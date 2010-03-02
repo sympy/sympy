@@ -1,9 +1,8 @@
-from mptypes import mpmathify, extraprec, eps, mpf, MultiPrecisionArithmetic
-from calculus import diff
-from functions import sqrt, sign, ldexp
-from matrices import matrix, norm as norm_
-from linalg import lu_solve
 from copy import copy
+
+class OptimizationMethods(object):
+    def __init__(ctx):
+        pass
 
 ##############
 # 1D-SOLVERS #
@@ -28,15 +27,16 @@ class Newton:
     """
     maxsteps = 20
 
-    def __init__(self, f, x0, **kwargs):
+    def __init__(self, ctx, f, x0, **kwargs):
+        self.ctx = ctx
         if len(x0) == 1:
             self.x0 = x0[0]
         else:
-            raise ValueError('expected 1 starting point, got %i' * len(x0))
+            raise ValueError('expected 1 starting point, got %i' % len(x0))
         self.f = f
         if not 'df' in kwargs:
             def df(x):
-                return diff(f, x)
+                return self.ctx.diff(f, x)
         else:
             df = kwargs['df']
         self.df = df
@@ -68,7 +68,8 @@ class Secant:
     """
     maxsteps = 30
 
-    def __init__(self, f, x0, **kwargs):
+    def __init__(self, ctx, f, x0, **kwargs):
+        self.ctx = ctx
         if len(x0) == 1:
             self.x0 = x0[0]
             self.x1 = self.x0 + 0.25
@@ -76,7 +77,7 @@ class Secant:
             self.x0 = x0[0]
             self.x1 = x0[1]
         else:
-            raise ValueError('expected 1 or 2 starting points, got %i' * len(x0))
+            raise ValueError('expected 1 or 2 starting points, got %i' % len(x0))
         self.f = f
 
     def __iter__(self):
@@ -115,20 +116,21 @@ class MNewton:
     """
     maxsteps = 20
 
-    def __init__(self, f, x0, **kwargs):
+    def __init__(self, ctx, f, x0, **kwargs):
+        self.ctx = ctx
         if not len(x0) == 1:
-            raise ValueError('expected 1 starting point, got %i' * len(x0))
+            raise ValueError('expected 1 starting point, got %i' % len(x0))
         self.x0 = x0[0]
         self.f = f
         if not 'df' in kwargs:
             def df(x):
-                return diff(f, x)
+                return self.ctx.diff(f, x)
         else:
             df = kwargs['df']
         self.df = df
         if not 'd2f' in kwargs:
             def d2f(x):
-                return diff(df, x)
+                return self.ctx.diff(df, x)
         else:
             d2f = kwargs['df']
         self.d2f = d2f
@@ -171,20 +173,21 @@ class Halley:
 
     maxsteps = 20
 
-    def __init__(self, f, x0, **kwargs):
+    def __init__(self, ctx, f, x0, **kwargs):
+        self.ctx = ctx
         if not len(x0) == 1:
             raise ValueError('expected 1 starting point, got %i' % len(x0))
         self.x0 = x0[0]
         self.f = f
         if not 'df' in kwargs:
             def df(x):
-                return diff(f, x)
+                return self.ctx.diff(f, x)
         else:
             df = kwargs['df']
         self.df = df
         if not 'd2f' in kwargs:
             def d2f(x):
-                return diff(df, x)
+                return self.ctx.diff(df, x)
         else:
             d2f = kwargs['df']
         self.d2f = d2f
@@ -225,7 +228,8 @@ class Muller:
     """
     maxsteps = 30
 
-    def __init__(self, f, x0, **kwargs):
+    def __init__(self, ctx, f, x0, **kwargs):
+        self.ctx = ctx
         if len(x0) == 1:
             self.x0 = x0[0]
             self.x1 = self.x0 + 0.25
@@ -270,7 +274,7 @@ class Muller:
             x1 = x2
             fx1 = fx2
             # denominator should be as large as possible => choose sign
-            r = sqrt(w**2 - 4*fx2*fx2x1x0)
+            r = self.ctx.sqrt(w**2 - 4*fx2*fx2x1x0)
             if abs(w - r) > abs(w + r):
                 r = -r
             x2 -= 2*fx2 / (w + r)
@@ -297,9 +301,10 @@ class Bisection:
     """
     maxsteps = 100
 
-    def __init__(self, f, x0, **kwargs):
+    def __init__(self, ctx, f, x0, **kwargs):
+        self.ctx = ctx
         if len(x0) != 2:
-            raise ValueError('expected interval of 2 points, got %i' * len(x0))
+            raise ValueError('expected interval of 2 points, got %i' % len(x0))
         self.f = f
         self.a = x0[0]
         self.b = x0[1]
@@ -311,7 +316,7 @@ class Bisection:
         l = b - a
         fb = f(b)
         while True:
-            m = ldexp(a + b, -1)
+            m = self.ctx.ldexp(a + b, -1)
             fm = f(m)
             if fm * fb < 0:
                 a = m
@@ -373,9 +378,10 @@ class Illinois:
     """
     maxsteps = 30
 
-    def __init__(self, f, x0, **kwargs):
+    def __init__(self, ctx, f, x0, **kwargs):
+        self.ctx = ctx
         if len(x0) != 2:
-            raise ValueError('expected interval of 2 points, got %i' * len(x0))
+            raise ValueError('expected interval of 2 points, got %i' % len(x0))
         self.a = x0[0]
         self.b = x0[1]
         self.f = f
@@ -464,16 +470,18 @@ class Ridder:
     """
     maxsteps = 30
 
-    def __init__(self, f, x0, **kwargs):
+    def __init__(self, ctx, f, x0, **kwargs):
+        self.ctx = ctx
         self.f = f
         if len(x0) != 2:
-            raise ValueError('expected interval of 2 points, got %i' * len(x0))
+            raise ValueError('expected interval of 2 points, got %i' % len(x0))
         self.x1 = x0[0]
         self.x2 = x0[1]
         self.verbose = kwargs['verbose']
         self.tol = kwargs['tol']
 
     def __iter__(self):
+        ctx = self.ctx
         f = self.f
         x1 = self.x1
         fx1 = f(x1)
@@ -482,7 +490,7 @@ class Ridder:
         while True:
             x3 = 0.5*(x1 + x2)
             fx3 = f(x3)
-            x4 = x3 + (x3 - x1) * sign(fx1 - fx2) * fx3 / sqrt(fx3**2 - fx1*fx2)
+            x4 = x3 + (x3 - x1) * ctx.sign(fx1 - fx2) * fx3 / ctx.sqrt(fx3**2 - fx1*fx2)
             fx4 = f(x4)
             if abs(fx4) < self.tol:
                 # TODO: better condition (when f is very flat)
@@ -508,14 +516,15 @@ class ANewton:
     """
     maxsteps = 20
 
-    def __init__(self, f, x0, **kwargs):
+    def __init__(self, ctx, f, x0, **kwargs):
+        self.ctx = ctx
         if not len(x0) == 1:
-            raise ValueError('expected 1 starting point, got %i' * len(x0))
+            raise ValueError('expected 1 starting point, got %i' % len(x0))
         self.x0 = x0[0]
         self.f = f
         if not 'df' in kwargs:
             def df(x):
-                return diff(f, x)
+                return self.ctx.diff(f, x)
         else:
             df = kwargs['df']
         self.df = df
@@ -560,7 +569,7 @@ class ANewton:
 # MULTIDIMENSIONAL SOLVERS #
 ############################
 
-def jacobian(f, x):
+def jacobian(ctx, f, x):
     """
     Calculate the Jacobian matrix of a function at the point x0.
 
@@ -568,21 +577,19 @@ def jacobian(f, x):
 
         f : R^m -> R^n with m >= n
     """
-    x = matrix(x)
-    h = sqrt(eps)
-    fx = matrix(f(*x))
+    x = ctx.matrix(x)
+    h = ctx.sqrt(ctx.eps)
+    fx = ctx.matrix(f(*x))
     m = len(fx)
     n = len(x)
-    J = matrix(m, n)
+    J = ctx.matrix(m, n)
     for j in xrange(n):
         xj = x.copy()
         xj[j] += h
-        Jj = (matrix(f(*xj)) - fx) / h
+        Jj = (ctx.matrix(f(*xj)) - fx) / h
         for i in xrange(m):
             J[i,j] = Jj[i]
     return J
-
-one = mpf(1)
 
 # TODO: test with user-specified jacobian matrix, support force_type
 class MDNewton:
@@ -593,7 +600,7 @@ class MDNewton:
 
     x0 is the starting point close to the root.
 
-    J is a function returning the jacobian matrix for a point.
+    J is a function returning the Jacobian matrix for a point.
 
     Supports overdetermined systems.
 
@@ -615,17 +622,18 @@ class MDNewton:
     """
     maxsteps = 10
 
-    def __init__(self, f, x0, **kwargs):
+    def __init__(self, ctx, f, x0, **kwargs):
+        self.ctx = ctx
         self.f = f
         if isinstance(x0, (tuple, list)):
-            x0 = matrix(x0)
+            x0 = ctx.matrix(x0)
         assert x0.cols == 1, 'need a vector'
         self.x0 = x0
         if 'J' in kwargs:
             self.J = kwargs['J']
         else:
             def J(*x):
-                return jacobian(f, x)
+                return ctx.jacobian(f, x)
             self.J = J
         self.norm = kwargs['norm']
         self.verbose = kwargs['verbose']
@@ -635,20 +643,20 @@ class MDNewton:
         x0 = self.x0
         norm = self.norm
         J = self.J
-        fx = matrix(f(*x0))
+        fx = self.ctx.matrix(f(*x0))
         fxnorm = norm(fx)
         cancel = False
         while not cancel:
             # get direction of descent
             fxn = -fx
             Jx = J(*x0)
-            s = lu_solve(Jx, fxn)
+            s = self.ctx.lu_solve(Jx, fxn)
             if self.verbose:
                 print 'Jx:'
                 print Jx
                 print 's:', s
             # damping step size TODO: better strategy (hard task)
-            l = one
+            l = self.ctx.one
             x1 = x0 + s
             while True:
                 if x1 == x0:
@@ -656,7 +664,7 @@ class MDNewton:
                         print "canceled, won't get more excact"
                     cancel = True
                     break
-                fx = matrix(f(*x1))
+                fx = self.ctx.matrix(f(*x1))
                 newnorm = norm(fx)
                 if newnorm < fxnorm:
                     # new x accepted
@@ -676,9 +684,7 @@ str2solver = {'newton':Newton, 'secant':Secant,'mnewton':MNewton,
               'illinois':Illinois, 'pegasus':Pegasus, 'anderson':Anderson,
               'ridder':Ridder, 'anewton':ANewton, 'mdnewton':MDNewton}
 
-@extraprec(20)
-def findroot(f, x0, solver=Secant, tol=None, verbose=False, verify=True,
-             force_type=mpmathify, **kwargs):
+def findroot(ctx, f, x0, solver=Secant, tol=None, verbose=False, verify=True, **kwargs):
     r"""
     Find a solution to `f(x) = 0`, using *x0* as starting point or
     interval for *x*.
@@ -701,8 +707,6 @@ def findroot(f, x0, solver=Secant, tol=None, verbose=False, verify=True,
         print additional information for each iteration if true
     *verify*
         verify the solution and raise a ValueError if `|f(x) > \mathrm{tol}|`
-    *force_type*
-        use specified type constructor on starting points
     *solver*
         a generator for *f* and *x0* returning approximative solution and error
     *maxsteps*
@@ -783,13 +787,11 @@ def findroot(f, x0, solver=Secant, tol=None, verbose=False, verify=True,
         >>> f = [lambda x1, x2: x1**2 + x2,
         ...      lambda x1, x2: 5*x1**2 - 3*x1 + 2*x2 - 3]
         >>> findroot(f, (0, 0))
-        matrix(
-        [['-0.618033988749895'],
-         ['-0.381966011250105']])
+        [-0.618033988749895]
+        [-0.381966011250105]
         >>> findroot(f, (10, 10))
-        matrix(
-        [['1.61803398874989'],
-         ['-2.61803398874989']])
+        [ 1.61803398874989]
+        [-2.61803398874989]
 
     You can verify this by solving the system manually.
 
@@ -799,9 +801,8 @@ def findroot(f, x0, solver=Secant, tol=None, verbose=False, verify=True,
         ...     return x1**2 + x2, 5*x1**2 - 3*x1 + 2*x2 - 3
         ...
         >>> findroot(f, (0, 0))
-        matrix(
-        [['-0.618033988749895'],
-         ['-0.381966011250105']])
+        [-0.618033988749895]
+        [-0.381966011250105]
 
 
     **Multiple roots**
@@ -830,22 +831,22 @@ def findroot(f, x0, solver=Secant, tol=None, verbose=False, verify=True,
     necessary::
 
         >>> findroot(f, -10, solver='anewton', verbose=True)
-        x: -9.88888888888888888889
+        x:     -9.88888888888888888889
         error: 0.111111111111111111111
         converging slowly
-        x: -9.77890011223344556678
+        x:     -9.77890011223344556678
         error: 0.10998877665544332211
         converging slowly
-        x: -9.67002233332199662166
+        x:     -9.67002233332199662166
         error: 0.108877778911448945119
         converging slowly
         accelerating convergence
-        x: -9.5622443299551077669
+        x:     -9.5622443299551077669
         error: 0.107778003366888854764
         converging slowly
-        x: 0.99999999999999999214
+        x:     0.99999999999999999214
         error: 10.562244329955107759
-        x: 1.0
+        x:     1.0
         error: 7.8598304758094664213e-18
         1.0
 
@@ -885,83 +886,94 @@ def findroot(f, x0, solver=Secant, tol=None, verbose=False, verify=True,
         Try another starting point or tweak arguments.
 
     """
-    # initialize arguments
-    if not force_type:
-        force_type = lambda x: x
-    elif not tol and (force_type == float or force_type == complex):
-        tol = 2**(-42)
-    kwargs['verbose'] = verbose
-    if 'd1f' in kwargs:
-        kwargs['df'] = kwargs['d1f']
-    if tol is None:
-        tol = eps * 2**10
-    kwargs['tol'] = tol
-    if isinstance(x0, (list, tuple)):
-        x0 = [force_type(x) for x in x0]
-    else:
-        x0 = [force_type(x0)]
-    if isinstance(solver, str):
-        try:
-            solver = str2solver[solver]
-        except KeyError:
-            raise ValueError('could not recognize solver')
-    # accept list of functions
-    if isinstance(f, (list, tuple)):
-        f2 = copy(f)
-        def tmp(*args):
-            return [fn(*args) for fn in f2]
-        f = tmp
-    # detect multidimensional functions
+    prec = ctx.prec
     try:
-        fx = f(*x0)
-        multidimensional = isinstance(fx, (list, tuple, matrix))
-    except TypeError:
-        fx = f(x0[0])
-        multidimensional = False
-    if 'multidimensional' in kwargs:
-        multidimensional = kwargs['multidimensional']
-    if multidimensional:
-        # only one multidimensional solver available at the moment
-        solver = MDNewton
-        if not 'norm' in kwargs:
-            norm = lambda x: norm_(x, mpf('inf'))
-            kwargs['norm'] = norm
-        else:
-            norm = kwargs['norm']
-    else:
-        norm = abs
-    # happily return starting point if it's a root
-    if norm(fx) == 0:
-        if multidimensional:
-            return matrix(x0)
-        else:
-            return x0[0]
-    # use solver
-    iterations = solver(f, x0, **kwargs)
-    if 'maxsteps' in kwargs:
-        maxsteps = kwargs['maxsteps']
-    else:
-        maxsteps = iterations.maxsteps
-    i = 0
-    for x, error in iterations:
-        if verbose:
-            print 'x:    ', x
-            print 'error:', error
-        i += 1
-        if error < tol * max(1, norm(x)) or i >= maxsteps:
-            break
-    if not isinstance(x, (list, tuple, matrix)):
-        xl = [x]
-    else:
-        xl = x
-    if verify and norm(f(*xl))**2 > tol: # TODO: better condition?
-        raise ValueError('Could not find root within given tolerance. '
-                         '(%g > %g)\n'
-                         'Try another starting point or tweak arguments.'
-                         % (norm(f(*xl))**2, tol))
-    return x
+        ctx.prec += 20
 
-def multiplicity(f, root, tol=eps, maxsteps=10, **kwargs):
+        # initialize arguments
+        if tol is None:
+            tol = ctx.eps * 2**10
+
+        kwargs['verbose'] = kwargs.get('verbose', verbose)
+
+        if 'd1f' in kwargs:
+            kwargs['df'] = kwargs['d1f']
+
+        kwargs['tol'] = tol
+        if isinstance(x0, (list, tuple)):
+            x0 = [ctx.convert(x) for x in x0]
+        else:
+            x0 = [ctx.convert(x0)]
+
+        if isinstance(solver, str):
+            try:
+                solver = str2solver[solver]
+            except KeyError:
+                raise ValueError('could not recognize solver')
+
+        # accept list of functions
+        if isinstance(f, (list, tuple)):
+            f2 = copy(f)
+            def tmp(*args):
+                return [fn(*args) for fn in f2]
+            f = tmp
+
+        # detect multidimensional functions
+        try:
+            fx = f(*x0)
+            multidimensional = isinstance(fx, (list, tuple, ctx.matrix))
+        except TypeError:
+            fx = f(x0[0])
+            multidimensional = False
+        if 'multidimensional' in kwargs:
+            multidimensional = kwargs['multidimensional']
+        if multidimensional:
+            # only one multidimensional solver available at the moment
+            solver = MDNewton
+            if not 'norm' in kwargs:
+                norm = lambda x: ctx.norm(x, 'inf')
+                kwargs['norm'] = norm
+            else:
+                norm = kwargs['norm']
+        else:
+            norm = abs
+
+        # happily return starting point if it's a root
+        if norm(fx) == 0:
+            if multidimensional:
+                return ctx.matrix(x0)
+            else:
+                return x0[0]
+
+        # use solver
+        iterations = solver(ctx, f, x0, **kwargs)
+        if 'maxsteps' in kwargs:
+            maxsteps = kwargs['maxsteps']
+        else:
+            maxsteps = iterations.maxsteps
+        i = 0
+        for x, error in iterations:
+            if verbose:
+                print 'x:    ', x
+                print 'error:', error
+            i += 1
+            if error < tol * max(1, norm(x)) or i >= maxsteps:
+                break
+        if not isinstance(x, (list, tuple, ctx.matrix)):
+            xl = [x]
+        else:
+            xl = x
+        if verify and norm(f(*xl))**2 > tol: # TODO: better condition?
+            raise ValueError('Could not find root within given tolerance. '
+                             '(%g > %g)\n'
+                             'Try another starting point or tweak arguments.'
+                             % (norm(f(*xl))**2, tol))
+        return x
+    finally:
+        ctx.prec = prec
+
+
+def multiplicity(ctx, f, root, tol=None, maxsteps=10, **kwargs):
     """
     Return the multiplicity of a given root of f.
 
@@ -973,14 +985,17 @@ def multiplicity(f, root, tol=eps, maxsteps=10, **kwargs):
     >>> from mpmath import *
     >>> multiplicity(lambda x: sin(x) - 1, pi/2)
     2
+
     """
+    if tol is None:
+        tol = ctx.eps ** 0.8
     kwargs['d0f'] = f
     for i in xrange(maxsteps):
         dfstr = 'd' + str(i) + 'f'
         if dfstr in kwargs:
             df = kwargs[dfstr]
         else:
-            df = lambda x: diff(f, x, i)
+            df = lambda x: ctx.diff(f, x, i)
         if not abs(df(root)) < tol:
             break
     return i
@@ -1063,7 +1078,9 @@ def steffensen(f):
         return (x*ffx - fx**2) / (ffx - 2*fx + x)
     return F
 
-MultiPrecisionArithmetic.findroot = staticmethod(findroot)
+OptimizationMethods.jacobian = jacobian
+OptimizationMethods.findroot = findroot
+OptimizationMethods.multiplicity = multiplicity
 
 if __name__ == '__main__':
     import doctest

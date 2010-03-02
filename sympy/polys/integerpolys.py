@@ -15,7 +15,7 @@ from math import floor, ceil, log, sqrt
 from random import randint
 
 from sympy.core.numbers import igcd, igcdex
-from sympy.mpmath.libmpf import isqrt
+from sympy.mpmath.libmp import isqrt
 
 INT_TYPE = int
 INT_ZERO = 0

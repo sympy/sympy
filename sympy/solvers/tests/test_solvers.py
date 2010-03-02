@@ -136,8 +136,7 @@ def test_solve_polynomial_cv_1a():
     assert solve( x**Rational(1,3) - 3, x) == [27]
     ans = solve(x**Rational(1,2)+x**Rational(1,3)+x**Rational(1,4),x)
     assert set([NS(w, n=2) for w in ans]) == \
-           set(['1.0e-2', '-9.5 - 2.8*I', '0', '-9.5 + 2.8*I'])
-
+        set(['0.010', '-9.5 + 2.8*I', '0', '-9.5 - 2.8*I'])
 def test_solve_polynomial_cv_1b():
     x, a = symbols('x a')
 

@@ -12,13 +12,11 @@ see libmpc and libmpi.
 import math
 from bisect import bisect
 
-from settings import (
-    MP_BASE, MP_ZERO, MP_ONE, MP_TWO, MP_FIVE, MODE,
-    round_floor, round_ceiling, round_down, round_up,
-    round_nearest, round_fast,
-)
+from backend import MPZ, MPZ_ZERO, MPZ_ONE, MPZ_TWO, MPZ_FIVE
 
 from libmpf import (
+    round_floor, round_ceiling, round_down, round_up,
+    round_nearest, round_fast,
     ComplexResult,
     bitcount, bctable, lshift, rshift, giant_steps, sqrt_fixed,
     from_int, to_int, from_man_exp, to_fixed, to_float, from_float,
@@ -80,11 +78,11 @@ def def_mpf_constant(fixed):
 
 def bsp_acot(q, a, b, hyperbolic):
     if b - a == 1:
-        a1 = MP_BASE(2*a + 3)
+        a1 = MPZ(2*a + 3)
         if hyperbolic or a&1:
-            return MP_ONE, a1 * q**2, a1
+            return MPZ_ONE, a1 * q**2, a1
         else:
-            return -MP_ONE, a1 * q**2, a1
+            return -MPZ_ONE, a1 * q**2, a1
     m = (a+b)//2
     p1, q1, r1 = bsp_acot(q, a, m, hyperbolic)
     p2, q2, r2 = bsp_acot(q, m, b, hyperbolic)
@@ -109,9 +107,9 @@ def machin(coefs, prec, hyperbolic=False):
     c*acot[h](n) + ...
     """
     extraprec = 10
-    s = MP_ZERO
+    s = MPZ_ZERO
     for a, b in coefs:
-        s += MP_BASE(a) * acot_fixed(MP_BASE(b), prec+extraprec, hyperbolic)
+        s += MPZ(a) * acot_fixed(MPZ(b), prec+extraprec, hyperbolic)
     return (s >> extraprec)
 
 # Logarithms of integers are needed for various computations involving
@@ -161,10 +159,10 @@ asymptotic complexity), so there is no reason not to use it in all cases.
 """
 
 # Constants in Chudnovsky's series
-CHUD_A = MP_BASE(13591409)
-CHUD_B = MP_BASE(545140134)
-CHUD_C = MP_BASE(640320)
-CHUD_D = MP_BASE(12)
+CHUD_A = MPZ(13591409)
+CHUD_B = MPZ(545140134)
+CHUD_C = MPZ(640320)
+CHUD_D = MPZ(12)
 
 def bs_chudnovsky(a, b, level, verbose):
     """
@@ -174,7 +172,7 @@ def bs_chudnovsky(a, b, level, verbose):
     for recursive calls.
     """
     if b-a == 1:
-        g = MP_BASE((6*b-5)*(2*b-1)*(6*b-1))
+        g = MPZ((6*b-5)*(2*b-1)*(6*b-1))
         p = b**3 * CHUD_C**3 // 24
         q = (-1)**b * g * (CHUD_A+CHUD_B*b)
     else:
@@ -214,7 +212,7 @@ def bspe(a, b):
     as an exact fraction (p, q).
     """
     if b-a == 1:
-        return MP_ONE, MP_BASE(b)
+        return MPZ_ONE, MPZ(b)
     m = (a+b)//2
     p1, q1 = bspe(a, m)
     p2, q2 = bspe(m, b)
@@ -242,7 +240,7 @@ def phi_fixed(prec):
     Computes the golden ratio, (1+sqrt(5))/2
     """
     prec += 10
-    a = isqrt_fast(MP_FIVE<<(2*prec)) + (MP_ONE << prec)
+    a = isqrt_fast(MPZ_FIVE<<(2*prec)) + (MPZ_ONE << prec)
     return a >> 11
 
 mpf_phi    = def_mpf_constant(phi_fixed)
@@ -345,7 +343,7 @@ def nthroot_fixed(y, n, prec, exp1):
     start = 50
     try:
         y1 = rshift(y, prec - n*start)
-        r = MP_BASE(int(y1**(1.0/n)))
+        r = MPZ(int(y1**(1.0/n)))
     except OverflowError:
         y1 = from_int(y1, start)
         fn = from_int(n)
@@ -459,32 +457,21 @@ def mpf_cbrt(s, prec, rnd=round_fast):
 # Fast sequential integer logarithms are required for various series
 # computations related to zeta functions, so we cache them
 # TODO: can this be done better?
+MAX_LOG_INT_CACHE = 2000
+
 log_int_cache = {}
 
 def log_int_fixed(n, prec):
-    if n < 2:
-        return MP_ZERO
-    cache = log_int_cache.get(prec)
-    if cache and (n in cache):
-        return cache[n]
-    if cache:
-        L = cache[max(cache)]
-    else:
-        cache = log_int_cache[prec] = {}
-        L = cache[2] = ln2_fixed(prec)
-    one = MP_ONE << prec
-    for p in xrange(max(cache)+1, n+1):
-        s = 0
-        u = one
-        k = 1
-        a = (2*p-1)**2
-        while u:
-            s += u // k
-            u //= a
-            k += 2
-        L += 2*s//(2*p-1)
-        cache[p] = L
-    return cache[n]
+    if n in log_int_cache:
+        value, vprec = log_int_cache[n]
+        if vprec >= prec:
+            return value >> (vprec - prec)
+    extra = 30
+    vprec = prec + extra
+    v = to_fixed(mpf_log(from_int(n), vprec+5), vprec)
+    if n < MAX_LOG_INT_CACHE:
+        log_int_cache[n] = (v, vprec)
+    return v >> extra
 
 # Use Taylor series with caching up to this prec
 LOG_TAYLOR_PREC = 2500
@@ -549,7 +536,7 @@ def log_agm(x, prec):
         b = (b*x2) >> prec
         a = (a*b) >> prec
         s += a
-    s += (MP_ONE<<prec)
+    s += (MPZ_ONE<<prec)
     s = (s*s)>>(prec-2)
     s = (s*isqrt_fast(x<<prec))>>prec
     # Compute jtheta3(x)**2
@@ -558,7 +545,7 @@ def log_agm(x, prec):
         b = (b*x2) >> prec
         a = (a*b) >> prec
         t += a
-    t = (MP_ONE<<prec) + (t<<1)
+    t = (MPZ_ONE<<prec) + (t<<1)
     t = (t*t)>>prec
     # Final formula
     p = agm_fixed(s, t, prec)
@@ -575,7 +562,7 @@ def log_taylor(x, prec, r=0):
     """
     for i in xrange(r):
         x = isqrt_fast(x<<prec)
-    one = MP_ONE << prec
+    one = MPZ_ONE << prec
     v = ((x-one)<<prec)//(x+one)
     sign = v < 0
     if sign:
@@ -615,7 +602,7 @@ def log_taylor_cached(x, prec):
     a >>= dprec
     log_a >>= dprec
     u = ((x - a) << prec) // a
-    v = (u << prec) // ((MP_TWO << prec) + u)
+    v = (u << prec) // ((MPZ_TWO << prec) + u)
     v2 = (v*v) >> prec
     v4 = (v2*v2) >> prec
     s0 = v
@@ -665,9 +652,9 @@ def mpf_log(x, prec, rnd=round_fast):
         # Calculate t = x-1 to measure distance from 1 in bits
         tsign = 1-abs_mag
         if tsign:
-            tman = (MP_ONE<<bc) - man
+            tman = (MPZ_ONE<<bc) - man
         else:
-            tman = man - (MP_ONE<<(bc-1))
+            tman = man - (MPZ_ONE<<(bc-1))
         tbc = bitcount(tman)
         cancellation = bc - tbc
         if cancellation > wp:
@@ -784,7 +771,7 @@ def exp_series(x, prec, r):
     x >>= r
     # 1 + x + x^2/2! + x^3/3! + x^4/4! + ... =
     # (1 + x^2/2! + ...) + x * (1 + x^2/3! + ...)
-    s0 = s1 = (MP_ONE << prec)
+    s0 = s1 = (MPZ_ONE << prec)
     k = 2
     a = x2 = (x * x) >> prec
     while a:
@@ -825,7 +812,7 @@ def exp_series2(x, prec, r):
         #   (x + x^9/9! + ...) + x^2 * (x/3! + x^9/11! + ...) +
         #   x^4 * (x/5! + x^9/13! + ...) + x^6 * (x/7! + x^9/15! + ...)
         J = 4
-        ax = [MP_ONE << prec, x2]
+        ax = [MPZ_ONE << prec, x2]
         px = x2
         asum = [x, x//6]
         fact = 6
@@ -848,7 +835,7 @@ def exp_series2(x, prec, r):
         for i in range(1, J):
             s1 += ax[i]*asum[i]
         s1 = asum[0] + (s1 >> prec)
-    c1 = isqrt_fast((s1*s1) + (MP_ONE<<(2*prec)))
+    c1 = isqrt_fast((s1*s1) + (MPZ_ONE<<(2*prec)))
     if sign:
         s = c1 - s1
     else:
@@ -985,7 +972,7 @@ def mpf_exp(x, prec, rnd=round_fast):
 #----------------------------------------------------------------------------#
 
 def sin_taylor(x, prec):
-    x = MP_BASE(x)
+    x = MPZ(x)
     x2 = (x*x) >> prec
     s = a = x
     k = 3
@@ -996,9 +983,9 @@ def sin_taylor(x, prec):
     return s
 
 def cos_taylor(x, prec):
-    x = MP_BASE(x)
+    x = MPZ(x)
     x2 = (x*x) >> prec
-    a = c = (MP_ONE<<prec)
+    a = c = (MPZ_ONE<<prec)
     k = 2
     while a:
         a = ((a * x2) >> prec) // (k*(1-k))
@@ -1010,7 +997,7 @@ def cos_taylor(x, prec):
 # Output: c * 2**(prec + r), s * 2**(prec + r)
 def expi_series(x, prec, r):
     x >>= r
-    one = MP_ONE << prec
+    one = MPZ_ONE << prec
     x2 = (x*x) >> prec
     s = x
     a = x
@@ -1019,7 +1006,7 @@ def expi_series(x, prec, r):
         a = ((a * x2) >> prec) // (-k*(k+1))
         s += a
         k += 2
-    c = isqrt_fast((MP_ONE<<(2*prec)) - (s*s))
+    c = isqrt_fast((MPZ_ONE<<(2*prec)) - (s*s))
     # Calculate (c + j*s)**(2**r) by repeated squaring
     for j in range(r):
         c, s =  (c*c-s*s) >> prec, (2*c*s ) >> prec
@@ -1170,7 +1157,7 @@ def calc_cos_sin(which, y, swaps, prec, cos_rnd, sin_rnd):
         if which_compute == 0:
             sin = sin_taylor(y, wp)
             # only need to evaluate one of the series
-            cos = isqrt_fast((MP_ONE<<(2*wp)) - sin*sin)
+            cos = isqrt_fast((MPZ_ONE<<(2*wp)) - sin*sin)
         elif which_compute == 1:
             sin = 0
             cos = cos_taylor(y, wp)
@@ -1191,7 +1178,7 @@ def calc_cos_sin(which, y, swaps, prec, cos_rnd, sin_rnd):
     if cos_rnd is not round_nearest:
         # Round and set correct signs
         # XXX: this logic needs a second look
-        ONE = MP_ONE << wp
+        ONE = MPZ_ONE << wp
         if cos_sign:
             cos += (-1)**(cos_rnd in (round_ceiling, round_down))
             cos = min(ONE, cos)
@@ -1212,7 +1199,7 @@ def calc_cos_sin(which, y, swaps, prec, cos_rnd, sin_rnd):
 
     return cos, sin
 
-def cos_sin(x, prec, rnd=round_fast, which=0):
+def mpf_cos_sin(x, prec, rnd=round_fast, which=0):
     """
     Computes (cos(x), sin(x)). The parameter 'which' can disable
     evaluation of either cos or sin:
@@ -1235,13 +1222,13 @@ def cos_sin(x, prec, rnd=round_fast, which=0):
     return calc_cos_sin(which, y, swaps, prec, rnd, rnd)
 
 def mpf_cos(x, prec, rnd=round_fast):
-    return cos_sin(x, prec, rnd, 1)[0]
+    return mpf_cos_sin(x, prec, rnd, 1)[0]
 
 def mpf_sin(x, prec, rnd=round_fast):
-    return cos_sin(x, prec, rnd, -1)[1]
+    return mpf_cos_sin(x, prec, rnd, -1)[1]
 
 def mpf_tan(x, prec, rnd=round_fast):
-    c, s = cos_sin(x, prec+20)
+    c, s = mpf_cos_sin(x, prec+20)
     return mpf_div(s, c, prec, rnd)
 
 # Accurate computation of cos(pi*x) and sin(pi*x) is needed by
@@ -1252,7 +1239,7 @@ def mpf_cos_sin_pi(x, prec, rnd=round_fast):
     for x close to an integer"""
     sign, man, exp, bc = x
     if not man:
-        return cos_sin(x, prec, rnd)
+        return mpf_cos_sin(x, prec, rnd)
     # Exactly an integer or half-integer?
     if exp >= -1:
         if exp == -1:
@@ -1280,16 +1267,16 @@ def mpf_cos_sin_pi(x, prec, rnd=round_fast):
     # to save some time and to get rounding right
     case = nhint % 4
     if case == 0:
-        c, s = cos_sin(x, prec, rnd)
+        c, s = mpf_cos_sin(x, prec, rnd)
     elif case == 1:
-        s, c = cos_sin(x, prec, rnd)
+        s, c = mpf_cos_sin(x, prec, rnd)
         c = mpf_neg(c)
     elif case == 2:
-        c, s = cos_sin(x, prec, rnd)
+        c, s = mpf_cos_sin(x, prec, rnd)
         c = mpf_neg(c)
         s = mpf_neg(s)
     else:
-        s, c = cos_sin(x, prec, rnd)
+        s, c = mpf_cos_sin(x, prec, rnd)
         s = mpf_neg(s)
     return c, s
 
@@ -1305,7 +1292,7 @@ def mpf_sin_pi(x, prec, rnd=round_fast):
 #
 
 def sinh_taylor(x, prec):
-    x = MP_BASE(x)
+    x = MPZ(x)
     x2 = (x*x) >> prec
     s = a = x
     k = 3
@@ -1315,7 +1302,7 @@ def sinh_taylor(x, prec):
         k += 2
     return s
 
-def cosh_sinh(x, prec, rnd=round_fast, tanh=0):
+def mpf_cosh_sinh(x, prec, rnd=round_fast, tanh=0):
     """Simultaneously compute (cosh(x), sinh(x)) for real x"""
     sign, man, exp, bc = x
     if (not man) and exp:
@@ -1363,15 +1350,15 @@ def cosh_sinh(x, prec, rnd=round_fast, tanh=0):
 
 def mpf_cosh(x, prec, rnd=round_fast):
     """Compute cosh(x) for a real argument x"""
-    return cosh_sinh(x, prec, rnd)[0]
+    return mpf_cosh_sinh(x, prec, rnd)[0]
 
 def mpf_sinh(x, prec, rnd=round_fast):
     """Compute sinh(x) for a real argument x"""
-    return cosh_sinh(x, prec, rnd)[1]
+    return mpf_cosh_sinh(x, prec, rnd)[1]
 
 def mpf_tanh(x, prec, rnd=round_fast):
     """Compute tanh(x) for a real argument x"""
-    return cosh_sinh(x, prec, rnd, tanh=1)
+    return mpf_cosh_sinh(x, prec, rnd, tanh=1)
 
 
 #----------------------------------------------------------------------
@@ -1392,7 +1379,7 @@ def atan_newton(x, prec):
         r = r << (p-prevp)
         cos, sin = expi_series(r, p, s)
         tan = (sin << p) // cos
-        a = ((tan - rshift(x, prec-p)) << p) // ((MP_ONE<<p) + ((tan**2)>>p))
+        a = ((tan - rshift(x, prec-p)) << p) // ((MPZ_ONE<<p) + ((tan**2)>>p))
         r = r - a
         prevp = p
     return rshift(r, prevp-prec)
@@ -1422,7 +1409,7 @@ def atan_taylor(x, prec):
     n = (x >> (prec-ATAN_TAYLOR_SHIFT))
     a, atan_a = atan_taylor_get_cached(n, prec)
     d = x - a
-    s0 = v = (d << prec) // ((a**2 >> prec) + (a*d >> prec) + (MP_ONE << prec))
+    s0 = v = (d << prec) // ((a**2 >> prec) + (a*d >> prec) + (MPZ_ONE << prec))
     v2 = (v**2 >> prec)
     v4 = (v2 * v2) >> prec
     s1 = v//3
@@ -1514,15 +1501,15 @@ def mpf_atan2(y, x, prec, rnd=round_fast):
         return mpf_pos(tquo, prec, rnd)
 
 def mpf_asin(x, prec, rnd=round_fast):
-    sign, man, exp, bc = x
-    if bc+exp > 0 and x not in (fone, fnone):
-        raise ComplexResult("asin(x) is real only for -1 <= x <= 1")
-    # asin(x) = 2*atan(x/(1+sqrt(1-x**2)))
-    wp = prec + 15
-    a = mpf_mul(x, x)
-    b = mpf_add(fone, mpf_sqrt(mpf_sub(fone, a, wp), wp), wp)
-    c = mpf_div(x, b, wp)
-    return mpf_shift(mpf_atan(c, prec, rnd), 1)
+  sign, man, exp, bc = x
+  if bc+exp > 0 and x not in (fone, fnone):
+      raise ComplexResult("asin(x) is real only for -1 <= x <= 1")
+  # asin(x) = 2*atan(x/(1+sqrt(1-x**2)))
+  wp = prec + 15
+  a = mpf_mul(x, x)
+  b = mpf_add(fone, mpf_sqrt(mpf_sub(fone, a, wp), wp), wp)
+  c = mpf_div(x, b, wp)
+  return mpf_shift(mpf_atan(c, prec, rnd), 1)
 
 def mpf_acos(x, prec, rnd=round_fast):
     # acos(x) = 2*atan(sqrt(1-x**2)/(1+x))

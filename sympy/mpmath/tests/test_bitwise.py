@@ -1,8 +1,9 @@
 """
-Test bit-level integer operations
+Test bit-level integer and mpf operations
 """
 
-from sympy.mpmath.libmpf import *
+from sympy.mpmath import *
+from sympy.mpmath.libmp import *
 
 def test_bitcount():
     assert bitcount(0) == 0
@@ -81,6 +82,16 @@ def test_rounding_bugs():
     assert from_man_exp(255, 0, 7, round_up) == (0, 1, 8, 1)
     assert from_man_exp(-255, 0, 7, round_floor) == (1, 1, 8, 1)
 
+def test_rounding_issue160():
+    a = from_man_exp(9867,-100)
+    b = from_man_exp(9867,-200)
+    c = from_man_exp(-1,0)
+    z = (1, 1023, -10, 10)
+    assert mpf_add(a, c, 10, 'd') == z
+    assert mpf_add(b, c, 10, 'd') == z
+    assert mpf_add(c, a, 10, 'd') == z
+    assert mpf_add(c, b, 10, 'd') == z
+
 def test_perturb():
     a = fone
     b = from_float(0.99999999999999989)
@@ -122,3 +133,40 @@ def test_add_exact():
     assert mpf_add(fone, fzero) == fone
     assert mpf_add(fzero, fone) == fone
     assert mpf_add(fzero, fzero) == fzero
+
+def test_long_exponent_shifts():
+    mp.dps = 15
+    # Check for possible bugs due to exponent arithmetic overflow
+    # in a C implementation
+    x = mpf(1)
+    for p in [32, 64]:
+        a = ldexp(1,2**(p-1))
+        b = ldexp(1,2**p)
+        c = ldexp(1,2**(p+1))
+        d = ldexp(1,-2**(p-1))
+        e = ldexp(1,-2**p)
+        f = ldexp(1,-2**(p+1))
+        assert (x+a) == a
+        assert (x+b) == b
+        assert (x+c) == c
+        assert (x+d) == x
+        assert (x+e) == x
+        assert (x+f) == x
+        assert (a+x) == a
+        assert (b+x) == b
+        assert (c+x) == c
+        assert (d+x) == x
+        assert (e+x) == x
+        assert (f+x) == x
+        assert (x-a) == -a
+        assert (x-b) == -b
+        assert (x-c) == -c
+        assert (x-d) == x
+        assert (x-e) == x
+        assert (x-f) == x
+        assert (a-x) == a
+        assert (b-x) == b
+        assert (c-x) == c
+        assert (d-x) == -x
+        assert (e-x) == -x
+        assert (f-x) == -x

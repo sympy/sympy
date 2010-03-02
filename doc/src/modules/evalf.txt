@@ -194,7 +194,7 @@ It is better to split this integral into two pieces:
 A similar example is the following oscillatory integral:
 
     >>> Integral(sin(x)/x**2, (x, 1, oo)).evalf(maxprec=20)
-    5.e-1
+    0.5
 
 
 It can be dealt with much more efficiently by telling ``evalf`` or ``N`` to use an oscillatory quadrature algorithm:

@@ -2,14 +2,12 @@
 Low-level functions for complex arithmetic.
 """
 
-from settings import (\
-    MP_BASE, MP_ZERO, MP_ONE, MP_TWO,
-    round_floor, round_ceiling, round_down, round_up,
-    round_nearest, round_fast
-)
+from backend import MPZ, MPZ_ZERO, MPZ_ONE, MPZ_TWO
 
 from libmpf import (\
-    bctable, normalize, reciprocal_rnd, rshift, lshift, giant_steps,
+    round_floor, round_ceiling, round_down, round_up,
+    round_nearest, round_fast, bitcount,
+    bctable, normalize, normalize1, reciprocal_rnd, rshift, lshift, giant_steps,
     negative_rnd,
     to_str, to_fixed, from_man_exp, from_float, to_float, from_int, to_int,
     fzero, fone, ftwo, fhalf, finf, fninf, fnan, fnone,
@@ -17,10 +15,11 @@ from libmpf import (\
     mpf_div, mpf_mul_int, mpf_shift, mpf_sqrt, mpf_hypot,
     mpf_rdiv_int, mpf_floor, mpf_ceil,
     mpf_sign,
+    ComplexResult
 )
 
 from libelefun import (\
-    mpf_pi, mpf_exp, mpf_log, cos_sin, cosh_sinh, mpf_tan, mpf_pow_int,
+    mpf_pi, mpf_exp, mpf_log, mpf_cos_sin, mpf_cosh_sinh, mpf_tan, mpf_pow_int,
     mpf_log_hypot,
     mpf_cos_sin_pi, mpf_phi,
     mpf_atan, mpf_atan2, mpf_cosh, mpf_sinh, mpf_tanh,
@@ -319,8 +318,8 @@ def mpc_nthroot_fixed(a, b, n, prec):
         r = (a1 + 1j * b1)**(1.0/n)
         re = r.real
         im = r.imag
-        re = MP_BASE(int(re))
-        im = MP_BASE(int(im))
+        re = MPZ(int(re))
+        im = MPZ(int(im))
     except OverflowError:
         a1 = from_int(a1, start)
         b1 = from_int(b1, start)
@@ -402,8 +401,8 @@ def mpc_exp((a, b), prec, rnd=round_fast):
 
     We use the direct formula exp(a+bi) = exp(a) * (cos(b) + sin(b)*i)
     for the computation. This formula is very nice because it is
-    pewrectly stable; since we just do real multiplications, the only
-    numerical errors that can crewp in are single-ulp rnd errors.
+    pefectly stable; since we just do real multiplications, the only
+    numerical errors that can creep in are single-ulp rounding errors.
 
     The formula is efficient since mpmath's real exp is quite fast and
     since we can compute cos and sin simultaneously.
@@ -413,9 +412,9 @@ def mpc_exp((a, b), prec, rnd=round_fast):
     so is this function for all complex numbers.
     """
     if a == fzero:
-        return cos_sin(b, prec, rnd)
+        return mpf_cos_sin(b, prec, rnd)
     mag = mpf_exp(a, prec+4, rnd)
-    c, s = cos_sin(b, prec+4, rnd)
+    c, s = mpf_cos_sin(b, prec+4, rnd)
     re = mpf_mul(mag, c, prec, rnd)
     im = mpf_mul(mag, s, prec, rnd)
     return re, im
@@ -436,8 +435,8 @@ def mpc_cos((a, b), prec, rnd=round_fast):
     if a == fzero:
         return mpf_cosh(b, prec, rnd), fzero
     wp = prec + 6
-    c, s = cos_sin(a, wp)
-    ch, sh = cosh_sinh(b, wp)
+    c, s = mpf_cos_sin(a, wp)
+    ch, sh = mpf_cosh_sinh(b, wp)
     re = mpf_mul(c, ch, prec, rnd)
     im = mpf_mul(s, sh, prec, rnd)
     return re, mpf_neg(im)
@@ -449,8 +448,8 @@ def mpc_sin((a, b), prec, rnd=round_fast):
     if a == fzero:
         return fzero, mpf_sinh(b, prec, rnd)
     wp = prec + 6
-    c, s = cos_sin(a, wp)
-    ch, sh = cosh_sinh(b, wp)
+    c, s = mpf_cos_sin(a, wp)
+    ch, sh = mpf_cosh_sinh(b, wp)
     re = mpf_mul(s, ch, prec, rnd)
     im = mpf_mul(c, sh, prec, rnd)
     return re, im
@@ -466,8 +465,8 @@ def mpc_tan(z, prec, rnd=round_fast):
     wp = prec + 15
     a = mpf_shift(a, 1)
     b = mpf_shift(b, 1)
-    c, s = cos_sin(a, wp)
-    ch, sh = cosh_sinh(b, wp)
+    c, s = mpf_cos_sin(a, wp)
+    ch, sh = mpf_cosh_sinh(b, wp)
     # TODO: handle cancellation when c ~=  -1 and ch ~= 1
     mag = mpf_add(c, ch, wp)
     re = mpf_div(s, mag, prec, rnd)
@@ -480,7 +479,7 @@ def mpc_cos_pi((a, b), prec, rnd=round_fast):
         return mpf_cosh(b, prec, rnd), fzero
     wp = prec + 6
     c, s = mpf_cos_sin_pi(a, wp)
-    ch, sh = cosh_sinh(b, wp)
+    ch, sh = mpf_cosh_sinh(b, wp)
     re = mpf_mul(c, ch, prec, rnd)
     im = mpf_mul(s, sh, prec, rnd)
     return re, mpf_neg(im)
@@ -491,7 +490,7 @@ def mpc_sin_pi((a, b), prec, rnd=round_fast):
         return fzero, mpf_sinh(b, prec, rnd)
     wp = prec + 6
     c, s = mpf_cos_sin_pi(a, wp)
-    ch, sh = cosh_sinh(b, wp)
+    ch, sh = mpf_cosh_sinh(b, wp)
     re = mpf_mul(s, ch, prec, rnd)
     im = mpf_mul(c, sh, prec, rnd)
     return re, im
@@ -718,3 +717,38 @@ def mpc_fibonacci(z, prec, rnd=round_fast):
     u = mpc_sub(u, v, wp)
     u = mpc_div_mpf(u, b, prec, rnd)
     return u
+
+def mpf_expj(x, prec, rnd='f'):
+    raise ComplexResult
+
+def mpc_expj(z, prec, rnd='f'):
+    re, im = z
+    if im == fzero:
+        return mpf_cos_sin(re, prec, rnd)
+    if re == fzero:
+        return mpf_exp(mpf_neg(im), prec, rnd), fzero
+    ey = mpf_exp(mpf_neg(im), prec+10)
+    c, s = mpf_cos_sin(re, prec+10)
+    re = mpf_mul(ey, c, prec, rnd)
+    im = mpf_mul(ey, s, prec, rnd)
+    return re, im
+
+def mpf_expjpi(x, prec, rnd='f'):
+    raise ComplexResult
+
+def mpc_expjpi(z, prec, rnd='f'):
+    re, im = z
+    if im == fzero:
+        return mpf_cos_sin_pi(re, prec, rnd)
+    sign, man, exp, bc = im
+    wp = prec+10
+    if man:
+        wp += max(0, exp+bc)
+    im = mpf_neg(mpf_mul(mpf_pi(wp), im, wp))
+    if re == fzero:
+        return mpf_exp(im, prec, rnd), fzero
+    ey = mpf_exp(im, prec+10)
+    c, s = mpf_cos_sin_pi(re, prec+10)
+    re = mpf_mul(ey, c, prec, rnd)
+    im = mpf_mul(ey, s, prec, rnd)
+    return re, im

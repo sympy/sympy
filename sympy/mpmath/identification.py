@@ -3,17 +3,17 @@ Implements the PSLQ algorithm for integer relation detection,
 and derivative algorithms for constant recognition.
 """
 
-from mptypes import (mpf, eps, mp, mpmathify, nstr, inf)
-from functions import (log, exp, sqrt)
-
-from libmpf import to_fixed, from_man_exp, MODE
-from libelefun import sqrt_fixed
+from libmp import int_types, sqrt_fixed
 
 # round to nearest integer (can be done more elegantly...)
 def round_fixed(x, prec):
     return ((x + (1<<(prec-1))) >> prec) << prec
 
-def pslq(x, tol=None, maxcoeff=1000, maxsteps=100, verbose=False):
+class IdentificationMethods(object):
+    pass
+
+
+def pslq(ctx, x, tol=None, maxcoeff=1000, maxsteps=100, verbose=False):
     r"""
     Given a vector of real numbers `x = [x_0, x_1, ..., x_n]`, ``pslq(x)``
     uses the PSLQ algorithm to find a list of integers
@@ -33,23 +33,28 @@ def pslq(x, tol=None, maxcoeff=1000, maxsteps=100, verbose=False):
 
         >>> from mpmath import *
         >>> mp.dps = 15; mp.pretty = True
-        >>> pslq([pi, 1], tol=0.01)
-        [-7, 22]
-        >>> pslq([pi, 1], tol=0.001)
-        [113, -355]
+        >>> pslq([-1, pi], tol=0.01)
+        [22, 7]
+        >>> pslq([-1, pi], tol=0.001)
+        [355, 113]
+        >>> mpf(22)/7; mpf(355)/113; +pi
+        3.14285714285714
+        3.14159292035398
+        3.14159265358979
 
     Pi is not a rational number with denominator less than 1000::
 
-        >>> pslq([pi, 1])
+        >>> pslq([-1, pi])
         >>>
 
     To within the standard precision, it can however be approximated
     by at least one rational number with denominator less than `10^{12}`::
 
-        >>> pslq([pi, 1], maxcoeff=10**12)
-        [-75888275702L, 238410049439L]
-        >>> mpf(_[1])/_[0]
-        -3.14159265358979
+        >>> p, q = pslq([-1, pi], maxcoeff=10**12)
+        >>> print p, q
+        238410049439 75888275702
+        >>> mpf(p)/q
+        3.14159265358979
 
     The PSLQ algorithm can be applied to long vectors. For example,
     we can investigate the rational (in)dependence of integer square
@@ -126,7 +131,7 @@ def pslq(x, tol=None, maxcoeff=1000, maxsteps=100, verbose=False):
     assert n >= 2
 
     # At too low precision, the algorithm becomes meaningless
-    prec = mp.prec
+    prec = ctx.prec
     assert prec >= 53
 
     if verbose and prec // max(2,n) < 5:
@@ -135,24 +140,24 @@ def pslq(x, tol=None, maxcoeff=1000, maxsteps=100, verbose=False):
     target = int(prec * 0.75)
 
     if tol is None:
-        tol = mpf(2)**(-target)
+        tol = ctx.mpf(2)**(-target)
     else:
-        tol = mpmathify(tol)
+        tol = ctx.convert(tol)
 
     extra = 60
     prec += extra
 
     if verbose:
-        print "PSLQ using prec %i and tol %s" % (prec, nstr(tol))
+        print "PSLQ using prec %i and tol %s" % (prec, ctx.nstr(tol))
 
-    tol = to_fixed(tol._mpf_, prec)
+    tol = ctx.to_fixed(tol, prec)
     assert tol
 
     # Convert to fixed-point numbers. The dummy None is added so we can
     # use 1-based indexing. (This just allows us to be consistent with
     # Bailey's indexing. The algorithm is 100 lines long, so debugging
     # a single wrong index can be painful.)
-    x = [None] + [to_fixed(mpf(xk)._mpf_, prec) for xk in x]
+    x = [None] + [ctx.to_fixed(ctx.mpf(xk), prec) for xk in x]
 
     # Sanity check on magnitudes
     minx = min(abs(xx) for xx in x[1:])
@@ -278,7 +283,7 @@ def pslq(x, tol=None, maxcoeff=1000, maxsteps=100, verbose=False):
                 if max(abs(v) for v in vec) < maxcoeff:
                     if verbose:
                         print "FOUND relation at iter %i/%i, error: %s" % \
-                            (REP, maxsteps, nstr(err / mpf(2)**prec, 1))
+                            (REP, maxsteps, ctx.nstr(err / ctx.mpf(2)**prec, 1))
                     return vec
             best_err = min(err, best_err)
         # Calculate a lower bound for the norm. We could do this
@@ -289,10 +294,10 @@ def pslq(x, tol=None, maxcoeff=1000, maxsteps=100, verbose=False):
             norm = ((1 << (2*prec)) // recnorm) >> prec
             norm //= 100
         else:
-            norm = inf
+            norm = ctx.inf
         if verbose:
             print "%i/%i:  Error: %8s   Norm: %s" % \
-                (REP, maxsteps, nstr(best_err / mpf(2)**prec, 1), norm)
+                (REP, maxsteps, ctx.nstr(best_err / ctx.mpf(2)**prec, 1), norm)
         if norm >= maxcoeff:
             break
     if verbose:
@@ -300,7 +305,7 @@ def pslq(x, tol=None, maxcoeff=1000, maxsteps=100, verbose=False):
         print "Could not find an integer relation. Norm bound: %s" % norm
     return None
 
-def findpoly(x, n=1, **kwargs):
+def findpoly(ctx, x, n=1, **kwargs):
     r"""
     ``findpoly(x, n)`` returns the coefficients of an integer
     polynomial `P` of degree at most `n` such that `P(x) \approx 0`.
@@ -315,7 +320,7 @@ def findpoly(x, n=1, **kwargs):
     and a maximum permitted coefficient size with ``maxcoeff``.
 
     For large values of `n`, it is recommended to run :func:`findpoly`
-    at high precision; preferrably 50 digits or more.
+    at high precision; preferably 50 digits or more.
 
     **Examples**
 
@@ -405,14 +410,14 @@ def findpoly(x, n=1, **kwargs):
     bound has been reached). Running with ``verbose=True`` to get an
     idea what is happening can be useful.
     """
-    x = mpf(x)
+    x = ctx.mpf(x)
     assert n >= 1
     if x == 0:
         return [1, 0]
-    xs = [mpf(1)]
+    xs = [ctx.mpf(1)]
     for i in range(1,n+1):
         xs.append(x**i)
-        a = pslq(xs, **kwargs)
+        a = ctx.pslq(xs, **kwargs)
         if a is not None:
             return a[::-1]
 
@@ -440,7 +445,7 @@ def pslqstring(r, constants):
                 cs = ''
             else:
                 cs = '*' + cs
-            if isinstance(z, (int, long)):
+            if isinstance(z, int_types):
                 if z > 0: term = str(z) + cs
                 else:     term = ("(%s)" % z) + cs
             else:
@@ -461,7 +466,7 @@ def prodstring(r, constants):
         if p:
             z = fracgcd(-p,q)
             cs = constants[i][1]
-            if isinstance(z, (int, long)):
+            if isinstance(z, int_types):
                 if abs(z) == 1: t = cs
                 else:           t = '%s**%s' % (cs, abs(z))
                 ([num,den][z<0]).append(t)
@@ -474,11 +479,11 @@ def prodstring(r, constants):
     if num: return num
     if den: return "1/(%s)" % den
 
-def quadraticstring(t,a,b,c):
+def quadraticstring(ctx,t,a,b,c):
     if c < 0:
         a,b,c = -a,-b,-c
-    u1 = (-b+sqrt(b**2-4*a*c))/(2*c)
-    u2 = (-b-sqrt(b**2-4*a*c))/(2*c)
+    u1 = (-b+ctx.sqrt(b**2-4*a*c))/(2*c)
+    u2 = (-b-ctx.sqrt(b**2-4*a*c))/(2*c)
     if abs(u1-t) < abs(u2-t):
         if b:  s = '((%s+sqrt(%s))/%s)' % (-b,b**2-4*a*c,2*c)
         else:  s = '(sqrt(%s)/%s)' % (-4*a*c,2*c)
@@ -491,36 +496,36 @@ def quadraticstring(t,a,b,c):
 # The third entry indicates whether the transformation is
 # redundant when c = 1
 transforms = [
-  (lambda x,c: x*c, '$y/$c', 0),
-  (lambda x,c: x/c, '$c*$y', 1),
-  (lambda x,c: c/x, '$c/$y', 0),
-  (lambda x,c: (x*c)**2, 'sqrt($y)/$c', 0),
-  (lambda x,c: (x/c)**2, '$c*sqrt($y)', 1),
-  (lambda x,c: (c/x)**2, '$c/sqrt($y)', 0),
-  (lambda x,c: c*x**2, 'sqrt($y)/sqrt($c)', 1),
-  (lambda x,c: x**2/c, 'sqrt($c)*sqrt($y)', 1),
-  (lambda x,c: c/x**2, 'sqrt($c)/sqrt($y)', 1),
-  (lambda x,c: sqrt(x*c), '$y**2/$c', 0),
-  (lambda x,c: sqrt(x/c), '$c*$y**2', 1),
-  (lambda x,c: sqrt(c/x), '$c/$y**2', 0),
-  (lambda x,c: c*sqrt(x), '$y**2/$c**2', 1),
-  (lambda x,c: sqrt(x)/c, '$c**2*$y**2', 1),
-  (lambda x,c: c/sqrt(x), '$c**2/$y**2', 1),
-  (lambda x,c: exp(x*c), 'log($y)/$c', 0),
-  (lambda x,c: exp(x/c), '$c*log($y)', 1),
-  (lambda x,c: exp(c/x), '$c/log($y)', 0),
-  (lambda x,c: c*exp(x), 'log($y/$c)', 1),
-  (lambda x,c: exp(x)/c, 'log($c*$y)', 1),
-  (lambda x,c: c/exp(x), 'log($c/$y)', 0),
-  (lambda x,c: log(x*c), 'exp($y)/$c', 0),
-  (lambda x,c: log(x/c), '$c*exp($y)', 1),
-  (lambda x,c: log(c/x), '$c/exp($y)', 0),
-  (lambda x,c: c*log(x), 'exp($y/$c)', 1),
-  (lambda x,c: log(x)/c, 'exp($c*$y)', 1),
-  (lambda x,c: c/log(x), 'exp($c/$y)', 0),
+  (lambda ctx,x,c: x*c, '$y/$c', 0),
+  (lambda ctx,x,c: x/c, '$c*$y', 1),
+  (lambda ctx,x,c: c/x, '$c/$y', 0),
+  (lambda ctx,x,c: (x*c)**2, 'sqrt($y)/$c', 0),
+  (lambda ctx,x,c: (x/c)**2, '$c*sqrt($y)', 1),
+  (lambda ctx,x,c: (c/x)**2, '$c/sqrt($y)', 0),
+  (lambda ctx,x,c: c*x**2, 'sqrt($y)/sqrt($c)', 1),
+  (lambda ctx,x,c: x**2/c, 'sqrt($c)*sqrt($y)', 1),
+  (lambda ctx,x,c: c/x**2, 'sqrt($c)/sqrt($y)', 1),
+  (lambda ctx,x,c: ctx.sqrt(x*c), '$y**2/$c', 0),
+  (lambda ctx,x,c: ctx.sqrt(x/c), '$c*$y**2', 1),
+  (lambda ctx,x,c: ctx.sqrt(c/x), '$c/$y**2', 0),
+  (lambda ctx,x,c: c*ctx.sqrt(x), '$y**2/$c**2', 1),
+  (lambda ctx,x,c: ctx.sqrt(x)/c, '$c**2*$y**2', 1),
+  (lambda ctx,x,c: c/ctx.sqrt(x), '$c**2/$y**2', 1),
+  (lambda ctx,x,c: ctx.exp(x*c), 'log($y)/$c', 0),
+  (lambda ctx,x,c: ctx.exp(x/c), '$c*log($y)', 1),
+  (lambda ctx,x,c: ctx.exp(c/x), '$c/log($y)', 0),
+  (lambda ctx,x,c: c*ctx.exp(x), 'log($y/$c)', 1),
+  (lambda ctx,x,c: ctx.exp(x)/c, 'log($c*$y)', 1),
+  (lambda ctx,x,c: c/ctx.exp(x), 'log($c/$y)', 0),
+  (lambda ctx,x,c: ctx.ln(x*c), 'exp($y)/$c', 0),
+  (lambda ctx,x,c: ctx.ln(x/c), '$c*exp($y)', 1),
+  (lambda ctx,x,c: ctx.ln(c/x), '$c/exp($y)', 0),
+  (lambda ctx,x,c: c*ctx.ln(x), 'exp($y/$c)', 1),
+  (lambda ctx,x,c: ctx.ln(x)/c, 'exp($c*$y)', 1),
+  (lambda ctx,x,c: c/ctx.ln(x), 'exp($c/$y)', 0),
 ]
 
-def identify(x, constants=[], tol=None, maxcoeff=1000, full=False,
+def identify(ctx, x, constants=[], tol=None, maxcoeff=1000, full=False,
     verbose=False):
     """
     Given a real number `x`, ``identify(x)`` attempts to find an exact
@@ -739,14 +744,14 @@ def identify(x, constants=[], tol=None, maxcoeff=1000, full=False,
         if verbose: print "Found: ", s
         solutions.append(s)
 
-    x = mpf(x)
+    x = ctx.mpf(x)
 
     # Further along, x will be assumed positive
     if x == 0:
         if full: return ['0']
         else:    return '0'
     if x < 0:
-        sol = identify(-x, constants, tol, maxcoeff, full, verbose)
+        sol = ctx.identify(-x, constants, tol, maxcoeff, full, verbose)
         if sol is None:
             return sol
         if full:
@@ -755,42 +760,45 @@ def identify(x, constants=[], tol=None, maxcoeff=1000, full=False,
             return "-(%s)" % sol
 
     if tol:
-        tol = mpf(tol)
+        tol = ctx.mpf(tol)
     else:
-        tol = eps**0.7
+        tol = ctx.eps**0.7
     M = maxcoeff
 
-    if isinstance(constants, dict):
-        constants = [(mpf(v), name) for (name, v) in constants.items()]
+    if constants:
+        if isinstance(constants, dict):
+            constants = [(ctx.mpf(v), name) for (name, v) in constants.items()]
+        else:
+            namespace = dict((name, getattr(ctx,name)) for name in dir(ctx))
+            constants = [(eval(p, namespace), p) for p in constants]
     else:
-        import sympy.mpmath as mpmath
-        constants = [(eval(p, mpmath.__dict__), p) for p in constants]
+        constants = []
 
     # We always want to find at least rational terms
     if 1 not in [value for (name, value) in constants]:
-        constants = [(mpf(1), '1')] + constants
+        constants = [(ctx.mpf(1), '1')] + constants
 
     # PSLQ with simple algebraic and functional transformations
     for ft, ftn, red in transforms:
         for c, cn in constants:
             if red and cn == '1':
                 continue
-            t = ft(x,c)
+            t = ft(ctx,x,c)
             # Prevent exponential transforms from wreaking havoc
             if abs(t) > M**2 or abs(t) < tol:
                 continue
             # Linear combination of base constants
-            r = pslq([t] + [a[0] for a in constants], tol, M)
+            r = ctx.pslq([t] + [a[0] for a in constants], tol, M)
             s = None
             if r is not None and max(abs(uw) for uw in r) <= M and r[0]:
                 s = pslqstring(r, constants)
             # Quadratic algebraic numbers
             else:
-                q = pslq([mpf(1), t, t**2], tol, M)
+                q = ctx.pslq([ctx.one, t, t**2], tol, M)
                 if q is not None and len(q) == 3 and q[2]:
                     aa, bb, cc = q
                     if max(abs(aa),abs(bb),abs(cc)) <= M:
-                        s = quadraticstring(t,aa,bb,cc)
+                        s = quadraticstring(ctx,t,aa,bb,cc)
             if s:
                 if cn == '1' and ('/$c' in ftn):
                     s = ftn.replace('$y', s).replace('/$c', '')
@@ -809,10 +817,10 @@ def identify(x, constants=[], tol=None, maxcoeff=1000, full=False,
         # Watch out for existing fractional powers of fractions
         logs = []
         for a, s in constants:
-            if not sum(bool(findpoly(log(a)/log(i),1)) for i in ilogs):
-                logs.append((log(a), s))
-        logs = [(log(i),str(i)) for i in ilogs] + logs
-        r = pslq([log(x)] + [a[0] for a in logs], tol, M)
+            if not sum(bool(ctx.findpoly(ctx.ln(a)/ctx.ln(i),1)) for i in ilogs):
+                logs.append((ctx.ln(a), s))
+        logs = [(ctx.ln(i),str(i)) for i in ilogs] + logs
+        r = ctx.pslq([ctx.ln(x)] + [a[0] for a in logs], tol, M)
         if r is not None and max(abs(uw) for uw in r) <= M and r[0]:
             addsolution(prodstring(r, logs))
             if not full: return solutions[0]
@@ -821,6 +829,11 @@ def identify(x, constants=[], tol=None, maxcoeff=1000, full=False,
         return sorted(solutions, key=len)
     else:
         return None
+
+IdentificationMethods.pslq = pslq
+IdentificationMethods.findpoly = findpoly
+IdentificationMethods.identify = identify
+
 
 if __name__ == '__main__':
     import doctest

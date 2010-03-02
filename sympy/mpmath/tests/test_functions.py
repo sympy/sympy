@@ -1,5 +1,4 @@
-from sympy.mpmath.libmpf import *
-from sympy.mpmath.libelefun import *
+from sympy.mpmath.libmp import *
 from sympy.mpmath import *
 import random
 import time
@@ -60,6 +59,10 @@ def test_constants():
             assert mertens == mpf(tmertens)
             assert twinprime == mpf(ttwinprime)
     mp.dps = 15
+    assert pi >= -1
+    assert pi > 2
+    assert pi > 3
+    assert pi < 4
 
 def test_exact_sqrts():
     for i in range(20000):
@@ -743,6 +746,17 @@ def test_cospi_sinpi():
     assert (sinpi(-1e-15)*M).ae(-pi)
     assert cospi(1e-15) == 1
     assert cospi(1e-15, rounding='d') < 1
+
+def test_expj():
+    assert expj(0) == 1
+    assert expj(1).ae(exp(j))
+    assert expj(j).ae(exp(-1))
+    assert expj(1+j).ae(exp(j*(1+j)))
+    assert expjpi(0) == 1
+    assert expjpi(1).ae(exp(j*pi))
+    assert expjpi(j).ae(exp(-pi))
+    assert expjpi(1+j).ae(exp(j*pi*(1+j)))
+    assert expjpi(-10**15 * j).ae('2.22579818340535731e+1364376353841841')
 
 def test_sinc():
     assert sinc(0) == sincpi(0) == 1

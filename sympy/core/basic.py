@@ -2133,13 +2133,13 @@ class Basic(AssumeMeths):
         # Number + Number*I is also fine
         re, im = v.as_real_imag()
         if allow_ints and re.is_Integer:
-            re = mpmath.libmpf.from_int(re.p)
+            re = mpmath.libmp.from_int(re.p)
         elif re.is_Real:
             re = re._mpf_
         else:
             raise ValueError(errmsg)
         if allow_ints and im.is_Integer:
-            im = mpmath.libmpf.from_int(im.p)
+            im = mpmath.libmp.from_int(im.p)
         elif im.is_Real:
             im = im._mpf_
         else:

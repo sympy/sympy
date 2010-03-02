@@ -1,4 +1,4 @@
-from sympy.mpmath.libmpf import *
+from sympy.mpmath.libmp import *
 from sympy.mpmath import mpf, mp
 
 from random import randint, choice, seed

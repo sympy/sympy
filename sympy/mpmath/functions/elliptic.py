@@ -1,75 +1,41 @@
-#!/usr/bin/env python
 """
-    elliptic.py
+elliptic.py
 
-    Implements the Jacobi theta and Jacobi elliptic functions, using
-    arbitrary precision math library
+Implements the Jacobi theta and Jacobi elliptic functions, using
+arbitrary precision math library
 
-    Author of the first version: M.T. Taschuk
+Author of the first version: M.T. Taschuk
 
-    References:
+References:
 
-    [1] Abramowitz & Stegun. 'Handbook of Mathematical Functions, 9th Ed.',
-        (Dover duplicate of 1972 edition)
-    [2] Whittaker 'A Course of Modern Analysis, 4th Ed.', 1946,
-        Cambridge Univeristy Press
-
+[1] Abramowitz & Stegun. 'Handbook of Mathematical Functions, 9th Ed.',
+    (Dover duplicate of 1972 edition)
+[2] Whittaker 'A Course of Modern Analysis, 4th Ed.', 1946,
+    Cambridge University Press
 """
-from mptypes import (mpf, mpc, mp, mpmathify, eps, one, zero, j)
-from functions import (pi, sqrt, cos, sin, exp, log, tanh, ellipk,
-                       sech, nthroot)
-from libmpf import to_fixed, MP_ZERO, mpf_shift, from_man_exp
-from libelefun import cos_sin
 
-# The series for the Jacobi theta functions converge for |q| < 1;
-# in the current implementation they throw a ValueError for
-# abs(q) > Q_LIM
-Q_LIM = 1 - 10**-7
+from functions import defun, defun_wrapped
 
-def calculate_nome(k):
-    """
-    Calculate the nome, q, from the value for k.
-
-    Useful factoids:
-
-    k**2 = m;   m is used in Abramowitz
-    """
-    k = mpmathify(k)
-
-    if abs(k) > one:             # range error
+@defun
+def calculate_nome(ctx, k):
+    k = ctx.convert(k)
+    if abs(k) > ctx.one:             # range error
         raise ValueError
-
-    if k == zero:
-        return zero
-    elif k == one:
-        return one
+    if k == ctx.zero:
+        return ctx.zero
+    elif k == ctx.one:
+        return ctx.one
     else:
-        kprimesquared = one - k**2
-        kprime = sqrt(kprimesquared)
-        top = ellipk(kprimesquared)
-        bottom = ellipk(k**2)
-
-        argument = -pi*top/bottom
-
-        nome = exp(argument)
+        kprimesquared = ctx.one - k**2
+        kprime = ctx.sqrt(kprimesquared)
+        top = ctx.ellipk(kprimesquared)
+        bottom = ctx.ellipk(k**2)
+        argument = -ctx.pi*top/bottom
+        nome = ctx.exp(argument)
         return nome
 
-# XXX: unused
-def calculate_k(q):
-    """
-    Calculates the value of k for a particular nome, q,
-    using Jacobi theta functions.
-    """
-
-    q = mpmathify(q)
-
-    v2 = jtheta(2, 0, q)
-    v3 = jtheta(3, 0, q)
-    m = v2**2/v3**2
-    return m
-
-
-def _jacobi_theta2(z, q):
+@defun
+def _jacobi_theta2(ctx, z, q):
     extra1 = 10
     extra2 = 20
     # the loops below break when the fixed precision quantities
@@ -77,10 +43,10 @@ def _jacobi_theta2(z, q):
     # right shifting small negative numbers by wp one obtains -1, not zero,
     # so the condition a**2 + b**2 > MIN is used to break the loops.
     MIN = 2
-    if z == zero:
-        if isinstance(q, mpf):
-            wp = mp.prec + extra1
-            x = to_fixed(q._mpf_, wp)
+    if z == ctx.zero:
+        if (not ctx._im(q)):
+            wp = ctx.prec + extra1
+            x = ctx.to_fixed(ctx._re(q), wp)
             x2 = (x*x) >> wp
             a = b = x2
             s = x2
@@ -89,14 +55,13 @@ def _jacobi_theta2(z, q):
                 a = (a*b) >> wp
                 s += a
             s = (1 << (wp+1)) + (s << 1)
-            s = mpf(from_man_exp(s, -wp, mp.prec, 'n'))
+            s = ctx.ldexp(s, -wp)
         else:
-            wp = mp.prec + extra1
-            xre, xim = q._mpc_
-            xre = to_fixed(xre, wp)
-            xim = to_fixed(xim, wp)
+            wp = ctx.prec + extra1
+            xre = ctx.to_fixed(ctx._re(q), wp)
+            xim = ctx.to_fixed(ctx._im(q), wp)
             x2re = (xre*xre - xim*xim) >> wp
-            x2im = (xre*xim) >> (wp - 1)
+            x2im = (xre*xim) >> (wp-1)
             are = bre = x2re
             aim = bim = x2im
             sre = (1<<wp) + are
@@ -110,18 +75,18 @@ def _jacobi_theta2(z, q):
                 sim += aim
             sre = (sre << 1)
             sim = (sim << 1)
-            sre = from_man_exp(sre, -wp, mp.prec, 'n')
-            sim = from_man_exp(sim, -wp, mp.prec, 'n')
-            s = mpc(sre, sim)
+            sre = ctx.ldexp(sre, -wp)
+            sim = ctx.ldexp(sim, -wp)
+            s = ctx.mpc(sre, sim)
     else:
-        if isinstance(q, mpf) and isinstance(z, mpf):
-            wp = mp.prec + extra1
-            x = to_fixed(q._mpf_, wp)
+        if (not ctx._im(q)) and (not ctx._im(z)):
+            wp = ctx.prec + extra1
+            x = ctx.to_fixed(ctx._re(q), wp)
             x2 = (x*x) >> wp
             a = b = x2
-            c1, s1 = cos_sin(z._mpf_, wp)
-            cn = c1 = to_fixed(c1, wp)
-            sn = s1 = to_fixed(s1, wp)
+            c1, s1 = ctx.cos_sin(ctx._re(z), prec=wp)
+            cn = c1 = ctx.to_fixed(c1, wp)
+            sn = s1 = ctx.to_fixed(s1, wp)
             c2 = (c1*c1 - s1*s1) >> wp
             s2 = (c1 * s1) >> (wp - 1)
             cn, sn = (cn*c2 - sn*s2) >> wp, (sn*c2 + cn*s2) >> wp
@@ -132,22 +97,21 @@ def _jacobi_theta2(z, q):
                 cn, sn = (cn*c2 - sn*s2) >> wp, (sn*c2 + cn*s2) >> wp
                 s += (a * cn) >> wp
             s = (s << 1)
-            s = mpf(from_man_exp(s, -wp, mp.prec, 'n'))
-            s *= nthroot(q, 4)
+            s = ctx.ldexp(s, -wp)
+            s *= ctx.nthroot(q, 4)
             return s
         # case z real, q complex
-        elif isinstance(z, mpf):
-            wp = mp.prec + extra2
-            xre, xim = q._mpc_
-            xre = to_fixed(xre, wp)
-            xim = to_fixed(xim, wp)
+        elif not ctx._im(z):
+            wp = ctx.prec + extra2
+            xre = ctx.to_fixed(ctx._re(q), wp)
+            xim = ctx.to_fixed(ctx._im(q), wp)
             x2re = (xre*xre - xim*xim) >> wp
             x2im = (xre*xim) >> (wp - 1)
             are = bre = x2re
             aim = bim = x2im
-            c1, s1 = cos_sin(z._mpf_, wp)
-            cn = c1 = to_fixed(c1, wp)
-            sn = s1 = to_fixed(s1, wp)
+            c1, s1 = ctx.cos_sin(ctx._re(z), prec=wp)
+            cn = c1 = ctx.to_fixed(c1, wp)
+            sn = s1 = ctx.to_fixed(s1, wp)
             c2 = (c1*c1 - s1*s1) >> wp
             s2 = (c1 * s1) >> (wp - 1)
             cn, sn = (cn*c2 - sn*s2) >> wp, (sn*c2 + cn*s2) >> wp
@@ -159,29 +123,28 @@ def _jacobi_theta2(z, q):
                 are, aim = (are * bre - aim * bim) >> wp,   \
                            (are * bim + aim * bre) >> wp
                 cn, sn = (cn*c2 - sn*s2) >> wp, (sn*c2 + cn*s2) >> wp
-
                 sre += ((are * cn) >> wp)
                 sim += ((aim * cn) >> wp)
             sre = (sre << 1)
             sim = (sim << 1)
-            sre = from_man_exp(sre, -wp, mp.prec, 'n')
-            sim = from_man_exp(sim, -wp, mp.prec, 'n')
-            s = mpc(sre, sim)
+            sre = ctx.ldexp(sre, -wp)
+            sim = ctx.ldexp(sim, -wp)
+            s = ctx.mpc(sre, sim)
         #case z complex, q real
-        elif isinstance(q, mpf):
-            wp = mp.prec + extra2
-            x = to_fixed(q._mpf_, wp)
+        elif not ctx._im(q):
+            wp = ctx.prec + extra2
+            x = ctx.to_fixed(ctx._re(q), wp)
             x2 = (x*x) >> wp
             a = b = x2
-            prec0 = mp.prec
-            mp.prec = wp
-            c1 = cos(z)
-            s1 = sin(z)
-            mp.prec = prec0
-            cnre = c1re = to_fixed(c1.real._mpf_, wp)
-            cnim = c1im = to_fixed(c1.imag._mpf_, wp)
-            snre = s1re = to_fixed(s1.real._mpf_, wp)
-            snim = s1im = to_fixed(s1.imag._mpf_, wp)
+            prec0 = ctx.prec
+            ctx.prec = wp
+            c1 = ctx.cos(z)
+            s1 = ctx.sin(z)
+            ctx.prec = prec0
+            cnre = c1re = ctx.to_fixed(ctx._re(c1), wp)
+            cnim = c1im = ctx.to_fixed(ctx._im(c1), wp)
+            snre = s1re = ctx.to_fixed(ctx._re(s1), wp)
+            snim = s1im = ctx.to_fixed(ctx._im(s1), wp)
             #c2 = (c1*c1 - s1*s1) >> wp
             c2re = (c1re*c1re - c1im*c1im - s1re*s1re + s1im*s1im) >> wp
             c2im = (c1re*c1im - s1re*s1im) >> (wp - 1)
@@ -197,7 +160,6 @@ def _jacobi_theta2(z, q):
             cnim = t2
             snre = t3
             snim = t4
-
             sre = c1re + ((a * cnre) >> wp)
             sim = c1im + ((a * cnim) >> wp)
             while abs(a) > MIN:
@@ -215,29 +177,28 @@ def _jacobi_theta2(z, q):
                 sim += ((a * cnim) >> wp)
             sre = (sre << 1)
             sim = (sim << 1)
-            sre = from_man_exp(sre, -wp, mp.prec, 'n')
-            sim = from_man_exp(sim, -wp, mp.prec, 'n')
-            s = mpc(sre, sim)
+            sre = ctx.ldexp(sre, -wp)
+            sim = ctx.ldexp(sim, -wp)
+            s = ctx.mpc(sre, sim)
         # case z and q complex
         else:
-            wp = mp.prec + extra2
-            xre, xim = q._mpc_
-            xre = to_fixed(xre, wp)
-            xim = to_fixed(xim, wp)
+            wp = ctx.prec + extra2
+            xre = ctx.to_fixed(ctx._re(q), wp)
+            xim = ctx.to_fixed(ctx._im(q), wp)
             x2re = (xre*xre - xim*xim) >> wp
             x2im = (xre*xim) >> (wp - 1)
             are = bre = x2re
             aim = bim = x2im
-            prec0 = mp.prec
-            mp.prec = wp
+            prec0 = ctx.prec
+            ctx.prec = wp
             # cos(z), siz(z) with z complex
-            c1 = cos(z)
-            s1 = sin(z)
-            mp.prec = prec0
-            cnre = c1re = to_fixed(c1.real._mpf_, wp)
-            cnim = c1im = to_fixed(c1.imag._mpf_, wp)
-            snre = s1re = to_fixed(s1.real._mpf_, wp)
-            snim = s1im = to_fixed(s1.imag._mpf_, wp)
+            c1 = ctx.cos(z)
+            s1 = ctx.sin(z)
+            ctx.prec = prec0
+            cnre = c1re = ctx.to_fixed(ctx._re(c1), wp)
+            cnim = c1im = ctx.to_fixed(ctx._im(c1), wp)
+            snre = s1re = ctx.to_fixed(ctx._re(s1), wp)
+            snim = s1im = ctx.to_fixed(ctx._im(s1), wp)
             c2re = (c1re*c1re - c1im*c1im - s1re*s1re + s1im*s1im) >> wp
             c2im = (c1re*c1im - s1re*s1im) >> (wp - 1)
             s2re = (c1re*s1re - c1im*s1im) >> (wp - 1)
@@ -255,13 +216,11 @@ def _jacobi_theta2(z, q):
             termim = c1im
             sre = c1re + ((are * cnre - aim * cnim) >> wp)
             sim = c1im + ((are * cnim + aim * cnre) >> wp)
-
             n = 3
             termre = ((are * cnre - aim * cnim) >> wp)
             termim = ((are * cnim + aim * cnre) >> wp)
             sre = c1re + ((are * cnre - aim * cnim) >> wp)
             sim = c1im + ((are * cnim + aim * cnre) >> wp)
-
             n = 5
             while are**2 + aim**2 > MIN:
                 bre, bim = (bre * x2re - bim * x2im) >> wp, \
@@ -284,24 +243,25 @@ def _jacobi_theta2(z, q):
                 n += 2
             sre = (sre << 1)
             sim = (sim << 1)
-            sre = from_man_exp(sre, -wp, mp.prec, 'n')
-            sim = from_man_exp(sim, -wp, mp.prec, 'n')
-            s = mpc(sre, sim)
-    s *= nthroot(q, 4)
+            sre = ctx.ldexp(sre, -wp)
+            sim = ctx.ldexp(sim, -wp)
+            s = ctx.mpc(sre, sim)
+    s *= ctx.nthroot(q, 4)
     return s
 
-def _djacobi_theta2(z, q, nd):
+@defun
+def _djacobi_theta2(ctx, z, q, nd):
     MIN = 2
     extra1 = 10
     extra2 = 20
-    if isinstance(q, mpf) and isinstance(z, mpf):
-        wp = mp.prec + extra1
-        x = to_fixed(q._mpf_, wp)
+    if (not ctx._im(q)) and (not ctx._im(z)):
+        wp = ctx.prec + extra1
+        x = ctx.to_fixed(ctx._re(q), wp)
         x2 = (x*x) >> wp
         a = b = x2
-        c1, s1 = cos_sin(z._mpf_, wp)
-        cn = c1 = to_fixed(c1, wp)
-        sn = s1 = to_fixed(s1, wp)
+        c1, s1 = ctx.cos_sin(ctx._re(z), prec=wp)
+        cn = c1 = ctx.to_fixed(c1, wp)
+        sn = s1 = ctx.to_fixed(s1, wp)
         c2 = (c1*c1 - s1*s1) >> wp
         s2 = (c1 * s1) >> (wp - 1)
         cn, sn = (cn*c2 - sn*s2) >> wp, (sn*c2 + cn*s2) >> wp
@@ -320,20 +280,19 @@ def _djacobi_theta2(z, q, nd):
                 s += (a * cn * (2*n+1)**nd) >> wp
             n += 1
         s = -(s << 1)
-        s = mpf(from_man_exp(s, -wp, mp.prec, 'n'))
+        s = ctx.ldexp(s, -wp)
         # case z real, q complex
-    elif isinstance(z, mpf):
-        wp = mp.prec + extra2
-        xre, xim = q._mpc_
-        xre = to_fixed(xre, wp)
-        xim = to_fixed(xim, wp)
+    elif not ctx._im(z):
+        wp = ctx.prec + extra2
+        xre = ctx.to_fixed(ctx._re(q), wp)
+        xim = ctx.to_fixed(ctx._im(q), wp)
         x2re = (xre*xre - xim*xim) >> wp
         x2im = (xre*xim) >> (wp - 1)
         are = bre = x2re
         aim = bim = x2im
-        c1, s1 = cos_sin(z._mpf_, wp)
-        cn = c1 = to_fixed(c1, wp)
-        sn = s1 = to_fixed(s1, wp)
+        c1, s1 = ctx.cos_sin(ctx._re(z), prec=wp)
+        cn = c1 = ctx.to_fixed(c1, wp)
+        sn = s1 = ctx.to_fixed(s1, wp)
         c2 = (c1*c1 - s1*s1) >> wp
         s2 = (c1 * s1) >> (wp - 1)
         cn, sn = (cn*c2 - sn*s2) >> wp, (sn*c2 + cn*s2) >> wp
@@ -360,24 +319,24 @@ def _djacobi_theta2(z, q, nd):
             n += 2
         sre = -(sre << 1)
         sim = -(sim << 1)
-        sre = from_man_exp(sre, -wp, mp.prec, 'n')
-        sim = from_man_exp(sim, -wp, mp.prec, 'n')
-        s = mpc(sre, sim)
+        sre = ctx.ldexp(sre, -wp)
+        sim = ctx.ldexp(sim, -wp)
+        s = ctx.mpc(sre, sim)
     #case z complex, q real
-    elif isinstance(q, mpf):
-        wp = mp.prec + extra2
-        x = to_fixed(q._mpf_, wp)
+    elif not ctx._im(q):
+        wp = ctx.prec + extra2
+        x = ctx.to_fixed(ctx._re(q), wp)
         x2 = (x*x) >> wp
         a = b = x2
-        prec0 = mp.prec
-        mp.prec = wp
-        c1 = cos(z)
-        s1 = sin(z)
-        mp.prec = prec0
-        cnre = c1re = to_fixed(c1.real._mpf_, wp)
-        cnim = c1im = to_fixed(c1.imag._mpf_, wp)
-        snre = s1re = to_fixed(s1.real._mpf_, wp)
-        snim = s1im = to_fixed(s1.imag._mpf_, wp)
+        prec0 = ctx.prec
+        ctx.prec = wp
+        c1 = ctx.cos(z)
+        s1 = ctx.sin(z)
+        ctx.prec = prec0
+        cnre = c1re = ctx.to_fixed(ctx._re(c1), wp)
+        cnim = c1im = ctx.to_fixed(ctx._im(c1), wp)
+        snre = s1re = ctx.to_fixed(ctx._re(s1), wp)
+        snim = s1im = ctx.to_fixed(ctx._im(s1), wp)
         #c2 = (c1*c1 - s1*s1) >> wp
         c2re = (c1re*c1re - c1im*c1im - s1re*s1re + s1im*s1im) >> wp
         c2im = (c1re*c1im - s1re*s1im) >> (wp - 1)
@@ -393,7 +352,6 @@ def _djacobi_theta2(z, q, nd):
         cnim = t2
         snre = t3
         snim = t4
-
         if (nd&1):
             sre = s1re + ((a * snre * 3**nd) >> wp)
             sim = s1im + ((a * snim * 3**nd) >> wp)
@@ -421,29 +379,28 @@ def _djacobi_theta2(z, q, nd):
             n += 2
         sre = -(sre << 1)
         sim = -(sim << 1)
-        sre = from_man_exp(sre, -wp, mp.prec, 'n')
-        sim = from_man_exp(sim, -wp, mp.prec, 'n')
-        s = mpc(sre, sim)
+        sre = ctx.ldexp(sre, -wp)
+        sim = ctx.ldexp(sim, -wp)
+        s = ctx.mpc(sre, sim)
     # case z and q complex
     else:
-        wp = mp.prec + extra2
-        xre, xim = q._mpc_
-        xre = to_fixed(xre, wp)
-        xim = to_fixed(xim, wp)
+        wp = ctx.prec + extra2
+        xre = ctx.to_fixed(ctx._re(q), wp)
+        xim = ctx.to_fixed(ctx._im(q), wp)
         x2re = (xre*xre - xim*xim) >> wp
         x2im = (xre*xim) >> (wp - 1)
         are = bre = x2re
         aim = bim = x2im
-        prec0 = mp.prec
-        mp.prec = wp
-        # cos(2*z), siz(2*z) with z complex
-        c1 = cos(z)
-        s1 = sin(z)
-        mp.prec = prec0
-        cnre = c1re = to_fixed(c1.real._mpf_, wp)
-        cnim = c1im = to_fixed(c1.imag._mpf_, wp)
-        snre = s1re = to_fixed(s1.real._mpf_, wp)
-        snim = s1im = to_fixed(s1.imag._mpf_, wp)
+        prec0 = ctx.prec
+        ctx.prec = wp
+        # cos(2*z), sin(2*z) with z complex
+        c1 = ctx.cos(z)
+        s1 = ctx.sin(z)
+        ctx.prec = prec0
+        cnre = c1re = ctx.to_fixed(ctx._re(c1), wp)
+        cnim = c1im = ctx.to_fixed(ctx._im(c1), wp)
+        snre = s1re = ctx.to_fixed(ctx._re(s1), wp)
+        snim = s1im = ctx.to_fixed(ctx._im(s1), wp)
         c2re = (c1re*c1re - c1im*c1im - s1re*s1re + s1im*s1im) >> wp
         c2im = (c1re*c1im - s1re*s1im) >> (wp - 1)
         s2re = (c1re*s1re - c1im*s1im) >> (wp - 1)
@@ -486,23 +443,24 @@ def _djacobi_theta2(z, q, nd):
             n += 2
         sre = -(sre << 1)
         sim = -(sim << 1)
-        sre = from_man_exp(sre, -wp, mp.prec, 'n')
-        sim = from_man_exp(sim, -wp, mp.prec, 'n')
-        s = mpc(sre, sim)
-    s *= nthroot(q, 4)
+        sre = ctx.ldexp(sre, -wp)
+        sim = ctx.ldexp(sim, -wp)
+        s = ctx.mpc(sre, sim)
+    s *= ctx.nthroot(q, 4)
     if (nd&1):
         return (-1)**(nd//2) * s
     else:
         return (-1)**(1 + nd//2) * s
 
-def _jacobi_theta3(z, q):
+@defun
+def _jacobi_theta3(ctx, z, q):
     extra1 = 10
     extra2 = 20
     MIN = 2
-    if z == zero:
-        if isinstance(q, mpf):
-            wp = mp.prec + extra1
-            x = to_fixed(q._mpf_, wp)
+    if z == ctx.zero:
+        if not ctx._im(q):
+            wp = ctx.prec + extra1
+            x = ctx.to_fixed(ctx._re(q), wp)
             s = x
             a = b = x
             x2 = (x*x) >> wp
@@ -511,13 +469,12 @@ def _jacobi_theta3(z, q):
                 a = (a*b) >> wp
                 s += a
             s = (1 << wp) + (s << 1)
-            s = mpf(from_man_exp(s, -wp, mp.prec, 'n'))
+            s = ctx.ldexp(s, -wp)
             return s
         else:
-            wp = mp.prec + extra1
-            xre, xim = q._mpc_
-            xre = to_fixed(xre, wp)
-            xim = to_fixed(xim, wp)
+            wp = ctx.prec + extra1
+            xre = ctx.to_fixed(ctx._re(q), wp)
+            xim = ctx.to_fixed(ctx._im(q), wp)
             x2re = (xre*xre - xim*xim) >> wp
             x2im = (xre*xim) >> (wp - 1)
             sre = are = bre = xre
@@ -531,20 +488,20 @@ def _jacobi_theta3(z, q):
                 sim += aim
             sre = (1 << wp) + (sre << 1)
             sim = (sim << 1)
-            sre = from_man_exp(sre, -wp, mp.prec, 'n')
-            sim = from_man_exp(sim, -wp, mp.prec, 'n')
-            s = mpc(sre, sim)
+            sre = ctx.ldexp(sre, -wp)
+            sim = ctx.ldexp(sim, -wp)
+            s = ctx.mpc(sre, sim)
             return s
     else:
-        if isinstance(q, mpf) and isinstance(z, mpf):
-            s = MP_ZERO
-            wp = mp.prec + extra1
-            x = to_fixed(q._mpf_, wp)
+        if (not ctx._im(q)) and (not ctx._im(z)):
+            s = 0
+            wp = ctx.prec + extra1
+            x = ctx.to_fixed(ctx._re(q), wp)
             a = b = x
             x2 = (x*x) >> wp
-            c1, s1 = cos_sin(mpf_shift(z._mpf_, 1), wp)
-            c1 = to_fixed(c1, wp)
-            s1 = to_fixed(s1, wp)
+            c1, s1 = ctx.cos_sin(ctx._re(z)*2, prec=wp)
+            c1 = ctx.to_fixed(c1, wp)
+            s1 = ctx.to_fixed(s1, wp)
             cn = c1
             sn = s1
             s += (a * cn) >> wp
@@ -554,21 +511,20 @@ def _jacobi_theta3(z, q):
                 cn, sn = (cn*c1 - sn*s1) >> wp, (sn*c1 + cn*s1) >> wp
                 s += (a * cn) >> wp
             s = (1 << wp) + (s << 1)
-            s = mpf(from_man_exp(s, -wp, mp.prec, 'n'))
+            s = ctx.ldexp(s, -wp)
             return s
         # case z real, q complex
-        elif isinstance(z, mpf):
-            wp = mp.prec + extra2
-            xre, xim = q._mpc_
-            xre = to_fixed(xre, wp)
-            xim = to_fixed(xim, wp)
+        elif not ctx._im(z):
+            wp = ctx.prec + extra2
+            xre = ctx.to_fixed(ctx._re(q), wp)
+            xim = ctx.to_fixed(ctx._im(q), wp)
             x2re = (xre*xre - xim*xim) >> wp
             x2im = (xre*xim) >> (wp - 1)
             are = bre = xre
             aim = bim = xim
-            c1, s1 = cos_sin(mpf_shift(z._mpf_, 1), wp)
-            c1 = to_fixed(c1, wp)
-            s1 = to_fixed(s1, wp)
+            c1, s1 = ctx.cos_sin(ctx._re(z)*2, prec=wp)
+            c1 = ctx.to_fixed(c1, wp)
+            s1 = ctx.to_fixed(s1, wp)
             cn = c1
             sn = s1
             sre = (are * cn) >> wp
@@ -579,30 +535,29 @@ def _jacobi_theta3(z, q):
                 are, aim = (are * bre - aim * bim) >> wp,   \
                            (are * bim + aim * bre) >> wp
                 cn, sn = (cn*c1 - sn*s1) >> wp, (sn*c1 + cn*s1) >> wp
-
                 sre += (are * cn) >> wp
                 sim += (aim * cn) >> wp
             sre = (1 << wp) + (sre << 1)
             sim = (sim << 1)
-            sre = from_man_exp(sre, -wp, mp.prec, 'n')
-            sim = from_man_exp(sim, -wp, mp.prec, 'n')
-            s = mpc(sre, sim)
+            sre = ctx.ldexp(sre, -wp)
+            sim = ctx.ldexp(sim, -wp)
+            s = ctx.mpc(sre, sim)
             return s
         #case z complex, q real
-        elif isinstance(q, mpf):
-            wp = mp.prec + extra2
-            x = to_fixed(q._mpf_, wp)
+        elif not ctx._im(q):
+            wp = ctx.prec + extra2
+            x = ctx.to_fixed(ctx._re(q), wp)
             a = b = x
             x2 = (x*x) >> wp
-            prec0 = mp.prec
-            mp.prec = wp
-            c1 = cos(2*z)
-            s1 = sin(2*z)
-            mp.prec = prec0
-            cnre = c1re = to_fixed(c1.real._mpf_, wp)
-            cnim = c1im = to_fixed(c1.imag._mpf_, wp)
-            snre = s1re = to_fixed(s1.real._mpf_, wp)
-            snim = s1im = to_fixed(s1.imag._mpf_, wp)
+            prec0 = ctx.prec
+            ctx.prec = wp
+            c1 = ctx.cos(2*z)
+            s1 = ctx.sin(2*z)
+            ctx.prec = prec0
+            cnre = c1re = ctx.to_fixed(ctx._re(c1), wp)
+            cnim = c1im = ctx.to_fixed(ctx._im(c1), wp)
+            snre = s1re = ctx.to_fixed(ctx._re(s1), wp)
+            snim = s1im = ctx.to_fixed(ctx._im(s1), wp)
             sre = (a * cnre) >> wp
             sim = (a * cnim) >> wp
             while abs(a) > MIN:
@@ -620,30 +575,29 @@ def _jacobi_theta3(z, q):
                 sim += (a * cnim) >> wp
             sre = (1 << wp) + (sre << 1)
             sim = (sim << 1)
-            sre = from_man_exp(sre, -wp, mp.prec, 'n')
-            sim = from_man_exp(sim, -wp, mp.prec, 'n')
-            s = mpc(sre, sim)
+            sre = ctx.ldexp(sre, -wp)
+            sim = ctx.ldexp(sim, -wp)
+            s = ctx.mpc(sre, sim)
             return s
         # case z and q complex
         else:
-            wp = mp.prec + extra2
-            xre, xim = q._mpc_
-            xre = to_fixed(xre, wp)
-            xim = to_fixed(xim, wp)
+            wp = ctx.prec + extra2
+            xre = ctx.to_fixed(ctx._re(q), wp)
+            xim = ctx.to_fixed(ctx._im(q), wp)
             x2re = (xre*xre - xim*xim) >> wp
             x2im = (xre*xim) >> (wp - 1)
             are = bre = xre
             aim = bim = xim
-            prec0 = mp.prec
-            mp.prec = wp
+            prec0 = ctx.prec
+            ctx.prec = wp
             # cos(2*z), sin(2*z) with z complex
-            c1 = cos(2*z)
-            s1 = sin(2*z)
-            mp.prec = prec0
-            cnre = c1re = to_fixed(c1.real._mpf_, wp)
-            cnim = c1im = to_fixed(c1.imag._mpf_, wp)
-            snre = s1re = to_fixed(s1.real._mpf_, wp)
-            snim = s1im = to_fixed(s1.imag._mpf_, wp)
+            c1 = ctx.cos(2*z)
+            s1 = ctx.sin(2*z)
+            ctx.prec = prec0
+            cnre = c1re = ctx.to_fixed(ctx._re(c1), wp)
+            cnim = c1im = ctx.to_fixed(ctx._im(c1), wp)
+            snre = s1re = ctx.to_fixed(ctx._re(s1), wp)
+            snim = s1im = ctx.to_fixed(ctx._im(s1), wp)
             sre = (are * cnre - aim * cnim) >> wp
             sim = (aim * cnre + are * cnim) >> wp
             while are**2 + aim**2 > MIN:
@@ -663,25 +617,26 @@ def _jacobi_theta3(z, q):
                 sim += (aim * cnre + are * cnim) >> wp
             sre = (1 << wp) + (sre << 1)
             sim = (sim << 1)
-            sre = from_man_exp(sre, -wp, mp.prec, 'n')
-            sim = from_man_exp(sim, -wp, mp.prec, 'n')
-            s = mpc(sre, sim)
+            sre = ctx.ldexp(sre, -wp)
+            sim = ctx.ldexp(sim, -wp)
+            s = ctx.mpc(sre, sim)
             return s
 
-def _djacobi_theta3(z, q, nd):
+@defun
+def _djacobi_theta3(ctx, z, q, nd):
     """nd=1,2,3 order of the derivative with respect to z"""
     MIN = 2
     extra1 = 10
     extra2 = 20
-    if isinstance(q, mpf) and isinstance(z, mpf):
-        s = MP_ZERO
-        wp = mp.prec + extra1
-        x = to_fixed(q._mpf_, wp)
+    if (not ctx._im(q)) and (not ctx._im(z)):
+        s = 0
+        wp = ctx.prec + extra1
+        x = ctx.to_fixed(ctx._re(q), wp)
         a = b = x
         x2 = (x*x) >> wp
-        c1, s1 = cos_sin(mpf_shift(z._mpf_, 1), wp)
-        c1 = to_fixed(c1, wp)
-        s1 = to_fixed(s1, wp)
+        c1, s1 = ctx.cos_sin(ctx._re(z)*2, prec=wp)
+        c1 = ctx.to_fixed(c1, wp)
+        s1 = ctx.to_fixed(s1, wp)
         cn = c1
         sn = s1
         if (nd&1):
@@ -699,20 +654,19 @@ def _djacobi_theta3(z, q, nd):
                 s += (a * cn * n**nd) >> wp
             n += 1
         s = -(s << (nd+1))
-        s = mpf(from_man_exp(s, -wp, mp.prec, 'n'))
+        s = ctx.ldexp(s, -wp)
     # case z real, q complex
-    elif isinstance(z, mpf):
-        wp = mp.prec + extra2
-        xre, xim = q._mpc_
-        xre = to_fixed(xre, wp)
-        xim = to_fixed(xim, wp)
+    elif not ctx._im(z):
+        wp = ctx.prec + extra2
+        xre = ctx.to_fixed(ctx._re(q), wp)
+        xim = ctx.to_fixed(ctx._im(q), wp)
         x2re = (xre*xre - xim*xim) >> wp
         x2im = (xre*xim) >> (wp - 1)
         are = bre = xre
         aim = bim = xim
-        c1, s1 = cos_sin(mpf_shift(z._mpf_, 1), wp)
-        c1 = to_fixed(c1, wp)
-        s1 = to_fixed(s1, wp)
+        c1, s1 = ctx.cos_sin(ctx._re(z)*2, prec=wp)
+        c1 = ctx.to_fixed(c1, wp)
+        s1 = ctx.to_fixed(s1, wp)
         cn = c1
         sn = s1
         if (nd&1):
@@ -737,24 +691,24 @@ def _djacobi_theta3(z, q, nd):
             n += 1
         sre = -(sre << (nd+1))
         sim = -(sim << (nd+1))
-        sre = from_man_exp(sre, -wp, mp.prec, 'n')
-        sim = from_man_exp(sim, -wp, mp.prec, 'n')
-        s = mpc(sre, sim)
+        sre = ctx.ldexp(sre, -wp)
+        sim = ctx.ldexp(sim, -wp)
+        s = ctx.mpc(sre, sim)
     #case z complex, q real
-    elif isinstance(q, mpf):
-        wp = mp.prec + extra2
-        x = to_fixed(q._mpf_, wp)
+    elif not ctx._im(q):
+        wp = ctx.prec + extra2
+        x = ctx.to_fixed(ctx._re(q), wp)
         a = b = x
         x2 = (x*x) >> wp
-        prec0 = mp.prec
-        mp.prec = wp
-        c1 = cos(2*z)
-        s1 = sin(2*z)
-        mp.prec = prec0
-        cnre = c1re = to_fixed(c1.real._mpf_, wp)
-        cnim = c1im = to_fixed(c1.imag._mpf_, wp)
-        snre = s1re = to_fixed(s1.real._mpf_, wp)
-        snim = s1im = to_fixed(s1.imag._mpf_, wp)
+        prec0 = ctx.prec
+        ctx.prec = wp
+        c1 = ctx.cos(2*z)
+        s1 = ctx.sin(2*z)
+        ctx.prec = prec0
+        cnre = c1re = ctx.to_fixed(ctx._re(c1), wp)
+        cnim = c1im = ctx.to_fixed(ctx._im(c1), wp)
+        snre = s1re = ctx.to_fixed(ctx._re(s1), wp)
+        snim = s1im = ctx.to_fixed(ctx._im(s1), wp)
         if (nd&1):
             sre = (a * snre) >> wp
             sim = (a * snim) >> wp
@@ -782,29 +736,28 @@ def _djacobi_theta3(z, q, nd):
             n += 1
         sre = -(sre << (nd+1))
         sim = -(sim << (nd+1))
-        sre = from_man_exp(sre, -wp, mp.prec, 'n')
-        sim = from_man_exp(sim, -wp, mp.prec, 'n')
-        s = mpc(sre, sim)
+        sre = ctx.ldexp(sre, -wp)
+        sim = ctx.ldexp(sim, -wp)
+        s = ctx.mpc(sre, sim)
     # case z and q complex
     else:
-        wp = mp.prec + extra2
-        xre, xim = q._mpc_
-        xre = to_fixed(xre, wp)
-        xim = to_fixed(xim, wp)
+        wp = ctx.prec + extra2
+        xre = ctx.to_fixed(ctx._re(q), wp)
+        xim = ctx.to_fixed(ctx._im(q), wp)
         x2re = (xre*xre - xim*xim) >> wp
         x2im = (xre*xim) >> (wp - 1)
         are = bre = xre
         aim = bim = xim
-        prec0 = mp.prec
-        mp.prec = wp
+        prec0 = ctx.prec
+        ctx.prec = wp
         # cos(2*z), sin(2*z) with z complex
-        c1 = cos(2*z)
-        s1 = sin(2*z)
-        mp.prec = prec0
-        cnre = c1re = to_fixed(c1.real._mpf_, wp)
-        cnim = c1im = to_fixed(c1.imag._mpf_, wp)
-        snre = s1re = to_fixed(s1.real._mpf_, wp)
-        snim = s1im = to_fixed(s1.imag._mpf_, wp)
+        c1 = ctx.cos(2*z)
+        s1 = ctx.sin(2*z)
+        ctx.prec = prec0
+        cnre = c1re = ctx.to_fixed(ctx._re(c1), wp)
+        cnim = c1im = ctx.to_fixed(ctx._im(c1), wp)
+        snre = s1re = ctx.to_fixed(ctx._re(s1), wp)
+        snim = s1im = ctx.to_fixed(ctx._im(s1), wp)
         if (nd&1):
             sre = (are * snre - aim * snim) >> wp
             sim = (aim * snre + are * snim) >> wp
@@ -834,33 +787,34 @@ def _djacobi_theta3(z, q, nd):
             n += 1
         sre = -(sre << (nd+1))
         sim = -(sim << (nd+1))
-        sre = from_man_exp(sre, -wp, mp.prec, 'n')
-        sim = from_man_exp(sim, -wp, mp.prec, 'n')
-        s = mpc(sre, sim)
+        sre = ctx.ldexp(sre, -wp)
+        sim = ctx.ldexp(sim, -wp)
+        s = ctx.mpc(sre, sim)
     if (nd&1):
         return (-1)**(nd//2) * s
     else:
         return (-1)**(1 + nd//2) * s
 
-def _jacobi_theta2a(z, q):
+@defun
+def _jacobi_theta2a(ctx, z, q):
     """
-    case z.imag != 0
+    case ctx._im(z) != 0
     theta(2, z, q) =
     q**1/4 * Sum(q**(n*n + n) * exp(j*(2*n + 1)*z), n=-inf, inf)
-    max term for minimum (2*n+1)*log(q).real - 2* z.imag
-    n0 = int(z.imag/log(q).real - 1/2)
+    max term for minimum (2*n+1)*log(q).real - 2* ctx._im(z)
+    n0 = int(ctx._im(z)/log(q).real - 1/2)
     theta(2, z, q) =
     q**1/4 * Sum(q**(n*n + n) * exp(j*(2*n + 1)*z), n=n0, inf) +
     q**1/4 * Sum(q**(n*n + n) * exp(j*(2*n + 1)*z), n, n0-1, -inf)
     """
-    n = n0 = int(z.imag/log(q).real - 1/2)
-    e2 = exp(2*j*z)
-    e = e0 = exp(j*(2*n + 1)*z)
+    n = n0 = int(ctx._im(z)/ctx._re(ctx.log(q)) - 1/2)
+    e2 = ctx.expj(2*z)
+    e = e0 = ctx.expj((2*n+1)*z)
     a = q**(n*n + n)
     # leading term
     term = a * e
     s = term
-    eps1 = eps*abs(term)
+    eps1 = ctx.eps*abs(term)
     while 1:
         n += 1
         e = e * e2
@@ -869,7 +823,7 @@ def _jacobi_theta2a(z, q):
             break
         s += term
     e = e0
-    e2 = exp(-2*j*z)
+    e2 = ctx.expj(-2*z)
     n = n0
     while 1:
         n -= 1
@@ -878,21 +832,22 @@ def _jacobi_theta2a(z, q):
         if abs(term) < eps1:
             break
         s += term
-    s = s * nthroot(q, 4)
+    s = s * ctx.nthroot(q, 4)
     return s
 
-def _jacobi_theta3a(z, q):
+@defun
+def _jacobi_theta3a(ctx, z, q):
     """
-    case z.imag != 0
+    case ctx._im(z) != 0
     theta3(z, q) = Sum(q**(n*n) * exp(j*2*n*z), n, -inf, inf)
-    max term for n*abs(log(q).real) + z.imag ~= 0
-    n0 = int(- z.imag/abs(log(q).real))
+    max term for n*abs(log(q).real) + ctx._im(z) ~= 0
+    n0 = int(- ctx._im(z)/abs(log(q).real))
     """
-    n = n0 = int(- z.imag/abs(log(q).real))
-    e2 = exp(2*j*z)
-    e = e0 = exp(j*2*n*z)
+    n = n0 = int(-ctx._im(z)/abs(ctx._re(ctx.log(q))))
+    e2 = ctx.expj(2*z)
+    e = e0 = ctx.expj(2*n*z)
     s = term = q**(n*n) * e
-    eps1 = eps*abs(term)
+    eps1 = ctx.eps*abs(term)
     while 1:
         n += 1
         e = e * e2
@@ -901,7 +856,7 @@ def _jacobi_theta3a(z, q):
             break
         s += term
     e = e0
-    e2 = exp(-2*j*z)
+    e2 = ctx.expj(-2*z)
     n = n0
     while 1:
         n -= 1
@@ -912,22 +867,23 @@ def _jacobi_theta3a(z, q):
         s += term
     return s
 
-def _djacobi_theta2a(z, q, nd):
+@defun
+def _djacobi_theta2a(ctx, z, q, nd):
     """
-    case z.imag != 0
+    case ctx._im(z) != 0
     dtheta(2, z, q, nd) =
     j* q**1/4 * Sum(q**(n*n + n) * (2*n+1)*exp(j*(2*n + 1)*z), n=-inf, inf)
-    max term for (2*n0+1)*log(q).real - 2* z.imag ~= 0
-    n0 = int(z.imag/log(q).real - 1/2)
+    max term for (2*n0+1)*log(q).real - 2* ctx._im(z) ~= 0
+    n0 = int(ctx._im(z)/log(q).real - 1/2)
     """
-    n = n0 = int(z.imag/log(q).real - 1/2)
-    e2 = exp(2*j*z)
-    e = e0 = exp(j*(2*n + 1)*z)
+    n = n0 = int(ctx._im(z)/ctx._re(ctx.log(q)) - 1/2)
+    e2 = ctx.expj(2*z)
+    e = e0 = ctx.expj((2*n + 1)*z)
     a = q**(n*n + n)
     # leading term
     term = (2*n+1)**nd * a * e
     s = term
-    eps1 = eps*abs(term)
+    eps1 = ctx.eps*abs(term)
     while 1:
         n += 1
         e = e * e2
@@ -936,7 +892,7 @@ def _djacobi_theta2a(z, q, nd):
             break
         s += term
     e = e0
-    e2 = exp(-2*j*z)
+    e2 = ctx.expj(-2*z)
     n = n0
     while 1:
         n -= 1
@@ -945,24 +901,25 @@ def _djacobi_theta2a(z, q, nd):
         if abs(term) < eps1:
             break
         s += term
-    return j**nd * s * nthroot(q, 4)
+    return ctx.j**nd * s * ctx.nthroot(q, 4)
 
-def _djacobi_theta3a(z, q, nd):
+@defun
+def _djacobi_theta3a(ctx, z, q, nd):
     """
-    case z.imag != 0
+    case ctx._im(z) != 0
     djtheta3(z, q, nd) = (2*j)**nd *
       Sum(q**(n*n) * n**nd * exp(j*2*n*z), n, -inf, inf)
-    max term for minimum n*abs(log(q).real) + z.imag
+    max term for minimum n*abs(log(q).real) + ctx._im(z)
     """
-    n = n0 = int(-z.imag/abs(log(q).real))
-    e2 = exp(2*j*z)
-    e = e0 = exp(j*2*n*z)
+    n = n0 = int(-ctx._im(z)/abs(ctx._re(ctx.log(q))))
+    e2 = ctx.expj(2*z)
+    e = e0 = ctx.expj(2*n*z)
     a = q**(n*n) * e
     s = term = n**nd * a
     if n != 0:
-        eps1 = eps*abs(term)
+        eps1 = ctx.eps*abs(term)
     else:
-        eps1 = eps*abs(a)
+        eps1 = ctx.eps*abs(a)
     while 1:
         n += 1
         e = e * e2
@@ -976,7 +933,7 @@ def _djacobi_theta3a(z, q, nd):
             break
         s += term
     e = e0
-    e2 = exp(-2*j*z)
+    e2 = ctx.expj(-2*z)
     n = n0
     while 1:
         n -= 1
@@ -990,419 +947,210 @@ def _djacobi_theta3a(z, q, nd):
         if aterm < eps1:
             break
         s += term
-    return (2*j)**nd * s
+    return (2*ctx.j)**nd * s
 
+@defun
+def jtheta(ctx, n, z, q, derivative=0):
+    if derivative:
+        return ctx._djtheta(n, z, q, derivative)
 
-
-
-def jtheta(n, z, q):
-    r"""
-    Computes the Jacobi theta function `\vartheta_n(z, q)`, where
-    `n = 1, 2, 3, 4`. The theta functions are functions of two
-    variables:
-
-    * `z` is the *argument*, an arbitrary real or complex number
-
-    * `q` is the *nome*, which must be a real or complex number
-      in the unit disk (i.e. `|q| < 1`)
-
-    One also commonly encounters the notation `\vartheta_n(z, \tau)`
-    in the literature. The variable `\tau` is called the *parameter*
-    and can be converted to a nome using the formula
-    `q = \exp(i \pi \tau)`. Note the condition `|q| < 1` requires
-    `\Im(\tau) > 0`; i.e. Jacobi theta functions are defined for
-    `\tau` in the upper half plane.
-
-    Other notations are also in use. For example, some authors use
-    the single-argument form `\vartheta_n(x)`. Depending on context,
-    this can mean ``jtheta(n, 0, x)``, ``jtheta(n, x, q)``, or possibly
-    something else. Needless to say, it is a good idea to cross-check
-    the definitions when working with theta functions.
-
-    **Definition**
-
-    The four Jacobi theta functions as implemented by :func:`jtheta`
-    are defined by the following infinite series:
-
-    .. math ::
-
-      \vartheta_1(z,q) = 2 q^{1/4} \sum_{n=0}^{\infty}
-        (-1)^n q^{n^2+n\,} \sin((2n+1)z)
-
-      \vartheta_2(z,q) = 2 q^{1/4} \sum_{n=0}^{\infty}
-        q^{n^{2\,} + n} \cos((2n+1)z)
-
-      \vartheta_3(z,q) = 1 + 2 \sum_{n=0}^{\infty}
-        q^{n^2\,} \cos(2 n z)
-
-      \vartheta_4(z,q) = 1 + 2 \sum_{n=0}^{\infty}
-        (-q)^{n^2\,} \cos(2 n z)
-
-    For `|q| \ll 1`, these series converge very quickly, so the
-    Jacobi theta functions can efficiently be evaluated to high
-    precision.
-
-    **Examples and basic properties**
-
-    Considered as functions of `z`, the Jacobi theta functions may be
-    viewed as generalizations of the ordinary trigonometric functions
-    cos and sin. They are periodic functions::
-
-        >>> from mpmath import *
-        >>> mp.dps = 15; mp.pretty = True
-        >>> jtheta(1, 0.1, 1/5.)
-        0.117756191842059
-        >>> jtheta(1, 0.1 + 2*pi, 1/5.)
-        0.117756191842059
-
-    Indeed, the series defining the theta functions are essentially
-    trigonometric Fourier series. The coefficients can be retrieved
-    using :func:`fourier`::
-
-        >>> nprint(fourier(lambda x: jtheta(2, x, 0.5), [-pi, pi], 4))
-        ([0.0, 1.68179, 0.0, 0.420448, 0.0], [0.0, 0.0, 0.0, 0.0, 0.0])
-
-    The Jacobi theta functions are also so-called quasiperiodic
-    functions of `z` and `\tau`, meaning that for fixed `\tau`,
-    `\vartheta_n(z, q)` and `\vartheta_n(z+\pi \tau, q)` are the same
-    except for an exponential factor::
-
-        >>> tau = 0.3*j
-        >>> q = exp(pi*j*tau)
-        >>> z = 10
-        >>> jtheta(4, z+tau*pi, q)
-        (-0.682420280786035 + 1.5266839997214j)
-        >>> -exp(-2*j*z)/q * jtheta(4, z, q)
-        (-0.682420280786035 + 1.5266839997214j)
-
-    The Jacobi theta functions satisfy a huge number of other
-    functional equations, such as the following identity (valid for
-    any `q`)::
-
-        >>> q = 0.3
-        >>> jtheta(3,0,q)**4
-        6.82374408935276
-        >>> jtheta(2,0,q)**4 + jtheta(4,0,q)**4
-        6.82374408935276
-
-    Extensive listings of identities satisfied by the Jacobi theta
-    functions can be found in standard reference works.
-
-    The Jacobi theta functions are related to the gamma function
-    for special arguments::
-
-        >>> jtheta(3, 0, exp(-pi))
-        1.08643481121331
-        >>> pi**(1/4.) / gamma(3/4.)
-        1.08643481121331
-
-    :func:`jtheta` supports arbitrary precision evaluation and complex
-    arguments::
-
-        >>> mp.dps = 50
-        >>> jtheta(4, sqrt(2), 0.5)
-        2.0549510717571539127004115835148878097035750653737
-        >>> mp.dps = 25
-        >>> jtheta(4, 1+2j, (1+j)/5)
-        (7.180331760146805926356634 - 1.634292858119162417301683j)
-
-    **Possible issues**
-
-    For `|q| \ge 1` or `\Im(\tau) \le 0`, :func:`jtheta` raises
-    ``ValueError``. This exception is also raised for `|q|` extremely
-    close to 1 (or equivalently `\tau` very close to 0), since the
-    series would converge too slowly::
-
-        >>> jtheta(1, 10, 0.99999999 * exp(0.5*j))
-        Traceback (most recent call last):
-          ...
-        ValueError: abs(q) > Q_LIM = 1.000000
-
-    """
-    z = mpmathify(z)
-    q = mpmathify(q)
+    z = ctx.convert(z)
+    q = ctx.convert(q)
 
     # Implementation note
-    # If z.imag is close to zero, _jacobi_theta2 and _jacobi_theta3
+    # If ctx._im(z) is close to zero, _jacobi_theta2 and _jacobi_theta3
     # are used,
     # which compute the series starting from n=0 using fixed precision
     # numbers;
     # otherwise  _jacobi_theta2a and _jacobi_theta3a are used, which compute
     # the series starting from n=n0, which is the largest term.
 
-    # TODO write _jacobi_theta2a and _jacobi_theta3a using fixed precision.
+    # TODO: write _jacobi_theta2a and _jacobi_theta3a using fixed-point
 
-    if abs(q) > Q_LIM:
-        raise ValueError('abs(q) > Q_LIM = %f' % Q_LIM)
+    if abs(q) > ctx.THETA_Q_LIM:
+        raise ValueError('abs(q) > THETA_Q_LIM = %f' % ctx.THETA_Q_LIM)
 
     extra = 10
     if z:
-        M = mp.mag(z)
+        M = ctx.mag(z)
         if M > 5 or (n == 1 and M < -5):
             extra += 2*abs(M)
     cz = 0.5
     extra2 = 50
-    prec0 = mp.prec
+    prec0 = ctx.prec
     try:
-        mp.prec += extra
+        ctx.prec += extra
         if n == 1:
-            if abs(z.imag) != 0:
-                if abs(z.imag) < cz * abs(log(q).real):
-                    mp.dps += extra2
-                    res = _jacobi_theta2(z - pi/2, q)
+            if ctx._im(z):
+                if abs(ctx._im(z)) < cz * abs(ctx._re(ctx.log(q))):
+                    ctx.dps += extra2
+                    res = ctx._jacobi_theta2(z - ctx.pi/2, q)
                 else:
-                    mp.dps += 10
-                    res = _jacobi_theta2a(z - pi/2, q)
+                    ctx.dps += 10
+                    res = ctx._jacobi_theta2a(z - ctx.pi/2, q)
             else:
-                res = _jacobi_theta2(z - pi/2, q)
+                res = ctx._jacobi_theta2(z - ctx.pi/2, q)
         elif n == 2:
-            if abs(z.imag) != 0:
-                if abs(z.imag) < cz * abs(log(q).real):
-                    mp.dps += extra2
-                    res = _jacobi_theta2(z, q)
+            if ctx._im(z):
+                if abs(ctx._im(z)) < cz * abs(ctx._re(ctx.log(q))):
+                    ctx.dps += extra2
+                    res = ctx._jacobi_theta2(z, q)
                 else:
-                    mp.dps += 10
-                    res = _jacobi_theta2a(z, q)
+                    ctx.dps += 10
+                    res = ctx._jacobi_theta2a(z, q)
             else:
-                res = _jacobi_theta2(z, q)
+                res = ctx._jacobi_theta2(z, q)
         elif n == 3:
-            if abs(z.imag) != 0:
-                if abs(z.imag) < cz * abs(log(q).real):
-                    mp.dps += extra2
-                    res = _jacobi_theta3(z, q)
+            if ctx._im(z):
+                if abs(ctx._im(z)) < cz * abs(ctx._re(ctx.log(q))):
+                    ctx.dps += extra2
+                    res = ctx._jacobi_theta3(z, q)
                 else:
-                    mp.dps += 10
-                    res = _jacobi_theta3a(z, q)
+                    ctx.dps += 10
+                    res = ctx._jacobi_theta3a(z, q)
             else:
-                res = _jacobi_theta3(z, q)
+                res = ctx._jacobi_theta3(z, q)
         elif n == 4:
-            if abs(z.imag) != 0:
-                if abs(z.imag) < cz * abs(log(q).real):
-                    mp.dps += extra2
-                    res = _jacobi_theta3(z, -q)
+            if ctx._im(z):
+                if abs(ctx._im(z)) < cz * abs(ctx._re(ctx.log(q))):
+                    ctx.dps += extra2
+                    res = ctx._jacobi_theta3(z, -q)
                 else:
-                    mp.dps += 10
-                    res = _jacobi_theta3a(z, -q)
+                    ctx.dps += 10
+                    res = ctx._jacobi_theta3a(z, -q)
             else:
-                res = _jacobi_theta3(z, -q)
+                res = ctx._jacobi_theta3(z, -q)
         else:
             raise ValueError
     finally:
-        mp.prec = prec0
+        ctx.prec = prec0
     return res
 
-def djtheta(n, z, q, nd=1):
-    r"""
-    For an integer `nd \ge 1`, computes the `nd`:th derivative with
-    respect to `z` of the Jacobi theta function `\vartheta_n(z,q)`::
+@defun
+def _djtheta(ctx, n, z, q, derivative=1):
+    z = ctx.convert(z)
+    q = ctx.convert(q)
+    nd = int(derivative)
 
-        >>> from mpmath import *
-        >>> mp.dps = 15; mp.pretty = True
-        >>> djtheta(3, 7, 0.2)
-        -0.795947847483158
-        >>> diff(lambda x: jtheta(3, x, 0.2), 7)
-        -0.795947847483158
-
-    For additional details, see :func:`jtheta`.
-    """
-
-    z = mpmathify(z)
-    q = mpmathify(q)
-
-    if abs(q) > Q_LIM:
-        raise ValueError('abs(q) > Q_LIM = %f' % Q_LIM)
-    extra = 10 + mp.prec * nd // 10
+    if abs(q) > ctx.THETA_Q_LIM:
+        raise ValueError('abs(q) > THETA_Q_LIM = %f' % ctx.THETA_Q_LIM)
+    extra = 10 + ctx.prec * nd // 10
     if z:
-        M = mp.mag(z)
+        M = ctx.mag(z)
         if M > 5 or (n != 1 and M < -5):
             extra += 2*abs(M)
     cz = 0.5
     extra2 = 50
-    prec0 = mp.prec
+    prec0 = ctx.prec
     try:
-        mp.prec += extra
+        ctx.prec += extra
         if n == 1:
-            if abs(z.imag) != 0:
-                if abs(z.imag) < cz * abs(log(q).real):
-                    mp.dps += extra2
-                    res = _djacobi_theta2(z - pi/2, q, nd)
+            if ctx._im(z):
+                if abs(ctx._im(z)) < cz * abs(ctx._re(ctx.log(q))):
+                    ctx.dps += extra2
+                    res = ctx._djacobi_theta2(z - ctx.pi/2, q, nd)
                 else:
-                    mp.dps += 10
-                    res = _djacobi_theta2a(z - pi/2, q, nd)
+                    ctx.dps += 10
+                    res = ctx._djacobi_theta2a(z - ctx.pi/2, q, nd)
             else:
-                res = _djacobi_theta2(z - pi/2, q, nd)
+                res = ctx._djacobi_theta2(z - ctx.pi/2, q, nd)
         elif n == 2:
-            if abs(z.imag) != 0:
-                if abs(z.imag) < cz * abs(log(q).real):
-                    mp.dps += extra2
-                    res = _djacobi_theta2(z, q, nd)
+            if ctx._im(z):
+                if abs(ctx._im(z)) < cz * abs(ctx._re(ctx.log(q))):
+                    ctx.dps += extra2
+                    res = ctx._djacobi_theta2(z, q, nd)
                 else:
-                    mp.dps += 10
-                    res = _djacobi_theta2a(z, q, nd)
+                    ctx.dps += 10
+                    res = ctx._djacobi_theta2a(z, q, nd)
             else:
-                res = _djacobi_theta2(z, q, nd)
+                res = ctx._djacobi_theta2(z, q, nd)
         elif n == 3:
-            if abs(z.imag) != 0:
-                if abs(z.imag) < cz * abs(log(q).real):
-                    mp.dps += extra2
-                    res = _djacobi_theta3(z, q, nd)
+            if ctx._im(z):
+                if abs(ctx._im(z)) < cz * abs(ctx._re(ctx.log(q))):
+                    ctx.dps += extra2
+                    res = ctx._djacobi_theta3(z, q, nd)
                 else:
-                    mp.dps += 10
-                    res = _djacobi_theta3a(z, q, nd)
+                    ctx.dps += 10
+                    res = ctx._djacobi_theta3a(z, q, nd)
             else:
-                res = _djacobi_theta3(z, q, nd)
+                res = ctx._djacobi_theta3(z, q, nd)
         elif n == 4:
-            if abs(z.imag) != 0:
-                if abs(z.imag) < cz * abs(log(q).real):
-                    mp.dps += extra2
-                    res = _djacobi_theta3(z, -q, nd)
+            if ctx._im(z):
+                if abs(ctx._im(z)) < cz * abs(ctx._re(ctx.log(q))):
+                    ctx.dps += extra2
+                    res = ctx._djacobi_theta3(z, -q, nd)
                 else:
-                    mp.dps += 10
-                    res = _djacobi_theta3a(z, -q, nd)
+                    ctx.dps += 10
+                    res = ctx._djacobi_theta3a(z, -q, nd)
             else:
-                res = _djacobi_theta3(z, -q, nd)
+                res = ctx._djacobi_theta3(z, -q, nd)
         else:
             raise ValueError
     finally:
-        mp.prec = prec0
-    return res
+        ctx.prec = prec0
+    return +res
 
-def jsn(u, m):
-    """
-    Computes of the Jacobi elliptic sn function in terms
-    of Jacobi theta functions.
-    `u` is any complex number, `m` must be in the unit disk
-
-    The sn-function is doubly periodic in the complex
-    plane with periods `4 K(m)` and `2 i K(1-m)`
-    (see :func:`ellipk`)::
-
-        >>> from mpmath import *
-        >>> mp.dps = 25; mp.pretty = True
-        >>> jsn(2, 0.25)
-        0.9628981775982774425751399
-        >>> jsn(2+4*ellipk(0.25), 0.25)
-        0.9628981775982774425751399
-        >>> chop(jsn(2+2*j*ellipk(1-0.25), 0.25))
-        0.9628981775982774425751399
-
-    """
-    if abs(m) < eps:
-        return sin(u)
-    elif m == one:
-        return tanh(u)
+@defun
+def jsn(ctx, u, m):
+    if abs(m) < ctx.eps:
+        return ctx.sin(u)
+    elif m == ctx.one:
+        return ctx.tanh(u)
     else:
         extra = 10
     try:
-        mp.prec += extra
-        q = calculate_nome(sqrt(m))
-
-        v3 = jtheta(3, zero, q)
-        v2 = jtheta(2, zero, q)        # mathworld says v4
+        ctx.prec += extra
+        q = ctx.calculate_nome(ctx.sqrt(m))
+        v3 = ctx.jtheta(3, 0, q)
+        v2 = ctx.jtheta(2, 0, q)        # mathworld says v4
         arg1 = u / (v3*v3)
-        v1 = jtheta(1, arg1, q)
-        v4 = jtheta(4, arg1, q)
-
+        v1 = ctx.jtheta(1, arg1, q)
+        v4 = ctx.jtheta(4, arg1, q)
         sn = (v3/v2)*(v1/v4)
     finally:
-        mp.prec -= extra
-
+        ctx.prec -= extra
     return sn
 
-
-def jcn(u, m):
-    """
-    Computes of the Jacobi elliptic cn function in terms
-    of Jacobi theta functions.
-    `u` is any complex number, `m` must be in the unit disk
-
-    The cn-function is doubly periodic in the complex
-    plane with periods `4 K(m)` and `4 i K(1-m)`
-    (see :func:`ellipk`)::
-
-        >>> from mpmath import *
-        >>> mp.dps = 25; mp.pretty = True
-        >>> jcn(2, 0.25)
-        -0.2698649654510865792581416
-        >>> jcn(2+4*ellipk(0.25), 0.25)
-        -0.2698649654510865792581416
-        >>> chop(jcn(2+4*j*ellipk(1-0.25), 0.25))
-        -0.2698649654510865792581416
-
-    """
-    if abs(m) < eps:
-        return cos(u)
-    elif m == one:
-        return sech(u)
+@defun
+def jcn(ctx, u, m):
+    if abs(m) < ctx.eps:
+        return ctx.cos(u)
+    elif m == ctx.one:
+        return ctx.sech(u)
     else:
         extra = 10
     try:
-        mp.prec += extra
-        q = calculate_nome(sqrt(m))
-
-        v3 = jtheta(3, zero, q)
-        v2 = jtheta(2, zero, q)
-        v04 = jtheta(4, zero, q)
-
+        ctx.prec += extra
+        q = ctx.calculate_nome(ctx.sqrt(m))
+        v3 = ctx.jtheta(3, 0, q)
+        v2 = ctx.jtheta(2, 0, q)
+        v04 = ctx.jtheta(4, 0, q)
         arg1 = u / (v3*v3)
-
-        v1 = jtheta(2, arg1, q)
-        v4 = jtheta(4, arg1, q)
-
+        v1 = ctx.jtheta(2, arg1, q)
+        v4 = ctx.jtheta(4, arg1, q)
         cn = (v04/v2)*(v1/v4)
     finally:
-        mp.prec -= extra
-    return cn
+        ctx.prec -= extra
+    return +cn
 
-
-def jdn(u, m):
-    """
-    Computes of the Jacobi elliptic dn function in terms
-    of Jacobi theta functions.
-    `u` is any complex number, `m` must be in the unit disk
-
-    The dn-function is doubly periodic in the complex
-    plane with periods `2 K(m)` and `4 i K(1-m)`
-    (see :func:`ellipk`)::
-
-        >>> from mpmath import *
-        >>> mp.dps = 25; mp.pretty = True
-        >>> jdn(2, 0.25)
-        0.8764740583123262286931578
-        >>> jdn(2+2*ellipk(0.25), 0.25)
-        0.8764740583123262286931578
-        >>> chop(jdn(2+4*j*ellipk(1-0.25), 0.25))
-        0.8764740583123262286931578
-
-    """
-    if m == zero:
-        return one
-    elif m == one:
-        return sech(u)
+@defun
+def jdn(ctx, u, m):
+    if m == ctx.zero:
+        return ctx.one
+    elif m == ctx.one:
+        return ctx.sech(u)
     else:
         extra = 10
     try:
-        mp.prec += extra
-        q = calculate_nome(sqrt(m))
-
-        v3 = jtheta(3, zero, q)
-        v2 = jtheta(2, zero, q)
-        v04 = jtheta(4, zero, q)
-
+        ctx.prec += extra
+        q = ctx.calculate_nome(ctx.sqrt(m))
+        v3 = ctx.jtheta(3, 0, q)
+        v2 = ctx.jtheta(2, 0, q)
+        v04 = ctx.jtheta(4, 0, q)
         arg1 = u / (v3*v3)
-
-        v1 = jtheta(3, arg1, q)
-        v4 = jtheta(4, arg1, q)
-
+        v1 = ctx.jtheta(3, arg1, q)
+        v4 = ctx.jtheta(4, arg1, q)
         cn = (v04/v3)*(v1/v4)
     finally:
-        mp.prec -= extra
-    return cn
-
-jacobi_elliptic_sn = jsn
-jacobi_elliptic_cn = jcn
-jacobi_elliptic_dn = jdn
-
-if __name__ == '__main__':
-    import doctest
-    doctest.testmod()
+        ctx.prec -= extra
+    return +cn

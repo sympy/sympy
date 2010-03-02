@@ -8,8 +8,8 @@ relation eval(srepr(expr))=expr holds in an appropriate environment.
 from printer import Printer
 from sympy.printing.precedence import precedence
 from sympy.core import Basic
-import sympy.mpmath.libmpf as mlib
-from sympy.mpmath.settings import prec_to_dps, repr_dps
+import sympy.mpmath.libmp as mlib
+from sympy.mpmath.libmp import prec_to_dps, repr_dps
 
 class ReprPrinter(Printer):
     printmethod = "_sympyrepr_"

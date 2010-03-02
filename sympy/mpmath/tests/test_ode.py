@@ -1,6 +1,7 @@
-from sympy.mpmath.calculus import ODE_step_euler, ODE_step_rk4, odeint, arange
+#from sympy.mpmath.calculus import ODE_step_euler, ODE_step_rk4, odeint, arange
 from sympy.mpmath import odefun, cos, sin, mpf, sinc, mp
 
+'''
 solvers = [ODE_step_euler, ODE_step_rk4]
 
 def test_ode1():
@@ -46,6 +47,7 @@ def test_ode2():
         # the result is x = exp(t)
         # let's just check the end point for t = 1, i.e. x = e
         assert abs(x[-1] - 2.718281828) < 1e-2
+'''
 
 def test_odefun_rational():
     mp.dps = 15
