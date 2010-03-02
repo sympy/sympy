@@ -3,6 +3,7 @@ from sympy.core.function import Function, diff
 from sympy.core.numbers import Number
 from sympy.core.relational import Relational
 from sympy.core.sympify import sympify
+from sympy.core.sets import Interval
 
 class ExprCondPair(Basic):
     """Represents an expression, condition pair."""
@@ -70,10 +71,10 @@ class Piecewise(Function):
             pair = ExprCondPair(*ec)
             cond_type = type(pair.cond)
             if not (cond_type is bool or issubclass(cond_type, Relational) or \
-                    issubclass(cond_type, Number)):
+                    issubclass(cond_type, Number) or issubclass(cond_type, Interval)):
                 raise TypeError, \
                     "Cond %s is of type %s, but must be a bool," \
-                    " Relational or Number" % (pair.cond, cond_type)
+                    " Relational, Number or Interval" % (pair.cond, cond_type)
             newargs.append(pair)
 
         r = cls.eval(*newargs)
@@ -216,6 +217,10 @@ class Piecewise(Function):
         for e, c in self.args:
             if isinstance(c, bool):
                 new_args.append((e._eval_subs(old, new), c))
+            elif isinstance(c, Interval):
+                # What do we do if there are more than one symbolic
+                # variable. Which do we put pass to Interval.contains?
+                new_args.append((e._eval_subs(old, new),  c.contains(new)))
             else:
                 new_args.append((e._eval_subs(old, new), c._eval_subs(old, new)))
         return Piecewise( *new_args )
@@ -223,9 +228,13 @@ class Piecewise(Function):
     @classmethod
     def __eval_cond(cls, cond):
         """Returns S.One if True, S.Zero if False, or None if undecidable."""
-        if type(cond) == bool or cond.is_number or (cond.args[0].is_Number and cond.args[1].is_Number):
-            if cond: return S.One
-            return S.Zero
+        if type(cond) == bool or cond.is_number:
+            if cond:
+                return S.One
+            else:
+                return S.Zero
+        elif type(cond) == Interval:
+            return None
         return None
 
 def piecewise_fold(expr):

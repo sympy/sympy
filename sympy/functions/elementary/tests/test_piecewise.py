@@ -1,5 +1,5 @@
 from sympy import diff, Integral, integrate, log, oo, Piecewise, \
-    piecewise_fold, raises, symbols, pi, solve, Rational
+    piecewise_fold, raises, symbols, pi, solve, Rational, Interval
 from sympy.utilities.pytest import XFAIL
 
 x,y = symbols('xy')
@@ -148,4 +148,10 @@ def test_doit():
     assert p2.doit() == p1
     assert p2.doit(deep = False) == p2
 
+def test_piecewise_interval():
+    p1 = Piecewise((x, Interval(0,1)), (0, True))
+    assert p1.subs(x, -0.5) == 0
+    assert p1.subs(x, 0.5) == 0.5
+    assert p1.diff(x) == Piecewise((1, Interval(0, 1)), (0, True))
+    assert integrate(p1, x) == Piecewise((x**2/2, Interval(0, 1)), (0, True))
 
