@@ -23,6 +23,8 @@ to mpmath:
 * Mike Taschuk <mtaschuk@ece.ualberta.ca>
 * Case Van Horsen <casevh@gmail.com>
 * Jorn Baayen <jorn.baayen@gmail.com>
+* Chris Smith <smichr@gmail.com>
+* Juan Arias de Reyna <arias@us.es>
 
 For a detailed changelog, including individual contributions,
 see the CHANGES file.
@@ -40,20 +42,21 @@ views of the sponsors.
 
 Credit also goes to:
 * The authors of the GMP library and the Python wrapper
-    gmpy, enabling mpmath to become much faster at
-    high precision
+  gmpy, enabling mpmath to become much faster at
+  high precision
 * The authors of MPFR, pari/gp, MPFUN, and other arbitrary-
-    precision libraries, whose documentation has been helpful
-    for implementing many of the algorithms in mpmath
+  precision libraries, whose documentation has been helpful
+  for implementing many of the algorithms in mpmath
 * Wikipedia contributors; Abramowitz & Stegun; Gradshteyn & Ryzhik;
-    Wolfram Research for MathWorld and the Wolfram Functions site.
-    These are the main references used for special functions
-    implementations.
+  Wolfram Research for MathWorld and the Wolfram Functions site.
+  These are the main references used for special functions
+  implementations.
 * George Brandl for developing the Sphinx documentation tool
-    used to build mpmath's documentation
+  used to build mpmath's documentation
 
 Release history:
 
+* Version 0.14 released on February 5, 2010
 * Version 0.13 released on August 13, 2009
 * Version 0.12 released on June 9, 2009
 * Version 0.11 released on January 26, 2009
@@ -80,11 +83,11 @@ http://pypi.python.org/pypi
 
 To install, unpack the mpmath archive and run
 
-    python setup.py install
+  python setup.py install
 
 Mpmath can also be installed using
 
-    python -m easy_install mpmath
+  python -m easy_install mpmath
 
 The latest development code is available from
 http://code.google.com/p/mpmath/source/checkout
@@ -123,18 +126,18 @@ http://mpmath.googlecode.com/svn/trunk/doc/build/index.html
 Mpmath is a work in progress. Major issues include:
 
 * Some functions may return incorrect values when given extremely
-    large arguments or arguments very close to singularities.
+  large arguments or arguments very close to singularities.
 
 * Directed rounding works for arithmetic operations. It is implemented
-    heuristically for other operations, and their results may be off by one
-    or two units in the last place (even if otherwise accurate).
+  heuristically for other operations, and their results may be off by one
+  or two units in the last place (even if otherwise accurate).
 
 * Some IEEE 754 features are not available. Inifinities and NaN are
-    partially supported; denormal rounding is currently not available
-    at all.
+  partially supported; denormal rounding is currently not available
+  at all.
 
 * The interface for switching precision and rounding is not finalized.
-    The current method is not threadsafe.
+  The current method is not threadsafe.
 
 5. Help and bug reports
 -----------------------

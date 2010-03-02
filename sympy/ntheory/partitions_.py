@@ -1,9 +1,8 @@
-from sympy.mpmath.libmpf import (fzero,
+from sympy.mpmath.libmp import (fzero,
     from_man_exp, from_int, from_rational,
     fone, ftwo, fhalf, bitcount, to_int, to_str, mpf_mul, mpf_div, mpf_sub,
-    mpf_add)
-from sympy.mpmath.libelefun import mpf_sqrt, mpf_pi, cosh_sinh, pi_fixed, \
-        mpf_cos
+    mpf_add,
+    mpf_sqrt, mpf_pi, mpf_cosh_sinh, pi_fixed, mpf_cos)
 from sympy.core.numbers import igcd
 import math
 
@@ -41,7 +40,7 @@ def D(n, j, prec, sq23pi, sqrt8):
     a = mpf_div(sq23pi, j, prec)
     b = mpf_sub(from_int(n), from_rational(1,24,prec), prec)
     c = mpf_sqrt(b, prec)
-    ch, sh = cosh_sinh(mpf_mul(a,c), prec)
+    ch, sh = mpf_cosh_sinh(mpf_mul(a,c), prec)
     D = mpf_div(mpf_sqrt(j,prec), mpf_mul(mpf_mul(sqrt8,b),pi), prec)
     E = mpf_sub(mpf_mul(a,ch), mpf_div(sh,c,prec), prec)
     return mpf_mul(D, E)

@@ -1,6 +1,6 @@
 import random
 from sympy.mpmath import *
-from sympy.mpmath.libmpf import *
+from sympy.mpmath.libmp import *
 
 
 def test_basic_string():
@@ -118,10 +118,10 @@ def test_conversion_methods():
         pass
     class SomethingReal:
         def _mpmath_(self, prec, rounding):
-            return make_mpf(from_str('1.3', prec, rounding))
+            return mp.make_mpf(from_str('1.3', prec, rounding))
     class SomethingComplex:
         def _mpmath_(self, prec, rounding):
-            return make_mpc((from_str('1.3', prec, rounding), \
+            return mp.make_mpc((from_str('1.3', prec, rounding), \
                 from_str('1.7', prec, rounding)))
     x = mpf(3)
     z = mpc(3)
@@ -152,7 +152,9 @@ def test_conversion_methods():
     assert x.__ge__(a) is NotImplemented
     assert x.__eq__(a) is NotImplemented
     assert x.__ne__(a) is NotImplemented
-    assert x.__cmp__(a) is NotImplemented
+    # implementation detail
+    if hasattr(x, "__cmp__"):
+        assert x.__cmp__(a) is NotImplemented
     assert x.__sub__(a) is NotImplemented
     assert x.__rsub__(a) is NotImplemented
     assert x.__mul__(a) is NotImplemented
@@ -181,3 +183,4 @@ def test_mpmathify():
     assert mpmathify('(1.0+1.0j)') == mpc(1, 1)
     assert mpmathify('(1.2e-10 - 3.4e5j)') == mpc('1.2e-10', '-3.4e5')
     assert mpmathify('1j') == mpc(1j)
+

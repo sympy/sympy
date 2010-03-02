@@ -10,8 +10,8 @@ from sympy.core.power import Pow
 from sympy.core.symbol import Symbol, Wild
 from sympy.core.basic import Basic
 
-import sympy.mpmath.libmpf as mlib
-from sympy.mpmath.settings import prec_to_dps
+import sympy.mpmath.libmp as mlib
+from sympy.mpmath.libmp import prec_to_dps
 
 class StrPrinter(Printer):
     printmethod = "_sympystr_"

@@ -1060,7 +1060,7 @@ def test_roots_quartic():
     # check for homogeneous in y (g=0)
     ans = roots_quartic(Poly(x**4 + x**3 - Rational(445, 16)*x**2 + x + 2, x))
     assert set([str(tmp.evalf(2)) for tmp in ans]) == \
-           set(['-2.5e-1', '-5.8 + .0e-7*I', '2.9e-1 + .0e-7*I', '4.8 + .0e-7*I'])
+        set(['4.8 + .0e-7*I', '-0.25', '0.29 + .0e-7*I', '-5.8 + .0e-7*I'])
     # no real roots and f=0
     assert roots_quartic(Poly(10 + 14*x + 11*x**2 + 4*x**3 + x**4, x)) == \
            [-1 - I, -1 - 2*I, -1 + I, -1 + 2*I]
@@ -1077,14 +1077,14 @@ def test_roots_quartic():
     p = Poly(-1 + 10*x - 32*x**2 + 54*x**3 - 27*x**4, x)
     ans = roots_quartic(p)
     assert [[str(tmp.evalf(2).as_real_imag()[j]) for tmp in ans] for j in [0,1]] == \
-           [['2.8e-1', '2.8e-1', '1.6e-1', '1.3'], ['-3.1e-1', '3.1e-1', '0', '0']]
+           [['0.28', '0.28', '0.16', '1.3'], ['-0.31', '0.31', '0', '0']]
     # -- a u=0 case
     i = I*sqrt(41847)
     p = Poly(x**4 + x**3 + x**2 + (S(3)/8 + i/72)*x + S(1)/96 + i/288, x)
     ans = roots_quartic(p)
-    assert [[str(tmp.evalf(2).as_real_imag()[j]) for tmp in ans] for j in [0,1]] == \
-    [['-2.5e-1', '-2.5e-1', '8.5e-1', '-1.3'],
-     ['1.6', '-1.1e-2', '-7.8e-1', '-7.8e-1']]
+    assert [sorted(str(tmp.evalf(2).as_real_imag()[j]) for tmp in ans) for j in [0,1]] == \
+    [sorted(['-0.25', '-0.25', '0.85', '-1.3']),
+     sorted(['1.6', '-0.011', '-0.78', '-0.78'])]
     # 4 real roots
     p = Poly(x**4 + -11*x**3 + 41*x**2 - 61*x + 30, x)
     ans = roots_quartic(p)

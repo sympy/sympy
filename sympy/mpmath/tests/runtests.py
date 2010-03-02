@@ -27,7 +27,7 @@ one of the arguments in their name are executed.
 
 """
 
-import sys, os
+import sys, os, traceback
 
 if "-psyco" in sys.argv:
     sys.argv.remove('-psyco')
@@ -68,13 +68,20 @@ def testit(importdir='', testdir=''):
         sys.path.insert(1, importdir)
     if testdir:
         sys.path.insert(1, testdir)
+    import os.path
+    import mpmath
+    print "mpmath imported from", os.path.dirname(mpmath.__file__)
+    print "mpmath backend:", mpmath.libmp.backend.BACKEND
+    print "mpmath mp class:", repr(mpmath.mp)
+    print "mpmath version:", mpmath.__version__
+    print "Python version:", sys.version
+    print
     if "-py" in sys.argv:
         sys.argv.remove('-py')
         import py
         py.test.cmdline.main()
     else:
         import glob
-        import os.path
         from timeit import default_timer as clock
         modules = []
         args = sys.argv[1:]
@@ -115,7 +122,16 @@ def testit(importdir='', testdir=''):
                         continue
                     print "   ", f[5:].ljust(25),
                     t1 = clock()
-                    module.__dict__[f]()
+                    try:
+                        module.__dict__[f]()
+                    except:
+                        etype, evalue, trb = sys.exc_info()
+                        if etype in (KeyboardInterrupt, SystemExit):
+                            raise
+                        print
+                        print "TEST FAILED!"
+                        print
+                        traceback.print_exc()
                     t2 = clock()
                     print "ok", "      ", ("%.7f" % (t2-t1)), "s"
         tend = clock()
@@ -140,3 +156,4 @@ if __name__ == '__main__':
         r.write_results(show_missing=True, summary=True, coverdir="/tmp")
     else:
         testit(importdir, testdir)
+

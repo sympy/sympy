@@ -1,8 +1,5 @@
 from sympy.mpmath import *
-from sympy.mpmath.settings import round_up
-
-from sympy.mpmath.libmpf import from_float
-from sympy.mpmath.gammazeta import mpf_zeta_int
+from sympy.mpmath.libmp import round_up, from_float, mpf_zeta_int
 
 def test_zeta_int_bug():
     assert mpf_zeta_int(0, 10) == from_float(-0.5)
@@ -52,9 +49,108 @@ def test_bernoulli():
 
     mp.dps = 15
 
-def test_bernpoly():
+def test_bernpoly_eulerpoly():
     mp.dps = 15
+    assert bernpoly(0,-1).ae(1)
+    assert bernpoly(0,0).ae(1)
+    assert bernpoly(0,'1/2').ae(1)
+    assert bernpoly(0,'3/4').ae(1)
+    assert bernpoly(0,1).ae(1)
+    assert bernpoly(0,2).ae(1)
+    assert bernpoly(1,-1).ae('-3/2')
+    assert bernpoly(1,0).ae('-1/2')
+    assert bernpoly(1,'1/2').ae(0)
+    assert bernpoly(1,'3/4').ae('1/4')
+    assert bernpoly(1,1).ae('1/2')
+    assert bernpoly(1,2).ae('3/2')
+    assert bernpoly(2,-1).ae('13/6')
+    assert bernpoly(2,0).ae('1/6')
+    assert bernpoly(2,'1/2').ae('-1/12')
+    assert bernpoly(2,'3/4').ae('-1/48')
+    assert bernpoly(2,1).ae('1/6')
+    assert bernpoly(2,2).ae('13/6')
+    assert bernpoly(3,-1).ae(-3)
+    assert bernpoly(3,0).ae(0)
+    assert bernpoly(3,'1/2').ae(0)
+    assert bernpoly(3,'3/4').ae('-3/64')
+    assert bernpoly(3,1).ae(0)
+    assert bernpoly(3,2).ae(3)
+    assert bernpoly(4,-1).ae('119/30')
+    assert bernpoly(4,0).ae('-1/30')
+    assert bernpoly(4,'1/2').ae('7/240')
+    assert bernpoly(4,'3/4').ae('7/3840')
+    assert bernpoly(4,1).ae('-1/30')
+    assert bernpoly(4,2).ae('119/30')
+    assert bernpoly(5,-1).ae(-5)
+    assert bernpoly(5,0).ae(0)
+    assert bernpoly(5,'1/2').ae(0)
+    assert bernpoly(5,'3/4').ae('25/1024')
+    assert bernpoly(5,1).ae(0)
+    assert bernpoly(5,2).ae(5)
+    assert bernpoly(10,-1).ae('665/66')
+    assert bernpoly(10,0).ae('5/66')
+    assert bernpoly(10,'1/2').ae('-2555/33792')
+    assert bernpoly(10,'3/4').ae('-2555/34603008')
+    assert bernpoly(10,1).ae('5/66')
+    assert bernpoly(10,2).ae('665/66')
+    assert bernpoly(11,-1).ae(-11)
+    assert bernpoly(11,0).ae(0)
+    assert bernpoly(11,'1/2').ae(0)
+    assert bernpoly(11,'3/4').ae('-555731/4194304')
+    assert bernpoly(11,1).ae(0)
+    assert bernpoly(11,2).ae(11)
+    assert eulerpoly(0,-1).ae(1)
+    assert eulerpoly(0,0).ae(1)
+    assert eulerpoly(0,'1/2').ae(1)
+    assert eulerpoly(0,'3/4').ae(1)
+    assert eulerpoly(0,1).ae(1)
+    assert eulerpoly(0,2).ae(1)
+    assert eulerpoly(1,-1).ae('-3/2')
+    assert eulerpoly(1,0).ae('-1/2')
+    assert eulerpoly(1,'1/2').ae(0)
+    assert eulerpoly(1,'3/4').ae('1/4')
+    assert eulerpoly(1,1).ae('1/2')
+    assert eulerpoly(1,2).ae('3/2')
+    assert eulerpoly(2,-1).ae(2)
+    assert eulerpoly(2,0).ae(0)
+    assert eulerpoly(2,'1/2').ae('-1/4')
+    assert eulerpoly(2,'3/4').ae('-3/16')
+    assert eulerpoly(2,1).ae(0)
+    assert eulerpoly(2,2).ae(2)
+    assert eulerpoly(3,-1).ae('-9/4')
+    assert eulerpoly(3,0).ae('1/4')
+    assert eulerpoly(3,'1/2').ae(0)
+    assert eulerpoly(3,'3/4').ae('-11/64')
+    assert eulerpoly(3,1).ae('-1/4')
+    assert eulerpoly(3,2).ae('9/4')
+    assert eulerpoly(4,-1).ae(2)
+    assert eulerpoly(4,0).ae(0)
+    assert eulerpoly(4,'1/2').ae('5/16')
+    assert eulerpoly(4,'3/4').ae('57/256')
+    assert eulerpoly(4,1).ae(0)
+    assert eulerpoly(4,2).ae(2)
+    assert eulerpoly(5,-1).ae('-3/2')
+    assert eulerpoly(5,0).ae('-1/2')
+    assert eulerpoly(5,'1/2').ae(0)
+    assert eulerpoly(5,'3/4').ae('361/1024')
+    assert eulerpoly(5,1).ae('1/2')
+    assert eulerpoly(5,2).ae('3/2')
+    assert eulerpoly(10,-1).ae(2)
+    assert eulerpoly(10,0).ae(0)
+    assert eulerpoly(10,'1/2').ae('-50521/1024')
+    assert eulerpoly(10,'3/4').ae('-36581523/1048576')
+    assert eulerpoly(10,1).ae(0)
+    assert eulerpoly(10,2).ae(2)
+    assert eulerpoly(11,-1).ae('-699/4')
+    assert eulerpoly(11,0).ae('691/4')
+    assert eulerpoly(11,'1/2').ae(0)
+    assert eulerpoly(11,'3/4').ae('-512343611/4194304')
+    assert eulerpoly(11,1).ae('-691/4')
+    assert eulerpoly(11,2).ae('699/4')
+    # Potential accuracy issues
     assert bernpoly(10000,10000).ae('5.8196915936323387117e+39999')
+    assert bernpoly(200,17.5).ae(3.8048418524583064909e244)
+    assert eulerpoly(200,17.5).ae(-3.7309911582655785929e275)
 
 def test_gamma():
     mp.dps = 15
@@ -222,10 +318,11 @@ def test_zeta_negative():
 
 def test_polygamma():
     mp.dps = 15
+    psi0 = lambda z: psi(0,z)
+    psi1 = lambda z: psi(1,z)
     assert psi0(3) == psi(0,3) == digamma(3)
-    assert psi1(3) == psi(1,3) == trigamma(3)
-    assert psi2(3) == psi(2,3) == tetragamma(3)
-    assert psi3(3) == psi(3,3) == pentagamma(3)
+    #assert psi2(3) == psi(2,3) == tetragamma(3)
+    #assert psi3(3) == psi(3,3) == pentagamma(3)
     assert psi0(pi).ae(0.97721330794200673)
     assert psi0(-pi).ae(7.8859523853854902)
     assert psi0(-pi+1).ae(7.5676424992016996)
@@ -234,7 +331,7 @@ def test_polygamma():
     assert findroot(psi0, 1).ae(1.4616321449683622)
     assert psi0(inf) == inf
     assert psi1(inf) == 0
-    assert psi2(inf) == 0
+    assert psi(2,inf) == 0
     assert psi1(pi).ae(0.37424376965420049)
     assert psi1(-pi).ae(53.030438740085385)
     assert psi1(pi+j).ae(0.32935710377142464 - 0.12222163911221135j)
@@ -254,6 +351,9 @@ def test_polygamma_high_prec():
 
 def test_polygamma_identities():
     mp.dps = 15
+    psi0 = lambda z: psi(0,z)
+    psi1 = lambda z: psi(1,z)
+    psi2 = lambda z: psi(2,z)
     assert psi0(0.5).ae(-euler-2*log(2))
     assert psi0(1).ae(-euler)
     assert psi1(0.5).ae(0.5*pi**2)
@@ -263,13 +363,14 @@ def test_polygamma_identities():
     mp.dps = 20
     u = -182*apery+4*sqrt(3)*pi**3
     mp.dps = 15
-    assert psi2(5/6.).ae(u)
-    assert psi3(0.5).ae(pi**4)
+    assert psi(2,5/6.).ae(u)
+    assert psi(3,0.5).ae(pi**4)
 
 def test_foxtrot_identity():
     # A test of the complex digamma function.
     # See http://mathworld.wolfram.com/FoxTrotSeries.html and
     # http://mathworld.wolfram.com/DigammaFunction.html
+    psi0 = lambda z: psi(0,z)
     mp.dps = 50
     a = (-1)**fraction(1,3)
     b = (-1)**fraction(2,3)
@@ -507,3 +608,51 @@ def test_primezeta():
     assert primezeta(1) == inf
     assert primezeta(inf) == 0
     assert isnan(primezeta(nan))
+
+def test_rs_zeta():
+    mp.dps = 15
+    assert zeta(0.5+100000j).ae(1.0730320148577531321 + 5.7808485443635039843j)
+    assert zeta(0.75+100000j).ae(1.837852337251873704 + 1.9988492668661145358j)
+    assert zeta(0.5+1000000j, derivative=3).ae(1647.7744105852674733 - 1423.1270943036622097j)
+    assert zeta(1+1000000j, derivative=3).ae(3.4085866124523582894 - 18.179184721525947301j)
+    assert zeta(1+1000000j, derivative=1).ae(-0.10423479366985452134 - 0.74728992803359056244j)
+    assert zeta(0.5-1000000j, derivative=1).ae(11.636804066002521459 + 17.127254072212996004j)
+    # Additional sanity tests using fp arithmetic.
+    # Some more high-precision tests are found in the docstrings
+    def ae(x, y, tol=1e-6):
+        return abs(x-y) < tol*abs(y)
+    assert ae(fp.zeta(0.5-100000j), 1.0730320148577531321 - 5.7808485443635039843j)
+    assert ae(fp.zeta(0.75-100000j), 1.837852337251873704 - 1.9988492668661145358j)
+    assert ae(fp.zeta(0.5+1e6j), 0.076089069738227100006 + 2.8051021010192989554j)
+    assert ae(fp.zeta(0.5+1e6j, derivative=1), 11.636804066002521459 - 17.127254072212996004j)
+    assert ae(fp.zeta(1+1e6j), 0.94738726251047891048 + 0.59421999312091832833j)
+    assert ae(fp.zeta(1+1e6j, derivative=1), -0.10423479366985452134 - 0.74728992803359056244j)
+    assert ae(fp.zeta(0.5+100000j, derivative=1), 10.766962036817482375 - 30.92705282105996714j)
+    assert ae(fp.zeta(0.5+100000j, derivative=2), -119.40515625740538429 + 217.14780631141830251j)
+    assert ae(fp.zeta(0.5+100000j, derivative=3), 1129.7550282628460881 - 1685.4736895169690346j)
+    assert ae(fp.zeta(0.5+100000j, derivative=4), -10407.160819314958615 + 13777.786698628045085j)
+    assert ae(fp.zeta(0.75+100000j, derivative=1), -0.41742276699594321475 - 6.4453816275049955949j)
+    assert ae(fp.zeta(0.75+100000j, derivative=2), -9.214314279161977266 + 35.07290795337967899j)
+    assert ae(fp.zeta(0.75+100000j, derivative=3), 110.61331857820103469 - 236.87847130518129926j)
+    assert ae(fp.zeta(0.75+100000j, derivative=4), -1054.334275898559401 + 1769.9177890161596383j)
+
+def test_zeta_near_1():
+    # Test for a former bug in mpf_zeta and mpc_zeta
+    mp.dps = 15
+    s1 = fadd(1, '1e-10', exact=True)
+    s2 = fadd(1, '-1e-10', exact=True)
+    s3 = fadd(1, '1e-10j', exact=True)
+    assert zeta(s1).ae(1.000000000057721566490881444e10)
+    assert zeta(s2).ae(-9.99999999942278433510574872e9)
+    z = zeta(s3)
+    assert z.real.ae(0.57721566490153286060)
+    assert z.imag.ae(-9.9999999999999999999927184e9)
+    mp.dps = 30
+    s1 = fadd(1, '1e-50', exact=True)
+    s2 = fadd(1, '-1e-50', exact=True)
+    s3 = fadd(1, '1e-50j', exact=True)
+    assert zeta(s1).ae('1e50')
+    assert zeta(s2).ae('-1e50')
+    z = zeta(s3)
+    assert z.real.ae('0.57721566490153286060651209008240243104215933593992')
+    assert z.imag.ae('-1e50')

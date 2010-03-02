@@ -9,22 +9,23 @@ References:
 [1] Abramowitz & Stegun. 'Handbook of Mathematical Functions, 9th Ed.',
     (Dover duplicate of 1972 edition)
 [2] Whittaker 'A Course of Modern Analysis, 4th Ed.', 1946,
-    Cambridge Univeristy Press
+    Cambridge University Press
 
 """
 
 import sympy.mpmath as mpmath
 import random
-from sympy.mpmath.mptypes import (mpc, mp, eps, j, zero, one)
-from sympy.mpmath.elliptic import *
-from sympy.mpmath.functions import ldexp
-from sympy.mpmath.calculus import diff
+
+from sympy.mpmath import *
 
 def mpc_ae(a, b, eps=eps):
     res = True
     res = res and a.real.ae(b.real, eps)
     res = res and a.imag.ae(b.imag, eps)
     return res
+
+zero = mpf(0)
+one = mpf(1)
 
 def test_calculate_nome():
     mp.dps = 100
@@ -164,18 +165,18 @@ def test_jtheta_issue39():
     assert r1.ae(r2)
     mp.dps = 15
     # issue 39 about high derivatives
-    assert djtheta(3, 4.5, 0.25, 9).ae(1359.04892680683)
-    assert djtheta(3, 4.5, 0.25, 50).ae(-6.14832772630905e+33)
+    assert jtheta(3, 4.5, 0.25, 9).ae(1359.04892680683)
+    assert jtheta(3, 4.5, 0.25, 50).ae(-6.14832772630905e+33)
     mp.dps = 50
-    r = djtheta(3, 4.5, 0.25, 9)
+    r = jtheta(3, 4.5, 0.25, 9)
     assert r.ae('1359.048926806828939547859396600218966947753213803')
-    r = djtheta(3, 4.5, 0.25, 50)
+    r = jtheta(3, 4.5, 0.25, 50)
     assert r.ae('-6148327726309051673317975084654262.4119215720343656')
 
 def test_jtheta_identities():
     """
     Tests the some of the jacobi identidies found in Abramowitz,
-    Sec. 16.28, Pg. 576.  The identies are tested to 1 part in 10^98.
+    Sec. 16.28, Pg. 576. The identities are tested to 1 part in 10^98.
     """
     mp.dps = 110
     eps1 = ldexp(eps, 30)
@@ -286,31 +287,31 @@ def test_djtheta():
     # Mathematica N[EllipticThetaPrime[1, 1/7 + I/3, 1/8 + I/5], 35]
     res = mpf('1.5555195883277196036090928995803201') - \
           mpf('0.02439761276895463494054149673076275') * j
-    result = djtheta(1, z, q)
+    result = jtheta(1, z, q, 1)
     assert(mpc_ae(result, res))
 
     # Mathematica N[EllipticThetaPrime[2, 1/7 + I/3, 1/8 + I/5], 35]
     res = mpf('0.19825296689470982332701283509685662') - \
           mpf('0.46038135182282106983251742935250009') * j
-    result = djtheta(2, z, q)
+    result = jtheta(2, z, q, 1)
     assert(mpc_ae(result, res))
 
     # Mathematica N[EllipticThetaPrime[3, 1/7 + I/3, 1/8 + I/5], 35]
     res = mpf('0.36492498415476212680896699407390026') - \
           mpf('0.57743812698666990209897034525640369') * j
-    result = djtheta(3, z, q)
+    result = jtheta(3, z, q, 1)
     assert(mpc_ae(result, res))
 
     # Mathematica N[EllipticThetaPrime[4, 1/7 + I/3, 1/8 + I/5], 35]
     res = mpf('-0.38936892528126996010818803742007352') + \
           mpf('0.66549886179739128256269617407313625') * j
-    result = djtheta(4, z, q)
+    result = jtheta(4, z, q, 1)
     assert(mpc_ae(result, res))
 
     for i in range(10):
         q = (one*random.random() + j*random.random())/2
         # identity in Wittaker, Watson &21.41
-        a = djtheta(1, 0, q)
+        a = jtheta(1, 0, q, 1)
         b = jtheta(2, 0, q)*jtheta(3, 0, q)*jtheta(4, 0, q)
         assert(a.ae(b))
 
@@ -319,10 +320,10 @@ def test_djtheta():
     for q,z in [(one/3, one/5), (one/3 + j/8, one/5),
         (one/3, one/5 + j/8), (one/3 + j/7, one/5 + j/8)]:
         for n in [1, 2, 3, 4]:
-            r = djtheta(n, z, q, nd=2)
+            r = jtheta(n, z, q, 2)
             r1 = diff(lambda zz: jtheta(n, zz, q), z, n=2)
             assert r.ae(r1)
-            r = djtheta(n, z, q, nd=3)
+            r = jtheta(n, z, q, 3)
             r1 = diff(lambda zz: jtheta(n, zz, q), z, n=3)
             assert r.ae(r1)
 
@@ -330,9 +331,9 @@ def test_djtheta():
     q = one/3
     z = zero
     a = [0]*5
-    a[1] = djtheta(1, z, q, 3)/djtheta(1, z, q)
+    a[1] = jtheta(1, z, q, 3)/jtheta(1, z, q, 1)
     for n in [2,3,4]:
-        a[n] = djtheta(n, z, q, 2)/jtheta(n, z, q)
+        a[n] = jtheta(n, z, q, 2)/jtheta(n, z, q)
     equality = a[2] + a[3] + a[4] - a[1]
     assert(equality.ae(0))
     mp.dps = 15
@@ -444,8 +445,8 @@ def test_jdn():
 
 def test_sn_cn_dn_identities():
     """
-    Tests the some of the jacobi elliptic function identidies found
-    on Mathworld.  Havn't found in Abramowitz.
+    Tests the some of the jacobi elliptic function identities found
+    on Mathworld. Haven't found in Abramowitz.
     """
     mp.dps = 100
     N = 5
@@ -470,7 +471,7 @@ def test_sn_cn_dn_identities():
         k = m.sqrt()
         zstring = str(10*random.random())
         z = mpf(zstring)
-        term1 = k**2 * jacobi_elliptic_sn(z, m)**2
+        term1 = k**2 * jsn(z, m)**2
         term2 = jdn(z, m)**2
         equality = one - term1 - term2
         assert(equality.ae(0))

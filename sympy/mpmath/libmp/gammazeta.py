@@ -15,22 +15,20 @@ This module implements gamma- and zeta-related functions:
 
 import math
 
-from settings import (\
-    MP_BASE, MP_ZERO, MP_ONE, MP_THREE, MODE, gmpy,
-    round_floor, round_ceiling, round_down, round_up,
-    round_nearest, round_fast
-)
+from backend import MPZ, MPZ_ZERO, MPZ_ONE, MPZ_THREE, gmpy
 
-from libintmath import list_primes, int_fac, moebius
+from libintmath import list_primes, ifac, moebius
 
 from libmpf import (\
+    round_floor, round_ceiling, round_down, round_up,
+    round_nearest, round_fast,
     lshift, sqrt_fixed,
     fzero, fone, fnone, fhalf, ftwo, finf, fninf, fnan,
     from_int, to_int, to_fixed, from_man_exp, from_rational,
     mpf_pos, mpf_neg, mpf_abs, mpf_add, mpf_sub,
     mpf_mul, mpf_mul_int, mpf_div, mpf_sqrt, mpf_pow_int,
     mpf_rdiv_int,
-    mpf_perturb, mpf_le, mpf_lt, mpf_shift,
+    mpf_perturb, mpf_le, mpf_lt, mpf_gt, mpf_shift,
     negative_rnd, reciprocal_rnd,
 )
 
@@ -39,12 +37,12 @@ from libelefun import (\
     def_mpf_constant,
     mpf_pi, pi_fixed, ln2_fixed, log_int_fixed, mpf_ln2,
     mpf_exp, mpf_log, mpf_pow, mpf_cosh,
-    cos_sin, cosh_sinh, mpf_cos_sin_pi, mpf_cos_pi, mpf_sin_pi,
+    mpf_cos_sin, mpf_cosh_sinh, mpf_cos_sin_pi, mpf_cos_pi, mpf_sin_pi,
 )
 
 from libmpc import (\
     mpc_zero, mpc_one, mpc_half, mpc_two,
-    mpc_abs, mpc_shift, mpc_pos,
+    mpc_abs, mpc_shift, mpc_pos, mpc_neg,
     mpc_add, mpc_sub, mpc_mul, mpc_div,
     mpc_add_mpf, mpc_mul_mpf, mpc_div_mpf, mpc_mpf_div,
     mpc_mul_int, mpc_pow_int,
@@ -66,7 +64,7 @@ from libmpc import (\
 @constant_memo
 def catalan_fixed(prec):
     prec = prec + 20
-    a = one = MP_ONE << prec
+    a = one = MPZ_ONE << prec
     s, t, n = 0, 1, 1
     while t:
         a *= 32 * n**3 * (2*n-1)
@@ -103,9 +101,9 @@ def catalan_fixed(prec):
 @constant_memo
 def khinchin_fixed(prec):
     wp = int(prec + prec**0.5 + 15)
-    s = MP_ZERO
+    s = MPZ_ZERO
     fac = from_int(4)
-    t = ONE = MP_ONE << wp
+    t = ONE = MPZ_ONE << wp
     pi = mpf_pi(wp)
     pipow = twopi2 = mpf_shift(mpf_mul(pi, pi, wp), 2)
     n = 1
@@ -172,9 +170,9 @@ def glaisher_fixed(prec):
     # Number of direct terms to sum before applying the Euler-Maclaurin
     # formula to the tail. TODO: choose more intelligently
     N = int(0.33*prec + 5)
-    ONE = MP_ONE << wp
+    ONE = MPZ_ONE << wp
     # Euler-Maclaurin, step 1: sum log(k)/k**2 for k from 2 to N-1
-    s = MP_ZERO
+    s = MPZ_ZERO
     for k in range(2, N):
         #print k, N
         s += log_int_fixed(k, wp) // k**2
@@ -231,10 +229,10 @@ def glaisher_fixed(prec):
 @constant_memo
 def apery_fixed(prec):
     prec += 20
-    d = MP_ONE << prec
-    term = MP_BASE(77) << prec
+    d = MPZ_ONE << prec
+    term = MPZ(77) << prec
     n = 1
-    s = MP_ZERO
+    s = MPZ_ZERO
     while term:
         s += term
         d *= (n**10)
@@ -273,7 +271,7 @@ def euler_fixed(prec):
     p = int(math.log((prec/4) * math.log(2), 2)) + 1
     n = 2**p
     A = U = -p*ln2_fixed(prec)
-    B = V = MP_ONE << prec
+    B = V = MPZ_ONE << prec
     k = 1
     while 1:
         B = B*n**2//k**2
@@ -353,7 +351,7 @@ MAX_BERNOULLI_CACHE = 3000
 """
 Small Bernoulli numbers and factorials are used in numerous summations,
 so it is critical for speed that sequential computation is fast and that
-values are cached up to a fairly high threshhold.
+values are cached up to a fairly high threshold.
 
 On the other hand, we also want to support fast computation of isolated
 large numbers. Currently, no such acceleration is provided for integer
@@ -431,7 +429,7 @@ def mpf_bernoulli(n, prec, rnd=None):
         if n > 10:
             return mpf_bernoulli_huge(n, prec, rnd)
         numbers = {0:fone}
-        m, bin, bin1 = state = [2, MP_BASE(10), MP_ONE]
+        m, bin, bin1 = state = [2, MPZ(10), MPZ_ONE]
         bernoulli_cache[wp] = (numbers, state)
     while m <= n:
         #print m
@@ -442,7 +440,7 @@ def mpf_bernoulli(n, prec, rnd=None):
         s = 0
         sexp = max(0, szbm)  - wp
         if m < 6:
-            a = MP_ZERO
+            a = MPZ_ZERO
         else:
             a = bin1
         for j in xrange(1, m//6+1):
@@ -677,11 +675,11 @@ def spouge_sum_complex(re, im, prec, a, c):
 # back here
 def mpf_gamma_int(n, prec, rounding=round_fast):
     if n < 1000:
-        return from_int(int_fac(n-1), prec, rounding)
+        return from_int(ifac(n-1), prec, rounding)
     # XXX: choose the cutoff less arbitrarily
     size = int(n*math.log(n,2))
     if prec > size/20.0:
-        return from_int(int_fac(n-1), prec, rounding)
+        return from_int(ifac(n-1), prec, rounding)
     return mpf_gamma(from_int(n), prec, rounding)
 
 def mpf_factorial(x, prec, rounding=round_fast):
@@ -712,7 +710,7 @@ def mpf_gamma(x, prec, rounding=round_fast, p1=1):
             raise ValueError("gamma function pole")
         # A direct factorial is fastest
         if exp + bc <= 10:
-            return from_int(int_fac((man<<exp)-p1), prec, rounding)
+            return from_int(ifac((man<<exp)-p1), prec, rounding)
     reflect = sign or exp+bc < -1
     if p1:
         # Should be done exactly!
@@ -896,9 +894,9 @@ def mpf_psi0(x, prec, rnd=round_fast):
     # Initial recurrence to obtain a large enough x
     m = to_int(x)
     n = int(0.11*wp) + 2
-    s = MP_ZERO
+    s = MPZ_ZERO
     x = to_fixed(x, wp)
-    one = MP_ONE << wp
+    one = MPZ_ONE << wp
     if m < n:
         for k in xrange(m, n):
             s -= (one << wp) // x
@@ -1098,14 +1096,12 @@ http://en.wikipedia.org/wiki/Dirichlet_eta_function
 
 borwein_cache = {}
 
-
-
 def borwein_coefficients(n):
     if n in borwein_cache:
         return borwein_cache[n]
-    ds = [MP_ZERO] * (n+1)
-    d = MP_ONE
-    s = ds[0] = MP_ONE
+    ds = [MPZ_ZERO] * (n+1)
+    d = MPZ_ONE
+    s = ds[0] = MPZ_ONE
     for i in range(1, n+1):
         d = d * 4 * (n+i-1) * (n-i+1)
         d //= ((2*i) * ((2*i)-1))
@@ -1114,12 +1110,17 @@ def borwein_coefficients(n):
     borwein_cache[n] = ds
     return ds
 
+ZETA_INT_CACHE_MAX_PREC = 1000
+zeta_int_cache = {}
+
 def mpf_zeta_int(s, prec, rnd=round_fast):
     """
     Optimized computation of zeta(s) for an integer s.
     """
     wp = prec + 20
     s = int(s)
+    if s in zeta_int_cache and zeta_int_cache[s][0] >= wp:
+        return mpf_pos(zeta_int_cache[s][1], prec, rnd)
     if s < 2:
         if s == 1:
             raise ValueError("zeta(1) pole")
@@ -1133,7 +1134,7 @@ def mpf_zeta_int(s, prec, rnd=round_fast):
     elif s >= wp*0.431:
         t = one = 1 << wp
         t += 1 << (wp - s)
-        t += one // (MP_THREE ** s)
+        t += one // (MPZ_THREE ** s)
         t += 1 << max(0, wp - s*2)
         return from_man_exp(t, -wp, prec, rnd)
     else:
@@ -1155,12 +1156,14 @@ def mpf_zeta_int(s, prec, rnd=round_fast):
     # Use Borwein's algorithm
     n = int(wp/2.54 + 5)
     d = borwein_coefficients(n)
-    t = MP_ZERO
-    s = MP_BASE(s)
+    t = MPZ_ZERO
+    s = MPZ(s)
     for k in xrange(n):
         t += (((-1)**k * (d[k] - d[n])) << wp) // (k+1)**s
     t = (t << wp) // (-d[n])
     t = (t << wp) // ((1 << wp) - (1 << (wp+1-s)))
+    if (s in zeta_int_cache and zeta_int_cache[s][0] < wp) or (s not in zeta_int_cache):
+        zeta_int_cache[s] = (wp, from_man_exp(t, -wp-wp))
     return from_man_exp(t, -wp-wp, prec, rnd)
 
 def mpf_zeta(s, prec, rnd=round_fast, alt=0):
@@ -1206,12 +1209,26 @@ def mpf_zeta(s, prec, rnd=round_fast, alt=0):
         pi = mpf_pi(wp+wp2)
         d = mpf_div(mpf_pow(mpf_shift(pi, 1), s, wp2), pi, wp2)
         return mpf_mul(a,mpf_mul(b,mpf_mul(c,d,wp),wp),prec,rnd)
-    t = MP_ZERO
+
+    # Near pole
+    r = mpf_sub(fone, s, wp)
+    asign, aman, aexp, abc = mpf_abs(r)
+    pole_dist = -2*(aexp+abc)
+    if pole_dist > wp:
+        if alt:
+            return mpf_ln2(prec, rnd)
+        else:
+            q = mpf_neg(mpf_div(fone, r, wp))
+            return mpf_add(q, mpf_euler(wp), prec, rnd)
+    else:
+        wp += max(0, pole_dist)
+
+    t = MPZ_ZERO
     #wp += 16 - (prec & 15)
     # Use Borwein's algorithm
     n = int(wp/2.54 + 5)
     d = borwein_coefficients(n)
-    t = MP_ZERO
+    t = MPZ_ZERO
     sf = to_fixed(s, wp)
     for k in xrange(n):
         u = from_man_exp(-sf*log_int_fixed(k+1, wp), -2*wp, wp)
@@ -1233,11 +1250,37 @@ def mpf_zeta(s, prec, rnd=round_fast, alt=0):
         q = mpf_sub(fone, mpf_pow(ftwo, mpf_sub(fone, s, wp), wp), wp)
         return mpf_div(t, q, prec, rnd)
 
-def mpc_zeta(s, prec, rnd=round_fast, alt=0):
+def mpc_zeta(s, prec, rnd=round_fast, alt=0, force=False):
     re, im = s
     if im == fzero:
         return mpf_zeta(re, prec, rnd, alt), fzero
+
+    # slow for large s
+    if (not force) and mpf_gt(mpc_abs(s, 10), from_int(prec)):
+        raise NotImplementedError
+
     wp = prec + 20
+
+    # Near pole
+    r = mpc_sub(mpc_one, s, wp)
+    asign, aman, aexp, abc = mpc_abs(r, 10)
+    pole_dist = -2*(aexp+abc)
+    if pole_dist > wp:
+        if alt:
+            q = mpf_ln2(wp)
+            y = mpf_mul(q, mpf_euler(wp), wp)
+            g = mpf_shift(mpf_mul(q, q, wp), -1)
+            g = mpf_sub(y, g)
+            z = mpc_mul_mpf(r, mpf_neg(g), wp)
+            z = mpc_add_mpf(z, q, wp)
+            return mpc_pos(z, prec, rnd)
+        else:
+            q = mpc_neg(mpc_div(mpc_one, r, wp))
+            q = mpc_add_mpf(q, mpf_euler(wp), wp)
+            return mpc_pos(q, prec, rnd)
+    else:
+        wp += max(0, pole_dist)
+
     # Reflection formula. To be rigorous, we should reflect to the left of
     # re = 1/2 (see comments for mpf_zeta), but this leads to unnecessary
     # slowdown for interesting values of s
@@ -1265,10 +1308,10 @@ def mpc_zeta(s, prec, rnd=round_fast, alt=0):
     d = borwein_coefficients(n)
     ref = to_fixed(re, wp)
     imf = to_fixed(im, wp)
-    tre = MP_ZERO
-    tim = MP_ZERO
-    one = MP_ONE << wp
-    one_2wp = MP_ONE << (2*wp)
+    tre = MPZ_ZERO
+    tim = MPZ_ZERO
+    one = MPZ_ONE << wp
+    one_2wp = MPZ_ONE << (2*wp)
     critical_line = re == fhalf
     for k in xrange(n):
         log = log_int_fixed(k+1, wp)
@@ -1281,7 +1324,7 @@ def mpc_zeta(s, prec, rnd=round_fast, alt=0):
             w *= (d[n] - d[k])
         else:
             w *= (d[k] - d[n])
-        wre, wim = cos_sin(from_man_exp(-imf * log_int_fixed(k+1, wp), -2*wp), wp)
+        wre, wim = mpf_cos_sin(from_man_exp(-imf * log, -2*wp), wp)
         tre += (w * to_fixed(wre, wp)) >> wp
         tim += (w * to_fixed(wim, wp)) >> wp
     tre //= (-d[n])
@@ -1291,7 +1334,7 @@ def mpc_zeta(s, prec, rnd=round_fast, alt=0):
     if alt:
         return mpc_pos((tre, tim), prec, rnd)
     else:
-        q = mpc_sub(mpc_one, mpc_pow(mpc_two, mpc_sub(mpc_one, s, wp), wp), wp)
+        q = mpc_sub(mpc_one, mpc_pow(mpc_two, r, wp), wp)
         return mpc_div((tre, tim), q, prec, rnd)
 
 def mpf_altzeta(s, prec, rnd=round_fast):
@@ -1299,3 +1342,135 @@ def mpf_altzeta(s, prec, rnd=round_fast):
 
 def mpc_altzeta(s, prec, rnd=round_fast):
     return mpc_zeta(s, prec, rnd, 1)
+
+# Not optimized currently
+mpf_zetasum = None
+
+def exp_fixed_prod(x, wp):
+    u = from_man_exp(x, -2*wp, wp)
+    esign, eman, eexp, ebc = mpf_exp(u, wp)
+    offset = eexp + wp
+    if offset >= 0:
+        return eman << offset
+    else:
+        return eman >> (-offset)
+
+def cos_sin_fixed_prod(x, wp):
+    cos, sin = mpf_cos_sin(from_man_exp(x, -2*wp), wp)
+    sign, man, exp, bc = cos
+    if sign:
+        man = -man
+    offset = exp + wp
+    if offset >= 0:
+        cos = man << offset
+    else:
+        cos = man >> (-offset)
+    sign, man, exp, bc = sin
+    if sign:
+        man = -man
+    offset = exp + wp
+    if offset >= 0:
+        sin = man << offset
+    else:
+        sin = man >> (-offset)
+    return cos, sin
+
+def pow_fixed(x, n, wp):
+    if n == 1:
+        return x
+    y = MPZ_ONE << wp
+    while n:
+        if n & 1:
+            y = (y*x) >> wp
+            n -= 1
+        x = (x*x) >> wp
+        n //= 2
+    return y
+
+def mpc_zetasum(s, a, n, derivatives, reflect, prec):
+    """
+    Fast version of mp._zetasum, assuming s = complex, a = integer.
+    """
+
+    wp = prec + 10
+    have_derivatives = derivatives != [0]
+    have_one_derivative = len(derivatives) == 1
+
+    # parse s
+    sre, sim = s
+    critical_line = (sre == fhalf)
+    sre = to_fixed(sre, wp)
+    sim = to_fixed(sim, wp)
+
+    maxd = max(derivatives)
+    if not have_one_derivative:
+        derivatives = range(maxd+1)
+
+    # x_d = 0, y_d = 0
+    xre = [MPZ_ZERO for d in derivatives]
+    xim = [MPZ_ZERO for d in derivatives]
+    if reflect:
+        yre = [MPZ_ZERO for d in derivatives]
+        yim = [MPZ_ZERO for d in derivatives]
+    else:
+        yre = yim = []
+
+    one = MPZ_ONE << wp
+    one_2wp = MPZ_ONE << (2*wp)
+
+    for w in xrange(a, a+n+1):
+        log = log_int_fixed(w, wp)
+        cos, sin = cos_sin_fixed_prod(-sim*log, wp)
+        if critical_line:
+            u = one_2wp // sqrt_fixed(w << wp, wp)
+        else:
+            u = exp_fixed_prod(-sre*log, wp)
+        xterm_re = (u * cos) >> wp
+        xterm_im = (u * sin) >> wp
+        if reflect:
+            reciprocal = (one_2wp // (u*w))
+            yterm_re = (reciprocal * cos) >> wp
+            yterm_im = (reciprocal * sin) >> wp
+
+        if have_derivatives:
+            if have_one_derivative:
+                log = pow_fixed(log, maxd, wp)
+                xre[0] += (xterm_re * log) >> wp
+                xim[0] += (xterm_im * log) >> wp
+                if reflect:
+                    yre[0] += (yterm_re * log) >> wp
+                    yim[0] += (yterm_im * log) >> wp
+            else:
+                t = MPZ_ONE << wp
+                for d in derivatives:
+                    xre[d] += (xterm_re * t) >> wp
+                    xim[d] += (xterm_im * t) >> wp
+                    if reflect:
+                        yre[d] += (yterm_re * t) >> wp
+                        yim[d] += (yterm_im * t) >> wp
+                    t = (t * log) >> wp
+        else:
+            xre[0] += xterm_re
+            xim[0] += xterm_im
+            if reflect:
+                yre[0] += yterm_re
+                yim[0] += yterm_im
+    if have_derivatives:
+        if have_one_derivative:
+            if maxd % 2:
+                xre[0] = -xre[0]
+                xim[0] = -xim[0]
+                if reflect:
+                    yre[0] = -yre[0]
+                    yim[0] = -yim[0]
+        else:
+            xre = [(-1)**d * xre[d] for d in derivatives]
+            xim = [(-1)**d * xim[d] for d in derivatives]
+            if reflect:
+                yre = [(-1)**d * yre[d] for d in derivatives]
+                yim = [(-1)**d * yim[d] for d in derivatives]
+    xs = [(from_man_exp(xa, -wp, prec, 'n'), from_man_exp(xb, -wp, prec, 'n'))
+        for (xa, xb) in zip(xre, xim)]
+    ys = [(from_man_exp(ya, -wp, prec, 'n'), from_man_exp(yb, -wp, prec, 'n'))
+        for (ya, yb) in zip(yre, yim)]
+    return xs, ys

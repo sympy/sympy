@@ -12,26 +12,20 @@ from bisect import bisect
 #from random import getrandbits
 getrandbits = None
 
-from settings import (\
-    MP_BASE, MP_ZERO, MP_ONE, MP_TWO, MP_FIVE, MODE, STRICT, gmpy,
-    round_floor, round_ceiling, round_down, round_up,
-    round_nearest, round_fast,
-    MP_BASE_TYPE, MODE
-)
+from backend import (MPZ, MPZ_TYPE, MPZ_ZERO, MPZ_ONE, MPZ_TWO, MPZ_FIVE,
+    BACKEND, STRICT, gmpy, sage, sage_utils)
 
-from libintmath import (
-    giant_steps,
+from libintmath import (giant_steps,
     trailtable, bctable, lshift, rshift, bitcount, trailing,
     sqrt_fixed, numeral, isqrt, isqrt_fast, sqrtrem,
-    bin_to_radix
-)
+    bin_to_radix)
 
 # We don't pickle tuples directly for the following reasons:
 #   1: pickle uses str() for ints, which is inefficient when they are large
 #   2: pickle doesn't work for gmpy mpzs
 # Both problems are solved by using hex()
 
-if MODE == 'sage':
+if BACKEND == 'sage':
     def to_pickable(x):
         sign, man, exp, bc = x
         return sign, hex(man), exp, bc
@@ -42,10 +36,37 @@ else:
 
 def from_pickable(x):
     sign, man, exp, bc = x
-    return (sign, MP_BASE(man, 16), exp, bc)
+    return (sign, MPZ(man, 16), exp, bc)
 
 class ComplexResult(ValueError):
     pass
+
+# All supported rounding modes
+round_nearest = intern('n')
+round_floor = intern('f')
+round_ceiling = intern('c')
+round_up = intern('u')
+round_down = intern('d')
+round_fast = round_down
+
+def prec_to_dps(n):
+    """Return number of accurate decimals that can be represented
+    with a precision of n bits."""
+    return max(1, int(round(int(n)/3.3219280948873626)-1))
+
+def dps_to_prec(n):
+    """Return the number of bits required to represent n decimals
+    accurately."""
+    return max(1, int(round((int(n)+1)*3.3219280948873626)))
+
+def repr_dps(n):
+    """Return the number of decimal digits required to represent
+    a number with n-bit precision so that it can be uniquely
+    reconstructed from the representation."""
+    dps = prec_to_dps(n)
+    if dps == 15:
+        return 17
+    return dps + 3
 
 #----------------------------------------------------------------------------#
 #                    Some commonly needed float values                       #
@@ -53,18 +74,18 @@ class ComplexResult(ValueError):
 
 # Regular number format:
 # (-1)**sign * mantissa * 2**exponent, plus bitcount of mantissa
-fzero = (0, MP_ZERO, 0, 0)
-fnzero = (1, MP_ZERO, 0, 0)
-fone = (0, MP_ONE, 0, 1)
-fnone = (1, MP_ONE, 0, 1)
-ftwo = (0, MP_ONE, 1, 1)
-ften = (0, MP_FIVE, 1, 3)
-fhalf = (0, MP_ONE, -1, 1)
+fzero = (0, MPZ_ZERO, 0, 0)
+fnzero = (1, MPZ_ZERO, 0, 0)
+fone = (0, MPZ_ONE, 0, 1)
+fnone = (1, MPZ_ONE, 0, 1)
+ftwo = (0, MPZ_ONE, 1, 1)
+ften = (0, MPZ_FIVE, 1, 3)
+fhalf = (0, MPZ_ONE, -1, 1)
 
 # Arbitrary encoding for special numbers: zero mantissa, nonzero exponent
-fnan = (0, MP_ZERO, -123, -1)
-finf = (0, MP_ZERO, -456, -2)
-fninf = (1, MP_ZERO, -789, -3)
+fnan = (0, MPZ_ZERO, -123, -1)
+finf = (0, MPZ_ZERO, -456, -2)
+fninf = (1, MPZ_ZERO, -789, -3)
 
 # Was 1e1000; this is broken in Python 2.4
 math_float_inf = 1e300 * 1e300
@@ -103,9 +124,9 @@ def round_int(x, n, rnd):
 # which direction to round when rounding to nearest.
 class h_mask_big:
     def __getitem__(self, n):
-        return (MP_ONE<<(n-1))-1
+        return (MPZ_ONE<<(n-1))-1
 
-h_mask_small = [0]+[((MP_ONE<<(_-1))-1) for _ in range(1, 300)]
+h_mask_small = [0]+[((MPZ_ONE<<(_-1))-1) for _ in range(1, 300)]
 h_mask = [h_mask_big(), h_mask_small]
 
 # The >> operator rounds to floor. shifts_down[rnd][sign]
@@ -221,7 +242,7 @@ def _normalize1(sign, man, exp, bc, prec, rnd):
 def strict_normalize(sign, man, exp, bc, prec, rnd):
     """Additional checks on the components of an mpf. Enable tests by setting
        the environment variable MPMATH_STRICT to Y."""
-    assert type(man) == MP_BASE_TYPE
+    assert type(man) == MPZ_TYPE
     assert type(bc) in (int, long)
     assert type(exp) in (int, long)
     assert bc == bitcount(man)
@@ -230,16 +251,19 @@ def strict_normalize(sign, man, exp, bc, prec, rnd):
 def strict_normalize1(sign, man, exp, bc, prec, rnd):
     """Additional checks on the components of an mpf. Enable tests by setting
        the environment variable MPMATH_STRICT to Y."""
-    assert type(man) == MP_BASE_TYPE
+    assert type(man) == MPZ_TYPE
     assert type(bc) in (int, long)
     assert type(exp) in (int, long)
     assert bc == bitcount(man)
     assert (not man) or (man & 1)
     return _normalize1(sign, man, exp, bc, prec, rnd)
 
-if MODE == 'gmpy' and '_mpmath_normalize' in dir(gmpy):
+if BACKEND == 'gmpy' and '_mpmath_normalize' in dir(gmpy):
     _normalize = gmpy._mpmath_normalize
     _normalize1 = gmpy._mpmath_normalize
+
+if BACKEND == 'sage':
+    _normalize = _normalize1 = sage_utils.normalize
 
 if STRICT:
     normalize = strict_normalize
@@ -255,7 +279,7 @@ else:
 def from_man_exp(man, exp, prec=None, rnd=round_fast):
     """Create raw mpf from (man, exp) pair. The mantissa may be signed.
     If no precision is specified, the mantissa is stored exactly."""
-    man = MP_BASE(man)
+    man = MPZ(man)
     sign = 0
     if man < 0:
         sign = 1
@@ -283,12 +307,13 @@ def from_man_exp(man, exp, prec=None, rnd=round_fast):
         return (sign, man, exp, bc)
     return normalize(sign, man, exp, bc, prec, rnd)
 
+int_cache = dict((n, from_man_exp(n, 0)) for n in range(-10, 257))
 
-
-if MODE == 'gmpy' and '_mpmath_create' in dir(gmpy):
+if BACKEND == 'gmpy' and '_mpmath_create' in dir(gmpy):
     from_man_exp = gmpy._mpmath_create
 
-int_cache = dict((n, from_man_exp(n, 0)) for n in range(-10, 257))
+if BACKEND == 'sage':
+    from_man_exp = sage_utils.from_man_exp
 
 def from_int(n, prec=0, rnd=round_fast):
     """Create a raw mpf from an integer. If no precision is specified,
@@ -405,7 +430,7 @@ def to_float(s, strict=False):
         return 0.0
 
 def from_rational(p, q, prec, rnd=round_fast):
-    """Create a raw mpf from a rational number p/q, rnd if
+    """Create a raw mpf from a rational number p/q, round if
     necessary."""
     return mpf_div(from_int(p), from_int(q), prec, rnd)
 
@@ -567,7 +592,7 @@ def mpf_abs(s, prec=None, rnd=round_fast):
         return s
     if not prec:
         if sign:
-            return (not sign, man, exp, bc)
+            return (0, man, exp, bc)
         return s
     return normalize1(0, man, exp, bc, prec, rnd)
 
@@ -603,8 +628,8 @@ def mpf_add(s, t, prec=0, rnd=round_fast, _sub=0):
                     if delta > prec + 4:
                         offset = prec + 4
                         sman <<= offset
-                        if tsign: sman -= 1
-                        else:     sman += 1
+                        if tsign == ssign: sman += 1
+                        else:              sman -= 1
                         return normalize1(ssign, sman, sexp-offset,
                             bitcount(sman), prec, rnd)
                 # Add
@@ -628,8 +653,8 @@ def mpf_add(s, t, prec=0, rnd=round_fast, _sub=0):
                     if delta > prec + 4:
                         offset = prec + 4
                         tman <<= offset
-                        if ssign: tman -= 1
-                        else:     tman += 1
+                        if ssign == tsign: tman += 1
+                        else:              tman -= 1
                         return normalize1(tsign, tman, texp-offset,
                             bitcount(tman), prec, rnd)
                 # Add
@@ -805,12 +830,7 @@ def python_mpf_mul_int(s, n, prec, rnd=round_fast):
     return normalize(sign, man, exp, bc, prec, rnd)
 
 
-if MODE == 'gmpy':
-    mpf_mul = gmpy_mpf_mul
-    mpf_mul_int = gmpy_mpf_mul_int
-elif MODE == 'sage':
-    # Like gmpy, take advantage of fast bitcount. Needs
-    # to be changed if gmpy_mpf_mul implementation changes
+if BACKEND == 'gmpy':
     mpf_mul = gmpy_mpf_mul
     mpf_mul_int = gmpy_mpf_mul_int
 else:
@@ -950,7 +970,7 @@ def mpf_pow_int(s, n, prec, rnd=round_fast):
             return fzero
         man = man*man
         if man == 1:
-            return (0, MP_ONE, exp+exp, 1)
+            return (0, MPZ_ONE, exp+exp, 1)
         bc = bc + bc - 2
         bc += bctable[int(man>>bc)]
         return normalize1(0, man, exp+exp, bc, prec, rnd)
@@ -963,7 +983,7 @@ def mpf_pow_int(s, n, prec, rnd=round_fast):
 
     # Use exact integer power when the exact mantissa is small
     if man == 1:
-        return (result_sign, MP_ONE, exp*n, 1)
+        return (result_sign, MPZ_ONE, exp*n, 1)
     if bc*n < 1000:
         man **= n
         return normalize1(result_sign, man, exp*n, bitcount(man), prec, rnd)
@@ -1022,7 +1042,7 @@ def mpf_perturb(x, eps_sign, prec, rnd):
     if rnd is round_nearest:
         return mpf_pos(x, prec, rnd)
     sign, man, exp, bc = x
-    eps = (eps_sign, MP_ONE, exp+bc-prec-1, 1)
+    eps = (eps_sign, MPZ_ONE, exp+bc-prec-1, 1)
     if sign:
         away = (rnd in (round_down, round_ceiling)) ^ eps_sign
     else:
@@ -1032,9 +1052,6 @@ def mpf_perturb(x, eps_sign, prec, rnd):
     else:
         return mpf_pos(x, prec, rnd)
 
-
-##############################################################################
-##############################################################################
 
 #----------------------------------------------------------------------------#
 #                              Radix conversion                              #
@@ -1100,8 +1117,8 @@ def to_str(s, dps, strip_zeros=True, min_fixed=None, max_fixed=None,
     that may be inserted for visual purposes).
 
     The number will be printed in fixed-point format if the position
-    of the leading digit is strictly between min_fixed (default = -dps/3)
-    and max_fixed (default = dps).
+    of the leading digit is strictly between min_fixed
+    (default = min(-dps/3,-5)) and max_fixed (default = dps).
 
     To force fixed-point format always, set min_fixed = -inf,
     max_fixed = +inf. To force floating-point format, set
@@ -1124,7 +1141,7 @@ def to_str(s, dps, strip_zeros=True, min_fixed=None, max_fixed=None,
         if s == fnan: return 'nan'
         raise ValueError
 
-    if min_fixed is None: min_fixed = -(dps//3)
+    if min_fixed is None: min_fixed = min(-(dps//3), -5)
     if max_fixed is None: max_fixed = dps
 
     # to_digits_exp rounds to floor.
@@ -1192,7 +1209,7 @@ def str_to_man_exp(x, base=10):
         a, b = parts[0], parts[1].rstrip('0')
         exp -= len(b)
         x = a + b
-    x = MP_BASE(int(x, base))
+    x = MPZ(int(x, base))
     return x, exp
 
 special_str = {'inf':finf, '+inf':finf, '-inf':fninf, 'nan':fnan}
@@ -1209,6 +1226,10 @@ def from_str(x, prec, rnd=round_fast):
     x = x.strip()
     if x in special_str:
         return special_str[x]
+
+    if '/' in x:
+        p, q = x.split('/')
+        return from_rational(int(p), int(q), prec, rnd)
 
     man, exp = str_to_man_exp(x, base=10)
 
@@ -1229,7 +1250,7 @@ def from_str(x, prec, rnd=round_fast):
 
 def from_bstr(x):
     man, exp = str_to_man_exp(x, base=2)
-    man = MP_BASE(man)
+    man = MPZ(man)
     sign = 0
     if man < 0:
         man = -man
@@ -1241,9 +1262,6 @@ def to_bstr(x):
     sign, man, exp, bc = x
     return ['','-'][sign] + numeral(man, size=bitcount(man), base=2) + ("e%i" % exp)
 
-
-##############################################################################
-##############################################################################
 
 #----------------------------------------------------------------------------#
 #                                Square roots                                #
@@ -1285,3 +1303,15 @@ def mpf_hypot(x, y, prec, rnd=round_fast):
     if x == fzero: return mpf_abs(y, prec, rnd)
     hypot2 = mpf_add(mpf_mul(x,x), mpf_mul(y,y), prec+4)
     return mpf_sqrt(hypot2, prec, rnd)
+
+
+if BACKEND == 'sage':
+    try:
+        import sage.libs.mpmath.ext_libmp as ext_lib
+        mpf_add = ext_lib.mpf_add
+        mpf_sub = ext_lib.mpf_sub
+        mpf_mul = ext_lib.mpf_mul
+        mpf_div = ext_lib.mpf_div
+        mpf_sqrt = ext_lib.mpf_sqrt
+    except ImportError:
+        pass

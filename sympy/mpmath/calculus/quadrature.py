@@ -214,7 +214,7 @@ class QuadratureRule(object):
             # by having 0 as an endpoint.
             if (a, b) == (ctx.ninf, ctx.inf):
                 _f = f
-                f = lambda x: _f(ctx.fneg(x,exact=True)) + _f(x)
+                f = lambda x: _f(-x) + _f(x)
                 a, b = (ctx.zero, ctx.inf)
             results = []
             for degree in xrange(1, max_degree+1):
@@ -232,7 +232,7 @@ class QuadratureRule(object):
             I += results[-1]
         if err > epsilon:
             if verbose:
-                print "Failed to reach full accuracy. Estimated error:", nstr(err)
+                print "Failed to reach full accuracy. Estimated error:", ctx.nstr(err)
         return I, err
 
     def sum_next(self, f, nodes, degree, prec, previous, verbose=False):
@@ -360,7 +360,7 @@ class TanhSinh(QuadratureRule):
                 break
 
             nodes.append((x, w))
-            nodes.append((ctx.fneg(x,exact=True), w))
+            nodes.append((-x, w))
 
             a *= udelta
             b *= urdelta
@@ -442,7 +442,7 @@ class GaussLegendre(QuadratureRule):
             if verbose  and j % 30 == 15:
                 print "Computing nodes (%i of %i)" % (j, upto)
             nodes.append((x, w))
-            nodes.append((ctx.fneg(x,exact=True), w))
+            nodes.append((-x, w))
         ctx.prec = orig
         return nodes
 
@@ -572,7 +572,7 @@ class QuadratureMethods:
         diamond-shaped path from `1` to `+i` to `-1` to `-i` to `1`::
 
             >>> mp.dps = 15
-            >>> quad(lambda z: 1/z, [1,j,-1,-j,1])
+            >>> chop(quad(lambda z: 1/z, [1,j,-1,-j,1]))
             (0.0 + 6.28318530717959j)
 
         **Examples of 2D and 3D integrals**
@@ -714,7 +714,7 @@ class QuadratureMethods:
         1. http://mathworld.wolfram.com/DoubleIntegral.html
 
         """
-        rule = kwargs.get('method', TanhSinh)
+        rule = kwargs.get('method', 'tanh-sinh')
         if type(rule) is str:
             if rule == 'tanh-sinh':
                 rule = ctx._tanh_sinh
@@ -729,7 +729,7 @@ class QuadratureMethods:
         orig = prec = ctx.prec
         epsilon = ctx.eps/8
         m = kwargs.get('maxdegree') or rule.guess_degree(prec)
-        points = [ctx.AS_POINTS(p) for p in points]
+        points = [ctx._as_points(p) for p in points]
         try:
             ctx.prec += 20
             if dim == 1:
@@ -963,7 +963,7 @@ class QuadratureMethods:
             0.5
 
         """
-        a, b = ctx.AS_POINTS(interval)
+        a, b = ctx._as_points(interval)
         a = ctx.convert(a)
         b = ctx.convert(b)
         if [omega, period, zeros].count(None) != 2:
@@ -991,10 +991,10 @@ class QuadratureMethods:
         #if n >= 9:
         #    raise ValueError("zeros do not appear to be correctly indexed")
         n = 1
-        # XXX: use method
-        from calculus import nsum
         s = ctx.quadgl(f, [a, zeros(n)])
-        s += nsum(lambda k: ctx.quadgl(f, [zeros(k), zeros(k+1)]), [n, ctx.inf])
+        def term(k):
+            return ctx.quadgl(f, [zeros(k), zeros(k+1)])
+        s += ctx.nsum(term, [n, ctx.inf])
         return s
 
 if __name__ == '__main__':
