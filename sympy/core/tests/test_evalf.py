@@ -29,7 +29,7 @@ def test_evalf_basic():
     assert NS('16*atan(1/5)-4*atan(1/239)', 15) == '3.14159265358979'
 
 def test_cancellation():
-    assert NS(Add(pi,Rational(1,10**1000),-pi,evaluate=False),15,maxprec=1200) == '1.00000000000000e-1000'
+    assert NS(Add(pi,Rational(1,10**1000),-pi,evaluate=False),15,maxn=1200) == '1.00000000000000e-1000'
 
 def test_evalf_powers():
     assert NS('pi**(10**20)',10) == '1.339148777e+49714987269413385435'
@@ -105,7 +105,7 @@ def test_evalf_trig():
     assert NS('sin(E*10**100)',15) == '0.409160531722613'
     # Some input near roots
     assert NS(sin(exp(pi*sqrt(163))*pi), 15) == '-2.35596641936785e-12'
-    assert NS(sin(pi*10**100 + Rational(7,10**5), evaluate=False), 15, maxprec=120) == \
+    assert NS(sin(pi*10**100 + Rational(7,10**5), evaluate=False), 15, maxn=120) == \
         '6.99999999428333e-5'
     assert NS(sin(Rational(7,10**5), evaluate=False), 15) == \
         '6.99999999428333e-5'
@@ -114,7 +114,7 @@ def test_evalf_trig():
 def test_evalf_near_integers():
     # Binet's formula
     f = lambda n: ((1+sqrt(5))**n)/(2**n * sqrt(5))
-    assert NS(f(5000) - fibonacci(5000), 10, maxprec=1500) == '5.156009964e-1046'
+    assert NS(f(5000) - fibonacci(5000), 10, maxn=1500) == '5.156009964e-1046'
     # Some near-integer identities from
     # http://mathworld.wolfram.com/AlmostInteger.html
     assert NS('sin(2017*2**(1/5))',15) == '-1.00000000000000'
@@ -158,9 +158,9 @@ def test_evalf_integer_parts():
     b = floor(log(8)/log(2), evaluate=False)
     raises(PrecisionExhausted, "a.evalf()")
     assert a.evalf(chop=True) == 3
-    assert a.evalf(maxprec=500) == 2
+    assert a.evalf(maxn=500) == 2
     raises(PrecisionExhausted, "b.evalf()")
-    raises(PrecisionExhausted, "b.evalf(maxprec=500)")
+    raises(PrecisionExhausted, "b.evalf(maxn=500)")
     assert b.evalf(chop=True) == 3
     assert int(floor(factorial(50)/E,evaluate=False).evalf()) == \
         11188719610782480504630258070757734324011354208865721592720336800L
@@ -171,7 +171,7 @@ def test_evalf_integer_parts():
 
 def test_evalf_trig_zero_detection():
     a = sin(160*pi, evaluate=False)
-    t = a.evalf(maxprec=100)
+    t = a.evalf(maxn=100)
     assert abs(t) < 1e-100
     assert t._prec < 2
     assert a.evalf(chop=True) == 0
@@ -203,3 +203,6 @@ def test_evalf_power_subs_bugs():
     assert exp(x).evalf(subs={x:0}) == 1
     assert ((2+I)**x).evalf(subs={x:0}) == 1
     assert (0**x).evalf(subs={x:0}) == 1
+
+def test_evalf_arguments():
+    raises(TypeError, 'pi.evalf(method="garbage")')

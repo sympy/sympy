@@ -118,13 +118,13 @@ Unfortunately, numerical evaluation cannot tell an expression that is exactly ze
     -.0e+84
 
 
-The lack of digits in the returned number indicates that ``N`` failed to achieve full accuracy. The result indicates that the magnitude of the expression is something less than 10^84, but that is not a particularly good answer. To force a higher working precision, the ``maxprec`` keyword argument can be used:
+The lack of digits in the returned number indicates that ``N`` failed to achieve full accuracy. The result indicates that the magnitude of the expression is something less than 10^84, but that is not a particularly good answer. To force a higher working precision, the ``maxn`` keyword argument can be used:
 
-    >>> N(fibonacci(1000) - (GoldenRatio)**1000/sqrt(5), maxprec=500)
+    >>> N(fibonacci(1000) - (GoldenRatio)**1000/sqrt(5), maxn=500)
     -4.60123853010113e-210
 
 
-Normally, ``maxprec`` can be set very high (thousands of digits), but be aware that this may cause significant slowdown in extreme cases. Alternatively, the ``strict=True`` option can be set to force an exception instead of silently returning a value with less than the requested accuracy:
+Normally, ``maxn`` can be set very high (thousands of digits), but be aware that this may cause significant slowdown in extreme cases. Alternatively, the ``strict=True`` option can be set to force an exception instead of silently returning a value with less than the requested accuracy:
 
     >>> N(fibonacci(1000) - (GoldenRatio)**1000/sqrt(5), strict=True) 
     Traceback (most recent call last):
@@ -133,7 +133,7 @@ Normally, ``maxprec`` can be set very high (thousands of digits), but be aware t
     <BLANKLINE>
     43466557686937456435688527675040625802564660517371780402481729089536555417949051890403879840079255169295922593080322634775209689623239873322471161642996440906533187938298969649928516003704476137795166849228875 - 5**(1/2)*GoldenRatio**1000/5
     <BLANKLINE>
-    from zero. Try simplifying the input, using chop=True, or providing a higher maxprec for evalf
+    from zero. Try simplifying the input, using chop=True, or providing a higher maxn for evalf
 
 
 If we add a term so that the Fibonacci approximation becomes exact (the full form of Binet's formula), we get an expression that is exactly zero, but ``N`` does not know this:
@@ -141,7 +141,7 @@ If we add a term so that the Fibonacci approximation becomes exact (the full for
     >>> f = fibonacci(100) - (GoldenRatio**100 - (GoldenRatio-1)**100)/sqrt(5)
     >>> N(f)
     .0e-113
-    >>> N(f, maxprec=1000)
+    >>> N(f, maxn=1000)
     .0e-1345
 
 
@@ -193,7 +193,8 @@ It is better to split this integral into two pieces:
 
 A similar example is the following oscillatory integral:
 
-    >>> Integral(sin(x)/x**2, (x, 1, oo)).evalf(maxprec=20)
+
+    >>> Integral(sin(x)/x**2, (x, 1, oo)).evalf(maxn=20)
     0.5
 
 

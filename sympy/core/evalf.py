@@ -193,7 +193,7 @@ def check_target(expr, result, prec):
     if a < prec:
         raise PrecisionExhausted("Failed to distinguish the expression: \n\n%s\n\n"
             "from zero. Try simplifying the input, using chop=True, or providing "
-            "a higher maxprec for evalf" % (expr))
+            "a higher maxn for evalf" % (expr))
 
 def get_integer_part(expr, no, options, return_ints=False):
     """
@@ -989,7 +989,7 @@ def evalf(x, prec, options):
         check_target(x, r, prec)
     return r
 
-def Basic_evalf(x, n=15, **options):
+def Basic_evalf(x, n=15, subs=None, maxn=100, chop=False, strict=False, quad=None, verbose=False):
     """
     Evaluate the given formula to an accuracy of n digits.
     Optional keyword arguments:
@@ -998,8 +998,8 @@ def Basic_evalf(x, n=15, **options):
             Substitute numerical values for symbols, e.g.
             subs={x:3, y:1+pi}.
 
-        maxprec=N
-            Allow a maximum temporary working precision of N digits
+        maxn=<integer>
+            Allow a maximum temporary working precision of maxn digits
             (default=100)
 
         chop=<bool>
@@ -1008,7 +1008,7 @@ def Basic_evalf(x, n=15, **options):
 
         strict=<bool>
             Raise PrecisionExhausted if any subresult fails to evaluate
-            to full accuracy, given the available maxprec
+            to full accuracy, given the available maxn
             (default=False)
 
         quad=<str>
@@ -1023,10 +1023,12 @@ def Basic_evalf(x, n=15, **options):
     if not evalf_table:
         _create_evalf_table()
     prec = dps_to_prec(n)
-    if 'maxprec' in options:
-        options['maxprec'] = int(options['maxprec']*LG10)
-    else:
-        options['maxprec'] = max(prec, DEFAULT_MAXPREC)
+    options = {'maxprec': max(prec,int(maxn*LG10)), 'chop': chop,
+               'strict': strict, 'verbose': verbose}
+    if subs is not None:
+        options['subs'] = subs
+    if quad is not None:
+        options['quad'] = quad
     try:
         result = evalf(x, prec+4, options)
     except NotImplementedError:

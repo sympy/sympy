@@ -245,9 +245,9 @@ def test_evalf_integrals():
     assert NS(2+Integral(log(2*cos(x/2)), (x, -pi, pi)), 20, chop=True) == NS(2, 20)
     assert NS(2+Integral(log(2*cos(x/2)), (x, -pi, pi)), 22, chop=True) == NS(2, 22)
     # Needs zero handling
-    assert NS(pi - 4*Integral('sqrt(1-x**2)', (x, 0, 1)), 15, maxprec=30, chop=True) in ('0.0', '0')
+    assert NS(pi - 4*Integral('sqrt(1-x**2)', (x, 0, 1)), 15, maxn=30, chop=True) in ('0.0', '0')
     # Oscillatory quadrature
-    a = Integral(sin(x)/x**2, (x, 1, oo)).evalf(maxprec=15)
+    a = Integral(sin(x)/x**2, (x, 1, oo)).evalf(maxn=15)
     assert 0.49 < a < 0.51
     assert NS(Integral(sin(x)/x**2, (x, 1, oo)), quad='osc') == '0.504067061906928'
     assert NS(Integral(cos(pi*x+1)/x, (x, -oo, -1)), quad='osc') == '0.276374705640365'
