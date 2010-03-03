@@ -44,6 +44,9 @@ class Algebra(object):
     is_ZZ = False
     is_QQ = False
 
+    is_FF = False
+    is_CC = False
+
     is_Poly = False
     is_Frac = False
 
@@ -295,6 +298,12 @@ class Algebra(object):
         """Returns an exact domain associated with `self`. """
         return self
 
+    def float_domain(self):
+        return FF
+
+    def complex_domain(self):
+        return CC
+
     def __getitem__(self, gens):
         """The mathematical way do make a polynomial ring. """
         if hasattr(gens, '__iter__'):
@@ -421,6 +430,12 @@ class Algebra(object):
     def evalf(self, a, **args):
         """Returns numerical approximation of `a`. """
         return self.to_sympy(a).evalf(**args)
+
+    def real(self, a):
+        return a
+
+    def imag(self, a):
+        return self.zero
 
 class Ring(Algebra):
     """Represents a ring domain. """
@@ -1322,6 +1337,143 @@ class RR_mpmath(RealAlgebra):
     def from_RR_mpmath(K1, a, K0):
         """Convert a mpmath `mpf` object to `dtype`. """
         return a
+
+class FF_float(RealAlgebra): # XXX: tmp solution
+    """Float domain. """
+
+    rep   = 'FF'
+
+    is_FF = True
+
+    dtype = float
+    zero  = dtype(0)
+    one   = dtype(1)
+
+    def __init__(self):
+        pass
+
+    def normal(self, a):
+        if abs(a) < 1e-15:
+            return self.zero
+        else:
+            return self.dtype(a)
+
+    def to_sympy(self, a):
+        """Convert `a` to a SymPy object. """
+        return sympy_mpf(a)
+
+    def from_sympy(self, a):
+        """Convert SymPy's Integer to `dtype`. """
+        b = a.evalf()
+
+        if b.is_Real and b not in [S.Infinity, S.NegativeInfinity]:
+            return float(b)
+        else:
+            raise CoercionFailed("expected Real object, got %s" % a)
+
+    def from_ZZ_python(K1, a, K0):
+        """Convert a Python `int` object to `dtype`. """
+        return K1.dtype(a)
+
+    def from_QQ_python(K1, a, K0):
+        """Convert a Python `Fraction` object to `dtype`. """
+        return K1.dtype(a.numerator) / a.denominator
+
+    def from_ZZ_sympy(K1, a, K0):
+        """Convert a SymPy `Integer` object to `dtype`. """
+        return K1.dtype(a.p)
+
+    def from_QQ_sympy(K1, a, K0):
+        """Convert a SymPy `Rational` object to `dtype`. """
+        return K1.dtype(a.p) / a.q
+
+    def from_ZZ_gmpy(K1, a, K0):
+        """Convert a GMPY `mpz` object to `dtype`. """
+        return K1.dtype(int(a))
+
+    def from_QQ_gmpy(K1, a, K0):
+        """Convert a GMPY `mpq` object to `dtype`. """
+        return K1.dtype(int(a.numer())) / int(a.denom)
+
+    def from_RR_sympy(K1, a, K0):
+        """Convert a SymPy `Real` object to `dtype`. """
+        return K1.dtype(a)
+
+    def from_RR_mpmath(K1, a, K0):
+        """Convert a mpmath `mpf` object to `dtype`. """
+        return K1.dtype(a)
+
+    def complex_domain(self):
+        return CC
+
+class CC_complex(RealAlgebra): # XXX: tmp solution
+    """Complex domain. """
+
+    rep   = 'CC'
+
+    dtype = complex
+    zero  = dtype(0)
+    one   = dtype(1)
+
+    def __init__(self):
+        pass
+
+    def to_sympy(self, a):
+        """Convert `a` to a SymPy object. """
+        return sympy_mpf(a)
+
+    def from_sympy(self, a):
+        """Convert SymPy's Integer to `dtype`. """
+        b = a.evalf()
+
+        if b.is_Real and b not in [S.Infinity, S.NegativeInfinity]:
+            return float(b)
+        else:
+            raise CoercionFailed("expected Real object, got %s" % a)
+
+    def from_ZZ_python(K1, a, K0):
+        """Convert a Python `int` object to `dtype`. """
+        return K1.dtype(a)
+
+    def from_QQ_python(K1, a, K0):
+        """Convert a Python `Fraction` object to `dtype`. """
+        return K1.dtype(a.numerator) / a.denominator
+
+    def from_ZZ_sympy(K1, a, K0):
+        """Convert a SymPy `Integer` object to `dtype`. """
+        return K1.dtype(a.p)
+
+    def from_QQ_sympy(K1, a, K0):
+        """Convert a SymPy `Rational` object to `dtype`. """
+        return K1.dtype(a.p) / a.q
+
+    def from_ZZ_gmpy(K1, a, K0):
+        """Convert a GMPY `mpz` object to `dtype`. """
+        return K1.dtype(int(a))
+
+    def from_QQ_gmpy(K1, a, K0):
+        """Convert a GMPY `mpq` object to `dtype`. """
+        return K1.dtype(int(a.numer())) / int(a.denom)
+
+    def from_RR_sympy(K1, a, K0):
+        """Convert a SymPy `Real` object to `dtype`. """
+        return K1.dtype(a)
+
+    def from_RR_mpmath(K1, a, K0):
+        """Convert a mpmath `mpf` object to `dtype`. """
+        return K1.dtype(a)
+
+    def from_FF_float(K1, a, K0):
+        return K1.dtype(a)
+
+    def real(self, a):
+        return a.real
+
+    def imag(self, a):
+        return a.imag
+
+FF = FF_float()
+CC = CC_complex()
 
 def _getenv(key, default=None):
     from os import getenv
