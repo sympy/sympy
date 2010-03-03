@@ -75,6 +75,9 @@ class Algebra(object):
         """Construct an element of `self` domain from `args`. """
         return self.dtype(*args)
 
+    def normal(self, *args):
+        return self.dtype(*args)
+
     def convert(K1, a, K0=None):
         """Convert an object `a` from `K0` to `K1`. """
         if K0 is not None:

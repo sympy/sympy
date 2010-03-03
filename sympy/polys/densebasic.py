@@ -190,7 +190,7 @@ def dmp_copy(f, u):
 
 def dup_normal(f, K):
     """Normalize univariate polynomial in the given domain. """
-    return dup_strip([ K(c) for c in f ])
+    return dup_strip([ K.normal(c) for c in f ])
 
 @cythonized("u,v")
 def dmp_normal(f, u, K):

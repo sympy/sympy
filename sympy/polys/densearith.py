@@ -3,6 +3,7 @@
 from sympy.polys.densebasic import (
     dup_LC, dmp_LC,
     dup_degree, dmp_degree,
+    dup_normal, dmp_normal,
     dup_strip, dmp_strip,
     dmp_zero_p, dmp_zero,
     dmp_one_p, dmp_one,
@@ -794,6 +795,9 @@ def dup_ff_div(f, g, K):
         h = dup_mul_term(g, c, j, K)
 
         r = dup_sub(r, h, K)
+
+        if not K.is_Exact:
+            r = dup_normal(r, K)
 
     return q, r
 
