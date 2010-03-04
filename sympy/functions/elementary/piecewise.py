@@ -97,9 +97,23 @@ class Piecewise(Function):
         # 1) Hit an unevaluatable cond (e.g. x<1) -> keep object
         # 2) Hit a true condition -> return that expr
         # 3) Remove false conditions, if no conditions left -> raise ValueError
-        all_conds_evaled = True
+        all_conds_evaled = True    # Do all conds eval to a bool?
+        piecewise_again = False    # Should we pass args to Piecewise again?
         non_false_ecpairs = []
         for expr, cond in args:
+            # Check here if expr is a Piecewise and collapse if one of
+            # the conds in expr matches cond. This allows the collapsing
+            # of Piecewise((Piecewise(x,x<0),x<0)) to Piecewise((x,x<0)).
+            # This is important when using piecewise_fold to simplify
+            # multiple Piecewise instances having the same conds.
+            # Eventually, this code should be able to collapse Piecewise's
+            # having different intervals, but this will probably require
+            # using the new assumptions.
+            if isinstance(expr, Piecewise):
+                for e, c in expr.args:
+                    if c == cond:
+                        expr = e
+                        piecewise_again = True
             cond_eval = cls.__eval_cond(cond)
             if cond_eval is None:
                 all_conds_evaled = False
@@ -108,7 +122,7 @@ class Piecewise(Function):
                 if all_conds_evaled:
                     return expr
                 non_false_ecpairs.append( (expr, cond) )
-        if len(non_false_ecpairs) != len(args):
+        if len(non_false_ecpairs) != len(args) or piecewise_again:
             return Piecewise(*non_false_ecpairs)
 
         # Count number of arguments.
