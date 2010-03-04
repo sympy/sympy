@@ -59,9 +59,25 @@ def _mathfun_n(f_real, f_complex):
     f.__name__ = f_real.__name__
     return f
 
+# Workaround for non-raising log and sqrt in Python 2.5 and 2.4
+# on Unix system
+try:
+    math.log(-2.0)
+    def math_log(x):
+        if x <= 0.0:
+            raise ValueError("math domain error")
+        return math.log(x)
+    def math_sqrt(x):
+        if x < 0.0:
+            raise ValueError("math domain error")
+        return math.sqrt(x)
+except (ValueError, TypeError):
+    math_log = math.log
+    math_sqrt = math.sqrt
+
 pow = _mathfun_n(operator.pow, lambda x, y: complex(x)**y)
-log = _mathfun_n(math.log, cmath.log)
-sqrt = _mathfun(math.sqrt, cmath.sqrt)
+log = _mathfun_n(math_log, cmath.log)
+sqrt = _mathfun(math_sqrt, cmath.sqrt)
 exp = _mathfun_real(math.exp, cmath.exp)
 
 cos = _mathfun_real(math.cos, cmath.cos)
@@ -305,7 +321,7 @@ def _digamma_real(x):
         if t < 1e-20:
             break
         t *= x2
-    return s + math.log(x) - 0.5/x
+    return s + math_log(x) - 0.5/x
 
 def _digamma_complex(x):
     if not x.imag:
@@ -516,7 +532,7 @@ def ei_taylor(z, _e1=False):
         s += log(-z)
     else:
         if type(z) is float or z.imag == 0.0:
-            s += math.log(abs(z))
+            s += math_log(abs(z))
         else:
             s += cmath.log(z)
     return s
