@@ -116,7 +116,7 @@ def init_session(session="ipython", pretty=True, use_unicode=None, message=None,
     ip.runcode(ip.compile("from sympy.interactive import *"))
 
     if pretty:
-        stringify_func = 'lambda arg: pretty(arg, %s)' % use_unicode
+        stringify_func = 'lambda arg: pretty(arg, use_unicode=%s)' % use_unicode
     else:
         stringify_func = 'sstrrepr'
 
@@ -143,3 +143,4 @@ def init_session(session="ipython", pretty=True, use_unicode=None, message=None,
             print "Exiting ..."
 
         ip.set_hook('shutdown_hook', shutdown_hook)
+
