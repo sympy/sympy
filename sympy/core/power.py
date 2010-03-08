@@ -386,7 +386,7 @@ class Pow(Basic):
                 else:
                     multi = (base**(n-1))._eval_expand_multinomial(deep=False)
                     if multi.is_Add:
-                        return Add(*[f*g for f in base.args for g in base.args])
+                        return Add(*[f*g for f in base.args for g in multi.args])
                     else:
                         return Add(*[f*multi for f in base.args])
         elif exp.is_Integer and exp.p < 0 and base.is_Add:
