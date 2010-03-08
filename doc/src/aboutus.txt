@@ -96,6 +96,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Łukasz Pankowski: fix matrix multiplication with numpy scalars
 #. Chu-Ching Huang: fix 3d plotting example
 #. Fernando Perez: symarray() implemented
+#. Raffaele De Feo: Fix non-commutative expansion
 
 
 Up-to-date list in the order of the first contribution is given in the `AUTHORS
