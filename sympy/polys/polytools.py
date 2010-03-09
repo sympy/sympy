@@ -460,7 +460,10 @@ class Poly(Basic):
                 if type(result) is tuple:
                     rep, gens = result
                 else:
-                    return result
+                    if result.is_Poly or not args.get('strict', True):
+                        return result
+                    else:
+                        raise GeneratorsNeeded("can't initialize from %s without generators" % rep)
 
         obj = Basic.__new__(cls)
 
@@ -1600,18 +1603,25 @@ class Poly(Basic):
     def __nonzero__(f):
         return not f.is_zero
 
+def NonStrictPoly(f, *gens, **args):
+    """Create a Poly instance with `strict` keyword set.  """
+    args = dict(args)
+    args['strict'] = False
+    return Poly(f, *gens, **args)
+
 def _polify_basic(f, g, *gens, **args):
     """Cooperatively make polynomials out of `f` and `g`. """
     if gens:
-        F, G = Poly(f, *gens, **args), Poly(g, *gens, **args)
+        F = NonStrictPoly(f, *gens, **args)
+        G = NonStrictPoly(g, *gens, **args)
 
         if not F.is_Poly or not G.is_Poly:
             raise CoercionFailed(F, G) # pragma: no cover
         else:
             return F, G
     else:
-        F = Poly(f, **args)
-        G = Poly(g, **args)
+        F = NonStrictPoly(f, **args)
+        G = NonStrictPoly(g, **args)
 
         if F.is_Poly:
             if G.is_Poly:
@@ -1878,7 +1888,7 @@ def resultant(f, g, *gens, **args):
 
 def discriminant(f, *gens, **args):
     """Computes discriminant of `f`. """
-    F = Poly(f, *_analyze_gens(gens), **args)
+    F = NonStrictPoly(f, *_analyze_gens(gens), **args)
 
     if not F.is_Poly:
         raise GeneratorsNeeded("can't compute discriminant of %s without generators" % f)
@@ -1949,7 +1959,7 @@ def lcm(f, g, *gens, **args):
 
 def terms_gcd(f, *gens, **args):
     """Remove GCD of terms from the polynomial `f`. """
-    F = Poly(f, *_analyze_gens(gens), **args)
+    F = NonStrictPoly(f, *_analyze_gens(gens), **args)
 
     if not F.is_Poly:
         return f
@@ -1967,7 +1977,7 @@ def terms_gcd(f, *gens, **args):
 def monic(f, *gens, **args):
     """Divides all coefficients by `LC(f)`. """
     args = _update_args(args, 'field', True)
-    F = Poly(f, *_analyze_gens(gens), **args)
+    F = NonStrictPoly(f, *_analyze_gens(gens), **args)
 
     if not F.is_Poly:
         raise GeneratorsNeeded("can't compute monic polynomial of %s without generators" % f)
@@ -1979,7 +1989,7 @@ def monic(f, *gens, **args):
 
 def content(f, *gens, **args):
     """Returns GCD of polynomial coefficients. """
-    F = Poly(f, *_analyze_gens(gens), **args)
+    F = NonStrictPoly(f, *_analyze_gens(gens), **args)
 
     if not F.is_Poly:
         raise GeneratorsNeeded("can't compute content of %s without generators" % f)
@@ -1988,7 +1998,7 @@ def content(f, *gens, **args):
 
 def primitive(f, *gens, **args):
     """Returns content and a primitive form of `f`. """
-    F = Poly(f, *_analyze_gens(gens), **args)
+    F = NonStrictPoly(f, *_analyze_gens(gens), **args)
 
     if not F.is_Poly:
         raise GeneratorsNeeded("can't compute primitive part of %s without generators" % f)
@@ -2018,7 +2028,7 @@ def compose(f, g, *gens, **args):
 
 def decompose(f, *gens, **args):
     """Computes functional decomposition of `f`. """
-    F = Poly(f, *_analyze_gens(gens), **args)
+    F = NonStrictPoly(f, *_analyze_gens(gens), **args)
 
     if not F.is_Poly:
         raise GeneratorsNeeded("can't compute functional decomposition of %s without generators" % f)
@@ -2033,7 +2043,7 @@ def decompose(f, *gens, **args):
 def sturm(f, *gens, **args):
     """Computes the Sturm sequence of `f`. """
     args = _update_args(args, 'field', True)
-    F = Poly(f, *_analyze_gens(gens), **args)
+    F = NonStrictPoly(f, *_analyze_gens(gens), **args)
 
     if not F.is_Poly:
         raise GeneratorsNeeded("can't compute Sturm sequence of %s without generators" % f)
@@ -2047,7 +2057,7 @@ def sturm(f, *gens, **args):
 
 def sqf_norm(f, *gens, **args):
     """Computes square-free norm of `f`. """
-    F = Poly(f, *_analyze_gens(gens), **args)
+    F = NonStrictPoly(f, *_analyze_gens(gens), **args)
 
     if not F.is_Poly:
         raise GeneratorsNeeded("can't compute square-free norm of %s without generators" % f)
@@ -2061,7 +2071,7 @@ def sqf_norm(f, *gens, **args):
 
 def sqf_part(f, *gens, **args):
     """Computes square-free part of `f`. """
-    F = Poly(f, *_analyze_gens(gens), **args)
+    F = NonStrictPoly(f, *_analyze_gens(gens), **args)
 
     if not F.is_Poly:
         raise GeneratorsNeeded("can't compute square-free part of %s without generators" % f)
@@ -2075,7 +2085,7 @@ def sqf_part(f, *gens, **args):
 
 def sqf_list(f, *gens, **args):
     """Returns a list of square-free factors of `f`. """
-    F = Poly(f, *_analyze_gens(gens), **args)
+    F = NonStrictPoly(f, *_analyze_gens(gens), **args)
 
     if not F.is_Poly:
         raise GeneratorsNeeded("can't compute square-free decomposition of %s without generators" % f)
@@ -2094,7 +2104,7 @@ def sqf(f, *gens, **args):
 
     def _sqf(f):
         """Squaqre-free factor a true polynomial expression. """
-        F = Poly(f, *gens, **args)
+        F = NonStrictPoly(f, *gens, **args)
 
         if not F.is_Poly:
             return (S.One, F)
@@ -2121,7 +2131,7 @@ def sqf(f, *gens, **args):
 
 def factor_list(f, *gens, **args):
     """Returns a list of irreducible factors of `f`. """
-    F = Poly(f, *_analyze_gens(gens), **args)
+    F = NonStrictPoly(f, *_analyze_gens(gens), **args)
 
     if not F.is_Poly:
         raise GeneratorsNeeded("can't compute factorization of %s without generators" % f)
@@ -2140,7 +2150,7 @@ def factor(f, *gens, **args):
 
     def _factor(f):
         """Factor a true polynomial expression. """
-        F = Poly(f, *gens, **args)
+        F = NonStrictPoly(f, *gens, **args)
 
         if not F.is_Poly:
             return (S.One, F)
@@ -2167,7 +2177,7 @@ def factor(f, *gens, **args):
 
 def intervals(f, *gens, **args):
     """Compute isolating intervals for roots of `f`. """
-    F = Poly(f, *_analyze_gens(gens), **args)
+    F = NonStrictPoly(f, *_analyze_gens(gens), **args)
 
     if F.is_Poly:
         return F.intervals(**args)
@@ -2176,7 +2186,7 @@ def intervals(f, *gens, **args):
 
 def nroots(f, *gens, **args):
     """Compute numerical approximations of roots of `f`. """
-    F = Poly(f, *_analyze_gens(gens), **args)
+    F = NonStrictPoly(f, *_analyze_gens(gens), **args)
 
     if F.is_Poly:
         return F.nroots(**args)
@@ -2248,10 +2258,10 @@ def groebner(F, *gens, **args):
 
 def horner(f, *gens, **args):
     """Apply Horner's rule to put a polynomial in Horner form. """
-    F = Poly(f, *_analyze_gens(gens), **args)
+    F = NonStrictPoly(f, *_analyze_gens(gens), **args)
 
     if not F.is_Poly:
-        return f
+        return F
 
     form, gen = S.Zero, F.gen
 

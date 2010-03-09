@@ -271,6 +271,11 @@ def test_Poly__new__():
     raises(GeneratorsNeeded, "Poly({1: 2, 0: 1})")
     raises(GeneratorsNeeded, "Poly([2, 1])")
 
+    raises(GeneratorsNeeded, "Poly(1)")
+    assert Poly(1, strict=False) == 1
+
+    assert Poly(Poly(a*x + b*y, x, y), x) == Poly(a*x + b*y, x)
+
     assert Poly(3*x**2 + 2*x + 1, domain='ZZ').all_coeffs() == [3, 2, 1]
     assert Poly(3*x**2 + 2*x + 1, domain='QQ').all_coeffs() == [3, 2, 1]
     assert Poly(3*x**2 + 2*x + 1, domain='RR').all_coeffs() == [3.0, 2.0, 1.0]
@@ -1098,7 +1103,7 @@ def test_gcdex():
     f, g = 2*x, x**2 - 16
     s, t, h = x/32, -Rational(1,16), 1
 
-    F, G, S, T, H = [ Poly(u, domain='QQ') for u in (f, g, s, t, h) ]
+    F, G, S, T, H = [ Poly(u, x, domain='QQ') for u in (f, g, s, t, h) ]
 
     assert F.half_gcdex(G) == (S, H)
     assert F.gcdex(G) == (S, T, H)
