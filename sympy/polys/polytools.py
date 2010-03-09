@@ -2246,3 +2246,23 @@ def groebner(F, *gens, **args):
     else:
         return G
 
+def horner(f, *gens, **args):
+    """Apply Horner's rule to put a polynomial in Horner form. """
+    F = Poly(f, *_analyze_gens(gens), **args)
+
+    if not F.is_Poly:
+        return f
+
+    form, gen = S.Zero, F.gen
+
+    if F.is_univariate:
+        for coeff in F.all_coeffs():
+            form = form*gen + coeff
+    else:
+        F, gens = Poly(F, gen), gens[1:]
+
+        for coeff in F.all_coeffs():
+            form = form*gen + horner(coeff, *gens, **args)
+
+    return form
+

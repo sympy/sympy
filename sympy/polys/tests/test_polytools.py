@@ -21,6 +21,7 @@ from sympy.polys.polytools import (
     intervals, nroots,
     cancel,
     groebner,
+    horner,
 )
 
 from sympy.polys.polyerrors import (
@@ -43,7 +44,7 @@ from sympy.polys.algebratools import ZZ, QQ, RR, EX
 
 from sympy import S, Integer, Rational, symbols, sqrt, exp, sin, expand, raises, oo, I
 
-x,y,z,p,q,r,s,t,u,v,w,a,b,c = symbols('x,y,z,p,q,r,s,t,u,v,w,a,b,c')
+x,y,z,p,q,r,s,t,u,v,w,a,b,c,d,e = symbols('x,y,z,p,q,r,s,t,u,v,w,a,b,c,d,e')
 
 def test__construct_domain():
     assert _construct_domain({(0,): 1, (1,): 2}) == \
@@ -1589,4 +1590,20 @@ def test_groebner():
         [Poly(1 + x**2, x, y), Poly(-1 + y**4, x, y)]
     assert groebner([x**2 + 1, y**4*x + x**3, x*y*z**3], x, y, z, order='grevlex', polys=True) == \
         [Poly(-1 + y**4, x, y, z), Poly(z**3, x, y, z), Poly(1 + x**2, x, y, z)]
+
+def test_horner():
+    assert horner(0) == 0
+    assert horner(1) == 1
+    assert horner(x) == x
+
+    assert horner(x + 1) == x + 1
+    assert horner(x**2 + 1) == x**2 + 1
+    assert horner(x**2 + x) == (x + 1)*x
+    assert horner(x**2 + x + 1) == (x + 1)*x + 1
+
+    assert horner(9*x**4 + 8*x**3 + 7*x**2 + 6*x + 5) == (((9*x + 8)*x + 7)*x + 6)*x + 5
+    assert horner(a*x**4 + b*x**3 + c*x**2 + d*x + e) == (((a*x + b)*x + c)*x + d)*x + e
+
+    assert horner(4*x**2*y**2 + 2*x**2*y + 2*x*y**2 + x*y, wrt=x) == ((4*y + 2)*x*y + (2*y + 1)*y)*x
+    assert horner(4*x**2*y**2 + 2*x**2*y + 2*x*y**2 + x*y, wrt=y) == ((4*x + 2)*y*x + (2*x + 1)*x)*y
 
