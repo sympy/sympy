@@ -7,6 +7,8 @@ from sympy.core.sets import Interval
 
 def _add_splines(c, b1, d, b2):
     """Construct c*b1 + d*b2."""
+    # print 'b1: ', b1
+    # print 'b2: ', b2
     if b1 == S.Zero or c == S.Zero:
         return piecewise_fold(expand(d*b2))
     if b2 == S.Zero or d == S.Zero:
@@ -72,22 +74,8 @@ def bspline_basis_set(d, knots, x):
     >>> d = 2
     >>> knots = range(5)
     >>> splines = bspline_basis_set(d, knots, x)
-    >>> pprint(splines)
-    ⎡⎧       2                     ⎧             2              ⎤
-    ⎢⎪      x                      ⎪            x               ⎥
-    ⎢⎪      ──         for [0, 1), ⎪  1/2 - x + ──    for [1, 2)⎥
-    ⎢⎪      2                      ⎪            2               ⎥
-    ⎢⎪                             ⎪                            ⎥
-    ⎢⎪              2              ⎪               2            ⎥
-    ⎢⎪-3/2 + 3⋅x - x   for [1, 2)  ⎪-11/2 + 5⋅x - x   for [2, 3)⎥
-    ⎢⎨                             ⎨                            ⎥
-    ⎢⎪             2               ⎪             2              ⎥
-    ⎢⎪            x                ⎪            x               ⎥
-    ⎢⎪9/2 - 3⋅x + ──   for [2, 3]  ⎪  8 - 4⋅x + ──    for [3, 4]⎥
-    ⎢⎪            2                ⎪            2               ⎥
-    ⎢⎪                             ⎪                            ⎥
-    ⎢⎪       0         otherwise   ⎪       0          otherwise ⎥
-    ⎣⎩                             ⎩                            ⎦
+    >>> splines
+    [Piecewise((x**2/2, [0, 1)), (-3/2 + 3*x - x**2, [1, 2)), (9/2 - 3*x + x**2/2, [2, 3]), (0, True)), Piecewise((1/2 - x + x**2/2, [1, 2)), (-11/2 + 5*x - x**2, [2, 3)), (8 - 4*x + x**2/2, [3, 4]), (0, True))]
     """
     splines = []
     n_splines = len(knots)-d-1

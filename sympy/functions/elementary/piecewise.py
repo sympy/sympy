@@ -3,7 +3,7 @@ from sympy.core.function import Function, diff
 from sympy.core.numbers import Number
 from sympy.core.relational import Relational
 from sympy.core.sympify import sympify
-from sympy.core.sets import Interval
+from sympy.core.sets import Interval, Set
 
 class ExprCondPair(Basic):
     """Represents an expression, condition pair."""
@@ -71,10 +71,10 @@ class Piecewise(Function):
             pair = ExprCondPair(*ec)
             cond_type = type(pair.cond)
             if not (cond_type is bool or issubclass(cond_type, Relational) or \
-                    issubclass(cond_type, Number) or issubclass(cond_type, Interval)):
+                    issubclass(cond_type, Number) or issubclass(cond_type, Set)):
                 raise TypeError, \
                     "Cond %s is of type %s, but must be a bool," \
-                    " Relational, Number or Interval" % (pair.cond, cond_type)
+                    " Relational, Number or Set" % (pair.cond, cond_type)
             newargs.append(pair)
 
         r = cls.eval(*newargs)
@@ -231,9 +231,9 @@ class Piecewise(Function):
         for e, c in self.args:
             if isinstance(c, bool):
                 new_args.append((e._eval_subs(old, new), c))
-            elif isinstance(c, Interval):
+            elif isinstance(c, Set):
                 # What do we do if there are more than one symbolic
-                # variable. Which do we put pass to Interval.contains?
+                # variable. Which do we put pass to Set.contains?
                 new_args.append((e._eval_subs(old, new),  c.contains(new)))
             else:
                 new_args.append((e._eval_subs(old, new), c._eval_subs(old, new)))
@@ -247,7 +247,7 @@ class Piecewise(Function):
                 return S.One
             else:
                 return S.Zero
-        elif type(cond) == Interval:
+        elif type(cond) == Set:
             return None
         return None
 
