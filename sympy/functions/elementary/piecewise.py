@@ -5,7 +5,7 @@ from sympy.core.relational import Relational
 from sympy.core.sympify import sympify
 from sympy.core.sets import Interval, Set
 
-class ExprCondPair(Basic):
+class ExprCondPair(Function):
     """Represents an expression, condition pair."""
 
     def __new__(cls, *args, **assumptions):
@@ -30,7 +30,6 @@ class ExprCondPair(Basic):
     def __iter__(self):
         yield self.expr
         yield self.cond
-
 
 class Piecewise(Function):
     """
@@ -111,7 +110,9 @@ class Piecewise(Function):
             # using the new assumptions.
             if isinstance(expr, Piecewise):
                 for e, c in expr.args:
-                    if c == cond:
+                    # Don't collapse if cond is "True" as this leads to
+                    # incorrect simplifications with nested Piecewises.
+                    if c == cond and cond is not True:
                         expr = e
                         piecewise_again = True
             cond_eval = cls.__eval_cond(cond)

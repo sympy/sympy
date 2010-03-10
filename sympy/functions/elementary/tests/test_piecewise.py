@@ -1,5 +1,6 @@
 from sympy import diff, Integral, integrate, log, oo, Piecewise, \
-    piecewise_fold, raises, symbols, pi, solve, Rational, Interval
+    piecewise_fold, raises, symbols, pi, solve, Rational, Interval, \
+    lambdify, expand
 from sympy.utilities.pytest import XFAIL
 
 x,y = symbols('xy')
@@ -138,6 +139,16 @@ def test_piecewise_fold():
     p = 4*p1 + 2*p2
     assert integrate(piecewise_fold(p),(x,-oo,oo)) == integrate(2*x + 2, (x, 0, 1))
 
+def test_piecewise_fold_expand():
+    p1 = Piecewise((1,Interval(0,1,False,True)),(0,True))
+
+    p2 = piecewise_fold(expand((1-x)*p1))
+    assert p2 == Piecewise((1 - x, Interval(0,1,False,True)), \
+        (Piecewise((-x, Interval(0,1,False,True)), (0, True)), True))
+
+    p2 = expand(piecewise_fold((1-x)*p1))
+    assert p2 == Piecewise((1 - x, Interval(0,1,False,True)), (0, True))
+
 def test_piecewise_duplicate():
     p = Piecewise((x, x < -10),(x**2, x <= -1),(x, 1 < x))
     assert p == Piecewise(*p.args)
@@ -154,4 +165,20 @@ def test_piecewise_interval():
     assert p1.subs(x, 0.5) == 0.5
     assert p1.diff(x) == Piecewise((1, Interval(0, 1)), (0, True))
     assert integrate(p1, x) == Piecewise((x**2/2, Interval(0, 1)), (0, True))
+
+def test_piecewise_collapse():
+    p1 = Piecewise((x, x<0),(x**2,x>1))
+    p2 = Piecewise((p1,x<0),(p1,x>1))
+    assert p2 == Piecewise((x, x < 0), (x**2, 1 < x))
+
+    p1 = Piecewise((Piecewise((x,x<0),(1,True)),True))
+    assert p1 == Piecewise((Piecewise((x,x<0),(1,True)),True))
+
+def test_piecewise_lambdify():
+    p = Piecewise((x**2,x<0),(x,Interval(0,1,False,True)),(2-x,x>=1),(0,True))
+    f = lambdify(x, p)
+    assert f(-2.0) == 4.0
+    assert f(0.0) == 0.0
+    assert f(0.5) == 0.5
+    assert f(2.0) == 0.0
 

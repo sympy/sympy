@@ -51,3 +51,4 @@ def test_repeated_degree_1():
     assert splines[3] == Piecewise((3 - x, Interval(2,3)), (0, True))
     assert splines[4] == Piecewise((-2 + x, Interval(2,3,False,True)), (4 - x, Interval(3,4)), (0, True))
     assert splines[5] == Piecewise((-3 + x, Interval(3,4)), (0, True))
+

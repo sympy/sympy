@@ -8,16 +8,16 @@ from sympy.core.sets import Interval
 def _add_splines(c, b1, d, b2):
     """Construct c*b1 + d*b2."""
     if b1 == S.Zero or c == S.Zero:
-        return piecewise_fold(expand(d*b2))
+        return expand(piecewise_fold(d*b2))
     if b2 == S.Zero or d == S.Zero:
-        return piecewise_fold(expand(c*b1))
+        return expand(piecewise_fold(c*b1))
     new_args = []
     n_intervals = len(b1.args)
     assert(n_intervals==len(b2.args))
     new_args.append((expand(c*b1.args[0].expr), b1.args[0].cond))
     for i in range(1, n_intervals-1):
         new_args.append((
-            expand(c*b1.args[i].expr+d*b2.args[i-1].expr), 
+            expand(c*b1.args[i].expr+d*b2.args[i-1].expr),
             b1.args[i].cond
         ))
     new_args.append((expand(d*b2.args[-2].expr), b2.args[-2].cond))
@@ -122,3 +122,4 @@ def bspline_basis_set(d, knots, x):
         b = bspline_basis(d,knots, i, x)
         splines.append(b)
     return splines
+
