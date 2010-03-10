@@ -7,8 +7,6 @@ from sympy.core.sets import Interval
 
 def _add_splines(c, b1, d, b2):
     """Construct c*b1 + d*b2."""
-    # print 'b1: ', b1
-    # print 'b2: ', b2
     if b1 == S.Zero or c == S.Zero:
         return piecewise_fold(expand(d*b2))
     if b2 == S.Zero or d == S.Zero:
