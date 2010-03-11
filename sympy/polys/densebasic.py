@@ -42,6 +42,22 @@ def dmp_ground_TC(f, u, K):
     else:
         return dmp_ground_TC(dmp_TC(f, K), u-1, K)
 
+@cythonized("u")
+def dmp_true_LT(f, u, K):
+    """Returns leading term `c * x_1**n_1 ... x_k**n_k`. """
+    monom = []
+
+    while u:
+        monom.append(len(f) - 1)
+        f, u = f[0], u - 1
+
+    if not f:
+        monom.append(0)
+    else:
+        monom.append(len(f) - 1)
+
+    return tuple(monom), dup_LC(f, K)
+
 def dup_degree(f):
     """Returns leading degree of `f` in `K[x]`. """
     return len(f) - 1

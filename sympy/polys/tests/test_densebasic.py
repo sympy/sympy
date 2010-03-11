@@ -4,6 +4,7 @@ from sympy.polys.densebasic import (
     dup_LC, dmp_LC,
     dup_TC, dmp_TC,
     dmp_ground_LC, dmp_ground_TC,
+    dmp_true_LT,
     dup_degree, dmp_degree,
     dmp_degree_in, dmp_degree_list,
     dup_strip, dmp_strip,
@@ -75,6 +76,14 @@ def test_dmp_ground_TC():
     assert dmp_ground_TC([[2,3,4],[5]], 1, ZZ) == 5
     assert dmp_ground_TC([[[]]], 2, ZZ) == 0
     assert dmp_ground_TC([[[2],[3,4]],[[5]]], 2, ZZ) == 5
+
+def test_dmp_true_LT():
+    assert dmp_true_LT([[]], 1, ZZ) == ((0, 0), 0)
+    assert dmp_true_LT([[7]], 1, ZZ) == ((0, 0), 7)
+
+    assert dmp_true_LT([[1,0]], 1, ZZ) == ((0, 1), 1)
+    assert dmp_true_LT([[1],[]], 1, ZZ) == ((1, 0), 1)
+    assert dmp_true_LT([[1,0],[]], 1, ZZ) == ((1, 1), 1)
 
 def test_dup_degree():
     assert dup_degree([]) == -1
