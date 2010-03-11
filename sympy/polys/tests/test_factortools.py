@@ -475,6 +475,27 @@ def test_dup_ext_factor():
             ([ANP([1], h, QQ), ANP([1,0], h, QQ)], 6),
         ])
 
+    h = [QQ(1,1), QQ(0,1), QQ(1,1)]
+    K = QQ.algebraic_field(I)
+
+    f = [ANP([QQ(4,1)], h, QQ), ANP([], h, QQ), ANP([QQ(9,1)], h, QQ)]
+
+    assert dup_ext_factor(f, K) == \
+        (ANP([QQ(4,1)], h, QQ), [
+            ([ANP([QQ(1,1)], h, QQ), ANP([-QQ(3,2), QQ(0,1)], h, QQ)], 1),
+            ([ANP([QQ(1,1)], h, QQ), ANP([ QQ(3,2), QQ(0,1)], h, QQ)], 1),
+        ])
+
+    f = [ANP([QQ(4,1)], h, QQ), ANP([QQ(8,1)], h, QQ), ANP([QQ(77,1)], h, QQ), ANP([QQ(18,1)], h, QQ), ANP([QQ(153,1)], h, QQ)]
+
+    assert dup_ext_factor(f, K) == \
+        (ANP([QQ(4,1)], h, QQ), [
+            ([ANP([QQ(1,1)], h, QQ), ANP([-QQ(4,1), QQ(1,1)], h, QQ)], 1),
+            ([ANP([QQ(1,1)], h, QQ), ANP([-QQ(3,2), QQ(0,1)], h, QQ)], 1),
+            ([ANP([QQ(1,1)], h, QQ), ANP([ QQ(3,2), QQ(0,1)], h, QQ)], 1),
+            ([ANP([QQ(1,1)], h, QQ), ANP([ QQ(4,1), QQ(1,1)], h, QQ)], 1),
+        ])
+
 def test_dmp_ext_factor():
     h = [QQ(1),QQ(0),QQ(-2)]
     K = QQ.algebraic_field(sqrt(2))
@@ -512,15 +533,22 @@ def test_dup_factor_list():
     assert dup_factor_list([], ZZ['y']) == (DMP([],ZZ), [])
     assert dup_factor_list([], QQ['y']) == (DMP([],QQ), [])
 
+    assert dup_factor_list([], ZZ, include=True) == [([], 1)]
+
     assert dup_factor_list([ZZ(7)], ZZ) == (ZZ(7), [])
     assert dup_factor_list([QQ(1,7)], QQ) == (QQ(1,7), [])
     assert dup_factor_list([DMP([ZZ(7)],ZZ)], ZZ['y']) == (DMP([ZZ(7)],ZZ), [])
     assert dup_factor_list([DMP([QQ(1,7)],QQ)], QQ['y']) == (DMP([QQ(1,7)],QQ), [])
 
+    assert dup_factor_list([ZZ(7)], ZZ, include=True) == [([ZZ(7)], 1)]
+
     assert dup_factor_list([ZZ(1),ZZ(2),ZZ(1)], ZZ) == \
         (ZZ(1), [([ZZ(1), ZZ(1)], 2)])
     assert dup_factor_list([QQ(1,2),QQ(1),QQ(1,2)], QQ) == \
         (QQ(1,2), [([QQ(1),QQ(1)], 2)])
+
+    assert dup_factor_list([ZZ(1),ZZ(2),ZZ(1)], ZZ, include=True) == \
+        [([ZZ(1), ZZ(1)], 2)]
 
     assert dup_factor_list([RR(1.0),RR(2.0),RR(1.0)], RR) == \
         (RR(1.0), [([RR(1.0),RR(1.0)], 2)])
@@ -549,10 +577,14 @@ def test_dmp_factor_list():
     assert dmp_factor_list([[]], 1, ZZ['y']) == (DMP([],ZZ), [])
     assert dmp_factor_list([[]], 1, QQ['y']) == (DMP([],QQ), [])
 
+    assert dmp_factor_list([[]], 1, ZZ, include=True) == [([[]], 1)]
+
     assert dmp_factor_list([[ZZ(7)]], 1, ZZ) == (ZZ(7), [])
     assert dmp_factor_list([[QQ(1,7)]], 1, QQ) == (QQ(1,7), [])
     assert dmp_factor_list([[DMP([ZZ(7)],ZZ)]], 1, ZZ['y']) == (DMP([ZZ(7)],ZZ), [])
     assert dmp_factor_list([[DMP([QQ(1,7)],QQ)]], 1, QQ['y']) == (DMP([QQ(1,7)],QQ), [])
+
+    assert dmp_factor_list([[ZZ(7)]], 1, ZZ, include=True) == [([[ZZ(7)]], 1)]
 
     f, g = [ZZ(1),ZZ(2),ZZ(1)], [ZZ(1),ZZ(1)]
 
@@ -578,6 +610,11 @@ def test_dmp_factor_list():
         (ZZ(4), [([[ZZ(1)],[]], 1),
                  ([[ZZ(1),ZZ(0)]], 1),
                  ([[ZZ(1)],[ZZ(1),ZZ(0)]], 1)])
+
+    assert dmp_factor_list(f, 1, ZZ, include=True) == \
+        [([[ZZ(4)],[]], 1),
+         ([[ZZ(1),ZZ(0)]], 1),
+         ([[ZZ(1)],[ZZ(1),ZZ(0)]], 1)]
 
     f = [[QQ(1,2),QQ(0)],[QQ(1,2),QQ(0),QQ(0)],[]]
 

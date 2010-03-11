@@ -909,8 +909,12 @@ class DUP(object):
 
     def factor_list(f, **args):
         """Returns a list of irreducible factors of `f`. """
-        coeff, factors = dup_factor_list(f.rep, f.dom, **args)
-        return coeff, [ (f.per(g), k) for g, k in factors ]
+        result = dup_factor_list(f.rep, f.dom, **args)
+
+        if type(result) is tuple:
+            return result[0], [ (f.per(g), k) for g, k in result[1] ]
+        else:
+            return [ (f.per(g), k) for g, k in result ]
 
     @property
     def is_zero(f):
@@ -1474,8 +1478,12 @@ class DMP(object):
 
     def factor_list(f, **args):
         """Returns a list of irreducible factors of `f`. """
-        coeff, factors = dmp_factor_list(f.rep, f.lev, f.dom, **args)
-        return coeff, [ (f.per(g), k) for g, k in factors ]
+        result = dmp_factor_list(f.rep, f.lev, f.dom, **args)
+
+        if type(result) is tuple:
+            return result[0], [ (f.per(g), k) for g, k in result[1] ]
+        else:
+            return [ (f.per(g), k) for g, k in result ]
 
     def intervals(f, **args):
         """Compute isolating intervals for roots of `f`. """

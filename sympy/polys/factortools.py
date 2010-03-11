@@ -20,7 +20,9 @@ from sympy.polys.densebasic import (
     dmp_zero, dmp_zero_p,
     dmp_one, dmp_one_p,
     dmp_nest, dmp_raise,
-    dup_inflate, dmp_strip,
+    dup_strip, dmp_strip,
+    dmp_ground,
+    dup_inflate,
     dmp_exclude, dmp_include,
     dmp_inject, dmp_eject,
     dmp_terms_gcd
@@ -988,7 +990,7 @@ def dmp_zz_factor(f, u, K):
 
     return cont, _sort_factors(factors)
 
-def dup_ext_factor(f, K, **args):
+def dup_ext_factor(f, K):
     """Factor polynomials over algebraic number fields. """
     n, lc = dup_degree(f), dup_LC(f, K)
 
@@ -1002,7 +1004,7 @@ def dup_ext_factor(f, K, **args):
     f, F = dup_sqf_part(f, K), f
     s, g, r = dup_sqf_norm(f, K)
 
-    coeff, factors = dup_factor_list(r, K.dom)
+    factors = dup_factor_list(r, K.dom, include=True)
 
     if len(factors) == 1:
         return lc, [(f, n//dup_degree(f))]
@@ -1015,24 +1017,26 @@ def dup_ext_factor(f, K, **args):
         h = dup_taylor(h, H, K)
         factors[i] = h
 
-    coeff = lc * K.convert(coeff, K.dom)
     factors = dup_trial_division(F, factors, K)
 
-    return coeff, factors
+    return lc, factors
 
 @cythonized("u")
-def dmp_ext_factor(f, u, K, **args):
+def dmp_ext_factor(f, u, K):
     """Factor polynomials over algebraic number fields. """
     if not u:
-        return dup_ext_factor(f, K, **args)
+        return dup_ext_factor(f, K)
 
     lc = dmp_ground_LC(f, u, K)
     f = dmp_ground_monic(f, u, K)
 
+    if all([ d <= 0 for d in dmp_degree_list(f, u) ]):
+        return lc, []
+
     f, F = dmp_sqf_part(f, u, K), f
     s, g, r = dmp_sqf_norm(f, u, K)
 
-    coeff, factors = dmp_factor_list(r, u, K.dom)
+    factors = dmp_factor_list(r, u, K.dom, include=True)
 
     if len(factors) == 1:
         coeff, factors = lc, [f]
@@ -1045,9 +1049,7 @@ def dmp_ext_factor(f, u, K, **args):
             h = dmp_compose(h, H, u, K)
             factors[i] = h
 
-        coeff = lc * K.convert(coeff, K.dom)
-
-    return coeff, dmp_trial_division(F, factors, u, K)
+    return lc, dmp_trial_division(F, factors, u, K)
 
 @cythonized("i,k,u")
 def dup_factor_list(f, K0, **args):
@@ -1056,52 +1058,59 @@ def dup_factor_list(f, K0, **args):
         raise DomainError('only characteristic zero allowed')
 
     if K0.is_Algebraic:
-        return dup_ext_factor(f, K0, **args)
-
-    if not K0.is_Exact:
-        K0_inexact, K0 = K0, K0.get_exact()
-        f = dup_convert(f, K0_inexact, K0)
+        coeff, factors = dup_ext_factor(f, K0)
     else:
-        K0_inexact = None
+        if not K0.is_Exact:
+            K0_inexact, K0 = K0, K0.get_exact()
+            f = dup_convert(f, K0_inexact, K0)
+        else:
+            K0_inexact = None
 
-    if K0.has_Field:
-        K = K0.get_ring()
+        if K0.has_Field:
+            K = K0.get_ring()
 
-        denom, f = dup_ground_to_ring(f, K0, K)
-        f = dup_convert(f, K0, K)
+            denom, f = dup_ground_to_ring(f, K0, K)
+            f = dup_convert(f, K0, K)
+        else:
+            K = K0
+
+        if K.is_ZZ:
+            coeff, factors = dup_zz_factor(f, K, **args)
+        elif K.is_Poly:
+            f, u = dmp_inject(f, 0, K)
+
+            coeff, factors = dmp_factor_list(f, u, K.dom, **args)
+
+            for i, (f, k) in enumerate(factors):
+                factors[i] = (dmp_eject(f, u, K), k)
+
+            coeff = K.convert(coeff, K.dom)
+        else: # pragma: no cover
+            raise DomainError('factorization not supported over %s' % K0)
+
+        if K0.has_Field:
+            for i, (f, k) in enumerate(factors):
+                factors[i] = (dup_convert(f, K, K0), k)
+
+            coeff = K0.convert(coeff, K)
+            denom = K0.convert(denom, K)
+
+            coeff = K0.quo(coeff, denom)
+
+        if K0_inexact is not None:
+            for i, (f, k) in enumerate(factors):
+                factors[i] = (dup_convert(f, K0, K0_inexact), k)
+
+            coeff = K0_inexact.convert(coeff, K0)
+
+    if not args.get('include', False):
+        return coeff, factors
     else:
-        K = K0
-
-    if K.is_ZZ:
-        coeff, factors = dup_zz_factor(f, K, **args)
-    elif K.is_Poly:
-        f, u = dmp_inject(f, 0, K)
-
-        coeff, factors = dmp_factor_list(f, u, K.dom, **args)
-
-        for i, (f, k) in enumerate(factors):
-            factors[i] = (dmp_eject(f, u, K), k)
-
-        coeff = K.convert(coeff, K.dom)
-    else: # pragma: no cover
-        raise DomainError('factorization not supported over %s' % K0)
-
-    if K0.has_Field:
-        for i, (f, k) in enumerate(factors):
-            factors[i] = (dup_convert(f, K, K0), k)
-
-        coeff = K0.convert(coeff, K)
-        denom = K0.convert(denom, K)
-
-        coeff = K0.quo(coeff, denom)
-
-    if K0_inexact is not None:
-        for i, (f, k) in enumerate(factors):
-            factors[i] = (dup_convert(f, K0, K0_inexact), k)
-
-        coeff = K0_inexact.convert(coeff, K0)
-
-    return coeff, factors
+        if not factors:
+            return [(dup_strip([coeff]), 1)]
+        else:
+            g = dup_mul_ground(factors[0][0], coeff, K)
+            return [(g, factors[0][1])] + factors[1:]
 
 @cythonized("u,v,i,k")
 def _dmp_inner_factor(f, u, K):
@@ -1133,50 +1142,57 @@ def dmp_factor_list(f, u, K0, **args):
         raise DomainError('only characteristic zero allowed')
 
     if K0.is_Algebraic:
-        return dmp_ext_factor(f, u, K0, **args)
-
-    if not K0.is_Exact:
-        K0_inexact, K0 = K0, K0.get_exact()
-        f = dmp_convert(f, u, K0_inexact, K0)
+        coeff, factors = dmp_ext_factor(f, u, K0)
     else:
-        K0_inexact = None
+        if not K0.is_Exact:
+            K0_inexact, K0 = K0, K0.get_exact()
+            f = dmp_convert(f, u, K0_inexact, K0)
+        else:
+            K0_inexact = None
 
-    if K0.has_Field:
-        K = K0.get_ring()
+        if K0.has_Field:
+            K = K0.get_ring()
 
-        denom, f = dmp_ground_to_ring(f, u, K0, K)
-        f = dmp_convert(f, u, K0, K)
+            denom, f = dmp_ground_to_ring(f, u, K0, K)
+            f = dmp_convert(f, u, K0, K)
+        else:
+            K = K0
+
+        if K.is_ZZ:
+            coeff, factors = _dmp_inner_factor(f, u, K)
+        elif K.is_Poly:
+            f, v = dmp_inject(f, u, K)
+
+            coeff, factors = dmp_factor_list(f, v, K.dom, **args)
+
+            for i, (f, k) in enumerate(factors):
+                factors[i] = (dmp_eject(f, v, K), k)
+
+            coeff = K.convert(coeff, K.dom)
+        else: # pragma: no cover
+            raise DomainError('factorization not supported over %s' % K0)
+
+        if K0.has_Field:
+            for i, (f, k) in enumerate(factors):
+                factors[i] = (dmp_convert(f, u, K, K0), k)
+
+            coeff = K0.convert(coeff, K)
+            denom = K0.convert(denom, K)
+
+            coeff = K0.quo(coeff, denom)
+
+        if K0_inexact is not None:
+            for i, (f, k) in enumerate(factors):
+                factors[i] = (dmp_convert(f, u, K0, K0_inexact), k)
+
+            coeff = K0_inexact.convert(coeff, K0)
+
+    if not args.get('include', False):
+        return coeff, factors
     else:
-        K = K0
-
-    if K.is_ZZ:
-        coeff, factors = _dmp_inner_factor(f, u, K)
-    elif K.is_Poly:
-        f, v = dmp_inject(f, u, K)
-
-        coeff, factors = dmp_factor_list(f, v, K.dom, **args)
-
-        for i, (f, k) in enumerate(factors):
-            factors[i] = (dmp_eject(f, v, K), k)
-
-        coeff = K.convert(coeff, K.dom)
-    else: # pragma: no cover
-        raise DomainError('factorization not supported over %s' % K0)
-
-    if K0.has_Field:
-        for i, (f, k) in enumerate(factors):
-            factors[i] = (dmp_convert(f, u, K, K0), k)
-
-        coeff = K0.convert(coeff, K)
-        denom = K0.convert(denom, K)
-
-        coeff = K0.quo(coeff, denom)
-
-    if K0_inexact is not None:
-        for i, (f, k) in enumerate(factors):
-            factors[i] = (dmp_convert(f, u, K0, K0_inexact), k)
-
-        coeff = K0_inexact.convert(coeff, K0)
-
-    return coeff, factors
+        if not factors:
+            return [(dmp_ground(coeff, u), 1)]
+        else:
+            g = dmp_mul_ground(factors[0][0], coeff, u, K)
+            return [(g, factors[0][1])] + factors[1:]
 
