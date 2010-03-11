@@ -2127,7 +2127,12 @@ def sqf(f, *gens, **args):
         coeff = coeff_p / coeff_q
         factors = factors_p / factors_q
 
-    return coeff * factors
+    if coeff is S.One:
+        return factors
+    elif not factors.is_Add:
+        return coeff*factors
+    else:
+        return Mul(coeff, factors, evaluate=False)
 
 def factor_list(f, *gens, **args):
     """Returns a list of irreducible factors of `f`. """
@@ -2173,7 +2178,12 @@ def factor(f, *gens, **args):
         coeff = coeff_p / coeff_q
         factors = factors_p / factors_q
 
-    return coeff * factors
+    if coeff is S.One:
+        return factors
+    elif not factors.is_Add:
+        return coeff*factors
+    else:
+        return Mul(coeff, factors, evaluate=False)
 
 def intervals(f, *gens, **args):
     """Compute isolating intervals for roots of `f`. """
