@@ -20,7 +20,7 @@ from sympy.polys.polytools import (
     factor_list, factor,
     intervals, nroots,
     cancel,
-    groebner,
+    reduced, groebner,
     horner,
 )
 
@@ -1579,6 +1579,24 @@ def test_cancel():
     G = Poly(1, x)
 
     assert cancel((f, g)) == (1, F, G)
+
+def test_reduced():
+    raises(PolynomialError, "reduced(x, [x], x, modulus=3)")
+
+    f = 2*x**4 + y**2 - x**2 + y**3
+    G = [x**3 - x, y**3 - y]
+
+    Q = [2*x, 1]
+    r = x**2 + y**2 + y
+
+    assert reduced(f, G) == (Q, r)
+    assert reduced(f, G, x, y) == (Q, r)
+
+    Q = [Poly(2*x, x, y), Poly(1, x, y)]
+    r = Poly(x**2 + y**2 + y, x, y)
+
+    assert reduced(f, G, polys=True) == (Q, r)
+    assert reduced(f, G, x, y, polys=True) == (Q, r)
 
 def test_groebner():
     raises(GeneratorsNeeded, "groebner([x, y], order='lex')")

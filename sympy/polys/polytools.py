@@ -22,7 +22,7 @@ from sympy.polys.polyutils import (
 )
 
 from sympy.polys.groebnertools import (
-    sdp_from_dict, sdp_groebner,
+    sdp_from_dict, sdp_div, sdp_groebner,
 )
 
 from sympy.polys.monomialtools import (
@@ -2225,10 +2225,45 @@ def cancel(f, *gens, **args):
         else:
             return c, P, Q
 
+def reduced(f, G, *gens, **args):
+    """Reduces a polynomial `f` modulo a set of polynomials `G`. """
+    if 'modulus' in args:
+        raise PolynomialError("can't reduce a polynomial over a finite field")
+
+    H = [f] + list(G)
+
+    order = Poly._analyze_order({'order': args.pop('order', 'lex')})
+    basic = _should_return_basic(*H, **args)
+
+    gens = _analyze_gens(gens)
+
+    H = [ Poly(h, *gens, **args) for h in H ]
+    dom, gens = H[0].get_domain(), H[0].gens
+
+    for h in H[1:]:
+        gens = _unify_gens(gens, h.gens)
+        dom = dom.unify(h.get_domain(), gens)
+
+    lev = len(gens) - 1
+
+    for i, h in enumerate(H):
+        h = Poly(h, *gens, **{'domain': dom})
+        H[i] = sdp_from_dict(h.rep.to_dict(), order)
+
+    Q, r = sdp_div(H[0], H[1:], lev, order, dom)
+
+    Q = [ Poly(DMP(dict(q), dom, lev), *gens) for q in Q ]
+    r =   Poly(DMP(dict(r), dom, lev), *gens)
+
+    if basic:
+        return [ q.as_basic() for q in Q ], r.as_basic()
+    else:
+        return Q, r
+
 def groebner(F, *gens, **args):
     """Computes reduced Groebner basis for a set of polynomials. """
     if 'modulus' in args:
-        raise PolynomialError("can't compute Groebner basis over over a finite field")
+        raise PolynomialError("can't compute Groebner basis over a finite field")
 
     order = Poly._analyze_order({'order': args.pop('order', 'lex')})
     basic = _should_return_basic(*F, **args)
