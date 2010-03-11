@@ -83,6 +83,7 @@ from sympy.polys.factortools import (
 
 from sympy.polys.galoistools import (
     gf_degree,
+    gf_int,
     gf_LC, gf_TC,
     gf_from_dict, gf_to_dict,
     gf_from_int_poly, gf_to_int_poly,
@@ -125,9 +126,9 @@ def init_normal_GFP(rep, mod, dom):
 class GFP(object):
     """Univariate Polynomials over Galois Fields. """
 
-    __slots__ = ['rep', 'mod', 'lev', 'dom']
+    __slots__ = ['rep', 'mod', 'lev', 'dom', 'sym']
 
-    def __init__(self, rep, mod, dom):
+    def __init__(self, rep, mod, dom, symmetric=None):
         if not dom.is_ZZ:
             raise DomainError("only ZZ domains allowed in GFP")
 
@@ -142,6 +143,11 @@ class GFP(object):
         self.mod = mod
         self.lev = 0
         self.dom = dom
+
+        if symmetric is not None:
+            self.sym = symmetric
+        else:
+            self.sym = True
 
     def __repr__(f):
         return "%s(%s, %s, %s)" % (f.__class__.__name__, f.rep, f.mod, f.dom)
@@ -160,6 +166,8 @@ class GFP(object):
         if not isinstance(g, GFP) or f.mod != g.mod:
             raise UnificationFailed("can't unify %s with %s" % (f, g))
 
+        sym = max(f.sym, g.sym)
+
         if f.dom == g.dom:
             return f.mod, f.dom, f.per, f.rep, g.rep
         else:
@@ -168,18 +176,18 @@ class GFP(object):
             F = gf_convert(f.rep, mod, f.dom, dom)
             G = gf_convert(g.rep, mod, g.dom, dom)
 
-            def per(rep, mod=mod, dom=dom):
-                return GFP(rep, mod, dom)
+            def per(rep, mod=mod, dom=dom, sym=sym):
+                return GFP(rep, mod, dom, sym)
 
         return mod, dom, per, F, G
 
     def per(f, rep):
         """Create a GFP out of the given representation. """
-        return GFP(rep, f.mod, f.dom)
+        return GFP(rep, f.mod, f.dom, f.sym)
 
     def to_dict(f):
         """Convert `f` to a dict representation with native coefficients. """
-        rep = gf_to_dict(f.rep, f.mod)
+        rep = gf_to_dict(f.rep, f.mod, f.sym)
 
         for k, v in dict(rep).iteritems():
             rep[(k,)] = v
@@ -189,7 +197,7 @@ class GFP(object):
 
     def to_sympy_dict(f):
         """Convert `f` to a dict representation with SymPy coefficients. """
-        rep = gf_to_dict(f.rep, f.mod)
+        rep = gf_to_dict(f.rep, f.mod, f.sym)
 
         for k, v in dict(rep).iteritems():
             rep[(k,)] = f.dom.to_sympy(v)
@@ -210,14 +218,14 @@ class GFP(object):
         if mod == f.mod:
             return f
         else:
-            return GFP(gf_reduce(f.rep, mod), mod, f.dom)
+            return GFP(gf_reduce(f.rep, mod), mod, f.dom, f.sym)
 
     def convert(f, dom):
         """Convert the ground domain of `f`. """
         if f.dom == dom:
             return f
         elif dom.is_ZZ:
-            return GFP(gf_convert(f.rep, f.mod, f.dom, dom), f.mod, dom)
+            return GFP(gf_convert(f.rep, f.mod, f.dom, dom), f.mod, dom, f.sym)
         else:
             raise DomainError("can't convert GFP ground domain to %s" % dom)
 
@@ -225,8 +233,10 @@ class GFP(object):
         """Returns all non-zero coefficients from `f`. """
         if not f:
             return [f.dom.zero]
-        else:
+        elif not f.sym:
             return [ c for c in f.rep if c ]
+        else:
+            return [ gf_int(c, f.mod) for c in f.rep if c ]
 
     def monoms(f):
         """Returns all non-zero monomials from `f`. """
@@ -243,15 +253,19 @@ class GFP(object):
 
         if n < 0:
             return [((0,), f.dom.zero)]
-        else:
+        elif not f.sym:
             return [ ((n-i,), c) for i, c in enumerate(f.rep) if c ]
+        else:
+            return [ ((n-i,), gf_int(c, f.mod)) for i, c in enumerate(f.rep) if c ]
 
     def all_coeffs(f):
         """Returns all coefficients from `f`. """
         if not f:
             return [f.dom.zero]
-        else:
+        elif not f.sym:
             return [ c for c in f.rep ]
+        else:
+            return [ gf_int(c, f.mod) for c in f.rep ]
 
     def all_monoms(f):
         """Returns all monomials from `f`. """
@@ -266,8 +280,10 @@ class GFP(object):
 
         if n < 0:
             return [((0,), f.dom.zero)]
-        else:
+        elif not f.sym:
             return [ ((n-i,), c) for i, c in enumerate(f.rep) ]
+        else:
+            return [ ((n-i,), gf_int(c, f.mod)) for i, c in enumerate(f.rep) ]
 
     def deflate(f):
         """Reduce degree of `f` by mapping `x**m` to `y`. """

@@ -245,6 +245,8 @@ def test_Poly__new__():
     raises(PolynomialError, "Poly(DMP([1,2], ZZ), x, modulus=3)")
     raises(PolynomialError, "Poly(GFP([1,2], 3, ZZ), x, modulus=3)")
 
+    raises(PolynomialError, "Poly(x, x, symmetric=True)")
+
     raises(PolynomialError, "Poly(x+y, x, y, domain=ZZ[x])")
     raises(PolynomialError, "Poly(x+y, x, y, domain=ZZ[y])")
 
@@ -296,6 +298,13 @@ def test_Poly__new__():
         Poly(x**2*y + 2*x*y**2 + 3*x*y, x, y)
 
     assert Poly(x**2 + 1, extension=I).get_domain() == QQ.algebraic_field(I)
+
+    f = 3*x**5 - x**4 + x**3 - x** 2 + 65538
+
+    assert Poly(f, x, modulus=65537, symmetric=True) == \
+        Poly(3*x**5 - x**4 + x**3 - x** 2 + 1, x, modulus=65537, symmetric=True)
+    assert Poly(f, x, modulus=65537, symmetric=False) == \
+        Poly(3*x**5 + 65536*x**4 + x**3 + 65536*x** 2 + 1, x, modulus=65537, symmetric=False)
 
 def test_Poly__args():
     assert Poly(x**2 + 1).args == [x**2 + 1]
@@ -381,6 +390,9 @@ def test_Poly_unify():
     assert Poly(x+2, x, modulus=3).unify(Poly(2*x+5, x))[2:] == (GFP([1, 2], 3, ZZ), GFP([2, 2], 3, ZZ))
 
     assert Poly(x+5, x, modulus=3).unify(Poly(x+7, x, modulus=3))[2:] == (GFP([1, 2], 3, ZZ), GFP([1, 1], 3, ZZ))
+
+    assert Poly(x+5, x, modulus=3, symmetric=True).unify(Poly(x+7, x, modulus=3, symmetric=False))[2:] == \
+        (GFP([1, 2], 3, ZZ, symmetric=True), GFP([1, 1], 3, ZZ, symmetric=True))
 
 def test_Poly__analyze_order():
     assert Poly._analyze_order({}) is None
@@ -1470,6 +1482,11 @@ def test_factor():
     assert factor(6*x - 10) == Mul(2, 3*x - 5, evaluate=False)
 
     assert factor((6*x - 10)/(3*x - 6), frac=True) == S(2)/3*((3*x - 5)/(x - 2))
+
+    assert factor(x**11 + x + 1, modulus=65537, symmetric=True) == \
+        (x**2 + x + 1)*(x**9 - x**8 + x**6 - x**5 + x**3 - x** 2 + 1)
+    assert factor(x**11 + x + 1, modulus=65537, symmetric=False) == \
+        (x**2 + x + 1)*(x**9 + 65536*x**8 + x**6 + 65536*x**5 + x**3 + 65536*x** 2 + 1)
 
 def test_intervals():
     f = Poly((2*x/5 - S(17)/3)*(4*x + S(1)/257))

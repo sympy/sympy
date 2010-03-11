@@ -149,12 +149,16 @@ def gf_from_dict(f, p, K):
     return gf_reduce(h, p)
 
 @cythonized("k,n")
-def gf_to_dict(f, p):
+def gf_to_dict(f, p, symmetric=True):
     """Convert `GF(p)[x]` polynomial to a dict. """
     n, result = gf_degree(f), {}
 
     for k in xrange(0, n+1):
-        a = gf_int(f[n-k], p)
+        if symmetric:
+            a = gf_int(f[n-k], p)
+        else:
+            a = f[n-k]
+
         if a: result[k] = a
 
     return result
@@ -163,9 +167,12 @@ def gf_from_int_poly(f, p):
     """Create `GF(p)[x]` polynomial from `Z[x]`. """
     return gf_reduce(f, p)
 
-def gf_to_int_poly(f, p):
+def gf_to_int_poly(f, p, symmetric=True):
     """Convert `GF(p)[x]` polynomial to `Z[x]`. """
-    return [ gf_int(c, p) for c in f ]
+    if symmetric:
+        return [ gf_int(c, p) for c in f ]
+    else:
+        return f
 
 def gf_neg(f, p, K):
     """Negate a polynomial in `GF(p)[x]`. """

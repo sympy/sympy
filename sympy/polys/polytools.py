@@ -255,12 +255,13 @@ def _init_poly_from_dict(dict_rep, *gens, **args):
     """Initialize a Poly given a dict instance. """
     domain = args.get('domain')
     modulus = args.get('modulus')
+    symmetric = args.get('symmetric')
 
     if modulus is not None:
         if len(gens) != 1:
             raise PolynomialError("multivariate polynomials over GF(p) are not supported")
         else:
-            return GFP(dict_rep, modulus, domain)
+            return GFP(dict_rep, modulus, domain, symmetric)
     else:
         if domain is not None:
             for k, v in dict_rep.iteritems():
@@ -274,12 +275,13 @@ def _init_poly_from_list(list_rep, *gens, **args):
     """Initialize a Poly given a list instance. """
     domain = args.get('domain')
     modulus = args.get('modulus')
+    symmetric = args.get('symmetric')
 
     if len(gens) != 1:
         raise PolynomialError("can't create a multivariate polynomial from a list")
 
     if modulus is not None:
-        return GFP(list_rep, modulus, domain)
+        return GFP(list_rep, modulus, domain, symmetric)
     else:
         if domain is not None:
             rep = map(domain.convert, list_rep)
@@ -293,6 +295,7 @@ def _init_poly_from_poly(poly_rep, *gens, **args):
     """Initialize a Poly given a Poly instance. """
     domain = args.get('domain')
     modulus = args.get('modulus')
+    symmetric = args.get('symmetric')
 
     if isinstance(poly_rep.rep, DMP):
         if not gens or poly_rep.gens == gens:
@@ -314,14 +317,14 @@ def _init_poly_from_poly(poly_rep, *gens, **args):
 
         if modulus is not None:
             if not rep.lev and rep.dom.is_ZZ:
-                rep = GFP(rep.rep, modulus, rep.dom)
+                rep = GFP(rep.rep, modulus, rep.dom, symmetric)
             else:
                 raise PolynomialError("can't make GF(p) polynomial out of %s" % rep)
     else:
         if not gens or poly_rep.gens == gens:
             if domain is not None or modulus is not None:
                 if modulus is not None:
-                    rep = GFP(poly_rep.rep.rep, modulus, poly_rep.rep.dom)
+                    rep = GFP(poly_rep.rep.rep, modulus, poly_rep.rep.dom, symmetric)
                 else:
                     rep = poly_rep.rep
 
@@ -354,12 +357,13 @@ def _init_poly_from_basic(basic_rep, *gens, **args):
 
     domain = args.get('domain')
     modulus = args.get('modulus')
+    symmetric = args.get('symmetric')
 
     if modulus is not None:
         if len(gens) > 1:
             raise PolynomialError("multivariate polynomials over GF(p) are not supported")
         else:
-            result = GFP(_dict_set_domain(dict_rep, domain), modulus, domain)
+            result = GFP(_dict_set_domain(dict_rep, domain), modulus, domain, symmetric)
     else:
         if domain is not None:
             dict_rep = _dict_set_domain(dict_rep, domain)
@@ -440,6 +444,11 @@ class Poly(Basic):
 
                 if extension is not True:
                     args['domain'] = domain = QQ.algebraic_field(*extension)
+
+            symmetric = args.get('symmetric')
+
+            if symmetric is not None and modulus is None:
+                raise PolynomialError("'symmetric' keyword only allowed together with 'modulus'")
 
             if isinstance(rep, (dict, list)):
                 if not gens:
@@ -525,13 +534,13 @@ class Poly(Basic):
             else:
                 G = g.rep.convert(dom)
         elif isinstance(f.rep, GFP) and isinstance(g.rep, DMP) and f.gens == g.gens:
-            dom, G, F, gens = f.rep.dom, GFP(g.rep.convert(f.rep.dom).rep, f.rep.mod, g.rep.dom), f.rep, f.gens
+            dom, G, F, gens = f.rep.dom, GFP(g.rep.convert(f.rep.dom).rep, f.rep.mod, f.rep.dom, f.rep.sym), f.rep, f.gens
         elif isinstance(f.rep, DMP) and isinstance(g.rep, GFP) and f.gens == g.gens:
-            dom, F, G, gens = g.rep.dom, GFP(f.rep.convert(g.rep.dom).rep, g.rep.mod, g.rep.dom), g.rep, g.gens
+            dom, F, G, gens = g.rep.dom, GFP(f.rep.convert(g.rep.dom).rep, g.rep.mod, g.rep.dom, g.rep.sym), g.rep, g.gens
         elif isinstance(f.rep, GFP) and isinstance(g.rep, GFP) and f.gens == g.gens and f.rep.mod == g.rep.mod:
-            dom, gens = f.rep.dom.unify(g.rep.dom), f.gens
-            F = GFP(f.rep.convert(dom).rep, f.rep.mod, dom)
-            G = GFP(g.rep.convert(dom).rep, g.rep.mod, dom)
+            dom, gens, sym = f.rep.dom.unify(g.rep.dom), f.gens, max(f.rep.sym, g.rep.sym)
+            F = GFP(f.rep.convert(dom).rep, f.rep.mod, dom, sym)
+            G = GFP(g.rep.convert(dom).rep, g.rep.mod, dom, sym)
         else:
             raise UnificationFailed("can't unify %s with %s" % (f, g))
 
