@@ -1635,7 +1635,6 @@ def test_reduced():
     assert reduced(f, G, x, y, polys=True) == (Q, r)
 
 def test_groebner():
-    raises(GeneratorsNeeded, "groebner([x, y], order='lex')")
     raises(PolynomialError, "groebner([x], x, modulus=3)")
 
     assert groebner([], x, y, z) == []

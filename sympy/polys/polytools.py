@@ -2290,20 +2290,25 @@ def groebner(F, *gens, **args):
     args = _update_args(args, 'field', True)
     gens = _analyze_gens(gens)
 
-    if not gens:
-        raise GeneratorsNeeded("can't compute Groebner basis without generators")
-
     if not F:
         return []
 
     F = [ Poly(f, *gens, **args) for f in F ]
-    dom, lev = F[0].get_domain(), len(gens)-1
+    dom, gens = F[0].get_domain(), F[0].gens
 
     for f in F[1:]:
+        gens = _unify_gens(gens, f.gens)
         dom = dom.unify(f.get_domain(), gens)
 
-    F = [ sdp_from_dict(f.set_domain(dom).rep.to_dict(), order) for f in F ]
-    G = [ Poly(DMP(dict(g), dom, lev), *gens) for g in sdp_groebner(F, lev, order, dom) ]
+    lev = len(gens) - 1
+
+    for i, f in enumerate(F):
+        f = Poly(f, *gens, **{'domain': dom})
+        F[i] = sdp_from_dict(f.rep.to_dict(), order)
+
+    G = sdp_groebner(F, lev, order, dom)
+
+    G = [ Poly(DMP(dict(g), dom, lev), *gens) for g in G ]
 
     if basic:
         return [ g.as_basic() for g in G ]
