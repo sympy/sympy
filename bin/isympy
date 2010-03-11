@@ -103,6 +103,13 @@ def main():
         help='setup pretty printing: Unicode | ASCII | any | no')
 
     parser.add_option(
+        '-o', '--order',
+        dest='order',
+        action='store',
+        default='old',
+        help='setup terms ordering: old | [rev-]lex, [rev-]grlex, [rev-]grevlex')
+
+    parser.add_option(
         '-q', '--quiet',
         dest='quiet',
         action='store_true',
@@ -117,9 +124,10 @@ def main():
         session = session.lower()
 
     args = {
-        'argv'        : ipy_args,
-        'pretty'      : True,
-        'use_unicode' : None,
+        'argv'         : ipy_args,
+        'pretty_print' : True,
+        'use_unicode'  : None,
+        'order'        : None,
     }
 
     pretty = options.pretty.lower()
@@ -137,6 +145,11 @@ def main():
                     raise ValueError("Unknown pretty" \
                         " printing setup: " + options.pretty)
 
+    order = options.order.lower()
+
+    if order != 'old':
+        args['order'] = order
+
     if not options.quiet:
         args['message'] = long_message
 
@@ -151,3 +164,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

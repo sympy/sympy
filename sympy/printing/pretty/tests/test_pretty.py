@@ -9,9 +9,9 @@ y = Symbol('y')
 th  = Symbol('theta')
 ph  = Symbol('phi')
 
-def pretty(expr):
+def pretty(expr, order=None):
     # ascii-pretty by default
-    return xpretty(expr, use_unicode=False)
+    return xpretty(expr, order=order, use_unicode=False)
 
 def test_pretty_str():
     assert pretty( 'xxx' ) == "'xxx'"
@@ -72,6 +72,23 @@ def test_pretty_basic():
     # Check for proper placement of negative sign
     assert pretty( -5*x/(x+10) ) == ' -5*x \n------\n10 + x'
     assert pretty( 1 - Rational(3,2)*(x+1) ) == '       3*x\n-1/2 - ---\n        2 '
+
+def test_pretty_ordering():
+    assert pretty(x**2 + x + 1, order='lex') == ' 2        \nx  + x + 1'
+    assert pretty(x**2 + x + 1, order='rev-lex') == '         2\n1 + x + x '
+
+    assert pretty(1 - x, order='lex') == '-x + 1'
+    assert pretty(1 - x, order='rev-lex') == '1 - x'
+
+    assert pretty(1 - 2*x, order='lex') == '-2*x + 1'
+    assert pretty(1 - 2*x, order='rev-lex') == '1 - 2*x'
+
+    f = 2*x**4 + y**2 - x**2 + y**3
+
+    assert pretty(f, order=None) == ' 2    2    3      4\ny  - x  + y  + 2*x '
+
+    assert pretty(f, order='lex') == '   4    2    3    2\n2*x  - x  + y  + y '
+    assert pretty(f, order='rev-lex') == ' 2    3    2      4\ny  + y  - x  + 2*x '
 
 def test_pretty_relational():
     assert pretty(Eq(x, y)) == 'x = y'
@@ -364,3 +381,4 @@ def test_pprint():
     finally:
         sys.stdout = sso
     assert fd.getvalue() == 'pi\n'
+

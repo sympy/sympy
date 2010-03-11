@@ -4,8 +4,12 @@ x, y, z = symbols('xyz')
 k, m, n = symbols('kmn', integer=True)
 f, g, h = map(Function, 'fgh')
 
-def init_printing(stringify_func):
+def init_printing(pretty_print=True, order=None, use_unicode=None):
     """Initializes pretty-printer depending on the environment. """
+    if pretty_print:
+        stringify_func = lambda arg: pretty(arg, order=order, use_unicode=use_unicode)
+    else:
+        stringify_func = sstrrepr
 
     try:
         import IPython
@@ -53,7 +57,7 @@ def init_printing(stringify_func):
 
     sys.displayhook = displayhook
 
-def init_session(session="ipython", pretty=True, use_unicode=None, message=None, argv=[]):
+def init_session(session="ipython", pretty_print=True, order=None, use_unicode=None, message=None, argv=[]):
     """Initialize embedded IPython or Python session. """
     import os, sys
 
@@ -115,12 +119,7 @@ def init_session(session="ipython", pretty=True, use_unicode=None, message=None,
     ip.runcode(ip.compile("from __future__ import division"))
     ip.runcode(ip.compile("from sympy.interactive import *"))
 
-    if pretty:
-        stringify_func = 'lambda arg: pretty(arg, use_unicode=%s)' % use_unicode
-    else:
-        stringify_func = 'sstrrepr'
-
-    ip.runcode(ip.compile("init_printing(%s)" % stringify_func))
+    ip.runcode(ip.compile("init_printing(pretty_print=%s, order=%r, use_unicode=%s)" % (pretty_print, order, use_unicode)))
 
     if not in_ipyshell:
         from sympy import __version__ as sympy_version

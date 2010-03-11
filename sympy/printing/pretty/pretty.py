@@ -15,8 +15,8 @@ pprint_try_use_unicode = pretty_try_use_unicode
 class PrettyPrinter(Printer):
     """Printer, which converts an expression into 2D ASCII-art figure."""
 
-    def __init__(self, profile=None):
-        Printer.__init__(self)
+    def __init__(self, order=None, profile=None):
+        Printer.__init__(self, order)
         self.emptyPrinter = lambda x : prettyForm(xstr(x))
 
         self._settings = {
@@ -407,15 +407,18 @@ class PrettyPrinter(Printer):
         else:
             return self._print_Function(e)
 
-    def _print_Add(self, sum):
-        args = list(sum.args)
-        args.sort(Basic._compare_pretty)
+    def _print_Add(self, expr):
+        if self.order is None:
+            terms = sorted(expr.args, Basic._compare_pretty)
+        else:
+            terms = [ elt[-1] for elt in self.analyze(expr) ]
+
         pforms = []
-        for x in args:
-            # Check for negative "things" so that this information can be enforce upon
-            # the pretty form so that it can be made of use (such as in a sum).
-            if x.is_Mul and x.as_coeff_terms()[0] < 0:
-                pform1 = self._print(-x)
+
+        for term in terms:
+            if term.is_Mul and term.as_coeff_terms()[0] < 0:
+                pform1 = self._print(-term)
+
                 if len(pforms) == 0:
                     if pform1.height() > 1:
                         pform2 = '- '
@@ -423,21 +426,26 @@ class PrettyPrinter(Printer):
                         pform2 = '-'
                 else:
                     pform2 = ' - '
+
                 pform = stringPict.next(pform2, pform1)
                 pforms.append(prettyForm(binding=prettyForm.NEG, *pform))
-            elif x.is_Number and x < 0:
-                pform1 = self._print(-x)
+            elif term.is_Number and term < 0:
+                pform1 = self._print(-term)
+
                 if len(pforms) == 0:
                     if pform1.height() > 1:
                         pform2 = '- '
                     else:
                         pform2 = '-'
+
                     pform = stringPict.next(pform2, pform1)
                 else:
                     pform = stringPict.next(' - ', pform1)
+
                 pforms.append(prettyForm(binding=prettyForm.NEG, *pform))
             else:
-                pforms.append(self._print(x))
+                pforms.append(self._print(term))
+
         return prettyForm.__add__(*pforms)
 
     def _print_Mul(self, product):
@@ -658,7 +666,7 @@ class PrettyPrinter(Printer):
         else:
             return self._print(expr.as_basic())
 
-def pretty(expr, profile=None, **kargs):
+def pretty(expr, order=None, profile=None, **kargs):
     """
     Returns a string containing the prettified form of expr.
 
@@ -676,18 +684,18 @@ def pretty(expr, profile=None, **kargs):
         profile = kargs
     uflag = pretty_use_unicode(kargs.get("use_unicode", None))
     try:
-        pp = PrettyPrinter(profile)
+        pp = PrettyPrinter(order, profile)
         return pp.doprint(expr)
     finally:
         pretty_use_unicode(uflag)
 
-def pretty_print(expr, use_unicode=None):
+def pretty_print(expr, order=None, use_unicode=None):
     """
     Prints expr in pretty form.
 
     pprint is just a shortcut for this function
     """
-    print pretty(expr, use_unicode = use_unicode)
+    print pretty(expr, order=order, use_unicode=use_unicode)
 
 pprint = pretty_print
 

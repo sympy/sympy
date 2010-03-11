@@ -65,6 +65,11 @@ Some more information how the single concepts work and who should use which:
     not defined in the Printer subclass this will be the same as str(expr)
 """
 
+from sympy import Basic, Mul
+
+from sympy.polys.polyutils import _analyze_power
+from sympy.polys.monomialtools import monomial_cmp
+
 class Printer(object):
     """Generic printer
 
@@ -171,7 +176,7 @@ class Printer(object):
     is subclassed from Basic.
 
     """
-    def __init__(self):
+    def __init__(self, order=None):
         self._str = str
         if not hasattr(self, "printmethod"):
             self.printmethod = None
@@ -181,6 +186,18 @@ class Printer(object):
         # _print_level is the number of times self._print() was recursively
         # called. See StrPrinter._print_Real() for an example of usage
         self._print_level = 0
+
+        # configure ordering of terms in Add (e.g. lexicographic ordering)
+        if order is not None:
+            if order.startswith('rev-'):
+                self.order = monomial_cmp(order[4:])
+                self.reverse = True
+            else:
+                self.order = monomial_cmp(order)
+                self.reverse = False
+        else:
+            self.order = None
+            self.reverse = False
 
     def doprint(self, expr):
         """Returns printer's representation for expr (as a string)"""
@@ -225,3 +242,68 @@ class Printer(object):
             return res
         finally:
             self._print_level -= 1
+
+    def analyze(self, expr):
+        """Rewrite an expression as sorted list of terms. """
+        gens, terms = set([]), []
+
+        for term in expr.as_Add():
+            coeff, cpart, ncpart = [], {}, []
+
+            for factor in term.as_Mul():
+                if not factor.is_commutative:
+                    ncpart.append(factor)
+                else:
+                    if factor.is_Number:
+                        coeff.append(factor)
+                    else:
+                        base, exp = _analyze_power(*factor.as_Pow())
+
+                        cpart[base] = exp
+                        gens.add(base)
+
+            terms.append((coeff, cpart, ncpart, term))
+
+        gens = sorted(gens, Basic._compare_pretty)
+
+        k, indices = len(gens), {}
+
+        for i, g in enumerate(gens):
+            indices[g] = i
+
+        result = []
+
+        for coeff, cpart, ncpart, term in terms:
+            monom = [0]*k
+
+            for base, exp in cpart.iteritems():
+                monom[indices[base]] = exp
+
+            result.append((coeff, monom, ncpart, term))
+
+        if self.order is None:
+            return sorted(result, Basic._compare_pretty)
+        else:
+            return sorted(result, self._compare_terms)
+
+    def _compare_terms(self, a, b):
+        """Compare two terms using data from Printer.analyze(). """
+        a_coeff, a_monom, a_ncpart, _ = a
+        b_coeff, b_monom, b_ncpart, _ = b
+
+        result = self.order(a_monom, b_monom)
+
+        if not result:
+            if not (a_ncpart or b_ncpart):
+                result = cmp(a_coeff, b_coeff)
+            else:
+                result = Basic._compare_pretty(Mul(*a_ncpart), Mul(*b_ncpart))
+
+                if not result:
+                    result = cmp(a_coeff, b_coeff)
+
+        if not self.reverse:
+            return -result
+        else:
+            return result
+
