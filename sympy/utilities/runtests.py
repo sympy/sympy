@@ -80,14 +80,13 @@ def isgeneratorfunction(object):
     return False
 
 def setup_pprint():
-    from sympy import pprint_use_unicode
+    from sympy import pprint_use_unicode, init_printing
+
     # force pprint to be in ascii mode in doctests
     pprint_use_unicode(False)
 
     # hook our nice, hash-stable strprinter
-    from sympy.interactive import init_printing
-    from sympy.printing import sstrrepr
-    init_printing(sstrrepr)
+    init_printing(pretty_print=False)
 
 def test(*paths, **kwargs):
     """
