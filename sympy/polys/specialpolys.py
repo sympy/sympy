@@ -1,6 +1,8 @@
-"""Methods for creating interesting polynomials, e.g. for benchmarking. """
+"""Functions for generating interesting polynomials, e.g. for benchmarking. """
 
-from sympy import Add, Integer, Symbol, Add, Mul, sqrt, nextprime
+from sympy.core import Add, Mul, Symbol, Rational, sympify
+
+from sympy.polys.polytools import Poly
 
 from sympy.polys.densebasic import (
     dmp_zero, dmp_one, dup_from_raw_dict,
@@ -13,22 +15,33 @@ from sympy.polys.densearith import (
 
 from sympy.polys.algebratools import ZZ
 
+from sympy.ntheory import nextprime
+
 from sympy.utilities import cythonized
 
 @cythonized("n,i")
-def swinnerton_dyer_poly(n, x):
-    """Generates n-th Swinnerton-Dyer polynomial.  """
-    p, elts = 2, [[x, -sqrt(2)], [x, sqrt(2)]]
+def swinnerton_dyer_poly(n, x=None, **args):
+    """Generates n-th Swinnerton-Dyer polynomial in `x`.  """
+    if n <= 0:
+        raise ValueError("can't generate Swinnerton-Dyer polynomial of order %s" % n)
+
+    if x is not None:
+        x = sympify(x)
+    else:
+        x = Symbol('x', dummy=True)
+
+    p, elts = 2, [[x, -2**Rational(1,2)],
+                  [x,  2**Rational(1,2)]]
 
     for i in xrange(2, n+1):
         p, _elts = nextprime(p), []
 
-        n_sqrt_p = -sqrt(p)
-        p_sqrt_p = +sqrt(p)
+        neg_sqrt = -p**Rational(1,2)
+        pos_sqrt = +p**Rational(1,2)
 
         for elt in elts:
-            _elts.append(elt + [n_sqrt_p])
-            _elts.append(elt + [p_sqrt_p])
+            _elts.append(elt + [neg_sqrt])
+            _elts.append(elt + [pos_sqrt])
 
         elts = _elts
 
@@ -37,7 +50,10 @@ def swinnerton_dyer_poly(n, x):
     for elt in elts:
         poly.append(Add(*elt))
 
-    return Mul(*poly).as_poly(x)
+    if not args.get('polys', False):
+        return Mul(*poly).expand()
+    else:
+        return Poly(Mul(*poly))
 
 @cythonized("n,i")
 def fateman_poly_F_1(n):
@@ -52,7 +68,7 @@ def fateman_poly_F_1(n):
     F = ((u + 1)*(u + 2)).as_poly(*Y)
     G = ((v + 1)*(-3*y_1*y_0**2 + y_1**2 - 1)).as_poly(*Y)
 
-    H = (Integer(1)).as_poly(*Y)
+    H = Poly(1, *Y)
 
     return F, G, H
 
@@ -95,10 +111,10 @@ def fateman_poly_F_2(n):
 
     u = Add(*[ y for y in Y[1:] ])
 
-    H = ((y_0 + u + 1)**2).as_poly(*Y)
+    H = Poly((y_0 + u + 1)**2, *Y)
 
-    F = ((y_0 - u - 2)**2).as_poly(*Y)
-    G = ((y_0 + u + 2)**2).as_poly(*Y)
+    F = Poly((y_0 - u - 2)**2, *Y)
+    G = Poly((y_0 + u + 2)**2, *Y)
 
     return H*F, H*G, H
 
@@ -132,10 +148,10 @@ def fateman_poly_F_3(n):
 
     u = Add(*[ y**(n+1) for y in Y[1:] ])
 
-    H = ((y_0**(n+1) + u + 1)**2).as_poly(*Y)
+    H = Poly((y_0**(n+1) + u + 1)**2, *Y)
 
-    F = ((y_0**(n+1) - u - 2)**2).as_poly(*Y)
-    G = ((y_0**(n+1) + u + 2)**2).as_poly(*Y)
+    F = Poly((y_0**(n+1) - u - 2)**2, *Y)
+    G = Poly((y_0**(n+1) + u + 2)**2, *Y)
 
     return H*F, H*G, H
 

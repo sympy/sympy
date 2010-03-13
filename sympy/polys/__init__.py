@@ -52,6 +52,10 @@ from algebratools import (
     ZZ, QQ, RR, EX,
 )
 
+from sympy.polys.specialpolys import (
+    swinnerton_dyer_poly,
+)
+
 from sympy.polys.orthopolys import (
     chebyshevt_poly,
     chebyshevu_poly,
