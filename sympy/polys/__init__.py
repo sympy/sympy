@@ -52,3 +52,11 @@ from algebratools import (
     ZZ, QQ, RR, EX,
 )
 
+from sympy.polys.orthopolys import (
+    chebyshevt_poly,
+    chebyshevu_poly,
+    hermite_poly,
+    legendre_poly,
+    laguerre_poly,
+)
+
