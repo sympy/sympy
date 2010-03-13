@@ -16,7 +16,7 @@ from polytools import (
     intervals, nroots,
     cancel,
     reduced, groebner,
-    horner,
+    horner, cyclotomic_poly,
 )
 
 from polyerrors import (

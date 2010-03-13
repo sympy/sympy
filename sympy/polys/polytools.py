@@ -29,6 +29,10 @@ from sympy.polys.monomialtools import (
     monomial_cmp,
 )
 
+from sympy.polys.factortools import (
+    dup_zz_cyclotomic_poly,
+)
+
 from sympy.polys.polyerrors import (
     OperationNotSupported, DomainError,
     CoercionFailed, UnificationFailed,
@@ -2334,4 +2338,21 @@ def horner(f, *gens, **args):
             form = form*gen + horner(coeff, *gens, **args)
 
     return form
+
+def cyclotomic_poly(n, x=None, **args):
+    """Generate cyclotomic polynomial of order `n` in `x`. """
+    if n <= 0:
+        raise ValueError("can't generate cyclotomic polynomial of order %s" % n)
+
+    if x is not None:
+        x = sympify(x)
+    else:
+        x = Symbol('x', dummy=True)
+
+    poly = Poly(DMP(dup_zz_cyclotomic_poly(int(n), ZZ), ZZ), x)
+
+    if not args.get('polys', False):
+        return poly.as_basic()
+    else:
+        return poly
 

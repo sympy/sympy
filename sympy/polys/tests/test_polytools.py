@@ -21,7 +21,7 @@ from sympy.polys.polytools import (
     intervals, nroots,
     cancel,
     reduced, groebner,
-    horner,
+    horner, cyclotomic_poly,
 )
 
 from sympy.polys.polyerrors import (
@@ -1664,4 +1664,16 @@ def test_horner():
 
     assert horner(4*x**2*y**2 + 2*x**2*y + 2*x*y**2 + x*y, wrt=x) == ((4*y + 2)*x*y + (2*y + 1)*y)*x
     assert horner(4*x**2*y**2 + 2*x**2*y + 2*x*y**2 + x*y, wrt=y) == ((4*x + 2)*y*x + (2*x + 1)*x)*y
+
+def test_cyclotomic_poly():
+    raises(ValueError, "cyclotomic_poly(0, x)")
+
+    assert cyclotomic_poly(1, x, polys=True) == Poly(x - 1)
+
+    assert cyclotomic_poly(1, x) == x - 1
+    assert cyclotomic_poly(2, x) == x + 1
+    assert cyclotomic_poly(3, x) == x**2 + x + 1
+    assert cyclotomic_poly(4, x) == x**2 + 1
+    assert cyclotomic_poly(5, x) == x**4 + x**3 + x**2 + x + 1
+    assert cyclotomic_poly(6, x) == x**2 - x + 1
 
