@@ -1,6 +1,6 @@
 """Functions for generating interesting polynomials, e.g. for benchmarking. """
 
-from sympy.core import Add, Mul, Symbol, Rational, sympify
+from sympy.core import S, Add, Mul, Symbol, Rational, sympify
 
 from sympy.polys.polytools import Poly
 
@@ -23,7 +23,7 @@ from sympy.polys.algebratools import ZZ
 
 from sympy.ntheory import nextprime
 
-from sympy.utilities import cythonized
+from sympy.utilities import cythonized, subsets
 
 @cythonized("n,i")
 def swinnerton_dyer_poly(n, x=None, **args):
@@ -62,7 +62,7 @@ def swinnerton_dyer_poly(n, x=None, **args):
         return Poly(Mul(*poly))
 
 def cyclotomic_poly(n, x=None, **args):
-    """Generate cyclotomic polynomial of order `n` in `x`. """
+    """Generates cyclotomic polynomial of order `n` in `x`. """
     if n <= 0:
         raise ValueError("can't generate cyclotomic polynomial of order %s" % n)
 
@@ -77,6 +77,20 @@ def cyclotomic_poly(n, x=None, **args):
         return poly.as_basic()
     else:
         return poly
+
+def symmetric_poly(n, *gens, **args):
+    """Generates symmetric polynomial of order `n`. """
+    if n < 0 or n > len(gens) or not gens:
+        raise ValueError("can't generate symmetric polynomial of order %s for %s" % (n, gens))
+    elif not n:
+        poly = S.One
+    else:
+        poly = Add(*[ Mul(*s) for s in subsets(gens, int(n)) ])
+
+    if not args.get('polys', False):
+        return poly
+    else:
+        return Poly(poly, *gens)
 
 @cythonized("n,i")
 def fateman_poly_F_1(n):

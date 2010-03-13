@@ -3,13 +3,18 @@
 from sympy import Poly, ZZ, raises
 
 from sympy.polys.specialpolys import (
-    swinnerton_dyer_poly, cyclotomic_poly,
-    fateman_poly_F_1, dmp_fateman_poly_F_1,
-    fateman_poly_F_2, dmp_fateman_poly_F_2,
-    fateman_poly_F_3, dmp_fateman_poly_F_3,
+    swinnerton_dyer_poly,
+    cyclotomic_poly,
+    symmetric_poly,
+    fateman_poly_F_1,
+    dmp_fateman_poly_F_1,
+    fateman_poly_F_2,
+    dmp_fateman_poly_F_2,
+    fateman_poly_F_3,
+    dmp_fateman_poly_F_3,
 )
 
-from sympy.abc import x, y
+from sympy.abc import x, y, z
 
 def test_swinnerton_dyer_poly():
     raises(ValueError, "swinnerton_dyer_poly(0, x)")
@@ -31,6 +36,17 @@ def test_cyclotomic_poly():
     assert cyclotomic_poly(4, x) == x**2 + 1
     assert cyclotomic_poly(5, x) == x**4 + x**3 + x**2 + x + 1
     assert cyclotomic_poly(6, x) == x**2 - x + 1
+
+def test_symmetric_poly():
+    raises(ValueError, "symmetric_poly(-1, x, y, z)")
+    raises(ValueError, "symmetric_poly(5, x, y, z)")
+
+    assert symmetric_poly(1, x, y, z, polys=True) == Poly(x + y + z)
+
+    assert symmetric_poly(0, x, y, z) == 1
+    assert symmetric_poly(1, x, y, z) == x + y + z
+    assert symmetric_poly(2, x, y, z) == x*y + x*z + y*z
+    assert symmetric_poly(3, x, y, z) == x*y*z
 
 def test_fateman_poly_F_1():
     f,g,h = fateman_poly_F_1(1)
