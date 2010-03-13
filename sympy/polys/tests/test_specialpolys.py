@@ -3,7 +3,7 @@
 from sympy import Poly, ZZ, raises
 
 from sympy.polys.specialpolys import (
-    swinnerton_dyer_poly,
+    swinnerton_dyer_poly, cyclotomic_poly,
     fateman_poly_F_1, dmp_fateman_poly_F_1,
     fateman_poly_F_2, dmp_fateman_poly_F_2,
     fateman_poly_F_3, dmp_fateman_poly_F_3,
@@ -19,6 +19,18 @@ def test_swinnerton_dyer_poly():
     assert swinnerton_dyer_poly(1, x) == x**2 - 2
     assert swinnerton_dyer_poly(2, x) == x**4 - 10*x**2 + 1
     assert swinnerton_dyer_poly(3, x) == x**8 - 40*x**6 + 352*x**4 - 960*x**2 + 576
+
+def test_cyclotomic_poly():
+    raises(ValueError, "cyclotomic_poly(0, x)")
+
+    assert cyclotomic_poly(1, x, polys=True) == Poly(x - 1)
+
+    assert cyclotomic_poly(1, x) == x - 1
+    assert cyclotomic_poly(2, x) == x + 1
+    assert cyclotomic_poly(3, x) == x**2 + x + 1
+    assert cyclotomic_poly(4, x) == x**2 + 1
+    assert cyclotomic_poly(5, x) == x**4 + x**3 + x**2 + x + 1
+    assert cyclotomic_poly(6, x) == x**2 - x + 1
 
 def test_fateman_poly_F_1():
     f,g,h = fateman_poly_F_1(1)

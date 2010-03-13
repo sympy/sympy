@@ -16,7 +16,7 @@ from polytools import (
     intervals, nroots,
     cancel,
     reduced, groebner,
-    horner, cyclotomic_poly,
+    horner,
 )
 
 from polyerrors import (
@@ -54,6 +54,7 @@ from algebratools import (
 
 from sympy.polys.specialpolys import (
     swinnerton_dyer_poly,
+    cyclotomic_poly,
 )
 
 from sympy.polys.orthopolys import (

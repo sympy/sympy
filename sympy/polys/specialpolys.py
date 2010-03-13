@@ -4,6 +4,8 @@ from sympy.core import Add, Mul, Symbol, Rational, sympify
 
 from sympy.polys.polytools import Poly
 
+from sympy.polys.polyclasses import DMP
+
 from sympy.polys.densebasic import (
     dmp_zero, dmp_one, dup_from_raw_dict,
     dmp_normal, dmp_raise, dmp_ground
@@ -11,6 +13,10 @@ from sympy.polys.densebasic import (
 
 from sympy.polys.densearith import (
     dmp_add_term, dmp_neg, dmp_mul, dmp_sqr
+)
+
+from sympy.polys.factortools import (
+    dup_zz_cyclotomic_poly
 )
 
 from sympy.polys.algebratools import ZZ
@@ -54,6 +60,23 @@ def swinnerton_dyer_poly(n, x=None, **args):
         return Mul(*poly).expand()
     else:
         return Poly(Mul(*poly))
+
+def cyclotomic_poly(n, x=None, **args):
+    """Generate cyclotomic polynomial of order `n` in `x`. """
+    if n <= 0:
+        raise ValueError("can't generate cyclotomic polynomial of order %s" % n)
+
+    if x is not None:
+        x = sympify(x)
+    else:
+        x = Symbol('x', dummy=True)
+
+    poly = Poly(DMP(dup_zz_cyclotomic_poly(int(n), ZZ), ZZ), x)
+
+    if not args.get('polys', False):
+        return poly.as_basic()
+    else:
+        return poly
 
 @cythonized("n,i")
 def fateman_poly_F_1(n):
