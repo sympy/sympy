@@ -680,6 +680,18 @@ def test_Poly_replace():
     raises(PolynomialError, "Poly(x+y, x).replace(x, y)")
     raises(PolynomialError, "Poly(x+y, y).replace(y, x)")
 
+def test_Poly_reorder():
+    raises(PolynomialError, "Poly(x+y).reorder(x, z)")
+
+    assert Poly(x + y, x, y).reorder(x, y) == Poly(x + y, x, y)
+    assert Poly(x + y, x, y).reorder(y, x) == Poly(x + y, y, x)
+
+    assert Poly(x + y, y, x).reorder(x, y) == Poly(x + y, x, y)
+    assert Poly(x + y, y, x).reorder(y, x) == Poly(x + y, y, x)
+
+    assert Poly(x + y, x, y).reorder(wrt=x) == Poly(x + y, x, y)
+    assert Poly(x + y, x, y).reorder(wrt=y) == Poly(x + y, y, x)
+
 def test_Poly_to_ring():
     assert Poly(2*x+1, domain='ZZ').to_ring() == Poly(2*x+1, domain='ZZ')
     assert Poly(2*x+1, domain='QQ').to_ring() == Poly(2*x+1, domain='ZZ')

@@ -737,6 +737,17 @@ class Poly(Basic):
 
         raise PolynomialError("can't replace %s with %s in %s" % (x, y, f))
 
+    def reorder(f, *gens, **args):
+        """Efficiently apply new order of generators. """
+        if not gens:
+            gens = _sort_gens(f.gens, **args)
+        elif set(f.gens) != set(gens):
+            raise PolynomialError("generators list can differ only up to order of elements")
+
+        rep = dict(zip(*_dict_reorder(f.rep.to_dict(), f.gens, gens)))
+
+        return f.per(DMP(rep, f.rep.dom, len(gens)-1), gens=gens)
+
     def to_ring(f):
         """Make the ground domain a ring. """
         try:
