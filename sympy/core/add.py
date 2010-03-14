@@ -371,6 +371,9 @@ class Add(AssocOp):
         #         n          n          n
         # (-3 + y)   ->  (-1)  * (3 - y)
         # similar to Mul.flatten()
+        if Basic.keep_sign:
+            return None
+
         c, t = self.as_coeff_terms()
         if c.is_negative and not other.is_integer:
             if c is not S.NegativeOne:

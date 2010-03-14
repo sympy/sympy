@@ -101,7 +101,7 @@ class Mul(AssocOp):
 
                 #         n          n          n
                 # (-3 + y)   ->  (-1)  * (3 - y)
-                if b.is_Add and e.is_Number:
+                if not Basic.keep_sign and b.is_Add and e.is_Number:
                     #found factor (x+y)**number; split off initial coefficient
                     c, t = b.as_coeff_terms()
                     #last time I checked, Add.as_coeff_terms returns One or NegativeOne

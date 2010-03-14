@@ -77,6 +77,8 @@ class BasicMeta(BasicType):
     classnamespace = {}
     singleton = {}
 
+    keep_sign = False
+
     def __init__(cls, *args, **kws):
         n = cls.__name__
         c = BasicMeta.classnamespace.get(n)
