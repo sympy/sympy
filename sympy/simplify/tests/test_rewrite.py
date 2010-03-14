@@ -1,4 +1,4 @@
-from sympy import sin, cos, exp, cot, sqrt, S, I, E, pi, symbols, Function, Matrix, Eq, RootSum, Lambda
+from sympy import sin, cos, exp, cot, sqrt, S, I, E, pi, symbols, Function, Matrix, Eq, RootSum, Lambda, raises
 from sympy.simplify import apart, together
 from sympy.integrals import integrate
 from sympy.utilities.pytest import XFAIL
@@ -24,8 +24,13 @@ def test_sin_exp_rewrite():
     assert cos(x).rewrite(cos, exp).rewrite(exp, sin) == cos(x)
 
 def test_apart():
-    assert apart(1/(x+2)/(x+1), x) == 1/(1 + x) - 1/(2 + x)
-    assert apart(1/(x+1)/(x+5), x) == -1/(5 + x)/4 + 1/(1 + x)/4
+    raises(ValueError, "apart(1/(x+1)/(y+2))")
+
+    assert apart(1) == 1
+    assert apart(1, x) == 1
+
+    assert apart(1/(x+2)/(x+1)) == 1/(1 + x) - 1/(2 + x)
+    assert apart(1/(x+1)/(x+5)) == -1/(5 + x)/4 + 1/(1 + x)/4
 
     f = apart(1/(x-y)/(x-z), x)
 

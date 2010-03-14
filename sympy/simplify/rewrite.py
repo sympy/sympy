@@ -5,7 +5,7 @@ from sympy.polys import Poly, RootSum, div, cancel
 from sympy.utilities import threaded
 
 @threaded()
-def apart(f, z, **flags):
+def apart(f, z=None, **args):
     """Computes partial fraction decomposition of a rational function.
 
        Given a rational function 'f', performing only gcd operations
@@ -41,12 +41,18 @@ def apart(f, z, **flags):
            ACM Press, Kiev, Ukraine, 1993, pp. 157-160.
 
     """
-    f = sympify(f)
-
-    if not f.has(z):
-        return f
-
     f = cancel(f)
+
+    if z is None:
+        symbols = f.atoms(Symbol)
+
+        if not symbols:
+            return f
+
+        if len(symbols) == 1:
+            z = list(symbols)[0]
+        else:
+            raise ValueError("multivariate partial fractions are not supported")
 
     P, Q = f.as_numer_denom()
 
@@ -61,7 +67,7 @@ def apart(f, z, **flags):
 
     q = Poly(q, z)
 
-    for d, n in q.sqf_list(all=True,include=True):
+    for d, n in q.sqf_list(all=True, include=True):
         b = d.as_basic()
         U += [ u.diff(z, n-1) ]
 
@@ -97,7 +103,7 @@ def apart(f, z, **flags):
 
             expr = numer.subs(z, a) / denom
 
-            partial += RootSum(Lambda(a, expr), D, **flags)
+            partial += RootSum(Lambda(a, expr), D, **args)
 
     return partial
 
