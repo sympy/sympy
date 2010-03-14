@@ -2136,8 +2136,10 @@ def sqf(f, *gens, **args):
         coeff = coeff_p / coeff_q
         factors = factors_p / factors_q
 
-    if coeff is S.One:
+    if coeff == 1:
         return factors
+    elif coeff == -1:
+        return -factors
     elif not factors.is_Add:
         return coeff*factors
     else:
@@ -2187,8 +2189,10 @@ def factor(f, *gens, **args):
         coeff = coeff_p / coeff_q
         factors = factors_p / factors_q
 
-    if coeff is S.One:
+    if coeff == 1:
         return factors
+    elif coeff == -1:
+        return -factors
     elif not factors.is_Add:
         return coeff*factors
     else:
