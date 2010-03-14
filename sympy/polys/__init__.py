@@ -1,7 +1,7 @@
 """Polynomial manipulation algorithms and algebraic objects. """
 
 from polytools import (
-    Poly,
+    Poly, poly,
     pdiv, prem, pquo, pexquo,
     div, rem, quo, exquo,
     half_gcdex, gcdex, invert,

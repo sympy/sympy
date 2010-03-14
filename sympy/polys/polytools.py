@@ -1,7 +1,7 @@
 """User-friendly public interface to polynomial functions. """
 
 from sympy import (
-    S, Basic, I, Integer, Mul, sympify, ask,
+    S, Basic, I, Integer, Add, Mul, sympify, ask,
 )
 
 from sympy.core.decorators import (
@@ -2349,4 +2349,60 @@ def horner(f, *gens, **args):
             form = form*gen + horner(coeff, *gens, **args)
 
     return form
+
+def poly(expr, **args):
+    """Efficiently transform an expression into a polynomial. """
+    expr = sympify(expr)
+
+    if expr.is_Poly:
+        return expr.reorder(**args)
+
+    terms, poly_terms = [], []
+
+    for term in expr.as_Add():
+        factors, poly_factors = [], []
+
+        for factor in term.as_Mul():
+            if factor.is_Add:
+                poly_factors.append(poly(factor))
+            elif factor.is_Pow and factor.base.is_Add and factor.exp.is_Integer:
+                poly_factors.append(poly(factor.base).pow(factor.exp))
+            else:
+                factors.append(factor)
+
+        if not poly_factors:
+            terms.append(term)
+        else:
+            product = poly_factors[0]
+
+            for factor in poly_factors[1:]:
+                product = product.mul(factor)
+
+            if factors:
+                factor = Mul(*factors)
+
+                if factor.is_Number:
+                    product = product.mul(factor)
+                else:
+                    product = product.mul(Poly(factor, expand=False))
+
+            poly_terms.append(product)
+
+    if not poly_terms:
+        result = Poly(expr, expand=False)
+    else:
+        result = poly_terms[0]
+
+        for term in poly_terms[1:]:
+            result = result.add(term)
+
+        if terms:
+            term = Add(*terms)
+
+            if term.is_Number:
+                result = result.add(term)
+            else:
+                result = result.add(Poly(term, expand=False))
+
+    return result.reorder(**args)
 

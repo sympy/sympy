@@ -1,7 +1,7 @@
 """Tests for user-friendly public interface to polynomial functions. """
 
 from sympy.polys.polytools import (
-    Poly, _polify_basic,
+    Poly, poly, _polify_basic,
     _construct_domain,
     _init_poly_from_dict,
     _init_poly_from_list,
@@ -1678,4 +1678,34 @@ def test_horner():
 
     assert horner(4*x**2*y**2 + 2*x**2*y + 2*x*y**2 + x*y, wrt=x) == ((4*y + 2)*x*y + (2*y + 1)*y)*x
     assert horner(4*x**2*y**2 + 2*x**2*y + 2*x*y**2 + x*y, wrt=y) == ((4*x + 2)*y*x + (2*x + 1)*x)*y
+
+def test_poly():
+    assert poly(x) == Poly(x, x)
+    assert poly(y) == Poly(y, y)
+
+    assert poly(x + y) == Poly(x + y, x, y)
+    assert poly(x + sin(x)) == Poly(x + sin(x), x, sin(x))
+
+    assert poly(x + y, wrt=y) == Poly(x + y, y, x)
+    assert poly(x + sin(x), wrt=sin(x)) == Poly(x + sin(x), sin(x), x)
+
+    assert poly(x*y + 2*x*z**2 + 17) == Poly(x*y + 2*x*z**2 + 17, x, y, z)
+
+    assert poly(2*(y + z)**2 - 1) == Poly(2*y**2 + 4*y*z + 2*z**2 - 1, y, z)
+    assert poly(x*(y + z)**2 - 1) == Poly(x*y**2 + 2*x*y*z + x*z**2 - 1, x, y, z)
+    assert poly(2*x*(y + z)**2 - 1) == Poly(2*x*y**2 + 4*x*y*z + 2*x*z**2 - 1, x, y, z)
+
+    assert poly(2*(y + z)**2 - x - 1) == Poly(2*y**2 + 4*y*z + 2*z**2 - x - 1, x, y, z)
+    assert poly(x*(y + z)**2 - x - 1) == Poly(x*y**2 + 2*x*y*z + x*z**2 - x - 1, x, y, z)
+    assert poly(2*x*(y + z)**2 - x - 1) == Poly(2*x*y**2 + 4*x*y*z + 2*x*z**2 - x - 1, x, y, z)
+
+    assert poly(x*y + (x + y)**2 + (x + z)**2) == \
+        Poly(2*x*z + 3*x*y + y**2 + z**2 + 2*x**2, x, y, z)
+    assert poly(x*y*(x + y)*(x + z)**2) == \
+        Poly(x**3*y**2 + x*y**2*z**2 + y*x**2*z**2 + 2*z*x**2*y**2 + 2*y*z*x**3 + y*x**4, x, y, z)
+
+    assert poly(Poly(x + y + z, y, x, z)) == Poly(x + y + z, x, y, z)
+    assert poly(Poly(x + y + z, y, x, z), wrt=z) == Poly(x + y + z, z, x, y)
+
+    raises(GeneratorsNeeded, "poly(1)")
 
