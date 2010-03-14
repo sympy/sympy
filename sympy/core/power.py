@@ -305,7 +305,20 @@ class Pow(Basic):
         else:
             result = None
 
-        if exp.is_Integer and exp.p > 0 and base.is_Add:
+        if exp.is_Rational and exp.p > 0 and base.is_Add:
+            if not exp.is_Integer:
+                n = Integer(exp.p // exp.q)
+
+                if not n:
+                    return base**exp
+                else:
+                    radical, result = Pow(base, exp - n), []
+
+                    for term in Pow(base, n)._eval_expand_multinomial(deep=False).as_Add():
+                        result.append(term*radical)
+
+                    return Add(*result)
+
             n = int(exp)
 
             if base.is_commutative:
@@ -389,8 +402,8 @@ class Pow(Basic):
                         return Add(*[f*g for f in base.args for g in multi.args])
                     else:
                         return Add(*[f*multi for f in base.args])
-        elif exp.is_Integer and exp.p < 0 and base.is_Add:
-            return 1 / Pow(base, -exp.p)._eval_expand_multinomial(deep=False)
+        elif exp.is_Rational and exp.p < 0 and base.is_Add and abs(exp.p) > exp.q:
+            return 1 / Pow(base, -exp)._eval_expand_multinomial(deep=False)
         elif exp.is_Add and base.is_Number:
             #  a + b      a  b
             # n      --> n  n  , where n, a, b are Numbers
