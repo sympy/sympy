@@ -8,7 +8,9 @@ from sympy.core.numbers import Rational
 from sympy.ntheory import divisors
 from sympy.functions import exp, sqrt
 
-from sympy.polys import Poly, cancel, PolynomialError
+from sympy.polys import (
+    Poly, cancel, PolynomialError, GeneratorsNeeded,
+)
 
 def roots_linear(f):
     """Returns a list of roots of a linear polynomial."""
@@ -21,7 +23,7 @@ def roots_quadratic(f):
     if c is S.Zero:
         return [c, -b/a]
 
-    d = (b**2 - 4*a*c)**S.Half
+    d = ((b**2).expand() - 4*a*c)**S.Half
 
     roots = [
         (-b + d) / (2*a),
@@ -133,19 +135,24 @@ def roots_quartic(f):
        .. [6] http://www.statemaster.com/encyclopedia/Quartic-equation
 
     """
-    # normalized coefficients
-    one, a, b, c, d = f.monic().all_coeffs()
+    _, a, b, c, d = f.monic().all_coeffs()
 
-    if d is S.Zero: # general soln ok, too
+    if not d:
         return [S.Zero] + roots([1, a, b, c], multiple=True)
-    elif (c/a)**2 == d: # general solution ok, too
-        m = sqrt(d)
-        z = Symbol('z', dummy=True)
-        x = f.gens[0]
-        z1, z2 = roots_quadratic(Poly(z**2+a*z+b-2*m, z))
-        f = Poly(x**2 - z*x + m, x)
-        return roots_quadratic(f.subs(z, z1)) + \
-               roots_quadratic(f.subs(z, z2))
+    elif (c/a)**2 == d:
+        x, m = f.gen, sqrt(d)
+
+        g = Poly(x**2 + a*x + b - 2*m, x)
+
+        z1, z2 = roots_quadratic(g)
+
+        h1 = Poly(x**2 - z1*x + m, x)
+        h2 = Poly(x**2 - z2*x + m, x)
+
+        r1 = roots_quadratic(h1)
+        r2 = roots_quadratic(h2)
+
+        return r1 + r2
     else:
         a2 = a ** 2
         e = b - 3 * a2 / 8
@@ -305,21 +312,20 @@ def roots(f, *gens, **flags):
         for coeff in f:
             poly[i], i = sympify(coeff), i-1
 
-        f = Poly(poly, x)
+        f = Poly(poly, x, field=True)
     else:
-        flags['field'] = True
-        f = Poly(f, *gens, **flags)
-
-        if not f.is_Poly:
+        try:
+            f = Poly(f, *gens, **flags)
+        except GeneratorsNeeded:
             if multiple:
                 return []
             else:
                 return {}
 
         if f.is_multivariate:
-            raise PolynomialError('multivariate polynomials not supported')
+            raise PolynomialError('multivariate polynomials are not supported')
 
-        x = f.gens[0]
+        f, x = f.to_field(), f.gen
 
     def _update_dict(result, root, k):
         if root in result:
@@ -416,7 +422,7 @@ def roots(f, *gens, **flags):
                 result = _try_decompose(f)
             else:
                 for factor, k in factors:
-                    for r in _try_heuristics(Poly(factor, x)):
+                    for r in _try_heuristics(Poly(factor, x, field=True)):
                         _update_dict(result, r, k)
 
         result.update(zeros)
