@@ -7,6 +7,7 @@ from sympy.polys.polytools import (
     _init_poly_from_list,
     _init_poly_from_poly,
     _init_poly_from_basic,
+    degree, degree_list,
     pdiv, prem, pquo, pexquo,
     div, rem, quo, exquo,
     half_gcdex, gcdex, invert,
@@ -856,6 +857,17 @@ def test_Poly_degree():
     assert Poly(2*y, x, y).degree(gen=y) == 1
     assert Poly(x*y, x, y).degree(gen=y) == 1
 
+    assert degree(1, x) == 0
+    assert degree(x, x) == 1
+
+    assert degree(x*y**2, gen=x) == 1
+    assert degree(x*y**2, gen=y) == 2
+
+    assert degree(x*y**2, x, y) == 1
+    assert degree(x*y**2, y, x) == 2
+
+    raises(GeneratorsNeeded, "degree(1)")
+
 def test_Poly_degree_list():
     assert Poly(0, x).degree_list() == (-1,)
     assert Poly(0, x, y).degree_list() == (-1,-1)
@@ -866,6 +878,13 @@ def test_Poly_degree_list():
     assert Poly(1, x, y, z).degree_list() == (0,0,0)
 
     assert Poly(x**2*y+x**3*z**2+1).degree_list() == (3,1,2)
+
+    assert degree_list(1, x) == (0,)
+    assert degree_list(x, x) == (1,)
+
+    assert degree_list(x*y**2) == (1,2)
+
+    raises(GeneratorsNeeded, "degree_list(1)")
 
 def test_Poly_total_degree():
     assert Poly(x**2*y+x**3*z**2+1).total_degree() == 6

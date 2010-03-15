@@ -1686,6 +1686,28 @@ def _should_return_basic(*polys, **args):
     else:
         return not all(isinstance(poly, Poly) for poly in polys)
 
+def degree(f, *gens, **args):
+    """Returns degree of `f` in the given generator. """
+    try:
+        F = Poly(f, *_analyze_gens(gens), **args)
+    except GeneratorsNeeded:
+        raise GeneratorsNeeded("can't compute degree of %s without generators" % f)
+
+    degree = F.degree(args.get('gen', 0))
+
+    return Integer(degree)
+
+def degree_list(f, *gens, **args):
+    """Returns a list of degrees of `f` in all generators. """
+    try:
+        F = Poly(f, *_analyze_gens(gens), **args)
+    except GeneratorsNeeded:
+        raise GeneratorsNeeded("can't compute degrees list of %s without generators" % f)
+
+    degrees = F.degree_list()
+
+    return tuple(map(Integer, degrees))
+
 def pdiv(f, g, *gens, **args):
     """Polynomial pseudo-division of `f` and `g`. """
     gens = _analyze_gens(gens)
