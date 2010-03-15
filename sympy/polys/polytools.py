@@ -2352,6 +2352,62 @@ def groebner(F, *gens, **args):
     else:
         return G
 
+def symmetrize(f, *gens, **args):
+    """Rewrite a polynomial in terms of elementary symmetric polynomials. """
+    try:
+        f = Poly(f, *_analyze_gens(gens), **args)
+    except GeneratorsNeeded:
+        if args.get('formal', False):
+            return (f, S.Zero, {})
+        else:
+            return (f, S.Zero)
+
+    from sympy.polys.specialpolys import symmetric_poly
+
+    polys, symbols = [], numbered_symbols('s', start=1)
+
+    for i in range(0, len(f.gens)):
+        polys.append((symbols.next(), symmetric_poly(i+1, *f.gens)))
+
+    indices = range(0, len(f.gens) - 1)
+    weights = range(len(f.gens), 0, -1)
+
+    symmetric = []
+
+    if not f.is_homogeneous:
+        symmetric.append(f.TC())
+        f -= f.TC()
+
+    while f:
+        _height, _monom, _coeff = -1, None, None
+
+        for i, (monom, coeff) in enumerate(f.terms()):
+            if all(monom[i] >= monom[i+1] for i in indices):
+                height = max([ n*m for n, m in zip(weights, monom) ])
+
+                if height > _height:
+                    _height, _monom, _coeff = height, monom, coeff
+
+        if _height != -1:
+            monom, coeff = _monom, _coeff
+        else:
+            break
+
+        term = []
+
+        for (s, _), m1, m2 in zip(polys, monom, monom[1:] + (0,)):
+            term.append(s**(m1 - m2))
+
+        term = Mul(coeff, *term)
+
+        symmetric.append(term)
+        f -= term.subs(polys)
+
+    if args.get('formal', False):
+        return (Add(*symmetric), f.as_basic(), dict(polys))
+    else:
+        return (Add(*symmetric).subs(polys), f.as_basic())
+
 def horner(f, *gens, **args):
     """Apply Horner's rule to put a polynomial in Horner form. """
     F = NonStrictPoly(f, *_analyze_gens(gens), **args)

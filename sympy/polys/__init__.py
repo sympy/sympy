@@ -17,6 +17,7 @@ from polytools import (
     intervals, nroots,
     cancel,
     reduced, groebner,
+    symmetrize,
     horner,
 )
 

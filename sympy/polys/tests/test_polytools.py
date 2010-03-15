@@ -22,6 +22,7 @@ from sympy.polys.polytools import (
     intervals, nroots,
     cancel,
     reduced, groebner,
+    symmetrize,
     horner,
 )
 
@@ -1681,6 +1682,37 @@ def test_groebner():
         [Poly(1 + x**2, x, y), Poly(-1 + y**4, x, y)]
     assert groebner([x**2 + 1, y**4*x + x**3, x*y*z**3], x, y, z, order='grevlex', polys=True) == \
         [Poly(-1 + y**4, x, y, z), Poly(z**3, x, y, z), Poly(1 + x**2, x, y, z)]
+
+def test_symmetrize():
+    assert symmetrize(0) == (0, 0)
+    assert symmetrize(1) == (1, 0)
+
+    assert symmetrize(0, x, y, z) == (0, 0)
+    assert symmetrize(1, x, y, z) == (1, 0)
+
+    assert symmetrize(0, formal=True) == (0, 0, {})
+    assert symmetrize(1, formal=True) == (1, 0, {})
+
+    s1 = x + y + z
+    s2 = x*y + x*z + y*z
+    s3 = x*y*z
+
+    assert symmetrize(x) == (x, 0)
+    assert symmetrize(x + 1) == (x + 1, 0)
+
+    assert symmetrize(x, x, y) == (x + y, -y)
+    assert symmetrize(x + 1, x, y) == (x + y + 1, -y)
+
+    assert symmetrize(x, x, y, z) == (s1, -y - z)
+    assert symmetrize(x + 1, x, y, z) == (s1 + 1, -y - z)
+
+    assert symmetrize(x**2, x, y, z) == (s1**2 - 2*s2, -y**2 - z**2)
+
+    assert symmetrize(x**2 + y**2) == (-2*x*y + (x + y)**2, 0)
+    assert symmetrize(x**2 - y**2) == (-2*x*y + (x + y)**2, -2*y**2)
+
+    assert symmetrize(x**3 + y**2 + a*x**2 + b*y**3, x, y) == \
+        (-3*x*y*(x + y) - 2*a*x*y + a*(x + y)**2 + (x + y)**3, y**2*(1 - a) - y**3*(1 - b))
 
 def test_horner():
     assert horner(0) == 0
