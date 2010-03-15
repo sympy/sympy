@@ -67,9 +67,9 @@ trim
 ----
 .. autofunction:: trim
 
-apart
------
-.. autofunction:: apart
+.. apart
+.. -----
+.. .. autofunction:: apart
 
 Square Root Denest
 ==================
@@ -86,3 +86,4 @@ Common Subexpresion Elimination
 cse
 ---
 .. autofunction:: cse
+
