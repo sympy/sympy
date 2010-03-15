@@ -66,9 +66,12 @@ def solve_poly_system(system, *gens):
         basis = [ b.as_basic() for b in basis ]
 
         if len(univariate) == 1:
-            f = univariate.pop().as_basic()
+            f = univariate.pop()
         else:
             raise ValueError("only zero-dimensional systems supported")
+
+        gens = f.gens
+        f = f.as_basic()
 
         zeros = roots(f, gens[-1]).keys()
 
