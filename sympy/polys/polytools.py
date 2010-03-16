@@ -696,10 +696,14 @@ class Poly(Basic):
         """Convert `extension` to an internal representation. """
         extension = args.get('extension')
         gaussian = args.get('gaussian')
+        split = args.get('split')
 
         if extension is not None:
             if gaussian is not None:
-                raise PolynomialError("extension is not allowed together with gaussian")
+                raise PolynomialError("'extension' is not allowed together with 'gaussian'")
+
+            if split is not None:
+                raise PolynomialError("'extension' is not allowed together with 'split'")
 
             if isinstance(extension, bool):
                 if extension is False:
@@ -712,8 +716,13 @@ class Poly(Basic):
                         extension = None
                     else:
                         extension = set(extension)
-        elif gaussian is not None and gaussian:
-            extension = set([S.ImaginaryUnit])
+        elif gaussian is not None:
+            if split is not None:
+                raise PolynomialError("'gaussian' is not allowed together with 'split'")
+            elif gaussian:
+                extension = set([S.ImaginaryUnit])
+        elif split is not None:
+            raise NotImplementedError('splitting extensions are not supported')
 
         return extension
 

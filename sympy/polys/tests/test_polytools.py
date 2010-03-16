@@ -518,6 +518,10 @@ def test_Poly__analyze_extension():
     assert Poly._analyze_extension({'gaussian': True}) == set([I])
 
     raises(PolynomialError, "Poly._analyze_extension({'gaussian': True, 'extension': I})")
+    raises(PolynomialError, "Poly._analyze_extension({'gaussian': True, 'split': True})")
+    raises(PolynomialError, "Poly._analyze_extension({'extension': I, 'split': True})")
+
+    raises(NotImplementedError, "Poly._analyze_extension({'split': True})")
 
 def test_Poly_abs():
     assert Poly(-x+1, x).abs() == abs(Poly(-x+1, x)) == Poly(x+1, x)
