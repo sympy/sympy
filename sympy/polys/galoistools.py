@@ -120,17 +120,17 @@ def gf_strip(f):
 
     return f[k:]
 
-def gf_reduce(f, p):
+def gf_trunc(f, p):
     """Reduce all coefficients modulo `p`. """
     return gf_strip([ a % p for a in f ])
 
 def gf_normal(f, p, K):
     """Normalize all coefficients in `K`. """
-    return gf_reduce(map(K, f), p)
+    return gf_trunc(map(K, f), p)
 
 def gf_convert(f, p, K0, K1):
     """Normalize all coefficients in `K`. """
-    return gf_reduce([ K1.convert(c, K0) for c in f ], p)
+    return gf_trunc([ K1.convert(c, K0) for c in f ], p)
 
 @cythonized("k,n")
 def gf_from_dict(f, p, K):
@@ -146,7 +146,7 @@ def gf_from_dict(f, p, K):
         for k in xrange(n, -1, -1):
             h.append(f.get((k,), K.zero) % p)
 
-    return gf_reduce(h, p)
+    return gf_trunc(h, p)
 
 @cythonized("k,n")
 def gf_to_dict(f, p, symmetric=True):
@@ -165,7 +165,7 @@ def gf_to_dict(f, p, symmetric=True):
 
 def gf_from_int_poly(f, p):
     """Create `GF(p)[x]` polynomial from `Z[x]`. """
-    return gf_reduce(f, p)
+    return gf_trunc(f, p)
 
 def gf_to_int_poly(f, p, symmetric=True):
     """Convert `GF(p)[x]` polynomial to `Z[x]`. """

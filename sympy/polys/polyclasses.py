@@ -87,7 +87,7 @@ from sympy.polys.galoistools import (
     gf_LC, gf_TC,
     gf_from_dict, gf_to_dict,
     gf_from_int_poly, gf_to_int_poly,
-    gf_reduce, gf_normal, gf_convert,
+    gf_trunc, gf_normal, gf_convert,
     gf_neg,
     gf_add_ground, gf_sub_ground,
     gf_mul_ground, gf_exquo_ground,
@@ -138,7 +138,7 @@ class GFP(object):
             if type(rep) is not list:
                 self.rep = gf_normal([rep], mod, dom)
             else:
-                self.rep = gf_reduce(rep, mod)
+                self.rep = gf_trunc(rep, mod)
 
         self.mod = mod
         self.lev = 0
@@ -213,12 +213,12 @@ class GFP(object):
     def one(cls, dom):
         return GFP(1, mod, dom)
 
-    def reduce(f, mod):
+    def trunc(f, mod):
         """Reduce `f` using new modulus. """
         if mod == f.mod:
             return f
         else:
-            return GFP(gf_reduce(f.rep, mod), mod, f.dom, f.sym)
+            return GFP(gf_trunc(f.rep, mod), mod, f.dom, f.sym)
 
     def convert(f, dom):
         """Convert the ground domain of `f`. """

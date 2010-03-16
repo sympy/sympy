@@ -678,7 +678,7 @@ class Poly(Basic):
         modulus = f._parse_modulus(modulus)
 
         if isinstance(f.rep, GFP):
-            return f.per(f.rep.reduce(modulus))
+            return f.per(f.rep.trunc(modulus))
         elif f.rep.dom.is_ZZ and f.is_univariate:
             return f.per(GFP(f.rep.rep, modulus, f.rep.dom))
         else:
@@ -1275,6 +1275,17 @@ class Poly(Basic):
             raise OperationNotSupported(f, 'lcm')
 
         return per(result)
+
+    def trunc(f, p):
+        """Reduce `f` modulo a constant `p`. """
+        p = f.rep.dom.convert(p)
+
+        try:
+            result = f.rep.trunc(p)
+        except AttributeError: # pragma: no cover
+            raise OperationNotSupported(f, 'trunc')
+
+        return f.per(result)
 
     def monic(f):
         """Divides all coefficients by `LC(f)`. """
@@ -2018,6 +2029,18 @@ def terms_gcd(f, *gens, **args):
         C, result = result.primitive()
 
     return C * Mul(*[ x**j for x, j in zip(F.gens, J) ]) * result.as_basic()
+
+def trunc(f, p, *gens, **args):
+    """Reduce `f` modulo a constant `p`. """
+    F = NonStrictPoly(f, *_analyze_gens(gens), **args)
+
+    if not F.is_Poly:
+        return F % p
+
+    if _should_return_basic(f, **args):
+        return F.trunc(p).as_basic()
+    else:
+        return F.trunc(p)
 
 def monic(f, *gens, **args):
     """Divides all coefficients by `LC(f)`. """

@@ -9,6 +9,7 @@ from polytools import (
     subresultants,
     resultant, discriminant,
     cofactors, gcd, lcm, terms_gcd,
+    trunc,
     monic, content, primitive,
     compose, decompose,
     sturm,

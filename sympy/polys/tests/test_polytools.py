@@ -14,6 +14,7 @@ from sympy.polys.polytools import (
     subresultants,
     resultant, discriminant,
     cofactors, gcd, lcm, terms_gcd,
+    trunc,
     monic, content, primitive,
     compose, decompose,
     sturm,
@@ -1309,6 +1310,33 @@ def test_terms_gcd():
     assert terms_gcd(x**3*y - x*y**3) == x*y*(x**2 - y**2)
     assert terms_gcd(2*x**3*y - 2*x*y**3) == 2*x*y*(x**2 - y**2)
     assert terms_gcd(x**3*y/2 - x*y**3/2) == x*y/2*(x**2 - y**2)
+
+def test_trunc():
+    f, g = x**5 + 2*x**4 + 3*x**3 + 4*x**2 + 5*x + 6, x**5 - x**4 + x**2 - x
+    F, G = Poly(f), Poly(g)
+
+    assert F.trunc(3) == G
+    assert trunc(f, 3) == g
+    assert trunc(f, 3, x) == g
+    assert trunc(f, 3, (x,)) == g
+    assert trunc(F, 3) == G
+    assert trunc(f, 3, polys=True) == G
+    assert trunc(F, 3, polys=False) == g
+
+    f, g = 6*x**5 + 5*x**4 + 4*x**3 + 3*x**2 + 2*x + 1, -x**4 + x**3 - x + 1
+    F, G = Poly(f), Poly(g)
+
+    assert F.trunc(3) == G
+    assert trunc(f, 3) == g
+    assert trunc(f, 3, x) == g
+    assert trunc(f, 3, (x,)) == g
+    assert trunc(F, 3) == G
+    assert trunc(f, 3, polys=True) == G
+    assert trunc(F, 3, polys=False) == g
+
+    f = Poly(x**2 + 2*x + 3, modulus=5)
+
+    assert f.trunc(2) == Poly(x**2 + 1, modulus=2)
 
 def test_monic():
     f, g = 2*x - 1, x - S(1)/2

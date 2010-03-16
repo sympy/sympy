@@ -1,7 +1,7 @@
 
 from sympy.polys.galoistools import (
     gf_crt, gf_crt1, gf_crt2, gf_int,
-    gf_degree, gf_strip, gf_reduce, gf_normal,
+    gf_degree, gf_strip, gf_trunc, gf_normal,
     gf_from_dict, gf_to_dict,
     gf_from_int_poly, gf_to_int_poly,
     gf_neg, gf_add_ground, gf_sub_ground, gf_mul_ground, gf_exquo_ground,
@@ -74,14 +74,14 @@ def test_gf_strip():
     assert gf_strip([0,1,2,0]) == [1,2,0]
     assert gf_strip([0,0,0,1,2,0]) == [1,2,0]
 
-def test_gf_reduce():
-    assert gf_reduce([], 11) == []
-    assert gf_reduce([1], 11) == [1]
-    assert gf_reduce([22], 11) == []
-    assert gf_reduce([12], 11) == [1]
+def test_gf_trunc():
+    assert gf_trunc([], 11) == []
+    assert gf_trunc([1], 11) == [1]
+    assert gf_trunc([22], 11) == []
+    assert gf_trunc([12], 11) == [1]
 
-    assert gf_reduce([11,22,17,1,0], 11) == [6,1,0]
-    assert gf_reduce([12,23,17,1,0], 11) == [1,1,6,1,0]
+    assert gf_trunc([11,22,17,1,0], 11) == [6,1,0]
+    assert gf_trunc([12,23,17,1,0], 11) == [1,1,6,1,0]
 
 def test_gf_normal():
     assert gf_normal([11,22,17,1,0], 11, ZZ) == [6,1,0]
