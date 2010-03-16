@@ -3,6 +3,7 @@
 from sympy.core import S, Add, Mul, Symbol, Rational, sympify
 
 from sympy.polys.polytools import Poly
+from sympy.polys.polyutils import _analyze_gens
 
 from sympy.polys.polyclasses import DMP
 
@@ -80,6 +81,8 @@ def cyclotomic_poly(n, x=None, **args):
 
 def symmetric_poly(n, *gens, **args):
     """Generates symmetric polynomial of order `n`. """
+    gens = _analyze_gens(gens)
+
     if n < 0 or n > len(gens) or not gens:
         raise ValueError("can't generate symmetric polynomial of order %s for %s" % (n, gens))
     elif not n:
