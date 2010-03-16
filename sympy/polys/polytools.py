@@ -2360,11 +2360,14 @@ def symmetrize(f, *gens, **args):
 
     polys, symbols = [], numbered_symbols('s', start=1)
 
-    for i in range(0, len(f.gens)):
-        polys.append((symbols.next(), symmetric_poly(i+1, *f.gens)))
+    gens, dom = f.gens, f.get_domain()
 
-    indices = range(0, len(f.gens) - 1)
-    weights = range(len(f.gens), 0, -1)
+    for i in range(0, len(f.gens)):
+        poly = symmetric_poly(i+1, gens, polys=True)
+        polys.append((symbols.next(), poly.set_domain(dom)))
+
+    indices = range(0, len(gens) - 1)
+    weights = range(len(gens), 0, -1)
 
     symmetric = []
 
@@ -2387,15 +2390,24 @@ def symmetrize(f, *gens, **args):
         else:
             break
 
-        term = []
+        exponents = []
 
-        for (s, _), m1, m2 in zip(polys, monom, monom[1:] + (0,)):
-            term.append(s**(m1 - m2))
+        for m1, m2 in zip(monom, monom[1:] + (0,)):
+            exponents.append(m1 - m2)
 
-        term = Mul(coeff, *term)
+        term = [ s**n for (s, _), n in zip(polys, exponents) ]
+        poly = [ p**n for (_, p), n in zip(polys, exponents) ]
 
-        symmetric.append(term)
-        f -= term.subs(polys)
+        symmetric.append(Mul(coeff, *term))
+
+        product = poly[0].mul(coeff)
+
+        for p in poly[1:]:
+            product = product.mul(p)
+
+        f -= product
+
+    polys = [ (s, p.as_basic()) for s, p in polys ]
 
     if args.get('formal', False):
         return (Add(*symmetric), f.as_basic(), dict(polys))
