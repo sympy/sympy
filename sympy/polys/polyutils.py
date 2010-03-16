@@ -91,6 +91,13 @@ def _unify_gens(f_gens, g_gens):
 
     return tuple(gens)
 
+def _analyze_gens(gens):
+    """Support for passing generators as `*gens` and `[gens]`. """
+    if len(gens) == 1 and hasattr(gens[0], '__iter__'):
+        return tuple(gens[0])
+    else:
+        return tuple(gens)
+
 def _sort_factors(factors, **args):
     """Sort low-level factors in increasing 'complexity' order. """
     def order_if_multiple_key((f, n)):

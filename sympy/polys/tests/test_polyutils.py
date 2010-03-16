@@ -5,6 +5,7 @@ from sympy import S, I, Integer, sqrt, symbols, raises, pi
 from sympy.polys.polyutils import (
     _sort_gens,
     _unify_gens,
+    _analyze_gens,
     _sort_factors,
     _analyze_power,
     _dict_from_basic_if_gens,
@@ -71,6 +72,13 @@ def test__unify_gens():
     assert _unify_gens([z,y,x], [z,y,x]) == (z,y,x)
 
     assert _unify_gens([x,y,z], [t,x,p,q,z]) == (t,x,y,p,q,z)
+
+def test__analyze_gens():
+    assert _analyze_gens((x,y,z)) == (x,y,z)
+    assert _analyze_gens([x,y,z]) == (x,y,z)
+
+    assert _analyze_gens(([x,y,z],)) == (x,y,z)
+    assert _analyze_gens(((x,y,z),)) == (x,y,z)
 
 def test__sort_factors():
     assert _sort_factors([], multiple=True) == []

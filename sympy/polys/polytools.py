@@ -17,6 +17,7 @@ from sympy.polys.polyutils import (
     basic_from_dict,
     _sort_gens,
     _unify_gens,
+    _analyze_gens,
     _dict_reorder,
     _dict_from_basic_no_gens,
 )
@@ -1662,13 +1663,6 @@ def _update_args(args, key, value):
         args[key] = value
 
     return args
-
-def _analyze_gens(gens):
-    """Support for passing generators as `*gens` and `[gens]`. """
-    if len(gens) == 1 and hasattr(gens[0], '__iter__'):
-        return tuple(gens[0])
-    else:
-        return gens
 
 def _basify_factors(factors):
     """Convert `(f_i, k)` factors to Basic expressions. """
