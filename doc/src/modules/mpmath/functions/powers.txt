@@ -6,19 +6,19 @@ Nth roots
 
 :func:`sqrt`
 ^^^^^^^^^^^^^^
-.. autofunction:: mpmath.functions.sqrt(x, **kwargs)
+.. autofunction:: mpmath.sqrt(x, **kwargs)
 
 :func:`cbrt`
 ^^^^^^^^^^^^^^
-.. autofunction:: mpmath.functions.cbrt(x, **kwargs)
+.. autofunction:: mpmath.cbrt(x, **kwargs)
 
 :func:`root`
 ^^^^^^^^^^^^^^
-.. autofunction:: mpmath.functions.root(z, n, k=0)
+.. autofunction:: mpmath.root(z, n, k=0)
 
 :func:`unitroots`
 ^^^^^^^^^^^^^^^^^
-.. autofunction:: mpmath.functions.unitroots(n, primitive=False)
+.. autofunction:: mpmath.unitroots(n, primitive=False)
 
 
 Exponentiation
@@ -26,19 +26,27 @@ Exponentiation
 
 :func:`exp`
 ^^^^^^^^^^^^^^
-.. autofunction:: mpmath.functions.exp(x, **kwargs)
+.. autofunction:: mpmath.exp(x, **kwargs)
 
 :func:`power`
 ^^^^^^^^^^^^^^
-.. autofunction:: mpmath.functions.power(x, y)
+.. autofunction:: mpmath.power(x, y)
+
+:func:`expj`
+^^^^^^^^^^^^^^
+.. autofunction:: mpmath.expj(x, **kwargs)
+
+:func:`expjpi`
+^^^^^^^^^^^^^^
+.. autofunction:: mpmath.expjpi(x, **kwargs)
 
 :func:`expm1`
 ^^^^^^^^^^^^^^
-.. autofunction:: mpmath.functions.expm1(x)
+.. autofunction:: mpmath.expm1(x)
 
 :func:`powm1`
 ^^^^^^^^^^^^^^
-.. autofunction:: mpmath.functions.powm1(x, y)
+.. autofunction:: mpmath.powm1(x, y)
 
 
 Logarithms
@@ -46,15 +54,15 @@ Logarithms
 
 :func:`log`
 ^^^^^^^^^^^^^^
-.. autofunction:: mpmath.functions.log(x, b=None)
+.. autofunction:: mpmath.log(x, b=None)
 
 :func:`ln`
 ^^^^^^^^^^^^^^
-.. autofunction:: mpmath.functions.ln(x, **kwargs)
+.. autofunction:: mpmath.ln(x, **kwargs)
 
 :func:`log10`
 ^^^^^^^^^^^^^^
-.. autofunction:: mpmath.functions.log10(x)
+.. autofunction:: mpmath.log10(x)
 
 
 Lambert W function
@@ -62,7 +70,7 @@ Lambert W function
 
 :func:`lambertw`
 ^^^^^^^^^^^^^^^^
-.. autofunction:: mpmath.functions.lambertw(z, k=0)
+.. autofunction:: mpmath.lambertw(z, k=0)
 
 
 Arithmetic-geometric mean
@@ -70,4 +78,4 @@ Arithmetic-geometric mean
 
 :func:`agm`
 ^^^^^^^^^^^^^^
-.. autofunction:: mpmath.functions.agm(a, b=1)
+.. autofunction:: mpmath.agm(a, b=1)

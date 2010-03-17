@@ -6,11 +6,11 @@ Elliptic integrals
 
 :func:`ellipk`
 ^^^^^^^^^^^^^^
-.. autofunction:: mpmath.functions.ellipk(x, **kwargs)
+.. autofunction:: mpmath.ellipk(x, **kwargs)
 
 :func:`ellipe`
 ^^^^^^^^^^^^^^
-.. autofunction:: mpmath.functions.ellipe(x, **kwargs)
+.. autofunction:: mpmath.ellipe(x, **kwargs)
 
 
 Jacobi theta functions
@@ -18,11 +18,7 @@ Jacobi theta functions
 
 :func:`jtheta`
 ^^^^^^^^^^^^^^
-.. autofunction:: mpmath.elliptic.jtheta(n,z,q)
-
-:func:`djtheta`
-^^^^^^^^^^^^^^^
-.. autofunction:: mpmath.elliptic.djtheta(n,z,q,nd=1)
+.. autofunction:: mpmath.jtheta(n,z,q,derivative=0)
 
 
 Jacobi elliptic functions
@@ -30,12 +26,12 @@ Jacobi elliptic functions
 
 :func:`jsn`
 ^^^^^^^^^^^^^^
-.. autofunction:: mpmath.elliptic.jsn(u,m)
+.. autofunction:: mpmath.jsn(u,m)
 
 :func:`jcn`
 ^^^^^^^^^^^^^^
-.. autofunction:: mpmath.elliptic.jcn(u,m)
+.. autofunction:: mpmath.jcn(u,m)
 
 :func:`jdn`
 ^^^^^^^^^^^^^^
-.. autofunction:: mpmath.elliptic.jdn(u,m)
+.. autofunction:: mpmath.jdn(u,m)

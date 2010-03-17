@@ -31,55 +31,55 @@ The predefined objects :data:`j` (imaginary unit), :data:`inf` (positive infinit
 Pi (``pi``)
 ....................................
 
-.. autoattribute:: mpmath.functions.pi
+.. autoattribute:: mpmath.mp.pi
 
 Degree (``degree``)
 ....................................
 
-.. autoattribute:: mpmath.functions.degree
+.. autoattribute:: mpmath.mp.degree
 
 Base of the natural logarithm (``e``)
 .....................................
 
-.. autoattribute:: mpmath.functions.e
+.. autoattribute:: mpmath.mp.e
 
 Golden ratio (``phi``)
 ......................
 
-.. autoattribute:: mpmath.functions.phi
+.. autoattribute:: mpmath.mp.phi
 
 
 Euler's constant (``euler``)
 ............................
 
-.. autoattribute:: mpmath.functions.euler
+.. autoattribute:: mpmath.mp.euler
 
 Catalan's constant (``catalan``)
 ................................
 
-.. autoattribute:: mpmath.functions.catalan
+.. autoattribute:: mpmath.mp.catalan
 
 Apery's constant (``apery``)
 ............................
 
-.. autoattribute:: mpmath.functions.apery
+.. autoattribute:: mpmath.mp.apery
 
 Khinchin's constant (``khinchin``)
 ..................................
 
-.. autoattribute:: mpmath.functions.khinchin
+.. autoattribute:: mpmath.mp.khinchin
 
 Glaisher's constant (``glaisher``)
 ..................................
 
-.. autoattribute:: mpmath.functions.glaisher
+.. autoattribute:: mpmath.mp.glaisher
 
 Mertens constant (``mertens``)
 ..................................
 
-.. autoattribute:: mpmath.functions.mertens
+.. autoattribute:: mpmath.mp.mertens
 
 Twin prime constant (``twinprime``)
 ...................................
 
-.. autoattribute:: mpmath.functions.twinprime
+.. autoattribute:: mpmath.mp.twinprime

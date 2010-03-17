@@ -10,7 +10,7 @@ Fibonacci numbers
 
 :func:`fibonacci`/:func:`fib`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. autofunction:: mpmath.functions.fibonacci(n, **kwargs)
+.. autofunction:: mpmath.fibonacci(n, **kwargs)
 
 
 Bernoulli numbers and polynomials
@@ -18,15 +18,26 @@ Bernoulli numbers and polynomials
 
 :func:`bernoulli`
 ^^^^^^^^^^^^^^^^^
-.. autofunction:: mpmath.functions.bernoulli(n)
+.. autofunction:: mpmath.bernoulli(n)
 
 :func:`bernfrac`
 ^^^^^^^^^^^^^^^^^
-.. autofunction:: mpmath.functions.bernfrac(n)
+.. autofunction:: mpmath.bernfrac(n)
 
 :func:`bernpoly`
 ^^^^^^^^^^^^^^^^^
-.. autofunction:: mpmath.functions.bernpoly(n,z)
+.. autofunction:: mpmath.bernpoly(n,z)
+
+Euler numbers and polynomials
+.................................
+
+:func:`eulernum`
+^^^^^^^^^^^^^^^^^
+.. autofunction:: mpmath.eulernum(n)
+
+:func:`eulerpoly`
+^^^^^^^^^^^^^^^^^
+.. autofunction:: mpmath.eulerpoly(n,z)
 
 
 Bell numbers and polynomials
@@ -34,7 +45,7 @@ Bell numbers and polynomials
 
 :func:`bell`
 ^^^^^^^^^^^^^^^^^
-.. autofunction:: mpmath.functions.bell(n,x)
+.. autofunction:: mpmath.bell(n,x)
 
 
 Prime counting functions
@@ -42,15 +53,15 @@ Prime counting functions
 
 :func:`primepi`
 ^^^^^^^^^^^^^^^^^
-.. autofunction:: mpmath.functions.primepi(x)
+.. autofunction:: mpmath.primepi(x)
 
 :func:`primepi2`
 ^^^^^^^^^^^^^^^^^
-.. autofunction:: mpmath.functions.primepi2(x)
+.. autofunction:: mpmath.primepi2(x)
 
 :func:`riemannr`
 ^^^^^^^^^^^^^^^^^
-.. autofunction:: mpmath.functions.riemannr(x)
+.. autofunction:: mpmath.riemannr(x)
 
 
 Cyclotomic polynomials
@@ -58,4 +69,4 @@ Cyclotomic polynomials
 
 :func:`cyclotomic`
 ^^^^^^^^^^^^^^^^^^
-.. autofunction:: mpmath.functions.cyclotomic(n,x)
+.. autofunction:: mpmath.cyclotomic(n,x)

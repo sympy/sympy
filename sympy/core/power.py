@@ -25,7 +25,7 @@ def integer_nthroot(y, n):
     if y in (0, 1): return y, True
     if n == 1: return y, True
     if n == 2:
-        x, rem = mpmath.libmpf.sqrtrem(y)
+        x, rem = mpmath.libmp.sqrtrem(y)
         return int(x), not rem
     if n > y: return 1, False
     # Get initial estimate for Newton's method. Care must be taken to

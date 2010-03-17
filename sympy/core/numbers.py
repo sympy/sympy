@@ -2,9 +2,8 @@ from basic import Atom, SingletonMeta, S, Basic
 from decorators import _sympifyit
 from cache import Memoizer, cacheit, clear_cache
 import sympy.mpmath as mpmath
-import sympy.mpmath.libmpf as mlib
-import sympy.mpmath.libmpc as mlibc
-from sympy.mpmath.libelefun import mpf_pow, mpf_pi, mpf_e, phi_fixed
+import sympy.mpmath.libmp as mlib
+from sympy.mpmath.libmp import mpf_pow, mpf_pi, mpf_e, phi_fixed
 import decimal
 
 rnd = mlib.round_nearest
@@ -275,7 +274,7 @@ class Real(Number):
         return self._mpf_, max(prec, self._prec)
 
     def __new__(cls, num, prec=15):
-        prec = mpmath.settings.dps_to_prec(prec)
+        prec = mlib.libmpf.dps_to_prec(prec)
         if isinstance(num, (int, long)):
             return Integer(num)
         if isinstance(num, (str, decimal.Decimal)):
@@ -361,7 +360,7 @@ class Real(Number):
                 y = mpf_pow(b, e, prec, rnd)
                 return Real._new(y, prec)
             except mlib.ComplexResult:
-                re, im = mlibc.mpc_pow((b, mlib.fzero), (e, mlib.fzero), prec, rnd)
+                re, im = mlib.mpc_pow((b, mlib.fzero), (e, mlib.fzero), prec, rnd)
                 return Real._new(re, prec) + Real._new(im, prec) * S.ImaginaryUnit
 
     def __abs__(self):
@@ -1529,7 +1528,8 @@ class EulerGamma(NumberSymbol):
     __slots__ = []
 
     def _as_mpf_val(self, prec):
-        return mlib.from_man_exp(mpmath.gammazeta.euler_fixed(prec+10), -prec-10)
+        return mlib.from_man_exp(mlib.libhyper.euler_fixed(
+            prec+10), -prec-10)
 
     def approximation_interval(self, number_cls):
         if issubclass(number_cls, Integer):
@@ -1551,7 +1551,7 @@ class Catalan(NumberSymbol):
     __slots__ = []
 
     def _as_mpf_val(self, prec):
-        return mlib.from_man_exp(mpmath.gammazeta.catalan_fixed(prec+10), -prec-10)
+        return mlib.from_man_exp(mlib.catalan_fixed(prec+10), -prec-10)
 
     def approximation_interval(self, number_cls):
         if issubclass(number_cls, Integer):

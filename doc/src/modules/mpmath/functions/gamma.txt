@@ -7,18 +7,18 @@ Factorials
 :func:`factorial`/:func:`fac`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. autofunction:: mpmath.functions.factorial(x, **kwargs)
+.. autofunction:: mpmath.factorial(x, **kwargs)
 
 :func:`fac2`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. autofunction:: mpmath.functions.fac2(x)
+.. autofunction:: mpmath.fac2(x)
 
-Binomial coefficients 
+Binomial coefficients
 ....................................................
 
 :func:`binomial`
 ^^^^^^^^^^^^^^^^
-.. autofunction:: mpmath.functions.binomial(n,k)
+.. autofunction:: mpmath.binomial(n,k)
 
 
 Gamma function
@@ -26,15 +26,15 @@ Gamma function
 
 :func:`gamma`
 ^^^^^^^^^^^^^^^^
-.. autofunction:: mpmath.functions.gamma(x, **kwargs)
+.. autofunction:: mpmath.gamma(x, **kwargs)
 
 :func:`gammaprod`
 ^^^^^^^^^^^^^^^^^
-.. autofunction:: mpmath.functions.gammaprod(a, b)
+.. autofunction:: mpmath.gammaprod(a, b)
 
 :func:`loggamma`
 ^^^^^^^^^^^^^^^^
-.. autofunction:: mpmath.functions.loggamma(x)
+.. autofunction:: mpmath.loggamma(x)
 
 
 Rising and falling factorials
@@ -42,22 +42,22 @@ Rising and falling factorials
 
 :func:`rf`
 ^^^^^^^^^^^^^^^^
-.. autofunction:: mpmath.functions.rf(x,n)
+.. autofunction:: mpmath.rf(x,n)
 
 :func:`ff`
 ^^^^^^^^^^^^^^^^
-.. autofunction:: mpmath.functions.ff(x,n)
+.. autofunction:: mpmath.ff(x,n)
 
 Beta function
 .............
 
 :func:`beta`
 ^^^^^^^^^^^^^^^^
-.. autofunction:: mpmath.functions.beta(x,y)
+.. autofunction:: mpmath.beta(x,y)
 
 :func:`betainc`
 ^^^^^^^^^^^^^^^^
-.. autofunction:: mpmath.functions.betainc(a,b,x1=0,x2=1,regularized=False)
+.. autofunction:: mpmath.betainc(a,b,x1=0,x2=1,regularized=False)
 
 
 Super- and hyperfactorials
@@ -65,26 +65,26 @@ Super- and hyperfactorials
 
 :func:`superfac`
 ^^^^^^^^^^^^^^^^
-.. autofunction:: mpmath.functions.superfac(z)
+.. autofunction:: mpmath.superfac(z)
 
 :func:`hyperfac`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. autofunction:: mpmath.functions.hyperfac(z)
+.. autofunction:: mpmath.hyperfac(z)
 
 :func:`barnesg`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. autofunction:: mpmath.functions.barnesg(z)
+.. autofunction:: mpmath.barnesg(z)
 
 
 Polygamma functions and harmonic numbers
 ........................................
 
-:func:`psi`/:func:`digamma`/:func:`trigamma`
+:func:`psi`/:func:`digamma`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. autofunction:: mpmath.functions.psi(m, z)
-.. autofunction:: mpmath.functions.digamma(z)
-.. autofunction:: mpmath.functions.trigamma(z)
+.. autofunction:: mpmath.psi(m, z)
+
+.. autofunction:: mpmath.digamma(z)
 
 :func:`harmonic`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. autofunction:: mpmath.functions.harmonic(z)
+.. autofunction:: mpmath.harmonic(z)

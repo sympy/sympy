@@ -4,10 +4,10 @@ Differentiation
 Numerical derivatives (``diff``, ``diffs``)
 ...........................................
 
-.. autofunction:: mpmath.calculus.diff
-.. autofunction:: mpmath.calculus.diffs
+.. autofunction:: mpmath.diff
+.. autofunction:: mpmath.diffs
 
 Fractional derivatives / differintegration (``differint``)
 ............................................................
 
-.. autofunction:: mpmath.calculus.differint
+.. autofunction:: mpmath.differint

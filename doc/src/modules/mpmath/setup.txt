@@ -66,17 +66,17 @@ After the setup has completed, you should be able to fire up the interactive Pyt
     >>> print 2*pi
     6.2831853071795864769252867665590057683943387987502
 
-*Note: if you have mpmath 0.6 or earlier installed, you may have to either first uninstall the old version, or manually delete the obsolete mpmath/lib directory. Otherwise this directory will be imported erroneously.*
+*Note: if you have are upgrading mpmath from an earlier version, you may have to manually uninstall the old version or remove the old files.*
 
 Using gmpy (optional)
 ---------------------
 
 By default, mpmath uses Python integers internally. If `gmpy <http://code.google.com/p/gmpy/>`_ version 1.03 or later is installed on your system, mpmath will automatically detect it and transparently use gmpy integers intead. This makes mpmath much faster, especially at high precision (approximately above 100 digits).
 
-To verify that mpmath uses gmpy, check the internal MODE variable is not equal to 'python':
+To verify that mpmath uses gmpy, check the internal variable ``BACKEND`` is not equal to 'python':
 
-    >>> import mpmath.settings
-    >>> mpmath.settings.MODE
+    >>> import mpmath.libmp
+    >>> mpmath.libmp.BACKEND
     'gmpy'
 
 The gmpy mode can be disabled by setting the MPMATH_NOGMPY environment variable. Note that the mode cannot be switched during runtime; mpmath must be re-imported for this change to take effect.
@@ -153,21 +153,20 @@ Mpmath is preinstalled a regular Python module, and can be imported as usual wit
 The mpmath installation under Sage automatically use Sage integers for asymptotically fast arithmetic,
 so there is no need to install GMPY::
 
-    sage: mpmath.settings.MODE
+    sage: mpmath.libmp.BACKEND
     'sage'
 
-Although mpmath can be imported directly, it is recommended to import the interface library
-``sage.libs.mpmath.all`` instead. For example::
+In Sage, mpmath can alternatively be imported via the interface library
+``sage.libs.mpmath.all``. For example::
 
     sage: import sage.libs.mpmath.all as mpmath
 
-Importing this library will load some Cython extension code that may slightly speed up mpmath
-and provide better type compatibility between mpmath and Sage number types.
-The function :func:`call` defined in this library allows you to call a mpmath
-function with any Sage number as input, and get a Sage ``RealNumber`` or ``ComplexNumber``
+This module provides a few extra conversion functions, including :func:`call`
+which permits calling any mpmath function with Sage numbers as input, and getting
+Sage ``RealNumber`` or ``ComplexNumber`` instances
 with the appropriate precision back::
 
-    sage: w = mpmath.call(mpmath.erf, 2+3*I, prec=100)   
+    sage: w = mpmath.call(mpmath.erf, 2+3*I, prec=100)
     sage: w
     -20.829461427614568389103088452 + 8.6873182714701631444280787545*I
     sage: type(w)

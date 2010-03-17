@@ -4,20 +4,20 @@ Function approximation
 Taylor series (``taylor``)
 ..........................
 
-.. autofunction:: mpmath.calculus.taylor
+.. autofunction:: mpmath.taylor
 
 Pade approximation (``pade``)
 .............................
 
-.. autofunction:: mpmath.calculus.pade
+.. autofunction:: mpmath.pade
 
 Chebyshev approximation (``chebyfit``)
 ......................................
 
-.. autofunction:: mpmath.calculus.chebyfit
+.. autofunction:: mpmath.chebyfit
 
 Fourier series (``fourier``, ``fourierval``)
 ............................................
 
-.. autofunction:: mpmath.calculus.fourier
-.. autofunction:: mpmath.calculus.fourierval
+.. autofunction:: mpmath.fourier
+.. autofunction:: mpmath.fourierval

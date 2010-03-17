@@ -14,7 +14,7 @@
 import sys
 
 # If your extensions are in another directory, add it here.
-#sys.path.append('some/directory')
+sys.path.append('../sympy')
 
 # General configuration
 # ---------------------
@@ -40,9 +40,9 @@ copyright = '2008, 2009, 2010 SymPy Development Team'
 # other places throughout the built documents.
 #
 # The short X.Y version.
-version = '0.7.0'
+version = '0.6.7'
 # The full version, including alpha/beta/rc tags.
-release = '0.7.0-git'
+release = '0.6.7'
 
 # There are two options for replacing |today|: either, you set today to some
 # non-false value, then it is used:
