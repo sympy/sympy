@@ -4,9 +4,9 @@ for mathematical functions.
 """
 
 from sympy.mpmath.libmp import (from_int, from_rational, fzero, normalize,
-        bitcount, round_nearest, to_str, fone, fnone, fhalf, from_float,
-        to_float, fnone, to_int, mpf_lt, mpf_sqrt, mpf_cmp, mpf_abs,
-        mpf_pow_int, mpf_shift, mpf_add, mpf_mul, mpf_neg)
+        bitcount, round_nearest, to_str, fone, fnone, fhalf, to_int, mpf_lt,
+        mpf_sqrt, mpf_cmp, mpf_abs, mpf_pow_int, mpf_shift, mpf_add, mpf_mul,
+        mpf_neg)
 
 import sympy.mpmath.libmp as libmp
 from sympy.mpmath.libmp.libmpf import dps_to_prec

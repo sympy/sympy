@@ -26,14 +26,13 @@ module.
 from sympy import Basic
 
 try:
-    import ast
+    from ast import parse, NodeTransformer, Call, Name, Load, \
+            fix_missing_locations, Str
     ast_enabled = True
 except ImportError:
     ast_enabled = False
 
 if ast_enabled:
-    from ast import parse, NodeTransformer, Call, Name, Load, \
-            fix_missing_locations, Str
 
     class Transform(NodeTransformer):
 

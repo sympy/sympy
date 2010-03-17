@@ -289,6 +289,6 @@ def var(*names, **kwargs):
         # doc
         del frame
 
-from basic import Basic, Atom, S, C
+from basic import Basic, S, C
 from sympify import sympify
 from function import Function

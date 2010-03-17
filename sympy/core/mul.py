@@ -320,7 +320,6 @@ class Mul(AssocOp):
 
                 if e.is_rational:
                     coeff, rest = b.as_coeff_terms()
-                    from sympy.functions import sign
                     unk=[]
                     nonneg=[]
                     neg=[]
