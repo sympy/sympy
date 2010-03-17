@@ -1,5 +1,5 @@
 """Inference in propositional logic"""
-from sympy.logic.boolalg import And, Or, Not, Implies, Equivalent, disjuncts, \
+from sympy.logic.boolalg import And, Or, Not, Implies, Equivalent, \
     conjuncts, to_cnf
 from sympy.core import Symbol, sympify
 
