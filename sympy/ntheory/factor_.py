@@ -8,7 +8,7 @@ from sympy.core.mul import Mul
 import random
 import math
 from primetest import isprime
-from generate import sieve, prime, primerange
+from generate import sieve, primerange
 from sympy.utilities.iterables import iff
 from sympy.core.sympify import S
 

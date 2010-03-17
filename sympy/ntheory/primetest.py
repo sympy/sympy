@@ -168,7 +168,6 @@ def isprime(n):
         False
 
     """
-    from sympy import primerange
     n = int(n)
     if n < 2:
         return False
