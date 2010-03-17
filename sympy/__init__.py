@@ -9,7 +9,7 @@ See the webpage for more information and documentation:
 
     http://code.google.com/p/sympy/"""
 
-__version__ = "0.6.7-rc2"
+__version__ = "0.6.7"
 
 
 def __sympy_debug():
