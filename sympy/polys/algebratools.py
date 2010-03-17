@@ -542,6 +542,10 @@ class IntegerRing(Ring):
 
     has_CharacteristicZero = True
 
+    def get_field(self):
+        """Returns a field associated with `self`. """
+        return QQ
+
     def from_AlgebraicField(K1, a, K0):
         """Convert a `ANP` object to `dtype`. """
         if a.is_ground:
@@ -563,6 +567,10 @@ class RationalField(Field):
     has_assoc_Field        = True
 
     has_CharacteristicZero = True
+
+    def get_ring(self):
+        """Returns a ring associated with `self`. """
+        return ZZ
 
     def algebraic_field(self, *extension):
         """Returns an algebraic field, i.e. `QQ(alpha, ...)`. """
@@ -691,15 +699,6 @@ class ZZ_python(IntegerRing):
         if q == 1:
             return python_int(p)
 
-    def get_field(self):
-        """Returns a field associated with `self`. """
-        if HAS_FRACTION:
-            return QQ_python()
-        elif HAS_GMPY:
-            return QQ_gmpy()
-        else:
-            return QQ_sympy()
-
     def gcdex(self, a, b):
         """Extended GCD of `a` and `b`. """
         return python_gcdex(a, b)
@@ -772,10 +771,6 @@ if HAS_FRACTION:
         def from_RR_mpmath(K1, a, K0):
             """Convert a mpmath `mpf` object to `dtype`. """
             return python_rat(*K0.as_integer_ratio(a))
-
-        def get_ring(self):
-            """Returns a ring associated with `self`. """
-            return ZZ_python()
 
         def numer(self, a):
             """Returns numerator of `a`. """
@@ -864,10 +859,6 @@ class ZZ_sympy(IntegerRing):
         if q == 1:
             return sympy_int(p)
 
-    def get_field(self):
-        """Returns a field associated with `self`. """
-        return QQ_sympy()
-
     def gcdex(self, a, b):
         """Extended GCD of `a` and `b`. """
         return map(sympy_int, sympy_gcdex(int(a), int(b)))
@@ -939,10 +930,6 @@ class QQ_sympy(RationalField):
     def from_RR_mpmath(K1, a, K0):
         """Convert a mpmath `mpf` object to `dtype`. """
         return sympy_rat(*K0.as_integer_ratio(a))
-
-    def get_ring(self):
-        """Returns a ring associated with `self`. """
-        return ZZ_sympy()
 
     def numer(self, a):
         """Returns numerator of `a`. """
@@ -1029,10 +1016,6 @@ if HAS_GMPY:
             if q == 1:
                 return gmpy_int(p)
 
-        def get_field(self):
-            """Returns a field associated with `self`. """
-            return QQ_gmpy()
-
         def gcdex(self, a, b):
             """Extended GCD of `a` and `b`. """
             h, s, t = gmpy_gcdex(a, b)
@@ -1109,10 +1092,6 @@ if HAS_GMPY:
         def from_RR_mpmath(K1, a, K0):
             """Convert a mpmath `mpf` object to `dtype`. """
             return gmpy_rat(*K0.as_integer_ratio(a))
-
-        def get_ring(self):
-            """Returns a ring associated with `self`. """
-            return ZZ_gmpy()
 
         def exquo(self, a, b):
             """Exact quotient of `a` and `b`, implies `__div__`.  """
