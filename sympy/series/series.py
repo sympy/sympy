@@ -1,5 +1,3 @@
-from sympy.core import sympify, Basic
-
 def series(expr, x, point=0, n=6, dir="+"):
     """Series expansion of expr around point `x=point`.
 

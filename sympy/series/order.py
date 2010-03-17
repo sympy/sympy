@@ -1,5 +1,5 @@
 from sympy.core.basic import Basic, S, C, sympify
-from sympy.core import oo, Rational, Pow
+from sympy.core import oo, Rational
 from sympy.core.cache import cacheit
 
 class Order(Basic):

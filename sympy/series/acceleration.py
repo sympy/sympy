@@ -9,7 +9,7 @@ Springer 1999. (Shanks transformation: pp. 368-375, Richardson
 extrapolation: pp. 375-377.)
 """
 
-from sympy import Symbol, factorial, pi, Integer, E, Sum2
+from sympy import factorial, Integer
 
 
 def richardson(A, k, n, N):

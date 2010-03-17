@@ -1,3 +1,7 @@
+from sympy import SYMPY_DEBUG
+from sympy.core import Basic, S, oo, Symbol, sympify, C, I
+from sympy.functions import log, exp
+from sympy.series.order import Order
 from sympy.simplify import powsimp
 """
 Limits
@@ -116,11 +120,6 @@ And check manually which line is wrong. Then go to the source code and debug
 this function to figure out the exact problem.
 
 """
-from sympy import SYMPY_DEBUG
-from sympy.core import Basic, S, Add, Mul, Pow, Function, oo, Symbol, \
-        Rational, Real, sympify, C, I
-from sympy.functions import log, exp
-from sympy.series.order import Order
 O = Order
 
 def debug(func):

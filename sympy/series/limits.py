@@ -1,4 +1,4 @@
-from sympy.core import S, Add, sympify, Basic, PoleError, Mul, oo, C
+from sympy.core import S, Add, sympify, Basic, PoleError, Mul, oo
 from gruntz import gruntz
 
 def limit(e, z, z0, dir="+"):
