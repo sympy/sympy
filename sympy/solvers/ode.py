@@ -192,7 +192,7 @@ anything is broken, one of those tests will surely fail.
 
 """
 from sympy.core.basic import Add, Basic, C, Mul, Pow
-from sympy.core.function import Derivative, diff, expand_mul, Function
+from sympy.core.function import Derivative, diff, expand_mul
 from sympy.core.multidimensional import vectorize
 from sympy.core.relational import Equality, Eq
 from sympy.core.symbol import Symbol, Wild
@@ -208,7 +208,6 @@ from sympy.solvers import solve
 
 from sympy.utilities import numbered_symbols, all, any, make_list
 
-import sympy.solvers
 # This is a list of hints in the order that they should be applied.  That means
 # that, in general, hints earlier in the list should produce simpler results
 # than those later for ODEs that fit both.  This is just based on my own
@@ -551,7 +550,6 @@ def classify_ode(eq, func, dict=False):
     """
     from sympy import expand
     from sympy.core import S
-    from sympy.utilities import all
 
     if not isinstance(func, Basic):
         raise ValueError("not a SymPy expression: %s" % func)
@@ -1082,8 +1080,6 @@ def compare_ode_sol(sol1, sol2, func, *args):
         -1
 
     """
-    from sympy.core.basic import C, S
-
     # First, if they are the same, don't bother testing which one to use
     if sol1 == sol2:
         return 0
@@ -1759,7 +1755,7 @@ def _homogeneous_order(eq, *symbols):
     endlessly put back together what homogeneous_order is trying to take
     apart.
     """
-    from sympy.utilities import all, any
+    from sympy.utilities import any
     if not symbols:
         raise ValueError, "homogeneous_order: no symbols were given."
 

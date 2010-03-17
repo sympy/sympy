@@ -1,7 +1,7 @@
 
-from sympy.polys import Poly, groebner, roots
+from sympy.polys import groebner, roots
 from sympy.simplify import simplify
-from sympy.utilities import any, all
+from sympy.utilities import any
 
 def solve_poly_system(system, *gens):
     """Solves a system of polynomial equations.

@@ -5,7 +5,7 @@ Currently implemented methods:
 
 """
 
-from sympy import Derivative, diff, Eq, Equality, Mul
+from sympy import Eq, Equality
 from sympy.simplify import simplify
 import operator
 

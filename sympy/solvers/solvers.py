@@ -21,11 +21,11 @@ from sympy.core.symbol import Symbol, Wild
 from sympy.core.relational import Equality
 from sympy.core.numbers import ilcm
 
-from sympy.functions import sqrt, log, exp, LambertW
+from sympy.functions import log, exp, LambertW
 from sympy.simplify import simplify, collect
 from sympy.matrices import Matrix, zeros
 from sympy.polys import roots
-from sympy.functions.elementary.piecewise import Piecewise, piecewise_fold
+from sympy.functions.elementary.piecewise import piecewise_fold
 
 from sympy.utilities import any, all
 from sympy.utilities.iterables import iff
