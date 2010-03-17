@@ -25,8 +25,8 @@ computations were done using the following setup::
     >>> Basic.keep_sign = True
     >>> init_printing(True, 'lex')
 
-    >>> var('x,y,z,s,c')
-    (x, y, z, s, c)
+    >>> var('x,y,z,s,c,n')
+    (x, y, z, s, c, n)
 
 Simple univariate polynomial factorization
 ------------------------------------------
