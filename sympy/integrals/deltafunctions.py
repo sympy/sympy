@@ -1,8 +1,6 @@
 import sympy
-from sympy.core import Symbol, Wild, S
 from sympy.functions import DiracDelta, Heaviside
 from sympy.solvers import solve
-#from sympy.integrals import Integral
 
 def change_mul(node,x):
     """change_mul(node,x)

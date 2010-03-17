@@ -1,10 +1,8 @@
 from sympy.core.add import Add
 from sympy.core.mul import Mul
-from sympy.core.power import Pow
-from sympy.core.function import Function
 from sympy.core.symbol import Symbol, Wild
-from sympy.core.basic import S, C, Atom, sympify
-from sympy.core.numbers import Integer, Rational
+from sympy.core.basic import S, C, sympify
+from sympy.core.numbers import Rational
 
 from sympy.functions import exp, sin , cos , tan , cot , asin
 from sympy.functions import log, sinh, cosh, tanh, coth, asinh
@@ -13,7 +11,7 @@ from sympy.functions import sqrt, erf
 
 from sympy.solvers import solve
 
-from sympy.polys import Poly, quo, gcd, lcm, \
+from sympy.polys import quo, gcd, lcm, \
     monomials, factor, cancel, PolynomialError
 from sympy.polys.polyroots import root_factors
 

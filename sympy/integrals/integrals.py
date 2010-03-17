@@ -1,4 +1,4 @@
-from sympy.core import Basic, S, C, Symbol, Wild, Pow, Add, sympify, diff, oo
+from sympy.core import Basic, S, C, Symbol, Wild, Add, sympify, diff, oo
 
 from sympy.integrals.trigonometry import trigintegrate
 from sympy.integrals.deltafunctions import deltaintegrate
@@ -6,11 +6,9 @@ from sympy.integrals.rationaltools import ratint
 from sympy.integrals.risch import heurisch
 from sympy.utilities import threaded, flatten
 from sympy.utilities.iterables import make_list
-from sympy.simplify import apart
-from sympy.series import limit
 from sympy.polys import Poly
 from sympy.solvers import solve
-from sympy.functions import DiracDelta, Heaviside, Piecewise
+from sympy.functions import Piecewise
 from sympy.geometry import Curve
 from sympy.functions.elementary.piecewise import piecewise_fold
 

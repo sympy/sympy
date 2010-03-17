@@ -1,7 +1,7 @@
 """This module implements tools for integrating rational functions. """
 
-from sympy import S, Add, Symbol, symbols, I, log, atan, \
-    div, quo, resultant, roots, collect, solve, RootSum, Lambda, cancel
+from sympy import S, Symbol, symbols, I, log, atan, \
+    resultant, roots, collect, solve, RootSum, Lambda, cancel
 
 from sympy.polys import Poly, subresultants, resultant, ZZ
 from sympy.polys.polyroots import number_of_real_roots
