@@ -125,7 +125,12 @@ def init_session(session="ipython", pretty_print=True, order=None, use_unicode=N
         from sympy import __version__ as sympy_version
         py_version = "%d.%d.%d" % sys.version_info[:3]
 
-        welcome = "Python %s console for SymPy %s" % (py_version, sympy_version)
+        if session == "ipython":
+            py_name = "IPython"
+        else:
+            py_name = "Python"
+        welcome = "%s console for SymPy %s (Python %s)" % (py_name,
+                sympy_version, py_version)
 
         if os.getenv('SYMPY_USE_CACHE') == 'no':
             welcome += ' (cache: off)'
