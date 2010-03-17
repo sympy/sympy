@@ -1,8 +1,6 @@
 from pyglet.gl import *
 from plot_mode_base import PlotModeBase
 from sympy.core.basic import S
-from util import scale_value, scale_value_list
-#from time import sleep
 
 class PlotCurve(PlotModeBase):
 

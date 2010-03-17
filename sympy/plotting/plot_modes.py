@@ -1,6 +1,5 @@
 from plot_curve import PlotCurve
 from plot_surface import PlotSurface
-from util import scale_value
 
 from sympy import pi, lambdify
 from sympy.functions import sin, cos

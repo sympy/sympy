@@ -1,4 +1,4 @@
-from sympy import Symbol, Basic, Integer, sympify
+from sympy import Symbol, Integer, sympify
 
 class PlotInterval(object):
     """

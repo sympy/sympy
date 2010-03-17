@@ -1,7 +1,6 @@
-from sympy import Basic, Symbol, symbols, sympify
+from sympy import Symbol, symbols, sympify
 from plot_interval import PlotInterval
 from plot_object import PlotObject
-from color_scheme import ColorScheme
 from util import parse_option_string
 from sympy.geometry.entity import GeometryEntity
 

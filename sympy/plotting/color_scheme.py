@@ -1,5 +1,5 @@
 from sympy import Basic, Symbol, symbols, lambdify
-from util import interpolate, rinterpolate, interpolate_color, create_bounds, update_bounds
+from util import interpolate, rinterpolate, create_bounds, update_bounds
 
 class ColorGradient(object):
     colors = [0.4,0.4,0.4], [0.9,0.9,0.9]

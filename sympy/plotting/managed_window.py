@@ -2,7 +2,7 @@ from pyglet.gl import *
 from pyglet.window import Window
 from pyglet.clock import Clock
 
-from threading import Thread, Lock, Event
+from threading import Thread, Lock
 
 gl_lock = Lock()
 
