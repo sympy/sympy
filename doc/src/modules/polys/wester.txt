@@ -334,6 +334,14 @@ non-symmetric representation::
     ⎛ 2        ⎞ ⎛ 9          8    6          5    3          2    ⎞
     ⎝x  + x + 1⎠⋅⎝x  + 65536⋅x  + x  + 65536⋅x  + x  + 65536⋅x  + 1⎠
 
+As with symmetric representation we can expand the factorization
+to get the input polynomial back. This time, however, we need to
+truncate coefficients of the expanded polynomial modulo 65537::
+
+    >>> trunc(expand(_), 65537)
+     11
+    x   + x + 1
+
 Working with expressions as polynomials
 ---------------------------------------
 
