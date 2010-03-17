@@ -1,4 +1,4 @@
-from sympy.core import Basic, S, C, Add, Mul, Symbol, sympify
+from sympy.core import Basic, S, C, Mul, sympify
 
 from sympy.polys import quo, roots
 from sympy.simplify import powsimp
