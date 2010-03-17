@@ -13,7 +13,7 @@ The relevant references for this module are:
     3. Sympy Tutorial, http://docs.sympy.org/
 """
 import sys
-import os, string, types, copy
+import types
 import numpy, sympy
 import re as regrep
 import sympy.galgebra.latex_ex
