@@ -183,6 +183,7 @@ def doctest(*paths, **kwargs):
                     "sympy/galgebra/latex_ex.py", # needs numpy
                     "sympy/conftest.py", # needs py.test
                     "sympy/utilities/benchmarking.py", # needs py.test
+                    "doc/src/modules/polys", # very time consuming
                     ])
     blacklist = convert_to_native_paths(blacklist)
 
