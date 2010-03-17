@@ -1,12 +1,12 @@
 """Module for querying SymPy objects about assumptions."""
 import inspect
 import copy
-from sympy.core import Symbol, sympify
+from sympy.core import sympify
 from sympy.utilities.source import get_class
 from sympy.assumptions import global_assumptions
 from sympy.assumptions.assume import eliminate_assume
 from sympy.logic.boolalg import to_cnf, conjuncts, disjuncts, \
-    Equivalent, And, Or, Not
+    And, Not
 from sympy.logic.inference import literal_symbol
 from sympy.logic.algorithms.dpll import dpll_int_repr
 
