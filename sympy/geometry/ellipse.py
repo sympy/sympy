@@ -1,4 +1,4 @@
-from sympy.core.basic import S, C, Basic, sympify
+from sympy.core.basic import S, C, sympify
 from sympy.simplify import simplify, trigsimp
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.geometry.exceptions import GeometryError
@@ -167,7 +167,6 @@ class Ellipse(GeometryEntity):
     def random_point(self):
         """Returns a random point on the ellipse."""
         from random import random
-        from sys import maxint
         t = C.Symbol('t', real=True)
         p = self.arbitrary_point('t')
         # get a random value in [-pi, pi)
