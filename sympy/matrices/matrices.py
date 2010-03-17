@@ -2,7 +2,7 @@ import warnings
 from sympy import Basic, Symbol, Integer
 from sympy.core import sympify
 
-from sympy.core.basic import S, C
+from sympy.core.basic import S
 from sympy.polys import Poly, roots, cancel
 from sympy.simplify import simplify
 from sympy.utilities import any
