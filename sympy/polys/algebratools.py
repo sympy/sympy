@@ -115,13 +115,7 @@ class Algebra(object):
 
     def of_type(self, a):
         """Check if `a` is of type `dtype`. """
-        if type(a) is not type(self.one):
-            try:
-                return isinstance(a, self.dtype)
-            except TypeError:
-                return False
-        else:
-            return True
+        return type(a) is type(self.one)
 
     def __contains__(self, a):
         """Check if `a` belongs to this domain. """
