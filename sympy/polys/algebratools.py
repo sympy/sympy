@@ -614,7 +614,7 @@ from sympy.core.numbers import (
     ilcm as python_lcm,
 )
 
-from sympy.mpmath.libmpf import (
+from sympy.mpmath.libmp.libmpf import (
     isqrt as python_sqrt,
 )
 
@@ -796,7 +796,7 @@ from sympy.core.numbers import (
     ilcm as sympy_lcm,
 )
 
-from sympy.mpmath.libmpf import (
+from sympy.mpmath.libmp.libmpf import (
     isqrt as sympy_sqrt,
 )
 
