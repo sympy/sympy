@@ -1,10 +1,8 @@
-from sympy.core import Basic, Add, S, C, sympify
+from sympy.core import Add, S, C, sympify
 from sympy.core.function import Function
 from zeta_functions import zeta
 from sympy.functions.elementary.exponential import log
 from sympy.functions.elementary.miscellaneous import sqrt
-
-from sympy.utilities.decorator import deprecated
 
 ###############################################################################
 ############################ COMPLETE GAMMA FUNCTION ##########################

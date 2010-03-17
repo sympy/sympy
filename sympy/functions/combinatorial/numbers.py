@@ -11,8 +11,6 @@ from sympy import Function, S, Symbol, Rational, oo, Integer, C
 
 from sympy.mpmath import bernfrac
 
-from sympy.utilities.decorator import deprecated
-
 def _product(a, b):
     p = 1
     for k in xrange(a, b+1):

@@ -1,10 +1,8 @@
-from sympy.core.basic import Basic, S, C, sympify
-from sympy.core.function import Function, Lambda
+from sympy.core.basic import S, C, sympify
+from sympy.core.function import Function
 from sympy.core.cache import cacheit
 
 from sympy.functions.elementary.miscellaneous import sqrt
-
-from sympy.utilities.decorator import deprecated
 
 ###############################################################################
 ########################### HYPERBOLIC FUNCTIONS ##############################

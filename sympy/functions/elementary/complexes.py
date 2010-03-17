@@ -1,8 +1,7 @@
-from sympy.core.basic import Basic, S, C, sympify
+from sympy.core.basic import S, C
 from sympy.core.function import Function, Derivative
 from sympy.functions.elementary.miscellaneous import sqrt
 
-from sympy.utilities.decorator import deprecated
 from sympy.utilities.iterables import make_list, iff
 
 ###############################################################################

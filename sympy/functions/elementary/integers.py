@@ -1,8 +1,7 @@
-from sympy.core.basic import Basic, S, C, sympify
-from sympy.core.function import Lambda, Function
+from sympy.core.basic import S, C
+from sympy.core.function import Function
 
 from sympy.core.evalf import get_integer_part, PrecisionExhausted
-from sympy.utilities.decorator import deprecated
 
 ###############################################################################
 ######################### FLOOR and CEILING FUNCTIONS #########################

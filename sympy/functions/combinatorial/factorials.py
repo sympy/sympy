@@ -1,9 +1,7 @@
-from sympy.core.basic import Basic, S, C, sympify
+from sympy.core.basic import S, C, sympify
 from sympy.core.function import Function
 from sympy.ntheory import sieve
 from math import sqrt
-
-from sympy.utilities.decorator import deprecated
 
 ###############################################################################
 ######################## FACTORIAL and MULTI-FACTORIAL ########################

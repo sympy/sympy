@@ -1,6 +1,5 @@
-from sympy.core.basic import Basic, S, C, sympify
-from sympy.core.function import Lambda, Function
-from sympy.utilities.decorator import deprecated
+from sympy.core.basic import S, sympify
+from sympy.core.function import Function
 
 ###############################################################################
 ############################# SQUARE ROOT FUNCTION ############################

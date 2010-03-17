@@ -1,11 +1,7 @@
-from sympy.core.basic import Basic, S, C, sympify
+from sympy.core.basic import S, sympify
 from sympy.core.function import Function
-from sympy.functions.elementary.miscellaneous import sqrt
-from sympy.core.cache import cacheit
 import sympy.polys
 from sympy.core import diff
-
-from sympy.utilities.decorator import deprecated
 
 ###############################################################################
 ################################ DELTA FUNCTION ###############################

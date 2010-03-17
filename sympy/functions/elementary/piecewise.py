@@ -4,8 +4,6 @@ from sympy.core.numbers import Number
 from sympy.core.relational import Relational
 from sympy.core.sympify import sympify
 
-from sympy.utilities.decorator import deprecated
-
 class ExprCondPair(Basic):
     """Represents an expression, condition pair."""
 

@@ -6,12 +6,10 @@ combinatorial polynomials.
 
 """
 
-from sympy.core.basic import Basic, S, C
-from sympy.core import Rational, Symbol
+from sympy.core.basic import S, C
+from sympy.core import Rational
 from sympy.core.function import Function
 from sympy.utilities.memoization import recurrence_memo, assoc_recurrence_memo
-from sympy.utilities.decorator import deprecated
-
 
 _x = C.Symbol('x', dummy=True)
 

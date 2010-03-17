@@ -1,8 +1,7 @@
-from sympy.core.basic import Basic, S, C, sympify
+from sympy.core.basic import S, C, sympify
 from sympy.core.function import Function
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.core.cache import cacheit
-from sympy.utilities.decorator import deprecated
 
 ###############################################################################
 ################################ ERROR FUNCTION ###############################

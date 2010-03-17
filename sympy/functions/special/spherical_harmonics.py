@@ -1,4 +1,4 @@
-from sympy import Function, Basic, C, Rational, pi, I
+from sympy import C, pi, I
 from sympy.core import Symbol, sympify
 from sympy.functions import legendre, assoc_legendre
 from sympy.functions.elementary.miscellaneous import sqrt
