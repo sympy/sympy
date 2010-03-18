@@ -63,9 +63,8 @@ from sympy.polys.densetools import (
     dup_taylor
 )
 
-from sympy.polys.polyutils import (
-    _sort_factors
-)
+from sympy.polys.polyutils import _sort_factors
+from sympy.polys.polyconfig import query
 
 from sympy.polys.polyerrors import (
     ExtraneousFactors, DomainError, EvaluationFailed
@@ -417,9 +416,9 @@ def dup_zz_factor_sqf(f, K):
     if n == 1 or dup_zz_irreducible_p(g, K):
         return cont, [(g, 1)]
 
-    factors = []
+    factors = None
 
-    if args.get('cyclotomic', True):
+    if query('USE_CYCLOTOMIC_FACTOR'):
         factors = dup_zz_cyclotomic_factor(g, K)
 
     if factors is None:
@@ -428,7 +427,7 @@ def dup_zz_factor_sqf(f, K):
     return cont, _sort_factors(factors, multiple=False)
 
 @cythonized("n,k")
-def dup_zz_factor(f, K, **args):
+def dup_zz_factor(f, K):
     """Factor (non square-free) polynomials in `Z[x]`.
 
        Given a univariate polynomial `f` in `Z[x]` computes its complete
@@ -486,7 +485,7 @@ def dup_zz_factor(f, K, **args):
     g = dup_sqf_part(g, K)
     H, factors = None, []
 
-    if args.get('cyclotomic', True):
+    if query('USE_CYCLOTOMIC_FACTOR'):
         H = dup_zz_cyclotomic_factor(g, K)
 
     if H is None:
@@ -774,12 +773,8 @@ def dmp_zz_wang_hensel_lifting(f, H, LC, A, p, u, K):
     else:
         return H
 
-EEZ_NUM_OK    = 3
-EEZ_NUM_TRY   = 5
-EEZ_MOD_STEP  = 2
-
 @cythonized("u,mod,i,j,s_arg,negative")
-def dmp_zz_wang(f, u, K, **args):
+def dmp_zz_wang(f, u, K, mod=None):
     """Factor primitive square-free polynomials in `Z[X]`.
 
        Given a multivariate polynomial `f` in `Z[x_1,...,x_n]`, which
@@ -814,13 +809,11 @@ def dmp_zz_wang(f, u, K, **args):
     b = dmp_zz_mignotte_bound(f, u, K)
     p = K(nextprime(b))
 
-    eez_mod = args.get('mod', None)
-
-    if eez_mod is None:
+    if mod is None:
         if u == 1:
-            eez_mod = 2
+            mod = 2
         else:
-            eez_mod = 1
+            mod = 1
 
     history, configs, A, r = set([]), [], [K.zero]*u, None
 
@@ -839,9 +832,13 @@ def dmp_zz_wang(f, u, K, **args):
     except EvaluationFailed:
         pass
 
-    while len(configs) < EEZ_NUM_OK:
-        for _ in xrange(EEZ_NUM_TRY):
-            A = [ K(randint(-eez_mod, eez_mod)) for _ in xrange(u) ]
+    eez_num_configs = query('EEZ_NUMBER_OF_CONFIGS')
+    eez_num_tries = query('EEZ_NUMBER_OF_TRIES')
+    eez_mod_step = query('EEZ_MODULUS_STEP')
+
+    while len(configs) < eez_num_configs:
+        for _ in xrange(eez_num_tries):
+            A = [ K(randint(-mod, mod)) for _ in xrange(u) ]
 
             if tuple(A) not in history:
                 history.add(tuple(A))
@@ -871,10 +868,10 @@ def dmp_zz_wang(f, u, K, **args):
 
             configs.append((s, cs, E, H, A))
 
-            if len(configs) == EEZ_NUM_OK:
+            if len(configs) == eez_num_configs:
                 break
         else:
-            eez_mod += EEZ_MOD_STEP
+            mod += eez_mod_step
 
     s_norm, s_arg, i = None, 0, 0
 
@@ -896,8 +893,8 @@ def dmp_zz_wang(f, u, K, **args):
         f, H, LC = dmp_zz_wang_lead_coeffs(f, T, cs, E, H, A, u, K)
         factors = dmp_zz_wang_hensel_lifting(f, H, LC, A, p, u, K)
     except ExtraneousFactors: # pragma: no cover
-        if args.get('restart', True):
-            return dmp_zz_wang(f, u, K, mod=eez_mod+1)
+        if query('EEZ_RESTART_IF_NEEDED'):
+            return dmp_zz_wang(f, u, K, mod+1)
         else:
             raise ExtraneousFactors("we need to restart algorithm with better parameters")
 

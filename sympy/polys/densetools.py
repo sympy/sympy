@@ -51,6 +51,8 @@ from sympy.polys.polyerrors import (
     DomainError
 )
 
+from sympy.polys.polyconfig import query
+
 from sympy.ntheory import nextprime
 
 from sympy.utilities import (
@@ -698,8 +700,6 @@ def dmp_qq_collins_resultant(f, g, u, K0):
 
     return dmp_exquo_ground(r, c, u-1, K0)
 
-USE_COLLINS_RESULTANT = 0
-
 @cythonized("u")
 def dmp_resultant(f, g, u, K):
     """Computes resultant of two polynomials in `K[X]`. """
@@ -707,10 +707,10 @@ def dmp_resultant(f, g, u, K):
         return dup_resultant(f, g, K)
 
     if K.has_Field:
-        if USE_COLLINS_RESULTANT and K.is_QQ:
+        if K.is_QQ and query('USE_COLLINS_RESULTANT'):
             return dmp_qq_collins_resultant(f, g, u, K)
     else:
-        if USE_COLLINS_RESULTANT and K.is_ZZ:
+        if K.is_ZZ and query('USE_COLLINS_RESULTANT'):
             return dmp_zz_collins_resultant(f, g, u, K)
 
     return dmp_prs_resultant(f, g, u, K)[0]
@@ -777,8 +777,6 @@ def _dup_ff_trivial_gcd(f, g, K):
     else:
         return None
 
-USE_DMP_SIMPLIFY_GCD = 1
-
 @cythonized("u")
 def _dmp_rr_trivial_gcd(f, g, u, K):
     """Handle trivial cases in GCD algorithm over a ring. """
@@ -797,7 +795,7 @@ def _dmp_rr_trivial_gcd(f, g, u, K):
             return f, dmp_one(u, K), dmp_zero(u)
         else:
             return dmp_neg(f, u, K), dmp_ground(-K.one, u), dmp_zero(u)
-    elif USE_DMP_SIMPLIFY_GCD:
+    elif query('USE_SIMPLIFY_GCD'):
         return _dmp_simplify_gcd(f, g, u, K)
     else:
         return None
@@ -818,7 +816,7 @@ def _dmp_ff_trivial_gcd(f, g, u, K):
         return (dmp_ground_monic(f, u, K),
                 dmp_ground(dmp_ground_LC(f, u, K), u),
                 dmp_zero(u))
-    elif USE_DMP_SIMPLIFY_GCD:
+    elif query('USE_SIMPLIFY_GCD'):
         return _dmp_simplify_gcd(f, g, u, K)
     else:
         return None
@@ -1237,27 +1235,22 @@ def dmp_qq_heu_gcd(f, g, u, K0):
 
     return h, cff, cfg
 
-USE_DUP_HEU_GCD = 1
-USE_DMP_HEU_GCD = 1
-
 def dup_inner_gcd(f, g, K):
     """Computes polynomial GCD and cofactors of `f` and `g` in `K[x]`. """
     if K.has_Field or not K.is_Exact:
-        if USE_DUP_HEU_GCD:
-            if K.is_QQ:
-                try:
-                    return dup_qq_heu_gcd(f, g, K)
-                except HeuristicGCDFailed:
-                    pass
+        if K.is_QQ and query('USE_HEU_GCD'):
+            try:
+                return dup_qq_heu_gcd(f, g, K)
+            except HeuristicGCDFailed:
+                pass
 
         return dup_ff_prs_gcd(f, g, K)
     else:
-        if USE_DUP_HEU_GCD:
-            if K.is_ZZ:
-                try:
-                    return dup_zz_heu_gcd(f, g, K)
-                except HeuristicGCDFailed:
-                    pass
+        if K.is_ZZ and query('USE_HEU_GCD'):
+            try:
+                return dup_zz_heu_gcd(f, g, K)
+            except HeuristicGCDFailed:
+                pass
 
         return dup_rr_prs_gcd(f, g, K)
 
@@ -1265,21 +1258,19 @@ def dup_inner_gcd(f, g, K):
 def _dmp_inner_gcd(f, g, u, K):
     """Helper function for `dmp_inner_gcd()`. """
     if K.has_Field or not K.is_Exact:
-        if USE_DMP_HEU_GCD:
-            if K.is_QQ:
-                try:
-                    return dmp_qq_heu_gcd(f, g, u, K)
-                except HeuristicGCDFailed:
-                    pass
+        if K.is_QQ and query('USE_HEU_GCD'):
+            try:
+                return dmp_qq_heu_gcd(f, g, u, K)
+            except HeuristicGCDFailed:
+                pass
 
         return dmp_ff_prs_gcd(f, g, u, K)
     else:
-        if USE_DMP_HEU_GCD:
-            if K.is_ZZ:
-                try:
-                     return dmp_zz_heu_gcd(f, g, u, K)
-                except HeuristicGCDFailed:
-                    pass
+        if K.is_ZZ and query('USE_HEU_GCD'):
+            try:
+                 return dmp_zz_heu_gcd(f, g, u, K)
+            except HeuristicGCDFailed:
+                pass
 
         return dmp_rr_prs_gcd(f, g, u, K)
 
