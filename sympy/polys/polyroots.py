@@ -466,8 +466,8 @@ def root_factors(f, *gens, **args):
             factors, N = factors + [Poly(x-r, x)]*n, N + n
 
         if N < F.degree():
-            g = reduce(lambda p,q: p*q, factors)
-            factors.append(f.exquo(g))
+            G = reduce(lambda p,q: p*q, factors)
+            factors.append(F.exquo(G))
 
     if not isinstance(f, Poly):
         return [ f.as_basic() for f in factors ]
