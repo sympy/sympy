@@ -214,8 +214,11 @@ def test__init_poly_from_poly():
 
     assert _init_poly_from_poly(h, y, x) == (DMP([[ZZ(1)],[ZZ(1),ZZ(0)]], ZZ), (y, x))
     assert _init_poly_from_poly(h, y, x, domain=ZZ) == (DMP([[ZZ(1)],[ZZ(1),ZZ(0)]], ZZ), (y, x))
-    assert _init_poly_from_poly(h, y, x, domain=QQ) == (DMP([[QQ(1)],[QQ(1),QQ(0)]], ZZ), (y, x))
+    assert _init_poly_from_poly(h, y, x, domain=QQ) == (DMP([[QQ(1)],[QQ(1),QQ(0)]], QQ), (y, x))
     raises(PolynomialError, "_init_poly_from_poly(h, y, x, modulus=3)")
+
+    assert _init_poly_from_poly(h, x, y, field=True) == (DMP([[QQ(1)],[QQ(1),QQ(0)]], QQ), (x, y))
+    assert _init_poly_from_poly(h, x, y, field=True) == (DMP([[QQ(1)],[QQ(1),QQ(0)]], QQ), (x, y))
 
 def test__init_poly_from_basic():
     assert _init_poly_from_basic(S(0)) == 0

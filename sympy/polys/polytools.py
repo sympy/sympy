@@ -294,13 +294,14 @@ def _init_poly_from_list(list_rep, *gens, **args):
 
 def _init_poly_from_poly(poly_rep, *gens, **args):
     """Initialize a Poly given a Poly instance. """
+    field = args.get('field')
     domain = args.get('domain')
     modulus = args.get('modulus')
     symmetric = args.get('symmetric')
 
     if isinstance(poly_rep.rep, DMP):
         if not gens or poly_rep.gens == gens:
-            if domain is not None or modulus is not None:
+            if field is not None or domain is not None or modulus is not None:
                 rep = poly_rep.rep
             else:
                 return poly_rep
@@ -315,6 +316,8 @@ def _init_poly_from_poly(poly_rep, *gens, **args):
 
         if domain is not None:
             rep = rep.convert(domain)
+        elif field is not None and field:
+            rep = rep.convert(rep.dom.get_field())
 
         if modulus is not None:
             if not rep.lev and rep.dom.is_ZZ:
