@@ -66,7 +66,7 @@ def gf_crt1(M, K):
 
     for m in M:
         E.append(p // m)
-        S.append(K.gcdex(E[-1], m)[0])
+        S.append(K.gcdex(E[-1], m)[0] % m)
 
     return p, E, S
 

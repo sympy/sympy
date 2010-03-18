@@ -42,7 +42,7 @@ def test_gf_crt():
     assert gf_crt(U, M, ZZ) == u
 
     E = [9215, 9405, 9603]
-    S = [-37, 24, 12]
+    S = [62, 24, 12]
 
     assert gf_crt1(M, ZZ) == (p, E, S)
     assert gf_crt2(U, M, p, E, S, ZZ) == u
