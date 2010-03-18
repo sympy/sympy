@@ -3,7 +3,7 @@
 from sympy.polys.densebasic import (
     dup_LC, dmp_LC, dup_normal, dmp_normal,
     dup_from_raw_dict, dmp_from_dict,
-    dmp_swap, dmp_one_p,
+    dmp_convert, dmp_swap, dmp_one_p,
 )
 
 from sympy.polys.densearith import (
@@ -148,14 +148,16 @@ def test_dmp_integrate():
         [[QQ(1,60)],[QQ(1,12)],[QQ(1,2)],[],[],[]]
 
 def test_dmp_integrate_in():
-    assert dmp_integrate_in(f_6, 2, 1, 3, QQ) == \
-        dmp_swap(dmp_integrate(dmp_swap(f_6, 0, 1, 3, QQ), 2, 3, QQ), 0, 1, 3, QQ)
-    assert dmp_integrate_in(f_6, 3, 1, 3, QQ) == \
-        dmp_swap(dmp_integrate(dmp_swap(f_6, 0, 1, 3, QQ), 3, 3, QQ), 0, 1, 3, QQ)
-    assert dmp_integrate_in(f_6, 2, 2, 3, QQ) == \
-        dmp_swap(dmp_integrate(dmp_swap(f_6, 0, 2, 3, QQ), 2, 3, QQ), 0, 2, 3, QQ)
-    assert dmp_integrate_in(f_6, 3, 2, 3, QQ) == \
-        dmp_swap(dmp_integrate(dmp_swap(f_6, 0, 2, 3, QQ), 3, 3, QQ), 0, 2, 3, QQ)
+    f = dmp_convert(f_6, 3, ZZ, QQ)
+
+    assert dmp_integrate_in(f, 2, 1, 3, QQ) == \
+        dmp_swap(dmp_integrate(dmp_swap(f, 0, 1, 3, QQ), 2, 3, QQ), 0, 1, 3, QQ)
+    assert dmp_integrate_in(f, 3, 1, 3, QQ) == \
+        dmp_swap(dmp_integrate(dmp_swap(f, 0, 1, 3, QQ), 3, 3, QQ), 0, 1, 3, QQ)
+    assert dmp_integrate_in(f, 2, 2, 3, QQ) == \
+        dmp_swap(dmp_integrate(dmp_swap(f, 0, 2, 3, QQ), 2, 3, QQ), 0, 2, 3, QQ)
+    assert dmp_integrate_in(f, 3, 2, 3, QQ) == \
+        dmp_swap(dmp_integrate(dmp_swap(f, 0, 2, 3, QQ), 3, 3, QQ), 0, 2, 3, QQ)
 
 def test_dup_diff():
     assert dup_diff([], 1, ZZ) == []
