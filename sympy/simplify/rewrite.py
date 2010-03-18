@@ -67,7 +67,7 @@ def apart(f, z=None, **args):
 
     q = Poly(q, z)
 
-    for d, n in q.sqf_list(all=True, include=True):
+    for d, n in q.sqf_list_include(all=True):
         b = d.as_basic()
         U += [ u.diff(z, n-1) ]
 
