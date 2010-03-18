@@ -82,10 +82,10 @@ want to be mentioned here, so see our repository history for a full list).
 #. Florian Mickler: reimplementation of convex_hull, several geometry module fixes
 #. Nicolas Pourcelot: Infinity comparison fixes, latex fixes
 #. Ben Goodrich: Matrix.jacobian() function improvements and fixes
-#. Toon Verstraelen: code generation module
+#. Toon Verstraelen: code generation module, latex printing improvements
 #. Ronan Lamy: test coverage script; limit, expansion and other fixes and improvements; cleanup
 #. James Abbatiello: fixes tests on windows
-#. Ryan Krauss: fixes could_extract_minus_sign() and latex fixes
+#. Ryan Krauss: fixes could_extract_minus_sign(), latex fixes and improvements
 #. Bill Flynn: substitution fixes
 #. Jorn Baayen: improvements to piecewise functions and latex printing, bug fixes
 #. Eh Tan: improve trigonometric simplification
