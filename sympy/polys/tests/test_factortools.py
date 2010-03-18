@@ -33,6 +33,7 @@ from sympy.polys.factortools import (
     dup_zz_factor, dup_zz_factor_sqf, dmp_zz_factor,
     dup_ext_factor, dmp_ext_factor,
     dup_factor_list, dmp_factor_list,
+    dup_factor_list_include, dmp_factor_list_include,
 )
 
 from sympy.polys.specialpolys import (
@@ -535,21 +536,21 @@ def test_dup_factor_list():
     assert dup_factor_list([], ZZ['y']) == (DMP([],ZZ), [])
     assert dup_factor_list([], QQ['y']) == (DMP([],QQ), [])
 
-    assert dup_factor_list([], ZZ, include=True) == [([], 1)]
+    assert dup_factor_list_include([], ZZ) == [([], 1)]
 
     assert dup_factor_list([ZZ(7)], ZZ) == (ZZ(7), [])
     assert dup_factor_list([QQ(1,7)], QQ) == (QQ(1,7), [])
     assert dup_factor_list([DMP([ZZ(7)],ZZ)], ZZ['y']) == (DMP([ZZ(7)],ZZ), [])
     assert dup_factor_list([DMP([QQ(1,7)],QQ)], QQ['y']) == (DMP([QQ(1,7)],QQ), [])
 
-    assert dup_factor_list([ZZ(7)], ZZ, include=True) == [([ZZ(7)], 1)]
+    assert dup_factor_list_include([ZZ(7)], ZZ) == [([ZZ(7)], 1)]
 
     assert dup_factor_list([ZZ(1),ZZ(2),ZZ(1)], ZZ) == \
         (ZZ(1), [([ZZ(1), ZZ(1)], 2)])
     assert dup_factor_list([QQ(1,2),QQ(1),QQ(1,2)], QQ) == \
         (QQ(1,2), [([QQ(1),QQ(1)], 2)])
 
-    assert dup_factor_list([ZZ(1),ZZ(2),ZZ(1)], ZZ, include=True) == \
+    assert dup_factor_list_include([ZZ(1),ZZ(2),ZZ(1)], ZZ) == \
         [([ZZ(1), ZZ(1)], 2)]
 
     assert dup_factor_list([RR(1.0),RR(2.0),RR(1.0)], RR) == \
@@ -579,14 +580,14 @@ def test_dmp_factor_list():
     assert dmp_factor_list([[]], 1, ZZ['y']) == (DMP([],ZZ), [])
     assert dmp_factor_list([[]], 1, QQ['y']) == (DMP([],QQ), [])
 
-    assert dmp_factor_list([[]], 1, ZZ, include=True) == [([[]], 1)]
+    assert dmp_factor_list_include([[]], 1, ZZ) == [([[]], 1)]
 
     assert dmp_factor_list([[ZZ(7)]], 1, ZZ) == (ZZ(7), [])
     assert dmp_factor_list([[QQ(1,7)]], 1, QQ) == (QQ(1,7), [])
     assert dmp_factor_list([[DMP([ZZ(7)],ZZ)]], 1, ZZ['y']) == (DMP([ZZ(7)],ZZ), [])
     assert dmp_factor_list([[DMP([QQ(1,7)],QQ)]], 1, QQ['y']) == (DMP([QQ(1,7)],QQ), [])
 
-    assert dmp_factor_list([[ZZ(7)]], 1, ZZ, include=True) == [([[ZZ(7)]], 1)]
+    assert dmp_factor_list_include([[ZZ(7)]], 1, ZZ) == [([[ZZ(7)]], 1)]
 
     f, g = [ZZ(1),ZZ(2),ZZ(1)], [ZZ(1),ZZ(1)]
 
@@ -613,7 +614,7 @@ def test_dmp_factor_list():
                  ([[ZZ(1),ZZ(0)]], 1),
                  ([[ZZ(1)],[ZZ(1),ZZ(0)]], 1)])
 
-    assert dmp_factor_list(f, 1, ZZ, include=True) == \
+    assert dmp_factor_list_include(f, 1, ZZ) == \
         [([[ZZ(4)],[]], 1),
          ([[ZZ(1),ZZ(0)]], 1),
          ([[ZZ(1)],[ZZ(1),ZZ(0)]], 1)]

@@ -1470,6 +1470,7 @@ def test_sqf():
     assert sqf_list(f, polys=True) == (1, [(G, 1), (H, 2)])
     assert sqf_list(F, polys=False) == (1, [(g, 1), (h, 2)])
 
+    assert F.sqf_list_include() == [(G, 1), (H, 2)]
     assert sqf_list(f, include=True) == [(g, 1), (h, 2)]
 
     raises(GeneratorsNeeded, "sqf_part(4)")
@@ -1513,6 +1514,7 @@ def test_factor():
     assert factor_list(f, polys=True) == (1, [(U, 1), (V, 2), (W, 1)])
     assert factor_list(F, polys=False) == (1, [(u, 1), (v, 2), (w, 1)])
 
+    assert F.factor_list_include() == [(U, 1), (V, 2), (W, 1)]
     assert factor_list(f, include=True) == [(u, 1), (v, 2), (w, 1)]
 
     raises(GeneratorsNeeded, "factor_list(4)")
