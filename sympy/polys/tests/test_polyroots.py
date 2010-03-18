@@ -254,6 +254,9 @@ def test_root_factors():
     assert root_factors(Poly(x**4-1, x), filter='Z') == \
         [Poly(x-1, x), Poly(x+1, x), Poly(x**2+1, x)]
 
+    assert root_factors(8*x**2 + 12*x**4 + 6*x**6 + x**8, x, filter='Q') == \
+        [x, x, x**6 + 6*x**4 + 12*x**2 + 8]
+
 def test_RootsOf():
     f = Poly((x-4)**4, x)
 
