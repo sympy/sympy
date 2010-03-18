@@ -402,7 +402,7 @@ def dup_zz_cyclotomic_factor(f, K):
         return H
 
 @cythonized("n")
-def dup_zz_factor_sqf(f, K, **args):
+def dup_zz_factor_sqf(f, K):
     """Factor square-free (non-primitive) polyomials in `Z[x]`. """
     cont, g = dup_primitive(f, K)
 
@@ -1004,7 +1004,7 @@ def dup_ext_factor(f, K):
     f, F = dup_sqf_part(f, K), f
     s, g, r = dup_sqf_norm(f, K)
 
-    factors = dup_factor_list(r, K.dom, include=True)
+    factors = dup_factor_list_include(r, K.dom)
 
     if len(factors) == 1:
         return lc, [(f, n//dup_degree(f))]
@@ -1036,7 +1036,7 @@ def dmp_ext_factor(f, u, K):
     f, F = dmp_sqf_part(f, u, K), f
     s, g, r = dmp_sqf_norm(f, u, K)
 
-    factors = dmp_factor_list(r, u, K.dom, include=True)
+    factors = dmp_factor_list_include(r, u, K.dom)
 
     if len(factors) == 1:
         coeff, factors = lc, [f]
@@ -1052,7 +1052,7 @@ def dmp_ext_factor(f, u, K):
     return lc, dmp_trial_division(F, factors, u, K)
 
 @cythonized("i,k,u")
-def dup_factor_list(f, K0, **args):
+def dup_factor_list(f, K0):
     """Factor polynomials into irreducibles in `K[x]`. """
     if not K0.has_CharacteristicZero: # pragma: no cover
         raise DomainError('only characteristic zero allowed')
@@ -1075,11 +1075,11 @@ def dup_factor_list(f, K0, **args):
             K = K0
 
         if K.is_ZZ:
-            coeff, factors = dup_zz_factor(f, K, **args)
+            coeff, factors = dup_zz_factor(f, K)
         elif K.is_Poly:
             f, u = dmp_inject(f, 0, K)
 
-            coeff, factors = dmp_factor_list(f, u, K.dom, **args)
+            coeff, factors = dmp_factor_list(f, u, K.dom)
 
             for i, (f, k) in enumerate(factors):
                 factors[i] = (dmp_eject(f, u, K), k)
@@ -1103,14 +1103,17 @@ def dup_factor_list(f, K0, **args):
 
             coeff = K0_inexact.convert(coeff, K0)
 
-    if not args.get('include', False):
-        return coeff, factors
+    return coeff, factors
+
+def dup_factor_list_include(f, K):
+    """Factor polynomials into irreducibles in `K[x]`. """
+    coeff, factors = dup_factor_list(f, K)
+
+    if not factors:
+        return [(dup_strip([coeff]), 1)]
     else:
-        if not factors:
-            return [(dup_strip([coeff]), 1)]
-        else:
-            g = dup_mul_ground(factors[0][0], coeff, K)
-            return [(g, factors[0][1])] + factors[1:]
+        g = dup_mul_ground(factors[0][0], coeff, K)
+        return [(g, factors[0][1])] + factors[1:]
 
 @cythonized("u,v,i,k")
 def _dmp_inner_factor(f, u, K):
@@ -1133,10 +1136,10 @@ def _dmp_inner_factor(f, u, K):
     return coeff, factors
 
 @cythonized("u,v,i,k")
-def dmp_factor_list(f, u, K0, **args):
+def dmp_factor_list(f, u, K0):
     """Factor polynomials into irreducibles in `K[X]`. """
     if not u:
-        return dup_factor_list(f, K0, **args)
+        return dup_factor_list(f, K0)
 
     if not K0.has_CharacteristicZero: # pragma: no cover
         raise DomainError('only characteristic zero allowed')
@@ -1163,7 +1166,7 @@ def dmp_factor_list(f, u, K0, **args):
         elif K.is_Poly:
             f, v = dmp_inject(f, u, K)
 
-            coeff, factors = dmp_factor_list(f, v, K.dom, **args)
+            coeff, factors = dmp_factor_list(f, v, K.dom)
 
             for i, (f, k) in enumerate(factors):
                 factors[i] = (dmp_eject(f, v, K), k)
@@ -1187,12 +1190,19 @@ def dmp_factor_list(f, u, K0, **args):
 
             coeff = K0_inexact.convert(coeff, K0)
 
-    if not args.get('include', False):
-        return coeff, factors
+    return coeff, factors
+
+@cythonized("u")
+def dmp_factor_list_include(f, u, K):
+    """Factor polynomials into irreducibles in `K[X]`. """
+    if not u:
+        return dup_factor_list_include(f, K)
+
+    coeff, factors = dmp_factor_list(f, u, K)
+
+    if not factors:
+        return [(dmp_ground(coeff, u), 1)]
     else:
-        if not factors:
-            return [(dmp_ground(coeff, u), 1)]
-        else:
-            g = dmp_mul_ground(factors[0][0], coeff, u, K)
-            return [(g, factors[0][1])] + factors[1:]
+        g = dmp_mul_ground(factors[0][0], coeff, u, K)
+        return [(g, factors[0][1])] + factors[1:]
 

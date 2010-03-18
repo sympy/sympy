@@ -1364,33 +1364,45 @@ class Poly(Basic):
 
         return f.per(result)
 
-    def _perify_factors(f, factors):
-        """Apply `per` functions to `(f_i, k)` factors. """
-        if type(factors) is tuple:
-            return f.rep.dom.to_sympy(factors[0]), \
-                [ (f.per(g), k) for g, k in factors[1] ]
-        else:
-            return [ (f.per(g), k) for g, k in factors ]
-
-    def sqf_list(f, **args):
+    def sqf_list(f, all=False):
         """Returns a list of square-free factors of `f`. """
         try:
-            result = f.rep.sqf_list(**args)
+            coeff, factors = f.rep.sqf_list(all)
         except AttributeError: # pragma: no cover
             raise OperationNotSupported(f, 'sqf_list')
 
-        return f._perify_factors(result)
+        return f.rep.dom.to_sympy(coeff), [ (f.per(g), k) for g, k in factors ]
 
-    def factor_list(f, **args):
+    def sqf_list_include(f, all=False):
+        """Returns a list of square-free factors of `f`. """
+        try:
+            factors = f.rep.sqf_list_include(all)
+        except AttributeError: # pragma: no cover
+            raise OperationNotSupported(f, 'sqf_list_include')
+
+        return [ (f.per(g), k) for g, k in factors ]
+
+    def factor_list(f):
         """Returns a list of irreducible factors of `f`. """
         try:
-            result = f.rep.factor_list(**args)
+            coeff, factors = f.rep.factor_list()
         except DomainError:
             return S.One, [(f, 1)]
         except AttributeError: # pragma: no cover
             raise OperationNotSupported(f, 'factor_list')
 
-        return f._perify_factors(result)
+        return f.rep.dom.to_sympy(coeff), [ (f.per(g), k) for g, k in factors ]
+
+    def factor_list_include(f):
+        """Returns a list of irreducible factors of `f`. """
+        try:
+            factors = f.rep.factor_list_include()
+        except DomainError:
+            return [(f, 1)]
+        except AttributeError: # pragma: no cover
+            raise OperationNotSupported(f, 'factor_list_include')
+
+        return [ (f.per(g), k) for g, k in factors ]
 
     def intervals(f, **args):
         """Compute isolating intervals for roots of `f`. """
@@ -1686,13 +1698,6 @@ def _update_args(args, key, value):
         args[key] = value
 
     return args
-
-def _basify_factors(factors):
-    """Convert `(f_i, k)` factors to Basic expressions. """
-    if type(factors) is tuple:
-        return factors[0], [ (g.as_basic(), k) for g, k in factors[1] ]
-    else:
-        return [ (g.as_basic(), k) for g, k in factors ]
 
 def _should_return_basic(*polys, **args):
     """Figure out if results should be returned as basic. """
@@ -2161,12 +2166,22 @@ def sqf_list(f, *gens, **args):
     if not F.is_Poly:
         raise GeneratorsNeeded("can't compute square-free decomposition of %s without generators" % f)
 
-    result = F.sqf_list(**args)
+    all = args.get('all', False)
 
-    if _should_return_basic(f, **args):
-        return _basify_factors(result)
+    if not args.get('include', False):
+        coeff, factors = result = F.sqf_list(all)
+
+        if _should_return_basic(f, **args):
+            return coeff, [ (g.as_basic(), k) for g, k in factors ]
+        else:
+            return coeff, factors
     else:
-        return result
+        factors = F.sqf_list_include()
+
+        if _should_return_basic(f, **args):
+            return [ (g.as_basic(), k) for g, k in factors ]
+        else:
+            return factors
 
 def sqf(f, *gens, **args):
     """Returns square-free decomposition of `f`. """
@@ -2180,7 +2195,7 @@ def sqf(f, *gens, **args):
         if not F.is_Poly:
             return (S.One, F)
 
-        (coeff, factors), result = F.sqf_list(**args), S.One
+        (coeff, factors), result = F.sqf_list(), S.One
 
         for g, k in factors:
             result *= g.as_basic()**k
@@ -2214,12 +2229,20 @@ def factor_list(f, *gens, **args):
     if not F.is_Poly:
         raise GeneratorsNeeded("can't compute factorization of %s without generators" % f)
 
-    result = F.factor_list(**args)
+    if not args.get('include', False):
+        coeff, factors = result = F.factor_list()
 
-    if _should_return_basic(f, **args):
-        return _basify_factors(result)
+        if _should_return_basic(f, **args):
+            return coeff, [ (g.as_basic(), k) for g, k in factors ]
+        else:
+            return coeff, factors
     else:
-        return result
+        factors = F.factor_list_include()
+
+        if _should_return_basic(f, **args):
+            return [ (g.as_basic(), k) for g, k in factors ]
+        else:
+            return factors
 
 def factor(f, *gens, **args):
     """Returns factorization into irreducibles of `f`. """
@@ -2233,7 +2256,7 @@ def factor(f, *gens, **args):
         if not F.is_Poly:
             return (S.One, F)
 
-        (coeff, factors), result = F.factor_list(**args), S.One
+        (coeff, factors), result = F.factor_list(), S.One
 
         for g, k in factors:
             result *= g.as_basic()**k

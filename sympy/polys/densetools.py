@@ -1659,7 +1659,7 @@ def dmp_sqf_part(f, u, K):
         return dmp_ground_primitive(sqf, u, K)[1]
 
 @cythonized("i")
-def dup_sqf_list(f, K, **args):
+def dup_sqf_list(f, K, all=False):
     """Returns square-free decomposition of a polynomial in `K[x]`. """
     if K.has_Field or not K.is_Exact:
         coeff = dup_LC(f, K)
@@ -1672,17 +1672,12 @@ def dup_sqf_list(f, K, **args):
             coeff = -coeff
 
     if dup_degree(f) <= 0:
-        if args.get('include', False):
-            return f
-        else:
-            return coeff, []
+        return coeff, []
 
     result, i = [], 1
 
     h = dup_diff(f, 1, K)
     g, p, q = dup_inner_gcd(f, h, K)
-
-    all = args.get('all', False)
 
     while True:
         d = dup_diff(p, 1, K)
@@ -1699,19 +1694,23 @@ def dup_sqf_list(f, K, **args):
 
         i += 1
 
-    if not args.get('include', False):
-        return coeff, result
-    else:
-        (g, i), rest = result[0], result[1:]
-        g = dup_mul_ground(g, coeff, K)
+    return coeff, result
 
-        return [(g, i)] + rest
+def dup_sqf_list_include(f, K, all=False):
+    """Returns square-free decomposition of a polynomial in `K[x]`. """
+    coeff, factors = dup_sqf_list(f, K, all)
+
+    if not factors:
+        return [(dup_strip([coeff]), 1)]
+    else:
+        g = dup_mul_ground(factors[0][0], coeff, K)
+        return [(g, factors[0][1])] + factors[1:]
 
 @cythonized("u,i")
-def dmp_sqf_list(f, u, K, **args):
+def dmp_sqf_list(f, u, K, all=False):
     """Returns square-free decomposition of a polynomial in `K[X]`. """
     if not u:
-        return dup_sqf_list(f, K, **args)
+        return dup_sqf_list(f, K, all)
 
     if K.has_Field or not K.is_Exact:
         coeff = dmp_ground_LC(f, u, K)
@@ -1724,17 +1723,12 @@ def dmp_sqf_list(f, u, K, **args):
             coeff = -coeff
 
     if dmp_degree(f, u) <= 0:
-        if args.get('include', False):
-            return f
-        else:
-            return coeff, []
+        return coeff, []
 
     result, i = [], 1
 
     h = dmp_diff(f, 1, u, K)
     g, p, q = dmp_inner_gcd(f, h, u, K)
-
-    all = args.get('all', False)
 
     while True:
         d = dmp_diff(p, 1, u, K)
@@ -1751,13 +1745,21 @@ def dmp_sqf_list(f, u, K, **args):
 
         i += 1
 
-    if not args.get('include', False):
-        return coeff, result
-    else:
-        (g, i), rest = result[0], result[1:]
-        g = dup_mul_ground(g, coeff, K)
+    return coeff, result
 
-        return [(g, i)] + rest
+@cythonized("u")
+def dmp_sqf_list_include(f, u, K, all=False):
+    """Returns square-free decomposition of a polynomial in `K[x]`. """
+    if not u:
+        return dup_sqf_list_include(f, K, all)
+
+    coeff, factors = dmp_sqf_list(f, u, K, all)
+
+    if not factors:
+        return [(dmp_ground(coeff, u), 1)]
+    else:
+        g = dmp_mul_ground(factors[0][0], coeff, u, K)
+        return [(g, factors[0][1])] + factors[1:]
 
 def dup_extract(f, g, K):
     """Extracts common content from a pair of polynomials in `K[x]`. """

@@ -42,7 +42,8 @@ from sympy.polys.densetools import (
     dmp_rr_ground_primitive, dmp_ff_ground_primitive, dmp_ground_primitive,
     dup_sqf_p, dmp_sqf_p,
     dup_sqf_part, dmp_sqf_part,
-    dup_sqf_list, dmp_sqf_list,
+    dup_sqf_list, dup_sqf_list_include,
+    dmp_sqf_list, dmp_sqf_list_include,
     dup_extract, dmp_ground_extract,
     dup_mirror, dup_scale, dup_taylor,
     dup_transform,
@@ -965,11 +966,22 @@ def test_dmp_sqf():
 
     assert dmp_sqf_part(f_5, 2, ZZ) == [[[1]], [[1], [-1, 0]]]
 
-    assert dmp_sqf_list([-1,1,0,0,1,-1], 0, ZZ) == \
-        (-1, [([1,1,1,1], 1), ([1,-1], 2)])
+    assert dup_sqf_list([], ZZ) == (ZZ(0), [])
+    assert dup_sqf_list_include([], ZZ) == [([], 1)]
 
-    assert dmp_sqf_list([[-1],[1],[],[],[1],[-1]], 1, ZZ) == \
+    f = [-1,1,0,0,1,-1]
+
+    assert dmp_sqf_list(f, 0, ZZ) == \
+        (-1, [([1,1,1,1], 1), ([1,-1], 2)])
+    assert dmp_sqf_list_include(f, 0, ZZ) == \
+        [([-1,-1,-1,-1], 1), ([1,-1], 2)]
+
+    f = [[-1],[1],[],[],[1],[-1]]
+
+    assert dmp_sqf_list(f, 1, ZZ) == \
         (-1, [([[1],[1],[1],[1]], 1), ([[1],[-1]], 2)])
+    assert dmp_sqf_list_include(f, 1, ZZ) == \
+        [([[-1],[-1],[-1],[-1]], 1), ([[1],[-1]], 2)]
 
 def test_dup_extract():
     f = dup_normal([2930944, 0, 2198208, 0, 549552, 0, 45796], ZZ)

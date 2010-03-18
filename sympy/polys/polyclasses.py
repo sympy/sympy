@@ -66,10 +66,11 @@ from sympy.polys.densetools import (
     dup_content, dmp_ground_content,
     dup_primitive, dmp_ground_primitive,
     dup_monic, dmp_ground_monic,
+    dup_sqf_p, dmp_sqf_p,
     dup_sqf_norm, dmp_sqf_norm,
     dup_sqf_part, dmp_sqf_part,
-    dup_sqf_list, dmp_sqf_list,
-    dup_sqf_p, dmp_sqf_p,
+    dup_sqf_list, dup_sqf_list_include,
+    dmp_sqf_list, dmp_sqf_list_include,
     dup_compose, dmp_compose,
     dup_decompose,
     dup_sturm,
@@ -78,7 +79,8 @@ from sympy.polys.densetools import (
 )
 
 from sympy.polys.factortools import (
-    dup_factor_list, dmp_factor_list,
+    dup_factor_list, dup_factor_list_include,
+    dmp_factor_list, dmp_factor_list_include,
 )
 
 from sympy.polys.galoistools import (
@@ -914,23 +916,25 @@ class DUP(object):
         """Computes square-free part of `f`. """
         return f.per(dup_sqf_part(f.rep, f.dom))
 
-    def sqf_list(f, **args):
+    def sqf_list(f, all=False):
         """Returns a list of square-free factors of `f`. """
-        result = dup_sqf_list(f.rep, f.dom, **args)
+        coeff, factors = dup_sqf_list(f.rep, f.dom, all)
+        return coeff, [ (f.per(g), k) for g, k in factors ]
 
-        if type(result) is tuple:
-            return result[0], [ (f.per(g), k) for g, k in result[1] ]
-        else:
-            return [ (f.per(g), k) for g, k in result ]
+    def sqf_list_include(f, all=False):
+        """Returns a list of square-free factors of `f`. """
+        factors = dup_sqf_list_include(f.rep, f.dom, all)
+        return [ (f.per(g), k) for g, k in factors ]
 
-    def factor_list(f, **args):
+    def factor_list(f):
         """Returns a list of irreducible factors of `f`. """
-        result = dup_factor_list(f.rep, f.dom, **args)
+        coeff, factors = dup_factor_list(f.rep, f.dom)
+        return coeff, [ (f.per(g), k) for g, k in factors ]
 
-        if type(result) is tuple:
-            return result[0], [ (f.per(g), k) for g, k in result[1] ]
-        else:
-            return [ (f.per(g), k) for g, k in result ]
+    def factor_list_include(f):
+        """Returns a list of irreducible factors of `f`. """
+        factors = dup_factor_list_include(f.rep, f.dom)
+        return [ (f.per(g), k) for g, k in factors ]
 
     @property
     def is_zero(f):
@@ -1483,23 +1487,25 @@ class DMP(object):
         """Computes square-free part of `f`. """
         return f.per(dmp_sqf_part(f.rep, f.lev, f.dom))
 
-    def sqf_list(f, **args):
-        """Returns square-free decomposition of `f`. """
-        result = dmp_sqf_list(f.rep, f.lev, f.dom, **args)
+    def sqf_list(f, all=False):
+        """Returns a list of square-free factors of `f`. """
+        coeff, factors = dmp_sqf_list(f.rep, f.lev, f.dom, all)
+        return coeff, [ (f.per(g), k) for g, k in factors ]
 
-        if type(result) is tuple:
-            return result[0], [ (f.per(g), k) for g, k in result[1] ]
-        else:
-            return [ (f.per(g), k) for g, k in result ]
+    def sqf_list_include(f, all=False):
+        """Returns a list of square-free factors of `f`. """
+        factors = dmp_sqf_list_include(f.rep, f.lev, f.dom, all)
+        return [ (f.per(g), k) for g, k in factors ]
 
-    def factor_list(f, **args):
+    def factor_list(f):
         """Returns a list of irreducible factors of `f`. """
-        result = dmp_factor_list(f.rep, f.lev, f.dom, **args)
+        coeff, factors = dmp_factor_list(f.rep, f.lev, f.dom)
+        return coeff, [ (f.per(g), k) for g, k in factors ]
 
-        if type(result) is tuple:
-            return result[0], [ (f.per(g), k) for g, k in result[1] ]
-        else:
-            return [ (f.per(g), k) for g, k in result ]
+    def factor_list_include(f):
+        """Returns a list of irreducible factors of `f`. """
+        factors = dmp_factor_list_include(f.rep, f.lev, f.dom)
+        return [ (f.per(g), k) for g, k in factors ]
 
     def intervals(f, **args):
         """Compute isolating intervals for roots of `f`. """
