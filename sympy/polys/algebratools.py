@@ -1256,7 +1256,7 @@ class RR_sympy(RealAlgebra):
 
     def from_QQ_gmpy(K1, a, K0):
         """Convert a GMPY `mpq` object to `dtype`. """
-        return sympy_mpf(int(a.numer())) / int(a.denom)
+        return sympy_mpf(int(a.numer())) / int(a.denom())
 
     def from_RR_sympy(K1, a, K0):
         """Convert a SymPy `Real` object to `dtype`. """
@@ -1315,7 +1315,7 @@ class RR_mpmath(RealAlgebra):
 
     def from_QQ_gmpy(K1, a, K0):
         """Convert a GMPY `mpq` object to `dtype`. """
-        return mpmath_mpf(int(a.numer())) / int(a.denom)
+        return mpmath_mpf(int(a.numer())) / int(a.denom())
 
     def from_RR_sympy(K1, a, K0):
         """Convert a SymPy `Real` object to `dtype`. """
