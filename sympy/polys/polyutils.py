@@ -24,7 +24,7 @@ def _sort_gens(gens, **args):
     gens_order = {}
 
     if sort is not None:
-        for i, elt in enumerate(sort.split('<')):
+        for i, elt in enumerate(sort.split('>')):
             gens_order[elt.strip()] = i+1
 
     if wrt is not None:
