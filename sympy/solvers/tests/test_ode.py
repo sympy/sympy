@@ -1,5 +1,5 @@
 from sympy import Function, dsolve, Symbol, sin, cos, sinh, acos, tan, cosh, \
-        I, exp, log, simplify, normal, together, ratsimp, powsimp, \
+        I, exp, log, simplify, normal, together, powsimp, \
         fraction, radsimp, Eq, sqrt, pi, erf,  diff, Rational, asinh, trigsimp, \
         S, RootOf, Poly, Integral, atan, Equality, solve, O, LambertW, Dummy
 from sympy.abc import x, y, z
