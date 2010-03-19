@@ -10,33 +10,29 @@ from sympy import Symbol, symbols, together, hypersimp, factorial, binomial, \
 from sympy.utilities import all
 from sympy.utilities.pytest import XFAIL
 
+from sympy.abc import x, y, z, t, a, b, c, d, e
+
 def test_ratsimp():
-    x = Symbol("x")
-    y = Symbol("y")
-    e = 1/x+1/y
-    assert e != (x+y)/(x*y)
-    assert ratsimp(e) == (x+y)/(x*y)
+    f, g = 1/x + 1/y, (x + y)/(x*y)
 
-    e = 1/(1+1/x)
-    assert ratsimp(e) == x/(x+1)
-    assert ratsimp(exp(e)) == exp(x/(x+1))
+    assert f != g and ratsimp(f) == g
 
-def test_ratsimp2():
-    x = Symbol("x")
-    e = 1/(1+1/x)
-    assert (x+1)*ratsimp(e)/x == 1
+    f, g = 1/(1 + 1/x), 1 - 1/(x + 1)
 
-@XFAIL
-def test_ratsimp_X1():
-    e = -x-y-(x+y)**(-1)*y**2+(x+y)**(-1)*x**2
-    assert e != -2*y
-    assert ratsimp(e) == -2*y
+    assert f != g and ratsimp(f) == g
 
-@XFAIL
-def test_ratsimp_X2():
-    e = x/(x+y)+y/(x+y)
-    assert e != 1
-    assert ratsimp(e) == 1
+    f, g = x/(x + y) + y/(x + y), 1
+
+    assert f != g and ratsimp(f) == g
+
+    f, g = -x - y - y**2/(x + y) + x**2/(x + y), -2*y
+
+    assert f != g and ratsimp(f) == g
+
+    f = (a*c*x*y + a*c*z - b*d*x*y - b*d*z - b*t*x*y - b*t*x - b*t*z + e*x)/(x*y + z)
+    g = a*c - b*d - b*t + (-b*t*x + e*x)/(x*y + z)
+
+    assert f != g and ratsimp(f) == g
 
 def test_trigsimp1():
     x, y = symbols('x y')

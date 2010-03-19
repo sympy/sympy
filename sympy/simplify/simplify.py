@@ -12,7 +12,7 @@ from sympy.functions import gamma, exp, sqrt, log
 
 from sympy.simplify.cse_main import cse
 
-from sympy.polys import Poly, cancel, factor
+from sympy.polys import Poly, reduced, cancel, factor, GeneratorsNeeded
 
 import sympy.mpmath as mpmath
 
@@ -807,58 +807,22 @@ def _separatevars_dict(expr, *symbols):
     return ret
 
 def ratsimp(expr):
-    """
-    == Usage ==
-        ratsimp(expr) -> joins two rational expressions and returns the simplest form
-
-    == Notes ==
-        Currently can simplify only simple expressions, for this to be really useful
-        multivariate polynomial algorithms are needed
+    """Put an expression over a common denominator, cancel and reduce.
 
     == Examples ==
         >>> from sympy import ratsimp
         >>> from sympy.abc import x, y
         >>> ratsimp(1/x + 1/y)
         (x + y)/(x*y)
-
     """
-    expr = sympify(expr)
-    if expr.is_Pow:
-        return Pow(ratsimp(expr.base), ratsimp(expr.exp))
-    elif expr.is_Mul:
-        res = []
-        for x in expr.args:
-            res.append(ratsimp(x))
-        return Mul(*res)
-    elif expr.is_Function:
-        return expr.func(*[ratsimp(t) for t in expr.args])
 
-    #elif expr.is_Function:
-    #    return type(expr)(ratsimp(expr[0]))
-    elif not expr.is_Add:
-        return expr
+    f, g = cancel(expr).as_numer_denom()
+    try:
+        Q, r = reduced(f, [g], field=True, expand=False)
+    except GeneratorsNeeded:
+        return f/g
 
-    def get_num_denum(x):
-        """Matches x = a/b and returns a/b."""
-        a,b = map(Wild, 'ab')
-        r = x.match(a/b)
-        if r is not None and len(r) == 2:
-            return r[a],r[b]
-        return x, S.One
-
-    x, y = expr.as_two_terms()
-
-    a,b = get_num_denum(ratsimp(x))
-    c,d = get_num_denum(ratsimp(y))
-
-    num = a*d+b*c
-    denum = b*d
-
-    # Check to see if the numerator actually expands to 0
-    if num.expand() == 0:
-        return 0
-
-    return num/denum
+    return Add(*Q) + r/g
 
 def trigsimp(expr, deep=False, recursive=False):
     """
