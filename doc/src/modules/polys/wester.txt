@@ -48,7 +48,7 @@ polynomial::
 
 .. note::
 
-    The content and the primitive part can be computed only in a ring. To
+    The content and the primitive part can be computed only over a ring. To
     simplify coefficients of a polynomial over a field use :func:`monic`.
 
 Univariate GCD, resultant and factorization
@@ -443,6 +443,9 @@ a composition of :func:`together` and :func:`cancel`::
     ───────────────────
      3      2
     x  + 4⋅x  + 5⋅x + 2
+
+Literature
+==========
 
 .. [Wester1999] Michael J. Wester, A Critique of the Mathematical Abilities of
     CA Systems, 1999, `<http://www.math.unm.edu/~wester/cas/book/Wester.pdf>`_
