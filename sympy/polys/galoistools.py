@@ -3,13 +3,10 @@
 from random import uniform
 from math import ceil, sqrt, log
 
-from sympy.polys.polyutils import (
-    _sort_factors
-)
+from sympy.polys.polyutils import _sort_factors
+from sympy.polys.polyconfig import query
 
-from sympy.polys.polyerrors import (
-    ExactQuotientFailed
-)
+from sympy.polys.polyerrors import ExactQuotientFailed
 
 from sympy.utilities import (
     any, all, cythonized
@@ -777,9 +774,9 @@ _irred_methods = {
     'rabin'  : gf_irred_p_rabin,
 }
 
-def gf_irreducible_p(f, p, K, **args):
+def gf_irreducible_p(f, p, K):
     """Test irreducibility of a polynomial `f` in `GF(p)[x]`. """
-    method = args.get('method')
+    method = query('GF_IRRED_METHOD')
 
     if method is not None:
         irred = _irred_methods[method](f, p, K)
@@ -1263,14 +1260,14 @@ _factor_methods = {
     'shoup'      : gf_shoup,      # `p` : large
 }
 
-def gf_factor_sqf(f, p, K, **args):
+def gf_factor_sqf(f, p, K):
     """Factor a square-free polynomial `f` in `GF(p)[x]`. """
     lc, f = gf_monic(f, p, K)
 
     if gf_degree(f) < 1:
         return lc, []
 
-    method = args.get('method')
+    method = query('GF_FACTOR_METHOD')
 
     if method is not None:
         factors = _factor_methods[method](f, p, K)
@@ -1280,7 +1277,7 @@ def gf_factor_sqf(f, p, K, **args):
     return lc, factors
 
 @cythonized("n")
-def gf_factor(f, p, K, **args):
+def gf_factor(f, p, K):
     """Factor (non square-free) polynomials in `GF(p)[x]`.
 
        Given a possibly non square-free polynomial `f` in `GF(p)[x]`, returns
@@ -1315,9 +1312,9 @@ def gf_factor(f, p, K, **args):
        2. Cantor-Zassenhaus - efficient on average input and with "typical" `p`
        3. Shoup-Kaltofen-Gathen - efficient with very large inputs and modulus
 
-       If you want to use a specific factorization method, instead of relying,
-       on the algorithm to choose one for you, specify `method` keyword and
-       set it to one of `berlekamp`, `zassenhaus` or `shoup` values.
+       If you want to use a specific factorization method, instead of the default
+       one, set GF_FACTOR_METHOD with one of `berlekamp`, `zassenhaus` or `shoup`
+       values.
 
        References
        ==========
@@ -1334,7 +1331,7 @@ def gf_factor(f, p, K, **args):
     factors = []
 
     for g, n in gf_sqf_list(f, p, K)[1]:
-        for h in gf_factor_sqf(g, p, K, **args)[1]:
+        for h in gf_factor_sqf(g, p, K)[1]:
             factors.append((h, n))
 
     return lc, _sort_factors(factors)

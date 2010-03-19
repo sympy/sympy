@@ -11,6 +11,9 @@ _default_config = {
     'EEZ_NUMBER_OF_CONFIGS'  : 3,
     'EEZ_NUMBER_OF_TRIES'    : 5,
     'EEZ_MODULUS_STEP'       : 2,
+
+    'GF_IRRED_METHOD'        : 'rabin',
+    'GF_FACTOR_METHOD'       : 'zassenhaus',
 }
 
 _current_config = {}
@@ -24,7 +27,7 @@ def setup(key, value=None):
 
 def query(key):
     """Ask for a value of the given configuration item. """
-    return _current_config[key]
+    return _current_config.get(key, None)
 
 def configure():
     """Initialized configuration of polys module. """
@@ -34,7 +37,10 @@ def configure():
         value = getenv('SYMPY_' + key)
 
         if value is not None:
-            _current_config[key] = value
+            try:
+                _current_config[key] = eval(value)
+            except NameError:
+                _current_config[key] = value
         else:
             _current_config[key] = default
 
