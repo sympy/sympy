@@ -2,7 +2,7 @@ from sympy import S, symbols, Integer, Rational, sqrt, I, solve_poly_system, Pol
 
 from sympy.utilities.pytest import raises
 
-x, y, z = symbols('xyz')
+from sympy.abc import x, y, z
 
 def test_solve_poly_system():
     assert solve_poly_system([x-1], x) == [(S.One,)]
@@ -33,3 +33,12 @@ def test_solve_poly_system():
 
     raises(ValueError, "solve_poly_system([x**3-y**3], x, y)")
 
+def test_solve_poly_system_slow():
+    f_1 = x**2 + y + z - 1
+    f_2 = x + y**2 + z - 1
+    f_3 = x + y + z**2 - 1
+
+    a, b = -sqrt(2) - 1, sqrt(2) - 1
+
+    assert solve_poly_system([f_1, f_2, f_3], x, y, z) == \
+        [(a, a, a), (0, 0, 1), (0, 1, 0), (b, b, b), (1, 0, 0)]
