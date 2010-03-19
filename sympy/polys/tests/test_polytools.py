@@ -339,11 +339,11 @@ def test_Poly__gens():
 
     assert Poly((x-p)*(x-q)).gens == (x, p, q)
 
-    assert Poly((x-p)*(x-q), sort='x < p < q').gens == (x, p, q)
-    assert Poly((x-p)*(x-q), sort='p < x < q').gens == (p, x, q)
-    assert Poly((x-p)*(x-q), sort='p < q < x').gens == (p, q, x)
+    assert Poly((x-p)*(x-q), sort='x > p > q').gens == (x, p, q)
+    assert Poly((x-p)*(x-q), sort='p > x > q').gens == (p, x, q)
+    assert Poly((x-p)*(x-q), sort='p > q > x').gens == (p, q, x)
 
-    assert Poly((x-p)*(x-q), x, p, q, sort='p < q < x').gens == (x, p, q)
+    assert Poly((x-p)*(x-q), x, p, q, sort='p > q > x').gens == (x, p, q)
 
     assert Poly((x-p)*(x-q), wrt='x').gens == (x, p, q)
     assert Poly((x-p)*(x-q), wrt='p').gens == (p, x, q)
@@ -355,8 +355,8 @@ def test_Poly__gens():
 
     assert Poly((x-p)*(x-q), x, p, q, wrt='p').gens == (x, p, q)
 
-    assert Poly((x-p)*(x-q), wrt='p', sort='q < x').gens == (p, q, x)
-    assert Poly((x-p)*(x-q), wrt='q', sort='p < x').gens == (q, p, x)
+    assert Poly((x-p)*(x-q), wrt='p', sort='q > x').gens == (p, q, x)
+    assert Poly((x-p)*(x-q), wrt='q', sort='p > x').gens == (q, p, x)
 
 def test_Poly_unify():
     raises(UnificationFailed, "Poly(x).unify(y)")

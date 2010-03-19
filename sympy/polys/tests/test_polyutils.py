@@ -41,13 +41,13 @@ def test__sort_gens():
     assert _sort_gens([x,p,q], wrt='p') == (p,x,q)
     assert _sort_gens([x,p,q], wrt='q') == (q,x,p)
 
-    assert _sort_gens([x,p,q], sort='x < p < q') == (x, p, q)
-    assert _sort_gens([x,p,q], sort='p < x < q') == (p, x, q)
-    assert _sort_gens([x,p,q], sort='p < q < x') == (p, q, x)
+    assert _sort_gens([x,p,q], sort='x > p > q') == (x, p, q)
+    assert _sort_gens([x,p,q], sort='p > x > q') == (p, x, q)
+    assert _sort_gens([x,p,q], sort='p > q > x') == (p, q, x)
 
-    assert _sort_gens([x,p,q], wrt='x', sort='q < p') == (x, q, p)
-    assert _sort_gens([x,p,q], wrt='p', sort='q < x') == (p, q, x)
-    assert _sort_gens([x,p,q], wrt='q', sort='p < x') == (q, p, x)
+    assert _sort_gens([x,p,q], wrt='x', sort='q > p') == (x, q, p)
+    assert _sort_gens([x,p,q], wrt='p', sort='q > x') == (p, q, x)
+    assert _sort_gens([x,p,q], wrt='q', sort='p > x') == (q, p, x)
 
 def test__unify_gens():
     assert _unify_gens([], []) == ()
