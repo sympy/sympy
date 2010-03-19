@@ -129,11 +129,18 @@ def init_session(session="ipython", pretty_print=True, order=None, use_unicode=N
             py_name = "IPython"
         else:
             py_name = "Python"
-        welcome = "%s console for SymPy %s (Python %s)" % (py_name,
-                sympy_version, py_version)
 
-        if os.getenv('SYMPY_USE_CACHE') == 'no':
-            welcome += ' (cache: off)'
+        from sympy.polys.algebratools import GROUND_TYPES
+
+        info = ['types: %s' % GROUND_TYPES]
+
+        cache = os.getenv('SYMPY_USE_CACHE')
+
+        if cache is not None and cache.lower() == 'no':
+            info.append('cache: off')
+
+        welcome = "%s console for SymPy %s (Python %s) (%s)" % \
+            (py_name, sympy_version, py_version, ', '.join(info))
 
         if message is not None:
             message = welcome + '\n\n' + message

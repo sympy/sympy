@@ -1466,7 +1466,7 @@ def _getenv(key, default=None):
     from os import getenv
     return getenv(key, default)
 
-GROUND_TYPES = _getenv('SYMPY_GROUND_TYPES', 'python').lower()
+GROUND_TYPES = _getenv('SYMPY_GROUND_TYPES', 'gmpy').lower()
 
 if GROUND_TYPES == 'python':  # XXX: needs 2.6 or better (at least for now)
     ZZ = ZZ_python()
@@ -1475,14 +1475,13 @@ if GROUND_TYPES == 'python':  # XXX: needs 2.6 or better (at least for now)
         QQ = QQ_python()
     elif HAS_GMPY:
         QQ = QQ_gmpy()
+        GROUND_TYPES = 'python/gmpy'
     else:
         QQ = QQ_sympy()
-
-    RR = RR_mpmath()
+        GROUND_TYPES = 'python/sympy'
 elif GROUND_TYPES == 'sympy': # XXX: this is *very* slow, guess why ;)
     ZZ = ZZ_sympy()
     QQ = QQ_sympy()
-    RR = RR_sympy()
 elif GROUND_TYPES == 'gmpy':  # XXX: should be fine? sorry, but no, try -Qnew, damn
     if HAS_GMPY:
         ZZ = ZZ_gmpy()
@@ -1492,12 +1491,14 @@ elif GROUND_TYPES == 'gmpy':  # XXX: should be fine? sorry, but no, try -Qnew, d
 
         if HAS_FRACTION:
             QQ = QQ_python()
+            GROUND_TYPES = 'python'
         else:
             QQ = QQ_sympy()
-
-    RR = RR_mpmath()
+            GROUND_TYPES = 'python/sympy'
 else:
     raise ValueError("invalid ground types: %s" % GROUND_TYPES)
+
+RR = RR_mpmath()
 
 from sympy.polys.polyclasses import DMP, DMF, ANP
 
