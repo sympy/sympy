@@ -1077,14 +1077,22 @@ def test_vech():
     assert m_vech.cols == 1
     for i in xrange(3):
         assert m_vech[i] == i + 1
-    m_vech = m.vech(diagonal = False)
+    m_vech = m.vech(diagonal=False)
     assert m_vech[0] == 2
+    x,y = symbols('xy')
+    m = Matrix([ [1, x*(x+y)], [y*x+x**2, 1] ])
+    m_vech = m.vech(diagonal=False)
+    assert m_vech[0] == y*x+x**2
+    x,y = symbols('xy')
+    m = Matrix([ [1, x*(x+y)], [y*x, 1] ])
+    m_vech = m.vech(diagonal=False, check_symmetry=False)
+    assert m_vech[0] == y*x
 
-def test_vech_TypeError():
+def test_vech_errors():
     m = Matrix([ [1,3] ])
     raises(TypeError, 'm.vech()')
     m = Matrix([ [1,3], [2,4] ])
-    raises(TypeError, 'm.vech()')
+    raises(ValueError, 'm.vech()')
 
 def test_block_diag1():
     x, y, z = symbols("x y z")

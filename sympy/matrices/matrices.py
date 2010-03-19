@@ -1494,12 +1494,16 @@ class Matrix(object):
         """
         return Matrix(self.cols*self.rows, 1, self.transpose().mat)
 
-    def vech(self, diagonal=True):
+    def vech(self, diagonal=True, check_symmetry=True):
         """
-        Return the unique elements of a symmetric Matrix as a one column matrix by stacking
+        Return the unique elements of a symmetric Matrix as a one column matrix
+
+         by stacking
         the elements in the lower triangle
 
-        diagonal ...... include the diagonal cells of self or not
+        Arguments:
+        diagonal -- include the diagonal cells of self or not
+        check_symmetry -- checks symmetry of self but not completely reliably
 
         >>> from sympy import Matrix
         >>> m=Matrix([ [1,2], [2,3] ])
@@ -1517,8 +1521,10 @@ class Matrix(object):
         c = self.cols
         if c != self.rows:
             raise TypeError("Matrix must be square")
-        if self != self.transpose():
-            raise TypeError("Matrix must be symmetric")
+        if check_symmetry:
+            self.simplify()
+            if self != self.transpose():
+                raise ValueError("Matrix appears to be asymmetric; consider check_symmetry=False")
         count = 0
         if diagonal:
             v = zeros( (c * (c + 1) // 2, 1) )
