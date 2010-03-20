@@ -1407,22 +1407,29 @@ class Poly(Basic):
 
         return [ (f.per(g), k) for g, k in factors ]
 
-    def intervals(f, **args):
-        """Compute isolating intervals for roots of `f`. """
-        dom, eps = f.rep.dom.get_field(), args.get('eps')
-
+    def intervals_sqf(f, eps=None, fast=False):
+        """Compute isolating intervals for roots of square-free `f`. """
         if eps is not None:
-            args['eps'] = dom.convert(eps)
+            eps = QQ.convert(eps)
 
         try:
-            result = f.rep.intervals(**args)
+            result = f.rep.intervals_sqf(eps=eps, fast=fast)
+        except AttributeError: # pragma: no cover
+            raise OperationNotSupported(f, 'intervals_sqf')
+
+        return [ (QQ.to_sympy(s), QQ.to_sympy(t)) for (s, t) in result ]
+
+    def intervals(f, eps=None, fast=False):
+        """Compute isolating intervals for roots of `f`. """
+        if eps is not None:
+            eps = QQ.convert(eps)
+
+        try:
+            result = f.rep.intervals(eps=eps, fast=fast)
         except AttributeError: # pragma: no cover
             raise OperationNotSupported(f, 'intervals')
 
-        if not args.get('sqf'):
-            return [ ((dom.to_sympy(s), dom.to_sympy(t)), k) for ((s, t), k) in result ]
-        else:
-            return [ (dom.to_sympy(s), dom.to_sympy(t)) for (s, t) in result ]
+        return [ ((QQ.to_sympy(s), QQ.to_sympy(t)), k) for ((s, t), k) in result ]
 
     def nroots(f, **args):
         """Compute numerical approximations of roots of `f`. """
@@ -2288,12 +2295,18 @@ def factor(f, *gens, **args):
 
 def intervals(f, *gens, **args):
     """Compute isolating intervals for roots of `f`. """
-    F = NonStrictPoly(f, *_analyze_gens(gens), **args)
-
-    if F.is_Poly:
-        return F.intervals(**args)
-    else:
+    try:
+        F = Poly(f, *_analyze_gens(gens), **args)
+    except GeneratorsNeeded:
         raise GeneratorsNeeded("can't isolate roots of %s without generators" % f)
+
+    eps = args.get('eps')
+    fast = args.get('fast')
+
+    if args.get('sqf', False):
+        return F.intervals_sqf(eps=eps, fast=fast)
+    else:
+        return F.intervals(eps=eps, fast=fast)
 
 def nroots(f, *gens, **args):
     """Compute numerical approximations of roots of `f`. """
