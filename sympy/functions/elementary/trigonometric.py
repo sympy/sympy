@@ -1072,3 +1072,7 @@ class atan2(Function):
 
     def _eval_is_real(self):
         return self.args[0].is_real and self.args[1].is_real
+
+    def _sage_(self):
+        import sage.all as sage
+        return sage.atan2(self.args[0]._sage_(), self.args[1]._sage_())

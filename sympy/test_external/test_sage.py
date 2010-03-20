@@ -105,6 +105,7 @@ def test_functions():
     check_expression("asin(x)", "x")
     check_expression("acos(x)", "x")
     check_expression("atan(x)", "x")
+    check_expression("atan2(y, x)", "x, y")
     check_expression("acot(x)", "x")
     check_expression("sinh(x)", "x")
     check_expression("cosh(x)", "x")
