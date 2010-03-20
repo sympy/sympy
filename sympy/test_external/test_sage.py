@@ -44,7 +44,7 @@ def check_expression(expr, var_symbols):
     assert isinstance(e_sympy, sympy.Basic)
 
     # Do the actual checks:
-    assert sympy.sympify(e_sage) == e_sympy
+    assert sympy.S(e_sage) == e_sympy
     assert e_sage == sage.SR(e_sympy)
 
 
