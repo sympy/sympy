@@ -115,7 +115,6 @@ def dmp_trial_division(f, factors, u, K):
         result.append((factor, k))
 
     return _sort_factors(result)
-    return sort_factors_if_mult(result)
 
 def dup_zz_mignotte_bound(f, K):
     """Mignotte bound for univariate polynomials in `K[x]`. """

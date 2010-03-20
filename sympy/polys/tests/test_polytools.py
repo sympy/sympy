@@ -1572,8 +1572,8 @@ def test_factor():
 def test_intervals():
     f = Poly((2*x/5 - S(17)/3)*(4*x + S(1)/257))
 
-    assert f.intervals(sqf=True) == [(-1, 0), (14, 15)]
-    assert f.intervals(sqf=False) == [((-1, 0), 1), ((14, 15), 1)]
+    assert f.intervals_sqf() == [(-1, 0), (14, 15)]
+    assert f.intervals() == [((-1, 0), 1), ((14, 15), 1)]
 
     assert f.intervals(eps=S(1)/10) == f.intervals(eps=0.1) == \
         [((-S(1)/258, 0), 1), ((S(85)/6, S(85)/6), 1)]
@@ -1587,7 +1587,7 @@ def test_intervals():
     f = (2*x/5 - S(17)/3)*(4*x + S(1)/257)
 
     assert intervals(f, sqf=True) == [(-1, 0), (14, 15)]
-    assert intervals(f, sqf=False) == [((-1, 0), 1), ((14, 15), 1)]
+    assert intervals(f) == [((-1, 0), 1), ((14, 15), 1)]
 
     assert intervals(f, eps=S(1)/10) == intervals(f, eps=0.1) == \
         [((-S(1)/258, 0), 1), ((S(85)/6, S(85)/6), 1)]
