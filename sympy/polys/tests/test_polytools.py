@@ -45,8 +45,7 @@ from sympy.polys.polyclasses import GFP, DMP, DMF
 
 from sympy.polys.algebratools import ZZ, QQ, RR, EX
 
-from sympy import S, Integer, Rational, Mul, symbols, sqrt, exp, sin, expand, oo, I
-
+from sympy import S, Integer, Rational, Mul, symbols, sqrt, exp, sin, expand, oo, I, pi
 from sympy.utilities.pytest import raises
 
 x,y,z,p,q,r,s,t,u,v,w,a,b,c,d,e = symbols('x,y,z,p,q,r,s,t,u,v,w,a,b,c,d,e')
@@ -1568,6 +1567,13 @@ def test_factor():
         (x**2 + x + 1)*(x**9 - x**8 + x**6 - x**5 + x**3 - x** 2 + 1)
     assert factor(x**11 + x + 1, modulus=65537, symmetric=False) == \
         (x**2 + x + 1)*(x**9 + 65536*x**8 + x**6 + 65536*x**5 + x**3 + 65536*x** 2 + 1)
+
+    assert factor(x/pi + x*sin(x)/pi) == x*(sin(x) + 1)/pi
+
+    f = y/(pi**2 + 2*pi + 1) + y*sin(x)/(pi**2 + 2*pi + 1)
+
+    assert factor(f) == y*(sin(x) + 1)/(pi**2 + 2*pi + 1)
+    assert factor(f, frac=True) == y*(sin(x) + 1)/(pi + 1)**2
 
 def test_intervals():
     f = Poly((2*x/5 - S(17)/3)*(4*x + S(1)/257))
