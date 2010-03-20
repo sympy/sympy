@@ -1,6 +1,6 @@
 """Tests for useful utilities for higher level polynomial classes. """
 
-from sympy import S, I, Integer, sqrt, symbols, pi
+from sympy import S, I, Integer, sin, cos, sqrt, symbols, pi
 from sympy.utilities.pytest import raises
 
 from sympy.polys.polyutils import (
@@ -203,3 +203,9 @@ def test__dict_from_basic_no_gens():
     assert _dict_from_basic_no_gens(3*sqrt(2)*pi*x*y, extension=False) == ({(1,1,1,1): 3}, (x,y,sqrt(2),pi))
     assert _dict_from_basic_no_gens(3*sqrt(2)*pi*x*y, extension=True) == ({(1,1,1): 3*sqrt(2)}, (x,y,pi))
 
+    assert _dict_from_basic_no_gens(3*sqrt(2)*pi*x*y, extension=True) == ({(1,1,1): 3*sqrt(2)}, (x,y,pi))
+
+    f = cos(x)*sin(x) + cos(x)*sin(y) + cos(y)*sin(x) + cos(y)*sin(y)
+
+    assert _dict_from_basic_no_gens(f) == ({(0, 1, 0, 1): 1, (0, 1, 1, 0): 1,
+        (1, 0, 0, 1): 1, (1, 0, 1, 0): 1}, (cos(x), cos(y), sin(x), sin(y)))
