@@ -1433,6 +1433,19 @@ def test_sturm():
 
     raises(GeneratorsNeeded, "sturm(4)")
 
+    f = Poly(S(1024)/(15625*pi**8)*x**5   \
+           - S(4096)/(625*pi**8)*x**4     \
+           + S(32)/(15625*pi**4)*x**3     \
+           - S(128)/(625*pi**4)*x**2      \
+           + S(1)/62500*x                 \
+           - S(1)/625, x, domain='ZZ(pi)')
+
+    assert sturm(f) == \
+        [Poly(x**3 - 100*x**2 + pi**4/64*x - 25*pi**4/16, x, domain='ZZ(pi)'),
+         Poly(3*x**2 - 200*x + pi**4/64, x, domain='ZZ(pi)'),
+         Poly((S(20000)/9 - pi**4/96)*x + 25*pi**4/18, x, domain='ZZ(pi)'),
+         Poly((-3686400000000*pi**4 - 11520000*pi**8 - 9*pi**12)/(26214400000000 - 245760000*pi**4 + 576*pi**8), x, domain='ZZ(pi)')]
+
 def test_sqf_norm():
     assert sqf_norm(x**2-2, extension=sqrt(3)) == \
         (1, x**2 - 2*sqrt(3)*x + 1, x**4 - 10*x**2 + 1)
