@@ -40,6 +40,7 @@ if 'MPMATH_NOSAGE' not in os.environ:
         import sage.libs.mpmath.utils as _sage_utils
         sage = sage.all
         sage_utils = _sage_utils
+        _bit_count = sage_utils.bitcount
         BACKEND = 'sage'
         MPZ = sage.Integer
     except:
