@@ -29,6 +29,7 @@ from sympy.polys.polytools import (
 
 from sympy.polys.polyerrors import (
     OperationNotSupported,
+    ExactQuotientFailed,
     UnificationFailed,
     GeneratorsNeeded,
     PolynomialError,
@@ -716,12 +717,16 @@ def test_Poly_to_ring():
     assert Poly(2*x+1, domain='QQ').to_ring() == Poly(2*x+1, domain='ZZ')
 
     raises(CoercionFailed, "Poly(x/2+1).to_ring()")
+    raises(OperationNotSupported, "Poly(2*x+1, modulus=3).to_ring()")
 
 def test_Poly_to_field():
     assert Poly(2*x+1, domain='ZZ').to_field() == Poly(2*x+1, domain='QQ')
     assert Poly(2*x+1, domain='QQ').to_field() == Poly(2*x+1, domain='QQ')
 
     assert Poly(x/2+1, domain='QQ').to_field() == Poly(x/2+1, domain='QQ')
+    assert Poly(2*x+1, modulus=3).to_field() == Poly(2*x+1, modulus=3)
+
+    raises(DomainError, "Poly(2.0*x + 1.0).to_field()")
 
 def test_Poly_coeffs():
     assert Poly(0, x).coeffs() == [0]
@@ -1198,6 +1203,10 @@ def test_gcdex():
     assert gcdex(100, 2004) == (-20, 1, 4)
     assert invert(3, 7) == 5
 
+    raises(DomainError, "half_gcdex(x + 1, 2*x + 1, auto=False)")
+    raises(DomainError, "gcdex(x + 1, 2*x + 1, auto=False)")
+    raises(DomainError, "invert(x + 1, 2*x + 1, auto=False)")
+
 def test_subresultants():
     f, g, h = x**2 - 2*x + 1, x**2 - 1, 2*x - 2
     F, G, H = Poly(f), Poly(g), Poly(h)
@@ -1364,6 +1373,10 @@ def test_monic():
 
     raises(GeneratorsNeeded, "monic(4)")
 
+    assert monic(2*x**2 + 6*x + 4, auto=False) == x**2 + 3*x + 2
+    raises(ExactQuotientFailed, "monic(2*x + 6*x + 1, auto=False)")
+
+    assert monic(2.0*x**2 + 6.0*x + 4.0) == x**2 + 3.0*x + 2.0
     assert monic(2*x**2 + 3*x + 4, modulus=5) == x**2 - x + 2
 
 def test_content():
@@ -1432,6 +1445,7 @@ def test_sturm():
     assert sturm(F, polys=False) == [f, g]
 
     raises(GeneratorsNeeded, "sturm(4)")
+    raises(DomainError, "sturm(f, auto=False)")
 
     f = Poly(S(1024)/(15625*pi**8)*x**5   \
            - S(4096)/(625*pi**8)*x**4     \
