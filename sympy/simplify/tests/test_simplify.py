@@ -146,6 +146,10 @@ def test_simplify():
     assert simplify(solutions[y]) == \
         (a*i+c*d+f*g-a*f-c*g-d*i)/(a*e*i+b*f*g+c*d*h-a*f*h-b*d*i-c*e*g)
 
+    f = -x + y/(z + t) + z*x/(z + t) + z*a/(z + t) + t*x/(z + t)
+
+    assert simplify(f) == (y + a*z)/(z + t)
+
 def test_simplify_issue_1308():
     assert simplify(exp(-Rational(1, 2)) + exp(-Rational(3, 2))) == \
         (1 + E)*exp(-Rational(3, 2))
