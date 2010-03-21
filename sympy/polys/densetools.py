@@ -336,8 +336,8 @@ def dmp_diff_eval_in(f, m, a, j, u, K):
 
 def dup_half_gcdex(f, g, K):
     """Half extended Euclidean algorithm in `F[x]`. """
-    if not K.has_Field:
-        raise DomainError('computation can be done only in a field')
+    if not (K.has_Field or not K.is_Exact):
+        raise DomainError("can't compute half extended GCD over %s" % K)
 
     a, b = [K.one], []
 
@@ -1979,8 +1979,8 @@ def dup_sturm(f, K):
            Computation, Academic Press, London, 1988, pp. 124-128
 
     """
-    if not K.has_Field:
-        raise DomainError('computation can be done only in a field')
+    if not (K.has_Field or not K.is_Exact):
+        raise DomainError("can't compute Sturm sequence over %s" % K)
 
     f = dup_sqf_part(f, K)
 

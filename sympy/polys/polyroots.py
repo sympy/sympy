@@ -291,7 +291,10 @@ def roots(f, *gens, **flags):
         if f.is_multivariate:
             raise PolynomialError('multivariate polynomials are not supported')
 
-        f, x = f.to_field(), f.gen
+        if flags.get('auto', True) and f.get_domain().has_Ring:
+            f = f.to_field()
+
+    x = f.gen
 
     def _update_dict(result, root, k):
         if root in result:

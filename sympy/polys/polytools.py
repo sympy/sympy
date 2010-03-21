@@ -1121,7 +1121,7 @@ class Poly(Basic):
 
     def integrate(f, *specs, **args):
         """Computes indefinite integral of `f`. """
-        if args.get('auto', True):
+        if args.get('auto', True) and f.rep.dom.has_Ring:
             f = f.to_field()
 
         try:
@@ -1173,11 +1173,11 @@ class Poly(Basic):
 
         return f.per(result, remove=j)
 
-    def half_gcdex(f, g, **args):
+    def half_gcdex(f, g, auto=True):
         """Half extended Euclidean algorithm of `f` and `g`. """
         dom, per, F, G = f.unify(g)
 
-        if args.get('auto', True):
+        if auto and dom.has_Ring:
             F, G = F.to_field(), G.to_field()
 
         try:
@@ -1187,11 +1187,11 @@ class Poly(Basic):
 
         return per(s), per(h)
 
-    def gcdex(f, g, **args):
+    def gcdex(f, g, auto=True):
         """Extended Euclidean algorithm of `f` and `g`. """
         dom, per, F, G = f.unify(g)
 
-        if args.get('auto', True):
+        if auto and dom.has_Ring:
             F, G = F.to_field(), G.to_field()
 
         try:
@@ -1201,11 +1201,11 @@ class Poly(Basic):
 
         return per(s), per(t), per(h)
 
-    def invert(f, g, **args):
+    def invert(f, g, auto=True):
         """Invert `f` modulo `g`, if possible. """
         dom, per, F, G = f.unify(g)
 
-        if args.get('auto', True):
+        if auto and dom.has_Ring:
             F, G = F.to_field(), G.to_field()
 
         try:
@@ -1290,8 +1290,11 @@ class Poly(Basic):
 
         return f.per(result)
 
-    def monic(f):
+    def monic(f, auto=True):
         """Divides all coefficients by `LC(f)`. """
+        if auto and f.rep.dom.has_Ring:
+            f = f.to_field()
+
         try:
             result = f.rep.monic()
         except AttributeError: # pragma: no cover
@@ -1337,9 +1340,9 @@ class Poly(Basic):
 
         return map(f.per, result)
 
-    def sturm(f, **args):
+    def sturm(f, auto=True):
         """Computes the Sturm sequence of `f`. """
-        if args.get('auto', True):
+        if auto and f.rep.dom.has_Ring:
             f = f.to_field()
 
         try:
@@ -1709,6 +1712,19 @@ def _update_args(args, key, value):
 
     return args
 
+def _filter_args(args, *keys):
+    """Filter the given keys from the args dict. """
+    if not keys:
+        return {}
+
+    keys, result = set(keys), {}
+
+    for key, value in args.items():
+        if key in keys:
+            result[key] = value
+
+    return result
+
 def _should_return_basic(*polys, **args):
     """Figure out if results should be returned as basic. """
     query = args.get('polys')
@@ -1870,7 +1886,6 @@ def exquo(f, g, *gens, **args):
 
 def half_gcdex(f, g, *gens, **args):
     """Half extended Euclidean algorithm of `f` and `g`. """
-    args = _update_args(args, 'field', True)
     gens = _analyze_gens(gens)
 
     try:
@@ -1881,7 +1896,7 @@ def half_gcdex(f, g, *gens, **args):
         except (AttributeError, TypeError): # pragma: no cover
             raise GeneratorsNeeded("can't compute half extended GCD of %s and %s without generators" % (f, g))
 
-    s, h = F.half_gcdex(G, **args)
+    s, h = F.half_gcdex(G, **_filter_args(args, 'auto'))
 
     if _should_return_basic(f, g, **args):
         return s.as_basic(), h.as_basic()
@@ -1890,7 +1905,6 @@ def half_gcdex(f, g, *gens, **args):
 
 def gcdex(f, g, *gens, **args):
     """Extended Euclidean algorithm of `f` and `g`. """
-    args = _update_args(args, 'field', True)
     gens = _analyze_gens(gens)
 
     try:
@@ -1901,7 +1915,7 @@ def gcdex(f, g, *gens, **args):
         except (AttributeError, TypeError): # pragma: no cover
             raise GeneratorsNeeded("can't compute extended GCD of %s and %s without generators" % (f, g))
 
-    s, t, h = F.gcdex(G, **args)
+    s, t, h = F.gcdex(G, **_filter_args(args, 'auto'))
 
     if _should_return_basic(f, g, **args):
         return s.as_basic(), t.as_basic(), h.as_basic()
@@ -1910,7 +1924,6 @@ def gcdex(f, g, *gens, **args):
 
 def invert(f, g, *gens, **args):
     """Invert `f` modulo `g`, if possible. """
-    args = _update_args(args, 'field', True)
     gens = _analyze_gens(gens)
 
     try:
@@ -1921,7 +1934,7 @@ def invert(f, g, *gens, **args):
         except (AttributeError, TypeError): # pragma: no cover
             raise GeneratorsNeeded("can't compute inversion of %s modulo %s without generators" % (f, g))
 
-    h = F.invert(G, **args)
+    h = F.invert(G, **_filter_args(args, 'auto'))
 
     if _should_return_basic(f, g, **args):
         return h.as_basic()
@@ -2062,16 +2075,17 @@ def trunc(f, p, *gens, **args):
 
 def monic(f, *gens, **args):
     """Divides all coefficients by `LC(f)`. """
-    args = _update_args(args, 'field', True)
     F = NonStrictPoly(f, *_analyze_gens(gens), **args)
 
     if not F.is_Poly:
         raise GeneratorsNeeded("can't compute monic polynomial of %s without generators" % f)
 
+    G = F.monic(**_filter_args(args, 'auto'))
+
     if _should_return_basic(f, **args):
-        return F.monic().as_basic()
+        return G.as_basic()
     else:
-        return F.monic()
+        return G
 
 def content(f, *gens, **args):
     """Returns GCD of polynomial coefficients. """
@@ -2128,13 +2142,12 @@ def decompose(f, *gens, **args):
 
 def sturm(f, *gens, **args):
     """Computes the Sturm sequence of `f`. """
-    args = _update_args(args, 'field', True)
     F = NonStrictPoly(f, *_analyze_gens(gens), **args)
 
     if not F.is_Poly:
         raise GeneratorsNeeded("can't compute Sturm sequence of %s without generators" % f)
 
-    result = F.sturm()
+    result = F.sturm(**_filter_args(args, 'auto'))
 
     if _should_return_basic(f, **args):
         return [ r.as_basic() for r in result ]

@@ -208,6 +208,10 @@ class GFP(object):
 
         return rep
 
+    def to_field(f):
+        """Make the ground domain a field. """
+        return f
+
     @classmethod
     def zero(cls, dom, mod):
         return GFP(0, mod, dom)
