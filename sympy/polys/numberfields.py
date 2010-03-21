@@ -179,7 +179,7 @@ def primitive_element(extension, x=None, **args):
     else: # pragma: no cover
         raise RuntimeError("run out of coefficient configurations")
 
-    _, g = g.ground_to_ring()
+    _, g = g.clear_denoms()
 
     if not args.get('polys', False):
         return g.as_basic(), coeffs, H

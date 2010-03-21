@@ -972,9 +972,9 @@ def test_Poly_l1_norm():
     assert Poly( 0, x).l1_norm() == 0
     assert Poly( 1, x).l1_norm() == 1
 
-def test_Poly_ground_to_ring():
-    assert Poly(2*x + 1).ground_to_ring() == (1, Poly(2*x + 1, domain='ZZ'))
-    assert Poly(x/2 + 1).ground_to_ring() == (2, Poly(x + 2, domain='QQ'))
+def test_Poly_clear_denoms():
+    assert Poly(2*x + 1).clear_denoms() == (1, Poly(2*x + 1, domain='ZZ'))
+    assert Poly(x/2 + 1).clear_denoms() == (2, Poly(x + 2, domain='QQ'))
 
 def test_Poly_integrate():
     assert Poly(x + 1).integrate() == Poly(x**2/2 + x)

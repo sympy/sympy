@@ -1110,12 +1110,12 @@ class Poly(Basic):
 
         return f.rep.dom.to_sympy(result)
 
-    def ground_to_ring(f):
+    def clear_denoms(f):
         """Clear denominators, but keep the ground domain. """
         try:
-            coeff, result = f.rep.ground_to_ring()
+            coeff, result = f.rep.clear_denoms()
         except AttributeError: # pragma: no cover
-            raise OperationNotSupported(f, 'ground_to_ring')
+            raise OperationNotSupported(f, 'clear_denoms')
 
         return f.rep.dom.to_sympy(coeff), f.per(result)
 
@@ -1454,8 +1454,8 @@ class Poly(Basic):
             return S.One, per(F), per(G)
 
         if dom.has_Field and dom.has_assoc_Ring:
-            cF, F = F.ground_to_ring()
-            cG, G = G.ground_to_ring()
+            cF, F = F.clear_denoms()
+            cG, G = G.clear_denoms()
 
             F = F.to_ring()
             G = G.to_ring()
