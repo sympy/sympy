@@ -12,7 +12,7 @@ from sympy.polys.densearith import (
 )
 
 from sympy.polys.densetools import (
-    dup_ground_to_ring, dmp_ground_to_ring,
+    dup_clear_denoms, dmp_clear_denoms,
     dup_integrate, dmp_integrate, dmp_integrate_in,
     dup_diff, dmp_diff, dmp_diff_in,
     dup_eval, dmp_eval, dmp_eval_in,
@@ -79,39 +79,39 @@ from sympy import I
 
 from sympy.utilities.pytest import raises
 
-def test_dup_ground_to_ring():
-    assert dup_ground_to_ring([], QQ, ZZ) == (ZZ(1), [])
+def test_dup_clear_denoms():
+    assert dup_clear_denoms([], QQ, ZZ) == (ZZ(1), [])
 
-    assert dup_ground_to_ring([QQ(1)], QQ, ZZ) == (ZZ(1), [QQ(1)])
-    assert dup_ground_to_ring([QQ(7)], QQ, ZZ) == (ZZ(1), [QQ(7)])
+    assert dup_clear_denoms([QQ(1)], QQ, ZZ) == (ZZ(1), [QQ(1)])
+    assert dup_clear_denoms([QQ(7)], QQ, ZZ) == (ZZ(1), [QQ(7)])
 
-    assert dup_ground_to_ring([QQ(7,3)], QQ) == (ZZ(3), [QQ(7)])
-    assert dup_ground_to_ring([QQ(7,3)], QQ, ZZ) == (ZZ(3), [QQ(7)])
+    assert dup_clear_denoms([QQ(7,3)], QQ) == (ZZ(3), [QQ(7)])
+    assert dup_clear_denoms([QQ(7,3)], QQ, ZZ) == (ZZ(3), [QQ(7)])
 
-    assert dup_ground_to_ring([QQ(3),QQ(1),QQ(0)], QQ, ZZ) == (ZZ(1), [QQ(3),QQ(1),QQ(0)])
-    assert dup_ground_to_ring([QQ(1),QQ(1,2),QQ(0)], QQ, ZZ) == (ZZ(2), [QQ(2),QQ(1),QQ(0)])
+    assert dup_clear_denoms([QQ(3),QQ(1),QQ(0)], QQ, ZZ) == (ZZ(1), [QQ(3),QQ(1),QQ(0)])
+    assert dup_clear_denoms([QQ(1),QQ(1,2),QQ(0)], QQ, ZZ) == (ZZ(2), [QQ(2),QQ(1),QQ(0)])
 
-    assert dup_ground_to_ring([QQ(3),QQ(1),QQ(0)], QQ, ZZ, convert=True) == (ZZ(1), [ZZ(3),ZZ(1),ZZ(0)])
-    assert dup_ground_to_ring([QQ(1),QQ(1,2),QQ(0)], QQ, ZZ, convert=True) == (ZZ(2), [ZZ(2),ZZ(1),ZZ(0)])
+    assert dup_clear_denoms([QQ(3),QQ(1),QQ(0)], QQ, ZZ, convert=True) == (ZZ(1), [ZZ(3),ZZ(1),ZZ(0)])
+    assert dup_clear_denoms([QQ(1),QQ(1,2),QQ(0)], QQ, ZZ, convert=True) == (ZZ(2), [ZZ(2),ZZ(1),ZZ(0)])
 
-    raises(DomainError, "dup_ground_to_ring([EX(7)], EX)")
+    raises(DomainError, "dup_clear_denoms([EX(7)], EX)")
 
-def test_dmp_ground_to_ring():
-    assert dmp_ground_to_ring([[]], 1, QQ, ZZ) == (ZZ(1), [[]])
+def test_dmp_clear_denoms():
+    assert dmp_clear_denoms([[]], 1, QQ, ZZ) == (ZZ(1), [[]])
 
-    assert dmp_ground_to_ring([[QQ(1)]], 1, QQ, ZZ) == (ZZ(1), [[QQ(1)]])
-    assert dmp_ground_to_ring([[QQ(7)]], 1, QQ, ZZ) == (ZZ(1), [[QQ(7)]])
+    assert dmp_clear_denoms([[QQ(1)]], 1, QQ, ZZ) == (ZZ(1), [[QQ(1)]])
+    assert dmp_clear_denoms([[QQ(7)]], 1, QQ, ZZ) == (ZZ(1), [[QQ(7)]])
 
-    assert dmp_ground_to_ring([[QQ(7,3)]], 1, QQ) == (ZZ(3), [[QQ(7)]])
-    assert dmp_ground_to_ring([[QQ(7,3)]], 1, QQ, ZZ) == (ZZ(3), [[QQ(7)]])
+    assert dmp_clear_denoms([[QQ(7,3)]], 1, QQ) == (ZZ(3), [[QQ(7)]])
+    assert dmp_clear_denoms([[QQ(7,3)]], 1, QQ, ZZ) == (ZZ(3), [[QQ(7)]])
 
-    assert dmp_ground_to_ring([[QQ(3)],[QQ(1)],[]], 1, QQ, ZZ) == (ZZ(1), [[QQ(3)],[QQ(1)],[]])
-    assert dmp_ground_to_ring([[QQ(1)],[QQ(1,2)],[]], 1, QQ, ZZ) == (ZZ(2), [[QQ(2)],[QQ(1)],[]])
+    assert dmp_clear_denoms([[QQ(3)],[QQ(1)],[]], 1, QQ, ZZ) == (ZZ(1), [[QQ(3)],[QQ(1)],[]])
+    assert dmp_clear_denoms([[QQ(1)],[QQ(1,2)],[]], 1, QQ, ZZ) == (ZZ(2), [[QQ(2)],[QQ(1)],[]])
 
-    assert dmp_ground_to_ring([[QQ(3)],[QQ(1)],[]], 1, QQ, ZZ, convert=True) == (ZZ(1), [[QQ(3)],[QQ(1)],[]])
-    assert dmp_ground_to_ring([[QQ(1)],[QQ(1,2)],[]], 1, QQ, ZZ, convert=True) == (ZZ(2), [[QQ(2)],[QQ(1)],[]])
+    assert dmp_clear_denoms([[QQ(3)],[QQ(1)],[]], 1, QQ, ZZ, convert=True) == (ZZ(1), [[QQ(3)],[QQ(1)],[]])
+    assert dmp_clear_denoms([[QQ(1)],[QQ(1,2)],[]], 1, QQ, ZZ, convert=True) == (ZZ(2), [[QQ(2)],[QQ(1)],[]])
 
-    raises(DomainError, "dmp_ground_to_ring([[EX(7)]], 1, EX)")
+    raises(DomainError, "dmp_clear_denoms([[EX(7)]], 1, EX)")
 
 def test_dup_integrate():
     assert dup_integrate([], 1, QQ) == []

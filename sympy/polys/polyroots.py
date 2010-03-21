@@ -193,7 +193,7 @@ def roots_rational(f):
     domain = f.get_domain()
 
     if domain.is_QQ:
-        _, f = f.ground_to_ring()
+        _, f = f.clear_denoms()
     elif domain.is_ZZ:
         f = f.set_domain('QQ')
     else:
