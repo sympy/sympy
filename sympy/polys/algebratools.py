@@ -191,13 +191,14 @@ class Algebra(object):
         elif K0 == K1:
             return K0
 
-        if K0.is_Numerical and K1.is_Numerical:
-            if K0 == K1:
-                return K0
-
         if K0.is_EX:
             return K0
         if K1.is_EX:
+            return K1
+
+        if not K0.is_Exact:
+            return K0
+        if not K1.is_Exact:
             return K1
 
         if K0.is_Composite:
