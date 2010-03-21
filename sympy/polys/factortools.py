@@ -54,7 +54,7 @@ from sympy.polys.densetools import (
     dup_content, dmp_ground_content,
     dup_monic, dmp_ground_monic,
     dup_primitive, dmp_primitive, dmp_ground_primitive,
-    dup_ground_to_ring, dmp_ground_to_ring,
+    dup_clear_denoms, dmp_clear_denoms,
     dup_eval, dmp_eval_tail,
     dmp_eval_in, dmp_diff_eval_in,
     dup_inner_gcd, dmp_inner_gcd,
@@ -1065,7 +1065,7 @@ def dup_factor_list(f, K0):
         if K0.has_Field:
             K = K0.get_ring()
 
-            denom, f = dup_ground_to_ring(f, K0, K)
+            denom, f = dup_clear_denoms(f, K0, K)
             f = dup_convert(f, K0, K)
         else:
             K = K0
@@ -1152,7 +1152,7 @@ def dmp_factor_list(f, u, K0):
         if K0.has_Field:
             K = K0.get_ring()
 
-            denom, f = dmp_ground_to_ring(f, u, K0, K)
+            denom, f = dmp_clear_denoms(f, u, K0, K)
             f = dmp_convert(f, u, K0, K)
         else:
             K = K0
