@@ -1,4 +1,4 @@
-from sympy.utilities.iterables import preorder_traversal
+
 
 def pprint_nodes(subtrees):
     """

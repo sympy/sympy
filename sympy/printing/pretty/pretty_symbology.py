@@ -47,7 +47,6 @@ except ImportError:
     U = lambda name: None
 
 from sympy.printing.conventions import split_super_sub
-import re
 
 
 # prefix conventions when constructing tables

@@ -5,9 +5,8 @@ A Printer for generating readable representation of most sympy classes.
 from printer import Printer
 from sympy.printing.precedence import precedence, PRECEDENCE
 from sympy.core.basic import S
-from sympy.core.numbers import One, Rational
+from sympy.core.numbers import Rational
 from sympy.core.power import Pow
-from sympy.core.symbol import Symbol, Wild
 from sympy.core.basic import Basic
 
 import sympy.mpmath.libmp as mlib

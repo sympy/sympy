@@ -2,7 +2,7 @@
 A MathML printer.
 """
 
-from sympy import Basic, sympify, C, S
+from sympy import Basic, sympify, S
 from sympy.simplify import fraction
 from printer import Printer
 from conventions import split_super_sub
@@ -23,8 +23,7 @@ class MathMLPrinter(Printer):
         self.dom = Document()
 
     def doprint(self, e):
-        mathML = Printer.doprint(self,expr)
-        return mathML.toxml()
+        return self._print(e).toxml(encoding="utf-8")
 
     def mathml_tag(self, e):
         """Returns the MathML tag for an expression."""
@@ -336,7 +335,7 @@ class MathMLPrinter(Printer):
 def mathml(expr):
     """Returns the MathML representation of expr"""
     s = MathMLPrinter()
-    return s._print(sympify(expr)).toxml(encoding="utf-8")
+    return s.doprint(sympify(expr))
 
 def print_mathml(expr):
     """

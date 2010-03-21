@@ -31,9 +31,6 @@ class stringPict(object):
         self.baseline = baseline
         self.binding = None
 
-    def __len__(self):
-        return len(str(self))
-
     @staticmethod
     def equalLengths(lines):
         # empty lines
@@ -313,7 +310,7 @@ class stringPict(object):
     def __eq__(self, o):
         if isinstance(o, str):
             return '\n'.join(self.picture) == o
-        elif isinstace(o, stringPict):
+        elif isinstance(o, stringPict):
             return o.picture == self.picture
         return False
 

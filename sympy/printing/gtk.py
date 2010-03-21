@@ -1,4 +1,4 @@
-from sympy import Basic
+
 from sympy.printing.mathml import mathml
 import tempfile
 import os

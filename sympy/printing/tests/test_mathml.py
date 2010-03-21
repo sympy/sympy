@@ -6,7 +6,7 @@ x = Symbol('x')
 mp = MathMLPrinter()
 
 def test_printmethod():
-    pass #TODO
+    assert mp.doprint(1+x) == '<apply><plus/><cn>1</cn><ci>x</ci></apply>'
 
 def test_mathml_core():
     mml_1 = mp._print(1+x)

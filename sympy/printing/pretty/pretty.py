@@ -110,14 +110,14 @@ class PrettyPrinter(Printer):
         syms.reverse()
         x = None
         for sym in syms:
-            S = self._print(sym)
-            dS= prettyForm(*S.left('d'))
+            s = self._print(sym)
+            ds = prettyForm(*s.left('d'))
 
             if x is None:
-                x = dS
+                x = ds
             else:
                 x = prettyForm(*x.right(' '))
-                x = prettyForm(*x.right(dS))
+                x = prettyForm(*x.right(ds))
 
         f = prettyForm(binding=prettyForm.FUNC, *self._print(deriv.expr).parens())
 
@@ -169,7 +169,7 @@ class PrettyPrinter(Printer):
 
         # \int \int \int ...
         firstterm = True
-        S = None
+        s = None
         for x,ab in integral.limits:
             # Create bar based on the height of the argument
             h = arg.height()
@@ -221,12 +221,12 @@ class PrettyPrinter(Printer):
                 pform = prettyForm(*pform.right(' '))
 
             if firstterm:
-                S = pform   # first term
+                s = pform   # first term
                 firstterm = False
             else:
-                S = prettyForm(*S.left(pform))
+                s = prettyForm(*s.left(pform))
 
-        pform = prettyForm(*arg.left(S))
+        pform = prettyForm(*arg.left(s))
         return pform
 
 
@@ -259,10 +259,10 @@ class PrettyPrinter(Printer):
 
     def _print_Matrix(self, e):
         M = e   # matrix
-        S = {}  # i,j -> pretty(M[i,j])
+        Ms = {}  # i,j -> pretty(M[i,j])
         for i in range(M.rows):
             for j in range(M.cols):
-                S[i,j] = self._print(M[i,j])
+                Ms[i,j] = self._print(M[i,j])
 
         # h- and v- spacers
         hsep = 2
@@ -272,7 +272,7 @@ class PrettyPrinter(Printer):
         maxw = [-1] * M.cols
 
         for j in range(M.cols):
-            maxw[j] = max([S[i,j].width()  for i in range(M.rows)])
+            maxw[j] = max([Ms[i,j].width()  for i in range(M.rows)])
 
 
         # drawing result
@@ -282,7 +282,7 @@ class PrettyPrinter(Printer):
 
             D_row = None
             for j in range(M.cols):
-                s = S[i,j]
+                s = Ms[i,j]
 
                 # reshape s to maxw
                 # XXX this should be generalized, and go to stringPict.reshape ?
@@ -593,36 +593,36 @@ class PrettyPrinter(Printer):
 
         union_delimiter = ' %s ' % pretty_atom('Union')
 
-        S2 = self._print_seq(other_sets, None, None, union_delimiter)
+        s2 = self._print_seq(other_sets, None, None, union_delimiter)
 
         if len(singletons) > 0:
-            S1 = self._print_seq(singletons, '{', '}')
+            s1 = self._print_seq(singletons, '{', '}')
 
-            S = prettyForm(*stringPict.next(S1, union_delimiter))
-            S = prettyForm(*stringPict.next(S, S2))
+            s = prettyForm(*stringPict.next(s1, union_delimiter))
+            s = prettyForm(*stringPict.next(s, s2))
         else:
-            S = S2
+            s = s2
 
-        return S
+        return s
 
     def _print_seq(self, seq, left=None, right=None, delimiter=', '):
-        S = None
+        s = None
 
         for item in seq:
             pform = self._print(item)
 
-            if S is None:
+            if s is None:
                 # first element
-                S = pform
+                s = pform
             else:
-                S = prettyForm(*stringPict.next(S, delimiter))
-                S = prettyForm(*stringPict.next(S, pform))
+                s = prettyForm(*stringPict.next(s, delimiter))
+                s = prettyForm(*stringPict.next(s, pform))
 
-        if S is None:
-            S = stringPict('')
+        if s is None:
+            s = stringPict('')
 
-        S = prettyForm(*S.parens(left, right, ifascii_nougly=True))
-        return S
+        s = prettyForm(*s.parens(left, right, ifascii_nougly=True))
+        return s
 
     def _print_list(self, l):
         return self._print_seq(l, '[', ']')
@@ -643,19 +643,19 @@ class PrettyPrinter(Printer):
         for k in keys:
             K = self._print(k)
             V = self._print(d[k])
-            S = prettyForm(*stringPict.next(K, ': ', V))
+            s = prettyForm(*stringPict.next(K, ': ', V))
 
-            items.append(S)
+            items.append(s)
 
         return self._print_seq(items, '{', '}')
 
-    def __print_set(self, s):
-        items = list(s)
+    def __print_set(self, set_):
+        items = list(set_)
         items.sort( Basic.compare_pretty )
 
-        S = self._print_seq(items, '(', ')')
-        S = prettyForm(*stringPict.next(type(s).__name__, S))
-        return S
+        s = self._print_seq(items, '(', ')')
+        s = prettyForm(*stringPict.next(type(set_).__name__, s))
+        return s
 
     _print_set       = __print_set
     _print_frozenset = __print_set

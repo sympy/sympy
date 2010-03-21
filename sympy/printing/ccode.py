@@ -10,7 +10,7 @@ source code files that are compilable without further modifications.
 """
 
 from str import StrPrinter
-from sympy.printing.precedence import precedence, PRECEDENCE
+from sympy.printing.precedence import precedence
 from sympy.core.basic import S
 
 class CCodePrinter(StrPrinter):
