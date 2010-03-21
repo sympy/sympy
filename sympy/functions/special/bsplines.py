@@ -27,7 +27,7 @@ def _add_splines(c, b1, d, b2):
 def bspline_basis(d, knots, n, x, close=True):
     """The n-th B-spline at x of degree d with knots.
 
-    B-Splines are piecewise polynomials of degree d [1].  There are defined on
+    B-Splines are piecewise polynomials of degree d [1].  They are defined on
     a set of knots, which is a sequence of integers or floats.
 
     The 0th degree splines have a value of one on a single interval:
@@ -53,7 +53,7 @@ def bspline_basis(d, knots, n, x, close=True):
     >>> bspline_basis(d, knots, 0, x)
     Piecewise((1 - x/2, [0, 2]), (0, True))
 
-    It is quite time consuming to contruct and evaluate B-splines. If you
+    It is quite time consuming to construct and evaluate B-splines. If you
     need to evaluate a B-splines many times, it is best to lambdify them
     first:
 
@@ -67,6 +67,8 @@ def bspline_basis(d, knots, n, x, close=True):
     [1] http://en.wikipedia.org/wiki/B-spline
     """
     knots = [sympify(k) for k in knots]
+    d = int(d)
+    n = int(n)
     n_knots = len(knots)
     n_intervals = n_knots-1
     if n+d+1 > n_intervals:
@@ -76,7 +78,7 @@ def bspline_basis(d, knots, n, x, close=True):
             (S.One, Interval(knots[n], knots[n+1], False, True)),
             (0, True)
         )
-    elif d>0:
+    elif d > 0:
         denom = knots[n+d] - knots[n]
         if denom != S.Zero:
             A = (x - knots[n])/denom
@@ -118,8 +120,5 @@ def bspline_basis_set(d, knots, x):
     """
     splines = []
     n_splines = len(knots)-d-1
-    for i in range(n_splines):
-        b = bspline_basis(d,knots, i, x)
-        splines.append(b)
-    return splines
+    return [bspline_basis(d, knots, i, x) for i in range(n_splines)]
 

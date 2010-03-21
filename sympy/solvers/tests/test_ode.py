@@ -1058,6 +1058,8 @@ def test_Liouville_ODE():
 
 @XFAIL
 def test_Liouville_ODE_xfail():
+    # This is failling because of how checkodesol is simplifying the
+    # differential equation once the solutions is plugged in.
     eq4 = x*diff(f(x), x, x) + x/f(x)*diff(f(x), x)**2 + x*diff(f(x), x)
     sol4 = [Eq(f(x), sqrt(C1 + C2*exp(-x))), Eq(f(x), -sqrt(C1 + C2*exp(-x)))]
     assert checkodesol(eq4, f(x), sol4[0], order=2, solve_for_func=False)[0]
