@@ -62,7 +62,7 @@ from sympy.utilities import (
 from random import random as randfloat
 from operator import itemgetter
 
-def dup_ground_to_ring(f, K0, K1=None, **args):
+def dup_clear_denoms(f, K0, K1=None, convert=False):
     """Clear denominators, i.e. transform `K_0` to `K_1`. """
     if K1 is None:
         K1 = K0.get_ring()
@@ -75,13 +75,13 @@ def dup_ground_to_ring(f, K0, K1=None, **args):
     if not K1.is_one(common):
         f = dup_mul_ground(f, common, K0)
 
-    if not args.get('convert'):
+    if not convert:
         return common, f
     else:
         return common, dup_convert(f, K0, K1)
 
 @cythonized("v,w")
-def _rec_ground_to_ring(g, v, K0, K1):
+def _rec_clear_denoms(g, v, K0, K1):
     """XXX"""
     common = K1.one
 
@@ -92,25 +92,25 @@ def _rec_ground_to_ring(g, v, K0, K1):
         w = v-1
 
         for c in g:
-            common = K1.lcm(common, _rec_ground_to_ring(c, w, K0, K1))
+            common = K1.lcm(common, _rec_clear_denoms(c, w, K0, K1))
 
     return common
 
 @cythonized("u")
-def dmp_ground_to_ring(f, u, K0, K1=None, **args):
+def dmp_clear_denoms(f, u, K0, K1=None, convert=False):
     """Clear denominators, i.e. transform `K_0` to `K_1`. """
     if not u:
-        return dup_ground_to_ring(f, K0, K1)
+        return dup_clear_denoms(f, K0, K1)
 
     if K1 is None:
         K1 = K0.get_ring()
 
-    common = _rec_ground_to_ring(f, u, K0, K1)
+    common = _rec_clear_denoms(f, u, K0, K1)
 
     if not K1.is_one(common):
         f = dmp_mul_ground(f, common, u, K0)
 
-    if not args.get('convert'):
+    if not convert:
         return common, f
     else:
         return common, dmp_convert(f, u, K0, K1)
@@ -688,8 +688,8 @@ def dmp_qq_collins_resultant(f, g, u, K0):
 
     K1 = K0.get_ring()
 
-    cf, f = dmp_ground_to_ring(f, u, K0, K1)
-    cg, g = dmp_ground_to_ring(g, u, K0, K1)
+    cf, f = dmp_clear_denoms(f, u, K0, K1)
+    cg, g = dmp_clear_denoms(g, u, K0, K1)
 
     f = dmp_convert(f, u, K0, K1)
     g = dmp_convert(g, u, K0, K1)
@@ -1184,8 +1184,8 @@ def dup_qq_heu_gcd(f, g, K0):
 
     K1 = K0.get_ring()
 
-    cf, f = dup_ground_to_ring(f, K0, K1)
-    cg, g = dup_ground_to_ring(g, K0, K1)
+    cf, f = dup_clear_denoms(f, K0, K1)
+    cg, g = dup_clear_denoms(g, K0, K1)
 
     f = dup_convert(f, K0, K1)
     g = dup_convert(g, K0, K1)
@@ -1215,8 +1215,8 @@ def dmp_qq_heu_gcd(f, g, u, K0):
 
     K1 = K0.get_ring()
 
-    cf, f = dmp_ground_to_ring(f, u, K0, K1)
-    cg, g = dmp_ground_to_ring(g, u, K0, K1)
+    cf, f = dmp_clear_denoms(f, u, K0, K1)
+    cg, g = dmp_clear_denoms(g, u, K0, K1)
 
     f = dmp_convert(f, u, K0, K1)
     g = dmp_convert(g, u, K0, K1)
@@ -2163,7 +2163,7 @@ def dup_outer_refine_real_root(f, s, t, K, eps=None, step=None, fast=False):
 def dup_refine_real_root(f, s, t, K, eps=None, step=None, fast=False):
     """Refine real root's approximating interval to the given precision. """
     if K.is_QQ:
-        (_, f), K = dup_ground_to_ring(f, K, convert=True), K.get_ring()
+        (_, f), K = dup_clear_denoms(f, K, convert=True), K.get_ring()
     elif not K.is_ZZ:
         raise DomainError("real root refinement not supported over %s" % K)
 
@@ -2278,7 +2278,7 @@ def dup_inner_isolate_real_roots(f, K, eps=None, fast=False):
 def dup_isolate_real_roots_sqf(f, K, eps=None, fast=False):
     """Isolate real roots of a square-free polynomial using CF approach. """
     if K.is_QQ:
-        (_, f), K = dup_ground_to_ring(f, K, convert=True), K.get_ring()
+        (_, f), K = dup_clear_denoms(f, K, convert=True), K.get_ring()
     elif not K.is_ZZ:
         raise DomainError("isolation of real roots not supported over %s" % K)
 
@@ -2294,7 +2294,7 @@ def dup_isolate_real_roots_sqf(f, K, eps=None, fast=False):
 def dup_isolate_real_roots(f, K, eps=None, fast=False):
     """Isolate real roots using continued fractions approach. """
     if K.is_QQ:
-        (_, f), K = dup_ground_to_ring(f, K, convert=True), K.get_ring()
+        (_, f), K = dup_clear_denoms(f, K, convert=True), K.get_ring()
     elif not K.is_ZZ:
         raise DomainError("isolation of real roots not supported over %s" % K)
 

@@ -51,7 +51,7 @@ from sympy.polys.densearith import (
 )
 
 from sympy.polys.densetools import (
-    dup_ground_to_ring, dmp_ground_to_ring,
+    dup_clear_denoms, dmp_clear_denoms,
     dup_integrate, dmp_integrate_in,
     dup_diff, dmp_diff_in,
     dup_eval, dmp_eval_in,
@@ -816,9 +816,9 @@ class DUP(object):
         """Returns l1 norm of `f`. """
         return dup_l1_norm(f.rep, f.dom)
 
-    def ground_to_ring(f):
+    def clear_denoms(f):
         """Clear denominators, but keep the ground domain. """
-        coeff, F = dup_ground_to_ring(f.rep, f.dom, f.dom.get_ring())
+        coeff, F = dup_clear_denoms(f.rep, f.dom, f.dom.get_ring())
         return coeff, f.per(F)
 
     def integrate(f, m=1):
@@ -1354,9 +1354,9 @@ class DMP(object):
         """Returns l1 norm of `f`. """
         return dmp_l1_norm(f.rep, f.lev, f.dom)
 
-    def ground_to_ring(f):
+    def clear_denoms(f):
         """Clear denominators, but keep the ground domain. """
-        coeff, F = dmp_ground_to_ring(f.rep, f.lev, f.dom, f.dom.get_ring())
+        coeff, F = dmp_clear_denoms(f.rep, f.lev, f.dom)
         return coeff, f.per(F)
 
     def integrate(f, m=1, j=0):
