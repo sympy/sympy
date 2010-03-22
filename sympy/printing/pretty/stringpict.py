@@ -78,7 +78,7 @@ class stringPict(object):
         return '\n'.join(result), newBaseline
 
     def right(self, *args):
-        """Put pictures next to this one.
+        r"""Put pictures next to this one.
         Returns string, baseline arguments for stringPict.
         (Multiline) strings are allowed, and are given a baseline of 0.
         >>> from sympy.printing.pretty.stringpict import stringPict
