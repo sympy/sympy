@@ -24,12 +24,13 @@ You can build boolean expressions with the standard python operators & (And),
     >>> ~x
     Not(x)
 
-You can also form implications with >>, <<, and class Equivalent:
+You can also form implications with >>, <<, and class Equivalent, which are 
+compiled away into their logical equivalents:
 
     >>> x >> y
-    Implies(x, y)
+    Or(Not(x), y)
     >>> x << y
-    Implies(y, x)
+    Or(Not(y), x)
 
 Like most types in SymPy, Boolean expressions inherit from sympy.core.Basic:
 

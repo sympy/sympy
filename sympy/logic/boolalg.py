@@ -104,7 +104,15 @@ class Nor(BooleanFunction):
         return A
 
 class Implies(BooleanFunction):
-    pass
+    """Logical implication.
+    A implies B is equivalent to !A v B
+    """
+    @classmethod
+    def eval(cls, *args):
+        if len(args) != 2:
+            raise ValueError, "%d operand(s) used for an Implies (pairs are required): %s" % (len(args), str(args))
+        else:
+            return Or(Not(args[0]), args[1])
 
 class Equivalent(BooleanFunction):
     """Equivalence relation.

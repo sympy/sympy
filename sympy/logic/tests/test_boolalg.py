@@ -97,8 +97,11 @@ def test_Nor():
 
 def test_Implies():
     A, B, C = symbols('ABC')
-    Implies(True, True) == True
-    Implies(False, False) == False
+    raises(ValueError, "Implies(A,B,C)")
+    assert Implies(True, True) == True
+    assert Implies(True, False) == False
+    assert Implies(False, True) == True
+    assert Implies(False, False) == True
     assert A >> B == B << A
 
 def test_Equivalent():
