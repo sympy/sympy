@@ -9,7 +9,7 @@ from sympy.polys.galoistools import (
     gf_div, gf_rem, gf_quo, gf_exquo,
     gf_lshift, gf_rshift, gf_expand,
     gf_pow, gf_pow_mod,
-    gf_gcd, gf_gcdex,
+    gf_gcdex, gf_gcd, gf_lcm, gf_cofactors,
     gf_LC, gf_TC, gf_monic,
     gf_eval, gf_multi_eval,
     gf_compose, gf_compose_mod,
@@ -283,19 +283,7 @@ def test_gf_powering():
     assert gf_pow_mod([1,0,0,1,8], 8, [2,0,7], 11, ZZ) == [1,5]
     assert gf_pow_mod([1,0,0,1,8], 45, [2,0,7], 11, ZZ) == [5,4]
 
-def test_gf_euclidean():
-    assert gf_gcd([], [], 11, ZZ) == []
-    assert gf_gcd([2], [], 11, ZZ) == [1]
-    assert gf_gcd([], [2], 11, ZZ) == [1]
-    assert gf_gcd([2], [2], 11, ZZ) == [1]
-
-    assert gf_gcd([], [1,0], 11, ZZ) == [1,0]
-    assert gf_gcd([1,0], [], 11, ZZ) == [1,0]
-
-    assert gf_gcd([3,0], [3,0], 11, ZZ) == [1,0]
-
-    assert gf_gcd([1,8,7], [1,7,1,7], 11, ZZ) == [1,7]
-
+def test_gf_gcdex():
     assert gf_gcdex([], [], 11, ZZ) == ([1], [], [])
     assert gf_gcdex([2], [], 11, ZZ) == ([6], [], [1])
     assert gf_gcdex([], [2], 11, ZZ) == ([], [6], [1])
@@ -307,6 +295,42 @@ def test_gf_euclidean():
     assert gf_gcdex([3,0], [3,0], 11, ZZ) == ([], [4], [1,0])
 
     assert gf_gcdex([1,8,7], [1,7,1,7], 11, ZZ) == ([5,6], [6], [1,7])
+
+def test_gf_gcd():
+    assert gf_gcd([], [], 11, ZZ) == []
+    assert gf_gcd([2], [], 11, ZZ) == [1]
+    assert gf_gcd([], [2], 11, ZZ) == [1]
+    assert gf_gcd([2], [2], 11, ZZ) == [1]
+
+    assert gf_gcd([], [1,0], 11, ZZ) == [1,0]
+    assert gf_gcd([1,0], [], 11, ZZ) == [1,0]
+
+    assert gf_gcd([3,0], [3,0], 11, ZZ) == [1,0]
+    assert gf_gcd([1,8,7], [1,7,1,7], 11, ZZ) == [1,7]
+
+def test_gf_lcm():
+    assert gf_lcm([], [], 11, ZZ) == []
+    assert gf_lcm([2], [], 11, ZZ) == []
+    assert gf_lcm([], [2], 11, ZZ) == []
+    assert gf_lcm([2], [2], 11, ZZ) == [1]
+
+    assert gf_lcm([], [1,0], 11, ZZ) == []
+    assert gf_lcm([1,0], [], 11, ZZ) == []
+
+    assert gf_lcm([3,0], [3,0], 11, ZZ) == [1,0]
+    assert gf_lcm([1,8,7], [1,7,1,7], 11, ZZ) == [1,8,8,8,7]
+
+def test_gf_cofactors():
+    assert gf_cofactors([], [], 11, ZZ) == ([], [], [])
+    assert gf_cofactors([2], [], 11, ZZ) == ([1], [2], [])
+    assert gf_cofactors([], [2], 11, ZZ) == ([1], [], [2])
+    assert gf_cofactors([2], [2], 11, ZZ) == ([1], [2], [2])
+
+    assert gf_cofactors([], [1,0], 11, ZZ) == ([1,0], [], [1])
+    assert gf_cofactors([1,0], [], 11, ZZ) == ([1,0], [1], [])
+
+    assert gf_cofactors([3,0], [3,0], 11, ZZ) == ([1,0], [3], [3])
+    assert gf_cofactors([1,8,7], [1,7,1,7], 11, ZZ) == (([1,7], [1,1], [1,0,1]))
 
 def test_gf_diff():
     assert gf_diff([], 11, ZZ) == []
