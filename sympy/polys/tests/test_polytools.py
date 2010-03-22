@@ -1324,6 +1324,22 @@ def test_gcd():
     assert gcd(8, 6) == 2
     assert lcm(8, 6) == 24
 
+    f, g = x**2 - 3*x - 4, x**3 - 4*x**2 + x - 4
+    l = x**4 - 3*x**3 - 3*x**2 - 3*x - 4
+    h, s, t = x - 4, x + 1, x**2 + 1
+
+    assert cofactors(f, g, moudlus=11) == (h, s, t)
+    assert gcd(f, g, moudlus=11) == h
+    assert lcm(f, g, moudlus=11) == l
+
+    f, g = x**2 + 8*x + 7, x**3 + 7*x**2 + x + 7
+    l = x**4 + 8*x**3 + 8*x**2 + 8*x + 7
+    h, s, t = x + 7, x + 1, x**2 + 1
+
+    assert cofactors(f, g, modulus=11, symmetric=False) == (h, s, t)
+    assert gcd(f, g, modulus=11, symmetric=False) == h
+    assert lcm(f, g, modulus=11, symmetric=False) == l
+
 def test_terms_gcd():
     assert terms_gcd(1) == 1
     assert terms_gcd(1, x) == 1

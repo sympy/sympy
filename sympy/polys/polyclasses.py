@@ -96,7 +96,7 @@ from sympy.polys.galoistools import (
     gf_mul_ground, gf_exquo_ground,
     gf_add, gf_sub, gf_mul, gf_sqr, gf_pow,
     gf_div, gf_rem, gf_quo, gf_exquo,
-    gf_gcd, gf_gcdex,
+    gf_gcdex, gf_gcd, gf_lcm, gf_cofactors,
     gf_monic, gf_diff, gf_eval, gf_compose,
     gf_sqf_p, gf_sqf_part, gf_sqf_list,
     gf_factor, gf_irreducible_p,
@@ -390,7 +390,18 @@ class GFP(object):
     def gcd(f, g):
         """Returns polynomial GCD of `f` and `g`. """
         mod, dom, per, F, G = f.unify(g)
-        return per(gf_gcd(F, G, dom, mod))
+        return per(gf_gcd(F, G, mod, dom))
+
+    def lcm(f, g):
+        """Returns polynomial LCM of `f` and `g`. """
+        mod, dom, per, F, G = f.unify(g)
+        return per(gf_lcm(F, G, mod, dom))
+
+    def cofactors(f, g):
+        """Returns polynomial GCD and cofactors of `f` and `g`. """
+        mod, dom, per, F, G = f.unify(g)
+        h, s, t = gf_cofactors(F, G, mod, dom)
+        return per(h), per(s), per(t)
 
     def monic(f):
         """Divides all coefficients by `LC(f)`. """
