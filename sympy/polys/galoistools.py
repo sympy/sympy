@@ -518,6 +518,26 @@ def gf_gcd(f, g, p, K):
 
     return gf_monic(f, p, K)[1]
 
+def gf_lcm(f, g, p, K):
+    """Computes polynomial LCM in `GF(p)[x]`. """
+    if not f or not g:
+        return []
+
+    h = gf_exquo(gf_mul(f, g, p, K),
+                 gf_gcd(f, g, p, K), p, K)
+
+    return gf_monic(h, p, K)[1]
+
+def gf_cofactors(f, g, p, K):
+    """Returns polynomial GCD and cofactors in `GF(p)[x]`. """
+    if not f and not g:
+        return ([], [], [])
+
+    h = gf_gcd(f, g, p, K)
+
+    return (h, gf_exquo(f, h, p, K),
+               gf_exquo(g, h, p, K))
+
 def gf_gcdex(f, g, p, K):
     """Extended Euclidean Algorithm in `GF(p)[x]`.
 
