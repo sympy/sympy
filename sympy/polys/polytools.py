@@ -1414,25 +1414,33 @@ class Poly(Basic):
 
         return [ (f.per(g), k) for g, k in factors ]
 
-    def intervals_sqf(f, eps=None, fast=False):
+    def intervals_sqf(f, eps=None, inf=None, sup=None, fast=False):
         """Compute isolating intervals for roots of square-free `f`. """
-        if isinstance(eps, Basic):
-            eps = QQ.from_sympy(eps)
+        if eps is not None:
+            eps = QQ.convert(eps)
+        if inf is not None:
+            inf = QQ.convert(inf)
+        if sup is not None:
+            sup = QQ.convert(sup)
 
         try:
-            result = f.rep.intervals_sqf(eps=eps, fast=fast)
+            result = f.rep.intervals_sqf(eps=eps, inf=inf, sup=sup, fast=fast)
         except AttributeError: # pragma: no cover
             raise OperationNotSupported(f, 'intervals_sqf')
 
         return [ (QQ.to_sympy(s), QQ.to_sympy(t)) for (s, t) in result ]
 
-    def intervals(f, eps=None, fast=False):
+    def intervals(f, eps=None, inf=None, sup=None, fast=False):
         """Compute isolating intervals for roots of `f`. """
-        if isinstance(eps, Basic):
-            eps = QQ.from_sympy(eps)
+        if eps is not None:
+            eps = QQ.convert(eps)
+        if inf is not None:
+            inf = QQ.convert(inf)
+        if sup is not None:
+            sup = QQ.convert(sup)
 
         try:
-            result = f.rep.intervals(eps=eps, fast=fast)
+            result = f.rep.intervals(eps=eps, inf=inf, sup=sup, fast=fast)
         except AttributeError: # pragma: no cover
             raise OperationNotSupported(f, 'intervals')
 
@@ -1445,9 +1453,8 @@ class Poly(Basic):
 
         s, t = QQ.convert(s), QQ.convert(t)
 
-        if isinstance(eps, Basic):
-            eps = QQ.from_sympy(eps)
-
+        if eps is not None:
+            eps = QQ.convert(eps)
         if steps is not None:
             steps = int(steps)
 
@@ -2333,6 +2340,8 @@ def factor(f, *gens, **args):
 def intervals(F, **args):
     """Compute isolating intervals for roots of `f`. """
     eps = args.get('eps')
+    inf = args.get('inf')
+    sup = args.get('sup')
     fast = args.get('fast')
 
     if not hasattr(F, '__iter__'):
@@ -2342,9 +2351,9 @@ def intervals(F, **args):
             return []
 
         if args.get('sqf', False):
-            return F.intervals_sqf(eps=eps, fast=fast)
+            return F.intervals_sqf(eps=eps, inf=inf, sup=sup, fast=fast)
         else:
-            return F.intervals(eps=eps, fast=fast)
+            return F.intervals(eps=eps, inf=inf, sup=sup, fast=fast)
     else:
         # XXX: the following should read:
         #
@@ -2370,9 +2379,16 @@ def intervals(F, **args):
             except GeneratorsNeeded:
                 F[i] = []
 
+        if eps is not None:
+            eps = QQ.convert(eps)
+        if inf is not None:
+            inf = QQ.convert(inf)
+        if sup is not None:
+            sup = QQ.convert(sup)
+
         result = []
 
-        for (s, t), k in dup_isolate_real_roots_list(F, QQ, eps=eps, fast=fast):
+        for (s, t), k in dup_isolate_real_roots_list(F, QQ, eps=eps, inf=inf, sup=sup, fast=fast):
             result.append(((QQ.to_sympy(s), QQ.to_sympy(t)), k))
 
         return result

@@ -1673,6 +1673,23 @@ def test_intervals():
     assert intervals([x+1, x+2, x-1, x+1, 1, x-1, x-1, (x-2)**2]) == \
         [((-2, -2), {1: 1}), ((-1, -1), {0: 1, 3: 1}), ((1, 1), {2: 1, 5: 1, 6: 1}), ((2, 2), {7: 2})]
 
+    f, g, h = x**2 - 2, x**4 - 4*x**2 + 4, x - 1
+
+    assert intervals(f, inf=S(7)/4, sqf=True) == []
+    assert intervals(f, inf=S(7)/5, sqf=True) == [(S(7)/5, S(3)/2)]
+    assert intervals(f, sup=S(7)/4, sqf=True) == [(-2, -1), (1, S(3)/2)]
+    assert intervals(f, sup=S(7)/5, sqf=True) == [(-2, -1)]
+
+    assert intervals(g, inf=S(7)/4) == []
+    assert intervals(g, inf=S(7)/5) == [((S(7)/5, S(3)/2), 2)]
+    assert intervals(g, sup=S(7)/4) == [((-2, -1), 2), ((1, S(3)/2), 2)]
+    assert intervals(g, sup=S(7)/5) == [((-2, -1), 2)]
+
+    assert intervals([g, h], inf=S(7)/4) == []
+    assert intervals([g, h], inf=S(7)/5) == [((S(7)/5, S(3)/2), {0: 2})]
+    assert intervals([g, h], sup=S(7)/4) == [((-2, -1), {0: 2}), ((1, 1), {1: 1}), ((1, S(3)/2), {0: 2})]
+    assert intervals([g, h], sup=S(7)/5) == [((-2, -1), {0: 2}), ((1, 1), {1: 1})]
+
 def test_refine_root():
     f = Poly(x**2 - 2)
 

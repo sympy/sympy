@@ -1331,6 +1331,25 @@ def test_dup_isolate_real_roots_sqf():
     assert dup_isolate_real_roots_sqf([QQ(8,5), QQ(-87374,3855), QQ(-17,771)], QQ) == \
         [(QQ(-1), QQ(0)), (QQ(14), QQ(15))]
 
+    assert dup_isolate_real_roots_sqf([1, -1], ZZ, inf=2) == []
+    assert dup_isolate_real_roots_sqf([1, -1], ZZ, sup=0) == []
+
+    assert dup_isolate_real_roots_sqf([1, -1], ZZ) == [(1, 1)]
+    assert dup_isolate_real_roots_sqf([1, -1], ZZ, inf=1) == [(1, 1)]
+    assert dup_isolate_real_roots_sqf([1, -1], ZZ, sup=1) == [(1, 1)]
+    assert dup_isolate_real_roots_sqf([1, -1], ZZ, inf=1, sup=1) == [(1, 1)]
+
+    f = [1, 0, -2]
+
+    assert dup_isolate_real_roots_sqf(f, ZZ, inf=QQ(7,4)) == []
+    assert dup_isolate_real_roots_sqf(f, ZZ, inf=QQ(7,5)) == [(QQ(7,5), QQ(3,2))]
+    assert dup_isolate_real_roots_sqf(f, ZZ, sup=QQ(7,5)) == [(-2, -1)]
+    assert dup_isolate_real_roots_sqf(f, ZZ, sup=QQ(7,4)) == [(-2, -1), (1, QQ(3,2))]
+    assert dup_isolate_real_roots_sqf(f, ZZ, sup=-QQ(7,4)) == []
+    assert dup_isolate_real_roots_sqf(f, ZZ, sup=-QQ(7,5)) == [(-QQ(3,2), -QQ(7,5))]
+    assert dup_isolate_real_roots_sqf(f, ZZ, inf=-QQ(7,5)) == [(1, 2)]
+    assert dup_isolate_real_roots_sqf(f, ZZ, inf=-QQ(7,4)) == [(-QQ(3,2), -1), (1, 2)]
+
     raises(DomainError, "dup_isolate_real_roots_sqf([EX(1), EX(2)], EX)")
 
 def test_dup_isolate_real_roots():
@@ -1358,6 +1377,25 @@ def test_dup_isolate_real_roots():
         [((-QQ(2), -QQ(3,2)), 1), ((-QQ(3,2), -QQ(1,1)), 1),
          (( QQ(1),  QQ(3,2)), 1), (( QQ(3,2),  QQ(3,2)), 1), ((QQ(3,2), QQ(2)), 1)]
 
+    assert dup_isolate_real_roots([1, -1], ZZ, inf=2) == []
+    assert dup_isolate_real_roots([1, -1], ZZ, sup=0) == []
+
+    assert dup_isolate_real_roots([1, -1], ZZ) == [((1, 1), 1)]
+    assert dup_isolate_real_roots([1, -1], ZZ, inf=1) == [((1, 1), 1)]
+    assert dup_isolate_real_roots([1, -1], ZZ, sup=1) == [((1, 1), 1)]
+    assert dup_isolate_real_roots([1, -1], ZZ, inf=1, sup=1) == [((1, 1), 1)]
+
+    f = [1, 0, -4, 0, 4]
+
+    assert dup_isolate_real_roots(f, ZZ, inf=QQ(7,4)) == []
+    assert dup_isolate_real_roots(f, ZZ, inf=QQ(7,5)) == [((QQ(7,5), QQ(3,2)), 2)]
+    assert dup_isolate_real_roots(f, ZZ, sup=QQ(7,5)) == [((-2, -1), 2)]
+    assert dup_isolate_real_roots(f, ZZ, sup=QQ(7,4)) == [((-2, -1), 2), ((1, QQ(3,2)), 2)]
+    assert dup_isolate_real_roots(f, ZZ, sup=-QQ(7,4)) == []
+    assert dup_isolate_real_roots(f, ZZ, sup=-QQ(7,5)) == [((-QQ(3,2), -QQ(7,5)), 2)]
+    assert dup_isolate_real_roots(f, ZZ, inf=-QQ(7,5)) == [((1, 2), 2)]
+    assert dup_isolate_real_roots(f, ZZ, inf=-QQ(7,4)) == [((-QQ(3,2), -1), 2), ((1, 2), 2)]
+
     raises(DomainError, "dup_isolate_real_roots([EX(1), EX(2)], EX)")
 
 def test_dup_isolate_real_roots_list():
@@ -1378,3 +1416,14 @@ def test_dup_isolate_real_roots_list():
 
     assert dup_isolate_real_roots_list([[1,1], [1,2], [1,-1], [1,1], [1,-1], [1,2]], ZZ) == \
         [((-QQ(2), -QQ(2)), {1: 1, 5: 1}), ((-QQ(1), -QQ(1)), {0: 1, 3: 1}), ((QQ(1), QQ(1)), {2: 1, 4: 1})]
+
+    f, g = [1, 0, -4, 0, 4], [1, -1]
+
+    assert dup_isolate_real_roots_list([f, g], ZZ, inf=QQ(7,4)) == []
+    assert dup_isolate_real_roots_list([f, g], ZZ, inf=QQ(7,5)) == [((QQ(7,5), QQ(3,2)), {0: 2})]
+    assert dup_isolate_real_roots_list([f, g], ZZ, sup=QQ(7,5)) == [((-2, -1), {0: 2}), ((1, 1), {1: 1})]
+    assert dup_isolate_real_roots_list([f, g], ZZ, sup=QQ(7,4)) == [((-2, -1), {0: 2}), ((1, 1), {1: 1}), ((1, QQ(3,2)), {0: 2})]
+    assert dup_isolate_real_roots_list([f, g], ZZ, sup=-QQ(7,4)) == []
+    assert dup_isolate_real_roots_list([f, g], ZZ, sup=-QQ(7,5)) == [((-QQ(3,2), -QQ(7,5)), {0: 2})]
+    assert dup_isolate_real_roots_list([f, g], ZZ, inf=-QQ(7,5)) == [((1, 1), {1: 1}), ((1, 2), {0: 2})]
+    assert dup_isolate_real_roots_list([f, g], ZZ, inf=-QQ(7,4)) == [((-QQ(3,2), -1), {0: 2}), ((1, 1), {1: 1}), ((1, 2), {0: 2})]
