@@ -55,6 +55,7 @@ from sympy.polys.densetools import (
     dup_refine_real_root,
     dup_isolate_real_roots,
     dup_isolate_real_roots_sqf,
+    dup_isolate_real_roots_list,
 )
 
 from sympy.polys.polyclasses import DMP, ANP
@@ -1150,42 +1151,42 @@ def test_dup_sign_variations():
 def test_dup_refine_real_root():
     f = [1,0,-2]
 
-    assert dup_refine_real_root(f, QQ(1), QQ(1), ZZ, step=1) == (QQ(1), QQ(1))
-    assert dup_refine_real_root(f, QQ(1), QQ(1), ZZ, step=9) == (QQ(1), QQ(1))
+    assert dup_refine_real_root(f, QQ(1), QQ(1), ZZ, steps=1) == (QQ(1), QQ(1))
+    assert dup_refine_real_root(f, QQ(1), QQ(1), ZZ, steps=9) == (QQ(1), QQ(1))
 
     raises(ValueError, "dup_refine_real_root(f, QQ(-2), QQ(2), ZZ)")
 
     s, t = QQ(1,1), QQ(2,1)
 
-    assert dup_refine_real_root(f, s, t, ZZ, step=0) == (QQ(1, 1), QQ(2, 1))
-    assert dup_refine_real_root(f, s, t, ZZ, step=1) == (QQ(1, 1), QQ(3, 2))
-    assert dup_refine_real_root(f, s, t, ZZ, step=2) == (QQ(4, 3), QQ(3, 2))
-    assert dup_refine_real_root(f, s, t, ZZ, step=3) == (QQ(7, 5), QQ(3, 2))
-    assert dup_refine_real_root(f, s, t, ZZ, step=4) == (QQ(7, 5), QQ(10, 7))
+    assert dup_refine_real_root(f, s, t, ZZ, steps=0) == (QQ(1, 1), QQ(2, 1))
+    assert dup_refine_real_root(f, s, t, ZZ, steps=1) == (QQ(1, 1), QQ(3, 2))
+    assert dup_refine_real_root(f, s, t, ZZ, steps=2) == (QQ(4, 3), QQ(3, 2))
+    assert dup_refine_real_root(f, s, t, ZZ, steps=3) == (QQ(7, 5), QQ(3, 2))
+    assert dup_refine_real_root(f, s, t, ZZ, steps=4) == (QQ(7, 5), QQ(10, 7))
 
     s, t = QQ(1,1), QQ(3,2)
 
-    assert dup_refine_real_root(f, s, t, ZZ, step=0) == (QQ(1, 1), QQ(3, 2))
-    assert dup_refine_real_root(f, s, t, ZZ, step=1) == (QQ(4, 3), QQ(3, 2))
-    assert dup_refine_real_root(f, s, t, ZZ, step=2) == (QQ(7, 5), QQ(3, 2))
-    assert dup_refine_real_root(f, s, t, ZZ, step=3) == (QQ(7, 5), QQ(10, 7))
-    assert dup_refine_real_root(f, s, t, ZZ, step=4) == (QQ(7, 5), QQ(17, 12))
+    assert dup_refine_real_root(f, s, t, ZZ, steps=0) == (QQ(1, 1), QQ(3, 2))
+    assert dup_refine_real_root(f, s, t, ZZ, steps=1) == (QQ(4, 3), QQ(3, 2))
+    assert dup_refine_real_root(f, s, t, ZZ, steps=2) == (QQ(7, 5), QQ(3, 2))
+    assert dup_refine_real_root(f, s, t, ZZ, steps=3) == (QQ(7, 5), QQ(10, 7))
+    assert dup_refine_real_root(f, s, t, ZZ, steps=4) == (QQ(7, 5), QQ(17, 12))
 
     s, t = QQ(1,1), QQ(5,3)
 
-    assert dup_refine_real_root(f, s, t, ZZ, step=0) == (QQ(1, 1), QQ(5, 3))
-    assert dup_refine_real_root(f, s, t, ZZ, step=1) == (QQ(1, 1), QQ(3, 2))
-    assert dup_refine_real_root(f, s, t, ZZ, step=2) == (QQ(7, 5), QQ(3, 2))
-    assert dup_refine_real_root(f, s, t, ZZ, step=3) == (QQ(7, 5), QQ(13, 9))
-    assert dup_refine_real_root(f, s, t, ZZ, step=4) == (QQ(7, 5), QQ(10, 7))
+    assert dup_refine_real_root(f, s, t, ZZ, steps=0) == (QQ(1, 1), QQ(5, 3))
+    assert dup_refine_real_root(f, s, t, ZZ, steps=1) == (QQ(1, 1), QQ(3, 2))
+    assert dup_refine_real_root(f, s, t, ZZ, steps=2) == (QQ(7, 5), QQ(3, 2))
+    assert dup_refine_real_root(f, s, t, ZZ, steps=3) == (QQ(7, 5), QQ(13, 9))
+    assert dup_refine_real_root(f, s, t, ZZ, steps=4) == (QQ(7, 5), QQ(10, 7))
 
     s, t = QQ(-1,1), QQ(-2,1)
 
-    assert dup_refine_real_root(f, s, t, ZZ, step=0) == (-QQ(2, 1), -QQ(1, 1))
-    assert dup_refine_real_root(f, s, t, ZZ, step=1) == (-QQ(3, 2), -QQ(1, 1))
-    assert dup_refine_real_root(f, s, t, ZZ, step=2) == (-QQ(3, 2), -QQ(4, 3))
-    assert dup_refine_real_root(f, s, t, ZZ, step=3) == (-QQ(3, 2), -QQ(7, 5))
-    assert dup_refine_real_root(f, s, t, ZZ, step=4) == (-QQ(10, 7), -QQ(7, 5))
+    assert dup_refine_real_root(f, s, t, ZZ, steps=0) == (-QQ(2, 1), -QQ(1, 1))
+    assert dup_refine_real_root(f, s, t, ZZ, steps=1) == (-QQ(3, 2), -QQ(1, 1))
+    assert dup_refine_real_root(f, s, t, ZZ, steps=2) == (-QQ(3, 2), -QQ(4, 3))
+    assert dup_refine_real_root(f, s, t, ZZ, steps=3) == (-QQ(3, 2), -QQ(7, 5))
+    assert dup_refine_real_root(f, s, t, ZZ, steps=4) == (-QQ(10, 7), -QQ(7, 5))
 
     raises(RefinementFailed, "dup_refine_real_root(f, QQ(0), QQ(1), ZZ)")
 
@@ -1359,3 +1360,21 @@ def test_dup_isolate_real_roots():
 
     raises(DomainError, "dup_isolate_real_roots([EX(1), EX(2)], EX)")
 
+def test_dup_isolate_real_roots_list():
+    f = dup_from_raw_dict({5: ZZ(1), 0: -ZZ(200)}, ZZ)
+    g = dup_from_raw_dict({5: ZZ(1), 0: -ZZ(201)}, ZZ)
+
+    assert dup_isolate_real_roots_list([f, g], ZZ) == \
+        [((QQ(75,26), QQ(101,35)), {0: 1}), ((QQ(283,98), QQ(26,9)), {1: 1})]
+
+    f = dup_from_raw_dict({5: -QQ(1,200), 0: QQ(1)}, QQ)
+    g = dup_from_raw_dict({5: -QQ(1,201), 0: QQ(1)}, QQ)
+
+    assert dup_isolate_real_roots_list([f, g], QQ) == \
+        [((QQ(75,26), QQ(101,35)), {0: 1}), ((QQ(283,98), QQ(26,9)), {1: 1})]
+
+    assert dup_isolate_real_roots_list([[1,1], [1,2], [1,-1], [1,1], [1,-1], [1,-1]], ZZ) == \
+        [((-QQ(2), -QQ(2)), {1: 1}), ((-QQ(1), -QQ(1)), {0: 1, 3: 1}), ((QQ(1), QQ(1)), {2: 1, 4: 1, 5: 1})]
+
+    assert dup_isolate_real_roots_list([[1,1], [1,2], [1,-1], [1,1], [1,-1], [1,2]], ZZ) == \
+        [((-QQ(2), -QQ(2)), {1: 1, 5: 1}), ((-QQ(1), -QQ(1)), {0: 1, 3: 1}), ((QQ(1), QQ(1)), {2: 1, 4: 1})]

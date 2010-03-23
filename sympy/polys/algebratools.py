@@ -548,7 +548,7 @@ class IntegerRing(Ring):
 
     def log(self, a, b):
         """Returns b-base logarithm of `a`. """
-        return self.dtype(math.floor(math.log(a, b)))
+        return self.dtype(math.log(a, b))
 
 class RationalField(Field):
     """General class for rational fields. """
