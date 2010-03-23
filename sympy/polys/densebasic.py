@@ -798,24 +798,21 @@ def dmp_eject(f, u, K, **args):
 
     return dmp_from_dict(h, v-1, K)
 
-@cythonized("g,G")
+@cythonized("i")
 def dup_terms_gcd(f, K):
     """Remove GCD of terms from `f` in `K[x]`. """
-    if dup_TC(f, K) or not f:
+    if not f or f[-1]:
         return 0, f
 
-    F = dup_to_raw_dict(f)
-    G = min(F.keys())
+    i = 0
 
-    if not G:
-        return G, f
+    for c in reversed(f):
+        if not c:
+            i += 1
+        else:
+            break
 
-    f = {}
-
-    for g, coeff in F.iteritems():
-        f[g-G] = coeff
-
-    return G, dup_from_raw_dict(f, K)
+    return i, f[:-i]
 
 @cythonized("u,g")
 def dmp_terms_gcd(f, u, K):
