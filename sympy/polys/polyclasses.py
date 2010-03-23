@@ -1524,17 +1524,17 @@ class DMP(object):
         factors = dmp_factor_list_include(f.rep, f.lev, f.dom)
         return [ (f.per(g), k) for g, k in factors ]
 
-    def intervals_sqf(f, eps=None, fast=False):
+    def intervals_sqf(f, eps=None, inf=None, sup=None, fast=False):
         """Compute isolating intervals for roots of square-free `f`. """
         if not f.lev:
-            return dup_isolate_real_roots_sqf(f.rep, f.dom, eps=eps, fast=fast)
+            return dup_isolate_real_roots_sqf(f.rep, f.dom, eps=eps, inf=inf, sup=sup, fast=fast)
         else:
             raise PolynomialError("can't isolate roots of a multivariate polynomial")
 
-    def intervals(f, eps=None, fast=False):
+    def intervals(f, eps=None, inf=None, sup=None, fast=False):
         """Compute isolating intervals for roots of `f`. """
         if not f.lev:
-            return dup_isolate_real_roots(f.rep, f.dom, eps=eps, fast=fast)
+            return dup_isolate_real_roots(f.rep, f.dom, eps=eps, inf=inf, sup=sup, fast=fast)
         else:
             raise PolynomialError("can't isolate roots of a multivariate polynomial")
 
