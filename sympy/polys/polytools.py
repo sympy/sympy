@@ -22,6 +22,10 @@ from sympy.polys.polyutils import (
     _dict_from_basic_no_gens,
 )
 
+from sympy.polys.densetools import (
+    dup_isolate_real_roots_list,
+)
+
 from sympy.polys.groebnertools import (
     sdp_from_dict, sdp_div, sdp_groebner,
 )
@@ -1412,8 +1416,8 @@ class Poly(Basic):
 
     def intervals_sqf(f, eps=None, fast=False):
         """Compute isolating intervals for roots of square-free `f`. """
-        if eps is not None:
-            eps = QQ.convert(eps)
+        if isinstance(eps, Basic):
+            eps = QQ.from_sympy(eps)
 
         try:
             result = f.rep.intervals_sqf(eps=eps, fast=fast)
@@ -1424,8 +1428,8 @@ class Poly(Basic):
 
     def intervals(f, eps=None, fast=False):
         """Compute isolating intervals for roots of `f`. """
-        if eps is not None:
-            eps = QQ.convert(eps)
+        if isinstance(eps, Basic):
+            eps = QQ.from_sympy(eps)
 
         try:
             result = f.rep.intervals(eps=eps, fast=fast)
@@ -1433,6 +1437,26 @@ class Poly(Basic):
             raise OperationNotSupported(f, 'intervals')
 
         return [ ((QQ.to_sympy(s), QQ.to_sympy(t)), k) for ((s, t), k) in result ]
+
+    def refine_root(f, s, t, eps=None, steps=None, fast=False, check_sqf=False):
+        """Refine an isolating interval of a root to the given precision. """
+        if check_sqf and not f.is_sqf:
+            raise PolynomialError("only square-free polynomials supported")
+
+        s, t = QQ.convert(s), QQ.convert(t)
+
+        if isinstance(eps, Basic):
+            eps = QQ.from_sympy(eps)
+
+        if steps is not None:
+            steps = int(steps)
+
+        try:
+            S, T = f.rep.refine_root(s, t, eps=eps, steps=steps, fast=fast)
+        except AttributeError: # pragma: no cover
+            raise OperationNotSupported(f, 'refine_root')
+
+        return QQ.to_sympy(S), QQ.to_sympy(T)
 
     def nroots(f, **args):
         """Compute numerical approximations of roots of `f`. """
@@ -2306,20 +2330,52 @@ def factor(f, *gens, **args):
     else:
         return Mul(coeff, factors, evaluate=False)
 
-def intervals(f, *gens, **args):
+def intervals(F, **args):
     """Compute isolating intervals for roots of `f`. """
-    try:
-        F = Poly(f, *_analyze_gens(gens), **args)
-    except GeneratorsNeeded:
-        raise GeneratorsNeeded("can't isolate roots of %s without generators" % f)
-
     eps = args.get('eps')
     fast = args.get('fast')
 
-    if args.get('sqf', False):
-        return F.intervals_sqf(eps=eps, fast=fast)
+    if not hasattr(F, '__iter__'):
+        try:
+            F = Poly(F)
+        except GeneratorsNeeded:
+            return []
+
+        if args.get('sqf', False):
+            return F.intervals_sqf(eps=eps, fast=fast)
+        else:
+            return F.intervals(eps=eps, fast=fast)
     else:
-        return F.intervals(eps=eps, fast=fast)
+        # XXX: the following should read:
+        #
+        #   F, gens, dom = parallel_from_basic(F)
+        #
+        #   if len(gens) > 1:
+        #       raise MultivariatePolynomialError("...")
+        #
+        #   (the same applies to groebner(), reduced() ...)
+
+        gens = set([])
+
+        for i, f in enumerate(F):
+            try:
+                f = Poly(f, domain=QQ)
+
+                gens |= set(f.gens)
+
+                if len(gens) > 1:
+                    raise PolynomialError("multivariate polynomials are not supported")
+                else:
+                    F[i] = f.rep.rep
+            except GeneratorsNeeded:
+                F[i] = []
+
+        result = []
+
+        for (s, t), k in dup_isolate_real_roots_list(F, QQ, eps=eps, fast=fast):
+            result.append(((QQ.to_sympy(s), QQ.to_sympy(t)), k))
+
+        return result
 
 def nroots(f, *gens, **args):
     """Compute numerical approximations of roots of `f`. """
