@@ -14,7 +14,8 @@ from sympy.polys.densebasic import (
     dmp_multi_deflate, dmp_inflate,
     dup_to_raw_dict, dup_from_raw_dict,
     dmp_raise, dmp_apply_pairs,
-    dmp_inject, dmp_zeros
+    dmp_inject, dmp_zeros,
+    dup_terms_gcd
 )
 
 from sympy.polys.densearith import (
@@ -2363,6 +2364,21 @@ def dup_inner_isolate_negative_roots(f, K, inf=None, sup=None, eps=None, fast=Fa
 
     return results
 
+def _isolate_zero(f, K, inf, sup, sqf=False):
+    """Handle special case of CF algorithm when ``f`` is inhomogeneous. """
+    j, f = dup_terms_gcd(f, K)
+
+    if j > 0:
+        F = K.get_field()
+
+        if (inf is None or inf <= 0) and (sup is None or 0 <= sup):
+            if not sqf:
+                return [((F.zero, F.zero), j)], f
+            else:
+                return [(F.zero, F.zero)], f
+
+    return [], f
+
 def dup_isolate_real_roots_sqf(f, K, eps=None, inf=None, sup=None, fast=False):
     """Isolate real roots of a square-free polynomial using CF approach. """
     if K.is_QQ:
@@ -2373,10 +2389,12 @@ def dup_isolate_real_roots_sqf(f, K, eps=None, inf=None, sup=None, fast=False):
     if dup_degree(f) <= 0:
         return []
 
+    I_zero, f = _isolate_zero(f, K, inf, sup, sqf=True)
+
     I_neg = dup_inner_isolate_negative_roots(f, K, eps=eps, inf=inf, sup=sup, fast=fast)
     I_pos = dup_inner_isolate_positive_roots(f, K, eps=eps, inf=inf, sup=sup, fast=fast)
 
-    return sorted(I_neg + I_pos)
+    return sorted(I_neg + I_zero + I_pos)
 
 def dup_isolate_real_roots(f, K, eps=None, inf=None, sup=None, fast=False):
     """Isolate real roots using continued fractions approach. """
@@ -2388,6 +2406,8 @@ def dup_isolate_real_roots(f, K, eps=None, inf=None, sup=None, fast=False):
     if dup_degree(f) <= 0:
         return []
 
+    I_zero, f = _isolate_zero(f, K, inf, sup, sqf=False)
+
     _, factors = dup_sqf_list(f, K)
 
     if len(factors) == 1:
@@ -2396,10 +2416,12 @@ def dup_isolate_real_roots(f, K, eps=None, inf=None, sup=None, fast=False):
         I_neg = dup_inner_isolate_negative_roots(f, K, eps=eps, inf=inf, sup=sup, fast=fast)
         I_pos = dup_inner_isolate_positive_roots(f, K, eps=eps, inf=inf, sup=sup, fast=fast)
 
-        return sorted([ ((u, v), k) for u, v in I_neg ] + \
-                      [ ((u, v), k) for u, v in I_pos ])
+        I_neg = [ ((u, v), k) for u, v in I_neg ]
+        I_pos = [ ((u, v), k) for u, v in I_pos ]
+    else:
+        I_neg, I_pos = _real_isolate_and_disjoin(factors, K, eps=eps, inf=inf, sup=sup, fast=fast)
 
-    return _real_isolate_and_disjoin(factors, K, eps=eps, inf=inf, sup=sup, fast=fast)
+    return sorted(I_neg + I_zero + I_pos)
 
 def dup_isolate_real_roots_list(polys, K, eps=None, inf=None, sup=None, fast=False):
     """Isolate real roots of a list of square-free polynomial using CF approach. """
@@ -2411,9 +2433,17 @@ def dup_isolate_real_roots_list(polys, K, eps=None, inf=None, sup=None, fast=Fal
     elif not K.is_ZZ:
         raise DomainError("isolation of real roots not supported over %s" % K)
 
-    factors_dict = {}
+    zeros, factors_dict = False, {}
+
+    if (inf is None or inf <= 0) and (sup is None or 0 <= sup):
+        zeros, zero_indices = True, {}
 
     for i, p in enumerate(polys):
+        j, p = dup_terms_gcd(p, K)
+
+        if zeros and j > 0:
+            zero_indices[i] = j
+
         for f, k in dup_sqf_list(p, K)[1]:
             f = tuple(f)
 
@@ -2427,7 +2457,17 @@ def dup_isolate_real_roots_list(polys, K, eps=None, inf=None, sup=None, fast=Fal
     for f, indices in factors_dict.items():
         factors_list.append((list(f), indices))
 
-    return _real_isolate_and_disjoin(factors_list, K, eps=eps, inf=inf, sup=sup, fast=fast)
+    I_neg, I_pos = _real_isolate_and_disjoin(factors_list, K,
+        eps=eps, inf=inf, sup=sup, fast=fast)
+
+    F = K.get_field()
+
+    if not zeros or not zero_indices:
+        I_zero = []
+    else:
+        I_zero = [((F.zero, F.zero), zero_indices)]
+
+    return sorted(I_neg + I_zero + I_pos)
 
 def _disjoint_p(M, N):
     """Check if Mobius transforms define disjoint intervals. """
@@ -2477,11 +2517,12 @@ def _real_isolate_and_disjoin(factors, K, eps=None, inf=None, sup=None, fast=Fal
 
     field = K.get_field()
 
-    I_pos = [ (_mobius_to_interval(M, field), k) for (_, M, k) in I_pos ]
     I_neg = [ (_mobius_to_interval(M, field), k) for (_, M, k) in I_neg ]
+    I_pos = [ (_mobius_to_interval(M, field), k) for (_, M, k) in I_pos ]
 
-    return sorted([ ((-v, -u), k) for ((u, v), k) in I_neg ] + \
-                  [ (( u,  v), k) for ((u, v), k) in I_pos ])
+    I_neg = [ ((-v, -u), k) for ((u, v), k) in I_neg ]
+
+    return I_neg, I_pos
 
 def _dup_inner_sturm(f, p, q, x, y, K):
     """Compute Sturm sequence at x+I*y in p+I*q direction. """

@@ -1623,6 +1623,12 @@ def test_intervals():
     assert intervals(0) == []
     assert intervals(1) == []
 
+    assert intervals(x, sqf=True) == [(0, 0)]
+    assert intervals(x) == [((0, 0), 1)]
+
+    assert intervals(x**128) == [((0, 0), 128)]
+    assert intervals([x**2, x**4]) == [((0, 0), {0: 2, 1: 4})]
+
     f = Poly((2*x/5 - S(17)/3)*(4*x + S(1)/257))
 
     assert f.intervals_sqf() == [(-1, 0), (14, 15)]
