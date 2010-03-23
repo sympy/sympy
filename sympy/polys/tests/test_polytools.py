@@ -31,6 +31,7 @@ from sympy.polys.polyerrors import (
     OperationNotSupported,
     ExactQuotientFailed,
     UnificationFailed,
+    RefinementFailed,
     GeneratorsNeeded,
     PolynomialError,
     CoercionFailed,
@@ -1619,10 +1620,16 @@ def test_factor():
     assert factor(f, frac=True) == y*(sin(x) + 1)/(pi + 1)**2
 
 def test_intervals():
+    assert intervals(0) == []
+    assert intervals(1) == []
+
     f = Poly((2*x/5 - S(17)/3)*(4*x + S(1)/257))
 
     assert f.intervals_sqf() == [(-1, 0), (14, 15)]
     assert f.intervals() == [((-1, 0), 1), ((14, 15), 1)]
+
+    assert f.intervals_sqf(fast=True) == [(-1, 0), (14, 15)]
+    assert f.intervals(fast=True) == [((-1, 0), 1), ((14, 15), 1)]
 
     assert f.intervals(eps=S(1)/10) == f.intervals(eps=0.1) == \
         [((-S(1)/258, 0), 1), ((S(85)/6, S(85)/6), 1)]
@@ -1654,7 +1661,37 @@ def test_intervals():
          ((-1, -1), 1), ((-1, 0), 3),
          ((1, S(3)/2), 1), ((S(3)/2, 2), 7)]
 
-    raises(GeneratorsNeeded, "intervals(0)")
+    assert intervals([x**5 - 200, x**5 - 201]) == \
+        [((S(75)/26, S(101)/35), {0: 1}), ((S(283)/98, S(26)/9), {1: 1})]
+
+    assert intervals([x**5 - 200, x**5 - 201], fast=True) == \
+        [((S(75)/26, S(101)/35), {0: 1}), ((S(283)/98, S(26)/9), {1: 1})]
+
+    assert intervals([x**2 - 200, x**2 - 201]) == \
+        [((-S(71)/5, -S(85)/6), {1: 1}), ((-S(85)/6, -14), {0: 1}), ((14, S(85)/6), {0: 1}), ((S(85)/6, S(71)/5), {1: 1})]
+
+    assert intervals([x+1, x+2, x-1, x+1, 1, x-1, x-1, (x-2)**2]) == \
+        [((-2, -2), {1: 1}), ((-1, -1), {0: 1, 3: 1}), ((1, 1), {2: 1, 5: 1, 6: 1}), ((2, 2), {7: 2})]
+
+def test_refine_root():
+    f = Poly(x**2 - 2)
+
+    assert f.refine_root(1, 2) == (1, 2)
+    assert f.refine_root(-2, -1) == (-2, -1)
+
+    assert f.refine_root(1, 2, steps=1) == (1, S(3)/2)
+    assert f.refine_root(-2, -1, steps=1) == (-S(3)/2, -1)
+
+    assert f.refine_root(1, 2, steps=1, fast=True) == (1, S(3)/2)
+    assert f.refine_root(-2, -1, steps=1, fast=True) == (-S(3)/2, -1)
+
+    assert f.refine_root(1, 2, eps=S(1)/100) == (S(24)/17, S(17)/12)
+    assert f.refine_root(1, 2, eps=1e-2) == (S(24)/17, S(17)/12)
+
+    raises(PolynomialError, "(f**2).refine_root(1, 2, check_sqf=True)")
+
+    raises(RefinementFailed, "(f**2).refine_root(1, 2)")
+    raises(RefinementFailed, "(f**2).refine_root(2, 3)")
 
 def test_nroots():
     assert Poly(x**2 - 1, x).nroots() == [-1.0, 1.0]
