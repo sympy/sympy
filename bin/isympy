@@ -140,7 +140,7 @@ def main():
 
             if pretty != 'ascii':
                 if pretty == 'no':
-                    args['pretty'] = False
+                    args['pretty_print'] = False
                 else:
                     raise ValueError("Unknown pretty" \
                         " printing setup: " + options.pretty)
