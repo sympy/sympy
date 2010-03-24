@@ -1190,6 +1190,15 @@ def test_dup_refine_real_root():
 
     raises(RefinementFailed, "dup_refine_real_root(f, QQ(0), QQ(1), ZZ)")
 
+    s, t, u, v, w = QQ(1), QQ(2), QQ(24,17), QQ(17,12), QQ(7,5)
+
+    assert dup_refine_real_root(f, s, t, ZZ, eps=QQ(1,100)) == (u, v)
+    assert dup_refine_real_root(f, s, t, ZZ, steps=6) == (u, v)
+
+    assert dup_refine_real_root(f, s, t, ZZ, eps=QQ(1,100), steps=5) == (w, v)
+    assert dup_refine_real_root(f, s, t, ZZ, eps=QQ(1,100), steps=6) == (u, v)
+    assert dup_refine_real_root(f, s, t, ZZ, eps=QQ(1,100), steps=7) == (u, v)
+
 def test_dup_isolate_real_roots_sqf():
     assert dup_isolate_real_roots_sqf([], ZZ) == []
     assert dup_isolate_real_roots_sqf([5], ZZ) == []
