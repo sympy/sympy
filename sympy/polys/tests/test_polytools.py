@@ -1699,8 +1699,11 @@ def test_intervals():
 def test_refine_root():
     f = Poly(x**2 - 2)
 
-    assert f.refine_root(1, 2) == (1, 2)
-    assert f.refine_root(-2, -1) == (-2, -1)
+    assert f.refine_root(1, 2, steps=0) == (1, 2)
+    assert f.refine_root(-2, -1, steps=0) == (-2, -1)
+
+    assert f.refine_root(1, 2, steps=None) == (1, S(3)/2)
+    assert f.refine_root(-2, -1, steps=None) == (-S(3)/2, -1)
 
     assert f.refine_root(1, 2, steps=1) == (1, S(3)/2)
     assert f.refine_root(-2, -1, steps=1) == (-S(3)/2, -1)

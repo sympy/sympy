@@ -1455,8 +1455,11 @@ class Poly(Basic):
 
         if eps is not None:
             eps = QQ.convert(eps)
+
         if steps is not None:
             steps = int(steps)
+        elif eps is None:
+            steps = 1
 
         try:
             S, T = f.rep.refine_root(s, t, eps=eps, steps=steps, fast=fast)
