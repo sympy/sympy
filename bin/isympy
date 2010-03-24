@@ -116,7 +116,18 @@ def main():
         default=False,
         help='print only version information at startup')
 
+    parser.add_option(
+        '-d', '--doctest',
+        dest='doctest',
+        action='store_true',
+        default=False,
+        help='use the doctest format for output (you can just copy and paste it)')
+
     (options, ipy_args) = parser.parse_args()
+
+    if options.doctest:
+        options.pretty = 'no'
+        options.console = 'python'
 
     session = options.console
 
