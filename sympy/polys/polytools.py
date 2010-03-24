@@ -1468,17 +1468,17 @@ class Poly(Basic):
 
         return QQ.to_sympy(S), QQ.to_sympy(T)
 
-    def nroots(f, **args):
+    def nroots(f, maxsteps=50, cleanup=True, error=False):
         """Compute numerical approximations of roots of `f`. """
         if f.is_multivariate:
-            raise PolynomialError("can't compute roots of a multivariate polynomial")
+            raise PolynomialError("can't compute numerical roots of a multivariate polynomial")
 
         try:
             coeffs = [ complex(c) for c in f.all_coeffs() ]
         except ValueError:
             raise DomainError("numerical domain expected, got %s" % f.rep.dom)
 
-        return sympify(npolyroots(coeffs, **args))
+        return sympify(npolyroots(coeffs, maxsteps=maxsteps, cleanup=cleanup, error=error))
 
     def cancel(f, g):
         """Cancel common factors in a rational function `f/g`.  """
@@ -2400,14 +2400,14 @@ def refine_root(f, s, t, eps=None, steps=None, fast=False, check_sqf=False):
 
     return F.refine_root(s, t, eps=eps, steps=steps, fast=fast, check_sqf=check_sqf)
 
-def nroots(f, *gens, **args):
+def nroots(f, maxsteps=50, cleanup=True, error=False):
     """Compute numerical approximations of roots of `f`. """
-    F = NonStrictPoly(f, *_analyze_gens(gens), **args)
+    try:
+        F = Poly(f)
+    except GeneratorsNeeded:
+        raise PolynomialError("can't compute numerical roots of %s, not a polynomial" % f)
 
-    if F.is_Poly:
-        return F.nroots(**args)
-    else:
-        raise GeneratorsNeeded("can't approximate roots of %s without generators" % f)
+    return F.nroots(maxsteps=maxsteps, cleanup=cleanup, error=error)
 
 def cancel(f, *gens, **args):
     """Cancel common factors in a rational function `f`.  """
