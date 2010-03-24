@@ -2061,7 +2061,7 @@ def a2idx(a):
     if hasattr(a, "__index__"):
         return a.__index__()
 
-def symarray(shape, prefix=''):
+def symarray(prefix, shape):
     """Create a numpy ndarray of symbols (as an object array).
 
     The created symbols are named prefix_i1_i2_...  You should thus provide a
@@ -2071,41 +2071,41 @@ def symarray(shape, prefix=''):
     Parameters
     ----------
 
+    prefix : string
+      A prefix prepended to the name of every symbol.
+
     shape : int or tuple
       Shape of the created array.  If an int, the array is one-dimensional; for
       more than one dimension the shape must be a tuple.
-
-    prefix : string
-      A prefix prepended to the name of every symbol.
 
     Examples
     --------
 
     >> from sympy import symarray
-    >> symarray(3)
+    >> symarray('', 3)
     [_0 _1 _2]
 
     If you want multiple symarrays to contain distinct symbols, you *must*
     provide unique prefixes:
 
-    >> a = symarray(3)
-    >> b = symarray(3)
+    >> a = symarray('', 3)
+    >> b = symarray('', 3)
     >> a[0] is b[0]
     True
-    >> a = symarray(3, 'a')
-    >> b = symarray(3, 'b')
+    >> a = symarray('a', 3)
+    >> b = symarray('b', 3)
     >> a[0] is b[0]
     False
 
     Creating symarrays with a prefix:
-    >> symarray(3, 'a')
+    >> symarray('a', 3)
     [a_0 a_1 a_2]
 
     For more than one dimension, the shape must be given as a tuple:
-    >> symarray((2,3), 'a')
+    >> symarray('a', (2,3))
     [[a_0_0 a_0_1 a_0_2]
     [a_1_0 a_1_1 a_1_2]]
-    >> symarray((2,3,2), 'a')
+    >> symarray('a', (2,3,2))
     [[[a_0_0_0 a_0_0_1]
       [a_0_1_0 a_0_1_1]
       [a_0_2_0 a_0_2_1]]
