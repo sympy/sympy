@@ -15,7 +15,7 @@ from polytools import (
     sturm,
     sqf_norm, sqf_part, sqf_list, sqf,
     factor_list, factor,
-    intervals, nroots,
+    intervals, refine_root, nroots,
     cancel,
     reduced, groebner,
     symmetrize,

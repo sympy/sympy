@@ -20,7 +20,7 @@ from sympy.polys.polytools import (
     sturm,
     sqf_norm, sqf_part, sqf_list, sqf,
     factor_list, factor,
-    intervals, nroots,
+    intervals, refine_root, nroots,
     cancel,
     reduced, groebner,
     symmetrize,
@@ -1718,6 +1718,19 @@ def test_refine_root():
 
     raises(RefinementFailed, "(f**2).refine_root(1, 2)")
     raises(RefinementFailed, "(f**2).refine_root(2, 3)")
+
+    f = x**2 - 2
+
+    assert refine_root(f, 1, 2, steps=1) == (1, S(3)/2)
+    assert refine_root(f, -2, -1, steps=1) == (-S(3)/2, -1)
+
+    assert refine_root(f, 1, 2, steps=1, fast=True) == (1, S(3)/2)
+    assert refine_root(f, -2, -1, steps=1, fast=True) == (-S(3)/2, -1)
+
+    assert refine_root(f, 1, 2, eps=S(1)/100) == (S(24)/17, S(17)/12)
+    assert refine_root(f, 1, 2, eps=1e-2) == (S(24)/17, S(17)/12)
+
+    raises(PolynomialError, "refine_root(1, 7, 8, eps=S(1)/100)")
 
 def test_nroots():
     assert Poly(x**2 - 1, x).nroots() == [-1.0, 1.0]
