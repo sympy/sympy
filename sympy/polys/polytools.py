@@ -2340,20 +2340,15 @@ def factor(f, *gens, **args):
     else:
         return Mul(coeff, factors, evaluate=False)
 
-def intervals(F, **args):
+def intervals(F, eps=None, inf=None, sup=None, fast=False, sqf=False):
     """Compute isolating intervals for roots of `f`. """
-    eps = args.get('eps')
-    inf = args.get('inf')
-    sup = args.get('sup')
-    fast = args.get('fast')
-
     if not hasattr(F, '__iter__'):
         try:
             F = Poly(F)
         except GeneratorsNeeded:
             return []
 
-        if args.get('sqf', False):
+        if sqf:
             return F.intervals_sqf(eps=eps, inf=inf, sup=sup, fast=fast)
         else:
             return F.intervals(eps=eps, inf=inf, sup=sup, fast=fast)
@@ -2367,20 +2362,20 @@ def intervals(F, **args):
         #
         #   (the same applies to groebner(), reduced() ...)
 
-        gens = set([])
+        G, gens = [], set([])
 
-        for i, f in enumerate(F):
+        for f in F:
             try:
-                f = Poly(f, domain=QQ)
+                g = Poly(f, domain=QQ)
 
-                gens |= set(f.gens)
+                gens |= set(g.gens)
 
                 if len(gens) > 1:
                     raise PolynomialError("multivariate polynomials are not supported")
                 else:
-                    F[i] = f.rep.rep
+                    G.append(g.rep.rep)
             except GeneratorsNeeded:
-                F[i] = []
+                G.append([])
 
         if eps is not None:
             eps = QQ.convert(eps)
@@ -2391,7 +2386,7 @@ def intervals(F, **args):
 
         result = []
 
-        for (s, t), k in dup_isolate_real_roots_list(F, QQ, eps=eps, inf=inf, sup=sup, fast=fast):
+        for (s, t), k in dup_isolate_real_roots_list(G, QQ, eps=eps, inf=inf, sup=sup, fast=fast):
             result.append(((QQ.to_sympy(s), QQ.to_sympy(t)), k))
 
         return result
@@ -2399,7 +2394,7 @@ def intervals(F, **args):
 def refine_root(f, s, t, eps=None, steps=None, fast=False, check_sqf=False):
     """Refine an isolating interval of a root to the given precision. """
     try:
-        F = Poly(f, domain=QQ)
+        F = Poly(f)
     except GeneratorsNeeded:
         raise PolynomialError("can't refine a root of %s, not a polynomial" % f)
 
