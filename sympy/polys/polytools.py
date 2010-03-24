@@ -2396,6 +2396,15 @@ def intervals(F, **args):
 
         return result
 
+def refine_root(f, s, t, eps=None, steps=None, fast=False, check_sqf=False):
+    """Refine an isolating interval of a root to the given precision. """
+    try:
+        F = Poly(f, domain=QQ)
+    except GeneratorsNeeded:
+        raise PolynomialError("can't refine a root of %s, not a polynomial" % f)
+
+    return F.refine_root(s, t, eps=eps, steps=steps, fast=fast, check_sqf=check_sqf)
+
 def nroots(f, *gens, **args):
     """Compute numerical approximations of roots of `f`. """
     F = NonStrictPoly(f, *_analyze_gens(gens), **args)
