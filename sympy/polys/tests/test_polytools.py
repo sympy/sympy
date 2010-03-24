@@ -1761,7 +1761,7 @@ def test_nroots():
     roots, error = nroots(x**2 - 1, error=True)
     assert roots == [-1.0, 1.0] and error < 1e25;
 
-    raises(GeneratorsNeeded, "nroots(0)")
+    raises(PolynomialError, "nroots(0)")
 
 def test_cancel():
     assert cancel(0) == 0
