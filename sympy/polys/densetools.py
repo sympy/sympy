@@ -2349,7 +2349,7 @@ def dup_inner_isolate_positive_roots(f, K, eps=None, inf=None, sup=None, fast=Fa
 
 def dup_inner_isolate_negative_roots(f, K, inf=None, sup=None, eps=None, fast=False, mobius=False):
     """Iteratively compute disjoint negative root isolation intervals. """
-    if inf is not None and sup >= 0:
+    if inf is not None and inf >= 0:
         return []
 
     roots = dup_inner_isolate_real_roots(dup_mirror(f, K), K, eps=eps, fast=fast)
