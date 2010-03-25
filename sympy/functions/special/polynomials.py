@@ -6,49 +6,33 @@ combinatorial polynomials.
 
 """
 
-from sympy.core import S, C, Rational, Function
-from sympy.utilities.memoization import recurrence_memo, assoc_recurrence_memo
+from sympy.core.basic import C
+from sympy.core.singleton import S
+from sympy.core import Rational
+from sympy.core.function import Function
 from sympy.functions.combinatorial.factorials import factorial
+
+from sympy.polys.orthopolys import (
+    chebyshevt_poly,
+    chebyshevu_poly,
+    laguerre_poly,
+    hermite_poly,
+    legendre_poly,
+)
 
 _x = C.Dummy('x')
 
 class PolynomialSequence(Function):
-    """Polynomial sequence with 1 index
-
-       n >= 0
-    """
+    """Polynomial sequence with one index and n >= 0. """
 
     nargs = 2
 
     @classmethod
     def eval(cls, n, x):
         if n.is_integer and n >= 0:
-            return cls.calc(int(n)).subs(_x, x)
+            return cls._ortho_poly(int(n), _x).subs(_x, x)
         if n.is_negative:
             raise ValueError("%s index must be nonnegative integer (got %r)" % (cls, n))
-
-
-class PolynomialSequence2(Function):
-    """Polynomial sequence with 2 indexes
-
-       n >= 0
-       abs(m) <= n
-    """
-
-    nargs = 3
-
-    @classmethod
-    def eval(cls, n, m, x):
-        if n.is_integer and n >= 0 and m.is_integer and abs(m) <= n:
-            return cls.calc2(int(n), int(m)).subs(_x, x)
-
-        if n.is_negative:
-            raise ValueError("%s : 1st index must be nonnegative integer (got %r)" % (cls, n))
-
-        if abs(m) > n:
-            raise ValueError("%s : abs('2nd index') must be <= '1st index' (got %r, %r)" % (cls, n, m))
-
-
 
 #----------------------------------------------------------------------------
 # Chebyshev polynomials of first and second kind
@@ -81,11 +65,8 @@ class chebyshevt(PolynomialSequence):
     """
     Chebyshev polynomial of the first kind, T_n(x)
     """
-    @staticmethod
-    @recurrence_memo([S.One, _x])
-    def calc(n, prev):
-        return (2*_x*prev[n-1] - prev[n-2]).expand()
 
+    _ortho_poly = staticmethod(chebyshevt_poly)
 
 class chebyshevu(PolynomialSequence):
     """
@@ -107,11 +88,8 @@ class chebyshevu(PolynomialSequence):
         -1 + 4*x**2
 
     """
-    @staticmethod
-    @recurrence_memo([S.One, 2*_x])
-    def calc(n, prev):
-        return (2*_x*prev[n-1] - prev[n-2]).expand()
 
+    _ortho_poly = staticmethod(chebyshevu_poly)
 
 class chebyshevt_root(Function):
     """
@@ -129,6 +107,7 @@ class chebyshevt_root(Function):
     0
 
     """
+
     nargs = 2
 
     @classmethod
@@ -153,6 +132,7 @@ class chebyshevu_root(Function):
         0
 
     """
+
     nargs = 2
 
     @classmethod
@@ -160,7 +140,6 @@ class chebyshevu_root(Function):
         if not 0 <= k < n:
             raise ValueError("must have 0 <= k < n")
         return C.cos(S.Pi*(k+1)/(n+1))
-
 
 #----------------------------------------------------------------------------
 # Legendre polynomials  and  Associated Legendre polynomials
@@ -189,13 +168,10 @@ class legendre(PolynomialSequence):
     ==========
     * http://en.wikipedia.org/wiki/Legendre_polynomial
     """
-    @staticmethod
-    @recurrence_memo([S.One, _x])
-    def calc(n, prev):
-        return (((2*n-1)*_x*prev[n-1] - (n-1)*prev[n-2])/n).expand()
 
+    _ortho_poly = staticmethod(legendre_poly)
 
-class assoc_legendre(PolynomialSequence2):
+class assoc_legendre(Function):
     """
     assoc_legendre(n,m, x) gives P_nm(x), where n and m are the degree
     and order or an expression which is related to the nth order
@@ -224,43 +200,28 @@ class assoc_legendre(PolynomialSequence2):
     * http://en.wikipedia.org/wiki/Associated_Legendre_polynomials
     """
 
-    @staticmethod
-    @assoc_recurrence_memo(legendre.calc)
-    def _calc2(n, m, prev):
-        P=prev
+    nargs = 3
 
-        # this is explicit (not recurrence) formula
-        #
-        # the result is pretty and we still benefit from memoization
-        Pnm = (-1)**m * (1-_x**2)**Rational(m,2) * P[n][0].diff(_x, m)
-        return Pnm
+    @classmethod
+    def calc(cls, n, m):
+        P = legendre_poly(n, _x, polys=True).diff((_x, m))
+        return (-1)**m * (1 - _x**2)**Rational(m, 2) * P.as_basic()
 
+    @classmethod
+    def eval(cls, n, m, x):
+        if n.is_integer and n >= 0 and m.is_integer and abs(m) <= n:
+            assoc = cls.calc(int(n), abs(int(m)))
 
-        # this is reccurence formula, but the cost to keep it pretty (simplify)
-        # is too high
-        Pnm = (n-(m-1))*_x*P[n][m-1] - (n+(m-1))*P[n-1][m-1]
+            if m < 0:
+                assoc *= (-1)**(-m) * (C.Factorial(n + m)/C.Factorial(n - m))
 
-        # hack to simplify the expression
-        # FIXME something more lightweight?
-        from sympy.simplify import simplify
+            return assoc.subs(_x, x)
 
-        Pnm = Pnm / (1-_x**2)**Rational(m+1,2)
-        Pnm = simplify(Pnm)
+        if n.is_negative:
+            raise ValueError("%s : 1st index must be nonnegative integer (got %r)" % (cls, n))
 
-        Pnm*= (1-_x**2)**Rational(m+1-1,2)
-
-        return Pnm
-
-    @staticmethod
-    def calc2(n,m):
-        if m >= 0:
-            return assoc_legendre._calc2(n,m)
-        else:
-            factorial = C.Factorial
-            m = -m
-            return (-1)**m *factorial(n-m)/factorial(n+m) * assoc_legendre._calc2(n, m)
-
-
+        if abs(m) > n:
+            raise ValueError("%s : abs('2nd index') must be <= '1st index' (got %r, %r)" % (cls, n, m))
 
 #----------------------------------------------------------------------------
 # Hermite polynomials
@@ -288,10 +249,8 @@ class hermite(PolynomialSequence):
     ==========
     * http://mathworld.wolfram.com/HermitePolynomial.html
     """
-    @staticmethod
-    @recurrence_memo([S.One, 2*_x])
-    def calc(n, prev):
-        return (2*_x*prev[n-1]-2*(n-1)*prev[n-2]).expand()
+
+    _ortho_poly = staticmethod(hermite_poly)
 
 def laguerre_l(n, alpha, x):
     """
