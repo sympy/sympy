@@ -754,9 +754,8 @@ def dmp_include(f, J, u, K):
     return dmp_from_dict(f, u, K)
 
 @cythonized("u,v,w")
-def dmp_inject(f, u, K, **args):
+def dmp_inject(f, u, K, front=False):
     """Convert `f` from `K[X][Y]` to `K[X,Y]`. """
-    front = args.get('front', False)
     f, h = dmp_to_dict(f, u), {}
 
     v = len(K.gens) - 1
@@ -775,9 +774,8 @@ def dmp_inject(f, u, K, **args):
     return dmp_from_dict(h, w, K.dom), w
 
 @cythonized("u,v")
-def dmp_eject(f, u, K, **args):
+def dmp_eject(f, u, K, front=False):
     """Convert `f` from `K[X,Y]` to `K[X][Y]`. """
-    front = args.get('front', False)
     f, h = dmp_to_dict(f, u), {}
 
     v = u - len(K.gens) + 1
