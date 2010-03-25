@@ -32,37 +32,39 @@ def bspline_basis(d, knots, n, x, close=True):
 
     The 0th degree splines have a value of one on a single interval:
 
-    >>> d = 0
-    >>> knots = range(5)
-    >>> bspline_basis(d, knots, 0, x)
-    Piecewise((1, [0, 1]), (0, True))
+        >>> from sympy import bspline_basis
+        >>> from sympy.abc import x
+        >>> d = 0
+        >>> knots = range(5)
+        >>> bspline_basis(d, knots, 0, x)
+        Piecewise((1, [0, 1]), (0, True))
 
     For a given (d, knots) there are len(knots)-d-1 B-splines defined, that
     are indexed by n (starting at 0).
 
     Here is an example of a cubic B-spline:
 
-    >>> bspline_basis(3, range(5), 0, x)
-    Piecewise((x**3/6, [0, 1)), (2/3 - 2*x + 2*x**2 - x**3/2, [1, 2)), (-22/3 + 10*x - 4*x**2 + x**3/2, [2, 3)), (32/3 - 8*x + 2*x**2 - x**3/6, [3, 4]), (0, True))
+        >>> bspline_basis(3, range(5), 0, x)
+        Piecewise((x**3/6, [0, 1)), (2/3 - 2*x + 2*x**2 - x**3/2, [1, 2)), (-22/3 + 10*x - 4*x**2 + x**3/2, [2, 3)), (32/3 - 8*x + 2*x**2 - x**3/6, [3, 4]), (0, True))
 
     By repeating knot points, you can introduce discontinuities in the
     B-splines and their derivatives:
 
-    >>> d = 1
-    >>> knots = [0,0,2,3,4]
-    >>> bspline_basis(d, knots, 0, x)
-    Piecewise((1 - x/2, [0, 2]), (0, True))
+        >>> d = 1
+        >>> knots = [0,0,2,3,4]
+        >>> bspline_basis(d, knots, 0, x)
+        Piecewise((1 - x/2, [0, 2]), (0, True))
 
     It is quite time consuming to construct and evaluate B-splines. If you
     need to evaluate a B-splines many times, it is best to lambdify them
     first:
 
-    >>> d = 3
-    >>> knots = range(10)
-    >>> b0 = bspline_basis(d, knots, 0, x)
-    >>> f = lambdify(x, b0)
-    >>> f(0.5)
-    0.020833333333333332
+        >>> from sympy import lambdify
+        >>> d = 3
+        >>> knots = range(10)
+        >>> b0 = bspline_basis(d, knots, 0, x)
+        >>> f = lambdify(x, b0)
+        >>> y = f(0.5)
 
     [1] http://en.wikipedia.org/wiki/B-spline
     """
@@ -112,11 +114,13 @@ def bspline_basis_set(d, knots, x):
     len(knots)-d-1 B-splines of degree d for the given knots. This function
     calls bspline_basis(d, knots, n, x) for different values of n.
 
-    >>> d = 2
-    >>> knots = range(5)
-    >>> splines = bspline_basis_set(d, knots, x)
-    >>> splines
-    [Piecewise((x**2/2, [0, 1)), (-3/2 + 3*x - x**2, [1, 2)), (9/2 - 3*x + x**2/2, [2, 3]), (0, True)), Piecewise((1/2 - x + x**2/2, [1, 2)), (-11/2 + 5*x - x**2, [2, 3)), (8 - 4*x + x**2/2, [3, 4]), (0, True))]
+        >>> from sympy import bspline_basis_set
+        >>> from sympy.abc import x
+        >>> d = 2
+        >>> knots = range(5)
+        >>> splines = bspline_basis_set(d, knots, x)
+        >>> splines
+        [Piecewise((x**2/2, [0, 1)), (-3/2 + 3*x - x**2, [1, 2)), (9/2 - 3*x + x**2/2, [2, 3]), (0, True)), Piecewise((1/2 - x + x**2/2, [1, 2)), (-11/2 + 5*x - x**2, [2, 3)), (8 - 4*x + x**2/2, [3, 4]), (0, True))]
     """
     splines = []
     n_splines = len(knots)-d-1
