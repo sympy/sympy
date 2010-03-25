@@ -1473,6 +1473,9 @@ class Poly(Basic):
         if f.is_multivariate:
             raise PolynomialError("can't compute numerical roots of a multivariate polynomial")
 
+        if f.degree() <= 0:
+            return []
+
         try:
             coeffs = [ complex(c) for c in f.all_coeffs() ]
         except ValueError:
@@ -2403,7 +2406,7 @@ def refine_root(f, s, t, eps=None, steps=None, fast=False, check_sqf=False):
 def nroots(f, maxsteps=50, cleanup=True, error=False):
     """Compute numerical approximations of roots of `f`. """
     try:
-        F = Poly(f)
+        F = Poly(f, greedy=False)
     except GeneratorsNeeded:
         raise PolynomialError("can't compute numerical roots of %s, not a polynomial" % f)
 
