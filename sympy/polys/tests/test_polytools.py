@@ -1733,6 +1733,9 @@ def test_refine_root():
     raises(PolynomialError, "refine_root(1, 7, 8, eps=S(1)/100)")
 
 def test_nroots():
+    assert Poly(0, x).nroots() == []
+    assert Poly(1, x).nroots() == []
+
     assert Poly(x**2 - 1, x).nroots() == [-1.0, 1.0]
     assert Poly(x**2 + 1, x).nroots() == [-I, I]
 
@@ -1760,6 +1763,9 @@ def test_nroots():
 
     roots, error = nroots(x**2 - 1, error=True)
     assert roots == [-1.0, 1.0] and error < 1e25;
+
+    assert nroots(x + I) == [-I]
+    assert nroots(x + 2*I) == [-2*I]
 
     raises(PolynomialError, "nroots(0)")
 
