@@ -1,12 +1,7 @@
 """Tools and arithmetics for monomials of distributed polynomials. """
 
-from sympy.core.mul import Mul
-from sympy.core.singleton import S
-
-from sympy.functions import factorial
-from sympy.utilities import all, any
-
-from sympy.utilities import cythonized
+from sympy.core import S, C, Mul
+from sympy.utilities import all, any, cythonized
 
 def monomials(variables, degree):
     """Generate a set of monomials of the given total degree or less.
@@ -64,7 +59,7 @@ def monomial_count(V, N):
            6
 
     """
-    return factorial(V + N) / factorial(V) / factorial(N)
+    return C.Factorial(V + N) / C.Factorial(V) / C.Factorial(N)
 
 def monomial_lex_cmp(a, b):
     return cmp(a, b)
