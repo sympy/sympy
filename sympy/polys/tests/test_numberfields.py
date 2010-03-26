@@ -10,6 +10,7 @@ from sympy.polys.numberfields import (
     field_isomorphism,
     to_number_field,
     AlgebraicNumber,
+    isolate,
 )
 
 from sympy.polys.polyerrors import (
@@ -464,4 +465,16 @@ def test_to_algebraic_integer():
     assert a.minpoly == x**2 - 12
     assert a.root    == 2*sqrt(3)
     assert a.rep     == DMP([QQ(7,19),QQ(3)], QQ)
+
+def test_isolate():
+    assert isolate(1) == (1, 1)
+    assert isolate(S(1)/2) == (S(1)/2, S(1)/2)
+
+    assert isolate(sqrt(2)) == (1, 2)
+    assert isolate(-sqrt(2)) == (-2, -1)
+
+    assert isolate(sqrt(2), eps=S(1)/100) == (S(24)/17, S(17)/12)
+    assert isolate(-sqrt(2), eps=S(1)/100) == (-S(17)/12, -S(24)/17)
+
+    raises(NotImplementedError, "isolate(I)")
 
