@@ -1,6 +1,7 @@
 from sympy.utilities.pytest import XFAIL
 from sympy import (symbols, lambdify, sqrt, sin, cos, pi, atan, Rational, Real,
         Matrix, Lambda, exp, Integral, oo)
+from sympy.printing.lambdarepr import LambdaPrinter
 from sympy import mpmath
 import math, sympy
 
@@ -254,3 +255,30 @@ def test_namespace_order():
     if2 = lambdify(x, g(x), modules=(n2, "sympy"))
     # previously gave 'second f'
     assert if1(1) == 'first f'
+
+#================== Test special printers ==========================
+def test_special_printers():
+    class IntervalPrinter(LambdaPrinter):
+        """Use ``lambda`` printer but print numbers as ``mpi`` intervals. """
+
+        def _print_Integer(self, expr):
+            return "mpi('%s')" % super(IntervalPrinter, self)._print_Integer(expr)
+
+        def _print_Rational(self, expr):
+            return "mpi('%s')" % super(IntervalPrinter, self)._print_Rational(expr)
+
+    def intervalrepr(expr):
+        return IntervalPrinter().doprint(expr)
+
+    expr = sympy.sqrt(sympy.sqrt(2) + sympy.sqrt(3)) + sympy.S(1)/2
+
+    func0 = lambdify((), expr, modules="mpmath", printer=intervalrepr)
+    func1 = lambdify((), expr, modules="mpmath", printer=IntervalPrinter)
+    func2 = lambdify((), expr, modules="mpmath", printer=IntervalPrinter())
+
+    mpi = type(mpmath.mpi(1, 2))
+
+    assert isinstance(func0(), mpi)
+    assert isinstance(func1(), mpi)
+    assert isinstance(func2(), mpi)
+
