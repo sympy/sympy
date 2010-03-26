@@ -1,4 +1,4 @@
-from sympy import symbols, Integral
+from sympy import symbols, Integral, Basic, raises
 from sympy.utilities.iterables import postorder_traversal, \
     preorder_traversal, flatten, subsets, variations
 from sympy.functions.elementary.piecewise import Piecewise, ExprCondPair
@@ -45,17 +45,24 @@ def test_preorder_traversal():
     assert list(postorder_traversal(('abc', ('d', 'ef')))) == [
         'abc', 'd', 'ef', ('d', 'ef'), ('abc', ('d', 'ef'))]
 
-
 def test_flatten():
-    assert flatten( (1,(1,)) ) == [1,1]
-    assert flatten( (x,(x,)) ) == [x,x]
+    assert flatten((1, (1,))) == [1, 1]
+    assert flatten((x, (x,))) == [x, x]
 
-    from sympy.core.basic import Basic
+    ls = [[(-2, -1), (1, 2)], [(0, 0)]]
+
+    assert flatten(ls, levels=0) == ls
+    assert flatten(ls, levels=1) == [(-2, -1), (1, 2), (0, 0)]
+    assert flatten(ls, levels=2) == [-2, -1, 1, 2, 0, 0]
+    assert flatten(ls, levels=3) == [-2, -1, 1, 2, 0, 0]
+
+    raises(ValueError, "flatten(ls, levels=-1)")
+
     class MyOp(Basic):
         pass
-    assert flatten( [MyOp(x, y), z]) == [MyOp(x, y), z]
-    assert flatten( [MyOp(x, y), z], cls=MyOp) == [x, y, z]
 
+    assert flatten([MyOp(x, y), z]) == [MyOp(x, y), z]
+    assert flatten([MyOp(x, y), z], cls=MyOp) == [x, y, z]
 
 def test_subsets():
     assert list(subsets([1, 2, 3], 1)) == [[1], [2], [3]]
@@ -66,3 +73,4 @@ def test_variations():
     assert variations([1,2,3], 2) == [[1, 2], [1, 3], [2, 1], [2, 3], [3, 1], [3, 2]]
     assert variations([1,2,3], 2, True) == [[1, 1], [1, 2], [1, 3], [2, 1], [2, 2], [2, 3], \
                         [3,1], [3,2], [3,3]]
+
