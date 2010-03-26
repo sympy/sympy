@@ -1,21 +1,31 @@
 from sympy.core import Basic, C
 from sympy.core.compatibility import minkey, iff, all, any #for backwards compatibility
 
-def flatten(iterable, cls=None):
+def flatten(iterable, levels=None, cls=None):
     """
     Recursively denest iterable containers.
 
     >>> from sympy.utilities.iterables import flatten
+
     >>> flatten([1, 2, 3])
     [1, 2, 3]
     >>> flatten([1, 2, [3]])
     [1, 2, 3]
     >>> flatten([1, [2, 3], [4, 5]])
     [1, 2, 3, 4, 5]
-    >>> flatten( (1,2, (1, None)) )
-    [1, 2, 1, None]
+    >>> flatten([1.0, 2, (1, None)])
+    [1.0, 2, 1, None]
 
-    If cls argument is specif, it will only flatten instances of that
+    If you want to denest only a specified number of levels of
+    nested containers, then set ``levels`` flag to the desired
+    number of levels::
+
+    >>> ls = [[(-2, -1), (1, 2)], [(0, 0)]]
+
+    >>> flatten(ls, levels=1)
+    [(-2, -1), (1, 2), (0, 0)]
+
+    If cls argument is specified, it will only flatten instances of that
     class, for example:
 
     >>> from sympy.core import Basic
@@ -27,18 +37,29 @@ def flatten(iterable, cls=None):
 
     adapted from http://kogs-www.informatik.uni-hamburg.de/~meine/python_tricks
     """
+    if levels is not None:
+        if not levels:
+            return iterable
+        elif levels > 0:
+            levels -= 1
+        else:
+            raise ValueError("expected non-negative number of levels, got %s" % levels)
+
     if cls is None:
         reducible = lambda x: hasattr(x, "__iter__") and not isinstance(x, basestring)
     else:
         reducible = lambda x: isinstance(x, cls)
+
     result = []
+
     for el in iterable:
         if reducible(el):
             if hasattr(el, 'args'):
                 el = el.args
-            result.extend(flatten(el, cls=cls))
+            result.extend(flatten(el, levels=levels, cls=cls))
         else:
             result.append(el)
+
     return result
 
 def postorder_traversal(node):
