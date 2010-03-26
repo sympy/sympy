@@ -41,6 +41,7 @@ from numberfields import (
     field_isomorphism,
     to_number_field,
     AlgebraicNumber,
+    isolate,
 )
 
 from monomialtools import (
