@@ -1,11 +1,10 @@
 from str import StrPrinter
 
-
 def _find_first_symbol(expr):
     for atom in expr.atoms():
         if atom.is_Symbol:
             return atom
-    raise ValueError('expression must contain a Symbol: %r' % r)
+    raise ValueError('expression must contain a Symbol: %r' % expr)
 
 class LambdaPrinter(StrPrinter):
     """
@@ -24,17 +23,18 @@ class LambdaPrinter(StrPrinter):
         for arg in expr.args:
             e = arg.expr
             c = arg.cond
-            result.append(self._print(e))
-            result.append(' if ')
+            result.append('iff(')
             if isinstance(c, Interval):
                 result.append(self._print(c.contains(_find_first_symbol(e))))
             else:
                 result.append(self._print(c))
-            result.append(' else (')
+            result.append(',')
+            result.append(self._print(e))
+            result.append(',')
             i += 1
         result = result[:-1]
-        result.append(' else 0')
-        result.append((i-1)*')')
+        result.append(',0')
+        result.append(i*')')
         return ''.join(result)
 
     def _print_And(self, expr):
