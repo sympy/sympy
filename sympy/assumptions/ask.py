@@ -74,21 +74,25 @@ def ask(expr, key, assumptions=True):
         for subclass in mro:
             if hasattr(handler, subclass.__name__):
                 res = getattr(handler, subclass.__name__)(expr, assumptions)
-                if _res is None: _res = res
+                if _res is None:
+                    _res = res
                 elif res is None:
                     # since first resolutor was conclusive, we keep that value
                     res = _res
                 else:
                     # only check consistency if both resolutors have concluded
-                    if _res != res: raise ValueError, 'incompatible resolutors'
+                    if _res != res:
+                        raise ValueError('incompatible resolutors')
                 break
     if res is not None:
         return res
 
-    if assumptions is True: return
+    if assumptions is True:
+        return
 
     # use logic inference
-    if not expr.is_Atom: return
+    if not expr.is_Atom:
+        return
     clauses = copy.deepcopy(known_facts_compiled)
 
     assumptions = conjuncts(to_cnf(assumptions))
@@ -96,21 +100,21 @@ def ask(expr, key, assumptions=True):
     for assump in assumptions:
         conj = eliminate_assume(assump, symbol=expr)
         if conj:
-            out = []
+            out = set()
             for sym in conjuncts(to_cnf(conj)):
                 lit, pos = literal_symbol(sym), type(sym) is not Not
                 if pos:
-                    out.extend([known_facts_keys.index(str(l))+1 for l in disjuncts(lit)])
+                    out.update([known_facts_keys.index(str(l))+1 for l in disjuncts(lit)])
                 else:
-                    out.extend([-(known_facts_keys.index(str(l))+1) for l in disjuncts(lit)])
+                    out.update([-(known_facts_keys.index(str(l))+1) for l in disjuncts(lit)])
             clauses.append(out)
 
     n = len(known_facts_keys)
-    clauses.append([known_facts_keys.index(key)+1])
-    if not dpll_int_repr(clauses, range(1, n+1), {}):
+    clauses.append(set([known_facts_keys.index(key)+1]))
+    if not dpll_int_repr(clauses, set(range(1, n+1)), {}):
         return False
-    clauses[-1][0] = -clauses[-1][0]
-    if not dpll_int_repr(clauses, range(1, n+1), {}):
+    clauses[-1] = set([-(known_facts_keys.index(key)+1)])
+    if not dpll_int_repr(clauses, set(range(1, n+1)), {}):
         # if the negation is satisfiable, it is entailed
         return True
     del clauses
@@ -213,4 +217,4 @@ for _c in known_facts:
 print out
 """
 known_facts_compiled = [[11, -14], [15, -1], [-1, -17], [1, 17, -15], [3, -4], [3, -14], [4, 14, -3], [15, -17], [-1, -17], [1, 17, -15], [15, -10], [7, -10], [-6, -10], [6, 10, -15, -7], [13, -15], [11, -16], [-16, -14], [2, -9], [-9, -7], [9, 7, -2], [2, -7], [-9, -7], [9, 7, -2], [14, -13], [-18, -13], [18, 13, -14], [14, -18], [14, -13], [18, 13, -14], [14, -2], [2, -9], [2, -7], [9, 7, -2]]
-
+known_facts_compiled = map(set, known_facts_compiled)

@@ -26,11 +26,12 @@ def dpll_satisfiable(expr):
 
     """
     symbols = list(expr.atoms(Symbol))
-    symbols_int_repr = range(1, len(symbols) + 1)
+    symbols_int_repr = set(range(1, len(symbols) + 1))
     clauses = conjuncts(to_cnf(expr))
     clauses_int_repr = to_int_repr(clauses, symbols)
     result = dpll_int_repr(clauses_int_repr, symbols_int_repr, {})
-    if not result: return result
+    if not result:
+        return result
     output = {}
     for key in result:
         output.update({symbols[key-1]: result[key]})
@@ -87,7 +88,7 @@ def dpll_int_repr(clauses, symbols, model):
     Arguments are expected to be in integer representation
 
     >>> from sympy.logic.algorithms.dpll import dpll_int_repr
-    >>> dpll_int_repr([[1], [2], [3]], [1, 2], {3: False})
+    >>> dpll_int_repr([set([1]), set([2]), set([3])], set([1, 2]), {3: False})
     False
 
     """
@@ -96,32 +97,33 @@ def dpll_int_repr(clauses, symbols, model):
     while P:
         model.update({P: value})
         symbols.remove(P)
-        if not value: P = -P
+        if not value:
+            P = -P
         clauses = unit_propagate_int_repr(clauses, P)
         P, value = find_unit_clause_int_repr(clauses, model)
     P, value = find_pure_symbol_int_repr(symbols, clauses)
     while P:
         model.update({P: value})
         symbols.remove(P)
-        if not value: P = -P
+        if not value:
+            P = -P
         clauses = unit_propagate_int_repr(clauses, P)
         P, value = find_pure_symbol_int_repr(symbols, clauses)
     # end DP kernel
     unknown_clauses = []
     for c in clauses:
         val =  pl_true_int_repr(c, model)
-        if val == False:
+        if val is False:
             return False
-        if val != True:
+        if val is not True:
             unknown_clauses.append(c)
     if not unknown_clauses:
         return model
-    if not clauses: return model
     P = symbols.pop()
     model_copy = model.copy()
     model.update({P: True})
     model_copy.update({P: False})
-    symbols_copy = symbols[:]
+    symbols_copy = symbols.copy()
     return (dpll_int_repr(clauses, symbols, model) or
             dpll_int_repr(clauses, symbols_copy, model_copy))
 
@@ -130,25 +132,27 @@ def dpll_int_repr(clauses, symbols, model):
 def pl_true_int_repr(clause, model={}):
     """
     Lightweight version of pl_true.
-    Argument clause represents the args of an Or clause. This is used
+    Argument clause represents the set of args of an Or clause. This is used
     inside dpll_int_repr, it is not meant to be used directly.
 
     >>> from sympy.logic.algorithms.dpll import pl_true_int_repr
-    >>> pl_true_int_repr([1, 2], {1: False})
-    >>> pl_true_int_repr([1, 2], {1: False, 2: False})
+    >>> pl_true_int_repr(set([1, 2]), {1: False})
+    >>> pl_true_int_repr(set([1, 2]), {1: False, 2: False})
     False
 
     """
-    if len(clause) == 1:
-        c = clause[0]
-        if c in model: return model.get(c)
-        if -c in model: return not model.get(-c)
-        return None
     result = False
-    for l in clause:
-        p = pl_true_int_repr([l], model)
-        if p: return True
-        if p is None: result = None
+    for lit in clause:
+        if lit < 0:
+            p = model.get(-lit)
+            if p is not None:
+                p = not p
+        else:
+            p = model.get(lit)
+        if p is True:
+            return True
+        elif p is None:
+            result = None
     return result
 
 def unit_propagate(clauses, symbol):
@@ -184,28 +188,19 @@ def unit_propagate(clauses, symbol):
             output.append(c)
     return output
 
-def unit_propagate_int_repr(clauses, symbol):
+def unit_propagate_int_repr(clauses, s):
     """
-    Same as above, but arguments are expected to be in integer
+    Same as unit_propagate, but arguments are expected to be in integer
     representation
 
     >>> from sympy.logic.algorithms.dpll import unit_propagate_int_repr
-    >>> unit_propagate_int_repr([[1, 2], [3, -2], [2]], 2)
-    [[3], [2]]
+    >>> unit_propagate_int_repr([set([1, 2]), set([3, -2]), set([2])], 2)
+    [set([3])]
 
     """
-    output = []
-    for c in clauses:
-        if len(c) == 1:
-            output.append(c)
-            continue
-        for l in c:
-            if l == symbol: break
-            elif l == -symbol:
-                output.append([x for x in c if x != l])
-                break
-        else: output.append(c)
-    return output
+    negated = set([-s])
+    return [clause - negated for clause in clauses if s not in clause]
+
 
 def find_pure_symbol(symbols, unknown_clauses):
     """
@@ -233,16 +228,21 @@ def find_pure_symbol_int_repr(symbols, unknown_clauses):
     to be in integer representation
 
     >>> from sympy.logic.algorithms.dpll import find_pure_symbol_int_repr
-    >>> find_pure_symbol_int_repr([1,2,3], [[1, -2], [-2, -3], [3, 1]])
+    >>> find_pure_symbol_int_repr(set([1,2,3]), [set([1, -2]), set([-2, -3]), set([3, 1])])
     (1, True)
 
     """
-    for sym in symbols:
-        found_pos, found_neg = False, False
-        for c in unknown_clauses:
-            if not found_pos and sym in c: found_pos = True
-            if not found_neg and -sym in c: found_neg = True
-        if found_pos ^ found_neg: return sym, found_pos
+    all_symbols = set()
+    for c in unknown_clauses:
+        all_symbols.update(c)
+    found_pos = all_symbols.intersection(symbols)
+    found_neg = all_symbols.intersection([-s for s in symbols])
+    for p in found_pos:
+        if -p not in found_neg:
+            return p, True
+    for p in found_neg:
+        if -p not in found_pos:
+            return -p, False
     return None, None
 
 def find_unit_clause(clauses, model):
@@ -273,20 +273,17 @@ def find_unit_clause_int_repr(clauses, model):
     integer representation.
 
     >>> from sympy.logic.algorithms.dpll import find_unit_clause_int_repr
-    >>> find_unit_clause_int_repr([[1, 2, 3], [2, -3], [1, -2]], {1: True})
+    >>> find_unit_clause_int_repr([set([1, 2, 3]), set([2, -3]), set([1, -2])], {1: True})
     (2, False)
 
     """
-    for c in clauses:
-        num_not_in_model = False
-        for literal in c:
-            sym = abs(literal)
-            if sym not in model:
-                if num_not_in_model:
-                    num_not_in_model = False
-                    break
-                num_not_in_model = True
-                P, value = sym, literal > 0
-        if num_not_in_model:
-            return P, value
+    bound = set(model) | set(-sym for sym in model)
+    for clause in clauses:
+        unbound = clause - bound
+        if len(unbound) == 1:
+            p = unbound.pop()
+            if p < 0:
+                return -p, False
+            else:
+                return p, True
     return None, None

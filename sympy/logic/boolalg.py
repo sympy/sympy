@@ -238,8 +238,8 @@ def to_int_repr(clauses, symbols):
     Examples:
         >>> from sympy.logic.boolalg import to_int_repr
         >>> from sympy.abc import x, y
-        >>> to_int_repr([x | y, y], [x, y])
-        [[1, 2], [2]]
+        >>> to_int_repr([x | y, y], [x, y]) == [set([1, 2]), set([2])]
+        True
 
     """
     def append_symbol(arg, symbols):
@@ -248,13 +248,5 @@ def to_int_repr(clauses, symbols):
         else:
             return symbols.index(arg)+1
 
-    output = []
-    for c in clauses:
-        if c.func is Or:
-            t = []
-            for arg in c.args:
-                t.append(append_symbol(arg, symbols))
-            output.append(t)
-        else:
-            output.append([append_symbol(c, symbols)])
-    return output
+    return [set(append_symbol(arg, symbols) for arg in make_list(c, Or)) \
+                                                            for c in clauses]
