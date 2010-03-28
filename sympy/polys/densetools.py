@@ -1781,6 +1781,40 @@ def dmp_ground_extract(f, g, u, K):
 
     return gcd, f, g
 
+def dup_real_imag(f, K):
+    """Return bivariate polynomials f1 and f2, such that f = f1 + f2*I. """
+    if not K.is_ZZ and not K.is_QQ:
+        raise DomainError("computing real and imaginary parts is not supported over %s" % K)
+
+    f1 = dmp_zero(1)
+    f2 = dmp_zero(1)
+
+    if not f:
+        return f1, f2
+
+    g = [[[K.one, K.zero]], [[K.one], []]]
+    h = dmp_ground(f[0], 2)
+
+    for c in f[1:]:
+        h = dmp_mul(h, g, 2, K)
+        h = dmp_add_term(h, dmp_ground(c, 1), 0, 2, K)
+
+    H = dup_to_raw_dict(h)
+
+    for k, h in H.iteritems():
+        m = k % 4
+
+        if not m:
+            f1 = dmp_add(f1, h, 1, K)
+        elif m == 1:
+            f2 = dmp_add(f2, h, 1, K)
+        elif m == 2:
+            f1 = dmp_sub(f1, h, 1, K)
+        else:
+            f2 = dmp_sub(f2, h, 1, K)
+
+    return f1, f2
+
 def dup_mirror(f, K):
     """Evaluate efficiently composition `f(-x)` in `K[x]`. """
     f, n, a = list(f), dup_degree(f), -K.one
