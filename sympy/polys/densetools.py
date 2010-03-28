@@ -2249,7 +2249,7 @@ def dup_inner_isolate_real_roots(f, K, eps=None, fast=False):
                 f = dup_taylor(f, A, K)
                 b, d = A*a + b, A*c + d
 
-                if not dup_eval(f, K.zero, K):
+                if not dup_TC(f, K):
                     roots.append((f, (b, b, d, d)))
                     f = dup_rshift(f, 1, K)
 
@@ -2265,7 +2265,7 @@ def dup_inner_isolate_real_roots(f, K, eps=None, fast=False):
 
             a1, b1, c1, d1, r = a, a+b, c, c+d, 0
 
-            if not dup_eval(f1, K.zero, K):
+            if not dup_TC(f1, K):
                 roots.append((f1, (b1, b1, d1, d1)))
                 f1, r = dup_rshift(f1, 1, K), 1
 
@@ -2274,28 +2274,44 @@ def dup_inner_isolate_real_roots(f, K, eps=None, fast=False):
 
             a2, b2, c2, d2 = b, a+b, d, c+d
 
-            if k2 > 1 or (k1 > 0 and k2 == 1):
+            if k2 > 1:
                 f2 = dup_taylor(dup_reverse(f), K.one, K)
 
-                if not dup_eval(f2, K.zero, K):
+                if not dup_TC(f2, K):
                     f2 = dup_rshift(f2, 1, K)
 
                 k2 = dup_sign_variations(f2, K)
+            else:
+                f2 = None
 
             if k1 < k2:
                 a1, a2, b1, b2 = a2, a1, b2, b1
                 c1, c2, d1, d2 = c2, c1, d2, d1
                 f1, f2, k1, k2 = f2, f1, k2, k1
 
-            if k1 == 0:
+            if not k1:
                 continue
+
+            if f1 is None:
+                f1 = dup_taylor(dup_reverse(f), K.one, K)
+
+                if not dup_TC(f1, K):
+                    f1 = dup_rshift(f1, 1, K)
+
             if k1 == 1:
                 roots.append(dup_inner_refine_real_root(f1, (a1, b1, c1, d1), K, eps=eps, fast=fast, mobius=True))
             else:
                 stack.append((a1, b1, c1, d1, f1, k1))
 
-            if k2 == 0:
+            if not k2:
                 continue
+
+            if f2 is None:
+                f2 = dup_taylor(dup_reverse(f), K.one, K)
+
+                if not dup_TC(f2, K):
+                    f2 = dup_rshift(f2, 1, K)
+
             if k2 == 1:
                 roots.append(dup_inner_refine_real_root(f2, (a2, b2, c2, d2), K, eps=eps, fast=fast, mobius=True))
             else:
