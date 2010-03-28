@@ -1343,6 +1343,14 @@ def test_dup_isolate_real_roots_sqf():
     assert dup_isolate_real_roots_sqf([QQ(8,5), QQ(-87374,3855), QQ(-17,771)], QQ) == \
         [(QQ(-1), QQ(0)), (QQ(14), QQ(15))]
 
+    f = [-10, 8, 80, -32, -160]
+
+    assert dup_isolate_real_roots_sqf(f, ZZ) == \
+        [(-QQ(2), -QQ(2)), (-QQ(2), -QQ(1)), (QQ(2), QQ(2)), (QQ(2), QQ(3))]
+
+    assert dup_isolate_real_roots_sqf(f, ZZ, eps=QQ(1,100)) == \
+        [(-QQ(2), -QQ(2)), (-QQ(23,14), -QQ(18,11)), (QQ(2), QQ(2)), (QQ(39,16), QQ(22,9))]
+
     assert dup_isolate_real_roots_sqf([1, -1], ZZ, inf=2) == []
     assert dup_isolate_real_roots_sqf([1, -1], ZZ, sup=0) == []
 
