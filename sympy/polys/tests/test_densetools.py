@@ -45,6 +45,7 @@ from sympy.polys.densetools import (
     dup_sqf_list, dup_sqf_list_include,
     dmp_sqf_list, dmp_sqf_list_include,
     dup_extract, dmp_ground_extract,
+    dup_real_imag,
     dup_mirror, dup_scale, dup_taylor,
     dup_transform,
     dup_compose, dmp_compose,
@@ -1002,6 +1003,17 @@ def test_dmp_ground_extract():
     G = dmp_normal([[384], [], [192], [], [24], []], 1, ZZ)
 
     assert dmp_ground_extract(f, g, 1, ZZ) == (45796, F, G)
+
+def test_dup_real_imag():
+    assert dup_real_imag([], ZZ) == ([[]], [[]])
+    assert dup_real_imag([1], ZZ) == ([[1]], [[]])
+
+    assert dup_real_imag([1,1], ZZ) == ([[1], [1]], [[1,0]])
+    assert dup_real_imag([1,2], ZZ) == ([[1], [2]], [[1,0]])
+
+    assert dup_real_imag([1,2,3], ZZ) == ([[1], [2], [-1,0,3]], [[2,0], [2,0]])
+
+    raises(DomainError, "dup_real_imag([EX(1), EX(2)], EX)")
 
 def test_dup_mirror():
     assert dup_mirror([], ZZ) == []
