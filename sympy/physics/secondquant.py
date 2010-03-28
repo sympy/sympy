@@ -1749,7 +1749,7 @@ class Commutator(Function):
     >>> from sympy.physics.secondquant import Commutator
     >>> A, B = symbols('A B', commutative=False)
     >>> Commutator(B, A)
-    Commutator(B, A)
+    -Commutator(A, B)
 
     Evaluate the commutator with .doit()
 
@@ -1838,8 +1838,8 @@ class Commutator(Function):
         #
         # Canonical ordering of arguments
         #
-        if a > b:
-            return S.NegativeOne*cls(b,a)
+        if cmp(a, b) > 0:
+            return S.NegativeOne*cls(b, a)
 
 
     def doit(self,**hints):
