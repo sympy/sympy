@@ -79,8 +79,8 @@ def dpll(clauses, symbols, model):
     model.update({P: True})
     model_copy.update({P: False})
     symbols_copy = symbols[:]
-    return (dpll(clauses, symbols, model) or
-            dpll(clauses, symbols_copy, model_copy))
+    return (dpll(unit_propagate(unknown_clauses, P), symbols, model) or
+            dpll(unit_propagate(unknown_clauses, Not(P)), symbols_copy, model_copy))
 
 def dpll_int_repr(clauses, symbols, model):
     """
@@ -124,8 +124,8 @@ def dpll_int_repr(clauses, symbols, model):
     model.update({P: True})
     model_copy.update({P: False})
     symbols_copy = symbols.copy()
-    return (dpll_int_repr(clauses, symbols, model) or
-            dpll_int_repr(clauses, symbols_copy, model_copy))
+    return (dpll_int_repr(unit_propagate_int_repr(unknown_clauses, P), symbols, model) or
+            dpll_int_repr(unit_propagate_int_repr(unknown_clauses, -P), symbols_copy, model_copy))
 
 ### helper methods for DPLL
 
