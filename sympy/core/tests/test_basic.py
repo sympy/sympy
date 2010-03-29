@@ -155,6 +155,14 @@ def test_relational():
     assert (-pi >= 3) == False
     assert (x - 2 < x - 3) == False
 
+def test_relational_noncommutative():
+    from sympy import Lt, Gt, Le, Ge
+    a, b = symbols('a b', commutative=False)
+    assert (a < b)  == Lt(a, b)
+    assert (a <= b) == Le(a, b)
+    assert (a > b)  == Gt(a, b)
+    assert (a >= b) == Ge(a, b)
+
 def test_basic_nostr():
     for obj in basic_objs:
         for op in ['+','-','*','/','**']:
