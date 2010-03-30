@@ -1580,8 +1580,7 @@ class Matrix(object):
 
     def berkowitz_charpoly(self, x):
         """Computes characteristic polynomial minors using Berkowitz method."""
-        coeffs, monoms = self.berkowitz()[-1], range(self.rows+1)
-        return Poly(dict(zip(reversed(monoms), coeffs)), x)
+        return Poly(map(simplify, self.berkowitz()[-1]), x)
 
     charpoly = berkowitz_charpoly
 
