@@ -974,8 +974,17 @@ def test_Poly_l1_norm():
     assert Poly( 1, x).l1_norm() == 1
 
 def test_Poly_clear_denoms():
-    assert Poly(2*x + 1).clear_denoms() == (1, Poly(2*x + 1, domain='ZZ'))
-    assert Poly(x/2 + 1).clear_denoms() == (2, Poly(x + 2, domain='QQ'))
+    coeff, poly = Poly(x + 2).clear_denoms()
+
+    assert coeff == 1 and poly == Poly(x + 2, domain='ZZ') and poly.get_domain() == ZZ
+
+    coeff, poly = Poly(x/2 + 1).clear_denoms()
+
+    assert coeff == 2 and poly == Poly(x + 2, domain='QQ') and poly.get_domain() == QQ
+
+    coeff, poly = Poly(x/2 + 1).clear_denoms(convert=True)
+
+    assert coeff == 2 and poly == Poly(x + 2, domain='ZZ') and poly.get_domain() == ZZ
 
 def test_Poly_integrate():
     assert Poly(x + 1).integrate() == Poly(x**2/2 + x)
@@ -1345,9 +1354,21 @@ def test_terms_gcd():
     assert terms_gcd(1) == 1
     assert terms_gcd(1, x) == 1
 
-    assert terms_gcd(x**3*y - x*y**3) == x*y*(x**2 - y**2)
-    assert terms_gcd(2*x**3*y - 2*x*y**3) == 2*x*y*(x**2 - y**2)
-    assert terms_gcd(x**3*y/2 - x*y**3/2) == x*y/2*(x**2 - y**2)
+    assert terms_gcd(x - 1) == x - 1
+    assert terms_gcd(-x - 1) == -x - 1
+
+    assert terms_gcd(2*x + 3) != Mul(1, 2*x + 3, evaluate=False)
+    assert terms_gcd(6*x + 4) == Mul(2, 3*x + 2, evaluate=False)
+
+    assert terms_gcd(x**3*y + x*y**3) == x*y*(x**2 + y**2)
+    assert terms_gcd(2*x**3*y + 2*x*y**3) == 2*x*y*(x**2 + y**2)
+    assert terms_gcd(x**3*y/2 + x*y**3/2) == x*y/2*(x**2 + y**2)
+
+    assert terms_gcd(x**3*y + 2*x*y**3) == x*y*(x**2 + 2*y**2)
+    assert terms_gcd(2*x**3*y + 4*x*y**3) == 2*x*y*(x**2 + 2*y**2)
+    assert terms_gcd(2*x**3*y/3 + 4*x*y**3/5) == 2*x*y/15*(5*x**2 + 6*y**2)
+
+    assert terms_gcd(2.0*x**3*y + 4.1*x*y**3) == x*y*(2.0*x**2 + 4.1*y**2)
 
 def test_trunc():
     f, g = x**5 + 2*x**4 + 3*x**3 + 4*x**2 + 5*x + 6, x**5 - x**4 + x**2 - x
