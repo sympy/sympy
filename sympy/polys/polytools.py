@@ -1114,14 +1114,19 @@ class Poly(Basic):
 
         return f.rep.dom.to_sympy(result)
 
-    def clear_denoms(f):
+    def clear_denoms(f, convert=False):
         """Clear denominators, but keep the ground domain. """
         try:
             coeff, result = f.rep.clear_denoms()
         except AttributeError: # pragma: no cover
             raise OperationNotSupported(f, 'clear_denoms')
 
-        return f.rep.dom.to_sympy(coeff), f.per(result)
+        coeff, f = f.rep.dom.to_sympy(coeff), f.per(result)
+
+        if not convert:
+            return coeff, f
+        else:
+            return coeff, f.to_ring()
 
     def integrate(f, *specs, **args):
         """Computes indefinite integral of `f`. """
@@ -1771,6 +1776,17 @@ def _should_return_basic(*polys, **args):
     else:
         return not all(isinstance(poly, Poly) for poly in polys)
 
+def _keep_coeff(coeff, factors):
+    """Return ``coeff*factors`` unevaluated if necessary. """
+    if coeff == 1:
+        return factors
+    elif coeff == -1:
+        return -factors
+    elif not factors.is_Add:
+        return coeff*factors
+    else:
+        return Mul(coeff, factors, evaluate=False)
+
 def degree(f, *gens, **args):
     """Returns degree of `f` in the given generator. """
     try:
@@ -2083,20 +2099,27 @@ def lcm(f, g, *gens, **args):
 
 def terms_gcd(f, *gens, **args):
     """Remove GCD of terms from the polynomial `f`. """
-    F = NonStrictPoly(f, *_analyze_gens(gens), **args)
-
-    if not F.is_Poly:
+    try:
+        f = Poly(f, *_analyze_gens(gens), **args)
+    except GeneratorsNeeded:
         return f
 
-    J, result = F.terms_gcd()
-    dom = result.get_domain()
+    (J, f), dom = f.terms_gcd(), f.get_domain()
 
-    if dom.has_Field or not dom.is_Exact:
-        C, result = result.LC(), result.monic()
+    if dom.has_Ring:
+        if dom.has_Field:
+            denom, f = f.clear_denoms(convert=True)
+
+        coeff, f = f.primitive()
+
+        if dom.has_Field:
+            coeff /= denom
     else:
-        C, result = result.primitive()
+        coeff = 1
 
-    return C * Mul(*[ x**j for x, j in zip(F.gens, J) ]) * result.as_basic()
+    term = Mul(*[ x**j for x, j in zip(f.gens, J) ])
+
+    return _keep_coeff(coeff, term*f.as_basic())
 
 def trunc(f, p, *gens, **args):
     """Reduce `f` modulo a constant `p`. """
@@ -2273,14 +2296,7 @@ def sqf(f, *gens, **args):
         coeff = coeff_p / coeff_q
         factors = factors_p / factors_q
 
-    if coeff == 1:
-        return factors
-    elif coeff == -1:
-        return -factors
-    elif not factors.is_Add:
-        return coeff*factors
-    else:
-        return Mul(coeff, factors, evaluate=False)
+    return _keep_coeff(coeff, factors)
 
 def factor_list(f, *gens, **args):
     """Returns a list of irreducible factors of `f`. """
@@ -2334,14 +2350,7 @@ def factor(f, *gens, **args):
         coeff = coeff_p / coeff_q
         factors = factors_p / factors_q
 
-    if coeff == 1:
-        return factors
-    elif coeff == -1:
-        return -factors
-    elif not factors.is_Add:
-        return coeff*factors
-    else:
-        return Mul(coeff, factors, evaluate=False)
+    return _keep_coeff(coeff, factors)
 
 def intervals(F, eps=None, inf=None, sup=None, strict=False, fast=False, sqf=False):
     """Compute isolating intervals for roots of `f`. """
