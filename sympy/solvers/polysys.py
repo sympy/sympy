@@ -68,7 +68,7 @@ def solve_poly_system(system, *gens):
         if len(univariate) == 1:
             f = univariate.pop()
         else:
-            raise ValueError("only zero-dimensional systems supported")
+            raise NotImplementedError("only zero-dimensional systems supported (finite number of solutions)")
 
         gens = f.gens
         f = f.as_basic()
