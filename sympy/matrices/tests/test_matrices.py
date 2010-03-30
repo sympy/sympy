@@ -1187,3 +1187,13 @@ def test_creation_args():
     assert eye(3.) == eye(3)
     assert ones((3L, Integer(4))) == ones((3, 4))
     raises(TypeError, 'Matrix(1, 2)')
+
+def test_Matrix_berkowitz_charpoly():
+    x, UA, K_i, K_w = symbols('x UA K_i K_w')
+
+    A = Matrix([[-K_i - UA + K_i**2/(K_i + K_w),       K_i*K_w/(K_i + K_w)],
+                [           K_i*K_w/(K_i + K_w), -K_w + K_w**2/(K_i + K_w)]])
+
+    assert A.berkowitz_charpoly(x) == \
+        Poly(x**2 + (K_i*UA + K_w*UA + 2*K_i*K_w)/(K_i + K_w)*x + K_i*K_w*UA/(K_i + K_w), x, domain='ZZ(K_i,K_w,UA)')
+
