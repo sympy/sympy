@@ -1696,6 +1696,11 @@ def test_intervals():
     assert intervals([g, h], sup=S(7)/4) == [((-2, -1), {0: 2}), ((1, 1), {1: 1}), ((1, S(3)/2), {0: 2})]
     assert intervals([g, h], sup=S(7)/5) == [((-2, -1), {0: 2}), ((1, 1), {1: 1})]
 
+    assert intervals([x+2, x**2 - 2]) == \
+        [((-2, -2), {0: 1}), ((-2, -1), {1: 1}), ((1, 2), {1: 1})]
+    assert intervals([x+2, x**2 - 2], strict=True) == \
+        [((-2, -2), {0: 1}), ((-S(3)/2, -1), {1: 1}), ((1, 2), {1: 1})]
+
 def test_refine_root():
     f = Poly(x**2 - 2)
 

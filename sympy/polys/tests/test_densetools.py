@@ -1484,3 +1484,10 @@ def test_dup_isolate_real_roots_list():
     assert dup_isolate_real_roots_list([f, g], ZZ, sup=-QQ(7,5)) == [((-QQ(3,2), -QQ(7,5)), {0: 2})]
     assert dup_isolate_real_roots_list([f, g], ZZ, inf=-QQ(7,5)) == [((1, 1), {1: 1}), ((1, 2), {0: 2})]
     assert dup_isolate_real_roots_list([f, g], ZZ, inf=-QQ(7,4)) == [((-QQ(3,2), -1), {0: 2}), ((1, 1), {1: 1}), ((1, 2), {0: 2})]
+
+    f, g = [2, 0, -1], [1, 0, -2]
+
+    assert dup_isolate_real_roots_list([f, g], ZZ) == \
+        [((-QQ(2), -QQ(1)), {1: 1}), ((-QQ(1), QQ(0)), {0: 1}), ((QQ(0), QQ(1)), {0: 1}), ((QQ(1), QQ(2)), {1: 1})]
+    assert dup_isolate_real_roots_list([f, g], ZZ, strict=True) == \
+        [((-QQ(3,2), -QQ(4,3)), {1: 1}), ((-QQ(1), -QQ(2,3)), {0: 1}), ((QQ(2,3), QQ(1)), {0: 1}), ((QQ(4,3), QQ(3,2)), {1: 1})]
