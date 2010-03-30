@@ -1406,3 +1406,11 @@ def test_SMatrix_CL_RL():
     assert SMatrix((1,2),(3,4)).row_list() == [(0, 0, 1), (0, 1, 2), (1, 0, 3), (1, 1, 4)]
     assert SMatrix((1,2),(3,4)).col_list() == [(0, 0, 1), (1, 0, 3), (0, 1, 2), (1, 1, 4)]
 
+def test_Matrix_berkowitz_charpoly():
+    x, UA, K_i, K_w = symbols('x UA K_i K_w')
+
+    A = Matrix([[-K_i - UA + K_i**2/(K_i + K_w),       K_i*K_w/(K_i + K_w)],
+                [           K_i*K_w/(K_i + K_w), -K_w + K_w**2/(K_i + K_w)]])
+
+    assert A.berkowitz_charpoly(x) == \
+        Poly(x**2 + (K_i*UA + K_w*UA + 2*K_i*K_w)/(K_i + K_w)*x + K_i*K_w*UA/(K_i + K_w), x, domain='ZZ(K_i,K_w,UA)')
