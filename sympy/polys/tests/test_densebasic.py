@@ -31,6 +31,7 @@ from sympy.polys.densebasic import (
     dmp_inject, dmp_eject,
     dup_terms_gcd, dmp_terms_gcd,
     dmp_list_terms, dmp_apply_pairs,
+    dup_random,
 )
 
 from sympy.polys.specialpolys import (
@@ -44,6 +45,7 @@ from sympy.polys.polyclasses import (
 from sympy.polys.algebratools import ZZ, QQ
 
 from sympy.utilities.pytest import raises
+from sympy.utilities import all
 
 def test_dup_LC():
     assert dup_LC([], ZZ) == 0
@@ -582,3 +584,23 @@ def test_dmp_apply_pairs():
     assert dmp_apply_pairs([[1,2],[3]], [[4],[5,6]], h, [], 1, ZZ) == [[8],[18]]
     assert dmp_apply_pairs([[1],[2,3]], [[4,5],[6]], h, [], 1, ZZ) == [[5],[18]]
 
+def test_dup_random():
+    f = dup_random(0, -10, 10, ZZ)
+
+    assert dup_degree(f) == 0
+    assert all([ -10 <= c <= 10 for c in f ])
+
+    f = dup_random(1, -20, 20, ZZ)
+
+    assert dup_degree(f) == 1
+    assert all([ -20 <= c <= 20 for c in f ])
+
+    f = dup_random(2, -30, 30, ZZ)
+
+    assert dup_degree(f) == 2
+    assert all([ -30 <= c <= 30 for c in f ])
+
+    f = dup_random(3, -40, 40, ZZ)
+
+    assert dup_degree(f) == 3
+    assert all([ -40 <= c <= 40 for c in f ])
