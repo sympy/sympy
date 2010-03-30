@@ -9,6 +9,8 @@ from sympy.polys.monomialtools import (
 
 from sympy.utilities import cythonized
 
+import random
+
 def poly_LC(f, K):
     """Returns leading coefficient of `f`. """
     if not f:
@@ -898,4 +900,13 @@ def dmp_apply_pairs(f, g, h, args, u, K):
         result.append(dmp_apply_pairs(a, b, h, args, v, K))
 
     return dmp_strip(result, u)
+
+def dup_random(n, a, b, K):
+    """Return a polynomial of degree ``n`` with coefficients in ``[a, b]``. """
+    f = [ K.convert(random.randint(a, b)) for _ in xrange(0, n+1) ]
+
+    while not f[0]:
+        f[0] = K.convert(random.randint(a, b))
+
+    return f
 
