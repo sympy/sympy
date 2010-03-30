@@ -2343,7 +2343,7 @@ def factor(f, *gens, **args):
     else:
         return Mul(coeff, factors, evaluate=False)
 
-def intervals(F, eps=None, inf=None, sup=None, fast=False, sqf=False):
+def intervals(F, eps=None, inf=None, sup=None, strict=False, fast=False, sqf=False):
     """Compute isolating intervals for roots of `f`. """
     if not hasattr(F, '__iter__'):
         try:
@@ -2387,10 +2387,13 @@ def intervals(F, eps=None, inf=None, sup=None, fast=False, sqf=False):
         if sup is not None:
             sup = QQ.convert(sup)
 
+        intervals = dup_isolate_real_roots_list(G, QQ,
+            eps=eps, inf=inf, sup=sup, strict=strict, fast=fast)
+
         result = []
 
-        for (s, t), k in dup_isolate_real_roots_list(G, QQ, eps=eps, inf=inf, sup=sup, fast=fast):
-            result.append(((QQ.to_sympy(s), QQ.to_sympy(t)), k))
+        for (s, t), indices in intervals:
+            result.append(((QQ.to_sympy(s), QQ.to_sympy(t)), indices))
 
         return result
 

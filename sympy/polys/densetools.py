@@ -2480,7 +2480,7 @@ def dup_isolate_real_roots(f, K, eps=None, inf=None, sup=None, fast=False):
 
     return sorted(I_neg + I_zero + I_pos)
 
-def dup_isolate_real_roots_list(polys, K, eps=None, inf=None, sup=None, fast=False):
+def dup_isolate_real_roots_list(polys, K, eps=None, inf=None, sup=None, strict=False, fast=False):
     """Isolate real roots of a list of square-free polynomial using CF approach. """
     if K.is_QQ:
         K, F, polys = K.get_ring(), K, polys[:]
@@ -2515,7 +2515,7 @@ def dup_isolate_real_roots_list(polys, K, eps=None, inf=None, sup=None, fast=Fal
         factors_list.append((list(f), indices))
 
     I_neg, I_pos = _real_isolate_and_disjoin(factors_list, K,
-        eps=eps, inf=inf, sup=sup, fast=fast)
+        eps=eps, inf=inf, sup=sup, strict=strict, fast=fast)
 
     F = K.get_field()
 
@@ -2526,20 +2526,29 @@ def dup_isolate_real_roots_list(polys, K, eps=None, inf=None, sup=None, fast=Fal
 
     return sorted(I_neg + I_zero + I_pos)
 
-def _disjoint_p(M, N):
+def _disjoint_p(M, N, strict=False):
     """Check if Mobius transforms define disjoint intervals. """
     a1, b1, c1, d1 = M
     a2, b2, c2, d2 = N
 
-    if a1*d1 > b1*c1:
+    a1d1, b1c1 = a1*d1, b1*c1
+    a2d2, b2c2 = a2*d2, b2*c2
+
+    if a1d1 == b1c1 and a2d2 == b2c2:
+        return True
+
+    if a1d1 > b1c1:
         a1, c1, b1, d1 = b1, d1, a1, c1
 
-    if a2*d2 > b2*c2:
+    if a2d2 > b2c2:
         a2, c2, b2, d2 = b2, d2, a2, c2
 
-    return a2*d1 >= c2*b1 or b2*c1 <= d2*a1
+    if not strict:
+        return a2*d1 >= c2*b1 or b2*c1 <= d2*a1
+    else:
+        return a2*d1 >  c2*b1 or b2*c1 <  d2*a1
 
-def _real_isolate_and_disjoin(factors, K, eps=None, inf=None, sup=None, fast=False):
+def _real_isolate_and_disjoin(factors, K, eps=None, inf=None, sup=None, strict=False, fast=False):
     """Isolate real roots of a list of polynomials and disjoin intervals. """
     I_pos, I_neg = [], []
 
@@ -2554,7 +2563,7 @@ def _real_isolate_and_disjoin(factors, K, eps=None, inf=None, sup=None, fast=Fal
 
     for i, (f, M, k) in enumerate(I_pos):
         for j, (g, N, m) in enumerate(I_pos[i+1:]):
-            while not _disjoint_p(M, N):
+            while not _disjoint_p(M, N, strict=strict):
                 f, M = dup_inner_refine_real_root(f, M, K, steps=1, fast=fast, mobius=True)
                 g, N = dup_inner_refine_real_root(g, N, K, steps=1, fast=fast, mobius=True)
 
@@ -2564,13 +2573,30 @@ def _real_isolate_and_disjoin(factors, K, eps=None, inf=None, sup=None, fast=Fal
 
     for i, (f, M, k) in enumerate(I_neg):
         for j, (g, N, m) in enumerate(I_neg[i+1:]):
-            while not _disjoint_p(M, N):
+            while not _disjoint_p(M, N, strict=strict):
                 f, M = dup_inner_refine_real_root(f, M, K, steps=1, fast=fast, mobius=True)
                 g, N = dup_inner_refine_real_root(g, N, K, steps=1, fast=fast, mobius=True)
 
             I_neg[i+j+1] = (g, N, m)
 
         I_neg[i] = (f, M, k)
+
+    if strict:
+        for i, (f, M, k) in enumerate(I_neg):
+            if not M[0]:
+                while not M[0]:
+                    f, M = dup_inner_refine_real_root(f, M, K, steps=1, fast=fast, mobius=True)
+
+                I_neg[i] = (f, M, k)
+                break
+
+        for j, (g, N, m) in enumerate(I_pos):
+            if not N[0]:
+                while not N[0]:
+                    g, N = dup_inner_refine_real_root(g, N, K, steps=1, fast=fast, mobius=True)
+
+                I_pos[j] = (g, N, m)
+                break
 
     field = K.get_field()
 
