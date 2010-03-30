@@ -304,24 +304,21 @@ def roots(f, *gens, **flags):
 
     def _try_decompose(f):
         """Find roots using functional decomposition. """
-        factors = f.decompose()
-        result, g = {}, factors[0]
+        factors, roots = f.decompose(), []
 
-        for h, i in g.sqf_list()[1]:
-            for r in _try_heuristics(h):
-                _update_dict(result, r, i)
+        for root in _try_heuristics(factors[0]):
+            roots.append(root)
 
         for factor in factors[1:]:
-            last, result = result.copy(), {}
+            previous, roots = list(roots), []
 
-            for last_r, i in last.iteritems():
-                g = factor - Poly(last_r, x)
+            for root in previous:
+                g = factor - Poly(root, x)
 
-                for h, j in g.sqf_list()[1]:
-                    for r in _try_heuristics(h):
-                        _update_dict(result, r, i*j)
+                for root in _try_heuristics(g):
+                    roots.append(root)
 
-        return result
+        return roots
 
     def _try_heuristics(f):
         """Find roots using formulas and some tricks. """
@@ -388,7 +385,8 @@ def roots(f, *gens, **flags):
             _, factors = Poly(f.as_basic()).factor_list()
 
             if len(factors) == 1 and factors[0][1] == 1:
-                result = _try_decompose(f)
+                for root in _try_decompose(f):
+                    _update_dict(result, root, 1)
             else:
                 for factor, k in factors:
                     for r in _try_heuristics(Poly(factor, x, field=True)):
