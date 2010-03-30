@@ -335,9 +335,9 @@ def roots(f, *gens, **flags):
 
         result = []
 
-        for i in [S(-1), S(1)]:
-            if f.eval(i).expand().is_zero:
-                f = f.exquo(Poly(x-1, x))
+        for i in [-1, 1]:
+            if not f.eval(i):
+                f = f.exquo(Poly(x - i, x))
                 result.append(i)
                 break
 
