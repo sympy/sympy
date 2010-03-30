@@ -658,8 +658,8 @@ def test_Poly_properties():
     assert Poly(1, x).is_ground == True
     assert Poly(x, x).is_ground == False
 
-    assert Poly(x*y*z+1).is_linear == True
-    assert Poly(x**2*y*z+1).is_linear == False
+    assert Poly(x+y+z+1).is_linear == True
+    assert Poly(x*y*z+1).is_linear == False
 
     assert Poly(x*y).is_monomial == True
     assert Poly(x*y+1).is_monomial == False

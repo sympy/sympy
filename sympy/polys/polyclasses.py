@@ -1583,7 +1583,7 @@ class DMP(object):
     @property
     def is_linear(f):
         """Returns `True` if `f` is linear in all its variables. """
-        return all(d <= 1 for d in dmp_degree_list(f.rep, f.lev))
+        return all([ sum(monom) <= 1 for monom in dmp_to_dict(f.rep, f.lev).keys() ])
 
     @property
     def is_homogeneous(f):
