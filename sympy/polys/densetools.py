@@ -2495,13 +2495,15 @@ def dup_isolate_real_roots_list(polys, K, eps=None, inf=None, sup=None, strict=F
     if (inf is None or inf <= 0) and (sup is None or 0 <= sup):
         zeros, zero_indices = True, {}
 
+    from sympy.polys.factortools import dup_factor_list
+
     for i, p in enumerate(polys):
         j, p = dup_terms_gcd(p, K)
 
         if zeros and j > 0:
             zero_indices[i] = j
 
-        for f, k in dup_sqf_list(p, K)[1]:
+        for f, k in dup_factor_list(p, K)[1]:
             f = tuple(f)
 
             if f not in factors_dict:
