@@ -31,7 +31,7 @@ def test_solve_poly_system():
     assert solve_poly_system([x**2 - y**2, x - 1], x, y) == solution
     assert solve_poly_system([x**2 - y**2, x - 1]) == solution
 
-    raises(ValueError, "solve_poly_system([x**3-y**3], x, y)")
+    raises(NotImplementedError, "solve_poly_system([x**3-y**3], x, y)")
 
 def test_solve_poly_system_slow():
     f_1 = x**2 + y + z - 1
