@@ -3,8 +3,6 @@
 from types import NoneType
 from inspect import getmro
 
-import decimal
-
 from core import BasicMeta
 
 class SympifyError(ValueError):
@@ -152,5 +150,3 @@ def _sympify(a):
        see: sympify
     """
     return sympify(a, strict=True)
-
-from singleton import S

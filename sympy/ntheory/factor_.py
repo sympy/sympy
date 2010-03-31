@@ -10,7 +10,7 @@ import math
 from primetest import isprime
 from generate import sieve, primerange
 from sympy.utilities.iterables import iff
-from sympy.core.sympify import S
+from sympy.core.singleton import S
 
 small_trailing = [i and max(int(not i % 2**j) and j for j in range(1,8)) \
     for i in range(256)]
