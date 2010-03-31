@@ -64,7 +64,7 @@ class Symbol(Atom):
         return (self.is_commutative, self.name)
 
     def as_dummy(self):
-        return Dummy(self.name, **self.assumptions0)
+        return Dummy(self.name, self.is_commutative, **self.assumptions0)
 
     def __call__(self, *args):
         return Function(self.name, nargs=len(args))(*args, **self.assumptions0)
