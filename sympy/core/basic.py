@@ -601,48 +601,6 @@ class Basic(AssumeMeths):
 
         return (st != ot)
 
-    # TODO all comparison methods should return True/False directly (?)
-    # see #153
-    #
-    # OTOH Py3k says
-    #
-    #    Comparisons other than == and != between disparate types will raise an
-    #    exception unless explicitly supported by the type
-    #
-    # references:
-    #
-    # http://www.python.org/dev/peps/pep-0207/
-    # http://www.python.org/dev/peps/pep-3100/#id18
-    # http://mail.python.org/pipermail/python-dev/2004-June/045111.html
-
-    @_sympifyit('other', False) # sympy >  other
-    def __lt__(self, other):
-        dif = self - other
-        if dif.is_negative != dif.is_nonnegative:
-            return dif.is_negative
-        return C.StrictInequality(self, other)
-
-    @_sympifyit('other', True)  # sympy >  other
-    def __gt__(self, other):
-        dif = self - other
-        if dif.is_positive !=  dif.is_nonpositive:
-            return dif.is_positive
-        return C.StrictInequality(other, self)
-
-    @_sympifyit('other', False) # sympy >  other
-    def __le__(self, other):
-        dif = self - other
-        if dif.is_nonpositive != dif.is_positive:
-            return dif.is_nonpositive
-        return C.Inequality(self, other)
-
-    @_sympifyit('other', True)  # sympy >  other
-    def __ge__(self, other):
-        dif = self - other
-        if dif.is_nonnegative != dif.is_negative:
-            return dif.is_nonnegative
-        return C.Inequality(other, self)
-
 
     def __repr__(self):
         return StrPrinter.doprint(self)
