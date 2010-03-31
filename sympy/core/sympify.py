@@ -1,7 +1,10 @@
 """sympify -- convert objects SymPy internal format"""
+
 # from basic import Basic, BasicType, S
 # from numbers  import Integer, Real
 import decimal
+
+from core import BasicType
 
 class SympifyError(ValueError):
     def __init__(self, expr, base_exc=None):
@@ -12,6 +15,7 @@ class SympifyError(ValueError):
             return "SympifyError: %s" % (self.expr,)
 
         return "Sympify of expression '%s' failed, because of exception being raised:\n%s: %s" % (self.expr, self.base_exc.__class__.__name__, str(self.base_exc))
+
 
 
 def sympify(a, locals=None, convert_xor=True):
@@ -188,4 +192,5 @@ def _sympify(a):
     raise SympifyError("%r is NOT a valid SymPy expression" % (a,))
 
 
-from basic import Basic, BasicType, S
+from basic import Basic
+from singleton import S

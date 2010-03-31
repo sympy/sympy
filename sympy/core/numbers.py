@@ -1,4 +1,6 @@
-from basic import Atom, SingletonMeta, S, Basic
+from core import C
+from basic import Atom, Basic
+from singleton import S, SingletonMeta
 from expr import Expr
 from decorators import _sympifyit
 from cache import Memoizer, cacheit, clear_cache
@@ -1712,9 +1714,7 @@ Basic.singleton['GoldenRatio'] = GoldenRatio
 Basic.singleton['EulerGamma'] = EulerGamma
 Basic.singleton['Catalan'] = Catalan
 
-from basic import S, C
 from sympify import _sympify, SympifyError
 from function import FunctionClass
 from power import Pow, integer_nthroot
 from mul import Mul
-
