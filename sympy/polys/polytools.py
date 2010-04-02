@@ -22,7 +22,7 @@ from sympy.polys.polyutils import (
     _dict_from_basic_no_gens,
 )
 
-from sympy.polys.densetools import (
+from sympy.polys.rootisolation import (
     dup_isolate_real_roots_list,
 )
 
