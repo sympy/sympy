@@ -75,14 +75,14 @@ from sympy.polys.densetools import (
     dup_decompose,
     dup_sturm,
     dmp_lift,
-    dup_isolate_real_roots_sqf,
-    dup_isolate_real_roots,
-    dup_refine_real_root,
 )
 
 from sympy.polys.rootisolation import (
+    dup_isolate_real_roots_sqf,
+    dup_isolate_real_roots,
     dup_isolate_all_roots_sqf,
     dup_isolate_all_roots,
+    dup_refine_real_root,
 )
 
 from sympy.polys.factortools import (
