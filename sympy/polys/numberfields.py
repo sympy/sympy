@@ -518,7 +518,7 @@ def isolate(alg, eps=None, fast=False):
     func = lambdify((), alg, modules="mpmath", printer=IntervalPrinter())
 
     poly = minpoly(alg, polys=True)
-    intervals = poly.intervals_sqf()
+    intervals = poly.intervals(sqf=True)
 
     dps, done = mp.dps, False
 

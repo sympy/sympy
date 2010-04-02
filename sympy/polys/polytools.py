@@ -1419,37 +1419,49 @@ class Poly(Basic):
 
         return [ (f.per(g), k) for g, k in factors ]
 
-    def intervals_sqf(f, eps=None, inf=None, sup=None, fast=False):
-        """Compute isolating intervals for roots of square-free `f`. """
-        if eps is not None:
-            eps = QQ.convert(eps)
-        if inf is not None:
-            inf = QQ.convert(inf)
-        if sup is not None:
-            sup = QQ.convert(sup)
-
-        try:
-            result = f.rep.intervals_sqf(eps=eps, inf=inf, sup=sup, fast=fast)
-        except AttributeError: # pragma: no cover
-            raise OperationNotSupported(f, 'intervals_sqf')
-
-        return [ (QQ.to_sympy(s), QQ.to_sympy(t)) for (s, t) in result ]
-
-    def intervals(f, eps=None, inf=None, sup=None, fast=False):
+    def intervals(f, all=False, eps=None, inf=None, sup=None, fast=False, sqf=False):
         """Compute isolating intervals for roots of `f`. """
         if eps is not None:
             eps = QQ.convert(eps)
+
         if inf is not None:
             inf = QQ.convert(inf)
         if sup is not None:
             sup = QQ.convert(sup)
 
         try:
-            result = f.rep.intervals(eps=eps, inf=inf, sup=sup, fast=fast)
+            result = f.rep.intervals(all=all, eps=eps, inf=inf, sup=sup, fast=fast, sqf=sqf)
         except AttributeError: # pragma: no cover
             raise OperationNotSupported(f, 'intervals')
 
-        return [ ((QQ.to_sympy(s), QQ.to_sympy(t)), k) for ((s, t), k) in result ]
+        if sqf:
+            def _real((s, t)):
+                return (QQ.to_sympy(s), QQ.to_sympy(t))
+
+            if not all:
+                return map(_real, result)
+
+            def _complex(((u, v), (s, t))):
+                return (QQ.to_sympy(u) + I*QQ.to_sympy(v),
+                        QQ.to_sympy(s) + I*QQ.to_sympy(t))
+
+            real_part, complex_part = result
+
+            return map(_real, real_part), map(_complex, complex_part)
+        else:
+            def _real(((s, t), k)):
+                return ((QQ.to_sympy(s), QQ.to_sympy(t)), k)
+
+            if not all:
+                return map(_real, result)
+
+            def _complex((((u, v), (s, t)), k)):
+                return ((QQ.to_sympy(u) + I*QQ.to_sympy(v),
+                         QQ.to_sympy(s) + I*QQ.to_sympy(t)), k)
+
+            real_part, complex_part = result
+
+            return map(_real, real_part), map(_complex, complex_part)
 
     def refine_root(f, s, t, eps=None, steps=None, fast=False, check_sqf=False):
         """Refine an isolating interval of a root to the given precision. """
@@ -2352,7 +2364,7 @@ def factor(f, *gens, **args):
 
     return _keep_coeff(coeff, factors)
 
-def intervals(F, eps=None, inf=None, sup=None, strict=False, fast=False, sqf=False):
+def intervals(F, all=False, eps=None, inf=None, sup=None, strict=False, fast=False, sqf=False):
     """Compute isolating intervals for roots of `f`. """
     if not hasattr(F, '__iter__'):
         try:
@@ -2360,10 +2372,7 @@ def intervals(F, eps=None, inf=None, sup=None, strict=False, fast=False, sqf=Fal
         except GeneratorsNeeded:
             return []
 
-        if sqf:
-            return F.intervals_sqf(eps=eps, inf=inf, sup=sup, fast=fast)
-        else:
-            return F.intervals(eps=eps, inf=inf, sup=sup, fast=fast)
+        return F.intervals(all=all, eps=eps, inf=inf, sup=sup, fast=fast, sqf=sqf)
     else:
         # XXX: the following should read:
         #
