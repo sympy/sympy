@@ -2175,7 +2175,7 @@ def dup_step_refine_real_root(f, M, K, fast=False):
 
     return f, (a, b, c, d)
 
-def dup_inner_refine_real_root(f, M, K, eps=None, steps=None, fast=False, mobius=False):
+def dup_inner_refine_real_root(f, M, K, eps=None, steps=None, disjoint=None, fast=False, mobius=False):
     """Refine a positive root of `f` given a Mobius transform or an interval. """
     F = K.get_field()
 
@@ -2202,16 +2202,22 @@ def dup_inner_refine_real_root(f, M, K, eps=None, steps=None, fast=False, mobius
             for i in xrange(0, steps):
                 f, (a, b, c, d) = dup_step_refine_real_root(f, (a, b, c, d), K, fast=fast)
 
+    if disjoint is not None:
+        while True:
+            u, v = _mobius_to_interval((a, b, c, d), F)
+
+            if v <= disjoint or disjoint <= u:
+                break
+            else:
+                f, (a, b, c, d) = dup_step_refine_real_root(f, (a, b, c, d), K, fast=fast)
+
     if not mobius:
         return _mobius_to_interval((a, b, c, d), F)
     else:
         return f, (a, b, c, d)
 
-def dup_outer_refine_real_root(f, s, t, K, eps=None, steps=None, fast=False):
+def dup_outer_refine_real_root(f, s, t, K, eps=None, steps=None, disjoint=None, fast=False):
     """Refine a positive root of `f` given an interval `(s, t)`. """
-    if s == t:
-        return (s, t)
-
     a, b, c, d = _mobius_from_interval((s, t), K.get_field())
 
     f = dup_transform(f, dup_strip([a, b]),
@@ -2220,9 +2226,9 @@ def dup_outer_refine_real_root(f, s, t, K, eps=None, steps=None, fast=False):
     if dup_sign_variations(f, K) != 1:
         raise RefinementFailed("there should be exactly one root in (%s, %s) interval" % (s, t))
 
-    return dup_inner_refine_real_root(f, (a, b, c, d), K, eps=eps, steps=steps, fast=fast)
+    return dup_inner_refine_real_root(f, (a, b, c, d), K, eps=eps, steps=steps, disjoint=disjoint, fast=fast)
 
-def dup_refine_real_root(f, s, t, K, eps=None, steps=None, fast=False):
+def dup_refine_real_root(f, s, t, K, eps=None, steps=None, disjoint=None, fast=False):
     """Refine real root's approximating interval to the given precision. """
     if K.is_QQ:
         (_, f), K = dup_clear_denoms(f, K, convert=True), K.get_ring()
@@ -2241,9 +2247,15 @@ def dup_refine_real_root(f, s, t, K, eps=None, steps=None, fast=False):
         if t <= 0:
             f, s, t, negative = dup_mirror(f, K), -t, -s, True
         else:
-            raise ValueError("can't refine a real root on (%s, %s)" % (s, t))
+            raise ValueError("can't refine a real root in (%s, %s)" % (s, t))
 
-    s, t = dup_outer_refine_real_root(f, s, t, K, eps=eps, steps=steps, fast=fast)
+    if negative and disjoint is not None:
+        if disjoint < 0:
+            disjoint = -disjoint
+        else:
+            disjoint = None
+
+    s, t = dup_outer_refine_real_root(f, s, t, K, eps=eps, steps=steps, disjoint=disjoint, fast=fast)
 
     if negative:
         return (-t, -s)
