@@ -1460,6 +1460,13 @@ def test_dup_isolate_real_roots():
 
     assert dup_isolate_real_roots(f, ZZ, inf=-2, sup=2) == I
 
+    f = [1, -3, -1, 11, -8, -8, 12, -4, 0, 0, 0, 0]
+
+    assert dup_isolate_real_roots(f, ZZ, basis=False) == \
+        [((-2, -1), 2), ((0, 0), 4), ((1, 1), 3), ((1, 2), 2)]
+    assert dup_isolate_real_roots(f, ZZ, basis=True) == \
+        [((-2, -1), 2, [1, 0, -2]), ((0, 0), 4, [1, 0]), ((1, 1), 3, [1, -1]), ((1, 2), 2, [1, 0, -2])]
+
     raises(DomainError, "dup_isolate_real_roots([EX(1), EX(2)], EX)")
 
 def test_dup_isolate_real_roots_list():
@@ -1513,3 +1520,12 @@ def test_dup_isolate_real_roots_list():
 
     assert dup_isolate_real_roots_list([f, g], ZZ) == \
         [((-QQ(2), -QQ(1)), {1: 1, 0: 1}), ((QQ(0), QQ(0)), {0: 1, 1: 2}), ((QQ(1), QQ(1)), {1: 1}), ((QQ(1), QQ(2)), {1: 1, 0: 1})]
+
+    f, g = [1, -3, -1, 11, -8, -8, 12, -4, 0, 0], [1, -2, 3, -4, 2, 0]
+
+    assert dup_isolate_real_roots_list([f, g], ZZ, basis=False) == \
+        [((-2, -1), {0: 2}), ((0, 0), {0: 2, 1: 1}), ((1, 1), {0: 3, 1: 2}), ((1, 2), {0: 2})]
+    assert dup_isolate_real_roots_list([f, g], ZZ, basis=True) == \
+        [((-2, -1), {0: 2}, [1, 0, -2]), ((0, 0), {0: 2, 1: 1}, [1, 0]), ((1, 1), {0: 3, 1: 2}, [1, -1]), ((1, 2), {0: 2}, [1, 0, -2])]
+
+    raises(DomainError, "dup_isolate_real_roots_list([[EX(1), EX(2)]], EX)")
