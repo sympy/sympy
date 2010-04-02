@@ -652,9 +652,9 @@ def dmp_zero_p(f, u):
     while u:
         if len(f) != 1:
             return False
-        else:
-            f = f[0]
-            u -= 1
+
+        f = f[0]
+        u -= 1
 
     return not f
 
