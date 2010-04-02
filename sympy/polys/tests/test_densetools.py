@@ -1211,6 +1211,18 @@ def test_dup_refine_real_root():
     assert dup_refine_real_root(f, s, t, ZZ, eps=QQ(1,100), steps=6) == (u, v)
     assert dup_refine_real_root(f, s, t, ZZ, eps=QQ(1,100), steps=7) == (u, v)
 
+    s, t, u, v = QQ(-2), QQ(-1), QQ(-3,2), QQ(-4,3)
+
+    assert dup_refine_real_root([1,0,-2], s, t, ZZ, disjoint=QQ(-5)) == (s, t)
+    assert dup_refine_real_root([1,0,-2], s, t, ZZ, disjoint=-v) == (s, t)
+    assert dup_refine_real_root([1,0,-2], s, t, ZZ, disjoint=v) == (u, v)
+
+    s, t, u, v = QQ(1), QQ(2), QQ(4,3), QQ(3,2)
+
+    assert dup_refine_real_root([1,0,-2], s, t, ZZ, disjoint=QQ(5)) == (s, t)
+    assert dup_refine_real_root([1,0,-2], s, t, ZZ, disjoint=-u) == (s, t)
+    assert dup_refine_real_root([1,0,-2], s, t, ZZ, disjoint=u) == (u, v)
+
 def test_dup_isolate_real_roots_sqf():
     assert dup_isolate_real_roots_sqf([], ZZ) == []
     assert dup_isolate_real_roots_sqf([5], ZZ) == []
