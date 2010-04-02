@@ -80,6 +80,11 @@ from sympy.polys.densetools import (
     dup_refine_real_root,
 )
 
+from sympy.polys.rootisolation import (
+    dup_isolate_all_roots_sqf,
+    dup_isolate_all_roots,
+)
+
 from sympy.polys.factortools import (
     dup_factor_list, dup_factor_list_include,
     dmp_factor_list, dmp_factor_list_include,
@@ -1524,17 +1529,19 @@ class DMP(object):
         factors = dmp_factor_list_include(f.rep, f.lev, f.dom)
         return [ (f.per(g), k) for g, k in factors ]
 
-    def intervals_sqf(f, eps=None, inf=None, sup=None, fast=False):
-        """Compute isolating intervals for roots of square-free `f`. """
-        if not f.lev:
-            return dup_isolate_real_roots_sqf(f.rep, f.dom, eps=eps, inf=inf, sup=sup, fast=fast)
-        else:
-            raise PolynomialError("can't isolate roots of a multivariate polynomial")
-
-    def intervals(f, eps=None, inf=None, sup=None, fast=False):
+    def intervals(f, all=False, eps=None, inf=None, sup=None, fast=False, sqf=False):
         """Compute isolating intervals for roots of `f`. """
         if not f.lev:
-            return dup_isolate_real_roots(f.rep, f.dom, eps=eps, inf=inf, sup=sup, fast=fast)
+            if not all:
+                if not sqf:
+                    return dup_isolate_real_roots(f.rep, f.dom, eps=eps, inf=inf, sup=sup, fast=fast)
+                else:
+                    return dup_isolate_real_roots_sqf(f.rep, f.dom, eps=eps, inf=inf, sup=sup, fast=fast)
+            else:
+                if not sqf:
+                    return dup_isolate_all_roots(f.rep, f.dom, eps=eps, inf=inf, sup=sup, fast=fast)
+                else:
+                    return dup_isolate_all_roots_sqf(f.rep, f.dom, eps=eps, inf=inf, sup=sup, fast=fast)
         else:
             raise PolynomialError("can't isolate roots of a multivariate polynomial")
 
