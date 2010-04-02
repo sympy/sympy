@@ -293,13 +293,12 @@ def dmp_ground_nth(f, N, u, K):
 @cythonized("u")
 def dmp_zero_p(f, u):
     """Returns True if `f` is zero in `K[X]`. """
-    if not u:
-        return not f
-    else:
-        if len(f) == 1:
-            return dmp_zero_p(f[0], u-1)
-        else:
+    while u:
+        if len(f) != 1:
             return False
+        f = f[0]
+        u -= 1
+    return not f
 
 @cythonized("u")
 def dmp_zero(u):
