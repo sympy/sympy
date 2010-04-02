@@ -1,10 +1,15 @@
 """Tests for tools for real and complex root isolation and refinement. """
 
 from sympy.polys.rootisolation import (
+    dup_isolate_complex_roots_sqf,
+    dup_isolate_all_roots_sqf,
+    dup_isolate_all_roots,
     dup_count_complex_roots,
 )
 
 from sympy.polys.algebratools import ZZ, QQ
+
+from sympy.utilities.pytest import raises
 
 a, b = (-QQ(1), -QQ(1)), (QQ(1), QQ(1))
 c, d = ( QQ(0),  QQ(0)), (QQ(1), QQ(1))
@@ -218,3 +223,43 @@ def test_dup_count_complex_roots_exclude():
     assert dup_count_complex_roots(f, a, b, ZZ, exclude=['SW', 'SE']) == 2
     assert dup_count_complex_roots(f, a, b, ZZ, exclude=['SW', 'SE', 'S']) == 1
     assert dup_count_complex_roots(f, a, b, ZZ, exclude=['SW', 'SE', 'S', 'N']) == 0
+
+    a, b = (QQ(0), QQ(0)), (QQ(1), QQ(1))
+
+    assert dup_count_complex_roots(f, a, b, ZZ, exclude=True) == 1
+
+def test_dup_isolate_complex_roots_sqf():
+    f = [1, -2, 3]
+
+    assert dup_isolate_complex_roots_sqf(f, ZZ) == \
+        [((0, 0), (6, 6)), ((0, -6), (6, 0))]
+
+    assert dup_isolate_complex_roots_sqf(f, ZZ, eps=QQ(1,10)) == \
+        [((QQ(15,16), QQ(45,32)), (QQ(33,32), QQ(3,2))), ((QQ(15,16), -QQ(3,2)), (QQ(33,32), -QQ(45,32)))]
+    assert dup_isolate_complex_roots_sqf(f, ZZ, eps=QQ(1,100)) == \
+        [((QQ(255,256), QQ(723,512)), (QQ(513,512), QQ(363,256))), ((QQ(255,256), -QQ(363,256)), (QQ(513,512), -QQ(723,512)))]
+
+    f = [7, -19, 20, 17, 20]
+
+    assert dup_isolate_complex_roots_sqf(f, ZZ) == \
+        [((-QQ(40,7), 0), (0, QQ(40,7))), ((-QQ(40,7), -QQ(40,7)), (0, 0)), ((0, 0), (QQ(40,7), QQ(40,7))), ((0, -QQ(40,7)), (QQ(40,7), 0))]
+
+def test_dup_isolate_all_roots_sqf():
+    f = [4, -1, 2, 5, 0]
+
+    assert dup_isolate_all_roots_sqf(f, ZZ) == \
+        ([(-1, 0), (0, 0)], [((0, 0), (QQ(5,2), QQ(5,2))), ((0, -QQ(5,2)), (QQ(5,2), 0))])
+
+    assert dup_isolate_all_roots_sqf(f, ZZ, eps=QQ(1,10)) == \
+        ([(QQ(-7,8), QQ(-6,7)), (0, 0)], [((QQ(35,64), QQ(65,64)), (QQ(5,8), QQ(35,32))), ((QQ(35,64), -QQ(35,32)), (QQ(5,8), -QQ(65,64)))])
+
+def test_dup_isolate_all_roots():
+    f = [4, -1, 2, 5, 0]
+
+    assert dup_isolate_all_roots(f, ZZ) == \
+        ([((-1, 0), 1), ((0, 0), 1)], [(((0, 0), (QQ(5,2), QQ(5,2))), 1), (((0, -QQ(5,2)), (QQ(5,2), 0)), 1)])
+
+    assert dup_isolate_all_roots(f, ZZ, eps=QQ(1,10)) == \
+        ([((QQ(-7,8), QQ(-6,7)), 1), ((0, 0), 1)], [(((QQ(35,64), QQ(65,64)), (QQ(5,8), QQ(35,32))), 1), (((QQ(35,64), -QQ(35,32)), (QQ(5,8), -QQ(65,64))), 1)])
+
+    raises(NotImplementedError, "dup_isolate_all_roots([1, 1, -2, -2, 1, 1], ZZ)")
