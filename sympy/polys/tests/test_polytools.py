@@ -47,7 +47,8 @@ from sympy.polys.polyclasses import GFP, DMP, DMF
 
 from sympy.polys.algebratools import ZZ, QQ, RR, EX
 
-from sympy import S, Integer, Rational, Mul, symbols, sqrt, exp, sin, expand, oo, I, pi
+from sympy import (S, Integer, Rational, Mul, symbols,
+    sqrt, exp, sin, expand, oo, I, pi, re, im)
 from sympy.utilities.pytest import raises
 
 x,y,z,p,q,r,s,t,u,v,w,a,b,c,d,e = symbols('x,y,z,p,q,r,s,t,u,v,w,a,b,c,d,e')
@@ -57,7 +58,6 @@ def _eq(a, b):
         if abs(x-y) > 1e-10:
             return False
     return True
-
 
 def test__construct_domain():
     assert _construct_domain({(0,): 1, (1,): 2}) == \
@@ -1652,10 +1652,10 @@ def test_intervals():
 
     f = Poly((2*x/5 - S(17)/3)*(4*x + S(1)/257))
 
-    assert f.intervals_sqf() == [(-1, 0), (14, 15)]
+    assert f.intervals(sqf=True) == [(-1, 0), (14, 15)]
     assert f.intervals() == [((-1, 0), 1), ((14, 15), 1)]
 
-    assert f.intervals_sqf(fast=True) == [(-1, 0), (14, 15)]
+    assert f.intervals(fast=True, sqf=True) == [(-1, 0), (14, 15)]
     assert f.intervals(fast=True) == [((-1, 0), 1), ((14, 15), 1)]
 
     assert f.intervals(eps=S(1)/10) == f.intervals(eps=0.1) == \
@@ -1721,6 +1721,25 @@ def test_intervals():
         [((-2, -2), {0: 1}), ((-2, -1), {1: 1}), ((1, 2), {1: 1})]
     assert intervals([x+2, x**2 - 2], strict=True) == \
         [((-2, -2), {0: 1}), ((-S(3)/2, -1), {1: 1}), ((1, 2), {1: 1})]
+
+    f = 7*z**4 - 19*z**3 + 20*z**2 + 17*z + 20
+
+    assert intervals(f) == []
+
+    roots = sorted(nroots(f), key=lambda r: (re(r), -im(r)))
+
+    real_part, complex_part = intervals(f, all=True, sqf=True)
+
+    assert real_part == []
+    assert all([ re(a) < re(r) < re(b) and im(a) < im(r) < im(b) for (a, b), r in zip(complex_part, roots) ])
+
+    assert complex_part == [(-S(40)/7, 40*I/7), (-S(40)/7 - 40*I/7, 0),
+                            (0, S(40)/7 + 40*I/7), (-40*I/7, S(40)/7)]
+
+    real_part, complex_part = intervals(f, all=True, sqf=True, eps=S(1)/10)
+
+    assert real_part == []
+    assert all([ re(a) < re(r) < re(b) and im(a) < im(r) < im(b) for (a, b), r in zip(complex_part, roots) ])
 
 def test_refine_root():
     f = Poly(x**2 - 2)
