@@ -304,10 +304,12 @@ def dmp_zero_p(f, u):
 @cythonized("u")
 def dmp_zero(u):
     """Returns a multivariate zero. """
-    if not u:
-        return []
-    else:
-        return [dmp_zero(u-1)]
+    r = []
+
+    for i in xrange(u):
+        r = [r]
+
+    return r
 
 @cythonized("u")
 def dmp_one_p(f, u, K):
@@ -336,18 +338,16 @@ def dmp_ground_p(f, c, u):
     else:
         return False
 
-@cythonized("u")
+@cythonized("i,u")
 def dmp_ground(c, u):
     """Returns a multivariate constant. """
     if not c:
         return dmp_zero(u)
-    else:
-        if u < 0:
-            return c
-        if not u:
-            return [c]
-        else:
-            return [dmp_ground(c, u-1)]
+
+    for i in xrange(u+1):
+        c = [c]
+
+    return c
 
 @cythonized("n,u")
 def dmp_zeros(n, u, K):
@@ -513,16 +513,16 @@ def dmp_permute(f, P, u, K):
 
     return dmp_from_dict(H, u, K)
 
-@cythonized("l")
+@cythonized("i,l")
 def dmp_nest(f, l, K):
     """Returns multivariate value nested `l`-levels. """
-    if type(f) is not list:
+    if not isinstance(f, list):
         return dmp_ground(f, l)
-    else:
-        if not l:
-            return f
-        else:
-            return [dmp_nest(f, l-1, K)]
+
+    for i in xrange(l):
+        f = [f]
+
+    return f
 
 @cythonized("l,k,u,v")
 def dmp_raise(f, l, u, K):
