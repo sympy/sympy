@@ -418,7 +418,7 @@ def _isolate_zero(f, K, inf, sup, basis=False, sqf=False):
 
     return [], f
 
-def dup_isolate_real_roots_sqf(f, K, eps=None, inf=None, sup=None, fast=False):
+def dup_isolate_real_roots_sqf(f, K, eps=None, inf=None, sup=None, fast=False, blackbox=False):
     """Isolate real roots of a square-free polynomial using CF approach. """
     if K.is_QQ:
         (_, f), K = dup_clear_denoms(f, K, convert=True), K.get_ring()
@@ -433,7 +433,12 @@ def dup_isolate_real_roots_sqf(f, K, eps=None, inf=None, sup=None, fast=False):
     I_neg = dup_inner_isolate_negative_roots(f, K, eps=eps, inf=inf, sup=sup, fast=fast)
     I_pos = dup_inner_isolate_positive_roots(f, K, eps=eps, inf=inf, sup=sup, fast=fast)
 
-    return sorted(I_neg + I_zero + I_pos)
+    roots = sorted(I_neg + I_zero + I_pos)
+
+    if not blackbox:
+        return roots
+    else:
+        return [ RealInterval((a, b), f, K) for (a, b) in roots ]
 
 def dup_isolate_real_roots(f, K, eps=None, inf=None, sup=None, basis=False, fast=False):
     """Isolate real roots using continued fractions approach. """
@@ -1122,7 +1127,215 @@ def dup_count_complex_roots(f, (u, v), (s, t), K, exclude=None):
 
     return _winding_number(T, F)
 
-def _find_smallest_rectangle(rectangles):
+def _vertical_bisection(N, (u, v), (s, t), I, Q, F1, F2, f1, f2, F):
+    """Vertical bisection step in Collins-Krandick root isolation algorithm. """
+    I_L1, I_L2, I_L3, I_L4 = I
+    Q_L1, Q_L2, Q_L3, Q_L4 = Q
+
+    f1L1F, f1L2F, f1L3F, f1L4F = F1
+    f2L1F, f2L2F, f2L3F, f2L4F = F2
+
+    x = (u + s) / 2
+
+    f1V = dmp_eval_in(f1, x, 0, 1, F)
+    f2V = dmp_eval_in(f2, x, 0, 1, F)
+
+    I_V = dup_isolate_real_roots_list([f1V, f2V], F, inf=v, sup=t, fast=True, strict=True, basis=True)
+
+    I_L1_L, I_L1_R = [], []
+    I_L2_L, I_L2_R = I_V, I_L2
+    I_L3_L, I_L3_R = [], []
+    I_L4_L, I_L4_R = I_L4, _reverse_intervals(I_V)
+
+    for I in I_L1:
+        (a, b), indices, h = I
+
+        if a == b:
+            if a == x:
+                I_L1_L.append(I)
+                I_L1_R.append(I)
+            elif a < x:
+                I_L1_L.append(I)
+            else:
+                I_L1_R.append(I)
+        else:
+            if b <= x:
+                I_L1_L.append(I)
+            elif a >= x:
+                I_L1_R.append(I)
+            else:
+                a, b = dup_refine_real_root(h, a, b, F.get_ring(), disjoint=x, fast=True)
+
+                if b <= x:
+                    I_L1_L.append(((a, b), indices, h))
+                else:
+                    I_L1_R.append(((a, b), indices, h))
+
+    for I in I_L3:
+        (b, a), indices, h = I
+
+        if a == b:
+            if a == x:
+                I_L3_L.append(I)
+                I_L3_R.append(I)
+            elif a < x:
+                I_L3_L.append(I)
+            else:
+                I_L3_R.append(I)
+        else:
+            if b <= x:
+                I_L3_L.append(I)
+            elif a >= x:
+                I_L3_R.append(I)
+            else:
+                a, b = dup_refine_real_root(h, a, b, F.get_ring(), disjoint=x, fast=True)
+
+                if b <= x:
+                    I_L3_L.append(((b, a), indices, h))
+                else:
+                    I_L3_R.append(((b, a), indices, h))
+
+    Q_L1_L = _intervals_to_quadrants(I_L1_L, f1L1F, f2L1F, u, x, F)
+    Q_L2_L = _intervals_to_quadrants(I_L2_L, f1V,   f2V,   v, t, F)
+    Q_L3_L = _intervals_to_quadrants(I_L3_L, f1L3F, f2L3F, x, u, F)
+    Q_L4_L = Q_L4
+
+    Q_L1_R = _intervals_to_quadrants(I_L1_R, f1L1F, f2L1F, x, s, F)
+    Q_L2_R = Q_L2
+    Q_L3_R = _intervals_to_quadrants(I_L3_R, f1L3F, f2L3F, s, x, F)
+    Q_L4_R = _intervals_to_quadrants(I_L4_R, f1V,   f2V,   t, v, F)
+
+    T_L = _traverse_quadrants(Q_L1_L, Q_L2_L, Q_L3_L, Q_L4_L, exclude=True)
+    T_R = _traverse_quadrants(Q_L1_R, Q_L2_R, Q_L3_R, Q_L4_R, exclude=True)
+
+    N_L = _winding_number(T_L, F)
+    N_R = _winding_number(T_R, F)
+
+    I_L = (I_L1_L, I_L2_L, I_L3_L, I_L4_L)
+    Q_L = (Q_L1_L, Q_L2_L, Q_L3_L, Q_L4_L)
+
+    I_R = (I_L1_R, I_L2_R, I_L3_R, I_L4_R)
+    Q_R = (Q_L1_R, Q_L2_R, Q_L3_R, Q_L4_R)
+
+    F1_L = (f1L1F, f1V, f1L3F, f1L4F)
+    F2_L = (f2L1F, f2V, f2L3F, f2L4F)
+
+    F1_R = (f1L1F, f1L2F, f1L3F, f1V)
+    F2_R = (f2L1F, f2L2F, f2L3F, f2V)
+
+    a, b = (u, v), (x, t)
+    c, d = (x, v), (s, t)
+
+    D_L = (N_L, a, b, I_L, Q_L, F1_L, F2_L)
+    D_R = (N_R, c, d, I_R, Q_R, F1_R, F2_R)
+
+    return D_L, D_R
+
+def _horizontal_bisection(N, (u, v), (s, t), I, Q, F1, F2, f1, f2, F):
+    """Horizontal bisection step in Collins-Krandick root isolation algorithm. """
+    I_L1, I_L2, I_L3, I_L4 = I
+    Q_L1, Q_L2, Q_L3, Q_L4 = Q
+
+    f1L1F, f1L2F, f1L3F, f1L4F = F1
+    f2L1F, f2L2F, f2L3F, f2L4F = F2
+
+    y = (v + t) / 2
+
+    f1H = dmp_eval_in(f1, y, 1, 1, F)
+    f2H = dmp_eval_in(f2, y, 1, 1, F)
+
+    I_H = dup_isolate_real_roots_list([f1H, f2H], F, inf=u, sup=s, fast=True, strict=True, basis=True)
+
+    I_L1_B, I_L1_U = I_L1, I_H
+    I_L2_B, I_L2_U = [], []
+    I_L3_B, I_L3_U = _reverse_intervals(I_H), I_L3
+    I_L4_B, I_L4_U = [], []
+
+    for I in I_L2:
+        (a, b), indices, h = I
+
+        if a == b:
+            if a == y:
+                I_L2_B.append(I)
+                I_L2_U.append(I)
+            elif a < y:
+                I_L2_B.append(I)
+            else:
+                I_L2_U.append(I)
+        else:
+            if b <= y:
+                I_L2_B.append(I)
+            elif a >= y:
+                I_L2_U.append(I)
+            else:
+                a, b = dup_refine_real_root(h, a, b, F.get_ring(), disjoint=y, fast=True)
+
+                if b <= y:
+                    I_L2_B.append(((a, b), indices, h))
+                else:
+                    I_L2_U.append(((a, b), indices, h))
+
+    for I in I_L4:
+        (b, a), indices, h = I
+
+        if a == b:
+            if a == y:
+                I_L4_B.append(I)
+                I_L4_U.append(I)
+            elif a < y:
+                I_L4_B.append(I)
+            else:
+                I_L4_U.append(I)
+        else:
+            if b <= y:
+                I_L4_B.append(I)
+            elif a >= y:
+                I_L4_U.append(I)
+            else:
+                a, b = dup_refine_real_root(h, a, b, F.get_ring(), disjoint=y, fast=True)
+
+                if b <= y:
+                    I_L4_B.append(((b, a), indices, h))
+                else:
+                    I_L4_U.append(((b, a), indices, h))
+
+    Q_L1_B = Q_L1
+    Q_L2_B = _intervals_to_quadrants(I_L2_B, f1L2F, f2L2F, v, y, F)
+    Q_L3_B = _intervals_to_quadrants(I_L3_B, f1H,   f2H,   s, u, F)
+    Q_L4_B = _intervals_to_quadrants(I_L4_B, f1L4F, f2L4F, y, v, F)
+
+    Q_L1_U = _intervals_to_quadrants(I_L1_U, f1H,   f2H,   u, s, F)
+    Q_L2_U = _intervals_to_quadrants(I_L2_U, f1L2F, f2L2F, y, t, F)
+    Q_L3_U = Q_L3
+    Q_L4_U = _intervals_to_quadrants(I_L4_U, f1L4F, f2L4F, t, y, F)
+
+    T_B = _traverse_quadrants(Q_L1_B, Q_L2_B, Q_L3_B, Q_L4_B, exclude=True)
+    T_U = _traverse_quadrants(Q_L1_U, Q_L2_U, Q_L3_U, Q_L4_U, exclude=True)
+
+    N_B = _winding_number(T_B, F)
+    N_U = _winding_number(T_U, F)
+
+    I_B = (I_L1_B, I_L2_B, I_L3_B, I_L4_B)
+    Q_B = (Q_L1_B, Q_L2_B, Q_L3_B, Q_L4_B)
+
+    I_U = (I_L1_U, I_L2_U, I_L3_U, I_L4_U)
+    Q_U = (Q_L1_U, Q_L2_U, Q_L3_U, Q_L4_U)
+
+    F1_B = (f1L1F, f1L2F, f1H, f1L4F)
+    F2_B = (f2L1F, f2L2F, f2H, f2L4F)
+
+    F1_U = (f1H, f1L2F, f1L3F, f1L4F)
+    F2_U = (f2H, f2L2F, f2L3F, f2L4F)
+
+    a, b = (u, v), (s, y)
+    c, d = (u, y), (s, t)
+
+    D_B = (N_B, a, b, I_B, Q_B, F1_B, F2_B)
+    D_U = (N_U, c, d, I_U, Q_U, F1_U, F2_U)
+
+    return D_B, D_U
+
+def _depth_first_select(rectangles):
     """Find a rectangle of minimum area for bisection. """
     min_area, j = None, None
 
@@ -1132,7 +1345,7 @@ def _find_smallest_rectangle(rectangles):
         if min_area is None or area < min_area:
             min_area, j = area, i
 
-    return j
+    return rectangles.pop(j)
 
 def _rectangle_small_p((u, v), (s, t), eps):
     """Return ``True`` if the given rectangle is small enough. """
@@ -1141,7 +1354,7 @@ def _rectangle_small_p((u, v), (s, t), eps):
     else:
         return True
 
-def dup_isolate_complex_roots_sqf(f, K, eps=None, inf=None, sup=None):
+def dup_isolate_complex_roots_sqf(f, K, eps=None, inf=None, sup=None, blackbox=False):
     """Isolate complex roots of a square-free polynomial using Collins-Krandick algorithm. """
     if not K.is_ZZ and not K.is_QQ:
         raise DomainError("isolation of complex roots is not supported over %s" % K)
@@ -1172,47 +1385,35 @@ def dup_isolate_complex_roots_sqf(f, K, eps=None, inf=None, sup=None):
 
     f1, f2 = dup_real_imag(f, F)
 
-    f1L1F = dmp_eval_in(f1, v, 1, 1, F)
-    f2L1F = dmp_eval_in(f2, v, 1, 1, F)
+    f1L1 = dmp_eval_in(f1, v, 1, 1, F)
+    f2L1 = dmp_eval_in(f2, v, 1, 1, F)
 
-    _, f1L1R = dup_clear_denoms(f1L1F, F, R, convert=True)
-    _, f2L1R = dup_clear_denoms(f2L1F, F, R, convert=True)
+    f1L2 = dmp_eval_in(f1, s, 0, 1, F)
+    f2L2 = dmp_eval_in(f2, s, 0, 1, F)
 
-    f1L2F = dmp_eval_in(f1, s, 0, 1, F)
-    f2L2F = dmp_eval_in(f2, s, 0, 1, F)
+    f1L3 = dmp_eval_in(f1, t, 1, 1, F)
+    f2L3 = dmp_eval_in(f2, t, 1, 1, F)
 
-    _, f1L2R = dup_clear_denoms(f1L2F, F, R, convert=True)
-    _, f2L2R = dup_clear_denoms(f2L2F, F, R, convert=True)
+    f1L4 = dmp_eval_in(f1, u, 0, 1, F)
+    f2L4 = dmp_eval_in(f2, u, 0, 1, F)
 
-    f1L3F = dmp_eval_in(f1, t, 1, 1, F)
-    f2L3F = dmp_eval_in(f2, t, 1, 1, F)
+    S_L1 = [f1L1, f2L1]
+    S_L2 = [f1L2, f2L2]
+    S_L3 = [f1L3, f2L3]
+    S_L4 = [f1L4, f2L4]
 
-    _, f1L3R = dup_clear_denoms(f1L3F, F, R, convert=True)
-    _, f2L3R = dup_clear_denoms(f2L3F, F, R, convert=True)
-
-    f1L4F = dmp_eval_in(f1, u, 0, 1, F)
-    f2L4F = dmp_eval_in(f2, u, 0, 1, F)
-
-    _, f1L4R = dup_clear_denoms(f1L4F, F, R, convert=True)
-    _, f2L4R = dup_clear_denoms(f2L4F, F, R, convert=True)
-
-    S_L1 = [f1L1R, f2L1R]
-    S_L2 = [f1L2R, f2L2R]
-    S_L3 = [f1L3R, f2L3R]
-    S_L4 = [f1L4R, f2L4R]
-
-    I_L1 = dup_isolate_real_roots_list(S_L1, R, inf=u, sup=s, fast=True, strict=True, basis=True)
-    I_L2 = dup_isolate_real_roots_list(S_L2, R, inf=v, sup=t, fast=True, strict=True, basis=True)
-    I_L3 = dup_isolate_real_roots_list(S_L3, R, inf=u, sup=s, fast=True, strict=True, basis=True)
-    I_L4 = dup_isolate_real_roots_list(S_L4, R, inf=v, sup=t, fast=True, strict=True, basis=True)
+    I_L1 = dup_isolate_real_roots_list(S_L1, F, inf=u, sup=s, fast=True, strict=True, basis=True)
+    I_L2 = dup_isolate_real_roots_list(S_L2, F, inf=v, sup=t, fast=True, strict=True, basis=True)
+    I_L3 = dup_isolate_real_roots_list(S_L3, F, inf=u, sup=s, fast=True, strict=True, basis=True)
+    I_L4 = dup_isolate_real_roots_list(S_L4, F, inf=v, sup=t, fast=True, strict=True, basis=True)
 
     I_L3 = _reverse_intervals(I_L3)
     I_L4 = _reverse_intervals(I_L4)
 
-    Q_L1 = _intervals_to_quadrants(I_L1, f1L1F, f2L1F, u, s, F)
-    Q_L2 = _intervals_to_quadrants(I_L2, f1L2F, f2L2F, v, t, F)
-    Q_L3 = _intervals_to_quadrants(I_L3, f1L3F, f2L3F, s, u, F)
-    Q_L4 = _intervals_to_quadrants(I_L4, f1L4F, f2L4F, t, v, F)
+    Q_L1 = _intervals_to_quadrants(I_L1, f1L1, f2L1, u, s, F)
+    Q_L2 = _intervals_to_quadrants(I_L2, f1L2, f2L2, v, t, F)
+    Q_L3 = _intervals_to_quadrants(I_L3, f1L3, f2L3, s, u, F)
+    Q_L4 = _intervals_to_quadrants(I_L4, f1L4, f2L4, t, v, F)
 
     T = _traverse_quadrants(Q_L1, Q_L2, Q_L3, Q_L4)
     N = _winding_number(T, F)
@@ -1223,235 +1424,63 @@ def dup_isolate_complex_roots_sqf(f, K, eps=None, inf=None, sup=None):
     I = (I_L1, I_L2, I_L3, I_L4)
     Q = (Q_L1, Q_L2, Q_L3, Q_L4)
 
-    F1 = (f1L1F, f1L2F, f1L3F, f1L4F)
-    F2 = (f2L1F, f2L2F, f2L3F, f2L4F)
+    F1 = (f1L1, f1L2, f1L3, f1L4)
+    F2 = (f2L1, f2L2, f2L3, f2L4)
 
     rectangles, roots = [(N, (u, v), (s, t), I, Q, F1, F2)], []
 
     while rectangles:
-        i = _find_smallest_rectangle(rectangles)
-        N, (u, v), (s, t), II, QQ, F1, F2 = rectangles.pop(i)
-
-        I_L1, I_L2, I_L3, I_L4 = II
-        Q_L1, Q_L2, Q_L3, Q_L4 = QQ
-
-        f1L1F, f1L2F, f1L3F, f1L4F = F1
-        f2L1F, f2L2F, f2L3F, f2L4F = F2
+        N, (u, v), (s, t), I, Q, F1, F2 = _depth_first_select(rectangles)
 
         if s - u > t - v:
-            x = (u + s) / 2
+            D_L, D_R = _vertical_bisection(N, (u, v), (s, t), I, Q, F1, F2, f1, f2, F)
 
-            f1VF = dmp_eval_in(f1, x, 0, 1, F)
-            f2VF = dmp_eval_in(f2, x, 0, 1, F)
-
-            _, f1VR = dup_clear_denoms(f1VF, F, R, convert=True)
-            _, f2VR = dup_clear_denoms(f2VF, F, R, convert=True)
-
-            I_V = dup_isolate_real_roots_list([f1VR, f2VR], R, inf=v, sup=t, fast=True, strict=True, basis=True)
-
-            I_L1_L, I_L1_R = [], []
-            I_L2_L, I_L2_R = I_V, I_L2
-            I_L3_L, I_L3_R = [], []
-            I_L4_L, I_L4_R = I_L4, _reverse_intervals(I_V)
-
-            for I in I_L1:
-                (a, b), indices, h = I
-
-                if a == b:
-                    if a == x:
-                        I_L1_L.append(I)
-                        I_L1_R.append(I)
-                    elif a < x:
-                        I_L1_L.append(I)
-                    else:
-                        I_L1_R.append(I)
-                else:
-                    if b <= x:
-                        I_L1_L.append(I)
-                    elif a >= x:
-                        I_L1_R.append(I)
-                    else:
-                        a, b = dup_refine_real_root(h, a, b, R, disjoint=x, fast=True)
-
-                        if b <= x:
-                            I_L1_L.append(((a, b), indices, h))
-                        else:
-                            I_L1_R.append(((a, b), indices, h))
-
-            for I in I_L3:
-                (b, a), indices, h = I
-
-                if a == b:
-                    if a == x:
-                        I_L3_L.append(I)
-                        I_L3_R.append(I)
-                    elif a < x:
-                        I_L3_L.append(I)
-                    else:
-                        I_L3_R.append(I)
-                else:
-                    if b <= x:
-                        I_L3_L.append(I)
-                    elif a >= x:
-                        I_L3_R.append(I)
-                    else:
-                        a, b = dup_refine_real_root(h, a, b, R, disjoint=x, fast=True)
-
-                        if b <= x:
-                            I_L3_L.append(((b, a), indices, h))
-                        else:
-                            I_L3_R.append(((b, a), indices, h))
-
-            Q_L1_L = _intervals_to_quadrants(I_L1_L, f1L1F, f2L1F, u, x, F)
-            Q_L2_L = _intervals_to_quadrants(I_L2_L, f1VF,  f2VF,  v, t, F)
-            Q_L3_L = _intervals_to_quadrants(I_L3_L, f1L3F, f2L3F, x, u, F)
-            Q_L4_L = Q_L4
-
-            Q_L1_R = _intervals_to_quadrants(I_L1_R, f1L1F, f2L1F, x, s, F)
-            Q_L2_R = Q_L2
-            Q_L3_R = _intervals_to_quadrants(I_L3_R, f1L3F, f2L3F, s, x, F)
-            Q_L4_R = _intervals_to_quadrants(I_L4_R, f1VF,  f2VF,  t, v, F)
-
-            T_L = _traverse_quadrants(Q_L1_L, Q_L2_L, Q_L3_L, Q_L4_L, exclude=True)
-            T_R = _traverse_quadrants(Q_L1_R, Q_L2_R, Q_L3_R, Q_L4_R, exclude=True)
-
-            N_L = _winding_number(T_L, F)
-            N_R = _winding_number(T_R, F)
-
-            I_L = (I_L1_L, I_L2_L, I_L3_L, I_L4_L)
-            Q_L = (Q_L1_L, Q_L2_L, Q_L3_L, Q_L4_L)
-
-            I_R = (I_L1_R, I_L2_R, I_L3_R, I_L4_R)
-            Q_R = (Q_L1_R, Q_L2_R, Q_L3_R, Q_L4_R)
-
-            F1_L = (f1L1F, f1VF, f1L3F, f1L4F)
-            F2_L = (f2L1F, f2VF, f2L3F, f2L4F)
-
-            F1_R = (f1L1F, f1L2F, f1L3F, f1VF)
-            F2_R = (f2L1F, f2L2F, f2L3F, f2VF)
+            N_L, a, b, I_L, Q_L, F1_L, F2_L = D_L
+            N_R, c, d, I_R, Q_R, F1_R, F2_R = D_R
 
             if N_L >= 1:
-                a, b = (u, v), (x, t)
-
                 if N_L == 1 and _rectangle_small_p(a, b, eps):
-                    roots.append((a, b))
+                    if not blackbox:
+                        roots.append((a, b))
+                    else:
+                        roots.append(ComplexInterval(a, b, I_L, Q_L, F1_L, F2_L, f1, f2, F))
                 else:
-                    rectangles.append((N_L, a, b, I_L, Q_L, F1_L, F2_L))
+                    rectangles.append(D_L)
 
             if N_R >= 1:
-                a, b = (x, v), (s, t)
-
-                if N_R == 1 and _rectangle_small_p(a, b, eps):
-                    roots.append((a, b))
+                if N_R == 1 and _rectangle_small_p(c, d, eps):
+                    if not blackbox:
+                        roots.append((c, d))
+                    else:
+                        roots.append(ComplexInterval(c, d, I_R, Q_R, F1_R, F2_R, f1, f2, F))
                 else:
-                    rectangles.append((N_R, a, b, I_R, Q_R, F1_R, F2_R))
+                    rectangles.append(D_R)
         else:
-            y = (v + t) / 2
+            D_B, D_U = _horizontal_bisection(N, (u, v), (s, t), I, Q, F1, F2, f1, f2, F)
 
-            f1HF = dmp_eval_in(f1, y, 1, 1, F)
-            f2HF = dmp_eval_in(f2, y, 1, 1, F)
-
-            _, f1HR = dup_clear_denoms(f1HF, F, R, convert=True)
-            _, f2HR = dup_clear_denoms(f2HF, F, R, convert=True)
-
-            I_H = dup_isolate_real_roots_list([f1HR, f2HR], R, inf=u, sup=s, fast=True, strict=True, basis=True)
-
-            I_L1_B, I_L1_U = I_L1, I_H
-            I_L2_B, I_L2_U = [], []
-            I_L3_B, I_L3_U = _reverse_intervals(I_H), I_L3
-            I_L4_B, I_L4_U = [], []
-
-            for I in I_L2:
-                (a, b), indices, h = I
-
-                if a == b:
-                    if a == y:
-                        I_L2_B.append(I)
-                        I_L2_U.append(I)
-                    elif a < y:
-                        I_L2_B.append(I)
-                    else:
-                        I_L2_U.append(I)
-                else:
-                    if b <= y:
-                        I_L2_B.append(I)
-                    elif a >= y:
-                        I_L2_U.append(I)
-                    else:
-                        a, b = dup_refine_real_root(h, a, b, R, disjoint=y, fast=True)
-
-                        if b <= y:
-                            I_L2_B.append(((a, b), indices, h))
-                        else:
-                            I_L2_U.append(((a, b), indices, h))
-
-            for I in I_L4:
-                (b, a), indices, h = I
-
-                if a == b:
-                    if a == y:
-                        I_L4_B.append(I)
-                        I_L4_U.append(I)
-                    elif a < y:
-                        I_L4_B.append(I)
-                    else:
-                        I_L4_U.append(I)
-                else:
-                    if b <= y:
-                        I_L4_B.append(I)
-                    elif a >= y:
-                        I_L4_U.append(I)
-                    else:
-                        a, b = dup_refine_real_root(h, a, b, R, disjoint=y, fast=True)
-
-                        if b <= y:
-                            I_L4_B.append(((b, a), indices, h))
-                        else:
-                            I_L4_U.append(((b, a), indices, h))
-
-            Q_L1_B = Q_L1
-            Q_L2_B = _intervals_to_quadrants(I_L2_B, f1L2F, f2L2F, v, y, F)
-            Q_L3_B = _intervals_to_quadrants(I_L3_B, f1HF,  f2HF,  s, u, F)
-            Q_L4_B = _intervals_to_quadrants(I_L4_B, f1L4F, f2L4F, y, v, F)
-
-            Q_L1_U = _intervals_to_quadrants(I_L1_U, f1HF,  f2HF,  u, s, F)
-            Q_L2_U = _intervals_to_quadrants(I_L2_U, f1L2F, f2L2F, y, t, F)
-            Q_L3_U = Q_L3
-            Q_L4_U = _intervals_to_quadrants(I_L4_U, f1L4F, f2L4F, t, y, F)
-
-            T_B = _traverse_quadrants(Q_L1_B, Q_L2_B, Q_L3_B, Q_L4_B, exclude=True)
-            T_U = _traverse_quadrants(Q_L1_U, Q_L2_U, Q_L3_U, Q_L4_U, exclude=True)
-
-            N_B = _winding_number(T_B, F)
-            N_U = _winding_number(T_U, F)
-
-            I_B = (I_L1_B, I_L2_B, I_L3_B, I_L4_B)
-            Q_B = (Q_L1_B, Q_L2_B, Q_L3_B, Q_L4_B)
-
-            I_U = (I_L1_U, I_L2_U, I_L3_U, I_L4_U)
-            Q_U = (Q_L1_U, Q_L2_U, Q_L3_U, Q_L4_U)
-
-            F1_B = (f1L1F, f1L2F, f1HF, f1L4F)
-            F2_B = (f2L1F, f2L2F, f2HF, f2L4F)
-
-            F1_U = (f1HF, f1L2F, f1L3F, f1L4F)
-            F2_U = (f2HF, f2L2F, f2L3F, f2L4F)
+            N_B, a, b, I_B, Q_B, F1_B, F2_B = D_B
+            N_U, c, d, I_U, Q_U, F1_U, F2_U = D_U
 
             if N_B >= 1:
-                a, b = (u, v), (s, y)
-
                 if N_B == 1 and _rectangle_small_p(a, b, eps):
-                    roots.append((a, b))
+                    if not blackbox:
+                        roots.append((a, b))
+                    else:
+                        roots.append(ComplexInterval(a, b, I_B, Q_B, F1_B, F2_B, f1, f2, F))
                 else:
-                    rectangles.append((N_B, a, b, I_B, Q_B, F1_B, F2_B))
+                    rectangles.append(D_B)
 
             if N_U >= 1:
-                a, b = (u, y), (s, t)
-
-                if N_U == 1 and _rectangle_small_p(a, b, eps):
-                    roots.append((a, b))
+                if N_U == 1 and _rectangle_small_p(c, d, eps):
+                    if not blackbox:
+                        roots.append((c, d))
+                    else:
+                        roots.append(ComplexInterval(c, d, I_U, Q_U, F1_U, F2_U, f1, f2, F))
                 else:
-                    rectangles.append((N_U, a, b, I_U, Q_U, F1_U, F2_U))
+                    rectangles.append(D_U)
+
+    if blackbox:
+        return sorted(roots, key=lambda r: (r.ax, r.ay))
 
     _roots, roots = sorted(roots, key=operator.itemgetter(0)), []
 
@@ -1460,10 +1489,10 @@ def dup_isolate_complex_roots_sqf(f, K, eps=None, inf=None, sup=None):
 
     return roots
 
-def dup_isolate_all_roots_sqf(f, K, eps=None, inf=None, sup=None, fast=False):
+def dup_isolate_all_roots_sqf(f, K, eps=None, inf=None, sup=None, fast=False, blackbox=False):
     """Isolate real and complex roots of a square-free polynomial ``f``. """
-    return (dup_isolate_real_roots_sqf(f, K, eps=eps, inf=inf, sup=sup, fast=fast),
-            dup_isolate_complex_roots_sqf(f, K, eps=eps, inf=inf, sup=sup))
+    return (dup_isolate_real_roots_sqf(f, K, eps=eps, inf=inf, sup=sup, fast=fast, blackbox=blackbox),
+            dup_isolate_complex_roots_sqf(f, K, eps=eps, inf=inf, sup=sup, blackbox=blackbox))
 
 def dup_isolate_all_roots(f, K, eps=None, inf=None, sup=None, fast=False):
     """Isolate real and complex roots of a non-square-free polynomial ``f``. """
@@ -1483,4 +1512,221 @@ def dup_isolate_all_roots(f, K, eps=None, inf=None, sup=None, fast=False):
         return real_part, complex_part
     else:
         raise NotImplementedError("only trivial square-free polynomials are supported")
+
+class RealInterval(object):
+    """A fully qualified representation of a real isolation interval. """
+
+    def __init__(self, data, f, dom):
+        """Initialize new real interval with complete information. """
+        if len(data) == 2:
+            s, t = data
+
+            self.neg = False
+
+            if s < 0:
+                if t <= 0:
+                    f, s, t, self.neg = dup_mirror(f, dom), -t, -s, True
+                else:
+                    raise ValueError("can't refine a real root in (%s, %s)" % (s, t))
+
+            a, b, c, d = _mobius_from_interval((s, t), dom.get_field())
+
+            f = dup_transform(f, dup_strip([a, b]),
+                                 dup_strip([c, d]), dom)
+
+            self.mobius = a, b, c, d
+        else:
+            self.mobius = data[:-1]
+            self.neg = data[-1]
+
+        self.f, self.dom = f, dom
+
+    @property
+    def a(self):
+        """Return the position of the left end. """
+        field = self.dom.get_field()
+        a, b, c, d = self.mobius
+
+        if not self.neg:
+            return field(a, c)
+        else:
+            return -field(b, d)
+
+    @property
+    def b(self):
+        """Return the position of the right end. """
+        field = self.dom.get_field()
+        a, b, c, d = self.mobius
+
+        if not self.neg:
+            return field(b, d)
+        else:
+            return -field(a, c)
+
+    @property
+    def dx(self):
+        """Return width of the real isolating interval. """
+        return self.b - self.a
+
+    @property
+    def center(self):
+        """Return the center of the real isolating interval. """
+        return (self.a + self.b)/2
+
+    def __str__(self):
+        return "(%s, %s)" % (self.a, self.b)
+
+    def is_disjoint(self, other):
+        """Return ``True`` if two isolation intervals are disjoint. """
+        return (self.b <= other.a or other.b <= self.a)
+
+    def _inner_refine(self):
+        """Internal one step real root refinement procedure. """
+        if self.mobius is None:
+            return self
+
+        f, mobius = dup_inner_refine_real_root(self.f, self.mobius, self.dom, steps=1, mobius=True)
+
+        return RealInterval(mobius + (self.neg,), f, self.dom)
+
+    def refine_disjoint(self, other):
+        """Refine an isolating interval until it is disjoint with another one. """
+        while not self.is_disjoint(other):
+            self, other = self._inner_refine(), other._inner_refine()
+
+        return self, other
+
+    def refine_size(self, dx):
+        """Refine an isolating interval until it is of sufficiently small size. """
+        while not (self.dx < dx):
+            self = self._inner_refine()
+
+        return self
+
+    def refine_step(self, steps=1):
+        """Perform several steps of real root refinement algorithm. """
+        for _ in xrange(steps):
+            self = self._inner_refine()
+
+        return self
+
+class ComplexInterval(object):
+    """A fully qualified representation of a complex isolation interval. """
+
+    def __init__(self, a, b, I, Q, F1, F2, f1, f2, dom, conj=False):
+        """Initialize new complex interval with complete information. """
+        self.a, self.b = a, b
+        self.I, self.Q = I, Q
+
+        self.f1, self.F1 = f1, F1
+        self.f2, self.F2 = f2, F2
+
+        self.dom = dom
+        self.conj = conj
+
+    @property
+    def ax(self):
+        """Return ``x`` coordinate of south-western corner. """
+        return self.a[0]
+
+    @property
+    def ay(self):
+        """Return ``y`` coordinate of south-western corner. """
+        if not self.conj:
+            return self.a[1]
+        else:
+            return -self.b[1]
+
+    @property
+    def bx(self):
+        """Return ``x`` coordinate of north-eastern corner. """
+        return self.b[0]
+
+    @property
+    def by(self):
+        """Return ``y`` coordinate of north-eastern corner. """
+        if not self.conj:
+            return self.b[1]
+        else:
+            return -self.a[1]
+
+    @property
+    def dx(self):
+        """Return width of the complex isolating interval. """
+        return self.b[0] - self.a[0]
+
+    @property
+    def dy(self):
+        """Return height of the complex isolating interval. """
+        return self.b[1] - self.a[1]
+
+    @property
+    def center(self):
+        """Return the center of the complex isolating interval. """
+        return ((self.ax + self.bx)/2, (self.ay + self.by)/2)
+
+    def __str__(self):
+        return "(%s, %s) x (%s, %s)" % (self.ax, self.bx, self.ay, self.by)
+
+    def conjugate(self):
+        """This complex interval really is located in lower half-plane. """
+        return ComplexInterval(self.a, self.b, self.I, self.Q,
+            self.F1, self.F2, self.f1, self.f2, self.dom, conj=True)
+
+    def is_disjoint(self, other):
+        """Return ``True`` if two isolation intervals are disjoint. """
+        return ((self.conj != other.conj) or ((self.bx <= other.ax or other.bx <= self.ax) or
+                                              (self.by <= other.ay or other.by <= self.ay)))
+
+    def _inner_refine(self):
+        """Internal one step complex root refinement procedure. """
+        (u, v), (s, t) = self.a, self.b
+
+        I, Q = self.I, self.Q
+
+        f1, F1 = self.f1, self.F1
+        f2, F2 = self.f2, self.F2
+
+        dom = self.dom
+
+        if s - u > t - v:
+            D_L, D_R = _vertical_bisection(1, (u, v), (s, t), I, Q, F1, F2, f1, f2, dom)
+
+            if D_L[0] == 1:
+                _, a, b, I, Q, F1, F2 = D_L
+            else:
+                _, a, b, I, Q, F1, F2 = D_R
+        else:
+            D_B, D_U = _horizontal_bisection(1, (u, v), (s, t), I, Q, F1, F2, f1, f2, dom)
+
+            if D_B[0] == 1:
+                _, a, b, I, Q, F1, F2 = D_B
+            else:
+                _, a, b, I, Q, F1, F2 = D_U
+
+        return ComplexInterval(a, b, I, Q, F1, F2, f1, f2, dom, self.conj)
+
+    def refine_disjoint(self, other):
+        """Refine an isolating interval until it is disjoint with another one. """
+        while not self.is_disjoint(other):
+            self, other = self._inner_refine(), other._inner_refine()
+
+        return self, other
+
+    def refine_size(self, dx, dy=None):
+        """Refine an isolating interval until it is of sufficiently small size. """
+        if dy is None:
+            dy = dx
+
+        while not (self.dx < dx and self.dy < dy):
+            self = self._inner_refine()
+
+        return self
+
+    def refine_step(self, steps=1):
+        """Perform several steps of complex root refinement algorithm. """
+        for _ in xrange(steps):
+            self = self._inner_refine()
+
+        return self
 
