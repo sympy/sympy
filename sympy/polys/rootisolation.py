@@ -1610,6 +1610,10 @@ class RealInterval(object):
 
         return self
 
+    def refine(self):
+        """Perform one step of real root refinement algorithm. """
+        return self._inner_refine()
+
 class ComplexInterval(object):
     """A fully qualified representation of a complex isolation interval. """
 
@@ -1730,3 +1734,6 @@ class ComplexInterval(object):
 
         return self
 
+    def refine(self):
+        """Perform one step of complex root refinement algorithm. """
+        return self._inner_refine()
