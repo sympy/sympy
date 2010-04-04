@@ -664,6 +664,11 @@ class PrettyPrinter(Printer):
         else:
             return self._print(expr.as_basic())
 
+    def _print_RootOf(self, expr):
+        pform = prettyForm(*self._print_seq(expr.args).parens())
+        pform = prettyForm(*pform.left('RootOf'))
+        return pform
+
 def pretty(expr, **settings):
     """
     Returns a string containing the prettified form of expr.

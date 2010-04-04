@@ -328,13 +328,7 @@ class StrPrinter(Printer):
                            self.parenthesize(expr.rhs, precedence(expr)))
 
     def _print_RootOf(self, expr):
-        poly = self._print(expr.poly)
-        return "RootOf(%s, index=%d)" % \
-            (poly[1+poly.index("("):-1], expr.index)
-
-    def _print_RootsOf(self, expr):
-        poly = self._print(expr.poly)
-        return "RootsOf(" + poly[1+poly.index("("):]
+        return "RootOf(%s, %d)" % (self._print(expr.expr), expr.index)
 
     def _print_RootSum(self, expr):
         func = self._print(expr.function)
