@@ -48,8 +48,12 @@ from monomialtools import (
     monomials, monomial_count,
 )
 
+from rootoftools import (
+    RootOf,
+)
+
 from polyroots import (
-    RootOf, RootsOf, RootSum, roots,
+    RootsOf, RootSum, roots,
 )
 
 from algebratools import (
