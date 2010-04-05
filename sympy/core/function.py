@@ -30,7 +30,7 @@ Example:
 
 """
 
-from basic import Basic, Atom, S, C
+from basic import Expr, Atom, S, C
 from basic import BasicMeta
 from cache import cacheit
 from itertools import repeat
@@ -81,7 +81,7 @@ class FunctionClass(BasicMeta):
     def __repr__(cls):
         return cls.__name__
 
-class Function(Basic):
+class Function(Expr):
     """
     Base class for applied functions.
     Constructor of undefined classes.
@@ -137,15 +137,15 @@ class Function(Basic):
                 del options[opt]
         # up to here.
         if options.get('evaluate') is False:
-            return Basic.__new__(cls, *args, **options)
+            return Expr.__new__(cls, *args, **options)
         evaluated = cls.eval(*args)
         if evaluated is not None: return evaluated
         # Just undefined functions have nargs == None
         if not cls.nargs and hasattr(cls, 'undefined_Function'):
-            r = Basic.__new__(cls, *args, **options)
+            r = Expr.__new__(cls, *args, **options)
             r.nargs = len(args)
             return r
-        return Basic.__new__(cls, *args, **options)
+        return Expr.__new__(cls, *args, **options)
 
     @property
     def is_commutative(self):
@@ -201,7 +201,7 @@ class Function(Basic):
                 # Written down as an elif to avoid a super-long line
                 elif isinstance(new.nargs,tuple) and self.nargs in new.nargs:
                     return new(*self.args)
-        return Basic._seq_subs(self, old, new)
+        return Expr._seq_subs(self, old, new)
 
     def _eval_evalf(self, prec):
         # Lookup mpmath function based on name
@@ -229,7 +229,7 @@ class Function(Basic):
         finally:
             mpmath.mp.prec = orig
 
-        return Basic._from_mpmath(v, prec)
+        return Expr._from_mpmath(v, prec)
 
     def _eval_is_comparable(self):
         if self.is_Function:
@@ -508,7 +508,7 @@ class WildFunction(Function, Atom):
     def is_number(self):
         return False
 
-class Derivative(Basic):
+class Derivative(Expr):
     """
     Carries out differentiation of the given expression with respect to symbols.
 
@@ -577,7 +577,7 @@ class Derivative(Basic):
                 # We make a special case for 0th derivative, because there
                 # is no good way to unambiguously print this.
                 return expr
-            obj = Basic.__new__(cls, expr, *symbols, **assumptions)
+            obj = Expr.__new__(cls, expr, *symbols, **assumptions)
             return obj
         unevaluated_symbols = []
         for s in symbols:
@@ -596,7 +596,7 @@ class Derivative(Basic):
 
         if not unevaluated_symbols:
             return expr
-        return Basic.__new__(cls, expr, *unevaluated_symbols, **assumptions)
+        return Expr.__new__(cls, expr, *unevaluated_symbols, **assumptions)
 
     def _eval_derivative(self, s):
         #print
@@ -641,7 +641,7 @@ class Derivative(Basic):
         if isinstance(expr, Derivative):
             if len(expr.symbols) == len(self.symbols):
                     #print "MAYBE:",self, expr, repl_dict, evaluate
-                return Basic.matches(self, expr, repl_dict, evaluate)
+                return Expr.matches(self, expr, repl_dict, evaluate)
         #print "NONE:",self, expr, repl_dict, evaluate
         return None
         #print self, expr, repl_dict, evaluate
@@ -717,7 +717,7 @@ class Lambda(Function):
 
     @classmethod
     def eval(cls,*args):
-        obj = Basic.__new__(cls, *args)
+        obj = Expr.__new__(cls, *args)
         #use dummy variables internally, just to be sure
         nargs = len(args)-1
 

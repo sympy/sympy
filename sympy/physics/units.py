@@ -5,9 +5,9 @@ The base class is Unit, where all here defined units (~200) inherit from.
 """
 
 from sympy import Rational, pi
-from sympy.core.basic import Basic, Atom
+from sympy.core.basic import Atom, Expr
 
-class Unit(Atom):
+class Unit(Atom, Expr):
     """
     Base class for all physical units.
 
@@ -20,7 +20,7 @@ class Unit(Atom):
     __slots__ = ["name", "abbrev"]
 
     def __new__(cls, name, abbrev, **assumptions):
-        obj = Basic.__new__(cls, **assumptions)
+        obj = Expr.__new__(cls, **assumptions)
         assert isinstance(name, str),`type(name)`
         assert isinstance(abbrev, str),`type(abbrev)`
         obj.name = name

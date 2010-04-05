@@ -1,4 +1,4 @@
-from sympy.core import Basic, S, C, Symbol, Wild, Add, sympify, diff, oo
+from sympy.core import Basic, Expr, S, C, Symbol, Wild, Pow, Add, sympify, diff, oo
 
 from sympy.integrals.trigonometry import trigintegrate
 from sympy.integrals.deltafunctions import deltaintegrate
@@ -12,7 +12,7 @@ from sympy.functions import Piecewise
 from sympy.geometry import Curve
 from sympy.functions.elementary.piecewise import piecewise_fold
 
-class Integral(Basic):
+class Integral(Expr):
     """Represents unevaluated integral."""
 
     def __new__(cls, function, *symbols, **assumptions):
@@ -61,7 +61,7 @@ class Integral(Basic):
             if not limits:
                 return function
 
-        obj = Basic.__new__(cls, **assumptions)
+        obj = Expr.__new__(cls, **assumptions)
         obj._args = (function, tuple(limits))
 
         return obj

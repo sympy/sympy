@@ -1,8 +1,8 @@
-from sympy.core.basic import Basic, S, C, sympify
+from sympy.core.basic import Basic, S, C, sympify, Expr
 from sympy.core import oo, Rational
 from sympy.core.cache import cacheit
 
-class Order(Basic):
+class Order(Expr):
     """
     Represents O(f(x)) at the point x = 0.
 
@@ -144,7 +144,7 @@ class Order(Basic):
             return expr
 
         # create Order instance:
-        obj = Basic.__new__(cls, expr, *symbols, **assumptions)
+        obj = Expr.__new__(cls, expr, *symbols, **assumptions)
 
         return obj
 

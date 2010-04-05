@@ -1,7 +1,7 @@
 from sympy.core.symbol import Symbol
 from sympy.core.add import Add
 from sympy.core.mul import Mul
-from sympy.core.basic import Basic, S
+from sympy.core.basic import Expr, S
 from sympy.core.sympify import sympify
 from sympy.core.numbers import Rational
 
@@ -614,7 +614,7 @@ def _exact_roots(f):
 
     return zeros
 
-class RootOf(Basic):
+class RootOf(Expr):
     """Represents n-th root of a univariate polynomial. """
 
     def __new__(cls, f, index):
@@ -634,7 +634,7 @@ class RootOf(Basic):
             if index < len(exact):
                 return exact[index]
             else:
-                return Basic.__new__(cls, f, index)
+                return Expr.__new__(cls, f, index)
 
     @property
     def poly(self):
@@ -647,7 +647,7 @@ class RootOf(Basic):
     def atoms(self, *args, **kwargs):
         return self.poly.atoms(*args, **kwargs)
 
-class RootsOf(Basic):
+class RootsOf(Expr):
     """Represents all roots of a univariate polynomial.
 
        >>> from sympy import roots, RootsOf
@@ -669,7 +669,7 @@ class RootsOf(Basic):
         if f.is_multivariate:
             raise ValueError('multivariate polynomial')
 
-        return Basic.__new__(cls, f)
+        return Expr.__new__(cls, f)
 
     @property
     def poly(self):
@@ -709,7 +709,7 @@ class RootsOf(Basic):
     def atoms(self, *args, **kwargs):
         return self.poly.atoms(*args, **kwargs)
 
-class RootSum(Basic):
+class RootSum(Expr):
     """Represents a sum of all roots of a univariate polynomial. """
 
     def __new__(cls, f, *args, **flags):
@@ -719,7 +719,7 @@ class RootSum(Basic):
         roots = RootsOf(*args)
 
         if not flags.get('evaluate', True):
-            return Basic.__new__(cls, f, roots)
+            return Expr.__new__(cls, f, roots)
         else:
             if roots.count == 0:
                 return S.Zero
@@ -730,7 +730,7 @@ class RootSum(Basic):
                     result.append(f(root))
 
                 if len(result) < roots.count:
-                    result.append(Basic.__new__(cls, f, roots))
+                    result.append(Expr.__new__(cls, f, roots))
 
                 return Add(*result)
 
@@ -752,4 +752,3 @@ class RootSum(Basic):
                 result += self.function(root)
 
             return result
-

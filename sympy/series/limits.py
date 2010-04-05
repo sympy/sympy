@@ -1,4 +1,4 @@
-from sympy.core import S, Add, sympify, Basic, PoleError, Mul, oo
+from sympy.core import S, Add, sympify, Expr, PoleError, Mul, oo, C
 from gruntz import gruntz
 
 def limit(e, z, z0, dir="+"):
@@ -114,7 +114,7 @@ def heuristics(e, z, z0, dir):
     raise PoleError(msg % (e, z, z0, dir))
 
 
-class Limit(Basic):
+class Limit(Expr):
     """Represents unevaluated limit.
 
     Examples:
@@ -132,7 +132,7 @@ class Limit(Basic):
         e = sympify(e)
         z = sympify(z)
         z0 = sympify(z0)
-        obj = Basic.__new__(cls)
+        obj = Expr.__new__(cls)
         obj._args = (e, z, z0, dir)
         return obj
 

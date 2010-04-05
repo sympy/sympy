@@ -1,8 +1,10 @@
-from sympy.core import (Basic, S, C, Symbol, Equality, Interval, sympify, Wild)
+from sympy.core import (Expr, S, C, Add, Mul, Symbol, Equality, Interval,
+    sympify, symbols, Wild)
+from sympy.functions import factorial
 from sympy.solvers import solve
 from sympy.utilities import flatten
 
-class Sum(Basic):
+class Sum(Expr):
     """Represents unevaluated summation."""
 
     def __new__(cls, f, *symbols, **assumptions):
@@ -47,7 +49,7 @@ class Sum(Basic):
 
                 raise ValueError("Invalid summation variable or limits")
 
-        obj = Basic.__new__(cls, **assumptions)
+        obj = Expr.__new__(cls, **assumptions)
         obj._args = (f, tuple(limits))
 
         return obj

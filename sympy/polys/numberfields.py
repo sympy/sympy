@@ -1,34 +1,14 @@
 """Computational algebraic number field theory. """
 
-from sympy import (
-    S, Basic, I, Integer, Rational, Real,
-    Symbol, Add, Mul, sympify, Q, ask,
-)
-
-from sympy.polys.polytools import (
-    Poly, sqf_norm, invert, factor_list, groebner,
-)
-
-from sympy.polys.polyutils import (
-    basic_from_dict,
-)
-
-from sympy.polys.polyclasses import (
-    ANP, DMP,
-)
-
-from sympy.polys.polyerrors import (
-    IsomorphismFailed,
-    CoercionFailed,
-    NotAlgebraic,
-)
-
-from sympy.utilities import (
-    any, all, numbered_symbols, variations,
-)
-
+from sympy import (S, Expr, I, Integer, Rational, Real, Symbol, Add, Mul,
+    sympify, Q, ask)
+from sympy.polys.polytools import Poly, sqf_norm, invert, factor_list, groebner
+from sympy.polys.polyutils import basic_from_dict
+from sympy.polys.polyclasses import ANP, DMP
+from sympy.polys.polyerrors import (IsomorphismFailed, CoercionFailed,
+    NotAlgebraic)
+from sympy.utilities import any, all, numbered_symbols, variations
 from sympy.ntheory import sieve
-
 from sympy.mpmath import pslq, mp
 
 def minimal_polynomial(ex, x=None, **args):
@@ -376,7 +356,7 @@ def to_number_field(extension, theta=None, **args):
         else:
             raise IsomorphismFailed("%s is not in a subfield of %s" % (root, theta.root))
 
-class AlgebraicNumber(Basic):
+class AlgebraicNumber(Expr):
     """Class for representing algebraic numbers in SymPy. """
 
     __slots__ = ['rep', 'root', 'alias', 'minpoly']
@@ -419,7 +399,7 @@ class AlgebraicNumber(Basic):
             if not isinstance(alias, Symbol):
                 alias = Symbol(alias)
 
-        obj = Basic.__new__(cls)
+        obj = Expr.__new__(cls)
 
         obj.rep = rep
         obj.root = root

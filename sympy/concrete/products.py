@@ -1,9 +1,9 @@
-from sympy.core import Basic, S, C, Mul, sympify
+from sympy.core import Expr, S, C, Add, Mul, Symbol, sympify
 
 from sympy.polys import quo, roots
 from sympy.simplify import powsimp
 
-class Product(Basic):
+class Product(Expr):
     """Represents unevaluated product.
 
     """
@@ -42,7 +42,7 @@ class Product(Basic):
         else:
             raise NotImplementedError
 
-        obj = Basic.__new__(cls, **assumptions)
+        obj = Expr.__new__(cls, **assumptions)
         obj._args = (term, k, a, n)
 
         return obj

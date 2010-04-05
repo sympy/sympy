@@ -6,8 +6,8 @@ of Many-Particle Systems."
 """
 
 from sympy import (
-    Basic, Function, Mul, sympify, Integer, Add, sqrt,
-    zeros, Pow, I, S, Symbol,
+    Basic, Expr, Function, Mul, sympify, Integer, Add, sqrt,
+    zeros, Pow, I, S,Symbol
 )
 
 from sympy.utilities import iff
@@ -69,7 +69,7 @@ class SubstitutionOfAmbigousOperatorFailed(SecondQuantizationError):
 class WicksTheoremDoesNotApply(SecondQuantizationError):
     pass
 
-class Dagger(Basic):
+class Dagger(Expr):
     """
     Hermitian conjugate of creation/annihilation operators.
 
@@ -608,7 +608,7 @@ class KroneckerDelta(Function):
 
 
 
-class SqOperator(Basic):
+class SqOperator(Expr):
     """
     Base class for Second Quantization operators.
     """
@@ -1154,7 +1154,7 @@ F = AnnihilateFermion
 
 
 
-class FockState(Basic):
+class FockState(Expr):
     """
     Many particle Fock state with a sequence of occupation numbers.
 
@@ -2882,7 +2882,7 @@ def wicks(e, **kw_args):
     # there was nothing to do
     return e
 
-class PermutationOperator(Basic):
+class PermutationOperator(Expr):
     """
     Represents the index permutation operator P(ij)
 

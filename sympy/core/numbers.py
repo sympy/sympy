@@ -1,4 +1,4 @@
-from basic import Atom, SingletonMeta, S, Basic
+from basic import Atom, SingletonMeta, S, Expr, Basic
 from decorators import _sympifyit
 from cache import Memoizer, cacheit, clear_cache
 import sympy.mpmath as mpmath
@@ -136,7 +136,7 @@ def factor_trial_division(n):
     return factors
 
 
-class Number(Atom):
+class Number(Atom, Expr):
     """
     Represents any kind of number in sympy.
 
@@ -244,7 +244,7 @@ class Real(Number):
         return (mlib.to_pickable(self._mpf_),)
 
     def __getstate__(self):
-        d = Basic.__getstate__(self).copy()
+        d = Expr.__getstate__(self).copy()
         del d["_mpf_"]
         return mlib.to_pickable(self._mpf_), d
 
@@ -252,7 +252,7 @@ class Real(Number):
         _mpf_, d = state
         _mpf_ = mlib.from_pickable(_mpf_)
         self._mpf_ = _mpf_
-        Basic.__setstate__(self, d)
+        Expr.__setstate__(self, d)
 
     is_Real = True
 
@@ -292,7 +292,7 @@ class Real(Number):
             _mpf_ = mpmath.mpf(num)._mpf_
         if not num:
             return C.Zero()
-        obj = Basic.__new__(cls)
+        obj = Expr.__new__(cls)
         obj._mpf_ = _mpf_
         obj._prec = prec
         return obj
@@ -301,7 +301,7 @@ class Real(Number):
     def _new(cls, _mpf_, _prec):
         if _mpf_ == mlib.fzero:
             return S.Zero
-        obj = Basic.__new__(cls)
+        obj = Expr.__new__(cls)
         obj._mpf_ = _mpf_
         obj._prec = _prec
         return obj
@@ -408,7 +408,7 @@ class Real(Number):
         if other.is_comparable: other = other.evalf()
         if isinstance(other, Number):
             return bool(mlib.mpf_lt(self._mpf_, other._as_mpf_val(self._prec)))
-        return Basic.__lt__(self, other)
+        return Expr.__lt__(self, other)
 
     def __le__(self, other):
         try:
@@ -420,7 +420,7 @@ class Real(Number):
         if other.is_comparable: other = other.evalf()
         if isinstance(other, Number):
             return bool(mlib.mpf_le(self._mpf_, other._as_mpf_val(self._prec)))
-        return Basic.__le__(self, other)
+        return Expr.__le__(self, other)
 
     def epsilon_eq(self, other, epsilon="10e-16"):
         return abs(self - other) < Real(epsilon)
@@ -537,7 +537,7 @@ class Rational(Number):
             q //= n
         if q==1: return Integer(p)
         if p==1 and q==2: return S.Half
-        obj = Basic.__new__(cls)
+        obj = Expr.__new__(cls)
         obj.p = p
         obj.q = q
         #obj._args = (p, q)
@@ -698,7 +698,7 @@ class Rational(Number):
             if isinstance(other, Real):
                 return bool(mlib.mpf_lt(self._as_mpf_val(other._prec), other._mpf_))
             return bool(self.p * other.q < self.q * other.p)
-        return Basic.__lt__(self, other)
+        return Expr.__lt__(self, other)
 
     def __le__(self, other):
         try:
@@ -712,7 +712,7 @@ class Rational(Number):
             if isinstance(other, Real):
                 return bool(mlib.mpf_le(self._as_mpf_val(other._prec), other._mpf_))
             return bool(self.p * other.q <= self.q * other.p)
-        return Basic.__le__(self, other)
+        return Expr.__le__(self, other)
 
     def factors(self):
         f = factor_trial_division(self.p).copy()
@@ -819,7 +819,7 @@ class Integer(Rational):
             elif ival == 1: obj = S.One
             elif ival == -1: obj = S.NegativeOne
             else:
-                obj = Basic.__new__(cls)
+                obj = Expr.__new__(cls)
                 obj.p = ival
 
             _intcache[i] = obj
@@ -1403,7 +1403,7 @@ class NaN(Rational):
         import sage.all as sage
         return sage.NaN
 
-class ComplexInfinity(Atom):
+class ComplexInfinity(Atom, Expr):
     __metaclass__ = SingletonMeta
 
     is_commutative = True
@@ -1434,7 +1434,7 @@ class ComplexInfinity(Atom):
                 else:
                     return S.Zero
 
-class NumberSymbol(Atom):
+class NumberSymbol(Atom, Expr):
     __metaclass__ = SingletonMeta
 
     is_commutative = True
@@ -1494,7 +1494,7 @@ class NumberSymbol(Atom):
         if other.is_comparable:
             other = other.evalf()
             return self.evalf()<other
-        return Basic.__lt__(self, other)
+        return Expr.__lt__(self, other)
     def __le__(self, other):
         try:
             other = _sympify(other)
@@ -1504,7 +1504,7 @@ class NumberSymbol(Atom):
         if other.is_comparable: other = other.evalf()
         if isinstance(other, Number):
             return self.evalf()<=other
-        return Basic.__le__(self, other)
+        return Expr.__le__(self, other)
     def __gt__(self, other):
         return (-self) < (-other)
     def __ge__(self, other):
@@ -1636,7 +1636,7 @@ class Catalan(NumberSymbol):
         import sage.all as sage
         return sage.catalan
 
-class ImaginaryUnit(Atom):
+class ImaginaryUnit(Atom, Expr):
     __metaclass__ = SingletonMeta
 
     is_commutative = True
@@ -1708,7 +1708,7 @@ Basic.singleton['GoldenRatio'] = GoldenRatio
 Basic.singleton['EulerGamma'] = EulerGamma
 Basic.singleton['Catalan'] = Catalan
 
-from basic import Basic, S, C
+from basic import S, C
 from sympify import _sympify, SympifyError
 from function import FunctionClass
 from power import Pow, integer_nthroot

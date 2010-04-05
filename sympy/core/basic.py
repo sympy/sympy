@@ -1613,6 +1613,79 @@ class Basic(AssumeMeths):
                 else:
                     return self
 
+    def __call__(self, subsdict):
+        """Use call as a shortcut for subs, but only support the dictionary version"""
+        if not isinstance(subsdict, dict):
+            raise TypeError("argument must be a dictionary")
+        return self.subs(subsdict)
+
+
+class EvalfMixin(object):
+    """Mixin class adding evalf capabililty."""
+    def _evalf(self, prec):
+        """Helper for evalf. Does the same thing but takes binary precision"""
+        r = self._eval_evalf(prec)
+        if r is None:
+            r = self
+        return r
+
+    def _eval_evalf(self, prec):
+        return
+
+    def _seq_eval_evalf(self, prec):
+        return self.__class__(*[s._evalf(prec) for s in self.args])
+
+    def _to_mpmath(self, prec, allow_ints=True):
+        # mpmath functions accept ints as input
+        errmsg = "cannot convert to mpmath number"
+        if allow_ints and self.is_Integer:
+            return self.p
+        v = self._eval_evalf(prec)
+        if v is None:
+            raise ValueError(errmsg)
+        if v.is_Real:
+            return mpmath.make_mpf(v._mpf_)
+        # Number + Number*I is also fine
+        re, im = v.as_real_imag()
+        if allow_ints and re.is_Integer:
+            re = mpmath.libmp.from_int(re.p)
+        elif re.is_Real:
+            re = re._mpf_
+        else:
+            raise ValueError(errmsg)
+        if allow_ints and im.is_Integer:
+            im = mpmath.libmp.from_int(im.p)
+        elif im.is_Real:
+            im = im._mpf_
+        else:
+            raise ValueError(errmsg)
+        return mpmath.make_mpc((re, im))
+
+class Expr(Basic, EvalfMixin):
+    def __float__(self):
+        result = self.evalf()
+        if result.is_Number:
+            return float(result)
+        else:
+            raise ValueError("Symbolic value, can't compute")
+
+    def __complex__(self):
+        result = self.evalf()
+        re, im = result.as_real_imag()
+        return complex(float(re), float(im))
+
+    @staticmethod
+    def _from_mpmath(x, prec):
+        if hasattr(x, "_mpf_"):
+            return C.Real._new(x._mpf_, prec)
+        elif hasattr(x, "_mpc_"):
+            re, im = x._mpc_
+            re = C.Real._new(re, prec)
+            im = C.Real._new(im, prec)*S.ImaginaryUnit
+            return re+im
+        else:
+            raise TypeError("expected mpmath number (mpf or mpc)")
+
     def coeff(self, x, expand=True):
         """
         Returns the coefficient of the term "x" or None if there is no "x".
@@ -2062,93 +2135,6 @@ class Basic(AssumeMeths):
             # As a last resort, we choose the one with greater hash
             return hash(self) < hash(negative_self)
 
-    ###################################################################################
-    ##################### DERIVATIVE, INTEGRAL, FUNCTIONAL METHODS ####################
-    ###################################################################################
-
-    def diff(self, *symbols, **assumptions):
-        new_symbols = map(sympify, symbols)
-        if not "evaluate" in assumptions:
-            assumptions["evaluate"] = True
-        ret = Derivative(self, *new_symbols, **assumptions)
-        return ret
-
-    def fdiff(self, *indices):
-        # FIXME FApply -> ?
-        return C.FApply(C.FDerivative(*indices), self)
-
-    def integrate(self, *args, **kwargs):
-        from sympy.integrals import integrate
-        return integrate(self, *args, **kwargs)
-
-    def __call__(self, subsdict):
-        """Use call as a shortcut for subs, but only support the dictionary version"""
-        if not isinstance(subsdict, dict):
-            raise TypeError("argument must be a dictionary")
-        return self.subs(subsdict)
-
-    def __float__(self):
-        result = self.evalf()
-        if result.is_Number:
-            return float(result)
-        else:
-            raise ValueError("Symbolic value, can't compute")
-
-    def __complex__(self):
-        result = self.evalf()
-        re, im = result.as_real_imag()
-        return complex(float(re), float(im))
-
-    def _evalf(self, prec):
-        """Helper for evalf. Does the same thing but takes binary precision"""
-        r = self._eval_evalf(prec)
-        if r is None:
-            r = self
-        return r
-
-    def _eval_evalf(self, prec):
-        return
-
-    def _seq_eval_evalf(self, prec):
-        return self.__class__(*[s._evalf(prec) for s in self.args])
-
-    def _to_mpmath(self, prec, allow_ints=True):
-        # mpmath functions accept ints as input
-        errmsg = "cannot convert to mpmath number"
-        if allow_ints and self.is_Integer:
-            return self.p
-        v = self._eval_evalf(prec)
-        if v is None:
-            raise ValueError(errmsg)
-        if v.is_Real:
-            return mpmath.make_mpf(v._mpf_)
-        # Number + Number*I is also fine
-        re, im = v.as_real_imag()
-        if allow_ints and re.is_Integer:
-            re = mpmath.libmp.from_int(re.p)
-        elif re.is_Real:
-            re = re._mpf_
-        else:
-            raise ValueError(errmsg)
-        if allow_ints and im.is_Integer:
-            im = mpmath.libmp.from_int(im.p)
-        elif im.is_Real:
-            im = im._mpf_
-        else:
-            raise ValueError(errmsg)
-        return mpmath.make_mpc((re, im))
-
-    @staticmethod
-    def _from_mpmath(x, prec):
-        if hasattr(x, "_mpf_"):
-            return C.Real._new(x._mpf_, prec)
-        elif hasattr(x, "_mpc_"):
-            re, im = x._mpc_
-            re = C.Real._new(re, prec)
-            im = C.Real._new(im, prec)*S.ImaginaryUnit
-            return re+im
-        else:
-            raise TypeError("expected mpmath number (mpf or mpc)")
 
     ###################################################################################
     ##################### SERIES, LEADING TERM, LIMIT, ORDER METHODS ##################
@@ -2346,6 +2332,25 @@ class Basic(AssumeMeths):
     def as_Pow(self):
         """Returns `self` as it was `Pow` instance. """
         return (self, S.One)
+
+    ###################################################################################
+    ##################### DERIVATIVE, INTEGRAL, FUNCTIONAL METHODS ####################
+    ###################################################################################
+
+    def diff(self, *symbols, **assumptions):
+        new_symbols = map(sympify, symbols)
+        if not "evaluate" in assumptions:
+            assumptions["evaluate"] = True
+        ret = Derivative(self, *new_symbols, **assumptions)
+        return ret
+
+    def fdiff(self, *indices):
+        # FIXME FApply -> ?
+        return C.FApply(C.FDerivative(*indices), self)
+
+    def integrate(self, *args, **kwargs):
+        from sympy.integrals import integrate
+        return integrate(self, *args, **kwargs)
 
     ##########################################################################
     ##################### END OF BASIC CLASS #################################

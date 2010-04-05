@@ -1,10 +1,10 @@
 
-from basic import Atom
+from basic import Atom, Expr
 from cache import cacheit
 
 import re
 
-class Symbol(Atom):
+class Symbol(Atom, Expr):
     """
     Assumptions::
        commutative = True
@@ -48,7 +48,7 @@ class Symbol(Atom):
 
     def __new_stage2__(cls, name, commutative=True, **assumptions):
         assert isinstance(name, str),`type(name)`
-        obj = Basic.__new__(cls, **assumptions)
+        obj = Expr.__new__(cls, **assumptions)
         obj.is_commutative = commutative
         obj.name = name
         return obj
@@ -288,6 +288,6 @@ def var(*names, **kwargs):
         # doc
         del frame
 
-from basic import Basic, S, C
+from basic import S, C
 from sympify import sympify
 from function import Function

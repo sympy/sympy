@@ -1,4 +1,4 @@
-from basic import Basic
+from basic import Expr
 from sympify import _sympify
 
 def Rel(a, b, op):
@@ -99,7 +99,7 @@ def Ge(a, b):
     """
     return Relational(a,b,'>=')
 
-class Relational(Basic):
+class Relational(Expr):
 
     __slots__ = []
 
@@ -124,7 +124,7 @@ class Relational(Basic):
         if lhs.is_real and lhs.is_number and rhs.is_real and rhs.is_number:
             return rop_cls._eval_relation(lhs.evalf(), rhs.evalf())
         else:
-            obj = Basic.__new__(rop_cls, lhs, rhs, **assumptions)
+            obj = Expr.__new__(rop_cls, lhs, rhs, **assumptions)
             return obj
 
     @property

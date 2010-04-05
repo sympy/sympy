@@ -1,4 +1,4 @@
-from basic import Basic, S, C
+from basic import Expr, S, C
 from sympify import _sympify
 from cache import cacheit
 
@@ -7,7 +7,7 @@ from cache import cacheit
 # from function import Lambda, WildFunction /cyclic/
 from symbol import Symbol, Wild
 
-class AssocOp(Basic):
+class AssocOp(Expr):
     """ Associative operations, can separate noncommutative and
     commutative parts.
 
@@ -23,7 +23,7 @@ class AssocOp(Basic):
     @cacheit
     def __new__(cls, *args, **assumptions):
         if assumptions.get('evaluate') is False:
-            return Basic.__new__(cls, *map(_sympify, args), **assumptions)
+            return Expr.__new__(cls, *map(_sympify, args), **assumptions)
         if len(args)==0:
             return cls.identity()
         if len(args)==1:
@@ -34,7 +34,7 @@ class AssocOp(Basic):
             elif nc_part: obj = nc_part[0]
             else: obj = cls.identity()
         else:
-            obj = Basic.__new__(cls, *(c_part + nc_part), **assumptions)
+            obj = Expr.__new__(cls, *(c_part + nc_part), **assumptions)
             obj.is_commutative = not nc_part
 
         if order_symbols is not None:
@@ -58,7 +58,7 @@ class AssocOp(Basic):
            x*y
 
         """
-        obj = Basic.__new__(type(self), *args)  # NB no assumptions for Add/Mul
+        obj = Expr.__new__(type(self), *args)  # NB no assumptions for Add/Mul
         obj.is_commutative = self.is_commutative
 
         return obj
@@ -87,7 +87,7 @@ class AssocOp(Basic):
         # c_part, nc_part, order_symbols
         return [], new_seq, None
 
-    _eval_subs = Basic._seq_subs
+    _eval_subs = Expr._seq_subs
 
     def _matches_commutative(self, expr, repl_dict={}, evaluate=False):
         """
@@ -197,7 +197,7 @@ class AssocOp(Basic):
             if r and not a: r = False
         return r
 
-    _eval_evalf = Basic._seq_eval_evalf
+    _eval_evalf = Expr._seq_eval_evalf
 
 class ShortCircuit(Exception):
     pass
@@ -247,7 +247,7 @@ class LatticeOp(AssocOp):
         elif len(_args) == 1:
             return set(_args).pop()
         else:
-            obj = Basic.__new__(cls, _args, **assumptions)
+            obj = Expr.__new__(cls, _args, **assumptions)
             obj._argset = _args
             return obj
 

@@ -21,7 +21,7 @@ from sympy.mpmath.libmp.gammazeta import mpf_bernoulli
 
 import math
 
-from basic import Basic, C, S
+from basic import EvalfMixin, C, S
 from sympify import sympify
 
 LG10 = math.log(10,2)
@@ -1057,7 +1057,7 @@ def Basic_evalf(x, n=15, subs=None, maxn=100, chop=False, strict=False, quad=Non
     else:
         return re
 
-Basic.evalf = Basic.n = Basic_evalf
+EvalfMixin.evalf = EvalfMixin.n = Basic_evalf
 
 def N(x, n=15, **options):
     """

@@ -1,4 +1,4 @@
-from basic import Basic
+from basic import Expr
 from sympify import _sympify
 from cache import cacheit
 from symbol import Symbol, Wild
@@ -62,7 +62,7 @@ def integer_nthroot(y, n):
         t = x**n
     return x, t == y
 
-class Pow(Basic):
+class Pow(Expr):
 
     is_Pow = True
 
@@ -73,14 +73,14 @@ class Pow(Basic):
         b = _sympify(b)
         e = _sympify(e)
         if assumptions.get('evaluate') is False:
-            return Basic.__new__(cls, b, e, **assumptions)
+            return Expr.__new__(cls, b, e, **assumptions)
         if e is S.Zero:
             return S.One
         if e is S.One:
             return b
         obj = b._eval_power(e)
         if obj is None:
-            obj = Basic.__new__(cls, b, e, **assumptions)
+            obj = Expr.__new__(cls, b, e, **assumptions)
             obj.is_commutative = (b.is_commutative and e.is_commutative)
         return obj
 
@@ -562,7 +562,7 @@ class Pow(Basic):
 
         d = self.exp.subs(d).matches(e, d)
         if d is None:
-            return Basic.matches(self, expr, repl_dict, evaluate)
+            return Expr.matches(self, expr, repl_dict, evaluate)
         return d
 
     def _eval_nseries(self, x, x0, n):
@@ -774,7 +774,7 @@ class Pow(Basic):
         """Returns `self` as it was `Pow` instance. """
         return (self.base, self.exp)
 
-from basic import Basic, S, C
+from basic import S, C
 from add import Add
 from numbers import Integer
 from mul import Mul

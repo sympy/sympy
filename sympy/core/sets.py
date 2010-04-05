@@ -1,4 +1,4 @@
-from basic import Basic, SingletonMeta, S
+from basic import Basic, SingletonMeta, S, EvalfMixin
 from sympify import _sympify
 from sympy.mpmath import mpi
 
@@ -197,7 +197,8 @@ class Set(Basic):
     def is_number(self):
         return False
 
-class Interval(Set):
+
+class Interval(Set, EvalfMixin):
     """
     Represents a real interval as a Set.
 
