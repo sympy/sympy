@@ -7,7 +7,6 @@ import re
 class Symbol(Atom):
     """
     Assumptions::
-       real = True
        commutative = True
 
     You can override the default assumptions in the constructor::
