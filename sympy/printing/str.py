@@ -376,6 +376,9 @@ class StrPrinter(Printer):
     def _print_Symbol(self, expr):
         return expr.name
 
+    def _print_Predicate(self, expr):
+        return expr.name
+
     def _print_str(self, expr):
         return expr
 

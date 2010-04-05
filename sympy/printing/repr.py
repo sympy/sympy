@@ -96,6 +96,9 @@ class ReprPrinter(Printer):
     def _print_Symbol(self, expr):
         return "%s(%s)" % (expr.__class__.__name__, self._print(expr.name))
 
+    def _print_Predicate(self, expr):
+        return "%s(%s)" % (expr.__class__.__name__, self._print(expr.name))
+
     def _print_str(self, expr):
         return repr(expr)
 

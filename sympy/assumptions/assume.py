@@ -47,6 +47,8 @@ class Assume(Boolean):
 
     """
     def __init__(self, expr, key='relational', value=True):
+        if isinstance(key, Predicate):
+            key = key.name
         self._args = (expr, key, value)
 
     is_Atom = True # do not attempt to decompose this
@@ -137,3 +139,21 @@ def eliminate_assume(expr, symbol=None):
             return Symbol(expr.key)
         return ~Symbol(expr.key)
     return expr.func(*map(eliminate_assume, expr.args))
+
+class Predicate(Boolean):
+
+    is_Atom = True
+
+    def __new__(cls, name, handlers=None):
+        obj = Boolean.__new__(cls)
+        obj.name = name
+        return obj
+
+    def _hashable_content(self):
+        return (self.name,)
+
+    def __getnewargs__(self):
+        return (self.name,)
+
+    def __call__(self, expr):
+        return Assume(expr, self.name)
