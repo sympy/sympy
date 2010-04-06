@@ -9,6 +9,11 @@ from sympy.polys.rootisolation import (
     dup_isolate_real_roots_sqf,
 )
 
+from sympy.polys.polyroots import (
+    roots_linear, roots_quadratic,
+    roots_binomial,
+)
+
 from sympy.polys.polyerrors import (
     PolynomialError, DomainError,
 )
@@ -81,12 +86,27 @@ class RootOf(Basic):
 
     __slots__ = ['poly', 'index', 'pointer', 'conjugate']
 
-    def __new__(cls, f, index, expand=True):
+    def __new__(cls, f, index, radicals=True, expand=True):
         """Construct a new ``RootOf`` object for ``k``-th root of ``f``. """
         poly = Poly(f, greedy=False, expand=expand)
 
         if not poly.is_univariate:
             raise PolynomialError("only univariate polynomials are supported")
+
+        deg, index = poly.degree(), int(index)
+
+        if index < -deg or index >= deg:
+            raise IndexError("root index out of [%d, %d] range, got %d" % (-deg, deg-1, index))
+        elif index < 0:
+            index += deg
+
+        if deg == 1:
+            return roots_linear(poly)[0]
+        if radicals:
+            if deg == 2:
+                return roots_quadratic(poly)[index]
+            if poly.length() == 2 and poly.TC():
+                return roots_binomial(poly)[index]
 
         dom = poly.get_domain()
 
@@ -95,17 +115,15 @@ class RootOf(Basic):
         elif not dom.is_ZZ:
             raise DomainError("RootOf is not supported over %s" % dom)
 
-        deg = poly.degree()
-
-        if index < -deg or index >= deg:
-            raise IndexError("root index out of [%d, %d] range, got %d" % (-deg, deg-1, index))
-        elif index < 0:
-            index += deg
-
         poly, index, pointer, conjugate = cls._inner_init(poly, index)
 
         if poly.degree() == 1:
-            return -poly.nth(0)/poly.nth(1)
+            return roots_linear(poly)[0]
+        if radicals:
+            if poly.degree() == 2:
+                return roots_quadratic(poly)[index]
+            if poly.length() == 2 and poly.TC():
+                return roots_binomial(poly)[index]
 
         obj = Basic.__new__(cls)
 
