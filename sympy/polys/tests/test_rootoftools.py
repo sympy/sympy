@@ -48,6 +48,13 @@ def test_RootOf___new__():
     raises(IndexError, "RootOf(x**2 - 1, 2)")
     raises(IndexError, "RootOf(x**2 - 1, 3)")
 
+def test_RootOf___eq__():
+    assert (RootOf(x**3 + 2, 0) == RootOf(x**3 + 2, 0)) == True
+    assert (RootOf(x**3 + 2, 0) == RootOf(x**3 + 2, 1)) == False
+    assert (RootOf(x**3 + 2, 1) == RootOf(x**3 + 2, 1)) == True
+    assert (RootOf(x**3 + 2, 1) == RootOf(x**3 + 2, 2)) == False
+    assert (RootOf(x**3 + 2, 2) == RootOf(x**3 + 2, 2)) == True
+
 def test_RootOf_is_real():
     assert RootOf(x**3 + 2, 0).is_real == True
     assert RootOf(x**3 + 2, 1).is_real == False

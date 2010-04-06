@@ -5,7 +5,6 @@ from sympy import Basic, Integer, Real, I
 from sympy.polys.polytools import Poly
 
 from sympy.polys.rootisolation import (
-    RealInterval, ComplexInterval,
     dup_isolate_complex_roots_sqf,
     dup_isolate_real_roots_sqf,
 )
@@ -80,7 +79,7 @@ _rootof_complexes_cache = {}
 class RootOf(Basic):
     """Represents ``k``-th root of a univariate polynomial. """
 
-    __slots__ = ['poly', 'index', 'interval']
+    __slots__ = ['poly', 'index', 'pointer', 'conjugate']
 
     def __new__(cls, f, index, expand=True):
         """Construct a new ``RootOf`` object for ``k``-th root of ``f``. """
@@ -99,11 +98,11 @@ class RootOf(Basic):
         deg = poly.degree()
 
         if index < -deg or index >= deg:
-            raise IndexError("root index out of (%d, %d) range, got %d" % (-deg, deg-1, index))
+            raise IndexError("root index out of [%d, %d] range, got %d" % (-deg, deg-1, index))
         elif index < 0:
             index += deg
 
-        poly, index, interval = cls._inner_init(poly, index)
+        poly, index, pointer, conjugate = cls._inner_init(poly, index)
 
         if poly.degree() == 1:
             return -poly.nth(0)/poly.nth(1)
@@ -112,7 +111,8 @@ class RootOf(Basic):
 
         obj.poly = poly
         obj.index = index
-        obj.interval = interval
+        obj.pointer = pointer
+        obj.conjugate = conjugate
 
         return obj
 
@@ -147,7 +147,7 @@ class RootOf(Basic):
             for j, (root, factor, k) in enumerate(reals):
                 if poly is None:
                     if index < i + k:
-                        poly, index, interval = factor, 0, root
+                        poly, index = factor, 0
 
                         for _, f, _ in reals[:j]:
                             if f == factor:
@@ -162,6 +162,8 @@ class RootOf(Basic):
 
             for factor, reals in cache.iteritems():
                 _rootof_reals_cache[factor] = reals
+
+            pointer, conjugate = index, None
         else:
             index, complexes = index - real_count, []
 
@@ -191,19 +193,18 @@ class RootOf(Basic):
                         if index >= i + k:
                             conjugate = True
 
-                        poly, index = factor, len(_rootof_reals_cache[factor])
-
-                        if conjugate:
-                            index += 1
+                        poly, pointer = factor, 0
 
                         for _, f, _ in complexes[:j]:
                             if f == factor:
-                                index += 2
+                                pointer += 1
 
                         if not conjugate:
-                            interval = root
+                            index = 2*pointer
                         else:
-                            interval = root.conjugate()
+                            index = 2*pointer + 1
+
+                        index += len(_rootof_reals_cache[poly])
                     else:
                         i += 2*k
 
@@ -215,7 +216,10 @@ class RootOf(Basic):
             for factor, complexes in cache.iteritems():
                 _rootof_complexes_cache[factor] = complexes
 
-        return poly, index, interval
+        return poly, index, pointer, conjugate
+
+    def _hashable_content(self):
+        return (self.expr, self.index)
 
     @property
     def expr(self):
@@ -228,17 +232,31 @@ class RootOf(Basic):
     @property
     def is_real(self):
         """Return ``True`` if the root in consideration is real. """
-        return isinstance(self.interval, RealInterval)
+        return self.conjugate is None
 
     @property
     def is_complex(self):
         """Return ``True`` if the root in consideration is complex. """
-        return isinstance(self.interval, ComplexInterval)
+        return self.conjugate is not None
 
     @property
     def is_conjugate(self):
         """Return ``True`` if the root is located in the lower half-plane. """
-        return self.is_complex and self.interval.conj
+        return self.is_complex and self.conjugate
+
+    def _get_interval(self):
+        """Internal function for retrieving isolation interval from cache. """
+        if self.is_real:
+            return _rootof_reals_cache[self.poly][self.pointer]
+        else:
+            return _rootof_complexes_cache[self.poly][self.pointer]
+
+    def _set_interval(self, interval):
+        """Internal function for updating isolation interval in cache. """
+        if self.is_real:
+            _rootof_reals_cache[self.poly][self.pointer] = interval
+        else:
+            _rootof_complexes_cache[self.poly][self.pointer] = interval
 
     def _eval_evalf(self, prec):
         """Evaluate this complex root to the given precision. """
@@ -246,7 +264,7 @@ class RootOf(Basic):
 
         try:
             func = lambdify(self.poly.gen, self.expr)
-            interval, refined = self.interval, False
+            interval, refined = self._get_interval(), False
 
             while True:
                 if self.is_real:
@@ -266,6 +284,12 @@ class RootOf(Basic):
                     refined = True
                     continue
                 else:
+                    if refined:
+                        self._set_interval(interval)
+
+                    if self.is_conjugate:
+                        root = root.conjugate()
+
                     break
         finally:
             mp.prec = _prec
