@@ -1622,6 +1622,9 @@ class Basic(AssumeMeths):
 
 class EvalfMixin(object):
     """Mixin class adding evalf capabililty."""
+
+    __slots__ = []
+
     def _evalf(self, prec):
         """Helper for evalf. Does the same thing but takes binary precision"""
         r = self._eval_evalf(prec)
@@ -1662,6 +1665,8 @@ class EvalfMixin(object):
         return mpmath.make_mpc((re, im))
 
 class Expr(Basic, EvalfMixin):
+    __slots__ = []
+
     def __float__(self):
         result = self.evalf()
         if result.is_Number:
