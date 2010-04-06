@@ -2,6 +2,8 @@ from sympy.core import Expr, S, C, Symbol, Equality, Interval, sympify, Wild
 from sympy.solvers import solve
 from sympy.utilities import flatten
 
+import __builtin__
+
 class Sum(Expr):
     """Represents unevaluated summation."""
 
@@ -161,6 +163,26 @@ class Sum(Expr):
 
 
 def sum(*args, **kwargs):
+    """Sum a sequence or compute symbolic summation.
+
+       If the first argument to :func:`sum` is a sequence, then this function
+       behaves exactly as its built-in counterpart. Otherwise :func:`sum` will
+       construct an unevaluated summation class instance and, by default,
+       evaluate it. The result can be return in a formal, unevaluated for
+       provided the ``evaluate`` keyword argument was set to ``False``.
+
+    """
+    if len(args) in [1, 2]:
+        sequence = args[0]
+
+        if hasattr(sequence, '__iter__'):
+            if len(args) == 1:
+                start = kwargs.get('start', 0)
+            else:
+                start = args[1]
+
+            return __builtin__.sum(sequence, start)
+
     summation = Sum(*args, **kwargs)
 
     if isinstance(summation, Sum):
@@ -291,3 +313,4 @@ def eval_sum_direct(expr, (i, a, b)):
         for j in xrange(a, b+1):
             s += expr
     return s
+

@@ -7,6 +7,17 @@ from sympy.utilities.pytest import XFAIL
 a, b, c, d, m, k = map(Symbol, 'abcdmk')
 n = Symbol('n', integer=True)
 
+def test_builtin_sums():
+    assert sum([]) == 0
+
+    assert sum([], 1) == 1
+    assert sum([], start=1) == 1
+
+    assert sum([1,2,3,4]) == 10
+
+    assert sum([1,2,3,4], 1) == 11
+    assert sum([1,2,3,4], start=1) == 11
+
 def test_arithmetic_sums():
     assert sum(1, (n, a, b)) == b-a+1
     assert sum(1, (n, 1, 10)) == 10
@@ -189,3 +200,4 @@ def test_Product_doit():
     assert Product(n*Integral(a**2), (n, 1, 3)).doit(deep = False) == \
         6*Integral(a**2)**3
     assert product(n*Integral(a**2), (n, 1, 3)) == 6*Integral(a**2)**3
+
