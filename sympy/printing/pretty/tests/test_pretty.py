@@ -2,7 +2,7 @@
 from sympy import (Matrix, Piecewise, Ne, symbols, sqrt, Function,
     Rational, conjugate, Derivative, tan, Function, log, floor, Symbol,
     pprint, sqrt, factorial, pi, sin, ceiling, pprint_use_unicode, I, S,
-    Limit, oo, cos, Pow, Integral, exp, Eq, Lt, Gt, Ge, Le, gamma, Abs)
+    Limit, oo, cos, Pow, Integral, exp, Eq, Lt, Gt, Ge, Le, gamma, Abs, RootOf)
 
 from sympy.printing.pretty import pretty as xpretty
 from sympy.printing.pretty import pprint
@@ -1881,6 +1881,21 @@ x->0  x   \
     assert  pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
+def test_pretty_RootOf():
+    expr = RootOf(x**5 + 11*x - 2, 0)
+    ascii_str = \
+"""\
+      / 5              \\\n\
+RootOf\\x  + 11*x - 2, 0/\
+"""
+    ucode_str = \
+u"""\
+      ⎛ 5              ⎞\n\
+RootOf⎝x  + 11⋅x - 2, 0⎠\
+"""
+
+    assert  pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
 
 def test_pretty_prec():
     assert xpretty(S("0.3"), full_prec=True) == "0.300000000000000"
