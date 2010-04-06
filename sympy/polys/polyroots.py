@@ -6,7 +6,7 @@ from sympy.core.sympify import sympify
 from sympy.core.numbers import Rational
 
 from sympy.ntheory import divisors
-from sympy.functions import exp, sqrt
+from sympy.functions import exp, sqrt, im
 
 from sympy.polys import (
     Poly, cancel, PolynomialError, GeneratorsNeeded,
@@ -21,16 +21,23 @@ def roots_quadratic(f):
     a, b, c = f.all_coeffs()
 
     if c is S.Zero:
-        return [c, -b/a]
+        r0, r1, d = c, -b/a, 0
+    else:
+        d = (b**2).expand() - 4*a*c
+        D = d**S.Half
 
-    d = sqrt((b**2).expand() - 4*a*c)
+        r0 = (-b + D) / (2*a)
+        r1 = (-b - D) / (2*a)
 
-    roots = [
-        (-b + d)/(2*a),
-        (-b - d)/(2*a),
-    ]
+    if r0.is_number and r1.is_number:
+        if d >= 0:
+            if r0 > r1:
+                r0, r1 = r1, r0
+        else:
+            if im(r0) < im(r1):
+                r0, r1 = r1, r0
 
-    return roots
+    return [r0, r1]
 
 def roots_cubic(f):
     """Returns a list of roots of a cubic polynomial."""

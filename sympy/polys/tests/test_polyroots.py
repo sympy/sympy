@@ -39,11 +39,9 @@ def test_roots_linear():
 
 def test_roots_quadratic():
     assert roots_quadratic(Poly(2*x**2, x)) == [0, 0]
-    assert roots_quadratic(Poly(2*x**2+3*x, x)) == [0, -Rational(3, 2)]
-    assert roots_quadratic(Poly(2*x**2+3, x)) == [I*sqrt(6)/2, -I*sqrt(6)/2]
-
-    assert roots_quadratic(Poly(2*x**2+4*x+3, x)) == \
-        [-1 + I*sqrt(2)/2, -1 - I*sqrt(2)/2]
+    assert roots_quadratic(Poly(2*x**2 + 3*x, x)) == [-Rational(3, 2), 0]
+    assert roots_quadratic(Poly(2*x**2 + 3, x)) == [I*sqrt(6)/2, -I*sqrt(6)/2]
+    assert roots_quadratic(Poly(2*x**2 + 4*x+3, x)) == [-1 + I*sqrt(2)/2, -1 - I*sqrt(2)/2]
 
 def test_roots_cubic():
     assert roots_cubic(Poly(2*x**3, x)) == [0, 0, 0]
