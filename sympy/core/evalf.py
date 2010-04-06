@@ -10,9 +10,9 @@ from sympy.mpmath.libmp import (from_int, from_rational, fzero, normalize,
 
 import sympy.mpmath.libmp as libmp
 from sympy.mpmath.libmp.libmpf import dps_to_prec
-from sympy.mpmath import mpf, mpc, quadts, quadosc, mp, make_mpf
+from sympy.mpmath import mpf, mpc, quadts, quadosc, mp, make_mpf, make_mpc
 from sympy.mpmath.libmp import (mpf_pi, mpf_log, mpf_pow, mpf_sin, mpf_cos,
-        mpf_atan, mpf_atan2, mpf_e, mpf_exp, from_man_exp)
+        mpf_atan, mpf_atan2, mpf_e, mpf_exp, from_man_exp, from_int)
 from sympy.mpmath.libmp.backend import MPZ
 from sympy.mpmath import nsum
 from sympy.mpmath import inf as mpmath_inf
@@ -22,7 +22,6 @@ from sympy.mpmath.libmp.gammazeta import mpf_bernoulli
 import math
 
 from basic import C, S
-from expr import EvalfMixin
 from sympify import sympify
 
 LG10 = math.log(10,2)
@@ -990,75 +989,120 @@ def evalf(x, prec, options):
         check_target(x, r, prec)
     return r
 
-def Basic_evalf(x, n=15, subs=None, maxn=100, chop=False, strict=False, quad=None, verbose=False):
-    """
-    Evaluate the given formula to an accuracy of n digits.
-    Optional keyword arguments:
+class EvalfMixin(object):
+    """Mixin class adding evalf capabililty."""
 
-        subs=<dict>
-            Substitute numerical values for symbols, e.g.
-            subs={x:3, y:1+pi}.
+    __slots__ = []
 
-        maxn=<integer>
-            Allow a maximum temporary working precision of maxn digits
-            (default=100)
+    def evalf(self, n=15, subs=None, maxn=100, chop=False, strict=False, quad=None, verbose=False):
+        """
+        Evaluate the given formula to an accuracy of n digits.
+        Optional keyword arguments:
 
-        chop=<bool>
-            Replace tiny real or imaginary parts in subresults
-            by exact zeros (default=False)
+            subs=<dict>
+                Substitute numerical values for symbols, e.g.
+                subs={x:3, y:1+pi}.
 
-        strict=<bool>
-            Raise PrecisionExhausted if any subresult fails to evaluate
-            to full accuracy, given the available maxn
-            (default=False)
+            maxn=<integer>
+                Allow a maximum temporary working precision of maxn digits
+                (default=100)
 
-        quad=<str>
-            Choose algorithm for numerical quadrature. By default,
-            tanh-sinh quadrature is used. For oscillatory
-            integrals on an infinite interval, try quad='osc'.
+            chop=<bool>
+                Replace tiny real or imaginary parts in subresults
+                by exact zeros (default=False)
 
-        verbose=<bool>
-            Print debug information (default=False)
+            strict=<bool>
+                Raise PrecisionExhausted if any subresult fails to evaluate
+                to full accuracy, given the available maxprec
+                (default=False)
 
-    """
-    if not evalf_table:
-        _create_evalf_table()
-    prec = dps_to_prec(n)
-    options = {'maxprec': max(prec,int(maxn*LG10)), 'chop': chop,
+            quad=<str>
+                Choose algorithm for numerical quadrature. By default,
+                tanh-sinh quadrature is used. For oscillatory
+                integrals on an infinite interval, try quad='osc'.
+
+            verbose=<bool>
+                Print debug information (default=False)
+
+        """
+        if not evalf_table:
+            _create_evalf_table()
+        prec = dps_to_prec(n)
+        options = {'maxprec': max(prec,int(maxn*LG10)), 'chop': chop,
                'strict': strict, 'verbose': verbose}
-    if subs is not None:
-        options['subs'] = subs
-    if quad is not None:
-        options['quad'] = quad
-    try:
-        result = evalf(x, prec+4, options)
-    except NotImplementedError:
-        # Fall back to the ordinary evalf
-        v = x._eval_evalf(prec)
-        if v is None:
-            return x
+        if subs is not None:
+            options['subs'] = subs
+        if quad is not None:
+            options['quad'] = quad
         try:
-            # If the result is numerical, normalize it
-            result = evalf(v, prec, options)
-        except:
-            # Probably contains symbols or unknown functions
-            return v
-    re, im, re_acc, im_acc = result
-    if re:
-        p = max(min(prec, re_acc), 1)
-        #re = mpf_pos(re, p, round_nearest)
-        re = C.Real._new(re, p)
-    else:
-        re = S.Zero
-    if im:
-        p = max(min(prec, im_acc), 1)
-        #im = mpf_pos(im, p, round_nearest)
-        im = C.Real._new(im, p)
-        return re + im*S.ImaginaryUnit
-    else:
-        return re
+            result = evalf(self, prec+4, options)
+        except NotImplementedError:
+            # Fall back to the ordinary evalf
+            v = self._eval_evalf(prec)
+            if v is None:
+                return self
+            try:
+                # If the result is numerical, normalize it
+                result = evalf(v, prec, options)
+            except:
+                # Probably contains symbols or unknown functions
+                return v
+        re, im, re_acc, im_acc = result
+        if re:
+            p = max(min(prec, re_acc), 1)
+            #re = mpf_pos(re, p, round_nearest)
+            re = C.Real._new(re, p)
+        else:
+            re = S.Zero
+        if im:
+            p = max(min(prec, im_acc), 1)
+            #im = mpf_pos(im, p, round_nearest)
+            im = C.Real._new(im, p)
+            return re + im*S.ImaginaryUnit
+        else:
+            return re
 
-EvalfMixin.evalf = EvalfMixin.n = Basic_evalf
+    n = evalf
+
+    def _evalf(self, prec):
+        """Helper for evalf. Does the same thing but takes binary precision"""
+        r = self._eval_evalf(prec)
+        if r is None:
+            r = self
+        return r
+
+    def _eval_evalf(self, prec):
+        return
+
+    def _seq_eval_evalf(self, prec):
+        return self.func(*[s._evalf(prec) for s in self.args])
+
+    def _to_mpmath(self, prec, allow_ints=True):
+        # mpmath functions accept ints as input
+        errmsg = "cannot convert to mpmath number"
+        if allow_ints and self.is_Integer:
+            return self.p
+        v = self._eval_evalf(prec)
+        if v is None:
+            raise ValueError(errmsg)
+        if v.is_Real:
+            return make_mpf(v._mpf_)
+        # Number + Number*I is also fine
+        re, im = v.as_real_imag()
+        if allow_ints and re.is_Integer:
+            re = from_int(re.p)
+        elif re.is_Real:
+            re = re._mpf_
+        else:
+            raise ValueError(errmsg)
+        if allow_ints and im.is_Integer:
+            im = from_int(im.p)
+        elif im.is_Real:
+            im = im._mpf_
+        else:
+            raise ValueError(errmsg)
+        return make_mpc((re, im))
+
 
 def N(x, n=15, **options):
     """
@@ -1076,4 +1120,3 @@ def N(x, n=15, **options):
 
     """
     return sympify(x).evalf(n, **options)
-

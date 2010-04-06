@@ -1,5 +1,5 @@
 from basic import Basic, SingletonMeta, S
-from expr import EvalfMixin
+from evalf import EvalfMixin
 from sympify import _sympify
 from sympy.mpmath import mpi
 

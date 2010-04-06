@@ -1,52 +1,8 @@
 
-import sympy.mpmath as mpmath
-from sympy.core.basic import Basic, S, C
+from basic import Basic, S, C
+from evalf import EvalfMixin
 from decorators import _sympifyit
 from cache import cacheit
-
-class EvalfMixin(object):
-    """Mixin class adding evalf capabililty."""
-
-    __slots__ = []
-
-    def _evalf(self, prec):
-        """Helper for evalf. Does the same thing but takes binary precision"""
-        r = self._eval_evalf(prec)
-        if r is None:
-            r = self
-        return r
-
-    def _eval_evalf(self, prec):
-        return
-
-    def _seq_eval_evalf(self, prec):
-        return self.__class__(*[s._evalf(prec) for s in self.args])
-
-    def _to_mpmath(self, prec, allow_ints=True):
-        # mpmath functions accept ints as input
-        errmsg = "cannot convert to mpmath number"
-        if allow_ints and self.is_Integer:
-            return self.p
-        v = self._eval_evalf(prec)
-        if v is None:
-            raise ValueError(errmsg)
-        if v.is_Real:
-            return mpmath.make_mpf(v._mpf_)
-        # Number + Number*I is also fine
-        re, im = v.as_real_imag()
-        if allow_ints and re.is_Integer:
-            re = mpmath.libmp.from_int(re.p)
-        elif re.is_Real:
-            re = re._mpf_
-        else:
-            raise ValueError(errmsg)
-        if allow_ints and im.is_Integer:
-            im = mpmath.libmp.from_int(im.p)
-        elif im.is_Real:
-            im = im._mpf_
-        else:
-            raise ValueError(errmsg)
-        return mpmath.make_mpc((re, im))
 
 
 class Expr(Basic, EvalfMixin):
