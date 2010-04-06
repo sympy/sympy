@@ -1,7 +1,8 @@
 """Inference in propositional logic"""
 from sympy.logic.boolalg import And, Or, Not, Implies, Equivalent, \
     conjuncts, to_cnf
-from sympy.core import Symbol, sympify
+from sympy.core.basic import C
+from sympy.core.sympify import sympify
 
 def literal_symbol(literal):
     """The symbol in this literal (without the negation).
@@ -131,7 +132,7 @@ class PropKB(KB):
         query_conjuncts.extend(conjuncts(to_cnf(query)))
         s = set()
         for q in query_conjuncts:
-            s = s.union(q.atoms(Symbol))
+            s = s.union(q.atoms(C.Symbol))
         return bool(dpll(query_conjuncts, list(s), {}))
 
     def retract(self, sentence):

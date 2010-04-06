@@ -1,4 +1,4 @@
-from sympy.core.basic import S, C, sympify
+from sympy.core import S, C, sympify, Wild
 from sympy.core.function import Lambda, Function, expand_log
 from sympy.core.cache import cacheit
 from sympy.core.symbol import Wild
@@ -529,4 +529,3 @@ class LambertW(Function):
             return LambertW(x)/(x*(1+LambertW(x)))
         else:
             raise ArgumentIndexError(self, argindex)
-

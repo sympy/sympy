@@ -1,4 +1,4 @@
-from sympy.core.symbol import Symbol
+from sympy.core import C
 
 def iff(condition, result1, result2):
     """
@@ -296,7 +296,7 @@ def variations(seq, n, repetition=False):
         cartesmodus = 'triple'
     return [[seq[index] for index in indices] for indices in result]
 
-def numbered_symbols(prefix='x', function=Symbol, start=0, *args, **assumptions):
+def numbered_symbols(prefix='x', function=None, start=0, *args, **assumptions):
     """
     Generate an infinite stream of Symbols consisting of a prefix and
     increasing subscripts.
@@ -319,6 +319,8 @@ def numbered_symbols(prefix='x', function=Symbol, start=0, *args, **assumptions)
     sym : Symbol
         The subscripted symbols.
     """
+    if function is None:
+        function = C.Symbol
 
     while True:
         name = '%s%s' % (prefix, start)

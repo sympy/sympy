@@ -463,7 +463,7 @@ class WildFunction(Function, Atom):
 
     def __new__(cls, name=None, **assumptions):
         if name is None:
-            name = 'Wf%s' % (Symbol.dummycount + 1) # XXX refactor dummy counting
+            name = 'Wf%s' % (C.Symbol.dummycount + 1) # XXX refactor dummy counting
             Symbol.dummycount += 1
         obj = Function.__new__(cls, name, **assumptions)
         obj.name = name
@@ -527,7 +527,7 @@ class Derivative(Expr):
 
             if isinstance(s, Integer):
                 continue
-            elif isinstance(s, Symbol):
+            elif isinstance(s, C.Symbol):
                 # handle cases like (x, 3)
                 if isinstance(next_s, Integer):
                     # yield (x, x, x)
@@ -540,7 +540,8 @@ class Derivative(Expr):
 
     def __new__(cls, expr, *symbols, **assumptions):
         expr = sympify(expr)
-        if not symbols: return expr
+        if not symbols:
+            return expr
         symbols = Derivative._symbolgen(*symbols)
         if expr.is_commutative:
             assumptions["commutative"] = True
@@ -560,7 +561,7 @@ class Derivative(Expr):
         unevaluated_symbols = []
         for s in symbols:
             s = sympify(s)
-            if not isinstance(s, Symbol):
+            if not isinstance(s, C.Symbol):
                 raise ValueError('Invalid literal: %s is not a valid variable' % s)
             if not expr.has(s):
                 return S.Zero
@@ -700,7 +701,7 @@ class Lambda(Function):
         nargs = len(args)-1
 
         expression = args[nargs]
-        funargs = [Symbol(arg.name, dummy=True) for arg in args[:nargs]]
+        funargs = [C.Symbol(arg.name, dummy=True) for arg in args[:nargs]]
         #probably could use something like foldl here
         for arg,funarg in zip(args[:nargs],funargs):
             expression = expression.subs(arg,funarg)
@@ -1052,5 +1053,3 @@ def expand_complex(expr, deep=True):
 from numbers import Rational, Integer
 from sympify import sympify
 from add    import Add
-from symbol import Symbol
-

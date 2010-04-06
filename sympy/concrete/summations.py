@@ -1,6 +1,4 @@
-from sympy.core import (Expr, S, C, Add, Mul, Symbol, Equality, Interval,
-    sympify, symbols, Wild)
-from sympy.functions import factorial
+from sympy.core import Expr, S, C, Symbol, Equality, Interval, sympify, Wild
 from sympy.solvers import solve
 from sympy.utilities import flatten
 

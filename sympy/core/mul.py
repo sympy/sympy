@@ -2,8 +2,6 @@ from basic import Basic, S
 from operations import AssocOp
 from cache import cacheit
 from logic import fuzzy_not
-from symbol import Symbol, Wild
-from sympy.utilities.iterables import make_list
 
 # internal marker to indicate:
 #   "there are still non-commutative objects -- don't forget to process them"
@@ -416,6 +414,8 @@ class Mul(AssocOp):
 
         sums must be a list of instances of Basic.
         """
+        from sympy.utilities.iterables import make_list
+
         L = len(sums)
         if L == 1:
             return sums[0].args
@@ -600,6 +600,7 @@ class Mul(AssocOp):
                 pp.remove(p)
 
         # only one symbol left in pattern -> match the remaining expression
+        from symbol import Wild
         if len(pp) == 1 and isinstance(pp[0], Wild):
             if len(ee) == 1:
                 d[pp[0]] = sign * ee[0]
@@ -656,6 +657,7 @@ class Mul(AssocOp):
 
     @cacheit
     def count_ops(self, symbolic=True):
+        from symbol import Symbol
         if symbolic:
             return Add(*[t.count_ops(symbolic) for t in self.args]) + \
                 Symbol('MUL') * (len(self.args) - 1)

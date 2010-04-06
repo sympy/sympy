@@ -192,7 +192,7 @@ anything is broken, one of those tests will surely fail.
 
 """
 from sympy.core import Add, Basic, C, S, Mul, Pow
-from sympy.core.function import Derivative, diff, expand_mul, Function
+from sympy.core.function import Derivative, diff, expand_mul
 from sympy.core.multidimensional import vectorize
 from sympy.core.relational import Equality, Eq
 from sympy.core.symbol import Symbol, Wild

@@ -709,6 +709,7 @@ class RootsOf(Expr):
     def atoms(self, *args, **kwargs):
         return self.poly.atoms(*args, **kwargs)
 
+
 class RootSum(Expr):
     """Represents a sum of all roots of a univariate polynomial. """
 

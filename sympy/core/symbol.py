@@ -2,10 +2,11 @@
 from basic import Atom, S, C
 from expr import Expr
 from cache import cacheit
+from sympy.logic.boolalg import Boolean
 
 import re
 
-class Symbol(Atom, Expr):
+class Symbol(Atom, Expr, Boolean):
     """
     Assumptions::
        commutative = True

@@ -1,7 +1,6 @@
 from expr import Expr
 from sympify import _sympify
 from cache import cacheit
-from symbol import Symbol, Wild
 
 from sympy import mpmath
 
@@ -778,4 +777,4 @@ from basic import S, C
 from add import Add
 from numbers import Integer
 from mul import Mul
-
+from symbol import Symbol, Wild

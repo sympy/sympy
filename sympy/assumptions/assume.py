@@ -1,5 +1,7 @@
 # doctests are disabled because of issue #1521
-from sympy.core import Basic, Symbol
+from sympy.core import  Symbol
+from sympy.core.relational import Relational
+from sympy.logic.boolalg import Boolean
 
 class AssumptionsContext(set):
     """Set representing assumptions.
@@ -31,7 +33,7 @@ class AssumptionsContext(set):
 
 global_assumptions = AssumptionsContext()
 
-class Assume(Basic):
+class Assume(Boolean):
     """New-style assumptions.
 
     >>> from sympy import Assume, Q

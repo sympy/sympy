@@ -1,10 +1,35 @@
 """Boolean algebra module for SymPy"""
-from sympy.core import Basic, Function, sympify, Symbol
-from sympy.utilities import make_list
+from sympy.core.basic import Basic
 from sympy.core.operations import LatticeOp
+from sympy.core.function import Function, sympify
+
+class Boolean(Basic):
+    """A boolean object is an object for which logic operations make sense."""
+
+    __slots__ = []
+
+    def __and__(self, other):
+        """Overloading for & operator"""
+        return And(self, other)
+
+    def __or__(self, other):
+        """Overloading for |"""
+        return Or(self, other)
+
+    def __invert__(self):
+        """Overloading for ~"""
+        return Not(self)
+
+    def __rshift__(self, other):
+        """Overloading for >>"""
+        return Implies(self, other)
+
+    def __lshift__(self, other):
+        """Overloading for <<"""
+        return Implies(other, self)
 
 
-class BooleanFunction(Function):
+class BooleanFunction(Function, Boolean):
     """Boolean function is a function that lives in a boolean space
     It is used as base class for And, Or, Not, etc.
     """
@@ -153,6 +178,7 @@ def conjuncts(expr):
     [Or(A, B)]
 
     """
+    from sympy.utilities import make_list
     return make_list(expr, And)
 
 def disjuncts(expr):
@@ -165,6 +191,7 @@ def disjuncts(expr):
     [And(A, B)]
 
     """
+    from sympy.utilities import make_list
     return make_list(expr, Or)
 
 def distribute_and_over_or(expr):
@@ -228,6 +255,7 @@ def compile_rule(s):
     TODO: can this be replaced by sympify ?
     """
     import re
+    from sympy.core import Symbol
     return eval(re.sub(r'([a-zA-Z0-9_.]+)', r'Symbol("\1")', s), {'Symbol' : Symbol})
 
 
@@ -248,5 +276,6 @@ def to_int_repr(clauses, symbols):
         else:
             return symbols.index(arg)+1
 
+    from sympy.utilities import make_list
     return [set(append_symbol(arg, symbols) for arg in make_list(c, Or)) \
                                                             for c in clauses]

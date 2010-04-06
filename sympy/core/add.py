@@ -1,7 +1,6 @@
 from basic import Basic, S, C
 from operations import AssocOp
 from cache import cacheit
-from symbol import Symbol
 
 class Add(AssocOp):
 
@@ -295,7 +294,9 @@ class Add(AssocOp):
         return S.One,(self,)
 
     def _eval_subs(self, old, new):
-        if self == old: return new
+        if self == old:
+            return new
+        from function import FunctionClass
         if isinstance(old, FunctionClass):
             return self.__class__(*[s._eval_subs(old, new) for s in self.args ])
         coeff_self, factors_self = self.as_coeff_factors()
@@ -495,5 +496,4 @@ class Add(AssocOp):
         return list(self.args)
 
 from mul import Mul
-from function import FunctionClass
-
+from symbol import Symbol

@@ -989,6 +989,7 @@ def evalf(x, prec, options):
         check_target(x, r, prec)
     return r
 
+
 class EvalfMixin(object):
     """Mixin class adding evalf capabililty."""
 
