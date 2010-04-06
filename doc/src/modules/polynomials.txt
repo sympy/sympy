@@ -214,10 +214,11 @@ polynomials and to solve some systems of polynomial equations::
     [(5, 5)]
 
     >>> solve_poly_system([y**2 - x**3 + 1, y*x], x, y)
-                                  ___                  ___
-                              I*\/ 3               I*\/ 3
-    [(0, -I), (1, 0), (-1/2 - -------, 0), (-1/2 + -------, 0), (0, I)]
-                                 2                    2
+                                         ___                  ___
+                                      I*\/ 3               I*\/ 3
+    [(0, I), (0, -I), (1, 0), (-1/2 + -------, 0), (-1/2 - -------, 0)]
+                                         2                    2
+
 
 Poly
 ~~~~
