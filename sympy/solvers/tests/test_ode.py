@@ -707,10 +707,12 @@ def test_nth_linear_constant_coeff_homogeneous_RootOf():
     # We have to test strings because _m is a dummy variable
     _m = Symbol('_m')
     eq = f(x).diff(x, 5) + 11*f(x).diff(x) - 2*f(x)
-    solstr = "f(x) == C1*exp(x*RootOf(_m**5 + 11*_m - 2, _m, domain='ZZ', index=0)) + C2" + \
-        "*exp(x*RootOf(_m**5 + 11*_m - 2, _m, domain='ZZ', index=1)) + C3*exp(x*RootOf(_" + \
-        "m**5 + 11*_m - 2, _m, domain='ZZ', index=2)) + C4*exp(x*RootOf(_m**5 + 11*_m - " + \
-        "2, _m, domain='ZZ', index=3)) + C5*exp(x*RootOf(_m**5 + 11*_m - 2, _m, domain='ZZ', index=4))"
+    solstr = "f(x) == " + \
+        "C1*exp(x*RootOf(_m**5 + 11*_m - 2, 0)) + " + \
+        "C2*exp(x*RootOf(_m**5 + 11*_m - 2, 1)) + " + \
+        "C3*exp(x*RootOf(_m**5 + 11*_m - 2, 2)) + " + \
+        "C4*exp(x*RootOf(_m**5 + 11*_m - 2, 3)) + " + \
+        "C5*exp(x*RootOf(_m**5 + 11*_m - 2, 4))"
     assert str(dsolve(eq, f(x))) == solstr
 
 @XFAIL

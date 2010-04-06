@@ -210,7 +210,7 @@ from sympy.core.sympify import sympify
 
 from sympy.functions import cos, exp, im, log, re, sin, sign
 from sympy.matrices import wronskian
-from sympy.polys import RootsOf, discriminant, RootOf
+from sympy.polys import Poly, RootOf
 from sympy.series import Order
 from sympy.simplify import collect, logcombine, powsimp, separatevars, \
     simplify, trigsimp
@@ -2216,11 +2216,11 @@ def ode_nth_linear_constant_coeff_homogeneous(eq, func, order, match, returns='s
     >>> dsolve(f(x).diff(x, 5) + 10*f(x).diff(x) - 2*f(x), f(x),
     ... hint='nth_linear_constant_coeff_homogeneous')
     ... # doctest: +NORMALIZE_WHITESPACE
-    f(x) == C1*exp(x*RootOf(_m**5 + 10*_m - 2, _m, domain='ZZ', index=0)) + \
-    C2*exp(x*RootOf(_m**5 + 10*_m - 2, _m, domain='ZZ', index=1)) + \
-    C3*exp(x*RootOf(_m**5 + 10*_m - 2, _m, domain='ZZ', index=2)) + \
-    C4*exp(x*RootOf(_m**5 + 10*_m - 2, _m, domain='ZZ', index=3)) + \
-    C5*exp(x*RootOf(_m**5 + 10*_m - 2, _m, domain='ZZ', index=4))
+    f(x) == C1*exp(x*RootOf(_m**5 + 10*_m - 2, 0)) + \
+    C2*exp(x*RootOf(_m**5 + 10*_m - 2, 1)) + \
+    C3*exp(x*RootOf(_m**5 + 10*_m - 2, 2)) + \
+    C4*exp(x*RootOf(_m**5 + 10*_m - 2, 3)) + \
+    C5*exp(x*RootOf(_m**5 + 10*_m - 2, 4))
 
     Note that because this method does not involve integration, there is
     no 'nth_linear_constant_coeff_homogeneous_Integral' hint.
@@ -2271,28 +2271,17 @@ def ode_nth_linear_constant_coeff_homogeneous(eq, func, order, match, returns='s
             pass
         else:
             chareq += r[i]*m**i
-    chareqroots = RootsOf(chareq, m)
-    charroots_exact = list(chareqroots.exact_roots())
-    charroots_formal = list(chareqroots.formal_roots())
-    if charroots_formal and discriminant(chareq, m) == 0:
-        # If Poly cannot find the roots explicitly, we can only return
-        # an expression in terms of RootOf's if we know the roots
-        # are not repeated.  We use the fact that a polynomial has
-        # repeated roots iff its discriminant == 0.
 
-        # Ideally, RootOf would cancel out roots from charroots_exact, so
-        # we check the discriminant of only the unknown part of the chareq.
-        # See issue 1557.
-        raise NotImplementedError("Cannot find all of the roots of " + \
-        "characteristic equation " + str(chareq) + ", which has " + \
-        "repeated roots.")
+    chareq = Poly(chareq, m)
+    chareqroots = [ RootOf(chareq, k) for k in xrange(chareq.degree()) ]
+
     # Create a dict root: multiplicity or charroots
     charroots = {}
-    for i in charroots_exact + charroots_formal:
-        if i in charroots:
-            charroots[i] += 1
+    for root in chareqroots:
+        if root in charroots:
+            charroots[root] += 1
         else:
-            charroots[i] = 1
+            charroots[root] = 1
     gsol = S(0)
     # We need keep track of terms so we can run collect() at the end.
     # This is necessary for constantsimp to work properly.
