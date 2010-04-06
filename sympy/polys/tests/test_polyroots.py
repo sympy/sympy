@@ -93,7 +93,7 @@ def test_roots_binomial():
     A = 10**Rational(3, 4)/10
 
     assert roots_binomial(Poly(5*x**4+2, x)) == \
-        [A+I*A, -A+I*A, -A-I*A, A-I*A]
+        [-A+I*A, -A-I*A, A+I*A, A-I*A]
 
     a1 = Symbol('a1', nonnegative=True)
     b1 = Symbol('b1', nonnegative=True)
