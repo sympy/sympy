@@ -665,7 +665,8 @@ class PrettyPrinter(Printer):
             return self._print(expr.as_basic())
 
     def _print_RootOf(self, expr):
-        pform = prettyForm(*self._print_seq(expr.args).parens())
+        args = [self._print_Add(expr.expr, order='lex'), expr.index]
+        pform = prettyForm(*self._print_seq(args).parens())
         pform = prettyForm(*pform.left('RootOf'))
         return pform
 

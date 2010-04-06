@@ -5,7 +5,7 @@ from sympy import (Abs, Catalan, cos, Derivative, E, EulerGamma, exp, factorial,
     Dummy)
 from sympy.core import Expr
 from sympy.physics.units import second
-from sympy.polys import Poly, RootsOf, RootOf, RootSum
+from sympy.polys import Poly, RootOf, RootSum
 from sympy.statistics.distributions import Normal, Sample, Uniform
 from sympy.geometry import Point, Circle
 from sympy.utilities.pytest import XFAIL, raises
@@ -283,10 +283,9 @@ def test_Relational():
     assert str(Rel(x+y, y, "==")) == "x + y == y"
 
 def test_Roots():
-    f = Poly(x**17 + 2*x - 1, x)
-    assert str(RootsOf(f)) == "RootsOf(x**17 + 2*x - 1, x, domain='ZZ')"
-    assert str(RootOf(f, 0)) == "RootOf(x**17 + 2*x - 1, x, domain='ZZ', index=0)"
-    assert str(RootSum(Lambda(z, z**2), f)) == "RootSum(Lambda(_z, _z**2), x**17 + 2*x - 1, x, domain='ZZ')"
+    f = Poly(x**5 + 2*x - 1, x)
+    assert str(RootOf(f, 0)) == "RootOf(x**5 + 2*x - 1, 0)"
+    assert str(RootSum(Lambda(z, z**2), f)) == "RootSum(Lambda(_z, _z**2), x**5 + 2*x - 1, x, domain='ZZ')"
 
 def test_Sample():
     assert str(Sample([x, y, 1])) in [

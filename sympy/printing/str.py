@@ -341,7 +341,7 @@ class StrPrinter(Printer):
                            self.parenthesize(expr.rhs, precedence(expr)))
 
     def _print_RootOf(self, expr):
-        return "RootOf(%s, %d)" % (self._print(expr.expr), expr.index)
+        return "RootOf(%s, %d)" % (self._print_Add(expr.expr, order='lex'), expr.index)
 
     def _print_RootSum(self, expr):
         func = self._print(expr.function)
