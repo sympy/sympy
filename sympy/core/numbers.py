@@ -1,4 +1,5 @@
-from basic import Atom, SingletonMeta, S, Expr, Basic
+from basic import Atom, SingletonMeta, S, Basic
+from expr import Expr
 from decorators import _sympifyit
 from cache import Memoizer, cacheit, clear_cache
 import sympy.mpmath as mpmath

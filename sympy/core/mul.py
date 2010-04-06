@@ -2,7 +2,6 @@ from basic import Basic, S
 from operations import AssocOp
 from cache import cacheit
 from logic import fuzzy_not
-from numbers import Integer, Rational
 from symbol import Symbol, Wild
 from sympy.utilities.iterables import make_list
 
@@ -954,7 +953,7 @@ class Mul(AssocOp):
         return list(self.args)
 
 from power import Pow
-from numbers import Real
+from numbers import Real, Integer, Rational
 from function import FunctionClass
 from sympify import sympify
 from add import Add

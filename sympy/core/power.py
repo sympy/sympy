@@ -1,4 +1,4 @@
-from basic import Expr
+from expr import Expr
 from sympify import _sympify
 from cache import cacheit
 from symbol import Symbol, Wild

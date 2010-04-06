@@ -1,11 +1,11 @@
-from basic import Expr, S, C
+from basic import S, C
+from expr import Expr
 from sympify import _sympify
 from cache import cacheit
 
 # from add import Add   /cyclic/
 # from mul import Mul   /cyclic/
 # from function import Lambda, WildFunction /cyclic/
-from symbol import Symbol, Wild
 
 class AssocOp(Expr):
     """ Associative operations, can separate noncommutative and
@@ -70,6 +70,7 @@ class AssocOp(Expr):
         if cls is Mul: return S.One
         if cls is Add: return S.Zero
         if cls is C.Composition:
+            from symbol import Symbol
             s = Symbol('x',dummy=True)
             return Lambda(s,s)
         raise NotImplementedError("identity not defined for class %r" % (cls.__name__))
@@ -154,6 +155,7 @@ class AssocOp(Expr):
         wild_part = []
         exact_part = []
         from function import WildFunction
+        from symbol import Wild
         for p in self.args:
             if p.atoms(Wild, WildFunction):
                 # not all Wild should stay Wilds, for example:

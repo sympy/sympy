@@ -191,8 +191,8 @@ method. The existing code is tested extensively in test_ode.py, so if
 anything is broken, one of those tests will surely fail.
 
 """
-from sympy.core.basic import Add, Basic, C, Mul, Pow
-from sympy.core.function import Derivative, diff, expand_mul
+from sympy.core import Add, Basic, C, S, Mul, Pow
+from sympy.core.function import Derivative, diff, expand_mul, Function
 from sympy.core.multidimensional import vectorize
 from sympy.core.relational import Equality, Eq
 from sympy.core.symbol import Symbol, Wild
@@ -2155,7 +2155,6 @@ def ode_nth_linear_constant_coeff_homogeneous(eq, func, order, match, returns='s
           Dover 1963, pp. 211
 
     """
-    from sympy.core.basic import S
     x = func.args[0]
     f = func.func
     r = match

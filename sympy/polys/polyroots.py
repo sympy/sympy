@@ -1,7 +1,7 @@
 from sympy.core.symbol import Symbol
 from sympy.core.add import Add
 from sympy.core.mul import Mul
-from sympy.core.basic import Expr, S
+from sympy.core import Expr, S
 from sympy.core.sympify import sympify
 from sympy.core.numbers import Rational
 

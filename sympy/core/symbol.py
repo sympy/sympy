@@ -1,5 +1,6 @@
 
-from basic import Atom, Expr
+from basic import Atom, S, C
+from expr import Expr
 from cache import cacheit
 
 import re
@@ -66,6 +67,7 @@ class Symbol(Atom, Expr):
         return Dummy(self.name, self.is_commutative, **self.assumptions0)
 
     def __call__(self, *args):
+        from function import Function
         return Function(self.name, nargs=len(args))(*args, **self.assumptions0)
 
     def _eval_expand_complex(self, deep=True, **hints):
@@ -288,6 +290,4 @@ def var(*names, **kwargs):
         # doc
         del frame
 
-from basic import S, C
 from sympify import sympify
-from function import Function

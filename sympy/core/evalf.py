@@ -21,7 +21,8 @@ from sympy.mpmath.libmp.gammazeta import mpf_bernoulli
 
 import math
 
-from basic import EvalfMixin, C, S
+from basic import C, S
+from expr import EvalfMixin
 from sympify import sympify
 
 LG10 = math.log(10,2)

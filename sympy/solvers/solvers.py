@@ -14,11 +14,7 @@
 """
 
 from sympy.core.sympify import sympify
-from sympy.core.basic import S, Mul
-from sympy.core.add import Add
-from sympy.core.power import Pow
-from sympy.core.symbol import Symbol, Wild
-from sympy.core.relational import Equality
+from sympy.core import S, Mul, Add, Pow, Symbol, Wild, Equality
 from sympy.core.numbers import ilcm
 
 from sympy.functions import log, exp, LambertW

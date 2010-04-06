@@ -58,7 +58,8 @@ def sympify(a, locals=None, convert_xor=True):
         return a
     if a is None:
         return a
-    elif isinstance(a, (int, long)):
+    from numbers import Integer, Real
+    if isinstance(a, (int, long)):
         return Integer(a)
     elif isinstance(a, (float, decimal.Decimal)):
         return Real(a)
@@ -146,7 +147,9 @@ def _sympify(a):
         return a
     if isinstance(a, BasicType):
         return a
-    elif isinstance(a, (int, long)):
+
+    from numbers import Integer, Real
+    if isinstance(a, (int, long)):
         return Integer(a)
     elif isinstance(a, (float, decimal.Decimal)):
         return Real(a)
@@ -185,8 +188,4 @@ def _sympify(a):
     raise SympifyError("%r is NOT a valid SymPy expression" % (a,))
 
 
-
-
-
-from numbers import Integer, Real
 from basic import Basic, BasicType, S

@@ -30,12 +30,12 @@ Example:
 
 """
 
-from basic import Expr, Atom, S, C
-from basic import BasicMeta
+from basic import BasicMeta, Atom, S, C
+from expr import Expr
 from cache import cacheit
 from itertools import repeat
-from numbers import Rational, Integer
-from symbol import Symbol
+#from numbers import Rational, Integer
+#from symbol import Symbol
 from multidimensional import vectorize
 from sympy.utilities.decorator import deprecated
 from sympy.utilities import all
@@ -1049,6 +1049,8 @@ def expand_complex(expr, deep=True):
     return sympify(expr).expand(deep=deep, complex=True, basic=False,\
     log=False, mul=False, power_exp=False, power_base=False, multinomial=False)
 
-
+from numbers import Rational, Integer
 from sympify import sympify
 from add    import Add
+from symbol import Symbol
+

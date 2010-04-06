@@ -3,7 +3,7 @@ from sympy import abs, Catalan, cos, Derivative, E, EulerGamma, exp, factorial,\
                   Limit, log, Matrix, nan, O, oo, pi, Rational, Real, Rel, S,\
                   sin, SMatrix, sqrt, sum, Sum, Sum2, Symbol, symbols, Wild,\
                   WildFunction, zeta, zoo, raises
-from sympy.core.basic import Expr
+from sympy.core import Expr
 from sympy.physics.units import second
 from sympy.polys import Poly, RootsOf, RootOf, RootSum
 from sympy.statistics.distributions import Normal, Sample, Uniform

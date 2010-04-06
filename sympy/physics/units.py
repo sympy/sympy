@@ -5,7 +5,7 @@ The base class is Unit, where all here defined units (~200) inherit from.
 """
 
 from sympy import Rational, pi
-from sympy.core.basic import Atom, Expr
+from sympy.core import Atom, Expr
 
 class Unit(Atom, Expr):
     """
