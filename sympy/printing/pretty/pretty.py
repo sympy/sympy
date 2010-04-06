@@ -405,11 +405,11 @@ class PrettyPrinter(Printer):
         else:
             return self._print_Function(e)
 
-    def _print_Add(self, expr):
-        if self.order is None:
+    def _print_Add(self, expr, order=None):
+        if order is None and self.order is None:
             terms = sorted(expr.args, Basic._compare_pretty)
         else:
-            terms = [ elt[-1] for elt in self.analyze(expr) ]
+            terms = [ elt[-1] for elt in self.analyze(expr, order) ]
 
         pforms = []
 

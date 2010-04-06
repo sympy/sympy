@@ -200,17 +200,7 @@ class Printer(object):
         self._print_level = 0
 
         # configure ordering of terms in Add (e.g. lexicographic ordering)
-        if self._settings["order"] is not None:
-            order = self._settings["order"]
-            if order.startswith('rev-'):
-                self.order = monomial_cmp(order[4:])
-                self.reverse = True
-            else:
-                self.order = monomial_cmp(order)
-                self.reverse = False
-        else:
-            self.order = None
-            self.reverse = False
+        self.order, self.reverse = self.parse_order(self._settings["order"])
 
     def doprint(self, expr):
         """Returns printer's representation for expr (as a string)"""
@@ -245,8 +235,13 @@ class Printer(object):
         finally:
             self._print_level -= 1
 
-    def analyze(self, expr):
+    def analyze(self, expr, order=None):
         """Rewrite an expression as sorted list of terms. """
+        if order is not None:
+            order, reverse = self.parse_order(order)
+        else:
+            order, reverse = None, None
+
         gens, terms = set([]), []
 
         for term in Add.make_args(expr):
@@ -283,17 +278,23 @@ class Printer(object):
 
             result.append((coeff, monom, ncpart, term))
 
-        if self.order is None:
+        if order is None and self.order is None:
             return sorted(result, Basic._compare_pretty)
         else:
-            return sorted(result, self._compare_terms)
+            return sorted(result, lambda a, b: \
+                self._compare_terms(a, b, order=order, reverse=reverse))
 
-    def _compare_terms(self, a, b):
+    def _compare_terms(self, a, b, order=None, reverse=None):
         """Compare two terms using data from Printer.analyze(). """
         a_coeff, a_monom, a_ncpart, _ = a
         b_coeff, b_monom, b_ncpart, _ = b
 
-        result = self.order(a_monom, b_monom)
+        if order is None:
+            order = self.order
+        if reverse is None:
+            reverse = self.reverse
+
+        result = order(a_monom, b_monom)
 
         if not result:
             if not (a_ncpart or b_ncpart):
@@ -304,8 +305,23 @@ class Printer(object):
                 if not result:
                     result = cmp(a_coeff, b_coeff)
 
-        if not self.reverse:
+        if not reverse:
             return -result
         else:
             return result
 
+    @classmethod
+    def parse_order(cls, order):
+        """Parse and configure ordering of terms in Add. """
+        if order is not None:
+            if order.startswith('rev-'):
+                order = monomial_cmp(order[4:])
+                reverse = True
+            else:
+                order = monomial_cmp(order)
+                reverse = False
+        else:
+            order = None
+            reverse = False
+
+        return order, reverse
