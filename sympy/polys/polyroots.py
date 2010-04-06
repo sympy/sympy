@@ -6,7 +6,7 @@ from sympy.core.sympify import sympify
 from sympy.core.numbers import Rational
 
 from sympy.ntheory import divisors
-from sympy.functions import exp, sqrt, im
+from sympy.functions import exp, sqrt, re, im
 
 from sympy.polys import (
     Poly, cancel, PolynomialError, GeneratorsNeeded,
@@ -192,6 +192,17 @@ def roots_binomial(f):
     for k in xrange(n):
         zeta = exp(2*k*S.Pi*I/n).expand(complex=True)
         roots.append((alpha*zeta).expand(power_base=False))
+
+    if all([ r.is_number for r in roots ]):
+        reals, complexes = [], []
+
+        for root in roots:
+            if root.is_real:
+                reals.append(root)
+            else:
+                complexes.append(root)
+
+        roots = sorted(reals) + sorted(complexes, key=lambda r: (re(r), -im(r)))
 
     return roots
 
