@@ -83,6 +83,8 @@ from sympy.polys.rootisolation import (
     dup_isolate_all_roots_sqf,
     dup_isolate_all_roots,
     dup_refine_real_root,
+    dup_count_real_roots,
+    dup_count_complex_roots,
 )
 
 from sympy.polys.factortools import (
@@ -1551,6 +1553,14 @@ class DMP(object):
             return dup_refine_real_root(f.rep, s, t, f.dom, eps=eps, steps=steps, fast=fast)
         else:
             raise PolynomialError("can't refine a root of a multivariate polynomial")
+
+    def count_real_roots(f, inf=None, sup=None):
+        """Return the number of real roots of ``f`` in ``[inf, sup]``. """
+        return dup_count_real_roots(f.rep, f.dom, inf=inf, sup=sup)
+
+    def count_complex_roots(f, inf=None, sup=None):
+        """Return the number of complex roots of ``f`` in ``[inf, sup]``. """
+        return dup_count_complex_roots(f.rep, f.dom, inf=inf, sup=sup)
 
     @property
     def is_zero(f):

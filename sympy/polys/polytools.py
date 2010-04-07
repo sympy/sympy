@@ -1485,6 +1485,55 @@ class Poly(Basic):
 
         return QQ.to_sympy(S), QQ.to_sympy(T)
 
+    def count_roots(f, inf=None, sup=None):
+        """Return the number of roots of ``f`` in ``[inf, sup]`` interval. """
+        inf_real, sup_real = True, True
+
+        if inf is not None:
+            inf = sympify(inf)
+
+            if inf is S.NegativeInfinity:
+                inf = None
+            else:
+                re, im = inf.as_real_imag()
+
+                if not im:
+                    inf = QQ.convert(inf)
+                else:
+                    inf, inf_real = map(QQ.convert, (re, im)), False
+
+        if sup is not None:
+            sup = sympify(sup)
+
+            if sup is S.Infinity:
+                sup = None
+            else:
+                re, im = sup.as_real_imag()
+
+                if not im:
+                    sup = QQ.convert(sup)
+                else:
+                    sup, sup_real = map(QQ.convert, (re, im)), False
+
+        if inf_real and sup_real:
+            try:
+                count = f.rep.count_real_roots(inf=inf, sup=sup)
+            except AttributeError: # pragma: no cover
+                raise OperationNotSupported(f, 'count_real_roots')
+        else:
+            if inf_real and inf is not None:
+                inf = (inf, QQ.zero)
+
+            if sup_real and sup is not None:
+                sup = (sup, QQ.zero)
+
+            try:
+                count = f.rep.count_complex_roots(inf=inf, sup=sup)
+            except AttributeError: # pragma: no cover
+                raise OperationNotSupported(f, 'count_complex_roots')
+
+        return Integer(count)
+
     def nroots(f, maxsteps=50, cleanup=True, error=False):
         """Compute numerical approximations of roots of `f`. """
         if f.is_multivariate:
@@ -2423,6 +2472,15 @@ def refine_root(f, s, t, eps=None, steps=None, fast=False, check_sqf=False):
         raise PolynomialError("can't refine a root of %s, not a polynomial" % f)
 
     return F.refine_root(s, t, eps=eps, steps=steps, fast=fast, check_sqf=check_sqf)
+
+def count_roots(f, inf=None, sup=None):
+    """Return the number of roots of ``f`` in ``[inf, sup]`` interval. """
+    try:
+        F = Poly(f, greedy=False)
+    except GeneratorsNeeded:
+        raise PolynomialError("can't count roots of %s, not a polynomial" % f)
+
+    return F.count_roots(inf=inf, sup=sup)
 
 def nroots(f, maxsteps=50, cleanup=True, error=False):
     """Compute numerical approximations of roots of `f`. """
