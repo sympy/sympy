@@ -2,7 +2,9 @@
 
 from sympy.polys.polytools import Poly
 
-from sympy.polys.rootoftools import RootOf
+from sympy.polys.rootoftools import (
+    RootOf, RootSum,
+)
 
 from sympy.polys.polyerrors import (
     GeneratorsNeeded,
@@ -10,7 +12,9 @@ from sympy.polys.polyerrors import (
     DomainError,
 )
 
-from sympy import sqrt, I, Rational, Real
+from sympy import (
+    sqrt, I, Rational, Real, Lambda,
+)
 
 from sympy.utilities.pytest import raises
 from sympy.abc import x, y
@@ -120,3 +124,30 @@ def test_RootOf_evalf():
     assert re.epsilon_eq( Real("0.60670583138111481707"))
     assert im.epsilon_eq(-Real("1.45061224918844152650"))
 
+def test_RootSum___new__():
+    f = x**3 + x + 3
+
+    assert isinstance(RootSum(f), RootSum) == True
+    assert RootSum(f).doit() == RootOf(f, 0) + RootOf(f, 1) + RootOf(f, 2)
+
+    assert RootSum(f**2) == 2*RootSum(f)
+    assert RootSum(f**2).doit() == 2*(RootOf(f, 0) + RootOf(f, 1) + RootOf(f, 2))
+
+    assert RootSum((x - 7)*f**3) == 7 + 3*RootSum(f)
+    assert RootSum((x - 7)*f**3).doit() == 7 + 3*(RootOf(f, 0) + RootOf(f, 1) + RootOf(f, 2))
+
+    g = Lambda(x, x**2)
+
+    assert isinstance(RootSum(f, g), RootSum) == True
+    assert RootSum(f, g).doit() == RootOf(f, 0)**2 + RootOf(f, 1)**2 + RootOf(f, 2)**2
+
+    assert RootSum(f**2, g) == 2*RootSum(f, Lambda(x, x**2))
+    assert RootSum(f**2, g).doit() == 2*(RootOf(f, 0)**2 + RootOf(f, 1)**2 + RootOf(f, 2)**2)
+
+    assert RootSum((x - 7)*f**3, g) == 49 + 3*RootSum(f, Lambda(x, x**2))
+    assert RootSum((x - 7)*f**3, g).doit() == 49 + 3*(RootOf(f, 0)**2 + RootOf(f, 1)**2 + RootOf(f, 2)**2)
+
+    assert RootSum(f, formal=False) == RootOf(f, 0) + RootOf(f, 1) + RootOf(f, 2)
+
+    raises(PolynomialError, "RootSum(x**3 + x + y)")
+    raises(TypeError, "RootSum(x**2 + 3, 10)")
