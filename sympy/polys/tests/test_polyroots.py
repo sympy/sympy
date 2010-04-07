@@ -6,33 +6,11 @@ from sympy.polys import Poly
 
 from sympy.polys.polyroots import root_factors, roots_linear,  \
     roots_quadratic, roots_cubic, roots_quartic, roots_binomial, \
-    roots_rational, roots, number_of_real_roots, RootOf, RootsOf, RootSum
+    roots_rational, roots, RootOf, RootsOf, RootSum
 
 from sympy.utilities import all
 
 a, b, c, d, t, x, y, z = symbols('a,b,c,d,t,x,y,z')
-
-def test_number_of_real_roots():
-    assert number_of_real_roots(0, x) == 0
-    assert number_of_real_roots(7, x) == 0
-
-    f = Poly(x - 1, x)
-
-    assert number_of_real_roots(f) == 1
-    assert number_of_real_roots(f, sup=0) == 0
-    assert number_of_real_roots(f, inf=1) == 0
-    assert number_of_real_roots(f, sup=0, inf=1) == 1
-
-    assert number_of_real_roots(f, sup=1, inf=0) == 1
-
-    f = x**2 - 4
-
-    assert number_of_real_roots(f, x) == 2
-    assert number_of_real_roots(f, x, sup=0) == 1
-    assert number_of_real_roots(f, x, inf=-1, sup=1) == 0
-
-    raises(ValueError, "number_of_real_roots(f, x, inf=t)")
-    raises(ValueError, "number_of_real_roots(f, x, sup=t)")
 
 def test_roots_linear():
     assert roots_linear(Poly(2*x+1, x)) == [-Rational(1, 2)]
