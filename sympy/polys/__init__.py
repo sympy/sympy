@@ -49,11 +49,11 @@ from monomialtools import (
 )
 
 from rootoftools import (
-    RootOf,
+    RootOf, RootSum,
 )
 
 from polyroots import (
-    RootsOf, RootSum, roots,
+    roots,
 )
 
 from algebratools import (

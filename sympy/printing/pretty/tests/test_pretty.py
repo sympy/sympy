@@ -3,12 +3,13 @@
 from sympy import Matrix, Piecewise, Ne, symbols, sqrt, Function, raises, \
     Rational, conjugate, Derivative, tan, Function, log, floor, Symbol, \
     pprint, sqrt, factorial, pi, sin, ceiling, pprint_use_unicode, I, S, \
-    Limit, oo, cos, Pow, Integral, exp, Eq, Lt, Gt, Ge, Le, gamma, RootOf
+    Limit, oo, cos, Pow, Integral, exp, Eq, Lt, Gt, Ge, Le, gamma, RootOf, \
+    RootSum, Lambda
 
 from sympy.printing.pretty import pretty as xpretty
 from sympy.printing.pretty import pprint
 
-x, y, k = symbols('xyk')
+x, y, z, k = symbols('xyzk')
 th  = Symbol('theta')
 ph  = Symbol('phi')
 
@@ -1895,6 +1896,35 @@ RootOf⎝x  + 11⋅x - 2, 0⎠\
 
     assert  pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
+
+def test_pretty_RootSum():
+    expr = RootSum(x**5 + 11*x - 2)
+    ascii_str = \
+"""\
+       / 5           \\\n\
+RootSum\\x  + 11*x - 2/\
+"""
+    ucode_str = \
+u"""\
+       ⎛ 5           ⎞\n\
+RootSum⎝x  + 11⋅x - 2⎠\
+"""
+
+    assert  pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    expr = RootSum(x**5 + 11*x - 2, Lambda(z, z**2))
+
+    ascii_str = \
+"""\
+       / 5                   /    2\\\\\n\
+RootSum\\x  + 11*x - 2, Lambda\\z, z //\
+"""
+    ucode_str = \
+u"""\
+       ⎛ 5              ⎛    2⎞⎞\n\
+RootSum⎝x  + 11⋅x - 2, Λ⎝z, z ⎠⎠\
+"""
 
 def test_pretty_prec():
     assert xpretty(S("0.3"), full_prec=True) == "0.300000000000000"

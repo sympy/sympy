@@ -282,10 +282,14 @@ def test_Relational():
     assert str(Rel(x, y, "<")) == "x < y"
     assert str(Rel(x+y, y, "==")) == "x + y == y"
 
-def test_Roots():
-    f = Poly(x**5 + 2*x - 1, x)
-    assert str(RootOf(f, 0)) == "RootOf(x**5 + 2*x - 1, 0)"
-    assert str(RootSum(Lambda(z, z**2), f)) == "RootSum(Lambda(_z, _z**2), x**5 + 2*x - 1, x, domain='ZZ')"
+def test_RootOf():
+    assert str(RootOf(x**5 + 2*x - 1, 0)) == "RootOf(x**5 + 2*x - 1, 0)"
+
+def test_RootSum():
+    f = x**5 + 2*x - 1
+
+    assert str(RootSum(f, Lambda(z, z))) == "RootSum(x**5 + 2*x - 1)"
+    assert str(RootSum(f, Lambda(z, z**2))) == "RootSum(x**5 + 2*x - 1, Lambda(_z, _z**2))"
 
 def test_Sample():
     assert str(Sample([x, y, 1])) in [
