@@ -344,10 +344,12 @@ class StrPrinter(Printer):
         return "RootOf(%s, %d)" % (self._print_Add(expr.expr, order='lex'), expr.index)
 
     def _print_RootSum(self, expr):
-        func = self._print(expr.function)
-        poly = self._print(expr.roots.poly)
-        return "RootSum(%s, %s)" % \
-            (func, poly[1+poly.index("("):-1])
+        args = [self._print_Add(expr.expr, order='lex')]
+
+        if not (isinstance(expr.func, Basic) and expr.func.is_identity):
+            args.append(self._print(expr.func))
+
+        return "RootSum(%s)" % ", ".join(args)
 
     def _print_Sample(self, expr):
         return "Sample([%s])"%self.stringify(expr, ", ", 0)

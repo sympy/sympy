@@ -6,7 +6,7 @@ from sympy.polys import Poly
 
 from sympy.polys.polyroots import root_factors, roots_linear,  \
     roots_quadratic, roots_cubic, roots_quartic, roots_binomial, \
-    roots_rational, roots, RootOf, RootsOf, RootSum
+    roots_rational, roots
 
 from sympy.utilities import all
 
@@ -247,35 +247,3 @@ def test_root_factors():
     assert root_factors(8*x**2 + 12*x**4 + 6*x**6 + x**8, x, filter='Q') == \
         [x, x, x**6 + 6*x**4 + 12*x**2 + 8]
 
-def test_RootsOf():
-    f = Poly((x-4)**4, x)
-
-    roots = RootsOf(f)
-
-    assert roots.count == 4
-
-    assert list(roots.roots()) == [ Integer(4),
-        Integer(4), Integer(4), Integer(4) ]
-
-    assert RootSum(lambda r: r**2, f) == 64
-
-    roots = RootsOf(x**5+x+1, x)
-
-    assert roots.count == 5
-
-    f = Poly(x**5+x+1, x)
-
-    assert list(roots.roots()) == [ RootOf(f, 0), RootOf(f, 1),
-        RootOf(f, 2), RootOf(f, 3), RootOf(f, 4) ]
-
-    assert RootSum(lambda r: r**2, f).doit() == RootOf(f, 0)**2 + \
-        RootOf(f, 1)**2 + RootOf(f, 2)**2 + RootOf(f, 3)**2 + RootOf(f, 4)**2
-
-    assert RootSum(Lambda(x, x), Poly(0, x), evaluate=True)  == S.Zero
-    assert RootSum(Lambda(x, x), Poly(0, x), evaluate=False) != S.Zero
-
-    assert RootSum(Lambda(x, x), Poly(x-1, x), evaluate=False).doit() == S.One
-
-    y = symbols('y')
-    f = Poly(x**6 - x**5 - 1, x)
-    assert RootOf(f, 0).subs(x, y) == RootOf(f.subs(x, y), 0)

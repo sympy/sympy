@@ -1,6 +1,6 @@
 """Implementation of RootOf class and related tools. """
 
-from sympy import Basic, Integer, Real, I
+from sympy import Expr, Integer, Real, I, Add, Lambda
 
 from sympy.polys.polytools import Poly
 
@@ -81,7 +81,7 @@ def dup_minpoly_pow(f, p, q, K):
 _rootof_reals_cache = {}
 _rootof_complexes_cache = {}
 
-class RootOf(Basic):
+class RootOf(Expr):
     """Represents ``k``-th root of a univariate polynomial. """
 
     __slots__ = ['poly', 'index', 'pointer', 'conjugate']
@@ -125,7 +125,7 @@ class RootOf(Basic):
             if poly.length() == 2 and poly.TC():
                 return roots_binomial(poly)[index]
 
-        obj = Basic.__new__(cls)
+        obj = Expr.__new__(cls)
 
         obj.poly = poly
         obj.index = index
@@ -313,3 +313,61 @@ class RootOf(Basic):
             mp.prec = _prec
 
         return Real._new(root.real._mpf_, prec) + I*Real._new(root.imag._mpf_, prec)
+
+class RootSum(Expr):
+    """Represents a sum of all roots of a univariate polynomial. """
+
+    __slots__ = ['poly', 'func', 'roots']
+
+    def __new__(cls, poly, func=None, formal=True):
+        """Construct new ``RootSum`` instance carrying all formal roots of ``poly``. """
+        poly = Poly(poly, greedy=False)
+
+        if not poly.is_univariate:
+            raise PolynomialError("only univariate polynomials are supported")
+
+        if func is None:
+            func = Lambda(poly.gen, poly.gen)
+        elif not hasattr(func, '__call__'):
+            raise TypeError("%s is not a callable object" % func)
+
+        (_, factors), terms = poly.factor_list(), []
+
+        for poly, k in factors:
+            roots = []
+
+            for i in xrange(0, poly.degree()):
+                root = RootOf(poly, i)
+
+                if formal and isinstance(root, RootOf):
+                    roots.append(root)
+                else:
+                    terms.append(k*func(root))
+
+            if formal and roots:
+                obj = Expr.__new__(cls)
+
+                obj.poly = poly
+                obj.func = func
+                obj.roots = roots
+
+                terms.append(k*obj)
+
+        return Add(*terms)
+
+    def _hashable_content(self):
+        return (self.expr, self.func)
+
+    @property
+    def expr(self):
+        return self.poly.as_basic()
+
+    @property
+    def args(self):
+        return [self.expr, self.func]
+
+    def doit(self, **hints):
+        if hints.get('roots', True):
+            return Add(*map(self.func, self.roots))
+        else:
+            return self
