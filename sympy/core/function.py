@@ -756,6 +756,14 @@ class Lambda(Function):
     def __hash__(self):
         return super(Lambda, self).__hash__()
 
+    @property
+    def is_identity(self):
+        """Return ``True`` if this ``Lambda`` is an identity function. """
+        if len(self.args) == 2:
+            return self.args[0] == self.args[1]
+        else:
+            return None
+
 def diff(f, *symbols, **kwargs):
     """
     Differentiate f with respect to symbols.

@@ -149,6 +149,10 @@ def test_Lambda():
     p = x, y, z, t
     assert Lambda(p, t*(x+y+z))(*p) == t * (x + y + z)
 
+def test_Lambda_is_identity():
+    assert Lambda(x, x).is_identity == True
+    assert Lambda(x, 2*x).is_identity == False
+    assert Lambda((x, y), x).is_identity == None
 
 def test_expand_function():
     assert expand(x+y) == x + y
