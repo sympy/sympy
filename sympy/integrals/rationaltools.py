@@ -4,7 +4,6 @@ from sympy import S, Symbol, symbols, I, log, atan, \
     resultant, roots, collect, solve, RootSum, Lambda, cancel, Dummy
 
 from sympy.polys import Poly, subresultants, resultant, ZZ
-from sympy.polys.polyroots import number_of_real_roots
 
 def ratint(f, x, **flags):
     """Performs indefinite integration of rational functions.
@@ -250,7 +249,7 @@ def log_to_real(h, q, x, t):
 
     R_u = roots(R, filter='R')
 
-    if len(R_u) != number_of_real_roots(R):
+    if len(R_u) != R.count_roots():
         return None
 
     result = S(0)
@@ -259,7 +258,7 @@ def log_to_real(h, q, x, t):
         C = Poly(c.subs({u:r_u}), v)
         R_v = roots(C, filter='R')
 
-        if len(R_v) != number_of_real_roots(C):
+        if len(R_v) != C.count_roots():
             return None
 
         for r_v in R_v:
@@ -280,7 +279,7 @@ def log_to_real(h, q, x, t):
 
     R_q = roots(q, filter='R')
 
-    if len(R_q) != number_of_real_roots(q):
+    if len(R_q) != q.count_roots():
         return None
 
     for r in R_q.iterkeys():

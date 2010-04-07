@@ -19,6 +19,7 @@ from sympy.polys.densetools import (
     dup_clear_denoms,
     dup_real_imag,
     dup_sqf_list,
+    dup_sturm,
 )
 
 from sympy.polys.factortools import (
@@ -603,6 +604,34 @@ def _real_isolate_and_disjoin(factors, K, eps=None, inf=None, sup=None, strict=F
 
     return I_neg, I_pos
 
+def dup_count_real_roots(f, K, inf=None, sup=None):
+    """Returns the number of distinct real roots of ``f`` in ``[inf, sup]``. """
+    if dup_degree(f) <= 0:
+        return 0
+
+    if not K.has_Field and K.is_Exact:
+        R, K = K, K.get_field()
+        f = dup_convert(f, R, K)
+
+    sturm = dup_sturm(f, K)
+
+    if inf is None:
+        signs_inf = dup_sign_variations([ dup_LC(s, K)*(-1)**dup_degree(s) for s in sturm ], K)
+    else:
+        signs_inf = dup_sign_variations([ dup_eval(s, inf, K) for s in sturm ], K)
+
+    if sup is None:
+        signs_sup = dup_sign_variations([ dup_LC(s, K) for s in sturm ], K)
+    else:
+        signs_sup = dup_sign_variations([ dup_eval(s, sup, K) for s in sturm ], K)
+
+    count = abs(signs_inf - signs_sup)
+
+    if inf is not None and not dup_eval(f, inf, K):
+        count += 1
+
+    return count
+
 OO = 'OO' # Origin of (re, im) coordinate system
 
 Q1 = 'Q1' # Quadrant #1 (++): re > 0 and im > 0
@@ -1066,7 +1095,7 @@ def _winding_number(T, field):
     """Compute the winding number of the input polynomial, i.e. the number of roots. """
     return int(sum([ field(*_values[t][i]) for t, i in T ]) / 2)
 
-def dup_count_complex_roots(f, (u, v), (s, t), K, exclude=None):
+def dup_count_complex_roots(f, K, inf=None, sup=None, exclude=None):
     """Count all roots in [u + v*I, s + t*I] rectangle using Collins-Krandick algorithm. """
     if not K.is_ZZ and not K.is_QQ:
         raise DomainError("complex root counting is not supported over %s" % K)
@@ -1076,10 +1105,23 @@ def dup_count_complex_roots(f, (u, v), (s, t), K, exclude=None):
     else:
         R, F = K.get_ring(), K
 
-    f1, f2 = dup_real_imag(f, K)
+    f = dup_convert(f, K, F)
 
-    f1 = dmp_convert(f1, 1, K, F)
-    f2 = dmp_convert(f2, 1, K, F)
+    if inf is None or sup is None:
+        n, lc = dup_degree(f), abs(dup_LC(f, F))
+        B = 2*max([ F.quo(abs(c), lc) for c in f ])
+
+    if inf is None:
+        (u, v) = (-B, -B)
+    else:
+        (u, v) = inf
+
+    if sup is None:
+        (s, t) = (+B, +B)
+    else:
+        (s, t) = sup
+
+    f1, f2 = dup_real_imag(f, F)
 
     f1L1F = dmp_eval_in(f1, v, 1, 1, F)
     f2L1F = dmp_eval_in(f2, v, 1, 1, F)

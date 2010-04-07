@@ -20,7 +20,7 @@ from sympy.polys.polytools import (
     sturm,
     sqf_norm, sqf_part, sqf_list, sqf,
     factor_list, factor,
-    intervals, refine_root, nroots,
+    intervals, refine_root, count_roots, nroots,
     cancel,
     reduced, groebner,
     symmetrize,
@@ -1776,6 +1776,41 @@ def test_refine_root():
     assert refine_root(f, 1, 2, eps=1e-2) == (S(24)/17, S(17)/12)
 
     raises(PolynomialError, "refine_root(1, 7, 8, eps=S(1)/100)")
+
+def test_count_roots():
+    assert count_roots(x**2 - 2) == 2
+
+    assert count_roots(x**2 - 2, inf=-oo) == 2
+    assert count_roots(x**2 - 2, sup=+oo) == 2
+    assert count_roots(x**2 - 2, inf=-oo, sup=+oo) == 2
+
+    assert count_roots(x**2 - 2, inf=-2) == 2
+    assert count_roots(x**2 - 2, inf=-1) == 1
+
+    assert count_roots(x**2 - 2, sup=1) == 1
+    assert count_roots(x**2 - 2, sup=2) == 2
+
+    assert count_roots(x**2 - 2, inf=-1, sup=1) == 0
+    assert count_roots(x**2 - 2, inf=-2, sup=2) == 2
+
+    assert count_roots(x**2 - 2, inf=-1, sup=1) == 0
+    assert count_roots(x**2 - 2, inf=-2, sup=2) == 2
+
+    assert count_roots(x**2 + 2) == 0
+    assert count_roots(x**2 + 2, inf=-2*I) == 2
+    assert count_roots(x**2 + 2, sup=+2*I) == 2
+    assert count_roots(x**2 + 2, inf=-2*I, sup=+2*I) == 2
+
+    assert count_roots(x**2 + 2, inf=0) == 0
+    assert count_roots(x**2 + 2, sup=0) == 0
+
+    assert count_roots(x**2 + 2, inf=-I) == 1
+    assert count_roots(x**2 + 2, sup=+I) == 1
+
+    assert count_roots(x**2 + 2, inf=+I/2, sup=+I) == 0
+    assert count_roots(x**2 + 2, inf=-I, sup=-I/2) == 0
+
+    raises(PolynomialError, "count_roots(1)")
 
 def test_nroots():
     assert Poly(0, x).nroots() == []
