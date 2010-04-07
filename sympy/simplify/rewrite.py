@@ -30,9 +30,6 @@ def apart(f, z=None, **args):
            >>> apart(y/(x+2)/(x+1), x)
            y/(1 + x) - y/(2 + x)
 
-           >>> apart(1/(1+x**5), x, evaluate=False)
-           RootSum(Lambda(_a, -_a/(5*(x - _a))), x**5 + 1, x, domain='ZZ')
-
        References
        ==========
 
@@ -103,7 +100,7 @@ def apart(f, z=None, **args):
 
             expr = numer.subs(z, a) / denom
 
-            partial += RootSum(Lambda(a, expr), D, **args)
+            partial += RootSum(D, Lambda(a, expr))
 
     return partial
 
