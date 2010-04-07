@@ -84,7 +84,7 @@ def ratint(f, x, **flags):
 
         if not real:
             for h, q in L:
-                eps += RootSum(Lambda(t, t*log(h.as_basic())), q)
+                eps += RootSum(q, Lambda(t, t*log(h.as_basic())))
         else:
             for h, q in L:
                 R = log_to_real(h, q, x, t)
@@ -92,7 +92,7 @@ def ratint(f, x, **flags):
                 if R is not None:
                     eps += R
                 else:
-                    eps += RootSum(Lambda(t, t*log(h.as_basic())), q)
+                    eps += RootSum(q, Lambda(t, t*log(h.as_basic())))
 
         result += eps
 
