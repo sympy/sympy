@@ -353,3 +353,12 @@ def test_sdp_groebner():
         sdp_from_dict({(0,0,2): QQ(1), (0,1,0): -QQ(1)}, O_grlex),
     ]
 
+    f = sdp_from_dict({(2,2): QQ(4), (1,1): QQ(4), (0,0): QQ(1)}, O_lex)
+    g = sdp_from_dict({(2,0): QQ(1), (0,2): QQ(1), (0,0):-QQ(1)}, O_lex)
+
+    assert sdp_groebner((f, g), 1, O_lex, QQ, monic=False) == [
+        sdp_from_dict({(1,0): -QQ(1,4), (0,7): QQ(1), (0,5): -QQ(2), (0,3): QQ(7,4), (0,1): -QQ(3,4)}, O_lex),
+        sdp_from_dict({(0,8): QQ(16), (0,6): -QQ(32), (0,4): QQ(24), (0,2): -QQ(8), (0,0): QQ(1)}, O_lex),
+    ]
+
+    raises(DomainError, "sdp_groebner([], 1, O_lex, ZZ)")
