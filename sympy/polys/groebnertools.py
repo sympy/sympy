@@ -479,7 +479,7 @@ def sdp_gcd(f, g, u, O, K):
     else:
         return sdp_monic(h, K)
 
-def sdp_groebner(F, u, O, K):
+def sdp_groebner(F, u, O, K, monic=True):
     """Computes Groebner basis for a set of polynomials in `K[X]`.
 
        Given a set of multivariate polynomials `F`, finds another
@@ -518,6 +518,9 @@ def sdp_groebner(F, u, O, K):
            Algorithms, Springer, Second Edition, 1997, pp. 62
 
     """
+    if not K.has_Field:
+        raise DomainError("can't compute a Groebner basis over %s" % K)
+
     F = [ f for f in F if f ]
 
     if not F:
@@ -636,18 +639,10 @@ def sdp_groebner(F, u, O, K):
 
             R, P, G, B = generate(R, P, G, B)
 
-    if K.has_Field:
-        basis = [ sdp_monic(F[g], K) for g in G ]
+    if not monic:
+        basis = [ F[g] for g in G ]
     else:
-        basis = []
-
-        for g in G:
-            _, g = sdp_primitive(F[g], K)
-
-            if K.is_negative(sdp_LC(g, K)):
-                basis.append(sdp_neg(g, u, O, K))
-            else:
-                basis.append(g)
+        basis = [ sdp_monic(F[g], K) for g in G ]
 
     return sorted(basis, key=lambda f: O(sdp_LM(f, u)), reverse=True)
 
