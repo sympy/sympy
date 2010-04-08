@@ -64,6 +64,52 @@ def monomial_count(V, N):
     """
     return C.Factorial(V + N) / C.Factorial(V) / C.Factorial(N)
 
+def monomial_lex_key(monom):
+    """Key function for sorting monomials in lexicographic order. """
+    return monom
+
+def monomial_grlex_key(monom):
+    """Key function for sorting monomials in graded lexicographic order. """
+    return (sum(monom), monom)
+
+def monomial_grevlex_key(monom):
+    """Key function for sorting monomials in reversed graded lexicographic order. """
+    return (sum(monom), tuple(reversed(monom)))
+
+_monomial_key = {
+    'lex'     : monomial_lex_key,
+    'grlex'   : monomial_grlex_key,
+    'grevlex' : monomial_grevlex_key,
+}
+
+def monomial_key(order):
+    """Return a function defining admissible order on monomials.
+
+       The result of a call to :func:`monomial_key` is a function which should
+       be used as a key to :func:`sorted` built-in function, to provide order
+       in a set of monomials of the same length.
+
+       Currently supported monomial orderings are:
+
+       1. lex       - lexicographic order
+       2. grlex     - graded lexicographic order
+       3. grevlex   - reversed graded lexicographic order
+
+       If the input argument is not a string but has ``__call__`` attribute,
+       then it will pass through with an assumption that the callable object
+       defines an admissible order on monomials.
+
+    """
+    if isinstance(order, str):
+        try:
+            return _monomial_key[order]
+        except KeyError:
+            raise ValueError("supported monomial orderings are 'lex', 'grlex' and 'grevlex', got %r" % order)
+    elif hasattr(order, '__call__'):
+        return order
+    else:
+        raise ValueError("monomial ordering specification must be a string or a callable, got %s" % order)
+
 def monomial_lex_cmp(a, b):
     return cmp(a, b)
 

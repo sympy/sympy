@@ -17,9 +17,13 @@ from sympy.polys.groebnertools import (
 )
 
 from sympy.polys.monomialtools import (
-    monomial_lex_cmp as O_lex,
-    monomial_grlex_cmp as O_grlex,
-    monomial_grevlex_cmp as O_grevlex,
+    monomial_lex_key as O_lex,
+    monomial_grlex_key as O_grlex,
+    monomial_grevlex_key as O_grevlex,
+)
+
+from sympy.polys.polyerrors import (
+    ExactQuotientFailed, DomainError,
 )
 
 from sympy.polys.algebratools import ZZ, QQ
@@ -239,113 +243,113 @@ def test_sdp_groebner():
 
     assert sdp_groebner((f, g), 1, O_grlex, QQ) == [a, b, c]
 
-    f = sdp_from_dict({(2,0,0): -1, (0,1,0): 1}, O_lex)
-    g = sdp_from_dict({(3,0,0): -1, (0,0,1): 1}, O_lex)
+    f = sdp_from_dict({(2,0,0): -QQ(1), (0,1,0): QQ(1)}, O_lex)
+    g = sdp_from_dict({(3,0,0): -QQ(1), (0,0,1): QQ(1)}, O_lex)
 
-    assert sdp_groebner((f, g), 2, O_lex, ZZ) == [
-        sdp_from_dict({(2,0,0): 1, (0,1,0): -1}, O_lex),
-        sdp_from_dict({(1,1,0): 1, (0,0,1): -1}, O_lex),
-        sdp_from_dict({(1,0,1): 1, (0,2,0): -1}, O_lex),
-        sdp_from_dict({(0,3,0): 1, (0,0,2): -1}, O_lex),
+    assert sdp_groebner((f, g), 2, O_lex, QQ) == [
+        sdp_from_dict({(2,0,0): QQ(1), (0,1,0): -QQ(1)}, O_lex),
+        sdp_from_dict({(1,1,0): QQ(1), (0,0,1): -QQ(1)}, O_lex),
+        sdp_from_dict({(1,0,1): QQ(1), (0,2,0): -QQ(1)}, O_lex),
+        sdp_from_dict({(0,3,0): QQ(1), (0,0,2): -QQ(1)}, O_lex),
     ]
 
-    f = sdp_from_dict({(2,0,0): -1, (0,1,0): 1}, O_grlex)
-    g = sdp_from_dict({(3,0,0): -1, (0,0,1): 1}, O_grlex)
+    f = sdp_from_dict({(2,0,0): -QQ(1), (0,1,0): QQ(1)}, O_grlex)
+    g = sdp_from_dict({(3,0,0): -QQ(1), (0,0,1): QQ(1)}, O_grlex)
 
-    assert sdp_groebner((f, g), 2, O_grlex, ZZ) == [
-        sdp_from_dict({(0,3,0): 1, (0,0,2): -1}, O_grlex),
-        sdp_from_dict({(2,0,0): 1, (0,1,0): -1}, O_grlex),
-        sdp_from_dict({(1,1,0): 1, (0,0,1): -1}, O_grlex),
-        sdp_from_dict({(1,0,1): 1, (0,2,0): -1}, O_grlex),
+    assert sdp_groebner((f, g), 2, O_grlex, QQ) == [
+        sdp_from_dict({(0,3,0): QQ(1), (0,0,2): -QQ(1)}, O_grlex),
+        sdp_from_dict({(2,0,0): QQ(1), (0,1,0): -QQ(1)}, O_grlex),
+        sdp_from_dict({(1,1,0): QQ(1), (0,0,1): -QQ(1)}, O_grlex),
+        sdp_from_dict({(1,0,1): QQ(1), (0,2,0): -QQ(1)}, O_grlex),
     ]
 
-    f = sdp_from_dict({(2,0,0): -1, (0,0,1): 1}, O_lex)
-    g = sdp_from_dict({(3,0,0): -1, (0,1,0): 1}, O_lex)
+    f = sdp_from_dict({(2,0,0): -QQ(1), (0,0,1): QQ(1)}, O_lex)
+    g = sdp_from_dict({(3,0,0): -QQ(1), (0,1,0): QQ(1)}, O_lex)
 
-    assert sdp_groebner((f, g), 2, O_lex, ZZ) == [
-        sdp_from_dict({(2,0,0): 1, (0,0,1): -1}, O_lex),
-        sdp_from_dict({(1,1,0): 1, (0,0,2): -1}, O_lex),
-        sdp_from_dict({(1,0,1): 1, (0,1,0): -1}, O_lex),
-        sdp_from_dict({(0,2,0): 1, (0,0,3): -1}, O_lex),
+    assert sdp_groebner((f, g), 2, O_lex, QQ) == [
+        sdp_from_dict({(2,0,0): QQ(1), (0,0,1): -QQ(1)}, O_lex),
+        sdp_from_dict({(1,1,0): QQ(1), (0,0,2): -QQ(1)}, O_lex),
+        sdp_from_dict({(1,0,1): QQ(1), (0,1,0): -QQ(1)}, O_lex),
+        sdp_from_dict({(0,2,0): QQ(1), (0,0,3): -QQ(1)}, O_lex),
     ]
 
-    f = sdp_from_dict({(2,0,0): -1, (0,0,1): 1}, O_grlex)
-    g = sdp_from_dict({(3,0,0): -1, (0,1,0): 1}, O_grlex)
+    f = sdp_from_dict({(2,0,0): -QQ(1), (0,0,1): QQ(1)}, O_grlex)
+    g = sdp_from_dict({(3,0,0): -QQ(1), (0,1,0): QQ(1)}, O_grlex)
 
-    assert sdp_groebner((f, g), 2, O_grlex, ZZ) == [
-        sdp_from_dict({(0,0,3): 1, (0,2,0): -1}, O_grlex),
-        sdp_from_dict({(2,0,0): 1, (0,0,1): -1}, O_grlex),
-        sdp_from_dict({(1,1,0): 1, (0,0,2): -1}, O_grlex),
-        sdp_from_dict({(1,0,1): 1, (0,1,0): -1}, O_grlex),
+    assert sdp_groebner((f, g), 2, O_grlex, QQ) == [
+        sdp_from_dict({(0,0,3): QQ(1), (0,2,0): -QQ(1)}, O_grlex),
+        sdp_from_dict({(2,0,0): QQ(1), (0,0,1): -QQ(1)}, O_grlex),
+        sdp_from_dict({(1,1,0): QQ(1), (0,0,2): -QQ(1)}, O_grlex),
+        sdp_from_dict({(1,0,1): QQ(1), (0,1,0): -QQ(1)}, O_grlex),
     ]
 
-    f = sdp_from_dict({(0,2,0): -1, (1,0,0): 1}, O_lex)
-    g = sdp_from_dict({(0,3,0): -1, (0,0,1): 1}, O_lex)
+    f = sdp_from_dict({(0,2,0): -QQ(1), (1,0,0): QQ(1)}, O_lex)
+    g = sdp_from_dict({(0,3,0): -QQ(1), (0,0,1): QQ(1)}, O_lex)
 
-    assert sdp_groebner((f, g), 2, O_lex, ZZ) == [
-        sdp_from_dict({(1,0,0): 1, (0,2,0): -1}, O_lex),
-        sdp_from_dict({(0,3,0): 1, (0,0,1): -1}, O_lex),
+    assert sdp_groebner((f, g), 2, O_lex, QQ) == [
+        sdp_from_dict({(1,0,0): QQ(1), (0,2,0): -QQ(1)}, O_lex),
+        sdp_from_dict({(0,3,0): QQ(1), (0,0,1): -QQ(1)}, O_lex),
     ]
 
-    f = sdp_from_dict({(0,2,0): -1, (1,0,0): 1}, O_grlex)
-    g = sdp_from_dict({(0,3,0): -1, (0,0,1): 1}, O_grlex)
+    f = sdp_from_dict({(0,2,0): -QQ(1), (1,0,0): QQ(1)}, O_grlex)
+    g = sdp_from_dict({(0,3,0): -QQ(1), (0,0,1): QQ(1)}, O_grlex)
 
-    assert sdp_groebner((f, g), 2, O_grlex, ZZ) == [
-        sdp_from_dict({(2,0,0): 1, (0,1,1): -1}, O_grlex),
-        sdp_from_dict({(1,1,0): 1, (0,0,1): -1}, O_grlex),
-        sdp_from_dict({(0,2,0): 1, (1,0,0): -1}, O_grlex),
+    assert sdp_groebner((f, g), 2, O_grlex, QQ) == [
+        sdp_from_dict({(2,0,0): QQ(1), (0,1,1): -QQ(1)}, O_grlex),
+        sdp_from_dict({(1,1,0): QQ(1), (0,0,1): -QQ(1)}, O_grlex),
+        sdp_from_dict({(0,2,0): QQ(1), (1,0,0): -QQ(1)}, O_grlex),
     ]
 
-    f = sdp_from_dict({(0,0,2): -1, (1,0,0): 1}, O_lex)
-    g = sdp_from_dict({(0,0,3): -1, (0,1,0): 1}, O_lex)
+    f = sdp_from_dict({(0,0,2): -QQ(1), (1,0,0): QQ(1)}, O_lex)
+    g = sdp_from_dict({(0,0,3): -QQ(1), (0,1,0): QQ(1)}, O_lex)
 
-    assert sdp_groebner((f, g), 2, O_lex, ZZ) == [
-        sdp_from_dict({(1,0,0): 1, (0,0,2): -1}, O_lex),
-        sdp_from_dict({(0,1,0): 1, (0,0,3): -1}, O_lex),
+    assert sdp_groebner((f, g), 2, O_lex, QQ) == [
+        sdp_from_dict({(1,0,0): QQ(1), (0,0,2): -QQ(1)}, O_lex),
+        sdp_from_dict({(0,1,0): QQ(1), (0,0,3): -QQ(1)}, O_lex),
     ]
 
-    f = sdp_from_dict({(0,0,2): -1, (1,0,0): 1}, O_grlex)
-    g = sdp_from_dict({(0,0,3): -1, (0,1,0): 1}, O_grlex)
+    f = sdp_from_dict({(0,0,2): -QQ(1), (1,0,0): QQ(1)}, O_grlex)
+    g = sdp_from_dict({(0,0,3): -QQ(1), (0,1,0): QQ(1)}, O_grlex)
 
-    assert sdp_groebner((f, g), 2, O_grlex, ZZ) == [
-        sdp_from_dict({(2,0,0): 1, (0,1,1): -1}, O_grlex),
-        sdp_from_dict({(1,0,1): 1, (0,1,0): -1}, O_grlex),
-        sdp_from_dict({(0,0,2): 1, (1,0,0): -1}, O_grlex),
+    assert sdp_groebner((f, g), 2, O_grlex, QQ) == [
+        sdp_from_dict({(2,0,0): QQ(1), (0,1,1): -QQ(1)}, O_grlex),
+        sdp_from_dict({(1,0,1): QQ(1), (0,1,0): -QQ(1)}, O_grlex),
+        sdp_from_dict({(0,0,2): QQ(1), (1,0,0): -QQ(1)}, O_grlex),
     ]
 
-    f = sdp_from_dict({(0,2,0): -1, (0,0,1): 1}, O_lex)
-    g = sdp_from_dict({(0,3,0): -1, (1,0,0): 1}, O_lex)
+    f = sdp_from_dict({(0,2,0): -QQ(1), (0,0,1): QQ(1)}, O_lex)
+    g = sdp_from_dict({(0,3,0): -QQ(1), (1,0,0): QQ(1)}, O_lex)
 
-    assert sdp_groebner((f, g), 2, O_lex, ZZ) == [
-        sdp_from_dict({(1,0,0): 1, (0,1,1): -1}, O_lex),
-        sdp_from_dict({(0,2,0): 1, (0,0,1): -1}, O_lex),
+    assert sdp_groebner((f, g), 2, O_lex, QQ) == [
+        sdp_from_dict({(1,0,0): QQ(1), (0,1,1): -QQ(1)}, O_lex),
+        sdp_from_dict({(0,2,0): QQ(1), (0,0,1): -QQ(1)}, O_lex),
     ]
 
-    f = sdp_from_dict({(0,2,0): -1, (0,0,1): 1}, O_grlex)
-    g = sdp_from_dict({(0,3,0): -1, (1,0,0): 1}, O_grlex)
+    f = sdp_from_dict({(0,2,0): -QQ(1), (0,0,1): QQ(1)}, O_grlex)
+    g = sdp_from_dict({(0,3,0): -QQ(1), (1,0,0): QQ(1)}, O_grlex)
 
-    assert sdp_groebner((f, g), 2, O_grlex, ZZ) == [
-        sdp_from_dict({(0,0,3): 1, (2,0,0): -1}, O_grlex),
-        sdp_from_dict({(1,1,0): 1, (0,0,2): -1}, O_grlex),
-        sdp_from_dict({(0,2,0): 1, (0,0,1): -1}, O_grlex),
-        sdp_from_dict({(0,1,1): 1, (1,0,0): -1}, O_grlex),
+    assert sdp_groebner((f, g), 2, O_grlex, QQ) == [
+        sdp_from_dict({(0,0,3): QQ(1), (2,0,0): -QQ(1)}, O_grlex),
+        sdp_from_dict({(1,1,0): QQ(1), (0,0,2): -QQ(1)}, O_grlex),
+        sdp_from_dict({(0,2,0): QQ(1), (0,0,1): -QQ(1)}, O_grlex),
+        sdp_from_dict({(0,1,1): QQ(1), (1,0,0): -QQ(1)}, O_grlex),
     ]
 
-    f = sdp_from_dict({(0,0,2): -1, (0,1,0): 1}, O_lex)
-    g = sdp_from_dict({(0,0,3): -1, (1,0,0): 1}, O_lex)
+    f = sdp_from_dict({(0,0,2): -QQ(1), (0,1,0): QQ(1)}, O_lex)
+    g = sdp_from_dict({(0,0,3): -QQ(1), (1,0,0): QQ(1)}, O_lex)
 
-    assert sdp_groebner((f, g), 2, O_lex, ZZ) == [
-        sdp_from_dict({(1,0,0): 1, (0,0,3): -1}, O_lex),
-        sdp_from_dict({(0,1,0): 1, (0,0,2): -1}, O_lex),
+    assert sdp_groebner((f, g), 2, O_lex, QQ) == [
+        sdp_from_dict({(1,0,0): QQ(1), (0,0,3): -QQ(1)}, O_lex),
+        sdp_from_dict({(0,1,0): QQ(1), (0,0,2): -QQ(1)}, O_lex),
     ]
 
-    f = sdp_from_dict({(0,0,2): -1, (0,1,0): 1}, O_grlex)
-    g = sdp_from_dict({(0,0,3): -1, (1,0,0): 1}, O_grlex)
+    f = sdp_from_dict({(0,0,2): -QQ(1), (0,1,0): QQ(1)}, O_grlex)
+    g = sdp_from_dict({(0,0,3): -QQ(1), (1,0,0): QQ(1)}, O_grlex)
 
-    assert sdp_groebner((f, g), 2, O_grlex, ZZ) == [
-        sdp_from_dict({(0,3,0): 1, (2,0,0): -1}, O_grlex),
-        sdp_from_dict({(1,0,1): 1, (0,2,0): -1}, O_grlex),
-        sdp_from_dict({(0,1,1): 1, (1,0,0): -1}, O_grlex),
-        sdp_from_dict({(0,0,2): 1, (0,1,0): -1}, O_grlex),
+    assert sdp_groebner((f, g), 2, O_grlex, QQ) == [
+        sdp_from_dict({(0,3,0): QQ(1), (2,0,0): -QQ(1)}, O_grlex),
+        sdp_from_dict({(1,0,1): QQ(1), (0,2,0): -QQ(1)}, O_grlex),
+        sdp_from_dict({(0,1,1): QQ(1), (1,0,0): -QQ(1)}, O_grlex),
+        sdp_from_dict({(0,0,2): QQ(1), (0,1,0): -QQ(1)}, O_grlex),
     ]
 

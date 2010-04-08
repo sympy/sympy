@@ -31,7 +31,7 @@ from sympy.polys.groebnertools import (
 )
 
 from sympy.polys.monomialtools import (
-    monomial_cmp,
+    monomial_key,
 )
 
 from sympy.polys.polyerrors import (
@@ -586,10 +586,7 @@ class Poly(Basic):
         order = args.get('order')
 
         if order is not None:
-            if isinstance(order, str):
-                order = monomial_cmp(order)
-            elif not hasattr(order, '__call__'):
-                raise ValueError("expected monomial order declaration or a function, got %s" % order)
+            order = monomial_key(order)
 
         return order
 

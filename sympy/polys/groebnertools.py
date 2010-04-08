@@ -4,13 +4,13 @@ from sympy.polys.monomialtools import (
     monomial_mul,
     monomial_div,
     monomial_lcm,
-    monomial_lex_cmp as O_lex,
-    monomial_grlex_cmp as O_grlex,
-    monomial_grevlex_cmp as O_grevlex,
+    monomial_lex_key as O_lex,
+    monomial_grlex_key as O_grlex,
+    monomial_grevlex_key as O_grevlex,
 )
 
 from sympy.polys.polyerrors import (
-    ExactQuotientFailed,
+    ExactQuotientFailed, DomainError,
 )
 
 from sympy.utilities import any, all
@@ -48,7 +48,7 @@ def sdp_monoms(f):
 
 def sdp_sort(f, O):
     """Sort terms in `f` using the given monomial order `O`. """
-    return sorted(f, O, key=itemgetter(0), reverse=True)
+    return sorted(f, key=lambda (m, _): O(m), reverse=True)
 
 def sdp_strip(f):
     """Remove terms with zero coefficients from `f` in `K[X]`. """
@@ -102,16 +102,16 @@ def sdp_add_term(f, (M, c), u, O, K):
 
     monoms = sdp_monoms(f)
 
-    if O(M, monoms[ 0]) > 0:
+    if cmp(O(M), O(monoms[ 0])) > 0:
         return [(M, c)] + f
-    if O(M, monoms[-1]) < 0:
+    if cmp(O(M), O(monoms[-1])) < 0:
         return f + [(M, c)]
 
     lo, hi = 0, len(monoms)-1
 
     while lo <= hi:
         i = (lo + hi) // 2
-        j = O(M, monoms[i])
+        j = cmp(O(M), O(monoms[i]))
 
         if not j:
             coeff = f[i][1] + c
@@ -137,16 +137,16 @@ def sdp_sub_term(f, (M, c), u, O, K):
 
     monoms = sdp_monoms(f)
 
-    if O(M, monoms[ 0]) > 0:
+    if cmp(O(M), O(monoms[ 0])) > 0:
         return [(M, -c)] + f
-    if O(M, monoms[-1]) < 0:
+    if cmp(O(M), O(monoms[-1])) < 0:
         return f + [(M, -c)]
 
     lo, hi = 0, len(monoms)-1
 
     while lo <= hi:
         i = (lo + hi) // 2
-        j = O(M, monoms[i])
+        j = cmp(O(M), O(monoms[i]))
 
         if not j:
             coeff = f[i][1] - c
@@ -584,7 +584,7 @@ def sdp_groebner(F, u, O, K):
         k, M = B.items()[0]
 
         for l, N in B.iteritems():
-            if O(M, N) == 1:
+            if cmp(O(M), O(N)) == 1:
                 k, M = l, N
 
         del B[k]
@@ -649,5 +649,5 @@ def sdp_groebner(F, u, O, K):
             else:
                 basis.append(g)
 
-    return list(sorted(basis, O, lambda p: sdp_LM(p, u), True))
+    return sorted(basis, key=lambda f: O(sdp_LM(f, u)), reverse=True)
 
