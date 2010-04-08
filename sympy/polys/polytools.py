@@ -2561,6 +2561,8 @@ def groebner(F, *gens, **args):
         raise PolynomialError("can't compute Groebner basis over a finite field")
 
     order = Poly._analyze_order({'order': args.pop('order', 'lex')})
+    monic = args.pop('monic', True)
+
     basic = _should_return_basic(*F, **args)
 
     args = _update_args(args, 'field', True)
@@ -2582,7 +2584,7 @@ def groebner(F, *gens, **args):
         f = Poly(f, *gens, **{'domain': dom})
         F[i] = sdp_from_dict(f.rep.to_dict(), order)
 
-    G = sdp_groebner(F, lev, order, dom)
+    G = sdp_groebner(F, lev, order, dom, monic=monic)
 
     G = [ Poly(DMP(dict(g), dom, lev), *gens) for g in G ]
 
