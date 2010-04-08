@@ -40,7 +40,7 @@ from sympy.polys.polyerrors import (
 )
 
 from sympy.polys.monomialtools import (
-    monomial_lex_cmp,
+    monomial_lex_key,
 )
 
 from sympy.polys.polyclasses import GFP, DMP, DMF
@@ -413,8 +413,9 @@ def test_Poly_unify():
 
 def test_Poly__analyze_order():
     assert Poly._analyze_order({}) is None
-    assert Poly._analyze_order({'order': 'lex'}) == monomial_lex_cmp
+    assert Poly._analyze_order({'order': 'lex'}) == monomial_lex_key
 
+    raises(ValueError, "Poly._analyze_order({'order': 'foo'})")
     raises(ValueError, "Poly._analyze_order({'order': 1})")
 
 def test_Poly__analyze_domain():

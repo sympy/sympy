@@ -2,8 +2,11 @@
 
 from sympy.polys.monomialtools import (
     monomials, monomial_count,
+    monomial_lex_key, monomial_grlex_key, monomial_grevlex_key, monomial_key,
     monomial_lex_cmp, monomial_grlex_cmp, monomial_grevlex_cmp, monomial_cmp,
-    monomial_mul, monomial_div, monomial_gcd, monomial_lcm, monomial_max, monomial_min,
+    monomial_mul, monomial_div,
+    monomial_gcd, monomial_lcm,
+    monomial_max, monomial_min,
 )
 
 from sympy.abc import x, y
@@ -28,6 +31,23 @@ def test_monomials():
 def test_monomial_count():
     assert monomial_count(2, 2) == 6
     assert monomial_count(2, 3) == 10
+
+def test_monomial_lex_key():
+    assert monomial_lex_key((1,2,3)) == (1,2,3)
+
+def test_monomial_grlex_key():
+    assert monomial_grlex_key((1,2,3)) == (6, (1,2,3))
+
+def test_monomial_grevlex_key():
+    assert monomial_grevlex_key((1,2,3)) == (6, (3,2,1))
+
+def test_monomial_key():
+    assert monomial_key('lex') == monomial_lex_key
+    assert monomial_key('grlex') == monomial_grlex_key
+    assert monomial_key('grevlex') == monomial_grevlex_key
+
+    raises(ValueError, "monomial_key('foo')")
+    raises(ValueError, "monomial_key(1)")
 
 def test_monomial_lex_cmp():
     assert monomial_lex_cmp((1,2,3), (1,2,3)) == 0
