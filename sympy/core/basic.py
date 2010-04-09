@@ -65,6 +65,8 @@ class Basic(AssumeMeths):
     is_Piecewise = False
     is_Poly = False
     is_AlgebraicNumber = False
+    is_Boolean = False
+    is_Not = False
 
     def __new__(cls, *args, **assumptions):
         obj = object.__new__(cls)
@@ -1113,6 +1115,3 @@ class Atom(Basic):
 
     def doit(self, **hints):
         return self
-
-
-
