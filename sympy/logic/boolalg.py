@@ -36,7 +36,7 @@ class BooleanFunction(Application, Boolean):
     """Boolean function is a function that lives in a boolean space
     It is used as base class for And, Or, Not, etc.
     """
-    pass
+    is_Boolean = True
 
 class And(LatticeOp, BooleanFunction):
     """
@@ -84,6 +84,9 @@ class Not(BooleanFunction):
     """Logical Not function (negation)
 
     Note: De Morgan rules applied automatically"""
+
+    is_Not = True
+
     @classmethod
     def eval(cls, *args):
         if len(args) > 1:
@@ -282,3 +285,4 @@ def to_int_repr(clauses, symbols):
     from sympy.utilities import make_list
     return [set(append_symbol(arg, symbols) for arg in make_list(c, Or)) \
                                                             for c in clauses]
+

@@ -78,6 +78,78 @@ class PrettyPrinter(Printer):
         pform = prettyForm(*stringPict.next(l, op, r))
         return pform
 
+    def _print_Not(self, e):
+        if pretty_use_unicode():
+            arg = e.args[0]
+            pform = self._print(arg)
+
+            if arg.is_Boolean and not arg.is_Not:
+                pform = prettyForm(*pform.parens())
+
+            return prettyForm(*pform.left(u"\u00ac "))
+        else:
+            return self._print_Function(e)
+
+    def __print_Boolean(self, e, char):
+        arg = e.args[0]
+        pform = self._print(arg)
+
+        if arg.is_Boolean and not arg.is_Not:
+            pform = prettyForm(*pform.parens())
+
+        for arg in e.args[1:]:
+            pform_arg = self._print(arg)
+
+            if arg.is_Boolean and not arg.is_Not:
+                pform_arg = prettyForm(*pform_arg.parens())
+
+            pform = prettyForm(*pform.right(u' %s ' % char))
+            pform = prettyForm(*pform.right(pform_arg))
+
+        return pform
+
+    def _print_And(self, e):
+        if pretty_use_unicode():
+            return self.__print_Boolean(e, u"\u2227")
+        else:
+            return self._print_Function(e)
+
+    def _print_Or(self, e):
+        if pretty_use_unicode():
+            return self.__print_Boolean(e, u"\u2228")
+        else:
+            return self._print_Function(e)
+
+    def _print_Xor(self, e):
+        if pretty_use_unicode():
+            return self.__print_Boolean(e, u"\u22bb")
+        else:
+            return self._print_Function(e)
+
+    def _print_Nand(self, e):
+        if pretty_use_unicode():
+            return self.__print_Boolean(e, u"\u22bc")
+        else:
+            return self._print_Function(e)
+
+    def _print_Nor(self, e):
+        if pretty_use_unicode():
+            return self.__print_Boolean(e, u"\u22bd")
+        else:
+            return self._print_Function(e)
+
+    def _print_Implies(self, e):
+        if pretty_use_unicode():
+            return self.__print_Boolean(e, u"\u2192")
+        else:
+            return self._print_Function(e)
+
+    def _print_Equivalent(self, e):
+        if pretty_use_unicode():
+            return self.__print_Boolean(e, u"\u2261")
+        else:
+            return self._print_Function(e)
+
     def _print_conjugate(self, e):
         pform = self._print(e.args[0])
         return prettyForm( *pform.above( hobj('_',pform.width())) )
