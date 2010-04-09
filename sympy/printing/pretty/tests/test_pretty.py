@@ -3,7 +3,7 @@ from sympy import (Matrix, Piecewise, Ne, symbols, sqrt, Function,
     Rational, conjugate, Derivative, tan, Function, log, floor, Symbol,
     pprint, sqrt, factorial, pi, sin, ceiling, pprint_use_unicode, I, S,
     Limit, oo, cos, Pow, Integral, exp, Eq, Lt, Gt, Ge, Le, gamma, Abs, RootOf,
-    RootSum, Lambda)
+    RootSum, Lambda, Not, And, Or, Xor, Nand, Nor, Implies, Equivalent)
 
 from sympy.printing.pretty import pretty as xpretty
 from sympy.printing.pretty import pprint
@@ -1926,6 +1926,47 @@ u"""\
        ⎛ 5              ⎛    2⎞⎞\n\
 RootSum⎝x  + 11⋅x - 2, Λ⎝z, z ⎠⎠\
 """
+
+def test_pretty_Boolean():
+    expr = Not(x, evaluate=False)
+
+    assert  pretty(expr) == "Not(x)"
+    assert upretty(expr) == u"¬ x"
+
+    expr = And(x, y, evalute=False)
+
+    assert  pretty(expr) == "And(x, y)"
+    assert upretty(expr) == u"x ∧ y"
+
+    expr = Or(x, y, evalute=False)
+
+    assert  pretty(expr) == "Or(x, y)"
+    assert upretty(expr) == u"x ∨ y"
+
+    expr = Xor(x, y, evaluate=False)
+
+    assert  pretty(expr) == "Xor(x, y)"
+    assert upretty(expr) == u"x ⊻ y"
+
+    expr = Nand(x, y, evaluate=False)
+
+    assert  pretty(expr) == "Nand(x, y)"
+    assert upretty(expr) == u"x ⊼ y"
+
+    expr = Nor(x, y, evaluate=False)
+
+    assert  pretty(expr) == "Nor(x, y)"
+    assert upretty(expr) == u"x ⊽ y"
+
+    expr = Implies(x, y, evaluate=False)
+
+    assert  pretty(expr) == "Implies(x, y)"
+    assert upretty(expr) == u"x → y"
+
+    expr = Equivalent(x, y, evaluate=False)
+
+    assert  pretty(expr) == "Equivalent(x, y)"
+    assert upretty(expr) == u"x ≡ y"
 
 def test_pretty_prec():
     assert xpretty(S("0.3"), full_prec=True) == "0.300000000000000"
