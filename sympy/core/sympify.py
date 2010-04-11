@@ -1,9 +1,8 @@
 """sympify -- convert objects SymPy internal format"""
 
 from types import NoneType
+from inspect import getmro
 
-# from basic import Basic, BasicType, S
-# from numbers  import Integer, Real
 import decimal
 
 from core import BasicMeta
@@ -19,6 +18,8 @@ class SympifyError(ValueError):
         return "Sympify of expression '%s' failed, because of exception being raised:\n%s: %s" % (self.expr, self.base_exc.__class__.__name__, str(self.base_exc))
 
 sympy_classes = BasicMeta.all_classes
+
+converter = {}
 
 def sympify(a, locals=None, convert_xor=True, strict=False):
     """
@@ -77,14 +78,16 @@ def sympify(a, locals=None, convert_xor=True, strict=False):
         else:
             return a
 
+    try:
+        return converter[cls](a)
+    except KeyError:
+        for superclass in getmro(cls):
+            try:
+                return converter[superclass](a)
+            except KeyError:
+                continue
+
     from numbers import Integer, Real
-    if isinstance(a, (int, long)):
-        return Integer(a)
-    elif isinstance(a, (float, decimal.Decimal)):
-        return Real(a)
-    elif isinstance(a, complex):
-        real, imag = map(sympify, (a.real, a.imag))
-        return real + S.ImaginaryUnit * imag
 
     # let's see if 'a' implements conversion methods such as '_sympy_' or
     # '__int__', that returns a SymPy (by definition) or SymPy compatible
