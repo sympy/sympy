@@ -20,44 +20,94 @@ class SympifyError(ValueError):
 
 
 
-def sympify(a, locals=None, convert_xor=True):
-    """Converts an arbitrary expression to a type that can be used
-       inside sympy. For example, it will convert python ints into
-       instance of sympy.Rational, floats into instances of sympy.Real,
-       etc. It is also able to coerce symbolic expressions which does
-       inherit after Basic. This can be useful in cooperation with SAGE.
+def sympify(a, locals=None, convert_xor=True, strict=False):
+    """
+    Converts an arbitrary expression to a type that can be used inside sympy.
 
-       It currently accepts as arguments:
-           - any object defined in sympy (except maybe matrices [TODO])
-           - standard numeric python types: int, long, float, Decimal
-           - strings (like "0.09" or "2e-19")
-           - booleans, including None (will leave them unchanged)
+    For example, it will convert python ints into instance of sympy.Rational,
+    floats into instances of sympy.Real, etc. It is also able to coerce symbolic
+    expressions which inherit from Basic. This can be useful in cooperation
+    with SAGE.
 
-       If the argument is already a type that sympy understands, it will do
-       nothing but return that value. This can be used at the beginning of a
-       function to ensure you are working with the correct type.
+    It currently accepts as arguments:
+       - any object defined in sympy (except matrices [TODO])
+       - standard numeric python types: int, long, float, Decimal
+       - strings (like "0.09" or "2e-19")
+       - booleans, including `None` (will leave them unchanged)
 
-       >>> from sympy import sympify
+    If the argument is already a type that sympy understands, it will do
+    nothing but return that value. This can be used at the beginning of a
+    function to ensure you are working with the correct type.
 
-       >>> sympify(2).is_integer
-       True
-       >>> sympify(2).is_real
-       True
+    >>> from sympy import sympify
 
-       >>> sympify(2.0).is_real
-       True
-       >>> sympify("2.0").is_real
-       True
-       >>> sympify("2e-45").is_real
-       True
+    >>> sympify(2).is_integer
+    True
+    >>> sympify(2).is_real
+    True
+
+    >>> sympify(2.0).is_real
+    True
+    >>> sympify("2.0").is_real
+    True
+    >>> sympify("2e-45").is_real
+    True
+
+    If the option `strict` is set to `True`, only the types for which an 
+    explicit conversion has been defined are converted. In the other 
+    cases, a SympifyError is raised.
+
+    >>> sympify(True)
+    True
+    >>> sympify(True, strict=True)
+    Traceback (most recent call last):
+    ...
+    SympifyError: SympifyError: True
 
     """
-    try:
-        return _sympify(a)
-    except SympifyError:
-        pass
-    if isinstance(a, (bool, NoneType)):
+    if isinstance(a, (Basic, BasicType)):
         return a
+    if isinstance(a, (bool, NoneType)):
+        if strict:
+            raise SympifyError(a)
+        else:
+            return a
+
+    from numbers import Integer, Real
+    if isinstance(a, (int, long)):
+        return Integer(a)
+    elif isinstance(a, (float, decimal.Decimal)):
+        return Real(a)
+    elif isinstance(a, complex):
+        real, imag = map(sympify, (a.real, a.imag))
+        return real + S.ImaginaryUnit * imag
+
+    # let's see if 'a' implements conversion methods such as '_sympy_' or
+    # '__int__', that returns a SymPy (by definition) or SymPy compatible
+    # expression, so we just use it
+    for methname, conv in [
+            ('_sympy_',None),
+            ('__float__', Real),
+            ('__int__', Integer),
+            ]:
+        meth = getattr(a, methname, None)
+        if meth is None:
+            continue
+
+        # we have to be careful -- calling Class.__int__() almost always is not
+        # a good idea
+        try:
+            v = meth()
+        except TypeError:
+            continue
+
+        if conv is not None:
+            v = conv(v)
+
+        return v
+
+    if strict:
+        raise SympifyError(a)
 
     if isinstance(a, (list,tuple,set)):
         return type(a)([sympify(x) for x in a])
@@ -112,45 +162,7 @@ def _sympify(a):
 
        see: sympify
     """
-    if isinstance(a, (Basic, BasicType)):
-        return a
-    if isinstance(a, (bool, NoneType)):
-        raise SympifyError(a)
-
-    from numbers import Integer, Real
-    if isinstance(a, (int, long)):
-        return Integer(a)
-    elif isinstance(a, (float, decimal.Decimal)):
-        return Real(a)
-    elif isinstance(a, complex):
-        real, imag = map(sympify, (a.real, a.imag))
-        return real + S.ImaginaryUnit * imag
-
-    # let's see if 'a' implements conversion methods such as '_sympy_' or
-    # '__int__', that returns a SymPy (by definition) or SymPy compatible
-    # expression, so we just use it
-    for methname, conv in [
-            ('_sympy_',None),
-            ('__float__', Real),
-            ('__int__', Integer),
-            ]:
-        meth = getattr(a, methname, None)
-        if meth is None:
-            continue
-
-        # we have to be careful -- calling Class.__int__() almost always is not
-        # a good idea
-        try:
-            v = meth()
-        except TypeError:
-            continue
-
-        if conv is not None:
-            v = conv(v)
-
-        return v
-
-    raise SympifyError(a)
+    return sympify(a, strict=True)
 
 
 from basic import Basic
