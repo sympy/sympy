@@ -780,6 +780,15 @@ class Poly(Basic):
 
         return f.per(result)
 
+    def to_exact(f):
+        """Make the ground domain exact. """
+        try:
+            result = f.rep.to_exact()
+        except AttributeError: # pragma: no cover
+            raise OperationNotSupported(f, 'to_exact')
+
+        return f.per(result)
+
     def coeffs(f):
         """Returns all non-zero coefficients from `f` in lex order. """
         return [ f.rep.dom.to_sympy(c) for c in f.rep.coeffs() ]

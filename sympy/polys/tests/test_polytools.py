@@ -730,6 +730,14 @@ def test_Poly_to_field():
 
     raises(DomainError, "Poly(2.0*x + 1.0).to_field()")
 
+def test_Poly_to_exact():
+    assert Poly(2*x).to_exact() == Poly(2*x)
+    assert Poly(x/2).to_exact() == Poly(x/2)
+
+    assert Poly(0.1*x).to_exact() == Poly(x/10)
+
+    raises(OperationNotSupported, "Poly(x, modulus=2).to_exact()")
+
 def test_Poly_coeffs():
     assert Poly(0, x).coeffs() == [0]
     assert Poly(1, x).coeffs() == [1]
