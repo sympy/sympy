@@ -271,7 +271,7 @@ class Interval(Set, EvalfMixin):
         """
         return self._args[0]
 
-    _inf = start
+    _inf = left = start
 
     @property
     def end(self):
@@ -287,7 +287,7 @@ class Interval(Set, EvalfMixin):
         """
         return self._args[1]
 
-    _sup = end
+    _sup = right = end
 
     @property
     def left_open(self):
@@ -400,6 +400,53 @@ class Interval(Set, EvalfMixin):
         is_comparable &= other.end.is_comparable
 
         return is_comparable
+
+    @property
+    def is_point(self):
+        """Return ``True`` if the left endpoint equals the right endpoint. """
+        return self.start == self.end
+
+    @property
+    def is_left_unbounded(self):
+        """Return ``True`` if the left endpoint is negative infinity. """
+        return self.left is S.NegativeInfinity
+
+    @property
+    def is_right_unbounded(self):
+        """Return ``True`` if the right endpoint is positive infinity. """
+        return self.right is S.Infinity
+
+    def as_relational(self, symbol):
+        """Rewrite an interval in terms of inequalities and logic operators. """
+        from sympy.core.relational import Eq, Lt, Le
+        from sympy.logic.boolalg import And
+
+        if not symbol.is_real:
+            raise ValueError("only real intervals are supported")
+
+        if self.is_point:
+            return Eq(symbol, self.start)
+        else:
+            if not self.is_left_unbounded:
+                if self.left_open:
+                    left = Lt(self.start, symbol)
+                else:
+                    left = Le(self.start, symbol)
+
+            if not self.is_right_unbounded:
+                if self.right_open:
+                    right = Lt(symbol, self.right)
+                else:
+                    right = Le(symbol, self.right)
+
+            if self.is_left_unbounded and self.is_right_unbounded:
+                return True # XXX: Contained(symbol, Reals)
+            elif self.is_left_unbounded:
+                return right
+            elif self.is_right_unbounded:
+                return left
+            else:
+                return And(left, right)
 
 class Union(Set):
     """
@@ -578,3 +625,4 @@ class EmptySet(Set):
 
     def _contains(self, other):
         return False
+
