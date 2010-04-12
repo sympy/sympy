@@ -1,4 +1,5 @@
 from expr import Expr
+from evalf import EvalfMixin
 from sympify import _sympify
 
 def Rel(a, b, op):
@@ -99,7 +100,7 @@ def Ge(a, b):
     """
     return Relational(a,b,'>=')
 
-class Relational(Expr):
+class Relational(Expr, EvalfMixin):
 
     __slots__ = []
 
@@ -139,6 +140,8 @@ class Relational(Expr):
         if self == old:
             return new
         return self.__class__(self.lhs._eval_subs(old, new), self.rhs._eval_subs(old, new))
+
+    _eval_evalf = Expr._seq_eval_evalf
 
 class Equality(Relational):
 
