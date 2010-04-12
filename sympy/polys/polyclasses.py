@@ -1180,6 +1180,10 @@ class DMP(object):
         """Make the ground domain a field. """
         return f.convert(f.dom.get_field())
 
+    def to_exact(f):
+        """Make the ground domain exact. """
+        return f.convert(f.dom.get_exact())
+
     def convert(f, dom):
         """Convert the ground domain of `f`. """
         if f.dom == dom:
