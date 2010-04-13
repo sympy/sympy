@@ -62,6 +62,41 @@ def flatten(iterable, levels=None, cls=None):
 
     return result
 
+def group(container, multiple=True):
+    """
+    Splits a container into a list of lists of equal, adjacent elements.
+
+    >>> from sympy.utilities.iterables import group
+
+    >>> group([1, 1, 1, 2, 2, 3])
+    [[1, 1, 1], [2, 2], [3]]
+
+    >>> group([1, 1, 1, 2, 2, 3], multiple=False)
+    [(1, 3), (2, 2), (3, 1)]
+
+    """
+    if not container:
+        return []
+
+    current, groups = [container[0]], []
+
+    for elem in container[1:]:
+        if elem == current[-1]:
+            current.append(elem)
+        else:
+            groups.append(current)
+            current = [elem]
+
+    groups.append(current)
+
+    if multiple:
+        return groups
+
+    for i, current in enumerate(groups):
+        groups[i] = (current[0], len(current))
+
+    return groups
+
 def postorder_traversal(node):
     """
     Do a postorder traversal of a tree.
