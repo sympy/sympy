@@ -1,7 +1,8 @@
 from sympy import symbols, Matrix, eye, I, Symbol, Rational, wronskian, cos, \
         sin, exp, hessian, sqrt, zeros, ones, randMatrix, Poly, S, pi, \
         integrate, oo, raises, trigsimp, Integer, block_diag, N
-from sympy.matrices.matrices import ShapeError, MatrixError
+from sympy.matrices.matrices import ShapeError, MatrixError, \
+        matrix_multiply_elementwise
 from sympy.printing import srepr
 from sympy.utilities.pytest import XFAIL
 
@@ -36,6 +37,16 @@ def test_multiplication():
     assert c[1,1]==6
     assert c[2,0]==18
     assert c[2,1]==0
+
+    h = matrix_multiply_elementwise(a, c)
+    assert h == a.multiply_elementwise(c)
+    assert h[0,0]==7
+    assert h[0,1]==4
+    assert h[1,0]==18
+    assert h[1,1]==6
+    assert h[2,0]==0
+    assert h[2,1]==0
+    raises(ShapeError, 'matrix_multiply_elementwise(a, b)')
 
     x = Symbol("x")
 

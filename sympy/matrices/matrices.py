@@ -1076,6 +1076,18 @@ class Matrix(object):
             prod += self[i] * b[i]
         return prod
 
+    def multiply_elementwise(self, b):
+        """Return the Hadamard product (elementwise product) of A and B
+
+        >>> import sympy
+        >>> A = sympy.Matrix([[0, 1, 2], [3, 4, 5]])
+        >>> B = sympy.Matrix([[1, 10, 100], [100, 10, 1]])
+        >>> print A.multiply_elementwise(B)
+        [  0, 10, 200]
+        [300, 40,   5]
+        """
+        return matrix_multiply_elementwise(self, b)
+
     def norm(self):
         assert self.rows == 1 or self.cols == 1
         out = sympify(0)
@@ -1632,6 +1644,22 @@ def matrix_multiply(A, B):
                                         map(lambda n, m: n*m,
                                         alst[i],
                                         blst[j])))
+
+def matrix_multiply_elementwise(A, B):
+    """Return the Hadamard product (elementwise product) of A and B
+
+    >>> import sympy
+    >>> A = sympy.Matrix([[0, 1, 2], [3, 4, 5]])
+    >>> B = sympy.Matrix([[1, 10, 100], [100, 10, 1]])
+    >>> print sympy.matrices.matrix_multiply_elementwise(A, B)
+    [  0, 10, 200]
+    [300, 40,   5]
+    """
+    if A.shape != B.shape:
+        raise ShapeError()
+    shape = A.shape
+    return Matrix(shape[0], shape[1],
+        lambda i, j: A[i,j] * B[i, j])
 
 def matrix_add(A,B):
     """Return A+B"""
