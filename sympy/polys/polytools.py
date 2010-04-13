@@ -45,10 +45,12 @@ from sympy.mpmath import (
 )
 
 from sympy.utilities import (
-    any, all, numbered_symbols,
+    any, all, group, numbered_symbols,
 )
 
 from sympy.ntheory import isprime
+
+import sympy.polys
 
 import re
 
@@ -1540,6 +1542,15 @@ class Poly(Basic):
 
         return Integer(count)
 
+    def real_roots(f, multiple=True):
+        """Return a list of real roots with multiplicities. """
+        reals = sympy.polys.rootoftools.RootOf(f)
+
+        if multiple:
+            return reals
+        else:
+            return group(reals, multiple=False)
+
     def nroots(f, maxsteps=50, cleanup=True, error=False):
         """Compute numerical approximations of roots of `f`. """
         if f.is_multivariate:
@@ -2487,6 +2498,15 @@ def count_roots(f, inf=None, sup=None):
         raise PolynomialError("can't count roots of %s, not a polynomial" % f)
 
     return F.count_roots(inf=inf, sup=sup)
+
+def real_roots(f, multiple=True):
+    """Return a list of real roots with multiplicities of ``f``. """
+    try:
+        F = Poly(f, greedy=False)
+    except GeneratorsNeeded:
+        raise PolynomialError("can't compute real roots of %s, not a polynomial" % f)
+
+    return F.real_roots(multiple=multiple)
 
 def nroots(f, maxsteps=50, cleanup=True, error=False):
     """Compute numerical approximations of roots of `f`. """
