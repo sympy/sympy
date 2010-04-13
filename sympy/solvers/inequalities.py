@@ -1,10 +1,10 @@
 """Tools for solving inequalities and systems of inequalities. """
 
-from sympy import S, Poly, Interval, Or
+from sympy import S, Poly, Interval, Or, Eq
 
-def solve_poly_inequality(eq, relational=False):
+def solve_poly_inequality(inequality):
     """Solve a polynomial inequality with rational coefficients.  """
-    poly = Poly(eq.lhs - eq.rhs, greedy=False)
+    poly = Poly(inequality.lhs - inequality.rhs, greedy=False)
 
     if not poly.is_univariate or not poly.gen.is_real:
         raise ValueError("only real univariate inequalities are supported")
@@ -21,11 +21,11 @@ def solve_poly_inequality(eq, relational=False):
 
     reals, result = poly.real_roots(multiple=False), []
 
-    if eq.rel_op == '==':
+    if inequality.rel_op == '==':
         for root, _ in reals:
             interval = Interval(root, root)
             result.append(interval)
-    elif eq.rel_op == '!=':
+    elif inequality.rel_op == '!=':
         left = S.NegativeInfinity
 
         for right, _ in reals + [(S.Infinity, 1)]:
@@ -40,16 +40,16 @@ def solve_poly_inequality(eq, relational=False):
 
         eq_sign, equal = None, False
 
-        if eq.rel_op == '>':
+        if inequality.rel_op == '>':
             eq_sign = +1
 
-        if eq.rel_op == '<':
+        if inequality.rel_op == '<':
             eq_sign = -1
 
-        if eq.rel_op == '>=':
+        if inequality.rel_op == '>=':
             eq_sign, equal = +1, True
 
-        if eq.rel_op == '<=':
+        if inequality.rel_op == '<=':
             eq_sign, equal = -1, True
 
         right, right_open = S.Infinity, True
@@ -70,10 +70,51 @@ def solve_poly_inequality(eq, relational=False):
         if sign == eq_sign:
             result.insert(0, Interval(S.NegativeInfinity, right, True, right_open))
 
-    if not exact:
-        result = [ r.evalf() for r in result ]
+    return result, exact, poly.gen
 
-    if not relational:
-        return result
-    else:
-        return Or(*[ interval.as_relational(poly.gen) for interval in result ])
+def solve_poly_inequalities(inequalities, relational=False):
+    """Solve a system of polynomial inequalities with rational coefficients.  """
+    results, exact, gen = None, True, None
+
+    if not hasattr(inequalities, '__iter__'):
+        inequalities = [inequalities]
+
+    for inequality in inequalities:
+        if not inequality.is_Relational:
+            inequality = Eq(inequality, S.Zero)
+
+        intervals, _exact, _gen = solve_poly_inequality(inequality)
+
+        if gen is None:
+            gen = _gen
+        elif gen != _gen:
+            raise ValueError("only real univariate inequality systems are supported")
+
+        if results is None:
+            results = intervals
+        else:
+            _results = []
+
+            for interval in intervals:
+                for result in results:
+                    _interval = interval.intersect(result)
+
+                    if _interval is not S.EmptySet:
+                        _results.append(_interval)
+
+            results = _results
+
+        exact &= _exact
+
+        if not results:
+            break
+
+    if not exact:
+        results = [ Interval(r.left.evalf(), r.right.evalf(),
+            left_open=r.left_open, right_open=r.right_open) for r in results ]
+
+    if relational:
+        results = Or(*[ r.as_relational(gen) for r in results ])
+
+    return results
+
