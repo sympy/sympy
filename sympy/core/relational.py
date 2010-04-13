@@ -104,6 +104,8 @@ class Relational(Expr, EvalfMixin):
 
     __slots__ = []
 
+    is_Relational = True
+
     @staticmethod
     def get_relational_class(rop):
         if rop is None or rop in ['==','eq']: return Equality, False
@@ -148,6 +150,8 @@ class Equality(Relational):
     rel_op = '=='
 
     __slots__ = []
+
+    is_Equality = True
 
     @classmethod
     def _eval_relation(cls, lhs, rhs):
