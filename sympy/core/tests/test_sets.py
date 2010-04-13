@@ -1,6 +1,6 @@
 from sympy import (
     Symbol, Set, Union, Interval, oo, S,
-    Inequality, Max, Min, And, Or, Eq, Le, Lt
+    Inequality, Max, Min, And, Or, Eq, Le, Lt, Real,
 )
 from sympy.mpmath import mpi
 
@@ -191,12 +191,14 @@ def test_Interval_is_point():
     assert Interval(3, 4).is_point == False
 
 def test_Interval_is_left_unbounded():
-    assert Interval(-oo, 3).is_left_unbounded == True
     assert Interval(3, 4).is_left_unbounded == False
+    assert Interval(-oo, 3).is_left_unbounded == True
+    assert Interval(Real("-inf"), 3).is_left_unbounded == True
 
 def test_Interval_is_right_unbounded():
-    assert Interval(3, oo).is_right_unbounded == True
     assert Interval(3, 4).is_right_unbounded == False
+    assert Interval(3, oo).is_right_unbounded == True
+    assert Interval(3, Real("+inf")).is_right_unbounded == True
 
 def test_Interval_as_relational():
     x = Symbol('x', real=True)
