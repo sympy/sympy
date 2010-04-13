@@ -2,11 +2,8 @@ from sympy import Symbol, symbols, together, hypersimp, factorial, binomial, \
         collect, Function, powsimp, separate, sin, exp, Rational, fraction, \
         simplify, trigsimp, cos, tan, cot, log, ratsimp, Matrix, pi, integrate, \
         solve, nsimplify, GoldenRatio, sqrt, E, I, sympify, atan, Derivative, \
-        S, diff, oo, Eq, Integer, gamma, acos, Integral, logcombine, \
-        separatevars, \
-        numer, \
-        denom, \
-        Wild
+        S, diff, oo, Eq, Integer, gamma, acos, Integral, logcombine, Wild, \
+        separatevars, erf
 from sympy.utilities import all
 from sympy.utilities.pytest import XFAIL
 
@@ -33,6 +30,17 @@ def test_ratsimp():
     g = a*c - b*d - b*t + (-b*t*x + e*x)/(x*y + z)
 
     assert f != g and ratsimp(f) == g
+
+    A = sqrt(pi)
+
+    B = log(erf(x) - 1)
+    C = log(erf(x) + 1)
+
+    D = 8 - 8*erf(x)
+
+    f = A*B/D - A*C/D + A*C*erf(x)/D - A*B*erf(x)/D + 2*A/D
+
+    assert ratsimp(f) == A*B/8 - A*C/8 + A/(4 - 4*erf(x))
 
 def test_trigsimp1():
     x, y = symbols('x y')
