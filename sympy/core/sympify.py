@@ -52,8 +52,8 @@ def sympify(a, locals=None, convert_xor=True, strict=False):
     >>> sympify("2e-45").is_real
     True
 
-    If the option `strict` is set to `True`, only the types for which an 
-    explicit conversion has been defined are converted. In the other 
+    If the option `strict` is set to `True`, only the types for which an
+    explicit conversion has been defined are converted. In the other
     cases, a SympifyError is raised.
 
     >>> sympify(True)
