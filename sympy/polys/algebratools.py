@@ -1899,12 +1899,19 @@ class FractionField(Field):
         return K1(K1.dom.convert(a, K0))
 
     def from_PolynomialRing(K1, a, K0):
-        """Convert a `DMP` object to `dtype`. """
+        """Convert a `DMF` object to `dtype`. """
         if K1.gens == K0.gens:
             if K1.dom == K0.dom:
                 return K1(a.rep)
             else:
                 return K1(a.convert(K1.dom).rep)
+        else:
+            monoms, coeffs = _dict_reorder(a.to_dict(), K0.gens, K1.gens)
+
+            if K1.dom != K0.dom:
+                coeffs = [ K1.dom.convert(c, K0.dom) for c in coeffs ]
+
+            return K1(dict(zip(monoms, coeffs)))
 
     def from_FractionField(K1, a, K0):
         """Convert a `DMF` object to `dtype`. """
