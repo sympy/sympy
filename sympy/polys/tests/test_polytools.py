@@ -20,7 +20,8 @@ from sympy.polys.polytools import (
     sturm,
     sqf_norm, sqf_part, sqf_list, sqf,
     factor_list, factor,
-    intervals, refine_root, count_roots, nroots,
+    intervals, refine_root, count_roots,
+    real_roots, nroots,
     cancel,
     reduced, groebner,
     symmetrize,
@@ -47,8 +48,11 @@ from sympy.polys.polyclasses import GFP, DMP, DMF
 
 from sympy.polys.algebratools import ZZ, QQ, RR, EX
 
-from sympy import (S, Integer, Rational, Mul, symbols,
-    sqrt, exp, sin, expand, oo, I, pi, re, im)
+from sympy import (
+    S, Integer, Rational, Mul, symbols, sqrt, exp,
+    sin, expand, oo, I, pi, re, im, RootOf,
+)
+
 from sympy.utilities.pytest import raises
 
 x,y,z,p,q,r,s,t,u,v,w,a,b,c,d,e = symbols('x,y,z,p,q,r,s,t,u,v,w,a,b,c,d,e')
@@ -1820,6 +1824,19 @@ def test_count_roots():
     assert count_roots(x**2 + 2, inf=-I, sup=-I/2) == 0
 
     raises(PolynomialError, "count_roots(1)")
+
+def test_real_roots():
+    assert real_roots(x) == [0]
+    assert real_roots(x, multiple=False) == [(0, 1)]
+
+    assert real_roots(x**3) == [0, 0, 0]
+    assert real_roots(x**3, multiple=False) == [(0, 3)]
+
+    assert real_roots(x*(x**3 + x + 3)) == [RootOf(x**3 + x + 3, 0), 0]
+    assert real_roots(x*(x**3 + x + 3), multiple=False) == [(RootOf(x**3 + x + 3, 0), 1), (0, 1)]
+
+    assert real_roots(x**3*(x**3 + x + 3)) == [RootOf(x**3 + x + 3, 0), 0, 0, 0]
+    assert real_roots(x**3*(x**3 + x + 3), multiple=False) == [(RootOf(x**3 + x + 3, 0), 1), (0, 3)]
 
 def test_nroots():
     assert Poly(0, x).nroots() == []
