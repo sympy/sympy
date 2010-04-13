@@ -73,6 +73,9 @@ def test_RootOf___new__():
     raises(GeneratorsNeeded, "RootOf(0, 0)")
     raises(GeneratorsNeeded, "RootOf(1, 0)")
 
+    raises(PolynomialError, "RootOf(Poly(0, x), 0)")
+    raises(PolynomialError, "RootOf(Poly(1, x), 0)")
+
     raises(PolynomialError, "RootOf(x - y, 0)")
 
     raises(DomainError, "RootOf(x**3 - x + sqrt(2), 0)")
@@ -91,6 +94,21 @@ def test_RootOf___new__():
     assert RootOf(Poly(x**3 - y, x), 0) == y**Rational(1,3)
 
     raises(DomainError, "RootOf(Poly(x**3 + x - y, x), 0)")
+
+def test_RootOf___new___indices():
+    r0 = RootOf(x**3 + x + 3, 0)
+    r1 = RootOf(x**3 + x + 3, 1)
+    r2 = RootOf(x**3 + x + 3, 2)
+
+    assert RootOf(x**3 + x + 3) == [r0]
+
+    assert RootOf(x**3 + x + 3, (0,)) == [r0]
+    assert RootOf(x**3 + x + 3, (0,1)) == [r0, r1]
+    assert RootOf(x**3 + x + 3, (0,1,2)) == [r0, r1, r2]
+
+    assert RootOf(x**3 + x + 3, (-3,)) == [r0]
+    assert RootOf(x**3 + x + 3, (-3,-2)) == [r0, r1]
+    assert RootOf(x**3 + x + 3, (-3,-2,-1)) == [r0, r1, r2]
 
 def test_RootOf___eq__():
     assert (RootOf(x**3 + x + 3, 0) == RootOf(x**3 + x + 3, 0)) == True
