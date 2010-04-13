@@ -32,7 +32,6 @@ def test_heurisch_polynomials():
 def test_heurisch_fractions():
     assert heurisch(1/x, x) == log(x)
     assert heurisch(1/(2 + x), x) == log(x + 2)
-    return
     assert heurisch(1/(x+sin(y)), x) == log(x+sin(y))
 
     # Up to a constant, where C = 5*pi*I/12, Mathematica gives identical
