@@ -67,6 +67,8 @@ class Basic(AssumeMeths):
     is_Piecewise = False
     is_Poly = False
     is_AlgebraicNumber = False
+    is_Relational = False
+    is_Equality = False
     is_Boolean = False
     is_Not = False
 
