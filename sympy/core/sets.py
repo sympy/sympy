@@ -1,6 +1,7 @@
 from basic import Basic
 from singleton import Singleton, S
 from evalf import EvalfMixin
+from numbers import Real
 from sympify import _sympify
 from sympy.mpmath import mpi, mpf
 
@@ -410,12 +411,12 @@ class Interval(Set, EvalfMixin):
     @property
     def is_left_unbounded(self):
         """Return ``True`` if the left endpoint is negative infinity. """
-        return self.left is S.NegativeInfinity
+        return self.left is S.NegativeInfinity or self.left == Real("-inf")
 
     @property
     def is_right_unbounded(self):
         """Return ``True`` if the right endpoint is positive infinity. """
-        return self.right is S.Infinity
+        return self.right is S.Infinity or self.right == Real("+inf")
 
     def as_relational(self, symbol):
         """Rewrite an interval in terms of inequalities and logic operators. """
