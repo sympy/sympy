@@ -407,6 +407,10 @@ def test_Poly_unify():
     assert Poly(x+1, y, x, domain='QQ').unify(Poly(x+2, x, y))[2:] == (DMP([[1, 1]], QQ), DMP([[1, 2]], QQ))
     assert Poly(x+1, y, x).unify(Poly(x+2, x, y, domain='QQ'))[2:] == (DMP([[1, 1]], QQ), DMP([[1, 2]], QQ))
 
+    assert Poly(a*x, x, domain='ZZ[a]').unify(Poly(a*b*x, x, domain='ZZ(a,b)'))[2:] == \
+        (DMP([DMF(([[1], []], [[1]]), ZZ), DMF(([[]], [[1]]), ZZ)], ZZ.frac_field(a,b)),
+         DMP([DMF(([[1, 0], []], [[1]]), ZZ), DMF(([[]], [[1]]), ZZ)], ZZ.frac_field(a,b)))
+
     assert Poly(2*x+5, x).unify(Poly(x+2, x, modulus=3))[2:] == (GFP([2, 2], 3, ZZ), GFP([1, 2], 3, ZZ))
     assert Poly(x+2, x, modulus=3).unify(Poly(2*x+5, x))[2:] == (GFP([1, 2], 3, ZZ), GFP([2, 2], 3, ZZ))
 
