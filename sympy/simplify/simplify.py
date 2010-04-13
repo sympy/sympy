@@ -822,7 +822,7 @@ def ratsimp(expr):
     except GeneratorsNeeded:
         return f/g
 
-    return Add(*Q) + r/g
+    return Add(*Q) + cancel(r/g)
 
 def trigsimp(expr, deep=False, recursive=False):
     """
