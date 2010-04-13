@@ -1,6 +1,6 @@
 from sympy import symbols, Integral, Basic, raises
 from sympy.utilities.iterables import postorder_traversal, \
-    preorder_traversal, flatten, subsets, variations
+    preorder_traversal, flatten, group, subsets, variations
 from sympy.functions.elementary.piecewise import Piecewise, ExprCondPair
 
 w,x,y,z= symbols('wxyz')
@@ -63,6 +63,25 @@ def test_flatten():
 
     assert flatten([MyOp(x, y), z]) == [MyOp(x, y), z]
     assert flatten([MyOp(x, y), z], cls=MyOp) == [x, y, z]
+
+def test_group():
+    assert group([]) == []
+    assert group([], multiple=False) == []
+
+    assert group([1]) == [[1]]
+    assert group([1], multiple=False) == [(1, 1)]
+
+    assert group([1,1]) == [[1,1]]
+    assert group([1,1], multiple=False) == [(1, 2)]
+
+    assert group([1,1,1]) == [[1,1,1]]
+    assert group([1,1,1], multiple=False) == [(1, 3)]
+
+    assert group([1,2,1]) == [[1],[2],[1]]
+    assert group([1,2,1], multiple=False) == [(1, 1), (2, 1), (1, 1)]
+
+    assert group([1,1,2,2,2,1,3,3]) == [[1,1], [2,2,2], [1], [3,3]]
+    assert group([1,1,2,2,2,1,3,3], multiple=False) == [(1, 2), (2, 3), (1, 1), (3, 2)]
 
 def test_subsets():
     assert list(subsets([1, 2, 3], 1)) == [[1], [2], [3]]
