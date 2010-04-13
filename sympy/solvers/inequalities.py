@@ -1,6 +1,6 @@
 """Tools for solving inequalities and systems of inequalities. """
 
-from sympy import S, Poly, RootOf, intervals, Interval, Or
+from sympy import S, Poly, Interval, Or
 
 def solve_poly_inequality(eq, relational=False):
     """Solve a polynomial inequality with rational coefficients.  """
@@ -19,42 +19,20 @@ def solve_poly_inequality(eq, relational=False):
     if not (domain.is_ZZ or domain.is_QQ):
         raise ValueError("inequality solving is not supported over %s" % domain)
 
-    result = []
+    reals, result = poly.real_roots(multiple=False), []
 
-    if eq.rel_op in ['==', '!=']:
-        n, roots = poly.count_roots(), []
+    if eq.rel_op == '==':
+        for root, _ in reals:
+            interval = Interval(root, root)
+            result.append(interval)
+    elif eq.rel_op == '!=':
+        left = S.NegativeInfinity
 
-        for i in xrange(0, n):
-            roots.append(RootOf(poly, i))
-
-        if eq.rel_op == '==':
-            for root in roots:
-                interval = Interval(root, root)
-                result.append(interval)
-        else:
-            left, roots = S.NegativeInfinity, roots + [S.Infinity]
-
-            for right in roots:
-                interval = Interval(left, right, True, True)
-                result.append(interval)
-                left = right
+        for right, _ in reals + [(S.Infinity, 1)]:
+            interval = Interval(left, right, True, True)
+            result.append(interval)
+            left = right
     else:
-        _, factors = poly.factor_list()
-
-        reals = intervals([ factor for factor, _ in factors])
-
-        visited, roots = {}, []
-
-        for interval, indices in reals:
-            (ith,) = indices.keys()
-
-            if ith in visited:
-                index = visited[ith] + 1
-            else:
-                index = 0
-
-            roots.append(RootOf(factors[ith][0], index))
-
         if poly.LC() > 0:
             sign = +1
         else:
@@ -76,10 +54,8 @@ def solve_poly_inequality(eq, relational=False):
 
         right, right_open = S.Infinity, True
 
-        for (interval, indices), left in reversed(zip(reals, roots)):
-            (ith,) = indices.keys()
-
-            if factors[ith][1] % 2:
+        for left, multiplicity in reversed(reals):
+            if multiplicity % 2:
                 if sign == eq_sign:
                     result.insert(0, Interval(left, right, not equal, right_open))
 
