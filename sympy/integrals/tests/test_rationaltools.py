@@ -3,7 +3,7 @@ from sympy import symbols, S, I, atan, log, Poly
 from sympy.integrals.rationaltools import ratint, \
     ratint_ratpart, ratint_logpart, log_to_atan, log_to_real
 
-from sympy.abc import a, x, t
+from sympy.abc import a, b, x, t
 
 half = S(1)/2
 
@@ -82,6 +82,9 @@ def test_ratint():
     assert ratint(1/(x**3+1), x, real=False) == log(1 + x)/3 - \
         (S(1)/6 - I*3**half/6)*log(-half + x + I*3**half/2) - \
         (S(1)/6 + I*3**half/6)*log(-half + x - I*3**half/2)
+
+    assert ratint(1/(x*(a+b*x)**3), x) == \
+        (3*a + 2*b*x)/(2*a**2*b**2*x**2 + 4*b*x*a**3 + 2*a**4) + log(x)/a**3 - log(x + a/b)/a**3
 
 def test_ratint_logpart():
     assert ratint_logpart(x, x**2-9, x, t) == \
