@@ -29,6 +29,7 @@ from sympy.utilities.lambdify import lambdify
 from sympy.mpmath import findroot
 
 from sympy.solvers.polysys import solve_poly_system
+from sympy.solvers.inequalities import solve_poly_inequalities
 
 from warnings import warn
 
@@ -148,8 +149,13 @@ def solve(f, *symbols, **flags):
     bare_f = not isinstance(f, (list, tuple, set))
     f, symbols = (sympit(w) for w in [f, symbols])
 
+    relational = flags.get('relational', False)
+
+    if any(fi.is_Relational and not fi.is_Equality for fi in f):
+        return solve_poly_inequalities(f, relational=relational)
+
     for i, fi in enumerate(f):
-        if isinstance(fi, Equality):
+        if fi.is_Equality:
             f[i] = fi.lhs - fi.rhs
 
     if not symbols:
