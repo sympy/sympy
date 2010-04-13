@@ -1,6 +1,6 @@
 from sympy import (Matrix, Symbol, solve, exp, log, cos, acos, Rational, Eq,
     sqrt, oo, LambertW, pi, I, sin, asin, Function, diff, Derivative, symbols,
-    S, sympify, var, simplify, Integral, sstr)
+    S, sympify, var, simplify, Integral, sstr, Interval, And, Or, Lt, Gt)
 
 from sympy.solvers import solve_linear_system, solve_linear_system_LU,dsolve,\
      tsolve
@@ -297,3 +297,11 @@ def test_issue626():
     F = x**2 + f(x)**2 - 4*x - 1
     e = F.diff(x)
     assert solve(e, f(x).diff(x)) == [(2-x)/f(x)]
+
+def test_solve_inequalities():
+    a = Symbol('a', real=True)
+
+    assert solve([Lt(a**2 - 2, 0), Gt(a**2 - 1, 0)]) == \
+        [Interval(-sqrt(2), -1, True, True), Interval(1, sqrt(2), True, True)]
+    assert solve([Lt(a**2 - 2, 0), Gt(a**2 - 1, 0)], relational=True) == \
+        Or(And(Lt(-sqrt(2), a), Lt(a, -1)), And(Lt(1, a), Lt(a, sqrt(2))))
