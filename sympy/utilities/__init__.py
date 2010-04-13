@@ -1,7 +1,7 @@
 """Some utilities that may help.
 """
-from iterables import iff, flatten, subsets, variations, any, all, \
-                      numbered_symbols, capture
+from iterables import (iff, flatten, group, subsets,
+    variations, numbered_symbols, cartes, capture, any, all)
 
 from lambdify import lambdify
 from source import source
