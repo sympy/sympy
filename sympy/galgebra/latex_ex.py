@@ -111,7 +111,7 @@ class LatexPrinter(Printer):
                 form \partial_{differentiation variable}
     """
 
-    #printmethod ='_latex_ex_'
+    #printmethod ='_latex_ex'
     sym_fmt = 0
     fct_fmt = 0
     pdiff_fmt = 0

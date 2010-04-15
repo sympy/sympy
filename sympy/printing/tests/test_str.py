@@ -21,11 +21,11 @@ d = Symbol('d', dummy=True)
 
 def test_printmethod():
     class R(abs):
-        def _sympystr_(self, printer):
+        def _sympystr(self, printer):
             return "foo(%s)" % printer._print(self.args[0])
     assert spr(R(x)) == "foo(x)"
     class R(abs):
-        def _sympystr_(self, printer):
+        def _sympystr(self, printer):
             return "foo"
     assert spr(R(x)) == "foo"
 

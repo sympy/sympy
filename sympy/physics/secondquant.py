@@ -241,7 +241,7 @@ class AntiSymmetricTensor(TensorSymbol):
         except ViolationOfPauliPrinciple:
             return S.Zero
 
-    def _latex_(self,printer):
+    def _latex(self,printer):
         return "%s^{%s}_{%s}" %(
                 self.symbol,
                 "".join([ i.name for i in self.args[1]]),
@@ -592,7 +592,7 @@ class KroneckerDelta(Function):
     def _dagger_(self):
         return self
 
-    def _latex_(self,printer):
+    def _latex(self,printer):
         return "\\delta_{%s%s}"% (self.args[0].name,self.args[1].name)
 
     def __repr__(self):
@@ -1026,7 +1026,7 @@ class AnnihilateFermion(FermionicOperator, Annihilator):
     def __repr__(self):
         return "AnnihilateFermion(%s)"%self.state
 
-    def _latex_(self,printer):
+    def _latex(self,printer):
         return "a_{%s}"%self.state.name
 
 class CreateFermion(FermionicOperator, Creator):
@@ -1146,7 +1146,7 @@ class CreateFermion(FermionicOperator, Creator):
     def __repr__(self):
         return "CreateFermion(%s)"%self.state
 
-    def _latex_(self,printer):
+    def _latex(self,printer):
         return "a^\\dagger_{%s}"%self.state.name
 
 Fd = CreateFermion
@@ -1865,7 +1865,7 @@ class Commutator(Function):
     def __str__(self):
         return "[%s,%s]" %(self.args[0],self.args[1])
 
-    def _latex_(self,printer):
+    def _latex(self,printer):
         return "\\left[%s,%s\\right]"%tuple([
             printer._print(arg) for arg in self.args])
 
@@ -2184,7 +2184,7 @@ class NO(Function):
         mul = Mul(*(self.args[0].args[0:i] + self.args[0].args[i+1:]))
         return NO(mul)
 
-    def _latex_(self,printer):
+    def _latex(self,printer):
         return "\\left\\{%s\\right\\}"%printer._print(self.args[0])
 
     def __repr__(self):
@@ -2921,7 +2921,7 @@ class PermutationOperator(Expr):
 
         return S.NegativeOne*expr
 
-    def _latex_(self, printer):
+    def _latex(self, printer):
         return "P(%s%s)"%self.args
 
 

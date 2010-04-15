@@ -9,7 +9,7 @@ from sympy.printing.fcode import fcode, wrap_fortran
 def test_printmethod():
     x = symbols('x')
     class nint(Function):
-        def _fcode_(self, printer):
+        def _fcode(self, printer):
             return "nint(%s)" % printer._print(self.args[0])
     assert fcode(nint(x)) == "      nint(x)"
 

@@ -9,7 +9,7 @@ g = Function('g')
 
 def test_printmethod():
     class fabs(abs):
-        def _ccode_(self, printer):
+        def _ccode(self, printer):
             return "fabs(%s)" % printer._print(self.args[0])
     assert ccode(fabs(x)) == "fabs(x)"
 

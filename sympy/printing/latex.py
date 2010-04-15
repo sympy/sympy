@@ -14,7 +14,7 @@ from sympy.mpmath.libmp import prec_to_dps
 import re, warnings
 
 class LatexPrinter(Printer):
-    printmethod = "_latex_"
+    printmethod = "_latex"
 
     _default_settings = {
         "order": None,

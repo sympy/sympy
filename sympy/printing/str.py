@@ -15,7 +15,7 @@ from sympy.mpmath.libmp import prec_to_dps
 from sympy.polys.polyerrors import PolynomialError
 
 class StrPrinter(Printer):
-    printmethod = "_sympystr_"
+    printmethod = "_sympystr"
     _default_settings = {
         "order": None,
         "full_prec": "auto",

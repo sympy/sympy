@@ -29,11 +29,11 @@ def sT(expr, string):
 
 def test_printmethod():
     class R(oo.__class__):
-        def _sympyrepr_(self, printer):
+        def _sympyrepr(self, printer):
             return "foo"
     assert srepr(R()) == "foo"
     class R(abs):
-        def _sympyrepr_(self, printer):
+        def _sympyrepr(self, printer):
             return "foo(%s)" % printer._print(self.args[0])
     assert srepr(R(x)) == "foo(Symbol('x'))"
 

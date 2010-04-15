@@ -15,7 +15,7 @@ class MathMLPrinter(Printer):
 
     References: http://www.w3.org/TR/MathML2/
     """
-    printmethod = "_mathml_"
+    printmethod = "_mathml"
     _default_settings = {
         "order": None,
         "encoding": "utf-8"

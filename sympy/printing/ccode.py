@@ -15,7 +15,7 @@ from sympy.core.basic import S
 
 class CCodePrinter(StrPrinter):
     """A printer to convert python expressions to strings of c code"""
-    printmethod = "_ccode_"
+    printmethod = "_ccode"
 
     def _print_Pow(self, expr):
         PREC = precedence(expr)

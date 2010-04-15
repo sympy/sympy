@@ -35,7 +35,7 @@ implicit_functions = set([
 
 class FCodePrinter(StrPrinter):
     """A printer to convert sympy expressions to strings of Fortran code"""
-    printmethod = "_fcode_"
+    printmethod = "_fcode"
 
     _default_settings = {
         'order': None,
