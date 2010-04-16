@@ -1,4 +1,4 @@
-from sympy import Basic, S, Symbol, Real, Integer, Rational,  \
+from sympy import Basic, S, Symbol, Wild,  Real, Integer, Rational,  \
     sin, cos, exp, log, oo, sqrt, symbols, Integral, sympify, \
     WildFunction, Poly, Function, Derivative, Number, pi, var, \
     NumberSymbol, zoo, Piecewise, Mul
@@ -444,6 +444,8 @@ def test_has():
     x, y = symbols("xy")
     f = Function("f")
     g = Function("g")
+    p = Wild('p')
+
     assert sin(x).has(x)
     assert sin(x).has(sin)
     assert not sin(x).has(y)
@@ -459,6 +461,10 @@ def test_has():
     assert not f(x).diff(x).has(y)
     assert not f(x).diff(x).has(g)
     assert not f(x).diff(x).has(sin)
+
+    assert (x**2).has(Symbol)
+    assert not (x**2).has(Wild)
+    assert (2*p).has(Wild)
 
 def test_has_any_symbols():
     x,y,z,t,u = symbols('xyztu')

@@ -1138,10 +1138,10 @@ class Basic(AssumeMeths):
         elif not patterns:
             raise TypeError("has() requires at least 1 argument (got none)")
         p = sympify(patterns[0])
-        if p.is_Atom and not isinstance(p, Wild):
-            return p in self.atoms(p.func)
         if isinstance(p, BasicType):
             return bool(self.atoms(p))
+        if p.is_Atom and not isinstance(p, Wild):
+            return p in self.atoms(p.func)
         if p.matches(self) is not None:
             return True
         for e in flatten(self.args):
