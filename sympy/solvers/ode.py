@@ -2243,18 +2243,20 @@ def ode_nth_linear_constant_coeff_homogeneous(eq, func, order, match, returns='s
     x = func.args[0]
     f = func.func
     r = match
+
     # A generator of constants
     constants = numbered_symbols(prefix='C', function=Symbol, start=1)
+
     # First, set up characteristic equation.
-    m = Symbol('m', dummy=True)
     chareq = S.Zero
+
     for i in r.keys():
         if type(i) == str or i < 0:
             pass
         else:
-            chareq += r[i]*m**i
+            chareq += r[i]*S.Pure**i
 
-    chareq = Poly(chareq, m)
+    chareq = Poly(chareq, S.Pure)
     chareqroots = [ RootOf(chareq, k) for k in xrange(chareq.degree()) ]
 
     # Create a dict root: multiplicity or charroots
