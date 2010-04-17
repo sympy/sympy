@@ -3,7 +3,7 @@ import inspect
 import copy
 from sympy.core import sympify
 from sympy.utilities.source import get_class
-from sympy.assumptions import global_assumptions
+from sympy.assumptions import global_assumptions, Assume, Predicate
 from sympy.assumptions.assume import eliminate_assume
 from sympy.logic.boolalg import to_cnf, conjuncts, disjuncts, \
     And, Not
@@ -12,24 +12,24 @@ from sympy.logic.algorithms.dpll import dpll_int_repr
 
 class Q:
     """Supported ask keys."""
-    bounded = 'bounded'
-    commutative = 'commutative'
-    complex = 'complex'
-    composite = 'composite'
-    even = 'even'
-    extended_real = 'extended_real'
-    imaginary = 'imaginary'
-    infinitesimal = 'infinitesimal'
-    infinity = 'infinity'
-    integer = 'integer'
-    irrational = 'irrational'
-    rational = 'rational'
-    negative = 'negative'
-    nonzero = 'nonzero'
-    positive = 'positive'
-    prime = 'prime'
-    real = 'real'
-    odd = 'odd'
+    bounded = Predicate('bounded')
+    commutative = Predicate('commutative')
+    complex = Predicate('complex')
+    composite = Predicate('composite')
+    even = Predicate('even')
+    extended_real = Predicate('extended_real')
+    imaginary = Predicate('imaginary')
+    infinitesimal = Predicate('infinitesimal')
+    infinity = Predicate('infinity')
+    integer = Predicate('integer')
+    irrational = Predicate('irrational')
+    rational = Predicate('rational')
+    negative = Predicate('negative')
+    nonzero = Predicate('nonzero')
+    positive = Predicate('positive')
+    prime = Predicate('prime')
+    real = Predicate('real')
+    odd = Predicate('odd')
 
 def ask(expr, key, assumptions=True):
     """
@@ -62,6 +62,8 @@ def ask(expr, key, assumptions=True):
 
     """
     expr = sympify(expr)
+    if type(key) is Predicate:
+        key = key.name
     assumptions = And(assumptions, And(*global_assumptions))
 
     # direct resolution method, no logic
@@ -137,6 +139,8 @@ def register_handler(key, handler):
         True
 
     """
+    if type(key) is Predicate:
+        key = key.name
     if key in handlers_dict:
         handlers_dict[key].append(handler)
     else:
@@ -144,6 +148,8 @@ def register_handler(key, handler):
 
 def remove_handler(key, handler):
     """Removes a handler from the ask system. Same syntax as register_handler"""
+    if type(key) is Predicate:
+        key = key.name
     handlers_dict[key].remove(handler)
 
 # handlers_dict tells us what ask handler we should use
