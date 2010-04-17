@@ -67,15 +67,13 @@ def ask(expr, key, assumptions=True):
     assumptions = And(assumptions, And(*global_assumptions))
 
     # direct resolution method, no logic
-    resolutors = []
-    for handler in handlers_dict[key]:
-        resolutors.append( get_class(handler) )
     res, _res = None, None
     mro = inspect.getmro(type(expr))
-    for handler in resolutors:
+    for handler in handlers_dict[key]:
+        cls = get_class(handler)
         for subclass in mro:
-            if hasattr(handler, subclass.__name__):
-                res = getattr(handler, subclass.__name__)(expr, assumptions)
+            if hasattr(cls, subclass.__name__):
+                res = getattr(cls, subclass.__name__)(expr, assumptions)
                 if _res is None:
                     _res = res
                 elif res is None:
