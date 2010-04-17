@@ -72,18 +72,21 @@ def ask(expr, key, assumptions=True):
     for handler in handlers_dict[key]:
         cls = get_class(handler)
         for subclass in mro:
-            if hasattr(cls, subclass.__name__):
-                res = getattr(cls, subclass.__name__)(expr, assumptions)
-                if _res is None:
-                    _res = res
-                elif res is None:
-                    # since first resolutor was conclusive, we keep that value
-                    res = _res
-                else:
-                    # only check consistency if both resolutors have concluded
-                    if _res != res:
-                        raise ValueError('incompatible resolutors')
-                break
+            try:
+                eval = getattr(cls, subclass.__name__)
+            except AttributeError:
+                continue
+            res = eval(expr, assumptions)
+            if _res is None:
+                _res = res
+            elif res is None:
+                # since first resolutor was conclusive, we keep that value
+                res = _res
+            else:
+                # only check consistency if both resolutors have concluded
+                if _res != res:
+                    raise ValueError('incompatible resolutors')
+            break
     if res is not None:
         return res
 
