@@ -1,6 +1,7 @@
+from basic import Basic, Atom
 from core import C
-from sympify import sympify
-from singleton import S
+from sympify import sympify, _sympify, SympifyError
+from singleton import S, Singleton
 from expr import Expr, AtomicExpr
 from cache import cacheit
 from compatibility import any, all
@@ -116,9 +117,12 @@ class Dummy(Symbol):
 
     __slots__ = ['dummy_index']
 
+    is_Dummy = True
+
     def __new__(cls, name=None, commutative=True, **assumptions):
         if name is None:
             name = str(Dummy._count)
+
         obj = Symbol.__xnew__(cls, name, commutative=commutative, **assumptions)
 
         Dummy._count += 1
@@ -134,6 +138,8 @@ class Wild(Symbol):
     """
 
     __slots__ = ['exclude', 'properties']
+
+    is_Wild = True
 
     def __new__(cls, name, exclude=None, properties=None, **assumptions):
         if type(exclude) is list:
@@ -187,6 +193,14 @@ class Wild(Symbol):
         from sympy.core.function import WildFunction
         return WildFunction(self.name, nargs=len(args))(*args, **assumptions)
 
+class Pure(Expr):
+    """A commutative singleton symbol different from all other symbols. """
+    __metaclass__ = Singleton
+
+    __slots__ = ['is_commutative', 'name']
+    is_commutative, name = True, 'pure'
+
+    is_Pure   = True
 
 def symbols(*names, **kwargs):
     """

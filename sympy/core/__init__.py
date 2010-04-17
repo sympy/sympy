@@ -27,5 +27,5 @@ from containers import Tuple
 Catalan = S.Catalan
 EulerGamma = S.EulerGamma
 GoldenRatio = S.GoldenRatio
-
+pure = S.Pure
 

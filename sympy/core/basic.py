@@ -53,6 +53,9 @@ class Basic(AssumeMeths):
     # To be overridden with True in the appropriate subclasses
     is_Atom = False
     is_Symbol = False
+    is_Dummy = False
+    is_Wild = False
+    is_Pure = False
     is_Function = False
     is_Add = False
     is_Mul = False
