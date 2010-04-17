@@ -1,5 +1,5 @@
 from sympy import Symbol, Wild, Inequality, StrictInequality, pi, I, Rational, \
-        sympify, raises, symbols
+        sympify, raises, symbols, S
 
 
 def test_Symbol():
@@ -94,6 +94,41 @@ def test_Wild_properties():
             else:
                 assert d == None
 
+def test_Pure():
+    assert (S.Pure == S.Pure) == True
+
+    assert (S.Pure == Symbol('x')) == False
+    assert (Symbol('x') == S.Pure) == False
+
+    assert (S.Pure == Symbol('x', dummy=True)) == False
+    assert (Symbol('x', dummy=True) == S.Pure) == False
+
+    assert (S.Pure == Symbol('x', commutative=False)) == False
+    assert (Symbol('x', commutative=False) == S.Pure) == False
+
+    assert (S.Pure == Symbol('pure')) == False
+    assert (Symbol('pure') == S.Pure) == False
+
+    assert (S.Pure == 1) == False
+    assert (S.Pure == I) == False
+
+    assert (S.Pure != S.Pure) == False
+
+    assert (S.Pure != Symbol('x')) == True
+    assert (Symbol('x') != S.Pure) == True
+
+    assert (S.Pure != Symbol('x', dummy=True)) == True
+    assert (Symbol('x', dummy=True) != S.Pure) == True
+
+    assert (S.Pure != Symbol('x', commutative=False)) == True
+    assert (Symbol('x', commutative=False) != S.Pure) == True
+
+    assert (S.Pure != Symbol('pure')) == True
+    assert (Symbol('pure') != S.Pure) == True
+
+    assert (S.Pure != 1) == True
+    assert (S.Pure != I) == True
+
 def test_symbols():
     x, y, z = Symbol('x'), Symbol('y'), Symbol('z')
     assert symbols('x') == Symbol('x')
@@ -108,3 +143,4 @@ def test_call():
     assert f(2)
     f = Wild('f')
     assert f({})
+

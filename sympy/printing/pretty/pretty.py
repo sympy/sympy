@@ -41,6 +41,16 @@ class PrettyPrinter(Printer):
         symb = pretty_symbol(e.name)
         return prettyForm(symb)
 
+    def _print_Pure(self, e):
+        use_unicode = self._settings["use_unicode"]
+
+        if use_unicode is False:
+            symb = pretty_symbol('pure')
+        else:
+            symb = pretty_symbol(u"\u2118")
+
+        return prettyForm(symb)
+
     def _print_Real(self, e):
         # we will use StrPrinter's Real printer, but we need to handle the
         # full_prec ourselves, according to the self._print_level

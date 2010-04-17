@@ -1,5 +1,6 @@
-from sympify import sympify
-from basic import Atom, S, C
+from basic import Basic, Atom, S, C
+from singleton import SingletonMeta
+from sympify import sympify, _sympify, SympifyError
 from expr import Expr
 from cache import cacheit
 from sympy.logic.boolalg import Boolean
@@ -99,6 +100,8 @@ class Dummy(Symbol):
 
     __slots__ = ['dummy_index']
 
+    is_Dummy = True
+
     def __new__(cls, name, commutative=True, **assumptions):
         obj = Symbol.__xnew__(cls, name, commutative=commutative, **assumptions)
 
@@ -131,6 +134,8 @@ class Wild(Symbol):
     """
 
     __slots__ = ['exclude', 'properties']
+
+    is_Wild = True
 
     def __new__(cls, name, exclude=None, properties=None, **assumptions):
         if type(exclude) is list:
@@ -184,6 +189,14 @@ class Wild(Symbol):
         from sympy.core.function import WildFunction
         return WildFunction(self.name, nargs=len(args))(*args, **assumptions)
 
+class Pure(Symbol):
+    """A commutative singleton symbol different from all other symbols. """
+    __metaclass__ = SingletonMeta
+
+    __slots__ = ['is_commutative', 'name']
+    is_commutative, name = True, 'pure'
+
+    is_Pure   = True
 
 def symbols(*names, **kwargs):
     """
@@ -291,3 +304,6 @@ def var(*names, **kwargs):
         # we should explicitly break cyclic dependencies as stated in inspect
         # doc
         del frame
+
+Basic.singleton['pure'] = Pure
+
