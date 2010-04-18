@@ -74,7 +74,7 @@ class Xor(BooleanFunction):
         A = args.pop()
         while args:
             B = args.pop()
-            A = Or(A & Not(B), (Not(A) & B))
+            A = Or(And(A, Not(B)), And(Not(A), B))
         return A
 
 class Not(BooleanFunction):
@@ -98,38 +98,27 @@ class Not(BooleanFunction):
 
 class Nand(BooleanFunction):
     """Logical NAND function.
+
     It evaluates its arguments in order, giving True immediately if any
     of them are False, and False if they are all True.
     """
     @classmethod
     def eval(cls, *args):
-        if not args:
-            return False
-        args = list(args)
-        A = Not(args.pop())
-        while args:
-            B = args.pop()
-            A = Or(A, Not(B))
-        return A
+        return Not(And(*args))
 
 class Nor(BooleanFunction):
     """Logical NOR function.
+
     It evaluates its arguments in order, giving False immediately if any
     of them are True, and True if they are all False.
     """
     @classmethod
     def eval(cls, *args):
-        if not args:
-            return False
-        args = list(args)
-        A = Not(args.pop())
-        while args:
-            B = args.pop()
-            A = And(A, Not(B))
-        return A
+        return Not(Or(*args))
 
 class Implies(BooleanFunction):
     """Logical implication.
+
     A implies B is equivalent to !A v B
     """
     @classmethod
@@ -141,11 +130,12 @@ class Implies(BooleanFunction):
 
 class Equivalent(BooleanFunction):
     """Equivalence relation.
+
     Equivalent(A, B) is True if and only if A and B are both True or both False
     """
     @classmethod
     def eval(cls, *args):
-        return Basic.__new__(cls, *sorted(args))
+        return Basic.__new__(cls, *set(args))
 
 ### end class definitions. Some useful methods
 
