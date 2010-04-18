@@ -40,7 +40,7 @@ def minimal_polynomial(ex, x=None, **args):
     if x is not None:
         x = sympify(x)
     else:
-        x = Dummy('x')
+        x = S.Pure
 
     def update_mapping(ex, exp, base=None):
         a = generator.next()
@@ -146,7 +146,7 @@ def primitive_element(extension, x=None, **args):
     if x is not None:
         x = sympify(x)
     else:
-        x = Dummy('x')
+        x = S.Pure
 
     if not args.get('ex', False):
         extension = [ AlgebraicNumber(ext, gen=x) for ext in extension ]
