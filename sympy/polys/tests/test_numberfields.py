@@ -1,6 +1,6 @@
 """Tests for computational algebraic number field theory. """
 
-from sympy import S, Rational, Symbol, Poly, sin, sqrt, I, oo
+from sympy import S, Rational, Symbol, Poly, sin, sqrt, I, oo, pure
 from sympy.utilities.pytest import raises
 
 from sympy.polys.numberfields import (
@@ -67,7 +67,10 @@ def test_minimal_polynomial():
     raises(NotAlgebraic, "minimal_polynomial(2**y, x)")
     raises(NotAlgebraic, "minimal_polynomial(sin(1), x)")
 
-    assert minimal_polynomial(sqrt(2), polys=True).is_Poly == True
+    assert minimal_polynomial(sqrt(2)) == pure**2 - 2
+    assert minimal_polynomial(sqrt(2), x) == x**2 - 2
+
+    assert minimal_polynomial(sqrt(2), polys=True) == Poly(pure**2 - 2)
     assert minimal_polynomial(sqrt(2), x, polys=True) == Poly(x**2 - 2)
 
     a = AlgebraicNumber(sqrt(2))
@@ -105,6 +108,8 @@ def test_primitive_element():
     assert primitive_element([sqrt(2)], x, ex=True, polys=True) == (Poly(x**2 - 2), [1], [[1, 0]])
     assert primitive_element([sqrt(2), sqrt(3)], x, ex=True, polys=True) == \
         (Poly(x**4 - 10*x**2 + 1), [1, 1], [[Q(1,2), 0, -Q(9,2), 0], [-Q(1,2), 0, Q(11,2), 0]])
+
+    assert primitive_element([sqrt(2)]) == (pure**2 - 2, [1])
 
     raises(ValueError, "primitive_element([], x, ex=False)")
     raises(ValueError, "primitive_element([], x, ex=True)")
