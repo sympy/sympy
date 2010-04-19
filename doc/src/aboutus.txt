@@ -98,6 +98,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Fernando Perez: symarray() implemented
 #. Raffaele De Feo: Fix non-commutative expansion
 #. Christian Muise: fixes to logic module
+#. Kazuo Thow: Cleanup pretty printing tests
 
 
 Up-to-date list in the order of the first contribution is given in the `AUTHORS
