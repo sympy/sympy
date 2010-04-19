@@ -364,10 +364,10 @@ class Mul(AssocOp):
                     return coeff**e * Mul(*[s**e for s in rest])
             elif e.is_Integer:
                 coeff, rest = b.as_coeff_terms()
-                l = [s**e for s in rest]
-                if e.is_negative:
-                    l.reverse()
-                return coeff**e * Mul(*l)
+                if coeff == S.One:
+                    return
+                else:
+                    return coeff**e * Mul(*rest)**e
 
         c, t = b.as_coeff_terms()
         if e.is_even and c.is_Number and c < 0:
