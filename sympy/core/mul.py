@@ -335,7 +335,7 @@ class Mul(AssocOp):
                         # either.
                         if coeff < 0:
                             coeff = -coeff
-                        if coeff == S.One:
+                        if coeff is S.One:
                             return None
                         b = b / coeff
                         return coeff ** e * b ** e
