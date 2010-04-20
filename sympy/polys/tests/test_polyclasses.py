@@ -2,7 +2,6 @@
 
 from sympy.polys.polyclasses import (
     GFP, init_normal_GFP,
-    DUP, init_normal_DUP,
     DMP, init_normal_DMP,
     SDP, init_normal_SDP,
     DMF, init_normal_DMF,
@@ -17,235 +16,6 @@ from sympy.polys.polyerrors import (
 )
 
 from sympy.utilities.pytest import raises
-
-def test_DUP___init__():
-    f = DUP([0,0,1,2,3], ZZ)
-
-    assert f.rep == [1,2,3]
-    assert f.dom == ZZ
-
-    f = DUP({2: QQ(1), 0: QQ(1)}, QQ)
-
-    assert f.rep == [QQ(1),QQ(0),QQ(1)]
-    assert f.dom == QQ
-
-    f = DUP(1, QQ)
-
-    assert f.rep == [QQ(1)]
-    assert f.dom == QQ
-
-def test_DUP___eq__():
-    assert DUP([ZZ(1),ZZ(2),ZZ(3)], ZZ) == \
-           DUP([ZZ(1),ZZ(2),ZZ(3)], ZZ)
-    assert DUP([QQ(1),QQ(2),QQ(3)], QQ) == \
-           DUP([ZZ(1),ZZ(2),ZZ(3)], ZZ)
-    assert DUP([ZZ(1),ZZ(2),ZZ(3)], ZZ) == \
-           DUP([QQ(1),QQ(2),QQ(3)], QQ)
-
-    assert DUP([ZZ(1),ZZ(2),ZZ(4)], ZZ) != \
-           DUP([ZZ(1),ZZ(2),ZZ(3)], ZZ)
-
-    assert DUP([QQ(1),QQ(2),QQ(4)], QQ) != \
-           DUP([ZZ(1),ZZ(2),ZZ(3)], ZZ)
-
-def test_DUP___bool__():
-    assert bool(DUP([], ZZ)) == False
-    assert bool(DUP([1], ZZ)) == True
-
-def test_DUP_to_dict():
-    f = DUP([3,0,0,2,0,0,0,0,8], ZZ)
-
-    assert f.to_dict() == \
-        {8: 3, 5: 2, 0: 8}
-    assert f.to_sympy_dict() == \
-        {8: ZZ.to_sympy(3), 5: ZZ.to_sympy(2), 0: ZZ.to_sympy(8)}
-
-def test_DUP_properties():
-    assert DUP([QQ(0)], QQ).is_zero == True
-    assert DUP([QQ(1)], QQ).is_zero == False
-
-    assert DUP([QQ(1)], QQ).is_one == True
-    assert DUP([QQ(2)], QQ).is_one == False
-
-    assert DUP([1], ZZ).is_ground == True
-    assert DUP([1,2,1], ZZ).is_ground == False
-
-    assert DUP([1,2,2], ZZ).is_sqf == True
-    assert DUP([1,2,1], ZZ).is_sqf == False
-
-    assert DUP([1,2,3], ZZ).is_monic == True
-    assert DUP([2,2,3], ZZ).is_monic == False
-
-    assert DUP([1,2,3], ZZ).is_primitive == True
-    assert DUP([2,4,6], ZZ).is_primitive == False
-
-def test_DUP_arithmetics():
-    f = DUP([1,1,1], ZZ)
-
-    assert f.add_term(2, 1) == DUP([1,3,1], ZZ)
-    assert f.sub_term(2, 1) == DUP([1,-1,1], ZZ)
-    assert f.mul_term(2, 1) == DUP([2,2,2,0], ZZ)
-
-    raises(TypeError, "f.add_term(2, 'x')")
-    raises(TypeError, "f.sub_term(2, 'x')")
-    raises(TypeError, "f.mul_term(2, 'x')")
-
-    g = DUP([3,3,3], ZZ)
-
-    assert f.mul_ground(3) == g
-    assert g.exquo_ground(3) == f
-
-    raises(ExactQuotientFailed, "f.quo_ground(4)")
-
-    f = DUP([1,-2,3,-4], ZZ)
-    g = DUP([1,2,3,4], ZZ)
-    h = DUP([-1,2,-3,4], ZZ)
-
-    assert f.abs() == g
-    assert abs(f) == g
-
-    assert f.neg() == h
-    assert -f == h
-
-    h = DUP([2,0,6,0], ZZ)
-
-    assert f.add(g) == h
-    assert f + g == h
-    assert g + f == h
-
-    h = DUP([1,-2,3,1], ZZ)
-
-    assert f + 5 == h
-    assert 5 + f == h
-
-    h = DUP([-4,0,-8], ZZ)
-
-    assert f.sub(g) == h
-    assert f - g ==  h
-    assert g - f == -h
-
-    h = DUP([1,-2,3,-9], ZZ)
-
-    assert f - 5 ==  h
-    assert 5 - f == -h
-
-    g = DUP([2], ZZ)
-    h = DUP([2,-4,6,-8], ZZ)
-
-    assert f.mul(g) == h
-    assert f * g == h
-    assert g * f == h
-    assert f * 2 == h
-    assert 2 * f == h
-
-    h = DUP([4], ZZ)
-
-    assert g.sqr() == h
-    assert g.pow(2) == h
-    assert g**2 == h
-
-    raises(TypeError, "f.pow('x')")
-
-    f = DUP([3,1,1,5], ZZ)
-    g = DUP([5,-3,1], ZZ)
-
-    q = DUP([15, 14], ZZ)
-    r = DUP([52, 111], ZZ)
-
-    assert f.pdiv(g) == (q, r)
-    assert f.pexquo(g) == q
-    assert f.prem(g) == r
-
-    raises(ExactQuotientFailed, 'f.pquo(g)')
-
-    q, r = DUP([], ZZ), f
-
-    assert f.div(g) == (q, r)
-    assert f.exquo(g) == q
-    assert f.rem(g) == r
-
-    raises(ExactQuotientFailed, 'f.quo(g)')
-
-def test_DUP_functionality():
-    f = DUP([1,2,3,4], ZZ)
-    g = DUP([3,4,3], ZZ)
-
-    assert f.degree() == 3
-
-    assert f.LC() == ZZ(1)
-    assert f.TC() == ZZ(4)
-    assert f.nth(1) == ZZ(3)
-
-    raises(TypeError, "f.nth('x')")
-
-    assert f.max_norm() == ZZ(4)
-    assert f.l1_norm() == ZZ(10)
-
-    assert f.diff(1) == g
-    assert f.eval(1) == ZZ(10)
-
-    raises(TypeError, "f.diff('x')")
-
-    f = DUP([QQ(2),QQ(0)], QQ)
-    g = DUP([QQ(1),QQ(0),QQ(-16)], QQ)
-
-    s = DUP([QQ(1,32),QQ(0)], QQ)
-    t = DUP([QQ(-1,16)], QQ)
-    h = DUP([QQ(1)], QQ)
-
-    assert f.half_gcdex(g) == (s, h)
-    assert f.gcdex(g) == (s, t, h)
-
-    assert f.invert(g) == s
-
-    f = DUP([1,-2,1], ZZ)
-    g = DUP([1,0,-1], ZZ)
-
-    a = DUP([2,-2], ZZ)
-
-    assert f.subresultants(g) == [f, g, a]
-    assert f.resultant(g) == 0
-
-    f = DUP([1,3,9,-13], ZZ)
-
-    assert f.discriminant() == -11664
-
-    f = DUP([1,2,1], ZZ)
-    g = DUP([1,1], ZZ)
-    h = DUP([1], ZZ)
-
-    assert f.cofactors(g) == (g, g, h)
-    assert f.gcd(g) == g
-    assert f.lcm(g) == f
-
-    assert f.sqf_part() == g
-    assert f.sqf_list() == (ZZ(1), [(g, 2)])
-
-    f = DUP([1,2,3,4,5,6], ZZ)
-
-    assert f.trunc(3) == DUP([1,-1,0,1,-1,0], ZZ)
-
-    f = DUP([QQ(3),QQ(-6)], QQ)
-    g = DUP([QQ(1),QQ(-2)], QQ)
-
-    assert f.monic() == g
-
-    f = DUP([3,-6], ZZ)
-    g = DUP([1,-2], ZZ)
-
-    assert f.content() == ZZ(3)
-    assert f.primitive() == (ZZ(3), g)
-
-    f = DUP([1,0,20,0,150,0,500,0,625,-2,0,-10,9], ZZ)
-    g = DUP([1,0,0,-2,9], ZZ)
-    h = DUP([1,0,5,0], ZZ)
-
-    assert g.compose(h) == f
-    assert f.decompose() == [g, h]
-
-    f = DUP([QQ(1),QQ(0)], QQ)
-
-    assert f.sturm() == [f, DUP([QQ(1)], QQ)]
 
 def test_DMP___init__():
     f = DMP([[0],[],[0,1,2],[3]], ZZ)
@@ -282,7 +52,7 @@ def test_DMP___bool__():
     assert bool(DMP([[]], ZZ)) == False
     assert bool(DMP([[1]], ZZ)) == True
 
-def test_DUP_to_dict():
+def test_DMP_to_dict():
     f = DMP([[3],[],[2],[],[8]], ZZ)
 
     assert f.to_dict() == \
@@ -297,8 +67,8 @@ def test_DMP_properties():
     assert DMP([[1]], ZZ).is_one == True
     assert DMP([[2]], ZZ).is_one == False
 
-    assert DUP([[1]], ZZ).is_ground == True
-    assert DUP([[1],[2],[1]], ZZ).is_ground == False
+    assert DMP([[1]], ZZ).is_ground == True
+    assert DMP([[1],[2],[1]], ZZ).is_ground == False
 
     assert DMP([[1],[2,0],[1,0]], ZZ).is_sqf == True
     assert DMP([[1],[2,0],[1,0,0]], ZZ).is_sqf == False
