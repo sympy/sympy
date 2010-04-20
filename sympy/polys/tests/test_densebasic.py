@@ -38,9 +38,7 @@ from sympy.polys.specialpolys import (
     f_0, f_1, f_2, f_3, f_4, f_5, f_6
 )
 
-from sympy.polys.polyclasses import (
-    DUP, DMP
-)
+from sympy.polys.polyclasses import DMP
 
 from sympy.polys.algebratools import ZZ, QQ
 
