@@ -196,7 +196,7 @@ class FCodePrinter(StrPrinter):
 
     def _print_not_fortran(self, expr):
         self._not_fortran.add(expr)
-        return StrPrinter.emptyPrinter(self, expr)
+        return self.emptyPrinter(expr)
 
     # The following can not be simply translated into Fortran.
     _print_Basic = _print_not_fortran

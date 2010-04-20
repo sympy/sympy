@@ -30,17 +30,6 @@ class StrPrinter(Printer):
     def stringify(self, args, sep, level=0):
         return sep.join([self.parenthesize(item, level) for item in args])
 
-    def emptyPrinter(self, expr):
-        if isinstance(expr, str):
-            return expr
-        elif isinstance(expr, Basic):
-            if hasattr(expr, "args"):
-                return repr(expr)
-            else:
-                raise
-        else:
-            return str(expr)
-
     def _print_Add(self, expr):
         args = list(expr.args)
 
