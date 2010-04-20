@@ -7,20 +7,8 @@ from python import python, print_python
 from ccode import ccode, print_ccode
 from fcode import fcode, print_fcode
 from gtk import *
-
 from preview import preview
-
-from str import StrPrinter, sstr, sstrrepr
-_StrPrinter = StrPrinter()
-
-
 from repr import srepr
-
-# /cyclic/
-from sympy.core import basic
-from sympy.matrices import matrices
-basic.StrPrinter = _StrPrinter
-matrices.StrPrinter = _StrPrinter
-del basic, matrices
-
 from tree import print_tree
+from str import StrPrinter, sstr, sstrrepr
+

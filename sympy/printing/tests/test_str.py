@@ -10,11 +10,7 @@ from sympy.statistics.distributions import Normal, Sample, Uniform
 from sympy.geometry import Point, Circle
 from sympy.utilities.pytest import XFAIL
 
-from sympy.core.basic import StrPrinter
-
-from sympy.printing import sstr, sstrrepr
-
-spr = StrPrinter.doprint
+from sympy.printing import sstr, sstrrepr, StrPrinter
 
 x, y, z, w = symbols('xyzw')
 d = Symbol('d', dummy=True)
@@ -23,11 +19,11 @@ def test_printmethod():
     class R(abs):
         def _sympystr(self, printer):
             return "foo(%s)" % printer._print(self.args[0])
-    assert spr(R(x)) == "foo(x)"
+    assert sstr(R(x)) == "foo(x)"
     class R(abs):
         def _sympystr(self, printer):
             return "foo"
-    assert spr(R(x)) == "foo"
+    assert sstr(R(x)) == "foo"
 
 def test_abs():
     assert str(abs(x)) == "abs(x)"
@@ -61,9 +57,9 @@ def test_Derivative():
     assert str(Derivative(x**2/y, x, y, evaluate=False)) == "D(x**2/y, x, y)"
 
 def test_dict():
-    assert str({1: 1+x}) == spr({1: 1+x}) == "{1: 1 + x}"
+    assert str({1: 1+x}) == sstr({1: 1+x}) == "{1: 1 + x}"
     assert str({1: x**2, 2: y*x}) in ("{1: x**2, 2: x*y}", "{2: x*y, 1: x**2}")
-    assert spr({1: x**2, 2: y*x}) == "{1: x**2, 2: x*y}"
+    assert sstr({1: x**2, 2: y*x}) == "{1: x**2, 2: x*y}"
 
 def test_Dummy():
     assert str(d) == "_d"
@@ -92,8 +88,8 @@ def test_Function():
     assert str(w) == "w_"
 
 def test_Geometry():
-    assert spr(Point(0,0))  == 'Point(0, 0)'
-    assert spr(Circle(Point(0,0), 3))   == 'Circle(Point(0, 0), 3)'
+    assert sstr(Point(0,0))  == 'Point(0, 0)'
+    assert sstr(Circle(Point(0,0), 3))   == 'Circle(Point(0, 0), 3)'
     # TODO test other Geometry entities
 
 def test_GoldenRatio():
@@ -133,13 +129,13 @@ def test_Limit():
     assert str(Limit(sin(x)/x, x, y, dir="-")) == "Limit(sin(x)/x, x, y, dir='-')"
 
 def test_list():
-    assert str([x]) == spr([x]) == "[x]"
-    assert str([x**2, x*y+1]) == spr([x**2, x*y+1]) == "[x**2, 1 + x*y]"
-    assert str([x**2, [y+x]]) == spr([x**2, [y+x]]) == "[x**2, [x + y]]"
+    assert str([x]) == sstr([x]) == "[x]"
+    assert str([x**2, x*y+1]) == sstr([x**2, x*y+1]) == "[x**2, 1 + x*y]"
+    assert str([x**2, [y+x]]) == sstr([x**2, [y+x]]) == "[x**2, [x + y]]"
 
 def test_Matrix():
     M = Matrix([[x**+1, 1], [y, x+y]])
-    assert str(M) == spr(M) == "[x,     1]\n[y, x + y]"
+    assert str(M) == sstr(M) == "[x,     1]\n[y, x + y]"
 
 def test_Mul():
     assert str(x/y) == "x/y"
@@ -303,15 +299,15 @@ def test_Sample():
             ]
 
 def test_set():
-    assert spr(set())       == 'set()'
-    assert spr(frozenset()) == 'frozenset()'
+    assert sstr(set())       == 'set()'
+    assert sstr(frozenset()) == 'frozenset()'
 
-    assert spr(set([1,2,3]))== 'set([1, 2, 3])'
-    assert spr(set([1,x,x**2,x**3,x**4]))   == 'set([1, x, x**2, x**3, x**4])'
+    assert sstr(set([1,2,3]))== 'set([1, 2, 3])'
+    assert sstr(set([1,x,x**2,x**3,x**4]))   == 'set([1, x, x**2, x**3, x**4])'
 
 def test_SMatrix():
     M = SMatrix([[x**+1, 1], [y, x+y]])
-    assert str(M) == spr(M) == "[x,     1]\n[y, x + y]"
+    assert str(M) == sstr(M) == "[x,     1]\n[y, x + y]"
 
 def test_Sum():
     assert str(sum(cos(3*z), (z, x, y))) == "Sum(cos(3*z), (z, x, y))"
@@ -328,9 +324,9 @@ def test_Symbol():
     assert str(e) == "x"
 
 def test_tuple():
-    assert str((x,)) == spr((x,)) == "(x,)"
-    assert str((x+y, 1+x)) == spr((x+y, 1+x)) == "(x + y, 1 + x)"
-    assert str((x+y, (1+x, x**2))) == spr((x+y, (1+x, x**2))) == "(x + y, (1 + x, x**2))"
+    assert str((x,)) == sstr((x,)) == "(x,)"
+    assert str((x+y, 1+x)) == sstr((x+y, 1+x)) == "(x + y, 1 + x)"
+    assert str((x+y, (1+x, x**2))) == sstr((x+y, (1+x, x**2))) == "(x + y, (1 + x, x**2))"
 
 def test_Uniform():
     assert str(Uniform(x, y)) == "Uniform(x, y)"
@@ -404,9 +400,10 @@ def test_full_prec():
             ]
 
 def test_empty_printer():
-    assert StrPrinter.emptyPrinter("foo") == "foo"
-    assert StrPrinter.emptyPrinter(x*y) == "x*y"
-    assert StrPrinter.emptyPrinter(32) == "32"
+    str_printer = StrPrinter()
+    assert str_printer.emptyPrinter("foo") == "foo"
+    assert str_printer.emptyPrinter(x*y) == "x*y"
+    assert str_printer.emptyPrinter(32) == "32"
 
 def test_settings():
     raises(TypeError, 'sstr(S(4), method="garbage")')

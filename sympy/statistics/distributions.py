@@ -1,6 +1,6 @@
 from sympy.core import sympify, Lambda, Symbol, Integer, Rational, oo, Real, pi
 from sympy.functions import sqrt, exp, erf
-from sympy.printing import _StrPrinter as StrPrinter
+from sympy.printing import sstr
 import random
 
 
@@ -23,7 +23,10 @@ class Sample(tuple):
         return s
 
     def __repr__(self):
-        return StrPrinter.doprint(self)
+        return sstr(self)
+
+    def __str__(self):
+        return sstr(self)
 
 
 class ContinuousProbability(object):
@@ -45,7 +48,10 @@ class ContinuousProbability(object):
             return Sample([s._random() for i in xrange(n)])
 
     def __repr__(self):
-        return StrPrinter.doprint(self)
+        return sstr(self)
+
+    def __str__(self):
+        return sstr(self)
 
 
 class Normal(ContinuousProbability):

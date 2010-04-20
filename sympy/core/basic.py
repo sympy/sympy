@@ -601,12 +601,13 @@ class Basic(AssumeMeths):
 
         return (st != ot)
 
-
     def __repr__(self):
-        return StrPrinter.doprint(self)
+        from sympy.printing import sstr
+        return sstr(self)
 
     def __str__(self):
-        return StrPrinter.doprint(self)
+        from sympy.printing import sstr
+        return sstr(self)
 
     def atoms(self, *types):
         """Returns the atoms that form the current object.
