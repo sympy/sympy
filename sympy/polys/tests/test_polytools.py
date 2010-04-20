@@ -419,6 +419,16 @@ def test_Poly_unify():
     assert Poly(x+5, x, modulus=3, symmetric=True).unify(Poly(x+7, x, modulus=3, symmetric=False))[2:] == \
         (GFP([1, 2], 3, ZZ, symmetric=True), GFP([1, 1], 3, ZZ, symmetric=True))
 
+def test_Poly__eq__():
+    assert (Poly(x, x) == Poly(x, x)) == True
+    assert (Poly(x, x, domain=QQ) == Poly(x, x)) == True
+    assert (Poly(x, x) == Poly(x, x, domain=QQ)) == True
+
+    assert (Poly(x, x, domain=ZZ[a]) == Poly(x, x)) == True
+    assert (Poly(x, x) == Poly(x, x, domain=ZZ[a])) == True
+
+    assert (Poly(x*y, x, y) == Poly(x, x)) == False
+
 def test_Poly__analyze_order():
     assert Poly._analyze_order({}) is None
     assert Poly._analyze_order({'order': 'lex'}) == monomial_lex_key

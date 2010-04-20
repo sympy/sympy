@@ -1780,7 +1780,19 @@ class Poly(Basic):
             except (PolynomialError, DomainError, CoercionFailed):
                 return False
 
-        return f.rep == g.rep and f.gens == g.gens
+        if f.gens != g.gens:
+            return False
+
+        if f.rep.dom != g.rep.dom:
+            try:
+                dom = f.rep.dom.unify(g.rep.dom, f.gens)
+            except UnificationFailed:
+                return False
+
+            f = f.set_domain(dom)
+            g = g.set_domain(dom)
+
+        return f.rep == g.rep
 
     @_sympifyit('g', NotImplemented)
     def __ne__(f, g):
