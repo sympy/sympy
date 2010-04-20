@@ -111,7 +111,7 @@ def preview(expr, output='png', viewer=None, euler=True):
     tmp = tempfile.mktemp()
 
     tex = open(tmp + ".tex", "w")
-    tex.write(format % latex(expr, inline=True))
+    tex.write(format % latex(expr, mode='inline'))
     tex.close()
 
     cwd = os.getcwd()
