@@ -8,9 +8,8 @@ class Add(AssocOp):
 
     is_Add = True
 
-    @classmethod
-    def identity(cls):
-        return S.Zero
+    #identity = S.Zero
+    # cyclic import, so defined in numbers.py
 
     @classmethod
     def flatten(cls, seq):

@@ -15,6 +15,9 @@ class AssocOp(Expr):
     (a op b) op c == a op (b op c) == a op b op c.
 
     Base class for Add and Mul.
+
+    This is an abstract base class, concrete derived classes must define
+    the attribute `identity`.
     """
 
     # for performance reason, we don't let is_commutative go to assumptions,
@@ -29,7 +32,7 @@ class AssocOp(Expr):
             obj.is_commutative = all(arg.is_commutative for arg in args)
             return obj
         if len(args)==0:
-            return cls.identity()
+            return cls.identity
         if len(args)==1:
             return _sympify(args[0])
         c_part, nc_part, order_symbols = cls.flatten(map(_sympify, args))
@@ -39,7 +42,7 @@ class AssocOp(Expr):
             elif nc_part:
                 obj = nc_part[0]
             else:
-                obj = cls.identity()
+                obj = cls.identity
         else:
             obj = Expr.__new__(cls, *(c_part + nc_part), **assumptions)
             obj.is_commutative = not nc_part
@@ -69,9 +72,6 @@ class AssocOp(Expr):
 
         return obj
 
-    @classmethod
-    def identity(cls):
-        raise NotImplementedError("identity not defined for class %r" % (cls.__name__))
 
     @classmethod
     def flatten(cls, seq):

@@ -20,9 +20,8 @@ class Mul(AssocOp):
 
     is_Mul = True
 
-    @classmethod
-    def identity(cls):
-        return S.One
+    #identity = S.One
+    # cyclic import, so defined in numbers.py
 
     @classmethod
     def flatten(cls, seq):
