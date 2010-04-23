@@ -216,9 +216,11 @@ class AssocOp(Expr):
 
         """
         if isinstance(expr, cls):
-            return list(expr.args)
+            return expr.args
+        elif expr == cls.identity:
+            return ()
         else:
-            return [expr]
+            return (expr,)
 
 class ShortCircuit(Exception):
     pass

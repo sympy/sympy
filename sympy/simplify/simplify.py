@@ -301,7 +301,7 @@ def together(expr, deep=False):
                     else:
                         denominator.append(Pow(term, maxi))
 
-            if all([c.is_integer for c in coeffs]):
+            if coeffs and all([c.is_integer for c in coeffs]):
                 gcds = lambda x, y: igcd(int(x), int(y))
                 common = Rational(reduce(gcds, coeffs))
             else:
