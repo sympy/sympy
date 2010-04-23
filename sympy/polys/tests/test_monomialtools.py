@@ -7,7 +7,10 @@ from sympy.polys.monomialtools import (
     monomial_mul, monomial_div,
     monomial_gcd, monomial_lcm,
     monomial_max, monomial_min,
+    Monomial,
 )
+
+from sympy.polys.polyerrors import ExactQuotientFailed
 
 from sympy.abc import x, y
 from sympy.utilities.pytest import raises
@@ -42,6 +45,8 @@ def test_monomial_grevlex_key():
     assert monomial_grevlex_key((1,2,3)) == (6, (3,2,1))
 
 def test_monomial_key():
+    assert monomial_key() == monomial_lex_key
+
     assert monomial_key('lex') == monomial_lex_key
     assert monomial_key('grlex') == monomial_grlex_key
     assert monomial_key('grevlex') == monomial_grevlex_key
@@ -119,3 +124,22 @@ def test_monomial_max():
 def test_monomial_min():
     assert monomial_min((3,4,5), (0,5,1), (6,3,9)) == (0,3,1)
 
+def test_Monomial():
+    assert Monomial(1, 2, 3).data == (1, 2, 3)
+
+    m, n = Monomial(3, 4, 1), Monomial(1, 2, 0)
+
+    assert m*n == Monomial(4, 6, 1)
+    assert m/n == Monomial(2, 2, 1)
+
+    assert m.gcd(n) == Monomial(1, 2, 0)
+    assert m.lcm(n) == Monomial(3, 4, 1)
+
+    a, b, c = [ Monomial(*monom) for monom in [(3,4,5), (0,5,1), (6,3,9)] ]
+
+    assert Monomial.max(a, b, c) == Monomial(6, 5, 9)
+    assert Monomial.min(a, b, c) == Monomial(0, 3, 1)
+
+    n = Monomial(5, 2, 0)
+
+    raises(ExactQuotientFailed, "m / n")
