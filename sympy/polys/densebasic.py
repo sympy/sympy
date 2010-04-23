@@ -4,8 +4,10 @@ from sympy.utilities import any, all
 from sympy.core import igcd, ilcm
 
 from sympy.polys.monomialtools import (
-    monomial_min, monomial_div
+    monomial_key, monomial_min, monomial_div
 )
+
+from sympy.polys.groebnertools import sdp_sort
 
 from sympy.utilities import cythonized
 
@@ -853,14 +855,17 @@ def _rec_list_terms(g, v, monom):
     return terms
 
 @cythonized("u")
-def dmp_list_terms(f, u, K):
-    """List all non-zero terms from `f` in lex order. """
+def dmp_list_terms(f, u, K, order=None):
+    """List all non-zero terms from `f` in the given order order. """
     terms = _rec_list_terms(f, u, ())
 
     if not terms:
         return [((0,)*(u+1), K.zero)]
-    else:
+
+    if order is None:
         return terms
+    else:
+        return sdp_sort(terms, monomial_key(order))
 
 @cythonized("n,m")
 def dup_apply_pairs(f, g, h, args, K):
