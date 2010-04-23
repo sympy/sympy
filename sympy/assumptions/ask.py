@@ -103,14 +103,15 @@ def ask(expr, key, assumptions=True):
     for assump in assumptions:
         conj = eliminate_assume(assump, symbol=expr)
         if conj:
-            out = set()
-            for sym in conjuncts(to_cnf(conj)):
-                lit, pos = literal_symbol(sym), type(sym) is not Not
-                if pos:
-                    out.update([known_facts_keys.index(str(l))+1 for l in disjuncts(lit)])
-                else:
-                    out.update([-(known_facts_keys.index(str(l))+1) for l in disjuncts(lit)])
-            clauses.append(out)
+            for clause in conjuncts(to_cnf(conj)):
+                out = set()
+                for atom in disjuncts(clause):
+                    lit, pos = literal_symbol(atom), type(atom) is not Not
+                    if pos:
+                        out.add(known_facts_keys.index(str(lit))+1)
+                    else:
+                        out.add(-(known_facts_keys.index(str(lit))+1))
+                clauses.append(out)
 
     n = len(known_facts_keys)
     clauses.append(set([known_facts_keys.index(key)+1]))

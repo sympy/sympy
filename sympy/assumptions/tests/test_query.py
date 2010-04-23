@@ -944,6 +944,13 @@ def test_global():
     global_assumptions.clear()
     assert ask(x, Q.integer) == None
 
+def test_functions_in_assumptions():
+    from sympy.logic.boolalg import Equivalent, Xor
+    x = symbols('x')
+    assert ask(x, Q.negative, Q.real(x) >> Q.positive(x)) is False
+    assert ask(x, Q.negative, Equivalent(Q.real(x), Q.positive(x))) is False
+    assert ask(x, Q.negative, Xor(Q.real(x), Q.negative(x))) is False
+
 def test_incompatible_resolutors():
     x = symbols('x')
     class Prime2AskHandler(AskHandler):
