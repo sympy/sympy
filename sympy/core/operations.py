@@ -34,9 +34,12 @@ class AssocOp(Expr):
             return _sympify(args[0])
         c_part, nc_part, order_symbols = cls.flatten(map(_sympify, args))
         if len(c_part) + len(nc_part) <= 1:
-            if c_part: obj = c_part[0]
-            elif nc_part: obj = nc_part[0]
-            else: obj = cls.identity()
+            if c_part:
+                obj = c_part[0]
+            elif nc_part:
+                obj = nc_part[0]
+            else:
+                obj = cls.identity()
         else:
             obj = Expr.__new__(cls, *(c_part + nc_part), **assumptions)
             obj.is_commutative = not nc_part
@@ -68,14 +71,6 @@ class AssocOp(Expr):
 
     @classmethod
     def identity(cls):
-        from mul import Mul
-        from add import Add
-        if cls is Mul: return S.One
-        if cls is Add: return S.Zero
-        if cls is C.Composition:
-            from symbol import Symbol
-            s = Symbol('x',dummy=True)
-            return Lambda(s,s)
         raise NotImplementedError("identity not defined for class %r" % (cls.__name__))
 
     @classmethod

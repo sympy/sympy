@@ -21,6 +21,10 @@ class Mul(AssocOp):
     is_Mul = True
 
     @classmethod
+    def identity(cls):
+        return S.One
+
+    @classmethod
     def flatten(cls, seq):
 
         # apply associativity, separate commutative part of seq

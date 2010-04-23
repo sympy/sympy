@@ -9,6 +9,10 @@ class Add(AssocOp):
     is_Add = True
 
     @classmethod
+    def identity(cls):
+        return S.Zero
+
+    @classmethod
     def flatten(cls, seq):
         """
         Takes the sequence "seq" of nested Adds and returns a flatten list.
