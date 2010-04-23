@@ -791,17 +791,17 @@ class Poly(Basic):
 
         return f.per(result)
 
-    def coeffs(f):
+    def coeffs(f, order=None):
         """Returns all non-zero coefficients from `f` in lex order. """
-        return [ f.rep.dom.to_sympy(c) for c in f.rep.coeffs() ]
+        return [ f.rep.dom.to_sympy(c) for c in f.rep.coeffs(order=order) ]
 
-    def monoms(f):
+    def monoms(f, order=None):
         """Returns all non-zero monomials from `f` in lex order. """
-        return f.rep.monoms()
+        return f.rep.monoms(order=order)
 
-    def terms(f):
+    def terms(f, order=None):
         """Returns all non-zero terms from `f` in lex order. """
-        return [ (m, f.rep.dom.to_sympy(c)) for m, c in f.rep.terms() ]
+        return [ (m, f.rep.dom.to_sympy(c)) for m, c in f.rep.terms(order=order) ]
 
     def all_coeffs(f):
         """Returns all coefficients from a univariate polynomial `f`. """
@@ -1054,8 +1054,11 @@ class Poly(Basic):
         except AttributeError: # pragma: no cover
             raise OperationNotSupported(f, 'total_degree')
 
-    def LC(f):
+    def LC(f, order=None):
         """Returns the leading coefficent of `f`. """
+        if order is not None:
+            return f.coeffs(order)[0]
+
         try:
             result = f.rep.LC()
         except AttributeError: # pragma: no cover
@@ -1072,10 +1075,10 @@ class Poly(Basic):
 
         return f.rep.dom.to_sympy(result)
 
-    def EC(f):
+    def EC(f, order=None):
         """Returns the last non-zero coefficent of `f`. """
         try:
-            return f.coeffs()[-1]
+            return f.coeffs(order)[-1]
         except AttributeError: # pragma: no cover
             raise OperationNotSupported(f, 'EC')
 
@@ -1088,21 +1091,21 @@ class Poly(Basic):
 
         return f.rep.dom.to_sympy(result)
 
-    def LM(f):
+    def LM(f, order=None):
         """Returns the leading monomial of `f`. """
-        return f.monoms()[0]
+        return f.monoms(order)[0]
 
-    def EM(f):
+    def EM(f, order=None):
         """Returns the last non-zero monomial of `f`. """
-        return f.monoms()[-1]
+        return f.monoms(order)[-1]
 
-    def LT(f):
+    def LT(f, order=None):
         """Returns the leading term of `f`. """
-        return f.terms()[0]
+        return f.terms(order)[0]
 
-    def ET(f):
+    def ET(f, order=None):
         """Returns the last non-zero term of `f`. """
-        return f.terms()[-1]
+        return f.terms(order)[-1]
 
     def max_norm(f):
         """Returns maximum norm of `f`. """

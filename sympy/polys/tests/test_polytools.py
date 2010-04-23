@@ -765,6 +765,9 @@ def test_Poly_coeffs():
     assert Poly(7*x**2+2*x+1, x).coeffs() == [7,2,1]
     assert Poly(7*x**4+2*x+1, x).coeffs() == [7,2,1]
 
+    assert Poly(x*y**7 + 2*x**2*y**3).coeffs('lex') == [2, 1]
+    assert Poly(x*y**7 + 2*x**2*y**3).coeffs('grlex') == [1, 2]
+
 def test_Poly_monoms():
     assert Poly(0, x).monoms() == [(0,)]
     assert Poly(1, x).monoms() == [(0,)]
@@ -774,6 +777,9 @@ def test_Poly_monoms():
     assert Poly(7*x**2+2*x+1, x).monoms() == [(2,),(1,),(0,)]
     assert Poly(7*x**4+2*x+1, x).monoms() == [(4,),(1,),(0,)]
 
+    assert Poly(x*y**7 + 2*x**2*y**3).monoms('lex') == [(2, 3), (1, 7)]
+    assert Poly(x*y**7 + 2*x**2*y**3).monoms('grlex') == [(1, 7), (2, 3)]
+
 def test_Poly_terms():
     assert Poly(0, x).terms() == [((0,), 0)]
     assert Poly(1, x).terms() == [((0,), 1)]
@@ -782,6 +788,9 @@ def test_Poly_terms():
 
     assert Poly(7*x**2+2*x+1, x).terms() == [((2,), 7),((1,), 2),((0,), 1)]
     assert Poly(7*x**4+2*x+1, x).terms() == [((4,), 7),((1,), 2),((0,), 1)]
+
+    assert Poly(x*y**7 + 2*x**2*y**3).terms('lex') == [((2, 3), 2), ((1, 7), 1)]
+    assert Poly(x*y**7 + 2*x**2*y**3).terms('grlex') == [((1, 7), 1), ((2, 3), 2)]
 
 def test_Poly_all_coeffs():
     assert Poly(0, x).all_coeffs() == [0]
@@ -945,6 +954,9 @@ def test_Poly_LC():
     assert Poly(1, x).LC() == 1
     assert Poly(2*x**2+x, x).LC() == 2
 
+    assert Poly(x*y**7 + 2*x**2*y**3).LC('lex') == 2
+    assert Poly(x*y**7 + 2*x**2*y**3).LC('grlex') == 1
+
 def test_Poly_TC():
     assert Poly(0, x).TC() == 0
     assert Poly(1, x).TC() == 1
@@ -954,6 +966,9 @@ def test_Poly_EC():
     assert Poly(0, x).EC() == 0
     assert Poly(1, x).EC() == 1
     assert Poly(2*x**2+x, x).EC() == 1
+
+    assert Poly(x*y**7 + 2*x**2*y**3).EC('lex') == 1
+    assert Poly(x*y**7 + 2*x**2*y**3).EC('grlex') == 2
 
 def test_Poly_nth():
     assert Poly(0, x).nth(0) == 0
@@ -975,20 +990,32 @@ def test_Poly_LM():
     assert Poly(1, x).LM() == (0,)
     assert Poly(2*x**2+x, x).LM() == (2,)
 
+    assert Poly(x*y**7 + 2*x**2*y**3).LM('lex') == (2, 3)
+    assert Poly(x*y**7 + 2*x**2*y**3).LM('grlex') == (1, 7)
+
 def test_Poly_EM():
     assert Poly(0, x).EM() == (0,)
     assert Poly(1, x).EM() == (0,)
     assert Poly(2*x**2+x, x).EM() == (1,)
+
+    assert Poly(x*y**7 + 2*x**2*y**3).EM('lex') == (1, 7)
+    assert Poly(x*y**7 + 2*x**2*y**3).EM('grlex') == (2, 3)
 
 def test_Poly_LT():
     assert Poly(0, x).LT() == ((0,), 0)
     assert Poly(1, x).LT() == ((0,), 1)
     assert Poly(2*x**2+x, x).LT() == ((2,), 2)
 
+    assert Poly(x*y**7 + 2*x**2*y**3).LT('lex') == ((2, 3), 2)
+    assert Poly(x*y**7 + 2*x**2*y**3).LT('grlex') == ((1, 7), 1)
+
 def test_Poly_ET():
     assert Poly(0, x).ET() == ((0,), 0)
     assert Poly(1, x).ET() == ((0,), 1)
     assert Poly(2*x**2+x, x).ET() == ((1,), 1)
+
+    assert Poly(x*y**7 + 2*x**2*y**3).ET('lex') == ((1, 7), 1)
+    assert Poly(x*y**7 + 2*x**2*y**3).ET('grlex') == ((2, 3), 2)
 
 def test_Poly_max_norm():
     assert Poly(-1, x).max_norm() == 1
