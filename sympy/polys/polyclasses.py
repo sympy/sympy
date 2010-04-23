@@ -244,7 +244,7 @@ class GFP(object):
         else:
             raise DomainError("can't convert GFP ground domain to %s" % dom)
 
-    def coeffs(f):
+    def coeffs(f, order=None):
         """Returns all non-zero coefficients from `f`. """
         if not f:
             return [f.dom.zero]
@@ -253,7 +253,7 @@ class GFP(object):
         else:
             return [ gf_int(c, f.mod) for c in f.rep if c ]
 
-    def monoms(f):
+    def monoms(f, order=None):
         """Returns all non-zero monomials from `f`. """
         n = gf_degree(f.rep)
 
@@ -262,7 +262,7 @@ class GFP(object):
         else:
             return [ (n-i,) for i, c in enumerate(f.rep) if c ]
 
-    def terms(f):
+    def terms(f, order=None):
         """Returns all non-zero terms from `f`. """
         n = gf_degree(f.rep)
 
@@ -683,17 +683,17 @@ class DMP(object):
         else:
             return DMP(dmp_convert(f.rep, f.lev, f.dom, dom), dom, f.lev)
 
-    def coeffs(f):
+    def coeffs(f, order=None):
         """Returns all non-zero coefficients from `f` in lex order. """
-        return [ c for _, c in dmp_list_terms(f.rep, f.lev, f.dom) ]
+        return [ c for _, c in dmp_list_terms(f.rep, f.lev, f.dom, order=order) ]
 
-    def monoms(f):
+    def monoms(f, order=None):
         """Returns all non-zero monomials from `f` in lex order. """
-        return [ m for m, _ in dmp_list_terms(f.rep, f.lev, f.dom) ]
+        return [ m for m, _ in dmp_list_terms(f.rep, f.lev, f.dom, order=order) ]
 
-    def terms(f):
+    def terms(f, order=None):
         """Returns all non-zero terms from `f` in lex order. """
-        return dmp_list_terms(f.rep, f.lev, f.dom)
+        return dmp_list_terms(f.rep, f.lev, f.dom, order=order)
 
     def all_coeffs(f):
         """Returns all coefficients from `f`. """
