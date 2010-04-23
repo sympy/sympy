@@ -4,6 +4,8 @@ from sympy.core.mul import Mul
 from sympy.core.singleton import S
 from sympy.core.basic import C
 
+from sympy.polys.polyerrors import ExactQuotientFailed
+
 from sympy.utilities import all, any, cythonized
 
 def monomials(variables, degree):
@@ -82,7 +84,7 @@ _monomial_key = {
     'grevlex' : monomial_grevlex_key,
 }
 
-def monomial_key(order):
+def monomial_key(order=None):
     """Return a function defining admissible order on monomials.
 
        The result of a call to :func:`monomial_key` is a function which should
@@ -91,7 +93,7 @@ def monomial_key(order):
 
        Currently supported monomial orderings are:
 
-       1. lex       - lexicographic order
+       1. lex       - lexicographic order (default)
        2. grlex     - graded lexicographic order
        3. grevlex   - reversed graded lexicographic order
 
@@ -100,6 +102,9 @@ def monomial_key(order):
        defines an admissible order on monomials.
 
     """
+    if order is None:
+        return _monomial_key['lex']
+
     if isinstance(order, str):
         try:
             return _monomial_key[order]
@@ -258,3 +263,87 @@ def monomial_min(*monoms):
 
     return tuple(M)
 
+class Monomial(object):
+    """Class representing a monomial, i.e. a product of powers. """
+
+    __slots__ = ['data']
+
+    def __init__(self, *data):
+        self.data = tuple(map(int, data))
+
+    def __hash__(self):
+        return hash((self.__class__.__name__, self.data))
+
+    def __repr__(self):
+        return "Monomial(%s)" % ", ".join(map(str, self.data))
+
+    def as_basic(self, *gens):
+        """Convert a monomial instance to a SymPy expression. """
+        return sum([ gen**exp for gen, exp in zip(gens, self.data) ])
+
+    def __eq__(self, other):
+        if isinstance(other, Monomial):
+            return self.data == other.data
+        else:
+            return False
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+    def __mul__(self, other):
+        if isinstance(other, Monomial):
+            return Monomial(*monomial_mul(self.data, other.data))
+        else:
+            raise TypeError("an instance of Monomial class expected, got %s" % other)
+
+    def __pow__(self, other):
+        n = int(other)
+
+        if not n:
+            return Monomial(*((0,)*len(self.data)))
+        elif n > 0:
+            data = self.data
+
+            for i in xrange(1, n):
+                data = monomial_mul(data, self.data)
+
+            return Monomial(*data)
+        else:
+            raise ValueError("a non-negative integer expected, got %s" % other)
+
+    def __div__(self, other):
+        if isinstance(other, Monomial):
+            result = monomial_div(self.data, other.data)
+
+            if result is not None:
+                return Monomial(*result)
+            else:
+                raise ExactQuotientFailed("%s monomial doesn't divide %s" % (self, other))
+        else:
+            raise TypeError("an instance of Monomial class expected, got %s" % other)
+
+    __floordiv__ = __truediv__ = __div__
+
+    def gcd(self, other):
+        """Greatest common divisor of monomials. """
+        if isinstance(other, Monomial):
+            return Monomial(*monomial_gcd(self.data, other.data))
+        else:
+            raise TypeError("an instance of Monomial class expected, got %s" % other)
+
+    def lcm(self, other):
+        """Least common multiple of monomials. """
+        if isinstance(other, Monomial):
+            return Monomial(*monomial_lcm(self.data, other.data))
+        else:
+            raise TypeError("an instance of Monomial class expected, got %s" % other)
+
+    @classmethod
+    def max(cls, *monomials):
+        """Returns maximal degree for each variable in a set of monomials. """
+        return Monomial(*monomial_max(*[ monomial.data for monomial in monomials ]))
+
+    @classmethod
+    def min(cls, *monomials):
+        """Returns minimal degree for each variable in a set of monomials. """
+        return Monomial(*monomial_min(*[ monomial.data for monomial in monomials ]))
