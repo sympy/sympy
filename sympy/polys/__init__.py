@@ -46,7 +46,7 @@ from numberfields import (
 )
 
 from monomialtools import (
-    monomials, monomial_count,
+    Monomial, monomials, monomial_count,
 )
 
 from rootoftools import (
