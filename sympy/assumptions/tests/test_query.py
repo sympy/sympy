@@ -973,7 +973,7 @@ def test_key_extensibility():
     """test that you can add keys to the ask system at runtime"""
     x = Symbol('x')
     # make sure thie key is not defined
-    raises(KeyError, "ask(x, 'my_key')")
+    raises(AttributeError, "ask(x, 'my_key')")
     class MyAskHandler(AskHandler):
         @staticmethod
         def Symbol(expr, assumptions):
