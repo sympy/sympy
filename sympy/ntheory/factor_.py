@@ -2,6 +2,7 @@
 Integer factorization
 """
 
+from sympy.core import Mul
 from sympy.core.numbers import igcd
 from sympy.core.power import integer_nthroot, Pow
 from sympy.core.mul import Mul
@@ -295,13 +296,13 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
     Partial Factorization
     =====================
 
-    If ``limit`` is specified, the search is stopped after performing
-    trial division up to (but not including) the limit (or taking a
+    If ``limit`` (> 2) is specified, the search is stopped after performing
+    trial division up to (and including) the limit (or taking a
     corresponding number of rho/p-1 steps). This is useful if one has
     a large number and only is interested in finding small factors (if
     any). Note that setting a limit does not prevent larger factors
-    from being found early; it simply means that any larger factors
-    returned may be composite.
+    from being found early; it simply means that the largest factor may
+    be composite.
 
     This number, for example, has two small factors and a huge
     semi-prime factor that cannot be reduced easily:
@@ -382,7 +383,9 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
 
     # It is sufficient to perform trial division up to sqrt(n)
     try:
-        limit = iff(limit, lambda: max(limit, low), lambda: int(n**0.5) + 2)
+        # add 1 to sqrt in case there is round off; add 1 overall to make
+        # sure that the limit is included
+        limit = iff(limit, lambda: max(limit, low), lambda: int(n**0.5) + 1) + 1
     except OverflowError:
         limit = 1e1000
 
@@ -423,7 +426,7 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
                     if verbose:
                         print (pm1_msg % (high_, high_))
                     ps = factorint(pollard_pm1(n, B=high_, seed=high_) or 1, \
-                        limit=limit, verbose=verbose)
+                        limit=limit-1, verbose=verbose)
                     n, found_pm1 = _trial(factors, n, ps, verbose)
                     if found_pm1:
                         _check_termination(factors, n, verbose)
@@ -434,7 +437,7 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
                     if verbose:
                         print (rho_msg % (1, max_steps, high_))
                     ps = factorint(pollard_rho(n, retries=1, max_steps=max_steps, \
-                        seed=high_) or 1, limit=limit, verbose=verbose)
+                        seed=high_) or 1, limit=limit-1, verbose=verbose)
                     n, found_rho = _trial(factors, n, ps, verbose)
                     if found_rho:
                         _check_termination(factors, n, verbose)
@@ -447,10 +450,10 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
 
 
 def primefactors(n, limit=None, verbose=False):
-    """Return a list of n's prime factors, ignoring multiplicity.
-    Unlike factorint(), primefactors() only returns prime numbers;
-    i.e., it does not return -1 or 0, and if 'limit' is set too
-    low for all factors to be found, composite factors are ignored.
+    """Return a sorted list of n's prime factors, ignoring multiplicity
+    and any composite factor that remains if the limit was set too low
+    for complete factorization. Unlike factorint(), primefactors() does
+    not return -1 or 0.
 
     Example usage
     =============
@@ -476,35 +479,84 @@ def primefactors(n, limit=None, verbose=False):
     """
     n = int(n)
     s = []
-    factors = sorted(factorint(n, limit=limit, verbose=verbose).items())
-    for p, _ in sorted(factors)[:-1:]:
-        if p not in [-1, 0, 1]:
-            s += [p]
-    if isprime(factors[-1][0]):
-        s += [factors[-1][0]]
+    factors = sorted(factorint(n, limit=limit, verbose=verbose).keys())
+    s = [f for f in factors[:-1:] if f not in [-1, 0, 1]]
+    if factors and isprime(factors[-1]):
+        s += [factors[-1]]
     return s
 
+def _divisors(n):
+    """Helper function for divisors which generates the divisors."""
 
-# TODO: speed up by using prime factorization
+    factordict = factorint(n)
+    ps = sorted(factordict.keys())
 
-def divisors(n):
+    def rec_gen(n = 0):
+        if n == len(ps):
+            yield 1
+        else :
+            pows = [1]
+            for j in xrange(factordict[ps[n]]):
+                pows.append(pows[-1] * ps[n])
+            for q in rec_gen(n + 1):
+                for p in pows:
+                    yield p * q
+
+    for p in rec_gen() :
+        yield p
+
+def divisors(n, generator=False):
     """
-    Return a list of all positive integer divisors of n.
+    Return all divisors of n sorted from 1..n by default.
+    If generator is True an unordered generator is returned.
 
-    >>> from sympy.ntheory import divisors
+    The number of divisors of n can be quite large if there are many
+    prime factors (counting repeated factors). If only the number of
+    factors is desired use divisor_count(n).
+
+    Examples::
+
+    >>> from sympy import divisors, divisor_count
     >>> divisors(24)
     [1, 2, 3, 4, 6, 8, 12, 24]
+    >>> divisor_count(24)
+    8
 
+    >>> list(divisors(120, generator=True))
+    [1, 2, 4, 8, 3, 6, 12, 24, 5, 10, 20, 40, 15, 30, 60, 120]
+
+    This is a slightly modified version of Tim Peters referenced at:
+    http://stackoverflow.com/questions/1010381/python-factorization
     """
+
     n = abs(n)
     if isprime(n):
         return [1, n]
-    s = []
-    for i in xrange(1, n+1):
-        if n % i == 0:
-            s += [i]
-    return s
+    elif n == 1:
+        return [1]
+    elif n == 0:
+        return []
+    else:
+        rv = _divisors(n)
+        if not generator:
+            return sorted(rv)
+        return rv
 
+def divisor_count(n):
+    """Return the number of divisors of n.
+
+    Reference:
+    http://www.mayer.dial.pipex.com/maths/formulae.htm
+
+    >>> from sympy import divisor_count
+    >>> divisor_count(6)
+    4
+    """
+
+    n = abs(n)
+    if n == 0:
+        return 0
+    return Mul(*[v+1 for k, v in factorint(n).items() if k > 1])
 
 def totient(n):
     """Calculate the Euler totient function phi(n)
