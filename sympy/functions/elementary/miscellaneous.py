@@ -1,4 +1,4 @@
-from sympy.core.basic import S, sympify
+from sympy.core.basic import C, S, sympify
 from sympy.core.function import Function
 
 ###############################################################################
@@ -6,8 +6,8 @@ from sympy.core.function import Function
 ###############################################################################
 
 def sqrt(arg):
-    arg = sympify(arg)
-    return arg**S.Half
+    # arg = sympify(arg) is handled by Pow
+    return C.Pow(arg, S.Half)
 
 ###############################################################################
 ############################# MINIMUM and MAXIMUM #############################
