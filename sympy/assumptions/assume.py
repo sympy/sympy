@@ -129,12 +129,11 @@ def eliminate_assume(expr, symbol=None):
         Not(positive)
 
     """
-    if type(expr) == Assume:
+    if expr.func is Assume:
         if symbol is not None:
-            if not expr.expr.has(symbol): return
-        if expr.value: return Symbol(expr.key)
+            if not expr.expr.has(symbol):
+                return
+        if expr.value:
+            return Symbol(expr.key)
         return ~Symbol(expr.key)
-    args = []
-    for a in expr.args:
-        args.append(eliminate_assume(a))
-    return type(expr)(*args)
+    return expr.func(*map(eliminate_assume, expr.args))
