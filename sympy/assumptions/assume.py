@@ -1,7 +1,7 @@
 # doctests are disabled because of issue #1521
 from sympy.core import  Symbol
 from sympy.core.relational import Relational
-from sympy.logic.boolalg import Boolean
+from sympy.logic.boolalg import Boolean, Not
 
 class AssumptionsContext(set):
     """Set representing assumptions.
@@ -17,7 +17,7 @@ class AssumptionsContext(set):
         >>> from sympy.abc import x
         >>> global_assumptions.add(Assume(x, Q.real))
         >>> global_assumptions
-        AssumptionsContext([Assume(x, 'real', True)])
+        AssumptionsContext([Assume(x, 'real')])
         >>> global_assumptions.remove(Assume(x, Q.real))
         >>> global_assumptions
         AssumptionsContext()
@@ -39,17 +39,20 @@ class Assume(Boolean):
     >>> from sympy import Assume, Q
     >>> from sympy.abc import x
     >>> Assume(x, Q.integer)
-    Assume(x, 'integer', True)
+    Assume(x, 'integer')
     >>> Assume(x, Q.integer, False)
-    Assume(x, 'integer', False)
+    Not(Assume(x, 'integer'))
     >>> Assume( x > 1 )
-    Assume(1 < x, 'relational', True)
+    Assume(1 < x, 'relational')
 
     """
-    def __init__(self, expr, key='relational', value=True):
+    def __new__(cls, expr, key='relational', value=True):
         if isinstance(key, Predicate):
             key = key.name
-        self._args = (expr, key, value)
+        if value:
+            return Boolean.__new__(cls, expr, key)
+        else:
+            return Not(Boolean.__new__(cls, expr, key))
 
     is_Atom = True # do not attempt to decompose this
 
@@ -84,27 +87,6 @@ class Assume(Boolean):
         """
         return self._args[1]
 
-    @property
-    def value(self):
-        """
-        Return the value stored by this assumptions.
-        It's a boolean. True means that the assumption
-        holds always, and False means the assumption
-        does not hold
-
-        Examples:
-            >>> from sympy import Assume, Q
-            >>> from sympy.abc import x
-            >>> a = Assume(x, Q.integer)
-            >>> a.value
-            True
-            >>> b = Assume(x, Q.integer, False)
-            >>> b.value
-            False
-
-        """
-        return self._args[2]
-
     def __eq__(self, other):
         if type(other) == Assume:
             return self._args == other._args
@@ -135,10 +117,8 @@ def eliminate_assume(expr, symbol=None):
         if symbol is not None:
             if not expr.expr.has(symbol):
                 return
-        if expr.value:
-            return Symbol(expr.key)
-        return ~Symbol(expr.key)
-    return expr.func(*map(eliminate_assume, expr.args))
+        return Symbol(expr.key)
+    return expr.func(*[eliminate_assume(arg, symbol) for arg in expr.args])
 
 class Predicate(Boolean):
 
