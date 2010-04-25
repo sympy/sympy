@@ -1,6 +1,6 @@
 """Useful utilities for higher level polynomial classes. """
 
-from sympy import S, sympify, Integer, Rational, Symbol, Add, Mul, Pow, ask
+from sympy import S, Basic, sympify, Integer, Rational, Symbol, Add, Mul, Pow, ask
 
 from sympy.polys.polyerrors import PolynomialError, GeneratorsNeeded
 
@@ -28,13 +28,23 @@ def _sort_gens(gens, **args):
             gens_order[elt.strip()] = i+1
 
     if wrt is not None:
-        wrt = str(wrt)
+        if isinstance(wrt, Basic):
+            wrt = [str(wrt)]
+        elif isinstance(wrt, str):
+            wrt = [ elt.strip() for elt in wrt.split(",") ]
+        elif hasattr(wrt, '__getitem__'):
+            wrt = list(map(str, wrt))
+        else:
+            raise TypeError("invalid argument given via 'wrt' keyword")
 
     def order_key(x):
         x = str(x)
 
-        if x == wrt:
-            return (0, x)
+        if wrt is not None:
+            try:
+                return (-len(wrt) + wrt.index(x), x)
+            except ValueError:
+                pass
 
         try:
             return ( gens_order[x], x)
