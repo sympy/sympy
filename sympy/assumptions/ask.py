@@ -31,6 +31,36 @@ class Q:
     real = Predicate('real')
     odd = Predicate('odd')
 
+
+def eval_predicate(predicate, expr, assumptions=True):
+    """
+    Evaluate predicate(expr) under the given assumptions.
+
+    This uses only direct resolution methods, not logical inference.
+    """
+    res, _res = None, None
+    mro = inspect.getmro(type(expr))
+    for handler in predicate.handlers:
+        cls = get_class(handler)
+        for subclass in mro:
+            try:
+                eval = getattr(cls, subclass.__name__)
+            except AttributeError:
+                continue
+            res = eval(expr, assumptions)
+            if _res is None:
+                _res = res
+            elif res is None:
+                # since first resolutor was conclusive, we keep that value
+                res = _res
+            else:
+                # only check consistency if both resolutors have concluded
+                if _res != res:
+                    raise ValueError('incompatible resolutors')
+            break
+    return res
+
+
 def ask(expr, key, assumptions=True):
     """
     Method for inferring properties about objects.
@@ -67,33 +97,14 @@ def ask(expr, key, assumptions=True):
     assumptions = And(assumptions, And(*global_assumptions))
 
     # direct resolution method, no logic
-    res, _res = None, None
-    mro = inspect.getmro(type(expr))
-    for handler in key.handlers:
-        cls = get_class(handler)
-        for subclass in mro:
-            try:
-                eval = getattr(cls, subclass.__name__)
-            except AttributeError:
-                continue
-            res = eval(expr, assumptions)
-            if _res is None:
-                _res = res
-            elif res is None:
-                # since first resolutor was conclusive, we keep that value
-                res = _res
-            else:
-                # only check consistency if both resolutors have concluded
-                if _res != res:
-                    raise ValueError('incompatible resolutors')
-            break
+    res = eval_predicate(key, expr, assumptions)
     if res is not None:
         return res
 
+    # use logic inference
     if assumptions is True:
         return
 
-    # use logic inference
     if not expr.is_Atom:
         return
     clauses = copy.deepcopy(known_facts_compiled)
