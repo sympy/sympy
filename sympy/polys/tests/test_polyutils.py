@@ -37,9 +37,33 @@ def test__sort_gens():
 
     assert _sort_gens([q,p,x]) == (x,p,q)
 
+    assert _sort_gens([x,p,q], wrt=x) == (x,p,q)
+    assert _sort_gens([x,p,q], wrt=p) == (p,x,q)
+    assert _sort_gens([x,p,q], wrt=q) == (q,x,p)
+
     assert _sort_gens([x,p,q], wrt='x') == (x,p,q)
     assert _sort_gens([x,p,q], wrt='p') == (p,x,q)
     assert _sort_gens([x,p,q], wrt='q') == (q,x,p)
+
+    assert _sort_gens([x,p,q], wrt='x,q') == (x,q,p)
+    assert _sort_gens([x,p,q], wrt='q,x') == (q,x,p)
+    assert _sort_gens([x,p,q], wrt='p,q') == (p,q,x)
+    assert _sort_gens([x,p,q], wrt='q,p') == (q,p,x)
+
+    assert _sort_gens([x,p,q], wrt='x, q') == (x,q,p)
+    assert _sort_gens([x,p,q], wrt='q, x') == (q,x,p)
+    assert _sort_gens([x,p,q], wrt='p, q') == (p,q,x)
+    assert _sort_gens([x,p,q], wrt='q, p') == (q,p,x)
+
+    assert _sort_gens([x,p,q], wrt=[x, 'q']) == (x,q,p)
+    assert _sort_gens([x,p,q], wrt=[q, 'x']) == (q,x,p)
+    assert _sort_gens([x,p,q], wrt=[p, 'q']) == (p,q,x)
+    assert _sort_gens([x,p,q], wrt=[q, 'p']) == (q,p,x)
+
+    assert _sort_gens([x,p,q], wrt=['x', 'q']) == (x,q,p)
+    assert _sort_gens([x,p,q], wrt=['q', 'x']) == (q,x,p)
+    assert _sort_gens([x,p,q], wrt=['p', 'q']) == (p,q,x)
+    assert _sort_gens([x,p,q], wrt=['q', 'p']) == (q,p,x)
 
     assert _sort_gens([x,p,q], sort='x > p > q') == (x, p, q)
     assert _sort_gens([x,p,q], sort='p > x > q') == (p, x, q)
