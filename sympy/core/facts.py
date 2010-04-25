@@ -873,7 +873,7 @@ class FactRules:
 
                 #new_fact(k, v)
                 if k in new_facts:
-                    assert new_facts[k] == v, \
+                    assert new_facts[k] is None or new_facts[k] == v, \
                             ('inconsistency between facts', new_facts, k, v)
                     # performance-wise it is important not to fire implied rules
                     # for already-seen fact -- we already did them all.
