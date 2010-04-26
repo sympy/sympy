@@ -145,20 +145,7 @@ class Matrix(object):
             self.rows = self.cols = 0
             self.mat = []
         else:
-            # TODO: on 0.7.0 delete this and uncomment the last line
-            mat = args
-            if not isinstance(mat[0], (list, tuple)):
-                # make each element a singleton
-                mat = [ [element] for element in mat ]
-            warnings.warn("Deprecated constructor, use brackets: Matrix(%s)" % str(mat))
-            self.rows=len(mat)
-            self.cols=len(mat[0])
-            self.mat=[]
-            for j in xrange(self.rows):
-                assert len(mat[j])==self.cols
-                for i in xrange(self.cols):
-                    self.mat.append(sympify(mat[j][i]))
-            #raise TypeError("Data type not understood")
+            raise TypeError("Data type not understood")
 
     def key2ij(self,key):
         """Converts key=(4,6) to 4,6 and ensures the key is correct."""
