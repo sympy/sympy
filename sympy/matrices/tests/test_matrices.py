@@ -1186,3 +1186,4 @@ def test_creation_args():
     assert eye(Integer(3)) == eye(3)
     assert eye(3.) == eye(3)
     assert ones((3L, Integer(4))) == ones((3, 4))
+    raises(TypeError, 'Matrix(1, 2)')
