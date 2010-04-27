@@ -951,6 +951,24 @@ def test_functions_in_assumptions():
     assert ask(x, Q.negative, Equivalent(Q.real(x), Q.positive(x))) is False
     assert ask(x, Q.negative, Xor(Q.real(x), Q.negative(x))) is False
 
+def test_is_true():
+    from sympy.logic.boolalg import Equivalent, Implies
+    x = symbols('x')
+    assert ask(True, Q.is_true) is True
+    assert ask(~Q.negative(x), Q.is_true, Q.positive(x)) is True
+    assert ask(~Q.real(x), Q.is_true, Q.commutative(x)) is None
+    assert ask(Q.negative(x) & Q.integer(x), Q.is_true, Q.positive(x)) is False
+    assert ask(Q.negative(x) & Q.integer(x), Q.is_true) is None
+    assert ask(Q.real(x) | Q.integer(x), Q.is_true, Q.positive(x)) is True
+    assert ask(Q.real(x) | Q.integer(x), Q.is_true) is None
+    assert ask(Q.real(x) >> Q.positive(x), Q.is_true, Q.negative(x)) is False
+    assert ask(Implies(Q.real(x), Q.positive(x), evaluate=False), Q.is_true,
+                    Q.negative(x)) is False
+    assert ask(Implies(Q.real(x), Q.positive(x), evaluate=False), Q.is_true) is None
+    assert ask(Equivalent(Q.integer(x), Q.even(x)), Q.is_true, Q.even(x)) is True
+    assert ask(Equivalent(Q.integer(x), Q.even(x)), Q.is_true) is None
+    assert ask(Equivalent(Q.positive(x), Q.integer(x)), Q.is_true, Q.integer(x)) is None
+
 def test_incompatible_resolutors():
     x = symbols('x')
     class Prime2AskHandler(AskHandler):

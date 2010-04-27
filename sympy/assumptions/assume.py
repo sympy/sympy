@@ -43,10 +43,10 @@ class Assume(Boolean):
     >>> Assume(x, Q.integer, False)
     Not(Assume(x, 'integer'))
     >>> Assume( x > 1 )
-    Assume(1 < x, 'relational')
+    Assume(1 < x, 'is_true')
 
     """
-    def __new__(cls, expr, key='relational', value=True):
+    def __new__(cls, expr, key='is_true', value=True):
         if isinstance(key, Predicate):
             key = key.name
         if value:

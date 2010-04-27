@@ -30,6 +30,7 @@ class Q:
     prime = Predicate('prime')
     real = Predicate('real')
     odd = Predicate('odd')
+    is_true = Predicate('is_true')
 
 
 def eval_predicate(predicate, expr, assumptions=True):
@@ -188,6 +189,7 @@ _handlers_dict = {
     'real'           : ['sympy.assumptions.handlers.sets.AskRealHandler'],
     'odd'            : ['sympy.assumptions.handlers.ntheory.AskOddHandler'],
     'algebraic'      : ['sympy.assumptions.handlers.sets.AskAlgebraicHandler'],
+    'is_true'        : ['sympy.assumptions.handlers.TautologicalHandler']
 }
 for name, value in _handlers_dict.iteritems():
     register_handler(name, value[0])
