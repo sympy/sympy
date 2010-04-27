@@ -1,10 +1,8 @@
 from sympy import symbols, Matrix, eye, I, Symbol, Rational, wronskian, cos, \
         sin, exp, hessian, sqrt, zeros, ones, randMatrix, Poly, S, pi, \
-        integrate, oo, raises, trigsimp, Integer, block_diag, N
+        oo, raises, trigsimp, Integer, block_diag, N
 from sympy.matrices.matrices import ShapeError, MatrixError, \
         matrix_multiply_elementwise
-from sympy.printing import srepr
-from sympy.utilities.pytest import XFAIL
 
 def test_division():
     x, y, z = symbols('x','y','z')
@@ -1174,7 +1172,7 @@ def test_inv_block():
         a.inv(method="ADJ"), a.inv(method="ADJ"), b.inv(method="ADJ"),
         a.inv(method="ADJ"), c.inv(method="ADJ"), a.inv(method="ADJ")])
 
-def test_creation():
+def test_creation_args():
     """
     Check that matrix dimensions can be specified using any reasonable type
     (see issue 1515).
