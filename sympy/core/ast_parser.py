@@ -90,7 +90,7 @@ def parse_expr(s, local_dict):
             raise SympifyError("Cannot parse.")
         a = Transform(local_dict, global_dict).visit(a)
         e = compile(a, "<string>", "eval")
-        return eval(e, local_dict, global_dict)
+        return eval(e, global_dict, local_dict)
     else:
         # in python2.4 and 2.5, the "ast" module is not available, so we need
         # to use our old implementation:

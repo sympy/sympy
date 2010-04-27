@@ -258,3 +258,13 @@ def test_issue1689():
 
 def test_issue1699_None():
     assert S(None) == None
+
+def test_issue1889_Builtins():
+    C = Symbol('C')
+    vars = {}
+    vars['C'] = C
+    exp1 = sympify('C')
+    assert( exp1 == C )	# Make sure it did not get mixed up with sympy.C
+
+    exp2 = sympify('C', vars)
+    assert( exp2 == C ) # Make sure it did not get mixed up with sympy.C
