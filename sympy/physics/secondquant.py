@@ -146,18 +146,27 @@ class TensorSymbol(Function):
 
 
 class SymTuple(Basic):
+    """
+    Wrapper around the builtin tuple object
 
-    def __new__(cls, arg_tuple, **kw_args):
-        """
-        the wrapped tuple is available as self.args
-        """
-        obj = Basic.__new__(cls,*arg_tuple, **kw_args)
-        return obj
+    The SymTuple is a subclass of Basic, so that it works well in the
+    Sympy framework.  The wrapped tuple is available as self.args, but
+    you can also access elements or slices with [:] syntax.
+
+    >>> from sympy import symbols
+    >>> from sympy.physics.secondquant import SymTuple
+    >>> a, b, c, d = symbols('a b c d')
+    >>> SymTuple(a, b, c)[1:]
+    SymTuple(b, c)
+    >>> SymTuple(a, b, c).subs(a, d)
+    SymTuple(d, b, c)
+
+    """
 
     def __getitem__(self,i):
         if isinstance(i,slice):
             indices = i.indices(len(self))
-            return SymTuple(tuple([self.args[i] for i in range(*indices)]))
+            return SymTuple(*[self.args[i] for i in range(*indices)])
         return self.args[i]
 
     def __len__(self):
@@ -165,12 +174,6 @@ class SymTuple(Basic):
 
     def __contains__(self,item):
         return item in self.args
-
-    def _eval_subs(self,old,new):
-        if self==old:
-            return new
-        t=tuple([ el._eval_subs(old,new)  for el in self.args])
-        return self.__class__(t)
 
 
 def _tuple_wrapper(method):
@@ -181,7 +184,7 @@ def _tuple_wrapper(method):
         newargs=[]
         for arg in args:
             if type(arg) is tuple:
-                newargs.append(SymTuple(arg))
+                newargs.append(SymTuple(*arg))
             else:
                 newargs.append(arg)
         return method(*newargs, **kw_args)
