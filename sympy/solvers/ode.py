@@ -434,8 +434,8 @@ def dsolve(eq, func, hint="default", simplify=True, **kwargs):
         gethints = set(hints) - set(['order', 'default', 'ordered_hints'])
         if hint == 'all_Integral':
             for i in hints:
-                if i[-9:] == '_Integral':
-                    gethints.remove(i[:-9])
+                if i.endswith('_Integral'):
+                    gethints.remove(i[:-len('_Integral')])
             # special case
             if "1st_homogeneous_coeff_best" in gethints:
                 gethints.remove("1st_homogeneous_coeff_best")
@@ -463,21 +463,23 @@ def dsolve(eq, func, hint="default", simplify=True, **kwargs):
         raise ValueError("Hint not recognized: " + hint)
     elif hint not in hints:
         raise ValueError("ODE " + str(eq) + " does not match hint " + hint)
-    elif hint[-9:] == '_Integral':
-        solvefunc = globals()['ode_' + hint[:-9]]
+    elif hint.endswith('_Integral'):
+        solvefunc = globals()['ode_' + hint[:-len('_Integral')]]
     else:
         solvefunc = globals()['ode_' + hint] # convert the string into a function
     # odesimp() will attempt to integrate, if necessary, apply constantsimp(),
     # attempt to solve for func, and apply any other hint specific simplifications
     if simplify:
-        return odesimp(solvefunc(eq, func, order=hints['order'],
+        rv = odesimp(solvefunc(eq, func, order=hints['order'],
             match=hints[hint]), func, hints['order'], hint)
     else:
         # We still want to integrate (you can disable it separately with the hint)
         r = hints[hint]
         r['simplify'] = False # Some hints can take advantage of this option
-        return _handle_Integral(solvefunc(eq, func, order=hints['order'],
+        rv = _handle_Integral(solvefunc(eq, func, order=hints['order'],
             match=hints[hint]), func, hints['order'], hint)
+    return rv
+
 
 
 def classify_ode(eq, func, dict=False):
@@ -822,7 +824,6 @@ def odesimp(eq, func, order, hint):
             |    \          \u2//
             |
            /
-        <BLANKLINE>
 
         >>  pprint(odesimp(eq, f(x), 1,
         ... hint='1st_homogeneous_coeff_subs_indep_div_dep'
@@ -838,8 +839,9 @@ def odesimp(eq, func, order, hint):
     f = func.func
     C1 = Symbol('C1')
 
-    # First, integrate, if the hint allows it.
+    # First, integrate if the hint allows it.
     eq = _handle_Integral(eq, func, order, hint)
+    assert isinstance(eq, Equality)
 
     # Second, clean up the arbitrary constants.
     # Right now, nth linear hints can put as many as 2*order constants in an
@@ -851,18 +853,33 @@ def odesimp(eq, func, order, hint):
     # Lastly, now that we have cleaned up the expression, try solving for func.
     # When RootOf is implemented in solve(), we will want to return a RootOf
     # everytime instead of an Equality.
-    """
-    if hint[:21] == "1st_homogeneous_coeff":
-        eq = logcombine(eq, assume_pos_real=True)
-        if eq.lhs.is_Function and eq.lhs.func is log and eq.rhs == 0:
-            eq = Eq(eq.lhs.args[0]/C1,C1)
-    """
+
+    # Get the f(x) on the left if possible.
+    if eq.rhs == func and not eq.lhs.has(func):
+        eq = [Eq(eq.rhs, eq.lhs)]
+
+    # make sure we are working with lists of solutions in simplified form.
     if eq.lhs == func and not eq.rhs.has(func):
         # The solution is already solved
-        pass
-    elif eq.rhs == func and not eq.lhs.has(func):
-        # The solution is solved, but in reverse, so switch it
-        eq = Eq(eq.rhs, eq.lhs)
+        eq = [eq]
+
+        # special simplification of the rhs
+        if hint.startswith("nth_linear_constant_coeff"):
+            # Collect terms to make the solution look nice.
+            # This is also necessary for constantsimp to remove unnecessary terms
+            # from the particular solution from variation of parameters
+            global collectterms
+            assert len(eq) == 1 and eq[0].lhs == f(x)
+            sol = eq[0].rhs
+            sol = expand_mul(sol)
+            for i, reroot, imroot in collectterms:
+                sol = collect(sol, x**i*exp(reroot*x)*sin(abs(imroot)*x))
+                sol = collect(sol, x**i*exp(reroot*x)*cos(imroot*x))
+            for i, reroot, imroot in collectterms:
+                sol = collect(sol, x**i*exp(reroot*x))
+            del collectterms
+            eq[0] = Eq(f(x), sol)
+
     else:
         # The solution is not solved, so try to solve it
         try:
@@ -874,43 +891,24 @@ def odesimp(eq, func, order, hint):
         else:
             eq = [Eq(f(x), t) for t in eqsol]
 
-        # Special handling for certain hints that we know will usually take a
-        # certain form
-        if hint[:21] == "1st_homogeneous_coeff":
-            neweq = []
-            for i in eq:
-                # Solutions from this hint can almost always be logcombined
-                newi = logcombine(i, assume_pos_real=True)
+        # special simplification of the lhs.
+        if hint.startswith("1st_homogeneous_coeff"):
+            for j, eqi in enumerate(eq):
+                newi = logcombine(eqi, assume_pos_real=True)
                 if newi.lhs.is_Function and newi.lhs.func is log and newi.rhs == 0:
-                    # log(C1*stuff) == 0 --> stuff == C1
-                    # Note that this is a form of constant simplification.
-                    # And also, the division of C1 relies on constantsimp()
-                    # making it C1*stuff.
-                    newi = Eq(newi.lhs.args[0]/C1,C1)
-                neweq.append(newi)
-            eq = neweq
-        if len(eq) == 1:
-            eq = eq[0] # We only want a list if there are multiple solutions
-
-    if hint[:25] == "nth_linear_constant_coeff":
-        # Collect terms to make the solution look nice.
-        # This is also necessary for constantsimp to remove unnecessary terms
-        # from the particular solution from variation of parameters
-        global collectterms
-        sol = eq.rhs
-        sol = expand_mul(sol)
-        for i, reroot, imroot in collectterms:
-            sol = collect(sol, x**i*exp(reroot*x)*sin(abs(imroot)*x))
-            sol = collect(sol, x**i*exp(reroot*x)*cos(imroot*x))
-        for i, reroot, imroot in collectterms:
-            sol = collect(sol, x**i*exp(reroot*x))
-        del collectterms
-        eq = Eq(f(x), sol)
+                    newi = Eq(newi.lhs.args[0]/C1, C1)
+                eq[j] = newi
 
     # We cleaned up the costants before solving to help the solve engine with
     # a simpler expression, but the solved expression could have introduced
     # things like -C1, so rerun constantsimp() one last time before returning.
-    eq = constant_renumber(constantsimp(eq, x, 2*order), 'C', 1, 2*order)
+    for i, eqi in enumerate(eq):
+        eq[i] = constant_renumber(constantsimp(eqi, x, 2*order), 'C', 1, 2*order)
+
+    # If there is only 1 solution, return it;
+    # otherwise return the list of solutions.
+    if len(eq) == 1:
+        eq = eq[0]
 
     return eq
 
@@ -1287,12 +1285,13 @@ def constantsimp(expr, independentsymbol, endnumber, startnumber=1,
     from sympy.utilities import any
     constantsymbols = [Symbol(symbolname+"%d" % t) for t in range(startnumber,
     endnumber + 1)]
+    constantsymbols_set = set(constantsymbols)
     x = independentsymbol
 
     if isinstance(expr, Equality):
         # For now, only treat the special case where one side of the equation
         # is a constant
-        if expr.lhs in constantsymbols:
+        if expr.lhs in constantsymbols_set:
             return Eq(expr.lhs, constantsimp(expr.rhs + expr.lhs, x, endnumber,
             startnumber, symbolname) - expr.lhs)
             # this could break if expr.lhs is absorbed into another constant,
@@ -1300,7 +1299,7 @@ def constantsimp(expr, independentsymbol, endnumber, startnumber=1,
             # on one side are first order.  At any rate, it will still be
             # technically correct.  The expression will just have too many
             # constants in it
-        elif expr.rhs in constantsymbols:
+        elif expr.rhs in constantsymbols_set:
             return Eq(constantsimp(expr.lhs + expr.rhs, x, endnumber,
             startnumber, symbolname) - expr.rhs, expr.rhs)
         else:
@@ -1411,7 +1410,7 @@ def constant_renumber(expr, symbolname, startnumber, endnumber):
             _constant_renumber(expr.rhs, symbolname, startnumber, endnumber))
 
         if type(expr) not in (Mul, Add, Pow) and not expr.is_Function and\
-        not any(expr.has(t) for t in constantsymbols):
+        not expr.has(*constantsymbols):
             # Base case, as above.  We better hope there aren't constants inside
             # of some other class, because they won't be renumbered.
             return expr
@@ -1470,7 +1469,7 @@ def _handle_Integral(expr, func, order, hint):
         sol = expr
     elif hint == "nth_linear_constant_coeff_homogeneous":
         sol = expr
-    elif hint[-9:] != "_Integral":
+    elif not hint.endswith("_Integral"):
         sol = expr.doit()
     else:
         sol = expr
@@ -1797,7 +1796,7 @@ def homogeneous_order(eq, *symbols):
 
     Determines if a function is homogeneous and if so of what order.
     A function f(x,y,...) is homogeneous of order n if
-    f(t*x,t*y,t*...) == t**n*f(x,y,...).  The function is implemented recursively.
+    f(t*x,t*y,t*...) == t**n*f(x,y,...).
 
     If the function is of two variables, F(x, y), then f being
     homogeneous of any order is equivalent to being able to rewrite
@@ -2528,7 +2527,7 @@ def _undetermined_coefficients_match(expr, x):
         elif expr.is_Mul:
             if expr.has(sin) or expr.has(cos):
                 foundtrig = False
-                # Make sure that there is only on trig function in the args.
+                # Make sure that there is only one trig function in the args.
                 # See the docstring.
                 for i in expr.args:
                     if i.has(sin) or i.has(cos):
