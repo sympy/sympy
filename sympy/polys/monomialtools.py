@@ -279,7 +279,7 @@ class Monomial(object):
 
     def as_basic(self, *gens):
         """Convert a monomial instance to a SymPy expression. """
-        return sum([ gen**exp for gen, exp in zip(gens, self.data) ])
+        return Mul(*[ gen**exp for gen, exp in zip(gens, self.data) ])
 
     def __eq__(self, other):
         if isinstance(other, Monomial):
