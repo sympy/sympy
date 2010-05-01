@@ -229,13 +229,14 @@ def eliminate_implications(expr):
     if expr.is_Atom:
         return expr     ## (Atoms are unchanged.)
     args = map(eliminate_implications, expr.args)
-    a, b = args[0], args[-1]
     if expr.func is Implies:
+        a, b = args[0], args[-1]
         return (~a) | b
     elif expr.func is Equivalent:
+        a, b = args[0], args[-1]
         return (a | Not(b)) & (b | Not(a))
     else:
-        return type(expr)(*args)
+        return expr.func(*args)
 
 def compile_rule(s):
     """Transforms a rule into a sympy expression
