@@ -28,6 +28,9 @@ class Boolean(Basic):
         """Overloading for <<"""
         return Implies(other, self)
 
+    def __xor__(self, other):
+        return Xor(self, other)
+
 
 class BooleanFunction(Application, Boolean):
     """Boolean function is a function that lives in a boolean space
