@@ -94,6 +94,9 @@ def test_latex_functions():
     assert latex(gamma(x)) == r"\operatorname{\Gamma}\left(x\right)"
     assert latex(Order(x)) == r"\operatorname{\mathcal{O}}\left(x\right)"
 
+def test_latex_brackets():
+    assert latex((-1)**x) == r"\left(-1\right)^{x}"
+
 def test_latex_derivatives():
     assert latex(diff(x**3, x, evaluate=False)) == \
     r"\frac{\partial}{\partial x} x^{3}"
