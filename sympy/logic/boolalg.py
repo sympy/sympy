@@ -135,6 +135,15 @@ class Equivalent(BooleanFunction):
     """
     @classmethod
     def eval(cls, *args):
+        argset = set(args)
+        if len(argset) <= 1:
+            return True
+        if True in argset:
+            argset.discard(True)
+            return And(*argset)
+        if False in argset:
+            argset.discard(False)
+            return Nor(*argset)
         return Basic.__new__(cls, *set(args))
 
 ### end class definitions. Some useful methods

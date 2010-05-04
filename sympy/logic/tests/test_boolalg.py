@@ -106,7 +106,15 @@ def test_Implies():
 
 def test_Equivalent():
     A, B, C = map(Boolean, symbols('ABC'))
-    assert Equivalent(A, B) == Equivalent(B, A)
+    assert Equivalent(A, B) == Equivalent(B, A) == Equivalent(A, B, A)
+    assert Equivalent() == True
+    assert Equivalent(A, A) == Equivalent(A) == True
+    assert Equivalent(True, True) == Equivalent(False, False) == True
+    assert Equivalent(True, False) == Equivalent(False, True) == False
+    assert Equivalent(A, True) == A
+    assert Equivalent(A, False) == Not(A)
+    assert Equivalent(A, B, True) == A & B
+    assert Equivalent(A, B, False) == ~A & ~B
 
 def test_bool_symbol():
     """Test that mixing symbols with boolean values
