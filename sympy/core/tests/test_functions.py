@@ -168,6 +168,15 @@ def test_diff_symbols():
           Derivative(g(x, y, z), z), Derivative(g(x, y, z), x, x),
           Derivative(g(x, y, z), y, y), Derivative(g(x, y, z), z, z, z),
           Derivative(g(x, y, z), x, y, z, z), Derivative(g(x, y, z), x, x, x)]]
+    # issue 1929
+    assert diff(-z + x/y, (z, x, y)) == [-1, 1/y, -x/y**2]
+    assert diff(f(x, y, z), x, y, z, 2) == Derivative(f(x, y, z), x, y, z, z)
+    assert diff(f(x, y, z), x, y, z, 2, evaluate=False) == \
+        Derivative(f(x, y, z), x, y, z, z)
+    assert Derivative(f(x, y, z), x, y, z)._eval_derivative(z) == \
+        Derivative(f(x, y, z), x, y, z, z)
+    assert Derivative(Derivative(f(x, y, z), x), y)._eval_derivative(z) == \
+        Derivative(f(x, y, z), x, y, z)
 
 @XFAIL
 def test_combine():
