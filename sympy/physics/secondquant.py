@@ -166,6 +166,21 @@ class SymTuple(Basic):
     def __contains__(self,item):
         return item in self.args
 
+    def _subs_atoms(self, subs_dict):
+        args = []
+        changed_something = False
+        for arg in self.args:
+            expr = arg._subs_atoms(subs_dict)
+            if expr is None:
+                args.append(arg)
+            else:
+                changed_something = True
+                args.append(expr)
+        if changed_something:
+            return self.func(args)
+        else:
+            return None
+
     def _eval_subs(self,old,new):
         if self==old:
             return new

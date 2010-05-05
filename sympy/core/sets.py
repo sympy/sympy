@@ -182,6 +182,25 @@ class Set(Basic):
             raise TypeError('contains did not evaluate to a bool: %r' % result)
         return result
 
+    def _subs_atoms(self, subs_dict):
+        args = []
+        substituted_something = False
+        for arg in self.args:
+            try:
+                expr = arg._subs_atoms(subs_dict)
+            except AttributeError:
+                args.append(arg)
+            else:
+                if expr is None:
+                    args.append(arg)
+                else:
+                    substituted_something = True
+                    args.append(expr)
+        if substituted_something:
+            return self.func(*args)
+        else:
+            return None
+
     def _eval_subs(self, old, new):
         if self == old: return new
         new_args = []

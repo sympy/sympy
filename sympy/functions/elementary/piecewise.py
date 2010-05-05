@@ -225,6 +225,40 @@ class Piecewise(Function):
     def _eval_derivative(self, s):
         return Piecewise(*[(diff(e, s), c) for e, c in self.args])
 
+    def _subs_atoms(self, subs_dict):
+        args = []
+        substituted_something = False
+        for e, c in self.args:
+            new_e = e._subs_atoms(subs_dict)
+            if isinstance(c, bool):
+                if new_e is not None:
+                    substituted_something = True
+                    args.append((new_e, c))
+                else:
+                    args.append((e,c))
+            elif isinstance(c, Set):
+                # What do we do if there are more than one symbolic
+                # variable. Which do we put pass to Set.contains?
+                if len(subs_dict) > 1:
+                    raise NotImplementedError()
+                substituted_something = True
+                args.append((new_e,  c.contains(subs_dict.popitem()[1])))
+            else:
+                new_c = c._subs_atoms(subs_dict)
+                if new_c is None and new_e is None:
+                    args.append((e,c))
+                else:
+                    substituted_something = True
+                    if new_c is None:
+                        new_c = c
+                    elif new_e is None:
+                        new_e = e
+                    args.append((new_e, new_c))
+        if substituted_something:
+            return self.func(*args)
+        else:
+            return None
+
     def _eval_subs(self, old, new):
         if self == old:
             return new

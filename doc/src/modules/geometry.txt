@@ -112,7 +112,7 @@ An in-depth example: Pappus' Theorem
     >>> 
     >>> def subs_point(l, val):
     ...    """Take an arbitrary point and make it a fixed point."""
-    ...    t = Symbol('t')
+    ...    t = Symbol('t', real=True)
     ...    ap = l.arbitrary_point()
     ...    return Point(ap[0].subs(t, val), ap[1].subs(t, val))
     ... 

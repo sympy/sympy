@@ -284,6 +284,22 @@ class Order(Expr):
         obj = Order(expr, *self.symbols)
         return self.contains(obj)
 
+    def _subs_atoms(self, subs_dict):
+        if len(subs_dict) > 1:
+            raise NotImplementedError()
+        old, new = subs_dict.items()[0]
+        if old.is_Symbol and old in self.symbols:
+            m = self.expr._subs_atoms(subs_dict)
+            if m is None:
+                return None
+            symbs = list(self.symbols)
+            if new.is_Symbol:
+                symbs[symbs.index(old)] = new
+            else:
+                symbs.pop(symbs.index(old))
+            return Order(m, *symbs)
+        return None
+
     def _eval_subs(self, old, new):
         if self==old:
             return new

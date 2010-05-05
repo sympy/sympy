@@ -893,6 +893,38 @@ class Basic(AssumeMeths):
         """
         return self
 
+    def _subs_atoms(self, subs_dict):
+        """
+        Substitute all given atoms by some other expression.
+
+        This function tries to be as fast as possible. It assumes valid
+        arguments absolutly no checking is done.
+
+        Arguments:
+
+            * subs_dict:
+                A dictionary holding (atom, expression) pairs.
+        """
+        if self.is_Atom:
+            return subs_dict.get(self, None)
+        args = []
+        substituted_something = False
+        for arg in self.args:
+            #try:
+                expr = arg._subs_atoms(subs_dict)
+            #except AttributeError:
+            #    args.append(arg)
+            #else:
+                if expr is None:
+                    args.append(arg)
+                else:
+                    substituted_something = True
+                    args.append(expr)
+        if substituted_something:
+            return self.func(*args)
+        else:
+            return None
+
     def subs(self, *args):
         """
         Substitutes an expression.
@@ -931,7 +963,11 @@ class Basic(AssumeMeths):
         """Substitutes an expression old -> new."""
         old = sympify(old)
         new = sympify(new)
-        return self._eval_subs(old, new)
+        if old.is_Atom:
+            expr = self._subs_atoms({old: new})
+            return self if expr is None else expr
+        else:
+            return self._eval_subs(old, new)
 
     def _eval_subs(self, old, new):
         if self == old:
