@@ -578,16 +578,12 @@ class Derivative(Expr):
         return Expr.__new__(cls, expr, *unevaluated_symbols, **assumptions)
 
     def _eval_derivative(self, s):
-        #print
-        #print self
-        #print s
-        #stop
         if s not in self.symbols:
             obj = self.expr.diff(s)
             if isinstance(obj, Derivative):
                 return Derivative(obj.expr, *(self.symbols+obj.symbols))
             return Derivative(obj, *self.symbols)
-        return Derivative(self.expr, *((s,)+self.symbols), **{'evaluate': False})
+        return Derivative(self.expr, *(self.symbols+(s,)), **{'evaluate': False})
 
     def doit(self, **hints):
         expr = self.expr
@@ -824,6 +820,8 @@ def diff(f, *symbols, **kwargs):
 
     # @vectorize(1) won't handle symbols in the way that we want, so we have to
     # write the for loop manually.
+    kwargs.setdefault('evaluate', True)
+
     if hasattr(symbols[0], '__iter__'):
         retlist = []
         for i in symbols[0]:
@@ -833,7 +831,6 @@ def diff(f, *symbols, **kwargs):
                 retlist.append(Derivative(f, i, **kwargs))
         return retlist
 
-    kwargs.setdefault('evaluate', True)
     return Derivative(f,*symbols, **kwargs)
 
 @vectorize(0)

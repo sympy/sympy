@@ -83,7 +83,8 @@ class LatexPrinter(Printer):
         printed, False otherwise. For example: a + b => True; a => False;
         10 => False; -10 => True.
         """
-        return not ((expr.is_Integer and expr.is_nonnegative) or expr.is_Atom)
+        return not ((expr.is_Integer and expr.is_nonnegative)
+                or (expr.is_Atom and expr is not S.NegativeOne))
 
     def _needs_function_brackets(self, expr):
         """
