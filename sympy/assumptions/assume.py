@@ -17,7 +17,7 @@ class AssumptionsContext(set):
         >>> from sympy.abc import x
         >>> global_assumptions.add(Assume(x, Q.real))
         >>> global_assumptions
-        AssumptionsContext([Assume(x, 'real')])
+        AssumptionsContext([Assume(x, Q.real)])
         >>> global_assumptions.remove(Assume(x, Q.real))
         >>> global_assumptions
         AssumptionsContext()
@@ -39,20 +39,27 @@ class Assume(Boolean):
     >>> from sympy import Assume, Q
     >>> from sympy.abc import x
     >>> Assume(x, Q.integer)
-    Assume(x, 'integer')
+    Assume(x, Q.integer)
     >>> Assume(x, Q.integer, False)
-    Not(Assume(x, 'integer'))
+    Not(Assume(x, Q.integer))
     >>> Assume( x > 1 )
-    Assume(1 < x, 'is_true')
+    Assume(1 < x, Q.is_true)
 
     """
-    def __new__(cls, expr, key='is_true', value=True):
-        if isinstance(key, Predicate):
-            key = key.name
+    def __new__(cls, expr, predicate=None, value=True):
+        from sympy import Q
+        if predicate is None:
+            predicate = Q.is_true
+        elif not isinstance(predicate, Predicate):
+            key = str(predicate)
+            try:
+                predicate = getattr(Q, key)
+            except AttributeError:
+                predicate = Predicate(key)
         if value:
-            return Boolean.__new__(cls, expr, key)
+            return Boolean.__new__(cls, expr, predicate)
         else:
-            return Not(Boolean.__new__(cls, expr, key))
+            return Not(Boolean.__new__(cls, expr, predicate))
 
     is_Atom = True # do not attempt to decompose this
 
@@ -108,16 +115,16 @@ def eliminate_assume(expr, symbol=None):
         >>> from sympy import Assume, Q
         >>> from sympy.abc import x
         >>> eliminate_assume(Assume(x, Q.positive))
-        positive
+        Q.positive
         >>> eliminate_assume(Assume(x, Q.positive, False))
-        Not(positive)
+        Not(Q.positive)
 
     """
     if expr.func is Assume:
         if symbol is not None:
             if not expr.expr.has(symbol):
                 return
-        return Symbol(expr.key)
+        return expr.key
     return expr.func(*[eliminate_assume(arg, symbol) for arg in expr.args])
 
 class Predicate(Boolean):

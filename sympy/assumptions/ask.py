@@ -119,8 +119,6 @@ def ask(expr, key, assumptions=True):
                 out = set()
                 for atom in disjuncts(clause):
                     lit, pos = literal_symbol(atom), type(atom) is not Not
-                    if lit.is_Symbol:
-                        lit = getattr(Q, lit.name)
                     if pos:
                         out.add(known_facts_keys.index(lit)+1)
                     else:
