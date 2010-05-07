@@ -32,8 +32,8 @@ def test_basics():
 
     assert integrate(t**2, (t,x,2*x)).diff(x) == 7*x**2
 
-    assert sorted(list( Integral(x,x).atoms() )) == [x]
-    assert sorted(list( Integral(f(x),(x,0,1)).atoms() )) == sorted([0,1,x])
+    assert Integral(x, x).atoms() == set([x])
+    assert Integral(f(x), (x, 0, 1)).atoms() == set([S(0), S(1), x])
 
 def test_basics_multiple():
 
@@ -418,3 +418,21 @@ def issue_1785():
 def issue_1785_fail():
     assert integrate(x**x*(1+log(x)).expand(mul=True)) is None
 
+def test_symbols():
+    from sympy.abc import x, y, z
+    assert Integral(0, x).symbols == set()
+    assert Integral(x).symbols == set([x])
+    assert Integral(x, (x, None, y)).symbols == set([y])
+    assert Integral(x, (x, y, None)).symbols == set([y])
+    assert Integral(x, (x, 1, y)).symbols == set([y])
+    assert Integral(x, (x, y, 1)).symbols == set([y])
+    assert Integral(x, (x, x, y)).symbols == set([x, y])
+    assert Integral(x, x, y).symbols == set([x, y])
+    assert Integral(x, (x, 1, 2)).symbols == set()
+    assert Integral(x, (y, 1, 2)).symbols == set([x])
+    assert Integral(x, (y, z, z)).symbols == set()
+    assert Integral(x, (y, 1, 2), (y, None, None)).symbols == set([x, y])
+    assert Integral(x, (y, 1, 2), (x, 1, y)).symbols == set([y])
+    assert Integral(2, (y, 1, 2), (y, 1, x), (x, 1, 2)).symbols == set()
+    assert Integral(2, (y, x, 2), (y, 1, x), (x, 1, 2)).symbols == set()
+    assert Integral(2, (x, 1, 2), (y, x, 2), (y, 1, 2)).symbols == set([x])
