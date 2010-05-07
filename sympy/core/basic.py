@@ -487,6 +487,11 @@ class Basic(AssumeMeths):
 
         return _atoms(self, typ=types)
 
+    @property
+    def symbols(self):
+        # subclass if the following is not true
+        return self.atoms(C.Symbol)
+
     def is_hypergeometric(self, k):
         from sympy.simplify import hypersimp
         return hypersimp(self, k) is not None

@@ -778,3 +778,9 @@ def test_2127():
     assert Add(evaluate=False) == 0
     assert Mul(evaluate=False) == 1
     assert Mul(x+y, evaluate=False).is_Add
+
+def test_symbols():
+    # this is the generic sense of symbols
+    assert (x).symbols == set([x])
+    # it is overridden when necessary
+    assert Integral(x, (x, 1, 2)).symbols == set()
