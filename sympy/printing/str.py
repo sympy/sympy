@@ -377,7 +377,7 @@ class StrPrinter(Printer):
         return expr.name
 
     def _print_Predicate(self, expr):
-        return expr.name
+        return "Q.%s" % expr.name
 
     def _print_str(self, expr):
         return expr
