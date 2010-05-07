@@ -101,12 +101,11 @@ def test_integrate_poly_defined():
     assert Qx.as_basic() == Rational(1,2) + y/3 + y**3
     assert Qy.as_basic() == pi**4/4 + pi*x + pi**2*x**2/2
 
-def test_integrate_varommited():
+def test_integrate_omit_var():
     y = Symbol('y')
-    assert integrate(2)     == 2
+    raises(ValueError, "integrate(2)")
     assert integrate(x)     == x**2/2
     assert integrate(x*y)   == x**2*y**2/4
-
 
 def test_integrate_poly_accurately():
     y = Symbol('y')
@@ -417,6 +416,28 @@ def issue_1785():
 @XFAIL
 def issue_1785_fail():
     assert integrate(x**x*(1+log(x)).expand(mul=True)) is None
+
+def test_is_number():
+    from sympy.abc import x, y, z
+    from sympy import cos, sin
+    a, b, c = [S(i) for i in (1, 2, 3)] # a, b, c below can be replaced with
+                                          # literals when Integral sympifies args
+    assert Integral(x).is_number == False
+    assert Integral(1, x).is_number == False
+    assert Integral(1, (x, a)).is_number == True
+    assert Integral(1, (x, a, b)).is_number == True
+    assert Integral(1, (x, a, y)).is_number == False
+    assert Integral(x, y).is_number == False
+    assert Integral(x, (y, a, x)).is_number == False
+    assert Integral(x, (y, a, b)).is_number == False
+    assert Integral(x, (x, a, b)).is_number == True
+    assert Integral(x*y, (x, a, b), (y, a, c)).is_number == True
+    assert Integral(x*y, (x, a, b), (y, a, z)).is_number == False
+    assert Integral(x, (x, a)).is_number == True
+    assert Integral(x, (x, a, Integral(y, (y, a, b)))).is_number == True
+    # it is possible to get a false negative if the integrand is
+    # actually an unsimplified zero, but this is true of is_number in general.
+    assert Integral(sin(x)**2 + cos(x)**2 - 1, x).is_number == False
 
 def test_symbols():
     from sympy.abc import x, y, z

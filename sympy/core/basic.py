@@ -510,7 +510,7 @@ class Basic(AssumeMeths):
     def is_number(self):
         """Returns True if 'self' is a number.
 
-           >>> from sympy import log
+           >>> from sympy import log, Integral
            >>> from sympy.abc import x, y
 
            >>> x.is_number
@@ -518,6 +518,10 @@ class Basic(AssumeMeths):
            >>> (2*x).is_number
            False
            >>> (2 + log(2)).is_number
+           True
+           >>> (2 + Integral(2, x)).is_number
+           False
+           >>> (2 + Integral(2, (x, 1, 2))).is_number
            True
 
         """
