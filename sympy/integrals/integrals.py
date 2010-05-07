@@ -105,6 +105,46 @@ class Integral(Expr):
 
         return variables
 
+    @property
+    def symbols(self):
+        """
+        This method returns the symbols that will exist when the
+        integral is evaluated. This is useful if one is trying to
+        determine whether an integral is dependent on a certain
+        symbol or not.
+
+        >>> from sympy import Integral
+        >>> from sympy.abc import x, y
+        >>> Integral(x, (x, y, 1)).symbols
+        set([y])
+        """
+        # analyze the integral
+        # >>> Integral(x*y,(x,1,2),(y,1,3)).args
+        # (x*y, Tuple(x, 1, 2), Tuple(y, 1, 3))
+        # >>> Integral(x, x, y).args
+        # (x, Tuple(x), Tuple(y))
+        intgrl = self
+        args = intgrl.args
+        integrand, limits = args[0], args[1:]
+        if integrand.is_zero:
+            return set()
+        isyms = integrand.atoms(Symbol)
+        for ilim in limits:
+            if len(ilim) == 1:
+                isyms.add(ilim[0])
+                continue
+            # take out the target symbol
+            if ilim[0] in isyms:
+                isyms.remove(ilim[0])
+            if len(ilim) == 3 and ilim[1] == ilim[2]:
+                # if two limits are the same the integral is 0
+                # and there are no symbols
+                return set()
+            # add in the new symbols
+            for i in ilim[1:]:
+                isyms.update(i.atoms(Symbol))
+        return isyms
+
     def transform(self, x, mapping, inverse=False):
         """
         Replace the integration variable x in the integrand with the
