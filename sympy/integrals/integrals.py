@@ -63,10 +63,10 @@ class Integral(Expr):
                 raise ValueError("Invalid integration variable or limits: %s" % str(symbols))
         else:
             # no symbols provided -- let's compute full anti-derivative
-            limits = [Tuple(symb) for symb in function.atoms(Symbol)]
-
-            if not limits:
-                return function
+            syms = function.atoms(Symbol)
+            if not syms:
+                raise ValueError('An integration variable is required.')
+            limits = [Tuple(symb) for symb in syms]
 
         obj = Expr.__new__(cls, **assumptions)
         arglist = [function]
@@ -146,6 +146,62 @@ class Integral(Expr):
             for i in ilim[1:]:
                 isyms.update(i.symbols)
         return isyms
+
+    @property
+    def is_number(self):
+        """
+        Return True if the Integral will result in a number, else False.
+
+        sympy considers anything that will result in a number to have
+        is_number == True.
+
+        >>> from sympy import log
+        >>> log(2).is_number
+        True
+
+        Integrals are a special case since they contain symbols that can
+        be replaced with numbers. Whether the integral can be done or not is
+        another issue. But answering whether the final result is a number is
+        not difficult.
+
+        >>> from sympy import Integral
+        >>> from sympy.abc import x, y
+        >>> Integral(x).is_number
+        False
+        >>> Integral(x, y).is_number
+        False
+        >>> Integral(x, (y, 1, x)).is_number
+        False
+        >>> Integral(x, (y, 1, 2)).is_number
+        False
+        >>> Integral(x, (y, 1, 1)).is_number
+        True
+        >>> Integral(x, (x, 1, 2)).is_number
+        True
+        >>> Integral(x*y, (x, 1, 2), (y, 1, 3)).is_number
+        True
+        >>> Integral(1, x, (x, 1, 2)).is_number
+        True
+        """
+
+        args = self.args
+        integrand, limits = args[0], args[1:]
+        isyms = integrand.atoms(Symbol)
+        for ilim in limits:
+            if len(ilim) == 1:
+                isyms.add(ilim[0])
+                continue # it may be removed later
+            elif len(ilim) == 3 and ilim[1] == ilim[2]: # XXX very naive equality test
+                return True # integral collapsed
+            if ilim[0] in isyms:
+                # take it out of the symbols since it will be replace
+                # with whatever the limits of the integral are
+                isyms.remove(ilim[0])
+            # add in the new symbols
+            for i in ilim[1:]:
+                isyms.update(i.symbols)
+        # if there are no surviving symbols then the result is a number
+        return len(isyms) == 0
 
     def transform(self, x, mapping, inverse=False):
         """
@@ -642,4 +698,3 @@ def line_integrate(field, curve, vars):
 
     integral = Integral(Ft, curve.limits).doit(deep = False)
     return integral
-
