@@ -8,6 +8,7 @@ from sympy.polys.polytools import (
     _init_poly_from_poly,
     _init_poly_from_basic,
     degree, degree_list,
+    LC, LM, LT,
     pdiv, prem, pquo, pexquo,
     div, rem, quo, exquo,
     half_gcdex, gcdex, invert,
@@ -955,6 +956,9 @@ def test_Poly_LC():
     assert Poly(x*y**7 + 2*x**2*y**3).LC('lex') == 2
     assert Poly(x*y**7 + 2*x**2*y**3).LC('grlex') == 1
 
+    assert LC(x*y**7 + 2*x**2*y**3, order='lex') == 2
+    assert LC(x*y**7 + 2*x**2*y**3, order='grlex') == 1
+
 def test_Poly_TC():
     assert Poly(0, x).TC() == 0
     assert Poly(1, x).TC() == 1
@@ -991,6 +995,9 @@ def test_Poly_LM():
     assert Poly(x*y**7 + 2*x**2*y**3).LM('lex') == (2, 3)
     assert Poly(x*y**7 + 2*x**2*y**3).LM('grlex') == (1, 7)
 
+    assert LM(x*y**7 + 2*x**2*y**3, order='lex') == x**2*y**3
+    assert LM(x*y**7 + 2*x**2*y**3, order='grlex') == x*y**7
+
 def test_Poly_EM():
     assert Poly(0, x).EM() == (0,)
     assert Poly(1, x).EM() == (0,)
@@ -1006,6 +1013,9 @@ def test_Poly_LT():
 
     assert Poly(x*y**7 + 2*x**2*y**3).LT('lex') == ((2, 3), 2)
     assert Poly(x*y**7 + 2*x**2*y**3).LT('grlex') == ((1, 7), 1)
+
+    assert LT(x*y**7 + 2*x**2*y**3, order='lex') == 2*x**2*y**3
+    assert LT(x*y**7 + 2*x**2*y**3, order='grlex') == x*y**7
 
 def test_Poly_ET():
     assert Poly(0, x).ET() == ((0,), 0)
