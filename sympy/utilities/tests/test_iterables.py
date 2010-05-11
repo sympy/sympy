@@ -1,6 +1,6 @@
 from sympy import symbols, Integral, Tuple, Dummy, Basic
 from sympy.utilities.iterables import postorder_traversal, \
-    preorder_traversal, flatten, group, subsets, variations, cartes, \
+    preorder_traversal, flatten, group, split, subsets, variations, cartes, \
     numbered_symbols
 from sympy.functions.elementary.piecewise import Piecewise, ExprCondPair
 from sympy.utilities.pytest import raises
@@ -83,6 +83,12 @@ def test_group():
 
     assert group([1,1,2,2,2,1,3,3]) == [[1,1], [2,2,2], [1], [3,3]]
     assert group([1,1,2,2,2,1,3,3], multiple=False) == [(1, 2), (2, 3), (1, 1), (3, 2)]
+
+def test_split():
+    assert split([], key=lambda a: a % 3) == []
+
+    assert split([16, 8, 3, 1, 2, 5, 7], key=lambda a: a % 3) == [[3], [16, 1, 7], [8, 2, 5]]
+    assert split([16, 8, 3, 7, 2, 5, 1], key=lambda a: a % 3) == [[3], [16, 7, 1], [8, 2, 5]]
 
 def test_subsets():
     # combinations
