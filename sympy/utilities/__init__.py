@@ -1,6 +1,6 @@
 """Some utilities that may help.
 """
-from iterables import (iff, flatten, group, subsets,
+from iterables import (iff, flatten, group, split, subsets,
     variations, numbered_symbols, cartes, capture, any, all)
 
 from lambdify import lambdify
