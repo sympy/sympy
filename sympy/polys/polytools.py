@@ -31,7 +31,7 @@ from sympy.polys.groebnertools import (
 )
 
 from sympy.polys.monomialtools import (
-    monomial_key,
+    Monomial, monomial_key,
 )
 
 from sympy.polys.polyerrors import (
@@ -1901,6 +1901,39 @@ def degree_list(f, *gens, **args):
     degrees = F.degree_list()
 
     return tuple(map(Integer, degrees))
+
+def LC(f, *gens, **args):
+    """Returns the leading coefficient of `f`. """
+    order = args.pop('order', None)
+
+    try:
+        return Poly(f, *gens, **args).LC(order=order)
+    except GeneratorsNeeded:
+        raise GeneratorsNeeded("can't compute the leading coefficient of %s without generators" % f)
+
+def LM(f, *gens, **args):
+    """Returns the leading monomial of `f`. """
+    order = args.pop('order', None)
+
+    try:
+        f = Poly(f, *gens, **args)
+    except GeneratorsNeeded:
+        raise GeneratorsNeeded("can't compute the leading monomial of %s without generators" % f)
+
+    return Monomial(*f.LM(order=order)).as_basic(*f.gens)
+
+def LT(f, *gens, **args):
+    """Returns the leading term of `f`. """
+    order = args.pop('order', None)
+
+    try:
+        f = Poly(f, *gens, **args)
+    except GeneratorsNeeded:
+        raise GeneratorsNeeded("can't compute the leading term of %s without generators" % f)
+
+    monom, coeff = f.LT(order=order)
+
+    return coeff*Monomial(*monom).as_basic(*f.gens)
 
 def pdiv(f, g, *gens, **args):
     """Polynomial pseudo-division of `f` and `g`. """
