@@ -32,7 +32,10 @@ def sdp_LM(f, u):
 
 def sdp_LT(f, u, K):
     """Returns the leading term of `f`. """
-    return sdp_LM(f, u), sdp_LC(f, K)
+    if f:
+        return f[0]
+    else:
+        return (0,)*(u+1), K.zero
 
 def sdp_del_LT(f):
     """Removes the leading from `f`. """
