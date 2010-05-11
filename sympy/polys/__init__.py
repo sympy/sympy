@@ -3,6 +3,7 @@
 from polytools import (
     Poly, poly,
     degree, degree_list,
+    LC, LM, LT,
     pdiv, prem, pquo, pexquo,
     div, rem, quo, exquo,
     half_gcdex, gcdex, invert,
