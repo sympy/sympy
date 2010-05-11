@@ -33,6 +33,14 @@ class Point(GeometryEntity):
 
         return GeometryEntity.__new__(cls, *coords)
 
+    @property
+    def x(self):
+        return self[0]
+
+    @property
+    def y(self):
+        return self[1]
+
     def is_collinear(*points):
         """
         Test whether or not a set of points are collinear. Returns True if
