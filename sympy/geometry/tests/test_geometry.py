@@ -32,6 +32,12 @@ def test_point():
     p3 = Point(0, 0)
     p4 = Point(1, 1)
 
+    assert p3.x == 0
+    assert p3.y == 0
+
+    assert p4.x == 1
+    assert p4.y == 1
+
     assert len(p1) == 2
     assert p2[1] == y2
     assert (p3+p4) == p4
