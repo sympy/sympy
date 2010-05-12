@@ -120,6 +120,21 @@ def eliminate_assume(expr, symbol=None):
     return expr.func(*filter(lambda x: x is not None, [eliminate_assume(arg, symbol) for arg in expr.args]))
 
 class Predicate(Boolean):
+    """A predicate is a function that returns a boolean value.
+
+    Predicates merely wrap their argument and remain unevaluated:
+
+        >>> from sympy import Q, ask
+        >>> Q.prime(7)
+        Q.prime(7)
+
+    To obtain the truth value of an expression containing predicates, use
+    the function `ask` and the special predicate Q.is_true:
+
+        >>> ask(Q.prime(7), Q.is_true)
+        True
+
+    """
 
     is_Atom = True
 
