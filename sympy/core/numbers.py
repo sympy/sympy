@@ -584,7 +584,8 @@ class Rational(Number):
     def _eval_is_zero(self):
         return self.p == 0
 
-    def __neg__(self): return Rational(-self.p, self.q)
+    def __neg__(self):
+        return Rational(-self.p, self.q)
 
     @_sympifyit('other', NotImplemented)
     def __mul__(self, other):
@@ -689,7 +690,8 @@ class Rational(Number):
             return other.__eq__(self)
         if isinstance(other, FunctionClass): #cos as opposed to cos(x)
             return False
-        if other.is_comparable and not isinstance(other, Rational): other = other.evalf()
+        if other.is_comparable and not isinstance(other, Rational):
+            other = other.evalf()
         if isinstance(other, Number):
             if isinstance(other, Real):
                 return bool(mlib.mpf_eq(self._as_mpf_val(other._prec), other._mpf_))
@@ -707,7 +709,8 @@ class Rational(Number):
             return other.__ne__(self)
         if isinstance(other, FunctionClass): #cos as opposed to cos(x)
             return True
-        if other.is_comparable and not isinstance(other, Rational): other = other.evalf()
+        if other.is_comparable and not isinstance(other, Rational):
+            other = other.evalf()
         if isinstance(other, Number):
             if isinstance(other, Real):
                 return bool(not mlib.mpf_eq(self._as_mpf_val(other._prec), other._mpf_))
@@ -722,7 +725,8 @@ class Rational(Number):
             return False    # sympy > other  --> not <
         if isinstance(other, NumberSymbol):
             return other.__ge__(self)
-        if other.is_comparable and not isinstance(other, Rational): other = other.evalf()
+        if other.is_comparable and not isinstance(other, Rational):
+            other = other.evalf()
         if isinstance(other, Number):
             if isinstance(other, Real):
                 return bool(mlib.mpf_lt(self._as_mpf_val(other._prec), other._mpf_))
@@ -736,7 +740,8 @@ class Rational(Number):
             return False    # sympy > other  -->  not <=
         if isinstance(other, NumberSymbol):
             return other.__gt__(self)
-        if other.is_comparable and not isinstance(other, Rational): other = other.evalf()
+        if other.is_comparable and not isinstance(other, Rational):
+            other = other.evalf()
         if isinstance(other, Number):
             if isinstance(other, Real):
                 return bool(mlib.mpf_le(self._as_mpf_val(other._prec), other._mpf_))
@@ -851,10 +856,9 @@ class Integer(Rational):
             # We only work with well-behaved integer types. This converts, for
             # example, numpy.int32 instances.
             ival = int(i)
-            if ival == 0: obj = S.Zero
-            elif ival == 1: obj = S.One
-            elif ival == -1: obj = S.NegativeOne
-            else:
+            try:
+                obj = _intcache[ival]
+            except KeyError:
                 obj = Expr.__new__(cls)
                 obj.p = ival
 
@@ -925,11 +929,6 @@ class Integer(Rational):
         elif isinstance(b, Integer):
             return Integer(b.p * a.p)
         return Rational.__mul__(a, b)
-
-    # XXX __pow__ ?
-
-    # XXX do we need to define __cmp__ ?
-#   def __cmp__(a, b):
 
     def __eq__(a, b):
         if type(b) is int:
@@ -1042,7 +1041,7 @@ class Integer(Rational):
         x, xexact = integer_nthroot(b_pos, e.q)
         if xexact:
             # if it's a perfect root we've finished
-            result = Integer(x**abs(e.p))
+            result = Integer(x ** abs(e.p))
             if b < 0:
                 result *= (-1)**e
             return result
