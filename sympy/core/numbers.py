@@ -1,8 +1,8 @@
 from core import C
 from sympify import converter, sympify, _sympify, SympifyError
-from basic import Atom, Basic
+from basic import Basic
 from singleton import S, SingletonMeta
-from expr import Expr
+from expr import Expr, AtomicExpr
 from decorators import _sympifyit
 from cache import cacheit, clear_cache
 import sympy.mpmath as mpmath
@@ -103,7 +103,7 @@ def igcdex(a, b):
     return (x*x_sign, y*y_sign, a)
 
 
-class Number(Atom, Expr):
+class Number(AtomicExpr):
     """
     Represents any kind of number in sympy.
 
@@ -1472,9 +1472,8 @@ class NaN(Rational):
         import sage.all as sage
         return sage.NaN
 
-class ComplexInfinity(Atom, Expr):
+class ComplexInfinity(AtomicExpr):
     __metaclass__ = SingletonMeta
-
     is_commutative = True
     is_comparable = None
     is_bounded = False
@@ -1503,7 +1502,7 @@ class ComplexInfinity(Atom, Expr):
                 else:
                     return S.Zero
 
-class NumberSymbol(Atom, Expr):
+class NumberSymbol(AtomicExpr):
     __metaclass__ = SingletonMeta
 
     is_commutative = True
@@ -1708,7 +1707,7 @@ class Catalan(NumberSymbol):
         import sage.all as sage
         return sage.catalan
 
-class ImaginaryUnit(Atom, Expr):
+class ImaginaryUnit(AtomicExpr):
     __metaclass__ = SingletonMeta
 
     is_commutative = True

@@ -1,9 +1,11 @@
 """Core module. Provides the basic operations needed in sympy.
 """
 
-from basic import Basic, Atom, S, C
-from expr import Expr
 from sympify import sympify
+from cache import cacheit
+from basic import Basic, Atom, C
+from singleton import S
+from expr import Expr, AtomicExpr
 from symbol import Symbol, Wild, symbols, var
 from numbers import Number, Real, Rational, Integer, NumberSymbol,\
         RealNumber, igcd, ilcm, seterr

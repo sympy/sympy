@@ -30,8 +30,10 @@ Example:
 
 """
 
-from basic import Basic, BasicMeta, Atom, S, C
-from expr import Expr
+from core import BasicMeta, C
+from basic import Basic
+from singleton import S
+from expr import Expr, AtomicExpr
 from cache import cacheit
 from itertools import repeat
 #from numbers import Rational, Integer
@@ -473,7 +475,7 @@ class Function(Application, Expr):
         x = sympify(x)
         return cls(x).diff(x, n).subs(x, 0) * x**n / C.Factorial(n)
 
-class WildFunction(Function, Atom):
+class WildFunction(Function, AtomicExpr):
     """
     WildFunction() matches any expression but another WildFunction()
     XXX is this as intended, does it work ?

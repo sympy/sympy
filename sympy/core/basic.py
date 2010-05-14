@@ -1102,10 +1102,6 @@ class Atom(Basic):
 
     __slots__ = []
 
-    def _eval_derivative(self, s):
-        if self==s: return S.One
-        return S.Zero
-
     def matches(self, expr, repl_dict, evaluate=False):
         if self == expr:
             return repl_dict
@@ -1117,24 +1113,13 @@ class Atom(Basic):
         else:
             return self
 
-    def as_numer_denom(self):
-        return self, S.One
-
     def count_ops(self, symbolic=True):
+        from singleton import S
         return S.Zero
 
     def doit(self, **hints):
         return self
 
-    def _eval_is_polynomial(self, syms):
-        return True
-
-    @property
-    def is_number(self):
-        return True
-
-    def _eval_nseries(self, x, x0, n):
-        return self
 
 
 from singleton import S

@@ -5,9 +5,9 @@ The base class is Unit, where all here defined units (~200) inherit from.
 """
 
 from sympy import Rational, pi
-from sympy.core import Atom, Expr
+from sympy.core import AtomicExpr
 
-class Unit(Atom, Expr):
+class Unit(AtomicExpr):
     """
     Base class for all physical units.
 
@@ -20,7 +20,7 @@ class Unit(Atom, Expr):
     __slots__ = ["name", "abbrev"]
 
     def __new__(cls, name, abbrev, **assumptions):
-        obj = Expr.__new__(cls, **assumptions)
+        obj = AtomicExpr.__new__(cls, **assumptions)
         assert isinstance(name, str),`type(name)`
         assert isinstance(abbrev, str),`type(abbrev)`
         obj.name = name
@@ -38,9 +38,6 @@ class Unit(Atom, Expr):
 
     def _hashable_content(self):
         return (self.name,self.abbrev)
-
-# Delete this so it doesn't pollute the namespace
-del Atom
 
 def defunit(value, *names):
     u = value
