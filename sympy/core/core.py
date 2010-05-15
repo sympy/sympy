@@ -72,7 +72,6 @@ class BasicMeta(BasicType):
 
     classnamespace = {}
     all_classes = set()
-    singleton = {}
 
     keep_sign = False
 

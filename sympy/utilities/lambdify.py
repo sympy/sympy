@@ -62,7 +62,7 @@ MODULES = {
     "numpy":(NUMPY, NUMPY_TRANSLATIONS, ("from numpy import *",)),
     "sympy":(SYMPY, {}, ("from sympy.functions import *",
                          "from sympy.matrices import Matrix",
-                         "from sympy import Integral",
+                         "from sympy import Integral, pi, oo, nan, zoo, E, I",
                          "from sympy.utilities.iterables import iff"))
 }
 

@@ -299,4 +299,4 @@ class Order(Expr):
         #XXX: SAGE doesn't have Order yet. Let's return 0 instead.
         return Rational(0)._sage_()
 
-Basic.singleton['O'] = lambda : Order
+O = Order

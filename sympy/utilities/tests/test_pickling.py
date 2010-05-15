@@ -146,12 +146,13 @@ from sympy.functions import (Piecewise, lowergamma, acosh,
         chebyshevu, chebyshevt, ln, chebyshevt_root, Binomial, legendre,
         Heaviside, Dij, factorial, bernoulli, coth, tanh, assoc_legendre, sign,
         arg, asin, DiracDelta, re, rf, abs, uppergamma, binomial, sinh, Ylm,
-        oo, cos, cot, acos, acot, gamma, bell, hermite, harmonic,
-        LambertW, zeta, log, Factorial, pi, asinh, acoth, Zlm,
+        cos, cot, acos, acot, gamma, bell, hermite, harmonic,
+        LambertW, zeta, log, Factorial, asinh, acoth, Zlm,
         cosh, dirichlet_eta, Eijk, loggamma, erf, max_, ceiling, im, fibonacci,
-        conjugate, tan, chebyshevu_root, floor, atanh, nan, sqrt, zoo, min_,
-        RisingFactorial, sin, E, atan, I, ff, FallingFactorial, lucas, atan2,
+        conjugate, tan, chebyshevu_root, floor, atanh, sqrt, min_,
+        RisingFactorial, sin, atan, ff, FallingFactorial, lucas, atan2,
         polygamma, exp)
+from sympy.core import pi, oo, nan, zoo, E, I
 
 def test_functions():
     zero_var = (pi, oo, nan, zoo, E, I)

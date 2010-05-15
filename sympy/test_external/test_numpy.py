@@ -240,7 +240,7 @@ def test_lambdify_matrix_vec_input():
 def test_lambdify_transl():
     from sympy.utilities.lambdify import NUMPY_TRANSLATIONS
     for sym, mat in NUMPY_TRANSLATIONS.iteritems():
-        assert sym in sympy.functions.__dict__ or sym in ("Matrix", )
+        assert sym in sympy.__dict__
         assert mat in numpy.__dict__
 
 def test_symarray():

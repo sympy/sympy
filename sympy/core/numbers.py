@@ -1773,18 +1773,6 @@ _intcache[0] = S.Zero
 _intcache[1] = S.One
 _intcache[-1]= S.NegativeOne
 
-Basic.singleton['E'] = Exp1
-Basic.singleton['pi'] = Pi
-Basic.singleton['I'] = ImaginaryUnit
-Basic.singleton['oo'] = Infinity
-Basic.singleton['nan'] = NaN
-
-Basic.singleton['zoo'] = ComplexInfinity
-
-Basic.singleton['GoldenRatio'] = GoldenRatio
-Basic.singleton['EulerGamma'] = EulerGamma
-Basic.singleton['Catalan'] = Catalan
-
 from function import FunctionClass
 from power import Pow, integer_nthroot
 from mul import Mul
