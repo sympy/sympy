@@ -11,7 +11,6 @@ except ImportError:
 else:
     has_functools = True
 
-
 def apply_on_element(f, args, kwargs, n):
     """
     Returns a structure with the same dimension as the specified argument,
@@ -102,6 +101,7 @@ class vectorize:
         Returns a wrapper for the one-dimensional function that can handle
         multidimensional arguments.
         """
+        @functools.wraps(f)
         def wrapper(*args, **kwargs):
             # Get arguments that should be treated multidimensional
             if self.mdargs:

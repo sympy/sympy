@@ -42,6 +42,7 @@ if not USE_PYTEST:
         pass
 
     def XFAIL(func):
+        @functools.wraps(func)
         def wrapper():
             try:
                 func()
@@ -126,6 +127,7 @@ else:
 
     def XFAIL(func):
         """XFAIL decorator"""
+        @functools.wraps(func)
         def func_wrapper():
             try:
                 func()
