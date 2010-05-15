@@ -1,4 +1,5 @@
-from basic import Basic, S
+from basic import Basic
+from singleton import S
 from operations import AssocOp
 from cache import cacheit
 from logic import fuzzy_not

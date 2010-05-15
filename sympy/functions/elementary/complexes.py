@@ -1,5 +1,4 @@
-from sympy.core.basic import S, C
-from sympy.core.function import Function, Derivative
+from sympy.core import S, C, Function, Derivative
 from sympy.functions.elementary.miscellaneous import sqrt
 
 from sympy.utilities.iterables import iff

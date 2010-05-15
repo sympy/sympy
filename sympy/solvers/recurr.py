@@ -46,13 +46,7 @@
     [3] a hypergeometric function  -> rsolve_hyper
 """
 
-from sympy.core.basic import S
-from sympy.core.numbers import Rational
-from sympy.core.symbol import Symbol, Wild
-from sympy.core.relational import Equality
-from sympy.core.add import Add
-from sympy.core.mul import Mul
-from sympy.core import sympify
+from sympy.core import S,  Rational, Symbol, Wild, Equality, Add, Mul, sympify
 
 from sympy.simplify import simplify, hypersimp, hypersimilar
 from sympy.solvers import solve, solve_undetermined_coeffs

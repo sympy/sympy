@@ -1,4 +1,4 @@
-from sympy.core.basic import Basic, S, C, sympify
+from sympy.core import Basic, S, C, sympify
 from sympy.simplify import simplify
 from sympy.geometry.exceptions import GeometryError
 from entity import GeometryEntity

@@ -1,6 +1,4 @@
-from sympy.core.basic import S, C, sympify
-from sympy.core.function import Function
-from sympy.core.cache import cacheit
+from sympy.core import S, C, sympify, Function, cacheit
 
 from sympy.functions.elementary.miscellaneous import sqrt
 

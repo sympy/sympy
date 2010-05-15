@@ -1,5 +1,4 @@
-from sympy.core.basic import Basic, S, C, sympify
-from sympy.core.function import expand
+from sympy.core import Basic, S, C, sympify, expand
 from sympy.functions import Piecewise, piecewise_fold
 from sympy.functions.elementary.piecewise import ExprCondPair
 from sympy.core.sets import Interval

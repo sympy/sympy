@@ -1,8 +1,7 @@
 import warnings
-from sympy import Basic, Symbol, Integer
+from sympy.core import S, Basic, Symbol, Integer
 from sympy.core.sympify import sympify, converter, SympifyError
 
-from sympy.core.basic import S
 from sympy.polys import Poly, roots, cancel
 from sympy.simplify import simplify
 from sympy.utilities import any

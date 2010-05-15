@@ -1,7 +1,8 @@
 """This tests sympy/core/basic.py with (ideally) no reference to subclasses
 of Basic or Atom."""
 
-from sympy.core.basic import Basic, Atom, S
+from sympy.core.basic import Basic, Atom
+from sympy.core.singleton import S
 
 from sympy.utilities.pytest import raises
 

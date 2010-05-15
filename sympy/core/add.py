@@ -1,4 +1,6 @@
-from basic import Basic, S, C
+from core import C
+from basic import Basic
+from singleton import S
 from operations import AssocOp
 from cache import cacheit
 

@@ -1,7 +1,5 @@
-from sympy.core.basic import S, C, sympify
-from sympy.core.function import Function
+from sympy.core import S, C, sympify, Function, cacheit
 from miscellaneous import sqrt
-from sympy.core.cache import cacheit
 
 ###############################################################################
 ########################## TRIGONOMETRIC FUNCTIONS ############################

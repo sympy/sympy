@@ -1,7 +1,5 @@
-from sympy.core.basic import S, sympify
-from sympy.core.function import Function
+from sympy.core import S, sympify, Function, diff
 import sympy.polys
-from sympy.core import diff
 
 ###############################################################################
 ################################ DELTA FUNCTION ###############################

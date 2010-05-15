@@ -2,7 +2,7 @@ from pyglet.gl import *
 from plot_mode import PlotMode
 from threading import Thread, Event, RLock
 from color_scheme import ColorScheme
-from sympy.core.basic import S
+from sympy.core import S
 from time import sleep
 
 class PlotModeBase(PlotMode):

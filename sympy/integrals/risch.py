@@ -1,12 +1,7 @@
-from sympy.core.add import Add
-from sympy.core.mul import Mul
-from sympy.core.symbol import Symbol, Wild
-from sympy.core.basic import S, C, sympify
-from sympy.core.numbers import Rational
+from sympy.core import Add, Mul, Symbol, Wild, S, C, sympify, Rational
 
 from sympy.functions import exp, sin , cos , tan , cot , asin
 from sympy.functions import log, sinh, cosh, tanh, coth, asinh
-
 from sympy.functions import sqrt, erf
 
 from sympy.solvers import solve

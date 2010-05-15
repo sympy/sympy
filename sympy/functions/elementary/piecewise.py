@@ -1,8 +1,5 @@
-from sympy.core.basic import Basic, S
-from sympy.core.function import Function, diff
-from sympy.core.numbers import Number
+from sympy.core import Basic, S, Function, diff, Number, sympify
 from sympy.core.relational import Relational
-from sympy.core.sympify import sympify
 from sympy.core.sets import Interval, Set
 
 class ExprCondPair(Function):

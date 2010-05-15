@@ -1,6 +1,4 @@
-from sympy.core.basic import S, C
-from sympy.core.function import Function
-
+from sympy.core import S, C, Function
 from sympy.core.evalf import get_integer_part, PrecisionExhausted
 
 ###############################################################################
