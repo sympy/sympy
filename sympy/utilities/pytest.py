@@ -4,6 +4,7 @@
 # XXX but we can't force everyone to install py-lib trunk
 
 import sys
+import functools
 
 try:
     # tested with py-lib 0.9.0
@@ -35,6 +36,7 @@ if not USE_PYTEST:
         pass
 
     def XFAIL(func):
+        @functools.wraps(func)
         def wrapper():
             try:
                 func()
@@ -117,6 +119,7 @@ else:
 
     def XFAIL(func):
         """XFAIL decorator"""
+        @functools.wraps(func)
         def func_wrapper():
             try:
                 func()
