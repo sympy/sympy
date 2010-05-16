@@ -1,6 +1,6 @@
 from sympy import symbols, Symbol, sinh, nan, oo, pi, asinh, acosh, log, sqrt, \
         coth, I, cot, E, tanh, tan, cosh, cos, S, sin, Rational, atanh, acoth, \
-        Integer, O
+        Integer, O, exp
 
 from sympy.utilities.pytest import XFAIL
 
@@ -444,3 +444,35 @@ def test_simplifications():
 
 def test_issue1037():
     assert cosh(asinh(Integer(3)/2)) == sqrt(Integer(13)/4)
+
+def test_sinh_rewrite():
+    x = Symbol('x')
+    assert sinh(x).rewrite(exp) == (exp(x)-exp(-x))/2
+    assert sinh(x).rewrite(cosh) == -I*cosh(x+I*pi/2)
+    tanh_half = tanh(S.Half*x)
+    assert sinh(x).rewrite(tanh) == 2*tanh_half/(1-tanh_half**2)
+    coth_half = coth(S.Half*x)
+    assert sinh(x).rewrite(coth) == 2*coth_half/(coth_half**2-1)
+
+def test_cosh_rewrite():
+    x = Symbol('x')
+    assert cosh(x).rewrite(exp) == (exp(x)+exp(-x))/2
+    assert cosh(x).rewrite(sinh) == -I*sinh(x+I*pi/2)
+    tanh_half = tanh(S.Half*x)**2
+    assert cosh(x).rewrite(tanh) == (1+tanh_half)/(1-tanh_half)
+    coth_half = coth(S.Half*x)**2
+    assert cosh(x).rewrite(coth) == (coth_half+1)/(coth_half-1)
+
+def test_tanh_rewrite():
+    x = Symbol('x')
+    assert tanh(x).rewrite(exp) == (exp(x)-exp(-x))/(exp(x)+exp(-x))
+    assert tanh(x).rewrite(sinh) == I*sinh(x)/sinh(I*pi/2-x)
+    assert tanh(x).rewrite(cosh) == I*cosh(I*pi/2-x)/cosh(x)
+    assert tanh(x).rewrite(coth) == 1/coth(x)
+
+def test_coth_rewrite():
+    x = Symbol('x')
+    assert coth(x).rewrite(exp) ==  (exp(x)+exp(-x))/(exp(x)-exp(-x))
+    assert coth(x).rewrite(sinh) == -I*sinh(I*pi/2-x)/sinh(x)
+    assert coth(x).rewrite(cosh) == -I*cosh(x)/cosh(I*pi/2-x)
+    assert coth(x).rewrite(tanh) == 1/tanh(x)
