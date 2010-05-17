@@ -312,6 +312,8 @@ def test_separable2():
     assert dsolve(eq10, f(x), hint='separable') == sol10
     assert checkodesol(eq7, f(x), sol7, order=1, solve_for_func=False)[0]
     assert checkodesol(eq8, f(x), sol8, order=1, solve_for_func=False)[0]
+    assert checkodesol(eq10, f(x), sol10, order=1, solve_for_func=False)[0]
+
 
 def test_separable3():
     eq11 = f(x).diff(x) - f(x)*tan(x)
@@ -365,13 +367,9 @@ def test_separable5():
 
 @XFAIL
 def test_separable_1_5_checkodesol():
-    # These fail because trigsimp() cannot reduce the expression to 0 in checkodesol()
-    a = Symbol('a')
-    eq10 = x*cos(f(x)) + x**2*sin(f(x))*f(x).diff(x) - a**2*sin(f(x))*f(x).diff(x)
+    # This fails because trigsimp() cannot reduce the expression to 0 in checkodesol()
     eq12 = (x - 1)*cos(f(x))*f(x).diff(x) - 2*x*sin(f(x))
-    sol10 = Eq(-log(1 - sin(f(x))**2)/2, C1 - log(x**2 - a**2)/2)
     sol12 = Eq(-log(1 - cos(f(x))**2)/2, C1 - 2*x - 2*log(1 - x))
-    assert checkodesol(eq10, f(x), sol10, order=1, solve_for_func=False)[0]
     assert checkodesol(eq12, f(x), sol12, order=1, solve_for_func=False)[0]
 
 def test_homogeneous_order():
@@ -1077,6 +1075,9 @@ def test_Liouville_ODE():
     assert checkodesol(eq2, f(x), sol1a, order=2, solve_for_func=False)[0]
     assert checkodesol(eq3, f(x), sol3[0], order=2, solve_for_func=False)[0]
     assert checkodesol(eq3, f(x), sol3[1], order=2, solve_for_func=False)[0]
+    sol4c = checkodesol(eq4, f(x), sol4, order=2, solve_for_func=False)
+    assert sol4c[0][0]
+    assert sol4c[1][0]
     assert checkodesol(eq5, f(x), sol5, order=2, solve_for_func=False)[0]
     not_Liouville1 = classify_ode(diff(f(x),x)/x + f(x)*diff(f(x),x,x)/2 -
         diff(f(x),x)**2/2, f(x))
@@ -1087,15 +1088,6 @@ def test_Liouville_ODE():
     assert hint+'_Integral' not in not_Liouville1
     assert hint+'_Integral' not in not_Liouville2
 
-
-@XFAIL
-def test_Liouville_ODE_xfail():
-    # This is failling because of how checkodesol is simplifying the
-    # differential equation once the solutions is plugged in.
-    eq4 = x*diff(f(x), x, x) + x/f(x)*diff(f(x), x)**2 + x*diff(f(x), x)
-    sol4 = [Eq(f(x), sqrt(C1 + C2*exp(-x))), Eq(f(x), -sqrt(C1 + C2*exp(-x)))]
-    assert checkodesol(eq4, f(x), sol4[0], order=2, solve_for_func=False)[0]
-    assert checkodesol(eq4, f(x), sol4[1], order=2, solve_for_func=False)[0]
 
 def test_unexpanded_Liouville_ODE():
     # This is the same as eq1 from test_Liouville_ODE() above.
