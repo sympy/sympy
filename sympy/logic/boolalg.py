@@ -74,7 +74,7 @@ class Xor(BooleanFunction):
         A = args.pop()
         while args:
             B = args.pop()
-            A = Or(A & Not(B), (Not(A) & B))
+            A = Or(And(A, Not(B)), And(Not(A), B))
         return A
 
 class Not(BooleanFunction):
@@ -98,38 +98,27 @@ class Not(BooleanFunction):
 
 class Nand(BooleanFunction):
     """Logical NAND function.
+
     It evaluates its arguments in order, giving True immediately if any
     of them are False, and False if they are all True.
     """
     @classmethod
     def eval(cls, *args):
-        if not args:
-            return False
-        args = list(args)
-        A = Not(args.pop())
-        while args:
-            B = args.pop()
-            A = Or(A, Not(B))
-        return A
+        return Not(And(*args))
 
 class Nor(BooleanFunction):
     """Logical NOR function.
+
     It evaluates its arguments in order, giving False immediately if any
     of them are True, and True if they are all False.
     """
     @classmethod
     def eval(cls, *args):
-        if not args:
-            return False
-        args = list(args)
-        A = Not(args.pop())
-        while args:
-            B = args.pop()
-            A = And(A, Not(B))
-        return A
+        return Not(Or(*args))
 
 class Implies(BooleanFunction):
     """Logical implication.
+
     A implies B is equivalent to !A v B
     """
     @classmethod
@@ -141,11 +130,21 @@ class Implies(BooleanFunction):
 
 class Equivalent(BooleanFunction):
     """Equivalence relation.
+
     Equivalent(A, B) is True if and only if A and B are both True or both False
     """
     @classmethod
     def eval(cls, *args):
-        return Basic.__new__(cls, *sorted(args))
+        argset = set(args)
+        if len(argset) <= 1:
+            return True
+        if True in argset:
+            argset.discard(True)
+            return And(*argset)
+        if False in argset:
+            argset.discard(False)
+            return Nor(*argset)
+        return Basic.__new__(cls, *set(args))
 
 ### end class definitions. Some useful methods
 
@@ -239,13 +238,14 @@ def eliminate_implications(expr):
     if expr.is_Atom:
         return expr     ## (Atoms are unchanged.)
     args = map(eliminate_implications, expr.args)
-    a, b = args[0], args[-1]
     if expr.func is Implies:
+        a, b = args[0], args[-1]
         return (~a) | b
     elif expr.func is Equivalent:
+        a, b = args[0], args[-1]
         return (a | Not(b)) & (b | Not(a))
     else:
-        return type(expr)(*args)
+        return expr.func(*args)
 
 def compile_rule(s):
     """Transforms a rule into a sympy expression

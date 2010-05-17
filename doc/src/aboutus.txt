@@ -99,6 +99,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Raffaele De Feo: Fix non-commutative expansion
 #. Christian Muise: fixes to logic module
 #. Kazuo Thow: Cleanup pretty printing tests
+#. Jezreel Ng: Fix hyperbolic functions rewrite
 
 
 Up-to-date list in the order of the first contribution is given in the `AUTHORS
