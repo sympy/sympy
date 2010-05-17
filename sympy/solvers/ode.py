@@ -1020,17 +1020,20 @@ def checkodesol(ode, func, sol, order='auto', solve_for_func=True):
             # - Back substitute into the ode in decreasing order
             #   (i.e., n, n-1, ...)
             # - Check the result for zero equivalence
+            if sol.lhs == func and not sol.rhs.has(func):
+                diffsols = {0:sol.rhs}
+            elif sol.rhs == func and not sol.lhs.has(func):
+                diffsols = {0:sol.lhs}
+            else:
+                diffsols = {}
             sol = sol.lhs - sol.rhs
-            diffsols = {0: sol}
             for i in range(1, order + 1):
-                # This is what the solution says df/dx should be.
-                ds = diffsols[i - 1].diff(x)
-
                 # Differentiation is a linear operator, so there should always
                 # be 1 solution. Nonetheless, we test just to make sure.
                 # We only need to solve once.  After that, we will automatically
                 # have the solution to the differential in the order we want.
                 if i == 1:
+                    ds = sol.diff(x)
                     try:
                         sdf = solve(ds,func.diff(x, i))
                         if len(sdf) != 1:
@@ -1041,14 +1044,20 @@ def checkodesol(ode, func, sol, order='auto', solve_for_func=True):
                     else:
                         diffsols[i] = sdf[0]
                 else:
-                    diffsols[i] = ds
+                    # This is what the solution says df/dx should be.
+                    diffsols[i] = diffsols[i - 1].diff(x)
+
             # Make sure the above didn't fail.
             if testnum > 2:
                 continue
             else:
                 # Substitute it into ode to check for self consistency.
                 lhs, rhs = ode.lhs, ode.rhs
-                for i in range(order, 0, -1):
+                for i in range(order, -1, -1):
+                    if i == 0 and not diffsols.has_key(0):
+                        # We can only substitute f(x) if the solution was
+                        # solved for f(x).
+                        break
                     lhs = lhs.subs(func.diff(x, i), diffsols[i])
                     rhs = rhs.subs(func.diff(x, i), diffsols[i])
                     ode_or_bool = Eq(lhs,rhs)

@@ -38,9 +38,8 @@ def test_checkodesol():
     assert checkodesol(diff(sol1.lhs, x, 3), f(x), sol1) == (True, 0)
     assert checkodesol(diff(sol1.lhs, x, 3)*exp(f(x)), f(x), sol1) == (True, 0)
     assert checkodesol(diff(sol1.lhs, x, 3), f(x), Eq(f(x), x*log(x))) == \
-        (False, 60*x**4*f(x)**3*log(x) + 180*x**5*f(x)**2*log(x) + \
-        60*x**5*f(x)**2 + 180*x**5*f(x)**2*log(x)**2 - 9*x**3 + \
-        60*x**4*f(x)**3 + 60*x**5*f(x)**2*log(x)**3 - 5*x**3*f(x)**4)
+        (False, -9 + 60*x**4*log(x)**2 + 240*x**4*log(x)**3 +
+        235*x**4*log(x)**4 + 60*x**4*log(x)**5)
     assert checkodesol(diff(exp(f(x)) + x, x)*x, f(x), Eq(exp(f(x)) + x)) == (True, 0)
     assert checkodesol(diff(exp(f(x)) + x, x)*x, f(x), Eq(exp(f(x)) + x), \
         solve_for_func=False) == (True, 0)
@@ -50,6 +49,11 @@ def test_checkodesol():
     assert checkodesol(f(x).diff(x) - 1/f(x)/2, f(x), Eq(f(x)**2, x)) == \
         [(True, 0), (True, 0)]
     assert checkodesol(f(x).diff(x) - f(x), f(x), Eq(C1*exp(x), f(x))) == (True, 0)
+    # Based on test_1st_homogeneous_coeff_ode2_eq3sol.  Make sure that
+    # checkodesol tries back substituting f(x) when it can.
+    eq3 = x*exp(f(x)/x) + f(x) - x*f(x).diff(x)
+    sol3 = Eq(f(x), log(log(C1/x)**(-x)))
+    assert not checkodesol(eq3, f(x), sol3)[1].has(f(x))
 
 def test_dsolve_options():
     eq = x*f(x).diff(x) + f(x)
