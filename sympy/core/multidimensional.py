@@ -3,7 +3,14 @@ Provides functionality for multidimensional usage of scalar-functions.
 
 Read the vectorize docstring for more details.
 """
-import functools
+try:
+    # functools is not available in Python 2.4
+    import functools
+except ImportError:
+    has_functools = False
+else:
+    has_functools = True
+
 
 def apply_on_element(f, args, kwargs, n):
     """
@@ -95,7 +102,6 @@ class vectorize:
         Returns a wrapper for the one-dimensional function that can handle
         multidimensional arguments.
         """
-        @functools.wraps(f)
         def wrapper(*args, **kwargs):
             # Get arguments that should be treated multidimensional
             if self.mdargs:
@@ -130,4 +136,6 @@ class vectorize:
             return f(*args, **kwargs)
         wrapper.__doc__ = f.__doc__
         wrapper.__name__ = f.__name__
+        if has_functools:
+            wrapper = functools.update_wrapper(wrapper, f)
         return wrapper

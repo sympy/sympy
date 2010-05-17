@@ -217,6 +217,7 @@ from sympy.simplify import collect, logcombine, powsimp, separatevars, \
 from sympy.solvers import solve
 
 from sympy.utilities import numbered_symbols, all, any, make_list
+from sympy.utilities.iterables import minkey
 
 # This is a list of hints in the order that they should be applied.  That means
 # that, in general, hints earlier in the list should produce simpler results
@@ -429,7 +430,7 @@ def dsolve(eq, func, hint="default", simplify=True, **kwargs):
                 failedhints[i] = detail
             else:
                 retdict[i] = sol
-        retdict['best'] = min(retdict.values(), key=lambda x:
+        retdict['best'] = minkey(retdict.values(), key=lambda x:
             ode_sol_simplicity(x, func, trysolving=not simplify))
         if hint == 'best':
             return retdict['best']
@@ -856,24 +857,24 @@ def odesimp(eq, func, order, hint):
             eq = [eq]
         else:
             eq = [Eq(f(x), t) for t in eqsol]
-        finally:
-            # Special handling for certain hints that we know will usually take a
-            # certain form
-            if hint[:21] == "1st_homogeneous_coeff":
-                neweq = []
-                for i in eq:
-                    # Solutions from this hint can almost always be logcombined
-                    newi = logcombine(i, assume_pos_real=True)
-                    if newi.lhs.is_Function and newi.lhs.func is log and newi.rhs == 0:
-                        # log(C1*stuff) == 0 --> stuff == C1
-                        # Note that this is a form of constant simplification.
-                        # And also, the division of C1 relies on constantsimp()
-                        # making it C1*stuff.
-                        newi = Eq(newi.lhs.args[0]/C1,C1)
-                    neweq.append(newi)
-                eq = neweq
-            if len(eq) == 1:
-                eq = eq[0] # We only want a list if there are multiple solutions
+
+        # Special handling for certain hints that we know will usually take a
+        # certain form
+        if hint[:21] == "1st_homogeneous_coeff":
+            neweq = []
+            for i in eq:
+                # Solutions from this hint can almost always be logcombined
+                newi = logcombine(i, assume_pos_real=True)
+                if newi.lhs.is_Function and newi.lhs.func is log and newi.rhs == 0:
+                    # log(C1*stuff) == 0 --> stuff == C1
+                    # Note that this is a form of constant simplification.
+                    # And also, the division of C1 relies on constantsimp()
+                    # making it C1*stuff.
+                    newi = Eq(newi.lhs.args[0]/C1,C1)
+                neweq.append(newi)
+            eq = neweq
+        if len(eq) == 1:
+            eq = eq[0] # We only want a list if there are multiple solutions
 
     if hint[:25] == "nth_linear_constant_coeff":
         # Collect terms to make the solution look nice.
@@ -1127,9 +1128,12 @@ def ode_sol_simplicity(sol, func, trysolving=True):
 
     This function is designed to be passed to min as the key argument,
     such as min(listofsolutions, key=lambda i: ode_sol_simplicity(i, f(x))).
+    Note that as long as SymPy supports Python 2.4, you must use the minkey()
+    function in sympy/utilities/iterables.py to emulate this behavior.
 
         >>> from sympy import symbols, Function, Eq, tan, cos, sqrt, Integral
         >>> from sympy.solvers.ode import ode_sol_simplicity
+        >>> from sympy.utilities.iterables import minkey
         >>> x, C1 = symbols('x C1')
         >>> f = Function('f')
 
@@ -1147,7 +1151,7 @@ def ode_sol_simplicity(sol, func, trysolving=True):
         >>> eq2 = Eq(x*sqrt(1 + cos(f(x)/x))/sqrt(-1 + cos(f(x)/x)), C1)
         >>> ode_sol_simplicity(eq1, f(x))
         23
-        >>> min([eq1, eq2], key=lambda i: ode_sol_simplicity(i, f(x)))
+        >>> minkey([eq1, eq2], key=lambda i: ode_sol_simplicity(i, f(x)))
         x/tan(f(x)/(2*x)) == C1
 
     """
@@ -1607,7 +1611,7 @@ def ode_1st_homogeneous_coeff_best(eq, func, order, match):
     if simplify:
         sol1 = odesimp(sol1, func, order, "1st_homogeneous_coeff_subs_indep_div_dep")
         sol2 = odesimp(sol2, func, order, "1st_homogeneous_coeff_subs_dep_div_indep")
-    return min(sol1, sol2, key=lambda x: ode_sol_simplicity(x, func,
+    return minkey([sol1, sol2], key=lambda x: ode_sol_simplicity(x, func,
         trysolving=not simplify))
 
 def ode_1st_homogeneous_coeff_subs_dep_div_indep(eq, func, order, match):
