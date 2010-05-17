@@ -95,6 +95,10 @@ def eliminate_assume(expr, symbol=None):
         Not(Q.positive)
 
     """
+    if symbol is not None:
+        props = expr.atoms(AppliedPredicate)
+        if props and symbol not in [prop.arg for prop in props]:
+            return
     if expr.__class__ is AppliedPredicate:
         if symbol is not None:
             if not expr.arg.has(symbol):
