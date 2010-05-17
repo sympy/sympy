@@ -827,7 +827,7 @@ def odesimp(eq, func, order, hint):
     # Second, clean up the arbitrary constants.
     # Right now, nth linear hints can put as many as 2*order constants in an
     # expression.  If that number grows with another hint, the third argument
-    # here should be raise accordingly, or constantsimp() rewritten to handle
+    # here should be raised accordingly, or constantsimp() rewritten to handle
     # an arbitrary number of constants.
     eq = constantsimp(eq, x, 2*order)
 
@@ -876,7 +876,7 @@ def odesimp(eq, func, order, hint):
                 eq = eq[0] # We only want a list if there are multiple solutions
 
     if hint[:25] == "nth_linear_constant_coeff":
-        # Collect termms to make the solution look nice.
+        # Collect terms to make the solution look nice.
         # This is also necessary for constantsimp to remove unnecessary terms
         # from the particular solution from variation of parameters
         global collectterms
@@ -1626,7 +1626,12 @@ def ode_1st_homogeneous_coeff_subs_dep_div_indep(eq, func, order, match):
         >>> from sympy import Function, dsolve, pprint
         >>> from sympy.abc import x
         >>> f, g, h = map(Function, ['f', 'g', 'h'])
-        >>> pprint(dsolve(g(f(x)/x) + h(f(x)/x)*f(x).diff(x), f(x),
+        >>> genform = g(f(x)/x) + h(f(x)/x)*f(x).diff(x)
+        >>> pprint(genform)
+        d         /f(x)\    /f(x)\
+        --(f(x))*h|----| + g|----|
+        dx        \ x  /    \ x  /
+        >>> pprint(dsolve(genform, f(x),
         ... hint='1st_homogeneous_coeff_subs_dep_div_indep_Integral'))
            f(x)
            ----
@@ -1702,7 +1707,12 @@ def ode_1st_homogeneous_coeff_subs_indep_div_dep(eq, func, order, match):
     >>> from sympy import Function, dsolve, pprint
     >>> from sympy.abc import x
     >>> f, g, h = map(Function, ['f', 'g', 'h'])
-    >>> pprint(dsolve(g(x/f(x)) + h(x/f(x))*f(x).diff(x), f(x),
+    >>> genform = g(x/f(x)) + h(x/f(x))*f(x).diff(x)
+    >>> pprint(genform)
+    d         / x  \    / x  \
+    --(f(x))*h|----| + g|----|
+    dx        \f(x)/    \f(x)/
+    >>> pprint(dsolve(genform, f(x),
     ... hint='1st_homogeneous_coeff_subs_indep_div_dep_Integral'))
                  x
                 ----
@@ -1926,8 +1936,12 @@ def ode_1st_linear(eq, func, order, match):
         >>> from sympy import Function, dsolve, Eq, pprint, diff, sin
         >>> from sympy.abc import x
         >>> f, P, Q = map(Function, ['f', 'P', 'Q'])
-        >>> pprint(dsolve(Eq(f(x).diff(x) + P(x)*f(x), Q(x)), f(x),
-        ... hint='1st_linear_Integral'))
+        >>> genform = Eq(f(x).diff(x) + P(x)*f(x), Q(x))
+        >>> pprint(genform)
+                    d
+        P(x)*f(x) + --(f(x)) = Q(x)
+                    dx
+        >>> pprint(dsolve(genform, f(x), hint='1st_linear_Integral'))
                /       /                   \
                |      |                    |
                |      |         /          |     /
@@ -1974,9 +1988,12 @@ def ode_Bernoulli(eq, func, order, match):
         >>> from sympy import Function, dsolve, Eq, pprint
         >>> from sympy.abc import x, n
         >>> f, P, Q = map(Function, ['f', 'P', 'Q'])
-
-        >>> pprint(dsolve(Eq(f(x).diff(x) + P(x)*f(x), Q(x)*f(x)**n),
-        ... f(x), hint='Bernoulli_Integral')) #doctest: +SKIP
+        >>> genform = Eq(f(x).diff(x) + P(x)*f(x), Q(x)*f(x)**n)
+        >>> pprint(genform)
+                    d           n
+        P(x)*f(x) + --(f(x)) = f (x)*Q(x)
+                    dx
+        >>> pprint(dsolve(genform, f(x), hint='Bernoulli_Integral')) #doctest: +SKIP
                                                                                        1
                                                                                       ----
                                                                                      1 - n
@@ -2045,8 +2062,14 @@ def ode_Liouville(eq, func, order, match):
         >>> from sympy import Function, dsolve, Eq, pprint, diff
         >>> from sympy.abc import x
         >>> f, g, h = map(Function, ['f', 'g', 'h'])
-        >>> pprint(dsolve(Eq(diff(f(x),x,x) + g(f(x))*diff(f(x),x)**2 +
-        ... h(x)*diff(f(x),x), 0), f(x), hint='Liouville_Integral'))
+        >>> genform = Eq(diff(f(x),x,x) + g(f(x))*diff(f(x),x)**2 +
+        ... h(x)*diff(f(x),x), 0)
+        >>> pprint(genform)
+                2                              2
+        d                   d                 d
+        --(f(x)) *g(f(x)) + --(f(x))*h(x) + -----(f(x)) = 0
+        dx                  dx              dx dx
+        >>> pprint(dsolve(genform, f(x), hint='Liouville_Integral'))
                                           f(x)
                   /                     /
                  |                     |
@@ -2418,8 +2441,8 @@ def _solve_undetermined_coefficients(eq, func, order, match):
     # The else clause actually should never be run unless the ode is only one
     # term, in which case it must be a derivative term and so will be inhomogeneous
     eqs = expand_mul(eqs)
-    eqslist = make_list(eqs, Add)
-    for i in eqslist:
+
+    for i in make_list(eqs, Add):
         s = separatevars(i, dict=True, symbols=[x])
         coeffsdict[s[x]] += s['coeff']
 
@@ -2710,8 +2733,12 @@ def ode_separable(eq, func, order, match):
         >>> from sympy import Function, dsolve, Eq, pprint
         >>> from sympy.abc import x
         >>> a, b, c, d, f = map(Function, ['a', 'b', 'c', 'd', 'f'])
-        >>> pprint(dsolve(Eq(a(x)*b(f(x))*f(x).diff(x), c(x)*d(f(x))), f(x),
-        ... hint='separable_Integral'))
+        >>> genform = Eq(a(x)*b(f(x))*f(x).diff(x), c(x)*d(f(x)))
+        >>> pprint(genform)
+        d
+        --(f(x))*a(x)*b(f(x)) = c(x)*d(f(x))
+        dx
+        >>> pprint(dsolve(genform, f(x), hint='separable_Integral'))
              f(x)
            /                  /
           |                  |
