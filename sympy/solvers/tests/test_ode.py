@@ -12,6 +12,11 @@ C2 = Symbol('C2')
 C3 = Symbol('C3')
 C4 = Symbol('C4')
 C5 = Symbol('C5')
+C6 = Symbol('C6')
+C7 = Symbol('C7')
+C8 = Symbol('C8')
+C9 = Symbol('C9')
+C10 = Symbol('C10')
 f = Function('f')
 g = Function('g')
 
@@ -1036,14 +1041,15 @@ def test_nth_linear_constant_coeff_variation_of_parameters():
     assert checkodesol(eq10, f(x), sol10, order=2, solve_for_func=False)[0]
     assert checkodesol(eq12, f(x), sol12, order=4, solve_for_func=False)[0]
 
-@XFAIL # XXX: #@$^&*!
 def test_nth_linear_constant_coeff_variation_of_parameters_simplify_False():
-    # solve_variation_of_parameters should attempt to simplify the Wronskian
-    # if simplify=False.  This test will run considerably slower if this
-    # isn't working.
+    # solve_variation_of_parameters shouldn't attempt to simplify the
+    # Wronskian if simplify=False.  If wronskian() ever gets good enough
+    # to simplify the result itself, this test might fail.
     hint = 'nth_linear_constant_coeff_variation_of_parameters'
-    assert len(str(dsolve(f(x).diff(x, 5) + 2*f(x).diff(x, 3) + f(x).diff(x) -
-        2*x - exp(I*x), f(x), hint + "_Integral", simplify=False))) == 2522
+    assert dsolve(f(x).diff(x, 5) + 2*f(x).diff(x, 3) + f(x).diff(x) -
+        2*x - exp(I*x), f(x), hint + "_Integral", simplify=False) != \
+    dsolve(f(x).diff(x, 5) + 2*f(x).diff(x, 3) + f(x).diff(x) -
+        2*x - exp(I*x), f(x), hint + "_Integral", simplify=True)
 
 def test_Liouville_ODE():
     hint = 'Liouville'
