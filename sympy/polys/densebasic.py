@@ -321,19 +321,19 @@ def dmp_one(u, K):
 @cythonized("u")
 def dmp_ground_p(f, c, u):
     """Returns True if `f` is constant in `K[X]`. """
-    if c is not None:
-        if not c:
-            return dmp_zero_p(f, u)
-        if not u:
-            return f == [c]
-    else:
-        if not u:
-            return len(f) <= 1
+    if c is not None and not c:
+        return dmp_zero_p(f, u)
 
-    if len(f) == 1:
-        return dmp_ground_p(f[0], c, u-1)
+    while u:
+        if len(f) != 1:
+            return False
+        f = f[0]
+        u -= 1
+
+    if c is None:
+        return len(f) <= 1
     else:
-        return False
+        return f == [c]
 
 @cythonized("u")
 def dmp_ground(c, u):
