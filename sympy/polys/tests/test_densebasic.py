@@ -13,6 +13,7 @@ from sympy.polys.densebasic import (
     dup_copy, dmp_copy,
     dup_normal, dmp_normal,
     dup_convert, dmp_convert,
+    dup_from_sympy, dmp_from_sympy,
     dup_nth, dmp_nth, dmp_ground_nth,
     dmp_zero_p, dmp_zero,
     dmp_one_p, dmp_one,
@@ -43,6 +44,7 @@ from sympy.polys.polyclasses import DMP
 
 from sympy.polys.domains import ZZ, QQ
 
+from sympy.core.singleton import S
 from sympy.utilities.pytest import raises
 from sympy.utilities import all
 
@@ -211,6 +213,18 @@ def test_dmp_convert():
 
     assert dmp_convert(f, 1, K0, K1) == \
         [[ZZ(1)],[ZZ(2)],[],[ZZ(3)]]
+
+def test_dup_from_sympy():
+    assert dup_from_sympy([S(1), S(2)], ZZ) == \
+        [ZZ(1), ZZ(2)]
+    assert dup_from_sympy([S(1)/2, S(3)], QQ) == \
+        [QQ(1, 2), QQ(3, 1)]
+
+def test_dmp_from_sympy():
+    assert dmp_from_sympy([[S(1), S(2)], [S(0)]], 1, ZZ) == \
+        [[ZZ(1), ZZ(2)], []]
+    assert dmp_from_sympy([[S(1)/2, S(2)]], 1, QQ) == \
+        [[QQ(1, 2), QQ(2, 1)]]
 
 def test_dup_nth():
     assert dup_nth([1,2,3], 0, ZZ) == 3
