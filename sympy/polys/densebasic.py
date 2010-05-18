@@ -33,18 +33,18 @@ dup_TC = dmp_TC = poly_TC
 @cythonized("u")
 def dmp_ground_LC(f, u, K):
     """Returns ground leading coefficient. """
-    if not u:
-        return dup_LC(f, K)
-    else:
-        return dmp_ground_LC(dmp_LC(f, K), u-1, K)
+    while u:
+        f = dmp_LC(f, K)
+        u -= 1
+    return dup_LC(f, K)
 
 @cythonized("u")
 def dmp_ground_TC(f, u, K):
     """Returns ground trailing coefficient. """
-    if not u:
-        return dup_TC(f, K)
-    else:
-        return dmp_ground_TC(dmp_TC(f, K), u-1, K)
+    while u:
+        f = dmp_TC(f, K)
+        u -= 1
+    return dup_TC(f, K)
 
 @cythonized("u")
 def dmp_true_LT(f, u, K):
