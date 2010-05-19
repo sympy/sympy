@@ -536,11 +536,11 @@ def dmp_raise(f, l, u, K):
 
         k = l-1
 
-        return [ dmp_ground(c, l-1) for c in f ]
+        return [ dmp_ground(c, k) for c in f ]
 
     v = u-1
 
-    return [ dmp_raise(c, l, u-1, K) for c in f ]
+    return [ dmp_raise(c, l, v, K) for c in f ]
 
 @cythonized("g,i")
 def dup_deflate(f, K):
@@ -768,10 +768,11 @@ def dmp_inject(f, u, K, front=False):
         g = g.to_dict()
 
         for g_monom, c in g.iteritems():
-            if not front:
-                h[f_monom + g_monom] = c
-            else:
+            if front:
                 h[g_monom + f_monom] = c
+            else:
+                h[f_monom + g_monom] = c
+
 
     w = u + v + 1
 
@@ -785,10 +786,10 @@ def dmp_eject(f, u, K, front=False):
     v = u - len(K.gens) + 1
 
     for monom, c in f.iteritems():
-        if not front:
-            f_monom, g_monom = monom[:v], monom[v:]
-        else:
+        if front:
             g_monom, f_monom = monom[:v], monom[v:]
+        else:
+            f_monom, g_monom = monom[:v], monom[v:]
 
         if f_monom in h:
             h[f_monom][g_monom] = c
