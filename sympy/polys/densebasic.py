@@ -14,14 +14,36 @@ from sympy.utilities import cythonized
 import random
 
 def poly_LC(f, K):
-    """Returns leading coefficient of `f`. """
+    """
+    Returns leading coefficient of `f`.
+
+    Example
+    =======
+    >>> from sympy.polys.algebratools import ZZ
+    >>> from sympy.polys.densebasic import poly_LC
+    >>> poly_LC([], ZZ)
+    0
+    >>> poly_LC([1, 2, 3], ZZ)
+    1
+    """
     if not f:
         return K.zero
     else:
         return f[0]
 
 def poly_TC(f, K):
-    """Returns trailing coefficient of `f`. """
+    """
+    Returns trailing coefficient of `f`.
+
+    Example
+    =======
+    >>> from sympy.polys.algebratools import ZZ
+    >>> from sympy.polys.densebasic import poly_TC
+    >>> poly_TC([], ZZ)
+    0
+    >>> poly_TC([1, 2, 3], ZZ)
+    3
+    """
     if not f:
         return K.zero
     else:
@@ -32,7 +54,16 @@ dup_TC = dmp_TC = poly_TC
 
 @cythonized("u")
 def dmp_ground_LC(f, u, K):
-    """Returns ground leading coefficient. """
+    """
+    Returns ground leading coefficient.
+
+    Example
+    =======
+    >>> from sympy.polys.algebratools import ZZ
+    >>> from sympy.polys.densebasic import dmp_ground_LC
+    >>> dmp_ground_LC([[[1], [2, 3]]], 2, ZZ)
+    1
+    """
     while u:
         f = dmp_LC(f, K)
         u -= 1
@@ -40,7 +71,16 @@ def dmp_ground_LC(f, u, K):
 
 @cythonized("u")
 def dmp_ground_TC(f, u, K):
-    """Returns ground trailing coefficient. """
+    """
+    Returns ground trailing coefficient.
+
+    Example
+    =======
+    >>> from sympy.polys.algebratools import ZZ
+    >>> from sympy.polys.densebasic import dmp_ground_TC
+    >>> dmp_ground_TC([[[1], [2, 3]]], 2, ZZ)
+    3
+    """
     while u:
         f = dmp_TC(f, K)
         u -= 1
@@ -48,7 +88,16 @@ def dmp_ground_TC(f, u, K):
 
 @cythonized("u")
 def dmp_true_LT(f, u, K):
-    """Returns leading term `c * x_1**n_1 ... x_k**n_k`. """
+    """
+    Returns leading term `c * x_1**n_1 ... x_k**n_k`.
+
+    Example
+    =======
+    >>> from sympy.polys.algebratools import ZZ
+    >>> from sympy.polys.densebasic import dmp_true_LT
+    >>> dmp_true_LT([[4], [2, 0], [3, 0, 0]], 1, ZZ)
+    ((2, 0), 4)
+    """
     monom = []
 
     while u:
@@ -63,12 +112,32 @@ def dmp_true_LT(f, u, K):
     return tuple(monom), dup_LC(f, K)
 
 def dup_degree(f):
-    """Returns leading degree of `f` in `K[x]`. """
+    """
+    Returns leading degree of `f` in `K[x]`.
+
+    Example
+    =======
+    >>> from sympy.polys.algebratools import ZZ
+    >>> from sympy.polys.densebasic import dup_degree
+    >>> dup_degree([1, 2, 0, 3])
+    3
+    """
     return len(f) - 1
 
 @cythonized("u")
 def dmp_degree(f, u):
-    """Returns leading degree of `f` in `x_0` in `K[X]`. """
+    """
+    Returns leading degree of `f` in `x_0` in `K[X]`.
+
+    Example
+    =======
+    >>> from sympy.polys.algebratools import ZZ
+    >>> from sympy.polys.densebasic import dmp_degree
+    >>> dmp_degree([[[]]], 2)
+    -1
+    >>> dmp_degree([[2], [1, 2, 3]], 1)
+    1
+    """
     if dmp_zero_p(f, u):
         return -1
     else:
@@ -76,7 +145,7 @@ def dmp_degree(f, u):
 
 @cythonized("v,i,j")
 def _rec_degree_in(g, v, i, j):
-    """XXX"""
+    """Recursive helper function for `dmp_degree_in()`."""
     if i == j:
         return dmp_degree(g, v)
 
@@ -86,7 +155,15 @@ def _rec_degree_in(g, v, i, j):
 
 @cythonized("j,u")
 def dmp_degree_in(f, j, u):
-    """Returns leading degree of `f` in `x_j` in `K[X]`. """
+    """
+    Returns leading degree of `f` in `x_j` in `K[X]`.
+
+    Examples
+    ========
+    >>> from sympy.polys.densebasic import dmp_degree_in
+    >>> dmp_degree_in([[2], [1, 2, 3]], 1, 1)
+    2
+    """
     if not j:
         return dmp_degree(f, u)
     if j < 0 or j > u:
@@ -96,7 +173,7 @@ def dmp_degree_in(f, j, u):
 
 @cythonized("v,i")
 def _rec_degree_list(g, v, i, degs):
-    """XXX"""
+    """Recursive helper for `dmp_degree_list()`."""
     degs[i] = max(degs[i], dmp_degree(g, v))
 
     if v > 0:
@@ -107,14 +184,30 @@ def _rec_degree_list(g, v, i, degs):
 
 @cythonized("u")
 def dmp_degree_list(f, u):
-    """Returns a list of degrees of `f` in `K[X]`. """
+    """
+    Returns a list of degrees of `f` in `K[X]`.
+
+    Example
+    =======
+    >>> from sympy.polys.densebasic import dmp_degree_list
+    >>> dmp_degree_list([[1], [1,2, 3]], 1)
+    (1, 2)
+    """
     degs = [-1]*(u+1)
     _rec_degree_list(f, u, 0, degs)
     return tuple(degs)
 
 @cythonized("i")
 def dup_strip(f):
-    """Remove leading zeros from `f` in `K[x]`. """
+    """
+    Remove leading zeros from `f` in `K[x]`.
+
+    Example
+    =======
+    >>> from sympy.polys.densebasic import dup_strip
+    >>> dup_strip([0, 0, 1, 2, 3, 0])
+    [1, 2, 3, 0]
+    """
     if not f or f[0]:
         return f
 
@@ -130,7 +223,15 @@ def dup_strip(f):
 
 @cythonized("u,v,i")
 def dmp_strip(f, u):
-    """Remove leading zeros from `f` in `K[X]`. """
+    """
+    Remove leading zeros from `f` in `K[X]`.
+
+    Example
+    =======
+    >>> from sympy.polys.densebasic import dmp_strip
+    >>> dmp_strip([[], [0, 1, 2], [1]], 1)
+    [[0, 1, 2], [1]]
+    """
     if not u:
         return dup_strip(f)
 
@@ -152,7 +253,7 @@ def dmp_strip(f, u):
 
 @cythonized("i,j")
 def _rec_validate(f, g, i, K):
-    """XXX"""
+    """Recursive helper for `dmp_validate()`."""
     if type(g) is not list:
         if K is not None and not K.of_type(g):
             raise TypeError("%s in %s in not of type %s" % (g, f, K.dtype))
@@ -170,7 +271,8 @@ def _rec_validate(f, g, i, K):
 
 @cythonized("v,w")
 def _rec_strip(g, v):
-    """XXX"""
+    """
+    Recursively strips g at all levels.  Used by dmp_validate."""
     if not v:
         return dup_strip(g)
 
@@ -180,7 +282,19 @@ def _rec_strip(g, v):
 
 @cythonized("u")
 def dmp_validate(f, K=None):
-    """Returns number of levels in `f` and recursively strips it. """
+    """
+    Returns number of levels in `f` and recursively strips it.
+
+    Example
+    =======
+    >>> from sympy.polys.densebasic import dmp_validate
+    >>> dmp_validate([[], [0, 1, 2], [1]])
+    ([[1, 2], [1]], 1)
+    >>> dmp_validate([[1], 1])
+    Traceback (most recent call last):
+    ...
+    ValueError: invalid data structure for a multivariate polynomial
+    """
     levels = _rec_validate(f, f, 0, K)
 
     u = levels.pop()
@@ -191,16 +305,40 @@ def dmp_validate(f, K=None):
         raise ValueError("invalid data structure for a multivariate polynomial")
 
 def dup_reverse(f):
-    """Compute x**n * f(1/x), i.e.: reverse `f` in `K[x]`. """
+    """
+    Compute x**n * f(1/x), i.e.: reverse `f` in `K[x]`.
+
+    Example
+    =======
+    >>> from sympy.polys.densebasic import dup_reverse
+    >>> dup_reverse([1, 2, 3, 0])
+    [3, 2, 1]
+    """
     return dup_strip(list(reversed(f)))
 
 def dup_copy(f):
-    """Create a new copy of a polynomial `f` in `K[x]`. """
+    """
+    Create a new copy of a polynomial `f` in `K[x]`.
+
+    Example
+    =======
+    >>> from sympy.polys.densebasic import dup_copy
+    >>> dup_copy([1, 2, 3])
+    [1, 2, 3]
+    """
     return list(f)
 
 @cythonized("u,v")
 def dmp_copy(f, u):
-    """Create a new copy of a polynomial `f` in `K[X]`. """
+    """
+    Create a new copy of a polynomial `f` in `K[X]`.
+
+    Example
+    =======
+    >>> from sympy.polys.densebasic import dmp_copy
+    >>> dmp_copy([[1], [1, 2]], 1)
+    [[1], [1, 2]]
+    """
     if not u:
         return list(f)
 
@@ -209,12 +347,30 @@ def dmp_copy(f, u):
     return [ dmp_copy(c, v) for c in f ]
 
 def dup_normal(f, K):
-    """Normalize univariate polynomial in the given domain. """
+    """
+    Normalize univariate polynomial in the given domain.
+
+    Example
+    =======
+    >>> from sympy.polys.algebratools import ZZ
+    >>> from sympy.polys.densebasic import dup_normal
+    >>> dup_normal([0, 1.5, 2, 3], ZZ)
+    [1, 2, 3]
+    """
     return dup_strip([ K.normal(c) for c in f ])
 
 @cythonized("u,v")
 def dmp_normal(f, u, K):
-    """Normalize multivariate polynomial in the given domain. """
+    """
+    Normalize multivariate polynomial in the given domain.
+
+    Example
+    =======
+    >>> from sympy.polys.algebratools import ZZ
+    >>> from sympy.polys.densebasic import dmp_normal
+    >>> dmp_normal([[], [0, 1.5, 2]], 1, ZZ)
+    [[1, 2]]
+    """
     if not u:
         return dup_normal(f, K)
 
@@ -223,7 +379,19 @@ def dmp_normal(f, u, K):
     return dmp_strip([ dmp_normal(c, v, K) for c in f ], u)
 
 def dup_convert(f, K0, K1):
-    """Convert ground domain of `f` from `K0` to `K1`. """
+    """
+    Convert ground domain of `f` from `K0` to `K1`.
+
+    Example
+    =======
+    >>> from sympy.polys.algebratools import ZZ
+    >>> from sympy.polys.polyclasses import DMP
+    >>> from sympy.polys.densebasic import dup_convert
+    >>> dup_convert([DMP([1], ZZ), DMP([2], ZZ)], ZZ['x'], ZZ)
+    [1, 2]
+    >>> dup_convert([1, 2], ZZ, ZZ['x'])
+    [DMP([1], ZZ), DMP([2], ZZ)]
+    """
     if K0 is not None and K0 == K1:
         return f
     else:
@@ -231,7 +399,19 @@ def dup_convert(f, K0, K1):
 
 @cythonized("u,v")
 def dmp_convert(f, u, K0, K1):
-    """Convert ground domain of `f` from `K0` to `K1`. """
+    """
+    Convert ground domain of `f` from `K0` to `K1`.
+
+    Example
+    =======
+    >>> from sympy.polys.algebratools import ZZ
+    >>> from sympy.polys.polyclasses import DMP
+    >>> from sympy.polys.densebasic import dmp_convert
+    >>> dmp_convert([[DMP([1], ZZ)], [DMP([2], ZZ)]], 1, ZZ['x'], ZZ)
+    [[1], [2]]
+    >>> dmp_convert([[1], [2]], 1, ZZ, ZZ['x'])
+    [[DMP([1], ZZ)], [DMP([2], ZZ)]]
+    """
     if not u:
         return dup_convert(f, K0, K1)
     if K0 is not None and K0 == K1:
@@ -242,12 +422,32 @@ def dmp_convert(f, u, K0, K1):
     return dmp_strip([ dmp_convert(c, v, K0, K1) for c in f ], u)
 
 def dup_from_sympy(f, K):
-    """Convert ground domain of `f` from SymPy to `K`. """
+    """
+    Convert ground domain of `f` from SymPy to `K`.
+
+    Example
+    =======
+    >>> from sympy import S
+    >>> from sympy.polys.algebratools import ZZ
+    >>> from sympy.polys.densebasic import dup_from_sympy
+    >>> dup_from_sympy([S(1), S(2)], ZZ) == [ZZ(1), ZZ(2)]
+    True
+    """
     return dup_strip([ K.from_sympy(c) for c in f ])
 
 @cythonized("u,v")
 def dmp_from_sympy(f, u, K):
-    """Convert ground domain of `f` from SymPy to `K`. """
+    """
+    Convert ground domain of `f` from SymPy to `K`.
+
+    Example
+    =======
+    >>> from sympy import S
+    >>> from sympy.polys.algebratools import ZZ
+    >>> from sympy.polys.densebasic import dmp_from_sympy
+    >>> dmp_from_sympy([[S(1)], [S(2)]], 1, ZZ) == [[ZZ(1)], [ZZ(2)]]
+    True
+    """
     if not u:
         return dup_from_sympy(f, K)
 
@@ -257,7 +457,18 @@ def dmp_from_sympy(f, u, K):
 
 @cythonized("n")
 def dup_nth(f, n, K):
-    """Returns n-th coefficient of `f` in `K[x]`. """
+    """
+    Returns n-th coefficient of `f` in `K[x]`.
+
+    Example
+    =======
+    >>> from sympy.polys.algebratools import ZZ
+    >>> from sympy.polys.densebasic import dup_nth
+    >>> dup_nth([1, 2, 3], 0, ZZ)
+    3
+    >>> dup_nth([1, 2, 3], 4, ZZ)
+    0
+    """
     if n < 0:
         raise IndexError("`n` must be non-negative, got %i" % n)
     elif n >= len(f):
@@ -267,7 +478,18 @@ def dup_nth(f, n, K):
 
 @cythonized("n,u")
 def dmp_nth(f, n, u, K):
-    """Returns n-th coefficient of `f` in `K[x]`. """
+    """
+    Returns n-th coefficient of `f` in `K[x]`.
+
+    Example
+    =======
+    >>> from sympy.polys.algebratools import ZZ
+    >>> from sympy.polys.densebasic import dmp_nth
+    >>> dmp_nth([[1], [2], [3]], 0, 1, ZZ)
+    [3]
+    >>> dmp_nth([[1], [2], [3]], 4, 1, ZZ)
+    []
+    """
     if n < 0:
         raise IndexError("`n` must be non-negative, got %i" % n)
     elif n >= len(f):
@@ -277,7 +499,16 @@ def dmp_nth(f, n, u, K):
 
 @cythonized("n,u,v")
 def dmp_ground_nth(f, N, u, K):
-    """Returns ground n-th coefficient of `f` in `K[x]`. """
+    """
+    Returns ground n-th coefficient of `f` in `K[x]`.
+
+    Example
+    =======
+    >>> from sympy.polys.algebratools import ZZ
+    >>> from sympy.polys.densebasic import dmp_ground_nth
+    >>> dmp_ground_nth([[1], [2, 3]], (0, 1), 1, ZZ)
+    2
+    """
     v = u
 
     for n in N:
@@ -292,7 +523,17 @@ def dmp_ground_nth(f, N, u, K):
 
 @cythonized("u")
 def dmp_zero_p(f, u):
-    """Returns True if `f` is zero in `K[X]`. """
+    """
+    Returns True if `f` is zero in `K[X]`.
+
+    Example
+    =======
+    >>> from sympy.polys.densebasic import dmp_zero_p
+    >>> dmp_zero_p([[[[[]]]]], 4)
+    True
+    >>> dmp_zero_p([[[[[1]]]]], 4)
+    False
+    """
     while u:
         if len(f) != 1:
             return False
@@ -302,7 +543,15 @@ def dmp_zero_p(f, u):
 
 @cythonized("u")
 def dmp_zero(u):
-    """Returns a multivariate zero. """
+    """
+    Returns a multivariate zero.
+
+    Example
+    =======
+    >>> from sympy.polys.densebasic import dmp_zero
+    >>> dmp_zero(4)
+    [[[[[]]]]]
+    """
     r = []
     for i in xrange(u):
         r = [r]
@@ -310,17 +559,45 @@ def dmp_zero(u):
 
 @cythonized("u")
 def dmp_one_p(f, u, K):
-    """Returns True if `f` is one in `K[X]`. """
+    """
+    Returns True if `f` is one in `K[X]`.
+
+    Example
+    =======
+    >>> from sympy.polys.algebratools import ZZ
+    >>> from sympy.polys.densebasic import dmp_one_p
+    >>> dmp_one_p([[[1]]], 2, ZZ)
+    True
+    """
     return dmp_ground_p(f, K.one, u)
 
 @cythonized("u")
 def dmp_one(u, K):
-    """Returns a multivariate one over `K`. """
+    """
+    Returns a multivariate one over `K`.
+
+    Example
+    =======
+    >>> from sympy.polys.algebratools import ZZ
+    >>> from sympy.polys.densebasic import dmp_one
+    >>> dmp_one(2, ZZ)
+    [[[1]]]
+    """
     return dmp_ground(K.one, u)
 
 @cythonized("u")
 def dmp_ground_p(f, c, u):
-    """Returns True if `f` is constant in `K[X]`. """
+    """
+    Returns True if `f` is constant in `K[X]`.
+
+    Example
+    =======
+    >>> from sympy.polys.densebasic import dmp_ground_p
+    >>> dmp_ground_p([[[3]]], 3, 2)
+    True
+    >>> dmp_ground_p([[[4]]], None, 2)
+    True
+    """
     if c is not None and not c:
         return dmp_zero_p(f, u)
 
@@ -337,7 +614,17 @@ def dmp_ground_p(f, c, u):
 
 @cythonized("u")
 def dmp_ground(c, u):
-    """Returns a multivariate constant. """
+    """
+    Returns a multivariate constant.
+
+    Example
+    =======
+    >>> from sympy.polys.densebasic import dmp_ground
+    >>> dmp_ground(3, 5)
+    [[[[[[3]]]]]]
+    >>> dmp_ground(1, -1)
+    1
+    """
     if not c:
         return dmp_zero(u)
 
@@ -347,7 +634,18 @@ def dmp_ground(c, u):
 
 @cythonized("n,u")
 def dmp_zeros(n, u, K):
-    """Returns a list of multivariate zeros. """
+    """
+    Returns a list of multivariate zeros.
+
+    Example
+    =======
+    >>> from sympy.polys.algebratools import ZZ
+    >>> from sympy.polys.densebasic import dmp_zeros
+    >>> dmp_zeros(3, 2, ZZ)
+    [[[[]]], [[[]]], [[[]]]]
+    >>> dmp_zeros(3, -1, ZZ)
+    [0, 0, 0]
+    """
     if not n:
         return []
 
@@ -358,7 +656,17 @@ def dmp_zeros(n, u, K):
 
 @cythonized("n,u")
 def dmp_grounds(c, n, u):
-    """Returns a list of multivariate constants. """
+    """
+    Returns a list of multivariate constants.
+
+    Example
+    =======
+    >>> from sympy.polys.densebasic import dmp_grounds
+    >>> dmp_grounds(4, 3, 2)
+    [[[[4]]], [[[4]]], [[[4]]]]
+    >>> dmp_grounds(4, 3, -1)
+    [4, 4, 4]
+    """
     if not n:
         return []
 
@@ -369,17 +677,50 @@ def dmp_grounds(c, n, u):
 
 @cythonized("u")
 def dmp_negative_p(f, u, K):
-    """Returns `True` if `LC(f)` is negative. """
+    """
+    Returns `True` if `LC(f)` is negative.
+
+    Example
+    =======
+    >>> from sympy.polys.algebratools import ZZ
+    >>> from sympy.polys.densebasic import dmp_negative_p
+    >>> dmp_negative_p([[1], [-1]], 1, ZZ)
+    False
+    >>> dmp_negative_p([[-1], [1]], 1, ZZ)
+    True
+    """
     return K.is_negative(dmp_ground_LC(f, u, K))
 
 @cythonized("u")
 def dmp_positive_p(f, u, K):
-    """Returns `True` if `LC(f)` is positive. """
+    """
+    Returns `True` if `LC(f)` is positive.
+
+    Example
+    =======
+    >>> from sympy.polys.algebratools import ZZ
+    >>> from sympy.polys.densebasic import dmp_positive_p
+    >>> dmp_positive_p([[1], [-1]], 1, ZZ)
+    True
+    >>> dmp_positive_p([[-1], [1]], 1, ZZ)
+    False
+    """
     return K.is_positive(dmp_ground_LC(f, u, K))
 
 @cythonized("n,k")
 def dup_from_dict(f, K):
-    """Create `K[x]` polynomial from a dict. """
+    """
+    Create `K[x]` polynomial from a dict.
+
+    Example
+    =======
+    >>> from sympy.polys.algebratools import ZZ
+    >>> from sympy.polys.densebasic import dup_from_dict
+    >>> dup_from_dict({(0,): 7, (2,): 5, (4,): 1}, ZZ)
+    [1, 0, 5, 0, 7]
+    >>> dup_from_dict({}, ZZ)
+    []
+    """
     if not f:
         return []
 
@@ -398,7 +739,16 @@ def dup_from_dict(f, K):
 
 @cythonized("n,k")
 def dup_from_raw_dict(f, K):
-    """Create `K[x]` polynomial from a raw dict. """
+    """
+    Create `K[x]` polynomial from a raw dict.
+
+    Example
+    =======
+    >>> from sympy.polys.algebratools import ZZ
+    >>> from sympy.polys.densebasic import dup_from_raw_dict
+    >>> dup_from_raw_dict({0: 7, 2: 5, 4: 1}, ZZ)
+    [1, 0, 5, 0, 7]
+    """
     if not f:
         return []
 
@@ -411,7 +761,18 @@ def dup_from_raw_dict(f, K):
 
 @cythonized("u,v,n,k")
 def dmp_from_dict(f, u, K):
-    """Create `K[X]` polynomial from a dict. """
+    """
+    Create `K[X]` polynomial from a dict.
+
+    Example
+    =======
+    >>> from sympy.polys.algebratools import ZZ
+    >>> from sympy.polys.densebasic import dmp_from_dict
+    >>> dmp_from_dict({(0, 0): 3, (0, 1): 2, (2, 1): 1}, 1, ZZ)
+    [[1, 0], [], [2, 3]]
+    >>> dmp_from_dict({}, 0, ZZ)
+    []
+    """
     if not u:
         return dup_from_dict(f, K)
     if not f:
@@ -441,7 +802,17 @@ def dmp_from_dict(f, u, K):
 
 @cythonized("n,k")
 def dup_to_dict(f):
-    """Convert `K[x]` polynomial to a dict. """
+    """
+    Convert `K[x]` polynomial to a dict.
+
+    Example
+    =======
+    >>> from sympy.polys.densebasic import dup_to_dict
+    >>> dup_to_dict([1, 0, 5, 0, 7])
+    {(0,): 7, (2,): 5, (4,): 1}
+    >>> dup_to_dict([])
+    {}
+    """
     n, result = dup_degree(f), {}
 
     for k in xrange(0, n+1):
@@ -452,7 +823,15 @@ def dup_to_dict(f):
 
 @cythonized("n,k")
 def dup_to_raw_dict(f):
-    """Convert `K[x]` polynomial to a raw dict. """
+    """
+    Convert `K[x]` polynomial to a raw dict.
+
+    Example
+    =======
+    >>> from sympy.polys.densebasic import dup_to_raw_dict
+    >>> dup_to_raw_dict([1, 0, 5, 0, 7])
+    {0: 7, 2: 5, 4: 1}
+    """
     n, result = dup_degree(f), {}
 
     for k in xrange(0, n+1):
@@ -463,7 +842,17 @@ def dup_to_raw_dict(f):
 
 @cythonized("u,v,n,k")
 def dmp_to_dict(f, u):
-    """Convert `K[X]` polynomial to a dict. """
+    """
+    Convert `K[X]` polynomial to a dict.
+
+    Example
+    =======
+    >>> from sympy.polys.densebasic import dmp_to_dict
+    >>> dmp_to_dict([[1, 0], [], [2, 3]], 1)
+    {(0, 0): 3, (0, 1): 2, (2, 1): 1}
+    >>> dmp_to_dict([], 0)
+    {}
+    """
     if not u:
         return dup_to_dict(f)
 
@@ -479,7 +868,20 @@ def dmp_to_dict(f, u):
 
 @cythonized("u,i,j")
 def dmp_swap(f, i, j, u, K):
-    """Transform `K[..x_i..x_j..]` to `K[..x_j..x_i..]`. """
+    """
+    Transform `K[..x_i..x_j..]` to `K[..x_j..x_i..]`.
+
+    Example
+    =======
+    >>> from sympy.polys.algebratools import ZZ
+    >>> from sympy.polys.densebasic import dmp_swap
+    >>> dmp_swap([[[2], [1, 0]], []], 0, 1, 2, ZZ)
+    [[[2], []], [[1, 0], []]]
+    >>> dmp_swap([[[2], [1, 0]], []], 1, 2, 2, ZZ)
+    [[[1], [2, 0]], [[]]]
+    >>> dmp_swap([[[2], [1, 0]], []], 0, 2, 2, ZZ)
+    [[[1, 0]], [[2, 0], []]]
+    """
     if i < 0 or j < 0 or i > u or j > u:
         raise IndexError("0 <= i < j <= %s expected" % u)
     elif i == j:
@@ -496,7 +898,18 @@ def dmp_swap(f, i, j, u, K):
 
 @cythonized("u")
 def dmp_permute(f, P, u, K):
-    """Returns a polynomial in `K[x_{P(1)},..,x_{P(n)}]`. """
+    """
+    Returns a polynomial in `K[x_{P(1)},..,x_{P(n)}]`.
+
+    Example
+    =======
+    >>> from sympy.polys.algebratools import ZZ
+    >>> from sympy.polys.densebasic import dmp_permute
+    >>> dmp_permute([[[2], [1, 0]], []], [1, 0, 2], 2, ZZ)
+    [[[2], []], [[1, 0], []]]
+    >>> dmp_permute([[[2], [1, 0]], []], [1, 2, 0], 2, ZZ)
+    [[[1], []], [[2, 0], []]]
+    """
     F, H = dmp_to_dict(f, u), {}
 
     for exp, coeff in F.iteritems():
@@ -511,7 +924,16 @@ def dmp_permute(f, P, u, K):
 
 @cythonized("l")
 def dmp_nest(f, l, K):
-    """Returns multivariate value nested `l`-levels. """
+    """
+    Returns multivariate value nested `l`-levels.
+
+    Example
+    =======
+    >>> from sympy.polys.algebratools import ZZ
+    >>> from sympy.polys.densebasic import dmp_nest
+    >>> dmp_nest([[1]], 2, ZZ)
+    [[[[1]]]]
+    """
     if not isinstance(f, list):
         return dmp_ground(f, l)
     for i in xrange(l):
@@ -520,7 +942,16 @@ def dmp_nest(f, l, K):
 
 @cythonized("l,k,u,v")
 def dmp_raise(f, l, u, K):
-    """Returns multivariate polynomial raised `l`-levels. """
+    """
+    Returns multivariate polynomial raised `l`-levels.
+
+    Example
+    =======
+    >>> from sympy.polys.algebratools import ZZ
+    >>> from sympy.polys.densebasic import dmp_raise
+    >>> dmp_raise([[], [1, 2]], 2, 1, ZZ)
+    [[[[]]], [[[1]], [[2]]]]
+    """
     if not l:
         return f
 
@@ -538,7 +969,16 @@ def dmp_raise(f, l, u, K):
 
 @cythonized("g,i")
 def dup_deflate(f, K):
-    """Map `x**m` to `y` in a polynomial in `K[x]`. """
+    """
+    Map `x**m` to `y` in a polynomial in `K[x]`.
+
+    Example
+    =======
+    >>> from sympy.polys.algebratools import ZZ
+    >>> from sympy.polys.densebasic import dup_deflate
+    >>> dup_deflate([1, 0, 0, 1, 0, 0, 1], ZZ)
+    (3, [1, 1, 1])
+    """
     if dup_degree(f) <= 0:
         return 1, f
 
@@ -557,7 +997,16 @@ def dup_deflate(f, K):
 
 @cythonized("u,i,m,a,b")
 def dmp_deflate(f, u, K):
-    """Map `x_i**m_i` to `y_i` in a polynomial in `K[X]`. """
+    """
+    Map `x_i**m_i` to `y_i` in a polynomial in `K[X]`.
+
+    Example
+    =======
+    >>> from sympy.polys.algebratools import ZZ
+    >>> from sympy.polys.densebasic import dmp_deflate
+    >>> dmp_deflate([[1, 0, 0, 2], [], [3, 0, 0, 4]], 1, ZZ)
+    ((2, 3), [[1, 2], [3, 4]])
+    """
     if dmp_zero_p(f, u):
         return (1,)*(u+1), f
 
@@ -587,7 +1036,16 @@ def dmp_deflate(f, u, K):
 
 @cythonized("G,g,i")
 def dup_multi_deflate(polys, K):
-    """Map `x**m` to `y` in a set of polynomials in `K[x]`. """
+    """
+    Map `x**m` to `y` in a set of polynomials in `K[x]`.
+
+    Example
+    =======
+    >>> from sympy.polys.algebratools import ZZ
+    >>> from sympy.polys.densebasic import dup_multi_deflate
+    >>> dup_multi_deflate(([1, 0, 2, 0, 3], [4, 0, 0]), ZZ)
+    (2, ([1, 2, 3], [4, 0]))
+    """
     G = 0
 
     for p in polys:
@@ -611,7 +1069,17 @@ def dup_multi_deflate(polys, K):
 
 @cythonized("u,G,g,m,a,b")
 def dmp_multi_deflate(polys, u, K):
-    """Map `x_i**m_i` to `y_i` in a set of polynomials in `K[X]`. """
+    """
+    Map `x_i**m_i` to `y_i` in a set of polynomials in `K[X]`.
+
+    Example
+    =======
+    >>> from sympy.polys.algebratools import ZZ
+    >>> from sympy.polys.densebasic import dmp_multi_deflate
+    >>> dmp_multi_deflate(([[1, 0, 0, 2], [], [3, 0, 0, 4]],
+    ... [[1, 0, 2], [], [3, 0, 4]]), 1, ZZ)
+    ((2, 1), ([[1, 0, 0, 2], [3, 0, 0, 4]], [[1, 0, 2], [3, 0, 4]]))
+    """
     if not u:
         M, H = dup_multi_deflate(polys, K)
         return (M,), H
@@ -652,7 +1120,16 @@ def dmp_multi_deflate(polys, u, K):
 
 @cythonized("m")
 def dup_inflate(f, m, K):
-    """Map `y` to `x**m` in a polynomial in `K[x]`. """
+    """
+    Map `y` to `x**m` in a polynomial in `K[x]`.
+
+    Example
+    =======
+    >>> from sympy.polys.algebratools import ZZ
+    >>> from sympy.polys.densebasic import dup_inflate
+    >>> dup_inflate([1, 1, 1], 3, ZZ)
+    [1, 0, 0, 1, 0, 0, 1]
+    """
     if m <= 0:
         raise IndexError("`m` must be positive, got %s" % m)
     if m == 1 or not f:
@@ -668,7 +1145,7 @@ def dup_inflate(f, m, K):
 
 @cythonized("u,v,i,j")
 def _rec_inflate(g, M, v, i, K):
-    """XXX"""
+    """Recursive helper for `dmp_inflate()`."""
     if not v:
         return dup_inflate(g, M[i], K)
     if M[i] <= 0:
@@ -690,7 +1167,16 @@ def _rec_inflate(g, M, v, i, K):
 
 @cythonized("u,m")
 def dmp_inflate(f, M, u, K):
-    """Map `y_i` to `x_i**k_i` in a polynomial in `K[X]`. """
+    """
+    Map `y_i` to `x_i**k_i` in a polynomial in `K[X]`.
+
+    Example
+    =======
+    >>> from sympy.polys.algebratools import ZZ
+    >>> from sympy.polys.densebasic import dmp_inflate
+    >>> dmp_inflate([[1, 2], [3, 4]], (2, 3), 1, ZZ)
+    [[1, 0, 0, 2], [], [3, 0, 0, 4]]
+    """
     if not u:
         return dup_inflate(f, M[0], K)
 
@@ -701,7 +1187,18 @@ def dmp_inflate(f, M, u, K):
 
 @cythonized("u,j")
 def dmp_exclude(f, u, K):
-    """Exclude useless levels from `f`. """
+    """
+    Exclude useless levels from `f`.
+
+    Returns the levels excluded, the new excluded `f`, and the new `u`.
+
+    Example
+    =======
+    >>> from sympy.polys.algebratools import ZZ
+    >>> from sympy.polys.densebasic import dmp_exclude
+    >>> dmp_exclude([[[1]], [[1], [2]]], 2, ZZ)
+    ([2], [[1], [1, 2]], 1)
+    """
     if not u or dmp_ground_p(f, None, u):
         return [], f, u
 
@@ -733,7 +1230,16 @@ def dmp_exclude(f, u, K):
 
 @cythonized("u,j")
 def dmp_include(f, J, u, K):
-    """Include useless levels in `f`. """
+    """
+    Include useless levels in `f`.
+
+    Example
+    =======
+    >>> from sympy.polys.algebratools import ZZ
+    >>> from sympy.polys.densebasic import dmp_include
+    >>> dmp_include([[1], [1, 2]], [2], 1, ZZ)
+    [[[1]], [[1], [2]]]
+    """
     if not J:
         return f
 
@@ -753,7 +1259,20 @@ def dmp_include(f, J, u, K):
 
 @cythonized("u,v,w")
 def dmp_inject(f, u, K, front=False):
-    """Convert `f` from `K[X][Y]` to `K[X,Y]`. """
+    """
+    Convert `f` from `K[X][Y]` to `K[X,Y]`.
+
+    Example
+    =======
+    >>> from sympy.polys.algebratools import ZZ
+    >>> from sympy.polys.densebasic import dmp_inject
+    >>> K = ZZ['x', 'y']
+    >>> dmp_inject([K([[1]]), K([[1], [2]])], 0, K)
+    ([[[1]], [[1], [2]]], 2)
+    >>> dmp_inject([K([[1]]), K([[1], [2]])], 0, K, front=True)
+    ([[[1]], [[1, 2]]], 2)
+    """
+
     f, h = dmp_to_dict(f, u), {}
 
     v = len(K.gens) - 1
@@ -774,7 +1293,17 @@ def dmp_inject(f, u, K, front=False):
 
 @cythonized("u,v")
 def dmp_eject(f, u, K, front=False):
-    """Convert `f` from `K[X,Y]` to `K[X][Y]`. """
+    """
+    Convert `f` from `K[X,Y]` to `K[X][Y]`.
+
+    Example
+    =======
+    >>> from sympy.polys.algebratools import ZZ
+    >>> from sympy.polys.densebasic import dmp_eject
+    >>> K = ZZ['x', 'y']
+    >>> dmp_eject([[[1]], [[1], [2]]], 2, K) == [K([[1]]), K([[1], [2]])]
+    True
+    """
     f, h = dmp_to_dict(f, u), {}
 
     v = u - len(K.gens) + 1
@@ -797,8 +1326,17 @@ def dmp_eject(f, u, K, front=False):
 
 @cythonized("i")
 def dup_terms_gcd(f, K):
-    """Remove GCD of terms from `f` in `K[x]`. """
-    if not f or f[-1]:
+    """
+    Remove GCD of terms from `f` in `K[x]`.
+
+    Example
+    =======
+    >>> from sympy.polys.algebratools import ZZ
+    >>> from sympy.polys.densebasic import dup_terms_gcd
+    >>> dup_terms_gcd([1, 0, 1, 0, 0], ZZ)
+    (2, [1, 0, 1])
+    """
+    if dup_TC(f, K) or not f:
         return 0, f
 
     i = 0
@@ -813,7 +1351,16 @@ def dup_terms_gcd(f, K):
 
 @cythonized("u,g")
 def dmp_terms_gcd(f, u, K):
-    """Remove GCD of terms from `f` in `K[X]`. """
+    """
+    Remove GCD of terms from `f` in `K[X]`.
+
+    Example
+    =======
+    >>> from sympy.polys.algebratools import ZZ
+    >>> from sympy.polys.densebasic import dmp_terms_gcd
+    >>> dmp_terms_gcd([[1, 0], [1, 0, 0], [], []], 1, ZZ)
+    ((2, 1), [[1], [1, 0]])
+    """
     if dmp_ground_TC(f, u, K) or dmp_zero_p(f, u):
         return (0,)*(u+1), f
 
@@ -832,7 +1379,7 @@ def dmp_terms_gcd(f, u, K):
 
 @cythonized("v,w,d,i")
 def _rec_list_terms(g, v, monom):
-    """XXX"""
+    """Recursive helper for `dmp_list_terms()`."""
     d, terms = dmp_degree(g, v), []
 
     if not v:
@@ -851,7 +1398,18 @@ def _rec_list_terms(g, v, monom):
 
 @cythonized("u")
 def dmp_list_terms(f, u, K, order=None):
-    """List all non-zero terms from `f` in the given order order. """
+    """
+    List all non-zero terms from `f` in the given order `order`.
+
+    Example
+    =======
+    >>> from sympy.polys.algebratools import ZZ
+    >>> from sympy.polys.densebasic import dmp_list_terms
+    >>> dmp_list_terms([[1, 1], [2, 3]], 1, ZZ)
+    [((1, 1), 1), ((1, 0), 1), ((0, 1), 2), ((0, 0), 3)]
+    >>> dmp_list_terms([[1, 1], [2, 3]], 1, ZZ, order='grevlex')
+    [((1, 1), 1), ((0, 1), 2), ((1, 0), 1), ((0, 0), 3)]
+    """
     terms = _rec_list_terms(f, u, ())
 
     if not terms:
@@ -864,7 +1422,17 @@ def dmp_list_terms(f, u, K, order=None):
 
 @cythonized("n,m")
 def dup_apply_pairs(f, g, h, args, K):
-    """Apply `h` to pairs of coefficients of `f` and `g`. """
+    """
+    Apply `h` to pairs of coefficients of `f` and `g`.
+
+    Example
+    =======
+    >>> from sympy.polys.algebratools import ZZ
+    >>> from sympy.polys.densebasic import dup_apply_pairs
+    >>> h = lambda x, y, z: 2*x + y - z
+    >>> dup_apply_pairs([1, 2, 3], [3, 2, 1], h, (1,), ZZ)
+    [4, 5, 6]
+    """
     n, m = len(f), len(g)
 
     if n != m:
@@ -882,7 +1450,17 @@ def dup_apply_pairs(f, g, h, args, K):
 
 @cythonized("u,v,n,m")
 def dmp_apply_pairs(f, g, h, args, u, K):
-    """Apply `h` to pairs of coefficients of `f` and `g`. """
+    """
+    Apply `h` to pairs of coefficients of `f` and `g`.
+
+    Example
+    =======
+    >>> from sympy.polys.algebratools import ZZ
+    >>> from sympy.polys.densebasic import dmp_apply_pairs
+    >>> h = lambda x, y, z: 2*x + y - z
+    >>> dmp_apply_pairs([[1], [2, 3]], [[3], [2, 1]], h, (1,), 1, ZZ)
+    [[4], [5, 6]]
+    """
     if not u:
         return dup_apply_pairs(f, g, h, args, K)
 
@@ -902,7 +1480,17 @@ def dmp_apply_pairs(f, g, h, args, u, K):
     return dmp_strip(result, u)
 
 def dup_random(n, a, b, K):
-    """Return a polynomial of degree ``n`` with coefficients in ``[a, b]``. """
+    """
+    Return a polynomial of degree ``n`` with coefficients in ``[a, b]``.
+
+    Example
+    =======
+    >>> from sympy.polys.algebratools import ZZ
+    >>> from sympy.polys.densebasic import dup_random
+
+    >> dup_random(3, -10, 10, ZZ)
+    [-2, -8, 9, -4]
+    """
     f = [ K.convert(random.randint(a, b)) for _ in xrange(0, n+1) ]
 
     while not f[0]:
