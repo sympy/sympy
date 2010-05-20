@@ -93,7 +93,7 @@ class sinh(Function):
         return sinh(re)*C.cos(im) + cosh(re)*C.sin(im)*S.ImaginaryUnit
 
     def _eval_rewrite_as_exp(self, arg):
-        return (S.Exp(arg) - S.Exp(-arg)) / 2
+        return (C.exp(arg) - C.exp(-arg)) / 2
 
     def _eval_rewrite_as_cosh(self, arg):
         return -S.ImaginaryUnit*cosh(arg + S.Pi*S.ImaginaryUnit/2)
@@ -209,7 +209,7 @@ class cosh(Function):
         return cosh(re)*C.cos(im) + sinh(re)*C.sin(im)*S.ImaginaryUnit
 
     def _eval_rewrite_as_exp(self, arg):
-        return (S.Exp(arg) + S.Exp(-arg)) / 2
+        return (C.exp(arg) + C.exp(-arg)) / 2
 
     def _eval_rewrite_as_sinh(self, arg):
         return -S.ImaginaryUnit*sinh(arg + S.Pi*S.ImaginaryUnit/2)
@@ -330,7 +330,7 @@ class tanh(Function):
             S.ImaginaryUnit*C.sin(im)*C.cos(im))/denom
 
     def _eval_rewrite_as_exp(self, arg):
-        neg_exp, pos_exp = S.Exp(-arg), S.Exp(arg)
+        neg_exp, pos_exp = C.exp(-arg), C.exp(arg)
         return (pos_exp-neg_exp)/(pos_exp+neg_exp)
 
     def _eval_rewrite_as_sinh(self, arg):
@@ -438,7 +438,7 @@ class coth(Function):
             S.ImaginaryUnit*C.sin(im)*C.cos(im))/denom
 
     def _eval_rewrite_as_exp(self, arg):
-        neg_exp, pos_exp = S.Exp(-arg), S.Exp(arg)
+        neg_exp, pos_exp = C.exp(-arg), C.exp(arg)
         return (pos_exp+neg_exp)/(pos_exp-neg_exp)
 
     def _eval_rewrite_as_sinh(self, arg):
