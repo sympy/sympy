@@ -829,6 +829,7 @@ def test_dmp_content():
 
 def test_dmp_ground_content():
     assert dmp_ground_content([[]], 1, ZZ) == ZZ(0)
+    assert dmp_ground_content([[]], 1, QQ) == QQ(0)
     assert dmp_ground_content([[1]], 1, ZZ) == ZZ(1)
     assert dmp_ground_content([[-1]], 1, ZZ) == ZZ(1)
     assert dmp_ground_content([[1],[1]], 1, ZZ) == ZZ(1)
