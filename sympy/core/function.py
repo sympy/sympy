@@ -30,7 +30,7 @@ Example:
 
 """
 
-from basic import BasicMeta, Atom, S, C
+from basic import Basic, BasicMeta, Atom, S, C
 from expr import Expr
 from cache import cacheit
 from itertools import repeat
@@ -81,14 +81,15 @@ class FunctionClass(BasicMeta):
     def __repr__(cls):
         return cls.__name__
 
-class Function(Expr):
+class Application(Basic):
     """
     Base class for applied functions.
-    Constructor of undefined classes.
 
+    Instances of Application represent the result of applying an application of
+    any type to any object.
     """
-
     __metaclass__ = FunctionClass
+    __slots__ = []
 
     is_Function = True
 
@@ -97,39 +98,6 @@ class Function(Expr):
     @vectorize(1)
     @cacheit
     def __new__(cls, *args, **options):
-        # NOTE: this __new__ is twofold:
-        #
-        # 1 -- it can create another *class*, which can then be instantiated by
-        #      itself e.g. Function('f') creates a new class f(Function)
-        #
-        # 2 -- on the other hand, we instantiate -- that is we create an
-        #      *instance* of a class created earlier in 1.
-        #
-        # So please keep, both (1) and (2) in mind.
-
-        # (1) create new function class
-        #     UC: Function('f')
-        if cls is Function:
-            #when user writes Function("f"), do an equivalent of:
-            #taking the whole class Function(...):
-            #and rename the Function to "f" and return f, thus:
-            #In [13]: isinstance(f, Function)
-            #Out[13]: False
-            #In [14]: isinstance(f, FunctionClass)
-            #Out[14]: True
-
-            if len(args) == 1 and isinstance(args[0], str):
-                #always create Function
-                return FunctionClass(Function, *args)
-                return FunctionClass(Function, *args, **options)
-            else:
-                print args
-                print type(args[0])
-                raise TypeError("You need to specify exactly one string")
-
-        # (2) create new instance of a class created in (1)
-        #     UC: Function('f')(x)
-        #     UC: sin(x)
         args = map(sympify, args)
         # these lines should be refactored
         for opt in ["nargs", "dummy", "comparable", "noncommutative", "commutative"]:
@@ -137,27 +105,16 @@ class Function(Expr):
                 del options[opt]
         # up to here.
         if options.get('evaluate') is False:
-            return Expr.__new__(cls, *args, **options)
+            return super(Application, cls).__new__(cls, *args, **options)
         evaluated = cls.eval(*args)
-        if evaluated is not None: return evaluated
+        if evaluated is not None:
+            return evaluated
         # Just undefined functions have nargs == None
         if not cls.nargs and hasattr(cls, 'undefined_Function'):
-            r = Expr.__new__(cls, *args, **options)
+            r = super(Application, cls).__new__(cls, *args, **options)
             r.nargs = len(args)
             return r
-        return Expr.__new__(cls, *args, **options)
-
-    @property
-    def is_commutative(self):
-        if all(getattr(t, 'is_commutative') for t in self.args):
-            return True
-        else:
-            return False
-
-    @classmethod
-    @deprecated
-    def canonize(cls, *args):
-        return cls.eval(*args)
+        return super(Application, cls).__new__(cls, *args, **options)
 
     @classmethod
     def eval(cls, *args):
@@ -187,6 +144,11 @@ class Function(Expr):
         """
         return
 
+
+    def count_ops(self, symbolic=True):
+        #      f()             args
+        return 1 + Add(*[ t.count_ops(symbolic) for t in self.args ])
+
     @property
     def func(self):
         return self.__class__
@@ -201,7 +163,65 @@ class Function(Expr):
                 # Written down as an elif to avoid a super-long line
                 elif isinstance(new.nargs,tuple) and self.nargs in new.nargs:
                     return new(*self.args)
-        return Expr._seq_subs(self, old, new)
+        return Basic._seq_subs(self, old, new)
+
+
+class Function(Application, Expr):
+    """
+    Base class for applied numeric functions.
+    Constructor of undefined classes.
+
+    """
+
+    @vectorize(1)
+    @cacheit
+    def __new__(cls, *args, **options):
+        # NOTE: this __new__ is twofold:
+        #
+        # 1 -- it can create another *class*, which can then be instantiated by
+        #      itself e.g. Function('f') creates a new class f(Function)
+        #
+        # 2 -- on the other hand, we instantiate -- that is we create an
+        #      *instance* of a class created earlier in 1.
+        #
+        # So please keep, both (1) and (2) in mind.
+
+        # (1) create new function class
+        #     UC: Function('f')
+        if cls is Function:
+            #when user writes Function("f"), do an equivalent of:
+            #taking the whole class Function(...):
+            #and rename the Function to "f" and return f, thus:
+            #In [13]: isinstance(f, Function)
+            #Out[13]: False
+            #In [14]: isinstance(f, FunctionClass)
+            #Out[14]: True
+
+            if len(args) == 1 and isinstance(args[0], str):
+                #always create Function
+                return FunctionClass(Function, *args)
+            else:
+                print args
+                print type(args[0])
+                raise TypeError("You need to specify exactly one string")
+
+        # (2) create new instance of a class created in (1)
+        #     UC: Function('f')(x)
+        #     UC: sin(x)
+        return Application.__new__(cls, *args, **options)
+
+
+    @property
+    def is_commutative(self):
+        if all(getattr(t, 'is_commutative') for t in self.args):
+            return True
+        else:
+            return False
+
+    @classmethod
+    @deprecated
+    def canonize(cls, *args):
+        return cls.eval(*args)
 
     def _eval_evalf(self, prec):
         # Lookup mpmath function based on name
@@ -266,10 +286,6 @@ class Function(Expr):
 
     def as_base_exp(self):
         return self, S.One
-
-    def count_ops(self, symbolic=True):
-        #      f()             args
-        return 1 + Add(*[ t.count_ops(symbolic) for t in self.args ])
 
     def _eval_nseries(self, x, x0, n):
         assert len(self.args) == 1
