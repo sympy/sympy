@@ -1481,7 +1481,7 @@ def dmp_rr_ground_content(f, u, K):
 @cythonized("u")
 def dmp_ff_ground_content(f, u, K):
     """Returns GCD of coefficients over a field. """
-    if not f:
+    if dmp_zero_p(f, u):
         return K.zero
     else:
         return K.one
