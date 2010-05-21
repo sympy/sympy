@@ -1995,7 +1995,7 @@ def dup_decompose(f, K):
         else:
             break
 
-    return [f] + F
+    return tuple([f] + F)
 
 def dup_sturm(f, K):
     """Computes the Sturm sequence of `f` in `F[x]`.

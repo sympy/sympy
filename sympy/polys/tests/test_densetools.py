@@ -1077,33 +1077,33 @@ def test_dmp_compose():
     assert dmp_compose([[1],[2],[1]], [[1], [2], [1]], 1, ZZ) == [[1],[4],[8],[8],[4]]
 
 def test_dup_decompose():
-    assert dup_decompose([1], ZZ) == [[1]]
+    assert dup_decompose([1], ZZ) == ([1],)
 
-    assert dup_decompose([1,0], ZZ) == [[1,0]]
-    assert dup_decompose([1,0,0,0], ZZ) == [[1,0,0,0]]
+    assert dup_decompose([1,0], ZZ) == ([1,0],)
+    assert dup_decompose([1,0,0,0], ZZ) == ([1,0,0,0],)
 
-    assert dup_decompose([1,0,0,0,0], ZZ) == [[1,0,0], [1,0,0]]
-    assert dup_decompose([1,0,0,0,0,0,0], ZZ) == [[1,0,0,0], [1,0,0]]
+    assert dup_decompose([1,0,0,0,0], ZZ) == ([1,0,0], [1,0,0])
+    assert dup_decompose([1,0,0,0,0,0,0], ZZ) == ([1,0,0,0], [1,0,0])
 
-    assert dup_decompose([7,0,0,0,1], ZZ) == [[7,0,1], [1,0,0]]
-    assert dup_decompose([4,0,3,0,2], ZZ) == [[4,3,2], [1,0,0]]
+    assert dup_decompose([7,0,0,0,1], ZZ) == ([7,0,1], [1,0,0])
+    assert dup_decompose([4,0,3,0,2], ZZ) == ([4,3,2], [1,0,0])
 
     f = [1,0,20,0,150,0,500,0,625,-2,0,-10,9]
 
-    assert dup_decompose(f, ZZ) == [[1,0,0,-2,9], [1,0,5,0]]
+    assert dup_decompose(f, ZZ) == ([1,0,0,-2,9], [1,0,5,0])
 
     f = [2,0,40,0,300,0,1000,0,1250,-4,0,-20,18]
 
-    assert dup_decompose(f, ZZ) == [[2,0,0,-4,18], [1,0,5,0]]
+    assert dup_decompose(f, ZZ) == ([2,0,0,-4,18], [1,0,5,0])
 
     f = [1,0,20,-8,150,-120,524,-600,865,-1034,600,-170,29]
 
-    assert dup_decompose(f, ZZ) == [[1,-8,24,-34,29], [1,0,5,0]]
+    assert dup_decompose(f, ZZ) == ([1,-8,24,-34,29], [1,0,5,0])
 
     f = [DMP([6,0,-42], ZZ), DMP([48,0,96], ZZ), DMP([144,648,288], ZZ),
          DMP([624,864,384], ZZ), DMP([108,312,432,192], ZZ)]
 
-    assert dup_decompose(f, ZZ['a']) == [f]
+    assert dup_decompose(f, ZZ['a']) == (f,)
 
 def test_dup_sturm():
     assert dup_sturm([QQ(5)], QQ) == [[QQ(1)]]
