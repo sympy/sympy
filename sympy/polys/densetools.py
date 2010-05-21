@@ -1046,7 +1046,7 @@ def dup_decompose(f, K):
     >>> f = ZZ.map([1, -2, 1, 0, 0])
 
     >>> dup_decompose(f, ZZ)
-    [[1, 0, 0], [1, -1, 0]]
+    ([1, 0, 0], [1, -1, 0])
 
     **References**
 
@@ -1064,7 +1064,7 @@ def dup_decompose(f, K):
         else:
             break
 
-    return [f] + F
+    return tuple([f] + F)
 
 @cythonized("u")
 def dmp_lift(f, u, K):
