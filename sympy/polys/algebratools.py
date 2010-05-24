@@ -114,7 +114,17 @@ class Algebra(object):
             raise CoercionFailed("can't convert %s to type %s" % (a, K1))
 
     def of_type(self, a):
-        """Check if `a` is of type `dtype`. """
+        """
+        Check if `a` is of type `dtype`.
+
+        Example
+        =======
+        >>> from sympy.polys.algebratools import ZZ, QQ
+        >>> ZZ.of_type(ZZ(2))
+        True
+        >>> ZZ.of_type(QQ(3, 2))
+        False
+        """
         return type(a) is type(self.one)
 
     def __contains__(self, a):
@@ -1111,6 +1121,24 @@ class ZZ_sympy(IntegerRing):
     def __init__(self):
         pass
 
+    def of_type(self, a):
+        """
+        Check if `a` is of type `dtype` (`Rational`).
+
+        Example
+        =======
+        >>> from sympy import Rational, Real
+        >>> from sympy.polys.algebratools import QQ_sympy
+        >>> QQ_sympy().of_type(Rational(3, 2))
+        True
+        >>> QQ_sympy().of_type(2)
+        False
+        """
+        return type(a) in [type(self.one), type(self.zero), type(sympy_rat(-1)),
+                           type(sympy_rat(2)), type(sympy_rat(1, 2)),
+                           type(sympy_rat(3, 2))]
+
+
     def to_sympy(self, a):
         """
         Convert `a` to a SymPy object.
@@ -1362,6 +1390,23 @@ class QQ_sympy(RationalField):
 
     def __init__(self):
         pass
+
+    def of_type(self, a):
+        """
+        Check if `a` is of type `dtype` (`sympy`).
+
+        Example
+        =======
+        >>> from sympy import Integer
+        >>> from sympy.polys.algebratools import ZZ_sympy, QQ
+        >>> ZZ_sympy().of_type(Integer(2))
+        True
+        >>> ZZ_sympy().of_type(QQ(3, 2))
+        False
+        """
+        return type(a) in [type(self.one), type(self.zero),
+                           type(sympy_int(-1)), type(sympy_int(2))]
+
 
     def to_sympy(self, a):
         """
