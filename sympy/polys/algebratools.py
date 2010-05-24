@@ -641,11 +641,33 @@ class ZZ_python(IntegerRing):
         pass
 
     def to_sympy(self, a):
-        """Convert `a` to a SymPy object. """
+        """
+        Convert `a` to a SymPy object.
+
+        Example
+        =======
+        >>> from sympy import S
+        >>> from sympy.polys.algebratools import ZZ_python
+        >>> ZZ_python().to_sympy(1)
+        1
+        >>> type(ZZ_python().to_sympy(1))
+        <class 'sympy.core.numbers.One'>
+        """
         return sympy_int(a)
 
     def from_sympy(self, a):
-        """Convert SymPy's Integer to `dtype`. """
+        """
+        Convert SymPy's Integer to `dtype` (`int`).
+
+        Example
+        =======
+        >>> from sympy import S
+        >>> from sympy.polys.algebratools import ZZ_python
+        >>> ZZ_python().from_sympy(S.One)
+        1
+        >>> type(ZZ_python().from_sympy(S.One))
+        <type 'int'>
+        """
         if a.is_Integer:
             return python_int(a.p)
         elif a.is_Real and int(a) == a:
@@ -654,60 +676,206 @@ class ZZ_python(IntegerRing):
             raise CoercionFailed("expected `Integer` object, got %s" % a)
 
     def from_ZZ_python(K1, a, K0):
-        """Convert a Python `int` object to `dtype`. """
+        """
+        Convert a Python `int` object to `dtype` (`int`).
+
+        Example
+        =======
+        >>> from sympy.polys.algebratools import ZZ_python
+        >>> ZZ_python().from_ZZ_python(int(1), ZZ_python())
+        1
+        >>> type(ZZ_python().from_ZZ_python(int(1), ZZ_python()))
+        <type 'int'>
+        """
         return a
 
     def from_QQ_python(K1, a, K0):
-        """Convert a Python `Fraction` object to `dtype`. """
+        """
+        Convert a Python `Fraction` object to `dtype` (`int`).
+
+        Example
+        =======
+        >>> from sympy.polys.algebratools import ZZ_python
+        >>> try:
+        ...     import fractions # fractions only exists in >= Python 2.6
+        ...     from sympy.polys.algebratools import QQ_python
+        ...     a = ZZ_python().from_QQ_python(fractions.Fraction(3, 1),
+        ...     QQ_python())
+        ... except ImportError:
+        ...     a = 3
+        >>> a
+        3
+        >>> type(a)
+        <type 'int'>
+        """
+        # XXX: is there a better way to structure this doctest?
         if a.denominator == 1:
             return a.numerator
 
     def from_ZZ_sympy(K1, a, K0):
-        """Convert a SymPy `Integer` object to `dtype`. """
+        """
+        Convert a SymPy `Integer` object to `dtype` (`int`).
+
+        Example
+        =======
+        >>> from sympy import S
+        >>> from sympy.polys.algebratools import ZZ_python, ZZ_sympy
+        >>> ZZ_python().from_ZZ_sympy(S.One, ZZ_sympy())
+        1
+        >>> type(ZZ_python().from_ZZ_sympy(S.One, ZZ_sympy()))
+        <type 'int'>
+        """
         return a.p
 
     def from_QQ_sympy(K1, a, K0):
-        """Convert a SymPy `Rational` object to `dtype`. """
+        """
+        Convert a SymPy `Rational` object to `dtype` (`int`).
+
+        Example
+        =======
+        >>> from sympy import Rational
+        >>> from sympy.polys.algebratools import ZZ_python, QQ_sympy
+        >>> ZZ_python().from_QQ_sympy(Rational(2, 1), QQ_sympy())
+        2
+        >>> type(ZZ_python().from_QQ_sympy(Rational(2, 1), QQ_sympy()))
+        <type 'int'>
+        """
         if a.q == 1:
             return a.p
 
     def from_ZZ_gmpy(K1, a, K0):
-        """Convert a GMPY `mpz` object to `dtype`. """
+        """
+        Convert a GMPY `mpz` object to `dtype` (`int).
+
+        Example
+        =======
+        >>> from sympy.polys.algebratools import ZZ_python
+        >>> try:
+        ...     import gmpy
+        ...     from sympy.polys.algebratools import ZZ_gmpy
+        ...     a = ZZ_python().from_ZZ_gmpy(gmpy.mpz(1), ZZ_gmpy())
+        ... except ImportError:
+        ...     a = 1
+        >>> a
+        1
+        >>> type(a)
+        <type 'int'>
+        """
         return python_int(a)
 
     def from_QQ_gmpy(K1, a, K0):
-        """Convert a GMPY `mpq` object to `dtype`. """
+        """
+        Convert a GMPY `mpq` object to `dtype` (`int).
+
+        Example
+        =======
+        >>> from sympy.polys.algebratools import ZZ_python
+        >>> try:
+        ...     import gmpy
+        ...     from sympy.polys.algebratools import QQ_gmpy
+        ...     a = ZZ_python().from_QQ_gmpy(gmpy.mpq(2, 1), QQ_gmpy())
+        ... except ImportError:
+        ...     a = 2
+        >>> a
+        2
+        >>> type(a)
+        <type 'int'>
+        """
         if a.denom() == 1:
             return python_int(a.numer())
 
     def from_RR_sympy(K1, a, K0):
-        """Convert a SymPy `Real` object to `dtype`. """
+        """
+        Convert a SymPy `Real` object to `dtype` (`int`).
+
+        Example
+        =======
+        >>> from sympy import Real
+        >>> from sympy.polys.algebratools import ZZ_python, RR_sympy
+        >>> ZZ_python().from_RR_sympy(Real(1.0), RR_sympy())
+        1
+        >>> type(ZZ_python().from_RR_sympy(Real(1.0), RR_sympy()))
+        <type 'int'>
+        """
         p, q = K0.as_integer_ratio(a)
 
         if q == 1:
             return python_int(p)
 
     def from_RR_mpmath(K1, a, K0):
-        """Convert a mpmath `mpf` object to `dtype`. """
+        """
+        Convert a mpmath `mpf` object to `dtype` (`int`).
+
+        Example
+        =======
+        >>> from sympy.mpmath import mpf
+        >>> from sympy.polys.algebratools import ZZ_python, RR_mpmath
+        >>> ZZ_python().from_RR_mpmath(mpf(1), RR_mpmath())
+        1
+        >>> type(ZZ_python().from_RR_mpmath(mpf(1), RR_mpmath()))
+        <type 'int'>
+        """
         p, q = K0.as_integer_ratio(a)
 
         if q == 1:
             return python_int(p)
 
     def gcdex(self, a, b):
-        """Extended GCD of `a` and `b`. """
+        """
+        Extended GCD of `a` and `b`.
+
+        Example
+        =======
+        >>> from sympy.polys.algebratools import ZZ_python
+        >>> ZZ_python().gcdex(12, 8)
+        (1, -1, 4)
+        >>> map(type, ZZ_python().gcdex(12, 8))
+        [<type 'int'>, <type 'int'>, <type 'int'>]
+        """
         return python_gcdex(a, b)
 
     def gcd(self, a, b):
-        """Returns GCD of `a` and `b`. """
+        """
+        Returns GCD of `a` and `b`.
+
+        Example
+        =======
+        >>> from sympy.polys.algebratools import ZZ_python
+        >>> ZZ_python().gcd(12, 8)
+        4
+        >>> type(ZZ_python().gcd(12, 8))
+        <type 'int'>
+        """
         return python_gcd(a, b)
 
     def lcm(self, a, b):
-        """Returns LCM of `a` and `b`. """
+        """
+        Returns LCM of `a` and `b`.
+
+        Example
+        =======
+        >>> from sympy.polys.algebratools import ZZ_python
+        >>> ZZ_python().lcm(12, 8)
+        24
+        >>> type(ZZ_python().lcm(12, 8))
+        <type 'int'>
+        """
         return python_lcm(a, b)
 
     def sqrt(self, a):
-        """Returns square root of `a`. """
+        """
+        Returns square root of `a`.
+
+        Example
+        =======
+        >>> from sympy.polys.algebratools import ZZ_python
+        >>> ZZ_python().sqrt(9)
+        3
+        >>> ZZ_python().sqrt(12)
+        3
+        >>> type(ZZ_python().sqrt(9))
+        <type 'int'>
+        """
         return python_int(python_sqrt(a))
 
 if HAS_FRACTION:
@@ -722,11 +890,34 @@ if HAS_FRACTION:
             pass
 
         def to_sympy(self, a):
-            """Convert `a` to a SymPy object. """
+            """
+            Convert `a` to a SymPy object.
+
+            Example
+            =======
+            >>> from sympy import Rational
+            >>> import fractions
+            >>> from sympy.polys.algebratools import QQ_python
+            >>> QQ_python().to_sympy(fractions.Fraction(2, 3))
+            2/3
+            >>> type(QQ_python().to_sympy(fractions.Fraction(2, 3)))
+            <class 'sympy.core.numbers.Rational'>
+            """
             return sympy_rat(a.numerator, a.denominator)
 
         def from_sympy(self, a):
-            """Convert SymPy's Rational to `dtype`. """
+            """
+            Convert SymPy's Rational to `dtype` (`fractions.Fraction`).
+
+            Example
+            =======
+            >>> from sympy import Rational
+            >>> from sympy.polys.algebratools import QQ_python
+            >>> QQ_python().from_sympy(Rational(2, 3))
+            2/3
+            >>> type(QQ_python().from_sympy(Rational(2, 3)))
+            <class 'fractions.Fraction'>
+            """
             if a.is_Rational and a.q != 0:
                 return python_rat(a.p, a.q)
             elif a.is_Real:
@@ -735,44 +926,164 @@ if HAS_FRACTION:
                 raise CoercionFailed("expected `Rational` object, got %s" % a)
 
         def from_ZZ_python(K1, a, K0):
-            """Convert a Python `int` object to `dtype`. """
+            """
+            Convert a Python `int` object to `dtype` (`fractions.Fraction`).
+
+            Example
+            =======
+            >>> from sympy.polys.algebratools import QQ_python, ZZ_python
+            >>> QQ_python().from_ZZ_python(1, ZZ_python())
+            1/1
+            >>> type(QQ_python().from_ZZ_python(1, ZZ_python()))
+            <class 'fractions.Fraction'>
+            """
             return python_rat(a)
 
         def from_QQ_python(K1, a, K0):
-            """Convert a Python `Fraction` object to `dtype`. """
+            """
+            Convert a Python `Fraction` object to `dtype` (`fractions.Fraction`).
+
+            Example
+            =======
+            >>> import fractions
+            >>> from sympy.polys.algebratools import QQ_python
+            >>> QQ_python().from_QQ_python(fractions.Fraction(2, 3), QQ_python())
+            2/3
+            >>> type(QQ_python().from_QQ_python(fractions.Fraction(2, 3),
+            ... QQ_python()))
+            <class 'fractions.Fraction'>
+            """
             return a
 
         def from_ZZ_sympy(K1, a, K0):
-            """Convert a SymPy `Integer` object to `dtype`. """
+            """
+            Convert a SymPy `Integer` object to `dtype` (`fractions.Fraction`).
+
+            Example
+            =======
+            >>> from sympy import S
+            >>> from sympy.polys.algebratools import QQ_python, ZZ_sympy
+            >>> QQ_python().from_ZZ_sympy(S.One, ZZ_sympy())
+            1/1
+            >>> type(QQ_python().from_ZZ_sympy(S.One, ZZ_sympy()))
+            <class 'fractions.Fraction'>
+            """
             return python_rat(a.p)
 
         def from_QQ_sympy(K1, a, K0):
-            """Convert a SymPy `Rational` object to `dtype`. """
+            """
+            Convert a SymPy `Rational` object to `dtype` (`fractions.Fraction`).
+
+            Example
+            =======
+            >>> from sympy import Rational
+            >>> from sympy.polys.algebratools import QQ_python, QQ_sympy
+            >>> QQ_python().from_QQ_sympy(Rational(2, 3), QQ_sympy())
+            2/3
+            >>> type(QQ_python().from_QQ_sympy(Rational(2, 3), QQ_sympy()))
+            <class 'fractions.Fraction'>
+            """
             return python_rat(a.p, a.q)
 
         def from_ZZ_gmpy(K1, a, K0):
-            """Convert a GMPY `mpz` object to `dtype`. """
+            """
+            Convert a GMPY `mpz` object to `dtype` (`fractions.Fraction`).
+
+            Example
+            =======
+            >>> import fractions
+            >>> try:
+            ...     import gmpy
+            ...     from sympy.polys.algebratools import QQ_python, ZZ_gmpy
+            ...     a = QQ_python().from_ZZ_gmpy(gmpy.mpz(1), ZZ_gmpy())
+            ... except ImportError:
+            ...     a = fractions.Fraction(1, 1)
+            >>> a
+            1/1
+            >>> type(a)
+            <class 'fractions.Fraction'>
+            """
             return python_rat(python_int(a))
 
         def from_QQ_gmpy(K1, a, K0):
-            """Convert a GMPY `mpq` object to `dtype`. """
+            """
+            Convert a GMPY `mpq` object to `dtype`(`fractions.Fraction`).
+
+            Example
+            =======
+            >>> import fractions
+            >>> try:
+            ...     import gmpy
+            ...     from sympy.polys.algebratools import QQ_python, QQ_gmpy
+            ...     a = QQ_python().from_QQ_gmpy(gmpy.mpq(2, 3), QQ_gmpy())
+            ... except ImportError:
+            ...     a = fractions.Fraction(2, 3)
+            >>> a
+            2/3
+            >>> type(a)
+            <class 'fractions.Fraction'>
+            """
             return python_rat(python_int(a.numer()),
                               python_int(a.denom()))
 
         def from_RR_sympy(K1, a, K0):
-            """Convert a SymPy `Real` object to `dtype`. """
+            """
+            Convert a SymPy `Real` object to `dtype` (`fractions.Fraction`).
+
+            Example
+            =======
+            >>> from sympy import Real
+            >>> from sympy.polys.algebratools import QQ_python, RR_sympy
+            >>> QQ_python().from_RR_sympy(Real(1.5), RR_sympy())
+            3/2
+            >>> type(QQ_python().from_RR_sympy(Real(1.5), RR_sympy()))
+            <class 'fractions.Fraction'>
+            """
             return python_rat(*K0.as_integer_ratio(a))
 
         def from_RR_mpmath(K1, a, K0):
-            """Convert a mpmath `mpf` object to `dtype`. """
+            """
+            Convert a mpmath `mpf` object to `dtype` (`fractions.Fraction`).
+
+            Example
+            =======
+            >>> from sympy.mpmath import mpf
+            >>> from sympy.polys.algebratools import QQ_python, RR_mpmath
+            >>> QQ_python().from_RR_mpmath(mpf(1.5), RR_mpmath())
+            3/2
+            >>> type(QQ_python().from_RR_mpmath(mpf(1.5), RR_mpmath()))
+            <class 'fractions.Fraction'>
+            """
             return python_rat(*K0.as_integer_ratio(a))
 
         def numer(self, a):
-            """Returns numerator of `a`. """
+            """
+            Returns numerator of `a`.
+
+            Example
+            =======
+            >>> import fractions
+            >>> from sympy.polys.algebratools import QQ_python
+            >>> QQ_python().numer(fractions.Fraction(2, 3))
+            2
+            >>> type(QQ_python().numer(fractions.Fraction(2, 3)))
+            <type 'int'>
+            """
             return a.numerator
 
         def denom(self, a):
-            """Returns denominator of `a`. """
+            """
+            Returns denominator of `a`.
+
+            Example
+            =======
+            >>> import fractions
+            >>> from sympy.polys.algebratools import QQ_python
+            >>> QQ_python().denom(fractions.Fraction(2, 3))
+            3
+            >>> type(QQ_python().denom(fractions.Fraction(2, 3)))
+            <type 'int'>
+            """
             return a.denominator
 
 from sympy import (
@@ -801,11 +1112,33 @@ class ZZ_sympy(IntegerRing):
         pass
 
     def to_sympy(self, a):
-        """Convert `a` to a SymPy object. """
+        """
+        Convert `a` to a SymPy object.
+
+        Example
+        =======
+        >>> from sympy import Integer
+        >>> from sympy.polys.algebratools import ZZ_sympy
+        >>> ZZ_sympy().to_sympy(Integer(2))
+        2
+        >>> type(ZZ_sympy().to_sympy(Integer(2)))
+        <class 'sympy.core.numbers.Integer'>
+        """
         return a
 
     def from_sympy(self, a):
-        """Convert SymPy's Integer to `dtype`. """
+        """
+        Convert SymPy's Integer to `dtype` (`Integer`).
+
+        Example
+        =======
+        >>> from sympy import Integer
+        >>> from sympy.polys.algebratools import ZZ_sympy
+        >>> ZZ_sympy().from_sympy(Integer(2))
+        2
+        >>> type(ZZ_sympy().from_sympy(Integer(2)))
+        <class 'sympy.core.numbers.Integer'>
+        """
         if a.is_Integer:
             return a
         elif a.is_Real and int(a) == a:
@@ -814,60 +1147,210 @@ class ZZ_sympy(IntegerRing):
             raise CoercionFailed("expected Integer object, got %s" % a)
 
     def from_ZZ_python(K1, a, K0):
-        """Convert a Python `int` object to `dtype`. """
+        """
+        Convert a Python `int` object to `dtype` (`Integer`).
+
+        Example
+        =======
+        >>> from sympy.polys.algebratools import ZZ_sympy, ZZ_python
+        >>> ZZ_sympy().from_ZZ_python(2, ZZ_python())
+        2
+        >>> type(ZZ_sympy().from_ZZ_python(2, ZZ_python()))
+        <class 'sympy.core.numbers.Integer'>
+        """
         return sympy_int(a)
 
     def from_QQ_python(K1, a, K0):
-        """Convert a Python `Fraction` object to `dtype`. """
+        """
+        Convert a Python `Fraction` object to `dtype` (`Integer`).
+
+        Example
+        =======
+        >>> from sympy import Integer
+        >>> try:
+        ...     import fractions # fractions only exists in >= Python 2.6
+        ...     from sympy.polys.algebratools import ZZ_sympy, QQ_python
+        ...     a = ZZ_sympy().from_QQ_python(fractions.Fraction(2, 1),
+        ...     QQ_python())
+        ... except ImportError:
+        ...     a = Integer(2)
+        >>> a
+        2
+        >>> type(a)
+        <class 'sympy.core.numbers.Integer'>
+        """
         if a.denominator == 1:
             return sympy_int(a.numerator)
 
     def from_ZZ_sympy(K1, a, K0):
-        """Convert a SymPy `Integer` object to `dtype`. """
+        """
+        Convert a SymPy `Integer` object to `dtype` (`Integer`).
+
+        Example
+        =======
+        >>> from sympy import Integer
+        >>> from sympy.polys.algebratools import ZZ_sympy
+        >>> ZZ_sympy().from_ZZ_sympy(Integer(2), ZZ_sympy())
+        2
+        >>> type(ZZ_sympy().from_ZZ_sympy(Integer(2), ZZ_sympy()))
+        <class 'sympy.core.numbers.Integer'>
+        """
         return a
 
     def from_QQ_sympy(K1, a, K0):
-        """Convert a SymPy `Rational` object to `dtype`. """
+        """
+        Convert a SymPy `Rational` object to `dtype` (`Integer`).
+
+        Example
+        =======
+        >>> from sympy import Rational
+        >>> from sympy.polys.algebratools import ZZ_sympy, QQ_sympy
+        >>> ZZ_sympy().from_QQ_sympy(Rational(2, 1), QQ_sympy())
+        2
+        >>> type(ZZ_sympy().from_QQ_sympy(Rational(2, 1), QQ_sympy()))
+        <class 'sympy.core.numbers.Integer'>
+        """
         if a.q == 1:
             return sympy_int(a.p)
 
     def from_ZZ_gmpy(K1, a, K0):
-        """Convert a GMPY `mpz` object to `dtype`. """
+        """
+        Convert a GMPY `mpz` object to `dtype` (`Integer`).
+
+        Example
+        =======
+        >>> from sympy import Integer
+        >>> try:
+        ...     import gmpy
+        ...     from sympy.polys.algebratools import ZZ_sympy, ZZ_gmpy
+        ...     a = ZZ_sympy().from_ZZ_gmpy(gmpy.mpz(2), ZZ_gmpy())
+        ... except ImportError:
+        ...     a = Integer(2)
+        >>> a
+        2
+        >>> type(a)
+        <class 'sympy.core.numbers.Integer'>
+        """
         return sympy_int(python_int(a))
 
     def from_QQ_gmpy(K1, a, K0):
-        """Convert a GMPY `mpq` object to `dtype`. """
+        """
+        Convert a GMPY `mpq` object to `dtype` (`Integer`).
+
+        Example
+        =======
+        >>> from sympy import Integer
+        >>> try:
+        ...     import gmpy
+        ...     from sympy.polys.algebratools import ZZ_sympy, QQ_gmpy
+        ...     a = ZZ_sympy().from_QQ_gmpy(gmpy.mpq(2, 1), QQ_gmpy())
+        ... except ImportError:
+        ...     a = Integer(2)
+        >>> a
+        2
+        >>> type(a)
+        <class 'sympy.core.numbers.Integer'>
+        """
         if a.denom() == 1:
             return sympy_int(python_int(a.numer()))
 
     def from_RR_sympy(K1, a, K0):
-        """Convert a SymPy `Real` object to `dtype`. """
+        """
+        Convert a SymPy `Real` object to `dtype` (`Integer`).
+
+        Example
+        =======
+        >>> from sympy import Real
+        >>> from sympy.polys.algebratools import ZZ_sympy, RR_sympy
+        >>> ZZ_sympy().from_RR_sympy(Real(2.0), RR_sympy())
+        2
+        >>> type(ZZ_sympy().from_RR_sympy(Real(2.0), RR_sympy()))
+        <class 'sympy.core.numbers.Integer'>
+        """
         p, q = K0.as_integer_ratio(a)
 
         if q == 1:
             return sympy_int(p)
 
     def from_RR_mpmath(K1, a, K0):
-        """Convert a mpmath `mpf` object to `dtype`. """
+        """Convert a mpmath `mpf` object to `dtype` (`Integer`).
+
+        Example
+        =======
+        >>> from sympy.mpmath import mpf
+        >>> from sympy.polys.algebratools import ZZ_sympy, RR_mpmath
+        >>> ZZ_sympy().from_RR_mpmath(mpf(2.0), RR_mpmath())
+        2
+        >>> type(ZZ_sympy().from_RR_mpmath(mpf(2.0), RR_mpmath()))
+        <class 'sympy.core.numbers.Integer'>
+        """
         p, q = K0.as_integer_ratio(a)
 
         if q == 1:
             return sympy_int(p)
 
     def gcdex(self, a, b):
-        """Extended GCD of `a` and `b`. """
+        """
+        Extended GCD of `a` and `b`.
+
+        Example
+        =======
+        >>> from sympy import Integer
+        >>> from sympy.polys.algebratools import ZZ_sympy
+        >>> ZZ_sympy().gcdex(Integer(12), Integer(8))
+        [1, -1, 4]
+        >>> map(type, ZZ_sympy().gcdex(Integer(12), Integer(8)))
+        [<class 'sympy.core.numbers.One'>,
+         <class 'sympy.core.numbers.NegativeOne'>,
+         <class 'sympy.core.numbers.Integer'>]
+        """
         return map(sympy_int, sympy_gcdex(int(a), int(b)))
 
     def gcd(self, a, b):
-        """Returns GCD of `a` and `b`. """
+        """
+        Returns GCD of `a` and `b`.
+
+        Example
+        =======
+        >>> from sympy import Integer
+        >>> from sympy.polys.algebratools import ZZ_sympy
+        >>> ZZ_sympy().gcd(Integer(12), Integer(8))
+        4
+        >>> type(ZZ_sympy().gcd(Integer(12), Integer(8)))
+        <class 'sympy.core.numbers.Integer'>
+        """
         return sympy_int(sympy_gcd(int(a), int(b)))
 
     def lcm(self, a, b):
-        """Returns LCM of `a` and `b`. """
+        """
+        Returns LCM of `a` and `b`.
+
+        Example
+        =======
+        >>> from sympy import Integer
+        >>> from sympy.polys.algebratools import ZZ_sympy
+        >>> ZZ_sympy().lcm(Integer(12), Integer(8))
+        24
+        >>> type(ZZ_sympy().lcm(Integer(12), Integer(8)))
+        <class 'sympy.core.numbers.Integer'>
+        """
         return sympy_int(sympy_lcm(int(a), int(b)))
 
     def sqrt(self, a):
-        """Returns square root of `a`. """
+        """
+        Returns square root of `a`.
+
+        Example
+        =======
+        >>> from sympy import Integer
+        >>> from sympy.polys.algebratools import ZZ_sympy
+        >>> ZZ_sympy().sqrt(Integer(9))
+        3
+        >>> ZZ_sympy().sqrt(Integer(12))
+        3
+        >>> type(ZZ_sympy().sqrt(Integer(9)))
+        <class 'sympy.core.numbers.Integer'>
+        """
         return sympy_int(int(sympy_sqrt(int(a))))
 
 class QQ_sympy(RationalField):
@@ -881,11 +1364,33 @@ class QQ_sympy(RationalField):
         pass
 
     def to_sympy(self, a):
-        """Convert `a` to a SymPy object. """
+        """
+        Convert `a` to a SymPy object.
+
+        Example
+        =======
+        >>> from sympy import Rational
+        >>> from sympy.polys.algebratools import QQ_sympy
+        >>> QQ_sympy().to_sympy(Rational(3, 2))
+        3/2
+        >>> type(QQ_sympy().to_sympy(Rational(3, 2)))
+        <class 'sympy.core.numbers.Rational'>
+        """
         return a
 
     def from_sympy(self, a):
-        """Convert SymPy's Rational to `dtype`. """
+        """
+        Convert SymPy's Rational to `dtype` (`Rational`).
+
+        Example
+        =======
+        >>> from sympy import Rational
+        >>> from sympy.polys.algebratools import QQ_sympy
+        >>> QQ_sympy().from_sympy(Rational(3, 2))
+        3/2
+        >>> type(QQ_sympy().from_sympy(Rational(3, 2)))
+        <class 'sympy.core.numbers.Rational'>
+        """
         if a.is_Rational and a.q != 0:
             return a
         elif a.is_Real:
@@ -894,44 +1399,170 @@ class QQ_sympy(RationalField):
             raise CoercionFailed("expected `Rational` object, got %s" % a)
 
     def from_ZZ_python(K1, a, K0):
-        """Convert a Python `int` object to `dtype`. """
+        """
+        Convert a Python `int` object to `dtype` (`Rational`).
+
+        Example
+        =======
+        >>> from sympy.polys.algebratools import QQ_sympy, ZZ_python
+        >>> QQ_sympy().from_ZZ_python(2, ZZ_python())
+        2
+        >>> type(QQ_sympy().from_ZZ_python(2, ZZ_python()))
+        <class 'sympy.core.numbers.Integer'>
+        """
         return sympy_rat(a)
 
     def from_QQ_python(K1, a, K0):
-        """Convert a Python `Fraction` object to `dtype`. """
+        """
+        Convert a Python `Fraction` object to `dtype` (`Rational`).
+
+        Example
+        =======
+        >>> from sympy import Rational
+        >>> try:
+        ...     import fractions # fractions only exists in >= Python 2.6
+        ...     from sympy.polys.algebratools import QQ_sympy, QQ_python
+        ...     a = QQ_sympy().from_QQ_python(fractions.Fraction(3, 2),
+        ...     QQ_python())
+        ... except ImportError:
+        ...     a = Rational(3, 2)
+        >>> a
+        3/2
+        >>> type(a)
+        <class 'sympy.core.numbers.Rational'>
+        """
         return sympy_rat(a.numerator, a.denominator)
 
     def from_ZZ_sympy(K1, a, K0):
-        """Convert a SymPy `Integer` object to `dtype`. """
+        """
+        Convert a SymPy `Integer` object to `dtype` (`Rational`).
+
+        Example
+        =======
+        >>> from sympy import Rational, Integer
+        >>> from sympy.polys.algebratools import QQ_sympy, ZZ_sympy
+        >>> QQ_sympy().from_ZZ_sympy(Integer(2), ZZ_sympy())
+        2
+        >>> type(QQ_sympy().from_ZZ_sympy(Integer(2), ZZ_sympy()))
+        <class 'sympy.core.numbers.Integer'>
+        """
         return sympy_rat(a.p)
 
     def from_QQ_sympy(K1, a, K0):
-        """Convert a SymPy `Rational` object to `dtype`. """
+        """
+        Convert a SymPy `Rational` object to `dtype` (`Rational`).
+
+        Example
+        =======
+        >>> from sympy import Rational
+        >>> from sympy.polys.algebratools import QQ_sympy
+        >>> QQ_sympy().from_QQ_sympy(Rational(3, 2), QQ_sympy())
+        3/2
+        >>> type(QQ_sympy().from_QQ_sympy(Rational(3, 2), QQ_sympy()))
+        <class 'sympy.core.numbers.Rational'>
+        """
         return a
 
     def from_ZZ_gmpy(K1, a, K0):
-        """Convert a GMPY `mpz` object to `dtype`. """
+        """
+        Convert a GMPY `mpz` object to `dtype` (`Rational`).
+
+        Example
+        =======
+        >>> from sympy import Rational
+        >>> try:
+        ...     import gmpy
+        ...     from sympy.polys.algebratools import QQ_sympy, ZZ_gmpy
+        ...     a = QQ_sympy().from_ZZ_gmpy(gmpy.mpz(2), ZZ_gmpy())
+        ... except ImportError:
+        ...     a = Rational(2)
+        >>> a
+        2
+        >>> type(a)
+        <class 'sympy.core.numbers.Integer'>
+        """
         return sympy_rat(python_int(a))
 
     def from_QQ_gmpy(K1, a, K0):
-        """Convert a GMPY `mpq` object to `dtype`. """
+        """
+        Convert a GMPY `mpq` object to `dtype` (`Rational`).
+
+        Example
+        =======
+        >>> from sympy import Rational
+        >>> try:
+        ...     import gmpy
+        ...     from sympy.polys.algebratools import QQ_sympy, QQ_gmpy
+        ...     a = QQ_sympy().from_QQ_gmpy(gmpy.mpq(3, 2), QQ_gmpy())
+        ... except ImportError:
+        ...     a = Rational(3, 2)
+        >>> a
+        3/2
+        >>> type(a)
+        <class 'sympy.core.numbers.Rational'>
+        """
         return sympy_rat(python_int(a.numer()),
                          python_int(a.denom()))
 
     def from_RR_sympy(K1, a, K0):
-        """Convert a SymPy `Real` object to `dtype`. """
+        """
+        Convert a SymPy `Real` object to `dtype` (`Rational`).
+
+        Example
+        =======
+        >>> from sympy import Real
+        >>> from sympy.polys.algebratools import QQ_sympy, RR_sympy
+        >>> QQ_sympy().from_RR_sympy(Real(1.5), RR_sympy())
+        3/2
+        >>> type(QQ_sympy().from_RR_sympy(Real(1.5), RR_sympy()))
+        <class 'sympy.core.numbers.Rational'>
+        """
         return sympy_rat(*K0.as_integer_ratio(a))
 
     def from_RR_mpmath(K1, a, K0):
-        """Convert a mpmath `mpf` object to `dtype`. """
+        """
+        Convert a mpmath `mpf` object to `dtype` (`Rational`).
+
+        Example
+        =======
+        >>> from sympy import Rational
+        >>> from sympy.mpmath import mpf
+        >>> from sympy.polys.algebratools import QQ_sympy, RR_mpmath
+        >>> QQ_sympy().from_RR_mpmath(mpf(1.5), RR_mpmath())
+        3/2
+        >>> type(QQ_sympy().from_RR_mpmath(mpf(1.5), RR_mpmath()))
+        <class 'sympy.core.numbers.Rational'>
+        """
         return sympy_rat(*K0.as_integer_ratio(a))
 
     def numer(self, a):
-        """Returns numerator of `a`. """
+        """
+        Returns numerator of `a`.
+
+        Example
+        =======
+        >>> from sympy import Rational
+        >>> from sympy.polys.algebratools import QQ_sympy
+        >>> QQ_sympy().numer(Rational(3, 2))
+        3
+        >>> type(QQ_sympy().numer(Rational(3, 2)))
+        <class 'sympy.core.numbers.Integer'>
+        """
         return sympy_int(a.p)
 
     def denom(self, a):
-        """Returns denominator of `a`. """
+        """
+        Returns denominator of `a`.
+
+        Example
+        =======
+        >>> from sympy import Rational
+        >>> from sympy.polys.algebratools import QQ_sympy
+        >>> QQ_sympy().denom(Rational(3, 2))
+        2
+        >>> type(QQ_sympy().denom(Rational(3, 2)))
+        <class 'sympy.core.numbers.Integer'>
+        """
         return sympy_int(a.q)
 
 if HAS_GMPY:
@@ -958,11 +1589,34 @@ if HAS_GMPY:
             pass
 
         def to_sympy(self, a):
-            """Convert `a` to a SymPy object. """
+            """
+            Convert `a` to a SymPy object.
+
+            Example
+            =======
+            >>> import gmpy
+            >>> from sympy.polys.algebratools import ZZ_gmpy
+            >>> ZZ_gmpy().to_sympy(gmpy.mpz(2))
+            2
+            >>> type(ZZ_gmpy().to_sympy(gmpy.mpz(2)))
+            <class 'sympy.core.numbers.Integer'>
+            """
             return sympy_int(int(a))
 
         def from_sympy(self, a):
-            """Convert SymPy's Integer to `dtype`. """
+            """
+            Convert SymPy's Integer to `dtype` (`mpz`).
+
+            Example
+            =======
+            >>> import gmpy
+            >>> from sympy import S
+            >>> from sympy.polys.algebratools import ZZ_gmpy
+            >>> ZZ_gmpy().from_sympy(S.One)
+            1
+            >>> type(ZZ_gmpy().from_sympy(S.One))
+            <type 'mpz'>
+            """
             if a.is_Integer:
                 return gmpy_int(a.p)
             elif a.is_Real and int(a) == a:
@@ -971,65 +1625,215 @@ if HAS_GMPY:
                 raise CoercionFailed("expected Integer object, got %s" % a)
 
         def from_ZZ_python(K1, a, K0):
-            """Convert a Python `int` object to `dtype`. """
+            """
+            Convert a Python `int` object to `dtype` (`mpz`).
+
+            Example
+            =======
+            >>> from sympy.polys.algebratools import ZZ_gmpy, ZZ_python
+            >>> ZZ_gmpy().from_ZZ_python(2, ZZ_python())
+            2
+            >>> type(ZZ_gmpy().from_ZZ_python(2, ZZ_python()))
+            <type 'mpz'>
+            """
             return gmpy_int(a)
 
         def from_QQ_python(K1, a, K0):
-            """Convert a Python `Fraction` object to `dtype`. """
+            """
+            Convert a Python `Fraction` object to `dtype` (`mpz`).
+
+            Example
+            =======
+            >>> import gmpy
+            >>> try:
+            ...     import fractions # fractions only exists in >= Python 2.6
+            ...     from sympy.polys.algebratools import ZZ_gmpy, QQ_python
+            ...     a = ZZ_gmpy().from_QQ_python(fractions.Fraction(2, 1),
+            ...     QQ_python())
+            ... except ImportError:
+            ...     a = gmpy.mpz(2)
+            >>> a
+            2
+            >>> type(a)
+            <type 'mpz'>
+            """
             if a.denominator == 1:
                 return gmpy_int(a.numerator)
 
         def from_ZZ_sympy(K1, a, K0):
-            """Convert a SymPy `Integer` object to `dtype`. """
+            """
+            Convert a SymPy `Integer` object to `dtype` (`mpz`).
+
+            Example
+            =======
+            >>> from sympy import Integer
+            >>> from sympy.polys.algebratools import ZZ_gmpy, ZZ_sympy
+            >>> ZZ_gmpy().from_ZZ_sympy(Integer(2), ZZ_sympy())
+            2
+            >>> type(ZZ_gmpy().from_ZZ_sympy(Integer(2), ZZ_sympy()))
+            <type 'mpz'>
+            """
             return gmpy_int(a.p)
 
         def from_QQ_sympy(K1, a, K0):
-            """Convert a SymPy `Rational` object to `dtype`. """
+            """
+            Convert a SymPy `Rational` object to `dtype` (`mpz`).
+
+            Example
+            =======
+            >>> from sympy import Rational
+            >>> from sympy.polys.algebratools import ZZ_gmpy, QQ_sympy
+            >>> ZZ_gmpy().from_QQ_sympy(Rational(2, 1), QQ_sympy())
+            2
+            >>> type(ZZ_gmpy().from_QQ_sympy(Rational(2, 1), QQ_sympy()))
+            <type 'mpz'>
+            """
             if a.q == 1:
                 return gmpy_int(a.p)
 
         def from_ZZ_gmpy(K1, a, K0):
-            """Convert a GMPY `mpz` object to `dtype`. """
+            """
+            Convert a GMPY `mpz` object to `dtype` (`mpz`).
+
+            Example
+            =======
+            >>> import gmpy
+            >>> from sympy.polys.algebratools import ZZ_gmpy
+            >>> ZZ_gmpy().from_ZZ_gmpy(gmpy.mpz(2), ZZ_gmpy())
+            2
+            >>> type(ZZ_gmpy().from_ZZ_gmpy(gmpy.mpz(2), ZZ_gmpy()))
+            <type 'mpz'>
+            """
             return a
 
         def from_QQ_gmpy(K1, a, K0):
-            """Convert a GMPY `mpq` object to `dtype`. """
+            """
+            Convert a GMPY `mpq` object to `dtype` (`mpz`).
+
+            Example
+            =======
+            >>> import gmpy
+            >>> from sympy.polys.algebratools import ZZ_gmpy, QQ_gmpy
+            >>> ZZ_gmpy().from_QQ_gmpy(gmpy.mpq(2, 1), QQ_gmpy())
+            2
+            >>> type(ZZ_gmpy().from_QQ_gmpy(gmpy.mpq(2, 1), QQ_gmpy()))
+            <type 'mpz'>
+            """
             if a.denom() == 1:
                 return a.numer()
 
         def from_RR_sympy(K1, a, K0):
-            """Convert a SymPy `Real` object to `dtype`. """
+            """
+            Convert a SymPy `Real` object to `dtype` (`mpz`).
+
+            Example
+            =======
+            >>> from sympy import Real
+            >>> from sympy.polys.algebratools import ZZ_gmpy, RR_sympy
+            >>> ZZ_gmpy().from_RR_sympy(Real(2.0), RR_sympy())
+            2
+            >>> type(ZZ_gmpy().from_RR_sympy(Real(2.0), RR_sympy()))
+            <type 'mpz'>
+            """
             p, q = K0.as_integer_ratio(a)
 
             if q == 1:
                 return gmpy_int(p)
 
         def from_RR_mpmath(K1, a, K0):
-            """Convert a mpmath `mpf` object to `dtype`. """
+            """
+            Convert a mpmath `mpf` object to `dtype` (`mpz`).
+
+            Example
+            =======
+            >>> from sympy.mpmath import mpf
+            >>> from sympy.polys.algebratools import ZZ_gmpy, RR_mpmath
+            >>> ZZ_gmpy().from_RR_mpmath(mpf(2.0), RR_mpmath())
+            2
+            >>> type(ZZ_gmpy().from_RR_mpmath(mpf(2.0), RR_mpmath()))
+            <type 'mpz'>
+            """
             p, q = K0.as_integer_ratio(a)
 
             if q == 1:
                 return gmpy_int(p)
 
         def gcdex(self, a, b):
-            """Extended GCD of `a` and `b`. """
+            """
+            Extended GCD of `a` and `b`.
+
+            Example
+            =======
+            >>> import gmpy
+            >>> from sympy.polys.algebratools import ZZ_gmpy
+            >>> ZZ_gmpy().gcdex(gmpy.mpz(12), gmpy.mpz(8))
+            (1, -1, 4)
+            >>> map(type, ZZ_gmpy().gcdex(gmpy.mpz(12), gmpy.mpz(8)))
+            [<type 'mpz'>, <type 'mpz'>, <type 'mpz'>]
+            """
             h, s, t = gmpy_gcdex(a, b)
             return s, t, h
 
         def gcd(self, a, b):
-            """Returns GCD of `a` and `b`. """
+            """
+            Returns GCD of `a` and `b`.
+
+            Example
+            =======
+            >>> import gmpy
+            >>> from sympy.polys.algebratools import ZZ_gmpy
+            >>> ZZ_gmpy().gcd(gmpy.mpz(12), gmpy.mpz(8))
+            4
+            >>> type(ZZ_gmpy().gcd(gmpy.mpz(12), gmpy.mpz(8)))
+            <type 'mpz'>
+            """
             return gmpy_gcd(a, b)
 
         def lcm(self, a, b):
-            """Returns LCM of `a` and `b`. """
+            """
+            Returns LCM of `a` and `b`.
+
+            Example
+            =======
+            >>> import gmpy
+            >>> from sympy.polys.algebratools import ZZ_gmpy
+            >>> ZZ_gmpy().lcm(gmpy.mpz(12), gmpy.mpz(8))
+            24
+            >>> type(ZZ_gmpy().lcm(gmpy.mpz(12), gmpy.mpz(8)))
+            <type 'mpz'>
+            """
             return gmpy_lcm(a, b)
 
         def sqrt(self, a):
-            """Returns square root of `a`. """
+            """
+            Returns square root of `a`.
+
+            Example
+            =======
+            >>> import gmpy
+            >>> from sympy.polys.algebratools import ZZ_gmpy
+            >>> ZZ_gmpy().sqrt(gmpy.mpz(9))
+            3
+            >>> ZZ_gmpy().sqrt(gmpy.mpz(12))
+            3
+            >>> type(ZZ_gmpy().sqrt(gmpy.mpz(9)))
+            <type 'mpz'>
+            """
             return gmpy_sqrt(a)
 
         def factorial(self, a):
-            """Returns factorial of `a`. """
+            """
+            Returns factorial of `a`.
+
+            Example
+            =======
+            >>> import gmpy
+            >>> from sympy.polys.algebratools import ZZ_gmpy
+            >>> ZZ_gmpy().factorial(gmpy.mpz(4))
+            24
+            >>> type(ZZ_gmpy().factorial(gmpy.mpz(4)))
+            <type 'mpz'>
+            """
             return gmpy_factorial(int(a))
 
     class QQ_gmpy(RationalField):
@@ -1043,12 +1847,35 @@ if HAS_GMPY:
             pass
 
         def to_sympy(self, a):
-            """Convert `a` to a SymPy object. """
+            """
+            Convert `a` to a SymPy object.
+
+            Example
+            =======
+            >>> import gmpy
+            >>> from sympy.polys.algebratools import QQ_gmpy
+            >>> QQ_gmpy().to_sympy(gmpy.mpq(3, 2))
+            3/2
+            >>> type(QQ_gmpy().to_sympy(gmpy.mpq(3, 2)))
+            <class 'sympy.core.numbers.Rational'>
+            """
             return sympy_rat(int(gmpy_numer(a)),
                              int(gmpy_denom(a)))
 
         def from_sympy(self, a):
-            """Convert SymPy's Integer to `dtype`. """
+            """
+            Convert SymPy's Integer to `dtype` (`mpq`).
+
+            Example
+            =======
+            >>> from sympy import Rational
+            >>> import gmpy
+            >>> from sympy.polys.algebratools import QQ_gmpy
+            >>> QQ_gmpy().from_sympy(Rational(3, 2))
+            3/2
+            >>> type(QQ_gmpy().from_sympy(Rational(3, 2)))
+            <type 'mpq'>
+            """
             if a.is_Rational and a.q != 0:
                 return gmpy_rat(a.p, a.q)
             elif a.is_Real:
@@ -1057,63 +1884,231 @@ if HAS_GMPY:
                 raise CoercionFailed("expected `Rational` object, got %s" % a)
 
         def from_ZZ_python(K1, a, K0):
-            """Convert a Python `int` object to `dtype`. """
+            """
+            Convert a Python `int` object to `dtype` (`mpq`).
+
+            Example
+            =======
+            >>> from sympy.polys.algebratools import QQ_gmpy, ZZ_python
+            >>> QQ_gmpy().from_ZZ_python(2, ZZ_python())
+            2/1
+            >>> type(QQ_gmpy().from_ZZ_python(2, ZZ_python()))
+            <type 'mpq'>
+            """
             return gmpy_rat(a)
 
         def from_QQ_python(K1, a, K0):
-            """Convert a Python `Fraction` object to `dtype`. """
+            """
+            Convert a Python `Fraction` object to `dtype` (`mpq`).
+
+            Example
+            =======
+            >>> import gmpy
+            >>> try:
+            ...     import fractions # fractions only exists in >= Python 2.6
+            ...     from sympy.polys.algebratools import QQ_gmpy, QQ_python
+            ...     a = QQ_gmpy().from_QQ_python(fractions.Fraction(3, 2),
+            ...     QQ_python)
+            ... except ImportError:
+            ...     a = gmpy.mpq(3, 2)
+            >>> a
+            3/2
+            >>> type(a)
+            <type 'mpq'>
+            """
             return gmpy_rat(a.numerator, a.denominator)
 
         def from_ZZ_sympy(K1, a, K0):
-            """Convert a SymPy `Integer` object to `dtype`. """
+            """
+            Convert a SymPy `Integer` object to `dtype` (`mpq`).
+
+            Example
+            =======
+            >>> from sympy import Integer
+            >>> from sympy.polys.algebratools import QQ_gmpy, ZZ_sympy
+            >>> QQ_gmpy().from_ZZ_sympy(Integer(2), ZZ_sympy())
+            2/1
+            >>> type(QQ_gmpy().from_ZZ_sympy(Integer(2), ZZ_sympy()))
+            <type 'mpq'>
+            """
             return gmpy_rat(a.p)
 
         def from_QQ_sympy(K1, a, K0):
-            """Convert a SymPy `Rational` object to `dtype`. """
+            """
+            Convert a SymPy `Rational` object to `dtype` (`mpq`).
+
+            Example
+            =======
+            >>> from sympy import Rational
+            >>> from sympy.polys.algebratools import QQ_gmpy, QQ_sympy
+            >>> QQ_gmpy().from_QQ_sympy(Rational(3, 2), QQ_sympy())
+            3/2
+            >>> type(QQ_gmpy().from_QQ_sympy(Rational(3, 2), QQ_sympy()))
+            <type 'mpq'>
+            """
             return gmpy_rat(a.p, a.q)
 
         def from_ZZ_gmpy(K1, a, K0):
-            """Convert a GMPY `mpz` object to `dtype`. """
+            """
+            Convert a GMPY `mpz` object to `dtype` (`mpq`).
+
+            Example
+            =======
+            >>> import gmpy
+            >>> from sympy.polys.algebratools import QQ_gmpy, ZZ_gmpy
+            >>> QQ_gmpy().from_ZZ_gmpy(gmpy.mpz(2), ZZ_gmpy())
+            2/1
+            >>> type(QQ_gmpy().from_ZZ_gmpy(gmpy.mpz(2), ZZ_gmpy()))
+            <type 'mpq'>
+            """
             return gmpy_rat(a)
 
         def from_QQ_gmpy(K1, a, K0):
-            """Convert a GMPY `mpq` object to `dtype`. """
+            """
+            Convert a GMPY `mpq` object to `dtype` (`mpq`).
+
+            Example
+            =======
+            >>> import gmpy
+            >>> from sympy.polys.algebratools import QQ_gmpy
+            >>> QQ_gmpy().from_QQ_gmpy(gmpy.mpq(3, 2), QQ_gmpy())
+            3/2
+            >>> type(QQ_gmpy().from_QQ_gmpy(gmpy.mpq(3, 2), QQ_gmpy()))
+            <type 'mpq'>
+            """
             return a
 
         def from_RR_sympy(K1, a, K0):
-            """Convert a SymPy `Real` object to `dtype`. """
+            """
+            Convert a SymPy `Real` object to `dtype` (`mpq`).
+
+            Example
+            =======
+            >>> from sympy import Real
+            >>> from sympy.polys.algebratools import QQ_gmpy, RR_sympy
+            >>> QQ_gmpy().from_RR_sympy(Real(1.5), RR_sympy())
+            3/2
+            >>> type(QQ_gmpy().from_RR_sympy(Real(1.5), RR_sympy()))
+            <type 'mpq'>
+            """
             return gmpy_rat(*K0.as_integer_ratio(a))
 
         def from_RR_mpmath(K1, a, K0):
-            """Convert a mpmath `mpf` object to `dtype`. """
+            """
+            Convert a mpmath `mpf` object to `dtype` (`mpq`).
+
+            Example
+            =======
+            >>> from sympy.mpmath import mpf
+            >>> from sympy.polys.algebratools import QQ_gmpy, RR_mpmath
+            >>> QQ_gmpy().from_RR_mpmath(mpf(1.5), RR_mpmath())
+            3/2
+            >>> type(QQ_gmpy().from_RR_mpmath(mpf(1.5), RR_mpmath()))
+            <type 'mpq'>
+            """
             return gmpy_rat(*K0.as_integer_ratio(a))
 
         def exquo(self, a, b):
-            """Exact quotient of `a` and `b`, implies `__div__`.  """
+            """
+            Exact quotient of `a` and `b`, implies `__div__`.
+
+            Example
+            =======
+            >>> import gmpy
+            >>> from sympy.polys.algebratools import QQ_gmpy
+            >>> QQ_gmpy().exquo(gmpy.mpq(3, 2), gmpy.mpq(5, 6))
+            9/5
+            >>> type(QQ_gmpy().exquo(gmpy.mpq(3, 2), gmpy.mpq(5, 6)))
+            <type 'mpq'>
+            """
             return gmpy_rat(a.qdiv(b))
 
         def quo(self, a, b):
-            """Quotient of `a` and `b`, implies `__div__`. """
+            """
+            Quotient of `a` and `b`, implies `__div__`.
+
+            Example
+            =======
+            >>> import gmpy
+            >>> from sympy.polys.algebratools import QQ_gmpy
+            >>> QQ_gmpy().quo(gmpy.mpq(3, 2), gmpy.mpq(5, 6))
+            9/5
+            >>> type(QQ_gmpy().quo(gmpy.mpq(3, 2), gmpy.mpq(5, 6)))
+            <type 'mpq'>
+            """
             return gmpy_rat(a.qdiv(b))
 
         def rem(self, a, b):
-            """Remainder of `a` and `b`, implies nothing.  """
+            """
+            Remainder of `a` and `b`, implies nothing.
+
+            Example
+            =======
+            >>> import gmpy
+            >>> from sympy.polys.algebratools import QQ_gmpy
+            >>> QQ_gmpy().rem(gmpy.mpq(3, 2), gmpy.mpq(5, 6))
+            0/1
+            >>> type(QQ_gmpy().rem(gmpy.mpq(3, 2), gmpy.mpq(5, 6)))
+            <type 'mpq'>
+            """
             return self.zero
 
         def div(self, a, b):
-            """Division of `a` and `b`, implies `__div__`. """
+            """
+            Division of `a` and `b`, implies `__div__`.
+
+            Example
+            =======
+            >>> import gmpy
+            >>> from sympy.polys.algebratools import QQ_gmpy
+            >>> QQ_gmpy().div(gmpy.mpq(3, 2), gmpy.mpq(5, 6))
+            (9/5, 0/1)
+            >>> map(type, QQ_gmpy().div(gmpy.mpq(3, 2), gmpy.mpq(5, 6)))
+            [<type 'mpq'>, <type 'mpq'>]
+             """
             return gmpy_rat(a.qdiv(b)), self.zero
 
         def numer(self, a):
-            """Returns numerator of `a`. """
+            """
+            Returns numerator of `a`.
+
+            Example
+            =======
+            >>> import gmpy
+            >>> from sympy.polys.algebratools import QQ_gmpy
+            >>> QQ_gmpy().numer(gmpy.mpq(3, 2))
+            3
+            >>> type(QQ_gmpy().numer(gmpy.mpq(3, 2)))
+            <type 'mpz'>
+            """
             return gmpy_numer(a)
 
         def denom(self, a):
-            """Returns denominator of `a`. """
+            """Returns denominator of `a`.
+
+            Example
+            =======
+            >>> import gmpy
+            >>> from sympy.polys.algebratools import QQ_gmpy
+            >>> QQ_gmpy().denom(gmpy.mpq(3, 2))
+            2
+            >>> type(QQ_gmpy().denom(gmpy.mpq(3, 2)))
+            <type 'mpz'>
+            """
             return gmpy_denom(a)
 
         def factorial(self, a):
-            """Returns factorial of `a`. """
+            """Returns factorial of `a`.
+
+            Example
+            =======
+            >>> import gmpy
+            >>> from sympy.polys.algebratools import QQ_gmpy
+            >>> QQ_gmpy().factorial(gmpy.mpq(4, 1))
+            24/1
+            >>> type(QQ_gmpy().factorial(gmpy.mpq(4, 1)))
+            <type 'mpq'>
+            """
             return gmpy_rat(gmpy_factorial(int(a)))
 
 class RealAlgebra(Algebra):
@@ -1228,11 +2223,33 @@ class RR_sympy(RealAlgebra):
         pass
 
     def to_sympy(self, a):
-        """Convert `a` to a SymPy object. """
+        """
+        Convert `a` to a SymPy object.
+
+        Example
+        =======
+        >>> from sympy import Real
+        >>> from sympy.polys.algebratools import RR_sympy
+        >>> RR_sympy().to_sympy(Real(1.5))
+        1.50000000000000
+        >>> type(RR_sympy().to_sympy(Real(1.5)))
+        <class 'sympy.core.numbers.Real'>
+        """
         return a
 
     def from_sympy(self, a):
-        """Convert SymPy's Integer to `dtype`. """
+        """
+        Convert SymPy's Integer to `dtype` (`Real`).
+
+        Example
+        =======
+        >>> from sympy import Real, Rational
+        >>> from sympy.polys.algebratools import RR_sympy
+        >>> RR_sympy().from_sympy(Rational(3, 2))
+        1.50000000000000
+        >>> type(RR_sympy().from_sympy(Rational(3, 2)))
+        <class 'sympy.core.numbers.Real'>
+        """
         b = a.evalf()
 
         if b.is_Real and b not in [S.Infinity, S.NegativeInfinity]:
@@ -1241,35 +2258,138 @@ class RR_sympy(RealAlgebra):
             raise CoercionFailed("expected Real object, got %s" % a)
 
     def from_ZZ_python(K1, a, K0):
-        """Convert a Python `int` object to `dtype`. """
+        """
+        Convert a Python `int` object to `dtype` (`Real`).
+
+        Example
+        =======
+        >>> from sympy.polys.algebratools import RR_sympy, ZZ_python
+        >>> RR_sympy().from_ZZ_python(2, ZZ_python())
+        2
+        >>> type(RR_sympy().from_ZZ_python(2, ZZ_python()))
+        <class 'sympy.core.numbers.Integer'>
+        """
         return sympy_mpf(a)
 
     def from_QQ_python(K1, a, K0):
-        """Convert a Python `Fraction` object to `dtype`. """
+        """
+        Convert a Python `Fraction` object to `dtype` (`Real`).
+
+        Example
+        =======
+        >>> from sympy import Rational
+        >>> try:
+        ...     import fractions # fractions only exists in >= Python 2.6
+        ...     from sympy.polys.algebratools import RR_sympy, QQ_python
+        ...     a = RR_sympy().from_QQ_python(fractions.Fraction(3, 2),
+        ...     QQ_python())
+        ... except ImportError:
+        ...     a = Rational(3, 2)
+        >>> a
+        3/2
+        >>> type(a)
+        <class 'sympy.core.numbers.Rational'>
+        """
         return sympy_mpf(a.numerator) / a.denominator
 
     def from_ZZ_sympy(K1, a, K0):
-        """Convert a SymPy `Integer` object to `dtype`. """
+        """
+        Convert a SymPy `Integer` object to `dtype` (`Real`).
+
+        Example
+        =======
+        >>> from sympy import Integer
+        >>> from sympy.polys.algebratools import RR_sympy, ZZ_sympy
+        >>> RR_sympy().from_ZZ_sympy(Integer(2), ZZ_sympy())
+        2
+        >>> type(RR_sympy().from_ZZ_sympy(Integer(2), ZZ_sympy()))
+        <class 'sympy.core.numbers.Integer'>
+        """
         return sympy_mpf(a.p)
 
     def from_QQ_sympy(K1, a, K0):
-        """Convert a SymPy `Rational` object to `dtype`. """
-        return sympy_mpf(a.p) / a.q
+        """
+        Convert a SymPy `Rational` object to `dtype` (`Real`).
+
+        Example
+        =======
+        >>> from sympy import Rational
+        >>> from sympy.polys.algebratools import RR_sympy, QQ_sympy
+        >>> RR_sympy().from_QQ_sympy(Rational(3, 2), QQ_sympy())
+        1.50000000000000
+        >>> type(RR_sympy().from_QQ_sympy(Rational(3, 2), QQ_sympy()))
+        <class 'sympy.core.numbers.Real'>
+        """
+        return sympy_mpf(a)
 
     def from_ZZ_gmpy(K1, a, K0):
-        """Convert a GMPY `mpz` object to `dtype`. """
+        """
+        Convert a GMPY `mpz` object to `dtype` (`Real`).
+
+        Example
+        =======
+        >>> from sympy import Real
+        >>> try:
+        ...     import gmpy
+        ...     from sympy.polys.algebratools import RR_sympy, ZZ_gmpy
+        ...     a = RR_sympy().from_ZZ_gmpy(gmpy.mpz(2), ZZ_gmpy())
+        ... except ImportError:
+        ...     a = Real(2)
+        >>> a
+        2
+        >>> type(a)
+        <class 'sympy.core.numbers.Integer'>
+        """
         return sympy_mpf(int(a))
 
     def from_QQ_gmpy(K1, a, K0):
-        """Convert a GMPY `mpq` object to `dtype`. """
+        """
+        Convert a GMPY `mpq` object to `dtype` (`Real`).
+
+        Example
+        =======
+        >>> from sympy import Rational
+        >>> try:
+        ...     import gmpy
+        ...     from sympy.polys.algebratools import RR_sympy, QQ_gmpy
+        ...     a = RR_sympy().from_QQ_gmpy(gmpy.mpq(3, 2), QQ_gmpy())
+        ... except ImportError:
+        ...     a = Rational(3, 2)
+        >>> a
+        3/2
+        >>> type(a)
+        <class 'sympy.core.numbers.Rational'>
+        """
         return sympy_mpf(int(a.numer())) / int(a.denom())
 
     def from_RR_sympy(K1, a, K0):
-        """Convert a SymPy `Real` object to `dtype`. """
+        """
+        Convert a SymPy `Real` object to `dtype` (`Real`).
+
+        Example
+        =======
+        >>> from sympy import Real
+        >>> from sympy.polys.algebratools import RR_sympy
+        >>> RR_sympy().from_RR_sympy(Real(1.5), RR_sympy())
+        1.50000000000000
+        >>> type(RR_sympy().from_RR_sympy(Real(1.5), RR_sympy()))
+        <class 'sympy.core.numbers.Real'>
+        """
         return a
 
     def from_RR_mpmath(K1, a, K0):
-        """Convert a mpmath `mpf` object to `dtype`. """
+        """
+        Convert a mpmath `mpf` object to `dtype` (`Real`).
+
+        Example
+        =======
+        >>> from sympy.mpmath import mpf
+        >>> from sympy.polys.algebratools import RR_sympy, RR_mpmath
+        >>> RR_sympy().from_RR_mpmath(mpf(1.5), RR_mpmath())
+        1.50000000000000
+        >>> type(RR_sympy().from_RR_mpmath(mpf(1.5), RR_mpmath()))
+        <class 'sympy.core.numbers.Real'>
+        """
         return sympy_mpf(a)
 
 from sympy.mpmath import (
@@ -1287,11 +2407,33 @@ class RR_mpmath(RealAlgebra):
         pass
 
     def to_sympy(self, a):
-        """Convert `a` to a SymPy object. """
+        """
+        Convert `a` to a SymPy object.
+
+        Example
+        =======
+        >>> from sympy.mpmath import mpf
+        >>> from sympy.polys.algebratools import RR_mpmath
+        >>> RR_mpmath().to_sympy(mpf(1.5))
+        1.50000000000000
+        >>> type(RR_mpmath().to_sympy(mpf(1.5)))
+        <class 'sympy.core.numbers.Real'>
+        """
         return sympy_mpf(a)
 
     def from_sympy(self, a):
-        """Convert SymPy's Integer to `dtype`. """
+        """
+        Convert SymPy's Integer to `dtype` (`mpf`)
+
+        Example
+        =======
+        >>> from sympy import Real
+        >>> from sympy.polys.algebratools import RR_mpmath
+        >>> RR_mpmath().from_sympy(Real(1.5))
+        1.5
+        >>> type(RR_mpmath().from_sympy(Real(1.5)))
+        <class 'sympy.mpmath.ctx_mp_python.mpf'>
+        """
         b = a.evalf()
 
         if b.is_Real and b not in [S.Infinity, S.NegativeInfinity]:
@@ -1300,35 +2442,138 @@ class RR_mpmath(RealAlgebra):
             raise CoercionFailed("expected Real object, got %s" % a)
 
     def from_ZZ_python(K1, a, K0):
-        """Convert a Python `int` object to `dtype`. """
+        """
+        Convert a Python `int` object to `dtype` (`mpf`)
+
+        Example
+        =======
+        >>> from sympy.polys.algebratools import RR_mpmath, ZZ_python
+        >>> RR_mpmath().from_ZZ_python(2, ZZ_python())
+        2.0
+        >>> type(RR_mpmath().from_ZZ_python(2, ZZ_python()))
+        <class 'sympy.mpmath.ctx_mp_python.mpf'>
+        """
         return mpmath_mpf(a)
 
     def from_QQ_python(K1, a, K0):
-        """Convert a Python `Fraction` object to `dtype`. """
+        """
+        Convert a Python `Fraction` object to `dtype` (`mpf`)
+
+        Example
+        =======
+        >>> from sympy.mpmath import mpf
+        >>> try:
+        ...     import fractions # fractions only exists in >= Python 2.6
+        ...     from sympy.polys.algebratools import RR_mpmath, QQ_python
+        ...     a = RR_mpmath().from_QQ_python(fractions.Fraction(3, 2),
+        ...     QQ_python())
+        ... except ImportError:
+        ...     a = mpf(1.5)
+        >>> a
+        1.5
+        >>> type(a)
+        <class 'sympy.mpmath.ctx_mp_python.mpf'>
+        """
         return mpmath_mpf(a.numerator) / a.denominator
 
     def from_ZZ_sympy(K1, a, K0):
-        """Convert a SymPy `Integer` object to `dtype`. """
+        """
+        Convert a SymPy `Integer` object to `dtype` (`mpf`)
+
+        Example
+        =======
+        >>> from sympy import Integer
+        >>> from sympy.polys.algebratools import RR_mpmath, ZZ_sympy
+        >>> RR_mpmath().from_ZZ_sympy(Integer(2), ZZ_sympy())
+        2.0
+        >>> type(RR_mpmath().from_ZZ_sympy(Integer(2), ZZ_sympy()))
+        <class 'sympy.mpmath.ctx_mp_python.mpf'>
+        """
         return mpmath_mpf(a.p)
 
     def from_QQ_sympy(K1, a, K0):
-        """Convert a SymPy `Rational` object to `dtype`. """
+        """
+        Convert a SymPy `Rational` object to `dtype` (`mpf`)
+
+        Example
+        =======
+        >>> from sympy import Rational
+        >>> from sympy.polys.algebratools import RR_mpmath, QQ_sympy
+        >>> RR_mpmath().from_QQ_sympy(Rational(3, 2), QQ_sympy())
+        1.5
+        >>> type(RR_mpmath().from_QQ_sympy(Rational(3, 2), QQ_sympy()))
+        <class 'sympy.mpmath.ctx_mp_python.mpf'>
+        """
         return mpmath_mpf(a.p) / a.q
 
     def from_ZZ_gmpy(K1, a, K0):
-        """Convert a GMPY `mpz` object to `dtype`. """
+        """
+        Convert a GMPY `mpz` object to `dtype` (`mpf`)
+
+        Example
+        =======
+        >>> from sympy.mpmath import mpf
+        >>> try:
+        ...     import gmpy
+        ...     from sympy.polys.algebratools import RR_mpmath, ZZ_gmpy
+        ...     a = RR_mpmath().from_ZZ_gmpy(gmpy.mpz(2), ZZ_gmpy())
+        ... except ImportError:
+        ...     a = mpf(2)
+        >>> a
+        2.0
+        >>> type(a)
+        <class 'sympy.mpmath.ctx_mp_python.mpf'>
+        """
         return mpmath_mpf(int(a))
 
     def from_QQ_gmpy(K1, a, K0):
-        """Convert a GMPY `mpq` object to `dtype`. """
+        """
+        Convert a GMPY `mpq` object to `dtype` (`mpf`)
+
+        Example
+        =======
+        >>> from sympy.mpmath import mpf
+        >>> try:
+        ...     import gmpy
+        ...     from sympy.polys.algebratools import RR_mpmath, QQ_gmpy
+        ...     a = RR_mpmath().from_QQ_gmpy(gmpy.mpq(3, 2), QQ_gmpy())
+        ... except ImportError:
+        ...     a = mpf(1.5)
+        >>> a
+        1.5
+        >>> type(a)
+        <class 'sympy.mpmath.ctx_mp_python.mpf'>
+        """
         return mpmath_mpf(int(a.numer())) / int(a.denom())
 
     def from_RR_sympy(K1, a, K0):
-        """Convert a SymPy `Real` object to `dtype`. """
+        """
+        Convert a SymPy `Real` object to `dtype` (`mpf`)
+
+        Example
+        =======
+        >>> from sympy import Real
+        >>> from sympy.polys.algebratools import RR_mpmath, RR_sympy
+        >>> RR_mpmath().from_RR_sympy(Real(1.5), RR_sympy())
+        1.5
+        >>> type(RR_mpmath().from_RR_sympy(Real(1.5), RR_sympy()))
+        <class 'sympy.mpmath.ctx_mp_python.mpf'>
+        """
         return mpmath_mpf(a)
 
     def from_RR_mpmath(K1, a, K0):
-        """Convert a mpmath `mpf` object to `dtype`. """
+        """
+        Convert a mpmath `mpf` object to `dtype` (`mpf`)
+
+        Example
+        =======
+        >>> from sympy.mpmath import mpf
+        >>> from sympy.polys.algebratools import RR_mpmath
+        >>> RR_mpmath().from_RR_mpmath(mpf(1.5), RR_mpmath())
+        1.5
+        >>> type(RR_mpmath().from_RR_mpmath(mpf(1.5), RR_mpmath()))
+        <class 'sympy.mpmath.ctx_mp_python.mpf'>
+        """
         return a
 
 class FF_float(RealAlgebra): # XXX: tmp solution
