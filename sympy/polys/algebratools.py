@@ -3228,81 +3228,81 @@ class ExpressionDomain(Field):
             else:
                 self.ex = ex.ex
 
-        def __repr__(f):
-            return 'EX(%s)' % repr(f.ex)
+        def __repr__(self):
+            return 'EX(%s)' % repr(self.ex)
 
-        def __str__(f):
-            return 'EX(%s)' %str(f.ex)
+        def __str__(self):
+            return 'EX(%s)' %str(self.ex)
 
         def __hash__(self):
             return hash((self.__class__.__name__, self.ex))
 
-        def as_basic(f):
-            return f.ex
+        def as_basic(self):
+            return self.ex
 
-        def numer(f):
-            return EX(f.ex.as_numer_denom()[0])
+        def numer(self):
+            return EX(self.ex.as_numer_denom()[0])
 
-        def denom(f):
-            return EX(f.ex.as_numer_denom()[1])
+        def denom(self):
+            return EX(self.ex.as_numer_denom()[1])
 
-        def simplify(f, ex):
+        def simplify(self, ex):
             from sympy import cancel
-            return f.__class__(cancel(ex))
+            return self.__class__(cancel(ex))
 
-        def __abs__(f):
-            return f.__class__(abs(f.ex))
+        def __abs__(self):
+            return self.__class__(abs(self.ex))
 
-        def __neg__(f):
-            return f.__class__(-f.ex)
+        def __neg__(self):
+            return self.__class__(-self.ex)
 
-        def __add__(f, g):
-            return f.simplify(f.ex+f.__class__(g).ex)
+        def __add__(self, g):
+            return self.simplify(self.ex+self.__class__(g).ex)
 
-        def __radd__(f, g):
-            return f.simplify(f.__class__(g).ex+f.ex)
+        def __radd__(self, g):
+            return self.simplify(self.__class__(g).ex+self.ex)
 
-        def __sub__(f, g):
-            return f.simplify(f.ex-f.__class__(g).ex)
+        def __sub__(self, g):
+            return self.simplify(self.ex-self.__class__(g).ex)
 
-        def __rsub__(f, g):
-            return f.simplify(f.__class__(g).ex-f.ex)
+        def __rsub__(self, g):
+            return self.simplify(self.__class__(g).ex-self.ex)
 
-        def __mul__(f, g):
-            return f.simplify(f.ex*f.__class__(g).ex)
+        def __mul__(self, g):
+            return self.simplify(self.ex*self.__class__(g).ex)
 
-        def __rmul__(f, g):
-            return f.simplify(f.__class__(g).ex*f.ex)
+        def __rmul__(self, g):
+            return self.simplify(self.__class__(g).ex*self.ex)
 
-        def __pow__(f, n):
-            return f.simplify(f.ex**n)
+        def __pow__(self, n):
+            return self.simplify(self.ex**n)
 
-        def __div__(f, g):
-            return f.simplify(f.ex/f.__class__(g).ex)
+        def __div__(self, g):
+            return self.simplify(self.ex/self.__class__(g).ex)
 
-        def __rdiv__(f, g):
-            return f.simplify(f.__class__(g).ex/f.ex)
+        def __rdiv__(self, g):
+            return self.simplify(self.__class__(g).ex/self.ex)
 
-        def __truediv__(f, g):
-            return f.simplify(f.ex/f.__class__(g).ex)
+        def __truediv__(self, g):
+            return self.simplify(self.ex/self.__class__(g).ex)
 
-        def __rtruediv__(f, g):
-            return f.simplify(f.__class__(g).ex/f.ex)
+        def __rtruediv__(self, g):
+            return self.simplify(self.__class__(g).ex/self.ex)
 
-        def __eq__(f, g):
-            return f.ex == f.__class__(g).ex
+        def __eq__(self, g):
+            return self.ex == self.__class__(g).ex
 
-        def __req__(f, g):
-            return f.__class__(g).ex == f.ex
+        def __req__(self, g):
+            return self.__class__(g).ex == self.ex
 
-        def __ne__(f, g):
-            return f.ex != f.__class__(g).ex
+        def __ne__(self, g):
+            return self.ex != self.__class__(g).ex
 
-        def __rne__(f, g):
-            return f.__class__(g).ex != f.ex
+        def __rne__(self, g):
+            return self.__class__(g).ex != self.ex
 
-        def __nonzero__(f):
-            return f.ex != 0
+        def __nonzero__(self):
+            return self.ex != 0
 
     dtype = Expression
 
