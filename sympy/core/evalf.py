@@ -1110,6 +1110,7 @@ def N(x, n=15, **options):
     Calls x.evalf(n, **options).
 
     Both .evalf() and N() are equivalent, use the one that you like better.
+    See also the docstring of .evalf() for information on the options.
 
     Example:
     >>> from sympy import Sum, Symbol, oo, N
