@@ -903,6 +903,9 @@ class Integer(Rational):
     def __rmod__(self, other):
         return Integer(other % self.p)
 
+    def __divmod__(self, other):
+        return divmod(self.p, other.p)
+
     # TODO make it decorator + bytecodehacks?
     def __add__(a, b):
         if isinstance(b, (int, long)):
