@@ -920,7 +920,7 @@ class Algebra(object):
         Example
         =======
         >>> from sympy.polys.algebratools import CC
-        >>> CC.real(CC(1 + 2j))
+        >>> CC.real(CC(1+2j))
         1.0
         """
         return a
@@ -932,7 +932,7 @@ class Algebra(object):
         Example
         =======
         >>> from sympy.polys.algebratools import CC
-        >>> CC.imag(CC(1 + 2j))
+        >>> CC.imag(CC(1+2j))
         2.0
         """
         return self.zero
@@ -2805,7 +2805,15 @@ class RealAlgebra(Algebra):
     has_CharacteristicZero = True
 
     def as_integer_ratio(self, a, **args):
-        """Convert real number to a (numer, denom) pair. """
+        """
+        Convert real number to a (numer, denom) pair.
+
+        Example
+        =======
+        >>> from sympy.polys.algebratools import RR
+        >>> RR.as_integer_ratio(1.5)
+        (3, 2)
+        """
         v, n = math.frexp(a) # XXX: hack, will work only for floats
 
         for i in xrange(300):
@@ -2831,7 +2839,15 @@ class RealAlgebra(Algebra):
             return n, d
 
     def limit_denom(self, n, d, **args):
-        """Find closest rational to `n/d` (up to `max_denom`). """
+        """
+        Find closest rational to `n/d` (up to `max_denom`).
+
+        Example
+        =======
+        >>> from sympy.polys.algebratools import RR
+        >>> RR.limit_denom(4521, 2045, max_denom=100)
+        (42, 19)
+        """
         max_denom = args.get('max_denom', 1000000)
 
         if d <= max_denom:
@@ -2864,31 +2880,91 @@ class RealAlgebra(Algebra):
             return P1, Q1
 
     def get_ring(self):
-        """Returns a ring associated with `self`. """
+        """
+        Returns a ring associated with `self`.
+
+        Example
+        =======
+        >>> from sympy.polys.algebratools import RR
+        >>> RR.get_ring()
+        Traceback (most recent call last):
+        ...
+        DomainError: there is no ring associated with RR
+        """
         raise DomainError('there is no ring associated with %s' % self)
 
     def get_field(self):
-        """Returns a field associated with `self`. """
+        """
+        Returns a field associated with `self`.
+
+        Example
+        =======
+        >>> from sympy.polys.algebratools import RR
+        >>> RR.get_field()
+        Traceback (most recent call last):
+        ...
+        DomainError: there is no field associated with RR
+        """
         raise DomainError('there is no field associated with %s' % self)
 
     def get_exact(self):
-        """Returns an exact domain associated with `self`. """
+        """
+        Returns an exact domain associated with `self`.
+
+        Example
+        =======
+        >>> from sympy.polys.algebratools import RR
+        >>> RR.get_exact()
+        QQ
+        """
         return QQ
 
     def exquo(self, a, b):
-        """Exact quotient of `a` and `b`, implies `__div__`.  """
+        """
+        Exact quotient of `a` and `b`, implies `__div__`.
+
+        Example
+        =======
+        >>> from sympy.polys.algebratools import RR
+        >>> RR.exquo(RR(5.5), RR(5.0))
+        1.1
+        """
         return a / b
 
     def quo(self, a, b):
-        """Quotient of `a` and `b`, implies `__div__`. """
+        """
+        Quotient of `a` and `b`, implies `__div__`.
+
+        Example
+        =======
+        >>> from sympy.polys.algebratools import RR
+        >>> RR.quo(RR(5.5), RR(5.0))
+        1.1
+        """
         return a / b
 
     def rem(self, a, b):
-        """Remainder of `a` and `b`, implies nothing.  """
+        """
+        Remainder of `a` and `b`, implies nothing.
+
+        Example
+        =======
+        >>> from sympy.polys.algebratools import RR
+        >>> RR.rem(RR(5.5), RR(5.0))
+        0.0
+        """
         return self.zero
 
     def div(self, a, b):
-        """Division of `a` and `b`, implies `__div__`. """
+        """
+        Division of `a` and `b`, implies `__div__`.
+
+        Example
+        =======
+        >>> from sympy.polys.algebratools import RR
+        >>> RR.div(RR(5.5), RR(5.0))
+        (1.1, 0.0)
+        """
         return a / b, self.zero
 
 from sympy import (
@@ -3274,17 +3350,49 @@ class FF_float(RealAlgebra): # XXX: tmp solution
         pass
 
     def normal(self, a):
+        """
+        Normalize `a` with respect to `self`.
+
+        Example
+        =======
+        >>> from sympy.polys.algebratools import FF
+        >>> FF.normal(1.0)
+        1.0
+        >>> FF.normal(1e-20)
+        0.0
+        """
         if abs(a) < 1e-15:
             return self.zero
         else:
             return self.dtype(a)
 
     def to_sympy(self, a):
-        """Convert `a` to a SymPy object. """
+        """
+        Convert `a` to a SymPy object.
+
+        Example
+        =======
+        >>> from sympy.polys.algebratools import FF
+        >>> FF.to_sympy(1.5)
+        1.50000000000000
+        >>> type(FF.to_sympy(1.5))
+        <class 'sympy.core.numbers.Real'>
+        """
         return sympy_mpf(a)
 
     def from_sympy(self, a):
-        """Convert SymPy's Integer to `dtype`. """
+        """
+        Convert SymPy's Integer to `dtype` (`float`).
+
+        Example
+        =======
+        >>> from sympy import Real
+        >>> from sympy.polys.algebratools import FF
+        >>> FF.from_sympy(Real(1.5))
+        1.5
+        >>> type(FF.from_sympy(Real(1.5)))
+        <type 'float'>
+        """
         b = a.evalf()
 
         if b.is_Real and b not in [S.Infinity, S.NegativeInfinity]:
@@ -3293,38 +3401,146 @@ class FF_float(RealAlgebra): # XXX: tmp solution
             raise CoercionFailed("expected Real object, got %s" % a)
 
     def from_ZZ_python(K1, a, K0):
-        """Convert a Python `int` object to `dtype`. """
+        """
+        Convert a Python `int` object to `dtype` (`float`).
+
+        Example
+        =======
+        >>> from sympy.polys.algebratools import FF, ZZ_python
+        >>> FF.from_ZZ_python(2, ZZ_python())
+        2.0
+        >>> type(FF.from_ZZ_python(2, ZZ_python()))
+        <type 'float'>
+        """
         return K1.dtype(a)
 
     def from_QQ_python(K1, a, K0):
-        """Convert a Python `Fraction` object to `dtype`. """
+        """
+        Convert a Python `Fraction` object to `dtype` (`float`).
+
+        Example
+        =======
+        >>> try:
+        ...     import fractions # fractions only exists in >= Python 2.6
+        ...     from sympy.polys.algebratools import FF, QQ_python
+        ...     a = FF.from_QQ_python(fractions.Fraction(3, 2), QQ_python())
+        ... except ImportError:
+        ...     a = 1.5
+        >>> a
+        1.5
+        >>> type(a)
+        <type 'float'>
+        """
         return K1.dtype(a.numerator) / a.denominator
 
     def from_ZZ_sympy(K1, a, K0):
-        """Convert a SymPy `Integer` object to `dtype`. """
+        """
+        Convert a SymPy `Integer` object to `dtype` (`float`).
+
+        Example
+        =======
+        >>> from sympy import Integer
+        >>> from sympy.polys.algebratools import FF, ZZ_sympy
+        >>> FF.from_ZZ_sympy(Integer(2), ZZ_sympy())
+        2.0
+        >>> type(FF.from_ZZ_sympy(Integer(2), ZZ_sympy()))
+        <type 'float'>
+        """
         return K1.dtype(a.p)
 
     def from_QQ_sympy(K1, a, K0):
-        """Convert a SymPy `Rational` object to `dtype`. """
+        """
+        Convert a SymPy `Rational` object to `dtype` (`float`).
+
+        Example
+        =======
+        >>> from sympy import Rational
+        >>> from sympy.polys.algebratools import FF, QQ_sympy
+        >>> FF.from_QQ_sympy(Rational(3, 2), QQ_sympy())
+        1.5
+        >>> type(FF.from_QQ_sympy(Rational(3, 2), QQ_sympy()))
+        <type 'float'>
+        """
         return K1.dtype(a.p) / a.q
 
     def from_ZZ_gmpy(K1, a, K0):
-        """Convert a GMPY `mpz` object to `dtype`. """
+        """
+        Convert a GMPY `mpz` object to `dtype` (`float`).
+
+        Example
+        =======
+        >>> try:
+        ...     import gmpy
+        ...     from sympy.polys.algebratools import FF, ZZ_gmpy
+        ...     a = FF.from_ZZ_gmpy(gmpy.mpz(2), ZZ_gmpy())
+        ... except ImportError:
+        ...     a = 2.0
+        >>> a
+        2.0
+        >>> type(a)
+        <type 'float'>
+        """
         return K1.dtype(int(a))
 
     def from_QQ_gmpy(K1, a, K0):
-        """Convert a GMPY `mpq` object to `dtype`. """
-        return K1.dtype(int(a.numer())) / int(a.denom)
+        """
+        Convert a GMPY `mpq` object to `dtype` (`float`).
+
+        Example
+        =======
+        >>> try:
+        ...     import gmpy
+        ...     from sympy.polys.algebratools import FF, QQ_gmpy
+        ...     a = FF.from_QQ_gmpy(gmpy.mpq(3, 2), QQ_gmpy())
+        ... except ImportError:
+        ...     a = 1.5
+        >>> a
+        1.5
+        >>> type(a)
+        <type 'float'>
+        """
+        return K1.dtype(int(a.numer())) / int(a.denom())
 
     def from_RR_sympy(K1, a, K0):
-        """Convert a SymPy `Real` object to `dtype`. """
+        """
+        Convert a SymPy `Real` object to `dtype` (`float`).
+
+        Example
+        =======
+        >>> from sympy import Real
+        >>> from sympy.polys.algebratools import FF, RR_sympy
+        >>> FF.from_RR_sympy(Real(1.5), RR_sympy())
+        1.5
+        >>> type(FF.from_RR_sympy(Real(1.5), RR_sympy()))
+        <type 'float'>
+        """
         return K1.dtype(a)
 
     def from_RR_mpmath(K1, a, K0):
-        """Convert a mpmath `mpf` object to `dtype`. """
+        """
+        Convert a mpmath `mpf` object to `dtype` (`float`).
+
+        Example
+        =======
+        >>> from sympy.mpmath import mpf
+        >>> from sympy.polys.algebratools import FF, RR_mpmath
+        >>> FF.from_RR_mpmath(mpf(1.5), RR_mpmath())
+        1.5
+        >>> type(FF.from_RR_mpmath(mpf(1.5), RR_mpmath()))
+        <type 'float'>
+        """
         return K1.dtype(a)
 
     def complex_domain(self):
+        """
+        Returns a complex domain associated with `self`.
+
+        Example
+        =======
+        >>> from sympy.polys.algebratools import FF
+        >>> FF.complex_domain()
+        CC
+        """
         return CC
 
 sympy_mpc = lambda a: sympy_mpf(a.real) + sympy_mpf(a.imag)*S.ImaginaryUnit
@@ -3342,11 +3558,32 @@ class CC_complex(RealAlgebra): # XXX: tmp solution
         pass
 
     def to_sympy(self, a):
-        """Convert `a` to a SymPy object. """
+        """
+        Convert `a` to a SymPy object.
+
+        Example
+        =======
+        >>> from sympy.polys.algebratools import CC
+        >>> CC.to_sympy(1+2j)
+        1.0 + 2.0*I
+        >>> type(CC.to_sympy(1+2j))
+        <class 'sympy.core.add.Add'>
+        """
         return sympy_mpc(a)
 
     def from_sympy(self, a):
-        """Convert SymPy's Integer to `dtype`. """
+        """
+        Convert SymPy's Integer to `dtype` (`complex`)
+
+        Example
+        =======
+        >>> from sympy import Real, I
+        >>> from sympy.polys.algebratools import CC
+        >>> CC.from_sympy(Real(1.0) + Real(2.0)*I)
+        (1+2j)
+        >>> type(CC.from_sympy(Real(1.0) + Real(2.0)*I))
+        <type 'complex'>
+        """
         b = a.evalf()
         r, i = a.as_real_imag()
         r, i = map(sympy_mpf, (r, i))
@@ -3363,44 +3600,172 @@ class CC_complex(RealAlgebra): # XXX: tmp solution
         return complex(R, I)
 
     def from_ZZ_python(K1, a, K0):
-        """Convert a Python `int` object to `dtype`. """
+        """
+        Convert a Python `int` object to `dtype` (`complex`)
+
+        Example
+        =======
+        >>> from sympy.polys.algebratools import CC, ZZ_python
+        >>> CC.from_ZZ_python(1, ZZ_python())
+        (1+0j)
+        >>> type(CC.from_ZZ_python(1, ZZ_python()))
+        <type 'complex'>
+        """
         return K1.dtype(a)
 
     def from_QQ_python(K1, a, K0):
-        """Convert a Python `Fraction` object to `dtype`. """
+        """
+        Convert a Python `Fraction` object to `dtype` (`complex`)
+
+        Example
+        =======
+        >>> try:
+        ...     import fractions # fractions only exists in >= Python 2.6
+        ...     from sympy.polys.algebratools import CC, QQ_python
+        ...     a = CC.from_QQ_python(fractions.Fraction(3, 2), QQ_python())
+        ... except ImportError:
+        ...     a = 1.5+0j
+        >>> a
+        (1.5+0j)
+        >>> type(a)
+        <type 'complex'>
+        """
         return K1.dtype(a.numerator) / a.denominator
 
     def from_ZZ_sympy(K1, a, K0):
-        """Convert a SymPy `Integer` object to `dtype`. """
+        """
+        Convert a SymPy `Integer` object to `dtype` (`complex`)
+
+        Example
+        =======
+        >>> from sympy import Integer
+        >>> from sympy.polys.algebratools import CC, ZZ_sympy
+        >>> CC.from_ZZ_sympy(Integer(2), ZZ_sympy())
+        (2+0j)
+        >>> type(CC.from_ZZ_sympy(Integer(2), ZZ_sympy()))
+        <type 'complex'>
+        """
         return K1.dtype(a.p)
 
     def from_QQ_sympy(K1, a, K0):
-        """Convert a SymPy `Rational` object to `dtype`. """
+        """
+        Convert a SymPy `Rational` object to `dtype` (`complex`)
+
+        Example
+        =======
+        >>> from sympy import Rational
+        >>> from sympy.polys.algebratools import CC, QQ_sympy
+        >>> CC.from_QQ_sympy(Rational(3, 2), QQ_sympy())
+        (1.5+0j)
+        >>> type(CC.from_QQ_sympy(Rational(3, 2), QQ_sympy()))
+        <type 'complex'>
+        """
         return K1.dtype(a.p) / a.q
 
     def from_ZZ_gmpy(K1, a, K0):
-        """Convert a GMPY `mpz` object to `dtype`. """
+        """
+        Convert a GMPY `mpz` object to `dtype` (`complex`)
+
+        Example
+        =======
+        >>> try:
+        ...     import gmpy
+        ...     from sympy.polys.algebratools import CC, ZZ_gmpy
+        ...     a = CC.from_ZZ_gmpy(gmpy.mpz(2), ZZ_gmpy())
+        ... except ImportError:
+        ...     a = 2+0j
+        >>> a
+        (2+0j)
+        >>> type(a)
+        <type 'complex'>
+        """
         return K1.dtype(int(a))
 
     def from_QQ_gmpy(K1, a, K0):
-        """Convert a GMPY `mpq` object to `dtype`. """
-        return K1.dtype(int(a.numer())) / int(a.denom)
+        """
+        Convert a GMPY `mpq` object to `dtype` (`complex`)
+
+        Example
+        =======
+        >>> try:
+        ...     import gmpy
+        ...     from sympy.polys.algebratools import CC, QQ_gmpy
+        ...     a = CC.from_QQ_gmpy(gmpy.mpq(3, 2), QQ_gmpy())
+        ... except ImportError:
+        ...     a = 1.5+0j
+        >>> a
+        (1.5+0j)
+        >>> type(a)
+        <type 'complex'>
+        """
+        return K1.dtype(int(a.numer())) / int(a.denom())
 
     def from_RR_sympy(K1, a, K0):
-        """Convert a SymPy `Real` object to `dtype`. """
+        """
+        Convert a SymPy `Real` object to `dtype` (`complex`)
+
+        Example
+        =======
+        >>> from sympy import Real
+        >>> from sympy.polys.algebratools import CC, RR_sympy
+        >>> CC.from_RR_sympy(Real(1.5), RR_sympy())
+        (1.5+0j)
+        >>> type(CC.from_RR_sympy(Real(1.5), RR_sympy()))
+        <type 'complex'>
+        """
         return K1.dtype(a)
 
     def from_RR_mpmath(K1, a, K0):
-        """Convert a mpmath `mpf` object to `dtype`. """
+        """
+        Convert a mpmath `mpf` object to `dtype` (`complex`)
+
+        Example
+        =======
+        >>> from sympy.mpmath import mpf
+        >>> from sympy.polys.algebratools import CC, RR_mpmath
+        >>> CC.from_RR_mpmath(mpf(1.5), RR_mpmath())
+        (1.5+0j)
+        >>> type(CC.from_RR_mpmath(mpf(1.5), RR_mpmath()))
+        <type 'complex'>
+        """
         return K1.dtype(a)
 
     def from_FF_float(K1, a, K0):
+        """
+        Convert a `FF` object to `dtype` (`complex`)
+
+        Example
+        =======
+        >>> from sympy.polys.algebratools import CC, FF
+        >>> CC.from_FF_float(1.0, FF)
+        (1+0j)
+        >>> type(CC.from_FF_float(1.0, FF))
+        <type 'complex'>
+        """
         return K1.dtype(a)
 
     def real(self, a):
+        """
+        Returns the real part of `a`.
+
+        Example
+        =======
+        >>> from sympy.polys.algebratools import CC
+        >>> CC.real(CC(1+2j))
+        1.0
+        """
         return a.real
 
     def imag(self, a):
+        """
+        Returns the imaginary part of `a`.
+
+        Example
+        =======
+        >>> from sympy.polys.algebratools import CC
+        >>> CC.imag(CC(1+2j))
+        2.0
+        """
         return a.imag
 
 FF = FF_float()
