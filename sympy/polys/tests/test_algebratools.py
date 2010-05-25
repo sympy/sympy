@@ -1,7 +1,7 @@
 """Tests for classes defining properties of ground domains, e.g. ZZ, QQ, ZZ[x] ... """
 
 from sympy.polys.algebratools import (
-    ZZ, QQ, RR, PolynomialRing, FractionField, EX, ZZ_sympy, QQ_sympy
+    ZZ, QQ, RR, CC, PolynomialRing, FractionField, EX, ZZ_sympy, QQ_sympy
 )
 
 from sympy.polys.polyerrors import (
@@ -10,7 +10,7 @@ from sympy.polys.polyerrors import (
     DomainError,
 )
 
-from sympy import S, sqrt, sin, oo, raises, Integer, Rational
+from sympy import S, sqrt, sin, oo, raises, Integer, Rational, I, Real
 
 from sympy.abc import x, y
 
@@ -396,3 +396,12 @@ def test_sympy_of_type():
     assert QQ_sympy().of_type(Rational(2))
     assert QQ_sympy().of_type(Rational(1, 2))
     assert QQ_sympy().of_type(Rational(3, 2))
+
+def test_CC_to_from_sympy():
+    assert CC.from_sympy(Real(1.0)) == 1+0j
+    assert CC.from_sympy(I) == 1j
+    assert CC.from_sympy(2*I) == 2j
+    assert CC.from_sympy(1 + 2*I) == 1+2j
+    assert CC.to_sympy(1+0j) == S.One
+    assert CC.to_sympy(1+2j) == S.One + S(2)*I
+    assert CC.to_sympy(2j) == S(2)*I

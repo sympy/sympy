@@ -3327,6 +3327,8 @@ class FF_float(RealAlgebra): # XXX: tmp solution
     def complex_domain(self):
         return CC
 
+sympy_mpc = lambda a: sympy_mpf(a.real) + sympy_mpf(a.imag)*S.ImaginaryUnit
+
 class CC_complex(RealAlgebra): # XXX: tmp solution
     """Complex domain. """
 
@@ -3341,16 +3343,24 @@ class CC_complex(RealAlgebra): # XXX: tmp solution
 
     def to_sympy(self, a):
         """Convert `a` to a SymPy object. """
-        return sympy_mpf(a)
+        return sympy_mpc(a)
 
     def from_sympy(self, a):
         """Convert SymPy's Integer to `dtype`. """
         b = a.evalf()
-
-        if b.is_Real and b not in [S.Infinity, S.NegativeInfinity]:
-            return float(b)
+        r, i = a.as_real_imag()
+        r, i = map(sympy_mpf, (r, i))
+        if r.is_Real and r not in [S.Infinity, S.NegativeInfinity] or r is S.Zero:
+            R = float(r)
         else:
             raise CoercionFailed("expected Real object, got %s" % a)
+
+        if i.is_Real and i not in [S.Infinity, S.NegativeInfinity] or i is S.Zero:
+            I = float(i)
+        else:
+            raise CoercionFailed("expected Real object, got %s" % a)
+
+        return complex(R, I)
 
     def from_ZZ_python(K1, a, K0):
         """Convert a Python `int` object to `dtype`. """
