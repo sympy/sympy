@@ -108,8 +108,27 @@ class PolynomialRing(Ring, CharacteristicZero, CompositeDomain):
             return K1(dict(zip(monoms, coeffs)))
 
     def from_FractionField(K1, a, K0):
-        """Convert a `DMF` object to `dtype`. """
-        return
+        """
+        Convert a ``DMF`` object to ``DMP``.
+
+        Example
+        =======
+
+        >>> from sympy.abc import x
+        >>> from sympy.polys.polyclasses import DMP, DMF
+        >>> from sympy.polys.algebratools import ZZ
+
+        >>> f = DMF(([ZZ(1), ZZ(1)], [ZZ(1)]), ZZ)
+        >>> F = ZZ[x].from_FractionField(f, ZZ[x])
+
+        >>> F == DMP([ZZ(1), ZZ(1)], ZZ)
+        True
+        >>> type(F)
+        <class 'sympy.polys.polyclasses.DMP'>
+
+        """
+        if a.denom().is_one:
+            return K1.from_PolynomialRing(a.numer(), K0)
 
     def get_field(self):
         """Returns a field associated with `self`. """
