@@ -10,6 +10,8 @@ from sympy.polys.polyerrors import (
     DomainError,
 )
 
+from sympy.polys.polyclasses import DMF, DMP
+
 from sympy import S, sqrt, sin, oo, raises, Integer, Rational, I, Real
 
 from sympy.abc import x, y
@@ -380,6 +382,13 @@ def test_Algebra_convert():
 
 def test_PolynomialRing__init():
     raises(GeneratorsNeeded, "ZZ.poly_ring()")
+
+def test_PolynomialRing_from_FractionField():
+    x = DMF(([1, 0, 1], [1, 1]), ZZ)
+    y = DMF(([1, 0, 1], [1]), ZZ)
+    assert ZZ['x'].from_FractionField(x, ZZ['x']) is None
+    assert ZZ['x'].from_FractionField(y, ZZ['x']) == \
+        DMP([ZZ(1), ZZ(0), ZZ(1)], ZZ)
 
 def test_FractionField__init():
     raises(GeneratorsNeeded, "ZZ.frac_field()")
