@@ -824,12 +824,13 @@ class Integer(Rational):
     # TODO caching with decorator, but not to degrade performance
     @int_trace
     def __new__(cls, i):
+        ival = int(i)
+
         try:
-            return _intcache[i]
+            return _intcache[ival]
         except KeyError:
             # We only work with well-behaved integer types. This converts, for
             # example, numpy.int32 instances.
-            ival = int(i)
             if ival == 0: obj = S.Zero
             elif ival == 1: obj = S.One
             elif ival == -1: obj = S.NegativeOne
@@ -837,7 +838,7 @@ class Integer(Rational):
                 obj = Expr.__new__(cls)
                 obj.p = ival
 
-            _intcache[i] = obj
+            _intcache[ival] = obj
             return obj
 
     def __getnewargs__(self):
