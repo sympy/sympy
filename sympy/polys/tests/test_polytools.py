@@ -56,6 +56,8 @@ from sympy import (
     sin, expand, raises, oo, I, pi, re, im, RootOf,
 )
 
+from sympy.utilities import all
+
 x,y,z,p,q,r,s,t,u,v,w,a,b,c,d,e = symbols('x,y,z,p,q,r,s,t,u,v,w,a,b,c,d,e')
 
 def _eq(a, b):

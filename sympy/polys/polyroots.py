@@ -12,6 +12,8 @@ from sympy.polys import (
     Poly, cancel, PolynomialError, GeneratorsNeeded,
 )
 
+from sympy.utilities import all
+
 def roots_linear(f):
     """Returns a list of roots of a linear polynomial."""
     return [-f.nth(0)/f.nth(1)]

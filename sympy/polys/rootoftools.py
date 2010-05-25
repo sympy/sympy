@@ -21,7 +21,7 @@ from sympy.mpmath import (
     mp, mpf, mpc, mpi, findroot,
 )
 
-from sympy.utilities import lambdify
+from sympy.utilities import lambdify, any
 
 def dup_minpoly_add(f, g, K):
     """ """

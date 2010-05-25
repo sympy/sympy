@@ -983,8 +983,8 @@ def dmp_qq_collins_resultant(f, g, u, K0):
     =======
     >>> from sympy.polys.algebratools import QQ
     >>> from sympy.polys.densetools import dmp_qq_collins_resultant
-    >>> dmp_qq_collins_resultant([[QQ(1, 2)], [1, QQ(2, 3)]], [[2, 1], [3]],
-    ... 1, QQ) == \
+    >>> dmp_qq_collins_resultant([[QQ(1, 2)], [QQ(1), QQ(2, 3)]],
+    ... [[QQ(2), QQ(1)], [QQ(3)]], 1, QQ) == \
     ... [QQ(-2), QQ(-7,3), QQ(5,6)]
     True
     """
@@ -1238,7 +1238,7 @@ def dup_ff_prs_gcd(f, g, K):
     =======
     >>> from sympy.polys.algebratools import QQ
     >>> from sympy.polys.densetools import dup_ff_prs_gcd
-    >>> dup_ff_prs_gcd([1, 0, -1], [1, -3, 2], QQ) == \
+    >>> dup_ff_prs_gcd([QQ(1), QQ(0), QQ(-1)], [QQ(1), QQ(-3), QQ(2)], QQ) == \
     ... ([QQ(1), QQ(-1)], [QQ(1), QQ(1)], [QQ(1), -QQ(2)])
     True
     """
@@ -1307,8 +1307,8 @@ def dmp_ff_prs_gcd(f, g, u, K):
     =======
     >>> from sympy.polys.algebratools import QQ
     >>> from sympy.polys.densetools import dmp_ff_prs_gcd
-    >>> dmp_ff_prs_gcd([[QQ(1, 2)], [QQ(1), 0], [QQ(1, 2), 0, 0]],
-    ... [[1], [1, 0], []], 1, QQ) == \
+    >>> dmp_ff_prs_gcd([[QQ(1, 2)], [QQ(1), QQ(0)], [QQ(1, 2), QQ(0), QQ(0)]],
+    ... [[QQ(1)], [QQ(1), QQ(0)], []], 1, QQ) == \
     ... ([[QQ(1)], [QQ(1), 0]], [[QQ(1,2)], [QQ(1,2), 0]], [[QQ(1)], []])
     True
     """

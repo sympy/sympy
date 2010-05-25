@@ -177,7 +177,7 @@ class Algebra(object):
         =======
         >>> from sympy import S
         >>> from sympy.polys.algebratools import ZZ
-        >>> ZZ.to_sympy(1) is S.One
+        >>> ZZ.to_sympy(ZZ(1)) is S.One
         True
         """
         raise NotImplementedError
@@ -836,7 +836,7 @@ class Algebra(object):
         Example
         =======
         >>> from sympy.polys.algebratools import ZZ
-        >>> ZZ.gcdex(ZZ(12), ZZ(8))
+        >>> tuple(ZZ.gcdex(ZZ(12), ZZ(8)))
         (1, -1, 4)
         """
         raise NotImplementedError

@@ -379,7 +379,7 @@ def dmp_normal(f, u, K):
     return dmp_strip([ dmp_normal(c, v, K) for c in f ], u)
 
 def dup_convert(f, K0, K1):
-    """
+    r"""
     Convert ground domain of `f` from `K0` to `K1`.
 
     Example
@@ -387,10 +387,11 @@ def dup_convert(f, K0, K1):
     >>> from sympy.polys.algebratools import ZZ
     >>> from sympy.polys.polyclasses import DMP
     >>> from sympy.polys.densebasic import dup_convert
-    >>> dup_convert([DMP([1], ZZ), DMP([2], ZZ)], ZZ['x'], ZZ)
+    >>> dup_convert([DMP([ZZ(1)], ZZ), DMP([2], ZZ)], ZZ['x'], ZZ)
     [1, 2]
-    >>> dup_convert([1, 2], ZZ, ZZ['x'])
-    [DMP([1], ZZ), DMP([2], ZZ)]
+    >>> dup_convert([1, 2], ZZ, ZZ['x']) == \
+    ... [DMP([ZZ(1)], ZZ), DMP([ZZ(2)], ZZ)]
+    True
     """
     if K0 is not None and K0 == K1:
         return f
@@ -399,7 +400,7 @@ def dup_convert(f, K0, K1):
 
 @cythonized("u,v")
 def dmp_convert(f, u, K0, K1):
-    """
+    r"""
     Convert ground domain of `f` from `K0` to `K1`.
 
     Example
@@ -407,10 +408,11 @@ def dmp_convert(f, u, K0, K1):
     >>> from sympy.polys.algebratools import ZZ
     >>> from sympy.polys.polyclasses import DMP
     >>> from sympy.polys.densebasic import dmp_convert
-    >>> dmp_convert([[DMP([1], ZZ)], [DMP([2], ZZ)]], 1, ZZ['x'], ZZ)
+    >>> dmp_convert([[DMP([ZZ(1)], ZZ)], [DMP([2], ZZ)]], 1, ZZ['x'], ZZ)
     [[1], [2]]
-    >>> dmp_convert([[1], [2]], 1, ZZ, ZZ['x'])
-    [[DMP([1], ZZ)], [DMP([2], ZZ)]]
+    >>> dmp_convert([[1], [2]], 1, ZZ, ZZ['x']) == \
+    ... [[DMP([ZZ(1)], ZZ)], [DMP([ZZ(2)], ZZ)]]
+    True
     """
     if not u:
         return dup_convert(f, K0, K1)
