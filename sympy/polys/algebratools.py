@@ -16,7 +16,16 @@ from sympy.polys.polyerrors import (
 import math
 
 def factorial(m):
-    """Returns `m!`. """
+    """
+    Returns `m!`.
+
+    Example
+    -------
+
+    >>> from sympy.polys.algebratools import factorial
+    >>> factorial(4)
+    24
+    """
     if not m:
         return 1
 
@@ -79,10 +88,34 @@ class Algebra(object):
         return self.dtype(*args)
 
     def normal(self, *args):
+        """
+        Normalize `a` with respect to `self`.
+
+        Example
+        =======
+        >>> from sympy import Integer
+        >>> from sympy.polys.algebratools import ZZ_python, ZZ_sympy
+        >>> ZZ_python().normal(1)
+        1
+        >>> type(ZZ_python().normal(1))
+        <type 'int'>
+        >>> ZZ_sympy().normal(2)
+        2
+        >>> type(ZZ_sympy().normal(2))
+        <class 'sympy.core.numbers.Integer'>
+        """
         return self.dtype(*args)
 
     def convert(K1, a, K0=None):
-        """Convert an object `a` from `K0` to `K1`. """
+        """
+        Convert an object `a` from `K0` to `K1`.
+
+        Example
+        =======
+        >>> from sympy.polys.algebratools import QQ, ZZ
+        >>> QQ.convert(QQ(2, 1), ZZ) == ZZ(2)
+        True
+        """
         if K0 is not None:
             _convert = getattr(K1, "from_" + K0.__class__.__name__)
 
@@ -137,43 +170,149 @@ class Algebra(object):
         return True
 
     def to_sympy(self, a):
-        """Convert `a` to a SymPy object. """
+        """
+        Convert `a` to a SymPy object.
+
+        Example
+        =======
+        >>> from sympy import S
+        >>> from sympy.polys.algebratools import ZZ
+        >>> ZZ.to_sympy(1) is S.One
+        True
+        """
         raise NotImplementedError
 
     def from_sympy(self, a):
-        """Convert a SymPy object to `dtype`. """
+        """
+        Convert a SymPy object to `dtype`.
+
+        Example
+        =======
+        >>> from sympy import S
+        >>> from sympy.polys.algebratools import ZZ
+        >>> ZZ.from_sympy(S(2))
+        2
+        """
         raise NotImplementedError
 
     def from_ZZ_python(K1, a, K0):
-        """Convert a Python `int` object to `dtype`. """
+        """
+        Convert a Python `int` object to `dtype`.
+
+        Example
+        =======
+        >>> from sympy.polys.algebratools import ZZ, ZZ_python
+        >>> ZZ.from_ZZ_python(2, ZZ_python())
+        2
+        """
         return None
 
     def from_QQ_python(K1, a, K0):
-        """Convert a Python `Fraction` object to `dtype`. """
+        """
+        Convert a Python `Fraction` object to `dtype`.
+
+        Example
+        =======
+        >>> from sympy.polys.algebratools import ZZ
+        >>> try:
+        ...     import fractions # fractions only exists in >= Python 2.6
+        ...     from sympy.polys.algebratools import QQ_python
+        ...     a = ZZ.from_QQ_python(fractions.Fraction(2, 1), QQ_python())
+        ... except ImportError:
+        ...     a = ZZ(2)
+        >>> a
+        2
+        """
         return None
 
     def from_ZZ_sympy(K1, a, K0):
-        """Convert a SymPy `Integer` object to `dtype`. """
+        """
+        Convert a SymPy `Integer` object to `dtype`.
+
+        Example
+        =======
+        >>> from sympy import S
+        >>> from sympy.polys.algebratools import ZZ, ZZ_sympy
+        >>> ZZ.from_ZZ_sympy(S(2), ZZ_sympy())
+        2
+        """
         return None
 
     def from_QQ_sympy(K1, a, K0):
-        """Convert a SymPy `Rational` object to `dtype`. """
+        """
+        Convert a SymPy `Rational` object to `dtype`.
+
+
+        Example
+        =======
+        >>> from sympy import S
+        >>> from sympy.polys.algebratools import QQ, QQ_sympy
+        >>> QQ.from_QQ_sympy(S(3)/2, QQ_sympy())
+        3/2
+        """
         return None
 
     def from_ZZ_gmpy(K1, a, K0):
-        """Convert a GMPY `mpz` object to `dtype`. """
+        """
+        Convert a GMPY `mpz` object to `dtype`.
+
+
+        Example
+        =======
+        >>> from sympy.polys.algebratools import ZZ
+        >>> try:
+        ...     import gmpy
+        ...     from sympy.polys.algebratools import ZZ_gmpy
+        ...     a = ZZ.from_ZZ_gmpy(gmpy.mpz(2), ZZ_gmpy)
+        ... except ImportError:
+        ...     a = ZZ(2)
+        >>> a
+        2
+        """
         return None
 
     def from_QQ_gmpy(K1, a, K0):
-        """Convert a GMPY `mpq` object to `dtype`. """
+        """
+        Convert a GMPY `mpq` object to `dtype`.
+
+        Example
+        =======
+        >>> from sympy.polys.algebratools import QQ
+        >>> try:
+        ...     import gmpy
+        ...     from sympy.polys.algebratools import QQ_gmpy
+        ...     a = QQ.from_QQ_gmpy(gmpy.mpq(3, 2), QQ_gmpy())
+        ... except ImportError:
+        ...     a = QQ(3, 2)
+        >>> a
+        3/2
+        """
         return None
 
     def from_RR_sympy(K1, a, K0):
-        """Convert a SymPy `Real` object to `dtype`. """
+        """
+        Convert a SymPy `Real` object to `dtype`.
+
+        Example
+        =======
+        >>> from sympy import S
+        >>> from sympy.polys.algebratools import ZZ, RR_sympy
+        >>> ZZ.from_RR_sympy(S(1.0), RR_sympy())
+        1
+        """
         return None
 
     def from_RR_mpmath(K1, a, K0):
-        """Convert a mpmath `mpf` object to `dtype`. """
+        """
+        Convert a mpmath `mpf` object to `dtype`.
+
+        Example
+        =======
+        >>> from sympy.mpmath import mpf
+        >>> from sympy.polys.algebratools import ZZ, RR_mpmath
+        >>> ZZ.from_RR_mpmath(1.0, RR_mpmath())
+        1
+        """
         return None
 
     def from_AlgebraicField(K1, a, K0):
@@ -194,7 +333,16 @@ class Algebra(object):
         return K1.from_sympy(a.ex)
 
     def unify(K0, K1, gens=None):
-        """Returns a maximal domain containg `K0` and `K1`. """
+        """
+        Returns a maximal domain containg `K0` and `K1`.
+
+        Example
+        =======
+        >>> from sympy.polys.algebratools import ZZ, QQ
+        >>> from sympy.abc import x
+        >>> ZZ[x].unify(QQ)
+        QQ[x]
+        """
         if gens is not None:
             if (K0.is_Composite and (set(K0.gens) & set(gens))) or (K1.is_Composite and (set(K1.gens) & set(gens))):
                 raise UnificationFailed("can't unify %s with %s, given %s generators" % (K0, K1, tuple(gens)))
@@ -306,21 +454,63 @@ class Algebra(object):
         return self.dtype != other.dtype
 
     def get_ring(self):
-        """Returns a ring associated with `self`. """
+        """
+        Returns a ring associated with `self`.
+
+        Example
+        =======
+        >>> from sympy.polys.algebratools import QQ
+        >>> QQ.get_ring()
+        ZZ
+        """
         raise DomainError('there is no ring associated with %s' % self)
 
     def get_field(self):
-        """Returns a field associated with `self`. """
+        """
+        Returns a field associated with `self`.
+
+        Example
+        =======
+        >>> from sympy.polys.algebratools import ZZ
+        >>> ZZ.get_field()
+        QQ
+        """
         raise DomainError('there is no field associated with %s' % self)
 
     def get_exact(self):
-        """Returns an exact domain associated with `self`. """
+        """
+        Returns an exact domain associated with `self`.
+
+        Example
+        =======
+        >>> from sympy.polys.algebratools import RR
+        >>> RR.get_exact()
+        QQ
+        """
         return self
 
     def float_domain(self):
+        """
+        Returns the floating point domain associated with `self`.
+
+        Example
+        =======
+        >>> from sympy.polys.algebratools import QQ
+        >>> QQ.float_domain()
+        FF
+        """
         return FF
 
     def complex_domain(self):
+        """
+        Returns the complex domain associated with `self`.
+
+        Example
+        =======
+        >>> from sympy.polys.algebratools import QQ
+        >>> QQ.complex_domain()
+        CC
+        """
         return CC
 
     def __getitem__(self, gens):
@@ -331,129 +521,420 @@ class Algebra(object):
             return self.poly_ring(gens)
 
     def poly_ring(self, *gens):
-        """Returns a polynomial ring, i.e. `K[X]`. """
+        """
+        Returns a polynomial ring, i.e. `K[X]`.
+
+        Example
+        =======
+        >>> from sympy.polys.algebratools import ZZ
+        >>> from sympy.abc import x
+        >>> ZZ.poly_ring(x)
+        ZZ[x]
+        >>> ZZ[x]
+        ZZ[x]
+        """
         return PolynomialRing(self, *gens)
 
     def frac_field(self, *gens):
-        """Returns a fraction field, i.e. `K(X)`. """
+        """
+        Returns a fraction field, i.e. `K(X)`.
+
+        Example
+        =======
+        >>> from sympy.polys.algebratools import ZZ
+        >>> from sympy.abc import x
+        >>> ZZ.frac_field(x)
+        ZZ(x)
+        """
         return FractionField(self, *gens)
 
     def algebraic_field(self, *extension):
-        """Returns an algebraic field, i.e. `K(alpha, ...)`. """
+        """
+        Returns an algebraic field, i.e. `K(alpha, ...)`.
+
+        Example
+        =======
+        >>> from sympy import I
+        >>> from sympy.polys.algebratools import QQ
+        >>> QQ.algebraic_field(I)
+        QQ<I>
+        """
         raise DomainError("can't create algebraic field over %s" % self)
 
     def is_zero(self, a):
-        """Returns True if `a` is zero. """
+        """
+        Returns True if `a` is zero.
+
+        Example
+        =======
+        >>> from sympy.polys.algebratools import ZZ
+        >>> ZZ.is_zero(ZZ(0))
+        True
+        >>> ZZ.is_zero(ZZ(1))
+        False
+        """
         return not a
 
     def is_one(self, a):
-        """Returns True if `a` is one. """
+        """
+        Returns True if `a` is one.
+
+        Example
+        =======
+        >>> from sympy.polys.algebratools import ZZ
+        >>> ZZ.is_one(ZZ(1))
+        True
+        >>> ZZ.is_one(ZZ(0))
+        False
+        """
         return a == self.one
 
     def is_positive(self, a):
-        """Returns True if `a` is positive. """
+        """
+        Returns True if `a` is positive.
+
+        Example
+        =======
+        >>> from sympy.polys.algebratools import ZZ
+        >>> ZZ.is_positive(ZZ(2))
+        True
+        >>> ZZ.is_positive(ZZ(0))
+        False
+        >>> ZZ.is_positive(ZZ(-2))
+        False
+        """
         return a > 0
 
     def is_negative(self, a):
-        """Returns True if `a` is negative. """
+        """
+        Returns True if `a` is negative.
+
+        Example
+        =======
+        >>> from sympy.polys.algebratools import ZZ
+        >>> ZZ.is_negative(ZZ(2))
+        False
+        >>> ZZ.is_negative(ZZ(0))
+        False
+        >>> ZZ.is_negative(ZZ(-2))
+        True
+        """
         return a < 0
 
     def is_nonpositive(self, a):
-        """Returns True if `a` is non-positive. """
+        """
+        Returns True if `a` is non-positive.
+
+        Example
+        =======
+        >>> from sympy.polys.algebratools import ZZ
+        >>> ZZ.is_nonpositive(ZZ(2))
+        False
+        >>> ZZ.is_nonpositive(ZZ(0))
+        True
+        >>> ZZ.is_nonpositive(ZZ(-2))
+        True
+        """
         return a <= 0
 
     def is_nonnegative(self, a):
-        """Returns True if `a` is non-negative. """
+        """
+        Returns True if `a` is non-negative.
+
+        Example
+        =======
+        >>> from sympy.polys.algebratools import ZZ
+        >>> ZZ.is_nonnegative(ZZ(2))
+        True
+        >>> ZZ.is_nonnegative(ZZ(0))
+        True
+        >>> ZZ.is_nonnegative(ZZ(-2))
+        False
+        """
         return a >= 0
 
     def abs(self, a):
-        """Absolute value of `a`, implies `__abs__`. """
+        """
+        Absolute value of `a`, implies `__abs__`.
+
+        Example
+        =======
+        >>> from sympy.polys.algebratools import ZZ
+        >>> ZZ.abs(ZZ(-2))
+        2
+        """
         return abs(a)
 
     def neg(self, a):
-        """Returns `a` negated, implies `__neg__`. """
+        """
+        Returns `a` negated, implies `__neg__`.
+
+        Example
+        =======
+        >>> from sympy.polys.algebratools import ZZ
+        >>> ZZ.neg(ZZ(2))
+        -2
+        """
         return -a
 
     def pos(self, a):
-        """Returns `a` positive, implies `__pos__`. """
+        """
+        Returns `a` positive, implies `__pos__`.
+
+        Example
+        =======
+        >>> from sympy.polys.algebratools import ZZ
+        >>> ZZ.pos(ZZ(2))
+        2
+        >>> ZZ.pos(ZZ(-2))
+        -2
+        """
         return +a
 
     def add(self, a, b):
-        """Sum of `a` and `b`, implies `__add__`.  """
+        """
+        Sum of `a` and `b`, implies `__add__`.
+
+        Example
+        =======
+        >>> from sympy.polys.algebratools import ZZ
+        >>> ZZ.add(ZZ(1), ZZ(2))
+        3
+        """
         return a + b
 
     def sub(self, a, b):
-        """Difference of `a` and `b`, implies `__sub__`.  """
+        """
+        Difference of `a` and `b`, implies `__sub__`.
+
+        Example
+        =======
+        >>> from sympy.polys.algebratools import ZZ
+        >>> ZZ.sub(ZZ(1), ZZ(2))
+        -1
+        """
         return a - b
 
     def mul(self, a, b):
-        """Product of `a` and `b`, implies `__mul__`.  """
+        """
+        Product of `a` and `b`, implies `__mul__`.
+
+        Example
+        =======
+        >>> from sympy.polys.algebratools import ZZ
+        >>> ZZ.mul(ZZ(2), ZZ(3))
+        6
+        """
         return a * b
 
     def pow(self, a, b):
-        """Raise `a` to power `b`, implies `__pow__`.  """
+        """
+        Raise `a` to power `b`, implies `__pow__`.
+
+        Example
+        =======
+        >>> from sympy.polys.algebratools import ZZ
+        >>> ZZ.pow(ZZ(2), ZZ(3))
+        8
+        """
         return a ** b
 
     def exquo(self, a, b):
-        """Exact quotient of `a` and `b`, implies something. """
+        """
+        Exact quotient of `a` and `b`, implies something.
+
+        Example
+        =======
+        >>> from sympy.polys.algebratools import ZZ
+        >>> ZZ.exquo(ZZ(3), ZZ(2))
+        1
+        >>> ZZ.exquo(ZZ(4), ZZ(2))
+        2
+        """
         raise NotImplementedError
 
     def quo(self, a, b):
-        """Quotient of `a` and `b`, implies something.  """
+        """
+        Quotient of `a` and `b`, implies something.
+
+        Example
+        =======
+        >>> from sympy.polys.algebratools import ZZ
+        >>> ZZ.quo(ZZ(5), ZZ(2))
+        Traceback (most recent call last):
+        ...
+        ExactQuotientFailed: 2 does not divide 5 in ZZ
+        >>> ZZ.quo(ZZ(4), ZZ(2))
+        2
+        """
         raise NotImplementedError
 
     def rem(self, a, b):
-        """Remainder of `a` and `b`, implies `__mod__`.  """
+        """
+        Remainder of `a` and `b`, implies `__mod__`.
+
+        Example
+        =======
+        >>> from sympy.polys.algebratools import ZZ
+        >>> ZZ.rem(ZZ(5), ZZ(2))
+        1
+        """
         raise NotImplementedError
 
     def div(self, a, b):
-        """Division of `a` and `b`, implies something. """
+        """
+        Division of `a` and `b`, implies something.
+
+        Example
+        =======
+        >>> from sympy.polys.algebratools import ZZ
+        >>> ZZ.div(ZZ(5), ZZ(2))
+        (2, 1)
+        """
         raise NotImplementedError
 
     def invert(self, a, b):
-        """Returns inversion of `a mod b`, implies something. """
+        """
+        Returns inversion of `a mod b`, implies something.
+
+        Example
+        =======
+        >>> from sympy.polys.algebratools import ZZ
+        >>> ZZ.invert(ZZ(3), ZZ(5))
+        2
+        """
         raise NotImplementedError
 
     def numer(self, a):
-        """Returns numerator of `a`. """
+        """
+        Returns numerator of `a`.
+
+        Example
+        =======
+        >>> from sympy.polys.algebratools import QQ
+        >>> QQ.numer(QQ(3, 2))
+        3
+        """
         raise NotImplementedError
 
     def denom(self, a):
-        """Returns denominator of `a`. """
+        """
+        Returns denominator of `a`.
+
+        Example
+        =======
+        >>> from sympy.polys.algebratools import QQ
+        >>> QQ.denom(QQ(3, 2))
+        2
+        """
         raise NotImplementedError
 
     def gcdex(self, a, b):
-        """Extended GCD of `a` and `b`. """
+        """
+        Extended GCD of `a` and `b`.
+
+        Example
+        =======
+        >>> from sympy.polys.algebratools import ZZ
+        >>> ZZ.gcdex(ZZ(12), ZZ(8))
+        (1, -1, 4)
+        """
         raise NotImplementedError
 
     def gcd(self, a, b):
-        """Returns GCD of `a` and `b`. """
+        """
+        Returns GCD of `a` and `b`.
+
+        Example
+        =======
+        >>> from sympy.polys.algebratools import ZZ
+        >>> ZZ.gcd(ZZ(12), ZZ(8))
+        4
+        """
         raise NotImplementedError
 
     def lcm(self, a, b):
-        """Returns LCM of `a` and `b`. """
+        """
+        Returns LCM of `a` and `b`.
+
+        Example
+        =======
+        >>> from sympy.polys.algebratools import ZZ
+        >>> ZZ.lcm(ZZ(12), ZZ(8))
+        24
+        """
         raise NotImplementedError
 
     def log(self, a, b):
-        """Returns b-base logarithm of `a`. """
+        """
+        Returns b-base logarithm of `a`.
+
+        Example
+        =======
+        >>> from sympy.polys.algebratools import ZZ
+        >>> ZZ.log(ZZ(8), 2)
+        3
+        """
         raise NotImplementedError
 
     def sqrt(self, a):
-        """Returns square root of `a`. """
+        """
+        Returns square root of `a`.
+
+        Example
+        =======
+        >>> from sympy.polys.algebratools import ZZ
+        >>> ZZ.sqrt(ZZ(9))
+        3
+        """
         raise NotImplementedError
 
     def factorial(self, a):
-        """Returns factorial of `a`. """
+        """
+        Returns factorial of `a`.
+
+        Example
+        =======
+        >>> from sympy.polys.algebratools import ZZ
+        >>> ZZ.factorial(4)
+        24
+        """
         return self.dtype(factorial(a))
 
     def evalf(self, a, **args):
-        """Returns numerical approximation of `a`. """
+        """
+        Returns numerical approximation of `a`.
+
+        Example
+        =======
+        >>> from sympy.polys.algebratools import QQ
+        >>> QQ.evalf(QQ(3, 2))
+        1.50000000000000
+        """
         return self.to_sympy(a).evalf(**args)
 
     def real(self, a):
+        """
+        Returns the real part of `a`.
+
+        Example
+        =======
+        >>> from sympy.polys.algebratools import CC
+        >>> CC.real(CC(1 + 2j))
+        1.0
+        """
         return a
 
     def imag(self, a):
+        """
+        Returns the imaginary part of `a`.
+
+        Example
+        =======
+        >>> from sympy.polys.algebratools import CC
+        >>> CC.imag(CC(1 + 2j))
+        2.0
+        """
         return self.zero
 
 class Ring(Algebra):
@@ -462,30 +943,82 @@ class Ring(Algebra):
     has_Ring = True
 
     def get_ring(self):
-        """Returns a ring associated with `self`. """
+        """
+        Returns a ring associated with `self`.
+
+        Example
+        =======
+        >>> from sympy.polys.algebratools import ZZ
+        >>> ZZ.get_ring()
+        ZZ
+        """
         return self
 
     def exquo(self, a, b):
-        """Exact quotient of `a` and `b`, implies `__floordiv__`.  """
+        """
+        Exact quotient of `a` and `b`, implies `__floordiv__`.
+
+        Example
+        =======
+        >>> from sympy.polys.algebratools import ZZ
+        >>> ZZ.exquo(ZZ(3), ZZ(2))
+        1
+        """
         return a // b
 
     def quo(self, a, b):
-        """Quotient of `a` and `b`, implies `__floordiv__`. """
+        """
+        Quotient of `a` and `b`, implies `__floordiv__`.
+
+        Example
+        =======
+        >>> from sympy.polys.algebratools import ZZ
+        >>> ZZ.quo(ZZ(3), ZZ(2))
+        Traceback (most recent call last):
+        ...
+        ExactQuotientFailed: 2 does not divide 3 in ZZ
+        >>> ZZ.quo(ZZ(4), ZZ(2))
+        2
+        """
         if a % b:
             raise ExactQuotientFailed('%s does not divide %s in %s' % (b, a, self))
         else:
             return a // b
 
     def rem(self, a, b):
-        """Remainder of `a` and `b`, implies `__mod__`.  """
+        """
+        Remainder of `a` and `b`, implies `__mod__`.
+
+        Example
+        =======
+        >>> from sympy.polys.algebratools import ZZ
+        >>> ZZ.rem(ZZ(3), ZZ(2))
+        1
+        """
         return a % b
 
     def div(self, a, b):
-        """Division of `a` and `b`, implies `__divmod__`. """
+        """
+        Division of `a` and `b`, implies `__divmod__`.
+
+        Example
+        =======
+        >>> from sympy.polys.algebratools import ZZ
+        >>> ZZ.div(ZZ(3), ZZ(2))
+        (1, 1)
+        """
         return divmod(a, b)
 
     def invert(self, a, b):
-        """Returns inversion of `a mod b`. """
+        """
+        Returns inversion of `a mod b`.
+
+        Example
+        =======
+        >>> from sympy.polys.algebratools import ZZ
+        >>> ZZ.invert(ZZ(3), ZZ(5))
+        2
+        """
         s, t, h = self.gcdex(a, b)
 
         if self.is_one(h):
@@ -494,11 +1027,27 @@ class Ring(Algebra):
             raise NotInvertible("zero divisor")
 
     def numer(self, a):
-        """Returns numerator of `a`. """
+        """
+        Returns numerator of `a`.
+
+        Example
+        =======
+        >>> from sympy.polys.algebratools import ZZ
+        >>> ZZ.numer(ZZ(2))
+        2
+        """
         return a
 
     def denom(self, a):
-        """Returns denominator of `a`. """
+        """
+        Returns denominator of `a`.
+
+        Example
+        =======
+        >>> from sympy.polys.algebratools import ZZ
+        >>> ZZ.denom(ZZ(2))
+        1
+        """
         return self.one
 
 class Field(Ring):
@@ -507,31 +1056,87 @@ class Field(Ring):
     has_Field = True
 
     def get_field(self):
-        """Returns a field associated with `self`. """
+        """
+        Returns a field associated with `self`.
+
+        Example
+        =======
+        >>> from sympy.polys.algebratools import QQ
+        >>> QQ.get_field()
+        QQ
+        """
         return self
 
     def exquo(self, a, b):
-        """Exact quotient of `a` and `b`, implies `__div__`.  """
+        """
+        Exact quotient of `a` and `b`, implies `__div__`.
+
+        Example
+        =======
+        >>> from sympy.polys.algebratools import QQ
+        >>> QQ.exquo(QQ(3), QQ(2))
+        3/2
+        """
         return a / b
 
     def quo(self, a, b):
-        """Quotient of `a` and `b`, implies `__div__`. """
+        """
+        Quotient of `a` and `b`, implies `__div__`.
+
+        Example
+        =======
+        >>> from sympy.polys.algebratools import QQ
+        >>> QQ.quo(QQ(3), QQ(2))
+        3/2
+        """
         return a / b
 
     def rem(self, a, b):
-        """Remainder of `a` and `b`, implies nothing.  """
+        """
+        Remainder of `a` and `b`, implies nothing.
+
+        Example
+        =======
+        >>> from sympy.polys.algebratools import QQ
+        >>> QQ.rem(QQ(3), QQ(2)) == QQ(0)
+        True
+        """
         return self.zero
 
     def div(self, a, b):
-        """Division of `a` and `b`, implies `__div__`. """
+        """
+        Division of `a` and `b`, implies `__div__`.
+
+        Example
+        =======
+        >>> from sympy.polys.algebratools import QQ
+        >>> QQ.div(QQ(3), QQ(2)) == (QQ(3, 2), QQ(0))
+        True
+        """
         return a / b, self.zero
 
     def gcd(self, a, b):
-        """Returns GCD of `a` and `b`. """
+        """
+        Returns GCD of `a` and `b`.
+
+        Example
+        =======
+        >>> from sympy.polys.algebratools import QQ
+        >>> QQ.gcd(QQ(3, 2), QQ(5, 6)) == QQ(1)
+        True
+        """
         return self.one
 
     def lcm(self, a, b):
-        """Returns LCM of `a` and `b`. """
+        """
+        Returns LCM of `a` and `b`.
+
+        Example
+        =======
+        >>> from sympy.polys.algebratools import QQ
+        >>> QQ.lcm(QQ(3, 2), QQ(5, 6))
+        5/4
+        """
         return a*b
 
 class IntegerRing(Ring):
@@ -548,7 +1153,15 @@ class IntegerRing(Ring):
     has_CharacteristicZero = True
 
     def get_field(self):
-        """Returns a field associated with `self`. """
+        """
+        Returns a field associated with `self`.
+
+        Example
+        =======
+        >>> from sympy.polys.algebratools import ZZ
+        >>> ZZ.get_field()
+        QQ
+        """
         return QQ
 
     def from_AlgebraicField(K1, a, K0):
@@ -557,7 +1170,15 @@ class IntegerRing(Ring):
             return K1.convert(a.LC(), K0.dom)
 
     def log(self, a, b):
-        """Returns b-base logarithm of `a`. """
+        """
+        Returns b-base logarithm of `a`.
+
+        Example
+        =======
+        >>> from sympy.polys.algebratools import ZZ
+        >>> ZZ.log(8, 2)
+        3
+        """
         return self.dtype(math.log(a, b))
 
 class RationalField(Field):
@@ -574,11 +1195,28 @@ class RationalField(Field):
     has_CharacteristicZero = True
 
     def get_ring(self):
-        """Returns a ring associated with `self`. """
+        """
+        Returns a ring associated with `self`.
+
+        Example
+        =======
+        >>> from sympy.polys.algebratools import QQ
+        >>> QQ.get_ring()
+        ZZ
+        """
         return ZZ
 
     def algebraic_field(self, *extension):
-        """Returns an algebraic field, i.e. `QQ(alpha, ...)`. """
+        """
+        Returns an algebraic field, i.e. `QQ(alpha, ...)`.
+
+        Example
+        =======
+        >>> from sympy import sqrt
+        >>> from sympy.polys.algebratools import QQ
+        >>> QQ.algebraic_field(sqrt(2) + sqrt(3))
+        QQ<2**(1/2) + 3**(1/2)>
+        """
         return AlgebraicField(self, *extension)
 
     def from_AlgebraicField(K1, a, K0):
@@ -1123,20 +1761,19 @@ class ZZ_sympy(IntegerRing):
 
     def of_type(self, a):
         """
-        Check if `a` is of type `dtype` (`Rational`).
+        Check if `a` is of type `dtype` (`sympy`).
 
         Example
         =======
-        >>> from sympy import Rational, Real
-        >>> from sympy.polys.algebratools import QQ_sympy
-        >>> QQ_sympy().of_type(Rational(3, 2))
+        >>> from sympy import Integer
+        >>> from sympy.polys.algebratools import ZZ_sympy, QQ
+        >>> ZZ_sympy().of_type(Integer(2))
         True
-        >>> QQ_sympy().of_type(2)
+        >>> ZZ_sympy().of_type(QQ(3, 2))
         False
         """
-        return type(a) in [type(self.one), type(self.zero), type(sympy_rat(-1)),
-                           type(sympy_rat(2)), type(sympy_rat(1, 2)),
-                           type(sympy_rat(3, 2))]
+        return type(a) in [type(self.one), type(self.zero),
+                           type(sympy_int(-1)), type(sympy_int(2))]
 
 
     def to_sympy(self, a):
@@ -1393,19 +2030,20 @@ class QQ_sympy(RationalField):
 
     def of_type(self, a):
         """
-        Check if `a` is of type `dtype` (`sympy`).
+        Check if `a` is of type `dtype` (`Rational`).
 
         Example
         =======
-        >>> from sympy import Integer
-        >>> from sympy.polys.algebratools import ZZ_sympy, QQ
-        >>> ZZ_sympy().of_type(Integer(2))
+        >>> from sympy import Rational, Real
+        >>> from sympy.polys.algebratools import QQ_sympy
+        >>> QQ_sympy().of_type(Rational(3, 2))
         True
-        >>> ZZ_sympy().of_type(QQ(3, 2))
+        >>> QQ_sympy().of_type(2)
         False
         """
-        return type(a) in [type(self.one), type(self.zero),
-                           type(sympy_int(-1)), type(sympy_int(2))]
+        return type(a) in [type(self.one), type(self.zero), type(sympy_rat(-1)),
+                           type(sympy_rat(2)), type(sympy_rat(1, 2)),
+                           type(sympy_rat(3, 2))]
 
 
     def to_sympy(self, a):
