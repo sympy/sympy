@@ -3999,11 +3999,36 @@ class PolynomialRing(Ring):
             return True
 
     def to_sympy(self, a):
-        """Convert `a` to a SymPy object. """
+        """
+        Convert `a` to a SymPy object.
+
+        Example
+        =======
+        >>> from sympy.abc import x
+        >>> from sympy.polys.polyclasses import DMP
+        >>> from sympy.polys.algebratools import ZZ
+        >>> ZZ[x].to_sympy(DMP([ZZ(1), ZZ(0), ZZ(1)], ZZ))
+        1 + x**2
+        >>> type(ZZ[x].to_sympy(DMP([ZZ(1), ZZ(0), ZZ(1)], ZZ)))
+        <class 'sympy.core.add.Add'>
+        """
         return basic_from_dict(a.to_sympy_dict(), *self.gens)
 
     def from_sympy(self, a):
-        """Convert SymPy's expression to `dtype`. """
+        r"""
+        Convert SymPy's expression to `dtype` (`DMP`).
+
+        Example
+        =======
+        >>> from sympy.abc import x
+        >>> from sympy.polys.polyclasses import DMP
+        >>> from sympy.polys.algebratools import ZZ
+        >>> ZZ[x].from_sympy(x**2 + 1) == \
+        ... DMP([ZZ(1), ZZ(0), ZZ(1)], ZZ)
+        True
+        >>> type(ZZ[x].from_sympy(x**2 + 1))
+        <class 'sympy.polys.polyclasses.DMP'>
+        """
         rep = dict_from_basic(a, self.gens)
 
         for k, v in rep.iteritems():
@@ -4012,39 +4037,184 @@ class PolynomialRing(Ring):
         return self(rep)
 
     def from_ZZ_python(K1, a, K0):
-        """Convert a Python `int` object to `dtype`. """
+        r"""
+        Convert a Python `int` object to `dtype` (`DMP`).
+
+        Example
+        =======
+        >>> from sympy.abc import x
+        >>> from sympy.polys.polyclasses import DMP
+        >>> from sympy.polys.algebratools import ZZ, ZZ_python
+        >>> ZZ[x].from_ZZ_python(1, ZZ_python()) == \
+        ... DMP([ZZ(1)], ZZ)
+        True
+        >>> type(ZZ[x].from_ZZ_python(1, ZZ_python()))
+        <class 'sympy.polys.polyclasses.DMP'>
+        """
         return K1(K1.dom.convert(a, K0))
 
     def from_QQ_python(K1, a, K0):
-        """Convert a Python `Fraction` object to `dtype`. """
+        r"""
+        Convert a Python `Fraction` object to `dtype` (`DMP`).
+
+        Example
+        =======
+        >>> from sympy.abc import x
+        >>> from sympy.polys.polyclasses import DMP
+        >>> from sympy.polys.algebratools import QQ
+        >>> try:
+        ...     import fractions # fractions only exists in >= Python 2.6
+        ...     from sympy.polys.algebratools import QQ_python
+        ...     a = QQ[x].from_QQ_python(fractions.Fraction(3, 2), QQ_python())
+        ... except ImportError:
+        ...     a = DMP([QQ(3, 2)], QQ)
+        >>> a == \
+        ... DMP([QQ(3, 2)], QQ)
+        True
+        >>> type(a)
+        <class 'sympy.polys.polyclasses.DMP'>
+        """
         return K1(K1.dom.convert(a, K0))
 
     def from_ZZ_sympy(K1, a, K0):
-        """Convert a SymPy `Integer` object to `dtype`. """
+        r"""
+        Convert a SymPy `Integer` object to `dtype` (`DMP`).
+
+        Example
+        =======
+        >>> from sympy import Integer
+        >>> from sympy.abc import x
+        >>> from sympy.polys.polyclasses import DMP
+        >>> from sympy.polys.algebratools import ZZ, ZZ_sympy
+        >>> ZZ[x].from_ZZ_sympy(Integer(2), ZZ_sympy()) == \
+        ... DMP([ZZ(2)], ZZ)
+        True
+        >>> type(ZZ[x].from_ZZ_sympy(Integer(2), ZZ_sympy()))
+        <class 'sympy.polys.polyclasses.DMP'>
+        """
         return K1(K1.dom.convert(a, K0))
 
     def from_QQ_sympy(K1, a, K0):
-        """Convert a SymPy `Rational` object to `dtype`. """
+        r"""
+        Convert a SymPy `Rational` object to `dtype` (`DMP`).
+
+        Example
+        =======
+        >>> from sympy import Rational
+        >>> from sympy.abc import x
+        >>> from sympy.polys.polyclasses import DMP
+        >>> from sympy.polys.algebratools import QQ, QQ_sympy
+        >>> QQ[x].from_QQ_sympy(Rational(3, 2), QQ_sympy()) == \
+        ... DMP([QQ(3, 2)], QQ)
+        True
+        >>> type(QQ[x].from_QQ_sympy(Rational(3, 2), QQ_sympy()))
+        <class 'sympy.polys.polyclasses.DMP'>
+        """
         return K1(K1.dom.convert(a, K0))
 
     def from_ZZ_gmpy(K1, a, K0):
-        """Convert a GMPY `mpz` object to `dtype`. """
+        r"""
+        Convert a GMPY `mpz` object to `dtype` (`DMP`).
+
+        Example
+        =======
+        >>> from sympy.abc import x
+        >>> from sympy.polys.polyclasses import DMP
+        >>> from sympy.polys.algebratools import ZZ
+        >>> try:
+        ...     import gmpy
+        ...     from sympy.polys.algebratools import ZZ_gmpy
+        ...     a = ZZ[x].from_ZZ_gmpy(gmpy.mpz(2), ZZ_gmpy())
+        ... except ImportError:
+        ...     a = DMP([ZZ(2)], ZZ)
+        >>> a == \
+        ... DMP([ZZ(2)], ZZ)
+        True
+        >>> type(a)
+        <class 'sympy.polys.polyclasses.DMP'>
+        """
         return K1(K1.dom.convert(a, K0))
 
     def from_QQ_gmpy(K1, a, K0):
-        """Convert a GMPY `mpq` object to `dtype`. """
+        r"""
+        Convert a GMPY `mpq` object to `dtype` (`DMP`).
+
+        Example
+        =======
+        >>> from sympy.abc import x
+        >>> from sympy.polys.polyclasses import DMP
+        >>> from sympy.polys.algebratools import QQ
+        >>> try:
+        ...     import gmpy
+        ...     from sympy.polys.algebratools import QQ_gmpy
+        ...     a = QQ[x].from_QQ_gmpy(gmpy.mpq(3, 2), QQ_gmpy())
+        ... except ImportError:
+        ...     a = DMP([QQ(3, 2)], QQ)
+        >>> a == \
+        ... DMP([QQ(3, 2)], QQ)
+        True
+        >>> type(a)
+        <class 'sympy.polys.polyclasses.DMP'>
+        """
         return K1(K1.dom.convert(a, K0))
 
     def from_RR_sympy(K1, a, K0):
-        """Convert a SymPy `Real` object to `dtype`. """
+        r"""
+        Convert a SymPy `Real` object to `dtype` (`DMP`).
+
+        Example
+        =======
+        >>> from sympy import Real
+        >>> from sympy.abc import x
+        >>> from sympy.polys.polyclasses import DMP
+        >>> from sympy.polys.algebratools import QQ, RR_sympy
+        >>> QQ[x].from_RR_sympy(Real(1.5), RR_sympy()) == \
+        ... DMP([QQ(3, 2)], QQ)
+        True
+        >>> type(QQ[x].from_RR_sympy(Real(1.5), RR_sympy()))
+        <class 'sympy.polys.polyclasses.DMP'>
+        """
         return K1(K1.dom.convert(a, K0))
 
     def from_RR_mpmath(K1, a, K0):
-        """Convert a mpmath `mpf` object to `dtype`. """
+        r"""
+        Convert a mpmath `mpf` object to `dtype` (`DMP`).
+
+        Example
+        =======
+        >>> from sympy.mpmath import mpf
+        >>> from sympy.abc import x
+        >>> from sympy.polys.polyclasses import DMP
+        >>> from sympy.polys.algebratools import QQ, RR_mpmath
+        >>> QQ[x].from_RR_mpmath(mpf(1.5), RR_mpmath()) == \
+        ... DMP([QQ(3, 2)], QQ)
+        True
+        >>> type(QQ[x].from_RR_mpmath(mpf(1.5), RR_mpmath()))
+        <class 'sympy.polys.polyclasses.DMP'>
+        """
         return K1(K1.dom.convert(a, K0))
 
     def from_PolynomialRing(K1, a, K0):
-        """Convert a `DMP` object to `dtype`. """
+        """
+        Convert a `DMP` object to `dtype` (`DMP`).
+
+        Example
+        =======
+        >>> from sympy.abc import x, y
+        >>> from sympy.polys.polyclasses import DMP
+        >>> from sympy.polys.algebratools import ZZ
+        >>> a = ZZ[x].from_PolynomialRing(DMP([ZZ(1), ZZ(0), ZZ(1)], ZZ[y]),
+        ... ZZ[y])
+        >>> a == DMP([1], ZZ)
+        True
+        >>> b = ZZ[x].from_PolynomialRing(DMP([ZZ(1), ZZ(0), ZZ(1)], ZZ[x]),
+        ... ZZ[x])
+        >>> b == DMP([1, 0, 1], ZZ[x])
+        True
+        >>> (type(a), type(b))
+        (<class 'sympy.polys.polyclasses.DMP'>,
+         <class 'sympy.polys.polyclasses.DMP'>)
+        """
         if K1.gens == K0.gens:
             if K1.dom == K0.dom:
                 return a
@@ -4078,47 +4248,173 @@ class PolynomialRing(Ring):
             return K1.from_PolynomialRing(a.numer(), K0)
 
     def get_field(self):
-        """Returns a field associated with `self`. """
+        """
+        Returns a field associated with `self`.
+
+        Example
+        =======
+        >>> from sympy.abc import x
+        >>> from sympy.polys.algebratools import ZZ
+        >>> ZZ[x].get_field()
+        ZZ(x)
+        >>> type(ZZ[x].get_field())
+        <class 'sympy.polys.algebratools.FractionField'>
+        """
         return FractionField(self.dom, *self.gens)
 
     def poly_ring(self, *gens):
-        """Returns a polynomial ring, i.e. `K[X]`. """
+        """
+        Returns a polynomial ring, i.e. `K[X]`.
+
+        Example
+        =======
+        >>> from sympy.abc import x, y
+        >>> from sympy.polys.algebratools import ZZ
+        >>> ZZ[x].poly_ring(y)
+        Traceback (most recent call last):
+        ...
+        NotImplementedError: nested domains not allowed
+        """
         raise NotImplementedError('nested domains not allowed')
 
     def frac_field(self, *gens):
-        """Returns a fraction field, i.e. `K(X)`. """
+        """
+        Returns a fraction field, i.e. `K(X)`.
+
+        Example
+        =======
+        >>> from sympy.abc import x, y
+        >>> from sympy.polys.algebratools import ZZ
+        >>> ZZ[x].frac_field(y)
+        Traceback (most recent call last):
+        ...
+        NotImplementedError: nested domains not allowed
+        """
         raise NotImplementedError('nested domains not allowed')
 
     def is_positive(self, a):
-        """Returns True if `LC(a)` is positive. """
+        """
+        Returns True if `LC(a)` is positive.
+
+        Example
+        =======
+        >>> from sympy.abc import x
+        >>> from sympy.polys.polyclasses import DMP
+        >>> from sympy.polys.algebratools import ZZ
+        >>> ZZ[x].is_positive(DMP([ZZ(1), ZZ(0), ZZ(-1)], ZZ))
+        True
+        >>> ZZ[x].is_positive(DMP([ZZ(-1), ZZ(0), ZZ(1)], ZZ))
+        False
+        >>> ZZ[x].is_positive(DMP([], ZZ))
+        False
+        """
         return self.dom.is_positive(a.LC())
 
     def is_negative(self, a):
-        """Returns True if `LC(a)` is negative. """
+        """
+        Returns True if `LC(a)` is negative.
+
+        Example
+        =======
+        >>> from sympy.abc import x
+        >>> from sympy.polys.polyclasses import DMP
+        >>> from sympy.polys.algebratools import ZZ
+        >>> ZZ[x].is_negative(DMP([ZZ(1), ZZ(0), ZZ(-1)], ZZ))
+        False
+        >>> ZZ[x].is_negative(DMP([ZZ(-1), ZZ(0), ZZ(1)], ZZ))
+        True
+        >>> ZZ[x].is_negative(DMP([], ZZ))
+        False
+        """
         return self.dom.is_negative(a.LC())
 
     def is_nonpositive(self, a):
-        """Returns True if `LC(a)` is non-positive. """
+        """
+        Returns True if `LC(a)` is non-positive.
+
+        Example
+        =======
+        >>> from sympy.abc import x
+        >>> from sympy.polys.polyclasses import DMP
+        >>> from sympy.polys.algebratools import ZZ
+        >>> ZZ[x].is_nonpositive(DMP([ZZ(1), ZZ(0), ZZ(-1)], ZZ))
+        False
+        >>> ZZ[x].is_nonpositive(DMP([ZZ(-1), ZZ(0), ZZ(1)], ZZ))
+        True
+        >>> ZZ[x].is_nonpositive(DMP([], ZZ))
+        True
+        """
         return self.dom.is_nonpositive(a.LC())
 
     def is_nonnegative(self, a):
-        """Returns True if `LC(a)` is non-negative. """
+        """
+        Returns True if `LC(a)` is non-negative.
+
+        Example
+        =======
+        >>> from sympy.abc import x
+        >>> from sympy.polys.polyclasses import DMP
+        >>> from sympy.polys.algebratools import ZZ
+        >>> ZZ[x].is_nonnegative(DMP([ZZ(1), ZZ(0), ZZ(-1)], ZZ))
+        True
+        >>> ZZ[x].is_nonnegative(DMP([ZZ(-1), ZZ(0), ZZ(1)], ZZ))
+        False
+        >>> ZZ[x].is_nonnegative(DMP([], ZZ))
+        True
+        """
         return self.dom.is_nonnegative(a.LC())
 
     def gcdex(self, a, b):
-        """Extended GCD of `a` and `b`. """
+        r"""
+        Extended GCD of `a` and `b`.
+
+        Example
+        =======
+        >>> from sympy.abc import x
+        >>> from sympy.polys.polyclasses import DMP
+        >>> from sympy.polys.algebratools import QQ
+        >>> QQ[x].gcdex(DMP([QQ(1), QQ(0), QQ(-1)], QQ),
+        ... DMP([QQ(1), QQ(1), QQ(0)], QQ)) == \
+        ... (DMP([QQ(-1)], QQ), DMP([QQ(1)], QQ), DMP([QQ(1), QQ(1)], QQ))
+        True
+        """
         return a.gcdex(b)
 
     def gcd(self, a, b):
-        """Returns GCD of `a` and `b`. """
+        r"""
+        Returns GCD of `a` and `b`.
+
+        Example
+        =======
+        >>> from sympy.abc import x
+        >>> from sympy.polys.polyclasses import DMP
+        >>> from sympy.polys.algebratools import QQ
+        >>> QQ[x].gcd(DMP([QQ(1), QQ(0), QQ(-1)], QQ),
+        ... DMP([QQ(1), QQ(1), QQ(0)], QQ)) == \
+        ... DMP([QQ(1), QQ(1)], QQ)
+        True
+        """
         return a.gcd(b)
 
     def lcm(self, a, b):
-        """Returns LCM of `a` and `b`. """
+        r"""
+        Returns LCM of `a` and `b`.
+
+        Example
+        =======
+        >>> from sympy.abc import x
+        >>> from sympy.polys.polyclasses import DMP
+        >>> from sympy.polys.algebratools import QQ
+        >>> QQ[x].lcm(DMP([QQ(1), QQ(0), QQ(-1)], QQ),
+        ... DMP([QQ(1), QQ(1), QQ(0)], QQ)) == \
+        ... DMP([QQ(1), QQ(0), QQ(-1), QQ(0)], QQ)
+        True
+        """
         return a.lcm(b)
 
     def factorial(self, a):
         """Returns factorial of `a`. """
+        # XXX: What is this supposed to do?
         return self.dtype(self.dom.factorial(a))
 
 class FractionField(Field):
@@ -4170,12 +4466,38 @@ class FractionField(Field):
             return True
 
     def to_sympy(self, a):
-        """Convert `a` to a SymPy object. """
+        """
+        Convert `a` to a SymPy object.
+
+        Example
+        =======
+        >>> from sympy.abc import x
+        >>> from sympy.polys.polyclasses import DMF
+        >>> from sympy.polys.algebratools import ZZ
+        >>> ZZ.frac_field(x).to_sympy(DMF(([ZZ(1), ZZ(2)], [ZZ(1), ZZ(1)]), ZZ))
+        (2 + x)/(1 + x)
+        >>> type(ZZ.frac_field(x).to_sympy(DMF(([ZZ(1), ZZ(2)],
+        ... [ZZ(1), ZZ(1)]), ZZ)))
+        <class 'sympy.core.mul.Mul'>
+        """
         return (basic_from_dict(a.numer().to_sympy_dict(), *self.gens) /
                 basic_from_dict(a.denom().to_sympy_dict(), *self.gens))
 
     def from_sympy(self, a):
-        """Convert SymPy's expression to `dtype`. """
+        r"""
+        Convert SymPy's expression to `dtype` (`DMF`).
+
+        Example
+        =======
+        >>> from sympy.abc import x
+        >>> from sympy.polys.polyclasses import DMF
+        >>> from sympy.polys.algebratools import ZZ
+        >>> ZZ.frac_field(x).from_sympy((2 + x)/(1 + x)) == \
+        ... DMF(([ZZ(1), ZZ(2)], [ZZ(1), ZZ(1)]), ZZ)
+        True
+        >>> type(ZZ.frac_field(x).from_sympy((2 + x)/(2 + x)))
+        <class 'sympy.polys.polyclasses.DMF'>
+        """
         p, q = a.as_numer_denom()
 
         num = dict_from_basic(p, self.gens)
@@ -4190,39 +4512,178 @@ class FractionField(Field):
         return self((num, den)).cancel()
 
     def from_ZZ_python(K1, a, K0):
-        """Convert a Python `int` object to `dtype`. """
+        r"""
+        Convert a Python `int` object to `dtype` (`DMF`).
+
+        Example
+        =======
+        >>> from sympy.abc import x
+        >>> from sympy.polys.polyclasses import DMF
+        >>> from sympy.polys.algebratools import ZZ, ZZ_python
+        >>> ZZ.frac_field(x).from_ZZ_python(2, ZZ_python()) == \
+        ... DMF(([ZZ(2)], [ZZ(1)]), ZZ)
+        True
+        >>> type(ZZ.frac_field(x).from_ZZ_python(2, ZZ_python()))
+        <class 'sympy.polys.polyclasses.DMF'>
+        """
         return K1(K1.dom.convert(a, K0))
 
     def from_QQ_python(K1, a, K0):
-        """Convert a Python `Fraction` object to `dtype`. """
+        """
+        Convert a Python `Fraction` object to `dtype` (`DMF`).
+
+        Example
+        =======
+        >>> from sympy.abc import x
+        >>> from sympy.polys.polyclasses import DMF
+        >>> from sympy.polys.algebratools import QQ
+        >>> try:
+        ...     import fractions # fractions only exists in >= Python 2.6
+        ...     from sympy.polys.algebratools import QQ_python
+        ...     a = QQ.frac_field(x).from_QQ_python(fractions.Fraction(3, 2),
+        ...     QQ_python())
+        ... except ImportError:
+        ...     a = DMF(([QQ(3, 2)], [QQ(1)]), QQ)
+        >>> a == DMF(([QQ(3, 2)], [QQ(1)]), QQ)
+        True
+        >>> type(a)
+        <class 'sympy.polys.polyclasses.DMF'>
+        """
         return K1(K1.dom.convert(a, K0))
 
     def from_ZZ_sympy(K1, a, K0):
-        """Convert a SymPy `Integer` object to `dtype`. """
+        r"""
+        Convert a SymPy `Integer` object to `dtype` (`DMF`).
+
+        Example
+        =======
+        >>> from sympy.abc import x
+        >>> from sympy import Integer
+        >>> from sympy.polys.polyclasses import DMF
+        >>> from sympy.polys.algebratools import ZZ, ZZ_sympy
+        >>> ZZ.frac_field(x).from_ZZ_sympy(Integer(2), ZZ_sympy()) == \
+        ... DMF(([ZZ(2)], [ZZ(1)]), ZZ)
+        True
+        >>> type(ZZ.frac_field(x).from_ZZ_sympy(Integer(2), ZZ_sympy()))
+        <class 'sympy.polys.polyclasses.DMF'>
+        """
         return K1(K1.dom.convert(a, K0))
 
     def from_QQ_sympy(K1, a, K0):
-        """Convert a SymPy `Rational` object to `dtype`. """
+        r"""
+        Convert a SymPy `Rational` object to `dtype` (`DMF`).
+
+        Example
+        =======
+        >>> from sympy.abc import x
+        >>> from sympy import Rational
+        >>> from sympy.polys.polyclasses import DMF
+        >>> from sympy.polys.algebratools import QQ, QQ_sympy
+        >>> QQ.frac_field(x).from_QQ_sympy(Rational(3, 2), QQ_sympy()) == \
+        ... DMF(([QQ(3, 2)], [QQ(1)]), QQ)
+        True
+        >>> type(QQ.frac_field(x).from_QQ_sympy(Rational(3, 2), QQ_sympy()))
+        <class 'sympy.polys.polyclasses.DMF'>
+        """
         return K1(K1.dom.convert(a, K0))
 
     def from_ZZ_gmpy(K1, a, K0):
-        """Convert a GMPY `mpz` object to `dtype`. """
+        """
+        Convert a GMPY `mpz` object to `dtype` (`DMF`).
+
+        Example
+        =======
+        >>> from sympy.abc import x
+        >>> from sympy.polys.polyclasses import DMF
+        >>> from sympy.polys.algebratools import ZZ
+        >>> try:
+        ...     import gmpy
+        ...     from sympy.polys.algebratools import ZZ_gmpy
+        ...     a = ZZ.frac_field(x).from_ZZ_gmpy(gmpy.mpz(2), ZZ_gmpy())
+        ... except ImportError:
+        ...     a = DMF(([ZZ(2)], [ZZ(1)]), ZZ)
+        >>> a == DMF(([ZZ(2)], [ZZ(1)]), ZZ)
+        True
+        >>> type(a)
+        <class 'sympy.polys.polyclasses.DMF'>
+        """
         return K1(K1.dom.convert(a, K0))
 
     def from_QQ_gmpy(K1, a, K0):
-        """Convert a GMPY `mpq` object to `dtype`. """
+        """
+        Convert a GMPY `mpq` object to `dtype` (`DMF`).
+
+        Example
+        =======
+        >>> from sympy.abc import x
+        >>> from sympy.polys.polyclasses import DMF
+        >>> from sympy.polys.algebratools import QQ
+        >>> try:
+        ...     import gmpy
+        ...     from sympy.polys.algebratools import QQ_gmpy
+        ...     a = QQ.frac_field(x).from_QQ_gmpy(gmpy.mpq(3, 2), QQ_gmpy())
+        ... except ImportError:
+        ...     a = DMF(([QQ(3, 2)], [QQ(1)]), QQ)
+        >>> a == DMF(([QQ(3, 2)], [QQ(1)]), QQ)
+        True
+        >>> type(a)
+        <class 'sympy.polys.polyclasses.DMF'>
+        """
         return K1(K1.dom.convert(a, K0))
 
     def from_RR_sympy(K1, a, K0):
-        """Convert a SymPy `Real` object to `dtype`. """
+        r"""
+        Convert a SymPy `Real` object to `dtype`(`DMF`).
+
+        Example
+        =======
+        >>> from sympy.abc import x
+        >>> from sympy import Real
+        >>> from sympy.polys.polyclasses import DMF
+        >>> from sympy.polys.algebratools import QQ, RR_sympy
+        >>> QQ.frac_field(x).from_RR_sympy(Real(1.5), RR_sympy()) == \
+        ... DMF(([QQ(3, 2)], [QQ(1)]), QQ)
+        True
+        >>> type(QQ.frac_field(x).from_RR_sympy(Real(1.5), RR_sympy()))
+        <class 'sympy.polys.polyclasses.DMF'>
+        """
         return K1(K1.dom.convert(a, K0))
 
     def from_RR_mpmath(K1, a, K0):
-        """Convert a mpmath `mpf` object to `dtype`. """
+        r"""
+        Convert a mpmath `mpf` object to `dtype`(`DMF`).
+
+        Example
+        =======
+        >>> from sympy.abc import x
+        >>> from sympy.mpmath import mpf
+        >>> from sympy.polys.polyclasses import DMF
+        >>> from sympy.polys.algebratools import QQ, RR_mpmath
+        >>> QQ.frac_field(x).from_RR_mpmath(mpf(1.5), RR_mpmath()) == \
+        ... DMF(([QQ(3, 2)], [QQ(1)]), QQ)
+        True
+        >>> type(QQ.frac_field(x).from_RR_mpmath(mpf(1.5), RR_mpmath()))
+        <class 'sympy.polys.polyclasses.DMF'>
+        """
         return K1(K1.dom.convert(a, K0))
 
     def from_PolynomialRing(K1, a, K0):
-        """Convert a `DMF` object to `dtype`. """
+        r"""
+        Convert a `DMF` object to `dtype`(`DMF`).
+
+        Example
+        =======
+        >>> from sympy.abc import x
+        >>> from sympy.polys.polyclasses import DMF, DMP
+        >>> from sympy.polys.algebratools import ZZ
+        >>> ZZ.frac_field(x).from_PolynomialRing(DMP([ZZ(1), ZZ(-1)], ZZ),
+        ... ZZ[x]) == \
+        ... DMF(([ZZ(1), ZZ(-1)], [ZZ(1)]), ZZ)
+        True
+        >>> type(ZZ.frac_field(x).from_PolynomialRing(DMP([ZZ(1), ZZ(-1)],
+        ... ZZ), ZZ[x]))
+        <class 'sympy.polys.polyclasses.DMF'>
+        """
         if K1.gens == K0.gens:
             if K1.dom == K0.dom:
                 return K1(a.rep)
@@ -4237,7 +4698,22 @@ class FractionField(Field):
             return K1(dict(zip(monoms, coeffs)))
 
     def from_FractionField(K1, a, K0):
-        """Convert a `DMF` object to `dtype`. """
+        r"""
+        Convert a `DMF` object to `dtype`(`DMF`).
+
+        Example
+        =======
+        >>> from sympy.abc import x
+        >>> from sympy.polys.polyclasses import DMF
+        >>> from sympy.polys.algebratools import ZZ
+        >>> ZZ.frac_field(x).from_FractionField(DMF(([ZZ(1), ZZ(2)],
+        ... [ZZ(1), ZZ(1)]), ZZ), ZZ[x]) == \
+        ... DMF(([ZZ(1), ZZ(2)], [ZZ(1), ZZ(1)]), ZZ)
+        True
+        >>> type(ZZ.frac_field(x).from_FractionField(DMF(([ZZ(1), ZZ(2)],
+        ... [ZZ(1), ZZ(2)]), ZZ), ZZ[x]))
+        <class 'sympy.polys.polyclasses.DMF'>
+        """
         if K1.gens == K0.gens:
             if K1.dom == K0.dom:
                 return a
@@ -4246,43 +4722,166 @@ class FractionField(Field):
                           a.denom().convert(K1.dom).rep)
 
     def get_ring(self):
-        """Returns a ring associated with `self`. """
+        """
+        Returns a ring associated with `self`.
+
+        Example
+        =======
+        >>> from sympy.abc import x
+        >>> from sympy.polys.polyclasses import DMF
+        >>> from sympy.polys.algebratools import ZZ
+        >>> ZZ.frac_field(x).get_ring()
+        ZZ[x]
+        """
         return PolynomialRing(self.dom, *self.gens)
 
     def poly_ring(self, *gens):
-        """Returns a polynomial ring, i.e. `K[X]`. """
+        """
+        Returns a polynomial ring, i.e. `K[X]`.
+
+        Example
+        =======
+        >>> from sympy.abc import x, y
+        >>> from sympy.polys.polyclasses import DMF
+        >>> from sympy.polys.algebratools import ZZ
+        >>> ZZ.frac_field(x).poly_ring(y)
+        Traceback (most recent call last):
+        ...
+        NotImplementedError: nested domains not allowed
+        """
         raise NotImplementedError('nested domains not allowed')
 
     def frac_field(self, *gens):
-        """Returns a fraction field, i.e. `K(X)`. """
+        """
+        Returns a fraction field, i.e. `K(X)`.
+
+        Example
+        =======
+        >>> from sympy.abc import x, y
+        >>> from sympy.polys.polyclasses import DMF
+        >>> from sympy.polys.algebratools import ZZ
+        >>> ZZ.frac_field(x).frac_field(y)
+        Traceback (most recent call last):
+        ...
+        NotImplementedError: nested domains not allowed
+        """
         raise NotImplementedError('nested domains not allowed')
 
     def is_positive(self, a):
-        """Returns True if `a` is positive. """
+        """
+        Returns True if `a` is positive.
+
+        Example
+        =======
+        >>> from sympy.abc import x
+        >>> from sympy.polys.polyclasses import DMF
+        >>> from sympy.polys.algebratools import ZZ
+        >>> ZZ.frac_field(x).is_positive(DMF(([ZZ(1), ZZ(2)],
+        ... [ZZ(1), ZZ(2)]), ZZ))
+        True
+        >>> ZZ.frac_field(x).is_positive(DMF(([ZZ(-1), ZZ(2)],
+        ... [ZZ(1), ZZ(2)]), ZZ))
+        False
+        >>> ZZ.frac_field(x).is_positive(DMF(([], [ZZ(1)]), ZZ))
+        False
+        """
         return self.dom.is_positive(a.numer().LC())
 
     def is_negative(self, a):
-        """Returns True if `a` is negative. """
+        """
+        Returns True if `a` is negative.
+
+        Example
+        =======
+        >>> from sympy.abc import x
+        >>> from sympy.polys.polyclasses import DMF
+        >>> from sympy.polys.algebratools import ZZ
+        >>> ZZ.frac_field(x).is_negative(DMF(([ZZ(1), ZZ(2)],
+        ... [ZZ(1), ZZ(2)]), ZZ))
+        False
+        >>> ZZ.frac_field(x).is_negative(DMF(([ZZ(-1), ZZ(2)],
+        ... [ZZ(1), ZZ(2)]), ZZ))
+        True
+        >>> ZZ.frac_field(x).is_negative(DMF(([], [ZZ(1)]), ZZ))
+        False
+        """
         return self.dom.is_negative(a.numer().LC())
 
     def is_nonpositive(self, a):
-        """Returns True if `a` is non-positive. """
+        """
+        Returns True if `a` is non-positive.
+
+        Example
+        =======
+        >>> from sympy.abc import x
+        >>> from sympy.polys.polyclasses import DMF
+        >>> from sympy.polys.algebratools import ZZ
+        >>> ZZ.frac_field(x).is_nonpositive(DMF(([ZZ(1), ZZ(2)],
+        ... [ZZ(1), ZZ(2)]), ZZ))
+        False
+        >>> ZZ.frac_field(x).is_nonpositive(DMF(([ZZ(-1), ZZ(2)],
+        ... [ZZ(1), ZZ(2)]), ZZ))
+        True
+        >>> ZZ.frac_field(x).is_nonpositive(DMF(([], [ZZ(1)]), ZZ))
+        True
+        """
         return self.dom.is_nonpositive(a.numer().LC())
 
     def is_nonnegative(self, a):
-        """Returns True if `a` is non-negative. """
+        """
+        Returns True if `a` is non-negative.
+
+        Example
+        =======
+        >>> from sympy.abc import x
+        >>> from sympy.polys.polyclasses import DMF
+        >>> from sympy.polys.algebratools import ZZ
+        >>> ZZ.frac_field(x).is_nonnegative(DMF(([ZZ(1), ZZ(2)],
+        ... [ZZ(1), ZZ(2)]), ZZ))
+        True
+        >>> ZZ.frac_field(x).is_nonnegative(DMF(([ZZ(-1), ZZ(2)],
+        ... [ZZ(1), ZZ(2)]), ZZ))
+        False
+        >>> ZZ.frac_field(x).is_nonnegative(DMF(([], [ZZ(1)]), ZZ))
+        True
+        """
         return self.dom.is_nonnegative(a.numer().LC())
 
     def numer(self, a):
-        """Returns numerator of `a`. """
+        r"""
+        Returns numerator of `a`.
+
+        Example
+        =======
+        >>> from sympy.abc import x
+        >>> from sympy.polys.polyclasses import DMF, DMP
+        >>> from sympy.polys.algebratools import ZZ
+        >>> ZZ.frac_field(x).numer(DMF(([ZZ(1), ZZ(2)],
+        ... [ZZ(1), ZZ(1)]), ZZ)) == \
+        ... DMP([ZZ(1), ZZ(2)], ZZ)
+        True
+        """
         return a.numer()
 
     def denom(self, a):
-        """Returns denominator of `a`. """
+        r"""
+        Returns denominator of `a`.
+
+        Example
+        =======
+        >>> from sympy.abc import x
+        >>> from sympy.polys.polyclasses import DMF, DMP
+        >>> from sympy.polys.algebratools import ZZ
+        >>> ZZ.frac_field(x).denom(DMF(([ZZ(1), ZZ(2)],
+        ... [ZZ(1), ZZ(1)]), ZZ)) == \
+        ... DMP([ZZ(1), ZZ(1)], ZZ)
+        True
+        """
         return a.denom()
 
     def factorial(self, a):
         """Returns factorial of `a`. """
+        # XXX: What is this suppposed to do?
         return self.dtype(self.dom.factorial(a))
 
 class ExpressionDomain(Field):
