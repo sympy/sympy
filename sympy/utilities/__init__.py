@@ -1,7 +1,7 @@
 """Some utilities that may help.
 """
 from iterables import (iff, flatten, group, split, subsets,
-    variations, numbered_symbols, cartes, capture, any, all)
+    variations, numbered_symbols, cartes, capture, any, all, dict_merge)
 
 from lambdify import lambdify
 from source import source

@@ -1,7 +1,7 @@
 from sympy import symbols, Integral, Tuple, Dummy, Basic
-from sympy.utilities.iterables import postorder_traversal, \
-    preorder_traversal, flatten, group, split, subsets, variations, cartes, \
-    numbered_symbols
+from sympy.utilities.iterables import (postorder_traversal, preorder_traversal,
+    flatten, group, split, subsets, variations, cartes, numbered_symbols,
+    dict_merge)
 from sympy.functions.elementary.piecewise import Piecewise, ExprCondPair
 from sympy.utilities.pytest import raises
 
@@ -160,3 +160,13 @@ def test_cartes():
 def test_numbered_symbols():
     s = numbered_symbols(cls=Dummy)
     assert isinstance(s.next(), Dummy)
+
+def test_dict_merge():
+    assert dict_merge({}, {1: x, y: z}) == {1: x, y: z}
+    assert dict_merge({1: x, y: z}, {}) == {1: x, y: z}
+
+    assert dict_merge({2: z}, {1: x, y: z}) == {1: x, 2: z, y: z}
+    assert dict_merge({1: x, y: z}, {2: z}) == {1: x, 2: z, y: z}
+
+    assert dict_merge({1: y, 2: z}, {1: x, y: z}) == {1: x, 2: z, y: z}
+    assert dict_merge({1: x, y: z}, {1: y, 2: z}) == {1: y, 2: z, y: z}
