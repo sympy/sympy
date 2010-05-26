@@ -283,7 +283,7 @@ def test_plotting2():
 
 #================== polys =======================
 from sympy.polys.polytools import Poly
-from sympy.polys.polyclasses import GFP, DUP, DMP, DMF, ANP
+from sympy.polys.polyclasses import GFP, DMP, DMF, ANP
 from sympy.polys.rootoftools import RootOf, RootSum
 
 from sympy.polys.algebratools import (
@@ -304,8 +304,6 @@ def test_polys():
         check(c)
 
     for c in (GFP, GFP([ZZ(1),ZZ(2),ZZ(3)], ZZ(7), ZZ)):
-        check(c)
-    for c in (DUP, DUP([ZZ(1),ZZ(2),ZZ(3)], ZZ(7), ZZ)):
         check(c)
     for c in (DMP, DMP([ZZ(1),ZZ(2),ZZ(3)], 0, ZZ)):
         check(c)
