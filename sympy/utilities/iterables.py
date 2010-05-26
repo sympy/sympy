@@ -438,3 +438,12 @@ def numbered_symbols(prefix='x', function=None, start=0, *args, **assumptions):
         yield function(name, *args, **assumptions)
         start += 1
 
+def dict_merge(*dicts):
+    """Merge dictionaries into a single dictionary. """
+    merged = {}
+
+    for dict in dicts:
+        merged.update(dict)
+
+    return merged
+
