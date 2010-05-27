@@ -167,7 +167,7 @@ def dmp_degree_in(f, j, u):
     if not j:
         return dmp_degree(f, u)
     if j < 0 or j > u:
-        raise IndexError("-%s <= j < %s expected, got %s" % (u, u, j))
+        raise IndexError("0 <= j <= %s expected, got %s" % (u, j))
 
     return _rec_degree_in(f, u, 0, j)
 

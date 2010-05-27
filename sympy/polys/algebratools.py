@@ -795,7 +795,7 @@ class Algebra(object):
 
     def invert(self, a, b):
         """
-        Returns inversion of `a mod b`, implies something.
+        Returns the inversion of `a mod b`, implies something.
 
         Example
         =======
@@ -807,7 +807,7 @@ class Algebra(object):
 
     def numer(self, a):
         """
-        Returns numerator of `a`.
+        Returns the numerator of `a`.
 
         Example
         =======
@@ -819,7 +819,7 @@ class Algebra(object):
 
     def denom(self, a):
         """
-        Returns denominator of `a`.
+        Returns the denominator of `a`.
 
         Example
         =======
@@ -843,7 +843,7 @@ class Algebra(object):
 
     def gcd(self, a, b):
         """
-        Returns GCD of `a` and `b`.
+        Returns the GCD of `a` and `b`.
 
         Example
         =======
@@ -855,7 +855,7 @@ class Algebra(object):
 
     def lcm(self, a, b):
         """
-        Returns LCM of `a` and `b`.
+        Returns the LCM of `a` and `b`.
 
         Example
         =======
@@ -867,7 +867,7 @@ class Algebra(object):
 
     def log(self, a, b):
         """
-        Returns b-base logarithm of `a`.
+        Returns the b-base logarithm of `a`.
 
         Example
         =======
@@ -879,7 +879,7 @@ class Algebra(object):
 
     def sqrt(self, a):
         """
-        Returns square root of `a`.
+        Returns the square root of `a`.
 
         Example
         =======
@@ -891,7 +891,7 @@ class Algebra(object):
 
     def factorial(self, a):
         """
-        Returns factorial of `a`.
+        Returns the factorial of `a`.
 
         Example
         =======
@@ -903,7 +903,7 @@ class Algebra(object):
 
     def evalf(self, a, **args):
         """
-        Returns numerical approximation of `a`.
+        Returns a numerical approximation of `a`.
 
         Example
         =======
@@ -1011,7 +1011,7 @@ class Ring(Algebra):
 
     def invert(self, a, b):
         """
-        Returns inversion of `a mod b`.
+        Returns the inversion of `a mod b`.
 
         Example
         =======
@@ -1028,7 +1028,7 @@ class Ring(Algebra):
 
     def numer(self, a):
         """
-        Returns numerator of `a`.
+        Returns the numerator of `a`.
 
         Example
         =======
@@ -1040,7 +1040,7 @@ class Ring(Algebra):
 
     def denom(self, a):
         """
-        Returns denominator of `a`.
+        Returns the denominator of `a`.
 
         Example
         =======
@@ -1117,7 +1117,7 @@ class Field(Ring):
 
     def gcd(self, a, b):
         """
-        Returns GCD of `a` and `b`.
+        Returns the GCD of `a` and `b`.
 
         Example
         =======
@@ -1129,7 +1129,7 @@ class Field(Ring):
 
     def lcm(self, a, b):
         """
-        Returns LCM of `a` and `b`.
+        Returns the LCM of `a` and `b`.
 
         Example
         =======
@@ -1171,7 +1171,7 @@ class IntegerRing(Ring):
 
     def log(self, a, b):
         """
-        Returns b-base logarithm of `a`.
+        Returns the b-base logarithm of `a`.
 
         Example
         =======
@@ -1484,7 +1484,7 @@ class ZZ_python(IntegerRing):
 
     def gcd(self, a, b):
         """
-        Returns GCD of `a` and `b`.
+        Returns the GCD of `a` and `b`.
 
         Example
         =======
@@ -1498,7 +1498,7 @@ class ZZ_python(IntegerRing):
 
     def lcm(self, a, b):
         """
-        Returns LCM of `a` and `b`.
+        Returns the LCM of `a` and `b`.
 
         Example
         =======
@@ -1512,7 +1512,7 @@ class ZZ_python(IntegerRing):
 
     def sqrt(self, a):
         """
-        Returns square root of `a`.
+        Returns the square root of `a`.
 
         Example
         =======
@@ -1706,7 +1706,7 @@ if HAS_FRACTION:
 
         def numer(self, a):
             """
-            Returns numerator of `a`.
+            Returns the numerator of `a`.
 
             Example
             =======
@@ -1721,7 +1721,7 @@ if HAS_FRACTION:
 
         def denom(self, a):
             """
-            Returns denominator of `a`.
+            Returns the denominator of `a`.
 
             Example
             =======
@@ -1973,7 +1973,7 @@ class ZZ_sympy(IntegerRing):
 
     def gcd(self, a, b):
         """
-        Returns GCD of `a` and `b`.
+        Returns the GCD of `a` and `b`.
 
         Example
         =======
@@ -1988,7 +1988,7 @@ class ZZ_sympy(IntegerRing):
 
     def lcm(self, a, b):
         """
-        Returns LCM of `a` and `b`.
+        Returns the LCM of `a` and `b`.
 
         Example
         =======
@@ -2003,7 +2003,7 @@ class ZZ_sympy(IntegerRing):
 
     def sqrt(self, a):
         """
-        Returns square root of `a`.
+        Returns the square root of `a`.
 
         Example
         =======
@@ -2220,7 +2220,7 @@ class QQ_sympy(RationalField):
 
     def numer(self, a):
         """
-        Returns numerator of `a`.
+        Returns the numerator of `a`.
 
         Example
         =======
@@ -2235,7 +2235,7 @@ class QQ_sympy(RationalField):
 
     def denom(self, a):
         """
-        Returns denominator of `a`.
+        Returns the denominator of `a`.
 
         Example
         =======
@@ -2459,7 +2459,7 @@ if HAS_GMPY:
 
         def gcd(self, a, b):
             """
-            Returns GCD of `a` and `b`.
+            Returns the GCD of `a` and `b`.
 
             Example
             =======
@@ -2474,7 +2474,7 @@ if HAS_GMPY:
 
         def lcm(self, a, b):
             """
-            Returns LCM of `a` and `b`.
+            Returns the LCM of `a` and `b`.
 
             Example
             =======
@@ -2489,7 +2489,7 @@ if HAS_GMPY:
 
         def sqrt(self, a):
             """
-            Returns square root of `a`.
+            Returns the square root of `a`.
 
             Example
             =======
@@ -2506,7 +2506,7 @@ if HAS_GMPY:
 
         def factorial(self, a):
             """
-            Returns factorial of `a`.
+            Returns the factorial of `a`.
 
             Example
             =======
@@ -2753,7 +2753,7 @@ if HAS_GMPY:
 
         def numer(self, a):
             """
-            Returns numerator of `a`.
+            Returns the numerator of `a`.
 
             Example
             =======
@@ -2767,7 +2767,8 @@ if HAS_GMPY:
             return gmpy_numer(a)
 
         def denom(self, a):
-            """Returns denominator of `a`.
+            """
+            Returns the denominator of `a`.
 
             Example
             =======
@@ -2781,7 +2782,8 @@ if HAS_GMPY:
             return gmpy_denom(a)
 
         def factorial(self, a):
-            """Returns factorial of `a`.
+            """
+            Returns the factorial of `a`.
 
             Example
             =======
@@ -3943,11 +3945,11 @@ class AlgebraicField(Field):
         return self.dom.is_nonnegative(a.LC())
 
     def numer(self, a):
-        """Returns numerator of `a`. """
+        """Returns the numerator of `a`. """
         return a
 
     def denom(self, a):
-        """Returns denominator of `a`. """
+        """Returns the denominator of `a`. """
         return self.one
 
 class PolynomialRing(Ring):
@@ -4382,7 +4384,7 @@ class PolynomialRing(Ring):
 
     def gcd(self, a, b):
         r"""
-        Returns GCD of `a` and `b`.
+        Returns the GCD of `a` and `b`.
 
         Example
         =======
@@ -4398,7 +4400,7 @@ class PolynomialRing(Ring):
 
     def lcm(self, a, b):
         r"""
-        Returns LCM of `a` and `b`.
+        Returns the LCM of `a` and `b`.
 
         Example
         =======
@@ -4413,7 +4415,7 @@ class PolynomialRing(Ring):
         return a.lcm(b)
 
     def factorial(self, a):
-        """Returns factorial of `a`. """
+        """Returns the factorial of `a`. """
         # XXX: What is this supposed to do?
         return self.dtype(self.dom.factorial(a))
 
@@ -4849,7 +4851,7 @@ class FractionField(Field):
 
     def numer(self, a):
         r"""
-        Returns numerator of `a`.
+        Returns the numerator of `a`.
 
         Example
         =======
@@ -4865,7 +4867,7 @@ class FractionField(Field):
 
     def denom(self, a):
         r"""
-        Returns denominator of `a`.
+        Returns the denominator of `a`.
 
         Example
         =======
@@ -4880,7 +4882,7 @@ class FractionField(Field):
         return a.denom()
 
     def factorial(self, a):
-        """Returns factorial of `a`. """
+        """Returns the factorial of `a`. """
         # XXX: What is this suppposed to do?
         return self.dtype(self.dom.factorial(a))
 
@@ -5068,11 +5070,11 @@ class ExpressionDomain(Field):
         return a.ex.as_coeff_terms()[0].is_nonnegative
 
     def numer(self, a):
-        """Returns numerator of `a`. """
+        """Returns the numerator of `a`. """
         return a.numer()
 
     def denom(self, a):
-        """Returns denominator of `a`. """
+        """Returns the denominator of `a`. """
         return a.denom()
 
 EX = ExpressionDomain()

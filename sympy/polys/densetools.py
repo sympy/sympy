@@ -235,14 +235,14 @@ def dmp_integrate_in(f, m, j, u, K):
     True
     """
     if j < 0 or j > u:
-        raise IndexError("-%s <= j < %s expected, got %s" % (u, u, j))
+        raise IndexError("0 <= j <= u expected, got %s" % (u, j))
 
     return _rec_integrate_in(f, m, u, 0, j, K)
 
 @cythonized("m,n,i")
 def dup_diff(f, m, K):
     """
-    m-th order derivative of a polynomial in `K[x]`.
+    `m`-th order derivative of a polynomial in `K[x]`.
 
     Example
     =======
@@ -275,7 +275,7 @@ def dup_diff(f, m, K):
 @cythonized("u,v,m,n,i")
 def dmp_diff(f, m, u, K):
     """
-    m-th order derivative in `x_0` of a polynomial in `K[X]`.
+    `m`-th order derivative in `x_0` of a polynomial in `K[X]`.
 
     Example
     =======
@@ -333,7 +333,7 @@ def dmp_diff_in(f, m, j, u, K):
     [[2, 2], [4, 3]]
     """
     if j < 0 or j > u:
-        raise IndexError("-%s <= j < %s expected, got %s" % (u, u, j))
+        raise IndexError("0 <= j <= %s expected, got %s" % (u, j))
 
     return _rec_diff_in(f, m, u, 0, j, K)
 
@@ -410,7 +410,7 @@ def dmp_eval_in(f, a, j, u, K):
     [7, 4]
     """
     if j < 0 or j > u:
-        raise IndexError("-%s <= j < %s expected, got %s" % (u, u, j))
+        raise IndexError("0 <= j <= %s expected, got %s" % (u, j))
 
     return _rec_eval_in(f, a, u, 0, j, K)
 
@@ -479,7 +479,7 @@ def dmp_diff_eval_in(f, m, a, j, u, K):
     [6, 11]
     """
     if j > u:
-        raise IndexError("-%s <= j < %s expected, got %s" % (u, u, j))
+        raise IndexError("0 <= j <= %s expected, got %s" % (u, j))
     if not j:
         return dmp_eval(dmp_diff(f, m, u, K), a, u, K)
 
