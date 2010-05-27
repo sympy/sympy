@@ -132,7 +132,7 @@ def init_session(session="ipython", pretty_print=True, order=None, use_unicode=N
 
         from sympy.polys.algebratools import GROUND_TYPES
 
-        info = ['types: %s' % GROUND_TYPES]
+        info = ['ground types: %s' % GROUND_TYPES]
 
         cache = os.getenv('SYMPY_USE_CACHE')
 
