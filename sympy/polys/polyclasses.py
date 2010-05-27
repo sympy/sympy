@@ -251,21 +251,62 @@ class GFP(object):
 
     @classmethod
     def zero(cls, dom, mod):
+        """
+        Returns a zero polynomial with modulus `mod` and domain `dom`.
+
+        Example
+        =======
+        >>> from sympy.polys.polyclasses import GFP
+        >>> from sympy.polys.algebratools import ZZ
+        >>> GFP.zero(ZZ, 2)
+        GFP([], 2, ZZ)
+        """
         return GFP(0, mod, dom)
 
     @classmethod
-    def one(cls, dom):
+    def one(cls, dom, mod):
+        r"""
+        Returns a one polynomial with modulus `mod` and domain `dom`.
+
+        Example
+        =======
+        >>> from sympy.polys.polyclasses import GFP
+        >>> from sympy.polys.algebratools import ZZ
+        >>> GFP.one(ZZ, 2) == \
+        ... GFP([ZZ(1)], 2, ZZ)
+        True
+        """
         return GFP(1, mod, dom)
 
     def trunc(f, mod):
-        """Reduce `f` using new modulus. """
+        r"""
+        Reduce `f` using new modulus.
+
+        Example
+        =======
+        >>> from sympy.polys.polyclasses import GFP
+        >>> from sympy.polys.algebratools import ZZ
+        >>> GFP([ZZ(7), ZZ(-2), ZZ(3)], 11, ZZ).trunc(5) == \
+        ... GFP([ZZ(2), ZZ(4), ZZ(3)], 5, ZZ)
+        True
+        """
         if mod == f.mod:
             return f
         else:
             return GFP(gf_trunc(f.rep, mod), mod, f.dom, f.sym)
 
     def convert(f, dom):
-        """Convert the ground domain of `f`. """
+        r"""
+        Convert the ground domain of `f`.
+
+        Example
+        =======
+        >>> from sympy.polys.polyclasses import GFP
+        >>> from sympy.polys.algebratools import ZZ
+        >>> GFP([ZZ(1), ZZ(4), ZZ(0)], 3, ZZ).convert(ZZ) == \
+        ... GFP([ZZ(1), ZZ(4), ZZ(0)], 3, ZZ)
+        True
+        """
         if f.dom == dom:
             return f
         elif dom.is_ZZ:
@@ -274,7 +315,16 @@ class GFP(object):
             raise DomainError("can't convert GFP ground domain to %s" % dom)
 
     def coeffs(f, order=None):
-        """Returns all non-zero coefficients from `f`. """
+        """
+        Returns all non-zero coefficients from `f`.
+
+        Example
+        =======
+        >>> from sympy.polys.polyclasses import GFP
+        >>> from sympy.polys.algebratools import ZZ
+        >>> GFP([ZZ(1), ZZ(2), ZZ(0), ZZ(4)], 5, ZZ).coeffs()
+        [1, 2, -1]
+        """
         if not f:
             return [f.dom.zero]
         elif not f.sym:
@@ -283,7 +333,16 @@ class GFP(object):
             return [ gf_int(c, f.mod) for c in f.rep if c ]
 
     def monoms(f, order=None):
-        """Returns all non-zero monomials from `f`. """
+        """
+        Returns all non-zero monomials from `f`.
+
+        Example
+        =======
+        >>> from sympy.polys.polyclasses import GFP
+        >>> from sympy.polys.algebratools import ZZ
+        >>> GFP([ZZ(1), ZZ(2), ZZ(0), ZZ(4)], 5, ZZ).monoms()
+        [(3,), (2,), (0,)]
+        """
         n = gf_degree(f.rep)
 
         if n < 0:
@@ -292,7 +351,16 @@ class GFP(object):
             return [ (n-i,) for i, c in enumerate(f.rep) if c ]
 
     def terms(f, order=None):
-        """Returns all non-zero terms from `f`. """
+        """
+        Returns all non-zero terms from `f`.
+
+        Example
+        =======
+        >>> from sympy.polys.polyclasses import GFP
+        >>> from sympy.polys.algebratools import ZZ
+        >>> GFP([ZZ(1), ZZ(2), ZZ(0), ZZ(4)], 5, ZZ).terms()
+        [((3,), 1), ((2,), 2), ((0,), -1)]
+        """
         n = gf_degree(f.rep)
 
         if n < 0:
@@ -303,7 +371,16 @@ class GFP(object):
             return [ ((n-i,), gf_int(c, f.mod)) for i, c in enumerate(f.rep) if c ]
 
     def all_coeffs(f):
-        """Returns all coefficients from `f`. """
+        """
+        Returns all coefficients from `f`.
+
+        Example
+        =======
+        >>> from sympy.polys.polyclasses import GFP
+        >>> from sympy.polys.algebratools import ZZ
+        >>> GFP([ZZ(1), ZZ(2), ZZ(0), ZZ(4)], 5, ZZ).all_coeffs()
+        [1, 2, 0, -1]
+        """
         if not f:
             return [f.dom.zero]
         elif not f.sym:
@@ -312,14 +389,34 @@ class GFP(object):
             return [ gf_int(c, f.mod) for c in f.rep ]
 
     def all_monoms(f):
-        """Returns all monomials from `f`. """
+        """
+        Returns all monomials from `f`.
+
+        Example
+        =======
+        >>> from sympy.polys.polyclasses import GFP
+        >>> from sympy.polys.algebratools import ZZ
+        >>> GFP([ZZ(1), ZZ(2), ZZ(0), ZZ(4)], 5, ZZ).all_monoms()
+        [(3,), (2,), (1,), (0,)]
+        """
+        n = gf_degree(f.rep)
+
         if n < 0:
             return [((0,), f.dom.zero)]
         else:
             return [ (n-i,) for i, c in enumerate(f.rep) ]
 
     def all_terms(f):
-        """Returns all terms from a `f`. """
+        """
+        Returns all terms from `f`.
+
+        Example
+        =======
+        >>> from sympy.polys.polyclasses import GFP
+        >>> from sympy.polys.algebratools import ZZ
+        >>> GFP([ZZ(1), ZZ(2), ZZ(0), ZZ(4)], 5, ZZ).all_terms()
+        [((3,), 1), ((2,), 2), ((1,), 0), ((0,), -1)]
+        """
         n = gf_degree(f.rep)
 
         if n < 0:
@@ -330,122 +427,394 @@ class GFP(object):
             return [ ((n-i,), gf_int(c, f.mod)) for i, c in enumerate(f.rep) ]
 
     def deflate(f):
-        """Reduce degree of `f` by mapping `x**m` to `y`. """
+        r"""
+        Reduce degree of `f` by mapping `x**m` to `y`.
+
+        Example
+        =======
+        >>> from sympy.polys.polyclasses import GFP
+        >>> from sympy.polys.algebratools import ZZ
+        >>> GFP([ZZ(1), ZZ(0), ZZ(0), ZZ(1)], 5, ZZ).deflate() == \
+        ... (3, GFP([ZZ(1), ZZ(1)], 5, ZZ))
+        True
+        """
         j, F = dup_deflate(f.rep, f.dom)
         return j, f.per(F)
 
     def terms_gcd(f):
-        """Remove GCD of terms from the polynomial `f`. """
+        r"""
+        Remove GCD of terms from the polynomial `f`.
+
+        Example
+        =======
+        >>> from sympy.polys.polyclasses import GFP
+        >>> from sympy.polys.algebratools import ZZ
+        >>> GFP([ZZ(1), ZZ(0), ZZ(1), ZZ(0), ZZ(0)], 5, ZZ).terms_gcd() == \
+        ... (2, GFP([ZZ(1), ZZ(0), ZZ(1)], 5, ZZ))
+        True
+        """
         j, F = dup_terms_gcd(f.rep, f.dom)
         return j, f.per(F)
 
     def add_ground(f, c):
-        """Add an element of the ground domain to `f`. """
+        r"""
+        Add an element of the ground domain to `f`.
+
+        Example
+        =======
+        >>> from sympy.polys.polyclasses import GFP
+        >>> from sympy.polys.algebratools import ZZ
+        >>> GFP([ZZ(3), ZZ(2), ZZ(4)], 5, ZZ).add_ground(2) == \
+        ... GFP([ZZ(3), ZZ(2), ZZ(1)], 5, ZZ)
+        True
+        """
         return f.per(gf_add_ground(f.rep, f.dom.convert(c), f.mod, f.dom))
 
     def sub_ground(f, c):
-        """Subtract an element of the ground domain from `f`. """
+        r"""
+        Subtract an element of the ground domain from `f`.
+
+        Example
+        =======
+        >>> from sympy.polys.polyclasses import GFP
+        >>> from sympy.polys.algebratools import ZZ
+        >>> GFP([ZZ(3), ZZ(2), ZZ(4)], 5, ZZ).sub_ground(2) == \
+        ... GFP([ZZ(3), ZZ(2), ZZ(2)], 5, ZZ)
+        True
+        """
         return f.per(gf_sub_ground(f.rep, f.dom.convert(c), f.mod, f.dom))
 
     def mul_ground(f, c):
-        """Multiply `f` by an element of the ground domain. """
+        r"""
+        Multiply `f` by an element of the ground domain.
+
+        Example
+        =======
+        >>> from sympy.polys.polyclasses import GFP
+        >>> from sympy.polys.algebratools import ZZ
+        >>> GFP([ZZ(3), ZZ(2), ZZ(4)], 5, ZZ).mul_ground(2) == \
+        ... GFP([ZZ(1), ZZ(4), ZZ(3)], 5, ZZ)
+        True
+        """
         return f.per(gf_mul_ground(f.rep, f.dom.convert(c), f.mod, f.dom))
 
     def exquo_ground(f, c):
-        """Divide `f` by an element of the ground domain. """
+        r"""
+        Divide `f` by an element of the ground domain.
+
+        Example
+        =======
+        >>> from sympy.polys.polyclasses import GFP
+        >>> from sympy.polys.algebratools import ZZ
+        >>> GFP([ZZ(3), ZZ(2), ZZ(4)], 5, ZZ).exquo_ground(2) == \
+        ... GFP([ZZ(4), ZZ(1), ZZ(2)], 5, ZZ)
+        True
+        """
         return f.per(gf_exquo_ground(f.rep, f.dom.convert(c), f.mod, f.dom))
 
     def neg(f):
-        """Negate all cefficients in `f`. """
-        return f.per(gf_neg(f.rep, f.dom))
+        r"""
+        Negate all cefficients in `f`.
+
+        Example
+        =======
+        >>> from sympy.polys.polyclasses import GFP
+        >>> from sympy.polys.algebratools import ZZ
+        >>> GFP([ZZ(3), ZZ(2), ZZ(1), ZZ(0)], 5, ZZ).neg() == \
+        ... GFP([ZZ(2), ZZ(3), ZZ(4), ZZ(0)], 5, ZZ)
+        True
+        """
+        return f.per(gf_neg(f.rep, f.mod, f.dom))
 
     def add(f, g):
-        """Add two univariate polynomials `f` and `g`. """
+        r"""
+        Add two univariate polynomials `f` and `g`.
+
+        Example
+        =======
+        >>> from sympy.polys.polyclasses import GFP
+        >>> from sympy.polys.algebratools import ZZ
+        >>> GFP([ZZ(3), ZZ(2), ZZ(4)], 5, ZZ).add(
+        ... GFP([ZZ(2), ZZ(2), ZZ(2)], 5, ZZ)) == \
+        ... GFP([ZZ(4), ZZ(1)], 5, ZZ)
+        True
+        """
         mod, dom, per, F, G = f.unify(g)
         return per(gf_add(F, G, mod, dom))
 
     def sub(f, g):
-        """Subtract two univariate polynomials `f` and `g`. """
+        r"""
+        Subtract two univariate polynomials `f` and `g`.
+
+        Example
+        =======
+        >>> from sympy.polys.polyclasses import GFP
+        >>> from sympy.polys.algebratools import ZZ
+        >>> GFP([ZZ(3), ZZ(2), ZZ(4)], 5, ZZ).sub(
+        ... GFP([ZZ(2), ZZ(2), ZZ(2)], 5, ZZ)) == \
+        ... GFP([ZZ(1), ZZ(0), ZZ(2)], 5, ZZ)
+        True
+        """
         mod, dom, per, F, G = f.unify(g)
         return per(gf_sub(F, G, mod, dom))
 
     def mul(f, g):
-        """Multiply two univariate polynomials `f` and `g`. """
+        r"""
+        Multiply two univariate polynomials `f` and `g`.
+
+        Example
+        =======
+        >>> from sympy.polys.polyclasses import GFP
+        >>> from sympy.polys.algebratools import ZZ
+        >>> GFP([ZZ(3), ZZ(2), ZZ(4)], 5, ZZ).mul(
+        ... GFP([ZZ(2), ZZ(2), ZZ(2)], 5, ZZ)) == \
+        ... GFP([ZZ(1), ZZ(0), ZZ(3), ZZ(2), ZZ(3)], 5, ZZ)
+        True
+        """
         mod, dom, per, F, G = f.unify(g)
         return per(gf_mul(F, G, mod, dom))
 
     def sqr(f):
-        """Square a univariate polynomial `f`. """
+        r"""
+        Square a univariate polynomial `f`.
+
+        Example
+        =======
+        >>> from sympy.polys.polyclasses import GFP
+        >>> from sympy.polys.algebratools import ZZ
+        >>> GFP([ZZ(3), ZZ(2), ZZ(4)], 5, ZZ).sqr() == \
+        ... GFP([ZZ(4), ZZ(2), ZZ(3), ZZ(1), ZZ(1)], 5, ZZ)
+        True
+        """
         return f.per(gf_sqr(f.rep, f.mod, f.dom))
 
     def pow(f, n):
-        """Raise `f` to a non-negative power `n`. """
+        r"""
+        Raise `f` to a non-negative power `n`.
+
+        Example
+        =======
+        >>> from sympy.polys.polyclasses import GFP
+        >>> from sympy.polys.algebratools import ZZ
+        >>> GFP([ZZ(3), ZZ(2), ZZ(4)], 5, ZZ).pow(3) == \
+        ... GFP([ZZ(2), ZZ(4), ZZ(4), ZZ(2), ZZ(2), ZZ(1), ZZ(4)], 5, ZZ)
+        True
+        """
         if isinstance(n, int):
             return f.per(gf_pow(f.rep, n, f.mod, f.dom))
         else:
             raise TypeError("`int` expected, got %s" % type(n))
 
     def div(f, g):
-        """Polynomial division with remainder of `f` and `g`. """
+        r"""
+        Polynomial division with remainder of `f` and `g`.
+
+        Example
+        =======
+        >>> from sympy.polys.polyclasses import GFP
+        >>> from sympy.polys.algebratools import ZZ
+        >>> GFP([ZZ(1), ZZ(0), ZZ(1), ZZ(1)], 2, ZZ).div(
+        ... GFP([ZZ(1), ZZ(1), ZZ(0)], 2, ZZ)) == \
+        ... (GFP([ZZ(1), ZZ(1)], 2, ZZ), GFP([ZZ(1)], 2, ZZ))
+        True
+        """
         mod, dom, per, F, G = f.unify(g)
         q, r = gf_div(F, G, mod, dom)
         return per(q), per(r)
 
     def rem(f, g):
-        """Computes polynomial remainder in of `f` and `g`. """
+        r"""
+        Computes polynomial remainder in of `f` and `g`.
+
+        Example
+        =======
+        >>> from sympy.polys.polyclasses import GFP
+        >>> from sympy.polys.algebratools import ZZ
+        >>> GFP([ZZ(1), ZZ(0), ZZ(1), ZZ(1)], 2, ZZ).rem(
+        ... GFP([ZZ(1), ZZ(1), ZZ(0)], 2, ZZ)) == \
+        ... GFP([ZZ(1)], 2, ZZ)
+        True
+        """
         mod, dom, per, F, G = f.unify(g)
         return per(gf_rem(F, G, mod, dom))
 
     def quo(f, g):
-        """Computes polynomial quotient in of `f` and `g`. """
+        r"""
+        Computes polynomial quotient in of `f` and `g`.
+
+        Example
+        =======
+        >>> from sympy.polys.polyclasses import GFP
+        >>> from sympy.polys.algebratools import ZZ
+
+        >> GFP([ZZ(1), ZZ(0), ZZ(1), ZZ(1)], 2, ZZ).quo(
+        ... GFP([ZZ(1), ZZ(1), ZZ(0)], 2, ZZ))
+        Traceback (most recent call last):
+        ...
+        ExactQuotientFailed: [1, 1, 0] does not divide [1, 0, 1, 1]
+        >>> GFP([ZZ(1), ZZ(0), ZZ(3), ZZ(2), ZZ(3)], 5, ZZ).quo(
+        ... GFP([ZZ(2), ZZ(2), ZZ(2)], 5, ZZ)) == \
+        ... GFP([ZZ(3), ZZ(2), ZZ(4)], 5, ZZ)
+        True
+        """
         mod, dom, per, F, G = f.unify(g)
         return per(gf_quo(F, G, mod, dom))
 
     def exquo(f, g):
-        """Computes polynomial exact quotient in of `f` and `g`. """
+        r"""
+        Computes polynomial exact quotient in of `f` and `g`.
+
+        Example
+        =======
+        >>> from sympy.polys.polyclasses import GFP
+        >>> from sympy.polys.algebratools import ZZ
+        >>> GFP([ZZ(1), ZZ(0), ZZ(1), ZZ(1)], 2, ZZ).exquo(
+        ... GFP([ZZ(1), ZZ(1), ZZ(0)], 2, ZZ)) == \
+        ... GFP([ZZ(1), ZZ(1)], 2, ZZ)
+        True
+        >>> GFP([ZZ(1), ZZ(0), ZZ(3), ZZ(2), ZZ(3)], 5, ZZ).exquo(
+        ... GFP([ZZ(2), ZZ(2), ZZ(2)], 5, ZZ)) == \
+        ... GFP([ZZ(3), ZZ(2), ZZ(4)], 5, ZZ)
+        True
+        """
         mod, dom, per, F, G = f.unify(g)
         return per(gf_exquo(F, G, mod, dom))
 
     def degree(f):
-        """Returns the leading degree of `f`. """
+        """
+        Returns the leading degree of `f`.
+
+        Example
+        =======
+        >>> from sympy.polys.polyclasses import GFP
+        >>> from sympy.polys.algebratools import ZZ
+        >>> GFP([ZZ(1), ZZ(1), ZZ(2), ZZ(0)], 5, ZZ).degree()
+        3
+        >>> GFP([], 5, ZZ).degree()
+        -1
+        """
         return gf_degree(f.rep)
 
     def LC(f):
-        """Returns the leading coefficent of `f`. """
+        """
+        Returns the leading coefficent of `f`.
+
+        Example
+        =======
+        >>> from sympy.polys.polyclasses import GFP
+        >>> from sympy.polys.algebratools import ZZ
+        >>> GFP([ZZ(3), ZZ(0), ZZ(1)], 5, ZZ).LC()
+        3
+        """
         return gf_LC(f.rep, f.dom)
 
     def TC(f):
-        """Returns the trailing coefficent of `f`. """
+        """
+        Returns the trailing coefficent of `f`.
+
+        Example
+        =======
+        >>> from sympy.polys.polyclasses import GFP
+        >>> from sympy.polys.algebratools import ZZ
+        >>> GFP([ZZ(3), ZZ(0), ZZ(1)], 5, ZZ).TC()
+        1
+        """
         return gf_TC(f.rep, f.dom)
 
     def gcdex(f, g):
-        """Extended Euclidean algorithm. """
+        r"""
+        Extended Euclidean algorithm.
+
+        Example
+        =======
+        >>> from sympy.polys.polyclasses import GFP
+        >>> from sympy.polys.algebratools import ZZ
+        >>> GFP([ZZ(1), ZZ(8), ZZ(7)], 11, ZZ).gcdex(
+        ... GFP([ZZ(1), ZZ(7), ZZ(1), ZZ(7)], 11, ZZ)) == \
+        ... (GFP([ZZ(5), ZZ(6)], 11, ZZ), GFP([ZZ(6)], 11, ZZ),
+        ...  GFP([ZZ(1), ZZ(7)], 11, ZZ))
+        True
+        """
         mod, dom, per, F, G = f.unify(g)
         s, t, h = gf_gcdex(F, G, mod, dom)
         return per(s), per(t), per(h)
 
     def gcd(f, g):
-        """Returns polynomial GCD of `f` and `g`. """
+        r"""
+        Returns polynomial GCD of `f` and `g`.
+
+        Example
+        =======
+        >>> from sympy.polys.polyclasses import GFP
+        >>> from sympy.polys.algebratools import ZZ
+        >>> GFP([ZZ(1), ZZ(8), ZZ(7)], 11, ZZ).gcd(
+        ... GFP([ZZ(1), ZZ(7), ZZ(1), ZZ(7)], 11, ZZ)) == \
+        ... GFP([ZZ(1), ZZ(7)], 11, ZZ)
+        True
+        """
         mod, dom, per, F, G = f.unify(g)
         return per(gf_gcd(F, G, mod, dom))
 
     def lcm(f, g):
-        """Returns polynomial LCM of `f` and `g`. """
+        r"""
+        Returns polynomial LCM of `f` and `g`.
+
+        Example
+        =======
+        >>> from sympy.polys.polyclasses import GFP
+        >>> from sympy.polys.algebratools import ZZ
+        >>> GFP([ZZ(1), ZZ(8), ZZ(7)], 11, ZZ).lcm(
+        ... GFP([ZZ(1), ZZ(7), ZZ(1), ZZ(7)], 11, ZZ)) == \
+        ... GFP([ZZ(1), ZZ(8), ZZ(8), ZZ(8), ZZ(7)], 11, ZZ)
+        True
+        """
         mod, dom, per, F, G = f.unify(g)
         return per(gf_lcm(F, G, mod, dom))
 
     def cofactors(f, g):
-        """Returns polynomial GCD and cofactors of `f` and `g`. """
+        r"""
+        Returns polynomial GCD and cofactors of `f` and `g`.
+
+        Example
+        =======
+        >>> from sympy.polys.polyclasses import GFP
+        >>> from sympy.polys.algebratools import ZZ
+        >>> GFP([ZZ(1), ZZ(8), ZZ(7)], 11, ZZ).cofactors(
+        ... GFP([ZZ(1), ZZ(7), ZZ(1), ZZ(7)], 11, ZZ)) == \
+        ... (GFP([ZZ(1), ZZ(7)], 11, ZZ), GFP([ZZ(1), ZZ(1)], 11, ZZ),
+        ...  GFP([ZZ(1), ZZ(0), ZZ(1)], 11, ZZ))
+        True
+        """
         mod, dom, per, F, G = f.unify(g)
         h, s, t = gf_cofactors(F, G, mod, dom)
         return per(h), per(s), per(t)
 
     def monic(f):
-        """Divides all coefficients by `LC(f)`. """
+        r"""
+        Divides all coefficients by `LC(f)`.
+
+        Example
+        =======
+        >>> from sympy.polys.polyclasses import GFP
+        >>> from sympy.polys.algebratools import ZZ
+        >>> GFP([ZZ(3), ZZ(2), ZZ(4)], 5, ZZ).monic() == \
+        ... GFP([ZZ(1), ZZ(4), ZZ(3)], 5, ZZ)
+        True
+        """
         return f.per(gf_monic(f.rep, f.mod, f.dom)[1])
 
     def diff(f, m=1):
-        """Computes partial derivative of `f`. """
+        r"""
+        Computes partial derivative of `f`.
+
+        Example
+        =======
+        >>> from sympy.polys.polyclasses import GFP
+        >>> from sympy.polys.algebratools import ZZ
+        >>> GFP([ZZ(3), ZZ(2), ZZ(4)], 5, ZZ).diff() == \
+        ... GFP([ZZ(1), ZZ(2)], 5, ZZ)
+        True
+        """
         if isinstance(m, int):
             if not m:
                 return f
@@ -460,56 +829,175 @@ class GFP(object):
             raise TypeError("`int` expected, got %s" % type(m))
 
     def eval(f, a):
-        """Evaluates `f` at the given point `a`. """
+        """
+        Evaluates `f` at the given point `a`.
+
+        Example
+        =======
+        >>> from sympy.polys.polyclasses import GFP
+        >>> from sympy.polys.algebratools import ZZ
+        >>> GFP([ZZ(3), ZZ(2), ZZ(4)], 5, ZZ).eval(2)
+        0
+        """
         return gf_eval(f.rep, f.dom.convert(a), f.mod, f.dom)
 
     def compose(f, g):
-        """Computes functional composition of `f` and `g`. """
+        r"""
+        Computes functional composition of `f` and `g`.
+
+        Example
+        =======
+        >>> from sympy.polys.polyclasses import GFP
+        >>> from sympy.polys.algebratools import ZZ
+        >>> GFP([ZZ(3), ZZ(2), ZZ(4)], 5, ZZ).compose(
+        ... GFP([ZZ(2), ZZ(2), ZZ(2)], 5, ZZ)) == \
+        ... GFP([ZZ(2), ZZ(4), ZZ(0), ZZ(3), ZZ(0)], 5, ZZ)
+        True
+        """
         mod, dom, per, F, G = f.unify(g)
         return per(gf_compose(F, G, mod, dom))
 
     def sqf_part(f):
-        """Computes square-free part of `f`. """
+        r"""
+        Computes square-free part of `f`.
+
+        Example
+        =======
+        >>> from sympy.polys.polyclasses import GFP
+        >>> from sympy.polys.algebratools import ZZ
+        >>> GFP([ZZ(1), ZZ(1), ZZ(3), ZZ(0), ZZ(1), ZZ(0), ZZ(2), ZZ(2), ZZ(1)],
+        ... 5, ZZ).sqf_part() == \
+        ... GFP([ZZ(1), ZZ(4), ZZ(3)], 5, ZZ)
+        True
+        """
         return f.per(gf_sqf_part(f.rep, f.mod, f.dom))
 
-    def sqf_list(f, **args):
-        """Returns a list of square-free factors of `f`. """
-        coeff, factors = gf_sqf_list(f.rep, f.mod, f.dom, **args)
+    def sqf_list(f):
+        r"""
+        Returns a list of square-free factors of `f`.
+
+        Example
+        =======
+        >>> from sympy.polys.polyclasses import GFP
+        >>> from sympy.polys.algebratools import ZZ
+        >>> GFP({11: ZZ(1), 0: ZZ(1)}, 11, ZZ).sqf_list() == \
+        ... (1, [(GFP([ZZ(1), ZZ(1)], 11, ZZ), 11)])
+        True
+        """
+        coeff, factors = gf_sqf_list(f.rep, f.mod, f.dom)
         return coeff, [ (f.per(g), k) for g, k in factors ]
 
-    def factor_list(f, **args):
-        """Returns a list of irreducible factors of `f`. """
-        coeff, factors = gf_factor(f.rep, f.mod, f.dom, **args)
+    def factor_list(f):
+        r"""
+        Returns a list of irreducible factors of `f`.
+
+        Example
+        =======
+        >>> from sympy.polys.polyclasses import GFP
+        >>> from sympy.polys.algebratools import ZZ
+        >>> GFP([ZZ(5), ZZ(2), ZZ(7), ZZ(2)], 11, ZZ).factor_list() == \
+        ... (5, [(GFP([ZZ(1), ZZ(2)], 11, ZZ), 1),
+        ...  (GFP([ZZ(1), ZZ(8)], 11, ZZ), 2)])
+        True
+        """
+        coeff, factors = gf_factor(f.rep, f.mod, f.dom)
         return coeff, [ (f.per(g), k) for g, k in factors ]
 
     @property
     def is_zero(f):
-        """Returns `True` if `f` is a zero polynomial. """
+        """
+        Returns `True` if `f` is a zero polynomial.
+
+        Example
+        =======
+        >>> from sympy.polys.polyclasses import GFP
+        >>> from sympy.polys.algebratools import ZZ
+        >>> GFP([], 5, ZZ).is_zero
+        True
+        >>> GFP([ZZ(1)], 5, ZZ).is_zero
+        False
+        """
         return not f
 
     @property
     def is_one(f):
-        """Returns `True` if `f` is a unit polynomial. """
+        """
+        Returns `True` if `f` is a unit polynomial.
+
+        Example
+        =======
+        >>> from sympy.polys.polyclasses import GFP
+        >>> from sympy.polys.algebratools import ZZ
+        >>> GFP([], 5, ZZ).is_one
+        False
+        >>> GFP([ZZ(1)], 5, ZZ).is_one
+        True
+        """
         return f.rep == [f.dom.one]
 
     @property
     def is_ground(f):
-        """Returns `True` if `f` is an element of the ground domain. """
+        """
+        Returns `True` if `f` is an element of the ground domain.
+
+        Example
+        =======
+        >>> from sympy.polys.polyclasses import GFP
+        >>> from sympy.polys.algebratools import ZZ
+        >>> GFP([ZZ(1), ZZ(0)], 5, ZZ).is_ground
+        False
+        >>> GFP([ZZ(1)], 5, ZZ).is_ground
+        True
+        """
         return len(f.rep) <= 1
 
     @property
     def is_sqf(f):
-        """Returns `True` if `f` is a square-free polynomial. """
+        """
+        Returns `True` if `f` is a square-free polynomial.
+
+        Example
+        =======
+        >>> from sympy.polys.polyclasses import GFP
+        >>> from sympy.polys.algebratools import ZZ
+        >>> GFP([ZZ(3), ZZ(2), ZZ(4)], 5, ZZ).is_sqf
+        True
+        >>> GFP([ZZ(2), ZZ(4), ZZ(4), ZZ(2), ZZ(2), ZZ(1), ZZ(4)], 5, ZZ).is_sqf
+        False
+        """
         return gf_sqf_p(f.rep, f.mod, f.dom)
 
     @property
     def is_monic(f):
-        """Returns `True` if the leading coefficient of `f` is one. """
+        """
+        Returns `True` if the leading coefficient of `f` is one.
+
+        Example
+        =======
+        >>> from sympy.polys.polyclasses import GFP
+        >>> from sympy.polys.algebratools import ZZ
+        >>> GFP([ZZ(3), ZZ(2), ZZ(4)], 5, ZZ).is_monic
+        False
+        >>> GFP([ZZ(1), ZZ(4), ZZ(3)], 5, ZZ).is_monic
+        True
+        """
         return f.dom.is_one(gf_LC(f.rep, f.dom))
 
     @property
     def is_irreducible(f):
-        """Returns `True` if `f` has no factors over its domain. """
+        """
+        Returns `True` if `f` has no factors over its domain.
+
+        Example
+        =======
+        >>> from sympy.polys.polyclasses import GFP
+        >>> from sympy.polys.algebratools import ZZ
+        >>> GFP([ZZ(1), ZZ(4), ZZ(2), ZZ(2), ZZ(3), ZZ(2), ZZ(4), ZZ(1), ZZ(4),
+        ... ZZ(0), ZZ(4)], 5, ZZ).is_irreducible
+        True
+        >>> GFP([ZZ(3), ZZ(2), ZZ(4)], 5, ZZ).is_irreducible
+        False
+        """
         return gf_irreducible_p(f.rep, f.mod, f.dom)
 
     def __neg__(f):
@@ -2313,30 +2801,103 @@ class DMF(object):
 
     @classmethod
     def zero(cls, lev, dom):
+        r"""
+        Returns a multivariate zero fraction with level `lev` and domain `dom`.
+
+        Example
+        =======
+        >>> from sympy.polys.polyclasses import DMF
+        >>> from sympy.polys.algebratools import ZZ
+        >>> DMF.zero(3, ZZ) == \
+        ... DMF(([[[[]]]], [[[[ZZ(1)]]]]), ZZ)
+        True
+        """
         return DMF(0, dom, lev)
 
     @classmethod
     def one(cls, lev, dom):
+        r"""
+        Returns a multivariate zero fraction with level `lev` and domain `dom`.
+
+        Example
+        =======
+        >>> from sympy.polys.polyclasses import DMF
+        >>> from sympy.polys.algebratools import ZZ
+        >>> DMF.one(3, ZZ) == \
+        ... DMF(([[[[ZZ(1)]]]], [[[[ZZ(1)]]]]), ZZ)
+        True
+        """
         return DMF(1, dom, lev)
 
     def numer(f):
-        """Returns numerator of `f`. """
+        r"""
+        Returns the numerator of `f`.
+
+        Example
+        =======
+        >>> from sympy.polys.polyclasses import DMF, DMP
+        >>> from sympy.polys.algebratools import ZZ
+        >>> DMF(([ZZ(1), ZZ(2)], [ZZ(1), ZZ(-2)]), ZZ).numer() == \
+        ... DMP([ZZ(1), ZZ(2)], ZZ)
+        True
+        """
         return f.half_per(f.num)
 
     def denom(f):
-        """Returns denominator of `f`. """
+        r"""
+        Returns the denominator of `f`.
+
+        Example
+        =======
+        >>> from sympy.polys.polyclasses import DMF, DMP
+        >>> from sympy.polys.algebratools import ZZ
+        >>> DMF(([ZZ(1), ZZ(2)], [ZZ(1), ZZ(-2)]), ZZ).denom() == \
+        ... DMP([ZZ(1), ZZ(-2)], ZZ)
+        True
+        """
         return f.half_per(f.den)
 
     def cancel(f):
-        """Remove common factors from `f.num` and `f.den`. """
+        r"""
+        Remove common factors from `f.num` and `f.den`.
+
+        Example
+        =======
+        >>> from sympy.polys.polyclasses import DMF
+        >>> from sympy.polys.algebratools import ZZ
+        >>> DMF(([ZZ(1), ZZ(0), ZZ(-1)], [ZZ(1), ZZ(1)]), ZZ).cancel() == \
+        ... DMF(([ZZ(1), ZZ(-1)], [ZZ(1)]), ZZ)
+        True
+        """
         return f.per(f.num, f.den)
 
     def neg(f):
-        """Negate all cefficients in `f`. """
+        r"""
+        Negate all cefficients in `f`.
+
+        Example
+        =======
+        >>> from sympy.polys.polyclasses import DMF
+        >>> from sympy.polys.algebratools import ZZ
+        >>> DMF(([ZZ(1), ZZ(0), ZZ(-1)], [ZZ(1), ZZ(-2)]), ZZ).neg() == \
+        ... DMF(([ZZ(-1), ZZ(0), ZZ(1)], [ZZ(1), ZZ(-2)]), ZZ)
+        True
+        """
         return f.per(dmp_neg(f.num, f.lev, f.dom), f.den, cancel=False)
 
     def add(f, g):
-        """Add two multivariate fractions `f` and `g`. """
+        r"""
+        Add two multivariate fractions `f` and `g`.
+
+        Example
+        =======
+        >>> from sympy.polys.polyclasses import DMF
+        >>> from sympy.polys.algebratools import ZZ
+        >>> DMF(([ZZ(1), ZZ(1)], [ZZ(1), ZZ(-1)]), ZZ).add(
+        ... DMF(([ZZ(1), ZZ(2)], [ZZ(1)]), ZZ)) == \
+        ... DMF(([ZZ(1), ZZ(2), ZZ(-1)], [ZZ(1), ZZ(-1)]), ZZ)
+        True
+        """
         if isinstance(g, DMP):
             lev, dom, per, (F_num, F_den), G = f.poly_unify(g)
             num, den = dmp_add_mul(F_num, F_den, G, lev, dom), F_den
@@ -2351,7 +2912,18 @@ class DMF(object):
         return per(num, den)
 
     def sub(f, g):
-        """Subtract two multivariate fractions `f` and `g`. """
+        r"""
+        Subtract two multivariate fractions `f` and `g`.
+
+        Example
+        =======
+        >>> from sympy.polys.polyclasses import DMF
+        >>> from sympy.polys.algebratools import ZZ
+        >>> DMF(([ZZ(1), ZZ(1)], [ZZ(1), ZZ(-1)]), ZZ).sub(
+        ... DMF(([ZZ(1), ZZ(2)], [ZZ(1)]), ZZ)) == \
+        ... DMF(([ZZ(-1), ZZ(0), ZZ(3)], [ZZ(1), ZZ(-1)]), ZZ)
+        True
+        """
         if isinstance(g, DMP):
             lev, dom, per, (F_num, F_den), G = f.poly_unify(g)
             num, den = dmp_sub_mul(F_num, F_den, G, lev, dom), F_den
@@ -2366,7 +2938,18 @@ class DMF(object):
         return per(num, den)
 
     def mul(f, g):
-        """Multiply two multivariate fractions `f` and `g`. """
+        r"""
+        Multiply two multivariate fractions `f` and `g`.
+
+        Example
+        =======
+        >>> from sympy.polys.polyclasses import DMF
+        >>> from sympy.polys.algebratools import ZZ
+        >>> DMF(([ZZ(1), ZZ(1)], [ZZ(1), ZZ(-1)]), ZZ).mul(
+        ... DMF(([ZZ(1), ZZ(2)], [ZZ(2), ZZ(-1)]), ZZ)) == \
+        ... DMF(([ZZ(1), ZZ(3), ZZ(2)], [ZZ(2), ZZ(-3), ZZ(1)]), ZZ)
+        True
+        """
         if isinstance(g, DMP):
             lev, dom, per, (F_num, F_den), G = f.poly_unify(g)
             num, den = dmp_mul(F_num, G, lev, dom), F_den
@@ -2380,7 +2963,17 @@ class DMF(object):
         return per(num, den)
 
     def pow(f, n):
-        """Raise `f` to a non-negative power `n`. """
+        r"""
+        Raise `f` to a non-negative power `n`.
+
+        Example
+        =======
+        >>> from sympy.polys.polyclasses import DMF
+        >>> from sympy.polys.algebratools import ZZ
+        >>> DMF(([ZZ(1), ZZ(-1)], [ZZ(1), ZZ(-2)]), ZZ).pow(2) == \
+        ... DMF(([ZZ(1), ZZ(-2), ZZ(1)], [ZZ(1), ZZ(-4), ZZ(4)]), ZZ)
+        True
+        """
         if isinstance(n, int):
             return f.per(dmp_pow(f.num, n, f.lev, f.dom),
                          dmp_pow(f.den, n, f.lev, f.dom), cancel=False)
@@ -2388,7 +2981,18 @@ class DMF(object):
             raise TypeError("`int` expected, got %s" % type(n))
 
     def quo(f, g):
-        """Computes quotient of fractions `f` and `g`. """
+        r"""
+        Computes quotient of fractions `f` and `g`.
+
+        Example
+        =======
+        >>> from sympy.polys.polyclasses import DMF
+        >>> from sympy.polys.algebratools import ZZ
+        >>> DMF(([ZZ(1), ZZ(-1)], [ZZ(1), ZZ(2)]), ZZ).quo(
+        ... DMF(([ZZ(1), ZZ(2)], [ZZ(2), ZZ(-1)]), ZZ)) == \
+        ... DMF(([ZZ(2), ZZ(-3), ZZ(1)], [ZZ(1), ZZ(4), ZZ(4)]), ZZ)
+        True
+        """
         if isinstance(g, DMP):
             lev, dom, per, (F_num, F_den), G = f.poly_unify(g)
             num, den = F_num, dmp_mul(F_den, G, lev, dom)
@@ -2404,17 +3008,48 @@ class DMF(object):
     exquo = quo
 
     def invert(f):
-        """Computes inverse of a fraction `f`. """
+        r"""
+        Computes inverse of a fraction `f`.
+
+        Example
+        =======
+        >>> from sympy.polys.polyclasses import DMF
+        >>> from sympy.polys.algebratools import ZZ
+        >>> DMF(([ZZ(1), ZZ(2)], [ZZ(3), ZZ(4)]), ZZ).invert() == \
+        ... DMF(([ZZ(3), ZZ(4)], [ZZ(1), ZZ(2)]), ZZ)
+        True
+        """
         return f.per(f.den, f.num, cancel=False)
 
     @property
     def is_zero(f):
-        """Returns `True` if `f` is a zero fraction. """
+        """
+        Returns `True` if `f` is a zero fraction.
+
+        Example
+        =======
+        >>> from sympy.polys.polyclasses import DMF
+        >>> from sympy.polys.algebratools import ZZ
+        >>> DMF(([[]], [[ZZ(1)]]), ZZ).is_zero
+        True
+        >>> DMF(([[ZZ(1)]], [ZZ(1)]), ZZ).is_zero
+        False
+        """
         return dmp_zero_p(f.num, f.lev)
 
     @property
     def is_one(f):
-        """Returns `True` if `f` is a unit fraction. """
+        """
+        Returns `True` if `f` is a unit fraction.
+        Example
+        =======
+        >>> from sympy.polys.polyclasses import DMF
+        >>> from sympy.polys.algebratools import ZZ
+        >>> DMF(([[]], [[ZZ(1)]]), ZZ).is_one
+        False
+        >>> DMF(([[ZZ(1)]], [ZZ(1)]), ZZ).is_one
+        True
+        """
         return dmp_one_p(f.num, f.lev, f.dom) and \
                dmp_one_p(f.den, f.lev, f.dom)
 
