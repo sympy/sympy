@@ -1145,7 +1145,12 @@ class RealAlgebra(Algebra):
         else:
             denom = m
 
-        return self.limit_denom(numer, denom, **args)
+        n, d = self.limit_denom(numer, denom, **args)
+
+        if a and not n:
+            return numer, denom
+        else:
+            return n, d
 
     def limit_denom(self, n, d, **args):
         """Find closest rational to `n/d` (up to `max_denom`). """
