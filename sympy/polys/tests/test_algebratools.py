@@ -370,6 +370,9 @@ def test_Algebra_get_exact():
     assert ZZ.frac_field(x,y).get_exact() == ZZ.frac_field(x,y)
     assert QQ.frac_field(x,y).get_exact() == QQ.frac_field(x,y)
 
+def test_Algebra_convert():
+    assert QQ.convert(10e-52) != QQ(0)
+
 def test_PolynomialRing__init():
     raises(GeneratorsNeeded, "ZZ.poly_ring()")
 
