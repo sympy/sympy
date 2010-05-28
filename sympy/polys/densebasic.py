@@ -1790,7 +1790,7 @@ def dup_random(n, a, b, K):
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densebasic import dup_random
 
-    >>  dup_random(3, -10, 10, ZZ)
+    >>> dup_random(3, -10, 10, ZZ) #doctest: +SKIP
     [-2, -8, 9, -4]
 
     """
