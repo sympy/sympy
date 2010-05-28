@@ -212,12 +212,26 @@ class Poly(Basic):
 
     @property
     def args(self):
-        """Don't mess up with the core. """
+        """
+        Don't mess up with the core.
+
+        >>> from sympy import Poly
+        >>> from sympy.abc import x
+        >>> Poly(x**2 + 1, x).args
+        [1 + x**2]
+        """
         return [self.as_basic()]
 
     @property
     def gen(self):
-        """Return principal generator. """
+        """
+        Return principal generator.
+
+        >>> from sympy import Poly
+        >>> from sympy.abc import x
+        >>> Poly(x**2 + 1, x).gen
+        x
+        """
         return self.gens[0]
 
     @property
@@ -241,7 +255,30 @@ class Poly(Basic):
         return self.new(self.rep.unit(self.rep.lev, self.rep.dom), *self.gens)
 
     def unify(f, g):
-        """Make ``f`` and ``g`` belong to the same domain. """
+        """
+        Make ``f`` and ``g`` belong to the same domain.
+
+        Example
+        =======
+
+        >>> from sympy import Poly
+        >>> from sympy.abc import x, y
+
+        >>> f, g = Poly(x/2 + 1), Poly(2*x + 1)
+
+        >>> f
+        Poly(1/2*x + 1, x, domain='QQ')
+        >>> g
+        Poly(2*x + 1, x, domain='ZZ')
+
+        >>> F, G = f.unify(g)
+
+        >>> F
+        Poly(1/2*x + 1, x, domain='QQ')
+        >>> G
+        Poly(2*x + 1, x, domain='QQ')
+
+        """
         _, per, F, G = f._unify(g)
         return per(F), per(G)
 
@@ -293,7 +330,18 @@ class Poly(Basic):
         return dom, per, F, G
 
     def per(f, rep, gens=None, remove=None):
-        """Create a Poly out of the given representation. """
+        """
+        Create a Poly out of the given representation.
+
+        **Example**
+
+        >>> from sympy import Poly, ZZ
+        >>> from sympy.abc import x, y
+        >>> from sympy.polys.polyclasses import DMP
+        >>> a = Poly(x**2 + 1)
+        >>> a.per(DMP([ZZ(1), ZZ(1)], ZZ), gens=[y])
+        Poly(y + 1, y, domain='ZZ')
+        """
         if gens is None:
             gens = f.gens
 
@@ -315,18 +363,36 @@ class Poly(Basic):
         return f.rep.dom
 
     def set_modulus(f, modulus):
-        """Set the modulus of ``f``. """
+        """
+        Set the modulus of `f`.
+
+        **Example**
+
+        >>> from sympy import Poly
+        >>> from sympy.abc import x
+        >>> Poly(5*x**2 + 2*x - 1, x).set_modulus(2)
+        Poly(x**2 + 1, x, modulus=2)
+        """
         modulus = options.Modulus.preprocess(modulus)
         return f.set_domain(FF(modulus))
 
     def get_modulus(f):
-        """Get the modulus of ``f``. """
+        """
+        Get the modulus of `f`.
+
+        **Example**
+
+        >>> from sympy import Poly
+        >>> from sympy.abc import x
+        >>> Poly(x**2 + 1, modulus=2).get_modulus()
+        2
+        """
         domain = f.get_domain()
 
         if not domain.has_CharacteristicZero:
             return Integer(domain.characteristic())
         else:
-            raise PolynomialError("not a polynomial over a finite field")
+            raise PolynomialError("not a polynomial over a Galois field")
 
     def _eval_subs(f, old, new):
         """Internal implementation of :func:`subs`. """
@@ -342,7 +408,16 @@ class Poly(Basic):
         return f.as_basic().subs(old, new)
 
     def replace(f, x, y=None):
-        """Replace ``x`` with ``y`` in generators list. """
+        """
+        Replace ``x`` with ``y`` in generators list.
+
+        **Example**
+
+        >>> from sympy import Poly
+        >>> from sympy.abc import x, y
+        >>> Poly(x**2 + 1, x).replace(x, y)
+        Poly(y**2 + 1, y, domain='ZZ')
+        """
         if y is None:
             if f.is_univariate:
                 x, y = f.gen, x
@@ -363,7 +438,16 @@ class Poly(Basic):
         raise PolynomialError("can't replace %s with %s in %s" % (x, y, f))
 
     def reorder(f, *gens, **args):
-        """Efficiently apply new order of generators. """
+        """
+        Efficiently apply new order of generators.
+
+        **Example**
+
+        >>> from sympy import Poly
+        >>> from sympy.abc import x, y
+        >>> Poly(x**2 + x*y**2, x, y).reorder(y, x)
+        Poly(y**2*x + x**2, y, x, domain='ZZ')
+        """
         opt = options.Options((), args)
 
         if not gens:
@@ -376,7 +460,16 @@ class Poly(Basic):
         return f.per(DMP(rep, f.rep.dom, len(gens)-1), gens=gens)
 
     def to_ring(f):
-        """Make the ground domain a ring. """
+        """
+        Make the ground domain a ring.
+
+        **Example**
+
+        >>> from sympy import Poly, QQ
+        >>> from sympy.abc import x
+        >>> Poly(x**2 + 1, domain=QQ).to_ring()
+        Poly(x**2 + 1, x, domain='ZZ')
+        """
         try:
             result = f.rep.to_ring()
         except AttributeError: # pragma: no cover
@@ -385,7 +478,16 @@ class Poly(Basic):
         return f.per(result)
 
     def to_field(f):
-        """Make the ground domain a field. """
+        """
+        Make the ground domain a field.
+
+        **Example**
+
+        >>> from sympy import Poly, ZZ
+        >>> from sympy.abc import x
+        >>> Poly(x**2 + 1, x, domain=ZZ).to_field()
+        Poly(x**2 + 1, x, domain='QQ')
+        """
         try:
             result = f.rep.to_field()
         except AttributeError: # pragma: no cover
@@ -394,7 +496,16 @@ class Poly(Basic):
         return f.per(result)
 
     def to_exact(f):
-        """Make the ground domain exact. """
+        """
+        Make the ground domain exact.
+
+        **Example**
+
+        >>> from sympy import Poly, RR
+        >>> from sympy.abc import x
+        >>> Poly(x**2 + 1.0, x, RR).to_exact()
+        Poly(x**2 + 1, x, RR, domain='QQ')
+        """
         try:
             result = f.rep.to_exact()
         except AttributeError: # pragma: no cover
@@ -419,35 +530,110 @@ class Poly(Basic):
         return f.per(result)
 
     def coeffs(f, order=None):
-        """Returns all non-zero coefficients from `f` in lex order. """
+        """
+        Returns all non-zero coefficients from `f` in lex order.
+
+        **Example**
+
+        >>> from sympy import Poly
+        >>> from sympy.abc import x
+        >>> Poly(x**3 + 2*x + 3, x).coeffs()
+        [1, 2, 3]
+        """
         return [ f.rep.dom.to_sympy(c) for c in f.rep.coeffs(order=order) ]
 
     def monoms(f, order=None):
-        """Returns all non-zero monomials from `f` in lex order. """
+        """
+        Returns all non-zero monomials from `f` in lex order.
+
+        **Example**
+
+        >>> from sympy import Poly
+        >>> from sympy.abc import x, y
+        >>> Poly(x**2 + 2*x*y**2 + x*y + 3*y, x, y).monoms()
+        [(2, 0), (1, 2), (1, 1), (0, 1)]
+        """
         return f.rep.monoms(order=order)
 
     def terms(f, order=None):
-        """Returns all non-zero terms from `f` in lex order. """
+        """
+        Returns all non-zero terms from `f` in lex order.
+
+        **Example**
+
+        >>> from sympy import Poly
+        >>> from sympy.abc import x, y
+        >>> Poly(x**2 + 2*x*y**2 + x*y + 3*y, x, y).terms()
+        [((2, 0), 1), ((1, 2), 2), ((1, 1), 1), ((0, 1), 3)]
+        """
         return [ (m, f.rep.dom.to_sympy(c)) for m, c in f.rep.terms(order=order) ]
 
     def all_coeffs(f):
-        """Returns all coefficients from a univariate polynomial `f`. """
+        """
+        Returns all coefficients from a univariate polynomial `f`.
+
+        **Example**
+
+        >>> from sympy import Poly
+        >>> from sympy.abc import x
+        >>> Poly(x**3 + 2*x - 1, x).all_coeffs()
+        [1, 0, 2, -1]
+        """
         return [ f.rep.dom.to_sympy(c) for c in f.rep.all_coeffs() ]
 
     def all_monoms(f):
-        """Returns all monomials from a univariate polynomial `f`. """
+        """
+        Returns all monomials from a univariate polynomial `f`.
+
+        **Example**
+
+        >>> from sympy import Poly
+        >>> from sympy.abc import x
+        >>> Poly(x**3 + 2*x - 1, x).all_monoms()
+        [(3,), (2,), (1,), (0,)]
+        """
         return f.rep.all_monoms()
 
     def all_terms(f):
-        """Returns all terms from a univariate polynomial `f`. """
+        """
+        Returns all terms from a univariate polynomial `f`.
+
+        **Example**
+
+        >>> from sympy import Poly
+        >>> from sympy.abc import x
+        >>> Poly(x**3 + 2*x - 1, x).all_terms()
+        [((3,), 1), ((2,), 0), ((1,), 2), ((0,), -1)]
+        """
         return [ (m, f.rep.dom.to_sympy(c)) for m, c in f.rep.all_terms() ]
 
     def length(f):
-        """Returns the number of non-zero terms in `f`. """
+        """
+        Returns the number of non-zero terms in `f`.
+
+        **Example**
+
+        >>> from sympy import Poly
+        >>> from sympy.abc import x
+        >>> Poly(x**2 + 2*x - 1).length()
+        3
+        """
         return len(f.as_dict())
 
     def as_dict(f, native=False):
-        """Switch to a ``dict`` representation. """
+        """
+        Switch to a ``dict`` representation.
+
+        Example
+        =======
+
+        >>> from sympy import Poly
+        >>> from sympy.abc import x, y
+
+        >>> Poly(x**2 + 2*x*y**2 - y, x, y).as_dict()
+        {(0, 1): -1, (1, 2): 2, (2, 0): 1}
+
+        """
         if native:
             return f.rep.to_dict()
         else:
@@ -461,13 +647,34 @@ class Poly(Basic):
             return f.rep.to_sympy_list()
 
     def as_expr(f, *gens):
-        """Convert a polynomial an expression. """
+        """
+        Convert a polynomial an expression.
+
+        Example
+        =======
+
+        >>> from sympy import Poly
+        >>> from sympy.abc import x, y
+
+        >>> Poly(x**2 + 2*x*y**2 - y, x, y).as_expr()
+        -y + x**2 + 2*x*y**2
+
+        """
         return basic_from_dict(f.rep.to_sympy_dict(), *(gens or f.gens))
 
     as_basic = as_expr
 
     def lift(f):
-        """Convert algebraic coefficients to rationals. """
+        """
+        Convert algebraic coefficients to rationals.
+
+        **Example**
+
+        >>> from sympy import Poly, I
+        >>> from sympy.abc import x
+        >>> Poly(x**2 + I*x + 1, x, extension=[I]).lift()
+        Poly(x**4 + 3*x**2 + 1, x, domain='QQ')
+        """
         try:
             result = f.rep.lift()
         except AttributeError: # pragma: no cover
@@ -476,7 +683,16 @@ class Poly(Basic):
         return f.per(result)
 
     def deflate(f):
-        """Reduce degree of `f` by mapping `x_i**m` to `y_i`. """
+        """
+        Reduce degree of `f` by mapping `x_i**m` to `y_i`.
+
+        **Example**
+
+        >>> from sympy import Poly
+        >>> from sympy.abc import x, y
+        >>> Poly(x**6*y**2 + x**3 + 1, x, y).deflate()
+        ((3, 2), Poly(x**2*y + x + 1, x, y, domain='ZZ'))
+        """
         try:
             J, result = f.rep.deflate()
         except AttributeError: # pragma: no cover
@@ -485,7 +701,16 @@ class Poly(Basic):
         return J, f.per(result)
 
     def terms_gcd(f):
-        """Remove GCD of terms from the polynomial `f`. """
+        """
+        Remove GCD of terms from the polynomial `f`.
+
+        **Example**
+
+        >>> from sympy import Poly
+        >>> from sympy.abc import x, y
+        >>> Poly(x**6*y**2 + x**3*y, x, y).terms_gcd()
+        ((3, 1), Poly(x**3*y + 1, x, y, domain='ZZ'))
+        """
         try:
             J, result = f.rep.terms_gcd()
         except AttributeError: # pragma: no cover
@@ -494,7 +719,16 @@ class Poly(Basic):
         return J, f.per(result)
 
     def abs(f):
-        """Make all coefficients in `f` positive. """
+        """
+        Make all coefficients in `f` positive.
+
+        **Example**
+
+        >>> from sympy import Poly
+        >>> from sympy.abc import x
+        >>> Poly(x**2 - 1, x).abs()
+        Poly(x**2 + 1, x, domain='ZZ')
+        """
         try:
             result = f.rep.abs()
         except AttributeError: # pragma: no cover
@@ -503,7 +737,18 @@ class Poly(Basic):
         return f.per(result)
 
     def neg(f):
-        """Negate all cefficients in `f`. """
+        """
+        Negate all cefficients in `f`.
+
+        **Example**
+
+        >>> from sympy import Poly
+        >>> from sympy.abc import x
+        >>> Poly(x**2 - 1, x).neg()
+        Poly(-x**2 + 1, x, domain='ZZ')
+        >>> -Poly(x**2 - 1, x)
+        Poly(-x**2 + 1, x, domain='ZZ')
+        """
         try:
             result = f.rep.neg()
         except AttributeError: # pragma: no cover
@@ -512,7 +757,18 @@ class Poly(Basic):
         return f.per(result)
 
     def add(f, g):
-        """Add two polynomials `f` and `g`. """
+        """
+        Add two polynomials `f` and `g`.
+
+        **Example**
+
+        >>> from sympy import Poly
+        >>> from sympy.abc import x
+        >>> Poly(x**2 + 1, x).add(Poly(x - 2, x))
+        Poly(x**2 + x - 1, x, domain='ZZ')
+        >>> Poly(x**2 + 1, x) + Poly(x - 2, x)
+        Poly(x**2 + x - 1, x, domain='ZZ')
+        """
         _, per, F, G = f._unify(g)
 
         try:
@@ -523,7 +779,18 @@ class Poly(Basic):
         return per(result)
 
     def sub(f, g):
-        """Subtract two polynomials `f` and `g`. """
+        """
+        Subtract two polynomials `f` and `g`.
+
+        **Example**
+
+        >>> from sympy import Poly
+        >>> from sympy.abc import x
+        >>> Poly(x**2 + 1, x).sub(Poly(x - 2, x))
+        Poly(x**2 - x + 3, x, domain='ZZ')
+        >>> Poly(x**2 + 1, x) - Poly(x - 2, x)
+        Poly(x**2 - x + 3, x, domain='ZZ')
+        """
         _, per, F, G = f._unify(g)
 
         try:
@@ -534,7 +801,18 @@ class Poly(Basic):
         return per(result)
 
     def mul(f, g):
-        """Multiply two polynomials `f` and `g`. """
+        """
+        Multiply two polynomials `f` and `g`.
+
+        **Example**
+
+        >>> from sympy import Poly
+        >>> from sympy.abc import x
+        >>> Poly(x**2 + 1, x).mul(Poly(x - 2, x))
+        Poly(x**3 - 2*x**2 + x - 2, x, domain='ZZ')
+        >>> Poly(x**2 + 1, x)*Poly(x - 2, x)
+        Poly(x**3 - 2*x**2 + x - 2, x, domain='ZZ')
+        """
         _, per, F, G = f._unify(g)
 
         try:
@@ -545,7 +823,18 @@ class Poly(Basic):
         return per(result)
 
     def sqr(f):
-        """Square a polynomial `f`. """
+        """
+        Square a polynomial `f`.
+
+        **Example**
+
+        >>> from sympy import Poly
+        >>> from sympy.abc import x
+        >>> Poly(x - 2, x).sqr()
+        Poly(x**2 - 4*x + 4, x, domain='ZZ')
+        >>> Poly(x - 2, x)**2
+        Poly(x**2 - 4*x + 4, x, domain='ZZ')
+        """
         try:
             result = f.rep.sqr()
         except AttributeError: # pragma: no cover
@@ -554,7 +843,18 @@ class Poly(Basic):
         return f.per(result)
 
     def pow(f, n):
-        """Raise `f` to a non-negative power `n`. """
+        """
+        Raise `f` to a non-negative power `n`.
+
+        **Example**
+
+        >>> from sympy import Poly
+        >>> from sympy.abc import x
+        >>> Poly(x - 2, x).pow(3)
+        Poly(x**3 - 6*x**2 + 12*x - 8, x, domain='ZZ')
+        >>> Poly(x - 2, x)**3
+        Poly(x**3 - 6*x**2 + 12*x - 8, x, domain='ZZ')
+        """
         n = int(n)
 
         try:
@@ -565,7 +865,16 @@ class Poly(Basic):
         return f.per(result)
 
     def pdiv(f, g):
-        """Polynomial pseudo-division of `f` by `g`. """
+        """
+        Polynomial pseudo-division of `f` by `g`.
+
+        **Example**
+
+        >>> from sympy import Poly
+        >>> from sympy.abc import x
+        >>> Poly(x**2 + 1, x).pdiv(Poly(2*x - 4, x))
+        (Poly(2*x + 4, x, domain='ZZ'), Poly(20, x, domain='ZZ'))
+        """
         _, per, F, G = f._unify(g)
 
         try:
@@ -576,7 +885,16 @@ class Poly(Basic):
         return per(q), per(r)
 
     def prem(f, g):
-        """Polynomial pseudo-remainder of `f` by `g`. """
+        """
+        Polynomial pseudo-remainder of `f` by `g`.
+
+        **Example**
+
+        >>> from sympy import Poly
+        >>> from sympy.abc import x
+        >>> Poly(x**2 + 1, x).prem(Poly(2*x - 4, x))
+        Poly(20, x, domain='ZZ')
+        """
         _, per, F, G = f._unify(g)
 
         try:
@@ -587,7 +905,20 @@ class Poly(Basic):
         return per(result)
 
     def pquo(f, g):
-        """Polynomial pseudo-quotient of `f` by `g`. """
+        """
+        Polynomial pseudo-quotient of `f` by `g`.
+
+        **Example**
+
+        >>> from sympy import Poly
+        >>> from sympy.abc import x
+        >>> Poly(x**2 + 1, x).pquo(Poly(2*x - 4, x)) #doctest: +SKIP
+        Traceback (most recent call last):
+        ...
+        ExactQuotientFailed: [2, -4] does not divide [1, 0, 1]
+        >>> Poly(x**2 - 1, x).pquo(Poly(2*x - 2, x))
+        Poly(2*x + 2, x, domain='ZZ')
+        """
         _, per, F, G = f._unify(g)
 
         try:
@@ -598,7 +929,18 @@ class Poly(Basic):
         return per(result)
 
     def pexquo(f, g):
-        """Polynomial exact pseudo-quotient of `f` by `g`. """
+        """
+        Polynomial exact pseudo-quotient of `f` by `g`.
+
+        **Example**
+
+        >>> from sympy import Poly
+        >>> from sympy.abc import x
+        >>> Poly(x**2 + 1, x).pexquo(Poly(2*x - 4, x)) #doctest: +SKIP
+        Poly(2*x + 4, x, domain='ZZ')
+        >>> Poly(x**2 - 1, x).pexquo(Poly(2*x - 2, x))
+        Poly(2*x + 2, x, domain='ZZ')
+        """
         _, per, F, G = f._unify(g)
 
         try:
@@ -609,7 +951,18 @@ class Poly(Basic):
         return per(result)
 
     def div(f, g):
-        """Polynomial division with remainder of `f` by `g`. """
+        """
+        Polynomial division with remainder of `f` by `g`.
+
+        **Example**
+
+        >>> from sympy import Poly, QQ, ZZ
+        >>> from sympy.abc import x
+        >>> Poly(x**2 + 1, x, domain=ZZ).div(Poly(2*x - 4, x, domain=ZZ))
+        (Poly(0, x, domain='ZZ'), Poly(x**2 + 1, x, domain='ZZ'))
+        >>> Poly(x**2 + 1, x, domain=QQ).div(Poly(2*x - 4, x, domain=QQ))
+        (Poly(1/2*x + 1, x, domain='QQ'), Poly(5, x, domain='QQ'))
+        """
         _, per, F, G = f._unify(g)
 
         try:
@@ -620,7 +973,18 @@ class Poly(Basic):
         return per(q), per(r)
 
     def rem(f, g):
-        """Computes polynomial remainder of `f` by `g`. """
+        """
+        Computes polynomial remainder of `f` by `g`.
+
+        **Example**
+
+        >>> from sympy import Poly, ZZ, QQ
+        >>> from sympy.abc import x
+        >>> Poly(x**2 + 1, x, domain=ZZ).rem(Poly(2*x - 4, x, domain=ZZ))
+        Poly(x**2 + 1, x, domain='ZZ')
+        >>> Poly(x**2 + 1, x, domain=QQ).rem(Poly(2*x - 4, x, domain=QQ))
+        Poly(5, x, domain='QQ')
+        """
         _, per, F, G = f._unify(g)
 
         try:
@@ -631,7 +995,20 @@ class Poly(Basic):
         return per(result)
 
     def quo(f, g):
-        """Computes polynomial quotient of `f` by `g`. """
+        """
+        Computes polynomial quotient of `f` by `g`.
+
+        **Example**
+
+        >>> from sympy import Poly
+        >>> from sympy.abc import x
+        >>> Poly(x**2 + 1, x).quo(Poly(2*x - 4, x)) #doctest: +SKIP
+        Traceback (most recent call last):
+        ...
+        ExactQuotientFailed: [2, -4] does not divide [1, 0, 1]
+        >>> Poly(x**2 - 1, x).quo(Poly(x - 1, x))
+        Poly(x + 1, x, domain='ZZ')
+        """
         _, per, F, G = f._unify(g)
 
         try:
@@ -642,7 +1019,18 @@ class Poly(Basic):
         return per(result)
 
     def exquo(f, g):
-        """Computes polynomial exact quotient of `f` by `g`. """
+        """
+        Computes polynomial exact quotient of `f` by `g`.
+
+        **Example**
+
+        >>> from sympy import Poly
+        >>> from sympy.abc import x
+        >>> Poly(x**2 + 1, x).exquo(Poly(2*x - 4, x))
+        Poly(0, x, domain='ZZ')
+        >>> Poly(x**2 - 1, x).exquo(Poly(x - 1, x))
+        Poly(x + 1, x, domain='ZZ')
+        """
         _, per, F, G = f._unify(g)
 
         try:
@@ -671,7 +1059,18 @@ class Poly(Basic):
                 raise PolynomialError("a valid generator expected, got %s" % gen)
 
     def degree(f, gen=0):
-        """Returns degree of `f` in `x_j`. """
+        """
+        Returns degree of `f` in `x_j`.
+
+        **Example**
+
+        >>> from sympy import Poly
+        >>> from sympy.abc import x, y
+        >>> Poly(x**2 + y*x + 1, x, y).degree()
+        2
+        >>> Poly(x**2 + y*x + y, x, y).degree(1)
+        1
+        """
         j = f._gen_to_level(gen)
 
         try:
@@ -680,21 +1079,48 @@ class Poly(Basic):
             raise OperationNotSupported(f, 'degree')
 
     def degree_list(f):
-        """Returns a list of degrees of `f`. """
+        """
+        Returns a list of degrees of `f`.
+
+        **Example**
+
+        >>> from sympy import Poly
+        >>> from sympy.abc import x, y
+        >>> Poly(x**2 + y*x + 1, x, y).degree_list()
+        (2, 1)
+        """
         try:
             return f.rep.degree_list()
         except AttributeError: # pragma: no cover
             raise OperationNotSupported(f, 'degree_list')
 
     def total_degree(f):
-        """Returns the total degree of `f`. """
+        """
+        Returns the total degree of `f`.
+
+        **Example**
+
+        >>> from sympy import Poly
+        >>> from sympy.abc import x, y
+        >>> Poly(x**2 + y*x + 1, x, y).total_degree()
+        3
+        """
         try:
             return f.rep.total_degree()
         except AttributeError: # pragma: no cover
             raise OperationNotSupported(f, 'total_degree')
 
     def LC(f, order=None):
-        """Returns the leading coefficent of `f`. """
+        """
+        Returns the leading coefficent of `f`.
+
+        **Example**
+
+        >>> from sympy import Poly
+        >>> from sympy.abc import x
+        >>> Poly(x**3 + 2*x**2 + 3*x, x).LC()
+        1
+        """
         if order is not None:
             return f.coeffs(order)[0]
 
@@ -706,7 +1132,16 @@ class Poly(Basic):
         return f.rep.dom.to_sympy(result)
 
     def TC(f):
-        """Returns the trailing coefficent of `f`. """
+        """
+        Returns the trailing coefficent of `f`.
+
+        **Example**
+
+        >>> from sympy import Poly
+        >>> from sympy.abc import x
+        >>> Poly(x**3 + 2*x**2 + 3*x, x).TC()
+        0
+        """
         try:
             result = f.rep.TC()
         except AttributeError: # pragma: no cover
@@ -715,14 +1150,34 @@ class Poly(Basic):
         return f.rep.dom.to_sympy(result)
 
     def EC(f, order=None):
-        """Returns the last non-zero coefficent of `f`. """
+        """
+        Returns the last non-zero coefficent of `f`.
+
+        **Example**
+
+        >>> from sympy import Poly
+        >>> from sympy.abc import x
+        >>> Poly(x**3 + 2*x**2 + 3*x, x).EC()
+        3
+        """
         try:
             return f.coeffs(order)[-1]
         except AttributeError: # pragma: no cover
             raise OperationNotSupported(f, 'EC')
 
     def nth(f, *N):
-        """Returns the `n`-th coefficient of `f`. """
+        """
+        Returns the `n`-th coefficient of `f`.
+
+        **Example**
+
+        >>> from sympy import Poly
+        >>> from sympy.abc import x, y
+        >>> Poly(x**3 + 2*x**2 + 3*x, x).nth(2)
+        2
+        >>> Poly(x**3 + 2*x*y**2 + y**2, x, y).nth(1, 2)
+        2
+        """
         try:
             result = f.rep.nth(*map(int, N))
         except AttributeError: # pragma: no cover
@@ -731,23 +1186,68 @@ class Poly(Basic):
         return f.rep.dom.to_sympy(result)
 
     def LM(f, order=None):
-        """Returns the leading monomial of `f`. """
+        """
+        Returns the leading monomial of `f`.
+
+        **Example**
+
+        >>> from sympy import Poly
+        >>> from sympy.abc import x, y
+        >>> Poly(x**2 + 2*x*y**2 + x*y + 3*y, x, y).LM()
+        (2, 0)
+        """
         return f.monoms(order)[0]
 
     def EM(f, order=None):
-        """Returns the last non-zero monomial of `f`. """
+        """
+        Returns the last non-zero monomial of `f`.
+
+        **Example**
+
+        >>> from sympy import Poly
+        >>> from sympy.abc import x, y
+        >>> Poly(x**2 + 2*x*y**2 + x*y + 3*y, x, y).EM()
+        (0, 1)
+        """
         return f.monoms(order)[-1]
 
     def LT(f, order=None):
-        """Returns the leading term of `f`. """
+        """
+        Returns the leading term of `f`.
+
+        **Example**
+
+        >>> from sympy import Poly
+        >>> from sympy.abc import x, y
+        >>> Poly(x**2 + 2*x*y**2 + x*y + 3*y, x, y).LT()
+        ((2, 0), 1)
+        """
         return f.terms(order)[0]
 
     def ET(f, order=None):
-        """Returns the last non-zero term of `f`. """
+        """
+        Returns the last non-zero term of `f`.
+
+        **Example**
+
+        >>> from sympy import Poly
+        >>> from sympy.abc import x, y
+        >>> Poly(x**2 + 2*x*y**2 + x*y + 3*y, x, y).ET()
+        ((0, 1), 3)
+        """
         return f.terms(order)[-1]
 
     def max_norm(f):
-        """Returns maximum norm of `f`. """
+        """
+        Returns maximum norm of `f`.
+
+        **Example**
+
+        >>> from sympy import Poly
+        >>> from sympy.abc import x
+        >>> Poly(-x**2 + 2*x - 3, x).max_norm()
+        3
+        """
         try:
             result = f.rep.max_norm()
         except AttributeError: # pragma: no cover
@@ -756,7 +1256,16 @@ class Poly(Basic):
         return f.rep.dom.to_sympy(result)
 
     def l1_norm(f):
-        """Returns l1 norm of `f`. """
+        """
+        Returns l1 norm of `f`.
+
+        **Example**
+
+        >>> from sympy import Poly
+        >>> from sympy.abc import x
+        >>> Poly(-x**2 + 2*x - 3, x).l1_norm()
+        6
+        """
         try:
             result = f.rep.l1_norm()
         except AttributeError: # pragma: no cover
@@ -765,7 +1274,18 @@ class Poly(Basic):
         return f.rep.dom.to_sympy(result)
 
     def clear_denoms(f, convert=False):
-        """Clear denominators, but keep the ground domain. """
+        """
+        Clear denominators, but keep the ground domain.
+
+        **Example**
+
+        >>> from sympy import Poly, S, QQ
+        >>> from sympy.abc import x
+        >>> Poly(x/2 + S(1)/3, x, domain=QQ).clear_denoms()
+        (6, Poly(3*x + 2, x, domain='QQ'))
+        >>> Poly(x/2 + S(1)/3, x, domain=QQ).clear_denoms(convert=True)
+        (6, Poly(3*x + 2, x, domain='ZZ'))
+        """
         try:
             coeff, result = f.rep.clear_denoms()
         except AttributeError: # pragma: no cover
@@ -779,7 +1299,18 @@ class Poly(Basic):
             return coeff, f.to_ring()
 
     def integrate(f, *specs, **args):
-        """Computes indefinite integral of `f`. """
+        """
+        Computes indefinite integral of `f`.
+
+        **Example**
+
+        >>> from sympy import Poly
+        >>> from sympy.abc import x, y
+        >>> Poly(x**2 + 2*x + 1, x).integrate()
+        Poly(1/3*x**3 + x**2 + x, x, domain='QQ')
+        >>> Poly(x*y**2 + x, x, y).integrate((0, 1), (1, 0))
+        Poly(1/2*x**2*y**2 + 1/2*x**2, x, y, domain='QQ')
+        """
         if args.get('auto', True) and f.rep.dom.has_Ring:
             f = f.to_field()
 
@@ -802,7 +1333,18 @@ class Poly(Basic):
             raise OperationNotSupported(f, 'integrate')
 
     def diff(f, *specs):
-        """Computes partial derivative of `f`. """
+        """
+        Computes partial derivative of `f`.
+
+        **Example**
+
+        >>> from sympy import Poly
+        >>> from sympy.abc import x, y
+        >>> Poly(x**2 + 2*x + 1, x).diff()
+        Poly(2*x + 2, x, domain='ZZ')
+        >>> Poly(x*y**2 + x, x, y).diff((0, 0), (1, 1))
+        Poly(2*x*y, x, y, domain='ZZ')
+        """
         try:
             if not specs:
                 return f.per(f.rep.diff(m=1))
@@ -822,7 +1364,18 @@ class Poly(Basic):
             raise OperationNotSupported(f, 'diff')
 
     def eval(f, x, a=None):
-        """Evaluates `f` at `a` in the given variable. """
+        """
+        Evaluate `f` at `a` in the given variable.
+
+        **Example**
+
+        >>> from sympy import Poly
+        >>> from sympy.abc import x, y
+        >>> Poly(x**2 + 2*x + 3, x).eval(2)
+        11
+        >>> Poly(2*x*y + 3*x + y + 2, x, y).eval(x, 2)
+        Poly(5*y + 8, y, domain='ZZ')
+        """
         if a is None:
             if isinstance(x, dict):
                 raise NotImplementedError('dict syntax')
@@ -841,7 +1394,19 @@ class Poly(Basic):
         return f.per(result, remove=j)
 
     def half_gcdex(f, g, auto=True):
-        """Half extended Euclidean algorithm of `f` and `g`. """
+        """
+        Half extended Euclidean algorithm of `f` and `g`.
+
+        Returns `(s, h)` such that `h = gcd(f, g)` and `s*f \equiv h (mod g)`.
+
+        **Example**
+
+        >>> from sympy import Poly
+        >>> from sympy.abc import x
+        >>> Poly(x**4 - 2*x**3 - 6*x**2 + 12*x + 15, x).half_gcdex(
+        ... Poly(x**3 + x**2 - 4*x - 4, x))
+        (Poly(-1/5*x + 3/5, x, domain='QQ'), Poly(x + 1, x, domain='QQ'))
+        """
         dom, per, F, G = f._unify(g)
 
         if auto and dom.has_Ring:
@@ -855,7 +1420,20 @@ class Poly(Basic):
         return per(s), per(h)
 
     def gcdex(f, g, auto=True):
-        """Extended Euclidean algorithm of `f` and `g`. """
+        """
+        Extended Euclidean algorithm of `f` and `g`.
+
+        Returns `(s, t, h)` such that `h = gcd(f, g)` and `s*f + t*g = h`.
+
+        **Example**
+
+        >>> from sympy import Poly
+        >>> from sympy.abc import x
+        >>> Poly(x**4 - 2*x**3 - 6*x**2 + 12*x + 15, x).gcdex(
+        ... Poly(x**3 + x**2 - 4*x - 4, x))
+        (Poly(-1/5*x + 3/5, x, domain='QQ'),
+         Poly(1/5*x**2 - 6/5*x + 2, x, domain='QQ'), Poly(x + 1, x, domain='QQ'))
+        """
         dom, per, F, G = f._unify(g)
 
         if auto and dom.has_Ring:
@@ -869,7 +1447,20 @@ class Poly(Basic):
         return per(s), per(t), per(h)
 
     def invert(f, g, auto=True):
-        """Invert `f` modulo `g`, if possible. """
+        """
+        Invert `f` modulo `g`, if possible.
+
+        **Example**
+
+        >>> from sympy import Poly
+        >>> from sympy.abc import x
+        >>> Poly(x**2 - 1, x).invert(Poly(2*x - 1, x))
+        Poly(-4/3, x, domain='QQ')
+        >>> Poly(x**2 - 1, x).invert(Poly(x - 1, x))
+        Traceback (most recent call last):
+        ...
+        NotInvertible: zero divisor
+        """
         dom, per, F, G = f._unify(g)
 
         if auto and dom.has_Ring:
@@ -892,7 +1483,17 @@ class Poly(Basic):
         return f.per(result)
 
     def subresultants(f, g):
-        """Computes subresultant PRS sequence of `f` and `g`. """
+        """
+        Computes the subresultant PRS sequence of `f` and `g`.
+
+        **Example**
+
+        >>> from sympy import Poly
+        >>> from sympy.abc import x
+        >>> Poly(x**2 + 1, x).subresultants(Poly(x**2 - 1, x))
+        [Poly(x**2 + 1, x, domain='ZZ'), Poly(x**2 - 1, x, domain='ZZ'),
+         Poly(-2, x, domain='ZZ')]
+        """
         _, per, F, G = f._unify(g)
 
         try:
@@ -903,7 +1504,16 @@ class Poly(Basic):
         return map(per, result)
 
     def resultant(f, g):
-        """Computes resultant of `f` and `g` via PRS. """
+        """
+        Computes the resultant of `f` and `g` via PRS.
+
+        **Example**
+
+        >>> from sympy import Poly
+        >>> from sympy.abc import x
+        >>> Poly(x**2 + 1, x).resultant(Poly(x**2 - 1, x))
+        4
+        """
         _, per, F, G = f._unify(g)
 
         try:
@@ -914,7 +1524,16 @@ class Poly(Basic):
         return per(result, remove=0)
 
     def discriminant(f):
-        """Computes discriminant of `f`. """
+        """
+        Computes discriminant of `f`.
+
+        **Example**
+
+        >>> from sympy import Poly
+        >>> from sympy.abc import x
+        >>> Poly(x**2 + 2*x + 3, x).discriminant()
+        -8
+        """
         try:
             result = f.rep.discriminant()
         except AttributeError: # pragma: no cover
@@ -923,7 +1542,20 @@ class Poly(Basic):
         return f.per(result, remove=0)
 
     def cofactors(f, g):
-        """Returns GCD of `f` and `g` and their cofactors. """
+        """
+        Returns GCD of `f` and `g` and their cofactors.
+
+        Returns `(h, cff, cfg)` such that `a = gcd(f, g)`, `cff = quo(f, h)`,
+        and `cfg = quo(g, h)`.
+
+        **Example**
+
+        >>> from sympy import Poly
+        >>> from sympy.abc import x
+        >>> Poly(x**2 - 1, x).cofactors(Poly(x**2 - 3*x + 2, x))
+        (Poly(x - 1, x, domain='ZZ'), Poly(x + 1, x, domain='ZZ'),
+         Poly(x - 2, x, domain='ZZ'))
+        """
         _, per, F, G = f._unify(g)
 
         try:
@@ -934,7 +1566,16 @@ class Poly(Basic):
         return per(h), per(cff), per(cfg)
 
     def gcd(f, g):
-        """Returns polynomial GCD of `f` and `g`. """
+        """
+        Returns polynomial GCD of `f` and `g`.
+
+        **Example**
+
+        >>> from sympy import Poly
+        >>> from sympy.abc import x
+        >>> Poly(x**2 - 1, x).gcd(Poly(x**2 - 3*x + 2, x))
+        Poly(x - 1, x, domain='ZZ')
+        """
         _, per, F, G = f._unify(g)
 
         try:
@@ -945,7 +1586,16 @@ class Poly(Basic):
         return per(result)
 
     def lcm(f, g):
-        """Returns polynomial LCM of `f` and `g`. """
+        """
+        Returns polynomial LCM of `f` and `g`.
+
+        **Example**
+
+        >>> from sympy import Poly
+        >>> from sympy.abc import x
+        >>> Poly(x**2 - 1, x).lcm(Poly(x**2 - 3*x + 2, x))
+        Poly(x**3 - 2*x**2 - x + 2, x, domain='ZZ')
+        """
         _, per, F, G = f._unify(g)
 
         try:
@@ -956,7 +1606,16 @@ class Poly(Basic):
         return per(result)
 
     def trunc(f, p):
-        """Reduce `f` modulo a constant `p`. """
+        """
+        Reduce `f` modulo a constant `p`.
+
+        **Example**
+
+        >>> from sympy import Poly
+        >>> from sympy.abc import x
+        >>> Poly(2*x**3 + 3*x**2 + 5*x + 7, x).trunc(3)
+        Poly(-x**3 - x + 1, x, domain='ZZ')
+        """
         p = f.rep.dom.convert(p)
 
         try:
@@ -967,7 +1626,18 @@ class Poly(Basic):
         return f.per(result)
 
     def monic(f, auto=True):
-        """Divides all coefficients by `LC(f)`. """
+        """
+        Divides all coefficients by `LC(f)`.
+
+        **Example**
+
+        >>> from sympy import Poly, ZZ
+        >>> from sympy.abc import x
+        >>> Poly(3*x**2 + 6*x + 9, x, domain=ZZ).monic()
+        Poly(x**2 + 2*x + 3, x, domain='QQ')
+        >>> Poly(3*x**2 + 4*x + 2, x, domain=ZZ).monic()
+        Poly(x**2 + 4/3*x + 2/3, x, domain='QQ')
+        """
         if auto and f.rep.dom.has_Ring:
             f = f.to_field()
 
@@ -979,7 +1649,16 @@ class Poly(Basic):
         return f.per(result)
 
     def content(f):
-        """Returns GCD of polynomial coefficients. """
+        """
+        Returns GCD of polynomial coefficients.
+
+        **Example**
+
+        >>> from sympy import Poly
+        >>> from sympy.abc import x
+        >>> Poly(6*x**2 + 8*x + 12, x).content()
+        2
+        """
         try:
             result = f.rep.content()
         except AttributeError: # pragma: no cover
@@ -988,7 +1667,16 @@ class Poly(Basic):
         return f.rep.dom.to_sympy(result)
 
     def primitive(f):
-        """Returns content and a primitive form of `f`. """
+        """
+        Returns content and a primitive form of `f`.
+
+        **Example**
+
+        >>> from sympy import Poly
+        >>> from sympy.abc import x
+        >>> Poly(2*x**2 + 8*x + 12, x).primitive()
+        (2, Poly(x**2 + 4*x + 6, x, domain='ZZ'))
+        """
         try:
             cont, result = f.rep.primitive()
         except AttributeError: # pragma: no cover
@@ -997,7 +1685,16 @@ class Poly(Basic):
         return f.rep.dom.to_sympy(cont), f.per(result)
 
     def compose(f, g):
-        """Computes functional composition of `f` and `g`. """
+        """
+        Computes functional composition of `f` and `g`.
+
+        **Example**
+
+        >>> from sympy import Poly
+        >>> from sympy.abc import x
+        >>> Poly(x**2 + x, x).compose(Poly(x - 1, x))
+        Poly(x**2 - x, x, domain='ZZ')
+        """
         _, per, F, G = f._unify(g)
 
         try:
@@ -1008,7 +1705,16 @@ class Poly(Basic):
         return per(result)
 
     def decompose(f):
-        """Computes functional decomposition of `f`. """
+        """
+        Computes functional decomposition of `f`.
+
+        **Example**
+
+        >>> from sympy import Poly
+        >>> from sympy.abc import x
+        >>> Poly(x**4 + 2*x**3 - x - 1, x, domain='ZZ').decompose()
+        [Poly(x**2 - x - 1, x, domain='ZZ'), Poly(x**2 + x, x, domain='ZZ')]
+        """
         try:
             result = f.rep.decompose()
         except AttributeError: # pragma: no cover
@@ -1017,7 +1723,18 @@ class Poly(Basic):
         return map(f.per, result)
 
     def sturm(f, auto=True):
-        """Computes the Sturm sequence of `f`. """
+        """
+        Computes the Sturm sequence of `f`.
+
+        **Example**
+
+        >>> from sympy import Poly
+        >>> from sympy.abc import x
+        >>> Poly(x**3 - 2*x**2 + x - 3, x).sturm()
+        [Poly(x**3 - 2*x**2 + x - 3, x, domain='QQ'),
+         Poly(3*x**2 - 4*x + 1, x, domain='QQ'),
+         Poly(2/9*x + 25/9, x, domain='QQ'), Poly(-2079/4, x, domain='QQ')]
+        """
         if auto and f.rep.dom.has_Ring:
             f = f.to_field()
 
@@ -1038,7 +1755,21 @@ class Poly(Basic):
         return [ (f.per(g), k) for g, k in result ]
 
     def sqf_norm(f):
-        """Computes square-free norm of `f`. """
+        """
+        Computes square-free norm of `f`.
+
+        Returns `s`, `f`, `r`, such that `g(x) = f(x-sa)` and `r(x) = Norm(g(x))`
+        is a square-free polynomtal over K, where `a` is the algebraic extension
+        of `K`.
+
+        **Example**
+
+        >>> from sympy import Poly, sqrt
+        >>> from sympy.abc import x
+        >>> Poly(x**2 + 1, x, extension=[sqrt(3)]).sqf_norm()
+        (1, Poly(x**2 - 2*3**(1/2)*x + 4, x, domain='QQ<3**(1/2)>'),
+         Poly(x**4 - 4*x**2 + 16, x, domain='QQ'))
+        """
         try:
             s, g, r = f.rep.sqf_norm()
         except AttributeError: # pragma: no cover
@@ -1047,7 +1778,16 @@ class Poly(Basic):
         return s, f.per(g), f.per(r)
 
     def sqf_part(f):
-        """Computes square-free part of `f`. """
+        """
+        Computes square-free part of `f`.
+
+        **Example**
+
+        >>> from sympy import Poly
+        >>> from sympy.abc import x
+        >>> Poly(x**3 - 3*x - 2, x).sqf_part()
+        Poly(x**2 - x - 2, x, domain='ZZ')
+        """
         try:
             result = f.rep.sqf_part()
         except AttributeError: # pragma: no cover
@@ -1056,7 +1796,21 @@ class Poly(Basic):
         return f.per(result)
 
     def sqf_list(f, all=False):
-        """Returns a list of square-free factors of `f`. """
+        """
+        Returns a list of square-free factors of `f`.
+
+        **Example**
+
+        >>> from sympy import Poly
+        >>> from sympy.abc import x
+        >>> Poly(2*x**5 + 16*x**4 + 50*x**3 + 76*x**2 + 56*x + 16, x).sqf_list()
+        (2, [(Poly(x + 1, x, domain='ZZ'), 2),
+             (Poly(x + 2, x, domain='ZZ'), 3)])
+        >>> Poly(2*x**5 + 16*x**4 + 50*x**3 + 76*x**2 + 56*x + 16,
+        ... x).sqf_list(all=True)
+        (2, [(Poly(1, x, domain='ZZ'), 1), (Poly(x + 1, x, domain='ZZ'), 2),
+             (Poly(x + 2, x, domain='ZZ'), 3)])
+        """
         try:
             coeff, factors = f.rep.sqf_list(all)
         except AttributeError: # pragma: no cover
@@ -1065,7 +1819,22 @@ class Poly(Basic):
         return f.rep.dom.to_sympy(coeff), [ (f.per(g), k) for g, k in factors ]
 
     def sqf_list_include(f, all=False):
-        """Returns a list of square-free factors of `f`. """
+        """
+        Returns a list of square-free factors of `f`.
+
+        **Example**
+
+        >>> from sympy import Poly
+        >>> from sympy.abc import x
+        >>> Poly(2*x**5 + 16*x**4 + 50*x**3 + 76*x**2 + 56*x + 16,
+        ... x).sqf_list_include()
+        [(Poly(2*x + 2, x, domain='ZZ'), 2),
+         (Poly(x + 2, x, domain='ZZ'), 3)]
+        >>> Poly(2*x**5 + 16*x**4 + 50*x**3 + 76*x**2 + 56*x + 16,
+        ... x).sqf_list_include(all=True)
+        [(Poly(2, x, domain='ZZ'), 1), (Poly(x + 1, x, domain='ZZ'), 2),
+         (Poly(x + 2, x, domain='ZZ'), 3)]
+        """
         try:
             factors = f.rep.sqf_list_include(all)
         except AttributeError: # pragma: no cover
@@ -1074,7 +1843,18 @@ class Poly(Basic):
         return [ (f.per(g), k) for g, k in factors ]
 
     def factor_list(f):
-        """Returns a list of irreducible factors of `f`. """
+        """
+        Returns a list of irreducible factors of `f`.
+
+        **Example**
+
+        >>> from sympy import Poly
+        >>> from sympy.abc import x, y
+        >>> Poly(4*x**2*y**2 + 4*x**3*y**2 + 2*x**4 + 2*y**4 + 2*x*y**4 +
+        ... 2*x**5, x, y).factor_list()
+        (2, [(Poly(x + 1, x, y, domain='ZZ'), 1),
+             (Poly(x**2 + y**2, x, y, domain='ZZ'), 2)])
+        """
         try:
             coeff, factors = f.rep.factor_list()
         except DomainError:
@@ -1085,7 +1865,18 @@ class Poly(Basic):
         return f.rep.dom.to_sympy(coeff), [ (f.per(g), k) for g, k in factors ]
 
     def factor_list_include(f):
-        """Returns a list of irreducible factors of `f`. """
+        """
+        Returns a list of irreducible factors of `f`.
+
+        **Example**
+
+        >>> from sympy import Poly
+        >>> from sympy.abc import x, y
+        >>> Poly(4*x**2*y**2 + 4*x**3*y**2 + 2*x**4 + 2*y**4 + 2*x*y**4 +
+        ... 2*x**5, x, y).factor_list_include()
+        [(Poly(2*x + 2, x, y, domain='ZZ'), 1),
+         (Poly(x**2 + y**2, x, y, domain='ZZ'), 2)]
+        """
         try:
             factors = f.rep.factor_list_include()
         except DomainError:
@@ -1096,7 +1887,18 @@ class Poly(Basic):
         return [ (f.per(g), k) for g, k in factors ]
 
     def intervals(f, all=False, eps=None, inf=None, sup=None, fast=False, sqf=False):
-        """Compute isolating intervals for roots of `f`. """
+        """
+        Compute isolating intervals for roots of `f`.
+
+        **Example**
+
+        >>> from sympy import Poly
+        >>> from sympy.abc import x
+        >>> Poly(x**2 - 3, x).intervals()
+        [((-2, -1), 1), ((1, 2), 1)]
+        >>> Poly(x**2 - 3, x).intervals(eps=1e-2)
+        [((-26/15, -19/11), 1), ((19/11, 26/15), 1)]
+        """
         if eps is not None:
             eps = QQ.convert(eps)
 
@@ -1140,7 +1942,16 @@ class Poly(Basic):
             return map(_real, real_part), map(_complex, complex_part)
 
     def refine_root(f, s, t, eps=None, steps=None, fast=False, check_sqf=False):
-        """Refine an isolating interval of a root to the given precision. """
+        """
+        Refine an isolating interval of a root to the given precision.
+
+        **Example**
+
+        >>> from sympy import Poly
+        >>> from sympy.abc import x
+        >>> Poly(x**2 - 3, x).refine_root(1, 2, eps=1e-2)
+        (19/11, 26/15)
+        """
         if check_sqf and not f.is_sqf:
             raise PolynomialError("only square-free polynomials supported")
 
@@ -1162,7 +1973,18 @@ class Poly(Basic):
         return QQ.to_sympy(S), QQ.to_sympy(T)
 
     def count_roots(f, inf=None, sup=None):
-        """Return the number of roots of ``f`` in ``[inf, sup]`` interval. """
+        """
+        Return the number of roots of ``f`` in ``[inf, sup]`` interval.
+
+        **Example**
+
+        >>> from sympy import Poly, I
+        >>> from sympy.abc import x
+        >>> Poly(x**4 - 4, x).count_roots(-3, 3)
+        2
+        >>> Poly(x**4 - 4, x).count_roots(0, 1 + 3*I)
+        1
+        """
         inf_real, sup_real = True, True
 
         if inf is not None:
@@ -1211,7 +2033,16 @@ class Poly(Basic):
         return Integer(count)
 
     def real_roots(f, multiple=True):
-        """Return a list of real roots with multiplicities. """
+        """
+        Return a list of real roots with multiplicities.
+
+        **Example**
+
+        >>> from sympy import Poly
+        >>> from sympy.abc import x
+        >>> Poly(2*x**3 - 7*x**2 + 4*x + 4, x).real_roots()
+        [-1/2, 2, 2]
+        """
         reals = sympy.polys.rootoftools.RootOf(f)
 
         if multiple:
@@ -1220,7 +2051,16 @@ class Poly(Basic):
             return group(reals, multiple=False)
 
     def nroots(f, maxsteps=50, cleanup=True, error=False):
-        """Compute numerical approximations of roots of `f`. """
+        """
+        Compute numerical approximations of roots of `f`.
+
+        **Example**
+
+        >>> from sympy import Poly
+        >>> from sympy.abc import x
+        >>> Poly(x**2 - 3).nroots()
+        [-1.73205080756888, 1.73205080756888]
+        """
         if f.is_multivariate:
             raise PolynomialError("can't compute numerical roots of a multivariate polynomial")
 
@@ -1235,7 +2075,16 @@ class Poly(Basic):
         return sympify(npolyroots(coeffs, maxsteps=maxsteps, cleanup=cleanup, error=error))
 
     def cancel(f, g):
-        """Cancel common factors in a rational function `f/g`.  """
+        """
+        Cancel common factors in a rational function `f/g`.
+
+        **Example**
+
+        >>> from sympy import Poly
+        >>> from sympy.abc import x
+        >>> Poly(2*x**2 - 2, x).cancel(Poly(x**2 - 2*x + 1, x))
+        (1, Poly(2*x + 2, x, domain='ZZ'), Poly(x - 1, x, domain='ZZ'))
+        """
         dom, per, F, G = f._unify(g)
 
         if F.is_zero or G.is_zero:
@@ -1277,62 +2126,204 @@ class Poly(Basic):
 
     @property
     def is_zero(f):
-        """Returns `True` if `f` is a zero polynomial. """
+        """
+        Returns `True` if `f` is a zero polynomial.
+
+        **Example**
+
+        >>> from sympy import Poly
+        >>> from sympy.abc import x
+        >>> Poly(0, x).is_zero
+        True
+        >>> Poly(1, x).is_zero
+        False
+        """
         return f.rep.is_zero
 
     @property
     def is_one(f):
-        """Returns `True` if `f` is a unit polynomial. """
+        """
+        Returns `True` if `f` is a unit polynomial.
+
+        **Example**
+
+        >>> from sympy import Poly
+        >>> from sympy.abc import x
+        >>> Poly(0, x).is_one
+        False
+        >>> Poly(1, x).is_one
+        True
+        """
         return f.rep.is_one
 
     @property
     def is_sqf(f):
-        """Returns `True` if `f` is a square-free polynomial. """
+        """
+        Returns `True` if `f` is a square-free polynomial.
+
+        **Example**
+
+        >>> from sympy import Poly
+        >>> from sympy.abc import x
+        >>> Poly(x**2 - 2*x + 1, x).is_sqf
+        False
+        >>> Poly(x**2 - 1, x).is_sqf
+        True
+        """
         return f.rep.is_sqf
 
     @property
     def is_monic(f):
-        """Returns `True` if the leading coefficient of `f` is one. """
+        """
+        Returns `True` if the leading coefficient of `f` is one.
+
+        **Example**
+
+        >>> from sympy import Poly
+        >>> from sympy.abc import x
+        >>> Poly(x + 2, x).is_monic
+        True
+        >>> Poly(2*x + 2, x).is_monic
+        False
+        """
         return f.rep.is_monic
 
     @property
     def is_primitive(f):
-        """Returns `True` if GCD of coefficients of `f` is one. """
+        """
+        Returns `True` if GCD of the coefficients of `f` is one.
+
+        **Example**
+
+        >>> from sympy import Poly
+        >>> from sympy.abc import x
+        >>> Poly(2*x**2 + 6*x + 12, x).is_primitive
+        False
+        >>> Poly(x**2 + 3*x + 6, x).is_primitive
+        True
+        """
         return f.rep.is_primitive
 
     @property
     def is_ground(f):
-        """Returns `True` if `f` is an element of the ground domain. """
+        """
+        Returns `True` if `f` is an element of the ground domain.
+
+        **Example**
+
+        >>> from sympy import Poly
+        >>> from sympy.abc import x, y
+        >>> Poly(x, x).is_ground
+        False
+        >>> Poly(2, x).is_ground
+        True
+        >>> Poly(y, x).is_ground
+        True
+        """
         return f.rep.is_ground
 
     @property
     def is_linear(f):
-        """Returns `True` if `f` is linear in all its variables. """
+        """
+        Returns `True` if `f` is linear in all its variables.
+
+        **Example**
+
+        >>> from sympy import Poly
+        >>> from sympy.abc import x, y
+        >>> Poly(x + y + 2, x, y).is_linear
+        True
+        >>> Poly(x*y + 2, x, y).is_linear
+        False
+        """
         return f.rep.is_linear
 
     @property
     def is_monomial(f):
-        """Returns `True` if `f` is zero or has only one term. """
+        """
+        Returns `True` if `f` is zero or has only one term.
+
+        **Example**
+
+        >>> from sympy import Poly
+        >>> from sympy.abc import x
+        >>> Poly(3*x**2, x).is_monomial
+        True
+        >>> Poly(3*x**2 + 1, x).is_monomial
+        False
+        """
         return f.length() <= 1
 
     @property
     def is_homogeneous(f):
-        """Returns `True` if `f` has zero trailing coefficient. """
+        """
+        Returns `True` if `f` has zero trailing coefficient.
+
+        **Example**
+
+        >>> from sympy import Poly
+        >>> from sympy.abc import x, y
+        >>> Poly(x*y + x + y, x, y).is_homogeneous
+        True
+        >>> Poly(x*y + x + y + 1, x, y).is_homogeneous
+        False
+        """
         return f.rep.is_homogeneous
 
     @property
     def is_irreducible(f):
-        """Returns `True` if `f` has no factors over its domain. """
+        """
+        Returns `True` if `f` has no factors over its domain.
+
+        **Example**
+
+        >>> from sympy import Poly
+        >>> from sympy.abc import x
+
+        >> Poly(x**2 + x + 1, x, modulus=2).is_irreducible
+        True
+        >> Poly(x**2 + 1, x, modulus=2).is_irreducible
+        False
+        """
         return f.rep.is_irreducible
 
     @property
     def is_univariate(f):
-        """Returns `True` if `f` is an univariate polynomial. """
+        """
+        Returns `True` if `f` is an univariate polynomial.
+
+        **Example**
+
+        >>> from sympy import Poly
+        >>> from sympy.abc import x, y
+        >>> Poly(x**2 + x + 1, x).is_univariate
+        True
+        >>> Poly(x*y**2 + x*y + 1, x, y).is_univariate
+        False
+        >>> Poly(x*y**2 + x*y + 1, x).is_univariate
+        True
+        >>> Poly(x**2 + x + 1, x, y).is_univariate
+        False
+        """
         return len(f.gens) == 1
 
     @property
     def is_multivariate(f):
-        """Returns `True` if `f` is a multivariate polynomial. """
+        """
+        Returns `True` if `f` is a multivariate polynomial.
+        **Example**
+
+        >>> from sympy import Poly
+        >>> from sympy.abc import x, y
+        >>> Poly(x**2 + x + 1, x).is_multivariate
+        False
+        >>> Poly(x*y**2 + x*y + 1, x, y).is_multivariate
+        True
+        >>> Poly(x*y**2 + x*y + 1, x).is_multivariate
+        False
+        >>> Poly(x**2 + x + 1, x, y).is_multivariate
+        True
+        """
         return len(f.gens) != 1
 
     def __abs__(f):
