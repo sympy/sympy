@@ -1134,8 +1134,7 @@ def gf_random(n, p, K):
     =======
     >>> from sympy.polys.algebratools import ZZ
     >>> from sympy.polys.galoistools import gf_random
-
-    >> gf_random(10, 5, ZZ)
+    >>> gf_random(10, 5, ZZ) #doctest: +SKIP
     [1, 2, 3, 2, 1, 1, 1, 2, 0, 4, 2]
     """
     return [K.one] + [ K(int(uniform(0, p))) for i in xrange(0, n) ]
@@ -1149,8 +1148,7 @@ def gf_irreducible(n, p, K):
     =======
     >>> from sympy.polys.algebratools import ZZ
     >>> from sympy.polys.galoistools import gf_irreducible
-
-    >> gf_irreducible(10, 5, ZZ)
+    >>> gf_irreducible(10, 5, ZZ) #doctest: +SKIP
     [1, 4, 2, 2, 3, 2, 4, 1, 4, 0, 4]
     """
     while True:

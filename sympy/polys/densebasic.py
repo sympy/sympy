@@ -1489,8 +1489,7 @@ def dup_random(n, a, b, K):
     =======
     >>> from sympy.polys.algebratools import ZZ
     >>> from sympy.polys.densebasic import dup_random
-
-    >> dup_random(3, -10, 10, ZZ)
+    >>> dup_random(3, -10, 10, ZZ) #doctest: +SKIP
     [-2, -8, 9, -4]
     """
     f = [ K.convert(random.randint(a, b)) for _ in xrange(0, n+1) ]
