@@ -24,19 +24,10 @@ class IsomorphismFailed(Exception):
 class ExtraneousFactors(Exception):
     pass
 
-class UnificationFailed(Exception):
-    pass
-
-class GeneratorsNeeded(Exception):
-    pass
-
 class EvaluationFailed(Exception):
     pass
 
 class RefinementFailed(Exception):
-    pass
-
-class PolynomialError(Exception):
     pass
 
 class CoercionFailed(Exception):
@@ -49,5 +40,26 @@ class NotAlgebraic(Exception):
     pass
 
 class DomainError(Exception):
+    pass
+
+class PolynomialError(Exception):
+    pass
+
+class UnificationFailed(Exception):
+    pass
+
+class GeneratorsNeeded(Exception):
+    pass
+
+class GeneratorsError(Exception):
+    pass
+
+class UnivariatePolynomialError(PolynomialError):
+    pass
+
+class MultivariatePolynomialError(PolynomialError):
+    pass
+
+class OptionError(Exception):
     pass
 

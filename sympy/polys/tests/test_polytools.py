@@ -255,7 +255,7 @@ def test__init_poly_from_basic():
     assert _init_poly_from_basic(y + 5, x, y, domain=ZZ) == (DMP([[1,5]], ZZ), (x,y))
 
 def test_Poly__new__():
-    raises(PolynomialError, "Poly(x+1, x, x)")
+    raises(GeneratorsError, "Poly(x+1, x, x)")
 
     raises(PolynomialError, "Poly(DMP([1,2], ZZ), x, y)")
     raises(PolynomialError, "Poly(GFP([1,2], 3, ZZ), x, y)")
