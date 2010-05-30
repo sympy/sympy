@@ -2494,7 +2494,7 @@ class DMP(object):
     @property
     def is_primitive(f):
         """
-        Returns `True` if GCD of coefficients of `f` is one.
+        Returns `True` if the GCD of the coefficients of `f` is one.
 
         Example
         =======

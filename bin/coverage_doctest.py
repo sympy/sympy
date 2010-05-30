@@ -42,6 +42,8 @@ def parse_file(file, verbose=False):
         function_name = (' '.join(file[i:j].lstrip('def').split()))[:-1]
         bare_function_name = function_name[:function_name.find("(")]
 
+        # XXX: We should also skip nested functions, which are internal and may
+        # be impossible to doctest.
         skip_this = False
         for skip in ['__dealloc__', '__new__', '_']:
             if function_name.startswith(skip + '('):
@@ -49,7 +51,7 @@ def parse_file(file, verbose=False):
                 break
         if function_name.startswith("_"):
             # For the time being, let's skip all "private" functions, that
-            # beging with "_". Later, when our doctests are in a good shape, we
+            # begin with "_". Later, when our doctests are in a good shape, we
             # may doctest those too.
             skip_this = True
         if skip_this:
