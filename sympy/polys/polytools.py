@@ -40,6 +40,10 @@ from sympy.polys.polyerrors import (
     GeneratorsNeeded, PolynomialError,
 )
 
+from sympy.polys.polycontext import (
+    register_context,
+)
+
 from sympy.mpmath import (
     polyroots as npolyroots,
 )
@@ -60,6 +64,8 @@ _re_dom_frac = re.compile("^(Z|ZZ|Q|QQ)\((.+)\)$")
 _re_dom_algebraic = re.compile("^(Q|QQ)\<(.+)\>$")
 
 from sympy.polys.algebratools import Algebra, ZZ, QQ, RR, EX
+
+from sympy.polys.polyoptions import Options
 
 def _construct_domain(rep, **args):
     """Constructs the minimal domain that the coefficients of `rep` fit in. """
@@ -393,93 +399,35 @@ class Poly(Basic):
 
     def __new__(cls, rep, *gens, **args):
         """Create a new polynomial instance out of something useful. """
-        if len(set(gens)) != len(gens):
-            raise PolynomialError("duplicated generators: %s" % str(gens))
+        if gens or len(args) != 1 or 'options' not in args:
+            options = Options(gens, args)
+        else:
+            options = args['options']
 
         if isinstance(rep, (DMP, GFP)):
-            if rep.lev != len(gens)-1 or args:
+            if rep.lev != len(options.gens)-1 or options.args:
                 raise PolynomialError("invalid arguments to construct a polynomial")
         else:
-            order = cls._analyze_order(args)
-            domain = cls._analyze_domain(args)
-            modulus = cls._analyze_modulus(args)
-            extension = cls._analyze_extension(args)
-
-            args = dict(args)
-
-            if domain is not None:
-                args['domain'] = domain
-            elif modulus is not None:
-                args['domain'] = ZZ
-
-            if modulus is not None:
-                args['modulus'] = modulus
-            if extension is not None:
-                args['extension'] = extension
-
-            greedy = args.get('greedy')
-            field = args.get('field')
-
-            if order is not None:
-                if modulus is not None:
-                    raise PolynomialError("'order' keyword is not allowed together with 'modulus'")
-
-                raise NotImplementedError("'order' keyword is not yet implemented")
-
-            if domain is not None:
-                if domain.is_Composite and set(domain.gens) & set(gens):
-                    raise PolynomialError("ground domain and generators interferes together")
-
-                if modulus is not None and not domain.is_ZZ:
-                    raise PolynomialError("'modulus' keyword requires ZZ ground domain")
-
-                if greedy is not None:
-                    raise PolynomialError("'domain' keyword in not allowed together with 'greedy'")
-
-                if field is not None:
-                    raise PolynomialError("'domain' keyword in not allowed together with 'field'")
-
-            if extension is not None:
-                if domain is not None:
-                    raise PolynomialError("'extension' keyword is not allowed together with 'domain'")
-
-                if modulus is not None:
-                    raise PolynomialError("'extension' keyword is not allowed together with 'modulus'")
-
-                if greedy is not None:
-                    raise PolynomialError("'extension' keyword in not allowed together with 'greedy'")
-
-                if field is not None:
-                    raise PolynomialError("'extension' keyword in not allowed together with 'field'")
-
-                if extension is not True:
-                    args['domain'] = domain = QQ.algebraic_field(*extension)
-
-            symmetric = args.get('symmetric')
-
-            if symmetric is not None and modulus is None:
-                raise PolynomialError("'symmetric' keyword only allowed together with 'modulus'")
-
             if isinstance(rep, (dict, list)):
-                if not gens:
+                if not options.gens:
                     raise GeneratorsNeeded("can't initialize from %s without generators" % type(rep).__name__)
 
                 if isinstance(rep, dict):
-                    rep = _init_poly_from_dict(rep, *gens, **args)
+                    rep = _init_poly_from_dict(rep, *options.gens, **options.args)
                 else:
-                    rep = _init_poly_from_list(rep, *gens, **args)
+                    rep = _init_poly_from_list(rep, *options.gens, **options.args)
             else:
                 rep = sympify(rep)
 
                 if rep.is_Poly:
-                    result = _init_poly_from_poly(rep, *gens, **args)
+                    result = _init_poly_from_poly(rep, *options.gens, **options.args)
                 else:
-                    result = _init_poly_from_basic(rep, *gens, **args)
+                    result = _init_poly_from_basic(rep, *options.gens, **options.args)
 
                 if type(result) is tuple:
-                    rep, gens = result
+                    rep, options['gens'] = result
                 else:
-                    if result.is_Poly or not args.get('strict', True):
+                    if result.is_Poly or not options.strict:
                         return result
                     else:
                         raise GeneratorsNeeded("can't initialize from %s without generators" % rep)
@@ -487,7 +435,7 @@ class Poly(Basic):
         obj = Basic.__new__(cls)
 
         obj.rep = rep
-        obj.gens = gens
+        obj.gens = options.gens
 
         return obj
 
@@ -581,6 +529,23 @@ class Poly(Basic):
     def unit(f):
         """Return unit of `f`'s polynomial algebra. """
         return f.per(f.rep.unit())
+
+    @classmethod
+    def _analyze_gens(cls, gens, args):
+        """Support for passing generators as `*gens` and `[gens]`. """
+        if len(gens) == 1 and hasattr(gens[0], '__iter__'):
+            gens = tuple(gens[0])
+
+        if not gens:
+            gens = args.pop('gens', ())
+
+            if not hasattr(gens, '__iter__'):
+                gens = (gens,)
+
+        if len(set(gens)) != len(gens):
+            raise PolynomialError("duplicated generators: %s" % str(gens))
+
+        return gens
 
     @classmethod
     def _analyze_order(cls, args):
@@ -2446,10 +2411,10 @@ def factor_list(f, *gens, **args):
         else:
             return factors
 
+@register_context
 def factor(f, *gens, **args):
     """Returns factorization into irreducibles of `f`. """
     frac = args.get('frac', False)
-    gens = _analyze_gens(gens)
 
     def _factor(f):
         """Factor a true polynomial expression. """

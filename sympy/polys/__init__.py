@@ -62,18 +62,21 @@ from algebratools import (
     ZZ, QQ, RR, EX,
 )
 
-from sympy.polys.specialpolys import (
+from specialpolys import (
     swinnerton_dyer_poly,
     cyclotomic_poly,
     symmetric_poly,
     random_poly,
 )
 
-from sympy.polys.orthopolys import (
+from orthopolys import (
     chebyshevt_poly,
     chebyshevu_poly,
     hermite_poly,
     legendre_poly,
     laguerre_poly,
 )
+
+from polyoptions import Options
+import polycontext as ctx
 
