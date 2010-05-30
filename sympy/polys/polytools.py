@@ -38,6 +38,7 @@ from sympy.polys.polyerrors import (
     OperationNotSupported, DomainError,
     CoercionFailed, UnificationFailed,
     GeneratorsNeeded, PolynomialError,
+    ExactQuotientFailed
 )
 
 from sympy.polys.polycontext import (
@@ -2931,7 +2932,10 @@ def pquo(f, g, *gens, **args):
     except CoercionFailed, (f, g):
         raise GeneratorsNeeded("can't compute pseudo quotient of %s and %s without generators" % (f, g))
 
-    q = F.pquo(G)
+    try:
+        q = F.pquo(G)
+    except ExactQuotientFailed:
+        raise ExactQuotientFailed("%s does not divide %s" % (g, f))
 
     if _should_return_basic(f, g, **args):
         return q.as_basic()
@@ -2995,7 +2999,10 @@ def quo(f, g, *gens, **args):
     except CoercionFailed, (f, g):
         raise GeneratorsNeeded("can't compute quotient of %s and %s without generators" % (f, g))
 
-    q = F.quo(G)
+    try:
+        q = F.quo(G)
+    except ExactQuotientFailed:
+        raise ExactQuotientFailed("%s does not divide %s" % (g, f))
 
     if _should_return_basic(f, g, **args):
         return q.as_basic()
