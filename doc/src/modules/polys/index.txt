@@ -21,4 +21,5 @@ Contents
     :maxdepth: 3
 
     wester.txt
+    polynomials.txt
 
