@@ -9,3 +9,4 @@ from source import source
 from decorator import threaded, deprecated
 
 from cythonutils import cythonized
+from timeutils import timed
