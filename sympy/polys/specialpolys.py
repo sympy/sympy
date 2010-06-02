@@ -8,8 +8,8 @@ from sympy.polys.polyutils import _analyze_gens
 from sympy.polys.polyclasses import DMP
 
 from sympy.polys.densebasic import (
-    dmp_zero, dmp_one, dup_from_raw_dict,
-    dmp_normal, dmp_raise, dmp_ground
+    dmp_zero, dmp_one, dmp_ground, dmp_normal,
+    dup_from_raw_dict, dmp_raise, dup_random
 )
 
 from sympy.polys.densearith import (
@@ -94,6 +94,15 @@ def symmetric_poly(n, *gens, **args):
         return poly
     else:
         return Poly(poly, *gens)
+
+def random_poly(x, n, inf, sup, domain=ZZ, polys=False):
+    """Return a polynomial of degree ``n`` with coefficients in ``[inf, sup]``. """
+    poly = Poly(dup_random(n, inf, sup, domain), x, domain=domain)
+
+    if not polys:
+        return poly.as_basic()
+    else:
+        return poly
 
 @cythonized("n,i")
 def fateman_poly_F_1(n):

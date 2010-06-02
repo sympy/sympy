@@ -7,6 +7,7 @@ from sympy.polys.specialpolys import (
     swinnerton_dyer_poly,
     cyclotomic_poly,
     symmetric_poly,
+    random_poly,
     fateman_poly_F_1,
     dmp_fateman_poly_F_1,
     fateman_poly_F_2,
@@ -14,6 +15,8 @@ from sympy.polys.specialpolys import (
     fateman_poly_F_3,
     dmp_fateman_poly_F_3,
 )
+
+from sympy.utilities import all, any
 
 from sympy.abc import x, y, z
 
@@ -49,6 +52,17 @@ def test_symmetric_poly():
     assert symmetric_poly(1, x, y, z) == x + y + z
     assert symmetric_poly(2, x, y, z) == x*y + x*z + y*z
     assert symmetric_poly(3, x, y, z) == x*y*z
+
+def test_random_poly():
+    poly = random_poly(x, 10, -100, 100, polys=False)
+
+    assert Poly(poly).degree() == 10
+    assert all(-100 <= coeff <= 100 for coeff in Poly(poly).coeffs()) is True
+
+    poly = random_poly(x, 10, -100, 100, polys=True)
+
+    assert poly.degree() == 10
+    assert all(-100 <= coeff <= 100 for coeff in poly.coeffs()) is True
 
 def test_fateman_poly_F_1():
     f,g,h = fateman_poly_F_1(1)
