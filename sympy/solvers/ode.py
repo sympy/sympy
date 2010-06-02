@@ -571,7 +571,6 @@ def classify_ode(eq, func, dict=False):
 
     """
     from sympy import expand
-    from sympy.core import S
 
     if len(func.args) != 1:
         raise ValueError("dsolve() and classify_ode() only work with functions " + \
@@ -950,7 +949,6 @@ def checkodesol(ode, func, sol, order='auto', solve_for_func=True):
         (False, 2)
 
     """
-    from sympy import S
     if not func.is_Function or len(func.args) != 1:
         raise ValueError("func must be a function of one variable, not " + str(func))
     x = func.args[0]
@@ -1269,7 +1267,6 @@ def constantsimp(expr, independentsymbol, endnumber, startnumber=1,
     # simplifying up.  Otherwise, we can skip that part of the
     # expression.
 
-    from sympy.core import S
     from sympy.utilities import any
     constantsymbols = [Symbol(symbolname+"%d" % t) for t in range(startnumber,
     endnumber + 1)]
@@ -1556,7 +1553,6 @@ def ode_1st_exact(eq, func, order, match):
     C1 = Symbol('C1')
     x0 = Symbol('x0', dummy=True)
     y0 = Symbol('y0', dummy=True)
-    y = Symbol('y', dummy=True)
     global exactvars # This is the only way to pass these dummy variables to
     # _handle_Integral
     exactvars = {'y0':y0, 'x0':x0, 'y':r['y']}
@@ -1828,7 +1824,6 @@ def _homogeneous_order(eq, *symbols):
     endlessly put back together what homogeneous_order is trying to take
     apart.
     """
-    from sympy.utilities import any
     if not symbols:
         raise ValueError, "homogeneous_order: no symbols were given."
 
@@ -2304,7 +2299,6 @@ def ode_nth_linear_constant_coeff_homogeneous(eq, func, order, match, returns='s
         # Create a list of (hopefully) linearly independent solutions
         gensols = []
         # Keep track of when to use sin or cos for nonzero imroot
-        trigdict = {}
         for i, reroot, imroot in collectterms:
             if imroot == 0:
                 gensols.append(x**i*exp(reroot*x))
