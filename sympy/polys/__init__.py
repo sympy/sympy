@@ -66,6 +66,7 @@ from sympy.polys.specialpolys import (
     swinnerton_dyer_poly,
     cyclotomic_poly,
     symmetric_poly,
+    random_poly,
 )
 
 from sympy.polys.orthopolys import (
