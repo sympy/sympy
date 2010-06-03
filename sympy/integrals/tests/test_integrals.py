@@ -1,11 +1,11 @@
 from sympy import (S, symbols, integrate, Integral, Derivative, exp, oo, Symbol,
         Function, Rational, log, sin, cos, pi, E, I, Poly, LambertW, diff,
         Matrix, sympify, sqrt, atan, asin, acos, atan, DiracDelta, Heaviside,
-        raises, Lambda, sstr)
+        raises, Lambda, sstr, cancel)
 from sympy.utilities.pytest import XFAIL, skip
 from sympy.physics.units import m, s
 
-x,y,a,t = symbols('x,y,a,t')
+x, y, a, b, c, d, k, m, t = symbols('x, y, a, b, c, d, k, m, t')
 n = Symbol('n', integer=True)
 f = Function('f')
 
@@ -410,11 +410,47 @@ def test_doit2():
     # risch currently chokes on the contained integral.
     assert e.doit(deep = False) == e
 
-def issue_1785():
+def test_issue_1785():
     assert integrate(sqrt(x)*(1+x)) == 2*x**Rational(3, 2)/3 + 2*x**Rational(5, 2)/5
     assert integrate(x**x*(1+log(x))) is not None
 
-@XFAIL
-def issue_1785_fail():
-    assert integrate(x**x*(1+log(x)).expand(mul=True)) is None
+def test_issue_1785_fail():
+    assert integrate(x**x*(1+log(x)).expand(mul=True)) == x**x
+
+def test_issue_1704():
+    x_max = Symbol('x_max')
+    assert integrate(y / pi * exp(-(x_max - x) / cos(a)), x) == \
+        y*cos(a)*exp(x/cos(a))*exp(-x_max/cos(a))/pi
+
+def test_issue_1892():
+    assert integrate(1/(x*(a+b*x)**3), x) == \
+        log(x)/a**3 + (3*a + 2*b*x)/(2*a**2*b**2*x**2 + 4*b*x*a**3 + 2*a**4) - log(x + a/b)/a**3
+
+def test_issue_1133():
+    skip("Takes too long")
+    assert integrate(exp(x)*cos(a+b*x)*sin(c+d*x), x) == \
+    (cos(a + b*x)*exp(x)*sin(c + d*x)/(1 + 2*b**2 + 2*d**2 - 2*b**2*d**2 + b**4 + d**4) +
+    b*exp(x)*sin(c + d*x)*sin(a + b*x)/(1 + 2*b**2 + 2*d**2 - 2*b**2*d**2 + b**4 + d**4) +
+    b**2*cos(a + b*x)*exp(x)*sin(c + d*x)/(1 + 2*b**2 + 2*d**2 - 2*b**2*d**2 + b**4 + d**4) +
+    b**3*exp(x)*sin(c + d*x)*sin(a + b*x)/(1 + 2*b**2 + 2*d**2 - 2*b**2*d**2 + b**4 + d**4) +
+    d**2*cos(a + b*x)*exp(x)*sin(c + d*x)/(1 + 2*b**2 + 2*d**2 - 2*b**2*d**2 + b**4 + d**4) -
+    b*d**2*exp(x)*sin(c + d*x)*sin(a + b*x)/(1 + 2*b**2 + 2*d**2 - 2*b**2*d**2 + b**4 + d**4) -
+    2*b*d*cos(c + d*x)*exp(x)*sin(a + b*x)/(1 + 2*b**2 + 2*d**2 - 2*b**2*d**2 + b**4 + d**4) -
+    d*cos(c + d*x)*cos(a + b*x)*exp(x)/(1 + 2*b**2 + 2*d**2 - 2*b**2*d**2 + b**4 + d**4) -
+    d**3*cos(c + d*x)*cos(a + b*x)*exp(x)/(1 + 2*b**2 + 2*d**2 - 2*b**2*d**2 + b**4 + d**4) +
+    d*b**2*cos(c + d*x)*cos(a + b*x)*exp(x)/(1 + 2*b**2 + 2*d**2 - 2*b**2*d**2 + b**4 + d**4))
+
+def test_issue_1277():
+    # Note, we need to cancel() here because of unevaluated 2*(1 + n) problems
+    assert cancel(integrate(n*(x**(1/n)-1), (x, 0, S.Half))) == \
+    (-n - n**2 + 2**(-1/n)*n**2)/(2 + 2*n)
+
+
+def test_issue_1301():
+    assert integrate((x**n)*log(x),x) == \
+    x*x**n*log(x)/(1 + 2*n + n**2) + n*x*x**n*log(x)/(1 + 2*n + n**2) - x*x**n/(1 + 2*n + n**2)
+
+def test_issue1428():
+    assert integrate(sin(k*x)*sin(m*x),(x,0,pi)) in [k*cos(pi*k)*sin(pi*m)/(m**2 - k**2),
+    k*cos(pi*k)*sin(pi*m)/(m**2 - k**2) - m*cos(pi*m)*sin(pi*k)/(m**2 - k**2)]
 
