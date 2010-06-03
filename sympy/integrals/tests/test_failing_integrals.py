@@ -151,8 +151,12 @@ def test_issue_1452():
     assert integrate(1/(x*sqrt(1-x**2)),x).has(Integral)
 
 @XFAIL
-def test_issue_1576():
+def test_issue_1576a():
     assert not integrate(4*pi**2*x**2*y**4*(y**2+9*x**2)/(y**2+x**2)**3, x).has(Integral)
+
+@XFAIL
+def test_issue_1576b():
+    assert not integrate((1+x)/(a+x**2), x).has(Integral)
 
 @XFAIL
 def test_issue_1604():
@@ -184,11 +188,15 @@ def test_issue_1792():
     assert not run_with_timeout("integrate(cos(x)**y, x)", t).has(Integral)
 
 @XFAIL
-def test_issue_1793():
+def test_issue_1793a():
     P1 = -A*exp(-z)
     P2 = -A/(c*t)*(sin(x)**2 + cos(y)**2)
     assert not integrate(c*(P2 - P1), t).has(Integral)
 
+@XFAIL
+def test_issue_1793b():
+    # (traceback)
+    assert not integrate((sin(y)*x**3 + 2*cos(y)*x**2 + 12)/(x**2 + 2), x).has(Integral)
 
 @XFAIL
 def test_issue_1796a():
