@@ -272,6 +272,27 @@ class Field(Option):
     def postprocess(cls, options):
         pass
 
+class Composite(Option):
+    __metaclass__ = OptionType
+
+    option = 'composite'
+
+    requires = []
+    excludes = ['domain', 'split', 'gaussian', 'extension', 'modulus', 'symmetric']
+
+    default = None
+
+    @classmethod
+    def preprocess(cls, composite):
+        if isinstance(composite, bool):
+            return composite
+        else:
+            raise OptionError("invalid argument for 'composite' option")
+
+    @classmethod
+    def postprocess(cls, options):
+        pass
+
 class Greedy(Option):
     __metaclass__ = OptionType
 

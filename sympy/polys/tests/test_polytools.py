@@ -116,6 +116,16 @@ def test__construct_domain():
     assert _construct_domain({(0,): 2/x, (1,): 3*y}) == \
         (ZZ.frac_field(x,y), {(0,): DMF(([[2]], [[1],[]]), ZZ), (1,): DMF(([[3,0]], [[1]]), ZZ)})
 
+    assert _construct_domain({(1,): sin(y)}, composite=False) == \
+        (EX, {(1,): EX(sin(y))})
+    assert _construct_domain({(1,): y}, composite=False) == \
+        (EX, {(1,): EX(y)})
+    assert _construct_domain({(1, 1): 1}, composite=False) == \
+        (ZZ, {(1, 1): 1})
+    assert _construct_domain({(1, 0): y}, composite=False) == \
+        (EX, {(1, 0): EX(y)})
+
+
 def test__init_poly_from_dict():
     raises(PolynomialError, "_init_poly_from_dict({0: 1, 1: 2}, x, y, modulus=3, domain=ZZ)")
 

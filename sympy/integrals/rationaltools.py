@@ -29,7 +29,7 @@ def ratint(f, x, **flags):
     else:
         p, q = f
 
-    p, q = Poly(p, x), Poly(q, x)
+    p, q = Poly(p, x, composite=False), Poly(q, x, composite=False)
 
     c, p, q = p.cancel(q)
     poly, p = p.div(q)
@@ -155,7 +155,8 @@ def ratint_logpart(f, g, x, t=None):
     a, b = g, f - g.diff()*Poly(t, x)
 
     R = subresultants(a, b)
-    res = Poly(resultant(a, b), t)
+
+    res = Poly(resultant(a, b), t, composite=False)
 
     R_map, H = {}, []
 

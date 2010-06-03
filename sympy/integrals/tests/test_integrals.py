@@ -422,10 +422,6 @@ def test_issue_1704():
     assert integrate(y / pi * exp(-(x_max - x) / cos(a)), x) == \
         y*cos(a)*exp(x/cos(a))*exp(-x_max/cos(a))/pi
 
-def test_issue_1892():
-    assert integrate(1/(x*(a+b*x)**3), x) == \
-        log(x)/a**3 + (3*a + 2*b*x)/(2*a**2*b**2*x**2 + 4*b*x*a**3 + 2*a**4) - log(x + a/b)/a**3
-
 def test_issue_1133():
     skip("Takes too long")
     assert integrate(exp(x)*cos(a+b*x)*sin(c+d*x), x) == \

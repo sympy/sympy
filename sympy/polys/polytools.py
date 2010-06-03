@@ -68,10 +68,10 @@ from sympy.polys.algebratools import Algebra, ZZ, QQ, RR, EX
 
 from sympy.polys.polyoptions import Options
 
-def _construct_domain(rep, **args):
+def _construct_domain(rep, extension=None, field=False, composite=True, **args):
     """Constructs the minimal domain that the coefficients of `rep` fit in. """
-    extension = args.get('extension', None)
-    field = args.get('field', False)
+
+    args.update({'extension':extension, 'field':field, 'composite':composite})
 
     def _construct_simple(rep):
         """Handle ZZ, QQ, RR and algebraic number domains. """
@@ -258,7 +258,10 @@ def _construct_domain(rep, **args):
         else:
             return _construct_expression(rep)
     else:
-        result = _construct_composite(rep)
+        if composite:
+            result = _construct_composite(rep)
+        else:
+            result = None
 
         if result is not None:
             return result
