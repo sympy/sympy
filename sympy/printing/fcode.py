@@ -44,7 +44,35 @@ class FCodePrinter(StrPrinter):
         'precision': 15,
         'user_functions': {},
         'human': True,
+        'source_format': 'fixed',
     }
+    def __init__(self, settings=None):
+        StrPrinter.__init__(self, settings)
+        self._init_leading_padding()
+
+    def _init_leading_padding(self):
+        # leading columns depend on fixed or free format
+        if self._settings['source_format'] == 'fixed':
+            self._lead_code = "      "
+            self._lead_cont = "     @ "
+            self._lead_comment = "C     "
+        elif self._settings['source_format'] == 'free':
+            self._lead_code = " "
+            self._lead_cont = "      "
+            self._lead_comment = "! "
+        else:
+            raise ValueError(
+                    "Unknown source format: %s" % self._settings['source_format']
+                    )
+
+    def _pad_leading_columns(self, lines):
+        result = []
+        for line in lines:
+            if line.startswith('!'):
+                result.append(self._lead_comment + line[1:].lstrip())
+            else:
+                result.append(self._lead_code + line)
+        return result
 
     def doprint(self, expr):
         """Returns Fortran code for expr (as a string)"""
@@ -65,38 +93,41 @@ class FCodePrinter(StrPrinter):
             # support for top-level Piecewise function
             for i, (e, c) in enumerate(expr.args):
                 if i == 0:
-                    lines.append("      if (%s) then" % self._print(c))
+                    lines.append("if (%s) then" % self._print(c))
                 elif i == len(expr.args)-1 and c == True:
-                    lines.append("      else")
+                    lines.append("else")
                 else:
-                    lines.append("      else if (%s) then" % self._print(c))
+                    lines.append("else if (%s) then" % self._print(c))
                 if self._settings["assign_to"] is None:
-                    lines.append("        %s" % self._print(e))
+                    lines.append("  %s" % self._print(e))
                 else:
-                    lines.append("        %s = %s" % (self._settings["assign_to"], self._print(e)))
-            lines.append("      end if")
+                    lines.append("  %s = %s" % (self._settings["assign_to"], self._print(e)))
+            lines.append("end if")
             text = "\n".join(lines)
         else:
             line = StrPrinter.doprint(self, expr)
             if self._settings["assign_to"] is None:
-                text = "      %s" % line
+                text = "%s" % line
             else:
-                text = "      %s = %s" % (self._settings["assign_to"], line)
+                text = "%s = %s" % (self._settings["assign_to"], line)
+
 
         # format the output
         if self._settings["human"]:
             lines = []
             if len(self._not_fortran) > 0:
-                lines.append("C     Not Fortran 77:")
+                lines.append("! Not Fortran:")
                 for expr in sorted(self._not_fortran):
-                    lines.append("C     %s" % expr)
+                    lines.append("! %s" % expr)
             for name, value in number_symbols:
-                lines.append("      parameter (%s = %s)" % (name, value))
+                lines.append("parameter (%s = %s)" % (name, value))
             lines.extend(text.split("\n"))
+            lines = self._pad_leading_columns(lines)
             lines = self._wrap_fortran(lines)
             result = "\n".join(lines)
         else:
-            result = number_symbols, self._not_fortran, text
+            text = self._pad_leading_columns([text])
+            result = number_symbols, self._not_fortran, text[0]
 
         del self._not_fortran
         return result
@@ -257,19 +288,25 @@ class FCodePrinter(StrPrinter):
             return pos
         # split line by line and add the splitted lines to result
         result = []
+        if self._settings['source_format'] == 'free':
+            trailing = ' &'
+        else:
+            trailing = ''
         for line in lines:
-            if line.startswith("      "):
+            if line.startswith(self._lead_code):
                 # code line
                 pos = split_pos_code(line, 72)
                 hunk = line[:pos].rstrip()
                 line = line[pos:].lstrip()
+                if line: hunk += trailing
                 result.append(hunk)
                 while len(line) > 0:
                     pos = split_pos_code(line, 65)
                     hunk = line[:pos].rstrip()
                     line = line[pos:].lstrip()
-                    result.append("     @ %s" % hunk)
-            elif line.startswith("C"):
+                    if line: hunk += trailing
+                    result.append("%s%s" % (self._lead_cont, hunk))
+            elif line.startswith(self._lead_comment):
                 # comment line
                 if len(line) > 72:
                     pos = line.rfind(" ", 6, 72)
@@ -284,7 +321,7 @@ class FCodePrinter(StrPrinter):
                             pos = 66
                         hunk = line[:pos]
                         line = line[pos:].lstrip()
-                        result.append("C     %s" % hunk)
+                        result.append("%s%s" % (self._lead_comment, hunk))
                 else:
                     result.append(line)
             else:
@@ -309,6 +346,8 @@ def fcode(expr, **settings):
                     some parameter statements for the number symbols. If
                     False, the same information is returned in a more
                     programmer-friendly data structure.
+         source_format  --  The source format can be either 'fixed' or 'free'.
+                            [default='fixed']
 
        >>> from sympy import fcode, symbols, Rational, pi, sin
        >>> x, tau = symbols(["x", "tau"])

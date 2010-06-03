@@ -73,9 +73,9 @@ def test_implicit():
 def test_not_fortran():
     x = symbols('x')
     g = Function('g')
-    assert fcode(gamma(x)) == "C     Not Fortran 77:\nC     gamma(x)\n      gamma(x)"
-    assert fcode(Integral(sin(x))) == "C     Not Fortran 77:\nC     Integral(sin(x), x)\n      Integral(sin(x), x)"
-    assert fcode(g(x)) == "C     Not Fortran 77:\nC     g(x)\n      g(x)"
+    assert fcode(gamma(x)) == "C     Not Fortran:\nC     gamma(x)\n      gamma(x)"
+    assert fcode(Integral(sin(x))) == "C     Not Fortran:\nC     Integral(sin(x), x)\n      Integral(sin(x), x)"
+    assert fcode(g(x)) == "C     Not Fortran:\nC     g(x)\n      g(x)"
 
 def test_user_functions():
     x = symbols('x')
