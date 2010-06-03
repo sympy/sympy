@@ -1,7 +1,7 @@
 from sympy import (S, symbols, integrate, Integral, Derivative, exp, erf, oo, Symbol,
         Function, Rational, log, sin, cos, pi, E, I, Poly, LambertW, diff,
         Matrix, sympify, sqrt, atan, asin, acos, asinh, acosh, DiracDelta, Heaviside,
-        Lambda, sstr, Add, Tuple, Eq, Interval, Sum)
+        Lambda, sstr, Add, Tuple, Eq, Interval, Sum, cancel)
 from sympy.utilities.pytest import XFAIL, skip, raises
 from sympy.physics.units import m, s
 
@@ -607,3 +607,31 @@ def test_issue_841():
           I*pi**(S(1)/2)*erf(-I*x*a**(S(1)/2) - I*b/(2*a**(S(1)/2)))*exp(c)*exp(-b**2/(4*a))/(2*a**(S(1)/2))
     assert simplify(integrate(exp(-a*x**2 + 2*d*x), (x, -oo, oo))) == pi**(S(1)/2)*(1 + erf(oo - d/a**(S(1)/2))) \
            *exp(d**2/a)/(2*a**(S(1)/2))
+
+def test_issue_2314():
+    # Note that this is not the same as testing ratint() becuase integrate()
+    # pulls out the coefficient.
+    a = Symbol('a')
+    assert integrate(-a/(a**2+x**2), x) == \
+        -a*(sqrt(-1/a**2)*log(x + a**2*sqrt(-1/a**2))/2 - sqrt(-1/a**2)*log(x -
+        a**2*sqrt(-1/a**2))/2)
+
+def test_issue_1793a():
+    A, z, c = symbols('A z c')
+    P1 = -A*exp(-z)
+    P2 = -A/(c*t)*(sin(x)**2 + cos(y)**2)
+
+    assert integrate(c*(P2 - P1), t) == \
+        c*(A*(-cos(y)**2 - sin(x)**2)*log(c*t)/c + A*t*exp(-z))
+
+def test_issue_1793b():
+    # Issues relating to issue 1497 are making the actual result of this hard
+    # to test.  The answer should be something like
+    #
+    # (-sin(y) + sqrt(-72 + 48*cos(y) - 8*cos(y)**2)/2)*log(x + sqrt(-72 +
+    # 48*cos(y) - 8*cos(y)**2)/(2*(3 - cos(y)))) + (-sin(y) - sqrt(-72 +
+    # 48*cos(y) - 8*cos(y)**2)/2)*log(x - sqrt(-72 + 48*cos(y) -
+    # 8*cos(y)**2)/(2*(3 - cos(y)))) + x**2*sin(y)/2 + 2*x*cos(y)
+
+    expr = (sin(y)*x**3 + 2*cos(y)*x**2 + 12)/(x**2 + 2)
+    assert cancel(integrate(expr, x).diff(x)) == expr

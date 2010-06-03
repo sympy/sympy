@@ -209,7 +209,10 @@ def construct_domain(obj, **args):
         else:
             domain, coeffs = _construct_expression(coeffs, opt)
     else:
-        result = _construct_composite(coeffs, opt)
+        if opt.composite:
+            result = _construct_composite(coeffs, opt)
+        else:
+            result = None
 
         if result is not None:
             domain, coeffs = result
