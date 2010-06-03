@@ -3,7 +3,7 @@ from sympy import sin, cos, atan2, gamma, conjugate, sqrt, Factorial, \
 from sympy import Catalan, EulerGamma, E, GoldenRatio, I, pi
 from sympy import Function, Rational, Integer
 
-from sympy.printing.fcode import fcode, wrap_fortran
+from sympy.printing.fcode import fcode, FCodePrinter
 
 
 def test_printmethod():
@@ -159,6 +159,7 @@ def test_fcode_Piecewise():
 
 def test_wrap_fortran():
     #   "########################################################################"
+    printer = FCodePrinter()
     lines = [
         "C     This is a long comment on a single line that must be wrapped properly",
         "      this = is + a + long + and + nasty + fortran + statement + that * must + be + wrapped + properly",
@@ -176,7 +177,7 @@ def test_wrap_fortran():
         "      this = is + a + long + and + nasty + fortran + statement(that)/must + be + wrapped + properly",
         "      this = is + a + long + and + nasty + fortran +     statement(that)/must + be + wrapped + properly",
     ]
-    wrapped_lines = wrap_fortran(lines)
+    wrapped_lines = printer._wrap_fortran(lines)
     expected_lines = [
         "C     This is a long comment on a single line that must be wrapped",
         "C     properly",

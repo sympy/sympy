@@ -93,7 +93,7 @@ class FCodePrinter(StrPrinter):
             for name, value in number_symbols:
                 lines.append("      parameter (%s = %s)" % (name, value))
             lines.extend(text.split("\n"))
-            lines = wrap_fortran(lines)
+            lines = self._wrap_fortran(lines)
             result = "\n".join(lines)
         else:
             result = number_symbols, self._not_fortran, text
@@ -229,68 +229,67 @@ class FCodePrinter(StrPrinter):
     _print_Wild = _print_not_fortran
     _print_WildFunction = _print_not_fortran
 
+    def _wrap_fortran(self, lines):
+        """Wrap long Fortran lines
 
-def wrap_fortran(lines):
-    """Wrap long Fortran lines
+           Argument:
+             lines  --  a list of lines (without \\n character)
 
-       Argument:
-         lines  --  a list of lines (without \\n character)
-
-       A comment line is split at white space. Code lines are split with a more
-       complex rule to give nice results.
-    """
-    # routine to find split point in a code line
-    my_alnum = set("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_")
-    my_white = set(" \t()")
-    def split_pos_code(line, endpos):
-        if len(line) <= endpos:
-            return len(line)
-        pos = endpos
-        split = lambda pos: \
-            (line[pos] in my_alnum and line[pos-1] not in my_alnum) or \
-            (line[pos] not in my_alnum and line[pos-1] in my_alnum) or \
-            (line[pos] in my_white and line[pos-1] not in my_white) or \
-            (line[pos] not in my_white and line[pos-1] in my_white)
-        while not split(pos):
-            pos -= 1
-            if pos == 0:
-                return endpos
-        return pos
-    # split line by line and add the splitted lines to result
-    result = []
-    for line in lines:
-        if line.startswith("      "):
-            # code line
-            pos = split_pos_code(line, 72)
-            hunk = line[:pos].rstrip()
-            line = line[pos:].lstrip()
-            result.append(hunk)
-            while len(line) > 0:
-                pos = split_pos_code(line, 65)
+           A comment line is split at white space. Code lines are split with a more
+           complex rule to give nice results.
+        """
+        # routine to find split point in a code line
+        my_alnum = set("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_")
+        my_white = set(" \t()")
+        def split_pos_code(line, endpos):
+            if len(line) <= endpos:
+                return len(line)
+            pos = endpos
+            split = lambda pos: \
+                (line[pos] in my_alnum and line[pos-1] not in my_alnum) or \
+                (line[pos] not in my_alnum and line[pos-1] in my_alnum) or \
+                (line[pos] in my_white and line[pos-1] not in my_white) or \
+                (line[pos] not in my_white and line[pos-1] in my_white)
+            while not split(pos):
+                pos -= 1
+                if pos == 0:
+                    return endpos
+            return pos
+        # split line by line and add the splitted lines to result
+        result = []
+        for line in lines:
+            if line.startswith("      "):
+                # code line
+                pos = split_pos_code(line, 72)
                 hunk = line[:pos].rstrip()
-                line = line[pos:].lstrip()
-                result.append("     @ %s" % hunk)
-        elif line.startswith("C"):
-            # comment line
-            if len(line) > 72:
-                pos = line.rfind(" ", 6, 72)
-                if pos == -1:
-                    pos = 72
-                hunk = line[:pos]
                 line = line[pos:].lstrip()
                 result.append(hunk)
                 while len(line) > 0:
-                    pos = line.rfind(" ", 0, 66)
+                    pos = split_pos_code(line, 65)
+                    hunk = line[:pos].rstrip()
+                    line = line[pos:].lstrip()
+                    result.append("     @ %s" % hunk)
+            elif line.startswith("C"):
+                # comment line
+                if len(line) > 72:
+                    pos = line.rfind(" ", 6, 72)
                     if pos == -1:
-                        pos = 66
+                        pos = 72
                     hunk = line[:pos]
                     line = line[pos:].lstrip()
-                    result.append("C     %s" % hunk)
+                    result.append(hunk)
+                    while len(line) > 0:
+                        pos = line.rfind(" ", 0, 66)
+                        if pos == -1:
+                            pos = 66
+                        hunk = line[:pos]
+                        line = line[pos:].lstrip()
+                        result.append("C     %s" % hunk)
+                else:
+                    result.append(line)
             else:
                 result.append(line)
-        else:
-            result.append(line)
-    return result
+        return result
 
 
 def fcode(expr, **settings):
