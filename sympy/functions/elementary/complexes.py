@@ -185,6 +185,9 @@ class sign(Function):
 
     is_bounded = True
 
+    def _eval_derivative(self, x):
+        return S.Zero
+
     def _eval_conjugate(self):
         return self
 
