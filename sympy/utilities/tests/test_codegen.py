@@ -1,6 +1,6 @@
 from sympy import symbols, raises
 from sympy.utilities.codegen import CCodeGen, Routine, InputArgument, Result, \
-    codegen, CodeGenError
+    codegen, CodeGenError, FCodeGen
 from StringIO import StringIO
 
 def get_string(dump_fn, routines, prefix="file"):
@@ -229,3 +229,371 @@ def test_complicated_codegen():
         'double test2(double x, double y, double z);\n'
         '#endif\n'
     )
+
+def test_empty_f_code():
+    code_gen = FCodeGen()
+    source = get_string(code_gen.dump_f95, [])
+    assert source == ""
+
+def test_empty_f_header():
+    code_gen = FCodeGen()
+    source = get_string(code_gen.dump_h, [])
+    assert source == ""
+
+def test_simple_f_code():
+    x,y,z = symbols('xyz')
+    expr = (x+y)*z
+    routine = Routine("test", [InputArgument(symbol) for symbol in x,y,z], [Result(expr)])
+    code_gen = FCodeGen()
+    source = get_string(code_gen.dump_f95, [routine])
+    expected = (
+            "REAL*8 function test(x, y, z)\n"
+            " implicit none\n"
+            " REAL*8 :: x\n"
+            " REAL*8 :: y\n"
+            " REAL*8 :: z\n"
+            " test =  z*(x + y)\n"
+            "end function\n"
+    )
+    assert source == expected
+
+def test_simple_f_header():
+    x,y,z = symbols('xyz')
+    expr = (x+y)*z
+    routine = Routine("test", [InputArgument(symbol) for symbol in x,y,z], [Result(expr)])
+    code_gen = FCodeGen()
+    source = get_string(code_gen.dump_h, [routine])
+    expected = (
+            "interface\n"
+            " REAL*8 function test(x, y, z)\n"
+            " implicit none\n"
+            " REAL*8 :: x\n"
+            " REAL*8 :: y\n"
+            " REAL*8 :: z\n"
+            " end function\n"
+            " end interface\n"
+    )
+    assert source == expected
+
+def test_simple_f_codegen():
+    x,y,z = symbols('xyz')
+    expr = (x+y)*z
+    result = codegen(("test", (x+y)*z), "F95", "file", header=False, empty=False)
+    expected = [
+       ("file.f90",
+        "REAL*8 function test(x, y, z)\n"
+        " implicit none\n"
+        " REAL*8 :: x\n"
+        " REAL*8 :: y\n"
+        " REAL*8 :: z\n"
+        " test =  z*(x + y)\n"
+        "end function\n"),
+       ("file.h",
+        "interface\n"
+        " REAL*8 function test(x, y, z)\n"
+        " implicit none\n"
+        " REAL*8 :: x\n"
+        " REAL*8 :: y\n"
+        " REAL*8 :: z\n"
+        " end function\n"
+        " end interface\n")
+    ]
+    assert result == expected
+
+def test_multiple_results_f():
+    x,y,z = symbols('xyz')
+    expr1 = (x+y)*z
+    expr2 = (x-y)*z
+    routine = Routine(
+        "test",
+        [InputArgument(symbol) for symbol in x,y,z],
+        [Result(expr1),Result(expr2)]
+    )
+    code_gen = FCodeGen()
+    raises(CodeGenError, 'get_string(code_gen.dump_h, [routine])')
+
+def test_no_results_f():
+    x = symbols('x')
+    raises(ValueError, 'Routine("test", [InputArgument(x)], [])')
+
+def test_intrinsic_math_codegen():
+    # not included: log10
+    from sympy import acos, asin, atan, ceiling, cos, cosh, floor, log, ln, \
+            sin, sinh, sqrt, tan, tanh, N
+    x = symbols('x')
+    name_expr = [
+            ("test_abs", abs(x)),
+            ("test_acos", acos(x)),
+            ("test_asin", asin(x)),
+            ("test_atan", atan(x)),
+            # ("test_ceil", ceiling(x)),
+            ("test_cos", cos(x)),
+            ("test_cosh", cosh(x)),
+            # ("test_floor", floor(x)),
+            ("test_log", log(x)),
+            ("test_ln", ln(x)),
+            ("test_sin", sin(x)),
+            ("test_sinh", sinh(x)),
+            ("test_sqrt", sqrt(x)),
+            ("test_tan", tan(x)),
+            ("test_tanh", tanh(x)),
+            ]
+    result = codegen(name_expr, "F95", "file", header=False, empty=False)
+    assert result[0][0] == "file.f90"
+    expected = (
+            'REAL*8 function test_abs(x)\n'
+            ' implicit none\n'
+            ' REAL*8 :: x\n'
+            ' test_abs =  abs(x)\n'
+            'end function\n'
+            'REAL*8 function test_acos(x)\n'
+            ' implicit none\n'
+            ' REAL*8 :: x\n'
+            ' test_acos =  acos(x)\n'
+            'end function\n'
+            'REAL*8 function test_asin(x)\n'
+            ' implicit none\n'
+            ' REAL*8 :: x\n'
+            ' test_asin =  asin(x)\n'
+            'end function\n'
+            'REAL*8 function test_atan(x)\n'
+            ' implicit none\n'
+            ' REAL*8 :: x\n'
+            ' test_atan =  atan(x)\n'
+            'end function\n'
+            'REAL*8 function test_cos(x)\n'
+            ' implicit none\n'
+            ' REAL*8 :: x\n'
+            ' test_cos =  cos(x)\n'
+            'end function\n'
+            'REAL*8 function test_cosh(x)\n'
+            ' implicit none\n'
+            ' REAL*8 :: x\n'
+            ' test_cosh =  cosh(x)\n'
+            'end function\n'
+            'REAL*8 function test_log(x)\n'
+            ' implicit none\n'
+            ' REAL*8 :: x\n'
+            ' test_log =  log(x)\n'
+            'end function\n'
+            'REAL*8 function test_ln(x)\n'
+            ' implicit none\n'
+            ' REAL*8 :: x\n'
+            ' test_ln =  log(x)\n'
+            'end function\n'
+            'REAL*8 function test_sin(x)\n'
+            ' implicit none\n'
+            ' REAL*8 :: x\n'
+            ' test_sin =  sin(x)\n'
+            'end function\n'
+            'REAL*8 function test_sinh(x)\n'
+            ' implicit none\n'
+            ' REAL*8 :: x\n'
+            ' test_sinh =  sinh(x)\n'
+            'end function\n'
+            'REAL*8 function test_sqrt(x)\n'
+            ' implicit none\n'
+            ' REAL*8 :: x\n'
+            ' test_sqrt =  sqrt(x)\n'
+            'end function\n'
+            'REAL*8 function test_tan(x)\n'
+            ' implicit none\n'
+            ' REAL*8 :: x\n'
+            ' test_tan =  tan(x)\n'
+            'end function\n'
+            'REAL*8 function test_tanh(x)\n'
+            ' implicit none\n'
+            ' REAL*8 :: x\n'
+            ' test_tanh =  tanh(x)\n'
+            'end function\n'
+        )
+    assert result[0][1] == expected
+
+    assert result[1][0] == "file.h"
+    expected =  (
+            'interface\n'
+            ' REAL*8 function test_abs(x)\n'
+            ' implicit none\n'
+            ' REAL*8 :: x\n'
+            ' end function\n'
+            ' end interface\n'
+            'interface\n'
+            ' REAL*8 function test_acos(x)\n'
+            ' implicit none\n'
+            ' REAL*8 :: x\n'
+            ' end function\n'
+            ' end interface\n'
+            'interface\n'
+            ' REAL*8 function test_asin(x)\n'
+            ' implicit none\n'
+            ' REAL*8 :: x\n'
+            ' end function\n'
+            ' end interface\n'
+            'interface\n'
+            ' REAL*8 function test_atan(x)\n'
+            ' implicit none\n'
+            ' REAL*8 :: x\n'
+            ' end function\n'
+            ' end interface\n'
+            'interface\n'
+            ' REAL*8 function test_cos(x)\n'
+            ' implicit none\n'
+            ' REAL*8 :: x\n'
+            ' end function\n'
+            ' end interface\n'
+            'interface\n'
+            ' REAL*8 function test_cosh(x)\n'
+            ' implicit none\n'
+            ' REAL*8 :: x\n'
+            ' end function\n'
+            ' end interface\n'
+            'interface\n'
+            ' REAL*8 function test_log(x)\n'
+            ' implicit none\n'
+            ' REAL*8 :: x\n'
+            ' end function\n'
+            ' end interface\n'
+            'interface\n'
+            ' REAL*8 function test_ln(x)\n'
+            ' implicit none\n'
+            ' REAL*8 :: x\n'
+            ' end function\n'
+            ' end interface\n'
+            'interface\n'
+            ' REAL*8 function test_sin(x)\n'
+            ' implicit none\n'
+            ' REAL*8 :: x\n'
+            ' end function\n'
+            ' end interface\n'
+            'interface\n'
+            ' REAL*8 function test_sinh(x)\n'
+            ' implicit none\n'
+            ' REAL*8 :: x\n'
+            ' end function\n'
+            ' end interface\n'
+            'interface\n'
+            ' REAL*8 function test_sqrt(x)\n'
+            ' implicit none\n'
+            ' REAL*8 :: x\n'
+            ' end function\n'
+            ' end interface\n'
+            'interface\n'
+            ' REAL*8 function test_tan(x)\n'
+            ' implicit none\n'
+            ' REAL*8 :: x\n'
+            ' end function\n'
+            ' end interface\n'
+            'interface\n'
+            ' REAL*8 function test_tanh(x)\n'
+            ' implicit none\n'
+            ' REAL*8 :: x\n'
+            ' end function\n'
+            ' end interface\n'
+    )
+    assert result[1][1] == expected
+
+def test_intrinsic_math2_codegen():
+    # not included: frexp, ldexp, modf, fmod
+    from sympy import atan2, N
+    x, y = symbols('xy')
+    name_expr = [
+        ("test_atan2", atan2(x,y)),
+        ("test_pow", x**y),
+    ]
+    result = codegen(name_expr, "F95", "file", header=False, empty=False)
+    assert result[0][0] == "file.f90"
+    expected = (
+            'REAL*8 function test_atan2(x, y)\n'
+            ' implicit none\n'
+            ' REAL*8 :: x\n'
+            ' REAL*8 :: y\n'
+            ' test_atan2 =  atan2(x, y)\n'
+            'end function\n'
+            'REAL*8 function test_pow(x, y)\n'
+            ' implicit none\n'
+            ' REAL*8 :: x\n'
+            ' REAL*8 :: y\n'
+            ' test_pow =  x**y\n'
+            'end function\n'
+            )
+    assert result[0][1] == expected
+
+    assert result[1][0] == "file.h"
+    expected = (
+            'interface\n'
+            ' REAL*8 function test_atan2(x, y)\n'
+            ' implicit none\n'
+            ' REAL*8 :: x\n'
+            ' REAL*8 :: y\n'
+            ' end function\n'
+            ' end interface\n'
+            'interface\n'
+            ' REAL*8 function test_pow(x, y)\n'
+            ' implicit none\n'
+            ' REAL*8 :: x\n'
+            ' REAL*8 :: y\n'
+            ' end function\n'
+            ' end interface\n'
+    )
+    assert result[1][1] == expected
+
+def test_complicated_codegen_f95():
+    from sympy import sin, cos, tan, N
+    x,y,z = symbols('xyz')
+    name_expr = [
+        ("test1", ((sin(x)+cos(y)+tan(z))**7).expand()),
+        ("test2", cos(cos(cos(cos(cos(cos(cos(cos(x+y+z))))))))),
+    ]
+    result = codegen(name_expr, "F95", "file", header=False, empty=False)
+    assert result[0][0] == "file.f90"
+    expected = (
+            'REAL*8 function test1(x, y, z)\n'
+            ' implicit none\n'
+            ' REAL*8 :: x\n'
+            ' REAL*8 :: y\n'
+            ' REAL*8 :: z\n'
+            ' test1 =  7*cos(y)**6*sin(x) + 7*cos(y)**6*tan(z) + 7*sin(x)**6*cos(y) + 7*sin(x) &\n'
+            '      **6*tan(z) + 7*tan(z)**6*cos(y) + 7*tan(z)**6*sin(x) + 42*cos(y) &\n'
+            '      **5*sin(x)*tan(z) + 42*sin(x)**5*cos(y)*tan(z) + 42*tan(z)**5*cos &\n'
+            '      (y)*sin(x) + 105*cos(y)**2*sin(x)**4*tan(z) + 105*cos(y)**2*tan(z &\n'
+            '      )**4*sin(x) + 105*cos(y)**4*sin(x)**2*tan(z) + 105*cos(y)**4*tan( &\n'
+            '      z)**2*sin(x) + 105*sin(x)**2*tan(z)**4*cos(y) + 105*sin(x)**4*tan &\n'
+            '      (z)**2*cos(y) + 140*cos(y)**3*sin(x)**3*tan(z) + 140*cos(y)**3* &\n'
+            '      tan(z)**3*sin(x) + 140*sin(x)**3*tan(z)**3*cos(y) + 21*cos(y)**5* &\n'
+            '      sin(x)**2 + 21*cos(y)**5*tan(z)**2 + 21*sin(x)**5*tan(z)**2 + &\n'
+            '      210*cos(y)**2*sin(x)**3*tan(z)**2 + 210*cos(y)**3*sin(x)**2*tan(z &\n'
+            '      )**2 + 35*cos(y)**4*sin(x)**3 + 35*cos(y)**4*tan(z)**3 + 35*sin(x &\n'
+            '      )**4*tan(z)**3 + 210*cos(y)**2*sin(x)**2*tan(z)**3 + 35*cos(y) &\n'
+            '      **3*sin(x)**4 + 35*cos(y)**3*tan(z)**4 + 35*sin(x)**3*tan(z)**4 + &\n'
+            '      21*cos(y)**2*sin(x)**5 + 21*cos(y)**2*tan(z)**5 + 21*sin(x)**2* &\n'
+            '      tan(z)**5 + cos(y)**7 + sin(x)**7 + tan(z)**7\n'
+            'end function\n'
+            'REAL*8 function test2(x, y, z)\n'
+            ' implicit none\n'
+            ' REAL*8 :: x\n'
+            ' REAL*8 :: y\n'
+            ' REAL*8 :: z\n'
+            ' test2 =  cos(cos(cos(cos(cos(cos(cos(cos(x + y + z))))))))\n'
+            'end function\n'
+    )
+    assert result[0][1] == expected
+    assert result[1][0] == "file.h"
+    expected = (
+            'interface\n'
+            ' REAL*8 function test1(x, y, z)\n'
+            ' implicit none\n'
+            ' REAL*8 :: x\n'
+            ' REAL*8 :: y\n'
+            ' REAL*8 :: z\n'
+            ' end function\n'
+            ' end interface\n'
+            'interface\n'
+            ' REAL*8 function test2(x, y, z)\n'
+            ' implicit none\n'
+            ' REAL*8 :: x\n'
+            ' REAL*8 :: y\n'
+            ' REAL*8 :: z\n'
+            ' end function\n'
+            ' end interface\n'
+    )
+    assert result[1][1] == expected

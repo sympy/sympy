@@ -76,6 +76,7 @@ from sympy.core.symbol import Symbol
 from sympy.core.basic import Basic
 from sympy.utilities.iterables import postorder_traversal
 from sympy.printing.ccode import ccode
+from sympy.printing.fcode import fcode
 
 from StringIO import StringIO
 import sympy, os
@@ -86,7 +87,7 @@ __all__ = [
     "Routine", "DataType", "default_datatypes", "get_default_datatype",
     "Argument", "InputArgument", "Result",
     # routines -> code
-    "CodeGen", "CCodeGen",
+    "CodeGen", "CCodeGen", "FCodeGen"
     # friendly functions
     "codegen",
 ]
@@ -263,8 +264,9 @@ This file is part of '%(project)s'
 
 
 class CCodeGen(CodeGen):
+
     def _dump_header(self, f):
-        """Writes a common header for the .c and the .h file."""
+        """Writes a common header for the generated files."""
         print >> f, "/****************************************************************************** "
         tmp = header_comment % {"version": sympy.__version__, "project": self.project}
         for line in tmp.splitlines():
@@ -372,6 +374,162 @@ class CCodeGen(CodeGen):
     # functions it has to call.
     dump_fns = [dump_c, dump_h]
 
+class FCodeGen(CodeGen):
+    """
+    Generator for Fortran 95 code
+    """
+
+    def _dump_header(self, f):
+        """Writes a common header for the generated files."""
+        print >> f, "!****************************************************************************** "
+        tmp = header_comment % {"version": sympy.__version__, "project": self.project}
+        for line in tmp.splitlines():
+            print >> f, "!*%s* " % line.center(76)
+        print >> f, "!******************************************************************************/"
+
+    def _get_routine_opening(self, routine):
+        """
+        Returns the opening statements of the fortran routine
+        """
+        code_list = []
+        if len(routine.results) > 1:
+            raise CodeGenError("Fortran only supports a single or no return value.")
+        elif len(routine.results) == 1:
+            result = routine.results[0]
+            code_list.append(result.datatype.fname)
+            code_list.append("function")
+        else:
+            code_list.append("subroutine")
+
+        # name of the routine + arguments
+        code_list.append("%s(%s)\n" % (routine.name,
+            ", ".join("%s" % arg.name for arg in routine.arguments)
+            ))
+
+        code_list.append('implicit none\n')
+
+        # argument type declarations
+        code_list.append("\n ".join(
+            ["%s :: %s" % (arg.datatype.fname, arg.name)
+                for arg in routine.arguments])
+            + '\n')
+
+        return code_list
+
+    def _get_routine_ending(self, routine):
+        """
+        Returns the closing statements of the fortran routine
+        """
+        if len(routine.results) == 1:
+            return ["end function\n"]
+        else:
+            return ["end subroutine\n"]
+
+    def get_interface(self, routine):
+        """Returns a string for the function interface for the given routine and
+           a single result object, which can be None.
+
+           If the routine has multiple result objects, a CodeGenError is
+           raised.
+
+           See: http://en.wikipedia.org/wiki/Function_prototype
+
+        """
+        prototype = [ "interface\n" ]
+        prototype.extend(self._get_routine_opening(routine))
+        prototype.extend(self._get_routine_ending(routine))
+        prototype.append("end interface\n")
+
+        return " ".join(prototype)
+
+    def _get_result(self, routine):
+        """Returns a single result object, which can be None.
+
+           If the routine has multiple result objects, an CodeGenError is
+           raised.
+
+           See: http://en.wikipedia.org/wiki/Function_prototype
+        """
+
+        if len(routine.results) > 1:
+            raise CodeGenError("Fortran only supports a single or no return value.")
+        elif len(routine.results) == 1:
+            result = routine.results[0]
+        else:
+            result = None
+
+        return result
+
+    def dump_f95(self, routines, f, prefix, header=True, empty=True):
+        """Write the F95 code file.
+
+           This file contains all the definitions of the routines in f95 code and
+           refers to the header file.
+
+           Arguments:
+             routines  --  a list of Routine instances
+             f  --  a file-like object to write the file to
+             prefix  --  the filename prefix, used to refer to the proper header
+                         file. Only the basename of the prefix is used.
+
+           Optional arguments:
+             header  --  When True, a header comment is included on top of each
+                         source file. [DEFAULT=True]
+             empty  --  When True, empty lines are included to structure the
+                        source files. [DEFAULT=True]
+        """
+        if header:
+            self._dump_header(f)
+        if empty: print >> f
+
+        for routine in routines:
+            code_lines = self._get_routine_opening(routine)
+
+            result = self._get_result(routine)
+            if result is not None:
+                code_lines.append("%s = %s\n" %(routine.name,
+                    fcode(result.expr, source_format='free')))
+            print >> f, ' '.join(code_lines),
+
+            if empty: print >> f
+            code_lines = self._get_routine_ending(routine)
+            print >> f, ' '.join(code_lines),
+
+            if empty: print >> f
+        if empty: print >> f
+    dump_f95.extension = "f90"
+
+    def dump_h(self, routines, f, prefix, header=True, empty=True):
+        """Writes the interface  header file.
+
+           This file contains all the function declarations.
+
+           Arguments:
+             routines  --  a list of Routine instances
+             f  --  a file-like object to write the file to
+             prefix  --  the filename prefix, used to construct the include
+                         guards.
+
+           Optional arguments:
+             header  --  When True, a header comment is included on top of each
+                         source file. [DEFAULT=True]
+             empty  --  When True, empty lines are included to structure the
+                        source files. [DEFAULT=True]
+        """
+        if header:
+            self._dump_header(f)
+        if empty: print >> f
+        # declaration of the function prototypes
+        for routine in routines:
+            prototype  = self.get_interface(routine)
+            print >> f, prototype,
+        if empty: print >> f
+    dump_h.extension = "h"
+
+    # This list of dump functions is used by CodeGen.write to know which dump
+    # functions it has to call.
+    dump_fns = [dump_f95, dump_h]
+
 
 #
 # Friendly functions
@@ -427,7 +585,7 @@ def codegen(name_expr, language, prefix, project="project", to_files=False, head
     """
 
     # Initialize the code generator.
-    CodeGenClass = {"C": CCodeGen}.get(language.upper())
+    CodeGenClass = {"C": CCodeGen, "F95": FCodeGen}.get(language.upper())
     if CodeGenClass is None:
         raise ValueError("Language '%s' is not supported." % language)
     code_gen = CodeGenClass(project)
