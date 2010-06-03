@@ -222,3 +222,17 @@ def test_integral():
     f = Lambda(x, exp(-x**2))
     l = lambdify(x, Integral(f(x), (x, -oo, oo)), modules="sympy")
     assert l(x) == Integral(exp(-x**2), (x, -oo, oo))
+
+#########Test Symbolic###########
+def test_sym_single_arg():
+    f = lambdify(x, x * y)
+    assert f(z) == z * y
+
+def test_sym_list_args():
+    f = lambdify([x,y], x + y + z)
+    assert f(1,2) == 3 + z
+
+def test_sym_integral():
+    f = Lambda(x, exp(-x**2))
+    l = lambdify(x, Integral(f(x), (x, -oo, oo)), modules="sympy")
+    assert l(y).doit() == sqrt(pi)

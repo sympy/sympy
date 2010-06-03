@@ -178,6 +178,13 @@ def lambdify(args, expr, modules=None):
     else:
         namespace = _get_namespace(modules)
 
+    if hasattr(expr, "atoms") :
+        #Try if you can extract symbols from the expression.
+        #Move on if expr.atoms in not implemented.
+        syms = expr.atoms()
+        for term in syms:
+            namespace.update({str(term): term})
+
     # Create lambda function.
     lstr = lambdastr(args, expr)
     return eval(lstr, namespace)
