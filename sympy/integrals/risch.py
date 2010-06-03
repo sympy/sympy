@@ -214,7 +214,11 @@ def heurisch(f, x, **kwargs):
     diffs = [ substitute(cancel(g.diff(x))) for g in terms ]
 
     denoms = [ g.as_numer_denom()[1] for g in diffs ]
-    denom = reduce(lambda p, q: lcm(p, q, *V), denoms)
+    try:
+        denom = reduce(lambda p, q: lcm(p, q, *V), denoms)
+    except PolynomialError:
+        # lcm can fail with this. See issue 1418.
+        return None
 
     numers = [ cancel(denom * g) for g in diffs ]
 
