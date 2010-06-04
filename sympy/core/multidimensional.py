@@ -101,7 +101,6 @@ class vectorize:
         Returns a wrapper for the one-dimensional function that can handle
         multidimensional arguments.
         """
-        @functools.wraps(f)
         def wrapper(*args, **kwargs):
             # Get arguments that should be treated multidimensional
             if self.mdargs:
