@@ -161,7 +161,7 @@ def test_wrap_fortran():
     #   "########################################################################"
     printer = FCodePrinter()
     lines = [
-        "C     This is a long comment on a single line that must be wrapped properly",
+        "C     This is a long comment on a single line that must be wrapped properly to produce nice output",
         "      this = is + a + long + and + nasty + fortran + statement + that * must + be + wrapped + properly",
         "      this = is + a + long + and + nasty + fortran + statement +  that * must + be + wrapped + properly",
         "      this = is + a + long + and + nasty + fortran + statement +   that * must + be + wrapped + properly",
@@ -180,7 +180,7 @@ def test_wrap_fortran():
     wrapped_lines = printer._wrap_fortran(lines)
     expected_lines = [
         "C     This is a long comment on a single line that must be wrapped",
-        "C     properly",
+        "C     properly to produce nice output",
         "      this = is + a + long + and + nasty + fortran + statement + that *",
         "     @ must + be + wrapped + properly",
         "      this = is + a + long + and + nasty + fortran + statement +  that *",
@@ -218,3 +218,25 @@ def test_wrap_fortran():
 
 def test_settings():
     raises(TypeError, 'fcode(S(4), method="garbage")')
+
+def test_free_form_code_line():
+    x, y = symbols('xy')
+    assert fcode(cos(x) + sin(y), source_format='free') == " cos(x) + sin(y)"
+
+def test_free_form_continuation_line():
+    x, y = symbols('xy')
+    result = fcode(((cos(x) + sin(y))**(7)).expand(), source_format='free')
+    expected = (
+' 7*cos(x)**6*sin(y) + 7*sin(y)**6*cos(x) + 21*cos(x)**5*sin(y)**2 + 35* &\n'
+'      cos(x)**4*sin(y)**3 + 35*cos(x)**3*sin(y)**4 + 21*cos(x)**2*sin(y &\n'
+'      )**5 + cos(x)**7 + sin(y)**7'
+    )
+    assert result == expected
+
+def test_free_form_comment_line():
+    printer = FCodePrinter({ 'source_format': 'free'})
+    lines = [ "! This is a long comment on a single line that must be wrapped properly to produce nice output"]
+    expected = [
+        '! This is a long comment on a single line that must be wrapped properly',
+        '! to produce nice output']
+    assert printer._wrap_fortran(lines) == expected

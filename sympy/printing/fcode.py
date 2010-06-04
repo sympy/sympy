@@ -317,7 +317,7 @@ class FCodePrinter(StrPrinter):
                     result.append(hunk)
                     while len(line) > 0:
                         pos = line.rfind(" ", 0, 66)
-                        if pos == -1:
+                        if pos == -1 or len(line) < 66:
                             pos = 66
                         hunk = line[:pos]
                         line = line[pos:].lstrip()
