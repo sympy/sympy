@@ -49,7 +49,7 @@ from sympy.polys.densebasic import (
     dup_to_raw_dict, dmp_to_dict,
     dup_deflate, dmp_deflate,
     dup_terms_gcd, dmp_terms_gcd,
-    dmp_list_terms,
+    dmp_list_terms, dmp_exclude
 )
 
 from sympy.polys.densearith import (
@@ -1459,6 +1459,23 @@ class DMP(object):
         """
         J, F = dmp_deflate(f.rep, f.lev, f.dom)
         return J, f.per(F)
+
+    def exclude(f):
+        r"""
+        Remove generators from f.
+
+        Returns the removed generators and the new excluded `f`.
+
+        Example
+        =======
+        >>> from sympy.polys.polyclasses import DMP
+        >>> from sympy.polys.algebratools import ZZ
+        >>> DMP([[[ZZ(1)]], [[ZZ(1)], [ZZ(2)]]], ZZ).exclude() == \
+        ... ([2], DMP([[ZZ(1)], [ZZ(1), ZZ(2)]], ZZ))
+        True
+        """
+        J, g, u = dmp_exclude(f.rep, f.lev, f.dom)
+        return J, DMP(g, f.dom, u)
 
     def terms_gcd(f):
         r"""

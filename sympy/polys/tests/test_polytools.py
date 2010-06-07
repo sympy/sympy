@@ -879,6 +879,11 @@ def test_Poly_deflate():
 
     assert Poly(x**2*y*z**11+x**4*z**11).deflate() == ((2,1,11), Poly(x*y*z+x**2*z))
 
+def test_Poly_exclude():
+    assert Poly(x, x, y).exclude() == Poly(x, x)
+    assert Poly(x*y, x, y).exclude() == Poly(x*y, x, y)
+    assert Poly(1, x, y).exclude() == Poly(1, x, y)
+
 def test_Poly__gen_to_level():
     assert Poly(1, x, y)._gen_to_level(-2) == 0
     assert Poly(1, x, y)._gen_to_level(-1) == 1

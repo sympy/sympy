@@ -773,6 +773,25 @@ class Poly(Basic):
 
         return extension
 
+    def exclude(f):
+        """
+        Remove unnecessary generators from `f`.
+
+        **Example**
+
+        >>> from sympy import Poly
+        >>> from sympy.abc import a, b, c, d, x
+        >>> Poly(a + x, a, b, c, d, x).exclude()
+        Poly(a + x, a, x, domain='ZZ')
+        """
+        J, new = f.rep.exclude()
+        newgens = []
+        for i in range(len(f.gens)):
+            if i not in J:
+                newgens.append(f.gens[i])
+
+        return f.per(new, gens=newgens)
+
     def replace(f, x, y=None):
         """
         Replace `x` with `y` in generators list.
