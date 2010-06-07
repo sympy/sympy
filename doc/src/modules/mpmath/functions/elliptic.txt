@@ -1,6 +1,33 @@
 Elliptic functions
 ------------------
 
+.. automodule :: mpmath.functions.elliptic
+
+
+Elliptic arguments
+...................................................
+
+:func:`qfrom`
+^^^^^^^^^^^^^
+.. autofunction:: mpmath.qfrom(**kwargs)
+
+:func:`qbarfrom`
+^^^^^^^^^^^^^^^^^
+.. autofunction:: mpmath.qbarfrom(**kwargs)
+
+:func:`mfrom`
+^^^^^^^^^^^^^
+.. autofunction:: mpmath.mfrom(**kwargs)
+
+:func:`kfrom`
+^^^^^^^^^^^^^
+.. autofunction:: mpmath.kfrom(**kwargs)
+
+:func:`taufrom`
+^^^^^^^^^^^^^^^
+.. autofunction:: mpmath.taufrom(**kwargs)
+
+
 Elliptic integrals
 ...................................................
 
@@ -24,14 +51,14 @@ Jacobi theta functions
 Jacobi elliptic functions
 .................................................................
 
-:func:`jsn`
-^^^^^^^^^^^^^^
-.. autofunction:: mpmath.jsn(u,m)
+:func:`ellipfun`
+^^^^^^^^^^^^^^^^^
+.. autofunction:: mpmath.ellipfun(kind,u=None,m=None,q=None,k=None,tau=None)
 
-:func:`jcn`
-^^^^^^^^^^^^^^
-.. autofunction:: mpmath.jcn(u,m)
 
-:func:`jdn`
-^^^^^^^^^^^^^^
-.. autofunction:: mpmath.jdn(u,m)
+Modular functions
+......................
+
+:func:`kleinj`
+^^^^^^^^^^^^^^^
+.. autofunction:: mpmath.kleinj(tau=None, **kwargs)

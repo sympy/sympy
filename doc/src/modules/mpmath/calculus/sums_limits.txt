@@ -1,22 +1,22 @@
 Sums, products, limits and extrapolation
 ----------------------------------------
 
-Summation (``fsum``, ``nsum``, ``sumem``)
-.........................................
+The functions listed here permit approximation of infinite
+sums, products, and other sequence limits.
+Use :func:`mpmath.fsum` and :func:`mpmath.fprod`
+for summation and multiplication of finite sequences.
 
-.. autofunction:: mpmath.fsum
+Summation (``nsum``, ``sumem``)
+.........................................
 .. autofunction:: mpmath.nsum
 .. autofunction:: mpmath.sumem
 
-Products (``fprod``, ``nprod``)
+Products (``nprod``)
 ...............................
-
-.. autofunction:: mpmath.fprod
 .. autofunction:: mpmath.nprod
 
 Limits (``limit``)
 ..................
-
 .. autofunction:: mpmath.limit
 
 Extrapolation (``richardson``, ``shanks``)

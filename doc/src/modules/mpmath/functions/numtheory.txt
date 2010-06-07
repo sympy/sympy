@@ -2,8 +2,8 @@ Number-theoretical, combinatorial and integer functions
 -------------------------------------------------------
 
 For factorial-type functions, including binomial coefficients,
-double factorials, etc., see the separate section of the documentation.
-
+double factorials, etc., see the separate
+section :doc:`gamma`.
 
 Fibonacci numbers
 .................

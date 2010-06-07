@@ -8,6 +8,10 @@ Nth roots
 ^^^^^^^^^^^^^^
 .. autofunction:: mpmath.sqrt(x, **kwargs)
 
+:func:`hypot`
+^^^^^^^^^^^^^
+.. autofunction:: mpmath.hypot(x, y)
+
 :func:`cbrt`
 ^^^^^^^^^^^^^^
 .. autofunction:: mpmath.cbrt(x, **kwargs)

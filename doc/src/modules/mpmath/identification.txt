@@ -9,17 +9,23 @@ Automated number recognition based on PSLQ is not a silver bullet. Any occurring
 
 The number identification facilities in mpmath are inspired by the `Inverse Symbolic Calculator <http://oldweb.cecm.sfu.ca/projects/ISC/ISCmain.html>`_ (ISC). The ISC is more powerful than mpmath, as it uses a lookup table of millions of precomputed constants (thereby mitigating the problem with exponential complexity).
 
-Constant recognition (``identify``)
+Constant recognition
 -----------------------------------
 
+:func:`identify`
+^^^^^^^^^^^^^^^^
 .. autofunction:: mpmath.identify
 
-Algebraic identification (``findpoly``)
+Algebraic identification
 ---------------------------------------
 
+:func:`findpoly`
+^^^^^^^^^^^^^^^^
 .. autofunction:: mpmath.findpoly
 
-Integer relations (``pslq``)
+Integer relations (PSLQ)
 ----------------------------
 
+:func:`pslq`
+^^^^^^^^^^^^^^^^
 .. autofunction:: mpmath.pslq
