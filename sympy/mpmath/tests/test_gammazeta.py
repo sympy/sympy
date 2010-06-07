@@ -547,7 +547,7 @@ def test_barnesg():
 
 def test_polylog():
     mp.dps = 15
-    zs = [sympy.mpmathify(z) for z in [0, 0.5, 0.99, 4, -0.5, -4, 1j, 3+4j]]
+    zs = [mpmathify(z) for z in [0, 0.5, 0.99, 4, -0.5, -4, 1j, 3+4j]]
     for z in zs: assert polylog(1, z).ae(-log(1-z))
     for z in zs: assert polylog(0, z).ae(z/(1-z))
     for z in zs: assert polylog(-1, z).ae(z/(1-z)**2)

@@ -119,10 +119,10 @@ def test_conversion_methods():
     class SomethingRandom:
         pass
     class SomethingReal:
-        def _sympy.mpmath_(self, prec, rounding):
+        def _mpmath_(self, prec, rounding):
             return mp.make_mpf(from_str('1.3', prec, rounding))
     class SomethingComplex:
-        def _sympy.mpmath_(self, prec, rounding):
+        def _mpmath_(self, prec, rounding):
             return mp.make_mpc((from_str('1.3', prec, rounding), \
                 from_str('1.7', prec, rounding)))
     x = mpf(3)
@@ -180,9 +180,9 @@ def test_conversion_methods():
     assert z.__pow__(a) is NotImplemented
     assert z.__rpow__(a) is NotImplemented
 
-def test_sympy.mpmathify():
-    assert sympy.mpmathify('1/2') == 0.5
-    assert sympy.mpmathify('(1.0+1.0j)') == mpc(1, 1)
-    assert sympy.mpmathify('(1.2e-10 - 3.4e5j)') == mpc('1.2e-10', '-3.4e5')
-    assert sympy.mpmathify('1j') == mpc(1j)
+def test_mpmathify():
+    assert mpmathify('1/2') == 0.5
+    assert mpmathify('(1.0+1.0j)') == mpc(1, 1)
+    assert mpmathify('(1.2e-10 - 3.4e5j)') == mpc('1.2e-10', '-3.4e5')
+    assert mpmathify('1j') == mpc(1j)
 
