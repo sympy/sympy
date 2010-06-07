@@ -3,7 +3,7 @@ from sympy.core import Basic, Expr, S, C, Symbol, Wild, Add, sympify, diff, oo
 from sympy.integrals.trigonometry import trigintegrate
 from sympy.integrals.deltafunctions import deltaintegrate
 from sympy.integrals.rationaltools import ratint
-from sympy.integrals.risch import heurisch
+from sympy.integrals.heurisch import heurisch
 from sympy.utilities import threaded, flatten
 from sympy.utilities.iterables import make_list
 from sympy.polys import Poly

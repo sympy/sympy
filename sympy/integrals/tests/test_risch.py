@@ -1,6 +1,6 @@
 from sympy import Rational, sqrt, symbols, sin, exp, log, sinh, cosh, cos, pi, \
     I, S, erf, tan, asin, asinh, acos, acosh, Function, Derivative, diff, simplify
-from sympy.integrals.risch import heurisch, components
+from sympy.integrals.heurisch import heurisch, components
 from sympy.utilities.pytest import XFAIL, skip
 
 x, y, z = symbols('x,y,z')
