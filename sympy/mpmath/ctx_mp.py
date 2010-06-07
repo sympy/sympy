@@ -30,9 +30,6 @@ from libmp import (MPZ, MPZ_ZERO, MPZ_ONE, int_types, repr_dps,
     mpc_mul_int, mpc_div, mpc_div_mpf, mpc_pow, mpc_pow_mpf, mpc_pow_int,
     mpc_mpf_div,
     mpf_pow,
-    mpi_mid, mpi_delta, mpi_str,
-    mpi_abs, mpi_pos, mpi_neg, mpi_add, mpi_sub,
-    mpi_mul, mpi_div, mpi_pow_int, mpi_pow,
     mpf_pi, mpf_degree, mpf_e, mpf_phi, mpf_ln2, mpf_ln10,
     mpf_euler, mpf_catalan, mpf_apery, mpf_khinchin,
     mpf_glaisher, mpf_twinprime, mpf_mertens,
@@ -57,132 +54,6 @@ except ImportError:
 
 from ctx_mp_python import _mpf, _mpc, mpnumeric
 
-
-class _mpi(mpnumeric):
-    """
-    Interval arithmetic class. Precision is controlled by mp.prec.
-    """
-
-    def __new__(cls, a, b=None):
-        ctx = cls.context
-        if isinstance(a, ctx.mpi):
-            return a
-        if b is None:
-            b = a
-        a = ctx.mpf(a, rounding=round_floor)
-        b = ctx.mpf(b, rounding=round_ceiling)
-        if ctx.isnan(a) or ctx.isnan(b):
-            a, b = ctx.ninf, ctx.inf
-        assert a <= b, "endpoints must be properly ordered"
-        return ctx.make_mpi((a._mpf_, b._mpf_))
-
-    @property
-    def a(self):
-        return self.context.make_mpf(self._mpi_[0])
-
-    @property
-    def b(self):
-        return self.context.make_mpf(self._mpi_[1])
-
-    @property
-    def mid(self):
-        ctx = self.context
-        return ctx.make_mpf(mpi_mid(self._mpi_, ctx.prec))
-
-    @property
-    def delta(self):
-        ctx = self.context
-        return ctx.make_mpf(mpi_delta(self._mpi_, ctx.prec))
-
-    def _compare(*args):
-        raise TypeError("no ordering relation is defined for intervals")
-
-    __gt__ = _compare
-    __le__ = _compare
-    __gt__ = _compare
-    __ge__ = _compare
-
-    def __contains__(self, t):
-        t = self.context.mpi(t)
-        return (self.a <= t.a) and (t.b <= self.b)
-
-    def __str__(self):
-        return mpi_str(self._mpi_, self.context.prec)
-
-    def __repr__(self):
-        if self.context.pretty:
-            return str(self)
-        return "mpi(%r, %r)" % (self.a, self.b)
-
-    def __eq__(self, other):
-        if not hasattr(other, "_mpi_"):
-            try:
-                other = self.context.mpi(other)
-            except:
-                return NotImplemented
-        return (self.a == other.a) and (self.b == other.b)
-
-    def __ne__(self, other):
-        return not (self == other)
-
-    def __abs__(self):
-        return self.context.make_mpi(mpi_abs(self._mpi_, self.context.prec))
-
-    def __pos__(self):
-        return self.context.make_mpi(mpi_pos(self._mpi_, self.context.prec))
-
-    def __neg__(self):
-        return self.context.make_mpi(mpi_neg(self._mpi_, self.context.prec))
-
-    def __add__(self, other):
-        if not hasattr(other, "_mpi_"):
-            other = self.context.mpi(other)
-        return self.context.make_mpi(mpi_add(self._mpi_, other._mpi_,
-            self.context.prec))
-
-    def __sub__(self, other):
-        if not hasattr(other, "_mpi_"):
-            other = self.context.mpi(other)
-        return self.context.make_mpi(mpi_sub(self._mpi_, other._mpi_,
-            self.context.prec))
-
-    def __mul__(self, other):
-        if not hasattr(other, "_mpi_"):
-            other = self.context.mpi(other)
-        return self.context.make_mpi(mpi_mul(self._mpi_, other._mpi_,
-            self.context.prec))
-
-    def __div__(self, other):
-        if not hasattr(other, "_mpi_"):
-            other = self.context.mpi(other)
-        return self.context.make_mpi(mpi_div(self._mpi_, other._mpi_,
-            self.context.prec))
-
-    def __pow__(self, other):
-        if isinstance(other, (int, long)):
-            return self.context.make_mpi(mpi_pow_int(self._mpi_, int(other),
-                self.context.prec))
-        if not hasattr(other, "_mpi_"):
-            other = self.context.mpi(other)
-        return self.context.make_mpi(mpi_pow(self._mpi_, other._mpi_,
-            self.context.prec))
-
-    def __rsub__(s, t):
-        return s.context.mpi(t) - s
-
-    def __rdiv__(s, t):
-        return s.context.mpi(t) / s
-
-    def __rpow__(s, t):
-        return s.context.mpi(t) ** s
-
-    __radd__ = __add__
-    __rmul__ = __mul__
-    __truediv__ = __div__
-    __rtruediv__ = __rdiv__
-    __floordiv__ = __div__
-    __rfloordiv__ = __rdiv__
-
 class MPContext(BaseMPContext, StandardBaseContext):
     """
     Context for multiprecision arithmetic with a global precision.
@@ -190,17 +61,10 @@ class MPContext(BaseMPContext, StandardBaseContext):
 
     def __init__(ctx):
         BaseMPContext.__init__(ctx)
-
         ctx.trap_complex = False
         ctx.pretty = False
-        ctx.mpi = type('mpi', (_mpi,), {})
-        ctx.types = [ctx.mpf, ctx.mpc, ctx.mpi, ctx.constant]
-        # For fast access
-        ctx.mpi._ctxdata = [ctx.mpi, new, ctx._prec_rounding]
-        ctx.mpi.context = ctx
-
+        ctx.types = [ctx.mpf, ctx.mpc, ctx.constant]
         ctx._mpq = rational.mpq
-
         ctx.default()
         StandardBaseContext.__init__(ctx)
 
@@ -253,16 +117,16 @@ class MPContext(BaseMPContext, StandardBaseContext):
         ctx.mertens = ctx.constant(mpf_mertens, "Mertens' constant", "mertens")
 
         # Standard functions
-        ctx.sqrt = ctx._wrap_libmp_function(libmp.mpf_sqrt, libmp.mpc_sqrt, libmp.mpi_sqrt)
+        ctx.sqrt = ctx._wrap_libmp_function(libmp.mpf_sqrt, libmp.mpc_sqrt)
         ctx.cbrt = ctx._wrap_libmp_function(libmp.mpf_cbrt, libmp.mpc_cbrt)
-        ctx.ln = ctx._wrap_libmp_function(libmp.mpf_log, libmp.mpc_log, libmp.mpi_log)
+        ctx.ln = ctx._wrap_libmp_function(libmp.mpf_log, libmp.mpc_log)
         ctx.atan = ctx._wrap_libmp_function(libmp.mpf_atan, libmp.mpc_atan)
-        ctx.exp = ctx._wrap_libmp_function(libmp.mpf_exp, libmp.mpc_exp, libmp.mpi_exp)
+        ctx.exp = ctx._wrap_libmp_function(libmp.mpf_exp, libmp.mpc_exp)
         ctx.expj = ctx._wrap_libmp_function(libmp.mpf_expj, libmp.mpc_expj)
         ctx.expjpi = ctx._wrap_libmp_function(libmp.mpf_expjpi, libmp.mpc_expjpi)
-        ctx.sin = ctx._wrap_libmp_function(libmp.mpf_sin, libmp.mpc_sin, libmp.mpi_sin)
-        ctx.cos = ctx._wrap_libmp_function(libmp.mpf_cos, libmp.mpc_cos, libmp.mpi_cos)
-        ctx.tan = ctx._wrap_libmp_function(libmp.mpf_tan, libmp.mpc_tan, libmp.mpi_tan)
+        ctx.sin = ctx._wrap_libmp_function(libmp.mpf_sin, libmp.mpc_sin)
+        ctx.cos = ctx._wrap_libmp_function(libmp.mpf_cos, libmp.mpc_cos)
+        ctx.tan = ctx._wrap_libmp_function(libmp.mpf_tan, libmp.mpc_tan)
         ctx.sinh = ctx._wrap_libmp_function(libmp.mpf_sinh, libmp.mpc_sinh)
         ctx.cosh = ctx._wrap_libmp_function(libmp.mpf_cosh, libmp.mpc_cosh)
         ctx.tanh = ctx._wrap_libmp_function(libmp.mpf_tanh, libmp.mpc_tanh)
@@ -276,10 +140,18 @@ class MPContext(BaseMPContext, StandardBaseContext):
         ctx.cospi = ctx._wrap_libmp_function(libmp.mpf_cos_pi, libmp.mpc_cos_pi)
         ctx.floor = ctx._wrap_libmp_function(libmp.mpf_floor, libmp.mpc_floor)
         ctx.ceil = ctx._wrap_libmp_function(libmp.mpf_ceil, libmp.mpc_ceil)
+        ctx.nint = ctx._wrap_libmp_function(libmp.mpf_nint, libmp.mpc_nint)
+        ctx.frac = ctx._wrap_libmp_function(libmp.mpf_frac, libmp.mpc_frac)
         ctx.fib = ctx.fibonacci = ctx._wrap_libmp_function(libmp.mpf_fibonacci, libmp.mpc_fibonacci)
+
         ctx.gamma = ctx._wrap_libmp_function(libmp.mpf_gamma, libmp.mpc_gamma)
-        ctx.digamma = ctx._wrap_libmp_function(libmp.mpf_psi0, libmp.mpc_psi0)
+        ctx.rgamma = ctx._wrap_libmp_function(libmp.mpf_rgamma, libmp.mpc_rgamma)
+        ctx.loggamma = ctx._wrap_libmp_function(libmp.mpf_loggamma, libmp.mpc_loggamma)
         ctx.fac = ctx.factorial = ctx._wrap_libmp_function(libmp.mpf_factorial, libmp.mpc_factorial)
+        ctx.gamma_old = ctx._wrap_libmp_function(libmp.mpf_gamma_old, libmp.mpc_gamma_old)
+        ctx.fac_old = ctx.factorial_old = ctx._wrap_libmp_function(libmp.mpf_factorial_old, libmp.mpc_factorial_old)
+
+        ctx.digamma = ctx._wrap_libmp_function(libmp.mpf_psi0, libmp.mpc_psi0)
         ctx.harmonic = ctx._wrap_libmp_function(libmp.mpf_harmonic, libmp.mpc_harmonic)
         ctx.ei = ctx._wrap_libmp_function(libmp.mpf_ei, libmp.mpc_ei)
         ctx.e1 = ctx._wrap_libmp_function(libmp.mpf_e1, libmp.mpc_e1)
@@ -305,7 +177,7 @@ class MPContext(BaseMPContext, StandardBaseContext):
         return ctx.make_mpf(libmp.mpf_hypot(x._mpf_, y._mpf_, *ctx._prec_rounding))
 
     def _gamma_upper_int(ctx, n, z):
-        n = int(n)
+        n = int(ctx._re(n))
         if n == 0:
             return ctx.e1(z)
         if not hasattr(z, '_mpf_'):
@@ -382,6 +254,32 @@ class MPContext(BaseMPContext, StandardBaseContext):
         else:
             return ctx.make_mpc(libmp.mpc_psi(m, z._mpc_, *ctx._prec_rounding))
 
+    def cos_sin(ctx, x, **kwargs):
+        if type(x) not in ctx.types:
+            x = ctx.convert(x)
+        prec, rounding = ctx._parse_prec(kwargs)
+        if hasattr(x, '_mpf_'):
+            c, s = libmp.mpf_cos_sin(x._mpf_, prec, rounding)
+            return ctx.make_mpf(c), ctx.make_mpf(s)
+        elif hasattr(x, '_mpc_'):
+            c, s = libmp.mpc_cos_sin(x._mpc_, prec, rounding)
+            return ctx.make_mpc(c), ctx.make_mpc(s)
+        else:
+            return ctx.cos(x, **kwargs), ctx.sin(x, **kwargs)
+
+    def cospi_sinpi(ctx, x, **kwargs):
+        if type(x) not in ctx.types:
+            x = ctx.convert(x)
+        prec, rounding = ctx._parse_prec(kwargs)
+        if hasattr(x, '_mpf_'):
+            c, s = libmp.mpf_cos_sin_pi(x._mpf_, prec, rounding)
+            return ctx.make_mpf(c), ctx.make_mpf(s)
+        elif hasattr(x, '_mpc_'):
+            c, s = libmp.mpc_cos_sin_pi(x._mpc_, prec, rounding)
+            return ctx.make_mpc(c), ctx.make_mpc(s)
+        else:
+            return ctx.cos(x, **kwargs), ctx.sin(x, **kwargs)
+
     def clone(ctx):
         """
         Create a copy of the context, with the same working precision.
@@ -403,11 +301,6 @@ class MPContext(BaseMPContext, StandardBaseContext):
             return True
         return False
 
-    def make_mpi(ctx, v):
-        a = new(ctx.mpi)
-        a._mpi_ = v
-        return a
-
     def isnpint(ctx, x):
         if not x:
             return True
@@ -420,7 +313,7 @@ class MPContext(BaseMPContext, StandardBaseContext):
             return x <= 0
         if isinstance(x, ctx.mpq):
             # XXX: WRONG
-            p, q = x
+            p, q = x._mpq_
             if not p:
                 return True
             return (not (q % p)) and p <= 0
@@ -491,22 +384,125 @@ class MPContext(BaseMPContext, StandardBaseContext):
         """
         return PrecisionManager(ctx, None, lambda d: n, normalize_output)
 
+    def autoprec(ctx, f, maxprec=None, catch=(), verbose=False):
+        """
+        Return a wrapped copy of *f* that repeatedly evaluates *f*
+        with increasing precision until the result converges to the
+        full precision used at the point of the call.
+
+        This heuristically protects against rounding errors, at the cost of
+        roughly a 2x slowdown compared to manually setting the optimal
+        precision. This method can, however, easily be fooled if the results
+        from *f* depend "discontinuously" on the precision, for instance
+        if catastrophic cancellation can occur. Therefore, :func:`~mpmath.autoprec`
+        should be used judiciously.
+
+        **Examples**
+
+        Many functions are sensitive to perturbations of the input arguments.
+        If the arguments are decimal numbers, they may have to be converted
+        to binary at a much higher precision. If the amount of required
+        extra precision is unknown, :func:`~mpmath.autoprec` is convenient::
+
+            >>> from mpmath import *
+            >>> mp.dps = 15
+            >>> mp.pretty = True
+            >>> besselj(5, 125 * 10**28)    # Exact input
+            -8.03284785591801e-17
+            >>> besselj(5, '1.25e30')   # Bad
+            7.12954868316652e-16
+            >>> autoprec(besselj)(5, '1.25e30')   # Good
+            -8.03284785591801e-17
+
+        The following fails to converge because `\sin(\pi) = 0` whereas all
+        finite-precision approximations of `\pi` give nonzero values::
+
+            >>> autoprec(sin)(pi)
+            Traceback (most recent call last):
+              ...
+            NoConvergence: autoprec: prec increased to 2910 without convergence
+
+        As the following example shows, :func:`~mpmath.autoprec` can protect against
+        cancellation, but is fooled by too severe cancellation::
+
+            >>> x = 1e-10
+            >>> exp(x)-1; expm1(x); autoprec(lambda t: exp(t)-1)(x)
+            1.00000008274037e-10
+            1.00000000005e-10
+            1.00000000005e-10
+            >>> x = 1e-50
+            >>> exp(x)-1; expm1(x); autoprec(lambda t: exp(t)-1)(x)
+            0.0
+            1.0e-50
+            0.0
+
+        With *catch*, an exception or list of exceptions to intercept
+        may be specified. The raised exception is interpreted
+        as signaling insufficient precision. This permits, for example,
+        evaluating a function where a too low precision results in a
+        division by zero::
+
+            >>> f = lambda x: 1/(exp(x)-1)
+            >>> f(1e-30)
+            Traceback (most recent call last):
+              ...
+            ZeroDivisionError
+            >>> autoprec(f, catch=ZeroDivisionError)(1e-30)
+            1.0e+30
+
+
+        """
+        def f_autoprec_wrapped(*args, **kwargs):
+            prec = ctx.prec
+            if maxprec is None:
+                maxprec2 = ctx._default_hyper_maxprec(prec)
+            else:
+                maxprec2 = maxprec
+            try:
+                ctx.prec = prec + 10
+                try:
+                    v1 = f(*args, **kwargs)
+                except catch:
+                    v1 = ctx.nan
+                prec2 = prec + 20
+                while 1:
+                    ctx.prec = prec2
+                    try:
+                        v2 = f(*args, **kwargs)
+                    except catch:
+                        v2 = ctx.nan
+                    if v1 == v2:
+                        break
+                    err = ctx.mag(v2-v1) - ctx.mag(v2)
+                    if err < (-prec):
+                        break
+                    if verbose:
+                        print "autoprec: target=%s, prec=%s, accuracy=%s" \
+                            % (prec, prec2, -err)
+                    v1 = v2
+                    if prec2 >= maxprec2:
+                        raise ctx.NoConvergence(\
+                        "autoprec: prec increased to %i without convergence"\
+                        % prec2)
+                    prec2 += int(prec2*2)
+                    prec2 = min(prec2, maxprec2)
+            finally:
+                ctx.prec = prec
+            return +v2
+        return f_autoprec_wrapped
+
     def nstr(ctx, x, n=6, **kwargs):
         """
-        Convert an ``mpf``, ``mpc`` or ``mpi`` to a decimal string literal with *n*
+        Convert an ``mpf`` or ``mpc`` to a decimal string literal with *n*
         significant digits. The small default value for *n* is chosen to
         make this function useful for printing collections of numbers
         (lists, matrices, etc).
 
-        If *x* is an ``mpi``, there are some extra options, notably *mode*, which
-        can be 'brackets', 'diff', 'plusminus' or 'percent'. See ``mpi_to_str`` for
-        a more complete documentation.
-
-        If *x* is a list or tuple, :func:`nstr` is applied recursively
-        to each element. For unrecognized classes, :func:`nstr`
+        If *x* is a list or tuple, :func:`~mpmath.nstr` is applied recursively
+        to each element. For unrecognized classes, :func:`~mpmath.nstr`
         simply returns ``str(x)``.
 
-        The companion function :func:`nprint` prints the result
+        The companion function :func:`~mpmath.nprint` prints the result
         instead of returning it.
 
             >>> from mpmath import *
@@ -527,15 +523,7 @@ class MPContext(BaseMPContext, StandardBaseContext):
             return repr(x)
         if isinstance(x, ctx.matrix):
             return x.__nstr__(n, **kwargs)
-        if hasattr(x, '_mpi_'):
-            return ctx.mpi_to_str(x, n, **kwargs)
         return str(x)
-
-    def nprint(ctx, x, n=6, **kwargs):
-        """
-        Equivalent to ``print nstr(x, n)``.
-        """
-        print ctx.nstr(x, n, **kwargs)
 
     def _convert_fallback(ctx, x, strings):
         if strings and isinstance(x, basestring):
@@ -547,11 +535,12 @@ class MPContext(BaseMPContext, StandardBaseContext):
                     re = 0
                 im = match.group('im').rstrip('j')
                 return ctx.mpc(ctx.convert(re), ctx.convert(im))
-            if '[' in x or '(' in x or '+-' in x:
-                # XXX
-                return ctx.mpi_from_str(x)
-        if type(x) in ctx.types:  # XXX fix for mpi for Cython context
-            return x
+        if hasattr(x, "_mpi_"):
+            a, b = x._mpi_
+            if a == b:
+                return ctx.make_mpf(a)
+            else:
+                raise ValueError("can only create mpf from zero-width interval")
         raise TypeError("cannot create mpf from " + repr(x))
 
     def mpmathify(ctx, *args, **kwargs):
@@ -705,7 +694,7 @@ maxterms, or set zeroprec."""
         Negates the number *x*, giving a floating-point result, optionally
         using a custom precision and rounding mode.
 
-        See the documentation of :func:`fadd` for a detailed description
+        See the documentation of :func:`~mpmath.fadd` for a detailed description
         of how to specify precision and rounding.
 
         **Examples**
@@ -772,7 +761,7 @@ maxterms, or set zeroprec."""
 
         **Examples**
 
-        Using :func:`fadd` with precision and rounding control::
+        Using :func:`~mpmath.fadd` with precision and rounding control::
 
             >>> from mpmath import *
             >>> mp.dps = 15; mp.pretty = False
@@ -833,12 +822,12 @@ maxterms, or set zeroprec."""
         Subtracts the numbers *x* and *y*, giving a floating-point result,
         optionally using a custom precision and rounding mode.
 
-        See the documentation of :func:`fadd` for a detailed description
+        See the documentation of :func:`~mpmath.fadd` for a detailed description
         of how to specify precision and rounding.
 
         **Examples**
 
-        Using :func:`fsub` with precision and rounding control::
+        Using :func:`~mpmath.fsub` with precision and rounding control::
 
             >>> from mpmath import *
             >>> mp.dps = 15; mp.pretty = False
@@ -899,7 +888,7 @@ maxterms, or set zeroprec."""
         Multiplies the numbers *x* and *y*, giving a floating-point result,
         optionally using a custom precision and rounding mode.
 
-        See the documentation of :func:`fadd` for a detailed description
+        See the documentation of :func:`~mpmath.fadd` for a detailed description
         of how to specify precision and rounding.
 
         **Examples**
@@ -968,7 +957,7 @@ maxterms, or set zeroprec."""
         Divides the numbers *x* and *y*, giving a floating-point result,
         optionally using a custom precision and rounding mode.
 
-        See the documentation of :func:`fadd` for a detailed description
+        See the documentation of :func:`~mpmath.fadd` for a detailed description
         of how to specify precision and rounding.
 
         **Examples**
@@ -1000,7 +989,7 @@ maxterms, or set zeroprec."""
             >>> fdiv(2, 3) - fdiv(2, 3, prec=100)
             mpf('-3.7007434154172148e-17')
 
-        Unlike :func:`fadd`, :func:`fmul`, etc., exact division is not
+        Unlike :func:`~mpmath.fadd`, :func:`~mpmath.fmul`, etc., exact division is not
         allowed since the quotient of two floating-point numbers generally
         does not have an exact floating-point representation. (In the
         future this might be changed to allow the case where the division
@@ -1030,12 +1019,31 @@ maxterms, or set zeroprec."""
         raise ValueError("Arguments need to be mpf or mpc compatible numbers")
 
     def nint_distance(ctx, x):
-        """
-        Returns (n, d) where n is the nearest integer to x and d is the
-        log-2 distance (i.e. distance in bits) of n from x. If d < 0,
-        (-d) gives the bits of cancellation when n is subtracted from x.
-        This function is intended to be used to check for cancellation
-        at poles.
+        r"""
+        Return `(n,d)` where `n` is the nearest integer to `x` and `d` is
+        an estimate of `\log_2(|x-n|)`. If `d < 0`, `-d` gives the precision
+        (measured in bits) lost to cancellation when computing `x-n`.
+
+            >>> from mpmath import *
+            >>> n, d = nint_distance(5)
+            >>> print n, d
+            5 -inf
+            >>> n, d = nint_distance(mpf(5))
+            >>> print n, d
+            5 -inf
+            >>> n, d = nint_distance(mpf(5.00000001))
+            >>> print n, d
+            5 -26
+            >>> n, d = nint_distance(mpf(4.99999999))
+            >>> print n, d
+            5 -26
+            >>> n, d = nint_distance(mpc(5,10))
+            >>> print n, d
+            5 4
+            >>> n, d = nint_distance(mpc(5,0.000001))
+            >>> print n, d
+            5 -19
+
         """
         if hasattr(x, "_mpf_"):
             re = x._mpf_
@@ -1052,7 +1060,7 @@ maxterms, or set zeroprec."""
         elif isinstance(x, int_types):
             return int(x), ctx.ninf
         elif isinstance(x, rational.mpq):
-            p, q = x
+            p, q = x._mpq_
             n, r = divmod(p, q)
             if 2*r >= q:
                 n += 1
@@ -1107,7 +1115,7 @@ maxterms, or set zeroprec."""
     def fprod(ctx, factors):
         r"""
         Calculates a product containing a finite number of factors (for
-        infinite products, see :func:`nprod`). The factors will be
+        infinite products, see :func:`~mpmath.nprod`). The factors will be
         converted to mpmath numbers.
 
             >>> from mpmath import *
@@ -1154,172 +1162,17 @@ maxterms, or set zeroprec."""
         return ctx.constant(lambda prec, rnd: from_rational(p, q, prec, rnd),
             '%s/%s' % (p, q))
 
-    def mpi_from_str(ctx, s):
-        """
-        Parse an interval number given as a string.
-
-        Allowed forms are
-            1. 'a +- b'
-            2. 'a (b%)'  % sign is optional
-            3. '[a, b]'
-            4. 'x[y,z]e'
-        In 1, a is the midpoint of the interval and b is the half-width.
-        In 2, a is the midpoint of the interval and b is the half-width.
-        In 3, the interval is indicated directly.
-        In 4, x are shared digits, y and z are unequal digits, e is the exponent.
-        """
-        e = ValueError("Improperly formed interval number '%s'" %s)
-        s = s.replace(" ", "")
-        if "+-" in s:
-            # case 1
-            n = [ctx.mpf(strip(i)) for i in s.split("+-")]
-            return ctx.mpi(n[0] - n[1], n[0] + n[1])
-        elif "(" in s:
-            # case 2
-            if s[0] == "(":  # Don't confuse with a complex number (x,y)
-                return None
-            if ")" not in s:
-                raise e
-            s = s.replace(")", "")
-            percent = False
-            if "%" in s:
-                if s[-1] != "%":
-                    raise e
-                percent = True
-                s = s.replace("%", "")
-            a, p = [ctx.mpf(strip(i)) for i in s.split("(")]
-            d = p
-            if percent:
-                d = a*p / 100
-            return ctx.mpi(a - d, a + d)
-        elif "," in s:
-            if ('[' not in s) or (']' not in s):
-                raise e
-            if s[0] == '[':
-                # case 3
-                s = s.replace("[", "")
-                s = s.replace("]", "")
-                n = [ctx.mpf(strip(i)) for i in s.split(",")]
-                return ctx.mpi(n[0], n[1])
-            else:
-                # case 4
-                x, y = s.split('[')
-                y, z = y.split(',')
-                if 'e' in s:
-                    z, e = z.split(']')
-                else:
-                    z, e = z.rstrip(']'), ''
-                return ctx.mpi(x + y + e, x + z + e)
-        else:
-            return None
-
-    def mpi_to_str(ctx, x, dps=None, use_spaces=True, brackets=('[', ']'),
-                   mode='brackets', error_dps=4, **kwargs):
-        """
-        Convert a mpi interval to a string.
-
-        **Arguments**
-
-        *dps*
-            decimal places to use for printing
-        *use_spaces*
-            use spaces for more readable output, defaults to true
-        *brackets*
-            tuple of two strings indicating the brackets to use
-        *mode*
-            mode of display: 'plusminus', 'percent', 'brackets' (default) or 'diff'
-        *error_dps*
-            limit the error to *error_dps* digits (mode 'plusminus and 'percent')
-
-        **Examples**
-
-            >>> from mpmath import mpi, mp
-            >>> mp.dps = 30
-            >>> x = mpi(1, 2)
-            >>> mpi_to_str(x, mode='plusminus')
-            '1.5 +- 5.0e-1'
-            >>> mpi_to_str(x, mode='percent')
-            '1.5 (33.33%)'
-            >>> mpi_to_str(x, mode='brackets')
-            '[1.0, 2.0]'
-            >>> mpi_to_str(x, mode='brackets' , brackets=('<', '>'))
-            '<1.0, 2.0>'
-            >>> x = mpi('5.2582327113062393041', '5.2582327113062749951')
-            >>> mpi_to_str(x, mode='diff')
-            '5.2582327113062[4, 7]'
-            >>> mpi_to_str(mpi(0), mode='percent')
-            '0.0 (0%)'
-
-        """
-        if dps is None:
-            dps = ctx.dps # TODO: maybe choose a smaller default value
-        a = to_str(x.a._mpf_, dps, **kwargs)
-        b = to_str(x.b._mpf_, dps, **kwargs)
-        mid = to_str(x.mid._mpf_, dps, **kwargs)
-        delta = to_str((x.delta/2)._mpf_, error_dps, **kwargs)
-        sp = ""
-        if use_spaces:
-            sp = " "
-        br1, br2 = brackets
-        if mode == 'plusminus':
-            s = mid + sp + "+-" + sp + delta
-        elif mode == 'percent':
-            a = x.mid
-            if x.mid != 0:
-                b = 100*x.delta/(2*x.mid)
-            else:
-                b = MPZ_ZERO
-            m = str(a)
-            p = ctx.nstr(b, error_dps)
-            s = m + sp + "(" + p + "%)"
-        elif mode == 'brackets':
-            s = br1 + a.strip() + "," + sp + b + br2
-        elif mode == 'diff':
-            # use more digits if str(x.a) and str(x.b) are equal
-            if a == b:
-                a = to_str(x.a._mpf_, repr_dps(ctx.prec), **kwargs)
-                b = to_str(x.b._mpf_, repr_dps(ctx.prec), **kwargs)
-            # separate mantissa and exponent
-            a = a.split('e')
-            if len(a) == 1:
-                a.append('')
-            b = b.split('e')
-            if len(b) == 1:
-                b.append('')
-            if a[1] == b[1]:
-                if a[0] != b[0]:
-                    for i in xrange(len(a[0]) + 1):
-                        if a[0][i] != b[0][i]:
-                            break
-                    s = (a[0][:i] + br1 + a[0][i:] + ',' + sp + b[0][i:] + br2
-                         + 'e'*min(len(a[1]), 1) + a[1])
-                else: # no difference
-                    s = a[0] + br1 + br2 + 'e'*min(len(a[1]), 1) + a[1]
-            else:
-                s = br1 + 'e'.join(a) + ',' + sp + 'e'.join(b) + br2
-        else:
-            raise ValueError("'%s' is unknown mode for printing mpi" % mode)
-        return s
-
     def absmin(ctx, x):
-        """
-        Returns ``abs(x).a`` for an interval, or ``abs(x)`` for anything else.
-        """
-        if hasattr(x, '_mpi_'):
-            return abs(x).a
-        return abs(x)
+        return abs(ctx.convert(x))
 
     def absmax(ctx, x):
-        """
-        Returns ``abs(x).b`` for an interval, or ``abs(x)`` for anything else.
-        """
-        if hasattr(x, '_mpi_'):
-            return abs(x).b
-        return abs(x)
+        return abs(ctx.convert(x))
 
     def _as_points(ctx, x):
+        # XXX: remove this?
         if hasattr(x, '_mpi_'):
-            return [x.a, x.b]
+            a, b = x._mpi_
+            return [ctx.make_mpf(a), ctx.make_mpf(b)]
         return x
 
     '''
@@ -1348,7 +1201,6 @@ maxterms, or set zeroprec."""
         xs = map(ctx.make_mpc, xs)
         ys = map(ctx.make_mpc, ys)
         return xs, ys
-
 
 class PrecisionManager:
     def __init__(self, ctx, precfun, dpsfun, normalize_output=False):

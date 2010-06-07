@@ -766,7 +766,7 @@ class MatrixMethods(object):
         ``p=inf`` gives the magnitude of the largest element.
 
         For *x* a matrix, ``p=2`` is the Frobenius norm.
-        For operator matrix norms, use :func:`mnorm` instead.
+        For operator matrix norms, use :func:`~mpmath.mnorm` instead.
 
         You can use the string 'inf' as well as float('inf') or mpf('inf')
         to specify the infinity norm.
@@ -825,7 +825,7 @@ class MatrixMethods(object):
         The Frobenius norm lacks some mathematical properties that might
         be expected of a norm.
 
-        For general elementwise `p`-norms, use :func:`norm` instead.
+        For general elementwise `p`-norms, use :func:`~mpmath.norm` instead.
 
         **Examples**
 

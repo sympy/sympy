@@ -230,6 +230,12 @@ def _gamma_complex(x):
 
 gamma = _mathfun_real(_gamma_real, _gamma_complex)
 
+def rgamma(x):
+    try:
+        return 1./gamma(x)
+    except ZeroDivisionError:
+        return x*0.0
+
 def factorial(x):
     return gamma(x+1.0)
 

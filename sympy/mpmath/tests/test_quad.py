@@ -22,6 +22,11 @@ def test_quad_symmetry():
     assert quadts(sin, [-1, 1]) == 0
     assert quadgl(sin, [-1, 1]) == 0
 
+def test_quad_infinite_mirror():
+    # Check mirrored infinite interval
+    assert ae(quad(lambda x: exp(-x*x), [inf,-inf]), -sqrt(pi))
+    assert ae(quad(lambda x: exp(x), [0,-inf]), -1)
+
 def test_quadgl_linear():
     assert quadgl(lambda x: x, [0, 1], maxdegree=1).ae(0.5)
 

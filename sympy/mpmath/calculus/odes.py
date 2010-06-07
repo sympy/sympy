@@ -84,7 +84,7 @@ def odefun(ctx, F, x0, y0, tol=None, degree=None, method='taylor', verbose=False
 
     **Options, speed and accuracy**
 
-    By default, :func:`odefun` uses a high-order Taylor series
+    By default, :func:`~mpmath.odefun` uses a high-order Taylor series
     method. For reasonably well-behaved problems, the solution will
     be fully accurate to within the working precision. Note that
     *F* must be possible to evaluate to very high precision
@@ -110,7 +110,7 @@ def odefun(ctx, F, x0, y0, tol=None, degree=None, method='taylor', verbose=False
     at higher precision.
 
     The function
-    object returned by :func:`odefun` caches the solutions at all step
+    object returned by :func:`~mpmath.odefun` caches the solutions at all step
     points and uses polynomial interpolation between step points.
     Therefore, once `y(x_1)` has been evaluated for some `x_1`,
     `y(x)` can be evaluated very quickly for any `x_0 \le x \le x_1`.
@@ -148,7 +148,7 @@ def odefun(ctx, F, x0, y0, tol=None, degree=None, method='taylor', verbose=False
         >>> f(1)
         [2.71828182845905]
 
-    :func:`odefun` can solve nonlinear ODEs, which are generally
+    :func:`~mpmath.odefun` can solve nonlinear ODEs, which are generally
     impossible (and at best difficult) to solve analytically. As
     an example of a nonlinear ODE, we will solve `y'(x) = x \sin(y(x))`
     for `y(0) = \pi/2`. An exact solution happens to be known
@@ -165,7 +165,7 @@ def odefun(ctx, F, x0, y0, tol=None, degree=None, method='taylor', verbose=False
 
     If `F` is independent of `y`, an ODE can be solved using direct
     integration. We can therefore obtain a reference solution with
-    :func:`quad`::
+    :func:`~mpmath.quad`::
 
         >>> f = lambda x: (1+x**2)/(1+x**3)
         >>> g = odefun(lambda x, y: f(x), pi, 0)

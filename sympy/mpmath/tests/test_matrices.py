@@ -56,9 +56,6 @@ def test_matrix_basic():
     A10 = matrix(A9)
     A9[0,0] = -100
     assert A9 != A10
-    A11 = matrix(randmatrix(2, 3), force_type=mpi)
-    for a in A11:
-        assert isinstance(a, mpi)
     assert nstr(A9)
 
 def test_matrix_power():

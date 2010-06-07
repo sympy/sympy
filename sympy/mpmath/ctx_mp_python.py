@@ -18,9 +18,6 @@ from libmp import (MPZ, MPZ_ZERO, MPZ_ONE, int_types, repr_dps,
     mpc_mul_int, mpc_div, mpc_div_mpf, mpc_pow, mpc_pow_mpf, mpc_pow_int,
     mpc_mpf_div,
     mpf_pow,
-    mpi_mid, mpi_delta, mpi_str,
-    mpi_abs, mpi_pos, mpi_neg, mpi_add, mpi_sub,
-    mpi_mul, mpi_div, mpi_pow_int, mpi_pow,
     mpf_pi, mpf_degree, mpf_e, mpf_phi, mpf_ln2, mpf_ln10,
     mpf_euler, mpf_catalan, mpf_apery, mpf_khinchin,
     mpf_glaisher, mpf_twinprime, mpf_mertens,
@@ -89,6 +86,11 @@ class _mpf(mpnumeric):
             t = cls.context.convert(x._mpmath_(prec, rounding))
             if hasattr(t, '_mpf_'):
                 return t._mpf_
+        if hasattr(x, '_mpi_'):
+            a, b = x._mpi_
+            if a == b:
+                return a
+            raise ValueError("can only create mpf from zero-width interval")
         raise TypeError("cannot create mpf from " + repr(x))
 
     @classmethod
@@ -97,7 +99,7 @@ class _mpf(mpnumeric):
         if isinstance(x, float): return from_float(x)
         if isinstance(x, complex_types): return cls.context.mpc(x)
         if isinstance(x, rational.mpq):
-            p, q = x
+            p, q = x._mpq_
             return from_rational(p, q, cls.context.prec)
         if hasattr(x, '_mpf_'): return x._mpf_
         if hasattr(x, '_mpmath_'):
@@ -610,7 +612,7 @@ class PythonMPContext:
 
     def convert(ctx, x, strings=True):
         """
-        Converts *x* to an ``mpf``, ``mpc`` or ``mpi``. If *x* is of type ``mpf``,
+        Converts *x* to an ``mpf`` or ``mpc``. If *x* is of type ``mpf``,
         ``mpc``, ``int``, ``float``, ``complex``, the conversion
         will be performed losslessly.
 
@@ -637,7 +639,7 @@ class PythonMPContext:
             return ctx.make_mpc((from_float(x.real), from_float(x.imag)))
         prec, rounding = ctx._prec_rounding
         if isinstance(x, rational.mpq):
-            p, q = x
+            p, q = x._mpq_
             return ctx.make_mpf(from_rational(p, q, prec))
         if strings and isinstance(x, basestring):
             try:
@@ -653,57 +655,155 @@ class PythonMPContext:
 
     def isnan(ctx, x):
         """
-        For an ``mpf`` *x*, determines whether *x* is not-a-number (nan)::
+        Return *True* if *x* is a NaN (not-a-number), or for a complex
+        number, whether either the real or complex part is NaN;
+        otherwise return *False*::
 
             >>> from mpmath import *
-            >>> isnan(nan), isnan(3)
-            (True, False)
+            >>> isnan(3.14)
+            False
+            >>> isnan(nan)
+            True
+            >>> isnan(mpc(3.14,2.72))
+            False
+            >>> isnan(mpc(3.14,nan))
+            True
+
         """
-        if not hasattr(x, '_mpf_'):
+        if hasattr(x, "_mpf_"):
+            return x._mpf_ == fnan
+        if hasattr(x, "_mpc_"):
+            return fnan in x._mpc_
+        if isinstance(x, int_types) or isinstance(x, rational.mpq):
             return False
-        return x._mpf_ == fnan
+        x = ctx.convert(x)
+        if hasattr(x, '_mpf_') or hasattr(x, '_mpc_'):
+            return ctx.isnan(x)
+        raise TypeError("isnan() needs a number as input")
 
     def isinf(ctx, x):
         """
-        For an ``mpf`` *x*, determines whether *x* is infinite::
+        Return *True* if the absolute value of *x* is infinite;
+        otherwise return *False*::
 
             >>> from mpmath import *
-            >>> isinf(inf), isinf(-inf), isinf(3)
-            (True, True, False)
+            >>> isinf(inf)
+            True
+            >>> isinf(-inf)
+            True
+            >>> isinf(3)
+            False
+            >>> isinf(3+4j)
+            False
+            >>> isinf(mpc(3,inf))
+            True
+            >>> isinf(mpc(inf,3))
+            True
+
         """
-        if not hasattr(x, '_mpf_'):
+        if hasattr(x, "_mpf_"):
+            return x._mpf_ in (finf, fninf)
+        if hasattr(x, "_mpc_"):
+            re, im = x._mpc_
+            return re in (finf, fninf) or im in (finf, fninf)
+        if isinstance(x, int_types) or isinstance(x, rational.mpq):
             return False
-        return x._mpf_ in (finf, fninf)
+        x = ctx.convert(x)
+        if hasattr(x, '_mpf_') or hasattr(x, '_mpc_'):
+            return ctx.isinf(x)
+        raise TypeError("isinf() needs a number as input")
 
-    def isint(ctx, x):
+    def isnormal(ctx, x):
         """
-        For an ``mpf`` *x*, or any type that can be converted
-        to ``mpf``, determines whether *x* is exactly
-        integer-valued::
+        Determine whether *x* is "normal" in the sense of floating-point
+        representation; that is, return *False* if *x* is zero, an
+        infinity or NaN; otherwise return *True*. By extension, a
+        complex number *x* is considered "normal" if its magnitude is
+        normal::
 
             >>> from mpmath import *
-            >>> isint(3), isint(mpf(3)), isint(3.2)
-            (True, True, False)
+            >>> isnormal(3)
+            True
+            >>> isnormal(0)
+            False
+            >>> isnormal(inf); isnormal(-inf); isnormal(nan)
+            False
+            False
+            False
+            >>> isnormal(0+0j)
+            False
+            >>> isnormal(0+3j)
+            True
+            >>> isnormal(mpc(2,nan))
+            False
+        """
+        if hasattr(x, "_mpf_"):
+            return bool(x._mpf_[1])
+        if hasattr(x, "_mpc_"):
+            re, im = x._mpc_
+            re_normal = bool(re[1])
+            im_normal = bool(im[1])
+            if re == fzero: return im_normal
+            if im == fzero: return re_normal
+            return re_normal and im_normal
+        if isinstance(x, int_types) or isinstance(x, rational.mpq):
+            return bool(x)
+        x = ctx.convert(x)
+        if hasattr(x, '_mpf_') or hasattr(x, '_mpc_'):
+            return ctx.isnormal(x)
+        raise TypeError("isnormal() needs a number as input")
+
+    def isint(ctx, x, gaussian=False):
+        """
+        Return *True* if *x* is integer-valued; otherwise return
+        *False*::
+
+            >>> from mpmath import *
+            >>> isint(3)
+            True
+            >>> isint(mpf(3))
+            True
+            >>> isint(3.2)
+            False
+            >>> isint(inf)
+            False
+
+        Optionally, Gaussian integers can be checked for::
+
+            >>> isint(3+0j)
+            True
+            >>> isint(3+2j)
+            False
+            >>> isint(3+2j, gaussian=True)
+            True
+
         """
         if isinstance(x, int_types):
             return True
-        try:
-            x = ctx.convert(x)
-        except:
-            return False
-        if hasattr(x, '_mpf_'):
-            if ctx.isnan(x) or ctx.isinf(x):
-                return False
-            return x == int(x)
-        if isinstance(x, ctx.mpq):
-            p, q = x
-            return not (p % q)
-        return False
+        if hasattr(x, "_mpf_"):
+            sign, man, exp, bc = xval = x._mpf_
+            return bool((man and exp >= 0) or xval == fzero)
+        if hasattr(x, "_mpc_"):
+            re, im = x._mpc_
+            rsign, rman, rexp, rbc = re
+            isign, iman, iexp, ibc = im
+            re_isint = (rman and rexp >= 0) or re == fzero
+            if gaussian:
+                im_isint = (iman and iexp >= 0) or im == fzero
+                return re_isint and im_isint
+            return re_isint and im == fzero
+        if isinstance(x, rational.mpq):
+            p, q = x._mpq_
+            return p % q == 0
+        x = ctx.convert(x)
+        if hasattr(x, '_mpf_') or hasattr(x, '_mpc_'):
+            return ctx.isint(x, gaussian)
+        raise TypeError("isint() needs a number as input")
 
     def fsum(ctx, terms, absolute=False, squared=False):
         """
         Calculates a sum containing a finite number of terms (for infinite
-        series, see :func:`nsum`). The terms will be converted to
+        series, see :func:`~mpmath.nsum`). The terms will be converted to
         mpmath numbers. For len(terms) > 2, this function is generally
         faster and produces more accurate results than the builtin
         Python function :func:`sum`.
@@ -767,7 +867,7 @@ class PythonMPContext:
         else:
             return s + other
 
-    def fdot(ctx, A, B=None):
+    def fdot(ctx, A, B=None, conjugate=False):
         r"""
         Computes the dot product of the iterables `A` and `B`,
 
@@ -775,12 +875,18 @@ class PythonMPContext:
 
             \sum_{k=0} A_k B_k.
 
-        Alternatively, :func:`fdot` accepts a single iterable of pairs.
+        Alternatively, :func:`~mpmath.fdot` accepts a single iterable of pairs.
         In other words, ``fdot(A,B)`` and ``fdot(zip(A,B))`` are equivalent.
-
         The elements are automatically converted to mpmath numbers.
 
-        Examples::
+        With ``conjugate=True``, the elements in the second vector
+        will be conjugated:
+
+        .. math ::
+
+            \sum_{k=0} A_k \overline{B_k}
+
+        **Examples**
 
             >>> from mpmath import *
             >>> mp.dps = 15; mp.pretty = False
@@ -792,6 +898,12 @@ class PythonMPContext:
             [(2, 1), (1.5, -1), (3, 2)]
             >>> fdot(_)
             mpf('6.5')
+            >>> A = [2, 1.5, 3j]
+            >>> B = [1+j, 3, -1-j]
+            >>> fdot(A, B)
+            mpc(real='9.5', imag='-1.0')
+            >>> fdot(A, B, conjugate=True)
+            mpc(real='3.5', imag='-5.0')
 
         """
         if B:
@@ -815,6 +927,8 @@ class PythonMPContext:
             if a_real and b_complex:
                 aval = a._mpf_
                 bre, bim = b._mpc_
+                if conjugate:
+                    bim = mpf_neg(bim)
                 real.append(mpf_mul(aval, bre))
                 imag.append(mpf_mul(aval, bim))
             elif b_real and a_complex:
@@ -823,11 +937,20 @@ class PythonMPContext:
                 real.append(mpf_mul(are, bval))
                 imag.append(mpf_mul(aim, bval))
             elif a_complex and b_complex:
-                re, im = mpc_mul(a._mpc_, b._mpc_, prec+20)
-                real.append(re)
-                imag.append(im)
+                #re, im = mpc_mul(a._mpc_, b._mpc_, prec+20)
+                are, aim = a._mpc_
+                bre, bim = b._mpc_
+                if conjugate:
+                    bim = mpf_neg(bim)
+                real.append(mpf_mul(are, bre))
+                real.append(mpf_neg(mpf_mul(aim, bim)))
+                imag.append(mpf_mul(are, bim))
+                imag.append(mpf_mul(aim, bre))
             else:
-                other += a*b
+                if conjugate:
+                    other += a*ctx.conj(b)
+                else:
+                    other += a*b
         s = mpf_sum(real, prec, rnd)
         if imag:
             s = ctx.make_mpc((s, mpf_sum(imag, prec, rnd)))
@@ -867,9 +990,6 @@ class PythonMPContext:
                     return ctx.make_mpc(mpc_f((x._mpf_, fzero), prec, rounding))
             elif hasattr(x, '_mpc_'):
                 return ctx.make_mpc(mpc_f(x._mpc_, prec, rounding))
-            elif hasattr(x, '_mpi_'):
-                if mpi_f:
-                    return ctx.make_mpi(mpi_f(x._mpi_, prec))
             raise NotImplementedError("%s of a %s" % (name, type(x)))
         name = mpf_f.__name__[4:]
         f.__doc__ = function_docs.__dict__.get(name, "Computes the %s of x" % doc)
@@ -891,7 +1011,7 @@ class PythonMPContext:
                 return +retval
         else:
             f_wrapped = f
-        f_wrapped.__doc__ = function_docs.__dict__.get(name, "<no doc>")
+        f_wrapped.__doc__ = function_docs.__dict__.get(name, f.__doc__)
         setattr(cls, name, f_wrapped)
 
     def _convert_param(ctx, x):
@@ -907,6 +1027,8 @@ class PythonMPContext:
             p = None
             if isinstance(x, tuple):
                 p, q = x
+            elif hasattr(x, '_mpq_'):
+                p, q = x._mpq_
             elif isinstance(x, basestring) and '/' in x:
                 p, q = x.split('/')
                 p = int(p)
@@ -914,7 +1036,7 @@ class PythonMPContext:
             if p is not None:
                 if not p % q:
                     return p // q, 'Z'
-                return ctx.mpq((p,q)), 'Q'
+                return ctx.mpq(p,q), 'Q'
             x = ctx.convert(x)
             if hasattr(x, "_mpc_"):
                 v, im = x._mpc_
@@ -933,7 +1055,7 @@ class PythonMPContext:
                     return int(man) << exp, 'Z'
                 if exp >= -4:
                     p, q = int(man), (1<<(-exp))
-                    return ctx.mpq((p,q)), 'Q'
+                    return ctx.mpq(p,q), 'Q'
             x = ctx.make_mpf(v)
             return x, 'R'
         elif not exp:
@@ -953,11 +1075,24 @@ class PythonMPContext:
 
     def mag(ctx, x):
         """
-        Quick logarithmic magnitude estimate of a number.
-        Returns an integer or infinity `m` such that `|x| <= 2^m`.
-        It is not guaranteed that `m` is an optimal bound,
-        but it will never be off by more than 2 (and probably not
-        more than 1).
+        Quick logarithmic magnitude estimate of a number. Returns an
+        integer or infinity `m` such that `|x| <= 2^m`. It is not
+        guaranteed that `m` is an optimal bound, but it will never
+        be too large by more than 2 (and probably not more than 1).
+
+        **Examples**
+
+            >>> from mpmath import *
+            >>> mp.pretty = True
+            >>> mag(10), mag(10.0), mag(mpf(10)), int(ceil(log(10,2)))
+            (4, 4, 4, 4)
+            >>> mag(10j), mag(10+10j)
+            (4, 5)
+            >>> mag(0.01), int(ceil(log(0.01,2)))
+            (-6, -6)
+            >>> mag(0), mag(inf), mag(-inf), mag(nan)
+            (-inf, +inf, +inf, nan)
+
         """
         if hasattr(x, "_mpf_"):
             return ctx._mpf_mag(x._mpf_)
@@ -973,9 +1108,9 @@ class PythonMPContext:
                 return bitcount(abs(x))
             return ctx.ninf
         elif isinstance(x, rational.mpq):
-            p, q = x
+            p, q = x._mpq_
             if p:
-                return 1 + bitcount(abs(p)) - bitcount(abs(q))
+                return 1 + bitcount(abs(p)) - bitcount(q)
             return ctx.ninf
         else:
             x = ctx.convert(x)

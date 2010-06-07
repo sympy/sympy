@@ -392,7 +392,7 @@ class LinearAlgebraMethods(object):
             norm = ctx.norm
         prec = ctx.prec
         try:
-            prec += 10
+            ctx.prec += 10
             # do not overwrite A nor b
             A, b = ctx.matrix(A, **kwargs).copy(), ctx.matrix(b, **kwargs).copy()
             if A.rows < A.cols:
@@ -406,30 +406,89 @@ class LinearAlgebraMethods(object):
         finally:
             ctx.prec = prec
 
-    # TODO: possible for complex matrices? -> have a look at GSL
-    def cholesky(ctx, A):
-        """
-        Cholesky decomposition of a symmetric positive-definite matrix.
+    def cholesky(ctx, A, tol=None):
+        r"""
+        Cholesky decomposition of a symmetric positive-definite matrix `A`.
+        Returns a lower triangular matrix `L` such that `A = L \times L^T`.
+        More generally, for a complex Hermitian positive-definite matrix,
+        a Cholesky decomposition satisfying `A = L \times L^H` is returned.
 
-        Can be used to solve linear equation systems twice as efficient compared
-        to LU decomposition or to test whether A is positive-definite.
+        The Cholesky decomposition can be used to solve linear equation
+        systems twice as efficiently as LU decomposition, or to
+        test whether `A` is positive-definite.
 
-        A = L * L.T
-        Only L (the lower part) is returned.
+        The optional parameter ``tol`` determines the tolerance for
+        verifying positive-definiteness.
+
+        **Examples**
+
+        Cholesky decomposition of a positive-definite symmetric matrix::
+
+            >>> from mpmath import *
+            >>> mp.dps = 25; mp.pretty = True
+            >>> A = eye(3) + hilbert(3)
+            >>> nprint(A)
+            [     2.0      0.5  0.333333]
+            [     0.5  1.33333      0.25]
+            [0.333333     0.25       1.2]
+            >>> L = cholesky(A)
+            >>> nprint(L)
+            [ 1.41421      0.0      0.0]
+            [0.353553  1.09924      0.0]
+            [0.235702  0.15162  1.05899]
+            >>> chop(A - L*L.T)
+            [0.0  0.0  0.0]
+            [0.0  0.0  0.0]
+            [0.0  0.0  0.0]
+
+        Cholesky decomposition of a Hermitian matrix::
+
+            >>> A = eye(3) + matrix([[0,0.25j,-0.5j],[-0.25j,0,0],[0.5j,0,0]])
+            >>> L = cholesky(A)
+            >>> nprint(L)
+            [          1.0                0.0                0.0]
+            [(0.0 - 0.25j)  (0.968246 + 0.0j)                0.0]
+            [ (0.0 + 0.5j)  (0.129099 + 0.0j)  (0.856349 + 0.0j)]
+            >>> chop(A - L*L.H)
+            [0.0  0.0  0.0]
+            [0.0  0.0  0.0]
+            [0.0  0.0  0.0]
+
+        Attempted Cholesky decomposition of a matrix that is not positive
+        definite::
+
+            >>> A = -eye(3) + hilbert(3)
+            >>> L = cholesky(A)
+            Traceback (most recent call last):
+              ...
+            ValueError: matrix is not positive-definite
+
+        **References**
+
+        1. [Wikipedia]_ http://en.wikipedia.org/wiki/Cholesky_decomposition
+
         """
         assert isinstance(A, ctx.matrix)
         if not A.rows == A.cols:
             raise ValueError('need n*n matrix')
+        if tol is None:
+            tol = +ctx.eps
         n = A.rows
         L = ctx.matrix(n)
         for j in xrange(n):
-            s = A[j,j] - ctx.fsum(L[j,k]**2 for k in xrange(j))
-            if s < ctx.eps:
-                raise ValueError('matrix not positive-definite')
+            c = ctx.re(A[j,j])
+            if abs(c-A[j,j]) > tol:
+                raise ValueError('matrix is not Hermitian')
+            s = c - ctx.fsum((L[j,k] for k in xrange(j)),
+                absolute=True, squared=True)
+            if s < tol:
+                raise ValueError('matrix is not positive-definite')
             L[j,j] = ctx.sqrt(s)
             for i in xrange(j, n):
-                L[i,j] = (A[i,j] - ctx.fsum(L[i,k] * L[j,k] for k in xrange(j))) \
-                         / L[j,j]
+                it1 = (L[i,k] for k in xrange(j))
+                it2 = (L[j,k] for k in xrange(j))
+                t = ctx.fdot(it1, it2, conjugate=True)
+                L[i,j] = (A[i,j] - t) / L[j,j]
         return L
 
     def cholesky_solve(ctx, A, b, **kwargs):
@@ -446,7 +505,7 @@ class LinearAlgebraMethods(object):
         """
         prec = ctx.prec
         try:
-            prec += 10
+            ctx.prec += 10
             # do not overwrite A nor b
             A, b = ctx.matrix(A, **kwargs).copy(), ctx.matrix(b, **kwargs).copy()
             if A.rows !=  A.cols:

@@ -117,7 +117,10 @@ def sign(ctx, x):
     if not x or ctx.isnan(x):
         return x
     if ctx._is_real_type(x):
-        return ctx.mpf(cmp(x, 0))
+        if x > 0:
+            return ctx.one
+        else:
+            return -ctx.one
     return x / abs(x)
 
 @defun
@@ -252,7 +255,11 @@ def im(ctx, x):
 
 @defun
 def conj(ctx, x):
-    return ctx.convert(x).conjugate()
+    x = ctx.convert(x)
+    try:
+        return x.conjugate()
+    except AttributeError:
+        return x
 
 @defun
 def polar(ctx, z):
@@ -274,7 +281,7 @@ def log10(ctx, x):
     return ctx.log(x, 10)
 
 @defun
-def modf(ctx, x, y):
+def fmod(ctx, x, y):
     return ctx.convert(x) % ctx.convert(y)
 
 @defun

@@ -1,16 +1,13 @@
 from sympy.mpmath import *
 
-mpi_to_str = mp.mpi_to_str
-mpi_from_str = mp.mpi_from_str
-
 def test_interval_identity():
-    mp.dps = 15
+    iv.dps = 15
     assert mpi(2) == mpi(2, 2)
     assert mpi(2) != mpi(-2, 2)
     assert not (mpi(2) != mpi(2, 2))
     assert mpi(-1, 1) == mpi(-1, 1)
     assert str(mpi('0.1')) == "[0.099999999999999991673, 0.10000000000000000555]"
-    assert repr(mpi('0.1')) == "mpi(mpf('0.099999999999999992'), mpf('0.10000000000000001'))"
+    assert repr(mpi('0.1')) == "mpi('0.099999999999999992', '0.10000000000000001')"
     u = mpi(-1, 3)
     assert -1 in u
     assert 2 in u
@@ -28,16 +25,16 @@ def test_interval_identity():
     assert not (3 in mpi(-inf, 0))
 
 def test_interval_arithmetic():
-    mp.dps = 15
+    iv.dps = 15
     assert mpi(2) + mpi(3,4) == mpi(5,6)
     assert mpi(1, 2)**2 == mpi(1, 4)
     assert mpi(1) + mpi(0, 1e-50) == mpi(1, mpf('1.0000000000000002'))
     x = 1 / (1 / mpi(3))
     assert x.a < 3 < x.b
     x = mpi(2) ** mpi(0.5)
-    mp.dps += 5
-    sq = sqrt(2)
-    mp.dps -= 5
+    iv.dps += 5
+    sq = iv.sqrt(2)
+    iv.dps -= 5
     assert x.a < sq < x.b
     assert mpi(1) / mpi(1, inf)
     assert mpi(2, 3) / inf == mpi(0, 0)
@@ -50,13 +47,13 @@ def test_interval_arithmetic():
         '[-166.66666666666668561, -166.66666666666665719]'
     assert mpi(0, 4) ** 3 == mpi(0, 64)
     assert mpi(2,4).mid == 3
-    mp.dps = 30
-    a = mpi(pi)
-    mp.dps = 15
+    iv.dps = 30
+    a = mpi(iv.pi)
+    iv.dps = 15
     b = +a
     assert b.a < a.a
     assert b.b > a.b
-    a = mpi(pi)
+    a = mpi(iv.pi)
     assert a == +a
     assert abs(mpi(-1,2)) == mpi(0,2)
     assert abs(mpi(0.5,2)) == mpi(0.5,2)
@@ -188,7 +185,11 @@ def test_interval_div():
     assert mpi(0, 0) / mpi(0, 1) == mpi(-inf, inf)
 
 def test_interval_cos_sin():
-    mp.dps = 15
+    iv.dps = 15
+    cos = iv.cos
+    sin = iv.sin
+    tan = iv.tan
+    pi = iv.pi
     # Around 0
     assert cos(mpi(0)) == 1
     assert sin(mpi(0)) == 0
@@ -202,63 +203,186 @@ def test_interval_cos_sin():
     assert cos(mpi(-1, 1.5)) == mpi(0.070737201667702906405, 1.0)
     assert sin(mpi(-1,1)) == mpi(-0.8414709848078966159, 0.8414709848078966159)
     assert sin(mpi(-1,0.5)) == mpi(-0.8414709848078966159, 0.47942553860420300538)
-    assert sin(mpi(-1,1e-100)) == mpi(-0.8414709848078966159, 1.00000000000000002e-100)
-    assert sin(mpi(-2e-100,1e-100)) == mpi(-2.00000000000000004e-100, 1.00000000000000002e-100)
+    assert mpi(-0.8414709848078966159, 1.00000000000000002e-100) in sin(mpi(-1,1e-100))
+    assert mpi(-2.00000000000000004e-100, 1.00000000000000002e-100) in sin(mpi(-2e-100,1e-100))
     # Same interval
-    assert cos(mpi(2, 2.5)) == mpi(-0.80114361554693380718, -0.41614683654714235139)
+    assert cos(mpi(2, 2.5))
     assert cos(mpi(3.5, 4)) == mpi(-0.93645668729079634129, -0.65364362086361182946)
     assert cos(mpi(5, 5.5)) == mpi(0.28366218546322624627, 0.70866977429126010168)
-    assert sin(mpi(2, 2.5)) == mpi(0.59847214410395654927, 0.90929742682568170942)
+    assert mpi(0.59847214410395654927, 0.90929742682568170942) in sin(mpi(2, 2.5))
     assert sin(mpi(3.5, 4)) == mpi(-0.75680249530792831347, -0.35078322768961983646)
     assert sin(mpi(5, 5.5)) == mpi(-0.95892427466313856499, -0.70554032557039181306)
     # Higher roots
-    mp.dps = 55
-    w = 4*10**50 + mpf(0.5)
+    iv.dps = 55
+    w = 4*10**50 + mpi(0.5)
     for p in [15, 40, 80]:
-        mp.dps = p
+        iv.dps = p
         assert 0 in sin(4*mpi(pi))
         assert 0 in sin(4*10**50*mpi(pi))
         assert 0 in cos((4+0.5)*mpi(pi))
         assert 0 in cos(w*mpi(pi))
         assert 1 in cos(4*mpi(pi))
         assert 1 in cos(4*10**50*mpi(pi))
-    mp.dps = 15
+    iv.dps = 15
     assert cos(mpi(2,inf)) == mpi(-1,1)
     assert sin(mpi(2,inf)) == mpi(-1,1)
     assert cos(mpi(-inf,2)) == mpi(-1,1)
     assert sin(mpi(-inf,2)) == mpi(-1,1)
     u = tan(mpi(0.5,1))
-    assert u.a.ae(tan(0.5))
-    assert u.b.ae(tan(1))
-    v = cot(mpi(0.5,1))
-    assert v.a.ae(cot(1))
-    assert v.b.ae(cot(0.5))
+    assert mpf(u.a).ae(mp.tan(0.5))
+    assert mpf(u.b).ae(mp.tan(1))
+    v = iv.cot(mpi(0.5,1))
+    assert mpf(v.a).ae(mp.cot(1))
+    assert mpf(v.b).ae(mp.cot(0.5))
+    # Sanity check of evaluation at n*pi and (n+1/2)*pi
+    for n in range(-5,7,2):
+        x = iv.cos(n*iv.pi)
+        assert -1 in x
+        assert x >= -1
+        assert x != -1
+        x = iv.sin((n+0.5)*iv.pi)
+        assert -1 in x
+        assert x >= -1
+        assert x != -1
+    for n in range(-6,8,2):
+        x = iv.cos(n*iv.pi)
+        assert 1 in x
+        assert x <= 1
+        if n:
+            assert x != 1
+        x = iv.sin((n+0.5)*iv.pi)
+        assert 1 in x
+        assert x <= 1
+        assert x != 1
+    for n in range(-6,7):
+        x = iv.cos((n+0.5)*iv.pi)
+        assert x.a < 0 < x.b
+        x = iv.sin(n*iv.pi)
+        if n:
+            assert x.a < 0 < x.b
 
-def test_mpi_to_str():
-    mp.dps = 30
+def test_interval_complex():
+    # TODO: many more tests
+    iv.dps = 15
+    mp.dps = 15
+    assert iv.mpc(2,3) == 2+3j
+    assert iv.mpc(2,3) != 2+4j
+    assert iv.mpc(2,3) != 1+3j
+    assert 1+3j in iv.mpc([1,2],[3,4])
+    assert 2+5j not in iv.mpc([1,2],[3,4])
+    assert iv.mpc(1,2) + 1j == 1+3j
+    assert iv.mpc([1,2],[2,3]) + 2+3j == iv.mpc([3,4],[5,6])
+    assert iv.mpc([2,4],[4,8]) / 2 == iv.mpc([1,2],[2,4])
+    assert iv.mpc([1,2],[2,4]) * 2j == iv.mpc([-8,-4],[2,4])
+    assert iv.mpc([2,4],[4,8]) / 2j == iv.mpc([2,4],[-2,-1])
+    assert iv.exp(2+3j).ae(mp.exp(2+3j))
+    assert iv.log(2+3j).ae(mp.log(2+3j))
+    assert (iv.mpc(2,3) ** iv.mpc(0.5,2)).ae(mp.mpc(2,3) ** mp.mpc(0.5,2))
+    assert 1j in (iv.mpf(-1) ** 0.5)
+    assert 1j in (iv.mpc(-1) ** 0.5)
+    assert abs(iv.mpc(0)) == 0
+    assert abs(iv.mpc(inf)) == inf
+    assert abs(iv.mpc(3,4)) == 5
+    assert abs(iv.mpc(4)) == 4
+    assert abs(iv.mpc(0,4)) == 4
+    assert abs(iv.mpc(0,[2,3])) == iv.mpf([2,3])
+    assert abs(iv.mpc(0,[-3,2])) == iv.mpf([0,3])
+    assert abs(iv.mpc([3,5],[4,12])) == iv.mpf([5,13])
+    assert abs(iv.mpc([3,5],[-4,12])) == iv.mpf([3,13])
+    assert iv.mpc(2,3) ** 0 == 1
+    assert iv.mpc(2,3) ** 1 == (2+3j)
+    assert iv.mpc(2,3) ** 2 == (2+3j)**2
+    assert iv.mpc(2,3) ** 3 == (2+3j)**3
+    assert iv.mpc(2,3) ** 4 == (2+3j)**4
+    assert iv.mpc(2,3) ** 5 == (2+3j)**5
+    assert iv.mpc(2,2) ** (-1) == (2+2j) ** (-1)
+    assert iv.mpc(2,2) ** (-2) == (2+2j) ** (-2)
+    assert iv.cos(2).ae(mp.cos(2))
+    assert iv.sin(2).ae(mp.sin(2))
+    assert iv.cos(2+3j).ae(mp.cos(2+3j))
+    assert iv.sin(2+3j).ae(mp.sin(2+3j))
+
+def test_interval_complex_arg():
+    assert iv.arg(3) == 0
+    assert iv.arg(0) == 0
+    assert iv.arg([0,3]) == 0
+    assert iv.arg(-3).ae(pi)
+    assert iv.arg(2+3j).ae(iv.arg(2+3j))
+    z = iv.mpc([-2,-1],[3,4])
+    t = iv.arg(z)
+    assert t.a.ae(mp.arg(-1+4j))
+    assert t.b.ae(mp.arg(-2+3j))
+    z = iv.mpc([-2,1],[3,4])
+    t = iv.arg(z)
+    assert t.a.ae(mp.arg(1+3j))
+    assert t.b.ae(mp.arg(-2+3j))
+    z = iv.mpc([1,2],[3,4])
+    t = iv.arg(z)
+    assert t.a.ae(mp.arg(2+3j))
+    assert t.b.ae(mp.arg(1+4j))
+    z = iv.mpc([1,2],[-2,3])
+    t = iv.arg(z)
+    assert t.a.ae(mp.arg(1-2j))
+    assert t.b.ae(mp.arg(1+3j))
+    z = iv.mpc([1,2],[-4,-3])
+    t = iv.arg(z)
+    assert t.a.ae(mp.arg(1-4j))
+    assert t.b.ae(mp.arg(2-3j))
+    z = iv.mpc([-1,2],[-4,-3])
+    t = iv.arg(z)
+    assert t.a.ae(mp.arg(-1-3j))
+    assert t.b.ae(mp.arg(2-3j))
+    z = iv.mpc([-2,-1],[-4,-3])
+    t = iv.arg(z)
+    assert t.a.ae(mp.arg(-2-3j))
+    assert t.b.ae(mp.arg(-1-4j))
+    z = iv.mpc([-2,-1],[-3,3])
+    t = iv.arg(z)
+    assert t.a.ae(-mp.pi)
+    assert t.b.ae(mp.pi)
+    z = iv.mpc([-2,2],[-3,3])
+    t = iv.arg(z)
+    assert t.a.ae(-mp.pi)
+    assert t.b.ae(mp.pi)
+
+def test_interval_ae():
+    iv.dps = 15
+    x = iv.mpf([1,2])
+    assert x.ae(1) is None
+    assert x.ae(1.5) is None
+    assert x.ae(2) is None
+    assert x.ae(2.01) is False
+    assert x.ae(0.99) is False
+    x = iv.mpf(3.5)
+    assert x.ae(3.5) is True
+    assert x.ae(3.5+1e-15) is True
+    assert x.ae(3.5-1e-15) is True
+    assert x.ae(3.501) is False
+    assert x.ae(3.499) is False
+    assert x.ae(iv.mpf([3.5,3.501])) is None
+    assert x.ae(iv.mpf([3.5,4.5+1e-15])) is None
+
+def test_interval_nstr():
+    iv.dps = n = 30
     x = mpi(1, 2)
     # FIXME: error_dps should not be necessary
-    assert mpi_to_str(x, mode='plusminus', error_dps=6) == '1.5 +- 0.5'
-    assert mpi_to_str(x, mode='plusminus', use_spaces=False, error_dps=6
-           ) == '1.5+-0.5'
-    assert mpi_to_str(x, mode='percent') == '1.5 (33.33%)'
-    assert mpi_to_str(x, mode='brackets', use_spaces=False) == '[1.0,2.0]'
-    assert mpi_to_str(x, mode='brackets' , brackets=('<', '>')) == '<1.0, 2.0>'
+    assert iv.nstr(x, n, mode='plusminus', error_dps=6) == '1.5 +- 0.5'
+    assert iv.nstr(x, n, mode='plusminus', use_spaces=False, error_dps=6) == '1.5+-0.5'
+    assert iv.nstr(x, n, mode='percent') == '1.5 (33.33%)'
+    assert iv.nstr(x, n, mode='brackets', use_spaces=False) == '[1.0,2.0]'
+    assert iv.nstr(x, n, mode='brackets' , brackets=('<', '>')) == '<1.0, 2.0>'
     x = mpi('5.2582327113062393041', '5.2582327113062749951')
-    assert (mpi_to_str(x, mode='diff') ==
-            '5.2582327113062[393041, 749951]')
-    assert (mpi_to_str(cos(mpi(1)), mode='diff', use_spaces=False) ==
-            '0.54030230586813971740093660744[2955,3053]')
-    assert (mpi_to_str(mpi('1e123', '1e129'), mode='diff') ==
-            '[1.0e+123, 1.0e+129]')
-    assert (mpi_to_str(exp(mpi('5000.1')), mode='diff') ==
-            '3.2797365856787867069110487[0926, 1191]e+2171')
+    assert iv.nstr(x, n, mode='diff') == '5.2582327113062[393041, 749951]'
+    assert iv.nstr(iv.cos(mpi(1)), n, mode='diff', use_spaces=False) == '0.54030230586813971740093660744[2955,3053]'
+    assert iv.nstr(mpi('1e123', '1e129'), n, mode='diff') == '[1.0e+123, 1.0e+129]'
+    exp = iv.exp
+    assert iv.nstr(iv.exp(mpi('5000.1')), n, mode='diff') == '3.2797365856787867069110487[0926, 1191]e+2171'
 
 def test_mpi_from_str():
-    assert mpi_from_str('1.5 +- 0.5') == mpi(mpf('1.0'), mpf('2.0'))
-    assert (mpi_from_str('1.5 (33.33333333333333333333333333333%)') ==
-            mpi(mpf(1), mpf(2)))
-    assert mpi_from_str('[1, 2]') == mpi(1, 2)
-    assert mpi_from_str('1[2, 3]') == mpi(12, 13)
-    assert mpi_from_str('1.[23,46]e-8') == mpi('1.23e-8', '1.46e-8')
-    assert mpi_from_str('12[3.4,5.9]e4') == mpi('123.4e+4', '125.9e4')
+    iv.dps = 15
+    assert iv.convert('1.5 +- 0.5') == mpi(mpf('1.0'), mpf('2.0'))
+    assert mpi(1, 2) in iv.convert('1.5 (33.33333333333333333333333333333%)')
+    assert iv.convert('[1, 2]') == mpi(1, 2)
+    assert iv.convert('1[2, 3]') == mpi(12, 13)
+    assert iv.convert('1.[23,46]e-8') == mpi('1.23e-8', '1.46e-8')
+    assert iv.convert('12[3.4,5.9]e4') == mpi('123.4e+4', '125.9e4')

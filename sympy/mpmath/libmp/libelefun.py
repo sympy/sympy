@@ -12,7 +12,7 @@ see libmpc and libmpi.
 import math
 from bisect import bisect
 
-from backend import MPZ, MPZ_ZERO, MPZ_ONE, MPZ_TWO, MPZ_FIVE
+from backend import MPZ, MPZ_ZERO, MPZ_ONE, MPZ_TWO, MPZ_FIVE, BACKEND
 
 from libmpf import (
     round_floor, round_ceiling, round_down, round_up,
@@ -20,7 +20,7 @@ from libmpf import (
     ComplexResult,
     bitcount, bctable, lshift, rshift, giant_steps, sqrt_fixed,
     from_int, to_int, from_man_exp, to_fixed, to_float, from_float,
-    normalize,
+    from_rational, normalize,
     fzero, fone, fnone, fhalf, finf, fninf, fnan,
     mpf_cmp, mpf_sign, mpf_abs,
     mpf_pos, mpf_neg, mpf_add, mpf_sub, mpf_mul, mpf_div, mpf_shift,
@@ -30,6 +30,49 @@ from libmpf import (
 )
 
 from libintmath import ifib
+
+
+#-------------------------------------------------------------------------------
+# Tuning parameters
+#-------------------------------------------------------------------------------
+
+# Cutoff for computing exp from cosh+sinh. This reduces the
+# number of terms by half, but also requires a square root which
+# is expensive with the pure-Python square root code.
+if BACKEND == 'python':
+    EXP_COSH_CUTOFF = 600
+else:
+    EXP_COSH_CUTOFF = 400
+# Cutoff for using more than 2 series
+EXP_SERIES_U_CUTOFF = 1500
+
+# Also basically determined by sqrt
+if BACKEND == 'python':
+    COS_SIN_CACHE_PREC = 400
+else:
+    COS_SIN_CACHE_PREC = 200
+COS_SIN_CACHE_STEP = 8
+cos_sin_cache = {}
+
+# Number of integer logarithms to cache (for zeta sums)
+MAX_LOG_INT_CACHE = 2000
+log_int_cache = {}
+
+LOG_TAYLOR_PREC = 2500  # Use Taylor series with caching up to this prec
+LOG_TAYLOR_SHIFT = 9    # Cache log values in steps of size 2^-N
+log_taylor_cache = {}
+# prec/size ratio of x for fastest convergence in AGM formula
+LOG_AGM_MAG_PREC_RATIO = 20
+
+ATAN_TAYLOR_PREC = 3000  # Same as for log
+ATAN_TAYLOR_SHIFT = 7   # steps of size 2^-N
+atan_taylor_cache = {}
+
+
+# ~= next power of two + 20
+cache_prec_steps = [22,22]
+for k in xrange(1, bitcount(LOG_TAYLOR_PREC)+1):
+    cache_prec_steps += [min(2**k,LOG_TAYLOR_PREC)+20] * 2**(k-1)
 
 
 #----------------------------------------------------------------------------#
@@ -251,6 +294,20 @@ mpf_ln2    = def_mpf_constant(ln2_fixed)
 mpf_ln10   = def_mpf_constant(ln10_fixed)
 
 
+@constant_memo
+def ln_sqrt2pi_fixed(prec):
+    wp = prec + 10
+    # ln(sqrt(2*pi)) = ln(2*pi)/2
+    return to_fixed(mpf_log(mpf_shift(mpf_pi(wp), 1), wp), prec-1)
+
+@constant_memo
+def sqrtpi_fixed(prec):
+    return sqrt_fixed(pi_fixed(prec), prec)
+
+mpf_sqrtpi   = def_mpf_constant(sqrtpi_fixed)
+mpf_ln_sqrt2pi   = def_mpf_constant(ln_sqrt2pi_fixed)
+
+
 #----------------------------------------------------------------------------#
 #                                                                            #
 #                                    Powers                                  #
@@ -454,40 +511,28 @@ def mpf_cbrt(s, prec, rnd=round_fast):
 #                                                                            #
 #----------------------------------------------------------------------------#
 
-# Fast sequential integer logarithms are required for various series
-# computations related to zeta functions, so we cache them
-# TODO: can this be done better?
-MAX_LOG_INT_CACHE = 2000
 
-log_int_cache = {}
-
-def log_int_fixed(n, prec):
+def log_int_fixed(n, prec, ln2=None):
+    """
+    Fast computation of log(n), caching the value for small n,
+    intended for zeta sums.
+    """
     if n in log_int_cache:
         value, vprec = log_int_cache[n]
         if vprec >= prec:
             return value >> (vprec - prec)
-    extra = 30
-    vprec = prec + extra
-    v = to_fixed(mpf_log(from_int(n), vprec+5), vprec)
+    wp = prec + 10
+    if wp <= LOG_TAYLOR_SHIFT:
+        if ln2 is None:
+            ln2 = ln2_fixed(wp)
+        r = bitcount(n)
+        x = n << (wp-r)
+        v = log_taylor_cached(x, wp) + r*ln2
+    else:
+        v = to_fixed(mpf_log(from_int(n), wp+5), wp)
     if n < MAX_LOG_INT_CACHE:
-        log_int_cache[n] = (v, vprec)
-    return v >> extra
-
-# Use Taylor series with caching up to this prec
-LOG_TAYLOR_PREC = 2500
-
-# Cache log values in steps of size 2^-N
-LOG_TAYLOR_SHIFT = 9
-
-# prec/size ratio of x for fastest convergence in AGM formula
-LOG_AGM_MAG_PREC_RATIO = 20
-
-log_taylor_cache = {}
-
-# ~= next power of two + 20
-cache_prec_steps = [22,22]
-for k in xrange(1, bitcount(LOG_TAYLOR_PREC)+1):
-    cache_prec_steps += [min(2**k,LOG_TAYLOR_PREC)+20] * 2**(k-1)
+        log_int_cache[n] = (v, wp)
+    return v >> (wp-prec)
 
 def agm_fixed(a, b, prec):
     """
@@ -731,636 +776,6 @@ def mpf_log_hypot(a, b, prec, rnd):
     return mpf_shift(mpf_log(h2, prec, rnd), -1)
 
 
-#----------------------------------------------------------------------------#
-#                                                                            #
-#                           Exponential function                             #
-#                                                                            #
-#----------------------------------------------------------------------------#
-
-# The exponential function has a rapidly convergent Maclaurin series:
-#
-#     exp(x) = 1 + x + x**2/2! + x**3/3! + x**4/4! + ...
-#
-# The series can be summed very easily using fixed-point arithmetic.
-# The convergence can be improved further, using a trick due to
-# Richard P. Brent: instead of computing exp(x) directly, we choose a
-# small integer r (say, r=10) and compute exp(x/2**r)**(2**r).
-
-# The optimal value for r depends on the Python platform, the magnitude
-# of x and the target precision, and has to be estimated from
-# experimental timings. One test with x ~= 0.3 showed that
-# r = 2.2*prec**0.42 gave a good fit to the optimal values for r for
-# prec between 1 and 10000 bits, on one particular machine.
-
-# This optimization makes the summation about twice as fast at
-# low precision levels and much faster at high precision
-# (roughly five times faster at 1000 decimal digits).
-
-# If |x| is very large, we first rewrite it as t + n*log(2) with the
-# integer n chosen such that |t| <= log(2), and then calculate
-# exp(x) as exp(t)*(2**n), using the Maclaurin series for exp(t)
-# (the multiplication by 2**n just amounts to shifting the exponent).
-
-# For very high precision use the newton method to compute exp from
-# log_agm; for |x| very large or very small use
-# exp(x + m) = exp(x) * e**m,  m = int(n * math.log(2))
-
-# Input: x * 2**prec
-# Output: exp(x) * 2**(prec + r)
-def exp_series(x, prec, r):
-    x >>= r
-    # 1 + x + x^2/2! + x^3/3! + x^4/4! + ... =
-    # (1 + x^2/2! + ...) + x * (1 + x^2/3! + ...)
-    s0 = s1 = (MPZ_ONE << prec)
-    k = 2
-    a = x2 = (x * x) >> prec
-    while a:
-        a = a // k
-        s0 += a
-        k += 1
-        a = a // k
-        s1 += a
-        a = (a * x2) >> prec
-        k += 1
-    # Calculate s**(2**r) by repeated squaring
-    s1 = (s1 * x) >> prec
-    s = s0 + s1
-    while r:
-        s = (s*s) >> prec
-        r -= 1
-    return s
-
-def exp_series2(x, prec, r):
-    x >>= r
-    sign = 0
-    if x < 0:
-        sign = 1
-        x = -x
-    x2 = (x*x) >> prec
-    if prec < 1500:
-        s1 = a = x
-        k = 3
-        while a:
-            a = ((a * x2) >> prec) // (k*(k-1))
-            s1 += a
-            k += 2
-    else:
-        # use Smith's method:
-        # reduce the number of multiplication summing concurrently J series
-        # J=4
-        # Sinh(x) =
-        #   (x + x^9/9! + ...) + x^2 * (x/3! + x^9/11! + ...) +
-        #   x^4 * (x/5! + x^9/13! + ...) + x^6 * (x/7! + x^9/15! + ...)
-        J = 4
-        ax = [MPZ_ONE << prec, x2]
-        px = x2
-        asum = [x, x//6]
-        fact = 6
-        k = 4
-        for j in range(2, J):
-            px = (px * x2) >> prec
-            ax.append(px)
-            fact *= k*(k+1)
-            asum.append(x//fact)
-            k += 2
-        lx = (ax[-1]*x2) >> prec
-        p = asum[-1]
-        while p:
-            p = (p * lx) >> prec
-            for j in range(J):
-                p = p//(k*(k+1))
-                asum[j] += p
-                k += 2
-        s1 = 0
-        for i in range(1, J):
-            s1 += ax[i]*asum[i]
-        s1 = asum[0] + (s1 >> prec)
-    c1 = isqrt_fast((s1*s1) + (MPZ_ONE<<(2*prec)))
-    if sign:
-        s = c1 - s1
-    else:
-        s = c1 + s1
-    # Calculate s**(2**r) by repeated squaring
-    while r:
-        s = (s*s) >> prec
-        r -= 1
-    return s
-
-# use the fourth order newton method, with step
-# r = r + r * (h + h^2/2 + h^3/6 + h$/24)
-# at each step the precision is quadrupled.
-
-def exp_newton(x, prec):
-    extra = 10
-    r = mpf_exp(x, 60)
-    start = 50
-    prevp = start
-    for p in giant_steps(start, prec+extra, 4):
-        h = mpf_sub(x, mpf_log(r, p), p)
-        h2 = mpf_mul(h, h, p)
-        h3 = mpf_mul(h2, h, p)
-        h4 = mpf_mul(h2, h2, p)
-        t = mpf_add(h, mpf_shift(h2, -1), p)
-        t = mpf_add(t, mpf_div(h3, from_int(6, p), p), p)
-        t = mpf_add(t, mpf_div(h4, from_int(24, p), p), p)
-        t = mpf_mul(r, t, p)
-        r = mpf_add(r, t, p)
-    return r
-
-# for precision larger than this limit, for x > 1, use the newton method
-LIM_EXP_SERIES2 = 10000
-# when the newton method is used, if x has mag=exp+bc larger than LIM_MAG
-# shift it
-LIM_MAG = 5
-
-# table of values to determine if exp_series2 or exp_newton is faster,
-# determined with benchmarking on a PC, with gmpy
-ns_exp = [8,9,10,11,12,13,33,66,83,99,132,166,199,232,265,298,332,664]
-precs_exp = [43000, 63000, 64000, 64000, 65000, 66000, 72000, 82000, 99000,
-   115000, 148000, 190000, 218000, 307000, 363000, 528000, 594000, 1650000]
-
-
-def mpf_exp(x, prec, rnd=round_fast):
-    sign, man, exp, bc = x
-    if not man:
-        if not exp:
-            return fone
-        if x == fninf:
-            return fzero
-        return x
-    mag = bc+exp
-    # Fast handling e**n. TODO: the best cutoff depends on both the
-    # size of n and the precision.
-    if prec > 600 and exp >= 0:
-        e = mpf_e(prec+10+int(1.45*mag))
-        return mpf_pow_int(e, (-1)**sign *(man<<exp), prec, rnd)
-    if mag < -prec-10:
-        return mpf_perturb(fone, sign, prec, rnd)
-    # extra precision needs to be similar in magnitude to log_2(|x|)
-    # for the modulo reduction, plus r for the error from squaring r times
-    wp = prec + max(0, mag)
-    if wp < 300:
-        r = int(2*wp**0.4)
-        if mag < 0:
-            r = max(1, r + mag)
-        wp += r + 20
-        t = to_fixed(x, wp)
-        # abs(x) > 1?
-        if mag > 1:
-            lg2 = ln2_fixed(wp)
-            n, t = divmod(t, lg2)
-        else:
-            n = 0
-        man = exp_series(t, wp, r)
-    else:
-        use_newton = False
-        # put a bound on exp to avoid infinite recursion in exp_newton
-        # TODO find a good bound
-        if wp > LIM_EXP_SERIES2 and exp < 1000:
-            if mag > 0:
-                use_newton = True
-            elif mag <= 0 and -mag <= ns_exp[-1]:
-                i = bisect(ns_exp, -mag-1)
-                if i < len(ns_exp):
-                    wp0 = precs_exp[i]
-                    if wp > wp0:
-                        use_newton = True
-
-        if not use_newton:
-            r = int(0.7 * wp**0.5)
-            if mag < 0:
-                r = max(1, r + mag)
-            wp += r + 20
-            t = to_fixed(x, wp)
-            if mag > 1:
-                lg2 = ln2_fixed(wp)
-                n, t = divmod(t, lg2)
-            else:
-                n = 0
-            man = exp_series2(t, wp, r)
-        else:
-            # if x is very small or very large use
-            # exp(x + m) = exp(x) * e**m
-            if mag > LIM_MAG:
-                wp += mag*10 + 100
-                n = int(mag * math.log(2)) + 1
-                x = mpf_sub(x, from_int(n, wp), wp)
-            elif mag <= 0:
-                wp += -mag*10 + 100
-                if mag < 0:
-                    n = int(-mag * math.log(2)) + 1
-                    x = mpf_add(x, from_int(n, wp), wp)
-            res = exp_newton(x, wp)
-            sign, man, exp, bc = res
-            if mag < 0:
-                t = mpf_pow_int(mpf_e(wp), n, wp)
-                res = mpf_div(res, t, wp)
-                sign, man, exp, bc = res
-            if mag > LIM_MAG:
-                t = mpf_pow_int(mpf_e(wp), n, wp)
-                res = mpf_mul(res, t, wp)
-                sign, man, exp, bc = res
-            return normalize(sign, man, exp, bc, prec, rnd)
-    bc = bitcount(man)
-    return normalize(0, man, int(-wp+n), bc, prec, rnd)
-
-
-#----------------------------------------------------------------------------#
-#                                                                            #
-#                          Trigonometric functions                           #
-#                                                                            #
-#----------------------------------------------------------------------------#
-
-def sin_taylor(x, prec):
-    x = MPZ(x)
-    x2 = (x*x) >> prec
-    s = a = x
-    k = 3
-    while a:
-        a = ((a * x2) >> prec) // (k*(1-k))
-        s += a
-        k += 2
-    return s
-
-def cos_taylor(x, prec):
-    x = MPZ(x)
-    x2 = (x*x) >> prec
-    a = c = (MPZ_ONE<<prec)
-    k = 2
-    while a:
-        a = ((a * x2) >> prec) // (k*(1-k))
-        c += a
-        k += 2
-    return c
-
-# Input: x * 2**prec
-# Output: c * 2**(prec + r), s * 2**(prec + r)
-def expi_series(x, prec, r):
-    x >>= r
-    one = MPZ_ONE << prec
-    x2 = (x*x) >> prec
-    s = x
-    a = x
-    k = 2
-    while a:
-        a = ((a * x2) >> prec) // (-k*(k+1))
-        s += a
-        k += 2
-    c = isqrt_fast((MPZ_ONE<<(2*prec)) - (s*s))
-    # Calculate (c + j*s)**(2**r) by repeated squaring
-    for j in range(r):
-        c, s =  (c*c-s*s) >> prec, (2*c*s ) >> prec
-    return c, s
-
-def reduce_angle(x, prec):
-    """
-    Let x be a nonzero, finite mpf value defining angle (measured in
-    radians). Then reduce_trig(x, prec) returns (y, swaps, n) where:
-
-      y = (man, wp) is the reduced angle as a scaled fixed-point
-        number with precision wp, i.e. a floating-point number with
-        exponent -wp. The mantissa is positive and has width ~equal
-        to the input prec.
-
-      swaps = (swap_cos_sin, cos_sign, sin_sign)
-        Flags indicating the swaps that need to be applied
-        to (cos(y), sin(y)) to obtain (cos(x), sin(x))
-
-      n is an integer giving the original quadrant of x
-
-    Calculation of the quadrant
-    ===========================
-
-    The integer n indices the quadrant of x. That is:
-
-        ...
-        -pi     <   x  < -pi/2     n = -2
-        -pi/2   <   x  <  0        n = -1
-        0       <   x  <  pi/2     n = 0
-        pi/2    <   x  <  pi       n = 1
-        pi      <   x  <  3*pi/2   n = 2
-        3*pi/2  <   x  <  2*pi     n = 3
-        2*pi    <   x  <  5*pi/2   n = 4
-        ...
-
-    Note that n does not wrap around. A quadrant index normalized to
-    lie in [0, 1, 2, 3] can be found easily later on by computing
-    n % 4. Keeping the extended information in n is crucial for
-    interval arithmetic, as it allows one to distinguish between
-    whether two points of a sine wave lie next to each other on
-    a monotonic segment or are actually separated by a full
-    period (or several periods).
-
-    Note also that because is x is guaranteed to be rational, and
-    all roots of the sine/cosine are irrational, all inequalities are
-    strict. That is, we can always compute the correct quadrant.
-    Care is required to do ensure that this is done right.
-
-    Swaps
-    =====
-
-    The number y is a reduction of x to the first quadrant. This is
-    essentially x mod pi/2. In fact, we reduce y further, to the first
-    octant, by computing pi/2-x if x > pi/4.
-
-    Due to the translation and mirror symmetries of trigonometric
-    functions, this allows us to compute sin(x) or cos(x) by computing
-    +/-sin(y) or +/-cos(y). The point, of course, is that if x
-    is large, the Taylor series for y converges much more quickly
-    than the one for x.
-
-    """
-    sign, man, exp, bc = x
-    magnitude = exp + bc
-
-    if not man:
-        return (0, 0), (0, 0, 0), 0
-
-    # Here we have abs(x) < 0.5. In this case no reduction is necessary.
-    # TODO: could also handle abs(x) < 1
-    if magnitude < 0:
-        # Quadrant is 0 or -1
-        n = -sign
-        swaps = (0, 0, sign)
-        fixed_exp = exp + bc - prec
-        delta = fixed_exp - exp
-        if delta < 0:
-            man <<= (-delta)
-        elif delta > 0:
-            man >>= delta
-        y = (man, -fixed_exp)
-        return y, swaps, n
-
-    i = 0
-    while 1:
-        cancellation_prec = 20 * 2**i
-        wp = prec + abs(magnitude) + cancellation_prec
-        pi1 = pi_fixed(wp)
-        pi2 = pi1 >> 1
-        pi4 = pi1 >> 2
-        # Find nearest multiple
-        n, y = divmod(to_fixed(x, wp), pi2)
-        # Interchange cos/sin ?
-        if y > pi4:
-            swap_cos_sin = 1
-            y = pi2 - y
-        else:
-            swap_cos_sin = 0
-        # Now, the catch is that x might be extremely close to a
-        # multiple of pi/2. This means accuracy is lost, and we may
-        # even end up in the wrong quadrant, which is bad news
-        # for interval arithmetic. This effect manifests by the
-        # fixed-point value of y becoming small.  This is easy to check for.
-        if y >> (prec + magnitude - 10):
-            n = int(n)
-            swaps = swap_table[swap_cos_sin^(n%2)][n%4]
-            return (y>>magnitude, wp-magnitude), swaps, n
-        i += 1
-
-swap_table = ((0,0,0),(0,1,0),(0,1,1),(0,0,1)), ((1,0,0),(1,1,0),(1,1,1),(1,0,1))
-
-def calc_cos_sin(which, y, swaps, prec, cos_rnd, sin_rnd):
-    """
-    Simultaneous computation of cos and sin (internal function).
-    """
-    y, wp = y
-    swap_cos_sin, cos_sign, sin_sign = swaps
-
-    if swap_cos_sin:
-        which_compute = -which
-    else:
-        which_compute = which
-
-    # XXX: assumes no swaps
-    if not y:
-        return fone, fzero
-
-    # Tiny nonzero argument
-    if wp > prec*2 + 30:
-        y = from_man_exp(y, -wp)
-
-        if swap_cos_sin:
-            cos_rnd, sin_rnd = sin_rnd, cos_rnd
-            cos_sign, sin_sign = sin_sign, cos_sign
-
-        if cos_sign: cos = mpf_perturb(fnone, 0, prec, cos_rnd)
-        else:        cos = mpf_perturb(fone, 1, prec, cos_rnd)
-        if sin_sign: sin = mpf_perturb(mpf_neg(y), 0, prec, sin_rnd)
-        else:        sin = mpf_perturb(y, 1, prec, sin_rnd)
-
-        if swap_cos_sin:
-            cos, sin = sin, cos
-        return cos, sin
-
-    # Use standard Taylor series
-    if prec < 600:
-        if which_compute == 0:
-            sin = sin_taylor(y, wp)
-            # only need to evaluate one of the series
-            cos = isqrt_fast((MPZ_ONE<<(2*wp)) - sin*sin)
-        elif which_compute == 1:
-            sin = 0
-            cos = cos_taylor(y, wp)
-        elif which_compute == -1:
-            sin = sin_taylor(y, wp)
-            cos = 0
-    # Use exp(i*x) with Brent's trick
-    else:
-        r = int(0.137 * prec**0.579)
-        ep = r+20
-        cos, sin = expi_series(y<<ep, wp+ep, r)
-        cos >>= ep
-        sin >>= ep
-
-    if swap_cos_sin:
-        cos, sin = sin, cos
-
-    if cos_rnd is not round_nearest:
-        # Round and set correct signs
-        # XXX: this logic needs a second look
-        ONE = MPZ_ONE << wp
-        if cos_sign:
-            cos += (-1)**(cos_rnd in (round_ceiling, round_down))
-            cos = min(ONE, cos)
-        else:
-            cos += (-1)**(cos_rnd in (round_ceiling, round_up))
-            cos = min(ONE, cos)
-        if sin_sign:
-            sin += (-1)**(sin_rnd in (round_ceiling, round_down))
-            sin = min(ONE, sin)
-        else:
-            sin += (-1)**(sin_rnd in (round_ceiling, round_up))
-            sin = min(ONE, sin)
-
-    if which != -1:
-        cos = normalize(cos_sign, cos, -wp, bitcount(cos), prec, cos_rnd)
-    if which != 1:
-        sin = normalize(sin_sign, sin, -wp, bitcount(sin), prec, sin_rnd)
-
-    return cos, sin
-
-def mpf_cos_sin(x, prec, rnd=round_fast, which=0):
-    """
-    Computes (cos(x), sin(x)). The parameter 'which' can disable
-    evaluation of either cos or sin:
-
-        0 -- return (cos(x), sin(x), n)
-        1 -- return (cos(x), -,      n)
-       -1 -- return (-,      sin(x), n)
-
-    If only one function is wanted, this is slightly
-    faster at low precision.
-    """
-    sign, man, exp, bc = x
-    # Exact (or special) cases
-    if not man:
-        if exp:
-            return (fnan, fnan)
-        else:
-            return (fone, fzero)
-    y, swaps, n = reduce_angle(x, prec+10)
-    return calc_cos_sin(which, y, swaps, prec, rnd, rnd)
-
-def mpf_cos(x, prec, rnd=round_fast):
-    return mpf_cos_sin(x, prec, rnd, 1)[0]
-
-def mpf_sin(x, prec, rnd=round_fast):
-    return mpf_cos_sin(x, prec, rnd, -1)[1]
-
-def mpf_tan(x, prec, rnd=round_fast):
-    c, s = mpf_cos_sin(x, prec+20)
-    return mpf_div(s, c, prec, rnd)
-
-# Accurate computation of cos(pi*x) and sin(pi*x) is needed by
-# reflection formulas for gamma, polygamma, zeta, etc
-
-def mpf_cos_sin_pi(x, prec, rnd=round_fast):
-    """Accurate computation of (cos(pi*x), sin(pi*x))
-    for x close to an integer"""
-    sign, man, exp, bc = x
-    if not man:
-        return mpf_cos_sin(x, prec, rnd)
-    # Exactly an integer or half-integer?
-    if exp >= -1:
-        if exp == -1:
-            c = fzero
-            s = (fone, fnone)[bool(man & 2) ^ sign]
-        elif exp == 0:
-            c, s = (fnone, fzero)
-        else:
-            c, s = (fone, fzero)
-        return c, s
-    # Close to 0 ?
-    size = exp + bc
-    if size < -(prec+5):
-        c = mpf_perturb(fone, 1, prec, rnd)
-        s = mpf_perturb(mpf_mul(x, mpf_pi(prec)), sign, prec, rnd)
-        return c, s
-    if sign:
-        man = -man
-    # Subtract nearest half-integer (= modulo pi/2)
-    nhint = ((man >> (-exp-2)) + 1) >> 1
-    man = man - (nhint << (-exp-1))
-    x = from_man_exp(man, exp, prec)
-    x = mpf_mul(x, mpf_pi(prec), prec)
-    # XXX: with some more work, could call calc_cos_sin,
-    # to save some time and to get rounding right
-    case = nhint % 4
-    if case == 0:
-        c, s = mpf_cos_sin(x, prec, rnd)
-    elif case == 1:
-        s, c = mpf_cos_sin(x, prec, rnd)
-        c = mpf_neg(c)
-    elif case == 2:
-        c, s = mpf_cos_sin(x, prec, rnd)
-        c = mpf_neg(c)
-        s = mpf_neg(s)
-    else:
-        s, c = mpf_cos_sin(x, prec, rnd)
-        s = mpf_neg(s)
-    return c, s
-
-def mpf_cos_pi(x, prec, rnd=round_fast):
-    return mpf_cos_sin_pi(x, prec, rnd)[0]
-
-def mpf_sin_pi(x, prec, rnd=round_fast):
-    return mpf_cos_sin_pi(x, prec, rnd)[1]
-
-
-#----------------------------------------------------------------------
-# Hyperbolic functions
-#
-
-def sinh_taylor(x, prec):
-    x = MPZ(x)
-    x2 = (x*x) >> prec
-    s = a = x
-    k = 3
-    while a:
-        a = ((a * x2) >> prec) // (k*(k-1))
-        s += a
-        k += 2
-    return s
-
-def mpf_cosh_sinh(x, prec, rnd=round_fast, tanh=0):
-    """Simultaneously compute (cosh(x), sinh(x)) for real x"""
-    sign, man, exp, bc = x
-    if (not man) and exp:
-        if tanh:
-            if x == finf: return fone
-            if x == fninf: return fnone
-            return fnan
-        if x == finf: return (finf, finf)
-        if x == fninf: return (finf, fninf)
-        return fnan, fnan
-
-    if sign:
-        man = -man
-
-    mag = exp + bc
-    prec2 = prec + 20
-
-    if mag < -3:
-        # Extremely close to 0, sinh(x) ~= x and cosh(x) ~= 1
-        if mag < -prec-2:
-            if tanh:
-                return mpf_perturb(x, 1-sign, prec, rnd)
-            cosh = mpf_perturb(fone, 0, prec, rnd)
-            sinh = mpf_perturb(x, sign, prec, rnd)
-            return cosh, sinh
-
-        # Avoid cancellation when computing sinh
-        # TODO: might be faster to use sinh series directly
-        prec2 += (-mag) + 4
-
-    # In the general case, we use
-    #    cosh(x) = (exp(x) + exp(-x))/2
-    #    sinh(x) = (exp(x) - exp(-x))/2
-    # and note that the exponential only needs to be computed once.
-    ep = mpf_exp(x, prec2)
-    em = mpf_div(fone, ep, prec2)
-    if tanh:
-        ch = mpf_add(ep, em, prec2, rnd)
-        sh = mpf_sub(ep, em, prec2, rnd)
-        return mpf_div(sh, ch, prec, rnd)
-    else:
-        ch = mpf_shift(mpf_add(ep, em, prec, rnd), -1)
-        sh = mpf_shift(mpf_sub(ep, em, prec, rnd), -1)
-        return ch, sh
-
-def mpf_cosh(x, prec, rnd=round_fast):
-    """Compute cosh(x) for a real argument x"""
-    return mpf_cosh_sinh(x, prec, rnd)[0]
-
-def mpf_sinh(x, prec, rnd=round_fast):
-    """Compute sinh(x) for a real argument x"""
-    return mpf_cosh_sinh(x, prec, rnd)[1]
-
-def mpf_tanh(x, prec, rnd=round_fast):
-    """Compute tanh(x) for a real argument x"""
-    return mpf_cosh_sinh(x, prec, rnd, tanh=1)
-
-
 #----------------------------------------------------------------------
 # Inverse tangent
 #
@@ -1372,23 +787,16 @@ def atan_newton(x, prec):
         r = math.atan(x/2.0**prec)
     prevp = 50
     r = int(r * 2.0**53) >> (53-prevp)
-    extra_p = 100
-    for p in giant_steps(prevp, prec):
-        s = int(0.137 * p**0.579)
-        p += s + 50
-        r = r << (p-prevp)
-        cos, sin = expi_series(r, p, s)
-        tan = (sin << p) // cos
-        a = ((tan - rshift(x, prec-p)) << p) // ((MPZ_ONE<<p) + ((tan**2)>>p))
+    extra_p = 50
+    for wp in giant_steps(prevp, prec):
+        wp += extra_p
+        r = r << (wp-prevp)
+        cos, sin = cos_sin_fixed(r, wp)
+        tan = (sin << wp) // cos
+        a = ((tan-rshift(x, prec-wp)) << wp) // ((MPZ_ONE<<wp) + ((tan**2)>>wp))
         r = r - a
-        prevp = p
+        prevp = wp
     return rshift(r, prevp-prec)
-
-
-ATAN_TAYLOR_PREC = 3000
-ATAN_TAYLOR_SHIFT = 7   # steps of size 2^-N
-
-atan_taylor_cache = {}
 
 def atan_taylor_get_cached(n, prec):
     # Taylor series with caching wins up to huge precisions
@@ -1593,3 +1001,411 @@ def mpf_fibonacci(x, prec, rnd=round_fast):
     u = mpf_sub(u, v, wp)
     u = mpf_div(u, b, prec, rnd)
     return u
+
+
+#-------------------------------------------------------------------------------
+# Exponential-type functions
+#-------------------------------------------------------------------------------
+
+def exponential_series(x, prec, type=0):
+    """
+    Taylor series for cosh/sinh or cos/sin.
+
+    type = 0 -- returns exp(x)  (slightly faster than cosh+sinh)
+    type = 1 -- returns (cosh(x), sinh(x))
+    type = 2 -- returns (cos(x), sin(x))
+    """
+    if x < 0:
+        x = -x
+        sign = 1
+    else:
+        sign = 0
+    r = int(0.5*prec**0.5)
+    xmag = bitcount(x) - prec
+    r = max(0, xmag + r)
+    extra = 10 + 2*max(r,-xmag)
+    wp = prec + extra
+    x <<= (extra - r)
+    one = MPZ_ONE << wp
+    alt = (type == 2)
+    if prec < EXP_SERIES_U_CUTOFF:
+        x2 = a = (x*x) >> wp
+        x4 = (x2*x2) >> wp
+        s0 = s1 = MPZ_ZERO
+        k = 2
+        while a:
+            a //= (k-1)*k; s0 += a; k += 2
+            a //= (k-1)*k; s1 += a; k += 2
+            a = (a*x4) >> wp
+        s1 = (x2*s1) >> wp
+        if alt:
+            c = s1 - s0 + one
+        else:
+            c = s1 + s0 + one
+    else:
+        u = int(0.3*prec**0.35)
+        x2 = a = (x*x) >> wp
+        xpowers = [one, x2]
+        for i in xrange(1, u):
+            xpowers.append((xpowers[-1]*x2)>>wp)
+        sums = [MPZ_ZERO] * u
+        k = 2
+        while a:
+            for i in xrange(u):
+                a //= (k-1)*k
+                if alt and k & 2: sums[i] -= a
+                else:             sums[i] += a
+                k += 2
+            a = (a*xpowers[-1]) >> wp
+        for i in xrange(1, u):
+            sums[i] = (sums[i]*xpowers[i]) >> wp
+        c = sum(sums) + one
+    if type == 0:
+        s = isqrt_fast(c*c - (one<<wp))
+        if sign:
+            v = c - s
+        else:
+            v = c + s
+        for i in xrange(r):
+            v = (v*v) >> wp
+        return v >> extra
+    else:
+        # Repeatedly apply the double-angle formula
+        # cosh(2*x) = 2*cosh(x)^2 - 1
+        # cos(2*x) = 2*cos(x)^2 - 1
+        pshift = wp-1
+        for i in xrange(r):
+            c = ((c*c) >> pshift) - one
+        # With the abs, this is the same for sinh and sin
+        s = isqrt_fast(abs((one<<wp) - c*c))
+        if sign:
+            s = -s
+        return (c>>extra), (s>>extra)
+
+def exp_basecase(x, prec):
+    """
+    Compute exp(x) as a fixed-point number. Works for any x,
+    but for speed should have |x| < 1. For an arbitrary number,
+    use exp(x) = exp(x-m*log(2)) * 2^m where m = floor(x/log(2)).
+    """
+    if prec > EXP_COSH_CUTOFF:
+        return exponential_series(x, prec, 0)
+    r = int(prec**0.5)
+    prec += r
+    s0 = s1 = (MPZ_ONE << prec)
+    k = 2
+    a = x2 = (x*x) >> prec
+    while a:
+        a //= k; s0 += a; k += 1
+        a //= k; s1 += a; k += 1
+        a = (a*x2) >> prec
+    s1 = (s1*x) >> prec
+    s = s0 + s1
+    u = r
+    while r:
+        s = (s*s) >> prec
+        r -= 1
+    return s >> u
+
+def exp_expneg_basecase(x, prec):
+    """
+    Computation of exp(x), exp(-x)
+    """
+    if prec > EXP_COSH_CUTOFF:
+        cosh, sinh = exponential_series(x, prec, 1)
+        return cosh+sinh, cosh-sinh
+    a = exp_basecase(x, prec)
+    b = (MPZ_ONE << (prec+prec)) // a
+    return a, b
+
+def cos_sin_basecase(x, prec):
+    """
+    Compute cos(x), sin(x) as fixed-point numbers, assuming x
+    in [0, pi/2). For an arbitrary number, use x' = x - m*(pi/2)
+    where m = floor(x/(pi/2)) along with quarter-period symmetries.
+    """
+    if prec > COS_SIN_CACHE_PREC:
+        return exponential_series(x, prec, 2)
+    precs = prec - COS_SIN_CACHE_STEP
+    t = x >> precs
+    n = int(t)
+    if n not in cos_sin_cache:
+        w = t<<(10+COS_SIN_CACHE_PREC-COS_SIN_CACHE_STEP)
+        cos_t, sin_t = exponential_series(w, 10+COS_SIN_CACHE_PREC, 2)
+        cos_sin_cache[n] = (cos_t>>10), (sin_t>>10)
+    cos_t, sin_t = cos_sin_cache[n]
+    offset = COS_SIN_CACHE_PREC - prec
+    cos_t >>= offset
+    sin_t >>= offset
+    x -= t << precs
+    cos = MPZ_ONE << prec
+    sin = x
+    k = 2
+    a = -((x*x) >> prec)
+    while a:
+        a //= k; cos += a; k += 1; a = (a*x) >> prec
+        a //= k; sin += a; k += 1; a = -((a*x) >> prec)
+    return ((cos*cos_t-sin*sin_t) >> prec), ((sin*cos_t+cos*sin_t) >> prec)
+
+def mpf_exp(x, prec, rnd=round_fast):
+    sign, man, exp, bc = x
+    if man:
+        mag = bc + exp
+        wp = prec + 14
+        if sign:
+            man = -man
+        # TODO: the best cutoff depends on both x and the precision.
+        if prec > 600 and exp >= 0:
+            # Need about log2(exp(n)) ~= 1.45*mag extra precision
+            e = mpf_e(wp+int(1.45*mag))
+            return mpf_pow_int(e, man<<exp, prec, rnd)
+        if mag < -wp:
+            return mpf_perturb(fone, sign, prec, rnd)
+        # |x| >= 2
+        if mag > 1:
+            # For large arguments: exp(2^mag*(1+eps)) =
+            # exp(2^mag)*exp(2^mag*eps) = exp(2^mag)*(1 + 2^mag*eps + ...)
+            # so about mag extra bits is required.
+            wpmod = wp + mag
+            offset = exp + wpmod
+            if offset >= 0:
+                t = man << offset
+            else:
+                t = man >> (-offset)
+            lg2 = ln2_fixed(wpmod)
+            n, t = divmod(t, lg2)
+            n = int(n)
+            t >>= mag
+        else:
+            offset = exp + wp
+            if offset >= 0:
+                t = man << offset
+            else:
+                t = man >> (-offset)
+            n = 0
+        man = exp_basecase(t, wp)
+        return from_man_exp(man, n-wp, prec, rnd)
+    if not exp:
+        return fone
+    if x == fninf:
+        return fzero
+    return x
+
+
+def mpf_cosh_sinh(x, prec, rnd=round_fast, tanh=0):
+    """Simultaneously compute (cosh(x), sinh(x)) for real x"""
+    sign, man, exp, bc = x
+    if (not man) and exp:
+        if tanh:
+            if x == finf: return fone
+            if x == fninf: return fnone
+            return fnan
+        if x == finf: return (finf, finf)
+        if x == fninf: return (finf, fninf)
+        return fnan, fnan
+    mag = exp+bc
+    wp = prec+14
+    if mag < -4:
+        # Extremely close to 0, sinh(x) ~= x and cosh(x) ~= 1
+        if mag < -wp:
+            if tanh:
+                return mpf_perturb(x, 1-sign, prec, rnd)
+            cosh = mpf_perturb(fone, 0, prec, rnd)
+            sinh = mpf_perturb(x, sign, prec, rnd)
+            return cosh, sinh
+        # Fix for cancellation when computing sinh
+        wp += (-mag)
+    # Does exp(-2*x) vanish?
+    if mag > 10:
+        if 3*(1<<(mag-1)) > wp:
+            # XXX: rounding
+            if tanh:
+                return mpf_perturb([fone,fnone][sign], 1-sign, prec, rnd)
+            c = s = mpf_shift(mpf_exp(mpf_abs(x), prec, rnd), -1)
+            if sign:
+                s = mpf_neg(s)
+            return c, s
+    # |x| > 1
+    if mag > 1:
+        wpmod = wp + mag
+        offset = exp + wpmod
+        if offset >= 0:
+            t = man << offset
+        else:
+            t = man >> (-offset)
+        lg2 = ln2_fixed(wpmod)
+        n, t = divmod(t, lg2)
+        n = int(n)
+        t >>= mag
+    else:
+        offset = exp + wp
+        if offset >= 0:
+            t = man << offset
+        else:
+            t = man >> (-offset)
+        n = 0
+    a, b = exp_expneg_basecase(t, wp)
+    # TODO: optimize division precision
+    cosh = a + (b>>(2*n))
+    sinh = a - (b>>(2*n))
+    if sign:
+        sinh = -sinh
+    if tanh:
+        man = (sinh << wp) // cosh
+        return from_man_exp(man, -wp, prec, rnd)
+    else:
+        cosh = from_man_exp(cosh, n-wp-1, prec, rnd)
+        sinh = from_man_exp(sinh, n-wp-1, prec, rnd)
+        return cosh, sinh
+
+
+def mod_pi2(man, exp, mag, wp):
+    # Reduce to standard interval
+    if mag > 0:
+        i = 0
+        while 1:
+            cancellation_prec = 20 << i
+            wpmod = wp + mag + cancellation_prec
+            pi2 = pi_fixed(wpmod-1)
+            pi4 = pi2 >> 1
+            offset = wpmod + exp
+            if offset >= 0:
+                t = man << offset
+            else:
+                t = man >> (-offset)
+            n, y = divmod(t, pi2)
+            if y > pi4:
+                small = pi2 - y
+            else:
+                small = y
+            if small >> (wp+mag-10):
+                n = int(n)
+                t = y >> mag
+                wp = wpmod - mag
+                break
+            i += 1
+    else:
+        wp += (-mag)
+        offset = exp + wp
+        if offset >= 0:
+            t = man << offset
+        else:
+            t = man >> (-offset)
+        n = 0
+    return t, n, wp
+
+
+def mpf_cos_sin(x, prec, rnd=round_fast, which=0, pi=False):
+    """
+    which:
+    0 -- return cos(x), sin(x)
+    1 -- return cos(x)
+    2 -- return sin(x)
+    3 -- return tan(x)
+
+    if pi=True, compute for pi*x
+    """
+    sign, man, exp, bc = x
+    if not man:
+        if exp:
+            c, s = fnan, fnan
+        else:
+            c, s = fone, fzero
+        if which == 0: return c, s
+        if which == 1: return c
+        if which == 2: return s
+        if which == 3: return s
+
+    mag = bc + exp
+    wp = prec + 10
+
+    # Extremely small?
+    if mag < 0:
+        if mag < -wp:
+            if pi:
+                x = mpf_mul(x, mpf_pi(wp))
+            c = mpf_perturb(fone, 1, prec, rnd)
+            s = mpf_perturb(x, 1-sign, prec, rnd)
+            if which == 0: return c, s
+            if which == 1: return c
+            if which == 2: return s
+            if which == 3: return mpf_perturb(x, sign, prec, rnd)
+    if pi:
+        if exp >= -1:
+            if exp == -1:
+                c = fzero
+                s = (fone, fnone)[bool(man & 2) ^ sign]
+            elif exp == 0:
+                c, s = (fnone, fzero)
+            else:
+                c, s = (fone, fzero)
+            if which == 0: return c, s
+            if which == 1: return c
+            if which == 2: return s
+            if which == 3: return mpf_div(s, c, prec, rnd)
+        # Subtract nearest half-integer (= mod by pi/2)
+        n = ((man >> (-exp-2)) + 1) >> 1
+        man = man - (n << (-exp-1))
+        mag2 = bitcount(man) + exp
+        wp = prec + 10 - mag2
+        offset = exp + wp
+        if offset >= 0:
+            t = man << offset
+        else:
+            t = man >> (-offset)
+        t = (t*pi_fixed(wp)) >> wp
+    else:
+        t, n, wp = mod_pi2(man, exp, mag, wp)
+    c, s = cos_sin_basecase(t, wp)
+    m = n & 3
+    if   m == 1: c, s = -s, c
+    elif m == 2: c, s = -c, -s
+    elif m == 3: c, s = s, -c
+    if sign:
+        s = -s
+    if which == 0:
+        c = from_man_exp(c, -wp, prec, rnd)
+        s = from_man_exp(s, -wp, prec, rnd)
+        return c, s
+    if which == 1:
+        return from_man_exp(c, -wp, prec, rnd)
+    if which == 2:
+        return from_man_exp(s, -wp, prec, rnd)
+    if which == 3:
+        return from_rational(s, c, prec, rnd)
+
+def mpf_cos(x, prec, rnd=round_fast): return mpf_cos_sin(x, prec, rnd, 1)
+def mpf_sin(x, prec, rnd=round_fast): return mpf_cos_sin(x, prec, rnd, 2)
+def mpf_tan(x, prec, rnd=round_fast): return mpf_cos_sin(x, prec, rnd, 3)
+def mpf_cos_sin_pi(x, prec, rnd=round_fast): return mpf_cos_sin(x, prec, rnd, 0, 1)
+def mpf_cos_pi(x, prec, rnd=round_fast): return mpf_cos_sin(x, prec, rnd, 1, 1)
+def mpf_sin_pi(x, prec, rnd=round_fast): return mpf_cos_sin(x, prec, rnd, 2, 1)
+def mpf_cosh(x, prec, rnd=round_fast): return mpf_cosh_sinh(x, prec, rnd)[0]
+def mpf_sinh(x, prec, rnd=round_fast): return mpf_cosh_sinh(x, prec, rnd)[1]
+def mpf_tanh(x, prec, rnd=round_fast): return mpf_cosh_sinh(x, prec, rnd, tanh=1)
+
+
+# Low-overhead fixed-point versions
+
+def cos_sin_fixed(x, prec, pi2=None):
+    if pi2 is None:
+        pi2 = pi_fixed(prec-1)
+    n, t = divmod(x, pi2)
+    n = int(n)
+    c, s = cos_sin_basecase(t, prec)
+    m = n & 3
+    if m == 0: return c, s
+    if m == 1: return -s, c
+    if m == 2: return -c, -s
+    if m == 3: return s, -c
+
+def exp_fixed(x, prec, ln2=None):
+    if ln2 is None:
+        ln2 = ln2_fixed(prec)
+    n, t = divmod(x, ln2)
+    n = int(n)
+    v = exp_basecase(t, prec)
+    if n >= 0:
+        return v << n
+    else:
+        return v >> (-n)

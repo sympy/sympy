@@ -12,12 +12,7 @@ def test_axes():
     except ImportError:
         print "\nSkipping test (pylab not available)\n"
         return
-    from Tkinter import TclError
-    try:
-        fig = pylab.figure()
-    except TclError:
-        print "\nSkipping test (Tcl problem)\n"
-        return
+    fig = pylab.figure()
     axes = fig.add_subplot(111)
     for ctx in [mp, fp]:
         ctx.plot(lambda x: x**2, [0, 3], axes=axes)

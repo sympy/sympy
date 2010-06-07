@@ -96,7 +96,7 @@ def _load_zeta_zeros(url):
     _zeta_zeros[:] = L
 
 @defun
-def zetazero(ctx, n, url='http://www.dtc.umn.edu/~odlyzko/zeta_tables/zeros1'):
+def oldzetazero(ctx, n, url='http://www.dtc.umn.edu/~odlyzko/zeta_tables/zeros1'):
     n = int(n)
     if n < 0:
         return ctx.zetazero(-n).conjugate()
@@ -138,19 +138,20 @@ def primepi(ctx, x):
         return 0
     return len(ctx.list_primes(x))
 
+# TODO: fix the interface wrt contexts
 @defun_wrapped
 def primepi2(ctx, x):
     x = int(x)
     if x < 2:
-        return ctx.mpi(0,0)
+        return ctx._iv.zero
     if x < 2657:
-        return ctx.mpi(ctx.primepi(x))
+        return ctx._iv.mpf(ctx.primepi(x))
     mid = ctx.li(x)
     # Schoenfeld's estimate for x >= 2657, assuming RH
     err = ctx.sqrt(x,rounding='u')*ctx.ln(x,rounding='u')/8/ctx.pi(rounding='d')
-    a = ctx.floor((ctx.mpi(mid)-err).a, rounding='d')
-    b = ctx.ceil((ctx.mpi(mid)+err).b, rounding='u')
-    return ctx.mpi(a, b)
+    a = ctx.floor((ctx._iv.mpf(mid)-err).a, rounding='d')
+    b = ctx.ceil((ctx._iv.mpf(mid)+err).b, rounding='u')
+    return ctx._iv.mpf([a,b])
 
 @defun_wrapped
 def primezeta(ctx, s):
@@ -204,9 +205,9 @@ def bernpoly(ctx, n, z):
         if n == 1: return z - 0.5
         if n == 2: return (6*z*(z-1)+1)/6
         if n == 3: return z*(z*(z-1.5)+0.5)
-    if abs(z) == ctx.inf:
+    if ctx.isinf(z):
         return z ** n
-    if z != z:
+    if ctx.isnan(z):
         return z
     if abs(z) > 2:
         def terms():
@@ -242,9 +243,9 @@ def eulerpoly(ctx, n, z):
         if n == 0: return z ** 0
         if n == 1: return z - 0.5
         if n == 2: return z*(z-1)
-    if abs(z) == ctx.inf:
+    if ctx.isinf(z):
         return z**n
-    if z != z:
+    if ctx.isnan(z):
         return z
     m = n+1
     if z == 0:
@@ -453,7 +454,7 @@ def zeta(ctx, s, a=1, derivative=0, method=None, **kwargs):
         #        if verbose:
         #            print "zeta: Could not use the Borwein algorithm"
         #        pass
-        if abs(im) > 60*prec and 10*re < prec and derivative <= 4 or \
+        if abs(im) > 500*prec and 10*re < prec and derivative <= 4 or \
             method == 'riemann-siegel':
             try:   #  py2.4 compatible try block
                 try:
@@ -520,7 +521,7 @@ def _hurwitz(ctx, s, a=1, d=0):
             # Rational reflection formula
             if atype == 'Q' or atype == 'Z':
                 try:
-                    p, q = a
+                    p, q = a._mpq_
                 except:
                     assert a == int(a)
                     p = int(a)
@@ -534,8 +535,7 @@ def _hurwitz(ctx, s, a=1, d=0):
                 return v
             # General reflection formula
             else:
-                C1 = ctx.cospi(t/2)
-                C2 = ctx.sinpi(t/2)
+                C1, C2 = ctx.cospi_sinpi(0.5*t)
                 # Clausen functions; could maybe use polylog directly
                 if C1: C1 *= ctx.clcos(t, 2*a, pi=True)
                 if C2: C2 *= ctx.clsin(t, 2*a, pi=True)
@@ -612,6 +612,7 @@ def _zetasum(ctx, s, a, n, derivatives=[0], reflect=False):
     derivatives (which should consist of either a single element
     or a range 0,1,...r). If reflect=False, the ydks are not computed.
     """
+    #print "zetasum", s, a, n
     try:
         return ctx._zetasum_fast(s, a, n, derivatives, reflect)
     except NotImplementedError:
