@@ -339,7 +339,7 @@ class Ellipse(GeometryEntity):
         else:
             return (c + Point(-h, 0), c + Point(h, 0))
 
-    def tangent_line(self, p):
+    def tangent_lines(self, p):
         """Tangent lines between `p` and the ellipse.
 
         If `p` is on the ellipse, returns the tangent line through point `p`.
@@ -352,7 +352,7 @@ class Ellipse(GeometryEntity):
 
         Returns
         -------
-        tangent_line : Line
+        tangent_lines : Line
 
         Raises
         ------
@@ -368,28 +368,60 @@ class Ellipse(GeometryEntity):
         --------
         >>> from sympy import Point, Ellipse
         >>> e1 = Ellipse(Point(0, 0), 3, 2)
-        >>> e1.tangent_line(Point(3, 0))
-        Line(Point(3, 0), Point(3, -12))
+        >>> e1.tangent_lines(Point(3, 0))
+        (Line(Point(3, 0), Point(3, -12)),)
 
         >>> # This will plot an ellipse together with a tangent line.
         >>> from sympy import Point, Ellipse, Plot
         >>> e = Ellipse(Point(0,0), 3, 2)
-        >>> t = e.tangent_line(e.random_point()) # doctest: +SKIP
+        >>> t = e.tangent_lines(e.random_point()) # doctest: +SKIP
         >>> p = Plot() # doctest: +SKIP
         >>> p[0] = e # doctest: +SKIP
         >>> p[1] = t # doctest: +SKIP
 
         """
+        from sympy import solve
         if p in self:
             rise = (self.vradius ** 2)*(self.center[0] - p[0])
             run = (self.hradius ** 2)*(p[1] - self.center[1])
             p2 = Point(simplify(p[0] + run),
                        simplify(p[1] + rise))
-            return Line(p, p2)
+            return (Line(p, p2),)
         else:
-            # TODO If p is not on the ellipse, attempt to create the
-            #      tangent(s) from point p to the ellipse..?
-            raise NotImplementedError("Cannot find tangent lines when p is not on the ellipse")
+            if len(self.foci) == 2:
+                f1, f2 = self.foci
+                maj = self.hradius
+                test = (2*maj -
+                        Point.distance(f1, p) -
+                        Point.distance(f2, p))
+            else:
+                test = self.radius - Point.distance(self.center, p)
+            if test.is_number and test.is_positive:
+                return []
+            # else p is outside the ellipse or we can't tell. In case of the
+            # latter, the solutions returned will only be valid if
+            # the pointis  not inside the ellipse; if it is, nan will result.
+            m = C.Dummy('m')
+            l = Line(p, Point(p[0] + 1, p[1] + m))
+            i1, i2 = self.intersection(l)
+            slopes = [s for s in solve(i1[0] - i2[0], m) if not s.has(S.ImaginaryUnit)]
+            if len(slopes) == 1: # tangent lines are horizontal and vertical
+                assert slopes[0] == 0
+                return (Line(p, Point(p[0]+1, p[1])), Line(p, Point(p[0], p[1]+1)))
+            tangent_points = [Point(i1[0].subs(m, mi), i1[1].subs(m, mi)) for mi in slopes]
+            return (Line(p, tangent_points[0]), Line(p, tangent_points[1]))
+
+    def inside(self, p):
+        if len(self.foci) == 2:
+            f1, f2 = self.foci
+            maj = self.hradius
+            test = (2*maj -
+                    Point.distance(f1, p) -
+                    Point.distance(f2, p))
+        else:
+            test = self.radius - Point.distance(self.center, p)
+        if test.is_number and test.is_positive:
+            return True
 
     def is_tangent(self, o):
         """Is `o` tangent to the ellipse?
@@ -992,3 +1024,5 @@ class Circle(Ellipse):
             return ret
 
         return Ellipse.intersection(self, o)
+
+from polygon import Polygon

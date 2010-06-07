@@ -36,8 +36,12 @@ class LinearEntity(GeometryEntity):
     """
 
     def __new__(cls, p1, p2, **kwargs):
-        if not isinstance(p1, Point) or not isinstance(p2, Point):
-            raise TypeError("%s.__new__ requires Point instances" % cls.__name__)
+        if not isinstance(p1, Point) and not isinstance(p2, Point):
+            raise TypeError("%s.__new__ requires two Points or a Point and a slope." % cls.__name__)
+        if not isinstance(p1, Point):
+            p1, p2 = p2, p1
+        if not isinstance(p2, Point): # point slope form
+            p2 = p1 + Point(S.One, p2)
         if p1 == p2:
             raise RuntimeError("%s.__new__ requires two distinct points" % cls.__name__)
 
@@ -596,6 +600,8 @@ class LinearEntity(GeometryEntity):
             if inter in self and inter in o:
                 return [inter]
             return []
+        else:
+            return o.intersection(self)
         raise NotImplementedError()
 
     def random_point(self):
@@ -960,7 +966,7 @@ class Ray(LinearEntity):
 
 
 class Segment(LinearEntity):
-    """An undirected line segment in space.
+    """A undirected line segment in space.
 
     Parameters
     ----------

@@ -211,7 +211,7 @@ def test_ellipse():
     c3 = Circle(Point(sqrt(2),sqrt(2)),1)
 
     # Test creation with three points
-    cen,rad = Point(3*half, 2), 5*half
+    cen, rad = Point(3*half, 2), 5*half
     assert Circle(Point(0,0), Point(3,0), Point(0,4)) == Circle(cen, rad)
     raises(GeometryError, "Circle(Point(0,0), Point(1,1), Point(2,2))")
 
@@ -236,7 +236,7 @@ def test_ellipse():
     assert e2.arbitrary_point() in e2
 
     # Foci
-    f1,f2 = Point(sqrt(12), 0), Point(-sqrt(12), 0)
+    f1, f2 = Point(sqrt(12), 0), Point(-sqrt(12), 0)
     ef = Ellipse(Point(0, 0), 4, 2)
     assert ef.foci in [(f1, f2), (f2, f1)]
 
@@ -245,14 +245,16 @@ def test_ellipse():
     p1_1 = Point(v, v)
     p1_2 = p2 + Point(half, 0)
     p1_3 = p2 + Point(0, 1)
-    assert e1.tangent_line(p4) == c1.tangent_line(p4)
-    assert e2.tangent_line(p1_2) == Line(p1_2, p2 + Point(half, 1))
-    assert e2.tangent_line(p1_3) == Line(p1_3, p2 + Point(half, 1))
-    assert c1.tangent_line(p1_1) == Line(p1_1, Point(0, sqrt(2)))
+    assert e1.tangent_lines(p4) == c1.tangent_lines(p4)
+    assert e2.tangent_lines(p1_2) == (Line(p1_2, p2 + Point(half, 1)),)
+    assert e2.tangent_lines(p1_3) == (Line(p1_3, p2 + Point(half, 1)),)
+    assert c1.tangent_lines(p1_1) == (Line(p1_1, Point(0, sqrt(2))),)
     assert e2.is_tangent(Line(p1_2, p2 + Point(half, 1)))
     assert e2.is_tangent(Line(p1_3, p2 + Point(half, 1)))
     assert c1.is_tangent(Line(p1_1, Point(0, sqrt(2))))
     assert e1.is_tangent(Line(Point(0, 0), Point(1, 1))) == False
+
+    # FAILING GOES HERE (from test_ellipse_fail when they work)
 
     # Intersection
     l1 = Line(Point(1, -5), Point(1, 5))
@@ -297,7 +299,22 @@ def test_ellipse():
     # FAILING ELLIPSE INTERSECTION GOES HERE
 
     # Combinations of above
-    assert e3.is_tangent(e3.tangent_line(p1 + Point(y1, 0)))
+    assert e3.is_tangent(e3.tangent_lines(p1 + Point(y1, 0))[0])
+
+@XFAIL
+def test_ellipse_fail():
+    # these need the upgrade to the solver; when this works, move
+    # these lines to the # FAILING GOES HERE line in test_ellipse above.
+    assert Ellipse(Point(5,5),2,1).tangent_lines(Point(0,0)) == \
+    (Line(Point(0, 0), Point(S(77)/25, S(132)/25)),
+     Line(Point(0, 0), Point(S(33)/5, S(22)/5)))
+    assert Ellipse(Point(5,5),2,1).tangent_lines(Point(3,4)) == \
+    (Line(Point(3, 4), Point(4, 4)), Line(Point(3, 4), Point(3, 5)))
+    assert Circle(Point(5,5),2).tangent_lines(Point(3,3)) == \
+    (Line(Point(3, 3), Point(4, 3)), Line(Point(3, 3), Point(3, 4)))
+    assert Circle(Point(5,5),2).tangent_lines(Point(5 - 2*sqrt(2), 5)) == \
+    (Line(Point(5 - 2*sqrt(2), 5), Point(5 - sqrt(2), 5 + sqrt(2))),
+     Line(Point(5 - 2*sqrt(2), 5), Point(5 - sqrt(2), 5 - sqrt(2))))
 
     major = 3
     minor = 1

@@ -30,12 +30,15 @@ class Polygon(GeometryEntity):
     Raises
     ------
     GeometryError
-        If all parameters are not Points, or there are less than three
-        parameters.
+        If all parameters are not Points.
+
+        If the Polygon has intersecting sides.
 
     See Also
     --------
     Point
+    Segment
+    Triangle
 
     Notes
     -----
@@ -43,27 +46,68 @@ class Polygon(GeometryEntity):
     some calculations can be be negative or positive (e.g., area)
     based on the orientation of the points.
 
+    Any consecutive identical points are reduced to a single point
+    and any points collinear and between two points will be removed.
+
+    A Triangle, Segment or Point will be returned when there are 3 or
+    less points provided.
+
     Examples
     --------
     >>> from sympy import Point, Polygon
-    >>> p1, p2, p3, p4 = map(Point, [(0, 0), (1, 0), (5, 1), (0, 1)])
+    >>> p1, p2, p3, p4, p5 = map(Point, [(0, 0), (1, 0), (5, 1), (0, 1), (3, 0)])
     >>> Polygon(p1, p2, p3, p4)
     Polygon(Point(0, 0), Point(1, 0), Point(5, 1), Point(0, 1))
+    >>> Polygon(p1, p2)
+    Segment(Point(0, 0), Point(1, 0))
+    >>> Polygon(p1, p2, p5)
+    Segment(Point(0, 0), Point(3, 0))
 
     """
 
     def __new__(cls, *args, **kwargs):
         vertices = GeometryEntity.extract_entities(args, remove_duplicates=False)
-        if len(vertices) < 3:
-            raise GeometryError("Polygon.__new__ requires at least three points")
 
         for p in vertices:
             if not isinstance(p, Point):
                 raise GeometryError("Polygon.__new__ requires points")
 
-        if len(vertices) == 3:
+        # remove consecutive duplicates and collinear points
+        nodup = []
+        for p in vertices:
+            if nodup and p == nodup[-1]:
+                continue
+            nodup.append(p)
+            if len(nodup) > 2:
+                if Point.is_collinear(*nodup[-3:]):
+                    nodup[-3:] = sorted(nodup[-3:])[0::2]
+        vertices = nodup
+
+        if len(vertices) > 3:
+            rv = GeometryEntity.__new__(cls, *vertices, **kwargs)
+        elif len(vertices) == 3:
             return Triangle(*vertices, **kwargs)
-        return GeometryEntity.__new__(cls, *vertices, **kwargs)
+        elif len(vertices) == 2:
+            return Segment(*vertices, **kwargs)
+        else:
+            return Point(*vertices, **kwargs)
+
+        # reject polygons that have intersecting sides unless the
+        # intersection is a shared point or a generalized intersection.
+        def concrete(p):
+            x, y = p
+            return x.is_number and y.is_number
+
+        sides = rv.sides
+        for i, si in enumerate(sides):
+            for j in range(i+1, len(sides)):
+                sj = sides[j]
+                hit = si.intersection(sj)
+                if hit and concrete(hit[0]) and\
+                   len(set([si[0], si[1], sj[0], sj[1]])) == 4:
+                    raise GeometryError("Polgon has intersecting sides.")
+
+        return rv
 
     @property
     def area(self):
@@ -277,6 +321,67 @@ class Polygon(GeometryEntity):
 
         return True
 
+    def inside(self, p):
+        """return True if p is inside self
+
+        adapted from:
+        [1] http://www.ariel.com.au/a/python-point-int-poly.html
+        [2] http://local.wasp.uwa.edu.au/~pbourke/geometry/insidepoly/
+        """
+        from sympy import Symbol, flatten
+
+        if p in self:
+            return False
+
+        if isinstance(p, Point):
+
+            def concrete(p):
+                x, y = p
+                return x.is_number and y.is_number
+            # move to p, checking that the result is numeric
+            lit = []
+            for v in self.vertices:
+                lit.append(v - p)
+                if not concrete(lit[-1]):
+                    return None
+            self = Polygon(*lit)
+
+            if self.is_convex():
+                side = None
+                for i, s in enumerate(self.sides):
+                    p0, p1 = s
+                    # the last segment doesn't have the points in the same order as the rest
+                    if i != len(self.sides):
+                        x0, y0 = p0
+                        x1, y1 = p1
+                    else:
+                        x0, y0 = p1
+                        x1, y1 = p0
+                    test = ((-y0)*(x1 - x0) - (-x0)*(y1 - y0)).is_negative
+                    if side is None:
+                        side = test
+                    elif test is not side:
+                        return False
+                return True
+
+            n = len(self)
+            hit_odd = False
+            p1x,p1y = self[0]
+            indices = range(1, n)
+            if p[-1] != p[0]:
+                indices.append(0)
+            for i in range(1, n):
+                p2x, p2y = self[i]
+                if 0 > min(p1y, p2y):
+                    if 0 <= max(p1y, p2y):
+                        if 0 <= max(p1x, p2x):
+                            if p1y != p2y:
+                                xinters = (-p1y)*(p2x - p1x)/(p2y - p1y) + p1x
+                            if p1x == p2x or 0 <= xinters:
+                                hit_odd = not hit_odd
+                p1x, p1y = p2x, p2y
+            return hit_odd
+
     def intersection(self, o):
         """The intersection of two polygons.
 
@@ -297,8 +402,8 @@ class Polygon(GeometryEntity):
         >>> from sympy import Point, Polygon
         >>> p1, p2, p3, p4 = map(Point, [(0, 0), (1, 0), (5, 1), (0, 1)])
         >>> poly1 = Polygon(p1, p2, p3, p4)
-        >>> p5, p6, p7, p8 = map(Point, [(3, 2), (1, -1), (0, 2), (-2, 1)])
-        >>> poly2 = Polygon(p5, p6, p7, p8)
+        >>> p5, p6, p7 = map(Point, [(3, 2), (1, -1), (0, 2)])
+        >>> poly2 = Polygon(p5, p6, p7)
         >>> poly1.intersection(poly2)
         [Point(2/3, 0), Point(9/5, 1/5), Point(7/3, 1), Point(1/3, 1)]
 
