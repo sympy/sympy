@@ -27,7 +27,10 @@ def derivation(p, D, x, t):
     Computes the Dp, given the derivation D with D = d/dx and p is a polynomial
     in t over K(x)
     """
-    return p.diff(t)*D + p.as_poly(t, x).diff(x).as_poly(t)
+    px = p.as_poly(t, x)
+    if px is None:
+        px = p.as_basic()
+    return p.diff(t)*D + px.diff(x).as_poly(t)
 
 def splitfactor(p, D, x, t):
     """
@@ -39,25 +42,26 @@ def splitfactor(p, D, x, t):
 
     Page. 100
     """
+    Zero = Poly(0, t)
     One = Poly(1, t)
-#    if not p.has_any_symbols():
-#        return (One, p)
+    if not p.has_any_symbols(t):
+        return (p, One)
 
-    if derivation(y) != Zero:
-        c, q = p.as_poly(y).primitive()
-        c, q = Poly(c, *V), Poly(q, *V)
+    if derivation(p, D, x, t) != Zero:
+        c, q = p.as_poly(t).primitive()
+        c, q = Poly(c, t), Poly(q, t)
 
-        h = q.gcd(derivation(q))
-        s = h.quo(q.gcd(q.diff(y)))
+        h = q.gcd(derivation(q, D, x, t))
+        s = h.quo(q.gcd(q.diff(t)))
 
-        c_split = splitfactor(c)
+        c_split = splitfactor(c, D, x, t)
 
-        if s.degree(y) == 0:
+        if s.degree(t) == 0:
             return (c_split[0], q * c_split[1])
 
-        q_split = splitfactor(q.quo(s))
+        q_split = splitfactor(q.quo(s), D, x, t)
 
-        return (c_split[0]*q_split[0]*s, c_split[1]*q_split[1])
+        return (c_split[1]*q_split[1], c_split[0]*q_split[0]*s)
     else:
-        return (One, p)
+        return (p, One)
 
