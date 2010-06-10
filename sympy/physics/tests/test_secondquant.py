@@ -4,7 +4,7 @@ from sympy.physics.secondquant import (
     FockState, AnnihilateBoson, CreateBoson, BosonicOperator,
     F, Fd, FKet, FBra, BosonState, CreateFermion, AnnihilateFermion,
     evaluate_deltas, AntiSymmetricTensor, contraction, NO, wicks,
-    PermutationOperator, simplify_index_permutations, SymTuple,
+    PermutationOperator, simplify_index_permutations
         )
 
 from sympy import (
@@ -13,20 +13,6 @@ from sympy import (
     expand, Function
 )
 
-
-def test_SymTuple():
-    t = (1, 2, 3, 4)
-    st =  SymTuple(*t)
-    assert set(t) == set(st)
-    assert len(t) == len(st)
-    assert set(t[:2]) == set(st[:2])
-    assert isinstance(st[:], SymTuple)
-    assert st == SymTuple(1, 2, 3, 4)
-    assert st.func(*st.args) == st
-    p,q,r,s = symbols('pqrs')
-    t2=(p,q,r,s)
-    st2 = SymTuple(*t2)
-    assert st2.atoms() == set(t2)
 
 def test_PermutationOperator():
     p,q,r,s = symbols('pqrs')
