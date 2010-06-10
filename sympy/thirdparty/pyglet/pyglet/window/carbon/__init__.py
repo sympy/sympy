@@ -655,7 +655,7 @@ class CarbonWindow(BaseWindow):
         # Can occur when mixing with other toolkits, e.g. Tk.
         # Fixes issue 180.
         if result not in (eventLoopTimedOutErr, eventLoopQuitErr):
-            raise 'Error %d' % result
+            raise Exception('Error %d' % result)
 
     def dispatch_pending_events(self):
         while self._event_queue:
@@ -1356,7 +1356,7 @@ def _create_cfstring(text):
 
 def _oscheck(result):
     if result != noErr:
-        raise 'Carbon error %d' % result
+        raise Exception('Carbon error %d' % result)
     return result
 
 def _aglcheck():
