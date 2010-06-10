@@ -1,7 +1,7 @@
 from basic import Basic, SingletonMeta, S
 from evalf import EvalfMixin
 from sympify import _sympify
-from sympy.mpmath import mpi
+from sympy.mpmath import mpi, mpf
 
 
 class Set(Basic):
@@ -390,7 +390,7 @@ class Interval(Set, EvalfMixin):
         return self.end - self.start
 
     def _eval_evalf(self, prec):
-        return mpi(self.start.evalf(prec), self.end.evalf(prec))
+        return mpi(mpf(self.start.evalf(prec)), mpf(self.end.evalf(prec)))
 
     def _is_comparable(self, other):
         is_comparable = self.start.is_comparable
