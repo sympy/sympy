@@ -588,3 +588,7 @@ def test_sympy_of_type():
     assert QQ_sympy().of_type(Rational(2))
     assert QQ_sympy().of_type(Rational(1, 2))
     assert QQ_sympy().of_type(Rational(3, 2))
+
+def test___eq__():
+    assert not QQ['x'] == ZZ['x']
+    assert not QQ.frac_field(x) == ZZ.frac_field(x)
