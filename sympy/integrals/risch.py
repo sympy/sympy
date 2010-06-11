@@ -91,6 +91,30 @@ def splitfactor(p, D, x, t, coefficientD=False):
     else:
         return (p, One)
 
+def splitfactor_sqf(p, D, x, t, coefficientD=False):
+    """
+    Splitting Square-free Factorization
+
+    Given a derivation D on k[t] and p in k[t], returns (N1, ..., Nm)
+    and (S1, ..., Sm) in k[t]^m such that p =
+    (N1*N2**2*...*Nm**m)*(S1*S2**2*...*Sm**m) is a splitting
+    factorization of p and the Ni and Si are square-free and coprime.
+    """
+    # TODO: This algorithm appears to be faster in every case
+#    from pudb import set_trace; set_trace() # Debugging
+    S = []
+    N = []
+    p_sqf = p.as_poly(t).sqf_list_include()
+    for pi, i in p_sqf:
+        Si = pi.gcd(derivation(pi, D, x, t, coefficientD))
+        Ni = pi.quo(Si)
+        if not Si.is_one:
+            S.append((Si, i))
+        if not Ni.is_one:
+            N.append((Ni, i))
+
+    return (tuple(N), tuple(S))
+
 def canonical_representation(a, d, D, x, t):
     """
     Canonical Representation.
@@ -107,11 +131,9 @@ def canonical_representation(a, d, D, x, t):
     q, r = a.div(d)
     dn, ds = splitfactor(d, D, x, t)
 
-    # Extended Euclidean Algorithm (Diophantine Version) pg. 13
-    # XXX: Should this go in densetools.py ?
     b, c = gcdexdiophantine(dn, ds, r)
 
-    return (q, (b,ds), (c,dn))
+    return (q, (b, ds), (c, dn))
 
 def hermite_reduce(a, d, D, x, t):
     """
