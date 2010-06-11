@@ -79,7 +79,10 @@ def dup_clear_denoms(f, K0, K1=None, convert=False):
     True
     """
     if K1 is None:
-        K1 = K0.get_ring()
+        if K0.has_assoc_Ring:
+            K1 = K0.get_ring()
+        else:
+            K1 = K0
 
     common = K1.one
 
@@ -131,7 +134,10 @@ def dmp_clear_denoms(f, u, K0, K1=None, convert=False):
         return dup_clear_denoms(f, K0, K1)
 
     if K1 is None:
-        K1 = K0.get_ring()
+        if K0.has_assoc_Ring:
+            K1 = K0.get_ring()
+        else:
+            K1 = K0
 
     common = _rec_clear_denoms(f, u, K0, K1)
 

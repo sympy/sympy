@@ -1640,7 +1640,11 @@ class Poly(Basic):
         except AttributeError: # pragma: no cover
             raise OperationNotSupported(f, 'clear_denoms')
 
-        coeff, f = f.rep.dom.get_ring().to_sympy(coeff), f.per(result)
+        dom = f.get_domain()
+        if dom.has_assoc_Ring:
+            coeff, f = dom.get_ring().to_sympy(coeff), f.per(result)
+        else:
+            coeff, f = dom.to_sympy(coeff), f.per(result)
 
         if not convert:
             return coeff, f

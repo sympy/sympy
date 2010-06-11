@@ -1071,6 +1071,10 @@ def test_Poly_clear_denoms():
 
     assert coeff == x and poly == Poly(y, y) and poly.get_domain() == ZZ.frac_field(x)
 
+    coeff, poly = Poly(sin(x)/x*y, y, domain='EX').clear_denoms()
+    assert coeff == x and poly == Poly(sin(x)*y, y) and poly.get_domain() == EX
+
+
 def test_Poly_integrate():
     assert Poly(x + 1).integrate() == Poly(x**2/2 + x)
     assert Poly(x + 1).integrate(x) == Poly(x**2/2 + x)
