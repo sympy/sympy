@@ -33,13 +33,15 @@ def gcdexdiophantine(a, b, c):
     # XXX: This go in densetools.py
     # XXX: Bettter name?
 
-    s, t, g = a.gcdex(b)
+    s, g = a.half_gcdex(b)
     q = c.quo(g) # Inexact division means c is not in (a, b)
-    s, t = q*s, q*t
+    s = q*s
 
     if not s.is_zero and b.degree() >= b.degree():
         q, r = s.div(b)
-        s, t = r, t + q*a
+        s = r
+
+    t = (c - s*a).quo(b)
 
     return (s, t)
 
