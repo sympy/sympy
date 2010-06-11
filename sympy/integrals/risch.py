@@ -143,15 +143,16 @@ def hermite_reduce(a, d, D, x, t):
     that f = Dg + h + r, h is simple, and r is reduced.
     """
     # TODO: Rewrite this using Mack's linear version
-
+    from pudb import set_trace; set_trace() # Debugging
     # Make d monic
-    from pudb import set_trace; set_trace()
     l = Poly(1/d.LC(), t)
     a, d = a.mul(l), d.mul(l)
 
     fp, fs, fn = canonical_representation(a, d, D, x, t)
 
     a, d = fn
+    l = Poly(1/d.LC(), t)
+    a, d = a.mul(l), d.mul(l)
 
     d_sqf = d.sqf_list()
 
@@ -182,3 +183,22 @@ def hermite_reduce(a, d, D, x, t):
     rrn, rrd = rr[1].mul(Poly(rr[0], t)), rr[2]
 
     return ((gn, gd), (r, d), (rrn, rrd))
+
+def polynomial_reduce(p, D, x, t):
+    """
+    Polynomial Reduction.
+
+    Given a derivation D on k(t) and p in k[t] where t is a nonlinear monomial
+    over k, return q, r in k[t] such that p = Dq  + r, and deg(r) < deg_t(Dt).
+    """
+    # TODO: This can probably be written non-recursively
+#    from pudb import set_trace; set_trace() # Debugging
+    if p.degree(t) < D.degree(t):
+        return (Poly(0, t), p)
+
+    m = p.degree(t) - D.degree(t) + 1
+    q0 = Poly(t**m, t).mul(Poly(p.as_poly(t).LC()/(m*D.as_poly(t).LC()), t))
+
+    q, r = polynomial_reduce(p - derivation(q0, D, x, t), D, x, t)
+
+    return (q0 + q, r)
