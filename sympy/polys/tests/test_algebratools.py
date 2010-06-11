@@ -327,13 +327,13 @@ def test_Algebra_get_ring():
     assert ZZ.get_ring() == ZZ
     assert QQ.get_ring() == ZZ
     assert ZZ[x].get_ring() == ZZ[x]
-    assert QQ[x].get_ring() == ZZ[x]
+    assert QQ[x].get_ring() == QQ[x]
     assert ZZ[x,y].get_ring() == ZZ[x,y]
-    assert QQ[x,y].get_ring() == ZZ[x,y]
+    assert QQ[x,y].get_ring() == QQ[x,y]
     assert ZZ.frac_field(x).get_ring() == ZZ[x]
-    assert QQ.frac_field(x).get_ring() == ZZ[x]
+    assert QQ.frac_field(x).get_ring() == QQ[x]
     assert ZZ.frac_field(x,y).get_ring() == ZZ[x,y]
-    assert QQ.frac_field(x,y).get_ring() == ZZ[x,y]
+    assert QQ.frac_field(x,y).get_ring() == QQ[x,y]
 
     raises(DomainError, "EX.get_ring()")
     raises(DomainError, "RR.get_ring()")
@@ -356,9 +356,9 @@ def test_Algebra_get_field():
     assert QQ.get_field() == QQ
     assert ALG.get_field() == ALG
     assert ZZ[x].get_field() == ZZ.frac_field(x)
-    assert QQ[x].get_field() == ZZ.frac_field(x)
+    assert QQ[x].get_field() == QQ.frac_field(x)
     assert ZZ[x,y].get_field() == ZZ.frac_field(x,y)
-    assert QQ[x,y].get_field() == ZZ.frac_field(x,y)
+    assert QQ[x,y].get_field() == QQ.frac_field(x,y)
 
     raises(DomainError, "RR.get_field()")
 
@@ -414,3 +414,7 @@ def test_CC_to_from_sympy():
     assert CC.to_sympy(1+0j) == S.One
     assert CC.to_sympy(1+2j) == S.One + S(2)*I
     assert CC.to_sympy(2j) == S(2)*I
+
+def test___eq__():
+    assert not QQ['x'] == ZZ['x']
+    assert not QQ.frac_field(x) == ZZ.frac_field(x)
