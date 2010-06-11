@@ -45,17 +45,22 @@ def gcdexdiophantine(a, b, c):
 
     return (s, t)
 
-def derivation(p, D, x, t):
+def derivation(p, D, x, t, coefficientD=False):
     """
     Computes the Dp, given the derivation D with D = d/dx and p is a polynomial
-    in t over K(x)
+    in t over K(x).  If coefficientD is True, it computes the derivation kD
+    (kappaD), which is defined as kD(sum(ai*Xi**i, (i, 0, n))) ==
+    sum(Dai*Xi**i, (i, 1, n)) (Definition 3.2.2, page 80).
     """
-    px = p.as_poly(t, x)
+    px = p.as_poly(x)
     if px is None:
         px = p.as_basic()
+
+    if coefficientD:
+        return px.diff(x).as_poly(t)
     return p.diff(t)*D + px.diff(x).as_poly(t)
 
-def splitfactor(p, D, x, t):
+def splitfactor(p, D, x, t, coefficientD=False):
     """
     Splitting factorization.
 
@@ -66,10 +71,12 @@ def splitfactor(p, D, x, t):
     Page. 100
     """
     One = Poly(1, t)
+    Dp = derivation(p, D, x, t, coefficientD)
     if not p.has_any_symbols(t):
-        return (p, One)
+        s = p.gcd(Dp)
+        n = p.quo(s)
+        return (n, s)
 
-    Dp = derivation(p, D, x, t)
     if not Dp.is_zero:
         h = p.gcd(Dp)
         g = p.gcd(p.diff(t))
@@ -78,7 +85,7 @@ def splitfactor(p, D, x, t):
         if s.degree(t) == 0:
             return (p, One)
 
-        q_split = splitfactor(p.quo(s), D, x, t)
+        q_split = splitfactor(p.quo(s), D, x, t, coefficientD)
 
         return (q_split[0], q_split[1]*s)
     else:
