@@ -49,7 +49,8 @@ from sympy.polys.densebasic import (
     dup_to_raw_dict, dmp_to_dict,
     dup_deflate, dmp_deflate,
     dup_terms_gcd, dmp_terms_gcd,
-    dmp_list_terms, dmp_exclude
+    dmp_list_terms, dmp_exclude,
+    dmp_permute
 )
 
 from sympy.polys.densearith import (
@@ -1477,6 +1478,23 @@ class DMP(object):
         J, g, u = dmp_exclude(f.rep, f.lev, f.dom)
         return J, DMP(g, f.dom, u)
 
+    def permute(f, P):
+        r"""
+        Returns a polynomial in `K[x_{P(1)}, ..., x_{P(n)}]`.
+
+        Example
+        =======
+        >>> from sympy.polys.polyclasses import DMP
+        >>> from sympy.polys.algebratools import ZZ
+        >>> DMP([[[ZZ(2)], [ZZ(1), ZZ(0)]], [[]]], ZZ).permute([1, 0, 2]) == \
+        ... DMP([[[ZZ(2)], []], [[ZZ(1), ZZ(0)], []]], ZZ)
+        True
+        >>> DMP([[[ZZ(2)], [ZZ(1), ZZ(0)]], [[]]], ZZ).permute([1, 2, 0]) == \
+        ... DMP([[[ZZ(1)], []], [[ZZ(2), ZZ(0)], []]], ZZ)
+        True
+        """
+        return f.per(dmp_permute(f.rep, P, f.lev, f.dom))
+
     def terms_gcd(f):
         r"""
         Remove GCD of terms from the polynomial `f`.
@@ -2658,7 +2676,7 @@ class SDP(object):
     # TODO: first make sdp_* functions more useful
 
 def init_normal_DMF(num, den, lev, dom):
-    return DFP(dmp_normal(num, lev, dom),
+    return DMF(dmp_normal(num, lev, dom),
                dmp_normal(den, lev, dom), dom, lev)
 
 class DMF(object):

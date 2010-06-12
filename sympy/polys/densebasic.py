@@ -907,9 +907,9 @@ def dmp_permute(f, P, u, K):
     =======
     >>> from sympy.polys.algebratools import ZZ
     >>> from sympy.polys.densebasic import dmp_permute
-    >>> dmp_permute([[[2], [1, 0]], []], [1, 0, 2], 2, ZZ)
+    >>> dmp_permute([[[2], [1, 0]], [[]]], [1, 0, 2], 2, ZZ)
     [[[2], []], [[1, 0], []]]
-    >>> dmp_permute([[[2], [1, 0]], []], [1, 2, 0], 2, ZZ)
+    >>> dmp_permute([[[2], [1, 0]], [[]]], [1, 2, 0], 2, ZZ)
     [[[1], []], [[2, 0], []]]
     """
     F, H = dmp_to_dict(f, u), {}
