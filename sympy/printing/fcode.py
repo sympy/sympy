@@ -124,10 +124,12 @@ class FCodePrinter(StrPrinter):
             lines.extend(text.split("\n"))
             lines = self._pad_leading_columns(lines)
             lines = self._wrap_fortran(lines)
+            lines = self.indent_code(lines)
             result = "\n".join(lines)
         else:
             text = self._pad_leading_columns([text])
             lines = self._wrap_fortran(text)
+            lines = self.indent_code(lines)
             result = number_symbols, self._not_fortran, "\n".join(lines)
 
         del self._not_fortran
@@ -329,6 +331,39 @@ class FCodePrinter(StrPrinter):
                 result.append(line)
         return result
 
+    def indent_code(self, code):
+        """Accepts a string of code or a list of code lines
+        """
+        if self._settings['source_format'] == 'fixed':
+            return code
+        if isinstance(code, basestring):
+            code_lines = self.indent_code(code.splitlines())
+            return '\n'.join(code_lines)
+
+        code = [ line.lstrip() for line in code ]
+
+        inc_keyword = ('do ', 'if(', 'if ', 'do\n')
+        dec_keyword = ('end ', 'enddo', 'end\n')
+
+        increase = [ int(line.startswith(inc_keyword)) for line in code ]
+        decrease = [ int(line.startswith(dec_keyword)) for line in code ]
+        continuation = [ line[-1] == '&' for line in code ]
+
+        level = 0
+        cont_padding = 0
+        tabwidth = 3
+        new_code = []
+        for i in range(len(code)):
+            level -= decrease[i]
+            padding = " "*(level*tabwidth + cont_padding)
+            new_code.append("%s%s" % (padding, code[i]))
+
+            if continuation[i]:
+                cont_padding = 2*tabwidth
+            else:
+                cont_padding = 0
+            level += increase[i]
+        return new_code
 
 def fcode(expr, **settings):
     """Converts an expr to a string of Fortran 77 code

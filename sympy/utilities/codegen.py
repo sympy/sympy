@@ -414,10 +414,9 @@ class FCodeGen(CodeGen):
         code_list.append('implicit none\n')
 
         # argument type declarations
-        code_list.append("\n ".join(
-            ["%s :: %s" % (arg.datatype.fname, arg.name)
-                for arg in routine.arguments])
-            + '\n')
+        code_list.extend(
+            ["%s :: %s\n" % (arg.datatype.fname, arg.name) for arg in routine.arguments]
+            )
 
         return code_list
 
@@ -516,6 +515,8 @@ class FCodeGen(CodeGen):
             code_lines.extend(openloop)
             code_lines.append("%s = %s\n" %(routine.name, f_expr))
             code_lines.extend(closeloop)
+
+            code_lines = self._printer.indent_code(code_lines)
 
             if empty: print >> f
             print >> f, ' '.join(code_lines),
