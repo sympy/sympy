@@ -252,7 +252,7 @@ def test_simple_f_code():
             " REAL*8 :: x\n"
             " REAL*8 :: y\n"
             " REAL*8 :: z\n"
-            " test =  z*(x + y)\n"
+            " test = z*(x + y)\n"
             "end function\n"
     )
     assert source == expected
@@ -286,7 +286,7 @@ def test_simple_f_codegen():
         " REAL*8 :: x\n"
         " REAL*8 :: y\n"
         " REAL*8 :: z\n"
-        " test =  z*(x + y)\n"
+        " test = z*(x + y)\n"
         "end function\n"),
        ("file.h",
         "interface\n"
@@ -344,67 +344,67 @@ def test_intrinsic_math_codegen():
             'REAL*8 function test_abs(x)\n'
             ' implicit none\n'
             ' REAL*8 :: x\n'
-            ' test_abs =  abs(x)\n'
+            ' test_abs = abs(x)\n'
             'end function\n'
             'REAL*8 function test_acos(x)\n'
             ' implicit none\n'
             ' REAL*8 :: x\n'
-            ' test_acos =  acos(x)\n'
+            ' test_acos = acos(x)\n'
             'end function\n'
             'REAL*8 function test_asin(x)\n'
             ' implicit none\n'
             ' REAL*8 :: x\n'
-            ' test_asin =  asin(x)\n'
+            ' test_asin = asin(x)\n'
             'end function\n'
             'REAL*8 function test_atan(x)\n'
             ' implicit none\n'
             ' REAL*8 :: x\n'
-            ' test_atan =  atan(x)\n'
+            ' test_atan = atan(x)\n'
             'end function\n'
             'REAL*8 function test_cos(x)\n'
             ' implicit none\n'
             ' REAL*8 :: x\n'
-            ' test_cos =  cos(x)\n'
+            ' test_cos = cos(x)\n'
             'end function\n'
             'REAL*8 function test_cosh(x)\n'
             ' implicit none\n'
             ' REAL*8 :: x\n'
-            ' test_cosh =  cosh(x)\n'
+            ' test_cosh = cosh(x)\n'
             'end function\n'
             'REAL*8 function test_log(x)\n'
             ' implicit none\n'
             ' REAL*8 :: x\n'
-            ' test_log =  log(x)\n'
+            ' test_log = log(x)\n'
             'end function\n'
             'REAL*8 function test_ln(x)\n'
             ' implicit none\n'
             ' REAL*8 :: x\n'
-            ' test_ln =  log(x)\n'
+            ' test_ln = log(x)\n'
             'end function\n'
             'REAL*8 function test_sin(x)\n'
             ' implicit none\n'
             ' REAL*8 :: x\n'
-            ' test_sin =  sin(x)\n'
+            ' test_sin = sin(x)\n'
             'end function\n'
             'REAL*8 function test_sinh(x)\n'
             ' implicit none\n'
             ' REAL*8 :: x\n'
-            ' test_sinh =  sinh(x)\n'
+            ' test_sinh = sinh(x)\n'
             'end function\n'
             'REAL*8 function test_sqrt(x)\n'
             ' implicit none\n'
             ' REAL*8 :: x\n'
-            ' test_sqrt =  sqrt(x)\n'
+            ' test_sqrt = sqrt(x)\n'
             'end function\n'
             'REAL*8 function test_tan(x)\n'
             ' implicit none\n'
             ' REAL*8 :: x\n'
-            ' test_tan =  tan(x)\n'
+            ' test_tan = tan(x)\n'
             'end function\n'
             'REAL*8 function test_tanh(x)\n'
             ' implicit none\n'
             ' REAL*8 :: x\n'
-            ' test_tanh =  tanh(x)\n'
+            ' test_tanh = tanh(x)\n'
             'end function\n'
         )
     assert result[0][1] == expected
@@ -507,13 +507,13 @@ def test_intrinsic_math2_codegen():
             ' implicit none\n'
             ' REAL*8 :: x\n'
             ' REAL*8 :: y\n'
-            ' test_atan2 =  atan2(x, y)\n'
+            ' test_atan2 = atan2(x, y)\n'
             'end function\n'
             'REAL*8 function test_pow(x, y)\n'
             ' implicit none\n'
             ' REAL*8 :: x\n'
             ' REAL*8 :: y\n'
-            ' test_pow =  x**y\n'
+            ' test_pow = x**y\n'
             'end function\n'
             )
     assert result[0][1] == expected
@@ -552,7 +552,7 @@ def test_complicated_codegen_f95():
             ' REAL*8 :: x\n'
             ' REAL*8 :: y\n'
             ' REAL*8 :: z\n'
-            ' test1 =  7*cos(y)**6*sin(x) + 7*cos(y)**6*tan(z) + 7*sin(x)**6*cos(y) + 7*sin(x) &\n'
+            ' test1 = 7*cos(y)**6*sin(x) + 7*cos(y)**6*tan(z) + 7*sin(x)**6*cos(y) + 7*sin(x) &\n'
             '      **6*tan(z) + 7*tan(z)**6*cos(y) + 7*tan(z)**6*sin(x) + 42*cos(y) &\n'
             '      **5*sin(x)*tan(z) + 42*sin(x)**5*cos(y)*tan(z) + 42*tan(z)**5*cos &\n'
             '      (y)*sin(x) + 105*cos(y)**2*sin(x)**4*tan(z) + 105*cos(y)**2*tan(z &\n'
@@ -573,7 +573,7 @@ def test_complicated_codegen_f95():
             ' REAL*8 :: x\n'
             ' REAL*8 :: y\n'
             ' REAL*8 :: z\n'
-            ' test2 =  cos(cos(cos(cos(cos(cos(cos(cos(x + y + z))))))))\n'
+            ' test2 = cos(cos(cos(cos(cos(cos(cos(cos(x + y + z))))))))\n'
             'end function\n'
     )
     assert result[0][1] == expected

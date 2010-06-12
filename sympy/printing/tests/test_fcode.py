@@ -221,13 +221,13 @@ def test_settings():
 
 def test_free_form_code_line():
     x, y = symbols('xy')
-    assert fcode(cos(x) + sin(y), source_format='free') == " cos(x) + sin(y)"
+    assert fcode(cos(x) + sin(y), source_format='free') == "cos(x) + sin(y)"
 
 def test_free_form_continuation_line():
     x, y = symbols('xy')
     result = fcode(((cos(x) + sin(y))**(7)).expand(), source_format='free')
     expected = (
-' 7*cos(x)**6*sin(y) + 7*sin(y)**6*cos(x) + 21*cos(x)**5*sin(y)**2 + 35* &\n'
+'7*cos(x)**6*sin(y) + 7*sin(y)**6*cos(x) + 21*cos(x)**5*sin(y)**2 + 35* &\n'
 '      cos(x)**4*sin(y)**3 + 35*cos(x)**3*sin(y)**4 + 21*cos(x)**2*sin(y &\n'
 '      )**5 + cos(x)**7 + sin(y)**7'
     )

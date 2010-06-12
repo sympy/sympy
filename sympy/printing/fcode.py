@@ -57,7 +57,7 @@ class FCodePrinter(StrPrinter):
             self._lead_cont = "     @ "
             self._lead_comment = "C     "
         elif self._settings['source_format'] == 'free':
-            self._lead_code = " "
+            self._lead_code = ""
             self._lead_cont = "      "
             self._lead_comment = "! "
         else:
@@ -293,20 +293,7 @@ class FCodePrinter(StrPrinter):
         else:
             trailing = ''
         for line in lines:
-            if line.startswith(self._lead_code):
-                # code line
-                pos = split_pos_code(line, 72)
-                hunk = line[:pos].rstrip()
-                line = line[pos:].lstrip()
-                if line: hunk += trailing
-                result.append(hunk)
-                while len(line) > 0:
-                    pos = split_pos_code(line, 65)
-                    hunk = line[:pos].rstrip()
-                    line = line[pos:].lstrip()
-                    if line: hunk += trailing
-                    result.append("%s%s" % (self._lead_cont, hunk))
-            elif line.startswith(self._lead_comment):
+            if line.startswith(self._lead_comment):
                 # comment line
                 if len(line) > 72:
                     pos = line.rfind(" ", 6, 72)
@@ -324,6 +311,19 @@ class FCodePrinter(StrPrinter):
                         result.append("%s%s" % (self._lead_comment, hunk))
                 else:
                     result.append(line)
+            elif line.startswith(self._lead_code):
+                # code line
+                pos = split_pos_code(line, 72)
+                hunk = line[:pos].rstrip()
+                line = line[pos:].lstrip()
+                if line: hunk += trailing
+                result.append(hunk)
+                while len(line) > 0:
+                    pos = split_pos_code(line, 65)
+                    hunk = line[:pos].rstrip()
+                    line = line[pos:].lstrip()
+                    if line: hunk += trailing
+                    result.append("%s%s" % (self._lead_cont, hunk))
             else:
                 result.append(line)
         return result
