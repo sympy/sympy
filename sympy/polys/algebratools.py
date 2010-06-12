@@ -4708,21 +4708,30 @@ class FractionField(Field):
         =======
         >>> from sympy.abc import x
         >>> from sympy.polys.polyclasses import DMF
-        >>> from sympy.polys.algebratools import ZZ
-        >>> ZZ.frac_field(x).from_FractionField(DMF(([ZZ(1), ZZ(2)],
-        ... [ZZ(1), ZZ(1)]), ZZ), ZZ[x]) == \
-        ... DMF(([ZZ(1), ZZ(2)], [ZZ(1), ZZ(1)]), ZZ)
+        >>> from sympy.polys.algebratools import ZZ, QQ
+        >>> QQ.frac_field(x).from_FractionField(DMF(([ZZ(1), ZZ(2)],
+        ... [ZZ(1), ZZ(1)]), ZZ), ZZ.frac_field(x)) == \
+        ... DMF(([QQ(1), QQ(2)], [QQ(1), QQ(1)]), QQ)
         True
-        >>> type(ZZ.frac_field(x).from_FractionField(DMF(([ZZ(1), ZZ(2)],
-        ... [ZZ(1), ZZ(2)]), ZZ), ZZ[x]))
+        >>> type(QQ.frac_field(x).from_FractionField(DMF(([ZZ(1), ZZ(2)],
+        ... [ZZ(1), ZZ(2)]), ZZ), ZZ.frac_field(x)))
         <class 'sympy.polys.polyclasses.DMF'>
         """
         if K1.gens == K0.gens:
             if K1.dom == K0.dom:
                 return a
             else:
-                return K1(a.numer().convert(K1.dom).rep,
-                          a.denom().convert(K1.dom).rep)
+                return K1((a.numer().convert(K1.dom).rep,
+                          a.denom().convert(K1.dom).rep))
+        elif set(K0.gens).issubset(K1.gens):
+            nmonoms, ncoeffs = _dict_reorder(a.numer().to_dict(), K0.gens, K1.gens)
+            dmonoms, dcoeffs = _dict_reorder(a.denom().to_dict(), K0.gens, K1.gens)
+
+            if K1.dom != K0.dom:
+                ncoeffs = [ K1.dom.convert(c, K0.dom) for c in ncoeffs ]
+                dcoeffs = [ K1.dom.convert(c, K0.dom) for c in dcoeffs ]
+
+            return K1((dict(zip(nmonoms, ncoeffs)), dict(zip(dmonoms, dcoeffs))))
 
     def get_ring(self):
         """
