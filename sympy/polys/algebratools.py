@@ -4692,12 +4692,13 @@ class FractionField(Field):
             else:
                 return K1(a.convert(K1.dom).rep)
         else:
-            monoms, coeffs = _dict_reorder(a.to_dict(), K0.gens, K1.gens)
+            if set(K0.gens).issubset(set(K1.gens)):
+                monoms, coeffs = _dict_reorder(a.to_dict(), K0.gens, K1.gens)
 
-            if K1.dom != K0.dom:
-                coeffs = [ K1.dom.convert(c, K0.dom) for c in coeffs ]
+                if K1.dom != K0.dom:
+                    coeffs = [ K1.dom.convert(c, K0.dom) for c in coeffs ]
 
-            return K1(dict(zip(monoms, coeffs)))
+                return K1(dict(zip(monoms, coeffs)))
 
     def from_FractionField(K1, a, K0):
         r"""
