@@ -114,7 +114,7 @@ def heurisch(f, x, **kwargs):
        ========
 
        >>> from sympy import tan
-       >>> from sympy.integrals.risch import heurisch
+       >>> from sympy.integrals.heurisch import heurisch
        >>> from sympy.abc import x, y
 
        >>> heurisch(y*tan(x), x)
