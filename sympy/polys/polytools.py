@@ -1839,7 +1839,7 @@ class Poly(Basic):
 
         return map(per, result)
 
-    def resultant(f, g):
+    def resultant(f, g, includePRS=False):
         """
         Computes the resultant of `f` and `g` via PRS.
 
@@ -1849,14 +1849,22 @@ class Poly(Basic):
         >>> from sympy.abc import x
         >>> Poly(x**2 + 1, x).resultant(Poly(x**2 - 1, x))
         4
+        >>> Poly(x**2 + 1, x).resultant(Poly(x**2 - 1, x), includePRS=True)
+        (4, [Poly(x**2 + 1, x, domain='ZZ'), Poly(x**2 - 1, x, domain='ZZ'),
+             Poly(-2, x, domain='ZZ')])
         """
         _, per, F, G = f.unify(g)
 
         try:
-            result = F.resultant(G)
+            if includePRS:
+                result, R = F.resultant(G, includePRS)
+            else:
+                result = F.resultant(G)
         except AttributeError: # pragma: no cover
             raise OperationNotSupported(f, 'resultant')
 
+        if includePRS:
+            return (per(result, remove=0), map(per, R))
         return per(result, remove=0)
 
     def discriminant(f):
@@ -3329,6 +3337,8 @@ def resultant(f, g, *gens, **args):
     >>> from sympy.abc import x
     >>> resultant(x**2 + 1, x**2 - 1)
     4
+    >>> resultant(x**2 + 1, x**2 - 1, includePRS=True)
+    (4, [1 + x**2, -1 + x**2, -2])
     """
     gens = _analyze_gens(gens)
 
@@ -3337,8 +3347,17 @@ def resultant(f, g, *gens, **args):
     except CoercionFailed, (f, g):
         raise GeneratorsNeeded("can't compute resultant of %s and %s without generators" % (f, g))
 
-    result = F.resultant(G)
+    includePRS = args.get('includePRS', False)
+    if includePRS:
+        result, R = F.resultant(G, includePRS)
+    else:
+        result = F.resultant(G)
 
+    if includePRS:
+        if _should_return_basic(f, g, **args):
+            return (result.as_basic(), [ r.as_basic() for r in R])
+        else:
+            return (result, R)
     if _should_return_basic(f, g, **args):
         return result.as_basic()
     else:

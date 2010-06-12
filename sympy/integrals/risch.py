@@ -234,11 +234,9 @@ def residue_reduce(a, d, D, x, t, z=None):
 
     if Dd.degree(t) <= d.degree(t):
         # TODO: Optimize dmp_resultant and dmp_subresultants
-        R = d.subresultants(q)
-        r = d.resultant(q)
+        r, R = d.resultant(q, includePRS=True)
     else:
-        R = q.subresultants(d)
-        r = q.resultant(d)
+        r, R = q.resultant(d, includePRS=True)
 
     Np, Sp = splitfactor_sqf(r, D, x, t, coefficientD=True)
     S = []

@@ -2060,7 +2060,7 @@ class DMP(object):
         R = dmp_subresultants(F, G, lev, dom)
         return map(per, R)
 
-    def resultant(f, g):
+    def resultant(f, g, includePRS=False):
         r"""
         Computes resultant of `f` and `g` via PRS.
 
@@ -2073,6 +2073,9 @@ class DMP(object):
         4
         """
         lev, dom, per, F, G = f.unify(g)
+        if includePRS:
+            res, R = dmp_resultant(F, G, lev, dom, includePRS)
+            return per(res, kill=True), map(per, R)
         return per(dmp_resultant(F, G, lev, dom), kill=True)
 
     def discriminant(f):

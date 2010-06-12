@@ -154,9 +154,9 @@ def ratint_logpart(f, g, x, t=None):
     t = t or Symbol('t', dummy=True)
     a, b = g, f - g.diff()*Poly(t, x)
 
-    R = subresultants(a, b)
+    res, R = resultant(a, b, includePRS=True)
 
-    res = Poly(resultant(a, b), t, composite=False)
+    res= Poly(res, t, composite=False)
 
     R_map, H = {}, []
 

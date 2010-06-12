@@ -688,7 +688,7 @@ def dup_prs_resultant(f, g, K):
 
     return res, R
 
-def dup_resultant(f, g, K):
+def dup_resultant(f, g, K, includePRS=False):
     """
     Computes resultant of two polynomials in `K[x]`.
 
@@ -699,6 +699,8 @@ def dup_resultant(f, g, K):
     >>> dup_resultant([1, 0, 1], [1, 0, -1], ZZ)
     4
     """
+    if includePRS:
+        return dup_prs_resultant(f, g, K)
     return dup_prs_resultant(f, g, K)[0]
 
 @cythonized("u,v,n,m,d,k")
@@ -1016,7 +1018,7 @@ def dmp_qq_collins_resultant(f, g, u, K0):
     return dmp_exquo_ground(r, c, u-1, K0)
 
 @cythonized("u")
-def dmp_resultant(f, g, u, K):
+def dmp_resultant(f, g, u, K, includePRS=False):
     """
     Computes resultant of two polynomials in `K[X]`.
 
@@ -1033,8 +1035,10 @@ def dmp_resultant(f, g, u, K):
     True
     """
     if not u:
-        return dup_resultant(f, g, K)
+        return dup_resultant(f, g, K, includePRS)
 
+    if includePRS:
+        return dmp_prs_resultant(f, g, u, K)
     if K.has_Field:
         if K.is_QQ and query('USE_COLLINS_RESULTANT'):
             return dmp_qq_collins_resultant(f, g, u, K)
