@@ -77,6 +77,7 @@ from sympy.core.basic import Basic
 from sympy.utilities.iterables import postorder_traversal
 from sympy.printing.ccode import ccode
 from sympy.printing.fcode import FCodePrinter
+from sympy.tensor import Idx
 
 from StringIO import StringIO
 import sympy, os
@@ -464,6 +465,20 @@ class FCodeGen(CodeGen):
 
         return result
 
+    def _get_loop_opening_ending(self, result):
+        """Returns a tuple (open_lines, close_lines) containing lists of codelines
+        """
+
+        indices = result.expr.atoms(Idx)
+        # FIXME: sort indices in an optimized way
+        open_lines = []
+        close_lines = []
+        for i in indices:
+            # fortran arrays start at 1 and end at dimension
+            open_lines.append("do %s = %s, %s\n" % (i.label, i.lower+1, i.upper+1))
+            close_lines.append("end do\n")
+        return open_lines, close_lines
+
     def dump_f95(self, routines, f, prefix, header=True, empty=True):
         """Write the F95 code file.
 
@@ -493,11 +508,14 @@ class FCodeGen(CodeGen):
             if result is None:
                 raise CodeGenError("FIXME: why calculate without storing result?")
 
+            openloop, closeloop = self._get_loop_opening_ending(result)
             constants, comments, f_expr = self._printer.doprint(result.expr)
 
             code_lines.extend(constants)
             # code_lines.extend(comments)
+            code_lines.extend(openloop)
             code_lines.append("%s = %s\n" %(routine.name, f_expr))
+            code_lines.extend(closeloop)
 
             if empty: print >> f
             print >> f, ' '.join(code_lines),
