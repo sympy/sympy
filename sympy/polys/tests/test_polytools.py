@@ -1341,6 +1341,7 @@ def test_resultant():
     assert resultant(F, G) == h
     assert resultant(f, g, polys=True) == h
     assert resultant(F, G, polys=False) == h
+    assert resultant(f, g, includePRS=True) == (h, [f, g, 2*x - 2])
 
     f, g, h = x - a, x - b, a - b
     F, G, H = Poly(f), Poly(g), Poly(h)
