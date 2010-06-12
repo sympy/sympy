@@ -115,13 +115,40 @@ class FractionField(Field, CharacteristicZero, CompositeDomain):
             return K1(dict(zip(monoms, coeffs)))
 
     def from_FractionField(K1, a, K0):
-        """Convert a `DMF` object to `dtype`. """
+        """
+        Convert a fraction field element to another fraction field.
+
+        Example
+        =======
+
+        >>> from sympy.polys.polyclasses import DMF
+        >>> from sympy.polys.domains import ZZ, QQ
+        >>> from sympy.abc import x
+
+        >>> f = DMF(([ZZ(1), ZZ(2)], [ZZ(1), ZZ(1)]), ZZ)
+
+        >>> QQx = QQ.frac_field(x)
+        >>> ZZx = ZZ.frac_field(x)
+
+        >>> g = QQx.from_FractionField(f, ZZx)
+        DMF(([1/1, 1/2], [1/1, 1/1]), QQ)
+
+        """
         if K1.gens == K0.gens:
             if K1.dom == K0.dom:
                 return a
             else:
-                return K1(a.numer().convert(K1.dom).rep,
-                          a.denom().convert(K1.dom).rep)
+                return K1((a.numer().convert(K1.dom).rep,
+                           a.denom().convert(K1.dom).rep))
+        elif set(K0.gens).issubset(K1.gens):
+            nmonoms, ncoeffs = _dict_reorder(a.numer().to_dict(), K0.gens, K1.gens)
+            dmonoms, dcoeffs = _dict_reorder(a.denom().to_dict(), K0.gens, K1.gens)
+
+            if K1.dom != K0.dom:
+                ncoeffs = [ K1.dom.convert(c, K0.dom) for c in ncoeffs ]
+                dcoeffs = [ K1.dom.convert(c, K0.dom) for c in dcoeffs ]
+
+            return K1((dict(zip(nmonoms, ncoeffs)), dict(zip(dmonoms, dcoeffs))))
 
     def get_ring(self):
         """Returns a ring associated with `self`. """
