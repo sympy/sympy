@@ -127,7 +127,8 @@ class FCodePrinter(StrPrinter):
             result = "\n".join(lines)
         else:
             text = self._pad_leading_columns([text])
-            result = number_symbols, self._not_fortran, text[0]
+            lines = self._wrap_fortran(text)
+            result = number_symbols, self._not_fortran, "\n".join(lines)
 
         del self._not_fortran
         return result
