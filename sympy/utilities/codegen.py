@@ -76,7 +76,7 @@ from sympy.core.symbol import Symbol
 from sympy.core.basic import Basic
 from sympy.utilities.iterables import postorder_traversal
 from sympy.printing.ccode import ccode
-from sympy.printing.fcode import fcode
+from sympy.printing.fcode import FCodePrinter
 
 from StringIO import StringIO
 import sympy, os
@@ -379,6 +379,10 @@ class FCodeGen(CodeGen):
     Generator for Fortran 95 code
     """
 
+    def __init__(self, project='project'):
+        CodeGen.__init__(self, project)
+        self._printer = FCodePrinter({'source_format':'free', 'human':False})
+
     def _dump_header(self, f):
         """Writes a common header for the generated files."""
         print >> f, "!****************************************************************************** "
@@ -486,12 +490,19 @@ class FCodeGen(CodeGen):
             code_lines = self._get_routine_opening(routine)
 
             result = self._get_result(routine)
-            if result is not None:
-                code_lines.append("%s = %s\n" %(routine.name,
-                    fcode(result.expr, source_format='free')))
-            print >> f, ' '.join(code_lines),
+            if result is None:
+                raise CodeGenError("FIXME: why calculate without storing result?")
+
+            constants, comments, f_expr = self._printer.doprint(result.expr)
+
+            code_lines.extend(constants)
+            # code_lines.extend(comments)
+            code_lines.append("%s = %s\n" %(routine.name, f_expr))
 
             if empty: print >> f
+            print >> f, ' '.join(code_lines),
+            if empty: print >> f
+
             code_lines = self._get_routine_ending(routine)
             print >> f, ' '.join(code_lines),
 
