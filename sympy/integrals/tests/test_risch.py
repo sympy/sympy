@@ -1,14 +1,15 @@
 """Most of these tests come from the examples in Bronstein's book."""
 from sympy import Poly
 from sympy.integrals.risch import (gcdexdiophantine, derivation, splitfactor,
-    splitfactor_sqf, canonical_representation, hermite_reduce, polynomial_reduce)
+    splitfactor_sqf, canonical_representation, hermite_reduce,
+    polynomial_reduce, residue_reduce)
 from sympy.utilities.pytest import XFAIL, skip
 
-from sympy.abc import x, t, nu
+from sympy.abc import x, t, nu, z
 
 def test_gcdexdiophantine():
     assert gcdexdiophantine(Poly(x**4 - 2*x**3 - 6*x**2 + 12*x + 15),
-        Poly(x**3 + x**2 - 4*x - 4), Poly(x**2 - 1)) == \
+    Poly(x**3 + x**2 - 4*x - 4), Poly(x**2 - 1)) == \
         (Poly((-x**2 + 4*x - 3)/5), Poly((x**3 - 7*x**2 + 16*x - 10)/5))
 
 def test_derivation():
@@ -49,7 +50,7 @@ def test_canonical_representation():
         Poly(t**2, t, domain='ZZ')))
     D = Poly(t**2 + 1, t)
     assert canonical_representation(Poly(t**5 + t**3 + x**2*t + 1, t),
-        Poly((t**2 + 1)**3, t), Poly(1 + t**2, t), x, t) == \
+    Poly((t**2 + 1)**3, t), Poly(1 + t**2, t), x, t) == \
         (Poly(0, t, domain='ZZ[x]'), (Poly(t**5 + t**3 + x**2*t + 1, t, domain='ZZ[x]'),
         Poly(t**6 + 3*t**4 + 3*t**2 + 1, t, domain='ZZ')), (Poly(0, t, domain='ZZ[x]'),
         Poly(1, t, domain='ZZ')))
@@ -62,8 +63,8 @@ def test_hermite_reduce():
         (Poly(-x, t, domain='ZZ[x]'), Poly(1, t, domain='ZZ[x]')))
     D = Poly(-t**2 - t/x - (1 - nu**2/x**2), t)
     assert hermite_reduce(Poly(x**2*t**5 + x*t**4 - nu**2*t**3 - x*(x**2 + 1)*t**2 -
-        (x**2 - nu**2)*t - x**5/4, t), Poly(x**2*t**4 + x**2*(x**2 + 2)*t**2 + x**2 +
-        x**4 + x**6/4, t), D, x, t) == \
+    (x**2 - nu**2)*t - x**5/4, t), Poly(x**2*t**4 + x**2*(x**2 + 2)*t**2 + x**2 +
+    x**4 + x**6/4, t), D, x, t) == \
         ((Poly(-1 - x**2/4, t), Poly(t**2 + 1 + x**2/2, t)),
         (Poly((-2*nu**2 - x**4)/(2*x**2)*t - (1 + x**2)/x, t),
         Poly(t**2 + 1 + x**2/2, t)), (Poly(t + 1/x, t), Poly(1, t)))
@@ -75,3 +76,16 @@ def test_polynomial_reduce():
     assert polynomial_reduce(Poly(0, t), D, x, t) == \
         (Poly(0, t, domain='ZZ'), Poly(0, t, domain='ZZ'))
 
+def test_residue_reduce():
+    a = Poly(2*t**2 - t - x**2, t)
+    d = Poly(t**3 - x**2*t, t)
+    D = Poly(1/x, t)
+    assert residue_reduce(a, d, D, x, t, z) == \
+        ([(Poly(-x**2 + 4*x**2*z**2, t, domain='ZZ[x,z]'),
+        Poly((1 + 3*x*z - 6*z**2 - 2*x**2 + 4*x**2*z**2)*t - x*z + x**2 +
+        2*x**2*z**2 - 2*z*x**3, t, domain='ZZ[x,z]'))], False)
+    D = Poly(-t**2 - t/x - (1 - nu**2/x**2), t)
+    assert residue_reduce(Poly((-2*nu**2 - x**4)/(2*x**2)*t - (1 + x**2)/x, t),
+    Poly(t**2 + 1 + x**2/2, t), D, x, t, z) == \
+        ([(Poly(2 + 4*z, t, domain='EX'), Poly(t**2 + 1 + x**2/2, t,
+        domain='QQ[x]'))], True)

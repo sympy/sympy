@@ -73,7 +73,7 @@ def splitfactor(p, D, x, t, coefficientD=False):
     One = Poly(1, t)
     Dp = derivation(p, D, x, t, coefficientD)
     if not p.has_any_symbols(t):
-        s = p.gcd(Dp)
+        s = p.as_poly(1/x).gcd(Dp.as_poly(1/x)).as_poly(t)
         n = p.quo(s)
         return (n, s)
 
@@ -101,12 +101,14 @@ def splitfactor_sqf(p, D, x, t, coefficientD=False):
     factorization of p and the Ni and Si are square-free and coprime.
     """
     # TODO: This algorithm appears to be faster in every case
-#    from pudb import set_trace; set_trace() # Debugging
     S = []
     N = []
-    p_sqf = p.as_poly(t).sqf_list_include()
+    p_sqf = p.sqf_list_include()
     for pi, i in p_sqf:
-        Si = pi.gcd(derivation(pi, D, x, t, coefficientD))
+        Si = pi.as_poly(1/x, x).gcd(derivation(pi, D, x, t,
+            coefficientD).as_poly(1/x, x)).as_poly(t)
+        pi = Poly(pi, t)
+        Si = Poly(Si, t)
         Ni = pi.quo(Si)
         if not Si.is_one:
             S.append((Si, i))
@@ -143,7 +145,6 @@ def hermite_reduce(a, d, D, x, t):
     that f = Dg + h + r, h is simple, and r is reduced.
     """
     # TODO: Rewrite this using Mack's linear version
-    from pudb import set_trace; set_trace() # Debugging
     # Make d monic
     l = Poly(1/d.LC(), t)
     a, d = a.mul(l), d.mul(l)
@@ -202,3 +203,61 @@ def polynomial_reduce(p, D, x, t):
     q, r = polynomial_reduce(p - derivation(q0, D, x, t), D, x, t)
 
     return (q0 + q, r)
+
+def residue_reduce(a, d, D, x, t, z=None):
+    """
+    Lazard-Rioboo-Rothstein-Trager resultant reduction.
+
+    Given a derivation D on k(t) and f in k(t) simple, return g elementary
+    over k(t) and a Boolean b in {True, False} such that f - Dg in k[t] if
+    b == True or f + h and f + h - Dg do not have an elementary integral over
+    k(t) for any h in k<t> (reduced) if b == False.
+
+    Returns (G, b), where G is a tuple of tuples of the form
+    (s_i, S_i), such that g = Add(*[RootSum(s_i, lambda x: S_i(x, t)) for S_i,
+    s_i in G]). f - Dg is the remianing integral, which is elementary if and
+    only if b == True, and hence the integral of f is elementary if and only if
+    b == True.
+
+    f - Dg is not calculated in this function because that would require
+    explicitly calculating the RootSum.
+    """
+#    from pudb import set_trace; set_trace() # Debugging
+
+    p, a = a.div(d)
+    z = z or Symbol('z', dummy=True)
+
+    pz = Poly(z, t, z)
+
+    Dd = derivation(d, D, x, t)
+    q = a - pz*Dd
+
+    if Dd.degree(t) <= d.degree(t):
+        # TODO: Optimize dmp_resultant and dmp_subresultants
+        R = d.subresultants(q)
+        r = d.resultant(q)
+    else:
+        R = q.subresultants(d)
+        r = q.resultant(d)
+
+    Np, Sp = splitfactor_sqf(r, D, x, t, coefficientD=True)
+    S = []
+
+    for s, i in Sp:
+        if i == d.degree(t):
+          S.append((s, d))
+        else:
+            h = R[-i - 1]
+            h_lc = Poly(h.as_poly(t).LC(), t, field=True)
+
+            h_lc_sqf = h_lc.sqf_list_include(all=True)
+
+            for a, j in h_lc_sqf:
+                h = h.as_poly(t).quo(Poly(gcd(a, s**j, x, 1/x), t))
+
+            S.append((s, h))
+        # TODO: Invert the leading term
+#            inv, coeffs = h_lc.invert(s),
+    b = all([not cancel(i.as_basic()).has_any_symbols(t, z) for i, _ in Np])
+
+    return (S, b)
