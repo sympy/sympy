@@ -77,6 +77,7 @@ from sympy.core.basic import Basic
 from sympy.printing.ccode import ccode
 from sympy.printing.fcode import FCodePrinter
 from sympy.tensor import Idx, Indexed
+from sympy.core.relational import Equality
 
 from StringIO import StringIO
 import sympy, os
@@ -119,8 +120,9 @@ class Routine(object):
              results  -- The return values. See Result class.
         """
         if len(results) == 0:
-            # This condition will be updated when we support output arguments.
-            raise ValueError("At least one result is required.")
+            if not [ arg for arg in arguments if isinstance(
+                arg, (OutputArgument, InOutArgument))]:
+                raise ValueError("At least one result is required.")
         self.name = name
         self.arguments = arguments
         self.results = results
@@ -154,7 +156,26 @@ class Argument(object):
        This structure is refined in the descendants below.
     """
 
-    def __init__(self, name, datatype, dimensions, precision):
+    def __init__(self, name, datatype=None, dimensions=None, precision=None):
+        """Initialize an input argument.
+
+           name  --  must be of class Symbol
+           datatype  --  When not given, the data type will be guessed based
+                         on the assumptions on the symbol argument.
+           dimension  --  If present, the argument is interpreted as an array.
+                          Dimensions must be a sequence containing tuples
+                          of first and last index in the range.
+           precision  --  FIXME
+        """
+
+        if not isinstance(name, Symbol):
+            raise TypeError("The first argument must be a sympy symbol.")
+        if datatype is None:
+            datatype = get_default_datatype(name)
+        elif not isinstance(datatype, DataType):
+            raise TypeError("The (optional) `datatype' argument must be an instance of the DataType class.")
+        if dimensions and not isinstance(dimensions, (tuple, list)):
+            raise TypeError("The dimension argument must be a sequence of tuples")
         self.name = name
         self.datatype = datatype
         self.dimensions = dimensions
@@ -162,33 +183,21 @@ class Argument(object):
 
 
 class InputArgument(Argument):
-    """An input argument."""
-    def __init__(self, symbol, datatype=None, dimensions=None, precision=None):
-        """Initialize an input argument.
+    pass
+class OutputArgument(Argument):
+    def __init__(self, name, result_var, expr, datatype=None, dimensions=None, precision=None):
+        Argument.__init__(self, name, datatype, dimensions, precision)
+        self.expr = expr
+        self.result_var = result_var
 
-           symbol  --  must be of class Symbol
-           datatype  --  When not given, the data type will be guessed based
-                         on the assumptions on the symbol argument.
-           dimension  --  If present, the argument is interpreted as an array.
-                          Dimensions must be a sequence containing tuples
-                          of first and last index in the range.
-           precision  --  FIXME
-
-        """
-        if not isinstance(symbol, Symbol):
-            raise TypeError("The first argument must be a sympy symbol.")
-        if datatype is None:
-            datatype = get_default_datatype(symbol)
-        elif not isinstance(datatype, DataType):
-            raise TypeError("The (optional) `datatype' argument must be an instance of the DataType class.")
-        if dimensions and not isinstance(dimensions, (tuple, list)):
-            raise TypeError("The dimension argument must be a sequence of tuples")
-        self.symbol = symbol
-        Argument.__init__(self, self.symbol.name, datatype, dimensions, precision)
-
+class InOutArgument(Argument):
+    def __init__(self, name, result_var, expr, datatype=None, dimensions=None, precision=None):
+        Argument.__init__(self, name, datatype, dimensions, precision)
+        self.expr = expr
+        self.result_var = result_var
 
 class Result(object):
-    """An expression for a return value.
+    """An expression for a scalar return value.
 
        The name result is used to avoid conflicts with the reserved word
        'return' in the python language. It is also shorter than ReturnValue.
@@ -468,12 +477,7 @@ class FCodeGen(CodeGen):
         return " ".join(prototype)
 
     def _get_result(self, routine):
-        """Returns a single result object, which can be None.
-
-           If the routine has multiple result objects, an CodeGenError is
-           raised.
-
-           See: http://en.wikipedia.org/wiki/Function_prototype
+        """Returns a single result object, which can be return value or outargument
         """
 
         if len(routine.results) > 1:
@@ -481,7 +485,12 @@ class FCodeGen(CodeGen):
         elif len(routine.results) == 1:
             result = routine.results[0]
         else:
-            result = None
+            outargs = [ arg for arg in routine.arguments if
+                    isinstance(arg, (OutputArgument, InOutArgument))]
+            if len(outargs) == 1:
+                result = outargs[0]
+            else:
+                raise CodeGenError("FIXME: need one and only one result object. Got %s"%len(outargs))
 
         return result
 
@@ -525,8 +534,10 @@ class FCodeGen(CodeGen):
             code_lines = self._get_routine_opening(routine)
 
             result = self._get_result(routine)
-            if result is None:
-                raise CodeGenError("FIXME: why calculate without storing result?")
+            if isinstance(result, Result):
+                result_var = routine.name
+            elif isinstance(result, (OutputArgument, InOutArgument)):
+                junk, junk, result_var = self._printer.doprint(result.result_var)
 
             openloop, closeloop = self._get_loop_opening_ending(result)
             constants, comments, f_expr = self._printer.doprint(result.expr)
@@ -534,7 +545,7 @@ class FCodeGen(CodeGen):
             code_lines.extend(constants)
             # code_lines.extend(comments)
             code_lines.extend(openloop)
-            code_lines.append("%s = %s\n" %(routine.name, f_expr))
+            code_lines.append("%s = %s\n" %(result_var, f_expr))
             code_lines.extend(closeloop)
 
             code_lines = self._printer.indent_code(code_lines)
@@ -593,7 +604,9 @@ def codegen(name_expr, language, prefix, project="project", to_files=False, head
        Mandatory Arguments:
          name_expr  --  A single (name, expression) tuple or a list of
                         (name, expression) tuples. Each tuple corresponds to a
-                        routine
+                        routine.  If the expression is an equality (an
+                        insance of class Equality) the left hand side is considered
+                        an output argument.
          language  --  A string that indicates the source code language. This
                        is case insensitive. For the moment, only 'C' is
                        supported.
@@ -649,6 +662,25 @@ def codegen(name_expr, language, prefix, project="project", to_files=False, head
         name_expr = [name_expr]
     for name, expr in name_expr:
 
+        # output argument or return value?
+        if isinstance(expr, Equality):
+            out_arg = expr.lhs
+            expr = expr.rhs
+            if isinstance(out_arg, Indexed):
+                dims = out_arg.dimensions
+                symbol = out_arg.label
+            elif isinstance(out_arg, Symbol):
+                dims = []
+                symbol = out_arg
+            else:
+                raise CodeGenError("Only Indexed or Symbol can define output arguments")
+
+            out_args = [OutputArgument(symbol, out_arg, expr, dimensions=dims)]
+            return_val = []
+        else:
+            out_args = []
+            return_val = [Result(expr)]
+
         # setup input argument list
         symbols = expr.atoms(Symbol)
         array_symbols = {}
@@ -670,8 +702,10 @@ def codegen(name_expr, language, prefix, project="project", to_files=False, head
 
             arg_list.append(InputArgument(symbol, **metadata))
 
+        arg_list.extend(out_args)
 
-        routines.append(Routine(name, arg_list, [Result(expr)]))
+
+        routines.append(Routine(name, arg_list, return_val))
 
     # Write the code.
     return code_gen.write(routines, prefix, to_files, header, empty)
