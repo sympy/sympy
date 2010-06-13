@@ -25,6 +25,7 @@ from sympy.core.numbers import NumberSymbol
 from sympy.functions import sin, cos, tan, asin, acos, atan, atan2, sinh, \
     cosh, tanh, sqrt, log, exp, abs, sign, conjugate, Piecewise
 from sympy.utilities.iterables import postorder_traversal
+from sympy.tensor import Idx
 
 
 implicit_functions = set([
@@ -74,6 +75,23 @@ class FCodePrinter(StrPrinter):
                 result.append(self._lead_code + line)
         return result
 
+    def _get_loop_opening_ending_ints(self, expr):
+        """Returns a tuple (open_lines, close_lines) containing lists of codelines
+        """
+
+        indices = expr.atoms(Idx)
+        # FIXME: sort indices in an optimized way
+        open_lines = []
+        close_lines = []
+        local_ints = set([])
+        for i in indices:
+            # fortran arrays start at 1 and end at dimension
+            open_lines.append("do %s = %s, %s" % (i.label, i.lower+1, i.upper+1))
+            close_lines.append("end do")
+            local_ints.add(self._print(i.label))
+        return open_lines, close_lines, local_ints
+
+
     def doprint(self, expr):
         """Returns Fortran code for expr (as a string)"""
         # find all number symbols
@@ -88,7 +106,12 @@ class FCodePrinter(StrPrinter):
         # Fortran.
         self._not_fortran = set([])
 
+
+        # Setup loops if expression contain Indexed objects
+        openloop, closeloop, local_ints = self._get_loop_opening_ending_ints(expr)
+
         lines = []
+
         if isinstance(expr, Piecewise):
             # support for top-level Piecewise function
             for i, (e, c) in enumerate(expr.args):
@@ -99,36 +122,45 @@ class FCodePrinter(StrPrinter):
                 else:
                     lines.append("else if (%s) then" % self._print(c))
                 if self._settings["assign_to"] is None:
+                    lines.extend(openloop)
                     lines.append("  %s" % self._print(e))
+                    lines.extend(closeloop)
                 else:
+                    lines.extend(openloop)
                     lines.append("  %s = %s" % (self._settings["assign_to"], self._print(e)))
+                    lines.extend(closeloop)
             lines.append("end if")
-            text = "\n".join(lines)
         else:
+            lines.extend(openloop)
             line = StrPrinter.doprint(self, expr)
             if self._settings["assign_to"] is None:
                 text = "%s" % line
             else:
                 text = "%s = %s" % (self._settings["assign_to"], line)
+            lines.append(text)
+            lines.extend(closeloop)
 
+        if local_ints:
+            lines.insert(0, "integer %s\n" % ", ".join(local_ints))
 
         # format the output
         if self._settings["human"]:
-            lines = []
+            frontlines = []
             if len(self._not_fortran) > 0:
-                lines.append("! Not Fortran:")
+                frontlines.append("! Not Fortran:")
                 for expr in sorted(self._not_fortran):
-                    lines.append("! %s" % expr)
+                    frontlines.append("! %s" % expr)
             for name, value in number_symbols:
-                lines.append("parameter (%s = %s)" % (name, value))
-            lines.extend(text.split("\n"))
+                frontlines.append("parameter (%s = %s)" % (name, value))
+            frontlines.extend(lines)
+            lines = frontlines
             lines = self._pad_leading_columns(lines)
             lines = self._wrap_fortran(lines)
             lines = self.indent_code(lines)
             result = "\n".join(lines)
         else:
-            text = self._pad_leading_columns([text])
-            lines = self._wrap_fortran(text)
+            lines = self._pad_leading_columns(lines)
+            lines = self._wrap_fortran(lines)
             lines = self.indent_code(lines)
             result = number_symbols, self._not_fortran, "\n".join(lines)
 

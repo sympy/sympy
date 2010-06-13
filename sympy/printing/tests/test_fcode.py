@@ -4,6 +4,7 @@ from sympy import Catalan, EulerGamma, E, GoldenRatio, I, pi
 from sympy import Function, Rational, Integer
 
 from sympy.printing.fcode import fcode, FCodePrinter
+from sympy.tensor import Indexed, Idx
 
 
 def test_printmethod():
@@ -240,3 +241,34 @@ def test_free_form_comment_line():
         '! This is a long comment on a single line that must be wrapped properly',
         '! to produce nice output']
     assert printer._wrap_fortran(lines) == expected
+
+def test_loops():
+    from sympy import symbols
+    i,j,n,m = symbols('i j n m', integer=True)
+    A,x,y = symbols('A x y')
+    A = Indexed(A, Idx(i, m), Idx(j, n))
+    x = Indexed(x, Idx(j, n))
+    y = Indexed(y, Idx(i, m))
+
+    # human = False
+    printer = FCodePrinter({ 'source_format': 'free', 'assign_to':y, 'human':0})
+    expected = ([], set([A, x]), 'integer i, j\ndo i = 1, m\n   do j = 1, n\n      y(i) = A(i, j)*x(j)\n   end do\nend do')
+    code = printer.doprint(A*x)
+    assert expected == code
+
+    # human = True
+    printer = FCodePrinter({ 'source_format': 'free', 'assign_to':y, 'human':1})
+
+    expected = (
+            '! Not Fortran:\n'
+            '! x(j)\n'
+            '! A(i, j)\n'
+            'integer i, j\n'
+            'do i = 1, m\n'
+            '   do j = 1, n\n'
+            '      y(i) = A(i, j)*x(j)\n'
+            '   end do\n'
+            'end do'
+            )
+    code = printer.doprint(A*x)
+    assert expected == code

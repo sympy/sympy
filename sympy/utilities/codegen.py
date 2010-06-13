@@ -494,20 +494,6 @@ class FCodeGen(CodeGen):
 
         return result
 
-    def _get_loop_opening_ending(self, result):
-        """Returns a tuple (open_lines, close_lines) containing lists of codelines
-        """
-
-        indices = result.expr.atoms(Idx)
-        # FIXME: sort indices in an optimized way
-        open_lines = []
-        close_lines = []
-        for i in indices:
-            # fortran arrays start at 1 and end at dimension
-            open_lines.append("do %s = %s, %s\n" % (i.label, i.lower+1, i.upper+1))
-            close_lines.append("end do\n")
-        return open_lines, close_lines
-
     def dump_f95(self, routines, f, prefix, header=True, empty=True):
         """Write the F95 code file.
 
@@ -535,20 +521,17 @@ class FCodeGen(CodeGen):
 
             result = self._get_result(routine)
             if isinstance(result, Result):
-                result_var = routine.name
+                self._printer._settings['assign_to'] = routine.name
             elif isinstance(result, (OutputArgument, InOutArgument)):
-                junk, junk, result_var = self._printer.doprint(result.result_var)
+                self._printer._settings['assign_to'] = result.result_var
 
-            openloop, closeloop = self._get_loop_opening_ending(result)
             constants, comments, f_expr = self._printer.doprint(result.expr)
 
             code_lines.extend(constants)
             # code_lines.extend(comments)
-            code_lines.extend(openloop)
-            code_lines.append("%s = %s\n" %(result_var, f_expr))
-            code_lines.extend(closeloop)
+            code_lines.append("%s\n" % f_expr)
 
-            code_lines = self._printer.indent_code(code_lines)
+            # code_lines = self._printer.indent_code(code_lines)
 
             if empty: print >> f
             print >> f, ' '.join(code_lines),
@@ -683,6 +666,8 @@ def codegen(name_expr, language, prefix, project="project", to_files=False, head
 
         # setup input argument list
         symbols = expr.atoms(Symbol)
+        dummies = set([i.label for i in expr.atoms(Idx)])
+        symbols -= dummies
         array_symbols = {}
         for array in expr.atoms(Indexed):
             array_symbols[array.label] = array
