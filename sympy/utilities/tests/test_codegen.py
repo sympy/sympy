@@ -248,11 +248,11 @@ def test_simple_f_code():
     source = get_string(code_gen.dump_f95, [routine])
     expected = (
             "REAL*8 function test(x, y, z)\n"
-            " implicit none\n"
-            " REAL*8 :: x\n"
-            " REAL*8 :: y\n"
-            " REAL*8 :: z\n"
-            " test = z*(x + y)\n"
+            "implicit none\n"
+            "REAL*8 :: x\n"
+            "REAL*8 :: y\n"
+            "REAL*8 :: z\n"
+            "test = z*(x + y)\n"
             "end function\n"
     )
     assert source == expected
@@ -265,13 +265,13 @@ def test_simple_f_header():
     source = get_string(code_gen.dump_h, [routine])
     expected = (
             "interface\n"
-            " REAL*8 function test(x, y, z)\n"
-            " implicit none\n"
-            " REAL*8 :: x\n"
-            " REAL*8 :: y\n"
-            " REAL*8 :: z\n"
-            " end function\n"
-            " end interface\n"
+            "REAL*8 function test(x, y, z)\n"
+            "implicit none\n"
+            "REAL*8 :: x\n"
+            "REAL*8 :: y\n"
+            "REAL*8 :: z\n"
+            "end function\n"
+            "end interface\n"
     )
     assert source == expected
 
@@ -282,21 +282,21 @@ def test_simple_f_codegen():
     expected = [
        ("file.f90",
         "REAL*8 function test(x, y, z)\n"
-        " implicit none\n"
-        " REAL*8 :: x\n"
-        " REAL*8 :: y\n"
-        " REAL*8 :: z\n"
-        " test = z*(x + y)\n"
+        "implicit none\n"
+        "REAL*8 :: x\n"
+        "REAL*8 :: y\n"
+        "REAL*8 :: z\n"
+        "test = z*(x + y)\n"
         "end function\n"),
        ("file.h",
         "interface\n"
-        " REAL*8 function test(x, y, z)\n"
-        " implicit none\n"
-        " REAL*8 :: x\n"
-        " REAL*8 :: y\n"
-        " REAL*8 :: z\n"
-        " end function\n"
-        " end interface\n")
+        "REAL*8 function test(x, y, z)\n"
+        "implicit none\n"
+        "REAL*8 :: x\n"
+        "REAL*8 :: y\n"
+        "REAL*8 :: z\n"
+        "end function\n"
+        "end interface\n")
     ]
     assert result == expected
 
@@ -342,69 +342,69 @@ def test_intrinsic_math_codegen():
     assert result[0][0] == "file.f90"
     expected = (
             'REAL*8 function test_abs(x)\n'
-            ' implicit none\n'
-            ' REAL*8 :: x\n'
-            ' test_abs = abs(x)\n'
+            'implicit none\n'
+            'REAL*8 :: x\n'
+            'test_abs = abs(x)\n'
             'end function\n'
             'REAL*8 function test_acos(x)\n'
-            ' implicit none\n'
-            ' REAL*8 :: x\n'
-            ' test_acos = acos(x)\n'
+            'implicit none\n'
+            'REAL*8 :: x\n'
+            'test_acos = acos(x)\n'
             'end function\n'
             'REAL*8 function test_asin(x)\n'
-            ' implicit none\n'
-            ' REAL*8 :: x\n'
-            ' test_asin = asin(x)\n'
+            'implicit none\n'
+            'REAL*8 :: x\n'
+            'test_asin = asin(x)\n'
             'end function\n'
             'REAL*8 function test_atan(x)\n'
-            ' implicit none\n'
-            ' REAL*8 :: x\n'
-            ' test_atan = atan(x)\n'
+            'implicit none\n'
+            'REAL*8 :: x\n'
+            'test_atan = atan(x)\n'
             'end function\n'
             'REAL*8 function test_cos(x)\n'
-            ' implicit none\n'
-            ' REAL*8 :: x\n'
-            ' test_cos = cos(x)\n'
+            'implicit none\n'
+            'REAL*8 :: x\n'
+            'test_cos = cos(x)\n'
             'end function\n'
             'REAL*8 function test_cosh(x)\n'
-            ' implicit none\n'
-            ' REAL*8 :: x\n'
-            ' test_cosh = cosh(x)\n'
+            'implicit none\n'
+            'REAL*8 :: x\n'
+            'test_cosh = cosh(x)\n'
             'end function\n'
             'REAL*8 function test_log(x)\n'
-            ' implicit none\n'
-            ' REAL*8 :: x\n'
-            ' test_log = log(x)\n'
+            'implicit none\n'
+            'REAL*8 :: x\n'
+            'test_log = log(x)\n'
             'end function\n'
             'REAL*8 function test_ln(x)\n'
-            ' implicit none\n'
-            ' REAL*8 :: x\n'
-            ' test_ln = log(x)\n'
+            'implicit none\n'
+            'REAL*8 :: x\n'
+            'test_ln = log(x)\n'
             'end function\n'
             'REAL*8 function test_sin(x)\n'
-            ' implicit none\n'
-            ' REAL*8 :: x\n'
-            ' test_sin = sin(x)\n'
+            'implicit none\n'
+            'REAL*8 :: x\n'
+            'test_sin = sin(x)\n'
             'end function\n'
             'REAL*8 function test_sinh(x)\n'
-            ' implicit none\n'
-            ' REAL*8 :: x\n'
-            ' test_sinh = sinh(x)\n'
+            'implicit none\n'
+            'REAL*8 :: x\n'
+            'test_sinh = sinh(x)\n'
             'end function\n'
             'REAL*8 function test_sqrt(x)\n'
-            ' implicit none\n'
-            ' REAL*8 :: x\n'
-            ' test_sqrt = sqrt(x)\n'
+            'implicit none\n'
+            'REAL*8 :: x\n'
+            'test_sqrt = sqrt(x)\n'
             'end function\n'
             'REAL*8 function test_tan(x)\n'
-            ' implicit none\n'
-            ' REAL*8 :: x\n'
-            ' test_tan = tan(x)\n'
+            'implicit none\n'
+            'REAL*8 :: x\n'
+            'test_tan = tan(x)\n'
             'end function\n'
             'REAL*8 function test_tanh(x)\n'
-            ' implicit none\n'
-            ' REAL*8 :: x\n'
-            ' test_tanh = tanh(x)\n'
+            'implicit none\n'
+            'REAL*8 :: x\n'
+            'test_tanh = tanh(x)\n'
             'end function\n'
         )
     assert result[0][1] == expected
@@ -412,83 +412,83 @@ def test_intrinsic_math_codegen():
     assert result[1][0] == "file.h"
     expected =  (
             'interface\n'
-            ' REAL*8 function test_abs(x)\n'
-            ' implicit none\n'
-            ' REAL*8 :: x\n'
-            ' end function\n'
-            ' end interface\n'
+            'REAL*8 function test_abs(x)\n'
+            'implicit none\n'
+            'REAL*8 :: x\n'
+            'end function\n'
+            'end interface\n'
             'interface\n'
-            ' REAL*8 function test_acos(x)\n'
-            ' implicit none\n'
-            ' REAL*8 :: x\n'
-            ' end function\n'
-            ' end interface\n'
+            'REAL*8 function test_acos(x)\n'
+            'implicit none\n'
+            'REAL*8 :: x\n'
+            'end function\n'
+            'end interface\n'
             'interface\n'
-            ' REAL*8 function test_asin(x)\n'
-            ' implicit none\n'
-            ' REAL*8 :: x\n'
-            ' end function\n'
-            ' end interface\n'
+            'REAL*8 function test_asin(x)\n'
+            'implicit none\n'
+            'REAL*8 :: x\n'
+            'end function\n'
+            'end interface\n'
             'interface\n'
-            ' REAL*8 function test_atan(x)\n'
-            ' implicit none\n'
-            ' REAL*8 :: x\n'
-            ' end function\n'
-            ' end interface\n'
+            'REAL*8 function test_atan(x)\n'
+            'implicit none\n'
+            'REAL*8 :: x\n'
+            'end function\n'
+            'end interface\n'
             'interface\n'
-            ' REAL*8 function test_cos(x)\n'
-            ' implicit none\n'
-            ' REAL*8 :: x\n'
-            ' end function\n'
-            ' end interface\n'
+            'REAL*8 function test_cos(x)\n'
+            'implicit none\n'
+            'REAL*8 :: x\n'
+            'end function\n'
+            'end interface\n'
             'interface\n'
-            ' REAL*8 function test_cosh(x)\n'
-            ' implicit none\n'
-            ' REAL*8 :: x\n'
-            ' end function\n'
-            ' end interface\n'
+            'REAL*8 function test_cosh(x)\n'
+            'implicit none\n'
+            'REAL*8 :: x\n'
+            'end function\n'
+            'end interface\n'
             'interface\n'
-            ' REAL*8 function test_log(x)\n'
-            ' implicit none\n'
-            ' REAL*8 :: x\n'
-            ' end function\n'
-            ' end interface\n'
+            'REAL*8 function test_log(x)\n'
+            'implicit none\n'
+            'REAL*8 :: x\n'
+            'end function\n'
+            'end interface\n'
             'interface\n'
-            ' REAL*8 function test_ln(x)\n'
-            ' implicit none\n'
-            ' REAL*8 :: x\n'
-            ' end function\n'
-            ' end interface\n'
+            'REAL*8 function test_ln(x)\n'
+            'implicit none\n'
+            'REAL*8 :: x\n'
+            'end function\n'
+            'end interface\n'
             'interface\n'
-            ' REAL*8 function test_sin(x)\n'
-            ' implicit none\n'
-            ' REAL*8 :: x\n'
-            ' end function\n'
-            ' end interface\n'
+            'REAL*8 function test_sin(x)\n'
+            'implicit none\n'
+            'REAL*8 :: x\n'
+            'end function\n'
+            'end interface\n'
             'interface\n'
-            ' REAL*8 function test_sinh(x)\n'
-            ' implicit none\n'
-            ' REAL*8 :: x\n'
-            ' end function\n'
-            ' end interface\n'
+            'REAL*8 function test_sinh(x)\n'
+            'implicit none\n'
+            'REAL*8 :: x\n'
+            'end function\n'
+            'end interface\n'
             'interface\n'
-            ' REAL*8 function test_sqrt(x)\n'
-            ' implicit none\n'
-            ' REAL*8 :: x\n'
-            ' end function\n'
-            ' end interface\n'
+            'REAL*8 function test_sqrt(x)\n'
+            'implicit none\n'
+            'REAL*8 :: x\n'
+            'end function\n'
+            'end interface\n'
             'interface\n'
-            ' REAL*8 function test_tan(x)\n'
-            ' implicit none\n'
-            ' REAL*8 :: x\n'
-            ' end function\n'
-            ' end interface\n'
+            'REAL*8 function test_tan(x)\n'
+            'implicit none\n'
+            'REAL*8 :: x\n'
+            'end function\n'
+            'end interface\n'
             'interface\n'
-            ' REAL*8 function test_tanh(x)\n'
-            ' implicit none\n'
-            ' REAL*8 :: x\n'
-            ' end function\n'
-            ' end interface\n'
+            'REAL*8 function test_tanh(x)\n'
+            'implicit none\n'
+            'REAL*8 :: x\n'
+            'end function\n'
+            'end interface\n'
     )
     assert result[1][1] == expected
 
@@ -504,16 +504,16 @@ def test_intrinsic_math2_codegen():
     assert result[0][0] == "file.f90"
     expected = (
             'REAL*8 function test_atan2(x, y)\n'
-            ' implicit none\n'
-            ' REAL*8 :: x\n'
-            ' REAL*8 :: y\n'
-            ' test_atan2 = atan2(x, y)\n'
+            'implicit none\n'
+            'REAL*8 :: x\n'
+            'REAL*8 :: y\n'
+            'test_atan2 = atan2(x, y)\n'
             'end function\n'
             'REAL*8 function test_pow(x, y)\n'
-            ' implicit none\n'
-            ' REAL*8 :: x\n'
-            ' REAL*8 :: y\n'
-            ' test_pow = x**y\n'
+            'implicit none\n'
+            'REAL*8 :: x\n'
+            'REAL*8 :: y\n'
+            'test_pow = x**y\n'
             'end function\n'
             )
     assert result[0][1] == expected
@@ -521,19 +521,19 @@ def test_intrinsic_math2_codegen():
     assert result[1][0] == "file.h"
     expected = (
             'interface\n'
-            ' REAL*8 function test_atan2(x, y)\n'
-            ' implicit none\n'
-            ' REAL*8 :: x\n'
-            ' REAL*8 :: y\n'
-            ' end function\n'
-            ' end interface\n'
+            'REAL*8 function test_atan2(x, y)\n'
+            'implicit none\n'
+            'REAL*8 :: x\n'
+            'REAL*8 :: y\n'
+            'end function\n'
+            'end interface\n'
             'interface\n'
-            ' REAL*8 function test_pow(x, y)\n'
-            ' implicit none\n'
-            ' REAL*8 :: x\n'
-            ' REAL*8 :: y\n'
-            ' end function\n'
-            ' end interface\n'
+            'REAL*8 function test_pow(x, y)\n'
+            'implicit none\n'
+            'REAL*8 :: x\n'
+            'REAL*8 :: y\n'
+            'end function\n'
+            'end interface\n'
     )
     assert result[1][1] == expected
 
@@ -548,52 +548,52 @@ def test_complicated_codegen_f95():
     assert result[0][0] == "file.f90"
     expected = (
             'REAL*8 function test1(x, y, z)\n'
-            ' implicit none\n'
-            ' REAL*8 :: x\n'
-            ' REAL*8 :: y\n'
-            ' REAL*8 :: z\n'
-            ' test1 = 7*cos(y)**6*sin(x) + 7*cos(y)**6*tan(z) + 7*sin(x)**6*cos(y) + 7*sin(x) &\n'
-            '      **6*tan(z) + 7*tan(z)**6*cos(y) + 7*tan(z)**6*sin(x) + 42*cos(y) &\n'
-            '      **5*sin(x)*tan(z) + 42*sin(x)**5*cos(y)*tan(z) + 42*tan(z)**5*cos &\n'
-            '      (y)*sin(x) + 105*cos(y)**2*sin(x)**4*tan(z) + 105*cos(y)**2*tan(z &\n'
-            '      )**4*sin(x) + 105*cos(y)**4*sin(x)**2*tan(z) + 105*cos(y)**4*tan( &\n'
-            '      z)**2*sin(x) + 105*sin(x)**2*tan(z)**4*cos(y) + 105*sin(x)**4*tan &\n'
-            '      (z)**2*cos(y) + 140*cos(y)**3*sin(x)**3*tan(z) + 140*cos(y)**3* &\n'
-            '      tan(z)**3*sin(x) + 140*sin(x)**3*tan(z)**3*cos(y) + 21*cos(y)**5* &\n'
-            '      sin(x)**2 + 21*cos(y)**5*tan(z)**2 + 21*sin(x)**5*tan(z)**2 + &\n'
-            '      210*cos(y)**2*sin(x)**3*tan(z)**2 + 210*cos(y)**3*sin(x)**2*tan(z &\n'
-            '      )**2 + 35*cos(y)**4*sin(x)**3 + 35*cos(y)**4*tan(z)**3 + 35*sin(x &\n'
-            '      )**4*tan(z)**3 + 210*cos(y)**2*sin(x)**2*tan(z)**3 + 35*cos(y) &\n'
-            '      **3*sin(x)**4 + 35*cos(y)**3*tan(z)**4 + 35*sin(x)**3*tan(z)**4 + &\n'
-            '      21*cos(y)**2*sin(x)**5 + 21*cos(y)**2*tan(z)**5 + 21*sin(x)**2* &\n'
-            '      tan(z)**5 + cos(y)**7 + sin(x)**7 + tan(z)**7\n'
+            'implicit none\n'
+            'REAL*8 :: x\n'
+            'REAL*8 :: y\n'
+            'REAL*8 :: z\n'
+            'test1 = 7*cos(y)**6*sin(x) + 7*cos(y)**6*tan(z) + 7*sin(x)**6*cos(y) + &\n'
+            '      7*sin(x)**6*tan(z) + 7*tan(z)**6*cos(y) + 7*tan(z)**6*sin(x) + &\n'
+            '      42*cos(y)**5*sin(x)*tan(z) + 42*sin(x)**5*cos(y)*tan(z) + 42*tan( &\n'
+            '      z)**5*cos(y)*sin(x) + 105*cos(y)**2*sin(x)**4*tan(z) + 105*cos(y) &\n'
+            '      **2*tan(z)**4*sin(x) + 105*cos(y)**4*sin(x)**2*tan(z) + 105*cos(y &\n'
+            '      )**4*tan(z)**2*sin(x) + 105*sin(x)**2*tan(z)**4*cos(y) + 105*sin( &\n'
+            '      x)**4*tan(z)**2*cos(y) + 140*cos(y)**3*sin(x)**3*tan(z) + 140*cos &\n'
+            '      (y)**3*tan(z)**3*sin(x) + 140*sin(x)**3*tan(z)**3*cos(y) + 21*cos &\n'
+            '      (y)**5*sin(x)**2 + 21*cos(y)**5*tan(z)**2 + 21*sin(x)**5*tan(z) &\n'
+            '      **2 + 210*cos(y)**2*sin(x)**3*tan(z)**2 + 210*cos(y)**3*sin(x) &\n'
+            '      **2*tan(z)**2 + 35*cos(y)**4*sin(x)**3 + 35*cos(y)**4*tan(z)**3 + &\n'
+            '      35*sin(x)**4*tan(z)**3 + 210*cos(y)**2*sin(x)**2*tan(z)**3 + 35* &\n'
+            '      cos(y)**3*sin(x)**4 + 35*cos(y)**3*tan(z)**4 + 35*sin(x)**3*tan(z &\n'
+            '      )**4 + 21*cos(y)**2*sin(x)**5 + 21*cos(y)**2*tan(z)**5 + 21*sin(x &\n'
+            '      )**2*tan(z)**5 + cos(y)**7 + sin(x)**7 + tan(z)**7\n'
             'end function\n'
             'REAL*8 function test2(x, y, z)\n'
-            ' implicit none\n'
-            ' REAL*8 :: x\n'
-            ' REAL*8 :: y\n'
-            ' REAL*8 :: z\n'
-            ' test2 = cos(cos(cos(cos(cos(cos(cos(cos(x + y + z))))))))\n'
+            'implicit none\n'
+            'REAL*8 :: x\n'
+            'REAL*8 :: y\n'
+            'REAL*8 :: z\n'
+            'test2 = cos(cos(cos(cos(cos(cos(cos(cos(x + y + z))))))))\n'
             'end function\n'
     )
     assert result[0][1] == expected
     assert result[1][0] == "file.h"
     expected = (
             'interface\n'
-            ' REAL*8 function test1(x, y, z)\n'
-            ' implicit none\n'
-            ' REAL*8 :: x\n'
-            ' REAL*8 :: y\n'
-            ' REAL*8 :: z\n'
-            ' end function\n'
-            ' end interface\n'
+            'REAL*8 function test1(x, y, z)\n'
+            'implicit none\n'
+            'REAL*8 :: x\n'
+            'REAL*8 :: y\n'
+            'REAL*8 :: z\n'
+            'end function\n'
+            'end interface\n'
             'interface\n'
-            ' REAL*8 function test2(x, y, z)\n'
-            ' implicit none\n'
-            ' REAL*8 :: x\n'
-            ' REAL*8 :: y\n'
-            ' REAL*8 :: z\n'
-            ' end function\n'
-            ' end interface\n'
+            'REAL*8 function test2(x, y, z)\n'
+            'implicit none\n'
+            'REAL*8 :: x\n'
+            'REAL*8 :: y\n'
+            'REAL*8 :: z\n'
+            'end function\n'
+            'end interface\n'
     )
     assert result[1][1] == expected

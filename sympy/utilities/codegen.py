@@ -427,6 +427,7 @@ class FCodeGen(CodeGen):
         # name of the routine + arguments
         code_list.append("%s(%s)\n" % (routine.name,
             ", ".join("%s" % arg.name for arg in routine.arguments)))
+        code_list = [ " ".join(code_list) ]
 
         code_list.append('implicit none\n')
 
@@ -474,7 +475,7 @@ class FCodeGen(CodeGen):
         prototype.extend(self._get_routine_ending(routine))
         prototype.append("end interface\n")
 
-        return " ".join(prototype)
+        return "".join(prototype)
 
     def _get_result(self, routine):
         """Returns a single result object, which can be return value or outargument
@@ -534,11 +535,11 @@ class FCodeGen(CodeGen):
             # code_lines = self._printer.indent_code(code_lines)
 
             if empty: print >> f
-            print >> f, ' '.join(code_lines),
+            print >> f, ''.join(code_lines),
             if empty: print >> f
 
             code_lines = self._get_routine_ending(routine)
-            print >> f, ' '.join(code_lines),
+            print >> f, ''.join(code_lines),
 
             if empty: print >> f
         if empty: print >> f
