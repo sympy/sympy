@@ -74,10 +74,9 @@ printing.
 
 from sympy.core.symbol import Symbol
 from sympy.core.basic import Basic
-from sympy.utilities.iterables import postorder_traversal
 from sympy.printing.ccode import ccode
 from sympy.printing.fcode import FCodePrinter
-from sympy.tensor import Idx
+from sympy.tensor import Idx, Indexed
 
 from StringIO import StringIO
 import sympy, os
@@ -155,27 +154,37 @@ class Argument(object):
        This structure is refined in the descendants below.
     """
 
-    def __init__(self, name, datatype):
+    def __init__(self, name, datatype, dimensions, precision):
         self.name = name
         self.datatype = datatype
+        self.dimensions = dimensions
+        self.precision = precision
 
 
 class InputArgument(Argument):
-    """A (scalar) input argument."""
-    def __init__(self, symbol, datatype=None):
-        """Initialize a (scalar) input argument.
+    """An input argument."""
+    def __init__(self, symbol, datatype=None, dimensions=None, precision=None):
+        """Initialize an input argument.
 
-           The second argument is optional. When not given, the data type will
-           be guessed based on the assumptions on the symbol argument.
+           symbol  --  must be of class Symbol
+           datatype  --  When not given, the data type will be guessed based
+                         on the assumptions on the symbol argument.
+           dimension  --  If present, the argument is interpreted as an array.
+                          Dimensions must be a sequence containing tuples
+                          of first and last index in the range.
+           precision  --  FIXME
+
         """
         if not isinstance(symbol, Symbol):
             raise TypeError("The first argument must be a sympy symbol.")
         if datatype is None:
             datatype = get_default_datatype(symbol)
         elif not isinstance(datatype, DataType):
-            raise TypeError("The (optional) second argument must be an instance of the DataType class.")
+            raise TypeError("The (optional) `datatype' argument must be an instance of the DataType class.")
+        if dimensions and not isinstance(dimensions, (tuple, list)):
+            raise TypeError("The dimension argument must be a sequence of tuples")
         self.symbol = symbol
-        Argument.__init__(self, self.symbol.name, datatype)
+        Argument.__init__(self, self.symbol.name, datatype, dimensions, precision)
 
 
 class Result(object):
@@ -408,15 +417,27 @@ class FCodeGen(CodeGen):
 
         # name of the routine + arguments
         code_list.append("%s(%s)\n" % (routine.name,
-            ", ".join("%s" % arg.name for arg in routine.arguments)
-            ))
+            ", ".join("%s" % arg.name for arg in routine.arguments)))
 
         code_list.append('implicit none\n')
 
         # argument type declarations
-        code_list.extend(
-            ["%s :: %s\n" % (arg.datatype.fname, arg.name) for arg in routine.arguments]
-            )
+        array_list = []
+        scalar_list = []
+        for arg in routine.arguments:
+            typeinfo = arg.datatype.fname
+            if arg.dimensions:
+                # fortran arrays start at 1
+                dimstr = ", ".join(["%s:%s"%(dim[0]+1, dim[1]+1)
+                    for dim in arg.dimensions])
+                typeinfo += ", allocatable, dimension(%s)" % dimstr
+                array_list.append("%s :: %s\n" % (typeinfo, arg.name))
+            else:
+                scalar_list.append("%s :: %s\n" % (typeinfo, arg.name))
+
+        # scalars first, because they can be used in array declarations
+        code_list.extend(scalar_list)
+        code_list.extend(array_list)
 
         return code_list
 
@@ -627,11 +648,30 @@ def codegen(name_expr, language, prefix, project="project", to_files=False, head
         # single tuple is given, turn it into a singleton list with a tuple.
         name_expr = [name_expr]
     for name, expr in name_expr:
-        symbols = set([])
-        for sub in postorder_traversal(expr):
-            if isinstance(sub, Symbol):
-                symbols.add(sub)
-        routines.append(Routine(name, [InputArgument(symbol) for symbol in sorted(symbols)], [Result(expr)]))
+
+        # setup input argument list
+        symbols = expr.atoms(Symbol)
+        array_symbols = {}
+        for array in expr.atoms(Indexed):
+            array_symbols[array.label] = array
+        arg_list = []
+        for symbol in sorted(symbols):
+            if symbol in array_symbols:
+                dims = []
+                array = array_symbols[symbol]
+                for i in array.indices:
+                    if i.lower == None:
+                        dims.append((S.Zero, S.Zero))
+                    else:
+                        dims.append((i.lower, i.upper))
+                metadata = {'dimensions': dims}
+            else:
+                metadata = {}
+
+            arg_list.append(InputArgument(symbol, **metadata))
+
+
+        routines.append(Routine(name, arg_list, [Result(expr)]))
 
     # Write the code.
     return code_gen.write(routines, prefix, to_files, header, empty)
