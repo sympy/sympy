@@ -1,4 +1,4 @@
-from sympy import symbols, raises
+from sympy import symbols, raises, Eq
 from sympy.utilities.codegen import CCodeGen, Routine, InputArgument, Result, \
     codegen, CodeGenError, FCodeGen
 from StringIO import StringIO
@@ -597,3 +597,47 @@ def test_complicated_codegen_f95():
             'end interface\n'
     )
     assert result[1][1] == expected
+
+def test_loops():
+    from sympy.tensor import Indexed, Idx
+    from sympy import symbols
+    i,j,n,m = symbols('i j n m', integer=True)
+    A,x,y = symbols('A x y')
+    A = Indexed(A, Idx(i, m), Idx(j, n))
+    x = Indexed(x, Idx(j, n))
+    y = Indexed(y, Idx(i, m))
+
+    (f1, code), (f2, interface) = codegen(
+            ('matrix_vector', Eq(y, A*x)), "F95", "file", header=False, empty=False)
+
+    assert f1 == 'file.f90'
+    assert code == (
+            'subroutine matrix_vector(A, m, n, x, y)\n'
+            'implicit none\n'
+            'INTEGER*4 :: m\n'
+            'INTEGER*4 :: n\n'
+            'REAL*8, allocatable, dimension(1:m, 1:n) :: A\n'
+            'REAL*8, allocatable, dimension(1:n) :: x\n'
+            'REAL*8, allocatable, dimension(1:m) :: y\n'
+            'integer i, j\n'
+            'do i = 1, m\n'
+            '   do j = 1, n\n'
+            '      y(i) = A(i, j)*x(j)\n'
+            '   end do\n'
+            'end do\n'
+            'end subroutine\n'
+            )
+
+    assert f2 == 'file.h'
+    assert interface == (
+            'interface\n'
+            'subroutine matrix_vector(A, m, n, x, y)\n'
+            'implicit none\n'
+            'INTEGER*4 :: m\n'
+            'INTEGER*4 :: n\n'
+            'REAL*8, allocatable, dimension(1:m, 1:n) :: A\n'
+            'REAL*8, allocatable, dimension(1:n) :: x\n'
+            'REAL*8, allocatable, dimension(1:m) :: y\n'
+            'end subroutine\n'
+            'end interface\n'
+            )
