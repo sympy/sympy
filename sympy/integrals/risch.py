@@ -192,17 +192,14 @@ def polynomial_reduce(p, D, x, t):
     Given a derivation D on k(t) and p in k[t] where t is a nonlinear monomial
     over k, return q, r in k[t] such that p = Dq  + r, and deg(r) < deg_t(Dt).
     """
-    # TODO: This can probably be written non-recursively
-#    from pudb import set_trace; set_trace() # Debugging
-    if p.degree(t) < D.degree(t):
-        return (Poly(0, t), p)
+    q = Poly(0, t)
+    while p.degree(t) >= D.degree(t):
+        m = p.degree(t) - D.degree(t) + 1
+        q0 = Poly(t**m, t).mul(Poly(p.as_poly(t).LC()/(m*D.as_poly(t).LC()), t))
+        q += q0
+        p = p - derivation(q0, D, x, t)
 
-    m = p.degree(t) - D.degree(t) + 1
-    q0 = Poly(t**m, t).mul(Poly(p.as_poly(t).LC()/(m*D.as_poly(t).LC()), t))
-
-    q, r = polynomial_reduce(p - derivation(q0, D, x, t), D, x, t)
-
-    return (q0 + q, r)
+    return (q, p)
 
 def residue_reduce(a, d, D, x, t, z=None, invert=True):
     """
