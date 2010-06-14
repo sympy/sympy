@@ -2,10 +2,10 @@
 from sympy import Poly, S
 from sympy.integrals.risch import (gcdexdiophantine, derivation, splitfactor,
     splitfactor_sqf, canonical_representation, hermite_reduce,
-    polynomial_reduce, residue_reduce)
+    polynomial_reduce, residue_reduce, integrate_hypertangent_polynomial)
 from sympy.utilities.pytest import XFAIL, skip
 
-from sympy.abc import x, t, nu, z
+from sympy.abc import x, t, nu, z, a
 
 def test_gcdexdiophantine():
     assert gcdexdiophantine(Poly(x**4 - 2*x**3 - 6*x**2 + 12*x + 15),
@@ -113,3 +113,11 @@ def test_residue_reduce():
     Poly(t**2 + 1 + x**2/2, t), D, x, t, z) == \
         ([(Poly(z + S(1)/2, z, domain='QQ'), Poly(t**2 + 1 + x**2/2, t,
         domain='QQ[x]'))], True)
+
+def test_integrate_hypertangent_polynomial():
+    D = Poly(t**2 + 1, t)
+    assert integrate_hypertangent_polynomial(Poly(t**2 + x*t + 1, t), D, x, t) == \
+        (Poly(t, t, domain='ZZ'), Poly(x/2, t, domain='QQ[x]'))
+    assert integrate_hypertangent_polynomial(Poly(t**5, t), Poly(a*(t**2 + 1), t), x, t) == \
+        (Poly(1/(4*a)*t**4 - 1/(2*a)*t**2, t, domain='ZZ(a)'),
+        Poly(1/(2*a), t, domain='ZZ(a)'))
