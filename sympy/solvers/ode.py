@@ -2210,7 +2210,7 @@ def ode_nth_linear_constant_coeff_homogeneous(eq, func, order, match, returns='s
     The following is for internal use:
 
     - returns = 'sol' returns the solution to the ODE.
-    - returns = 'list'  returns a list of linearly independent
+    - returns = 'list' returns a list of linearly independent
       solutions, for use with non homogeneous solution methods like
       variation of parameters and undetermined coefficients.  Note that,
       though the solutions should be linearly independent, this function
