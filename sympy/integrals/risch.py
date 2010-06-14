@@ -12,7 +12,7 @@ from sympy.functions import sqrt, erf
 from sympy.solvers import solve
 
 from sympy.polys import quo, gcd, lcm, \
-    monomials, factor, cancel, PolynomialError, Poly
+    monomials, factor, cancel, PolynomialError, Poly, reduced
 from sympy.polys.polyroots import root_factors
 
 from sympy.utilities.iterables import make_list
@@ -70,7 +70,7 @@ def splitfactor(p, D, x, t, coefficientD=False):
 
     Page. 100
     """
-    One = Poly(1, t)
+    One = Poly(1, t, domain=p.get_domain())
     Dp = derivation(p, D, x, t, coefficientD)
     if not p.has_any_symbols(t):
         s = p.as_poly(1/x).gcd(Dp.as_poly(1/x)).as_poly(t)
@@ -204,7 +204,7 @@ def polynomial_reduce(p, D, x, t):
 
     return (q0 + q, r)
 
-def residue_reduce(a, d, D, x, t, z=None):
+def residue_reduce(a, d, D, x, t, z=None, invert=True):
     """
     Lazard-Rioboo-Rothstein-Trager resultant reduction.
 
@@ -214,16 +214,14 @@ def residue_reduce(a, d, D, x, t, z=None):
     k(t) for any h in k<t> (reduced) if b == False.
 
     Returns (G, b), where G is a tuple of tuples of the form
-    (s_i, S_i), such that g = Add(*[RootSum(s_i, lambda x: S_i(x, t)) for S_i,
-    s_i in G]). f - Dg is the remianing integral, which is elementary if and
-    only if b == True, and hence the integral of f is elementary if and only if
-    b == True.
+    (s_i, S_i), such that g = Add(*[RootSum(s_i, lambda z: z*log(S_i(z, t))) for
+    S_i, s_i in G]). f - Dg is the remianing integral, which is elementary if
+    and only if b == True, and hence the integral of f is elementary if and only
+    if b == True.
 
     f - Dg is not calculated in this function because that would require
     explicitly calculating the RootSum.
     """
-#    from pudb import set_trace; set_trace() # Debugging
-
     p, a = a.div(d)
     z = z or Symbol('z', dummy=True)
 
@@ -233,17 +231,17 @@ def residue_reduce(a, d, D, x, t, z=None):
     q = a - pz*Dd
 
     if Dd.degree(t) <= d.degree(t):
-        # TODO: Optimize dmp_resultant and dmp_subresultants
         r, R = d.resultant(q, includePRS=True)
     else:
         r, R = q.resultant(d, includePRS=True)
 
     Np, Sp = splitfactor_sqf(r, D, x, t, coefficientD=True)
-    S = []
+    H = []
 
     for s, i in Sp:
         if i == d.degree(t):
-          S.append((s, d))
+            s = Poly(s, z).monic()
+            H.append((s, d))
         else:
             h = R[-i - 1]
             h_lc = Poly(h.as_poly(t).LC(), t, field=True)
@@ -253,9 +251,20 @@ def residue_reduce(a, d, D, x, t, z=None):
             for a, j in h_lc_sqf:
                 h = h.as_poly(t).quo(Poly(gcd(a, s**j, x, 1/x), t))
 
-            S.append((s, h))
-        # TODO: Invert the leading term
-#            inv, coeffs = h_lc.invert(s),
+            s = Poly(s, z).monic()
+
+            if invert:
+                h_lc = Poly(h.as_poly(t).LC(), t, field=True)
+                inv, coeffs = h_lc.as_poly(z).invert(s), [S(1)]
+
+                for coeff in h.coeffs()[1:]:
+                    T = reduced(inv*coeff, [s])[1]
+                    coeffs.append(T.as_basic())
+
+                h = Poly(dict(zip(h.monoms(), coeffs)), t)
+
+            H.append((s, h))
+
     b = all([not cancel(i.as_basic()).has_any_symbols(t, z) for i, _ in Np])
 
-    return (S, b)
+    return (H, b)

@@ -1,5 +1,5 @@
 """Most of these tests come from the examples in Bronstein's book."""
-from sympy import Poly
+from sympy import Poly, S
 from sympy.integrals.risch import (gcdexdiophantine, derivation, splitfactor,
     splitfactor_sqf, canonical_representation, hermite_reduce,
     polynomial_reduce, residue_reduce)
@@ -68,6 +68,19 @@ def test_hermite_reduce():
         ((Poly(-1 - x**2/4, t), Poly(t**2 + 1 + x**2/2, t)),
         (Poly((-2*nu**2 - x**4)/(2*x**2)*t - (1 + x**2)/x, t),
         Poly(t**2 + 1 + x**2/2, t)), (Poly(t + 1/x, t), Poly(1, t)))
+    D = Poly(1/x, t)
+    assert hermite_reduce(Poly(-t**2 + 2*t + 2, t),
+    Poly(-x*t**2 + 2*x*t - x, t), D, x, t) == \
+        ((Poly(3, t, domain='ZZ(x)'), Poly(t - 1, t, domain='ZZ(x)')),
+        (Poly(0, t, domain='ZZ(x)'), Poly(t - 1, t, domain='ZZ(x)')),
+        (Poly(1/x, t, domain='ZZ(x)'), Poly(1, t, domain='ZZ(x)')))
+    assert hermite_reduce(Poly(-x**2*t**6 + (-1 - 2*x**3 + x**4)*t**3 +
+    (-3 - 3*x**4)*t**2 - 2*x*t - x - 3*x**2, t, domain='ZZ[x]'),
+    Poly(x**4*t**6 - 2*x**2*t**3 + 1, t, domain='ZZ[x]'), D, x, t) == \
+        ((Poly(x**2*t + (1 + x**4)/x, t, domain='ZZ(x)'), Poly(x**2*t**3 - 1, t,
+        domain='ZZ(x)')), (Poly(0, t, domain='ZZ(x)'), Poly(t**3 - 1/x**2, t,
+        domain='ZZ(x)')), (Poly(-1/x**2, t, domain='ZZ(x)'), Poly(1, t, domain='ZZ(x)')))
+
 
 def test_polynomial_reduce():
     D = Poly(1 + t**2, t)
@@ -80,12 +93,23 @@ def test_residue_reduce():
     a = Poly(2*t**2 - t - x**2, t)
     d = Poly(t**3 - x**2*t, t)
     D = Poly(1/x, t)
-    assert residue_reduce(a, d, D, x, t, z) == \
-        ([(Poly(-x**2 + 4*x**2*z**2, t, domain='ZZ[x,z]'),
-        Poly((1 + 3*x*z - 6*z**2 - 2*x**2 + 4*x**2*z**2)*t - x*z + x**2 +
-        2*x**2*z**2 - 2*z*x**3, t, domain='ZZ[x,z]'))], False)
+    assert residue_reduce(a, d, D, x, t, z, invert=False) == \
+        ([(Poly(z**2 - S(1)/4, z, domain='ZZ(x)'), Poly((1 + 3*x*z - 6*z**2 -
+        2*x**2 + 4*x**2*z**2)*t - x*z + x**2 + 2*x**2*z**2 - 2*z*x**3, t,
+        domain='ZZ[x,z]'))], False)
+    assert residue_reduce(a, d, D, x, t, z, invert=True) == \
+        ([(Poly(z**2 - S(1)/4, z, domain='ZZ(x)'), Poly(t + 2*x*z, t,
+        domain='ZZ[x,z]'))], False)
+    assert residue_reduce(Poly(-2/x, t, domain='ZZ(x)'), Poly(t**2 - 1, t,
+    domain='ZZ(x)'), D, x, t, z, invert=False) == \
+        ([(Poly(z**2 - 1, z, domain='ZZ(x)'), Poly(-z*t - 1, t,
+        domain='ZZ(x,z)'))], True)
+    assert residue_reduce(Poly(-2/x, t, domain='ZZ(x)'), Poly(t**2 - 1, t,
+    domain='ZZ(x)'), D, x, t, z, invert=True) == \
+        ([(Poly(z**2 - 1, z, domain='ZZ(x)'), Poly(t + z, t,
+        domain='ZZ[z]'))], True)
     D = Poly(-t**2 - t/x - (1 - nu**2/x**2), t)
     assert residue_reduce(Poly((-2*nu**2 - x**4)/(2*x**2)*t - (1 + x**2)/x, t),
     Poly(t**2 + 1 + x**2/2, t), D, x, t, z) == \
-        ([(Poly(2 + 4*z, t, domain='EX'), Poly(t**2 + 1 + x**2/2, t,
+        ([(Poly(z + S(1)/2, z, domain='QQ'), Poly(t**2 + 1 + x**2/2, t,
         domain='QQ[x]'))], True)
