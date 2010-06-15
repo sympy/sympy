@@ -5,13 +5,6 @@ from evalf import EvalfMixin
 from decorators import _sympifyit, call_highest_priority
 from cache import cacheit
 
-def call_other(self, other):
-    if hasattr(other, '_op_priority'):
-        if other._op_priority > self._op_priority:
-            return True
-    return False
-
-
 class Expr(Basic, EvalfMixin):
     __slots__ = []
 
@@ -95,7 +88,6 @@ class Expr(Basic, EvalfMixin):
         re, im = result.as_real_imag()
         return complex(float(re), float(im))
 
-
     @_sympifyit('other', False) # sympy >  other
     def __lt__(self, other):
         dif = self - other
@@ -123,7 +115,6 @@ class Expr(Basic, EvalfMixin):
         if dif.is_nonnegative != dif.is_negative:
             return dif.is_nonnegative
         return C.Inequality(other, self)
-
 
     @staticmethod
     def _from_mpmath(x, prec):
@@ -188,7 +179,7 @@ class Expr(Basic, EvalfMixin):
     def removeO(self):
         "Removes the O(..) symbol if there is one"
         if self.is_Order:
-            return Integer(0)
+            return S.Zero
         for i,x in enumerate(self.args):
             if x.is_Order:
                 return Add(*(self.args[:i]+self.args[i+1:]))
@@ -280,12 +271,8 @@ class Expr(Basic, EvalfMixin):
             coeff = self.match(w * expr)
 
             if coeff is not None:
-                if expr.is_Mul:
-                    args = expr.args
-                else:
-                    args = [expr]
 
-                if coeff[w].has(*args):
+                if coeff[w].has(*Mul.make_args(expr)):
                     return None
                 else:
                     return coeff[w]
@@ -502,12 +489,12 @@ class Expr(Basic, EvalfMixin):
                     newargs.append(newarg)
                 else:
                     return None
-            return C.Add(*newargs)
+            return Add(*newargs)
         elif self.is_Mul:
             for i in xrange(len(self.args)):
                 newargs = list(self.args)
                 del(newargs[i])
-                tmp = C.Mul(*newargs).extract_multiplicatively(c)
+                tmp = Mul(*newargs).extract_multiplicatively(c)
                 if tmp != None:
                     return tmp * self.args[i]
         elif self.is_Pow:
@@ -599,11 +586,11 @@ class Expr(Basic, EvalfMixin):
                 if c_terms == self_terms:
                     new_coeff = self_coeff.extract_additively(c_coeff)
                     if new_coeff != None:
-                        return new_coeff * C.Mul(*self_terms)
+                        return new_coeff * Mul(*self_terms)
             elif c == self_terms:
                 new_coeff = self_coeff.extract_additively(1)
                 if new_coeff != None:
-                    return new_coeff * C.Mul(*self_terms)
+                    return new_coeff * Mul(*self_terms)
 
     def could_extract_minus_sign(self):
         """Canonical way to choose an element in the set {e, -e} where
@@ -825,10 +812,10 @@ class Expr(Basic, EvalfMixin):
         """
         from sympy import powsimp
         x = sympify(x)
-        c,e = self.as_leading_term(x).as_coeff_exponent(x)
+        c, e = self.as_leading_term(x).as_coeff_exponent(x)
         c = powsimp(c, deep=True, combine='exp')
         if not c.has(x):
-            return c,e
+            return c, e
         raise ValueError("cannot compute leadterm(%s, %s), got c=%s" % (self, x, c))
 
     ###################################################################################
@@ -1015,10 +1002,9 @@ class AtomicExpr(Atom, Expr):
         return self
 
 from mul import Mul
-from power import Pow
 from add import Add
+from power import Pow
 from relational import Inequality, StrictInequality
 from function import FunctionClass, Derivative
-from numbers import Rational, Integer
 from sympify import _sympify, sympify, SympifyError
 from symbol import Wild

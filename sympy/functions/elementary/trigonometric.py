@@ -1,4 +1,9 @@
-from sympy.core import S, C, sympify, Function, cacheit
+from sympy.core.cache import cacheit
+from sympy.core.add import Add
+from sympy.core.mul import Mul
+from sympy.core.basic import C, sympify
+from sympy.core.singleton import S
+from sympy.core.function import Function
 from miscellaneous import sqrt
 
 ###############################################################################
@@ -190,7 +195,7 @@ class sin(Function):
         else:
             coeff, terms = arg.as_coeff_mul()
             if not (coeff is S.One) and coeff.is_Integer and terms:
-                x = C.Mul(*terms)
+                x = Mul(*terms)
                 y = (coeff-1)*x
         if x is not None:
             return (sin(x)*cos(y) + sin(y)*cos(x)).expand(trig=True)
@@ -402,7 +407,7 @@ class cos(Function):
         else:
             coeff, terms = arg.as_coeff_mul()
             if not (coeff is S.One) and coeff.is_Integer and terms:
-                x = C.Mul(*terms)
+                x = Mul(*terms)
                 return C.chebyshevt(coeff, cos(x))
         return cos(arg)
 
@@ -606,7 +611,7 @@ class cot(Function):
 
     def fdiff(self, argindex=1):
         if argindex == 1:
-            return -S.One - self**2
+            return S.NegativeOne - self**2
         else:
             raise ArgumentIndexError(self, argindex)
 

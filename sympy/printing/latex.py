@@ -2,7 +2,7 @@
 A Printer which converts an expression into its LaTeX equivalent.
 """
 
-from sympy.core import S, C, Basic, Add, Wild, var
+from sympy.core import S, C, Basic, Add, Mul, Wild, var
 from printer import Printer
 from conventions import split_super_sub
 from sympy.simplify import fraction
@@ -204,7 +204,7 @@ class LatexPrinter(Printer):
             coeff = -coeff
             tex = "- "
 
-        numer, denom = fraction(C.Mul(*terms))
+        numer, denom = fraction(Mul(*terms))
         seperator = self._settings['mul_symbol_latex']
 
         def convert(terms):

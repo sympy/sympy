@@ -1,4 +1,4 @@
-from basic import Basic
+from basic import Basic, C
 from singleton import S
 from operations import AssocOp
 from cache import cacheit
@@ -157,43 +157,39 @@ class Mul(AssocOp):
         #  z - y    y
         # x      * x  will be left alone.  This is because checking every possible
         # combination can slow things down.
+
+        # gather exponents of common bases...
+        # in c_powers
         new_c_powers = []
         common_b = {} # b:e
 
-        # First gather exponents of common bases
         for b, e in c_powers:
             co = e.as_coeff_mul()
-            if b in common_b:
-                if  co[1] in common_b[b]:
-                    common_b[b][co[1]] += co[0]
-                else:
-                    common_b[b][co[1]] = co[0]
-            else:
-                common_b[b] = {co[1]:co[0]}
+            common_b.setdefault(b, {}).setdefault(co[1], []).append(co[0])
+        for b, d in common_b.items():
+            for di, li in d.items():
+                d[di] = Add(*li)
 
         for b,e, in common_b.items():
             for t, c in e.items():
                 new_c_powers.append((b,c*Mul(*t)))
         c_powers = new_c_powers
 
-        # And the same for numeric bases
+        # and in num_exp
         new_num_exp = []
         common_b = {} # b:e
+
         for b, e in num_exp:
             co = e.as_coeff_mul()
-            if b in common_b:
-                if  co[1] in common_b[b]:
-                    common_b[b][co[1]] += co[0]
-                else:
-                    common_b[b][co[1]] = co[0]
-            else:
-                common_b[b] = {co[1]:co[0]}
+            common_b.setdefault(b, {}).setdefault(co[1], []).append(co[0])
+        for b, d in common_b.items():
+            for di, li in d.items():
+                d[di] = Add(*li)
 
         for b,e, in common_b.items():
             for t, c in e.items():
                 new_num_exp.append((b,c*Mul(*t)))
         num_exp = new_num_exp
-
 
         # --- PART 2 ---
         #
@@ -228,10 +224,9 @@ class Mul(AssocOp):
         inv_exp_dict = {}   # exp:Mul(num-bases)     x    x
                             # e.g.  x:6  for  ... * 2  * 3  * ...
         for b,e in num_exp:
-            if e in inv_exp_dict:
-                inv_exp_dict[e] *= b
-            else:
-                inv_exp_dict[e] = b
+            inv_exp_dict.setdefault(e, []).append(b)
+        for e,b in inv_exp_dict.items():
+            inv_exp_dict[e] = Mul(*b)
 
         reeval = False
 
@@ -369,7 +364,7 @@ class Mul(AssocOp):
             elif e.is_Integer:
                 coeff, rest = b.as_coeff_mul()
                 if coeff == S.One:
-                    return
+                    return # the test below for even exponent needs coeff != 1
                 else:
                     return Mul(Pow(coeff, e), Pow(Mul(*rest), e))
 
@@ -418,6 +413,7 @@ class Mul(AssocOp):
 
         sums must be a list of instances of Basic.
         """
+
         L = len(sums)
         if L == 1:
             return sums[0].args
@@ -602,8 +598,7 @@ class Mul(AssocOp):
                 pp.remove(p)
 
         # only one symbol left in pattern -> match the remaining expression
-        from symbol import Wild
-        if len(pp) == 1 and isinstance(pp[0], Wild):
+        if len(pp) == 1 and isinstance(pp[0], C.Wild):
             if len(ee) == 1:
                 d[pp[0]] = sign * ee[0]
             else:

@@ -69,7 +69,7 @@ class gamma(Function):
         if arg.is_Add:
             for i, coeff in enumerate(arg.args):
                 if arg.args[i].is_Number:
-                    terms = C.Add(*(arg.args[:i] + arg.args[i+1:]))
+                    terms = Add(*(arg.args[:i] + arg.args[i+1:]))
 
                     if coeff.is_Rational:
                         if coeff.q != 1:

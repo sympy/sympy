@@ -206,8 +206,6 @@ class Add(AssocOp):
 
     @cacheit
     def as_two_terms(self):
-        if len(self.args) == 1:
-            return S.Zero, self
         return self.args[0], self._new_rawargs(*self.args[1:])
 
     def as_numer_denom(self):
@@ -216,7 +214,8 @@ class Add(AssocOp):
             numers.append(n)
             denoms.append(d)
         r = xrange(len(numers))
-        return Add(*[Mul(*(denoms[:i]+[numers[i]]+denoms[i+1:])) for i in r]),Mul(*denoms)
+        return Add(*[Mul(*(denoms[:i]+[numers[i]]+denoms[i+1:]))
+                     for i in r]), Mul(*denoms)
 
     def count_ops(self, symbolic=True):
         if symbolic:
@@ -295,13 +294,12 @@ class Add(AssocOp):
     def as_coeff_mul(self, x=None):
         # -2 + 2 * a -> -1, 2-2*a
         if self.args[0].is_Number and self.args[0].is_negative:
-            return -S.One,(-self,)
-        return S.One,(self,)
+            return S.NegativeOne, (-self,)
+        return S.One, (self,)
 
     def _eval_subs(self, old, new):
         if self == old:
             return new
-        from function import FunctionClass
         if isinstance(old, FunctionClass):
             return self.__class__(*[s._eval_subs(old, new) for s in self.args ])
         coeff_self, terms_self = self.as_coeff_add()
@@ -512,5 +510,6 @@ class Add(AssocOp):
         return s
 
 
+from function import FunctionClass
 from mul import Mul
 from symbol import Symbol

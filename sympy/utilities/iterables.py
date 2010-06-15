@@ -381,6 +381,7 @@ def numbered_symbols(prefix='x', function=None, start=0, *args, **assumptions):
     sym : Symbol
         The subscripted symbols.
     """
+
     if function is None:
         function = C.Symbol
 

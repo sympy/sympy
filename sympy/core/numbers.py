@@ -1792,18 +1792,18 @@ class ImaginaryUnit(AtomicExpr):
         if isinstance(e, Number):
             if isinstance(e, Integer):
                 e = e.p % 4
-                if e==0:
+                if e == 0:
                     return S.One
-                if e==1:
+                if e == 1:
                     return S.ImaginaryUnit
-                if e==2:
+                if e == 2:
                     return -S.One
                 return -S.ImaginaryUnit
-            return (-S.One) ** (e * S.Half)
+            return (S.NegativeOne) ** (e * S.Half)
         return
 
     def as_base_exp(self):
-        return -S.One, S.Half
+        return S.NegativeOne, S.Half
 
     def _sage_(self):
         import sage.all as sage

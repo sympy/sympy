@@ -173,9 +173,9 @@ def isprime(n):
     =============
     >>> from sympy.ntheory import isprime
     >>> isprime(13)
-        True
-        >>> isprime(15)
-        False
+    True
+    >>> isprime(15)
+    False
 
     """
     n = int(n)
