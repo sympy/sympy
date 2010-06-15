@@ -407,7 +407,7 @@ class Expr(Basic, EvalfMixin):
         return (C.re(self), C.im(self))
 
     def as_powers_dict(self):
-        return { self : S.One }
+        return dict([self.as_base_exp()])
 
     def as_base_exp(self):
         # a -> b ** e
