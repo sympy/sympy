@@ -386,7 +386,7 @@ class Integral(Expr):
             else:
                 return None
 
-        return C.Add(*parts)
+        return Add(*parts)
 
     def _eval_lseries(self, x, x0):
         arg = self.args[0]

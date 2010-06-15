@@ -207,40 +207,36 @@ def test_as_leading_term3():
     assert (2*x+pi*x+x**2).as_leading_term(x) == 2*x + pi*x
 
 def test_atoms():
-   assert sorted(list(x.atoms())) == [x]
-   assert sorted(list((1+x).atoms())) == sorted([1, x])
+    assert sorted(list(x.atoms())) == [x]
+    assert sorted(list((1+x).atoms())) == sorted([1, x])
 
-   assert sorted(list((1+2*cos(x)).atoms(Symbol))) == [x]
-   assert sorted(list((1+2*cos(x)).atoms(Symbol,Number))) == sorted([1, 2, x])
+    assert sorted(list((1+2*cos(x)).atoms(Symbol))) == [x]
+    assert sorted(list((1+2*cos(x)).atoms(Symbol,Number))) == sorted([1, 2, x])
 
-   assert sorted(list((2*(x**(y**x))).atoms())) == sorted([2, x, y])
+    assert sorted(list((2*(x**(y**x))).atoms())) == sorted([2, x, y])
 
-   assert sorted(list(Rational(1,2).atoms())) == [S.Half]
-   assert sorted(list(Rational(1,2).atoms(Symbol))) == []
+    assert sorted(list(Rational(1,2).atoms())) == [S.Half]
+    assert sorted(list(Rational(1,2).atoms(Symbol))) == []
 
-   assert sorted(list(sin(oo).atoms(oo))) == [oo]
+    assert sorted(list(sin(oo).atoms(oo))) == [oo]
 
-   assert sorted(list(Poly(0, x).atoms())) == [S.Zero]
-   assert sorted(list(Poly(1, x).atoms())) == [S.One]
+    assert sorted(list(Poly(0, x).atoms())) == [S.Zero]
+    assert sorted(list(Poly(1, x).atoms())) == [S.One]
 
-   assert sorted(list(Poly(x, x).atoms())) == [x]
-   assert sorted(list(Poly(x, x, y).atoms())) == [x]
-   assert sorted(list(Poly(x + y, x, y).atoms())) == sorted([x, y])
-   assert sorted(list(Poly(x + y, x, y, z).atoms())) == sorted([x, y])
-   assert sorted(list(Poly(x + y*t, x, y, z).atoms())) == sorted([t, x, y])
+    assert sorted(list(Poly(x, x).atoms())) == [x]
+    assert sorted(list(Poly(x, x, y).atoms())) == [x]
+    assert sorted(list(Poly(x + y, x, y).atoms())) == sorted([x, y])
+    assert sorted(list(Poly(x + y, x, y, z).atoms())) == sorted([x, y])
+    assert sorted(list(Poly(x + y*t, x, y, z).atoms())) == sorted([t, x, y])
 
-   I = S.ImaginaryUnit
-   assert list((I*pi).atoms(NumberSymbol)) == [pi]
-   assert sorted((I*pi).atoms(NumberSymbol, I)) == \
-          sorted((I*pi).atoms(I,NumberSymbol)) == [pi, I]
+    I = S.ImaginaryUnit
+    assert list((I*pi).atoms(NumberSymbol)) == [pi]
+    assert sorted((I*pi).atoms(NumberSymbol, I)) == \
+           sorted((I*pi).atoms(I,NumberSymbol)) == [pi, I]
 
-   I = S.ImaginaryUnit
-   assert list((I*pi).atoms(NumberSymbol)) == [pi]
-   assert sorted((I*pi).atoms(NumberSymbol, I)) == \
-          sorted((I*pi).atoms(I,NumberSymbol)) == [pi, I]
 
-   assert exp(exp(x)).atoms(exp) == set([exp(exp(x)), exp(x)])
-   assert (1 + x*(2 + y)+exp(3 + z)).atoms(Add) == set(
+    assert exp(exp(x)).atoms(exp) == set([exp(exp(x)), exp(x)])
+    assert (1 + x*(2 + y)+exp(3 + z)).atoms(Add) == set(
                                                    [1 + x*(2 + y)+exp(3 + z),
                                                     2 + y,
                                                     3 + z])
@@ -589,7 +585,6 @@ def test_is_number():
     a = A()
     assert a.is_number == False
 
-
 # TODO write more tests for as_coeff_factors
 def test_as_coeff_factors():
     x = Symbol('x')
@@ -598,7 +593,6 @@ def test_as_coeff_factors():
     assert (-1+x).as_coeff_factors() == (-1, (x,))
     assert ( 2+x).as_coeff_factors() == ( 2, (x,))
     assert ( 1+x).as_coeff_factors() == ( 1, (x,))
-
 
 def test_as_coeff_exponent():
     x, y = symbols("xy")

@@ -327,7 +327,7 @@ class KroneckerDelta(Function):
             return cls(j,i)
         diff = i-j
         if diff == 0:
-            return Integer(1)
+            return S.One
         elif diff.is_number:
             return S.Zero
 
@@ -1115,7 +1115,7 @@ class FockState(Expr):
     """
     Many particle Fock state with a sequence of occupation numbers.
 
-    Anywhere you can have a FockState, you can also have Integer(0).
+    Anywhere you can have a FockState, you can also have S.Zero.
     All code must check for this!
     """
 
@@ -1165,16 +1165,16 @@ class BosonState(FockState):
     def up(self, i):
         i = int(i)
         new_occs = list(self.args[0])
-        new_occs[i] = new_occs[i]+Integer(1)
+        new_occs[i] = new_occs[i]+S.One
         return self.__class__(new_occs)
 
     def down(self, i):
         i = int(i)
         new_occs = list(self.args[0])
-        if new_occs[i]==Integer(0):
-            return Integer(0)
+        if new_occs[i]==S.Zero:
+            return S.Zero
         else:
-            new_occs[i] = new_occs[i]-Integer(1)
+            new_occs[i] = new_occs[i]-S.One
             return self.__class__(new_occs)
 
 
@@ -1517,7 +1517,7 @@ class InnerProduct(Basic):
 
     @classmethod
     def eval(cls, bra, ket):
-        result = Integer(1)
+        result = S.One
         for i,j in zip(bra.args[0], ket.args[0]):
             result *= KroneckerDelta(i,j)
             if result == 0: break

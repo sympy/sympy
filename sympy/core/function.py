@@ -484,7 +484,7 @@ class WildFunction(Function, Atom):
     def __new__(cls, name=None, **assumptions):
         if name is None:
             name = 'Wf%s' % (C.Symbol.dummycount + 1) # XXX refactor dummy counting
-            Symbol.dummycount += 1
+            C.Symbol.dummycount += 1
         obj = Function.__new__(cls, name, **assumptions)
         obj.name = name
         return obj

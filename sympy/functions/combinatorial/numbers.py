@@ -7,7 +7,7 @@ Factorials, binomial coefficients and related functions are located in
 the separate 'factorials' module.
 """
 
-from sympy import Function, S, Symbol, Rational, oo, Integer, C
+from sympy import Function, S, Symbol, Rational, oo, Integer, C, Add
 
 from sympy.mpmath import bernfrac
 
@@ -257,7 +257,7 @@ class bernoulli(Function):
                     n, result = int(n), []
                     for k in xrange(n + 1):
                         result.append(C.Binomial(n, k)*cls(k)*sym**(n-k))
-                    return C.Add(*result)
+                    return Add(*result)
             else:
                 raise ValueError("Bernoulli numbers are defined only"
                                  " for nonnegative integer indices.")

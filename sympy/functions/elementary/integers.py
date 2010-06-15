@@ -1,6 +1,6 @@
 from sympy.core.basic import S, C
 from sympy.core.function import Function
-
+from sympy.core import Add
 from sympy.core.evalf import get_integer_part, PrecisionExhausted
 
 ###############################################################################
@@ -26,10 +26,7 @@ class RoundFunction(Function):
         ipart = npart = spart = S.Zero
 
         # Extract integral (or complex integral) terms
-        if arg.is_Add:
-            terms = arg.args
-        else:
-            terms = [arg]
+        terms = Add.make_args(arg)
 
         for t in terms:
             if t.is_integer or (t.is_imaginary and C.im(t).is_integer):
@@ -166,3 +163,4 @@ class ceiling(RoundFunction):
                 return r
         else:
             return r
+

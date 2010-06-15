@@ -164,7 +164,7 @@ def separate(expr, deep=False):
 
         if expr.base.is_Mul:
             t = [separate(C.Pow(t,expo), deep) for t in expr.base.args]
-            return C.Mul(*t)
+            return Mul(*t)
         elif expr.base.func is C.exp:
             if deep == True:
                 return C.exp(separate(expr.base[0], deep)*expo)
@@ -254,7 +254,7 @@ def together(expr, deep=False):
                         elif term.exp.is_Mul:
                             coeff, tail = term.exp.as_coeff_terms()
                             if coeff.is_Rational:
-                                tail = C.Mul(*tail)
+                                tail = Mul(*tail)
                                 term, expo = Pow(term.base, tail), coeff
                         coeff = S.One
                     elif term.func is C.exp:
@@ -263,7 +263,7 @@ def together(expr, deep=False):
                         elif term.args[0].is_Mul:
                             coeff, tail = term.args[0].as_coeff_terms()
                             if coeff.is_Rational:
-                                tail = C.Mul(*tail)
+                                tail = Mul(*tail)
                                 term, expo = C.exp(tail), coeff
                         coeff = S.One
                     elif term.is_Rational:
@@ -542,7 +542,7 @@ def collect(expr, syms, evaluate=True, exact=False):
                 coeff, tail = expr.exp.as_coeff_terms()
 
                 if coeff.is_Rational:
-                    rat_expo, sym_expo = coeff, C.Mul(*tail)
+                    rat_expo, sym_expo = coeff, Mul(*tail)
                 else:
                     sym_expo = expr.exp
             else:
@@ -554,7 +554,7 @@ def collect(expr, syms, evaluate=True, exact=False):
                 coeff, tail = expr.args[0].as_coeff_terms()
 
                 if coeff.is_Rational:
-                    sexpr, rat_expo = C.exp(C.Mul(*tail)), coeff
+                    sexpr, rat_expo = C.exp(Mul(*tail)), coeff
         elif isinstance(expr, Derivative):
             sexpr, deriv = parse_derivative(expr)
 
@@ -887,6 +887,7 @@ def trigsimp(expr, deep=False, recursive=False):
 
     deep:
     - Apply trigsimp inside functions
+
     recursive:
     - Use common subexpression elimination (cse()) and apply
     trigsimp recursively (recursively==True is quite expensive
@@ -1139,7 +1140,7 @@ def powsimp(expr, deep=False, combine='all'):
         else:
             return expr
     elif expr.is_Add:
-        return C.Add(*[powsimp(t, deep, combine) for t in expr.args])
+        return Add(*[powsimp(t, deep, combine) for t in expr.args])
 
     elif expr.is_Mul:
         if combine in ('exp', 'all'):
@@ -1202,7 +1203,7 @@ def powsimp(expr, deep=False, combine='all'):
                 b, e = c_powers[i]
                 exp_c, exp_t = e.as_coeff_terms()
                 if not (exp_c is S.One) and exp_t:
-                    c_powers[i] = [C.Pow(b, exp_c), C.Mul(*exp_t)]
+                    c_powers[i] = [C.Pow(b, exp_c), Mul(*exp_t)]
 
 
             # Combine bases whenever they have the same exponent
@@ -1243,7 +1244,8 @@ def powsimp(expr, deep=False, combine='all'):
                     if not in_c_powers:
                         c_powers.append([new_base, simpe])
             c_part = [C.Pow(b,e) for b,e in c_powers]
-            return C.Mul(*(c_part + nc_part))
+            return Mul(*(c_part + nc_part))
+
     else:
         return expr
 

@@ -397,7 +397,7 @@ class Basic(AssumeMeths):
 
            >>> from sympy import I, pi, sin
            >>> from sympy.abc import x, y
-           >>> set((1+x+2*sin(y+I*pi)).atoms())
+           >>> (1 + x + 2*sin(y + I*pi)).atoms()
            set([1, 2, pi, x, y, I])
 
            If one or more types are given, the results will contain only
@@ -406,16 +406,16 @@ class Basic(AssumeMeths):
            Examples::
 
            >>> from sympy import Number, NumberSymbol, Symbol
-           >>> (1+x+2*sin(y+I*pi)).atoms(Symbol)
+           >>> (1 + x + 2*sin(y + I*pi)).atoms(Symbol)
            set([x, y])
 
-           >>> (1+x+2*sin(y+I*pi)).atoms(Number)
+           >>> (1 + x + 2*sin(y + I*pi)).atoms(Number)
            set([1, 2])
 
-           >>> (1+x+2*sin(y+I*pi)).atoms(Number, NumberSymbol)
+           >>> (1 + x + 2*sin(y + I*pi)).atoms(Number, NumberSymbol)
            set([1, 2, pi])
 
-           >>> (1+x+2*sin(y+I*pi)).atoms(Number, NumberSymbol, I)
+           >>> (1 + x + 2*sin(y + I*pi)).atoms(Number, NumberSymbol, I)
            set([1, 2, pi, I])
 
            Note that I (imaginary unit) and zoo (complex infinity) are special
@@ -423,7 +423,7 @@ class Basic(AssumeMeths):
 
            The type can be given implicitly, too::
 
-           >>> (1+x+2*sin(y+I*pi)).atoms(x) # x is a Symbol
+           >>> (1 + x + 2*sin(y + I*pi)).atoms(x) # x is a Symbol
            set([x, y])
 
            Be careful to check your assumptions when using the implicit option
@@ -432,10 +432,10 @@ class Basic(AssumeMeths):
            integers in an expression::
 
            >>> from sympy import S
-           >>> (1+x+2*sin(y+I*pi)).atoms(S(1))
+           >>> (1 + x + 2*sin(y + I*pi)).atoms(S(1))
            set([1])
 
-           >>> (1+x+2*sin(y+I*pi)).atoms(S(2))
+           >>> (1 + x + 2*sin(y + I*pi)).atoms(S(2))
            set([1, 2])
 
            Finally, arguments to atoms() can select more than atomic atoms: any
@@ -444,15 +444,14 @@ class Basic(AssumeMeths):
            expression recursively::
 
            >>> from sympy import Function, Mul
-           >>> (1+x+2*sin(y+I*pi)).atoms(Function)
+           >>> (1 + x + 2*sin(y + I*pi)).atoms(Function)
            set([sin(y + pi*I)])
 
-           >>> (1+x+2*sin(y+I*pi)).atoms(Mul)
+           >>> (1 + x + 2*sin(y + I*pi)).atoms(Mul)
            set([2*sin(y + pi*I), pi*I])
 
 
         """
-
 
         def _atoms(expr, typ):
             """Helper function for recursively denesting atoms"""
@@ -507,13 +506,11 @@ class Basic(AssumeMeths):
            True
 
         """
-        result = False
-        for obj in self.iter_basic_args():
-            if obj.is_number:
-                result = True
-            else:
-                return False
-        return result
+        from sympy.utilities import all
+
+        if not self.args:
+            return False
+        return all(obj.is_number for obj in self.iter_basic_args())
 
     @property
     def func(self):
@@ -655,21 +652,15 @@ class Basic(AssumeMeths):
             return None
 
     def as_basic(self):
-        """Converts polynomial to a valid sympy expression.
+        """A method to be subclassed to return an object in basic form.
 
-           >>> from sympy import sin
-           >>> from sympy.abc import x, y
-
-           >>> p = (x**2 + x*y).as_poly(x, y)
-
-           >>> p.as_basic()
-           x*y + x**2
-
-           >>> f = sin(x)
-
-           >>> f.as_basic()
-           sin(x)
-
+        Example:
+        >>> from sympy import Poly
+        >>> from sympy.abc import x
+        >>> Poly(x)
+        Poly(x, x, domain='ZZ')
+        >>> _.as_basic()
+        x
         """
         return self
 
@@ -785,6 +776,7 @@ class Basic(AssumeMeths):
             else:
                 subst.append(pattern)
         subst.reverse()
+
         return self._subs_list(subst)
 
     def _seq_subs(self, old, new):

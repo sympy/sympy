@@ -1,7 +1,7 @@
 from sympy.core.basic import S, C
 from sympy.core.function import Function, Derivative
 from sympy.functions.elementary.miscellaneous import sqrt
-
+from sympy.core import Add, Mul
 from sympy.utilities.iterables import iff
 
 ###############################################################################
@@ -46,7 +46,7 @@ class re(Function):
         else:
 
             included, reverted, excluded = [], [], []
-            arg = C.Add.make_args(arg)
+            arg = Add.make_args(arg)
             for term in arg:
                 coeff = term.as_coefficient(S.ImaginaryUnit)
 
@@ -59,7 +59,7 @@ class re(Function):
                     included.append(term)
 
             if len(arg) != len(included):
-                a, b, c = map(lambda xs: C.Add(*xs),
+                a, b, c = map(lambda xs: Add(*xs),
                     [included, reverted, excluded])
 
                 return cls(a) - im(b) + c
@@ -119,7 +119,7 @@ class im(Function):
             return -im(arg.args[0])
         else:
             included, reverted, excluded = [], [], []
-            arg = C.Add.make_args(arg)
+            arg = Add.make_args(arg)
             for term in arg:
                 coeff = term.as_coefficient(S.ImaginaryUnit)
 
@@ -132,7 +132,7 @@ class im(Function):
                     included.append(term)
 
             if len(arg) != len(included):
-                a, b, c = map(lambda xs: C.Add(*xs),
+                a, b, c = map(lambda xs: Add(*xs),
                     [included, reverted, excluded])
 
                 return cls(a) + re(b) + c
@@ -186,7 +186,7 @@ class sign(Function):
                     is_neg = not is_neg
             if c is S.One and len(unk) == len(args):
                 return None
-            return iff(is_neg, S.NegativeOne, S.One) * cls(C.Mul(*unk))
+            return iff(is_neg, S.NegativeOne, S.One) * cls(Mul(*unk))
 
     is_bounded = True
 
@@ -237,7 +237,7 @@ class abs(Function):
         if arg.is_negative: return -arg
         coeff, terms = arg.as_coeff_terms()
         if coeff is not S.One:
-            return cls(coeff) * cls(C.Mul(*terms))
+            return cls(coeff) * cls(Mul(*terms))
         if arg.is_real is False:
             return sqrt( (arg * arg.conjugate()).expand() )
         if arg.is_Pow:

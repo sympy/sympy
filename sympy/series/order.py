@@ -1,4 +1,5 @@
 from sympy.core import Basic, S, C, sympify, Expr, oo, Rational, Symbol
+from sympy.core import Add, Mul
 from sympy.core.cache import cacheit
 
 def solve4linearsymbol(eqn, rhs, symbols = None):
@@ -11,7 +12,6 @@ def solve4linearsymbol(eqn, rhs, symbols = None):
     if eqn.is_Symbol:
         return (eqn, rhs)
     if symbols is None:
-        # TODO: Need test that calls this branch
         symbols = eqn.atoms(Symbol)
     if symbols:
         # find  symbol
@@ -150,13 +150,13 @@ class Order(Expr):
             else:
                 if expr.is_Add:
                     lst = expr.extract_leading_order(*symbols)
-                    expr = C.Add(*[f.expr for (e,f) in lst])
+                    expr = Add(*[f.expr for (e,f) in lst])
                 else:
                     expr = expr.as_leading_term(*symbols)
                     coeff, terms = expr.as_coeff_terms()
                     if coeff is S.Zero:
                         return coeff
-                    expr = C.Mul(*[t for t in terms if t.has(*symbols)])
+                    expr = Mul(*[t for t in terms if t.has(*symbols)])
 
         elif expr is not S.Zero:
             expr = S.One
