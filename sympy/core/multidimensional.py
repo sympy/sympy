@@ -3,6 +3,14 @@ Provides functionality for multidimensional usage of scalar-functions.
 
 Read the vectorize docstring for more details.
 """
+try:
+    # functools is not available in Python 2.4
+    import functools
+except ImportError:
+    has_functools = False
+else:
+    has_functools = True
+
 
 def apply_on_element(f, args, kwargs, n):
     """
@@ -53,7 +61,8 @@ def structure_copy(structure):
         return structure.copy()
     return iter_copy(structure)
 
-
+#FIXME: Is it possible to use the decorator function from the decorator module
+#       to make help(vectorized_funciton) give the original signature?
 class vectorize:
     """
     Generalizes a function taking scalars to accept multidimensional arguments.
@@ -127,4 +136,6 @@ class vectorize:
             return f(*args, **kwargs)
         wrapper.__doc__ = f.__doc__
         wrapper.__name__ = f.__name__
+        if has_functools:
+            wrapper = functools.update_wrapper(wrapper, f)
         return wrapper

@@ -1,6 +1,6 @@
 from basic import S, C
 from expr import Expr
-from sympify import _sympify
+from sympify import _sympify, sympify
 from cache import cacheit
 
 # from add import Add   /cyclic/
@@ -23,7 +23,10 @@ class AssocOp(Expr):
     @cacheit
     def __new__(cls, *args, **assumptions):
         if assumptions.get('evaluate') is False:
-            return Expr.__new__(cls, *map(_sympify, args), **assumptions)
+            args = map(_sympify, args)
+            obj = Expr.__new__(cls, *args, **assumptions)
+            obj.is_commutative = all(arg.is_commutative for arg in args)
+            return obj
         if len(args)==0:
             return cls.identity()
         if len(args)==1:
@@ -40,7 +43,6 @@ class AssocOp(Expr):
         if order_symbols is not None:
             obj = C.Order(obj, *order_symbols)
         return obj
-
 
     def _new_rawargs(self, *args):
         """create new instance of own class with args exactly as provided by caller
@@ -239,7 +241,7 @@ class LatticeOp(AssocOp):
     is_commutative = True
 
     def __new__(cls, *args, **assumptions):
-        args = (_sympify(arg) for arg in args)
+        args = (sympify(arg) for arg in args)
         try:
             _args = frozenset(cls._new_args_filter(args))
         except ShortCircuit:

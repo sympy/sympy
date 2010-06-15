@@ -1,7 +1,7 @@
 from sympy import Basic, S, Symbol, Wild,  Real, Integer, Rational,  \
     sin, cos, exp, log, oo, sqrt, symbols, Integral, sympify, \
     WildFunction, Poly, Function, Derivative, Number, pi, var, \
-    NumberSymbol, zoo, Piecewise, Mul
+    NumberSymbol, zoo, Piecewise, Mul, Pow
 
 from sympy.core.cache import clear_cache
 
@@ -739,3 +739,11 @@ def test_Basic_keep_sign():
     Basic.keep_sign = False
     assert Mul(x - 1, x + 1) == -(1 - x)*(1 + x)
     assert (1/(x - 1)).as_coeff_terms()[0] == -1
+
+def test_issue1864():
+    assert hasattr(Mul(x, y), "is_commutative")
+    assert hasattr(Mul(x, y, evaluate=False), "is_commutative")
+    assert hasattr(Pow(x, y), "is_commutative")
+    assert hasattr(Pow(x, y, evaluate=False), "is_commutative")
+    expr = Mul(Pow(2, 2, evaluate=False), 3, evaluate=False) + 1
+    assert hasattr(expr, "is_commutative")

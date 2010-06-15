@@ -4,8 +4,9 @@ import types
 from sympy.utilities.pytest import XFAIL
 
 from sympy.core.assumptions import AssumeMeths
-from sympy.core.basic import Atom, Basic, BasicMeta, BasicType,\
-        ClassesRegistry, SingletonFactory
+from sympy.core.basic import Atom, Basic
+from sympy.core.core import BasicMeta, BasicType, ClassesRegistry
+from sympy.core.singleton import SingletonFactory
 from sympy.core.symbol import Dummy, Symbol, Temporary, Wild
 from sympy.core.numbers import Catalan, ComplexInfinity, EulerGamma, Exp1,\
         GoldenRatio, Half, ImaginaryUnit, Infinity, Integer, NaN,\

@@ -26,11 +26,11 @@ ONE  = sympy.Rational(1)
 TWO  = sympy.Rational(2)
 HALF = sympy.Rational(1,2)
 
-sym_type = sympy.core.symbol.Symbol
-pow_type = sympy.core.power.Pow
-abs_type = sympy.abs
-mul_type = sympy.core.mul.Mul
-add_type = sympy.core.add.Add
+from sympy.core import Symbol as sym_type
+from sympy.core import Pow as pow_type
+from sympy import abs as abs_type
+from sympy.core import Mul as mul_type
+from sympy.core import Add as add_type
 
 global MAIN_PROGRAM
 

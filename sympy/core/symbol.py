@@ -1,4 +1,4 @@
-
+from sympify import sympify
 from basic import Atom, S, C
 from expr import Expr
 from cache import cacheit
@@ -290,5 +290,3 @@ def var(*names, **kwargs):
         # we should explicitly break cyclic dependencies as stated in inspect
         # doc
         del frame
-
-from sympify import sympify
