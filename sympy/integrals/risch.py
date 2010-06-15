@@ -11,8 +11,8 @@ from sympy.functions import sqrt, erf
 
 from sympy.solvers import solve
 
-from sympy.polys import quo, gcd, lcm, \
-    monomials, factor, cancel, PolynomialError, Poly, reduced
+from sympy.polys import (quo, gcd, lcm, monomials, factor, cancel,
+    PolynomialError, Poly, reduced, RootSum)
 from sympy.polys.polyroots import root_factors
 
 from sympy.utilities.iterables import make_list
@@ -21,6 +21,8 @@ from sympy.utilities.iterables import make_list
 #Zero = Poly(0, *V)
 
 #One = Poly(1, *V)
+
+#    from pudb import set_trace; set_trace() # Debugging
 
 def gcdexdiophantine(a, b, c):
     """
@@ -217,11 +219,13 @@ def residue_reduce(a, d, D, x, t, z=None, invert=True):
     if b == True.
 
     f - Dg is not calculated in this function because that would require
-    explicitly calculating the RootSum.
+    explicitly calculating the RootSum.  Use residue_reduce_derivation().
     """
     # If r = residue_reduce(...), then the logarithmic part is given by:
     # sum([RootSum(a[0].as_poly(z), lambda i: i*log(a[1].as_basic()).subs(z,
     # i)).subs(t, log(x)) for a in r[0]])
+    if a.is_zero:
+        return ([], True)
     p, a = a.div(d)
     z = z or Symbol('z', dummy=True)
 
@@ -255,7 +259,7 @@ def residue_reduce(a, d, D, x, t, z=None, invert=True):
 
             if invert:
                 h_lc = Poly(h.as_poly(t).LC(), t, field=True)
-                inv, coeffs = h_lc.as_poly(z).invert(s), [S(1)]
+                inv, coeffs = h_lc.as_poly(z, field=True).invert(s), [S(1)]
 
                 for coeff in h.coeffs()[1:]:
                     T = reduced(inv*coeff, [s])[1]
@@ -268,6 +272,24 @@ def residue_reduce(a, d, D, x, t, z=None, invert=True):
     b = all([not cancel(i.as_basic()).has_any_symbols(t, z) for i, _ in Np])
 
     return (H, b)
+
+def residue_reduce_to_basic(H, x, t, z, tfunc):
+    """
+    Converts the tuple returned by residue_reduce into a Basic expression.
+    """
+    return sum([RootSum(a[0].as_poly(z), lambda i:
+        i*log(a[1].as_basic()).subs(z, i)).subs(t, tfunc(x)) for a in H])
+
+def residue_reduce_derivation(H, D, x, t, z):
+    """
+    Computes the derivation of an expression returned by residue_reduce().
+
+    In general, this is a rational function, so this returns an as_basic()
+    result.
+    """
+    lambdafunc = lambda i: i*derivation(a[1], D, x, t).as_basic().subs(z, i)/ \
+        a[1].as_basic().subs(z, i)
+    return S(sum([RootSum(a[0].as_poly(z), lambdafunc) for a in H]))
 
 def integrate_hypertangent_polynomial(p, D, x, t):
     """
@@ -283,3 +305,34 @@ def integrate_hypertangent_polynomial(p, D, x, t):
     a = derivation(t, D, x, t).quo(Poly(t**2 + 1, t))
     c = Poly(r.nth(1)/(2*a.as_basic()), t)
     return (q, c)
+
+def integrate_nonlinear_no_specials(a, d, D, x, t, tfunc):
+    """
+    Integration of nonlinear monomials with no specials.
+
+    Given a nonlinear monomial t over k such that Sirr = p in k[t] such that p
+    is special, monic, and irreducible} is empty, and f in k(t), returns g
+    elementary over k(t) and a Boolean b in {True, False} such that f - Dg is in
+    k if b == True, or f - Dg does not have an elementary integral over k(t) if
+    b == False.
+
+    This function returns a Basic expression.
+    """
+    z = Symbol('z', dummy=True)
+    g1, h, r = hermite_reduce(a, d, D, x, t)
+    g2, b = residue_reduce(h[0], h[1], D, x, t, z=z)
+    if not b:
+        return ((g1[0].as_basic()/g2[1].as_basic()).subs(t, tfunc(x)) +
+                residue_reduce_to_basic(g2, t, z, tfunc))
+    # This should be a polynomial in t, or else there is a bug.
+    p = cancel(h[0].as_basic()/h[1].as_basic() - residue_reduce_derivation(g2,
+        D, x, t, z).as_basic() + r[0].as_basic()/r[1].as_basic()).as_poly(t)
+    q1, q2 = polynomial_reduce(p, D, x, t)
+
+    if q2.has(t):
+        b = False
+    else:
+        b = True
+    ret = cancel(g1[0].as_basic()/g1[1].as_basic() + q1.as_basic()).subs(t,
+        tfunc(x)) + residue_reduce_to_basic(g2, x, t, z, tfunc)
+    return (ret, b)

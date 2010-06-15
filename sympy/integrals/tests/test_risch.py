@@ -1,8 +1,9 @@
 """Most of these tests come from the examples in Bronstein's book."""
-from sympy import Poly, S
+from sympy import Poly, S, Function, log
 from sympy.integrals.risch import (gcdexdiophantine, derivation, splitfactor,
     splitfactor_sqf, canonical_representation, hermite_reduce,
-    polynomial_reduce, residue_reduce, integrate_hypertangent_polynomial)
+    polynomial_reduce, residue_reduce, integrate_hypertangent_polynomial,
+    integrate_nonlinear_no_specials,)
 from sympy.utilities.pytest import XFAIL, skip
 
 from sympy.abc import x, t, nu, z, a
@@ -113,6 +114,12 @@ def test_residue_reduce():
     Poly(t**2 + 1 + x**2/2, t), D, x, t, z) == \
         ([(Poly(z + S(1)/2, z, domain='QQ'), Poly(t**2 + 1 + x**2/2, t,
         domain='QQ[x]'))], True)
+    D = Poly(1 + t**2, t)
+    assert residue_reduce(Poly(-2*x*t + 1 - x**2, t, domain='ZZ(x)'),
+    Poly(t**2 + 2*x*t + 1 + x**2, t, domain='ZZ[x]'), D, x, t, z) == \
+        ([(Poly(z**2 + S(1)/4, z, domain='QQ'), Poly(t + x + 2*z, t,
+        domain='ZZ[x,z]'))], True)
+
 
 def test_integrate_hypertangent_polynomial():
     D = Poly(t**2 + 1, t)
@@ -121,3 +128,15 @@ def test_integrate_hypertangent_polynomial():
     assert integrate_hypertangent_polynomial(Poly(t**5, t), Poly(a*(t**2 + 1), t), x, t) == \
         (Poly(1/(4*a)*t**4 - 1/(2*a)*t**2, t, domain='ZZ(a)'),
         Poly(1/(2*a), t, domain='ZZ(a)'))
+
+def test_integrate_nonlinear_no_specials():
+    a, d, = Poly(x**2*t**5 + x*t**4 - nu**2*t**3 - x*(x**2 + 1)*t**2 -(x**2 -
+    nu**2)*t - x**5/4, t), Poly(x**2*t**4 + x**2*(x**2 + 2)*t**2 + x**2 +x**4 + x**6/4, t)
+    D = Poly(-t**2 - t/x - (1 - nu**2/x**2), t)
+    # f(x) == phi_nu(x), the logarithmic derivative of J_v, the Bessel function,
+    # which has no specials (see Chapter 5, note 4 of Bronstein's book).
+    f = Function('phi_nu')
+    assert integrate_nonlinear_no_specials(a, d, D, x, t, f) == \
+        (-log(1 + f(x)**2 + x**2/2)/2 - (4 + x**2)/(4 + 2*x**2 + 4*f(x)**2), True)
+    assert integrate_nonlinear_no_specials(Poly(t, t), Poly(1, t), D, x, t, f) == \
+        (0, False)
