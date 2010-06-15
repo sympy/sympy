@@ -96,17 +96,15 @@ class Pow(Expr):
         return self._args[1]
 
     def _eval_power(self, other):
-        if other == S.NegativeOne:
-            return Pow(self.base, self.exp * other)
-        if self.exp.is_integer and other.is_integer:
-            return Pow(self.base, self.exp * other)
-        if self.base.is_nonnegative and self.exp.is_real and other.is_real:
-            return Pow(self.base, self.exp * other)
-        if self.exp.is_even and self.base.is_real:
-            return Pow(abs(self.base), self.exp * other)
-        if self.exp.is_real and other.is_real and abs(self.exp) < S.One:
-            return Pow(self.base, self.exp * other)
-        return
+        b, e = self.as_base_exp()
+        if other.is_integer:
+            return Pow(b, e * other)
+        if b.is_nonnegative and (e.is_real or other.is_real):
+            return Pow(b, e * other)
+        if e.is_even and b.is_real: # hence b is pos and e is real
+            return Pow(abs(b), e * other)
+        if abs(e) < S.One and other.is_real:
+            return Pow(b, e * other)
 
     def _eval_is_comparable(self):
         c1 = self.base.is_comparable
@@ -213,9 +211,6 @@ class Pow(Expr):
             coeff2, terms2 = (self.exp*C.log(self.base)).as_coeff_terms()
             if terms1==terms2: return new**(coeff2/coeff1) # (x**(2*y)).subs(exp(3*y*log(x)),z) -> z**(2/3)
         return self.base._eval_subs(old, new) ** self.exp._eval_subs(old, new)
-
-    def as_powers_dict(self):
-        return { self.base : self.exp }
 
     def as_base_exp(self):
         if self.base.is_Rational and self.base.p==1:
@@ -551,26 +546,32 @@ class Pow(Expr):
     def as_numer_denom(self):
         base, exp = self.as_base_exp()
         n, d = base.as_numer_denom()
+        if d.is_negative and n.is_negative:
+            n, d = -n, -d
         if exp.is_Integer:
             if exp.is_negative:
                 n, d = d, n
                 exp = -exp
-            return n ** exp, d ** exp
-        elif exp.is_Rational:
+            return Pow(n, exp), Pow(d, exp)
+        elif exp.is_Rational or d.is_positive:
             if d.is_negative is None:
                 # we won't split up the base
                 if exp.is_negative:
-                    #return d * base ** -exp, n
-                    return S.One, base ** -exp
+                    return S.One, Pow(base, -exp)
                 else:
                     return self, S.One
             if d.is_negative:
                 n = -n
                 d = -d
-            if exp.is_negative:
+            c, t = exp.as_coeff_terms()
+            if c.is_negative:
                 n, d = d, n
                 exp = -exp
-            return n ** exp, d ** exp
+            return Pow(n, exp), Pow(d, exp)
+        else:
+            c, t = exp.as_coeff_terms()
+            if c.is_negative:
+                return 1, base**-exp
         # unprocessed Real and NumberSymbol
         return self, S.One
 

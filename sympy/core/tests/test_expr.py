@@ -1,4 +1,4 @@
-from sympy import Add, Basic, S, Symbol, Wild,  Real, Integer, Rational,  \
+from sympy import Add, Basic, S, Symbol, Wild,  Real, Integer, Rational, I, \
     sin, cos, exp, log, oo, sqrt, symbols, Integral, sympify, \
     WildFunction, Poly, Function, Derivative, Number, pi, var, \
     NumberSymbol, zoo, Piecewise, Mul, Pow, nsimplify, ratsimp, trigsimp, \
@@ -93,6 +93,7 @@ class F1_1(DummyNumber):
     number = 1.1
     def __float__(self):
         return self.number
+
 
 x,y,z,t = symbols('xyzt')
 
@@ -398,6 +399,8 @@ def test_as_numer_denom():
     assert (1/x).as_numer_denom() == (1, x)
     assert x.as_numer_denom() == (x, 1)
     assert (x/y).as_numer_denom() == (x, y)
+    n = Symbol('0 or neg', nonpositive=True)
+    assert ((x/n)**-S.Half).as_numer_denom() == (1, (x/n)**S.Half)
 
 def test_as_independent():
     assert (2*x*sin(x)+y+x).as_independent(x) == (y, x + 2*x*sin(x))
@@ -431,8 +434,6 @@ def test_subs_dict():
     assert expr._subs_dict(seq) == c + a*b*sin(d*e)
 
 def test_subs_list():
-    x,y = symbols('xy')
-
     assert (sin(x))._subs_list([(sin(x), 2), (x, 1)]) == 2
     assert (sin(x))._subs_list([(x, 1), (sin(x), 2)]) == sin(1)
 
@@ -537,8 +538,6 @@ def test_has_all_symbols():
     assert expr.has_all_symbols(x, y, z, t, u) == False
 
 def test_as_poly_basic():
-    x, y = symbols('xy')
-
     f = x**2 + 2*x*y
 
     assert f.as_poly().as_basic() == f
@@ -561,7 +560,6 @@ def test_nonzero():
     assert bool(x*0)    == False
 
 def test_is_number():
-    x, y = symbols('xy')
     g = WildFunction('g')
 
     assert Real(3.14).is_number == True
@@ -590,8 +588,6 @@ def test_is_number():
 
 # TODO write more tests for as_coeff_factors
 def test_as_coeff_factors():
-    x = Symbol('x')
-
     assert     x .as_coeff_factors() == ( 0, (x,))
     assert (-1+x).as_coeff_factors() == (-1, (x,))
     assert ( 2+x).as_coeff_factors() == ( 2, (x,))
@@ -599,7 +595,6 @@ def test_as_coeff_factors():
 
 
 def test_as_coeff_exponent():
-    x, y = symbols("xy")
     assert (3*x**4).as_coeff_exponent(x) == (3, 4)
     assert (2*x**3).as_coeff_exponent(x) == (2, 3)
     assert (4*x**2).as_coeff_exponent(x) == (4, 2)
@@ -620,7 +615,6 @@ def test_as_coeff_exponent():
     assert fx.as_coeff_exponent(f(x)) == (fx ,0)
 
 def test_extractions():
-    x, y = symbols("xy")
     n = Symbol("n", integer=True)
     assert ((x*y)**3).extract_multiplicatively(x**2 * y) == x*y**2
     assert ((x*y)**3).extract_multiplicatively(x**4 * y) == None
@@ -671,14 +665,14 @@ def test_coeff():
     assert (2*f(x) + 3*f(x).diff(x)).coeff(f(x)) == 2
 
 def test_coeff2():
-    var('r, kappa')
+    r, kappa = symbols('r, kappa')
     psi = Function("psi")
     g = 1/r**2 * (2*r*psi(r).diff(r, 1) + r**2 * psi(r).diff(r, 2))
     g = g.expand()
     assert g.coeff((psi(r).diff(r))) == 2/r
 
 def test_coeff2_0():
-    var('r, kappa')
+    r, kappa = symbols('r, kappa')
     psi = Function("psi")
     g = 1/r**2 * (2*r*psi(r).diff(r, 1) + r**2 * psi(r).diff(r, 2))
     g = g.expand()
@@ -686,7 +680,6 @@ def test_coeff2_0():
     assert g.coeff(psi(r).diff(r, 2)) == 1
 
 def test_coeff_expand():
-    x, y, z = symbols('x y z')
     expr = z*(x+y)**2
     expr2 = z*(x+y)**2 + z*(2*x + 2*y)**2
     assert expr.coeff(z) == 2*x*y + x**2 + y**2
@@ -761,6 +754,7 @@ def test_action_verbs():
     assert cancel((x**2+5*x+6)/(x+2)) == ((x**2+5*x+6)/(x+2)).cancel()
 
 def test_as_powers_dict():
+    assert x.as_powers_dict() == {x: 1}
     assert (x**y*z).as_powers_dict() == {x: y, z: 1}
     assert Mul(2, 2, **dict(evaluate=False)).as_powers_dict() == {S(2): S(2)}
 
