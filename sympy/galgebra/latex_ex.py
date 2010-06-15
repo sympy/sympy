@@ -6,7 +6,7 @@ import sys
 
 import os,types,StringIO
 
-from sympy.core import S, C, Basic, Symbol
+from sympy.core import S, C, Basic, Symbol, Mul
 from sympy.printing.printer import Printer
 from sympy.simplify import fraction
 import re as regrep
@@ -418,7 +418,7 @@ class LatexPrinter(Printer):
             coeff = -coeff
             tex = "- "
 
-        numer, denom = fraction(C.Mul(*terms))
+        numer, denom = fraction(Mul(*terms))
 
         def convert(terms):
             product = []

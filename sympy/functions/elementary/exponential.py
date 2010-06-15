@@ -1,8 +1,9 @@
-from sympy.core import S, C, sympify, Wild
+from sympy.core import C, sympify
 from sympy.core.add import Add
 from sympy.core.function import Lambda, Function, expand_log
 from sympy.core.cache import cacheit
-from sympy.core.symbol import Wild
+from sympy.core.singleton import S
+from sympy.core.symbol import Wild, Symbol
 from sympy.core.mul import Mul
 
 from sympy.ntheory import multiplicity
@@ -63,7 +64,7 @@ class exp(Function):
             coeff, terms = arg.as_coeff_terms()
 
             if coeff is S.Infinity:
-                excluded.append(coeff**C.Mul(*terms))
+                excluded.append(coeff**Mul(*terms))
             else:
                 coeffs, log_term = [coeff], None
 
@@ -81,12 +82,12 @@ class exp(Function):
                         break
 
                 if log_term is not None:
-                    excluded.append(log_term**C.Mul(*coeffs))
+                    excluded.append(log_term**Mul(*coeffs))
                 else:
                     included.append(arg)
 
         if excluded:
-            return C.Mul(*(excluded+[cls(C.Add(*included))]))
+            return Mul(*(excluded+[cls(Add(*included))]))
 
     @staticmethod
     @cacheit
@@ -116,7 +117,7 @@ class exp(Function):
         return self.func(self.args[0].conjugate())
 
     def as_base_exp(self):
-        return S.Exp1, C.Mul(*self.args)
+        return S.Exp1, Mul(*self.args)
 
     def as_coeff_terms(self, x=None):
         arg = self.args[0]
@@ -154,8 +155,8 @@ class exp(Function):
                     else:
                         old_al.append(a._eval_subs(old, new))
                 if new_l:
-                    new_l.append(self.func(C.Add(*old_al)))
-                    r = C.Mul(*new_l)
+                    new_l.append(self.func(Add(*old_al)))
+                    r = Mul(*new_l)
                     return r
         old = o
         return Function._eval_subs(self, old, new)
@@ -186,7 +187,7 @@ class exp(Function):
     def _eval_lseries(self, x, x0):
         s = self.args[0]
         yield exp(s.subs(x, x0))
-        from sympy import Symbol, Integral, Derivative
+        from sympy import Integral, Derivative
         t = Symbol("t", dummy=True)
         f = s.subs(x, t)
         g = Integral(exp(f) * Derivative(f, t), (t, x0, x)).lseries(x, x0)
@@ -194,7 +195,7 @@ class exp(Function):
             yield term
 
     def _eval_nseries(self, x, x0, n):
-        from sympy import limit, Symbol, oo, powsimp
+        from sympy import limit, oo, powsimp
         arg = self.args[0]
         arg_series = arg.nseries(x, x0, n)
         if arg_series.is_Order:
@@ -215,12 +216,12 @@ class exp(Function):
             g = self.taylor_term(i, self.args[0], g)
             g = g.nseries(x, x0, n)
             l.append(g)
-        return C.Add(*l) + C.Order(x**n, x)
+        return Add(*l) + C.Order(x**n, x)
 
     def _eval_as_leading_term(self, x):
         arg = self.args[0]
         if arg.is_Add:
-            return C.Mul(*[exp(f).as_leading_term(x) for f in arg.args])
+            return Mul(*[exp(f).as_leading_term(x) for f in arg.args])
         arg = self.args[0].as_leading_term(x)
         if C.Order(1,x).contains(arg):
             return S.One
@@ -311,7 +312,7 @@ class log(Function):
         #        arg.exp.is_number:
         #        return arg.exp * self(arg.base)
         #elif arg.is_Mul and arg.is_real:
-        #    return C.Add(*[self(a) for a in arg])
+        #    return Add(*[self(a) for a in arg])
         elif not arg.is_Add:
             coeff = arg.as_coefficient(S.ImaginaryUnit)
 
@@ -474,7 +475,7 @@ class log(Function):
                 g = ln.taylor_term(i, z, g)
                 g = g.nseries(x, x0, n)
                 l.append(g)
-            obj = C.Add(*l) + ln(arg0)
+            obj = Add(*l) + ln(arg0)
         obj2 = expand_log(powsimp(obj, deep=True, combine='exp'))
         if obj2 != obj:
             r = obj2.nseries(x, x0, n)
@@ -522,7 +523,7 @@ class LambertW(Function):
     def eval(cls, x):
         if x == S.Zero: return S.Zero
         if x == S.Exp1: return S.One
-        if x == -1/S.Exp1: return -S.One
+        if x == -1/S.Exp1: return S.NegativeOne
         if x == -log(2)/2: return -log(2)
         if x == S.Infinity: return S.Infinity
 
@@ -532,3 +533,4 @@ class LambertW(Function):
             return LambertW(x)/(x*(1+LambertW(x)))
         else:
             raise ArgumentIndexError(self, argindex)
+

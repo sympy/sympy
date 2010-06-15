@@ -18,7 +18,7 @@ responsibility for generating properly cased Fortran code to the user.
 """
 
 
-from sympy.core import S, C
+from sympy.core import S, C, Add
 from sympy.printing.codeprinter import CodePrinter
 from sympy.printing.precedence import precedence
 from sympy.functions import sin, cos, tan, asin, acos, atan, atan2, sinh, \
@@ -166,7 +166,7 @@ class FCodePrinter(CodePrinter):
         if len(pure_imaginary) > 0:
             if len(mixed) > 0:
                 PREC = precedence(expr)
-                term = C.Add(*mixed)
+                term = Add(*mixed)
                 t = self._print(term)
                 if t.startswith('-'):
                     sign = "-"
@@ -177,14 +177,14 @@ class FCodePrinter(CodePrinter):
                     t = "(%s)" % t
 
                 return "cmplx(%s,%s) %s %s" % (
-                    self._print(C.Add(*pure_real)),
-                    self._print(-S.ImaginaryUnit*C.Add(*pure_imaginary)),
+                    self._print(Add(*pure_real)),
+                    self._print(-S.ImaginaryUnit*Add(*pure_imaginary)),
                     sign, t,
                 )
             else:
                 return "cmplx(%s,%s)" % (
-                    self._print(C.Add(*pure_real)),
-                    self._print(-S.ImaginaryUnit*C.Add(*pure_imaginary)),
+                    self._print(Add(*pure_real)),
+                    self._print(-S.ImaginaryUnit*Add(*pure_imaginary)),
                 )
         else:
             return CodePrinter._print_Add(self, expr)

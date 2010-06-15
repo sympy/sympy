@@ -33,12 +33,12 @@ def integer_nthroot(y, n):
     # Get initial estimate for Newton's method. Care must be taken to
     # avoid overflow
     try:
-        guess = int(y ** (1./n)+0.5)
+        guess = int(y**(1./n) + 0.5)
     except OverflowError:
-        expt = _log(y,2)/n
+        expt = _log(y, 2)/n
         if expt > 53:
-            shift = int(expt-53)
-            guess = int(2.0**(expt-shift)+1) << shift
+            shift = int(expt - 53)
+            guess = int(2.0**(expt-shift) + 1) << shift
         else:
             guess = int(2.0**expt)
     #print n
@@ -207,12 +207,17 @@ class Pow(Expr):
         if old.func is self.func and self.base == old.base:
             coeff1, terms1 = self.exp.as_coeff_terms()
             coeff2, terms2 = old.exp.as_coeff_terms()
-            if terms1==terms2: return new ** (coeff1/coeff2) # (x**(2*y)).subs(x**(3*y),z) -> z**(2/3)
+            if terms1 == terms2:
+                return Pow(new, coeff1/coeff2) # (x**(2*y)).subs(x**(3*y),z) -> z**(2/3)
         if old.func is C.exp:
             coeff1, terms1 = old.args[0].as_coeff_terms()
             coeff2, terms2 = (self.exp*C.log(self.base)).as_coeff_terms()
-            if terms1==terms2: return new**(coeff2/coeff1) # (x**(2*y)).subs(exp(3*y*log(x)),z) -> z**(2/3)
-        return self.base._eval_subs(old, new) ** self.exp._eval_subs(old, new)
+            if terms1 == terms2:
+                return Pow(new, coeff2/coeff1) # (x**(2*y)).subs(exp(3*y*log(x)),z) -> z**(2/3)
+        b, e = self.base._eval_subs(old, new), self.exp._eval_subs(old, new)
+        #if not b and e.is_negative: # don't let subs create an infinity
+        #    return S.NaN
+        return Pow(b, e)
 
     def as_powers_dict(self):
         return { self.base : self.exp }
@@ -299,7 +304,7 @@ class Pow(Expr):
             exp = e
 
         if e is not None or b is not None:
-            result = base**exp
+            result = Pow(base, exp)
 
             if result.is_Pow:
                 base, exp = result.base, result.exp
@@ -313,7 +318,7 @@ class Pow(Expr):
                 n = Integer(exp.p // exp.q)
 
                 if not n:
-                    return base**exp
+                    return Pow(base, exp)
                 else:
                     radical, result = Pow(base, exp - n), []
 
@@ -348,13 +353,13 @@ class Pow(Expr):
                     if a.is_Rational and b.is_Rational:
                         if not a.is_Integer:
                             if not b.is_Integer:
-                                k = (a.q * b.q) ** n
+                                k = Pow(a.q * b.q, n)
                                 a, b = a.p*b.q, a.q*b.p
                             else:
-                                k = a.q ** n
+                                k = Pow(a.q, n)
                                 a, b = a.p, a.q*b
                         elif not b.is_Integer:
-                            k = b.q ** n
+                            k = Pow(b.q, n)
                             a, b = a*b.q, b.p
                         else:
                             k = 1
@@ -415,11 +420,11 @@ class Pow(Expr):
 
             for term in exp.args:
                 if term.is_Number:
-                    coeff *= base**term
+                    coeff *= Pow(base, term)
                 else:
                     tail += term
 
-            return coeff * base**tail
+            return coeff * Pow(base, tail)
         else:
             return result
 
@@ -480,10 +485,10 @@ class Pow(Expr):
             #       only a single one is returned from here.
             re, im = self.base.as_real_imag(deep=deep)
 
-            r = (re**2 + im**2)**S.Half
+            r = Pow(Pow(re, 2) + Pow(im, 2), S.Half)
             t = C.atan2(im, re)
 
-            rp, tp = r**self.exp, t*self.exp
+            rp, tp = Pow(r, self.exp), t*self.exp
 
             return (rp*C.cos(tp), rp*C.sin(tp))
         else:
@@ -528,12 +533,12 @@ class Pow(Expr):
         if exp < 0 and not base.is_real:
             base = base.conjugate() / (base * base.conjugate())._evalf(prec)
             exp = -exp
-        return (base ** exp).expand()
+        return Pow(base, exp).expand()
 
     @cacheit
     def count_ops(self, symbolic=True):
         if symbolic:
-            return Add(*[t.count_ops(symbolic) for t in self.args]) + Symbol('POW')
+            return Add(*[t.count_ops(symbolic) for t in self.args]) + C.Symbol('POW')
         return Add(*[t.count_ops(symbolic) for t in self.args]) + 1
 
     def _eval_is_polynomial(self, syms):
@@ -689,7 +694,7 @@ class Pow(Expr):
                     n = n2
 
                 term2 = collect(rest.as_leading_term(x), x)
-                k, l = Wild("k"), Wild("l")
+                k, l = C.Wild("k"), C.Wild("l")
                 r = term2.match(k*x**l)
                 k, l = r[k], r[l]
                 if l.is_Rational and l>0:
@@ -791,19 +796,19 @@ class Pow(Expr):
 
     def _eval_as_leading_term(self, x):
         if not self.exp.has(x):
-            return self.base.as_leading_term(x) ** self.exp
+            return Pow(self.base.as_leading_term(x), self.exp)
         return C.exp(self.exp * C.log(self.base)).as_leading_term(x)
 
     @cacheit
     def taylor_term(self, n, x, *previous_terms): # of (1+x)**e
         if n<0: return S.Zero
         x = _sympify(x)
-        return C.Binomial(self.exp, n) * x**n
+        return C.Binomial(self.exp, n) * Pow(x, n)
 
     def _sage_(self):
-        return self.args[0]._sage_() ** self.args[1]._sage_()
+        return Pow(self.args[0]._sage_(), self.args[1]._sage_())
 
 from add import Add
 from numbers import Integer
 from mul import Mul
-from symbol import Symbol, Wild
+from symbol import Symbol

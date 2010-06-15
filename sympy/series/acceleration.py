@@ -9,7 +9,7 @@ Springer 1999. (Shanks transformation: pp. 368-375, Richardson
 extrapolation: pp. 375-377.)
 """
 
-from sympy import factorial, Integer
+from sympy import factorial, Integer, S
 
 
 def richardson(A, k, n, N):
@@ -56,7 +56,7 @@ def richardson(A, k, n, N):
         1.6449340668
 
     """
-    s = Integer(0)
+    s = S.Zero
     for j in range(0, N+1):
         s += A.subs(k, Integer(n+j)) * (n+j)**N * (-1)**(j+N) / \
             (factorial(j) * factorial(N-j))
