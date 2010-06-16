@@ -20,7 +20,7 @@ responsibility for generating properly cased Fortran code to the user.
 
 from str import StrPrinter
 from sympy.printing.precedence import precedence
-from sympy.core import S, Add, I
+from sympy.core import S, Add, I, Symbol
 from sympy.core.numbers import NumberSymbol
 from sympy.functions import sin, cos, tan, asin, acos, atan, atan2, sinh, \
     cosh, tanh, sqrt, log, exp, abs, sign, conjugate, Piecewise
@@ -48,6 +48,8 @@ class FCodePrinter(StrPrinter):
         'source_format': 'fixed',
     }
     def __init__(self, settings=None):
+        if settings and isinstance(settings.get('assign_to'), basestring):
+            settings['assign_to'] = Symbol(settings['assign_to'])
         StrPrinter.__init__(self, settings)
         self._init_leading_padding()
 
