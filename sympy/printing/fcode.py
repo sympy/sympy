@@ -85,12 +85,13 @@ class FCodePrinter(StrPrinter):
         # FIXME: sort indices in an optimized way
         open_lines = []
         close_lines = []
-        local_ints = set([])
+        local_ints = []
+
         for i in indices:
             # fortran arrays start at 1 and end at dimension
             open_lines.append("do %s = %s, %s" % (i.label, i.lower+1, i.upper+1))
             close_lines.append("end do")
-            local_ints.add(self._print(i.label))
+            local_ints.append(i)
         return open_lines, close_lines, local_ints
 
 
@@ -112,8 +113,24 @@ class FCodePrinter(StrPrinter):
         # Setup loops if expression contain Indexed objects
         openloop, closeloop, local_ints = self._get_loop_opening_ending_ints(expr)
 
-        lines = []
+        self._not_fortran |= set(local_ints)
 
+        # the lhs may contain loops that are not in the rhs
+        lhs = self._settings['assign_to']
+        if lhs:
+            open_lhs, close_lhs, lhs_ints = self._get_loop_opening_ending_ints(lhs)
+            for n,ind in enumerate(lhs_ints):
+                if ind not in self._not_fortran:
+                    self._not_fortran.add(ind)
+                    openloop.insert(0,open_lhs[n])
+                    closeloop.append(close_lhs[n])
+
+        # if there are loops, we assume that there could be summations
+        # initialization of lhs expression must be handled elsewhere
+        if openloop:
+            expr = expr + lhs
+
+        lines = []
         if isinstance(expr, Piecewise):
             # support for top-level Piecewise function
             for i, (e, c) in enumerate(expr.args):
