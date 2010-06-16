@@ -455,6 +455,15 @@ class FCodeGen(CodeGen):
 
         return code_list
 
+    def _declare_locals(self, routine):
+        code_list = []
+        for var in sorted(routine.local_vars, key=str):
+            typeinfo = get_default_datatype(var)
+            code_list.append("%s :: %s\n" % (typeinfo.fname, var))
+
+        return code_list
+
+
     def _get_routine_ending(self, routine):
         """
         Returns the closing statements of the fortran routine
@@ -534,6 +543,7 @@ class FCodeGen(CodeGen):
 
             constants, comments, f_expr = self._printer.doprint(result.expr)
 
+            code_lines.extend(self._declare_locals(routine))
             code_lines.extend(constants)
             # code_lines.extend(comments)
             code_lines.append("%s\n" % f_expr)
