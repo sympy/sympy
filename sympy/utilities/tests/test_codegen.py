@@ -611,7 +611,7 @@ def test_loops():
             ('matrix_vector', Eq(y, A*x)), "F95", "file", header=False, empty=False)
 
     assert f1 == 'file.f90'
-    assert code == (
+    expected = (
             'subroutine matrix_vector(A, m, n, x, y)\n'
             'implicit none\n'
             'INTEGER*4 :: m\n'
@@ -619,15 +619,18 @@ def test_loops():
             'REAL*8, allocatable, dimension(1:m, 1:n) :: A\n'
             'REAL*8, allocatable, dimension(1:n) :: x\n'
             'REAL*8, allocatable, dimension(1:m) :: y\n'
-            'integer i, j\n'
+            'INTEGER*4 :: i\n'
+            'INTEGER*4 :: j\n'
+            'y = 0.d0\n'
             'do i = 1, m\n'
             '   do j = 1, n\n'
-            '      y(i) = A(i, j)*x(j)\n'
+            '      y(i) = A(i, j)*x(j) + y(i)\n'
             '   end do\n'
             'end do\n'
             'end subroutine\n'
             )
 
+    assert expected == code
     assert f2 == 'file.h'
     assert interface == (
             'interface\n'
