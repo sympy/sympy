@@ -142,9 +142,6 @@ class FCodePrinter(StrPrinter):
             lines.append(text)
             lines.extend(closeloop)
 
-        if local_ints:
-            lines.insert(0, "integer %s\n" % ", ".join(local_ints))
-
         # format the output
         if self._settings["human"]:
             frontlines = []
