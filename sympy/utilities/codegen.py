@@ -109,7 +109,7 @@ class Routine(object):
        values are possible in Python, but not in C or Fortran. Another example:
        Fortran and Python support complex numbers, while C does not.
     """
-    def __init__(self, name, arguments, results):
+    def __init__(self, name, arguments, results, local_vars=None):
         """Initialize a Routine instance.
 
            Arguments:
@@ -126,6 +126,7 @@ class Routine(object):
         self.name = name
         self.arguments = arguments
         self.results = results
+        self.local_vars = local_vars or []
 
 
 class DataType(object):
@@ -691,7 +692,7 @@ def codegen(name_expr, language, prefix, project="project", to_files=False, head
         arg_list.extend(out_args)
 
 
-        routines.append(Routine(name, arg_list, return_val))
+        routines.append(Routine(name, arg_list, return_val, dummies))
 
     # Write the code.
     return code_gen.write(routines, prefix, to_files, header, empty)
