@@ -431,8 +431,11 @@ class FCodeGen(CodeGen):
         code_list = [ " ".join(code_list) ]
 
         code_list.append('implicit none\n')
+        return code_list
 
+    def _declare_arguments(self, routine):
         # argument type declarations
+        code_list = []
         array_list = []
         scalar_list = []
         for arg in routine.arguments:
@@ -473,6 +476,7 @@ class FCodeGen(CodeGen):
         """
         prototype = [ "interface\n" ]
         prototype.extend(self._get_routine_opening(routine))
+        prototype.extend(self._declare_arguments(routine))
         prototype.extend(self._get_routine_ending(routine))
         prototype.append("end interface\n")
 
@@ -520,6 +524,7 @@ class FCodeGen(CodeGen):
 
         for routine in routines:
             code_lines = self._get_routine_opening(routine)
+            code_lines.extend(self._declare_arguments(routine))
 
             result = self._get_result(routine)
             if isinstance(result, Result):
