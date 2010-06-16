@@ -147,7 +147,7 @@ class FCodePrinter(StrPrinter):
             frontlines = []
             if len(self._not_fortran) > 0:
                 frontlines.append("! Not Fortran:")
-                for expr in sorted(self._not_fortran):
+                for expr in sorted(self._not_fortran, key=self._print):
                     frontlines.append("! %s" % expr)
             for name, value in number_symbols:
                 frontlines.append("parameter (%s = %s)" % (name, value))
