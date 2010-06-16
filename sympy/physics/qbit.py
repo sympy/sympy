@@ -9,11 +9,11 @@ class Qbit(Expr):
     Represents a single quantum gate
     """
     def __new__(cls, *args):
-        obj = Expr.__new__(cls, args, commutative = False)
+        obj = Expr.__new__(cls, *args, commutative = False)
         return obj
 
     def dimension(self):
-        return len(self.args[0])
+        return len(self.args)
 
     def _sympyrepr_(self):
         pass
@@ -23,7 +23,7 @@ class Gate(Expr):
     A gate operator that acts qubit(s)
     """
     def __new__(cls, *args):
-        obj = Expr.__new__(cls, args, commutative = False)
+        obj = Expr.__new__(cls, *args, commutative = False)
         return obj
 
     def _sympyrepr_(self, printer, *args):
