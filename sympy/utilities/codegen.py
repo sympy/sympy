@@ -509,6 +509,24 @@ class FCodeGen(CodeGen):
 
         return result
 
+    def _init_resultvars(self, routine):
+        """Returns codelines that intialize the result variables if applicable.
+        """
+        code_lines = []
+        for arg in routine.arguments:
+            if isinstance(arg, OutputArgument):
+                if arg.datatype.fname == 'REAL*8':
+                    code_lines.append("%s = 0.d0\n" % arg.name)
+                elif arg.datatype.fname == 'INTEGER*4':
+                    code_lines.append("%s = 0\n" % arg.name)
+                else:
+                    raise NotImplementedError
+        if routine.results:
+            code_lines.append("%s = 0.d0\n" % routine.results[0])
+
+        return code_lines
+
+
     def dump_f95(self, routines, f, prefix, header=True, empty=True):
         """Write the F95 code file.
 
@@ -541,11 +559,15 @@ class FCodeGen(CodeGen):
             elif isinstance(result, (OutputArgument, InOutArgument)):
                 self._printer.set_assign_to(result.result_var)
 
-            constants, comments, f_expr = self._printer.doprint(result.expr)
+            constants, not_fortran, f_expr = self._printer.doprint(result.expr)
 
             code_lines.extend(self._declare_locals(routine))
             code_lines.extend(constants)
-            # code_lines.extend(comments)
+
+            # if we have loops we must initialize result variables
+            if [ idx for idx in not_fortran if isinstance(idx, Idx)]:
+                code_lines.extend(self._init_resultvars(routine))
+
             code_lines.append("%s\n" % f_expr)
 
             # code_lines = self._printer.indent_code(code_lines)
