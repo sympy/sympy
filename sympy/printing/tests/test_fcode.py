@@ -252,7 +252,7 @@ def test_loops():
 
     # human = False
     printer = FCodePrinter({ 'source_format': 'free', 'assign_to':y, 'human':0})
-    expected = ([], set([A, x]), 'integer i, j\ndo i = 1, m\n   do j = 1, n\n      y(i) = A(i, j)*x(j)\n   end do\nend do')
+    expected = ([], set([A, x, y, Idx(j, n), Idx(i, m)]), 'do i = 1, m\n   do j = 1, n\n      y(i) = A(i, j)*x(j) + y(i)\n   end do\nend do')
     code = printer.doprint(A*x)
     assert expected == code
 
@@ -261,12 +261,14 @@ def test_loops():
 
     expected = (
             '! Not Fortran:\n'
-            '! x(j)\n'
             '! A(i, j)\n'
-            'integer i, j\n'
+            '! i\n'
+            '! j\n'
+            '! x(j)\n'
+            '! y(i)\n'
             'do i = 1, m\n'
             '   do j = 1, n\n'
-            '      y(i) = A(i, j)*x(j)\n'
+            '      y(i) = A(i, j)*x(j) + y(i)\n'
             '   end do\n'
             'end do'
             )
