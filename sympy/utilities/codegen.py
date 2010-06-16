@@ -522,9 +522,9 @@ class FCodeGen(CodeGen):
 
             result = self._get_result(routine)
             if isinstance(result, Result):
-                self._printer._settings['assign_to'] = routine.name
+                self._printer.set_assign_to(routine.name)
             elif isinstance(result, (OutputArgument, InOutArgument)):
-                self._printer._settings['assign_to'] = result.result_var
+                self._printer.set_assign_to(result.result_var)
 
             constants, comments, f_expr = self._printer.doprint(result.expr)
 

@@ -20,7 +20,7 @@ responsibility for generating properly cased Fortran code to the user.
 
 from str import StrPrinter
 from sympy.printing.precedence import precedence
-from sympy.core import S, Add, I, Symbol
+from sympy.core import S, Add, I, Symbol, Basic
 from sympy.core.numbers import NumberSymbol
 from sympy.functions import sin, cos, tan, asin, acos, atan, atan2, sinh, \
     cosh, tanh, sqrt, log, exp, abs, sign, conjugate, Piecewise
@@ -48,10 +48,21 @@ class FCodePrinter(StrPrinter):
         'source_format': 'fixed',
     }
     def __init__(self, settings=None):
-        if settings and isinstance(settings.get('assign_to'), basestring):
-            settings['assign_to'] = Symbol(settings['assign_to'])
         StrPrinter.__init__(self, settings)
         self._init_leading_padding()
+        if settings:
+            self.set_assign_to(settings.get('assign_to'))
+
+    def set_assign_to(self, result_variable):
+        """Updates the 'assign_to' setting to result_variable"""
+        if isinstance(result_variable, basestring):
+            self._settings['assign_to'] = Symbol(result_variable)
+        elif isinstance(result_variable, (Basic, type(None))):
+            self._settings['assign_to'] = result_variable
+        else:
+            raise TypeError("FCodePrinter cannot assign to object of type %s"%
+                    type(result_variable))
+
 
     def _init_leading_padding(self):
         # leading columns depend on fixed or free format
