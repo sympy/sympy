@@ -113,12 +113,22 @@ def test_Rational_new():
     """
     _test_rational_new(Rational)
 
-    n1 = Rational(1,2)
+    n1 = Rational(1, 2)
     assert n1 == Rational(Integer(1), 2)
     assert n1 == Rational(Integer(1), Integer(2))
     assert n1 == Rational(1, Integer(2))
-    assert n1 == Rational(Rational(1,2))
-    assert n1 == Rational(1.2,2)
+    assert n1 == Rational(Rational(1, 2))
+    assert n1 == Rational(1.2, 2)
+    assert n1 == Rational('.5')
+    assert 1 == Rational(n1, n1)
+    assert Rational(3, 2) == Rational(Rational(1,2),Rational(1,3))
+    assert Rational(3, 1) == Rational(1,Rational(1,3))
+    n3_4 = Rational(3, 4)
+    assert Rational('3/4') == n3_4
+    assert -Rational('-3/4') == n3_4
+    assert Rational('.76').limit_denominator(4) == n3_4
+    assert Rational(19, 25).limit_denominator(4) == n3_4
+    assert Rational('19/25').limit_denominator(4) == n3_4
 
 def test_Rational_cmp():
     n1 = Rational(1,4)

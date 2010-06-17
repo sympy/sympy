@@ -1346,12 +1346,40 @@ def simplify(expr):
 
     return expr
 
-
-def nsimplify(expr, constants=[], tolerance=None, full=False):
+def _real_to_rational(expr):
     """
-    Numerical simplification -- tries to find a simple formula
-    that numerically matches the given expression. The input should
-    be possible to evalf to a precision of at least 30 digits.
+    Replace all reals in expr with rationals.
+    >>> from sympy import nsimplify
+    >>> from sympy.abc import x
+    >>> nsimplify(.76 + .1*x**.5, rational=1)
+    19/25 + x**(1/2)/10
+    """
+    p = sympify(expr)
+    for r in p.atoms(C.Real):
+        newr = nsimplify(r)
+        if not newr.is_Rational or \
+           r.is_finite and not newr.is_finite:
+            newr = r
+            if newr < 0:
+                s = -1
+                newr *= s
+            else:
+                s = 1
+            d = Pow(10, int((mpmath.log(newr)/mpmath.log(10))))
+            newr = s*Rational(str(nsimplify(newr/d)))*d
+        p = p.subs(r, newr)
+    return p
+
+def nsimplify(expr, constants=[], tolerance=None, full=False, rational=False):
+    """
+    Replace numbers with simple representations.
+
+    If rational=True then numbers are simply replaced with their rational
+    equivalents.
+
+    If rational=False, a simple formula that numerically matches the
+    given expression is sought (and the input should be possible to evalf
+    to a precision of at least 30 digits).
 
     Optionally, a list of (rationally independent) constants to
     include in the formula may be given.
@@ -1375,6 +1403,9 @@ def nsimplify(expr, constants=[], tolerance=None, full=False):
         22/7
 
     """
+    if rational:
+        return _real_to_rational(expr)
+
     expr = sympify(expr)
 
     prec = 30
