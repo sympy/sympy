@@ -28,6 +28,11 @@ def ae(x, y, tol=1e-12):
         return True
     return abs(x-y) <= tol*abs(y)
 
+def test_conj():
+    assert fp.conj(4) == 4
+    assert fp.conj(3+4j) == 3-4j
+    assert fp.fdot([1,2],[3,2+1j], conjugate=True) == 7-2j
+
 def test_fp_number_parts():
     assert ae(fp.arg(3), 0.0)
     assert ae(fp.arg(-3), 3.1415926535897932385)
@@ -250,8 +255,8 @@ def test_fp_erf():
     assert ae(fp.erf(-1j), -1.650425758797542876j)
     assert ae(fp.erf((2+3j)), (-20.829461427614568389 + 8.6873182714701631444j))
     assert ae(fp.erf(-(2+3j)), -(-20.829461427614568389 + 8.6873182714701631444j))
-    assert ae(fp.erf((8+9j)), (-1072006.2525062051158 + 364149.91954310255423j))
-    assert ae(fp.erf(-(8+9j)), -(-1072006.2525062051158 + 364149.91954310255423j))
+    assert ae(fp.erf((8+9j)), (-1072004.2525062051158 + 364149.91954310255423j))
+    assert ae(fp.erf(-(8+9j)), -(-1072004.2525062051158 + 364149.91954310255423j))
     assert fp.erfc(fp.inf) == 0.0
     assert fp.erfc(fp.ninf) == 2.0
     assert fp.erfc(0) == 1
@@ -280,7 +285,7 @@ def test_fp_erf():
     assert ae(fp.erfc((2+3j)), (21.829461427614568389 - 8.6873182714701631444j), 1e-13)
     assert ae(fp.erfc(-(2+3j)), (-19.829461427614568389 + 8.6873182714701631444j), 1e-13)
     assert ae(fp.erfc((8+9j)), (1072005.2525062051158 - 364149.91954310255423j))
-    assert ae(fp.erfc(-(8+9j)), (-1072005.2525062051158 + 364149.91954310255423j))
+    assert ae(fp.erfc(-(8+9j)), (-1072003.2525062051158 + 364149.91954310255423j))
     assert ae(fp.erfc(20+0j), (5.3958656116079009289e-176 + 0.0j))
 
 def test_fp_lambertw():

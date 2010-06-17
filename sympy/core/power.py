@@ -1,10 +1,11 @@
+from math import log as _log
+
 from expr import Expr
 from sympify import _sympify
 from cache import cacheit
+from basic import S, C
 
 from sympy import mpmath
-
-from math import log as _log
 
 def integer_nthroot(y, n):
     """
@@ -71,16 +72,17 @@ class Pow(Expr):
     def __new__(cls, b, e, **assumptions):
         b = _sympify(b)
         e = _sympify(e)
-        if assumptions.get('evaluate') is False:
-            return Expr.__new__(cls, b, e, **assumptions)
-        if e is S.Zero:
-            return S.One
-        if e is S.One:
-            return b
-        obj = b._eval_power(e)
-        if obj is None:
-            obj = Expr.__new__(cls, b, e, **assumptions)
-            obj.is_commutative = (b.is_commutative and e.is_commutative)
+        if assumptions.get('evaluate') is not False:
+            if e is S.Zero:
+                return S.One
+            elif e is S.One:
+                return b
+            else:
+                obj = b._eval_power(e)
+                if obj is not None:
+                    return obj
+        obj = Expr.__new__(cls, b, e, **assumptions)
+        obj.is_commutative = (b.is_commutative and e.is_commutative)
         return obj
 
     @property
@@ -773,7 +775,6 @@ class Pow(Expr):
         """Returns `self` as it was `Pow` instance. """
         return (self.base, self.exp)
 
-from basic import S, C
 from add import Add
 from numbers import Integer
 from mul import Mul

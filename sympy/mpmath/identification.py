@@ -24,7 +24,7 @@ def pslq(ctx, x, tol=None, maxcoeff=1000, maxsteps=100, verbose=False):
         |c_1 x_1 + c_2 x_2 + ... + c_n x_n| < \mathrm{tol}
 
     and such that `\max |c_k| < \mathrm{maxcoeff}`. If no such vector
-    exists, :func:`pslq` returns ``None``. The tolerance defaults to
+    exists, :func:`~mpmath.pslq` returns ``None``. The tolerance defaults to
     3/4 of the working precision.
 
     **Examples**
@@ -310,21 +310,21 @@ def findpoly(ctx, x, n=1, **kwargs):
     ``findpoly(x, n)`` returns the coefficients of an integer
     polynomial `P` of degree at most `n` such that `P(x) \approx 0`.
     If no polynomial having `x` as a root can be found,
-    :func:`findpoly` returns ``None``.
+    :func:`~mpmath.findpoly` returns ``None``.
 
-    :func:`findpoly` works by successively calling :func:`pslq` with
+    :func:`~mpmath.findpoly` works by successively calling :func:`~mpmath.pslq` with
     the vectors `[1, x]`, `[1, x, x^2]`, `[1, x, x^2, x^3]`, ...,
     `[1, x, x^2, .., x^n]` as input. Keyword arguments given to
-    :func:`findpoly` are forwarded verbatim to :func:`pslq`. In
+    :func:`~mpmath.findpoly` are forwarded verbatim to :func:`~mpmath.pslq`. In
     particular, you can specify a tolerance for `P(x)` with ``tol``
     and a maximum permitted coefficient size with ``maxcoeff``.
 
-    For large values of `n`, it is recommended to run :func:`findpoly`
+    For large values of `n`, it is recommended to run :func:`~mpmath.findpoly`
     at high precision; preferably 50 digits or more.
 
     **Examples**
 
-    By default (degree `n = 1`), :func:`findpoly` simply finds a linear
+    By default (degree `n = 1`), :func:`~mpmath.findpoly` simply finds a linear
     polynomial with a rational root::
 
         >>> from mpmath import *
@@ -361,12 +361,12 @@ def findpoly(ctx, x, n=1, **kwargs):
     In fact, `x^4 - 10x^2 + 1` is the *minimal polynomial* of
     `r = \sqrt 2 + \sqrt 3`, meaning that a rational polynomial of
     lower degree having `r` as a root does not exist. Given sufficient
-    precision, :func:`findpoly` will usually find the correct
+    precision, :func:`~mpmath.findpoly` will usually find the correct
     minimal polynomial of a given algebraic number.
 
     **Non-algebraic numbers**
 
-    If :func:`findpoly` fails to find a polynomial with given
+    If :func:`~mpmath.findpoly` fails to find a polynomial with given
     coefficient size and tolerance constraints, that means no such
     polynomial exists.
 
@@ -395,7 +395,7 @@ def findpoly(ctx, x, n=1, **kwargs):
         [-4, 22, -29, -2]
 
     It is unknown whether Euler's constant is transcendental (or even
-    irrational). We can use :func:`findpoly` to check that if is
+    irrational). We can use :func:`~mpmath.findpoly` to check that if is
     an algebraic number, its minimal polynomial must have degree
     at least 7 and a coefficient of magnitude at least 1000000::
 
@@ -533,7 +533,7 @@ def identify(ctx, x, constants=[], tol=None, maxcoeff=1000, full=False,
     is found, ``None`` is returned. With ``full=True``, a list of
     matching formulas is returned.
 
-    As a simple example, :func:`identify` will find an algebraic
+    As a simple example, :func:`~mpmath.identify` will find an algebraic
     formula for the golden ratio::
 
         >>> from mpmath import *
@@ -541,9 +541,9 @@ def identify(ctx, x, constants=[], tol=None, maxcoeff=1000, full=False,
         >>> identify(phi)
         '((1+sqrt(5))/2)'
 
-    :func:`identify` can identify simple algebraic numbers and simple
+    :func:`~mpmath.identify` can identify simple algebraic numbers and simple
     combinations of given base constants, as well as certain basic
-    transformations thereof. More specifically, :func:`identify`
+    transformations thereof. More specifically, :func:`~mpmath.identify`
     looks for the following:
 
         1. Fractions
@@ -557,12 +557,12 @@ def identify(ctx, x, constants=[], tol=None, maxcoeff=1000, full=False,
            small integers
 
     Base constants can be given as a list of strings representing mpmath
-    expressions (:func:`identify` will ``eval`` the strings to numerical
+    expressions (:func:`~mpmath.identify` will ``eval`` the strings to numerical
     values and use the original strings for the output), or as a dict of
     formula:value pairs.
 
-    In order not to produce spurious results, :func:`identify` should
-    be used with high precision; preferrably 50 digits or more.
+    In order not to produce spurious results, :func:`~mpmath.identify` should
+    be used with high precision; preferably 50 digits or more.
 
     **Examples**
 
@@ -580,10 +580,10 @@ def identify(ctx, x, constants=[], tol=None, maxcoeff=1000, full=False,
         >>> identify(0.881373587019543)
         'log(((2+sqrt(8))/2))'
 
-    By default, :func:`identify` does not recognize `\pi`. At standard
+    By default, :func:`~mpmath.identify` does not recognize `\pi`. At standard
     precision it finds a not too useful approximation. At slightly
     increased precision, this approximation is no longer accurate
-    enough and :func:`identify` more correctly returns ``None``::
+    enough and :func:`~mpmath.identify` more correctly returns ``None``::
 
         >>> identify(pi)
         '(2**(176/117)*3**(20/117)*5**(35/39))/(7**(92/117))'
@@ -598,7 +598,7 @@ def identify(ctx, x, constants=[], tol=None, maxcoeff=1000, full=False,
         '(3*pi + (-2)*e)'
 
     Here is an example using a dict of constants. Note that the
-    constants need not be "atomic"; :func:`identify` can just
+    constants need not be "atomic"; :func:`~mpmath.identify` can just
     as well express the given number in terms of expressions
     given by formulas::
 
@@ -667,7 +667,7 @@ def identify(ctx, x, constants=[], tol=None, maxcoeff=1000, full=False,
         ((3/20) + (21/20)*e + (3/20)*catalan)
         ...
 
-    The numerical values are roughly as close to pi as permitted by the
+    The numerical values are roughly as close to `\pi` as permitted by the
     specified tolerance:
 
         >>> e/log(6-4*e/3)
@@ -683,7 +683,7 @@ def identify(ctx, x, constants=[], tol=None, maxcoeff=1000, full=False,
 
     The output formula can be evaluated as a Python expression.
     Note however that if fractions (like '2/3') are present in
-    the formula, Python's :func:`eval()` may erroneously perform
+    the formula, Python's :func:`~mpmath.eval()` may erroneously perform
     integer division. Note also that the output is not necessarily
     in the algebraically simplest form::
 
@@ -691,7 +691,7 @@ def identify(ctx, x, constants=[], tol=None, maxcoeff=1000, full=False,
         '(sqrt(8)/2)'
 
     As a solution to both problems, consider using SymPy's
-    :func:`sympify` to convert the formula into a symbolic expression.
+    :func:`~mpmath.sympify` to convert the formula into a symbolic expression.
     SymPy can be used to pretty-print or further simplify the formula
     symbolically::
 
@@ -699,7 +699,7 @@ def identify(ctx, x, constants=[], tol=None, maxcoeff=1000, full=False,
         >>> sympify(identify(sqrt(2)))
         2**(1/2)
 
-    Sometimes :func:`identify` can simplify an expression further than
+    Sometimes :func:`~mpmath.identify` can simplify an expression further than
     a symbolic algorithm::
 
         >>> from sympy import simplify
@@ -715,8 +715,8 @@ def identify(ctx, x, constants=[], tol=None, maxcoeff=1000, full=False,
         1/2 + 5**(1/2)/2
 
     (In fact, this functionality is available directly in SymPy as the
-    function :func:`nsimplify`, which is essentially a wrapper for
-    :func:`identify`.)
+    function :func:`~mpmath.nsimplify`, which is essentially a wrapper for
+    :func:`~mpmath.identify`.)
 
     **Miscellaneous issues and limitations**
 
@@ -726,9 +726,9 @@ def identify(ctx, x, constants=[], tol=None, maxcoeff=1000, full=False,
 
     The worst-case computation time grows quickly with the number of
     base constants. Already with 3 or 4 base constants,
-    :func:`identify` may require several seconds to finish. To search
+    :func:`~mpmath.identify` may require several seconds to finish. To search
     for relations among a large number of constants, you should
-    consider using :func:`pslq` directly.
+    consider using :func:`~mpmath.pslq` directly.
 
     The extended transformations are applied to x, not the constants
     separately. As a result, ``identify`` will for example be able to

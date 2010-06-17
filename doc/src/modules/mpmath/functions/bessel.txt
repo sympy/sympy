@@ -1,6 +1,8 @@
 Bessel functions and related functions
 --------------------------------------
 
+The functions in this section arise as solutions to various differential equations in physics, typically describing wavelike oscillatory behavior or a combination of oscillation and exponential decay or growth. Mathematically, they are special cases of the confluent hypergeometric functions `\,_0F_1`, `\,_1F_1` and `\,_1F_2` (see :doc:`hypergeometric`).
+
 
 Bessel functions
 ...................................................
@@ -97,4 +99,17 @@ Coulomb wave functions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 .. autofunction:: mpmath.coulombc(l,eta)
 
+Confluent U and Whittaker functions
+...................................
 
+:func:`hyperu`
+^^^^^^^^^^^^^^
+.. autofunction:: mpmath.hyperu(a, b, z)
+
+:func:`whitm`
+^^^^^^^^^^^^^^
+.. autofunction:: mpmath.whitm(k,m,z)
+
+:func:`whitw`
+^^^^^^^^^^^^^^
+.. autofunction:: mpmath.whitw(k,m,z)

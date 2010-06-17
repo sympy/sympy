@@ -70,6 +70,54 @@ class StandardBaseContext(Context,
             return x.imag
         return ctx.zero
 
+    def _as_points(ctx, x):
+        return x
+
+    def fneg(ctx, x, **kwargs):
+        return -ctx.convert(x)
+
+    def fadd(ctx, x, y, **kwargs):
+        return ctx.convert(x)+ctx.convert(y)
+
+    def fsub(ctx, x, y, **kwargs):
+        return ctx.convert(x)-ctx.convert(y)
+
+    def fmul(ctx, x, y, **kwargs):
+        return ctx.convert(x)*ctx.convert(y)
+
+    def fdiv(ctx, x, y, **kwargs):
+        return ctx.convert(x)/ctx.convert(y)
+
+    def fsum(ctx, args, absolute=False, squared=False):
+        if absolute:
+            if squared:
+                return sum((abs(x)**2 for x in args), ctx.zero)
+            return sum((abs(x) for x in args), ctx.zero)
+        if squared:
+            return sum((x**2 for x in args), ctx.zero)
+        return sum(args, ctx.zero)
+
+    def fdot(ctx, xs, ys=None, conjugate=False):
+        if ys is not None:
+            xs = zip(xs, ys)
+        if conjugate:
+            cf = ctx.conj
+            return sum((x*cf(y) for (x,y) in xs), ctx.zero)
+        else:
+            return sum((x*y for (x,y) in xs), ctx.zero)
+
+    def fprod(ctx, args):
+        prod = ctx.one
+        for arg in args:
+            prod *= arg
+        return prod
+
+    def nprint(ctx, x, n=6, **kwargs):
+        """
+        Equivalent to ``print nstr(x, n)``.
+        """
+        print ctx.nstr(x, n, **kwargs)
+
     def chop(ctx, x, tol=None):
         """
         Chops off small real or imaginary parts, or converts
@@ -93,9 +141,11 @@ class StandardBaseContext(Context,
             if abs(x) < tol:
                 return ctx.zero
             if ctx._is_complex_type(x):
-                if abs(x.imag) < min(tol, absx*tol):
+                #part_tol = min(tol, absx*tol)
+                part_tol = max(tol, absx*tol)
+                if abs(x.imag) < part_tol:
                     return x.real
-                if abs(x.real) < min(tol, absx*tol):
+                if abs(x.real) < part_tol:
                     return ctx.mpc(0, x.imag)
         except TypeError:
             if isinstance(x, ctx.matrix):
@@ -117,7 +167,7 @@ class StandardBaseContext(Context,
         If only one epsilon is given, both are set to the same value.
         If none is given, both epsilons are set to `2^{-p+m}` where
         `p` is the current working precision and `m` is a small
-        integer. The default setting typically allows :func:`almosteq`
+        integer. The default setting typically allows :func:`~mpmath.almosteq`
         to be used to check for mathematical equality
         in the presence of small rounding errors.
 
@@ -157,10 +207,10 @@ class StandardBaseContext(Context,
 
     def arange(ctx, *args):
         r"""
-        This is a generalized version of Python's :func:`range` function
+        This is a generalized version of Python's :func:`~mpmath.range` function
         that accepts fractional endpoints and step sizes and
-        returns a list of ``mpf`` instances. Like :func:`range`,
-        :func:`arange` can be called with 1, 2 or 3 arguments:
+        returns a list of ``mpf`` instances. Like :func:`~mpmath.range`,
+        :func:`~mpmath.arange` can be called with 1, 2 or 3 arguments:
 
         ``arange(b)``
             `[0, 1, 2, \ldots, x]`
@@ -171,8 +221,8 @@ class StandardBaseContext(Context,
 
         where `b-1 \le x < b` (in the third case, `b-h \le x < b`).
 
-        Like Python's :func:`range`, the endpoint is not included. To
-        produce ranges where the endpoint is included, :func:`linspace`
+        Like Python's :func:`~mpmath.range`, the endpoint is not included. To
+        produce ranges where the endpoint is included, :func:`~mpmath.linspace`
         is more convenient.
 
         **Examples**
@@ -234,15 +284,13 @@ class StandardBaseContext(Context,
         samples from `a` to `b`. The syntax ``linspace(mpi(a,b), n)``
         is also valid.
 
-        This function is often more convenient than :func:`arange`
+        This function is often more convenient than :func:`~mpmath.arange`
         for partitioning an interval into subintervals, since
         the endpoint is included::
 
             >>> from mpmath import *
             >>> mp.dps = 15; mp.pretty = False
             >>> linspace(1, 4, 4)
-            [mpf('1.0'), mpf('2.0'), mpf('3.0'), mpf('4.0')]
-            >>> linspace(mpi(1,4), 4)
             [mpf('1.0'), mpf('2.0'), mpf('3.0'), mpf('4.0')]
 
         You may also provide the keyword argument ``endpoint=False``::
@@ -278,6 +326,9 @@ class StandardBaseContext(Context,
 
     def cos_sin(ctx, z, **kwargs):
         return ctx.cos(z, **kwargs), ctx.sin(z, **kwargs)
+
+    def cospi_sinpi(ctx, z, **kwargs):
+        return ctx.cospi(z, **kwargs), ctx.sinpi(z, **kwargs)
 
     def _default_hyper_maxprec(ctx, p):
         return int(1000 * p**0.25 + 4*p)
@@ -317,8 +368,117 @@ class StandardBaseContext(Context,
         finally:
             ctx.prec = prec
 
+    def mul_accurately(ctx, factors, check_step=1):
+        prec = ctx.prec
+        try:
+            extraprec = 10
+            while 1:
+                ctx.prec = prec + extraprec + 5
+                max_mag = ctx.ninf
+                one = ctx.one
+                s = one
+                k = 0
+                for factor in factors():
+                    s *= factor
+                    term = factor - one
+                    if (not k % check_step):
+                        term_mag = ctx.mag(term)
+                        max_mag = max(max_mag, term_mag)
+                        sum_mag = ctx.mag(s-one)
+                        #if sum_mag - term_mag > ctx.prec:
+                        #    break
+                        if -term_mag > ctx.prec:
+                            break
+                    k += 1
+                cancellation = max_mag - sum_mag
+                if cancellation != cancellation:
+                    break
+                if cancellation < extraprec or ctx._fixed_precision:
+                    break
+                extraprec += min(ctx.prec, cancellation)
+            return s
+        finally:
+            ctx.prec = prec
+
     def power(ctx, x, y):
+        r"""Converts `x` and `y` to mpmath numbers and evaluates
+        `x^y = \exp(y \log(x))`::
+
+            >>> from mpmath import *
+            >>> mp.dps = 30; mp.pretty = True
+            >>> power(2, 0.5)
+            1.41421356237309504880168872421
+
+        This shows the leading few digits of a large Mersenne prime
+        (performing the exact calculation ``2**43112609-1`` and
+        displaying the result in Python would be very slow)::
+
+            >>> power(2, 43112609)-1
+            3.16470269330255923143453723949e+12978188
+        """
         return ctx.convert(x) ** ctx.convert(y)
 
     def _zeta_int(ctx, n):
         return ctx.zeta(n)
+
+    def maxcalls(ctx, f, N):
+        """
+        Return a wrapped copy of *f* that raises ``NoConvergence`` when *f*
+        has been called more than *N* times::
+
+            >>> from mpmath import *
+            >>> mp.dps = 15
+            >>> f = maxcalls(sin, 10)
+            >>> print sum(f(n) for n in range(10))
+            1.95520948210738
+            >>> f(10)
+            Traceback (most recent call last):
+              ...
+            NoConvergence: maxcalls: function evaluated 10 times
+
+        """
+        counter = [0]
+        def f_maxcalls_wrapped(*args, **kwargs):
+            counter[0] += 1
+            if counter[0] > N:
+                raise ctx.NoConvergence("maxcalls: function evaluated %i times" % N)
+            return f(*args, **kwargs)
+        return f_maxcalls_wrapped
+
+    def memoize(ctx, f):
+        """
+        Return a wrapped copy of *f* that caches computed values, i.e.
+        a memoized copy of *f*. Values are only reused if the cached precision
+        is equal to or higher than the working precision::
+
+            >>> from mpmath import *
+            >>> mp.dps = 15; mp.pretty = True
+            >>> f = memoize(maxcalls(sin, 1))
+            >>> f(2)
+            0.909297426825682
+            >>> f(2)
+            0.909297426825682
+            >>> mp.dps = 25
+            >>> f(2)
+            Traceback (most recent call last):
+              ...
+            NoConvergence: maxcalls: function evaluated 1 times
+
+        """
+        f_cache = {}
+        def f_cached(*args, **kwargs):
+            if kwargs:
+                key = args, tuple(kwargs.items())
+            else:
+                key = args
+            prec = ctx.prec
+            if key in f_cache:
+                cprec, cvalue = f_cache[key]
+                if cprec >= prec:
+                    return +cvalue
+            value = f(*args, **kwargs)
+            f_cache[key] = (prec, value)
+            return value
+        f_cached.__name__ = f.__name__
+        f_cached.__doc__ = f.__doc__
+        return f_cached

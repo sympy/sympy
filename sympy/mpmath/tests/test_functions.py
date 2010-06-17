@@ -458,7 +458,7 @@ def test_aliases():
     assert degrees(5.6) == 5.6 / degree
     assert radians(5.6) == 5.6 * degree
     assert power(-1,0.5) == j
-    assert modf(25,7) == 4.0 and isinstance(modf(25,7), mpf)
+    assert fmod(25,7) == 4.0 and isinstance(fmod(25,7), mpf)
 
 def test_arg_sign():
     assert arg(3) == 0
@@ -517,7 +517,7 @@ def test_arange():
 def test_linspace():
     assert linspace(2, 9, 7) == [mpf('2.0'), mpf('3.166666666666667'),
         mpf('4.3333333333333339'), mpf('5.5'), mpf('6.666666666666667'),
-        mpf('7.8333333333333339'), mpf('9.0')] == linspace(mpi(2, 9), 7)
+        mpf('7.8333333333333339'), mpf('9.0')]
     assert linspace(2, 9, 7, endpoint=0) == [mpf('2.0'), mpf('3.0'), mpf('4.0'),
         mpf('5.0'), mpf('6.0'), mpf('7.0'), mpf('8.0')]
     assert linspace(2, 7, 1) == [mpf(2)]

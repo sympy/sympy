@@ -18,7 +18,7 @@ from libmpf import (\
     from_rational,
     fzero, fone, fnone, ftwo, finf, fninf, fnan,
     mpf_sign, mpf_add, mpf_abs, mpf_pos,
-    mpf_cmp, mpf_lt, mpf_le, mpf_gt,
+    mpf_cmp, mpf_lt, mpf_le, mpf_gt, mpf_min_max,
     mpf_perturb, mpf_neg, mpf_shift, mpf_sub, mpf_mul, mpf_div,
     sqrt_fixed, mpf_sqrt, mpf_rdiv_int, mpf_pow_int,
     to_rational,
@@ -127,7 +127,7 @@ def make_hyp_summator(key):
             add("%sINT_%i = coeffs[%i]" % (W, i, i))
         elif flag == 'Q':
             ([arat,brat][i >= p]).append(i)
-            add("%sP_%i, %sQ_%i = coeffs[%i]" % (W, i, W, i, i))
+            add("%sP_%i, %sQ_%i = coeffs[%i]._mpq_" % (W, i, W, i, i))
         elif flag == 'R':
             ([areal,breal][i >= p]).append(i)
             add("xsign, xm, xe, xbc = coeffs[%i]._mpf_" % i)
@@ -1043,7 +1043,7 @@ def mpc_agm(a, b, prec, rnd=round_fast):
         a1 = mpc_shift(mpc_add(a, b, wp), -1)
         b1 = mpc_sqrt(mpc_mul(a, b, wp), wp)
         a, b = a1, b1
-        size = sorted([mpc_abs(a,10), mpc_abs(a,10)], cmp=mpf_cmp)[1]
+        size = mpf_min_max([mpc_abs(a,10), mpc_abs(b,10)])[1]
         err = mpc_abs(mpc_sub(a, b, 10), 10)
         if size == fzero or mpf_lt(err, mpf_mul(eps, size)):
             return a

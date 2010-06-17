@@ -31,7 +31,7 @@ Zeta function zeros
 
 :func:`zetazero`
 ^^^^^^^^^^^^^^^^
-.. autofunction:: mpmath.zetazero(n, url='http://www.dtc.umn.edu/~odlyzko/zeta_tables/zeros1')
+.. autofunction:: mpmath.zetazero(n, verbose=False)
 
 Riemann-Siegel functions and Gram points
 ........................................

@@ -89,6 +89,10 @@ Inverse trigonometric functions
 ^^^^^^^^^^^^^^^^
 .. autofunction:: mpmath.atan(x, **kwargs)
 
+:func:`atan2`
+^^^^^^^^^^^^^
+.. autofunction:: mpmath.atan2(y, x)
+
 :func:`asec`
 ^^^^^^^^^^^^^^^^
 .. autofunction:: mpmath.asec(x)

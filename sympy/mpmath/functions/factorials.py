@@ -157,13 +157,13 @@ def hyperfac(ctx, z):
     return v / ctx.barnesg(zp1)
 
 @defun_wrapped
-def loggamma(ctx, z):
+def loggamma_old(ctx, z):
     a = ctx._re(z)
     b = ctx._im(z)
     if not b and a > 0:
-        return ctx.ln(ctx.gamma(z))
+        return ctx.ln(ctx.gamma_old(z))
     u = ctx.arg(z)
-    w = ctx.ln(ctx.gamma(z))
+    w = ctx.ln(ctx.gamma_old(z))
     if b:
         gi = -b - u/2 + a*u + b*ctx.ln(abs(z))
         n = ctx.floor((gi-ctx._im(w))/(2*ctx.pi)+0.5) * (2*ctx.pi)

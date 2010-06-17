@@ -117,10 +117,14 @@ def hypercomb(ctx, function, params=[], discard_known_zeros=True, **kwargs):
                     print "    gamma", ctx.nstr(alpha_s), ctx.nstr(beta_s)
                     print "    hyper", ctx.nstr(a_s), ctx.nstr(b_s)
                     print "    z", ctx.nstr(z)
-                v = ctx.hyper(a_s, b_s, z, **kwargs)
-                for a in alpha_s: v *= ctx.gamma(a)
-                for b in beta_s: v /= ctx.gamma(b)
-                for w, c in zip(w_s, c_s): v *= ctx.power(w, c)
+                #v = ctx.hyper(a_s, b_s, z, **kwargs)
+                #for a in alpha_s: v *= ctx.gamma(a)
+                #for b in beta_s: v *= ctx.rgamma(b)
+                #for w, c in zip(w_s, c_s): v *= ctx.power(w, c)
+                v = ctx.fprod([ctx.hyper(a_s, b_s, z, **kwargs)] + \
+                    [ctx.gamma(a) for a in alpha_s] + \
+                    [ctx.rgamma(b) for b in beta_s] + \
+                    [ctx.power(w,c) for (w,c) in zip(w_s,c_s)])
                 if verbose:
                     print "    Value:", v
                 evaluated_terms.append(v)
@@ -317,7 +321,7 @@ def _hyp1f1(ctx, a_s, b_s, z, **kwargs):
         try:
             try:
                 ctx.prec += magz
-                sector = ctx._im(z) < 0 and ctx._re(z) <= 0
+                sector = ctx._im(z) < 0
                 def h(a,b):
                     if sector:
                         E = ctx.expjpi(ctx.fneg(a, exact=True))
@@ -1498,8 +1502,9 @@ def legenq(ctx, n, m, z, type=2, **kwargs):
         return ctx.nan
     if type == 2:
         def h(n, m):
-            s = 2 * ctx.sinpi(m) / ctx.pi
-            c = ctx.cospi(m)
+            cos, sin = ctx.cospi_sinpi(m)
+            s = 2 * sin / ctx.pi
+            c = cos
             a = 1+z
             b = 1-z
             u = m/2
@@ -1548,12 +1553,12 @@ def chebyu(ctx, n, x, **kwargs):
 
 @defun
 def j0(ctx, x):
-    """Computes the Bessel function `J_0(x)`. See :func:`besselj`."""
+    """Computes the Bessel function `J_0(x)`. See :func:`~mpmath.besselj`."""
     return ctx.besselj(0, x)
 
 @defun
 def j1(ctx, x):
-    """Computes the Bessel function `J_1(x)`.  See :func:`besselj`."""
+    """Computes the Bessel function `J_1(x)`.  See :func:`~mpmath.besselj`."""
     return ctx.besselj(1, x)
 
 @defun
@@ -1691,8 +1696,9 @@ def bessely(ctx, n, z, derivative=0, **kwargs):
     elif d < 0:
         ctx.prec -= d
     # TODO: avoid cancellation for imaginary arguments
-    return (ctx.besselj(n,z,derivative,**kwargs)*ctx.cospi(n) - \
-        ctx.besselj(-n,z,derivative,**kwargs))/ctx.sinpi(n)
+    cos, sin = ctx.cospi_sinpi(n)
+    return (ctx.besselj(n,z,derivative,**kwargs)*cos - \
+        ctx.besselj(-n,z,derivative,**kwargs))/sin
 
 @defun_wrapped
 def besselk(ctx, n, z, **kwargs):
@@ -1778,8 +1784,9 @@ def ber(ctx, n, z, **kwargs):
     # http://functions.wolfram.com/Bessel-TypeFunctions/KelvinBer2/26/01/02/0001/
     def h(n):
         r = -(z/4)**4
-        T1 = [ctx.cospi(0.75*n), z/2], [1, n], [], [n+1], [], [0.5, 0.5*(n+1), 0.5*n+1], r
-        T2 = [-ctx.sinpi(0.75*n), z/2], [1, n+2], [], [n+2], [], [1.5, 0.5*(n+3), 0.5*n+1], r
+        cos, sin = ctx.cospi_sinpi(-0.75*n)
+        T1 = [cos, z/2], [1, n], [], [n+1], [], [0.5, 0.5*(n+1), 0.5*n+1], r
+        T2 = [sin, z/2], [1, n+2], [], [n+2], [], [1.5, 0.5*(n+3), 0.5*n+1], r
         return T1, T2
     return ctx.hypercomb(h, [n], **kwargs)
 
@@ -1790,8 +1797,9 @@ def bei(ctx, n, z, **kwargs):
     # http://functions.wolfram.com/Bessel-TypeFunctions/KelvinBei2/26/01/02/0001/
     def h(n):
         r = -(z/4)**4
-        T1 = [ctx.cospi(0.75*n), z/2], [1, n+2], [], [n+2], [], [1.5, 0.5*(n+3), 0.5*n+1], r
-        T2 = [ctx.sinpi(0.75*n), z/2], [1, n], [], [n+1], [], [0.5, 0.5*(n+1), 0.5*n+1], r
+        cos, sin = ctx.cospi_sinpi(0.75*n)
+        T1 = [cos, z/2], [1, n+2], [], [n+2], [], [1.5, 0.5*(n+3), 0.5*n+1], r
+        T2 = [sin, z/2], [1, n], [], [n+1], [], [0.5, 0.5*(n+1), 0.5*n+1], r
         return T1, T2
     return ctx.hypercomb(h, [n], **kwargs)
 
@@ -1802,10 +1810,12 @@ def ker(ctx, n, z, **kwargs):
     # http://functions.wolfram.com/Bessel-TypeFunctions/KelvinKer2/26/01/02/0001/
     def h(n):
         r = -(z/4)**4
-        T1 = [2, z, 4*ctx.cospi(0.25*n)], [-n-3, n, 1], [-n], [], [], [0.5, 0.5*(1+n), 0.5*(n+2)], r
-        T2 = [2, z, -ctx.sinpi(0.25*n)], [-n-3, 2+n, 1], [-n-1], [], [], [1.5, 0.5*(3+n), 0.5*(n+2)], r
-        T3 = [2, z, 4*ctx.cospi(0.75*n)], [n-3, -n, 1], [n], [], [], [0.5, 0.5*(1-n), 1-0.5*n], r
-        T4 = [2, z, -ctx.sinpi(0.75*n)], [n-3, 2-n, 1], [n-1], [], [], [1.5, 0.5*(3-n), 1-0.5*n], r
+        cos1, sin1 = ctx.cospi_sinpi(0.25*n)
+        cos2, sin2 = ctx.cospi_sinpi(0.75*n)
+        T1 = [2, z, 4*cos1], [-n-3, n, 1], [-n], [], [], [0.5, 0.5*(1+n), 0.5*(n+2)], r
+        T2 = [2, z, -sin1], [-n-3, 2+n, 1], [-n-1], [], [], [1.5, 0.5*(3+n), 0.5*(n+2)], r
+        T3 = [2, z, 4*cos2], [n-3, -n, 1], [n], [], [], [0.5, 0.5*(1-n), 1-0.5*n], r
+        T4 = [2, z, -sin2], [n-3, 2-n, 1], [n-1], [], [], [1.5, 0.5*(3-n), 1-0.5*n], r
         return T1, T2, T3, T4
     return ctx.hypercomb(h, [n], **kwargs)
 
@@ -1816,10 +1826,12 @@ def kei(ctx, n, z, **kwargs):
     # http://functions.wolfram.com/Bessel-TypeFunctions/KelvinKei2/26/01/02/0001/
     def h(n):
         r = -(z/4)**4
-        T1 = [-ctx.cospi(0.75*n), 2, z], [1, n-3, 2-n], [n-1], [], [], [1.5, 0.5*(3-n), 1-0.5*n], r
-        T2 = [-ctx.sinpi(0.75*n), 2, z], [1, n-1, -n], [n], [], [], [0.5, 0.5*(1-n), 1-0.5*n], r
-        T3 = [-ctx.sinpi(0.25*n), 2, z], [1, -n-1, n], [-n], [], [], [0.5, 0.5*(n+1), 0.5*(n+2)], r
-        T4 = [-ctx.cospi(0.25*n), 2, z], [1, -n-3, n+2], [-n-1], [], [], [1.5, 0.5*(n+3), 0.5*(n+2)], r
+        cos1, sin1 = ctx.cospi_sinpi(0.75*n)
+        cos2, sin2 = ctx.cospi_sinpi(0.25*n)
+        T1 = [-cos1, 2, z], [1, n-3, 2-n], [n-1], [], [], [1.5, 0.5*(3-n), 1-0.5*n], r
+        T2 = [-sin1, 2, z], [1, n-1, -n], [n], [], [], [0.5, 0.5*(1-n), 1-0.5*n], r
+        T3 = [-sin2, 2, z], [1, -n-1, n], [-n], [], [], [0.5, 0.5*(n+1), 0.5*(n+2)], r
+        T4 = [-cos2, 2, z], [1, -n-3, n+2], [-n-1], [], [], [1.5, 0.5*(n+3), 0.5*(n+2)], r
         return T1, T2, T3, T4
     return ctx.hypercomb(h, [n], **kwargs)
 
@@ -1886,11 +1898,11 @@ def meijerg(ctx, a_s, b_s, z, r=1, series=None, **kwargs):
     return ctx.hypercomb(h, a+b, **kwargs)
 
 @defun_wrapped
-def appellf1(ctx,a,b1,b2,c,z1,z2,**kwargs):
-    # Assume z1 smaller
-    # We will use z1 for the outer loop
-    if abs(z1) > abs(z2):
-        z1, z2 = z2, z1
+def appellf1(ctx,a,b1,b2,c,x,y,**kwargs):
+    # Assume x smaller
+    # We will use x for the outer loop
+    if abs(x) > abs(y):
+        x, y = y, x
         b1, b2 = b2, b1
     def ok(x):
         return abs(x) < 0.99
@@ -1900,35 +1912,278 @@ def appellf1(ctx,a,b1,b2,c,z1,z2,**kwargs):
     elif ctx.isnpint(b1):
         pass
     elif ctx.isnpint(b2):
-        z1, z2, b1, b2 = z2, z1, b2, b1
+        x, y, b1, b2 = y, x, b2, b1
     else:
-        #print z1, z2
-        # Note: ok if |z2| > 1, because
+        #print x, y
+        # Note: ok if |y| > 1, because
         # 2F1 implements analytic continuation
-        if not ok(z1):
-            u1 = (z1-z2)/(z1-1)
+        if not ok(x):
+            u1 = (x-y)/(x-1)
             if not ok(u1):
                 raise ValueError("Analytic continuation not implemented")
             #print "Using analytic continuation"
-            return (1-z1)**(-b1)*(1-z2)**(c-a-b2)*\
-                ctx.appellf1(c-a,b1,c-b1-b2,c,u1,z2,**kwargs)
-    #print "inner is", a, b2, c
-    one = ctx.one
+            return (1-x)**(-b1)*(1-y)**(c-a-b2)*\
+                ctx.appellf1(c-a,b1,c-b1-b2,c,u1,y,**kwargs)
+    return ctx.hyper2d({'m+n':[a],'m':[b1],'n':[b2]}, {'m+n':[c]}, x,y, **kwargs)
+
+@defun
+def appellf2(ctx,a,b1,b2,c1,c2,x,y,**kwargs):
+    # TODO: continuation
+    return ctx.hyper2d({'m+n':[a],'m':[b1],'n':[b2]},
+        {'m':[c1],'n':[c2]}, x,y, **kwargs)
+
+@defun
+def appellf3(ctx,a1,a2,b1,b2,c,x,y,**kwargs):
+    outer_polynomial = ctx.isnpint(a1) or ctx.isnpint(b1)
+    inner_polynomial = ctx.isnpint(a2) or ctx.isnpint(b2)
+    if not outer_polynomial:
+        if inner_polynomial or abs(x) > abs(y):
+            x, y = y, x
+            a1,a2,b1,b2 = a2,a1,b2,b1
+    return ctx.hyper2d({'m':[a1,b1],'n':[a2,b2]}, {'m+n':[c]},x,y,**kwargs)
+
+@defun
+def appellf4(ctx,a,b,c1,c2,x,y,**kwargs):
+    # TODO: continuation
+    return ctx.hyper2d({'m+n':[a,b]}, {'m':[c1],'n':[c2]},x,y,**kwargs)
+
+@defun
+def hyper2d(ctx, a, b, x, y, **kwargs):
+    r"""
+    Sums the generalized 2D hypergeometric series
+
+    .. math ::
+
+        \sum_{m=0}^{\infty} \sum_{n=0}^{\infty}
+            \frac{P((a),m,n)}{Q((b),m,n)}
+            \frac{x^m y^n} {m! n!}
+
+    where `(a) = (a_1,\ldots,a_r)`, `(b) = (b_1,\ldots,b_s)` and where
+    `P` and `Q` are products of rising factorials such as `(a_j)_n` or
+    `(a_j)_{m+n}`. `P` and `Q` are specified in the form of dicts, with
+    the `m` and `n` dependence as keys and parameter lists as values.
+    The supported rising factorials are given in the following table
+    (note that only a few are supported in `Q`):
+
+    +------------+-------------------+--------+
+    | Key        |  Rising factorial | `Q`    |
+    +============+===================+========+
+    | ``'m'``    |   `(a_j)_m`       | Yes    |
+    +------------+-------------------+--------+
+    | ``'n'``    |   `(a_j)_n`       | Yes    |
+    +------------+-------------------+--------+
+    | ``'m+n'``  |   `(a_j)_{m+n}`   | Yes    |
+    +------------+-------------------+--------+
+    | ``'m-n'``  |   `(a_j)_{m-n}`   | No     |
+    +------------+-------------------+--------+
+    | ``'n-m'``  |   `(a_j)_{n-m}`   | No     |
+    +------------+-------------------+--------+
+    | ``'2m+n'`` |   `(a_j)_{2m+n}`  | No     |
+    +------------+-------------------+--------+
+    | ``'2m-n'`` |   `(a_j)_{2m-n}`  | No     |
+    +------------+-------------------+--------+
+    | ``'2n-m'`` |   `(a_j)_{2n-m}`  | No     |
+    +------------+-------------------+--------+
+
+    For example, the Appell F1 and F4 functions
+
+    .. math ::
+
+        F_1 = \sum_{m=0}^{\infty} \sum_{n=0}^{\infty}
+              \frac{(a)_{m+n} (b)_m (c)_n}{(d)_{m+n}}
+              \frac{x^m y^n}{m! n!}
+
+        F_4 = \sum_{m=0}^{\infty} \sum_{n=0}^{\infty}
+              \frac{(a)_{m+n} (b)_{m+n}}{(c)_m (d)_{n}}
+              \frac{x^m y^n}{m! n!}
+
+    can be represented respectively as
+
+        ``hyper2d({'m+n':[a], 'm':[b], 'n':[c]}, {'m+n':[d]}, x, y)``
+
+        ``hyper2d({'m+n':[a,b]}, {'m':[c], 'n':[d]}, x, y)``
+
+    More generally, :func:`~mpmath.hyper2d` can evaluate any of the 34 distinct
+    convergent second-order (generalized Gaussian) hypergeometric
+    series enumerated by Horn, as well as the Kampe de Feriet
+    function.
+
+    The series is computed by rewriting it so that the inner
+    series (i.e. the series containing `n` and `y`) has the form of an
+    ordinary generalized hypergeometric series and thereby can be
+    evaluated efficiently using :func:`~mpmath.hyper`. If possible,
+    manually swapping `x` and `y` and the corresponding parameters
+    can sometimes give better results.
+
+    **Examples**
+
+    Two separable cases: a product of two geometric series, and a
+    product of two Gaussian hypergeometric functions::
+
+        >>> from mpmath import *
+        >>> mp.dps = 25; mp.pretty = True
+        >>> x, y = mpf(0.25), mpf(0.5)
+        >>> hyper2d({'m':1,'n':1}, {}, x,y)
+        2.666666666666666666666667
+        >>> 1/(1-x)/(1-y)
+        2.666666666666666666666667
+        >>> hyper2d({'m':[1,2],'n':[3,4]}, {'m':[5],'n':[6]}, x,y)
+        4.164358531238938319669856
+        >>> hyp2f1(1,2,5,x)*hyp2f1(3,4,6,y)
+        4.164358531238938319669856
+
+    Some more series that can be done in closed form::
+
+        >>> hyper2d({'m':1,'n':1},{'m+n':1},x,y)
+        2.013417124712514809623881
+        >>> (exp(x)*x-exp(y)*y)/(x-y)
+        2.013417124712514809623881
+
+    Six of the 34 Horn functions, G1-G3 and H1-H3::
+
+        >>> from mpmath import *
+        >>> mp.dps = 10; mp.pretty = True
+        >>> x, y = 0.0625, 0.125
+        >>> a1,a2,b1,b2,c1,c2,d = 1.1,-1.2,-1.3,-1.4,1.5,-1.6,1.7
+        >>> hyper2d({'m+n':a1,'n-m':b1,'m-n':b2},{},x,y)  # G1
+        1.139090746
+        >>> nsum(lambda m,n: rf(a1,m+n)*rf(b1,n-m)*rf(b2,m-n)*\
+        ...     x**m*y**n/fac(m)/fac(n), [0,inf], [0,inf])
+        1.139090746
+        >>> hyper2d({'m':a1,'n':a2,'n-m':b1,'m-n':b2},{},x,y)  # G2
+        0.9503682696
+        >>> nsum(lambda m,n: rf(a1,m)*rf(a2,n)*rf(b1,n-m)*rf(b2,m-n)*\
+        ...     x**m*y**n/fac(m)/fac(n), [0,inf], [0,inf])
+        0.9503682696
+        >>> hyper2d({'2n-m':a1,'2m-n':a2},{},x,y)  # G3
+        1.029372029
+        >>> nsum(lambda m,n: rf(a1,2*n-m)*rf(a2,2*m-n)*\
+        ...     x**m*y**n/fac(m)/fac(n), [0,inf], [0,inf])
+        1.029372029
+        >>> hyper2d({'m-n':a1,'m+n':b1,'n':c1},{'m':d},x,y)  # H1
+        -1.605331256
+        >>> nsum(lambda m,n: rf(a1,m-n)*rf(b1,m+n)*rf(c1,n)/rf(d,m)*\
+        ...     x**m*y**n/fac(m)/fac(n), [0,inf], [0,inf])
+        -1.605331256
+        >>> hyper2d({'m-n':a1,'m':b1,'n':[c1,c2]},{'m':d},x,y)  # H2
+        -2.35405404
+        >>> nsum(lambda m,n: rf(a1,m-n)*rf(b1,m)*rf(c1,n)*rf(c2,n)/rf(d,m)*\
+        ...     x**m*y**n/fac(m)/fac(n), [0,inf], [0,inf])
+        -2.35405404
+        >>> hyper2d({'2m+n':a1,'n':b1},{'m+n':c1},x,y)  # H3
+        0.974479074
+        >>> nsum(lambda m,n: rf(a1,2*m+n)*rf(b1,n)/rf(c1,m+n)*\
+        ...     x**m*y**n/fac(m)/fac(n), [0,inf], [0,inf])
+        0.974479074
+
+    **References**
+
+    1. [SrivastavaKarlsson]_
+    2. [Weisstein]_ http://mathworld.wolfram.com/HornFunction.html
+    3. [Weisstein]_ http://mathworld.wolfram.com/AppellHypergeometricFunction.html
+
+    """
+    x = ctx.convert(x)
+    y = ctx.convert(y)
+    def parse(dct, key):
+        args = dct.pop(key, [])
+        try:
+            args = list(args)
+        except TypeError:
+            args = [args]
+        return map(ctx.convert, args)
+    a_s = dict(a)
+    b_s = dict(b)
+    a_m = parse(a, 'm')
+    a_n = parse(a, 'n')
+    a_m_add_n = parse(a, 'm+n')
+    a_m_sub_n = parse(a, 'm-n')
+    a_n_sub_m = parse(a, 'n-m')
+    a_2m_add_n = parse(a, '2m+n')
+    a_2m_sub_n = parse(a, '2m-n')
+    a_2n_sub_m = parse(a, '2n-m')
+    b_m = parse(b, 'm')
+    b_n = parse(b, 'n')
+    b_m_add_n = parse(b, 'm+n')
+    if a: raise ValueError("unsupported key: %r" % a.keys()[0])
+    if b: raise ValueError("unsupported key: %r" % b.keys()[0])
     s = 0
-    t = 1
-    k = 0
-    while 1:
-        h = ctx.hyp2f1(a,b2,c,z2,zeroprec=ctx.prec,**kwargs)
-        term = t * h
-        if abs(term) < ctx.eps and abs(h) > 10*ctx.eps:
-            break
-        s += term
-        k += 1
-        t = (t*a*b1*z1) / (c*k)
-        c += one
-        a += one
-        b1 += one
-    return s
+    outer = ctx.one
+    m = ctx.mpf(0)
+    ok_count = 0
+    prec = ctx.prec
+    maxterms = kwargs.get('maxterms', 20*prec)
+    try:
+        ctx.prec += 10
+        tol = +ctx.eps
+        while 1:
+            inner_sign = 1
+            outer_sign = 1
+            inner_a = list(a_n)
+            inner_b = list(b_n)
+            outer_a = [a+m for a in a_m]
+            outer_b = [b+m for b in b_m]
+            # (a)_{m+n} = (a)_m (a+m)_n
+            for a in a_m_add_n:
+                a = a+m
+                inner_a.append(a)
+                outer_a.append(a)
+            # (b)_{m+n} = (b)_m (b+m)_n
+            for b in b_m_add_n:
+                b = b+m
+                inner_b.append(b)
+                outer_b.append(b)
+            # (a)_{n-m} = (a-m)_n / (a-m)_m
+            for a in a_n_sub_m:
+                inner_a.append(a-m)
+                outer_b.append(a-m-1)
+            # (a)_{m-n} = (-1)^(m+n) (1-a-m)_m / (1-a-m)_n
+            for a in a_m_sub_n:
+                inner_sign *= (-1)
+                outer_sign *= (-1)**(m)
+                inner_b.append(1-a-m)
+                outer_a.append(-a-m)
+            # (a)_{2m+n} = (a)_{2m} (a+2m)_n
+            for a in a_2m_add_n:
+                inner_a.append(a+2*m)
+                outer_a.append((a+2*m)*(1+a+2*m))
+            # (a)_{2m-n} = (-1)^(2m+n) (1-a-2m)_{2m} / (1-a-2m)_n
+            for a in a_2m_sub_n:
+                inner_sign *= (-1)
+                inner_b.append(1-a-2*m)
+                outer_a.append((a+2*m)*(1+a+2*m))
+            # (a)_{2n-m} = 4^n ((a-m)/2)_n ((a-m+1)/2)_n / (a-m)_m
+            for a in a_2n_sub_m:
+                inner_sign *= 4
+                inner_a.append(0.5*(a-m))
+                inner_a.append(0.5*(a-m+1))
+                outer_b.append(a-m-1)
+            inner = ctx.hyper(inner_a, inner_b, inner_sign*y,
+                zeroprec=ctx.prec, **kwargs)
+            term = outer * inner * outer_sign
+            if abs(term) < tol:
+                ok_count += 1
+            else:
+                ok_count = 0
+            if ok_count >= 3 or not outer:
+                break
+            s += term
+            for a in outer_a: outer *= a
+            for b in outer_b: outer /= b
+            m += 1
+            outer = outer * x / m
+            if m > maxterms:
+                raise ctx.NoConvergence("maxterms exceeded in hyper2d")
+    finally:
+        ctx.prec = prec
+    return +s
+
+"""
+@defun
+def kampe_de_feriet(ctx,a,b,c,d,e,f,x,y,**kwargs):
+    return ctx.hyper2d({'m+n':a,'m':b,'n':c},
+        {'m+n':d,'m':e,'n':f}, x,y, **kwargs)
+"""
 
 @defun_wrapped
 def coulombc(ctx, l, eta, _cache={}):
@@ -2036,12 +2291,13 @@ def spherharm(ctx, l, m, theta, phi, **kwargs):
         # http://functions.wolfram.com/Polynomials/
         #     SphericalHarmonicY/26/01/02/0004/
         def h(l,m):
+            absm = abs(m)
             C = [-1, ctx.expj(m*phi),
-                 (2*l+1)*ctx.fac(l+abs(m))/ctx.pi/ctx.fac(l-abs(m)),
+                 (2*l+1)*ctx.fac(l+absm)/ctx.pi/ctx.fac(l-absm),
                  ctx.sin(theta)**2,
-                 ctx.fac(abs(m)), 2]
-            P = [0.5*m*(ctx.sign(m)+1), 1, 0.5, 0.5*abs(m), -1, -abs(m)-1]
-            return ((C, P, [], [], [abs(m)-l, l+abs(m)+1], [abs(m)+1],
+                 ctx.fac(absm), 2]
+            P = [0.5*m*(ctx.sign(m)+1), 1, 0.5, 0.5*absm, -1, -absm-1]
+            return ((C, P, [], [], [absm-l, l+absm+1], [absm+1],
                 ctx.sin(0.5*theta)**2),)
     else:
         # http://functions.wolfram.com/HypergeometricFunctions/
@@ -2049,12 +2305,77 @@ def spherharm(ctx, l, m, theta, phi, **kwargs):
         def h(l,m):
             if ctx.isnpint(l-m+1) or ctx.isnpint(l+m+1) or ctx.isnpint(1-m):
                 return (([0], [-1], [], [], [], [], 0),)
-            C = [0.5*ctx.expj(m*phi),
-                 (2*l+1)/ctx.pi,
-                 ctx.gamma(l-m+1),
-                 ctx.gamma(l+m+1),
-                 ctx.cos(0.5*theta)**2,
-                 ctx.sin(0.5*theta)**2]
+            cos, sin = ctx.cos_sin(0.5*theta)
+            C = [0.5*ctx.expj(m*phi), (2*l+1)/ctx.pi,
+                 ctx.gamma(l-m+1), ctx.gamma(l+m+1),
+                 cos**2, sin**2]
             P = [1, 0.5, 0.5, -0.5, 0.5*m, -0.5*m]
-            return ((C, P, [], [1-m], [-l,l+1], [1-m], ctx.sin(0.5*theta)**2),)
+            return ((C, P, [], [1-m], [-l,l+1], [1-m], sin**2),)
     return ctx.hypercomb(h, [l,m], **kwargs)
+
+@defun
+def bihyper(ctx, a_s, b_s, z, **kwargs):
+    r"""
+    Evaluates the bilateral hypergeometric series
+
+    .. math ::
+
+        \,_AH_B(a_1, \ldots, a_k; b_1, \ldots, b_B; z) =
+            \sum_{n=-\infty}^{\infty}
+            \frac{(a_1)_n \ldots (a_A)_n}
+                 {(b_1)_n \ldots (b_B)_n} \, z^n
+
+    where, for direct convergence, `A = B` and `|z| = 1`, although a
+    regularized sum exists more generally by considering the
+    bilateral series as a sum of two ordinary hypergeometric
+    functions. In order for the series to make sense, none of the
+    parameters may be integers.
+
+    **Examples**
+
+    The value of `\,_2H_2` at `z = 1` is given by Dougall's formula::
+
+        >>> from mpmath import *
+        >>> mp.dps = 25; mp.pretty = True
+        >>> a,b,c,d = 0.5, 1.5, 2.25, 3.25
+        >>> bihyper([a,b],[c,d],1)
+        -14.49118026212345786148847
+        >>> gammaprod([c,d,1-a,1-b,c+d-a-b-1],[c-a,d-a,c-b,d-b])
+        -14.49118026212345786148847
+
+    The regularized function `\,_1H_0` can be expressed as the
+    sum of one `\,_2F_0` function and one `\,_1F_1` function::
+
+        >>> a = mpf(0.25)
+        >>> z = mpf(0.75)
+        >>> bihyper([a], [], z)
+        (0.2454393389657273841385582 + 0.2454393389657273841385582j)
+        >>> hyper([a,1],[],z) + (hyper([1],[1-a],-1/z)-1)
+        (0.2454393389657273841385582 + 0.2454393389657273841385582j)
+        >>> hyper([a,1],[],z) + hyper([1],[2-a],-1/z)/z/(a-1)
+        (0.2454393389657273841385582 + 0.2454393389657273841385582j)
+
+    **References**
+
+    1. [Slater]_ (chapter 6: "Bilateral Series", pp. 180-189)
+    2. [Wikipedia]_ http://en.wikipedia.org/wiki/Bilateral_hypergeometric_series
+
+    """
+    z = ctx.convert(z)
+    c_s = a_s + b_s
+    p = len(a_s)
+    q = len(b_s)
+    if (p, q) == (0,0) or (p, q) == (1,1):
+        return ctx.zero * z
+    neg = (p-q) % 2
+    def h(*c_s):
+        a_s = list(c_s[:p])
+        b_s = list(c_s[p:])
+        aa_s = [2-b for b in b_s]
+        bb_s = [2-a for a in a_s]
+        rp = [(-1)**neg * z] + [1-b for b in b_s] + [1-a for a in a_s]
+        rc = [-1] + [1]*len(b_s) + [-1]*len(a_s)
+        T1 = [], [], [], [], a_s + [1], b_s, z
+        T2 = rp, rc, [], [], aa_s + [1], bb_s, (-1)**neg / z
+        return T1, T2
+    return ctx.hypercomb(h, c_s, **kwargs)

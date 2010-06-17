@@ -98,7 +98,7 @@ math_float_inf = 1e300 * 1e300
 # This function can be used to round a mantissa generally. However,
 # we will try to do most rounding inline for efficiency.
 def round_int(x, n, rnd):
-    if rnd is round_nearest:
+    if rnd == round_nearest:
         if x >= 0:
             t = x >> (n-1)
             if t & 1 and ((t & 2) or (x & h_mask[n<300][n])):
@@ -107,15 +107,15 @@ def round_int(x, n, rnd):
                 return t>>1
         else:
             return -round_int(-x, n, rnd)
-    if rnd is round_floor:
+    if rnd == round_floor:
         return x >> n
-    if rnd is round_ceiling:
+    if rnd == round_ceiling:
         return -((-x) >> n)
-    if rnd is round_down:
+    if rnd == round_down:
         if x >= 0:
             return x >> n
         return -((-x) >> n)
-    if rnd is round_up:
+    if rnd == round_up:
         if x >= 0:
             return -((-x) >> n)
         return x >> n
@@ -166,7 +166,7 @@ def _normalize(sign, man, exp, bc, prec, rnd):
     # Cut mantissa down to size if larger than target precision
     n = bc - prec
     if n > 0:
-        if rnd is round_nearest:
+        if rnd == round_nearest:
             t = man >> (n-1)
             if t & 1 and ((t & 2) or (man & h_mask[n<300][n])):
                 man = (t>>1)+1
@@ -207,7 +207,7 @@ def _normalize1(sign, man, exp, bc, prec, rnd):
     if bc <= prec:
         return sign, man, exp, bc
     n = bc - prec
-    if rnd is round_nearest:
+    if rnd == round_nearest:
         t = man >> (n-1)
         if t & 1 and ((t & 2) or (man & h_mask[n<300][n])):
             man = (t>>1)+1
@@ -352,27 +352,48 @@ def to_int(s, rnd=None):
     else:
         return round_int(man, -exp, rnd)
 
-def mpf_ceil(s, prec, rnd=round_fast):
-    """Calculate ceil of a raw mpf, and round the result in the given
-    direction (not necessarily ceiling). Note: returns a raw mpf
-    representing an integer, not a Python int."""
+def mpf_round_int(s, rnd):
     sign, man, exp, bc = s
     if (not man) and exp:
         return s
-    if exp > 0:
-        return mpf_pos(s, prec, rnd)
-    return from_int(to_int(s, round_ceiling), prec, rnd)
+    if exp >= 0:
+        return s
+    mag = exp+bc
+    if mag < 1:
+        if rnd == round_ceiling:
+            if sign: return fzero
+            else:    return fone
+        elif rnd == round_floor:
+            if sign: return fnone
+            else:    return fzero
+        elif rnd == round_nearest:
+            if mag < 0 or man == MPZ_ONE: return fzero
+            elif sign: return fnone
+            else:      return fone
+        else:
+            raise NotImplementedError
+    return mpf_pos(s, min(bc, mag), rnd)
 
-def mpf_floor(s, prec, rnd=round_fast):
-    """Calculate floor of a raw mpf, and round the result in the given
-    direction (not necessarily floor). Note: returns a raw mpf
-    representing an integer, not a Python int."""
-    sign, man, exp, bc = s
-    if (not man) and exp:
-        return s
-    if exp > 0:
-        return mpf_pos(s, prec, rnd)
-    return from_int(to_int(s, round_floor), prec, rnd)
+def mpf_floor(s, prec=0, rnd=round_fast):
+    v = mpf_round_int(s, round_floor)
+    if prec:
+        v = mpf_pos(v, prec, rnd)
+    return v
+
+def mpf_ceil(s, prec=0, rnd=round_fast):
+    v = mpf_round_int(s, round_ceiling)
+    if prec:
+        v = mpf_pos(v, prec, rnd)
+    return v
+
+def mpf_nint(s, prec=0, rnd=round_fast):
+    v = mpf_round_int(s, round_nearest)
+    if prec:
+        v = mpf_pos(v, prec, rnd)
+    return v
+
+def mpf_frac(s, prec=0, rnd=round_fast):
+    return mpf_sub(s, mpf_floor(s), prec, rnd)
 
 def from_float(x, prec=53, rnd=round_fast):
     """Create a raw mpf from a Python float, rounding if necessary.
@@ -519,8 +540,14 @@ def mpf_cmp(s, t):
         return -1
     # This reduces to direct integer comparison
     if sexp == texp:
-        if ssign: return -cmp(sman, tman)
-        else:     return cmp(sman, tman)
+        if sman == tman:
+            return 0
+        if sman > tman:
+            if ssign: return -1
+            else:     return 1
+        else:
+            if ssign: return 1
+            else:     return -1
     # Check position of the highest set bit in each number. If
     # different, there is certainly an inequality.
     a = sbc + sexp
@@ -559,13 +586,22 @@ def mpf_ge(s, t):
         return False
     return mpf_cmp(s, t) >= 0
 
-def mpf_pos(s, prec, rnd=round_fast):
+def mpf_min_max(seq):
+    min = max = seq[0]
+    for x in seq[1:]:
+        if mpf_lt(x, min): min = x
+        if mpf_gt(x, max): max = x
+    return min, max
+
+def mpf_pos(s, prec=0, rnd=round_fast):
     """Calculate 0+s for a raw mpf (i.e., just round s to the specified
     precision)."""
-    sign, man, exp, bc = s
-    if (not man) and exp:
-        return s
-    return normalize1(sign, man, exp, bc, prec, rnd)
+    if prec:
+        sign, man, exp, bc = s
+        if (not man) and exp:
+            return s
+        return normalize1(sign, man, exp, bc, prec, rnd)
+    return s
 
 def mpf_neg(s, prec=None, rnd=round_fast):
     """Negate a raw mpf (return -s), rounding the result to the
@@ -990,7 +1026,7 @@ def mpf_pow_int(s, n, prec, rnd=round_fast):
 
     # Use directed rounding all the way through to maintain rigorous
     # bounds for interval arithmetic
-    rounds_down = (rnd is round_nearest) or \
+    rounds_down = (rnd == round_nearest) or \
         shifts_down[rnd][result_sign]
 
     # Now we perform binary exponentiation. Need to estimate precision
@@ -1039,7 +1075,7 @@ def mpf_perturb(x, eps_sign, prec, rnd):
     With rounding to nearest, this is taken to simply normalize
     x to the given precision.
     """
-    if rnd is round_nearest:
+    if rnd == round_nearest:
         return mpf_pos(x, prec, rnd)
     sign, man, exp, bc = x
     eps = (eps_sign, MPZ_ONE, exp+bc-prec-1, 1)

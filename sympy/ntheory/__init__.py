@@ -6,7 +6,7 @@ from generate import nextprime, prevprime, prime, primepi, primerange,\
 randprime, Sieve, sieve
 from primetest import isprime, mr
 from factor_ import divisors, factorint, multiplicity, perfect_power,\
-pollard_pm1, pollard_rho, primefactors, totient, trailing
+pollard_pm1, pollard_rho, primefactors, totient, trailing, divisor_count
 from partitions_ import npartitions
 from residue import is_primitive_root, is_quad_residue, legendre_symbol,\
 n_order, totient_

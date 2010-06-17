@@ -3,9 +3,10 @@ Plotting (requires matplotlib)
 """
 
 from colorsys import hsv_to_rgb, hls_to_rgb
+from libmp import NoConvergence
 
 class VisualizationMethods(object):
-    plot_ignore = (ValueError, ArithmeticError, ZeroDivisionError)
+    plot_ignore = (ValueError, ArithmeticError, ZeroDivisionError, NoConvergence)
 
 def plot(ctx, f, xlim=[-5,5], ylim=None, points=200, file=None, dpi=None,
     singularities=[], axes=None):
@@ -33,7 +34,7 @@ def plot(ctx, f, xlim=[-5,5], ylim=None, points=200, file=None, dpi=None,
     real part is plotted with dashes and the imaginary part
     is plotted with dots.
 
-    NOTE: This function requires matplotlib (pylab).
+    .. note :: This function requires matplotlib (pylab).
     """
     if file:
         axes = None
@@ -92,9 +93,9 @@ def plot(ctx, f, xlim=[-5,5], ylim=None, points=200, file=None, dpi=None,
                 axes.plot(x, z, ':'+c, linewidth=3)
             else:
                 axes.plot(x, y, c, linewidth=3)
-    axes.set_xlim(xlim)
+    axes.set_xlim(map(float, xlim))
     if ylim:
-        axes.set_ylim(ylim)
+        axes.set_ylim(map(float, ylim))
     axes.set_xlabel('x')
     axes.set_ylabel('f(x)')
     axes.grid(True)
@@ -137,7 +138,7 @@ def cplot(ctx, f, re=[-5,5], im=[-5,5], points=2000, color=None,
     function that many times is likely to be slow, the 'verbose'
     option is useful to display progress.
 
-    NOTE: This function requires matplotlib (pylab).
+    .. note :: This function requires matplotlib (pylab).
     """
     if color is None:
         color = ctx.default_color_function
@@ -204,7 +205,7 @@ def splot(ctx, f, u=[-5,5], v=[-5,5], points=100, keep_aspect=True, \
         >>> f = lambda u, v: [r*cos(u), (R+r*sin(u))*cos(v), (R+r*sin(u))*sin(v)]
         >>> splot(f, [0, 2*pi], [0, 2*pi])    # doctest: +SKIP
 
-    NOTE: This function requires matplotlib (pylab) 0.98.5.3 or higher.
+    .. note :: This function requires matplotlib (pylab) 0.98.5.3 or higher.
     """
     import pylab
     import mpl_toolkits.mplot3d as mplot3d

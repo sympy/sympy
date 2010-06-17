@@ -183,6 +183,13 @@ def test_gamma():
     assert factorial(3) == 6
     assert isnan(gamma(nan))
     assert gamma(1100).ae('4.8579168073569433667e2866')
+    assert rgamma(0) == 0
+    assert rgamma(-1) == 0
+    assert rgamma(2) == 1.0
+    assert rgamma(3) == 0.5
+    assert loggamma(2+8j).ae(-8.5205176753667636926 + 10.8569497125597429366j)
+    assert loggamma('1e10000').ae('2.302485092994045684017991e10004')
+    assert loggamma('1e10000j').ae(mpc('-1.570796326794896619231322e10000','2.302485092994045684017991e10004'))
 
 def test_fac2():
     mp.dps = 15
@@ -474,8 +481,6 @@ def test_gamma_huge_5():
         "7571892628368354580620654233316841")
     mp.dps = 15
 
-"""
-XXX: fails
 def test_gamma_huge_6():
     return
     mp.dps = 500
@@ -489,7 +494,6 @@ def test_gamma_huge_6():
         "8 - 4.2996028528243336966001185406200082244961757496106e-9565705"
         "5002j)")
     mp.dps = 15
-"""
 
 def test_gamma_huge_7():
     mp.dps = 100
@@ -497,11 +501,14 @@ def test_gamma_huge_7():
     mp.dps = 15
     y = gamma(a)
     assert str(y.real) == "2.0"
-    assert str(y.imag) == "2.16735365342606e-1000"
+    # wrong
+    #assert str(y.imag) == "2.16735365342606e-1000"
+    assert str(y.imag) == "1.84556867019693e-1000"
     mp.dps = 50
     y = gamma(a)
     assert str(y.real) == "2.0"
-    assert str(y.imag) == "2.1673536534260596065418805612488708028522563689298e-1000"
+    #assert str(y.imag) == "2.1673536534260596065418805612488708028522563689298e-1000"
+    assert str(y.imag) ==  "1.8455686701969342787869758198351951379156813281202e-1000"
 
 def test_stieltjes():
     mp.dps = 15

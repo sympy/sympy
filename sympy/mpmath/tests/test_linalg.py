@@ -194,10 +194,9 @@ def test_precision():
     assert mnorm(inverse(inverse(A)) - A, 1) < 1.e-45
 
 def test_interval_matrix():
-    a = matrix([['0.1','0.3','1.0'],['7.1','5.5','4.8'],['3.2','4.4','5.6']],
-               force_type=mpi)
-    b = matrix(['4','0.6','0.5'], force_type=mpi)
-    c = lu_solve(a, b)
+    a = iv.matrix([['0.1','0.3','1.0'],['7.1','5.5','4.8'],['3.2','4.4','5.6']])
+    b = iv.matrix(['4','0.6','0.5'])
+    c = iv.lu_solve(a, b)
     assert c[0].delta < 1e-13
     assert c[1].delta < 1e-13
     assert c[2].delta < 1e-13

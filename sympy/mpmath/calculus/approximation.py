@@ -17,8 +17,8 @@ def chebcoeff(ctx,f,a,b,j,N):
     s = ctx.mpf(0)
     h = ctx.mpf(0.5)
     for k in range(1, N+1):
-        t = ctx.cos(ctx.pi*(k-h)/N)
-        s += f(t*(b-a)*h + (b+a)*h) * ctx.cos(ctx.pi*j*(k-h)/N)
+        t = ctx.cospi((k-h)/N)
+        s += f(t*(b-a)*h + (b+a)*h) * ctx.cospi(j*(k-h)/N)
     return 2*s/N
 
 # Generate Chebyshev polynomials T_n(ax+b) in expanded form
@@ -39,11 +39,11 @@ def chebyfit(ctx, f, interval, N, error=False):
     r"""
     Computes a polynomial of degree `N-1` that approximates the
     given function `f` on the interval `[a, b]`. With ``error=True``,
-    :func:`chebyfit` also returns an accurate estimate of the
+    :func:`~mpmath.chebyfit` also returns an accurate estimate of the
     maximum absolute error; that is, the maximum value of
     `|f(x) - P(x)|` for `x \in [a, b]`.
 
-    :func:`chebyfit` uses the Chebyshev approximation formula,
+    :func:`~mpmath.chebyfit` uses the Chebyshev approximation formula,
     which gives a nearly optimal solution: that is, the maximum
     error of the approximating polynomial is very close to
     the smallest possible for any polynomial of the same degree.
@@ -56,7 +56,7 @@ def chebyfit(ctx, f, interval, N, error=False):
 
     **Examples**
 
-    Here we use :func:`chebyfit` to generate a low-degree approximation
+    Here we use :func:`~mpmath.chebyfit` to generate a low-degree approximation
     of `f(x) = \cos(x)`, valid on the interval `[1, 2]`::
 
         >>> from mpmath import *
@@ -140,7 +140,7 @@ def chebyfit(ctx, f, interval, N, error=False):
 def fourier(ctx, f, interval, N):
     r"""
     Computes the Fourier series of degree `N` of the given function
-    on the interval `[a, b]`. More precisely, :func:`fourier` returns
+    on the interval `[a, b]`. More precisely, :func:`~mpmath.fourier` returns
     two lists `(c, s)` of coefficients (the cosine series and sine
     series, respectively), such that
 
@@ -153,7 +153,7 @@ def fourier(ctx, f, interval, N):
 
     Note that many texts define the first coefficient as `2 c_0` instead
     of `c_0`. The easiest way to evaluate the computed series correctly
-    is to pass it to :func:`fourierval`.
+    is to pass it to :func:`~mpmath.fourierval`.
 
     **Examples**
 
@@ -196,7 +196,7 @@ def fourier(ctx, f, interval, N):
         >>> nprint(sqrt(quad(g, I)))
         0.00467963
 
-    :func:`fourier` uses numerical quadrature. For nonsmooth functions,
+    :func:`~mpmath.fourier` uses numerical quadrature. For nonsmooth functions,
     the accuracy (and speed) can be improved by including all singular
     points in the interval specification::
 
@@ -229,7 +229,7 @@ def fourier(ctx, f, interval, N):
 def fourierval(ctx, series, interval, x):
     """
     Evaluates a Fourier series (in the format computed by
-    by :func:`fourier` for the given interval) at the point `x`.
+    by :func:`~mpmath.fourier` for the given interval) at the point `x`.
 
     The series should be a pair `(c, s)` where `c` is the
     cosine series and `s` is the sine series. The two lists

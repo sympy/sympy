@@ -63,7 +63,7 @@ def main():
     p.add_option("-v", "--verbose", action="store_true", dest="verbose",
                  help="Report all changes.")
     p.add_option("-r", "--recursive", action="store_true", dest="recursive",
-                 help="Report all changes.")
+                 help="Recursively correct all files in a directory.")
     options, args = p.parse_args()
     if options.dry:
         options.verbose = True

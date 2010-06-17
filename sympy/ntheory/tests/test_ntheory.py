@@ -4,7 +4,7 @@ from sympy.ntheory import isprime, n_order, is_primitive_root, \
     is_quad_residue, legendre_symbol, npartitions, totient, \
     factorint, primefactors, divisors, randprime, nextprime, prevprime, \
     primerange, primepi, prime, pollard_rho, perfect_power, multiplicity, \
-    trailing
+    trailing, divisor_count
 from sympy.ntheory.bbp_pi import pi_hex_digits
 from sympy import factorial as fac
 
@@ -65,6 +65,7 @@ def test_isprime():
     s.extend(100000)
     ps = set(s.primerange(2, 100001))
     for n in range(100001):
+        # if (n in ps) != isprime(n): print n
         assert (n in ps) == isprime(n)
     assert isprime(179424673)
     # Some Mersenne primes
@@ -160,7 +161,7 @@ def multiproduct(seq=(), start=1):
     times the value of the parameter ``start``. The input may be a
     sequence of (factor, exponent) pairs or a dict of such pairs.
 
-        >>> multiproduct({3:7, 2:5}, 4)
+        >>> multiproduct({3:7, 2:5}, 4) # = 3**7 * 2**5 * 4
         279936
 
     """
@@ -188,12 +189,6 @@ def test_factorint():
     assert factorint(2**(2**6) + 1) == {274177:1, 67280421310721:1}
     assert factorint(5951757) == {3:1, 7:1, 29:2, 337:1}
     assert factorint(64015937) == {7993:1, 8009:1}
-    assert divisors(1) == [1]
-    assert divisors(2) == [1, 2]
-    assert divisors(3) == [1, 3]
-    assert divisors(10) == [1, 2, 5, 10]
-    assert divisors(100) == [1, 2, 4, 5, 10, 20, 25, 50, 100]
-    assert divisors(101) == [1, 101]
     assert factorint(0) == {0:1}
     assert factorint(1) == {}
     assert factorint(-1) == {-1:1}
@@ -223,7 +218,23 @@ def test_factorint():
     assert pollard_rho(19, seed=1) is None
     assert factorint(3,2) == {3: 1}
     assert factorint(12345) == {3: 1, 5: 1, 823: 1}
-    assert factorint(12345, 3) == {12345: 1} # there are no factors less than 3
+    assert factorint(12345, limit=3) == {4115: 1, 3: 1} # the 5 is greater than the limit
+
+def divisors_and_divisor_count():
+    assert divisors(-1) == [1]
+    assert divisors(0) == []
+    assert divisors(1) == [1]
+    assert divisors(2) == [1, 2]
+    assert divisors(3) == [1, 3]
+    assert divisors(10) == [1, 2, 5, 10]
+    assert divisors(100) == [1, 2, 4, 5, 10, 20, 25, 50, 100]
+    assert divisors(101) == [1, 101]
+
+    assert divisor_count(0) == 0
+    assert divisor_count(-1) == 1
+    assert divisor_count(1) == 1
+    assert divisor_count(6) == 4
+    assert divisor_count(12) == 6
 
 def test_visual_factorint():
     assert type(factorint(42, visual=True)) == Mul
@@ -318,3 +329,12 @@ def test_multinomial_coefficients():
 
 def test_issue1257():
     assert factorint(1030903) == {53: 2, 367: 1}
+
+def test_divisors():
+    assert divisors(28) == [1, 2, 4, 7, 14, 28]
+    assert [x for x in divisors(3*5*7,1)] == [1, 3, 5, 15, 7, 21, 35, 105]
+    assert divisors(0) == []
+
+def test_divisor_count():
+    assert divisor_count(0) == 0
+    assert divisor_count(6) == 4

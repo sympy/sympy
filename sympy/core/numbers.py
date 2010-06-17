@@ -1,4 +1,7 @@
-from basic import Atom, SingletonMeta, S, Basic
+from core import C
+from sympify import converter, sympify, _sympify, SympifyError
+from basic import Atom, Basic
+from singleton import S, SingletonMeta
 from expr import Expr
 from decorators import _sympifyit
 from cache import Memoizer, cacheit, clear_cache
@@ -430,6 +433,8 @@ class Real(Number):
         import sage.all as sage
         return sage.RealNumber(str(self))
 
+# Add sympify converters
+converter[float] = converter[decimal.Decimal] = Real
 
 # this is here to work nicely in Sage
 RealNumber = Real
@@ -1109,6 +1114,10 @@ class Integer(Rational):
             else:
                 raise ValueError("expected an integer, got %s" % b)
 
+# Add sympify converters
+converter[int] = converter[long] = Integer
+
+
 class Zero(Integer):
     __metaclass__ = SingletonMeta
 
@@ -1696,6 +1705,12 @@ class ImaginaryUnit(Atom, Expr):
         import sage.all as sage
         return sage.I
 
+
+def sympify_complex(a):
+    real, imag = map(sympify, (a.real, a.imag))
+    return real + S.ImaginaryUnit * imag
+converter[complex] = sympify_complex
+
 _intcache[0] = S.Zero
 _intcache[1] = S.One
 _intcache[-1]= S.NegativeOne
@@ -1712,9 +1727,6 @@ Basic.singleton['GoldenRatio'] = GoldenRatio
 Basic.singleton['EulerGamma'] = EulerGamma
 Basic.singleton['Catalan'] = Catalan
 
-from basic import S, C
-from sympify import _sympify, SympifyError
 from function import FunctionClass
 from power import Pow, integer_nthroot
 from mul import Mul
-

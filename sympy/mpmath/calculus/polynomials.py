@@ -9,13 +9,13 @@ from calculus import defun
 def polyval(ctx, coeffs, x, derivative=False):
     r"""
     Given coefficients `[c_n, \ldots, c_2, c_1, c_0]` and a number `x`,
-    :func:`polyval` evaluates the polynomial
+    :func:`~mpmath.polyval` evaluates the polynomial
 
     .. math ::
 
         P(x) = c_n x^n + \ldots + c_2 x^2 + c_1 x + c_0.
 
-    If *derivative=True* is set, :func:`polyval` simultaneously
+    If *derivative=True* is set, :func:`~mpmath.polyval` simultaneously
     evaluates `P(x)` with the derivative, `P'(x)`, and returns the
     tuple `(P(x), P'(x))`.
 
@@ -48,10 +48,10 @@ def polyroots(ctx, coeffs, maxsteps=50, cleanup=True, extraprec=10, error=False)
     Computes all roots (real or complex) of a given polynomial. The roots are
     returned as a sorted list, where real roots appear first followed by
     complex conjugate roots as adjacent elements. The polynomial should be
-    given as a list of coefficients, in the format used by :func:`polyval`.
+    given as a list of coefficients, in the format used by :func:`~mpmath.polyval`.
     The leading coefficient must be nonzero.
 
-    With *error=True*, :func:`polyroots` returns a tuple *(roots, err)* where
+    With *error=True*, :func:`~mpmath.polyroots` returns a tuple *(roots, err)* where
     *err* is an estimate of the maximum error among the computed roots.
 
     **Examples**
@@ -96,7 +96,7 @@ def polyroots(ctx, coeffs, maxsteps=50, cleanup=True, extraprec=10, error=False)
 
     **Precision and conditioning**
 
-    Provided there are no repeated roots, :func:`polyroots` can typically
+    Provided there are no repeated roots, :func:`~mpmath.polyroots` can typically
     compute all roots of an arbitrary polynomial to high precision::
 
         >>> mp.dps = 60
@@ -115,7 +115,7 @@ def polyroots(ctx, coeffs, maxsteps=50, cleanup=True, extraprec=10, error=False)
 
     **Algorithm**
 
-    :func:`polyroots` implements the Durand-Kerner method [1], which
+    :func:`~mpmath.polyroots` implements the Durand-Kerner method [1], which
     uses complex arithmetic to locate all roots simultaneously.
     The Durand-Kerner method can be viewed as approximately performing
     simultaneous Newton iteration for all the roots. In particular,

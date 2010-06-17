@@ -14,7 +14,7 @@ The most basic way to create one is to use the ``matrix`` class directly. You
 can create an empty matrix specifying the dimensions::
 
     >>> from mpmath import *
-    >>> mp.dps = 15
+    >>> mp.dps = 15; mp.pretty = False
     >>> matrix(2)
     matrix(
     [['0.0', '0.0'],
@@ -260,6 +260,12 @@ so called norms.
 Linear algebra
 --------------
 
+Decompositions
+..............
+
+.. autofunction :: mpmath.cholesky
+
+
 Linear equations
 ................
 
@@ -334,23 +340,25 @@ The function ``lu`` computes an explicit LU factorization of a matrix::
     [4.0  5.0  6.0]
     [7.0  8.0  9.0]
 
-Interval matrices
------------------
+Interval and double-precision matrices
+--------------------------------------
 
-Matrices may contain interval elements. This allows for performing
-basic linear algebra operations such as matrix multiplication
-and equation solving with rigorous error bounds::
+The ``iv.matrix`` and ``fp.matrix`` classes convert inputs
+to intervals and Python floating-point numbers respectively.
 
-    >>> a = matrix([['0.1','0.3','1.0'],
-    ...             ['7.1','5.5','4.8'],
-    ...             ['3.2','4.4','5.6']], force_type=mpi)
+Interval matrices can be used to perform linear algebra operations
+with rigorous error tracking::
+
+    >>> a = iv.matrix([['0.1','0.3','1.0'],
+    ...                ['7.1','5.5','4.8'],
+    ...                ['3.2','4.4','5.6']])
     >>>
-    >>> b = matrix(['4','0.6','0.5'], force_type=mpi)
-    >>> c = lu_solve(a, b)
+    >>> b = iv.matrix(['4','0.6','0.5'])
+    >>> c = iv.lu_solve(a, b)
     >>> print c
-    [ [5.2582327113062393162, 5.2582327113062749448]]
-    [[-13.15504939626785654, -13.155049396267821172]]
-    [ [7.4206915477497212581, 7.4206915477497310818]]
+    [  [5.2582327113062393041, 5.2582327113062749951]]
+    [[-13.155049396267856583, -13.155049396267821167]]
+    [  [7.4206915477497212555, 7.4206915477497310922]]
     >>> print a*c
     [  [3.9999999999999866773, 4.0000000000000133227]]
     [[0.59999999999972430942, 0.60000000000027142733]]

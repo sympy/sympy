@@ -1,95 +1,204 @@
-# TODO: use gmpy.mpq when available?
+import operator
+from libmp import int_types, mpf_hash, bitcount
 
-class mpq(tuple):
+new = object.__new__
+
+def create_reduced(p, q, _cache={}):
+    key = p, q
+    if key in _cache:
+        return _cache[key]
+    x, y = p, q
+    while y:
+        x, y = y, x % y
+    if x != 1:
+        p //= x
+        q //= x
+    v = new(mpq)
+    v._mpq_ = p, q
+    # Speedup integers, half-integers and other small fractions
+    if q <= 4 and abs(key[0]) < 100:
+        _cache[key] = v
+    return v
+
+class mpq(object):
     """
-    Rational number type, only intended for internal use.
+    Exact rational type, currently only intended for internal use.
     """
 
-    """
-    def _mpmath_(self, prec, rounding):
-        # XXX
-        return mp.make_mpf(from_rational(self[0], self[1], prec, rounding))
-        #(mpf(self[0])/self[1])._mpf_
+    __slots__ = ["_mpq_"]
 
-    """
+    def __new__(cls, p, q=1):
+        if type(p) is tuple:
+            p, q = p
+        elif hasattr(p, '_mpq_'):
+            p, q = p._mpq_
+        return create_reduced(p, q)
 
-    def __int__(self):
-        a, b = self
+    def __repr__(s):
+        return "mpq(%s,%s)" % s._mpq_
+
+    def __str__(s):
+        return "(%s/%s)" % s._mpq_
+
+    def __int__(s):
+        a, b = s._mpq_
         return a // b
 
-    def __abs__(self):
-        a, b = self
-        return mpq((abs(a), b))
+    def __nonzero__(s):
+        return bool(s._mpq_[0])
 
-    def __neg__(self):
-        a, b = self
-        return mpq((-a, b))
+    def __hash__(s):
+        a, b = s._mpq_
+        if b == 1:
+            return hash(a)
+        # Power of two: mpf compatible hash
+        if not (b & (b-1)):
+            return mpf_hash(from_man_exp(a, 1-bitcount(b)))
+        return hash((a,b))
 
-    def __nonzero__(self):
-        return bool(self[0])
-
-    def __cmp__(self, other):
-        if type(other) is int and self[1] == 1:
-            return cmp(self[0], other)
+    def __eq__(s, t):
+        ttype = type(t)
+        if ttype is mpq:
+            return s._mpq_ == t._mpq_
+        if ttype in int_types:
+            a, b = s._mpq_
+            if b != 1:
+                return False
+            return a == t
         return NotImplemented
 
-    def __add__(self, other):
-        if isinstance(other, mpq):
-            a, b = self
-            c, d = other
-            return mpq((a*d+b*c, b*d))
-        if isinstance(other, (int, long)):
-            a, b = self
-            return mpq((a+b*other, b))
+    def __ne__(s, t):
+        ttype = type(t)
+        if ttype is mpq:
+            return s._mpq_ != t._mpq_
+        if ttype in int_types:
+            a, b = s._mpq_
+            if b != 1:
+                return True
+            return a != t
+        return NotImplemented
+
+    def _cmp(s, t, op):
+        ttype = type(t)
+        if ttype in int_types:
+            a, b = s._mpq_
+            return op(a, t*b)
+        if ttype is mpq:
+            a, b = s._mpq_
+            c, d = t._mpq_
+            return op(a*d, b*c)
+        return NotImplementedError
+
+    def __lt__(s, t): return s._cmp(t, operator.lt)
+    def __le__(s, t): return s._cmp(t, operator.le)
+    def __gt__(s, t): return s._cmp(t, operator.gt)
+    def __ge__(s, t): return s._cmp(t, operator.ge)
+
+    def __abs__(s):
+        a, b = s._mpq_
+        if a >= 0:
+            return s
+        v = new(mpq)
+        v._mpq_ = -a, b
+        return v
+
+    def __neg__(s):
+        a, b = s._mpq_
+        v = new(mpq)
+        v._mpq_ = -a, b
+        return v
+
+    def __pos__(s):
+        return s
+
+    def __add__(s, t):
+        ttype = type(t)
+        if ttype is mpq:
+            a, b = s._mpq_
+            c, d = t._mpq_
+            return create_reduced(a*d+b*c, b*d)
+        if ttype in int_types:
+            a, b = s._mpq_
+            v = new(mpq)
+            v._mpq_ = a+b*t, b
+            return v
         return NotImplemented
 
     __radd__ = __add__
 
-    def __sub__(self, other):
-        if isinstance(other, mpq):
-            a, b = self
-            c, d = other
-            return mpq((a*d-b*c, b*d))
-        if isinstance(other, (int, long)):
-            a, b = self
-            return mpq((a-b*other, b))
+    def __sub__(s, t):
+        ttype = type(t)
+        if ttype is mpq:
+            a, b = s._mpq_
+            c, d = t._mpq_
+            return create_reduced(a*d-b*c, b*d)
+        if ttype in int_types:
+            a, b = s._mpq_
+            v = new(mpq)
+            v._mpq_ = a-b*t, b
+            return v
         return NotImplemented
 
-    def __rsub__(self, other):
-        if isinstance(other, mpq):
-            a, b = self
-            c, d = other
-            return mpq((b*c-a*d, b*d))
-        if isinstance(other, (int, long)):
-            a, b = self
-            return mpq((b*other-a, b))
+    def __rsub__(s, t):
+        ttype = type(t)
+        if ttype is mpq:
+            a, b = s._mpq_
+            c, d = t._mpq_
+            return create_reduced(b*c-a*d, b*d)
+        if ttype in int_types:
+            a, b = s._mpq_
+            v = new(mpq)
+            v._mpq_ = b*t-a, b
+            return v
         return NotImplemented
 
-    def __mul__(self, other):
-        if isinstance(other, mpq):
-            a, b = self
-            c, d = other
-            return mpq((a*c, b*d))
-        if isinstance(other, (int, long)):
-            a, b = self
-            return mpq((a*other, b))
-        return NotImplemented
-
-    def __div__(self, other):
-        if isinstance(other, (int, long)):
-            if other:
-                a, b = self
-                return mpq((a, b*other))
-            raise ZeroDivisionError
-        return NotImplemented
-
-    def __pow__(self, other):
-        if type(other) is int:
-            a, b = self
-            return mpq((a**other, b**other))
+    def __mul__(s, t):
+        ttype = type(t)
+        if ttype is mpq:
+            a, b = s._mpq_
+            c, d = t._mpq_
+            return create_reduced(a*c, b*d)
+        if ttype in int_types:
+            a, b = s._mpq_
+            return create_reduced(a*t, b)
         return NotImplemented
 
     __rmul__ = __mul__
+
+    def __div__(s, t):
+        ttype = type(t)
+        if ttype is mpq:
+            a, b = s._mpq_
+            c, d = t._mpq_
+            return create_reduced(a*d, b*c)
+        if ttype in int_types:
+            a, b = s._mpq_
+            return create_reduced(a, b*t)
+        return NotImplemented
+
+    def __rdiv__(s, t):
+        ttype = type(t)
+        if ttype is mpq:
+            a, b = s._mpq_
+            c, d = t._mpq_
+            return create_reduced(b*c, a*d)
+        if ttype in int_types:
+            a, b = s._mpq_
+            return create_reduced(b*t, a)
+        return NotImplemented
+
+    def __pow__(s, t):
+        ttype = type(t)
+        if ttype in int_types:
+            a, b = s._mpq_
+            if t:
+                if t < 0:
+                    a, b, t = b, a, -t
+                v = new(mpq)
+                v._mpq_ = a**t, b**t
+                return v
+            raise ZeroDivisionError
+        return NotImplemented
 
 
 mpq_1 = mpq((1,1))

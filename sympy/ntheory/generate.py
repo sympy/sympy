@@ -3,6 +3,7 @@ Generating and counting primes.
 """
 
 import random
+from bisect import bisect
 from primetest import isprime
 
 
@@ -82,19 +83,11 @@ class Sieve:
         assert n >= 2
         if n > self._list[-1]:
             self.extend(n)
-        # Use a binary search
-        a = 0
-        b = len(self._list)-1
-        while 1:
-            m = (a + b) // 2
-            if self._list[m] == n:
-                return m+1, m+1
-            elif self._list[m] > n:
-                b = m - 1
-            elif self._list[m] < n:
-                a = m + 1
-            if a > b:
-                return b+1, a+1
+        b = bisect(self._list, n)
+        if self._list[b-1] == n:
+            return b, b
+        else:
+            return b, b+1
 
     def __contains__(self, n):
         if n < 2:

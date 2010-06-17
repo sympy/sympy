@@ -102,3 +102,9 @@ def test_symbols():
     assert symbols('xyz', each_char=False) == Symbol('xyz')
     x, y = symbols('x y', each_char=False, real=True)
     assert x.is_real and y.is_real
+
+def test_call():
+    f = Symbol('f')
+    assert f(2)
+    f = Wild('f')
+    assert f({})

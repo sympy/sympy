@@ -8,12 +8,12 @@ class QuadratureRule(object):
 
     You can implement a custom quadrature rule by subclassing
     :class:`QuadratureRule` and implementing the appropriate
-    methods. The subclass can then be used by :func:`quad` by
+    methods. The subclass can then be used by :func:`~mpmath.quad` by
     passing it as the *method* argument.
 
     :class:`QuadratureRule` instances are supposed to be singletons.
     :class:`QuadratureRule` therefore implements instance caching
-    in :func:`__new__`.
+    in :func:`~mpmath.__new__`.
     """
 
     def __init__(self, ctx):
@@ -34,7 +34,7 @@ class QuadratureRule(object):
         r"""
         Compute nodes for the standard interval `[-1, 1]`. Subclasses
         should probably implement only this method, and use
-        :func:`get_nodes` method to retrieve the nodes.
+        :func:`~mpmath.get_nodes` method to retrieve the nodes.
         """
         raise NotImplementedError
 
@@ -42,11 +42,11 @@ class QuadratureRule(object):
         """
         Return nodes for given interval, degree and precision. The
         nodes are retrieved from a cache if already computed;
-        otherwise they are computed by calling :func:`calc_nodes`
+        otherwise they are computed by calling :func:`~mpmath.calc_nodes`
         and are then cached.
 
         Subclasses should probably not implement this method,
-        but just implement :func:`calc_nodes` for the actual
+        but just implement :func:`~mpmath.calc_nodes` for the actual
         node computation.
         """
         key = (a, b, degree, prec)
@@ -95,29 +95,34 @@ class QuadratureRule(object):
             return nodes
         half = ctx.mpf(0.5)
         new_nodes = []
-        if (a, b) == (ctx.ninf, ctx.inf):
-            p05 = -half
-            for x, w in nodes:
-                x2 = x*x
-                px1 = one-x2
-                spx1 = px1**p05
-                x = x*spx1
-                w *= spx1/px1
-                new_nodes.append((x, w))
-        elif a == ctx.ninf:
-            b1 = b+1
-            for x, w in nodes:
-                u = 2/(x+one)
-                x = b1-u
-                w *= half*u**2
-                new_nodes.append((x, w))
-        elif b == ctx.inf:
-            a1 = a-1
-            for x, w in nodes:
-                u = 2/(x+one)
-                x = a1+u
-                w *= half*u**2
-                new_nodes.append((x, w))
+        if ctx.isinf(a) or ctx.isinf(b):
+            if (a, b) == (ctx.ninf, ctx.inf):
+                p05 = -half
+                for x, w in nodes:
+                    x2 = x*x
+                    px1 = one-x2
+                    spx1 = px1**p05
+                    x = x*spx1
+                    w *= spx1/px1
+                    new_nodes.append((x, w))
+            elif a == ctx.ninf:
+                b1 = b+1
+                for x, w in nodes:
+                    u = 2/(x+one)
+                    x = b1-u
+                    w *= half*u**2
+                    new_nodes.append((x, w))
+            elif b == ctx.inf:
+                a1 = a-1
+                for x, w in nodes:
+                    u = 2/(x+one)
+                    x = a1+u
+                    w *= half*u**2
+                    new_nodes.append((x, w))
+            elif a == ctx.inf or b == ctx.ninf:
+                return [(x,-w) for (x,w) in self.transform_nodes(nodes, b, a, verbose)]
+            else:
+                raise NotImplementedError
         else:
             # Simple linear change of variables
             C = (b-a)/2
@@ -130,15 +135,15 @@ class QuadratureRule(object):
         """
         Given a desired precision `p` in bits, estimate the degree `m`
         of the quadrature required to accomplish full accuracy for
-        typical integrals. By default, :func:`quad` will perform up
+        typical integrals. By default, :func:`~mpmath.quad` will perform up
         to `m` iterations. The value of `m` should be a slight
         overestimate, so that "slightly bad" integrals can be dealt
         with automatically using a few extra iterations. On the
-        other hand, it should not be too big, so :func:`quad` can
+        other hand, it should not be too big, so :func:`~mpmath.quad` can
         quit within a reasonable amount of time when it is given
         an "unsolvable" integral.
 
-        The default formula used by :func:`guess_degree` is tuned
+        The default formula used by :func:`~mpmath.guess_degree` is tuned
         for both :class:`TanhSinh` and :class:`GaussLegendre`.
         The output is roughly as follows:
 
@@ -198,10 +203,10 @@ class QuadratureRule(object):
         Main integration function. Computes the 1D integral over
         the interval specified by *points*. For each subinterval,
         performs quadrature of degree from 1 up to *max_degree*
-        until :func:`estimate_error` signals convergence.
+        until :func:`~mpmath.estimate_error` signals convergence.
 
-        :func:`summation` transforms each subintegration to
-        the standard interval and then calls :func:`sum_next`.
+        :func:`~mpmath.summation` transforms each subintegration to
+        the standard interval and then calls :func:`~mpmath.sum_next`.
         """
         ctx = self.ctx
         I = err = ctx.zero
@@ -240,8 +245,8 @@ class QuadratureRule(object):
         Evaluates the step sum `\sum w_k f(x_k)` where the *nodes* list
         contains the `(w_k, x_k)` pairs.
 
-        :func:`summation` will supply the list *results* of
-        values computed by :func:`sum_next` at previous degrees, in
+        :func:`~mpmath.summation` will supply the list *results* of
+        values computed by :func:`~mpmath.sum_next` at previous degrees, in
         case the quadrature rule is able to reuse them.
         """
         return self.ctx.fdot((w, f(x)) for (x,w) in nodes)
@@ -384,7 +389,7 @@ class GaussLegendre(QuadratureRule):
     The abscissas and weights are given by roots and values of
     Legendre polynomials, which are the orthogonal polynomials
     on `[-1, 1]` with respect to the unit weight
-    (see :func:`legendre`).
+    (see :func:`~mpmath.legendre`).
 
     In this implementation, we take the "degree" `m` of the quadrature
     to denote a Gauss-Legendre rule of degree `3 \cdot 2^m` (following
@@ -493,12 +498,12 @@ class QuadratureMethods:
 
         **Options**
 
-        :func:`quad` recognizes the following keyword arguments:
+        :func:`~mpmath.quad` recognizes the following keyword arguments:
 
         *method*
             Chooses integration algorithm (described below).
         *error*
-            If set to true, :func:`quad` returns `(v, e)` where `v` is the
+            If set to true, :func:`~mpmath.quad` returns `(v, e)` where `v` is the
             integral and `e` is the estimated error.
         *maxdegree*
             Maximum degree of the quadrature rule to try before
@@ -512,7 +517,7 @@ class QuadratureMethods:
         quadrature and Gauss-Legendre quadrature. These can be selected
         using *method='tanh-sinh'* or *method='gauss-legendre'* or by
         passing the classes *method=TanhSinh*, *method=GaussLegendre*.
-        The functions :func:`quadts` and :func:`quadgl` are also available
+        The functions :func:`~mpmath.quadts` and :func:`~mpmath.quadgl` are also available
         as shortcuts.
 
         Both algorithms have the property that doubling the number of
@@ -527,7 +532,7 @@ class QuadratureMethods:
         The advantages of the tanh-sinh algorithm are that it tends to
         handle endpoint singularities well, and that the nodes are cheap
         to compute on the first run. For these reasons, it is used by
-        :func:`quad` as the default algorithm.
+        :func:`~mpmath.quad` as the default algorithm.
 
         Gauss-Legendre quadrature often requires fewer function
         evaluations, and is therefore often faster for repeated use, but
@@ -579,7 +584,7 @@ class QuadratureMethods:
 
         Here are several nice examples of analytically solvable
         2D integrals (taken from MathWorld [1]) that can be evaluated
-        to high precision fairly rapidly by :func:`quad`::
+        to high precision fairly rapidly by :func:`~mpmath.quad`::
 
             >>> mp.dps = 30
             >>> f = lambda x, y: (x-1)/((1-x*y)*log(x*y))
@@ -613,7 +618,7 @@ class QuadratureMethods:
             >>> print 1/e
             0.367879441171442
 
-        For nonrectangular areas, one can call :func:`quad` recursively.
+        For nonrectangular areas, one can call :func:`~mpmath.quad` recursively.
         For example, we can replicate the earlier example of calculating
         `\pi` by integrating over the unit-circle, and actually use double
         quadrature to actually measure the area circle::
@@ -673,8 +678,8 @@ class QuadratureMethods:
 
         For functions that are smooth (in the sense of being infinitely
         differentiable) but contain sharp mid-interval peaks or many
-        "bumps", :func:`quad` may fail to provide full accuracy. For
-        example, with default settings, :func:`quad` is able to integrate
+        "bumps", :func:`~mpmath.quad` may fail to provide full accuracy. For
+        example, with default settings, :func:`~mpmath.quad` is able to integrate
         `\sin(x)` accurately over an interval of length 100 but not over
         length 1000::
 
@@ -812,12 +817,12 @@ class QuadratureMethods:
 
         where at least one of `a` and `b` is infinite and where
         `f(x) = g(x) \cos(\omega x  + \phi)` for some slowly
-        decreasing function `g(x)`. With proper input, :func:`quadosc`
+        decreasing function `g(x)`. With proper input, :func:`~mpmath.quadosc`
         can also handle oscillatory integrals where the oscillation
         rate is different from a pure sine or cosine wave.
 
         In the standard case when `|a| < \infty, b = \infty`,
-        :func:`quadosc` works by evaluating the infinite series
+        :func:`~mpmath.quadosc` works by evaluating the infinite series
 
         .. math ::
 
@@ -826,7 +831,7 @@ class QuadratureMethods:
 
         where `x_k` are consecutive zeros (alternatively
         some other periodic reference point) of `f(x)`.
-        Accordingly, :func:`quadosc` requires information about the
+        Accordingly, :func:`~mpmath.quadosc` requires information about the
         zeros of `f(x)`. For a periodic function, you can specify
         the zeros by either providing the angular frequency `\omega`
         (*omega*) or the *period* `2 \pi/\omega`. In general, you can
@@ -849,7 +854,7 @@ class QuadratureMethods:
         *half-period*, not the full period. In theory, it does not matter
         whether each partial integral is done over a half period or a full
         period. However, if done over half-periods, the infinite series
-        passed to :func:`nsum` becomes an *alternating series* and this
+        passed to :func:`~mpmath.nsum` becomes an *alternating series* and this
         typically makes the extrapolation much more efficient.
 
         Here is an example of an integration over the entire real line,
@@ -911,7 +916,7 @@ class QuadratureMethods:
         cancel out). These integrals are virtually impossible to calculate
         to any kind of accuracy using standard quadrature rules. However,
         if one provides the correct asymptotic distribution of zeros
-        (`x_n \sim \sqrt{n}`), :func:`quadosc` works::
+        (`x_n \sim \sqrt{n}`), :func:`~mpmath.quadosc` works::
 
             >>> mp.dps = 30
             >>> f = lambda x: cos(x**2)
@@ -944,7 +949,7 @@ class QuadratureMethods:
 
             >>> f = lambda x: 1/x**2+sin(x)/x**4
             >>> quadosc(f, [1,inf], omega=1)  # Bad
-            1.28642190869921
+            1.28642190869861
             >>> quadosc(f, [1,inf], omega=0.5)  # Perfect
             1.28652953559617
             >>> 1+(cos(1)+ci(1)+sin(1))/6
@@ -952,10 +957,10 @@ class QuadratureMethods:
 
         **Fast decay**
 
-        :func:`quadosc` is primarily useful for slowly decaying
+        :func:`~mpmath.quadosc` is primarily useful for slowly decaying
         integrands. If the integrand decreases exponentially or faster,
-        :func:`quad` will likely handle it without trouble (and generally be
-        much faster than :func:`quadosc`)::
+        :func:`~mpmath.quad` will likely handle it without trouble (and generally be
+        much faster than :func:`~mpmath.quadosc`)::
 
             >>> quadosc(lambda x: cos(x)/exp(x), [0, inf], omega=1)
             0.5

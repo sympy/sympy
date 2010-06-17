@@ -4,6 +4,13 @@
 # XXX but we can't force everyone to install py-lib trunk
 
 import sys
+try:
+    # functools is not available in Python 2.4
+    import functools
+except ImportError:
+    has_functools = False
+else:
+    has_functools = True
 
 try:
     # tested with py-lib 0.9.0
@@ -41,6 +48,8 @@ if not USE_PYTEST:
             except Exception:
                 raise XFail()
             raise XPass()
+        if has_functools:
+            wrapper = functools.update_wrapper(wrapper, func)
         return wrapper
 
     def skip(str):
@@ -127,4 +136,6 @@ else:
             else:
                 raise XPass('XPASS: %s' % func.func_name)
 
+        if has_functools:
+            func_wrapper = functools.update_wrapper(func_wrapper, func)
         return func_wrapper

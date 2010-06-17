@@ -17,7 +17,7 @@ _isprime_fallback_primes = [
 #>>> len(_)
 #46
 # pseudoprimes that will pass through last mr_safe test
-pseudos = set([
+_pseudos = set([
         669094855201,
         1052516956501,2007193456621,2744715551581,9542968210729,
         17699592963781,19671510288601,
@@ -135,13 +135,40 @@ def _mr_safe(n):
     """
 
     n = int(n)
-    if n < 1373653: return mr(n, [2, 3])
-    if n < 170584961: return mr(n, [350, 3958281543])
-    if n < 4759123141: return mr(n, [2, 7, 61]) # ref [3]
-    if n < 75792980677: return mr(n, [2, 379215, 457083754])
-    if n < 1000000000000: return mr(n, [2, 13, 23, 1662803])
-    if n < 10000000000000000: return mr(n, [2, 3, 7, 61, 24251]) \
-       and n not in pseudos
+    if n < 1373653:
+        return mr(n, [2, 3])
+        #[2, 3] stot = 1 pmax = 3
+        # these two (and similar below) are commented out since they are
+        # more expensive in terms of stot than a later test.
+        #if n < 9080191: return mr(n, [31, 73]) # ref [3]
+        #[31, 73] stot = 4 pmax = 73
+        #if n < 25326001: return mr(n, [2, 3, 5])
+        #[2, 3, 5] stot = 3 pmax = 5
+    if n < 170584961:
+        return mr(n, [350, 3958281543])
+        #[350, 3958281543L] stot = 1 pmax = 1319427181
+    if n < 4759123141:
+        return mr(n, [2, 7, 61]) # ref [3]
+        #[2, 7, 61] stot = 3 pmax = 61
+    if n < 75792980677:
+        return mr(n, [2, 379215, 457083754])
+        #[2, 379215, 457083754] stot = 1 pmax = 228541877
+        #if n < 118670087467: return n is not 3215031751 and mr(n, [2, 3, 5, 7]) # ref [3]
+        #[2, 3, 5, 7] stot = 4 pmax = 7
+    if n < 1000000000000:
+        return mr(n, [2, 13, 23, 1662803])
+        #[2, 13, 23, 1662803] stot = 4 pmax = 1662803
+        #if n < 2152302898747: return mr(n, [2, 3, 5, 7, 11])
+        #[2, 3, 5, 7, 11] stot = 5 pmax = 11
+        #if n < 3474749660383: return mr(n, [2, 3, 5, 7, 11, 13])
+        #[2, 3, 5, 7, 11, 13] stot = 7 pmax = 13
+        #if n < 21652684502221: return mr(n, [2, 1215, 34862, 574237825])
+        #[2, 1215, 34862, 574237825] stot = 8 pmax = 114847565
+        #if n < 341550071728321: return mr(n, [2, 3, 5, 7, 11, 13, 17])
+        #[2, 3, 5, 7, 11, 13, 17] stot = 11 pmax = 17
+    if n < 10000000000000000:
+        return mr(n, [2, 3, 7, 61, 24251]) and n not in _pseudos
+        #[2, 3, 7, 61, 24251] stot = 5 pmax = 24251
     raise ValueError("n too large")
 
 def isprime(n):

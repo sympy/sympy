@@ -17,12 +17,12 @@ import math
 
 from backend import MPZ, MPZ_ZERO, MPZ_ONE, MPZ_THREE, gmpy
 
-from libintmath import list_primes, ifac, moebius
+from libintmath import list_primes, ifac, ifac2, moebius
 
 from libmpf import (\
     round_floor, round_ceiling, round_down, round_up,
     round_nearest, round_fast,
-    lshift, sqrt_fixed,
+    lshift, sqrt_fixed, isqrt_fast,
     fzero, fone, fnone, fhalf, ftwo, finf, fninf, fnan,
     from_int, to_int, to_fixed, from_man_exp, from_rational,
     mpf_pos, mpf_neg, mpf_abs, mpf_add, mpf_sub,
@@ -30,6 +30,7 @@ from libmpf import (\
     mpf_rdiv_int,
     mpf_perturb, mpf_le, mpf_lt, mpf_gt, mpf_shift,
     negative_rnd, reciprocal_rnd,
+    bitcount, to_float, mpf_floor, mpf_sign, ComplexResult
 )
 
 from libelefun import (\
@@ -38,6 +39,8 @@ from libelefun import (\
     mpf_pi, pi_fixed, ln2_fixed, log_int_fixed, mpf_ln2,
     mpf_exp, mpf_log, mpf_pow, mpf_cosh,
     mpf_cos_sin, mpf_cosh_sinh, mpf_cos_sin_pi, mpf_cos_pi, mpf_sin_pi,
+    ln_sqrt2pi_fixed, mpf_ln_sqrt2pi, sqrtpi_fixed, mpf_sqrtpi,
+    cos_sin_fixed, exp_fixed
 )
 
 from libmpc import (\
@@ -48,8 +51,11 @@ from libmpc import (\
     mpc_mul_int, mpc_pow_int,
     mpc_log, mpc_exp, mpc_pow,
     mpc_cos_pi, mpc_sin_pi,
-    mpc_reciprocal, mpc_square
+    mpc_reciprocal, mpc_square,
+    mpc_sub_mpf
 )
+
+
 
 # Catalan's constant is computed using Lupas's rapidly convergent series
 # (listed on http://mathworld.wolfram.com/CatalansConstant.html)
@@ -522,19 +528,21 @@ def bernfrac(n):
         >>> print bernoulli(10**4)
         -9.04942396360948e+27677
 
-    Note: :func:`bernoulli` computes a floating-point approximation
-    directly, without computing the exact fraction first.
-    This is much faster for large `n`.
+    .. note ::
+
+        :func:`~mpmath.bernoulli` computes a floating-point approximation
+        directly, without computing the exact fraction first.
+        This is much faster for large `n`.
 
     **Algorithm**
 
-    :func:`bernfrac` works by computing the value of `B_n` numerically
+    :func:`~mpmath.bernfrac` works by computing the value of `B_n` numerically
     and then using the von Staudt-Clausen theorem [1] to reconstruct
     the exact fraction. For large `n`, this is significantly faster than
     computing `B_1, B_2, \ldots, B_2` recursively with exact arithmetic.
     The implementation has been tested for `n = 10^m` up to `m = 6`.
 
-    In practice, :func:`bernfrac` appears to be about three times
+    In practice, :func:`~mpmath.bernfrac` appears to be about three times
     slower than the specialized program calcbn.exe [2]
 
     **References**
@@ -564,7 +572,7 @@ def bernfrac(n):
 
 #-----------------------------------------------------------------------#
 #                                                                       #
-#                         The gamma function                            #
+#              The gamma function  (OLD IMPLEMENTATION)                 #
 #                                                                       #
 #-----------------------------------------------------------------------#
 
@@ -669,11 +677,7 @@ def spouge_sum_complex(re, im, prec, a, c):
     im = from_man_exp(sim, -prec, prec, round_floor)
     return re, im
 
-# XXX: currently this falls back to mpf_gamma. It should
-# be the other way around: this function should handle
-# all sizes/precisions efficiently, and gamma should fall
-# back here
-def mpf_gamma_int(n, prec, rounding=round_fast):
+def mpf_gamma_int_old(n, prec, rounding=round_fast):
     if n < 1000:
         return from_int(ifac(n-1), prec, rounding)
     # XXX: choose the cutoff less arbitrarily
@@ -682,13 +686,13 @@ def mpf_gamma_int(n, prec, rounding=round_fast):
         return from_int(ifac(n-1), prec, rounding)
     return mpf_gamma(from_int(n), prec, rounding)
 
-def mpf_factorial(x, prec, rounding=round_fast):
-    return mpf_gamma(x, prec, rounding, p1=0)
+def mpf_factorial_old(x, prec, rounding=round_fast):
+    return mpf_gamma_old(x, prec, rounding, p1=0)
 
-def mpc_factorial(x, prec, rounding=round_fast):
-    return mpc_gamma(x, prec, rounding, p1=0)
+def mpc_factorial_old(x, prec, rounding=round_fast):
+    return mpc_gamma_old(x, prec, rounding, p1=0)
 
-def mpf_gamma(x, prec, rounding=round_fast, p1=1):
+def mpf_gamma_old(x, prec, rounding=round_fast, p1=1):
     """
     Computes the gamma function of a real floating-point argument.
     With p1=0, computes a factorial instead.
@@ -721,7 +725,7 @@ def mpf_gamma(x, prec, rounding=round_fast, p1=1):
         wp += 15
         pix = mpf_mul(x, mpf_pi(wp), wp)
         t = mpf_sin_pi(x, wp)
-        g = mpf_gamma(mpf_sub(fone, x), wp)
+        g = mpf_gamma_old(mpf_sub(fone, x), wp)
         return mpf_div(pix, mpf_mul(t, g, wp), prec, rounding)
     sprec, a, c = get_spouge_coefficients(wp)
     s = spouge_sum_real(x, sprec, a, c)
@@ -733,10 +737,10 @@ def mpf_gamma(x, prec, rounding=round_fast, p1=1):
     t = mpf_mul(mpf_exp(t, wp), s, prec, rounding)
     return t
 
-def mpc_gamma(x, prec, rounding=round_fast, p1=1):
+def mpc_gamma_old(x, prec, rounding=round_fast, p1=1):
     re, im = x
     if im == fzero:
-        return mpf_gamma(re, prec, rounding, p1), fzero
+        return mpf_gamma_old(re, prec, rounding, p1), fzero
     # More precision is needed for enormous x.
     sign, man, exp, bc = re
     isign, iman, iexp, ibc = im
@@ -767,13 +771,13 @@ def mpc_gamma(x, prec, rounding=round_fast, p1=1):
         pix = mpc_mul(x, pi, wp)
         t = mpc_sin_pi(x, wp)
         u = mpc_sub(mpc_one, x, wp)
-        g = mpc_gamma(u, wp)
+        g = mpc_gamma_old(u, wp)
         w = mpc_mul(t, g, wp)
         return mpc_div(pix, w, wp)
     # Extremely close to the real line?
     # XXX: reflection formula
     if iexp+ibc < -wp:
-        a = mpf_gamma(re_orig, wp)
+        a = mpf_gamma_old(re_orig, wp)
         b = mpf_psi0(re_orig, wp)
         gamma_diff = mpf_div(a, b, wp)
         return mpf_pos(a, prec, rounding), mpf_mul(gamma_diff, im, prec, rounding)
@@ -1230,14 +1234,17 @@ def mpf_zeta(s, prec, rnd=round_fast, alt=0):
     d = borwein_coefficients(n)
     t = MPZ_ZERO
     sf = to_fixed(s, wp)
+    ln2 = ln2_fixed(wp)
     for k in xrange(n):
-        u = from_man_exp(-sf*log_int_fixed(k+1, wp), -2*wp, wp)
-        esign, eman, eexp, ebc = mpf_exp(u, wp)
-        offset = eexp + wp
-        if offset >= 0:
-            w = ((d[k] - d[n]) * eman) << offset
-        else:
-            w = ((d[k] - d[n]) * eman) >> (-offset)
+        u = (-sf*log_int_fixed(k+1, wp, ln2)) >> wp
+        #esign, eman, eexp, ebc = mpf_exp(u, wp)
+        #offset = eexp + wp
+        #if offset >= 0:
+        #    w = ((d[k] - d[n]) * eman) << offset
+        #else:
+        #    w = ((d[k] - d[n]) * eman) >> (-offset)
+        eman = exp_fixed(u, wp, ln2)
+        w = (d[k] - d[n]) * eman
         if k & 1:
             t -= w
         else:
@@ -1313,20 +1320,23 @@ def mpc_zeta(s, prec, rnd=round_fast, alt=0, force=False):
     one = MPZ_ONE << wp
     one_2wp = MPZ_ONE << (2*wp)
     critical_line = re == fhalf
+    ln2 = ln2_fixed(wp)
+    pi2 = pi_fixed(wp-1)
+    wp2 = wp+wp
     for k in xrange(n):
-        log = log_int_fixed(k+1, wp)
+        log = log_int_fixed(k+1, wp, ln2)
         # A square root is much cheaper than an exp
         if critical_line:
-            w = one_2wp // sqrt_fixed((k+1) << wp, wp)
+            w = one_2wp // isqrt_fast((k+1) << wp2)
         else:
-            w = to_fixed(mpf_exp(from_man_exp(-ref*log, -2*wp), wp), wp)
+            w = exp_fixed((-ref*log) >> wp, wp)
         if k & 1:
             w *= (d[n] - d[k])
         else:
             w *= (d[k] - d[n])
-        wre, wim = mpf_cos_sin(from_man_exp(-imf * log, -2*wp), wp)
-        tre += (w * to_fixed(wre, wp)) >> wp
-        tim += (w * to_fixed(wim, wp)) >> wp
+        wre, wim = cos_sin_fixed((-imf*log)>>wp, wp, pi2)
+        tre += (w * wre) >> wp
+        tim += (w * wim) >> wp
     tre //= (-d[n])
     tim //= (-d[n])
     tre = from_man_exp(tre, -wp, wp)
@@ -1346,34 +1356,6 @@ def mpc_altzeta(s, prec, rnd=round_fast):
 # Not optimized currently
 mpf_zetasum = None
 
-def exp_fixed_prod(x, wp):
-    u = from_man_exp(x, -2*wp, wp)
-    esign, eman, eexp, ebc = mpf_exp(u, wp)
-    offset = eexp + wp
-    if offset >= 0:
-        return eman << offset
-    else:
-        return eman >> (-offset)
-
-def cos_sin_fixed_prod(x, wp):
-    cos, sin = mpf_cos_sin(from_man_exp(x, -2*wp), wp)
-    sign, man, exp, bc = cos
-    if sign:
-        man = -man
-    offset = exp + wp
-    if offset >= 0:
-        cos = man << offset
-    else:
-        cos = man >> (-offset)
-    sign, man, exp, bc = sin
-    if sign:
-        man = -man
-    offset = exp + wp
-    if offset >= 0:
-        sin = man << offset
-    else:
-        sin = man >> (-offset)
-    return cos, sin
 
 def pow_fixed(x, n, wp):
     if n == 1:
@@ -1386,6 +1368,97 @@ def pow_fixed(x, n, wp):
         x = (x*x) >> wp
         n //= 2
     return y
+
+# TODO: optimize / cleanup interface / unify with list_primes
+sieve_cache = []
+primes_cache = []
+mult_cache = []
+
+def primesieve(n):
+    global sieve_cache, primes_cache, mult_cache
+    if n < len(sieve_cache):
+        sieve = sieve_cache#[:n+1]
+        primes = primes_cache[:primes_cache.index(max(sieve))+1]
+        mult = mult_cache#[:n+1]
+        return sieve, primes, mult
+    sieve = [0] * (n+1)
+    mult = [0] * (n+1)
+    primes = list_primes(n)
+    for p in primes:
+        #sieve[p::p] = p
+        for k in xrange(p,n+1,p):
+            sieve[k] = p
+    for i, p in enumerate(sieve):
+        if i >= 2:
+            m = 1
+            n = i // p
+            while not n % p:
+                n //= p
+                m += 1
+            mult[i] = m
+    sieve_cache = sieve
+    primes_cache = primes
+    mult_cache = mult
+    return sieve, primes, mult
+
+def zetasum_sieved(critical_line, sre, sim, a, n, wp):
+    assert a >= 1
+    sieve, primes, mult = primesieve(a+n)
+    basic_powers = {}
+    one = MPZ_ONE << wp
+    one_2wp = MPZ_ONE << (2*wp)
+    wp2 = wp+wp
+    ln2 = ln2_fixed(wp)
+    pi2 = pi_fixed(wp-1)
+    for p in primes:
+        if p*2 > a+n:
+            break
+        log = log_int_fixed(p, wp, ln2)
+        cos, sin = cos_sin_fixed((-sim*log)>>wp, wp, pi2)
+        if critical_line:
+            u = one_2wp // isqrt_fast(p<<wp2)
+        else:
+            u = exp_fixed((-sre*log)>>wp, wp)
+        pre = (u*cos) >> wp
+        pim = (u*sin) >> wp
+        basic_powers[p] = [(pre, pim)]
+        tre, tim = pre, pim
+        for m in range(1,int(math.log(a+n,p)+0.01)+1):
+            tre, tim = ((pre*tre-pim*tim)>>wp), ((pim*tre+pre*tim)>>wp)
+            basic_powers[p].append((tre,tim))
+    xre = MPZ_ZERO
+    xim = MPZ_ZERO
+    if a == 1:
+        xre += one
+    aa = max(a,2)
+    for k in xrange(aa, a+n+1):
+        p = sieve[k]
+        if p in basic_powers:
+            m = mult[k]
+            tre, tim = basic_powers[p][m-1]
+            while 1:
+                k //= p**m
+                if k == 1:
+                    break
+                p = sieve[k]
+                m = mult[k]
+                pre, pim = basic_powers[p][m-1]
+                tre, tim = ((pre*tre-pim*tim)>>wp), ((pim*tre+pre*tim)>>wp)
+        else:
+            log = log_int_fixed(k, wp, ln2)
+            cos, sin = cos_sin_fixed((-sim*log)>>wp, wp, pi2)
+            if critical_line:
+                u = one_2wp // isqrt_fast(k<<wp2)
+            else:
+                u = exp_fixed((-sre*log)>>wp, wp)
+            tre = (u*cos) >> wp
+            tim = (u*sin) >> wp
+        xre += tre
+        xim += tim
+    return xre, xim
+
+# Set to something large to disable
+ZETASUM_SIEVE_CUTOFF = 10
 
 def mpc_zetasum(s, a, n, derivatives, reflect, prec):
     """
@@ -1401,6 +1474,11 @@ def mpc_zetasum(s, a, n, derivatives, reflect, prec):
     critical_line = (sre == fhalf)
     sre = to_fixed(sre, wp)
     sim = to_fixed(sim, wp)
+
+    if a > 0 and n > ZETASUM_SIEVE_CUTOFF and not have_derivatives and not reflect:
+        re, im = zetasum_sieved(critical_line, sre, sim, a, n, wp)
+        xs = [(from_man_exp(re, -wp, prec, 'n'), from_man_exp(im, -wp, prec, 'n'))]
+        return xs, []
 
     maxd = max(derivatives)
     if not have_one_derivative:
@@ -1418,13 +1496,17 @@ def mpc_zetasum(s, a, n, derivatives, reflect, prec):
     one = MPZ_ONE << wp
     one_2wp = MPZ_ONE << (2*wp)
 
+    ln2 = ln2_fixed(wp)
+    pi2 = pi_fixed(wp-1)
+    wp2 = wp+wp
+
     for w in xrange(a, a+n+1):
-        log = log_int_fixed(w, wp)
-        cos, sin = cos_sin_fixed_prod(-sim*log, wp)
+        log = log_int_fixed(w, wp, ln2)
+        cos, sin = cos_sin_fixed((-sim*log)>>wp, wp, pi2)
         if critical_line:
-            u = one_2wp // sqrt_fixed(w << wp, wp)
+            u = one_2wp // isqrt_fast(w<<wp2)
         else:
-            u = exp_fixed_prod(-sre*log, wp)
+            u = exp_fixed((-sre*log)>>wp, wp)
         xterm_re = (u * cos) >> wp
         xterm_im = (u * sin) >> wp
         if reflect:
@@ -1474,3 +1556,822 @@ def mpc_zetasum(s, a, n, derivatives, reflect, prec):
     ys = [(from_man_exp(ya, -wp, prec, 'n'), from_man_exp(yb, -wp, prec, 'n'))
         for (ya, yb) in zip(yre, yim)]
     return xs, ys
+
+
+#-----------------------------------------------------------------------#
+#                                                                       #
+#              The gamma function  (NEW IMPLEMENTATION)                 #
+#                                                                       #
+#-----------------------------------------------------------------------#
+
+# Higher means faster, but more precomputation time
+MAX_GAMMA_TAYLOR_PREC = 5000
+# Need to derive higher bounds for Taylor series to go higher
+assert MAX_GAMMA_TAYLOR_PREC < 15000
+
+# Use Stirling's series if abs(x) > beta*prec
+# Important: must be large enough for convergence!
+GAMMA_STIRLING_BETA = 0.2
+
+SMALL_FACTORIAL_CACHE_SIZE = 150
+
+gamma_taylor_cache = {}
+gamma_stirling_cache = {}
+
+small_factorial_cache = [from_int(ifac(n)) for \
+    n in range(SMALL_FACTORIAL_CACHE_SIZE+1)]
+
+def zeta_array(N, prec):
+    """
+    zeta(n) = A * pi**n / n! + B
+
+    where A is a rational number (A = Bernoulli number
+    for n even) and B is an infinite sum over powers of exp(2*pi).
+    (B = 0 for n even).
+
+    TODO: this is currently only used for gamma, but could
+    be very useful elsewhere.
+    """
+    extra = 30
+    wp = prec+extra
+    zeta_values = [MPZ_ZERO] * (N+2)
+    pi = pi_fixed(wp)
+    # STEP 1:
+    one = MPZ_ONE << wp
+    zeta_values[0] = -one//2
+    f_2pi = mpf_shift(mpf_pi(wp),1)
+    exp_2pi_k = exp_2pi = mpf_exp(f_2pi, wp)
+    # Compute exponential series
+    # Store values of 1/(exp(2*pi*k)-1),
+    # exp(2*pi*k)/(exp(2*pi*k)-1)**2, 1/(exp(2*pi*k)-1)**2
+    # pi*k*exp(2*pi*k)/(exp(2*pi*k)-1)**2
+    exps3 = []
+    k = 1
+    while 1:
+        tp = wp - 9*k
+        if tp < 1:
+            break
+        # 1/(exp(2*pi*k-1)
+        q1 = mpf_div(fone, mpf_sub(exp_2pi_k, fone, tp), tp)
+        # pi*k*exp(2*pi*k)/(exp(2*pi*k)-1)**2
+        q2 = mpf_mul(exp_2pi_k, mpf_mul(q1,q1,tp), tp)
+        q1 = to_fixed(q1, wp)
+        q2 = to_fixed(q2, wp)
+        q2 = (k * q2 * pi) >> wp
+        exps3.append((q1, q2))
+        # Multiply for next round
+        exp_2pi_k = mpf_mul(exp_2pi_k, exp_2pi, wp)
+        k += 1
+    # Exponential sum
+    for n in xrange(3, N+1, 2):
+        s = MPZ_ZERO
+        k = 1
+        for e1, e2 in exps3:
+            if n%4 == 3:
+                t = e1 // k**n
+            else:
+                U = (n-1)//4
+                t = (e1 + e2//U) // k**n
+            if not t:
+                break
+            s += t
+            k += 1
+        zeta_values[n] = -2*s
+    # Even zeta values
+    B = [mpf_abs(mpf_bernoulli(k,wp)) for k in xrange(N+2)]
+    pi_pow = fpi = mpf_pow_int(mpf_shift(mpf_pi(wp), 1), 2, wp)
+    pi_pow = mpf_div(pi_pow, from_int(4), wp)
+    for n in xrange(2,N+2,2):
+        z = mpf_mul(B[n], pi_pow, wp)
+        zeta_values[n] = to_fixed(z, wp)
+        pi_pow = mpf_mul(pi_pow, fpi, wp)
+        pi_pow = mpf_div(pi_pow, from_int((n+1)*(n+2)), wp)
+    # Zeta sum
+    reciprocal_pi = (one << wp) // pi
+    for n in xrange(3, N+1, 4):
+        U = (n-3)//4
+        s = zeta_values[4*U+4]*(4*U+7)//4
+        for k in xrange(1, U+1):
+            s -= (zeta_values[4*k] * zeta_values[4*U+4-4*k]) >> wp
+        zeta_values[n] += (2*s*reciprocal_pi) >> wp
+    for n in xrange(5, N+1, 4):
+        U = (n-1)//4
+        s = zeta_values[4*U+2]*(2*U+1)
+        for k in xrange(1, 2*U+1):
+            s += ((-1)**k*2*k* zeta_values[2*k] * zeta_values[4*U+2-2*k])>>wp
+        zeta_values[n] += ((s*reciprocal_pi)>>wp)//(2*U)
+    return [x>>extra for x in zeta_values]
+
+def gamma_taylor_coefficients(inprec):
+    """
+    Gives the Taylor coefficients of 1/gamma(1+x) as
+    a list of fixed-point numbers. Enough coefficients are returned
+    to ensure that the series converges to the given precision
+    when x is in [0.5, 1.5].
+    """
+    # Reuse nearby cache values (small case)
+    if inprec < 400:
+        prec = inprec + (10-(inprec%10))
+    elif inprec < 1000:
+        prec = inprec + (30-(inprec%30))
+    else:
+        prec = inprec
+    if prec in gamma_taylor_cache:
+        return gamma_taylor_cache[prec], prec
+
+    # Experimentally determined bounds
+    if prec < 1000:
+        N = int(prec**0.76 + 2)
+    else:
+        # Valid to at least 15000 bits
+        N = int(prec**0.787 + 2)
+
+    # Reuse higher precision values
+    for cprec in gamma_taylor_cache:
+        if cprec > prec:
+            coeffs = [x>>(cprec-prec) for x in gamma_taylor_cache[cprec][-N:]]
+            if inprec < 1000:
+                gamma_taylor_cache[prec] = coeffs
+            return coeffs, prec
+
+    # Cache at a higher precision (large case)
+    if prec > 1000:
+        prec = int(prec * 1.2)
+
+    wp = prec + 20
+    A = [0] * N
+    A[0] = MPZ_ZERO
+    A[1] = MPZ_ONE << wp
+    A[2] = euler_fixed(wp)
+    # SLOW, reference implementation
+    #zeta_values = [0,0]+[to_fixed(mpf_zeta_int(k,wp),wp) for k in xrange(2,N)]
+    zeta_values = zeta_array(N, wp)
+    for k in xrange(3, N):
+        a = (-A[2]*A[k-1])>>wp
+        for j in xrange(2,k):
+            a += ((-1)**j * zeta_values[j] * A[k-j]) >> wp
+        a //= (1-k)
+        A[k] = a
+    A = [a>>20 for a in A]
+    A = A[::-1]
+    A = A[:-1]
+    gamma_taylor_cache[prec] = A
+    #return A, prec
+    return gamma_taylor_coefficients(inprec)
+
+def gamma_fixed_taylor(xmpf, x, wp, prec, rnd, type):
+    # Determine nearest multiple of N/2
+    #n = int(x >> (wp-1))
+    #steps = (n-1)>>1
+    nearest_int = ((x >> (wp-1)) + MPZ_ONE) >> 1
+    one = MPZ_ONE << wp
+    coeffs, cwp = gamma_taylor_coefficients(wp)
+    if nearest_int > 0:
+        r = one
+        for i in xrange(nearest_int-1):
+            x -= one
+            r = (r*x) >> wp
+        x -= one
+        p = MPZ_ZERO
+        for c in coeffs:
+            p = c + ((x*p)>>wp)
+        p >>= (cwp-wp)
+        if type == 0:
+            return from_man_exp((r<<wp)//p, -wp, prec, rnd)
+        if type == 2:
+            return mpf_shift(from_rational(p, (r<<wp), prec, rnd), wp)
+        if type == 3:
+            return mpf_log(mpf_abs(from_man_exp((r<<wp)//p, -wp)), prec, rnd)
+    else:
+        r = one
+        for i in xrange(-nearest_int):
+            r = (r*x) >> wp
+            x += one
+        p = MPZ_ZERO
+        for c in coeffs:
+            p = c + ((x*p)>>wp)
+        p >>= (cwp-wp)
+        if wp - bitcount(abs(x)) > 10:
+            # pass very close to 0, so do floating-point multiply
+            g = mpf_add(xmpf, from_int(-nearest_int))  # exact
+            r = from_man_exp(p*r,-wp-wp)
+            r = mpf_mul(r, g, wp)
+            if type == 0:
+                return mpf_div(fone, r, prec, rnd)
+            if type == 2:
+                return mpf_pos(r, prec, rnd)
+            if type == 3:
+                return mpf_log(mpf_abs(mpf_div(fone, r, wp)), prec, rnd)
+        else:
+            r = from_man_exp(x*p*r,-3*wp)
+            if type == 0: return mpf_div(fone, r, prec, rnd)
+            if type == 2: return mpf_pos(r, prec, rnd)
+            if type == 3: return mpf_neg(mpf_log(mpf_abs(r), prec, rnd))
+
+def stirling_coefficient(n):
+    if n in gamma_stirling_cache:
+        return gamma_stirling_cache[n]
+    p, q = bernfrac(n)
+    q *= MPZ(n*(n-1))
+    gamma_stirling_cache[n] = p, q, bitcount(abs(p)), bitcount(q)
+    return gamma_stirling_cache[n]
+
+def real_stirling_series(x, prec):
+    """
+    Sums the rational part of Stirling's expansion,
+
+    log(sqrt(2*pi)) - z + 1/(12*z) - 1/(360*z^3) + ...
+
+    """
+    t = (MPZ_ONE<<(prec+prec)) // x   # t = 1/x
+    u = (t*t)>>prec                  # u = 1/x**2
+    s = ln_sqrt2pi_fixed(prec) - x
+    # Add initial terms of Stirling's series
+    s += t//12;            t = (t*u)>>prec
+    s -= t//360;           t = (t*u)>>prec
+    s += t//1260;          t = (t*u)>>prec
+    s -= t//1680;          t = (t*u)>>prec
+    if not t: return s
+    s += t//1188;          t = (t*u)>>prec
+    s -= 691*t//360360;    t = (t*u)>>prec
+    s += t//156;           t = (t*u)>>prec
+    if not t: return s
+    s -= 3617*t//122400;   t = (t*u)>>prec
+    s += 43867*t//244188;  t = (t*u)>>prec
+    s -= 174611*t//125400;  t = (t*u)>>prec
+    if not t: return s
+    k = 22
+    # From here on, the coefficients are growing, so we
+    # have to keep t at a roughly constant size
+    usize = bitcount(abs(u))
+    tsize = bitcount(abs(t))
+    texp = 0
+    while 1:
+        p, q, pb, qb = stirling_coefficient(k)
+        term_mag = tsize + pb + texp
+        shift = -texp
+        m = pb - term_mag
+        if m > 0 and shift < m:
+            p >>= m
+            shift -= m
+        m = tsize - term_mag
+        if m > 0 and shift < m:
+            w = t >> m
+            shift -= m
+        else:
+            w = t
+        term = (t*p//q) >> shift
+        if not term:
+            break
+        s += term
+        t = (t*u) >> usize
+        texp -= (prec - usize)
+        k += 2
+    return s
+
+def complex_stirling_series(x, y, prec):
+    # t = 1/z
+    _m = (x*x + y*y) >> prec
+    tre = (x << prec) // _m
+    tim = (-y << prec) // _m
+    # u = 1/z**2
+    ure = (tre*tre - tim*tim) >> prec
+    uim = tim*tre >> (prec-1)
+    # s = log(sqrt(2*pi)) - z
+    sre = ln_sqrt2pi_fixed(prec) - x
+    sim = -y
+
+    # Add initial terms of Stirling's series
+    sre += tre//12; sim += tim//12;
+    tre, tim = ((tre*ure-tim*uim)>>prec), ((tre*uim+tim*ure)>>prec)
+    sre -= tre//360; sim -= tim//360;
+    tre, tim = ((tre*ure-tim*uim)>>prec), ((tre*uim+tim*ure)>>prec)
+    sre += tre//1260; sim += tim//1260;
+    tre, tim = ((tre*ure-tim*uim)>>prec), ((tre*uim+tim*ure)>>prec)
+    sre -= tre//1680; sim -= tim//1680;
+    tre, tim = ((tre*ure-tim*uim)>>prec), ((tre*uim+tim*ure)>>prec)
+    if abs(tre) + abs(tim) < 5: return sre, sim
+    sre += tre//1188; sim += tim//1188;
+    tre, tim = ((tre*ure-tim*uim)>>prec), ((tre*uim+tim*ure)>>prec)
+    sre -= 691*tre//360360; sim -= 691*tim//360360;
+    tre, tim = ((tre*ure-tim*uim)>>prec), ((tre*uim+tim*ure)>>prec)
+    sre += tre//156; sim += tim//156;
+    tre, tim = ((tre*ure-tim*uim)>>prec), ((tre*uim+tim*ure)>>prec)
+    if abs(tre) + abs(tim) < 5: return sre, sim
+    sre -= 3617*tre//122400; sim -= 3617*tim//122400;
+    tre, tim = ((tre*ure-tim*uim)>>prec), ((tre*uim+tim*ure)>>prec)
+    sre += 43867*tre//244188; sim += 43867*tim//244188;
+    tre, tim = ((tre*ure-tim*uim)>>prec), ((tre*uim+tim*ure)>>prec)
+    sre -= 174611*tre//125400; sim -= 174611*tim//125400;
+    tre, tim = ((tre*ure-tim*uim)>>prec), ((tre*uim+tim*ure)>>prec)
+    if abs(tre) + abs(tim) < 5: return sre, sim
+
+    k = 22
+    # From here on, the coefficients are growing, so we
+    # have to keep t at a roughly constant size
+    usize = bitcount(max(abs(ure), abs(uim)))
+    tsize = bitcount(max(abs(tre), abs(tim)))
+    texp = 0
+    while 1:
+        p, q, pb, qb = stirling_coefficient(k)
+        term_mag = tsize + pb + texp
+        shift = -texp
+        m = pb - term_mag
+        if m > 0 and shift < m:
+            p >>= m
+            shift -= m
+        m = tsize - term_mag
+        if m > 0 and shift < m:
+            wre = tre >> m
+            wim = tim >> m
+            shift -= m
+        else:
+            wre = tre
+            wim = tim
+        termre = (tre*p//q) >> shift
+        termim = (tim*p//q) >> shift
+        if abs(termre) + abs(termim) < 5:
+            break
+        sre += termre
+        sim += termim
+        tre, tim = ((tre*ure - tim*uim)>>usize), \
+            ((tre*uim + tim*ure)>>usize)
+        texp -= (prec - usize)
+        k += 2
+    return sre, sim
+
+
+def mpf_gamma(x, prec, rnd='d', type=0):
+    """
+    This function implements multipurpose evaluation of the gamma
+    function, G(x), as well as the following versions of the same:
+
+    type = 0 -- G(x)                    [standard gamma function]
+    type = 1 -- G(x+1) = x*G(x+1) = x!  [factorial]
+    type = 2 -- 1/G(x)                  [reciprocal gamma function]
+    type = 3 -- log(|G(x)|)             [log-gamma function, real part]
+    """
+
+    # Specal values
+    sign, man, exp, bc = x
+    if not man:
+        if x == fzero:
+            if type == 1: return fone
+            if type == 2: return fzero
+            raise ValueError("gamma function pole")
+        if x == finf:
+            if type == 2: return fzero
+            return finf
+        return fnan
+
+    # First of all, for log gamma, numbers can be well beyond the fixed-point
+    # range, so we must take care of huge numbers before e.g. trying
+    # to convert x to the nearest integer
+    if type == 3:
+        wp = prec+20
+        if exp+bc > wp and not sign:
+            return mpf_sub(mpf_mul(x, mpf_log(x, wp), wp), x, prec, rnd)
+
+    # We strongly want to special-case small integers
+    is_integer = exp >= 0
+    if is_integer:
+        # Poles
+        if sign:
+            if type == 2:
+                return fzero
+            raise ValueError("gamma function pole")
+        # n = x
+        n = man << exp
+        if n < SMALL_FACTORIAL_CACHE_SIZE:
+            if type == 0:
+                return mpf_pos(small_factorial_cache[n-1], prec, rnd)
+            if type == 1:
+                return mpf_pos(small_factorial_cache[n], prec, rnd)
+            if type == 2:
+                return mpf_div(fone, small_factorial_cache[n-1], prec, rnd)
+            if type == 3:
+                return mpf_log(small_factorial_cache[n-1], prec, rnd)
+    else:
+        # floor(abs(x))
+        n = int(man >> (-exp))
+
+    # Estimate size and precision
+    # Estimate log(gamma(|x|),2) as x*log(x,2)
+    mag = exp + bc
+    gamma_size = n*mag
+
+    if type == 3:
+        wp = prec + 20
+    else:
+        wp = prec + bitcount(gamma_size) + 20
+
+    # Very close to 0, pole
+    if mag < -wp:
+        if type == 0:
+            return mpf_sub(mpf_div(fone,x, wp),mpf_shift(fone,-wp),prec,rnd)
+        if type == 1: return mpf_sub(fone, x, prec, rnd)
+        if type == 2: return mpf_add(x, mpf_shift(fone,mag-wp), prec, rnd)
+        if type == 3: return mpf_neg(mpf_log(mpf_abs(x), prec, rnd))
+
+    # From now on, we assume having a gamma function
+    if type == 1:
+        return mpf_gamma(mpf_add(x, fone), prec, rnd, 0)
+
+    # Special case integers (those not small enough to be caught above,
+    # but still small enough for an exact factorial to be faster
+    # than an approximate algorithm), and half-integers
+    if exp >= -1:
+        if is_integer:
+            if gamma_size < 10*wp:
+                if type == 0:
+                    return from_int(ifac(n-1), prec, rnd)
+                if type == 2:
+                    return from_rational(MPZ_ONE, ifac(n-1), prec, rnd)
+                if type == 3:
+                    return mpf_log(from_int(ifac(n-1)), prec, rnd)
+        # half-integer
+        if n < 100 or gamma_size < 10*wp:
+            if sign:
+                w = sqrtpi_fixed(wp)
+                if n % 2: f = ifac2(2*n+1)
+                else:     f = -ifac2(2*n+1)
+                if type == 0:
+                    return mpf_shift(from_rational(w, f, prec, rnd), -wp+n+1)
+                if type == 2:
+                    return mpf_shift(from_rational(f, w, prec, rnd), wp-n-1)
+                if type == 3:
+                    return mpf_log(mpf_shift(from_rational(w, abs(f),
+                        prec, rnd), -wp+n+1), prec, rnd)
+            elif n == 0:
+                if type == 0: return mpf_sqrtpi(prec, rnd)
+                if type == 2: return mpf_div(fone, mpf_sqrtpi(wp), prec, rnd)
+                if type == 3: return mpf_log(mpf_sqrtpi(wp), prec, rnd)
+            else:
+                w = sqrtpi_fixed(wp)
+                w = from_man_exp(w * ifac2(2*n-1), -wp-n)
+                if type == 0: return mpf_pos(w, prec, rnd)
+                if type == 2: return mpf_div(fone, w, prec, rnd)
+                if type == 3: return mpf_log(mpf_abs(w), prec, rnd)
+
+    # Convert to fixed point
+    offset = exp + wp
+    if offset >= 0: absxman = man << offset
+    else:           absxman = man >> (-offset)
+
+    # For log gamma, provide accurate evaluation for x = 1+eps and 2+eps
+    if type == 3 and not sign:
+        one = MPZ_ONE << wp
+        one_dist = abs(absxman-one)
+        two_dist = abs(absxman-2*one)
+        cancellation = (wp - bitcount(min(one_dist, two_dist)))
+        if cancellation > 10:
+            xsub1 = mpf_sub(fone, x)
+            xsub2 = mpf_sub(ftwo, x)
+            xsub1mag = xsub1[2]+xsub1[3]
+            xsub2mag = xsub2[2]+xsub2[3]
+            if xsub1mag < -wp:
+                return mpf_mul(mpf_euler(wp), mpf_sub(fone, x), prec, rnd)
+            if xsub2mag < -wp:
+                return mpf_mul(mpf_sub(fone, mpf_euler(wp)),
+                    mpf_sub(x, ftwo), prec, rnd)
+            # Proceed but increase precision
+            wp += max(-xsub1mag, -xsub2mag)
+            offset = exp + wp
+            if offset >= 0: absxman = man << offset
+            else:           absxman = man >> (-offset)
+
+    # Use Taylor series if appropriate
+    n_for_stirling = int(GAMMA_STIRLING_BETA*wp)
+    if n < max(100, n_for_stirling) and wp < MAX_GAMMA_TAYLOR_PREC:
+        if sign:
+            absxman = -absxman
+        return gamma_fixed_taylor(x, absxman, wp, prec, rnd, type)
+
+    # Use Stirling's series
+    # First ensure that |x| is large enough for rapid convergence
+    xorig = x
+
+    # Argument reduction
+    r = 0
+    if n < n_for_stirling:
+        r = one = MPZ_ONE << wp
+        d = n_for_stirling - n
+        for k in xrange(d):
+            r = (r * absxman) >> wp
+            absxman += one
+        x = xabs = from_man_exp(absxman, -wp)
+        if sign:
+            x = mpf_neg(x)
+    else:
+        xabs = mpf_abs(x)
+
+    # Asymptotic series
+    y = real_stirling_series(absxman, wp)
+    u = to_fixed(mpf_log(xabs, wp), wp)
+    u = ((absxman - (MPZ_ONE<<(wp-1))) * u) >> wp
+    y += u
+    w = from_man_exp(y, -wp)
+
+    # Compute final value
+    if sign:
+        # Reflection formula
+        A = mpf_mul(mpf_sin_pi(xorig, wp), xorig, wp)
+        B = mpf_neg(mpf_pi(wp))
+        if type == 0 or type == 2:
+            A = mpf_mul(A, mpf_exp(w, wp))
+            if r:
+                B = mpf_mul(B, from_man_exp(r, -wp), wp)
+            if type == 0:
+                return mpf_div(B, A, prec, rnd)
+            if type == 2:
+                return mpf_div(A, B, prec, rnd)
+        if type == 3:
+            if r:
+                B = mpf_mul(B, from_man_exp(r, -wp), wp)
+            A = mpf_add(mpf_log(mpf_abs(A), wp), w, wp)
+            return mpf_sub(mpf_log(mpf_abs(B), wp), A, prec, rnd)
+    else:
+        if type == 0:
+            if r:
+                return mpf_div(mpf_exp(w, wp),
+                    from_man_exp(r, -wp), prec, rnd)
+            return mpf_exp(w, prec, rnd)
+        if type == 2:
+            if r:
+                return mpf_div(from_man_exp(r, -wp),
+                    mpf_exp(w, wp), prec, rnd)
+            return mpf_exp(mpf_neg(w), prec, rnd)
+        if type == 3:
+            if r:
+                return mpf_sub(w, mpf_log(from_man_exp(r,-wp), wp), prec, rnd)
+            return mpf_pos(w, prec, rnd)
+
+
+def mpc_gamma(z, prec, rnd='d', type=0):
+    a, b = z
+    asign, aman, aexp, abc = a
+    bsign, bman, bexp, bbc = b
+
+    if b == fzero:
+        # Imaginary part on negative half-axis for log-gamma function
+        if type == 3 and asign:
+            re = mpf_gamma(a, prec, rnd, 3)
+            n = (-aman) >> (-aexp)
+            im = mpf_mul_int(mpf_pi(prec+10), n, prec, rnd)
+            return re, im
+        return mpf_gamma(a, prec, rnd, type), fzero
+
+    # Some kind of complex inf/nan
+    if (not aman and aexp) or (not bman and bexp):
+        return (fnan, fnan)
+
+    # Initial working precision
+    wp = prec + 20
+
+    amag = aexp+abc
+    bmag = bexp+bbc
+    if aman:
+        mag = max(amag, bmag)
+    else:
+        mag = bmag
+
+    # Close to 0
+    if mag < -8:
+        if mag < -wp:
+            # 1/gamma(z) = z + euler*z^2 + O(z^3)
+            v = mpc_add(z, mpc_mul_mpf(mpc_mul(z,z,wp),mpf_euler(wp),wp), wp)
+            if type == 0: return mpc_reciprocal(v, prec, rnd)
+            if type == 1: return mpc_div(z, v, prec, rnd)
+            if type == 2: return mpc_pos(v, prec, rnd)
+            if type == 3: return mpc_log(mpc_reciprocal(v, prec), prec, rnd)
+        elif type != 1:
+            wp += (-mag)
+
+    # Handle huge log-gamma values; must do this before converting to
+    # a fixed-point value. TODO: determine a precise cutoff of validity
+    # depending on amag and bmag
+    if type == 3 and mag > wp and ((not asign) or (bmag >= amag)):
+        return mpc_sub(mpc_mul(z, mpc_log(z, wp), wp), z, prec, rnd)
+
+    # From now on, we assume having a gamma function
+    if type == 1:
+        return mpc_gamma((mpf_add(a, fone), b), prec, rnd, 0)
+
+    an = abs(to_int(a))
+    bn = abs(to_int(b))
+    absn = max(an, bn)
+    gamma_size = absn*mag
+    if type == 3:
+        pass
+    else:
+        wp += bitcount(gamma_size)
+
+    # Reflect to the right half-plane. Note that Stirling's expansion
+    # is valid in the left half-plane too, as long as we're not too close
+    # to the real axis, but in order to use this argument reduction
+    # in the negative direction must be implemented.
+    #need_reflection = asign and ((bmag < 0) or (amag-bmag > 4))
+    need_reflection = asign
+    zorig = z
+    if need_reflection:
+        z = mpc_neg(z)
+        asign, aman, aexp, abc = a = z[0]
+        bsign, bman, bexp, bbc = b = z[1]
+
+    # Imaginary part very small compared to real one?
+    yfinal = 0
+    balance_prec = 0
+    if bmag < -10:
+        # Check z ~= 1 and z ~= 2 for loggamma
+        if type == 3:
+            zsub1 = mpc_sub_mpf(z, fone)
+            if zsub1[0] == fzero:
+                cancel1 = -bmag
+            else:
+                cancel1 = -max(zsub1[0][2]+zsub1[0][3], bmag)
+            if cancel1 > wp:
+                pi = mpf_pi(wp)
+                x = mpc_mul_mpf(zsub1, pi, wp)
+                x = mpc_mul(x, x, wp)
+                x = mpc_div_mpf(x, from_int(12), wp)
+                y = mpc_mul_mpf(zsub1, mpf_neg(mpf_euler(wp)), wp)
+                yfinal = mpc_add(x, y, wp)
+                if not need_reflection:
+                    return mpc_pos(yfinal, prec, rnd)
+            elif cancel1 > 0:
+                wp += cancel1
+            zsub2 = mpc_sub_mpf(z, ftwo)
+            if zsub2[0] == fzero:
+                cancel2 = -bmag
+            else:
+                cancel2 = -max(zsub2[0][2]+zsub2[0][3], bmag)
+            if cancel2 > wp:
+                pi = mpf_pi(wp)
+                t = mpf_sub(mpf_mul(pi, pi), from_int(6))
+                x = mpc_mul_mpf(mpc_mul(zsub2, zsub2, wp), t, wp)
+                x = mpc_div_mpf(x, from_int(12), wp)
+                y = mpc_mul_mpf(zsub2, mpf_sub(fone, mpf_euler(wp)), wp)
+                yfinal = mpc_add(x, y, wp)
+                if not need_reflection:
+                    return mpc_pos(yfinal, prec, rnd)
+            elif cancel2 > 0:
+                wp += cancel2
+        if bmag < -wp:
+            # Compute directly from the real gamma function.
+            pp = 2*(wp+10)
+            aabs = mpf_abs(a)
+            eps = mpf_shift(fone, amag-wp)
+            x1 = mpf_gamma(aabs, pp, type=type)
+            x2 = mpf_gamma(mpf_add(aabs, eps), pp, type=type)
+            xprime = mpf_div(mpf_sub(x2, x1, pp), eps, pp)
+            y = mpf_mul(b, xprime, prec, rnd)
+            yfinal = (x1, y)
+            # Note: we still need to use the reflection formula for
+            # near-poles, and the correct branch of the log-gamma function
+            if not need_reflection:
+                return mpc_pos(yfinal, prec, rnd)
+        else:
+            balance_prec += (-bmag)
+
+    wp += balance_prec
+    n_for_stirling = int(GAMMA_STIRLING_BETA*wp)
+    need_reduction = absn < n_for_stirling
+
+    afix = to_fixed(a, wp)
+    bfix = to_fixed(b, wp)
+
+    r = 0
+    if not yfinal:
+        zprered = z
+        # Argument reduction
+        if absn < n_for_stirling:
+            absn = complex(an, bn)
+            d = int((1 + n_for_stirling**2 - bn**2)**0.5 - an)
+            rre = one = MPZ_ONE << wp
+            rim = MPZ_ZERO
+            for k in xrange(d):
+                rre, rim = ((afix*rre-bfix*rim)>>wp), ((afix*rim + bfix*rre)>>wp)
+                afix += one
+            r = from_man_exp(rre, -wp), from_man_exp(rim, -wp)
+            a = from_man_exp(afix, -wp)
+            z = a, b
+
+        yre, yim = complex_stirling_series(afix, bfix, wp)
+        # (z-1/2)*log(z) + S
+        lre, lim = mpc_log(z, wp)
+        lre = to_fixed(lre, wp)
+        lim = to_fixed(lim, wp)
+        yre = ((lre*afix - lim*bfix)>>wp) - (lre>>1) + yre
+        yim = ((lre*bfix + lim*afix)>>wp) - (lim>>1) + yim
+        y = from_man_exp(yre, -wp), from_man_exp(yim, -wp)
+
+        if r and type == 3:
+            # If re(z) > 0 and abs(z) <= 4, the branches of loggamma(z)
+            # and log(gamma(z)) coincide. Otherwise, use the zeroth order
+            # Stirling expansion to compute the correct imaginary part.
+            y = mpc_sub(y, mpc_log(r, wp), wp)
+            zfa = to_float(zprered[0])
+            zfb = to_float(zprered[1])
+            zfabs = math.hypot(zfa,zfb)
+            #if not (zfa > 0.0 and zfabs <= 4):
+            yfb = to_float(y[1])
+            u = math.atan2(zfb, zfa)
+            if zfabs <= 0.5:
+                gi = 0.577216*zfb - u
+            else:
+                gi = -zfb - 0.5*u + zfa*u + zfb*math.log(zfabs)
+            n = int(math.floor((gi-yfb)/(2*math.pi)+0.5))
+            y = (y[0], mpf_add(y[1], mpf_mul_int(mpf_pi(wp), 2*n, wp), wp))
+
+    if need_reflection:
+        if type == 0 or type == 2:
+            A = mpc_mul(mpc_sin_pi(zorig, wp), zorig, wp)
+            B = (mpf_neg(mpf_pi(wp)), fzero)
+            if yfinal:
+                if type == 2:
+                    A = mpc_div(A, yfinal, wp)
+                else:
+                    A = mpc_mul(A, yfinal, wp)
+            else:
+                A = mpc_mul(A, mpc_exp(y, wp), wp)
+            if r:
+                B = mpc_mul(B, r, wp)
+            if type == 0: return mpc_div(B, A, prec, rnd)
+            if type == 2: return mpc_div(A, B, prec, rnd)
+
+        # Reflection formula for the log-gamma function with correct branch
+        # http://functions.wolfram.com/GammaBetaErf/LogGamma/16/01/01/0006/
+        # LogGamma[z] == -LogGamma[-z] - Log[-z] +
+        # Sign[Im[z]] Floor[Re[z]] Pi I + Log[Pi] -
+        #      Log[Sin[Pi (z - Floor[Re[z]])]] -
+        # Pi I (1 - Abs[Sign[Im[z]]]) Abs[Floor[Re[z]]]
+        if type == 3:
+            if yfinal:
+                s1 = mpc_neg(yfinal)
+            else:
+                s1 = mpc_neg(y)
+            # s -= log(-z)
+            s1 = mpc_sub(s1, mpc_log(mpc_neg(zorig), wp), wp)
+            # floor(re(z))
+            rezfloor = mpf_floor(zorig[0])
+            imzsign = mpf_sign(zorig[1])
+            pi = mpf_pi(wp)
+            t = mpf_mul(pi, rezfloor)
+            t = mpf_mul_int(t, imzsign, wp)
+            s1 = (s1[0], mpf_add(s1[1], t, wp))
+            s1 = mpc_add_mpf(s1, mpf_log(pi, wp), wp)
+            t = mpc_sin_pi(mpc_sub_mpf(zorig, rezfloor), wp)
+            t = mpc_log(t, wp)
+            s1 = mpc_sub(s1, t, wp)
+            # Note: may actually be unused, because we fall back
+            # to the mpf_ function for real arguments
+            if not imzsign:
+                t = mpf_mul(pi, mpf_floor(rezfloor), wp)
+                s1 = (s1[0], mpf_sub(s1[1], t, wp))
+            return mpc_pos(s1, prec, rnd)
+    else:
+        if type == 0:
+            if r:
+                return mpc_div(mpc_exp(y, wp), r, prec, rnd)
+            return mpc_exp(y, prec, rnd)
+        if type == 2:
+            if r:
+                return mpc_div(r, mpc_exp(y, wp), prec, rnd)
+            return mpc_exp(mpc_neg(y), prec, rnd)
+        if type == 3:
+            return mpc_pos(y, prec, rnd)
+
+def mpf_factorial(x, prec, rnd='d'):
+    return mpf_gamma(x, prec, rnd, 1)
+
+def mpc_factorial(x, prec, rnd='d'):
+    return mpc_gamma(x, prec, rnd, 1)
+
+def mpf_rgamma(x, prec, rnd='d'):
+    return mpf_gamma(x, prec, rnd, 2)
+
+def mpc_rgamma(x, prec, rnd='d'):
+    return mpc_gamma(x, prec, rnd, 2)
+
+def mpf_loggamma(x, prec, rnd='d'):
+    sign, man, exp, bc = x
+    if sign:
+        raise ComplexResult
+    return mpf_gamma(x, prec, rnd, 3)
+
+def mpc_loggamma(z, prec, rnd='d'):
+    a, b = z
+    asign, aman, aexp, abc = a
+    bsign, bman, bexp, bbc = b
+    if b == fzero and asign:
+        re = mpf_gamma(a, prec, rnd, 3)
+        n = (-aman) >> (-aexp)
+        im = mpf_mul_int(mpf_pi(prec+10), n, prec, rnd)
+        return re, im
+    return mpc_gamma(z, prec, rnd, 3)
+
+def mpf_gamma_int(n, prec, rnd=round_fast):
+    if n < SMALL_FACTORIAL_CACHE_SIZE:
+        return mpf_pos(small_factorial_cache[n-1], prec, rnd)
+    return mpf_gamma(from_int(n), prec, rnd)
+

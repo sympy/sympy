@@ -5,3 +5,5 @@ import hypergeometric
 import elliptic
 import zeta
 import rszeta
+import zetazeros
+import qfunctions
