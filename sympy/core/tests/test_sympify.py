@@ -71,6 +71,12 @@ def test_sympify_bool():
     assert sympify(True) == True
     assert sympify(False)== False
 
+def test_sympyify_iterables():
+    ans = [Rational(3, 10), Rational(1, 5)]
+    assert sympify(['.3', '.2'], rational=1) == ans
+    assert sympify(set(['.3', '.2']), rational=1) == set(ans)
+    assert sympify(tuple(['.3', '.2']), rational=1) == tuple(ans)
+
 def test_sympify4():
     class A:
         def _sympy_(self):

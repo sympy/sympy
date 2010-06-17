@@ -101,7 +101,7 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False):
         raise SympifyError(a)
 
     if isinstance(a, (list, tuple, set)):
-        return type(a)([sympify(x) for x in a])
+        return type(a)([sympify(x, locals=locals, convert_xor=convert_xor, rational=rational) for x in a])
 
     # At this point we were given an arbitrary expression
     # which does not inherit from Basic and doesn't implement
