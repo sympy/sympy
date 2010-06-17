@@ -2409,7 +2409,7 @@ class Poly(Basic):
 
         return sympify(npolyroots(coeffs, maxsteps=maxsteps, cleanup=cleanup, error=error))
 
-    def cancel(f, g):
+    def cancel(f, g, include=False):
         """
         Cancel common factors in a rational function `f/g`.
 
@@ -2419,8 +2419,17 @@ class Poly(Basic):
         >>> from sympy.abc import x
         >>> Poly(2*x**2 - 2, x).cancel(Poly(x**2 - 2*x + 1, x))
         (1, Poly(2*x + 2, x, domain='ZZ'), Poly(x - 1, x, domain='ZZ'))
+        >>> Poly(2*x**2 - 2, x).cancel(Poly(x**2 - 2*x + 1, x), include=True)
+        (Poly(2*x + 2, x, domain='ZZ'), Poly(x - 1, x, domain='ZZ'))
         """
         dom, per, F, G = f.unify(g)
+
+        if include:
+            try:
+                _, P, Q = F.cofactors(G)
+            except AttributeError: # pragma: no cover
+                raise OperationNotSupported(f, 'cofactors')
+            return per(P), per(Q)
 
         if F.is_zero or G.is_zero:
             return S.One, per(F), per(G)

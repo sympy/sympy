@@ -78,7 +78,7 @@ def test_hermite_reduce():
     assert hermite_reduce(Poly(-x**2*t**6 + (-1 - 2*x**3 + x**4)*t**3 +
     (-3 - 3*x**4)*t**2 - 2*x*t - x - 3*x**2, t, domain='ZZ[x]'),
     Poly(x**4*t**6 - 2*x**2*t**3 + 1, t, domain='ZZ[x]'), D, x, t) == \
-        ((Poly(x**2*t + (1 + x**4)/x, t, domain='ZZ(x)'), Poly(x**2*t**3 - 1, t,
+        ((Poly(t + (1 + x**4)/x**3, t, domain='ZZ(x)'), Poly(t**3 - 1/x**2, t,
         domain='ZZ(x)')), (Poly(0, t, domain='ZZ(x)'), Poly(t**3 - 1/x**2, t,
         domain='ZZ(x)')), (Poly(-1/x**2, t, domain='ZZ(x)'), Poly(1, t, domain='ZZ(x)')))
 

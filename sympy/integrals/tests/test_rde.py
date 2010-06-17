@@ -16,6 +16,6 @@ def test_weak_normalizer():
         (Poly(-3*t**2 + 1, t, domain='ZZ'), Poly(t**2 - 1, t, domain='ZZ')))
     assert weak_normalizer(r[1][0], r[1][1], D, x, t) == (Poly(1, t), r[1])
     D = Poly(1 + t**2)
-    r = weak_normalizer(Poly(1 + t**2), Poly(t, t), Poly(1 + t**2, t), x, t, z)
-    assert r == (Poly(t, t, domain='ZZ'), (Poly(0, t, domain='ZZ'), Poly(t**2, t, domain='ZZ')))
+    r = weak_normalizer(Poly(1 + t**2), Poly(t, t), D, x, t, z)
+    assert r == (Poly(t, t, domain='ZZ'), (Poly(0, t, domain='ZZ'), Poly(1, t, domain='ZZ')))
     assert weak_normalizer(r[1][0], r[1][1], D, x, t) == (Poly(1, t), r[1])

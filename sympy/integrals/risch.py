@@ -192,11 +192,11 @@ def hermite_reduce(a, d, D, x, t):
     q, r = a.div(d)
 
     # TODO: review the proof to see if this is necessary
-    g = gn.cancel(gd)
-    gn, gd = g[1].mul(Poly(g[0], t)), g[2]
+    gn, gd = gn.cancel(gd, include=True)
 
-    rr = (q + fp + fs[0]).cancel(fs[1])
-    rrn, rrd = rr[1].mul(Poly(rr[0], t)), rr[2]
+    rrn = q + fp + fs[0]
+    rrd = fs[1]
+    rrn, rrd = rrn.cancel(rrd, include=True)
 
     return ((gn, gd), (r, d), (rrn, rrd))
 

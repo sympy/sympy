@@ -68,7 +68,6 @@ def weak_normalizer(a, d, D, x, t, z=None):
     dq = derivation(q, D, x, t)
     sn = q*a - d*dq
     sd = q*d
-    c, sn, sd = sn.cancel(sd)
-    sn *= Poly(c, t)
+    sn, sd = sn.cancel(sd, include=True)
 
     return (q, (sn, sd))
