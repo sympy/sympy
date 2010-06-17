@@ -29,6 +29,32 @@ from sympy.integrals.risch import (gcdex_diophantine, derivation, splitfactor,
 from operator import mul
 #    from pudb import set_trace; set_trace() # Debugging
 
+def order_at(a, p, t):
+    """
+    Computes the order of a at p, with respect to t.
+
+    For a, p in k[t], the order of a at p is defined as nu_p(a) = max{n in Z+
+    such that p**n|a}, where a != 0.  If a == 0, nu_p(a) = +oo, but this
+    function will instead raise ValueError in that case.
+
+    To compute the order at a rational function, a/b, use the fact that
+    nu_p(a/b) == nu_p(a) - nu_p(b).
+    """
+    if a.is_zero:
+        raise ValueError("a == 0, order_at(%s, %s, %s) == +oo" % (a, p, t))
+    if p == Poly(t, t):
+        return a.as_poly(t).ET()[0][0]
+
+    n = -1
+    p1 = Poly(1, t)
+    r = Poly(0, t)
+    while r.is_zero:
+        n += 1
+        p1 = p1*p
+        r = a.rem(p1)
+
+    return n
+
 def weak_normalizer(a, d, D, x, t, z=None):
     """
     Weak normalization.

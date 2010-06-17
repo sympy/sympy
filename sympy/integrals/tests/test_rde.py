@@ -1,9 +1,20 @@
 """Most of these tests come from the examples in Bronstein's book."""
 from sympy import Poly
 from sympy.integrals.risch import NonElementaryIntegral
-from sympy.integrals.rde import (weak_normalizer, normal_denominator)
+from sympy.integrals.rde import (order_at, weak_normalizer, normal_denominator)
 from sympy.utilities.pytest import raises
 from sympy.abc import x, t, z
+
+def test_order_at():
+    a = Poly(t**4, t)
+    b = Poly((t**2 + 1)**3*t, t)
+    p1 = Poly(t, t)
+    p2 = Poly(1 + t**2, t)
+    assert order_at(a, p1, t) == 4
+    assert order_at(b, p1, t) == 1
+    assert order_at(a, p2, t) == 0
+    assert order_at(b, p2, t) == 3
+    raises(ValueError, "order_at(Poly(0, t), Poly(t, t), t)")
 
 def test_weak_normalizer():
     a = Poly((1 + x)*t**5 + 4*t**4 + (-1 - 3*x)*t**3 - 4*t**2 + (-2 + 2*x)*t, t, domain='ZZ[x]')
