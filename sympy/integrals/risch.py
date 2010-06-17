@@ -24,6 +24,15 @@ from sympy.utilities.iterables import make_list
 
 #    from pudb import set_trace; set_trace() # Debugging
 
+class NonElementaryIntegral(Exception):
+    """
+    Exception used by subroutines within the Risch algorithm to indicate to one
+    another that the function being integrated does not have an elementary
+    integral in the given differential field.
+    """
+    # TODO: Rewrite algorithms below to use this (?)
+    pass
+
 def gcdex_diophantine(a, b, c):
     """
     Extended Euclidean Algorithm, Diophantine version.
