@@ -1,6 +1,6 @@
 """Most of these tests come from the examples in Bronstein's book."""
 from sympy import Poly, S, Function, log
-from sympy.integrals.risch import (gcdexdiophantine, derivation, splitfactor,
+from sympy.integrals.risch import (gcdex_diophantine, derivation, splitfactor,
     splitfactor_sqf, canonical_representation, hermite_reduce,
     polynomial_reduce, residue_reduce, integrate_hypertangent_polynomial,
     integrate_nonlinear_no_specials,)
@@ -8,8 +8,8 @@ from sympy.utilities.pytest import XFAIL, skip
 
 from sympy.abc import x, t, nu, z, a
 
-def test_gcdexdiophantine():
-    assert gcdexdiophantine(Poly(x**4 - 2*x**3 - 6*x**2 + 12*x + 15),
+def test_gcdex_diophantine():
+    assert gcdex_diophantine(Poly(x**4 - 2*x**3 - 6*x**2 + 12*x + 15),
     Poly(x**3 + x**2 - 4*x - 4), Poly(x**2 - 1)) == \
         (Poly((-x**2 + 4*x - 3)/5), Poly((x**3 - 7*x**2 + 16*x - 10)/5))
 

@@ -24,7 +24,7 @@ from sympy.utilities.iterables import make_list
 
 #    from pudb import set_trace; set_trace() # Debugging
 
-def gcdexdiophantine(a, b, c):
+def gcdex_diophantine(a, b, c):
     """
     Extended Euclidean Algorithm, Diophantine version.
 
@@ -139,7 +139,7 @@ def canonical_representation(a, d, D, x, t):
     q, r = a.div(d)
     dn, ds = splitfactor(d, D, x, t)
 
-    b, c = gcdexdiophantine(dn, ds, r)
+    b, c = gcdex_diophantine(dn, ds, r)
 
     return (q, (b, ds), (c, dn))
 
@@ -173,7 +173,7 @@ def hermite_reduce(a, d, D, x, t):
         u = d.quo(v**i)
         for j in range(i - 1, 0, -1):
             udv = u*derivation(v, D, x, t)
-            b, c = gcdexdiophantine(udv, v, a.mul(Poly(-1/j, t)))
+            b, c = gcdex_diophantine(udv, v, a.mul(Poly(-1/j, t)))
 
             gn = gn*v**j + b
             gd = gd*v**j
@@ -296,7 +296,8 @@ def residue_reduce_derivation(H, D, x, t, z):
     """
     lambdafunc = lambda i: i*derivation(a[1], D, x, t).as_basic().subs(z, i)/ \
         a[1].as_basic().subs(z, i)
-    return S(sum([RootSum(a[0].as_poly(z), lambdafunc) for a in H]))
+    return S(sum((RootSum(a[0].as_poly(z), lambda i: i*derivation(a[1], D, x, t).as_basic().subs(z, i)/ \
+        a[1].as_basic().subs(z, i)) for a in H)))
 
 def integrate_hypertangent_polynomial(p, D, x, t):
     """

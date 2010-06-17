@@ -19,5 +19,56 @@ reduced to finding y'' in k[t], where y == y''/(n*s)
 See Chapter 6 of "Symbolic Integration I: Transcendental Functions" by Manuel
 Bronstein.
 """
-from sympy.polys import Poly
+from sympy.core.symbol import Symbol
+
+from sympy.polys import Poly, gcd, ZZ
+
+from sympy.integrals.risch import (gcdex_diophantine, derivation, splitfactor)
+
+from operator import mul
 #    from pudb import set_trace; set_trace() # Debugging
+
+def weak_normalizer(a, d, D, x, t, z=None):
+    """
+    Weak normalization.
+
+    Given a derivation D on k[t] and f == a/d in k(t), return q in k[t] such
+    that f - Dq/q is weakly normalized with respect to t.
+
+    f in k(t) is said to be "weakly normalized" with respect to t if
+    residue_p(f) is not a positive integer for any normal irreducible p in k[t]
+    such that f is in R_p (Definition 6.1.1).  If f has an elementary integral,
+    this is equivalent to no logarithm of integral(f) whose argument depends on
+    t has a positive integer coefficient, where the arguments of the logarithms
+    not in k(t) are in k[t].
+
+    Returns (q, f - Dq/q)
+    """
+    z = z or Symbol('z', dummy=True)
+    dn, ds = splitfactor(d, D, x, t)
+
+    # Compute d1, where dn == d1*d2**2*...*dn**n is a square-free
+    # factorization of d.
+    g = gcd(dn, dn.diff(t))
+    d_sqf_part = dn.quo(g)
+    d1 = d_sqf_part.quo(gcd(d_sqf_part, g))
+
+    a1, b = gcdex_diophantine(d.quo(d1), d1, a)
+    r = (a - Poly(z, t)*derivation(d1, D, x, t)).as_poly(t).resultant(d1.as_poly(t))
+    r = Poly(r, z)
+
+    if not r.has(z):
+        return Poly(1, t)
+
+    N = [i for i in r.real_roots() if i in ZZ and i > 0]
+
+    q = reduce(mul, [gcd(a - Poly(n, t)*derivation(d1, D, x, t), d1) for n in N],
+        Poly(1, t))
+
+    dq = derivation(q, D, x, t)
+    sn = q*a - d*dq
+    sd = q*d
+    c, sn, sd = sn.cancel(sd)
+    sn *= Poly(c, t)
+
+    return (q, (sn, sd))
