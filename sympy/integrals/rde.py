@@ -5,7 +5,7 @@ Given a differential field K of characteristic 0 that is a simple monomial
 extension of a base field k and f, g in K, the Risch Differential Equation
 problem is to decide if there exist y in K such that Dy + f*y == g and to find
 one if there are some.  If t is a monomial over k and the coefficients of f and
-g are in k(t), then y is in k(t), and the out line of the algorithm here is
+g are in k(t), then y is in k(t), and the outline of the algorithm here is
 given as:
 
 1. Compute the normal part n of the denominator of y.  The problem is then
@@ -23,7 +23,8 @@ from sympy.core.symbol import Symbol
 
 from sympy.polys import Poly, gcd, ZZ
 
-from sympy.integrals.risch import (gcdex_diophantine, derivation, splitfactor)
+from sympy.integrals.risch import (gcdex_diophantine, derivation, splitfactor,
+    NonElementaryIntegral)
 
 from operator import mul
 #    from pudb import set_trace; set_trace() # Debugging
@@ -71,3 +72,35 @@ def weak_normalizer(a, d, D, x, t, z=None):
     sn, sd = sn.cancel(sd, include=True)
 
     return (q, (sn, sd))
+
+def normal_denominator(fa, fd, ga, gd, D, x, t):
+    """
+    Normal part of the denominator.
+
+    Given a derivation D on k[t] and f, g in k(t) with f weakly normalized with
+    respect to t, either raise NonElementaryIntegral, in which case the equation
+    Dy + f*y == g has no solution in k(t), or the quadruplet (a, b, c, h) such
+    that a, h in k[t], b, c in k<t>, and for any solution y in k(t) of
+    Dy + f*y == g, q = y*h in k<t> satisfies a*Dq + b*q == c.
+
+    This constitutes step 1 in the outline given in the rde.py docstring.
+    """
+    dn, ds = splitfactor(fd, D, x, t)
+    en, es = splitfactor(gd, D, x, t)
+
+    p = gcd(dn, es)
+    h = gcd(en, en.diff(t)).quo(gcd(p, p.diff(t)))
+
+    a = dn*h
+    c = a*h
+    if c.div(en)[1]:
+        # en does not divide dn*h**2
+        raise NonElementaryIntegral
+    ca = c*ga
+    ca, cd = ca.cancel(gd, include=True)
+
+    ba = a*fa - dn*derivation(h, D, x, t)*fd
+    ba, bd = ba.cancel(fd, include=True)
+
+    # (dn*h, dn*h*f - dn*Dh, dn*h**2*g, h)
+    return (a, (ba, bd), (ca, cd), h)

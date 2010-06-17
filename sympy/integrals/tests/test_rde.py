@@ -1,6 +1,8 @@
 """Most of these tests come from the examples in Bronstein's book."""
 from sympy import Poly
-from sympy.integrals.rde import (weak_normalizer, )
+from sympy.integrals.risch import NonElementaryIntegral
+from sympy.integrals.rde import (weak_normalizer, normal_denominator)
+from sympy.utilities.pytest import raises
 from sympy.abc import x, t, z
 
 def test_weak_normalizer():
@@ -19,3 +21,14 @@ def test_weak_normalizer():
     r = weak_normalizer(Poly(1 + t**2), Poly(t, t), D, x, t, z)
     assert r == (Poly(t, t, domain='ZZ'), (Poly(0, t, domain='ZZ'), Poly(1, t, domain='ZZ')))
     assert weak_normalizer(r[1][0], r[1][1], D, x, t) == (Poly(1, t), r[1])
+
+def test_normal_denominator():
+    raises(NonElementaryIntegral, """normal_denominator(Poly(1, t), Poly(1, t),
+    Poly(1, t), Poly(t, t), Poly(1, t), x, t)""")
+    fa, fd = Poly(t**2 + 1, t), Poly(1, t)
+    ga, gd = Poly(1, t), Poly(t**2, t)
+    D = Poly(t**2 + 1, t)
+    assert normal_denominator(fa, fd, ga, gd, D, x, t) == \
+        (Poly(t, t, domain='ZZ'), (Poly(t**3 - t**2 + t - 1, t, domain='ZZ'),
+        Poly(1, t, domain='ZZ')), (Poly(1, t, domain='ZZ'), Poly(1, t, domain='ZZ')),
+        Poly(t, t, domain='ZZ'))
