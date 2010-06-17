@@ -2,8 +2,8 @@ from sympy import Symbol, symbols, together, hypersimp, factorial, binomial, \
         collect, Function, powsimp, separate, sin, exp, Rational, fraction, \
         simplify, trigsimp, cos, tan, cot, log, ratsimp, Matrix, pi, integrate, \
         solve, nsimplify, GoldenRatio, sqrt, E, I, sympify, atan, Derivative, \
-        S, diff, oo, Eq, Integer, gamma, acos, Integral, logcombine, Wild, \
-        separatevars
+        S, diff, oo, Eq, Integer, gamma, acos, Integral, logcombine, \
+        separatevars, Wild
 from sympy.utilities import all
 from sympy.utilities.pytest import XFAIL
 
@@ -444,6 +444,8 @@ def test_nsimplify():
     assert nsimplify(0.33333, tolerance=1e-4) == Rational(1, 3)
     assert nsimplify(2.0**(1/3.), tolerance=0.001) == Rational(635, 504)
     assert nsimplify(2.0**(1/3.), tolerance=0.001, full=True) == 2**Rational(1, 3)
+    assert nsimplify(x + .5, rational=True) == Rational(1, 2) + x
+    assert nsimplify(1/.3 + x, rational=True) == Rational(10, 3) + x
 
 def test_extract_minus_sign():
     x = Symbol("x")
