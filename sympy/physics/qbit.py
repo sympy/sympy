@@ -68,8 +68,7 @@ class YBasisSet(BasisSet):
 
 class HadamardGate(Gate):
     """
-    An object representing a Hadamard Gate:
-    1/sqrt(2)*[[1, 1], [1, -1]]
+    An object representing a Hadamard Gate
     """
     def _sympystr(self, printer, *args):
         return "H(%s)" % printer._print(self.args[0], *args)
@@ -78,7 +77,7 @@ class HadamardGate(Gate):
         return Matrix([[1., 1.], [1., -1.]])*(1./(2.**(1./2.)))
 
     def _represent_XBasisSet(self, HilbertSize):
-        pass
+        return Matrix([[1., 1.], [1., -1.]])*(1./(2.**(1./2.)))
 
     def _represent_YBasisSet(self, HilbertSize):
         pass
@@ -86,7 +85,6 @@ class HadamardGate(Gate):
 class XGate(Gate):
     """
     An object representing a Pauli-X gate:
-    [[0, 1], [1, 0]]
     """
     def _sympystr(self, printer, *args):
         return "X(%s)" % printer._print(self.args[0], *args)
@@ -95,7 +93,7 @@ class XGate(Gate):
         return Matrix([[0, 1.], [1., 0]])
 
     def _represent_XBasisSet(self, HilbertSize):
-        pass
+        return Matrix([[1,0],[0,-1]])
 
     def _represent_YBasisSet(self, HilbertSize):
         pass
@@ -103,7 +101,6 @@ class XGate(Gate):
 class YGate(Gate):
     """
     An object representing a Pauli-Y gate:
-    [[0, -i], [i, 0]]
     """
     def _sympystr(self, printer, *args):
         return "Y(%s)" % printer._print(self.args[0], *args)
@@ -112,7 +109,7 @@ class YGate(Gate):
         return Matrix([[0, -complex(0,1)], [complex(0,1), -0]])
 
     def _represent_XBasisSet(self, HilbertSize):
-        pass
+        return Matrix([[0,complex(0,1)],[complex(0,-1),0]])
 
     def _represent_YBasisSet(self, HilbertSize):
         pass
@@ -120,7 +117,6 @@ class YGate(Gate):
 class ZGate(Gate):
     """
     An object representing a Pauli-Z gate:
-    [[1, 0], [0, -1]]
     """
     def _sympystr(self, printer, *args):
         return "Z(%s)" % printer._print(self.args[0], *args)
@@ -129,7 +125,7 @@ class ZGate(Gate):
         return Matrix([[1., 0], [0, -1.]])
 
     def _represent_XBasisSet(self, HilbertSize):
-        pass
+        return Matrix([[0,1],[1,0]])
 
     def _represent_YBasisSet(self, HilbertSize):
         pass
@@ -137,7 +133,6 @@ class ZGate(Gate):
 class PhaseGate(Gate):
     """
     An object representing a phase gate:
-    [[1, 0], [0, i]]
     """
     def _sympystr(self, printer, *args):
         return "S(%s)" % printer._print(self.args[0], *args)
@@ -146,7 +141,7 @@ class PhaseGate(Gate):
         return Matrix([[1, 0], [0, i]])
 
     def _represent_XBasisSet(self, HilbertSize):
-        pass
+        return Matrix([[complex(.5,.5), complex(.5,-.5)], [complex(.5,-.5),complex(.5,.5)]])
 
     def _represent_YBasisSet(self, HilbertSize):
         pass
@@ -154,16 +149,15 @@ class PhaseGate(Gate):
 class TGate(Gate):
     """
     An object representing a pi/8 gate:
-    [[1, 0], [0, e**(i*pi/4)]]
     """
     def _sympystr(self, printer, *args):
         return "T(%s)" % printer._print(self.args[0], *args)
 
     def _represent_ZBasisSet(self, HilbertSize):
-        return Matrix([[1., 0], [1., -1.]])
+        return Matrix([[1., 0], [0, exp(complex(0,pi/4))]])
 
     def _represent_XBasisSet(self, HilbertSize):
-        pass
+        return Matrix([[.5+.5*exp(complex(0,pi/4)),.5-.5*exp(complex(0,pi/4))],[.5-.5*exp(complex(0,pi/4)),.5+.5*exp(complex(0,pi/4))]])
 
     def _represent_YBasisSet(self, HilbertSize):
         pass
@@ -181,9 +175,16 @@ def represent(circuit, basis, GateRep = False):
     else:
         raise HilbertSpaceException()
 
-    #for now, assume Qbits are all zero at beginning (just for testing).
-    result = Matrix([1, 0])
+    #Turn the definite state of Qbits |X> into a single one in the Xth element of its column vector
+    n = 1
+    definiteState = 0
+    for it in wires.args:
+        definiteState += n*it
+        n = n*2
+    result = [0 for x in range(2**HilbertSize)]
+    result[definiteState] = 1
 
+    result = Matrix(result)
 
     #go through each gate (from left->right) and apply it in X basis
     #http://docs.sympy.org/modules/mpmath/matrices.html says:
