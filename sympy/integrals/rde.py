@@ -130,3 +130,64 @@ def normal_denominator(fa, fd, ga, gd, D, x, t):
 
     # (dn*h, dn*h*f - dn*Dh, dn*h**2*g, h)
     return (a, (ba, bd), (ca, cd), h)
+
+def special_denom(a, ba, bd, ca, cd, D, x, t, case):
+    """
+    Special part of the denominator.
+
+    case is one of {'exp', 'tan', 'primitive'} for the hyperexponential,
+    hypertangent, and primitive cases, respectively.  For the hyperexponential
+    (resp. hypertangent) case, given a derivation D on k[t] and a in k[t], b, c,
+    in k<t> with Dt/t (resp. Dt/(t**2 + 1)) in k (sqrt(-1) not in k), a != 0,
+    and gcd(a, t) == 1, return the quadruplet (A, B, C, 1/h) such that A, B, C,
+    h in k[t] and for any solution q in k<t> of a*Dq + b*q == c, r = qh in k[t]
+    satisfies A*Dr + B*r == C.
+
+    For the primitive case, k<t> == k[t], so it returns (a, b, c, 1) in this
+    case.
+
+    This constitutes step 2 of the outline given in the rde.py docstring.
+    """
+    if case == 'exp':
+        p = Poly(t, t)
+    elif case == 'tan':
+        p = Poly(t**2 + 1, t)
+    elif case == 'primitive':
+        B = ba.quo(bd)
+        C = cd.quo(cd)
+        return (a, B, C, Poly(1, t))
+    else:
+        raise ValueError("case must be one of {'exp', 'tan', 'primitive'}, not %s" % case)
+
+    nb = order_at(ba, p, t) - order_at(bd, p, t)
+    nc = order_at(ca, p, t) - order_at(cd, p, t)
+
+    n = min(0, nc - min(0, nb))
+    if not nb:
+        # Possible cancelation.
+        #
+        # if case == 'exp':
+        #     alpha = (-b/a).rem(p) == -b(0)/a(0)
+        #     if alpha == m*Dt/t + Dz/z # parametric logarithmic derivative problem
+        #         n = min(n, m)
+        # elif case == 'tan':
+        #     alpha*sqrt(-1) + beta = (-b/a).rem(p) == -b(sqrt(-1))/a(sqrt(-1))
+        #     eta = derivation(t, D, x, t).quo(Poly(t**2 + 1, t)) # eta in k
+        #     if 2*beta == Dv/v for some v in k* (see pg. 176) and \
+        #     alpha*sqrt(-1) + beta == 2*m*eta*sqrt(-1) + Dz/z:
+        #     # parametric logarithmic derivative problem
+        #         n = min(n, m)
+        raise NotImplementedError("""The ability to solve the parametric
+            logarithmic derivative problem is required to solve this RDE.""")
+
+    N = max(0, -nb, n - nc)
+    pN = p**N
+    pn = p**n
+
+    A = a*pN
+    B = (ba*pN.quo(bd) + Poly(n, t)*a*derivation(p, D, x, t)*pN.quo(p))
+    C = ca*pN.quo(pn).quo(cd)
+    h = pn # This is 1/h
+
+    # (ap**N, (b + n*a*Dp/p)*p**N, c*p**(N - n), p**-n)
+    return (A, B, C, h)

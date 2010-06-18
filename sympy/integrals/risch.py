@@ -303,10 +303,8 @@ def residue_reduce_derivation(H, D, x, t, z):
     In general, this is a rational function in t, so this returns an
     as_basic() result.
     """
-    lambdafunc = lambda i: i*derivation(a[1], D, x, t).as_basic().subs(z, i)/ \
-        a[1].as_basic().subs(z, i)
-    return S(sum((RootSum(a[0].as_poly(z), lambda i: i*derivation(a[1], D, x, t).as_basic().subs(z, i)/ \
-        a[1].as_basic().subs(z, i)) for a in H)))
+    return S(sum((RootSum(a[0].as_poly(z), lambda i: i*derivation(a[1], D, x,
+        t).as_basic().subs(z, i)/a[1].as_basic().subs(z, i)) for a in H)))
 
 def integrate_hypertangent_polynomial(p, D, x, t):
     """
@@ -341,6 +339,7 @@ def integrate_nonlinear_no_specials(a, d, D, x, t, tfunc):
     if not b:
         return ((g1[0].as_basic()/g2[1].as_basic()).subs(t, tfunc(x)) +
                 residue_reduce_to_basic(g2, t, z, tfunc))
+
     # This should be a polynomial in t, or else there is a bug.
     p = cancel(h[0].as_basic()/h[1].as_basic() - residue_reduce_derivation(g2,
         D, x, t, z).as_basic() + r[0].as_basic()/r[1].as_basic()).as_poly(t)
