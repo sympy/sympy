@@ -564,9 +564,12 @@ class FCodeGen(CodeGen):
             code_lines.extend(self._declare_locals(routine))
             code_lines.extend(constants)
 
+            if empty: code_lines.append('\n')
+
             # if we have loops we must initialize result variables
             if [ idx for idx in not_fortran if isinstance(idx, Idx)]:
                 code_lines.extend(self._init_resultvars(routine))
+                if empty: code_lines.append('\n')
 
             code_lines.append("%s\n" % f_expr)
 
