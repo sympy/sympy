@@ -78,6 +78,7 @@ from sympy.printing.ccode import ccode
 from sympy.printing.fcode import FCodePrinter
 from sympy.tensor import Idx, Indexed
 from sympy.core.relational import Equality
+from sympy.utilities import flatten
 
 from StringIO import StringIO
 import sympy, os
@@ -182,6 +183,18 @@ class Argument(object):
         self.dimensions = dimensions
         self.precision = precision
 
+    def get_symbols(self):
+        """Returns a set of all symbols related to this argument.
+
+        Scalar arguments return themselves in a set, while array arguments return
+        the array variable as well as all symbols the specifiy dimensions.
+        """
+        if self.dimensions:
+            symbs = set(flatten(self.dimensions))
+            symbs.add(self.name)
+            return symbs
+        else:
+            return set([self.name])
 
 class InputArgument(Argument):
     pass
