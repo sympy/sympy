@@ -135,11 +135,7 @@ class FCodePrinter(StrPrinter):
                     self._not_fortran.add(ind)
                     openloop.insert(0,open_lhs[n])
                     closeloop.append(close_lhs[n])
-
-        # if there are loops, we assume that there could be summations
-        # initialization of lhs expression must be handled elsewhere
-        if openloop:
-            expr = expr + lhs
+            lhs_printed = self._print(lhs)
 
         lines = []
         if isinstance(expr, Piecewise):
@@ -157,7 +153,7 @@ class FCodePrinter(StrPrinter):
                     lines.extend(closeloop)
                 else:
                     lines.extend(openloop)
-                    lines.append("  %s = %s" % (self._settings["assign_to"], self._print(e)))
+                    lines.append("  %s = %s" % (lhs_printed, self._print(e)))
                     lines.extend(closeloop)
             lines.append("end if")
         else:
@@ -166,7 +162,7 @@ class FCodePrinter(StrPrinter):
             if self._settings["assign_to"] is None:
                 text = "%s" % line
             else:
-                text = "%s = %s" % (self._settings["assign_to"], line)
+                text = "%s = %s" % (lhs_printed, line)
             lines.append(text)
             lines.extend(closeloop)
 
