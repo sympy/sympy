@@ -30,7 +30,7 @@ def test_empty_c_header():
 def test_simple_c_code():
     x,y,z = symbols('xyz')
     expr = (x+y)*z
-    routine = Routine("test", [InputArgument(symbol) for symbol in x,y,z], [Result(expr)])
+    routine = Routine("test", expr)
     code_gen = CCodeGen()
     source = get_string(code_gen.dump_c, [routine])
     expected = (
@@ -45,7 +45,7 @@ def test_simple_c_code():
 def test_simple_c_header():
     x,y,z = symbols('xyz')
     expr = (x+y)*z
-    routine = Routine("test", [InputArgument(symbol) for symbol in x,y,z], [Result(expr)])
+    routine = Routine("test", expr)
     code_gen = CCodeGen()
     source = get_string(code_gen.dump_h, [routine])
     expected = (
@@ -81,15 +81,13 @@ def test_multiple_results_c():
     expr2 = (x-y)*z
     routine = Routine(
         "test",
-        [InputArgument(symbol) for symbol in x,y,z],
-        [Result(expr1),Result(expr2)]
+        [expr1,expr2]
     )
     code_gen = CCodeGen()
     raises(CodeGenError, 'get_string(code_gen.dump_h, [routine])')
 
 def test_no_results_c():
-    x = symbols('x')
-    raises(ValueError, 'Routine("test", [InputArgument(x)], [])')
+    raises(ValueError, 'Routine("test", [])')
 
 def test_ansi_math1_codegen():
     # not included: log10
@@ -243,7 +241,7 @@ def test_empty_f_header():
 def test_simple_f_code():
     x,y,z = symbols('xyz')
     expr = (x+y)*z
-    routine = Routine("test", [InputArgument(symbol) for symbol in x,y,z], [Result(expr)])
+    routine = Routine("test", expr)
     code_gen = FCodeGen()
     source = get_string(code_gen.dump_f95, [routine])
     expected = (
@@ -260,7 +258,7 @@ def test_simple_f_code():
 def test_simple_f_header():
     x,y,z = symbols('xyz')
     expr = (x+y)*z
-    routine = Routine("test", [InputArgument(symbol) for symbol in x,y,z], [Result(expr)])
+    routine = Routine("test", expr)
     code_gen = FCodeGen()
     source = get_string(code_gen.dump_h, [routine])
     expected = (
@@ -306,15 +304,13 @@ def test_multiple_results_f():
     expr2 = (x-y)*z
     routine = Routine(
         "test",
-        [InputArgument(symbol) for symbol in x,y,z],
-        [Result(expr1),Result(expr2)]
+        [expr1,expr2]
     )
     code_gen = FCodeGen()
     raises(CodeGenError, 'get_string(code_gen.dump_h, [routine])')
 
 def test_no_results_f():
-    x = symbols('x')
-    raises(ValueError, 'Routine("test", [InputArgument(x)], [])')
+    raises(ValueError, 'Routine("test", [])')
 
 def test_intrinsic_math_codegen():
     # not included: log10

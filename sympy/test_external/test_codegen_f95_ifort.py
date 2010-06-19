@@ -155,7 +155,7 @@ def is_feasible():
     # This test should always work, otherwise the f95 compiler is not present.
     x,y,z = symbols('xyz')
     expr = (x+y)*z
-    routine = Routine("test", [InputArgument(symbol) for symbol in x,y,z], [Result(expr)])
+    routine = Routine("test", expr)
     numerical_tests = [
         ("test", (1.0, 6.0, 3.0), 21.0, 1e-15),
         ("test", (-1.0, 2.0, -2.5), -2.5, 1e-15),

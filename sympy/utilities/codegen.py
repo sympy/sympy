@@ -74,6 +74,7 @@ printing.
 
 from sympy.core.symbol import Symbol
 from sympy.core.basic import Basic
+from sympy.core.symtuple import SymTuple
 from sympy.printing.ccode import ccode
 from sympy.printing.fcode import FCodePrinter
 from sympy.tensor import Idx, Indexed
@@ -110,24 +111,90 @@ class Routine(object):
        values are possible in Python, but not in C or Fortran. Another example:
        Fortran and Python support complex numbers, while C does not.
     """
-    def __init__(self, name, arguments, results, local_vars=None):
+    def __init__(self, name, expr):
         """Initialize a Routine instance.
 
            Arguments:
              name  --  A string with the name of this routine in the generated
                        code
-             arguments  --  A list of all input arguments. (TODO: add output
-                            and input/output arguments). See InputArgument class.
-             results  -- The return values. See Result class.
+             expr  --  The sympy expression that the Routine instance will represent.
+                       If given a list or tuple of expressions, the routine
+                       will be considered to have multiple return values.
+
+            A decision about whether to use output arguments or return values,
+            is made depending on the mathematical expressions.  For an expression
+            of type Equality, the left hand side is made into an OutputArgument
+            (or an InOutArgument if appropriate).  Else, the calculated
+            expression is the return values of the routine.
+
+            A tuple of exressions can be used to create a routine with both
+            return value(s) and output argument(s).
+
         """
-        if len(results) == 0:
-            if not [ arg for arg in arguments if isinstance(
-                arg, (OutputArgument, InOutArgument))]:
-                raise ValueError("At least one result is required.")
+        arg_list = []
+
+        if isinstance(expr, (list, tuple)):
+            if not expr:
+                raise ValueError("No expression given")
+            expressions = SymTuple(*expr)
+        else:
+            expressions = SymTuple(expr)
+
+        # local variables
+        local_vars = set([i.label for i in expressions.atoms(Idx)])
+
+        # symbols that should be arguments
+        symbols = expressions.atoms(Symbol) - local_vars
+
+        # Decide whether to use output argument or return value
+        return_val = []
+        output_args = []
+        for expr in expressions:
+            if isinstance(expr, Equality):
+                out_arg = expr.lhs
+                expr = expr.rhs
+                if isinstance(out_arg, Indexed):
+                    dims = out_arg.dimensions
+                    symbol = out_arg.label
+                elif isinstance(out_arg, Symbol):
+                    dims = []
+                    symbol = out_arg
+                else:
+                    raise CodeGenError("Only Indexed or Symbol can define output arguments")
+
+                output_args.append(OutputArgument(symbol, out_arg, expr, dimensions=dims))
+
+                # avoid duplicate arguments
+                symbols.remove(symbol)
+            else:
+                return_val.append(Result(expr))
+
+        # setup input argument list
+        array_symbols = {}
+        for array in expressions.atoms(Indexed):
+            array_symbols[array.label] = array
+
+        for symbol in sorted(symbols):
+            if symbol in array_symbols:
+                dims = []
+                array = array_symbols[symbol]
+                for i in array.indices:
+                    if i.lower == None:
+                        dims.append((S.Zero, S.Zero))
+                    else:
+                        dims.append((i.lower, i.upper))
+                metadata = {'dimensions': dims}
+            else:
+                metadata = {}
+
+            arg_list.append(InputArgument(symbol, **metadata))
+
+        arg_list.extend(output_args)
+
         self.name = name
-        self.arguments = arguments
-        self.results = results
-        self.local_vars = local_vars or []
+        self.arguments = arg_list
+        self.results = return_val
+        self.local_vars = local_vars
 
 
 class DataType(object):
@@ -698,54 +765,9 @@ def codegen(name_expr, language, prefix, project="project", to_files=False, head
     if isinstance(name_expr[0], basestring):
         # single tuple is given, turn it into a singleton list with a tuple.
         name_expr = [name_expr]
+
     for name, expr in name_expr:
-
-        # output argument or return value?
-        if isinstance(expr, Equality):
-            out_arg = expr.lhs
-            expr = expr.rhs
-            if isinstance(out_arg, Indexed):
-                dims = out_arg.dimensions
-                symbol = out_arg.label
-            elif isinstance(out_arg, Symbol):
-                dims = []
-                symbol = out_arg
-            else:
-                raise CodeGenError("Only Indexed or Symbol can define output arguments")
-
-            out_args = [OutputArgument(symbol, out_arg, expr, dimensions=dims)]
-            return_val = []
-        else:
-            out_args = []
-            return_val = [Result(expr)]
-
-        # setup input argument list
-        symbols = expr.atoms(Symbol)
-        dummies = set([i.label for i in expr.atoms(Idx)])
-        symbols -= dummies
-        array_symbols = {}
-        for array in expr.atoms(Indexed):
-            array_symbols[array.label] = array
-        arg_list = []
-        for symbol in sorted(symbols):
-            if symbol in array_symbols:
-                dims = []
-                array = array_symbols[symbol]
-                for i in array.indices:
-                    if i.lower == None:
-                        dims.append((S.Zero, S.Zero))
-                    else:
-                        dims.append((i.lower, i.upper))
-                metadata = {'dimensions': dims}
-            else:
-                metadata = {}
-
-            arg_list.append(InputArgument(symbol, **metadata))
-
-        arg_list.extend(out_args)
-
-
-        routines.append(Routine(name, arg_list, return_val, dummies))
+        routines.append(Routine(name, expr))
 
     # Write the code.
     return code_gen.write(routines, prefix, to_files, header, empty)
