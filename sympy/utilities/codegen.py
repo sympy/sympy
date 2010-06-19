@@ -73,7 +73,7 @@ printing.
 
 
 from sympy.core.symbol import Symbol
-from sympy.core.basic import Basic
+from sympy.core.expr import Expr
 from sympy.core.symtuple import SymTuple
 from sympy.printing.ccode import ccode
 from sympy.printing.fcode import FCodePrinter
@@ -289,7 +289,7 @@ class Result(object):
            The second argument is optional. When not given, the data type will
            be guessed based on the assumptions on the expression argument.
         """
-        if not isinstance(expr, Basic):
+        if not isinstance(expr, Expr):
             raise TypeError("The first argument must be a sympy expression.")
         if datatype is None:
             datatype = get_default_datatype(expr)
