@@ -199,6 +199,14 @@ class Routine(object):
         self.results = return_val
         self.local_vars = local_vars
 
+    @property
+    def result_variables(self):
+        """
+        Returns a tuple of OutputArgument, InOutArgument and Result.
+        """
+        args = [arg for arg in self.arguments if isinstance(arg, (OutputArgument, InOutArgument))]
+        args.extend(self.results)
+        return args
 
 class DataType(object):
     """Holds strings for a certain datatype in different programming languages."""
@@ -686,33 +694,32 @@ class FCodeGen(CodeGen):
             self._dump_header(f)
         if empty: print >> f
 
+
         for routine in routines:
             code_lines = self._get_routine_opening(routine)
             code_lines.extend(self._declare_arguments(routine))
-
-            result = self._get_result(routine)
-            if isinstance(result, Result):
-                self._printer.set_assign_to(routine.name)
-            elif isinstance(result, (OutputArgument, InOutArgument)):
-                self._printer.set_assign_to(result.result_var)
-
-            constants, not_fortran, f_expr = self._printer.doprint(result.expr)
-
             code_lines.extend(self._declare_locals(routine))
-            code_lines.extend(constants)
 
-            if empty: code_lines.append('\n')
+            for result in routine.result_variables:
+                if isinstance(result, Result):
+                    self._printer.set_assign_to(routine.name)
+                elif isinstance(result, (OutputArgument, InOutArgument)):
+                    self._printer.set_assign_to(result.result_var)
 
-            # if we have loops we must initialize result variables
-            if [ idx for idx in not_fortran if isinstance(idx, Idx)]:
-                code_lines.extend(self._init_resultvars(routine))
+                constants, not_fortran, f_expr = self._printer.doprint(result.expr)
+
+                code_lines.extend(constants)
+
                 if empty: code_lines.append('\n')
 
-            code_lines.append("%s\n" % f_expr)
+                if result.needs_initialization:
+                    code_lines.extend(self._init_resultvars(routine))
+                    if empty: code_lines.append('\n')
 
-            # code_lines = self._printer.indent_code(code_lines)
+                code_lines.append("%s\n" % f_expr)
 
-            if empty: print >> f
+                if empty: code_lines.append('\n')
+
             print >> f, ''.join(code_lines),
             if empty: print >> f
 
