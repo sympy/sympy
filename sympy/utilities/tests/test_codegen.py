@@ -640,3 +640,49 @@ def test_loops():
             'end subroutine\n'
             'end interface\n'
             )
+
+def test_loops_InOut():
+    from sympy.tensor import Indexed, Idx
+    from sympy import symbols
+    i,j,n,m = symbols('i j n m', integer=True)
+    A,x,y = symbols('A x y')
+    A = Indexed(A, Idx(i, m), Idx(j, n))
+    x = Indexed(x, Idx(j, n))
+    y = Indexed(y, Idx(i, m))
+
+    (f1, code), (f2, interface) = codegen(
+            ('matrix_vector', Eq(y, y + A*x)), "F95", "file", header=False, empty=False)
+
+    assert f1 == 'file.f90'
+    expected = (
+            'subroutine matrix_vector(A, m, n, x, y)\n'
+            'implicit none\n'
+            'INTEGER*4 :: m\n'
+            'INTEGER*4 :: n\n'
+            'REAL*8, allocatable, dimension(1:m, 1:n) :: A\n'
+            'REAL*8, allocatable, dimension(1:n) :: x\n'
+            'REAL*8, allocatable, dimension(1:m) :: y\n'
+            'INTEGER*4 :: i\n'
+            'INTEGER*4 :: j\n'
+            'do i = 1, m\n'
+            '   do j = 1, n\n'
+            '      y(i) = A(i, j)*x(j) + y(i)\n'
+            '   end do\n'
+            'end do\n'
+            'end subroutine\n'
+            )
+
+    assert expected == code
+    assert f2 == 'file.h'
+    assert interface == (
+            'interface\n'
+            'subroutine matrix_vector(A, m, n, x, y)\n'
+            'implicit none\n'
+            'INTEGER*4 :: m\n'
+            'INTEGER*4 :: n\n'
+            'REAL*8, allocatable, dimension(1:m, 1:n) :: A\n'
+            'REAL*8, allocatable, dimension(1:n) :: x\n'
+            'REAL*8, allocatable, dimension(1:m) :: y\n'
+            'end subroutine\n'
+            'end interface\n'
+            )
