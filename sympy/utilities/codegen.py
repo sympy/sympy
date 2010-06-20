@@ -268,24 +268,77 @@ class Argument(object):
 
 class InputArgument(Argument):
     pass
-class OutputArgument(Argument):
+
+class ResultBase(object):
+
+    @property
+    def needs_initialization(self):
+        return self._need_initialization
+
+    def _prepare_expr(self):
+        """Depending on the expression, it may need to be prepared for loops
+
+        Example:
+
+        The math expression denoting a matrix vector product is
+
+        y(i) = A(i,j)*x(j)          (imlicit summation over j)
+
+        Obviously, the code that calculates the matrix vector product must change
+        the right hand side a little in order to store intermediate results
+        correctly ....................
+                                      |
+        y = 0                         |
+        do i=1,m                      |
+            do j = 1,n                V
+                y(i) = A(i,j)*x(i) + y(i)
+            end do j
+        end do i
+
+        This would not be necessary if the left hand side has all indices that are on
+        the right hand side.  E.g. for a dyadic product:
+
+        do i=1,m
+            do j = 1,n
+                A(i,j) = x(i)*y(j)
+            end do j
+        end do i
+
+        """
+        rhs_loops = set([ i.label for i in self.expr.atoms(Idx) ])
+        lhs_loops = set([ i.label for i in self.result_var.atoms(Idx) ])
+        if rhs_loops - lhs_loops:
+            self.expr = self.expr + self.result_var
+
+class OutputArgument(Argument, ResultBase):
+    """OutputArgument are always initialized in the routine
+    """
+    _need_initialization = True
+    def __init__(self, name, result_var, expr, datatype=None, dimensions=None, precision=None):
+        Argument.__init__(self, name, datatype, dimensions, precision)
+        self.expr = expr
+        self.result_var = result_var
+        self._prepare_expr()
+
+class InOutArgument(Argument, ResultBase):
+    """InOutArgument are never initialized in the routine
+    """
+    _need_initialization = False
+
     def __init__(self, name, result_var, expr, datatype=None, dimensions=None, precision=None):
         Argument.__init__(self, name, datatype, dimensions, precision)
         self.expr = expr
         self.result_var = result_var
 
-class InOutArgument(Argument):
-    def __init__(self, name, result_var, expr, datatype=None, dimensions=None, precision=None):
-        Argument.__init__(self, name, datatype, dimensions, precision)
-        self.expr = expr
-        self.result_var = result_var
 
-class Result(object):
+class Result(ResultBase):
     """An expression for a scalar return value.
 
        The name result is used to avoid conflicts with the reserved word
        'return' in the python language. It is also shorter than ReturnValue.
     """
+    _need_initialization = False
+
     def __init__(self, expr, datatype=None):
         """Initialize a (scalar) return value.
 
@@ -300,7 +353,8 @@ class Result(object):
             raise TypeError("The (optional) second argument must be an instance of the DataType class.")
         self.expr = expr
         self.datatype = datatype
-
+        self.result_var = Symbol('result_%s'%hash(expr))
+        self._prepare_expr()
 
 #
 # Transformation of routine objects into code
