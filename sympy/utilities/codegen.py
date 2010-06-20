@@ -584,7 +584,16 @@ class FCodeGen(CodeGen):
         array_list = []
         scalar_list = []
         for arg in routine.arguments:
-            typeinfo = arg.datatype.fname
+
+            if isinstance(arg, InputArgument):
+                typeinfo = "%s, intent(in)" % arg.datatype.fname
+            elif isinstance(arg, InOutArgument):
+                typeinfo = "%s, intent(inout)" % arg.datatype.fname
+            elif isinstance(arg, OutputArgument):
+                typeinfo = "%s, intent(out)" % arg.datatype.fname
+            else:
+                raise CodeGenError("Unkown Argument type: %s"%type(arg))
+
             if arg.dimensions:
                 # fortran arrays start at 1
                 dimstr = ", ".join(["%s:%s"%(dim[0]+1, dim[1]+1)
