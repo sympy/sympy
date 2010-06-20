@@ -162,7 +162,10 @@ class Routine(object):
                 else:
                     raise CodeGenError("Only Indexed or Symbol can define output arguments")
 
-                output_args.append(OutputArgument(symbol, out_arg, expr, dimensions=dims))
+                if expr.has(symbol):
+                    output_args.append(InOutArgument(symbol, out_arg, expr, dimensions=dims))
+                else:
+                    output_args.append(OutputArgument(symbol, out_arg, expr, dimensions=dims))
 
                 # avoid duplicate arguments
                 symbols.remove(symbol)
