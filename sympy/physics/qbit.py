@@ -1,9 +1,13 @@
 """
     Single qbits and their gates
+    a = [[x for x in 2*q] for q in l]+[[x for x in 2*q] for q in l]
 """
 from sympy import Expr, sympify, Add, Mul, Pow, I, Function, Integer, S, sympify, Matrix, elementary
+from sympy.core.numbers import *
 from sympy.core.basic import S, sympify
 from sympy.core.function import Function
+from sympy.functions.elementary.exponential import *
+from sympy.functions.elementary.miscellaneous import *
 
 class Qbit(Expr):
     """
@@ -28,6 +32,17 @@ class Qbit(Expr):
 
     def _sympyrepr(self, printer, *args):
         return "%s(%i)" %  (self.__class__.__name__, printer._print(self.name, args))
+
+class QbitSpace(Expr):
+    def __new__(cls, size):
+        return Expr.__new__(cls, size, commutative = False)
+
+    def _sympystr(self,printer, *args):
+        return "l2(2)**%d" % (self.args[0])
+
+    @property
+    def dimension(self):
+        return size
 
 class Gate(Expr):
     """
@@ -54,6 +69,25 @@ class Gate(Expr):
     def _represent_YBasisSet(self, HilbertSize):
         raise NotImplementedError("Y-Basis Representation not implemented")
 
+def representHilbertSpace(gate, HilbertSize, qbit):
+    I = Matrix([[1,0],[0,1]])
+    product = [I for x in range(HilbertSize)]
+    product[qbit] = gate
+    MatrixRep = TensorProduct(product)
+    return MatrixRep
+
+def TensorProduct(args):
+    MatrixExpansion = args[len(args)-1]
+    for gate in args[:len(args)-1]:
+        a = ((gate[0]*MatrixExpansion).tolist())
+        b = ((gate[1]*MatrixExpansion).tolist())
+        c = ((gate[2]*MatrixExpansion).tolist())
+        d = ((gate[3]*MatrixExpansion).tolist())
+        b = [a[x].extend(b[x]) for x in range(len(a))]
+        d = [c[x].extend(d[x]) for x in range(len(c))]
+        MatrixExpansion = Matrix(a + c)
+    return MatrixExpansion
+
 class BasisSet(Expr):
     pass
 
@@ -74,10 +108,17 @@ class HadamardGate(Gate):
         return "H(%s)" % printer._print(self.args[0], *args)
 
     def _represent_ZBasisSet(self, HilbertSize):
-        return Matrix([[1., 1.], [1., -1.]])*(1./(2.**(1./2.)))
+        if self.minimumdimension > HilbertSize:
+            raise HilbertSpaceException()
+        gate = Matrix([[1, 1], [1, -1]])*(1/sqrt(2))
+        if HilbertSize  == 1:            
+            return Matrix([[1, 1], [1, -1]])*(1/sqrt(2))
+        else:
+            m = representHilbertSpace(gate, HilbertSize, self.args[0])
+            return m
 
     def _represent_XBasisSet(self, HilbertSize):
-        return Matrix([[1., 1.], [1., -1.]])*(1./(2.**(1./2.)))
+        return Matrix([[1, 1], [1, -1]])*(1/sqrt(2))
 
     def _represent_YBasisSet(self, HilbertSize):
         pass
@@ -90,7 +131,9 @@ class XGate(Gate):
         return "X(%s)" % printer._print(self.args[0], *args)
 
     def _represent_ZBasisSet(self, HilbertSize):
-        return Matrix([[0, 1.], [1., 0]])
+        if self.minimumdimension > HilbertSize:
+            raise HilbertSpaceException()
+        return Matrix([[0, 1], [1, 0]])
 
     def _represent_XBasisSet(self, HilbertSize):
         return Matrix([[1,0],[0,-1]])
@@ -122,7 +165,7 @@ class ZGate(Gate):
         return "Z(%s)" % printer._print(self.args[0], *args)
 
     def _represent_ZBasisSet(self, HilbertSize):
-        return Matrix([[1., 0], [0, -1.]])
+        return Matrix([[1, 0], [0, -1]])
 
     def _represent_XBasisSet(self, HilbertSize):
         return Matrix([[0,1],[1,0]])
@@ -138,7 +181,7 @@ class PhaseGate(Gate):
         return "S(%s)" % printer._print(self.args[0], *args)
 
     def _represent_ZBasisSet(self, HilbertSize):
-        return Matrix([[1, 0], [0, i]])
+        return Matrix([[1, 0], [0, complex(0,1)]])
 
     def _represent_XBasisSet(self, HilbertSize):
         return Matrix([[complex(.5,.5), complex(.5,-.5)], [complex(.5,-.5),complex(.5,.5)]])
@@ -154,15 +197,15 @@ class TGate(Gate):
         return "T(%s)" % printer._print(self.args[0], *args)
 
     def _represent_ZBasisSet(self, HilbertSize):
-        return Matrix([[1., 0], [0, exp(complex(0,pi/4))]])
+        return Matrix([[1, 0], [0, exp(complex(0,Pi/4))]])
 
     def _represent_XBasisSet(self, HilbertSize):
-        return Matrix([[.5+.5*exp(complex(0,pi/4)),.5-.5*exp(complex(0,pi/4))],[.5-.5*exp(complex(0,pi/4)),.5+.5*exp(complex(0,pi/4))]])
+        return Matrix([[.5+.5*exp(complex(0,Pi/4)),.5-.5*exp(complex(0,Pi/4))],[.5-.5*exp(complex(0,Pi/4)),.5+.5*exp(complex(0,Pi/4))]])
 
     def _represent_YBasisSet(self, HilbertSize):
         pass
 
-def represent(circuit, basis, GateRep = False):
+def represent(circuit, basis = ZBasisSet(), GateRep = False):
     """
         Represents the elements in a certain basis 
     """
@@ -195,9 +238,10 @@ def represent(circuit, basis, GateRep = False):
         if hasattr(gate,  rep_method_name):
             rep_method = getattr(gate, rep_method_name)
             gate_rep = rep_method(HilbertSize)
+            print gate_rep
             result = gate_rep*result        
 
-    print result
+    return result
 
 """
 #find the basis it should be represented by for each gate
