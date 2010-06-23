@@ -658,7 +658,7 @@ def gf_quo(f, g, p, K):
     >>> gf_quo([1, 0, 1, 1], [1, 1, 0], 2, ZZ)
     Traceback (most recent call last):
     ...
-    ExactQuotientFailed: [1, 1, 0] does not divide [1, 0, 1, 1]
+    ExactQuotientFailed: [1, 1, 0] does not divide [1, 0, 1, 1] in ZZ
     >>> gf_quo([1, 0, 3, 2, 3], [2, 2, 2], 5, ZZ)
     [3, 2, 4]
     """
@@ -667,7 +667,7 @@ def gf_quo(f, g, p, K):
     if not r:
         return q
     else:
-        raise ExactQuotientFailed('%s does not divide %s' % (g, f))
+        raise ExactQuotientFailed('%s does not divide %s in %s' % (g, f, K))
 
 @cythonized("df,dg,dq,dr,i,j")
 def gf_exquo(f, g, p, K):

@@ -909,7 +909,7 @@ def dup_pquo(f, g, K):
     >>> dup_pquo([1, 0, 1], [2, -4], ZZ)
     Traceback (most recent call last):
     ...
-    ExactQuotientFailed: [2, -4] does not divide [1, 0, 1]
+    ExactQuotientFailed: [2, -4] does not divide [1, 0, 1] in ZZ
     >>> dup_pquo([1, 0, -1], [2, -2], ZZ)
     [2, 2]
     """
@@ -918,7 +918,7 @@ def dup_pquo(f, g, K):
     if not r:
         return q
     else:
-        raise ExactQuotientFailed('%s does not divide %s' % (g, f))
+        raise ExactQuotientFailed('%s does not divide %s in %s' % (g, f, K))
 
 def dup_pexquo(f, g, K):
     """
@@ -1044,7 +1044,7 @@ def dmp_pquo(f, g, u, K):
     >>> dmp_pquo([[1], [1, 0], []], [[2], [2]], 1, ZZ)
     Traceback (most recent call last):
     ...
-    ExactQuotientFailed: [[2], [2]] does not divide [[1], [1, 0], []]
+    ExactQuotientFailed: [[2], [2]] does not divide [[1], [1, 0], []] in ZZ
     >>> dmp_pquo([[1], [1, 0], []], [[2], [2, 0]], 1, ZZ)
     [[2], []]
     """
@@ -1053,7 +1053,7 @@ def dmp_pquo(f, g, u, K):
     if dmp_zero_p(r, u):
         return q
     else:
-        raise ExactQuotientFailed('%s does not divide %s' % (g, f))
+        raise ExactQuotientFailed('%s does not divide %s in %s' % (g, f, K))
 
 def dmp_pexquo(f, g, u, K):
     """
@@ -1307,7 +1307,7 @@ def dup_quo(f, g, K):
     >>> dup_quo([1, 0, 1], [2, -4], ZZ)
     Traceback (most recent call last):
     ...
-    ExactQuotientFailed: [2, -4] does not divide [1, 0, 1]
+    ExactQuotientFailed: [2, -4] does not divide [1, 0, 1] in ZZ
     >>> dup_quo([1, 0, -1], [1, -1], ZZ)
     [1, 1]
     """
@@ -1316,7 +1316,7 @@ def dup_quo(f, g, K):
     if not r:
         return q
     else:
-        raise ExactQuotientFailed('%s does not divide %s' % (g, f))
+        raise ExactQuotientFailed('%s does not divide %s in %s' % (g, f, K))
 
 def dup_exquo(f, g, K):
     r"""
@@ -1385,7 +1385,7 @@ def dmp_quo(f, g, u, K):
     >>> dmp_quo([[1], [1, 0], []], [[2], [2]], 1, ZZ)
     Traceback (most recent call last):
     ...
-    ExactQuotientFailed: [[2], [2]] does not divide [[1], [1, 0], []]
+    ExactQuotientFailed: [[2], [2]] does not divide [[1], [1, 0], []] in ZZ
     >>> dmp_quo([[1], [1, 0], []], [[1], [1, 0]], 1, ZZ)
     [[1], []]
     """
@@ -1394,7 +1394,7 @@ def dmp_quo(f, g, u, K):
     if dmp_zero_p(r, u):
         return q
     else:
-        raise ExactQuotientFailed('%s does not divide %s' % (g, f))
+        raise ExactQuotientFailed('%s does not divide %s in %s' % (g, f, K))
 
 @cythonized("u")
 def dmp_exquo(f, g, u, K):
