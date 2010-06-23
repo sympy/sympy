@@ -1,5 +1,5 @@
 from sympy import Rational, Symbol, Real, I, sqrt, oo, nan, pi, E, Integer, \
-        S, factorial, Catalan, EulerGamma, GoldenRatio, cos
+        S, factorial, Catalan, EulerGamma, GoldenRatio, cos, exp
 from sympy.core.power import integer_nthroot
 
 from sympy.core.numbers import igcd, ilcm, igcdex, seterr
@@ -213,6 +213,11 @@ def test_Infinity_2():
     assert (-oo)*x != -oo
     assert (-oo)*(pi-1) == -oo
     assert (-oo)*(1-pi) == oo
+
+def test_Infinity_inequations():
+    assert oo > pi
+    assert not (oo < pi)
+    assert exp(-3) < oo
 
 def test_NaN():
     assert nan == nan
