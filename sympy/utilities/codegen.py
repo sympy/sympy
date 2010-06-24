@@ -598,7 +598,7 @@ class FCodeGen(CodeGen):
                 # fortran arrays start at 1
                 dimstr = ", ".join(["%s:%s"%(dim[0]+1, dim[1]+1)
                     for dim in arg.dimensions])
-                typeinfo += ", allocatable, dimension(%s)" % dimstr
+                typeinfo += ", dimension(%s)" % dimstr
                 array_list.append("%s :: %s\n" % (typeinfo, arg.name))
             else:
                 scalar_list.append("%s :: %s\n" % (typeinfo, arg.name))
