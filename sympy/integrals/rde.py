@@ -21,14 +21,15 @@ Bronstein.
 """
 from sympy.core.symbol import Symbol
 
-from sympy.polys import Poly, gcd, ZZ
+from sympy.polys import Poly, gcd, ZZ, cancel
 
 from sympy.integrals.risch import (gcdex_diophantine, derivation, splitfactor,
-    NonElementaryIntegral)
+    NonElementaryIntegral, get_case)
 
 from operator import mul
 #    from pudb import set_trace; set_trace() # Debugging
 
+# TODO: Add messages to NonElementaryIntegral errors
 def order_at(a, p, t):
     """
     Computes the order of a at p, with respect to t.
@@ -143,11 +144,15 @@ def special_denom(a, ba, bd, ca, cd, D, x, t, case='auto'):
     h in k[t] and for any solution q in k<t> of a*Dq + b*q == c, r = qh in k[t]
     satisfies A*Dr + B*r == C.
 
-    For the primitive case, k<t> == k[t], so it returns (a, b, c, 1) in this
+    For case == 'primitive', k<t> == k[t], so it returns (a, b, c, 1) in this
     case.
 
     This constitutes step 2 of the outline given in the rde.py docstring.
     """
+    # TODO: finish writing this and write tests
+    if case == 'auto':
+        case = get_case(D, x, t)
+
     if case == 'exp':
         p = Poly(t, t)
     elif case == 'tan':
@@ -157,7 +162,7 @@ def special_denom(a, ba, bd, ca, cd, D, x, t, case='auto'):
         C = cd.quo(cd)
         return (a, B, C, Poly(1, t))
     else:
-        raise ValueError("case must be one of {'exp', 'tan', 'primitive'}, not %s" % case)
+        raise ValueError("case must be one of {'exp', 'tan', 'primitive'}, not %s." % case)
 
     nb = order_at(ba, p, t) - order_at(bd, p, t)
     nc = order_at(ca, p, t) - order_at(cd, p, t)
@@ -191,3 +196,101 @@ def special_denom(a, ba, bd, ca, cd, D, x, t, case='auto'):
 
     # (ap**N, (b + n*a*Dp/p)*p**N, c*p**(N - n), p**-n)
     return (A, B, C, h)
+
+def bound_degree(a, b, c, D, x, t, case='auto'):
+    """
+    Bound on polynomial solutions.
+
+    Given a derivation D on k[t] and a, b, c in k[t] with a != 0, return n in
+    ZZ such that deg(q) <= n for any solution q in k[t] of a*Dq + b*q == c.
+    """
+    # TODO: finish writing this and write tests
+    if case == 'auto':
+        case = get_case(D, x, t)
+
+    da = a.degree(t)
+    db = b.degree(t)
+    dc = c.degree(t)
+
+    alpha = -b.as_poly(t).LC().as_basic()/c.as_poly(t).LC().as_basic()
+    alpha = cancel(alpha)
+
+    if case == 'primitive':
+        if D.is_one: # base case
+            n = max(0, dc - max(db, da - 1))
+            if db == da - 1 and alpha.is_Integer:
+                n = max(0, alpha, dc - db)
+        else:
+            if db > da:
+                n = max(0, dc - db)
+            else:
+                max(0, dc - da + 1)
+
+            if db == da - 1:
+                raise NotImplementedError("Possible cancellation cases are " +
+                    "not yet implemented for the primitive case.")
+                # if alpha == m*Dt + Dz for z in k and m in ZZ:
+                    # n = max(n, m)
+
+            if db == da:
+                raise NotImplementedError("Possible cancellation cases are " +
+                "not yet implemented for the primitive case.")
+                # if alpha == Dz/z for z in k*:
+                    # beta = -lc(a*Dz + b*z)/(z*lc(a))
+                    # if beta == m*Dt + Dw for w in k and m in ZZ:
+                        # n = max(n, m)
+
+    elif case == 'exp':
+        n = max(0, dc - max(db, da))
+        if da == db:
+            raise NotImplementedError("Possible cancellation cases are " +
+                "not yet implemented hyperexponential case.")
+            # if alpha == m*Dt/t + Dz/z for z in k* and m in ZZ:
+                # n = max(n, m)
+
+    elif case in ['tan', 'other_nonlinear']:
+        delta = D.degree(t)
+        lam = D.LC()
+        n = max(0, dc - max(da + delta - 1, db))
+        if db == da + delta - 1 and alpha.is_Integer:
+            n = max(0, alpha, dc - db)
+
+    else:
+        raise ValueError("case must be one of {'exp', 'tan', 'primitive', " +
+            "'other_nonlinear'}, not %s." % case)
+
+    return n
+
+def spde(a, b, c, D, n, x, t):
+    """
+    Rothstein's Special Polynomial Differential Equation algorithm.
+
+    Given a derivation D on k[t], an integer n and a, b, c in k[t] with a != 0,
+    either raise NonElementaryIntegral, in whih case the equation
+    a*Dq + b*q == c has no solution of degree at most n in k[t], or return the
+    tuple (B, C, m, alpha, beta) such that B, C, alpha, beta in k[t], m in ZZ,
+    and any solution q in k[t] of degree at most n of a*Dq + b*q == c must be of
+    the form q == alpha*h + beta, where h in k[t], deg(h) <= m, and
+    Dh + B*h == C.
+    """
+    # TODO: Rewrite this non-recursively
+    zero = Poly(0, t)
+    if n < 0:
+        if c.is_zero:
+            return (zero, zero, 0, zero, zero)
+        raise NonElementaryIntegral
+
+    g = a.gcd(b)
+    if not c.rem(g).is_zero: # g does not divide c
+        raise NonElementaryIntegral
+
+    a, b, c = a.quo(g), b.quo(g), c.quo(g)
+    if a.degree(t) == 0:
+        return (b.quo(a), c.quo(a), n, Poly(1, t), zero)
+
+    r, z = gcdex_diophantine(b, a, c)
+    u = (a, b + derivation(a, D, x, t), z - derivation(r, D, x, t), D,
+        n - a.degree(t)) + (x, t)
+    B, C, m, alpha, beta = spde(*u)
+
+    return (B, C, m, a*alpha, a*beta + r)

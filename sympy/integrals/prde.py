@@ -25,6 +25,7 @@ def parametric_log_deriv_heu(fa, fd, wa, wd, D, x, t):
 
     The argument w == Dtheta/theta
     """
+    # TODO: finish writing this and write tests
     from pudb import set_trace; set_trace() # Debugging
     c1 = Symbol('c', dummy=True)
 
@@ -116,6 +117,7 @@ def is_log_deriv_k_t_radical(fa, fd, D, x, t, case='auto'):
     hyperexponential, and hypertangent cases, respectively.  If case it 'auto',
     it will attempt to determine the type of the derivation automatically.
     """
+    # TODO: finish writing this and write tests
     from pudb import set_trace; set_trace() # Debugging
     if case == 'auto':
         case = get_case(D, x, t)
