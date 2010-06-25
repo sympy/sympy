@@ -771,6 +771,13 @@ class FCodeGen(CodeGen):
     dump_fns = [dump_f95, dump_h]
 
 
+def get_code_generator(language, project):
+    CodeGenClass = {"C": CCodeGen, "F95": FCodeGen}.get(language.upper())
+    if CodeGenClass is None:
+        raise ValueError("Language '%s' is not supported." % language)
+    return CodeGenClass(project)
+
+
 #
 # Friendly functions
 #
@@ -827,10 +834,7 @@ def codegen(name_expr, language, prefix, project="project", to_files=False, head
     """
 
     # Initialize the code generator.
-    CodeGenClass = {"C": CCodeGen, "F95": FCodeGen}.get(language.upper())
-    if CodeGenClass is None:
-        raise ValueError("Language '%s' is not supported." % language)
-    code_gen = CodeGenClass(project)
+    code_gen = get_code_generator(language, project)
 
     # Construct the routines based on the name_expression pairs.
     #  mainly the input arguments require some work
