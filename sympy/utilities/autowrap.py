@@ -46,7 +46,7 @@ When is this module NOT the best approach?
 
 """
 from sympy.utilities.codegen import codegen, get_code_generator, Routine
-import sys, os, tempfile
+import sys, os, tempfile, subprocess
 
 class CodeWrapError(Exception): pass
 
@@ -100,8 +100,9 @@ class F2PyCodeWrapper(CodeWrapper):
 
     def _process_files(self, routine):
         filename = self._filename + '.' + self.generator.dump_f95.extension
-        command = "f2py -m %s -c %s" %(self.module_name, filename)
-        retcode = os.system(command)
+        command = ["f2py", "-m", self.module_name, "-c" , filename]
+        null = open(os.devnull, 'w')
+        retcode = subprocess.call(command, stdout=null)
         if retcode:
             raise CodeWrapError
 
