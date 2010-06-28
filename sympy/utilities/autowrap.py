@@ -52,7 +52,12 @@ class CodeWrapError(Exception): pass
 
 class CodeWrapper:
     _filename = "codewrapper"
-    _module_name = "wrapped_expr"
+    _module_basename = "autowrapped"
+    _module_counter = 0
+
+    @property
+    def module_name(self):
+        return "%s_%s" % (self._module_basename, CodeWrapper._module_counter)
 
     def __init__(self, generator, filepath=None):
         """
@@ -83,9 +88,10 @@ class CodeWrapper:
             self._prepare_files(routine)
             self._process_files(routine)
             sys.path.append(workdir)
-            mod = __import__(self._module_name)
+            mod = __import__(self.module_name)
             sys.path.pop()
         finally:
+            CodeWrapper._module_counter +=1
             os.chdir(oldwork)
 
         return self._get_wrapped_function(mod)
@@ -94,7 +100,7 @@ class F2PyCodeWrapper(CodeWrapper):
 
     def _process_files(self, routine):
         filename = self._filename + '.' + self.generator.dump_f95.extension
-        command = "f2py -m %s -c %s" %(self._module_name, filename)
+        command = "f2py -m %s -c %s" %(self.module_name, filename)
         retcode = os.system(command)
         if retcode:
             raise CodeWrapError
