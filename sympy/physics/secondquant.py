@@ -12,7 +12,7 @@ from sympy import (
 
 from sympy.utilities import iff
 from sympy.core.cache import cacheit
-from sympy.core.symtuple import _tuple_wrapper
+from sympy.core.symtuple import tuple_wrapper
 
 
 __all__ = [
@@ -150,7 +150,7 @@ class AntiSymmetricTensor(TensorSymbol):
 
     nargs = 3
 
-    @_tuple_wrapper
+    @tuple_wrapper
     def __new__(cls, symbol, upper, lower):
         return TensorSymbol.__new__(cls, symbol, upper, lower)
 

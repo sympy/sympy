@@ -31,7 +31,7 @@ class SymTuple(Basic):
         return item in self.args
 
 
-def _tuple_wrapper(method):
+def tuple_wrapper(method):
     """
     Decorator that makes any tuple in arguments into SymTuple
     """
