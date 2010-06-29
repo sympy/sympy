@@ -23,16 +23,33 @@
 
 from sympy import Expr, Basic, SymTuple, Symbol, Integer, sympify, S
 
+class IndexException(Exception):
+    pass
 
 class Indexed(Expr):
     """Represent an arbitrary object with indices, e.g. a symbolic array element.
 
     >>> from sympy.tensor import Indexed
-    >>> from sympy.abc import a, x, y
-    >>> Indexed(a, x, y)
-    a(x, y)
+    >>> from sympy import symbols
+    >>> i, j, k = symbols('i j k', integer=True)
+    >>> a = symbols('a')
+    >>> Indexed(a, i, j)
+    a(i, j)
+
+    There is also syntactic sugar that allows declaration of the stem independent
+    of the indices:
+
+    >>> A = Indexed(a); A
+    a
+    >>> A(i, j, k)
+    a(i, j, k)
 
     """
+
+    def __call__(self, *indices, **kw_args):
+        if self.rank != 0:
+            raise IndexException("Indexed with rank > 0 cannot be used as stem")
+        return self.func(self.label, *indices, **kw_args)
 
     @property
     def label(self):
@@ -53,7 +70,10 @@ class Indexed(Expr):
 
     def _sympystr(self, p):
         indices = map(p.doprint, self.indices)
-        return "%s(%s)" % (p.doprint(self.label), ", ".join(indices))
+        if indices:
+            return "%s(%s)" % (p.doprint(self.label), ", ".join(indices))
+        else:
+            return "%s" % p.doprint(self.label)
 
 
 class Idx(Basic):
