@@ -104,6 +104,8 @@ class Idx(Basic):
 
     """
 
+    is_integer = True
+
     def __new__(cls, label, range=None, **kw_args):
 
         label, range = map(sympify, (label, range))

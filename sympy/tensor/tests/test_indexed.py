@@ -18,6 +18,10 @@ def test_Idx_construction():
     raises(TypeError, "Idx(i, (2, x))")
     raises(TypeError, "Idx(i, (2, 3.5))")
 
+def test_Idx_properties():
+    i, a, b = symbols('i a b', integer=True)
+    assert Idx(i).is_integer
+
 def test_Idx_bounds():
     i, a, b = symbols('i a b', integer=True)
     assert Idx(i).lower == None
