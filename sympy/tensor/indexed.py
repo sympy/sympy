@@ -46,6 +46,11 @@ class Indexed(Expr):
 
     """
 
+    def __new__(cls, *args, **kw_args):
+        args = args[:1] + tuple(
+                [ a if isinstance(a, Idx) else Idx(a) for a in args[1:] ])
+        return Expr.__new__(cls, *args, **kw_args)
+
     def __call__(self, *indices, **kw_args):
         if self.rank != 0:
             raise IndexException("Indexed with rank > 0 cannot be used as stem")
