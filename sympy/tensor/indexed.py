@@ -62,7 +62,7 @@ class Indexed(Expr):
     @property
     def rank(self):
         """returns the number of indices"""
-        return len(args)-1
+        return len(self.args)-1
 
     @property
     def dimensions(self):
