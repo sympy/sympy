@@ -95,6 +95,12 @@ class Idx(Basic):
     >>> idx = Idx(i); idx.lower, idx.upper
     (None, None)
 
+    4) for a literal integer instead of a symbolic label the bounds are still
+    there:
+
+    >>> idx = Idx(2, n); idx.lower, idx.upper
+    (0, -1 + n)
+
 
     """
 
@@ -105,11 +111,7 @@ class Idx(Basic):
         if not label.is_integer:
             raise TypeError("Idx object requires an integer label")
 
-        if label.is_Number:
-            obj = Basic.__new__(cls, label, SymTuple(S.Zero, S.Zero), **kw_args)
-            return obj
-
-        if isinstance(range, (tuple, list, SymTuple)):
+        elif isinstance(range, (tuple, list, SymTuple)):
             assert len(range) == 2, "Idx got range tuple with wrong length"
             for bound in range:
                 if not (bound.is_integer or abs(bound) is S.Infinity):
@@ -122,7 +124,7 @@ class Idx(Basic):
         elif range:
             raise TypeError("range must be tuple, symbol or integer")
         else:
-            args = label, SymTuple(None, None)
+            args = label,
 
         obj = Basic.__new__(cls, *args, **kw_args)
         return obj
@@ -133,11 +135,18 @@ class Idx(Basic):
 
     @property
     def lower(self):
-        return self.args[1][0]
+        try:
+            return self.args[1][0]
+        except IndexError:
+            return
+
 
     @property
     def upper(self):
-        return self.args[1][1]
+        try:
+            return self.args[1][1]
+        except IndexError:
+            return
 
     def _sympystr(self, p):
         return p.doprint(self.label)
