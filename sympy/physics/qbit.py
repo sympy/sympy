@@ -9,13 +9,15 @@ from sympy.functions.elementary.exponential import *
 from sympy.functions.elementary.miscellaneous import *
 from sympy.matrices.matrices import *
 from sympy.simplify import *
-import copy
 
 class Qbit(Expr):
     """
     Represents a single quantum gate    
     """
     def __new__(cls, *args):
+        for element in args:
+            if not (element == 1 or element == 0):
+                raise Exception("Values must be either one or zero")
         obj = Expr.__new__(cls, *args, commutative = False)
         return obj
 
@@ -38,7 +40,7 @@ class Qbit(Expr):
         return "|%s>" % printer._print(string, *args)
 
     def _sympyrepr(self, printer, *args):
-        return "%s(%i)" %  (self.__class__.__name__, printer._print(self.name, args))
+        return "%s%s" % (printer._print(self.__class__.__name__, *args), printer._print(str(self.args)))
 
     def flip(self, *args):
         newargs = list(self.args[:])
@@ -49,7 +51,7 @@ class Qbit(Expr):
                 newargs[self.dimension-i-1] = 1
         return Qbit(*newargs)
 
-    def _represent(self):
+    def _represent_ZBasisSet(self):
         n = 1
         definiteState = 0
         for it in reversed(self.args):
@@ -58,7 +60,13 @@ class Qbit(Expr):
         result = [0 for x in range(2**self.dimension)]
         result[definiteState] = 1
 
-        return Matrix(result) 
+        return Matrix(result)
+
+    def _represent_XBasisSet(self):
+        raise NotImplementedError("I can't allow you to do that Dave")
+
+    def _represent_ZBasisSet(self):
+        raise NotImplementedError("Dave. I'm afraid I can't do that.")
 
 class Gate(Expr):
     """
@@ -67,6 +75,9 @@ class Gate(Expr):
     """
     def __new__(cls, *args):
         obj = Expr.__new__(cls, *args, commutative = False)
+        if obj.inputnumber != len(args):
+            num = obj.inputnumber
+            raise Exception("This gate applies to %d qbits" % (num))
         return obj
 
     @property
@@ -76,26 +87,46 @@ class Gate(Expr):
     @property
     def minimumdimension(self):
         return max(self.args)
+        
+    @property
+    def inputnumber(self):
+        mat = self.matrix
+        return log((mat).cols,2)
+        
+    def _apply(self, qbits, mat):
+        assert isinstance(qbits, Qbit), "can only apply self to qbits"
+        # check number of qbits this gate acts on
+        if self.minimumdimension >= qbits.dimension:
+            raise HilbertSpaceException()    
+        if isinstance(qbits, Qbit):
+            #find which column of the matrix this qbit applies to 
+            args = [self.args[i] for i in reversed(range(len(self.args)))]
+            column_index = 0
+            n = 1
+            for element in args:
+                column_index += n*qbits[element]
+                n = n<<1
+            column = mat[:,column_index]
+            #now apply each column element to qbit
+            result = 0
+            for index in range(len(column.tolist())):
+                new_qbit = Qbit(*qbits.args)
+                for bit in range(len(args)):
+                    if new_qbit[args[bit]] != (index>>bit)&1:
+                        new_qbit = new_qbit.flip(args[bit])
+                result += column[index]*new_qbit
+        else:
+            raise Exception("can't apply to object that is not a qbit")
+        return result        
 
     def _apply_ZBasisSet(self, qbits):
-        assert isinstance(qbits, Qbit), "msg"
-        # check number of qbits this gate acts on
-        # check to make sure dimensions are OK
-        target_bit = self.args[0]
+        #switch qbit basis and matrix basis when fully implemented
         mat = self.matrix
-        if isinstance(qbits, Qbit):
-            column_index = qbits[target_bit]
-            column = mat[:,column_index]
-            if column_index:
-                qbits = column[1]*qbits + column[0]*qbits.flip(target_bit)
-            else:
-                qbits = column[0]*qbits + column[1]*qbits.flip(target_bit)
-        else:
-            raise Exception()
-        return qbits 
+        return self._apply(qbits, mat)        
+
 
     def _sympyrepr(self, printer, *args):
-        return "%s(%s)" %  (self.__class__.__name__, printer._print(self.name, args))
+        return "%s(%s)" %  (printer._print(self.__class__.__name__, *args), printer._print(self.args, *args))
 
     def _represent_ZBasisSet(self, HilbertSize):
         if self.minimumdimension >= HilbertSize:
@@ -165,18 +196,37 @@ class XBasisSet(BasisSet):
 class YBasisSet(BasisSet):
     pass
 
+class CZGate(Gate):
+    @property
+    def matrix(self):
+        return Matrix([[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,-1]])
+
+class SwapGate(Gate):
+    @property
+    def matrix(self):
+        return Matrix([[1,0,0,0],[0,0,1,0],[0,1,0,0],[0,0,0,1]])
+
+class CPhaseGate(Gate):
+    @property
+    def matrix(self):
+        return Matrix([[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1*ImaginaryUnit()]])
+
+class ToffoliGate(Gate):
+    @property
+    def matrix(self):
+        return Matrix([[1,0,0,0,0,0,0,0],[0,1,0,0,0,0,0,0],[0,0,1,0,0,0,0,0],[0,0,0,1,0,0,0,0],[0,0,0,0,1,0,0,0],[0,0,0,0,0,1,0,0],[0,0,0,0,0,0,0,1],[0,0,0,0,0,0,1,0]])
+
+class CNOTGate(Gate):
+    @property
+    def matrix(self):
+        return Matrix([[1,0,0,0],[0,1,0,0],[0,0,0,1],[0,0,1,0]])
+
 class HadamardGate(Gate):
     """
     An object representing a Hadamard Gate
-    """
+    """    
     def _sympystr(self, printer, *args):
         return "H(%s)" % printer._print(self.args[0], *args)
-
-    def _represent_XBasisSet(self, HilbertSize):
-        return Matrix([[1, 1], [1, -1]])*(1/sqrt(2))
-
-    def _represent_YBasisSet(self, HilbertSize):
-        pass
 
     @property
     def matrix(self):
@@ -189,12 +239,6 @@ class XGate(Gate):
     def _sympystr(self, printer, *args):
         return "X(%s)" % printer._print(self.args[0], *args)
 
-    def _represent_XBasisSet(self, HilbertSize):
-        return Matrix([[1,0],[0,-1]])
-
-    def _represent_YBasisSet(self, HilbertSize):
-        pass
-
     @property
     def matrix(self):
         return Matrix([[0, 1], [1, 0]])
@@ -205,12 +249,6 @@ class YGate(Gate):
     """
     def _sympystr(self, printer, *args):
         return "Y(%s)" % printer._print(self.args[0], *args)
-
-    def _represent_XBasisSet(self, HilbertSize):
-        return Matrix([[0,complex(0,1)],[complex(0,-1),0]])
-
-    def _represent_YBasisSet(self, HilbertSize):
-        pass
 
     @property
     def matrix(self):
@@ -223,12 +261,6 @@ class ZGate(Gate):
     def _sympystr(self, printer, *args):
         return "Z(%s)" % printer._print(self.args[0], *args)
 
-    def _represent_XBasisSet(self, HilbertSize):
-        return Matrix([[0,1],[1,0]])
-
-    def _represent_YBasisSet(self, HilbertSize):
-        pass
-
     @property
     def matrix(self):
         return Matrix([[1, 0], [0, -1]])
@@ -240,12 +272,6 @@ class PhaseGate(Gate):
     def _sympystr(self, printer, *args):
         return "S(%s)" % printer._print(self.args[0], *args)
 
-    def _represent_XBasisSet(self, HilbertSize):
-        return Matrix([[complex(.5,.5), complex(.5,-.5)], [complex(.5,-.5),complex(.5,.5)]])
-
-    def _represent_YBasisSet(self, HilbertSize):
-        pass
-
     @property
     def matrix(self):
         return Matrix([[1, 0], [0, complex(0,1)]])
@@ -256,13 +282,6 @@ class TGate(Gate):
     """
     def _sympystr(self, printer, *args):
         return "T(%s)" % printer._print(self.args[0], *args)
-
-    def _represent_XBasisSet(self, HilbertSize):
-        return Matrix([[.5+.5*exp(complex(0,Pi/4)),.5-.5*exp(complex(0,Pi/4))],[.5-.5*exp(complex(0,Pi/4)),.5+.5*exp(complex(0,Pi/4))]])
-
-    def _represent_YBasisSet(self, HilbertSize):
-        pass
-
 
     @property
     def matrix(self):
@@ -351,8 +370,7 @@ def apply_gates(circuit, basis = ZBasisSet()):
     if isinstance(states, (Mul,Add,Pow)):
         states = states.expand()
     return states
-
-#will want to sort stuff in the future so that they are in the correct order                
+             
     
 """
 # Look at dimension of basis, only work if it is not a symbol, the dispatch to Qbits._represent_BasisClass
@@ -403,7 +421,7 @@ def qbits_to_matrix(qbits):
         return result
     #if we are at the bottom of the recursion, have the base case be representing the matrix
     elif isinstance(qbits, Qbit):
-        return qbits._represent()
+        return qbits._represent_ZBasis() #TODO other bases with getattr
     else:
         raise Exception("Malformed input")
 
@@ -418,7 +436,7 @@ def represent(circuit, basis = ZBasisSet(), GateRep = False, HilbertSize = None)
     # check if the last element in circuit is Gate
     # if not raise exception becuase size of Hilbert space undefined
     if isinstance(circuit, Qbit):
-        return circuit._represent()
+        return getattr(circuit, rep_method_name)()
     elif isinstance(circuit, Gate):
         if HilbertSize == None:
             raise HilbertSpaceException("User must specify HilbertSize when gates are not applied on Qbits") 
@@ -434,7 +452,7 @@ def represent(circuit, basis = ZBasisSet(), GateRep = False, HilbertSize = None)
     if isinstance(qbit, Qbit):
         HilbertSize = len(qbit)
         #Turn the definite state of Qbits |X> into a single one in the Xth element of its column vector
-        result = qbit._represent()
+        result = getattr(qbit, rep_method_name)()
     elif HilbertSize == None:    
         raise HilbertSpaceException("User must specify HilbertSize when gates are not applied on Qbits")        
     else:
