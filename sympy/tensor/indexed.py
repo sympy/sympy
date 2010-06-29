@@ -64,32 +64,35 @@ class Idx(Basic):
                             set to 0 and range-1
     .. tuple  --  interpreted as lower, upper elements in range.
 
-    You can use oo or -oo to specify an unbounded range, and the default range
-    (0,0) means that the index is fixed.
+    Note that the Idx constructor is rather pedantic, and will not accept
+    non-integer symbols.  The only exception is that you can use oo and -oo to
+    specify an unbounded range.  For all other cases, both label and bounds
+    must be declared as integers, in the sense that for a symbol n,
+    n.is_integer must return True.
 
     >>> from sympy.tensor import Indexed, Idx
     >>> from sympy import symbols, oo
-    >>> n, x, L, U = symbols('n x L U')
+    >>> n, i, L, U = symbols('n i L U', integer=True)
 
     1) Both upper and lower bound specified
 
-    >>> idx = Idx(x, (L, U)); idx
-    x
+    >>> idx = Idx(i, (L, U)); idx
+    i
     >>> idx.lower, idx.upper
     (L, U)
 
     2) Only dimension specified, lower bound defaults to 0
 
-    >>> idx = Idx(x, n); idx.lower, idx.upper
+    >>> idx = Idx(i, n); idx.lower, idx.upper
     (0, -1 + n)
-    >>> idx = Idx(x, 4); idx.lower, idx.upper
+    >>> idx = Idx(i, 4); idx.lower, idx.upper
     (0, 3)
-    >>> idx = Idx(x, oo); idx.lower, idx.upper
+    >>> idx = Idx(i, oo); idx.lower, idx.upper
     (0, oo)
 
     3) No bounds given, interpretation of this depends on context.
 
-    >>> idx = Idx(x); idx.lower, idx.upper
+    >>> idx = Idx(i); idx.lower, idx.upper
     (None, None)
 
 
@@ -99,14 +102,22 @@ class Idx(Basic):
 
         label, range = map(sympify, (label, range))
 
+        if not label.is_integer:
+            raise TypeError("Idx object requires an integer label")
+
         if label.is_Number:
             obj = Basic.__new__(cls, label, SymTuple(S.Zero, S.Zero), **kw_args)
             return obj
 
         if isinstance(range, (tuple, list, SymTuple)):
             assert len(range) == 2, "Idx got range tuple with wrong length"
+            for bound in range:
+                if not (bound.is_integer or abs(bound) is S.Infinity):
+                    raise TypeError("Idx object requires integer bounds")
             args = label, SymTuple(*range)
         elif isinstance(range, (Symbol, Integer)) or range is S.Infinity:
+            if not (range.is_integer or range is S.Infinity):
+                raise TypeError("Idx object requires an integer dimension")
             args = label, SymTuple(S.Zero, range-S.One)
         elif range:
             raise TypeError("range must be tuple, symbol or integer")
