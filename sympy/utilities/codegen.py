@@ -415,6 +415,39 @@ class CodeGen(object):
                 result.append((filename, contents.getvalue()))
             return result
 
+    def dump_code(self, routines, f, prefix, header=True, empty=True):
+        """Write the code file by calling language specific methods in correct order
+
+           The generated file contains all the definitions of the routines in
+           low-level code and refers to the header file if appropriate.
+
+           Arguments:
+             routines  --  a list of Routine instances
+             f  --  a file-like object to write the file to
+             prefix  --  the filename prefix, used to refer to the proper header
+                         file. Only the basename of the prefix is used.
+
+           Optional arguments:
+             header  --  When True, a header comment is included on top of each
+                         source file. [DEFAULT=True]
+             empty  --  When True, empty lines are included to structure the
+                        source files. [DEFAULT=True]
+        """
+
+        code_lines = []
+        for routine in routines:
+            if empty: code_lines.append("\n")
+            code_lines.extend(self._get_routine_opening(routine))
+            code_lines.extend(self._declare_arguments(routine))
+            code_lines.extend(self._declare_locals(routine))
+            if empty: code_lines.append("\n")
+            code_lines.extend(self._call_printer(routine))
+            if empty: code_lines.append("\n")
+            code_lines.extend(self._get_routine_ending(routine))
+
+        if header and code_lines:
+            self._dump_header(f)
+        print >> f, ''.join(code_lines),
 
 class CodeGenError(Exception):
     pass
@@ -680,63 +713,23 @@ class FCodeGen(CodeGen):
 
         return code_lines
 
+    def _call_printer(self, routine):
+        code_lines = []
+        for result in routine.result_variables:
+            if isinstance(result, Result):
+                self._printer.set_assign_to(routine.name)
+            elif isinstance(result, (OutputArgument, InOutArgument)):
+                self._printer.set_assign_to(result.result_var)
+
+            constants, not_fortran, f_expr = self._printer.doprint(result.expr)
+            code_lines.extend(constants)
+            if result.needs_initialization:
+                code_lines.extend(self._init_resultvars(routine))
+            code_lines.append("%s\n" % f_expr)
+        return code_lines
 
     def dump_f95(self, routines, f, prefix, header=True, empty=True):
-        """Write the F95 code file.
-
-           This file contains all the definitions of the routines in f95 code and
-           refers to the header file.
-
-           Arguments:
-             routines  --  a list of Routine instances
-             f  --  a file-like object to write the file to
-             prefix  --  the filename prefix, used to refer to the proper header
-                         file. Only the basename of the prefix is used.
-
-           Optional arguments:
-             header  --  When True, a header comment is included on top of each
-                         source file. [DEFAULT=True]
-             empty  --  When True, empty lines are included to structure the
-                        source files. [DEFAULT=True]
-        """
-        if header:
-            self._dump_header(f)
-        if empty: print >> f
-
-
-        for routine in routines:
-            code_lines = self._get_routine_opening(routine)
-            code_lines.extend(self._declare_arguments(routine))
-            code_lines.extend(self._declare_locals(routine))
-
-            for result in routine.result_variables:
-                if isinstance(result, Result):
-                    self._printer.set_assign_to(routine.name)
-                elif isinstance(result, (OutputArgument, InOutArgument)):
-                    self._printer.set_assign_to(result.result_var)
-
-                constants, not_fortran, f_expr = self._printer.doprint(result.expr)
-
-                code_lines.extend(constants)
-
-                if empty: code_lines.append('\n')
-
-                if result.needs_initialization:
-                    code_lines.extend(self._init_resultvars(routine))
-                    if empty: code_lines.append('\n')
-
-                code_lines.append("%s\n" % f_expr)
-
-                if empty: code_lines.append('\n')
-
-            print >> f, ''.join(code_lines),
-            if empty: print >> f
-
-            code_lines = self._get_routine_ending(routine)
-            print >> f, ''.join(code_lines),
-
-            if empty: print >> f
-        if empty: print >> f
+        self.dump_code(routines, f, prefix, header, empty)
     dump_f95.extension = "f90"
 
     def dump_h(self, routines, f, prefix, header=True, empty=True):
