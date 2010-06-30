@@ -82,7 +82,8 @@ from sympy.core.relational import Equality
 from sympy.utilities import flatten
 
 from StringIO import StringIO
-import sympy, os
+import sympy
+import os
 
 
 __all__ = [
@@ -201,9 +202,7 @@ class Routine(object):
 
     @property
     def result_variables(self):
-        """
-        Returns a tuple of OutputArgument, InOutArgument and Result.
-        """
+        """Returns a tuple of OutputArgument, InOutArgument and Result."""
         args = [arg for arg in self.arguments if isinstance(arg, (OutputArgument, InOutArgument))]
         args.extend(self.results)
         return args
