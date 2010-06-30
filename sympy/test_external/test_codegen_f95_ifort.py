@@ -25,7 +25,9 @@
 from sympy import symbols
 from sympy.utilities.codegen import codegen, FCodeGen, Routine, InputArgument, \
     Result
-import sys, os, tempfile
+import sys
+import os
+import tempfile
 
 
 # templates for the main program that will test the generated code.
