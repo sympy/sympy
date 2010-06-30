@@ -432,11 +432,11 @@ class CCodeGen(CodeGen):
 
     def _dump_header(self, f):
         """Writes a common header for the generated files."""
-        print >> f, "/****************************************************************************** "
+        print >> f, "/" + "*"*78
         tmp = header_comment % {"version": sympy.__version__, "project": self.project}
         for line in tmp.splitlines():
             print >> f, " *%s* " % line.center(76)
-        print >> f, " ******************************************************************************/"
+        print >> f, " " + "*"*78 + "/"
 
     def get_prototype_result(self, routine):
         """Returns a string for the function prototype for the given routine and
@@ -550,11 +550,11 @@ class FCodeGen(CodeGen):
 
     def _dump_header(self, f):
         """Writes a common header for the generated files."""
-        print >> f, "!****************************************************************************** "
+        print >> f, "!" + "*"*78
         tmp = header_comment % {"version": sympy.__version__, "project": self.project}
         for line in tmp.splitlines():
             print >> f, "!*%s* " % line.center(76)
-        print >> f, "!******************************************************************************/"
+        print >> f, "!" + "*"*78
 
     def _get_routine_opening(self, routine):
         """
