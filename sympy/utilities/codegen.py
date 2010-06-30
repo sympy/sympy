@@ -435,6 +435,7 @@ class CodeGen(object):
         """
 
         code_lines = []
+        code_lines.extend(self._preprosessor_statements(prefix))
         for routine in routines:
             if empty: code_lines.append("\n")
             code_lines.extend(self._get_routine_opening(routine))
@@ -496,41 +497,39 @@ class CCodeGen(CodeGen):
         ))
         return " ".join(prototype), result
 
+    def _preprosessor_statements(self, prefix):
+        code_lines = []
+        code_lines.append("#include \"%s.h\"\n" % os.path.basename(prefix))
+        code_lines.append("#include <math.h>\n")
+        return code_lines
+
+    def _get_routine_opening(self, routine):
+        prototype, result = self.get_prototype_result(routine)
+        return ["%s {\n" % prototype]
+
+    def _declare_arguments(self, routine):
+        # arguments are in prototype
+        return []
+
+    def _declare_locals(self, routine):
+        code_list = []
+        for var in sorted(routine.local_vars, key=str):
+            typeinfo = get_default_datatype(var)
+            code_list.append("%s %s\n" % (typeinfo.cname, var))
+        return code_list
+
+    def _call_printer(self, routine):
+        prototype, result = self.get_prototype_result(routine)
+        if result is not None:
+            return ["  return %s;\n" % ccode(result.expr)]
+        else:
+            return []
+
+    def _get_routine_ending(self, routine):
+        return ["}\n"]
+
     def dump_c(self, routines, f, prefix, header=True, empty=True):
-        """Write the C code file.
-
-           This file contains all the definitions of the routines in c code and
-           refers to the header file.
-
-           Arguments:
-             routines  --  a list of Routine instances
-             f  --  a file-like object to write the file to
-             prefix  --  the filename prefix, used to refer to the proper header
-                         file. Only the basename of the prefix is used.
-
-           Optional arguments:
-             header  --  When True, a header comment is included on top of each
-                         source file. [DEFAULT=True]
-             empty  --  When True, empty lines are included to structure the
-                        source files. [DEFAULT=True]
-        """
-        if header:
-            self._dump_header(f)
-        if empty: print >> f
-        print >> f, "#include \"%s.h\"" % os.path.basename(prefix)
-        print >> f, "#include <math.h>"
-        if empty: print >> f
-        for routine in routines:
-            # function definitions.
-            prototype, result = self.get_prototype_result(routine)
-            print >> f, "%s {" % prototype
-            # return value
-            if result is not None:
-                print >> f, "  return %s;" % ccode(result.expr)
-            # curly closing brackets
-            print >> f, "}"
-            if empty: print >> f
-        if empty: print >> f
+        self.dump_code(routines, f, prefix, header, empty)
     dump_c.extension = "c"
 
     def dump_h(self, routines, f, prefix, header=True, empty=True):
@@ -588,6 +587,9 @@ class FCodeGen(CodeGen):
         for line in tmp.splitlines():
             print >> f, "!*%s* " % line.center(76)
         print >> f, "!" + "*"*78
+
+    def _preprosessor_statements(self, prefix):
+        return []
 
     def _get_routine_opening(self, routine):
         """
