@@ -9,6 +9,7 @@ from sympy.functions.elementary.exponential import *
 from sympy.functions.elementary.miscellaneous import *
 from sympy.matrices.matrices import *
 from sympy.simplify import *
+from sympy.core.symbol import *
 
 class Qbit(Expr):
     """
@@ -65,7 +66,7 @@ class Qbit(Expr):
     def _represent_XBasisSet(self):
         raise NotImplementedError("I can't allow you to do that Dave")
 
-    def _represent_ZBasisSet(self):
+    def _represent_YBasisSet(self):
         raise NotImplementedError("Dave. I'm afraid I can't do that.")
 
 class Gate(Expr):
@@ -78,6 +79,9 @@ class Gate(Expr):
         if obj.inputnumber != len(args):
             num = obj.inputnumber
             raise Exception("This gate applies to %d qbits" % (num))
+        for i in range(len(args)):
+            if args[i] in (args[:i] + args[i+1:]):
+                raise Exception("Can't have duplicate control and target bits!")
         return obj
 
     @property
@@ -135,7 +139,7 @@ class Gate(Expr):
         if HilbertSize  == 1:            
             return gate
         else:
-            m = representHilbertSpace(gate, HilbertSize, self.args[0])
+            m = representHilbertSpace(gate, HilbertSize, self.args)
             return m 
 
     def _represent_XBasisSet(self, HilbertSize):
@@ -144,24 +148,69 @@ class Gate(Expr):
     def _represent_YBasisSet(self, HilbertSize):
         raise NotImplementedError("Y-Basis Representation not implemented")
 
-def representHilbertSpace(gateMatrix, HilbertSize, qbit, format='sympy'):
+def representHilbertSpace(gateMatrix, HilbertSize, qbits, format='sympy'):
     """   if format=='sympy':
     elif format=='numpy':
     else:
         raise ValueError()
     """
-    product = []
-    #fill product with [I1,Gate,I2] such that the unitaries, I, cause the gate to be applied to the correct qbit  
-    if qbit != HilbertSize-1:
-        product.append(eye(2**(HilbertSize-qbit-1)))    
-    product.append(gateMatrix)
-    if qbit != 0:
-        product.append(eye(2**qbit))
+    if gateMatrix.cols == 2:
+        product = []
+        qbit = qbits[0]
+        #fill product with [I1,Gate,I2] such that the unitaries, I, cause the gate to be applied to the correct qbit  
+        if qbit != HilbertSize-1:
+            product.append(eye(2**(HilbertSize-qbit-1)))    
+        product.append(gateMatrix)
+        if qbit != 0:
+            product.append(eye(2**qbit))
 
-    #do the tensor product of these I's and gates
-    MatrixRep = TensorProduct(*product)
-    return MatrixRep
+        #do the tensor product of these I's and gates
+        MatrixRep = TensorProduct(*product)
+        return MatrixRep
 
+    else:
+        controls = qbits[:-1]
+        target =  qbits[-1]
+        answer = 0
+        product = []
+        #break up gateMatrix into list of 2x2's
+        matrixArray = []
+        for i in range(gateMatrix.cols/2):
+            for j in range(gateMatrix.cols/2):
+                matrixArray.append(gateMatrix[i*2:i*2+2,j*2:j*2+2])
+
+        for i in range((gateMatrix.cols/2)**2):
+            product = []
+            for j in range(HilbertSize):
+                product.append(eye(2))
+            n = 0
+            for item in controls:
+                product.pop(HilbertSize-1-item)
+                product.insert(HilbertSize-1-item, _operator(i>>(n+len(controls))&1,(i>>n)&1))
+                n = n+1
+            product.pop(HilbertSize-1-target)
+            product.insert(HilbertSize-1-target, matrixArray[i])
+            
+            if answer == 0:
+                answer = TensorProduct(*product)
+            else:
+                answer = answer + TensorProduct(*product)
+        return answer
+      
+def _operator(first, second):
+    if (first != 1 and first != 0) or (second != 1 and second != 0):
+        raise Exception("can only make matricies |0><0|, |1><1|, |0><1|, or |1><0|")
+    if first:
+        if second:
+            return Matrix([[0,0],[0,1]])
+        else:
+            return Matrix([[0,0],[1,0]])
+    else:
+        if second:
+            return Matrix([[0,1],[0,0]])
+        else:
+            return Matrix([[1,0],[0,0]])
+            
 def TensorProduct(*args):
     #pull out the first element in the product
     MatrixExpansion  = args[len(args)-1]
@@ -195,6 +244,12 @@ class XBasisSet(BasisSet):
 
 class YBasisSet(BasisSet):
     pass
+
+class Arb(Gate):
+    @property
+    def matrix(self):
+        a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p = symbols('abcdefghijklmnop')
+        return Matrix([[a,b,c,d],[e,f,g,h],[i,j,k,l],[m,n,o,p]])
 
 class CZGate(Gate):
     @property
@@ -545,6 +600,15 @@ def gatesort(circuit):
         return gatesort(circuit)
     else:
         return circuit    
+
+def QFT(number):
+    circuit = 1
+    for wire in range(number):
+        circuit = HadamardGate(wire)*circuit
+        for item in range(number-wire-1):
+            item = item+1+wire
+            circuit = CPhaseGate(wire,item)*circuit
+    return circuit
 
 class HilbertSpaceException(Exception):
     pass

@@ -41,6 +41,33 @@ def test_CompoundGates_Z():
     answer = represent(circuit)
     assert Matrix([.5*ImaginaryUnit()*sqrt(2),ImaginaryUnit()/sqrt(2)]) == answer
 
+def test_CNOTGate():
+    circuit = CNOTGate(1,0)
+    assert represent(circuit, HilbertSize = 2) == Matrix([[1,0,0,0],[0,1,0,0],[0,0,0,1],[0,0,1,0]])
+    circuit = circuit*Qbit(1,1,1)
+    assert matrix_to_qbits(represent(circuit)) == apply_gates(circuit)
+
+def test_ToffoliGate():
+    circuit = ToffoliGate(2,1,0)
+    assert represent(circuit, HilbertSize = 3) == Matrix([[1,0,0,0,0,0,0,0],[0,1,0,0,0,0,0,0],[0,0,1,0,0,0,0,0],[0,0,0,1,0,0,0,0],[0,0,0,0,1,0,0,0],[0,0,0,0,0,1,0,0],[0,0,0,0,0,0,0,1],[0,0,0,0,0,0,1,0]])
+
+    circuit = ToffoliGate(3,0,1)
+    assert apply_gates(circuit*Qbit(1,0,0,1)) == matrix_to_qbits(represent(circuit*Qbit(1,0,0,1)))
+    assert apply_gates(circuit*Qbit(0,0,0,0)) == matrix_to_qbits(represent(circuit*Qbit(0,0,0,0)))
+
+def test_ArbMat_Equality():
+    class Arb(Gate):
+        @property
+        def matrix(self):
+            a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p = symbols('abcdefghijklmnop')
+            return Matrix([[a,b,c,d],[e,f,g,h],[i,j,k,l],[m,n,o,p]])
+        
+    for i in range(4):
+        for j in range(4):
+            if j != i:
+                assert apply_gates(Arb(i,j)*Qbit(1,1,1,1)) == matrix_to_qbits(represent(Arb(i,j)*Qbit(1,1,1,1)))
+    
+
 def test_tensor_product():
     try:
         import numpy as np
@@ -123,8 +150,5 @@ def test_apply_represent_equality():
     state_rep = matrix_to_qbits(mat)
     states = states.expand()
     state_rep = state_rep.expand()
-    print "\nthis is circuit and results",circuit
-    print states  
-    print state_rep 
     assert state_rep == states
 
