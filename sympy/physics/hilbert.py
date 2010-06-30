@@ -21,7 +21,7 @@ class HilbertSpace(Expr):
     description = 'General abstract Hilbert space.'
 
     def __new__(cls):
-        obj = Expr.__new__(cls, commutative=False)
+        obj = Expr.__new__(cls, **{'commutative': False})
         return obj
 
     @property
@@ -73,7 +73,8 @@ class l2(HilbertSpace):
     Let's say you want to create an l2(2) Hilbert space (2 dimensional). All
     you need to do simply type these commands in:
 
-        >>> from sympy.physics.hilbert import *
+        >>> from sympy import Expr, Interval, oo, sympify
+        >>> from sympy.physics.hilbert import l2
         >>> hs = l2(2)
         >>> hs
         l2(2)
@@ -102,12 +103,8 @@ class l2(HilbertSpace):
         dimension = sympify(dimension)
         if not (dimension.is_Integer or dimension is oo or dimension.is_Symbol):
             raise TypeError('l2 dimension must be an integer, oo or a Symbol: %r' % dimension)
-        obj = Expr.__new__(cls, dimension, commutative=False)
+        obj = Expr.__new__(cls, dimension, **{'commutative': False})
         return obj
-
-    def _eval_subs(self, old, new):
-        r = self.__class__(self.args[0].subs(old, new))
-        return r
 
     @property
     def dimension(self):
@@ -137,7 +134,8 @@ class L2(HilbertSpace):
     If you want to create an L2 space over certain intervals (integers are used
     here, but you can use oo or symbols), use commands such as these:
 
-        >>> from sympy.physics.hilbert import *
+        >>> from sympy import Expr, Interval, oo, sympify
+        >>> from sympy.physics.hilbert import L2
         >>> HS = L2(Interval(-2, 42))
         >>> HS
         L2([-2, 42])
@@ -154,12 +152,8 @@ class L2(HilbertSpace):
     def __new__(cls, interval):
         if not isinstance(interval, Interval):
             raise TypeError('L2 interval must be an Interval instance: %r' % interval)
-        obj = Expr.__new__(cls, interval, commutative=False)
+        obj = Expr.__new__(cls, interval, **{'commutative': False})
         return obj
-
-    def _eval_subs(self, old, new):
-        r = self.__class__(self.args[0].subs(old, new))
-        return r
 
     @property
     def dimension(self):
@@ -192,7 +186,7 @@ class FockSpace(HilbertSpace):
 
     Creating a Fock space is quite simple:
 
-        >>> from sympy.physics.hilbert import *
+        >>> from sympy.physics.hilbert import FockSpace
         >>> fs = FockSpace()
         >>> fs
         FS()
@@ -204,7 +198,7 @@ class FockSpace(HilbertSpace):
     """
 
     def __new__(cls):
-        obj = Expr.__new__(cls, commutative=False)
+        obj = Expr.__new__(cls, **{'commutative': False})
         return obj
 
     @property
@@ -230,10 +224,11 @@ class TensorProductHilbertSpace(HilbertSpace):
 
     The tensor product between two Hilbert spaces is represented by the
     operator "*" Only the same type of Hilbert space with the same
-    dimension and/or interval will be combined into a direct power, 
+    dimension and/or interval will be combined into a direct power,
     otherwise the tensor product behaves as follows:
 
-        >>> from sympy.physics.hilbert import *
+        >>> from sympy import Expr, Interval, oo, sympify
+        >>> from sympy.physics.hilbert import l2, L2, FockSpace, TensorProductHilbertSpace, DirectPowerHilbertSpace
         >>> hs = l2(2)
         >>> HS = L2(Interval(-42, 42))
         >>> fs = FockSpace()
@@ -264,7 +259,7 @@ class TensorProductHilbertSpace(HilbertSpace):
         r = cls.eval(args)
         if isinstance(r, Expr):
             return r
-        obj = Expr.__new__(cls, *args, commutative=False)
+        obj = Expr.__new__(cls, *args, **{'commutative': False})
         return obj
 
     @classmethod
@@ -306,10 +301,6 @@ class TensorProductHilbertSpace(HilbertSpace):
             return DirectPowerHilbertSpace(comb_args[0].base, comb_args[0].exp)
         else:
             return None
-
-    def _eval_subs(self, old, new):
-        r = self.__class__(*[arg.subs(old, new) for arg in self.args])
-        return r
 
     @property
     def dimension(self):
@@ -355,7 +346,8 @@ class DirectSumHilbertSpace(HilbertSpace):
     This class uses the "+" operator to represent direct sums between
     different Hilbert spaces. Here is a basic example:
 
-        >>> from sympy.physics.hilbert import *
+        >>> from sympy import Expr, Interval, oo, sympify
+        >>> from sympy.physics.hilbert import l2, L2, DirectSumHilbertSpace
         >>> from sympy.abc import x
         >>> hs = l2(x)
         >>> HS = L2(Interval(0, 1))
@@ -379,7 +371,7 @@ class DirectSumHilbertSpace(HilbertSpace):
         r = cls.eval(args)
         if isinstance(r, Expr):
             return r
-        obj = Expr.__new__(cls, *args, commutative=False)
+        obj = Expr.__new__(cls, *args, **{'commutative': False})
         return obj
 
     @classmethod
@@ -400,10 +392,6 @@ class DirectSumHilbertSpace(HilbertSpace):
             return DirectSumHilbertSpace(*new_args)
         else:
             return None
-
-    def _eval_subs(self, old, new):
-        r = self.__class__(*[arg.subs(old, new) for arg in self.args])
-        return r
 
     @property
     def dimension(self):
@@ -442,7 +430,8 @@ class DirectPowerHilbertSpace(HilbertSpace):
     will be automatically combined into a single direct power. Here
     are some examples:
 
-        >>> from sympy.physics.hilbert import *
+        >>> from sympy import Expr, Interval, oo, sympify
+        >>> from sympy.physics.hilbert import l2, L2, DirectPowerHilbertSpace, TensorProductHilbertSpace
         >>> from sympy.abc import x
         >>> p1 = l2(3)**2
         >>> p1
@@ -488,7 +477,7 @@ class DirectPowerHilbertSpace(HilbertSpace):
         r = cls.eval(args)
         if isinstance(r, Expr):
             return r
-        return Expr.__new__(cls, *r, commutative=False)
+        return Expr.__new__(cls, *r, **{'commutative': False})
 
     @classmethod
     def eval(cls, args):
@@ -508,10 +497,6 @@ class DirectPowerHilbertSpace(HilbertSpace):
             if not (power.is_Integer or power.is_Symbol):
                 raise ValueError('Hilbert spaces can only be raised to positive integer powers or symbols: %r' % exp)
         return new_args
-
-    def _eval_subs(self, old, new):
-        r = self.__class__(self.base.subs(old, new), self.exp.subs(old, new))
-        return r
 
     @property
     def base(self):

@@ -9,7 +9,7 @@ def test_l2_int():
     assert s1.dimension == 2
     assert s1 == s2
     assert s1.subs(2, 42) == l2(42)
-    
+
 def test_l2_oo():
     s2 = l2(oo)
     s3 = l2(oo)
@@ -161,7 +161,7 @@ def test_TensorProductHilbertSpace_mixed():
     true_test = s3*s6*s9*b3*b6*b9*f3
     assert isinstance(true_test, TensorProductHilbertSpace)
     assert true_test.dimension == oo
-    assert true_test.subs(q, x) == s3*s6*s9*b3*b6*L2(Interval(x, y))*L2(Interval(x, p))*f3
+    assert true_test.spaces == (l2(2), l2(42), l2(oo)**2, l2(x)**2, L2(Interval(-42, 42)), L2(Interval(-21, 21)), L2(Interval(-oo, oo))**2, L2(Interval(x, y)), L2(Interval(q, p)), FockSpace()**2)
 
 def test_DirectSumHilbertSpace_l2_int():
     s1 = l2(2)
@@ -427,3 +427,4 @@ def test_DirectPowerHilbertSpace_mixed():
     assert isinstance(true_test, TensorProductHilbertSpace)
     assert true_test.dimension == oo
     assert true_test == l2(5)**(8+x)*l2(oo)**(8+x)*l2(y)**(8+x)*L2(Interval(-42,42))**7*L2(Interval(-oo,oo))**7*L2(Interval(x, y))**(12+x)*FockSpace()**(10+x+y)
+    assert true_test.spaces == (l2(5)**(8+x), l2(oo)**(8+x), l2(y)**(8+x), L2(Interval(-42,42))**7, L2(Interval(-oo,oo))**7, L2(Interval(x, y))**(12+x), FockSpace()**(10+x+y))
