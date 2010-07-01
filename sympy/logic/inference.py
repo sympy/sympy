@@ -37,6 +37,9 @@ def satisfiable(expr, algorithm="dpll"):
     if algorithm == "dpll":
         from sympy.logic.algorithms.dpll import dpll_satisfiable
         return dpll_satisfiable(expr)
+    elif algorithm == "dpll2":
+        from sympy.logic.algorithms.dpll2 import dpll_satisfiable
+        return dpll_satisfiable(expr)
     raise NotImplementedError
 
 def pl_true(expr, model={}):
