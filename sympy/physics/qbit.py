@@ -64,10 +64,18 @@ class Qbit(Expr):
         return Matrix(result)
 
     def _represent_XBasisSet(self):
-        raise NotImplementedError("I can't allow you to do that Dave")
+        return basisChangeState(self._represent_ZBasisSet(), self.XBasisTransform)            
 
     def _represent_YBasisSet(self):
-        raise NotImplementedError("Dave. I'm afraid I can't do that.")
+        return basisChangeState(self._represent_ZBasisSet(), self.YBasisTransform) 
+
+    @property
+    def XBasisTransform(self):
+        return 1/sqrt(2)*Matrix([[1,1],[1,-1]])
+
+    @property
+    def YBasisTransform(self):
+        return Matrix([[ImaginaryUnit(),0],[0,-ImaginaryUnit()]])
 
 class Gate(Expr):
     """
@@ -143,10 +151,25 @@ class Gate(Expr):
             return m 
 
     def _represent_XBasisSet(self, HilbertSize):
-        raise NotImplementedError("X-Basis Representation not implemented")
+        if self.minimumdimension >= HilbertSize:
+            raise HilbertSpaceException()
+        gate = basisChangeOperator(self.matrix, self.XBasisTransform)
+        if HilbertSize  == 1:            
+            return gate
+        else:
+            m = representHilbertSpace(gate, HilbertSize, self.args)
+            return m
 
     def _represent_YBasisSet(self, HilbertSize):
         raise NotImplementedError("Y-Basis Representation not implemented")
+
+    @property
+    def XBasisTransform(self):
+        return 1/sqrt(2)*Matrix([[1,1],[1,-1]])
+
+    @property
+    def YBasisTransform(self):
+        return Matrix([[ImaginaryUnit(),0],[0,-ImaginaryUnit()]])
 
 def representHilbertSpace(gateMatrix, HilbertSize, qbits, format='sympy'):
     """   if format=='sympy':
@@ -170,6 +193,7 @@ def representHilbertSpace(gateMatrix, HilbertSize, qbits, format='sympy'):
 
     else:
         controls = qbits[:-1]
+        controls = [x for x in reversed(controls)]
         target =  qbits[-1]
         answer = 0
         product = []
@@ -244,12 +268,6 @@ class XBasisSet(BasisSet):
 
 class YBasisSet(BasisSet):
     pass
-
-class Arb(Gate):
-    @property
-    def matrix(self):
-        a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p = symbols('abcdefghijklmnop')
-        return Matrix([[a,b,c,d],[e,f,g,h],[i,j,k,l],[m,n,o,p]])
 
 class CZGate(Gate):
     @property
@@ -450,7 +468,7 @@ def matrix_to_qbits(matrix):
             qbit_array.reverse()  
             result = result + matrix[i]*Qbit(*qbit_array)
             
-    #if sympy simplified by pulling out a constant coefficeint, undo that
+    #if sympy simplified by pulling out a constant coefficient, undo that
     if isinstance(result, (Mul,Add,Pow)):
         result = result.expand()
     return result
@@ -484,10 +502,10 @@ def represent(circuit, basis = ZBasisSet(), GateRep = False, HilbertSize = None)
     """
         Represents the elements in a certain basis 
     """
-
     basis_name = basis.__class__.__name__
     rep_method_name = '_represent_%s' % basis_name
 
+    circuit = circuit.expand()
     # check if the last element in circuit is Gate
     # if not raise exception becuase size of Hilbert space undefined
     if isinstance(circuit, Qbit):
@@ -499,9 +517,16 @@ def represent(circuit, basis = ZBasisSet(), GateRep = False, HilbertSize = None)
         rep_method = getattr(gate, rep_method_name)
         gate_rep = rep_method(HilbertSize)
         return gate_rep
+    elif isinstance(circuit, Add):
+        out = 0
+        for i in circuit.args:
+            if not out:
+                out = represent(i, basis, GateRep, HilbertSize)
+            else:
+                out = out + represent(i, basis, GateRep, HilbertSize)
+        return out
     elif not isinstance(circuit, Mul):
-        raise Exception()
-    
+        raise Exception("Malformed input")
 
     qbit = circuit.args[len(circuit.args)-1]
     if isinstance(qbit, Qbit):
@@ -521,7 +546,7 @@ def represent(circuit, basis = ZBasisSet(), GateRep = False, HilbertSize = None)
     for gate in reversed(circuit.args[:len(circuit.args)-1]):
         basis_name = basis.__class__.__name__
         rep_method_name = '_represent_%s' % basis_name
-        if isinstance(gate, Pow):
+        if isinstance(gate, Pow) and isinstance(gate.base, Gate):
             number_of_applications = gate.exp
             gate = gate.base
             rep_method = getattr(gate, rep_method_name)
@@ -533,7 +558,7 @@ def represent(circuit, basis = ZBasisSet(), GateRep = False, HilbertSize = None)
             gate_rep = rep_method(HilbertSize)
             result = gate_rep*result
         else:
-            raise Exception()     
+            result = gate*result
 
     return result
 
@@ -567,39 +592,37 @@ def gatesimp(circuit):
     return circuit
 
 def gatesort(circuit):
-    #recursive bubble sort of gates checking for commutivity
-    changes = False
-    cirArray = circuit.args
-    for i in range(len(cirArray)-1):
-        #Go through each element and switch ones that are in wrong order
-        if isinstance(cirArray[i], (Gate, Pow)) and isinstance(cirArray[i+1], (Gate, Pow)):
-            if isinstance(cirArray[i], Pow):
-                first = cirArray[i].base
-            else:
-                first = cirArray[i]
-
-            if isinstance(cirArray[i+1], Pow):
-                second = cirArray[i+1].base
-            else:
-                second = cirArray[i+1]
-
-            if first.args > second.args:
-                #make sure elements commute, meaning they do not affect ANY of the same qbits
-                commute = True
-                for arg1 in cirArray[i].args:
-                   for arg2 in cirArray[i+1].args:
-                        if arg1 == arg2:
-                            commute = False
-                # if they do commute, switch them
-                if commute:
-                    circuit = Mul(*(circuit.args[:i] + (circuit.args[i+1],) + (circuit.args[i],) + circuit.args[i+2:])) 
-                    cirArray = circuit.args
-                    changes = True
-    #if we made changes, recursively call the sort method until we don't
-    if changes:
-        return gatesort(circuit)
-    else:
-        return circuit    
+    #bubble sort of gates checking for commutivity of neighbor (Python doesn't have a do-while)
+    changes = True
+    while changes:
+        changes = False
+        cirArray = circuit.args
+        for i in range(len(cirArray)-2):
+            #Go through each element and switch ones that are in wrong order
+            if isinstance(cirArray[i], (Gate, Pow)) and isinstance(cirArray[i+1], (Gate, Pow)):
+                if isinstance(cirArray[i], Pow):
+                    first = cirArray[i].base
+                else:
+                    first = cirArray[i]
+    
+                if isinstance(cirArray[i+1], Pow):
+                    second = cirArray[i+1].base
+                else:
+                    second = cirArray[i+1]
+    
+                if first.args > second.args:
+                    #make sure elements commute, meaning they do not affect ANY of the same qbits
+                    commute = True
+                    for arg1 in cirArray[i].args:
+                       for arg2 in cirArray[i+1].args:
+                            if arg1 == arg2:
+                                commute = False
+                    # if they do commute, switch them
+                    if commute:
+                        circuit = Mul(*(circuit.args[:i] + (circuit.args[i+1],) + (circuit.args[i],) + circuit.args[i+2:])) 
+                        cirArray = circuit.args
+                        changes = True
+    return circuit    
 
 def QFT(number):
     circuit = 1
@@ -612,4 +635,68 @@ def QFT(number):
 
 class HilbertSpaceException(Exception):
     pass
+
+def basisChangeOperator(gate, tranmat):
+    return tranmat*gate*(Dagger(tranmat))
+
+def basisChangeState(state, tranmat):
+    mat = []
+    for i in range(log(state.rows,2)):
+        mat = mat + [tranmat,]
+    tranmat = TensorProduct(*mat)
+
+    return tranmat*state
+
+#This is a Facsimile of matt's code
+class Dagger(Expr):
+    """
+General hermitian conjugate operation.
+"""
+
+    def __new__(cls, arg):
+        if isinstance(arg, Matrix):
+            return cls.eval(arg)
+        arg = sympify(arg)
+        r = cls.eval(arg)
+        if isinstance(r, Expr):
+            return r
+        obj = Expr.__new__(cls, arg)
+        return obj
+
+    @classmethod
+    def eval(cls, arg):
+        """
+Evaluates the Dagger instance.
+"""
+        try:
+            d = arg._eval_dagger()
+        except:
+            if isinstance(arg, Expr):
+                if arg.is_Add:
+                    return Add(*tuple(map(Dagger, arg.args)))
+                if arg.is_Mul:
+                    return Mul(*tuple(map(Dagger, reversed(arg.args))))
+                if arg.is_Number:
+                    return arg
+                if arg.is_Pow:
+                    return Pow(Dagger(arg.args[0]), Dagger(arg.args[1]))
+                if arg == I:
+                    return -arg
+            # transpose and replace each matrix element with complex conjugate
+            elif isinstance(arg, Matrix):
+                arg = arg.T
+                for i in range(arg.rows*arg.cols):
+                    arg[i] = Dagger(arg[i])
+                return arg
+            else:
+                return None
+        else:
+            return d
+
+    def _eval_subs(self, old, new):
+        r = Dagger(self.args[0].subs(old, new))
+        return r
+
+    def _eval_dagger(self):
+        return self.args[0]
 
