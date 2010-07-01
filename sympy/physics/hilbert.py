@@ -101,10 +101,21 @@ class l2(HilbertSpace):
 
     def __new__(cls, dimension):
         dimension = sympify(dimension)
-        if not (dimension.is_Integer or dimension is oo or dimension.is_Symbol):
-            raise TypeError('l2 dimension must be an integer, oo or a Symbol: %r' % dimension)
+        r = cls.eval(dimension)
+        if isinstance(r, Expr):
+            return r
         obj = Expr.__new__(cls, dimension, **{'commutative': False})
         return obj
+
+    @classmethod
+    def eval(cls, dimension):
+        if len(dimension.atoms()) == 1:
+            if not (dimension.is_Integer and dimension >= 0 or dimension is oo or dimension.is_Symbol):
+                raise TypeError('l2 dimension can only be a positive integer, oo, or a Symbol: %r' % dimension)
+        else:
+            for dim in dimension.atoms():
+                if not (dim.is_Integer or dim is oo or dim.is_Symbol):
+                    raise TypeError('l2 dimension can only contain integers, oo, or a Symbol: %r' % dim)
 
     @property
     def dimension(self):
@@ -371,7 +382,7 @@ class DirectSumHilbertSpace(HilbertSpace):
         r = cls.eval(args)
         if isinstance(r, Expr):
             return r
-        obj = Expr.__new__(cls, *args, **{'commutative': False})
+        obj = Expr.__new__(cls, *args)
         return obj
 
     @classmethod
@@ -492,10 +503,11 @@ class DirectPowerHilbertSpace(HilbertSpace):
         #check (and allow) for hs**(x+42+y...) case
         if len(exp.atoms()) == 1:
             if not (exp.is_Integer and exp >= 0 or exp.is_Symbol):
-                raise ValueError('Hilbert spaces can only be raised to positive integer powers or symbols: %r' % exp)
-        for power in exp.atoms():
-            if not (power.is_Integer or power.is_Symbol):
-                raise ValueError('Hilbert spaces can only be raised to positive integer powers or symbols: %r' % exp)
+                raise ValueError('Hilbert spaces can only be raised to positive integers or Symbols: %r' % exp)
+        else:
+            for power in exp.atoms():
+                if not (power.is_Integer or power.is_Symbol):
+                    raise ValueError('Hilbert space powers can only contain integers or Symbols: %r' % power)
         return new_args
 
     @property
