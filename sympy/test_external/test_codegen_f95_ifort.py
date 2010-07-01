@@ -24,6 +24,7 @@
 
 
 from sympy import symbols
+from sympy.utilities.pytest import skip
 from sympy.utilities.codegen import(
         codegen, Routine, InputArgument, Result, get_code_generator
         )
@@ -248,12 +249,33 @@ def is_feasible(language, commands):
         return False
 
 valid_lang_commands = []
+invalid_lang_compilers = []
 for lang, compiler in combinations_lang_compiler:
     commands = compile_commands[compiler]
     if is_feasible(lang, commands):
         valid_lang_commands.append((lang, commands))
     else:
-        print "dropping %s %s"%lang, commands
+        invalid_lang_compilers.append((lang, compiler))
+
+# We test all language-compiler combinations, just to report what is skipped
+
+def test_C_cc():
+    if ("C", 'cc') in invalid_lang_compilers:
+        skip("`cc' command didn't work as expected")
+
+def test_F95_ifort():
+    if ("F95", 'ifort') in invalid_lang_compilers:
+        skip("`ifort' command didn't work as expected")
+
+def test_F95_gfortran():
+    if ("F95", 'gfortran') in invalid_lang_compilers:
+        skip("`gfortran' command didn't work as expected")
+
+def test_F95_g95():
+    if ("F95", 'g95') in invalid_lang_compilers:
+        skip("`g95' command didn't work as expected")
+
+# Here comes the actual tests
 
 def test_basic_codegen():
     x,y,z = symbols('xyz')
