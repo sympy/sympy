@@ -31,6 +31,7 @@ from sympy.utilities.codegen import(
 import sys
 import os
 import tempfile
+import subprocess
 
 
 # templates for the main program that will test the generated code.
@@ -115,8 +116,10 @@ combinations_lang_compiler = [
 
 def try_run(commands):
     """Run a series of commands and only return True if all ran fine."""
+    null = open(os.devnull, 'w')
     for command in commands:
-        retcode = os.system(command)
+        retcode = subprocess.call(command, stdout=null, shell=True,
+                stderr=subprocess.STDOUT)
         if retcode != 0:
             return False
     return True
