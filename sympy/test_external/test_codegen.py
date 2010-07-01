@@ -300,10 +300,8 @@ def test_intrinsic_math1_codegen():
         ("test_acos", acos(x)),
         ("test_asin", asin(x)),
         ("test_atan", atan(x)),
-        # ("test_ceil", ceiling(x)),
         ("test_cos", cos(x)),
         ("test_cosh", cosh(x)),
-        # ("test_floor", floor(x)),
         ("test_log", log(x)),
         ("test_ln", ln(x)),
         ("test_sin", sin(x)),
@@ -318,7 +316,11 @@ def test_intrinsic_math1_codegen():
             expected = N(expr.subs(x, xval))
             numerical_tests.append((name, (xval,), expected, 1e-14))
     for lang, commands in valid_lang_commands:
-        run_test("intrinsic_math1", name_expr, numerical_tests, lang, commands)
+        if lang == "C":
+            name_expr_C = [("test_floor", floor(x)), ("test_ceil", ceiling(x))]
+        else:
+            name_expr_C = []
+        run_test("intrinsic_math1", name_expr + name_expr_C, numerical_tests, lang, commands)
 
 def test_instrinsic_math2_codegen():
     # not included: frexp, ldexp, modf, fmod
