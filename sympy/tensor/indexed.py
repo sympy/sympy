@@ -9,16 +9,35 @@
 
     To express a matrix-vector product in terms of Indexed objects:
 
-
     >>> from sympy.tensor import Indexed, Idx
     >>> from sympy import symbols, Eq
-    >>> i,j,n,m,M,x,y = symbols('i j n m M x y')
+    >>> M, x, y = symbols('M x y')
+    >>> i, j, n, m = symbols('i j n m', integer=True)
     >>> M = Indexed(M, Idx(i, m), Idx(j, n))
     >>> x = Indexed(x, Idx(j, n))
     >>> y = Indexed(y, Idx(i, m))
     >>> Eq(y, M*x)
     y(i) == M(i, j)*x(j)
 
+
+    TODO:  (some ideas for improvement)
+
+    o test and guarantee numpy compatibility
+
+    o functions to operate on the indexed expressions
+       - check_conformance()
+       - determine_resulting_indices()
+       - determine_summation_indices()
+       - identify standard constructs, e.g matrix-vector product in a subexpression
+
+    o functions to generate component based arrays (numpy and sympy.Matrix)
+       - generate a single array directly from Indexed
+       - convert simple sub-expressions
+
+    o sophisticated indexing (possibly in subclasses to preserve simplicity)
+       - Idx with range smaller than dimension of Indexed
+       - Idx with stepsize != 1
+       - Idx with step determined by function call
 """
 
 from sympy import Expr, Basic, SymTuple, Symbol, Integer, sympify, S
