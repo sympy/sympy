@@ -110,7 +110,7 @@ class l2(HilbertSpace):
     @classmethod
     def eval(cls, dimension):
         if len(dimension.atoms()) == 1:
-            if not (dimension.is_Integer and dimension >= 0 or dimension is oo or dimension.is_Symbol):
+            if not (dimension.is_Integer and dimension > 0 or dimension is oo or dimension.is_Symbol):
                 raise TypeError('l2 dimension can only be a positive integer, oo, or a Symbol: %r' % dimension)
         else:
             for dim in dimension.atoms():
@@ -382,7 +382,7 @@ class DirectSumHilbertSpace(HilbertSpace):
         r = cls.eval(args)
         if isinstance(r, Expr):
             return r
-        obj = Expr.__new__(cls, *args)
+        obj = Expr.__new__(cls, *args, **{'commutative': True})
         return obj
 
     @classmethod
@@ -419,7 +419,7 @@ class DirectSumHilbertSpace(HilbertSpace):
     @property
     def spaces(self):
         """A tuple of the Hilbert spaces in this direct sum."""
-        return self.args
+        return set(self.args)
 
     def _sympyrepr(self, printer, *args):
         spaces_reprs = [printer._print(arg, *args) for arg in self.args]

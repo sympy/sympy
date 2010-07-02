@@ -71,6 +71,8 @@ def test_TensorProductHilbertSpace_l2_int():
     assert s3.dimension == 84   #(2*42)
     assert s3.subs(42, 3) == l2(2)*l2(3)
     assert s3.spaces == (l2(2), l2(42))
+    assert s1*s2 != s2*s1
+    assert list((s1*s2).spaces) == list(reversed((s2*s1).spaces))
 
 def test_TensorProductHilbertSpace_l2_oo():
     s1 = l2(oo)
@@ -80,6 +82,8 @@ def test_TensorProductHilbertSpace_l2_oo():
     assert s3.dimension == oo
     assert s3.subs(oo, 2) == l2(2)*l2(42)
     assert s3.spaces == (l2(oo), l2(42))
+    assert s1*s2 != s2*s1
+    assert list((s1*s2).spaces) == list(reversed((s2*s1).spaces))
 
 def test_TensorProductHilbertSpace_l2_symbol():
     x = Symbol('x')
@@ -92,6 +96,8 @@ def test_TensorProductHilbertSpace_l2_symbol():
     assert s3.dimension == x*y
     assert s3.subs(y, z) == l2(x)*l2(z)
     assert s3.spaces == (l2(x), l2(y))
+    assert s1*s2 != s2*s1
+    assert list((s1*s2).spaces) == list(reversed((s2*s1).spaces))
 
 def test_TensorProductHilbertSpace_L2_int():
     b1 = L2(Interval(-42, 42))
@@ -101,6 +107,8 @@ def test_TensorProductHilbertSpace_L2_int():
     assert b3.dimension == oo
     assert b3.subs(-21, -42) == L2(Interval(-42, 42))*L2(Interval(-42, 21))
     assert b3.spaces == (L2(Interval(-42, 42)), L2(Interval(-21, 21)))
+    assert b1*b2 != b2*b1
+    assert list((b1*b2).spaces) == list(reversed((b2*b1).spaces))
 
 def test_TensorProductHilbertSpace_L2_oo():
     b1 = L2(Interval(-42, oo))
@@ -110,6 +118,8 @@ def test_TensorProductHilbertSpace_L2_oo():
     assert b3.dimension == oo
     assert b3.subs(oo, 42) == L2(Interval(-42, 42, False, True))*L2(Interval(-oo, 42))
     assert b3.spaces == (L2(Interval(-42, oo)), L2(Interval(-oo, 42)))
+    assert b1*b2 != b2*b1
+    assert list((b1*b2).spaces) == list(reversed((b2*b1).spaces))
 
 def test_TensorProductHilbertSpace_L2_symbol():
     x = Symbol('x', real = True)
@@ -123,6 +133,8 @@ def test_TensorProductHilbertSpace_L2_symbol():
     assert b3.dimension == oo
     assert b3.subs(q, x) == L2(Interval(x, y))*L2(Interval(x, p))
     assert b3.spaces == (L2(Interval(x, y)), L2(Interval(q, p)))
+    assert b1*b2 != b2*b1
+    assert list((b1*b2).spaces) == list(reversed((b2*b1).spaces))
 
 def test_TensorProductHilbertSpace_FockSpace():
     f1 = FockSpace()
@@ -170,7 +182,8 @@ def test_DirectSumHilbertSpace_l2_int():
     assert isinstance(s3, DirectSumHilbertSpace)
     assert s3.dimension == 44   #(2+42)
     assert s3.subs(2, 21) == l2(21)+l2(42)
-    assert s3.spaces == (l2(2), l2(42))
+    assert s3.spaces == set((l2(2), l2(42)))
+    assert (s1+s2).spaces == (s2+s1).spaces
 
 def test_DirectSumHilbertSpace_l2_oo():
     s1 = l2(oo)
@@ -179,7 +192,8 @@ def test_DirectSumHilbertSpace_l2_oo():
     assert isinstance(s3, DirectSumHilbertSpace)
     assert s3.dimension == oo
     assert s3.subs(oo, 42) == l2(42)+l2(42)
-    assert s3.spaces == (l2(oo), l2(oo))
+    assert s3.spaces == set((l2(oo), l2(oo)))
+    assert (s1+s2).spaces == (s2+s1).spaces
 
 def test_DirectSumHilbertSpace_l2_symbol():
     x = Symbol('x')
@@ -190,7 +204,8 @@ def test_DirectSumHilbertSpace_l2_symbol():
     assert isinstance(s3, DirectSumHilbertSpace)
     assert s3.dimension == x+y
     assert s3.subs(y, x) == l2(x)+l2(x)
-    assert s3.spaces == (l2(x), l2(y))
+    assert s3.spaces == set((l2(x), l2(y)))
+    assert (s1+s2).spaces == (s2+s1).spaces
 
 def test_DirectSumHilbertSpace_L2_int():
     b1 = L2(Interval(-42, 42))
@@ -199,7 +214,8 @@ def test_DirectSumHilbertSpace_L2_int():
     assert isinstance(b3, DirectSumHilbertSpace)
     assert b3.dimension == oo
     assert b3.subs(-21, -42) == L2(Interval(-42, 42))+L2(Interval(-42, 21))
-    assert b3.spaces == (L2(Interval(-42, 42)), L2(Interval(-21, 21)))
+    assert b3.spaces == set((L2(Interval(-42, 42)), L2(Interval(-21, 21))))
+    assert (b1+b2).spaces == (b2+b1).spaces
 
 def test_DirectSumHilbertSpace_L2_oo():
     b1 = L2(Interval(-oo, oo))
@@ -208,7 +224,8 @@ def test_DirectSumHilbertSpace_L2_oo():
     assert isinstance(b3, DirectSumHilbertSpace)
     assert b3.dimension == oo
     assert b3.subs(oo, 42) == L2(Interval(-oo, 42, False, True))+L2(Interval(-oo, 42, False, True))
-    assert b3.spaces == (L2(Interval(-oo, oo)), L2(Interval(-oo, oo)))
+    assert b3.spaces == set((L2(Interval(-oo, oo)), L2(Interval(-oo, oo))))
+    assert (b1+b2).spaces == (b2+b1).spaces
 
 def test_DirectSumHilbertSpace_L2_symbol():
     x = Symbol('x', real = True)
@@ -221,7 +238,8 @@ def test_DirectSumHilbertSpace_L2_symbol():
     assert isinstance(b3, DirectSumHilbertSpace)
     assert b3.dimension == oo
     assert b3.subs(x, q) == L2(Interval(q, y))+L2(Interval(q, p))
-    assert b3.spaces == (L2(Interval(x, y)), L2(Interval(q, p)))
+    assert b3.spaces == set((L2(Interval(x, y)), L2(Interval(q, p))))
+    assert (b1+b2).spaces == (b2+b1).spaces
 
 def test_DirectSumHilbertSpace_FockSpace():
     f1 = FockSpace()
@@ -229,6 +247,8 @@ def test_DirectSumHilbertSpace_FockSpace():
     f3 = f1+f2
     assert isinstance(f3, DirectSumHilbertSpace)
     assert f3.dimension == oo
+    assert f3.spaces == set((FockSpace(), FockSpace()))
+    assert (f1+f2).spaces == (f2+f1).spaces
 
 def test_DirectSumHilbertSpace_mixed():
     s1 = l2(2)
