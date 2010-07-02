@@ -140,14 +140,14 @@ class Gate(Expr):
     def _sympyrepr(self, printer, *args):
         return "%s(%s)" %  (printer._print(self.__class__.__name__, *args), printer._print(self.args, *args))
 
-    def _represent_ZBasisSet(self, HilbertSize):
+    def _represent_ZBasisSet(self, HilbertSize, format = 'sympy'):
         if self.minimumdimension >= HilbertSize:
             raise HilbertSpaceException()
         gate = self.matrix
         if HilbertSize  == 1:            
             return gate
         else:
-            m = representHilbertSpace(gate, HilbertSize, self.args)
+            m = representHilbertSpace(gate, HilbertSize, self.args, format)
             return m 
 
     def _represent_XBasisSet(self, HilbertSize):
@@ -172,12 +172,53 @@ class Gate(Expr):
         return Matrix([[ImaginaryUnit(),0],[0,-ImaginaryUnit()]])
 
 def representHilbertSpace(gateMatrix, HilbertSize, qbits, format='sympy'):
-    """   if format=='sympy':
+
+    #returns |first><second|, if first and second are 0 or 1.    
+    def _operator(first, second, format):
+        if (first != 1 and first != 0) or (second != 1 and second != 0):
+            raise Exception("can only make matricies |0><0|, |1><1|, |0><1|, or |1><0|")
+        if first:
+            if second:
+                ret = Matrix([[0,0],[0,1]])
+            else:
+                ret = Matrix([[0,0],[1,0]])
+        else:
+            if second:
+                ret = Matrix([[0,1],[0,0]])
+            else:
+                ret = Matrix([[1,0],[0,0]])
+        if format == 'sympy':
+            return ret
+        else:
+            import numpy as np
+            return np.matrix(ret.tolist())
+
+    #Wrapper function that gives np.kron same interface as TensorProduct
+    def npTensorProduct(*product):
+        answer = product[0]
+        for item in product[1:]:
+            answer = np.kron(answer, item)
+        return answer
+
+    if format == 'sympy':
+        eye = getattr(gateMatrix, 'eye')
+        kron = TensorProduct
     elif format=='numpy':
+        #if user specified numpy as matrix format, try to import
+        try:         
+            import numpy as np
+        except Exception:
+            #If we couldn't load, just revert to sympy
+            representHilbertSpace(gateMatrix, HilbertSize, qbits, format ='sympy')
+        #redirect eye to the numpy eye function, and kron to a modified numpy function
+        gateMatrix = np.matrix(gateMatrix.tolist())
+        aeye = getattr(np, 'eye')
+        eye = lambda x: np.matrix(aeye(x))
+        kron = npTensorProduct      
     else:
         raise ValueError()
-    """
-    if gateMatrix.cols == 2:
+
+    if gateMatrix.shape[1] == 2:
         product = []
         qbit = qbits[0]
         #fill product with [I1,Gate,I2] such that the unitaries, I, cause the gate to be applied to the correct qbit  
@@ -188,53 +229,57 @@ def representHilbertSpace(gateMatrix, HilbertSize, qbits, format='sympy'):
             product.append(eye(2**qbit))
 
         #do the tensor product of these I's and gates
-        MatrixRep = TensorProduct(*product)
+        if format == 'sympy' or format == 'numpy':
+            MatrixRep = kron(*product)
+        else:
+            raise ValueError()         
         return MatrixRep
 
+    #If we are dealing with a matrix that is inheritely multi-qubit, do more work
     else:
+        #find the control and target qbit(s)
         controls = qbits[:-1]
         controls = [x for x in reversed(controls)]
         target =  qbits[-1]
         answer = 0
         product = []
-        #break up gateMatrix into list of 2x2's
+        #break up gateMatrix into list of 2x2 matricies's
+        #This list will be used for determining what matrix goes where
         matrixArray = []
-        for i in range(gateMatrix.cols/2):
-            for j in range(gateMatrix.cols/2):
+        for i in range(gateMatrix.shape[1]/2):
+            for j in range(gateMatrix.shape[1]/2):
                 matrixArray.append(gateMatrix[i*2:i*2+2,j*2:j*2+2])
 
-        for i in range((gateMatrix.cols/2)**2):
+        #Build up tensor products and additions, so that we can form matrix
+        for i in range((gateMatrix.shape[1]/2)**2):
             product = []
+            #Put Unities in all locations
             for j in range(HilbertSize):
                 product.append(eye(2))
             n = 0
+            #put Operators |0><0|, |1><1|, |0><1|, or |1><0| in place of I's for control bits
             for item in controls:
                 product.pop(HilbertSize-1-item)
-                product.insert(HilbertSize-1-item, _operator(i>>(n+len(controls))&1,(i>>n)&1))
+                product.insert(HilbertSize-1-item, _operator(i>>(n+len(controls))&1,(i>>n)&1, format))
                 n = n+1
+            #put the correct submatrix from matrixarray into target-bit location
             product.pop(HilbertSize-1-target)
             product.insert(HilbertSize-1-target, matrixArray[i])
-            
-            if answer == 0:
-                answer = TensorProduct(*product)
+
+            #preform Tensor product first time
+            if isinstance(answer, (int, Integer)):
+                if format == 'sympy' or format == 'numpy':
+                    answer = kron(*product)
+                else:
+                    raise ValueError()
+            #add last answer to TensorProduct of what we have
             else:
-                answer = answer + TensorProduct(*product)
+                if format == 'sympy' or format == 'numpy':
+                    answer = answer + kron(*product)
+                else:
+                    raise ValueError()
         return answer
-      
-def _operator(first, second):
-    if (first != 1 and first != 0) or (second != 1 and second != 0):
-        raise Exception("can only make matricies |0><0|, |1><1|, |0><1|, or |1><0|")
-    if first:
-        if second:
-            return Matrix([[0,0],[0,1]])
-        else:
-            return Matrix([[0,0],[1,0]])
-    else:
-        if second:
-            return Matrix([[0,1],[0,0]])
-        else:
-            return Matrix([[1,0],[0,0]])
-            
+          
 def TensorProduct(*args):
     #pull out the first element in the product
     MatrixExpansion  = args[len(args)-1]
@@ -498,7 +543,7 @@ def qbits_to_matrix(qbits):
     else:
         raise Exception("Malformed input")
 
-def represent(circuit, basis = ZBasisSet(), GateRep = False, HilbertSize = None):
+def represent(circuit, basis = ZBasisSet(), GateRep = False, HilbertSize = None, format = 'sympy'):
     """
         Represents the elements in a certain basis 
     """
@@ -515,15 +560,15 @@ def represent(circuit, basis = ZBasisSet(), GateRep = False, HilbertSize = None)
             raise HilbertSpaceException("User must specify HilbertSize when gates are not applied on Qbits") 
         gate = circuit
         rep_method = getattr(gate, rep_method_name)
-        gate_rep = rep_method(HilbertSize)
+        gate_rep = rep_method(HilbertSize, format)
         return gate_rep
     elif isinstance(circuit, Add):
         out = 0
         for i in circuit.args:
             if not out:
-                out = represent(i, basis, GateRep, HilbertSize)
+                out = represent(i, basis, GateRep, HilbertSize, format)
             else:
-                out = out + represent(i, basis, GateRep, HilbertSize)
+                out = out + represent(i, basis, GateRep, HilbertSize, format)
         return out
     elif not isinstance(circuit, Mul):
         raise Exception("Malformed input")
@@ -538,7 +583,7 @@ def represent(circuit, basis = ZBasisSet(), GateRep = False, HilbertSize = None)
     else:
         gate = qbit
         rep_method = getattr(gate, rep_method_name)
-        gate_rep = rep_method(HilbertSize)
+        gate_rep = rep_method(HilbertSize, format)
         result = gate_rep
 
 
@@ -550,12 +595,12 @@ def represent(circuit, basis = ZBasisSet(), GateRep = False, HilbertSize = None)
             number_of_applications = gate.exp
             gate = gate.base
             rep_method = getattr(gate, rep_method_name)
-            gate_rep = rep_method(HilbertSize)
+            gate_rep = rep_method(HilbertSize, format)
             for i in range(number_of_applications):
                 result = gate_rep*result
         elif hasattr(gate,  rep_method_name):
             rep_method = getattr(gate, rep_method_name)
-            gate_rep = rep_method(HilbertSize)
+            gate_rep = rep_method(HilbertSize, format)
             result = gate_rep*result
         else:
             result = gate*result
@@ -587,7 +632,13 @@ def gatesimp(circuit):
                     newargs = (circuit.args[:i] + (SGate(circuit.args[i].base.args[0])**Integer(circuit.args[i].exp/2), circuit.args[i].base**(circuit.args[i].exp % 2)) + circuit.args[i+1:])
                     circuit =  gatesimp(Mul(*newargs))
                     break
-            #take care of HYH=-Y,HXH=Z,HZH=X?
+            #Deal with HXH = Z, HZH = X, HYH = -Y
+            if isinstance(circuit.args[i], HadamardGate):
+                #check for X,Y,Z in front
+                pass
+                #check for Hadamard to right of that
+                #replace stuff
+                
             
     return circuit
 
@@ -624,18 +675,10 @@ def gatesort(circuit):
                         changes = True
     return circuit    
 
-def QFT(number):
-    circuit = 1
-    for wire in range(number):
-        circuit = HadamardGate(wire)*circuit
-        for item in range(number-wire-1):
-            item = item+1+wire
-            circuit = CPhaseGate(wire,item)*circuit
-    return circuit
-
 class HilbertSpaceException(Exception):
     pass
 
+#This doesn't really work yet
 def basisChangeOperator(gate, tranmat):
     return tranmat*gate*(Dagger(tranmat))
 
@@ -647,7 +690,7 @@ def basisChangeState(state, tranmat):
 
     return tranmat*state
 
-#This is a Facsimile of matt's code
+#This is a Facsimile of Matt's code
 class Dagger(Expr):
     """
 General hermitian conjugate operation.
