@@ -20,7 +20,7 @@ def literal_symbol(literal):
     else:
         return literal
 
-def satisfiable(expr, algorithm="dpll"):
+def satisfiable(expr, algorithm="dpll2"):
     """Check satisfiability of a propositional sentence.
     Returns a model when it succeeds
 
