@@ -283,7 +283,14 @@ def roots(f, *gens, **flags):
            {1: 1, -1: 1}
 
     """
-    multiple = flags.get('multiple', False)
+    flags = dict(flags)
+
+    auto = flags.pop('auto', True)
+    cubics = flags.pop('cubics', True)
+    quartics = flags.pop('quartics', True)
+    multiple = flags.pop('multiple', False)
+    filter = flags.pop('filter', None)
+    predicate = flags.pop('predicate', None)
 
     if isinstance(f, list):
         if gens:
@@ -309,7 +316,7 @@ def roots(f, *gens, **flags):
         if f.is_multivariate:
             raise PolynomialError('multivariate polynomials are not supported')
 
-        if flags.get('auto', True) and f.get_domain().has_Ring:
+        if auto and f.get_domain().has_Ring:
             f = f.to_field()
 
     x = f.gen
@@ -365,9 +372,9 @@ def roots(f, *gens, **flags):
             result += map(cancel, roots_linear(f))
         elif n == 2:
             result += map(cancel, roots_quadratic(f))
-        elif n == 3 and flags.get('cubics', True):
+        elif n == 3 and cubics:
             result += roots_cubic(f)
-        elif n == 4 and flags.get('quartics', True):
+        elif n == 4 and quartics:
             result += roots_quartic(f)
 
         return result
@@ -412,8 +419,6 @@ def roots(f, *gens, **flags):
 
         result.update(zeros)
 
-    filter = flags.get('filter', None)
-
     if filter not in [None, 'C']:
         handlers = {
             'Z' : lambda r: r.is_Integer,
@@ -430,8 +435,6 @@ def roots(f, *gens, **flags):
         for zero in dict(result).iterkeys():
             if not query(zero):
                 del result[zero]
-
-    predicate = flags.get('predicate', None)
 
     if predicate is not None:
         for zero in dict(result).iterkeys():
@@ -461,6 +464,9 @@ def root_factors(f, *gens, **args):
            [x - y**(1/2), x + y**(1/2)]
 
     """
+    args = dict(args)
+    filter = args.pop('filter', None)
+
     F = Poly(f, *gens, **args)
 
     if not F.is_Poly:
@@ -471,10 +477,7 @@ def root_factors(f, *gens, **args):
 
     x = F.gens[0]
 
-    if 'multiple' in args:
-        del args['multiple']
-
-    zeros = roots(F, **args)
+    zeros = roots(F, filter=filter)
 
     if not zeros:
         factors = [F]

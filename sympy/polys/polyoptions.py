@@ -3,17 +3,18 @@
 from sympy.core import S, Basic, sympify
 
 from sympy.polys.polyerrors import (
+    PolynomialError,
     GeneratorsError,
     OptionError,
 )
 
 from sympy.polys.monomialtools import monomial_key
 
+from sympy.polys.algebratools import Algebra, ZZ, QQ, RR, EX
+
 from sympy.ntheory import isprime
 
 import re
-
-from sympy.polys.algebratools import Algebra, ZZ, QQ, RR, EX
 
 class Option(object):
     """ """
@@ -68,7 +69,7 @@ class Options(dict):
 
     __options__ = {}
 
-    def __init__(self, gens, args, flags=None):
+    def __init__(self, gens, args, flags=None, strict=False):
         """ """
         dict.__init__(self)
 
@@ -86,7 +87,8 @@ class Options(dict):
 
             if issubclass(cls, Flag):
                 if flags is None or option not in flags:
-                    raise OptionError("'%s' flag is not allowed in this context" % option)
+                    if strict:
+                        raise OptionError("'%s' flag is not allowed in this context" % option)
 
             if value is not None:
                 self[option] = cls.preprocess(value)
@@ -394,6 +396,7 @@ class Gaussian(BooleanOption):
     def postprocess(cls, options):
         if options['gaussian'] is True:
             options['extension'] = set([S.ImaginaryUnit])
+            Extension.postprocess(options) # XXX: temporary
 
 class Extension(Option):
     __metaclass__ = OptionType
@@ -499,6 +502,14 @@ class Polys(BooleanOption, Flag):
     __metaclass__ = OptionType
 
     option = 'polys'
+    default = None
+
+class Include(BooleanOption, Flag):
+    """ """
+
+    __metaclass__ = OptionType
+
+    option = 'include'
     default = None
 
 class Gen(Option, Flag):
