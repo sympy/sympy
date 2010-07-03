@@ -1,6 +1,7 @@
 from sympy import symbols, sin, Matrix, raises, Interval, Piecewise
 from sympy.printing.lambdarepr import lambdarepr
-x,y,z = symbols("xyz")
+
+x,y,z = symbols("x,y,z")
 
 def test_basic():
     assert lambdarepr(x*y)=="x*y"
@@ -21,3 +22,4 @@ def test_piecewise():
 
 def test_settings():
     raises(TypeError, 'lambdarepr(sin(x),method="garbage")')
+

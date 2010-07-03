@@ -13,9 +13,8 @@ from sympy import (
     expand, Function
 )
 
-
 def test_PermutationOperator():
-    p,q,r,s = symbols('pqrs')
+    p,q,r,s = symbols('p,q,r,s')
     f,g,h,i = map(Function, 'fghi')
     P = PermutationOperator
     assert (P(p,q).get_permuted(f(p)*g(q)) ==
@@ -31,7 +30,7 @@ def test_PermutationOperator():
 
 
 def test_dagger():
-    i, j, n, m = symbols('i j n m')
+    i, j, n, m = symbols('i,j,n,m')
     assert Dagger(1) == 1
     assert Dagger(1.0) == 1.0
     assert Dagger(2*I) == -2*I
@@ -47,7 +46,7 @@ def test_dagger():
     assert Dagger(B(n)**10) == Dagger(B(n))**10
 
 def test_operator():
-    i, j = symbols('i j')
+    i, j = symbols('i,j')
     o = BosonicOperator(i)
     assert o.state == i
     assert o.is_symbolic
@@ -56,7 +55,7 @@ def test_operator():
     assert not o.is_symbolic
 
 def test_create():
-    i, j, n, m = symbols('i j n m')
+    i, j, n, m = symbols('i,j,n,m')
     o = Bd(i)
     assert isinstance(o, CreateBoson)
     o = o.subs(i, j)
@@ -67,7 +66,7 @@ def test_create():
     assert o.apply_operator(BKet([n])) == o*BKet([n])
 
 def test_annihilate():
-    i, j, n, m = symbols('i j n m')
+    i, j, n, m = symbols('i,j,n,m')
     o = B(i)
     assert isinstance(o, AnnihilateBoson)
     o = o.subs(i, j)
@@ -78,7 +77,7 @@ def test_annihilate():
     assert o.apply_operator(BKet([n])) == o*BKet([n])
 
 def test_basic_state():
-    i, j, n, m = symbols('i j n m')
+    i, j, n, m = symbols('i,j,n,m')
     s = BosonState([0,1,2,3,4])
     assert len(s) == 5
     assert s.args[0] == tuple(range(5))
@@ -94,7 +93,7 @@ def test_basic_state():
     assert s.up(0) == BosonState([n+1,m])
 
 def test_kronecker_delta():
-    i, j, k = symbols('i j k')
+    i, j, k = symbols('i,j,k')
     D = KroneckerDelta
     assert D(i, i) == 1
     assert D(i, i + 1) == 0
@@ -107,9 +106,9 @@ def test_kronecker_delta():
     assert D(i, j).subs(dict(i=3, j=3)) == 1
 
 
-    i,j,k,l = symbols('ijkl',below_fermi=True,dummy=True)
-    a,b,c,d = symbols('abcd',above_fermi=True, dummy=True)
-    p,q,r,s = symbols('pqrs',dumy=True)
+    i,j,k,l = symbols('i,j,k,l', below_fermi=True,dummy=True)
+    a,b,c,d = symbols('a,b,c,d', above_fermi=True, dummy=True)
+    p,q,r,s = symbols('p,q,r,s', dummy=True)
 
     assert D(i,a) == 0
 
@@ -156,13 +155,13 @@ def test_kronecker_delta():
 
 
 # def Xtest_move1():
-#     i, j = symbols('i j')
+#     i, j = symbols('i,j')
 #     o = A(i)*C(j)
 #     # This almost works, but has a minus sign wrong
 #     assert move(o, 0, 1) == KroneckerDelta(i, j) + C(j)*A(i)
 #
 # def Xtest_move2():
-#     i, j = symbols('i j')
+#     i, j = symbols('i,j')
 #     o = C(j)*A(i)
 #     # This almost works, but has a minus sign wrong
 #     assert move(o, 0, 1) == -KroneckerDelta(i, j) + A(i)*C(j)
@@ -176,7 +175,7 @@ def test_basic_apply():
 
 
 def test_complex_apply():
-    n, m = symbols("n m")
+    n, m = symbols("n,m")
     o = Bd(0)*B(0)*Bd(1)*B(0)
     e = apply_operators(o*BKet([n,m]))
     answer = sqrt(n)*sqrt(m+1)*(-1+n)*BKet([-1+n,1+m])
@@ -189,7 +188,7 @@ def test_number_operator():
     assert e == n*BKet([n])
 
 def test_inner_product():
-    i, j, k, l = symbols('i j k l')
+    i, j, k, l = symbols('i,j,k,l')
     s1 = BBra([0])
     s2 = BKet([1])
     assert InnerProduct(s1, Dagger(s1)) == 1
@@ -200,7 +199,7 @@ def test_inner_product():
     assert r == KroneckerDelta(i, k)*KroneckerDelta(j, l)
 
 def test_symbolic_matrix_elements():
-    n, m = symbols('n m')
+    n, m = symbols('n,m')
     s1 = BBra([n])
     s2 = BKet([m])
     o = B(0)
@@ -219,7 +218,7 @@ def test_matrix_elements():
         assert m[i+1, i] == sqrt(i+1)
 
 def test_sho():
-    n, m = symbols('n m')
+    n, m = symbols('n,m')
     h_n = Bd(n)*B(n)*(n + Rational(1, 2))
     H = Sum(h_n, (n, 0, 5))
     o = H.doit(deep = False)
@@ -232,7 +231,7 @@ def test_sho():
         assert diag[i] == m[i, i]
 
 def test_commutation():
-    n, m = symbols("n m", above_fermi=True)
+    n, m = symbols("n,m", above_fermi=True)
     c = Commutator(B(0), Bd(0))
     assert c == 1
     c = Commutator(Bd(0), B(0))
@@ -253,16 +252,16 @@ def test_commutation():
     assert c == -1 + 2*NO(Fd(m)*F(m))
 
     C = Commutator
-    X,Y,Z = symbols('XYZ',commutative=False)
+    X,Y,Z = symbols('X,Y,Z',commutative=False)
     assert C(C(X,Y),Z) != 0
     assert C(C(X,Z),Y) != 0
     assert C(Y,C(X,Z)) != 0
     # assert (C(C(Y,Z),X).eval_nested() + C(C(Z,X),Y).eval_nested() + C(C(X,Y),Z).eval_nested()) == 0
     # assert (C(X,C(Y,Z)).eval_nested() + C(Y,C(Z,X)).eval_nested() + C(Z,C(X,Y)).eval_nested()) == 0
 
-    i,j,k,l = symbols('ijkl',below_fermi=True)
-    a,b,c,d = symbols('abcd',above_fermi=True)
-    p,q,r,s = symbols('pqrs')
+    i,j,k,l = symbols('i,j,k,l',below_fermi=True)
+    a,b,c,d = symbols('a,b,c,d',above_fermi=True)
+    p,q,r,s = symbols('p,q,r,s')
     D=KroneckerDelta
 
     assert C(Fd(a),F(i)) == -2*NO(F(i)*Fd(a))
@@ -270,7 +269,7 @@ def test_commutation():
     assert C(Fd(a)*F(i),Fd(b)*F(j)).doit() == 0
 
 def test_create_f():
-    i, j, n, m = symbols('i j n m')
+    i, j, n, m = symbols('i,j,n,m')
     o = Fd(i)
     assert isinstance(o, CreateFermion)
     o = o.subs(i, j)
@@ -284,9 +283,9 @@ def test_create_f():
     vacuum = FKet([],fermi_level=4)
     assert vacuum == FKet([],fermi_level=4)
 
-    i,j,k,l = symbols('ijkl',below_fermi=True)
-    a,b,c,d = symbols('abcd',above_fermi=True)
-    p,q,r,s = symbols('pqrs')
+    i,j,k,l = symbols('i,j,k,l',below_fermi=True)
+    a,b,c,d = symbols('a,b,c,d',above_fermi=True)
+    p,q,r,s = symbols('p,q,r,s')
 
     assert Fd(i).apply_operator(FKet([i,j,k],4)) == FKet([j,k],4)
     assert Fd(a).apply_operator(FKet([i,b,k],4)) == FKet([a,i,b,k],4)
@@ -294,7 +293,7 @@ def test_create_f():
 
 
 def test_annihilate_f():
-    i, j, n, m = symbols('i j n m')
+    i, j, n, m = symbols('i,j,n,m')
     o = F(i)
     assert isinstance(o, AnnihilateFermion)
     o = o.subs(i, j)
@@ -305,16 +304,16 @@ def test_annihilate_f():
     o = F(n)
     assert o.apply_operator(FKet([n])) == FKet([])
 
-    i,j,k,l = symbols('ijkl',below_fermi=True)
-    a,b,c,d = symbols('abcd',above_fermi=True)
-    p,q,r,s = symbols('pqrs')
+    i,j,k,l = symbols('i,j,k,l',below_fermi=True)
+    a,b,c,d = symbols('a,b,c,d',above_fermi=True)
+    p,q,r,s = symbols('p,q,r,s')
     assert F(i).apply_operator(FKet([i,j,k],4)) == 0
     assert F(a).apply_operator(FKet([i,b,k],4)) == 0
     assert F(l).apply_operator(FKet([i,j,k],3)) == 0
     assert F(l).apply_operator(FKet([i,j,k],4)) == FKet([l,i,j,k],4)
 
 def test_create_b():
-    i, j, n, m = symbols('i j n m')
+    i, j, n, m = symbols('i,j,n,m')
     o = Bd(i)
     assert isinstance(o, CreateBoson)
     o = o.subs(i, j)
@@ -325,7 +324,7 @@ def test_create_b():
     assert o.apply_operator(BKet([n])) == o*BKet([n])
 
 def test_annihilate_b():
-    i, j, n, m = symbols('i j n m')
+    i, j, n, m = symbols('i,j,n,m')
     o = B(i)
     assert isinstance(o, AnnihilateBoson)
     o = o.subs(i, j)
@@ -333,7 +332,7 @@ def test_annihilate_b():
     o = B(0)
 
 def test_wicks():
-    p,q,r,s = symbols('pqrs',above_fermi=True)
+    p,q,r,s = symbols('p,q,r,s',above_fermi=True)
 
     # Testing for particles only
 
@@ -358,9 +357,9 @@ def test_wicks():
 
 
     # Testing CC equations particles and holes
-    i,j,k,l = symbols('ijkl',below_fermi=True,dummy=True)
-    a,b,c,d = symbols('abcd',above_fermi=True,dummy=True)
-    p,q,r,s = symbols('pqrs',dummy=True)
+    i,j,k,l = symbols('i,j,k,l',below_fermi=True,dummy=True)
+    a,b,c,d = symbols('a,b,c,d',above_fermi=True,dummy=True)
+    p,q,r,s = symbols('p,q,r,s',dummy=True)
 
     assert (wicks(F(a)*NO(F(i)*F(j))*Fd(b)) ==
             NO(F(a)*F(i)*F(j)*Fd(b)) +
@@ -387,9 +386,9 @@ def test_wicks():
 
 
 def test_NO():
-    i,j,k,l = symbols('ijkl',below_fermi=True)
-    a,b,c,d = symbols('abcd',above_fermi=True)
-    p,q,r,s = symbols('pqrs', dummy=True)
+    i,j,k,l = symbols('i,j,k,l',below_fermi=True)
+    a,b,c,d = symbols('a,b,c,d',above_fermi=True)
+    p,q,r,s = symbols('p,q,r,s', dummy=True)
 
     assert (NO(Fd(p)*F(q) + Fd(a)*F(b))==
        NO(Fd(p)*F(q)) + NO(Fd(a)*F(b)))
@@ -429,9 +428,9 @@ def test_NO():
 
 
 def test_contraction():
-    i,j,k,l = symbols('ijkl',below_fermi=True)
-    a,b,c,d = symbols('abcd',above_fermi=True)
-    p,q,r,s = symbols('pqrs')
+    i,j,k,l = symbols('i,j,k,l',below_fermi=True)
+    a,b,c,d = symbols('a,b,c,d',above_fermi=True)
+    p,q,r,s = symbols('p,q,r,s')
     assert contraction(Fd(i),F(j)) == KroneckerDelta(i,j)
     assert contraction(F(a),Fd(b)) == KroneckerDelta(a,b)
     assert contraction(F(a),Fd(i)) == 0
@@ -447,9 +446,9 @@ def test_contraction():
 
 
 def test_Tensors():
-    i,j,k,l = symbols('ijkl',below_fermi=True,dummy=True)
-    a,b,c,d = symbols('abcd',above_fermi=True,dummy=True)
-    p,q,r,s = symbols('pqrs')
+    i,j,k,l = symbols('i,j,k,l',below_fermi=True,dummy=True)
+    a,b,c,d = symbols('a,b,c,d',above_fermi=True,dummy=True)
+    p,q,r,s = symbols('p,q,r,s')
 
     AT= AntiSymmetricTensor
     assert AT('t',(a,b),(i,j)) == -AT('t',(b,a),(i,j))
@@ -470,9 +469,9 @@ def test_Tensors():
 
 
 def test_fully_contracted():
-    i,j,k,l = symbols('ijkl',below_fermi=True)
-    a,b,c,d = symbols('abcd',above_fermi=True)
-    p,q,r,s = symbols('pqrs', dummy=True)
+    i,j,k,l = symbols('i,j,k,l',below_fermi=True)
+    a,b,c,d = symbols('a,b,c,d',above_fermi=True)
+    p,q,r,s = symbols('p,q,r,s', dummy=True)
 
     Fock = (AntiSymmetricTensor('f',(p,),(q,))*
             NO(Fd(p)*F(q)))
@@ -487,3 +486,4 @@ def test_fully_contracted():
             keep_only_fully_contracted=True,
             simplify_kronecker_deltas=True)
     assert Vabij==AntiSymmetricTensor('v',(a,b),(i,j))
+

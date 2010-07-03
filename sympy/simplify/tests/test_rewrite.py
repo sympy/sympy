@@ -3,7 +3,7 @@ from sympy.simplify import apart, together
 from sympy.integrals import integrate
 from sympy.utilities.pytest import XFAIL
 
-x,y,z,n = symbols('xyzn')
+x,y,z,n = symbols('x,y,z,n')
 
 def test_has():
     assert cot(x).has(x)

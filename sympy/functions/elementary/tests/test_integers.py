@@ -7,7 +7,7 @@ def test_floor():
 
     x = Symbol('x')
     y = Symbol('y', real=True)
-    k, n = symbols('kn', integer=True)
+    k, n = symbols('k,n', integer=True)
 
     assert floor(nan) == nan
 
@@ -105,7 +105,7 @@ def test_ceiling():
 
     x = Symbol('x')
     y = Symbol('y', real=True)
-    k, n = symbols('kn', integer=True)
+    k, n = symbols('k,n', integer=True)
 
     assert ceiling(nan) == nan
 
@@ -203,3 +203,4 @@ def test_issue_1050():
     assert floor(3 + pi*I + y*I) == 3 + floor(pi+y)*I
     assert floor(3*I + pi*I + y*I) == floor(3+pi+y)*I
     assert floor(3 + E + pi*I + y*I) == 5 + floor(pi+y)*I
+

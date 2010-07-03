@@ -94,7 +94,7 @@ class F1_1(DummyNumber):
     def __float__(self):
         return self.number
 
-x,y,z,t = symbols('xyzt')
+x,y,z,t = symbols('x,y,z,t')
 
 i5 = I5()
 f1_1 = F1_1()
@@ -159,7 +159,7 @@ def test_relational():
 
 def test_relational_noncommutative():
     from sympy import Lt, Gt, Le, Ge
-    a, b = symbols('a b', commutative=False)
+    a, b = symbols('a,b', commutative=False)
     assert (a < b)  == Lt(a, b)
     assert (a <= b) == Le(a, b)
     assert (a > b)  == Gt(a, b)
@@ -287,7 +287,7 @@ def test_is_polynomial():
     assert ((x**2)*(y**2) + x*(y**2) + y*x + exp(x)).is_polynomial(x, y) == False
 
 def test_is_rational_function():
-    x,y = symbols('xy')
+    x,y = symbols('x,y')
 
     assert Integer(1).is_rational_function() == True
     assert Integer(1).is_rational_function(x) == True
@@ -343,7 +343,7 @@ def test_SAGE3():
     assert e == ('mys', x, o)
 
 def test_len():
-    x, y, z = symbols("xyz")
+    x, y, z = symbols("x,y,z")
     e = x*y
     assert len(e.args) == 2
     e = x+y+z
@@ -379,7 +379,7 @@ def test_iter_basic_args():
     assert list((x**y).iter_basic_args()) == [x, y]
 
 def test_noncommutative_expand_issue658():
-    A, B, C = symbols('ABC', commutative=False)
+    A, B, C = symbols('A,B,C', commutative=False)
     assert A*B - B*A != 0
     assert (A*(A+B)*B).expand() == A**2*B + A*B**2
     assert (A*(A+B+C)*B).expand() == A**2*B + A*B**2 + A*C*B
@@ -411,7 +411,7 @@ def test_as_independent():
     assert (2*sin(x)).as_independent(y) == (2*sin(x), 1)
 
 def test_subs_dict():
-    a,b,c,d,e = symbols('abcde')
+    a,b,c,d,e = symbols('a,b,c,d,e')
 
     assert (sin(x))._subs_dict({ x : 1, sin(x) : 2}) == 2
     assert (sin(x))._subs_dict([(x, 1), (sin(x), 2)]) == 2
@@ -425,7 +425,7 @@ def test_subs_dict():
     assert expr._subs_dict(seq) == c + a*b*sin(d*e)
 
 def test_subs_list():
-    x,y = symbols('xy')
+    x,y = symbols('x,y')
 
     assert (sin(x))._subs_list([(sin(x), 2), (x, 1)]) == 2
     assert (sin(x))._subs_list([(x, 1), (sin(x), 2)]) == sin(1)
@@ -434,7 +434,7 @@ def test_subs_list():
     assert (x+y)._subs_list([(y, x**2), (x, 3)]) == 12
 
 def test_call():
-    a,b,c,d,e = symbols('abcde')
+    a,b,c,d,e = symbols('a,b,c,d,e')
 
     assert sin(x)({ x : 1, sin(x) : 2}) == 2
 
@@ -443,7 +443,7 @@ def test_call():
     assert expr({ sqrt(sin(2*x)) : a, cos(2*x) : b, sin(2*x) : c, x : d, exp(x) : e}) == c + a*b*sin(d*e)
 
 def test_has():
-    x, y = symbols("xy")
+    x, y = symbols("x,y")
     f = Function("f")
     g = Function("g")
     p = Wild('p')
@@ -469,7 +469,7 @@ def test_has():
     assert (2*p).has(Wild)
 
 def test_has_any_symbols():
-    x,y,z,t,u = symbols('xyztu')
+    x,y,z,t,u = symbols('x,y,z,t,u')
 
     i = Integer(4400)
 
@@ -509,7 +509,7 @@ def test_has_any_symbols():
     assert poly.has_all_symbols(x, y, z, t) == False
 
 def test_has_all_symbols():
-    x,y,z,t,u = symbols('xyztu')
+    x,y,z,t,u = symbols('x,y,z,t,u')
 
     i = Integer(4400)
 
@@ -533,7 +533,7 @@ def test_has_all_symbols():
     assert expr.has_all_symbols(x, y, z, t, u) == False
 
 def test_as_poly_basic():
-    x, y = symbols('xy')
+    x, y = symbols('x,y')
 
     f = x**2 + 2*x*y
 
@@ -557,7 +557,7 @@ def test_nonzero():
     assert bool(x*0)    == False
 
 def test_is_number():
-    x, y = symbols('xy')
+    x, y = symbols('x,y')
     g = WildFunction('g')
 
     assert Real(3.14).is_number == True
@@ -595,7 +595,7 @@ def test_as_coeff_factors():
 
 
 def test_as_coeff_exponent():
-    x, y = symbols("xy")
+    x, y = symbols("x,y")
     assert (3*x**4).as_coeff_exponent(x) == (3, 4)
     assert (2*x**3).as_coeff_exponent(x) == (2, 3)
     assert (4*x**2).as_coeff_exponent(x) == (4, 2)
@@ -616,7 +616,7 @@ def test_as_coeff_exponent():
     assert fx.as_coeff_exponent(f(x)) == (fx ,0)
 
 def test_extractions():
-    x, y = symbols("xy")
+    x, y = symbols("x,y")
     n = Symbol("n", integer=True)
     assert ((x*y)**3).extract_multiplicatively(x**2 * y) == x*y**2
     assert ((x*y)**3).extract_multiplicatively(x**4 * y) == None
@@ -667,14 +667,14 @@ def test_coeff():
     assert (2*f(x) + 3*f(x).diff(x)).coeff(f(x)) == 2
 
 def test_coeff2():
-    var('r, kappa')
+    var('r,kappa')
     psi = Function("psi")
     g = 1/r**2 * (2*r*psi(r).diff(r, 1) + r**2 * psi(r).diff(r, 2))
     g = g.expand()
     assert g.coeff((psi(r).diff(r))) == 2/r
 
 def test_coeff2_0():
-    var('r, kappa')
+    var('r,kappa')
     psi = Function("psi")
     g = 1/r**2 * (2*r*psi(r).diff(r, 1) + r**2 * psi(r).diff(r, 2))
     g = g.expand()
@@ -682,7 +682,7 @@ def test_coeff2_0():
     assert g.coeff(psi(r).diff(r, 2)) == 1
 
 def test_coeff_expand():
-    x, y, z = symbols('x y z')
+    x, y, z = symbols('x,y,z')
     expr = z*(x+y)**2
     expr2 = z*(x+y)**2 + z*(2*x + 2*y)**2
     assert expr.coeff(z) == 2*x*y + x**2 + y**2
@@ -751,7 +751,7 @@ def test_issue1864():
     assert hasattr(expr, "is_commutative")
 
 def test_action_verbs():
-    a,b,c,d = symbols('abcd')
+    a,b,c,d = symbols('a,b,c,d')
     assert nsimplify((1/(exp(3*pi*x/5)+1))) == (1/(exp(3*pi*x/5)+1)).nsimplify()
     assert ratsimp(1/x + 1/y) == (1/x + 1/y).ratsimp()
     assert trigsimp(log(x), deep=True) == (log(x)).trigsimp(deep = True)
@@ -766,3 +766,4 @@ def test_action_verbs():
     assert factor(x**2+5*x+6) == (x**2+5*x+6).factor()
     assert refine(sqrt(x**2)) == sqrt(x**2).refine()
     assert cancel((x**2+5*x+6)/(x+2)) == ((x**2+5*x+6)/(x+2)).cancel()
+

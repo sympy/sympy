@@ -128,8 +128,8 @@ this will generate isympy.1 in the current directory. -->
     <programlisting>
 >>> from __future__ import division
 >>> from sympy import *
->>> x, y, z = symbols("xyz")
->>> k, m, n = symbols("kmn", integer=True)
+>>> x, y, z = symbols("x,y,z")
+>>> k, m, n = symbols("k,m,n", integer=True)
     </programlisting>
 
     <para>So starting isympy is equivalent to starting python (or ipython) and
@@ -169,7 +169,7 @@ this will generate isympy.1 in the current directory. -->
 			</varlistentry>
 		</variablelist>
 	</refsect1>
-	
+
 	<refsect1 id="bugs">
 		<!-- Or use this section to tell about upstream BTS. -->
 		<title>BUGS</title>

@@ -412,10 +412,11 @@ def test_issue405():
     assert e.series(x, 4) == a + a**3*x**2/6 + 3*a**5*x**4/40 + O(x**5)
 
 def test_issue1342():
-    x, a, b = symbols('x a b')
+    x, a, b = symbols('x,a,b')
     f = 1/(1+a*x)
     assert f.series(x, 0, 5) == 1 - a*x + a**2*x**2 - a**3*x**3 + \
             a**4*x**4 + O(x**5)
     f = 1/(1+(a+b)*x)
     assert f.series(x, 0, 3) == 1 - a*x - b*x + a**2*x**2 + b**2*x**2 + \
             2*a*b*x**2 + O(x**3)
+

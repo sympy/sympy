@@ -1,6 +1,6 @@
 from sympy import symbols, sin, exp, cos
 
-x, y, z = symbols('xyz')
+x, y, z = symbols('x,y,z')
 
 def test_count_ops_non_symbolic():
     assert x.count_ops(symbolic=True) == 0
@@ -13,3 +13,4 @@ def test_count_ops_non_symbolic():
     assert (2*z+y**17+x+sin(x)).count_ops(symbolic=False) == 6
     assert (2*z+y**17+x+sin(x**2)).count_ops(symbolic=False) == 7
     assert (2*z+y**17+x+sin(x**2)+exp(cos(x))).count_ops(symbolic=False) == 10
+

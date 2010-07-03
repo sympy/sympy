@@ -2,7 +2,7 @@ from sympy import symbols, oo
 from sympy.core.relational import Relational, Equality, StrictInequality, \
     Rel, Eq, Lt, Le, Gt, Ge, Ne
 
-x,y,z = symbols('xyz')
+x,y,z = symbols('x,y,z')
 
 
 def test_rel_ne():

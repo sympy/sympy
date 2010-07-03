@@ -3,8 +3,7 @@ from sympy import symbols, log, Real, nan, oo, I, pi, E, exp, Symbol, \
 from sympy.utilities.pytest import XFAIL
 
 def test_exp():
-
-    x, y = symbols('xy')
+    x, y = symbols('x,y')
 
     k = Symbol('k', integer=True)
 
@@ -78,7 +77,7 @@ def test_log():
     assert log(2**3, 2) == 3
     assert log(3**3, 3) == 3
 
-    x, y = symbols('xy')
+    x, y = symbols('x,y')
 
     assert log(x) == log(x)
     assert log(x,exp(1)) == log(x)
@@ -94,7 +93,7 @@ def test_log():
     #simplification. --Ondrej
     #assert log(exp(x)) != x
 
-    x, y = symbols('xy', positive=True)
+    x, y = symbols('x,y', positive=True)
 
     assert log(x) == log(x)
     #assert log(x*y) != log(x) + log(y)
@@ -140,7 +139,7 @@ def test_log_expand():
     w = Symbol("w", positive=True)
     e = log(w**(log(5)/log(3)))
     assert e.expand() == log(5)/log(3) * log(w)
-    x, y, z = symbols('xyz', positive=True)
+    x, y, z = symbols('x,y,z', positive=True)
     assert log(x*(y+z)).expand(mul=False) == log(x)+log(y+z)
     assert log(log(x**2)*log(y*z)).expand() == log(2*log(x)*log(y) + 2*log(x)*log(z))
     assert log(x**log(x**2)).expand(deep=False) == log(x)*log(x**2)
@@ -154,7 +153,7 @@ def test_log_simplify():
 
 
 def test_exp__as_base_exp():
-    x,y = symbols('xy')
+    x,y = symbols('x,y')
 
     assert exp(x)   .as_base_exp()  == (E, x)
     assert exp(2*x) .as_base_exp()  == (E, 2*x)

@@ -3,7 +3,7 @@ from sympy import diff, Integral, integrate, log, oo, Piecewise, \
     lambdify, expand
 from sympy.utilities.pytest import XFAIL
 
-x,y = symbols('xy')
+x,y = symbols('x,y')
 
 def test_piecewise():
 

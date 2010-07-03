@@ -1,6 +1,6 @@
 from sympy import symbols, erf, nan, oo, Real, sqrt, pi, O
 
-x, y = symbols('xy')
+x, y = symbols('x,y')
 
 def test_erf():
     assert erf(nan) == nan
@@ -19,3 +19,4 @@ def test_erf_series():
 
 def test_erf_evalf():
     assert abs( erf(Real(2.0)) - 0.995322265 )  <  1E-8  # XXX
+

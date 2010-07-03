@@ -124,10 +124,10 @@ def test_issue643():
     assert e.subs(sqrt(x), 1)   == exp(y)
 
 def test_subs_dict1():
-    x, y = symbols('xy')
+    x, y = symbols('x,y')
     assert (1+x*y).subs(x, pi) == 1 + pi*y
     assert (1+x*y).subs({x:pi, y:2}) == 1 + 2*pi
-    c2,c3,q1p,q2p,c1,s1,s2,s3= symbols('c2 c3 q1p q2p c1 s1 s2 s3')
+    c2,c3,q1p,q2p,c1,s1,s2,s3= symbols('c2,c3,q1p,q2p,c1,s1,s2,s3')
     test=c2**2*q2p*c3 + c1**2*s2**2*q2p*c3 + s1**2*s2**2*q2p*c3 \
         - c1**2*q1p*c2*s3 - s1**2*q1p*c2*s3
     assert test.subs({c1**2 : 1-s1**2, c2**2 : 1-s2**2, c3**3: 1-s3**2}) \
@@ -176,8 +176,8 @@ def test_subs_simple():
 
 def test_subs_constants():
     # Define symbols
-    a,b = symbols('ab', commutative = True)
-    x,y = symbols('xy', commutative = False)
+    a,b = symbols('a,b', commutative = True)
+    x,y = symbols('x,y', commutative = False)
 
     """ CONSTANTS TESTS """
     assert (a*b  ).subs(2*a,1) == a*b
@@ -192,7 +192,7 @@ def test_subs_constants():
 
 def test_subs_commutative():
     # Define symbols
-    a,b,c,d,K = symbols('abcdK', commutative = True)
+    a,b,c,d,K = symbols('a,b,c,d,K', commutative = True)
 
     """ COMMUTATIVE TESTS """
     assert (a*b    ).subs(a*b,K) == K
@@ -207,7 +207,7 @@ def test_subs_commutative():
 
 def test_subs_noncommutative():
     # Define symbols
-    w,x,y,z,L = symbols('wxyzL', commutative = False)
+    w,x,y,z,L = symbols('w,x,y,z,L', commutative = False)
 
     """ NONCOMMUTATIVE TESTS """
     assert (x*y    ).subs(x*y,L) == L
@@ -225,8 +225,8 @@ def test_subs_noncommutative():
 
 def test_subs_basic_funcs():
     # Define symbols
-    a,b,c,d,K = symbols('abcdK', commutative = True)
-    w,x,y,z,L = symbols('wxyzL', commutative = False)
+    a,b,c,d,K = symbols('a,b,c,d,K', commutative = True)
+    w,x,y,z,L = symbols('w,x,y,z,L', commutative = False)
 
     """ OTHER OPERATION TESTS"""
     assert (x+y  ).subs(x+y,L) == L
@@ -257,8 +257,8 @@ def test_subs_wild():
 
 def test_subs_mixed():
     # Define symbols
-    a,b,c,d,K = symbols('abcdK', commutative = True)
-    w,x,y,z,L = symbols('wxyzL', commutative = False)
+    a,b,c,d,K = symbols('a,b,c,d,K', commutative = True)
+    w,x,y,z,L = symbols('w,x,y,z,L', commutative = False)
     R,S,T,U = Wild('R'), Wild('S'), Wild('T'), Wild('U')
 
     """ MIXED TESTS """
@@ -269,8 +269,8 @@ def test_subs_mixed():
     assert (c*y*x*y*x**(R*S-a*b)-T*(a*R*b*S)).subs(x*y,L).subs(a*b,K).subs(R*S,U) == c*y*L*x**(U-K)-T*(U*K)
 
 def test_division():
-    a,b,c = symbols('abc', commutative = True)
-    x,y,z = symbols('xyz', commutative = True)
+    a,b,c = symbols('a,b,c', commutative = True)
+    x,y,z = symbols('x,y,z', commutative = True)
     assert (    1/a   ).subs(a,c)  == 1/c
     assert (   1/a**2 ).subs(a,c)  == 1/c**2
     assert (   1/a**2 ).subs(a,-2) == Rational(1,4)
@@ -312,3 +312,4 @@ def test_functions_subs():
     assert (f(x,y)).subs(f,sin) == f(x,y)
     assert (sin(x)+atan2(x,y)).subs([[atan2,f],[sin,g]]) == f(x,y) + g(x)
     assert (g(f(x+y, x))).subs([[f, l], [g, exp]]) == exp(x + sin(x + y))
+

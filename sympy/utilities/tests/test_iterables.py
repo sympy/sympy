@@ -3,7 +3,7 @@ from sympy.utilities.iterables import postorder_traversal, preorder_traversal, \
     flatten, group, split, subsets, variations, dict_merge
 from sympy.functions.elementary.piecewise import Piecewise, ExprCondPair
 
-w,x,y,z= symbols('wxyz')
+w,x,y,z= symbols('w,x,y,z')
 
 def test_postorder_traversal():
     expr = z+w*(x+y)

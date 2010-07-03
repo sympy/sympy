@@ -1394,7 +1394,7 @@ def logcombine(expr, assume_pos_real=False):
     -log(z) + a*log(x) + log(y)
     >>> logcombine(a*log(x)+log(y)-log(z), assume_pos_real=True)
     log(y*x**a/z)
-    >>> x,y,z = symbols('xyz', positive=True)
+    >>> x,y,z = symbols('x,y,z', positive=True)
     >>> a = Symbol('a', real=True)
     >>> logcombine(a*log(x)+log(y)-log(z))
     log(y*x**a/z)

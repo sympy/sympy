@@ -5,7 +5,7 @@ from sympy import (S, symbols, integrate, Integral, Derivative, exp, oo, Symbol,
 from sympy.utilities.pytest import XFAIL, skip
 from sympy.physics.units import m, s
 
-x,y,a,t = symbols('xyat')
+x,y,a,t = symbols('x,y,a,t')
 n = Symbol('n', integer=True)
 f = Function('f')
 

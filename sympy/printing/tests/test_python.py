@@ -5,7 +5,7 @@ from sympy import Symbol, symbols, oo, limit, Rational, Integral, Derivative, \
 
 from sympy.printing.python import python
 
-x, y = symbols('xy')
+x, y = symbols('x,y')
 th  = Symbol('theta')
 ph  = Symbol('phi')
 
@@ -147,3 +147,4 @@ def test_python_limits():
 
 def test_settings():
     raises(TypeError, 'python(x, method="garbage")')
+

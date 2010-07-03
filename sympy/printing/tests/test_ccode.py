@@ -4,7 +4,7 @@ from sympy import Function, Piecewise, Rational, Integer
 from sympy.printing import ccode
 from sympy.utilities.pytest import XFAIL
 
-x, y, z = symbols('xyz')
+x, y, z = symbols('x,y,z')
 g = Function('g')
 
 def test_printmethod():

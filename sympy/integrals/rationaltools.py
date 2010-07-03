@@ -234,7 +234,7 @@ def log_to_real(h, q, x, t):
                              a | q(a) = 0
 
     """
-    u, v = symbols('u v')
+    u, v = symbols('u,v')
 
     H = h.as_basic().subs({t:u+I*v}).expand()
     Q = q.as_basic().subs({t:u+I*v}).expand()

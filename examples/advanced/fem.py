@@ -15,14 +15,14 @@ $ python fem.py
 from sympy import symbols, Symbol, factorial, Rational, zeros, div, eye, \
         integrate, diff, pprint
 
-x, y, z = symbols('x y z')
+x, y, z = symbols('x,y,z')
 
 class ReferenceSimplex:
    def __init__(self, nsd):
        self.nsd = nsd
        coords = []
        if nsd <= 3:
-           coords = symbols('xyz')[:nsd]
+           coords = symbols('x,y,z')[:nsd]
        else:
            coords = []
            for d in range(0,nsd):
@@ -204,3 +204,4 @@ def main():
 
 if __name__ == "__main__":
    main()
+

@@ -2,8 +2,8 @@ from sympy import Function, symbols, S, sqrt, rf, factorial
 from sympy.solvers.recurr import rsolve, rsolve_poly, rsolve_ratio, rsolve_hyper
 
 y = Function('y')
-n, k = symbols('nk', integer=True)
-C0, C1, C2 = symbols('C0', 'C1', 'C2')
+n, k = symbols('n,k', integer=True)
+C0, C1, C2 = symbols('C0,C1,C2')
 
 def test_rsolve_poly():
     assert rsolve_poly([-1, -1, 1], 0, n) == 0

@@ -1,6 +1,6 @@
 from sympy import symbols, Dij, Eijk
 
-x, y = symbols('xy')
+x, y = symbols('x,y')
 
 def test_Dij():
     assert Dij(1, 1) == 1
@@ -16,3 +16,4 @@ def test_Eijk():
     assert Eijk(1, 3, 1) == 0
     assert Eijk(1, x, x) == 0
     assert Eijk(x, y, x) == 0
+

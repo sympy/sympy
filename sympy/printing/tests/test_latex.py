@@ -7,8 +7,8 @@ from sympy.printing.latex import latex
 from sympy.utilities.pytest import XFAIL
 from sympy.functions import DiracDelta
 
-x,y = symbols('xy')
-k,n = symbols('kn', integer=True)
+x,y = symbols('x,y')
+k,n = symbols('k,n', integer=True)
 
 def test_printmethod():
     class R(abs):
@@ -265,3 +265,4 @@ def test_mainvar():
 
 def test_settings():
     raises(TypeError, 'latex(x*y, method="garbage")')
+
