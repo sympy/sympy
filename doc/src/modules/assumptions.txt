@@ -67,7 +67,7 @@ commutative except otherwise stated.
 Examples::
 
     >>> from sympy import *
-    >>> x, y = symbols('x y')
+    >>> x, y = symbols('x,y')
     >>> ask(x, Q.commutative)
     True
     >>> ask(x, Q.commutative, Assume(x, Q.commutative, False))
@@ -88,7 +88,7 @@ Examples::
     True
     >>> ask(I, Q.complex)
     True
-    >>> x, y = symbols('x y')
+    >>> x, y = symbols('x,y')
     >>> ask(x+I*y, Q.complex, Assume(x, Q.real) & Assume(y, Q.real))
     True
 
@@ -152,7 +152,7 @@ Examples::
     >>> from sympy import *
     >>> ask(1/oo, Q.infinitesimal)
     True
-    >>> x, y = symbols('x y')
+    >>> x, y = symbols('x,y')
     >>> ask(2*x, Q.infinitesimal, Assume(x, Q.infinitesimal))
     True
     >>> ask(x*y, Q.infinitesimal, Assume(x, Q.infinitesimal) & Assume(y, Q.bounded))
@@ -202,7 +202,7 @@ Examples::
      >>> from sympy import *
      >>> ask(Rational(3, 4), Q.rational)
      True
-     >>> x, y = symbols('x y')
+     >>> x, y = symbols('x,y')
      >>> ask(x/2, Q.rational, Assume(x, Q.integer))
      True
      >>> ask(x/y, Q.rational, Assume(x, Q.integer) & Assume(y, Q.integer))
@@ -226,7 +226,7 @@ Examples::
 Remarks
 ^^^^^^^
 negative numbers are defined as real numbers that are not zero nor positive, so
-complex numbers (with nontrivial imaginary coefficients) will return False 
+complex numbers (with nontrivial imaginary coefficients) will return False
 in this ask. The same applies to ask positive.
 
 
@@ -273,7 +273,7 @@ Examples::
     >>> from sympy import *
     >>> ask(sqrt(2), Q.real)
     True
-    >>> x, y = symbols('x y')
+    >>> x, y = symbols('x,y')
     >>> ask(x*y, Q.real, Assume(x, Q.real) & Assume(y, Q.real))
     True
 

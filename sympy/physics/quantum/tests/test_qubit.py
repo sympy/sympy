@@ -10,7 +10,7 @@ from sympy.physics.quantum.shor import *
 from sympy.core.containers import Tuple
 from sympy.matrices.matrices import Matrix
 import random
-x, y = symbols('xy')
+x, y = symbols('x,y')
 
 epsilon = .000001
 

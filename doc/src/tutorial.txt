@@ -99,8 +99,8 @@ defined the symbols x, y, z and some other things:
     Python 2.4.4 console for SymPy 0.5.12-hg. These commands were executed:
     >>> from __future__ import division
     >>> from sympy import *
-    >>> x, y, z = symbols('xyz')
-    >>> k, m, n = symbols('kmn', integer=True)
+    >>> x, y, z = symbols('x,y,z')
+    >>> k, m, n = symbols('k,m,n', integer=True)
     >>> f = Function("f")
 
     Documentation can be found at http://sympy.org/
@@ -377,7 +377,7 @@ powerful extended Risch-Norman algorithm and some heuristics and pattern
 matching::
 
     >>> from sympy import *
-    >>> x, y = symbols('xy')
+    >>> x, y = symbols('x,y')
 
 You can integrate elementary functions::
 
@@ -738,12 +738,12 @@ This is a nice ascii-art printing produced by a ``pprint`` function:
     -
     x
     >>> pprint(Integral(x**2, x))
-      /     
-     |      
-     |  2   
+      /
+     |
+     |  2
      | x  dx
-     |      
-    /       
+     |
+    /
 
 
 See also the wiki `Pretty Printing
@@ -753,7 +753,7 @@ unicode printing.
 Tip: To make the pretty printing default in the python interpreter, use::
 
     $ python
-    Python 2.5.2 (r252:60911, Jun 25 2008, 17:58:32) 
+    Python 2.5.2 (r252:60911, Jun 25 2008, 17:58:32)
     [GCC 4.3.1] on linux2
     Type "help", "copyright", "credits" or "license" for more information.
     >>> from sympy import *
@@ -763,16 +763,16 @@ Tip: To make the pretty printing default in the python interpreter, use::
     x
     >>> x**3/3
      3
-    x 
+    x
     --
-    3 
+    3
     >>> Integral(x**2, x) #doctest: +NORMALIZE_WHITESPACE
-      /     
-     |      
-     |  2   
+      /
+     |
+     |  2
      | x  dx
-     |      
-    /     
+     |
+    /
 
 
 **Python printing**

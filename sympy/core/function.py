@@ -864,7 +864,7 @@ def expand(e, deep=True, power_base=True, power_exp=True, mul=True, \
     >>> from sympy import log, symbols
     >>> log(x**2*y).expand(log=True)
     log(y*x**2)
-    >>> x, y = symbols('xy', positive=True)
+    >>> x, y = symbols('x,y', positive=True)
     >>> log(x**2*y).expand(log=True)
     2*log(x) + log(y)
 
@@ -904,7 +904,7 @@ def expand(e, deep=True, power_base=True, power_exp=True, mul=True, \
 
     Examples:
     >>> from sympy import expand_log, expand, expand_mul
-    >>> x, y, z = symbols('xyz', positive=True)
+    >>> x, y, z = symbols('x,y,z', positive=True)
 
     >> expand(log(x*(y+z))) # could be either one below
     log(x*y + x*z)
@@ -953,7 +953,7 @@ def expand_mul(expr, deep=True):
 
     Example:
     >>> from sympy import symbols, expand_mul, exp, log
-    >>> x, y = symbols('xy', positive=True)
+    >>> x, y = symbols('x,y', positive=True)
     >>> expand_mul(exp(x+y)*(x+y)*log(x*y**2))
     x*exp(x + y)*log(x*y**2) + y*exp(x + y)*log(x*y**2)
 
@@ -984,7 +984,7 @@ def expand_log(expr, deep=True):
 
     Example:
     >>> from sympy import symbols, expand_log, exp, log
-    >>> x, y = symbols('xy', positive=True)
+    >>> x, y = symbols('x,y', positive=True)
     >>> expand_log(exp(x+y)*(x+y)*log(x*y**2))
     (x + y)*(2*log(y) + log(x))*exp(x + y)
 

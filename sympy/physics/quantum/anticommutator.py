@@ -39,7 +39,7 @@ class AntiCommutator(Expr):
         >>> from sympy import symbols
         >>> from sympy.physics.quantum import AntiCommutator
         >>> from sympy.physics.quantum import Operator, Dagger
-        >>> x, y = symbols('xy')
+        >>> x, y = symbols('x,y')
         >>> A = Operator('A')
         >>> B = Operator('B')
 

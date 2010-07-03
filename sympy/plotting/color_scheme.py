@@ -142,7 +142,7 @@ class ColorScheme(object):
                              "can be given for a color scheme.")
 
     def _fill_in_vars(self, args):
-        defaults = symbols('xyzuv')
+        defaults = symbols('x,y,z,u,v')
         if len(args) == 0: return defaults
         if not isinstance(args, (tuple, list)):
             raise v_error
@@ -282,7 +282,7 @@ class ColorScheme(object):
     def __repr__(self): return "%s" % (self.str_base())
 
 
-x,y,z,t,u,v = symbols('xyztuv')
+x,y,z,t,u,v = symbols('x,y,z,t,u,v')
 
 default_color_schemes['rainbow'] = ColorScheme( z, y, x )
 default_color_schemes['zfade'] = ColorScheme( z, (0.4,0.4,0.97), (0.97,0.4,0.4), (None, None, z) )

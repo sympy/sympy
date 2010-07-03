@@ -7,8 +7,8 @@ from sympy.physics.quantum import KroneckerDelta
 from sympy.physics.quantum.piab import PIABHamiltonian, PIABKet, PIABBra, m, L
 
 
-x, n = symbols('xn')
-i, j = symbols('ij')
+x, n = symbols('x,n')
+i, j = symbols('i,j')
 
 
 def test_H():

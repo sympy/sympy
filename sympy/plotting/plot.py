@@ -28,7 +28,7 @@ class Plot(object):
     See examples/plotting.py for many more examples.
 
 
-    >>> from sympy import symbols, Plot
+    >>> from sympy import Plot
     >>> from sympy.abc import x, y, z
 
     >>> Plot(x*y**3-y*x**3)

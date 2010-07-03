@@ -10,7 +10,7 @@ from sympy.series.order import Order
 
 from sympy.printing.precedence import precedence, PRECEDENCE
 
-x, y = symbols("xy")
+x, y = symbols("x,y")
 
 def test_Add():
     assert precedence(x+y) == PRECEDENCE["Add"]

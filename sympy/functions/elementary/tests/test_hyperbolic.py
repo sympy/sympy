@@ -5,7 +5,7 @@ from sympy import symbols, Symbol, sinh, nan, oo, pi, asinh, acosh, log, sqrt, \
 from sympy.utilities.pytest import XFAIL
 
 def test_sinh():
-    x, y = symbols('xy')
+    x, y = symbols('x,y')
 
     k = Symbol('k', integer=True)
 
@@ -66,7 +66,7 @@ def test_sinh():
     assert sinh(k*pi*I/2) == sin(k*pi/2)*I
 
 def test_cosh():
-    x, y = symbols('xy')
+    x, y = symbols('x,y')
 
     k = Symbol('k', integer=True)
 
@@ -127,7 +127,7 @@ def test_cosh():
     assert cosh(k*pi) == cosh(k*pi)
 
 def test_tanh():
-    x, y = symbols('xy')
+    x, y = symbols('x,y')
 
     k = Symbol('k', integer=True)
 
@@ -188,7 +188,7 @@ def test_tanh():
     assert tanh(k*pi*I/2) == tan(k*pi/2)*I
 
 def test_coth():
-    x, y = symbols('xy')
+    x, y = symbols('x,y')
 
     k = Symbol('k', integer=True)
 
@@ -249,7 +249,7 @@ def test_coth():
     assert coth(k*pi*I) == -cot(k*pi)*I
 
 def test_asinh():
-    x, y = symbols('xy')
+    x, y = symbols('x,y')
     assert asinh(x) == asinh(x)
     assert asinh(-x) == -asinh(x)
     assert asinh(nan) == nan

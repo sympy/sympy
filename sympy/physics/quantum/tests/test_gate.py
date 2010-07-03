@@ -17,10 +17,8 @@ def test_gate():
     assert h.min_qubits == 2
     assert h.nqubits == 1
 
-
-def test_ugate():
-    """Test the general UGate."""
-    a,b,c,d = symbols('abcd')
+def test_UGate():
+    a,b,c,d = symbols('a,b,c,d')
     uMat = Matrix([[a,b],[c,d]])
 
     # Test basic case where gate exists in 1-qubit space
@@ -75,10 +73,8 @@ def test_cgate():
     assert matrix_to_qubit(represent(CPhaseGate*Qubit('11'), nqubits=2)) == \
         I*Qubit('11')
 
-
-def test_ugate_cgate_combo():
-    """Test a UGate/CGate combination."""
-    a,b,c,d = symbols('abcd')
+def test_UGate_CGate_combo():
+    a,b,c,d = symbols('a,b,c,d')
     uMat = Matrix([[a,b],[c,d]])
     cMat = Matrix([[1,0,0,0],[0,1,0,0],[0,0,a,b],[0,0,c,d]])
 

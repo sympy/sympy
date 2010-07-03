@@ -10,7 +10,7 @@ import math, sympy
 mpmath.mp.dps = 50
 sin02 = mpmath.mpf("0.19866933079506121545941262711838975037020672954020")
 
-x,y,z = symbols('xyz')
+x,y,z = symbols('x,y,z')
 
 #================== Test different arguments ==============
 def test_no_args():

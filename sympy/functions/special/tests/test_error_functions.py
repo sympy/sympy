@@ -1,6 +1,6 @@
 from sympy import symbols, erf, nan, oo, Real, sqrt, pi, O
 
-x, y = symbols('xy')
+x, y = symbols('x,y')
 
 def test_erf():
     assert erf(nan) == nan

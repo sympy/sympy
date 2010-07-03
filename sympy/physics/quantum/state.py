@@ -268,7 +268,7 @@ class Ket(State, KetBase):
 
     Compound labels are passed as tuples::
 
-        >>> n, m = symbols('nm')
+        >>> n, m = symbols('n,m')
         >>> k = Ket(n,m)
         >>> k
         |nm>
@@ -323,7 +323,7 @@ class Bra(State, BraBase):
     Like Kets, Bras can have compound labels and be manipulated in a similar
     manner::
 
-        >>> n, m = symbols('nm')
+        >>> n, m = symbols('n,m')
         >>> b = Bra(n,m) - I*Bra(m,n)
         >>> b
         -I*<mn| + <nm|

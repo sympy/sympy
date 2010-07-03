@@ -6,14 +6,14 @@ from sympy.matrices.matrices import (ShapeError, MatrixError,
 from sympy.utilities.pytest import raises
 
 def test_division():
-    x, y, z = symbols('x','y','z')
+    x, y, z = symbols('x,y,z')
     v = Matrix(1,2,[x, y])
     assert v.__div__(z) == Matrix(1,2,[x/z, y/z])
     assert v.__truediv__(z) == Matrix(1,2,[x/z, y/z])
     assert v/z == Matrix(1,2,[x/z, y/z])
 
 def test_sum():
-    x, y, z = symbols('xyz')
+    x, y, z = symbols('x,y,z')
     m = Matrix([[1,2,3],[x,y,x],[2*y,-50,z*x]])
     assert m+m == Matrix([[2,4,6],[2*x,2*y,2*x],[4*y,-100,2*z*x]])
 
@@ -108,7 +108,7 @@ def test_creation():
     assert c[:] == [1,2,3,4,5,6,7,8,9]
 
 def test_tolist():
-    x, y, z = symbols('xyz')
+    x, y, z = symbols('x,y,z')
     lst = [[S.One,S.Half,x*y,S.Zero],[x,y,z,x**2],[y,-S.One,z*x,3]]
     m = Matrix(lst)
     assert m.tolist() == lst
@@ -260,7 +260,7 @@ def test_applyfunc():
     assert m0.applyfunc(lambda x: 0 ) == zeros(3)
 
 def test_expand():
-    x,y = symbols('xy')
+    x,y = symbols('x,y')
     m0 = Matrix([[x*(x+y),2],[((x+y)*y)*x,x*(y+x*(x+y))]])
     # Test if expand() returns a matrix
     m1 = m0.expand()
@@ -484,7 +484,7 @@ def canonicalize(v):
     return tuple(set([c(x) for x in v]))
 
 def test_eigen():
-    x,y = symbols('xy')
+    x,y = symbols('x,y')
 
     R = Rational
 
@@ -867,7 +867,7 @@ def test_subs():
     assert Matrix([[x,2],[x+y,4]]).subs({x:-1,y:-2}) == Matrix([[-1,2],[-3,4]])
 
 def test_simplify():
-    x,y,f,n = symbols('xyfn')
+    x,y,f,n = symbols('x,y,f,n')
     M = Matrix([ [    1/x + 1/y,               (x + x*y)/ x             ],
                  [(f(x) + y*f(x))/f(x), 2 * (1/n - cos(n * pi)/n)/ pi ]
                  ])
@@ -930,13 +930,13 @@ def test_trace():
     assert M.trace() == 14
 
 def test_shape():
-    x, y = symbols("xy")
+    x, y = symbols("x,y")
     M = Matrix([[x,0,0],
                 [0,y,0]])
     assert M.shape == (2, 3)
 
 def test_col_row():
-    x, y = symbols("xy")
+    x, y = symbols("x,y")
     M = Matrix([[x,0,0],
                 [0,y,0]])
     M.row(1,lambda x,i: x+i+1)
@@ -1058,7 +1058,7 @@ def test_zeros_ones_fill():
     assert a.shape == b.shape == (3, 5)
 
 def test_issue650():
-    x, y = symbols('x','y')
+    x, y = symbols('x,y')
     a = Matrix([[x**2, x*y],[x*sin(y), x*cos(y)]])
     assert a.diff(x) == Matrix([[2*x, y],[sin(y), cos(y)]])
     assert Matrix([[x, -x, x**2],[exp(x),1/x-exp(-x), x+1/x]]).limit(x, oo) == Matrix([[oo, -oo, oo],[oo, 0, oo]])
@@ -1073,7 +1073,7 @@ def test_inv_iszerofunc():
         assert A.inv(method, iszerofunc=lambda x: x==0) == A.inv("ADJ")
 
 def test_jacobian_metrics():
-    rho, phi = symbols("rho phi")
+    rho, phi = symbols("rho,phi")
     X = Matrix([rho*cos(phi), rho*sin(phi)])
     Y = Matrix([rho, phi])
     J = X.jacobian(Y)
@@ -1085,7 +1085,7 @@ def test_jacobian_metrics():
     assert g == Matrix([[1, 0], [0, rho**2]])
 
 def test_jacobian2():
-    rho, phi = symbols("rho phi")
+    rho, phi = symbols("rho,phi")
     X = Matrix([rho*cos(phi), rho*sin(phi), rho**2])
     Y = Matrix([rho, phi])
     J = Matrix([
@@ -1096,7 +1096,7 @@ def test_jacobian2():
     assert X.jacobian(Y) == J
 
 def test_issue1465():
-    x, y, z = symbols('x', 'y', 'z')
+    x, y, z = symbols('x,y,z')
     X = Matrix([exp(x + y + z), exp(x + y + z), exp(x + y + z)])
     Y = Matrix([x, y, z])
     for i in range(1, 3):
@@ -1110,7 +1110,7 @@ def test_issue1465():
                 assert J[:,k] == X_slice
 
 def test_nonvectorJacobian():
-    x, y, z = symbols('x', 'y', 'z')
+    x, y, z = symbols('x,y,z')
     X = Matrix([ [exp(x + y + z), exp(x + y + z)],
                  [exp(x + y + z), exp(x + y + z)] ])
     Y = Matrix([x, y, z])
@@ -1134,11 +1134,11 @@ def test_vech():
         assert m_vech[i] == i + 1
     m_vech = m.vech(diagonal=False)
     assert m_vech[0] == 2
-    x,y = symbols('xy')
+    x,y = symbols('x,y')
     m = Matrix([ [1, x*(x+y)], [y*x+x**2, 1] ])
     m_vech = m.vech(diagonal=False)
     assert m_vech[0] == y*x+x**2
-    x,y = symbols('xy')
+    x,y = symbols('x,y')
     m = Matrix([ [1, x*(x+y)], [y*x, 1] ])
     m_vech = m.vech(diagonal=False, check_symmetry=False)
     assert m_vech[0] == y*x
@@ -1194,7 +1194,7 @@ def test_diag():
             ])
 
 def test_get_diag_blocks1():
-    x, y, z = symbols("x y z")
+    x, y, z = symbols("x,y,z")
     a = Matrix([[1, 2], [2, 3]])
     b = Matrix([[3, x], [y, 3]])
     c = Matrix([[3, x, 3], [y, 3, z], [x, y, z]])
@@ -1203,7 +1203,7 @@ def test_get_diag_blocks1():
     c.get_diag_blocks() == [c]
 
 def test_get_diag_blocks2():
-    x, y, z = symbols("x y z")
+    x, y, z = symbols("x,y,z")
     a = Matrix([[1, 2], [2, 3]])
     b = Matrix([[3, x], [y, 3]])
     c = Matrix([[3, x, 3], [y, 3, z], [x, y, z]])
@@ -1213,7 +1213,7 @@ def test_get_diag_blocks2():
     assert diag(c, c, b).get_diag_blocks() == [c, c, b]
 
 def test_inv_block():
-    x, y, z = symbols("x y z")
+    x, y, z = symbols("x,y,z")
     a = Matrix([[1, 2], [2, 3]])
     b = Matrix([[3, x], [y, 3]])
     c = Matrix([[3, x, 3], [y, 3, z], [x, y, z]])
@@ -1264,13 +1264,13 @@ def test_diagonal_symmetrical():
     m = Matrix(2,3,[0, 0, 0, 0, 0, 0])
     assert not m.is_symmetric()
 
-    x, y = symbols('x','y')
+    x, y = symbols('x y')
     m = Matrix(3,3,[1, x**2 + 2*x + 1, y, (x + 1)**2 , 2, 0, y, 0, 3])
     assert m.is_symmetric()
 
 
 def test_diagonalization():
-    x, y, z = symbols('x','y','z')
+    x, y, z = symbols('x y z')
     m = Matrix(3,2,[-3, 1, -3, 20, 3, 10])
     assert not m.is_diagonalizable()
     assert not m.is_symmetric()
@@ -1339,7 +1339,7 @@ def test_diagonalization():
     raises(MatrixError, '(D, P) = m.diagonalize()')
 
     # symbolic
-    a, b, c, d = symbols('a','b','c', 'd')
+    a, b, c, d = symbols('a b c d')
     m = Matrix(2,2,[a, c, c, b])
     assert m.is_symmetric()
     assert m.is_diagonalizable()
@@ -1407,7 +1407,7 @@ def test_SMatrix_CL_RL():
     assert SMatrix((1,2),(3,4)).col_list() == [(0, 0, 1), (1, 0, 3), (0, 1, 2), (1, 1, 4)]
 
 def test_Matrix_berkowitz_charpoly():
-    x, UA, K_i, K_w = symbols('x UA K_i K_w')
+    x, UA, K_i, K_w = symbols('x,UA,K_i,K_w')
 
     A = Matrix([[-K_i - UA + K_i**2/(K_i + K_w),       K_i*K_w/(K_i + K_w)],
                 [           K_i*K_w/(K_i + K_w), -K_w + K_w**2/(K_i + K_w)]])

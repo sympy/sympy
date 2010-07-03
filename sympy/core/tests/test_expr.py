@@ -95,8 +95,7 @@ class F1_1(DummyNumber):
     def __float__(self):
         return self.number
 
-
-x,y,z,t = symbols('xyzt')
+x,y,z,t = symbols('x,y,z,t')
 
 i5 = I5()
 f1_1 = F1_1()
@@ -161,7 +160,7 @@ def test_relational():
 
 def test_relational_noncommutative():
     from sympy import Lt, Gt, Le, Ge
-    a, b = symbols('a b', commutative=False)
+    a, b = symbols('a,b', commutative=False)
     assert (a < b)  == Lt(a, b)
     assert (a <= b) == Le(a, b)
     assert (a > b)  == Gt(a, b)
@@ -295,7 +294,7 @@ def test_is_polynomial():
     assert ((x**2)*(y**2) + x*(y**2) + y*x + exp(x)).is_polynomial(x, y) == False
 
 def test_is_rational_function():
-    x,y = symbols('xy')
+    x,y = symbols('x,y')
 
     assert Integer(1).is_rational_function() == True
     assert Integer(1).is_rational_function(x) == True
@@ -351,7 +350,7 @@ def test_SAGE3():
     assert e == ('mys', x, o)
 
 def test_len():
-    x, y, z = symbols("xyz")
+    x, y, z = symbols("x,y,z")
     e = x*y
     assert len(e.args) == 2
     e = x+y+z
@@ -387,7 +386,7 @@ def test_iter_basic_args():
     assert list((x**y).iter_basic_args()) == [x, y]
 
 def test_noncommutative_expand_issue658():
-    A, B, C = symbols('ABC', commutative=False)
+    A, B, C = symbols('A,B,C', commutative=False)
     assert A*B - B*A != 0
     assert (A*(A+B)*B).expand() == A**2*B + A*B**2
     assert (A*(A+B+C)*B).expand() == A**2*B + A*B**2 + A*C*B
@@ -434,7 +433,7 @@ def test_as_independent():
     assert (2*sin(x)).as_independent(y) == (2*sin(x), 1)
 
 def test_subs_dict():
-    a,b,c,d,e = symbols('abcde')
+    a,b,c,d,e = symbols('a,b,c,d,e')
 
     assert (sin(x))._subs_dict({ x : 1, sin(x) : 2}) == 2
     assert (sin(x))._subs_dict([(x, 1), (sin(x), 2)]) == 2
@@ -448,6 +447,7 @@ def test_subs_dict():
     assert expr._subs_dict(seq) == c + a*b*sin(d*e)
 
 def test_subs_list():
+
     assert (sin(x))._subs_list([(sin(x), 2), (x, 1)]) == 2
     assert (sin(x))._subs_list([(x, 1), (sin(x), 2)]) == sin(1)
 
@@ -462,7 +462,7 @@ def test_call():
     raises(TypeError, "sin(x)(1)")
 
 def test_has_any():
-    x,y,z,t,u = symbols('xyztu')
+    x,y,z,t,u = symbols('x,y,z,t,u')
     f = Function("f")
     g = Function("g")
     p = Wild('p')
@@ -521,6 +521,7 @@ def test_has_any():
     assert FockState((x, y)).has(x)
 
 def test_as_poly_basic():
+
     f = x**2 + 2*x*y
 
     assert f.as_poly().as_basic() == f
@@ -741,7 +742,7 @@ def test_issue1864():
     assert hasattr(expr, "is_commutative")
 
 def test_action_verbs():
-    a,b,c,d = symbols('abcd')
+    a,b,c,d = symbols('a,b,c,d')
     assert nsimplify((1/(exp(3*pi*x/5)+1))) == (1/(exp(3*pi*x/5)+1)).nsimplify()
     assert ratsimp(1/x + 1/y) == (1/x + 1/y).ratsimp()
     assert trigsimp(log(x), deep=True) == (log(x)).trigsimp(deep = True)

@@ -5,8 +5,8 @@ from sympy.physics.quantum.commutator import Commutator as Comm
 from sympy.physics.quantum.operator import Operator
 
 
-a, b, c = symbols('abc')
-A, B, C, D = symbols('ABCD', commutative=False)
+a, b, c = symbols('a,b,c')
+A, B, C, D = symbols('A,B,C,D', commutative=False)
 
 
 def test_commutator():

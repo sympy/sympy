@@ -3,7 +3,7 @@ from sympy import symbols, Symbol, nan, oo, I, sinh, sin, acot, pi, atan, \
         cosh, atan2, exp, asinh, acoth, atanh, O
 
 def test_sin():
-    x, y = symbols('xy')
+    x, y = symbols('x,y')
 
     r = Symbol('r', real=True)
 
@@ -77,7 +77,7 @@ def test_sin():
 
 
 def test_cos():
-    x, y = symbols('xy')
+    x, y = symbols('x,y')
 
     r = Symbol('r', real=True)
 
@@ -146,7 +146,7 @@ def test_cos():
     assert cos(r).is_real == True
 
 def test_tan():
-    x, y = symbols('xy')
+    x, y = symbols('x,y')
 
     r = Symbol('r', real=True)
 
@@ -206,7 +206,7 @@ def test_tan_rewrite():
 
 
 def test_cot():
-    x, y = symbols('xy')
+    x, y = symbols('x,y')
 
     r = Symbol('r', real=True)
 
@@ -390,7 +390,7 @@ def _check_no_rewrite(func, arg):
     return func(arg).args[0] == arg
 
 def test_evenodd_rewrite():
-    x, y = symbols('xy')
+    x, y = symbols('x,y')
     a = cos(2) #negative
     b = sin(1) #positive
     even = [cos]

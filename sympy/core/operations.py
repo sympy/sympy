@@ -177,7 +177,7 @@ class AssocOp(Expr):
         >> a = Wild("a")
         >> b = Wild("b")
         >> c = Wild("c")
-        >> x, y, z = symbols("x y z")
+        >> x, y, z = symbols("x,y,z")
         >> (a+b*c)._matches_commutative(x+y*z)
         {a_: x, b_: y, c_: z}
 

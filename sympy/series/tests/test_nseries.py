@@ -421,7 +421,7 @@ def test_issue405():
            a*(4 - x)/(4*sqrt(1 - 16*a**2)))
 
 def test_issue1342():
-    x, a, b = symbols('x a b')
+    x, a, b = symbols('x,a,b')
     f = 1/(1+a*x)
     assert f.series(x, 0, 5) == 1 - a*x + a**2*x**2 - a**3*x**3 + \
             a**4*x**4 + O(x**5)

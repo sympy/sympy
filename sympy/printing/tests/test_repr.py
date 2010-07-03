@@ -4,7 +4,7 @@ from sympy import Symbol, symbols, Function, Integer, Matrix, nan, oo, Abs, \
 from sympy.geometry import Point, Circle, Ellipse
 from sympy.printing import srepr
 
-x, y = symbols('xy')
+x, y = symbols('x,y')
 
 # eval(srepr(expr)) == expr has to succeed in the right environment. The right
 # environment is the scope of "from sympy import *" for most cases.

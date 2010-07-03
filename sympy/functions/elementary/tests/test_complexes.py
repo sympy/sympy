@@ -4,8 +4,7 @@ from sympy.utilities.pytest import XFAIL
 
 
 def test_re():
-
-    x, y = symbols('xy')
+    x, y = symbols('x,y')
 
     r = Symbol('r', real=True)
 
@@ -43,8 +42,7 @@ def test_re():
     assert re((2+I)**2).expand(complex=True) == 3
 
 def test_im():
-
-    x, y = symbols('xy')
+    x, y = symbols('x,y')
 
     r = Symbol('r', real=True)
 
@@ -100,7 +98,7 @@ def test_sign():
 
 
 def test_Abs():
-    x, y = symbols('xy')
+    x, y = symbols('x,y')
     assert Abs(0) == 0
     assert Abs(1) == 1
     assert Abs(-1)== 1
@@ -158,7 +156,7 @@ def test_conjugate():
     assert conjugate(a) == a
     assert conjugate(I*a) == -I*a
 
-    x, y = symbols('xy')
+    x, y = symbols('x,y')
     assert conjugate(conjugate(x)) == x
     assert conjugate(x + y) == conjugate(x) + conjugate(y)
     assert conjugate(x - y) == conjugate(x) - conjugate(y)

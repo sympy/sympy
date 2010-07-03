@@ -7,7 +7,7 @@ from sympy.printing.python import python
 
 from sympy.utilities.pytest import raises
 
-x, y = symbols('xy')
+x, y = symbols('x,y')
 th  = Symbol('theta')
 ph  = Symbol('phi')
 

@@ -215,7 +215,7 @@ def test_roots2():
     """Just test that calculating these roots does not hang
     (final result is not checked)
     """
-    a, b, c, d, x = symbols("a b c d x")
+    a, b, c, d, x = symbols("a,b,c,d,x")
 
     f1 = x**2*c + (a/b) + x*c*d - a
     f2 = x**2*(a + b*(c-d)*a) + x*a*b*c/(b*d-d) + (a*d-c/d)
@@ -223,7 +223,7 @@ def test_roots2():
     assert roots(f1, x).values() == [1, 1]
     assert roots(f2, x).values() == [1, 1]
 
-    (zz, yy, xx, zy, zx, yx, k) = symbols("zz yy xx zy zx yx k")
+    (zz, yy, xx, zy, zx, yx, k) = symbols("zz,yy,xx,zy,zx,yx,k")
 
     e1 = (zz-k)*(yy-k)*(xx-k) + zy*yx*zx + zx-zy-yx
     e2 = (zz-k)*yx*yx + zx*(yy-k)*zx + zy*zy*(xx-k)

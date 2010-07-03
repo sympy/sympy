@@ -7,7 +7,7 @@ from sympy.physics.quantum.tensorproduct import tensor_product_simp
 from sympy.physics.quantum.dagger import Dagger
 
 
-A,B,C = symbols('ABC', commutative=False)
+A,B,C = symbols('A,B,C', commutative=False)
 x = symbols('x')
 
 mat1 = Matrix([[1,2*I],[1+I,3]])

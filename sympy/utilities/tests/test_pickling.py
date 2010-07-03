@@ -164,7 +164,7 @@ def test_functions():
             conjugate, tan, floor, atanh, sin, atan, lucas, exp)
     two_var = (rf, ff, lowergamma, chebyshevu, chebyshevt, binomial, Max,
             Min, atan2, polygamma, hermite, legendre, uppergamma)
-    x, y, z = symbols("x y z")
+    x, y, z = symbols("x,y,z")
     others = (chebyshevt_root, chebyshevu_root, Eijk(x, y, z),
             Piecewise( (0, x<-1), (x**2, x<=1), (x**3, True)),
             assoc_legendre)

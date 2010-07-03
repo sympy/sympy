@@ -10,10 +10,9 @@ from sympy.printing.pretty import pprint
 
 from sympy.utilities.pytest import raises
 
-x, y, z, k = symbols('xyzk')
-th  = Symbol('theta')
-ph  = Symbol('phi')
-
+a, b, x, y, z, k = symbols('a,b,x,y,z,k')
+th = Symbol('theta')
+ph = Symbol('phi')
 
 """
 Expressions whose pretty-printing is tested here:
@@ -1002,7 +1001,6 @@ sin (x)\
     assert  pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
-    a, b = symbols('ab')
     expr = conjugate(a+b*I)
     ascii_str = \
 """\
