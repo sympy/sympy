@@ -202,6 +202,9 @@ class Pure(Expr):
 
     is_Pure   = True
 
+_re_var_range = re.compile(r"^(.*?)(\d*):(\d+)$")
+_re_var_split = re.compile(r"\s|,")
+
 def symbols(*names, **kwargs):
     """
     Return a list of symbols with names taken from 'names'
@@ -241,24 +244,43 @@ def symbols(*names, **kwargs):
     isinstance(names[0], str) and (' ' in names[0] or ',' in names[0]):
         kwargs['each_char'] = False
     if not kwargs.pop("each_char", True):
-        # the new way:
-        s = names[0]
-        if not isinstance(s, list):
-            s = re.split('\s|,', s)
-        res = []
-        for t in s:
-            # skip empty strings
-            if not t:
+        names = names[0]
+
+        if not isinstance(names, list):
+            names = _re_var_split.split(names)
+
+        result = []
+
+        for name in names:
+            if not name:
                 continue
-            sym = func(t, **kwargs)
-            res.append(sym)
-        res = tuple(res)
-        if len(res) == 0:   # var('')
-            res = None
-        elif len(res) == 1: # var('x')
-            res = res[0]
-                            # otherwise var('a b ...')
-        return res
+
+            match = _re_var_range.match(name)
+
+            if match is not None:
+                name, start, end = match.groups()
+
+                if not start:
+                    start = 0
+                else:
+                    start = int(start)
+
+                for i in xrange(start, int(end)):
+                    symbol = func("%s%i" % (name, i), **kwargs)
+                    result.append(symbol)
+            else:
+                symbol = func(name, **kwargs)
+                result.append(symbol)
+
+        result = tuple(result)
+
+        if len(result) <= 1:
+            if not result:           # var('')
+                result = None
+            else:                    # var('x')
+                result = result[0]
+
+        return result
     else:
         # this is the old, deprecated behavior:
         if len(names) == 1:

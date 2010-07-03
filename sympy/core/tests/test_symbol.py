@@ -152,6 +152,18 @@ def test_symbols():
     x, y = symbols('x y', each_char=False, real=True)
     assert x.is_real and y.is_real
 
+    assert symbols('x0:0', each_char=False) is None
+    assert symbols('x0:1', each_char=False) == Symbol('x0')
+    assert symbols('x0:3', each_char=False) == (Symbol('x0'), Symbol('x1'), Symbol('x2'))
+
+    assert symbols('x:0', each_char=False) is None
+    assert symbols('x:1', each_char=False) == Symbol('x0')
+    assert symbols('x:3', each_char=False) == (Symbol('x0'), Symbol('x1'), Symbol('x2'))
+
+    assert symbols('x1:1', each_char=False) is None
+    assert symbols('x1:2', each_char=False) == Symbol('x1')
+    assert symbols('x1:3', each_char=False) == (Symbol('x1'), Symbol('x2'))
+
 def test_call():
     f = Symbol('f')
     assert f(2)
