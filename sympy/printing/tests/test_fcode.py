@@ -1,5 +1,5 @@
 from sympy import sin, cos, atan2, gamma, conjugate, sqrt, Factorial, \
-    Integral, Piecewise, Add, diff, symbols, S, Real
+    Integral, Piecewise, Add, diff, symbols, S, Real, symbols
 from sympy import Catalan, EulerGamma, E, GoldenRatio, I, pi
 from sympy import Function, Rational, Integer, Lambda
 
@@ -7,9 +7,6 @@ from sympy.printing.fcode import fcode, FCodePrinter
 from sympy.tensor import IndexedBase, Idx
 from sympy.utilities.lambdify import implemented_function
 from sympy.utilities.pytest import raises
-
-from sympy.utilities.pytest import raises
-
 
 def test_printmethod():
     x = symbols('x')
@@ -19,8 +16,9 @@ def test_printmethod():
     assert fcode(nint(x)) == "      nint(x)"
 
 def test_fcode_Pow():
-    x, y = symbols('xy')
+    x, y = symbols('x,y')
     n = symbols('n', integer=True)
+
     assert fcode(x**3) == "      x**3"
     assert fcode(x**(y**3)) == "      x**(y**3)"
     assert fcode(1/(sin(x)*3.5)**(x - y**x)/(x**2 + y)) == \
@@ -46,7 +44,7 @@ def test_fcode_Real():
     assert fcode(Real(-1e20)) == "      -1.00000000000000d+20"
 
 def test_fcode_functions():
-    x, y = symbols('xy')
+    x, y = symbols('x,y')
     assert fcode(sin(x) ** cos(y)) == "      sin(x)**cos(y)"
 
 def test_fcode_NumberSymbol():
@@ -78,7 +76,7 @@ def test_fcode_complex():
     assert fcode(3+x) == "      3 + x"
 
 def test_implicit():
-    x, y = symbols('xy')
+    x, y = symbols('x,y')
     assert fcode(sin(x)) == "      sin(x)"
     assert fcode(atan2(x,y)) == "      atan2(x, y)"
     assert fcode(conjugate(x)) == "      conjg(x)"
@@ -123,7 +121,7 @@ def test_assign_to():
     assert fcode(sin(x), assign_to="s") == "      s = sin(x)"
 
 def test_line_wrapping():
-    x, y = symbols('xy')
+    x, y = symbols('x,y')
     assert fcode(((x+y)**10).expand(), assign_to="var") == (
         "      var = 45*x**8*y**2 + 120*x**7*y**3 + 210*x**6*y**4 + 252*x**5*y**5\n"
         "     @ + 210*x**4*y**6 + 120*x**3*y**7 + 45*x**2*y**8 + 10*x*y**9 + 10*y\n"
@@ -280,11 +278,11 @@ def test_settings():
     raises(TypeError, 'fcode(S(4), method="garbage")')
 
 def test_free_form_code_line():
-    x, y = symbols('xy')
+    x, y = symbols('x,y')
     assert fcode(cos(x) + sin(y), source_format='free') == "cos(x) + sin(y)"
 
 def test_free_form_continuation_line():
-    x, y = symbols('xy')
+    x, y = symbols('x,y')
     result = fcode(((cos(x) + sin(y))**(7)).expand(), source_format='free')
     expected = (
 '7*cos(x)**6*sin(y) + 7*sin(y)**6*cos(x) + 21*cos(x)**5*sin(y)**2 + 35* &\n'
@@ -302,8 +300,7 @@ def test_free_form_comment_line():
     assert printer._wrap_fortran(lines) == expected
 
 def test_loops():
-    from sympy import symbols
-    n,m = symbols('n m', integer=True)
+    n, m = symbols('n,m', integer=True)
     A = IndexedBase('A')
     x = IndexedBase('x')
     y = IndexedBase('y')
@@ -320,6 +317,7 @@ def test_loops():
             '   end do\n'
             'end do'
             )
+
     code = fcode(A[i, j]*x[j], assign_to=y[i], source_format='free')
     assert (code == expected % {'rhs': 'A(i, j)*x(j) + y(i)'} or
             code == expected % {'rhs': 'x(j)*A(i, j) + y(i)'})
@@ -346,3 +344,4 @@ def test_derived_classes():
     printer = MyFancyFCodePrinter()
     x = symbols('x')
     assert printer.doprint(sin(x)) == "      bork = sin(x)"
+

@@ -374,7 +374,7 @@ def test_I():
     assert ask(z, Q.composite)        == False
 
 def test_bounded():
-    x, y = symbols('xy')
+    x, y = symbols('x,y')
     assert ask(x, Q.bounded) == False
     assert ask(x, Q.bounded, Assume(x, Q.bounded)) == True
     assert ask(x, Q.bounded, Assume(y, Q.bounded)) == False
@@ -433,7 +433,7 @@ def test_bounded_xfail():
 def test_commutative():
     """By default objects are Q.commutative that is why it returns True
     for both key=True and key=False"""
-    x, y = symbols('xy')
+    x, y = symbols('x,y')
     assert ask(x, Q.commutative) == True
     assert ask(x, Q.commutative, Assume(x, Q.commutative, False)) == False
     assert ask(x, Q.commutative, Assume(x, Q.complex)) == True
@@ -454,7 +454,7 @@ def test_commutative():
     assert ask(log(x), Q.commutative) == True
 
 def test_complex():
-    x, y = symbols('xy')
+    x, y = symbols('x,y')
     assert ask(x, Q.complex) == None
     assert ask(x, Q.complex, Assume(x, Q.complex)) == True
     assert ask(x, Q.complex, Assume(y, Q.complex)) == None
@@ -529,7 +529,7 @@ def test_complex():
     assert ask(im(x),  Q.complex) == True
 
 def test_even():
-    x, y, z, t = symbols('x y z t')
+    x, y, z, t = symbols('x,y,z,t')
     assert ask(x, Q.even) == None
     assert ask(x, Q.even, Assume(x, Q.integer)) == None
     assert ask(x, Q.even, Assume(x, Q.integer, False)) == False
@@ -581,7 +581,7 @@ def test_extended_real():
     assert ask(x+S.Infinity, Q.extended_real, Assume(x, Q.real)) == True
 
 def test_rational():
-    x, y = symbols('xy')
+    x, y = symbols('x,y')
     assert ask(x, Q.rational, Assume(x, Q.integer)) == True
     assert ask(x, Q.rational, Assume(x, Q.irrational)) == False
     assert ask(x, Q.rational, Assume(x, Q.real)) == None
@@ -628,7 +628,7 @@ def test_rational():
         Assume(y, Q.rational)) == False
 
 def test_imaginary():
-    x, y, z = symbols('x y z')
+    x, y, z = symbols('x,y,z')
     I = S.ImaginaryUnit
     assert ask(x, Q.imaginary) == None
     assert ask(x, Q.imaginary, Assume(x, Q.real)) == False
@@ -661,7 +661,7 @@ def test_imaginary():
                      Assume(y, Q.imaginary) & Assume(z, Q.imaginary)) == False
 
 def test_infinitesimal():
-    x, y = symbols('x y')
+    x, y = symbols('x,y')
     assert ask(x, Q.infinitesimal) == None
     assert ask(x, Q.infinitesimal, Assume(x, Q.infinitesimal)) == True
 
@@ -696,7 +696,7 @@ def test_integer():
     assert ask(x/3, Q.integer, Assume(x, Q.even)) == None
 
 def test_negative():
-    x, y = symbols('xy')
+    x, y = symbols('x,y')
     assert ask(x, Q.negative, Assume(x, Q.negative)) == True
     assert ask(x, Q.negative, Assume(x, Q.positive)) == False
     assert ask(x, Q.negative, Assume(x, Q.real, False)) == False
@@ -737,7 +737,7 @@ def test_negative():
     assert ask(Abs(x), Q.negative) == False
 
 def test_nonzero():
-    x, y = symbols('xy')
+    x, y = symbols('x,y')
     assert ask(x, Q.nonzero) == None
     assert ask(x, Q.nonzero, Assume(x, Q.real)) == None
     assert ask(x, Q.nonzero, Assume(x, Q.positive)) == True
@@ -759,7 +759,7 @@ def test_nonzero():
     assert ask(Abs(x), Q.nonzero, Assume(x, Q.nonzero)) == True
 
 def test_odd():
-    x, y, z, t = symbols('x y z t')
+    x, y, z, t = symbols('x,y,z,t')
     assert ask(x, Q.odd) == None
     assert ask(x, Q.odd, Assume(x, Q.odd)) == True
     assert ask(x, Q.odd, Assume(x, Q.integer)) == None
@@ -808,7 +808,7 @@ def test_odd():
     assert ask(Abs(x), Q.odd, Assume(x, Q.odd)) == True
 
 def test_prime():
-    x, y = symbols('x y')
+    x, y = symbols('x,y')
     assert ask(x, Q.prime, Assume(x, Q.prime)) == True
     assert ask(x, Q.prime, Assume(x, Q.prime, False)) == False
     assert ask(x, Q.prime, Assume(x, Q.integer)) == None
@@ -826,7 +826,7 @@ def test_prime():
                      Assume(y, Q.integer)) == False
 
 def test_positive():
-    x, y, z, w = symbols('xyzw')
+    x, y, z, w = symbols('x,y,z,w')
     assert ask(x, Q.positive, Assume(x, Q.positive)) == True
     assert ask(x, Q.positive, Assume(x, Q.negative)) == False
     assert ask(x, Q.positive, Assume(x, Q.nonzero)) == None
@@ -862,7 +862,7 @@ def test_positive_xfail():
     assert ask(1/(1 + x**2), Q.positive, Assume(x, Q.real)) == True
 
 def test_real():
-    x, y = symbols('x y')
+    x, y = symbols('x,y')
     assert ask(x, Q.real) == None
     assert ask(x, Q.real, Assume(x, Q.real)) == True
     assert ask(x, Q.real, Assume(x, Q.nonzero)) == True

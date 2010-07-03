@@ -10,7 +10,7 @@ from sympy.printing.pretty import pprint
 
 from sympy.utilities.pytest import raises
 
-x, y, k = symbols('xyk')
+a, b, x, y, z, k = symbols('a,b,x,y,z,k')
 th  = Symbol('theta')
 ph  = Symbol('phi')
 
@@ -1002,7 +1002,6 @@ sin (x)\
     assert  pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
-    a, b = symbols('ab')
     expr = conjugate(a+b*I)
     ascii_str = \
 """\

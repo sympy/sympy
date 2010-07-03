@@ -3,7 +3,7 @@ from sympy.utilities.decorator import threaded
 from sympy import symbols, Eq, Matrix
 
 def test_threaded():
-    x, y = symbols('xy')
+    x, y = symbols('x,y')
 
     @threaded()
     def function(expr, *args):
@@ -31,3 +31,4 @@ def test_threaded():
         return expr**n
 
     assert function(x + y, 2) == (x + y)**2
+

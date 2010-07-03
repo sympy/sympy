@@ -281,7 +281,7 @@ def test_F95_g95():
 # Here comes the actual tests
 
 def test_basic_codegen():
-    x,y,z = symbols('xyz')
+    x,y,z = symbols('x,y,z')
     numerical_tests = [
         ("test", (1.0, 6.0, 3.0), 21.0, 1e-15),
         ("test", (-1.0, 2.0, -2.5), -2.5, 1e-15),
@@ -325,7 +325,7 @@ def test_intrinsic_math1_codegen():
 def test_instrinsic_math2_codegen():
     # not included: frexp, ldexp, modf, fmod
     from sympy import atan2, N
-    x, y = symbols('xy')
+    x, y = symbols('x,y')
     name_expr = [
         ("test_atan2", atan2(x,y)),
         ("test_pow", x**y),
@@ -340,7 +340,7 @@ def test_instrinsic_math2_codegen():
 
 def test_complicated_codegen():
     from sympy import sin, cos, tan, N
-    x,y,z = symbols('xyz')
+    x,y,z = symbols('x,y,z')
     name_expr = [
         ("test1", ((sin(x)+cos(y)+tan(z))**7).expand()),
         ("test2", cos(cos(cos(cos(cos(cos(cos(cos(x+y+z))))))))),
@@ -352,3 +352,4 @@ def test_complicated_codegen():
             numerical_tests.append((name, (xval,yval,zval), expected, 1e-12))
     for lang, commands in valid_lang_commands:
         run_test("complicated_codegen", name_expr, numerical_tests, lang, commands)
+

@@ -8,7 +8,7 @@ from sympy.tensor import IndexedBase, Idx
 # import test
 from sympy import ccode
 
-x, y, z = symbols('xyz')
+x, y, z = symbols('x,y,z')
 g = Function('g')
 
 def test_printmethod():

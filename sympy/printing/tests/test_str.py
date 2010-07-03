@@ -11,7 +11,7 @@ from sympy.utilities.pytest import XFAIL, raises
 
 from sympy.printing import sstr, sstrrepr, StrPrinter
 
-x, y, z, w = symbols('xyzw')
+x, y, z, w = symbols('x,y,z,w')
 d = Symbol('d', dummy=True)
 
 def test_printmethod():
@@ -406,3 +406,4 @@ def test_empty_printer():
 
 def test_settings():
     raises(TypeError, 'sstr(S(4), method="garbage")')
+

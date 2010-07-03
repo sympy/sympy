@@ -1,4 +1,4 @@
-from sympy import Symbol, symbols, sympify
+from sympy import Symbol, sympify
 from plot_interval import PlotInterval
 from plot_object import PlotObject
 from util import parse_option_string
@@ -242,16 +242,7 @@ class PlotMode(PlotObject):
         ModeSubclass._init_mode().
         """
         def symbols_list(symbol_str):
-            """
-            symbols() doesn't behave exactly
-            like I need. I need a list even
-            when len(str) == 1 or 0.
-            """
-            if len(symbol_str) == 0:
-                return []
-            if len(symbol_str) == 1:
-                return [Symbol(symbol_str)]
-            return symbols(symbol_str)
+            return [ Symbol(s) for s in symbol_str ]
 
         # Convert the vars strs into
         # lists of symbols.
@@ -403,3 +394,4 @@ def var_count_error(is_independent, is_plotting):
     else: n, s = PlotMode._d_var_max, "dependent"
     return ("%s with more than %i %s variables "
             "is not supported.") % (v, n, s)
+

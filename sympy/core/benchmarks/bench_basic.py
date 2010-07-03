@@ -1,6 +1,6 @@
 from sympy.core import symbols, S, C
 
-x,y = symbols('xy')
+x,y = symbols('x,y')
 
 def timeit_Symbol_meth_lookup():
     x.diff  # no call, just method lookup
@@ -13,3 +13,4 @@ def timeit_C_lookup():
 
 def timeit_Symbol_eq_xy():
     x == y
+

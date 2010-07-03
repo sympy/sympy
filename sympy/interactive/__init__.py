@@ -1,7 +1,7 @@
 from sympy import *
 
-x, y, z, t = symbols('x y z t')
-k, m, n = symbols('k m n', integer=True)
+x, y, z, t = symbols('x,y,z,t')
+k, m, n = symbols('k,m,n', integer=True)
 f, g, h = map(Function, 'fgh')
 
 def init_printing(pretty_print=True, order=None, use_unicode=None):

@@ -19,7 +19,7 @@ except:
     disabled = True
 
 from sympy import symbols, sin, cos
-x,y = symbols('xy')
+x,y = symbols('x,y')
 
 def test_import():
     from sympy import Plot
@@ -73,3 +73,4 @@ def _test_plot_log():
     from sympy import Plot
     p=Plot(log(x), [x,0,6.282,4], 'mode=polar', visible=False)
     p.wait_for_calculations()
+

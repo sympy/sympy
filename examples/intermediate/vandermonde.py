@@ -131,7 +131,7 @@ def main():
 
     print '-'*79
     print "Polynomial fitting with a Vandermonde Matrix:"
-    x,y,z = symbols('x y z')
+    x,y,z = symbols('x,y,z')
 
     points = [(0,3), (1,2), (2,3)]
     print """
@@ -164,3 +164,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

@@ -3,7 +3,7 @@ from sympy import Rational, sqrt, symbols, sin, exp, log, sinh, cosh, cos, pi, \
 from sympy.integrals.risch import heurisch, components
 from sympy.utilities.pytest import XFAIL, skip
 
-x, y, z = symbols('xyz')
+x, y, z = symbols('x,y,z')
 f = Function('f')
 
 def test_components():
