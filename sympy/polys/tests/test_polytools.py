@@ -35,10 +35,12 @@ from sympy.polys.polyerrors import (
     UnificationFailed,
     RefinementFailed,
     GeneratorsNeeded,
+    GeneratorsError,
     PolynomialError,
     CoercionFailed,
     NotAlgebraic,
     DomainError,
+    OptionError,
 )
 
 from sympy.polys.monomialtools import (
@@ -266,29 +268,29 @@ def test_Poly__new__():
     raises(PolynomialError, "Poly(DMP([1,2], ZZ), x, modulus=3)")
     raises(PolynomialError, "Poly(GFP([1,2], 3, ZZ), x, modulus=3)")
 
-    raises(PolynomialError, "Poly(x, x, symmetric=True)")
+    raises(OptionError, "Poly(x, x, symmetric=True)")
 
     raises(PolynomialError, "Poly(x+y, x, y, domain=ZZ[x])")
     raises(PolynomialError, "Poly(x+y, x, y, domain=ZZ[y])")
 
     raises(PolynomialError, "Poly(x+2, x, modulus=3, domain=QQ)")
 
-    raises(PolynomialError, "Poly(x+2, x, domain=ZZ, gaussian=True)")
-    raises(PolynomialError, "Poly(x+2, x, modulus=3, gaussian=True)")
+    raises(OptionError, "Poly(x+2, x, domain=ZZ, gaussian=True)")
+    raises(OptionError, "Poly(x+2, x, modulus=3, gaussian=True)")
 
-    raises(PolynomialError, "Poly(x+2, x, domain=ZZ, extension=[sqrt(3)])")
-    raises(PolynomialError, "Poly(x+2, x, modulus=3, extension=[sqrt(3)])")
+    raises(OptionError, "Poly(x+2, x, domain=ZZ, extension=[sqrt(3)])")
+    raises(OptionError, "Poly(x+2, x, modulus=3, extension=[sqrt(3)])")
 
-    raises(PolynomialError, "Poly(x+2, x, domain=ZZ, extension=True)")
-    raises(PolynomialError, "Poly(x+2, x, modulus=3, extension=True)")
+    raises(OptionError, "Poly(x+2, x, domain=ZZ, extension=True)")
+    raises(OptionError, "Poly(x+2, x, modulus=3, extension=True)")
 
-    raises(PolynomialError, "Poly(x+2, x, domain=ZZ, greedy=True)")
-    raises(PolynomialError, "Poly(x+2, x, domain=QQ, field=True)")
+    raises(OptionError, "Poly(x+2, x, domain=ZZ, greedy=True)")
+    raises(OptionError, "Poly(x+2, x, domain=QQ, field=True)")
 
-    raises(PolynomialError, "Poly(x+2, x, domain=ZZ, greedy=False)")
-    raises(PolynomialError, "Poly(x+2, x, domain=QQ, field=False)")
+    raises(OptionError, "Poly(x+2, x, domain=ZZ, greedy=False)")
+    raises(OptionError, "Poly(x+2, x, domain=QQ, field=False)")
 
-    raises(PolynomialError, "Poly(x+1, x, modulus=3, order='grlex')")
+    raises(NotImplementedError, "Poly(x+1, x, modulus=3, order='grlex')")
     raises(NotImplementedError, "Poly(x+1, x, order='grlex')")
 
     raises(GeneratorsNeeded, "Poly({1: 2, 0: 1})")
@@ -1402,9 +1404,9 @@ def test_gcd():
     l = x**4 - 3*x**3 - 3*x**2 - 3*x - 4
     h, s, t = x - 4, x + 1, x**2 + 1
 
-    assert cofactors(f, g, moudlus=11) == (h, s, t)
-    assert gcd(f, g, moudlus=11) == h
-    assert lcm(f, g, moudlus=11) == l
+    assert cofactors(f, g, modulus=11) == (h, s, t)
+    assert gcd(f, g, modulus=11) == h
+    assert lcm(f, g, modulus=11) == l
 
     f, g = x**2 + 8*x + 7, x**3 + 7*x**2 + x + 7
     l = x**4 + 8*x**3 + 8*x**2 + 8*x + 7
