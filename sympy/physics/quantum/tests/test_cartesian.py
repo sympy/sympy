@@ -8,7 +8,7 @@ from sympy.physics.quantum.cartesian import (
     XOp, PxOp, X, Px, XKet, XBra, PxKet, PxBra
 )
 
-x, y = symbols('xy')
+x, y = symbols('x,y')
 px, py = symbols('px py')
 
 

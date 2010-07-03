@@ -16,7 +16,7 @@ You can build boolean expressions with the standard python operators & (And),
 |(Or), ~ (Not):
 
     >>> from sympy import *
-    >>> x, y = symbols('x y')
+    >>> x, y = symbols('x,y')
     >>> y | (x & y)
     Or(And(x, y), y)
     >>> x | y
@@ -24,7 +24,7 @@ You can build boolean expressions with the standard python operators & (And),
     >>> ~x
     Not(x)
 
-You can also form implications with >>, <<, and class Equivalent, which are 
+You can also form implications with >>, <<, and class Equivalent, which are
 compiled away into their logical equivalents:
 
     >>> x >> y

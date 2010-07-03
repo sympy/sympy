@@ -3,7 +3,7 @@ import itertools
 from sympy import Add, Mul, Pow, Symbol, exp, sqrt, symbols, sympify, cse
 from sympy.simplify import cse_main, cse_opts
 
-w,x,y,z = symbols('wxyz')
+w,x,y,z = symbols('w,x,y,z')
 x0,x1,x2 = list(itertools.islice(cse_main.numbered_symbols(), 0, 3))
 negone = sympify(-1)
 

@@ -12,7 +12,7 @@ def test_Abs():
     assert refine(Abs(x**2), Assume(x, Q.real)) == x**2
 
 def test_pow():
-    x, y, z = symbols('x y z')
+    x, y, z = symbols('x,y,z')
     assert refine((-1)**x, Assume(x, Q.even)) == 1
     assert refine((-1)**x, Assume(x, Q.odd)) == -1
     assert refine((-2)**x, Assume(x, Q.even)) == 2**x

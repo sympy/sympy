@@ -10,7 +10,7 @@ from sympy.logic.algorithms.dpll import dpll, dpll_satisfiable, \
 from sympy.utilities.pytest import raises, XFAIL
 
 def test_find_pure_symbol():
-    A, B, C = symbols('ABC')
+    A, B, C = symbols('A,B,C')
     assert find_pure_symbol([A], [A]) == (A, True)
     assert find_pure_symbol([A, B], [~A | B, ~B | A]) == (None, None)
     assert find_pure_symbol([A, B, C], [ A | ~B, ~B | ~C, C | A]) == (A, True)
@@ -32,7 +32,7 @@ def test_find_pure_symbol_int_repr():
                 [set([-1, 2]), set([-2, -3]), set([3, 1])]) == (None, None)
 
 def test_unit_clause():
-    A, B, C = symbols('ABC')
+    A, B, C = symbols('A,B,C')
     assert find_unit_clause([A], {}) == (A, True)
     assert find_unit_clause([A, ~A], {}) == (A, True) ### Wrong ??
     assert find_unit_clause([A | B], {A: True}) == (B, True)
@@ -53,7 +53,7 @@ def test_unit_clause_int_repr():
 #    assert find_unit_clause([A | B | C, B | ~C, A ], {}) == (A, True)
 
 def test_unit_propagate():
-    A, B, C = symbols('ABC')
+    A, B, C = symbols('A,B,C')
     assert unit_propagate([A | B], A) == []
     assert unit_propagate([A | B, ~A | C, ~C | B, A], A) == [C, ~C | B, A]
 
@@ -64,11 +64,11 @@ def test_unit_propagate_int_repr():
 
 def test_dpll():
     """This is also tested in test_dimacs"""
-    A, B, C = symbols('ABC')
+    A, B, C = symbols('A,B,C')
     assert dpll([A | B], [A, B], {A: True, B: True}) == {A: True, B: True}
 
 def test_dpll_satisfiable():
-    A, B, C = symbols('ABC')
+    A, B, C = symbols('A,B,C')
     assert dpll_satisfiable( A & ~A ) == False
     assert dpll_satisfiable( A & ~B ) == {A: True, B: False}
     assert dpll_satisfiable( A | B ) in ({A: True}, {B: True}, {A: True, B: True})
@@ -80,11 +80,11 @@ def test_dpll_satisfiable():
     assert dpll_satisfiable( Equivalent(A, B) & ~A ) == {A: False, B: False}
 
 def test_satisfiable():
-    A, B, C = symbols('ABC')
+    A, B, C = symbols('A,B,C')
     assert satisfiable(A & (A >> B) & ~B) == False
 
 def test_pl_true():
-    A, B, C = symbols('ABC')
+    A, B, C = symbols('A,B,C')
     assert pl_true(True) == True
     assert pl_true( A & B, {A : True, B : True}) == True
     assert pl_true( A | B, {A : True}) == True
@@ -115,7 +115,7 @@ def test_pl_true_wrong_input():
     #raises(ValueError, "pl_true(42)")  #returns None, but should it?
 
 def test_PropKB():
-    A, B, C = symbols('ABC')
+    A, B, C = symbols('A,B,C')
     kb = PropKB()
     kb.tell(A >> B)
     kb.tell(B >> C)
@@ -145,5 +145,5 @@ def test_PropKB():
 def test_propKB_tolerant():
     """"tolerant to bad input"""
     kb = PropKB()
-    A, B, C = symbols('ABC')
+    A, B, C = symbols('A,B,C')
     assert kb.ask(B) == False

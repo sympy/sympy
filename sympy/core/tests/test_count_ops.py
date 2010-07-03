@@ -1,7 +1,7 @@
 from sympy import symbols, sin, exp, cos, Derivative, Integral, Basic, \
                   count_ops, S, And, I, pi, Eq
 
-x, y, z = symbols('xyz')
+x, y, z = symbols('x,y,z')
 
 def test_count_ops_non_visual():
     def count(val):

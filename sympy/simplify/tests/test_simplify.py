@@ -43,7 +43,7 @@ def test_ratsimp():
     assert ratsimp(f) == A*B/8 - A*C/8 + A/(4 - 4*erf(x))
 
 def test_trigsimp1():
-    x, y = symbols('x y')
+    x, y = symbols('x,y')
 
     assert trigsimp(1 - sin(x)**2) == cos(x)**2
     assert trigsimp(1 - cos(x)**2) == sin(x)**2
@@ -70,7 +70,7 @@ def test_trigsimp1():
     assert trigsimp(log(e), deep=True) == log(2)
 
 def test_trigsimp2():
-    x, y = symbols('x y')
+    x, y = symbols('x,y')
     assert trigsimp(cos(x)**2*sin(y)**2 + cos(x)**2*cos(y)**2 + sin(x)**2,
             recursive=True) == 1
     assert trigsimp(sin(x)**2*sin(y)**2 + sin(x)**2*cos(y)**2 + cos(x)**2,
@@ -81,7 +81,7 @@ def test_issue1274():
     assert abs(trigsimp(2.0*sin(x)**2+2.0*cos(x)**2)-2.0) < 1e-10
 
 def test_trigsimp3():
-    x, y = symbols('x y')
+    x, y = symbols('x,y')
     assert trigsimp(sin(x)/cos(x)) == tan(x)
     assert trigsimp(sin(x)**2/cos(x)**2) == tan(x)**2
     assert trigsimp(sin(x)**3/cos(x)**3) == tan(x)**3
@@ -103,7 +103,7 @@ def test_factorial_simplify():
     assert simplify(factorial(factorial(x))) == factorial(factorial(x))
 
 def test_simplify():
-    x, y, z, k, n, m, w, f, s, A = symbols('xyzknmwfsA')
+    x, y, z, k, n, m, w, f, s, A = symbols('x,y,z,k,n,m,w,f,s,A')
 
     assert all(simplify(tmp) == tmp for tmp in [I, E, oo, x, -x, -oo, -E, -I])
 
@@ -143,7 +143,7 @@ def test_simplify():
     assert simplify((A*Matrix([0,f]))[1]) == \
         (2*k*f - f*m*w**2)/(k**2 - 3*k*m*w**2 + m**2*w**4)
 
-    a, b, c, d, e, f, g, h, i = symbols('abcdefghi')
+    a, b, c, d, e, f, g, h, i = symbols('a,b,c,d,e,f,g,h,i')
 
     f_1 = x*a + y*b + z*c - 1
     f_2 = x*d + y*e + z*f - 1
@@ -219,7 +219,7 @@ def test_together():
     assert together(1/x**y + 1/x**(y-1)) == x**(-y)*(1 + x)
 
 def test_separate():
-    x, y, z = symbols('xyz')
+    x, y, z = symbols('x,y,z')
 
     assert separate((x*y*z)**4) == x**4*y**4*z**4
     assert separate((x*y*z)**x) == x**x*y**x*z**x
@@ -239,7 +239,7 @@ def test_separate_X1():
     assert separate((exp(x)*exp(y))**z) == exp(x*z)*exp(y*z)
 
 def test_powsimp():
-    x, y, z, n = symbols('xyzn')
+    x, y, z, n = symbols('x,y,z,n')
     f = Function('f')
     assert powsimp( 4**x * 2**(-x) * 2**(-x) ) == 1
     assert powsimp( (-4)**x * (-2)**(-x) * 2**(-x) ) == 1
@@ -262,7 +262,7 @@ def test_powsimp():
     assert powsimp((1 + E*exp(E))*exp(-E)) == (1 + E*exp(E))*exp(-E)
     assert powsimp((1 + E*exp(E))*exp(-E), combine='exp') == (1 + E*exp(E))*exp(-E)
     assert powsimp((1 + E*exp(E))*exp(-E), combine='base') == (1 + E*exp(E))*exp(-E)
-    x,y = symbols('xy', nonnegative=True)
+    x,y = symbols('x,y', nonnegative=True)
     n = Symbol('n', real=True)
     assert powsimp( y**n * (y/x)**(-n) ) == x**n
     assert powsimp(x**(x**(x*y)*y**(x*y))*y**(x**(x*y)*y**(x*y)),deep=True) == (x*y)**(x*y)**(x*y)
@@ -281,7 +281,7 @@ def test_powsimp():
     assert powsimp((1/p)**log(2)/p) == p**(-1 - log(2))
 
 def test_powsimp_nc():
-    x, y, z = symbols('xyz')
+    x, y, z = symbols('x,y,z')
     A, B, C = symbols('A B C', commutative=False)
 
     assert powsimp(A**x*A**y, combine='all') == A**(x+y)
@@ -310,7 +310,7 @@ def test_powsimp_nc():
 
 def test_collect_1():
     """Collect with respect to a Symbol"""
-    x, y, z, n = symbols('xyzn')
+    x, y, z, n = symbols('x,y,z,n')
     assert collect( x + y*x, x ) == x * (1 + y)
     assert collect( x + x**2, x ) == x + x**2
     assert collect( x**2 + y*x**2, x ) == (x**2)*(1+y)
@@ -324,14 +324,14 @@ def test_collect_1():
 
 def test_collect_2():
     """Collect with respect to a sum"""
-    a, b, x = symbols('abx')
+    a, b, x = symbols('a,b,x')
     assert collect(a*(cos(x)+sin(x)) + b*(cos(x)+sin(x)), sin(x)+cos(x)) == (a + b)*(cos(x) + sin(x))
 
 def test_collect_3():
     """Collect with respect to a product"""
-    a, b, c = symbols('abc')
+    a, b, c = symbols('a,b,c')
     f = Function('f')
-    x, y, z, n = symbols('xyzn')
+    x, y, z, n = symbols('x,y,z,n')
 
     assert collect(-x/8 + x*y, -x) == -x*(S.One/8 - y)
 
@@ -348,14 +348,14 @@ def test_collect_3():
 
 def test_collect_4():
     """Collect with respect to a power"""
-    a, b, c, x = symbols('abcx')
+    a, b, c, x = symbols('a,b,c,x')
 
     assert collect(a*x**c + b*x**c, x**c) == x**c*(a + b)
     assert collect(a*x**(2*c) + b*x**(2*c), x**c) == (x**2)**c*(a + b)
 
 def test_collect_5():
     """Collect with respect to a tuple"""
-    a, x, y, z, n = symbols('axyzn')
+    a, x, y, z, n = symbols('a,x,y,z,n')
     assert collect(x**2*y**4 + z*(x*y**2)**2 + z + a*z, [x*y**2, z]) in [
                 z*(1 + a + x**2*y**4) + x**2*y**4,
                 z*(1 + a) + x**2*y**4*(1 + z) ]
@@ -365,7 +365,7 @@ def test_collect_5():
 def test_collect_D():
     D = Derivative
     f = Function('f')
-    x, a, b = symbols('xab')
+    x, a, b = symbols('x,a,b')
     fx  = D(f(x), x)
     fxx = D(f(x), x, x)
 
@@ -389,7 +389,7 @@ def collect_issues():
 def test_collect_D_0():
     D = Derivative
     f = Function('f')
-    x, a, b = symbols('xab')
+    x, a, b = symbols('x,a,b')
     fxx = D(f(x), x, x)
 
     # collect does not distinguish nested derivatives, so it returns
@@ -413,7 +413,7 @@ def test_collect_Wild():
     assert collect(a*(x + 1)**y + (x + 1)**y, w1**w2) == (1 + a)*(x + 1)**y
 
 def test_separatevars():
-    x,y,z,n = symbols('xyzn')
+    x,y,z,n = symbols('x,y,z,n')
     assert separatevars(2*n*x*z+2*x*y*z) == 2*x*z*(n+y)
     assert separatevars(x*z+x*y*z) == x*z*(1+y)
     assert separatevars(pi*x*z+pi*x*y*z) == pi*x*z*(1+y)
@@ -428,16 +428,16 @@ def test_separatevars():
     assert separatevars(sqrt(y*(p**2 + x*p**2))) == p*sqrt(y)*sqrt(1 + x)
 
 def test_separatevars_advanced_factor():
-    x,y,z = symbols('xyz')
+    x,y,z = symbols('x,y,z')
     assert separatevars(1 + log(x)*log(y) + log(x) + log(y)) == (log(x) + 1)*(log(y) + 1)
     assert separatevars(1 + x - log(z) - x*log(z) - exp(y)*log(z) - \
         x*exp(y)*log(z) + x*exp(y) + exp(y)) == \
         (1 + x)*(1 - log(z))*(1 + exp(y))
-    x, y = symbols('xy', positive=True)
+    x, y = symbols('x,y', positive=True)
     assert separatevars(1 + log(x**log(y)) + log(x*y)) == (log(x) + 1)*(log(y) + 1)
 
 def test_hypersimp():
-    n, k = symbols('nk', integer=True)
+    n, k = symbols('n,k', integer=True)
 
     assert hypersimp(factorial(k), k) == k + 1
     assert hypersimp(factorial(k**2), k) is None
@@ -459,7 +459,7 @@ def test_hypersimp():
     assert hypersimp(term, k) == (k - n)/(k**2+2*k+1)
 
 def test_together2():
-    x, y, z = symbols("xyz")
+    x, y, z = symbols("x,y,z")
     assert together(1/(x*y) + 1/y**2) == 1/x*y**(-2)*(x + y)
     assert together(1/(1 + 1/x)) == x/(1 + x)
     x = symbols("x", nonnegative=True)
@@ -514,9 +514,9 @@ def test_diff():
     assert simplify(f(x).diff(x, y)-f(x).diff(y, x)) == 0
 
 def test_logcombine_1():
-    x, y = symbols("xy")
+    x, y = symbols("x,y")
     a = Symbol("a")
-    z, w = symbols("zw", positive=True)
+    z, w = symbols("z,w", positive=True)
     b = Symbol("b", real=True)
     assert logcombine(log(x)+2*log(y)) == log(x) + 2*log(y)
     assert logcombine(log(x)+2*log(y), force=True) == log(x*y**2)
@@ -557,7 +557,7 @@ def test_logcombine_1():
 def test_logcombine_2():
     # The same as one of the tests above, but with Rational(a, b) replaced with a/b.
     # This fails because of a bug in matches.  See issue 1274.
-    x, y = symbols("xy")
+    x, y = symbols("x,y")
     assert logcombine((x*y+sqrt(x**4+y**4)+log(x)-log(y))/(pi*x**(2/3)*y**(3/2)), \
         force=True) == log(x**(1/(pi*x**(2/3)*y**(3/2)))*y**(-1/\
         (pi*x**(2/3)*y**(3/2)))) + (x**4 + y**4)**(1/2)/(pi*x**(2/3)*y**(3/2)) + \
@@ -590,6 +590,7 @@ def test_powdenest():
     assert powdenest((x**(2*a/3))**(3*x)) == (x**(a/3))**(6*x)
     assert powdenest(exp(3*x*log(2))) == 2**(3*x)
     assert powdenest(sqrt(p**2)) == p
+    i, j = symbols('i,j', integer=1)
     assert powdenest((x**x)**(i + j)) # -X-> (x**x)**i*(x**x)**j == x**(x*(i + j))
     assert powdenest(exp(3*y*log(x))) == x**(3*y)
     assert powdenest(exp(y*(log(a) + log(b)))) == (a*b)**y

@@ -27,7 +27,7 @@ def get_string(dump_fn, routines, prefix="file", header=False, empty=False):
     return source
 
 def test_cython_wrapper_scalar_function():
-    x,y,z = symbols('xyz')
+    x,y,z = symbols('x,y,z')
     expr = (x+y)*z
     routine = Routine("test", expr)
     code_gen = CythonCodeWrapper(CCodeGen())
@@ -42,7 +42,7 @@ def test_cython_wrapper_scalar_function():
 
 def test_cython_wrapper_outarg():
     from sympy import Equality
-    x,y,z = symbols('xyz')
+    x,y,z = symbols('x,y,z')
     code_gen = CythonCodeWrapper(CCodeGen())
 
     routine = Routine("test", Equality(z, x + y))
@@ -59,7 +59,7 @@ def test_cython_wrapper_outarg():
 
 def test_cython_wrapper_inoutarg():
     from sympy import Equality
-    x,y,z = symbols('xyz')
+    x,y,z = symbols('x,y,z')
     code_gen = CythonCodeWrapper(CCodeGen())
     routine = Routine("test", Equality(z, x + y + z))
     source = get_string(code_gen.dump_pyx, [routine])

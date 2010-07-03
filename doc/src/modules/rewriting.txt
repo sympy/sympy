@@ -19,7 +19,7 @@ expand rules.
 
 Expanding of arithmetic expressions involving products and powers:
     >>> from sympy import *
-    >>> x, y, z = symbols('xyz')
+    >>> x, y, z = symbols('x,y,z')
     >>> ((x + y)*(x - y)).expand(basic=True)
     x**2 - y**2
     >>> ((x + y + z)**2).expand(basic=True)

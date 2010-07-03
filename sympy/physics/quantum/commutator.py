@@ -40,8 +40,8 @@ class Commutator(Expr):
 
         >>> from sympy import symbols
         >>> from sympy.physics.quantum import Commutator, Dagger
-        >>> x, y = symbols('xy')
-        >>> A, B, C = symbols('ABC', commutative=False)
+        >>> x, y = symbols('x,y')
+        >>> A, B, C = symbols('A,B,C', commutative=False)
 
     Create some commutators and use ``doit`` to multiply them out.
 

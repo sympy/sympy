@@ -10,7 +10,7 @@ from sympy.physics.quantum.state import (
 from sympy.physics.quantum.hilbert import HilbertSpace
 
 
-x,y,t = symbols('xyt')
+x,y,t = symbols('x,y,t')
 
 def test_ket():
     k = Ket('0')

@@ -5,7 +5,8 @@ from sympy.utilities.pytest import raises, XFAIL
 
 def test_overloading():
     """Test that |, & are overloaded as expected"""
-    A, B, C = map(Boolean, symbols('ABC'))
+    A, B, C = map(Boolean, symbols('A,B,C'))
+
     assert A & B == And(A, B)
     assert A | B == Or(A, B)
     assert (A & B) | C == Or(And(A, B), C)
@@ -15,7 +16,8 @@ def test_overloading():
     assert A ^ B == Xor(A, B)
 
 def test_And():
-    A, B, C = map(Boolean, symbols('ABC'))
+    A, B, C = map(Boolean, symbols('A,B,C'))
+
     assert And() == True
     assert And(A) == A
     assert And(True) == True
@@ -30,7 +32,8 @@ def test_And():
     assert And(True, False, A) == False
 
 def test_Or():
-    A, B, C = map(Boolean, symbols('ABC'))
+    A, B, C = map(Boolean, symbols('A,B,C'))
+
     assert Or() == False
     assert Or(A) == A
     assert Or(True) == True
@@ -45,7 +48,8 @@ def test_Or():
     assert Or(False, False, A) == A
 
 def test_Xor():
-    A, B, C = map(Boolean, symbols('ABC'))
+    A, B, C = map(Boolean, symbols('A,B,C'))
+
     assert Xor() == False
     assert Xor(A) == A
     assert Xor(True) == True
@@ -67,7 +71,8 @@ def test_Not():
     assert Not(False,False) == [True,  True ]
 
 def test_Nand():
-    A, B, C = map(Boolean, symbols('ABC'))
+    A, B, C = map(Boolean, symbols('A,B,C'))
+
     assert Nand() == False
     assert Nand(A) == ~A
     assert Nand(True) == False
@@ -82,7 +87,8 @@ def test_Nand():
     assert Nand(True, False, A) == True
 
 def test_Nor():
-    A, B, C = map(Boolean, symbols('ABC'))
+    A, B, C = map(Boolean, symbols('A,B,C'))
+
     assert Nor() == True
     assert Nor(A) == ~A
     assert Nor(True) == False
@@ -97,7 +103,8 @@ def test_Nor():
     assert Nor(True, False, A) == False
 
 def test_Implies():
-    A, B, C = map(Boolean, symbols('ABC'))
+    A, B, C = map(Boolean, symbols('A,B,C'))
+
     raises(ValueError, "Implies(A,B,C)")
     assert Implies(True, True) == True
     assert Implies(True, False) == False
@@ -106,7 +113,8 @@ def test_Implies():
     assert A >> B == B << A
 
 def test_Equivalent():
-    A, B, C = map(Boolean, symbols('ABC'))
+    A, B, C = map(Boolean, symbols('A,B,C'))
+
     assert Equivalent(A, B) == Equivalent(B, A) == Equivalent(A, B, A)
     assert Equivalent() == True
     assert Equivalent(A, A) == Equivalent(A) == True
@@ -120,7 +128,8 @@ def test_Equivalent():
 def test_bool_symbol():
     """Test that mixing symbols with boolean values
     works as expected"""
-    A, B, C = map(Boolean, symbols('ABC'))
+    A, B, C = map(Boolean, symbols('A,B,C'))
+
     assert And(A, True)  == A
     assert And(A, True, True) == A
     assert And(A, False) == False
@@ -129,7 +138,8 @@ def test_bool_symbol():
     assert Or(A, False)  == A
 
 def test_subs():
-    A, B, C = map(Boolean, symbols('ABC'))
+    A, B, C = map(Boolean, symbols('A,B,C'))
+
     assert (A & B).subs(A, True) == B
     assert (A & B).subs(A, False) == False
     assert (A & B).subs(B, True) == A
@@ -148,17 +158,20 @@ see http://en.wikipedia.org/wiki/Boolean_algebra_(structure)
 
 def test_commutative():
     """Test for commutativity of And and Or"""
-    A, B = map(Boolean, 'ab')
+    A, B = map(Boolean, symbols('A,B'))
+
     assert A & B == B & A
     assert A | B == B | A
 
 def test_and_associativity():
     """Test for associativity of And"""
-    A, B, C = map(Boolean, symbols('ABC'))
+    A, B, C = map(Boolean, symbols('A,B,C'))
+
     assert (A & B) & C == A & (B & C)
 
 def test_or_assicativity():
-    A, B, C = map(Boolean, symbols('ABC'))
+    A, B, C = map(Boolean, symbols('A,B,C'))
+
     assert ((A | B) | C) == (A | (B | C))
 
 def test_double_negation():
@@ -166,20 +179,21 @@ def test_double_negation():
     assert ~(~a) == a
 
 def test_De_Morgan():
-    A, B, C = map(Boolean, symbols('ABC'))
+    A, B, C = map(Boolean, symbols('A,B,C'))
+
     assert ~(A & B) == (~A) | (~B)
     assert ~(A | B) == (~A) & (~B)
     assert ~(A | B | C) == ~A & ~B  & ~C
 
 # test methods
 def test_eliminate_implications():
-    A, B, C = map(Boolean, symbols('ABC'))
+    A, B, C = map(Boolean, symbols('A,B,C'))
+
     assert eliminate_implications(Implies(A, B, evaluate=False)) == (~A) | B
-    assert eliminate_implications(A >> (C >>Not(B))) \
-        == Or(Or(Not(B), Not(C)), Not(A))
+    assert eliminate_implications(A >> (C >>Not(B))) == Or(Or(Not(B), Not(C)), Not(A))
 
 def test_conjuncts():
-    A, B, C = map(Boolean, symbols('ABC'))
+    A, B, C = map(Boolean, symbols('A,B,C'))
     assert conjuncts(A & B & C) == set([A, B, C])
     assert conjuncts((A | B) & C) == set([A | B, C])
     assert conjuncts(A) == set([A])
@@ -187,7 +201,7 @@ def test_conjuncts():
     assert conjuncts(False) == set([False])
 
 def test_disjuncts():
-    A, B, C = map(Boolean, symbols('ABC'))
+    A, B, C = map(Boolean, symbols('A,B,C'))
     assert disjuncts(A | B | C) == set([A, B, C])
     assert disjuncts((A | B) & C) == set([(A | B) & C])
     assert disjuncts(A) == set([A])
@@ -195,11 +209,13 @@ def test_disjuncts():
     assert disjuncts(False) == set([False])
 
 def test_distribute():
-    A, B, C = map(Boolean, symbols('ABC'))
+    A, B, C = map(Boolean, symbols('A,B,C'))
+
     assert distribute_and_over_or(Or(And(A, B), C)) == And(Or(A, C), Or(B, C))
 
 def test_to_cnf():
-    A, B, C = map(Boolean, symbols('ABC'))
+    A, B, C = map(Boolean, symbols('A,B,C'))
+
     assert to_cnf(~(B | C)) == And(Not(B), Not(C))
     assert to_cnf((A & B) | C) == And(Or(A, C), Or(B, C))
     assert to_cnf(A >> B) == (~A) | B
@@ -215,7 +231,8 @@ def test_compile_rule():
     assert compile_rule("A & B") == sympify("A & B")
 
 def test_to_int_repr():
-    x, y, z = map(Boolean, 'xyz')
+    x, y, z = map(Boolean, symbols('x,y,z'))
+
     def sorted_recursive(arg):
         try:
             return sorted(sorted_recursive(x) for x in arg)
@@ -228,7 +245,7 @@ def test_to_int_repr():
                                             sorted_recursive([[1, 2], [3, -1]])
 
 def test_is_cnf():
-    x, y, z = symbols('xyz')
+    x, y, z = symbols('x,y,z')
     assert is_cnf(x | y | z) == True
     assert is_cnf(x & y & z) == True
     assert is_cnf((x | y) & z) == True

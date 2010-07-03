@@ -16,7 +16,7 @@ from sympy import sin, cos, pi, sqrt, exp
 from time import sleep, clock
 
 def main():
-    x,y,z = symbols('xyz')
+    x,y,z = symbols('x,y,z')
 
     # toggle axes visibility with F5, colors with F6
     axes_options = 'visible=false; colored=true; label_ticks=true; label_axes=true; overlay=true; stride=0.5'

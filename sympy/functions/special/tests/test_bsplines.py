@@ -2,7 +2,7 @@ from sympy.functions import bspline_basis, bspline_basis_set
 from sympy import Piecewise, Interval
 from sympy import symbols, Rational
 
-x, y = symbols('xy')
+x, y = symbols('x,y')
 
 def test_basic_degree_0():
     d = 0

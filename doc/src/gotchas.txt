@@ -190,8 +190,8 @@ giving you some default Symbols and Functions.
 
     >>> from __future__ import division
     >>> from sympy import *
-    >>> x, y, z, t = symbols('x y z t')
-    >>> k, m, n = symbols('k m n', integer=True)
+    >>> x, y, z, t = symbols('x,y,z,t')
+    >>> k, m, n = symbols('k,m,n', integer=True)
     >>> f, g, h = map(Function, 'fgh')
 
 You can also import common symbol names from :mod:`sympy.abc`.

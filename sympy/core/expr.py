@@ -396,7 +396,7 @@ class Expr(Basic, EvalfMixin):
 
            >>> from sympy import symbols, I
 
-           >>> x, y = symbols('xy', real=True)
+           >>> x, y = symbols('x,y', real=True)
 
            >>> (x + y*I).as_real_imag()
            (x, y)
@@ -517,7 +517,7 @@ class Expr(Basic, EvalfMixin):
 
            >>> from sympy import symbols, Rational
 
-           >>> x, y = symbols('xy', real=True)
+           >>> x, y = symbols('x,y', real=True)
 
            >>> ((x*y)**3).extract_multiplicatively(x**2 * y)
            x*y**2
@@ -617,7 +617,7 @@ class Expr(Basic, EvalfMixin):
 
            >>> from sympy import symbols
 
-           >>> x, y = symbols('xy', real=True)
+           >>> x, y = symbols('x,y', real=True)
 
            >>> ((x*y)**3).extract_additively(1)
 

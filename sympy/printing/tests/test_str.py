@@ -12,7 +12,7 @@ from sympy.utilities.pytest import XFAIL, raises
 
 from sympy.printing import sstr, sstrrepr, StrPrinter
 
-x, y, z, w = symbols('xyzw')
+x, y, z, w = symbols('x,y,z,w')
 d = Dummy('d')
 
 def test_printmethod():

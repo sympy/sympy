@@ -7,7 +7,7 @@ def test_floor():
 
     x = Symbol('x')
     y = Symbol('y', real=True)
-    k, n = symbols('kn', integer=True)
+    k, n = symbols('k,n', integer=True)
 
     assert floor(nan) == nan
 
@@ -105,7 +105,7 @@ def test_ceiling():
 
     x = Symbol('x')
     y = Symbol('y', real=True)
-    k, n = symbols('kn', integer=True)
+    k, n = symbols('k,n', integer=True)
 
     assert ceiling(nan) == nan
 

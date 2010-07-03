@@ -2,8 +2,7 @@ from sympy import symbols, rf, Symbol, factorial, Factorial, ff, nan, oo,\
         Factorial2, factorial2
 
 def test_rf_eval_apply():
-
-    x, y = symbols('xy')
+    x, y = symbols('x,y')
 
     assert rf(nan, y) == nan
 
@@ -31,8 +30,7 @@ def test_rf_eval_apply():
     assert rf(1, 100) == factorial(100)
 
 def test_ff_eval_apply():
-
-    x, y = symbols('xy')
+    x, y = symbols('x,y')
 
     assert ff(nan, y) == nan
 
