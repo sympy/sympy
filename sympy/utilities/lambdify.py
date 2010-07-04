@@ -103,6 +103,7 @@ def lambdify(args, expr, modules=None):
 
     Usage:
     >>> from sympy import sqrt, sin
+    >>> from sympy.utilities import lambdify
     >>> from sympy.abc import x, y, z
     >>> f = lambdify(x, x**2)
     >>> f(2)
