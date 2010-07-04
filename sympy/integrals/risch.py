@@ -74,6 +74,25 @@ def derivation(p, D, x, t, coefficientD=False):
         return px.diff(x).as_poly(t)
     return p.diff(t)*D + px.diff(x).as_poly(t)
 
+def get_case(D, x, t):
+    """
+    Returns the type of the derivation D.
+
+    Returns one of {'exp', 'tan', 'primitive', 'other_linear',
+    'other_nonlinear'}.
+    This implementation does not yet consider the tower of differential
+    extensions that may lie below the current extension.
+    """
+    if not D.has(t):
+        return 'primitive'
+    if D.rem(Poly(t, t)).is_zero:
+        return 'exp'
+    if D.rem(Poly(1 + t**2, t)).is_zero:
+        return 'tan'
+    if D.degree(t) > 1:
+        return 'other_nonlinear'
+    return 'other_linear'
+
 def splitfactor(p, D, x, t, coefficientD=False):
     """
     Splitting factorization.

@@ -131,7 +131,7 @@ def normal_denominator(fa, fd, ga, gd, D, x, t):
     # (dn*h, dn*h*f - dn*Dh, dn*h**2*g, h)
     return (a, (ba, bd), (ca, cd), h)
 
-def special_denom(a, ba, bd, ca, cd, D, x, t, case):
+def special_denom(a, ba, bd, ca, cd, D, x, t, case='auto'):
     """
     Special part of the denominator.
 
@@ -177,8 +177,8 @@ def special_denom(a, ba, bd, ca, cd, D, x, t, case):
         #     alpha*sqrt(-1) + beta == 2*m*eta*sqrt(-1) + Dz/z:
         #     # parametric logarithmic derivative problem
         #         n = min(n, m)
-        raise NotImplementedError("""The ability to solve the parametric
-            logarithmic derivative problem is required to solve this RDE.""")
+        raise NotImplementedError("The ability to solve the parametric " +
+            "logarithmic derivative problem is required to solve this RDE.")
 
     N = max(0, -nb, n - nc)
     pN = p**N
