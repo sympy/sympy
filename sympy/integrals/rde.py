@@ -17,7 +17,7 @@ reduced to finding y'' in k[t], where y == y''/(n*s)
 5. Find the solutions in k[t] of bounded degree of the reduced equation.
 
 See Chapter 6 of "Symbolic Integration I: Transcendental Functions" by Manuel
-Bronstein.
+Bronstein.  See also the docstring of risch.py.
 """
 from sympy.core.symbol import Symbol
 
@@ -56,7 +56,7 @@ def order_at(a, p, t):
 
     return n
 
-def weak_normalizer(a, d, D, x, t, z=None):
+def weak_normalizer(a, d, D, x, T, z=None):
     """
     Weak normalization.
 
@@ -72,8 +72,9 @@ def weak_normalizer(a, d, D, x, t, z=None):
 
     Returns (q, f - Dq/q)
     """
+    t = T[-1]
     z = z or Symbol('z', dummy=True)
-    dn, ds = splitfactor(d, D, x, t)
+    dn, ds = splitfactor(d, D, x, T)
 
     # Compute d1, where dn == d1*d2**2*...*dn**n is a square-free
     # factorization of d.
@@ -82,25 +83,25 @@ def weak_normalizer(a, d, D, x, t, z=None):
     d1 = d_sqf_part.quo(gcd(d_sqf_part, g))
 
     a1, b = gcdex_diophantine(d.quo(d1), d1, a)
-    r = (a - Poly(z, t)*derivation(d1, D, x, t)).as_poly(t).resultant(d1.as_poly(t))
+    r = (a - Poly(z, *T)*derivation(d1, D, x, T)).as_poly(t).resultant(d1.as_poly(t))
     r = Poly(r, z)
 
     if not r.has(z):
-        return (Poly(1, t), (a, d))
+        return (Poly(1, *T), (a, d))
 
     N = [i for i in r.real_roots() if i in ZZ and i > 0]
 
-    q = reduce(mul, [gcd(a - Poly(n, t)*derivation(d1, D, x, t), d1) for n in N],
-        Poly(1, t))
+    q = reduce(mul, [gcd(a - Poly(n, *T)*derivation(d1, D, x, T), d1) for n in N],
+        Poly(1, *T))
 
-    dq = derivation(q, D, x, t)
+    dq = derivation(q, D, x, T)
     sn = q*a - d*dq
     sd = q*d
     sn, sd = sn.cancel(sd, include=True)
 
     return (q, (sn, sd))
 
-def normal_denominator(fa, fd, ga, gd, D, x, t):
+def normal_denominator(fa, fd, ga, gd, D, x, T):
     """
     Normal part of the denominator.
 
@@ -112,8 +113,9 @@ def normal_denominator(fa, fd, ga, gd, D, x, t):
 
     This constitutes step 1 in the outline given in the rde.py docstring.
     """
-    dn, ds = splitfactor(fd, D, x, t)
-    en, es = splitfactor(gd, D, x, t)
+    t = T[-1]
+    dn, ds = splitfactor(fd, D, x, T)
+    en, es = splitfactor(gd, D, x, T)
 
     p = gcd(dn, es)
     h = gcd(en, en.diff(t)).quo(gcd(p, p.diff(t)))
@@ -126,13 +128,13 @@ def normal_denominator(fa, fd, ga, gd, D, x, t):
     ca = c*ga
     ca, cd = ca.cancel(gd, include=True)
 
-    ba = a*fa - dn*derivation(h, D, x, t)*fd
+    ba = a*fa - dn*derivation(h, D, x, T)*fd
     ba, bd = ba.cancel(fd, include=True)
 
     # (dn*h, dn*h*f - dn*Dh, dn*h**2*g, h)
     return (a, (ba, bd), (ca, cd), h)
 
-def special_denom(a, ba, bd, ca, cd, D, x, t, case='auto'):
+def special_denom(a, ba, bd, ca, cd, D, x, T, case='auto'):
     """
     Special part of the denominator.
 
@@ -150,19 +152,23 @@ def special_denom(a, ba, bd, ca, cd, D, x, t, case='auto'):
     This constitutes step 2 of the outline given in the rde.py docstring.
     """
     # TODO: finish writing this and write tests
+    t = T[-1]
+    d = D[-1]
+
     if case == 'auto':
-        case = get_case(D, x, t)
+        case = get_case(d, x, t)
 
     if case == 'exp':
-        p = Poly(t, t)
+        p = Poly(t, *T)
     elif case == 'tan':
-        p = Poly(t**2 + 1, t)
-    elif case == 'primitive':
+        p = Poly(t**2 + 1, *T)
+    elif case in ['primitive', 'base']:
         B = ba.quo(bd)
         C = cd.quo(cd)
-        return (a, B, C, Poly(1, t))
+        return (a, B, C, Poly(1, *T))
     else:
-        raise ValueError("case must be one of {'exp', 'tan', 'primitive'}, not %s." % case)
+        raise ValueError("case must be one of {'exp', 'tan', 'primitive', " +
+            "'base'}, not %s." % case)
 
     nb = order_at(ba, p, t) - order_at(bd, p, t)
     nc = order_at(ca, p, t) - order_at(cd, p, t)
@@ -190,14 +196,14 @@ def special_denom(a, ba, bd, ca, cd, D, x, t, case='auto'):
     pn = p**n
 
     A = a*pN
-    B = (ba*pN.quo(bd) + Poly(n, t)*a*derivation(p, D, x, t)*pN.quo(p))
+    B = (ba*pN.quo(bd) + Poly(n, t)*a*derivation(p, D, x, T)*pN.quo(p))
     C = ca*pN.quo(pn).quo(cd)
     h = pn # This is 1/h
 
     # (ap**N, (b + n*a*Dp/p)*p**N, c*p**(N - n), p**-n)
     return (A, B, C, h)
 
-def bound_degree(a, b, c, D, x, t, case='auto'):
+def bound_degree(a, b, c, D, x, T, case='auto'):
     """
     Bound on polynomial solutions.
 
@@ -205,8 +211,11 @@ def bound_degree(a, b, c, D, x, t, case='auto'):
     ZZ such that deg(q) <= n for any solution q in k[t] of a*Dq + b*q == c.
     """
     # TODO: finish writing this and write tests
+    t = T[-1]
+    d = D[-1]
+
     if case == 'auto':
-        case = get_case(D, x, t)
+        case = get_case(d, x, t)
 
     da = a.degree(t)
     db = b.degree(t)
@@ -215,30 +224,30 @@ def bound_degree(a, b, c, D, x, t, case='auto'):
     alpha = -b.as_poly(t).LC().as_basic()/c.as_poly(t).LC().as_basic()
     alpha = cancel(alpha)
 
-    if case == 'primitive':
-        if D.is_one: # base case
-            n = max(0, dc - max(db, da - 1))
-            if db == da - 1 and alpha.is_Integer:
-                n = max(0, alpha, dc - db)
+    if case == 'base':
+        n = max(0, dc - max(db, da - 1))
+        if db == da - 1 and alpha.is_Integer:
+            n = max(0, alpha, dc - db)
+
+    elif case == 'primitive':
+        if db > da:
+            n = max(0, dc - db)
         else:
-            if db > da:
-                n = max(0, dc - db)
-            else:
-                max(0, dc - da + 1)
+            max(0, dc - da + 1)
 
-            if db == da - 1:
-                raise NotImplementedError("Possible cancellation cases are " +
-                    "not yet implemented for the primitive case.")
-                # if alpha == m*Dt + Dz for z in k and m in ZZ:
-                    # n = max(n, m)
-
-            if db == da:
-                raise NotImplementedError("Possible cancellation cases are " +
+        if db == da - 1:
+            raise NotImplementedError("Possible cancellation cases are " +
                 "not yet implemented for the primitive case.")
-                # if alpha == Dz/z for z in k*:
-                    # beta = -lc(a*Dz + b*z)/(z*lc(a))
-                    # if beta == m*Dt + Dw for w in k and m in ZZ:
-                        # n = max(n, m)
+            # if alpha == m*Dt + Dz for z in k and m in ZZ:
+                # n = max(n, m)
+
+        if db == da:
+            raise NotImplementedError("Possible cancellation cases are " +
+            "not yet implemented for the primitive case.")
+            # if alpha == Dz/z for z in k*:
+                # beta = -lc(a*Dz + b*z)/(z*lc(a))
+                # if beta == m*Dt + Dw for w in k and m in ZZ:
+                    # n = max(n, m)
 
     elif case == 'exp':
         n = max(0, dc - max(db, da))
@@ -249,19 +258,19 @@ def bound_degree(a, b, c, D, x, t, case='auto'):
                 # n = max(n, m)
 
     elif case in ['tan', 'other_nonlinear']:
-        delta = D.degree(t)
-        lam = D.LC()
+        delta = d.degree(t)
+        lam = d.LC()
         n = max(0, dc - max(da + delta - 1, db))
         if db == da + delta - 1 and alpha.is_Integer:
             n = max(0, alpha, dc - db)
 
     else:
         raise ValueError("case must be one of {'exp', 'tan', 'primitive', " +
-            "'other_nonlinear'}, not %s." % case)
+            "'other_nonlinear', 'base'}, not %s." % case)
 
     return n
 
-def spde(a, b, c, D, n, x, t):
+def spde(a, b, c, D, n, x, T):
     """
     Rothstein's Special Polynomial Differential Equation algorithm.
 
@@ -274,7 +283,8 @@ def spde(a, b, c, D, n, x, t):
     Dh + B*h == C.
     """
     # TODO: Rewrite this non-recursively
-    zero = Poly(0, t)
+    t = T[-1]
+    zero = Poly(0, *T)
     if n < 0:
         if c.is_zero:
             return (zero, zero, 0, zero, zero)
@@ -286,11 +296,12 @@ def spde(a, b, c, D, n, x, t):
 
     a, b, c = a.quo(g), b.quo(g), c.quo(g)
     if a.degree(t) == 0:
-        return (b.quo(a), c.quo(a), n, Poly(1, t), zero)
+        return (b.quo(a), c.quo(a), n, Poly(1, *T), zero)
 
-    r, z = gcdex_diophantine(b, a, c)
-    u = (a, b + derivation(a, D, x, t), z - derivation(r, D, x, t), D,
-        n - a.degree(t)) + (x, t)
+    r, z = gcdex_diophantine(b.as_poly(t), a.as_poly(t), c.as_poly(t))
+    r, z = Poly(r, *T), Poly(z, *T)
+    u = (a, b + derivation(a, D, x, T), z - derivation(r, D, x, T), D,
+        n - a.degree(t)) + (x, T)
     B, C, m, alpha, beta = spde(*u)
 
     return (B, C, m, a*alpha, a*beta + r)
