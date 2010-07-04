@@ -84,3 +84,9 @@ def test_spde():
     3*t**4/4 + t**3 - t**2 + 1, t), D, n, x, [t]) == \
         (Poly(0, t, domain='ZZ'), Poly(t/2 - S(1)/4, t, domain='QQ'), -2 + n,
         Poly(t**2 + t + 1, t, domain='ZZ'), Poly(5*t/4, t, domain='QQ'))
+
+def test_solve_poly_rde_no_cancel():
+    # deg(b) large
+    assert solve_poly_rde(Poly(t**2 + 1, t), Poly(t**3 + (x + 1)*t**2 + t + x + 2, t),
+    [Poly(1 + t**2, t)], oo, x, [t]) == \
+        Poly(t + x, t, domain='ZZ[x]')

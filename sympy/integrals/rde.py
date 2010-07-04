@@ -305,3 +305,37 @@ def spde(a, b, c, D, n, x, T):
     B, C, m, alpha, beta = spde(*u)
 
     return (B, C, m, a*alpha, a*beta + r)
+
+def no_cancel_b_large(b, c, D, n, x, T):
+    """
+    Poly Risch Differential Equation - No cancelation: deg(b) large enough.
+
+    Given a derivation D on k[t], n either an integer or +oo, and b, c in k[t]
+    with b != 0 and either D == d/dt or deg(b) > max(0, deg(D) - 1), either
+    raise NonElementaryIntegral, in which case the equation Dq + b*q == c has no
+    solution of degree at most n in k[t], or a solution q in k[t] of this
+    equation with deg(q) < n.
+    """
+    t = T[-1]
+    q = Poly(0, *T)
+
+    while not c.is_zero:
+        m = c.degree(t) - b.degree(t)
+        if not 0 <= m <= n:
+            raise NonElementaryIntegral
+        p = Poly(c.as_poly(t).LC()/b.as_poly(t).LC()*t**m, *T)
+        q = q + p
+        n = m - 1
+        c = c - derivation(p, D, x, T) - b*p
+    return q
+
+def solve_poly_rde(b, c, D, n, x, T):
+    """
+    Solve a Polynomial Risch Differential Equation with degree bound n.
+    """
+    t = T[-1]
+
+    if D[-1].is_one or b.degree(t):
+        return no_cancel_b_large(b, c, D, n, x, T)
+    else:
+        raise NotImplementedError("Remaining cases for Poly RDE not yet implemented.")
