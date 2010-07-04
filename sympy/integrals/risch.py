@@ -105,6 +105,9 @@ def splitfactor(p, D, x, t, coefficientD=False):
     """
     One = Poly(1, t, domain=p.get_domain())
     Dp = derivation(p, D, x, t, coefficientD)
+    if p.is_zero:
+        return (p, One)
+
     if not p.has_any_symbols(t):
         s = p.as_poly(1/x).gcd(Dp.as_poly(1/x)).as_poly(t)
         n = p.quo(s)
@@ -137,6 +140,9 @@ def splitfactor_sqf(p, D, x, t, coefficientD=False):
     S = []
     N = []
     p_sqf = p.sqf_list_include()
+    if p.is_zero:
+        return (((p, 1),), ())
+
     for pi, i in p_sqf:
         Si = pi.as_poly(1/x, x).gcd(derivation(pi, D, x, t,
             coefficientD).as_poly(1/x, x)).as_poly(t)
@@ -259,6 +265,7 @@ def residue_reduce(a, d, D, x, t, z=None, invert=True):
     # If r = residue_reduce(...), then the logarithmic part is given by:
     # sum([RootSum(a[0].as_poly(z), lambda i: i*log(a[1].as_basic()).subs(z,
     # i)).subs(t, log(x)) for a in r[0]])
+    a, d = a.cancel(d, include=True)
     if a.is_zero:
         return ([], True)
     p, a = a.div(d)

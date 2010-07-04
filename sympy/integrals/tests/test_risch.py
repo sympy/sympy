@@ -42,6 +42,8 @@ def test_splitfactor():
     assert splitfactor_sqf(r, D, x, t, coefficientD=True) == \
         (((Poly(x*z - x**2 - z*x**3 + x**4, t, domain='ZZ[x,z]'), 1),),
         ((Poly(-x**2 + 4*x**2*z**2, t, domain='ZZ[x,z]'), 1),))
+    assert splitfactor(Poly(0, t), D, x, t) == (Poly(0, t), Poly(1, t))
+    assert splitfactor_sqf(Poly(0, t), D, x, t) == (((Poly(0, t), 1),), ())
 
 def test_canonical_representation():
     D = Poly(1 + t**2, t)
