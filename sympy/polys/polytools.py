@@ -2424,14 +2424,7 @@ class Poly(Basic):
         """
         dom, per, F, G = f.unify(g)
 
-        if include:
-            try:
-                _, P, Q = F.cofactors(G)
-            except AttributeError: # pragma: no cover
-                raise OperationNotSupported(f, 'cofactors')
-            return per(P), per(Q)
-
-        if F.is_zero or G.is_zero:
+        if (F.is_zero or G.is_zero) and not include:
             return S.One, per(F), per(G)
 
         if dom.has_Field and dom.has_assoc_Ring:
@@ -2456,7 +2449,11 @@ class Poly(Basic):
 
             coeff = cG/cF
         else:
-            coeff = S.One
+            coeff, cF, cG = [S.One]*3
+
+        if include:
+            return (per(P)*Poly(cG, *g.gens, domain=dom),
+                per(Q)*Poly(cF, *f.gens, domain=dom))
 
         return coeff, per(P), per(Q)
 
