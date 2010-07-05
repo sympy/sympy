@@ -160,7 +160,7 @@ need to write special code in _handle_Integral().  Arbitrary constants
 should be symbols named C1, C2, and so on.  All solution methods should
 return an equality instance.  If you need an arbitrary number of
 arbitrary constants, you can use constants =
-numbered_symbols(prefix='C', function=Symbol, start=1).  If it is
+numbered_symbols(prefix='C', cls=Symbol, start=1).  If it is
 possible to solve for the dependent function in a general way, do so.
 Otherwise, do as best as you can, but do not call solve in your
 ode_hint() function.  odesimp() will attempt to solve the solution for
@@ -2258,7 +2258,8 @@ def ode_nth_linear_constant_coeff_homogeneous(eq, func, order, match, returns='s
     f = func.func
     r = match
     # A generator of constants
-    constants = numbered_symbols(prefix='C', function=Symbol, start=1)
+    constants = numbered_symbols(prefix='C', cls=Symbol, start=1)
+
     # First, set up characteristic equation.
     m = Symbol('m', dummy=True)
     chareq = S.Zero
