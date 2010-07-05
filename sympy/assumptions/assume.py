@@ -108,6 +108,9 @@ class Assume(Boolean):
             return self._args == other._args
         return False
 
+    def __hash__(self):
+        return super(Assume, self).__hash__()
+
 def eliminate_assume(expr, symbol=None):
     """
     Convert an expression with assumptions to an equivalent with all assumptions

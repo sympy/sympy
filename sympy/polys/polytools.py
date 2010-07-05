@@ -1641,6 +1641,9 @@ class Poly(Basic):
     def __ne__(f, g):
         return not f.__eq__(g)
 
+    def __hash__(self):
+        return super(Poly, self).__hash__()
+
     def __nonzero__(f):
         return not f.is_zero
 

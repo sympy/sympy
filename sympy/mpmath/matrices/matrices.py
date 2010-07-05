@@ -539,6 +539,9 @@ class _matrix(object):
         return self.__rows == other.__rows and self.__cols == other.__cols \
                and self.__data == other.__data
 
+    def __hash__(self):
+        return super(_matrix, self).__hash__()
+
     def __len__(self):
         if self.rows == 1:
             return self.cols

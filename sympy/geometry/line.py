@@ -327,6 +327,9 @@ class LinearEntity(GeometryEntity):
     def __eq__(self, other):
         raise NotImplementedError()
 
+    def __hash__(self):
+        return super(LinearEntity, self).__hash__()
+
     def __contains__(self, other):
         raise NotImplementedError()
 
@@ -397,6 +400,9 @@ class Line(LinearEntity):
         """Return True if other is equal to this Line, or False otherwise."""
         if not isinstance(other, Line): return False
         return Point.is_collinear(self.p1, self.p2, other.p1, other.p2)
+
+    def __hash__(self):
+        return super(Line, self).__hash__()
 
 
 class Ray(LinearEntity):
@@ -472,6 +478,9 @@ class Ray(LinearEntity):
         if not isinstance(other, Ray):
             return False
         return ((self.source == other.source) and (other.p2 in self))
+
+    def __hash__(self):
+        return super(Ray, self).__hash__()
 
     def __contains__(self, o):
         """Return True if o is on this Ray, or False otherwise."""
@@ -584,6 +593,9 @@ class Segment(LinearEntity):
         if not isinstance(other, Segment):
             return False
         return ((self.p1 == other.p1) and (self.p2 == other.p2))
+
+    def __hash__(self):
+        return super(Segment, self).__hash__()
 
     def __contains__(self, o):
         """Return True if o is on this Segment, or False otherwise."""
