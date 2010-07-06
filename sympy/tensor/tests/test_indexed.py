@@ -1,5 +1,5 @@
 from sympy import symbols, Integer
-from sympy.tensor import Indexed, Idx
+from sympy.tensor import Indexed, Idx, IndexedElement
 from sympy.tensor.indexed import IndexException
 from sympy.utilities.pytest import raises
 from sympy import oo
@@ -78,18 +78,9 @@ def test_Idx_subs():
 def test_Indexed_sugar():
     i, j = symbols('i j', integer=True)
     a = symbols('a')
-    A1 = Indexed(a, i, j)
+    A1 = IndexedElement(a, i, j)
     A2 = Indexed(a)
     assert A1 == A2(i, j)
-    raises(IndexException, 'A1(i, j)')
-
-def test_Indexed_func_args():
-    i, j = symbols('i j', integer=True)
-    a = symbols('a')
-    A = Indexed(a, i, j)
-    assert A.func(*A.args)
-    A = Indexed(a)(i, j)
-    assert A.func(*A.args)
 
 def test_Indexed_subs():
     i, j, k = symbols('i j k', integer=True)
@@ -97,17 +88,29 @@ def test_Indexed_subs():
     A = Indexed(a)
     B = Indexed(b)
     assert A == B.subs(b, a)
+
+def test_IndexedElement_func_args():
+    i, j = symbols('i j', integer=True)
+    a = symbols('a')
+    A = IndexedElement(a, i, j)
+    assert A.func(*A.args)
+
+def test_IndexedElement_subs():
+    i, j, k = symbols('i j k', integer=True)
+    a, b = symbols('a b')
+    A = Indexed(a)
+    B = Indexed(b)
     assert A(i, j) == B(i, j).subs(b, a)
     assert A(i, j) == A(i, k).subs(k, j)
 
-def test_Indexed_properties():
+def test_IndexedElement_properties():
     i, j = symbols('i j', integer=True)
     a = symbols('a')
-    A = Indexed(a, i, j)
+    A = IndexedElement(a, i, j)
     assert A.rank == 2
     assert A.indices == tuple(map(Idx, (i, j)))
-    assert A.label == a
+    assert A.stem == Indexed(a)
     assert A.dimensions == [(None, None), (None, None)]
 
     n, m = symbols('n m', integer=True)
-    assert Indexed(a, Idx(i, m), Idx(j, n)).dimensions == [(0, m - 1), (0, n - 1)]
+    assert IndexedElement(a, Idx(i, m), Idx(j, n)).dimensions == [(0, m - 1), (0, n - 1)]

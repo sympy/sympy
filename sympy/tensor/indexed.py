@@ -1,23 +1,51 @@
 """Module that defines indexed objects with arbitrary transformation properties.
 
-    The Idx class represent indices and each Idx can optionally contain
-    information about its range.  Transformation properties can be defined in
-    subclasses.
+    The classes Indexed, IndexedElement and Idx represent a matrix element M(i, j)
+    as in the following graph:
+
+       1) The IndexedElement class represents an element of the indexed object.
+                  |
+               ___|___
+              '       '
+               M(i, j)
+              /   \__\____
+              |           \
+              |            \
+              |     2) The Idx class represent indices and each Idx can
+              |        optionally contain information about its range.
+              |
+    3) The Indexed class represents the `stem' of an indexed object, here `M'.
+    The stem used by itself is usually taken to represent the entire array.
+
 
     Examples
     ========
 
-    To express a matrix-vector product in terms of Indexed objects:
+    To express the above matrix element example you would write:
 
     >>> from sympy.tensor import Indexed, Idx
-    >>> from sympy import symbols, Eq
-    >>> M, x, y = symbols('M x y')
+    >>> from sympy import symbols
     >>> i, j, n, m = symbols('i j n m', integer=True)
-    >>> M = Indexed(M, Idx(i, m), Idx(j, n))
-    >>> x = Indexed(x, Idx(j, n))
-    >>> y = Indexed(y, Idx(i, m))
-    >>> Eq(y, M*x)
-    y(i) == M(i, j)*x(j)
+    >>> M = Indexed('M')
+    >>> M(i, j)
+    M(i, j)
+
+    If the indexed objects will be converted to component based arrays, e.g.
+    numpy arrays, you also need to provide (symbolic) dimensions.  This is done
+    with the Idx class:
+
+    >>> ii = Idx(i, m)
+    >>> jj = Idx(j, n)
+    >>> M(ii, jj)
+    M(i, j)
+    >>> M(ii, jj).dimensions
+    [(0, -1 + m), (0, -1 + n)]
+
+    To express a matrix-vector product in terms of Indexed objects:
+
+    >>> x = Indexed('x')
+    >>> M(ii, jj)*x(jj)
+    M(i, j)*x(j)
 
 
     TODO:  (some ideas for improvement)
@@ -46,37 +74,81 @@ class IndexException(Exception):
     pass
 
 class Indexed(Expr):
-    """Represent an arbitrary object with indices, e.g. a symbolic array element.
+    """Represent the stem of an indexed object, e.g. a numpy array.
+
+    The IndexedStem class represent an array that contains elements. An element
+    i of an indexed object A is denoted A(i) and is represented by the
+    IndexedElement class.
+
+    The Indexed class allows a simple notation for e.g. matrix equations,
+    resembling what you could do with the Symbol class.  But, the Indexed class
+    adds functionality that is not available for Symbol instances:
+
+      -  An Indexed object can optionally store shape information.  This can
+         be used in functions that check array conformance and conditions for
+         numpy broadcasting.
+      -  An Indexed object implements syntactic sugar that allows easy symbolic
+         representation of array elements,  e.g. you can type A(i, j) to
+         create a symbol for element i,j of array A.
+      -  The Indexed object symbolizes a mathematical structure equivalent to
+         arrays, and is recognized as such for code generation and
+         TODO: conversion to a numpy array and sympy.Matrix objects.
 
     >>> from sympy.tensor import Indexed
     >>> from sympy import symbols
-    >>> i, j, k = symbols('i j k', integer=True)
-    >>> a = symbols('a')
-    >>> Indexed(a, i, j)
-    a(i, j)
-
-    There is also syntactic sugar that allows declaration of the stem independent
-    of the indices:
-
-    >>> A = Indexed(a); A
+    >>> a = Indexed('a'); a
     a
-    >>> A(i, j, k)
+    >>> type(a)
+    <class 'sympy.tensor.indexed.Indexed'>
+
+    Objects of type IndexedElement to symbolize elements of the array will by
+    created whenever indices are supplied to the stem:
+
+    >>> i, j, k = symbols('i j k', integer=True)
+    >>> a(i, j, k)
     a(i, j, k)
+    >>> type(a(i, j, k))
+    <class 'sympy.tensor.indexed.IndexedElement'>
 
     """
+    def __new__(cls, label, **kw_args):
+        if isinstance(label, basestring):
+            label = Symbol(label)
 
-    def __new__(cls, *args, **kw_args):
-        args = args[:1] + tuple(
-                [ a if isinstance(a, Idx) else Idx(a) for a in args[1:] ])
-        return Expr.__new__(cls, *args, **kw_args)
+        # TODO: implement optional shape argument
+
+        return Expr.__new__(cls, label, **kw_args)
 
     def __call__(self, *indices, **kw_args):
-        if self.rank != 0:
-            raise IndexException("Indexed with rank > 0 cannot be used as stem")
-        return self.func(self.label, *indices, **kw_args)
+        return IndexedElement(self, *indices, **kw_args)
 
     @property
     def label(self):
+        return self.args[0]
+
+    def _sympystr(self, p):
+        return p.doprint(self.label)
+
+class IndexedElement(Expr):
+    """Represent an indexed element, e.g. a symbolic array element.
+
+    >>> from sympy.tensor import IndexedElement
+    >>> from sympy import symbols
+    >>> i, j, k = symbols('i j k', integer=True)
+    >>> IndexedElement('a', i, j)
+    a(i, j)
+
+    """
+
+    def __new__(cls, stem, *args, **kw_args):
+        assert args
+        if isinstance(stem, (basestring, Symbol)):
+            stem = Indexed(stem)
+        args = tuple([ a if isinstance(a, Idx) else Idx(a) for a in args ])
+        return Expr.__new__(cls, stem, *args, **kw_args)
+
+    @property
+    def stem(self):
         return self.args[0]
 
     @property
@@ -94,10 +166,7 @@ class Indexed(Expr):
 
     def _sympystr(self, p):
         indices = map(p.doprint, self.indices)
-        if indices:
-            return "%s(%s)" % (p.doprint(self.label), ", ".join(indices))
-        else:
-            return "%s" % p.doprint(self.label)
+        return "%s(%s)" % (p.doprint(self.stem), ", ".join(indices))
 
 
 class Idx(Basic):
