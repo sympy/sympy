@@ -209,6 +209,8 @@ def bound_degree(a, b, c, D, x, T, case='auto'):
 
     Given a derivation D on k[t] and a, b, c in k[t] with a != 0, return n in
     ZZ such that deg(q) <= n for any solution q in k[t] of a*Dq + b*q == c.
+
+    This constitutes step 3 of the outline given in the rde.py docstring.
     """
     # TODO: finish writing this and write tests
     t = T[-1]
@@ -253,7 +255,7 @@ def bound_degree(a, b, c, D, x, T, case='auto'):
         n = max(0, dc - max(db, da))
         if da == db:
             raise NotImplementedError("Possible cancellation cases are " +
-                "not yet implemented hyperexponential case.")
+                "not yet implemented for the hyperexponential case.")
             # if alpha == m*Dt/t + Dz/z for z in k* and m in ZZ:
                 # n = max(n, m)
 
@@ -281,6 +283,8 @@ def spde(a, b, c, D, n, x, T):
     and any solution q in k[t] of degree at most n of a*Dq + b*q == c must be of
     the form q == alpha*h + beta, where h in k[t], deg(h) <= m, and
     Dh + B*h == C.
+
+    This constitutes step 4 of the outline given in the rde.py docstring.
     """
     # TODO: Rewrite this non-recursively
     t = T[-1]
@@ -321,21 +325,85 @@ def no_cancel_b_large(b, c, D, n, x, T):
 
     while not c.is_zero:
         m = c.degree(t) - b.degree(t)
-        if not 0 <= m <= n:
+        if not 0 <= m <= n: # n < 0 or m < 0 or m > n
             raise NonElementaryIntegral
+
         p = Poly(c.as_poly(t).LC()/b.as_poly(t).LC()*t**m, *T)
         q = q + p
         n = m - 1
         c = c - derivation(p, D, x, T) - b*p
+
+    return q
+
+def no_cancel_b_small(b, c, D, n, x, T):
+    """
+    Poly Risch Differential Equation - No cancelation: deg(b) small enough.
+
+    Given a deriation D on k[t], n either an integer or +oo, and b, c in k[t]
+    with deg(b) < deg(D) - 1 and either D == d/dt or deg(D) >= 2, either raise
+    NonElementaryIntegral, in which case the equation Dq + b*q == c has no
+    solution of degree at most n in k[t], or a solution q in k[t] of this
+    equation with deg(q) <= n, or the tuple (h, b0, c0) such that h in k[t],
+    b0, c0, in k, and for any solution q in k[t] of degree at most n of
+    Dq + bq == c, y == q - h is a solution in k of Dy + b0*y == c0.
+    """
+    t = T[-1]
+    d = D[-1]
+
+    q = Poly(0, *T)
+
+    while not c.is_zero:
+        if n == 0:
+            m = 0
+        else:
+            m = c.degree(t) - d.degree(t) + 1
+
+        if not 0 <= m <= n: # n < 0 or m < 0 or m > n
+            raise NonElementaryIntegral
+
+        if m > 0:
+            p = Poly(c.as_poly(t).LC()/(m*d.as_poly(t).LC())*t**m, *T)
+        else:
+            if b.degree(t) != c.degree(t):
+                raise NonElementaryIntegral
+            if b.degree(t) == 0:
+                return (q, b, c)
+            p = Poly(c.as_poly(t).LC()/b.as_poly(t).LC(), *T)
+
+        q = q + p
+        n = m - 1
+        c = c - derivation(p, D, x, T) - b*p
+
     return q
 
 def solve_poly_rde(b, c, D, n, x, T):
     """
     Solve a Polynomial Risch Differential Equation with degree bound n.
+
+    This constitutes step 4 of the outline given in the rde.py docstring.
     """
     t = T[-1]
+    d = D[-1]
 
-    if D[-1].is_one or b.degree(t):
+    if not b.is_zero and (d.is_one or b.degree(t)):
         return no_cancel_b_large(b, c, D, n, x, T)
+
+    elif (b.is_zero or b.degree(t) < d.degree(t) - 1) and (d.is_one or d.degree(t) >= 2):
+        R = no_cancel_b_small(b, c, D, n, x, T)
+
+        if isinstance(R, Poly):
+            return R
+        else:
+            # XXX: Might k be a field? (pg. 209)
+            h, b0, c0 = R
+            T = T[:-1]
+            D = D[:-1]
+            if not T:
+                T = [x]
+                D = [Poly(1, x)]
+                b0 = b.as_poly(x)
+                c0 = c0.as_poly(x)
+            q = solve_poly_rde(b0, c0, D, n, x, T)
+            return h + q
     else:
         raise NotImplementedError("Remaining cases for Poly RDE not yet implemented.")

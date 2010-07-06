@@ -90,3 +90,9 @@ def test_solve_poly_rde_no_cancel():
     assert solve_poly_rde(Poly(t**2 + 1, t), Poly(t**3 + (x + 1)*t**2 + t + x + 2, t),
     [Poly(1 + t**2, t)], oo, x, [t]) == \
         Poly(t + x, t, domain='ZZ[x]')
+    # deg(b) small
+    assert solve_poly_rde(Poly(0, t), Poly(t/2 - S(1)/4, t), [Poly(1, t)], oo, x, [t]) == \
+        Poly(t**2/4 - t/4, t, domain='QQ')
+    D = [Poly(t**2 + 1, t)]
+    assert solve_poly_rde(Poly(2, t), Poly(t**2 + 2*t + 3, t), D, 1, x, [t]) == \
+        Poly(t + 1, t, x, domain='ZZ')
