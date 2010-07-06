@@ -456,22 +456,27 @@ class Basic(AssumeMeths):
 
         def _atoms(expr, typ):
             """Helper function for recursively denesting atoms"""
+
+            result = set()
             if isinstance(expr, Basic):
                 if expr.is_Atom and len(typ) == 0: # if we haven't specified types
-                    return [expr]
+                    result.add(expr)
                 else:
                     try:
-                        if isinstance(expr, typ): return [expr]
+                        if isinstance(expr, typ):
+                            result.add(expr)
                     except TypeError:
                         #one or more types is in implicit form
                         for t in typ:
                             if type(type(t)) is type:
-                                if isinstance(expr, t): return [expr]
+                                if isinstance(expr, t):
+                                    result.add(expr)
                             else:
-                                if isinstance(expr, type(t)): return [expr]
-            result = []
-            #search for a suitable iterator
-            if isinstance(expr, Basic):
+                                if isinstance(expr, type(t)):
+                                    result.add(expr)
+                if result:
+                    return result
+
                 iter = expr.iter_basic_args()
             elif isinstance(expr, (tuple, list)):
                 iter = expr.__iter__()
@@ -479,10 +484,11 @@ class Basic(AssumeMeths):
                 iter = []
 
             for obj in iter:
-                result.extend(_atoms(obj, typ))
+                result.update(_atoms(obj, typ))
+
             return result
 
-        return set(_atoms(self, typ=types))
+        return _atoms(self, typ=types)
 
     def is_hypergeometric(self, k):
         from sympy.simplify import hypersimp
