@@ -246,9 +246,9 @@ def test_loops():
     from sympy import symbols
     i,j,n,m = symbols('i j n m', integer=True)
     A,x,y = symbols('A x y')
-    A = Indexed(A, Idx(i, m), Idx(j, n))
-    x = Indexed(x, Idx(j, n))
-    y = Indexed(y, Idx(i, m))
+    A = Indexed(A)(Idx(i, m), Idx(j, n))
+    x = Indexed(x)(Idx(j, n))
+    y = Indexed(y)(Idx(i, m))
 
     # human = False
     printer = FCodePrinter({ 'source_format': 'free', 'assign_to':y, 'human':0})

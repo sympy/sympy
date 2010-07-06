@@ -77,7 +77,7 @@ from sympy.core.expr import Expr
 from sympy.core.symtuple import SymTuple
 from sympy.printing.ccode import ccode
 from sympy.printing.fcode import FCodePrinter
-from sympy.tensor import Idx, Indexed
+from sympy.tensor import Idx, IndexedElement
 from sympy.core.relational import Equality
 from sympy.utilities import flatten
 
@@ -154,14 +154,14 @@ class Routine(object):
             if isinstance(expr, Equality):
                 out_arg = expr.lhs
                 expr = expr.rhs
-                if isinstance(out_arg, Indexed):
+                if isinstance(out_arg, IndexedElement):
                     dims = out_arg.dimensions
-                    symbol = out_arg.label
+                    symbol = out_arg.stem.label
                 elif isinstance(out_arg, Symbol):
                     dims = []
                     symbol = out_arg
                 else:
-                    raise CodeGenError("Only Indexed or Symbol can define output arguments")
+                    raise CodeGenError("Only IndexedElement or Symbol can define output arguments")
 
                 if expr.has(symbol):
                     output_args.append(InOutArgument(symbol, out_arg, expr, dimensions=dims))
@@ -175,8 +175,8 @@ class Routine(object):
 
         # setup input argument list
         array_symbols = {}
-        for array in expressions.atoms(Indexed):
-            array_symbols[array.label] = array
+        for array in expressions.atoms(IndexedElement):
+            array_symbols[array.stem.label] = array
 
         for symbol in sorted(symbols):
             if symbol in array_symbols:
