@@ -12,7 +12,7 @@ from sympy import (
 
 from sympy.utilities import iff
 from sympy.core.cache import cacheit
-from sympy.core.symtuple import tuple_wrapper
+from sympy.core.containers import tuple_wrapper
 
 
 __all__ = [

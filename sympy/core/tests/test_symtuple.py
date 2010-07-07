@@ -1,5 +1,5 @@
 from sympy import Tuple, symbols
-from sympy.core.symtuple import tuple_wrapper
+from sympy.core.containers import tuple_wrapper
 
 def test_Tuple():
     t = (1, 2, 3, 4)

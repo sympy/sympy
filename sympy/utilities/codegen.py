@@ -74,7 +74,7 @@ printing.
 
 from sympy.core.symbol import Symbol
 from sympy.core.expr import Expr
-from sympy.core.symtuple import Tuple
+from sympy.core.containers import Tuple
 from sympy.printing.ccode import ccode
 from sympy.printing.fcode import FCodePrinter
 from sympy.tensor import Idx, IndexedElement
