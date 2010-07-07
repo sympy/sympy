@@ -161,7 +161,7 @@ class AssocOp(Expr):
         from function import WildFunction
         from symbol import Wild
         for p in self.args:
-            if p.atoms(Wild, WildFunction):
+            if p.has(Wild, WildFunction):
                 # not all Wild should stay Wilds, for example:
                 # (w2+w3).matches(w1) -> (w1+w3).matches(w1) -> w3.matches(0)
                 if (not p in repl_dict) and (not p in expr):

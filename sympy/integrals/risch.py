@@ -216,7 +216,7 @@ def heurisch(f, x, **kwargs):
 
     def deflation(p):
         for y in V:
-            if not p.has_any_symbols(y):
+            if not p.has(y):
                 continue
 
             if derivation(p) is not S.Zero:
@@ -227,7 +227,7 @@ def heurisch(f, x, **kwargs):
 
     def splitter(p):
         for y in V:
-            if not p.has_any_symbols(y):
+            if not p.has(y):
                 continue
 
             if derivation(y) is not S.Zero:

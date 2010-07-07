@@ -906,6 +906,9 @@ def trigsimp(expr, deep=False, recursive=False):
     """
     from sympy.core import S
     sin, cos, tan, cot = C.sin, C.cos, C.tan, C.cot
+    if not expr.has(sin, cos, tan, cot):
+        return expr
+
     if recursive:
         w, g = cse(expr)
         g = trigsimp_nonrecursive(g[0])

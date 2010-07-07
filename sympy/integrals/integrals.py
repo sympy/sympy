@@ -224,7 +224,7 @@ class Integral(Expr):
            [2] http://en.wikipedia.org/wiki/Differentiation_under_the_integral_sign
         """
 
-        if not sym in self.atoms(Symbol):
+        if not self.has(sym):
             return S.Zero
 
         if Tuple(sym) in self.limits:

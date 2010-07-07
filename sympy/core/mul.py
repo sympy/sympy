@@ -372,7 +372,7 @@ class Mul(AssocOp):
         if e.is_even and c.is_Number and c < 0:
             return Pow((Mul(-c, Mul(*t))), e)
 
-        #if e.atoms(Wild):
+        #if e.has(Wild):
         #    return Mul(*[t**e for t in b])
 
     def _eval_evalf(self, prec):

@@ -131,17 +131,17 @@ def _separate(eq, dep, others):
     for term in eq.args:
         if term.is_Mul:
             for i in term.args:
-                if i.is_Derivative and not i.has_any_symbols(*others):
+                if i.is_Derivative and not i.has(*others):
                     terms.add(term)
                     continue
-        elif term.is_Derivative and not term.has_any_symbols(*others):
+        elif term.is_Derivative and not term.has(*others):
             terms.add(term)
     # Find the factor that we need to divide by
     div = set()
     for term in terms:
         ext, sep = term.expand().as_independent(dep)
         # Failed?
-        if sep.has_any_symbols(*others):
+        if sep.has(*others):
             return None
         div.add(ext)
     # FIXME: Find lcm() of all the divisors and divide with it, instead of
@@ -161,13 +161,13 @@ def _separate(eq, dep, others):
     lhs = rhs = 0
     for term in eq.args:
         # Check, whether we have already term with independent variable...
-        if not term.has_any_symbols(*others):
+        if not term.has(*others):
             lhs += term
             continue
         # ...otherwise, try to separate
         temp, sep = term.expand().as_independent(dep)
         # Failed?
-        if sep.has_any_symbols(*others):
+        if sep.has(*others):
             return None
         # Extract the divisors
         div.add(sep)
@@ -177,6 +177,6 @@ def _separate(eq, dep, others):
     lhs = simplify(lhs/fulldiv).expand()
     rhs = simplify(rhs/fulldiv).expand()
     # ...and check whether we were successful :)
-    if lhs.has_any_symbols(*others) or rhs.has_any_symbols(dep):
+    if lhs.has(*others) or rhs.has(dep):
         return None
     return [lhs, rhs]

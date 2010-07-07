@@ -1311,7 +1311,7 @@ def constantsimp(expr, independentsymbol, endnumber, startnumber=1,
         # We don't know how to handle other classes
         # This also serves as the base case for the recursion
         return expr
-    elif not any(expr.has(t) for t in constantsymbols):
+    elif not expr.has(*constantsymbols):
         return expr
     else:
         newargs = []
@@ -1860,7 +1860,7 @@ def _homogeneous_order(eq, *symbols):
                 symbols = tuple(symbols)
 
     # The following are not supported
-    if eq.has(Order) or eq.has(Derivative):
+    if eq.has(Order, Derivative):
         return None
 
     # These are all constants
@@ -2525,12 +2525,12 @@ def _undetermined_coefficients_match(expr, x):
         if expr.is_Add:
             return all([_test_term(i, x) for i in expr.args])
         elif expr.is_Mul:
-            if expr.has(sin) or expr.has(cos):
+            if expr.has(sin, cos):
                 foundtrig = False
                 # Make sure that there is only one trig function in the args.
                 # See the docstring.
                 for i in expr.args:
-                    if i.has(sin) or i.has(cos):
+                    if i.has(sin, cos):
                         if foundtrig:
                             return False
                         else:
