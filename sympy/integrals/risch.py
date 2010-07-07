@@ -156,7 +156,7 @@ def heurisch(f, x, **kwargs):
             f = f.rewrite(candidates, rule)
     else:
         for candidates in rewritables.iterkeys():
-            if f.has(*candidates):
+            if f.has(*candidates, **dict(any=1)):
                 break
         else:
             rewrite = True
@@ -216,7 +216,7 @@ def heurisch(f, x, **kwargs):
 
     def deflation(p):
         for y in V:
-            if not p.has_any_symbols(y):
+            if not p.has(y):
                 continue
 
             if derivation(p) is not S.Zero:
@@ -227,7 +227,7 @@ def heurisch(f, x, **kwargs):
 
     def splitter(p):
         for y in V:
-            if not p.has_any_symbols(y):
+            if not p.has(y):
                 continue
 
             if derivation(y) is not S.Zero:
@@ -304,7 +304,7 @@ def heurisch(f, x, **kwargs):
     reducibles = set()
 
     for poly in polys:
-        if poly.has(*V):
+        if poly.has(*V, **dict(any=1)):
             try:
                 factorization = factor(poly, greedy=True)
             except PolynomialError:
@@ -332,7 +332,7 @@ def heurisch(f, x, **kwargs):
         B = _symbols('B', len(irreducibles))
 
         for i, poly in enumerate(irreducibles):
-            if poly.has(*V):
+            if poly.has(*V, **dict(any=1)):
                 log_coeffs.append(B[i])
                 log_part.append(log_coeffs[-1] * log(poly))
 

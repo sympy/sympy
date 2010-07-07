@@ -815,119 +815,72 @@ class Basic(AssumeMeths):
         return False
 
     @cacheit
-    def has_any_symbols(self, *syms):
-        """Return True if 'self' has any of the symbols.
+    def has(self, *patterns, **flags):
+        """Return True if self has all of the patterns. If the `any` flag
+        is True then return True if any of the patterns are present.
 
-           >>> from sympy import sin
+           >>> from sympy import sin, S
            >>> from sympy.abc import x, y, z
 
-           >>> (x**2 + sin(x*y)).has_any_symbols(z)
+           >>> (x**2 + sin(x*y)).has(z)
            False
 
-           >>> (x**2 + sin(x*y)).has_any_symbols(x, y)
+           >>> (x**2 + sin(x*y)).has(x, y)
            True
 
-           >>> (x**2 + sin(x*y)).has_any_symbols(x, y, z)
-           True
-
-        """
-        syms = set(syms)
-
-        if not syms:
-            return True
-        else:
-            def search(expr):
-                if type(expr) in (tuple, set, list):
-                    for i in expr:
-                        if search(i):
-                            return True
-                elif not isinstance(expr, Basic):
-                    pass
-                elif expr.is_Atom:
-                    if expr.is_Symbol:
-                        return expr in syms
-                    else:
-                        return False
-                else:
-                    for term in expr.iter_basic_args():
-                        if search(term):
-                            return True
-                    else:
-                        return False
-
-            return search(self)
-
-    @cacheit
-    def has_all_symbols(self, *syms):
-        """Return True if 'self' has all of the symbols.
-
-           >>> from sympy import sin
-           >>> from sympy.abc import x, y, z
-
-           >>> (x**2 + sin(x*y)).has_all_symbols(x, y)
-           True
-
-           >>> (x**2 + sin(x*y)).has_all_symbols(x, y, z)
+           >>> (x**2 + sin(x*y)).has(x, y, z)
            False
 
-        """
-        syms = set(syms)
+           When `any` is True then True is returned if any of the patterns are present:
 
-        if not syms:
-            return True
-        else:
-            def search(expr):
-                if type(expr) in (tuple, set, list):
-                    for i in expr:
-                        search(i)
-                elif not isinstance(expr, Basic):
-                    pass
-                elif expr.is_Atom:
-                    if expr.is_Symbol and expr in syms:
-                        syms.remove(expr)
-                else:
-                    for term in expr.iter_basic_args():
-                        if not syms:
-                            break
-                        else:
-                            search(term)
+           >>> (x**2 + sin(x*y)).has(x, y, z, any=True)
+           True
 
-            search(self)
+           If there are not patterns False is always returned:
+           "something doesn't have nothing"
 
-            return not syms
+           >>> (x).has()
+           False
+           >>> (S.One).has()
+           False
 
-    def has(self, *patterns):
-        """
-        Return True if self has any of the patterns.
-
-        Example:
-        >>> from sympy.abc import x
-        >>> (2*x).has(x)
-        True
-        >>> (2*x/x).has(x)
-        False
 
         """
-        from sympy.utilities.iterables import flatten
+        from sympy.utilities.iterables import all, any
         from sympy.core.symbol import Wild
-        if len(patterns)>1:
-            for p in patterns:
-                if self.has(p):
-                    return True
-            return False
-        elif not patterns:
-            raise TypeError("has() requires at least 1 argument (got none)")
-        p = sympify(patterns[0])
-        if isinstance(p, BasicType):
-            return bool(self.atoms(p))
-        if p.is_Atom and not isinstance(p, Wild):
-            return p in self.atoms(p.func)
-        if p.matches(self) is not None:
-            return True
-        for e in flatten(self.args):
-            if isinstance(e, Basic) and e.has(p):
+
+        def search(expr, target, hit):
+            if type(expr) in (tuple, set, list):
+                for i in expr:
+                    if search(i, target, hit):
+                        return True
+            elif not isinstance(expr, Basic):
+                pass
+            elif target(expr) and hit(expr):
                 return True
-        return False
+            else:
+                for term in expr.iter_basic_args():
+                    if search(term, target, hit):
+                        return True
+            return False
+
+        def _has(p):
+            p = sympify(p)
+            if isinstance(p, BasicType):
+                return search(self, lambda w: isinstance(w, p), lambda w: True)
+            if p.is_Atom and not isinstance(p, Wild):
+                return search(self, lambda w: isinstance(w, p.func), lambda w: w in [p])
+            return search(self, lambda w: p.matches(w) is not None, lambda w: True)
+
+        if not patterns:
+            return False # something doesn't have nothing
+
+        patterns = set(patterns)
+
+        if flags.get('any', False):
+            return any(_has(p) for p in patterns)
+        else:
+            return all(_has(p) for p in patterns)
 
     def matches(self, expr, repl_dict={}, evaluate=False):
         """

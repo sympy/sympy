@@ -286,7 +286,7 @@ class Expr(Basic, EvalfMixin):
                 else:
                     args = [expr]
 
-                if coeff[w].has(*args):
+                if coeff[w].has(*args, **dict(any=1)):
                     return None
                 else:
                     return coeff[w]
@@ -321,7 +321,7 @@ class Expr(Basic, EvalfMixin):
 
         if self.is_Add or self.is_Mul:
             for term in self.args:
-                if term.has(*deps):
+                if term.has(*deps, **dict(any=1)):
                     depend.append(term)
                 else:
                     indeps.append(term)
@@ -329,7 +329,7 @@ class Expr(Basic, EvalfMixin):
             return (self.__class__(*indeps),
                     self.__class__(*depend))
         else:
-            if self.has(*deps):
+            if self.has(*deps, **dict(any=1)):
                 return (S.One, self)
             else:
                 return (self, S.One)

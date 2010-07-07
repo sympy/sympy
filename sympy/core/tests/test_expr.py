@@ -447,7 +447,7 @@ def test_call():
     raises(TypeError, "sin(x)(1)")
 
 def test_has():
-    x, y = symbols("xy")
+    x,y,z,t,u = symbols('xyztu')
     f = Function("f")
     g = Function("g")
     p = Wild('p')
@@ -472,69 +472,72 @@ def test_has():
     assert not (x**2).has(Wild)
     assert (2*p).has(Wild)
 
-def test_has_any_symbols():
-    x,y,z,t,u = symbols('xyztu')
-
     i = Integer(4400)
 
-    assert i.has_any_symbols(x) == False
+    assert i.has(x) == False
 
-    assert (i*x**i).has_any_symbols(x) == True
-    assert (i*y**i).has_any_symbols(x) == False
-    assert (i*y**i).has_any_symbols(x, y) == True
+    assert (i*x**i).has(x) == True
+    assert (i*y**i).has(x) == False
+    assert (i*y**i).has(x, y, any=1)
 
     expr = x**2*y + sin(2**t + log(z))
 
-    assert expr.has_any_symbols(u) == False
+    assert expr.has(u) == False
 
-    assert expr.has_any_symbols(x) == True
-    assert expr.has_any_symbols(y) == True
-    assert expr.has_any_symbols(z) == True
-    assert expr.has_any_symbols(t) == True
+    assert expr.has(x) == True
+    assert expr.has(y) == True
+    assert expr.has(z) == True
+    assert expr.has(t) == True
 
-    assert expr.has_any_symbols(x, y, z, t) == True
-    assert expr.has_any_symbols(x, y, z, t, u)  == True
+    assert expr.has(x, y, z, t)
+    assert expr.has(x, y, z, t, u) is False
+    assert expr.has(x, y, z, t, u, any=1)
 
     from sympy.physics.units import m, s
 
-    assert (x*m/s).has_any_symbols(x) == True
-    assert (x*m/s).has_all_symbols(x) == True
-
-    assert (x*m/s).has_any_symbols(y, z) == False
-    assert (x*m/s).has_all_symbols(x, y) == False
+    assert (x*m/s).has(x)
+    assert (x*m/s).has(y, z) is False
 
     poly = Poly(x**2 + x*y*sin(z), x, y, t)
 
-    assert poly.has_any_symbols(x) == True
-    assert poly.has_any_symbols(x, y, z) == True
-    assert poly.has_any_symbols(x, y, z, t) == True
+    assert poly.has(x)
+    assert poly.has(x, y, z)
+    assert poly.has(x, y, z, t, any=1)
 
-    assert poly.has_all_symbols(x, y, z) == True
-    assert poly.has_all_symbols(x, y, z, t) == False
-
-def test_has_all_symbols():
+def test_has_all():
     x,y,z,t,u = symbols('xyztu')
+    u = symbols('u')
 
     i = Integer(4400)
 
-    assert i.has_all_symbols(x) == False
+    assert i.has(x) == False
 
-    assert (i*x**i).has_all_symbols(x) == True
-    assert (i*y**i).has_all_symbols(x) == False
+    assert (i*x**i).has(x)
+    assert (i*y**i).has(x) == False
 
     expr = x**2*y + sin(2**t + log(z))
 
-    assert expr.has_all_symbols(y, z, t) == True
-    assert expr.has_all_symbols(x, z, t) == True
-    assert expr.has_all_symbols(x, y, t) == True
-    assert expr.has_all_symbols(x, y, z) == True
+    assert expr.has(y, z, t)
+    assert expr.has(x, z, t)
+    assert expr.has(x, y, t)
+    assert expr.has(x, y, z)
 
-    assert expr.has_all_symbols(y, u, t) == False
-    assert expr.has_all_symbols(x, z, u) == False
-    assert expr.has_all_symbols(u, y, z) == False
+    assert expr.has(y, u, t) == False
+    assert expr.has(x, z, u) == False
+    assert expr.has(u, y, z) == False
 
-    assert expr.has_all_symbols(x, y, z, t) == True
-    assert expr.has_all_symbols(x, y, z, t, u) == False
+    assert expr.has(x, y, z, t)
+    assert expr.has(x, y, z, t, u) == False
+
+    from sympy.physics.units import m, s
+
+    assert (x*m/s).has(x)
+    assert (x*m/s).has(x, y) == False
+
+    poly = Poly(x**2 + x*y*sin(z), x, y, t)
+
+    assert poly.has(x, y, z)
+    assert poly.has(x, y, z, t) == False
 
 def test_as_poly_basic():
     x, y = symbols('xy')

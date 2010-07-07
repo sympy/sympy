@@ -493,8 +493,8 @@ class Ray(LinearEntity):
             return ((o.p1 in self) and (o.p2 in self))
         elif isinstance(o, Point):
             if Point.is_collinear(self.p1, self.p2, o):
-                if (not self.p1[0].atoms(C.Symbol)) and (not self.p1[1].atoms(C.Symbol)) \
-                        and (not self.p2[0].atoms(C.Symbol)) and (not self.p2[1].atoms(C.Symbol)):
+                if (not self.p1[0].has(C.Symbol)) and (not self.p1[1].has(C.Symbol)) \
+                        and (not self.p2[0].has(C.Symbol)) and (not self.p2[1].has(C.Symbol)):
                     if self.xdirection is S.Infinity:
                         return o[0] >= self.source[0]
                     elif self.xdirection is S.NegativeInfinity:

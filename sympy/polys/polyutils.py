@@ -162,7 +162,7 @@ def _dict_from_basic_if_gens(ex, gens, **args):
                     base, exp = _analyze_power(*factor.as_base_exp())
                     monom[indices[base]] = exp
                 except KeyError:
-                    if not factor.has(*gens):
+                    if not factor.has(*gens, **dict(any=1)):
                         coeff.append(factor)
                     else:
                         raise PolynomialError("%s contains an element of the generators set" % factor)

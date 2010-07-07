@@ -32,7 +32,7 @@ class RoundFunction(Function):
         for t in terms:
             if t.is_integer or (t.is_imaginary and C.im(t).is_integer):
                 ipart += t
-            elif t.atoms(C.Symbol):
+            elif t.has(C.Symbol):
                 spart += t
             else:
                 npart += t

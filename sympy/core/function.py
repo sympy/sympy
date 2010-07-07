@@ -328,7 +328,7 @@ class Function(Application, Expr):
 
     def _eval_is_polynomial(self, syms):
         for arg in self.args:
-            if arg.has(*syms):
+            if arg.has(*syms, **dict(any=1)):
                 return False
         return True
 

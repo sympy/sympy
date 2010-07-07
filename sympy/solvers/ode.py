@@ -1410,7 +1410,7 @@ def constant_renumber(expr, symbolname, startnumber, endnumber):
             _constant_renumber(expr.rhs, symbolname, startnumber, endnumber))
 
         if type(expr) not in (Mul, Add, Pow) and not expr.is_Function and\
-        not expr.has(*constantsymbols):
+        not expr.has(*constantsymbols, **dict(any=1)):
             # Base case, as above.  We better hope there aren't constants inside
             # of some other class, because they won't be renumbered.
             return expr
@@ -1860,7 +1860,7 @@ def _homogeneous_order(eq, *symbols):
                 symbols = tuple(symbols)
 
     # The following are not supported
-    if eq.has(Order) or eq.has(Derivative):
+    if eq.has(Order, Derivative, any=1):
         return None
 
     # These are all constants
@@ -2525,12 +2525,12 @@ def _undetermined_coefficients_match(expr, x):
         if expr.is_Add:
             return all([_test_term(i, x) for i in expr.args])
         elif expr.is_Mul:
-            if expr.has(sin) or expr.has(cos):
+            if expr.has(sin, cos, any=1):
                 foundtrig = False
                 # Make sure that there is only one trig function in the args.
                 # See the docstring.
                 for i in expr.args:
-                    if i.has(sin) or i.has(cos):
+                    if i.has(sin, cos, any=1):
                         if foundtrig:
                             return False
                         else:

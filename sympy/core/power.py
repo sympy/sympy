@@ -537,10 +537,10 @@ class Pow(Expr):
         return Add(*[t.count_ops(symbolic) for t in self.args]) + 1
 
     def _eval_is_polynomial(self, syms):
-        if self.exp.has(*syms):
+        if self.exp.has(*syms, **dict(any=1)):
             return False
 
-        if self.base.has(*syms):
+        if self.base.has(*syms, **dict(any=1)):
             # it would be nice to have is_nni working
             return self.base._eval_is_polynomial(syms) and \
                    self.exp.is_nonnegative and \
