@@ -2,7 +2,7 @@
 from sympy import Poly, S, symbols, oo
 from sympy.integrals.risch import NonElementaryIntegral
 from sympy.integrals.rde import (order_at, weak_normalizer, normal_denominator,
-    bound_degree, spde, solve_poly_rde)
+    bound_degree, spde, solve_poly_rde, no_cancel_deg_b_equal_deg_D_minus_1)
 from sympy.utilities.pytest import raises
 from sympy.abc import x, t, z, n
 
@@ -96,3 +96,8 @@ def test_solve_poly_rde_no_cancel():
     D = [Poly(t**2 + 1, t)]
     assert solve_poly_rde(Poly(2, t), Poly(t**2 + 2*t + 3, t), D, 1, x, [t]) == \
         Poly(t + 1, t, x, domain='ZZ')
+    # deg(b) == deg(D) - 1
+    D = [Poly(t**2 + 1, t)]
+    assert no_cancel_deg_b_equal_deg_D_minus_1(Poly(1 - t, t),
+    Poly(t**3 + t**2 - 2*x*t - 2*x, t), D, oo, x, [t]) == \
+        (Poly(t**2, t, domain='ZZ'), 1, Poly((-2 - 2*x)*t - 2*x, t, domain='ZZ[x]'))

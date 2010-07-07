@@ -376,6 +376,53 @@ def no_cancel_b_small(b, c, D, n, x, T):
 
     return q
 
+# TODO: better name for this function
+def no_cancel_deg_b_equal_deg_D_minus_1(b, c, D, n, x, T):
+    """
+    Poly Risch Differential Equation - No cancelation: deg(b) == deg(D) - 1
+
+    Given a derivation D on k[t] with deg(D) >= 2, n either an integer
+    or +oo, and b, c in k[t] with deg(b) == deg(D) - 1, either raise
+    NonElementaryIntegral, in which case the equation Dq + b*q == c has
+    no solution of degree at most n in k[t], or a solution q in k[t] of
+    this equation with deg(q) <= n, or the tuple (h, m, C) such that h
+    in k[t], m in ZZ, and C in k[t], and for any solution q in k[t] of
+    degree at most n of Dq + b*q == c, y == q - h is a solution in k[t]
+    of degree at most m of Dy + b*y == C.
+    """
+    t = T[-1]
+    d = D[-1]
+
+    q = Poly(0, *T)
+    lc = cancel(-b.as_poly(t).LC()/d.as_poly(t).LC())
+    if lc.is_Integer and lc.is_positive:
+        M = lc
+    else:
+        M = -1
+
+    while not c.is_zero:
+        m = max(M, c.degree(t) - d.degree(t) + 1)
+
+        if not 0 <= m <= n: # n < 0 or m < 0 or m > n
+            raise NonElementaryIntegral
+
+        u = cancel(m*d.as_poly(t).LC() + b.as_poly(t).LC())
+        if u.is_zero:
+            return (q, m, c)
+        if m > 0:
+            p = Poly(c.as_poly(t).LC()/u*t**m, *T)
+        else:
+            if c.degree(t) != d.degree(t) - 1:
+                raise NonElementaryIntegral
+            else:
+                p = c.as_poly(t).LC()/b.as_poly(t).LC()
+
+        q = q + p
+        n = m - 1
+        c = c - derivation(p, D, x, T) - b*p
+
+    return q
+
 def solve_poly_rde(b, c, D, n, x, T):
     """
     Solve a Polynomial Risch Differential Equation with degree bound n.
@@ -385,7 +432,7 @@ def solve_poly_rde(b, c, D, n, x, T):
     t = T[-1]
     d = D[-1]
 
-    if not b.is_zero and (d.is_one or b.degree(t)):
+    if not b.is_zero and (d.is_one or b.degree(t) > max(0, d.degree(t) - 1)):
         return no_cancel_b_large(b, c, D, n, x, T)
 
     elif (b.is_zero or b.degree(t) < d.degree(t) - 1) and (d.is_one or d.degree(t) >= 2):
@@ -401,9 +448,22 @@ def solve_poly_rde(b, c, D, n, x, T):
             if not T:
                 T = [x]
                 D = [Poly(1, x)]
-                b0 = b.as_poly(x)
+                b0 = b0.as_poly(x)
                 c0 = c0.as_poly(x)
-            q = solve_poly_rde(b0, c0, D, n, x, T)
-            return h + q
+            y = solve_poly_rde(b0, c0, D, n, x, T)
+            return h + y
+
+    elif d.degree(t) >= 2 and b.degree(t) == d.degree(t) - 1 and \
+        n > -b.as_poly(t).LC()/d.as_poly(t).LC():
+
+        R = no_cancel_deg_b_equal_deg_D_minus_1(b, c, D, n, x, T)
+
+        if isinstance(R, Poly):
+            return R
+        else:
+            h, m, C = R
+            y = solve_poly_rde(b, C, D, m, x, T)
+            return h + y
+
     else:
         raise NotImplementedError("Remaining cases for Poly RDE not yet implemented.")
