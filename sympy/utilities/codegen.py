@@ -434,6 +434,9 @@ class CodeGen(object):
         """
 
         code_lines = []
+        if header:
+            code_lines.extend(self._get_header())
+
         code_lines.extend(self._preprosessor_statements(prefix))
         for routine in routines:
             if empty: code_lines.append("\n")
@@ -445,8 +448,6 @@ class CodeGen(object):
             if empty: code_lines.append("\n")
             code_lines.extend(self._get_routine_ending(routine))
 
-        if header and code_lines:
-            self._dump_header(f)
         print >> f, ''.join(code_lines),
 
 class CodeGenError(Exception):
@@ -463,13 +464,15 @@ This file is part of '%(project)s'
 
 class CCodeGen(CodeGen):
 
-    def _dump_header(self, f):
+    def _get_header(self):
         """Writes a common header for the generated files."""
-        print >> f, "/" + "*"*78
+        code_lines = []
+        code_lines.append("/" + "*"*78 + '\n')
         tmp = header_comment % {"version": sympy.__version__, "project": self.project}
         for line in tmp.splitlines():
-            print >> f, " *%s* " % line.center(76)
-        print >> f, " " + "*"*78 + "/"
+            code_lines.append(" *%s*\n" % line.center(76))
+        code_lines.append(" " + "*"*78 + "/\n")
+        return code_lines
 
     def _get_prototype(self, routine):
         """Returns a string for the function prototype for the given routine.
@@ -542,7 +545,7 @@ class CCodeGen(CodeGen):
                         source files. [DEFAULT=True]
         """
         if header:
-            self._dump_header(f)
+            print >> f, ''.join(self._get_header())
         guard_name = "%s__%s__H" % (self.project.replace(" ", "_").upper(), prefix.replace("/", "_").upper())
         # include guards
         if empty: print >> f
@@ -571,13 +574,15 @@ class FCodeGen(CodeGen):
     def __init__(self, project='project'):
         CodeGen.__init__(self, project)
 
-    def _dump_header(self, f):
+    def _get_header(self):
         """Writes a common header for the generated files."""
-        print >> f, "!" + "*"*78
+        code_lines = []
+        code_lines.append("!" + "*"*78 + '\n')
         tmp = header_comment % {"version": sympy.__version__, "project": self.project}
         for line in tmp.splitlines():
-            print >> f, "!*%s* " % line.center(76)
-        print >> f, "!" + "*"*78
+            code_lines.append("!*%s*\n" % line.center(76))
+        code_lines.append("!" + "*"*78 + '\n')
+        return code_lines
 
     def _preprosessor_statements(self, prefix):
         return []
@@ -725,7 +730,7 @@ class FCodeGen(CodeGen):
                         source files. [DEFAULT=True]
         """
         if header:
-            self._dump_header(f)
+            print >> f, ''.join(self._get_header())
         if empty: print >> f
         # declaration of the function prototypes
         for routine in routines:
