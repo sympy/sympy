@@ -5,6 +5,11 @@ sure that passing custom Axes works.
 """
 
 try:
+    import matplotlib
+    version = matplotlib.__version__.split("-")[0]
+    version = version.split(".")[:2]
+    if map(int, version) < [0,99]:
+        raise ImportError
     from pylab import figure
     f = figure()
     disabled = False
