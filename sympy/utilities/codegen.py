@@ -679,8 +679,7 @@ class FCodeGen(CodeGen):
         return "".join(prototype)
 
     def _init_resultvars(self, routine):
-        """Returns codelines that intialize the result variables if applicable.
-        """
+        """Returns codelines that intialize the result variables if applicable."""
         code_lines = []
         for arg in routine.arguments:
             if isinstance(arg, OutputArgument):
