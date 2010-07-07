@@ -678,24 +678,6 @@ class FCodeGen(CodeGen):
 
         return "".join(prototype)
 
-    def _get_result(self, routine):
-        """Returns a single result object, which can be return value or outargument
-        """
-
-        if len(routine.results) > 1:
-            raise CodeGenError("Fortran only supports a single or no return value.")
-        elif len(routine.results) == 1:
-            result = routine.results[0]
-        else:
-            outargs = [ arg for arg in routine.arguments if
-                    isinstance(arg, (OutputArgument, InOutArgument))]
-            if len(outargs) == 1:
-                result = outargs[0]
-            else:
-                raise CodeGenError("FIXME: need one and only one result object. Got %s"%len(outargs))
-
-        return result
-
     def _init_resultvars(self, routine):
         """Returns codelines that intialize the result variables if applicable.
         """
