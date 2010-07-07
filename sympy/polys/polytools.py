@@ -2452,8 +2452,8 @@ class Poly(Basic):
             coeff, cF, cG = [S.One]*3
 
         if include:
-            return (per(P)*Poly(cG, *g.gens, domain=dom),
-                per(Q)*Poly(cF, *f.gens, domain=dom))
+            return (per(P)*Poly(cG, *g.gens, **{'domain':dom}),
+                per(Q)*Poly(cF, *f.gens, **{'domain':dom}))
 
         return coeff, per(P), per(Q)
 
