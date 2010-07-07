@@ -141,7 +141,7 @@ class Ellipse(GeometryEntity):
             return (c, c)
 
         hr, vr = self.hradius, self.vradius
-        if hr.atoms(C.Symbol) or vr.atoms(C.Symbol):
+        if hr.has(C.Symbol) or vr.has(C.Symbol):
             raise ValueError("foci can only be determined on non-symbolic radii")
 
         # calculate focus distance (manually, since focus_distance calls this routine)

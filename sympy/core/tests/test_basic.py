@@ -41,10 +41,10 @@ def test_matches_basic():
 
 def test_has():
     assert b21.has(b1)
-    assert b21.has(b3, b1)
+    assert b21.has(b3, b1, any=1)
     assert b21.has(Basic)
-    assert not b1.has(b21, b3)
-    raises(TypeError, "b21.has()")
+    assert not b1.has(b21, b3, any=1)
+    assert not b21.has()
 
 def test_subs():
     assert b21.subs(b2, b1) == Basic(b1, b1)

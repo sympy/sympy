@@ -156,7 +156,7 @@ class Order(Expr):
                     coeff, terms = expr.as_coeff_terms()
                     if coeff is S.Zero:
                         return coeff
-                    expr = C.Mul(*[t for t in terms if t.has(*symbols)])
+                    expr = C.Mul(*[t for t in terms if t.has(*symbols, **dict(any=1))])
 
         elif expr is not S.Zero:
             expr = S.One

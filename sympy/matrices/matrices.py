@@ -1185,7 +1185,7 @@ class Matrix(object):
     def is_symbolic(self):
         for i in range(self.cols):
             for j in range(self.rows):
-                if self[i,j].atoms(Symbol):
+                if self[i,j].has(Symbol):
                     return True
         return False
 

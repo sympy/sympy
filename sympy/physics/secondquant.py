@@ -2617,8 +2617,8 @@ def substitute_dummies(expr, new_indices=False, reverse_order=True, pretty_indic
     belows = []
     generals = []
 
-    Dummy = type(Symbol('x',dummy=True))
-    dummies = [ d for d in expr.atoms() if isinstance(d,Dummy) ]
+    Dummy = type(Symbol('x', dummy=True))
+    dummies = [ d for d in expr.atoms() if isinstance(d, Dummy) ]
     dummies.sort()
 
     # generate lists with the dummies we will insert
