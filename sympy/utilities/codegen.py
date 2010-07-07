@@ -503,7 +503,7 @@ class CCodeGen(CodeGen):
         return ["%s {\n" % prototype]
 
     def _declare_arguments(self, routine):
-        # arguments are in prototype
+        # arguments are declared in prototype
         return []
 
     def _declare_locals(self, routine):
