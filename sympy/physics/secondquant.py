@@ -7,7 +7,7 @@ of Many-Particle Systems."
 
 from sympy import (
     Basic, Expr, Function, Mul, sympify, Integer, Add, sqrt,
-    zeros, Pow, I, S, Symbol, SymTuple
+    zeros, Pow, I, S, Symbol, Tuple
 )
 
 from sympy.utilities import iff
@@ -168,11 +168,11 @@ class AntiSymmetricTensor(TensorSymbol):
         >>> i, j = symbols('i j', below_fermi=True)
         >>> a, b = symbols('a b', above_fermi=True)
         >>> AntiSymmetricTensor('t', (a, b), (i, j))
-        AntiSymmetricTensor(t, SymTuple(a, b), SymTuple(i, j))
+        AntiSymmetricTensor(t, Tuple(a, b), Tuple(i, j))
         >>> AntiSymmetricTensor('t', (b, a), (i, j))
-        -AntiSymmetricTensor(t, SymTuple(a, b), SymTuple(i, j))
+        -AntiSymmetricTensor(t, Tuple(a, b), Tuple(i, j))
         >>> -AntiSymmetricTensor('t', (b, a), (i, j))
-        AntiSymmetricTensor(t, SymTuple(a, b), SymTuple(i, j))
+        AntiSymmetricTensor(t, Tuple(a, b), Tuple(i, j))
 
         As you can see, the eval() method is automatically called.
 
@@ -218,7 +218,7 @@ class AntiSymmetricTensor(TensorSymbol):
         >>> i, j = symbols('i j', below_fermi=True)
         >>> a, b = symbols('a b', above_fermi=True)
         >>> AntiSymmetricTensor('t', (a, b), (i, j))
-        AntiSymmetricTensor(t, SymTuple(a, b), SymTuple(i, j))
+        AntiSymmetricTensor(t, Tuple(a, b), Tuple(i, j))
         >>> AntiSymmetricTensor('t', (a, b), (i, j)).symbol
         t
 
@@ -237,9 +237,9 @@ class AntiSymmetricTensor(TensorSymbol):
         >>> i, j = symbols('i j', below_fermi=True)
         >>> a, b = symbols('a b', above_fermi=True)
         >>> AntiSymmetricTensor('t', (a, b), (i, j))
-        AntiSymmetricTensor(t, SymTuple(a, b), SymTuple(i, j))
+        AntiSymmetricTensor(t, Tuple(a, b), Tuple(i, j))
         >>> AntiSymmetricTensor('t', (a, b), (i, j)).upper
-        SymTuple(a, b)
+        Tuple(a, b)
 
 
         """
@@ -257,9 +257,9 @@ class AntiSymmetricTensor(TensorSymbol):
         >>> i, j = symbols('i j', below_fermi=True)
         >>> a, b = symbols('a b', above_fermi=True)
         >>> AntiSymmetricTensor('t', (a, b), (i, j))
-        AntiSymmetricTensor(t, SymTuple(a, b), SymTuple(i, j))
+        AntiSymmetricTensor(t, Tuple(a, b), Tuple(i, j))
         >>> AntiSymmetricTensor('t', (a, b), (i, j)).lower
-        SymTuple(i, j)
+        Tuple(i, j)
 
         """
         return self.args[2]

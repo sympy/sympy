@@ -74,7 +74,7 @@ printing.
 
 from sympy.core.symbol import Symbol
 from sympy.core.expr import Expr
-from sympy.core.symtuple import SymTuple
+from sympy.core.symtuple import Tuple
 from sympy.printing.ccode import ccode
 from sympy.printing.fcode import FCodePrinter
 from sympy.tensor import Idx, IndexedElement
@@ -137,9 +137,9 @@ class Routine(object):
         if isinstance(expr, (list, tuple)):
             if not expr:
                 raise ValueError("No expression given")
-            expressions = SymTuple(*expr)
+            expressions = Tuple(*expr)
         else:
-            expressions = SymTuple(expr)
+            expressions = Tuple(expr)
 
         # local variables
         local_vars = set([i.label for i in expressions.atoms(Idx)])

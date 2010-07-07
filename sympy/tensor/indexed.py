@@ -68,7 +68,7 @@
        - Idx with step determined by function call
 """
 
-from sympy import Expr, Basic, SymTuple, Symbol, Integer, sympify, S
+from sympy import Expr, Basic, Tuple, Symbol, Integer, sympify, S
 
 class IndexException(Exception):
     pass
@@ -226,16 +226,16 @@ class Idx(Basic):
         if not label.is_integer:
             raise TypeError("Idx object requires an integer label")
 
-        elif isinstance(range, (tuple, list, SymTuple)):
+        elif isinstance(range, (tuple, list, Tuple)):
             assert len(range) == 2, "Idx got range tuple with wrong length"
             for bound in range:
                 if not (bound.is_integer or abs(bound) is S.Infinity):
                     raise TypeError("Idx object requires integer bounds")
-            args = label, SymTuple(*range)
+            args = label, Tuple(*range)
         elif isinstance(range, (Symbol, Integer)) or range is S.Infinity:
             if not (range.is_integer or range is S.Infinity):
                 raise TypeError("Idx object requires an integer dimension")
-            args = label, SymTuple(S.Zero, range-S.One)
+            args = label, Tuple(S.Zero, range-S.One)
         elif range:
             raise TypeError("range must be tuple, symbol or integer")
         else:
