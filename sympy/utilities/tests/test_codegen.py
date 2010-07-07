@@ -3,7 +3,7 @@ from sympy.utilities.codegen import CCodeGen, Routine, InputArgument, Result, \
     codegen, CodeGenError, FCodeGen
 from StringIO import StringIO
 
-def get_string(dump_fn, routines, prefix="file"):
+def get_string(dump_fn, routines, prefix="file", header=False, empty=False):
     """Wrapper for dump_fn. dump_fn writes its results to a stream object and
        this wrapper returns the contents of that stream as a string. This
        auxiliary function is used by many tests below.
@@ -12,7 +12,7 @@ def get_string(dump_fn, routines, prefix="file"):
        testing of the output.
     """
     output = StringIO()
-    dump_fn(routines, output, prefix, header=False, empty=False)
+    dump_fn(routines, output, prefix, header, empty)
     source = output.getvalue()
     output.close()
     return source
@@ -21,6 +21,23 @@ def test_empty_c_code():
     code_gen = CCodeGen()
     source = get_string(code_gen.dump_c, [])
     assert source == "#include \"file.h\"\n#include <math.h>\n"
+
+def test_empty_c_code_with_comment():
+    code_gen = CCodeGen()
+    source = get_string(code_gen.dump_c, [], header=True)
+    assert source[:82] == (
+            "/******************************************************************************\n *"
+            )
+          #   "                    Code generated with sympy 0.6.7-git                    "
+    assert source[158:] == (                                                              "*\n"
+            " *                                                                            *\n"
+            " *              See http://www.sympy.org/ for more information.               *\n"
+            " *                                                                            *\n"
+            " *                       This file is part of 'project'                       *\n"
+            " ******************************************************************************/\n"
+            "#include \"file.h\"\n"
+            "#include <math.h>\n"
+            )
 
 def test_empty_c_header():
     code_gen = CCodeGen()
@@ -232,6 +249,21 @@ def test_empty_f_code():
     code_gen = FCodeGen()
     source = get_string(code_gen.dump_f95, [])
     assert source == ""
+
+def test_empty_f_code_with_header():
+    code_gen = FCodeGen()
+    source = get_string(code_gen.dump_f95, [], header=True)
+    assert source[:82] == (
+            "!******************************************************************************\n!*"
+            )
+          #   "                    Code generated with sympy 0.6.7-git                    "
+    assert source[158:] == (                                                              "*\n"
+            "!*                                                                            *\n"
+            "!*              See http://www.sympy.org/ for more information.               *\n"
+            "!*                                                                            *\n"
+            "!*                       This file is part of 'project'                       *\n"
+            "!******************************************************************************\n"
+            )
 
 def test_empty_f_header():
     code_gen = FCodeGen()
