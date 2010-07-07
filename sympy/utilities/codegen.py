@@ -471,30 +471,23 @@ class CCodeGen(CodeGen):
             print >> f, " *%s* " % line.center(76)
         print >> f, " " + "*"*78 + "/"
 
-    def get_prototype_result(self, routine):
-        """Returns a string for the function prototype for the given routine and
-           a single result object, which can be None.
+    def _get_prototype(self, routine):
+        """Returns a string for the function prototype for the given routine.
 
            If the routine has multiple result objects, an CodeGenError is
            raised.
 
            See: http://en.wikipedia.org/wiki/Function_prototype
         """
-        prototype = []
         if len(routine.results) > 1:
             raise CodeGenError("C only supports a single or no return value.")
         elif len(routine.results) == 1:
-            result = routine.results[0]
-            prototype.append(result.datatype.cname)
+            ctype = routine.results[0].datatype.cname
         else:
-            result = None
-            prototype.append("void")
-        # name of the routine + arguments + curly opening brackets
-        prototype.append("%s(%s)" % (
-            routine.name,
-            ", ".join("%s %s" % (arg.datatype.cname, arg.name) for arg in routine.arguments)
-        ))
-        return " ".join(prototype), result
+            ctype = "void"
+        arguments = ", ".join([ "%s %s" % (arg.datatype.cname, arg.name)
+                for arg in routine.arguments ])
+        return "%s %s(%s)" % (ctype, routine.name, arguments)
 
     def _preprosessor_statements(self, prefix):
         code_lines = []
@@ -503,7 +496,7 @@ class CCodeGen(CodeGen):
         return code_lines
 
     def _get_routine_opening(self, routine):
-        prototype, result = self.get_prototype_result(routine)
+        prototype = self._get_prototype(routine)
         return ["%s {\n" % prototype]
 
     def _declare_arguments(self, routine):
@@ -518,11 +511,11 @@ class CCodeGen(CodeGen):
         return code_list
 
     def _call_printer(self, routine):
-        prototype, result = self.get_prototype_result(routine)
-        if result is not None:
-            return ["  return %s;\n" % ccode(result.expr)]
-        else:
-            return []
+        for result in routine.result_variables:
+            if isinstance(result, Result):
+                return ["  return %s;\n" % ccode(result.expr)]
+            elif isinstance(result, (OutputArgument, InOutArgument)):
+                raise NotImplementedError
 
     def _get_routine_ending(self, routine):
         return ["}\n"]
@@ -558,7 +551,7 @@ class CCodeGen(CodeGen):
         if empty: print >> f
         # declaration of the function prototypes
         for routine in routines:
-            prototype, result = self.get_prototype_result(routine)
+            prototype = self._get_prototype(routine)
             print >> f, "%s;" % prototype
         # end if include guards
         if empty: print >> f
