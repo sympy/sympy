@@ -16,25 +16,13 @@ whether an argument is in k[t], in which case it will just return a Poly in t,
 or in k(t), in which case it will return the fraction (fa, fd). Other variable
 names probably come from the names used in Bronstein's book.
 """
-from sympy.core.add import Add
-from sympy.core.mul import Mul
-from sympy.core.symbol import Symbol, Wild
-from sympy.core.basic import S, C, sympify
-from sympy.core.numbers import Rational
+from sympy.core.basic import S
 from sympy.core.function import Lambda
+from sympy.core.symbol import Symbol
 
-from sympy.functions import exp, sin , cos , tan , cot , asin
-from sympy.functions import log, sinh, cosh, tanh, coth, asinh
+from sympy.functions import log
 
-from sympy.functions import sqrt, erf
-
-from sympy.solvers import solve
-
-from sympy.polys import (quo, gcd, lcm, monomials, factor, cancel,
-    PolynomialError, Poly, reduced, RootSum)
-from sympy.polys.polyroots import root_factors
-
-from sympy.utilities.iterables import make_list
+from sympy.polys import (gcd, cancel, PolynomialError, Poly, reduced, RootSum)
 
 #    from pudb import set_trace; set_trace() # Debugging
 
