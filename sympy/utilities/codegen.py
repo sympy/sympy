@@ -516,7 +516,7 @@ class CCodeGen(CodeGen):
     def _call_printer(self, routine):
         for result in routine.result_variables:
             if isinstance(result, Result):
-                return ["  return %s;\n" % ccode(result.expr)]
+                return ["   return %s;\n" % ccode(result.expr)]
             elif isinstance(result, (OutputArgument, InOutArgument)):
                 raise NotImplementedError
 

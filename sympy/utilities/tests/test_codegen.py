@@ -54,7 +54,7 @@ def test_simple_c_code():
         "#include \"file.h\"\n"
         "#include <math.h>\n"
         "double test(double x, double y, double z) {\n"
-        "  return z*(x + y);\n"
+        "   return z*(x + y);\n"
         "}\n"
     )
     assert source == expected
@@ -82,7 +82,7 @@ def test_simple_c_codegen():
         "#include \"file.h\"\n"
         "#include <math.h>\n"
         "double test(double x, double y, double z) {\n"
-        "  return z*(x + y);\n"
+        "   return z*(x + y);\n"
         "}\n"),
        ("file.h",
         "#ifndef PROJECT__FILE__H\n"
@@ -132,21 +132,21 @@ def test_ansi_math1_codegen():
     assert result[0][0] == "file.c"
     assert result[0][1] == (
         '#include "file.h"\n#include <math.h>\n'
-        'double test_fabs(double x) {\n  return fabs(x);\n}\n'
-        'double test_acos(double x) {\n  return acos(x);\n}\n'
-        'double test_asin(double x) {\n  return asin(x);\n}\n'
-        'double test_atan(double x) {\n  return atan(x);\n}\n'
-        'double test_ceil(double x) {\n  return ceil(x);\n}\n'
-        'double test_cos(double x) {\n  return cos(x);\n}\n'
-        'double test_cosh(double x) {\n  return cosh(x);\n}\n'
-        'double test_floor(double x) {\n  return floor(x);\n}\n'
-        'double test_log(double x) {\n  return log(x);\n}\n'
-        'double test_ln(double x) {\n  return log(x);\n}\n'
-        'double test_sin(double x) {\n  return sin(x);\n}\n'
-        'double test_sinh(double x) {\n  return sinh(x);\n}\n'
-        'double test_sqrt(double x) {\n  return pow(x,(1.0/2.0));\n}\n'
-        'double test_tan(double x) {\n  return tan(x);\n}\n'
-        'double test_tanh(double x) {\n  return tanh(x);\n}\n'
+        'double test_fabs(double x) {\n   return fabs(x);\n}\n'
+        'double test_acos(double x) {\n   return acos(x);\n}\n'
+        'double test_asin(double x) {\n   return asin(x);\n}\n'
+        'double test_atan(double x) {\n   return atan(x);\n}\n'
+        'double test_ceil(double x) {\n   return ceil(x);\n}\n'
+        'double test_cos(double x) {\n   return cos(x);\n}\n'
+        'double test_cosh(double x) {\n   return cosh(x);\n}\n'
+        'double test_floor(double x) {\n   return floor(x);\n}\n'
+        'double test_log(double x) {\n   return log(x);\n}\n'
+        'double test_ln(double x) {\n   return log(x);\n}\n'
+        'double test_sin(double x) {\n   return sin(x);\n}\n'
+        'double test_sinh(double x) {\n   return sinh(x);\n}\n'
+        'double test_sqrt(double x) {\n   return pow(x,(1.0/2.0));\n}\n'
+        'double test_tan(double x) {\n   return tan(x);\n}\n'
+        'double test_tanh(double x) {\n   return tanh(x);\n}\n'
     )
     assert result[1][0] == "file.h"
     assert result[1][1] == (
@@ -173,8 +173,8 @@ def test_ansi_math2_codegen():
     assert result[0][0] == "file.c"
     assert result[0][1] == (
         '#include "file.h"\n#include <math.h>\n'
-        'double test_atan2(double x, double y) {\n  return atan2(x, y);\n}\n'
-        'double test_pow(double x, double y) {\n  return pow(x,y);\n}\n'
+        'double test_atan2(double x, double y) {\n   return atan2(x, y);\n}\n'
+        'double test_pow(double x, double y) {\n   return pow(x,y);\n}\n'
     )
     assert result[1][0] == "file.h"
     assert result[1][1] == (
@@ -196,7 +196,7 @@ def test_complicated_codegen():
     assert result[0][1] == (
         '#include "file.h"\n#include <math.h>\n'
         'double test1(double x, double y, double z) {\n'
-        '  return '
+        '   return '
         '7*pow(cos(y),6)*sin(x) + '
         '7*pow(cos(y),6)*tan(z) + '
         '7*pow(sin(x),6)*cos(y) + '
@@ -233,7 +233,7 @@ def test_complicated_codegen():
         'pow(cos(y),7) + pow(sin(x),7) + pow(tan(z),7);\n'
         '}\n'
         'double test2(double x, double y, double z) {\n'
-        '  return cos(cos(cos(cos(cos(cos(cos(cos(x + y + z))))))));\n'
+        '   return cos(cos(cos(cos(cos(cos(cos(cos(x + y + z))))))));\n'
         '}\n'
     )
     assert result[1][0] == "file.h"
