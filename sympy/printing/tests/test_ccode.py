@@ -1,4 +1,4 @@
-from sympy import sin, cos, abs, exp, pi, oo, symbols, ceiling, raises
+from sympy import sin, cos, abs, exp, pi, oo, symbols, ceiling, raises, sqrt
 from sympy import Function, Piecewise, Rational, Integer
 
 from sympy.printing import ccode
@@ -12,6 +12,11 @@ def test_printmethod():
         def _ccode(self, printer):
             return "fabs(%s)" % printer._print(self.args[0])
     assert ccode(fabs(x)) == "fabs(x)"
+
+def test_ccode_sqrt():
+    assert ccode(sqrt(x)) == "sqrt(x)"
+    assert ccode(x**0.5) == "sqrt(x)"
+    assert ccode(x**Rational(1,2)) == "sqrt(x)"
 
 def test_ccode_Pow():
     assert ccode(x**3) == "pow(x,3)"

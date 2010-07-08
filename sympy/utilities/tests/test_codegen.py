@@ -144,7 +144,7 @@ def test_ansi_math1_codegen():
         'double test_ln(double x) {\n   return log(x);\n}\n'
         'double test_sin(double x) {\n   return sin(x);\n}\n'
         'double test_sinh(double x) {\n   return sinh(x);\n}\n'
-        'double test_sqrt(double x) {\n   return pow(x,(1.0/2.0));\n}\n'
+        'double test_sqrt(double x) {\n   return sqrt(x);\n}\n'
         'double test_tan(double x) {\n   return tan(x);\n}\n'
         'double test_tanh(double x) {\n   return tanh(x);\n}\n'
     )
