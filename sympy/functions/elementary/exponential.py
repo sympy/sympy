@@ -93,7 +93,7 @@ class exp(Function):
                     included.append(arg)
 
         if excluded:
-            return Mul(*(excluded+[cls(Add(*included))]))
+            return Mul(*(excluded + [cls(Add(*included))]))
 
     @staticmethod
     @cacheit
