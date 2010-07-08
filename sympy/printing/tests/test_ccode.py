@@ -19,10 +19,10 @@ def test_ccode_sqrt():
     assert ccode(x**Rational(1,2)) == "sqrt(x)"
 
 def test_ccode_Pow():
-    assert ccode(x**3) == "pow(x,3)"
-    assert ccode(x**(y**3)) == "pow(x,(pow(y,3)))"
+    assert ccode(x**3) == "pow(x, 3)"
+    assert ccode(x**(y**3)) == "pow(x, pow(y, 3))"
     assert ccode(1/(g(x)*3.5)**(x - y**x)/(x**2 + y)) == \
-        "pow((3.5*g(x)),(-x + pow(y,x)))/(y + pow(x,2))"
+        "pow(3.5*g(x), -x + pow(y, x))/(y + pow(x, 2))"
 
 def test_ccode_constants():
     assert ccode(exp(1)) == "M_E"
@@ -41,7 +41,7 @@ def test_ccode_Integer():
     assert ccode(Integer(-1)) == "-1"
 
 def test_ccode_functions():
-    assert ccode(sin(x) ** cos(x)) == "pow(sin(x),cos(x))"
+    assert ccode(sin(x) ** cos(x)) == "pow(sin(x), cos(x))"
 
 def test_ccode_exceptions():
     assert ccode(ceiling(x)) == "ceil(x)"
@@ -64,7 +64,7 @@ if (x < 1) {
 x
 }
 else {
-pow(x,2)
+pow(x, 2)
 }\
 """
     assert p == s

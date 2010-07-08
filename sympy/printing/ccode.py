@@ -24,8 +24,8 @@ class CCodePrinter(StrPrinter):
         elif expr.exp == 0.5:
             return 'sqrt(%s)' % self._print(expr.base)
         else:
-            return 'pow(%s,%s)'%(self.parenthesize(expr.base, PREC),
-                                 self.parenthesize(expr.exp, PREC))
+            return 'pow(%s, %s)'%(self._print(expr.base),
+                                 self._print(expr.exp))
 
     def _print_Rational(self, expr):
         p, q = int(expr.p), int(expr.q)
