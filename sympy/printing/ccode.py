@@ -13,9 +13,35 @@ from str import StrPrinter
 from sympy.printing.precedence import precedence
 from sympy.core.basic import S
 
+
+# dictionary mapping sympy function to (argument_conditions, C_function).
+# Used in CCodePrinter._print_Function(self)
+known_functions = {
+        "ceiling": [(lambda x: True, "ceil")],
+        "abs": [(lambda x: not x.is_integer, "fabs")],
+        }
+
 class CCodePrinter(StrPrinter):
     """A printer to convert python expressions to strings of c code"""
     printmethod = "_ccode"
+
+    _default_settings = {
+        'order': None,
+        'full_prec': 'auto',
+        'precision': 15,
+        'user_functions': {},
+        'human': True,
+    }
+
+    def __init__(self, settings={}):
+        """Register function mappings supplied by user"""
+        StrPrinter.__init__(self, settings)
+        self.known_functions = dict(known_functions)
+        userfuncs = settings.get('user_functions', {})
+        for k,v in userfuncs.items():
+            if not isinstance(v, tuple):
+                userfuncs[k] = (lambda *x: True, v)
+        self.known_functions.update(userfuncs)
 
     def _print_Pow(self, expr):
         PREC = precedence(expr)
@@ -69,24 +95,39 @@ class CCodePrinter(StrPrinter):
         return '!'+self.parenthesize(expr.args[0], PREC)
 
     def _print_Function(self, expr):
-        if expr.func.__name__ == "ceiling":
-            return "ceil(%s)" % self.stringify(expr.args, ", ")
-        elif expr.func.__name__ == "abs" and not expr.args[0].is_integer:
-            return "fabs(%s)" % self.stringify(expr.args, ", ")
-        else:
-            return StrPrinter._print_Function(self, expr)
+        if expr.func.__name__ in self.known_functions:
+            cond_cfunc = self.known_functions[expr.func.__name__]
+            for cond, cfunc in cond_cfunc:
+                if cond(*expr.args):
+                    return "%s(%s)" % (cfunc, self.stringify(expr.args, ", "))
+        return StrPrinter._print_Function(self, expr)
 
 
 def ccode(expr, **settings):
     r"""Converts an expr to a string of c code
 
-        Works for simple expressions using math.h functions.
+        Arguments:
+          expr  --  a sympy expression to be converted
 
-        >>> from sympy import ccode, Rational
-        >>> from sympy.abc import tau
+        Optional arguments:
+          precision  --  the precision for numbers such as pi [default=15]
+          user_functions  --  A dictionary where keys are FunctionClass instances
+                              and values are there string representations.
+                              Alternatively, the dictionary value can be a list
+                              of tuples i.e. [(argument_test, cfunction_string)].
+                              See below for examples.
+          human  --  If True, the result is a single string that may contain
+                     some constant declarations for the number symbols. If
+                     False, the same information is returned in a more
+                     programmer-friendly data structure.
 
+        >>> from sympy import ccode, symbols, Rational, sin
+        >>> x, tau = symbols(["x", "tau"])
         >>> ccode((2*tau)**Rational(7,2))
-        '8*pow(2,(1.0/2.0))*pow(tau,(7.0/2.0))'
+        '8*sqrt(2)*pow(tau, 7.0/2.0)'
+        >>> ccode(sin(x), assign_to="s")
+        's = sin(x);'
+
 
     """
     return CCodePrinter(settings).doprint(expr)
