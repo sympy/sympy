@@ -37,15 +37,9 @@ def dpll_satisfiable(expr):
 
     if not result:
         return result
-    output = {}
-    for lit in solver.var_settings:
-        if lit < 0:
-            result = False
-        else:
-            result = True
 
-        output.update({symbols[abs(lit)-1]: result})
-    return output
+    return dict((symbols[abs(lit) - 1], lit > 0) for lit in solver.var_settings)
+
 
 class SATSolver(object):
     """
