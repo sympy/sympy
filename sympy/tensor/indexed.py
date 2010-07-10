@@ -129,6 +129,13 @@ class Indexed(Expr):
     def _sympystr(self, p):
         return p.doprint(self.label)
 
+#FIXME only needed for 2.4 compatibility
+def _ensure_Idx(arg):
+    if isinstance(arg, Idx):
+        return arg
+    else:
+        return Idx(arg)
+
 class IndexedElement(Expr):
     """Represent an indexed element, e.g. a symbolic array element.
 
@@ -144,7 +151,10 @@ class IndexedElement(Expr):
         assert args
         if isinstance(stem, (basestring, Symbol)):
             stem = Indexed(stem)
-        args = tuple([ a if isinstance(a, Idx) else Idx(a) for a in args ])
+
+        # FIXME: 2.4 compatibility
+        args = map(_ensure_Idx, args)
+        # args = tuple([ a if isinstance(a, Idx) else Idx(a) for a in args ])
         return Expr.__new__(cls, stem, *args, **kw_args)
 
     @property
