@@ -274,3 +274,12 @@ def test_loops():
             )
     code = printer.doprint(A*x)
     assert expected == code
+
+def test_derived_classes():
+    class MyFancyFCodePrinter(FCodePrinter):
+        _default_settings = FCodePrinter._default_settings.copy()
+        _default_settings['assign_to'] = "bork"
+
+    printer = MyFancyFCodePrinter()
+    x = symbols('x')
+    assert printer.doprint(sin(x)) == "      bork = sin(x)"

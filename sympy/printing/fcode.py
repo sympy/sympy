@@ -50,18 +50,14 @@ class FCodePrinter(StrPrinter):
     def __init__(self, settings=None):
         StrPrinter.__init__(self, settings)
         self._init_leading_padding()
-        if settings:
-            self.set_assign_to(settings.get('assign_to'))
-
-    def set_assign_to(self, result_variable):
-        """Updates the 'assign_to' setting to result_variable"""
-        if isinstance(result_variable, basestring):
-            self._settings['assign_to'] = Symbol(result_variable)
-        elif isinstance(result_variable, (Basic, type(None))):
-            self._settings['assign_to'] = result_variable
+        assign_to = self._settings['assign_to']
+        if isinstance(assign_to, basestring):
+            self._settings['assign_to'] = Symbol(assign_to)
+        elif isinstance(assign_to, (Basic, type(None))):
+            self._settings['assign_to'] = assign_to
         else:
             raise TypeError("FCodePrinter cannot assign to object of type %s"%
-                    type(result_variable))
+                    type(assign_to))
 
 
     def _init_leading_padding(self):
