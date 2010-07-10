@@ -86,16 +86,16 @@ def weak_normalizer(a, d, D, x, T, z=None):
     d1 = d_sqf_part.quo(gcd(d_sqf_part, g))
 
     a1, b = gcdex_diophantine(d.quo(d1).as_poly(t), d1.as_poly(t), a.as_poly(t))
-    r = (a - Poly(z, *T)*derivation(d1, D, x, T)).as_poly(t).resultant(d1.as_poly(t))
+    r = (a - Poly(z, t)*derivation(d1, D, x, T)).as_poly(t).resultant(d1.as_poly(t))
     r = Poly(r, z)
 
     if not r.has(z):
-        return (Poly(1, *T), (a, d))
+        return (Poly(1, t), (a, d))
 
     N = [i for i in r.real_roots() if i in ZZ and i > 0]
 
-    q = reduce(mul, [gcd(a - Poly(n, *T)*derivation(d1, D, x, T), d1) for n in N],
-        Poly(1, *T))
+    q = reduce(mul, [gcd(a - Poly(n, t)*derivation(d1, D, x, T), d1) for n in N],
+        Poly(1, t))
 
     dq = derivation(q, D, x, T)
     sn = q*a - d*dq
@@ -164,13 +164,13 @@ def special_denom(a, ba, bd, ca, cd, D, x, T, case='auto'):
         case = get_case(d, x, t)
 
     if case == 'exp':
-        p = Poly(t, *T)
+        p = Poly(t, t)
     elif case == 'tan':
-        p = Poly(t**2 + 1, *T)
+        p = Poly(t**2 + 1, t)
     elif case in ['primitive', 'base']:
         B = ba.quo(bd)
         C = cd.quo(cd)
-        return (a, B, C, Poly(1, *T))
+        return (a, B, C, Poly(1, t))
     else:
         raise ValueError("case must be one of {'exp', 'tan', 'primitive', " +
             "'base'}, not %s." % case)
@@ -294,7 +294,7 @@ def spde(a, b, c, D, n, x, T):
     """
     # TODO: Rewrite this non-recursively
     t = T[-1]
-    zero = Poly(0, *T)
+    zero = Poly(0, t)
     if n < 0:
         if c.is_zero:
             return (zero, zero, 0, zero, zero)
@@ -306,10 +306,10 @@ def spde(a, b, c, D, n, x, T):
 
     a, b, c = a.quo(g), b.quo(g), c.quo(g)
     if a.degree(t) == 0:
-        return (b.quo(a), c.quo(a), n, Poly(1, *T), zero)
+        return (b.quo(a), c.quo(a), n, Poly(1, t), zero)
 
     r, z = gcdex_diophantine(b.as_poly(t), a.as_poly(t), c.as_poly(t))
-    r, z = Poly(r, *T), Poly(z, *T)
+    r, z = Poly(r, t), Poly(z, t)
     u = (a, b + derivation(a, D, x, T), z - derivation(r, D, x, T), D,
         n - a.degree(t)) + (x, T)
     B, C, m, alpha, beta = spde(*u)
@@ -328,14 +328,14 @@ def no_cancel_b_large(b, c, D, n, x, T):
     deg(q) < n.
     """
     t = T[-1]
-    q = Poly(0, *T)
+    q = Poly(0, t)
 
     while not c.is_zero:
         m = c.degree(t) - b.degree(t)
         if not 0 <= m <= n: # n < 0 or m < 0 or m > n
             raise NonElementaryIntegral
 
-        p = Poly(c.as_poly(t).LC()/b.as_poly(t).LC()*t**m, *T)
+        p = Poly(c.as_poly(t).LC()/b.as_poly(t).LC()*t**m, t)
         q = q + p
         n = m - 1
         c = c - derivation(p, D, x, T) - b*p
@@ -358,7 +358,7 @@ def no_cancel_b_small(b, c, D, n, x, T):
     t = T[-1]
     d = D[-1]
 
-    q = Poly(0, *T)
+    q = Poly(0, t)
 
     while not c.is_zero:
         if n == 0:
@@ -370,13 +370,13 @@ def no_cancel_b_small(b, c, D, n, x, T):
             raise NonElementaryIntegral
 
         if m > 0:
-            p = Poly(c.as_poly(t).LC()/(m*d.as_poly(t).LC())*t**m, *T)
+            p = Poly(c.as_poly(t).LC()/(m*d.as_poly(t).LC())*t**m, t)
         else:
             if b.degree(t) != c.degree(t):
                 raise NonElementaryIntegral
             if b.degree(t) == 0:
                 return (q, b, c)
-            p = Poly(c.as_poly(t).LC()/b.as_poly(t).LC(), *T)
+            p = Poly(c.as_poly(t).LC()/b.as_poly(t).LC(), t)
 
         q = q + p
         n = m - 1
@@ -401,7 +401,7 @@ def no_cancel_deg_b_equal_deg_D_minus_1(b, c, D, n, x, T):
     t = T[-1]
     d = D[-1]
 
-    q = Poly(0, *T)
+    q = Poly(0, t)
     lc = cancel(-b.as_poly(t).LC()/d.as_poly(t).LC())
     if lc.is_Integer and lc.is_positive:
         M = lc
@@ -418,7 +418,7 @@ def no_cancel_deg_b_equal_deg_D_minus_1(b, c, D, n, x, T):
         if u.is_zero:
             return (q, m, c)
         if m > 0:
-            p = Poly(c.as_poly(t).LC()/u*t**m, *T)
+            p = Poly(c.as_poly(t).LC()/u*t**m, t)
         else:
             if c.degree(t) != d.degree(t) - 1:
                 raise NonElementaryIntegral

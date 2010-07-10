@@ -60,7 +60,6 @@ def gcdex_diophantine(a, b, c):
 
     return (s, t)
 
-# TODO: Rewrite to support multiple extensions
 def derivation(p, D, x, T, coefficientD=False):
     """
     Computes Dp.
@@ -77,15 +76,17 @@ def derivation(p, D, x, T, coefficientD=False):
     list of the derivatives of each element of t, such that for each D[i] is a
     polynomial in t[i] and a ratinoal function in t[:i].
     """
+    t = T[-1]
+
     px = p.as_poly(x)
     if px is None:
         px = p.as_basic()
 
     if coefficientD:
-        return px.diff(x).as_poly(*T)
+        return px.diff(x).as_poly(t)
 
     p = Poly(p, *T)
-    return sum([d*p.diff(v) for d, v in zip(D, T)]) + px.diff(x).as_poly(*T)
+    return sum([(d*p.diff(v)).as_poly(t) for d, v in zip(D, T)]) + px.diff(x).as_poly(t)
 
 def get_case(d, x, t):
     """
@@ -116,7 +117,9 @@ def splitfactor(p, D, x, T, coefficientD=False):
 
     Page. 100
     """
-    One = Poly(1, *T, domain=p.get_domain())
+    t = T[-1]
+
+    One = Poly(1, t, domain=p.get_domain())
     Dp = derivation(p, D, x, T, coefficientD)
     for t in T:
         if p.is_zero:
@@ -152,6 +155,8 @@ def splitfactor_sqf(p, D, x, T, coefficientD=False):
     """
     # TODO: This algorithm appears to be faster in every case
     # TODO: Verify this and splitfactor() for multiple extensions
+    t = T[-1]
+
     S = []
     N = []
     p_sqf = p.sqf_list_include()
@@ -160,9 +165,9 @@ def splitfactor_sqf(p, D, x, T, coefficientD=False):
 
     for pi, i in p_sqf:
         Si = pi.as_poly(1/x, x).gcd(derivation(pi, D, x, T,
-            coefficientD).as_poly(1/x, x)).as_poly(*T)
-        pi = Poly(pi, *T)
-        Si = Poly(Si, *T)
+            coefficientD).as_poly(1/x, x)).as_poly(t)
+        pi = Poly(pi, t)
+        Si = Poly(Si, t)
         Ni = pi.quo(Si)
         if not Si.is_one:
             S.append((Si, i))
@@ -184,14 +189,14 @@ def canonical_representation(a, d, D, x, T):
     t = T[-1]
 
     # Make d monic
-    l = Poly(1/d.LC(), *T)
+    l = Poly(1/d.LC(), t)
     a, d = a.mul(l), d.mul(l)
 
     q, r = a.div(d)
     dn, ds = splitfactor(d, D, x, T)
 
     b, c = gcdex_diophantine(dn.as_poly(t), ds.as_poly(t), r.as_poly(t))
-    b, c = b.as_poly(*T), c.as_poly(*T)
+    b, c = b.as_poly(t), c.as_poly(t)
 
     return (q, (b, ds), (c, dn))
 
@@ -206,19 +211,19 @@ def hermite_reduce(a, d, D, x, T):
 
     # TODO: Rewrite this using Mack's linear version
     # Make d monic
-    l = Poly(1/d.LC(), *T)
+    l = Poly(1/d.LC(), t)
     a, d = a.mul(l), d.mul(l)
 
     fp, fs, fn = canonical_representation(a, d, D, x, T)
 
     a, d = fn
-    l = Poly(1/d.LC(), *T)
+    l = Poly(1/d.LC(), t)
     a, d = a.mul(l), d.mul(l)
 
     d_sqf = d.sqf_list()
 
-    gn = Poly(0, *T)
-    gd = Poly(1, *T)
+    gn = Poly(0, t)
+    gd = Poly(1, t)
 
     for v, i in d.sqf_list_include():
         if i < 2:
@@ -228,12 +233,12 @@ def hermite_reduce(a, d, D, x, T):
         for j in range(i - 1, 0, -1):
             udv = u*derivation(v, D, x, T)
             b, c = gcdex_diophantine(udv.as_poly(t), v.as_poly(t),
-                a.mul(Poly(-1/j, *T)).as_poly(t))
-            b, c = b.as_poly(*T), c.as_poly(*T)
+                a.mul(Poly(-1/j, t)).as_poly(t))
+            b, c = b.as_poly(t), c.as_poly(t)
 
             gn = gn*v**j + b
             gd = gd*v**j
-            a = c.mul(Poly(-j, *T)) - u*derivation(b, D, x, T)
+            a = c.mul(Poly(-j, t)) - u*derivation(b, D, x, T)
 
         d = u*v
     q, r = a.div(d)
@@ -257,10 +262,10 @@ def polynomial_reduce(p, D, x, T):
     """
     t = T[-1]
     d = D[-1]
-    q = Poly(0, *T)
+    q = Poly(0, t)
     while p.degree(t) >= d.degree(t):
         m = p.degree(t) - d.degree(t) + 1
-        q0 = Poly(t**m, *T).mul(Poly(p.as_poly(t).LC()/(m*d.as_poly(t).LC()), *T))
+        q0 = Poly(t**m, t).mul(Poly(p.as_poly(t).LC()/(m*d.as_poly(t).LC()), t))
         q += q0
         p = p - derivation(q0, D, x, T)
 
@@ -283,22 +288,21 @@ def residue_reduce(a, d, D, x, T, z=None, invert=True):
     elementary if and only if b == True.
 
     f - Dg is not calculated in this function because that would require
-    explicitly calculating the RootSum.  Use
-    residue_reduce_derivation().
+    explicitly calculating the RootSum.  Use residue_reduce_derivation().
     """
     # If r = residue_reduce(...), then the logarithmic part is given by:
     # sum([RootSum(a[0].as_poly(z), lambda i: i*log(a[1].as_basic()).subs(z,
     # i)).subs(t, log(x)) for a in r[0]])
-    a, d = a.cancel(d, include=True)
-    if a.is_zero:
-        return ([], True)
 
-    p, a = a.div(d)
     t = T[-1]
     z = z or Symbol('z', dummy=True)
-    Tz = T + [z]
+    a, d = a.cancel(d, include=True)
 
-    pz = Poly(z, *Tz)
+    if a.is_zero:
+        return ([], True)
+    p, a = a.div(d)
+
+    pz = Poly(z, t)
 
     Dd = derivation(d, D, x, T)
     q = a - pz*Dd
@@ -308,6 +312,7 @@ def residue_reduce(a, d, D, x, T, z=None, invert=True):
     else:
         r, R = q.resultant(d, includePRS=True)
 
+    r = Poly(r, z)
     Np, Sp = splitfactor_sqf(r, D, x, T, coefficientD=True)
     H = []
 
@@ -317,28 +322,28 @@ def residue_reduce(a, d, D, x, T, z=None, invert=True):
             H.append((s, d))
         else:
             h = R[-i - 1]
-            h_lc = Poly(h.as_poly(t).LC(), *T, field=True)
+            h_lc = Poly(h.as_poly(t).LC(), t, field=True)
 
             h_lc_sqf = h_lc.sqf_list_include(all=True)
 
             for a, j in h_lc_sqf:
-                h = Poly(h, t, field=True).quo(Poly(gcd(a, s**j, x, 1/x), *T))
+                h = Poly(h, t, field=True).quo(Poly(gcd(a, s**j, x, 1/x), t))
 
             s = Poly(s, z).monic()
 
             if invert:
-                h_lc = Poly(h.as_poly(t).LC(), *T, field=True)
+                h_lc = Poly(h.as_poly(t).LC(), t, field=True)
                 inv, coeffs = h_lc.as_poly(z, field=True).invert(s), [S(1)]
 
                 for coeff in h.coeffs()[1:]:
                     L = reduced(inv*coeff, [s])[1]
                     coeffs.append(L.as_basic())
 
-                h = Poly(dict(zip(h.monoms(), coeffs)), *T)
+                h = Poly(dict(zip(h.monoms(), coeffs)), t)
 
             H.append((s, h))
 
-    b = all([not cancel(i.as_basic()).has_any_symbols(*Tz) for i, _ in Np])
+    b = all([not cancel(i.as_basic()).has_any_symbols(t, z) for i, _ in Np])
 
     return (H, b)
 
@@ -379,11 +384,14 @@ def integrate_hyperexponential_polynomial(p, D, x, T):
     D1 = D[:-1]
     T1 = T[:-1]
     if not D1:
+        t1 = x
         T1 = [x]
         D1 = [Poly(1, x)]
+    else:
+        t = T1[-1]
 
-    qa = Poly(0, *T)
-    qd = Poly(1, *T)
+    qa = Poly(0, t)
+    qd = Poly(1, t)
     b = True
     for i in xrange(-p.degree(1/t), p.degree(t) + 1):
         if not i:
@@ -394,12 +402,12 @@ def integrate_hyperexponential_polynomial(p, D, x, T):
             a = p.as_poly(t).nth(i)
 
         aa, ad = a.as_numer_denom()
-        aa, ad = aa.as_poly(*T1), ad.as_poly(*T1)
-        iDt = Poly(i, *T1)*d.quo(Poly(t, *T)).as_poly(*T1)
+        aa, ad = aa.as_poly(t1), ad.as_poly(t1)
+        iDt = Poly(i, t1)*d.quo(Poly(t, t)).as_poly(t1)
         iDta, iDtd = iDt.as_basic().as_numer_denom()
-        iDta, iDtd = iDta.as_poly(*T1), iDtd.as_poly(*T1)
+        iDta, iDtd = iDta.as_poly(t1), iDtd.as_poly(t1)
         try:
-            va, vd = rischDE(iDta, iDtd, Poly(aa, *T1), Poly(ad, *T1), D1, x, T1)
+            va, vd = rischDE(iDta, iDtd, Poly(aa, t1), Poly(ad, t1), D1, x, T1)
         except NonElementaryIntegral:
             b = False
         else:
@@ -453,8 +461,8 @@ def integrate_hypertangent_polynomial(p, D, x, T):
     # XXX: Make sure that sqrt(-1) is not in k.
     t = T[-1]
     q, r = polynomial_reduce(p, D, x, T)
-    a = derivation(t, D, x, T).quo(Poly(t**2 + 1, *T))
-    c = Poly(r.nth(1)/(2*a.as_basic()), *T)
+    a = derivation(t, D, x, T).quo(Poly(t**2 + 1, t))
+    c = Poly(r.nth(1)/(2*a.as_basic()), t)
     return (q, c)
 
 def integrate_nonlinear_no_specials(a, d, D, x, T, Tfuncs):
@@ -480,7 +488,7 @@ def integrate_nonlinear_no_specials(a, d, D, x, T, Tfuncs):
     # Because f has no specials, this should be a polynomial in t, or else
     # there is a bug.
     p = cancel(h[0].as_basic()/h[1].as_basic() - residue_reduce_derivation(g2,
-        D, x, T, z).as_basic() + r[0].as_basic()/r[1].as_basic()).as_poly(*T)
+        D, x, T, z).as_basic() + r[0].as_basic()/r[1].as_basic()).as_poly(t)
     q1, q2 = polynomial_reduce(p, D, x, T)
 
     if q2.has(t):

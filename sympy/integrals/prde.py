@@ -44,7 +44,7 @@ def parametric_log_deriv_heu(fa, fd, wa, wd, D, x, T):
             "> B, no solution for c.")
 
         N, M = s[c1].as_numer_denom() # N, M are integers
-        N, M = Poly(N, *T), Poly(M, *T)
+        N, M = Poly(N, t), Poly(M, t)
 
         nfmwa = N*fa*wd - M*wa*fd
         nfmwd = fd*wd
@@ -66,7 +66,7 @@ def parametric_log_deriv_heu(fa, fd, wa, wd, D, x, T):
             "B.")
 
     c = lcm(fd.as_poly(t).LC(),wd.as_poly(t).LC())
-    l = fd.monic().lcm(wd.monic())*Poly(c, *T)
+    l = fd.monic().lcm(wd.monic())*Poly(c, t)
     ln, ls = splitfactor(l, D, x, T)
     z = ls*ln.gcd(ln.diff(t))
 
@@ -84,7 +84,7 @@ def parametric_log_deriv_heu(fa, fd, wa, wd, D, x, T):
             "<= B, no solution for c.")
 
     M, N = s[c1].as_numer_denom()
-    M, N = Poly(M, *T), Poly(N, *T)
+    M, N = Poly(M, t), Poly(N, t)
 
     nfmwa = N*fa*wd - M*wa*fd
     nfmwd = fd*wd
@@ -127,7 +127,7 @@ def is_log_deriv_k_t_radical(fa, fd, D, x, T, case='auto'):
         # These had better be True.
         assert case in ['auto', 'primitive', 'base']
         assert not D
-        t = Poly(x, x)
+        t = x
         d = Poly(1, x)
         case = 'base'
     else:
@@ -154,7 +154,7 @@ def is_log_deriv_k_t_radical(fa, fd, D, x, T, case='auto'):
 
     p = cancel(fa.as_basic()/fd.as_basic() - residue_reduce_derivation(H, D, x, T, z))
     try:
-        p = Poly(p, *T)
+        p = Poly(p, t)
     except PolynomialError:
         # f - Dg will be in k[t] if f is the logarithmic derivaitve of a k(t)-radical
         return None
@@ -163,7 +163,7 @@ def is_log_deriv_k_t_radical(fa, fd, D, x, T, case='auto'):
         return None
 
     if case == 'exp':
-        wa, wd = derivation(t, D, x, T).cancel(Poly(t, *T), include=True)
+        wa, wd = derivation(t, D, x, T).cancel(Poly(t, t), include=True)
         try:
             n, e, u = parametric_log_deriv(p, Poly(1, t), wa, wd, D, x, T)
         except NonElementaryIntegral:

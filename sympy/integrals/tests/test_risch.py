@@ -27,11 +27,11 @@ def test_derivation():
     assert derivation(Poly(t**2 + 1/x*t + (1 - 2*x)/(4*x**2), t, domain='ZZ(x)'), D, x, [t]) == \
         Poly(-2*t**3 - 4/x*t**2 - (5 - 2*x)/(2*x**2)*t - (1 - 2*x)/(2*x**3), t, domain='ZZ(x)')
     # TODO: Add tests for multiple extensions and coefficientD
-    assert derivation(Poly(x*t*t1, t, t1), [Poly(1/x, t1), Poly(t, t)], x, [t1, t]) == \
-        Poly(t*t1 + x*t*t1 + t, t1,t)
-    assert derivation(Poly(x*t*t1, t, t1), [Poly(1/x, t1), Poly(t, t)], x, [t1, t],
+    assert derivation(Poly(x*t*t1, t), [Poly(1/x, t1), Poly(t, t)], x, [t1, t]) == \
+        Poly(t*t1 + x*t*t1 + t, t)
+    assert derivation(Poly(x*t*t1, t), [Poly(1/x, t1), Poly(t, t)], x, [t1, t],
     coefficientD=True) == \
-        Poly(t*t1, t1, t)
+        Poly(t*t1, t)
 
 def test_splitfactor():
     p = Poly(4*x**4*t**5 + (-4*x**3 - 4*x**4)*t**4 + (-3*x**2 + 2*x**3)*t**3 +
@@ -150,3 +150,5 @@ def test_integrate_nonlinear_no_specials():
         (-log(1 + f(x)**2 + x**2/2)/2 - (4 + x**2)/(4 + 2*x**2 + 4*f(x)**2), True)
     assert integrate_nonlinear_no_specials(Poly(t, t), Poly(1, t), D, x, [t], [f]) == \
         (0, False)
+
+# TODO: Add tests for integrate_hyperexponential

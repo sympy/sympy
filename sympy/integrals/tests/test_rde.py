@@ -70,11 +70,11 @@ def test_spde():
         (Poly(0, t, domain='ZZ'), Poly(0, t, domain='ZZ'), 0,
         Poly(0, t, domain='ZZ(x)'), Poly(1, t, domain='ZZ(x)'))
     D = [Poly(t0/x**2, t0), Poly(1/x, t)]
-    assert spde(Poly(t**2, t0, t), Poly(-t**2/x**2 - 1/x, t0, t),
-    Poly((2*x - 1)*t**4 + (t0 + x)/x*t**3 - (t0 + 4*x**2)/(2*x)*t**2 + x*t, t0, t),
+    assert spde(Poly(t**2, t), Poly(-t**2/x**2 - 1/x, t),
+    Poly((2*x - 1)*t**4 + (t0 + x)/x*t**3 - (t0 + 4*x**2)/(2*x)*t**2 + x*t, t),
     D, 3, x, [t0, t]) == \
-        (Poly(0, t0, t, domain='ZZ'), Poly(0, t0, t, domain='ZZ'), 0,
-        Poly(0, t0, t, domain='ZZ(x)'), Poly(t0*t**2/2 + x**2*t**2 - x**2*t, t0, t, domain='EX'))
+        (Poly(0, t, domain='ZZ'), Poly(0, t, domain='ZZ'), 0,
+        Poly(0, t, domain='ZZ(x)'), Poly(t0*t**2/2 + x**2*t**2 - x**2*t, t, domain='EX'))
     D = [Poly(1, t)]
     assert spde(Poly(t**2 + t + 1, t), Poly(-2*t - 1, t), Poly(t**5/2 +
     3*t**4/4 + t**3 - t**2 + 1, t), D, 4, x, [t]) == \
@@ -101,3 +101,5 @@ def test_solve_poly_rde_no_cancel():
     assert no_cancel_deg_b_equal_deg_D_minus_1(Poly(1 - t, t),
     Poly(t**3 + t**2 - 2*x*t - 2*x, t), D, oo, x, [t]) == \
         (Poly(t**2, t, domain='ZZ'), 1, Poly((-2 - 2*x)*t - 2*x, t, domain='ZZ[x]'))
+
+# TODO: Add tests for rischDE
