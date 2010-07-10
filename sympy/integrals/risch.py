@@ -1,20 +1,22 @@
 """
 The Risch Algorithm for transcendental function integration.
 
-The core algorithms for the Risch algorithm are here.  The subproblem algorithms
-are in the rde.py and prde.py files for the Risch Differential Equation solver
-and the parametric problems solvers, respectively.  Conventions here is that
-the base domain is QQ(x), and each differential extension is t1, t2, ..., t.
-x is the variable of integration (Dx == 1), D is a list of the derivatives of t1,
-t2, ..., t, T is the list of t1, t2, ..., t, t is the outer-most variable of the
-differential extension, k is the field Q(x, t1, ..., tn-1), where t == tn.  The
-numerator of a fraction is denoted by a and the denominator by d.  If the
-fraction is named f, fa == numer(f) and fd == denom(f).  Fractions are returned
-as tuples (fa, fd).  d and t are often used to represent the topmost derivation
-and extension variable, respectively.  The docstring of a function signifies
-whether an argument is in k[t], in which case it will just return a Poly in t,
-or in k(t), in which case it will return the fraction (fa, fd). Other variable
-names probably come from the names used in Bronstein's book.
+The core algorithms for the Risch algorithm are here.  The subproblem
+algorithms are in the rde.py and prde.py files for the Risch
+Differential Equation solver and the parametric problems solvers,
+respectively.  Conventions here is that the base domain is QQ(x), and
+each differential extension is t1, t2, ..., t. x is the variable of
+integration (Dx == 1), D is a list of the derivatives of t1, t2, ..., t,
+T is the list of t1, t2, ..., t, t is the outer-most variable of the
+differential extension, k is the field Q(x, t1, ..., tn-1), where t ==
+tn.  The numerator of a fraction is denoted by a and the denominator by
+d.  If the fraction is named f, fa == numer(f) and fd == denom(f).
+Fractions are returned as tuples (fa, fd).  d and t are often used to
+represent the topmost derivation and extension variable, respectively.
+The docstring of a function signifies whether an argument is in k[t], in
+which case it will just return a Poly in t, or in k(t), in which case it
+will return the fraction (fa, fd). Other variable names probably come
+from the names used in Bronstein's book.
 """
 from sympy.core.basic import S
 from sympy.core.function import Lambda
@@ -179,6 +181,8 @@ def canonical_representation(a, d, D, x, T):
     (has a special denominator), and f_n is simple (has a normal
     denominator).
     """
+    t = T[-1]
+
     # Make d monic
     l = Poly(1/d.LC(), *T)
     a, d = a.mul(l), d.mul(l)
@@ -186,7 +190,8 @@ def canonical_representation(a, d, D, x, T):
     q, r = a.div(d)
     dn, ds = splitfactor(d, D, x, T)
 
-    b, c = gcdex_diophantine(dn, ds, r)
+    b, c = gcdex_diophantine(dn.as_poly(t), ds.as_poly(t), r.as_poly(t))
+    b, c = b.as_poly(*T), c.as_poly(*T)
 
     return (q, (b, ds), (c, dn))
 
@@ -197,6 +202,8 @@ def hermite_reduce(a, d, D, x, T):
     Given a derivation D on k(t) and f = a/d in k(t), returns g, h, r in
     k(t) such that f = Dg + h + r, h is simple, and r is reduced.
     """
+    t = T[-1]
+
     # TODO: Rewrite this using Mack's linear version
     # Make d monic
     l = Poly(1/d.LC(), *T)
@@ -220,7 +227,9 @@ def hermite_reduce(a, d, D, x, T):
         u = d.quo(v**i)
         for j in range(i - 1, 0, -1):
             udv = u*derivation(v, D, x, T)
-            b, c = gcdex_diophantine(udv, v, a.mul(Poly(-1/j, *T)))
+            b, c = gcdex_diophantine(udv.as_poly(t), v.as_poly(t),
+                a.mul(Poly(-1/j, *T)).as_poly(t))
+            b, c = b.as_poly(*T), c.as_poly(*T)
 
             gn = gn*v**j + b
             gd = gd*v**j
@@ -340,7 +349,7 @@ def residue_reduce_to_basic(H, x, T, z, Tfuncs):
     # TODO: check what Lambda does with RootOf
     i = Symbol('i', dummy=True)
     return sum((RootSum(a[0].as_poly(z), Lambda(i, i*log(a[1].as_basic()).subs(
-        {z: i}).subs(zip(T, [f(x) for f in Tfuncs])))) for a in H))
+        {z: i}).subs(reversed(zip(T, [f(x) for f in Tfuncs]))))) for a in H))
 
 def residue_reduce_derivation(H, D, x, T, z):
     """
@@ -353,6 +362,84 @@ def residue_reduce_derivation(H, D, x, T, z):
     i = Symbol('i', dummy=True)
     return S(sum((RootSum(a[0].as_poly(z), Lambda(i, i*derivation(a[1], D, x,
         T).as_basic().subs(z, i)/a[1].as_basic().subs(z, i))) for a in H)))
+
+def integrate_hyperexponential_polynomial(p, D, x, T):
+    """
+    Integration of hyperexponential polynomials.
+
+    Given a hyperexponential monomial t over k and p in k[t, 1/t], return q in
+    k[t, 1/t] and a bool b in {True, False} such that p - Dq in k if b is True,
+    or p - Dq does not have an elementary integral over k(t) if b is False.
+    """
+    from sympy.integrals.rde import rischDE
+
+    t = T[-1]
+    d = D[-1]
+
+    D1 = D[:-1]
+    T1 = T[:-1]
+    if not D1:
+        T1 = [x]
+        D1 = [Poly(1, x)]
+
+    qa = Poly(0, *T)
+    qd = Poly(1, *T)
+    b = True
+    for i in xrange(-p.degree(1/t), p.degree(t) + 1):
+        if not i:
+            continue
+        elif i < 0:
+            a = p.as_poly(1/t).nth(-i)
+        else:
+            a = p.as_poly(t).nth(i)
+
+        aa, ad = a.as_numer_denom()
+        aa, ad = aa.as_poly(*T1), ad.as_poly(*T1)
+        iDt = Poly(i, *T1)*d.quo(Poly(t, *T)).as_poly(*T1)
+        iDta, iDtd = iDt.as_basic().as_numer_denom()
+        iDta, iDtd = iDta.as_poly(*T1), iDtd.as_poly(*T1)
+        try:
+            va, vd = rischDE(iDta, iDtd, Poly(aa, *T1), Poly(ad, *T1), D1, x, T1)
+        except NonElementaryIntegral:
+            b = False
+        else:
+            qa = qa*vd + va*Poly(t**i)*qd
+            qd *= vd
+
+    return (qa, qd, b)
+
+def integrate_hyperexponential(a, d, D, x, T, Tfuncs):
+    """
+    Integration of hyperexponential functions.
+
+    Given a hyperexponential monomial t over k and f in k(t), return g
+    elementary over k(t) and a bool b in {True, False} such that f - Dg in k
+    if b is True or f - Dg does not have an elementary integral over k(t) if b
+    is False.
+
+    The function returns a Basic expression.
+    """
+    from pudb import set_trace; set_trace() # Debugging
+    t = T[-1]
+    z = Symbol('z', dummy=True)
+    g1, h, r = hermite_reduce(a, d, D, x, T)
+    g2, b = residue_reduce(h[0], h[1], D, x, T, z=z)
+    if not b:
+        return ((g1[0].as_basic()/g2[1].as_basic()).subs(reversed(zip(T, [f(x)
+            for x in Tfuncs]))) + residue_reduce_to_basic(g2, t, z, tfunc))
+
+    # p should be a polynomial in t and 1/t, because Sirr == k[t, 1/t]
+    # h - Dg2 + r
+    p = cancel(h[0].as_basic()/h[1].as_basic() - residue_reduce_derivation(g2,
+        D, x, T, z).as_basic() + r[0].as_basic()/r[1].as_basic())
+    p = Poly(p, t, 1/t)
+
+    qa, qd, b = integrate_hyperexponential_polynomial(p, D, x, T)
+
+    ret = (g1[0].as_basic()/g1[1].as_basic() + qa.as_basic()).subs(reversed(
+        zip(T, [f(x) for f in Tfuncs])))/qd.as_basic().subs(reversed(zip(T,
+        [f(x) for f in Tfuncs]))) + residue_reduce_to_basic(g2, x, T, z, Tfuncs)
+    return (ret, b)
 
 def integrate_hypertangent_polynomial(p, D, x, T):
     """
@@ -387,8 +474,8 @@ def integrate_nonlinear_no_specials(a, d, D, x, T, Tfuncs):
     g1, h, r = hermite_reduce(a, d, D, x, T)
     g2, b = residue_reduce(h[0], h[1], D, x, T, z=z)
     if not b:
-        return ((g1[0].as_basic()/g2[1].as_basic()).subs(zip(T, [f(x) for x in
-            Tfuncs])) + residue_reduce_to_basic(g2, t, z, tfunc))
+        return ((g1[0].as_basic()/g2[1].as_basic()).subs(reversed(zip(T, [f(x)
+            for x in Tfuncs]))) + residue_reduce_to_basic(g2, t, z, tfunc))
 
     # Because f has no specials, this should be a polynomial in t, or else
     # there is a bug.
@@ -400,6 +487,8 @@ def integrate_nonlinear_no_specials(a, d, D, x, T, Tfuncs):
         b = False
     else:
         b = True
-    ret = cancel(g1[0].as_basic()/g1[1].as_basic() + q1.as_basic()).subs(zip(T,
-        [f(x) for f in Tfuncs])) + residue_reduce_to_basic(g2, x, T, z, Tfuncs)
+
+    ret = cancel(g1[0].as_basic()/g1[1].as_basic() + q1.as_basic()).subs(
+        reversed(zip(T, [f(x) for f in Tfuncs]))) + residue_reduce_to_basic(g2,
+        x, T, z, Tfuncs)
     return (ret, b)

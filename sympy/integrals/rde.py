@@ -20,6 +20,7 @@ k[t].
 See Chapter 6 of "Symbolic Integration I: Transcendental Functions" by
 Manuel Bronstein.  See also the docstring of risch.py.
 """
+from sympy.core import oo
 from sympy.core.symbol import Symbol
 
 from sympy.polys import Poly, gcd, ZZ, cancel
@@ -84,7 +85,7 @@ def weak_normalizer(a, d, D, x, T, z=None):
     d_sqf_part = dn.quo(g)
     d1 = d_sqf_part.quo(gcd(d_sqf_part, g))
 
-    a1, b = gcdex_diophantine(d.quo(d1), d1, a)
+    a1, b = gcdex_diophantine(d.quo(d1).as_poly(t), d1.as_poly(t), a.as_poly(t))
     r = (a - Poly(z, *T)*derivation(d1, D, x, T)).as_poly(t).resultant(d1.as_poly(t))
     r = Poly(r, z)
 
@@ -200,7 +201,7 @@ def special_denom(a, ba, bd, ca, cd, D, x, T, case='auto'):
     pn = p**n
 
     A = a*pN
-    B = (ba*pN.quo(bd) + Poly(n, t)*a*derivation(p, D, x, T)*pN.quo(p))
+    B = ba*pN.quo(bd) + Poly(n, t)*a*derivation(p, D, x, T).quo(p)*pN
     C = ca*pN.quo(pn).quo(cd)
     h = pn # This is 1/h
 
@@ -469,8 +470,41 @@ def solve_poly_rde(b, c, D, n, x, T):
             return R
         else:
             h, m, C = R
+            # XXX: Or should it be risch_DE()?
             y = solve_poly_rde(b, C, D, m, x, T)
             return h + y
 
     else:
         raise NotImplementedError("Remaining cases for Poly RDE not yet implemented.")
+
+def rischDE(fa, fd, ga, gd, D, x, T):
+    """
+    Solve a Risch Differential Equation - Dy + f*y == g.
+
+    See the outline in the docstring of rde.py for more information
+    about the procedure used.  Either raise NonElementaryIntegral, in
+    which case there is no solution y in the diven differential field,
+    or return y in k(t) satisfying Dy + f*y == g, or raise
+    NotImplementedError, in which case, the algorithms necessary to
+    solve the given Risch Differential Equation have not yet been
+    implemented.
+    """
+    _, (fa, fd) = weak_normalizer(fa, fd, D, x, T)
+    a, (ba, bd), (ca, cd), hn = normal_denominator(fa, fd, ga, gd, D, x, T)
+    A, B, C, hs = special_denom(a, ba, bd, ca, cd, D, x, T)
+    try:
+        # Until this is fully implemented, use oo.  Note that this, will almost
+        # certaintly cause non-termination in spde() (unless A == 1), and
+        # *might* lead to non-termination in the next step for a non-elementary
+        # integral (I don't know for certain yet).
+        n = bound_degree(A, B, C, D, x, T)
+    except NotImplementedError:
+        # TODO: Remove warnings
+        import warnings
+        warnings.warn("risch_DE: Proceeding with n = oo; may cause non-termination.")
+        n = oo
+
+    B, C, m, alpha, beta = spde(A, B, C, D, n, x, T)
+    y = solve_poly_rde(B, C, D, n, x, T)
+
+    return (alpha*y + beta, hn*hs)
