@@ -332,7 +332,7 @@ def dup_sqf_list_include(f, K, all=False):
     >>> f = ZZ.map([2, 16, 50, 76, 56, 16])
 
     >>> dup_sqf_list_include(f, ZZ)
-    [([2, 2], 2), ([1, 2], 3)]
+    [([2], 1), ([1, 1], 2), ([1, 2], 3)]
 
     >>> dup_sqf_list_include(f, ZZ, all=True)
     [([2], 1), ([1, 1], 2), ([1, 2], 3)]
@@ -340,11 +340,12 @@ def dup_sqf_list_include(f, K, all=False):
     """
     coeff, factors = dup_sqf_list(f, K, all=all)
 
-    if not factors:
-        return [(dup_strip([coeff]), 1)]
-    else:
+    if factors and factors[0][1] == 1:
         g = dup_mul_ground(factors[0][0], coeff, K)
-        return [(g, factors[0][1])] + factors[1:]
+        return [(g, 1)] + factors[1:]
+    else:
+        g = dup_strip([coeff])
+        return [(g, 1)] + factors
 
 @cythonized("u,i")
 def dmp_sqf_list(f, u, K, all=False):
@@ -419,7 +420,7 @@ def dmp_sqf_list_include(f, u, K, all=False):
     >>> f = ZZ.map([[1], [2, 0], [1, 0, 0], [], [], []])
 
     >>> dmp_sqf_list_include(f, 1, ZZ)
-    [([[1], [1, 0]], 2), ([[1], []], 3)]
+    [([[1]], 1), ([[1], [1, 0]], 2), ([[1], []], 3)]
 
     >>> dmp_sqf_list_include(f, 1, ZZ, all=True)
     [([[1]], 1), ([[1], [1, 0]], 2), ([[1], []], 3)]
@@ -430,11 +431,12 @@ def dmp_sqf_list_include(f, u, K, all=False):
 
     coeff, factors = dmp_sqf_list(f, u, K, all=all)
 
-    if not factors:
-        return [(dmp_ground(coeff, u), 1)]
-    else:
+    if factors and factors[0][1] == 1:
         g = dmp_mul_ground(factors[0][0], coeff, u, K)
-        return [(g, factors[0][1])] + factors[1:]
+        return [(g, 1)] + factors[1:]
+    else:
+        g = dmp_ground(coeff, u)
+        return [(g, 1)] + factors
 
 def dup_gff_list(f, K):
     """
