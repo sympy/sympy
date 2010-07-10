@@ -1,5 +1,5 @@
-from sympy import Symbol, Wild, sin, cos, exp, sqrt, pi, Function, Derivative,\
-        abc, Integer, Eq, symbols, Add, I, Real, log, Rational, Lambda, atan2
+from sympy import (Symbol, Wild, sin, cos, exp, sqrt, pi, Function, Derivative,
+        abc, Integer, Eq, symbols, Add, I, Real, log, Rational, Lambda, atan2)
 
 def test_subs():
     n3=Rational(3)
@@ -74,7 +74,6 @@ def test_dict():
     assert e._subs_dict(r) == r[a]/r[b] * sin(r[b]*x)
     assert e._subs_dict(r) == 3 * sin(4*x) / 4
 
-
 def test_dict_ambigous():   # see #467
     x = Symbol('x')
     y = Symbol('y')
@@ -92,7 +91,6 @@ def test_dict_ambigous():   # see #467
     # and this is how order can affect the result
     assert f .subs(x,y) .subs(exp(x),y)  == y*exp(y)
     assert f .subs(exp(x),y) .subs(x,y)  == y**2
-
 
 def test_deriv_sub_bug3():
     x = Symbol("x")
@@ -281,7 +279,6 @@ def test_division():
     assert (   1/x**2 ).subs(x,-2) == Rational(1,4)
     assert ( -(1/x**2)).subs(x,-2) == -Rational(1,4)
 
-
 def test_add():
     a, b, c, d, x = abc.a, abc.b, abc.c, abc.d, abc.x
     assert (a**2 - b - c).subs(a**2 - b, d) in [d - c, a**2 - b - c]
@@ -300,8 +297,6 @@ def test_add():
 def test_subs_issue910():
     assert (I*Symbol("a")).subs(1, 2) == I*Symbol("a")
 
-
-
 def test_functions_subs():
     x, y = map(Symbol, 'xy')
     f, g = map(Function, 'fg')
@@ -313,3 +308,8 @@ def test_functions_subs():
     assert (sin(x)+atan2(x,y)).subs([[atan2,f],[sin,g]]) == f(x,y) + g(x)
     assert (g(f(x+y, x))).subs([[f, l], [g, exp]]) == exp(x + sin(x + y))
 
+def test_subs_iter():
+    x, y = symbols('x,y')
+    assert x.subs(reversed([[x, y]])) == y
+    it = iter([[x, y]])
+    assert x.subs(it) == y
