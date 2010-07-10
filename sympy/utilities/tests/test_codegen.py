@@ -686,3 +686,22 @@ def test_loops_InOut():
             'end subroutine\n'
             'end interface\n'
             )
+
+def test_output_arg_f():
+    from sympy import sin, cos, Equality
+    x, y, z = symbols("xyz")
+    r = Routine("foo", [Equality(y, sin(x)), cos(x)])
+    c = FCodeGen()
+    result = c.write([r], "test", header=False, empty=False)
+    assert result[0][0] == "test.f90"
+    assert result[0][1] == (
+        'REAL*8 function foo(x, y)\n'
+        'implicit none\n'
+        'REAL*8, intent(in) :: x\n'
+        'REAL*8, intent(out) :: y\n'
+        'y = 0.d0\n'
+        'foo = 0.d0\n'
+        'y = sin(x)\n'
+        'foo = cos(x)\n'
+        'end function\n'
+    )

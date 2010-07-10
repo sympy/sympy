@@ -709,7 +709,7 @@ class FCodeGen(CodeGen):
                 else:
                     raise NotImplementedError
         if routine.results:
-            code_lines.append("%s = 0.d0\n" % routine.results[0])
+            code_lines.append("%s = 0.d0\n" % routine.name)
 
         return code_lines
 
