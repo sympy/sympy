@@ -1463,7 +1463,7 @@ class DMP(object):
 
     def exclude(f):
         r"""
-        Remove generators from f.
+        Remove useless generators from f.
 
         Returns the removed generators and the new excluded `f`.
 

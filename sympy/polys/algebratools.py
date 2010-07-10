@@ -137,6 +137,12 @@ class Algebra(object):
                 if type(a) is long:
                     return K1(a)
 
+                if K1.is_Numerical and getattr(a, 'is_ground', False):
+                    r = a.rep
+                    for i in xrange(a.lev + 1):
+                        r = r[0]
+                    return K1.convert(r)
+
                 a = sympify(a)
 
                 if isinstance(a, Basic):

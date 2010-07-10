@@ -379,6 +379,7 @@ def test_Algebra_get_exact():
 
 def test_Algebra_convert():
     assert QQ.convert(10e-52) != QQ(0)
+    assert ZZ.convert(DMP([[ZZ(1)]], ZZ)) == ZZ(1)
 
 def test_PolynomialRing__init():
     raises(GeneratorsNeeded, "ZZ.poly_ring()")
