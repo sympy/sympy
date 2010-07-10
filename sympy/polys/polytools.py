@@ -3348,12 +3348,12 @@ def resultant(f, g, *gens, **args):
     """
     gens = _analyze_gens(gens)
 
+    includePRS = args.pop('includePRS', False)
     try:
         F, G = _polify_basic(f, g, *gens, **args)
     except CoercionFailed, (f, g):
         raise GeneratorsNeeded("can't compute resultant of %s and %s without generators" % (f, g))
 
-    includePRS = args.get('includePRS', False)
     if includePRS:
         result, R = F.resultant(G, includePRS)
     else:
@@ -3731,12 +3731,11 @@ def sqf_list(f, *gens, **args):
     >>> sqf_list(2*x**5 + 16*x**4 + 50*x**3 + 76*x**2 + 56*x + 16, all=True)
     (2, [(1, 1), (1 + x, 2), (2 + x, 3)])
     """
+    all = args.pop('all', False)
     F = NonStrictPoly(f, *_analyze_gens(gens), **args)
 
     if not F.is_Poly:
         raise GeneratorsNeeded("can't compute square-free decomposition of %s without generators" % f)
-
-    all = args.get('all', False)
 
     if not args.get('include', False):
         coeff, factors = result = F.sqf_list(all)
