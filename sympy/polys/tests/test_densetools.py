@@ -943,6 +943,9 @@ def test_dup_sqf():
 
     assert dup_sqf_list(res, ZZ) == (45796, [([4,0,1], 3)])
 
+    assert dup_sqf_list_include([DMP([1, 0, 0, 0], ZZ), DMP([], ZZ), DMP([], ZZ)], ZZ[x]) == \
+        [([DMP([1, 0, 0, 0], ZZ)], 1), ([DMP([1], ZZ), DMP([], ZZ)], 2)]
+
 def test_dmp_sqf():
     assert dmp_sqf_part([[]], 1, ZZ) == [[]]
     assert dmp_sqf_p([[]], 1, ZZ) == True
@@ -984,6 +987,9 @@ def test_dmp_sqf():
         (-1, [([[1],[1],[1],[1]], 1), ([[1],[-1]], 2)])
     assert dmp_sqf_list_include(f, 1, ZZ) == \
         [([[-1],[-1],[-1],[-1]], 1), ([[1],[-1]], 2)]
+
+    assert dmp_sqf_list_include([[-1], [2], [-1]], 1, ZZ) == \
+        [([[-1]], 1), ([[1], [-1]], 2)]
 
 def test_dup_extract():
     f = dup_normal([2930944, 0, 2198208, 0, 549552, 0, 45796], ZZ)

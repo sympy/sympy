@@ -2522,8 +2522,13 @@ def dup_sqf_list_include(f, K, all=False):
     if not factors:
         return [(dup_strip([coeff]), 1)]
     else:
-        g = dup_mul_ground(factors[0][0], coeff, K)
-        return [(g, factors[0][1])] + factors[1:]
+        if factors[0][1] == 1:
+            g = dup_mul_ground(factors[0][0], coeff, K)
+            return [(g, factors[0][1])] + factors[1:]
+        else:
+            g = [coeff]
+            return [(g, 1)] + factors
+
 
 @cythonized("u,i")
 def dmp_sqf_list(f, u, K, all=False):
@@ -2600,8 +2605,14 @@ def dmp_sqf_list_include(f, u, K, all=False):
     if not factors:
         return [(dmp_ground(coeff, u), 1)]
     else:
-        g = dmp_mul_ground(factors[0][0], coeff, u, K)
-        return [(g, factors[0][1])] + factors[1:]
+        if factors[0][1] == 1:
+            g = dmp_mul_ground(factors[0][0], coeff, u, K)
+            return [(g, factors[0][1])] + factors[1:]
+        else:
+            g = [coeff]
+            for _ in xrange(u):
+                g = [g]
+            return [(g, 1)] + factors
 
 def dup_extract(f, g, K):
     """
