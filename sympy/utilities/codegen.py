@@ -91,7 +91,7 @@ __all__ = [
     "Routine", "DataType", "default_datatypes", "get_default_datatype",
     "Argument", "InputArgument", "Result",
     # routines -> code
-    "CodeGen", "CCodeGen", "FCodeGen"
+    "CodeGen", "CCodeGen", "FCodeGen",
     # friendly functions
     "codegen",
 ]
