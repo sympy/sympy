@@ -1,9 +1,9 @@
 """Most of these tests come from the examples in Bronstein's book."""
-from sympy import Poly, S, Function, log, symbols
+from sympy import Poly, S, Function, log, symbols, exp, tan, Integral
 from sympy.integrals.risch import (gcdex_diophantine, derivation, splitfactor,
     splitfactor_sqf, canonical_representation, hermite_reduce,
-    polynomial_reduce, residue_reduce, integrate_hypertangent_polynomial,
-    integrate_nonlinear_no_specials,)
+    polynomial_reduce, residue_reduce, integrate_hyperexponential,
+    integrate_hypertangent_polynomial, integrate_nonlinear_no_specials)
 from sympy.utilities.pytest import XFAIL, skip
 
 from sympy.abc import x, t, nu, z, a
@@ -121,14 +121,37 @@ def test_residue_reduce():
     # TODO: Skip or make faster
     assert residue_reduce(Poly((-2*nu**2 - x**4)/(2*x**2)*t - (1 + x**2)/x, t),
     Poly(t**2 + 1 + x**2/2, t), D, x, [t], z) == \
-        ([(Poly(z + S(1)/2, z, domain='QQ'), Poly(t**2 + 1 + x**2/2, t,
-        domain='QQ[x]'))], True)
+        ([(Poly(1, z, domain='QQ'), Poly(t, t)), (Poly(z + S(1)/2, z),
+        Poly(t**2 + 1 + x**2/2, t))], True)
     D = [Poly(1 + t**2, t)]
     assert residue_reduce(Poly(-2*x*t + 1 - x**2, t, domain='ZZ(x)'),
     Poly(t**2 + 2*x*t + 1 + x**2, t, domain='ZZ[x]'), D, x, [t], z) == \
         ([(Poly(z**2 + S(1)/4, z, domain='QQ'), Poly(t + x + 2*z, t,
         domain='ZZ[x,z]'))], True)
 
+def test_integrate_hyperexponential():
+    # TODO: Add tests for integrate_hyperexponential() from the book
+    a = Poly((1 + 2*t1 + t1**2 + 2*t1**3)*t**2 + (1 + t1**2)*t + 1 + t1**2, t)
+    d = Poly(1, t)
+    D = [Poly(1 + t1**2, t1), Poly(t*(1 + t1**2), t)]
+    assert integrate_hyperexponential(a, d, D, x, [t1, t], [tan, lambda x: exp(tan(x))]) == \
+        (exp(2*tan(x))*tan(x) + Integral(1 + tan(x)**2, x) + exp(tan(x)), True)
+        # (exp(2*tan(x))*tan(x) + tan(x) + exp(tan(x)), True)
+
+    a = Poly(t, t)
+    d = Poly(1, t)
+    D = [Poly(2*x*t, t)]
+
+    assert integrate_hyperexponential(a, d, D, x, [t], [lambda x: exp(x**2)]) == (0, False)
+
+    D = [Poly(t, t)]
+    assert integrate_hyperexponential(a, d, D, x, [t], [exp]) == (exp(x), True)
+
+    a = Poly(25*t**6 - 10*t**5 + 7*t**4 - 8*t**3 + 13*t**2 + 2*t - 1, t)
+    d = Poly(25*t**6 + 35*t**4 + 11*t**2 + 1, t)
+    assert integrate_hyperexponential(a, d, D, x, [t], [exp]) == \
+        (-(55 - 50*exp(x))/(25 + 125*exp(2*x)) + Integral(-1, x) + log(1 + exp(2*x)), True)
+        # (-(55 - 50*exp(x))/(25 + 125*exp(2*x)) - x + log(1 + exp(2*x)), True)
 
 def test_integrate_hypertangent_polynomial():
     D = [Poly(t**2 + 1, t)]
@@ -150,5 +173,3 @@ def test_integrate_nonlinear_no_specials():
         (-log(1 + f(x)**2 + x**2/2)/2 - (4 + x**2)/(4 + 2*x**2 + 4*f(x)**2), True)
     assert integrate_nonlinear_no_specials(Poly(t, t), Poly(1, t), D, x, [t], [f]) == \
         (0, False)
-
-# TODO: Add tests for integrate_hyperexponential

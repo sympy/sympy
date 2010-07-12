@@ -26,6 +26,7 @@ from sympy.functions import log
 
 from sympy.polys import (gcd, cancel, PolynomialError, Poly, reduced, RootSum)
 
+from sympy.integrals import Integral
 #    from pudb import set_trace; set_trace() # Debugging
 
 class NonElementaryIntegral(Exception):
@@ -86,7 +87,8 @@ def derivation(p, D, x, T, coefficientD=False):
         return px.diff(x).as_poly(t)
 
     p = Poly(p, *T)
-    return sum([(d*p.diff(v)).as_poly(t) for d, v in zip(D, T)]) + px.diff(x).as_poly(t)
+    return sum([(d*p.diff(v).as_poly(t)).as_poly(t) for d, v in zip(D, T)]) + \
+        px.diff(x).as_poly(t)
 
 def get_case(d, x, t):
     """
@@ -121,21 +123,22 @@ def splitfactor(p, D, x, T, coefficientD=False):
 
     One = Poly(1, t, domain=p.get_domain())
     Dp = derivation(p, D, x, T, coefficientD)
-    for t in T:
+    # XXX: Is this right?
+    for i in T:
         if p.is_zero:
             continue
 
-        if not p.has_any_symbols(t):
+        if not p.has_any_symbols(i):
             s = p.as_poly(1/x).gcd(Dp.as_poly(1/x)).as_poly(t)
             n = p.quo(s)
             return (n, s)
 
         if not Dp.is_zero:
-            h = p.gcd(Dp)
-            g = p.gcd(p.diff(t))
+            h = p.gcd(Dp).to_field()
+            g = p.gcd(p.as_poly(*T).diff(i)).to_field()
             s = h.quo(g)
 
-            if s.degree(t) == 0:
+            if s.as_poly(i).degree(i) == 0:
                 return (p, One)
 
             q_split = splitfactor(p.quo(s), D, x, T, coefficientD)
@@ -312,16 +315,21 @@ def residue_reduce(a, d, D, x, T, z=None, invert=True):
     else:
         r, R = q.resultant(d, includePRS=True)
 
+    R_map, H = {}, []
+    for i in R:
+        R_map[i.degree()] = i
+
     r = Poly(r, z)
     Np, Sp = splitfactor_sqf(r, D, x, T, coefficientD=True)
-    H = []
 
     for s, i in Sp:
         if i == d.degree(t):
             s = Poly(s, z).monic()
             H.append((s, d))
         else:
-            h = R[-i - 1]
+            h = R_map.get(i)
+            if h is None:
+                continue
             h_lc = Poly(h.as_poly(t).LC(), t, field=True)
 
             h_lc_sqf = h_lc.sqf_list_include(all=True)
@@ -353,8 +361,10 @@ def residue_reduce_to_basic(H, x, T, z, Tfuncs):
     """
     # TODO: check what Lambda does with RootOf
     i = Symbol('i', dummy=True)
+    s = list(reversed(zip(T, [f(x) for f in Tfuncs])))
+
     return sum((RootSum(a[0].as_poly(z), Lambda(i, i*log(a[1].as_basic()).subs(
-        {z: i}).subs(reversed(zip(T, [f(x) for f in Tfuncs]))))) for a in H))
+        {z: i}).subs(s))) for a in H))
 
 def residue_reduce_derivation(H, D, x, T, z):
     """
@@ -368,7 +378,7 @@ def residue_reduce_derivation(H, D, x, T, z):
     return S(sum((RootSum(a[0].as_poly(z), Lambda(i, i*derivation(a[1], D, x,
         T).as_basic().subs(z, i)/a[1].as_basic().subs(z, i))) for a in H)))
 
-def integrate_hyperexponential_polynomial(p, D, x, T):
+def integrate_hyperexponential_polynomial(p, D, x, T, z):
     """
     Integration of hyperexponential polynomials.
 
@@ -388,16 +398,16 @@ def integrate_hyperexponential_polynomial(p, D, x, T):
         T1 = [x]
         D1 = [Poly(1, x)]
     else:
-        t = T1[-1]
+        t1 = T1[-1]
 
     qa = Poly(0, t)
     qd = Poly(1, t)
     b = True
-    for i in xrange(-p.degree(1/t), p.degree(t) + 1):
+    for i in xrange(-p.degree(z), p.degree(t) + 1):
         if not i:
             continue
         elif i < 0:
-            a = p.as_poly(1/t).nth(-i)
+            a = p.as_poly(z).nth(-i)
         else:
             a = p.as_poly(t).nth(i)
 
@@ -414,6 +424,8 @@ def integrate_hyperexponential_polynomial(p, D, x, T):
             qa = qa*vd + va*Poly(t**i)*qd
             qd *= vd
 
+    # TODO: Add integrate(p.as_poly(t).nth(0)) to make it correct!
+
     return (qa, qd, b)
 
 def integrate_hyperexponential(a, d, D, x, T, Tfuncs):
@@ -425,28 +437,33 @@ def integrate_hyperexponential(a, d, D, x, T, Tfuncs):
     if b is True or f - Dg does not have an elementary integral over k(t) if b
     is False.
 
-    The function returns a Basic expression.
+    This function returns a Basic expression.
     """
-    from pudb import set_trace; set_trace() # Debugging
     t = T[-1]
     z = Symbol('z', dummy=True)
+    s = list(reversed(zip(T, [f(x) for f in Tfuncs])))
+
     g1, h, r = hermite_reduce(a, d, D, x, T)
     g2, b = residue_reduce(h[0], h[1], D, x, T, z=z)
     if not b:
-        return ((g1[0].as_basic()/g2[1].as_basic()).subs(reversed(zip(T, [f(x)
-            for x in Tfuncs]))) + residue_reduce_to_basic(g2, t, z, tfunc))
+        return ((g1[0].as_basic()/g2[1].as_basic()).subs(s) +
+            residue_reduce_to_basic(g2, t, z, tfunc))
 
     # p should be a polynomial in t and 1/t, because Sirr == k[t, 1/t]
     # h - Dg2 + r
     p = cancel(h[0].as_basic()/h[1].as_basic() - residue_reduce_derivation(g2,
-        D, x, T, z).as_basic() + r[0].as_basic()/r[1].as_basic())
-    p = Poly(p, t, 1/t)
+        D, x, T, z) + r[0].as_basic()/r[1].as_basic())
+    p = p.as_poly(t, 1/t).replace(1/t, z)
 
-    qa, qd, b = integrate_hyperexponential_polynomial(p, D, x, T)
+    qa, qd, b = integrate_hyperexponential_polynomial(p, D, x, T, z)
 
-    ret = (g1[0].as_basic()/g1[1].as_basic() + qa.as_basic()).subs(reversed(
-        zip(T, [f(x) for f in Tfuncs])))/qd.as_basic().subs(reversed(zip(T,
-        [f(x) for f in Tfuncs]))) + residue_reduce_to_basic(g2, x, T, z, Tfuncs)
+    i = p.as_poly(t).nth(0).as_poly(z).nth(0)
+
+    ret = ((g1[0].as_basic()/g1[1].as_basic() + qa.as_basic()).subs(s)/
+        qd.as_basic().subs(s) + residue_reduce_to_basic(g2, x, T, z, Tfuncs))
+    if not i.is_zero:
+        ret += Integral(i.subs(s), x)
+
     return (ret, b)
 
 def integrate_hypertangent_polynomial(p, D, x, T):
@@ -477,13 +494,17 @@ def integrate_nonlinear_no_specials(a, d, D, x, T, Tfuncs):
 
     This function returns a Basic expression.
     """
+    # TODO: Integral from k?
+    # XXX: a and d must be canceled, or this might not return correct results
     t = T[-1]
     z = Symbol('z', dummy=True)
+    s = list(reversed(zip(T, [f(x) for f in Tfuncs])))
+
     g1, h, r = hermite_reduce(a, d, D, x, T)
     g2, b = residue_reduce(h[0], h[1], D, x, T, z=z)
     if not b:
-        return ((g1[0].as_basic()/g2[1].as_basic()).subs(reversed(zip(T, [f(x)
-            for x in Tfuncs]))) + residue_reduce_to_basic(g2, t, z, tfunc))
+        return ((g1[0].as_basic()/g2[1].as_basic()).subs(s) +
+            residue_reduce_to_basic(g2, t, z, tfunc))
 
     # Because f has no specials, this should be a polynomial in t, or else
     # there is a bug.
@@ -496,7 +517,6 @@ def integrate_nonlinear_no_specials(a, d, D, x, T, Tfuncs):
     else:
         b = True
 
-    ret = cancel(g1[0].as_basic()/g1[1].as_basic() + q1.as_basic()).subs(
-        reversed(zip(T, [f(x) for f in Tfuncs]))) + residue_reduce_to_basic(g2,
-        x, T, z, Tfuncs)
+    ret = (cancel(g1[0].as_basic()/g1[1].as_basic() + q1.as_basic()).subs(s) +
+        residue_reduce_to_basic(g2, x, T, z, Tfuncs))
     return (ret, b)
