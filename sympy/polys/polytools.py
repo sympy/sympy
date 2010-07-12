@@ -1264,7 +1264,7 @@ class Poly(Basic):
         >>> Poly(x**2 + 1, x).pquo(Poly(2*x - 4, x)) #doctest: +SKIP
         Traceback (most recent call last):
         ...
-        ExactQuotientFailed: [2, -4] does not divide [1, 0, 1]
+        ExactQuotientFailed: [2, -4] does not divide [1, 0, 1] in ZZ
         >>> Poly(x**2 - 1, x).pquo(Poly(2*x - 2, x))
         Poly(2*x + 2, x, domain='ZZ')
         """
@@ -1354,7 +1354,7 @@ class Poly(Basic):
         >>> Poly(x**2 + 1, x).quo(Poly(2*x - 4, x)) #doctest: +SKIP
         Traceback (most recent call last):
         ...
-        ExactQuotientFailed: [2, -4] does not divide [1, 0, 1]
+        ExactQuotientFailed: [2, -4] does not divide [1, 0, 1] in ZZ
         >>> Poly(x**2 - 1, x).quo(Poly(x - 1, x))
         Poly(x + 1, x, domain='ZZ')
         """
