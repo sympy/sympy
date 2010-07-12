@@ -58,7 +58,7 @@ def order_at(a, p, t):
 
     return n
 
-def weak_normalizer(a, d, D, x, T, z=None):
+def weak_normalizer(a, d, D, T, z=None):
     """
     Weak normalization.
 
@@ -77,7 +77,7 @@ def weak_normalizer(a, d, D, x, T, z=None):
     """
     t = T[-1]
     z = z or Symbol('z', dummy=True)
-    dn, ds = splitfactor(d, D, x, T)
+    dn, ds = splitfactor(d, D, T)
 
     # Compute d1, where dn == d1*d2**2*...*dn**n is a square-free
     # factorization of d.
@@ -86,7 +86,7 @@ def weak_normalizer(a, d, D, x, T, z=None):
     d1 = d_sqf_part.quo(gcd(d_sqf_part, g))
 
     a1, b = gcdex_diophantine(d.quo(d1).as_poly(t), d1.as_poly(t), a.as_poly(t))
-    r = (a - Poly(z, t)*derivation(d1, D, x, T)).as_poly(t).resultant(d1.as_poly(t))
+    r = (a - Poly(z, t)*derivation(d1, D, T)).as_poly(t).resultant(d1.as_poly(t))
     r = Poly(r, z)
 
     if not r.has(z):
@@ -94,17 +94,17 @@ def weak_normalizer(a, d, D, x, T, z=None):
 
     N = [i for i in r.real_roots() if i in ZZ and i > 0]
 
-    q = reduce(mul, [gcd(a - Poly(n, t)*derivation(d1, D, x, T), d1) for n in N],
+    q = reduce(mul, [gcd(a - Poly(n, t)*derivation(d1, D, T), d1) for n in N],
         Poly(1, t))
 
-    dq = derivation(q, D, x, T)
+    dq = derivation(q, D, T)
     sn = q*a - d*dq
     sd = q*d
     sn, sd = sn.cancel(sd, include=True)
 
     return (q, (sn, sd))
 
-def normal_denominator(fa, fd, ga, gd, D, x, T):
+def normal_denominator(fa, fd, ga, gd, D, T):
     """
     Normal part of the denominator.
 
@@ -118,8 +118,8 @@ def normal_denominator(fa, fd, ga, gd, D, x, T):
     This constitutes step 1 in the outline given in the rde.py docstring.
     """
     t = T[-1]
-    dn, ds = splitfactor(fd, D, x, T)
-    en, es = splitfactor(gd, D, x, T)
+    dn, ds = splitfactor(fd, D, T)
+    en, es = splitfactor(gd, D, T)
 
     p = gcd(dn, es)
     h = gcd(en, en.diff(t)).quo(gcd(p, p.diff(t)))
@@ -132,13 +132,13 @@ def normal_denominator(fa, fd, ga, gd, D, x, T):
     ca = c*ga
     ca, cd = ca.cancel(gd, include=True)
 
-    ba = a*fa - dn*derivation(h, D, x, T)*fd
+    ba = a*fa - dn*derivation(h, D, T)*fd
     ba, bd = ba.cancel(fd, include=True)
 
     # (dn*h, dn*h*f - dn*Dh, dn*h**2*g, h)
     return (a, (ba, bd), (ca, cd), h)
 
-def special_denom(a, ba, bd, ca, cd, D, x, T, case='auto'):
+def special_denom(a, ba, bd, ca, cd, D, T, case='auto'):
     """
     Special part of the denominator.
 
@@ -161,7 +161,7 @@ def special_denom(a, ba, bd, ca, cd, D, x, T, case='auto'):
     d = D[-1]
 
     if case == 'auto':
-        case = get_case(d, x, t)
+        case = get_case(d, t)
 
     if case == 'exp':
         p = Poly(t, t)
@@ -169,7 +169,7 @@ def special_denom(a, ba, bd, ca, cd, D, x, T, case='auto'):
         p = Poly(t**2 + 1, t)
     elif case in ['primitive', 'base']:
         B = ba.quo(bd)
-        C = cd.quo(cd)
+        C = ca.quo(cd)
         return (a, B, C, Poly(1, t))
     else:
         raise ValueError("case must be one of {'exp', 'tan', 'primitive', " +
@@ -188,7 +188,7 @@ def special_denom(a, ba, bd, ca, cd, D, x, T, case='auto'):
         #         n = min(n, m)
         # elif case == 'tan':
         #     alpha*sqrt(-1) + beta = (-b/a).rem(p) == -b(sqrt(-1))/a(sqrt(-1))
-        #     eta = derivation(t, D, x, t).quo(Poly(t**2 + 1, t)) # eta in k
+        #     eta = derivation(t, D, T).quo(Poly(t**2 + 1, t)) # eta in k
         #     if 2*beta == Dv/v for some v in k* (see pg. 176) and \
         #     alpha*sqrt(-1) + beta == 2*m*eta*sqrt(-1) + Dz/z:
         #     # parametric logarithmic derivative problem
@@ -201,14 +201,14 @@ def special_denom(a, ba, bd, ca, cd, D, x, T, case='auto'):
     pn = p**n
 
     A = a*pN
-    B = ba*pN.quo(bd) + Poly(n, t)*a*derivation(p, D, x, T).quo(p)*pN
+    B = ba*pN.quo(bd) + Poly(n, t)*a*derivation(p, D, T).quo(p)*pN
     C = ca*pN.quo(pn).quo(cd)
     h = pn # This is 1/h
 
     # (ap**N, (b + n*a*Dp/p)*p**N, c*p**(N - n), p**-n)
     return (A, B, C, h)
 
-def bound_degree(a, b, c, D, x, T, case='auto'):
+def bound_degree(a, b, c, D, T, case='auto'):
     """
     Bound on polynomial solutions.
 
@@ -223,7 +223,7 @@ def bound_degree(a, b, c, D, x, T, case='auto'):
     d = D[-1]
 
     if case == 'auto':
-        case = get_case(d, x, t)
+        case = get_case(d, t)
 
     da = a.degree(t)
     db = b.degree(t)
@@ -278,7 +278,7 @@ def bound_degree(a, b, c, D, x, T, case='auto'):
 
     return n
 
-def spde(a, b, c, D, n, x, T):
+def spde(a, b, c, D, n, T):
     """
     Rothstein's Special Polynomial Differential Equation algorithm.
 
@@ -310,13 +310,13 @@ def spde(a, b, c, D, n, x, T):
 
     r, z = gcdex_diophantine(b.as_poly(t), a.as_poly(t), c.as_poly(t))
     r, z = Poly(r, t), Poly(z, t)
-    u = (a, b + derivation(a, D, x, T), z - derivation(r, D, x, T), D,
-        n - a.degree(t)) + (x, T)
+    u = (a, b + derivation(a, D, T), z - derivation(r, D, T), D,
+        n - a.degree(t)) + (T,)
     B, C, m, alpha, beta = spde(*u)
 
     return (B, C, m, a*alpha, a*beta + r)
 
-def no_cancel_b_large(b, c, D, n, x, T):
+def no_cancel_b_large(b, c, D, n, T):
     """
     Poly Risch Differential Equation - No cancelation: deg(b) large enough.
 
@@ -338,11 +338,11 @@ def no_cancel_b_large(b, c, D, n, x, T):
         p = Poly(c.as_poly(t).LC()/b.as_poly(t).LC()*t**m, t)
         q = q + p
         n = m - 1
-        c = c - derivation(p, D, x, T) - b*p
+        c = c - derivation(p, D, T) - b*p
 
     return q
 
-def no_cancel_b_small(b, c, D, n, x, T):
+def no_cancel_b_small(b, c, D, n, T):
     """
     Poly Risch Differential Equation - No cancelation: deg(b) small enough.
 
@@ -375,17 +375,17 @@ def no_cancel_b_small(b, c, D, n, x, T):
             if b.degree(t) != c.degree(t):
                 raise NonElementaryIntegral
             if b.degree(t) == 0:
-                return (q, b, c)
+                return (q, b.as_poly(T[-2]), c.as_poly(T[-2]))
             p = Poly(c.as_poly(t).LC()/b.as_poly(t).LC(), t)
 
         q = q + p
         n = m - 1
-        c = c - derivation(p, D, x, T) - b*p
+        c = c - derivation(p, D, T) - b*p
 
     return q
 
 # TODO: better name for this function
-def no_cancel_deg_b_equal_deg_D_minus_1(b, c, D, n, x, T):
+def no_cancel_equal(b, c, D, n, T):
     """
     Poly Risch Differential Equation - No cancelation: deg(b) == deg(D) - 1
 
@@ -427,11 +427,11 @@ def no_cancel_deg_b_equal_deg_D_minus_1(b, c, D, n, x, T):
 
         q = q + p
         n = m - 1
-        c = c - derivation(p, D, x, T) - b*p
+        c = c - derivation(p, D, T) - b*p
 
     return q
 
-def solve_poly_rde(b, c, D, n, x, T):
+def solve_poly_rde(b, c, D, n, T):
     """
     Solve a Polynomial Risch Differential Equation with degree bound n.
 
@@ -441,10 +441,10 @@ def solve_poly_rde(b, c, D, n, x, T):
     d = D[-1]
 
     if not b.is_zero and (d.is_one or b.degree(t) > max(0, d.degree(t) - 1)):
-        return no_cancel_b_large(b, c, D, n, x, T)
+        return no_cancel_b_large(b, c, D, n, T)
 
     elif (b.is_zero or b.degree(t) < d.degree(t) - 1) and (d.is_one or d.degree(t) >= 2):
-        R = no_cancel_b_small(b, c, D, n, x, T)
+        R = no_cancel_b_small(b, c, D, n, T)
 
         if isinstance(R, Poly):
             return R
@@ -453,31 +453,26 @@ def solve_poly_rde(b, c, D, n, x, T):
             h, b0, c0 = R
             T = T[:-1]
             D = D[:-1]
-            if not T:
-                T = [x]
-                D = [Poly(1, x)]
-                b0 = b0.as_poly(x)
-                c0 = c0.as_poly(x)
-            y = solve_poly_rde(b0, c0, D, n, x, T)
+            y = solve_poly_rde(b0, c0, D, n, T)
             return h + y
 
     elif d.degree(t) >= 2 and b.degree(t) == d.degree(t) - 1 and \
         n > -b.as_poly(t).LC()/d.as_poly(t).LC():
 
-        R = no_cancel_deg_b_equal_deg_D_minus_1(b, c, D, n, x, T)
+        R = no_cancel_equal(b, c, D, n, T)
 
         if isinstance(R, Poly):
             return R
         else:
             h, m, C = R
             # XXX: Or should it be risch_DE()?
-            y = solve_poly_rde(b, C, D, m, x, T)
+            y = solve_poly_rde(b, C, D, m, T)
             return h + y
 
     else:
         raise NotImplementedError("Remaining cases for Poly RDE not yet implemented.")
 
-def rischDE(fa, fd, ga, gd, D, x, T):
+def rischDE(fa, fd, ga, gd, D, T):
     """
     Solve a Risch Differential Equation - Dy + f*y == g.
 
@@ -489,22 +484,22 @@ def rischDE(fa, fd, ga, gd, D, x, T):
     solve the given Risch Differential Equation have not yet been
     implemented.
     """
-    _, (fa, fd) = weak_normalizer(fa, fd, D, x, T)
-    a, (ba, bd), (ca, cd), hn = normal_denominator(fa, fd, ga, gd, D, x, T)
-    A, B, C, hs = special_denom(a, ba, bd, ca, cd, D, x, T)
+    _, (fa, fd) = weak_normalizer(fa, fd, D, T)
+    a, (ba, bd), (ca, cd), hn = normal_denominator(fa, fd, ga, gd, D, T)
+    A, B, C, hs = special_denom(a, ba, bd, ca, cd, D, T)
     try:
         # Until this is fully implemented, use oo.  Note that this, will almost
         # certaintly cause non-termination in spde() (unless A == 1), and
         # *might* lead to non-termination in the next step for a non-elementary
         # integral (I don't know for certain yet).
-        n = bound_degree(A, B, C, D, x, T)
+        n = bound_degree(A, B, C, D, T)
     except NotImplementedError:
         # TODO: Remove warnings
         import warnings
         warnings.warn("risch_DE: Proceeding with n = oo; may cause non-termination.")
         n = oo
 
-    B, C, m, alpha, beta = spde(A, B, C, D, n, x, T)
-    y = solve_poly_rde(B, C, D, n, x, T)
+    B, C, m, alpha, beta = spde(A, B, C, D, n, T)
+    y = solve_poly_rde(B, C, D, n, T)
 
     return (alpha*y + beta, hn*hs)

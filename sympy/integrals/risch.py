@@ -4,10 +4,10 @@ The Risch Algorithm for transcendental function integration.
 The core algorithms for the Risch algorithm are here.  The subproblem
 algorithms are in the rde.py and prde.py files for the Risch
 Differential Equation solver and the parametric problems solvers,
-respectively.  Conventions here is that the base domain is QQ(x), and
+respectively.  Conventions here is that the base domain is QQ, x == t0, and
 each differential extension is t1, t2, ..., t. x is the variable of
-integration (Dx == 1), D is a list of the derivatives of t1, t2, ..., t,
-T is the list of t1, t2, ..., t, t is the outer-most variable of the
+integration (Dx == 1), D is a list of the derivatives of x, t1, t2, ..., t,
+T is the list of x, t1, t2, ..., t, t is the outer-most variable of the
 differential extension, k is the field Q(x, t1, ..., tn-1), where t ==
 tn.  The numerator of a fraction is denoted by a and the denominator by
 d.  If the fraction is named f, fa == numer(f) and fd == denom(f).
@@ -61,36 +61,35 @@ def gcdex_diophantine(a, b, c):
 
     return (s, t)
 
-def derivation(p, D, x, T, coefficientD=False):
+def derivation(p, D, T, coefficientD=False):
     """
     Computes Dp.
 
     Given the derivation D with D = d/dx and p is a polynomial in t over
     K(x), return Dp.  If coefficientD is True, it computes the derivation kD
     (kappaD), which is defined as kD(sum(ai*Xi**i, (i, 0, n))) ==
-    sum(Dai*Xi**i, (i, 1, n)) (Definition 3.2.2, page 80).  X in this case is T,
-    so coefficientD computes the derivative just with respect to x, with the
-    elements of T treated as constants.
-
-    x is the base variable in the differential extension, the variable of
-    integration.  T is a list of the other variables in the extension.  D is a
-    list of the derivatives of each element of t, such that for each D[i] is a
-    polynomial in t[i] and a ratinoal function in t[:i].
+    sum(Dai*Xi**i, (i, 1, n)) (Definition 3.2.2, page 80).  X in this case is
+    T[-1], so coefficientD computes the derivative just with respect to T[:-1],
+    with T[-1] treated as a constant.
     """
     t = T[-1]
 
-    px = p.as_poly(x)
-    if px is None:
-        px = p.as_basic()
+    r = Poly(0, t)
 
     if coefficientD:
-        return px.diff(x).as_poly(t)
+        D = D[:-1]
+        T = T[:-1]
 
-    p = Poly(p, *T)
-    return sum([(d*p.diff(v).as_poly(t)).as_poly(t) for d, v in zip(D, T)]) + \
-        px.diff(x).as_poly(t)
+    for d, v in zip(D, T):
+        pv = p.as_poly(v)
+        if pv is None:
+            pv = p.as_basic()
 
-def get_case(d, x, t):
+        r += (d*pv.diff(v)).as_poly(t)
+
+    return r
+
+def get_case(d, t):
     """
     Returns the type of the derivation d.
 
@@ -109,7 +108,7 @@ def get_case(d, x, t):
         return 'other_nonlinear'
     return 'other_linear'
 
-def splitfactor(p, D, x, T, coefficientD=False):
+def splitfactor(p, D, T, coefficientD=False):
     """
     Splitting factorization.
 
@@ -120,34 +119,34 @@ def splitfactor(p, D, x, T, coefficientD=False):
     Page. 100
     """
     t = T[-1]
+    kinv = [1/x for x in T[:-1]]
 
     One = Poly(1, t, domain=p.get_domain())
-    Dp = derivation(p, D, x, T, coefficientD)
+    Dp = derivation(p, D, T, coefficientD)
     # XXX: Is this right?
-    for i in T:
-        if p.is_zero:
-            continue
+    if p.is_zero:
+        return (p, One)
 
-        if not p.has_any_symbols(i):
-            s = p.as_poly(1/x).gcd(Dp.as_poly(1/x)).as_poly(t)
-            n = p.quo(s)
-            return (n, s)
+    if not p.has_any_symbols(t):
+        s = p.as_poly(*kinv).gcd(Dp.as_poly(*kinv)).as_poly(t)
+        n = p.quo(s)
+        return (n, s)
 
-        if not Dp.is_zero:
-            h = p.gcd(Dp).to_field()
-            g = p.gcd(p.as_poly(*T).diff(i)).to_field()
-            s = h.quo(g)
+    if not Dp.is_zero:
+        h = p.gcd(Dp).to_field()
+        g = p.gcd(p.diff(t)).to_field()
+        s = h.quo(g)
 
-            if s.as_poly(i).degree(i) == 0:
-                return (p, One)
+        if s.degree(t) == 0:
+            return (p, One)
 
-            q_split = splitfactor(p.quo(s), D, x, T, coefficientD)
+        q_split = splitfactor(p.quo(s), D, T, coefficientD)
 
-            return (q_split[0], q_split[1]*s)
+        return (q_split[0], q_split[1]*s)
     else:
         return (p, One)
 
-def splitfactor_sqf(p, D, x, T, coefficientD=False):
+def splitfactor_sqf(p, D, T, coefficientD=False):
     """
     Splitting Square-free Factorization
 
@@ -159,6 +158,7 @@ def splitfactor_sqf(p, D, x, T, coefficientD=False):
     # TODO: This algorithm appears to be faster in every case
     # TODO: Verify this and splitfactor() for multiple extensions
     t = T[-1]
+    kkinv = [1/x for x in T[:-1]] + T[:-1]
 
     S = []
     N = []
@@ -167,8 +167,8 @@ def splitfactor_sqf(p, D, x, T, coefficientD=False):
         return (((p, 1),), ())
 
     for pi, i in p_sqf:
-        Si = pi.as_poly(1/x, x).gcd(derivation(pi, D, x, T,
-            coefficientD).as_poly(1/x, x)).as_poly(t)
+        Si = pi.as_poly(*kkinv).gcd(derivation(pi, D, T,
+            coefficientD).as_poly(*kkinv)).as_poly(t)
         pi = Poly(pi, t)
         Si = Poly(Si, t)
         Ni = pi.quo(Si)
@@ -179,7 +179,7 @@ def splitfactor_sqf(p, D, x, T, coefficientD=False):
 
     return (tuple(N), tuple(S))
 
-def canonical_representation(a, d, D, x, T):
+def canonical_representation(a, d, D, T):
     """
     Canonical Representation.
 
@@ -196,14 +196,14 @@ def canonical_representation(a, d, D, x, T):
     a, d = a.mul(l), d.mul(l)
 
     q, r = a.div(d)
-    dn, ds = splitfactor(d, D, x, T)
+    dn, ds = splitfactor(d, D, T)
 
     b, c = gcdex_diophantine(dn.as_poly(t), ds.as_poly(t), r.as_poly(t))
     b, c = b.as_poly(t), c.as_poly(t)
 
     return (q, (b, ds), (c, dn))
 
-def hermite_reduce(a, d, D, x, T):
+def hermite_reduce(a, d, D, T):
     """
     Hermite Reduction - Quadratic version.
 
@@ -217,7 +217,7 @@ def hermite_reduce(a, d, D, x, T):
     l = Poly(1/d.LC(), t)
     a, d = a.mul(l), d.mul(l)
 
-    fp, fs, fn = canonical_representation(a, d, D, x, T)
+    fp, fs, fn = canonical_representation(a, d, D, T)
 
     a, d = fn
     l = Poly(1/d.LC(), t)
@@ -234,14 +234,14 @@ def hermite_reduce(a, d, D, x, T):
 
         u = d.quo(v**i)
         for j in range(i - 1, 0, -1):
-            udv = u*derivation(v, D, x, T)
+            udv = u*derivation(v, D, T)
             b, c = gcdex_diophantine(udv.as_poly(t), v.as_poly(t),
                 a.mul(Poly(-1/j, t)).as_poly(t))
             b, c = b.as_poly(t), c.as_poly(t)
 
             gn = gn*v**j + b
             gd = gd*v**j
-            a = c.mul(Poly(-j, t)) - u*derivation(b, D, x, T)
+            a = c.mul(Poly(-j, t)) - u*derivation(b, D, T)
 
         d = u*v
     q, r = a.div(d)
@@ -255,7 +255,7 @@ def hermite_reduce(a, d, D, x, T):
 
     return ((gn, gd), (r, d), (rrn, rrd))
 
-def polynomial_reduce(p, D, x, T):
+def polynomial_reduce(p, D, T):
     """
     Polynomial Reduction.
 
@@ -270,11 +270,11 @@ def polynomial_reduce(p, D, x, T):
         m = p.degree(t) - d.degree(t) + 1
         q0 = Poly(t**m, t).mul(Poly(p.as_poly(t).LC()/(m*d.as_poly(t).LC()), t))
         q += q0
-        p = p - derivation(q0, D, x, T)
+        p = p - derivation(q0, D, T)
 
     return (q, p)
 
-def residue_reduce(a, d, D, x, T, z=None, invert=True):
+def residue_reduce(a, d, D, T, z=None, invert=True):
     """
     Lazard-Rioboo-Rothstein-Trager resultant reduction.
 
@@ -300,6 +300,7 @@ def residue_reduce(a, d, D, x, T, z=None, invert=True):
     t = T[-1]
     z = z or Symbol('z', dummy=True)
     a, d = a.cancel(d, include=True)
+    kkinv = [1/x for x in T[:-1]] + T[:-1]
 
     if a.is_zero:
         return ([], True)
@@ -307,7 +308,7 @@ def residue_reduce(a, d, D, x, T, z=None, invert=True):
 
     pz = Poly(z, t)
 
-    Dd = derivation(d, D, x, T)
+    Dd = derivation(d, D, T)
     q = a - pz*Dd
 
     if Dd.degree(t) <= d.degree(t):
@@ -320,7 +321,7 @@ def residue_reduce(a, d, D, x, T, z=None, invert=True):
         R_map[i.degree()] = i
 
     r = Poly(r, z)
-    Np, Sp = splitfactor_sqf(r, D, x, T, coefficientD=True)
+    Np, Sp = splitfactor_sqf(r, D, T, coefficientD=True)
 
     for s, i in Sp:
         if i == d.degree(t):
@@ -335,7 +336,7 @@ def residue_reduce(a, d, D, x, T, z=None, invert=True):
             h_lc_sqf = h_lc.sqf_list_include(all=True)
 
             for a, j in h_lc_sqf:
-                h = Poly(h, t, field=True).quo(Poly(gcd(a, s**j, x, 1/x), t))
+                h = Poly(h, t, field=True).quo(Poly(gcd(a, s**j, *kkinv), t))
 
             s = Poly(s, z).monic()
 
@@ -355,18 +356,19 @@ def residue_reduce(a, d, D, x, T, z=None, invert=True):
 
     return (H, b)
 
-def residue_reduce_to_basic(H, x, T, z, Tfuncs):
+def residue_reduce_to_basic(H, T, z, Tfuncs):
     """
     Converts the tuple returned by residue_reduce() into a Basic expression.
     """
     # TODO: check what Lambda does with RootOf
+    x = T[0]
     i = Symbol('i', dummy=True)
-    s = list(reversed(zip(T, [f(x) for f in Tfuncs])))
+    s = zip(reversed(T), [f(x) for f in Tfuncs])
 
     return sum((RootSum(a[0].as_poly(z), Lambda(i, i*log(a[1].as_basic()).subs(
         {z: i}).subs(s))) for a in H))
 
-def residue_reduce_derivation(H, D, x, T, z):
+def residue_reduce_derivation(H, D, T, z):
     """
     Computes the derivation of an expression returned by residue_reduce().
 
@@ -375,10 +377,10 @@ def residue_reduce_derivation(H, D, x, T, z):
     """
     # TODO: verify that this is correct for multiple extensions
     i = Symbol('i', dummy=True)
-    return S(sum((RootSum(a[0].as_poly(z), Lambda(i, i*derivation(a[1], D, x,
+    return S(sum((RootSum(a[0].as_poly(z), Lambda(i, i*derivation(a[1], D,
         T).as_basic().subs(z, i)/a[1].as_basic().subs(z, i))) for a in H)))
 
-def integrate_hyperexponential_polynomial(p, D, x, T, z):
+def integrate_hyperexponential_polynomial(p, D, T, z):
     """
     Integration of hyperexponential polynomials.
 
@@ -393,12 +395,7 @@ def integrate_hyperexponential_polynomial(p, D, x, T, z):
 
     D1 = D[:-1]
     T1 = T[:-1]
-    if not D1:
-        t1 = x
-        T1 = [x]
-        D1 = [Poly(1, x)]
-    else:
-        t1 = T1[-1]
+    t1 = T1[-1]
 
     qa = Poly(0, t)
     qd = Poly(1, t)
@@ -417,7 +414,7 @@ def integrate_hyperexponential_polynomial(p, D, x, T, z):
         iDta, iDtd = iDt.as_basic().as_numer_denom()
         iDta, iDtd = iDta.as_poly(t1), iDtd.as_poly(t1)
         try:
-            va, vd = rischDE(iDta, iDtd, Poly(aa, t1), Poly(ad, t1), D1, x, T1)
+            va, vd = rischDE(iDta, iDtd, Poly(aa, t1), Poly(ad, t1), D1, T1)
         except NonElementaryIntegral:
             b = False
         else:
@@ -428,7 +425,7 @@ def integrate_hyperexponential_polynomial(p, D, x, T, z):
 
     return (qa, qd, b)
 
-def integrate_hyperexponential(a, d, D, x, T, Tfuncs):
+def integrate_hyperexponential(a, d, D, T, Tfuncs):
     """
     Integration of hyperexponential functions.
 
@@ -439,12 +436,14 @@ def integrate_hyperexponential(a, d, D, x, T, Tfuncs):
 
     This function returns a Basic expression.
     """
+    from pudb import set_trace; set_trace() # Debugging
     t = T[-1]
+    x = T[0]
     z = Symbol('z', dummy=True)
-    s = list(reversed(zip(T, [f(x) for f in Tfuncs])))
+    s = zip(reversed(T), [f(x) for f in Tfuncs])
 
-    g1, h, r = hermite_reduce(a, d, D, x, T)
-    g2, b = residue_reduce(h[0], h[1], D, x, T, z=z)
+    g1, h, r = hermite_reduce(a, d, D, T)
+    g2, b = residue_reduce(h[0], h[1], D, T, z=z)
     if not b:
         return ((g1[0].as_basic()/g2[1].as_basic()).subs(s) +
             residue_reduce_to_basic(g2, t, z, tfunc))
@@ -452,21 +451,21 @@ def integrate_hyperexponential(a, d, D, x, T, Tfuncs):
     # p should be a polynomial in t and 1/t, because Sirr == k[t, 1/t]
     # h - Dg2 + r
     p = cancel(h[0].as_basic()/h[1].as_basic() - residue_reduce_derivation(g2,
-        D, x, T, z) + r[0].as_basic()/r[1].as_basic())
+        D, T, z) + r[0].as_basic()/r[1].as_basic())
     p = p.as_poly(t, 1/t).replace(1/t, z)
 
-    qa, qd, b = integrate_hyperexponential_polynomial(p, D, x, T, z)
+    qa, qd, b = integrate_hyperexponential_polynomial(p, D, T, z)
 
     i = p.as_poly(t).nth(0).as_poly(z).nth(0)
 
     ret = ((g1[0].as_basic()/g1[1].as_basic() + qa.as_basic()).subs(s)/
-        qd.as_basic().subs(s) + residue_reduce_to_basic(g2, x, T, z, Tfuncs))
+        qd.as_basic().subs(s) + residue_reduce_to_basic(g2, T, z, Tfuncs))
     if not i.is_zero:
         ret += Integral(i.subs(s), x)
 
     return (ret, b)
 
-def integrate_hypertangent_polynomial(p, D, x, T):
+def integrate_hypertangent_polynomial(p, D, T):
     """
     Integration of hypertangent polynomials.
 
@@ -477,12 +476,12 @@ def integrate_hypertangent_polynomial(p, D, x, T):
     """
     # XXX: Make sure that sqrt(-1) is not in k.
     t = T[-1]
-    q, r = polynomial_reduce(p, D, x, T)
-    a = derivation(t, D, x, T).quo(Poly(t**2 + 1, t))
+    q, r = polynomial_reduce(p, D, T)
+    a = derivation(t, D, T).quo(Poly(t**2 + 1, t))
     c = Poly(r.nth(1)/(2*a.as_basic()), t)
     return (q, c)
 
-def integrate_nonlinear_no_specials(a, d, D, x, T, Tfuncs):
+def integrate_nonlinear_no_specials(a, d, D, T, Tfuncs):
     """
     Integration of nonlinear monomials with no specials.
 
@@ -497,11 +496,12 @@ def integrate_nonlinear_no_specials(a, d, D, x, T, Tfuncs):
     # TODO: Integral from k?
     # XXX: a and d must be canceled, or this might not return correct results
     t = T[-1]
+    x = T[0]
     z = Symbol('z', dummy=True)
-    s = list(reversed(zip(T, [f(x) for f in Tfuncs])))
+    s = zip(reversed(T), [f(x) for f in Tfuncs])
 
-    g1, h, r = hermite_reduce(a, d, D, x, T)
-    g2, b = residue_reduce(h[0], h[1], D, x, T, z=z)
+    g1, h, r = hermite_reduce(a, d, D, T)
+    g2, b = residue_reduce(h[0], h[1], D, T, z=z)
     if not b:
         return ((g1[0].as_basic()/g2[1].as_basic()).subs(s) +
             residue_reduce_to_basic(g2, t, z, tfunc))
@@ -509,8 +509,8 @@ def integrate_nonlinear_no_specials(a, d, D, x, T, Tfuncs):
     # Because f has no specials, this should be a polynomial in t, or else
     # there is a bug.
     p = cancel(h[0].as_basic()/h[1].as_basic() - residue_reduce_derivation(g2,
-        D, x, T, z).as_basic() + r[0].as_basic()/r[1].as_basic()).as_poly(t)
-    q1, q2 = polynomial_reduce(p, D, x, T)
+        D, T, z).as_basic() + r[0].as_basic()/r[1].as_basic()).as_poly(t)
+    q1, q2 = polynomial_reduce(p, D, T)
 
     if q2.has(t):
         b = False
@@ -518,5 +518,5 @@ def integrate_nonlinear_no_specials(a, d, D, x, T, Tfuncs):
         b = True
 
     ret = (cancel(g1[0].as_basic()/g1[1].as_basic() + q1.as_basic()).subs(s) +
-        residue_reduce_to_basic(g2, x, T, z, Tfuncs))
+        residue_reduce_to_basic(g2, T, z, Tfuncs))
     return (ret, b)

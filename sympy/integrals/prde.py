@@ -10,7 +10,7 @@ from sympy.polys import Poly, PolynomialError, lcm, cancel
 from sympy.integrals.risch import (derivation, get_case, NonElementaryIntegral,
     residue_reduce, splitfactor, residue_reduce_derivation)
 
-def parametric_log_deriv_heu(fa, fd, wa, wd, D, x, T):
+def parametric_log_deriv_heu(fa, fd, wa, wd, D, T):
     """
     Parametric logarithmic derivative heuristic.
 
@@ -33,7 +33,7 @@ def parametric_log_deriv_heu(fa, fd, wa, wd, D, x, T):
     p, a = fa.div(fd)
     q, b = wa.div(wd)
 
-    B = max(0, derivation(t, D, x, T).degree(t) - 1)
+    B = max(0, derivation(t, D, T).degree(t) - 1)
     C = max(p.degree(t), q.degree(t))
 
     if q.degree(t) > B:
@@ -48,7 +48,7 @@ def parametric_log_deriv_heu(fa, fd, wa, wd, D, x, T):
 
         nfmwa = N*fa*wd - M*wa*fd
         nfmwd = fd*wd
-        Qv = is_log_deriv_k_t_radical(N*fa*wd - M*wa*fd, fd*wd, D, x, T, 'auto')
+        Qv = is_log_deriv_k_t_radical(N*fa*wd - M*wa*fd, fd*wd, D, T, 'auto')
         if Qv is None:
             raise NonElementaryIntegral("parametric_log_deriv_heu(): %s/%s " +
                 "(N*f - M*w) is not the logarithmic derivaitive of a k(t)-radical."
@@ -67,7 +67,7 @@ def parametric_log_deriv_heu(fa, fd, wa, wd, D, x, T):
 
     c = lcm(fd.as_poly(t).LC(),wd.as_poly(t).LC())
     l = fd.monic().lcm(wd.monic())*Poly(c, t)
-    ln, ls = splitfactor(l, D, x, T)
+    ln, ls = splitfactor(l, D, T)
     z = ls*ln.gcd(ln.diff(t))
 
     if not z.has(t):
@@ -88,7 +88,7 @@ def parametric_log_deriv_heu(fa, fd, wa, wd, D, x, T):
 
     nfmwa = N*fa*wd - M*wa*fd
     nfmwd = fd*wd
-    Qv = is_log_deriv_k_t_radical(nfmwa, nfmwd, D, x, T, 'auto')
+    Qv = is_log_deriv_k_t_radical(nfmwa, nfmwd, D, T, 'auto')
     if Qv is None:
         raise NonElementaryIntegral("parametric_log_deriv_heu(): %s/%s " +
             "(N*f - M*w) is not the logarithmic derivaitive of a k(t)-radical."
@@ -101,11 +101,11 @@ def parametric_log_deriv_heu(fa, fd, wa, wd, D, x, T):
 
     return (Q*N, Q*M, v)
 
-def parametric_log_deriv(fa, fd, wa, wd, D, x, T):
+def parametric_log_deriv(fa, fd, wa, wd, D, T):
     # TODO: Write the full algorithm using the structure theorems.
-    return parametric_log_deriv_heu(fa, fd, wa, wd, D, x, T)
+    return parametric_log_deriv_heu(fa, fd, wa, wd, D, T)
 
-def is_log_deriv_k_t_radical(fa, fd, D, x, T, case='auto'):
+def is_log_deriv_k_t_radical(fa, fd, D, T, case='auto'):
     """
     Checks if f can be written as the logarithmic derivative of a k(t)-radical.
 
@@ -135,15 +135,15 @@ def is_log_deriv_k_t_radical(fa, fd, D, x, T, case='auto'):
         d = D[-1]
 
     if case == 'auto':
-        case = get_case(d, x, t)
+        case = get_case(d, t)
 
     # f must be simple
-    n, s = splitfactor(fd, D, x, T)
+    n, s = splitfactor(fd, D, T)
     if not s.is_one:
         return None
 
     z = Symbol('z', dummy=True)
-    H, b = residue_reduce(fa, fd, D, x, T, z=z)
+    H, b = residue_reduce(fa, fd, D, T, z=z)
     if not b:
         # Note, according to the note on page 255 of Bronstein's book, this
         # should never happen with the parametric logarithmic derivative
@@ -152,7 +152,7 @@ def is_log_deriv_k_t_radical(fa, fd, D, x, T, case='auto'):
         raise NotImplementedError("f has a non-elementary integral, cannot " +
             "determine if it is the logarithmic derivative of a k(t)-radical.")
 
-    p = cancel(fa.as_basic()/fd.as_basic() - residue_reduce_derivation(H, D, x, T, z))
+    p = cancel(fa.as_basic()/fd.as_basic() - residue_reduce_derivation(H, D, T, z))
     try:
         p = Poly(p, t)
     except PolynomialError:
@@ -163,9 +163,9 @@ def is_log_deriv_k_t_radical(fa, fd, D, x, T, case='auto'):
         return None
 
     if case == 'exp':
-        wa, wd = derivation(t, D, x, T).cancel(Poly(t, t), include=True)
+        wa, wd = derivation(t, D, T).cancel(Poly(t, t), include=True)
         try:
-            n, e, u = parametric_log_deriv(p, Poly(1, t), wa, wd, D, x, T)
+            n, e, u = parametric_log_deriv(p, Poly(1, t), wa, wd, D, T)
         except NonElementaryIntegral:
             return None
         u **= e
@@ -173,7 +173,7 @@ def is_log_deriv_k_t_radical(fa, fd, D, x, T, case='auto'):
         "not yet completely implemented for is_log_deriv_k_t_radical().")
 
     elif case == 'primitive':
-        n, u = is_log_deriv_k_t_radical(fa, fd, D[:-1], x, T[:-1], case='auto')
+        n, u = is_log_deriv_k_t_radical(fa, fd, D[:-1], T[:-1], case='auto')
         raise NotImplementedError("The primitive case is " +
         "not yet completely implemented for is_log_deriv_k_t_radical()")
 
