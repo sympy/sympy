@@ -1,4 +1,4 @@
-from sympy import Expr, sympify, Add, Mul, Pow, I, Function, Integer, S, sympify
+from sympy import Expr, sympify, Add, Mul, Pow, I, Function, Integer, S, sympify, Matrix
 from sympy.core.basic import Atom
 
 """
@@ -23,219 +23,16 @@ Notes:
 """
 
 __all__ = [
-    'Dagger',
-    'KroneckerDelta',
-    'Operator',
-    'Commutator',
-    # 'AntiCommutator',
     'State',
     'Ket',
     'Bra',
     'InnerProduct'
+    'Operator',
+    'Dagger',
+    'KroneckerDelta',
+    'Commutator',
+    # 'AntiCommutator',
 ]
-
-class Dagger(Expr):
-    """
-    General hermitian conjugate operation.
-    """
-
-    def __new__(cls, arg):
-        arg = sympify(arg)
-        r = cls.eval(arg)
-        if isinstance(r, Expr):
-            return r
-        obj = Expr.__new__(cls, arg)
-        return obj
-
-    @classmethod
-    def eval(cls, arg):
-        """
-        Evaluates the Dagger instance.
-        """
-        try:
-            d = arg._eval_dagger()
-        except:
-            if isinstance(arg, Expr):
-                if arg.is_Add:
-                    return Add(*tuple(map(Dagger, arg.args)))
-                if arg.is_Mul:
-                    return Mul(*tuple(map(Dagger, reversed(arg.args))))
-                if arg.is_Number:
-                    return arg
-                if arg.is_Pow:
-                    return Pow(Dagger(arg.args[0]),arg.args[1])
-                if arg == I:
-                    return -arg
-            else:
-                return None
-        else:
-            return d
-
-    def _eval_subs(self, old, new):
-        r = Dagger(self.args[0].subs(old, new))
-        return r
-
-    def _eval_dagger(self):
-        return self.args[0]
-
-class KroneckerDelta(Function):
-    """
-    Discrete delta function.
-    """
-
-    nargs = 2
-    is_commutative=True
-
-    @classmethod
-    def eval(cls, i, j):
-        """
-        Evaluates the discrete delta function.
-        """
-        if i > j:
-            return cls(j,i)
-        diff = i-j
-        if diff == 0:
-            return Integer(1)
-        elif diff.is_number:
-            return S.Zero
-
-    def _eval_subs(self, old, new):
-        r = KroneckerDelta(self.args[0].subs(old, new), self.args[1].subs(old, new))
-        return r
-
-    def _eval_dagger(self):
-        return self
-
-    def _latex_(self,printer):
-        return "\\delta_{%s%s}"% (self.args[0].name,self.args[1].name)
-
-    def __repr__(self):
-        return "KroneckerDelta(%s,%s)"% (self.args[0],self.args[1])
-
-    def __str__(self):
-        return 'd(%s,%s)'% (self.args[0],self.args[1])
-
-class Operator(Expr):
-    """
-    Base class for non-commuting Quantum operators.
-
-    >>> from sympy import simplify
-    >>> from sympy.physics.quantum import Operator
-    >>> A = Operator('A')
-    >>> print A
-    A
-    """
-
-    def __new__(cls, name):
-        name = sympify(name)
-        obj = Expr.__new__(cls, name, commutative=False)
-        return obj
-
-    @property
-    def name(self):
-        return self.args[0]
-
-    def doit(self,**kw_args):
-        return self
-
-    def _sympyrepr_(self, printer, *args):
-        return "%s(%s)" % (self.__class__.__name__, printer._print(self.name, *args))
-
-    def _sympystr_(self, printer, *args):
-        return printer._print(self.name, *args)
-
-    def _pretty_(self, printer, *args):
-        return printer._print(self.name, *args)
-
-def split_commutative_parts(m):
-    c_part = [p for p in m.args if p.is_commutative]
-    nc_part = [p for p in m.args if not p.is_commutative]
-    return c_part, nc_part
-
-class Commutator(Function):
-    """
-    The Commutator:  [A, B] = A*B - B*A
-
-    The arguments are ordered according to .__cmp__()
-
-    >>> from sympy import symbols
-    >>> from sympy.physics.secondquant import Commutator
-    >>> A, B = symbols('A B', commutative=False)
-    >>> Commutator(B, A)
-    Commutator(B, A)
-
-    Evaluate the commutator with .doit()
-
-    >>> comm = Commutator(A,B); comm
-    Commutator(A, B)
-    >>> comm.doit()
-    A*B - B*A
-    """
-
-    is_commutative = False
-    nargs = 2
-
-    @classmethod
-    def eval(cls, a, b):
-        """
-        The Commutator [A,B] is on canonical form if A < B
-
-
-        """
-        if not (a and b): return S.Zero
-        if a == b: return S.Zero
-        if a.is_commutative or b.is_commutative:
-            return S.Zero
-
-        #
-        # [A+B,C]  ->  [A,C] + [B,C]
-        #
-        a = a.expand()
-        if isinstance(a,Add):
-            return Add(*[cls(term,b) for term in a.args])
-        b = b.expand()
-        if isinstance(b,Add):
-            return Add(*[cls(a,term) for term in b.args])
-
-        #
-        # [xA,yB]  ->  xy*[A,B]
-        #
-        c_part = []
-        nc_part = []
-        nc_part2 = []
-        if isinstance(a,Mul):
-            c_part,nc_part = split_commutative_parts(a)
-        if isinstance(b,Mul):
-            c_part2,nc_part2 = split_commutative_parts(b)
-            c_part.extend(c_part2)
-        if c_part:
-            a = nc_part or [a]
-            b = nc_part2 or [b]
-            return Mul(*c_part)*cls(Mul(*a),Mul(*b))
-
-        #
-        # Canonical ordering of arguments
-        #
-        if a > b:
-            return S.NegativeOne*cls(b,a)
-
-    def doit(self, **hints):
-        a = self.args[0]
-        b = self.args[1]
-        return (a*b - b*a).doit(**hints)
-
-    def _eval_dagger(self):
-        return Commutator(Dagger(self.args[1]), Dagger(self.args[0]))
-
-    def __repr__(self):
-        return "Commutator(%s,%s)" %(self.args[0], self.args[1])
-
-    def __str__(self):
-        return "[%s,%s]" %(self.args[0], self.args[1])
-
-    def _latex_(self,printer):
-        return "\\left[%s,%s\\right]"%tuple([
-            printer._print(arg) for arg in self.args])
 
 class State(Expr):
     """
@@ -331,3 +128,212 @@ class InnerProduct(Expr):
         sket = str(self.ket)
         return "%s|%s" % (sbra[:-1], sket[1:])
 
+class Operator(Expr):
+    """
+    Base class for non-commuting Quantum operators.
+
+    >>> from sympy import simplify
+    >>> from sympy.physics.quantum import Operator
+    >>> A = Operator('A')
+    >>> print A
+    A
+    """
+
+    def __new__(cls, name):
+        name = sympify(name)
+        obj = Expr.__new__(cls, name, commutative=False)
+        return obj
+
+    @property
+    def name(self):
+        return self.args[0]
+
+    def doit(self,**kw_args):
+        return self
+
+    def _sympyrepr_(self, printer, *args):
+        return "%s(%s)" % (self.__class__.__name__, printer._print(self.name, *args))
+
+    def _sympystr_(self, printer, *args):
+        return printer._print(self.name, *args)
+
+    def _pretty_(self, printer, *args):
+        return printer._print(self.name, *args)
+
+class Dagger(Expr):
+    """
+    General hermitian conjugate operation.
+    """
+
+    def __new__(cls, arg):
+        if isinstance(arg, Matrix):
+            return cls.eval(arg)
+        arg = sympify(arg)
+        r = cls.eval(arg)
+        if isinstance(r, Expr):
+            return r
+        obj = Expr.__new__(cls, arg)
+        return obj
+
+    @classmethod
+    def eval(cls, arg):
+        """
+        Evaluates the Dagger instance.
+        """
+        try:
+            d = arg._eval_dagger()
+        except:
+            if isinstance(arg, Expr):
+                if arg.is_Add:
+                    return Add(*tuple(map(Dagger, arg.args)))
+                if arg.is_Mul:
+                    return Mul(*tuple(map(Dagger, reversed(arg.args))))
+                if arg.is_Number:
+                    return arg
+                if arg.is_Pow:
+                    return Pow(Dagger(arg.args[0]), Dagger(arg.args[1]))
+                if arg == I:
+                    return -arg
+            elif isinstance(arg, Matrix):
+                arg = arg.T
+                for i in range(arg.rows*arg.cols):
+                    arg[i] = Dagger(arg[i])
+                return arg
+            else:
+                return None
+        else:
+            return d
+
+    def _eval_subs(self, old, new):
+        r = Dagger(self.args[0].subs(old, new))
+        return r
+
+    def _eval_dagger(self):
+        return self.args[0]
+
+class KroneckerDelta(Function):
+    """
+    Discrete delta function.
+    """
+
+    nargs = 2
+    is_commutative=True
+
+    @classmethod
+    def eval(cls, i, j):
+        """
+        Evaluates the discrete delta function.
+        """
+        if i > j:
+            return cls(j,i)
+        diff = i-j
+        if diff == 0:
+            return Integer(1)
+        elif diff.is_number:
+            return S.Zero
+
+    def _eval_subs(self, old, new):
+        r = KroneckerDelta(self.args[0].subs(old, new), self.args[1].subs(old, new))
+        return r
+
+    def _eval_dagger(self):
+        return self
+
+    def _latex_(self,printer):
+        return "\\delta_{%s%s}"% (self.args[0].name,self.args[1].name)
+
+    def __repr__(self):
+        return "KroneckerDelta(%s,%s)"% (self.args[0],self.args[1])
+
+    def __str__(self):
+        return 'd(%s,%s)'% (self.args[0],self.args[1])
+
+def split_commutative_parts(m):
+    c_part = [p for p in m.args if p.is_commutative]
+    nc_part = [p for p in m.args if not p.is_commutative]
+    return c_part, nc_part
+
+class Commutator(Function):
+    """
+    The Commutator:  [A, B] = A*B - B*A
+
+    The arguments are ordered according to .__cmp__()
+
+    >>> from sympy import symbols
+    >>> from sympy.physics.secondquant import Commutator
+    >>> A, B = symbols('A B', commutative=False)
+    >>> Commutator(B, A)
+    Commutator(B, A)
+
+    Evaluate the commutator with .doit()
+
+    >>> comm = Commutator(A,B); comm
+    Commutator(A, B)
+    >>> comm.doit()
+    A*B - B*A
+    """
+
+    is_commutative = False
+    nargs = 2
+
+    @classmethod
+    def eval(cls, a, b):
+        """
+        The Commutator [A,B] is on canonical form if A < B
+
+
+        """
+        if not (a and b): return S.Zero
+        if a == b: return S.Zero
+        if a.is_commutative or b.is_commutative:
+            return S.Zero
+
+        #
+        # [A+B,C]  ->  [A,C] + [B,C]
+        #
+        a = a.expand()
+        if isinstance(a,Add):
+            return Add(*[cls(term,b) for term in a.args])
+        b = b.expand()
+        if isinstance(b,Add):
+            return Add(*[cls(a,term) for term in b.args])
+
+        #
+        # [xA,yB]  ->  xy*[A,B]
+        #
+        c_part = []
+        nc_part = []
+        nc_part2 = []
+        if isinstance(a,Mul):
+            c_part,nc_part = split_commutative_parts(a)
+        if isinstance(b,Mul):
+            c_part2,nc_part2 = split_commutative_parts(b)
+            c_part.extend(c_part2)
+        if c_part:
+            a = nc_part or [a]
+            b = nc_part2 or [b]
+            return Mul(*c_part)*cls(Mul(*a),Mul(*b))
+
+        #
+        # Canonical ordering of arguments
+        #
+        if a > b:
+            return S.NegativeOne*cls(b,a)
+
+    def doit(self, **hints):
+        a = self.args[0]
+        b = self.args[1]
+        return (a*b - b*a).doit(**hints)
+
+    def _eval_dagger(self):
+        return Commutator(Dagger(self.args[1]), Dagger(self.args[0]))
+
+    def __repr__(self):
+        return "Commutator(%s,%s)" %(self.args[0], self.args[1])
+
+    def __str__(self):
+        return "[%s,%s]" %(self.args[0], self.args[1])
+
+    def _latex_(self,printer):
+        return "\\left[%s,%s\\right]"%tuple([
+            printer._print(arg) for arg in self.args])
