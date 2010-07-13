@@ -31,7 +31,7 @@ def test_represent_ZGate_Z():
 def test_represent_PhaseGate_Z():
     circuit = PhaseGate(0)*Qbit(0,1)
     answer = represent(circuit, ZBasisSet())
-    assert Matrix([0, complex(0,1),0,0]) == answer 
+    assert Matrix([0, ImaginaryUnit(),0,0]) == answer 
 
 def test_represent_TGate_Z():
     circuit = TGate(0)*Qbit(0,1)
@@ -83,8 +83,43 @@ def test_gate_qbit_strings():
     assert sstr(ZGate(6)) == "Z(6)"
     assert sstr(YGate(6)) == "Y(6)"
     assert sstr(CNOTGate(1,0)) == "CNOTGate(1, 0)"
-      
+
+def test_ArbMat4_apply():
+    a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p = symbols('abcdefghijklmnop')
+    class Arb(Gate):
+        @property
+        def matrix(self):
+            return Matrix([[a,b,c,d],[e,f,g,h],[i,j,k,l],[m,n,o,p]])
+
+    assert apply_gates(Arb(1,0)*Qbit(0,0,1,0,1)) == b*Qbit(0,0,1,0,0) + f*Qbit(0,0,1,0,1) + j*Qbit(0,0,1,1,0) + n*Qbit(0,0,1,1,1)
+    assert apply_gates(Arb(2,4)*Qbit(0,0,1,0,1)) == c*Qbit(0,0,0,0,1) + g*Qbit(1,0,0,0,1) + k*Qbit(0,0,1,0,1) + o*Qbit(1,0,1,0,1)
+    assert apply_gates(Arb(3,0)*Qbit(1,1,1,1,1)) == d*Qbit(1,0,1,1,0) + h*Qbit(1,0,1,1,1) + l*Qbit(1,1,1,1,0) + p*Qbit(1,1,1,1,1)
+    assert apply_gates(Arb(6,9)*Qbit(0,1,1,0,1,1,0,1,0,1)) == a*Qbit(0,1,1,0,1,1,0,1,0,1) + e*Qbit(1,1,1,0,1,1,0,1,0,1) + i*Qbit(0,1,1,1,1,1,0,1,0,1) + m*Qbit(1,1,1,1,1,1,0,1,0,1)
+
+def test_ArbMat8_apply():
+    a,b,c,d,e,f,g,h = symbols('abcdefgh')
+    class Arb(Gate):
+        @property
+        def matrix(self):
+            symlist = [a,b,c,d,e,f,g,h]
+            lout = []
+            for i in range(8):
+                lin = []
+                for j in range(8):
+                    lin.append(symlist[i]**j)
+                lout.append(lin)
+            return Matrix(lout)    
+
+    assert apply_gates(Arb(2,1,0)*Qbit(0,1,1,0,1)) == a**5*Qbit(0,1,0,0,0) + b**5*Qbit(0,1,0,0,1) + c**5*Qbit(0,1,0,1,0) + d**5*Qbit(0,1,0,1,1) + e**5*Qbit(0,1,1,0,0) + f**5*Qbit(0,1,1,0,1) + g**5*Qbit(0,1,1,1,0) + h**5*Qbit(0,1,1,1,1)
+    assert apply_gates(Arb(0,4,3)*Qbit(1,1,0,1,0)) == a**3*Qbit(0,0,0,1,0) + b**3*Qbit(0,1,0,1,0) + c**3*Qbit(1,0,0,1,0) + d**3*Qbit(1,1,0,1,0) + e**3*Qbit(0,0,0,1,1) + f**3*Qbit(0,1,0,1,1) + g**3*Qbit(1,0,0,1,1) + h**3*Qbit(1,1,0,1,1)
+    assert apply_gates(Arb(4,1,3)*Qbit(0,1,0,0,1,0)) == a**6*Qbit(0,0,0,0,0,0) + b**6*Qbit(0,0,1,0,0,0) + c**6*Qbit(0,0,0,0,1,0) + d**6*Qbit(0,0,1,0,1,0) + e**6*Qbit(0,1,0,0,0,0) + f**6*Qbit(0,1,1,0,0,0) + g**6*Qbit(0,1,0,0,1,0) + h**6*Qbit(0,1,1,0,1,0)
+    assert apply_gates(Arb(3,1,4)*Qbit(0,1,0,1,0,0,1,0,1)) == Qbit(0,1,0,1,0,0,1,0,1) + Qbit(0,1,0,1,1,0,1,0,1) + Qbit(0,1,0,1,0,0,1,1,1) + Qbit(0,1,0,1,1,0,1,1,1) + Qbit(0,1,0,1,0,1,1,0,1) + Qbit(0,1,0,1,1,1,1,0,1) + Qbit(0,1,0,1,0,1,1,1,1) + Qbit(0,1,0,1,1,1,1,1,1)
+    assert apply_gates(Arb(8,10,9)*Qbit(1,1,1,0,1,0,1,0,1,0,1)) == a**7*Qbit(0,0,0,0,1,0,1,0,1,0,1) + b**7*Qbit(0,1,0,0,1,0,1,0,1,0,1) + c**7*Qbit(1,0,0,0,1,0,1,0,1,0,1) + d**7*Qbit(1,1,0,0,1,0,1,0,1,0,1) + e**7*Qbit(0,0,1,0,1,0,1,0,1,0,1) + f**7*Qbit(0,1,1,0,1,0,1,0,1,0,1) + g**7*Qbit(1,0,1,0,1,0,1,0,1,0,1) + h**7*Qbit(1,1,1,0,1,0,1,0,1,0,1)
+    assert apply_gates(Arb(9,2,3)*Qbit(0,1,1,1,1,1,1,0,1,1)) == a*Qbit(0,1,1,1,1,1,0,0,1,1) + b*Qbit(0,1,1,1,1,1,1,0,1,1) + c*Qbit(0,1,1,1,1,1,0,1,1,1) + d*Qbit(0,1,1,1,1,1,1,1,1,1) + e*Qbit(1,1,1,1,1,1,0,0,1,1) + f*Qbit(1,1,1,1,1,1,1,0,1,1) + g*Qbit(1,1,1,1,1,1,0,1,1,1) + h*Qbit(1,1,1,1,1,1,1,1,1,1)
+    assert apply_gates(Arb(2,1,0)*Qbit(0,1,0)) == a**2*Qbit(0,0,0) + b**2*Qbit(0,0,1) + c**2*Qbit(0,1,0) + d**2*Qbit(0,1,1) + e**2*Qbit(1,0,0) + f**2*Qbit(1,0,1) + g**2*Qbit(1,1,0) + h**2*Qbit(1,1,1)
+    
 def test_ArbMat4_Equality():
+
     class Arb(Gate):
         @property
         def matrix(self):
@@ -94,7 +129,7 @@ def test_ArbMat4_Equality():
     for i in range(4):
         for j in range(4):
             if j != i:
-                assert apply_gates(Arb(i,j)*(Qbit(0,1,0,1,0))) == matrix_to_qbits(represent(Arb(i,j)*(Qbit(0,1,0,1,0))))   
+                assert apply_gates(Arb(i,j)*(Qbit(1,0,1,1,0))) == matrix_to_qbits(represent(Arb(i,j)*(Qbit(1,0,1,1,0)), format = 'numpy'))   
 
 def test_Arb8_Matrix_Equality():
     class Arb(Gate):
@@ -112,8 +147,9 @@ def test_Arb8_Matrix_Equality():
 
     for i in range(4):
         for j in range(4):
-            if j != i:
-                assert apply_gates(Arb(i+1,j+1,0)*(Qbit(0,1,0,1,0))) == matrix_to_qbits(represent(Arb(i+1,j+1,0)*(Qbit(0,1,0,1,0))))     
+            for k in range(4):
+                if j != i and k != i and k != j:
+                    assert apply_gates(Arb(i,j,k)*(Qbit(0,1,1,1,0))) == matrix_to_qbits(represent(Arb(i,j,k)*(Qbit(0,1,1,1,0)), format = 'numpy'))     
 
 def test_superposition_of_states():
     assert apply_gates(CNOTGate(0,1)*HadamardGate(0)*(1/sqrt(2)*Qbit(0,1) + 1/sqrt(2)*Qbit(1,0))) == (Qbit(0,1)/2 + Qbit(0,0)/2 - Qbit(1,1)/2 + Qbit(1,0)/2)
@@ -183,7 +219,7 @@ def test_tensor_product():
     npl1 = np.matrix(l1.tolist())
     npl2 = np.matrix(l2.tolist())
     npvec = np.matrix(vec.tolist())
-    
+
     numpy_product = np.kron(l1,np.kron(vec,l2)) 
     assert numpy_product.tolist() == sympy_product.tolist()
 
@@ -204,11 +240,3 @@ def test_apply_represent_equality():
     state_rep = state_rep.expand()
     assert state_rep == states
 
-
-"""
-In [16]: apply_gates(Arb(2,0)*(x*Qbit(0,1,0) + y*Qbit(1,1,0) + z*Qbit(1,1,1) + w*Qbit(0,1,1)))
-Out[16]: 
-a⋅x⋅|010> + b⋅w⋅|010> + c⋅y⋅|010> + d⋅z⋅|010> + e⋅x⋅|011> + f⋅w⋅|011> + g⋅y⋅|011> + h⋅
-z⋅|011> + i⋅x⋅|110> + j⋅w⋅|110> + k⋅y⋅|110> + l⋅z⋅|110> + m⋅x⋅|111> + n⋅w⋅|111> + o⋅y⋅
-|111> + p⋅z⋅|111>
-"""
