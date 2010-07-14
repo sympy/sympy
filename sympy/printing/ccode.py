@@ -11,7 +11,8 @@ source code files that are compilable without further modifications.
 
 from str import StrPrinter
 from sympy.printing.precedence import precedence
-from sympy.core.basic import S
+from sympy.core.basic import S, Basic
+from sympy.core.symbol import Symbol
 from sympy.core.numbers import NumberSymbol
 from sympy.functions import Piecewise, piecewise_fold
 from sympy.tensor import Idx
@@ -47,6 +48,12 @@ class CCodePrinter(StrPrinter):
         self.known_functions.update(userfuncs)
 
     def doprint(self, expr, assign_to=None):
+
+        if isinstance(assign_to, basestring):
+            assign_to = Symbol(assign_to)
+        elif not isinstance(assign_to, (Basic, type(None))):
+            raise TypeError("CCodePrinter cannot assign to object of type %s"%
+                    type(result_variable))
 
         # keep a set of expressions that are not strictly translatable to C
         # and number constants that must be declared and initialized
