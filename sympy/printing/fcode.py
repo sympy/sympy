@@ -394,8 +394,12 @@ class FCodePrinter(StrPrinter):
         inc_keyword = ('do ', 'if(', 'if ', 'do\n')
         dec_keyword = ('end ', 'enddo', 'end\n')
 
-        increase = [ int(line.startswith(inc_keyword)) for line in code ]
-        decrease = [ int(line.startswith(dec_keyword)) for line in code ]
+        increase = [ int(reduce(lambda x, y: x or line.startswith(y),
+                                inc_keyword, False)) \
+                     for line in code ]
+        decrease = [ int(reduce(lambda x, y: x or line.startswith(y),
+                                dec_keyword, False)) \
+                     for line in code ]
         continuation = [ line[-1] == '&' for line in code ]
 
         level = 0
