@@ -1,5 +1,5 @@
 from sympy import sin, cos, abs, exp, pi, oo, symbols, ceiling, raises, sqrt
-from sympy import Function, Piecewise, Rational, Integer
+from sympy import Function, Piecewise, Rational, Integer, GoldenRatio, EulerGamma, Catalan
 
 from sympy.printing.ccode import ccode, CCodePrinter
 from sympy.utilities.pytest import XFAIL
@@ -24,11 +24,16 @@ def test_ccode_Pow():
     assert ccode(1/(g(x)*3.5)**(x - y**x)/(x**2 + y)) == \
         "pow(3.5*g(x), -x + pow(y, x))/(y + pow(x, 2))"
 
-def test_ccode_constants():
+def test_ccode_constants_mathh():
     assert ccode(exp(1)) == "M_E"
     assert ccode(pi) == "M_PI"
     assert ccode(oo) == "HUGE_VAL"
     assert ccode(-oo) == "-HUGE_VAL"
+
+def test_ccode_constants_other():
+    assert ccode(2*GoldenRatio) == "double const GoldenRatio = 1.61803398874989\n2*GoldenRatio"
+    assert ccode(2*Catalan) == "double const Catalan = 0.915965594177219\n2*Catalan"
+    assert ccode(2*EulerGamma) == "double const EulerGamma = 0.577215664901533\n2*EulerGamma"
 
 def test_ccode_Rational():
     assert ccode(Rational(3,7)) == "3.0/7.0"

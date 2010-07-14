@@ -192,6 +192,48 @@ class CCodePrinter(StrPrinter):
                     return "%s(%s)" % (cfunc, self.stringify(expr.args, ", "))
         return StrPrinter._print_Function(self, expr)
 
+    def _print_NumberSymbol(self, expr):
+        # A Number symbol that is not implemented here or with _printmethod
+        # is registered and printed with str().
+        self._number_symbols.add((str(expr), expr.evalf(self._settings["precision"])))
+        return str(expr)
+
+    _print_Catalan = _print_NumberSymbol
+    _print_EulerGamma = _print_NumberSymbol
+    _print_GoldenRatio = _print_NumberSymbol
+
+    def _print_not_c(self, expr):
+        self._not_c.add(expr)
+        return self.emptyPrinter(expr)
+
+    # The following can not be simply translated into C.
+    _print_Basic = _print_not_c
+    _print_ComplexInfinity = _print_not_c
+    _print_Derivative = _print_not_c
+    _print_dict = _print_not_c
+    _print_Dummy = _print_not_c
+    _print_ExprCondPair = _print_not_c
+    _print_GeometryEntity = _print_not_c
+    _print_Integral = _print_not_c
+    _print_Interval = _print_not_c
+    _print_Limit = _print_not_c
+    _print_list = _print_not_c
+    _print_Matrix = _print_not_c
+    _print_DeferredVector = _print_not_c
+    _print_NaN = _print_not_c
+    _print_Normal = _print_not_c
+    _print_Order = _print_not_c
+    _print_PDF = _print_not_c
+    _print_RootOf = _print_not_c
+    _print_RootsOf = _print_not_c
+    _print_RootSum = _print_not_c
+    _print_Sample = _print_not_c
+    _print_SMatrix = _print_not_c
+    _print_tuple = _print_not_c
+    _print_Uniform = _print_not_c
+    _print_Unit = _print_not_c
+    _print_Wild = _print_not_c
+    _print_WildFunction = _print_not_c
 
     def indent_code(self, code):
         """Accepts a string of code or a list of code lines"""
