@@ -16,7 +16,7 @@ class Symbol(AtomicExpr, Boolean):
 
     You can override the default assumptions in the constructor::
        >>> from sympy import symbols
-       >>> A,B = symbols('AB', commutative = False)
+       >>> A,B = symbols('A,B', commutative = False)
        >>> bool(A*B != B*A)
        True
        >>> bool(A*B*2 == 2*A*B) == True # multiplication by scalars is commutative
@@ -205,51 +205,78 @@ class Pure(Expr):
 _re_var_range = re.compile(r"^(.*?)(\d*):(\d+)$")
 _re_var_split = re.compile(r"\s|,")
 
-def symbols(*names, **kwargs):
+def symbols(names, **args):
     """
-    Return a list of symbols with names taken from 'names'
-    argument, which can be a string, then each character
-    forms a separate symbol, or a sequence of strings.
+    Transform strings into instances of :class:`Symbol` class.
 
-    >>> from sympy import symbols
-    >>> x, y, z = symbols('xyz')
+    :func:`symbols` function returns a sequence of symbols with names taken
+    from ``names`` argument, which can be a comma or whitespace delimited
+    string, or a sequence of strings::
 
-    Please note that this syntax is deprecated and will be dropped in a
-    future version of sympy. Use comma or whitespace separated characters
-    instead. Currently the old behavior is standard, this can be changed
-    using the 'each_char' keyword:
+        >>> from sympy import symbols, Function
 
-    >>> symbols('xyz', each_char=False)
-    xyz
+        >>> x, y, z = symbols('x,y,z')
+        >>> a, b, c = symbols('a b c')
 
-    All newly created symbols have assumptions set accordingly
-    to 'kwargs'. Main intention behind this function is to
-    simplify and shorten examples code in doc-strings.
+    The type of output is dependent on the properties of input arguments::
 
-    >>> a = symbols('a', integer=True)
-    >>> a.is_integer
-    True
-    >>> xx, yy, zz = symbols('xx', 'yy', 'zz', real=True)
-    >>> xx.is_real and yy.is_real and zz.is_real
-    True
+        >>> x = symbols('x')
+        >>> (x,) = symbols('x,')
+
+        >>> symbols(('a', 'b', 'c'))
+        (a, b, c)
+        >>> symbols(['a', 'b', 'c'])
+        [a, b, c]
+        >>> symbols(set(['a', 'b', 'c']))
+        set([a, b, c])
+
+    If an iterable container is needed set ``seq`` argument to ``True``::
+
+        >>> symbols('x', seq=True)
+        (x,)
+
+    To cut on typing, range syntax is supported co create indexed symbols::
+
+        >>> symbols('x:10')
+        (x0, x1, x2, x3, x4, x5, x6, x7, x8, x9)
+
+        >>> symbols('x5:10')
+        (x5, x6, x7, x8, x9)
+
+        >>> symbols('x5:10,y:5')
+        (x5, x6, x7, x8, x9, y0, y1, y2, y3, y4)
+
+        >>> symbols(('x5:10', 'y:5'))
+        ((x5, x6, x7, x8, x9), (y0, y1, y2, y3, y4))
+
+    All newly created symbols have assumptions set accordingly to ``args``::
+
+        >>> a = symbols('a', integer=True)
+        >>> a.is_integer
+        True
+
+        >>> x, y, z = symbols('x,y,z', real=True)
+        >>> x.is_real and y.is_real and z.is_real
+        True
+
+    Despite its name, :func:`symbols` can create symbol--like objects of
+    other type, for example instances of Function or Wild classes. To
+    achieve this, set ``cls`` keyword argument to the desired type::
+
+        >>> symbols('f,g,h', cls=Function)
+        (f, g, h)
+
+        >>> type(_[0])
+        <class 'sympy.core.function.UndefinedFunction'>
 
     """
-    func = Symbol
-    # when polys12 is in place remove from here...
-    if 'cls' in kwargs and kwargs.pop('cls') is Dummy:
-        func = Dummy
-    # ... to here when polys12 is in place
-    # use new behavior if space or comma in string
-    if not 'each_char' in kwargs and len(names) == 1 and \
-    isinstance(names[0], str) and (' ' in names[0] or ',' in names[0]):
-        kwargs['each_char'] = False
-    if not kwargs.pop("each_char", True):
-        names = names[0]
+    result = []
 
-        if not isinstance(names, list):
-            names = _re_var_split.split(names)
+    if isinstance(names, basestring):
+        names = _re_var_split.split(names)
 
-        result = []
+        cls = args.pop('cls', Symbol)
+        seq = args.pop('seq', False)
 
         for name in names:
             if not name:
@@ -266,72 +293,79 @@ def symbols(*names, **kwargs):
                     start = int(start)
 
                 for i in xrange(start, int(end)):
-                    symbol = func("%s%i" % (name, i), **kwargs)
+                    symbol = cls("%s%i" % (name, i), **args)
                     result.append(symbol)
+
+                seq = True
             else:
-                symbol = func(name, **kwargs)
+                symbol = cls(name, **args)
                 result.append(symbol)
 
-        result = tuple(result)
+        if not seq and len(result) <= 1:
+            if not result:
+                return None
+            elif names[-1]:
+                return result[0]
 
-        if len(result) <= 1:
-            if not result:           # var('')
-                result = None
-            else:                    # var('x')
-                result = result[0]
-
-        return result
+        return tuple(result)
     else:
-        # this is the old, deprecated behavior:
-        if len(names) == 1:
-            result = [ func(name, **kwargs) for name in names[0] ]
-        else:
-            result = [ func(name, **kwargs) for name in names ]
-        if len(result) == 1:
-            return result[0]
-        else:
-            return result
+        for name in names:
+            syms = symbols(name, **args)
 
-def var(*names, **kwargs):
+            if syms is not None:
+                result.append(syms)
+
+        return type(names)(result)
+
+def var(names, **args):
     """
-    Create symbols and inject them into global namespace.
+    Create symbols and inject them into the global namespace.
 
-    This calls symbols() with the same arguments and puts the results into
-    global namespace. Unlike symbols(), it uses each_char=False by default
-    for compatibility reasons.
+    This calls :func:`symbols` with the same arguments and puts the results
+    into the *global* namespace. It's recommended not to use :func:`var` in
+    library code, where :func:`symbols` has to be used::
 
-    NOTE: The new variable is both returned and automatically injected into
-    the parent's *global* namespace.  It's recommended not to use "var" in
-    library code, it is better to use symbols() instead.
+        >>> from sympy import var
 
-    >>> from sympy import var
-    >>> var('m')
-    m
-    >>> var('n xx yy zz')
-    (n, xx, yy, zz)
-    >>> n
-    n
-    >>> var('x y', real=True)
-    (x, y)
-    >>> x.is_real and y.is_real
-    True
+        >>> var('x')
+        x
+        >>> x
+        x
+
+        >>> var('a,ab,abc')
+        (a, ab, abc)
+        >>> abc
+        abc
+
+        >>> var('x,y', real=True)
+        (x, y)
+        >>> x.is_real and y.is_real
+        True
+
+    See :func:`symbol` documentation for more details on what kinds of
+    arguments can be passed to :func:`var`.
 
     """
-    import inspect
-    frame = inspect.currentframe().f_back
+    def traverse(symbols, frame):
+        """Recursively inject symbols to the global namespace. """
+        for symbol in symbols:
+            if isinstance(symbol, Basic):
+                frame.f_globals[symbol.name] = symbol
+            else:
+                traverse(symbol, frame)
+
+    from inspect import currentframe
+    frame = currentframe().f_back
+
     try:
-        kwargs['each_char'] = False
-        s = symbols(*names, **kwargs)
-        if s is None:
-            return s
-        if isinstance(s, Symbol):
-            s_list = [s]
-        else:
-            s_list = s
-        for t in s_list:
-            frame.f_globals[t.name] = t
-        return s
+        syms = symbols(names, **args)
+
+        if syms is not None:
+            if isinstance(syms, Basic):
+                frame.f_globals[syms.name] = syms
+            else:
+                traverse(syms, frame)
     finally:
-        # we should explicitly break cyclic dependencies as stated in inspect
-        # doc
-        del frame
+        del frame # break cyclic dependencies as stated in inspect docs
+
+    return syms

@@ -32,7 +32,7 @@ def test_var():
     assert fg == Symbol('fg')
 
     # check return value
-    assert v  == (d, e, fg)
+    assert v  == [d, e, fg]
 
     # see if var() really injects into global namespace
     raises(NameError, "z1")
