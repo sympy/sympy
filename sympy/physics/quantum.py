@@ -26,7 +26,8 @@ __all__ = [
     'State',
     'Ket',
     'Bra',
-    'InnerProduct'
+    'InnerProduct',
+    'OuterProduct',
     'Operator',
     'Dagger',
     'KroneckerDelta',
@@ -46,8 +47,22 @@ class State(Expr):
     rbracket = ')'
 
     def __new__(cls, name):
-        obj = Expr.__new__(cls, name, commutative=False)
+        obj = Expr.__new__(cls, name, **{'commutative': False})
         return obj
+
+    def __mul__(self, other):
+        if isinstance(self, Ket) and isinstance(other, Ket):
+#            return TensorProductsomethingsomething
+            raise NotImplementedError
+        elif isinstance(self, Bra) and isinstance(other, Bra):
+#            return TensorProductsomethingsomething
+            raise NotImplementedError
+        elif isinstance(self, Bra) and isinstance(other, Ket):
+            return InnerProduct(self, other)
+        elif isinstance(self, Ket) and isinstance(other, Bra):
+            return OuterProduct(self, other)
+        else:
+            return Mul(self, other)
 
     @property
     def name(self):
@@ -82,12 +97,6 @@ class Bra(State):
     def _eval_dagger(self):
         return Ket(*self.args)
 
-    def __mul__(self, other):
-        if isinstance(other, Ket):
-            return InnerProduct(self, other)
-        else:
-            return Expr.__mul__(self, other)
-
 class InnerProduct(Expr):
     """
     An unevaluated inner product between a Bra and Ket.
@@ -99,7 +108,7 @@ class InnerProduct(Expr):
         r = cls.eval(bra, ket)
         if isinstance(r, Expr):
             return r
-        obj = Expr.__new__(cls, *(bra, ket), **dict(commutative=True))
+        obj = Expr.__new__(cls, *(bra, ket), **{'commutative': True})
         return obj
 
     @classmethod
@@ -128,6 +137,46 @@ class InnerProduct(Expr):
         sket = str(self.ket)
         return "%s|%s" % (sbra[:-1], sket[1:])
 
+class OuterProduct(Expr):
+    """
+    An unevaluated inner product between a Bra and Ket.
+    """
+
+    def __new__(cls, ket, bra):
+        assert isinstance(ket, Ket), 'must be a Ket'
+        assert isinstance(bra, Bra), 'must be a Bra'
+        r = cls.eval(bra, ket)
+        if isinstance(r, Expr):
+            return r
+        obj = Expr.__new__(cls, *(bra, ket), **{'commutative': True})
+        return obj
+
+    @classmethod
+    def eval(cls, bra, ket):
+        # We need to decide what to do here. We probably will ask if the
+        # bra and ket know how to do the outer product.
+        return None
+
+    @property
+    def bra(self):
+        return self.args[1]
+
+    @property
+    def ket(self):
+        return self.args[0]
+
+    def _eval_subs(self, old, new):
+        r = self.__class__(self.bra.subs(old,new), self.ket.subs(old,new))
+        return r
+
+    def __repr__(self):
+        return self.__str__()
+
+    def __str__(self):
+        sbra = str(self.bra)
+        sket = str(self.ket)
+        return sbra+sket
+
 class Operator(Expr):
     """
     Base class for non-commuting Quantum operators.
@@ -141,7 +190,7 @@ class Operator(Expr):
 
     def __new__(cls, name):
         name = sympify(name)
-        obj = Expr.__new__(cls, name, commutative=False)
+        obj = Expr.__new__(cls, name, **{'commutative': False})
         return obj
 
     @property
