@@ -1,7 +1,7 @@
 """Most of these tests come from the examples in Bronstein's book."""
 from sympy import Poly, S, symbols, oo
 from sympy.integrals.risch import NonElementaryIntegral
-from sympy.integrals.rde import (order_at, weak_normalizer, normal_denominator,
+from sympy.integrals.rde import (order_at, weak_normalizer, normal_denom,
     bound_degree, spde, solve_poly_rde, no_cancel_equal, rischDE)
 from sympy.utilities.pytest import raises
 from sympy.abc import x, t, z, n
@@ -35,15 +35,22 @@ def test_weak_normalizer():
     assert r == (Poly(t, t), (Poly(0, t), Poly(1, t)))
     assert weak_normalizer(r[1][0], r[1][1], D, [x, t]) == (Poly(1, t), r[1])
 
-def test_normal_denominator():
-    raises(NonElementaryIntegral, """normal_denominator(Poly(1, x), Poly(1, x),
+def test_normal_denom():
+    raises(NonElementaryIntegral, """normal_denom(Poly(1, x), Poly(1, x),
     Poly(1, x), Poly(x, x), [Poly(1, x)], [x])""")
     fa, fd = Poly(t**2 + 1, t), Poly(1, t)
     ga, gd = Poly(1, t), Poly(t**2, t)
     D = [Poly(1, x), Poly(t**2 + 1, t)]
-    assert normal_denominator(fa, fd, ga, gd, D, [x, t]) == \
+    assert normal_denom(fa, fd, ga, gd, D, [x, t]) == \
         (Poly(t, t), (Poly(t**3 - t**2 + t - 1, t), Poly(1, t)), (Poly(1, t),
         Poly(1, t)), Poly(t, t))
+
+def test_special_denom():
+    # TODO: add more tests here
+    D = [Poly(t, t)]
+    assert special_denom(Poly(1, t), Poly(t**2, t), Poly(1, t), Poly(t**2 - 1, t),
+    Poly(t, t), D, [t]) == \
+        (Poly(1, t), Poly(t**2 - 1, t), Poly(t**2 - 1, t), Poly(t, t))
 
 def test_bound_degree():
     # Primitive (TODO)

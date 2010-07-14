@@ -48,6 +48,7 @@ def order_at(a, p, t):
     if p == Poly(t, t):
         return a.as_poly(t).ET()[0][0]
 
+    # TODO: Can this be done more efficiently?
     n = -1
     p1 = Poly(1, t)
     r = Poly(0, t)
@@ -104,7 +105,7 @@ def weak_normalizer(a, d, D, T, z=None):
 
     return (q, (sn, sd))
 
-def normal_denominator(fa, fd, ga, gd, D, T):
+def normal_denom(fa, fd, ga, gd, D, T):
     """
     Normal part of the denominator.
 
@@ -121,8 +122,8 @@ def normal_denominator(fa, fd, ga, gd, D, T):
     dn, ds = splitfactor(fd, D, T)
     en, es = splitfactor(gd, D, T)
 
-    p = gcd(dn, es)
-    h = gcd(en, en.diff(t)).quo(gcd(p, p.diff(t)))
+    p = dn.gcd(en)
+    h = en.gcd(en.diff(t)).quo(p.gcd(p.diff(t)))
 
     a = dn*h
     c = a*h
@@ -145,11 +146,11 @@ def special_denom(a, ba, bd, ca, cd, D, T, case='auto'):
     case is one of {'exp', 'tan', 'primitive'} for the hyperexponential,
     hypertangent, and primitive cases, respectively.  For the
     hyperexponential (resp. hypertangent) case, given a derivation D on
-    k[t] and a in k[t], b, c, in k<t> with Dt/t (resp. Dt/(t**2 + 1)) in
-    k (sqrt(-1) not in k), a != 0, and gcd(a, t) == 1, return the
-    quadruplet (A, B, C, 1/h) such that A, B, C, h in k[t] and for any
-    solution q in k<t> of a*Dq + b*q == c, r = qh in k[t] satisfies
-    A*Dr + B*r == C.
+    k[t] and a in k[t], b, c, in k<t> with Dt/t in k (resp. Dt/(t**2 + 1) in
+    k, sqrt(-1) not in k), a != 0, and gcd(a, t) == 1 (resp.
+    gcd(a, t**2 + 1) == 1), return the quadruplet (A, B, C, 1/h) such that
+    A, B, C, h in k[t] and for any solution q in k<t> of a*Dq + b*q == c,
+    r = qh in k[t] satisfies A*Dr + B*r == C.
 
     For case == 'primitive', k<t> == k[t], so it returns (a, b, c, 1) in
     this case.
@@ -174,6 +175,7 @@ def special_denom(a, ba, bd, ca, cd, D, T, case='auto'):
     else:
         raise ValueError("case must be one of {'exp', 'tan', 'primitive', " +
             "'base'}, not %s." % case)
+    # assert a.div(p)[1]
 
     nb = order_at(ba, p, t) - order_at(bd, p, t)
     nc = order_at(ca, p, t) - order_at(cd, p, t)
@@ -198,14 +200,14 @@ def special_denom(a, ba, bd, ca, cd, D, T, case='auto'):
 
     N = max(0, -nb, n - nc)
     pN = p**N
-    pn = p**n
+    pn = p**-n # This is 1/h
 
     A = a*pN
     B = ba*pN.quo(bd) + Poly(n, t)*a*derivation(p, D, T).quo(p)*pN
-    C = ca*pN.quo(pn).quo(cd)
-    h = pn # This is 1/h
+    C = (ca*pN*pn).quo(cd)
+    h = pn
 
-    # (ap**N, (b + n*a*Dp/p)*p**N, c*p**(N - n), p**-n)
+    # (a*p**N, (b + n*a*Dp/p)*p**N, c*p**(N - n), p**-n)
     return (A, B, C, h)
 
 def bound_degree(a, b, c, D, T, case='auto'):
@@ -453,7 +455,11 @@ def solve_poly_rde(b, c, D, n, T):
             h, b0, c0 = R
             T = T[:-1]
             D = D[:-1]
-            y = solve_poly_rde(b0, c0, D, n, T)
+            t = T[-1]
+            b0, c0 = b0.as_poly(t), c0.as_poly(t)
+            assert b0
+            assert c0
+            y = solve_poly_rde(b0, c0, D, n, T).as_poly(t)
             return h + y
 
     elif d.degree(t) >= 2 and b.degree(t) == d.degree(t) - 1 and \
@@ -474,7 +480,7 @@ def solve_poly_rde(b, c, D, n, T):
 
 def rischDE(fa, fd, ga, gd, D, T):
     """
-    Solve a Risch Differential Equation - Dy + f*y == g.
+    Solve a Risch Differential Equation: Dy + f*y == g.
 
     See the outline in the docstring of rde.py for more information
     about the procedure used.  Either raise NonElementaryIntegral, in
@@ -485,7 +491,7 @@ def rischDE(fa, fd, ga, gd, D, T):
     implemented.
     """
     _, (fa, fd) = weak_normalizer(fa, fd, D, T)
-    a, (ba, bd), (ca, cd), hn = normal_denominator(fa, fd, ga, gd, D, T)
+    a, (ba, bd), (ca, cd), hn = normal_denom(fa, fd, ga, gd, D, T)
     A, B, C, hs = special_denom(a, ba, bd, ca, cd, D, T)
     try:
         # Until this is fully implemented, use oo.  Note that this, will almost
