@@ -30,7 +30,7 @@ def test_prde_special_denom():
     assert prde_special_denom(a, ba, bd, G, D, [x, t]) == \
         (Poly(t + 1, t), Poly(t**2, t), [Poly(t, t), Poly(t**2, t), Poly(t**3, t)], Poly(1, t))
     G = [(Poly(t, t), Poly(1, t)), (Poly(1, t), Poly(t, t))]
-    assert prde_special_denom(Poly(1, t), Poly(t**2, t), Poly(1, t), G, D, [x, t])
+    assert prde_special_denom(Poly(1, t), Poly(t**2, t), Poly(1, t), G, D, [x, t]) == \
         (Poly(1, t), Poly(t**2 - 1, t), [Poly(t**2, t), Poly(1, t)], Poly(t, t))
 
 def test_is_log_deriv_k_t_radical():

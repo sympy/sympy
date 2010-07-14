@@ -379,7 +379,8 @@ class Domain(Option):
 
     @classmethod
     def postprocess(cls, options):
-        if options['domain'].is_Composite and set(options['domain'].gens) & set(options['gens']):
+        if options['domain'].is_Composite and set(options['domain'].gens) & \
+        set(options.get('gens', ())):
             raise PolynomialError("ground domain and generators interferes together")
 
 class Split(Option):

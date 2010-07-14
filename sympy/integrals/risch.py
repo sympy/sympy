@@ -436,7 +436,6 @@ def integrate_hyperexponential(a, d, D, T, Tfuncs):
 
     This function returns a Basic expression.
     """
-    from pudb import set_trace; set_trace() # Debugging
     # XXX: a and d must be canceled, or this might not return correct results
     t = T[-1]
     x = T[0]
