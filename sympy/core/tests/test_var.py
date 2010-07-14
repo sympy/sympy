@@ -1,6 +1,6 @@
 # Tests for var are in their own file, because var pollutes global namespace.
 
-from sympy import Symbol, var
+from sympy import Symbol, var, Function, FunctionClass
 from sympy.utilities.pytest import raises
 
 # make z1 with call-depth = 1
@@ -63,3 +63,13 @@ def test_var_accepts_comma():
 def test_var_keywords():
     var('x y', real=True)
     assert x.is_real and y.is_real
+
+def test_var_cls():
+    f = var('f', cls=Function)
+
+    assert isinstance(f, FunctionClass)
+
+    g, h = var('g,h', cls=Function)
+
+    assert isinstance(g, FunctionClass)
+    assert isinstance(h, FunctionClass)
