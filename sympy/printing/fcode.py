@@ -53,9 +53,7 @@ class FCodePrinter(StrPrinter):
         assign_to = self._settings['assign_to']
         if isinstance(assign_to, basestring):
             self._settings['assign_to'] = Symbol(assign_to)
-        elif isinstance(assign_to, (Basic, type(None))):
-            self._settings['assign_to'] = assign_to
-        else:
+        elif not isinstance(assign_to, (Basic, type(None))):
             raise TypeError("FCodePrinter cannot assign to object of type %s"%
                     type(assign_to))
 
