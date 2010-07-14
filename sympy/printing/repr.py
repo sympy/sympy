@@ -49,12 +49,6 @@ class ReprPrinter(Printer):
         # GeometryEntity is special -- its base is tuple
         return type(expr).__name__ + srepr(tuple(expr))
 
-    def _print_Infinity(self, expr):
-        return 'Infinity'
-
-    def _print_Integer(self, expr):
-        return '%s(%s)' % (expr.__class__.__name__, self._print(expr.p))
-
     def _print_list(self, expr):
         return "[%s]"%self.reprify(expr, ", ")
 
@@ -67,22 +61,22 @@ class ReprPrinter(Printer):
         return '%s(%s)' % (expr.__class__.__name__, self._print(l))
 
     def _print_NaN(self, expr):
-        return "nan"
+        return "S.NaN"
+
+    def _print_Infinity(self, expr):
+        return 'S.Infinity'
 
     def _print_NegativeInfinity(self, expr):
-        return "NegativeInfinity"
+        return "S.NegativeInfinity"
 
-    def _print_NegativeOne(self, expr):
-        return "NegativeOne"
-
-    def _print_One(self, expr):
-        return "One"
+    def _print_Integer(self, expr):
+        return 'Integer(%s)' % self._print(expr.p)
 
     def _print_Rational(self, expr):
-        return '%s(%s, %s)' % (expr.__class__.__name__, self._print(expr.p), self._print(expr.q))
+        return 'Rational(%s, %s)' % (self._print(expr.p), self._print(expr.q))
 
     def _print_Fraction(self, expr):
-        return '%s(%s, %s)' % (expr.__class__.__name__, self._print(expr.numerator), self._print(expr.denominator))
+        return 'Fraction(%s, %s)' % (self._print(expr.numerator), self._print(expr.denominator))
 
     def _print_Real(self, expr):
         dps = prec_to_dps(expr._prec)
@@ -110,9 +104,6 @@ class ReprPrinter(Printer):
 
     def _print_WildFunction(self, expr):
         return "%s('%s')" % (expr.__class__.__name__, expr.name)
-
-    def _print_Zero(self, expr):
-        return "Zero"
 
     def _print_AlgebraicNumber(self, expr):
         return "%s(%s, %s)" % (self.__class__.__name__,
