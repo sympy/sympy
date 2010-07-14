@@ -1,5 +1,9 @@
 """
 Algorithms for solving Parametric Risch Differential Equations.
+
+The methods used for solving Parametric Risch Differential Equations parallel
+those for solving Risch Differential Equations.  See the outline in the
+docstring of rde.py for more information.
 """
 from sympy.core import Symbol
 
@@ -9,6 +13,113 @@ from sympy.polys import Poly, PolynomialError, lcm, cancel
 
 from sympy.integrals.risch import (derivation, get_case, NonElementaryIntegral,
     residue_reduce, splitfactor, residue_reduce_derivation)
+from sympy.integrals.rde import order_at, weak_normalizer
+
+#    from pudb import set_trace; set_trace() # Debugging
+
+def prde_normal_denom(fa, fd, G, D, T):
+    """
+    Parametric Risch Differential Equation - Normal part of the denominator.
+
+    Given a derivation D on k[t] and f, g1, ..., gm in k(t) with f weakly
+    normalized with respect to t, return the tuple (a, b, G, h) such that
+    a, h in k[t], b in k<t>, G = [g1, ..., gm] in k(t)^m, and for any solution
+    c1, ..., cm in Const(k) and y in k(t) of Dy + f*y == Sum(ci*gi, (i, 1, m)),
+    q == y*h in k<t> satisfies a*Dq + b*q == Sum(ci*Gi, (i, 1, m)).
+    """
+    t = T[-1]
+    dn, ds = splitfactor(fd, D, T)
+    gd = reduce(lambda i, j: i.lcm(j), zip(*G)[1])
+    en, es = splitfactor(gd, D, T)
+
+    p = dn.gcd(en)
+    h = en.gcd(en.diff(t)).quo(p.gcd(p.diff(t)))
+
+    a = dn*h
+    c = a*h
+
+    ba = a*fa - dn*derivation(h, D, T)*fd
+    ba, bd = ba.cancel(fd, include=True)
+
+    G = [(c*A).cancel(D, include=True) for A, D in G]
+
+    return (a, (ba, bd), G, h)
+
+def prde_special_denom(a, ba, bd, G, D, T, case='auto'):
+    """
+    Parametric Risch Differential Equation - Special part of the denominator.
+
+    case is on of {'exp', 'tan', 'primitive'} for the hyperexponential,
+    hypertangent, and primitive cases, respectively.  For the hyperexponential
+    (resp. hypertangent) case, given a derivation D on k[t] and a in k[t],
+    b in k<t>, and g1, ..., gm in k(t) with Dt/t in k (resp. Dt/(t**2 + 1) in
+    k, sqrt(-1) not in k), a != 0, and gcd(a, t) == 1 (resp.
+    gcd(a, t**2 + 1) == 1), return the tuple (A, B, GG, h) such that A, B, h in
+    k[t], GG = [gg1, ..., ggm] in k(t)^m, and for any solution c1, ..., cm in
+    Const(k) and q in k<t> of a*Dq + b*q == Sum(ci*gi, (i, 1, m)), r == q*h in
+    k[t] satisfies A*Dr + B*r == Sum(ci*ggi, (i, 1, m)).
+
+    For case == 'primitive', k<t> == k[t], so it returns (a, b, G, 1) in this
+    case.
+    """
+    t = T[-1]
+    d = D[-1]
+
+    if case == 'auto':
+        case = get_case(d, t)
+
+    if case == 'exp':
+        p = Poly(t, t)
+    elif case == 'tan':
+        p = Poly(t**2 + 1, t)
+    elif case in ['primitive', 'base']:
+        B = ba.quo(bd)
+        return (a, B, G, Poly(1, t))
+    else:
+        raise ValueError("case must be one of {'exp', 'tan', 'primitive', " +
+            "'base'}, not %s." % case)
+
+    nb = order_at(ba, p, t) - order_at(bd, p, t)
+    nc = min([order_at(Ga, p, t) - order_at(Gd, p, t) for Ga, Gd in G])
+
+    n = min(0, nc - min(0, nb))
+    if not nb:
+        # Possible cancelation
+        #
+        # if case == 'exp':
+        #     alpha = (-b/a).rem(p) == -b(0)/a(0)
+        #     if alpha == m*Dt/t + Dz/z # parametric logarithmic derivative problem
+        #         n = min(n, m)
+        # elif case == 'tan':
+        #     alpha*sqrt(-1) + beta = (-b/a)/rem(p) == -b(sqrt(-1))/a(sqrt(-1))
+        #     eta = derivation(t, D, T).quo(Poly(t**2 + 1, t)) # eta in k
+        #     if 2*beta == Db/b for some v in k* (see pg. 176) and \
+        #     alpha*sqrt(-1) + beta == 2*b*eta*sqrt(-1) + Dz/z:
+        #     # parametric logarithmic derivative problem
+        #         n = min(n, m)
+        raise NotImplementedError("The ability to solve the parametric " +
+            "logarithmic derivative problem is required to solve this PRDE.")
+
+    N = max(0, -nb)
+    pN = p**N
+    pn = p**-n # This is 1/h
+
+    A = a*pN
+    B = ba*pN.quo(bd) + Poly(n, t)*a*derivation(p, D, T).quo(p)*pN
+    G = [(Ga*pN*pn).quo(Gd) for Ga, Gd in G]
+    h = pn
+
+    # (a*p**N, (b + n*a*Dp/p)*p**N, g1*p**(N - n), ..., gm*p**(N - n), p**-n)
+    return (A, B, G, h)
+
+def param_rischDE(fa, fd, G, D, T):
+    """
+    Solve a Parametric Risch Differential Equation: Dy + f*y == Sum(ci*Gi, (i, 1, m)).
+    """
+    _, (fa, fd) = weak_normalizer(fa, fd, D, T)
+    a, (ba, bd), G, hn = prde_normal_denom(a, ga, gd, G, D, T)
+    A, B, G, hs = prde_special_denom(a, ba, bd, G, D, T)
+
 
 def parametric_log_deriv_heu(fa, fd, wa, wd, D, T):
     """
@@ -122,6 +233,7 @@ def is_log_deriv_k_t_radical(fa, fd, D, T, case='auto'):
     from pudb import set_trace; set_trace() # Debugging
     fa, fd = fa.cancel(fd, include=True)
 
+    # TODO: Fix for x in T
     if not T:
         # Base case.
         # These had better be True.
@@ -184,9 +296,11 @@ def is_log_deriv_k_t_radical(fa, fd, D, T, case='auto'):
     elif case == 'tan':
         raise NotImplementedError("The hypertangent case is " +
         "not yet implemented for is_log_deriv_k_t_radical()")
+
     elif case in ['other_linear', 'other_nonlinear']:
         # XXX: If these are supported by the structure theorems, change to NotImplementedError.
         raise ValueError("The %s case is not supported in this function." % case)
+
     else:
         raise ValueError("case must be one of {'primitive', 'exp', 'tan', "+
         "'base', 'auto'}, not %s""" % case)
