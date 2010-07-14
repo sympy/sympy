@@ -150,10 +150,11 @@ class IndexedElement(Expr):
     """
 
     def __new__(cls, stem, *args, **kw_args):
-        assert args
+        if not args: raise IndexException("IndexedElement needs at least one index")
         if isinstance(stem, (basestring, Symbol)):
             stem = Indexed(stem)
-
+        elif not isinstance(stem, Indexed):
+            raise TypeError("IndexedElement expects string, Symbol or Indexed as stem")
         # FIXME: 2.4 compatibility
         args = map(_ensure_Idx, args)
         # args = tuple([ a if isinstance(a, Idx) else Idx(a) for a in args ])

@@ -1,4 +1,4 @@
-from sympy import symbols, Integer
+from sympy import symbols, Integer, Symbol
 from sympy.tensor import Indexed, Idx, IndexedElement
 from sympy.tensor.indexed import IndexException
 from sympy.utilities.pytest import raises
@@ -88,6 +88,14 @@ def test_Indexed_subs():
     A = Indexed(a)
     B = Indexed(b)
     assert A == B.subs(b, a)
+
+def test_IndexedElement_constructor():
+    i, j = symbols('i j', integer=True)
+    A = IndexedElement('A', i, j)
+    assert A == IndexedElement(Symbol('A'), i, j)
+    assert A == IndexedElement(Indexed('A'), i, j)
+    raises(TypeError, 'IndexedElement(A, i, j)')
+    raises(IndexException, 'IndexedElement("A")')
 
 def test_IndexedElement_func_args():
     i, j = symbols('i j', integer=True)
