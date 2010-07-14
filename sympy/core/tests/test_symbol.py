@@ -144,25 +144,72 @@ def test_Pure():
     assert (S.Pure != I) == True
 
 def test_symbols():
-    x, y, z = Symbol('x'), Symbol('y'), Symbol('z')
-    assert symbols('x') == Symbol('x')
-    assert symbols('xyz') == [x, y, z]
-    assert symbols('x y z') == symbols('x,y,z') == (x, y, z)
-    assert symbols('xyz', each_char=False) == Symbol('xyz')
-    x, y = symbols('x y', each_char=False, real=True)
-    assert x.is_real and y.is_real
+    x = Symbol('x')
+    y = Symbol('y')
+    z = Symbol('z')
 
-    assert symbols('x0:0', each_char=False) is None
-    assert symbols('x0:1', each_char=False) == Symbol('x0')
-    assert symbols('x0:3', each_char=False) == (Symbol('x0'), Symbol('x1'), Symbol('x2'))
+    assert symbols('') is None
 
-    assert symbols('x:0', each_char=False) is None
-    assert symbols('x:1', each_char=False) == Symbol('x0')
-    assert symbols('x:3', each_char=False) == (Symbol('x0'), Symbol('x1'), Symbol('x2'))
+    assert symbols('x') == x
+    assert symbols('x,') == (x,)
+    assert symbols('x ') == (x,)
 
-    assert symbols('x1:1', each_char=False) is None
-    assert symbols('x1:2', each_char=False) == Symbol('x1')
-    assert symbols('x1:3', each_char=False) == (Symbol('x1'), Symbol('x2'))
+    assert symbols('x,y,z') == (x, y, z)
+    assert symbols('x y z') == (x, y, z)
+
+    assert symbols('x,y,z,') == (x, y, z)
+    assert symbols('x y z ') == (x, y, z)
+
+    xyz = Symbol('xyz')
+    abc = Symbol('abc')
+
+    assert symbols('xyz') == xyz
+    assert symbols('xyz,') == (xyz,)
+    assert symbols('xyz,abc') == (xyz, abc)
+
+    assert symbols(('xyz',)) == (xyz,)
+    assert symbols(('xyz,',)) == ((xyz,),)
+    assert symbols(('x,y,z,',)) == ((x, y, z),)
+    assert symbols(('xyz', 'abc')) == (xyz, abc)
+    assert symbols(('xyz,abc',)) == ((xyz, abc),)
+    assert symbols(('xyz,abc', 'x,y,z')) == ((xyz, abc), (x, y, z))
+
+    assert symbols(('x', 'y', 'z')) == (x, y, z)
+    assert symbols(['x', 'y', 'z']) == [x, y, z]
+    assert symbols(set(['x', 'y', 'z'])) == set([x, y, z])
+
+    assert symbols('x,,y,,z') == (x, y, z)
+    assert symbols(('x', '', 'y', '', 'z')) == (x, y, z)
+
+    a, b = symbols('x,y', real=True)
+
+    assert a.is_real and b.is_real
+
+    x0 = Symbol('x0')
+    x1 = Symbol('x1')
+    x2 = Symbol('x2')
+
+    y0 = Symbol('y0')
+    y1 = Symbol('y1')
+
+    assert symbols('x0:0') == ()
+    assert symbols('x0:1') == (x0,)
+    assert symbols('x0:2') == (x0, x1)
+    assert symbols('x0:3') == (x0, x1, x2)
+
+    assert symbols('x:0') == ()
+    assert symbols('x:1') == (x0,)
+    assert symbols('x:2') == (x0, x1)
+    assert symbols('x:3') == (x0, x1, x2)
+
+    assert symbols('x1:1') == ()
+    assert symbols('x1:2') == (x1,)
+    assert symbols('x1:3') == (x1, x2)
+
+    assert symbols('x1:3,x,y,z') == (x1, x2, x, y, z)
+
+    assert symbols('x:3,y:2') == (x0, x1, x2, y0, y1)
+    assert symbols(('x:3', 'y:2')) == ((x0, x1, x2), (y0, y1))
 
 def test_call():
     f = Symbol('f')
