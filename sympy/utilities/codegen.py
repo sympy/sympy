@@ -242,8 +242,8 @@ class Argument(object):
            datatype  --  When not given, the data type will be guessed based
                          on the assumptions on the symbol argument.
            dimension  --  If present, the argument is interpreted as an array.
-                          Dimensions must be a sequence containing tuples
-                          of first and last index in the range.
+                          Dimensions must be a sequence containing tuples, i.e.
+                          (lower, upper) bounds for each index of the array
            precision  --  FIXME
         """
 
