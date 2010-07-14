@@ -3,6 +3,7 @@ from singleton import SingletonMeta
 from sympify import sympify, _sympify, SympifyError
 from expr import Expr
 from cache import cacheit
+from function import FunctionClass
 from sympy.logic.boolalg import Boolean
 
 import re
@@ -347,6 +348,8 @@ def var(names, **args):
         for symbol in symbols:
             if isinstance(symbol, Basic):
                 frame.f_globals[symbol.name] = symbol
+            elif isinstance(symbol, FunctionClass):
+                frame.f_globals[symbol.__name__] = symbol
             else:
                 traverse(symbol, frame)
 
@@ -359,6 +362,8 @@ def var(names, **args):
         if syms is not None:
             if isinstance(syms, Basic):
                 frame.f_globals[syms.name] = syms
+            elif isinstance(syms, FunctionClass):
+                frame.f_globals[syms.__name__] = syms
             else:
                 traverse(syms, frame)
     finally:
