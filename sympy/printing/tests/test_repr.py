@@ -46,12 +46,12 @@ def test_Function():
     sT(Function('f'), "Function('f')")
 
 def test_Geometry():
-    sT(Point(0,0),  "Point(Zero, Zero)")
-    sT(Ellipse(Point(0, 0), 5, 1),  "Ellipse(Point(Zero, Zero), Integer(5), One)")
+    sT(Point(0,0),  "Point(Integer(0), Integer(0))")
+    sT(Ellipse(Point(0, 0), 5, 1),  "Ellipse(Point(Integer(0), Integer(0)), Integer(5), Integer(1))")
     # TODO more tests
 
 def test_Infinity():
-    sT(oo, "Infinity")
+    sT(oo, "S.Infinity")
 
 def test_Integer():
     sT(Integer(4), "Integer(4)")
@@ -60,19 +60,19 @@ def test_list():
     sT([x, Integer(4)], "[Symbol('x'), Integer(4)]")
 
 def test_Matrix():
-    sT(Matrix([[x**+1, 1], [y, x+y]]), "Matrix([[Symbol('x'), One], [Symbol('y'), Add(Symbol('x'), Symbol('y'))]])")
+    sT(Matrix([[x**+1, 1], [y, x+y]]), "Matrix([[Symbol('x'), Integer(1)], [Symbol('y'), Add(Symbol('x'), Symbol('y'))]])")
 
 def test_NaN():
-    sT(nan, "nan")
+    sT(nan, "S.NaN")
 
 def test_NegativeInfinity():
-    sT(-oo, "NegativeInfinity")
+    sT(-oo, "S.NegativeInfinity")
 
 def test_NegativeOne():
-    sT(-Integer(1), "NegativeOne")
+    sT(-Integer(1), "Integer(-1)")
 
 def test_One():
-    sT(S.One, "One")
+    sT(S.One, "Integer(1)")
 
 def test_Rational():
     sT(Rational(1,3), "Rational(1, 3)")
@@ -96,7 +96,7 @@ def test_WildFunction():
     sT(WildFunction('w'), "WildFunction('w')")
 
 def test_Zero():
-    sT(S.Zero, "Zero")
+    sT(S.Zero, "Integer(0)")
 
 def test_settins():
     raises(TypeError, 'srepr(x, method="garbage")')
