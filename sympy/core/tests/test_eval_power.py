@@ -127,3 +127,12 @@ def test_power_with_noncommutative_mul_as_base():
     assert not (x*y)**3 == x**3*y**3
     assert (2*x*y)**3 == 8*(x*y)**3
 
+def test_zero():
+    x = Symbol('x')
+    y = Symbol('y')
+    assert 0**x != 0
+    assert 0**(2*x) == 0**x
+    assert (0**(2 - x)).as_base_exp() == (0, 2 - x)
+    assert 0**(x - 2) == S.Infinity**(2 - x)
+    assert 0**(2*x*y) == 0**(x*y)
+    assert 0**(-2*x*y) == S.Infinity**(x*y)
