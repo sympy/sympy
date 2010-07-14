@@ -106,3 +106,24 @@ def test_ccode_Indexed():
     assert p._print_IndexedElement(B) == 'B[%s]'% str(k + i*n*o + j*o)
 
     assert p._not_c == set([Indexed('x'), Indexed('A'), Indexed('B')])
+
+
+@XFAIL
+def test_ccode_loops():
+    from sympy.tensor import Indexed, Idx
+    from sympy import symbols
+    i,j,n,m = symbols('i j n m', integer=True)
+    A,x,y = symbols('A x y')
+    A = Indexed(A)(Idx(i, m), Idx(j, n))
+    x = Indexed(x)(Idx(j, n))
+    y = Indexed(y)(Idx(i, m))
+
+    s = (
+            '   for (int i=0, i<m; i++){\n'
+            '      for (int j=0, j<n; j++){\n'
+            '         y[i] = A[i*n + j]*x[j] + y[i];\n'
+            '      }\n'
+            '   }\n'
+            )
+    c = ccode(A*x, assign_to=y)
+    assert c== s

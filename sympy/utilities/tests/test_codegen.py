@@ -2,6 +2,7 @@ from sympy import symbols, raises, Eq
 from sympy.utilities.codegen import CCodeGen, Routine, InputArgument, Result, \
     codegen, CodeGenError, FCodeGen
 from StringIO import StringIO
+from sympy.utilities.pytest import XFAIL
 
 def get_string(dump_fn, routines, prefix="file", header=False, empty=False):
     """Wrapper for dump_fn. dump_fn writes its results to a stream object and
@@ -244,6 +245,44 @@ def test_complicated_codegen():
         'double test2(double x, double y, double z);\n'
         '#endif\n'
     )
+
+@XFAIL
+def test_loops_c():
+    from sympy.tensor import Indexed, Idx
+    from sympy import symbols
+    i,j,n,m = symbols('i j n m', integer=True)
+    A,x,y = symbols('A x y')
+    A = Indexed(A)(Idx(i, m), Idx(j, n))
+    x = Indexed(x)(Idx(j, n))
+    y = Indexed(y)(Idx(i, m))
+
+    (f1, code), (f2, interface) = codegen(
+            ('matrix_vector', Eq(y, A*x)), "C", "file", header=False, empty=False)
+
+    assert f1 == 'file.c'
+    expected = (
+            '#include "file.h"\n'
+            '#include <math.h>\n'
+            'void matrix_vector(double *A, int m, int n, double *x, double *y){\n'
+            '   for (int i=0, i<m; i++){\n'
+            '      y[i] = 0\n'
+            '   }\n'
+            '   for (int i=0, i<m; i++){\n'
+            '      for (int j=0, j<n; j++){\n'
+            '         y[i] = A[i*j + j]*x[j] + y[i];\n'
+            '      }\n'
+            '   }\n'
+            '}\n'
+            )
+
+    assert expected == code
+    assert f2 == 'file.h'
+    assert interface == (
+        '#ifndef PROJECT__FILE__H\n'
+        '#define PROJECT__FILE__H\n'
+        'void matrix_vector(double *A, int m, int n, double *x, double *y);\n'
+        '#endif\n'
+            )
 
 def test_empty_f_code():
     code_gen = FCodeGen()
