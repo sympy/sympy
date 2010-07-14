@@ -272,7 +272,7 @@ def _init_poly_from_dict(dict_rep, *gens, **args):
 
     if modulus is not None:
         if len(gens) != 1:
-            raise PolynomialError("multivariate polynomials over GF(p) are not supported")
+            raise NotImplementedError("multivariate polynomials over finite fields are not supported")
         else:
             return GFP(dict_rep, modulus, domain, symmetric)
     else:
@@ -349,7 +349,7 @@ def _init_poly_from_poly(poly_rep, *gens, **args):
             else:
                 return poly_rep
         else:
-            raise PolynomialError("multivariate polynomials over GF(p) are not supported")
+            raise NotImplementedError("multivariate polynomials over finite fields are not supported")
 
     return (rep, gens or poly_rep.gens)
 
@@ -377,7 +377,7 @@ def _init_poly_from_basic(basic_rep, *gens, **args):
 
     if modulus is not None:
         if len(gens) > 1:
-            raise PolynomialError("multivariate polynomials over GF(p) are not supported")
+            raise NotImplementedError("multivariate polynomials over finite fields are not supported")
         else:
             result = GFP(_dict_set_domain(dict_rep, domain), modulus, domain, symmetric)
     else:
