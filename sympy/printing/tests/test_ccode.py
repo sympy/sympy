@@ -69,6 +69,19 @@ pow(x, 2)
 """
     assert p == s
 
+def test_ccode_Piecewise_deep():
+    p = ccode(2*Piecewise((x,x<1),(x**2,True)))
+    s = \
+"""\
+if (x < 1) {
+2*x
+}
+else {
+2*pow(x, 2)
+}\
+"""
+    assert p == s
+
 def test_ccode_settings():
     raises(TypeError, 'ccode(sin(x),method="garbage")')
 

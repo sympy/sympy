@@ -12,6 +12,9 @@ source code files that are compilable without further modifications.
 from str import StrPrinter
 from sympy.printing.precedence import precedence
 from sympy.core.basic import S
+from sympy.core.numbers import NumberSymbol
+from sympy.functions import Piecewise, piecewise_fold
+from sympy.tensor import Idx
 
 
 # dictionary mapping sympy function to (argument_conditions, C_function).
@@ -42,6 +45,95 @@ class CCodePrinter(StrPrinter):
             if not isinstance(v, tuple):
                 userfuncs[k] = (lambda *x: True, v)
         self.known_functions.update(userfuncs)
+
+    def doprint(self, expr, assign_to=None):
+
+        # keep a set of expressions that are not strictly translatable to C
+        # and number constants that must be declared and initialized
+        not_c = self._not_c = set()
+        self._number_symbols = set()
+
+        # We treat Piecewise here to ensure it is top-level and outside loops
+        expr = piecewise_fold(expr)
+        lines = []
+        if isinstance(expr, Piecewise):
+            for i, (e, c) in enumerate(expr.args):
+                if i == 0:
+                    lines.append("if (%s) {" % self._print(c))
+                elif i == len(expr.args)-1 and c == True:
+                    lines.append("else {")
+                else:
+                    lines.append("else if (%s) {" % self._print(c))
+                code0 = self._doprint_a_piece(e, assign_to)
+                lines.extend(code0)
+                lines.append("}")
+        else:
+            code0 = self._doprint_a_piece(expr, assign_to)
+            lines.extend(code0)
+
+        # format the output
+        if self._settings["human"]:
+            frontlines = []
+            if len(not_c) > 0:
+                frontlines.append("// Not C:")
+                for expr in sorted(not_c, key=str):
+                    frontlines.append("// %s" % expr)
+            for name, value in sorted(self._number_symbols, key=str):
+                frontlines.append("double const %s = %s" % (name, value))
+            lines = frontlines + lines
+            # lines = self.indent_code(lines)
+            result = "\n".join(lines)
+        else:
+            # lines = self.indent_code(lines)
+            result = self._number_symbols, not_c, "\n".join(lines)
+        del self._not_c
+        del self._number_symbols
+        return result
+
+    def _doprint_a_piece(self, expr, assign_to=None):
+
+        # Setup loops if expression contain Indexed objects
+        openloop, closeloop, local_ints = self._get_loop_opening_ending_ints(expr)
+
+        # the lhs may contain loops that are not in the rhs
+        lhs = assign_to
+        if lhs:
+            open_lhs, close_lhs, lhs_ints = self._get_loop_opening_ending_ints(lhs)
+            for n,ind in enumerate(lhs_ints):
+                if ind not in local_ints:
+                    openloop.insert(0, open_lhs[n])
+                    closeloop.append(close_lhs[n])
+            lhs_printed = self._print(lhs)
+
+        lines = openloop
+        line = StrPrinter.doprint(self, expr)
+        if assign_to is None:
+            text = "%s" % line
+        else:
+            text = "%s = %s" % (lhs_printed, line)
+        lines.append(text)
+        lines.extend(closeloop)
+        return lines
+
+    def _get_loop_opening_ending_ints(self, expr):
+        """Returns a tuple (open_lines, close_lines) containing lists of codelines
+        """
+        indices = expr.atoms(Idx)
+        # FIXME: sort indices in an optimized way
+        open_lines = []
+        close_lines = []
+        local_ints = []
+
+        loopstart = "for (int %(var)s = %(start)s; %(var)s < %(end)s; %(var)s++){"
+        for i in indices:
+            # C arrays start at 0 and end at dimension-1
+            open_lines.append(loopstart % {
+                'var': i.label,
+                'start': i.lower,
+                'end': i.upper})
+            close_lines.append("}")
+            local_ints.append(i)
+        return open_lines, close_lines, local_ints
 
     def _print_Pow(self, expr):
         PREC = precedence(expr)
@@ -80,19 +172,6 @@ class CCodePrinter(StrPrinter):
     def _print_NegativeInfinity(self, expr):
         return '-HUGE_VAL'
 
-    def _print_Piecewise(self, expr):
-        ecpairs = ["(%s) {\n%s\n}\n" % (self._print(c), self._print(e)) \
-                       for e, c in expr.args[:-1]]
-        last_line = ""
-        if expr.args[-1].cond == True:
-            last_line = "else {\n%s\n}" % self._print(expr.args[-1].expr)
-        else:
-            ecpairs.append("(%s) {\n%s\n" % \
-                           (self._print(expr.args[-1].cond),
-                            self._print(expr.args[-1].expr)))
-        code = "if %s" + last_line
-        return code % "else if ".join(ecpairs)
-
     def _print_And(self, expr):
         PREC = precedence(expr)
         return '&&'.join(self.parenthesize(a, PREC) for a in expr.args)
@@ -114,7 +193,7 @@ class CCodePrinter(StrPrinter):
         return StrPrinter._print_Function(self, expr)
 
 
-def ccode(expr, **settings):
+def ccode(expr, assign_to=None, **settings):
     r"""Converts an expr to a string of c code
 
         Arguments:
@@ -141,7 +220,7 @@ def ccode(expr, **settings):
 
 
     """
-    return CCodePrinter(settings).doprint(expr)
+    return CCodePrinter(settings).doprint(expr, assign_to)
 
 def print_ccode(expr, **settings):
     """Prints C representation of the given expression."""
