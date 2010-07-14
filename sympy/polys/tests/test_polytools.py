@@ -117,7 +117,7 @@ def test__construct_domain():
         (ZZ.frac_field(x,y), {(0,): DMF(([[2]], [[1],[]]), ZZ), (1,): DMF(([[3,0]], [[1]]), ZZ)})
 
 def test__init_poly_from_dict():
-    raises(PolynomialError, "_init_poly_from_dict({0: 1, 1: 2}, x, y, modulus=3, domain=ZZ)")
+    raises(NotImplementedError, "_init_poly_from_dict({0: 1, 1: 2}, x, y, modulus=3, domain=ZZ)")
 
     assert _init_poly_from_dict({0: 1, 1: 2}, x, modulus=3, domain=ZZ) == GFP([2,1], 3, ZZ)
     assert _init_poly_from_dict({0: 1, 1: 5}, x, modulus=3, domain=ZZ) == GFP([2,1], 3, ZZ)
@@ -174,7 +174,7 @@ def test__init_poly_from_poly():
     assert _init_poly_from_poly(f, x, y) == Poly(x + 7, x, y, domain='ZZ')
     assert _init_poly_from_poly(f, x, y, domain=ZZ) == Poly(x + 7, x, y, domain='ZZ')
     assert _init_poly_from_poly(f, x, y, domain=QQ) == Poly(x + 7, x, y, domain='QQ')
-    raises(PolynomialError, "_init_poly_from_poly(f, x, y, modulus=3)")
+    raises(NotImplementedError, "_init_poly_from_poly(f, x, y, modulus=3)")
 
     assert _init_poly_from_poly(g) == g
     assert _init_poly_from_poly(g, domain=ZZ) == (GFP([1,2], 3, ZZ), (x,))
@@ -186,15 +186,15 @@ def test__init_poly_from_poly():
     raises(DomainError, "_init_poly_from_poly(g, x, domain=QQ)")
     assert _init_poly_from_poly(g, x, modulus=2) == (GFP([1,0], 2, ZZ), (x,))
 
-    raises(PolynomialError, "_init_poly_from_poly(g, y)")
-    raises(PolynomialError, "_init_poly_from_poly(g, y, domain=ZZ)")
-    raises(PolynomialError, "_init_poly_from_poly(g, y, domain=QQ)")
-    raises(PolynomialError, "_init_poly_from_poly(g, y, modulus=3)")
+    raises(NotImplementedError, "_init_poly_from_poly(g, y)")
+    raises(NotImplementedError, "_init_poly_from_poly(g, y, domain=ZZ)")
+    raises(NotImplementedError, "_init_poly_from_poly(g, y, domain=QQ)")
+    raises(NotImplementedError, "_init_poly_from_poly(g, y, modulus=3)")
 
-    raises(PolynomialError, "_init_poly_from_poly(g, x, y)")
-    raises(PolynomialError, "_init_poly_from_poly(g, x, y, domain=ZZ)")
-    raises(PolynomialError, "_init_poly_from_poly(g, x, y, domain=QQ)")
-    raises(PolynomialError, "_init_poly_from_poly(g, x, y, modulus=3)")
+    raises(NotImplementedError, "_init_poly_from_poly(g, x, y)")
+    raises(NotImplementedError, "_init_poly_from_poly(g, x, y, domain=ZZ)")
+    raises(NotImplementedError, "_init_poly_from_poly(g, x, y, domain=QQ)")
+    raises(NotImplementedError, "_init_poly_from_poly(g, x, y, modulus=3)")
 
     assert _init_poly_from_poly(h) == h
     assert _init_poly_from_poly(h, domain=ZZ) == (DMP([[ZZ(1)],[ZZ(1),ZZ(0)]], ZZ), (x,y))
@@ -238,8 +238,8 @@ def test__init_poly_from_basic():
     assert _init_poly_from_basic(x + 5, x, modulus=3, domain=ZZ) == (GFP([1,2], 3, ZZ), (x,))
     assert _init_poly_from_basic(y + 5, y, modulus=3, domain=ZZ) == (GFP([1,2], 3, ZZ), (y,))
 
-    raises(PolynomialError, "_init_poly_from_basic(x + y, modulus=3, domain=ZZ)")
-    raises(PolynomialError, "_init_poly_from_basic(x + y, x, y, modulus=3, domain=ZZ)")
+    raises(NotImplementedError, "_init_poly_from_basic(x + y, modulus=3, domain=ZZ)")
+    raises(NotImplementedError, "_init_poly_from_basic(x + y, x, y, modulus=3, domain=ZZ)")
 
     assert _init_poly_from_basic(x + 5) == (DMP([1,5], ZZ), (x,))
     assert _init_poly_from_basic(y + 5) == (DMP([1,5], ZZ), (y,))
