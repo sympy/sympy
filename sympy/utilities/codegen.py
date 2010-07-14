@@ -506,6 +506,9 @@ class CCodeGen(CodeGen):
         # arguments are declared in prototype
         return []
 
+    def _init_resultvars(self, routine):
+        return []  #FIXME
+
     def _declare_locals(self, routine):
         code_list = []
         for var in sorted(routine.local_vars, key=str):
@@ -516,9 +519,19 @@ class CCodeGen(CodeGen):
     def _call_printer(self, routine):
         for result in routine.result_variables:
             if isinstance(result, Result):
-                return ["   return %s;\n" % ccode(result.expr)]
+                assign_to = None
             elif isinstance(result, (OutputArgument, InOutArgument)):
-                raise NotImplementedError
+                assign_to = result.result_var
+
+            constants, not_c, c_expr = ccode(result.expr, assign_to=assign_to, human=False)
+            code_lines = sorted(constants, key = str)
+            if result.needs_initialization:
+                code_lines.extend(self._init_resultvars(routine))
+            if assign_to:
+                code_lines.append("%s\n" % c_expr)
+            else:
+                code_lines.append("   return %s;\n" % ccode(result.expr))
+        return code_lines
 
     def _get_routine_ending(self, routine):
         return ["}\n"]
