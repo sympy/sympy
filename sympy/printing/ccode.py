@@ -57,6 +57,17 @@ class CCodePrinter(StrPrinter):
         p, q = int(expr.p), int(expr.q)
         return '%d.0/%d.0' % (p, q)
 
+    def _print_IndexedElement(self, expr):
+        # calculate index for 1d array
+        dims = expr.dimensions
+        inds = [ i.label for i in expr.indices ]
+        elem = S.Zero
+        offset = S.One
+        for i in reversed(range(expr.rank)):
+            elem += offset*inds[i]
+            offset *= dims[i]
+        return "%s[%s]" % (self._print(expr.stem), self._print(elem))
+
     def _print_Exp1(self, expr):
         return "M_E"
 

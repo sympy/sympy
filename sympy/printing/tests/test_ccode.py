@@ -1,7 +1,7 @@
 from sympy import sin, cos, abs, exp, pi, oo, symbols, ceiling, raises, sqrt
 from sympy import Function, Piecewise, Rational, Integer
 
-from sympy.printing import ccode
+from sympy.printing.ccode import ccode, CCodePrinter
 from sympy.utilities.pytest import XFAIL
 
 x, y, z = symbols('xyz')
@@ -72,3 +72,19 @@ pow(x, 2)
 def test_ccode_settings():
     raises(TypeError, 'ccode(sin(x),method="garbage")')
 
+def test_ccode_Indexed():
+    from sympy.tensor import Indexed, Idx
+    from sympy import symbols
+    i,j,k,n,m,o = symbols('i j k n m o', integer=True)
+
+    p = CCodePrinter()
+    p._not_c = set()
+
+    x = Indexed('x')(Idx(j, n))
+    assert p._print_IndexedElement(x) == 'x[j]'
+    A = Indexed('A')(Idx(i, m), Idx(j, n))
+    assert p._print_IndexedElement(A) == 'A[%s]'% str(j + n*i)
+    B = Indexed('B')(Idx(i, m), Idx(j, n), Idx(k, o))
+    assert p._print_IndexedElement(B) == 'B[%s]'% str(k + i*n*o + j*o)
+
+    assert p._not_c == set([Indexed('x'), Indexed('A'), Indexed('B')])
