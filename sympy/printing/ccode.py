@@ -117,7 +117,7 @@ class CCodePrinter(StrPrinter):
         if assign_to is None:
             text = "%s" % line
         else:
-            text = "%s = %s" % (lhs_printed, line)
+            text = "%s = %s;" % (lhs_printed, line)
         lines.append(text)
         lines.extend(closeloop)
         return lines
