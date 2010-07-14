@@ -381,8 +381,7 @@ class FCodePrinter(StrPrinter):
         return result
 
     def indent_code(self, code):
-        """Accepts a string of code or a list of code lines
-        """
+        """Accepts a string of code or a list of code lines"""
         if self._settings['source_format'] == 'fixed':
             return code
         if isinstance(code, basestring):
