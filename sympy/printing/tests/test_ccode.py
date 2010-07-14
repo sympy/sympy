@@ -61,10 +61,10 @@ def test_ccode_Piecewise():
     s = \
 """\
 if (x < 1) {
-x
+   x
 }
 else {
-pow(x, 2)
+   pow(x, 2)
 }\
 """
     assert p == s
@@ -74,10 +74,10 @@ def test_ccode_Piecewise_deep():
     s = \
 """\
 if (x < 1) {
-2*x
+   2*x
 }
 else {
-2*pow(x, 2)
+   2*pow(x, 2)
 }\
 """
     assert p == s

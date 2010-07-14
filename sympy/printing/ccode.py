@@ -81,10 +81,10 @@ class CCodePrinter(StrPrinter):
             for name, value in sorted(self._number_symbols, key=str):
                 frontlines.append("double const %s = %s" % (name, value))
             lines = frontlines + lines
-            # lines = self.indent_code(lines)
+            lines = self.indent_code(lines)
             result = "\n".join(lines)
         else:
-            # lines = self.indent_code(lines)
+            lines = self.indent_code(lines)
             result = self._number_symbols, not_c, "\n".join(lines)
         del self._not_c
         del self._number_symbols
@@ -191,6 +191,29 @@ class CCodePrinter(StrPrinter):
                 if cond(*expr.args):
                     return "%s(%s)" % (cfunc, self.stringify(expr.args, ", "))
         return StrPrinter._print_Function(self, expr)
+
+
+    def indent_code(self, code):
+        """Accepts a string of code or a list of code lines"""
+
+        if isinstance(code, basestring):
+           code_lines = self.indent_code(code.splitlines())
+           return '\n'.join(code_lines)
+
+        tab = "   "
+        inc_token = ('{', '(')
+        dec_token = ('}', ')')
+
+        code = [ line.strip() for line in code ]
+        increase = [ line.endswith(inc_token) for line in code ]
+        decrease = [ line.startswith(dec_token) for line in code ]
+        pretty = []
+        level = 0
+        for n, line in enumerate(code):
+            level -= decrease[n]
+            pretty.append("%s%s" % (tab*level, line))
+            level += increase[n]
+        return pretty
 
 
 def ccode(expr, assign_to=None, **settings):
