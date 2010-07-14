@@ -31,7 +31,7 @@ def test_var():
     assert fg == Symbol('fg')
 
     # check return value
-    assert v  == (d, e, fg)
+    assert v  == [d, e, fg]
 
     # see if var() really injects into global namespace
     raises(NameError, "z1")
@@ -62,3 +62,4 @@ def test_var_accepts_comma():
 def test_var_keywords():
     var('x y', real=True)
     assert x.is_real and y.is_real
+
