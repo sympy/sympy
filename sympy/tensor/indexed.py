@@ -39,6 +39,8 @@
     >>> M(ii, jj)
     M(i, j)
     >>> M(ii, jj).dimensions
+    [m, n]
+    >>> M(ii, jj).ranges
     [(0, -1 + m), (0, -1 + n)]
 
     To express a matrix-vector product in terms of Indexed objects:
@@ -172,7 +174,17 @@ class IndexedElement(Expr):
 
     @property
     def dimensions(self):
-        return [(i.lower, i.upper) for i in self.indices]
+        """returns a list with dimensions of each index"""
+        try:
+            return [ i.upper - i.lower + 1 for i in self.indices ]
+        except TypeError:
+            # Let's return a more meaningful error
+            raise IndexException("Dimensions are not defined")
+
+    @property
+    def ranges(self):
+        """returns a list of tuples with lower and upper range of each index"""
+        return [ (i.lower, i.upper) for i in self.indices ]
 
     def _sympystr(self, p):
         indices = map(p.doprint, self.indices)

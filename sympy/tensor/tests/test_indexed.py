@@ -110,7 +110,9 @@ def test_IndexedElement_properties():
     assert A.rank == 2
     assert A.indices == tuple(map(Idx, (i, j)))
     assert A.stem == Indexed(a)
-    assert A.dimensions == [(None, None), (None, None)]
+    assert A.ranges == [(None, None), (None, None)]
+    raises(IndexException, 'A.dimensions')
 
     n, m = symbols('n m', integer=True)
-    assert IndexedElement(a, Idx(i, m), Idx(j, n)).dimensions == [(0, m - 1), (0, n - 1)]
+    assert IndexedElement(a, Idx(i, m), Idx(j, n)).ranges == [(0, m - 1), (0, n - 1)]
+    assert IndexedElement(a, Idx(i, m), Idx(j, n)).dimensions == [m, n]

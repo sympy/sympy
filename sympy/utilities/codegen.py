@@ -155,7 +155,7 @@ class Routine(object):
                 out_arg = expr.lhs
                 expr = expr.rhs
                 if isinstance(out_arg, IndexedElement):
-                    dims = out_arg.dimensions
+                    dims = out_arg.ranges
                     symbol = out_arg.stem.label
                 elif isinstance(out_arg, Symbol):
                     dims = []
