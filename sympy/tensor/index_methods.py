@@ -12,7 +12,7 @@ from sympy.tensor.indexed import Idx, Indexed, IndexedElement
 class IndexConformanceException(Exception):
     pass
 
-def _remove_repeated(c_inds, nc_inds):
+def _remove_repeated(c_inds, nc_inds, return_dummies=False):
     """Removes summation indices from index sequences."""
 
     sum_index = {}
@@ -26,7 +26,10 @@ def _remove_repeated(c_inds, nc_inds):
     c_inds = filter(lambda x: not sum_index[x], c_inds)
     nc_inds = filter(lambda x: not sum_index[x], nc_inds)
 
-    return c_inds, nc_inds
+    if return_dummies:
+        return c_inds, nc_inds, [ i for i in sum_index if sum_index[i] ]
+    else:
+        return c_inds, nc_inds
 
 def _get_indices_Mul(expr):
     """Determine the outer indices of a Mul object.
