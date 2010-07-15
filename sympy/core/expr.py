@@ -1207,10 +1207,10 @@ class Expr(Basic, EvalfMixin):
         from sympy.simplify import collect
         return collect(self, syms, evaluate, exact)
 
-    def apart(self, z=None, **args):
+    def apart(self, x=None, **args):
         """See the apart function in sympy.simplify"""
-        from sympy.simplify import apart
-        return apart(self, z=None, **args)
+        from sympy.polys import apart
+        return apart(self, x=None, **args)
 
     def ratsimp(self):
         """See the ratsimp function in sympy.simplify"""
