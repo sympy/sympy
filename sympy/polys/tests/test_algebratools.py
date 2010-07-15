@@ -1,11 +1,18 @@
 """Tests for classes defining properties of ground domains, e.g. ZZ, QQ, ZZ[x] ... """
 
-from sympy.polys.algebratools import ZZ, QQ, RR, PolynomialRing, FractionField, EX
-from sympy.polys.polyerrors import (UnificationFailed, GeneratorsNeeded,
-    DomainError,)
 
 from sympy import S, sqrt, sin, oo
-from sympy.abc import x, y
+from sympy.abc import x, y, z
+
+from sympy.polys.algebratools import (
+    ZZ, QQ, RR, PolynomialRing, FractionField, EX
+)
+from sympy.polys.polyerrors import (
+    UnificationFailed,
+    GeneratorsNeeded,
+    GeneratorsError,
+    DomainError,
+)
 
 from sympy.utilities.pytest import raises
 
@@ -379,3 +386,7 @@ def test_PolynomialRing__init():
 def test_FractionField__init():
     raises(GeneratorsNeeded, "ZZ.frac_field()")
 
+def test_inject():
+    assert ZZ.inject(x, y, z) == ZZ[x, y, z]
+    assert ZZ[x].inject(y, z) == ZZ[x, y, z]
+    raises(GeneratorsError, "ZZ[x].inject(x)")

@@ -7,6 +7,7 @@ from sympy.polys.polyerrors import (
     IsomorphismFailed,
     UnificationFailed,
     GeneratorsNeeded,
+    GeneratorsError,
     CoercionFailed,
     NotInvertible,
     NotAlgebraic,
@@ -54,6 +55,8 @@ class Algebra(object):
 
     is_Numerical = False
     is_Algebraic = False
+
+    is_Simple    = False
     is_Composite = False
 
     has_CharacteristicZero = False
@@ -332,6 +335,10 @@ class Algebra(object):
         """Returns an algebraic field, i.e. `K(alpha, ...)`. """
         raise DomainError("can't create algebraic field over %s" % self)
 
+    def inject(self, *gens):
+        """Inject generators into this domain. """
+        raise NotImplementedError
+
     def is_zero(self, a):
         """Returns True if `a` is zero. """
         return not a
@@ -524,7 +531,21 @@ class Field(Ring):
         """Returns LCM of `a` and `b`. """
         return a*b
 
-class IntegerRing(Ring):
+class SimpleDomain(Algebra):
+    """Base class for simple domains, e.g. ZZ, QQ. """
+
+    is_Simple = True
+
+    def inject(self, *gens):
+        """Inject generators into this domain. """
+        return self.poly_ring(*gens)
+
+class CompositeDomain(Algebra):
+    """Base class for composite domains, e.g. ZZ[x]. """
+
+    is_Composite = True
+
+class IntegerRing(Ring, SimpleDomain):
     """General class for integer rings. """
 
     is_ZZ = True
@@ -550,7 +571,7 @@ class IntegerRing(Ring):
         """Returns b-base logarithm of `a`. """
         return self.dtype(math.log(a, b))
 
-class RationalField(Field):
+class RationalField(Field, SimpleDomain):
     """General class for rational fields. """
 
     is_QQ = True
@@ -589,12 +610,12 @@ class ZZ_gmpy(IntegerRing):
 class QQ_gmpy(RationalField):
     pass
 
-class PolynomialRing(Ring):
+class PolynomialRing(Ring, CompositeDomain):
     pass
-class FractionField(Field):
+class FractionField(Field, CompositeDomain):
     pass
 
-class ExpressionDomain(Field):
+class ExpressionDomain(Field, SimpleDomain):
     pass
 
 HAS_FRACTION = True
@@ -1116,7 +1137,7 @@ if HAS_GMPY:
             """Returns factorial of `a`. """
             return gmpy_rat(gmpy_factorial(int(a)))
 
-class RealAlgebra(Algebra):
+class RealAlgebra(SimpleDomain):
     """Abstract algebra for real numbers. """
 
     rep   = 'RR'
@@ -1647,12 +1668,11 @@ class AlgebraicField(Field):
         """Returns denominator of `a`. """
         return self.one
 
-class PolynomialRing(Ring):
+class PolynomialRing(Ring, CompositeDomain):
     """A class for representing multivariate polynomial rings. """
 
     dtype        = DMP
     is_Poly      = True
-    is_Composite = True
 
     has_assoc_Ring         = True
     has_assoc_Field        = True
@@ -1771,6 +1791,13 @@ class PolynomialRing(Ring):
         """Returns a fraction field, i.e. `K(X)`. """
         raise NotImplementedError('nested domains not allowed')
 
+    def inject(self, *gens):
+        """Inject generators into this domain. """
+        if not (set(self.gens) & set(gens)):
+            return self.__class__(self.dom, *(self.gens + gens))
+        else:
+            raise GeneratorsError("common generators in %s and %s" % (self.gens, gens))
+
     def is_positive(self, a):
         """Returns True if `LC(a)` is positive. """
         return self.dom.is_positive(a.LC())
@@ -1803,12 +1830,11 @@ class PolynomialRing(Ring):
         """Returns factorial of `a`. """
         return self.dtype(self.dom.factorial(a))
 
-class FractionField(Field):
+class FractionField(Field, CompositeDomain):
     """A class for representing rational function fields. """
 
     dtype        = DMF
     is_Frac      = True
-    is_Composite = True
 
     has_assoc_Ring         = True
     has_assoc_Field        = True
@@ -1967,7 +1993,7 @@ class FractionField(Field):
         """Returns factorial of `a`. """
         return self.dtype(self.dom.factorial(a))
 
-class ExpressionDomain(Field):
+class ExpressionDomain(Field, SimpleDomain):
     """A class for arbitrary expressions. """
 
     is_EX = True
