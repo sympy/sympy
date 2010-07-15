@@ -96,6 +96,13 @@ def get_indices(expr):
     >>> get_indices(x(i) + A(i, j)*y(j))
     ((i,), ())
 
+    The concept of `outer' indices applies recursively, starting on the deepest
+    level.  This implies that dummies inside parenthesis are assumed to be
+    summed first, and there following expression is handled gracefully:
+
+    >>> get_indices((x(i) + A(i, j)*y(j))*x(j))
+    ((i, j), ())
+
     Note that if the indexed objects commute, the indices will be sorted so
     that the symbol of the stem should have no influence on the identified
     outer indices.
