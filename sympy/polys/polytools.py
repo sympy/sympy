@@ -697,6 +697,19 @@ class Poly(Basic):
 
         return extension
 
+    def _eval_subs(f, old, new):
+        """Internal implementation of :func:`subs`. """
+        if old in f.gens:
+            if new.is_number:
+                return f.eval(old, new)
+            else:
+                try:
+                    return f.replace(old, new)
+                except PolynomialError:
+                    pass
+
+        return f.as_basic().subs(old, new)
+
     def replace(f, x, y=None):
         """Replace `x` with `y` in generators list. """
         if y is None:
