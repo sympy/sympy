@@ -1147,9 +1147,17 @@ class Poly(Basic):
         except AttributeError: # pragma: no cover
             raise OperationNotSupported(f, 'diff')
 
-    def eval(f, a, gen=0):
+    def eval(f, x, a=None):
         """Evaluates `f` at `a` in the given variable. """
-        j = f._gen_to_level(gen)
+        if a is None:
+            if isinstance(x, dict):
+                raise NotImplementedError('dict syntax')
+            else:
+                j, a = 0, x
+        else:
+            j = f._gen_to_level(x)
+
+        # XXX: use DomainError when not convertible
 
         try:
             result = f.rep.eval(a, j)
