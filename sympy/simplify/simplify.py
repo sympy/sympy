@@ -341,8 +341,6 @@ def together(expr, deep=False):
 
     return powsimp(_together(separate(expr)), deep=True, combine='exp')
 
-#apart -> partial fractions decomposition (will be here :)
-
 def collect(expr, syms, evaluate=True, exact=False):
     """
         Collect additive terms with respect to a list of symbols up

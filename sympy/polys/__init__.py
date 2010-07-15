@@ -77,6 +77,10 @@ from orthopolys import (
     laguerre_poly,
 )
 
+from partfrac import (
+    apart,
+)
+
 from polyoptions import Options
 import polycontext as ctx
 
