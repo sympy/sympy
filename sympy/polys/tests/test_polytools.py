@@ -1091,34 +1091,35 @@ def test_Poly_eval():
     assert Poly(1, x).eval(7) == 1
     assert Poly(x, x).eval(7) == 7
 
-    assert Poly(0, x).eval(7, gen=0) == 0
-    assert Poly(1, x).eval(7, gen=0) == 1
-    assert Poly(x, x).eval(7, gen=0) == 7
+    assert Poly(0, x).eval(0, 7) == 0
+    assert Poly(1, x).eval(0, 7) == 1
+    assert Poly(x, x).eval(0, 7) == 7
 
-    assert Poly(0, x).eval(7, gen=x) == 0
-    assert Poly(1, x).eval(7, gen=x) == 1
-    assert Poly(x, x).eval(7, gen=x) == 7
+    assert Poly(0, x).eval(x, 7) == 0
+    assert Poly(1, x).eval(x, 7) == 1
+    assert Poly(x, x).eval(x, 7) == 7
 
-    assert Poly(0, x).eval(7, gen='x') == 0
-    assert Poly(1, x).eval(7, gen='x') == 1
-    assert Poly(x, x).eval(7, gen='x') == 7
+    assert Poly(0, x).eval('x', 7) == 0
+    assert Poly(1, x).eval('x', 7) == 1
+    assert Poly(x, x).eval('x', 7) == 7
 
-    raises(PolynomialError, "Poly(1, x).eval(7, gen=1)")
-    raises(PolynomialError, "Poly(1, x).eval(7, gen=y)")
-    raises(PolynomialError, "Poly(1, x).eval(7, gen='y')")
+    raises(PolynomialError, "Poly(1, x).eval(1, 7)")
+    raises(PolynomialError, "Poly(1, x).eval(y, 7)")
+    raises(PolynomialError, "Poly(1, x).eval('y', 7)")
 
-    assert Poly(1, x, y).eval(7) == Poly(1, y)
+    assert Poly(123, x, y).eval(7) == Poly(123, y)
     assert Poly(2*y, x, y).eval(7) == Poly(2*y, y)
     assert Poly(x*y, x, y).eval(7) == Poly(7*y, y)
 
-    assert Poly(1, x, y).eval(7, gen=x) == Poly(1, y)
-    assert Poly(2*y, x, y).eval(7, gen=x) == Poly(2*y, y)
-    assert Poly(x*y, x, y).eval(7, gen=x) == Poly(7*y, y)
+    assert Poly(123, x, y).eval(x, 7) == Poly(123, y)
+    assert Poly(2*y, x, y).eval(x, 7) == Poly(2*y, y)
+    assert Poly(x*y, x, y).eval(x, 7) == Poly(7*y, y)
 
-    assert Poly(1, x, y).eval(7, gen=y) == Poly(1, x)
-    assert Poly(2*y, x, y).eval(7, gen=y) == Poly(14, x)
-    assert Poly(x*y, x, y).eval(7, gen=y) == Poly(7*x, x)
+    assert Poly(123, x, y).eval(y, 7) == Poly(123, x)
+    assert Poly(2*y, x, y).eval(y, 7) == Poly(14, x)
+    assert Poly(x*y, x, y).eval(y, 7) == Poly(7*x, x)
 
+    raises(NotImplementedError, "Poly(x*y).eval({x: 7})")
     raises(CoercionFailed, "Poly(x+1, domain='ZZ').eval(S(1)/2)")
 
 def test__polify_basic():
