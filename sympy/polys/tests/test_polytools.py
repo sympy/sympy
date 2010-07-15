@@ -1997,6 +1997,11 @@ def test_cancel():
 
     assert cancel((f, g), extension=True) == (1, x**2 - 2*x - 3, x - sqrt(2))
 
+    f = Poly(-2*x + 3, x)
+    g = Poly(-x**9 + x**8 + x**6 - x**5 + 2*x**2 - 3*x + 1, x)
+
+    assert cancel((f, g)) == (1, -f, -g)
+
 def test_reduced():
     raises(PolynomialError, "reduced(x, [x], x, modulus=3)")
 
