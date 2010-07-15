@@ -437,6 +437,10 @@ def numbered_symbols(prefix='x', cls=None, start=0, *args, **assumptions):
         yield cls(name, *args, **assumptions)
         start += 1
 
+def take(iter, n):
+    """Return ``n`` items from ``iter`` iterator. """
+    return [ iter.next() for i in xrange(n) ]
+
 def dict_merge(*dicts):
     """Merge dictionaries into a single dictionary. """
     merged = {}
