@@ -391,6 +391,10 @@ def capture(func):
     sys.stdout = stdout
     return file.getvalue()
 
+def take(iter, n):
+    """Return ``n`` items from ``iter`` iterator. """
+    return [ iter.next() for i in xrange(n) ]
+
 def dict_merge(*dicts):
     """Merge dictionaries into a single dictionary. """
     merged = {}
