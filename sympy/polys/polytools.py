@@ -1584,6 +1584,16 @@ class Poly(Basic):
         else:
             coeff = S.One
 
+        p_neg = dom.is_negative(P.LC())
+        q_neg = dom.is_negative(Q.LC())
+
+        if p_neg and q_neg:
+            P, Q = -P, -Q
+        elif p_neg:
+            coeff, P = -coeff, -P
+        elif q_neg:
+            coeff, Q = -coeff, -Q
+
         return coeff, per(P), per(Q)
 
     @property
