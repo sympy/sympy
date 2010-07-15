@@ -46,6 +46,11 @@ class State(Expr):
     lbracket = 'State('
     rbracket = ')'
 
+    lbrac_repr = 'State('
+    rbrac_repr = ')'
+
+    hilbert_space = None
+
     def __new__(cls, name):
         obj = Expr.__new__(cls, name, **{'commutative': False})
         return obj
@@ -64,6 +69,20 @@ class State(Expr):
         else:
             return Mul(self, other)
 
+    def __rmul__(self, other):
+        if isinstance(self, Ket) and isinstance(other, Ket):
+#            return TensorProductsomethingsomething
+            raise NotImplementedError
+        elif isinstance(self, Bra) and isinstance(other, Bra):
+#            return TensorProductsomethingsomething
+            raise NotImplementedError
+        elif isinstance(self, Bra) and isinstance(other, Ket):
+            return OuterProduct(other, self)
+        elif isinstance(self, Ket) and isinstance(other, Bra):
+            return InnerProduct(other, self)
+        else:
+            return Mul(other, self)
+
     @property
     def name(self):
         return self.args[0]
@@ -75,16 +94,18 @@ class State(Expr):
     def doit(self,**kw_args):
         return self
 
-    def __repr__(self):
-        return self.__str__()
+    def _sympyrepr(self, printer, *args):
+        return '%s%s%s' % (self.lbrac_repr, self.name, self.rbrac_repr)
 
-    def __str__(self):
-        return "%s%s%s" % (self.lbracket, self.name, self.rbracket)
+    def _sympystr(self, printer, *args):
+        return '%s%s%s' % (self.lbracket, self.name, self.rbracket)
 
 class Ket(State):
 
     lbracket = '|'
     rbracket = '>'
+
+    lbrac_repr = 'Ket('
 
     def _eval_dagger(self):
         return Bra(*self.args)
@@ -93,6 +114,8 @@ class Bra(State):
 
     lbracket = '<'
     rbracket = '|'
+
+    lbrac_repr = 'Bra('
 
     def _eval_dagger(self):
         return Ket(*self.args)
@@ -129,10 +152,13 @@ class InnerProduct(Expr):
         r = self.__class__(self.bra.subs(old,new), self.ket.subs(old,new))
         return r
 
-    def __repr__(self):
-        return self.__str__()
+    def _eval_dagger(self):
+        return InnerProduct(Dagger(self.ket), Dagger(self.bra))
 
-    def __str__(self):
+    def _sympyrepr(self, printer, *args):
+        return 'InnerProduct(%s, %s)' % (printer._print(self.bra, *args), printer._print(self.ket, *args))
+
+    def _sympystr(self, printer, *args):
         sbra = str(self.bra)
         sket = str(self.ket)
         return "%s|%s" % (sbra[:-1], sket[1:])
@@ -148,11 +174,11 @@ class OuterProduct(Expr):
         r = cls.eval(bra, ket)
         if isinstance(r, Expr):
             return r
-        obj = Expr.__new__(cls, *(bra, ket), **{'commutative': True})
+        obj = Expr.__new__(cls, *(ket, bra), **{'commutative': True})
         return obj
 
     @classmethod
-    def eval(cls, bra, ket):
+    def eval(cls, ket, bra):
         # We need to decide what to do here. We probably will ask if the
         # bra and ket know how to do the outer product.
         return None
@@ -166,16 +192,17 @@ class OuterProduct(Expr):
         return self.args[0]
 
     def _eval_subs(self, old, new):
-        r = self.__class__(self.bra.subs(old,new), self.ket.subs(old,new))
+        r = self.__class__(self.ket.subs(old,new), self.bra.subs(old,new))
         return r
 
-    def __repr__(self):
-        return self.__str__()
+    def _eval_dagger(self):
+        return OuterProduct(Dagger(self.bra), Dagger(self.ket))
 
-    def __str__(self):
-        sbra = str(self.bra)
-        sket = str(self.ket)
-        return sbra+sket
+    def _sympyrepr(self, printer, *args):
+        return 'OuterProduct(%s, %s)' % (printer._print(self.ket, *args), printer._print(self.bra, *args))
+
+    def _sympystr(self, printer, *args):
+        return str(self.ket)+str(self.bra)
 
 class Operator(Expr):
     """
@@ -200,13 +227,13 @@ class Operator(Expr):
     def doit(self,**kw_args):
         return self
 
-    def _sympyrepr_(self, printer, *args):
+    def _sympyrepr(self, printer, *args):
         return "%s(%s)" % (self.__class__.__name__, printer._print(self.name, *args))
 
-    def _sympystr_(self, printer, *args):
+    def _sympystr(self, printer, *args):
         return printer._print(self.name, *args)
 
-    def _pretty_(self, printer, *args):
+    def _pretty(self, printer, *args):
         return printer._print(self.name, *args)
 
 class Dagger(Expr):
