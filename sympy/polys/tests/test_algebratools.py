@@ -7,12 +7,13 @@ from sympy.polys.algebratools import (
 from sympy.polys.polyerrors import (
     UnificationFailed,
     GeneratorsNeeded,
+    GeneratorsError,
     DomainError,
 )
 
 from sympy import S, sqrt, sin, oo, raises
 
-from sympy.abc import x, y
+from sympy.abc import x, y, z
 
 ALG = QQ.algebraic_field(sqrt(2)+sqrt(3))
 
@@ -383,4 +384,9 @@ def test_PolynomialRing__init():
 
 def test_FractionField__init():
     raises(GeneratorsNeeded, "ZZ.frac_field()")
+
+def test_inject():
+    assert ZZ.inject(x, y, z) == ZZ[x, y, z]
+    assert ZZ[x].inject(y, z) == ZZ[x, y, z]
+    raises(GeneratorsError, "ZZ[x].inject(x)")
 
