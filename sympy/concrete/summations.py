@@ -269,7 +269,7 @@ def eval_sum_symbolic(f, (i, a, b)):
     # Polynomial terms with Faulhaber's formula
     p = C.Wild('p')
     e = f.match(i**p)
-    if e != None:
+    if e is not None:
         c = p.subs(e)
         B = C.bernoulli
         if c.is_integer and c >= 0:

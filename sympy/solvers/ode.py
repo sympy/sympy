@@ -706,7 +706,7 @@ def classify_ode(eq, func, dict=False):
             # dy/dx == F(y/x) or dy/dx == F(x/y)
             ordera = homogeneous_order(r[d], x, y)
             orderb = homogeneous_order(r[e], x, y)
-            if ordera == orderb and ordera != None:
+            if ordera == orderb and ordera is not None:
                 # u1=y/x and u2=x/y
                 u1 = Symbol('u1', dummy=True)
                 u2 = Symbol('u2', dummy=True)

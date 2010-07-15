@@ -70,7 +70,7 @@ class Sum2(_BigOperator):
             f = Pow(i, 1, evaluate=False) # TODO: match should handle this
         p = Wild('p')
         e = f.match(i**p)
-        if e != None:
+        if e is not None:
             c = p.subs(e)
             B = C.bernoulli
             if c.is_integer and c >= 0:
@@ -155,7 +155,7 @@ class Product(_BigOperator):
         p = Wild('p')
         q = Wild('q')
         e = f.match(p+q*i)
-        if e != None:
+        if e is not None:
             pp = p.subs(e)
             qq = q.subs(e)
             if not pp.has(i) and not qq.has(i):

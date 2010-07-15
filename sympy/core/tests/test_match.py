@@ -165,7 +165,7 @@ def test_derivative1():
     assert fd.match(p) == {p: fd}
     assert (fd+1).match(p+1) == {p: fd}
     assert (fd).match(fd) == {}
-    assert (3*fd).match(p*fd) != None
+    assert (3*fd).match(p*fd) is not None
     p = Wild("p", exclude=[x])
     q = Wild("q", exclude=[x])
     assert (3*fd-1).match(p*fd + q) == {p: 3, q: -1}

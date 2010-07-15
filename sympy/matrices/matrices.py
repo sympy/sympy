@@ -753,12 +753,12 @@ class Matrix(object):
         """
         if isinstance(key, slice):
             lo, hi = 0, defmax
-            if key.start != None:
+            if key.start is not None:
                 if key.start >= 0:
                     lo = key.start
                 else:
                     lo = defmax+key.start
-            if key.stop != None:
+            if key.stop is not None:
                 if key.stop >= 0:
                     hi = key.stop
                 else:

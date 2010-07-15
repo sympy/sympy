@@ -206,7 +206,7 @@ class Piecewise(Function):
         if curr_low < b:
             holes.append([curr_low, b, default])
 
-        if holes and default != None:
+        if holes and default is not None:
             int_expr.extend(holes)
         elif holes and default == None:
             raise ValueError, "Called interval evaluation over piecewise " \

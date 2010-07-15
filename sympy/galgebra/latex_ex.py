@@ -870,8 +870,8 @@ class LatexPrinter(Printer):
         line_lst = []
         first_flg = True
         for grade in expr.mv:
-            if type(grade) != None:
-                if type(grade) != None:
+            if type(grade) is not None:
+                if type(grade) is not None:
                     ibase = 0
                     for base in grade:
                         if base != 0:
@@ -1142,16 +1142,16 @@ def xdvi(filename='tmplatex.tex',debug=False):
     latex_str = None
     xdvi_str  = None
 
-    if find_executable('latex') != None:
+    if find_executable('latex') is not None:
         latex_str = 'latex'
 
-    if find_executable('xdvi') != None:
+    if find_executable('xdvi') is not None:
         xdvi_str = 'xdvi'
 
-    if find_executable('yap') != None:
+    if find_executable('yap') is not None:
         xdvi_str = 'yap'
 
-    if latex_str != None and xdvi_str != None:
+    if latex_str is not None and xdvi_str is not None:
         if debug: #Display latex excution output for debugging purposes
             os.system(latex_str+' '+filename[:-4])
         else: #Works for Linux don't know about Windows

@@ -1771,20 +1771,20 @@ class MV(object):
                         self.mv[0] = numpy.array([sympy.Symbol(value)],dtype=numpy.object)
                 self.name = value+'bm'
         if fct:
-            if vars != None:
+            if vars is not None:
                 vars = tuple(vars)
             for grade in MV.n1rg:
                 if not isinstance(self.mv[grade],types.IntType):
                     if grade == 0:
                         coef = sympy.galgebra.latex_ex.LatexPrinter.str_basic(self.mv[0][0])
-                        if vars == None and MV.coords != None:
+                        if vars == None and MV.coords is not None:
                             self.mv[0]= numpy.array([sympy.Function(coef)(*MV.coords)],dtype=numpy.object)
                         else:
                             self.mv[0]= numpy.array([sympy.Function(coef)(*vars)],dtype=numpy.object)
                     else:
                         for base in range(MV.nbasis[grade]):
                             coef = sympy.galgebra.latex_ex.LatexPrinter.str_basic(self.mv[grade][base])
-                            if vars == None and MV.coords != None:
+                            if vars == None and MV.coords is not None:
                                 self.mv[grade][base] = sympy.Function(coef)(*MV.coords)
                             else:
                                 self.mv[grade][base] = sympy.Function(coef)(*vars)
