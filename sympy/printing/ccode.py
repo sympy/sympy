@@ -254,8 +254,11 @@ class CCodePrinter(StrPrinter):
         dec_token = ('}', ')')
 
         code = [ line.strip() for line in code ]
-        increase = [ line.endswith(inc_token) for line in code ]
-        decrease = [ line.startswith(dec_token) for line in code ]
+
+        from sympy.utilities.iterables import any  # 2.4 support
+        increase = [ int(any(map(line.endswith, inc_token))) for line in code ]
+        decrease = [ int(any(map(line.startswith, dec_token))) for line in code ]
+
         pretty = []
         level = 0
         for n, line in enumerate(code):
