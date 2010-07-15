@@ -151,3 +151,42 @@ def get_indices(expr):
         else:
             raise NotImplementedError(
                     "No specialized function for type %s"%type(expr))
+
+def get_contraction_structure(expr):
+    """Determine dummy indices of expression `expr' and describe structure of the expression
+
+    By `dummy' we mean indices that are summation indices.
+
+    The stucture of the expression is determined and returned as follows:
+
+    1) The terms of a conforming summation are returned as a dict where the keys
+    are summation indices and the values are terms for which the dummies are
+    relevant.
+
+    2) If there are nested Add objects, we recurse to determine summation
+    indices for the the deeper terms. The resulting dict is stored as the value
+    instead of the Add expression. The factors and the dict are stored in a
+    list representing the mul.
+
+    Examples
+    ========
+
+    >>> from sympy.tensor.index_methods import get_dummies
+    >>> from sympy import symbols
+    >>> from sympy.tensor import Indexed, Idx
+    >>> x, y, A = map(Indexed, ['x', 'y', 'A'])
+    >>> i, j, a, z = symbols('i j a z', integer=True)
+    >>> get_dummies(x(i)*y(i) + A(j, j))
+    {i: [x(i)*y(i)], j: [A(j, j)]}
+    >>> get_dummies(x(i)*y(j))
+    {None: [x(i)*y(j)]}
+    >>> get_dummies(x(i)*(y(j) + A(j, k)*x(k)) - A(i, j))
+    {None: [[x(i), {None: y(j), k: A(j, k)*x(k))}], A(i, j)]}
+
+    Note that the data structure reveals a potential factorization of the array
+    contraction.  The deepest sum can be calculated first and stored in a 1
+    dimensional array with index j.
+
+    """
+
+    raise NotImplementedError("FIXME please!")
