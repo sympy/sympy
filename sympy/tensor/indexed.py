@@ -148,6 +148,7 @@ class IndexedElement(Expr):
     a(i, j)
 
     """
+    is_commutative = True
 
     def __new__(cls, stem, *args, **kw_args):
         if not args: raise IndexException("IndexedElement needs at least one index")
