@@ -699,29 +699,38 @@ def test_Poly_is_irreducible():
     assert Poly(7*x + 3, modulus=11).is_irreducible == True
     assert Poly(7*x**2 + 3*x + 1, modulus=11).is_irreducible == False
 
+def test_Poly_subs():
+    assert Poly(x + 1).subs(x, 0) == 1
+
+    assert Poly(x + 1).subs(x, x) == Poly(x + 1)
+    assert Poly(x + 1).subs(x, y) == Poly(y + 1)
+
+    assert Poly(x*y, x).subs(y, x) == x**2
+    assert Poly(x*y, x).subs(x, y) == y**2
+
 def test_Poly_replace():
-    assert Poly(x+1).replace(x) == Poly(x+1)
-    assert Poly(x+1).replace(y) == Poly(y+1)
+    assert Poly(x + 1).replace(x) == Poly(x + 1)
+    assert Poly(x + 1).replace(y) == Poly(y + 1)
 
-    raises(PolynomialError, "Poly(x+y).replace(z)")
+    raises(PolynomialError, "Poly(x + y).replace(z)")
 
-    assert Poly(x+1).replace(x, x) == Poly(x+1)
-    assert Poly(x+1).replace(x, y) == Poly(y+1)
+    assert Poly(x + 1).replace(x, x) == Poly(x + 1)
+    assert Poly(x + 1).replace(x, y) == Poly(y + 1)
 
-    assert Poly(x+y).replace(x, x) == Poly(x+y)
-    assert Poly(x+y).replace(x, z) == Poly(z+y, z, y)
+    assert Poly(x + y).replace(x, x) == Poly(x + y)
+    assert Poly(x + y).replace(x, z) == Poly(z + y, z, y)
 
-    assert Poly(x+y).replace(y, y) == Poly(x+y)
-    assert Poly(x+y).replace(y, z) == Poly(x+z, x, z)
+    assert Poly(x + y).replace(y, y) == Poly(x + y)
+    assert Poly(x + y).replace(y, z) == Poly(x + z, x, z)
 
-    raises(PolynomialError, "Poly(x+y).replace(x, y)")
-    raises(PolynomialError, "Poly(x+y).replace(z, t)")
+    raises(PolynomialError, "Poly(x + y).replace(x, y)")
+    raises(PolynomialError, "Poly(x + y).replace(z, t)")
 
-    assert Poly(x+y, x).replace(x, z) == Poly(z+y, z)
-    assert Poly(x+y, y).replace(y, z) == Poly(x+z, z)
+    assert Poly(x + y, x).replace(x, z) == Poly(z + y, z)
+    assert Poly(x + y, y).replace(y, z) == Poly(x + z, z)
 
-    raises(PolynomialError, "Poly(x+y, x).replace(x, y)")
-    raises(PolynomialError, "Poly(x+y, y).replace(y, x)")
+    raises(PolynomialError, "Poly(x + y, x).replace(x, y)")
+    raises(PolynomialError, "Poly(x + y, y).replace(y, x)")
 
 def test_Poly_reorder():
     raises(PolynomialError, "Poly(x+y).reorder(x, z)")
