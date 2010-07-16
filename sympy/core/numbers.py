@@ -100,6 +100,19 @@ def igcdex(a, b):
 
     return (x*x_sign, y*y_sign, a)
 
+def ifactorial(m):
+    """Computes factorial of ``m``. """
+    if not m:
+        return 1
+
+    k = m
+
+    while m > 1:
+        m -= 1
+        k *= m
+
+    return k
+
 @Memoizer((int, long), return_value_converter = lambda d: d.copy())
 def factor_trial_division(n):
     """
@@ -1746,3 +1759,4 @@ Basic.singleton['Catalan'] = Catalan
 from function import FunctionClass
 from power import Pow, integer_nthroot
 from mul import Mul
+
