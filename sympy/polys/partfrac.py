@@ -6,7 +6,7 @@ from sympy.utilities import numbered_symbols, take, threaded
 
 from sympy.polys.polytools import _polify_basic
 
-@threaded()
+@threaded
 def apart(f, x=None, full=False):
     """Compute partial fraction decomposition of a rational function.
 

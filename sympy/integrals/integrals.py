@@ -6,7 +6,7 @@ from sympy.integrals.trigonometry import trigintegrate
 from sympy.integrals.deltafunctions import deltaintegrate
 from sympy.integrals.rationaltools import ratint
 from sympy.integrals.risch import heurisch
-from sympy.utilities import threaded, flatten, any, all
+from sympy.utilities import xthreaded, flatten, any, all
 from sympy.polys import Poly
 from sympy.solvers import solve
 from sympy.functions import Piecewise, sign
@@ -738,7 +738,7 @@ class Integral(Expr):
         return result*dx
 
 
-@threaded(use_add=False)
+@xthreaded
 def integrate(*args, **kwargs):
     """integrate(f, var, ...)
 
@@ -791,7 +791,7 @@ def integrate(*args, **kwargs):
         return integral
 
 
-@threaded(use_add=False)
+@xthreaded
 def line_integrate(field, curve, vars):
     """line_integrate(field, Curve, variables)
 
