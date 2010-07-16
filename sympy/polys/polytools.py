@@ -63,7 +63,7 @@ _re_dom_frac = re.compile("^(Z|ZZ|Q|QQ)\((.+)\)$")
 
 _re_dom_algebraic = re.compile("^(Q|QQ)\<(.+)\>$")
 
-from sympy.polys.algebratools import Algebra, ZZ, QQ, RR, EX
+from sympy.polys.algebratools import ZZ, QQ, RR, EX
 
 from sympy.polys.polyoptions import Options
 
@@ -570,10 +570,9 @@ class Poly(Basic):
     @classmethod
     def _parse_domain(cls, dom):
         """Make an algebra out of a string representation. """
-        if isinstance(dom, Algebra):
+        if not isinstance(dom, basestring):
             return dom
-
-        if isinstance(dom, basestring):
+        else:
             if dom in ['Z', 'ZZ']:
                 return ZZ
 

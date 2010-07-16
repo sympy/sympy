@@ -17,7 +17,7 @@ from sympy.abc import x, y, z
 
 ALG = QQ.algebraic_field(sqrt(2)+sqrt(3))
 
-def test_Algebra__unify():
+def test_Domain__unify():
     assert ZZ.unify(ZZ) == ZZ
     assert QQ.unify(QQ) == QQ
 
@@ -174,7 +174,7 @@ def test_Algebra__unify():
     raises(UnificationFailed, "ZZ.poly_ring('x','y').unify(ZZ, gens=('y', 'z'))")
     raises(UnificationFailed, "ZZ.unify(ZZ.poly_ring('x','y'), gens=('y', 'z'))")
 
-def test_Algebra__contains__():
+def test_Domain__contains__():
     assert (0 in EX) == True
     assert (0 in ZZ) == True
     assert (0 in QQ) == True
@@ -307,7 +307,7 @@ def test_Algebra__contains__():
     assert (x**2 + y**2 in QQ[x,y]) == True
     assert (x**2 + y**2 in RR[x,y]) == True
 
-def test_Algebra_get_ring():
+def test_Domain_get_ring():
     assert ZZ.has_assoc_Ring == True
     assert QQ.has_assoc_Ring == True
     assert ZZ[x].has_assoc_Ring == True
@@ -338,7 +338,7 @@ def test_Algebra_get_ring():
     raises(DomainError, "RR.get_ring()")
     raises(DomainError, "ALG.get_ring()")
 
-def test_Algebra_get_field():
+def test_Domain_get_field():
     assert EX.has_assoc_Field == True
     assert ZZ.has_assoc_Field == True
     assert QQ.has_assoc_Field == True
@@ -361,7 +361,7 @@ def test_Algebra_get_field():
 
     raises(DomainError, "RR.get_field()")
 
-def test_Algebra_get_exact():
+def test_Domain_get_exact():
     assert EX.get_exact() == EX
     assert ZZ.get_exact() == ZZ
     assert QQ.get_exact() == QQ
@@ -376,7 +376,7 @@ def test_Algebra_get_exact():
     assert ZZ.frac_field(x,y).get_exact() == ZZ.frac_field(x,y)
     assert QQ.frac_field(x,y).get_exact() == QQ.frac_field(x,y)
 
-def test_Algebra_convert():
+def test_Domain_convert():
     assert QQ.convert(10e-52) != QQ(0)
 
 def test_PolynomialRing__init():

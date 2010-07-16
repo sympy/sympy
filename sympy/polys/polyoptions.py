@@ -10,7 +10,7 @@ from sympy.polys.polyerrors import (
 
 from sympy.polys.monomialtools import monomial_key
 
-from sympy.polys.algebratools import Algebra, ZZ, QQ, RR, EX
+from sympy.polys.algebratools import ZZ, QQ, RR, EX
 
 from sympy.ntheory import isprime
 
@@ -309,9 +309,9 @@ class Domain(Option):
 
     @classmethod
     def preprocess(cls, domain):
-        if isinstance(domain, Algebra):
+        if not isinstance(domain, str):
             return domain
-        elif isinstance(domain, str):
+        else:
             if domain in ['Z', 'ZZ']:
                 return ZZ
 
@@ -354,7 +354,7 @@ class Domain(Option):
                 gens = map(sympify, r.groups()[1].split(','))
                 return QQ.algebraic_field(*gens)
 
-        raise OptionError('expected a valid domain specification, got %s' % domain)
+            raise OptionError('expected a valid domain specification, got %s' % domain)
 
     @classmethod
     def postprocess(cls, options):

@@ -29,7 +29,7 @@ def factorial(m):
 
     return k
 
-class Algebra(object):
+class Domain(object):
     """Represents an abstract domain. """
 
     dtype = None
@@ -291,11 +291,11 @@ class Algebra(object):
         return ExpressionDomain()
 
     def __eq__(self, other):
-        """Returns `True` if two algebras are equivalent. """
+        """Returns `True` if two domains are equivalent. """
         return self.dtype == other.dtype
 
     def __ne__(self, other):
-        """Returns `False` if two algebras are equivalent. """
+        """Returns `False` if two domains are equivalent. """
         return self.dtype != other.dtype
 
     def get_ring(self):
@@ -453,7 +453,7 @@ class Algebra(object):
     def imag(self, a):
         return self.zero
 
-class Ring(Algebra):
+class Ring(Domain):
     """Represents a ring domain. """
 
     has_Ring = True
@@ -531,7 +531,7 @@ class Field(Ring):
         """Returns LCM of `a` and `b`. """
         return a*b
 
-class SimpleDomain(Algebra):
+class SimpleDomain(Domain):
     """Base class for simple domains, e.g. ZZ, QQ. """
 
     is_Simple = True
@@ -540,7 +540,7 @@ class SimpleDomain(Algebra):
         """Inject generators into this domain. """
         return self.poly_ring(*gens)
 
-class CompositeDomain(Algebra):
+class CompositeDomain(Domain):
     """Base class for composite domains, e.g. ZZ[x]. """
 
     is_Composite = True
@@ -1137,8 +1137,8 @@ if HAS_GMPY:
             """Returns factorial of `a`. """
             return gmpy_rat(gmpy_factorial(int(a)))
 
-class RealAlgebra(SimpleDomain):
-    """Abstract algebra for real numbers. """
+class RealDomain(SimpleDomain):
+    """Abstract domain for real numbers. """
 
     rep   = 'RR'
 
@@ -1238,8 +1238,8 @@ from sympy import (
     Real as sympy_mpf,
 )
 
-class RR_sympy(RealAlgebra):
-    """Algebra for real numbers based on SymPy Real type. """
+class RR_sympy(RealDomain):
+    """Domain for real numbers based on SymPy Real type. """
 
     dtype = sympy_mpf
     zero  = dtype(0)
@@ -1297,8 +1297,8 @@ from sympy.mpmath import (
     mpf as mpmath_mpf,
 )
 
-class RR_mpmath(RealAlgebra):
-    """Algebra for real numbers based on mpmath mpf type. """
+class RR_mpmath(RealDomain):
+    """Domain for real numbers based on mpmath mpf type. """
 
     dtype = mpmath_mpf
     zero  = dtype(0)
@@ -1352,7 +1352,7 @@ class RR_mpmath(RealAlgebra):
         """Convert a mpmath `mpf` object to `dtype`. """
         return a
 
-class FF_float(RealAlgebra): # XXX: tmp solution
+class FF_float(RealDomain): # XXX: tmp solution
     """Float domain. """
 
     rep   = 'FF'
@@ -1420,7 +1420,7 @@ class FF_float(RealAlgebra): # XXX: tmp solution
     def complex_domain(self):
         return CC
 
-class CC_complex(RealAlgebra): # XXX: tmp solution
+class CC_complex(RealDomain): # XXX: tmp solution
     """Complex domain. """
 
     rep   = 'CC'
@@ -1576,14 +1576,14 @@ class AlgebraicField(Field):
         return ANP(a, self.mod.rep, self.dom)
 
     def __eq__(self, other):
-        """Returns `True` if two algebras are equivalent. """
+        """Returns `True` if two domains are equivalent. """
         if self.dtype == other.dtype:
             return self.ext == other.ext
         else:
             return False
 
     def __ne__(self, other):
-        """Returns `False` if two algebras are equivalent. """
+        """Returns `False` if two domains are equivalent. """
         if self.dtype == other.dtype:
             return self.ext != other.ext
         else:
@@ -1702,14 +1702,14 @@ class PolynomialRing(Ring, CompositeDomain):
         return DMP(a, self.dom, len(self.gens)-1)
 
     def __eq__(self, other):
-        """Returns `True` if two algebras are equivalent. """
+        """Returns `True` if two domains are equivalent. """
         if self.dtype == other.dtype:
             return self.gens == other.gens
         else:
             return False
 
     def __ne__(self, other):
-        """Returns `False` if two algebras are equivalent. """
+        """Returns `False` if two domains are equivalent. """
         if self.dtype == other.dtype:
             return self.gens != other.gens
         else:
@@ -1864,14 +1864,14 @@ class FractionField(Field, CompositeDomain):
         return DMF(a, self.dom, len(self.gens)-1)
 
     def __eq__(self, other):
-        """Returns `True` if two algebras are equivalent. """
+        """Returns `True` if two domains are equivalent. """
         if self.dtype == other.dtype:
             return self.gens == other.gens
         else:
             return False
 
     def __ne__(self, other):
-        """Returns `False` if two algebras are equivalent. """
+        """Returns `False` if two domains are equivalent. """
         if self.dtype == other.dtype:
             return self.gens != other.gens
         else:
