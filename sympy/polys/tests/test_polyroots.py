@@ -123,7 +123,7 @@ def test_roots():
                                             -S(3)/2: 1, -S(1)/2: 1, S(3)/2: 1}
 
     assert roots((a+b+c)*x + a+b+c+d, x) == \
-        { (-a-b-c-d) / (a+b+c) : 1 }
+        { -((a+b+c+d)/(a+b+c)) : 1 }
 
     assert roots(x**3+x**2-x+1, x, cubics=False) == {}
     assert roots(((x-2)*(x+3)*(x-4)).expand(), x, cubics=False) == {-S(3): 1, S(2): 1, S(4): 1}
