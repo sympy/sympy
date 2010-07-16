@@ -37,7 +37,7 @@ from sympy.polys.polyerrors import (
 )
 
 from sympy.polys.specialpolys import f_0
-from sympy.polys.algebratools import ZZ, QQ
+from sympy.polys.domains import ZZ, QQ
 
 from sympy.utilities.pytest import raises
 

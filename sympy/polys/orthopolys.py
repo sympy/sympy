@@ -12,7 +12,7 @@ from sympy.polys.densearith import (
     dup_mul, dup_mul_ground, dup_lshift, dup_sub
 )
 
-from sympy.polys.algebratools import ZZ, QQ
+from sympy.polys.domains import ZZ, QQ
 
 @cythonized("n,i")
 def dup_chebyshevt(n, K):

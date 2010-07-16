@@ -20,7 +20,7 @@ from sympy.polys.polyerrors import (
     PolynomialError,
 )
 
-from sympy.polys.algebratools import ZZ, QQ, EX
+from sympy.polys.domains import ZZ, QQ, EX
 
 x,y,z,p,q,r,s,t,u,v,w = symbols('x,y,z,p,q,r,s,t,u,v,w')
 

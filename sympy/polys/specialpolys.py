@@ -20,7 +20,7 @@ from sympy.polys.factortools import (
     dup_zz_cyclotomic_poly
 )
 
-from sympy.polys.algebratools import ZZ
+from sympy.polys.domains import ZZ
 
 from sympy.ntheory import nextprime
 

@@ -71,7 +71,7 @@ from sympy.polys.specialpolys import (
     dmp_fateman_poly_F_3,
 )
 
-from sympy.polys.algebratools import ZZ, QQ, EX
+from sympy.polys.domains import ZZ, QQ, EX
 
 from sympy import I
 

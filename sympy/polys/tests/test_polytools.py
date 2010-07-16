@@ -49,7 +49,7 @@ from sympy.polys.monomialtools import (
 
 from sympy.polys.polyclasses import GFP, DMP, DMF
 
-from sympy.polys.algebratools import ZZ, QQ, RR, EX
+from sympy.polys.domains import ZZ, QQ, RR, EX
 
 from sympy import (
     S, Integer, Rational, Mul, symbols, sqrt, exp,
