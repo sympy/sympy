@@ -1772,6 +1772,17 @@ class Poly(Basic):
         return g.exquo(f)
 
     @_sympifyit('g', NotImplemented)
+    def __div__(f, g): # pragma: no cover
+        return f.as_basic()/g.as_basic()
+
+    @_sympifyit('g', NotImplemented)
+    def __rdiv__(f, g): # pragma: no cover
+        return g.as_basic()/f.as_basic()
+
+    __truediv__ = __div__
+    __rtruediv__ = __rdiv__
+
+    @_sympifyit('g', NotImplemented)
     def __eq__(f, g):
         if not g.is_Poly:
             try:
