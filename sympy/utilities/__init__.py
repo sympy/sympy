@@ -14,7 +14,7 @@ else:
 from lambdify import lambdify
 from source import source
 
-from decorator import threaded, deprecated, wraps
+from decorator import threaded, xthreaded, deprecated, wraps
 
 from runtests import test, doctest
 
