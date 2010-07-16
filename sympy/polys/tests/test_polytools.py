@@ -560,6 +560,11 @@ def test_Poly__analyze_extension():
 
     raises(NotImplementedError, "Poly._analyze_extension({'split': True})")
 
+def test_Poly___div__():
+    assert Poly(x)/Poly(x) == 1
+    assert Poly(x**2)/Poly(x) == x
+    assert Poly(x)/Poly(x**2) == 1/x
+
 def test_Poly_abs():
     assert Poly(-x+1, x).abs() == abs(Poly(-x+1, x)) == Poly(x+1, x)
 
