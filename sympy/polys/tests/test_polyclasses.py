@@ -8,7 +8,7 @@ from sympy.polys.polyclasses import (
     ANP, init_normal_ANP,
 )
 
-from sympy.polys.algebratools import ZZ, QQ
+from sympy.polys.domains import ZZ, QQ
 from sympy.polys.specialpolys import f_4
 
 from sympy.polys.polyerrors import (

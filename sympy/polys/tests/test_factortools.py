@@ -43,7 +43,7 @@ from sympy.polys.specialpolys import (
 from sympy.polys.polyconfig import setup
 from sympy.polys.polyerrors import DomainError
 from sympy.polys.polyclasses import DMP, DMF, ANP
-from sympy.polys.algebratools import ZZ, QQ, RR, EX
+from sympy.polys.domains import ZZ, QQ, RR, EX
 
 from sympy import nextprime, sin, sqrt, I
 
