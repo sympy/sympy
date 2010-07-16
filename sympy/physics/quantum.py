@@ -52,6 +52,7 @@ class State(Expr):
     hilbert_space = None
 
     def __new__(cls, name):
+        name = sympify(name)
         obj = Expr.__new__(cls, name, **{'commutative': False})
         return obj
 
@@ -148,10 +149,6 @@ class InnerProduct(Expr):
     def ket(self):
         return self.args[1]
 
-    def _eval_subs(self, old, new):
-        r = self.__class__(self.bra.subs(old,new), self.ket.subs(old,new))
-        return r
-
     def _eval_dagger(self):
         return InnerProduct(Dagger(self.ket), Dagger(self.bra))
 
@@ -171,7 +168,7 @@ class OuterProduct(Expr):
     def __new__(cls, ket, bra):
         assert isinstance(ket, Ket), 'must be a Ket'
         assert isinstance(bra, Bra), 'must be a Bra'
-        r = cls.eval(bra, ket)
+        r = cls.eval(ket, bra)
         if isinstance(r, Expr):
             return r
         obj = Expr.__new__(cls, *(ket, bra), **{'commutative': True})
@@ -190,10 +187,6 @@ class OuterProduct(Expr):
     @property
     def ket(self):
         return self.args[0]
-
-    def _eval_subs(self, old, new):
-        r = self.__class__(self.ket.subs(old,new), self.bra.subs(old,new))
-        return r
 
     def _eval_dagger(self):
         return OuterProduct(Dagger(self.bra), Dagger(self.ket))
@@ -225,6 +218,9 @@ class Operator(Expr):
         return self.args[0]
 
     def doit(self,**kw_args):
+        return self
+
+    def _eval_dagger(self):
         return self
 
     def _sympyrepr(self, printer, *args):
