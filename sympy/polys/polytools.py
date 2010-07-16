@@ -63,7 +63,7 @@ _re_dom_frac = re.compile("^(Z|ZZ|Q|QQ)\((.+)\)$")
 
 _re_dom_algebraic = re.compile("^(Q|QQ)\<(.+)\>$")
 
-from sympy.polys.algebratools import ZZ, QQ, RR, EX
+from sympy.polys.domains import ZZ, QQ, RR, EX
 
 from sympy.polys.polyoptions import Options
 

@@ -25,7 +25,7 @@ from sympy.polys.polyerrors import (
     DomainError,
 )
 
-from sympy.polys.algebratools import ZZ, QQ, EX
+from sympy.polys.domains import ZZ, QQ, EX
 
 from sympy import raises
 

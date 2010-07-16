@@ -10,7 +10,7 @@ from sympy.polys.polyerrors import (
 
 from sympy.polys.monomialtools import monomial_key
 
-from sympy.polys.algebratools import ZZ, QQ, RR, EX
+from sympy.polys.domains import ZZ, QQ, RR, EX
 
 from sympy.ntheory import isprime
 

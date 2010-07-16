@@ -284,8 +284,10 @@ from sympy.polys.polytools import Poly
 from sympy.polys.polyclasses import GFP, DMP, DMF, ANP
 from sympy.polys.rootoftools import RootOf, RootSum
 
-from sympy.polys.algebratools import (
-    ZZ_python, ZZ_sympy, QQ_sympy,
+from sympy.polys.domains import (
+    PythonIntegerRing,
+    SymPyIntegerRing,
+    SymPyRationalField,
     PolynomialRing,
     FractionField,
     ExpressionDomain,
@@ -295,8 +297,8 @@ from sympy.polys.algebratools import (
 def test_polys():
     x = Symbol("x")
 
-    ZZ = ZZ_python()
-    QQ = QQ_sympy()
+    ZZ = PythonIntegerRing()
+    QQ = SymPyRationalField()
 
     for c in (Poly, Poly(x, x)):
         check(c)
@@ -310,11 +312,11 @@ def test_polys():
     for c in (ANP, ANP([QQ(1),QQ(2)], [QQ(1),QQ(2),QQ(3)], QQ)):
         check(c)
 
-    for c in (ZZ_python, ZZ_python()):
+    for c in (PythonIntegerRing, PythonIntegerRing()):
         check(c)
-    for c in (ZZ_sympy, ZZ_sympy()):
+    for c in (SymPyIntegerRing, SymPyIntegerRing()):
         check(c)
-    for c in (QQ_sympy, QQ_sympy()):
+    for c in (SymPyRationalField, SymPyRationalField()):
         check(c)
 
     for c in (PolynomialRing, PolynomialRing(ZZ, 'x', 'y')):
@@ -325,23 +327,21 @@ def test_polys():
     for c in (ExpressionDomain, ExpressionDomain()):
         check(c)
 
-    try:
-        from sympy.polys.algebratools import QQ_python
+    from sympy.polys.domains import HAS_FRACTION, HAS_GMPY
 
-        for c in (QQ_python, QQ_python()):
-            check(c)
-    except ImportError:
-        pass
+    if HAS_FRACTION:
+        from sympy.polys.domains import PythonRationalField
 
-    try:
-        from sympy.polys.algebratools import QQ_python
+        for c in (PythonRationalField, PythonRationalField()):
+            check(c)
 
-        for c in (ZZ_gmpy, ZZ_gmpy()):
+    if HAS_GMPY:
+        from sympy.polys.domains import GMPYIntegerRing, GMPYRationalField
+
+        for c in (GMPYIntegerRing, GMPYIntegerRing())):
             check(c)
-        for c in (QQ_gmpy, QQ_gmpy()):
+        for c in (GMPYRationalField, GMPYRationalField()):
             check(c)
-    except ImportError:
-        pass
 
     f = x**3 + x + 3
     g = lambda x: x

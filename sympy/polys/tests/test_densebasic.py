@@ -40,7 +40,7 @@ from sympy.polys.specialpolys import (
 
 from sympy.polys.polyclasses import DMP
 
-from sympy.polys.algebratools import ZZ, QQ
+from sympy.polys.domains import ZZ, QQ
 
 from sympy import raises, all
 

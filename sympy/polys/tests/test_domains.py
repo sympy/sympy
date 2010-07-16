@@ -1,6 +1,6 @@
 """Tests for classes defining properties of ground domains, e.g. ZZ, QQ, ZZ[x] ... """
 
-from sympy.polys.algebratools import (
+from sympy.polys.domains import (
     ZZ, QQ, RR, PolynomialRing, FractionField, EX
 )
 

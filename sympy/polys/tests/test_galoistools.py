@@ -31,7 +31,7 @@ from sympy.polys.polyerrors import (
 
 from sympy.polys.polyconfig import setup
 
-from sympy.polys.algebratools import ZZ
+from sympy.polys.domains import ZZ
 from sympy import pi, nextprime, raises
 
 def test_gf_crt():

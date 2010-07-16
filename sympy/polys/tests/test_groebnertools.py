@@ -26,7 +26,7 @@ from sympy.polys.polyerrors import (
     ExactQuotientFailed, DomainError,
 )
 
-from sympy.polys.algebratools import ZZ, QQ
+from sympy.polys.domains import ZZ, QQ
 
 from sympy import raises
 

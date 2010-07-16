@@ -58,7 +58,7 @@ from polyroots import (
     roots,
 )
 
-from algebratools import (
+from domains import (
     ZZ, QQ, RR, EX,
 )
 
