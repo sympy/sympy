@@ -6,7 +6,7 @@ from iterables import (iff, flatten, group, split, take, subsets,
 from lambdify import lambdify
 from source import source
 
-from decorator import threaded, deprecated
+from decorator import threaded, deprecated, wraps
 
 from cythonutils import cythonized
 from timeutils import timed
