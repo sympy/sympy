@@ -102,6 +102,18 @@ def igcdex(a, b):
 
     return (x*x_sign, y*y_sign, a)
 
+def ifactorial(m):
+    """Computes factorial of ``m``. """
+    if not m:
+        return 1
+
+    k = m
+
+    while m > 1:
+        m -= 1
+        k *= m
+
+    return k
 
 class Number(AtomicExpr):
     """
