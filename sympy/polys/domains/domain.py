@@ -401,6 +401,10 @@ class Domain(object):
         """Returns inversion of `a mod b`, implies something. """
         raise NotImplementedError
 
+    def revert(self, a):
+        """Returns `a**(-1)` if possible. """
+        raise NotImplementedError
+
     def numer(self, a):
         """Returns numerator of `a`. """
         raise NotImplementedError

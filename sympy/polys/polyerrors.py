@@ -36,6 +36,9 @@ class CoercionFailed(Exception):
 class NotInvertible(Exception):
     pass
 
+class NotReversible(Exception):
+    pass
+
 class NotAlgebraic(Exception):
     pass
 

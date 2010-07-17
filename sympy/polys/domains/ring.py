@@ -1,7 +1,7 @@
 """Implementation of :class:`Ring` class. """
 
 from sympy.polys.domains.domain import Domain
-from sympy.polys.polyerrors import ExactQuotientFailed, NotInvertible
+from sympy.polys.polyerrors import ExactQuotientFailed, NotInvertible, NotReversible
 
 class Ring(Domain):
     """Represents a ring domain. """
@@ -39,6 +39,13 @@ class Ring(Domain):
             return s % b
         else:
             raise NotInvertible("zero divisor")
+
+    def revert(self, a):
+        """Returns `a**(-1)` if possible. """
+        if self.is_one(a):
+            return a
+        else:
+            raise NotReversible('only unity is reversible in a ring')
 
     def numer(self, a):
         """Returns numerator of `a`. """
