@@ -14,6 +14,7 @@ from polytools import (
     monic, content, primitive,
     compose, decompose,
     sturm,
+    gff_list, gff,
     sqf_norm, sqf_part, sqf_list, sqf,
     factor_list, factor,
     intervals, refine_root, count_roots,
