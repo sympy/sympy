@@ -103,12 +103,16 @@ class exp(Function):
         return x**n/C.Factorial()(n)
 
     def _eval_expand_complex(self, deep=True, **hints):
+        re_part, im_part = self.as_real_imag(deep=deep, **hints)
+        return re_part + im_part*S.ImaginaryUnit
+
+    def as_real_imag(self, deep=True, **hints):
         re, im = self.args[0].as_real_imag()
         if deep:
             re = re.expand(deep, **hints)
             im = im.expand(deep, **hints)
         cos, sin = C.cos(im), C.sin(im)
-        return exp(re) * cos + S.ImaginaryUnit * exp(re) * sin
+        return (exp(re)*cos, exp(re)*sin)
 
     def _eval_conjugate(self):
         return self.func(self.args[0].conjugate())
@@ -374,7 +378,7 @@ class log(Function):
                 **hints)
         return self.func(arg)
 
-    def _eval_expand_complex(self, deep=True, **hints):
+    def as_real_imag(self, deep=True, **hints):
         if deep:
             abs = C.abs(self.args[0].expand(deep, **hints))
             arg = C.arg(self.args[0].expand(deep, **hints))
@@ -383,9 +387,13 @@ class log(Function):
             arg = C.arg(self.args[0])
         if hints['log']: # Expand the log
             hints['complex'] = False
-            return log(abs).expand(deep, **hints) + S.ImaginaryUnit * arg
+            return (log(abs).expand(deep, **hints), arg)
         else:
-            return log(abs) + S.ImaginaryUnit * arg
+            return (log(abs), arg)
+
+    def _eval_expand_complex(self, deep=True, **hints):
+        re_part, im_part = self.as_real_imag(deep=deep, **hints)
+        return re_part + im_part*S.ImaginaryUnit
 
     def _eval_is_real(self):
         return self.args[0].is_positive

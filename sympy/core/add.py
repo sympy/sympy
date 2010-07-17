@@ -345,6 +345,15 @@ class Add(AssocOp):
             lst = new_lst
         return tuple(lst)
 
+    def as_real_imag(self, deep=True):
+        sargs, terms = self.args, []
+        re_part, im_part = [], []
+        for term in sargs:
+            re, im = term.as_real_imag(deep=deep)
+            re_part.append(re)
+            im_part.append(im)
+        return (self.new(*re_part), self.new(*im_part))
+
     def _eval_as_leading_term(self, x):
         coeff, factors = self.as_coeff_factors(x)
         has_unbounded = bool([f for f in self.args if f.is_unbounded])

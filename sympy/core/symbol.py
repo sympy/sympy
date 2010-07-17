@@ -71,8 +71,12 @@ class Symbol(Atom, Expr, Boolean):
         from function import Function
         return Function(self.name, nargs=len(args))(*args, **self.assumptions0)
 
+    def as_real_imag(self, deep=True):
+        return (C.re(self), C.im(self))
+
     def _eval_expand_complex(self, deep=True, **hints):
-            return C.re(self) + C.im(self)*S.ImaginaryUnit
+        re, im = self.as_real_imag()
+        return re + im*S.ImaginaryUnit
 
     def _sage_(self):
         import sage.all as sage

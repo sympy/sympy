@@ -31,7 +31,6 @@ class re(Function):
        2
 
     """
-
     nargs = 1
 
     is_real = True
@@ -67,6 +66,9 @@ class re(Function):
 
     def _eval_conjugate(self):
         return self
+
+    def as_real_imag(self, deep=True):
+        return (self, S.Zero)
 
     def _eval_expand_complex(self, deep=True, **hints):
 #        if deep:
@@ -137,6 +139,9 @@ class im(Function):
 
     def _eval_conjugate(self):
         return self
+
+    def as_real_imag(self, deep=True):
+        return (self, S.Zero)
 
     def _eval_expand_complex(self, deep=True, **hints):
 #        if deep:
