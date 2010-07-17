@@ -1,5 +1,6 @@
 from sympy import Expr, sympify, Add, Mul, Pow, I, Function, Integer, S, sympify, Matrix
 from sympy.core.basic import Atom
+from sympy.physics.hilbert import *
 
 """
 Notes:
@@ -49,7 +50,7 @@ class State(Expr):
     lbrac_repr = 'State('
     rbrac_repr = ')'
 
-    hilbert_space = None
+    hilbert_space = HilbertSpace()
 
     def __new__(cls, name):
         name = sympify(name)
@@ -207,6 +208,8 @@ class Operator(Expr):
     >>> print A
     A
     """
+
+    hilbert_space = HilbertSpace()
 
     def __new__(cls, name):
         name = sympify(name)
