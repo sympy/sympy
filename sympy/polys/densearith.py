@@ -1,7 +1,7 @@
 """Arithmetics for dense recursive polynomials in `K[x]` or `K[X]`. """
 
 from sympy.polys.densebasic import (
-    dup_LC, dmp_LC,
+    dup_LC, dup_TC, dmp_LC,
     dup_degree, dmp_degree,
     dup_normal, dmp_normal,
     dup_strip, dmp_strip,
@@ -15,6 +15,8 @@ from sympy.polys.polyerrors import (
 )
 
 from sympy.utilities import cythonized
+
+from math import ceil, log
 
 @cythonized("i,n,m")
 def dup_add_term(f, c, i, K):
@@ -953,3 +955,18 @@ def dmp_expand(polys, u, K):
 
     return f
 
+@cythonized('i,n')
+def dup_revert(f, n, K):
+    """Compute `f**(-1)` mod `x**n` using Newton iteration. """
+    g = [K.revert(dup_TC(f, K))]
+    h = [K.one, K.zero, K.zero]
+
+    N = int(ceil(log(n, 2)))
+
+    for i in xrange(1, N + 1):
+        a = dup_mul_ground(g, K(2), K)
+        b = dup_mul(f, dup_sqr(g, K), K)
+        g = dup_rem(dup_sub(a, b, K), h, K)
+        h = dup_lshift(h, dup_degree(h), K)
+
+    return g
