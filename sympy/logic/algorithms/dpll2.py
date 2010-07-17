@@ -59,7 +59,7 @@ class SATSolver(object):
             self.vsids_init()
             self.heur_calculate = self.vsids_calculate
             self.heur_lit_assigned = self.vsids_lit_assigned
-            self.heur_lit_removed = self.vsids_lit_removed
+            self.heur_lit_unset = self.vsids_lit_unset
         else:
             raise NotImplementedError
 
@@ -190,9 +190,10 @@ class SATSolver(object):
         Undo the changes of the most recent decision level.
         """
         # Undo the variable settings
-        for lit in self.current_level.var_settings:
+        for i in range(len(self.current_level.var_settings)-1, -1, -1):
+            lit = self.current_level.var_settings[i]
             self.var_settings.remove(lit)
-            self.heur_lit_removed(lit)
+            self.heur_lit_unset(lit)
             self.variable_set[abs(lit)] = False
 
         # Undo the clause satisfactions
@@ -236,32 +237,80 @@ class SATSolver(object):
     #      Heuristics       #
     #########################
     def vsids_init(self):
-        self.lit_heap = []
-        for var in range(1, len(self.appears_neg)):
-            heappush(self.lit_heap, (-len(self.appears_neg[var]), -var))
-            heappush(self.lit_heap, (-len(self.appears_pos[var]), var))
+        vars = range(1, len(self.appears_neg))
+        lit_list = sorted([(-len(self.appears_neg[var]), VSIDSLit(-var)) for var in vars] + \
+                          [(-len(self.appears_pos[var]), VSIDSLit(var)) for var in vars])
+
+        # We keep track of all literal objects so we can access and decay them all at once
+        self.vsids_lit_list = [item[1] for item in lit_list]
+        self.vsids_lit_map = {}
+
+        for lit in self.vsids_lit_list:
+            self.vsids_lit_map[lit.val] = lit
+
+        lit_list[0][1].prev = None
+        lit_list[0][1].next = lit_list[1][1]
+        lit_list[0][1].score = float(lit_list[0][0])
+
+        lit_list[-1][1].prev = lit_list[-2][1]
+        lit_list[-1][1].next = None
+        lit_list[-1][1].score = float(lit_list[-1][0])
+
+        for i in range(1, len(lit_list) - 1):
+            lit_list[i][1].prev = lit_list[i-1][1]
+            lit_list[i][1].next = lit_list[i+1][1]
+            lit_list[i][1].score = float(lit_list[i][0])
+
+        self.vsids_start = lit_list[0][1]
 
     def vsids_decay(self):
-        # We divide everything in the heap by 2 for a decay factor
-        #  Note: This doesn't change the heap property
-        self.lit_heap = map(lambda x: x / 2.0, self.lit_heap)
+        # We divide every literal score by 2 for a decay factor
+        #  Note: This doesn't change the ordering of literals property
+        for lit in self.vsids_lit_list:
+            lit.score /= 2.0
 
     def vsids_calculate(self):
         """
             VSIDS Heuristic
         """
-        while self.variable_set[abs(self.lit_heap[0][1])]:
-            heappop(self.lit_heap)
+        return self.vsids_start.val
 
-        return heappop(self.lit_heap)[1]
+    def vsids_lit_assigned(self, lit, other=False):
+        literal = self.vsids_lit_map[lit]
 
-    def vsids_lit_assigned(self, lit):
-        pass
+        left = literal.prev
+        right = literal.next
 
-    def vsids_lit_removed(self, lit):
-        var = abs(lit)
-        heappush(self.lit_heap, (-len(self.appears_neg), -var))
-        heappush(self.lit_heap, (-len(self.appears_pos), var))
+        if left != None:
+            left.next = right
+
+        if right != None:
+            right.prev = left
+
+        if left == None:
+            self.vsids_start = right
+
+        if not other:
+            self.vsids_lit_assigned(-lit, True)
+
+    def vsids_lit_unset(self, lit, other = False):
+        # We do this first since the unsetting must follow a FILO order
+        if not other:
+            self.vsids_lit_unset(-lit, True)
+
+        literal = self.vsids_lit_map[lit]
+
+        left = literal.prev
+        right = literal.next
+
+        if left != None:
+            left.next = literal
+
+        if right != None:
+            right.prev = literal
+
+        if left == None:
+            self.vsids_start = literal
 
 class Level(object):
     """
@@ -274,3 +323,22 @@ class Level(object):
         self.clauses_removed = []
         self.var_settings = []
         self.flipped = flipped
+
+class VSIDSLit(object):
+    """
+    Represents a single literal in a boolean theory.
+    """
+
+    def __init__(self, val):
+        self.val = val
+
+    def __str__(self):
+        left = right = None
+        if self.prev:
+            left = self.prev.val
+        if self.next:
+            right = self.next.val
+        return "%s <- (%d) -> %s\n" % (str(left), self.val, str(right))
+
+    def __repr__(self):
+        return self.__str__()
