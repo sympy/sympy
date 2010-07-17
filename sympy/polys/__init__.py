@@ -33,6 +33,7 @@ from polyerrors import (
     PolynomialError,
     CoercionFailed,
     NotInvertible,
+    NotReversible,
     NotAlgebraic,
     DomainError,
 )

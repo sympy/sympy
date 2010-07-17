@@ -1,6 +1,7 @@
 """Implementation of :class:`Field` class. """
 
 from sympy.polys.domains.ring import Ring
+from sympy.polys.polyerrors import NotReversible
 
 class Field(Ring):
     """Represents a field domain. """
@@ -34,3 +35,10 @@ class Field(Ring):
     def lcm(self, a, b):
         """Returns LCM of `a` and `b`. """
         return a*b
+
+    def revert(self, a):
+        """Returns `a**(-1)` if possible. """
+        if a:
+            return 1/a
+        else:
+            raise NotReversible('zero is not reversible')
