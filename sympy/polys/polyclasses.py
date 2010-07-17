@@ -96,6 +96,7 @@ from sympy.polys.densetools import (
     dup_content, dmp_ground_content,
     dup_primitive, dmp_ground_primitive,
     dup_monic, dmp_ground_monic,
+    dup_gff_list,
     dup_sqf_p, dmp_sqf_p,
     dup_sqf_norm, dmp_sqf_norm,
     dup_sqf_part, dmp_sqf_part,
@@ -1032,6 +1033,13 @@ class DMP(object):
         """Computes the Sturm sequence of `f`. """
         if not f.lev:
             return map(f.per, dup_sturm(f.rep, f.dom))
+        else:
+            raise ValueError('univariate polynomial expected')
+
+    def gff_list(f):
+        """Computes greatest factorial factorization of `f`. """
+        if not f.lev:
+            return [ (f.per(g), k) for g, k in dup_gff_list(f.rep, f.dom) ]
         else:
             raise ValueError('univariate polynomial expected')
 

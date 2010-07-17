@@ -40,6 +40,7 @@ from sympy.polys.densetools import (
     dup_rr_primitive, dup_ff_primitive, dup_primitive,
     dmp_primitive,
     dmp_rr_ground_primitive, dmp_ff_ground_primitive, dmp_ground_primitive,
+    dup_gff_list,
     dup_sqf_p, dmp_sqf_p,
     dup_sqf_part, dmp_sqf_part,
     dup_sqf_list, dup_sqf_list_include,
@@ -891,6 +892,17 @@ def test_dmp_ground_primitive():
 
     assert dmp_ground_primitive(f_6, 3, ZZ) == (ZZ(1), f_6)
     assert dmp_ground_primitive(dmp_mul_ground(f_6, ZZ(8), 3, ZZ), 3, ZZ) == (ZZ(8), f_6)
+
+def test_dup_gff_list():
+    f = [1, 2, -1, -2, 0, 0]
+
+    assert dup_gff_list(f, ZZ) == [([1, 0], 1), ([1, 2], 4)]
+
+    g = [1, -20, 166, -744, 1965, -3132, 2948, -1504, 320, 0]
+
+    assert dup_gff_list(g, ZZ) == [([1, -5, 4], 1), ([1, -5, 4], 2), ([1, 0], 3)]
+
+    raises(ValueError, "dup_gff_list([], ZZ)")
 
 def test_dup_sqf():
     assert dup_sqf_part([], ZZ) == []
