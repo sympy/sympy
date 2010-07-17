@@ -1220,6 +1220,15 @@ class Poly(Basic):
 
         return per(result)
 
+    def revert(f, n):
+        """Compute `f**(-1)` mod `x**n`. """
+        try:
+            result = f.rep.revert(int(n))
+        except AttributeError: # pragma: no cover
+            raise OperationNotSupported(f, 'revert')
+
+        return f.per(result)
+
     def subresultants(f, g):
         """Computes subresultant PRS sequence of `f` and `g`. """
         _, per, F, G = f.unify(g)

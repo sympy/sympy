@@ -77,6 +77,7 @@ from sympy.polys.densearith import (
     dmp_add_mul, dmp_sub_mul,
     dup_max_norm, dmp_max_norm,
     dup_l1_norm, dmp_l1_norm,
+    dup_revert,
 )
 
 from sympy.polys.densetools import (
@@ -957,6 +958,13 @@ class DMP(object):
 
         if not lev:
             return per(dup_invert(F, G, dom))
+        else:
+            raise ValueError('univariate polynomial expected')
+
+    def revert(f, n):
+        """Compute `f**(-1)` mod `x**n`. """
+        if not f.lev:
+            return f.per(dup_revert(f.rep, n, f.dom))
         else:
             raise ValueError('univariate polynomial expected')
 
