@@ -1559,6 +1559,30 @@ def dmp_ground_primitive(f, u, K):
     else:
         return dmp_rr_ground_primitive(f, u, K)
 
+def dup_gff_list(f, K):
+    """Returns greatest factorial factorization of `f` in `K[x]`. """
+    if not f:
+        raise ValueError("greatest factorial factorization doesn't exist for a zero polynomial")
+
+    f = dup_monic(f, K)
+
+    if not dup_degree(f):
+        return []
+    else:
+        g = dup_gcd(f, dup_taylor(f, K.one, K), K)
+        H = dup_gff_list(g, K)
+
+        for i, (h, k) in enumerate(H):
+            g = dup_mul(g, dup_taylor(h, -K(k), K), K)
+            H[i] = (h, k + 1)
+
+        f = dup_exquo(f, g, K)
+
+        if not dup_degree(f):
+            return H
+        else:
+            return [(f, 1)] + H
+
 def dup_sqf_p(f, K):
     """Returns `True` if `f` is a square-free polynomial in `K[x]`. """
     if not f:

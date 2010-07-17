@@ -1366,6 +1366,15 @@ class Poly(Basic):
 
         return map(f.per, result)
 
+    def gff_list(f):
+        """Computes greatest factorial factorization of `f`. """
+        try:
+            result = f.rep.gff_list()
+        except AttributeError: # pragma: no cover
+            raise OperationNotSupported(f, 'gff_list')
+
+        return [ (f.per(g), k) for g, k in result ]
+
     def sqf_norm(f):
         """Computes square-free norm of `f`. """
         try:
@@ -2354,6 +2363,24 @@ def sturm(f, *gens, **args):
         return [ r.as_basic() for r in result ]
     else:
         return result
+
+def gff_list(f, *gens, **args):
+    """Returns a list of greatest factorial factors of `f`. """
+    F = NonStrictPoly(f, *_analyze_gens(gens), **args)
+
+    if not F.is_Poly:
+        return []
+
+    factors = F.gff_list()
+
+    if _should_return_basic(f, **args):
+        return [ (g.as_basic(), k) for g, k in factors ]
+    else:
+        return factors
+
+def gff(f, *gens, **args):
+    """Computes greatest factorial factorization of `f`. """
+    raise NotImplementedError('symbolic falling factorial')
 
 def sqf_norm(f, *gens, **args):
     """Computes square-free norm of `f`. """
