@@ -906,6 +906,50 @@ def dmp_apply_pairs(f, g, h, args, u, K):
 
     return dmp_strip(result, u)
 
+@cythonized("m,n,k,M,N")
+def dup_slice(f, m, n, K):
+    """Take a continuous subsequence of terms of `f` in `K[x]`. """
+    k = len(f)
+
+    M = k - m
+    N = k - n
+
+    f = f[N:M]
+
+    if not f:
+        return []
+    else:
+        return f + [K.zero]*m
+
+@cythonized("m,n,u")
+def dmp_slice(f, m, n, u, K):
+    """Take a continuous subsequence of terms of `f` in `K[X]`. """
+    return dmp_slice_in(f, m, n, 0, u, K)
+
+@cythonized("m,n,j,u,k")
+def dmp_slice_in(f, m, n, j, u, K):
+    """Take a continuous subsequence of terms of `f` in `x_j` in `K[X]`. """
+    if j < 0 or j > u:
+        raise IndexError("-%s <= j < %s expected, got %s" % (u, u, j))
+
+    if not u:
+        return dup_slice(f, m, n, K)
+
+    f, g = dmp_to_dict(f, u), {}
+
+    for monom, coeff in f.iteritems():
+        k = monom[j]
+
+        if k < m or k >= n:
+            monom = monom[:j] + (0,) + monom[j+1:]
+
+        if monom in g:
+            g[monom] += coeff
+        else:
+            g[monom] = coeff
+
+    return dmp_from_dict(g, u, K)
+
 def dup_random(n, a, b, K):
     """Return a polynomial of degree ``n`` with coefficients in ``[a, b]``. """
     f = [ K.convert(random.randint(a, b)) for _ in xrange(0, n+1) ]

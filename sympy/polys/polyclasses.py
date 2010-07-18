@@ -50,6 +50,7 @@ from sympy.polys.densebasic import (
     dup_deflate, dmp_deflate,
     dup_terms_gcd, dmp_terms_gcd,
     dmp_list_terms,
+    dmp_slice_in,
 )
 
 from sympy.polys.densearith import (
@@ -713,6 +714,10 @@ class DMP(object):
             return f
         else:
             return DMP(dmp_convert(f.rep, f.lev, f.dom, dom), dom, f.lev)
+
+    def slice(f, m, n, j=0):
+        """Take a continuous subsequence of terms of `f`. """
+        return f.per(dmp_slice_in(f.rep, m, n, j, f.lev, f.dom))
 
     def coeffs(f, order=None):
         """Returns all non-zero coefficients from `f` in lex order. """

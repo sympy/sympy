@@ -768,6 +768,22 @@ class Poly(Basic):
 
         return f.per(result)
 
+    def slice(f, x, m, n=None):
+        """Take a continuous subsequence of terms of `f`. """
+        if n is None:
+            j, m, n = 0, x, m
+        else:
+            j = f._gen_to_level(x)
+
+        m, n = int(m), int(n)
+
+        try:
+            result = f.rep.slice(m, n, j)
+        except AttributeError: # pragma: no cover
+            raise OperationNotSupported(f, 'slice')
+
+        return f.per(result)
+
     def coeffs(f, order=None):
         """Returns all non-zero coefficients from `f` in lex order. """
         return [ f.rep.dom.to_sympy(c) for c in f.rep.coeffs(order=order) ]
