@@ -152,42 +152,48 @@ def _analyze_power(base, exp):
 
     return base, exp
 
-def _dict_from_basic_if_gens(ex, gens, **args):
-    """Convert `ex` to a multinomial given a generators list. """
+
+def _parallel_dict_from_basic_if_gens(exprs, gens, **args):
+    """Transform expressions into a multinomial form given generators. """
     k, indices = len(gens), {}
 
     for i, g in enumerate(gens):
         indices[g] = i
 
-    result = {}
+    polys = []
 
-    for term in Add.make_args(ex):
-        coeff, monom = [], [0]*k
+    for expr in exprs:
+        poly = {}
 
-        for factor in Mul.make_args(term):
-            if factor.is_Number:
-                coeff.append(factor)
+        for term in Add.make_args(expr) or (S.Zero,):
+            coeff, monom = [], [0]*k
+
+            for factor in Mul.make_args(term):
+                if factor.is_Number:
+                    coeff.append(factor)
+                else:
+                    try:
+                        base, exp = _analyze_power(*factor.as_base_exp())
+                        monom[indices[base]] = exp
+                    except KeyError:
+                        if not factor.has(*gens):
+                            coeff.append(factor)
+                        else:
+                            raise PolynomialError("%s contains an element of the generators set" % factor)
+
+            monom = tuple(monom)
+
+            if monom in poly:
+                poly[monom] += Mul(*coeff)
             else:
-                try:
-                    base, exp = _analyze_power(*factor.as_base_exp())
-                    monom[indices[base]] = exp
-                except KeyError:
-                    if not factor.has(*gens):
-                        coeff.append(factor)
-                    else:
-                        raise PolynomialError("%s contains an element of the generators set" % factor)
+                poly[monom] = Mul(*coeff)
 
-        monom = tuple(monom)
+        polys.append(poly)
 
-        if monom in result:
-            result[monom] += Mul(*coeff)
-        else:
-            result[monom] = Mul(*coeff)
+    return polys
 
-    return result
-
-def _dict_from_basic_no_gens(ex, **args):
-    """Figure out generators and convert `ex` to a multinomial. """
+def _parallel_dict_from_basic_no_gens(exprs, **args):
+    """Transform expressions into a multinomial form and figure out generators. """
     domain = args.get('domain')
 
     if domain is not None:
@@ -209,61 +215,89 @@ def _dict_from_basic_no_gens(ex, **args):
                 def _is_coeff(factor):
                     return factor.is_number
 
-    gens, terms = set([]), []
+    gens, reprs = set([]), []
 
-    for term in Add.make_args(ex):
-        coeff, elements = [], {}
+    for expr in exprs:
+        terms = []
 
-        for factor in Mul.make_args(term):
-            if factor.is_Number or _is_coeff(factor):
-                coeff.append(factor)
-            else:
-                base, exp = _analyze_power(*factor.as_base_exp())
+        for term in Add.make_args(expr) or (S.Zero,):
+            coeff, elements = [], {}
 
-                elements[base] = exp
-                gens.add(base)
+            for factor in Mul.make_args(term):
+                if factor.is_Number or _is_coeff(factor):
+                    coeff.append(factor)
+                else:
+                    base, exp = _analyze_power(*factor.as_base_exp())
 
-        terms.append((coeff, elements))
+                    elements[base] = exp
+                    gens.add(base)
+
+            terms.append((coeff, elements))
+
+        reprs.append(terms)
 
     if not gens:
-        raise GeneratorsNeeded("specify generators to give %s a meaning" % ex)
+        raise GeneratorsNeeded("specify generators to give %s a meaning" % (exprs,))
 
     gens = _sort_gens(gens, **args)
-
     k, indices = len(gens), {}
 
     for i, g in enumerate(gens):
         indices[g] = i
 
-    result = {}
+    polys = []
 
-    for coeff, term in terms:
-        monom = [0]*k
+    for terms in reprs:
+        poly = {}
 
-        for base, exp in term.iteritems():
-            monom[indices[base]] = exp
+        for coeff, term in terms:
+            monom = [0]*k
 
-        monom = tuple(monom)
+            for base, exp in term.iteritems():
+                monom[indices[base]] = exp
 
-        if monom in result:
-            result[monom] += Mul(*coeff)
-        else:
-            result[monom] = Mul(*coeff)
+            monom = tuple(monom)
 
-    return result, tuple(gens)
+            if monom in poly:
+                poly[monom] += Mul(*coeff)
+            else:
+                poly[monom] = Mul(*coeff)
 
-def dict_from_basic(ex, gens=None, **args):
-    """Converts a SymPy expression to a multinomial. """
+        polys.append(poly)
+
+    return polys, tuple(gens)
+
+def _dict_from_basic_if_gens(expr, gens, **args):
+    """Transform an expression into a multinomial form given generators. """
+    return _parallel_dict_from_basic_if_gens((expr,), gens, **args)[0]
+
+def _dict_from_basic_no_gens(expr, **args):
+    """Transform an expression into a multinomial form and figure out generators. """
+    (poly,), gens = _parallel_dict_from_basic_no_gens((expr,), **args)
+    return poly, gens
+
+def parallel_dict_from_basic(exprs, gens=None, **args):
+    """Transform expressions into a multinomial form. """
     if args.get('expand', True):
-        ex = ex.expand()
+        exprs = [ expr.expand() for expr in exprs ]
 
     if gens is not None:
-        return _dict_from_basic_if_gens(ex, gens, **args)
+        return _parallel_dict_from_basic_if_gens(exprs, gens, **args)
     else:
-        return _dict_from_basic_no_gens(ex, **args)
+        return _parallel_dict_from_basic_no_gens(exprs, **args)
+
+def dict_from_basic(expr, gens=None, **args):
+    """Transform an expression into a multinomial form. """
+    if args.get('expand', True):
+        expr = expr.expand()
+
+    if gens is not None:
+        return _dict_from_basic_if_gens(expr, gens, **args)
+    else:
+        return _dict_from_basic_no_gens(expr, **args)
 
 def basic_from_dict(rep, *gens):
-    """Converts a multinomial to a SymPy expression. """
+    """Convert a multinomial form into an expression. """
     result = []
 
     for monom, coeff in rep.iteritems():
