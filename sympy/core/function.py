@@ -808,8 +808,8 @@ def diff(f, *symbols, **kwargs):
     kwargs.setdefault('evaluate', True)
     return Derivative(f, *symbols, **kwargs)
 
-def expand(e, deep=True, power_base=True, power_exp=True, mul=True, \
-           log=True, multinomial=True, basic=True, **hints):
+def expand(e, deep=True, modulus=None, power_base=True, power_exp=True, \
+        mul=True, log=True, multinomial=True, basic=True, **hints):
     """
     Expand an expression using methods given as hints.
 
@@ -942,7 +942,7 @@ def expand(e, deep=True, power_base=True, power_exp=True, mul=True, \
     hints['log'] = log
     hints['multinomial'] = multinomial
     hints['basic'] = basic
-    return sympify(e).expand(deep=deep, **hints)
+    return sympify(e).expand(deep=deep, modulus=modulus, **hints)
 
 # These are simple wrappers around single hints.  Feel free to add ones for
 # power_exp, power_base, multinomial, or basic if you need them.
