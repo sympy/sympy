@@ -9,8 +9,11 @@ from sympy.polys.polyutils import (
     _analyze_gens,
     _sort_factors,
     _analyze_power,
+    _parallel_dict_from_basic_if_gens,
+    _parallel_dict_from_basic_no_gens,
     _dict_from_basic_if_gens,
     _dict_from_basic_no_gens,
+    parallel_dict_from_basic,
     dict_from_basic,
     basic_from_dict,
 )
@@ -233,3 +236,13 @@ def test__dict_from_basic_no_gens():
 
     assert _dict_from_basic_no_gens(f) == ({(0, 1, 0, 1): 1, (0, 1, 1, 0): 1,
         (1, 0, 0, 1): 1, (1, 0, 1, 0): 1}, (cos(x), cos(y), sin(x), sin(y)))
+
+def test__parallel_dict_from_basic_if_gens():
+    assert _parallel_dict_from_basic_if_gens([x+2*y+3*z, Integer(7)], (x,)) == \
+        [{(1,): Integer(1), (0,): 2*y+3*z}, {(0,): Integer(7)}]
+
+def test__parallel_dict_from_basic_no_gens():
+    assert _parallel_dict_from_basic_no_gens([x*y, Integer(3)]) == \
+        ([{(1,1): Integer(1)}, {(0,0): Integer(3)}], (x,y))
+    assert _parallel_dict_from_basic_no_gens([x*y, 2*z, Integer(3)]) == \
+        ([{(1,1,0): Integer(1)}, {(0,0,1): Integer(2)}, {(0,0,0): Integer(3)}], (x,y,z))
