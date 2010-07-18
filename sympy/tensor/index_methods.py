@@ -27,11 +27,11 @@ def _remove_repeated(c_inds, nc_inds, return_dummies=False):
     nc_inds = filter(lambda x: not sum_index[x], nc_inds)
 
     if return_dummies:
-        return c_inds, nc_inds, [ i for i in sum_index if sum_index[i] ]
+        return c_inds, nc_inds, tuple([ i for i in sum_index if sum_index[i] ])
     else:
         return c_inds, nc_inds
 
-def _get_indices_Mul(expr):
+def _get_indices_Mul(expr, return_dummies=False):
     """Determine the outer indices of a Mul object.
 
     returns all non-repeated indices.
@@ -48,7 +48,7 @@ def _get_indices_Mul(expr):
     c_inds  = reduce(lambda x, y: x + y, c_inds)
     nc_inds = reduce(lambda x, y: x + y, nc_inds)
 
-    return _remove_repeated(c_inds, nc_inds)
+    return _remove_repeated(c_inds, nc_inds, return_dummies)
 
 
 def _get_indices_Add(expr):
@@ -167,29 +167,73 @@ def get_contraction_structure(expr):
     relevant.
 
     2) If there are nested Add objects, we recurse to determine summation
-    indices for the the deeper terms. The resulting dict is stored as the value
-    instead of the Add expression. The factors and the dict are stored in a
-    list representing the mul.
+    indices for the the deeper terms. The resulting dict is returned as a value
+    in the dictionary, and the Add expression is the corresponding key.
 
     Examples
     ========
 
-    >>> from sympy.tensor.index_methods import get_dummies
+    >>> from sympy.tensor.index_methods import get_contraction_structure
     >>> from sympy import symbols
     >>> from sympy.tensor import Indexed, Idx
     >>> x, y, A = map(Indexed, ['x', 'y', 'A'])
-    >>> i, j, a, z = symbols('i j a z', integer=True)
-    >>> get_dummies(x(i)*y(i) + A(j, j))
-    {i: [x(i)*y(i)], j: [A(j, j)]}
-    >>> get_dummies(x(i)*y(j))
+    >>> i, j, k, l = symbols('i j k l', integer=True)
+    >>> get_contraction_structure(x(i)*y(i) + A(j, j))
+    {(i,): [x(i)*y(i)], (j,): [A(j, j)]}
+    >>> get_contraction_structure(x(i)*y(j))
     {None: [x(i)*y(j)]}
-    >>> get_dummies(x(i)*(y(j) + A(j, k)*x(k)) - A(i, j))
-    {None: [[x(i), {None: y(j), k: A(j, k)*x(k))}], A(i, j)]}
 
-    Note that the data structure reveals a potential factorization of the array
-    contraction.  The deepest sum can be calculated first and stored in a 1
-    dimensional array with index j.
+    A nested Add object is returned as a nested dictionary.  The term
+    containing the parenthesis is used as the key, and it stores the dictionary
+    resulting from a recursive call on the Add expression.
+
+    >>> d = get_contraction_structure(x(i)*(y(i) + A(i, j)*x(j)))
+    >>> sorted(d.keys())
+    [(i,), (x(j)*A(i, j) + y(i))*x(i)]
+    >>> d[(Idx(i),)]
+    [(x(j)*A(i, j) + y(i))*x(i)]
+    >>> d[(x(j)*A(i, j) + y(i))*x(i)]
+    [{None: [y(i)], (j,): [x(j)*A(i, j)]}]
+
+    Note that the presence of expressions among the dictinary keys indicates a
+    factorization of the array contraction.  The summation in the deepest
+    nested level must be calculated first so that the external contraction can access
+    the resulting array with index j.
 
     """
 
-    raise NotImplementedError("FIXME please!")
+    # We call ourself recursively to inspect sub expressions.
+
+    if isinstance(expr, IndexedElement):
+        c = expr.indices
+        nc = tuple()
+        junk, junk, key = _remove_repeated(c, nc, return_dummies=True)
+        return {key or None: [expr]}
+    elif expr.is_Atom:
+        return {None: [expr]}
+    elif expr.is_Mul:
+        junk, junk, key = _get_indices_Mul(expr, return_dummies=True)
+        result = {key or None: [expr]}
+        # recurse if we have any Add objects
+        addfactors = filter(lambda x: x.is_Add, expr.args)
+        if addfactors:
+            result[expr] = []
+            for factor in addfactors:
+                d = get_contraction_structure(factor)
+                result[expr].append(d)
+        return result
+    elif expr.is_Add:
+        # Note: we just collect all terms with identical summation indices, We
+        # do nothing to identify equivalent terms here, as this would require
+        # substitutions or pattern matching in expressions of unknown
+        # complexity.
+        result = {}
+        for term in expr.args:
+            # recurse on every term
+            d = get_contraction_structure(term)
+            for key in d:
+                if key in result:
+                    result[key].extend(d[key])
+                else:
+                    result[key] = d[key]
+        return result
