@@ -90,3 +90,5 @@ RR = RR_mpmath()
 CC = CC_mpmath()
 
 EX = ExpressionDomain()
+
+from constructor import construct_domain

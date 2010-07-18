@@ -63,206 +63,9 @@ _re_dom_frac = re.compile("^(Z|ZZ|Q|QQ)\((.+)\)$")
 
 _re_dom_algebraic = re.compile("^(Q|QQ)\<(.+)\>$")
 
-from sympy.polys.domains import ZZ, QQ, RR, EX
+from sympy.polys.domains import ZZ, QQ, RR, EX, construct_domain
 
 from sympy.polys.polyoptions import Options
-
-def _construct_domain(rep, **args):
-    """Constructs the minimal domain that the coefficients of `rep` fit in. """
-    extension = args.get('extension', None)
-    field = args.get('field', False)
-
-    def _construct_simple(rep):
-        """Handle ZZ, QQ, RR and algebraic number domains. """
-        result, rational, inexact, algebraic = {}, False, False, False
-
-        if extension is True:
-            is_algebraic = lambda coeff: ask(coeff, 'algebraic')
-        else:
-            is_algebraic = lambda coeff: False
-
-        for coeff in rep.itervalues():
-            if coeff.is_Rational:
-                if not coeff.is_Integer:
-                    rational = True
-            elif coeff.is_Real:
-                if not algebraic:
-                    inexact = True
-                else:
-                    return False
-            elif is_algebraic(coeff):
-                if not inexact:
-                    algebraic = True
-                else:
-                    return False
-            else:
-                return None
-
-        if algebraic:
-            from numberfields import primitive_element
-
-            monoms, coeffs, exts = [], [], set([])
-
-            for monom, coeff in rep.iteritems():
-                if coeff.is_Rational:
-                    coeff = (None, 0, QQ.from_sympy(coeff))
-                else:
-                    a, _ = coeff.as_coeff_add()
-                    coeff -= a
-
-                    b, _ = coeff.as_coeff_mul()
-                    coeff /= b
-
-                    exts.add(coeff)
-
-                    a = QQ.from_sympy(a)
-                    b = QQ.from_sympy(b)
-
-                    coeff = (coeff, b, a)
-
-                monoms.append(monom)
-                coeffs.append(coeff)
-
-            exts = list(exts)
-
-            g, span, H = primitive_element(exts, ex=True, polys=True)
-            root = sum([ s*ext for s, ext in zip(span, exts) ])
-
-            K, g = QQ.algebraic_field((g, root)), g.rep.rep
-
-            for monom, (coeff, a, b) in zip(monoms, coeffs):
-                if coeff is not None:
-                    coeff = a*ANP.from_list(H[exts.index(coeff)], g, QQ) + b
-                else:
-                    coeff = ANP.from_list([b], g, QQ)
-
-                result[monom] = coeff
-        else:
-            if inexact:
-                K = RR
-            else:
-                if field or rational:
-                    K = QQ
-                else:
-                    K = ZZ
-
-            for monom, coeff in rep.iteritems():
-                result[monom] = K.from_sympy(coeff)
-
-        return K, result
-
-    def _construct_composite(rep):
-        """Handle domains like ZZ[X], QQ[X], ZZ(X) or QQ(X). """
-        numers, denoms = [], []
-
-        for coeff in rep.itervalues():
-            num, den = coeff.as_numer_denom()
-
-            try:
-                numers.append(_dict_from_basic_no_gens(num))
-            except GeneratorsNeeded:
-                numers.append((num, None))
-
-            try:
-                denoms.append(_dict_from_basic_no_gens(den))
-            except GeneratorsNeeded:
-                denoms.append((den, None))
-
-        gens = set([])
-
-        for _, num_gens in numers:
-            if num_gens is not None:
-                gens.update(num_gens)
-
-        fractions = False
-
-        for _, den_gens in denoms:
-            if den_gens is not None:
-                gens.update(den_gens)
-                fractions = True
-
-        if any(gen.is_number for gen in gens):
-            return None
-
-        gens = _sort_gens(gens, **args)
-        k, coeffs = len(gens), []
-
-        if not field and not fractions:
-            if all(den is S.One for den, _ in denoms):
-                K = ZZ.poly_ring(*gens)
-
-                for num, num_gens in numers:
-                    if num_gens is not None:
-                        num_monoms, num_coeffs = _dict_reorder(num, num_gens, gens)
-                    else:
-                        num_monoms, num_coeffs = [(0,)*k], [num]
-
-                    num_coeffs = [ K.dom.from_sympy(c) for c in num_coeffs ]
-                    coeffs.append(K(dict(zip(num_monoms, num_coeffs))))
-            else:
-                K = QQ.poly_ring(*gens)
-
-                for (num, num_gens), (den, _) in zip(numers, denoms):
-                    if num_gens is not None:
-                        num_monoms, num_coeffs = _dict_reorder(num, num_gens, gens)
-                        num_coeffs = [ coeff/den for coeff in num_coeffs ]
-                    else:
-                        num_monoms, num_coeffs = [(0,)*k], [num/den]
-
-                    num_coeffs = [ K.dom.from_sympy(c) for c in num_coeffs ]
-                    coeffs.append(K(dict(zip(num_monoms, num_coeffs))))
-        else:
-            K = ZZ.frac_field(*gens)
-
-            for (num, num_gens), (den, den_gens) in zip(numers, denoms):
-                if num_gens is not None:
-                    num_monoms, num_coeffs = _dict_reorder(num, num_gens, gens)
-                else:
-                    num_monoms, num_coeffs = [(0,)*k], [num]
-
-                if den_gens is not None:
-                    den_monoms, den_coeffs = _dict_reorder(den, den_gens, gens)
-                else:
-                    den_monoms, den_coeffs = [(0,)*k], [den]
-
-                num_coeffs = [ K.dom.from_sympy(c) for c in num_coeffs ]
-                den_coeffs = [ K.dom.from_sympy(c) for c in den_coeffs ]
-
-                num = dict(zip(num_monoms, num_coeffs))
-                den = dict(zip(den_monoms, den_coeffs))
-
-                coeffs.append(K((num, den)))
-
-        return K, dict(zip(rep.keys(), coeffs))
-
-    def _construct_expression(rep):
-        """The last resort case, i.e. use EX domain. """
-        result, K = {}, EX
-
-        for monom, coeff in rep.iteritems():
-            result[monom] = K.from_sympy(coeff)
-
-        return EX, result
-
-    rep = dict(rep)
-
-    for monom, coeff in rep.items():
-        rep[monom] = sympify(coeff)
-
-    result = _construct_simple(rep)
-
-    if result is not None:
-        if result is not False:
-            return result
-        else:
-            return _construct_expression(rep)
-    else:
-        result = _construct_composite(rep)
-
-        if result is not None:
-            return result
-        else:
-            return _construct_expression(rep)
 
 def _init_poly_from_dict(dict_rep, *gens, **args):
     """Initialize a Poly given a dict instance. """
@@ -280,7 +83,7 @@ def _init_poly_from_dict(dict_rep, *gens, **args):
             for k, v in dict_rep.iteritems():
                 dict_rep[k] = domain.convert(v)
         else:
-            domain, dict_rep = _construct_domain(dict_rep, **args)
+            domain, dict_rep = construct_domain(dict_rep, **args)
 
         return DMP(dict_rep, domain, len(gens)-1)
 
@@ -300,7 +103,7 @@ def _init_poly_from_list(list_rep, *gens, **args):
             rep = map(domain.convert, list_rep)
         else:
             dict_rep = dict(enumerate(reversed(list_rep)))
-            domain, rep = _construct_domain(dict_rep, **args)
+            domain, rep = construct_domain(dict_rep, **args)
 
         return DMP(rep, domain, len(gens)-1)
 
@@ -384,7 +187,7 @@ def _init_poly_from_basic(basic_rep, *gens, **args):
         if domain is not None:
             dict_rep = _dict_set_domain(dict_rep, domain)
         else:
-            domain, dict_rep = _construct_domain(dict_rep, **args)
+            domain, dict_rep = construct_domain(dict_rep, **args)
 
         result = DMP(dict_rep, domain, len(gens)-1)
 
