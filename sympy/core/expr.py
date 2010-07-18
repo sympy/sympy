@@ -1155,8 +1155,8 @@ class Expr(Basic, EvalfMixin):
     def _eval_expand_func(self, deep=True, **hints):
         return self
 
-    def expand(self, deep=True, power_base=True, power_exp=True, mul=True, \
-           log=True, multinomial=True, basic=True, **hints):
+    def expand(self, deep=True, modulus=None, power_base=True, power_exp=True, \
+            mul=True, log=True, multinomial=True, basic=True, **hints):
         """
         Expand an expression using hints.
 
@@ -1171,6 +1171,25 @@ class Expr(Basic, EvalfMixin):
                 func = getattr(expr, '_eval_expand_'+hint, None)
                 if func is not None:
                     expr = func(deep=deep, **hints)
+
+        if modulus is not None:
+            modulus = sympify(modulus)
+
+            if not modulus.is_Integer or modulus <= 0:
+                raise ValueError("modulus must be a positive integer, got %s" % modulus)
+
+            terms = []
+
+            for term in Add.make_args(expr):
+                coeff, tail = term.as_coeff_mul()
+
+                coeff %= modulus
+
+                if coeff:
+                    terms.append(Mul(*((coeff,) + tail)))
+
+            expr = Add(*terms)
+
         return expr
 
     ###########################################################################
