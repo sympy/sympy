@@ -62,6 +62,7 @@ from polyroots import (
 
 from domains import (
     ZZ, QQ, RR, EX,
+    construct_domain,
 )
 
 from specialpolys import (

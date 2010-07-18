@@ -2,7 +2,6 @@
 
 from sympy.polys.polytools import (
     Poly, poly, _polify_basic,
-    _construct_domain,
     _init_poly_from_dict,
     _init_poly_from_list,
     _init_poly_from_poly,
@@ -66,56 +65,6 @@ def _eq(a, b):
         if abs(x-y) > 1e-10:
             return False
     return True
-
-def test__construct_domain():
-    assert _construct_domain({(0,): 1, (1,): 2}) == \
-        (ZZ, {(0,): ZZ(1), (1,): ZZ(2)})
-    assert _construct_domain({(0,): 1, (1,): 2}, field=True) == \
-        (QQ, {(0,): QQ(1), (1,): QQ(2)})
-
-    assert _construct_domain({(0,): S(1), (1,): S(2)}) == \
-        (ZZ, {(0,): ZZ(1), (1,): ZZ(2)})
-    assert _construct_domain({(0,): S(1), (1,): S(2)}, field=True) == \
-        (QQ, {(0,): QQ(1), (1,): QQ(2)})
-
-    assert _construct_domain({(0,): S(1)/2, (1,): S(2)}) == \
-        (QQ, {(0,): QQ(1,2), (1,): QQ(2)})
-
-    assert _construct_domain({(0,): 3.14, (1,): 1, (2,): S(1)/2}) == \
-        (RR, {(0,): RR(3.14), (1,): RR(1.0), (2,): RR(0.5)})
-
-    assert _construct_domain({(0,): 3.14, (1,): sqrt(2)}, extension=None) == \
-        (EX, {(0,): EX(3.14), (1,): EX(sqrt(2))})
-    assert _construct_domain({(0,): 3.14, (1,): sqrt(2)}, extension=True) == \
-        (EX, {(0,): EX(3.14), (1,): EX(sqrt(2))})
-
-    assert _construct_domain({(0,): 1, (1,): sqrt(2)}, extension=None) == \
-        (EX, {(0,): EX(1), (1,): EX(sqrt(2))})
-
-    ALG = QQ.algebraic_field(sqrt(2))
-
-    assert _construct_domain({(0,): 7, (1,): S(1)/2, (2,): sqrt(2)}, extension=True) == \
-        (ALG, {(0,): ALG.convert(7), (1,): ALG.convert(S(1)/2), (2,): ALG.convert(sqrt(2))})
-
-    ALG = QQ.algebraic_field(sqrt(2)+sqrt(3))
-
-    assert _construct_domain({(0,): 7, (1,): sqrt(2), (2,): sqrt(3)}, extension=True) == \
-        (ALG, {(0,): ALG.convert(7), (1,): ALG.convert(sqrt(2)), (2,): ALG.convert(sqrt(3))})
-
-    assert _construct_domain({(0,): 2*x, (1,): 3}) == \
-        (ZZ[x], {(0,): DMP([2,0], ZZ), (1,): DMP([3], ZZ)})
-    assert _construct_domain({(0,): 2*x, (1,): 3*y}) == \
-        (ZZ[x,y], {(0,): DMP([[2],[]], ZZ), (1,): DMP([[3,0]], ZZ)})
-
-    assert _construct_domain({(0,): x/2, (1,): 3}) == \
-        (QQ[x], {(0,): DMP([QQ(1,2),QQ(0)], QQ), (1,): DMP([QQ(3)], QQ)})
-    assert _construct_domain({(0,): x/2, (1,): 3*y}) == \
-        (QQ[x,y], {(0,): DMP([[QQ(1,2)],[]], QQ), (1,): DMP([[QQ(3),QQ(0)]], QQ)})
-
-    assert _construct_domain({(0,): 2/x, (1,): 3}) == \
-        (ZZ.frac_field(x), {(0,): DMF(([2], [1,0]), ZZ), (1,): DMF(([3], [1]), ZZ)})
-    assert _construct_domain({(0,): 2/x, (1,): 3*y}) == \
-        (ZZ.frac_field(x,y), {(0,): DMF(([[2]], [[1],[]]), ZZ), (1,): DMF(([[3,0]], [[1]]), ZZ)})
 
 def test__init_poly_from_dict():
     raises(NotImplementedError, "_init_poly_from_dict({0: 1, 1: 2}, x, y, modulus=3, domain=ZZ)")
