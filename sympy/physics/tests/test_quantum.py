@@ -67,30 +67,30 @@ def test_Bra():
 def test_InnerProduct():
     A = Bra('A')
     B = Ket('B')
-    C = A*B
-    assert isinstance(A*B, InnerProduct)
+    C = InnerProduct(A, B)
+    assert isinstance(C, InnerProduct)
     assert C.bra == A == Bra('A')
     assert C.ket == B == Ket('B')
     assert C != B*A
     assert C == InnerProduct(A, B) == InnerProduct(Bra('A'), Ket('B'))
-    assert Dagger(C) == Dagger(B)*Dagger(A) == Bra('B')*Ket('A')
+    assert Dagger(C) == InnerProduct(Dagger(B), Dagger(A)) == InnerProduct(Bra('B'), Ket('A'))
     assert isinstance(Dagger(C), InnerProduct)
-    assert C.subs(Bra('A'), Bra('S')) == Bra('S')*Ket('B') == Bra('S')*B
-    assert C.subs(Ket('B'), Ket('S')) == Bra('A')*Ket('S') == A*Ket('S')
+    assert C.subs(Bra('A'), Bra('S')) == InnerProduct(Bra('S'), Ket('B')) == InnerProduct(Bra('S'), B)
+    assert C.subs(Ket('B'), Ket('S')) == InnerProduct(Bra('A'), Ket('S')) == InnerProduct(A, Ket('S'))
 
 def test_OuterProduct():
     A = Ket('A')
     B = Bra('B')
-    C = A*B
-    assert isinstance(A*B, OuterProduct)
+    C = OuterProduct(A, B)
+    assert isinstance(C, OuterProduct)
     assert C.bra == B == Bra('B')
     assert C.ket == A == Ket('A')
     assert C != B*A
     assert C == OuterProduct(A, B) == OuterProduct(Ket('A'), Bra('B'))
-    assert Dagger(C) == Dagger(B)*Dagger(A) == Ket('B')*Bra('A')
+    assert Dagger(C) == OuterProduct(Dagger(B), Dagger(A)) == OuterProduct(Ket('B'), Bra('A'))
     assert isinstance(Dagger(C), OuterProduct)
-    assert C.subs(Bra('B'), Bra('S')) == Ket('A')*Bra('S') == A*Bra('S')
-    assert C.subs(Ket('A'), Ket('S')) == Ket('S')*Bra('B') == Ket('S')*B
+    assert C.subs(Bra('B'), Bra('S')) == OuterProduct(Ket('A'), Bra('S')) == OuterProduct(A, Bra('S'))
+    assert C.subs(Ket('A'), Ket('S')) == OuterProduct(Ket('S'), Bra('B')) == OuterProduct(Ket('S'), B)
 
 def test_Operator():
     a = Symbol('a')

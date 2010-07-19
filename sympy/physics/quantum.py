@@ -57,34 +57,6 @@ class State(Expr):
         obj = Expr.__new__(cls, name, **{'commutative': False})
         return obj
 
-    def __mul__(self, other):
-        if isinstance(self, Ket) and isinstance(other, Ket):
-#            return TensorProductsomethingsomething
-            raise NotImplementedError
-        elif isinstance(self, Bra) and isinstance(other, Bra):
-#            return TensorProductsomethingsomething
-            raise NotImplementedError
-        elif isinstance(self, Bra) and isinstance(other, Ket):
-            return InnerProduct(self, other)
-        elif isinstance(self, Ket) and isinstance(other, Bra):
-            return OuterProduct(self, other)
-        else:
-            return Mul(self, other)
-
-    def __rmul__(self, other):
-        if isinstance(self, Ket) and isinstance(other, Ket):
-#            return TensorProductsomethingsomething
-            raise NotImplementedError
-        elif isinstance(self, Bra) and isinstance(other, Bra):
-#            return TensorProductsomethingsomething
-            raise NotImplementedError
-        elif isinstance(self, Bra) and isinstance(other, Ket):
-            return OuterProduct(other, self)
-        elif isinstance(self, Ket) and isinstance(other, Bra):
-            return InnerProduct(other, self)
-        else:
-            return Mul(other, self)
-
     @property
     def name(self):
         return self.args[0]
@@ -247,7 +219,11 @@ class Dagger(Expr):
         r = cls.eval(arg)
         if isinstance(r, Expr):
             return r
-        obj = Expr.__new__(cls, arg)
+        #make unevaluated dagger commutative or non-commutative depending on arg
+        if arg.is_commutative:
+            obj = Expr.__new__(cls, arg)
+        else:
+            obj = Expr.__new__(cls, arg, **{'commutative':False})
         return obj
 
     @classmethod
@@ -285,6 +261,9 @@ class Dagger(Expr):
 
     def _eval_dagger(self):
         return self.args[0]
+
+def combine_ip():
+    pass
 
 class KroneckerDelta(Function):
     """
