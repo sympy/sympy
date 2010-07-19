@@ -1119,6 +1119,10 @@ class Integer(Rational):
     def __rfloordiv__(self, other):
         return Integer(Integer(other).p // self.p)
 
+    def factorial(a):
+        """Compute factorial of `a`. """
+        return Integer(ifactorial(int(a)))
+
     def sqrt(a):
         """Compute integer square root of `a`. """
         return Integer(mlib.isqrt(int(a)))
