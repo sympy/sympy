@@ -1,4 +1,4 @@
-""" """
+"""Options manager for :class:`Poly` and public API functions. """
 
 from sympy.core import S, Basic, sympify
 
@@ -10,7 +10,7 @@ from sympy.polys.polyerrors import (
 
 from sympy.polys.monomialtools import monomial_key
 
-from sympy.polys.domains import ZZ, QQ, RR, EX
+from sympy.polys.domains import FF, GF, ZZ, QQ, RR, EX
 
 from sympy.ntheory import isprime
 
@@ -41,8 +41,8 @@ class BooleanOption(Option):
 
     @classmethod
     def preprocess(cls, value):
-        if value in (True, False, 1, 0):
-            return value
+        if value is True or value is False or value is 1 or value is 0:
+            return bool(value)
         else:
             raise OptionError("'%s' must have a boolean value assigned, got %s" % (cls.option, value))
 
@@ -140,7 +140,9 @@ class Options(dict):
 
         return flags
 
-class Expand(Option):
+class Expand(BooleanOption):
+    """ """
+
     __metaclass__ = OptionType
 
     option = 'expand'
@@ -150,20 +152,9 @@ class Expand(Option):
 
     default = None
 
-    @classmethod
-    def preprocess(cls, expand):
-        if expand in (True, False, 1, 0):
-            return expand
-        elif isinstance(expand, dict):
-            raise NotImplementedError
-        else:
-            raise OptionError("'expand' ...")
-
-    @classmethod
-    def postprocess(cls, options):
-        pass
-
 class Gens(Option):
+    """ """
+
     __metaclass__ = OptionType
 
     option = 'gens'
@@ -183,11 +174,9 @@ class Gens(Option):
 
         return tuple(gens)
 
-    @classmethod
-    def postprocess(cls, options):
-        pass
-
 class Wrt(Option):
+    """ """
+
     __metaclass__ = OptionType
 
     option = 'wrt'
@@ -197,22 +186,22 @@ class Wrt(Option):
 
     default = None
 
+    _re_split = re.compile(" |,")
+
     @classmethod
     def preprocess(cls, wrt):
         if isinstance(wrt, Basic):
             return [str(wrt)]
         elif isinstance(wrt, str):
-            return [ gen.strip() for gen in wrt.split(",") ]
+            return [ gen.strip() for gen in cls._re_split.split(wrt) ]
         elif hasattr(wrt, '__getitem__'):
             return list(map(str, wrt))
         else:
             raise OptionError("invalid argument for 'wrt' option")
 
-    @classmethod
-    def postprocess(cls, options):
-        pass
-
 class Sort(Option):
+    """ """
+
     __metaclass__ = OptionType
 
     option = 'sort'
@@ -229,11 +218,9 @@ class Sort(Option):
         else:
             raise OptionError("invalid argument for 'sort' option")
 
-    @classmethod
-    def postprocess(cls, options):
-        pass
-
 class Order(Option):
+    """ """
+
     __metaclass__ = OptionType
 
     option = 'order'
@@ -244,14 +231,16 @@ class Order(Option):
     default = None
 
     @classmethod
-    def preprocessder(cls, order):
+    def preprocess(cls, order):
         return monomial_key(order)
 
     @classmethod
     def postprocess(cls, options):
         raise NotImplementedError("'order' keyword is not implemented yet")
 
-class Field(Option):
+class Field(BooleanOption):
+    """ """
+
     __metaclass__ = OptionType
 
     option = 'field'
@@ -261,18 +250,9 @@ class Field(Option):
 
     default = None
 
-    @classmethod
-    def preprocess(cls, field):
-        if isinstance(field, bool):
-            return field
-        else:
-            raise OptionError("invalid argument for 'field' option")
+class Greedy(BooleanOption):
+    """ """
 
-    @classmethod
-    def postprocess(cls, options):
-        pass
-
-class Greedy(Option):
     __metaclass__ = OptionType
 
     option = 'greedy'
@@ -282,18 +262,9 @@ class Greedy(Option):
 
     default = None
 
-    @classmethod
-    def preprocess(cls, greedy):
-        if isinstance(greedy, bool):
-            return greedy
-        else:
-            raise OptionError("invalid argument for 'greedy' option")
-
-    @classmethod
-    def postprocess(cls, options):
-        pass
-
 class Domain(Option):
+    """ """
+
     __metaclass__ = OptionType
 
     option = 'domain'
@@ -303,9 +274,10 @@ class Domain(Option):
 
     default = None
 
-    _re_polynomial = re.compile("^(Z|ZZ|Q|QQ)\[(.+)\]$")
-    _re_fraction   = re.compile("^(Z|ZZ|Q|QQ)\((.+)\)$")
-    _re_algebraic  = re.compile("^(Q|QQ)\<(.+)\>$")
+    _re_finitefield = re.compile("^(FF|GF)\((\d+)\)$")
+    _re_polynomial  = re.compile("^(Z|ZZ|Q|QQ)\[(.+)\]$")
+    _re_fraction    = re.compile("^(Z|ZZ|Q|QQ)\((.+)\)$")
+    _re_algebraic   = re.compile("^(Q|QQ)\<(.+)\>$")
 
     @classmethod
     def preprocess(cls, domain):
@@ -324,7 +296,13 @@ class Domain(Option):
             if domain == 'EX':
                 return EX
 
-            r = re.match(cls._re_polynomial, domain)
+            r = cls._re_finitefield.match(domain)
+
+            if r is not None:
+                _, modulus = r.groups()
+                return FF(int(modulus))
+
+            r = cls._re_polynomial.match(domain)
 
             if r is not None:
                 ground, gens = r.groups()
@@ -336,7 +314,7 @@ class Domain(Option):
                 else:
                     return QQ.poly_ring(*gens)
 
-            r = re.match(cls._re_fraction, domain)
+            r = cls._re_fraction.match(domain)
 
             if r is not None:
                 ground, gens = r.groups()
@@ -348,7 +326,7 @@ class Domain(Option):
                 else:
                     return QQ.frac_field(*gens)
 
-            r = re.match(cls._re_algebraic, domain)
+            r = cls._re_algebraic.match(domain)
 
             if r is not None:
                 gens = map(sympify, r.groups()[1].split(','))
@@ -359,9 +337,11 @@ class Domain(Option):
     @classmethod
     def postprocess(cls, options):
         if options['domain'].is_Composite and set(options['domain'].gens) & set(options['gens']):
-            raise PolynomialError("ground domain and generators interferes together")
+            raise GeneratorsError("ground domain and generators interferes together")
 
-class Split(Option):
+class Split(BooleanOption):
+    """ """
+
     __metaclass__ = OptionType
 
     option = 'split'
@@ -372,17 +352,12 @@ class Split(Option):
     default = None
 
     @classmethod
-    def preprocess(cls, split):
-        if isinstance(split, bool):
-            return split
-        else:
-            raise OptionError("invalid argument for 'split' option")
-
-    @classmethod
     def postprocess(cls, options):
         raise NotImplementedError("'split' option is not implemented yet")
 
 class Gaussian(BooleanOption):
+    """ """
+
     __metaclass__ = OptionType
 
     option = 'gaussian'
@@ -396,9 +371,11 @@ class Gaussian(BooleanOption):
     def postprocess(cls, options):
         if options['gaussian'] is True:
             options['extension'] = set([S.ImaginaryUnit])
-            Extension.postprocess(options) # XXX: temporary
+            Extension.postprocess(options)
 
 class Extension(Option):
+    """ """
+
     __metaclass__ = OptionType
 
     option = 'extension'
@@ -410,9 +387,10 @@ class Extension(Option):
 
     @classmethod
     def preprocess(cls, extension):
-        if isinstance(extension, bool):
-            if extension is False:
-                raise OptionError("'False' is an invalid argument for 'extension'")
+        if extension is True or extension is 1:
+            return bool(extension)
+        elif extension is False or extension is 0:
+            raise OptionError("'False' is an invalid argument for 'extension'")
         else:
             if not hasattr(extension, '__iter__'):
                 extension = set([extension])
@@ -422,7 +400,7 @@ class Extension(Option):
                 else:
                     extension = set(extension)
 
-        return extension
+            return extension
 
     @classmethod
     def postprocess(cls, options):
@@ -430,12 +408,14 @@ class Extension(Option):
             options['domain'] = QQ.algebraic_field(*options['extension'])
 
 class Modulus(Option):
+    """ """
+
     __metaclass__ = OptionType
 
     option = 'modulus'
 
     requires = []
-    excludes = ['field', 'greedy', 'split', 'gaussian', 'extension']
+    excludes = ['field', 'greedy', 'split', 'domain', 'gaussian', 'extension']
 
     default = None
 
@@ -443,30 +423,30 @@ class Modulus(Option):
     def preprocess(cls, modulus):
         modulus = sympify(modulus)
 
-        if modulus.is_Integer and isprime(modulus):
+        if modulus.is_Integer and modulus > 0:
             return int(modulus)
         else:
-            raise OptionError("'modulus' must be a prime integer, got %s" % modulus)
+            raise OptionError("'modulus' must a positive integer, got %s" % modulus)
 
     @classmethod
     def postprocess(cls, options):
-        if 'domain' in options:
-            if not options['domain'].is_ZZ:
-                raise PolynomialError("'domain' must have ZZ category when give with 'modulus'")
-        else:
-            options['domain'] = ZZ
+        options['domain'] = ZZ # XXX: FF(options['modulus'])
 
 class Symmetric(BooleanOption):
+    """ """
+
     __metaclass__ = OptionType
 
     option = 'symmetric'
 
     requires = ['modulus']
-    excludes = ['field', 'greedy', 'split', 'gaussian', 'extension']
+    excludes = ['field', 'greedy', 'domain', 'split', 'gaussian', 'extension']
 
     default = None
 
 class Strict(BooleanOption):
+    """ """
+
     __metaclass__ = OptionType
 
     option = 'strict'
@@ -513,6 +493,8 @@ class Include(BooleanOption, Flag):
     default = None
 
 class Gen(Option, Flag):
+    """ """
+
     __metaclass__ = OptionType
 
     option = 'gen'

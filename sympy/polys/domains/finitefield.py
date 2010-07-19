@@ -34,11 +34,13 @@ class FiniteField(Field, SimpleDomain):
 
     def __eq__(self, other):
         """Returns `True` if two domains are equivalent. """
-        return self.dtype == other.dtype and self.mod == other.mod and self.dom == other.dom
+        return self.dtype.__class__.__name__ == other.dtype.__class__.__name__ and \
+                self.mod == other.mod and self.dom == other.dom # XXX: this is a hack
 
     def __ne__(self, other):
         """Returns `False` if two domains are equivalent. """
-        return self.dtype != other.dtype or self.mod != other.mod or self.dom != other.dom
+        return self.dtype.__class__.__name__ != other.dtype.__class__.__name__ or \
+                self.mod != other.mod or self.dom != other.dom # XXX: this is a hack
 
     def characteristic(self):
         """Return the characteristic of this domain. """
