@@ -3,7 +3,8 @@ from sympy import (Matrix, Piecewise, Ne, symbols, sqrt, Function,
     Rational, conjugate, Derivative, tan, Function, log, floor, Symbol,
     pprint, sqrt, factorial, pi, sin, ceiling, pprint_use_unicode, I, S,
     Limit, oo, cos, Pow, Integral, exp, Eq, Lt, Gt, Ge, Le, gamma, Abs, RootOf,
-    RootSum, Lambda, Not, And, Or, Xor, Nand, Nor, Implies, Equivalent)
+    RootSum, Lambda, Not, And, Or, Xor, Nand, Nor, Implies, Equivalent,
+    ZZ, QQ, RR)
 
 from sympy.printing.pretty import pretty as xpretty
 from sympy.printing.pretty import pprint
@@ -1965,6 +1966,42 @@ def test_pretty_Boolean():
 
     assert  pretty(expr) == "Equivalent(x, y)"
     assert upretty(expr) == u"x ≡ y"
+
+def test_pretty_Domain():
+    expr = ZZ
+
+    assert  pretty(expr) == "ZZ"
+    assert upretty(expr) == u"\u2124"
+
+    expr = QQ
+
+    assert  pretty(expr) == "QQ"
+    assert upretty(expr) == u"\u211A"
+
+    expr = RR
+
+    assert  pretty(expr) == "RR"
+    assert upretty(expr) == u"\u211D"
+
+    expr = QQ[x]
+
+    assert  pretty(expr) == "QQ[x]"
+    assert upretty(expr) == u"\u211A[x]"
+
+    expr = QQ[x, y]
+
+    assert  pretty(expr) == "QQ[x, y]"
+    assert upretty(expr) == u"\u211A[x, y]"
+
+    expr = ZZ.frac_field(x)
+
+    assert  pretty(expr) == "ZZ(x)"
+    assert upretty(expr) == u"\u2124(x)"
+
+    expr = ZZ.frac_field(x, y)
+
+    assert  pretty(expr) == "ZZ(x, y)"
+    assert upretty(expr) == u"\u2124(x, y)"
 
 def test_pretty_prec():
     assert xpretty(S("0.3"), full_prec=True) == "0.300000000000000"
