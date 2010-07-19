@@ -1119,6 +1119,10 @@ class Integer(Rational):
     def __rfloordiv__(self, other):
         return Integer(Integer(other).p // self.p)
 
+    def sqrt(a):
+        """Compute integer square root of `a`. """
+        return Integer(mlib.isqrt(int(a)))
+
     def half_gcdex(a, b):
         """Half Extended Euclidean Algorithm. """
         s, _, h = a.gcdex(b)
