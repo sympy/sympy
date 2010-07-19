@@ -20,7 +20,7 @@ from sympy.core.numbers import ilcm
 from sympy.functions import log, exp, LambertW
 from sympy.simplify import simplify, collect
 from sympy.matrices import Matrix, zeros
-from sympy.polys import roots
+from sympy.polys import roots, cancel
 from sympy.functions.elementary.piecewise import piecewise_fold
 
 from sympy.utilities import any, all
@@ -560,6 +560,8 @@ def solve_undetermined_coeffs(equ, coeffs, sym, **flags):
         # got equation, so move all the
         # terms to the left hand side
         equ = equ.lhs - equ.rhs
+
+    equ = cancel(equ).as_numer_denom()[0]
 
     system = collect(equ.expand(), sym, evaluate=False).values()
 

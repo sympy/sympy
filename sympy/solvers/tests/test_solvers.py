@@ -4,7 +4,7 @@ from sympy import Matrix, Symbol, solve, exp, log, cos, acos, Rational, Eq, \
         And, Or, Lt, Gt
 
 from sympy.solvers import solve_linear_system, solve_linear_system_LU,dsolve,\
-     tsolve
+     tsolve, solve_undetermined_coeffs
 
 from sympy.solvers.solvers import guess_solve_strategy, GS_POLY, GS_POLY_CV_1, GS_POLY_CV_2,\
     GS_TRANSCENDENTAL, GS_RATIONAL, GS_RATIONAL_CV_1
@@ -307,3 +307,15 @@ def test_solve_inequalities():
     assert solve([Lt(a**2 - 2, 0), Gt(a**2 - 1, 0)], relational=True) == \
         Or(And(Lt(-sqrt(2), a), Lt(a, -1)), And(Lt(1, a), Lt(a, sqrt(2))))
 
+def test_solve_undetermined_coeffs():
+    a, b, c, x = symbols('a, b, c, x')
+
+    assert solve_undetermined_coeffs(a*x**2 + b*x**2 + b*x  + 2*c*x + c + 1, [a, b, c], x) == \
+        {a: -2, b: 2, c: -1}
+    # Test that rational functions work
+    assert solve_undetermined_coeffs(a/x  + b/(x + 1) - (2*x + 1)/(x**2 + x), [a, b], x) == \
+        {a: 1, b: 1}
+    # Test cancelation in rational functions
+    assert solve_undetermined_coeffs(((c + 1)*a*x**2 + (c + 1)*b*x**2 +
+    (c + 1)*b*x  + (c + 1)*2*c*x + (c + 1)**2)/(c + 1), [a, b, c], x) == \
+        {a: -2, b: 2, c: -1}
