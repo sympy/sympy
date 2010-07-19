@@ -762,6 +762,14 @@ class PrettyPrinter(Printer):
         pform = prettyForm(*pform.left('RootSum'))
         return pform
 
+    def _print_FiniteField(self, expr):
+        if pretty_use_unicode():
+            form = u'\u2124_%d'
+        else:
+            form = 'GF(%d)'
+
+        return prettyForm(pretty_symbol(form % expr.mod))
+
     def _print_IntegerRing(self, expr):
         if pretty_use_unicode():
             return prettyForm(u'\u2124')
