@@ -1,19 +1,19 @@
 """Implementation of :class:`RealDomain` class. """
 
 from sympy.polys.domains.simpledomain import SimpleDomain
+from sympy.polys.domains.characteristiczero import CharacteristicZero
+
 from sympy.polys.polyerrors import DomainError
 
 import math
 
-class RealDomain(SimpleDomain):
+class RealDomain(CharacteristicZero, SimpleDomain): # XXX: should be a field
     """Abstract domain for real numbers. """
 
     rep   = 'RR'
 
     is_Exact     = False
     is_Numerical = True
-
-    has_CharacteristicZero = True
 
     def as_integer_ratio(self, a, **args):
         """Convert real number to a (numer, denom) pair. """
