@@ -572,6 +572,10 @@ def test_IntegerInteger():
     assert a == b
 
 def test_Integer_methods():
+    assert Integer(0).factorial() == Integer(1)
+    assert Integer(1).factorial() == Integer(1)
+    assert Integer(10).factorial() == Integer(3628800)
+
     assert Integer(100).sqrt() == Integer(10)
     assert Integer(110).sqrt() == Integer(10)
     assert Integer(121).sqrt() == Integer(11)
