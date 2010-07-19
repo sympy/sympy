@@ -1,4 +1,4 @@
-"""Implementation of :class:`ExpressionDomain` class. """
+"""Implementation of :class:`IntegerRing` class. """
 
 from sympy.polys.domains.ring import Ring
 from sympy.polys.domains.simpledomain import SimpleDomain
