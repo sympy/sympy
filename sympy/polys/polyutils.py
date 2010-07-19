@@ -4,6 +4,8 @@ from sympy import S, Basic, sympify, Integer, Rational, Symbol, Add, Mul, Pow, a
 
 from sympy.polys.polyerrors import PolynomialError, GeneratorsNeeded
 
+import re
+
 _gens_order = {
     'a': 301, 'b': 302, 'c': 303, 'd': 304,
     'e': 305, 'f': 306, 'g': 307, 'h': 308,
@@ -15,6 +17,7 @@ _gens_order = {
 }
 
 _max_order = 1000
+_re_gen = re.compile(r"^(.+?)(\d*)$")
 
 def _sort_gens(gens, **args):
     """Sort generators in a reasonably intelligent way. """
@@ -37,26 +40,33 @@ def _sort_gens(gens, **args):
         else:
             raise TypeError("invalid argument given via 'wrt' keyword")
 
-    def order_key(x):
-        x = str(x)
+    def order_key(gen):
+        gen = str(gen)
 
         if wrt is not None:
             try:
-                return (-len(wrt) + wrt.index(x), x)
+                return (-len(wrt) + wrt.index(gen), gen, 0)
             except ValueError:
                 pass
 
+        name, index = _re_gen.match(gen).groups()
+
+        if index:
+            index = int(index)
+        else:
+            index = 0
+
         try:
-            return ( gens_order[x], x)
+            return ( gens_order[name], name, index)
         except KeyError:
             pass
 
         try:
-            return (_gens_order[x], x)
+            return (_gens_order[name], name, index)
         except KeyError:
             pass
 
-        return (_max_order, x)
+        return (_max_order, name, index)
 
     try:
         gens = sorted(gens, key=order_key)
