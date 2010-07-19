@@ -2,8 +2,9 @@
 
 from sympy.polys.domains.field import Field
 from sympy.polys.domains.simpledomain import SimpleDomain
+from sympy.polys.domains.characteristiczero import CharacteristicZero
 
-class RationalField(Field, SimpleDomain):
+class RationalField(Field, CharacteristicZero, SimpleDomain):
     """General class for rational fields. """
 
     is_QQ = True
@@ -13,8 +14,6 @@ class RationalField(Field, SimpleDomain):
 
     has_assoc_Ring         = True
     has_assoc_Field        = True
-
-    has_CharacteristicZero = True
 
     def get_ring(self):
         """Returns a ring associated with `self`. """

@@ -2,12 +2,13 @@
 
 from sympy.polys.domains.ring import Ring
 from sympy.polys.domains.compositedomain import CompositeDomain
+from sympy.polys.domains.characteristiczero import CharacteristicZero
 
 from sympy.polys.polyclasses import DMP
 from sympy.polys.polyerrors import GeneratorsNeeded, GeneratorsError
 from sympy.polys.polyutils import dict_from_basic, basic_from_dict, _dict_reorder
 
-class PolynomialRing(Ring, CompositeDomain):
+class PolynomialRing(Ring, CharacteristicZero, CompositeDomain):
     """A class for representing multivariate polynomial rings. """
 
     dtype        = DMP
@@ -15,8 +16,6 @@ class PolynomialRing(Ring, CompositeDomain):
 
     has_assoc_Ring         = True
     has_assoc_Field        = True
-
-    has_CharacteristicZero = True
 
     def __init__(self, dom, *gens):
         if not gens:

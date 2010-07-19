@@ -2,11 +2,12 @@
 
 from sympy.polys.domains.field import Field
 from sympy.polys.domains.simpledomain import SimpleDomain
-from sympy.polys.polyerrors import DomainError
+from sympy.polys.domains.characteristiczero import CharacteristicZero
 
 from sympy.core import sympify
+from sympy.polys.polyerrors import DomainError
 
-class ExpressionDomain(Field, SimpleDomain):
+class ExpressionDomain(Field, CharacteristicZero, SimpleDomain):
     """A class for arbitrary expressions. """
 
     is_EX = True
@@ -106,8 +107,6 @@ class ExpressionDomain(Field, SimpleDomain):
 
     has_assoc_Ring         = False
     has_assoc_Field        = True
-
-    has_CharacteristicZero = True
 
     def __init__(self):
         pass
