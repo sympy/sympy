@@ -1066,6 +1066,10 @@ class Integer(Rational):
     def __rfloordiv__(self, other):
         return Integer(Integer(other).p // self.p)
 
+    def sqrt(a):
+        """Compute integer square root of `a`. """
+        return Integer(mlib.isqrt(int(a)))
+
     def half_gcdex(a, b):
         """Half Extended Euclidean Algorithm. """
         s, _, h = a.gcdex(b)
@@ -1103,7 +1107,7 @@ class Integer(Rational):
             raise ZeroDivisionError("zero divisor")
 
     def cofactors(a, b):
-        """Returns GCD and cofactors of input arguments. """
+        """Compute GCD and cofactors of input arguments. """
         if type(b) is int:
             gcd = Integer(igcd(int(a), b))
             return gcd, a//gcd, Integer(b)//gcd
@@ -1117,7 +1121,7 @@ class Integer(Rational):
                 raise ValueError("expected an integer, got %s" % b)
 
     def gcd(a, b):
-        """Returns greates common divisor of input arguments. """
+        """Compute greatest common divisor of input arguments. """
         if type(b) is int:
             return Integer(igcd(int(a), b))
         else:
@@ -1129,7 +1133,7 @@ class Integer(Rational):
                 raise ValueError("expected an integer, got %s" % b)
 
     def lcm(a, b):
-        """Returns least common multiple of input arguments. """
+        """Compute least common multiple of input arguments. """
         if type(b) is int:
             return Integer(ilcm(int(a), b))
         else:
@@ -1142,7 +1146,6 @@ class Integer(Rational):
 
 # Add sympify converters
 converter[int] = converter[long] = Integer
-
 
 class Zero(Integer):
     __metaclass__ = SingletonMeta
