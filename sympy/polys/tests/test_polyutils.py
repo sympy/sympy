@@ -76,6 +76,10 @@ def test__sort_gens():
     assert _sort_gens([x,p,q], wrt='p', sort='q > x') == (p, q, x)
     assert _sort_gens([x,p,q], wrt='q', sort='p > x') == (q, p, x)
 
+    X = symbols('x0,x1,x2,x10,x11,x12,x20,x21,x22')
+
+    assert _sort_gens(X) == X
+
 def test__unify_gens():
     assert _unify_gens([], []) == ()
 
