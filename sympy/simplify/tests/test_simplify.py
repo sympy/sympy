@@ -3,7 +3,10 @@ from sympy import Symbol, symbols, together, hypersimp, factorial, binomial, \
         simplify, trigsimp, cos, tan, cot, log, ratsimp, Matrix, pi, integrate, \
         solve, nsimplify, GoldenRatio, sqrt, E, I, sympify, atan, Derivative, \
         S, diff, oo, Eq, Integer, gamma, acos, Integral, logcombine, \
-        separatevars, Wild
+        separatevars, \
+        numer, \
+        denom, \
+        Wild
 from sympy.utilities import all
 from sympy.utilities.pytest import XFAIL
 

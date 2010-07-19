@@ -171,3 +171,13 @@ def test_infinity():
     assert exp(I*oo) == nan
     assert exp(y*I*oo) == nan
 
+def test_as_numer_denom():
+    from sympy.abc import x
+    n = symbols('n', negative=True)
+    assert exp(x).as_numer_denom() == (exp(x), 1)
+    assert exp(-x).as_numer_denom() == (1, exp(x))
+    assert exp(-2*x).as_numer_denom() == (1, exp(2*x))
+    assert exp(-2).as_numer_denom() == (1, exp(2))
+    assert exp(n).as_numer_denom() == (exp(n), 1)
+    assert exp(-n).as_numer_denom() == (1, exp(n))
+

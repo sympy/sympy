@@ -20,6 +20,12 @@ class exp(Function):
     def inverse(self, argindex=1):
         return log
 
+    def as_numer_denom(self):
+        c, t = self.args[0].as_coeff_terms()
+        if c.is_negative:
+            return S.One, exp(-self.args[0])
+        return self, S.One
+
     @classmethod
     def eval(cls, arg):
         if arg.is_Number:
