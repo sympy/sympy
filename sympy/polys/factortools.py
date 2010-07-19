@@ -60,7 +60,7 @@ from sympy.polys.densetools import (
     dup_inner_gcd, dmp_inner_gcd,
     dup_sqf_norm, dmp_sqf_norm,
     dup_compose, dmp_compose,
-    dup_taylor
+    dup_shift
 )
 
 from sympy.polys.polyutils import _sort_factors
@@ -1010,7 +1010,7 @@ def dup_ext_factor(f, K):
     for i, (factor, _) in enumerate(factors):
         h = dup_convert(factor, K.dom, K)
         h, _, g = dup_inner_gcd(h, g, K)
-        h = dup_taylor(h, H, K)
+        h = dup_shift(h, H, K)
         factors[i] = h
 
     factors = dup_trial_division(F, factors, K)

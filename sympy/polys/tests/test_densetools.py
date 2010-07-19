@@ -47,7 +47,7 @@ from sympy.polys.densetools import (
     dmp_sqf_list, dmp_sqf_list_include,
     dup_extract, dmp_ground_extract,
     dup_real_imag,
-    dup_mirror, dup_scale, dup_taylor,
+    dup_mirror, dup_scale, dup_shift,
     dup_transform,
     dup_compose, dmp_compose,
     dup_decompose,
@@ -1037,12 +1037,12 @@ def test_dup_scale():
     assert dup_scale([1,2,3,4,5], -1, ZZ) == [1,-2,3,-4,5]
     assert dup_scale([1,2,3,4,5], -7, ZZ) == [2401,-686,147,-28,5]
 
-def test_dup_taylor():
-    assert dup_taylor([], 1, ZZ) == []
-    assert dup_taylor([1], 1, ZZ) == [1]
+def test_dup_shift():
+    assert dup_shift([], 1, ZZ) == []
+    assert dup_shift([1], 1, ZZ) == [1]
 
-    assert dup_taylor([1,2,3,4,5], 1, ZZ) == [1,6,15,20,15]
-    assert dup_taylor([1,2,3,4,5], 7, ZZ) == [1,30,339,1712,3267]
+    assert dup_shift([1,2,3,4,5], 1, ZZ) == [1,6,15,20,15]
+    assert dup_shift([1,2,3,4,5], 7, ZZ) == [1,30,339,1712,3267]
 
 def test_dup_transform():
     assert dup_transform([], [], [1,1], ZZ) == []

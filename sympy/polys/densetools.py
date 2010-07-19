@@ -1569,11 +1569,11 @@ def dup_gff_list(f, K):
     if not dup_degree(f):
         return []
     else:
-        g = dup_gcd(f, dup_taylor(f, K.one, K), K)
+        g = dup_gcd(f, dup_shift(f, K.one, K), K)
         H = dup_gff_list(g, K)
 
         for i, (h, k) in enumerate(H):
-            g = dup_mul(g, dup_taylor(h, -K(k), K), K)
+            g = dup_mul(g, dup_shift(h, -K(k), K), K)
             H[i] = (h, k + 1)
 
         f = dup_exquo(f, g, K)
@@ -1613,7 +1613,7 @@ def dup_sqf_norm(f, K):
         if dup_sqf_p(r, K.dom):
             break
         else:
-            f, s = dup_taylor(f, -K.unit, K), s+1
+            f, s = dup_shift(f, -K.unit, K), s+1
 
     return s, f, r
 
@@ -1857,7 +1857,7 @@ def dup_scale(f, a, K):
 
     return f
 
-def dup_taylor(f, a, K):
+def dup_shift(f, a, K):
     """Evaluate efficiently Taylor shift `f(x + a)` in `K[x]`. """
     f, n = list(f), dup_degree(f)
 
