@@ -19,7 +19,7 @@ import sympy.mpmath as mpmath
 def fraction(expr, exact=False):
     """Returns a pair with expression's numerator and denominator.
        If the given expression is not a fraction then this function
-       will assume that the denominator is equal to one.
+       will return the tuple (expr, 1).
 
        This function will not make any attempt to simplify nested
        fractions or to do any term rewriting at all.
@@ -57,8 +57,8 @@ def fraction(expr, exact=False):
        >>> fraction(2*x**(-y))
        (2, x**y)
 
-       #>>> fraction(exp(-x))
-       #(1, exp(x))
+       >>> fraction(exp(-x))
+       (1, exp(x))
 
        >>> fraction(exp(-x), exact=True)
        (exp(-x), 1)
@@ -69,37 +69,23 @@ def fraction(expr, exact=False):
     numer, denom = [], []
 
     for term in Mul.make_args(expr):
-        if term.is_Pow:
-            b, e = term.as_base_exp()
-            if e.is_negative:
-                if e is S.NegativeOne:
+        if term.is_Pow or term.func is exp:
+            b, ex = term.as_base_exp()
+            if ex.is_negative:
+                if ex is S.NegativeOne:
                     denom.append(b)
                 else:
-                    denom.append(Pow(b, -e))
-            elif not exact and e.is_Mul:
-                if e.as_coeff_mul()[0].is_negative:
-                    denom.append(Pow(b, -e))
-                else:
-                    numer.append(term)
-            else:
-                numer.append(term)
-        elif term.func is C.exp:
-            e = term.args[0]
-            if e.is_negative:
-                denom.append(C.exp(-e))
-            elif not exact and e.is_Mul:
-                if e.as_coeff_mul()[0].is_negative:
-                    denom.append(C.exp(-e))
-                else:
-                    numer.append(term)
+                    denom.append(Pow(b, -ex))
+            elif not exact and ex.is_Mul:
+                n, d = term.as_numer_denom()
+                numer.append(n)
+                denom.append(d)
             else:
                 numer.append(term)
         elif term.is_Rational:
-            if term.is_integer:
-                numer.append(term)
-            else:
-                numer.append(Rational(term.p))
-                denom.append(Rational(term.q))
+            n, d = term.as_numer_denom()
+            numer.append(n)
+            denom.append(d)
         else:
             numer.append(term)
 

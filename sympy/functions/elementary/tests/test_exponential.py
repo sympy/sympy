@@ -173,3 +173,13 @@ def test_exp_expand():
     assert exp(A+B+C).expand() == exp(A+B+C)
     assert exp(x+y).expand() == exp(x)*exp(y)
     assert exp(x+y+z).expand() == exp(x)*exp(y)*exp(z)
+
+def test_as_numer_denom():
+    from sympy.abc import x
+    n = symbols('n', negative=True)
+    assert exp(x).as_numer_denom() == (exp(x), 1)
+    assert exp(-x).as_numer_denom() == (1, exp(x))
+    assert exp(-2*x).as_numer_denom() == (1, exp(2*x))
+    assert exp(-2).as_numer_denom() == (1, exp(2))
+    assert exp(n).as_numer_denom() == (exp(n), 1)
+    assert exp(-n).as_numer_denom() == (1, exp(n))
