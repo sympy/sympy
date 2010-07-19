@@ -2,10 +2,11 @@
 
 from sympy.polys.domains.ring import Ring
 from sympy.polys.domains.simpledomain import SimpleDomain
+from sympy.polys.domains.characteristiczero import CharacteristicZero
 
 import math
 
-class IntegerRing(Ring, SimpleDomain):
+class IntegerRing(Ring, CharacteristicZero, SimpleDomain):
     """General class for integer rings. """
 
     is_ZZ = True
@@ -15,8 +16,6 @@ class IntegerRing(Ring, SimpleDomain):
 
     has_assoc_Ring         = True
     has_assoc_Field        = True
-
-    has_CharacteristicZero = True
 
     def get_field(self):
         """Returns a field associated with `self`. """

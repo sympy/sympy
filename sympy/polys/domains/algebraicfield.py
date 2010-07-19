@@ -2,11 +2,12 @@
 
 from sympy.polys.domains.field import Field
 from sympy.polys.domains.simpledomain import SimpleDomain
+from sympy.polys.domains.characteristiczero import CharacteristicZero
 
 from sympy.polys.polyclasses import ANP
 from sympy.polys.polyerrors import CoercionFailed, DomainError, NotAlgebraic, IsomorphismFailed
 
-class AlgebraicField(Field, SimpleDomain):
+class AlgebraicField(Field, CharacteristicZero, SimpleDomain):
     """A class for representing algebraic number fields. """
 
     dtype        = ANP
@@ -16,8 +17,6 @@ class AlgebraicField(Field, SimpleDomain):
 
     has_assoc_Ring  = False
     has_assoc_Field = True
-
-    has_CharacteristicZero = True
 
     def __init__(self, dom, *ext):
         if not dom.is_QQ:

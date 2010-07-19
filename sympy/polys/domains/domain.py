@@ -442,3 +442,7 @@ class Domain(object):
 
     def imag(self, a):
         return self.zero
+
+    def characteristic(self):
+        """Return the characteristic of this domain. """
+        raise NotImplementedError('characteristic()')
