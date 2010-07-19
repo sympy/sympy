@@ -220,10 +220,10 @@ def test_Poly__new__():
 
     raises(OptionError, "Poly(x, x, symmetric=True)")
 
-    raises(PolynomialError, "Poly(x+y, x, y, domain=ZZ[x])")
-    raises(PolynomialError, "Poly(x+y, x, y, domain=ZZ[y])")
+    raises(GeneratorsError, "Poly(x+y, x, y, domain=ZZ[x])")
+    raises(GeneratorsError, "Poly(x+y, x, y, domain=ZZ[y])")
 
-    raises(PolynomialError, "Poly(x+2, x, modulus=3, domain=QQ)")
+    raises(OptionError, "Poly(x+2, x, modulus=3, domain=QQ)")
 
     raises(OptionError, "Poly(x+2, x, domain=ZZ, gaussian=True)")
     raises(OptionError, "Poly(x+2, x, modulus=3, gaussian=True)")
@@ -382,66 +382,6 @@ def test_Poly__eq__():
 
     assert (Poly(x*y, x, y) == Poly(x, x)) == False
 
-def test_Poly__analyze_order():
-    assert Poly._analyze_order({}) is None
-    assert Poly._analyze_order({'order': 'lex'}) == monomial_lex_key
-
-    raises(ValueError, "Poly._analyze_order({'order': 'foo'})")
-    raises(ValueError, "Poly._analyze_order({'order': 1})")
-
-def test_Poly__analyze_domain():
-    assert Poly._analyze_domain({}) is None
-    assert Poly._analyze_domain({'domain': ZZ}) == ZZ
-    assert Poly._analyze_domain({'domain': 'ZZ'}) == ZZ
-
-def test_Poly__parse_domain():
-    assert Poly._parse_domain(ZZ) == ZZ
-    assert Poly._parse_domain(QQ) == QQ
-    assert Poly._parse_domain(EX) == EX
-    assert Poly._parse_domain(ZZ[x,y]) == ZZ[x,y]
-
-    assert Poly._parse_domain('Z') == ZZ
-    assert Poly._parse_domain('Q') == QQ
-
-    assert Poly._parse_domain('ZZ') == ZZ
-    assert Poly._parse_domain('QQ') == QQ
-
-    assert Poly._parse_domain('EX') == EX
-
-    raises(ValueError, "Poly._parse_domain('Z[]')")
-
-    assert Poly._parse_domain('Z[x]') == ZZ[x]
-    assert Poly._parse_domain('Q[x]') == QQ[x]
-
-    assert Poly._parse_domain('ZZ[x]') == ZZ[x]
-    assert Poly._parse_domain('QQ[x]') == QQ[x]
-
-    assert Poly._parse_domain('Z[x,y]') == ZZ[x,y]
-    assert Poly._parse_domain('Q[x,y]') == QQ[x,y]
-
-    assert Poly._parse_domain('ZZ[x,y]') == ZZ[x,y]
-    assert Poly._parse_domain('QQ[x,y]') == QQ[x,y]
-
-    raises(ValueError, "Poly._parse_domain('Z()')")
-
-    assert Poly._parse_domain('Z(x)') == ZZ.frac_field(x)
-    assert Poly._parse_domain('Q(x)') == QQ.frac_field(x)
-
-    assert Poly._parse_domain('ZZ(x)') == ZZ.frac_field(x)
-    assert Poly._parse_domain('QQ(x)') == QQ.frac_field(x)
-
-    assert Poly._parse_domain('Z(x,y)') == ZZ.frac_field(x,y)
-    assert Poly._parse_domain('Q(x,y)') == QQ.frac_field(x,y)
-
-    assert Poly._parse_domain('ZZ(x,y)') == ZZ.frac_field(x,y)
-    assert Poly._parse_domain('QQ(x,y)') == QQ.frac_field(x,y)
-
-    assert Poly._parse_domain('Q<I>') == QQ.algebraic_field(I)
-    assert Poly._parse_domain('QQ<I>') == QQ.algebraic_field(I)
-
-    assert Poly._parse_domain('Q<sqrt(2), I>') == QQ.algebraic_field(sqrt(2), I)
-    assert Poly._parse_domain('QQ<sqrt(2), I>') == QQ.algebraic_field(sqrt(2), I)
-
 def test_Poly_get_domain():
     assert Poly(2*x).get_domain() == ZZ
 
@@ -468,18 +408,6 @@ def test_Poly_set_domain():
     raises(CoercionFailed, "Poly(x/2 + 1).set_domain(ZZ)")
     raises(DomainError, "Poly(x + 1, modulus=2).set_domain(QQ)")
 
-def test_Poly__analyze_modulus():
-    assert Poly._analyze_modulus({}) is None
-    assert Poly._analyze_modulus({'modulus': 2}) == 2
-    assert Poly._analyze_modulus({'modulus': Integer(2)}) == 2
-
-def test_Poly__parse_modulus():
-    assert Poly._parse_modulus(5) == 5
-    assert Poly._parse_modulus(Integer(5)) == 5
-
-    raises(ValueError, "Poly._parse_modulus(1)")
-    raises(ValueError, "Poly._parse_modulus(x)")
-
 def test_Poly_get_modulus():
     Poly(x**2 + 1, modulus=2).get_modulus() == 2
     raises(PolynomialError, "Poly(x**2 + 1).get_modulus()")
@@ -491,24 +419,6 @@ def test_Poly_set_modulus():
     Poly(x**2 + 1).set_modulus(2) == Poly(x**2 + 1, modulus=2)
 
     raises(PolynomialError, "Poly(x/2 + 1).set_modulus(2)")
-
-def test_Poly__analyze_extension():
-    assert Poly._analyze_extension({}) is None
-    assert Poly._analyze_extension({'extension': []}) is None
-    assert Poly._analyze_extension({'extension': sqrt(2)}) == set([sqrt(2)])
-    assert Poly._analyze_extension({'extension': [sqrt(2),sqrt(3)]}) == set([sqrt(2),sqrt(3)])
-
-    assert Poly._analyze_extension({'extension': True}) is True
-    assert Poly._analyze_extension({'extension': False}) is None
-
-    assert Poly._analyze_extension({'extension': I}) == set([I])
-    assert Poly._analyze_extension({'gaussian': True}) == set([I])
-
-    raises(PolynomialError, "Poly._analyze_extension({'gaussian': True, 'extension': I})")
-    raises(PolynomialError, "Poly._analyze_extension({'gaussian': True, 'split': True})")
-    raises(PolynomialError, "Poly._analyze_extension({'extension': I, 'split': True})")
-
-    raises(NotImplementedError, "Poly._analyze_extension({'split': True})")
 
 def test_Poly___div__():
     assert Poly(x)/Poly(x) == 1

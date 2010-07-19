@@ -65,7 +65,7 @@ _re_dom_algebraic = re.compile("^(Q|QQ)\<(.+)\>$")
 
 from sympy.polys.domains import ZZ, QQ, RR, EX, construct_domain
 
-from sympy.polys.polyoptions import Options
+from sympy.polys import polyoptions as options
 
 def _init_poly_from_dict(dict_rep, *gens, **args):
     """Initialize a Poly given a dict instance. """
@@ -203,34 +203,34 @@ class Poly(Basic):
     def __new__(cls, rep, *gens, **args):
         """Create a new polynomial instance out of something useful. """
         if gens or len(args) != 1 or 'options' not in args:
-            options = Options(gens, args)
+            opt = options.Options(gens, args)
         else:
-            options = args['options']
+            opt = args['options']
 
         if isinstance(rep, (DMP, GFP)):
-            if rep.lev != len(options.gens)-1 or options.args:
+            if rep.lev != len(opt.gens)-1 or opt.args:
                 raise PolynomialError("invalid arguments to construct a polynomial")
         else:
             if isinstance(rep, (dict, list)):
-                if not options.gens:
+                if not opt.gens:
                     raise GeneratorsNeeded("can't initialize from %s without generators" % type(rep).__name__)
 
                 if isinstance(rep, dict):
-                    rep = _init_poly_from_dict(rep, *options.gens, **options.args)
+                    rep = _init_poly_from_dict(rep, *opt.gens, **opt.args)
                 else:
-                    rep = _init_poly_from_list(rep, *options.gens, **options.args)
+                    rep = _init_poly_from_list(rep, *opt.gens, **opt.args)
             else:
                 rep = sympify(rep)
 
                 if rep.is_Poly:
-                    result = _init_poly_from_poly(rep, *options.gens, **options.args)
+                    result = _init_poly_from_poly(rep, *opt.gens, **opt.args)
                 else:
-                    result = _init_poly_from_basic(rep, *options.gens, **options.args)
+                    result = _init_poly_from_basic(rep, *opt.gens, **opt.args)
 
                 if type(result) is tuple:
-                    rep, options['gens'] = result
+                    rep, opt['gens'] = result
                 else:
-                    if result.is_Poly or not options.strict:
+                    if result.is_Poly or not opt.strict:
                         return result
                     else:
                         raise GeneratorsNeeded("can't initialize from %s without generators" % rep)
@@ -238,7 +238,7 @@ class Poly(Basic):
         obj = Basic.__new__(cls)
 
         obj.rep = rep
-        obj.gens = options.gens
+        obj.gens = opt.gens
 
         return obj
 
@@ -333,122 +333,18 @@ class Poly(Basic):
         """Return unit of `f`'s polynomial algebra. """
         return f.per(f.rep.unit())
 
-    @classmethod
-    def _analyze_gens(cls, gens, args):
-        """Support for passing generators as `*gens` and `[gens]`. """
-        if len(gens) == 1 and hasattr(gens[0], '__iter__'):
-            gens = tuple(gens[0])
-
-        if not gens:
-            gens = args.pop('gens', ())
-
-            if not hasattr(gens, '__iter__'):
-                gens = (gens,)
-
-        if len(set(gens)) != len(gens):
-            raise PolynomialError("duplicated generators: %s" % str(gens))
-
-        return gens
-
-    @classmethod
-    def _analyze_order(cls, args):
-        """Convert `order` to an internal representation. """
-        order = args.get('order')
-
-        if order is not None:
-            order = monomial_key(order)
-
-        return order
-
-    @classmethod
-    def _analyze_domain(cls, args):
-        """Convert `domain` to an internal representation. """
-        domain = args.get('domain')
-
-        if domain is not None:
-            domain = cls._parse_domain(domain)
-
-        return domain
-
-    @classmethod
-    def _parse_domain(cls, dom):
-        """Make an algebra out of a string representation. """
-        if not isinstance(dom, basestring):
-            return dom
-        else:
-            if dom in ['Z', 'ZZ']:
-                return ZZ
-
-            if dom in ['Q', 'QQ']:
-                return QQ
-
-            if dom in ['R', 'RR']:
-                return RR
-
-            if dom == 'EX':
-                return EX
-
-            r = re.match(_re_dom_poly, dom)
-
-            if r is not None:
-                ground, gens = r.groups()
-
-                gens = map(sympify, gens.split(','))
-
-                if ground in ['Z', 'ZZ']:
-                    return ZZ.poly_ring(*gens)
-                else:
-                    return QQ.poly_ring(*gens)
-
-            r = re.match(_re_dom_frac, dom)
-
-            if r is not None:
-                ground, gens = r.groups()
-
-                gens = map(sympify, gens.split(','))
-
-                if ground in ['Z', 'ZZ']:
-                    return ZZ.frac_field(*gens)
-                else:
-                    return QQ.frac_field(*gens)
-
-            r = re.match(_re_dom_algebraic, dom)
-
-            if r is not None:
-                gens = map(sympify, r.groups()[1].split(','))
-                return QQ.algebraic_field(*gens)
-
-        raise ValueError('expected a valid domain specification, got %s' % dom)
-
     def set_domain(f, domain):
         """Set the ground domain of `f`. """
-        return f.per(f.rep.convert(f._parse_domain(domain)))
+        domain = options.Domain.preprocess(domain)
+        return f.per(f.rep.convert(domain))
 
     def get_domain(f):
         """Get the ground domain of `f`. """
         return f.rep.dom
 
-    @classmethod
-    def _analyze_modulus(cls, args):
-        """Convert `modulus` to an internal representation. """
-        modulus = args.get('modulus')
-
-        if modulus is not None:
-            modulus = cls._parse_modulus(modulus)
-
-        return modulus
-
-    @classmethod
-    def _parse_modulus(cls, modulus):
-        """Check if we were given a valid modulus. """
-        if isinstance(modulus, (int, Integer)) and isprime(modulus):
-            return int(modulus)
-        else:
-            raise ValueError("modulus must be a prime integer, got %s" % modulus)
-
     def set_modulus(f, modulus):
         """Set the modulus of `f`. """
-        modulus = f._parse_modulus(modulus)
+        modulus = options.Modulus.preprocess(modulus)
 
         if isinstance(f.rep, GFP):
             return f.per(f.rep.trunc(modulus))
@@ -463,41 +359,6 @@ class Poly(Basic):
             return Integer(f.rep.mod)
         else:
             raise PolynomialError("not a polynomial over a Galois field")
-
-    @classmethod
-    def _analyze_extension(cls, args):
-        """Convert `extension` to an internal representation. """
-        extension = args.get('extension')
-        gaussian = args.get('gaussian')
-        split = args.get('split')
-
-        if extension is not None:
-            if gaussian is not None:
-                raise PolynomialError("'extension' is not allowed together with 'gaussian'")
-
-            if split is not None:
-                raise PolynomialError("'extension' is not allowed together with 'split'")
-
-            if isinstance(extension, bool):
-                if extension is False:
-                    extension = None
-            else:
-                if not hasattr(extension, '__iter__'):
-                    extension = set([extension])
-                else:
-                    if not extension:
-                        extension = None
-                    else:
-                        extension = set(extension)
-        elif gaussian is not None:
-            if split is not None:
-                raise PolynomialError("'gaussian' is not allowed together with 'split'")
-            elif gaussian:
-                extension = set([S.ImaginaryUnit])
-        elif split is not None:
-            raise NotImplementedError('splitting extensions are not supported')
-
-        return extension
 
     def _eval_subs(f, old, new):
         """Internal implementation of :func:`subs`. """
@@ -2465,7 +2326,7 @@ def reduced(f, G, *gens, **args):
 
     H = [f] + list(G)
 
-    order = Poly._analyze_order({'order': args.pop('order', 'lex')})
+    order = options.Order.preprocess(args.pop('order', 'lex'))
     basic = _should_return_basic(*H, **args)
 
     gens = _analyze_gens(gens)
@@ -2498,7 +2359,7 @@ def groebner(F, *gens, **args):
     if 'modulus' in args:
         raise PolynomialError("can't compute Groebner basis over a finite field")
 
-    order = Poly._analyze_order({'order': args.pop('order', 'lex')})
+    order = options.Order.preprocess(args.pop('order', 'lex'))
     monic = args.pop('monic', True)
 
     basic = _should_return_basic(*F, **args)
