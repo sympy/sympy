@@ -12,7 +12,7 @@ from sympy.polys.densearith import (
 )
 
 from sympy.polys.densetools import (
-    dup_scale, dup_taylor, dup_mirror,
+    dup_mirror, dup_scale, dup_shift,
     dup_transform,
     dup_eval, dmp_eval_in,
     dup_sign_variations,
@@ -116,13 +116,13 @@ def dup_step_refine_real_root(f, M, K, fast=False):
         a, c, A = A*a, A*c, K.one
 
     if A >= K.one:
-        f = dup_taylor(f, A, K)
+        f = dup_shift(f, A, K)
         b, d = A*a + b, A*c + d
 
         if not dup_eval(f, K.zero, K):
             return f, (b, b, d, d)
 
-    f, g = dup_taylor(f, K.one, K), f
+    f, g = dup_shift(f, K.one, K), f
 
     a1, b1, c1, d1 = a, a+b, c, c+d
 
@@ -134,7 +134,7 @@ def dup_step_refine_real_root(f, M, K, fast=False):
     if k == 1:
         a, b, c, d = a1, b1, c1, d1
     else:
-        f = dup_taylor(dup_reverse(g), K.one, K)
+        f = dup_shift(dup_reverse(g), K.one, K)
 
         if not dup_eval(f, K.zero, K):
             f = dup_rshift(f, 1, K)
@@ -260,7 +260,7 @@ def dup_inner_isolate_real_roots(f, K, eps=None, fast=False):
                 a, c, A = A*a, A*c, K.one
 
             if A >= K.one:
-                f = dup_taylor(f, A, K)
+                f = dup_shift(f, A, K)
                 b, d = A*a + b, A*c + d
 
                 if not dup_TC(f, K):
@@ -275,7 +275,7 @@ def dup_inner_isolate_real_roots(f, K, eps=None, fast=False):
                     roots.append(dup_inner_refine_real_root(f, (a, b, c, d), K, eps=eps, fast=fast, mobius=True))
                     continue
 
-            f1 = dup_taylor(f, K.one, K)
+            f1 = dup_shift(f, K.one, K)
 
             a1, b1, c1, d1, r = a, a+b, c, c+d, 0
 
@@ -289,7 +289,7 @@ def dup_inner_isolate_real_roots(f, K, eps=None, fast=False):
             a2, b2, c2, d2 = b, a+b, d, c+d
 
             if k2 > 1:
-                f2 = dup_taylor(dup_reverse(f), K.one, K)
+                f2 = dup_shift(dup_reverse(f), K.one, K)
 
                 if not dup_TC(f2, K):
                     f2 = dup_rshift(f2, 1, K)
@@ -307,7 +307,7 @@ def dup_inner_isolate_real_roots(f, K, eps=None, fast=False):
                 continue
 
             if f1 is None:
-                f1 = dup_taylor(dup_reverse(f), K.one, K)
+                f1 = dup_shift(dup_reverse(f), K.one, K)
 
                 if not dup_TC(f1, K):
                     f1 = dup_rshift(f1, 1, K)
@@ -321,7 +321,7 @@ def dup_inner_isolate_real_roots(f, K, eps=None, fast=False):
                 continue
 
             if f2 is None:
-                f2 = dup_taylor(dup_reverse(f), K.one, K)
+                f2 = dup_shift(dup_reverse(f), K.one, K)
 
                 if not dup_TC(f2, K):
                     f2 = dup_rshift(f2, 1, K)
