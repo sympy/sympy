@@ -572,6 +572,10 @@ def test_IntegerInteger():
     assert a == b
 
 def test_Integer_methods():
+    assert Integer(100).sqrt() == Integer(10)
+    assert Integer(110).sqrt() == Integer(10)
+    assert Integer(121).sqrt() == Integer(11)
+
     assert Integer(100).half_gcdex(2004) == \
         (Integer(-20), Integer(4))
     assert Integer(100).half_gcdex(Integer(2004)) == \
