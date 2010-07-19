@@ -42,24 +42,17 @@ from sympy import (
     Rational as SymPyRationalType,
 )
 
-from sympy.core.numbers import (
-    ifactorial as sympy_factorial,
-    igcdex     as sympy_gcdex,
-    igcd       as sympy_gcd,
-    ilcm       as sympy_lcm,
-)
-
 if HAS_GMPY:
     from gmpy import (
         mpz    as GMPYIntegerType,
         mpq    as GMPYRationalType,
+        fac    as gmpy_factorial,
         numer  as gmpy_numer,
         denom  as gmpy_denom,
         gcdext as gmpy_gcdex,
         gcd    as gmpy_gcd,
         lcm    as gmpy_lcm,
         sqrt   as gmpy_sqrt,
-        fac    as gmpy_factorial,
     )
 else:
     class GMPYIntegerType(object):
@@ -77,7 +70,6 @@ else:
     gmpy_gcd         = None
     gmpy_lcm         = None
     gmpy_sqrt        = None
-    gmpy_factorial   = None
 
 from sympy.mpmath import (
     mpf as MPmathRealType,

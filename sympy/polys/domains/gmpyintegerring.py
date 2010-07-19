@@ -11,7 +11,7 @@ from sympy.polys.domains.groundtypes import (
 from sympy.polys.polyerrors import CoercionFailed
 
 class GMPYIntegerRing(IntegerRing):
-    """Integer ring based on GMPY mpz class. """
+    """Integer ring based on GMPY's `mpz` type. """
 
     dtype = GMPYIntegerType
     zero  = dtype(0)
@@ -19,7 +19,7 @@ class GMPYIntegerRing(IntegerRing):
     alias = 'ZZ_gmpy'
 
     def __init__(self):
-        pass
+        """Allow instantiation of this domain. """
 
     def to_sympy(self, a):
         """Convert `a` to a SymPy object. """
@@ -32,66 +32,66 @@ class GMPYIntegerRing(IntegerRing):
         elif a.is_Real and int(a) == a:
             return GMPYIntegerType(int(a))
         else:
-            raise CoercionFailed("expected Integer object, got %s" % a)
+            raise CoercionFailed("expected an integer, got %s" % a)
 
     def from_ZZ_python(K1, a, K0):
-        """Convert a Python `int` object to `dtype`. """
+        """Convert Python's `int` to GMPY's `mpz`. """
         return GMPYIntegerType(a)
 
     def from_QQ_python(K1, a, K0):
-        """Convert a Python `Fraction` object to `dtype`. """
+        """Convert Python's `Fraction` to GMPY's `mpz`. """
         if a.denominator == 1:
             return GMPYIntegerType(a.numerator)
 
     def from_ZZ_sympy(K1, a, K0):
-        """Convert a SymPy `Integer` object to `dtype`. """
+        """Convert SymPy's `Integer` to GMPY's `mpz`. """
         return GMPYIntegerType(a.p)
 
     def from_QQ_sympy(K1, a, K0):
-        """Convert a SymPy `Rational` object to `dtype`. """
+        """Convert SymPy's `Rational` to GMPY's `mpz`. """
         if a.q == 1:
             return GMPYIntegerType(a.p)
 
     def from_ZZ_gmpy(K1, a, K0):
-        """Convert a GMPY `mpz` object to `dtype`. """
+        """Convert GMPY's `mpz` to GMPY's `mpz`. """
         return a
 
     def from_QQ_gmpy(K1, a, K0):
-        """Convert a GMPY `mpq` object to `dtype`. """
+        """Convert GMPY `mpq` to GMPY's `mpz`. """
         if a.denom() == 1:
             return a.numer()
 
     def from_RR_sympy(K1, a, K0):
-        """Convert a SymPy `Real` object to `dtype`. """
+        """Convert SymPy's `Real` to GMPY's `mpz`. """
         p, q = K0.as_integer_ratio(a)
 
         if q == 1:
             return GMPYIntegerType(p)
 
     def from_RR_mpmath(K1, a, K0):
-        """Convert a mpmath `mpf` object to `dtype`. """
+        """Convert mpmath's `mpf` to GMPY's `mpz`. """
         p, q = K0.as_integer_ratio(a)
 
         if q == 1:
             return GMPYIntegerType(p)
 
     def gcdex(self, a, b):
-        """Extended GCD of `a` and `b`. """
+        """Compute extended GCD of `a` and `b`. """
         h, s, t = gmpy_gcdex(a, b)
         return s, t, h
 
     def gcd(self, a, b):
-        """Returns GCD of `a` and `b`. """
+        """Compute GCD of `a` and `b`. """
         return gmpy_gcd(a, b)
 
     def lcm(self, a, b):
-        """Returns LCM of `a` and `b`. """
+        """Compute LCM of `a` and `b`. """
         return gmpy_lcm(a, b)
 
     def sqrt(self, a):
-        """Returns square root of `a`. """
+        """Compute square root of `a`. """
         return gmpy_sqrt(a)
 
     def factorial(self, a):
-        """Returns factorial of `a`. """
-        return gmpy_factorial(int(a))
+        """Compute factorial of `a`. """
+        return gmpy_factorial(a)

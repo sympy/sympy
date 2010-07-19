@@ -433,10 +433,6 @@ class Domain(object):
         """Returns square root of `a`. """
         raise NotImplementedError
 
-    def factorial(self, a):
-        """Returns factorial of `a`. """
-        return self.dtype(python_factorial(a))
-
     def evalf(self, a, **args):
         """Returns numerical approximation of `a`. """
         return self.to_sympy(a).evalf(**args)
