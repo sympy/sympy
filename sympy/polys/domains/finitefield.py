@@ -21,6 +21,9 @@ class FiniteField(Field, SimpleDomain):
     mod = None
 
     def __init__(self, mod):
+        if mod <= 0:
+            raise ValueError('modulus must be a positive integer, got %s' % mod)
+
         self.dtype = ModularIntegerFactory(mod, self.dom)
         self.zero  = self.dtype(0)
         self.one   = self.dtype(1)

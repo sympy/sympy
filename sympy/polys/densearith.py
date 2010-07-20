@@ -364,7 +364,7 @@ def dup_mul(f, g, K):
 
         h.append(coeff)
 
-    return h
+    return dup_strip(h)
 
 @cythonized("u,v,df,dg,i,j")
 def dmp_mul(f, g, u, K):
@@ -395,7 +395,7 @@ def dmp_mul(f, g, u, K):
 
         h.append(coeff)
 
-    return h
+    return dmp_strip(h, u)
 
 @cythonized("df,jmin,jmax,n,i,j")
 def dup_sqr(f, K):
@@ -423,7 +423,7 @@ def dup_sqr(f, K):
 
         h.append(c)
 
-    return h
+    return dup_strip(h)
 
 @cythonized("u,v,df,jmin,jmax,n,i,j")
 def dmp_sqr(f, u, K):
@@ -451,7 +451,7 @@ def dmp_sqr(f, u, K):
         for j in xrange(jmin, jmax+1):
             c = dmp_add(c, dmp_mul(f[j], f[i-j], v, K), v, K)
 
-        c = dmp_mul_ground(c, 2, v, K)
+        c = dmp_mul_ground(c, K(2), v, K)
 
         if n & 1:
             elem = dmp_sqr(f[jmax+1], v, K)
@@ -459,7 +459,7 @@ def dmp_sqr(f, u, K):
 
         h.append(c)
 
-    return h
+    return dmp_strip(h, u)
 
 @cythonized("n,m")
 def dup_pow(f, n, K):

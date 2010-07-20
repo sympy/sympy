@@ -41,7 +41,7 @@ from sympy.polys.densearith import (
 )
 
 from sympy.polys.galoistools import (
-    gf_int, gf_crt
+    gf_int, gf_crt, gf_sqf_list, gf_sqf_part
 )
 
 from sympy.polys.polyerrors import (
@@ -130,7 +130,7 @@ def dup_integrate(f, m, K):
         for j in xrange(1, m):
             n *= i+j+1
 
-        g.insert(0, K.quo(c, K(n)))
+        g.insert(0, K.exquo(c, K(n)))
 
     return g
 
@@ -173,7 +173,7 @@ def dmp_integrate_in(f, m, j, u, K):
 
     return _rec_integrate_in(f, m, u, 0, j, K)
 
-@cythonized("m,n,i")
+@cythonized("m,n,k,i")
 def dup_diff(f, m, K):
     """m-th order derivative of a polynomial in `K[x]`. """
     if m <= 0:
@@ -184,18 +184,25 @@ def dup_diff(f, m, K):
     if n < m:
         return []
 
-    deriv, c = [], K.one
+    deriv = []
 
-    for i in xrange(0, m):
-        c, n = c*K(n), n-1
+    if m == 1:
+        for coeff in f[:-m]:
+            deriv.append(K(n)*coeff)
+            n -= 1
+    else:
+        for coeff in f[:-m]:
+            k = n
 
-    for coeff in f[:-m]:
-        deriv.append(coeff*c)
-        c, n = K(n)*K.exquo(c, K(n+m)), n-1
+            for i in xrange(n-1, n-m, -1):
+                k *= i
 
-    return deriv
+            deriv.append(K(k)*coeff)
+            n -= 1
 
-@cythonized("u,v,m,n,i")
+    return dup_strip(deriv)
+
+@cythonized("u,v,m,n,k,i")
 def dmp_diff(f, m, u, K):
     """m-th order derivative in `x_0` of a polynomial in `K[X]`. """
     if not u:
@@ -208,17 +215,23 @@ def dmp_diff(f, m, u, K):
     if n < m:
         return dmp_zero(u)
 
-    deriv, c, v = [], K.one, u-1
+    deriv, v = [], u-1
 
-    for i in xrange(0, m):
-        c, n = c*K(n), n-1
+    if m == 1:
+        for coeff in f[:-m]:
+            deriv.append(dmp_mul_ground(coeff, K(n), v, K))
+            n -= 1
+    else:
+        for coeff in f[:-m]:
+            k = n
 
-    for coeff in f[:-m]:
-        h = dmp_mul_ground(coeff, c, v, K)
-        c, n = K(n)*K.exquo(c, K(n+m)), n-1
-        deriv.append(h)
+            for i in xrange(n-1, n-m, -1):
+                k *= i
 
-    return deriv
+            deriv.append(dmp_mul_ground(coeff, K(k), v, K))
+            n -= 1
+
+    return dmp_strip(deriv, u)
 
 @cythonized("m,v,w,i,j")
 def _rec_diff_in(g, m, v, i, j, K):
@@ -457,7 +470,7 @@ def dup_prs_resultant(f, g, K):
     i = dup_degree(R[-2])
 
     res = dup_LC(R[-1], K)**i
-    res = K.quo(res*p, q)
+    res = K.exquo(res*p, q)
 
     return res, R
 
@@ -730,7 +743,7 @@ def dup_discriminant(f, K):
 
         r = dup_resultant(f, dup_diff(f, 1, K), K)
 
-        return K.quo(r, c*K(s))
+        return K.exquo(r, c*K(s))
 
 @cythonized("u,v,d,s")
 def dmp_discriminant(f, u, K):
@@ -1642,8 +1655,22 @@ def dmp_sqf_norm(f, u, K):
 
     return s, f, r
 
+@cythonized("i")
+def dup_gf_sqf_part(f, K):
+    """Compute square-free part of `f` in `GF(p)[x]`. """
+    f = dup_convert(f, K, K.dom)
+    g = gf_sqf_part(f, K.mod, K.dom)
+    return dup_convert(g, K.dom, K)
+
+def dmp_gf_sqf_part(f, K):
+    """Compute square-free part of `f` in `GF(p)[X]`. """
+    raise DomainError('multivariate polynomials over %s' % K)
+
 def dup_sqf_part(f, K):
     """Returns square-free part of a polynomial in `K[x]`. """
+    if not K.has_CharacteristicZero:
+        return dup_gf_sqf_part(f, K)
+
     if not f:
         return f
 
@@ -1661,6 +1688,12 @@ def dup_sqf_part(f, K):
 @cythonized("u")
 def dmp_sqf_part(f, u, K):
     """Returns square-free part of a polynomial in `K[X]`. """
+    if not u:
+        return dup_sqf_part(f, K)
+
+    if not K.has_CharacteristicZero:
+        return dmp_gf_sqf_part(f, u, K)
+
     if dmp_zero_p(f, u):
         return f
 
@@ -1676,8 +1709,27 @@ def dmp_sqf_part(f, u, K):
         return dmp_ground_primitive(sqf, u, K)[1]
 
 @cythonized("i")
+def dup_gf_sqf_list(f, K, all=False):
+    """Compute square-free decomposition of `f` in `GF(p)[x]`. """
+    f = dup_convert(f, K, K.dom)
+
+    coeff, factors = gf_sqf_list(f, K.mod, K.dom, all=all)
+
+    for i, (f, k) in enumerate(factors):
+        factors[i] = (dup_convert(f, K.dom, K), k)
+
+    return K.convert(coeff, K.dom), factors
+
+def dmp_gf_sqf_list(f, u, K, all=False):
+    """Compute square-free decomposition of `f` in `GF(p)[X]`. """
+    raise DomainError('multivariate polynomials over %s' % K)
+
+@cythonized("i")
 def dup_sqf_list(f, K, all=False):
     """Returns square-free decomposition of a polynomial in `K[x]`. """
+    if not K.has_CharacteristicZero:
+        return dup_gf_sqf_list(f, K, all=all)
+
     if K.has_Field or not K.is_Exact:
         coeff = dup_LC(f, K)
         f = dup_monic(f, K)
@@ -1715,7 +1767,7 @@ def dup_sqf_list(f, K, all=False):
 
 def dup_sqf_list_include(f, K, all=False):
     """Returns square-free decomposition of a polynomial in `K[x]`. """
-    coeff, factors = dup_sqf_list(f, K, all)
+    coeff, factors = dup_sqf_list(f, K, all=all)
 
     if not factors:
         return [(dup_strip([coeff]), 1)]
@@ -1727,7 +1779,10 @@ def dup_sqf_list_include(f, K, all=False):
 def dmp_sqf_list(f, u, K, all=False):
     """Returns square-free decomposition of a polynomial in `K[X]`. """
     if not u:
-        return dup_sqf_list(f, K, all)
+        return dup_sqf_list(f, K, all=all)
+
+    if not K.has_CharacteristicZero:
+        return dmp_gf_sqf_list(f, u, K, all=all)
 
     if K.has_Field or not K.is_Exact:
         coeff = dmp_ground_LC(f, u, K)
@@ -1768,9 +1823,9 @@ def dmp_sqf_list(f, u, K, all=False):
 def dmp_sqf_list_include(f, u, K, all=False):
     """Returns square-free decomposition of a polynomial in `K[x]`. """
     if not u:
-        return dup_sqf_list_include(f, K, all)
+        return dup_sqf_list_include(f, K, all=all)
 
-    coeff, factors = dmp_sqf_list(f, u, K, all)
+    coeff, factors = dmp_sqf_list(f, u, K, all=all)
 
     if not factors:
         return [(dmp_ground(coeff, u), 1)]
