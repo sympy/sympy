@@ -31,7 +31,7 @@ class SymPyIntegerRing(IntegerRing):
 
     def from_FF_python(K1, a, K0):
         """Convert `ModularInteger(int)` to SymPy's `Integer`. """
-        return SymPyIntegerType(a.val)
+        return SymPyIntegerType(a.to_int())
 
     def from_ZZ_python(K1, a, K0):
         """Convert Python's `int` to SymPy's `Integer`. """
@@ -44,7 +44,7 @@ class SymPyIntegerRing(IntegerRing):
 
     def from_FF_sympy(K1, a, K0):
         """Convert `ModularInteger(Integer)` to SymPy's `Integer`. """
-        return a.val
+        return a.to_int()
 
     def from_ZZ_sympy(K1, a, K0):
         """Convert SymPy's `Integer` to SymPy's `Integer`. """
@@ -57,7 +57,7 @@ class SymPyIntegerRing(IntegerRing):
 
     def from_FF_gmpy(K1, a, K0):
         """Convert `ModularInteger(mpz)` to SymPy's `Integer`. """
-        return SymPyIntegerType(int(a.val))
+        return SymPyIntegerType(int(a.to_int()))
 
     def from_ZZ_gmpy(K1, a, K0):
         """Convert GMPY's `mpz` to SymPy's `Integer`. """
