@@ -430,7 +430,7 @@ class Modulus(Option):
 
     @classmethod
     def postprocess(cls, options):
-        options['domain'] = ZZ # XXX: FF(options['modulus'])
+        options['domain'] = FF(options['modulus'], options.get('symmetric', True))
 
 class Symmetric(BooleanOption):
     """ """
