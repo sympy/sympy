@@ -452,6 +452,7 @@ def integrate_hyperexponential(a, d, D, T, Tfuncs):
     # h - Dg2 + r
     p = cancel(h[0].as_basic()/h[1].as_basic() - residue_reduce_derivation(g2,
         D, T, z) + r[0].as_basic()/r[1].as_basic())
+    # TODO: Use subs() in new polys10 (?)
     p = p.as_poly(t, 1/t).replace(1/t, z)
 
     qa, qd, b = integrate_hyperexponential_polynomial(p, D, T, z)

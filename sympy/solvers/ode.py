@@ -1153,7 +1153,8 @@ def ode_sol_simplicity(sol, func, trysolving=True):
         x/tan(f(x)/(2*x)) == C1
 
     """
-    #TODO: write examples
+    # TODO: if two solutions are solved for f(x), we still want to be
+    # able to get the simpler of the two
 
     # See the docstring for the coercion rules.  We check easier (faster)
     # things here first, to save time.

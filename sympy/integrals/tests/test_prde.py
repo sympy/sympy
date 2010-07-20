@@ -1,7 +1,7 @@
 """Most of these tests come from the examples in Bronstein's book."""
-from sympy import Poly
+from sympy import Poly, Matrix
 from sympy.integrals.prde import (prde_normal_denom, prde_special_denom,
-    is_log_deriv_k_t_radical, parametric_log_deriv_heu)
+    prde_linear_constraints, is_log_deriv_k_t_radical, parametric_log_deriv_heu)
 
 from sympy.abc import x, t
 
@@ -34,6 +34,17 @@ def test_prde_special_denom():
     assert prde_special_denom(Poly(1, t), Poly(t**2, t), Poly(1, t), G, D, [x, t]) == \
         (Poly(1, t), Poly(t**2 - 1, t), [(Poly(t**2, t), Poly(1, t)),
         (Poly(1, t), Poly(1, t))], Poly(t, t))
+
+def test_prde_linear_constraints():
+    D = [Poly(1, x)]
+    G = [(Poly(2*x**3 + 3*x + 1, x), Poly(x**2 - 1, x)), (Poly(1, x), Poly(x - 1, x)),
+        (Poly(1, x), Poly(x + 1, x))]
+    assert prde_linear_constraints(Poly(1, x), Poly(0, x), G, D, [x]) == \
+        ((Poly(2*x, x), Poly(0, x), Poly(0, x)), Matrix([[1, 1, -1], [5, 1,  1]]))
+    G = [(Poly(t, t), Poly(1, t)), (Poly(t**2, t), Poly(1, t)), (Poly(t**3, t), Poly(1, t))]
+    D = [Poly(1, x), Poly(t, t)]
+    assert prde_linear_constraints(Poly(t + 1, t), Poly(t**2, t), G, D, [x, t]) == \
+        ((Poly(t, t), Poly(t**2, t), Poly(t**3, t)), Matrix())
 
 def test_is_log_deriv_k_t_radical():
     pass

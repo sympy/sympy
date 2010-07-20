@@ -7,6 +7,8 @@ docstring of rde.py for more information.
 """
 from sympy.core import Symbol
 
+from sympy.matrices import Matrix
+
 from sympy.solvers import solve
 
 from sympy.polys import Poly, PolynomialError, lcm, cancel
@@ -111,6 +113,34 @@ def prde_special_denom(a, ba, bd, G, D, T, case='auto'):
 
     # (a*p**N, (b + n*a*Dp/p)*p**N, g1*p**(N - n), ..., gm*p**(N - n), p**-n)
     return (A, B, G, h)
+
+def prde_linear_constraints(a, b, G, D, T):
+    """
+    Parametric Risch Differential Equation - Generate linear constraints on the constants.
+
+    Given a derivation D on k[t], a, b, in k[t] with gcd(a, b) == 1, and
+    G = [g1, ..., gm] in k(t)^m, return Q = [q1, ..., qm] in k[t]^m and a
+    matrix M with entries in k(t) such that for any solution c1, ..., cm in
+    Const(k) and p in k[t] of a*Dp + b*p == Sum(ci*gi, (i, 1, m)),
+    (c1, ..., cm) is a solution of Mx == 0, and p and the ci satisfy
+    a*Dp + b*p == Sum(ci*gi, (i, 1, m)).
+
+    Because M has entries in k(t), and because Matrix doesn't play well with
+    Poly, M will be a Matrix of Basic expressions.
+    """
+    t = T[-1]
+    m = len(G)
+
+    d = reduce(lambda i, j: i.lcm(j), zip(*G)[1])
+    Q = [(ga*(d).quo(gd)).div(d) for ga, gd in G]
+
+    if not all([ri.is_zero for _, ri in Q]):
+        N = max([ri.degree(t) for _, ri in Q])
+        M = Matrix(N + 1, m, lambda i, j: Q[j][1].nth(i))
+    else:
+        M = Matrix() # No constraints, return the empty matrix.
+
+    return (zip(*Q)[0], M)
 
 def param_rischDE(fa, fd, G, D, T):
     """
