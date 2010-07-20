@@ -69,7 +69,8 @@ from sympy.mpmath import (
     mpi as MPmathIntervalType,
 )
 
-from sympy.mpmath.libmp.libmpf import (
-    isqrt as python_sqrt,
-)
+from sympy.mpmath.libmp.libmpf import isqrt
+
+def python_sqrt(a):
+    return int(isqrt)
 

@@ -69,11 +69,11 @@ class FiniteField(Field, SimpleDomain):
 
     def from_FF_python(K1, a, K0=None):
         """Convert `ModularInteger(int)` to `dtype`. """
-        return self.dtype(K1.dom.from_ZZ_python(a.val))
+        return K1.dtype(K1.dom.from_ZZ_python(a.val, K0.dom))
 
     def from_ZZ_python(K1, a, K0=None):
         """Convert Python's `int` to `dtype`. """
-        return self.dtype(K1.dom.from_ZZ_python(a))
+        return K1.dtype(K1.dom.from_ZZ_python(a, K0))
 
     def from_QQ_python(K1, a, K0=None):
         """Convert Python's `Fraction` to `dtype`. """
@@ -82,24 +82,24 @@ class FiniteField(Field, SimpleDomain):
 
     def from_FF_sympy(K1, a, K0=None):
         """Convert `ModularInteger(Integer)` to `dtype`. """
-        return self.dtype(K1.dom.from_ZZ_sympy(a.val))
+        return K1.dtype(K1.dom.from_ZZ_sympy(a.val, K0.dom))
 
     def from_ZZ_sympy(K1, a, K0=None):
         """Convert SymPy's `Integer` to `dtype`. """
-        return self.dtype(K1.dom.from_ZZ_sympy(a))
+        return K1.dtype(K1.dom.from_ZZ_sympy(a, K0))
 
     def from_QQ_sympy(K1, a, K0=None):
         """Convert SymPy's `Rational` to `dtype`. """
         if a.q == 1:
-            return K1.from_ZZ_sympy(a.p)
+            return K1.from_ZZ_python(a.p)
 
     def from_FF_gmpy(K1, a, K0=None):
         """Convert `ModularInteger(mpz)` to `dtype`. """
-        return self.dtype(K1.dom.from_ZZ_gmpy(a.val))
+        return K1.dtype(K1.dom.from_ZZ_gmpy(a.val, K0.dom))
 
     def from_ZZ_gmpy(K1, a, K0=None):
         """Convert GMPY's `mpz` to `dtype`. """
-        return self.dtype(K1.dom.from_ZZ_gmpy(a))
+        return K1.dtype(K1.dom.from_ZZ_gmpy(a, K0))
 
     def from_QQ_gmpy(K1, a, K0=None):
         """Convert GMPY's `mpq` to `dtype`. """
@@ -111,14 +111,14 @@ class FiniteField(Field, SimpleDomain):
         p, q = K0.as_integer_ratio(a)
 
         if q == 1:
-            return self.dtype(self.dom.dtype(p))
+            return K1.dtype(self.dom.dtype(p))
 
     def from_RR_mpmath(K1, a, K0):
         """Convert mpmath's `mpf` to `dtype`. """
         p, q = K0.as_integer_ratio(a)
 
         if q == 1:
-            return self.dtype(self.dom.dtype(p))
+            return K1.dtype(self.dom.dtype(p))
 
     def gcdex(self, a, b):
         """Compute extended GCD of `a` and `b`. """
