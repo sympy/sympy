@@ -331,6 +331,23 @@ def test_subs5():
     assert e.subs(x, 5) == e
     assert e.subs(y, 5) == e
 
+def test_subs6():
+    e = Integral(x*y, (x, f(x), f(y)))
+    assert e.subs(x, 1) == Integral(x*y, (x, f(1), f(y)))
+    assert e.subs(y, 1) == Integral(x, (x, f(x), f(1)))
+    e = Integral(x*y, (x, f(x), f(y)), (y, f(x), f(y)))
+    assert e.subs(x, 1) == Integral(x*y, (x, f(1), f(y)), (y, f(1), f(y)))
+    assert e.subs(y, 1) == Integral(x*y, (x, f(x), f(1)), (y, f(x), f(1)))
+
+def test_subs7():
+    e = Integral(x, (x, 1, y), (y, 1, 2))
+    assert e.subs({x:1, y:2}) == e
+    e = Integral(sin(x) + sin(y), (x, sin(x), sin(y)),
+                                  (y, 1, 2))
+    assert e._eval_subs(sin(y), 1) == e
+    assert e._eval_subs(sin(x), 1) == Integral(sin(x) + sin(y), (x, 1, sin(y)),
+                                                                (y, 1, 2))
+
 def test_integration_variable():
     raises(ValueError, "Integral(exp(-x**2), 3)")
     raises(ValueError, "Integral(exp(-x**2), (3, -oo, oo))")

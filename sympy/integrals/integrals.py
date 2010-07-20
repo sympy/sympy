@@ -513,21 +513,62 @@ class Integral(Expr):
             return integrate(arg.removeO(), x) + arg.getO()*x
 
     def _eval_subs(self, old, new):
-        arg0 = self.args[0].subs(old, new)
-        arg1 = []
-        for lim in self.args[1:]:
-            sym = lim[0]
-            if sym == old:
-                return self
-            if len(lim) == 1:
-                arg1.append((sym,))
-            elif len(lim) == 2:
-                b = lim[1]
-                arg1.append((sym, None, b.subs(old, new)))
-            else:
-                a, b, = lim[1:3]
-                arg1.append((sym, a.subs(old, new), b.subs(old, new)))
-        return Integral(arg0, *arg1)
+        """
+        Substitute old with new without targeting variables of integration.
+
+        Physically, all variables in an Integral are the same type: Symbols.
+        Conceptually, those that appear as variables of integration are
+        temporary/dummy symbols and this substitution routine will not allow
+        any changes to them.
+
+        Given the following Integral,
+
+            Integral(x + a, (a, a, 3), (b, x, c))
+
+        imagine putting the dummy variables in angle-brackets to understand
+        which variables can and cannot be changed: anything not in <> can
+        be changed.
+
+            Integral(x + <a>, (<a>, a, 3), (<b>, x, c))
+
+        However, if a request to change x to y + a is made, a new symbol would
+        have to be created to disambiguate the <a> fom the `a`. But no
+        mechanism exists at present for this so this will raise an error.
+
+        >>> from sympy import Integral
+        >>> from sympy.abc import a, b, c, x, y
+
+        >>> i = Integral(a + x, (a, a, 3), (b, x, c))
+        >>> list(i.symbols) # only these can be changed
+        [x, a, c]
+        >>> i.subs(a, c) # note that the variable of integration is unchanged
+        Integral(a + x, (a, c, 3), (b, x, c))
+        >>> i.subs(a + x, b) == i # there is no x + a, only x + <a>
+        True
+        >>> i.subs(x, y - c)
+        Integral(a + y - c, (a, a, 3), (b, y - c, c))
+        """
+        integrand, limits = self.function, self.limits
+        old_atoms = old.symbols
+        limits = list(limits)
+
+        # make limits explicit if they are to be targeted by old:
+        # Integral(x, x) -> Integral(x, (x, x)) if old = x
+        if old.is_Symbol:
+            for i, l in enumerate(limits):
+                if len(l) == 1 and l[0] == old:
+                    limits[i] = Tuple(l[0], l[0])
+
+        dummies = set()
+        for i in xrange(-1, -len(limits) - 1, -1):
+            xab = limits[i]
+            if not dummies.intersection(old_atoms):
+                limits[i] = Tuple(xab[0],
+                                  *[l.subs(old, new) for l in xab[1:]])
+            dummies.add(xab[0])
+        if not dummies.intersection(old_atoms):
+            integrand = integrand.subs(old, new)
+        return Integral(integrand, *limits)
 
     def as_sum(self, n, method="midpoint"):
         """
