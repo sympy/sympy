@@ -290,12 +290,11 @@ def _imp_namespace(expr, namespace=None):
             _imp_namespace(val, namespace)
         return namespace
     # sympy expressions may be Functions themselves
-    if hasattr(expr, 'func'):
-        if (isinstance(expr.func, FunctionClass) and
-            hasattr(expr.func, '__imp__') and
-            not expr.func.__imp__ is None):
+    func = getattr(expr, 'func', None)
+    if isinstance(func, FunctionClass):
+        imp = getattr(func, '__imp__', None)
+        if not imp is None:
             name = expr.func.__name__
-            imp = expr.func.__imp__
             if name in namespace and namespace[name] != imp:
                 raise ValueError('We found more than one '
                                  'implementation with name '
