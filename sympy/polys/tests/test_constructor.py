@@ -1,6 +1,6 @@
 """Tests for tools for constructing domains for expressions. """
 
-from sympy.polys.domains.constructor import construct_domain
+from sympy.polys.constructor import construct_domain
 from sympy.polys.domains import ZZ, QQ, RR, EX
 
 from sympy import S, sqrt

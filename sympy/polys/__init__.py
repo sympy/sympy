@@ -62,6 +62,9 @@ from polyroots import (
 
 from domains import (
     FF, GF, ZZ, QQ, RR, EX,
+)
+
+from constructor import (
     construct_domain,
 )
 
