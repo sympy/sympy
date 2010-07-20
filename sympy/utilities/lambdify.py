@@ -184,9 +184,8 @@ def lambdify(args, expr, modules=None, use_imps=True):
             modules = ("math", "mpmath", "sympy")
             
     # Get the needed namespaces.
-    # First find any function implementations
     namespaces = []
-    namespace = {}
+    # First find any function implementations
     if use_imps:
         namespaces.append(_imp_namespace(expr))
     # Check for dict before iterating
@@ -195,9 +194,10 @@ def lambdify(args, expr, modules=None, use_imps=True):
     else:
         namespaces += list(modules)
     # fill namespace with first having highest priority
+    namespace = {}
     for m in namespaces[::-1]:
-            buf = _get_namespace(m)
-            namespace.update(buf)
+        buf = _get_namespace(m)
+        namespace.update(buf)
 
     if hasattr(expr, "atoms") :
         #Try if you can extract symbols from the expression.
@@ -292,7 +292,8 @@ def _imp_namespace(expr, namespace=None):
     # sympy expressions may be Functions themselves
     if hasattr(expr, 'func'):
         if (isinstance(expr.func, FunctionClass) and
-            hasattr(expr.func, '__imp__')):
+            hasattr(expr.func, '__imp__') and
+            not expr.func.__imp__ is None):
             name = expr.func.__name__
             imp = expr.func.__imp__
             if name in namespace and namespace[name] != imp:
