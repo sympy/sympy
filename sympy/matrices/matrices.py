@@ -1119,17 +1119,6 @@ class Matrix(object):
         M.col_del(j)
         return M
 
-    def zeronm(self, n, m):
-        # used so that certain functions above can use this
-        # then only this func need be overloaded in subclasses
-        warnings.warn( 'Deprecated: use zeros() instead.' )
-        return Matrix(n,m,[S.Zero]*n*m)
-
-    def zero(self, n):
-        """Returns a n x n matrix of zeros."""
-        warnings.warn( 'Deprecated: use zeros() instead.' )
-        return Matrix(n,n,[S.Zero]*n*n)
-
     def zeros(self, dims):
         """Returns a dims = (d1,d2) matrix of zeros."""
         n, m = _dims_to_nm( dims )
@@ -1666,27 +1655,10 @@ def matrix_add(A,B):
         ret[i] = map(lambda j,k: j+k, alst[i], blst[i])
     return Matrix(ret)
 
-def zero(n):
-    """Create square zero matrix n x n"""
-    warnings.warn( 'Deprecated: use zeros() instead.' )
-    return zeronm(n,n)
-
-def zeronm(n,m):
-    """Create zero matrix n x m"""
-    warnings.warn( 'Deprecated: use zeros() instead.' )
-    assert n>0
-    assert m>0
-    return Matrix(n,m,[S.Zero]*m*n)
-
 def zeros(dims):
     """Create zero matrix of dimensions dims = (d1,d2)"""
     n, m = _dims_to_nm(dims)
     return Matrix(n, m, [S.Zero]*m*n)
-
-def one(n):
-    """Create square all-one matrix n x n"""
-    warnings.warn( 'Deprecated: use ones() instead.' )
-    return Matrix(n,n,[S.One]*n*n)
 
 def ones(dims):
     """Create all-one matrix of dimensions dims = (d1,d2)"""
@@ -2040,13 +2012,6 @@ class SMatrix(Matrix):
                                (self[2]*b[0] - self[0]*b[2]),
                                (self[0]*b[1] - self[1]*b[0])))
 
-    def zeronm(self,n,m):
-        warnings.warn( 'Deprecated: use zeros() instead.' )
-        return SMatrix(n,m,{})
-
-    def zero(self, n):
-        warnings.warn( 'Deprecated: use zeros() instead.' )
-        return SMatrix(n,n,{})
 
     def zeros(self, dims):
         """Returns a dims = (d1,d2) matrix of zeros."""
