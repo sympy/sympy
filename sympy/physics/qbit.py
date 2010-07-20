@@ -58,10 +58,11 @@ class Qbit(Expr):
     def _represent_ZBasisSet(self):
         n = 1
         definiteState = 0
-        for it in reversed(self.args):
+        args = self.args
+        for it in reversed(args):
             definiteState += n*it
             n = n*2
-        result = [0 for x in range(2**self.dimension)]
+        result = [0 for x in range(2**(self.dimension))]
         result[definiteState] = 1
 
         return Matrix(result)
@@ -352,7 +353,7 @@ class controlledMod(Gate):
         for i in reversed(range(t)):
             outarray.append((out>>i)&1)
         return Qbit(*outarray)
-        
+  
 def measure(qbit, state):
     state = state.expand()
     if isinstance(state, Mul):
@@ -365,7 +366,7 @@ def measure(qbit, state):
     #This will be used to determine probability of getting a 1
     for item in state.args:
         if item.args[-1][qbit] == 1:
-            prob1 += item.args[0]**2
+            prob1 += Mul(*item.args[0:-1])*Mul(*item.args[0:-1]).conjugate()
     if prob1 < random.random():
         choice = 0
     else:
@@ -533,7 +534,7 @@ class TGate(Gate):
     def matrix(self):
         return Matrix([[1, 0], [0, exp(I*Pi()/4)]])
 
-def apply_gates(circuit, basis = ZBasisSet()):
+def apply_gates(circuit, basis = ZBasisSet(), floatingPoint = False):
     # if all we have is a Qbit without any gates, return the qbit
     if isinstance(circuit, Qbit):
         return circuit
@@ -547,8 +548,10 @@ def apply_gates(circuit, basis = ZBasisSet()):
     if isinstance(circuit, Add):
         result = 0
         for i in circuit.args:
-            result = result + apply_gates(i, basis)
-        return result        
+            result = result + apply_gates(i, basis, floatingPoint)
+        if floatingPoint:
+            result = result.evalf()
+        return result     
 
     state_coeff = 1
     #pick out each object that multiplies the state
@@ -573,7 +576,9 @@ def apply_gates(circuit, basis = ZBasisSet()):
         if isinstance(states, Add):
             result = 0            
             for state in states.args:
-                result = result + apply_gates(gate**number_of_applications*state, basis)
+                result = result + apply_gates(gate**number_of_applications*state, basis, floatingPoint)
+            if floatingPoint:
+                result = result.evalf()
             states = result
             states = states.expand()
 
@@ -591,7 +596,7 @@ def apply_gates(circuit, basis = ZBasisSet()):
  
             #apply the gate the right number of times to this state
             coefficient = Mul(*(states.args[:i]+states.args[i+1:]))
-            states = apply_gates(gate**(number_of_applications)*states.args[i], basis)
+            states = apply_gates(gate**(number_of_applications)*states.args[i], basis, floatingPoint)
             states = coefficient*states            
             states = states.expand()
             
@@ -604,7 +609,7 @@ def apply_gates(circuit, basis = ZBasisSet()):
             states = states.expand()
             number_of_applications -= 1
             while number_of_applications > 0:
-                states = apply_gates(gate*states)
+                states = apply_gates(gate*states, basis, floatingPoint)
                 number_of_applications -= 1
        
         #if it's not one of those, there is something wrong
@@ -667,7 +672,7 @@ def qbits_to_matrix(qbits):
         return result
     #if we are at the bottom of the recursion, have the base case be representing the matrix
     elif isinstance(qbits, Qbit):
-        return qbits._represent_ZBasis() #TODO other bases with getattr
+        return qbits._represent_ZBasisSet() #TODO other bases with getattr
     else:
         raise Exception("Malformed input")
 
@@ -825,23 +830,152 @@ def gatesort(circuit):
 class HilbertSpaceException(Exception):
     pass
 
-def QFT(start, finish):
+class Fourier(Gate):
+    def __new__(self, *args):
+        if args[0] >= args[1]:
+            raise Exception("Start must be smaller than finish")
+        return Expr.__new__(self, *args)
+
+    @property
+    def _apply(self, qbits):
+        raise NotImplementedError("This command doesn't make sense for a Fourier Transform")
+
+    @property
+    def minimumdimension(self):
+        return self.args[1]-1
+
+    @property
+    def inputnumber(self):
+        return 2
+
+    def _represent_ZBasisSet(self, HilbertSize, format = 'sympy'):
+        if HilbertSize <= self.minimumdimension:
+            raise  HilbertSpaceException("HilbertSize doesn't work")
+        product = []
+        product.append(eye(2**(self.args[0])))
+        product.append(self.matrix)
+        product.append(eye(2**(HilbertSize - self.args[1])))
+        return TensorProduct(*product)
+        
+         
+    @property
+    def matrix(self):
+        N = 2**(self.args[1]-self.args[0])
+        if isinstance(self, QFT):
+            omega = exp(2*I*Pi()/(N))
+        else:
+            omega =  exp(-2*I*Pi()/(N))
+        mat = 0
+        for i in range(N):
+            temp = 0
+            for j in range(N):
+                if temp == 0:
+                    temp = Matrix([[1]])
+                else:
+                    temp = temp.row_join(Matrix([[omega**(i*j%N)]]))
+            if mat == 0:
+                mat = temp
+            else:
+                mat = mat.col_join(temp)
+        mat = mat/sqrt(N)
+        return mat
+
+    def _apply_ZBasisSet(self, qbits):
+        mat = qbits_to_matrix(qbits)
+        return self.DFT(mat)
+
+    def DFT(self, qbitmat):
+        N = qbitmat.rows
+        if isinstance(self, QFT):
+            omega = exp(2*I*Pi()/(N))
+        else:
+            omega = exp(-2*I*Pi()/(N))
+        retVal = 0     
+        for i in range(N):
+            if qbitmat[i] == 0:
+                continue
+            temp = [omega**(j*i)/sqrt(N) for j in range(N)]
+            if retVal == 0:
+                retVal = Matrix(temp)
+            else:
+                retVal = retVal + Matrix(temp)
+        return retVal
+
+####### ALU ######## TODO Get SetZero Actually working (for non-definite states) None of this is right yet
+
+def ADD(cls, InReg, InOutReg, carryReg, circuit):
+    if len(InReg) != len(InOutReg):
+        raise Exception("Input and Output Registers must be of same size")
     circuit = 1
-    for level in reversed(range(start, finish)):
-        circuit = HadamardGate(level)*circuit
-        for i in range(level-start):
-            circuit = RkGate(level, level-i-1, i+2)*circuit
-    for i in range((finish-start)/2):
-        circuit = SwapGate(i+start, finish-i-1)*circuit
+    for i in range(len(InReg)):
+        if i != (len(InReg)-1):
+            circuit = ToffoliGate(InReg[i], InOutReg[i], carryReg[i+1])*circuit
+            circuit = ToffoliGate(InReg[i], carryReg[i], carryReg[i+1])*circuit
+            circuit = ToffoliGate(InOutReg[i], carryReg[i], carryReg[i+1])*circuit
+        circuit = CNOTGate(InReg[i], InOutReg[i])*circuit
+        circuit = CNOTGate(carryReg[i], InOutReg[i])*circuit
+    for item in carryReg:
+        circuit = SetZero(item)*circuit
     return circuit
 
-def IQFT(start, finish):
+def Bitshift(cls, Register, number, tempStorage):
+    circuit = SetZero(tempStorage)
+    if number > 0:
+        for i in range(abs(number)):
+            circuit = SwapGate(Register[-1], tempStorage)*circuit
+            for i in reversed(range(len(Register)-1)):
+                circuit = SwapGate(i, i+1)*circuit
+            circuit = SetZero(tempStorage)*circuit
+        return circuit
+    elif number < 0:
+        for i in range(abs(number)):
+            circuit = SwapGate(Register[0], tempStorage)*circuit
+            for i in range(len(Register)-1):
+                circuit = SwapGate(i, i+1)*circuit
+            circuit = SetZero(tempStorage)*circuit
+        return circuit
+    else:
+        return 1
+
+def Multiply(cls, InReg1, InReg2, OutReg, tempReg, carryReg):
     circuit = 1
-    for i in range((finish-start)/2):
-        circuit = SwapGate(i+start, finish-i-1)*circuit
-    for level in range(start, finish):
-        for i in reversed(range(level-start)):
-            circuit = IRkGate(level, level-i-1, i+2)*circuit
-        circuit = HadamardGate(level)*circuit
-    return circuit
+    for item in OutReg:
+        circuit = SetZero(item)*circuit
+    for item in tempReg:
+        circuit = SetZero(item)*circuit
+                    
+def SetZero(item, circuit):
+    measure(item,circuit)
+    circuit = circuit.expand()
+    #This is more subtle than I had originally planned
+    #Can't make a gate do to distrutivity of Most gates, but not measurement
+    #I will fix this soon so that it works in all cases
+                
+      
+class QFT(Fourier):
+    def decompose(self):
+        start = self.args[0]
+        finish = self.args[1]
+        circuit = 1
+        for level in reversed(range(start, finish)):
+            circuit = HadamardGate(level)*circuit
+            for i in range(level-start):
+                circuit = RkGate(level, level-i-1, i+2)*circuit
+        for i in range((finish-start)/2):
+            circuit = SwapGate(i+start, finish-i-1)*circuit
+        return circuit
+
+class IQFT(Fourier):
+
+    def decompose(self):
+        start = self.args[0]
+        finish = self.args[1]
+        circuit = 1
+        for i in range((finish-start)/2):
+            circuit = SwapGate(i+start, finish-i-1)*circuit
+        for level in range(start, finish):
+            for i in reversed(range(level-start)):
+                circuit = IRkGate(level, level-i-1, i+2)*circuit
+            circuit = HadamardGate(level)*circuit
+        return circuit
           

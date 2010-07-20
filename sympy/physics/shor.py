@@ -44,22 +44,37 @@ def arr(num, t):
         car.append((num>>i)&1)
     return car
 
-def getr(p,q):
-    if p == 0:
+def getr(x, y, N):
+    fraction = continuedFraction(x,y)
+    #now convert into r
+    total = ratioize(fraction, N)
+    return total
+
+def ratioize(list, N):
+    if list[0] > N:
         return 0
-    first = gcd(p,q)
-    while first != 1:
-        p = p/first
-        q = q/first
-        first = gcd(p,q)
-    return q
+    if len(list) == 1:
+        return list[0]
+    return list[0] + ratioize(list[1:], N)
+     
+def continuedFraction(x, y):
+    x = int(x)
+    y = int(y)
+    temp = x/y
+    if temp*y == x:
+        return [temp,]
+
+    list = continuedFraction(y, x-temp*y)
+    list.insert(0, temp)
+    return list
+
     
 # This is quantum part of Shor's algorithm
 # Takes two registers, puts first in superposition of states with Hadamards so: |k>|0> with k being all possible choices 
 def periodfind(a, N):
-    epsilon = .25
+    epsilon = .5
     #picks out t's such that maintains accuracy within epsilon
-    t = int(2*math.ceil(log(N)) + 1 + math.ceil(log(2+1/(2*epsilon))))
+    t = int(2*math.ceil(log(N,2)))
     # make the first half of register be 0's |000...000>
     start = [0 for x in range(t)]
     #Put second half into superposition of states so we have |1>x|0> + |2>x|0> + ... |k>x>|0> + ... + |2**n-1>x|0>
@@ -74,20 +89,26 @@ def periodfind(a, N):
     circuit = controlledMod(t,a,N)*circuit
     #will measure first half of register giving one of the a**k%N's 
     circuit = apply_gates(circuit)
+    print circuit
     print "controlled Mod'd"
     for i in range(t):
         circuit = measure(i, circuit)
+    print circuit
     print "measured 1"
     #Now apply Inverse Quantum Fourier Transform on the second half of the register
-    circuit = IQFT(t, 2*t)*circuit
-    circuit = apply_gates(circuit)
-    print "IQFT'd"
+    circuit = apply_gates(QFT(t, t*2).decompose()*circuit, floatingPoint = True)
+    print circuit
+    print "QFT'd"
     for i in range(t):
         circuit = measure(i+t, circuit)
+    print circuit
     if isinstance(circuit, Qbit):
         register = circuit
-    else:
+    elif isinstance(circuit, Mul):
         register = circuit.args[-1]
+    else:
+        register = circuit.args[-1].args[-1]
+    
     print register
     n = 1
     answer = 0
@@ -97,7 +118,7 @@ def periodfind(a, N):
     if answer == 0:
         raise OrderFindingException("Order finder returned 0. Happens with chance %f" % epsilon)
     #turn answer into r using continued fractions
-    g = getr(answer, 2**t)
+    g = getr(answer, 2**t, N)
     print g
     return g
         
