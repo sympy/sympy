@@ -458,6 +458,9 @@ class Matrix(object):
         return super(Matrix, self).__hash__()
 
     def _format_str(self, strfunc, rowsep='\n'):
+        # Handle zero dimensions:
+        if self.rows == 0 or self.cols == 0:
+            return '[]'
         # Build table of string representations of the elements
         res = []
         # Track per-column max lengths for pretty alignment

@@ -400,6 +400,9 @@ class PrettyPrinter(Printer):
 
             D = prettyForm(*D.below(D_row))
 
+        if D is None:
+            D = prettyForm('') # Empty Matrix
+
         D = prettyForm(*D.parens('[',']'))
         return D
 

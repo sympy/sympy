@@ -61,6 +61,7 @@ def test_list():
 
 def test_Matrix():
     sT(Matrix([[x**+1, 1], [y, x+y]]), "Matrix([[Symbol('x'), One], [Symbol('y'), Add(Symbol('x'), Symbol('y'))]])")
+    sT(Matrix(), "Matrix([])")
 
 def test_NaN():
     sT(nan, "nan")

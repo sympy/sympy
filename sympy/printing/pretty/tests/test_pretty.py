@@ -1561,6 +1561,12 @@ u"""\
 
 
 def test_pretty_matrix():
+    # Empty Matrix
+    expr = Matrix()
+    ascii_str = "[]"
+    unicode_str = "[]"
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == unicode_str
     expr = Matrix([[x**2+1, 1], [y, x+y]])
     ascii_str_1 = \
 """\
