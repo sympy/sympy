@@ -20,11 +20,11 @@ class FiniteField(Field, SimpleDomain):
     dom = None
     mod = None
 
-    def __init__(self, mod):
+    def __init__(self, mod, symmetric=True):
         if mod <= 0:
             raise ValueError('modulus must be a positive integer, got %s' % mod)
 
-        self.dtype = ModularIntegerFactory(mod, self.dom)
+        self.dtype = ModularIntegerFactory(mod, self.dom, symmetric)
         self.zero  = self.dtype(0)
         self.one   = self.dtype(1)
         self.mod   = mod
@@ -59,7 +59,7 @@ class FiniteField(Field, SimpleDomain):
 
     def to_sympy(self, a):
         """Convert `a` to a SymPy object. """
-        return SymPyIntegerType(int(a.val))
+        return SymPyIntegerType(int(a))
 
     def from_sympy(self, a):
         """Convert SymPy's Integer to SymPy's `Integer`. """

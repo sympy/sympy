@@ -3,7 +3,7 @@
 class ModularInteger(object):
     """A class representing an modular integers. """
 
-    mod, dom = None, None
+    mod, dom, sym = None, None, None
 
     __slots__ = ['val']
 
@@ -17,11 +17,16 @@ class ModularInteger(object):
         return "%s mod %s" % (self.val, self.mod)
 
     def __int__(self):
-        """Return the unique integer `-m/2 < i <= m/2`. """
-        if self.val <= self.mod // 2:
-            return self.val
+        return int(self.to_int())
+
+    def to_int(self):
+        if self.sym:
+            if self.val <= self.mod // 2:
+                return self.val
+            else:
+                return self.val - self.mod
         else:
-            return self.val - self.mod
+            return self.val
 
     def __pos__(self):
         return self
@@ -43,6 +48,9 @@ class ModularInteger(object):
 
     __truediv__ = __div__
 
+    def __mod__(self, other):
+        return self.__class__(self.val % other.val)
+
     def __pow__(self, exp):
         if not exp:
             return self.__class__(self.dom.one)
@@ -55,20 +63,23 @@ class ModularInteger(object):
         return self.__class__(val**exp)
 
     def __eq__(self, other):
-        return self.val == other.val
+        return isinstance(other, ModularInteger) and self.val == other.val
 
     def __ne__(self, other):
-        return self.val != other.val
+        return not isinstance(other, ModularInteger) or self.val != other.val
 
     def __nonzero__(self):
         return bool(self.val)
 
-def ModularIntegerFactory(_mod, _dom):
+def ModularIntegerFactory(_mod, _dom, _sym):
     """Create custom class for specific integer modulus."""
 
     class cls(ModularInteger):
-        mod, dom = _dom.convert(_mod), _dom
+        mod, dom, sym = _dom.convert(_mod), _dom, _sym
 
-    cls.__name__ = "ModularInteger%s" % _mod
+    if _sym:
+        cls.__name__ = "SymmetricModularInteger%s" % _mod
+    else:
+        cls.__name__ = "ModularInteger%s" % _mod
 
     return cls

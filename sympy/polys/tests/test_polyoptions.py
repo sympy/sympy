@@ -232,7 +232,16 @@ def test_Modulus_postprocess():
 
     assert opt == {
         'modulus': 5,
-        'domain': ZZ, # XXX: FF(5),
+        'domain': FF(5),
+    }
+
+    opt = {'modulus': 5, 'symmetric': False}
+    Modulus.postprocess(opt)
+
+    assert opt == {
+        'modulus': 5,
+        'domain': FF(5, False),
+        'symmetric': False,
     }
 
 def test_Symmetric_preprocess():

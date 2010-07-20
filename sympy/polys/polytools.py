@@ -9,7 +9,7 @@ from sympy.core.decorators import (
 )
 
 from sympy.polys.polyclasses import (
-    GFP, DMP, SDP, ANP, DMF,
+    DMP, SDP, ANP, DMF,
 )
 
 from sympy.polys.polyutils import (
@@ -56,67 +56,45 @@ from sympy.ntheory import isprime
 
 import sympy.polys
 
-import re
-
-_re_dom_poly = re.compile("^(Z|ZZ|Q|QQ)\[(.+)\]$")
-_re_dom_frac = re.compile("^(Z|ZZ|Q|QQ)\((.+)\)$")
-
-_re_dom_algebraic = re.compile("^(Q|QQ)\<(.+)\>$")
-
-from sympy.polys.domains import ZZ, QQ, RR, EX, construct_domain
+from sympy.polys.domains import FF, ZZ, QQ, RR, EX, construct_domain
 
 from sympy.polys import polyoptions as options
 
 def _init_poly_from_dict(dict_rep, *gens, **args):
     """Initialize a Poly given a dict instance. """
     domain = args.get('domain')
-    modulus = args.get('modulus')
-    symmetric = args.get('symmetric')
 
-    if modulus is not None:
-        if len(gens) != 1:
-            raise NotImplementedError("multivariate polynomials over finite fields are not supported")
-        else:
-            return GFP(dict_rep, modulus, domain, symmetric)
+    if domain is not None:
+        for k, v in dict_rep.iteritems():
+            dict_rep[k] = domain.convert(v)
     else:
-        if domain is not None:
-            for k, v in dict_rep.iteritems():
-                dict_rep[k] = domain.convert(v)
-        else:
-            domain, dict_rep = construct_domain(dict_rep, **args)
+        domain, dict_rep = construct_domain(dict_rep, **args)
 
-        return DMP(dict_rep, domain, len(gens)-1)
+    return DMP(dict_rep, domain, len(gens)-1)
 
 def _init_poly_from_list(list_rep, *gens, **args):
     """Initialize a Poly given a list instance. """
     domain = args.get('domain')
-    modulus = args.get('modulus')
-    symmetric = args.get('symmetric')
 
     if len(gens) != 1:
         raise PolynomialError("can't create a multivariate polynomial from a list")
 
-    if modulus is not None:
-        return GFP(list_rep, modulus, domain, symmetric)
+    if domain is not None:
+        rep = map(domain.convert, list_rep)
     else:
-        if domain is not None:
-            rep = map(domain.convert, list_rep)
-        else:
-            dict_rep = dict(enumerate(reversed(list_rep)))
-            domain, rep = construct_domain(dict_rep, **args)
+        dict_rep = dict(enumerate(reversed(list_rep)))
+        domain, rep = construct_domain(dict_rep, **args)
 
-        return DMP(rep, domain, len(gens)-1)
+    return DMP(rep, domain, len(gens)-1)
 
 def _init_poly_from_poly(poly_rep, *gens, **args):
     """Initialize a Poly given a Poly instance. """
-    field = args.get('field')
+    field = args.get('field')   # XXX: this should be in options manager
     domain = args.get('domain')
-    modulus = args.get('modulus')
-    symmetric = args.get('symmetric')
 
     if isinstance(poly_rep.rep, DMP):
         if not gens or poly_rep.gens == gens:
-            if field is not None or domain is not None or modulus is not None:
+            if domain is not None or field is not None:
                 rep = poly_rep.rep
             else:
                 return poly_rep
@@ -133,26 +111,8 @@ def _init_poly_from_poly(poly_rep, *gens, **args):
             rep = rep.convert(domain)
         elif field is not None and field:
             rep = rep.convert(rep.dom.get_field())
-
-        if modulus is not None:
-            if not rep.lev and rep.dom.is_ZZ:
-                rep = GFP(rep.rep, modulus, rep.dom, symmetric)
-            else:
-                raise PolynomialError("can't make GF(p) polynomial out of %s" % rep)
     else:
-        if not gens or poly_rep.gens == gens:
-            if domain is not None or modulus is not None:
-                if modulus is not None:
-                    rep = GFP(poly_rep.rep.rep, modulus, poly_rep.rep.dom, symmetric)
-                else:
-                    rep = poly_rep.rep
-
-                if domain is not None:
-                    rep = rep.convert(domain)
-            else:
-                return poly_rep
-        else:
-            raise NotImplementedError("multivariate polynomials over finite fields are not supported")
+        raise PolynomialError("unknown polynomial representation")
 
     return (rep, gens or poly_rep.gens)
 
@@ -175,21 +135,13 @@ def _init_poly_from_basic(basic_rep, *gens, **args):
         return result
 
     domain = args.get('domain')
-    modulus = args.get('modulus')
-    symmetric = args.get('symmetric')
 
-    if modulus is not None:
-        if len(gens) > 1:
-            raise NotImplementedError("multivariate polynomials over finite fields are not supported")
-        else:
-            result = GFP(_dict_set_domain(dict_rep, domain), modulus, domain, symmetric)
+    if domain is not None:
+        dict_rep = _dict_set_domain(dict_rep, domain)
     else:
-        if domain is not None:
-            dict_rep = _dict_set_domain(dict_rep, domain)
-        else:
-            domain, dict_rep = construct_domain(dict_rep, **args)
+        domain, dict_rep = construct_domain(dict_rep, **args)
 
-        result = DMP(dict_rep, domain, len(gens)-1)
+    result = DMP(dict_rep, domain, len(gens)-1)
 
     return result, gens
 
@@ -207,7 +159,7 @@ class Poly(Basic):
         else:
             opt = args['options']
 
-        if isinstance(rep, (DMP, GFP)):
+        if isinstance(rep, DMP):
             if rep.lev != len(opt.gens)-1 or opt.args:
                 raise PolynomialError("invalid arguments to construct a polynomial")
         else:
@@ -294,14 +246,6 @@ class Poly(Basic):
                 G = DMP(dict(zip(g_monoms, g_coeffs)), dom, lev)
             else:
                 G = g.rep.convert(dom)
-        elif isinstance(f.rep, GFP) and isinstance(g.rep, DMP) and f.gens == g.gens:
-            dom, G, F, gens = f.rep.dom, GFP(g.rep.convert(f.rep.dom).rep, f.rep.mod, f.rep.dom, f.rep.sym), f.rep, f.gens
-        elif isinstance(f.rep, DMP) and isinstance(g.rep, GFP) and f.gens == g.gens:
-            dom, F, G, gens = g.rep.dom, GFP(f.rep.convert(g.rep.dom).rep, g.rep.mod, g.rep.dom, g.rep.sym), g.rep, g.gens
-        elif isinstance(f.rep, GFP) and isinstance(g.rep, GFP) and f.gens == g.gens and f.rep.mod == g.rep.mod:
-            dom, gens, sym = f.rep.dom.unify(g.rep.dom), f.gens, max(f.rep.sym, g.rep.sym)
-            F = GFP(f.rep.convert(dom).rep, f.rep.mod, dom, sym)
-            G = GFP(g.rep.convert(dom).rep, g.rep.mod, dom, sym)
         else:
             raise UnificationFailed("can't unify %s with %s" % (f, g))
 
@@ -345,20 +289,16 @@ class Poly(Basic):
     def set_modulus(f, modulus):
         """Set the modulus of `f`. """
         modulus = options.Modulus.preprocess(modulus)
-
-        if isinstance(f.rep, GFP):
-            return f.per(f.rep.trunc(modulus))
-        elif f.rep.dom.is_ZZ and f.is_univariate:
-            return f.per(GFP(f.rep.rep, modulus, f.rep.dom))
-        else:
-            raise PolynomialError("not a polynomial over a Galois field")
+        return f.set_domain(FF(modulus))
 
     def get_modulus(f):
         """Get the modulus of `f`. """
-        if isinstance(f.rep, GFP):
-            return Integer(f.rep.mod)
+        domain = f.get_domain()
+
+        if not domain.has_CharacteristicZero:
+            return Integer(domain.characteristic())
         else:
-            raise PolynomialError("not a polynomial over a Galois field")
+            raise PolynomialError("not a polynomial over a finite field")
 
     def _eval_subs(f, old, new):
         """Internal implementation of :func:`subs`. """
