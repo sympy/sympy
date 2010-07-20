@@ -9,7 +9,7 @@ from sympy.core.decorators import (
 )
 
 from sympy.polys.polyclasses import (
-    DMP, SDP, ANP, DMF,
+    DMP, ANP, DMF,
 )
 
 from sympy.polys.polyutils import (
