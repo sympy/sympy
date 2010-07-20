@@ -32,6 +32,10 @@ def test_derivation():
     assert derivation(Poly(x*t*t1, t), [Poly(1, x), Poly(1/x, t1), Poly(t, t)], [x, t1, t],
     coefficientD=True) ==  Poly((1 + t1)*t, t)
     assert derivation(Poly(x, x), [Poly(1, x)], [x]) == Poly(1, x)
+    # Test basic option
+    assert derivation((x + 1)/(x - 1), [Poly(1, x)], [x], basic=True) == -2/(1 - 2*x + x**2)
+    assert derivation((t + 1)/(t - 1), [Poly(t, t)], [t], basic=True) == -2*t/(1 - 2*t + t**2)
+    assert derivation(t + 1, [Poly(t, t)], [t], basic=True) == t
 
 def test_splitfactor():
     p = Poly(4*x**4*t**5 + (-4*x**3 - 4*x**4)*t**4 + (-3*x**2 + 2*x**3)*t**3 +

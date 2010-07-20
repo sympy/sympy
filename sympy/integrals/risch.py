@@ -61,20 +61,28 @@ def gcdex_diophantine(a, b, c):
 
     return (s, t)
 
-def derivation(p, D, T, coefficientD=False):
+def derivation(p, D, T, coefficientD=False, basic=False):
     """
     Computes Dp.
 
     Given the derivation D with D = d/dx and p is a polynomial in t over
-    K(x), return Dp.  If coefficientD is True, it computes the derivation kD
+    K(x), return Dp.
+
+    If coefficientD is True, it computes the derivation kD
     (kappaD), which is defined as kD(sum(ai*Xi**i, (i, 0, n))) ==
     sum(Dai*Xi**i, (i, 1, n)) (Definition 3.2.2, page 80).  X in this case is
     T[-1], so coefficientD computes the derivative just with respect to T[:-1],
     with T[-1] treated as a constant.
+
+    If basic=True, the returns a Basic expression.  Elements of D can still be
+    instances of Poly.
     """
     t = T[-1]
 
-    r = Poly(0, t)
+    if basic:
+        r = 0
+    else:
+        r = Poly(0, t)
 
     if coefficientD:
         D = D[:-1]
@@ -82,11 +90,16 @@ def derivation(p, D, T, coefficientD=False):
 
     for d, v in zip(D, T):
         pv = p.as_poly(v)
-        if pv is None:
+        if pv is None or basic:
             pv = p.as_basic()
 
-        r += (d*pv.diff(v)).as_poly(t)
+        if basic:
+            r += d.as_basic()*pv.diff(v)
+        else:
+            r += (d*pv.diff(v)).as_poly(t)
 
+    if basic:
+        r = cancel(r)
     return r
 
 def get_case(d, t):
