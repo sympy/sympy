@@ -106,7 +106,7 @@ def prde_special_denom(a, ba, bd, G, D, T, case='auto'):
 
     A = a*pN
     B = ba*pN.quo(bd) + Poly(n, t)*a*derivation(p, D, T).quo(p)*pN
-    G = [(Ga*pN*pn).quo(Gd) for Ga, Gd in G]
+    G = [(Ga*pN*pn).cancel(Gd, include=True) for Ga, Gd in G]
     h = pn
 
     # (a*p**N, (b + n*a*Dp/p)*p**N, g1*p**(N - n), ..., gm*p**(N - n), p**-n)
