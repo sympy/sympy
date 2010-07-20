@@ -5,7 +5,7 @@ from sympy import (S, symbols, integrate, Integral, Derivative, exp, oo, Symbol,
 from sympy.utilities.pytest import XFAIL, skip
 from sympy.physics.units import m, s
 
-x, y, a, b, c, d, k, m, t = symbols('x, y, a, b, c, d, k, m, t')
+x, y, z, a, b, c, d, k, m, t = symbols('x, y, z, a, b, c, d, k, m, t')
 n = Symbol('n', integer=True)
 f = Function('f')
 
@@ -450,3 +450,6 @@ def test_issue1428():
     assert integrate(sin(k*x)*sin(m*x),(x,0,pi)) in [k*cos(pi*k)*sin(pi*m)/(m**2 - k**2),
     k*cos(pi*k)*sin(pi*m)/(m**2 - k**2) - m*cos(pi*m)*sin(pi*k)/(m**2 - k**2)]
 
+def test_issue1054():
+    assert integrate(1/(1+x+y+z), (x, 0, 1), (y, 0, 1), (z, 0, 1)) in \
+        [6*log(2) + 8*log(4) - 27*log(3)/2, 22*log(2) - 27*log(3)/2]
