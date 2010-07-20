@@ -1,9 +1,7 @@
 """Tests for OO layer of several polynomial representations. """
 
 from sympy.polys.polyclasses import (
-    GFP, init_normal_GFP,
     DMP, init_normal_DMP,
-    SDP, init_normal_SDP,
     DMF, init_normal_DMF,
     ANP, init_normal_ANP,
 )
