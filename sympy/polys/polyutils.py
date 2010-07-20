@@ -19,26 +19,15 @@ _gens_order = {
 _max_order = 1000
 _re_gen = re.compile(r"^(.+?)(\d*)$")
 
-def _sort_gens(gens, **args):
+def _sort_gens(gens, opt=None):
     """Sort generators in a reasonably intelligent way. """
-    sort = args.get('sort')
-    wrt = args.get('wrt')
+    gens_order, wrt = {}, None
 
-    gens_order = {}
+    if opt is not None:
+        gens_order, wrt = {}, opt.wrt
 
-    if sort is not None:
-        for i, elt in enumerate(sort.split('>')):
-            gens_order[elt.strip()] = i+1
-
-    if wrt is not None:
-        if isinstance(wrt, Basic):
-            wrt = [str(wrt)]
-        elif isinstance(wrt, str):
-            wrt = [ elt.strip() for elt in wrt.split(",") ]
-        elif hasattr(wrt, '__getitem__'):
-            wrt = list(map(str, wrt))
-        else:
-            raise TypeError("invalid argument given via 'wrt' keyword")
+        for i, gen in enumerate(opt.sort):
+            gens_order[gen] = i+1
 
     def order_key(gen):
         gen = str(gen)

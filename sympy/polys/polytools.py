@@ -336,8 +336,10 @@ class Poly(Basic):
 
     def reorder(f, *gens, **args):
         """Efficiently apply new order of generators. """
+        opt = Options((), args)
+
         if not gens:
-            gens = _sort_gens(f.gens, **args)
+            gens = _sort_gens(f.gens, opt)
         elif set(f.gens) != set(gens):
             raise PolynomialError("generators list can differ only up to order of elements")
 
