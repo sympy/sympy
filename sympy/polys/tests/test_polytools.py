@@ -416,11 +416,6 @@ def test_Poly_set_modulus():
 
     raises(CoercionFailed, "Poly(x/2 + 1).set_modulus(2)")
 
-def test_Poly___div__():
-    assert Poly(x)/Poly(x) == 1
-    assert Poly(x**2)/Poly(x) == x
-    assert Poly(x)/Poly(x**2) == 1/x
-
 def test_Poly_abs():
     assert Poly(-x+1, x).abs() == abs(Poly(-x+1, x)) == Poly(x+1, x)
 
@@ -439,6 +434,9 @@ def test_Poly_add():
     assert Poly(1, x) + x == Poly(x+1, x)
     assert Poly(1, x) + sin(x) == 1+sin(x)
 
+    assert Poly(x, x) + 1 == Poly(x+1, x)
+    assert 1 + Poly(x, x) == Poly(x+1, x)
+
 def test_Poly_sub():
     assert Poly(0, x).sub(Poly(0, x)) == Poly(0, x)
     assert Poly(0, x) - Poly(0, x) == Poly(0, x)
@@ -451,6 +449,9 @@ def test_Poly_sub():
     assert Poly(1, x) - x == Poly(1-x, x)
     assert Poly(1, x) - sin(x) == 1-sin(x)
 
+    assert Poly(x, x) - 1 == Poly(x-1, x)
+    assert 1 - Poly(x, x) == Poly(1-x, x)
+
 def test_Poly_mul():
     assert Poly(0, x).mul(Poly(0, x)) == Poly(0, x)
     assert Poly(0, x) * Poly(0, x) == Poly(0, x)
@@ -462,6 +463,9 @@ def test_Poly_mul():
 
     assert Poly(1, x) * x == Poly(x, x)
     assert Poly(1, x) * sin(x) == sin(x)
+
+    assert Poly(x, x) * 2 == Poly(2*x, x)
+    assert 2 * Poly(x, x) == Poly(2*x, x)
 
 def test_Poly_sqr():
     assert Poly(x*y, x, y).sqr() == Poly(x**2*y**2, x, y)
@@ -489,6 +493,16 @@ def test_Poly_divmod():
     assert divmod(f, x) == (q, r)
     assert f // x == q
     assert f % x == r
+
+    q, r = Poly(0, x), Poly(2, x)
+
+    assert divmod(2, g) == (q, r)
+    assert 2 // g == q
+    assert 2 % g == r
+
+    assert Poly(x)/Poly(x) == 1
+    assert Poly(x**2)/Poly(x) == x
+    assert Poly(x)/Poly(x**2) == 1/x
 
 def test_Poly_eq_ne():
     assert (Poly(x+y, x, y) == Poly(x+y, x, y)) == True
