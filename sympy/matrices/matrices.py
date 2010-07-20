@@ -506,7 +506,7 @@ class Matrix(object):
         should return True if its argument is zero.
 
         """
-        if self.cols != self.rows:
+        if not self.is_square:
             raise NonSquareMatrixError("A Matrix must be square to invert.")
         if try_block_diag:
             blocks = self.get_diag_blocks()
@@ -675,7 +675,7 @@ class Matrix(object):
         return newmat
 
     def trace(self):
-        if self.cols != self.rows:
+        if not self.is_square:
             raise NonSquareMatrixError("A Matrix must be square to compute the trace.")
 
         trace = 0
@@ -861,7 +861,7 @@ class Matrix(object):
         Returns A comprised of L,U (L's diag entries are 1) and
         p which is the list of the row swaps (in order).
         """
-        if self.rows != self.cols:
+        if not self.is_square:
             raise NonSquareMatrixError("A Matrix must be square to apply LUdecomposition_Simple().")
         n = self.rows
         A = self[:,:]
@@ -1026,7 +1026,7 @@ class Matrix(object):
 
         Assumes full-rank square (for now).
         """
-        if self.rows != self.cols:
+        if not self.is_square:
             raise NonSquareMatrixError("A Matrix must be square to apply QRdecomposition().")
         n = self.rows
         Q, R = self.zeros(n), self.zeros(n)
@@ -1301,7 +1301,7 @@ class Matrix(object):
         """
         Calculates the inverse using Gaussian elimination.
         """
-        if self.rows != self.cols:
+        if not self.is_square:
             raise NonSquareMatrixError("A Matrix must be square to invert.")
 
         if self.det() == 0:
@@ -1315,7 +1315,7 @@ class Matrix(object):
         """
         Calculates the inverse using the adjugate matrix and a determinant.
         """
-        if self.rows != self.cols:
+        if not self.is_square:
             raise NonSquareMatrixError("A Matrix must be square to invert.")
 
         d = self.berkowitz_det()
@@ -1870,7 +1870,7 @@ def block_diag(matrices):
     """
     rows = 0
     for m in matrices:
-        if m.rows != m.cols:
+        if not m.is_square:
             raise NonSquareMatrixError("All matrices must be square.")
         rows += m.rows
     A = zeros((rows, rows))
