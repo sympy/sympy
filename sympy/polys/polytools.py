@@ -1310,7 +1310,7 @@ class Poly(Basic):
         return f.add(g)
 
     @_sympifyit('g', NotImplemented)
-    def __radd__(f, g): # pragma: no cover
+    def __radd__(f, g):
         if not g.is_Poly:
             try:
                 g = Poly(g, *f.gens)
@@ -1330,7 +1330,7 @@ class Poly(Basic):
         return f.sub(g)
 
     @_sympifyit('g', NotImplemented)
-    def __rsub__(f, g): # pragma: no cover
+    def __rsub__(f, g):
         if not g.is_Poly:
             try:
                 g = Poly(g, *f.gens)
@@ -1350,7 +1350,7 @@ class Poly(Basic):
         return f.mul(g)
 
     @_sympifyit('g', NotImplemented)
-    def __rmul__(f, g): # pragma: no cover
+    def __rmul__(f, g):
         if not g.is_Poly:
             try:
                 g = Poly(g, *f.gens)
@@ -1374,7 +1374,7 @@ class Poly(Basic):
         return f.div(g)
 
     @_sympifyit('g', NotImplemented)
-    def __rdivmod__(f, g): # pragma: no cover
+    def __rdivmod__(f, g):
         if not g.is_Poly:
             g = Poly(g, *f.gens)
 
@@ -1388,7 +1388,7 @@ class Poly(Basic):
         return f.rem(g)
 
     @_sympifyit('g', NotImplemented)
-    def __rmod__(f, g): # pragma: no cover
+    def __rmod__(f, g):
         if not g.is_Poly:
             g = Poly(g, *f.gens)
 
@@ -1402,18 +1402,18 @@ class Poly(Basic):
         return f.exquo(g)
 
     @_sympifyit('g', NotImplemented)
-    def __rfloordiv__(f, g): # pragma: no cover
+    def __rfloordiv__(f, g):
         if not g.is_Poly:
             g = Poly(g, *f.gens)
 
         return g.exquo(f)
 
     @_sympifyit('g', NotImplemented)
-    def __div__(f, g): # pragma: no cover
+    def __div__(f, g):
         return f.as_basic()/g.as_basic()
 
     @_sympifyit('g', NotImplemented)
-    def __rdiv__(f, g): # pragma: no cover
+    def __rdiv__(f, g):
         return g.as_basic()/f.as_basic()
 
     __truediv__ = __div__
