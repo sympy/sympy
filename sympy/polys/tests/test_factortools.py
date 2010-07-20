@@ -43,7 +43,7 @@ from sympy.polys.specialpolys import (
 from sympy.polys.polyconfig import setup
 from sympy.polys.polyerrors import DomainError
 from sympy.polys.polyclasses import DMP, DMF, ANP
-from sympy.polys.domains import ZZ, QQ, RR, EX
+from sympy.polys.domains import FF, ZZ, QQ, RR, EX
 
 from sympy import nextprime, sin, sqrt, I
 
@@ -562,6 +562,11 @@ def test_dup_factor_list():
     assert dup_factor_list_include([ZZ(1),ZZ(2),ZZ(1)], ZZ) == \
         [([ZZ(1), ZZ(1)], 2)]
 
+    K = FF(2)
+
+    assert dup_factor_list([K(1),K(0),K(1)], K) == \
+        (K(1), [([K(1), K(1)], 2)])
+
     assert dup_factor_list([RR(1.0),RR(2.0),RR(1.0)], RR) == \
         (RR(1.0), [([RR(1.0),RR(1.0)], 2)])
     assert dup_factor_list([RR(2.0),RR(4.0),RR(2.0)], RR) == \
@@ -655,5 +660,8 @@ def test_dmp_factor_list():
                              ([[DMP([QQ(1),QQ(0)],QQ)]], 1),
                              ([[DMP([QQ(1)],QQ)],[DMP([QQ(1),QQ(0)],QQ)]], 1)])
 
+    K = FF(2)
+
+    raises(DomainError, "dmp_factor_list([[K(1)],[],[K(1),K(0),K(0)]], 1, K)")
     raises(DomainError, "dmp_factor_list([[EX(sin(1))]], 1, EX)")
 

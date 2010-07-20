@@ -29,6 +29,10 @@ class SymPyIntegerRing(IntegerRing):
         else:
             raise CoercionFailed("expected an integer, got %s" % a)
 
+    def from_FF_python(K1, a, K0):
+        """Convert `ModularInteger(int)` to SymPy's `Integer`. """
+        return SymPyIntegerType(a.val)
+
     def from_ZZ_python(K1, a, K0):
         """Convert Python's `int` to SymPy's `Integer`. """
         return SymPyIntegerType(a)
@@ -38,6 +42,10 @@ class SymPyIntegerRing(IntegerRing):
         if a.denominator == 1:
             return SymPyIntegerType(a.numerator)
 
+    def from_FF_sympy(K1, a, K0):
+        """Convert `ModularInteger(Integer)` to SymPy's `Integer`. """
+        return a.val
+
     def from_ZZ_sympy(K1, a, K0):
         """Convert SymPy's `Integer` to SymPy's `Integer`. """
         return a
@@ -46,6 +54,10 @@ class SymPyIntegerRing(IntegerRing):
         """Convert SymPy's `Rational` to SymPy's `Integer`. """
         if a.q == 1:
             return SymPyIntegerType(a.p)
+
+    def from_FF_gmpy(K1, a, K0):
+        """Convert `ModularInteger(mpz)` to SymPy's `Integer`. """
+        return SymPyIntegerType(int(a.val))
 
     def from_ZZ_gmpy(K1, a, K0):
         """Convert GMPY's `mpz` to SymPy's `Integer`. """
