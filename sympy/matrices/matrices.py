@@ -43,7 +43,8 @@ def _dims_to_nm(dims):
     return n, m
 
 def _iszero(x):
-    return x == 0
+    """Returns True if x is zero."""
+    return x.is_zero
 
 
 class DeferredVector(object):
