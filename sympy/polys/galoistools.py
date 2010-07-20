@@ -826,7 +826,7 @@ def gf_sqf_part(f, p, K):
     return g
 
 @cythonized("i,n,d,r")
-def gf_sqf_list(f, p, K):
+def gf_sqf_list(f, p, K, all=False):
     """Returns square-free decomposition of a `GF(p)[x]` polynomial.
 
        Given a polynomial `f` in `GF(p)[x]`, returns the leading coefficient
@@ -908,6 +908,9 @@ def gf_sqf_list(f, p, K):
             f, n = f[:d+1], n*r
         else:
             break
+
+    if all:
+        raise ValueError("'all=True' is not supported yet")
 
     return lc, factors
 

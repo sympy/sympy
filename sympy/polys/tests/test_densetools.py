@@ -72,7 +72,7 @@ from sympy.polys.specialpolys import (
     dmp_fateman_poly_F_3,
 )
 
-from sympy.polys.domains import ZZ, QQ, EX
+from sympy.polys.domains import FF, ZZ, QQ, EX
 
 from sympy import I
 
@@ -177,6 +177,18 @@ def test_dup_diff():
     assert dup_diff(f, 2, ZZ) ==          dup_diff(dup_diff(f, 1, ZZ), 1, ZZ)
     assert dup_diff(f, 3, ZZ) == dup_diff(dup_diff(dup_diff(f, 1, ZZ), 1, ZZ), 1, ZZ)
 
+    K = FF(3)
+    f = dup_normal([17,34,56,-345,23,76,0,0,12,3,7], K)
+
+    assert dup_diff(f, 1, K) == dup_normal([2,0,1,0,0,2,0,0,0,0], K)
+    assert dup_diff(f, 2, K) == dup_normal([1,0,0,2,0,0,0], K)
+    assert dup_diff(f, 3, K) == dup_normal([], K)
+
+    assert dup_diff(f, 0, K) ==                            f
+    assert dup_diff(f, 1, K) ==                   dup_diff(f, 1, K)
+    assert dup_diff(f, 2, K) ==          dup_diff(dup_diff(f, 1, K), 1, K)
+    assert dup_diff(f, 3, K) == dup_diff(dup_diff(dup_diff(f, 1, K), 1, K), 1, K)
+
 def test_dmp_diff():
     assert dmp_diff([], 1, 0, ZZ) == []
     assert dmp_diff([[]], 1, 1, ZZ) == [[]]
@@ -194,6 +206,14 @@ def test_dmp_diff():
     assert dmp_diff(f_6, 1, 3, ZZ) ==                   dmp_diff(f_6, 1, 3, ZZ)
     assert dmp_diff(f_6, 2, 3, ZZ) ==          dmp_diff(dmp_diff(f_6, 1, 3, ZZ), 1, 3, ZZ)
     assert dmp_diff(f_6, 3, 3, ZZ) == dmp_diff(dmp_diff(dmp_diff(f_6, 1, 3, ZZ), 1, 3, ZZ), 1, 3, ZZ)
+
+    K = FF(23)
+    F_6 = dmp_normal(f_6, 3, K)
+
+    assert dmp_diff(F_6, 0, 3, K) ==                            F_6
+    assert dmp_diff(F_6, 1, 3, K) ==                   dmp_diff(F_6, 1, 3, K)
+    assert dmp_diff(F_6, 2, 3, K) ==          dmp_diff(dmp_diff(F_6, 1, 3, K), 1, 3, K)
+    assert dmp_diff(F_6, 3, 3, K) == dmp_diff(dmp_diff(dmp_diff(F_6, 1, 3, K), 1, 3, K), 1, 3, K)
 
 def test_dmp_diff_in():
     assert dmp_diff_in(f_6, 2, 1, 3, ZZ) == \
@@ -943,6 +963,29 @@ def test_dup_sqf():
     assert dup_sqf_list([1,0,6,0,12,0,8,0,0], ZZ) == \
         (1, [([1,0], 2), ([1,0,2], 3)])
 
+    K = FF(2)
+    f = map(K, [1,0,1])
+
+    assert dup_sqf_list(f, K) == \
+        (K(1), [([K(1),K(1)], 2)])
+
+    K = FF(3)
+    f = map(K, [1,0,0,2,0,0,2,0,0,1,0])
+
+    assert dup_sqf_list(f, K) == \
+        (K(1), [([K(1), K(0)], 1),
+                ([K(1), K(1)], 3),
+                ([K(1), K(2)], 6)])
+
+    f = [1,0,0,1]
+    g = map(K, f)
+
+    assert dup_sqf_part(f, ZZ) == f
+    assert dup_sqf_part(g, K) == [K(1), K(1)]
+
+    assert dup_sqf_p(f, ZZ) == True
+    assert dup_sqf_p(g, K) == False
+
     A = [[1],[],[-3],[],[6]]
     D = [[1],[],[-5],[],[5],[],[4]]
 
@@ -993,6 +1036,10 @@ def test_dmp_sqf():
         (-1, [([[1],[1],[1],[1]], 1), ([[1],[-1]], 2)])
     assert dmp_sqf_list_include(f, 1, ZZ) == \
         [([[-1],[-1],[-1],[-1]], 1), ([[1],[-1]], 2)]
+
+    K = FF(2)
+
+    raises(DomainError, "dmp_sqf_list([[K(1), K(0), K(1)]], 1, K)")
 
 def test_dup_extract():
     f = dup_normal([2930944, 0, 2198208, 0, 549552, 0, 45796], ZZ)
