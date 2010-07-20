@@ -1,7 +1,6 @@
 """Useful utilities for higher level polynomial classes. """
 
 from sympy import S, Basic, sympify, Integer, Rational, Symbol, Add, Mul, Pow, ask
-
 from sympy.polys.polyerrors import PolynomialError, GeneratorsNeeded
 
 import re
@@ -19,8 +18,11 @@ _gens_order = {
 _max_order = 1000
 _re_gen = re.compile(r"^(.+?)(\d*)$")
 
-def _sort_gens(gens, opt=None):
+def _sort_gens(gens, **args):
     """Sort generators in a reasonably intelligent way. """
+    from sympy.polys.polyoptions import build_options
+    opt = build_options(**args)
+
     gens_order, wrt = {}, None
 
     if opt is not None:
@@ -151,12 +153,11 @@ def _analyze_power(base, exp):
 
     return base, exp
 
-
-def _parallel_dict_from_basic_if_gens(exprs, gens, **args):
+def _parallel_dict_from_basic_if_gens(exprs, opt):
     """Transform expressions into a multinomial form given generators. """
-    k, indices = len(gens), {}
+    k, indices = len(opt.gens), {}
 
-    for i, g in enumerate(gens):
+    for i, g in enumerate(opt.gens):
         indices[g] = i
 
     polys = []
@@ -175,7 +176,7 @@ def _parallel_dict_from_basic_if_gens(exprs, gens, **args):
                         base, exp = _analyze_power(*factor.as_base_exp())
                         monom[indices[base]] = exp
                     except KeyError:
-                        if not factor.has(*gens):
+                        if not factor.has(*opt.gens):
                             coeff.append(factor)
                         else:
                             raise PolynomialError("%s contains an element of the generators set" % factor)
@@ -189,30 +190,22 @@ def _parallel_dict_from_basic_if_gens(exprs, gens, **args):
 
         polys.append(poly)
 
-    return polys
+    return polys, opt.gens
 
-def _parallel_dict_from_basic_no_gens(exprs, **args):
+def _parallel_dict_from_basic_no_gens(exprs, opt):
     """Transform expressions into a multinomial form and figure out generators. """
-    domain = args.get('domain')
-
-    if domain is not None:
+    if opt.domain is not None:
         def _is_coeff(factor):
-            return factor in domain
+            return factor in opt.domain
+    elif opt.extension is True:
+        def _is_coeff(factor):
+            return ask(factor, 'algebraic')
+    elif opt.greedy is not False:
+        def _is_coeff(factor):
+            return False
     else:
-        extension = args.get('extension')
-
-        if extension is True:
-            def _is_coeff(factor):
-                return ask(factor, 'algebraic')
-        else:
-            greedy = args.get('greedy', True)
-
-            if greedy is True:
-                def _is_coeff(factor):
-                    return False
-            else:
-                def _is_coeff(factor):
-                    return factor.is_number
+        def _is_coeff(factor):
+            return factor.is_number
 
     gens, reprs = set([]), []
 
@@ -238,7 +231,7 @@ def _parallel_dict_from_basic_no_gens(exprs, **args):
     if not gens:
         raise GeneratorsNeeded("specify generators to give %s a meaning" % (exprs,))
 
-    gens = _sort_gens(gens, **args)
+    gens = _sort_gens(gens, opt=opt)
     k, indices = len(gens), {}
 
     for i, g in enumerate(gens):
@@ -266,34 +259,41 @@ def _parallel_dict_from_basic_no_gens(exprs, **args):
 
     return polys, tuple(gens)
 
-def _dict_from_basic_if_gens(expr, gens, **args):
+def _dict_from_basic_if_gens(expr, opt):
     """Transform an expression into a multinomial form given generators. """
-    return _parallel_dict_from_basic_if_gens((expr,), gens, **args)[0]
-
-def _dict_from_basic_no_gens(expr, **args):
-    """Transform an expression into a multinomial form and figure out generators. """
-    (poly,), gens = _parallel_dict_from_basic_no_gens((expr,), **args)
+    (poly,), gens = _parallel_dict_from_basic_if_gens((expr,), opt)
     return poly, gens
 
-def parallel_dict_from_basic(exprs, gens=None, **args):
+def _dict_from_basic_no_gens(expr, opt):
+    """Transform an expression into a multinomial form and figure out generators. """
+    (poly,), gens = _parallel_dict_from_basic_no_gens((expr,), opt)
+    return poly, gens
+
+def parallel_dict_from_basic(exprs, **args):
     """Transform expressions into a multinomial form. """
-    if args.get('expand', True):
+    from sympy.polys.polyoptions import build_options
+    opt = build_options(**args)
+
+    if opt.expand is not False:
         exprs = [ expr.expand() for expr in exprs ]
 
-    if gens is not None:
-        return _parallel_dict_from_basic_if_gens(exprs, gens, **args)
+    if opt.gens:
+        return _parallel_dict_from_basic_if_gens(exprs, opt)
     else:
-        return _parallel_dict_from_basic_no_gens(exprs, **args)
+        return _parallel_dict_from_basic_no_gens(exprs, opt)
 
-def dict_from_basic(expr, gens=None, **args):
+def dict_from_basic(expr, **args):
     """Transform an expression into a multinomial form. """
-    if args.get('expand', True):
+    from sympy.polys.polyoptions import build_options
+    opt = build_options(**args)
+
+    if opt.expand is not False:
         expr = expr.expand()
 
-    if gens is not None:
-        return _dict_from_basic_if_gens(expr, gens, **args)
+    if opt.gens:
+        return _dict_from_basic_if_gens(expr, opt)
     else:
-        return _dict_from_basic_no_gens(expr, **args)
+        return _dict_from_basic_no_gens(expr, opt)
 
 def basic_from_dict(rep, *gens):
     """Convert a multinomial form into an expression. """

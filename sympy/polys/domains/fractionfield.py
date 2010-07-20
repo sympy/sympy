@@ -62,8 +62,8 @@ class FractionField(Field, CharacteristicZero, CompositeDomain):
         """Convert SymPy's expression to `dtype`. """
         p, q = a.as_numer_denom()
 
-        num = dict_from_basic(p, self.gens)
-        den = dict_from_basic(q, self.gens)
+        num, _ = dict_from_basic(p, gens=self.gens)
+        den, _ = dict_from_basic(q, gens=self.gens)
 
         for k, v in num.iteritems():
             num[k] = self.dom.from_sympy(v)

@@ -59,7 +59,7 @@ class PolynomialRing(Ring, CharacteristicZero, CompositeDomain):
 
     def from_sympy(self, a):
         """Convert SymPy's expression to `dtype`. """
-        rep = dict_from_basic(a, self.gens)
+        rep, _ = dict_from_basic(a, gens=self.gens)
 
         for k, v in rep.iteritems():
             rep[k] = self.dom.from_sympy(v)

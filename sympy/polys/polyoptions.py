@@ -166,7 +166,9 @@ class Gens(Option):
 
     @classmethod
     def preprocess(cls, gens):
-        if len(gens) == 1 and hasattr(gens[0], '__iter__'):
+        if isinstance(gens, Basic):
+            gens = (gens,)
+        elif len(gens) == 1 and hasattr(gens[0], '__iter__'):
             gens = gens[0]
 
         if len(set(gens)) != len(gens):
@@ -338,8 +340,9 @@ class Domain(Option):
 
     @classmethod
     def postprocess(cls, options):
-        if options['domain'].is_Composite and set(options['domain'].gens) & set(options['gens']):
-            raise GeneratorsError("ground domain and generators interferes together")
+        if 'gens' in options and options['domain'].is_Composite:
+            if set(options['domain'].gens) & set(options['gens']):
+                raise GeneratorsError("ground domain and generators interferes together")
 
 class Split(BooleanOption):
     """ """
@@ -512,3 +515,10 @@ class Gen(Option, Flag):
             return gen
         else:
             raise OptionError("invalid argument for 'gen' option")
+
+def build_options(**args):
+    """Construct options from keyword arguments or ... options. """
+    if len(args) != 1 or 'opt' not in args:
+        return Options((), args)
+    else:
+        return args['opt']
