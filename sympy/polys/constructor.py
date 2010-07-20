@@ -1,15 +1,16 @@
 """Tools for constructing domains for expressions. """
 
-from sympy.polys.polyutils import _parallel_dict_from_basic_no_gens
+from sympy.polys.polyutils import parallel_dict_from_basic
+from sympy.polys.polyoptions import build_options
 from sympy.polys.domains import ZZ, QQ, RR, EX
 from sympy.assumptions import ask
 from sympy.core import S, sympify
 
-def _construct_simple(coeffs, **args):
+def _construct_simple(coeffs, opt):
     """Handle simple domains, e.g.: ZZ, QQ, RR and algebraic domains. """
     result, rationals, reals, algebraics = {}, False, False, False
 
-    if args.get('extension') is True:
+    if opt.extension is True:
         is_algebraic = lambda coeff: ask(coeff, 'algebraic')
     else:
         is_algebraic = lambda coeff: False
@@ -36,12 +37,12 @@ def _construct_simple(coeffs, **args):
             return None
 
     if algebraics:
-        domain, result = _construct_algebraic(coeffs)
+        domain, result = _construct_algebraic(coeffs, opt)
     else:
         if reals:
             domain = RR
         else:
-            if args.get('field') or rationals:
+            if opt.field or rationals:
                 domain = QQ
             else:
                 domain = ZZ
@@ -53,7 +54,7 @@ def _construct_simple(coeffs, **args):
 
     return domain, result
 
-def _construct_algebraic(coeffs, **args):
+def _construct_algebraic(coeffs, opt):
     """We know that coefficients are algebraic so construct the extension. """
     from sympy.polys.numberfields import primitive_element
 
@@ -95,7 +96,7 @@ def _construct_algebraic(coeffs, **args):
 
     return domain, result
 
-def _construct_composite(coeffs, **args):
+def _construct_composite(coeffs, opt):
     """Handle composite domains, e.g.: ZZ[X], QQ[X], ZZ(X), QQ(X). """
     numers, denoms = [], []
 
@@ -105,7 +106,7 @@ def _construct_composite(coeffs, **args):
         numers.append(numer)
         denoms.append(denom)
 
-    polys, gens = _parallel_dict_from_basic_no_gens(numers + denoms) # XXX: sorting
+    polys, gens = parallel_dict_from_basic(numers + denoms) # XXX: sorting
 
     if any(gen.is_number for gen in gens):
         return None # generators are number-like so lets better use EX
@@ -116,7 +117,7 @@ def _construct_composite(coeffs, **args):
     numers = polys[:k]
     denoms = polys[k:]
 
-    if args.get('field'):
+    if opt.field:
         fractions = True
     else:
         fractions, monom = False, (0,)*n
@@ -168,7 +169,7 @@ def _construct_composite(coeffs, **args):
 
     return domain, result
 
-def _construct_expression(coeffs, **args):
+def _construct_expression(coeffs, opt):
     """The last resort case, i.e. use the expression domain. """
     domain, result = EX, []
 
@@ -179,26 +180,28 @@ def _construct_expression(coeffs, **args):
 
 def construct_domain(obj, **args):
     """Construct a minimal domain for the list of coefficients. """
+    opt = build_options(**args)
+
     if isinstance(obj, dict):
         monoms, coeffs = zip(*obj.items())
     else:
         coeffs = obj
 
     coeffs = map(sympify, coeffs)
-    result = _construct_simple(coeffs, **args)
+    result = _construct_simple(coeffs, opt)
 
     if result is not None:
         if result is not False:
             domain, coeffs = result
         else:
-            domain, coeffs = _construct_expression(coeffs, **args)
+            domain, coeffs = _construct_expression(coeffs, opt)
     else:
-        result = _construct_composite(coeffs, **args)
+        result = _construct_composite(coeffs, opt)
 
         if result is not None:
             domain, coeffs = result
         else:
-            domain, coeffs = _construct_expression(coeffs, **args)
+            domain, coeffs = _construct_expression(coeffs, opt)
 
     if isinstance(obj, dict):
         return domain, dict(zip(monoms, coeffs))

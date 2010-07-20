@@ -56,41 +56,56 @@ from sympy.ntheory import isprime
 
 import sympy.polys
 
-from sympy.polys.domains import FF, ZZ, QQ, RR, EX, construct_domain
+from sympy.polys.domains import FF, QQ
+from sympy.polys.constructor import construct_domain
 
 from sympy.polys import polyoptions as options
 
-def _init_poly_from_dict(dict_rep, *gens, **args):
+def init_poly_from_dict(dict_rep, **args):
+    opt = options.build_options(**args)
+    return _init_poly_from_dict(dict_rep, opt)
+
+def _init_poly_from_dict(dict_rep, opt):
     """Initialize a Poly given a dict instance. """
-    domain = args.get('domain')
+    gens = opt.gens
+    domain = opt.domain
 
     if domain is not None:
         for k, v in dict_rep.iteritems():
             dict_rep[k] = domain.convert(v)
     else:
-        domain, dict_rep = construct_domain(dict_rep, **args)
+        domain, dict_rep = construct_domain(dict_rep, opt=opt)
 
     return DMP(dict_rep, domain, len(gens)-1)
 
-def _init_poly_from_list(list_rep, *gens, **args):
-    """Initialize a Poly given a list instance. """
-    domain = args.get('domain')
+def init_poly_from_list(list_rep, **args):
+    opt = options.build_options(**args)
+    return _init_poly_from_list(list_rep, opt)
 
-    if len(gens) != 1:
+def _init_poly_from_list(list_rep, opt):
+    """Initialize a Poly given a list instance. """
+    if len(opt.gens) != 1:
         raise PolynomialError("can't create a multivariate polynomial from a list")
 
+    gens = opt.gens
+    domain = opt.domain
+
     if domain is not None:
-        rep = map(domain.convert, list_rep)
+        list_rep = map(domain.convert, list_rep)
     else:
-        dict_rep = dict(enumerate(reversed(list_rep)))
-        domain, rep = construct_domain(dict_rep, **args)
+        domain, list_rep = construct_domain(list_rep, opt=opt)
 
-    return DMP(rep, domain, len(gens)-1)
+    return DMP(list_rep, domain, len(gens)-1)
 
-def _init_poly_from_poly(poly_rep, *gens, **args):
+def init_poly_from_poly(poly_rep, **args):
+    opt = options.build_options(**args)
+    return _init_poly_from_poly(poly_rep, opt)
+
+def _init_poly_from_poly(poly_rep, opt):
     """Initialize a Poly given a Poly instance. """
-    field = args.get('field')   # XXX: this should be in options manager
-    domain = args.get('domain')
+    gens = opt.gens
+    field = opt.field
+    domain = opt.domain
 
     if isinstance(poly_rep.rep, DMP):
         if not gens or poly_rep.gens == gens:
@@ -100,7 +115,7 @@ def _init_poly_from_poly(poly_rep, *gens, **args):
                 return poly_rep
         else:
             if set(gens) != set(poly_rep.gens):
-                return Poly(poly_rep.as_basic(), *gens, **args)
+                return Poly(poly_rep.as_basic(), opt=opt)
             else:
                 dict_rep = dict(zip(*_dict_reorder(
                     poly_rep.rep.to_dict(), poly_rep.gens, gens)))
@@ -116,15 +131,16 @@ def _init_poly_from_poly(poly_rep, *gens, **args):
 
     return (rep, gens or poly_rep.gens)
 
-def _init_poly_from_basic(basic_rep, *gens, **args):
+def init_poly_from_basic(basic_rep, **args):
+    opt = options.build_options(**args)
+    return _init_poly_from_basic(basic_rep, opt)
+
+def _init_poly_from_basic(basic_rep, opt):
     """Initialize a Poly given a Basic expression. """
-    if not gens:
-        try:
-            dict_rep, gens = dict_from_basic(basic_rep, **args)
-        except GeneratorsNeeded:
-            return basic_rep
-    else:
-        dict_rep = dict_from_basic(basic_rep, gens, **args)
+    try:
+        dict_rep, gens = dict_from_basic(basic_rep, opt=opt)
+    except GeneratorsNeeded:
+        return basic_rep
 
     def _dict_set_domain(rep, domain):
         result = {}
@@ -134,16 +150,14 @@ def _init_poly_from_basic(basic_rep, *gens, **args):
 
         return result
 
-    domain = args.get('domain')
+    domain = opt.domain
 
     if domain is not None:
         dict_rep = _dict_set_domain(dict_rep, domain)
     else:
-        domain, dict_rep = construct_domain(dict_rep, **args)
+        domain, dict_rep = construct_domain(dict_rep, opt=opt)
 
-    result = DMP(dict_rep, domain, len(gens)-1)
-
-    return result, gens
+    return (DMP(dict_rep, domain, len(gens)-1), gens)
 
 class Poly(Basic):
     """Generic class for representing polynomials in SymPy. """
@@ -154,10 +168,10 @@ class Poly(Basic):
 
     def __new__(cls, rep, *gens, **args):
         """Create a new polynomial instance out of something useful. """
-        if gens or len(args) != 1 or 'options' not in args:
+        if gens or len(args) != 1 or 'opt' not in args:
             opt = options.Options(gens, args)
         else:
-            opt = args['options']
+            opt = args['opt']
 
         if isinstance(rep, DMP):
             if rep.lev != len(opt.gens)-1 or opt.args:
@@ -168,16 +182,16 @@ class Poly(Basic):
                     raise GeneratorsNeeded("can't initialize from %s without generators" % type(rep).__name__)
 
                 if isinstance(rep, dict):
-                    rep = _init_poly_from_dict(rep, *opt.gens, **opt.args)
+                    rep = _init_poly_from_dict(rep, opt)
                 else:
-                    rep = _init_poly_from_list(rep, *opt.gens, **opt.args)
+                    rep = _init_poly_from_list(rep, opt)
             else:
                 rep = sympify(rep)
 
                 if rep.is_Poly:
-                    result = _init_poly_from_poly(rep, *opt.gens, **opt.args)
+                    result = _init_poly_from_poly(rep, opt)
                 else:
-                    result = _init_poly_from_basic(rep, *opt.gens, **opt.args)
+                    result = _init_poly_from_basic(rep, opt)
 
                 if type(result) is tuple:
                     rep, opt['gens'] = result
@@ -336,10 +350,10 @@ class Poly(Basic):
 
     def reorder(f, *gens, **args):
         """Efficiently apply new order of generators. """
-        opt = Options((), args)
+        opt = options.Options((), args)
 
         if not gens:
-            gens = _sort_gens(f.gens, opt)
+            gens = _sort_gens(f.gens, opt=opt)
         elif set(f.gens) != set(gens):
             raise PolynomialError("generators list can differ only up to order of elements")
 
