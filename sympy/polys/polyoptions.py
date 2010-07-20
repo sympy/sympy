@@ -209,12 +209,14 @@ class Sort(Option):
     requires = []
     excludes = []
 
-    default = None
+    default = []
 
     @classmethod
     def preprocess(cls, sort):
         if isinstance(sort, str):
-            return sort
+            return [ gen.strip() for gen in sort.split('>') ]
+        elif hasattr(sort, '__getitem__'):
+            return list(sort)
         else:
             raise OptionError("invalid argument for 'sort' option")
 

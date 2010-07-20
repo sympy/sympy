@@ -25,6 +25,8 @@ from sympy.polys.polyerrors import (
 
 from sympy.polys.domains import ZZ, QQ, EX
 
+from sympy.polys.polyoptions import Options
+
 x,y,z,p,q,r,s,t,u,v,w = symbols('x,y,z,p,q,r,s,t,u,v,w')
 
 def test__sort_gens():
@@ -40,41 +42,41 @@ def test__sort_gens():
 
     assert _sort_gens([q,p,x]) == (x,p,q)
 
-    assert _sort_gens([x,p,q], wrt=x) == (x,p,q)
-    assert _sort_gens([x,p,q], wrt=p) == (p,x,q)
-    assert _sort_gens([x,p,q], wrt=q) == (q,x,p)
+    assert _sort_gens([x,p,q], Options((), {'wrt': x})) == (x,p,q)
+    assert _sort_gens([x,p,q], Options((), {'wrt': p})) == (p,x,q)
+    assert _sort_gens([x,p,q], Options((), {'wrt': q})) == (q,x,p)
 
-    assert _sort_gens([x,p,q], wrt='x') == (x,p,q)
-    assert _sort_gens([x,p,q], wrt='p') == (p,x,q)
-    assert _sort_gens([x,p,q], wrt='q') == (q,x,p)
+    assert _sort_gens([x,p,q], Options((), {'wrt': 'x'})) == (x,p,q)
+    assert _sort_gens([x,p,q], Options((), {'wrt': 'p'})) == (p,x,q)
+    assert _sort_gens([x,p,q], Options((), {'wrt': 'q'})) == (q,x,p)
 
-    assert _sort_gens([x,p,q], wrt='x,q') == (x,q,p)
-    assert _sort_gens([x,p,q], wrt='q,x') == (q,x,p)
-    assert _sort_gens([x,p,q], wrt='p,q') == (p,q,x)
-    assert _sort_gens([x,p,q], wrt='q,p') == (q,p,x)
+    assert _sort_gens([x,p,q], Options((), {'wrt': 'x,q'})) == (x,q,p)
+    assert _sort_gens([x,p,q], Options((), {'wrt': 'q,x'})) == (q,x,p)
+    assert _sort_gens([x,p,q], Options((), {'wrt': 'p,q'})) == (p,q,x)
+    assert _sort_gens([x,p,q], Options((), {'wrt': 'q,p'})) == (q,p,x)
 
-    assert _sort_gens([x,p,q], wrt='x, q') == (x,q,p)
-    assert _sort_gens([x,p,q], wrt='q, x') == (q,x,p)
-    assert _sort_gens([x,p,q], wrt='p, q') == (p,q,x)
-    assert _sort_gens([x,p,q], wrt='q, p') == (q,p,x)
+    assert _sort_gens([x,p,q], Options((), {'wrt': 'x, q'})) == (x,q,p)
+    assert _sort_gens([x,p,q], Options((), {'wrt': 'q, x'})) == (q,x,p)
+    assert _sort_gens([x,p,q], Options((), {'wrt': 'p, q'})) == (p,q,x)
+    assert _sort_gens([x,p,q], Options((), {'wrt': 'q, p'})) == (q,p,x)
 
-    assert _sort_gens([x,p,q], wrt=[x, 'q']) == (x,q,p)
-    assert _sort_gens([x,p,q], wrt=[q, 'x']) == (q,x,p)
-    assert _sort_gens([x,p,q], wrt=[p, 'q']) == (p,q,x)
-    assert _sort_gens([x,p,q], wrt=[q, 'p']) == (q,p,x)
+    assert _sort_gens([x,p,q], Options((), {'wrt': [x, 'q']})) == (x,q,p)
+    assert _sort_gens([x,p,q], Options((), {'wrt': [q, 'x']})) == (q,x,p)
+    assert _sort_gens([x,p,q], Options((), {'wrt': [p, 'q']})) == (p,q,x)
+    assert _sort_gens([x,p,q], Options((), {'wrt': [q, 'p']})) == (q,p,x)
 
-    assert _sort_gens([x,p,q], wrt=['x', 'q']) == (x,q,p)
-    assert _sort_gens([x,p,q], wrt=['q', 'x']) == (q,x,p)
-    assert _sort_gens([x,p,q], wrt=['p', 'q']) == (p,q,x)
-    assert _sort_gens([x,p,q], wrt=['q', 'p']) == (q,p,x)
+    assert _sort_gens([x,p,q], Options((), {'wrt': ['x', 'q']})) == (x,q,p)
+    assert _sort_gens([x,p,q], Options((), {'wrt': ['q', 'x']})) == (q,x,p)
+    assert _sort_gens([x,p,q], Options((), {'wrt': ['p', 'q']})) == (p,q,x)
+    assert _sort_gens([x,p,q], Options((), {'wrt': ['q', 'p']})) == (q,p,x)
 
-    assert _sort_gens([x,p,q], sort='x > p > q') == (x, p, q)
-    assert _sort_gens([x,p,q], sort='p > x > q') == (p, x, q)
-    assert _sort_gens([x,p,q], sort='p > q > x') == (p, q, x)
+    assert _sort_gens([x,p,q], Options((), {'sort': 'x > p > q'})) == (x, p, q)
+    assert _sort_gens([x,p,q], Options((), {'sort': 'p > x > q'})) == (p, x, q)
+    assert _sort_gens([x,p,q], Options((), {'sort': 'p > q > x'})) == (p, q, x)
 
-    assert _sort_gens([x,p,q], wrt='x', sort='q > p') == (x, q, p)
-    assert _sort_gens([x,p,q], wrt='p', sort='q > x') == (p, q, x)
-    assert _sort_gens([x,p,q], wrt='q', sort='p > x') == (q, p, x)
+    assert _sort_gens([x,p,q], Options((), {'wrt': 'x', 'sort': 'q > p'})) == (x, q, p)
+    assert _sort_gens([x,p,q], Options((), {'wrt': 'p', 'sort': 'q > x'})) == (p, q, x)
+    assert _sort_gens([x,p,q], Options((), {'wrt': 'q', 'sort': 'p > x'})) == (q, p, x)
 
     X = symbols('x0,x1,x2,x10,x11,x12,x20,x21,x22')
 
