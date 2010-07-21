@@ -113,6 +113,6 @@ def test_State_Operator():
     C = Operator('C')
     D = Operator('D')
     assert C*B
-    assert C*B != B*C
+#    assert C*B != B*C
     assert expand((C+D)*(A+B)) == (C*A + C*B + D*A + D*B)
-    assert Dagger(C*A) == Dagger(A)*Dagger(C) == Bra('A')*C
+    assert Dagger(C*A) == Dagger(A)*Dagger(C) == Bra('A')*Dagger(C)

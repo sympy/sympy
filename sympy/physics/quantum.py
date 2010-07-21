@@ -47,9 +47,6 @@ class State(Expr):
     lbracket = 'State('
     rbracket = ')'
 
-    lbrac_repr = 'State('
-    rbrac_repr = ')'
-
     hilbert_space = HilbertSpace()
 
     def __new__(cls, name):
@@ -65,34 +62,61 @@ class State(Expr):
     def is_symbolic(self):
         return True
 
+    def __mul__(self, other):
+        qmul = Mul(self, other)
+        if validate_mul(qmul):
+            return qmul
+
+    def __rmul__(self, other):
+        qrmul = Mul(other, self)
+        if validate_mul(qrmul):
+            return qrmul
+
+    def _print_name(self, printer, *args):
+        return printer._print(self.args[0], *args)
+
+    def _print_name_pretty(self, printer, *args):
+        pform = printer._print(self.args[0], *args)
+        return pform
+
     def doit(self,**kw_args):
         return self
 
+    def _eval_dagger(self):
+        return self.dual
+
     def _sympyrepr(self, printer, *args):
-        return '%s%s%s' % (self.lbrac_repr, self.name, self.rbrac_repr)
+        return '%s(%s)' % (self.__class__.__name__, self._print_name(printer, *args))
 
     def _sympystr(self, printer, *args):
-        return '%s%s%s' % (self.lbracket, self.name, self.rbracket)
+        return '%s%s%s' % (self.lbracket, self._print_name(printer, *args), self.rbracket)
+
+    def _pretty(self, printer, *args):
+        from sympy.printing.pretty.stringpict import prettyForm, stringPict
+        pform = self._print_name_pretty(printer, *args)
+        pform = prettyForm(*pform.left(prettyForm(self.lbracket)))
+        pform = prettyForm(*pform.right(prettyForm(self.rbracket)))
+        return pform
 
 class Ket(State):
 
     lbracket = '|'
     rbracket = '>'
 
-    lbrac_repr = 'Ket('
-
-    def _eval_dagger(self):
+    @property
+    def dual(self):
         return Bra(*self.args)
+
 
 class Bra(State):
 
     lbracket = '<'
     rbracket = '|'
 
-    lbrac_repr = 'Bra('
-
-    def _eval_dagger(self):
+    @property
+    def dual(self):
         return Ket(*self.args)
+
 
 class InnerProduct(Expr):
     """
@@ -100,8 +124,8 @@ class InnerProduct(Expr):
     """
 
     def __new__(cls, bra, ket):
-        assert isinstance(bra, Bra), 'must be a Bra'
-        assert isinstance(ket, Ket), 'must be a Ket'
+        assert isinstance(bra, Bra), 'First argument must be a Bra'
+        assert isinstance(ket, Ket), 'Second argument must be a Ket'
         r = cls.eval(bra, ket)
         if isinstance(r, Expr):
             return r
@@ -126,7 +150,7 @@ class InnerProduct(Expr):
         return InnerProduct(Dagger(self.ket), Dagger(self.bra))
 
     def _sympyrepr(self, printer, *args):
-        return 'InnerProduct(%s, %s)' % (printer._print(self.bra, *args), printer._print(self.ket, *args))
+        return '%s(%s,%s)' % (self.__class__.__name__, printer._print(self.bra, *args), printer._print(self.ket, *args))
 
     def _sympystr(self, printer, *args):
         sbra = str(self.bra)
@@ -139,8 +163,8 @@ class OuterProduct(Expr):
     """
 
     def __new__(cls, ket, bra):
-        assert isinstance(ket, Ket), 'must be a Ket'
-        assert isinstance(bra, Bra), 'must be a Bra'
+        assert isinstance(ket, Ket), 'First argument must be a Ket'
+        assert isinstance(bra, Bra), 'Second argument must be a Bra'
         r = cls.eval(ket, bra)
         if isinstance(r, Expr):
             return r
@@ -165,7 +189,7 @@ class OuterProduct(Expr):
         return OuterProduct(Dagger(self.bra), Dagger(self.ket))
 
     def _sympyrepr(self, printer, *args):
-        return 'OuterProduct(%s, %s)' % (printer._print(self.ket, *args), printer._print(self.bra, *args))
+        return '%s(%s,%s)' % (self.__class__.__name__, printer._print(self.ket, *args), printer._print(self.bra, *args))
 
     def _sympystr(self, printer, *args):
         return str(self.ket)+str(self.bra)
@@ -192,20 +216,48 @@ class Operator(Expr):
     def name(self):
         return self.args[0]
 
+    def __mul__(self, other):
+        qmul = Mul(self, other)
+        if validate_mul(qmul):
+            return qmul
+
+    def __rmul__(self, other):
+        qrmul = Mul(other, self)
+        if validate_mul(qrmul):
+            return qrmul
+
     def doit(self,**kw_args):
         return self
 
-    def _eval_dagger(self):
-        return self
-
     def _sympyrepr(self, printer, *args):
-        return "%s(%s)" % (self.__class__.__name__, printer._print(self.name, *args))
+        return '%s(%s)' % (self.__class__.__name__, printer._print(self.name, *args))
 
     def _sympystr(self, printer, *args):
         return printer._print(self.name, *args)
 
     def _pretty(self, printer, *args):
         return printer._print(self.name, *args)
+
+def validate_mul(expr):
+    """
+    Check to see if the Mul containing quantum objects is valid and return True.
+
+    * Only works for simple Muls (e.g. a*b*c*d) right now.
+    """
+    expr = split_commutative_parts(expr)[1] #obtain noncommutative parts of mul
+    old_arg = None
+    for arg in expr:
+        if old_arg:
+            if isinstance(old_arg, Ket) and isinstance(arg, Ket):
+                raise NotImplementedError
+            if isinstance(old_arg, Bra) and isinstance(arg, Bra):
+                raise NotImplementedError
+            if isinstance(old_arg, Operator) and isinstance(arg, Bra):
+                raise Exception('Operator*Bra is invalid in quantum mechanics.')
+            if isinstance(old_arg, Ket) and isinstance(arg, Operator):
+                raise Exception('Ket*Operator is invalid in quantum mechanics.')
+        old_arg = arg
+    return True
 
 class Dagger(Expr):
     """
@@ -262,8 +314,17 @@ class Dagger(Expr):
     def _eval_dagger(self):
         return self.args[0]
 
-def combine_ip():
-    pass
+    def _sympyrepr(self, printer, *args):
+        return '%s(%s)' % (self.__class__.__name__, self.args[0])
+
+    def _sympystr(self, printer, *args):
+        return '%s(%s)' % (self.__class__.__name__, self.args[0])
+
+    def _pretty(self, printer, *args):
+        from sympy.printing.pretty.stringpict import prettyForm, stringPict
+        pform = printer._print(self.args[0], *args)
+        pform = pform**prettyForm(u'\u2020')
+        return pform
 
 class KroneckerDelta(Function):
     """
