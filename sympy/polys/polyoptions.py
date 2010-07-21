@@ -24,7 +24,10 @@ class Option(object):
     requires = []
     excludes = []
 
-    default = None
+    @classmethod
+    def default(cls):
+        """ """
+        return None
 
     @classmethod
     def preprocess(cls, option):
@@ -56,7 +59,7 @@ class OptionType(type):
             try:
                 return self[cls.option]
             except KeyError:
-                return cls.default
+                return cls.default()
 
         setattr(Options, cls.option, getter)
         Options.__options__[cls.option] = cls
@@ -150,8 +153,6 @@ class Expand(BooleanOption):
     requires = []
     excludes = []
 
-    default = None
-
 class Gens(Option):
     """ """
 
@@ -162,7 +163,9 @@ class Gens(Option):
     requires = []
     excludes = []
 
-    default = ()
+    @classmethod
+    def default(cls):
+        return ()
 
     @classmethod
     def preprocess(cls, gens):
@@ -185,8 +188,6 @@ class Wrt(Option):
 
     requires = []
     excludes = []
-
-    default = None
 
     _re_split = re.compile(" |,")
 
@@ -211,14 +212,16 @@ class Sort(Option):
     requires = []
     excludes = []
 
-    default = []
+    @classmethod
+    def default(cls):
+        return []
 
     @classmethod
     def preprocess(cls, sort):
         if isinstance(sort, str):
             return [ gen.strip() for gen in sort.split('>') ]
         elif hasattr(sort, '__getitem__'):
-            return list(sort)
+            return list(map(str, sort))
         else:
             raise OptionError("invalid argument for 'sort' option")
 
@@ -232,15 +235,13 @@ class Order(Option):
     requires = []
     excludes = []
 
-    default = None
+    @classmethod
+    def default(cls):
+        return monomial_key('lex')
 
     @classmethod
     def preprocess(cls, order):
         return monomial_key(order)
-
-    @classmethod
-    def postprocess(cls, options):
-        raise NotImplementedError("'order' keyword is not implemented yet")
 
 class Field(BooleanOption):
     """ """
@@ -250,9 +251,7 @@ class Field(BooleanOption):
     option = 'field'
 
     requires = []
-    excludes = ['domain', 'split', 'gaussian', 'extension', 'modulus', 'symmetric']
-
-    default = None
+    excludes = ['domain', 'split', 'gaussian', 'extension']
 
 class Greedy(BooleanOption):
     """ """
@@ -264,8 +263,6 @@ class Greedy(BooleanOption):
     requires = []
     excludes = ['domain', 'split', 'gaussian', 'extension', 'modulus', 'symmetric']
 
-    default = None
-
 class Domain(Option):
     """ """
 
@@ -275,8 +272,6 @@ class Domain(Option):
 
     requires = []
     excludes = ['field', 'greedy', 'split', 'gaussian', 'extension']
-
-    default = None
 
     _re_finitefield = re.compile("^(FF|GF)\((\d+)\)$")
     _re_polynomial  = re.compile("^(Z|ZZ|Q|QQ)\[(.+)\]$")
@@ -354,8 +349,6 @@ class Split(BooleanOption):
     requires = []
     excludes = ['field', 'greedy', 'domain', 'gaussian', 'extension', 'modulus', 'symmetric']
 
-    default = None
-
     @classmethod
     def postprocess(cls, options):
         raise NotImplementedError("'split' option is not implemented yet")
@@ -369,8 +362,6 @@ class Gaussian(BooleanOption):
 
     requires = []
     excludes = ['field', 'greedy', 'domain', 'split', 'extension', 'modulus', 'symmetric']
-
-    default = None
 
     @classmethod
     def postprocess(cls, options):
@@ -387,8 +378,6 @@ class Extension(Option):
 
     requires = []
     excludes = ['field', 'greedy', 'domain', 'split', 'gaussian', 'modulus', 'symmetric']
-
-    default = None
 
     @classmethod
     def preprocess(cls, extension):
@@ -420,9 +409,7 @@ class Modulus(Option):
     option = 'modulus'
 
     requires = []
-    excludes = ['field', 'greedy', 'split', 'domain', 'gaussian', 'extension']
-
-    default = None
+    excludes = ['greedy', 'split', 'domain', 'gaussian', 'extension']
 
     @classmethod
     def preprocess(cls, modulus):
@@ -445,9 +432,7 @@ class Symmetric(BooleanOption):
     option = 'symmetric'
 
     requires = ['modulus']
-    excludes = ['field', 'greedy', 'domain', 'split', 'gaussian', 'extension']
-
-    default = None
+    excludes = ['greedy', 'domain', 'split', 'gaussian', 'extension']
 
 class Strict(BooleanOption):
     """ """
@@ -455,7 +440,10 @@ class Strict(BooleanOption):
     __metaclass__ = OptionType
 
     option = 'strict'
-    default = True
+
+    @classmethod
+    def default(cls):
+        return True
 
 class Auto(BooleanOption, Flag):
     """ """
@@ -463,7 +451,10 @@ class Auto(BooleanOption, Flag):
     __metaclass__ = OptionType
 
     option = 'auto'
-    default = True
+
+    @classmethod
+    def default(cls):
+        return True
 
 class Frac(BooleanOption, Flag):
     """ """
@@ -471,7 +462,10 @@ class Frac(BooleanOption, Flag):
     __metaclass__ = OptionType
 
     option = 'frac'
-    default = False
+
+    @classmethod
+    def default(cls):
+        return False
 
 class Formal(BooleanOption, Flag):
     """ """
@@ -479,7 +473,10 @@ class Formal(BooleanOption, Flag):
     __metaclass__ = OptionType
 
     option = 'formal'
-    default = False
+
+    @classmethod
+    def default(cls):
+        return False
 
 class Polys(BooleanOption, Flag):
     """ """
@@ -487,7 +484,6 @@ class Polys(BooleanOption, Flag):
     __metaclass__ = OptionType
 
     option = 'polys'
-    default = None
 
 class Include(BooleanOption, Flag):
     """ """
@@ -495,7 +491,21 @@ class Include(BooleanOption, Flag):
     __metaclass__ = OptionType
 
     option = 'include'
-    default = None
+
+    @classmethod
+    def default(cls):
+        return False
+
+class Monic(BooleanOption, Flag):
+    """ """
+
+    __metaclass__ = OptionType
+
+    option = 'monic'
+
+    @classmethod
+    def default(cls):
+        return True
 
 class Gen(Option, Flag):
     """ """
@@ -506,8 +516,6 @@ class Gen(Option, Flag):
 
     requires = []
     excludes = []
-
-    default = None
 
     @classmethod
     def preprocess(cls, gen):
