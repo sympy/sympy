@@ -7,6 +7,37 @@ x, y = symbols('xy')
 
 epsilon = .000001
 
+def test_Qbit():
+    array = [0,0,1,1,0]
+    qb = Qbit(0,0,1,1,0)
+    assert qb.flip(0) == Qbit(0,0,1,1,1)
+    assert qb.flip(1) == Qbit(0,0,1,0,0)
+    assert qb.flip(4) == Qbit(1,0,1,1,0)
+    assert qb.dimension == 5
+    for i in range(5):
+        assert qb[i] == array[4-i]
+    assert len(qb) == 5
+    qb = Qbit(1,1,0)
+    assert qb._represent_ZBasisSet() == Matrix([0,0,0,0,0,0,1,0])
+
+def test_Gate():
+    c = CNOTGate(0,3)
+    t = ToffoliGate(0,1,6)
+    h = HadamardGate(2)
+    assert c.minimumdimension == 3
+    assert t.minimumdimension == 6
+    assert h.minimumdimension == 2
+    assert c.inputnumber == 2
+    assert t.inputnumber == 3
+    assert h.inputnumber == 1
+
+def test_represent_HilbertSpace():
+    import numpy as np
+    a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p = symbols('abcdefghijklmnop')
+    gateMat = Matrix([[a,b,c,d],[e,f,g,h],[i,j,k,l],[m,n,o,p]])
+    assert representHilbertSpace(gateMat, 3, (0,1)) == Matrix([[a,c,b,d,0,0,0,0],[i,k,j,l,0,0,0,0],[e,g,f,h,0,0,0,0],[m,o,n,p,0,0,0,0],[0,0,0,0,a,c,b,d],[0,0,0,0,i,k,j,l],[0,0,0,0,e,g,f,h],[0,0,0,0,m,o,n,p]])
+    assert type(representHilbertSpace(gateMat, 2, (0,1), format = 'numpy')) == type(np.matrix(1))
+
 def test_represent_Hadamard_Z():
     circuit = HadamardGate(0)*Qbit(0, 0)
     answer = represent(circuit, ZBasisSet())
@@ -240,3 +271,30 @@ def test_apply_represent_equality():
     state_rep = state_rep.expand()
     assert state_rep == states
 
+def test_reversible_add():
+    def numtoarr(num, t=4):
+        car = []
+        for i in reversed(range(t)):
+            car.append((num>>i)&1)
+        return car
+            
+    for i in range(4):
+        for k in range(4):
+            result = apply_gates(ADD((0,1,2,3),(4,5,6,7),(8,9,10,11),Qbit(*([0,0,0,0] + numtoarr(k) + numtoarr(i)))))
+            assert list(result.args[4:8]) == numtoarr(i+k)
+
+def test_represent_decimal():
+    assert Qbit(9) == Qbit(1,0,0,1)
+    assert Qbit(15) == Qbit(1,1,1,1)
+    assert Qbit(9,5) == Qbit(0,1,0,0,1)
+    assert Qbit(15,7) == Qbit(0,0,0,1,1,1,1)
+    Qbit.outDecimal = 1
+    assert str(Qbit(15,7)) == '|15>'
+    assert str(Qbit(16,10)) == '|16>'
+
+def test_matrix_to_qbits():
+    assert matrix_to_qbits(Matrix([1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0])) == Qbit(0,0,0,0)
+    assert qbits_to_matrix(Qbit(0,0,0,0)) == Matrix([1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0])
+    assert matrix_to_qbits(sqrt(2)*2*Matrix([1,1,1,1,1,1,1,1])) == (2*sqrt(2)*(Qbit(0,0,0) + Qbit(0,0,1) + Qbit(0,1,0) + Qbit(0,1,1) + Qbit(1,0,0) + Qbit(1,0,1) + Qbit(1,1,0) + Qbit(1,1,1))).expand()
+    assert qbits_to_matrix(2*sqrt(2)*(Qbit(0,0,0) + Qbit(0,0,1) + Qbit(0,1,0) + Qbit(0,1,1) + Qbit(1,0,0) + Qbit(1,0,1) + Qbit(1,1,0) + Qbit(1,1,1))) == sqrt(2)*2*Matrix([1,1,1,1,1,1,1,1])
+    

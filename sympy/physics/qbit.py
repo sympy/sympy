@@ -16,11 +16,19 @@ class Qbit(Expr):
     """
     Represents a single definite quantum state    
     """
+    outDecimal = False
     def __new__(cls, *args):
+        #If they just give us one number, express it in the least number of bits possible
+        if args[0] > 1 and len(args) == 1:
+            array = [(args[0]>>i)&1 for i in reversed(range(int(math.ceil((log(args[0],2)+.00000001).evalf()))))]
+            return Expr.__new__(cls, *array, commutative = False)
+        #if they give us two numbers, the second number is the number of bits on which it is expressed)
+        #Thus, Qbit(0,5) == |00000>. second argument can't be one becuase of intersection and uslessesness of possibility
+        elif len(args) == 2 and args[1] > 1:
+            array = [(args[0]>>i)&1 for i in reversed(range(args[1]))]
+            return Expr.__new__(cls, *array, commutative = False)
         for element in args:
-            if element == '+' or element == '-':
-                return QbitX.__new__(cls, *args)
-            elif not (element == 1 or element == 0):
+            if not (element == 1 or element == 0):
                 raise Exception("Values must be either one or zero")
         obj = Expr.__new__(cls, *args, commutative = False)
         return obj
@@ -39,8 +47,16 @@ class Qbit(Expr):
 
     def _sympystr(self, printer, *args):
         string = ""
-        for it in self.args:
-            string = string + str(it)
+        if Qbit.outDecimal:
+            number = 0
+            n = 1
+            for i in reversed(self.args):
+                number += n*i
+                n = n<<1
+            string = str(number)
+        else:
+            for it in self.args:
+                string = string + str(it)
         return "|%s>" % printer._print(string, *args)
 
     def _sympyrepr(self, printer, *args):
@@ -363,8 +379,6 @@ def measure(qbit, state):
     if isinstance(state, Mul):
         return state        
     #for now, we convert to float TODO keep it as is sqrt's and all
-    state = state.evalf()
-    state = state.expand()
     prob1 = 0
     #Go through each item in the add and grab its probability
     #This will be used to determine probability of getting a 1
@@ -985,9 +999,8 @@ def SetZero(item, circuit):
         return circuit.args[:-1]*circuit.args[-1].flip(item)
     return circuit
 
-        
-        
-             
+
+            
 class QFT(Fourier):
     def decompose(self):
         start = self.args[0]
