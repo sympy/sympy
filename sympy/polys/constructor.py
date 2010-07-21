@@ -180,7 +180,7 @@ def _construct_expression(coeffs, opt):
 
 def construct_domain(obj, **args):
     """Construct a minimal domain for the list of coefficients. """
-    opt = build_options(**args)
+    opt = build_options(args)
 
     if isinstance(obj, dict):
         monoms, coeffs = zip(*obj.items())

@@ -1,10 +1,8 @@
 """Algorithms for partial fraction decomposition of rational functions. """
 
-from sympy.core import S, Symbol, Function, Lambda
-from sympy.polys import Poly, RootSum, cancel
+from sympy.core import S, sympify, Symbol, Function, Lambda
+from sympy.polys import Poly, RootSum, cancel, parallel_poly_from_expr
 from sympy.utilities import numbered_symbols, take, threaded
-
-from sympy.polys.polytools import _polify_basic
 
 @threaded
 def apart(f, x=None, full=False):
@@ -25,16 +23,19 @@ def apart(f, x=None, full=False):
            y/(1 + x) - y/(2 + x)
 
     """
+    f = sympify(f)
+
     if f.is_Atom:
         return f
+    else:
+        P, Q = f.as_numer_denom()
 
     if x is None:
         gens = ()
     else:
         gens = (x,)
 
-    P, Q = f.as_numer_denom()
-    P, Q = _polify_basic(P, Q, *gens)
+    (P, Q), opt = parallel_poly_from_expr((P, Q), *gens)
 
     if P.is_multivariate:
         raise NotImplementedError("multivariate partial fraction decomposition")

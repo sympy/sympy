@@ -6,6 +6,7 @@ from sympy.polys.polyerrors import (
     PolynomialError,
     GeneratorsError,
     OptionError,
+    FlagError,
 )
 
 from sympy.polys.monomialtools import monomial_key
@@ -20,6 +21,8 @@ class Option(object):
     """ """
 
     option = None
+
+    is_Flag = False
 
     requires = []
     excludes = []
@@ -38,6 +41,11 @@ class Option(object):
     def postprocess(cls, options):
         """ """
         pass
+
+class Flag(Option):
+    """ """
+
+    is_Flag = True
 
 class BooleanOption(Option):
     """ """
@@ -63,9 +71,6 @@ class OptionType(type):
 
         setattr(Options, cls.option, getter)
         Options.__options__[cls.option] = cls
-
-class Flag(object):
-    """ """
 
 class Options(dict):
     """ """
@@ -152,6 +157,10 @@ class Expand(BooleanOption):
 
     requires = []
     excludes = []
+
+    @classmethod
+    def default(cls):
+        return True
 
 class Gens(Option):
     """ """
@@ -507,7 +516,18 @@ class Monic(BooleanOption, Flag):
     def default(cls):
         return True
 
-class Gen(Option, Flag):
+class All(BooleanOption, Flag):
+    """ """
+
+    __metaclass__ = OptionType
+
+    option = 'all'
+
+    @classmethod
+    def default(cls):
+        return False
+
+class Gen(Flag):
     """ """
 
     __metaclass__ = OptionType
@@ -518,15 +538,33 @@ class Gen(Option, Flag):
     excludes = []
 
     @classmethod
+    def default(cls):
+        return 0
+
+    @classmethod
     def preprocess(cls, gen):
-        if isinstance(gen, Basic):
+        if isinstance(gen, (Basic, int)):
             return gen
         else:
             raise OptionError("invalid argument for 'gen' option")
 
-def build_options(**args):
+def build_options(gens, args=None):
     """Construct options from keyword arguments or ... options. """
-    if len(args) != 1 or 'opt' not in args:
-        return Options((), args)
+    if args is None:
+        gens, args = (), gens
+
+    if len(args) != 1 or 'opt' not in args or gens:
+        return Options(gens, args)
     else:
         return args['opt']
+
+def allowed_flags(args, flags):
+    """ """
+    flags = set(flags)
+
+    for arg in args.iterkeys():
+        try:
+            if Options.__options__[arg].is_Flag and not arg in flags:
+                raise FlagError("'%s' flag is not allowed in this context" % arg)
+        except KeyError:
+            raise OptionError("'%s' is not a valid option" % arg)

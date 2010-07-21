@@ -3,7 +3,7 @@
 from sympy.polys.polyoptions import (
     Options, Expand, Gens, Wrt, Sort, Order, Field, Greedy, Domain,
     Split, Gaussian, Extension, Modulus, Symmetric, Strict, Auto,
-    Frac, Formal, Polys, Include, Monic, Gen,
+    Frac, Formal, Polys, Include, Monic, All, Gen,
 )
 
 from sympy.polys.monomialtools import monomial_lex_key
@@ -373,6 +373,21 @@ def test_Monic_postprocess():
     Monic.postprocess(opt)
 
     assert opt == {'monic': True}
+
+def test_All_preprocess():
+    assert All.preprocess(False) is False
+    assert All.preprocess(True) is True
+
+    assert All.preprocess(0) is False
+    assert All.preprocess(1) is True
+
+    raises(OptionError, "All.preprocess(x)")
+
+def test_Monic_postprocess():
+    opt = {'all': True}
+    All.postprocess(opt)
+
+    assert opt == {'all': True}
 
 def test_Gen_preprocess():
     pass
