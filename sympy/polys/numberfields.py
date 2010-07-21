@@ -74,7 +74,8 @@ def minimal_polynomial(ex, x=None, **args):
 
                     alg = ex.base - coeff
 
-                    inverse = invert(elt.gen + coeff, elt)
+                    # XXX: turn this into eval()
+                    inverse = invert(elt.gen + coeff, elt).as_basic()
                     base = inverse.subs(elt.gen, alg).expand()
 
                     if ex.exp == -1:

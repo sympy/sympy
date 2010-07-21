@@ -4,6 +4,10 @@ from sympy import (
     S, Basic, I, Integer, Add, Mul, sympify, ask,
 )
 
+from sympy.core.sympify import (
+    SympifyError,
+)
+
 from sympy.core.decorators import (
     _sympifyit,
 )
@@ -39,7 +43,8 @@ from sympy.polys.polyerrors import (
     OperationNotSupported, DomainError,
     CoercionFailed, UnificationFailed,
     GeneratorsNeeded, PolynomialError,
-    PolificationFailed,
+    PolificationFailed, FlagError,
+    ComputationFailed,
 )
 
 from sympy.polys.polycontext import (
@@ -64,7 +69,7 @@ from sympy.polys.constructor import construct_domain
 from sympy.polys import polyoptions as options
 
 def init_poly_from_dict(dict_rep, **args):
-    opt = options.build_options(**args)
+    opt = options.build_options(args)
     return _init_poly_from_dict(dict_rep, opt)
 
 def _init_poly_from_dict(dict_rep, opt):
@@ -81,7 +86,7 @@ def _init_poly_from_dict(dict_rep, opt):
     return DMP(dict_rep, domain, len(gens)-1)
 
 def init_poly_from_list(list_rep, **args):
-    opt = options.build_options(**args)
+    opt = options.build_options(args)
     return _init_poly_from_list(list_rep, opt)
 
 def _init_poly_from_list(list_rep, opt):
@@ -100,7 +105,7 @@ def _init_poly_from_list(list_rep, opt):
     return DMP(list_rep, domain, len(gens)-1)
 
 def init_poly_from_poly(poly_rep, **args):
-    opt = options.build_options(**args)
+    opt = options.build_options(args)
     return _init_poly_from_poly(poly_rep, opt)
 
 def _init_poly_from_poly(poly_rep, opt):
@@ -134,7 +139,7 @@ def _init_poly_from_poly(poly_rep, opt):
     return (rep, gens or poly_rep.gens)
 
 def init_poly_from_basic(basic_rep, **args):
-    opt = options.build_options(**args)
+    opt = options.build_options(args)
     return _init_poly_from_basic(basic_rep, opt)
 
 def _init_poly_from_basic(basic_rep, opt):
@@ -243,6 +248,21 @@ class Poly(Basic):
     def gen(self):
         """Return principal generator. """
         return self.gens[0]
+
+    @property
+    def domain(self):
+        """Get the ground domain of `self`. """
+        return self.get_domain()
+
+    @property
+    def zero(self):
+        """Return zero polynomial with `self`'s properties. """
+        return self.new(self.rep.zero(self.rep.lev, self.rep.dom), self.gens)
+
+    @property
+    def one(self):
+        """Return one polynomial with `self`'s properties. """
+        return self.new(self.rep.one(self.rep.lev, self.rep.dom), self.gens)
 
     def unify(f, g):
         """Make `f` and `g` belong to the same domain. """
@@ -1489,25 +1509,109 @@ class Poly(Basic):
     def __nonzero__(f):
         return not f.is_zero
 
+def poly_from_expr(expr, *gens, **args):
+    """Construct a polynomial from an expression. """
+    opt = options.build_options(gens, args)
+    orig, expr = expr, sympify(expr)
+
+    if not isinstance(expr, Basic):
+        raise PolificationFailed(orig, expr)
+    elif expr.is_Poly:
+        poly = Poly(expr, opt=opt)
+
+        opt['gens'] = poly.gens
+        opt['domain'] = poly.domain
+
+        if opt.polys is None:
+            opt['polys'] = True
+
+        if opt.frac:
+            return (poly, poly.one), opt
+        else:
+            return poly, opt
+    elif opt.frac:
+        numer, denom = expr.as_numer_denom()
+
+        if opt.expand:
+            numer = numer.expand()
+            denom = denom.expand()
+
+        try:
+            return parallel_poly_from_expr((numer, denom), opt=opt)
+        except PolificationFailed:
+            raise PolificationFailed(orig, numer/denom)
+    elif opt.expand:
+        expr = expr.expand()
+
+    try:
+        rep, gens = dict_from_basic(expr, opt=opt)
+    except GeneratorsNeeded:
+        raise PolificationFailed(orig, expr)
+
+    monoms, coeffs = zip(*rep.items())
+    domain = opt.domain
+
+    if domain is None:
+        domain, coeffs = construct_domain(coeffs, opt=opt)
+    else:
+        coeffs = map(domain.from_sympy, coeffs)
+
+    level = len(gens)-1
+
+    poly = Poly.new(DMP.from_monoms_coeffs(monoms, coeffs, level, domain), gens)
+
+    opt['gens'] = gens
+    opt['domain'] = domain
+
+    if opt.polys is None:
+        opt['polys'] = False
+
+    return poly, opt
+
 def parallel_poly_from_expr(exprs, *gens, **args):
     """Construct polynomials from expressions. """
-    opt = options.Options(gens, args)
+    opt = options.build_options(gens, args)
+
+    if len(exprs) == 2:
+        f, g = exprs
+
+        if isinstance(f, Poly) and isinstance(g, Poly):
+            f = Poly(f, opt=opt)
+            g = Poly(g, opt=opt)
+
+            f, g = f.unify(g)
+
+            opt['gens'] = f.gens
+            opt['domain'] = f.domain
+
+            if opt.polys is None:
+                opt['polys'] = True
+
+            return [f, g], opt
 
     origs, exprs = list(exprs), []
     _exprs, _polys = [], []
 
+    failed = False
+
     for i, expr in enumerate(origs):
         expr = sympify(expr)
 
-        if expr.is_Poly:
-            _polys.append(i)
-        else:
-            _exprs.append(i)
+        if isinstance(expr, Basic):
+            if expr.is_Poly:
+                _polys.append(i)
+            else:
+                _exprs.append(i)
 
-            if opt.expand:
-                expr = expr.expand()
+                if opt.expand:
+                    expr = expr.expand()
+        else:
+            failed = True
 
         exprs.append(expr)
+
+    if failed:
+        raise PolificationFailed(origs, exprs, True)
 
     if _polys:
         # XXX: this is a temporary solution
@@ -1517,7 +1621,7 @@ def parallel_poly_from_expr(exprs, *gens, **args):
     try:
         reps, gens = parallel_dict_from_basic(exprs, opt=opt)
     except GeneratorsNeeded:
-        raise PolificationFailed(origs, exprs)
+        raise PolificationFailed(origs, exprs, True)
 
     coeffs_list, lengths = [], []
 
@@ -1557,37 +1661,6 @@ def parallel_poly_from_expr(exprs, *gens, **args):
 
     return polys, opt
 
-def NonStrictPoly(f, *gens, **args):
-    """Create a Poly instance with `strict` keyword set.  """
-    args = dict(args)
-    args['strict'] = False
-    return Poly(f, *gens, **args)
-
-def _polify_basic(f, g, *gens, **args):
-    """Cooperatively make polynomials out of `f` and `g`. """
-    if gens:
-        F = NonStrictPoly(f, *gens, **args)
-        G = NonStrictPoly(g, *gens, **args)
-
-        if not F.is_Poly or not G.is_Poly:
-            raise CoercionFailed(F, G) # pragma: no cover
-        else:
-            return F, G
-    else:
-        F = NonStrictPoly(f, **args)
-        G = NonStrictPoly(g, **args)
-
-        if F.is_Poly:
-            if G.is_Poly:
-                return F, G
-            else:
-                return F, Poly(g, *F.gens, **args)
-        else:
-            if G.is_Poly:
-                return Poly(f, *G.gens, **args), G
-            else:
-                raise CoercionFailed(F, G)
-
 def _update_args(args, key, value):
     """Add a new `(key, value)` pair to arguments dict. """
     args = dict(args)
@@ -1596,28 +1669,6 @@ def _update_args(args, key, value):
         args[key] = value
 
     return args
-
-def _filter_args(args, *keys):
-    """Filter the given keys from the args dict. """
-    if not keys:
-        return {}
-
-    keys, result = set(keys), {}
-
-    for key, value in args.items():
-        if key in keys:
-            result[key] = value
-
-    return result
-
-def _should_return_basic(*polys, **args):
-    """Figure out if results should be returned as basic. """
-    query = args.get('polys')
-
-    if query is not None:
-        return not query
-    else:
-        return not all(isinstance(poly, Poly) for poly in polys)
 
 def _keep_coeff(coeff, factors):
     """Return ``coeff*factors`` unevaluated if necessary. """
@@ -1631,623 +1682,681 @@ def _keep_coeff(coeff, factors):
         return Mul(coeff, factors, evaluate=False)
 
 def degree(f, *gens, **args):
-    """Returns degree of `f` in the given generator. """
+    """Return the degree of ``f`` in the given variable. """
+    options.allowed_flags(args, ['gen', 'polys'])
+
     try:
-        F = Poly(f, *_analyze_gens(gens), **args)
-    except GeneratorsNeeded:
-        raise GeneratorsNeeded("can't compute degree of %s without generators" % f)
+        F, opt = poly_from_expr(f, *gens, **args)
+    except PolificationFailed, exc:
+        raise ComputationFailed('degree', 1, exc)
 
-    degree = F.degree(args.get('gen', 0))
-
-    return Integer(degree)
+    return Integer(F.degree(opt.gen))
 
 def degree_list(f, *gens, **args):
-    """Returns a list of degrees of `f` in all generators. """
+    """Return a list of degrees of ``f`` in all variables. """
+    options.allowed_flags(args, ['polys'])
+
     try:
-        F = Poly(f, *_analyze_gens(gens), **args)
-    except GeneratorsNeeded:
-        raise GeneratorsNeeded("can't compute degrees list of %s without generators" % f)
+        F, opt = poly_from_expr(f, *gens, **args)
+    except PolificationFailed, exc:
+        raise ComputationFailed('degree_list', 1, exc)
 
     degrees = F.degree_list()
 
     return tuple(map(Integer, degrees))
 
 def LC(f, *gens, **args):
-    """Returns the leading coefficient of `f`. """
-    order = args.pop('order', None)
+    """Return the leading coefficient of ``f``. """
+    options.allowed_flags(args, ['polys'])
 
     try:
-        return Poly(f, *gens, **args).LC(order=order)
-    except GeneratorsNeeded:
-        raise GeneratorsNeeded("can't compute the leading coefficient of %s without generators" % f)
+        F, opt = poly_from_expr(f, *gens, **args)
+    except PolificationFailed, exc:
+        raise ComputationFailed('LC', 1, exc)
+
+    return F.LC(order=opt.order)
 
 def LM(f, *gens, **args):
-    """Returns the leading monomial of `f`. """
-    order = args.pop('order', None)
+    """Return the leading monomial of ``f``. """
+    options.allowed_flags(args, ['polys'])
 
     try:
-        f = Poly(f, *gens, **args)
-    except GeneratorsNeeded:
-        raise GeneratorsNeeded("can't compute the leading monomial of %s without generators" % f)
+        F, opt = poly_from_expr(f, *gens, **args)
+    except PolificationFailed, exc:
+        raise ComputationFailed('LM', 1, exc)
 
-    return Monomial(*f.LM(order=order)).as_basic(*f.gens)
+    monom = Monomial(*F.LM(order=opt.order))
+
+    return monom.as_basic(*opt.gens)
 
 def LT(f, *gens, **args):
-    """Returns the leading term of `f`. """
-    order = args.pop('order', None)
+    """Return the leading term of ``f``. """
+    options.allowed_flags(args, ['polys'])
 
     try:
-        f = Poly(f, *gens, **args)
-    except GeneratorsNeeded:
-        raise GeneratorsNeeded("can't compute the leading term of %s without generators" % f)
+        F, opt = poly_from_expr(f, *gens, **args)
+    except PolificationFailed, exc:
+        raise ComputationFailed('LT', 1, exc)
 
-    monom, coeff = f.LT(order=order)
+    monom, coeff = F.LT(order=opt.order)
 
-    return coeff*Monomial(*monom).as_basic(*f.gens)
+    return coeff*Monomial(*monom).as_basic(*opt.gens)
 
 def pdiv(f, g, *gens, **args):
-    """Polynomial pseudo-division of `f` and `g`. """
-    gens = _analyze_gens(gens)
+    """Compute polynomial pseudo--division of ``f`` and ``g``. """
+    options.allowed_flags(args, ['polys'])
 
     try:
-        F, G = _polify_basic(f, g, *gens, **args)
-    except CoercionFailed, (f, g):
-        raise GeneratorsNeeded("can't compute pseudo division of %s and %s without generators" % (f, g))
+        (F, G), opt = parallel_poly_from_expr((f, g), *gens, **args)
+    except PolificationFailed, exc:
+        raise ComputationFailed('pdiv', 2, exc)
 
     q, r = F.pdiv(G)
 
-    if _should_return_basic(f, g, **args):
+    if not opt.polys:
         return q.as_basic(), r.as_basic()
     else:
         return q, r
 
 def prem(f, g, *gens, **args):
-    """Polynomial pseudo-remainder of `f` and `g`. """
-    gens = _analyze_gens(gens)
+    """Compute polynomial pseudo--remainder of ``f`` and ``g``. """
+    options.allowed_flags(args, ['polys'])
 
     try:
-        F, G = _polify_basic(f, g, *gens, **args)
-    except CoercionFailed, (f, g):
-        raise GeneratorsNeeded("can't compute pseudo remainder of %s and %s without generators" % (f, g))
+        (F, G), opt = parallel_poly_from_expr((f, g), *gens, **args)
+    except PolificationFailed, exc:
+        raise ComputationFailed('prem', 2, exc)
 
     r = F.prem(G)
 
-    if _should_return_basic(f, g, **args):
+    if not opt.polys:
         return r.as_basic()
     else:
         return r
 
 def pquo(f, g, *gens, **args):
-    """Polynomial pseudo-quotient of `f` and `g`. """
-    gens = _analyze_gens(gens)
+    """Compute polynomial pseudo--quotient of ``f`` and ``g``. """
+    options.allowed_flags(args, ['polys'])
 
     try:
-        F, G = _polify_basic(f, g, *gens, **args)
-    except CoercionFailed, (f, g):
-        raise GeneratorsNeeded("can't compute pseudo quotient of %s and %s without generators" % (f, g))
+        (F, G), opt = parallel_poly_from_expr((f, g), *gens, **args)
+    except PolificationFailed, exc:
+        raise ComputationFailed('pquo', 2, exc)
 
     q = F.pquo(G)
 
-    if _should_return_basic(f, g, **args):
+    if not opt.polys:
         return q.as_basic()
     else:
         return q
 
 def pexquo(f, g, *gens, **args):
-    """Polynomial exact pseudo-quotient of `f` and `g`. """
-    gens = _analyze_gens(gens)
+    """Compute polynomial exact pseudo--quotient of ``f`` and ``g``. """
+    options.allowed_flags(args, ['polys'])
 
     try:
-        F, G = _polify_basic(f, g, *gens, **args)
-    except CoercionFailed, (f, g):
-        raise GeneratorsNeeded("can't compute pseudo quotient of %s and %s without generators" % (f, g))
+        (F, G), opt = parallel_poly_from_expr((f, g), *gens, **args)
+    except PolificationFailed, exc:
+        raise ComputationFailed('pexquo', 2, exc)
 
     q = F.pexquo(G)
 
-    if _should_return_basic(f, g, **args):
+    if not opt.polys:
         return q.as_basic()
     else:
         return q
 
 def div(f, g, *gens, **args):
-    """Polynomial division with remainder of `f` and `g`. """
-    gens = _analyze_gens(gens)
+    """Compute polynomial division of ``f`` and ``g``. """
+    options.allowed_flags(args, ['polys'])
 
     try:
-        F, G = _polify_basic(f, g, *gens, **args)
-    except CoercionFailed, (f, g):
-        raise GeneratorsNeeded("can't compute division of %s and %s without generators" % (f, g))
+        (F, G), opt = parallel_poly_from_expr((f, g), *gens, **args)
+    except PolificationFailed, exc:
+        raise ComputationFailed('div', 2, exc)
 
     q, r = F.div(G)
 
-    if _should_return_basic(f, g, **args):
+    if not opt.polys:
         return q.as_basic(), r.as_basic()
     else:
         return q, r
 
 def rem(f, g, *gens, **args):
-    """Computes polynomial remainder of `f` and `g`. """
-    gens = _analyze_gens(gens)
+    """Compute polynomial remainder of ``f`` and ``g``. """
+    options.allowed_flags(args, ['polys'])
 
     try:
-        F, G = _polify_basic(f, g, *gens, **args)
-    except CoercionFailed, (f, g):
-        raise GeneratorsNeeded("can't compute remainder of %s and %s without generators" % (f, g))
+        (F, G), opt = parallel_poly_from_expr((f, g), *gens, **args)
+    except PolificationFailed, exc:
+        raise ComputationFailed('rem', 2, exc)
 
     r = F.rem(G)
 
-    if _should_return_basic(f, g, **args):
+    if not opt.polys:
         return r.as_basic()
     else:
         return r
 
 def quo(f, g, *gens, **args):
-    """Computes polynomial quotient of `f` and `g`. """
-    gens = _analyze_gens(gens)
+    """Compute polynomial quotient of ``f`` and ``g``. """
+    options.allowed_flags(args, ['polys'])
 
     try:
-        F, G = _polify_basic(f, g, *gens, **args)
-    except CoercionFailed, (f, g):
-        raise GeneratorsNeeded("can't compute quotient of %s and %s without generators" % (f, g))
+        (F, G), opt = parallel_poly_from_expr((f, g), *gens, **args)
+    except PolificationFailed, exc:
+        raise ComputationFailed('quo', 2, exc)
 
     q = F.quo(G)
 
-    if _should_return_basic(f, g, **args):
+    if not opt.polys:
         return q.as_basic()
     else:
         return q
 
 def exquo(f, g, *gens, **args):
-    """Computes polynomial exact quotient of `f` and `g`. """
-    gens = _analyze_gens(gens)
+    """Compute polynomial exact quotient of ``f`` and ``g``. """
+    options.allowed_flags(args, ['polys'])
 
     try:
-        F, G = _polify_basic(f, g, *gens, **args)
-    except CoercionFailed, (f, g):
-        raise GeneratorsNeeded("can't compute quotient of %s and %s without generators" % (f, g))
+        (F, G), opt = parallel_poly_from_expr((f, g), *gens, **args)
+    except PolificationFailed, exc:
+        raise ComputationFailed('exquo', 2, exc)
 
     q = F.exquo(G)
 
-    if _should_return_basic(f, g, **args):
+    if not opt.polys:
         return q.as_basic()
     else:
         return q
 
 def half_gcdex(f, g, *gens, **args):
-    """Half extended Euclidean algorithm of `f` and `g`. """
-    gens = _analyze_gens(gens)
+    """Half extended Euclidean algorithm of ``f`` and ``g``. """
+    options.allowed_flags(args, ['auto', 'polys'])
 
     try:
-        F, G = _polify_basic(f, g, *gens, **args)
-    except CoercionFailed, (f, g):
-        try:
-            return f.half_gcdex(g)
-        except (AttributeError, TypeError): # pragma: no cover
-            raise GeneratorsNeeded("can't compute half extended GCD of %s and %s without generators" % (f, g))
+        (F, G), opt = parallel_poly_from_expr((f, g), *gens, **args)
+    except PolificationFailed, exc:
+        f, g = exc.exprs
 
-    s, h = F.half_gcdex(G, **_filter_args(args, 'auto'))
+        if hasattr(f, 'half_gcdex'):
+            try:
+                return f.half_gcdex(g)
+            except (SympifyError, ValueError):
+                pass
 
-    if _should_return_basic(f, g, **args):
+        raise ComputationFailed('half_gcdex', 2, exc)
+
+    s, h = F.half_gcdex(G, auto=opt.auto)
+
+    if not opt.polys:
         return s.as_basic(), h.as_basic()
     else:
         return s, h
 
 def gcdex(f, g, *gens, **args):
-    """Extended Euclidean algorithm of `f` and `g`. """
-    gens = _analyze_gens(gens)
+    """Extended Euclidean algorithm of ``f`` and ``g``. """
+    options.allowed_flags(args, ['auto', 'polys'])
 
     try:
-        F, G = _polify_basic(f, g, *gens, **args)
-    except CoercionFailed, (f, g):
-        try:
-            return f.gcdex(g)
-        except (AttributeError, TypeError): # pragma: no cover
-            raise GeneratorsNeeded("can't compute extended GCD of %s and %s without generators" % (f, g))
+        (F, G), opt = parallel_poly_from_expr((f, g), *gens, **args)
+    except PolificationFailed, exc:
+        f, g = exc.exprs
 
-    s, t, h = F.gcdex(G, **_filter_args(args, 'auto'))
+        if hasattr(f, 'gcdex'):
+            try:
+                return f.gcdex(g)
+            except (SympifyError, ValueError):
+                pass
 
-    if _should_return_basic(f, g, **args):
+        raise ComputationFailed('gcdex', 2, exc)
+
+    s, t, h = F.gcdex(G, auto=opt.auto)
+
+    if not opt.polys:
         return s.as_basic(), t.as_basic(), h.as_basic()
     else:
         return s, t, h
 
 def invert(f, g, *gens, **args):
-    """Invert `f` modulo `g`, if possible. """
-    gens = _analyze_gens(gens)
+    """Invert ``f`` modulo ``g`` when possible. """
+    options.allowed_flags(args, ['auto', 'polys'])
 
     try:
-        F, G = _polify_basic(f, g, *gens, **args)
-    except CoercionFailed, (f, g):
-        try:
-            return f.invert(g)
-        except (AttributeError, TypeError): # pragma: no cover
-            raise GeneratorsNeeded("can't compute inversion of %s modulo %s without generators" % (f, g))
+        (F, G), opt = parallel_poly_from_expr((f, g), *gens, **args)
+    except PolificationFailed, exc:
+        f, g = exc.exprs
 
-    h = F.invert(G, **_filter_args(args, 'auto'))
+        if hasattr(f, 'invert'):
+            try:
+                return f.invert(g)
+            except (SympifyError, ValueError):
+                pass
 
-    if _should_return_basic(f, g, **args):
+        raise ComputationFailed('invert', 2, exc)
+
+    h = F.invert(G, auto=opt.auto)
+
+    if not opt.polys:
         return h.as_basic()
     else:
         return h
 
 def subresultants(f, g, *gens, **args):
-    """Computes subresultant PRS sequence of `f` and `g`. """
-    gens = _analyze_gens(gens)
+    """Compute subresultant PRS of ``f`` and ``g``. """
+    options.allowed_flags(args, ['polys'])
 
     try:
-        F, G = _polify_basic(f, g, *gens, **args)
-    except CoercionFailed, (f, g):
-        raise GeneratorsNeeded("can't compute subresultants of %s and %s without generators" % (f, g))
+        (F, G), opt = parallel_poly_from_expr((f, g), *gens, **args)
+    except PolificationFailed, exc:
+        raise ComputationFailed('subresultants', 2, exc)
 
     result = F.subresultants(G)
 
-    if _should_return_basic(f, g, **args):
+    if not opt.polys:
         return [ r.as_basic() for r in result ]
     else:
         return result
 
 def resultant(f, g, *gens, **args):
-    """Computes resultant of `f` and `g` via PRS. """
-    gens = _analyze_gens(gens)
+    """Compute resultant of ``f`` and ``g``. """
+    options.allowed_flags(args, ['polys'])
 
     try:
-        F, G = _polify_basic(f, g, *gens, **args)
-    except CoercionFailed, (f, g):
-        raise GeneratorsNeeded("can't compute resultant of %s and %s without generators" % (f, g))
+        (F, G), opt = parallel_poly_from_expr((f, g), *gens, **args)
+    except PolificationFailed, exc:
+        raise ComputationFailed('resultant', 2, exc)
 
     result = F.resultant(G)
 
-    if _should_return_basic(f, g, **args):
+    if not opt.polys:
         return result.as_basic()
     else:
         return result
 
 def discriminant(f, *gens, **args):
-    """Computes discriminant of `f`. """
-    F = NonStrictPoly(f, *_analyze_gens(gens), **args)
+    """Compute discriminant of ``f``. """
+    options.allowed_flags(args, ['polys'])
 
-    if not F.is_Poly:
-        raise GeneratorsNeeded("can't compute discriminant of %s without generators" % f)
+    try:
+        F, opt = poly_from_expr(f, *gens, **args)
+    except PolificationFailed, exc:
+        raise ComputationFailed('discriminant', 1, exc)
 
     result = F.discriminant()
 
-    if _should_return_basic(f, **args):
+    if not opt.polys:
         return result.as_basic()
     else:
         return result
 
 def cofactors(f, g, *gens, **args):
-    """Returns GCD of `f` and `g` and their cofactors. """
-    gens = _analyze_gens(gens)
+    """Compute GCD and cofactors of ``f`` and ``g``. """
+    options.allowed_flags(args, ['polys'])
 
     try:
-        F, G = _polify_basic(f, g, *gens, **args)
-    except CoercionFailed, (f, g):
-        try:
-            return f.cofactors(g)
-        except (AttributeError, TypeError): # pragma: no cover
-            raise GeneratorsNeeded("can't compute cofactors of %s and %s without generators" % (f, g))
+        (F, G), opt = parallel_poly_from_expr((f, g), *gens, **args)
+    except PolificationFailed, exc:
+        f, g = exc.exprs
+
+        if hasattr(f, 'cofactors'):
+            try:
+                return f.cofactors(g)
+            except (SympifyError, ValueError):
+                pass
+
+        raise ComputationFailed('cofactors', 2, exc)
 
     h, cff, cfg = F.cofactors(G)
 
-    if _should_return_basic(f, g, **args):
+    if not opt.polys:
         return h.as_basic(), cff.as_basic(), cfg.as_basic()
     else:
         return h, cff, cfg
 
 def gcd(f, g, *gens, **args):
-    """Returns polynomial GCD of `f` and `g`. """
-    gens = _analyze_gens(gens)
+    """Compute GCD of ``f`` and ``g``. """
+    options.allowed_flags(args, ['polys'])
 
     try:
-        F, G = _polify_basic(f, g, *gens, **args)
-    except CoercionFailed, (f, g):
-        try:
-            return f.gcd(g)
-        except (AttributeError, TypeError): # pragma: no cover
-            raise GeneratorsNeeded("can't compute GCD of %s and %s without generators" % (f, g))
+        (F, G), opt = parallel_poly_from_expr((f, g), *gens, **args)
+    except PolificationFailed, exc:
+        f, g = exc.exprs
+
+        if hasattr(f, 'gcd'):
+            try:
+                return f.gcd(g)
+            except (SympifyError, ValueError):
+                pass
+
+        raise ComputationFailed('gcd', 2, exc)
 
     result = F.gcd(G)
 
-    if _should_return_basic(f, g, **args):
+    if not opt.polys:
         return result.as_basic()
     else:
         return result
 
 def lcm(f, g, *gens, **args):
-    """Returns polynomial LCM of `f` and `g`. """
-    gens = _analyze_gens(gens)
+    """Compute LCM of ``f`` and ``g``. """
+    options.allowed_flags(args, ['polys'])
 
     try:
-        F, G = _polify_basic(f, g, *gens, **args)
-    except CoercionFailed, (f, g):
-        try:
-            return f.lcm(g)
-        except (AttributeError, TypeError): # pragma: no cover
-            raise GeneratorsNeeded("can't compute LCM of %s and %s without generators" % (f, g))
+        (F, G), opt = parallel_poly_from_expr((f, g), *gens, **args)
+    except PolificationFailed, exc:
+        f, g = exc.exprs
+
+        if hasattr(f, 'lcm'):
+            try:
+                return f.lcm(g)
+            except (SympifyError, ValueError):
+                pass
+
+        raise ComputationFailed('lcm', 2, exc)
 
     result = F.lcm(G)
 
-    if _should_return_basic(f, g, **args):
+    if not opt.polys:
         return result.as_basic()
     else:
         return result
 
 def terms_gcd(f, *gens, **args):
-    """Remove GCD of terms from the polynomial `f`. """
+    """Remove GCD of terms from ``f``. """
+    options.allowed_flags(args, ['polys'])
+
     try:
-        f = Poly(f, *_analyze_gens(gens), **args)
-    except GeneratorsNeeded:
-        return f
+        F, opt = poly_from_expr(f, *gens, **args)
+    except PolificationFailed, exc:
+        return exc.expr
 
-    (J, f), dom = f.terms_gcd(), f.get_domain()
+    J, f = F.terms_gcd()
 
-    if dom.has_Ring:
-        if dom.has_Field:
+    if opt.domain.has_Ring:
+        if opt.domain.has_Field:
             denom, f = f.clear_denoms(convert=True)
 
         coeff, f = f.primitive()
 
-        if dom.has_Field:
+        if opt.domain.has_Field:
             coeff /= denom
     else:
-        coeff = 1
+        coeff = S.One
 
     term = Mul(*[ x**j for x, j in zip(f.gens, J) ])
 
     return _keep_coeff(coeff, term*f.as_basic())
 
 def trunc(f, p, *gens, **args):
-    """Reduce `f` modulo a constant `p`. """
-    F = NonStrictPoly(f, *_analyze_gens(gens), **args)
+    """Reduce ``f`` modulo a constant ``p``. """
+    options.allowed_flags(args, ['polys'])
 
-    if not F.is_Poly:
-        return F % p
+    try:
+        F, opt = poly_from_expr(f, *gens, **args)
+    except PolificationFailed, exc:
+        raise ComputationFailed('trunc', 1, exc)
 
-    if _should_return_basic(f, **args):
-        return F.trunc(p).as_basic()
+    result = F.trunc(sympify(p))
+
+    if not opt.polys:
+        return result.as_basic()
     else:
-        return F.trunc(p)
+        return result
 
 def monic(f, *gens, **args):
-    """Divides all coefficients by `LC(f)`. """
-    F = NonStrictPoly(f, *_analyze_gens(gens), **args)
+    """Divide all coefficients of ``f`` by ``LC(f)``. """
+    options.allowed_flags(args, ['auto', 'polys'])
 
-    if not F.is_Poly:
-        raise GeneratorsNeeded("can't compute monic polynomial of %s without generators" % f)
+    try:
+        F, opt = poly_from_expr(f, *gens, **args)
+    except PolificationFailed, exc:
+        raise ComputationFailed('monic', 1, exc)
 
-    G = F.monic(**_filter_args(args, 'auto'))
+    result = F.monic(auto=opt.auto)
 
-    if _should_return_basic(f, **args):
-        return G.as_basic()
+    if not opt.polys:
+        return result.as_basic()
     else:
-        return G
+        return result
 
 def content(f, *gens, **args):
-    """Returns GCD of polynomial coefficients. """
-    F = NonStrictPoly(f, *_analyze_gens(gens), **args)
+    """Compute GCD of coefficients of ``f``. """
+    options.allowed_flags(args, ['polys'])
 
-    if not F.is_Poly:
-        raise GeneratorsNeeded("can't compute content of %s without generators" % f)
-    else:
-        return F.content()
+    try:
+        F, opt = poly_from_expr(f, *gens, **args)
+    except PolificationFailed, exc:
+        raise ComputationFailed('content', 1, exc)
+
+    return F.content()
 
 def primitive(f, *gens, **args):
-    """Returns content and a primitive form of `f`. """
-    F = NonStrictPoly(f, *_analyze_gens(gens), **args)
+    """Compute content and the primitive form of ``f``. """
+    options.allowed_flags(args, ['polys'])
 
-    if not F.is_Poly:
-        raise GeneratorsNeeded("can't compute primitive part of %s without generators" % f)
+    try:
+        F, opt = poly_from_expr(f, *gens, **args)
+    except PolificationFailed, exc:
+        raise ComputationFailed('primitive', 1, exc)
 
     cont, result = F.primitive()
 
-    if _should_return_basic(f, **args):
+    if not opt.polys:
         return cont, result.as_basic()
     else:
         return cont, result
 
 def compose(f, g, *gens, **args):
-    """Returns functional composition `f(g)`. """
-    gens = _analyze_gens(gens)
+    """Compute functional composition ``f(g)``. """
+    options.allowed_flags(args, ['polys'])
 
     try:
-        F, G = _polify_basic(f, g, *gens, **args)
-    except CoercionFailed, (f, g):
-        raise GeneratorsNeeded("can't compute composition of %s and %s without generators" % (f, g))
+        (F, G), opt = parallel_poly_from_expr((f, g), *gens, **args)
+    except PolificationFailed, exc:
+        raise ComputationFailed('compose', 2, exc)
 
     result = F.compose(G)
 
-    if _should_return_basic(f, g, **args):
+    if not opt.polys:
         return result.as_basic()
     else:
         return result
 
 def decompose(f, *gens, **args):
-    """Computes functional decomposition of `f`. """
-    F = NonStrictPoly(f, *_analyze_gens(gens), **args)
+    """Compute functional decomposition of ``f``. """
+    options.allowed_flags(args, ['polys'])
 
-    if not F.is_Poly:
-        raise GeneratorsNeeded("can't compute functional decomposition of %s without generators" % f)
+    try:
+        F, opt = poly_from_expr(f, *gens, **args)
+    except PolificationFailed, exc:
+        raise ComputationFailed('decompose', 1, exc)
 
     result = F.decompose()
 
-    if _should_return_basic(f, **args):
+    if not opt.polys:
         return [ r.as_basic() for r in result ]
     else:
         return result
 
 def sturm(f, *gens, **args):
-    """Computes the Sturm sequence of `f`. """
-    F = NonStrictPoly(f, *_analyze_gens(gens), **args)
+    """Compute Sturm sequence of ``f``. """
+    options.allowed_flags(args, ['auto', 'polys'])
 
-    if not F.is_Poly:
-        raise GeneratorsNeeded("can't compute Sturm sequence of %s without generators" % f)
+    try:
+        F, opt = poly_from_expr(f, *gens, **args)
+    except PolificationFailed, exc:
+        raise ComputationFailed('sturm', 1, exc)
 
-    result = F.sturm(**_filter_args(args, 'auto'))
+    result = F.sturm(auto=opt.auto)
 
-    if _should_return_basic(f, **args):
+    if not opt.polys:
         return [ r.as_basic() for r in result ]
     else:
         return result
 
 def gff_list(f, *gens, **args):
-    """Returns a list of greatest factorial factors of `f`. """
-    F = NonStrictPoly(f, *_analyze_gens(gens), **args)
+    """Compute a list of greatest factorial factors of ``f``. """
+    options.allowed_flags(args, ['polys'])
 
-    if not F.is_Poly:
-        return []
+    try:
+        F, opt = poly_from_expr(f, *gens, **args)
+    except PolificationFailed, exc:
+        raise ComputationFailed('gff_list', 1, exc)
 
     factors = F.gff_list()
 
-    if _should_return_basic(f, **args):
+    if not opt.polys:
         return [ (g.as_basic(), k) for g, k in factors ]
     else:
         return factors
 
 def gff(f, *gens, **args):
-    """Computes greatest factorial factorization of `f`. """
+    """Compute greatest factorial factorization of ``f``. """
     raise NotImplementedError('symbolic falling factorial')
 
 def sqf_norm(f, *gens, **args):
-    """Computes square-free norm of `f`. """
-    F = NonStrictPoly(f, *_analyze_gens(gens), **args)
+    """Compute square--free norm of ``f``. """
+    options.allowed_flags(args, ['polys'])
 
-    if not F.is_Poly:
-        raise GeneratorsNeeded("can't compute square-free norm of %s without generators" % f)
+    try:
+        F, opt = poly_from_expr(f, *gens, **args)
+    except PolificationFailed, exc:
+        raise ComputationFailed('sqf_norm', 1, exc)
 
     s, g, r = F.sqf_norm()
 
-    if _should_return_basic(f, **args):
+    if not opt.polys:
         return Integer(s), g.as_basic(), r.as_basic()
     else:
         return Integer(s), g, r
 
 def sqf_part(f, *gens, **args):
-    """Computes square-free part of `f`. """
-    F = NonStrictPoly(f, *_analyze_gens(gens), **args)
+    """Compute square--free part of ``f``. """
+    options.allowed_flags(args, ['polys'])
 
-    if not F.is_Poly:
-        raise GeneratorsNeeded("can't compute square-free part of %s without generators" % f)
+    try:
+        F, opt = poly_from_expr(f, *gens, **args)
+    except PolificationFailed, exc:
+        raise ComputationFailed('sqf_part', 1, exc)
 
     result = F.sqf_part()
 
-    if _should_return_basic(f, **args):
+    if not opt.polys:
         return result.as_basic()
     else:
         return result
 
 def sqf_list(f, *gens, **args):
-    """Returns a list of square-free factors of `f`. """
-    F = NonStrictPoly(f, *_analyze_gens(gens), **args)
+    """Compute a list of square--free factors of ``f``. """
+    options.allowed_flags(args, ['all', 'include', 'polys'])
 
-    if not F.is_Poly:
-        raise GeneratorsNeeded("can't compute square-free decomposition of %s without generators" % f)
+    try:
+        F, opt = poly_from_expr(f, *gens, **args)
+    except PolificationFailed, exc:
+        raise ComputationFailed('sqf_list', 1, exc)
 
-    all = args.get('all', False)
+    if not opt.include:
+        coeff, factors = F.sqf_list(all=opt.all)
 
-    if not args.get('include', False):
-        coeff, factors = result = F.sqf_list(all)
-
-        if _should_return_basic(f, **args):
+        if not opt.polys:
             return coeff, [ (g.as_basic(), k) for g, k in factors ]
         else:
             return coeff, factors
     else:
-        factors = F.sqf_list_include()
+        factors = F.sqf_list_include(all=opt.all)
 
-        if _should_return_basic(f, **args):
+        if not opt.polys:
             return [ (g.as_basic(), k) for g, k in factors ]
         else:
             return factors
 
+def _inner_sqf(f):
+    """Helper function for :func:`sqf`. """
+    (coeff, factors), result = f.sqf_list(), S.One
+
+    for g, k in factors:
+        result *= g.as_basic()**k
+
+    return coeff, result
+
 def sqf(f, *gens, **args):
-    """Returns square-free decomposition of `f`. """
-    frac = args.get('frac', False)
-    gens = _analyze_gens(gens)
+    """Compute square--free decomposition of ``f``. """
+    options.allowed_flags(args, ['frac', 'polys'])
 
-    def _sqf(f):
-        """Squaqre-free factor a true polynomial expression. """
-        F = NonStrictPoly(f, *gens, **args)
+    try:
+        F, opt = poly_from_expr(f, *gens, **args)
+    except PolificationFailed, exc:
+        return exc.expr
 
-        if not F.is_Poly:
-            return (S.One, F)
-
-        (coeff, factors), result = F.sqf_list(), S.One
-
-        for g, k in factors:
-            result *= g.as_basic()**k
-
-        return (coeff, result)
-
-    if not frac:
-        coeff, factors = _sqf(f)
+    if not opt.frac:
+        coeff, factors = _inner_sqf(F)
     else:
-        p, q = cancel(f).as_numer_denom()
+        p, q = F
 
-        coeff_p, factors_p = _sqf(p)
-        coeff_q, factors_q = _sqf(q)
+        cp, fp = _inner_sqf(p)
+        cq, fq = _inner_sqf(q)
 
-        coeff = coeff_p / coeff_q
-        factors = factors_p / factors_q
+        coeff, factors = cp/cq, fp/fq
 
     return _keep_coeff(coeff, factors)
 
 def factor_list(f, *gens, **args):
-    """Returns a list of irreducible factors of `f`. """
-    F = NonStrictPoly(f, *_analyze_gens(gens), **args)
+    """Compute a list of irreducible factors of ``f``. """
+    options.allowed_flags(args, ['include', 'polys'])
 
-    if not F.is_Poly:
-        raise GeneratorsNeeded("can't compute factorization of %s without generators" % f)
+    try:
+        F, opt = poly_from_expr(f, *gens, **args)
+    except PolificationFailed, exc:
+        raise ComputationFailed('factor_list', 1, exc)
 
-    if not args.get('include', False):
-        coeff, factors = result = F.factor_list()
+    if not opt.include:
+        coeff, factors = F.factor_list()
 
-        if _should_return_basic(f, **args):
+        if not opt.polys:
             return coeff, [ (g.as_basic(), k) for g, k in factors ]
         else:
             return coeff, factors
     else:
         factors = F.factor_list_include()
 
-        if _should_return_basic(f, **args):
+        if not opt.polys:
             return [ (g.as_basic(), k) for g, k in factors ]
         else:
             return factors
 
-@register_context
+def _inner_factor(f):
+    """Helper function for :func:`factor`. """
+    (coeff, factors), result = f.factor_list(), S.One
+
+    for g, k in factors:
+        result *= g.as_basic()**k
+
+    return coeff, result
+
 def factor(f, *gens, **args):
-    """Returns factorization into irreducibles of `f`. """
-    frac = args.get('frac', False)
+    """Compute factorization into irreducibles of ``f``. """
+    options.allowed_flags(args, ['frac', 'polys'])
 
-    def _factor(f):
-        """Factor a true polynomial expression. """
-        F = NonStrictPoly(f, *gens, **args)
+    try:
+        F, opt = poly_from_expr(f, *gens, **args)
+    except PolificationFailed, exc:
+        return exc.expr
 
-        if not F.is_Poly:
-            return (S.One, F)
-
-        (coeff, factors), result = F.factor_list(), S.One
-
-        for g, k in factors:
-            result *= g.as_basic()**k
-
-        return (coeff, result)
-
-    if not frac:
-        coeff, factors = _factor(f)
+    if not opt.frac:
+        coeff, factors = _inner_factor(F)
     else:
-        p, q = cancel(f).as_numer_denom()
+        p, q = F
 
-        coeff_p, factors_p = _factor(p)
-        coeff_q, factors_q = _factor(q)
+        cp, fp = _inner_factor(p)
+        cq, fq = _inner_factor(q)
 
-        coeff = coeff_p / coeff_q
-        factors = factors_p / factors_q
+        coeff, factors = cp/cq, fp/fq
 
     return _keep_coeff(coeff, factors)
 
 def intervals(F, all=False, eps=None, inf=None, sup=None, strict=False, fast=False, sqf=False):
-    """Compute isolating intervals for roots of `f`. """
+    """Compute isolating intervals for roots of ``f``. """
     if not hasattr(F, '__iter__'):
         try:
             F = Poly(F)
@@ -2292,7 +2401,7 @@ def refine_root(f, s, t, eps=None, steps=None, fast=False, check_sqf=False):
     return F.refine_root(s, t, eps=eps, steps=steps, fast=fast, check_sqf=check_sqf)
 
 def count_roots(f, inf=None, sup=None):
-    """Return the number of roots of ``f`` in ``[inf, sup]`` interval. """
+    """Compute the number of roots of ``f`` in ``[inf, sup]`` interval. """
     try:
         F = Poly(f, greedy=False)
     except GeneratorsNeeded:
@@ -2301,7 +2410,7 @@ def count_roots(f, inf=None, sup=None):
     return F.count_roots(inf=inf, sup=sup)
 
 def real_roots(f, multiple=True):
-    """Return a list of real roots with multiplicities of ``f``. """
+    """Compute a list of real roots with multiplicities of ``f``. """
     try:
         F = Poly(f, greedy=False)
     except GeneratorsNeeded:
@@ -2310,7 +2419,7 @@ def real_roots(f, multiple=True):
     return F.real_roots(multiple=multiple)
 
 def nroots(f, maxsteps=50, cleanup=True, error=False):
-    """Compute numerical approximations of roots of `f`. """
+    """Compute numerical approximations of roots of ``f``. """
     try:
         F = Poly(f, greedy=False)
     except GeneratorsNeeded:
@@ -2319,7 +2428,9 @@ def nroots(f, maxsteps=50, cleanup=True, error=False):
     return F.nroots(maxsteps=maxsteps, cleanup=cleanup, error=error)
 
 def cancel(f, *gens, **args):
-    """Cancel common factors in a rational function `f`.  """
+    """Cancel common factors in a rational function ``f``.  """
+    options.allowed_flags(args, ['polys'])
+
     f = sympify(f)
 
     if type(f) is not tuple:
@@ -2330,11 +2441,9 @@ def cancel(f, *gens, **args):
     else:
         p, q = f
 
-    gens = _analyze_gens(gens)
-
     try:
-        F, G = _polify_basic(p, q, *gens, **args)
-    except CoercionFailed:
+        (F, G), opt = parallel_poly_from_expr((p, q), *gens, **args)
+    except PolificationFailed, exc:
         if type(f) is not tuple:
             return f
         else:
@@ -2345,13 +2454,13 @@ def cancel(f, *gens, **args):
     if type(f) is not tuple:
         return c*(P.as_basic()/Q.as_basic())
     else:
-        if _should_return_basic(p, q, **args):
+        if not opt.polys:
             return c, P.as_basic(), Q.as_basic()
         else:
             return c, P, Q
 
 def reduced(f, G, *gens, **args):
-    """Reduces a polynomial `f` modulo a set of polynomials `G`. """
+    """Reduce a polynomial ``f`` modulo a set of polynomials ``G``. """
     polys, opt = parallel_poly_from_expr([f] + list(G), *gens, **args)
 
     for i, poly in enumerate(polys):
@@ -2370,7 +2479,7 @@ def reduced(f, G, *gens, **args):
         return Q, r
 
 def groebner(F, *gens, **args):
-    """Computes reduced Groebner basis for a set of polynomials. """
+    """Compute a reduced Groebner basis for a set of polynomials. """
     args = _update_args(args, 'field', True)
 
     polys, opt = parallel_poly_from_expr(F, *gens, **args)
@@ -2390,16 +2499,14 @@ def groebner(F, *gens, **args):
 
 def symmetrize(f, *gens, **args):
     """Rewrite a polynomial in terms of elementary symmetric polynomials. """
+    options.allowed_flags(args, ['formal'])
+
     try:
-        f = Poly(f, *_analyze_gens(gens), **args)
-    except GeneratorsNeeded:
-        if args.get('formal', False):
-            return (f, S.Zero, {})
-        else:
-            return (f, S.Zero)
+        f, opt = poly_from_expr(f, *gens, **args)
+    except PolificationFailed, exc:
+        return ComputationFailed('symmetrize', 1, exc)
 
     from sympy.polys.specialpolys import symmetric_poly
-
     polys, symbols = [], numbered_symbols('s', start=1)
 
     gens, dom = f.gens, f.get_domain()
@@ -2451,17 +2558,19 @@ def symmetrize(f, *gens, **args):
 
     polys = [ (s, p.as_basic()) for s, p in polys ]
 
-    if args.get('formal', False):
+    if opt.formal:
         return (Add(*symmetric), f.as_basic(), dict(polys))
     else:
         return (Add(*symmetric).subs(polys), f.as_basic())
 
 def horner(f, *gens, **args):
-    """Apply Horner's rule to put a polynomial in Horner form. """
-    F = NonStrictPoly(f, *_analyze_gens(gens), **args)
+    """Rewrite a polynomial in Horner form. """
+    options.allowed_flags(args, [])
 
-    if not F.is_Poly:
-        return F
+    try:
+        F, opt = poly_from_expr(f, *gens, **args)
+    except PolificationFailed, exc:
+        return exc.expr
 
     form, gen = S.Zero, F.gen
 
