@@ -20,6 +20,7 @@ from sympy.polys.polyutils import (
     _analyze_gens,
     _dict_reorder,
     _dict_from_basic_no_gens,
+    parallel_dict_from_basic,
 )
 
 from sympy.polys.rootisolation import (
@@ -38,6 +39,7 @@ from sympy.polys.polyerrors import (
     OperationNotSupported, DomainError,
     CoercionFailed, UnificationFailed,
     GeneratorsNeeded, PolynomialError,
+    PolificationFailed,
 )
 
 from sympy.polys.polycontext import (
@@ -173,6 +175,9 @@ class Poly(Basic):
         else:
             opt = args['opt']
 
+        if 'order' in opt:
+            raise NotImplementedError("'order' keyword is not implemented yet")
+
         if isinstance(rep, DMP):
             if rep.lev != len(opt.gens)-1 or opt.args:
                 raise PolynomialError("invalid arguments to construct a polynomial")
@@ -208,6 +213,19 @@ class Poly(Basic):
 
         return obj
 
+    @classmethod
+    def new(cls, rep, gens):
+        """Construct :class:`Poly` instance from raw representation. """
+        if not isinstance(rep, DMP):
+            raise PolynomialError("invalid polynomial representation: %s" % rep)
+
+        obj = Basic.__new__(cls)
+
+        obj.rep = rep
+        obj.gens = tuple(gens)
+
+        return obj
+
     def __getnewargs__(self):
         """Data used by pickling protocol version 2. """
         return (self.rep, self.gens)
@@ -228,6 +246,10 @@ class Poly(Basic):
 
     def unify(f, g):
         """Make `f` and `g` belong to the same domain. """
+        _, per, F, G = f._unify(g)
+        return per(F), per(G)
+
+    def _unify(f, g):
         g = sympify(g)
 
         if not g.is_Poly:
@@ -487,7 +509,7 @@ class Poly(Basic):
 
     def add(f, g):
         """Add two polynomials `f` and `g`. """
-        _, per, F, G = f.unify(g)
+        _, per, F, G = f._unify(g)
 
         try:
             result = F.add(G)
@@ -498,7 +520,7 @@ class Poly(Basic):
 
     def sub(f, g):
         """Subtract two polynomials `f` and `g`. """
-        _, per, F, G = f.unify(g)
+        _, per, F, G = f._unify(g)
 
         try:
             result = F.sub(G)
@@ -509,7 +531,7 @@ class Poly(Basic):
 
     def mul(f, g):
         """Multiply two polynomials `f` and `g`. """
-        _, per, F, G = f.unify(g)
+        _, per, F, G = f._unify(g)
 
         try:
             result = F.mul(G)
@@ -540,7 +562,7 @@ class Poly(Basic):
 
     def pdiv(f, g):
         """Polynomial pseudo-division of `f` by `g`. """
-        _, per, F, G = f.unify(g)
+        _, per, F, G = f._unify(g)
 
         try:
             q, r = F.pdiv(G)
@@ -551,7 +573,7 @@ class Poly(Basic):
 
     def prem(f, g):
         """Polynomial pseudo-remainder of `f` by `g`. """
-        _, per, F, G = f.unify(g)
+        _, per, F, G = f._unify(g)
 
         try:
             result = F.prem(G)
@@ -562,7 +584,7 @@ class Poly(Basic):
 
     def pquo(f, g):
         """Polynomial pseudo-quotient of `f` by `g`. """
-        _, per, F, G = f.unify(g)
+        _, per, F, G = f._unify(g)
 
         try:
             result = F.pquo(G)
@@ -573,7 +595,7 @@ class Poly(Basic):
 
     def pexquo(f, g):
         """Polynomial exact pseudo-quotient of `f` by `g`. """
-        _, per, F, G = f.unify(g)
+        _, per, F, G = f._unify(g)
 
         try:
             result = F.pexquo(G)
@@ -584,7 +606,7 @@ class Poly(Basic):
 
     def div(f, g):
         """Polynomial division with remainder of `f` by `g`. """
-        _, per, F, G = f.unify(g)
+        _, per, F, G = f._unify(g)
 
         try:
             q, r = F.div(G)
@@ -595,7 +617,7 @@ class Poly(Basic):
 
     def rem(f, g):
         """Computes polynomial remainder of `f` by `g`. """
-        _, per, F, G = f.unify(g)
+        _, per, F, G = f._unify(g)
 
         try:
             result = F.rem(G)
@@ -606,7 +628,7 @@ class Poly(Basic):
 
     def quo(f, g):
         """Computes polynomial quotient of `f` by `g`. """
-        _, per, F, G = f.unify(g)
+        _, per, F, G = f._unify(g)
 
         try:
             result = F.quo(G)
@@ -617,7 +639,7 @@ class Poly(Basic):
 
     def exquo(f, g):
         """Computes polynomial exact quotient of `f` by `g`. """
-        _, per, F, G = f.unify(g)
+        _, per, F, G = f._unify(g)
 
         try:
             result = F.exquo(G)
@@ -816,7 +838,7 @@ class Poly(Basic):
 
     def half_gcdex(f, g, auto=True):
         """Half extended Euclidean algorithm of `f` and `g`. """
-        dom, per, F, G = f.unify(g)
+        dom, per, F, G = f._unify(g)
 
         if auto and dom.has_Ring:
             F, G = F.to_field(), G.to_field()
@@ -830,7 +852,7 @@ class Poly(Basic):
 
     def gcdex(f, g, auto=True):
         """Extended Euclidean algorithm of `f` and `g`. """
-        dom, per, F, G = f.unify(g)
+        dom, per, F, G = f._unify(g)
 
         if auto and dom.has_Ring:
             F, G = F.to_field(), G.to_field()
@@ -844,7 +866,7 @@ class Poly(Basic):
 
     def invert(f, g, auto=True):
         """Invert `f` modulo `g`, if possible. """
-        dom, per, F, G = f.unify(g)
+        dom, per, F, G = f._unify(g)
 
         if auto and dom.has_Ring:
             F, G = F.to_field(), G.to_field()
@@ -867,7 +889,7 @@ class Poly(Basic):
 
     def subresultants(f, g):
         """Computes subresultant PRS sequence of `f` and `g`. """
-        _, per, F, G = f.unify(g)
+        _, per, F, G = f._unify(g)
 
         try:
             result = F.subresultants(G)
@@ -878,7 +900,7 @@ class Poly(Basic):
 
     def resultant(f, g):
         """Computes resultant of `f` and `g` via PRS. """
-        _, per, F, G = f.unify(g)
+        _, per, F, G = f._unify(g)
 
         try:
             result = F.resultant(G)
@@ -898,7 +920,7 @@ class Poly(Basic):
 
     def cofactors(f, g):
         """Returns GCD of `f` and `g` and their cofactors. """
-        _, per, F, G = f.unify(g)
+        _, per, F, G = f._unify(g)
 
         try:
             h, cff, cfg = F.cofactors(G)
@@ -909,7 +931,7 @@ class Poly(Basic):
 
     def gcd(f, g):
         """Returns polynomial GCD of `f` and `g`. """
-        _, per, F, G = f.unify(g)
+        _, per, F, G = f._unify(g)
 
         try:
             result = F.gcd(G)
@@ -920,7 +942,7 @@ class Poly(Basic):
 
     def lcm(f, g):
         """Returns polynomial LCM of `f` and `g`. """
-        _, per, F, G = f.unify(g)
+        _, per, F, G = f._unify(g)
 
         try:
             result = F.lcm(G)
@@ -972,7 +994,7 @@ class Poly(Basic):
 
     def compose(f, g):
         """Computes functional composition of `f` and `g`. """
-        _, per, F, G = f.unify(g)
+        _, per, F, G = f._unify(g)
 
         try:
             result = F.compose(G)
@@ -1210,7 +1232,7 @@ class Poly(Basic):
 
     def cancel(f, g):
         """Cancel common factors in a rational function `f/g`.  """
-        dom, per, F, G = f.unify(g)
+        dom, per, F, G = f._unify(g)
 
         if F.is_zero or G.is_zero:
             return S.One, per(F), per(G)
@@ -1466,6 +1488,74 @@ class Poly(Basic):
 
     def __nonzero__(f):
         return not f.is_zero
+
+def parallel_poly_from_expr(exprs, *gens, **args):
+    """Construct polynomials from expressions. """
+    opt = options.Options(gens, args)
+
+    origs, exprs = list(exprs), []
+    _exprs, _polys = [], []
+
+    for i, expr in enumerate(origs):
+        expr = sympify(expr)
+
+        if expr.is_Poly:
+            _polys.append(i)
+        else:
+            _exprs.append(i)
+
+            if opt.expand:
+                expr = expr.expand()
+
+        exprs.append(expr)
+
+    if _polys:
+        # XXX: this is a temporary solution
+        for i in _polys:
+            exprs[i] = exprs[i].as_basic()
+
+    try:
+        reps, gens = parallel_dict_from_basic(exprs, opt=opt)
+    except GeneratorsNeeded:
+        raise PolificationFailed(origs, exprs)
+
+    coeffs_list, lengths = [], []
+
+    all_monoms = []
+    all_coeffs = []
+
+    for rep in reps:
+        monoms, coeffs = zip(*rep.items())
+
+        coeffs_list.extend(coeffs)
+        all_monoms.append(monoms)
+
+        lengths.append(len(coeffs))
+
+    domain = opt.domain
+
+    if domain is None:
+        domain, coeffs_list = construct_domain(coeffs_list, opt=opt)
+    else:
+        coeffs_list = map(domain.from_sympy, coeffs_list)
+
+    for k in lengths:
+        all_coeffs.append(coeffs_list[:k])
+        coeffs_list = coeffs_list[k:]
+
+    polys, level = [], len(gens)-1
+
+    for monoms, coeffs in zip(all_monoms, all_coeffs):
+        rep = DMP.from_monoms_coeffs(monoms, coeffs, level, domain)
+        polys.append(Poly.new(rep, gens))
+
+    opt['gens'] = gens
+    opt['domain'] = domain
+
+    if opt.polys is None:
+        opt['polys'] = bool(_polys)
+
+    return polys, opt
 
 def NonStrictPoly(f, *gens, **args):
     """Create a Poly instance with `strict` keyword set.  """
@@ -2166,44 +2256,29 @@ def intervals(F, all=False, eps=None, inf=None, sup=None, strict=False, fast=Fal
 
         return F.intervals(all=all, eps=eps, inf=inf, sup=sup, fast=fast, sqf=sqf)
     else:
-        # XXX: the following should read:
-        #
-        #   F, gens, dom = parallel_from_basic(F)
-        #
-        #   if len(gens) > 1:
-        #       raise MultivariatePolynomialError("...")
-        #
-        #   (the same applies to groebner(), reduced() ...)
+        polys, opt = parallel_poly_from_expr(F, domain='QQ')
 
-        G, gens = [], set([])
+        if len(opt.gens) > 1:
+            raise MultivariatePolynomialError
 
-        for f in F:
-            try:
-                g = Poly(f, domain=QQ)
-
-                gens |= set(g.gens)
-
-                if len(gens) > 1:
-                    raise PolynomialError("multivariate polynomials are not supported")
-                else:
-                    G.append(g.rep.rep)
-            except GeneratorsNeeded:
-                G.append([])
+        for i, poly in enumerate(polys):
+            polys[i] = poly.rep.rep
 
         if eps is not None:
-            eps = QQ.convert(eps)
+            eps = opt.domain.convert(eps)
         if inf is not None:
-            inf = QQ.convert(inf)
+            inf = opt.domain.convert(inf)
         if sup is not None:
-            sup = QQ.convert(sup)
+            sup = opt.domain.convert(sup)
 
-        intervals = dup_isolate_real_roots_list(G, QQ,
+        intervals = dup_isolate_real_roots_list(polys, opt.domain,
             eps=eps, inf=inf, sup=sup, strict=strict, fast=fast)
 
         result = []
 
         for (s, t), indices in intervals:
-            result.append(((QQ.to_sympy(s), QQ.to_sympy(t)), indices))
+            s, t = opt.domain.to_sympy(s), opt.domain.to_sympy(t)
+            result.append(((s, t), indices))
 
         return result
 
@@ -2277,73 +2352,38 @@ def cancel(f, *gens, **args):
 
 def reduced(f, G, *gens, **args):
     """Reduces a polynomial `f` modulo a set of polynomials `G`. """
-    if 'modulus' in args:
-        raise PolynomialError("can't reduce a polynomial over a finite field")
+    polys, opt = parallel_poly_from_expr([f] + list(G), *gens, **args)
 
-    H = [f] + list(G)
+    for i, poly in enumerate(polys):
+        polys[i] = sdp_from_dict(poly.rep.to_dict(), opt.order)
 
-    order = options.Order.preprocess(args.pop('order', 'lex'))
-    basic = _should_return_basic(*H, **args)
+    level = len(opt.gens)-1
 
-    gens = _analyze_gens(gens)
+    Q, r = sdp_div(polys[0], polys[1:], level, opt.order, opt.domain)
 
-    H = [ Poly(h, *gens, **args) for h in H ]
-    dom, gens = H[0].get_domain(), H[0].gens
+    Q = [ Poly(DMP(dict(q), opt.domain, level), *opt.gens) for q in Q ]
+    r =   Poly(DMP(dict(r), opt.domain, level), *opt.gens)
 
-    for h in H[1:]:
-        gens = _unify_gens(gens, h.gens)
-        dom = dom.unify(h.get_domain(), gens)
-
-    lev = len(gens) - 1
-
-    for i, h in enumerate(H):
-        h = Poly(h, *gens, **{'domain': dom})
-        H[i] = sdp_from_dict(h.rep.to_dict(), order)
-
-    Q, r = sdp_div(H[0], H[1:], lev, order, dom)
-
-    Q = [ Poly(DMP(dict(q), dom, lev), *gens) for q in Q ]
-    r =   Poly(DMP(dict(r), dom, lev), *gens)
-
-    if basic:
+    if not opt.polys:
         return [ q.as_basic() for q in Q ], r.as_basic()
     else:
         return Q, r
 
 def groebner(F, *gens, **args):
     """Computes reduced Groebner basis for a set of polynomials. """
-    if 'modulus' in args:
-        raise PolynomialError("can't compute Groebner basis over a finite field")
-
-    order = options.Order.preprocess(args.pop('order', 'lex'))
-    monic = args.pop('monic', True)
-
-    basic = _should_return_basic(*F, **args)
-
     args = _update_args(args, 'field', True)
-    gens = _analyze_gens(gens)
 
-    if not F:
-        return []
+    polys, opt = parallel_poly_from_expr(F, *gens, **args)
 
-    F = [ Poly(f, *gens, **args) for f in F ]
-    dom, gens = F[0].get_domain(), F[0].gens
+    for i, poly in enumerate(polys):
+        polys[i] = sdp_from_dict(poly.rep.to_dict(), opt.order)
 
-    for f in F[1:]:
-        gens = _unify_gens(gens, f.gens)
-        dom = dom.unify(f.get_domain(), gens)
+    level = len(opt.gens)-1
 
-    lev = len(gens) - 1
+    G = sdp_groebner(polys, level, opt.order, opt.domain, monic=opt.monic)
+    G = [ Poly(DMP(dict(g), opt.domain, level), *opt.gens) for g in G ]
 
-    for i, f in enumerate(F):
-        f = Poly(f, *gens, **{'domain': dom})
-        F[i] = sdp_from_dict(f.rep.to_dict(), order)
-
-    G = sdp_groebner(F, lev, order, dom, monic=monic)
-
-    G = [ Poly(DMP(dict(g), dom, lev), *gens) for g in G ]
-
-    if basic:
+    if not opt.polys:
         return [ g.as_basic() for g in G ]
     else:
         return G

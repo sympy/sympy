@@ -66,3 +66,11 @@ class MultivariatePolynomialError(PolynomialError):
 class OptionError(Exception):
     pass
 
+class PolificationFailed(PolynomialError):
+
+    def __init__(self, origs, exprs):
+        self.origs = tuple(origs)
+        self.exprs = tuple(exprs)
+
+    def __str__(self): # pragma: no cover
+        return "can't construct polynomials from %s" % ', '.join(map(str, self.origs))

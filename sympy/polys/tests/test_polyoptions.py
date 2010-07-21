@@ -3,7 +3,7 @@
 from sympy.polys.polyoptions import (
     Options, Expand, Gens, Wrt, Sort, Order, Field, Greedy, Domain,
     Split, Gaussian, Extension, Modulus, Symmetric, Strict, Auto,
-    Frac, Formal, Polys, Include, Gen,
+    Frac, Formal, Polys, Include, Monic, Gen,
 )
 
 from sympy.polys.monomialtools import monomial_lex_key
@@ -59,19 +59,29 @@ def test_Wrt_postprocess():
     assert opt == {'wrt': ['x']}
 
 def test_Sort_preprocess():
-    pass
+    assert Sort.preprocess([x, y, z]) == ['x', 'y', 'z']
+    assert Sort.preprocess((x, y, z)) == ['x', 'y', 'z']
+
+    assert Sort.preprocess('x > y > z') == ['x', 'y', 'z']
+    assert Sort.preprocess('x>y>z') == ['x', 'y', 'z']
+
+    raises(OptionError, "Sort.preprocess(0)")
+    raises(OptionError, "Sort.preprocess(set([x, y, z]))")
 
 def test_Sort_postprocess():
-    opt = {'sort': 'x < y'}
+    opt = {'sort': 'x > y'}
     Sort.postprocess(opt)
 
-    assert opt == {'sort': 'x < y'}
+    assert opt == {'sort': 'x > y'}
 
 def test_Order_preprocess():
     assert Order.preprocess('lex') == monomial_lex_key
 
 def test_Order_postprocess():
-    raises(NotImplementedError, "Order.postprocess({})")
+    opt = {'order': True}
+    Order.postprocess(opt)
+
+    assert opt == {'order': True}
 
 def test_Field_preprocess():
     assert Field.preprocess(False) is False
@@ -348,6 +358,21 @@ def test_Include_postprocess():
     Include.postprocess(opt)
 
     assert opt == {'include': True}
+
+def test_Monic_preprocess():
+    assert Monic.preprocess(False) is False
+    assert Monic.preprocess(True) is True
+
+    assert Monic.preprocess(0) is False
+    assert Monic.preprocess(1) is True
+
+    raises(OptionError, "Monic.preprocess(x)")
+
+def test_Monic_postprocess():
+    opt = {'monic': True}
+    Monic.postprocess(opt)
+
+    assert opt == {'monic': True}
 
 def test_Gen_preprocess():
     pass
