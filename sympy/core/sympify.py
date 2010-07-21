@@ -170,6 +170,7 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False):
             if rational and code == 2: # a number
                 from sympy.core.numbers import Rational
                 rep = "(%s)" % str(Rational(sym))
+                rep = '*1/'.join(rep.split('/')) # in case we get a long int fraction
             elif code == 51: # an operator
                 if sym == '/':
                     rep = '*1/'

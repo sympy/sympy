@@ -43,6 +43,8 @@ def test_sympify1():
     assert sympify('222222222222/11111111111') == Rational(222222222222, 11111111111)
     # ... even if they come from repetend notation
     assert sympify('1/.2[123456789012]') == Rational(333333333333, 70781892967)
+    # ... or from high precision reals
+    assert sympify('.1234567890123456', rational=1) == Rational(19290123283179,  156250000000000)
 
 def test_sympify2():
     class A:

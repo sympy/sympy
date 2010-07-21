@@ -471,8 +471,8 @@ class Rational(Number):
         10000000000000001/100000000000000000
 
     Parsing needs for any other type of string for which a Rational is desired
-    can be handled with the q-option in sympify() which produces rationals from
-    strings like '.[3]' (=1/3) and '3/10' (=3/10).
+    can be handled with the rational=True option in sympify() which produces
+    rationals from strings like '.[3]' (=1/3) and '3/10' (=3/10).
 
     Low-level
     ---------
