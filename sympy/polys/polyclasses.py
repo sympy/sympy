@@ -235,6 +235,10 @@ class DMP(object):
 
         return rep
 
+    @classmethod
+    def from_monoms_coeffs(cls, monoms, coeffs, lev, dom):
+        return DMP(dict(zip(monoms, coeffs)), dom, lev)
+
     def to_ring(f):
         """Make the ground domain a field. """
         return f.convert(f.dom.get_ring())

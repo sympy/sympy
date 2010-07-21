@@ -2,6 +2,7 @@
 
 from polytools import (
     Poly, poly,
+    parallel_poly_from_expr,
     degree, degree_list,
     LC, LM, LT,
     pdiv, prem, pquo, pexquo,

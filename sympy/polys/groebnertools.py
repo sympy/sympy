@@ -527,7 +527,7 @@ def sdp_groebner(F, u, O, K, monic=True):
     F = [ f for f in F if f ]
 
     if not F:
-        return [[]]
+        return []
 
     R, P, G, B, I = set(), set(), set(), {}, {}
 
