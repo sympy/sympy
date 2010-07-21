@@ -353,6 +353,10 @@ class controlledMod(Gate):
         for i in reversed(range(t)):
             outarray.append((out>>i)&1)
         return Qbit(*outarray)
+
+def ensembleMeasure(state):
+    if isinstance(state, Add):
+        pass  
   
 def measure(qbit, state):
     state = state.expand()
@@ -364,6 +368,8 @@ def measure(qbit, state):
     prob1 = 0
     #Go through each item in the add and grab its probability
     #This will be used to determine probability of getting a 1
+    if isinstance(state, (Mul, Qbit)):
+        return state
     for item in state.args:
         if item.args[-1][qbit] == 1:
             prob1 += Mul(*item.args[0:-1])*Mul(*item.args[0:-1]).conjugate()
@@ -903,10 +909,9 @@ class Fourier(Gate):
 
 ####### ALU ######## TODO Get SetZero Actually working (for non-definite states) None of this is right yet
 
-def ADD(cls, InReg, InOutReg, carryReg, circuit):
+def ADD(InReg, InOutReg, carryReg, circuit):
     if len(InReg) != len(InOutReg):
         raise Exception("Input and Output Registers must be of same size")
-    circuit = 1
     for i in range(len(InReg)):
         if i != (len(InReg)-1):
             circuit = ToffoliGate(InReg[i], InOutReg[i], carryReg[i+1])*circuit
@@ -914,44 +919,75 @@ def ADD(cls, InReg, InOutReg, carryReg, circuit):
             circuit = ToffoliGate(InOutReg[i], carryReg[i], carryReg[i+1])*circuit
         circuit = CNOTGate(InReg[i], InOutReg[i])*circuit
         circuit = CNOTGate(carryReg[i], InOutReg[i])*circuit
+    circuit = apply_gates(circuit)
     for item in carryReg:
-        circuit = SetZero(item)*circuit
+        circuit = SetZero(item,circuit)
     return circuit
 
-def Bitshift(cls, Register, number, tempStorage):
-    circuit = SetZero(tempStorage)
+def Bitshift(Register, number, tempStorage, circuit):
+    circuit = SetZero(tempStorage, circuit)
     if number > 0:
         for i in range(abs(number)):
             circuit = SwapGate(Register[-1], tempStorage)*circuit
             for i in reversed(range(len(Register)-1)):
                 circuit = SwapGate(i, i+1)*circuit
-            circuit = SetZero(tempStorage)*circuit
+            circuit = apply_gates(circuit)
+            circuit = SetZero(tempStorage, circuit)
         return circuit
     elif number < 0:
         for i in range(abs(number)):
             circuit = SwapGate(Register[0], tempStorage)*circuit
             for i in range(len(Register)-1):
                 circuit = SwapGate(i, i+1)*circuit
-            circuit = SetZero(tempStorage)*circuit
+            circuit = apply_gates(circuit)
+            circuit = SetZero(tempStorage, circuit)
         return circuit
     else:
         return 1
 
-def Multiply(cls, InReg1, InReg2, OutReg, tempReg, carryReg):
-    circuit = 1
+def Multiply(InReg1, InReg2, OutReg, carryReg, circuit):
+    circuit = circuit.expand()
+    if isinstance(circuit, Add):
+        part = 0
+        for item in circuit.args:
+            part = part + Multiply(InReg1, InReg2, OutReg, carryReg, item)
+        return part
+    if isinstance(circuit, Mul):
+        return circuit.args[:-1]*Multiply(InReg1, InReg2, OutReg, carryReg, circuit.args[-1])
+
     for item in OutReg:
-        circuit = SetZero(item)*circuit
-    for item in tempReg:
-        circuit = SetZero(item)*circuit
+        circuit = SetZero(item, circuit)
+    for item in carryReg:
+        circuit = SetZero(item, circuit)
+    for i in InReg2:
+        if circuit[i] == 1:
+            circuit = ADD(InReg1, OutReg, carryReg, circuit)
+        circuit = Bitshift(InReg1, 1, carryReg[0], circuit)
+    return circuit
                     
 def SetZero(item, circuit):
-    measure(item,circuit)
+    circuit = measure(item,circuit)
     circuit = circuit.expand()
-    #This is more subtle than I had originally planned
-    #Can't make a gate do to distrutivity of Most gates, but not measurement
-    #I will fix this soon so that it works in all cases
-                
-      
+    if isinstance(circuit, Add):
+        if circuit.args[-1].args[-1][item] == 0:
+            return circuit
+        part = 0
+        for i in circuit.args:
+            part = part + i.args[:-1]*i.args[-1].flip(item)
+        return part
+    if isinstance(circuit, Qbit):
+        if circuit[item] == 0:
+            return circuit
+        return circuit.flip(item)
+    if isinstance(circuit, Mul):
+        if circuit.args[-1][item] == 0:
+            return circuit
+        return circuit.args[:-1]*circuit.args[-1].flip(item)
+    return circuit
+
+        
+        
+             
 class QFT(Fourier):
     def decompose(self):
         start = self.args[0]
