@@ -21,7 +21,7 @@ _re_gen = re.compile(r"^(.+?)(\d*)$")
 def _sort_gens(gens, **args):
     """Sort generators in a reasonably intelligent way. """
     from sympy.polys.polyoptions import build_options
-    opt = build_options(**args)
+    opt = build_options(args)
 
     gens_order, wrt = {}, None
 
@@ -272,7 +272,7 @@ def _dict_from_basic_no_gens(expr, opt):
 def parallel_dict_from_basic(exprs, **args):
     """Transform expressions into a multinomial form. """
     from sympy.polys.polyoptions import build_options
-    opt = build_options(**args)
+    opt = build_options(args)
 
     if opt.expand is not False:
         exprs = [ expr.expand() for expr in exprs ]
@@ -285,7 +285,7 @@ def parallel_dict_from_basic(exprs, **args):
 def dict_from_basic(expr, **args):
     """Transform an expression into a multinomial form. """
     from sympy.polys.polyoptions import build_options
-    opt = build_options(**args)
+    opt = build_options(args)
 
     if opt.expand is not False:
         expr = expr.expand()

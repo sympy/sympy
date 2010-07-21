@@ -1,7 +1,7 @@
 """Tests for user-friendly public interface to polynomial functions. """
 
 from sympy.polys.polytools import (
-    Poly, poly, _polify_basic,
+    Poly, poly,
     parallel_poly_from_expr,
     init_poly_from_dict,
     init_poly_from_list,
@@ -34,6 +34,7 @@ from sympy.polys.polyerrors import (
     OperationNotSupported,
     ExactQuotientFailed,
     PolificationFailed,
+    ComputationFailed,
     UnificationFailed,
     RefinementFailed,
     GeneratorsNeeded,
@@ -322,6 +323,14 @@ def test_Poly__gens():
 
     assert Poly((x-p)*(x-q), wrt='p', sort='q > x').gens == (p, q, x)
     assert Poly((x-p)*(x-q), wrt='q', sort='p > x').gens == (q, p, x)
+
+def test_Poly_zero():
+    assert Poly(x).zero == Poly(0, x, domain=ZZ)
+    assert Poly(x/2).zero == Poly(0, x, domain=QQ)
+
+def test_Poly_one():
+    assert Poly(x).one == Poly(1, x, domain=ZZ)
+    assert Poly(x/2).one == Poly(1, x, domain=QQ)
 
 def test_Poly__unify():
     raises(UnificationFailed, "Poly(x)._unify(y)")
@@ -830,7 +839,7 @@ def test_Poly_degree():
     assert degree(x*y**2, x, y) == 1
     assert degree(x*y**2, y, x) == 2
 
-    raises(GeneratorsNeeded, "degree(1)")
+    raises(ComputationFailed, "degree(1)")
 
 def test_Poly_degree_list():
     assert Poly(0, x).degree_list() == (-1,)
@@ -848,7 +857,7 @@ def test_Poly_degree_list():
 
     assert degree_list(x*y**2) == (1,2)
 
-    raises(GeneratorsNeeded, "degree_list(1)")
+    raises(ComputationFailed, "degree_list(1)")
 
 def test_Poly_total_degree():
     assert Poly(x**2*y+x**3*z**2+1).total_degree() == 6
@@ -1051,34 +1060,6 @@ def test_parallel_poly_from_expr():
 
     raises(PolificationFailed, "parallel_poly_from_expr([0, 1])")
 
-def test__polify_basic():
-    assert _polify_basic(x-1, x**2-1, x) == (Poly(x-1, x), Poly(x**2-1, x))
-    assert _polify_basic(Poly(x-1, x), x**2-1, x) == (Poly(x-1, x), Poly(x**2-1, x))
-    assert _polify_basic(x-1, Poly(x**2-1, x), x) == (Poly(x-1, x), Poly(x**2-1, x))
-    assert _polify_basic(Poly(x-1, x), Poly(x**2-1, x), x) == (Poly(x-1, x), Poly(x**2-1, x))
-
-    assert _polify_basic(x-1, x**2-1, x, y) == (Poly(x-1, x, y), Poly(x**2-1, x, y))
-    assert _polify_basic(Poly(x-1, x), x**2-1, x, y) == (Poly(x-1, x, y), Poly(x**2-1, x, y))
-    assert _polify_basic(x-1, Poly(x**2-1, x), x, y) == (Poly(x-1, x, y), Poly(x**2-1, x, y))
-    assert _polify_basic(Poly(x-1, x), Poly(x**2-1, x), x, y) == (Poly(x-1, x, y), Poly(x**2-1, x, y))
-
-    assert _polify_basic(x-1, x**2-1) == (Poly(x-1, x), Poly(x**2-1, x))
-    assert _polify_basic(Poly(x-1, x), x**2-1) == (Poly(x-1, x), Poly(x**2-1, x))
-    assert _polify_basic(x-1, Poly(x**2-1, x)) == (Poly(x-1, x), Poly(x**2-1, x))
-    assert _polify_basic(Poly(x-1, x), Poly(x**2-1, x)) == (Poly(x-1, x), Poly(x**2-1, x))
-
-    assert _polify_basic(1, x**2-1) == (Poly(1, x), Poly(x**2-1, x))
-    assert _polify_basic(1, x**2-1) == (Poly(1, x), Poly(x**2-1, x))
-    assert _polify_basic(1, Poly(x**2-1, x)) == (Poly(1, x), Poly(x**2-1, x))
-    assert _polify_basic(1, Poly(x**2-1, x)) == (Poly(1, x), Poly(x**2-1, x))
-
-    assert _polify_basic(x**2-1, 1) == (Poly(x**2-1, x), Poly(1, x))
-    assert _polify_basic(x**2-1, 1) == (Poly(x**2-1, x), Poly(1, x))
-    assert _polify_basic(Poly(x**2-1, x), 1) == (Poly(x**2-1, x), Poly(1, x))
-    assert _polify_basic(Poly(x**2-1, x), 1) == (Poly(x**2-1, x), Poly(1, x))
-
-    raises(CoercionFailed, "_polify_basic(1, 2)")
-
 def test_pdiv():
     f, g = x**2 - y**2, x - y
     q, r = x + y, 0
@@ -1120,10 +1101,10 @@ def test_pdiv():
     assert pquo(F, G, polys=False) == q
     assert prem(F, G, polys=False) == r
 
-    raises(GeneratorsNeeded, "pdiv(4, 2)")
-    raises(GeneratorsNeeded, "pexquo(4, 2)")
-    raises(GeneratorsNeeded, "pquo(4, 2)")
-    raises(GeneratorsNeeded, "prem(4, 2)")
+    raises(ComputationFailed, "pdiv(4, 2)")
+    raises(ComputationFailed, "pexquo(4, 2)")
+    raises(ComputationFailed, "pquo(4, 2)")
+    raises(ComputationFailed, "prem(4, 2)")
 
 def test_div():
     f, g = x**2 - y**2, x - y
@@ -1166,10 +1147,10 @@ def test_div():
     assert quo(F, G, polys=False) == q
     assert rem(F, G, polys=False) == r
 
-    raises(GeneratorsNeeded, "div(4, 2)")
-    raises(GeneratorsNeeded, "exquo(4, 2)")
-    raises(GeneratorsNeeded, "quo(4, 2)")
-    raises(GeneratorsNeeded, "rem(4, 2)")
+    raises(ComputationFailed, "div(4, 2)")
+    raises(ComputationFailed, "exquo(4, 2)")
+    raises(ComputationFailed, "quo(4, 2)")
+    raises(ComputationFailed, "rem(4, 2)")
 
 def test_gcdex():
     f, g = 2*x, x**2 - 16
@@ -1231,7 +1212,7 @@ def test_subresultants():
     assert subresultants(f, g, polys=True) == [F, G, H]
     assert subresultants(F, G, polys=False) == [f, g, h]
 
-    raises(GeneratorsNeeded, "subresultants(4, 2)")
+    raises(ComputationFailed, "subresultants(4, 2)")
 
 def test_resultant():
     f, g, h = x**2 - 2*x + 1, x**2 - 1, 0
@@ -1256,7 +1237,7 @@ def test_resultant():
     assert resultant(f, g, polys=True) == H
     assert resultant(F, G, polys=False) == h
 
-    raises(GeneratorsNeeded, "resultant(4, 2)")
+    raises(ComputationFailed, "resultant(4, 2)")
 
 def test_discriminant():
     f, g = x**3 + 3*x**2 + 9*x - 13, -11664
@@ -1281,7 +1262,7 @@ def test_discriminant():
     assert discriminant(f, polys=True) == G
     assert discriminant(F, polys=False) == g
 
-    raises(GeneratorsNeeded, "discriminant(4)")
+    raises(ComputationFailed, "discriminant(4)")
 
 def test_gcd():
     f, g = x**3 - 1, x**2 - 1
@@ -1411,7 +1392,7 @@ def test_monic():
     assert monic(f, polys=True) == G
     assert monic(F, polys=False) == g
 
-    raises(GeneratorsNeeded, "monic(4)")
+    raises(ComputationFailed, "monic(4)")
 
     assert monic(2*x**2 + 6*x + 4, auto=False) == x**2 + 3*x + 2
     raises(ExactQuotientFailed, "monic(2*x + 6*x + 1, auto=False)")
@@ -1425,7 +1406,7 @@ def test_content():
     F.content() == 2
     content(f) == 2
 
-    raises(GeneratorsNeeded, "content(4)")
+    raises(ComputationFailed, "content(4)")
 
     f = Poly(2*x, modulus=3)
 
@@ -1443,7 +1424,7 @@ def test_primitive():
     assert primitive(f, polys=True) == (2, G)
     assert primitive(F, polys=False) == (2, g)
 
-    raises(GeneratorsNeeded, "primitive(4)")
+    raises(ComputationFailed, "primitive(4)")
 
     f = Poly(2*x, modulus=3)
 
@@ -1472,8 +1453,8 @@ def test_compose():
     assert decompose(f, polys=True) == [G, H]
     assert decompose(F, polys=False) == [g, h]
 
-    raises(GeneratorsNeeded, "compose(4, 2)")
-    raises(GeneratorsNeeded, "decompose(4)")
+    raises(ComputationFailed, "compose(4, 2)")
+    raises(ComputationFailed, "decompose(4)")
 
     assert compose(x**2 - y**2, x - y, x, y) ==  x**2 - 2*x*y
     assert compose(x**2 - y**2, x - y, y, x) == -y**2 + 2*x*y
@@ -1490,7 +1471,7 @@ def test_sturm():
     assert sturm(f, polys=True) == [F, G]
     assert sturm(F, polys=False) == [f, g]
 
-    raises(GeneratorsNeeded, "sturm(4)")
+    raises(ComputationFailed, "sturm(4)")
     raises(DomainError, "sturm(f, auto=False)")
 
     f = Poly(S(1024)/(15625*pi**8)*x**5   \
@@ -1563,8 +1544,8 @@ def test_sqf():
     assert F.sqf_list_include() == [(G, 1), (H, 2)]
     assert sqf_list(f, include=True) == [(g, 1), (h, 2)]
 
-    raises(GeneratorsNeeded, "sqf_part(4)")
-    raises(GeneratorsNeeded, "sqf_list(4)")
+    raises(ComputationFailed, "sqf_part(4)")
+    raises(ComputationFailed, "sqf_list(4)")
 
     assert sqf(1) == 1
     assert sqf(1, frac=True) == 1
@@ -1586,6 +1567,12 @@ def test_sqf():
     assert sqf(6*x - 10) == Mul(2, 3*x - 5, evaluate=False)
 
     assert sqf((6*x - 10)/(3*x - 6), frac=True) == S(2)/3*((3*x - 5)/(x - 2))
+    assert sqf(Poly(x**2 - 2*x + 1), frac=True) == (x - 1)**2
+
+    f = 3 + x - x*(1 + x) + x**2
+
+    assert sqf(f) == 3
+    assert sqf(f, frac=True) == 3
 
 def test_factor():
     f = x**5 - x**3 - x**2 + 1
@@ -1607,7 +1594,7 @@ def test_factor():
     assert F.factor_list_include() == [(U, 1), (V, 2), (W, 1)]
     assert factor_list(f, include=True) == [(u, 1), (v, 2), (w, 1)]
 
-    raises(GeneratorsNeeded, "factor_list(4)")
+    raises(ComputationFailed, "factor_list(4)")
 
     assert factor(1) == 1
     assert factor(1, frac=True) == 1
@@ -1662,6 +1649,13 @@ def test_factor():
 
     assert factor(f) == y*(sin(x) + 1)/(pi**2 + 2*pi + 1)
     assert factor(f, frac=True) == y*(sin(x) + 1)/(pi + 1)**2
+
+    assert factor(Poly(x**2 - 2*x + 1), frac=True) == (x - 1)**2
+
+    f = 3 + x - x*(1 + x) + x**2
+
+    assert factor(f) == 3
+    assert factor(f, frac=True) == 3
 
 def test_intervals():
     assert intervals(0) == []
@@ -1993,14 +1987,8 @@ def test_groebner():
     assert sum([ q*g for q, g in zip(Q, G)]) + r == Poly(f, modulus=7)
 
 def test_symmetrize():
-    assert symmetrize(0) == (0, 0)
-    assert symmetrize(1) == (1, 0)
-
     assert symmetrize(0, x, y, z) == (0, 0)
     assert symmetrize(1, x, y, z) == (1, 0)
-
-    assert symmetrize(0, formal=True) == (0, 0, {})
-    assert symmetrize(1, formal=True) == (1, 0, {})
 
     s1 = x + y + z
     s2 = x*y + x*z + y*z

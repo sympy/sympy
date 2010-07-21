@@ -190,7 +190,8 @@ class Domain(object):
         if gens is not None:
             if (K0.is_Composite and (set(K0.gens) & set(gens))) or (K1.is_Composite and (set(K1.gens) & set(gens))):
                 raise UnificationFailed("can't unify %s with %s, given %s generators" % (K0, K1, tuple(gens)))
-        elif K0 == K1:
+
+        if K0 == K1:
             return K0
 
         if not K0.has_CharacteristicZero:

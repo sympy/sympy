@@ -54,6 +54,16 @@ class UnificationFailed(Exception):
 class GeneratorsNeeded(Exception):
     pass
 
+class ComputationFailed(Exception):
+
+    def __init__(self, func, nargs, exc):
+        self.func = func
+        self.nargs = nargs
+        self.exc = exc
+
+    def __str__(self):
+        return "%s(%s) failed without generators" % (self.func, ', '.join(map(str, self.exc.exprs[:self.nargs])))
+
 class GeneratorsError(Exception):
     pass
 
@@ -66,11 +76,25 @@ class MultivariatePolynomialError(PolynomialError):
 class OptionError(Exception):
     pass
 
+class FlagError(OptionError):
+    pass
+
 class PolificationFailed(PolynomialError):
 
-    def __init__(self, origs, exprs):
-        self.origs = tuple(origs)
-        self.exprs = tuple(exprs)
+    def __init__(self, origs, exprs, seq=False):
+        if not seq:
+            self.orig = origs
+            self.expr = exprs
+            self.origs = [origs]
+            self.exprs = [exprs]
+        else:
+            self.origs = origs
+            self.exprs = exprs
+
+        self.seq = seq
 
     def __str__(self): # pragma: no cover
-        return "can't construct polynomials from %s" % ', '.join(map(str, self.origs))
+        if not self.seq:
+            return "can't construct a polynomial from %s" % str(self.orig)
+        else:
+            return "can't construct polynomials from %s" % ', '.join(map(str, self.origs))
