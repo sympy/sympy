@@ -23,6 +23,9 @@ from polytools import (
     real_roots, nroots,
     cancel,
     reduced, groebner,
+)
+
+from polyfuncs import (
     symmetrize,
     horner,
 )
