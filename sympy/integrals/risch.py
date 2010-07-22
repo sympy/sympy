@@ -449,7 +449,7 @@ def integrate_hyperexponential(a, d, D, T, Tfuncs):
 
     This function returns a Basic expression.
     """
-    # XXX: a and d must be canceled, or this might not return correct results
+    # XXX: a and d must be canceled, or this might return incorrect results
     t = T[-1]
     x = T[0]
     z = Symbol('z', dummy=True)

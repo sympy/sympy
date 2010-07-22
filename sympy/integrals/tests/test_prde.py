@@ -1,7 +1,8 @@
 """Most of these tests come from the examples in Bronstein's book."""
 from sympy import Poly, Matrix
 from sympy.integrals.prde import (prde_normal_denom, prde_special_denom,
-    prde_linear_constraints, is_log_deriv_k_t_radical, parametric_log_deriv_heu)
+    prde_linear_constraints, constant_system, is_log_deriv_k_t_radical,
+    parametric_log_deriv_heu)
 
 from sympy.abc import x, t
 
@@ -45,6 +46,17 @@ def test_prde_linear_constraints():
     D = [Poly(1, x), Poly(t, t)]
     assert prde_linear_constraints(Poly(t + 1, t), Poly(t**2, t), G, D, [x, t]) == \
         ((Poly(t, t), Poly(t**2, t), Poly(t**3, t)), Matrix())
+
+def test_constant_system():
+    A = Matrix([[-(x + 3)/(x - 1), (x + 1)/(x - 1), 1],
+                [-x - 3, x + 1, x - 1],
+                [2*(x + 3)/(x - 1), 0, 0]])
+    u = Matrix([(x + 1)/(x - 1), x + 1, 0])
+    assert constant_system(A, u, [Poly(1, x)], [x]) == \
+        (Matrix([[1, 0, 0],
+                 [0, 1, 0],
+                 [0, 0, 0],
+                 [0, 0, 1]]), Matrix([0, 1, 0, 0]))
 
 def test_is_log_deriv_k_t_radical():
     pass

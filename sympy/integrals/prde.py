@@ -142,6 +142,56 @@ def prde_linear_constraints(a, b, G, D, T):
 
     return (zip(*Q)[0], M)
 
+def constant_system(A, u, D, T):
+    """
+    Generate a system for the constant solutions.
+
+    Given a differential field (K, D) with constant field C = Const(K), a Matrix
+    A, and a vector (Matrix) u with coefficients in K, returns the tuple
+    (B, v, s), where B is a Matrix with coefficients in C and v is a vector
+    (Matrix) such that either v has coefficients in C, in which case s is True
+    and the solutions in C of Ax == u are exactly all the solutions of Bx == v,
+    or v has a nonconstant coefficient, in which case s is False Ax == u has no
+    constant solution.
+
+    This algorithm is used both in solving parametric problems and in
+    determining if an element a of K is a derivative of an element of K or the
+    logarithmic derivative of a K-radical using the structure theorem approach.
+
+    Because Poly does not play well with Matrix yet, this algorithm assumes that
+    all matrix entries are Basic expressions.
+    """
+    t = T[-1]
+
+    Au = A.row_join(u)
+    Au = Au.rref(simplified=True, simplify=cancel)[0]
+    Au = Au.applyfunc(cancel)
+    A, u = Au[:, :-1], Au[:, -1]
+
+    for j in range(A.cols):
+        for i in range(A.rows):
+            if A[i, j].has_any_symbols(*T):
+                # This assumes that const(F(t0, ..., tn) == const(K) == F
+                Ri = A[i, :]
+                # Rm+1; m = A.rows
+                Rm1 = Ri.applyfunc(lambda x: derivation(x, D, T, basic=True)/
+                    derivation(A[i, j], D, T, basic=True))
+                Rm1 = Rm1.applyfunc(cancel)
+                um1 = cancel(derivation(u[i], D, T, basic=True)/
+                    derivation(A[i, j], D, T, basic=True))
+
+                for s in range(A.rows):
+                    # A[s, :] = A[s, :] - A[s, i]*A[:, m+1]
+                    Asj = A[s, j]
+                    A.row(s, lambda r, jj: cancel(r - Asj*Rm1[jj]))
+                    # u[s] = u[s] - A[s, j]*u[m+1
+                    u.row(s, lambda r, jj: cancel(r - Asj*um1))
+
+                A = A.col_join(Rm1)
+                u = u.col_join(Matrix([um1]))
+
+    return (A, u)
+
 def param_rischDE(fa, fd, G, D, T):
     """
     Solve a Parametric Risch Differential Equation: Dy + f*y == Sum(ci*Gi, (i, 1, m)).
@@ -332,7 +382,7 @@ def is_log_deriv_k_t_radical(fa, fd, D, T, case='auto'):
         raise ValueError("The %s case is not supported in this function." % case)
 
     else:
-        raise ValueError("case must be one of {'primitive', 'exp', 'tan', "+
+        raise ValueError("case must be one of {'primitive', 'exp', 'tan', " +
         "'base', 'auto'}, not %s""" % case)
 
     return (n, u)
