@@ -15,7 +15,8 @@ from sympy.core.basic import S, Basic
 from sympy.core.symbol import Symbol
 from sympy.core.numbers import NumberSymbol
 from sympy.functions import Piecewise, piecewise_fold
-from sympy.tensor import Idx
+from sympy.tensor import Idx, IndexedElement
+from sympy.tensor.index_methods import get_indices, get_contraction_structure
 
 
 # dictionary mapping sympy function to (argument_conditions, C_function).
@@ -98,34 +99,75 @@ class CCodePrinter(StrPrinter):
         return result
 
     def _doprint_a_piece(self, expr, assign_to=None):
+        # Here we print an expression that may contain IndexedElement objects, they
+        # correspond to arrays in the generated code.  The low-level implementation
+        # involves looping over array elements and possibly storing results in temporary
+        # variables or accumulate it in the assign_to object.
 
-        # Setup loops if expression contain Indexed objects
-        openloop, closeloop, local_ints = self._get_loop_opening_ending_ints(expr)
+        rc, rnc = get_indices(expr)
+        if rc + rnc:
+            if not isinstance(assign_to, IndexedElement):
+                raise TypeError("array result requires that assign_to is an IndexedElement")
+            lc, lnc = get_indices(assign_to)
+            if rc + rnc != lc + lnc:
+                raise ValueError("lhs indices must match rhs indices")
 
-        # the lhs may contain loops that are not in the rhs
-        lhs = assign_to
-        if lhs:
-            open_lhs, close_lhs, lhs_ints = self._get_loop_opening_ending_ints(lhs)
-            for n,ind in enumerate(lhs_ints):
-                if ind not in local_ints:
-                    openloop.insert(0, open_lhs[n])
-                    closeloop.append(close_lhs[n])
-            lhs_printed = self._print(lhs)
+        # Setup loops over non-dummy indices  --  all terms need these
+        openloop, closeloop, junk = self._get_loop_opening_ending_ints(rc + rnc)
 
-        lines = openloop
-        line = StrPrinter.doprint(self, expr)
-        if assign_to is None:
-            text = "%s" % line
+        lhs_printed = self._print(assign_to)
+        lines = []
+
+        # Setup loops over dummy indices  --  each term needs separate treatment
+        d = get_contraction_structure(expr)
+        if len(d) == 1 and d.keys()[0] is None:
+            # no summations
+            lines.extend(openloop)
+            text = StrPrinter.doprint(self, expr)
+            if assign_to is not None:
+                text = "%s = %s;" % (lhs_printed, text)
+            lines.append(text)
+            lines.extend(closeloop)
         else:
-            text = "%s = %s;" % (lhs_printed, line)
-        lines.append(text)
-        lines.extend(closeloop)
+            # there are summations
+            for dummies in d:
+                if isinstance(dummies, tuple):
+                    openloop_d, closeloop_d, junk = self._get_loop_opening_ending_ints(dummies)
+
+                    for term in d[dummies]:
+                        if term in d:
+                            # one factor in the term has an internal summation that
+                            # must be computed first, we need temporary variables
+                            raise NotImplementedError("FIXME: no support for nested Add yet")
+                        else:
+
+                            # We need the lhs expression as an accumulator for
+                            # the loops, i.e
+                            #
+                            # for (int d=0; d < dim; d++){
+                            #    lhs[] = lhs[] + term[][d]
+                            # }           ^.................. the accumulator
+                            #
+                            # We check if the expression already contains the
+                            # lhs, and raise an exception if it does, as that
+                            # syntax is currently undefined.  FIXME: What is a
+                            # good interpretation of this?
+                            if term.has(assign_to):
+                                raise(ValueError("FIXME: lhs present in rhs,\
+                                    this is undefined in CCodePrinter"))
+
+                            lines.extend(openloop)
+                            lines.extend(openloop_d)
+                            text = "%s = %s;" % (lhs_printed, StrPrinter.doprint(self, assign_to + expr))
+                            lines.append(text)
+                            lines.extend(closeloop_d)
+                            lines.extend(closeloop)
+
         return lines
 
-    def _get_loop_opening_ending_ints(self, expr):
+    def _get_loop_opening_ending_ints(self, indices):
         """Returns a tuple (open_lines, close_lines) containing lists of codelines
         """
-        indices = expr.atoms(Idx)
         # FIXME: sort indices in an optimized way
         open_lines = []
         close_lines = []
