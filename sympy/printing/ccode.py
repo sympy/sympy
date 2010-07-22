@@ -165,7 +165,7 @@ class CCodePrinter(StrPrinter):
         for i in reversed(range(expr.rank)):
             elem += offset*inds[i]
             offset *= dims[i]
-        return "%s[%s]" % (self._print(expr.stem), self._print(elem))
+        return "%s[%s]" % (self._print(expr.stem.label), self._print(elem))
 
     def _print_Exp1(self, expr):
         return "M_E"

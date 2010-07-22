@@ -105,7 +105,7 @@ def test_ccode_Indexed():
     B = Indexed('B')(Idx(i, m), Idx(j, n), Idx(k, o))
     assert p._print_IndexedElement(B) == 'B[%s]'% str(k + i*n*o + j*o)
 
-    assert p._not_c == set([Indexed('x'), Indexed('A'), Indexed('B')])
+    assert p._not_c == set()
 
 
 @XFAIL
