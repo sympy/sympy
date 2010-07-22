@@ -2,6 +2,7 @@
 
 from sympy import S, Basic, sympify, Integer, Rational, Symbol, Add, Mul, Pow, ask
 from sympy.polys.polyerrors import PolynomialError, GeneratorsNeeded
+from sympy.polys.polyoptions import build_options
 
 import re
 
@@ -20,7 +21,6 @@ _re_gen = re.compile(r"^(.+?)(\d*)$")
 
 def _sort_gens(gens, **args):
     """Sort generators in a reasonably intelligent way. """
-    from sympy.polys.polyoptions import build_options
     opt = build_options(args)
 
     gens_order, wrt = {}, None
@@ -271,7 +271,6 @@ def _dict_from_basic_no_gens(expr, opt):
 
 def parallel_dict_from_basic(exprs, **args):
     """Transform expressions into a multinomial form. """
-    from sympy.polys.polyoptions import build_options
     opt = build_options(args)
 
     if opt.expand is not False:
@@ -284,7 +283,6 @@ def parallel_dict_from_basic(exprs, **args):
 
 def dict_from_basic(expr, **args):
     """Transform an expression into a multinomial form. """
-    from sympy.polys.polyoptions import build_options
     opt = build_options(args)
 
     if opt.expand is not False:
@@ -330,3 +328,26 @@ def _dict_reorder(rep, gens, new_gens):
 
     return map(tuple, new_monoms), coeffs
 
+def _parallel_dict_from_expr(exprs, opt):
+    """Transform expressions into a multinomial form. """
+    if opt.expand is not False:
+        exprs = [ expr.expand() for expr in exprs ]
+
+    if opt.gens:
+        reps, gens = _parallel_dict_from_basic_if_gens(exprs, opt)
+    else:
+        reps, gens = _parallel_dict_from_basic_no_gens(exprs, opt)
+
+    return reps, opt.clone({'gens': gens})
+
+def _dict_from_expr(expr, opt):
+    """Transform an expression into a multinomial form. """
+    if opt.expand is not False:
+        expr = expr.expand()
+
+    if opt.gens:
+        rep, gens = _dict_from_basic_if_gens(expr, opt)
+    else:
+        rep, gens = _dict_from_basic_no_gens(expr, opt)
+
+    return rep, opt.clone({'gens': gens})

@@ -236,6 +236,11 @@ class DMP(object):
         return rep
 
     @classmethod
+    def from_dict(cls, rep, lev, dom):
+        """Construct and instance of ``cls`` from a ``dict`` representation. """
+        return cls(dmp_from_dict(rep, lev, dom), dom, lev)
+
+    @classmethod
     def from_monoms_coeffs(cls, monoms, coeffs, lev, dom):
         return DMP(dict(zip(monoms, coeffs)), dom, lev)
 

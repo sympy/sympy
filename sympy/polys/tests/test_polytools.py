@@ -3,10 +3,6 @@
 from sympy.polys.polytools import (
     Poly, poly,
     parallel_poly_from_expr,
-    init_poly_from_dict,
-    init_poly_from_list,
-    init_poly_from_poly,
-    init_poly_from_basic,
     degree, degree_list,
     LC, LM, LT,
     pdiv, prem, pquo, pexquo,
@@ -31,6 +27,7 @@ from sympy.polys.polytools import (
 )
 
 from sympy.polys.polyerrors import (
+    MultivariatePolynomialError,
     OperationNotSupported,
     ExactQuotientFailed,
     PolificationFailed,
@@ -69,168 +66,153 @@ def _eq(a, b):
             return False
     return True
 
-def test_init_poly_from_dict():
+def test_Poly_from_dict():
     K = FF(3)
 
-    assert init_poly_from_dict({0: 1, 1: 2}, gens=x, domain=K) == DMP([K(2),K(1)], K)
-    assert init_poly_from_dict({0: 1, 1: 5}, gens=x, domain=K) == DMP([K(2),K(1)], K)
+    assert Poly.from_dict({0: 1, 1: 2}, gens=x, domain=K).rep == DMP([K(2),K(1)], K)
+    assert Poly.from_dict({0: 1, 1: 5}, gens=x, domain=K).rep == DMP([K(2),K(1)], K)
 
-    assert init_poly_from_dict({(0,): 1, (1,): 2}, gens=x, domain=K) == DMP([K(2),K(1)], K)
-    assert init_poly_from_dict({(0,): 1, (1,): 5}, gens=x, domain=K) == DMP([K(2),K(1)], K)
+    assert Poly.from_dict({(0,): 1, (1,): 2}, gens=x, domain=K).rep == DMP([K(2),K(1)], K)
+    assert Poly.from_dict({(0,): 1, (1,): 5}, gens=x, domain=K).rep == DMP([K(2),K(1)], K)
 
-    assert init_poly_from_dict({(0, 0): 1, (1, 1): 2}, gens=(x,y), domain=K) == DMP([[K(2),K(0)],[K(1)]],  K)
+    assert Poly.from_dict({(0, 0): 1, (1, 1): 2}, gens=(x,y), domain=K).rep == DMP([[K(2),K(0)],[K(1)]],  K)
 
-    assert init_poly_from_dict({0: 1, 1: 2}, gens=x) == DMP([ZZ(2),ZZ(1)], ZZ)
-    assert init_poly_from_dict({0: 1, 1: 2}, gens=x, field=True) == DMP([QQ(2),QQ(1)], QQ)
+    assert Poly.from_dict({0: 1, 1: 2}, gens=x).rep == DMP([ZZ(2),ZZ(1)], ZZ)
+    assert Poly.from_dict({0: 1, 1: 2}, gens=x, field=True).rep == DMP([QQ(2),QQ(1)], QQ)
 
-    assert init_poly_from_dict({0: 1, 1: 2}, gens=x, domain=ZZ) == DMP([ZZ(2),ZZ(1)], ZZ)
-    assert init_poly_from_dict({0: 1, 1: 2}, gens=x, domain=QQ) == DMP([QQ(2),QQ(1)], QQ)
+    assert Poly.from_dict({0: 1, 1: 2}, gens=x, domain=ZZ).rep == DMP([ZZ(2),ZZ(1)], ZZ)
+    assert Poly.from_dict({0: 1, 1: 2}, gens=x, domain=QQ).rep == DMP([QQ(2),QQ(1)], QQ)
 
-    assert init_poly_from_dict({(0,): 1, (1,): 2}, gens=x) == DMP([ZZ(2),ZZ(1)], ZZ)
-    assert init_poly_from_dict({(0,): 1, (1,): 2}, gens=x, field=True) == DMP([QQ(2),QQ(1)], QQ)
+    assert Poly.from_dict({(0,): 1, (1,): 2}, gens=x).rep == DMP([ZZ(2),ZZ(1)], ZZ)
+    assert Poly.from_dict({(0,): 1, (1,): 2}, gens=x, field=True).rep == DMP([QQ(2),QQ(1)], QQ)
 
-    assert init_poly_from_dict({(0,): 1, (1,): 2}, gens=x, domain=ZZ) == DMP([ZZ(2),ZZ(1)], ZZ)
-    assert init_poly_from_dict({(0,): 1, (1,): 2}, gens=x, domain=QQ) == DMP([QQ(2),QQ(1)], QQ)
+    assert Poly.from_dict({(0,): 1, (1,): 2}, gens=x, domain=ZZ).rep == DMP([ZZ(2),ZZ(1)], ZZ)
+    assert Poly.from_dict({(0,): 1, (1,): 2}, gens=x, domain=QQ).rep == DMP([QQ(2),QQ(1)], QQ)
 
-def test_init_poly_from_list():
+def test_Poly_from_list():
     K = FF(3)
 
-    assert init_poly_from_list([2,1], gens=x, domain=K) == DMP([K(2),K(1)], K)
-    assert init_poly_from_list([5,1], gens=x, domain=K) == DMP([K(2),K(1)], K)
+    assert Poly.from_list([2,1], gens=x, domain=K).rep == DMP([K(2),K(1)], K)
+    assert Poly.from_list([5,1], gens=x, domain=K).rep == DMP([K(2),K(1)], K)
 
-    assert init_poly_from_list([2,1], gens=x) == DMP([ZZ(2),ZZ(1)], ZZ)
-    assert init_poly_from_list([2,1], gens=x, field=True) == DMP([QQ(2),QQ(1)], QQ)
+    assert Poly.from_list([2,1], gens=x).rep == DMP([ZZ(2),ZZ(1)], ZZ)
+    assert Poly.from_list([2,1], gens=x, field=True).rep == DMP([QQ(2),QQ(1)], QQ)
 
-    assert init_poly_from_list([2,1], gens=x, domain=ZZ) == DMP([ZZ(2),ZZ(1)], ZZ)
-    assert init_poly_from_list([2,1], gens=x, domain=QQ) == DMP([QQ(2),QQ(1)], QQ)
+    assert Poly.from_list([2,1], gens=x, domain=ZZ).rep == DMP([ZZ(2),ZZ(1)], ZZ)
+    assert Poly.from_list([2,1], gens=x, domain=QQ).rep == DMP([QQ(2),QQ(1)], QQ)
 
-    raises(PolynomialError, "init_poly_from_list([[]], gens=(x,y))")
+    raises(MultivariatePolynomialError, "Poly.from_list([[]], gens=(x,y))")
 
-def test_init_poly_from_poly():
+def test_Poly_from_poly():
     f = Poly(x+7, x, domain=ZZ)
     g = Poly(x+2, x, modulus=3)
     h = Poly(x+y, x, y, domain=ZZ)
 
     K = FF(3)
 
-    assert init_poly_from_poly(f) == f
-    assert init_poly_from_poly(f, domain=K) == (DMP([K(1),K(1)], K), (x,))
-    assert init_poly_from_poly(f, domain=ZZ) == (DMP([1,7], ZZ), (x,))
-    assert init_poly_from_poly(f, domain=QQ) == (DMP([1,7], QQ), (x,))
+    assert Poly.from_poly(f) == f
+    assert Poly.from_poly(f, domain=K).rep == DMP([K(1),K(1)], K)
+    assert Poly.from_poly(f, domain=ZZ).rep == DMP([1,7], ZZ)
+    assert Poly.from_poly(f, domain=QQ).rep == DMP([1,7], QQ)
 
-    assert init_poly_from_poly(f, gens=x) == f
-    assert init_poly_from_poly(f, gens=x, domain=K) == (DMP([K(1),K(1)], K), (x,))
-    assert init_poly_from_poly(f, gens=x, domain=ZZ) == (DMP([1,7], ZZ), (x,))
-    assert init_poly_from_poly(f, gens=x, domain=QQ) == (DMP([1,7], QQ), (x,))
+    assert Poly.from_poly(f, gens=x) == f
+    assert Poly.from_poly(f, gens=x, domain=K).rep == DMP([K(1),K(1)], K)
+    assert Poly.from_poly(f, gens=x, domain=ZZ).rep == DMP([1,7], ZZ)
+    assert Poly.from_poly(f, gens=x, domain=QQ).rep == DMP([1,7], QQ)
 
-    assert init_poly_from_poly(f, gens=y) == Poly(x + 7, y, domain='ZZ[x]')
-    raises(CoercionFailed, "init_poly_from_poly(f, gens=y, domain=K)")
-    raises(CoercionFailed, "init_poly_from_poly(f, gens=y, domain=ZZ)")
-    raises(CoercionFailed, "init_poly_from_poly(f, gens=y, domain=QQ)")
+    assert Poly.from_poly(f, gens=y) == Poly(x + 7, y, domain='ZZ[x]')
+    raises(CoercionFailed, "Poly.from_poly(f, gens=y, domain=K)")
+    raises(CoercionFailed, "Poly.from_poly(f, gens=y, domain=ZZ)")
+    raises(CoercionFailed, "Poly.from_poly(f, gens=y, domain=QQ)")
 
-    assert init_poly_from_poly(f, gens=(x,y)) == Poly(x + 7, x, y, domain='ZZ')
-    assert init_poly_from_poly(f, gens=(x,y), domain=ZZ) == Poly(x + 7, x, y, domain='ZZ')
-    assert init_poly_from_poly(f, gens=(x,y), domain=QQ) == Poly(x + 7, x, y, domain='QQ')
-    assert init_poly_from_poly(f, gens=(x,y), modulus=3) == Poly(x + 7, x, y, domain='FF(3)')
+    assert Poly.from_poly(f, gens=(x,y)) == Poly(x + 7, x, y, domain='ZZ')
+    assert Poly.from_poly(f, gens=(x,y), domain=ZZ) == Poly(x + 7, x, y, domain='ZZ')
+    assert Poly.from_poly(f, gens=(x,y), domain=QQ) == Poly(x + 7, x, y, domain='QQ')
+    assert Poly.from_poly(f, gens=(x,y), modulus=3) == Poly(x + 7, x, y, domain='FF(3)')
 
     K = FF(2)
 
-    assert init_poly_from_poly(g) == g
-    assert init_poly_from_poly(g, domain=ZZ) == (DMP([1,-1], ZZ), (x,))
-    raises(CoercionFailed, "init_poly_from_poly(g, domain=QQ)")
-    assert init_poly_from_poly(g, domain=K) == (DMP([K(1),K(0)], K), (x,))
+    assert Poly.from_poly(g) == g
+    assert Poly.from_poly(g, domain=ZZ).rep == DMP([1,-1], ZZ)
+    raises(CoercionFailed, "Poly.from_poly(g, domain=QQ)")
+    assert Poly.from_poly(g, domain=K).rep == DMP([K(1),K(0)], K)
 
-    assert init_poly_from_poly(g, gens=x) == g
-    assert init_poly_from_poly(g, gens=x, domain=ZZ) == (DMP([1,-1], ZZ), (x,))
-    raises(CoercionFailed, "init_poly_from_poly(g, gens=x, domain=QQ)")
-    assert init_poly_from_poly(g, gens=x, domain=K) == (DMP([K(1),K(0)], K), (x,))
-
-    #raises(NotImplementedError, "init_poly_from_poly(g, gens=y)")
-    #raises(NotImplementedError, "init_poly_from_poly(g, gens=y, domain=ZZ)")
-    #raises(NotImplementedError, "init_poly_from_poly(g, gens=y, domain=QQ)")
-    #raises(NotImplementedError, "init_poly_from_poly(g, gens=y, modulus=3)")
-
-    #raises(NotImplementedError, "init_poly_from_poly(g, gens=(x,y))")
-    #raises(NotImplementedError, "init_poly_from_poly(g, gens=(x,y), domain=ZZ)")
-    #raises(NotImplementedError, "init_poly_from_poly(g, gens=(x,y), domain=QQ)")
-    #raises(NotImplementedError, "init_poly_from_poly(g, gens=(x,y), modulus=3)")
+    assert Poly.from_poly(g, gens=x) == g
+    assert Poly.from_poly(g, gens=x, domain=ZZ).rep == DMP([1,-1], ZZ)
+    raises(CoercionFailed, "Poly.from_poly(g, gens=x, domain=QQ)")
+    assert Poly.from_poly(g, gens=x, domain=K).rep == DMP([K(1),K(0)], K)
 
     K = FF(3)
 
-    assert init_poly_from_poly(h) == h
-    assert init_poly_from_poly(h, domain=ZZ) == (DMP([[ZZ(1)],[ZZ(1),ZZ(0)]], ZZ), (x,y))
-    assert init_poly_from_poly(h, domain=QQ) == (DMP([[QQ(1)],[QQ(1),QQ(0)]], QQ), (x,y))
-    assert init_poly_from_poly(h, domain=K) == (DMP([[K(1)],[K(1),K(0)]], K), (x,y))
+    assert Poly.from_poly(h) == h
+    assert Poly.from_poly(h, domain=ZZ).rep == DMP([[ZZ(1)],[ZZ(1),ZZ(0)]], ZZ)
+    assert Poly.from_poly(h, domain=QQ).rep == DMP([[QQ(1)],[QQ(1),QQ(0)]], QQ)
+    assert Poly.from_poly(h, domain=K).rep == DMP([[K(1)],[K(1),K(0)]], K)
 
-    assert init_poly_from_poly(h, gens=x) == Poly(x+y, x, domain=ZZ[y])
-    raises(CoercionFailed, "init_poly_from_poly(h, gens=x, domain=ZZ)")
-    assert init_poly_from_poly(h, gens=x, domain=ZZ[y]) == Poly(x+y, x, domain=ZZ[y])
-    raises(CoercionFailed, "init_poly_from_poly(h, gens=x, domain=QQ)")
-    assert init_poly_from_poly(h, gens=x, domain=QQ[y]) == Poly(x+y, x, domain=QQ[y])
-    raises(CoercionFailed, "init_poly_from_poly(h, gens=x, modulus=3)")
+    assert Poly.from_poly(h, gens=x) == Poly(x+y, x, domain=ZZ[y])
+    raises(CoercionFailed, "Poly.from_poly(h, gens=x, domain=ZZ)")
+    assert Poly.from_poly(h, gens=x, domain=ZZ[y]) == Poly(x+y, x, domain=ZZ[y])
+    raises(CoercionFailed, "Poly.from_poly(h, gens=x, domain=QQ)")
+    assert Poly.from_poly(h, gens=x, domain=QQ[y]) == Poly(x+y, x, domain=QQ[y])
+    raises(CoercionFailed, "Poly.from_poly(h, gens=x, modulus=3)")
 
-    assert init_poly_from_poly(h, gens=y) == Poly(x+y, y, domain=ZZ[x])
-    raises(CoercionFailed, "init_poly_from_poly(h, gens=y, domain=ZZ)")
-    assert init_poly_from_poly(h, gens=y, domain=ZZ[x]) == Poly(x+y, y, domain=ZZ[x])
-    raises(CoercionFailed, "init_poly_from_poly(h, gens=y, domain=QQ)")
-    assert init_poly_from_poly(h, gens=y, domain=QQ[x]) == Poly(x+y, y, domain=QQ[x])
-    raises(CoercionFailed, "init_poly_from_poly(h, gens=y, modulus=3)")
+    assert Poly.from_poly(h, gens=y) == Poly(x+y, y, domain=ZZ[x])
+    raises(CoercionFailed, "Poly.from_poly(h, gens=y, domain=ZZ)")
+    assert Poly.from_poly(h, gens=y, domain=ZZ[x]) == Poly(x+y, y, domain=ZZ[x])
+    raises(CoercionFailed, "Poly.from_poly(h, gens=y, domain=QQ)")
+    assert Poly.from_poly(h, gens=y, domain=QQ[x]) == Poly(x+y, y, domain=QQ[x])
+    raises(CoercionFailed, "Poly.from_poly(h, gens=y, modulus=3)")
 
-    assert init_poly_from_poly(h, gens=(x,y)) == h
-    assert init_poly_from_poly(h, gens=(x,y), domain=ZZ) == (DMP([[ZZ(1)],[ZZ(1),ZZ(0)]], ZZ), (x,y))
-    assert init_poly_from_poly(h, gens=(x,y), domain=QQ) == (DMP([[QQ(1)],[QQ(1),QQ(0)]], QQ), (x,y))
-    assert init_poly_from_poly(h, gens=(x,y), domain=K) == (DMP([[K(1)],[K(1),K(0)]], K), (x,y))
+    assert Poly.from_poly(h, gens=(x,y)) == h
+    assert Poly.from_poly(h, gens=(x,y), domain=ZZ).rep == DMP([[ZZ(1)],[ZZ(1),ZZ(0)]], ZZ)
+    assert Poly.from_poly(h, gens=(x,y), domain=QQ).rep == DMP([[QQ(1)],[QQ(1),QQ(0)]], QQ)
+    assert Poly.from_poly(h, gens=(x,y), domain=K).rep == DMP([[K(1)],[K(1),K(0)]], K)
 
-    assert init_poly_from_poly(h, gens=(y,x)) == (DMP([[ZZ(1)],[ZZ(1),ZZ(0)]], ZZ), (y, x))
-    assert init_poly_from_poly(h, gens=(y,x), domain=ZZ) == (DMP([[ZZ(1)],[ZZ(1),ZZ(0)]], ZZ), (y,x))
-    assert init_poly_from_poly(h, gens=(y,x), domain=QQ) == (DMP([[QQ(1)],[QQ(1),QQ(0)]], QQ), (y,x))
-    assert init_poly_from_poly(h, gens=(y,x), domain=K) == (DMP([[K(1)],[K(1),K(0)]], K), (y,x))
+    assert Poly.from_poly(h, gens=(y,x)).rep == DMP([[ZZ(1)],[ZZ(1),ZZ(0)]], ZZ)
+    assert Poly.from_poly(h, gens=(y,x), domain=ZZ).rep == DMP([[ZZ(1)],[ZZ(1),ZZ(0)]], ZZ)
+    assert Poly.from_poly(h, gens=(y,x), domain=QQ).rep == DMP([[QQ(1)],[QQ(1),QQ(0)]], QQ)
+    assert Poly.from_poly(h, gens=(y,x), domain=K).rep == DMP([[K(1)],[K(1),K(0)]], K)
 
-    assert init_poly_from_poly(h, gens=(x,y), field=True) == (DMP([[QQ(1)],[QQ(1),QQ(0)]], QQ), (x,y))
-    assert init_poly_from_poly(h, gens=(x,y), field=True) == (DMP([[QQ(1)],[QQ(1),QQ(0)]], QQ), (x,y))
+    assert Poly.from_poly(h, gens=(x,y), field=True).rep == DMP([[QQ(1)],[QQ(1),QQ(0)]], QQ)
+    assert Poly.from_poly(h, gens=(x,y), field=True).rep == DMP([[QQ(1)],[QQ(1),QQ(0)]], QQ)
 
-def test_init_poly_from_basic():
-    assert init_poly_from_basic(S(0)) == 0
-    assert init_poly_from_basic(S(7)) == 7
+def test_Poly_from_expr():
+    raises(GeneratorsNeeded, "Poly.from_expr(S(0))")
+    raises(GeneratorsNeeded, "Poly.from_expr(S(7))")
 
     K = FF(3)
 
-    assert init_poly_from_basic(x + 5, domain=K) == (DMP([K(1),K(2)], K), (x,))
-    assert init_poly_from_basic(y + 5, domain=K) == (DMP([K(1),K(2)], K), (y,))
+    assert Poly.from_expr(x + 5, domain=K).rep == DMP([K(1),K(2)], K)
+    assert Poly.from_expr(y + 5, domain=K).rep == DMP([K(1),K(2)], K)
 
-    assert init_poly_from_basic(x + 5, gens=x, domain=K) == (DMP([K(1),K(2)], K), (x,))
-    assert init_poly_from_basic(y + 5, gens=y, domain=K) == (DMP([K(1),K(2)], K), (y,))
+    assert Poly.from_expr(x + 5, x, domain=K).rep == DMP([K(1),K(2)], K)
+    assert Poly.from_expr(y + 5, y, domain=K).rep == DMP([K(1),K(2)], K)
 
-    assert init_poly_from_basic(x + y, domain=K) == (DMP([[K(1)],[K(1),K(0)]], K), (x,y))
-    assert init_poly_from_basic(x + y, gens=(x,y), domain=K) == (DMP([[K(1)],[K(1),K(0)]], K), (x,y))
+    assert Poly.from_expr(x + y, domain=K).rep == DMP([[K(1)],[K(1),K(0)]], K)
+    assert Poly.from_expr(x + y, x, y, domain=K).rep == DMP([[K(1)],[K(1),K(0)]], K)
 
-    assert init_poly_from_basic(x + 5) == (DMP([1,5], ZZ), (x,))
-    assert init_poly_from_basic(y + 5) == (DMP([1,5], ZZ), (y,))
+    assert Poly.from_expr(x + 5).rep == DMP([1,5], ZZ)
+    assert Poly.from_expr(y + 5).rep == DMP([1,5], ZZ)
 
-    assert init_poly_from_basic(x + 5, gens=x) == (DMP([1,5], ZZ), (x,))
-    assert init_poly_from_basic(y + 5, gens=y) == (DMP([1,5], ZZ), (y,))
+    assert Poly.from_expr(x + 5, x).rep == DMP([1,5], ZZ)
+    assert Poly.from_expr(y + 5, y).rep == DMP([1,5], ZZ)
 
-    assert init_poly_from_basic(x + 5, domain=ZZ) == (DMP([1,5], ZZ), (x,))
-    assert init_poly_from_basic(y + 5, domain=ZZ) == (DMP([1,5], ZZ), (y,))
+    assert Poly.from_expr(x + 5, domain=ZZ).rep == DMP([1,5], ZZ)
+    assert Poly.from_expr(y + 5, domain=ZZ).rep == DMP([1,5], ZZ)
 
-    assert init_poly_from_basic(x + 5, gens=x, domain=ZZ) == (DMP([1,5], ZZ), (x,))
-    assert init_poly_from_basic(y + 5, gens=y, domain=ZZ) == (DMP([1,5], ZZ), (y,))
+    assert Poly.from_expr(x + 5, x, domain=ZZ).rep == DMP([1,5], ZZ)
+    assert Poly.from_expr(y + 5, y, domain=ZZ).rep == DMP([1,5], ZZ)
 
-    assert init_poly_from_basic(x + 5, gens=(x,y), domain=ZZ) == (DMP([[1],[5]], ZZ), (x,y))
-    assert init_poly_from_basic(y + 5, gens=(x,y), domain=ZZ) == (DMP([[1,5]], ZZ), (x,y))
+    assert Poly.from_expr(x + 5, x, y, domain=ZZ).rep == DMP([[1],[5]], ZZ)
+    assert Poly.from_expr(y + 5, x, y, domain=ZZ).rep == DMP([[1,5]], ZZ)
 
 def test_Poly__new__():
     raises(GeneratorsError, "Poly(x+1, x, x)")
 
-    raises(PolynomialError, "Poly(DMP([1,2], ZZ), x, y)")
-    raises(PolynomialError, "Poly(DMP([1,2], ZZ), x, domain=ZZ)")
-    raises(PolynomialError, "Poly(DMP([1,2], ZZ), x, modulus=3)")
-
-    raises(OptionError, "Poly(x, x, symmetric=True)")
-
     raises(GeneratorsError, "Poly(x+y, x, y, domain=ZZ[x])")
     raises(GeneratorsError, "Poly(x+y, x, y, domain=ZZ[y])")
 
+    raises(OptionError, "Poly(x, x, symmetric=True)")
     raises(OptionError, "Poly(x+2, x, modulus=3, domain=QQ)")
 
     raises(OptionError, "Poly(x+2, x, domain=ZZ, gaussian=True)")
@@ -255,7 +237,6 @@ def test_Poly__new__():
     raises(GeneratorsNeeded, "Poly([2, 1])")
 
     raises(GeneratorsNeeded, "Poly(1)")
-    assert Poly(1, strict=False) == 1
 
     assert Poly(Poly(a*x + b*y, x, y), x) == Poly(a*x + b*y, x)
 
