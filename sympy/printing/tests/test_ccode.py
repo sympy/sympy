@@ -108,7 +108,6 @@ def test_ccode_Indexed():
     assert p._not_c == set()
 
 
-@XFAIL
 def test_ccode_loops():
     from sympy.tensor import Indexed, Idx
     from sympy import symbols
@@ -119,11 +118,11 @@ def test_ccode_loops():
     y = Indexed(y)(Idx(i, m))
 
     s = (
-            '   for (int i=0, i<m; i++){\n'
-            '      for (int j=0, j<n; j++){\n'
-            '         y[i] = A[i*n + j]*x[j] + y[i];\n'
-            '      }\n'
+            'for (int i=0; i<m; i++){\n'
+            '   for (int j=0; j<n; j++){\n'
+            '      y[i] = x[j]*A[j + i*n] + y[i];\n'
             '   }\n'
+            '}'
             )
     c = ccode(A*x, assign_to=y)
     assert c== s
