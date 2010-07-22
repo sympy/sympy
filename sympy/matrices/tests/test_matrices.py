@@ -913,10 +913,10 @@ def test_col_row():
     x, y = symbols("x,y")
     M = Matrix([[x,0,0],
                 [0,y,0]])
-    M.row(1,lambda x,i: x+i+1)
+    M.row(1,lambda r, j: r+j+1)
     assert M == Matrix([[x,0,0],
                         [1,y+2,3]])
-    M.col(0,lambda x,i: x+y**i)
+    M.col(0,lambda c, j: c+y**j)
     assert M == Matrix([[x+1,0,0],
                         [1+y,y+2,3]])
 

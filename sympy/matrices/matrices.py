@@ -1,4 +1,3 @@
-import warnings
 from sympy import Basic, Symbol, Integer
 from sympy.core.sympify import sympify, converter, SympifyError
 
