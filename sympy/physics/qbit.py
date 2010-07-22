@@ -205,6 +205,16 @@ class Gate(Expr):
     def YBasisTransform(self):
         return Matrix([[ImaginaryUnit(),0],[0,-ImaginaryUnit()]])
 
+#class keeps track of fact that it can't be distributed
+class NondistributiveGate(Gate):
+    def __new__(cls, *args):
+        if len(args) != 1:
+            raise Exception("Can only measure one at a time for now")
+        return Expr.__new__(cls, *args, commutative = False)
+        
+    def measure(states):
+        raise NotImplementedError("This type of measure has not been implemented")
+
 def representHilbertSpace(gateMatrix, HilbertSize, qbits, format='sympy'):
 
     #returns |first><second|, if first and second are 0 or 1.    
@@ -373,33 +383,40 @@ class controlledMod(Gate):
 def ensembleMeasure(state):
     if isinstance(state, Add):
         pass  
-  
-def measure(qbit, state):
-    state = state.expand()
-    if isinstance(state, Mul):
-        return state        
-    #for now, we convert to float TODO keep it as is sqrt's and all
-    prob1 = 0
-    #Go through each item in the add and grab its probability
-    #This will be used to determine probability of getting a 1
-    if isinstance(state, (Mul, Qbit)):
-        return state
-    for item in state.args:
-        if item.args[-1][qbit] == 1:
-            prob1 += Mul(*item.args[0:-1])*Mul(*item.args[0:-1]).conjugate()
-    if prob1 < random.random():
-        choice = 0
-    else:
-        choice = 1
-    result = 0
-    for item in state.args:
-        if item.args[-1][qbit] == choice:
-            result = result + item
-    if choice:
-        result = result/sqrt(prob1)
-    else:
-        result = result/sqrt(1-prob1)
-    return result.expand()
+
+class measure(NondistributiveGate):
+    def __new__(cls, *args):
+        if len(args) != 1:
+            raise Exception("Can only measure one at a time for now")
+        return Expr.__new__(cls, *args, commutative = False)
+
+    def measure(self, state):
+        qbit = self.args[0]
+        state = state.expand()
+        if isinstance(state, Mul):
+            return state        
+        #for now, we convert to float TODO keep it as is sqrt's and all
+        prob1 = 0
+        #Go through each item in the add and grab its probability
+        #This will be used to determine probability of getting a 1
+        if isinstance(state, (Mul, Qbit)):
+            return state
+        for item in state.args:
+            if item.args[-1][qbit] == 1:
+                prob1 += Mul(*item.args[0:-1])*Mul(*item.args[0:-1]).conjugate()
+        if prob1 < random.random():
+            choice = 0
+        else:
+            choice = 1
+        result = 0
+        for item in state.args:
+            if item.args[-1][qbit] == choice:
+                result = result + item
+        if choice:
+            result = result/sqrt(prob1)
+        else:
+            result = result/sqrt(1-prob1)
+        return result.expand()
      
                 
 
@@ -560,12 +577,12 @@ def apply_gates(circuit, basis = ZBasisSet(), floatingPoint = False):
         return circuit
 
     #if we have a Mul object, get the state of the system
-    if isinstance(circuit, Mul):
+    elif isinstance(circuit, Mul):
         states = circuit.args[len(circuit.args)-1]
         states = states.expand()
 
     #if we have an add object with gates mixed in, apply_gates recursively
-    if isinstance(circuit, Add):
+    elif isinstance(circuit, Add):
         result = 0
         for i in circuit.args:
             result = result + apply_gates(i, basis, floatingPoint)
@@ -594,13 +611,17 @@ def apply_gates(circuit, basis = ZBasisSet(), floatingPoint = False):
 
         #if states is in superposition of states (a sum of qbits states), applyGates to each state contined within
         if isinstance(states, Add):
-            result = 0            
-            for state in states.args:
-                result = result + apply_gates(gate**number_of_applications*state, basis, floatingPoint)
-            if floatingPoint:
-                result = result.evalf()
-            states = result
-            states = states.expand()
+            #special check for non-distributivity, do all at once
+            if isinstance(gate, NondistributiveGate):
+                states = gate.measure(states)
+            else:
+                result = 0            
+                for state in states.args:
+                    result = result + apply_gates(gate**number_of_applications*state, basis, floatingPoint)
+                if floatingPoint:
+                    result = result.evalf()
+                states = result
+                states = states.expand()
 
         #if we have a mul, apply gate to each register and multiply result
         elif isinstance(states, Mul):
@@ -617,20 +638,23 @@ def apply_gates(circuit, basis = ZBasisSet(), floatingPoint = False):
             #apply the gate the right number of times to this state
             coefficient = Mul(*(states.args[:i]+states.args[i+1:]))
             states = apply_gates(gate**(number_of_applications)*states.args[i], basis, floatingPoint)
-            states = coefficient*states            
-            states = states.expand()
+            states = coefficient*states 
+            states = states.expand()           
             
         #If we have a single Qbit, apply to this Qbit
         elif isinstance(states, Qbit):
-            basis_name = basis.__class__.__name__
-            apply_method_name = '_apply_%s' % basis_name  
-            apply_method = getattr(gate, apply_method_name)
-            states = apply_method(states)
-            states = states.expand()
-            number_of_applications -= 1
-            while number_of_applications > 0:
-                states = apply_gates(gate*states, basis, floatingPoint)
+            if isinstance(gate, NondistributiveGate):
+                states = gate.measure(states)
+            else:
+                basis_name = basis.__class__.__name__
+                apply_method_name = '_apply_%s' % basis_name  
+                apply_method = getattr(gate, apply_method_name)
+                states = apply_method(states)
+                states = states.expand()
                 number_of_applications -= 1
+                while number_of_applications > 0:
+                    states = apply_gates(gate*states, basis, floatingPoint)
+                    number_of_applications -= 1
        
         #if it's not one of those, there is something wrong
         else:
@@ -638,7 +662,7 @@ def apply_gates(circuit, basis = ZBasisSet(), floatingPoint = False):
 
     #tack on any coefficients that were there before and simplify
     states = state_coeff*states
-    if isinstance(states, (Mul,Add,Pow)):
+    if isinstance(states, (Add,Pow, Mul)):
         states = states.expand()
     return states
              
@@ -921,85 +945,102 @@ class Fourier(Gate):
                 retVal = retVal + Matrix(temp)
         return retVal
 
-####### ALU ######## TODO Get SetZero Actually working (for non-definite states) None of this is right yet
+####### ALU ######### 
 
-def ADD(InReg, InOutReg, carryReg, circuit):
-    if len(InReg) != len(InOutReg):
-        raise Exception("Input and Output Registers must be of same size")
-    for i in range(len(InReg)):
-        if i != (len(InReg)-1):
-            circuit = ToffoliGate(InReg[i], InOutReg[i], carryReg[i+1])*circuit
-            circuit = ToffoliGate(InReg[i], carryReg[i], carryReg[i+1])*circuit
-            circuit = ToffoliGate(InOutReg[i], carryReg[i], carryReg[i+1])*circuit
-        circuit = CNOTGate(InReg[i], InOutReg[i])*circuit
-        circuit = CNOTGate(carryReg[i], InOutReg[i])*circuit
-    circuit = apply_gates(circuit)
-    for item in carryReg:
-        circuit = SetZero(item,circuit)
-    return circuit
-
-def Bitshift(Register, number, tempStorage, circuit):
-    circuit = SetZero(tempStorage, circuit)
-    if number > 0:
-        for i in range(abs(number)):
-            circuit = SwapGate(Register[-1], tempStorage)*circuit
-            for i in reversed(range(len(Register)-1)):
-                circuit = SwapGate(i, i+1)*circuit
-            circuit = apply_gates(circuit)
-            circuit = SetZero(tempStorage, circuit)
+class ADD(Gate): #TODO check what happens when we carry for diff number of in-out sizes 
+    def __new__(cls, *args):
+        InReg = args[0]
+        InOutReg = args[1]
+        carryReg = args[2]
+        circuit = 1
+        for i in range(len(InReg)):
+            if i != (len(InReg)-1):
+                circuit = ToffoliGate(InReg[i], InOutReg[i], carryReg[i+1])*circuit
+                circuit = ToffoliGate(InReg[i], carryReg[i], carryReg[i+1])*circuit
+                circuit = ToffoliGate(InOutReg[i], carryReg[i], carryReg[i+1])*circuit
+            circuit = CNOTGate(InReg[i], InOutReg[i])*circuit
+            circuit = CNOTGate(carryReg[i], InOutReg[i])*circuit
+        for item in carryReg:
+            circuit = SetZero(item)*circuit
         return circuit
-    elif number < 0:
-        for i in range(abs(number)):
-            circuit = SwapGate(Register[0], tempStorage)*circuit
-            for i in range(len(Register)-1):
-                circuit = SwapGate(i, i+1)*circuit
-            circuit = apply_gates(circuit)
-            circuit = SetZero(tempStorage, circuit)
+    
+class Bitshift(Gate): #check
+    def __new__(cls, *args):
+        Register = args[0]
+        number = args[1]
+        tempStorage = args[2]
+        circuit = SetZero(tempStorage)
+        if number > 0:
+            for i in range(abs(number)):
+                circuit = SwapGate(Register[-1], tempStorage)*circuit
+                for i in reversed(range(len(Register)-1)):
+                    circuit = SwapGate(i, i+1)*circuit
+                circuit = SetZero(tempStorage)*circuit
+            return circuit
+        elif number < 0:
+            for i in range(abs(number)):
+                circuit = SwapGate(Register[0], tempStorage)*circuit
+                for i in range(len(Register)-1):
+                    circuit = SwapGate(i, i+1)*circuit
+                circuit = SetZero(tempStorage)*circuit
+            return circuit
+        else:
+            return 1
+
+class Multiply(NondistributiveGate): #This is harder than I thought will need to fix-it
+    def __new__(cls, *args):
+        if len(args) != 4:
+            raise Exception("Must input InReg1, InReg2, OutReg, carryReg Tuples")
+        return Expr.__new__(cls, *args, commutative = False)
+
+    def measure(self, circuit):
+        InReg1 = self.args[0]
+        InReg2 = self.args[1]
+        OutReg = self.args[2]
+        carryReg = self.args[3]
+        circuit = circuit.expand()
+        if isinstance(circuit, Add):
+            part = 0
+            for item in circuit.args:
+                part = part + apply_gates(Multiply(InReg1, InReg2, OutReg, carryReg)*measure)                
+            return part
+        if isinstance(circuit, Mul):
+            return circuit.args[:-1]*Multiply(InReg1, InReg2, OutReg, carryReg, circuit.args[-1])
+        
+        for item in OutReg:
+            circuit = SetZero(item)*circuit
+        for item in carryReg:
+            circuit = SetZero(item)*circuit
+        circuit = apply_gates(circuit)
+        for i in InReg2:
+            if circuit[i] == 1:
+                circuit = ADD(InReg1, OutReg, carryReg)*circuit
+            circuit = Bitshift(InReg1, 1, carryReg[0])*circuit
+        circuit = apply_gates(circuit)
         return circuit
-    else:
-        return 1
-
-def Multiply(InReg1, InReg2, OutReg, carryReg, circuit):
-    circuit = circuit.expand()
-    if isinstance(circuit, Add):
-        part = 0
-        for item in circuit.args:
-            part = part + Multiply(InReg1, InReg2, OutReg, carryReg, item)
-        return part
-    if isinstance(circuit, Mul):
-        return circuit.args[:-1]*Multiply(InReg1, InReg2, OutReg, carryReg, circuit.args[-1])
-
-    for item in OutReg:
-        circuit = SetZero(item, circuit)
-    for item in carryReg:
-        circuit = SetZero(item, circuit)
-    for i in InReg2:
-        if circuit[i] == 1:
-            circuit = ADD(InReg1, OutReg, carryReg, circuit)
-        circuit = Bitshift(InReg1, 1, carryReg[0], circuit)
-    return circuit
-                    
-def SetZero(item, circuit):
-    circuit = measure(item,circuit)
-    circuit = circuit.expand()
-    if isinstance(circuit, Add):
-        if circuit.args[-1].args[-1][item] == 0:
-            return circuit
-        part = 0
-        for i in circuit.args:
-            part = part + i.args[:-1]*i.args[-1].flip(item)
-        return part
-    if isinstance(circuit, Qbit):
-        if circuit[item] == 0:
-            return circuit
-        return circuit.flip(item)
-    if isinstance(circuit, Mul):
-        if circuit.args[-1][item] == 0:
-            return circuit
-        return circuit.args[:-1]*circuit.args[-1].flip(item)
-    return circuit
-
-
+                        
+class SetZero(NondistributiveGate):
+    def measure(self, circuit):
+        item = self.args[0]
+        circuit = measure(item)*circuit
+        circuit = apply_gates(circuit)
+        circuit = circuit.expand()
+        if isinstance(circuit, Add):
+            if circuit.args[-1].args[-1][item] == 0:
+                return circuit
+            part = 0
+            for i in circuit.args:
+                part = part + i.args[:-1]*i.args[-1].flip(item)
+            return part
+        if isinstance(circuit, Qbit):
+            if circuit[item] == 0:
+                return circuit
+            return circuit.flip(item)
+        if isinstance(circuit, Mul):
+            if circuit.args[-1][item] == 0:
+                return circuit
+            return circuit.args[:-1]*circuit.args[-1].flip(item)
+        return circuit
             
 class QFT(Fourier):
     def decompose(self):
@@ -1015,7 +1056,6 @@ class QFT(Fourier):
         return circuit
 
 class IQFT(Fourier):
-
     def decompose(self):
         start = self.args[0]
         finish = self.args[1]

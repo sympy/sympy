@@ -2,6 +2,7 @@ from sympy.physics.qbit import *
 from sympy import symbols, Rational
 from sympy.core.numbers import *
 from sympy.functions.elementary import *
+from sympy.physics.shor import *
 import random
 x, y = symbols('xy')
 
@@ -31,6 +32,11 @@ def test_Gate():
     assert t.inputnumber == 3
     assert h.inputnumber == 1
 
+def test_Fourier():
+    assert QFT(0,3).decompose() == SwapGate(0,2)*HadamardGate(0)*RkGate(1,0,2)*HadamardGate(1)*RkGate(2,0,3)*RkGate(2,1,2)*HadamardGate(2)
+    assert QFT(0,3).inputnumber == 2
+    assert IQFT(0,3).decompose() == HadamardGate(2)*IRkGate(2,1,2)*IRkGate(2,0,3)*HadamardGate(1)*IRkGate(1,0,2)*HadamardGate(0)*SwapGate(0,2)
+    
 def test_represent_HilbertSpace():
     import numpy as np
     a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p = symbols('abcdefghijklmnop')
@@ -283,6 +289,29 @@ def test_reversible_add():
             result = apply_gates(ADD((0,1,2,3),(4,5,6,7),(8,9,10,11),Qbit(*([0,0,0,0] + numtoarr(k) + numtoarr(i)))))
             assert list(result.args[4:8]) == numtoarr(i+k)
 
+def test_reversible_bitshift():
+    circuit = Qbit(0,0,0,1,0,1,1,1,1,0,1,0,1)
+    Register = range(12)
+    tempStorage = 12
+    number = 2
+    assert Bitshift(Register, number, tempStorage, circuit) == Qbit(0,1,0,1,1,1,1,0,1,0,1,0,0)
+    number = -1
+    assert Bitshift(Register, number, tempStorage, circuit) == Qbit(0,0,0,0,1,0,1,1,1,1,0,1,0)
+    number = -2
+    assert Bitshift(Register, number, tempStorage, circuit) == Qbit(0,0,0,0,0,1,0,1,1,1,1,0,1)
+    number = 1
+    assert Bitshift(Register, number, tempStorage, circuit) == Qbit(0,0,1,0,1,1,1,1,0,1,0,1,0)
+    number = 12
+    assert Bitshift(Register, number, tempStorage, circuit) == Qbit(0,0,0,0,0,0,0,0,0,0,0,0,0)
+
+def test_reversible_multiply():
+    InReg1 = (0,1,2,3)
+    InReg2 = (4,5,6,7)
+    OutReg = (8,9,10,11)
+    carryReg = (12,13,14,15)
+    circuit =  Qbit(0,0,0,0,0,0,0,0,0,0,1,0,0,0,1,0)
+    assert Multiply(InReg1, InReg2, OutReg, carryReg, circuit) == Qbit(0,0,0,0,0,1,0,0,0,0,1,0,0,0,0,0)
+
 def test_represent_decimal():
     assert Qbit(9) == Qbit(1,0,0,1)
     assert Qbit(15) == Qbit(1,1,1,1)
@@ -297,4 +326,17 @@ def test_matrix_to_qbits():
     assert qbits_to_matrix(Qbit(0,0,0,0)) == Matrix([1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0])
     assert matrix_to_qbits(sqrt(2)*2*Matrix([1,1,1,1,1,1,1,1])) == (2*sqrt(2)*(Qbit(0,0,0) + Qbit(0,0,1) + Qbit(0,1,0) + Qbit(0,1,1) + Qbit(1,0,0) + Qbit(1,0,1) + Qbit(1,1,0) + Qbit(1,1,1))).expand()
     assert qbits_to_matrix(2*sqrt(2)*(Qbit(0,0,0) + Qbit(0,0,1) + Qbit(0,1,0) + Qbit(0,1,1) + Qbit(1,0,0) + Qbit(1,0,1) + Qbit(1,1,0) + Qbit(1,1,1))) == sqrt(2)*2*Matrix([1,1,1,1,1,1,1,1])
-    
+
+def test_gcd():
+    assert gcd(163231, 152057) == 151
+    assert gcd(93, 3) == 3
+    assert gcd(21,93) == 3
+    assert gcd(4775, 6876) == 191
+
+def test_continuedFrac():
+    assert continuedFraction(3245, 10000) == [0,3,12,4,13]
+    assert continuedFraction(1932, 2568) == [0, 1, 3, 26, 2]
+    assert continuedFraction(6589, 2569) == [2, 1, 1, 3, 2, 1, 3, 1, 23]
+    assert getr(513, 1024, 10) == 2
+    assert getr(169, 1024, 11) == 6
+    assert getr(314, 4096, 16) == 13

@@ -92,7 +92,8 @@ def periodfind(a, N):
     print circuit
     print "controlled Mod'd"
     for i in range(t):
-        circuit = measure(i, circuit)
+        circuit = measure(i)*circuit
+    circuit = apply_gates(circuit)
     print circuit
     print "measured 1"
     #Now apply Inverse Quantum Fourier Transform on the second half of the register
@@ -100,7 +101,8 @@ def periodfind(a, N):
     print circuit
     print "QFT'd"
     for i in range(t):
-        circuit = measure(i+t, circuit)
+        circuit = measure(i+t)*circuit
+    circuit = apply_gates(circuit)
     print circuit
     if isinstance(circuit, Qbit):
         register = circuit
@@ -124,6 +126,4 @@ def periodfind(a, N):
         
 class OrderFindingException(Exception):
     pass
-
-
 
