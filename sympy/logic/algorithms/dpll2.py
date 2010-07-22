@@ -48,7 +48,7 @@ class SATSolver(object):
      normal form.
     """
 
-    def __init__(self, clauses, variables, var_settings, heuristic = 'vsids'):
+    def __init__(self, clauses, variables, var_settings, heuristic = 'vsids', clause_learning = 'simple'):
         self.var_settings = var_settings
         self.heuristic = heuristic
 
@@ -60,12 +60,23 @@ class SATSolver(object):
             self.heur_calculate = self.vsids_calculate
             self.heur_lit_assigned = self.vsids_lit_assigned
             self.heur_lit_unset = self.vsids_lit_unset
+            self.heur_clause_added = self.vsids_clause_added
+        else:
+            raise NotImplementedError
+
+        if 'simple' == clause_learning:
+            self.add_learned_clause = self.simple_add_learned_clause
+            self.compute_conflict = self.simple_compute_conflict
         else:
             raise NotImplementedError
 
         # Create the base level
         self.levels = [Level(0)]
         self.current_level.varsettings = var_settings
+
+        # Keep stats
+        self.num_decisions = 0
+        self.num_learned_clauses = 0
 
     def initialize_variables(self, variables):
         """Set up the variable data structures needed."""
@@ -118,8 +129,6 @@ class SATSolver(object):
             self.simplify()
             # Check if we've made the theory unsat
             if self.is_unsatisfied:
-                # TODO: Detect and add a learned clause here
-
                 # We unroll all of the decisions until we can flip a literal
                 while self.current_level.flipped:
                     self.undo()
@@ -127,6 +136,9 @@ class SATSolver(object):
                     # If we've unrolled all the way, the theory is unsat
                     if 1 == len(self.levels):
                         return False
+
+                # Detect and add a learned clause
+                self.add_learned_clause(self.compute_conflict())
 
                 flip_lit = -self.current_level.decision
                 self.undo()
@@ -190,8 +202,7 @@ class SATSolver(object):
         Undo the changes of the most recent decision level.
         """
         # Undo the variable settings
-        for i in range(len(self.current_level.var_settings)-1, -1, -1):
-            lit = self.current_level.var_settings[i]
+        for lit in self.current_level.var_settings:
             self.var_settings.remove(lit)
             self.heur_lit_unset(lit)
             self.variable_set[abs(lit)] = False
@@ -237,80 +248,62 @@ class SATSolver(object):
     #      Heuristics       #
     #########################
     def vsids_init(self):
-        vars = range(1, len(self.appears_neg))
-        lit_list = sorted([(-len(self.appears_neg[var]), VSIDSLit(-var)) for var in vars] + \
-                          [(-len(self.appears_pos[var]), VSIDSLit(var)) for var in vars])
-
-        # We keep track of all literal objects so we can access and decay them all at once
-        self.vsids_lit_list = [item[1] for item in lit_list]
-        self.vsids_lit_map = {}
-
-        for lit in self.vsids_lit_list:
-            self.vsids_lit_map[lit.val] = lit
-
-        lit_list[0][1].prev = None
-        lit_list[0][1].next = lit_list[1][1]
-        lit_list[0][1].score = float(lit_list[0][0])
-
-        lit_list[-1][1].prev = lit_list[-2][1]
-        lit_list[-1][1].next = None
-        lit_list[-1][1].score = float(lit_list[-1][0])
-
-        for i in range(1, len(lit_list) - 1):
-            lit_list[i][1].prev = lit_list[i-1][1]
-            lit_list[i][1].next = lit_list[i+1][1]
-            lit_list[i][1].score = float(lit_list[i][0])
-
-        self.vsids_start = lit_list[0][1]
+        self.lit_heap = []
+        for var in range(1, len(self.appears_neg)):
+            heappush(self.lit_heap, (float(-len(self.appears_neg[var])), -var))
+            heappush(self.lit_heap, (float(-len(self.appears_pos[var])), var))
 
     def vsids_decay(self):
         # We divide every literal score by 2 for a decay factor
-        #  Note: This doesn't change the ordering of literals property
-        for lit in self.vsids_lit_list:
-            lit.score /= 2.0
+        #  Note: This doesn't change the heap property
+        for i in range(len(self.lit_heap)):
+            self.lit_heap[0] /= 2.0
 
     def vsids_calculate(self):
         """
             VSIDS Heuristic
         """
-        return self.vsids_start.val
+        self.num_decisions += 1
+        while self.variable_set[abs(self.lit_heap[0][1])]:
+            heappop(self.lit_heap)
 
-    def vsids_lit_assigned(self, lit, other=False):
-        literal = self.vsids_lit_map[lit]
+        return heappop(self.lit_heap)[1]
 
-        left = literal.prev
-        right = literal.next
+    def vsids_lit_assigned(self, lit):
+        pass
 
-        if left != None:
-            left.next = right
+    def vsids_lit_unset(self, lit):
+        var = abs(lit)
+        heappush(self.lit_heap, (-len(self.appears_neg), -var))
+        heappush(self.lit_heap, (-len(self.appears_pos), var))
 
-        if right != None:
-            right.prev = left
+    def vsids_clause_added(self, cls):
+        self.num_learned_clauses += 1
 
-        if left == None:
-            self.vsids_start = right
 
-        if not other:
-            self.vsids_lit_assigned(-lit, True)
+    ########################
+    #   Clause Learning    #
+    ########################
 
-    def vsids_lit_unset(self, lit, other = False):
-        # We do this first since the unsetting must follow a FILO order
-        if not other:
-            self.vsids_lit_unset(-lit, True)
+    def simple_add_learned_clause(self, cls):
 
-        literal = self.vsids_lit_map[lit]
+        cls_num = len(self.clauses)
+        self.clauses.append(cls)
+        self.clause_sat.append(False)
+        self.remaining_clauses.add(cls_num)
 
-        left = literal.prev
-        right = literal.next
+        for lit in cls:
+            if lit < 0:
+                self.appears_neg[-lit].append(cls_num)
+            else:
+                self.appears_pos[lit].append(cls_num)
 
-        if left != None:
-            left.next = literal
+        self.heur_clause_added(cls)
 
-        if right != None:
-            right.prev = literal
-
-        if left == None:
-            self.vsids_start = literal
+    def simple_compute_conflict(self):
+        # Build a clause representing the fact that at least one
+        #  decision made so far is wrong.
+        return [-(level.decision) for level in self.levels[1:]]
 
 class Level(object):
     """
@@ -323,22 +316,3 @@ class Level(object):
         self.clauses_removed = []
         self.var_settings = []
         self.flipped = flipped
-
-class VSIDSLit(object):
-    """
-    Represents a single literal in a boolean theory.
-    """
-
-    def __init__(self, val):
-        self.val = val
-
-    def __str__(self):
-        left = right = None
-        if self.prev:
-            left = self.prev.val
-        if self.next:
-            right = self.next.val
-        return "%s <- (%d) -> %s\n" % (str(left), self.val, str(right))
-
-    def __repr__(self):
-        return self.__str__()
