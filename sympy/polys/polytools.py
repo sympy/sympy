@@ -17,14 +17,12 @@ from sympy.polys.polyclasses import (
 )
 
 from sympy.polys.polyutils import (
-    dict_from_basic,
     basic_from_dict,
     _sort_gens,
     _unify_gens,
-    _analyze_gens,
     _dict_reorder,
-    _dict_from_basic_no_gens,
-    parallel_dict_from_basic,
+    _dict_from_expr,
+    _parallel_dict_from_expr,
 )
 
 from sympy.polys.rootisolation import (
@@ -44,6 +42,7 @@ from sympy.polys.polyerrors import (
     CoercionFailed, UnificationFailed,
     GeneratorsNeeded, PolynomialError,
     PolificationFailed, FlagError,
+    MultivariatePolynomialError,
     ComputationFailed,
 )
 
@@ -68,104 +67,6 @@ from sympy.polys.constructor import construct_domain
 
 from sympy.polys import polyoptions as options
 
-def init_poly_from_dict(dict_rep, **args):
-    opt = options.build_options(args)
-    return _init_poly_from_dict(dict_rep, opt)
-
-def _init_poly_from_dict(dict_rep, opt):
-    """Initialize a Poly given a dict instance. """
-    gens = opt.gens
-    domain = opt.domain
-
-    if domain is not None:
-        for k, v in dict_rep.iteritems():
-            dict_rep[k] = domain.convert(v)
-    else:
-        domain, dict_rep = construct_domain(dict_rep, opt=opt)
-
-    return DMP(dict_rep, domain, len(gens)-1)
-
-def init_poly_from_list(list_rep, **args):
-    opt = options.build_options(args)
-    return _init_poly_from_list(list_rep, opt)
-
-def _init_poly_from_list(list_rep, opt):
-    """Initialize a Poly given a list instance. """
-    if len(opt.gens) != 1:
-        raise PolynomialError("can't create a multivariate polynomial from a list")
-
-    gens = opt.gens
-    domain = opt.domain
-
-    if domain is not None:
-        list_rep = map(domain.convert, list_rep)
-    else:
-        domain, list_rep = construct_domain(list_rep, opt=opt)
-
-    return DMP(list_rep, domain, len(gens)-1)
-
-def init_poly_from_poly(poly_rep, **args):
-    opt = options.build_options(args)
-    return _init_poly_from_poly(poly_rep, opt)
-
-def _init_poly_from_poly(poly_rep, opt):
-    """Initialize a Poly given a Poly instance. """
-    gens = opt.gens
-    field = opt.field
-    domain = opt.domain
-
-    if isinstance(poly_rep.rep, DMP):
-        if not gens or poly_rep.gens == gens:
-            if domain is not None or field is not None:
-                rep = poly_rep.rep
-            else:
-                return poly_rep
-        else:
-            if set(gens) != set(poly_rep.gens):
-                return Poly(poly_rep.as_basic(), opt=opt)
-            else:
-                dict_rep = dict(zip(*_dict_reorder(
-                    poly_rep.rep.to_dict(), poly_rep.gens, gens)))
-
-                rep = DMP(dict_rep, poly_rep.rep.dom, len(gens)-1)
-
-        if domain is not None:
-            rep = rep.convert(domain)
-        elif field is not None and field:
-            rep = rep.convert(rep.dom.get_field())
-    else:
-        raise PolynomialError("unknown polynomial representation")
-
-    return (rep, gens or poly_rep.gens)
-
-def init_poly_from_basic(basic_rep, **args):
-    opt = options.build_options(args)
-    return _init_poly_from_basic(basic_rep, opt)
-
-def _init_poly_from_basic(basic_rep, opt):
-    """Initialize a Poly given a Basic expression. """
-    try:
-        dict_rep, gens = dict_from_basic(basic_rep, opt=opt)
-    except GeneratorsNeeded:
-        return basic_rep
-
-    def _dict_set_domain(rep, domain):
-        result = {}
-
-        for k, v in rep.iteritems():
-            result[k] = domain.from_sympy(v)
-
-        return result
-
-    domain = opt.domain
-
-    if domain is not None:
-        dict_rep = _dict_set_domain(dict_rep, domain)
-    else:
-        domain, dict_rep = construct_domain(dict_rep, opt=opt)
-
-    return (DMP(dict_rep, domain, len(gens)-1), gens)
-
 class Poly(Basic):
     """Generic class for representing polynomials in SymPy. """
 
@@ -175,61 +76,131 @@ class Poly(Basic):
 
     def __new__(cls, rep, *gens, **args):
         """Create a new polynomial instance out of something useful. """
-        if gens or len(args) != 1 or 'opt' not in args:
-            opt = options.Options(gens, args)
-        else:
-            opt = args['opt']
+        opt = options.build_options(gens, args)
 
         if 'order' in opt:
             raise NotImplementedError("'order' keyword is not implemented yet")
 
-        if isinstance(rep, DMP):
-            if rep.lev != len(opt.gens)-1 or opt.args:
-                raise PolynomialError("invalid arguments to construct a polynomial")
-        else:
-            if isinstance(rep, (dict, list)):
-                if not opt.gens:
-                    raise GeneratorsNeeded("can't initialize from %s without generators" % type(rep).__name__)
-
-                if isinstance(rep, dict):
-                    rep = _init_poly_from_dict(rep, opt)
-                else:
-                    rep = _init_poly_from_list(rep, opt)
+        if isinstance(rep, (dict, list)):
+            if isinstance(rep, dict):
+                return cls._from_dict(rep, opt)
             else:
-                rep = sympify(rep)
+                return cls._from_list(rep, opt)
+        else:
+            rep = sympify(rep)
 
-                if rep.is_Poly:
-                    result = _init_poly_from_poly(rep, opt)
-                else:
-                    result = _init_poly_from_basic(rep, opt)
+            if rep.is_Poly:
+                return cls._from_poly(rep, opt)
+            else:
+                return cls._from_expr(rep, opt)
 
-                if type(result) is tuple:
-                    rep, opt['gens'] = result
-                else:
-                    if result.is_Poly or not opt.strict:
-                        return result
-                    else:
-                        raise GeneratorsNeeded("can't initialize from %s without generators" % rep)
+    @classmethod
+    def new(cls, rep, *gens):
+        """Construct :class:`Poly` instance from raw representation. """
+        if not isinstance(rep, DMP):
+            raise PolynomialError("invalid polynomial representation: %s" % rep)
+        elif rep.lev != len(gens)-1:
+            raise PolynomialError("invalid arguments: %s, %s" % (rep, gens))
 
         obj = Basic.__new__(cls)
 
         obj.rep = rep
-        obj.gens = opt.gens
+        obj.gens = gens
 
         return obj
 
     @classmethod
-    def new(cls, rep, gens):
-        """Construct :class:`Poly` instance from raw representation. """
-        if not isinstance(rep, DMP):
-            raise PolynomialError("invalid polynomial representation: %s" % rep)
+    def from_dict(cls, rep, *gens, **args):
+        """Construct a polynomial from a ``dict``. """
+        opt = options.build_options(gens, args)
+        return cls._from_dict(rep, opt)
 
-        obj = Basic.__new__(cls)
+    @classmethod
+    def from_list(cls, rep, *gens, **args):
+        """Construct a polynomial from a ``list``. """
+        opt = options.build_options(gens, args)
+        return cls._from_list(rep, opt)
 
-        obj.rep = rep
-        obj.gens = tuple(gens)
+    @classmethod
+    def from_poly(cls, rep, *gens, **args):
+        """Construct a polynomial from a polynomial. """
+        opt = options.build_options(gens, args)
+        return cls._from_poly(rep, opt)
 
-        return obj
+    @classmethod
+    def from_expr(cls, rep, *gens, **args):
+        """Construct a polynomial from an expression. """
+        opt = options.build_options(gens, args)
+        return cls._from_expr(rep, opt)
+
+    @classmethod
+    def _from_dict(cls, rep, opt):
+        """Construct a polynomial from a ``dict``. """
+        gens = opt.gens
+
+        if not gens:
+            raise GeneratorsNeeded("can't initialize from 'dict' without generators")
+
+        level = len(gens)-1
+        domain = opt.domain
+
+        if domain is None:
+            domain, rep = construct_domain(rep, opt=opt)
+        else:
+            for monom, coeff in rep.iteritems():
+                rep[monom] = domain.convert(coeff)
+
+        return cls.new(DMP.from_dict(rep, level, domain), *gens)
+
+    @classmethod
+    def _from_list(cls, rep, opt):
+        """Construct a polynomial from a ``list``. """
+        gens = opt.gens
+
+        if not gens:
+            raise GeneratorsNeeded("can't initialize from 'list' without generators")
+        elif len(gens) != 1:
+            raise MultivariatePolynomialError("'list' representation not supported")
+
+        level = len(gens)-1
+        domain = opt.domain
+
+        if domain is None:
+            domain, rep = construct_domain(rep, opt=opt)
+        else:
+            rep = map(domain.convert, rep)
+
+        return cls.new(DMP.from_list(rep, level, domain), *gens)
+
+    @classmethod
+    def _from_poly(cls, rep, opt):
+        """Construct a polynomial from a polynomial. """
+        gens = opt.gens
+        order = opt.order
+        field = opt.field
+        domain = opt.domain
+
+        if gens and rep.gens != gens:
+            if set(rep.gens) != set(gens):
+                return cls._from_expr(rep.as_expr(), opt)
+            else:
+                rep = rep.reorder(*gens)
+
+        if 'order' in opt:
+            rep = rep.set_order(order)
+
+        if 'domain' in opt and domain:
+            rep = rep.set_domain(domain)
+        elif field is True:
+            rep = rep.to_field()
+
+        return rep
+
+    @classmethod
+    def _from_expr(cls, rep, opt):
+        """Construct a polynomial from an expression. """
+        rep, opt = _dict_from_expr(rep, opt)
+        return cls._from_dict(rep, opt)
 
     def __getnewargs__(self):
         """Data used by pickling protocol version 2. """
@@ -251,21 +222,26 @@ class Poly(Basic):
 
     @property
     def domain(self):
-        """Get the ground domain of `self`. """
+        """Get the ground domain of ``self``. """
         return self.get_domain()
 
     @property
     def zero(self):
-        """Return zero polynomial with `self`'s properties. """
-        return self.new(self.rep.zero(self.rep.lev, self.rep.dom), self.gens)
+        """Return zero polynomial with ``self``'s properties. """
+        return self.new(self.rep.zero(self.rep.lev, self.rep.dom), *self.gens)
 
     @property
     def one(self):
-        """Return one polynomial with `self`'s properties. """
-        return self.new(self.rep.one(self.rep.lev, self.rep.dom), self.gens)
+        """Return one polynomial with ``self``'s properties. """
+        return self.new(self.rep.one(self.rep.lev, self.rep.dom), *self.gens)
+
+    @property
+    def unit(f):
+        """Return unit polynomial with ``self``'s properties. """
+        return self.new(self.rep.unit(self.rep.lev, self.rep.dom), *self.gens)
 
     def unify(f, g):
-        """Make `f` and `g` belong to the same domain. """
+        """Make ``f`` and ``g`` belong to the same domain. """
         _, per, F, G = f._unify(g)
         return per(F), per(G)
 
@@ -312,7 +288,7 @@ class Poly(Basic):
                 if not gens:
                     return dom.to_sympy(rep)
 
-            return Poly(rep, *gens)
+            return Poly.new(rep, *gens)
 
         return dom, per, F, G
 
@@ -327,28 +303,24 @@ class Poly(Basic):
             if not gens:
                 return f.rep.dom.to_sympy(rep)
 
-        return Poly(rep, *gens)
-
-    def unit(f):
-        """Return unit of `f`'s polynomial algebra. """
-        return f.per(f.rep.unit())
+        return Poly.new(rep, *gens)
 
     def set_domain(f, domain):
-        """Set the ground domain of `f`. """
+        """Set the ground domain of ``f``. """
         domain = options.Domain.preprocess(domain)
         return f.per(f.rep.convert(domain))
 
     def get_domain(f):
-        """Get the ground domain of `f`. """
+        """Get the ground domain of ``f``. """
         return f.rep.dom
 
     def set_modulus(f, modulus):
-        """Set the modulus of `f`. """
+        """Set the modulus of ``f``. """
         modulus = options.Modulus.preprocess(modulus)
         return f.set_domain(FF(modulus))
 
     def get_modulus(f):
-        """Get the modulus of `f`. """
+        """Get the modulus of ``f``. """
         domain = f.get_domain()
 
         if not domain.has_CharacteristicZero:
@@ -370,7 +342,7 @@ class Poly(Basic):
         return f.as_basic().subs(old, new)
 
     def replace(f, x, y=None):
-        """Replace `x` with `y` in generators list. """
+        """Replace ``x`` with ``y`` in generators list. """
         if y is None:
             if f.is_univariate:
                 x, y = f.gen, x
@@ -474,13 +446,25 @@ class Poly(Basic):
         """Returns the number of non-zero terms in `f`. """
         return len(f.as_dict())
 
-    def as_dict(f):
-        """Switch to a dict representation with SymPy coefficients. """
-        return f.rep.to_sympy_dict()
+    def as_dict(f, native=False):
+        """Switch to a ``dict`` representation. """
+        if native:
+            return f.rep.to_dict()
+        else:
+            return f.rep.to_sympy_dict()
 
-    def as_basic(f, *gens):
-        """Convert a polynomial instance to a SymPy expression. """
+    def as_list(f, native=False):
+        """Switch to a ``list`` representation. """
+        if native:
+            return f.rep.to_list()
+        else:
+            return f.rep.to_sympy_list()
+
+    def as_expr(f, *gens):
+        """Convert a polynomial an expression. """
         return basic_from_dict(f.rep.to_sympy_dict(), *(gens or f.gens))
+
+    as_basic = as_expr
 
     def lift(f):
         """Convert algebraic coefficients to rationals. """
@@ -1537,14 +1521,14 @@ def poly_from_expr(expr, *gens, **args):
             denom = denom.expand()
 
         try:
-            return parallel_poly_from_expr((numer, denom), opt=opt)
+            return _parallel_poly_from_expr((numer, denom), opt)
         except PolificationFailed:
             raise PolificationFailed(orig, numer/denom)
     elif opt.expand:
         expr = expr.expand()
 
     try:
-        rep, gens = dict_from_basic(expr, opt=opt)
+        rep, opt = _dict_from_expr(expr, opt)
     except GeneratorsNeeded:
         raise PolificationFailed(orig, expr)
 
@@ -1556,11 +1540,10 @@ def poly_from_expr(expr, *gens, **args):
     else:
         coeffs = map(domain.from_sympy, coeffs)
 
-    level = len(gens)-1
+    level = len(opt.gens)-1
 
-    poly = Poly.new(DMP.from_monoms_coeffs(monoms, coeffs, level, domain), gens)
+    poly = Poly.new(DMP.from_monoms_coeffs(monoms, coeffs, level, domain), *opt.gens)
 
-    opt['gens'] = gens
     opt['domain'] = domain
 
     if opt.polys is None:
@@ -1571,13 +1554,16 @@ def poly_from_expr(expr, *gens, **args):
 def parallel_poly_from_expr(exprs, *gens, **args):
     """Construct polynomials from expressions. """
     opt = options.build_options(gens, args)
+    return _parallel_poly_from_expr(exprs, opt)
 
+def _parallel_poly_from_expr(exprs, opt):
+    """Construct polynomials from expressions. """
     if len(exprs) == 2:
         f, g = exprs
 
         if isinstance(f, Poly) and isinstance(g, Poly):
-            f = Poly(f, opt=opt)
-            g = Poly(g, opt=opt)
+            f = Poly._from_poly(f, opt)
+            g = Poly._from_poly(g, opt)
 
             f, g = f.unify(g)
 
@@ -1619,7 +1605,7 @@ def parallel_poly_from_expr(exprs, *gens, **args):
             exprs[i] = exprs[i].as_basic()
 
     try:
-        reps, gens = parallel_dict_from_basic(exprs, opt=opt)
+        reps, opt = _parallel_dict_from_expr(exprs, opt)
     except GeneratorsNeeded:
         raise PolificationFailed(origs, exprs, True)
 
@@ -1647,13 +1633,12 @@ def parallel_poly_from_expr(exprs, *gens, **args):
         all_coeffs.append(coeffs_list[:k])
         coeffs_list = coeffs_list[k:]
 
-    polys, level = [], len(gens)-1
+    polys, level = [], len(opt.gens)-1
 
     for monoms, coeffs in zip(all_monoms, all_coeffs):
         rep = DMP.from_monoms_coeffs(monoms, coeffs, level, domain)
-        polys.append(Poly.new(rep, gens))
+        polys.append(Poly.new(rep, *opt.gens))
 
-    opt['gens'] = gens
     opt['domain'] = domain
 
     if opt.polys is None:
@@ -2470,8 +2455,8 @@ def reduced(f, G, *gens, **args):
 
     Q, r = sdp_div(polys[0], polys[1:], level, opt.order, opt.domain)
 
-    Q = [ Poly(DMP(dict(q), opt.domain, level), *opt.gens) for q in Q ]
-    r =   Poly(DMP(dict(r), opt.domain, level), *opt.gens)
+    Q = [ Poly.new(DMP(dict(q), opt.domain, level), *opt.gens) for q in Q ]
+    r =   Poly.new(DMP(dict(r), opt.domain, level), *opt.gens)
 
     if not opt.polys:
         return [ q.as_basic() for q in Q ], r.as_basic()
@@ -2490,7 +2475,7 @@ def groebner(F, *gens, **args):
     level = len(opt.gens)-1
 
     G = sdp_groebner(polys, level, opt.order, opt.domain, monic=opt.monic)
-    G = [ Poly(DMP(dict(g), opt.domain, level), *opt.gens) for g in G ]
+    G = [ Poly.new(DMP(dict(g), opt.domain, level), *opt.gens) for g in G ]
 
     if not opt.polys:
         return [ g.as_basic() for g in G ]
