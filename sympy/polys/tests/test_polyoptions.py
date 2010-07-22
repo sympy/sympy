@@ -16,6 +16,23 @@ from sympy import Integer, I, sqrt
 from sympy.utilities.pytest import raises
 from sympy.abc import x, y, z
 
+def test_Options_clone():
+    opt = Options((x, y, z), {'domain': 'ZZ'})
+
+    assert opt.gens == (x, y, z)
+    assert opt.domain == ZZ
+    assert ('order' in opt) == False
+
+    new_opt = opt.clone({'gens': (x,y), 'order': 'lex'})
+
+    assert opt.gens == (x, y, z)
+    assert opt.domain == ZZ
+    assert ('order' in opt) == False
+
+    assert new_opt.gens == (x, y)
+    assert new_opt.domain == ZZ
+    assert ('order' in new_opt) == True
+
 def test_Expand_preprocess():
     assert Expand.preprocess(False) is False
     assert Expand.preprocess(True) is True

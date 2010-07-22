@@ -72,7 +72,7 @@ def cyclotomic_poly(n, x=None, **args):
     else:
         x = Dummy('x')
 
-    poly = Poly(DMP(dup_zz_cyclotomic_poly(int(n), ZZ), ZZ), x)
+    poly = Poly.new(DMP(dup_zz_cyclotomic_poly(int(n), ZZ), ZZ), x)
 
     if not args.get('polys', False):
         return poly.as_basic()

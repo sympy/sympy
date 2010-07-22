@@ -462,12 +462,12 @@ class AlgebraicNumber(Expr):
     def as_poly(self, x=None):
         """Create a Poly instance from `self`. """
         if x is not None:
-            return Poly(self.rep, x)
+            return Poly.new(self.rep, x)
         else:
             if self.alias is not None:
-                return Poly(self.rep, self.alias)
+                return Poly.new(self.rep, self.alias)
             else:
-                return Poly(self.rep, Dummy('x'))
+                return Poly.new(self.rep, Dummy('x'))
 
     def as_basic(self, x=None):
         """Create a Basic expression from `self`. """
