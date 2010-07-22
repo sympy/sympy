@@ -151,9 +151,13 @@ def get_indices(expr):
             return _get_indices_Mul(expr)
         elif expr.is_Add:
             return _get_indices_Add(expr)
+
+        # this test is expensive, so it should be at the end
+        elif not expr.has(IndexedElement):
+            return tuple(), tuple()
         else:
             raise NotImplementedError(
-                    "No specialized function for type %s"%type(expr))
+                    "FIXME: No specialized handling of type %s"%type(expr))
 
 def get_contraction_structure(expr):
     """Determine dummy indices of expression `expr' and describe structure of the expression
@@ -237,3 +241,10 @@ def get_contraction_structure(expr):
                 else:
                     result[key] = d[key]
         return result
+
+    # this test is expensive, so it should be at the end
+    elif not expr.has(IndexedElement):
+        return {None: expr}
+    else:
+        raise NotImplementedError(
+                "FIXME: No specialized handling of type %s"%type(expr))
