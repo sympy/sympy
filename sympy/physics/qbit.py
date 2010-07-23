@@ -380,9 +380,23 @@ class controlledMod(Gate):
             outarray.append((out>>i)&1)
         return Qbit(*outarray)
 
-def ensembleMeasure(state):
-    if isinstance(state, Add):
-        pass  
+class ensembleMeasure(NondistributiveGate): #for now, ensemble measure does not do partial measurements FIXIT
+    def __new__(cls, *args):
+        return Expr.__new__(cls, *args, commutative = False)
+
+    def measure(self, state):
+        state = state.expand()
+        if isinstance(state, (Qbit, Mul)):
+                return state
+        if len(self.args) == 0:
+            #Do whole measuremnet
+            retVal = []
+            for each_item in state.args:
+                retVal.append((Mul(*each_item.args[0:-1])*Mul(*each_item.args[0:-1]).conjugate(), each_item.args[-1]))
+            return retVal
+        else:
+            raise NotImplementedError("Don't have partial ensemble measures done yet, check back later")
+            #Do partial measurement
 
 class measure(NondistributiveGate):
     def __new__(cls, *args):
@@ -392,10 +406,7 @@ class measure(NondistributiveGate):
 
     def measure(self, state):
         qbit = self.args[0]
-        state = state.expand()
-        if isinstance(state, Mul):
-            return state        
-        #for now, we convert to float TODO keep it as is sqrt's and all
+        state = state.expand() 
         prob1 = 0
         #Go through each item in the add and grab its probability
         #This will be used to determine probability of getting a 1
@@ -417,8 +428,6 @@ class measure(NondistributiveGate):
         else:
             result = result/sqrt(1-prob1)
         return result.expand()
-     
-                
 
 class RkGate(Gate):
     def __new__(cls, *args):
@@ -953,6 +962,8 @@ class ADD(Gate): #TODO check what happens when we carry for diff number of in-ou
         InOutReg = args[1]
         carryReg = args[2]
         circuit = 1
+        for item in carryReg:
+            circuit = SetZero(item)*circuit
         for i in range(len(InReg)):
             if i != (len(InReg)-1):
                 circuit = ToffoliGate(InReg[i], InOutReg[i], carryReg[i+1])*circuit
@@ -960,6 +971,26 @@ class ADD(Gate): #TODO check what happens when we carry for diff number of in-ou
                 circuit = ToffoliGate(InOutReg[i], carryReg[i], carryReg[i+1])*circuit
             circuit = CNOTGate(InReg[i], InOutReg[i])*circuit
             circuit = CNOTGate(carryReg[i], InOutReg[i])*circuit
+        for item in carryReg:
+            circuit = SetZero(item)*circuit
+        return circuit
+
+class ControlledADD(Gate): #TODO check what happens when we carry for diff number of in-out sizes 
+    def __new__(cls, *args):
+        InReg = args[0]
+        InOutReg = args[1]
+        carryReg = args[2]
+        control = args[3]
+        circuit = 1
+        for item in carryReg:
+            circuit = SetZero(item)*circuit
+        for i in range(len(InReg)):
+            if i != (len(InReg)-1):
+                circuit = ToffoliGate(InReg[i], InOutReg[i], carryReg[i+1])*circuit
+                circuit = ToffoliGate(InReg[i], carryReg[i], carryReg[i+1])*circuit
+                circuit = ToffoliGate(InOutReg[i], carryReg[i], carryReg[i+1])*circuit
+            circuit = ToffoliGate(control, InReg[i], InOutReg[i])*circuit
+            circuit = ToffoliGate(control, carryReg[i], InOutReg[i])*circuit
         for item in carryReg:
             circuit = SetZero(item)*circuit
         return circuit
@@ -987,36 +1018,22 @@ class Bitshift(Gate): #check
         else:
             return 1
 
-class Multiply(NondistributiveGate): #This is harder than I thought will need to fix-it
+class Multiply(NondistributiveGate): #This is harder than I thought will need to fix-it (Controlled-Add?)
     def __new__(cls, *args):
         if len(args) != 4:
             raise Exception("Must input InReg1, InReg2, OutReg, carryReg Tuples")
-        return Expr.__new__(cls, *args, commutative = False)
-
-    def measure(self, circuit):
-        InReg1 = self.args[0]
-        InReg2 = self.args[1]
-        OutReg = self.args[2]
-        carryReg = self.args[3]
-        circuit = circuit.expand()
-        if isinstance(circuit, Add):
-            part = 0
-            for item in circuit.args:
-                part = part + apply_gates(Multiply(InReg1, InReg2, OutReg, carryReg)*measure)                
-            return part
-        if isinstance(circuit, Mul):
-            return circuit.args[:-1]*Multiply(InReg1, InReg2, OutReg, carryReg, circuit.args[-1])
-        
+        InReg1 = args[0]
+        InReg2 = args[1]
+        OutReg = args[2]
+        carryReg = args[3]
+        circuit = 1
         for item in OutReg:
             circuit = SetZero(item)*circuit
         for item in carryReg:
             circuit = SetZero(item)*circuit
-        circuit = apply_gates(circuit)
         for i in InReg2:
-            if circuit[i] == 1:
-                circuit = ADD(InReg1, OutReg, carryReg)*circuit
+            circuit = ControlledADD(InReg1, OutReg, carryReg, i)*circuit
             circuit = Bitshift(InReg1, 1, carryReg[0])*circuit
-        circuit = apply_gates(circuit)
         return circuit
                         
 class SetZero(NondistributiveGate):

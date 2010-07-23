@@ -286,7 +286,7 @@ def test_reversible_add():
             
     for i in range(4):
         for k in range(4):
-            result = apply_gates(ADD((0,1,2,3),(4,5,6,7),(8,9,10,11),Qbit(*([0,0,0,0] + numtoarr(k) + numtoarr(i)))))
+            result = apply_gates(ADD((0,1,2,3),(4,5,6,7),(8,9,10,11))*Qbit(*([0,0,0,0] + numtoarr(k) + numtoarr(i))))
             assert list(result.args[4:8]) == numtoarr(i+k)
 
 def test_reversible_bitshift():
@@ -294,15 +294,15 @@ def test_reversible_bitshift():
     Register = range(12)
     tempStorage = 12
     number = 2
-    assert Bitshift(Register, number, tempStorage, circuit) == Qbit(0,1,0,1,1,1,1,0,1,0,1,0,0)
+    assert apply_gates(Bitshift(Register, number, tempStorage)*circuit) == Qbit(0,1,0,1,1,1,1,0,1,0,1,0,0)
     number = -1
-    assert Bitshift(Register, number, tempStorage, circuit) == Qbit(0,0,0,0,1,0,1,1,1,1,0,1,0)
+    assert apply_gates(Bitshift(Register, number, tempStorage)*circuit) == Qbit(0,0,0,0,1,0,1,1,1,1,0,1,0)
     number = -2
-    assert Bitshift(Register, number, tempStorage, circuit) == Qbit(0,0,0,0,0,1,0,1,1,1,1,0,1)
+    assert apply_gates(Bitshift(Register, number, tempStorage)*circuit) == Qbit(0,0,0,0,0,1,0,1,1,1,1,0,1)
     number = 1
-    assert Bitshift(Register, number, tempStorage, circuit) == Qbit(0,0,1,0,1,1,1,1,0,1,0,1,0)
+    assert apply_gates(Bitshift(Register, number, tempStorage)*circuit) == Qbit(0,0,1,0,1,1,1,1,0,1,0,1,0)
     number = 12
-    assert Bitshift(Register, number, tempStorage, circuit) == Qbit(0,0,0,0,0,0,0,0,0,0,0,0,0)
+    assert apply_gates(Bitshift(Register, number, tempStorage)*circuit) == Qbit(0,0,0,0,0,0,0,0,0,0,0,0,0)
 
 def test_reversible_multiply():
     InReg1 = (0,1,2,3)
@@ -310,7 +310,7 @@ def test_reversible_multiply():
     OutReg = (8,9,10,11)
     carryReg = (12,13,14,15)
     circuit =  Qbit(0,0,0,0,0,0,0,0,0,0,1,0,0,0,1,0)
-    assert Multiply(InReg1, InReg2, OutReg, carryReg, circuit) == Qbit(0,0,0,0,0,1,0,0,0,0,1,0,0,0,0,0)
+    assert apply_gates(Multiply(InReg1, InReg2, OutReg, carryReg)*circuit) == Qbit(0,0,0,0,0,1,0,0,0,0,1,0,0,0,0,0)
 
 def test_represent_decimal():
     assert Qbit(9) == Qbit(1,0,0,1)
