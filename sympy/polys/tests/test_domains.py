@@ -14,6 +14,9 @@ from sympy.polys.polyerrors import (
 )
 
 from sympy.utilities.pytest import raises
+from sympy import S, sqrt, sin, oo, all
+
+from sympy.abc import x, y, z
 
 ALG = QQ.algebraic_field(sqrt(2)+sqrt(3))
 
@@ -389,3 +392,12 @@ def test_inject():
     assert ZZ.inject(x, y, z) == ZZ[x, y, z]
     assert ZZ[x].inject(y, z) == ZZ[x, y, z]
     raises(GeneratorsError, "ZZ[x].inject(x)")
+
+def test_Domain_map():
+    seq = ZZ.map([1, 2, 3, 4])
+
+    assert all([ ZZ.of_type(elt) for elt in seq ])
+
+    seq = ZZ.map([[1, 2, 3, 4]])
+
+    assert all([ ZZ.of_type(elt) for elt in seq[0] ]) and len(seq) == 1
