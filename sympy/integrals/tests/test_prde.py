@@ -1,7 +1,7 @@
 """Most of these tests come from the examples in Bronstein's book."""
 from sympy import Poly, Matrix
 from sympy.integrals.prde import (prde_normal_denom, prde_special_denom,
-    prde_linear_constraints, constant_system, par_spde,
+    prde_linear_constraints, constant_system, prde_spde, prde_no_cancel_b_large,
     is_log_deriv_k_t_radical, parametric_log_deriv_heu)
 
 from sympy.abc import x, t
@@ -62,11 +62,22 @@ def test_constant_system():
                  [0, 0, 0],
                  [0, 0, 1]]), Matrix([0, 1, 0, 0]))
 
-def test_par_spde():
+def test_prde_spde():
     D = [Poly(x, t), Poly(-x*t, t)]
-    assert par_spde(Poly(t, t), Poly(-1/x, t), D, 2, [Poly(1, x), Poly(1/x, t)], [x, t]) == \
+    assert prde_spde(Poly(t, t), Poly(-1/x, t), D, 2, [Poly(1, x), Poly(1/x, t)], [x, t]) == \
         (Poly(t, t), Poly(0, t), [Poly(2*x, t), Poly(-x, t)],
         [Poly(-x**2, t), Poly(0, t)], 1)
+
+def test_prde_no_cancel():
+    # b large
+    D = [Poly(1, x)]
+    assert prde_no_cancel_b_large(Poly(1, x), [Poly(x**2, x), Poly(1, x)], 2, D, [x]) == \
+        ([Poly(x**2 - 2*x + 2, x), Poly(1, x)], Matrix([[1, 0, -1, 0],
+                                                        [0, 1, 0, -1]]))
+
+    assert prde_no_cancel_b_large(Poly(1, x), [Poly(x**3, x), Poly(1, x)], 3, D, [x]) == \
+        ([Poly(x**3 - 3*x**2 + 6*x - 6, x), Poly(1, x)], Matrix([[1, 0, -1, 0],
+                                                                 [0, 1, 0, -1]]))
 
 def test_is_log_deriv_k_t_radical():
     pass

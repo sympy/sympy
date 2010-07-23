@@ -4,10 +4,19 @@ Algorithms for solving Parametric Risch Differential Equations.
 The methods used for solving Parametric Risch Differential Equations parallel
 those for solving Risch Differential Equations.  See the outline in the
 docstring of rde.py for more information.
+
+The Parametric Risch Differential Equation problem is, given f, g1, ..., gm in
+K(t), to determine if there exist y in K(t) and c1, ..., cm in Const(K) such
+that Dy + f*y == Sum(ci*gi, (i, 1, m)), and to find such y and ci if they exist.
+
+For the algorithms here G is a list of tuples of factions of the terms on the
+right hand side of the equation (i.e., gi in k(t)), and Q is a list of terms on
+the right hand side of the equation (i.e., qi in k[t]).  See the docstring of
+each function for more information.
 """
 from sympy.core import Symbol
 
-from sympy.matrices import Matrix
+from sympy.matrices import Matrix, zeros, eye
 
 from sympy.solvers import solve
 
@@ -193,28 +202,65 @@ def constant_system(A, u, D, T):
 
     return (A, u)
 
-def par_spde(a, b, G, n, D, T):
+def prde_spde(a, b, Q, n, D, T):
     """
     Special Polynomial Differential Equation algorithm: Parametric Version.
 
-    Given a derivation D on k[t], an integer n, and a, b, g1, ..., gm in k[t]
+    Given a derivation D on k[t], an integer n, and a, b, q1, ..., qm in k[t]
     with deg(a) > 0 and gcd(a, b) == 1, return (A, B, Q, R, n1), with
-    Q = [q1, ..., qm] and R = [r1, ..., rm], such that for any solution
+    Qq = [q1, ..., qm] and R = [r1, ..., rm], such that for any solution
     c1, ..., cm in Const(k) and q in k[t] of degree at most n of
     a*Dq + b*q == Sum(ci*gi, (i, 1, m)), p = (q - Sum(ci*ri, (i, 1, m)))/a has
     degree at most n1 and satisfies A*Dp + B*p == Sum(ci*qi, (i, 1, m))
     """
     t = T[-1]
 
-    R, Z = zip(*[gcdex_diophantine(b, a, gi) for gi in G])
+    R, Z = zip(*[gcdex_diophantine(b, a, qi) for qi in Q])
 
     A = a
     B = b + derivation(a, D, T)
-    Q = [zi - derivation(ri, D, T) for ri, zi in zip(R, Z)]
+    Qq = [zi - derivation(ri, D, T) for ri, zi in zip(R, Z)]
     R = list(R)
     n1 = n - a.degree(t)
 
-    return (A, B, Q, R, n1)
+    return (A, B, Qq, R, n1)
+
+def prde_no_cancel_b_large(b, Q, n, D, T):
+    """
+    Parametric Poly Risch Differential Equation - No cancelation: deg(b) large enough.
+
+    Given a derivation D on k[t], n in ZZ, and b, q1, ..., qm in k[t] with
+    b != 0 and either D == d/dt or deg(b) > max(0, deg(D) - 1), returns
+    h1, ..., hr in k[r] and a matrix A with coefficients in Const(k) such that
+    if c1, ..., cm in Const(k) and q in k[t] satisfy deg(q) <= n and
+    Dq + b*Q == Sum(ci*qi, (i, 1, m)), then q = Sum(dj*hj, (j, 1, r)), where
+    d1, ..., dr in Const(k) and A*Matrix([[c1, ..., cm, d1, ...., dr]]).T == 0.
+    """
+    t = T[-1]
+    db = b.degree(t)
+    m = len(Q)
+    H = [Poly(0, t)]*m
+
+    while n >= 0:
+        for i in range(m):
+            si = Q[i].nth(n + db)/b.LC()
+            sitn = Poly(si*t**n, t)
+            H[i] = H[i] + sitn
+            Q[i] = Q[i] - derivation(sitn, D, T) - b*sitn
+        n -= 1
+
+    if all(qi.is_zero for qi in Q):
+        dc = -1
+        M = zeros([0, 2])
+    else:
+        dc = max([qi.degree(t) for qi in Q])
+        M = Matrix(dc + 1, m, lambda i, j: Q[j].nth(i))
+    A, u = constant_system(M, zeros([dc + 1, 1]), D, T)
+    c = eye(m)
+    A = A.row_join(zeros([A.rows, m])).col_join(c.row_join(-c))
+
+    return (H, A)
+
 
 def param_rischDE(fa, fd, G, D, T):
     """
@@ -266,7 +312,7 @@ def parametric_log_deriv_heu(fa, fd, wa, wd, D, T):
         Qv = is_log_deriv_k_t_radical(N*fa*wd - M*wa*fd, fd*wd, D, T, 'auto')
         if Qv is None:
             raise NonElementaryIntegral("parametric_log_deriv_heu(): %s/%s " +
-                "(N*f - M*w) is not the logarithmic derivaitive of a k(t)-radical."
+                "(N*f - M*w) is not the logarithmic derivative of a k(t)-radical."
                 % (nfmwa, nfmwd))
         Q, v = Qv
 
@@ -306,7 +352,7 @@ def parametric_log_deriv_heu(fa, fd, wa, wd, D, T):
     Qv = is_log_deriv_k_t_radical(nfmwa, nfmwd, D, T, 'auto')
     if Qv is None:
         raise NonElementaryIntegral("parametric_log_deriv_heu(): %s/%s " +
-            "(N*f - M*w) is not the logarithmic derivaitive of a k(t)-radical."
+            "(N*f - M*w) is not the logarithmic derivative of a k(t)-radical."
             % (nfmwa, nfmwd))
     Q, v = Qv
 
@@ -372,7 +418,7 @@ def is_log_deriv_k_t_radical(fa, fd, D, T, case='auto'):
     try:
         p = Poly(p, t)
     except PolynomialError:
-        # f - Dg will be in k[t] if f is the logarithmic derivaitve of a k(t)-radical
+        # f - Dg will be in k[t] if f is the logarithmic derivative of a k(t)-radical
         return None
 
     if p.degree(t) >= max(1, d.degree(t)):
