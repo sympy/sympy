@@ -6,7 +6,7 @@ from str import StrPrinter
 
 # A list of classes that should be printed using StrPrinter
 STRPRINT = ("Add", "Infinity", "Integer", "Mul", "NegativeInfinity",
-            "NegativeOne", "One", "Pow", "Zero")
+            "Pow", "Zero")
 
 class PythonPrinter(ReprPrinter, StrPrinter):
     """A printer which converts an expression into its Python interpretation."""
@@ -61,3 +61,4 @@ def python(expr, **settings):
 def print_python(expr, **settings):
     """Print output of python() function"""
     print python(expr, **settings)
+
