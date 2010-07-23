@@ -2513,7 +2513,7 @@ def dup_sqf_list_include(f, K, all=False):
     >>> from sympy.polys.algebratools import ZZ
     >>> from sympy.polys.densetools import dup_sqf_list_include
     >>> dup_sqf_list_include([2, 16, 50, 76, 56, 16], ZZ)
-    [([2, 2], 2), ([1, 2], 3)]
+    [([2], 1), ([1, 1], 2), ([1, 2], 3)]
     >>> dup_sqf_list_include([2, 16, 50, 76, 56, 16], ZZ, all=True)
     [([2], 1), ([1, 1], 2), ([1, 2], 3)]
     """
@@ -2592,7 +2592,7 @@ def dmp_sqf_list_include(f, u, K, all=False):
     >>> from sympy.polys.algebratools import ZZ
     >>> from sympy.polys.densetools import dmp_sqf_list_include
     >>> dmp_sqf_list_include([[1], [2, 0], [1, 0, 0], [], [], []], 1, ZZ)
-    [([[1], [1, 0]], 2), ([[1], []], 3)]
+    [([[1]], 1), ([[1], [1, 0]], 2), ([[1], []], 3)]
     >>> dmp_sqf_list_include([[1], [2, 0], [1, 0, 0], [], [], []], 1, ZZ,
     ... all=True)
     [([[1]], 1), ([[1], [1, 0]], 2), ([[1], []], 3)]

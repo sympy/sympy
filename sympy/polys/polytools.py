@@ -2184,7 +2184,7 @@ class Poly(Basic):
         >>> from sympy.abc import x
         >>> Poly(2*x**5 + 16*x**4 + 50*x**3 + 76*x**2 + 56*x + 16,
         ... x).sqf_list_include()
-        [(Poly(2*x + 2, x, domain='ZZ'), 2),
+        [(Poly(2, x, domain='ZZ'), 1), (Poly(x + 1, x, domain='ZZ'), 2),
          (Poly(x + 2, x, domain='ZZ'), 3)]
         >>> Poly(2*x**5 + 16*x**4 + 50*x**3 + 76*x**2 + 56*x + 16,
         ... x).sqf_list_include(all=True)

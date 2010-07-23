@@ -2332,7 +2332,8 @@ class DMP(object):
         >>> from sympy.polys.algebratools import ZZ
         >>> DMP([ZZ(2), ZZ(16), ZZ(50), ZZ(76), ZZ(56), ZZ(16)],
         ... ZZ).sqf_list_include() == \
-        ... [(DMP([ZZ(2), ZZ(2)], ZZ), 2), (DMP([ZZ(1), ZZ(2)], ZZ), 3)]
+        ... [(DMP([ZZ(2)], ZZ), 1), (DMP([ZZ(1), ZZ(1)], ZZ), 2),
+        ... (DMP([ZZ(1), ZZ(2)], ZZ), 3)]
         True
         >>> DMP([ZZ(2), ZZ(16), ZZ(50), ZZ(76), ZZ(56), ZZ(16)],
         ... ZZ).sqf_list_include(all=True) == \
