@@ -127,7 +127,7 @@ def test__construct_domain():
 
 
 def test__init_poly_from_dict():
-    raises(PolynomialError, "_init_poly_from_dict({0: 1, 1: 2}, x, y, modulus=3, domain=ZZ)")
+    raises(NotImplementedError, "_init_poly_from_dict({0: 1, 1: 2}, x, y, modulus=3, domain=ZZ)")
 
     assert _init_poly_from_dict({0: 1, 1: 2}, x, modulus=3, domain=ZZ) == GFP([2,1], 3, ZZ)
     assert _init_poly_from_dict({0: 1, 1: 5}, x, modulus=3, domain=ZZ) == GFP([2,1], 3, ZZ)
@@ -184,7 +184,7 @@ def test__init_poly_from_poly():
     assert _init_poly_from_poly(f, x, y) == Poly(x + 7, x, y, domain='ZZ')
     assert _init_poly_from_poly(f, x, y, domain=ZZ) == Poly(x + 7, x, y, domain='ZZ')
     assert _init_poly_from_poly(f, x, y, domain=QQ) == Poly(x + 7, x, y, domain='QQ')
-    raises(PolynomialError, "_init_poly_from_poly(f, x, y, modulus=3)")
+    raises(NotImplementedError, "_init_poly_from_poly(f, x, y, modulus=3)")
 
     assert _init_poly_from_poly(g) == g
     assert _init_poly_from_poly(g, domain=ZZ) == (GFP([1,2], 3, ZZ), (x,))
@@ -196,15 +196,15 @@ def test__init_poly_from_poly():
     raises(DomainError, "_init_poly_from_poly(g, x, domain=QQ)")
     assert _init_poly_from_poly(g, x, modulus=2) == (GFP([1,0], 2, ZZ), (x,))
 
-    raises(PolynomialError, "_init_poly_from_poly(g, y)")
-    raises(PolynomialError, "_init_poly_from_poly(g, y, domain=ZZ)")
-    raises(PolynomialError, "_init_poly_from_poly(g, y, domain=QQ)")
-    raises(PolynomialError, "_init_poly_from_poly(g, y, modulus=3)")
+    raises(NotImplementedError, "_init_poly_from_poly(g, y)")
+    raises(NotImplementedError, "_init_poly_from_poly(g, y, domain=ZZ)")
+    raises(NotImplementedError, "_init_poly_from_poly(g, y, domain=QQ)")
+    raises(NotImplementedError, "_init_poly_from_poly(g, y, modulus=3)")
 
-    raises(PolynomialError, "_init_poly_from_poly(g, x, y)")
-    raises(PolynomialError, "_init_poly_from_poly(g, x, y, domain=ZZ)")
-    raises(PolynomialError, "_init_poly_from_poly(g, x, y, domain=QQ)")
-    raises(PolynomialError, "_init_poly_from_poly(g, x, y, modulus=3)")
+    raises(NotImplementedError, "_init_poly_from_poly(g, x, y)")
+    raises(NotImplementedError, "_init_poly_from_poly(g, x, y, domain=ZZ)")
+    raises(NotImplementedError, "_init_poly_from_poly(g, x, y, domain=QQ)")
+    raises(NotImplementedError, "_init_poly_from_poly(g, x, y, modulus=3)")
 
     assert _init_poly_from_poly(h) == h
     assert _init_poly_from_poly(h, domain=ZZ) == (DMP([[ZZ(1)],[ZZ(1),ZZ(0)]], ZZ), (x,y))
@@ -248,8 +248,8 @@ def test__init_poly_from_basic():
     assert _init_poly_from_basic(x + 5, x, modulus=3, domain=ZZ) == (GFP([1,2], 3, ZZ), (x,))
     assert _init_poly_from_basic(y + 5, y, modulus=3, domain=ZZ) == (GFP([1,2], 3, ZZ), (y,))
 
-    raises(PolynomialError, "_init_poly_from_basic(x + y, modulus=3, domain=ZZ)")
-    raises(PolynomialError, "_init_poly_from_basic(x + y, x, y, modulus=3, domain=ZZ)")
+    raises(NotImplementedError, "_init_poly_from_basic(x + y, modulus=3, domain=ZZ)")
+    raises(NotImplementedError, "_init_poly_from_basic(x + y, x, y, modulus=3, domain=ZZ)")
 
     assert _init_poly_from_basic(x + 5) == (DMP([1,5], ZZ), (x,))
     assert _init_poly_from_basic(y + 5) == (DMP([1,5], ZZ), (y,))
@@ -714,29 +714,38 @@ def test_Poly_is_irreducible():
     assert Poly(7*x + 3, modulus=11).is_irreducible == True
     assert Poly(7*x**2 + 3*x + 1, modulus=11).is_irreducible == False
 
+def test_Poly_subs():
+    assert Poly(x + 1).subs(x, 0) == 1
+
+    assert Poly(x + 1).subs(x, x) == Poly(x + 1)
+    assert Poly(x + 1).subs(x, y) == Poly(y + 1)
+
+    assert Poly(x*y, x).subs(y, x) == x**2
+    assert Poly(x*y, x).subs(x, y) == y**2
+
 def test_Poly_replace():
-    assert Poly(x+1).replace(x) == Poly(x+1)
-    assert Poly(x+1).replace(y) == Poly(y+1)
+    assert Poly(x + 1).replace(x) == Poly(x + 1)
+    assert Poly(x + 1).replace(y) == Poly(y + 1)
 
-    raises(PolynomialError, "Poly(x+y).replace(z)")
+    raises(PolynomialError, "Poly(x + y).replace(z)")
 
-    assert Poly(x+1).replace(x, x) == Poly(x+1)
-    assert Poly(x+1).replace(x, y) == Poly(y+1)
+    assert Poly(x + 1).replace(x, x) == Poly(x + 1)
+    assert Poly(x + 1).replace(x, y) == Poly(y + 1)
 
-    assert Poly(x+y).replace(x, x) == Poly(x+y)
-    assert Poly(x+y).replace(x, z) == Poly(z+y, z, y)
+    assert Poly(x + y).replace(x, x) == Poly(x + y)
+    assert Poly(x + y).replace(x, z) == Poly(z + y, z, y)
 
-    assert Poly(x+y).replace(y, y) == Poly(x+y)
-    assert Poly(x+y).replace(y, z) == Poly(x+z, x, z)
+    assert Poly(x + y).replace(y, y) == Poly(x + y)
+    assert Poly(x + y).replace(y, z) == Poly(x + z, x, z)
 
-    raises(PolynomialError, "Poly(x+y).replace(x, y)")
-    raises(PolynomialError, "Poly(x+y).replace(z, t)")
+    raises(PolynomialError, "Poly(x + y).replace(x, y)")
+    raises(PolynomialError, "Poly(x + y).replace(z, t)")
 
-    assert Poly(x+y, x).replace(x, z) == Poly(z+y, z)
-    assert Poly(x+y, y).replace(y, z) == Poly(x+z, z)
+    assert Poly(x + y, x).replace(x, z) == Poly(z + y, z)
+    assert Poly(x + y, y).replace(y, z) == Poly(x + z, z)
 
-    raises(PolynomialError, "Poly(x+y, x).replace(x, y)")
-    raises(PolynomialError, "Poly(x+y, y).replace(y, x)")
+    raises(PolynomialError, "Poly(x + y, x).replace(x, y)")
+    raises(PolynomialError, "Poly(x + y, y).replace(y, x)")
 
 def test_Poly_reorder():
     raises(PolynomialError, "Poly(x+y).reorder(x, z)")
@@ -1119,34 +1128,35 @@ def test_Poly_eval():
     assert Poly(1, x).eval(7) == 1
     assert Poly(x, x).eval(7) == 7
 
-    assert Poly(0, x).eval(7, gen=0) == 0
-    assert Poly(1, x).eval(7, gen=0) == 1
-    assert Poly(x, x).eval(7, gen=0) == 7
+    assert Poly(0, x).eval(0, 7) == 0
+    assert Poly(1, x).eval(0, 7) == 1
+    assert Poly(x, x).eval(0, 7) == 7
 
-    assert Poly(0, x).eval(7, gen=x) == 0
-    assert Poly(1, x).eval(7, gen=x) == 1
-    assert Poly(x, x).eval(7, gen=x) == 7
+    assert Poly(0, x).eval(x, 7) == 0
+    assert Poly(1, x).eval(x, 7) == 1
+    assert Poly(x, x).eval(x, 7) == 7
 
-    assert Poly(0, x).eval(7, gen='x') == 0
-    assert Poly(1, x).eval(7, gen='x') == 1
-    assert Poly(x, x).eval(7, gen='x') == 7
+    assert Poly(0, x).eval('x', 7) == 0
+    assert Poly(1, x).eval('x', 7) == 1
+    assert Poly(x, x).eval('x', 7) == 7
 
-    raises(PolynomialError, "Poly(1, x).eval(7, gen=1)")
-    raises(PolynomialError, "Poly(1, x).eval(7, gen=y)")
-    raises(PolynomialError, "Poly(1, x).eval(7, gen='y')")
+    raises(PolynomialError, "Poly(1, x).eval(1, 7)")
+    raises(PolynomialError, "Poly(1, x).eval(y, 7)")
+    raises(PolynomialError, "Poly(1, x).eval('y', 7)")
 
-    assert Poly(1, x, y).eval(7) == Poly(1, y)
+    assert Poly(123, x, y).eval(7) == Poly(123, y)
     assert Poly(2*y, x, y).eval(7) == Poly(2*y, y)
     assert Poly(x*y, x, y).eval(7) == Poly(7*y, y)
 
-    assert Poly(1, x, y).eval(7, gen=x) == Poly(1, y)
-    assert Poly(2*y, x, y).eval(7, gen=x) == Poly(2*y, y)
-    assert Poly(x*y, x, y).eval(7, gen=x) == Poly(7*y, y)
+    assert Poly(123, x, y).eval(x, 7) == Poly(123, y)
+    assert Poly(2*y, x, y).eval(x, 7) == Poly(2*y, y)
+    assert Poly(x*y, x, y).eval(x, 7) == Poly(7*y, y)
 
-    assert Poly(1, x, y).eval(7, gen=y) == Poly(1, x)
-    assert Poly(2*y, x, y).eval(7, gen=y) == Poly(14, x)
-    assert Poly(x*y, x, y).eval(7, gen=y) == Poly(7*x, x)
+    assert Poly(123, x, y).eval(y, 7) == Poly(123, x)
+    assert Poly(2*y, x, y).eval(y, 7) == Poly(14, x)
+    assert Poly(x*y, x, y).eval(y, 7) == Poly(7*x, x)
 
+    raises(NotImplementedError, "Poly(x*y).eval({x: 7})")
     raises(CoercionFailed, "Poly(x+1, domain='ZZ').eval(S(1)/2)")
 
 def test_poly_cancel():

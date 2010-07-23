@@ -276,7 +276,7 @@ def _init_poly_from_dict(dict_rep, *gens, **args):
 
     if modulus is not None:
         if len(gens) != 1:
-            raise PolynomialError("multivariate polynomials over GF(p) are not supported")
+            raise NotImplementedError("multivariate polynomials over finite fields are not supported")
         else:
             return GFP(dict_rep, modulus, domain, symmetric)
     else:
@@ -353,7 +353,7 @@ def _init_poly_from_poly(poly_rep, *gens, **args):
             else:
                 return poly_rep
         else:
-            raise PolynomialError("multivariate polynomials over GF(p) are not supported")
+            raise NotImplementedError("multivariate polynomials over finite fields are not supported")
 
     return (rep, gens or poly_rep.gens)
 
@@ -381,7 +381,7 @@ def _init_poly_from_basic(basic_rep, *gens, **args):
 
     if modulus is not None:
         if len(gens) > 1:
-            raise PolynomialError("multivariate polynomials over GF(p) are not supported")
+            raise NotImplementedError("multivariate polynomials over finite fields are not supported")
         else:
             result = GFP(_dict_set_domain(dict_rep, domain), modulus, domain, symmetric)
     else:
@@ -791,6 +791,19 @@ class Poly(Basic):
                 newgens.append(f.gens[i])
 
         return f.per(new, gens=newgens)
+
+    def _eval_subs(f, old, new):
+        """Internal implementation of :func:`subs`. """
+        if old in f.gens:
+            if new.is_number:
+                return f.eval(old, new)
+            else:
+                try:
+                    return f.replace(old, new)
+                except PolynomialError:
+                    pass
+
+        return f.as_basic().subs(old, new)
 
     def replace(f, x, y=None):
         """
@@ -1716,7 +1729,7 @@ class Poly(Basic):
         except AttributeError: # pragma: no cover
             raise OperationNotSupported(f, 'diff')
 
-    def eval(f, a, gen=0):
+    def eval(f, x, a=None):
         """
         Efficiently evaluates `f` at `a` in the given variable.
 
@@ -1724,12 +1737,20 @@ class Poly(Basic):
 
         >>> from sympy import Poly
         >>> from sympy.abc import x, y
-        >>> Poly(x**2 + 2*x + 3, x).eval(2)
-        11
-        >>> Poly(2*x*y + 3*x + y + 2, x, y).eval(2, gen=x)
+        >>> Poly(x**2 + 2*x + 3, x).eval(0)
+        3
+        >>> Poly(2*x*y + 3*x + y + 2, x, y).eval(0, 2)
         Poly(5*y + 8, y, domain='ZZ')
         """
-        j = f._gen_to_level(gen)
+        if a is None:
+            if isinstance(x, dict):
+                raise NotImplementedError('dict syntax')
+            else:
+                j, a = 0, x
+        else:
+            j = f._gen_to_level(x)
+
+        # XXX: use DomainError is a is not convertible
 
         try:
             result = f.rep.eval(a, j)
