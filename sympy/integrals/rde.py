@@ -210,13 +210,18 @@ def special_denom(a, ba, bd, ca, cd, D, T, case='auto'):
     # (a*p**N, (b + n*a*Dp/p)*p**N, c*p**(N - n), p**-n)
     return (A, B, C, h)
 
-def bound_degree(a, b, c, D, T, case='auto'):
+def bound_degree(a, b, cG, D, T, case='auto', parametric=False):
     """
     Bound on polynomial solutions.
 
     Given a derivation D on k[t] and a, b, c in k[t] with a != 0, return
     n in ZZ such that deg(q) <= n for any solution q in k[t] of
-    a*Dq + b*q == c.
+    a*Dq + b*q == c, when parametric=False, or deg(q) <= n for any solution
+    c1, ..., cm in Const(k) and q in k[t] of a*Dq + b*q == Sum(ci*gi, (i, 1, m))
+    when parametric=True.
+
+    For parametric=False, cG is c, a Poly; for parametric=True, cG is G ==
+    [g1, ..., gm], a list of Polys.
 
     This constitutes step 3 of the outline given in the rde.py docstring.
     """
@@ -229,7 +234,12 @@ def bound_degree(a, b, c, D, T, case='auto'):
 
     da = a.degree(t)
     db = b.degree(t)
-    dc = c.degree(t)
+
+    # The parametic and regular cases are identical, except for this part
+    if parametric:
+        dc = max([i.degree(t) for i in cG])
+    else:
+        dc = cG.degree(t)
 
     alpha = -b.as_poly(t).LC().as_basic()/a.as_poly(t).LC().as_basic()
     alpha = cancel(alpha)
