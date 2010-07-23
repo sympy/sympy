@@ -97,6 +97,17 @@ class State(Expr):
         pform = prettyForm(*pform.left(prettyForm(self.lbracket)))
         pform = prettyForm(*pform.right(prettyForm(self.rbracket)))
         return pform
+.
+    def represent(self, basis, **options):
+        
+
+def represent(expr, basis, **options):
+    """Represent the quantum expression in the given basis."""
+    if isinstance(expr, (State, Operator)):
+        return expr.represent(basis, **options)
+    elif:
+        
+
 
 class Ket(State):
 
