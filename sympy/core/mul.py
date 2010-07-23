@@ -238,6 +238,8 @@ class Mul(AssocOp):
             else:
                 inv_exp_dict[e] = b
 
+        reeval = False
+
         for e,b in inv_exp_dict.items():
             if e is S.Zero:
                 continue
@@ -251,6 +253,10 @@ class Mul(AssocOp):
                 coeff *= b ** e
             else:
                 obj = b**e
+                if obj.is_Mul:
+                    # We may have split out a number that needs to go in coeff
+                    # e.g., sqrt(6)*sqrt(2) == 2*sqrt(3).  See issue 415.
+                    reeval = True
                 if obj.is_Number:
                     coeff *= obj
                 else:
@@ -305,6 +311,8 @@ class Mul(AssocOp):
             coeff = c_part[0]
             c_part = [Add(*[coeff*f for f in c_part[1].args])]
 
+        if reeval:
+            return Mul.flatten(c_part)
         return c_part, nc_part, order_symbols
 
 

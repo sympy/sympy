@@ -261,6 +261,9 @@ class Ellipse(GeometryEntity):
                     and (self.hradius == o.hradius) \
                     and (self.vradius == o.vradius))
 
+    def __hash__(self):
+        return super(Ellipse, self).__hash__()
+
     def __contains__(self, o):
         if isinstance(o, Point):
             x = C.Symbol('x', real=True, dummy=True)

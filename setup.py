@@ -60,6 +60,7 @@ modules = [
     'sympy.parsing',
     'sympy.physics',
     'sympy.plotting',
+    'sympy.tensor',
     'sympy.thirdparty',
     'sympy.logic',
     'sympy.logic.algorithms',

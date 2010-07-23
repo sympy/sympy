@@ -3,7 +3,8 @@ from sympy import sin, cos, atan2, gamma, conjugate, sqrt, Factorial, \
 from sympy import Catalan, EulerGamma, E, GoldenRatio, I, pi
 from sympy import Function, Rational, Integer
 
-from sympy.printing.fcode import fcode, wrap_fortran
+from sympy.printing.fcode import fcode, FCodePrinter
+from sympy.tensor import Indexed, Idx
 
 
 def test_printmethod():
@@ -73,9 +74,9 @@ def test_implicit():
 def test_not_fortran():
     x = symbols('x')
     g = Function('g')
-    assert fcode(gamma(x)) == "C     Not Fortran 77:\nC     gamma(x)\n      gamma(x)"
-    assert fcode(Integral(sin(x))) == "C     Not Fortran 77:\nC     Integral(sin(x), x)\n      Integral(sin(x), x)"
-    assert fcode(g(x)) == "C     Not Fortran 77:\nC     g(x)\n      g(x)"
+    assert fcode(gamma(x)) == "C     Not Fortran:\nC     gamma(x)\n      gamma(x)"
+    assert fcode(Integral(sin(x))) == "C     Not Fortran:\nC     Integral(sin(x), x)\n      Integral(sin(x), x)"
+    assert fcode(g(x)) == "C     Not Fortran:\nC     g(x)\n      g(x)"
 
 def test_user_functions():
     x = symbols('x')
@@ -159,8 +160,9 @@ def test_fcode_Piecewise():
 
 def test_wrap_fortran():
     #   "########################################################################"
+    printer = FCodePrinter()
     lines = [
-        "C     This is a long comment on a single line that must be wrapped properly",
+        "C     This is a long comment on a single line that must be wrapped properly to produce nice output",
         "      this = is + a + long + and + nasty + fortran + statement + that * must + be + wrapped + properly",
         "      this = is + a + long + and + nasty + fortran + statement +  that * must + be + wrapped + properly",
         "      this = is + a + long + and + nasty + fortran + statement +   that * must + be + wrapped + properly",
@@ -176,10 +178,10 @@ def test_wrap_fortran():
         "      this = is + a + long + and + nasty + fortran + statement(that)/must + be + wrapped + properly",
         "      this = is + a + long + and + nasty + fortran +     statement(that)/must + be + wrapped + properly",
     ]
-    wrapped_lines = wrap_fortran(lines)
+    wrapped_lines = printer._wrap_fortran(lines)
     expected_lines = [
         "C     This is a long comment on a single line that must be wrapped",
-        "C     properly",
+        "C     properly to produce nice output",
         "      this = is + a + long + and + nasty + fortran + statement + that *",
         "     @ must + be + wrapped + properly",
         "      this = is + a + long + and + nasty + fortran + statement +  that *",
@@ -217,3 +219,67 @@ def test_wrap_fortran():
 
 def test_settings():
     raises(TypeError, 'fcode(S(4), method="garbage")')
+
+def test_free_form_code_line():
+    x, y = symbols('xy')
+    assert fcode(cos(x) + sin(y), source_format='free') == "cos(x) + sin(y)"
+
+def test_free_form_continuation_line():
+    x, y = symbols('xy')
+    result = fcode(((cos(x) + sin(y))**(7)).expand(), source_format='free')
+    expected = (
+'7*cos(x)**6*sin(y) + 7*sin(y)**6*cos(x) + 21*cos(x)**5*sin(y)**2 + 35* &\n'
+'      cos(x)**4*sin(y)**3 + 35*cos(x)**3*sin(y)**4 + 21*cos(x)**2*sin(y &\n'
+'      )**5 + cos(x)**7 + sin(y)**7'
+    )
+    assert result == expected
+
+def test_free_form_comment_line():
+    printer = FCodePrinter({ 'source_format': 'free'})
+    lines = [ "! This is a long comment on a single line that must be wrapped properly to produce nice output"]
+    expected = [
+        '! This is a long comment on a single line that must be wrapped properly',
+        '! to produce nice output']
+    assert printer._wrap_fortran(lines) == expected
+
+def test_loops():
+    from sympy import symbols
+    i,j,n,m = symbols('i j n m', integer=True)
+    A,x,y = symbols('A x y')
+    A = Indexed(A)(Idx(i, m), Idx(j, n))
+    x = Indexed(x)(Idx(j, n))
+    y = Indexed(y)(Idx(i, m))
+
+    # human = False
+    printer = FCodePrinter({ 'source_format': 'free', 'assign_to':y, 'human':0})
+    expected = ([], set([A, x, y, Idx(j, n), Idx(i, m)]), 'do i = 1, m\n   do j = 1, n\n      y(i) = A(i, j)*x(j)\n   end do\nend do')
+    code = printer.doprint(A*x)
+    # assert expected == code
+
+    # human = True
+    printer = FCodePrinter({ 'source_format': 'free', 'assign_to':y, 'human':1})
+
+    expected = (
+            '! Not Fortran:\n'
+            '! A(i, j)\n'
+            '! i\n'
+            '! j\n'
+            '! x(j)\n'
+            '! y(i)\n'
+            'do i = 1, m\n'
+            '   do j = 1, n\n'
+            '      y(i) = A(i, j)*x(j)\n'
+            '   end do\n'
+            'end do'
+            )
+    code = printer.doprint(A*x)
+    assert expected == code
+
+def test_derived_classes():
+    class MyFancyFCodePrinter(FCodePrinter):
+        _default_settings = FCodePrinter._default_settings.copy()
+        _default_settings['assign_to'] = "bork"
+
+    printer = MyFancyFCodePrinter()
+    x = symbols('x')
+    assert printer.doprint(sin(x)) == "      bork = sin(x)"

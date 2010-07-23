@@ -4,14 +4,17 @@ sure that passing custom Axes works.
 
 """
 
+try:
+    from pylab import figure
+    f = figure()
+    disabled = False
+except:
+    disabled = True
+
 from sympy.mpmath import mp, fp
 
 def test_axes():
-    try:
-        import pylab
-    except ImportError:
-        print "\nSkipping test (pylab not available)\n"
-        return
+    import pylab
     fig = pylab.figure()
     axes = fig.add_subplot(111)
     for ctx in [mp, fp]:

@@ -222,9 +222,10 @@ Expressions<symbolic-expressions>` below), numeric evaluation (:func:`N`
 is equivalent to :ref:`evalf()<evalf-label>` ), the class registry (for
 things like :func:`C.cos`, to prevent cyclic imports in some code),
 the `big O <http://en.wikipedia.org/wiki/Big_O_notation>`_ order symbol
-(as in :math:`O(n\log{n})`), and the assumptions object that holds a list of supported ask keys (such as :obj:`Q.real`), respectively.  You can use the mnemonic
-``QCOSINE`` to remember what Symbols are defined by default in SymPy.  Or
-better yet, always use lowercase letters for Symbol names.  Python will
+(as in :math:`O(n\log{n})`), and the assumptions object that holds a list of
+supported ask keys (such as :obj:`Q.real`), respectively.  You can use the
+mnemonic ``QCOSINE`` to remember what Symbols are defined by default in SymPy.
+Or better yet, always use lowercase letters for Symbol names.  Python will
 not prevent you from overriding default SymPy names or functions, so be
 careful.
 
@@ -376,12 +377,12 @@ In :command:`isympy`, with the :command:`ipython` shell::
     SyntaxError: invalid syntax
     >>> 2*x
     2*x
-    >>> x^2 # This is not power.  Use ** instead.
+    >>> (x+1)^2 # This is not power.  Use ** instead.
     Traceback (most recent call last):
-      File "<console>", line 1, in <module>
-    TypeError: unsupported operand type(s) for ^: 'Symbol' and 'int'
-    >>> x**2
-    x**2
+    ...
+    TypeError: unsupported operand type(s) for ^: 'Add' and 'int'
+    >>> (x+1)**2
+    (1 + x)**2
     >>> pprint(3 - x**(2*x)/(x + 1))
           2*x
          x

@@ -69,6 +69,7 @@ from sympy import Basic, Mul
 
 from sympy.polys.polyutils import _analyze_power
 from sympy.polys.monomialtools import monomial_cmp
+from sympy.core.basic import BasicMeta
 
 class Printer(object):
     """Generic printer
@@ -228,7 +229,8 @@ class Printer(object):
             # If the printer defines a name for a printing method
             # (Printer.printmethod) and the object knows for itself how it
             # should be printed, use that method.
-            if self.printmethod and hasattr(expr, self.printmethod):
+            if (self.printmethod and hasattr(expr, self.printmethod)
+                    and not isinstance(expr, BasicMeta)):
                 return getattr(expr, self.printmethod)(self, *args)
 
             # See if the class of expr is known, or if one of its super

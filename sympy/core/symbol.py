@@ -181,6 +181,7 @@ class Wild(Symbol):
         return repl_dict
 
     def __call__(self, *args, **assumptions):
+        from sympy.core.function import WildFunction
         return WildFunction(self.name, nargs=len(args))(*args, **assumptions)
 
 

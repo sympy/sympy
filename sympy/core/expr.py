@@ -840,11 +840,6 @@ class Expr(Basic, EvalfMixin):
         # FIXME FApply -> ?
         return C.FApply(C.FDerivative(*indices), self)
 
-    def integrate(self, *args, **kwargs):
-        from sympy.integrals import integrate
-        return integrate(self, *args, **kwargs)
-
-
     ###########################################################################
     ###################### EXPRESSION EXPANSION METHODS #######################
     ###########################################################################
@@ -895,6 +890,90 @@ class Expr(Basic, EvalfMixin):
                 if func is not None:
                     expr = func(deep=deep, **hints)
         return expr
+
+    ###########################################################################
+    ################### GLOBAL ACTION VERB WRAPPER METHODS ####################
+    ###########################################################################
+
+    def integrate(self, *args, **kwargs):
+        """See the integrate function in sympy.integrals"""
+        from sympy.integrals import integrate
+        return integrate(self, *args, **kwargs)
+
+    def simplify(self):
+        """See the simplify function in sympy.simplify"""
+        from sympy.simplify import simplify
+        return simplify(self)
+
+    def together(self, *args, **kwargs):
+        """See the together function in sympy.simplify"""
+        from sympy.simplify import together
+        return together(self, *args, **kwargs)
+
+    def nsimplify(self, constants=[], tolerance=None, full=False):
+        """See the nsimplify function in sympy.simplify"""
+        from sympy.simplify import nsimplify
+        return nsimplify(self, constants, tolerance, full)
+
+    def separate(self, deep=False):
+        """See the seperate function in sympy.simplify"""
+        from sympy.simplify import separate
+        return separate(self, deep)
+
+    def collect(self, syms, evaluate=True, exact=False):
+        """See the collect function in sympy.simplify"""
+        from sympy.simplify import collect
+        return collect(self, syms, evaluate, exact)
+
+    def apart(self, z=None, **args):
+        """See the apart function in sympy.simplify"""
+        from sympy.simplify import apart
+        return apart(self, z=None, **args)
+
+    def ratsimp(self):
+        """See the ratsimp function in sympy.simplify"""
+        from sympy.simplify import ratsimp
+        return ratsimp(self)
+
+    def trigsimp(self, deep=False, recursive=False):
+        """See the trigsimp function in sympy.simplify"""
+        from sympy.simplify import trigsimp
+        return trigsimp(self, deep, recursive)
+
+    def radsimp(self):
+        """See the radsimp function in sympy.simplify"""
+        from sympy.simplify import radsimp
+        return radsimp(self)
+
+    def powsimp(self, deep=False, combine='all'):
+        """See the powsimp function in sympy.simplify"""
+        from sympy.simplify import powsimp
+        return powsimp(self, deep, combine)
+
+    def combsimp(self):
+        """See the combsimp function in sympy.simplify"""
+        from sympy.simplify import combsimp
+        return combsimp(self)
+
+    def factor(self, *gens, **args):
+        """See the factor function in sympy.simplify"""
+        from sympy.polys import factor
+        return factor(self, *gens, **args)
+
+    def refine(self, assumption=True):
+        """See the refine function in sympy.assumptions"""
+        from sympy.assumptions import refine
+        return refine(self, assumption)
+
+    def cancel(self, *gens, **args):
+        """See the cancel function in sympy.polys"""
+        from sympy.polys import cancel
+        return cancel(self, *gens, **args)
+
+    def invert(self, g):
+        """See the invert function in sympy.polys"""
+        from sympy.polys import invert
+        return invert(self, g)
 
 from mul import Mul
 from power import Pow

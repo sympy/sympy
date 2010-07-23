@@ -453,6 +453,9 @@ class Matrix(object):
         else:
             return True
 
+    def __hash__(self):
+        return super(Matrix, self).__hash__()
+
     def _format_str(self, strfunc, rowsep='\n'):
         # Build table of string representations of the elements
         res = []

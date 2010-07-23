@@ -58,7 +58,7 @@ class StrPrinter(Printer):
         return sign + ' '.join(l)
 
     def _print_Assume(self, expr):
-        return 'Assume(%s, %r, %s)' % (expr.expr, expr.key, expr.value)
+        return 'Assume(%s, %r)' % (expr.expr, expr.key)
 
     def _print_Basic(self, expr):
         l = [self._print(o) for o in expr.args]
@@ -375,6 +375,9 @@ class StrPrinter(Printer):
 
     def _print_Symbol(self, expr):
         return expr.name
+
+    def _print_Predicate(self, expr):
+        return "Q.%s" % expr.name
 
     def _print_str(self, expr):
         return expr
