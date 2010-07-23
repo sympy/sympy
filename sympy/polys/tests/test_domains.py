@@ -11,7 +11,7 @@ from sympy.polys.polyerrors import (
     DomainError,
 )
 
-from sympy import S, sqrt, sin, oo, raises
+from sympy import S, sqrt, sin, oo, raises, all
 
 from sympy.abc import x, y, z
 
@@ -389,4 +389,13 @@ def test_inject():
     assert ZZ.inject(x, y, z) == ZZ[x, y, z]
     assert ZZ[x].inject(y, z) == ZZ[x, y, z]
     raises(GeneratorsError, "ZZ[x].inject(x)")
+
+def test_Domain_map():
+    seq = ZZ.map([1, 2, 3, 4])
+
+    assert all([ ZZ.of_type(elt) for elt in seq ])
+
+    seq = ZZ.map([[1, 2, 3, 4]])
+
+    assert all([ ZZ.of_type(elt) for elt in seq[0] ]) and len(seq) == 1
 

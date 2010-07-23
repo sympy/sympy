@@ -314,6 +314,18 @@ class Domain(object):
         """Returns `False` if two domains are equivalent. """
         return self.dtype != other.dtype
 
+    def map(self, seq):
+        """Rersively apply ``self`` to all elements of ``seq``. """
+        result = []
+
+        for elt in seq:
+            if isinstance(elt, list):
+                result.append(self.map(elt))
+            else:
+                result.append(self(elt))
+
+        return result
+
     def get_ring(self):
         """Returns a ring associated with `self`. """
         raise DomainError('there is no ring associated with %s' % self)
