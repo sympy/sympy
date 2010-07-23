@@ -26,8 +26,7 @@ from polytools import (
 )
 
 from polyfuncs import (
-    symmetrize,
-    horner,
+    symmetrize, horner, interpolate,
 )
 
 from polyerrors import (
@@ -75,6 +74,7 @@ from constructor import (
 
 from specialpolys import (
     swinnerton_dyer_poly,
+    interpolating_poly,
     cyclotomic_poly,
     symmetric_poly,
     random_poly,

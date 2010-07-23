@@ -1,7 +1,7 @@
 """Tests for high--level polynomials manipulation functions. """
 
 from sympy.polys.polyfuncs import (
-    symmetrize, horner,
+    symmetrize, horner, interpolate,
 )
 
 from sympy.abc import a, b, c, d, e, x, y, z
@@ -46,3 +46,9 @@ def test_horner():
 
     assert horner(4*x**2*y**2 + 2*x**2*y + 2*x*y**2 + x*y, wrt=x) == ((4*y + 2)*x*y + (2*y + 1)*y)*x
     assert horner(4*x**2*y**2 + 2*x**2*y + 2*x*y**2 + x*y, wrt=y) == ((4*x + 2)*y*x + (2*x + 1)*x)*y
+
+def test_interpolate():
+    assert interpolate([1,4,9,16], x) == x**2
+    assert interpolate([(1, 1), (2, 4), (3, 9)], x) == x**2
+    assert interpolate([(1, 2), (2, 5), (3, 10)], x) == 1 + x**2
+    assert interpolate({1: 2, 2: 5, 3: 10}, x) == 1 + x**2
