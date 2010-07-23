@@ -32,11 +32,15 @@ def dpll_satisfiable(expr):
     clauses = conjuncts(to_cnf(expr))
     clauses_int_repr = to_int_repr(clauses, symbols)
 
-    solver = SATSolver(clauses_int_repr, symbols_int_repr, set([]))
+    solver = SATSolver(clauses_int_repr, symbols_int_repr, set())
     result = solver.find_model()
 
     if not result:
         return result
+    # Uncomment to confirm the solution is valid (hitting set for the clauses)
+    #else:
+        #for cls in clauses_int_repr:
+            #assert solver.var_settings.intersection(cls)
 
     return dict((symbols[abs(lit) - 1], lit > 0) for lit in solver.var_settings)
 
@@ -51,6 +55,8 @@ class SATSolver(object):
     def __init__(self, clauses, variables, var_settings, heuristic = 'vsids', clause_learning = 'simple'):
         self.var_settings = var_settings
         self.heuristic = heuristic
+        self.is_unsatisfied = False
+        self.unit_prop_queue = []
 
         self.initialize_variables(variables)
         self.initialize_clauses(clauses)
@@ -80,26 +86,35 @@ class SATSolver(object):
 
     def initialize_variables(self, variables):
         """Set up the variable data structures needed."""
-        self.appears_pos = [[] for i in range(len(variables) + 1)]
-        self.appears_neg = [[] for i in range(len(variables) + 1)]
+        self.sentinels = {}
+        self.occurrence_count = {}
+        for i in xrange(1, len(variables)+1):
+            self.sentinels[i] = set()
+            self.sentinels[-i] = set()
+            self.occurrence_count[i] = 0
+            self.occurrence_count[-i] = 0
+
         self.variable_set = [False] * (len(variables) + 1)
 
     def initialize_clauses(self, clauses):
         """Set up the clause data structures needed."""
         self.clauses = []
-        self.clause_sat = []
         for cls in clauses:
             self.clauses.append(list(cls))
-            self.clause_sat.append(False)
-
-        self.remaining_clauses = set(range(len(self.clauses)))
 
         for i in range(len(self.clauses)):
+
+            # Handle the unit clauses
+            if 1 == len(self.clauses[i]):
+                self.unit_prop_queue.append(self.clauses[i][0])
+                continue
+
+            self.sentinels[self.clauses[i][0]].add(i)
+            self.sentinels[self.clauses[i][-1]].add(i)
+
             for lit in self.clauses[i]:
-                if lit < 0:
-                    self.appears_neg[-lit].append(i)
-                else:
-                    self.appears_pos[lit].append(i)
+                self.occurrence_count[lit] += 1
+
 
     def find_model(self):
         """Main DPLL loop."""
@@ -108,8 +123,14 @@ class SATSolver(object):
         #  variable setting in successive rounds
         flip_var = False
 
+        # Check if unit prop says the theory is unsat right off the bat
+        self.simplify()
+        if self.is_unsatisfied:
+            return False
+
         # While the theory still has clauses remaining
-        while not self.is_satisfied:
+        while True:
+
             if flip_var:
                 # We have just backtracked and we are trying to opposite literal
                 flip_var = False
@@ -119,6 +140,10 @@ class SATSolver(object):
                 # Pick a literal to set
                 lit = self.heur_calculate()
 
+                # Stopping condition for a satisfying theory
+                if 0 == lit:
+                    return True
+
                 # Start the new decision level
                 self.levels.append(Level(lit))
 
@@ -127,8 +152,12 @@ class SATSolver(object):
 
             # Simplify the theory
             self.simplify()
+
             # Check if we've made the theory unsat
             if self.is_unsatisfied:
+
+                self.is_unsatisfied = False
+
                 # We unroll all of the decisions until we can flip a literal
                 while self.current_level.flipped:
                     self.undo()
@@ -145,57 +174,47 @@ class SATSolver(object):
                 self.levels.append(Level(flip_lit, flipped = True))
                 flip_var = True
 
-        return True
-
 
     ########################
     #    Helper Methods    #
     ########################
     @property
-    def is_satisfied(self):
-        return 0 == len(self.remaining_clauses)
-
-    @property
-    def is_unsatisfied(self):
-        for cls in self.remaining_clauses:
-            if self.clause_unsatisfied(cls):
-                return True
-        return False
-
-    @property
     def current_level(self):
         return self.levels[-1]
 
-    def clause_satisfied(self, cls):
-        return self.clause_sat[cls]
-
-    def clause_unsatisfied(self, cls):
+    def clause_sat(self, cls):
         for lit in self.clauses[cls]:
-            if -lit not in self.var_settings:
-                return False
-        return True
+            if lit in self.var_settings:
+                return True
+        return False
 
-    def fetch_clause(self, cls):
-        return filter(lambda x: not self.variable_set[abs(x)], self.clauses[cls])
+    def is_sentinel(self, lit, cls):
+        return cls in self.sentinels[lit]
 
     def assign_literal(self, lit):
         self.var_settings.add(lit)
-        self.current_level.var_settings.append(lit)
-        self.heur_lit_assigned(lit)
+        self.current_level.var_settings.add(lit)
         self.variable_set[abs(lit)] = True
+        self.heur_lit_assigned(lit)
 
-        if lit < 0:
-            for cls in self.appears_neg[-lit]:
-                if not self.clause_sat[cls]:
-                    self.clause_sat[cls] = True
-                    self.remaining_clauses.remove(cls)
-                    self.current_level.clauses_removed.append(cls)
-        else:
-            for cls in self.appears_pos[lit]:
-                if not self.clause_sat[cls]:
-                    self.clause_sat[cls] = True
-                    self.remaining_clauses.remove(cls)
-                    self.current_level.clauses_removed.append(cls)
+        sentinel_list = list(self.sentinels[-lit])
+
+        for cls in sentinel_list:
+            if not self.clause_sat(cls):
+                other_sentinel = None
+                for newlit in self.clauses[cls]:
+                    if newlit != -lit:
+                        if self.is_sentinel(newlit, cls):
+                            other_sentinel = newlit
+                        elif not self.variable_set[abs(newlit)]:
+                            self.sentinels[-lit].remove(cls)
+                            self.sentinels[newlit].add(cls)
+                            other_sentinel = None
+                            break
+
+                # Check if no sentinel update exists
+                if other_sentinel:
+                    self.unit_prop_queue.append(other_sentinel)
 
     def undo(self):
         """
@@ -207,13 +226,9 @@ class SATSolver(object):
             self.heur_lit_unset(lit)
             self.variable_set[abs(lit)] = False
 
-        # Undo the clause satisfactions
-        for cls in self.current_level.clauses_removed:
-            self.clause_sat[cls] = False
-            self.remaining_clauses.add(cls)
-
         # Pop the level off the stack
         self.levels.pop()
+
 
     #########################
     #      Propagation      #
@@ -233,12 +248,18 @@ class SATSolver(object):
 
     def unit_prop(self):
         """Perform unit propagation on the current theory."""
-        for cls in self.remaining_clauses:
-            full = self.fetch_clause(cls)
-            if 1 == len(full):
-                self.assign_literal(full[0])
-                return True
-        return False
+        result = len(self.unit_prop_queue) > 0
+
+        while self.unit_prop_queue:
+            next_lit = self.unit_prop_queue.pop()
+            if -next_lit in self.var_settings:
+                self.is_unsatisfied = True
+                self.unit_prop_queue = []
+                return False
+            else:
+                self.assign_literal(next_lit)
+
+        return result
 
     def pure_literal(self):
         """Look for pure literals and assign them when found."""
@@ -249,23 +270,28 @@ class SATSolver(object):
     #########################
     def vsids_init(self):
         self.lit_heap = []
-        for var in range(1, len(self.appears_neg)):
-            heappush(self.lit_heap, (float(-len(self.appears_neg[var])), -var))
-            heappush(self.lit_heap, (float(-len(self.appears_pos[var])), var))
+        for var in range(1, len(self.variable_set)):
+            heappush(self.lit_heap, (float(-(self.occurrence_count[-var])), -var))
+            heappush(self.lit_heap, (float(-(self.occurrence_count[var])), var))
 
     def vsids_decay(self):
         # We divide every literal score by 2 for a decay factor
         #  Note: This doesn't change the heap property
         for i in range(len(self.lit_heap)):
-            self.lit_heap[0] /= 2.0
+            self.lit_heap[i] /= 2.0
 
     def vsids_calculate(self):
         """
             VSIDS Heuristic
         """
+        if len(self.lit_heap) == 0:
+            return 0
+
         self.num_decisions += 1
         while self.variable_set[abs(self.lit_heap[0][1])]:
             heappop(self.lit_heap)
+            if len(self.lit_heap) == 0:
+                return 0
 
         return heappop(self.lit_heap)[1]
 
@@ -274,8 +300,8 @@ class SATSolver(object):
 
     def vsids_lit_unset(self, lit):
         var = abs(lit)
-        heappush(self.lit_heap, (-len(self.appears_neg), -var))
-        heappush(self.lit_heap, (-len(self.appears_pos), var))
+        heappush(self.lit_heap, (float(-(self.occurrence_count[-var])), -var))
+        heappush(self.lit_heap, (float(-(self.occurrence_count[var])), var))
 
     def vsids_clause_added(self, cls):
         self.num_learned_clauses += 1
@@ -289,14 +315,12 @@ class SATSolver(object):
 
         cls_num = len(self.clauses)
         self.clauses.append(cls)
-        self.clause_sat.append(False)
-        self.remaining_clauses.add(cls_num)
 
         for lit in cls:
-            if lit < 0:
-                self.appears_neg[-lit].append(cls_num)
-            else:
-                self.appears_pos[lit].append(cls_num)
+            self.occurrence_count[lit] += 1
+
+        self.sentinels[cls[0]].add(cls_num)
+        self.sentinels[cls[-1]].add(cls_num)
 
         self.heur_clause_added(cls)
 
@@ -313,6 +337,5 @@ class Level(object):
 
     def __init__(self, decision, flipped = False):
         self.decision = decision
-        self.clauses_removed = []
-        self.var_settings = []
+        self.var_settings = set()
         self.flipped = flipped
