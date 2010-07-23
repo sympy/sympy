@@ -4,7 +4,7 @@ import time, os, sys
 
 input_path = os.getcwd() + '/' + '/'.join(sys.argv[0].split('/')[:-1])
 
-INPUT = [5 * i for i in range(2,15)]
+INPUT = [5 * i for i in range(2,16)]
 ALGORITHMS = ['dpll', 'dpll2']
 results = {}
 
