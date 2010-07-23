@@ -68,39 +68,41 @@ def test_bound_degree():
 
 def test_spde():
     raises(NonElementaryIntegral, "spde(Poly(t, t), Poly((t - 1)*(t**2 + 1), " +
-        "t), Poly(1, t), [Poly(1, x), Poly(1 + t**2, t)], 0, [x, t])")
+        "t), Poly(1, t), 0, [Poly(1, x), Poly(1 + t**2, t)], [x, t])")
     D = [Poly(1, x), Poly(t, t)]
     assert spde(Poly(t**2 + x*t*2 + x**2, t), Poly(t**2/x**2 + (2/x - 1)*t, t),
-    Poly(t**2/x**2 + (2/x - 1)*t, t), D, 0, [x, t]) == \
+    Poly(t**2/x**2 + (2/x - 1)*t, t), 0, D, [x, t]) == \
         (Poly(0, t), Poly(0, t), 0, Poly(0, t), Poly(1, t))
     D = [Poly(1, x), Poly(t0/x**2, t0), Poly(1/x, t)]
     assert spde(Poly(t**2, t), Poly(-t**2/x**2 - 1/x, t),
     Poly((2*x - 1)*t**4 + (t0 + x)/x*t**3 - (t0 + 4*x**2)/(2*x)*t**2 + x*t, t),
-    D, 3, [x, t0, t]) == \
+    3, D, [x, t0, t]) == \
         (Poly(0, t), Poly(0, t), 0, Poly(0, t),
         Poly(t0*t**2/2 + x**2*t**2 - x**2*t, t))
     D = [Poly(1, x)]
     assert spde(Poly(x**2 + x + 1, x), Poly(-2*x - 1, x), Poly(x**5/2 +
-    3*x**4/4 + x**3 - x**2 + 1, x), D, 4, [x]) == \
+    3*x**4/4 + x**3 - x**2 + 1, x), 4, D, [x]) == \
         (Poly(0, x), Poly(x/2 - S(1)/4, x), 2, Poly(x**2 + x + 1, x), Poly(5*x/4, x))
     assert spde(Poly(x**2 + x + 1, x), Poly(-2*x - 1, x), Poly(x**5/2 +
-    3*x**4/4 + x**3 - x**2 + 1, x), D, n, [x]) == \
+    3*x**4/4 + x**3 - x**2 + 1, x), n, D, [x]) == \
         (Poly(0, x), Poly(x/2 - S(1)/4, x), -2 + n, Poly(x**2 + x + 1, x), Poly(5*x/4, x))
 
 def test_solve_poly_rde_no_cancel():
     # deg(b) large
+    D = [Poly(1, x), Poly(1 + t**2, t)]
     assert solve_poly_rde(Poly(t**2 + 1, t), Poly(t**3 + (x + 1)*t**2 + t + x + 2, t),
-    [Poly(1, x), Poly(1 + t**2, t)], oo, [x, t]) == Poly(t + x, t)
+    oo, D, [x, t]) == Poly(t + x, t)
     # deg(b) small
-    assert solve_poly_rde(Poly(0, x), Poly(x/2 - S(1)/4, x), [Poly(1, x)], oo, [x]) == \
+    D = [Poly(1, x)]
+    assert solve_poly_rde(Poly(0, x), Poly(x/2 - S(1)/4, x), oo, D, [x]) == \
         Poly(x**2/4 - x/4, x)
     D = [Poly(1, x), Poly(t**2 + 1, t)]
-    assert solve_poly_rde(Poly(2, t), Poly(t**2 + 2*t + 3, t), D, 1, [x, t]) == \
+    assert solve_poly_rde(Poly(2, t), Poly(t**2 + 2*t + 3, t), 1, D, [x, t]) == \
         Poly(t + 1, t, x)
     # deg(b) == deg(D) - 1
     D = [Poly(1, x), Poly(t**2 + 1, t)]
     assert no_cancel_equal(Poly(1 - t, t),
-    Poly(t**3 + t**2 - 2*x*t - 2*x, t), D, oo, [x, t]) == \
+    Poly(t**3 + t**2 - 2*x*t - 2*x, t), oo, D, [x, t]) == \
         (Poly(t**2, t), 1, Poly((-2 - 2*x)*t - 2*x, t))
 
 def test_rischDE():

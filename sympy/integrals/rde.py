@@ -231,7 +231,7 @@ def bound_degree(a, b, c, D, T, case='auto'):
     db = b.degree(t)
     dc = c.degree(t)
 
-    alpha = -b.as_poly(t).LC().as_basic()/c.as_poly(t).LC().as_basic()
+    alpha = -b.as_poly(t).LC().as_basic()/a.as_poly(t).LC().as_basic()
     alpha = cancel(alpha)
 
     if case == 'base':
@@ -270,6 +270,7 @@ def bound_degree(a, b, c, D, T, case='auto'):
     elif case in ['tan', 'other_nonlinear']:
         delta = d.degree(t)
         lam = d.LC()
+        alpha = cancel(alpha/lam)
         n = max(0, dc - max(da + delta - 1, db))
         if db == da + delta - 1 and alpha.is_Integer:
             n = max(0, alpha, dc - db)
@@ -280,7 +281,7 @@ def bound_degree(a, b, c, D, T, case='auto'):
 
     return n
 
-def spde(a, b, c, D, n, T):
+def spde(a, b, c, n, D, T):
     """
     Rothstein's Special Polynomial Differential Equation algorithm.
 
@@ -312,13 +313,13 @@ def spde(a, b, c, D, n, T):
 
     r, z = gcdex_diophantine(b.as_poly(t), a.as_poly(t), c.as_poly(t))
     r, z = Poly(r, t), Poly(z, t)
-    u = (a, b + derivation(a, D, T), z - derivation(r, D, T), D,
-        n - a.degree(t)) + (T,)
+    u = (a, b + derivation(a, D, T), z - derivation(r, D, T), n - a.degree(t),
+        D) + (T,)
     B, C, m, alpha, beta = spde(*u)
 
     return (B, C, m, a*alpha, a*beta + r)
 
-def no_cancel_b_large(b, c, D, n, T):
+def no_cancel_b_large(b, c, n, D, T):
     """
     Poly Risch Differential Equation - No cancelation: deg(b) large enough.
 
@@ -344,7 +345,7 @@ def no_cancel_b_large(b, c, D, n, T):
 
     return q
 
-def no_cancel_b_small(b, c, D, n, T):
+def no_cancel_b_small(b, c, n, D, T):
     """
     Poly Risch Differential Equation - No cancelation: deg(b) small enough.
 
@@ -387,7 +388,7 @@ def no_cancel_b_small(b, c, D, n, T):
     return q
 
 # TODO: better name for this function
-def no_cancel_equal(b, c, D, n, T):
+def no_cancel_equal(b, c, n, D, T):
     """
     Poly Risch Differential Equation - No cancelation: deg(b) == deg(D) - 1
 
@@ -433,7 +434,7 @@ def no_cancel_equal(b, c, D, n, T):
 
     return q
 
-def solve_poly_rde(b, c, D, n, T):
+def solve_poly_rde(b, c, n, D, T):
     """
     Solve a Polynomial Risch Differential Equation with degree bound n.
 
@@ -443,10 +444,10 @@ def solve_poly_rde(b, c, D, n, T):
     d = D[-1]
 
     if not b.is_zero and (d.is_one or b.degree(t) > max(0, d.degree(t) - 1)):
-        return no_cancel_b_large(b, c, D, n, T)
+        return no_cancel_b_large(b, c, n, D, T)
 
     elif (b.is_zero or b.degree(t) < d.degree(t) - 1) and (d.is_one or d.degree(t) >= 2):
-        R = no_cancel_b_small(b, c, D, n, T)
+        R = no_cancel_b_small(b, c, n, D, T)
 
         if isinstance(R, Poly):
             return R
@@ -459,20 +460,20 @@ def solve_poly_rde(b, c, D, n, T):
             b0, c0 = b0.as_poly(t), c0.as_poly(t)
             assert b0
             assert c0
-            y = solve_poly_rde(b0, c0, D, n, T).as_poly(t)
+            y = solve_poly_rde(b0, c0, n, D, T).as_poly(t)
             return h + y
 
     elif d.degree(t) >= 2 and b.degree(t) == d.degree(t) - 1 and \
         n > -b.as_poly(t).LC()/d.as_poly(t).LC():
 
-        R = no_cancel_equal(b, c, D, n, T)
+        R = no_cancel_equal(b, c, n, D, T)
 
         if isinstance(R, Poly):
             return R
         else:
             h, m, C = R
             # XXX: Or should it be risch_DE()?
-            y = solve_poly_rde(b, C, D, m, T)
+            y = solve_poly_rde(b, C, m, D, T)
             return h + y
 
     else:
@@ -505,7 +506,7 @@ def rischDE(fa, fd, ga, gd, D, T):
         warnings.warn("risch_DE: Proceeding with n = oo; may cause non-termination.")
         n = oo
 
-    B, C, m, alpha, beta = spde(A, B, C, D, n, T)
-    y = solve_poly_rde(B, C, D, n, T)
+    B, C, m, alpha, beta = spde(A, B, C, n, D, T)
+    y = solve_poly_rde(B, C, n, D, T)
 
     return (alpha*y + beta, hn*hs)
