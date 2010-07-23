@@ -1011,6 +1011,16 @@ def test_zeros_ones_fill():
     assert a.cols == b.cols == 5
     assert a.shape == b.shape == (3, 5)
 
+def test_empty_zeros():
+    a = zeros(0)
+    assert a == Matrix()
+    a = zeros([0, 2])
+    assert a.rows == 0
+    assert a.cols == 2
+    a = zeros([2, 0])
+    assert a.rows == 2
+    assert a.cols == 0
+
 def test_issue650():
     x, y = symbols('x,y')
     a = Matrix([[x**2, x*y],[x*sin(y), x*cos(y)]])
@@ -1177,7 +1187,7 @@ def test_creation_args():
     Check that matrix dimensions can be specified using any reasonable type
     (see issue 1515).
     """
-    raises(ValueError, 'zeros((3, 0))')
+    raises(ValueError, 'zeros((3, -1))')
     raises(ValueError, 'zeros((1, 2, 3, 4))')
     assert zeros(3L) == zeros(3)
     assert zeros(Integer(3)) == zeros(3)

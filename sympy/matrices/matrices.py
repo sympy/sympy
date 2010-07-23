@@ -29,8 +29,8 @@ def _dims_to_nm(dims):
 
     # This will work for nd-array too when they are added to sympy.
     for dim in dims:
-        if dim <= 0:
-            raise ValueError("Matrix dimensions should be positive integers.")
+        if dim < 0:
+            raise ValueError("Matrix dimensions should be non-negative integers.")
 
     if l == 2:
         n, m = map(int, dims)
