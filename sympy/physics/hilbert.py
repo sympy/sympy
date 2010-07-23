@@ -44,7 +44,7 @@ class HilbertSpace(Expr):
     def __pow__(self, other, mod=None):
         if mod is not None:
             raise ValueError('The third argument to __pow__ is not supported for Hilbert spaces.')
-        return DirectPowerHilbertSpace(self, other)
+        return TensorPowerHilbertSpace(self, other)
 
     def __contains__(self, other):
         """Is the operator or state in this Hilbert space."""
@@ -235,11 +235,11 @@ class TensorProductHilbertSpace(HilbertSpace):
 
     The tensor product between two Hilbert spaces is represented by the
     operator "*" Only the same type of Hilbert space with the same
-    dimension and/or interval will be combined into a direct power,
+    dimension and/or interval will be combined into a tensor power,
     otherwise the tensor product behaves as follows:
 
         >>> from sympy import Expr, Interval, oo, sympify
-        >>> from sympy.physics.hilbert import l2, L2, FockSpace, TensorProductHilbertSpace, DirectPowerHilbertSpace
+        >>> from sympy.physics.hilbert import l2, L2, FockSpace, TensorProductHilbertSpace, TensorPowerHilbertSpace
         >>> hs = l2(2)
         >>> HS = L2(Interval(-42, 42))
         >>> fs = FockSpace()
@@ -254,7 +254,7 @@ class TensorProductHilbertSpace(HilbertSpace):
         >>> tensor_product.spaces
         (l2(2), L2([-42, 42]), FS())
 
-    Identical Hilbert spaces will be combined into one direct power:
+    Identical Hilbert spaces will be combined into one tensor power:
 
         >>> ms = hs*hs*hs
         >>> ms
@@ -283,7 +283,7 @@ class TensorProductHilbertSpace(HilbertSpace):
             if isinstance(arg, TensorProductHilbertSpace):
                 new_args.extend(arg.args)
                 recall = True
-            elif isinstance(arg, (HilbertSpace, DirectPowerHilbertSpace)):
+            elif isinstance(arg, (HilbertSpace, TensorPowerHilbertSpace)):
                 new_args.append(arg)
             else:
                 raise TypeError('Hilbert spaces can only be multiplied by other Hilbert spaces: %r' % arg)
@@ -292,11 +292,11 @@ class TensorProductHilbertSpace(HilbertSpace):
         prev_arg = None
         for new_arg in new_args:
             if prev_arg != None:
-                if isinstance(new_arg, DirectPowerHilbertSpace) and isinstance(prev_arg, DirectPowerHilbertSpace) and new_arg.base == prev_arg.base:
+                if isinstance(new_arg, TensorPowerHilbertSpace) and isinstance(prev_arg, TensorPowerHilbertSpace) and new_arg.base == prev_arg.base:
                     prev_arg = new_arg.base**(new_arg.exp+prev_arg.exp)
-                elif isinstance(new_arg, DirectPowerHilbertSpace) and new_arg.base == prev_arg:
+                elif isinstance(new_arg, TensorPowerHilbertSpace) and new_arg.base == prev_arg:
                     prev_arg = prev_arg**(new_arg.exp+1)
-                elif isinstance(prev_arg, DirectPowerHilbertSpace) and new_arg == prev_arg.base:
+                elif isinstance(prev_arg, TensorPowerHilbertSpace) and new_arg == prev_arg.base:
                     prev_arg = new_arg**(prev_arg.exp+1)
                 elif new_arg == prev_arg:
                     prev_arg = new_arg**2
@@ -309,7 +309,7 @@ class TensorProductHilbertSpace(HilbertSpace):
         if recall:
             return TensorProductHilbertSpace(*comb_args)
         elif len(comb_args) == 1:
-            return DirectPowerHilbertSpace(comb_args[0].base, comb_args[0].exp)
+            return TensorPowerHilbertSpace(comb_args[0].base, comb_args[0].exp)
         else:
             return None
 
@@ -429,20 +429,20 @@ class DirectSumHilbertSpace(HilbertSpace):
         spaces_strs = [printer._print(arg, *args) for arg in self.args]
         return '+'.join(spaces_strs)
 
-class DirectPowerHilbertSpace(HilbertSpace):
+class TensorPowerHilbertSpace(HilbertSpace):
     """
     An exponentiated (iterated tensor/direct product) Hilbert space [1].
 
     Examples
     ========
 
-    Direct powers (repeated tensor products) are represented by the
+    Tensor powers (repeated tensor products) are represented by the
     operator "**" Identical Hilbert spaces that are multiplied together
     will be automatically combined into a single direct power. Here
     are some examples:
 
         >>> from sympy import Expr, Interval, oo, sympify
-        >>> from sympy.physics.hilbert import l2, L2, DirectPowerHilbertSpace, TensorProductHilbertSpace
+        >>> from sympy.physics.hilbert import l2, L2, TensorPowerHilbertSpace, TensorProductHilbertSpace
         >>> from sympy.abc import x
         >>> p1 = l2(3)**2
         >>> p1
@@ -507,7 +507,7 @@ class DirectPowerHilbertSpace(HilbertSpace):
         else:
             for power in exp.atoms():
                 if not (power.is_Integer or power.is_Symbol):
-                    raise ValueError('Hilbert space powers can only contain integers or Symbols: %r' % power)
+                    raise ValueError('Tensor powers can only contain integers or Symbols: %r' % power)
         return new_args
 
     @property
@@ -530,7 +530,7 @@ class DirectPowerHilbertSpace(HilbertSpace):
         return "An exponentiated Hilbert space."
 
     def _sympyrepr(self, printer, *args):
-        return "DirectPowerHilbertSpace(%s,%s)" % (printer._print(self.base, *args), printer._print(self.exp, *args))
+        return "TensorPowerHilbertSpace(%s,%s)" % (printer._print(self.base, *args), printer._print(self.exp, *args))
 
     def _sympystr(self, printer, *args):
         return "%s**(%s)" % (printer._print(self.base, *args), printer._print(self.exp, *args))

@@ -123,17 +123,22 @@ class InnerProduct(Expr):
     An unevaluated inner product between a Bra and Ket.
     """
 
-    def __new__(cls, bra, ket):
+    def __new__(cls, bra, *args):
+        if not (bra and args):
+            raise Exception('InnerProduct requires at least a leading Bra and a trailing Ket')
         assert isinstance(bra, Bra), 'First argument must be a Bra'
-        assert isinstance(ket, Ket), 'Second argument must be a Ket'
-        r = cls.eval(bra, ket)
+        if len(args) == 1:
+            assert isinstance(args[0], Ket), 'Last argument must be a Ket'
+        else:
+            assert isinstance(args[-1], Ket), 'Last argument must be a Ket'
+        r = cls.eval(*args)
         if isinstance(r, Expr):
             return r
-        obj = Expr.__new__(cls, *(bra, ket), **{'commutative': True})
+        obj = Expr.__new__(cls, bra, *args)
         return obj
 
     @classmethod
-    def eval(cls, bra, ket):
+    def eval(cls, *args):
         # We need to decide what to do here. We probably will ask if the
         # bra and ket know how to do the inner product.
         return None
@@ -144,31 +149,61 @@ class InnerProduct(Expr):
 
     @property
     def ket(self):
-        return self.args[1]
+        if len(self.args) == 2:
+            return self.args[1]
+        else:
+            return self.args[1:]
 
     def _eval_dagger(self):
-        return InnerProduct(Dagger(self.ket), Dagger(self.bra))
+        #daggers a mul of the inner product's args
+        dagger = Dagger(Mul(*self.args))
+        return InnerProduct(*dagger.args)
+
+    def _innerproduct_printer(self, printer, *args):
+        print_elements = []
+        for arg in self.args:
+            print_elements.append(printer._print(arg, *args))
+        return print_elements
 
     def _sympyrepr(self, printer, *args):
-        return '%s(%s,%s)' % (self.__class__.__name__, printer._print(self.bra, *args), printer._print(self.ket, *args))
+        innerproduct_reprs = self._innerproduct_printer(printer, *args)
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(innerproduct_reprs))
 
     def _sympystr(self, printer, *args):
-        sbra = str(self.bra)
-        sket = str(self.ket)
-        return "%s|%s" % (sbra[:-1], sket[1:])
+        if len(self.args) == 2:
+            sbra = str(self.bra)
+            sket = str(self.ket)
+            return '%s|%s' % (sbra[:-1], sket[1:])
+        else:
+            innerproduct_strs = self._innerproduct_printer(printer, *args)
+            return '%s' % ''.join(innerproduct_strs)
+
+    def _pretty(self, printer, *args):
+#        if len(self.args) == 2:
+#            return '<%s|%s>' % (self.bra._pretty(printer, *args), self.ket._pretty(printer, *args))
+#        else:
+            pretty_args = None
+            for arg in self.args:
+                if pretty_args != None:
+                    pretty_args = pretty_args*arg._pretty(printer, *args)
+                else:
+                    pretty_args = arg._pretty(printer, *args)
+            return pretty_args
 
 class OuterProduct(Expr):
     """
-    An unevaluated inner product between a Bra and Ket.
+    An unevaluated outer product between a Ket and Bra.
     """
 
     def __new__(cls, ket, bra):
+        if not (ket and bra):
+            raise Exception('OuterProduct requires a leading Ket and a trailing Bra')
         assert isinstance(ket, Ket), 'First argument must be a Ket'
         assert isinstance(bra, Bra), 'Second argument must be a Bra'
         r = cls.eval(ket, bra)
         if isinstance(r, Expr):
             return r
-        obj = Expr.__new__(cls, *(ket, bra), **{'commutative': True})
+        obj = Expr.__new__(cls, *(ket, bra), **{'commutative': False})
         return obj
 
     @classmethod
@@ -178,12 +213,12 @@ class OuterProduct(Expr):
         return None
 
     @property
-    def bra(self):
-        return self.args[1]
-
-    @property
     def ket(self):
         return self.args[0]
+
+    @property
+    def bra(self):
+        return self.args[1]
 
     def _eval_dagger(self):
         return OuterProduct(Dagger(self.bra), Dagger(self.ket))
@@ -193,6 +228,9 @@ class OuterProduct(Expr):
 
     def _sympystr(self, printer, *args):
         return str(self.ket)+str(self.bra)
+
+    def _pretty(self, printer, *args):
+        return self.ket._pretty(printer, *args)*self.bra._pretty(printer, *args)
 
 class Operator(Expr):
     """
@@ -247,17 +285,85 @@ def validate_mul(expr):
     expr = split_commutative_parts(expr)[1] #obtain noncommutative parts of mul
     old_arg = None
     for arg in expr:
-        if old_arg:
+        if old_arg != None:
             if isinstance(old_arg, Ket) and isinstance(arg, Ket):
                 raise NotImplementedError
             if isinstance(old_arg, Bra) and isinstance(arg, Bra):
                 raise NotImplementedError
-            if isinstance(old_arg, Operator) and isinstance(arg, Bra):
-                raise Exception('Operator*Bra is invalid in quantum mechanics.')
-            if isinstance(old_arg, Ket) and isinstance(arg, Operator):
-                raise Exception('Ket*Operator is invalid in quantum mechanics.')
+            if (isinstance(old_arg, Operator) or isinstance(old_arg, OuterProduct)) and isinstance(arg, Bra):
+                raise Exception('(Operator or OuterProduct)*Bra is invalid in quantum mechanics.')
+            if isinstance(old_arg, Ket) and (isinstance(arg, Operator) or isinstance(arg, OuterProduct)):
+                raise Exception('Ket*(Operator or OuterProduct) is invalid in quantum mechanics.')
         old_arg = arg
     return True
+
+def combine_innerproduct(expr):
+    """
+    Combines a (valid) Mul of quantum objects into inner products (if possible).
+
+    * Only works for simple Muls (e.g. a*b*c*d) right now.
+    """
+    if validate_mul(expr):
+        new_expr = Mul()
+        inner_product = []
+        left_of_bra = False
+        for arg in expr.args:
+            if isinstance(arg, Bra):
+                left_of_bra = True
+                inner_product.append(arg)
+            elif (isinstance(arg, Ket) and left_of_bra == True):
+                inner_product.append(arg)
+                new_expr = new_expr*InnerProduct(*inner_product)
+                inner_product = []
+                left_of_bra = False
+            elif left_of_bra == True:
+                inner_product.append(arg)
+            else:
+                new_expr = new_expr*arg
+        return new_expr*Mul(*inner_product)
+
+def combine_outerproduct(expr):
+    """
+    Combines a (valid) Mul of quantum objects into outer products (if possible).
+
+    * Only works for simple Muls (e.g. a*b*c*d) right now.
+    """
+    if validate_mul(expr):
+        old_arg = None
+        new_expr = Mul()
+        left_of_bra = False
+        for arg in expr.args:
+            if old_arg != None:
+                if (isinstance(old_arg, Ket) and isinstance(arg, Bra)):
+                    new_expr = new_expr*OuterProduct(old_arg, arg)
+                    left_of_bra = True
+                elif left_of_bra == True:
+                    left_of_bra = False
+                else:
+                    new_expr = new_expr*old_arg
+            old_arg = arg
+        if left_of_bra == True:
+            return new_expr
+        else:
+            return new_expr*old_arg
+
+def split_product(expr):
+    """
+    Separates a (valid) Mul of quantum objects and inner/outer products into a 
+    Mul.
+
+    * Only works for simple Muls (e.g. a*b*c*d) right now.
+    """
+    if validate_mul(expr):
+        new_expr = Mul()
+        for arg in expr.args:
+            if isinstance(arg, InnerProduct):
+                new_expr = new_expr*Mul(*arg.args)
+            elif isinstance(arg, OuterProduct):
+                new_expr = new_expr*Mul(*arg.args)
+            else:
+                new_expr = new_expr*arg
+        return new_expr
 
 class Dagger(Expr):
     """

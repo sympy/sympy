@@ -1,4 +1,4 @@
-from sympy.physics.hilbert import l2, L2, FockSpace, TensorProductHilbertSpace, DirectSumHilbertSpace, DirectPowerHilbertSpace
+from sympy.physics.hilbert import l2, L2, FockSpace, TensorProductHilbertSpace, DirectSumHilbertSpace, TensorPowerHilbertSpace
 
 from sympy import Interval, oo, Symbol
 
@@ -141,7 +141,7 @@ def test_TensorProductHilbertSpace_FockSpace():
     f2 = FockSpace()
     f3 = f1*f2
     # will never be a tensor product instance due to power combining (Fock spaces can't be different as of now)
-    assert isinstance(f3, DirectPowerHilbertSpace)
+    assert isinstance(f3, TensorPowerHilbertSpace)
     assert f3.dimension == oo
 
 def test_TensorProductHilbertSpace_mixed():
@@ -281,7 +281,7 @@ def test_DirectSumHilbertSpace_mixed():
     assert true_test.dimension == oo
     assert true_test.subs(-oo, -42) == s3+s6+s9+b3+L2(Interval(-42, oo, True))+L2(Interval(-42, oo, True))+b9+f3
 
-def test_DirectPowerHilbertSpace_l2_int():
+def test_TensorPowerHilbertSpace_l2_int():
     x = Symbol('x')
     s1 = l2(5)
     s2 = s1*s1
@@ -289,11 +289,11 @@ def test_DirectPowerHilbertSpace_l2_int():
     s4 = s1**2
     s5 = s1**3
     s6 = s3*s1**x
-    assert isinstance(s2, DirectPowerHilbertSpace)
-    assert isinstance(s3, DirectPowerHilbertSpace)
-    assert isinstance(s4, DirectPowerHilbertSpace)
-    assert isinstance(s5, DirectPowerHilbertSpace)
-    assert isinstance(s6, DirectPowerHilbertSpace)
+    assert isinstance(s2, TensorPowerHilbertSpace)
+    assert isinstance(s3, TensorPowerHilbertSpace)
+    assert isinstance(s4, TensorPowerHilbertSpace)
+    assert isinstance(s5, TensorPowerHilbertSpace)
+    assert isinstance(s6, TensorPowerHilbertSpace)
     assert s2 == s4
     assert s3 == s5
     assert s4.dimension == s2.dimension == 25  #(5**2)
@@ -307,7 +307,7 @@ def test_DirectPowerHilbertSpace_l2_int():
     assert s6.exp == 3+x
     assert s5.subs(3, 4) == s1**4
 
-def test_DirectPowerHilbertSpace_l2_oo():
+def test_TensorPowerHilbertSpace_l2_oo():
     x = Symbol('x')
     s1 = l2(oo)
     s2 = s1*s1
@@ -315,11 +315,11 @@ def test_DirectPowerHilbertSpace_l2_oo():
     s4 = s1**2
     s5 = s1**3
     s6 = s3*s1**x
-    assert isinstance(s2, DirectPowerHilbertSpace)
-    assert isinstance(s3, DirectPowerHilbertSpace)
-    assert isinstance(s4, DirectPowerHilbertSpace)
-    assert isinstance(s5, DirectPowerHilbertSpace)
-    assert isinstance(s6, DirectPowerHilbertSpace)
+    assert isinstance(s2, TensorPowerHilbertSpace)
+    assert isinstance(s3, TensorPowerHilbertSpace)
+    assert isinstance(s4, TensorPowerHilbertSpace)
+    assert isinstance(s5, TensorPowerHilbertSpace)
+    assert isinstance(s6, TensorPowerHilbertSpace)
     assert s2 == s4
     assert s3 == s5
     assert s4.dimension == s2.dimension == oo
@@ -333,7 +333,7 @@ def test_DirectPowerHilbertSpace_l2_oo():
     assert s6.exp == 3+x
     assert s5.subs(3, 4) == s1**4
 
-def test_DirectPowerHilbertSpace_l2_symbol():
+def test_TensorPowerHilbertSpace_l2_symbol():
     x = Symbol('x')
     y = Symbol('y')
     s1 = l2(y)
@@ -342,11 +342,11 @@ def test_DirectPowerHilbertSpace_l2_symbol():
     s4 = s1**2
     s5 = s1**3
     s6 = s3*s1**x
-    assert isinstance(s2, DirectPowerHilbertSpace)
-    assert isinstance(s3, DirectPowerHilbertSpace)
-    assert isinstance(s4, DirectPowerHilbertSpace)
-    assert isinstance(s5, DirectPowerHilbertSpace)
-    assert isinstance(s6, DirectPowerHilbertSpace)
+    assert isinstance(s2, TensorPowerHilbertSpace)
+    assert isinstance(s3, TensorPowerHilbertSpace)
+    assert isinstance(s4, TensorPowerHilbertSpace)
+    assert isinstance(s5, TensorPowerHilbertSpace)
+    assert isinstance(s6, TensorPowerHilbertSpace)
     assert s2 == s4
     assert s3 == s5
     assert s4.dimension == s2.dimension == y**2
@@ -360,12 +360,12 @@ def test_DirectPowerHilbertSpace_l2_symbol():
     assert s6.exp == 3+x
     assert s6.subs(x, y) == s1**(3+y)
 
-def test_DirectPowerHilbertSpace_L2_int():
+def test_TensorPowerHilbertSpace_L2_int():
     b1 = L2(Interval(-42, 42))
     b3 = b1*b1
     b4 = b3*b1**2*b1
-    assert isinstance(b3, DirectPowerHilbertSpace)
-    assert isinstance(b4, DirectPowerHilbertSpace)
+    assert isinstance(b3, TensorPowerHilbertSpace)
+    assert isinstance(b4, TensorPowerHilbertSpace)
     assert b3 == b1**2
     assert b4 == b1**5
     assert b3.dimension == b4.dimension == oo
@@ -373,12 +373,12 @@ def test_DirectPowerHilbertSpace_L2_int():
     assert b4.exp == 5
     assert b3.exp == 2
 
-def test_DirectPowerHilbertSpace_L2_oo():
+def test_TensorPowerHilbertSpace_L2_oo():
     b1 = L2(Interval(-oo, oo))
     b3 = b1*b1
     b4 = b3*b1**2*b1
-    assert isinstance(b3, DirectPowerHilbertSpace)
-    assert isinstance(b4, DirectPowerHilbertSpace)
+    assert isinstance(b3, TensorPowerHilbertSpace)
+    assert isinstance(b4, TensorPowerHilbertSpace)
     assert b3 == b1**2
     assert b4 == b1**5
     assert b3.dimension == b4.dimension == oo
@@ -386,16 +386,16 @@ def test_DirectPowerHilbertSpace_L2_oo():
     assert b4.exp == 5
     assert b3.exp == 2
 
-def test_DirectPowerHilbertSpace_L2_symbol():
+def test_TensorPowerHilbertSpace_L2_symbol():
     x = Symbol('x', real = True)
     y = Symbol('y', real = True)
     b1 = L2(Interval(x, y))
     b3 = b1*b1
     b4 = b3*b1**2*b1
     b5 = b4*b1**x
-    assert isinstance(b3, DirectPowerHilbertSpace)
-    assert isinstance(b4, DirectPowerHilbertSpace)
-    assert isinstance(b5, DirectPowerHilbertSpace)
+    assert isinstance(b3, TensorPowerHilbertSpace)
+    assert isinstance(b4, TensorPowerHilbertSpace)
+    assert isinstance(b5, TensorPowerHilbertSpace)
     assert b3 == b1**2
     assert b4 == b1**5
     assert b5 == b1**(5+x)
@@ -405,18 +405,18 @@ def test_DirectPowerHilbertSpace_L2_symbol():
     assert b3.exp == 2
     assert b5.exp == (5+x)
 
-def test_DirectPowerHilbertSpace_FockSpace():
+def test_TensorPowerHilbertSpace_FockSpace():
     x = Symbol('x')
     y = Symbol('y')
     f1 = FockSpace()
     f2 = f1*f1*f1*f1**4*f1*f1**x*f1**2*f1**y
-    assert isinstance(f2, DirectPowerHilbertSpace)
+    assert isinstance(f2, TensorPowerHilbertSpace)
     assert f2.dimension == oo
     assert f2 == f1**(10+x+y)
     assert f2.base == FockSpace()
     assert f2.exp == (10+x+y)
 
-def test_DirectPowerHilbertSpace_mixed():
+def test_TensorPowerHilbertSpace_mixed():
     x = Symbol('x', real = True)
     y = Symbol('y', real = True)
     s1 = l2(5)
