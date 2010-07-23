@@ -1,4 +1,4 @@
-"""Advanced tools for dense recursive polynomials in `K[x]` or `K[X]`. """
+"""Advanced tools for dense recursive polynomials in ``K[x]`` or ``K[X]``. """
 
 from sympy.polys.densebasic import (
     dup_strip, dmp_strip,
@@ -64,7 +64,24 @@ from random import random as randfloat
 from operator import itemgetter
 
 def dup_clear_denoms(f, K0, K1=None, convert=False):
-    """Clear denominators, i.e. transform `K_0` to `K_1`. """
+    """
+    Clear denominators, i.e. transform ``K_0`` to ``K_1``.
+
+    Example
+    =======
+
+    >>> from sympy.polys.domains import QQ, ZZ
+    >>> from sympy.polys.densetools import dup_clear_denoms
+
+    >>> f = [QQ(1,2), QQ(1,3)]
+    >>> dup_clear_denoms(f, QQ, convert=False)
+    (6, [3/1, 2/1])
+
+    >>> f = [QQ(1,2), QQ(1,3)]
+    >>> dup_clear_denoms(f, QQ, convert=True)
+    (6, [3, 2])
+
+    """
     if K1 is None:
         K1 = K0.get_ring()
 
@@ -83,7 +100,7 @@ def dup_clear_denoms(f, K0, K1=None, convert=False):
 
 @cythonized("v,w")
 def _rec_clear_denoms(g, v, K0, K1):
-    """XXX"""
+    """Recursive helper for :func:`dmp_clear_denoms`."""
     common = K1.one
 
     if not v:
@@ -99,7 +116,24 @@ def _rec_clear_denoms(g, v, K0, K1):
 
 @cythonized("u")
 def dmp_clear_denoms(f, u, K0, K1=None, convert=False):
-    """Clear denominators, i.e. transform `K_0` to `K_1`. """
+    """
+    Clear denominators, i.e. transform ``K_0`` to ``K_1``.
+
+    Example
+    =======
+
+    >>> from sympy.polys.domains import QQ, ZZ
+    >>> from sympy.polys.densetools import dmp_clear_denoms
+
+    >>> f = [[QQ(1,2)], [QQ(1,3), QQ(1)]]
+    >>> dmp_clear_denoms(f, 1, QQ, convert=False)
+    (6, [[3/1], [2/1, 6/1]])
+
+    >>> f = [[QQ(1,2)], [QQ(1,3), QQ(1)]]
+    >>> dmp_clear_denoms(f, 1, QQ, convert=True)
+    (6, [[3], [2, 6]])
+
+    """
     if not u:
         return dup_clear_denoms(f, K0, K1)
 
@@ -118,7 +152,21 @@ def dmp_clear_denoms(f, u, K0, K1=None, convert=False):
 
 @cythonized("m,n,i,j")
 def dup_integrate(f, m, K):
-    """Computes indefinite integral of `f` in `K[x]`. """
+    """
+    Computes indefinite integral of ``f`` in ``K[x]``.
+
+    Example
+    =======
+
+    >>> from sympy.polys.domains import QQ
+    >>> from sympy.polys.densetools import dup_integrate
+
+    >>> dup_integrate([QQ(1), QQ(2), QQ(0)], 1, QQ)
+    [1/3, 1/1, 0/1, 0/1]
+    >>> dup_integrate([QQ(1), QQ(2), QQ(0)], 2, QQ)
+    [1/12, 1/3, 0/1, 0/1, 0/1]
+
+    """
     if m <= 0 or not f:
         return f
 
@@ -136,7 +184,21 @@ def dup_integrate(f, m, K):
 
 @cythonized("m,u,v,n,i,j")
 def dmp_integrate(f, m, u, K):
-    """Computes indefinite integral of `f` in `x_0` in `K[X]`. """
+    """
+    Computes indefinite integral of ``f`` in ``x_0`` in ``K[X]``.
+
+    Example
+    =======
+
+    >>> from sympy.polys.domains import QQ
+    >>> from sympy.polys.densetools import dmp_integrate
+
+    >>> dmp_integrate([[QQ(1)], [QQ(2), QQ(0)]], 1, 1, QQ)
+    [[1/2], [2/1, 0/1], []]
+    >>> dmp_integrate([[QQ(1)], [QQ(2), QQ(0)]], 2, 1, QQ)
+    [[1/6], [1/1, 0/1], [], []]
+
+    """
     if not u:
         return dup_integrate(f, m, K)
 
@@ -157,7 +219,7 @@ def dmp_integrate(f, m, u, K):
 
 @cythonized("m,v,w,i,j")
 def _rec_integrate_in(g, m, v, i, j, K):
-    """XXX"""
+    """Recursive helper for :func:`dmp_integrate_in`."""
     if i == j:
         return dmp_integrate(g, m, v, K)
 
@@ -167,7 +229,21 @@ def _rec_integrate_in(g, m, v, i, j, K):
 
 @cythonized("m,j,u")
 def dmp_integrate_in(f, m, j, u, K):
-    """Computes indefinite integral of `f` in `x_j` in `K[X]`. """
+    """
+    Computes indefinite integral of ``f`` in ``x_j`` in ``K[X]``.
+
+    Example
+    =======
+
+    >>> from sympy.polys.domains import QQ
+    >>> from sympy.polys.densetools import dmp_integrate_in
+
+    >>> dmp_integrate_in([[QQ(1)], [QQ(2), QQ(0)]], 1, 0, 1, QQ)
+    [[1/2], [2/1, 0/1], []]
+    >>> dmp_integrate_in([[QQ(1)], [QQ(2), QQ(0)]], 1, 1, 1, QQ)
+    [[1/1, 0/1], [1/1, 0/1, 0/1]]
+
+    """
     if j < 0 or j > u:
         raise IndexError("-%s <= j < %s expected, got %s" % (u, u, j))
 
@@ -175,7 +251,21 @@ def dmp_integrate_in(f, m, j, u, K):
 
 @cythonized("m,n,k,i")
 def dup_diff(f, m, K):
-    """m-th order derivative of a polynomial in `K[x]`. """
+    """
+    ``m``--th order derivative of a polynomial in ``K[x]``.
+
+    Example
+    =======
+
+    >>> from sympy.polys.domains import ZZ
+    >>> from sympy.polys.densetools import dup_diff
+
+    >>> dup_diff([ZZ(1), ZZ(2), ZZ(3), ZZ(4)], 1, ZZ)
+    [3, 4, 3]
+    >>> dup_diff([ZZ(1), ZZ(2), ZZ(3), ZZ(4)], 2, ZZ)
+    [6, 4]
+
+    """
     if m <= 0:
         return f
 
@@ -204,7 +294,23 @@ def dup_diff(f, m, K):
 
 @cythonized("u,v,m,n,k,i")
 def dmp_diff(f, m, u, K):
-    """m-th order derivative in `x_0` of a polynomial in `K[X]`. """
+    """
+    ``m``-th order derivative in ``x_0`` of a polynomial in ``K[X]``.
+
+    Example
+    =======
+
+    >>> from sympy.polys.domains import ZZ
+    >>> from sympy.polys.densetools import dmp_diff
+
+    >>> f = ZZ.map([[1, 2, 3], [2, 3, 1]])
+
+    >>> dmp_diff(f, 1, 1, ZZ)
+    [[1, 2, 3]]
+    >>> dmp_diff(f, 2, 1, ZZ)
+    [[]]
+
+    """
     if not u:
         return dup_diff(f, m, K)
     if m <= 0:
@@ -235,7 +341,7 @@ def dmp_diff(f, m, u, K):
 
 @cythonized("m,v,w,i,j")
 def _rec_diff_in(g, m, v, i, j, K):
-    """XXX"""
+    """Recursive helper for :func:`dmp_diff_in`."""
     if i == j:
         return dmp_diff(g, m, v, K)
 
@@ -245,14 +351,42 @@ def _rec_diff_in(g, m, v, i, j, K):
 
 @cythonized("m,j,u")
 def dmp_diff_in(f, m, j, u, K):
-    """m-th order derivative in `x_j` of a polynomial in `K[X]`. """
+    """
+    ``m``--th order derivative in ``x_j`` of a polynomial in ``K[X]``.
+
+    Example
+    =======
+
+    >>> from sympy.polys.domains import ZZ
+    >>> from sympy.polys.densetools import dmp_diff_in
+
+    >>> f = ZZ.map([[1, 2, 3], [2, 3, 1]])
+
+    >>> dmp_diff_in(f, 1, 0, 1, ZZ)
+    [[1, 2, 3]]
+    >>> dmp_diff_in(f, 1, 1, 1, ZZ)
+    [[2, 2], [4, 3]]
+
+    """
     if j < 0 or j > u:
         raise IndexError("-%s <= j < %s expected, got %s" % (u, u, j))
 
     return _rec_diff_in(f, m, u, 0, j, K)
 
 def dup_eval(f, a, K):
-    """Evaluate a polynomial at `x = a` in `K[x]` using Horner scheme. """
+    """
+    Evaluate a polynomial at ``x = a`` in ``K[x]`` using Horner scheme.
+
+    Example
+    =======
+
+    >>> from sympy.polys.domains import ZZ
+    >>> from sympy.polys.densetools import dup_eval
+
+    >>> dup_eval([ZZ(1), ZZ(2), ZZ(3)], 2, ZZ)
+    11
+
+    """
     if not a:
         return dup_TC(f, K)
 
@@ -266,7 +400,21 @@ def dup_eval(f, a, K):
 
 @cythonized("u,v")
 def dmp_eval(f, a, u, K):
-    """Evaluate a polynomial at `x_0 = a` in `K[X]` using Horner scheme. """
+    """
+    Evaluate a polynomial at ``x_0 = a`` in ``K[X]`` using the Horner scheme.
+
+    Example
+    =======
+
+    >>> from sympy.polys.domains import ZZ
+    >>> from sympy.polys.densetools import dmp_eval
+
+    >>> f = ZZ.map([[2, 3], [1, 2]])
+
+    >>> dmp_eval(f, 2, 1, ZZ)
+    [5, 8]
+
+    """
     if not u:
         return dup_eval(f, a, K)
 
@@ -283,7 +431,7 @@ def dmp_eval(f, a, u, K):
 
 @cythonized("v,i,j")
 def _rec_eval_in(g, a, v, i, j, K):
-    """XXX"""
+    """Recursive helper for :func:`dmp_eval_in`."""
     if i == j:
         return dmp_eval(g, a, v, K)
 
@@ -293,7 +441,23 @@ def _rec_eval_in(g, a, v, i, j, K):
 
 @cythonized("u")
 def dmp_eval_in(f, a, j, u, K):
-    """Evaluate a polynomial at `x_j = a` in `K[X]` using Horner scheme. """
+    """
+    Evaluate a polynomial at ``x_j = a`` in ``K[X]`` using the Horner scheme.
+
+    Example
+    =======
+
+    >>> from sympy.polys.domains import ZZ
+    >>> from sympy.polys.densetools import dmp_eval_in
+
+    >>> f = ZZ.map([[2, 3], [1, 2]])
+
+    >>> dmp_eval_in(f, 2, 0, 1, ZZ)
+    [5, 8]
+    >>> dmp_eval_in(f, 2, 1, 1, ZZ)
+    [7, 4]
+
+    """
     if j < 0 or j > u:
         raise IndexError("-%s <= j < %s expected, got %s" % (u, u, j))
 
@@ -301,7 +465,7 @@ def dmp_eval_in(f, a, j, u, K):
 
 @cythonized("i,u")
 def _rec_eval_tail(g, i, A, u, K):
-    """XXX"""
+    """Recursive helper for :func:`dmp_eval_tail`."""
     if i == u:
         return dup_eval(g, A[-1], K)
     else:
@@ -314,7 +478,23 @@ def _rec_eval_tail(g, i, A, u, K):
 
 @cythonized("u")
 def dmp_eval_tail(f, A, u, K):
-    """Evaluate a polynomial at `x_j = a_j, ...` in `K[X]`. """
+    """
+    Evaluate a polynomial at ``x_j = a_j, ...`` in ``K[X]``.
+
+    Example
+    =======
+
+    >>> from sympy.polys.domains import ZZ
+    >>> from sympy.polys.densetools import dmp_eval_tail
+
+    >>> f = ZZ.map([[2, 3], [1, 2]])
+
+    >>> dmp_eval_tail(f, (2, 2), 1, ZZ)
+    18
+    >>> dmp_eval_tail(f, (2,), 1, ZZ)
+    [7, 4]
+
+    """
     if not A:
         return f
 
@@ -330,7 +510,7 @@ def dmp_eval_tail(f, A, u, K):
 
 @cythonized("m,v,i,j")
 def _rec_diff_eval(g, m, a, v, i, j, K):
-    """XXX"""
+    """Recursive helper for :func:`dmp_diff_eval`."""
     if i == j:
         return dmp_eval(dmp_diff(g, m, v, K), a, v, K)
 
@@ -340,7 +520,23 @@ def _rec_diff_eval(g, m, a, v, i, j, K):
 
 @cythonized("m,j,u")
 def dmp_diff_eval_in(f, m, a, j, u, K):
-    """Differentiate and evaluate a polynomial in `x_j` at `a` in `K[X]`. """
+    """
+    Differentiate and evaluate a polynomial in ``x_j`` at ``a`` in ``K[X]``.
+
+    Example
+    =======
+
+    >>> from sympy.polys.domains import ZZ
+    >>> from sympy.polys.densetools import dmp_diff_eval_in
+
+    >>> f = ZZ.map([[1, 2, 3], [2, 3, 1]])
+
+    >>> dmp_diff_eval_in(f, 1, 2, 0, 1, ZZ)
+    [1, 2, 3]
+    >>> dmp_diff_eval_in(f, 1, 2, 1, 1, ZZ)
+    [6, 11]
+
+    """
     if j > u:
         raise IndexError("-%s <= j < %s expected, got %s" % (u, u, j))
     if not j:
@@ -349,7 +545,24 @@ def dmp_diff_eval_in(f, m, a, j, u, K):
     return _rec_diff_eval(f, m, a, u, 0, j, K)
 
 def dup_half_gcdex(f, g, K):
-    """Half extended Euclidean algorithm in `F[x]`. """
+    """
+    Half extended Euclidean algorithm in ``F[x]``.
+
+    Returns ``(s, h)`` such that ``h = gcd(f, g)`` and ``s*f = h (mod g)``.
+
+    Example
+    =======
+
+    >>> from sympy.polys.domains import QQ
+    >>> from sympy.polys.densetools import dup_half_gcdex
+
+    >>> f = QQ.map([1, -2, -6, 12, 15])
+    >>> g = QQ.map([1, 1, -4, -4])
+
+    >>> dup_half_gcdex(f, g, QQ)
+    ([-1/5, 3/5], [1/1, 1/1])
+
+    """
     if not (K.has_Field or not K.is_Exact):
         raise DomainError("can't compute half extended GCD over %s" % K)
 
@@ -366,7 +579,24 @@ def dup_half_gcdex(f, g, K):
     return a, f
 
 def dup_gcdex(f, g, K):
-    """Extended Euclidean algorithm in `F[x]`. """
+    """
+    Extended Euclidean algorithm in ``F[x]``.
+
+    Returns ``(s, t, h)`` such that ``h = gcd(f, g)`` and ``s*f + t*g = h``.
+
+    Example
+    =======
+
+    >>> from sympy.polys.domains import QQ
+    >>> from sympy.polys.densetools import dup_gcdex
+
+    >>> f = QQ.map([1, -2, -6, 12, 15])
+    >>> g = QQ.map([1, 1, -4, -4])
+
+    >>> dup_gcdex(f, g, QQ)
+    ([-1/5, 3/5], [1/5, -6/5, 2/1], [1/1, 1/1])
+
+    """
     s, h = dup_half_gcdex(f, g, K)
 
     F = dup_sub_mul(h, s, f, K)
@@ -375,7 +605,28 @@ def dup_gcdex(f, g, K):
     return s, t, h
 
 def dup_invert(f, g, K):
-    """Compute multiplicative inverse of `f` in `F[x]/(g(x))`. """
+    """
+    Compute multiplicative inverse of ``f`` in ``F[x]/(g(x))``.
+
+    Example
+    =======
+
+    >>> from sympy.polys.domains import QQ
+    >>> from sympy.polys.densetools import dup_invert
+
+    >>> f = QQ.map([1, 0, -1])
+    >>> g = QQ.map([2, -1])
+    >>> h = QQ.map([1, -1])
+
+    >>> dup_invert(f, g, QQ)
+    [-4/3]
+
+    >>> dup_invert(f, h, QQ)
+    Traceback (most recent call last):
+    ...
+    NotInvertible: zero divisor
+
+    """
     s, h = dup_half_gcdex(f, g, K)
 
     if h == [K.one]:
@@ -385,7 +636,26 @@ def dup_invert(f, g, K):
 
 @cythonized("n,m,d,k")
 def dup_inner_subresultants(f, g, K):
-    """Subresultant PRS algorithm in `K[x]`. """
+    """
+    Subresultant PRS algorithm in ``K[x]``.
+
+    Returns the subresultant polynomial remainder sequence, values for beta,
+    and values for delta (the last two are necessary for computing the
+    resultant in dup_prs_resultant).
+
+    Example
+    =======
+
+    >>> from sympy.polys.domains import ZZ
+    >>> from sympy.polys.densetools import dup_inner_subresultants
+
+    >>> f = ZZ.map([1, 0, 1])
+    >>> g = ZZ.map([1, 0, -1])
+
+    >>> dup_inner_subresultants(f, g, ZZ)
+    ([[1, 0, 1], [1, 0, -1], [-2]], [-1, -1], [0, 2])
+
+    """
     n = dup_degree(f)
     m = dup_degree(g)
 
@@ -432,12 +702,42 @@ def dup_inner_subresultants(f, g, K):
     return R, B, D
 
 def dup_subresultants(f, g, K):
-    """Computes subresultant PRS of two polynomials in `K[x]`. """
+    """
+    Computes subresultant PRS of two polynomials in ``K[x]``.
+
+    Example
+    =======
+
+    >>> from sympy.polys.domains import ZZ
+    >>> from sympy.polys.densetools import dup_subresultants
+
+    >>> f = ZZ.map([1, 0, 1])
+    >>> g = ZZ.map([1, 0, -1])
+
+    >>> dup_subresultants(f, g, ZZ)
+    [[1, 0, 1], [1, 0, -1], [-2]]
+
+    """
     return dup_inner_subresultants(f, g, K)[0]
 
 @cythonized("s,i,du,dv,dw")
 def dup_prs_resultant(f, g, K):
-    """Resultant algorithm in `K[x]` using subresultant PRS. """
+    """
+    Resultant algorithm in ``K[x]`` using subresultant PRS.
+
+    Example
+    =======
+
+    >>> from sympy.polys.domains import ZZ
+    >>> from sympy.polys.densetools import dup_prs_resultant
+
+    >>> f = ZZ.map([1, 0, 1])
+    >>> g = ZZ.map([1, 0, -1])
+
+    >>> dup_prs_resultant(f, g, ZZ)
+    (4, [[1, 0, 1], [1, 0, -1], [-2]])
+
+    """
     if not f or not g:
         return (K.zero, [])
 
@@ -475,12 +775,49 @@ def dup_prs_resultant(f, g, K):
     return res, R
 
 def dup_resultant(f, g, K):
-    """Computes resultant of two polynomials in `K[x]`. """
+    """
+    Computes resultant of two polynomials in ``K[x]``.
+
+    Example
+    =======
+
+    >>> from sympy.polys.domains import ZZ
+    >>> from sympy.polys.densetools import dup_resultant
+
+    >>> f = ZZ.map([1, 0, 1])
+    >>> g = ZZ.map([1, 0, -1])
+
+    >>> dup_resultant(f, g, ZZ)
+    4
+
+    """
     return dup_prs_resultant(f, g, K)[0]
 
 @cythonized("u,v,n,m,d,k")
 def dmp_inner_subresultants(f, g, u, K):
-    """Subresultant PRS algorithm in `K[X]`. """
+    """
+    Subresultant PRS algorithm in ``K[X]``.
+
+    Example
+    =======
+
+    >>> from sympy.polys.domains import ZZ
+    >>> from sympy.polys.densetools import dmp_inner_subresultants
+
+    >>> f = ZZ.map([[3, 0], [], [-1, 0, 0, -4]])
+    >>> g = ZZ.map([[1], [1, 0, 0, 0], [-9]])
+
+    >>> a = [[3, 0, 0, 0, 0], [1, 0, -27, 4]]
+    >>> b = [[-3, 0, 0, -12, 1, 0, -54, 8, 729, -216, 16]]
+
+    >>> R = ZZ.map([f, g, a, b])
+    >>> B = ZZ.map([[-1], [1], [9, 0, 0, 0, 0, 0, 0, 0, 0]])
+    >>> D = ZZ.map([0, 1, 1])
+
+    >>> dmp_inner_subresultants(f, g, 1, ZZ) == (R, B, D)
+    True
+
+    """
     if not u:
         return dup_inner_subresultants(f, g, K)
 
@@ -535,12 +872,48 @@ def dmp_inner_subresultants(f, g, u, K):
 
 @cythonized("u")
 def dmp_subresultants(f, g, u, K):
-    """Computes subresultant PRS of two polynomials in `K[X]`. """
+    """
+    Computes subresultant PRS of two polynomials in ``K[X]``.
+
+    Example
+    =======
+
+    >>> from sympy.polys.domains import ZZ
+    >>> from sympy.polys.densetools import dmp_subresultants
+
+    >>> f = [[3, 0], [], [-1, 0, 0, -4]]
+    >>> g = [[1], [1, 0, 0, 0], [-9]]
+
+    >>> a = [[3, 0, 0, 0, 0], [1, 0, -27, 4]]
+    >>> b = [[-3, 0, 0, -12, 1, 0, -54, 8, 729, -216, 16]]
+
+    >>> dmp_subresultants(f, g, 1, ZZ) == [f, g, a, b]
+    True
+
+    """
     return dmp_inner_subresultants(f, g, u, K)[0]
 
 @cythonized("u,v,s,i,d,du,dv,dw")
 def dmp_prs_resultant(f, g, u, K):
-    """Resultant algorithm in `K[X]` using subresultant PRS. """
+    """
+    Resultant algorithm in ``K[X]`` using subresultant PRS.
+
+    Example
+    =======
+
+    >>> from sympy.polys.domains import ZZ
+    >>> from sympy.polys.densetools import dmp_prs_resultant
+
+    >>> f = ZZ.map([[3, 0], [], [-1, 0, 0, -4]])
+    >>> g = ZZ.map([[1], [1, 0, 0, 0], [-9]])
+
+    >>> a = ZZ.map([[3, 0, 0, 0, 0], [1, 0, -27, 4]])
+    >>> b = ZZ.map([[-3, 0, 0, -12, 1, 0, -54, 8, 729, -216, 16]])
+
+    >>> dmp_prs_resultant(f, g, 1, ZZ) == (b[0], [f, g, a, b])
+    True
+
+    """
     if not u:
         return dup_prs_resultant(f, g, K)
 
@@ -587,7 +960,22 @@ def dmp_prs_resultant(f, g, u, K):
 
 @cythonized("u,v,n,m,N,M,B")
 def dmp_zz_modular_resultant(f, g, p, u, K):
-    """Compute resultant of `f` and `g` modulo a prime `p`. """
+    """
+    Compute resultant of ``f`` and ``g`` modulo a prime ``p``.
+
+    Example
+    =======
+
+    >>> from sympy.polys.domains import ZZ
+    >>> from sympy.polys.densetools import dmp_zz_modular_resultant
+
+    >>> f = ZZ.map([[1], [1, 2]])
+    >>> g = ZZ.map([[2, 1], [3]])
+
+    >>> dmp_zz_modular_resultant(f, g, ZZ(5), 1, ZZ)
+    [-2, 0, 1]
+
+    """
     if not u:
         return gf_int(dup_prs_resultant(f, g, K)[0] % p, p)
 
@@ -649,7 +1037,22 @@ def _collins_crt(r, R, P, p, K):
 
 @cythonized("u,v,n,m")
 def dmp_zz_collins_resultant(f, g, u, K):
-    """Collins's modular resultant algorithm in `Z[X]`. """
+    """
+    Collins's modular resultant algorithm in ``Z[X]``.
+
+    Example
+    =======
+
+    >>> from sympy.polys.domains import ZZ
+    >>> from sympy.polys.densetools import dmp_zz_collins_resultant
+
+    >>> f = ZZ.map([[1], [1, 2]])
+    >>> g = ZZ.map([[2, 1], [3]])
+
+    >>> dmp_zz_collins_resultant(f, g, 1, ZZ)
+    [-2, -5, 1]
+
+    """
 
     n = dmp_degree(f, u)
     m = dmp_degree(g, u)
@@ -693,7 +1096,22 @@ def dmp_zz_collins_resultant(f, g, u, K):
 
 @cythonized("u,n,m")
 def dmp_qq_collins_resultant(f, g, u, K0):
-    """Collins's modular resultant algorithm in `Q[X]`. """
+    """
+    Collins's modular resultant algorithm in ``Q[X]``.
+
+    Example
+    =======
+
+    >>> from sympy.polys.domains import QQ
+    >>> from sympy.polys.densetools import dmp_qq_collins_resultant
+
+    >>> f = [[QQ(1,2)], [QQ(1), QQ(2,3)]]
+    >>> g = [[QQ(2), QQ(1)], [QQ(3)]]
+
+    >>> dmp_qq_collins_resultant(f, g, 1, QQ)
+    [-2/1, -7/3, 5/6]
+
+    """
     n = dmp_degree(f, u)
     m = dmp_degree(g, u)
 
@@ -717,7 +1135,22 @@ def dmp_qq_collins_resultant(f, g, u, K0):
 
 @cythonized("u")
 def dmp_resultant(f, g, u, K):
-    """Computes resultant of two polynomials in `K[X]`. """
+    """
+    Computes resultant of two polynomials in ``K[X]``.
+
+    Example
+    =======
+
+    >>> from sympy.polys.domains import ZZ
+    >>> from sympy.polys.densetools import dmp_resultant
+
+    >>> f = ZZ.map([[3, 0], [], [-1, 0, 0, -4]])
+    >>> g = ZZ.map([[1], [1, 0, 0, 0], [-9]])
+
+    >>> dmp_resultant(f, g, 1, ZZ)
+    [-3, 0, 0, -12, 1, 0, -54, 8, 729, -216, 16]
+
+    """
     if not u:
         return dup_resultant(f, g, K)
 
@@ -732,7 +1165,19 @@ def dmp_resultant(f, g, u, K):
 
 @cythonized("d,s")
 def dup_discriminant(f, K):
-    """Computes discriminant of a polynomial in `K[x]`. """
+    """
+    Computes discriminant of a polynomial in ``K[x]``.
+
+    Example
+    =======
+
+    >>> from sympy.polys.domains import ZZ
+    >>> from sympy.polys.densetools import dup_discriminant
+
+    >>> dup_discriminant([ZZ(1), ZZ(2), ZZ(3)], ZZ)
+    -8
+
+    """
     d = dup_degree(f)
 
     if d <= 0:
@@ -747,7 +1192,21 @@ def dup_discriminant(f, K):
 
 @cythonized("u,v,d,s")
 def dmp_discriminant(f, u, K):
-    """Computes discriminant of a polynomial in `K[X]`. """
+    """
+    Computes discriminant of a polynomial in ``K[X]``.
+
+    Example
+    =======
+
+    >>> from sympy.polys.domains import ZZ
+    >>> from sympy.polys.densetools import dmp_discriminant
+
+    >>> f = ZZ.map([[[[1]], [[]]], [[[1], []]], [[[1, 0]]]])
+
+    >>> dmp_discriminant(f, 3, ZZ)
+    [[[-4, 0]], [[1], [], []]]
+
+    """
     if not u:
         return dup_discriminant(f, K)
 
@@ -838,7 +1297,7 @@ def _dmp_ff_trivial_gcd(f, g, u, K):
 
 @cythonized("u,v,df,dg")
 def _dmp_simplify_gcd(f, g, u, K):
-    """Try to eliminate `x_0` from GCD computation in `K[X]`. """
+    """Try to eliminate ``x_0`` from GCD computation in ``K[X]``. """
     df = dmp_degree(f, u)
     dg = dmp_degree(g, u)
 
@@ -865,7 +1324,25 @@ def _dmp_simplify_gcd(f, g, u, K):
     return [h], cff, cfg
 
 def dup_rr_prs_gcd(f, g, K):
-    """Computes polynomial GCD using subresultants over a ring. """
+    """
+    Computes polynomial GCD using subresultants over a ring.
+
+    Returns ``(h, cff, cfg)`` such that ``a = gcd(f, g)``, ``cff = quo(f, h)``,
+    and ``cfg = quo(g, h)``.
+
+    Example
+    =======
+
+    >>> from sympy.polys.domains import ZZ
+    >>> from sympy.polys.densetools import dup_rr_prs_gcd
+
+    >>> f = ZZ.map([1, 0, -1])
+    >>> g = ZZ.map([1, -3, 2])
+
+    >>> dup_rr_prs_gcd(f, g, ZZ)
+    ([1, -1], [1, 1], [1, -2])
+
+    """
     result = _dup_rr_trivial_gcd(f, g, K)
 
     if result is not None:
@@ -890,7 +1367,25 @@ def dup_rr_prs_gcd(f, g, K):
     return h, cff, cfg
 
 def dup_ff_prs_gcd(f, g, K):
-    """Computes polynomial GCD using subresultants over a field. """
+    """
+    Computes polynomial GCD using subresultants over a field.
+
+    Returns ``(h, cff, cfg)`` such that ``a = gcd(f, g)``, ``cff = quo(f, h)``,
+    and ``cfg = quo(g, h)``.
+
+    Example
+    =======
+
+    >>> from sympy.polys.domains import QQ
+    >>> from sympy.polys.densetools import dup_ff_prs_gcd
+
+    >>> f = QQ.map([1, 0, -1])
+    >>> g = QQ.map([1, -3, 2])
+
+    >>> dup_ff_prs_gcd(f, g, QQ)
+    ([1/1, -1/1], [1/1, 1/1], [1/1, -2/1])
+
+    """
     result = _dup_ff_trivial_gcd(f, g, K)
 
     if result is not None:
@@ -906,7 +1401,25 @@ def dup_ff_prs_gcd(f, g, K):
 
 @cythonized("u")
 def dmp_rr_prs_gcd(f, g, u, K):
-    """Computes polynomial GCD using subresultants over a ring. """
+    """
+    Computes polynomial GCD using subresultants over a ring.
+
+    Returns ``(h, cff, cfg)`` such that ``a = gcd(f, g)``, ``cff = quo(f, h)``,
+    and ``cfg = quo(g, h)``.
+
+    Example
+    =======
+
+    >>> from sympy.polys.domains import ZZ
+    >>> from sympy.polys.densetools import dmp_rr_prs_gcd
+
+    >>> f = ZZ.map([[1], [2, 0], [1, 0, 0]])
+    >>> g = ZZ.map([[1], [1, 0], []])
+
+    >>> dmp_rr_prs_gcd(f, g, 1, ZZ)
+    ([[1], [1, 0]], [[1], [1, 0]], [[1], []])
+
+    """
     if not u:
         return dup_rr_prs_gcd(f, g, K)
 
@@ -934,7 +1447,25 @@ def dmp_rr_prs_gcd(f, g, u, K):
 
 @cythonized("u")
 def dmp_ff_prs_gcd(f, g, u, K):
-    """Computes polynomial GCD using subresultants over a field. """
+    """
+    Computes polynomial GCD using subresultants over a field.
+
+    Returns ``(h, cff, cfg)`` such that ``a = gcd(f, g)``, ``cff = quo(f, h)``,
+    and ``cfg = quo(g, h)``.
+
+    Example
+    =======
+
+    >>> from sympy.polys.domains import QQ
+    >>> from sympy.polys.densetools import dmp_ff_prs_gcd
+
+    >>> f = [[QQ(1,2)], [QQ(1), QQ(0)], [QQ(1,2), QQ(0), QQ(0)]]
+    >>> g = [[QQ(1)], [QQ(1), QQ(0)], []]
+
+    >>> dmp_ff_prs_gcd(f, g, 1, QQ)
+    ([[1/1], [1/1, 0/1]], [[1/2], [1/2, 0/1]], [[1/1], []])
+
+    """
     if not u:
         return dup_ff_prs_gcd(f, g, K)
 
@@ -977,30 +1508,44 @@ def _dup_zz_gcd_interpolate(h, x, K):
 
 @cythonized("i,df,dg")
 def dup_zz_heu_gcd(f, g, K):
-    """Heuristic polynomial GCD in `Z[x]`.
+    """
+    Heuristic polynomial GCD in ``Z[x]``.
 
-       Given univariate polynomials `f` and `g` in `Z[x]`, returns their GCD
-       and cofactors, i.e. polynomials `h`, `cff` and `cfg` such that::
+    Given univariate polynomials ``f`` and ``g`` in ``Z[x]``, returns
+    their GCD and cofactors, i.e. polynomials ``h``, ``cff`` and ``cfg``
+    such that::
 
-              h = gcd(f, g), cff = quo(f, h) and cfg = quo(g, h)
+          h = gcd(f, g), cff = quo(f, h) and cfg = quo(g, h)
 
-       The algorithm is purely heuristic which means it may fail to compute
-       the GCD. This will be signaled by raising an exception. In this case
-       you will need to switch to another GCD method.
+    The algorithm is purely heuristic which means it may fail to compute
+    the GCD. This will be signaled by raising an exception. In this case
+    you will need to switch to another GCD method.
 
-       The algorithm computes the polynomial GCD by evaluating polynomials
-       f and g at certain points and computing (fast) integer GCD of those
-       evaluations. The polynomial GCD is recovered from the integer image
-       by interpolation.  The final step is to verify if the result is the
-       correct GCD. This gives cofactors as a side effect.
+    The algorithm computes the polynomial GCD by evaluating polynomials
+    f and g at certain points and computing (fast) integer GCD of those
+    evaluations. The polynomial GCD is recovered from the integer image
+    by interpolation.  The final step is to verify if the result is the
+    correct GCD. This gives cofactors as a side effect.
 
-       References
-       ==========
+    Example
+    =======
 
-       .. [Liao95] Hsin-Chao Liao,  R. Fateman, Evaluation of the heuristic
-          polynomial GCD, International Symposium on Symbolic and Algebraic
-          Computation (ISSAC), ACM Press, Montreal, Quebec, Canada, 1995,
-          pp. 240--247
+    >>> from sympy.polys.domains import ZZ
+    >>> from sympy.polys.densetools import dup_zz_heu_gcd
+
+    >>> f = ZZ.map([1, 0, -1])
+    >>> g = ZZ.map([1, -3, 2])
+
+    >>> dup_zz_heu_gcd(f, g, ZZ)
+    ([1, -1], [1, 1], [1, -2])
+
+    References
+    ==========
+
+    .. [Liao95] Hsin-Chao Liao,  R. Fateman, Evaluation of the heuristic
+    polynomial GCD, International Symposium on Symbolic and Algebraic
+    Computation (ISSAC), ACM Press, Montreal, Quebec, Canada, 1995,
+    pp. 240--247
 
     """
     result = _dup_rr_trivial_gcd(f, g, K)
@@ -1092,32 +1637,46 @@ def _dmp_zz_gcd_interpolate(h, x, v, K):
 
 @cythonized("u,v,i,dg,df")
 def dmp_zz_heu_gcd(f, g, u, K):
-    """Heuristic polynomial GCD in `Z[X]`.
+    """
+    Heuristic polynomial GCD in ``Z[X]``.
 
-       Given univariate polynomials `f` and `g` in `Z[X]`, returns their GCD
-       and cofactors, i.e. polynomials `h`, `cff` and `cfg` such that::
+    Given univariate polynomials ``f`` and ``g`` in ``Z[X]``, returns
+    their GCD and cofactors, i.e. polynomials ``h``, ``cff`` and ``cfg``
+    such that::
 
-              h = gcd(f, g), cff = quo(f, h) and cfg = quo(g, h)
+          h = gcd(f, g), cff = quo(f, h) and cfg = quo(g, h)
 
-       The algorithm is purely heuristic which means it may fail to compute
-       the GCD. This will be signaled by raising an exception. In this case
-       you will need to switch to another GCD method.
+    The algorithm is purely heuristic which means it may fail to compute
+    the GCD. This will be signaled by raising an exception. In this case
+    you will need to switch to another GCD method.
 
-       The algorithm computes the polynomial GCD by evaluating polynomials
-       f and g at certain points and computing (fast) integer GCD of those
-       evaluations. The polynomial GCD is recovered from the integer image
-       by interpolation. The evaluation proces reduces f and g variable by
-       variable into a large integer.  The final step  is to verify if the
-       interpolated polynomial is the correct GCD. This gives cofactors of
-       the input polynomials as a side effect.
+    The algorithm computes the polynomial GCD by evaluating polynomials
+    f and g at certain points and computing (fast) integer GCD of those
+    evaluations. The polynomial GCD is recovered from the integer image
+    by interpolation. The evaluation proces reduces f and g variable by
+    variable into a large integer.  The final step  is to verify if the
+    interpolated polynomial is the correct GCD. This gives cofactors of
+    the input polynomials as a side effect.
 
-       References
-       ==========
+    Example
+    =======
 
-       .. [Liao95] Hsin-Chao Liao,  R. Fateman, Evaluation of the heuristic
-          polynomial GCD, International Symposium on Symbolic and Algebraic
-          Computation (ISSAC), ACM Press, Montreal, Quebec, Canada, 1995,
-          pp. 240--247
+    >>> from sympy.polys.domains import ZZ
+    >>> from sympy.polys.densetools import dmp_zz_heu_gcd
+
+    >>> f = ZZ.map([[1], [2, 0], [1, 0, 0]])
+    >>> g = ZZ.map([[1], [1, 0], []])
+
+    >>> dmp_zz_heu_gcd(f, g, 1, ZZ)
+    ([[1], [1, 0]], [[1], [1, 0]], [[1], []])
+
+    References
+    ==========
+
+    .. [Liao95] Hsin-Chao Liao,  R. Fateman, Evaluation of the heuristic
+    polynomial GCD, International Symposium on Symbolic and Algebraic
+    Computation (ISSAC), ACM Press, Montreal, Quebec, Canada, 1995,
+    pp. 240--247
 
     """
     if not u:
@@ -1190,7 +1749,25 @@ def dmp_zz_heu_gcd(f, g, u, K):
     raise HeuristicGCDFailed('no luck')
 
 def dup_qq_heu_gcd(f, g, K0):
-    """Heuristic polynomial GCD in `Q[x]`. """
+    """
+    Heuristic polynomial GCD in ``Q[x]``.
+
+    Returns ``(h, cff, cfg)`` such that ``a = gcd(f, g)``,
+    ``cff = quo(f, h)``, and ``cfg = quo(g, h)``.
+
+    Example
+    =======
+
+    >>> from sympy.polys.domains import QQ
+    >>> from sympy.polys.densetools import dup_qq_heu_gcd
+
+    >>> f = [QQ(1,2), QQ(7,4), QQ(3,2)]
+    >>> g = [QQ(1,2), QQ(1), QQ(0)]
+
+    >>> dup_qq_heu_gcd(f, g, QQ)
+    ([1/1, 2/1], [1/2, 3/4], [1/2, 0/1])
+
+    """
     result = _dup_ff_trivial_gcd(f, g, K0)
 
     if result is not None:
@@ -1221,7 +1798,25 @@ def dup_qq_heu_gcd(f, g, K0):
 
 @cythonized("u")
 def dmp_qq_heu_gcd(f, g, u, K0):
-    """Heuristic polynomial GCD in `Q[X]`. """
+    """
+    Heuristic polynomial GCD in ``Q[X]``.
+
+    Returns ``(h, cff, cfg)`` such that ``a = gcd(f, g)``,
+    ``cff = quo(f, h)``, and ``cfg = quo(g, h)``.
+
+    Example
+    =======
+
+    >>> from sympy.polys.domains import QQ
+    >>> from sympy.polys.densetools import dmp_qq_heu_gcd
+
+    >>> f = [[QQ(1,4)], [QQ(1), QQ(0)], [QQ(1), QQ(0), QQ(0)]]
+    >>> g = [[QQ(1,2)], [QQ(1), QQ(0)], []]
+
+    >>> dmp_qq_heu_gcd(f, g, 1, QQ)
+    ([[1/1], [2/1, 0/1]], [[1/4], [1/2, 0/1]], [[1/2], []])
+
+    """
     result = _dmp_ff_trivial_gcd(f, g, u, K0)
 
     if result is not None:
@@ -1251,7 +1846,25 @@ def dmp_qq_heu_gcd(f, g, u, K0):
     return h, cff, cfg
 
 def dup_inner_gcd(f, g, K):
-    """Computes polynomial GCD and cofactors of `f` and `g` in `K[x]`. """
+    """
+    Computes polynomial GCD and cofactors of ``f`` and ``g`` in ``K[x]``.
+
+    Returns ``(h, cff, cfg)`` such that ``a = gcd(f, g)``,
+    ``cff = quo(f, h)``, and ``cfg = quo(g, h)``.
+
+    Example
+    =======
+
+    >>> from sympy.polys.domains import ZZ
+    >>> from sympy.polys.densetools import dup_inner_gcd
+
+    >>> f = ZZ.map([1, 0, -1])
+    >>> g = ZZ.map([1, -3, 2])
+
+    >>> dup_inner_gcd(f, g, ZZ)
+    ([1, -1], [1, 1], [1, -2])
+
+    """
     if K.has_Field or not K.is_Exact:
         if K.is_QQ and query('USE_HEU_GCD'):
             try:
@@ -1291,7 +1904,25 @@ def _dmp_inner_gcd(f, g, u, K):
 
 @cythonized("u")
 def dmp_inner_gcd(f, g, u, K):
-    """Computes polynomial GCD and cofactors of `f` and `g` in `K[X]`. """
+    """
+    Computes polynomial GCD and cofactors of ``f`` and ``g`` in ``K[X]``.
+
+    Returns ``(h, cff, cfg)`` such that ``a = gcd(f, g)``,
+    ``cff = quo(f, h)``, and ``cfg = quo(g, h)``.
+
+    Example
+    =======
+
+    >>> from sympy.polys.domains import ZZ
+    >>> from sympy.polys.densetools import dmp_inner_gcd
+
+    >>> f = ZZ.map([[1], [2, 0], [1, 0, 0]])
+    >>> g = ZZ.map([[1], [1, 0], []])
+
+    >>> dmp_inner_gcd(f, g, 1, ZZ)
+    ([[1], [1, 0]], [[1], [1, 0]], [[1], []])
+
+    """
     if not u:
         return dup_inner_gcd(f, g, K)
 
@@ -1303,16 +1934,61 @@ def dmp_inner_gcd(f, g, u, K):
             dmp_inflate(cfg, J, u, K))
 
 def dup_gcd(f, g, K):
-    """Computes polynomial GCD of `f` and `g` in `K[x]`. """
+    """
+    Computes polynomial GCD of ``f`` and ``g`` in ``K[x]``.
+
+    Example
+    =======
+
+    >>> from sympy.polys.domains import ZZ
+    >>> from sympy.polys.densetools import dup_gcd
+
+    >>> f = ZZ.map([1, 0, -1])
+    >>> g = ZZ.map([1, -3, 2])
+
+    >>> dup_gcd(f, g, ZZ)
+    [1, -1]
+
+    """
     return dup_inner_gcd(f, g, K)[0]
 
 @cythonized("u")
 def dmp_gcd(f, g, u, K):
-    """Computes polynomial GCD of `f` and `g` in `K[X]`. """
+    """
+    Computes polynomial GCD of ``f`` and ``g`` in ``K[X]``.
+
+    Example
+    =======
+
+    >>> from sympy.polys.domains import ZZ
+    >>> from sympy.polys.densetools import dmp_gcd
+
+    >>> f = ZZ.map([[1], [2, 0], [1, 0, 0]])
+    >>> g = ZZ.map([[1], [1, 0], []])
+
+    >>> dmp_gcd(f, g, 1, ZZ)
+    [[1], [1, 0]]
+
+    """
     return dmp_inner_gcd(f, g, u, K)[0]
 
 def dup_rr_lcm(f, g, K):
-    """Computes polynomial LCM over a ring in `K[x]`. """
+    """
+    Computes polynomial LCM over a ring in ``K[x]``.
+
+    Example
+    =======
+
+    >>> from sympy.polys.domains import ZZ
+    >>> from sympy.polys.densetools import dup_rr_lcm
+
+    >>> f = ZZ.map([1, 0, -1])
+    >>> g = ZZ.map([1, -3, 2])
+
+    >>> dup_rr_lcm(f, g, ZZ)
+    [1, -2, -1, 2]
+
+    """
     fc, f = dup_primitive(f, K)
     gc, g = dup_primitive(g, K)
 
@@ -1324,14 +2000,44 @@ def dup_rr_lcm(f, g, K):
     return dup_mul_ground(h, c, K)
 
 def dup_ff_lcm(f, g, K):
-    """Computes polynomial LCM over a field in `K[x]`. """
+    """
+    Computes polynomial LCM over a field in ``K[x]``.
+
+    Example
+    =======
+
+    >>> from sympy.polys.domains import QQ
+    >>> from sympy.polys.densetools import dup_ff_lcm
+
+    >>> f = [QQ(1,2), QQ(7,4), QQ(3,2)]
+    >>> g = [QQ(1,2), QQ(1), QQ(0)]
+
+    >>> dup_ff_lcm(f, g, QQ)
+    [1/1, 7/2, 3/1, 0/1]
+
+    """
     h = dup_exquo(dup_mul(f, g, K),
                   dup_gcd(f, g, K), K)
 
     return dup_monic(h, K)
 
 def dup_lcm(f, g, K):
-    """Computes polynomial LCM of `f` and `g` in `K[x]`. """
+    """
+    Computes polynomial LCM of ``f`` and ``g`` in ``K[x]``.
+
+    Example
+    =======
+
+    >>> from sympy.polys.domains import ZZ
+    >>> from sympy.polys.densetools import dup_lcm
+
+    >>> f = ZZ.map([1, 0, -1])
+    >>> g = ZZ.map([1, -3, 2])
+
+    >>> dup_lcm(f, g, ZZ)
+    [1, -2, -1, 2]
+
+    """
     if K.has_Field or not K.is_Exact:
         return dup_ff_lcm(f, g, K)
     else:
@@ -1339,7 +2045,22 @@ def dup_lcm(f, g, K):
 
 @cythonized("u")
 def dmp_rr_lcm(f, g, u, K):
-    """Computes polynomial LCM over a ring in `K[X]`. """
+    """
+    Computes polynomial LCM over a ring in ``K[X]``.
+
+    Example
+    =======
+
+    >>> from sympy.polys.domains import ZZ
+    >>> from sympy.polys.densetools import dmp_rr_lcm
+
+    >>> f = ZZ.map([[1], [2, 0], [1, 0, 0]])
+    >>> g = ZZ.map([[1], [1, 0], []])
+
+    >>> dmp_rr_lcm(f, g, 1, ZZ)
+    [[1], [2, 0], [1, 0, 0], []]
+
+    """
     fc, f = dmp_ground_primitive(f, u, K)
     gc, g = dmp_ground_primitive(g, u, K)
 
@@ -1352,7 +2073,22 @@ def dmp_rr_lcm(f, g, u, K):
 
 @cythonized("u")
 def dmp_ff_lcm(f, g, u, K):
-    """Computes polynomial LCM over a field in `K[X]`. """
+    """
+    Computes polynomial LCM over a field in ``K[X]``.
+
+    Example
+    =======
+
+    >>> from sympy.polys.domains import QQ
+    >>> from sympy.polys.densetools import dmp_ff_lcm
+
+    >>> f = [[QQ(1,4)], [QQ(1), QQ(0)], [QQ(1), QQ(0), QQ(0)]]
+    >>> g = [[QQ(1,2)], [QQ(1), QQ(0)], []]
+
+    >>> dmp_ff_lcm(f, g, 1, QQ)
+    [[1/1], [4/1, 0/1], [4/1, 0/1, 0/1], []]
+
+    """
     h = dmp_exquo(dmp_mul(f, g, u, K),
                   dmp_gcd(f, g, u, K), u, K)
 
@@ -1360,7 +2096,22 @@ def dmp_ff_lcm(f, g, u, K):
 
 @cythonized("u")
 def dmp_lcm(f, g, u, K):
-    """Computes polynomial LCM of `f` and `g` in `K[X]`. """
+    """
+    Computes polynomial LCM of ``f`` and ``g`` in ``K[X]``.
+
+    Example
+    =======
+
+    >>> from sympy.polys.domains import ZZ
+    >>> from sympy.polys.densetools import dmp_lcm
+
+    >>> f = ZZ.map([[1], [2, 0], [1, 0, 0]])
+    >>> g = ZZ.map([[1], [1, 0], []])
+
+    >>> dmp_lcm(f, g, 1, ZZ)
+    [[1], [2, 0], [1, 0, 0], []]
+
+    """
     if not u:
         return dup_lcm(f, g, K)
 
@@ -1370,7 +2121,21 @@ def dmp_lcm(f, g, u, K):
         return dmp_rr_lcm(f, g, u, K)
 
 def dup_trunc(f, p, K):
-    """Reduce `K[x]` polynomial modulo a constant `p` in `K`. """
+    """
+    Reduce ``K[x]`` polynomial modulo a constant ``p`` in ``K``.
+
+    Example
+    =======
+
+    >>> from sympy.polys.domains import ZZ
+    >>> from sympy.polys.densetools import dup_trunc
+
+    >>> f = ZZ.map([2, 3, 5, 7])
+
+    >>> dup_trunc(f, ZZ(3), ZZ)
+    [-1, 0, -1, 1]
+
+    """
     if K.is_ZZ:
         g = []
 
@@ -1388,12 +2153,41 @@ def dup_trunc(f, p, K):
 
 @cythonized("u")
 def dmp_trunc(f, p, u, K):
-    """Reduce `K[X]` polynomial modulo a polynomial `p` in `K[Y]`. """
+    """
+    Reduce ``K[X]`` polynomial modulo a polynomial ``p`` in ``K[Y]``.
+
+    Example
+    =======
+
+    >>> from sympy.polys.domains import ZZ
+    >>> from sympy.polys.densetools import dmp_trunc
+
+    >>> f = ZZ.map([[3, 8], [5, 6], [2, 3]])
+    >>> g = ZZ.map([1, -1])
+
+    >>> dmp_trunc(f, g, 1, ZZ)
+    [[11], [11], [5]]
+
+    """
     return dmp_strip([ dmp_rem(c, p, u-1, K) for c in f ], u)
 
 @cythonized("u,v")
 def dmp_ground_trunc(f, p, u, K):
-    """Reduce `K[X]` polynomial modulo a constant `p` in `K`. """
+    """
+    Reduce ``K[X]`` polynomial modulo a constant ``p`` in ``K``.
+
+    Example
+    =======
+
+    >>> from sympy.polys.domains import ZZ
+    >>> from sympy.polys.densetools import dmp_ground_trunc
+
+    >>> f = ZZ.map([[3, 8], [5, 6], [2, 3]])
+
+    >>> dmp_ground_trunc(f, ZZ(3), 1, ZZ)
+    [[-1], [-1, 0], [-1, 0]]
+
+    """
     if not u:
         return dup_trunc(f, p, K)
 
@@ -1402,7 +2196,22 @@ def dmp_ground_trunc(f, p, u, K):
     return dmp_strip([ dmp_ground_trunc(c, p, v, K) for c in f ], u)
 
 def dup_monic(f, K):
-    """Divides all coefficients by `LC(f)` in `K[x]`. """
+    """
+    Divides all coefficients by ``LC(f)`` in ``K[x]``.
+
+    Example
+    =======
+
+    >>> from sympy.polys.domains import ZZ, QQ
+    >>> from sympy.polys.densetools import dup_monic
+
+    >>> dup_monic([ZZ(3), ZZ(6), ZZ(9)], ZZ)
+    [1, 2, 3]
+
+    >>> dup_monic([QQ(3), QQ(4), QQ(2)], QQ)
+    [1/1, 4/3, 2/3]
+
+    """
     if not f:
         return f
 
@@ -1415,7 +2224,25 @@ def dup_monic(f, K):
 
 @cythonized("u")
 def dmp_ground_monic(f, u, K):
-    """Divides all coefficients by `LC(f)` in `K[X]`. """
+    """
+    Divides all coefficients by ``LC(f)`` in ``K[X]``.
+
+    Example
+    =======
+
+    >>> from sympy.polys.domains import ZZ, QQ
+    >>> from sympy.polys.densetools import dmp_ground_monic
+
+    >>> f = ZZ.map([[3, 6], [3, 0], [9, 3]])
+    >>> g = QQ.map([[3, 8], [5, 6], [2, 3]])
+
+    >>> dmp_ground_monic(f, 1, ZZ)
+    [[1, 2], [1, 0], [3, 1]]
+
+    >>> dmp_ground_monic(g, 1, QQ)
+    [[1/1, 8/3], [5/3, 2/1], [2/3, 1/1]]
+
+    """
     if not u:
         return dup_monic(f, K)
 
@@ -1430,7 +2257,19 @@ def dmp_ground_monic(f, u, K):
         return dmp_quo_ground(f, lc, u, K)
 
 def dup_rr_content(f, K):
-    """Returns GCD of coefficients over a ring. """
+    """
+    Returns GCD of coefficients over a ring.
+
+    Example
+    =======
+
+    >>> from sympy.polys.domains import ZZ
+    >>> from sympy.polys.densetools import dup_rr_content
+
+    >>> dup_rr_content([ZZ(6), ZZ(8), ZZ(12)], ZZ)
+    2
+
+    """
     cont = K.zero
 
     for c in f:
@@ -1442,14 +2281,40 @@ def dup_rr_content(f, K):
     return cont
 
 def dup_ff_content(f, K):
-    """Returns GCD of coefficients over a field. """
+    """
+    Returns GCD of coefficients over a field.
+
+    Example
+    =======
+
+    >>> from sympy.polys.domains import QQ
+    >>> from sympy.polys.densetools import dup_ff_content
+
+    >>> dup_ff_content([], QQ)
+    0/1
+    >>> dup_ff_content([QQ(1), QQ(1,2), QQ(2,3)], QQ)
+    1/1
+
+    """
     if not f:
         return K.zero
     else:
         return K.one
 
 def dup_content(f, K):
-    """Returns GCD of coefficients in `K[x]`. """
+    """
+    Returns GCD of coefficients in `K[x]`.
+
+    Example
+    =======
+
+    >>> from sympy.polys.domains import ZZ
+    >>> from sympy.polys.densetools import dup_content
+
+    >>> dup_content([ZZ(6), ZZ(8), ZZ(12)], ZZ)
+    2
+
+    """
     if K.has_Field or not K.is_Exact:
         return dup_ff_content(f, K)
     else:
@@ -1457,7 +2322,21 @@ def dup_content(f, K):
 
 @cythonized("u,v")
 def dmp_content(f, u, K):
-    """Returns GCD of multivariate coefficients. """
+    """
+    Returns GCD of multivariate coefficients.
+
+    Example
+    =======
+
+    >>> from sympy.polys.domains import ZZ
+    >>> from sympy.polys.densetools import dmp_content
+
+    >>> f = ZZ.map([[2, 6], [4, 12]])
+
+    >>> dmp_content(f, 1, ZZ)
+    [2, 6]
+
+    """
     cont, v = dmp_LC(f, K), u-1
 
     if dmp_zero_p(f, u):
@@ -1476,7 +2355,21 @@ def dmp_content(f, u, K):
 
 @cythonized("u,v")
 def dmp_rr_ground_content(f, u, K):
-    """Returns GCD of coefficients over a ring. """
+    """
+    Returns GCD of coefficients over a ring.
+
+    Example
+    =======
+
+    >>> from sympy.polys.domains import ZZ
+    >>> from sympy.polys.densetools import dmp_rr_ground_content
+
+    >>> f = ZZ.map([[2, 6], [4, 12]])
+
+    >>> dmp_rr_ground_content(f, 1, ZZ)
+    2
+
+    """
     if not u:
         return dup_rr_content(f, K)
 
@@ -1493,7 +2386,21 @@ def dmp_rr_ground_content(f, u, K):
 
 @cythonized("u")
 def dmp_ff_ground_content(f, u, K):
-    """Returns GCD of coefficients over a field. """
+    """
+    Returns GCD of coefficients over a field.
+
+    Example
+    =======
+
+    >>> from sympy.polys.domains import QQ
+    >>> from sympy.polys.densetools import dmp_ff_ground_content
+
+    >>> dmp_ff_ground_content([[]], 1, QQ)
+    0/1
+    >>> dmp_ff_ground_content([[QQ(2), QQ(1,2)], [QQ(4)]], 1, QQ)
+    1/1
+
+    """
     if dmp_zero_p(f, u):
         return K.zero
     else:
@@ -1501,7 +2408,21 @@ def dmp_ff_ground_content(f, u, K):
 
 @cythonized("u")
 def dmp_ground_content(f, u, K):
-    """Returns GCD of coefficients in `K[X]`. """
+    """
+    Returns GCD of coefficients in ``K[X]``.
+
+    Example
+    =======
+
+    >>> from sympy.polys.domains import ZZ
+    >>> from sympy.polys.densetools import dmp_ground_content
+
+    >>> f = ZZ.map([[2, 6], [4, 12]])
+
+    >>> dmp_ground_content(f, 1, ZZ)
+    2
+
+    """
     if not u:
         return dup_content(f, K)
 
@@ -1511,7 +2432,19 @@ def dmp_ground_content(f, u, K):
         return dmp_rr_ground_content(f, u, K)
 
 def dup_rr_primitive(f, K):
-    """Returns content and a primitive polynomial over a ring. """
+    """
+    Returns content and a primitive polynomial over a ring.
+
+    Example
+    =======
+
+    >>> from sympy.polys.domains import ZZ
+    >>> from sympy.polys.densetools import dup_rr_primitive
+
+    >>> dup_rr_primitive([ZZ(6), ZZ(8), ZZ(12)], ZZ)
+    (2, [3, 4, 6])
+
+    """
     cont = dup_content(f, K)
 
     if not f or K.is_one(cont):
@@ -1520,11 +2453,38 @@ def dup_rr_primitive(f, K):
         return cont, dup_exquo_ground(f, cont, K)
 
 def dup_ff_primitive(f, K):
-    """Returns content and a primitive polynomial over a field. """
-    return K.one, f
+    """
+    Returns content and a primitive polynomial over a field.
+
+    Example
+    =======
+
+    >>> from sympy.polys.domains import QQ
+    >>> from sympy.polys.densetools import dup_ff_primitive
+
+    >>> dup_ff_primitive([QQ(1), QQ(1,2), QQ(2,3)], QQ)
+    (1/1, [1/1, 1/2, 2/3])
+
+    """
+    if not f:
+        return K.zero, f
+    else:
+        return K.one, f
 
 def dup_primitive(f, K):
-    """Returns content and a primitive polynomial in `K[x]`. """
+    """
+    Returns content and a primitive polynomial in ``K[x]``.
+
+    Example
+    =======
+
+    >>> from sympy.polys.domains import ZZ
+    >>> from sympy.polys.densetools import dup_primitive
+
+    >>> dup_primitive([ZZ(2), ZZ(6), ZZ(12)], ZZ)
+    (2, [1, 3, 6])
+
+    """
     if K.has_Field or not K.is_Exact:
         return dup_ff_primitive(f, K)
     else:
@@ -1532,7 +2492,21 @@ def dup_primitive(f, K):
 
 @cythonized("u,v")
 def dmp_primitive(f, u, K):
-    """Returns multivariate content and a primitive polynomial. """
+    """
+    Returns multivariate content and a primitive polynomial.
+
+    Example
+    =======
+
+    >>> from sympy.polys.domains import ZZ
+    >>> from sympy.polys.densetools import dmp_primitive
+
+    >>> f = ZZ.map([[2, 6], [4, 12]])
+
+    >>> dmp_primitive(f, 1, ZZ)
+    ([2, 6], [[1], [2]])
+
+    """
     cont, v = dmp_content(f, u, K), u-1
 
     if dmp_zero_p(f, u) or dmp_one_p(cont, v, K):
@@ -1542,7 +2516,21 @@ def dmp_primitive(f, u, K):
 
 @cythonized("u")
 def dmp_rr_ground_primitive(f, u, K):
-    """Returns content and a primitive polynomial over a ring. """
+    """
+    Compute content and the primitive from of ``f`` over a ring.
+
+    Example
+    =======
+
+    >>> from sympy.polys.domains import ZZ
+    >>> from sympy.polys.densetools import dmp_rr_ground_primitive
+
+    >>> f = ZZ.map([[2, 6], [4, 12]])
+
+    >>> dmp_rr_ground_primitive(f, 1, ZZ)
+    (2, [[1, 3], [2, 6]])
+
+    """
     cont = dmp_ground_content(f, u, K)
 
     if K.is_one(cont):
@@ -1552,7 +2540,21 @@ def dmp_rr_ground_primitive(f, u, K):
 
 @cythonized("u")
 def dmp_ff_ground_primitive(f, u, K):
-    """Returns content and a primitive polynomial over a ring. """
+    """
+    Compute content and the primitive from of ``f`` over a field.
+
+    Example
+    =======
+
+    >>> from sympy.polys.domains import QQ
+    >>> from sympy.polys.densetools import dmp_ff_ground_primitive
+
+    >>> f = [[QQ(2), QQ(1,2)], [QQ(4)]]
+
+    >>> dmp_ff_ground_primitive(f, 1, QQ)
+    (1/1, [[2/1, 1/2], [4/1]])
+
+    """
     if dmp_zero_p(f, u):
         return K.zero, f
     else:
@@ -1560,7 +2562,21 @@ def dmp_ff_ground_primitive(f, u, K):
 
 @cythonized("u")
 def dmp_ground_primitive(f, u, K):
-    """Returns content and a primitive polynomial in `K[x]`. """
+    """
+    Compute content and the primitive form of ``f`` in ``K[x]``.
+
+    Example
+    =======
+
+    >>> from sympy.polys.domains import ZZ
+    >>> from sympy.polys.densetools import dmp_ground_primitive
+
+    >>> f = ZZ.map([[2, 6], [4, 12]])
+
+    >>> dmp_ground_primitive(f, 1, ZZ)
+    (2, [[1, 3], [2, 6]])
+
+    """
     if not u:
         return dup_primitive(f, K)
 
@@ -1573,7 +2589,21 @@ def dmp_ground_primitive(f, u, K):
         return dmp_rr_ground_primitive(f, u, K)
 
 def dup_gff_list(f, K):
-    """Returns greatest factorial factorization of `f` in `K[x]`. """
+    """
+    Compute greatest factorial factorization of ``f`` in ``K[x]``.
+
+    Example
+    =======
+
+    >>> from sympy.polys.domains import ZZ
+    >>> from sympy.polys.densetools import dup_gff_list
+
+    >>> f = ZZ.map([1, 2, -1, -2, 0, 0])
+
+    >>> dup_gff_list(f, ZZ)
+    [([1, 0], 1), ([1, 2], 4)]
+
+    """
     if not f:
         raise ValueError("greatest factorial factorization doesn't exist for a zero polynomial")
 
@@ -1597,7 +2627,21 @@ def dup_gff_list(f, K):
             return [(f, 1)] + H
 
 def dup_sqf_p(f, K):
-    """Returns `True` if `f` is a square-free polynomial in `K[x]`. """
+    """
+    Return ``True`` if ``f`` is a square--free polynomial in ``K[x]``.
+
+    Example
+    =======
+
+    >>> from sympy.polys.domains import ZZ
+    >>> from sympy.polys.densetools import dup_sqf_p
+
+    >>> dup_sqf_p([ZZ(1),-ZZ(2), ZZ(1)], ZZ)
+    False
+    >>> dup_sqf_p([ZZ(1), ZZ(0),-ZZ(1)], ZZ)
+    True
+
+    """
     if not f:
         return True
     else:
@@ -1605,7 +2649,24 @@ def dup_sqf_p(f, K):
 
 @cythonized("u")
 def dmp_sqf_p(f, u, K):
-    """Returns `True` if `f` is a square-free polynomial in `K[X]`. """
+    """
+    Return ``True`` if ``f`` is a square--free polynomial in ``K[X]``.
+
+    Example
+    =======
+
+    >>> from sympy.polys.domains import ZZ
+    >>> from sympy.polys.densetools import dmp_sqf_p
+
+    >>> f = ZZ.map([[1], [2, 0], [1, 0, 0]])
+    >>> dmp_sqf_p(f, 1, ZZ)
+    False
+
+    >>> f = ZZ.map([[1], [], [1, 0, 0]])
+    >>> dmp_sqf_p(f, 1, ZZ)
+    True
+
+    """
     if dmp_zero_p(f, u):
         return True
     else:
@@ -1613,7 +2674,31 @@ def dmp_sqf_p(f, u, K):
 
 @cythonized("s")
 def dup_sqf_norm(f, K):
-    """Square-free norm of `f` in `K[x]`, useful over algebraic domains. """
+    """
+    Square--free norm of ``f`` in ``K[x]``, useful over algebraic domains.
+
+    Returns ``s``, ``f``, ``r``, such that ``g(x) = f(x-sa)`` and ``r(x) = Norm(g(x))``
+    is a square-free polynomtal over K, where ``a`` is the algebraic extension of ``K``.
+
+    Example
+    =======
+
+    >>> from sympy import sqrt
+    >>> from sympy.polys.domains import QQ
+    >>> from sympy.polys.densetools import dup_sqf_norm
+
+    >>> K = QQ.algebraic_field(sqrt(3))
+
+    >>> s, f, r = dup_sqf_norm([K(1), K(0), K(-2)], K)
+
+    >>> s == 1
+    True
+    >>> f == [K(1), K([QQ(-2), QQ(0)]), K(1)]
+    True
+    >>> r == [1, 0, -10, 0, 1]
+    True
+
+    """
     if not K.is_Algebraic:
         raise DomainError("ground domain must be algebraic")
 
@@ -1632,7 +2717,31 @@ def dup_sqf_norm(f, K):
 
 @cythonized("s,u")
 def dmp_sqf_norm(f, u, K):
-    """Square-free norm of `f` in `K[X]`, useful over algebraic domains. """
+    """
+    Square-free norm of ``f`` in ``K[X]``, useful over algebraic domains.
+
+    Returns ``s``, ``f``, ``r``, such that ``g(x) = f(x-sa)`` and ``r(x) = Norm(g(x))``
+    is a square-free polynomtal over K, where ``a`` is the algebraic extension of ``K``.
+
+    Example
+    =======
+
+    >>> from sympy import I
+    >>> from sympy.polys.domains import QQ
+    >>> from sympy.polys.densetools import dmp_sqf_norm
+
+    >>> K = QQ.algebraic_field(I)
+
+    >>> s, f, r = dmp_sqf_norm([[K(1), K(0)], [K(1), K(0), K(0)]], 1, K)
+
+    >>> s == 1
+    True
+    >>> f == [[K(1), K(0)], [K(1), K([QQ(-1), QQ(0)]), K(0)]]
+    True
+    >>> r == [[1, 0, 0], [2, 0, 0, 0], [1, 0, 1, 0, 0]]
+    True
+
+    """
     if not u:
         return dup_sqf_norm(f, K)
 
@@ -1657,17 +2766,29 @@ def dmp_sqf_norm(f, u, K):
 
 @cythonized("i")
 def dup_gf_sqf_part(f, K):
-    """Compute square-free part of `f` in `GF(p)[x]`. """
+    """Compute square-free part of ``f`` in ``GF(p)[x]``. """
     f = dup_convert(f, K, K.dom)
     g = gf_sqf_part(f, K.mod, K.dom)
     return dup_convert(g, K.dom, K)
 
 def dmp_gf_sqf_part(f, K):
-    """Compute square-free part of `f` in `GF(p)[X]`. """
+    """Compute square-free part of ``f`` in ``GF(p)[X]``. """
     raise DomainError('multivariate polynomials over %s' % K)
 
 def dup_sqf_part(f, K):
-    """Returns square-free part of a polynomial in `K[x]`. """
+    """
+    Returns square-free part of a polynomial in ``K[x]``.
+
+    Example
+    =======
+
+    >>> from sympy.polys.domains import ZZ
+    >>> from sympy.polys.densetools import dup_sqf_part
+
+    >>> dup_sqf_part([ZZ(1), ZZ(0), -ZZ(3), -ZZ(2)], ZZ)
+    [1, -1, -2]
+
+    """
     if not K.has_CharacteristicZero:
         return dup_gf_sqf_part(f, K)
 
@@ -1687,7 +2808,21 @@ def dup_sqf_part(f, K):
 
 @cythonized("u")
 def dmp_sqf_part(f, u, K):
-    """Returns square-free part of a polynomial in `K[X]`. """
+    """
+    Returns square-free part of a polynomial in ``K[X]``.
+
+    Example
+    =======
+
+    >>> from sympy.polys.domains import ZZ
+    >>> from sympy.polys.densetools import dmp_sqf_part
+
+    >>> f = ZZ.map([[1], [2, 0], [1, 0, 0], []])
+
+    >>> dmp_sqf_part(f, 1, ZZ)
+    [[1], [1, 0], []]
+
+    """
     if not u:
         return dup_sqf_part(f, K)
 
@@ -1710,7 +2845,7 @@ def dmp_sqf_part(f, u, K):
 
 @cythonized("i")
 def dup_gf_sqf_list(f, K, all=False):
-    """Compute square-free decomposition of `f` in `GF(p)[x]`. """
+    """Compute square-free decomposition of ``f`` in ``GF(p)[x]``. """
     f = dup_convert(f, K, K.dom)
 
     coeff, factors = gf_sqf_list(f, K.mod, K.dom, all=all)
@@ -1721,12 +2856,29 @@ def dup_gf_sqf_list(f, K, all=False):
     return K.convert(coeff, K.dom), factors
 
 def dmp_gf_sqf_list(f, u, K, all=False):
-    """Compute square-free decomposition of `f` in `GF(p)[X]`. """
+    """Compute square--free decomposition of ``f`` in ``GF(p)[X]``. """
     raise DomainError('multivariate polynomials over %s' % K)
 
 @cythonized("i")
 def dup_sqf_list(f, K, all=False):
-    """Returns square-free decomposition of a polynomial in `K[x]`. """
+    """
+    Return square--free decomposition of a polynomial in ``K[x]``.
+
+    Example
+    =======
+
+    >>> from sympy.polys.domains import ZZ
+    >>> from sympy.polys.densetools import dup_sqf_list
+
+    >>> f = ZZ.map([2, 16, 50, 76, 56, 16])
+
+    >>> dup_sqf_list(f, ZZ)
+    (2, [([1, 1], 2), ([1, 2], 3)])
+
+    >>> dup_sqf_list(f, ZZ, all=True)
+    (2, [([1], 1), ([1, 1], 2), ([1, 2], 3)])
+
+    """
     if not K.has_CharacteristicZero:
         return dup_gf_sqf_list(f, K, all=all)
 
@@ -1766,7 +2918,24 @@ def dup_sqf_list(f, K, all=False):
     return coeff, result
 
 def dup_sqf_list_include(f, K, all=False):
-    """Returns square-free decomposition of a polynomial in `K[x]`. """
+    """
+    Return square--free decomposition of a polynomial in ``K[x]``.
+
+    Example
+    =======
+
+    >>> from sympy.polys.domains import ZZ
+    >>> from sympy.polys.densetools import dup_sqf_list_include
+
+    >>> f = ZZ.map([2, 16, 50, 76, 56, 16])
+
+    >>> dup_sqf_list_include(f, ZZ)
+    [([2, 2], 2), ([1, 2], 3)]
+
+    >>> dup_sqf_list_include(f, ZZ, all=True)
+    [([2], 1), ([1, 1], 2), ([1, 2], 3)]
+
+    """
     coeff, factors = dup_sqf_list(f, K, all=all)
 
     if not factors:
@@ -1777,7 +2946,24 @@ def dup_sqf_list_include(f, K, all=False):
 
 @cythonized("u,i")
 def dmp_sqf_list(f, u, K, all=False):
-    """Returns square-free decomposition of a polynomial in `K[X]`. """
+    """
+    Return square--free decomposition of a polynomial in ``K[X]``.
+
+    Example
+    =======
+
+    >>> from sympy.polys.domains import ZZ
+    >>> from sympy.polys.densetools import dmp_sqf_list
+
+    >>> f = ZZ.map([[1], [2, 0], [1, 0, 0], [], [], []])
+
+    >>> dmp_sqf_list(f, 1, ZZ)
+    (1, [([[1], [1, 0]], 2), ([[1], []], 3)])
+
+    >>> dmp_sqf_list(f, 1, ZZ, all=True)
+    (1, [([[1]], 1), ([[1], [1, 0]], 2), ([[1], []], 3)])
+
+    """
     if not u:
         return dup_sqf_list(f, K, all=all)
 
@@ -1821,7 +3007,24 @@ def dmp_sqf_list(f, u, K, all=False):
 
 @cythonized("u")
 def dmp_sqf_list_include(f, u, K, all=False):
-    """Returns square-free decomposition of a polynomial in `K[x]`. """
+    """
+    Return square--free decomposition of a polynomial in ``K[x]``.
+
+    Example
+    =======
+
+    >>> from sympy.polys.domains import ZZ
+    >>> from sympy.polys.densetools import dmp_sqf_list_include
+
+    >>> f = ZZ.map([[1], [2, 0], [1, 0, 0], [], [], []])
+
+    >>> dmp_sqf_list_include(f, 1, ZZ)
+    [([[1], [1, 0]], 2), ([[1], []], 3)]
+
+    >>> dmp_sqf_list_include(f, 1, ZZ, all=True)
+    [([[1]], 1), ([[1], [1, 0]], 2), ([[1], []], 3)]
+
+    """
     if not u:
         return dup_sqf_list_include(f, K, all=all)
 
@@ -1834,7 +3037,22 @@ def dmp_sqf_list_include(f, u, K, all=False):
         return [(g, factors[0][1])] + factors[1:]
 
 def dup_extract(f, g, K):
-    """Extracts common content from a pair of polynomials in `K[x]`. """
+    """
+    Extract common content from a pair of polynomials in ``K[x]``.
+
+    Example
+    =======
+
+    >>> from sympy.polys.domains import ZZ
+    >>> from sympy.polys.densetools import dup_extract
+
+    >>> f = ZZ.map([6, 12, 18])
+    >>> g = ZZ.map([4, 8, 12])
+
+    >>> dup_extract(f, g, ZZ)
+    (2, [3, 6, 9], [2, 4, 6])
+
+    """
     fc = dup_content(f, K)
     gc = dup_content(g, K)
 
@@ -1848,7 +3066,22 @@ def dup_extract(f, g, K):
 
 @cythonized("u")
 def dmp_ground_extract(f, g, u, K):
-    """Extracts common content from a pair of polynomials in `K[X]`. """
+    """
+    Extract common content from a pair of polynomials in ``K[X]``.
+
+    Example
+    =======
+
+    >>> from sympy.polys.domains import ZZ
+    >>> from sympy.polys.densetools import dmp_ground_extract
+
+    >>> f = ZZ.map([[6, 12], [18]])
+    >>> g = ZZ.map([[4, 8], [12]])
+
+    >>> dmp_ground_extract(f, g, 1, ZZ)
+    (2, [[3, 6], [9]], [[2, 4], [6]])
+
+    """
     fc = dmp_ground_content(f, u, K)
     gc = dmp_ground_content(g, u, K)
 
@@ -1861,7 +3094,19 @@ def dmp_ground_extract(f, g, u, K):
     return gcd, f, g
 
 def dup_real_imag(f, K):
-    """Return bivariate polynomials f1 and f2, such that f = f1 + f2*I. """
+    """
+    Return bivariate polynomials ``f1`` and ``f2``, such that ``f = f1 + f2*I``.
+
+    Example
+    =======
+
+    >>> from sympy.polys.domains import ZZ
+    >>> from sympy.polys.densetools import dup_real_imag
+
+    >>> dup_real_imag([ZZ(1), ZZ(1), ZZ(1), ZZ(1)], ZZ)
+    ([[1], [1], [-3, 0, 1], [-1, 0, 1]], [[3, 0], [2, 0], [-1, 0, 1, 0]])
+
+    """
     if not K.is_ZZ and not K.is_QQ:
         raise DomainError("computing real and imaginary parts is not supported over %s" % K)
 
@@ -1895,7 +3140,19 @@ def dup_real_imag(f, K):
     return f1, f2
 
 def dup_mirror(f, K):
-    """Evaluate efficiently composition `f(-x)` in `K[x]`. """
+    """
+    Evaluate efficiently the composition ``f(-x)`` in ``K[x]``.
+
+    Example
+    =======
+
+    >>> from sympy.polys.domains import ZZ
+    >>> from sympy.polys.densetools import dup_mirror
+
+    >>> dup_mirror([ZZ(1), ZZ(2), -ZZ(4), ZZ(2)], ZZ)
+    [-1, 2, 4, 2]
+
+    """
     f, n, a = list(f), dup_degree(f), -K.one
 
     for i in xrange(n-1, -1, -1):
@@ -1904,7 +3161,19 @@ def dup_mirror(f, K):
     return f
 
 def dup_scale(f, a, K):
-    """Evaluate efficiently composition `f(a*x)` in `K[x]`. """
+    """
+    Evaluate efficiently composition ``f(a*x)`` in ``K[x]``.
+
+    Example
+    =======
+
+    >>> from sympy.polys.domains import ZZ
+    >>> from sympy.polys.densetools import dup_scale
+
+    >>> dup_scale([ZZ(1), -ZZ(2), ZZ(1)], ZZ(2), ZZ)
+    [4, -4, 1]
+
+    """
     f, n, b = list(f), dup_degree(f), a
 
     for i in xrange(n-1, -1, -1):
@@ -1913,7 +3182,19 @@ def dup_scale(f, a, K):
     return f
 
 def dup_shift(f, a, K):
-    """Evaluate efficiently Taylor shift `f(x + a)` in `K[x]`. """
+    """
+    Evaluate efficiently Taylor shift ``f(x + a)`` in ``K[x]``.
+
+    Example
+    =======
+
+    >>> from sympy.polys.domains import ZZ
+    >>> from sympy.polys.densetools import dup_shift
+
+    >>> dup_shift([ZZ(1), -ZZ(2), ZZ(1)], ZZ(2), ZZ)
+    [1, 2, 1]
+
+    """
     f, n = list(f), dup_degree(f)
 
     for i in xrange(n, 0, -1):
@@ -1923,7 +3204,23 @@ def dup_shift(f, a, K):
     return f
 
 def dup_transform(f, p, q, K):
-    """Evaluate functional transformation `q**n * f(p/q)` in `K[x]`. """
+    """
+    Evaluate functional transformation ``q**n * f(p/q)`` in ``K[x]``.
+
+    Example
+    =======
+
+    >>> from sympy.polys.domains import ZZ
+    >>> from sympy.polys.densetools import dup_transform
+
+    >>> f = ZZ.map([1, -2, 1])
+    >>> p = ZZ.map([1, 0, 1])
+    >>> q = ZZ.map([1, -1])
+
+    >>> dup_transform(f, p, q, ZZ)
+    [1, -2, 5, -4, 4]
+
+    """
     if not f:
         return []
 
@@ -1940,7 +3237,22 @@ def dup_transform(f, p, q, K):
     return h
 
 def dup_compose(f, g, K):
-    """Evaluate functional composition `f(g)` in `K[x]`. """
+    """
+    Evaluate functional composition ``f(g)`` in ``K[x]``.
+
+    Example
+    =======
+
+    >>> from sympy.polys.domains import ZZ
+    >>> from sympy.polys.densetools import dup_compose
+
+    >>> f = ZZ.map([1, 1, 0])
+    >>> g = ZZ.map([1, -1])
+
+    >>> dup_compose(f, g, ZZ)
+    [1, -1, 0]
+
+    """
     if len(g) <= 1:
         return dup_strip([dup_eval(f, dup_LC(g, K), K)])
 
@@ -1957,7 +3269,22 @@ def dup_compose(f, g, K):
 
 @cythonized("u")
 def dmp_compose(f, g, u, K):
-    """Evaluate functional composition `f(g)` in `K[X]`. """
+    """
+    Evaluate functional composition ``f(g)`` in ``K[X]``.
+
+    Example
+    =======
+
+    >>> from sympy.polys.domains import ZZ
+    >>> from sympy.polys.densetools import dmp_compose
+
+    >>> f = ZZ.map([[1, 2], [1, 0]])
+    >>> g = ZZ.map([[1, 0]])
+
+    >>> dmp_compose(f, g, 1, ZZ)
+    [[1, 3, 0]]
+
+    """
     if not u:
         return dup_compose(f, g, K)
 
@@ -1974,7 +3301,7 @@ def dmp_compose(f, g, u, K):
 
 @cythonized("s,n,r,i,j")
 def _dup_right_decompose(f, s, K):
-    """XXX"""
+    """Helper function for :func:`_dup_decompose`."""
     n = dup_degree(f)
     lc = dup_LC(f, K)
 
@@ -2002,7 +3329,7 @@ def _dup_right_decompose(f, s, K):
 
 @cythonized("i")
 def _dup_left_decompose(f, h, K):
-    """XXX"""
+    """Helper function for :func:`_dup_decompose`."""
     g, i = {}, 0
 
     while f:
@@ -2019,7 +3346,7 @@ def _dup_left_decompose(f, h, K):
 
 @cythonized("df,s")
 def _dup_decompose(f, K):
-    """XXX"""
+    """Helper function for :func:`dup_decompose`."""
     df = dup_degree(f)
 
     for s in xrange(2, df):
@@ -2037,30 +3364,42 @@ def _dup_decompose(f, K):
     return None
 
 def dup_decompose(f, K):
-    """Computes functional decomposition of `f` in `K[x]`.
+    """
+    Computes functional decomposition of ``f`` in ``K[x]``.
 
-       Given an univariate polynomial `f` with coefficients in a field of
-       characteristic zero, returns tuple `(f_1, f_2, ..., f_n)`, where::
+    Given an univariate polynomial ``f`` with coefficients in a field of
+    characteristic zero, returns list ``[f_1, f_2, ..., f_n]``, where::
 
-                  f = f_1 o f_2 o ... f_n = f_1(f_2(... f_n))
+              f = f_1 o f_2 o ... f_n = f_1(f_2(... f_n))
 
-       and `f_2, ..., f_n` are monic and homogeneous polynomials of at
-       least second degree.
+    and ``f_2, ..., f_n`` are monic and homogeneous polynomials of at
+    least second degree.
 
-       Unlike factorization, complete functional decompositions of
-       polynomials are not unique, consider examples:
+    Unlike factorization, complete functional decompositions of
+    polynomials are not unique, consider examples:
 
-       1. `f o g = f(x + b) o (g - b)`
-       2. `x**n o x**m = x**m o x**n`
-       3. `T_n o T_m = T_m o T_n`
+    1. ``f o g = f(x + b) o (g - b)``
+    2. ``x**n o x**m = x**m o x**n``
+    3. ``T_n o T_m = T_m o T_n``
 
-       where `T_n` and `T_m` are Chebyshev polynomials.
+    where ``T_n`` and ``T_m`` are Chebyshev polynomials.
 
-       References
-       ==========
+    Example
+    =======
 
-       .. [Kozen89] D. Kozen, S. Landau, Polynomial decomposition algorithms,
-          Journal of Symbolic Computation 7 (1989), pp. 445-456
+    >>> from sympy.polys.domains import ZZ
+    >>> from sympy.polys.densetools import dup_decompose
+
+    >>> f = ZZ.map([1, -2, 1, 0, 0])
+
+    >>> dup_decompose(f, ZZ)
+    [[1, 0, 0], [1, -1, 0]]
+
+    References
+    ==========
+
+    .. [Kozen89] D. Kozen, S. Landau, Polynomial decomposition algorithms,
+    Journal of Symbolic Computation 7 (1989), pp. 445-456
 
     """
     F = []
@@ -2077,20 +3416,32 @@ def dup_decompose(f, K):
     return [f] + F
 
 def dup_sturm(f, K):
-    """Computes the Sturm sequence of `f` in `F[x]`.
+    """
+    Computes the Sturm sequence of ``f`` in ``F[x]``.
 
-       Given an univariate, square-free polynomial `f(x)` returns the
-       associated Sturm sequence `f_0(x), ..., f_n(x)` defined by::
+    Given an univariate, square-free polynomial ``f(x)`` returns the
+    associated Sturm sequence ``f_0(x), ..., f_n(x)`` defined by::
 
-           f_0(x), f_1(x) = f(x), f'(x)
-           f_n = -rem(f_{n-2}(x), f_{n-1}(x))
+       f_0(x), f_1(x) = f(x), f'(x)
+       f_n = -rem(f_{n-2}(x), f_{n-1}(x))
 
-       References
-       ==========
+    Example
+    =======
 
-       .. [Davenport88] J.H. Davenport, Y. Siret, E. Tournier,
-           Computer Algebra Systems and Algorithms for Algebraic
-           Computation, Academic Press, London, 1988, pp. 124-128
+    >>> from sympy.polys.domains import QQ
+    >>> from sympy.polys.densetools import dup_sturm
+
+    >>> f = QQ.map([1, -2, 1, -3])
+
+    >>> dup_sturm(f, QQ)
+    [[1/1, -2/1, 1/1, -3/1], [3/1, -4/1, 1/1], [2/9, 25/9], [-2079/4]]
+
+    References
+    ==========
+
+    .. [Davenport88] J.H. Davenport, Y. Siret, E. Tournier, Computer Algebra
+    Systems and Algorithms for Algebraic Computation, Academic Press, London,
+    1988, pp. 124-128
 
     """
     if not (K.has_Field or not K.is_Exact):
@@ -2108,7 +3459,23 @@ def dup_sturm(f, K):
 
 @cythonized("u")
 def dmp_lift(f, u, K):
-    """Convert algebraic coefficients to integers in `K[X]`. """
+    """
+    Convert algebraic coefficients to integers in ``K[X]``.
+
+    Example
+    =======
+
+    >>> from sympy import I
+    >>> from sympy.polys.domains import QQ
+    >>> from sympy.polys.densetools import dmp_lift
+
+    >>> K = QQ.algebraic_field(I)
+    >>> f = [K(1), K([QQ(1), QQ(0)]), K([QQ(2), QQ(0)])]
+
+    >>> dmp_lift(f, 0, K)
+    [1/1, 0/1, 2/1, 0/1, 9/1, 0/1, -8/1, 0/1, 16/1]
+
+    """
     if not K.is_Algebraic:
         raise DomainError('computation can be done only in an algebraic domain')
 
@@ -2132,7 +3499,21 @@ def dmp_lift(f, u, K):
     return dmp_convert(dmp_expand(polys, u, K), u, K, K.dom)
 
 def dup_sign_variations(f, K):
-    """Compute the number of sign variations of `f` in `K[x]`. """
+    """
+    Compute the number of sign variations of ``f`` in ``K[x]``.
+
+    Example
+    =======
+
+    >>> from sympy.polys.domains import ZZ
+    >>> from sympy.polys.densetools import dup_sign_variations
+
+    >>> f = ZZ.map([1, 0, -1, -1, 1])
+
+    >>> dup_sign_variations(f, ZZ)
+    2
+
+    """
     prev, k = K.zero, 0
 
     for coeff in f:

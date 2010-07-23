@@ -860,6 +860,14 @@ def test_dmp_ground_content():
     assert dmp_ground_content(f_6, 3, ZZ) == ZZ(1)
     assert dmp_ground_content(dmp_mul_ground(f_6, ZZ(8), 3, ZZ), 3, ZZ) == ZZ(8)
 
+def test_dup_rr_primitive():
+    assert dup_rr_primitive([], ZZ) == (ZZ(0), [])
+    assert dup_rr_primitive([ZZ(7)], ZZ) == (ZZ(7), [ZZ(1)])
+
+def test_dup_ff_primitive():
+    assert dup_ff_primitive([], QQ) == (QQ(0), [])
+    assert dup_ff_primitive([QQ(7)], QQ) == (QQ(1), [QQ(7)])
+
 def test_dup_primitive():
     assert dup_primitive([], ZZ) == (0, [])
     assert dup_primitive([1], ZZ) == (1, [1])
