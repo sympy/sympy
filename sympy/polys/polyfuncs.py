@@ -1,8 +1,11 @@
 """High--level polynomials manipulation functions. """
 
 from sympy.polys.polytools import poly_from_expr, Poly
-from sympy.polys.specialpolys import symmetric_poly
 from sympy.polys.polyoptions import allowed_flags
+
+from sympy.polys.specialpolys import (
+    symmetric_poly, interpolating_poly,
+)
 
 from sympy.polys.polyerrors import (
     PolificationFailed, ComputationFailed,
@@ -100,3 +103,31 @@ def horner(f, *gens, **args):
             form = form*gen + horner(coeff, *gens, **args)
 
     return form
+
+def interpolate(data, x):
+    """Construct an interpolating polynomial for the data points.
+
+       >>> interpolate([1,4,9,16], x)
+       x**2
+       >>> interpolate([(1, 1), (2, 4), (3, 9)], x)
+       x**2
+       >>> interpolate([(1, 2), (2, 5), (3, 10)], x)
+       1 + x**2
+       >>> interpolate({1: 2, 2: 5, 3: 10}, x)
+       1 + x**2
+
+    """
+    n = len(data)
+
+    if isinstance(data, dict):
+        X, Y = zip(*data.items())
+    else:
+        if isinstance(data[0], tuple):
+            X, Y = zip(*data)
+        else:
+            X = range(1, n+1)
+            Y = list(data)
+
+    poly = interpolating_poly(n, x, X, Y)
+
+    return poly.expand()

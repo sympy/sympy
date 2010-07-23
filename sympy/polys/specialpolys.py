@@ -1,6 +1,7 @@
 """Functions for generating interesting polynomials, e.g. for benchmarking. """
 
-from sympy.core import S, Add, Mul, Symbol, Rational, sympify, Dummy
+from sympy.core import Add, Mul, Symbol, Rational, sympify, Dummy, symbols
+from sympy.core.singleton import S
 
 from sympy.polys.polytools import Poly
 from sympy.polys.polyutils import _analyze_gens
@@ -103,6 +104,35 @@ def random_poly(x, n, inf, sup, domain=ZZ, polys=False):
         return poly.as_basic()
     else:
         return poly
+
+@cythonized("n,i,j")
+def interpolating_poly(n, x, X='x', Y='y'):
+    """Construct Lagrange interpolating polynomial for ``n`` data points. """
+    if isinstance(X, str):
+        X = symbols("%s:%s" % (xn, n))
+
+    if isinstance(Y, str):
+        Y = symbols("%s:%s" % (yn, n))
+
+    coeffs = []
+
+    for i in xrange(0, n):
+        numer = []
+        denom = []
+
+        for j in xrange(0, n):
+            if i == j:
+                continue
+
+            numer.append(x    - X[j])
+            denom.append(X[i] - X[j])
+
+        numer = Mul(*numer)
+        denom = Mul(*denom)
+
+        coeffs.append(numer/denom)
+
+    return Add(*[ coeff*y for coeff, y in zip(coeffs, Y) ])
 
 @cythonized("n,i")
 def fateman_poly_F_1(n):
