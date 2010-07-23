@@ -13,9 +13,10 @@ from sympy.solvers import solve
 
 from sympy.polys import Poly, PolynomialError, lcm, cancel
 
-from sympy.integrals.risch import (derivation, get_case, NonElementaryIntegral,
-    residue_reduce, splitfactor, residue_reduce_derivation)
-from sympy.integrals.rde import order_at, weak_normalizer
+from sympy.integrals.risch import (gcdex_diophantine, derivation, get_case,
+    NonElementaryIntegral, residue_reduce, splitfactor,
+    residue_reduce_derivation)
+from sympy.integrals.rde import order_at, weak_normalizer, bound_degree
 
 #    from pudb import set_trace; set_trace() # Debugging
 
@@ -191,6 +192,29 @@ def constant_system(A, u, D, T):
                 u = u.col_join(Matrix([um1]))
 
     return (A, u)
+
+def par_spde(a, b, G, n, D, T):
+    """
+    Special Polynomial Differential Equation algorithm: Parametric Version.
+
+    Given a derivation D on k[t], an integer n, and a, b, g1, ..., gm in k[t]
+    with deg(a) > 0 and gcd(a, b) == 1, return (A, B, Q, R, n1), with
+    Q = [q1, ..., qm] and R = [r1, ..., rm], such that for any solution
+    c1, ..., cm in Const(k) and q in k[t] of degree at most n of
+    a*Dq + b*q == Sum(ci*gi, (i, 1, m)), p = (q - Sum(ci*ri, (i, 1, m)))/a has
+    degree at most n1 and satisfies A*Dp + B*p == Sum(ci*qi, (i, 1, m))
+    """
+    t = T[-1]
+
+    R, Z = zip(*[gcdex_diophantine(b, a, gi) for gi in G])
+
+    A = a
+    B = b + derivation(a, D, T)
+    Q = [zi - derivation(ri, D, T) for ri, zi in zip(R, Z)]
+    R = list(R)
+    n1 = n - a.degree(t)
+
+    return (A, B, Q, R, n1)
 
 def param_rischDE(fa, fd, G, D, T):
     """

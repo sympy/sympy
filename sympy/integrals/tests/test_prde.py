@@ -1,8 +1,8 @@
 """Most of these tests come from the examples in Bronstein's book."""
 from sympy import Poly, Matrix
 from sympy.integrals.prde import (prde_normal_denom, prde_special_denom,
-    prde_linear_constraints, constant_system, is_log_deriv_k_t_radical,
-    parametric_log_deriv_heu)
+    prde_linear_constraints, constant_system, par_spde,
+    is_log_deriv_k_t_radical, parametric_log_deriv_heu)
 
 from sympy.abc import x, t
 
@@ -46,6 +46,10 @@ def test_prde_linear_constraints():
     D = [Poly(1, x), Poly(t, t)]
     assert prde_linear_constraints(Poly(t + 1, t), Poly(t**2, t), G, D, [x, t]) == \
         ((Poly(t, t), Poly(t**2, t), Poly(t**3, t)), Matrix())
+    G = [(Poly(2*x, t), Poly(t, t)), (Poly(-x, t), Poly(t, t))]
+    D = [Poly(1, x), Poly(1/x, t)]
+    prde_linear_constraints(Poly(1, t), Poly(0, t), G, D, [x, t]) == \
+        ((Poly(0, t), Poly(0, t)), Matrix([[2*x, -x]]))
 
 def test_constant_system():
     A = Matrix([[-(x + 3)/(x - 1), (x + 1)/(x - 1), 1],
@@ -57,6 +61,12 @@ def test_constant_system():
                  [0, 1, 0],
                  [0, 0, 0],
                  [0, 0, 1]]), Matrix([0, 1, 0, 0]))
+
+def test_par_spde():
+    D = [Poly(x, t), Poly(-x*t, t)]
+    assert par_spde(Poly(t, t), Poly(-1/x, t), D, 2, [Poly(1, x), Poly(1/x, t)], [x, t]) == \
+        (Poly(t, t), Poly(0, t), [Poly(2*x, t), Poly(-x, t)],
+        [Poly(-x**2, t), Poly(0, t)], 1)
 
 def test_is_log_deriv_k_t_radical():
     pass
