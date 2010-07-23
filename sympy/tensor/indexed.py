@@ -207,9 +207,18 @@ class Idx(Basic):
     must be declared as integers, in the sense that for a symbol n,
     n.is_integer must return True.
 
+    For convenience, if the label is given as a string, it is automatically
+    converted to an integer symbol.  (Note that this conversion is not done for
+    range or dimension arguments.)
+
     >>> from sympy.tensor import Indexed, Idx
     >>> from sympy import symbols, oo
     >>> n, i, L, U = symbols('n i L U', integer=True)
+
+    0) Construction from a string
+
+    >>> Idx('qwerty')
+    qwerty
 
     1) Both upper and lower bound specified
 
@@ -245,6 +254,8 @@ class Idx(Basic):
 
     def __new__(cls, label, range=None, **kw_args):
 
+        if isinstance(label, basestring):
+            label = Symbol(label, integer=True)
         label, range = map(sympify, (label, range))
 
         if not label.is_integer:
