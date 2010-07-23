@@ -314,6 +314,9 @@ class stringPict(object):
             return o.picture == self.picture
         return False
 
+    def __hash__(self):
+        return super(stringPict, self).__hash__()
+
     def __str__(self):
         return str.join('\n', self.picture)
 

@@ -230,7 +230,7 @@ class assoc_legendre(PolynomialSequence2):
     def _calc2(n, m, prev):
         P=prev
 
-        # this is explicit (not reccurence) formula
+        # this is explicit (not recurrence) formula
         #
         # the result is pretty and we still benefit from memoization
         Pnm = (-1)**m * (1-_x**2)**Rational(m,2) * P[n][0].diff(_x, m)

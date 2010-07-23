@@ -33,6 +33,9 @@ class Unit(Atom, Expr):
     def __eq__(self, other):
         return isinstance(other, Unit) and self.name == other.name
 
+    def __hash__(self):
+        return super(Unit, self).__hash__()
+
     def _hashable_content(self):
         return (self.name,self.abbrev)
 

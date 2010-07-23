@@ -171,10 +171,10 @@ def lambdify(args, expr, modules=None):
         namespace = _get_namespace(modules)
     elif hasattr(modules, "__iter__"):
         namespace = {}
-        for m in modules:
+        # fill namespace with first having highest priority
+        for m in list(modules)[::-1]:
             buf = _get_namespace(m)
-            buf.update(namespace)
-            namespace = buf
+            namespace.update(buf)
     else:
         namespace = _get_namespace(modules)
 

@@ -18,6 +18,7 @@ from function import Lambda, WildFunction, Derivative, diff, FunctionClass, \
     expand_trig, expand_complex
 from sets import Set, Interval, Union, EmptySet
 from evalf import PrecisionExhausted, N
+from containers import Tuple
 
 # expose singletons like exp, log, oo, I, etc.
 for _n, _cls in Basic.singleton.items():

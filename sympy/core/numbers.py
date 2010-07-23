@@ -216,6 +216,9 @@ class Number(Atom, Expr):
     def __ge__(self, other):
         return _sympify(other).__le__(self)
 
+    def __hash__(self):
+        return super(Number, self).__hash__()
+
     def as_coeff_terms(self, x=None):
         # a -> c * t
         return self, tuple()
@@ -425,6 +428,9 @@ class Real(Number):
         if isinstance(other, Number):
             return bool(mlib.mpf_le(self._mpf_, other._as_mpf_val(self._prec)))
         return Expr.__le__(self, other)
+
+    def __hash__(self):
+        return super(Real, self).__hash__()
 
     def epsilon_eq(self, other, epsilon="10e-16"):
         return abs(self - other) < Real(epsilon)
@@ -720,6 +726,9 @@ class Rational(Number):
             return bool(self.p * other.q <= self.q * other.p)
         return Expr.__le__(self, other)
 
+    def __hash__(self):
+        return super(Rational, self).__hash__()
+
     def factors(self):
         f = factor_trial_division(self.p).copy()
         for p,e in factor_trial_division(self.q).items():
@@ -942,6 +951,9 @@ class Integer(Rational):
         elif isinstance(b, Integer):
             return (a.p <= b.p)
         return Rational.__le__(a, b)
+
+    def __hash__(self):
+        return super(Integer, self).__hash__()
 
     ########################################
 
@@ -1522,6 +1534,9 @@ class NumberSymbol(Atom, Expr):
         return (-self) < (-other)
     def __ge__(self, other):
         return (-self) <= (-other)
+
+    def __hash__(self):
+        return super(NumberSymbol, self).__hash__()
 
 
 class Exp1(NumberSymbol):

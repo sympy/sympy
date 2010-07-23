@@ -428,6 +428,9 @@ class AlgebraicNumber(Expr):
         return a.rep != b.rep or \
             a.minpoly.all_coeffs() != b.minpoly.all_coeffs()
 
+    def __hash__(self):
+        return super(AlgebraicNumber, self).__hash__()
+
     def _eval_evalf(self, prec):
         return self.as_basic()._evalf(prec)
 

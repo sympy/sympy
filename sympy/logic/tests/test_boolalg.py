@@ -12,6 +12,7 @@ def test_overloading():
     assert A >> B == Implies(A, B)
     assert A << B == Implies(B, A)
     assert ~A == Not(A)
+    assert A ^ B == Xor(A, B)
 
 def test_And():
     A, B, C = map(Boolean, symbols('ABC'))
