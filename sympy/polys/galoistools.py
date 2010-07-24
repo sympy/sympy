@@ -404,7 +404,7 @@ def gf_quo(f, g, p, K):
     if not r:
         return q
     else:
-        raise ExactQuotientFailed('%s does not divide %s' % (g, f))
+        raise ExactQuotientFailed(f, g)
 
 @cythonized("df,dg,dq,dr,i,j")
 def gf_exquo(f, g, p, K):
