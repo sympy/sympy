@@ -31,17 +31,29 @@ class Expr(Basic, EvalfMixin):
 
     @_sympifyit('other', NotImplemented)
     def __add__(self, other):
-        return Add(self, other)
+        if call_other(self, other, '__radd__'):
+            return other.__radd__(self)
+        else:
+            return Add(self, other)
     @_sympifyit('other', NotImplemented)
     def __radd__(self, other):
-        return Add(other, self)
+        if call_other(self, other, '__add__'):
+            return other.__add__(self)
+        else:
+            return Add(other, self)
 
     @_sympifyit('other', NotImplemented)
     def __sub__(self, other):
-        return Add(self, -other)
+        if call_other(self, other, '__rsub__'):
+            return other.__rsub__(self)
+        else:
+            return Add(self, -other)
     @_sympifyit('other', NotImplemented)
     def __rsub__(self, other):
-        return Add(other, -self)
+        if call_other(self, other, '__sub__'):
+            return other.__sub__(self)
+        else:
+            return Add(other, -self)
 
     @_sympifyit('other', NotImplemented)
     def __mul__(self, other):
@@ -58,17 +70,29 @@ class Expr(Basic, EvalfMixin):
 
     @_sympifyit('other', NotImplemented)
     def __pow__(self, other):
-        return Pow(self, other)
+        if call_other(self, other, '__rpow__'):
+            return other.__rpow__(self)
+        else:
+            return Pow(self, other)
     @_sympifyit('other', NotImplemented)
     def __rpow__(self, other):
-        return Pow(other, self)
+        if call_other(self, other, '__pow__'):
+            return other.__pow__(self)
+        else:
+            return Pow(other, self)
 
     @_sympifyit('other', NotImplemented)
     def __div__(self, other):
-        return Mul(self, Pow(other, S.NegativeOne))
+        if call_other(self, other, '__rdiv__'):
+            return other.__rdiv__(self)
+        else:
+            return Mul(self, Pow(other, S.NegativeOne))
     @_sympifyit('other', NotImplemented)
     def __rdiv__(self, other):
-        return Mul(other, Pow(self, S.NegativeOne))
+        if call_other(self, other, '__div__'):
+            return other.__div__(self)
+        else:
+            return Mul(other, Pow(self, S.NegativeOne))
 
     __truediv__ = __div__
     __rtruediv__ = __rdiv__
