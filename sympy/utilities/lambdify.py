@@ -103,7 +103,7 @@ def lambdify(args, expr, modules=None, use_imps=True):
 
     Usage:
     >>> from sympy import sqrt, sin
-    >>> from sympy.utilities import lambdify
+    >>> from sympy.utilities.lambdify import lambdify
     >>> from sympy.abc import x, y, z
     >>> f = lambdify(x, x**2)
     >>> f(2)
@@ -156,7 +156,7 @@ def lambdify(args, expr, modules=None, use_imps=True):
         >> lambda x: my_cool_function(x)
 
     Functions present in `expr` can also carry their own numerical
-    implementations, in a callable attached to the ``__imp__``
+    implementations, in a callable attached to the ``_imp_``
     attribute.  Usually you attach this using the
     ``implemented_function`` factory:
 
@@ -168,7 +168,7 @@ def lambdify(args, expr, modules=None, use_imps=True):
     >>> func(4)
     5
 
-    ``lambdify`` always prefers ``__imp__`` implementations to
+    ``lambdify`` always prefers ``_imp_`` implementations to
     implementations in other namespaces, unless the ``use_imps`` input
     parameter is False.
     """
@@ -182,7 +182,7 @@ def lambdify(args, expr, modules=None, use_imps=True):
             modules = ("math", "numpy", "mpmath", "sympy")
         except ImportError:
             modules = ("math", "mpmath", "sympy")
-            
+
     # Get the needed namespaces.
     namespaces = []
     # First find any function implementations
@@ -256,14 +256,14 @@ def _imp_namespace(expr, namespace=None):
 
     We need to search for functions in anything that can be thrown at
     us - that is - anything that could be passed as `expr`.  Examples
-    include sympy expressions, as well tuples, lists and dicts that may
+    include sympy expressions, as well as tuples, lists and dicts that may
     contain sympy expressions.
 
     Parameters
     ----------
     expr : object
        Something passed to lambdify, that will generate valid code from
-       ``str(expr)``. 
+       ``str(expr)``.
     namespace : None or mapping
        Namespace to fill.  None results in new empty dict
 
@@ -273,6 +273,17 @@ def _imp_namespace(expr, namespace=None):
        dict with keys of implemented function names within `expr` and
        corresponding values being the numerical implementation of
        function
+
+    Examples
+    --------
+    >>> from sympy.abc import x, y, z
+    >>> from sympy.utilities.lambdify import implemented_function, _imp_namespace
+    >>> from sympy import Function
+    >>> f = implemented_function(Function('f'), lambda x : x+1)
+    >>> g = implemented_function(Function('g'), lambda x : x*10)
+    >>> namespace = _imp_namespace(f(g(x)))
+    >>> sorted(namespace.keys())
+    ['f', 'g']
     """
     # Delayed import to avoid circular imports
     from sympy.core.function import FunctionClass
@@ -292,7 +303,7 @@ def _imp_namespace(expr, namespace=None):
     # sympy expressions may be Functions themselves
     func = getattr(expr, 'func', None)
     if isinstance(func, FunctionClass):
-        imp = getattr(func, '__imp__', None)
+        imp = getattr(func, '_imp_', None)
         if not imp is None:
             name = expr.func.__name__
             if name in namespace and namespace[name] != imp:
@@ -326,6 +337,16 @@ def implemented_function(symfunc, implementation):
     -------
     afunc : sympy.FunctionClass instance
        function with attached implementation
+
+    Examples
+    --------
+    >>> from sympy.abc import x, y, z
+    >>> from sympy.utilities.lambdify import lambdify, implemented_function
+    >>> from sympy import Function
+    >>> f = implemented_function(Function('f'), lambda x : x+1)
+    >>> lam_f = lambdify(x, f(x))
+    >>> lam_f(4)
+    5
     """
     # Delayed import to avoid circular imports
     from sympy.core.function import FunctionClass, Function
@@ -333,6 +354,5 @@ def implemented_function(symfunc, implementation):
     if isinstance(symfunc, basestring):
         symfunc = FunctionClass(Function, symfunc)
     # We need to attach as a method because symfunc will be a class
-    symfunc.__imp__ = staticmethod(implementation)
+    symfunc._imp_ = staticmethod(implementation)
     return symfunc
-

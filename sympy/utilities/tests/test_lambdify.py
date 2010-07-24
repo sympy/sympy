@@ -1,4 +1,4 @@
-from sympy.utilities.pytest import XFAIL
+from sympy.utilities.pytest import XFAIL, raises
 from sympy import (symbols, lambdify, sqrt, sin, cos, pi, atan, Rational, Real,
         Matrix, Lambda, exp, Integral, oo)
 from sympy import mpmath
@@ -268,17 +268,12 @@ def test_imps():
     assert l2(3) == math.sqrt(3)
     # check that we can pass in a Function as input
     func = sympy.Function('myfunc')
-    assert not hasattr(func, '__imp__')
+    assert not hasattr(func, '_imp_')
     my_f = implemented_function(func, lambda x: 2*x)
-    assert hasattr(func, '__imp__')
+    assert hasattr(func, '_imp_')
     # Error for functions with same name and different implementation
     f2 = implemented_function("f", lambda x : x+101)
-    try:
-        lambdify(x, f(f2(x)))
-    except ValueError:
-        pass
-    else:
-        raise Exception('ValueError not raised')
+    raises(ValueError, 'lambdify(x, f(f2(x)))')
 
 def test_lambdify_imps():
     # Test lambdify with implemented functions
@@ -312,4 +307,3 @@ def test_lambdify_imps():
     # Unless flag passed
     lam = lambdify(x, f(x), d, use_imps=False)
     assert lam(3) == 102
-    
