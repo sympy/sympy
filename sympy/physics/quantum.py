@@ -1,5 +1,7 @@
-from sympy import Expr, sympify, Add, Mul, Pow, I, Function, Integer, S, sympify, Matrix
-from sympy.core.basic import Atom
+from sympy import (
+    Expr, Basic, sympify, Add, Mul, Pow, 
+    I, Function, Integer, S, sympify, Matrix
+)
 from sympy.physics.hilbert import *
 
 """
@@ -36,7 +38,57 @@ __all__ = [
     # 'AntiCommutator',
 ]
 
-class State(Expr):
+
+#-----------------------------------------------------------------------------
+# Error handling
+#-----------------------------------------------------------------------------
+
+class QuantumError(Exception):
+    pass
+
+
+#-----------------------------------------------------------------------------
+# Main objects
+#-----------------------------------------------------------------------------
+
+class Representable(object):
+    """An object that can be represented."""
+
+    def represent(self, basis, **options):
+        rep_method = '_represent_%s' % basis.__class__.__name__
+        if hasattr(self, rep_method):
+            f = getattr(self, rep_method)
+            rep = f(basis, **options)
+            return rep
+        else:
+            raise QuantumError(
+                'Object %r does not know how to represent itself in basis: %r' % (self, basis)
+            )
+
+
+class BasisSet(Basic):
+    """A basis set for a Hilbert Space"""
+
+    hilbert_space = HilbertSpace()
+
+    def __new__(cls, dimension):
+        dimension = sympify(dimension)
+        return Basic.__new__(cls, dimension)
+
+    @property
+    def dimension(self):
+        return self.args[0]
+
+    def __len__(self):
+        return self.dimension
+
+    @property
+    def unity(self):
+        """Return the unity operator for this basis set."""
+        raise NotImplementedError('Not implemented')
+
+
+class State(Expr, Representable):
     """
     General abstract quantum state.
 
@@ -92,11 +144,12 @@ class State(Expr):
         return '%s%s%s' % (self.lbracket, self._print_name(printer, *args), self.rbracket)
 
     def _pretty(self, printer, *args):
-        from sympy.printing.pretty.stringpict import prettyForm, stringPict
+        from sympy.printing.pretty.stringpict import prettyForm
         pform = self._print_name_pretty(printer, *args)
         pform = prettyForm(*pform.left(prettyForm(self.lbracket)))
         pform = prettyForm(*pform.right(prettyForm(self.rbracket)))
         return pform
+
 
 class Ket(State):
 
@@ -116,6 +169,51 @@ class Bra(State):
     @property
     def dual(self):
         return Ket(*self.args)
+
+
+class Operator(Expr, Representable):
+    """
+    Base class for non-commuting Quantum operators.
+
+    >>> from sympy import simplify
+    >>> from sympy.physics.quantum import Operator
+    >>> A = Operator('A')
+    >>> print A
+    A
+    """
+
+    hilbert_space = HilbertSpace()
+
+    def __new__(cls, name):
+        name = sympify(name)
+        obj = Expr.__new__(cls, name, **{'commutative': False})
+        return obj
+
+    @property
+    def name(self):
+        return self.args[0]
+
+    def __mul__(self, other):
+        qmul = Mul(self, other)
+        if validate_mul(qmul):
+            return qmul
+
+    def __rmul__(self, other):
+        qrmul = Mul(other, self)
+        if validate_mul(qrmul):
+            return qrmul
+
+    def doit(self,**kw_args):
+        return self
+
+    def _sympyrepr(self, printer, *args):
+        return '%s(%s)' % (self.__class__.__name__, printer._print(self.name, *args))
+
+    def _sympystr(self, printer, *args):
+        return printer._print(self.name, *args)
+
+    def _pretty(self, printer, *args):
+        return printer._print(self.name, *args)
 
 
 class InnerProduct(Expr):
@@ -190,6 +288,7 @@ class InnerProduct(Expr):
                     pretty_args = arg._pretty(printer, *args)
             return pretty_args
 
+
 class OuterProduct(Expr):
     """
     An unevaluated outer product between a Ket and Bra.
@@ -232,138 +331,6 @@ class OuterProduct(Expr):
     def _pretty(self, printer, *args):
         return self.ket._pretty(printer, *args)*self.bra._pretty(printer, *args)
 
-class Operator(Expr):
-    """
-    Base class for non-commuting Quantum operators.
-
-    >>> from sympy import simplify
-    >>> from sympy.physics.quantum import Operator
-    >>> A = Operator('A')
-    >>> print A
-    A
-    """
-
-    hilbert_space = HilbertSpace()
-
-    def __new__(cls, name):
-        name = sympify(name)
-        obj = Expr.__new__(cls, name, **{'commutative': False})
-        return obj
-
-    @property
-    def name(self):
-        return self.args[0]
-
-    def __mul__(self, other):
-        qmul = Mul(self, other)
-        if validate_mul(qmul):
-            return qmul
-
-    def __rmul__(self, other):
-        qrmul = Mul(other, self)
-        if validate_mul(qrmul):
-            return qrmul
-
-    def doit(self,**kw_args):
-        return self
-
-    def _sympyrepr(self, printer, *args):
-        return '%s(%s)' % (self.__class__.__name__, printer._print(self.name, *args))
-
-    def _sympystr(self, printer, *args):
-        return printer._print(self.name, *args)
-
-    def _pretty(self, printer, *args):
-        return printer._print(self.name, *args)
-
-def validate_mul(expr):
-    """
-    Check to see if the Mul containing quantum objects is valid and return True.
-
-    * Only works for simple Muls (e.g. a*b*c*d) right now.
-    """
-    expr = split_commutative_parts(expr)[1] #obtain noncommutative parts of mul
-    old_arg = None
-    for arg in expr:
-        if old_arg != None:
-            if isinstance(old_arg, Ket) and isinstance(arg, Ket):
-                raise NotImplementedError
-            if isinstance(old_arg, Bra) and isinstance(arg, Bra):
-                raise NotImplementedError
-            if (isinstance(old_arg, Operator) or isinstance(old_arg, OuterProduct)) and isinstance(arg, Bra):
-                raise Exception('(Operator or OuterProduct)*Bra is invalid in quantum mechanics.')
-            if isinstance(old_arg, Ket) and (isinstance(arg, Operator) or isinstance(arg, OuterProduct)):
-                raise Exception('Ket*(Operator or OuterProduct) is invalid in quantum mechanics.')
-        old_arg = arg
-    return True
-
-def combine_innerproduct(expr):
-    """
-    Combines a (valid) Mul of quantum objects into inner products (if possible).
-
-    * Only works for simple Muls (e.g. a*b*c*d) right now.
-    """
-    if validate_mul(expr):
-        new_expr = Mul()
-        inner_product = []
-        left_of_bra = False
-        for arg in expr.args:
-            if isinstance(arg, Bra):
-                left_of_bra = True
-                inner_product.append(arg)
-            elif (isinstance(arg, Ket) and left_of_bra == True):
-                inner_product.append(arg)
-                new_expr = new_expr*InnerProduct(*inner_product)
-                inner_product = []
-                left_of_bra = False
-            elif left_of_bra == True:
-                inner_product.append(arg)
-            else:
-                new_expr = new_expr*arg
-        return new_expr*Mul(*inner_product)
-
-def combine_outerproduct(expr):
-    """
-    Combines a (valid) Mul of quantum objects into outer products (if possible).
-
-    * Only works for simple Muls (e.g. a*b*c*d) right now.
-    """
-    if validate_mul(expr):
-        old_arg = None
-        new_expr = Mul()
-        left_of_bra = False
-        for arg in expr.args:
-            if old_arg != None:
-                if (isinstance(old_arg, Ket) and isinstance(arg, Bra)):
-                    new_expr = new_expr*OuterProduct(old_arg, arg)
-                    left_of_bra = True
-                elif left_of_bra == True:
-                    left_of_bra = False
-                else:
-                    new_expr = new_expr*old_arg
-            old_arg = arg
-        if left_of_bra == True:
-            return new_expr
-        else:
-            return new_expr*old_arg
-
-def split_product(expr):
-    """
-    Separates a (valid) Mul of quantum objects and inner/outer products into a 
-    Mul.
-
-    * Only works for simple Muls (e.g. a*b*c*d) right now.
-    """
-    if validate_mul(expr):
-        new_expr = Mul()
-        for arg in expr.args:
-            if isinstance(arg, InnerProduct):
-                new_expr = new_expr*Mul(*arg.args)
-            elif isinstance(arg, OuterProduct):
-                new_expr = new_expr*Mul(*arg.args)
-            else:
-                new_expr = new_expr*arg
-        return new_expr
 
 class Dagger(Expr):
     """
@@ -427,10 +394,11 @@ class Dagger(Expr):
         return '%s(%s)' % (self.__class__.__name__, self.args[0])
 
     def _pretty(self, printer, *args):
-        from sympy.printing.pretty.stringpict import prettyForm, stringPict
+        from sympy.printing.pretty.stringpict import prettyForm
         pform = printer._print(self.args[0], *args)
         pform = pform**prettyForm(u'\u2020')
         return pform
+
 
 class KroneckerDelta(Function):
     """
@@ -469,10 +437,6 @@ class KroneckerDelta(Function):
     def __str__(self):
         return 'd(%s,%s)'% (self.args[0],self.args[1])
 
-def split_commutative_parts(m):
-    c_part = [p for p in m.args if p.is_commutative]
-    nc_part = [p for p in m.args if not p.is_commutative]
-    return c_part, nc_part
 
 class Commutator(Function):
     """
@@ -558,3 +522,129 @@ class Commutator(Function):
     def _latex_(self,printer):
         return "\\left[%s,%s\\right]"%tuple([
             printer._print(arg) for arg in self.args])
+
+
+#-----------------------------------------------------------------------------
+# Functions
+#-----------------------------------------------------------------------------
+
+def represent(expr, basis, **options):
+    """Represent the quantum expression in the given basis."""
+    if isinstance(expr, (State, Operator)):
+        return expr.represent(basis, **options)
+    elif isinstance(expr, Add):
+        result = S.Zero
+        for args in expr.args:
+            result += represent(basis, **options)
+        return result
+    elif isinstance(expr, Pow):
+        return represent(expr.base, basis, **options)**expr.exp
+
+    if not isinstance(expr, Mul):
+        raise TypeError('Mul expected, got: %r' % expr)
+
+    for arg in reversed(expr.args):
+        result = S.One
+        result *= represent(arg, basis, **options)
+    return result
+
+
+def validate_mul(expr):
+    """
+    Check to see if the Mul containing quantum objects is valid and return True.
+
+    * Only works for simple Muls (e.g. a*b*c*d) right now.
+    """
+    expr = split_commutative_parts(expr)[1] #obtain noncommutative parts of mul
+    old_arg = None
+    for arg in expr:
+        if old_arg != None:
+            if isinstance(old_arg, Ket) and isinstance(arg, Ket):
+                raise NotImplementedError
+            if isinstance(old_arg, Bra) and isinstance(arg, Bra):
+                raise NotImplementedError
+            if (isinstance(old_arg, Operator) or isinstance(old_arg, OuterProduct)) and isinstance(arg, Bra):
+                raise Exception('(Operator or OuterProduct)*Bra is invalid in quantum mechanics.')
+            if isinstance(old_arg, Ket) and (isinstance(arg, Operator) or isinstance(arg, OuterProduct)):
+                raise Exception('Ket*(Operator or OuterProduct) is invalid in quantum mechanics.')
+        old_arg = arg
+    return True
+
+
+def combine_innerproduct(expr):
+    """
+    Combines a (valid) Mul of quantum objects into inner products (if possible).
+
+    * Only works for simple Muls (e.g. a*b*c*d) right now.
+    """
+    if validate_mul(expr):
+        new_expr = Mul()
+        inner_product = []
+        left_of_bra = False
+        for arg in expr.args:
+            if isinstance(arg, Bra):
+                left_of_bra = True
+                inner_product.append(arg)
+            elif (isinstance(arg, Ket) and left_of_bra == True):
+                inner_product.append(arg)
+                new_expr = new_expr*InnerProduct(*inner_product)
+                inner_product = []
+                left_of_bra = False
+            elif left_of_bra == True:
+                inner_product.append(arg)
+            else:
+                new_expr = new_expr*arg
+        return new_expr*Mul(*inner_product)
+
+
+def combine_outerproduct(expr):
+    """
+    Combines a (valid) Mul of quantum objects into outer products (if possible).
+
+    * Only works for simple Muls (e.g. a*b*c*d) right now.
+    """
+    if validate_mul(expr):
+        old_arg = None
+        new_expr = Mul()
+        left_of_bra = False
+        for arg in expr.args:
+            if old_arg != None:
+                if (isinstance(old_arg, Ket) and isinstance(arg, Bra)):
+                    new_expr = new_expr*OuterProduct(old_arg, arg)
+                    left_of_bra = True
+                elif left_of_bra == True:
+                    left_of_bra = False
+                else:
+                    new_expr = new_expr*old_arg
+            old_arg = arg
+        if left_of_bra == True:
+            return new_expr
+        else:
+            return new_expr*old_arg
+
+
+def split_product(expr):
+    """
+    Separates a (valid) Mul of quantum objects and inner/outer products into a 
+    Mul.
+
+    * Only works for simple Muls (e.g. a*b*c*d) right now.
+    """
+    if validate_mul(expr):
+        new_expr = Mul()
+        for arg in expr.args:
+            if isinstance(arg, InnerProduct):
+                new_expr = new_expr*Mul(*arg.args)
+            elif isinstance(arg, OuterProduct):
+                new_expr = new_expr*Mul(*arg.args)
+            else:
+                new_expr = new_expr*arg
+        return new_expr
+
+
+def split_commutative_parts(m):
+    c_part = [p for p in m.args if p.is_commutative]
+    nc_part = [p for p in m.args if not p.is_commutative]
+    return c_part, nc_part
+
+
