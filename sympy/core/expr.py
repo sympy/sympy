@@ -5,12 +5,22 @@ from decorators import _sympifyit
 from cache import cacheit
 
 
+def call_other(self, other, method_name):
+    if hasattr(other, '_op_priority'):
+        if other._op_priority > self._op_priority:
+            if hasattr(other, method_name):
+                return True
+    return False
+
+
 class Expr(Basic, EvalfMixin):
     __slots__ = []
 
     # ***************
     # * Arithmetics *
     # ***************
+
+    _op_priority = 10.0
 
     def __pos__(self):
         return self
@@ -35,10 +45,16 @@ class Expr(Basic, EvalfMixin):
 
     @_sympifyit('other', NotImplemented)
     def __mul__(self, other):
-        return Mul(self, other)
+        if call_other(self, other, '__rmul__'):
+            return other.__rmul__(self)
+        else:
+            return Mul(self, other)
     @_sympifyit('other', NotImplemented)
     def __rmul__(self, other):
-        return Mul(other, self)
+        if call_other(self, other, '__mul__'):
+            return other.__mul__(self)
+        else:
+            return Mul(other, self)
 
     @_sympifyit('other', NotImplemented)
     def __pow__(self, other):
