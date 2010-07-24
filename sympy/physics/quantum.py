@@ -530,7 +530,7 @@ class Commutator(Function):
 
 def represent(expr, basis, **options):
     """Represent the quantum expression in the given basis."""
-    if isinstance(expr, (State, Operator)):
+    if isinstance(expr, Representable):
         return expr.represent(basis, **options)
     elif isinstance(expr, Add):
         result = S.Zero
@@ -539,6 +539,8 @@ def represent(expr, basis, **options):
         return result
     elif isinstance(expr, Pow):
         return represent(expr.base, basis, **options)**expr.exp
+    else:
+        return expr
 
     if not isinstance(expr, Mul):
         raise TypeError('Mul expected, got: %r' % expr)
