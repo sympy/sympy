@@ -776,6 +776,9 @@ class Lambda(Function):
            #     return True
         return False
 
+    def __hash__(self):
+        return super(Lambda, self).__hash__()
+
 @vectorize(0)
 def diff(f, *symbols, **kwargs):
     """

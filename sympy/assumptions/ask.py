@@ -3,33 +3,64 @@ import inspect
 import copy
 from sympy.core import sympify
 from sympy.utilities.source import get_class
-from sympy.assumptions import global_assumptions
+from sympy.assumptions import global_assumptions, Assume, Predicate
 from sympy.assumptions.assume import eliminate_assume
 from sympy.logic.boolalg import to_cnf, conjuncts, disjuncts, \
-    And, Not
+    And, Not, Implies, Equivalent, to_int_repr
 from sympy.logic.inference import literal_symbol
 from sympy.logic.algorithms.dpll import dpll_int_repr
 
 class Q:
     """Supported ask keys."""
-    bounded = 'bounded'
-    commutative = 'commutative'
-    complex = 'complex'
-    composite = 'composite'
-    even = 'even'
-    extended_real = 'extended_real'
-    imaginary = 'imaginary'
-    infinitesimal = 'infinitesimal'
-    infinity = 'infinity'
-    integer = 'integer'
-    irrational = 'irrational'
-    rational = 'rational'
-    negative = 'negative'
-    nonzero = 'nonzero'
-    positive = 'positive'
-    prime = 'prime'
-    real = 'real'
-    odd = 'odd'
+    bounded = Predicate('bounded')
+    commutative = Predicate('commutative')
+    complex = Predicate('complex')
+    composite = Predicate('composite')
+    even = Predicate('even')
+    extended_real = Predicate('extended_real')
+    imaginary = Predicate('imaginary')
+    infinitesimal = Predicate('infinitesimal')
+    infinity = Predicate('infinity')
+    integer = Predicate('integer')
+    irrational = Predicate('irrational')
+    rational = Predicate('rational')
+    negative = Predicate('negative')
+    nonzero = Predicate('nonzero')
+    positive = Predicate('positive')
+    prime = Predicate('prime')
+    real = Predicate('real')
+    odd = Predicate('odd')
+    is_true = Predicate('is_true')
+
+
+def eval_predicate(predicate, expr, assumptions=True):
+    """
+    Evaluate predicate(expr) under the given assumptions.
+
+    This uses only direct resolution methods, not logical inference.
+    """
+    res, _res = None, None
+    mro = inspect.getmro(type(expr))
+    for handler in predicate.handlers:
+        cls = get_class(handler)
+        for subclass in mro:
+            try:
+                eval = getattr(cls, subclass.__name__)
+            except AttributeError:
+                continue
+            res = eval(expr, assumptions)
+            if _res is None:
+                _res = res
+            elif res is None:
+                # since first resolutor was conclusive, we keep that value
+                res = _res
+            else:
+                # only check consistency if both resolutors have concluded
+                if _res != res:
+                    raise ValueError('incompatible resolutors')
+            break
+    return res
+
 
 def ask(expr, key, assumptions=True):
     """
@@ -62,35 +93,19 @@ def ask(expr, key, assumptions=True):
 
     """
     expr = sympify(expr)
+    if type(key) is not Predicate:
+        key = getattr(Q, str(key))
     assumptions = And(assumptions, And(*global_assumptions))
 
     # direct resolution method, no logic
-    resolutors = []
-    for handler in handlers_dict[key]:
-        resolutors.append( get_class(handler) )
-    res, _res = None, None
-    mro = inspect.getmro(type(expr))
-    for handler in resolutors:
-        for subclass in mro:
-            if hasattr(handler, subclass.__name__):
-                res = getattr(handler, subclass.__name__)(expr, assumptions)
-                if _res is None:
-                    _res = res
-                elif res is None:
-                    # since first resolutor was conclusive, we keep that value
-                    res = _res
-                else:
-                    # only check consistency if both resolutors have concluded
-                    if _res != res:
-                        raise ValueError('incompatible resolutors')
-                break
+    res = eval_predicate(key, expr, assumptions)
     if res is not None:
         return res
 
+    # use logic inference
     if assumptions is True:
         return
 
-    # use logic inference
     if not expr.is_Atom:
         return
     clauses = copy.deepcopy(known_facts_compiled)
@@ -100,14 +115,15 @@ def ask(expr, key, assumptions=True):
     for assump in assumptions:
         conj = eliminate_assume(assump, symbol=expr)
         if conj:
-            out = set()
-            for sym in conjuncts(to_cnf(conj)):
-                lit, pos = literal_symbol(sym), type(sym) is not Not
-                if pos:
-                    out.update([known_facts_keys.index(str(l))+1 for l in disjuncts(lit)])
-                else:
-                    out.update([-(known_facts_keys.index(str(l))+1) for l in disjuncts(lit)])
-            clauses.append(out)
+            for clause in conjuncts(to_cnf(conj)):
+                out = set()
+                for atom in disjuncts(clause):
+                    lit, pos = literal_symbol(atom), type(atom) is not Not
+                    if pos:
+                        out.add(known_facts_keys.index(lit)+1)
+                    else:
+                        out.add(-(known_facts_keys.index(lit)+1))
+                clauses.append(out)
 
     n = len(known_facts_keys)
     clauses.append(set([known_facts_keys.index(key)+1]))
@@ -137,18 +153,22 @@ def register_handler(key, handler):
         True
 
     """
-    if key in handlers_dict:
-        handlers_dict[key].append(handler)
-    else:
-        handlers_dict.update({key: [handler]})
+    if type(key) is Predicate:
+        key = key.name
+    try:
+        getattr(Q, key).add_handler(handler)
+    except AttributeError:
+        setattr(Q, key, Predicate(key, handlers=[handler]))
 
 def remove_handler(key, handler):
     """Removes a handler from the ask system. Same syntax as register_handler"""
-    handlers_dict[key].remove(handler)
+    if type(key) is Predicate:
+        key = key.name
+    getattr(Q, key).remove_handler(handler)
 
 # handlers_dict tells us what ask handler we should use
 # for a particular key
-handlers_dict = {
+_handlers_dict = {
     'bounded'        : ['sympy.assumptions.handlers.calculus.AskBoundedHandler'],
     'commutative'    : ['sympy.assumptions.handlers.AskCommutativeHandler'],
     'complex'        : ['sympy.assumptions.handlers.sets.AskComplexHandler'],
@@ -167,54 +187,28 @@ handlers_dict = {
     'real'           : ['sympy.assumptions.handlers.sets.AskRealHandler'],
     'odd'            : ['sympy.assumptions.handlers.ntheory.AskOddHandler'],
     'algebraic'      : ['sympy.assumptions.handlers.sets.AskAlgebraicHandler'],
+    'is_true'        : ['sympy.assumptions.handlers.TautologicalHandler']
 }
+for name, value in _handlers_dict.iteritems():
+    register_handler(name, value[0])
 
-known_facts_keys = []
 
-for k in Q.__dict__.keys():
-    if k.startswith('__'): continue
-    known_facts_keys.append(k)
+known_facts_keys = [getattr(Q, attr) for attr in Q.__dict__ \
+                                                if not attr.startswith('__')]
+known_facts = And(
+    Implies   (Q.real, Q.complex),
+    Equivalent(Q.even, Q.integer & ~Q.odd),
+    Equivalent(Q.extended_real, Q.real | Q.infinity),
+    Equivalent(Q.odd, Q.integer & ~Q.even),
+    Equivalent(Q.prime, Q.integer & Q.positive & ~Q.composite),
+    Implies   (Q.integer, Q.rational),
+    Implies   (Q.imaginary, Q.complex & ~Q.real),
+    Equivalent(Q.negative, Q.nonzero & ~Q.positive),
+    Equivalent(Q.positive, Q.nonzero & ~Q.negative),
+    Equivalent(Q.rational, Q.real & ~Q.irrational),
+    Equivalent(Q.real, Q.rational | Q.irrational),
+    Implies   (Q.nonzero, Q.real),
+    Equivalent(Q.nonzero, Q.positive | Q.negative)
+)
 
-"""
-known_facts_compiled gets generated from the above. known_facts_compiled
-is in CNF form and efficient integer representation.
-
-known_facts = [
-    Implies   (real, complex),
-    Equivalent(even, integer & ~odd),
-    Equivalent(extended_real, real | infinity),
-    Equivalent(odd, integer & ~even),
-    Equivalent(prime, integer & positive & ~composite),
-    Implies   (integer, rational),
-    Implies   (imaginary, complex & ~real),
-    Equivalent(negative, nonzero & ~positive),
-    Equivalent(positive, nonzero & ~negative),
-    Equivalent(rational, real & ~irrational),
-    Equivalent(real, rational | irrational),
-    Implies   (nonzero, real),
-    Equivalent(nonzero, positive | negative),
-]
-
-To generate known_facts_compiled, use the following script.
-
-from sympy import var
-from sympy.assumptions import Q
-from sympy.logic.boolalg import *
-
-syms = []
-
-for k in Q.__dict__.keys():
-    if k.startswith('__'): continue
-    syms.append(var(k))
-print syms
-out = []
-
-for _c in known_facts:
-    _c = conjuncts(to_cnf(_c))
-    c = to_int_repr(_c, syms)
-    for l in c:
-        out.append(l)
-print out
-"""
-known_facts_compiled = [[11, -14], [15, -1], [-1, -17], [1, 17, -15], [3, -4], [3, -14], [4, 14, -3], [15, -17], [-1, -17], [1, 17, -15], [15, -10], [7, -10], [-6, -10], [6, 10, -15, -7], [13, -15], [11, -16], [-16, -14], [2, -9], [-9, -7], [9, 7, -2], [2, -7], [-9, -7], [9, 7, -2], [14, -13], [-18, -13], [18, 13, -14], [14, -18], [14, -13], [18, 13, -14], [14, -2], [2, -9], [2, -7], [9, 7, -2]]
-known_facts_compiled = map(set, known_facts_compiled)
+known_facts_compiled = to_int_repr(conjuncts(to_cnf(known_facts)), known_facts_keys)

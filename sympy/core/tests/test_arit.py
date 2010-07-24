@@ -1,5 +1,5 @@
 from sympy import Symbol, sin, cos, exp, O, sqrt, Rational, Real, re, pi, \
-        sympify, sqrt, Add, Mul, Pow, I, log
+        sympify, sqrt, Add, Mul, Pow, I, log, S
 from sympy.utilities.pytest import XFAIL
 
 x = Symbol('x')
@@ -1073,3 +1073,10 @@ def test_Pow_as_coeff_terms_doesnt_expand():
 
 def test_issue974():
     assert -1/(-1-x)    == 1/(1+x)
+
+def test_issue415():
+    assert (S.Half)**S.Half * sqrt(6) == 2 * sqrt(3)/2
+    assert S(1)/2*sqrt(6)*sqrt(2) == sqrt(3)
+    assert sqrt(6)/2*sqrt(2) == sqrt(3)
+    assert sqrt(6)*sqrt(2)/2 == sqrt(3)
+

@@ -1,7 +1,7 @@
 # doctests are disabled because of issue #1521
 from sympy.core import  Symbol
 from sympy.core.relational import Relational
-from sympy.logic.boolalg import Boolean
+from sympy.logic.boolalg import Boolean, Not
 
 class AssumptionsContext(set):
     """Set representing assumptions.
@@ -17,7 +17,7 @@ class AssumptionsContext(set):
         >>> from sympy.abc import x
         >>> global_assumptions.add(Assume(x, Q.real))
         >>> global_assumptions
-        AssumptionsContext([Assume(x, 'real', True)])
+        AssumptionsContext([Assume(x, Q.real)])
         >>> global_assumptions.remove(Assume(x, Q.real))
         >>> global_assumptions
         AssumptionsContext()
@@ -39,15 +39,27 @@ class Assume(Boolean):
     >>> from sympy import Assume, Q
     >>> from sympy.abc import x
     >>> Assume(x, Q.integer)
-    Assume(x, 'integer', True)
+    Assume(x, Q.integer)
     >>> Assume(x, Q.integer, False)
-    Assume(x, 'integer', False)
+    Not(Assume(x, Q.integer))
     >>> Assume( x > 1 )
-    Assume(1 < x, 'relational', True)
+    Assume(1 < x, Q.is_true)
 
     """
-    def __init__(self, expr, key='relational', value=True):
-        self._args = (expr, key, value)
+    def __new__(cls, expr, predicate=None, value=True):
+        from sympy import Q
+        if predicate is None:
+            predicate = Q.is_true
+        elif not isinstance(predicate, Predicate):
+            key = str(predicate)
+            try:
+                predicate = getattr(Q, key)
+            except AttributeError:
+                predicate = Predicate(key)
+        if value:
+            return Boolean.__new__(cls, expr, predicate)
+        else:
+            return Not(Boolean.__new__(cls, expr, predicate))
 
     is_Atom = True # do not attempt to decompose this
 
@@ -82,31 +94,13 @@ class Assume(Boolean):
         """
         return self._args[1]
 
-    @property
-    def value(self):
-        """
-        Return the value stored by this assumptions.
-        It's a boolean. True means that the assumption
-        holds always, and False means the assumption
-        does not hold
-
-        Examples:
-            >>> from sympy import Assume, Q
-            >>> from sympy.abc import x
-            >>> a = Assume(x, Q.integer)
-            >>> a.value
-            True
-            >>> b = Assume(x, Q.integer, False)
-            >>> b.value
-            False
-
-        """
-        return self._args[2]
-
     def __eq__(self, other):
         if type(other) == Assume:
             return self._args == other._args
         return False
+
+    def __hash__(self):
+        return super(Assume, self).__hash__()
 
 def eliminate_assume(expr, symbol=None):
     """
@@ -121,17 +115,39 @@ def eliminate_assume(expr, symbol=None):
         >>> from sympy import Assume, Q
         >>> from sympy.abc import x
         >>> eliminate_assume(Assume(x, Q.positive))
-        positive
+        Q.positive
         >>> eliminate_assume(Assume(x, Q.positive, False))
-        Not(positive)
+        Not(Q.positive)
 
     """
-    if type(expr) == Assume:
+    if expr.func is Assume:
         if symbol is not None:
-            if not expr.expr.has(symbol): return
-        if expr.value: return Symbol(expr.key)
-        return ~Symbol(expr.key)
-    args = []
-    for a in expr.args:
-        args.append(eliminate_assume(a))
-    return type(expr)(*args)
+            if not expr.expr.has(symbol):
+                return
+        return expr.key
+    return expr.func(*[eliminate_assume(arg, symbol) for arg in expr.args])
+
+class Predicate(Boolean):
+
+    is_Atom = True
+
+    def __new__(cls, name, handlers=None):
+        obj = Boolean.__new__(cls)
+        obj.name = name
+        obj.handlers = handlers or []
+        return obj
+
+    def _hashable_content(self):
+        return (self.name,)
+
+    def __getnewargs__(self):
+        return (self.name,)
+
+    def __call__(self, expr):
+        return Assume(expr, self.name)
+
+    def add_handler(self, handler):
+        self.handlers.append(handler)
+
+    def remove_handler(self, handler):
+        self.handlers.remove(handler)

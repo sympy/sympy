@@ -20,11 +20,12 @@ responsibility for generating properly cased Fortran code to the user.
 
 from str import StrPrinter
 from sympy.printing.precedence import precedence
-from sympy.core import S, Add, I
+from sympy.core import S, Add, I, Symbol, Basic
 from sympy.core.numbers import NumberSymbol
 from sympy.functions import sin, cos, tan, asin, acos, atan, atan2, sinh, \
     cosh, tanh, sqrt, log, exp, abs, sign, conjugate, Piecewise
 from sympy.utilities.iterables import postorder_traversal
+from sympy.tensor import Idx
 
 
 implicit_functions = set([
@@ -44,7 +45,60 @@ class FCodePrinter(StrPrinter):
         'precision': 15,
         'user_functions': {},
         'human': True,
+        'source_format': 'fixed',
     }
+    def __init__(self, settings=None):
+        StrPrinter.__init__(self, settings)
+        self._init_leading_padding()
+        assign_to = self._settings['assign_to']
+        if isinstance(assign_to, basestring):
+            self._settings['assign_to'] = Symbol(assign_to)
+        elif not isinstance(assign_to, (Basic, type(None))):
+            raise TypeError("FCodePrinter cannot assign to object of type %s"%
+                    type(assign_to))
+
+
+    def _init_leading_padding(self):
+        # leading columns depend on fixed or free format
+        if self._settings['source_format'] == 'fixed':
+            self._lead_code = "      "
+            self._lead_cont = "     @ "
+            self._lead_comment = "C     "
+        elif self._settings['source_format'] == 'free':
+            self._lead_code = ""
+            self._lead_cont = "      "
+            self._lead_comment = "! "
+        else:
+            raise ValueError(
+                    "Unknown source format: %s" % self._settings['source_format']
+                    )
+
+    def _pad_leading_columns(self, lines):
+        result = []
+        for line in lines:
+            if line.startswith('!'):
+                result.append(self._lead_comment + line[1:].lstrip())
+            else:
+                result.append(self._lead_code + line)
+        return result
+
+    def _get_loop_opening_ending_ints(self, expr):
+        """Returns a tuple (open_lines, close_lines) containing lists of codelines
+        """
+
+        indices = expr.atoms(Idx)
+        # FIXME: sort indices in an optimized way
+        open_lines = []
+        close_lines = []
+        local_ints = []
+
+        for i in indices:
+            # fortran arrays start at 1 and end at dimension
+            open_lines.append("do %s = %s, %s" % (i.label, i.lower+1, i.upper+1))
+            close_lines.append("end do")
+            local_ints.append(i)
+        return open_lines, close_lines, local_ints
+
 
     def doprint(self, expr):
         """Returns Fortran code for expr (as a string)"""
@@ -60,43 +114,72 @@ class FCodePrinter(StrPrinter):
         # Fortran.
         self._not_fortran = set([])
 
+
+        # Setup loops if expression contain Indexed objects
+        openloop, closeloop, local_ints = self._get_loop_opening_ending_ints(expr)
+
+        self._not_fortran |= set(local_ints)
+
+        # the lhs may contain loops that are not in the rhs
+        lhs = self._settings['assign_to']
+        if lhs:
+            open_lhs, close_lhs, lhs_ints = self._get_loop_opening_ending_ints(lhs)
+            for n,ind in enumerate(lhs_ints):
+                if ind not in self._not_fortran:
+                    self._not_fortran.add(ind)
+                    openloop.insert(0,open_lhs[n])
+                    closeloop.append(close_lhs[n])
+            lhs_printed = self._print(lhs)
+
         lines = []
         if isinstance(expr, Piecewise):
             # support for top-level Piecewise function
             for i, (e, c) in enumerate(expr.args):
                 if i == 0:
-                    lines.append("      if (%s) then" % self._print(c))
+                    lines.append("if (%s) then" % self._print(c))
                 elif i == len(expr.args)-1 and c == True:
-                    lines.append("      else")
+                    lines.append("else")
                 else:
-                    lines.append("      else if (%s) then" % self._print(c))
+                    lines.append("else if (%s) then" % self._print(c))
                 if self._settings["assign_to"] is None:
-                    lines.append("        %s" % self._print(e))
+                    lines.extend(openloop)
+                    lines.append("  %s" % self._print(e))
+                    lines.extend(closeloop)
                 else:
-                    lines.append("        %s = %s" % (self._settings["assign_to"], self._print(e)))
-            lines.append("      end if")
-            text = "\n".join(lines)
+                    lines.extend(openloop)
+                    lines.append("  %s = %s" % (lhs_printed, self._print(e)))
+                    lines.extend(closeloop)
+            lines.append("end if")
         else:
+            lines.extend(openloop)
             line = StrPrinter.doprint(self, expr)
             if self._settings["assign_to"] is None:
-                text = "      %s" % line
+                text = "%s" % line
             else:
-                text = "      %s = %s" % (self._settings["assign_to"], line)
+                text = "%s = %s" % (lhs_printed, line)
+            lines.append(text)
+            lines.extend(closeloop)
 
         # format the output
         if self._settings["human"]:
-            lines = []
+            frontlines = []
             if len(self._not_fortran) > 0:
-                lines.append("C     Not Fortran 77:")
-                for expr in sorted(self._not_fortran):
-                    lines.append("C     %s" % expr)
+                frontlines.append("! Not Fortran:")
+                for expr in sorted(self._not_fortran, key=self._print):
+                    frontlines.append("! %s" % expr)
             for name, value in number_symbols:
-                lines.append("      parameter (%s = %s)" % (name, value))
-            lines.extend(text.split("\n"))
-            lines = wrap_fortran(lines)
+                frontlines.append("parameter (%s = %s)" % (name, value))
+            frontlines.extend(lines)
+            lines = frontlines
+            lines = self._pad_leading_columns(lines)
+            lines = self._wrap_fortran(lines)
+            lines = self.indent_code(lines)
             result = "\n".join(lines)
         else:
-            result = number_symbols, self._not_fortran, text
+            lines = self._pad_leading_columns(lines)
+            lines = self._wrap_fortran(lines)
+            lines = self.indent_code(lines)
+            result = number_symbols, self._not_fortran, "\n".join(lines)
 
         del self._not_fortran
         return result
@@ -229,69 +312,111 @@ class FCodePrinter(StrPrinter):
     _print_Wild = _print_not_fortran
     _print_WildFunction = _print_not_fortran
 
+    def _wrap_fortran(self, lines):
+        """Wrap long Fortran lines
 
-def wrap_fortran(lines):
-    """Wrap long Fortran lines
+           Argument:
+             lines  --  a list of lines (without \\n character)
 
-       Argument:
-         lines  --  a list of lines (without \\n character)
-
-       A comment line is split at white space. Code lines are split with a more
-       complex rule to give nice results.
-    """
-    # routine to find split point in a code line
-    my_alnum = set("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_")
-    my_white = set(" \t()")
-    def split_pos_code(line, endpos):
-        if len(line) <= endpos:
-            return len(line)
-        pos = endpos
-        split = lambda pos: \
-            (line[pos] in my_alnum and line[pos-1] not in my_alnum) or \
-            (line[pos] not in my_alnum and line[pos-1] in my_alnum) or \
-            (line[pos] in my_white and line[pos-1] not in my_white) or \
-            (line[pos] not in my_white and line[pos-1] in my_white)
-        while not split(pos):
-            pos -= 1
-            if pos == 0:
-                return endpos
-        return pos
-    # split line by line and add the splitted lines to result
-    result = []
-    for line in lines:
-        if line.startswith("      "):
-            # code line
-            pos = split_pos_code(line, 72)
-            hunk = line[:pos].rstrip()
-            line = line[pos:].lstrip()
-            result.append(hunk)
-            while len(line) > 0:
-                pos = split_pos_code(line, 65)
-                hunk = line[:pos].rstrip()
-                line = line[pos:].lstrip()
-                result.append("     @ %s" % hunk)
-        elif line.startswith("C"):
-            # comment line
-            if len(line) > 72:
-                pos = line.rfind(" ", 6, 72)
-                if pos == -1:
-                    pos = 72
-                hunk = line[:pos]
-                line = line[pos:].lstrip()
-                result.append(hunk)
-                while len(line) > 0:
-                    pos = line.rfind(" ", 0, 66)
+           A comment line is split at white space. Code lines are split with a more
+           complex rule to give nice results.
+        """
+        # routine to find split point in a code line
+        my_alnum = set("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_")
+        my_white = set(" \t()")
+        def split_pos_code(line, endpos):
+            if len(line) <= endpos:
+                return len(line)
+            pos = endpos
+            split = lambda pos: \
+                (line[pos] in my_alnum and line[pos-1] not in my_alnum) or \
+                (line[pos] not in my_alnum and line[pos-1] in my_alnum) or \
+                (line[pos] in my_white and line[pos-1] not in my_white) or \
+                (line[pos] not in my_white and line[pos-1] in my_white)
+            while not split(pos):
+                pos -= 1
+                if pos == 0:
+                    return endpos
+            return pos
+        # split line by line and add the splitted lines to result
+        result = []
+        if self._settings['source_format'] == 'free':
+            trailing = ' &'
+        else:
+            trailing = ''
+        for line in lines:
+            if line.startswith(self._lead_comment):
+                # comment line
+                if len(line) > 72:
+                    pos = line.rfind(" ", 6, 72)
                     if pos == -1:
-                        pos = 66
+                        pos = 72
                     hunk = line[:pos]
                     line = line[pos:].lstrip()
-                    result.append("C     %s" % hunk)
+                    result.append(hunk)
+                    while len(line) > 0:
+                        pos = line.rfind(" ", 0, 66)
+                        if pos == -1 or len(line) < 66:
+                            pos = 66
+                        hunk = line[:pos]
+                        line = line[pos:].lstrip()
+                        result.append("%s%s" % (self._lead_comment, hunk))
+                else:
+                    result.append(line)
+            elif line.startswith(self._lead_code):
+                # code line
+                pos = split_pos_code(line, 72)
+                hunk = line[:pos].rstrip()
+                line = line[pos:].lstrip()
+                if line: hunk += trailing
+                result.append(hunk)
+                while len(line) > 0:
+                    pos = split_pos_code(line, 65)
+                    hunk = line[:pos].rstrip()
+                    line = line[pos:].lstrip()
+                    if line: hunk += trailing
+                    result.append("%s%s" % (self._lead_cont, hunk))
             else:
                 result.append(line)
-        else:
-            result.append(line)
-    return result
+        return result
 
+    def indent_code(self, code):
+        """Accepts a string of code or a list of code lines
+        """
+        if self._settings['source_format'] == 'fixed':
+            return code
+        if isinstance(code, basestring):
+            code_lines = self.indent_code(code.splitlines())
+            return '\n'.join(code_lines)
+
+        code = [ line.lstrip() for line in code ]
+
+        inc_keyword = ('do ', 'if(', 'if ', 'do\n')
+        dec_keyword = ('end ', 'enddo', 'end\n')
+
+        increase = [ int(reduce(lambda x, y: x or line.startswith(y),
+                                inc_keyword, False)) \
+                     for line in code ]
+        decrease = [ int(reduce(lambda x, y: x or line.startswith(y),
+                                dec_keyword, False)) \
+                     for line in code ]
+        continuation = [ line[-1] == '&' for line in code ]
+
+        level = 0
+        cont_padding = 0
+        tabwidth = 3
+        new_code = []
+        for i in range(len(code)):
+            level -= decrease[i]
+            padding = " "*(level*tabwidth + cont_padding)
+            new_code.append("%s%s" % (padding, code[i]))
+
+            if continuation[i]:
+                cont_padding = 2*tabwidth
+            else:
+                cont_padding = 0
+            level += increase[i]
+        return new_code
 
 def fcode(expr, **settings):
     """Converts an expr to a string of Fortran 77 code
@@ -310,6 +435,8 @@ def fcode(expr, **settings):
                     some parameter statements for the number symbols. If
                     False, the same information is returned in a more
                     programmer-friendly data structure.
+         source_format  --  The source format can be either 'fixed' or 'free'.
+                            [default='fixed']
 
        >>> from sympy import fcode, symbols, Rational, pi, sin
        >>> x, tau = symbols(["x", "tau"])

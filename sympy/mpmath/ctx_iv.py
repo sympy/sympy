@@ -116,6 +116,9 @@ class ivmpf(object):
     def __gt__(s, t): return s._compare(t, libmp.mpi_gt)
     def __ge__(s, t): return s._compare(t, libmp.mpi_ge)
 
+    def __hash__(self):
+        return super(ivmpf, self).__hash__()
+
     def __abs__(self):
         return self.ctx.make_mpf(mpi_abs(self._mpi_, self.ctx.prec))
     def __pos__(self):
@@ -208,6 +211,9 @@ class ivmpc(object):
     def __neg__(s): return s.ctx.make_mpc(mpci_neg(s._mpci_, s.ctx.prec))
     def __pos__(s): return s.ctx.make_mpc(mpci_pos(s._mpci_, s.ctx.prec))
     def __abs__(s): return s.ctx.make_mpf(mpci_abs(s._mpci_, s.ctx.prec))
+
+    def __hash__(self):
+        return super(ivmpc, self).__hash__()
 
     def ae(s, t, rel_eps=None, abs_eps=None):
         return s.ctx.almosteq(s, t, rel_eps, abs_eps)

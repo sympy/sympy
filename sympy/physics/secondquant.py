@@ -7,11 +7,12 @@ of Many-Particle Systems."
 
 from sympy import (
     Basic, Expr, Function, Mul, sympify, Integer, Add, sqrt,
-    zeros, Pow, I, S,Symbol
+    zeros, Pow, I, S, Symbol, Tuple
 )
 
 from sympy.utilities import iff
 from sympy.core.cache import cacheit
+from sympy.core.containers import tuple_wrapper
 
 
 __all__ = [
@@ -44,7 +45,6 @@ __all__ = [
     'wicks',
     'NO',
     'evaluate_deltas',
-    'SymTuple',
     'AntiSymmetricTensor',
     'substitute_dummies',
     'PermutationOperator',
@@ -145,69 +145,11 @@ class TensorSymbol(Function):
     is_commutative = True
 
 
-class SymTuple(Basic):
-
-    def __new__(cls, arg_tuple, **kw_args):
-        """
-        the wrapped tuple is available as self.args
-        """
-        obj = Basic.__new__(cls,*arg_tuple, **kw_args)
-        return obj
-
-    def __getitem__(self,i):
-        if isinstance(i,slice):
-            indices = i.indices(len(self))
-            return SymTuple(tuple([self.args[i] for i in range(*indices)]))
-        return self.args[i]
-
-    def __len__(self):
-        return len(self.args)
-
-    def __contains__(self,item):
-        return item in self.args
-
-    def _subs_atoms(self, subs_dict):
-        args = []
-        changed_something = False
-        for arg in self.args:
-            expr = arg._subs_atoms(subs_dict)
-            if expr is None:
-                args.append(arg)
-            else:
-                changed_something = True
-                args.append(expr)
-        if changed_something:
-            return self.func(args)
-        else:
-            return None
-
-    def _eval_subs(self,old,new):
-        if self==old:
-            return new
-        t=tuple([ el._eval_subs(old,new)  for el in self.args])
-        return self.__class__(t)
-
-
-def _tuple_wrapper(method):
-    """
-    Decorator that makes any tuple in arguments into SymTuple
-    """
-    def wrap_tuples(*args, **kw_args):
-        newargs=[]
-        for arg in args:
-            if type(arg) is tuple:
-                newargs.append(SymTuple(arg))
-            else:
-                newargs.append(arg)
-        return method(*newargs, **kw_args)
-    return wrap_tuples
-
-
 class AntiSymmetricTensor(TensorSymbol):
 
     nargs = 3
 
-    @_tuple_wrapper
+    @tuple_wrapper
     def __new__(cls, symbol, upper, lower):
         return TensorSymbol.__new__(cls, symbol, upper, lower)
 
@@ -225,11 +167,11 @@ class AntiSymmetricTensor(TensorSymbol):
         >>> i, j = symbols('i j', below_fermi=True)
         >>> a, b = symbols('a b', above_fermi=True)
         >>> AntiSymmetricTensor('t', (a, b), (i, j))
-        AntiSymmetricTensor(t, SymTuple(a, b), SymTuple(i, j))
+        AntiSymmetricTensor(t, Tuple(a, b), Tuple(i, j))
         >>> AntiSymmetricTensor('t', (b, a), (i, j))
-        -AntiSymmetricTensor(t, SymTuple(a, b), SymTuple(i, j))
+        -AntiSymmetricTensor(t, Tuple(a, b), Tuple(i, j))
         >>> -AntiSymmetricTensor('t', (b, a), (i, j))
-        AntiSymmetricTensor(t, SymTuple(a, b), SymTuple(i, j))
+        AntiSymmetricTensor(t, Tuple(a, b), Tuple(i, j))
 
         As you can see, the eval() method is automatically called.
 
@@ -275,7 +217,7 @@ class AntiSymmetricTensor(TensorSymbol):
         >>> i, j = symbols('i j', below_fermi=True)
         >>> a, b = symbols('a b', above_fermi=True)
         >>> AntiSymmetricTensor('t', (a, b), (i, j))
-        AntiSymmetricTensor(t, SymTuple(a, b), SymTuple(i, j))
+        AntiSymmetricTensor(t, Tuple(a, b), Tuple(i, j))
         >>> AntiSymmetricTensor('t', (a, b), (i, j)).symbol
         t
 
@@ -294,9 +236,9 @@ class AntiSymmetricTensor(TensorSymbol):
         >>> i, j = symbols('i j', below_fermi=True)
         >>> a, b = symbols('a b', above_fermi=True)
         >>> AntiSymmetricTensor('t', (a, b), (i, j))
-        AntiSymmetricTensor(t, SymTuple(a, b), SymTuple(i, j))
+        AntiSymmetricTensor(t, Tuple(a, b), Tuple(i, j))
         >>> AntiSymmetricTensor('t', (a, b), (i, j)).upper
-        SymTuple(a, b)
+        Tuple(a, b)
 
 
         """
@@ -314,9 +256,9 @@ class AntiSymmetricTensor(TensorSymbol):
         >>> i, j = symbols('i j', below_fermi=True)
         >>> a, b = symbols('a b', above_fermi=True)
         >>> AntiSymmetricTensor('t', (a, b), (i, j))
-        AntiSymmetricTensor(t, SymTuple(a, b), SymTuple(i, j))
+        AntiSymmetricTensor(t, Tuple(a, b), Tuple(i, j))
         >>> AntiSymmetricTensor('t', (a, b), (i, j)).lower
-        SymTuple(i, j)
+        Tuple(i, j)
 
         """
         return self.args[2]

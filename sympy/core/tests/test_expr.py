@@ -1,7 +1,9 @@
 from sympy import Basic, S, Symbol, Wild,  Real, Integer, Rational,  \
     sin, cos, exp, log, oo, sqrt, symbols, Integral, sympify, \
     WildFunction, Poly, Function, Derivative, Number, pi, var, \
-    NumberSymbol, zoo, Piecewise, Mul, Pow
+    NumberSymbol, zoo, Piecewise, Mul, Pow, nsimplify, ratsimp, trigsimp, \
+    radsimp, powsimp, simplify, together, separate, collect, \
+    apart, combsimp, factor, refine, cancel, invert
 
 from sympy.core.cache import clear_cache
 
@@ -747,3 +749,20 @@ def test_issue1864():
     assert hasattr(Pow(x, y, evaluate=False), "is_commutative")
     expr = Mul(Pow(2, 2, evaluate=False), 3, evaluate=False) + 1
     assert hasattr(expr, "is_commutative")
+
+def test_action_verbs():
+    a,b,c,d = symbols('abcd')
+    assert nsimplify((1/(exp(3*pi*x/5)+1))) == (1/(exp(3*pi*x/5)+1)).nsimplify()
+    assert ratsimp(1/x + 1/y) == (1/x + 1/y).ratsimp()
+    assert trigsimp(log(x), deep=True) == (log(x)).trigsimp(deep = True)
+    assert radsimp(1/(2+sqrt(2))) == (1/(2+sqrt(2))).radsimp()
+    assert powsimp(x**y*x**z*y**z, combine='all') == (x**y*x**z*y**z).powsimp(combine='all')
+    assert simplify(x**y*x**z*y**z) == (x**y*x**z*y**z).simplify()
+    assert together(1/x + 1/y) == (1/x + 1/y).together()
+    assert separate((x*(y*z)**3)**2) == ((x*(y*z)**3)**2).separate()
+    assert collect(a*x**2 + b*x**2 + a*x - b*x + c, x) == (a*x**2 + b*x**2 + a*x - b*x + c).collect(x)
+    assert apart(y/(y+2)/(y+1), y) == (y/(y+2)/(y+1)).apart(y)
+    assert combsimp(y/(x+2)/(x+1)) == (y/(x+2)/(x+1)).combsimp()
+    assert factor(x**2+5*x+6) == (x**2+5*x+6).factor()
+    assert refine(sqrt(x**2)) == sqrt(x**2).refine()
+    assert cancel((x**2+5*x+6)/(x+2)) == ((x**2+5*x+6)/(x+2)).cancel()

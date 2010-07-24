@@ -188,6 +188,9 @@ class Polygon(GeometryEntity):
 
         return False
 
+    def __hash__(self):
+        return super(Polygon, self).__hash__()
+
     def __contains__(self, o):
         if isinstance(o, Polygon):
             return self == o
