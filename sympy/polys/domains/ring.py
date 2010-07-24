@@ -19,7 +19,7 @@ class Ring(Domain):
     def quo(self, a, b):
         """Quotient of `a` and `b`, implies `__floordiv__`. """
         if a % b:
-            raise ExactQuotientFailed('%s does not divide %s in %s' % (b, a, self))
+            raise ExactQuotientFailed(a, b, self)
         else:
             return a // b
 

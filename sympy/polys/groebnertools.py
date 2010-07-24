@@ -400,7 +400,7 @@ def sdp_quo(f, g, u, O, K):
     if not r:
         return q
     else:
-        raise ExactQuotientFailed('%s does not divide %s' % (g, f))
+        raise ExactQuotientFailed(f, g)
 
 def sdp_exquo(f, g, u, O, K):
     """Returns exact polynomial quotient in `K[x]`. """

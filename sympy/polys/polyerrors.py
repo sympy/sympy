@@ -10,7 +10,17 @@ class OperationNotSupported(Exception):
         return "`%s` operation not supported by %s representation" % (self.func, self.poly.rep.__class__.__name__)
 
 class ExactQuotientFailed(Exception):
-    pass
+
+    def __init__(self, f, g, dom=None):
+        self.f, self.g, self.dom = f, g, dom
+
+    def __str__(self): # pragma: no cover
+        from sympy.printing.str import sstr
+
+        if self.dom is None:
+            return "%s does not divide %s" % (sstr(self.g), sstr(self.f))
+        else:
+            return "%s does not divide %s in %s" % (sstr(self.g), sstr(self.f), sstr(self.dom))
 
 class HeuristicGCDFailed(Exception):
     pass
