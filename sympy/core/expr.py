@@ -5,11 +5,10 @@ from decorators import _sympifyit
 from cache import cacheit
 
 
-def call_other(self, other, method_name):
+def call_other(self, other):
     if hasattr(other, '_op_priority'):
         if other._op_priority > self._op_priority:
-            if hasattr(other, method_name):
-                return True
+            return True
     return False
 
 
@@ -31,68 +30,88 @@ class Expr(Basic, EvalfMixin):
 
     @_sympifyit('other', NotImplemented)
     def __add__(self, other):
-        if call_other(self, other, '__radd__'):
-            return other.__radd__(self)
-        else:
-            return Add(self, other)
+        if call_other(self, other):
+            try:
+                return other.__radd__(self)
+            except AttributeError:
+                pass
+        return Add(self, other)
     @_sympifyit('other', NotImplemented)
     def __radd__(self, other):
-        if call_other(self, other, '__add__'):
-            return other.__add__(self)
-        else:
-            return Add(other, self)
+        if call_other(self, other):
+            try:
+                return other.__add__(self)
+            except AttributeError:
+                pass
+        return Add(other, self)
 
     @_sympifyit('other', NotImplemented)
     def __sub__(self, other):
-        if call_other(self, other, '__rsub__'):
-            return other.__rsub__(self)
-        else:
-            return Add(self, -other)
+        if call_other(self, other):
+            try:
+                return other.__rsub__(self)
+            except AttributeError:
+                pass
+        return Add(self, -other)
     @_sympifyit('other', NotImplemented)
     def __rsub__(self, other):
-        if call_other(self, other, '__sub__'):
-            return other.__sub__(self)
-        else:
-            return Add(other, -self)
+        if call_other(self, other):
+            try:
+                return other.__sub__(self)
+            except AttributeError:
+                pass
+        return Add(other, -self)
 
     @_sympifyit('other', NotImplemented)
     def __mul__(self, other):
-        if call_other(self, other, '__rmul__'):
-            return other.__rmul__(self)
-        else:
-            return Mul(self, other)
+        if call_other(self, other):
+            try:
+                return other.__rmul__(self)
+            except AttributeError:
+                pass
+        return Mul(self, other)
     @_sympifyit('other', NotImplemented)
     def __rmul__(self, other):
-        if call_other(self, other, '__mul__'):
-            return other.__mul__(self)
-        else:
-            return Mul(other, self)
+        if call_other(self, other):
+            try:
+                return other.__mul__(self)
+            except AttributeError:
+                pass
+        return Mul(other, self)
 
     @_sympifyit('other', NotImplemented)
     def __pow__(self, other):
-        if call_other(self, other, '__rpow__'):
-            return other.__rpow__(self)
-        else:
-            return Pow(self, other)
+        if call_other(self, other):
+            try:
+                return other.__rpow__(self)
+            except AttributeError:
+                pass
+        return Pow(self, other)
     @_sympifyit('other', NotImplemented)
     def __rpow__(self, other):
-        if call_other(self, other, '__pow__'):
-            return other.__pow__(self)
-        else:
-            return Pow(other, self)
+        if call_other(self, other):
+            try:
+                return other.__pow__(self)
+            except AttributeError:
+                pass
+        return Pow(other, self)
 
     @_sympifyit('other', NotImplemented)
     def __div__(self, other):
-        if call_other(self, other, '__rdiv__'):
-            return other.__rdiv__(self)
-        else:
-            return Mul(self, Pow(other, S.NegativeOne))
+        if call_other(self, other):
+            try:
+                return other.__rdiv__(self)
+            except AttributeError:
+                pass
+        return Mul(self, Pow(other, S.NegativeOne))
     @_sympifyit('other', NotImplemented)
     def __rdiv__(self, other):
-        if call_other(self, other, '__div__'):
-            return other.__div__(self)
-        else:
-            return Mul(other, Pow(self, S.NegativeOne))
+        if call_other(self, other):
+            try:
+                return other.__div__(self)
+            except AttributeError:
+                pass
+        return Mul(other, Pow(self, S.NegativeOne))
 
     __truediv__ = __div__
     __rtruediv__ = __rdiv__
