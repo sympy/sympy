@@ -96,19 +96,36 @@ class State(Expr, Representable):
     All code must check for this!
     """
 
-    lbracket = 'State('
-    rbracket = ')'
-
     hilbert_space = HilbertSpace()
 
-    def __new__(cls, name):
+    def __new__(cls, name, kind='ket'):
+        if not (kind=='ket' or kind=='bra'):
+            raise ValueError("kind must be either 'ket' or 'bra', got: %r" % kind)
         name = sympify(name)
-        obj = Expr.__new__(cls, name, **{'commutative': False})
+        obj = Expr.__new__(cls, name, kind, **{'commutative': False})
         return obj
 
     @property
     def name(self):
         return self.args[0]
+
+    @property
+    def kind(self):
+        return self.args[1]
+
+    @property
+    def is_ket(self):
+        if self.kind == 'ket':
+            return True
+        elif self.kind == 'bra':
+            return False
+
+    @property
+    def is_bra(self):
+        if self.kind == 'bra':
+            return True
+        elif self.kind == 'ket':
+            return False
 
     @property
     def is_symbolic(self):
@@ -137,6 +154,27 @@ class State(Expr, Representable):
     def _eval_dagger(self):
         return self.dual
 
+    @property
+    def dual(self):
+        if self.is_ket:
+            return State(self.args[0], 'bra')
+        elif self.is_bra:
+            return State(self.args[0], 'ket')
+
+    @property
+    def lbracket(self):
+        if self.is_ket:
+            return '|'
+        else:
+            return '<'
+
+    @property
+    def rbracket(self):
+        if self.is_ket:
+            return '>'
+        else:
+            return '|'
+
     def _sympyrepr(self, printer, *args):
         return '%s(%s)' % (self.__class__.__name__, self._print_name(printer, *args))
 
@@ -151,24 +189,11 @@ class State(Expr, Representable):
         return pform
 
 
-class Ket(State):
+def Ket(name):
+    return State(name, kind='ket')
 
-    lbracket = '|'
-    rbracket = '>'
-
-    @property
-    def dual(self):
-        return Bra(*self.args)
-
-
-class Bra(State):
-
-    lbracket = '<'
-    rbracket = '|'
-
-    @property
-    def dual(self):
-        return Ket(*self.args)
+def Bra(name):
+    return State(name, kind='bra')
 
 
 class Operator(Expr, Representable):
@@ -221,25 +246,12 @@ class InnerProduct(Expr):
     An unevaluated inner product between a Bra and Ket.
     """
 
-    def __new__(cls, bra, *args):
-        if not (bra and args):
-            raise Exception('InnerProduct requires at least a leading Bra and a trailing Ket')
-        assert isinstance(bra, Bra), 'First argument must be a Bra'
-        if len(args) == 1:
-            assert isinstance(args[0], Ket), 'Last argument must be a Ket'
-        else:
-            assert isinstance(args[-1], Ket), 'Last argument must be a Ket'
+    def __new__(cls, bra, ket):
         r = cls.eval(*args)
         if isinstance(r, Expr):
             return r
-        obj = Expr.__new__(cls, bra, *args)
+        obj = Expr.__new__(cls, bra, ket)
         return obj
-
-    @classmethod
-    def eval(cls, *args):
-        # We need to decide what to do here. We probably will ask if the
-        # bra and ket know how to do the inner product.
-        return None
 
     @property
     def bra(self):
@@ -247,15 +259,10 @@ class InnerProduct(Expr):
 
     @property
     def ket(self):
-        if len(self.args) == 2:
-            return self.args[1]
-        else:
-            return self.args[1:]
+        return self.args[1]
 
     def _eval_dagger(self):
-        #daggers a mul of the inner product's args
-        dagger = Dagger(Mul(*self.args))
-        return InnerProduct(*dagger.args)
+        return InnerProduct(Dagger(self.ket), Dagger(self.bra))
 
     def _innerproduct_printer(self, printer, *args):
         print_elements = []
@@ -527,6 +534,19 @@ class Commutator(Function):
 #-----------------------------------------------------------------------------
 # Functions
 #-----------------------------------------------------------------------------
+
+def is_bra(expr):
+    if isinstance(expr, State):
+        if expr.is_bra:
+            return True
+    return False
+
+def is_ket(expr):
+    if isinstance(expr, State):
+        if expr.is_bra:
+            return True
+    return False
+
 
 def represent(expr, basis, **options):
     """Represent the quantum expression in the given basis."""
