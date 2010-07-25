@@ -46,7 +46,7 @@
     To express a matrix-vector product in terms of Indexed objects:
 
     >>> x = Indexed('x')
-    >>> M(ii, jj)*x(jj)
+    >>> M(ii, jj)*x(jj)     #doctest: +SKIP
     M(i, j)*x(j)
 
 
