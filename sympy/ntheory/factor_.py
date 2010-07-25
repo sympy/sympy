@@ -47,6 +47,8 @@ def multiplicity(p, n):
 
     """
 
+    if p == n:
+        return 1
     if p == 2:
         return trailing(n)
 
