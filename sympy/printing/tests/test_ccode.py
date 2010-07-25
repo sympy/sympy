@@ -111,11 +111,12 @@ def test_ccode_Indexed():
 def test_ccode_loops():
     from sympy.tensor import Indexed, Idx
     from sympy import symbols
-    i,j,n,m = symbols('i j n m', integer=True)
-    A,x,y = symbols('A x y')
-    A = Indexed(A)(Idx(i, m), Idx(j, n))
-    x = Indexed(x)(Idx(j, n))
-    y = Indexed(y)(Idx(i, m))
+    n,m = symbols('n m', integer=True)
+    A = Indexed('A')
+    x = Indexed('x')
+    y = Indexed('y')
+    i = Idx('i', m)
+    j = Idx('j', n)
 
     s = (
             'for (int i=0; i<m; i++){\n'
@@ -124,5 +125,5 @@ def test_ccode_loops():
             '   }\n'
             '}'
             )
-    c = ccode(A*x, assign_to=y)
-    assert c== s
+    c = ccode(A(i, j)*x(j), assign_to=y(i))
+    assert c == s
