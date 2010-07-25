@@ -183,9 +183,9 @@ def get_contraction_structure(expr):
     >>> x, y, A = map(Indexed, ['x', 'y', 'A'])
     >>> i, j, k, l = symbols('i j k l', integer=True)
     >>> get_contraction_structure(x(i)*y(i) + A(j, j))
-    {(i,): [x(i)*y(i)], (j,): [A(j, j)]}
+    {(i,): set([x(i)*y(i)]), (j,): set([A(j, j)])}
     >>> get_contraction_structure(x(i)*y(j))
-    {None: [x(i)*y(j)]}
+    {None: set([x(i)*y(j)])}
 
     A nested Add object is returned as a nested dictionary.  The term
     containing the parenthesis is used as the key, and it stores the dictionary
@@ -195,9 +195,9 @@ def get_contraction_structure(expr):
     >>> sorted(d.keys())
     [(i,), (x(j)*A(i, j) + y(i))*x(i)]
     >>> d[(Idx(i),)]
-    [(x(j)*A(i, j) + y(i))*x(i)]
+    set([(x(j)*A(i, j) + y(i))*x(i)])
     >>> d[(x(j)*A(i, j) + y(i))*x(i)]
-    [{None: [y(i)], (j,): [x(j)*A(i, j)]}]
+    [{None: set([y(i)]), (j,): set([x(j)*A(i, j)])}]
 
     Note that the presence of expressions among the dictinary keys indicates a
     factorization of the array contraction.  The summation in the deepest
@@ -212,12 +212,12 @@ def get_contraction_structure(expr):
         c = expr.indices
         nc = tuple()
         junk, junk, key = _remove_repeated(c, nc, return_dummies=True)
-        return {key or None: [expr]}
+        return {key or None: set([expr])}
     elif expr.is_Atom:
-        return {None: [expr]}
+        return {None: set([expr])}
     elif expr.is_Mul:
         junk, junk, key = _get_indices_Mul(expr, return_dummies=True)
-        result = {key or None: [expr]}
+        result = {key or None: set([expr])}
         # recurse if we have any Add objects
         addfactors = filter(lambda x: x.is_Add, expr.args)
         if addfactors:
@@ -237,14 +237,14 @@ def get_contraction_structure(expr):
             d = get_contraction_structure(term)
             for key in d:
                 if key in result:
-                    result[key].extend(d[key])
+                    result[key] |= d[key]
                 else:
                     result[key] = d[key]
         return result
 
     # this test is expensive, so it should be at the end
     elif not expr.has(IndexedElement):
-        return {None: expr}
+        return {None: set([expr])}
     else:
         raise NotImplementedError(
                 "FIXME: No specialized handling of type %s"%type(expr))
