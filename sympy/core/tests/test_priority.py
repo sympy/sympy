@@ -1,89 +1,45 @@
 from sympy import Expr, Symbol
-from sympy.core.expr import call_other
+from sympy.core.decorators import call_highest_priority
+
 
 class Higher(Expr):
 
     _op_priority = 20.0
     result = 'high'
 
+    @call_highest_priority('__rmul__')
     def __mul__(self, other):
-        if call_other(self, other):
-            try:
-                return other.__rmul__(self)
-            except AttributeError:
-                pass
         return self.result
-
+    @call_highest_priority('__mul__')
     def __rmul__(self, other):
-        if call_other(self, other):
-            try:
-                return other.__mul__(self)
-            except AttributeError:
-                pass
         return self.result
 
+    @call_highest_priority('__radd__')
     def __add__(self, other):
-        if call_other(self, other):
-            try:
-                return other.__radd__(self)
-            except AttributeError:
-                pass
         return self.result
-
+    @call_highest_priority('__add__')
     def __radd__(self, other):
-        if call_other(self, other):
-            try:
-                return other.__add__(self)
-            except AttributeError:
-                pass
         return self.result
 
+    @call_highest_priority('__rsub__')
     def __sub__(self, other):
-        if call_other(self, other):
-            try:
-                return other.__rsub__(self)
-            except AttributeError:
-                pass
         return self.result
-
+    @call_highest_priority('__sub__')
     def __rsub__(self, other):
-        if call_other(self, other):
-            try:
-                return other.__sub__(self)
-            except AttributeError:
-                pass
         return self.result
 
+    @call_highest_priority('__rpow__')
     def __pow__(self, other):
-        if call_other(self, other):
-            try:
-                return other.__rpow__(self)
-            except AttributeError:
-                pass
         return self.result
-
+    @call_highest_priority('__pow__')
     def __rpow__(self, other):
-        if call_other(self, other):
-            try:
-                return other.__pow__(self)
-            except AttributeError:
-                pass
         return self.result
 
+    @call_highest_priority('__rdiv__')
     def __div__(self, other):
-        if call_other(self, other):
-            try:
-                return other.__rdiv__(self)
-            except AttributeError:
-                pass
         return self.result
-
+    @call_highest_priority('__div__')
     def __rdiv__(self, other):
-        if call_other(self, other):
-            try:
-                return other.__rdiv__(self)
-            except AttributeError:
-                pass
         return self.result
 
 class Lower(Higher):
@@ -132,3 +88,4 @@ def test_div():
     assert x/h == h/x == 'high'
     assert l/x != 'low'
     assert x/l != 'low'
+

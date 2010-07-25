@@ -1,7 +1,7 @@
 
 from basic import Basic, S, C
 from evalf import EvalfMixin
-from decorators import _sympifyit
+from decorators import _sympifyit, call_highest_priority
 from cache import cacheit
 
 
@@ -19,6 +19,12 @@ class Expr(Basic, EvalfMixin):
     # * Arithmetics *
     # ***************
 
+    # Expr and its sublcasses use _op_priority to determine which object
+    # passed to a binary special method (__mul__, etc.) will handle the
+    # operation. In general, the 'call_highest_priority' decorator will choose
+    # the object with the highest _op_priority to handle the call.
+    # Custom subclasses that want to define their own binary special methods
+    # should set an _op_priority value that is higher than the default.
     _op_priority = 10.0
 
     def __pos__(self):
@@ -29,88 +35,48 @@ class Expr(Basic, EvalfMixin):
         return C.abs(self)
 
     @_sympifyit('other', NotImplemented)
+    @call_highest_priority('__radd__')
     def __add__(self, other):
-        if call_other(self, other):
-            try:
-                return other.__radd__(self)
-            except AttributeError:
-                pass
         return Add(self, other)
     @_sympifyit('other', NotImplemented)
+    @call_highest_priority('__add__')
     def __radd__(self, other):
-        if call_other(self, other):
-            try:
-                return other.__add__(self)
-            except AttributeError:
-                pass
         return Add(other, self)
 
     @_sympifyit('other', NotImplemented)
+    @call_highest_priority('__rsub__')
     def __sub__(self, other):
-        if call_other(self, other):
-            try:
-                return other.__rsub__(self)
-            except AttributeError:
-                pass
         return Add(self, -other)
     @_sympifyit('other', NotImplemented)
+    @call_highest_priority('__sub__')
     def __rsub__(self, other):
-        if call_other(self, other):
-            try:
-                return other.__sub__(self)
-            except AttributeError:
-                pass
         return Add(other, -self)
 
     @_sympifyit('other', NotImplemented)
+    @call_highest_priority('__rmul__')
     def __mul__(self, other):
-        if call_other(self, other):
-            try:
-                return other.__rmul__(self)
-            except AttributeError:
-                pass
         return Mul(self, other)
     @_sympifyit('other', NotImplemented)
+    @call_highest_priority('__mul__')
     def __rmul__(self, other):
-        if call_other(self, other):
-            try:
-                return other.__mul__(self)
-            except AttributeError:
-                pass
         return Mul(other, self)
 
     @_sympifyit('other', NotImplemented)
+    @call_highest_priority('__rpow__')
     def __pow__(self, other):
-        if call_other(self, other):
-            try:
-                return other.__rpow__(self)
-            except AttributeError:
-                pass
         return Pow(self, other)
     @_sympifyit('other', NotImplemented)
+    @call_highest_priority('__pow__')
     def __rpow__(self, other):
-        if call_other(self, other):
-            try:
-                return other.__pow__(self)
-            except AttributeError:
-                pass
         return Pow(other, self)
 
     @_sympifyit('other', NotImplemented)
+    @call_highest_priority('__rdiv__')
     def __div__(self, other):
-        if call_other(self, other):
-            try:
-                return other.__rdiv__(self)
-            except AttributeError:
-                pass
         return Mul(self, Pow(other, S.NegativeOne))
     @_sympifyit('other', NotImplemented)
+    @call_highest_priority('__div__')
     def __rdiv__(self, other):
-        if call_other(self, other):
-            try:
-                return other.__div__(self)
-            except AttributeError:
-                pass
         return Mul(other, Pow(self, S.NegativeOne))
 
     __truediv__ = __div__
