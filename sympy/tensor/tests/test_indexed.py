@@ -124,3 +124,16 @@ def test_IndexedElement_properties():
     n, m = symbols('n m', integer=True)
     assert IndexedElement(a, Idx(i, m), Idx(j, n)).ranges == [(0, m - 1), (0, n - 1)]
     assert IndexedElement(a, Idx(i, m), Idx(j, n)).dimensions == [m, n]
+
+def test_non_commutative():
+    i, j, k = symbols('i j k', integer=True)
+    A = Indexed('A')
+    B = Indexed('B')
+    assert A.is_commutative
+    assert A(i).is_commutative
+    assert A(i)*B(j) == B(j)*A(i)
+    A = Indexed('A', commutative=False)
+    B = Indexed('B', commutative=False)
+    assert not A.is_commutative
+    assert not A(i).is_commutative
+    assert A(i)*B(j) != B(j)*A(i)

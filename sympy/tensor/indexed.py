@@ -113,16 +113,28 @@ class Indexed(Expr):
     <class 'sympy.tensor.indexed.IndexedElement'>
 
     """
-    def __new__(cls, label, **kw_args):
+    def __new__(cls, label, shape=None, commutative=True, **kw_args):
         if isinstance(label, basestring):
             label = Symbol(label)
 
-        # TODO: implement optional shape argument
+        obj = Expr.__new__(cls, label, **kw_args)
+        obj._is_commutative = commutative
+        obj._shape = shape
+        return obj
 
-        return Expr.__new__(cls, label, **kw_args)
+    def _hashable_content(self):
+        return Expr._hashable_content(self) + (self._is_commutative, self._shape)
 
     def __call__(self, *indices, **kw_args):
         return IndexedElement(self, *indices, **kw_args)
+
+    @property
+    def is_commutative(self):
+        return self._is_commutative
+
+    @property
+    def shape(self):
+        return self._shape
 
     @property
     def label(self):
@@ -148,7 +160,6 @@ class IndexedElement(Expr):
     a(i, j)
 
     """
-    is_commutative = True
 
     def __new__(cls, stem, *args, **kw_args):
         if not args: raise IndexException("IndexedElement needs at least one index")
@@ -164,6 +175,10 @@ class IndexedElement(Expr):
     @property
     def stem(self):
         return self.args[0]
+
+    @property
+    def is_commutative(self):
+        return self.stem.is_commutative
 
     @property
     def indices(self):
