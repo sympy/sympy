@@ -11,7 +11,7 @@ source code files that are compilable without further modifications.
 
 from str import StrPrinter
 from sympy.printing.precedence import precedence
-from sympy.core.basic import S, Basic
+from sympy.core import S, Basic, Add
 from sympy.core.symbol import Symbol
 from sympy.core.numbers import NumberSymbol
 from sympy.functions import Piecewise, piecewise_fold
@@ -120,48 +120,48 @@ class CCodePrinter(StrPrinter):
 
         # Setup loops over dummy indices  --  each term needs separate treatment
         d = get_contraction_structure(expr)
-        if len(d) == 1 and d.keys()[0] is None:
-            # no summations
+        if None in d:
+            # terms with no summations first
             lines.extend(openloop)
-            text = StrPrinter.doprint(self, expr)
+            text = StrPrinter.doprint(self, Add(*d[None]))
             if assign_to is not None:
                 text = "%s = %s;" % (lhs_printed, text)
             lines.append(text)
             lines.extend(closeloop)
-        else:
-            # there are summations
-            for dummies in d:
-                if isinstance(dummies, tuple):
-                    openloop_d, closeloop_d, junk = self._get_loop_opening_ending_ints(dummies)
 
-                    for term in d[dummies]:
-                        if term in d:
-                            # one factor in the term has an internal summation that
-                            # must be computed first, we need temporary variables
-                            raise NotImplementedError("FIXME: no support for nested Add yet")
-                        else:
+        for dummies in d:
+            # then terms with summations
+            if isinstance(dummies, tuple):
+                openloop_d, closeloop_d, junk = self._get_loop_opening_ending_ints(dummies)
 
-                            # We need the lhs expression as an accumulator for
-                            # the loops, i.e
-                            #
-                            # for (int d=0; d < dim; d++){
-                            #    lhs[] = lhs[] + term[][d]
-                            # }           ^.................. the accumulator
-                            #
-                            # We check if the expression already contains the
-                            # lhs, and raise an exception if it does, as that
-                            # syntax is currently undefined.  FIXME: What is a
-                            # good interpretation of this?
-                            if term.has(assign_to):
-                                raise(ValueError("FIXME: lhs present in rhs,\
-                                    this is undefined in CCodePrinter"))
+                for term in d[dummies]:
+                    if term in d:
+                        # one factor in the term has an internal summation that
+                        # must be computed first, we need temporary variables
+                        raise NotImplementedError("FIXME: no support for nested Add yet")
+                    else:
 
-                            lines.extend(openloop)
-                            lines.extend(openloop_d)
-                            text = "%s = %s;" % (lhs_printed, StrPrinter.doprint(self, assign_to + expr))
-                            lines.append(text)
-                            lines.extend(closeloop_d)
-                            lines.extend(closeloop)
+                        # We need the lhs expression as an accumulator for
+                        # the loops, i.e
+                        #
+                        # for (int d=0; d < dim; d++){
+                        #    lhs[] = lhs[] + term[][d]
+                        # }           ^.................. the accumulator
+                        #
+                        # We check if the expression already contains the
+                        # lhs, and raise an exception if it does, as that
+                        # syntax is currently undefined.  FIXME: What is a
+                        # good interpretation of this?
+                        if term.has(assign_to):
+                            raise(ValueError("FIXME: lhs present in rhs,\
+                                this is undefined in CCodePrinter"))
+
+                        lines.extend(openloop)
+                        lines.extend(openloop_d)
+                        text = "%s = %s;" % (lhs_printed, StrPrinter.doprint(self, assign_to + term))
+                        lines.append(text)
+                        lines.extend(closeloop_d)
+                        lines.extend(closeloop)
 
         return lines
 
