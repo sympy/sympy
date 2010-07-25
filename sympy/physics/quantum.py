@@ -148,7 +148,7 @@ class State(Expr, Representable):
         pform = printer._print(self.args[0], *args)
         return pform
 
-    def doit(self,**kw_args):
+    def doit(self, **kw_args):
         return self
 
     def _eval_dagger(self):
