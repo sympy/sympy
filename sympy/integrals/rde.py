@@ -37,8 +37,7 @@ def order_at(a, p, t):
     Computes the order of a at p, with respect to t.
 
     For a, p in k[t], the order of a at p is defined as nu_p(a) = max({n
-    in Z+ such that p**n|a}), where a != 0.  If a == 0, nu_p(a) = +oo,
-    but this function will instead raise ValueError in that case.
+    in Z+ such that p**n|a}), where a != 0.  If a == 0, nu_p(a) = +oo.
 
     To compute the order at a rational function, a/b, use the fact that
     nu_p(a/b) == nu_p(a) - nu_p(b).
@@ -49,8 +48,8 @@ def order_at(a, p, t):
         return a.as_poly(t).ET()[0][0]
 
     # TODO: Can this be done more efficiently?
-    # Perhaps using sqf factorization, or binary search, or some other
-    # clever method.
+    # Perhaps using sqf factorization, binary search with an upper bound of
+    # a.degree(t)//p.degree(t), or some other clever method.
     n = -1
     p1 = Poly(1, t)
     r = Poly(0, t)

@@ -4,7 +4,7 @@ from sympy.integrals.prde import (prde_normal_denom, prde_special_denom,
     prde_linear_constraints, constant_system, prde_spde, prde_no_cancel_b_large,
     is_log_deriv_k_t_radical, parametric_log_deriv_heu)
 
-from sympy.abc import x, t
+from sympy.abc import x, t, n
 
 def test_prde_normal_denom():
     D = [Poly(1, x), Poly(1 + t**2, t)]
@@ -64,9 +64,10 @@ def test_constant_system():
 
 def test_prde_spde():
     D = [Poly(x, t), Poly(-x*t, t)]
-    assert prde_spde(Poly(t, t), Poly(-1/x, t), D, 2, [Poly(1, x), Poly(1/x, t)], [x, t]) == \
+    # TODO: when bound_degree() can handle this, test degree bound from that too
+    assert prde_spde(Poly(t, t), Poly(-1/x, t), D, n, [Poly(1, x), Poly(1/x, t)], [x, t]) == \
         (Poly(t, t), Poly(0, t), [Poly(2*x, t), Poly(-x, t)],
-        [Poly(-x**2, t), Poly(0, t)], 1)
+        [Poly(-x**2, t), Poly(0, t)], n - 1)
 
 def test_prde_no_cancel():
     # b large
