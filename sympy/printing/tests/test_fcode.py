@@ -268,10 +268,11 @@ def test_loops():
             '! y(i)\n'
             'do i = 1, m\n'
             '   do j = 1, n\n'
-            '      y(i) = A(i, j)*x(j)\n'
+            '      y(i) = %(rhs)s\n'
             '   end do\n'
             'end do'
-            )
+            )% {'rhs': str(A*x)}
+    assert str(A*x) == 'A(i, j)*x(j)' or str(A*x) == 'x(j)*Ai, j)'
     code = printer.doprint(A*x)
     assert expected == code
 
