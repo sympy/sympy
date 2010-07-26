@@ -7,11 +7,10 @@ from sympy import Expr, sympify, Add, Mul, Pow, I, Function, Integer, S, sympify
 from sympy.core.numbers import *
 from sympy.core.basic import S, sympify
 from sympy.core.function import Function
-from sympy.functions.elementary.exponential import *
-from sympy.functions.elementary.miscellaneous import *
-from sympy.matrices.matrices import *
-from sympy.simplify import *
-from sympy.core.symbol import *
+from sympy.functions.elementary.exponential import exp, log
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.matrices.matrices import Matrix, eye
+from sympy.core.symbol import Symbol, symbols
 import math
 
 class QbitZBasisSet(BasisSet):
@@ -49,16 +48,19 @@ class Qbit(State):
         import math
         #If they just give us one number, express it in the least number of bits possible
         if args[0] > 1 and len(args) == 1:
-            array = [(args[0]>>i)&1 for i in reversed(range(int(math.log(args[0], 2)+.001)))]
+            array = [(args[0]>>i)&1 for i in reversed(range(int(math.ceil(math.log(args[0], 2)+.01)+.001)))]
+            array = sympify(array)
             return Expr.__new__(cls, *array, **{'commutative':False})
         #if they give us two numbers, the second number is the number of bits on which it is expressed)
         #Thus, Qbit(0,5) == |00000>. second argument can't be one becuase of intersection and uslessesness of possibility
         elif len(args) == 2 and args[1] > 1:
             array = [(args[0]>>i)&1 for i in reversed(range(args[1]))]
+            array = sympify(array)
             return Expr.__new__(cls, *array, **{'commutative':False})
         for element in args:
             if not (element == 1 or element == 0):
                 raise Exception("Values must be either one or zero")
+        args = sympify(args)
         obj = Expr.__new__(cls, *args, **{'commutative':False})
         return obj
     
@@ -72,10 +74,19 @@ class Qbit(State):
     def __getitem__(self, bit):
         if bit > self.dimension - 1:
             raise Exception()
-        return self.args[self.dimension-bit-1]
-    
-    def _sympystr(self, printer, *args):
-        string = ""
+        return self.args[int(self.dimension-bit-1)]
+
+    #Todo OutDecimal
+    def _print_name(self, printer, *args):
+        string = self.to_string()
+        return printer._print(string, *args)
+
+    def _print_name_pretty(self, printer, *args):
+        string = self.to_string()
+        pform = printer._print(string, *args)
+        return pform
+
+    def to_string(self):
         if Qbit.outDecimal:
             number = 0
             n = 1
@@ -84,20 +95,22 @@ class Qbit(State):
                 n = n<<1
             string = str(number)
         else:
-            for it in self.args:
-                string = string + str(it)
-        return "|%s>" % printer._print(string, *args)
-    
+            string = ""
+            for i in self.args:
+                string = string + str(i)
+        return string
+
     def _sympyrepr(self, printer, *args):
         return "%s%s" % (printer._print(self.__class__.__name__, *args), printer._print(str(self.args)))
     
     def flip(self, *args):
         newargs = list(self.args[:])
         for i in args:
-            if newargs[self.dimension-i-1] == 1:
-                newargs[self.dimension-i-1] = 0
+            bit = int(self.dimension-i-1)
+            if newargs[bit] == 1:
+                newargs[bit] = 0
             else:
-                newargs[self.dimension-i-1] = 1
+                newargs[bit] = 1
         return Qbit(*newargs)
     
     def _represent_QbitZBasisSet(self, basis, **options):
@@ -111,8 +124,7 @@ class Qbit(State):
             definiteState += n*it
             n = n*2
         result = [0 for x in range(2**(self.dimension))]
-        result[definiteState] = 1
-        
+        result[int(definiteState)] = 1   
         return Matrix(result)
     
     @property
@@ -137,14 +149,14 @@ class Gate(Operator):
     """
     name = 'Gate'
     def __new__(cls, *args):
-        obj = Operator.__new__(cls, *args)
+        args = sympify(args)
+        obj = Expr.__new__(cls, *args)
         if obj.inputnumber != len(args):
             num = obj.inputnumber
             raise Exception("This gate applies to %d qbits" % (num))
         for i in range(len(args)):
             if args[i] in (args[:i] + args[i+1:]):
                 raise Exception("Can't have duplicate control and target bits!")
-        obj.name = obj.__class__.__name__ 
         return obj
     
     @property
@@ -207,8 +219,16 @@ class Gate(Operator):
             m = representHilbertSpace(gate, basis.dimension, self.args, format)
             return m
 
-    def _sympystr(self, printer, *args):
-        return '%s(%s)' % (printer._print(self.name, *args), str(self.args))
+    @property
+    def name(self):
+        string = "("
+        arguments = len(self.args)
+        for i in range(arguments):
+            string = string + str(self.args[i])
+            if i != arguments - 1:
+                string = string + ","
+        string = string + ")"
+        return self.__class__.__name__ + string
     
     @property
     def XBasisTransform(self):
@@ -221,6 +241,7 @@ class Gate(Operator):
 #class keeps track of fact that it can't be distributed
 class NondistributiveGate(Gate):
     def __new__(cls, *args):
+        args = sympify(args)
         if len(args) != 1:
             raise Exception("Can only measure one at a time for now")
         return Expr.__new__(cls, *args, **{'commutative': False})
@@ -514,11 +535,10 @@ class HadamardGate(Gate):
     """
     An object representing a Hadamard Gate
     """
-    def _sympystr(self, printer, *args):
-        return "H(%s)" % printer._print(self.args[0], *args)
-    
+  
     @property
     def matrix(self):
+        from sympy.functions.elementary.miscellaneous import sqrt
         return Matrix([[1, 1], [1, -1]])*(1/sqrt(2))
 
 class XGate(Gate):
@@ -533,9 +553,7 @@ class YGate(Gate):
     """
     An object representing a Pauli-Y gate:
     """
-    def _sympystr(self, printer, *args):
-        return "Y(%s)" % printer._print(self.args[0], *args)
-    
+   
     @property
     def matrix(self):
         return Matrix([[0, complex(0,-1)], [complex(0,1), 0]])
@@ -549,9 +567,7 @@ class ZGate(Gate):
     """
     An object representing a Pauli-Z gate:
     """
-    def _sympystr(self, printer, *args):
-        return "Z(%s)" % printer._print(self.args[0], *args)
-    
+   
     @property
     def matrix(self):
         return Matrix([[1, 0], [0, -1]])
@@ -560,9 +576,7 @@ class PhaseGate(Gate):
     """
     An object representing a phase gate:
     """
-    def _sympystr(self, printer, *args):
-        return "S(%s)" % printer._print(self.args[0], *args)
-    
+   
     @property
     def matrix(self):
         return Matrix([[1, 0], [0, complex(0,1)]])
@@ -571,8 +585,6 @@ class TGate(Gate):
     """
     An object representing a pi/8 gate:
     """
-    def _sympystr(self, printer, *args):
-        return "T(%s)" % printer._print(self.args[0], *args)
     
     @property
     def matrix(self):
@@ -723,7 +735,7 @@ def qbits_to_matrix(qbits):
         return result
     #if we are at the bottom of the recursion, have the base case be representing the matrix
     elif isinstance(qbits, Qbit):
-        return qbits._represent_ZBasisSet() #TODO other bases with getattr
+        return qbits._represent_QbitZBasisSet(QbitZBasisSet(len(qbits))) #TODO other bases with getattr
     else:
         raise Exception("Malformed input")
 """

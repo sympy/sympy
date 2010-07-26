@@ -535,19 +535,22 @@ def represent(expr, basis, **options):
     elif isinstance(expr, Add):
         result = S.Zero
         for args in expr.args:
-            result += represent(basis, **options)
+            if not result:
+                result = represent(args, basis, **options)
+            else:
+                result += represent(args, basis, **options)
         return result
     elif isinstance(expr, Pow):
         return represent(expr.base, basis, **options)**expr.exp
-    else:
+    elif not isinstance(expr, Mul):
         return expr
 
     if not isinstance(expr, Mul):
         raise TypeError('Mul expected, got: %r' % expr)
 
+    result = S.One
     for arg in reversed(expr.args):
-        result = S.One
-        result *= represent(arg, basis, **options)
+        result = represent(arg, basis, **options)*result
     return result
 
 

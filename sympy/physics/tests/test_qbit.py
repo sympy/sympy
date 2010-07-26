@@ -19,7 +19,7 @@ def test_Qbit():
         assert qb[i] == array[4-i]
     assert len(qb) == 5
     qb = Qbit(1,1,0)
-    assert qb._represent_ZBasisSet() == Matrix([0,0,0,0,0,0,1,0])
+    assert qb._represent_QbitZBasisSet(QbitZBasisSet(3)) == Matrix([0,0,0,0,0,0,1,0])
 
 def test_Gate():
     c = CNOTGate(0,3)
@@ -46,66 +46,66 @@ def test_represent_HilbertSpace():
 
 def test_represent_Hadamard_Z():
     circuit = HadamardGate(0)*Qbit(0, 0)
-    answer = represent(circuit, ZBasisSet())
+    answer = represent(circuit, QbitZBasisSet(2))
     # check that the answers are same to within an epsilon
     assert answer == Matrix([1/sqrt(2),1/sqrt(2), 0, 0])
 
 def test_represent_XGate_Z():
     circuit = XGate(0)*Qbit(0,0)
-    answer = represent(circuit, ZBasisSet())
+    answer = represent(circuit, QbitZBasisSet(2))
     assert Matrix([0, 1, 0, 0]) == answer
 
 def test_represent_YGate_Z():
     circuit = YGate(0)*Qbit(0,0)
-    answer = represent(circuit, ZBasisSet())
+    answer = represent(circuit, QbitZBasisSet(2))
     assert answer[0] == 0 and answer[1] == ImaginaryUnit() and answer[2] == 0 and answer[3] == 0
 
 def test_represent_ZGate_Z():
     circuit = ZGate(0)*Qbit(0,0)
-    answer = represent(circuit, ZBasisSet())
+    answer = represent(circuit, QbitZBasisSet(2))
     assert Matrix([1, 0, 0, 0]) == answer
 
 def test_represent_PhaseGate_Z():
     circuit = PhaseGate(0)*Qbit(0,1)
-    answer = represent(circuit, ZBasisSet())
+    answer = represent(circuit, QbitZBasisSet(2))
     assert Matrix([0, ImaginaryUnit(),0,0]) == answer 
 
 def test_represent_TGate_Z():
     circuit = TGate(0)*Qbit(0,1)
-    assert Matrix([0, exp(I*Pi()/4), 0, 0]) == represent(circuit)
+    assert Matrix([0, exp(I*Pi()/4), 0, 0]) == represent(circuit, QbitZBasisSet(2))
 
 def test_CompoundGates_Z():
     circuit = YGate(0)*ZGate(0)*XGate(0)*HadamardGate(0)*Qbit(0, 0)
-    answer = represent(circuit)
+    answer = represent(circuit, QbitZBasisSet(2))
     assert Matrix([.5*ImaginaryUnit()*sqrt(2),ImaginaryUnit()/sqrt(2), 0, 0]) == answer
 
 def test_CNOTGate():
     circuit = CNOTGate(1,0)
-    assert represent(circuit, HilbertSize = 2) == Matrix([[1,0,0,0],[0,1,0,0],[0,0,0,1],[0,0,1,0]])
+    assert represent(circuit, QbitZBasisSet(2)) == Matrix([[1,0,0,0],[0,1,0,0],[0,0,0,1],[0,0,1,0]])
     circuit = circuit*Qbit(1,1,1)
-    assert matrix_to_qbits(represent(circuit)) == apply_gates(circuit)
+    assert matrix_to_qbits(represent(circuit, QbitZBasisSet(3))) == apply_gates(circuit)
 
 def test_ToffoliGate():
     circuit = ToffoliGate(2,1,0)
-    assert represent(circuit, HilbertSize = 3) == Matrix([[1,0,0,0,0,0,0,0],[0,1,0,0,0,0,0,0],[0,0,1,0,0,0,0,0],[0,0,0,1,0,0,0,0],[0,0,0,0,1,0,0,0],[0,0,0,0,0,1,0,0],[0,0,0,0,0,0,0,1],[0,0,0,0,0,0,1,0]])
+    assert represent(circuit, QbitZBasisSet(3)) == Matrix([[1,0,0,0,0,0,0,0],[0,1,0,0,0,0,0,0],[0,0,1,0,0,0,0,0],[0,0,0,1,0,0,0,0],[0,0,0,0,1,0,0,0],[0,0,0,0,0,1,0,0],[0,0,0,0,0,0,0,1],[0,0,0,0,0,0,1,0]])
 
     circuit = ToffoliGate(3,0,1)
-    assert apply_gates(circuit*Qbit(1,0,0,1)) == matrix_to_qbits(represent(circuit*Qbit(1,0,0,1)))
-    assert apply_gates(circuit*Qbit(0,0,0,0)) == matrix_to_qbits(represent(circuit*Qbit(0,0,0,0)))
+    assert apply_gates(circuit*Qbit(1,0,0,1)) == matrix_to_qbits(represent(circuit*Qbit(1,0,0,1), QbitZBasisSet(4)))
+    assert apply_gates(circuit*Qbit(0,0,0,0)) == matrix_to_qbits(represent(circuit*Qbit(0,0,0,0), QbitZBasisSet(4)))
 
 def test_SwapGate():
     assert apply_gates(SwapGate(0,1)*Qbit(1,0)) == Qbit(0,1)
     assert Qbit(0,1,0) == apply_gates(SwapGate(1,0)*SwapGate(0,1)*Qbit(0,1,0))
-    assert matrix_to_qbits(represent(SwapGate(0,1)*Qbit(1,0))) == Qbit(0,1)
-    assert Qbit(0,1,0) == matrix_to_qbits(represent(SwapGate(1,0)*SwapGate(0,1)*Qbit(0,1,0)))
+    assert matrix_to_qbits(represent(SwapGate(0,1)*Qbit(1,0), QbitZBasisSet(2))) == Qbit(0,1)
+    assert Qbit(0,1,0) == matrix_to_qbits(represent(SwapGate(1,0)*SwapGate(0,1)*Qbit(0,1,0), QbitZBasisSet(3)))
 
 def test_ControlledZ_Gate():
     assert apply_gates(CZGate(0,1)*Qbit(1,1)) == -Qbit(1,1)
-    assert matrix_to_qbits(represent(CZGate(0,1)*Qbit(1,1))) == -Qbit(1,1)
+    assert matrix_to_qbits(represent(CZGate(0,1)*Qbit(1,1), QbitZBasisSet(2))) == -Qbit(1,1)
 
 def test_CPhase_Gate():
     assert apply_gates(CPhaseGate(0,1)*Qbit(1,1)) == ImaginaryUnit()*Qbit(1,1)
-    assert matrix_to_qbits(represent(CPhaseGate(0,1)*Qbit(1,1))) == ImaginaryUnit()*Qbit(1,1)
+    assert matrix_to_qbits(represent(CPhaseGate(0,1)*Qbit(1,1), QbitZBasisSet(2))) == ImaginaryUnit()*Qbit(1,1)
 
 def test_gateSort():
     assert gatesort(HadamardGate(0)*XGate(1)*HadamardGate(0)**2*CNOTGate(0,1)*XGate(1)*XGate(0)) == HadamardGate(0)**3*XGate(1)*CNOTGate(0,1)*XGate(0)*XGate(1)
@@ -115,11 +115,11 @@ def test_gatesimp():
 
 def test_gate_qbit_strings():
     assert sstr(Qbit(0,1)) == "|01>"
-    assert sstr(HadamardGate(3)) == "H(3)"
-    assert sstr(XGate(2)) == "X(2)"
-    assert sstr(ZGate(6)) == "Z(6)"
-    assert sstr(YGate(6)) == "Y(6)"
-    assert sstr(CNOTGate(1,0)) == "CNOTGate(1, 0)"
+    assert sstr(HadamardGate(3)) == "HadamardGate(3)"
+    assert sstr(XGate(2)) == "XGate(2)"
+    assert sstr(ZGate(6)) == "ZGate(6)"
+    assert sstr(YGate(6)) == "YGate(6)"
+    assert sstr(CNOTGate(1,0)) == "CNOTGate(1,0)"
 
 def test_ArbMat4_apply():
     a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p = symbols('abcdefghijklmnop')
@@ -166,7 +166,7 @@ def test_ArbMat4_Equality():
     for i in range(4):
         for j in range(4):
             if j != i:
-                assert apply_gates(Arb(i,j)*(Qbit(1,0,1,1,0))) == matrix_to_qbits(represent(Arb(i,j)*(Qbit(1,0,1,1,0)), format = 'numpy'))   
+                assert apply_gates(Arb(i,j)*(Qbit(1,0,1,1,0))) == matrix_to_qbits(represent(Arb(i,j)*Qbit(1,0,1,1,0), QbitZBasisSet(5)))   
 
 def test_Arb8_Matrix_Equality():
     class Arb(Gate):
@@ -186,11 +186,11 @@ def test_Arb8_Matrix_Equality():
         for j in range(4):
             for k in range(4):
                 if j != i and k != i and k != j:
-                    assert apply_gates(Arb(i,j,k)*(Qbit(0,1,1,1,0))) == matrix_to_qbits(represent(Arb(i,j,k)*(Qbit(0,1,1,1,0)), format = 'numpy'))     
+                    assert apply_gates(Arb(i,j,k)*(Qbit(0,1,1,1,0))) == matrix_to_qbits(represent(Arb(i,j,k)*Qbit(0,1,1,1,0), QbitZBasisSet(5)))     
 
 def test_superposition_of_states():
     assert apply_gates(CNOTGate(0,1)*HadamardGate(0)*(1/sqrt(2)*Qbit(0,1) + 1/sqrt(2)*Qbit(1,0))) == (Qbit(0,1)/2 + Qbit(0,0)/2 - Qbit(1,1)/2 + Qbit(1,0)/2)
-    assert matrix_to_qbits(represent(CNOTGate(0,1)*HadamardGate(0)*(1/sqrt(2)*Qbit(0,1) + 1/sqrt(2)*Qbit(1,0)))) == (Qbit(0,1)/2 + Qbit(0,0)/2 - Qbit(1,1)/2 + Qbit(1,0)/2)
+    assert matrix_to_qbits(represent(CNOTGate(0,1)*HadamardGate(0)*(1/sqrt(2)*Qbit(0,1) + 1/sqrt(2)*Qbit(1,0)), QbitZBasisSet(2))) == (Qbit(0,1)/2 + Qbit(0,0)/2 - Qbit(1,1)/2 + Qbit(1,0)/2)
     
     
 def test_tensor_product():
@@ -270,7 +270,7 @@ def test_apply_represent_equality():
         circuit = gates[int(random.random()*6)]*circuit
 
 
-    mat = represent(circuit)
+    mat = represent(circuit, QbitZBasisSet(6))
     states = apply_gates(circuit)
     state_rep = matrix_to_qbits(mat)
     states = states.expand()
