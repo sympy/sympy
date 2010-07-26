@@ -691,11 +691,12 @@ def test_loops():
             'y = 0.d0\n'
             'do i = 1, m\n'
             '   do j = 1, n\n'
-            '      y(i) = A(i, j)*x(j) + y(i)\n'
+            '      y(i) = %(rhs)s + y(i)\n'
             '   end do\n'
             'end do\n'
             'end subroutine\n'
-            )
+            ) % {'rhs': str(A*x)}
+    assert str(A*x) == 'A(i, j)*x(j)' or str(A*x) == 'x(j)*A(i, j)'
 
     assert expected == code
     assert f2 == 'file.h'
@@ -737,11 +738,12 @@ def test_loops_InOut():
             'INTEGER*4 :: j\n'
             'do i = 1, m\n'
             '   do j = 1, n\n'
-            '      y(i) = A(i, j)*x(j) + y(i)\n'
+            '      y(i) = %(rhs)s + y(i)\n'
             '   end do\n'
             'end do\n'
             'end subroutine\n'
-            )
+            ) % {'rhs': str(A*x)}
+    assert str(A*x) == 'A(i, j)*x(j)' or str(A*x) == 'x(j)*A(i, j)'
 
     assert expected == code
     assert f2 == 'file.h'
