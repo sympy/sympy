@@ -7,7 +7,7 @@ from sympy.integrals.risch import (gcdex_diophantine, derivation, splitfactor,
 from sympy.utilities.pytest import XFAIL, skip
 
 from sympy.abc import x, t, nu, z, a
-t1, t2 = symbols('t1 t2')
+t0, t1, t2 = symbols('t0, t1, t2')
 
 def test_gcdex_diophantine():
     assert gcdex_diophantine(Poly(x**4 - 2*x**3 - 6*x**2 + 12*x + 15),
@@ -139,6 +139,11 @@ def test_integrate_hyperexponential():
     assert integrate_hyperexponential(a, d, D, [x, t], [exp]) == \
         (-(55 - 50*exp(x))/(25 + 125*exp(2*x)) + Integral(-1, x) + log(1 + exp(2*x)), True)
         # (-(55 - 50*exp(x))/(25 + 125*exp(2*x)) - x + log(1 + exp(2*x)), True)
+    D = [Poly(1, x), Poly(t0, t0), Poly(t0*t, t)]
+    assert integrate_hyperexponential(Poly(2*t0*t**2, t), Poly(1, t), D, [x, t0, t],
+    [lambda x: exp(exp(x)), exp]) == \
+        (exp(2*exp(x)), True)
+
 
 def test_integrate_hypertangent_polynomial():
     D = [Poly(1, x), Poly(t**2 + 1, t)]

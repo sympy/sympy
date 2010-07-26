@@ -17,7 +17,7 @@ def test_order_at():
     assert order_at(b, p1, t) == 1
     assert order_at(a, p2, t) == 0
     assert order_at(b, p2, t) == 3
-    raises(ValueError, "order_at(Poly(0, t), Poly(t, t), t)")
+    assert order_at(Poly(0, t), Poly(t, t), t) == oo
 
 def test_weak_normalizer():
     a = Poly((1 + x)*t**5 + 4*t**4 + (-1 - 3*x)*t**3 - 4*t**2 + (-2 + 2*x)*t, t)

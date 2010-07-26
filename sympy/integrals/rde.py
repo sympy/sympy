@@ -44,11 +44,13 @@ def order_at(a, p, t):
     nu_p(a/b) == nu_p(a) - nu_p(b).
     """
     if a.is_zero:
-        raise ValueError("a == 0, order_at(%s, %s, %s) == +oo" % (a, p, t))
+        return oo
     if p == Poly(t, t):
         return a.as_poly(t).ET()[0][0]
 
     # TODO: Can this be done more efficiently?
+    # Perhaps using sqf factorization, or binary search, or some other
+    # clever method.
     n = -1
     p1 = Poly(1, t)
     r = Poly(0, t)
