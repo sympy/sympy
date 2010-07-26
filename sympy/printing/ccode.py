@@ -135,10 +135,13 @@ class CCodePrinter(StrPrinter):
                 openloop_d, closeloop_d, junk = self._get_loop_opening_ending_ints(dummies)
 
                 for term in d[dummies]:
-                    if term in d:
-                        # one factor in the term has an internal summation that
-                        # must be computed first, we need temporary variables
-                        raise NotImplementedError("FIXME: no support for nested Add yet")
+                    if term in d and not ([f.keys() for f in d[term]]
+                            == [[None] for f in d[term]]):
+                        # If one factor in the term has it's own internal
+                        # contractions, those must be computed first.
+                        # (temporary variables?)
+                        raise NotImplementedError(
+                                "FIXME: no support for contractions in factor yet")
                     else:
 
                         # We need the lhs expression as an accumulator for
@@ -150,8 +153,8 @@ class CCodePrinter(StrPrinter):
                         #
                         # We check if the expression already contains the
                         # lhs, and raise an exception if it does, as that
-                        # syntax is currently undefined.  FIXME: What is a
-                        # good interpretation of this?
+                        # syntax is currently undefined.  FIXME: What would be
+                        # a good interpretation?
                         if term.has(assign_to):
                             raise(ValueError("FIXME: lhs present in rhs,\
                                 this is undefined in CCodePrinter"))
