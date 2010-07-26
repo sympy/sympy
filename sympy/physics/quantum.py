@@ -5,7 +5,7 @@ from sympy import (
 from sympy.physics.hilbert import *
 
 """
-Notes:
+Questions:
 
 * What is an appropriate base class for Operator?
 * What does doit do and should be use it to do things like apply operators?
@@ -21,8 +21,6 @@ Notes:
   of states and maybe the operator they are eigenvectors of. We need a way
   of labeling these states by name and index: |a[0]>, |a[1]>, etc.
 * Should Operator.name and State.name be a string or symbol?
-* How are the names of an Operator different than the class?
-* Should operators be singletons?
 """
 
 __all__ = [
