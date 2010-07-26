@@ -108,7 +108,7 @@ def test_ccode_Indexed():
     assert p._not_c == set()
 
 
-def test_ccode_loops():
+def test_ccode_loops_matrix_vector():
     from sympy.tensor import Indexed, Idx
     from sympy import symbols
     n,m = symbols('n m', integer=True)
@@ -126,4 +126,115 @@ def test_ccode_loops():
             '}'
             )
     c = ccode(A(i, j)*x(j), assign_to=y(i))
+    assert c == s
+
+def test_ccode_loops_add():
+    from sympy.tensor import Indexed, Idx
+    from sympy import symbols
+    n, m = symbols('n m', integer=True)
+    A = Indexed('A')
+    x = Indexed('x')
+    y = Indexed('y')
+    z = Indexed('z')
+    i = Idx('i', m)
+    j = Idx('j', n)
+
+    s = (
+            'for (int i=0; i<m; i++){\n'
+            '   y[i] = x[i] + z[i];\n'
+            '}\n'
+            'for (int i=0; i<m; i++){\n'
+            '   for (int j=0; j<n; j++){\n'
+            '      y[i] = x[j]*A[j + i*n] + y[i];\n'
+            '   }\n'
+            '}'
+            )
+    c = ccode(A(i, j)*x(j) + x(i) + z(i), assign_to=y(i))
+    assert c == s
+
+def test_ccode_loops_multiple_contractions():
+    from sympy.tensor import Indexed, Idx
+    from sympy import symbols
+    n, m, o, p = symbols('n m o p', integer=True)
+    a = Indexed('a')
+    b = Indexed('b')
+    y = Indexed('y')
+    i = Idx('i', m)
+    j = Idx('j', n)
+    k = Idx('k', o)
+    l = Idx('l', p)
+
+    s = (
+'for (int i=0; i<m; i++){\n'
+'   for (int l=0; l<p; l++){\n'
+'      for (int j=0; j<n; j++){\n'
+'         for (int k=0; k<o; k++){\n'
+'            y[i] = b[l + k*p + j*o*p]*a[l + k*p + j*o*p + i*n*o*p] + y[i];\n'
+'         }\n'
+'      }\n'
+'   }\n'
+'}'
+            )
+    c = ccode(a(i, j, k, l)*b(j, k, l), assign_to=y(i))
+    assert c == s
+
+def test_ccode_loops_addfactor():
+    from sympy.tensor import Indexed, Idx
+    from sympy import symbols
+    n, m, o, p = symbols('n m o p', integer=True)
+    a = Indexed('a')
+    b = Indexed('b')
+    c = Indexed('c')
+    y = Indexed('y')
+    i = Idx('i', m)
+    j = Idx('j', n)
+    k = Idx('k', o)
+    l = Idx('l', p)
+
+    s = (
+'for (int i=0; i<m; i++){\n'
+'   for (int l=0; l<p; l++){\n'
+'      for (int j=0; j<n; j++){\n'
+'         for (int k=0; k<o; k++){\n'
+'            y[i] = (a[l + k*p + j*o*p + i*n*o*p] + b[l + k*p + j*o*p + i*n*o*p])*c[l + k*p + j*o*p] + y[i];\n'
+'         }\n'
+'      }\n'
+'   }\n'
+'}'
+            )
+    c = ccode((a(i, j, k, l) + b(i, j, k, l))*c(j, k, l), assign_to=y(i))
+    assert c == s
+
+def test_ccode_loops_multiple_terms():
+    from sympy.tensor import Indexed, Idx
+    from sympy import symbols
+    n, m, o, p = symbols('n m o p', integer=True)
+    a = Indexed('a')
+    b = Indexed('b')
+    c = Indexed('c')
+    y = Indexed('y')
+    i = Idx('i', m)
+    j = Idx('j', n)
+    k = Idx('k', o)
+
+    s = (
+'for (int i=0; i<m; i++){\n'
+'   for (int j=0; j<n; j++){\n'
+'      for (int k=0; k<o; k++){\n'
+'         y[i] = b[j]*b[k]*c[k + j*o + i*n*o] + y[i];\n'
+'      }\n'
+'   }\n'
+'}\n'
+'for (int i=0; i<m; i++){\n'
+'   for (int k=0; k<o; k++){\n'
+'      y[i] = b[k]*a[k + i*o] + y[i];\n'
+'   }\n'
+'}\n'
+'for (int i=0; i<m; i++){\n'
+'   for (int j=0; j<n; j++){\n'
+'      y[i] = b[j]*a[j + i*n] + y[i];\n'
+'   }\n'
+'}'
+            )
+    c = ccode(a(i, j)*b(j) + a(i, k)*b(k) + c(i, j, k)*b(j)*b(k), assign_to=y(i))
     assert c == s
