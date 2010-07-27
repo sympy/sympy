@@ -665,6 +665,7 @@ def test_complicated_codegen_f95():
     )
     assert result[1][1] == expected
 
+@XFAIL
 def test_loops():
     from sympy.tensor import Indexed, Idx
     from sympy import symbols
