@@ -27,10 +27,9 @@ AUTHORS:
 Copyright (C) 2008 Jens Rasch <jyr2000@gmail.com>
 """
 
-from sage.rings.complex_number import ComplexNumber
-from sage.rings.integer import Integer
-from sage.rings.finite_rings.integer_mod import Mod
-from sage.symbolic.constants import pi
+from sympy import Integer, pi, sqrt
+#from sage.rings.complex_number import ComplexNumber
+#from sage.rings.finite_rings.integer_mod import Mod
 
 # This list of precomputed factorials is needed to massively
 # accelerate future calculations of the various coefficients
@@ -61,7 +60,7 @@ def _calc_factlist(nn):
     if nn >= len(_Factlist):
         for ii in range(len(_Factlist), nn + 1):
             _Factlist.append(_Factlist[ii - 1] * ii)
-    return _Factlist[:Integer(nn) + 1]
+    return _Factlist[:int(nn) + 1]
 
 
 def wigner_3j(j_1, j_2, j_3, m_1, m_2, m_3, prec=None):
@@ -195,9 +194,9 @@ def wigner_3j(j_1, j_2, j_3, m_1, m_2, m_3, prec=None):
                           _Factlist[int(j_3 + m_3)]) / \
                           _Factlist[int(j_1 + j_2 + j_3 + 1)]
 
-    ressqrt = argsqrt.sqrt(prec)
-    if type(ressqrt) is ComplexNumber:
-        ressqrt = ressqrt.real()
+    ressqrt = sqrt(argsqrt)
+    if ressqrt.is_complex:
+        ressqrt = ressqrt.as_real_imag()[0]
 
     imin = max(-j_3 + j_1 + m_2, -j_3 + j_2 - m_1, 0)
     imax = min(j_2 + m_2, j_1 - m_1, j_1 + j_2 - j_3)
@@ -261,7 +260,7 @@ def clebsch_gordan(j_1, j_2, j_3, m_1, m_2, m_3, prec=None):
 
     - Jens Rasch (2009-03-24): initial version
     """
-    res = (-1) ** int(j_1 - j_2 + m_3) * (2 * j_3 + 1).sqrt(prec) * \
+    res = (-1) ** int(j_1 - j_2 + m_3) * sqrt(2 * j_3 + 1) * \
         wigner_3j(j_1, j_2, j_3, m_1, m_2, -m_3, prec)
     return res
 
