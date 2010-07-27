@@ -582,13 +582,13 @@ def validate_mul(expr):
     old_arg = None
     for arg in expr:
         if old_arg != None:
-            if isinstance(old_arg, Ket) and isinstance(arg, Ket):
+            if isinstance(old_arg, State) and old_arg.kind == 'ket' and isinstance(arg, State) and arg.kind == 'ket':
                 raise NotImplementedError
-            if isinstance(old_arg, Bra) and isinstance(arg, Bra):
+            if isinstance(old_arg, State) and old_arg.kind == 'ket' and isinstance(arg, State) and arg.kind == 'ket':
                 raise NotImplementedError
-            if (isinstance(old_arg, Operator) or isinstance(old_arg, OuterProduct)) and isinstance(arg, Bra):
+            if (isinstance(old_arg, Operator) or isinstance(old_arg, OuterProduct)) and isinstance(arg, State) and arg.kind == 'bra':
                 raise Exception('(Operator or OuterProduct)*Bra is invalid in quantum mechanics.')
-            if isinstance(old_arg, Ket) and (isinstance(arg, Operator) or isinstance(arg, OuterProduct)):
+            if isinstance(old_arg, State) and old_arg.kind == 'ket' and (isinstance(arg, Operator) or isinstance(arg, OuterProduct)):
                 raise Exception('Ket*(Operator or OuterProduct) is invalid in quantum mechanics.')
         old_arg = arg
     return True
@@ -608,7 +608,7 @@ def combine_innerproduct(expr):
             if isinstance(arg, Bra):
                 left_of_bra = True
                 inner_product.append(arg)
-            elif (isinstance(arg, Ket) and left_of_bra == True):
+            elif (isinstance(arg, State) and arg.kind == 'ket' and left_of_bra == True):
                 inner_product.append(arg)
                 new_expr = new_expr*InnerProduct(*inner_product)
                 inner_product = []
@@ -632,7 +632,7 @@ def combine_outerproduct(expr):
         left_of_bra = False
         for arg in expr.args:
             if old_arg != None:
-                if (isinstance(old_arg, Ket) and isinstance(arg, Bra)):
+                if (isinstance(old_arg, State) and old_arg.kind == 'ket' and isinstance(arg, State) and old_arg.kind == 'bra'):
                     new_expr = new_expr*OuterProduct(old_arg, arg)
                     left_of_bra = True
                 elif left_of_bra == True:

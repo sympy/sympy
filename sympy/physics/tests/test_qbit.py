@@ -327,12 +327,6 @@ def test_matrix_to_qbits():
     assert matrix_to_qbits(sqrt(2)*2*Matrix([1,1,1,1,1,1,1,1])) == (2*sqrt(2)*(Qbit(0,0,0) + Qbit(0,0,1) + Qbit(0,1,0) + Qbit(0,1,1) + Qbit(1,0,0) + Qbit(1,0,1) + Qbit(1,1,0) + Qbit(1,1,1))).expand()
     assert qbits_to_matrix(2*sqrt(2)*(Qbit(0,0,0) + Qbit(0,0,1) + Qbit(0,1,0) + Qbit(0,1,1) + Qbit(1,0,0) + Qbit(1,0,1) + Qbit(1,1,0) + Qbit(1,1,1))) == sqrt(2)*2*Matrix([1,1,1,1,1,1,1,1])
 
-def test_gcd():
-    assert gcd(163231, 152057) == 151
-    assert gcd(93, 3) == 3
-    assert gcd(21,93) == 3
-    assert gcd(4775, 6876) == 191
-
 def test_continuedFrac():
     assert continuedFraction(3245, 10000) == [0,3,12,4,13]
     assert continuedFraction(1932, 2568) == [0, 1, 3, 26, 2]

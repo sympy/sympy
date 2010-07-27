@@ -9,7 +9,9 @@ from sympy.simplify import *
 from sympy.core.symbol import *
 from sympy.physics.qbit import *
 import math
+from sympy.core.numbers import igcd
 
+"""
 #This uses Euclid's Algorithm to find the gcd of a and b  
 def gcd(a,b):
     remainder = a
@@ -19,12 +21,13 @@ def gcd(a,b):
         return b
     else:
         return gcd(b, remainder)
+"""
 
 def shor(N):
     a = random.randrange(N-2)+2
-    if gcd(N,a) != 1:
+    if igcd(N,a) != 1:
         print "got lucky with rand"
-        return gcd(N,a)
+        return igcd(N,a)
     print "a= ",a
     print "N= ",N
     r = periodfind(a,N)
@@ -35,7 +38,7 @@ def shor(N):
     if a**(r/2)%N == -1:
         print "r not meet prereques, begin again"
         shor(N)
-    answer = (gcd(a**(r/2)-1, N), gcd(a**(r/2)+1, N))
+    answer = (igcd(a**(r/2)-1, N), igcd(a**(r/2)+1, N))
     return answer
 
 def arr(num, t):
@@ -89,16 +92,13 @@ def periodfind(a, N):
     circuit = controlledMod(t,a,N)*circuit
     #will measure first half of register giving one of the a**k%N's 
     circuit = apply_gates(circuit)
-    print circuit
     print "controlled Mod'd"
     for i in range(t):
         circuit = measure(i)*circuit
     circuit = apply_gates(circuit)
-    print circuit
     print "measured 1"
     #Now apply Inverse Quantum Fourier Transform on the second half of the register
     circuit = apply_gates(QFT(t, t*2).decompose()*circuit, floatingPoint = True)
-    print circuit
     print "QFT'd"
     for i in range(t):
         circuit = measure(i+t)*circuit

@@ -387,7 +387,7 @@ class controlledMod(Gate):
     def __new__(cls, *args):
         return Expr.__new__(cls, *args, **{'commutative': False})
     
-    def _apply_ZBasisSet(self, qbits):
+    def _apply_QbitZBasisSet(self, qbits):
         t = self.args[0]
         a = self.args[1]
         N = self.args[2]
@@ -396,9 +396,9 @@ class controlledMod(Gate):
         for i in range(t):
             k = k + n*qbits[t+i]
             n = n*2
-        out = a**k%N
+        out = int(a**k%N)
         outarray = list(qbits.args[0:t])
-        for i in reversed(range(t)):
+        for i in reversed(range(t)):            
             outarray.append((out>>i)&1)
         return Qbit(*outarray)
 
@@ -427,6 +427,7 @@ class measure(NondistributiveGate):
         return Expr.__new__(cls, *args, **{'commutative': False})
     
     def measure(self, state):
+        import random
         qbit = self.args[0]
         state = state.expand()
         prob1 = 0
@@ -449,7 +450,8 @@ class measure(NondistributiveGate):
             result = result/sqrt(prob1)
         else:
             result = result/sqrt(1-prob1)
-        return result.expand()
+        #TODO FIXME I evalf'd becuase of wierdness, need to get measure working in apply for real 
+        return result.expand().evalf()
 
 class RkGate(Gate):
     def __new__(cls, *args):
@@ -459,7 +461,7 @@ class RkGate(Gate):
             raise Exception("This gate applies to %d qbits" % (num))
         return obj
     
-    def _apply_ZBasisSet(self, qbits):
+    def _apply_QbitZBasisSet(self, qbits):
         #switch qbit basis and matrix basis when fully implemented
         mat = Matrix([[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,exp(2*ImaginaryUnit()*Pi()/2**self.args[2])]])
         args = [self.args[i] for i in reversed(range(2))]
