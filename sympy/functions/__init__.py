@@ -10,8 +10,8 @@ import combinatorial
 import elementary
 import special
 
-from special.polynomials import legendre, assoc_legendre, hermite, chebyshevt, chebyshevu, \
-        chebyshevu_root, chebyshevt_root
+from special.polynomials import (legendre, assoc_legendre, hermite, chebyshevt,
+        chebyshevu, chebyshevu_root, chebyshevt_root, laguerre_l)
 
 # see #391
 from combinatorial.factorials import factorial, rf, ff, binomial
