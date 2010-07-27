@@ -167,7 +167,7 @@ class SATSolver(object):
                         return False
 
                 # Detect and add a learned clause
-                self.add_learned_clause(self.compute_conflict())
+                #self.add_learned_clause(self.compute_conflict())
 
                 flip_lit = -self.current_level.decision
                 self.undo()
