@@ -295,10 +295,10 @@ class CCodePrinter(StrPrinter):
            return '\n'.join(code_lines)
 
         tab = "   "
-        inc_token = ('{', '(')
+        inc_token = ('{', '(', '{\n', '(\n')
         dec_token = ('}', ')')
 
-        code = [ line.strip() for line in code ]
+        code = [ line.lstrip() for line in code ]
 
         from sympy.utilities.iterables import any  # 2.4 support
         increase = [ int(any(map(line.endswith, inc_token))) for line in code ]
