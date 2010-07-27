@@ -476,11 +476,8 @@ class CCodeGen(CodeGen):
         return []  #FIXME
 
     def _declare_locals(self, routine):
-        code_list = []
-        for var in sorted(routine.local_vars, key=str):
-            typeinfo = get_default_datatype(var)
-            code_list.append("%s %s\n" % (typeinfo.cname, var))
-        return code_list
+        # loop variables are declared in loop statement
+        return []
 
     def _call_printer(self, routine):
         for result in routine.result_variables:
