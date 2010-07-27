@@ -301,7 +301,7 @@ def test_empty_f_code_with_header():
             "!*              See http://www.sympy.org/ for more information.               *\n"
             "!*                                                                            *\n"
             "!*                       This file is part of 'project'                       *\n"
-            "!******************************************************************************\n"
+            "!******************************************************************************\n\n"
             )
 
 def test_empty_f_header():

@@ -75,8 +75,8 @@ printing.
 from sympy.core.symbol import Symbol
 from sympy.core.expr import Expr
 from sympy.core.containers import Tuple
-from sympy.printing.ccode import ccode
-from sympy.printing.fcode import fcode
+from sympy.printing.ccode import ccode, CCodePrinter
+from sympy.printing.fcode import fcode, FCodePrinter
 from sympy.tensor import Idx, IndexedElement
 from sympy.core.relational import Equality
 from sympy.utilities import flatten
@@ -396,11 +396,8 @@ class CodeGen(object):
                         source files. [DEFAULT=True]
         """
 
-        code_lines = []
-        if header:
-            code_lines.extend(self._get_header())
+        code_lines = self._preprosessor_statements(prefix)
 
-        code_lines.extend(self._preprosessor_statements(prefix))
         for routine in routines:
             if empty: code_lines.append("\n")
             code_lines.extend(self._get_routine_opening(routine))
@@ -411,7 +408,13 @@ class CodeGen(object):
             if empty: code_lines.append("\n")
             code_lines.extend(self._get_routine_ending(routine))
 
-        print >> f, ''.join(code_lines),
+        code_lines = self._indent_code(''.join(code_lines))
+
+        if header:
+            code_lines = ''.join(self._get_header() + [code_lines])
+
+        if code_lines:
+            print >> f, code_lines
 
 class CodeGenError(Exception):
     pass
@@ -495,6 +498,10 @@ class CCodeGen(CodeGen):
             else:
                 code_lines.append("   return %s;\n" % ccode(result.expr))
         return code_lines
+
+    def _indent_code(self, codelines):
+        p = CCodePrinter()
+        return p.indent_code(codelines)
 
     def _get_routine_ending(self, routine):
         return ["}\n"]
@@ -683,6 +690,10 @@ class FCodeGen(CodeGen):
                 code_lines.extend(self._init_resultvars(routine))
             code_lines.append("%s\n" % f_expr)
         return code_lines
+
+    def _indent_code(self, codelines):
+        p = FCodePrinter({'source_format': 'free', 'human': False})
+        return p.indent_code(codelines)
 
     def dump_f95(self, routines, f, prefix, header=True, empty=True):
         self.dump_code(routines, f, prefix, header, empty)
