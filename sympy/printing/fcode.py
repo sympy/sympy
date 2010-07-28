@@ -399,7 +399,7 @@ class FCodePrinter(StrPrinter):
         decrease = [ int(reduce(lambda x, y: x or line.startswith(y),
                                 dec_keyword, False)) \
                      for line in code ]
-        continuation = [ line[-1] == '&' for line in code ]
+        continuation = [ line.endswith('&') for line in code ]
 
         level = 0
         cont_padding = 0
