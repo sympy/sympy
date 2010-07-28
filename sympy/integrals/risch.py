@@ -238,7 +238,7 @@ def hermite_reduce(a, d, D, T):
 
     d_sqf = d.sqf_list()
 
-    gn = Poly(0, t)
+    ga = Poly(0, t)
     gd = Poly(1, t)
 
     for v, i in d.sqf_list_include():
@@ -252,21 +252,21 @@ def hermite_reduce(a, d, D, T):
                 a.mul(Poly(-1/j, t)).as_poly(t))
             b, c = b.as_poly(t), c.as_poly(t)
 
-            gn = gn*v**j + b
+            ga = ga*v**j + b
             gd = gd*v**j
             a = c.mul(Poly(-j, t)) - u*derivation(b, D, T)
 
         d = u*v
     q, r = a.div(d)
 
-    gn, gd = gn.cancel(gd, include=True)
+    ga, gd = ga.cancel(gd, include=True)
     r, d = r.cancel(d, include=True)
 
-    rrn = q + fp + fs[0]
+    rra = q*fs[1] + fp*fs[1] + fs[0]
     rrd = fs[1]
-    rrn, rrd = rrn.cancel(rrd, include=True)
+    rra, rrd = rra.cancel(rrd, include=True)
 
-    return ((gn, gd), (r, d), (rrn, rrd))
+    return ((ga, gd), (r, d), (rra, rrd))
 
 def polynomial_reduce(p, D, T):
     """
@@ -472,8 +472,8 @@ def integrate_hyperexponential(a, d, D, T, Tfuncs):
 
     i = p.as_poly(t).nth(0).as_poly(z).nth(0)
 
-    ret = ((g1[0].as_basic()/g1[1].as_basic() + qa.as_basic()).subs(s)/
-        qd.as_basic().subs(s) + residue_reduce_to_basic(g2, T, z, Tfuncs))
+    ret = ((g1[0].as_basic()/g1[1].as_basic() + qa.as_basic()/
+        qd.as_basic()).subs(s) + residue_reduce_to_basic(g2, T, z, Tfuncs))
     if not i.is_zero:
         ret += Integral(i.subs(s), x)
 

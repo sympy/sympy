@@ -150,6 +150,8 @@ def test_integrate_hyperexponential():
     D = [Poly(1, x), Poly(t, t)]
     assert integrate_hyperexponential(Poly(x**2/2*t, t), Poly(1, t), D, [x, t], [exp]) == \
         (x**2*exp(x)/2 - x*exp(x) + exp(x), True)
+    assert integrate_hyperexponential(Poly(1 + t, t), Poly(t, t), D, [x, t], [exp]) == \
+        (Integral(1, x) - exp(-x), True) # (x - exp(-x), True)
 
 def test_integrate_hypertangent_polynomial():
     D = [Poly(1, x), Poly(t**2 + 1, t)]
