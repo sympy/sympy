@@ -25,7 +25,8 @@ from sympy.polys import Poly, PolynomialError, lcm, cancel
 from sympy.integrals.risch import (gcdex_diophantine, derivation, get_case,
     NonElementaryIntegral, residue_reduce, splitfactor,
     residue_reduce_derivation)
-from sympy.integrals.rde import order_at, weak_normalizer, bound_degree
+from sympy.integrals.rde import (order_at, order_at_oo, weak_normalizer,
+    bound_degree)
 
 #    from pudb import set_trace; set_trace() # Debugging
 
@@ -74,6 +75,7 @@ def prde_special_denom(a, ba, bd, G, D, T, case='auto'):
     For case == 'primitive', k<t> == k[t], so it returns (a, b, G, 1) in this
     case.
     """
+    # TODO: Merge this with the very similar special_denom() in rde.py
     t = T[-1]
     d = D[-1]
 
@@ -133,7 +135,7 @@ def prde_linear_constraints(a, b, G, D, T):
     matrix M with entries in k(t) such that for any solution c1, ..., cm in
     Const(k) and p in k[t] of a*Dp + b*p == Sum(ci*gi, (i, 1, m)),
     (c1, ..., cm) is a solution of Mx == 0, and p and the ci satisfy
-    a*Dp + b*p == Sum(ci*gi, (i, 1, m)).
+    a*Dp + b*p == Sum(ci*qi, (i, 1, m)).
 
     Because M has entries in k(t), and because Matrix doesn't play well with
     Poly, M will be a Matrix of Basic expressions.
@@ -234,7 +236,7 @@ def prde_no_cancel_b_large(b, Q, n, D, T):
     h1, ..., hr in k[r] and a matrix A with coefficients in Const(k) such that
     if c1, ..., cm in Const(k) and q in k[t] satisfy deg(q) <= n and
     Dq + b*Q == Sum(ci*qi, (i, 1, m)), then q = Sum(dj*hj, (j, 1, r)), where
-    d1, ..., dr in Const(k) and A*Matrix([[c1, ..., cm, d1, ...., dr]]).T == 0.
+    d1, ..., dr in Const(k) and A*Matrix([[c1, ..., cm, d1, ..., dr]]).T == 0.
     """
     t = T[-1]
     db = b.degree(t)
@@ -270,6 +272,56 @@ def param_rischDE(fa, fd, G, D, T):
     a, (ba, bd), G, hn = prde_normal_denom(a, ga, gd, G, D, T)
     A, B, G, hs = prde_special_denom(a, ba, bd, G, D, T)
 
+    A, B, Q, R, n1 = prde_spde(A, B, Q, n, D, T)
+
+def limited_integrate_reduce(fa, fd, G, D, T):
+    """
+    Simpler version of step 1 & 2 for the limited integration problem.
+
+    Given a derivation D on k(t) and f, g1, ..., gn in k(t), return
+    (a, b, h, N, g, V) such that a, b, h in k[t], N is a non-negative integer,
+    g in k(t), V == [v1, ..., vm] in k(t)^m, and for any solution v in k(t),
+    c1, ..., cm in C of f == Dv + Sum(ci*wi, (i, 1, m)), p = v*h is in k<t>, and
+    p and the ci satisfy a*Dp + b*p == g + Sum(ci*vi, (i, 1, m)).  Furthermore,
+    if S1irr == Sirr, then p is in k[t], and if t is nonlinear or Liouvillian
+    over k, then deg(p) <= N.
+
+    So that the special part is always computed, this function calls the more
+    general prde_special_denom() automatically if it cannot determint that
+    S1irr == Sirr.  Furthermore, it will automatically call bound_degree() when
+    t is linear and non-Liouvillian, which for the transcendental case, implies
+    that Dt == a*t + b with for some a, b in k*.
+    """
+    t = T[-1]
+    d = D[-1]
+
+    dn, ds = splitfactor(fd, D, T)
+    E = [splitfactor(gd, D, T) for _, gd in G]
+    c = reduce(lambda i, j: i.lcm(j), (dn,) + zip(*E)[0]) # lcm(dn, en1, ..., enm)
+    hn = c.gcd(c.diff(t))
+    a = hn
+    b = -derivation(hn, D, T)
+    N = 0
+
+    g = get_case(d, t)
+    # These are the cases where we know that S1irr = Sirr, but there could be
+    # others, and this algorithm will need to be extended to handle them.
+    if g in ['base', 'primitive', 'exp', 'tan']:
+        hs = reduce(lambda i, j: i.lcm(j), (ds,) + zip(*E)[1]) # lcm(ds, es1, ..., esm)
+        a = hn*hs
+        b = -derivation(hn, D, T) - (hn*derivation(hs, D, T)).quo(hs)
+        mu = min(order_at_oo(fa, fd, t), min([order_at_oo(ga, gd, t) for
+            ga, gd in G]))
+        # So far, all the above are also nonlinear or Liouvillian, but if this
+        # changes, then this will need to be updated to call bound_degree()
+        # as per the docstring of this function (g == 'other_linear').
+        N = hn.degree(t) + hs.degree(t) + max(0, 1 - d.degree(t) - mu)
+    else:
+        # TODO: implement this
+        raise NotImplementedError
+
+    V = [(-a*hn*ga).cancel(gd, include=True) for ga, gd in G]
+    return (a, b, a, N, (a*hn*fa).cancel(fd, include=True), V)
 
 def parametric_log_deriv_heu(fa, fd, wa, wd, D, T):
     """

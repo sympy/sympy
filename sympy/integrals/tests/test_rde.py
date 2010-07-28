@@ -1,8 +1,9 @@
 """Most of these tests come from the examples in Bronstein's book."""
 from sympy import Poly, S, symbols, oo
 from sympy.integrals.risch import NonElementaryIntegral
-from sympy.integrals.rde import (order_at, weak_normalizer, normal_denom,
-    special_denom, bound_degree, spde, solve_poly_rde, no_cancel_equal, rischDE)
+from sympy.integrals.rde import (order_at, order_at_oo, weak_normalizer,
+    normal_denom, special_denom, bound_degree, spde, solve_poly_rde,
+    no_cancel_equal, rischDE)
 from sympy.utilities.pytest import raises
 from sympy.abc import x, t, z, n
 
@@ -18,6 +19,9 @@ def test_order_at():
     assert order_at(a, p2, t) == 0
     assert order_at(b, p2, t) == 3
     assert order_at(Poly(0, t), Poly(t, t), t) == oo
+    assert order_at_oo(Poly(t**2 - 1, t), Poly(t + 1), t) == \
+           order_at_oo(Poly(t - 1, t), Poly(1, t), t) == -1
+    assert order_at_oo(Poly(0, t), Poly(1, t), t) == oo
 
 def test_weak_normalizer():
     a = Poly((1 + x)*t**5 + 4*t**4 + (-1 - 3*x)*t**3 - 4*t**2 + (-2 + 2*x)*t, t)

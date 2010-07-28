@@ -2,7 +2,7 @@
 from sympy import Poly, Matrix
 from sympy.integrals.prde import (prde_normal_denom, prde_special_denom,
     prde_linear_constraints, constant_system, prde_spde, prde_no_cancel_b_large,
-    is_log_deriv_k_t_radical, parametric_log_deriv_heu)
+    limited_integrate_reduce, is_log_deriv_k_t_radical, parametric_log_deriv_heu)
 
 from sympy.abc import x, t, n
 
@@ -79,6 +79,12 @@ def test_prde_no_cancel():
     assert prde_no_cancel_b_large(Poly(1, x), [Poly(x**3, x), Poly(1, x)], 3, D, [x]) == \
         ([Poly(x**3 - 3*x**2 + 6*x - 6, x), Poly(1, x)], Matrix([[1, 0, -1, 0],
                                                                  [0, 1, 0, -1]]))
+def test_limited_integrate_reduce():
+    D = [Poly(1, x), Poly(1/x, t)]
+    assert limited_integrate_reduce(Poly(x, t), Poly(t**2, t), [(Poly(x, t),
+    Poly(t, t))], D, [x, t]) == \
+        (Poly(t, t), Poly(-1/x, t), Poly(t, t), 1, (Poly(x, t), Poly(1, t)),
+        [(Poly(-x*t, t), Poly(1, t))])
 
 def test_is_log_deriv_k_t_radical():
     pass
