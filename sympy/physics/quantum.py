@@ -2,6 +2,7 @@ from sympy import (
     Expr, Basic, sympify, Add, Mul, Pow, 
     I, Function, Integer, S, sympify, Matrix
 )
+from sympy.core.decorators import call_highest_priority
 from sympy.physics.hilbert import *
 
 """
@@ -94,6 +95,8 @@ class State(Expr, Representable):
     All code must check for this!
     """
 
+    _op_priority = 100.0
+
     hilbert_space = HilbertSpace()
 
     def __new__(cls, name, kind='ket'):
@@ -129,15 +132,31 @@ class State(Expr, Representable):
     def is_symbolic(self):
         return True
 
+    @call_highest_priority('__rmul__')
     def __mul__(self, other):
-        qmul = Mul(self, other)
-        if validate_mul(qmul):
-            return qmul
+        return _qmul(self, other)
 
+    @call_highest_priority('__mul__')
     def __rmul__(self, other):
-        qrmul = Mul(other, self)
-        if validate_mul(qrmul):
-            return qrmul
+        return _qmul(other, self)
+
+    @call_highest_priority('__radd__')
+    def __add__(self, other):
+        _validate_add(self, other)
+        return Add(self, other)
+
+    @call_highest_priority('__add__')
+    def __radd__(self, other):
+        _validate_add(self, other)
+        return Add(other, self)
+
+    @call_highest_priority('__rpow__')
+    def __pow__(self, other):
+        raise NotImplementedError("Can't do Tensor Products of States Yet")
+
+    @call_highest_priority('__pow__')
+    def __rpow__(self, other):
+        raise QuantumError("Can't raise %s to a State" % (other.__class__.__name__,))
 
     def _print_name(self, printer, *args):
         return printer._print(self.args[0], *args)
@@ -186,7 +205,6 @@ class State(Expr, Representable):
         pform = prettyForm(*pform.right(prettyForm(self.rbracket)))
         return pform
 
-
 def Ket(name):
     return State(name, kind='ket')
 
@@ -205,6 +223,8 @@ class Operator(Expr, Representable):
     A
     """
 
+    _op_priority = 100.0
+
     hilbert_space = HilbertSpace()
 
     def __new__(cls, name):
@@ -216,15 +236,34 @@ class Operator(Expr, Representable):
     def name(self):
         return self.args[0]
 
+    @call_highest_priority('__rmul__')
     def __mul__(self, other):
-        qmul = Mul(self, other)
-        if validate_mul(qmul):
-            return qmul
+        return _qmul(self, other)
 
+    @call_highest_priority('__mul__')
     def __rmul__(self, other):
-        qrmul = Mul(other, self)
-        if validate_mul(qrmul):
-            return qrmul
+        return _qmul(other, self)
+
+    @call_highest_priority('__radd__')
+    def __add__(self, other):
+        _validate_add(self, other)
+        return Add(self, other)
+
+    @call_highest_priority('__add__')
+    def __radd__(self, other):
+        _validate_add(self, other)
+        return Add(other, self)
+
+    @call_highest_priority('__rpow__')
+    def __pow__(self, other):
+        if not isinstance(other, (Mul, Add, Pow, Number, Symbol)):
+            raise QuantumError("Can't raise Operator to %s" % (other.__class__.__name__,))
+        return Pow(self, other)
+
+    @call_highest_priority('__pow__')
+    def __rpow__(self, other):
+        #??operator**operator??
+        pass
 
     def doit(self,**kw_args):
         return self
@@ -238,18 +277,27 @@ class Operator(Expr, Representable):
     def _pretty(self, printer, *args):
         return printer._print(self.name, *args)
 
-
 class InnerProduct(Expr):
     """
     An unevaluated inner product between a Bra and Ket.
     """
 
     def __new__(cls, bra, ket):
-        r = cls.eval(*args)
+        if not (bra and ket):
+            raise Exception('InnerProduct requires a leading Bra and a trailing Ket')
+        assert (isinstance(bra, State) and bra.kind == 'bra'), 'First argument must be a Bra'
+        assert (isinstance(ket, State) and ket.kind == 'ket'), 'Second argument must be a Ket'
+        r = cls.eval(bra, ket)
         if isinstance(r, Expr):
             return r
         obj = Expr.__new__(cls, bra, ket)
         return obj
+
+    @classmethod
+    def eval(cls, bra, ket):
+        # We need to decide what to do here. We probably will ask if the
+        # bra and ket know how to do the inner product.
+        return None
 
     @property
     def bra(self):
@@ -262,36 +310,16 @@ class InnerProduct(Expr):
     def _eval_dagger(self):
         return InnerProduct(Dagger(self.ket), Dagger(self.bra))
 
-    def _innerproduct_printer(self, printer, *args):
-        print_elements = []
-        for arg in self.args:
-            print_elements.append(printer._print(arg, *args))
-        return print_elements
-
     def _sympyrepr(self, printer, *args):
-        innerproduct_reprs = self._innerproduct_printer(printer, *args)
-        return '%s(%s)' % (self.__class__.__name__, ', '.join(innerproduct_reprs))
+        return '%s(%s,%s)' % (self.__class__.__name__, printer._print(self.bra, *args), printer._print(self.ket, *args))
 
     def _sympystr(self, printer, *args):
-        if len(self.args) == 2:
-            sbra = str(self.bra)
-            sket = str(self.ket)
-            return '%s|%s' % (sbra[:-1], sket[1:])
-        else:
-            innerproduct_strs = self._innerproduct_printer(printer, *args)
-            return '%s' % ''.join(innerproduct_strs)
+        sbra = str(self.bra)
+        sket = str(self.ket)
+        return '%s|%s' % (sbra[:-1], sket[1:])
 
     def _pretty(self, printer, *args):
-#        if len(self.args) == 2:
-#            return '<%s|%s>' % (self.bra._pretty(printer, *args), self.ket._pretty(printer, *args))
-#        else:
-            pretty_args = None
-            for arg in self.args:
-                if pretty_args != None:
-                    pretty_args = pretty_args*arg._pretty(printer, *args)
-                else:
-                    pretty_args = arg._pretty(printer, *args)
-            return pretty_args
+        return self.bra._pretty(printer, *args)*self.ket._pretty(printer, *args)
 
 
 class OuterProduct(Expr):
@@ -302,8 +330,8 @@ class OuterProduct(Expr):
     def __new__(cls, ket, bra):
         if not (ket and bra):
             raise Exception('OuterProduct requires a leading Ket and a trailing Bra')
-        assert isinstance(ket, Ket), 'First argument must be a Ket'
-        assert isinstance(bra, Bra), 'Second argument must be a Bra'
+        assert (isinstance(ket, State) and ket.kind == 'ket'), 'First argument must be a Ket'
+        assert (isinstance(bra, State) and bra.kind == 'bra'), 'Second argument must be a Bra'
         r = cls.eval(ket, bra)
         if isinstance(r, Expr):
             return r
@@ -571,80 +599,54 @@ def represent(expr, basis, **options):
         result = represent(arg, basis, **options)*result
     return result
 
-
-def validate_mul(expr):
-    """
-    Check to see if the Mul containing quantum objects is valid and return True.
-
-    * Only works for simple Muls (e.g. a*b*c*d) right now.
-    """
-    expr = split_commutative_parts(expr)[1] #obtain noncommutative parts of mul
-    old_arg = None
-    for arg in expr:
-        if old_arg != None:
-            if isinstance(old_arg, State) and old_arg.kind == 'ket' and isinstance(arg, State) and arg.kind == 'ket':
-                raise NotImplementedError
-            if isinstance(old_arg, State) and old_arg.kind == 'ket' and isinstance(arg, State) and arg.kind == 'ket':
-                raise NotImplementedError
-            if (isinstance(old_arg, Operator) or isinstance(old_arg, OuterProduct)) and isinstance(arg, State) and arg.kind == 'bra':
-                raise Exception('(Operator or OuterProduct)*Bra is invalid in quantum mechanics.')
-            if isinstance(old_arg, State) and old_arg.kind == 'ket' and (isinstance(arg, Operator) or isinstance(arg, OuterProduct)):
-                raise Exception('Ket*(Operator or OuterProduct) is invalid in quantum mechanics.')
-        old_arg = arg
-    return True
-
-
-def combine_innerproduct(expr):
-    """
-    Combines a (valid) Mul of quantum objects into inner products (if possible).
-
-    * Only works for simple Muls (e.g. a*b*c*d) right now.
-    """
-    if validate_mul(expr):
-        new_expr = Mul()
-        inner_product = []
-        left_of_bra = False
-        for arg in expr.args:
-            if isinstance(arg, Bra):
-                left_of_bra = True
-                inner_product.append(arg)
-            elif (isinstance(arg, State) and arg.kind == 'ket' and left_of_bra == True):
-                inner_product.append(arg)
-                new_expr = new_expr*InnerProduct(*inner_product)
-                inner_product = []
-                left_of_bra = False
-            elif left_of_bra == True:
-                inner_product.append(arg)
-            else:
-                new_expr = new_expr*arg
-        return new_expr*Mul(*inner_product)
-
-
-def combine_outerproduct(expr):
-    """
-    Combines a (valid) Mul of quantum objects into outer products (if possible).
-
-    * Only works for simple Muls (e.g. a*b*c*d) right now.
-    """
-    if validate_mul(expr):
-        old_arg = None
-        new_expr = Mul()
-        left_of_bra = False
-        for arg in expr.args:
-            if old_arg != None:
-                if (isinstance(old_arg, State) and old_arg.kind == 'ket' and isinstance(arg, State) and old_arg.kind == 'bra'):
-                    new_expr = new_expr*OuterProduct(old_arg, arg)
-                    left_of_bra = True
-                elif left_of_bra == True:
-                    left_of_bra = False
-                else:
-                    new_expr = new_expr*old_arg
-            old_arg = arg
-        if left_of_bra == True:
-            return new_expr
+def _validate_add(expr1, expr2):
+    if isinstance(expr1, Add):
+        _validate_add(expr1.args[-1], expr2)
+        return 
+    elif isinstance(expr2, Add):
+        _validate_add(expr1, expr2.args[0])
+        return
+    else:
+        if isinstance(expr1, State) and isinstance(expr2, State):
+            if expr1.kind == expr2.kind:
+                return
+        elif isinstance(expr1, Operator) and isinstance(expr2, Operator):
+            return
         else:
-            return new_expr*old_arg
+            raise QuantumError("Can't add %s and %s" % (expr1.__class__.__name__, expr2.__class__.__name__))
 
+def _qmul(expr1, expr2):
+    """
+    Check to see if arg1 or arg2 can combine to be a valid Mul.
+    """
+    def _validate(expr, mul, i):
+        if isinstance(mul.args[i], State) and isinstance(expr, State):
+            if mul.args[i].kind == 'bra' and expr.kind == 'bra': 
+                raise NotImplementedError
+            elif mul.args[i].kind == 'ket' and expr.kind == 'ket':
+                raise NotImplementedError
+        if (isinstance(mul.args[i], Operator) or isinstance(mul.args[i], OuterProduct)) and (isinstance(expr, State) and expr.kind == 'bra'):
+            raise QuantumError('(Operator or OuterProduct)*Bra is invalid in quantum mechanics.')
+        if (isinstance(mul.args[i], State) and mul.args[i].kind == 'ket') and (isinstance(expr, Operator) or isinstance(expr, OuterProduct)):
+            raise QuantumError('Ket*(Operator or OuterProduct) is invalid in quantum mechanics.')
+        if i == -1:
+            new_args = mul.args[:i] + (_qmul(mul.args[i], expr), )
+            return Mul(*new_args)
+        else:
+            new_args = (_qmul(expr, mul.args[i]), ) + mul.args[1:]
+            return Mul(*new_args)
+
+    if isinstance(expr1, Mul):
+        return _validate(expr2, expr1, -1)     
+    elif isinstance(expr2, Mul):
+        return _validate(expr1, expr2, 0)
+    else:
+        if (isinstance(expr1, State) and expr1.kind == 'bra') and (isinstance(expr2, State) and expr2.kind == 'ket'):
+            return InnerProduct(expr1, expr2)
+        elif (isinstance(expr1, State) and expr1.kind == 'ket') and (isinstance(expr2, State) and expr2.kind == 'bra'):
+            return OuterProduct(expr1, expr2)
+        else:
+            return Mul(expr1, expr2)
 
 def split_product(expr):
     """
@@ -653,21 +655,17 @@ def split_product(expr):
 
     * Only works for simple Muls (e.g. a*b*c*d) right now.
     """
-    if validate_mul(expr):
-        new_expr = Mul()
-        for arg in expr.args:
-            if isinstance(arg, InnerProduct):
-                new_expr = new_expr*Mul(*arg.args)
-            elif isinstance(arg, OuterProduct):
-                new_expr = new_expr*Mul(*arg.args)
-            else:
-                new_expr = new_expr*arg
-        return new_expr
-
+    new_expr = Mul()
+    for arg in expr.args:
+        if isinstance(arg, InnerProduct):
+            new_expr = new_expr*Mul(*arg.args)
+        elif isinstance(arg, OuterProduct):
+            new_expr = new_expr*Mul(*arg.args)
+        else:
+            new_expr = new_expr*arg
+    return new_expr
 
 def split_commutative_parts(m):
     c_part = [p for p in m.args if p.is_commutative]
     nc_part = [p for p in m.args if not p.is_commutative]
     return c_part, nc_part
-
-
