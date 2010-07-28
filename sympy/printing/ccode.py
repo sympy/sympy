@@ -87,7 +87,7 @@ class CCodePrinter(StrPrinter):
                 for expr in sorted(not_c, key=str):
                     frontlines.append("// %s" % expr)
             for name, value in sorted(self._number_symbols, key=str):
-                frontlines.append("double const %s = %s" % (name, value))
+                frontlines.append("double const %s = %s;" % (name, value))
             lines = frontlines + lines
             lines = self.indent_code(lines)
             result = "\n".join(lines)
