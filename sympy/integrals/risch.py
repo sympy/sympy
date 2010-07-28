@@ -456,7 +456,7 @@ def integrate_hyperexponential(a, d, D, T, Tfuncs):
     g1, h, r = hermite_reduce(a, d, D, T)
     g2, b = residue_reduce(h[0], h[1], D, T, z=z)
     if not b:
-        return ((g1[0].as_basic()/g2[1].as_basic()).subs(s) +
+        return ((g1[0].as_basic()/g1[1].as_basic()).subs(s) +
             residue_reduce_to_basic(g2, T, z, Tfuncs), b)
 
     # p should be a polynomial in t and 1/t, because Sirr == k[t, 1/t]
