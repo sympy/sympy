@@ -405,10 +405,13 @@ class FCodePrinter(StrPrinter):
         cont_padding = 0
         tabwidth = 3
         new_code = []
-        for i in range(len(code)):
+        for i, line in enumerate(code):
+            if not line:
+                new_code.append(line)
+                continue
             level -= decrease[i]
             padding = " "*(level*tabwidth + cont_padding)
-            new_code.append("%s%s" % (padding, code[i]))
+            new_code.append("%s%s" % (padding, line))
 
             if continuation[i]:
                 cont_padding = 2*tabwidth

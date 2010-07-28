@@ -307,6 +307,9 @@ class CCodePrinter(StrPrinter):
         pretty = []
         level = 0
         for n, line in enumerate(code):
+            if not line:
+                pretty.append(line)
+                continue
             level -= decrease[n]
             pretty.append("%s%s" % (tab*level, line))
             level += increase[n]
