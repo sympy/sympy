@@ -422,10 +422,10 @@ def integrate_hyperexponential_polynomial(p, D, T, z):
             a = p.as_poly(t).nth(i)
 
         aa, ad = a.as_numer_denom()
-        aa, ad = aa.as_poly(t1), ad.as_poly(t1)
+        aa, ad = aa.as_poly(t1, field=True), ad.as_poly(t1, field=True)
         iDt = Poly(i, t1)*d.quo(Poly(t, t)).as_poly(t1)
         iDta, iDtd = iDt.as_basic().as_numer_denom()
-        iDta, iDtd = iDta.as_poly(t1), iDtd.as_poly(t1)
+        iDta, iDtd = iDta.as_poly(t1, field=True), iDtd.as_poly(t1, field=True)
         try:
             va, vd = rischDE(iDta, iDtd, Poly(aa, t1), Poly(ad, t1), D1, T1)
         except NonElementaryIntegral:

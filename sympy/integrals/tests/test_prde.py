@@ -82,6 +82,9 @@ def test_prde_no_cancel():
     # b small
     D = [Poly(1, x), Poly(t**3 + 1, t)]
     # XXX: Is there a better example of a monomial with D.degree() > 2?
+
+    # My original q was t**4 + t + 1, but this solution implies q == t**4
+    # (c1 = 4), with some of the ci for the original q equal to 0.
     G = [Poly(t**6, t), Poly(x*t**5, t), Poly(t**3, t), Poly(x*t**2, t), Poly(1 + x, t)]
     assert prde_no_cancel_b_small(Poly(x*t, t), G, 4, D, [x, t]) == \
         ([Poly(t**4/4 - x/12*t**3 + x**2/24*t**2 + (-S(11)/12 - x**3/24)*t + x/24, t),
@@ -96,6 +99,7 @@ def test_prde_no_cancel():
                                          [0, 0,       1, 0, 0,  0,  0, -1,  0,  0],
                                          [0, 0,       0, 1, 0,  0,  0,  0, -1,  0],
                                          [0, 0,       0, 0, 1,  0,  0,  0,  0, -1]]))
+
     # TODO: Add test for deg(b) <= 0 with b small
 
 def test_limited_integrate_reduce():

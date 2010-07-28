@@ -144,6 +144,9 @@ def test_integrate_hyperexponential():
     [lambda x: exp(exp(x)), exp]) == \
         (exp(2*exp(x)), True)
 
+    D = [Poly(1, x), Poly(t, t)]
+    assert integrate_hyperexponential(Poly(x**2/2*t, t), Poly(1, t), D, [x, t], [exp]) == \
+        (x**2*exp(x)/2 - x*exp(x) + exp(x), True)
 
 def test_integrate_hypertangent_polynomial():
     D = [Poly(1, x), Poly(t**2 + 1, t)]
