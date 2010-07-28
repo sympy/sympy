@@ -134,20 +134,24 @@ class State(Expr, Representable):
 
     @call_highest_priority('__rmul__')
     def __mul__(self, other):
+        compare_hilbert(self, other)
         return _qmul(self, other)
 
     @call_highest_priority('__mul__')
     def __rmul__(self, other):
+        compare_hilbert(other, self)
         return _qmul(other, self)
 
     @call_highest_priority('__radd__')
     def __add__(self, other):
+        compare_hilbert(self, other)
         _validate_add(self, other)
         return Add(self, other)
 
     @call_highest_priority('__add__')
     def __radd__(self, other):
-        _validate_add(self, other)
+        compare_hilbert(other, self)
+        _validate_add(other, self)
         return Add(other, self)
 
     @call_highest_priority('__rpow__')
@@ -238,20 +242,24 @@ class Operator(Expr, Representable):
 
     @call_highest_priority('__rmul__')
     def __mul__(self, other):
+        compare_hilbert(self, other)
         return _qmul(self, other)
 
     @call_highest_priority('__mul__')
     def __rmul__(self, other):
+        compare_hilbert(other, self)
         return _qmul(other, self)
 
     @call_highest_priority('__radd__')
     def __add__(self, other):
+        compare_hilbert(self, other)
         _validate_add(self, other)
         return Add(self, other)
 
     @call_highest_priority('__add__')
     def __radd__(self, other):
-        _validate_add(self, other)
+        compare_hilbert(other, self)
+        _validate_add(other, self)
         return Add(other, self)
 
     @call_highest_priority('__rpow__')
