@@ -222,7 +222,7 @@ def special_denom(a, ba, bd, ca, cd, D, T, case='auto'):
     # (a*p**N, (b + n*a*Dp/p)*p**N, c*p**(N - n), p**-n)
     return (A, B, C, h)
 
-def bound_degree(a, b, cG, D, T, case='auto', parametric=False):
+def bound_degree(a, b, cQ, D, T, case='auto', parametric=False):
     """
     Bound on polynomial solutions.
 
@@ -232,8 +232,8 @@ def bound_degree(a, b, cG, D, T, case='auto', parametric=False):
     c1, ..., cm in Const(k) and q in k[t] of a*Dq + b*q == Sum(ci*gi, (i, 1, m))
     when parametric=True.
 
-    For parametric=False, cG is c, a Poly; for parametric=True, cG is G ==
-    [g1, ..., gm], a list of Polys.
+    For parametric=False, cQ is c, a Poly; for parametric=True, cQ is Q ==
+    [q1, ..., qm], a list of Polys.
 
     This constitutes step 3 of the outline given in the rde.py docstring.
     """
@@ -249,9 +249,9 @@ def bound_degree(a, b, cG, D, T, case='auto', parametric=False):
 
     # The parametic and regular cases are identical, except for this part
     if parametric:
-        dc = max([i.degree(t) for i in cG])
+        dc = max([i.degree(t) for i in cQ])
     else:
-        dc = cG.degree(t)
+        dc = cQ.degree(t)
 
     alpha = -b.as_poly(t).LC().as_basic()/a.as_poly(t).LC().as_basic()
     alpha = cancel(alpha)
@@ -456,20 +456,31 @@ def no_cancel_equal(b, c, n, D, T):
 
     return q
 
-def solve_poly_rde(b, c, n, D, T):
+def solve_poly_rde(b, cQ, n, D, T, parametric=False):
     """
     Solve a Polynomial Risch Differential Equation with degree bound n.
 
     This constitutes step 4 of the outline given in the rde.py docstring.
+
+    For parametric=False, cQ is c, a Poly; for parametric=True, cQ is Q ==
+    [q1, ..., qm], a list of Polys.
     """
+    from sympy.integrals.prde import (prde_no_cancel_b_large,
+        prde_no_cancel_b_small)
+
     t = T[-1]
     d = D[-1]
 
     if not b.is_zero and (d.is_one or b.degree(t) > max(0, d.degree(t) - 1)):
-        return no_cancel_b_large(b, c, n, D, T)
+        if parametric:
+            return prde_no_cancel_b_large(b, cQ, n, D, T)
+        return no_cancel_b_large(b, cQ, n, D, T)
 
     elif (b.is_zero or b.degree(t) < d.degree(t) - 1) and (d.is_one or d.degree(t) >= 2):
-        R = no_cancel_b_small(b, c, n, D, T)
+        if parametric:
+            return prde_no_cancel_b_small(b, cQ, n, D, T)
+
+        R = no_cancel_b_small(b, cQ, n, D, T)
 
         if isinstance(R, Poly):
             return R
@@ -480,13 +491,16 @@ def solve_poly_rde(b, c, n, D, T):
             D = D[:-1]
             t = T[-1]
             b0, c0 = b0.as_poly(t), c0.as_poly(t)
-            assert b0
-            assert c0
+            assert b0 is not None
+            assert c0 is not None
             y = solve_poly_rde(b0, c0, n, D, T).as_poly(t)
             return h + y
 
     elif d.degree(t) >= 2 and b.degree(t) == d.degree(t) - 1 and \
         n > -b.as_poly(t).LC()/d.as_poly(t).LC():
+
+        if parametric:
+            raise NotImplementedError("prde_no_cancel_b_equal() is not yet implemented.")
 
         R = no_cancel_equal(b, c, n, D, T)
 
@@ -499,6 +513,8 @@ def solve_poly_rde(b, c, n, D, T):
             return h + y
 
     else:
+        if parametric:
+            raise NotImplementedError("Remaining cases for Poly PRDE not yet implemented.")
         raise NotImplementedError("Remaining cases for Poly RDE not yet implemented.")
 
 def rischDE(fa, fd, ga, gd, D, T):
@@ -529,6 +545,6 @@ def rischDE(fa, fd, ga, gd, D, T):
         n = oo
 
     B, C, m, alpha, beta = spde(A, B, C, n, D, T)
-    y = solve_poly_rde(B, C, n, D, T)
+    y = solve_poly_rde(B, C, m, D, T)
 
     return (alpha*y + beta, hn*hs)

@@ -124,6 +124,9 @@ def test_integrate_hyperexponential():
     assert integrate_hyperexponential(a, d, D, [x, t1, t], [lambda x: exp(tan(x)), tan]) == \
         (exp(2*tan(x))*tan(x) + Integral(1 + tan(x)**2, x) + exp(tan(x)), True)
         # (exp(2*tan(x))*tan(x) + tan(x) + exp(tan(x)), True)
+    a = Poly((t1**3 + (x + 1)*t1**2 + t1 + x + 2)*t, t)
+    assert integrate_hyperexponential(a, d, D, [x, t1, t], [lambda x: exp(tan(x)), tan]) == \
+        (exp(tan(x))*tan(x) + x*exp(tan(x)), True)
 
     a = Poly(t, t)
     d = Poly(1, t)

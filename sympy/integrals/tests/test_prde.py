@@ -2,8 +2,8 @@
 from sympy import Poly, Matrix, S
 from sympy.integrals.prde import (prde_normal_denom, prde_special_denom,
     prde_linear_constraints, constant_system, prde_spde, prde_no_cancel_b_large,
-    prde_no_cancel_b_small, limited_integrate_reduce, is_log_deriv_k_t_radical,
-    parametric_log_deriv_heu)
+    prde_no_cancel_b_small, limited_integrate_reduce, limited_integrate,
+    is_log_deriv_k_t_radical, parametric_log_deriv_heu)
 
 from sympy.abc import x, t, n
 
@@ -108,6 +108,13 @@ def test_limited_integrate_reduce():
     Poly(t, t))], D, [x, t]) == \
         (Poly(t, t), Poly(-1/x, t), Poly(t, t), 1, (Poly(x, t), Poly(1, t)),
         [(Poly(-x*t, t), Poly(1, t))])
+
+def test_limited_integrate():
+    D = [Poly(1, x)]
+    G = [(Poly(x, x), Poly(x + 1, x))]
+    assert limited_integrate(Poly(-(1 + x + 5*x**2 - 3*x**3), x),
+    Poly(1 - x - x**2 + x**3, x), G, D, [x]) == \
+        (Poly(x**2 - x + 2, x), Poly(x - 1, x))
 
 def test_is_log_deriv_k_t_radical():
     pass

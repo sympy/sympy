@@ -26,7 +26,7 @@ from sympy.integrals.risch import (gcdex_diophantine, derivation, get_case,
     NonElementaryIntegral, residue_reduce, splitfactor,
     residue_reduce_derivation)
 from sympy.integrals.rde import (order_at, order_at_oo, weak_normalizer,
-    bound_degree)
+    bound_degree, spde, solve_poly_rde)
 
 #    from pudb import set_trace; set_trace() # Debugging
 
@@ -364,6 +364,42 @@ def limited_integrate_reduce(fa, fd, G, D, T):
 
     V = [(-a*hn*ga).cancel(gd, include=True) for ga, gd in G]
     return (a, b, a, N, (a*hn*fa).cancel(fd, include=True), V)
+
+def limited_integrate(fa, fd, G, D, T):
+    """
+    Solves the limited integration problem:  f = Dv + Sum(ci*wi, (i, 1, n))
+    """
+    from pudb import set_trace; set_trace() # Debugging
+    t = T[-1]
+
+    A, B, h, N, g, V = limited_integrate_reduce(fa, fd, G, D, T)
+    V = [g] + V
+    g = A.gcd(B)
+    A, B, V = A.quo(g), B.quo(g), [via.cancel(vid*g, include=True) for via, vid in V]
+    Q, M = prde_linear_constraints(A, B, V, D, T)
+    M, _ = constant_system(M, zeros([M.rows, 1]), D, T)
+    l = M.nullspace()
+    if M == Matrix() or len(l) > 1:
+        # Continue with param_rischDE()
+        raise NotImplementedError
+    elif len(l) == 0:
+        raise NonElementaryIntegral
+    elif len(l) == 1:
+        # The c1 == 1.  In this case, we can assume a normal Risch DE
+        if l[0][0].is_zero:
+            raise NonElementaryIntegral
+        else:
+            l[0] *= 1/l[0][0]
+            C = sum([Poly(i, t)*q for (i, q) in zip(l[0], Q)])
+            # Custom version of rischDE() that uses already computed denominator
+            # and degree bound from above.
+            B, C, m, alpha, beta = spde(A, B, C, N, D, T)
+            y = solve_poly_rde(B, C, m, D, T)
+
+            return (alpha*y + beta, h)
+    else:
+        raise NotImplementedError
+
 
 def parametric_log_deriv_heu(fa, fd, wa, wd, D, T):
     """
