@@ -434,8 +434,6 @@ def integrate_hyperexponential_polynomial(p, D, T, z):
             qa = qa*vd + va*Poly(t**i)*qd
             qd *= vd
 
-    # TODO: Add integrate(p.as_poly(t).nth(0)) to make it correct!
-
     return (qa, qd, b)
 
 def integrate_hyperexponential(a, d, D, T, Tfuncs):
@@ -459,7 +457,7 @@ def integrate_hyperexponential(a, d, D, T, Tfuncs):
     g2, b = residue_reduce(h[0], h[1], D, T, z=z)
     if not b:
         return ((g1[0].as_basic()/g2[1].as_basic()).subs(s) +
-            residue_reduce_to_basic(g2, t, z, tfunc))
+            residue_reduce_to_basic(g2, T, z, Tfuncs), b)
 
     # p should be a polynomial in t and 1/t, because Sirr == k[t, 1/t]
     # h - Dg2 + r
@@ -517,8 +515,8 @@ def integrate_nonlinear_no_specials(a, d, D, T, Tfuncs):
     g1, h, r = hermite_reduce(a, d, D, T)
     g2, b = residue_reduce(h[0], h[1], D, T, z=z)
     if not b:
-        return ((g1[0].as_basic()/g2[1].as_basic()).subs(s) +
-            residue_reduce_to_basic(g2, t, z, tfunc))
+        return ((g1[0].as_basic()/g1[1].as_basic()).subs(s) +
+            residue_reduce_to_basic(g2, T, z, Tfuncs), b)
 
     # Because f has no specials, this should be a polynomial in t, or else
     # there is a bug.
