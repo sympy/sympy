@@ -263,6 +263,48 @@ def prde_no_cancel_b_large(b, Q, n, D, T):
 
     return (H, A)
 
+def prde_no_cancel_b_small(b, Q, n, D, T):
+    """
+    Parametric Poly Risch Differential Equation - No cancelation: deg(b) small enough.
+
+    Given a derivation D on k[t], n in ZZ, and b, q1, ..., qm in k[t] with
+    deg(b) < deg(D) - 1 and either D == d/dt or deg(D) >= 2, returns
+    h1, ..., hr in k[t] and a matrix A with coefficients in Const(k) such that
+    if c1, ..., cm in Const(k) and q in k[t] satisfy deg(q) <= n and
+    Dq + b*q == Sum(ci*qi, (i, 1, m)) then q = Sum(dj*hj, (j, 1, r)) where
+    d1, ..., dr in Const(k) and A*Matrix([[c1, ..., cm, d1, ..., dr]]).T == 0.
+    """
+    t = T[-1]
+    d = D[-1]
+    m = len(Q)
+    H = [Poly(0, t)]*m
+
+    while n > 0:
+        for i in range(m):
+            si = Q[i].nth(n + d.degree(t) - 1)/(n*d.LC())
+            sitn = Poly(si*t**n, t)
+            H[i] = H[i] + sitn
+            Q[i] = Q[i] - derivation(sitn, D, T) - b*sitn
+        n -= 1
+
+    if b.degree(t) > 0:
+        for i in range(m):
+            si = Poly(Q[i].nth(b.degree(t))/b.LC(), t)
+            H[i] = H[i] + si
+            Q[i] = Q[i] - derivation(si, D, T) - b*si
+        if all(qi.is_zero for qi in Q):
+            dc = -1
+            M = Matrix()
+        else:
+            dc = max([qi.degree(t) for qi in Q])
+            M = Matrix(dc + 1, m, lambda i, j: Q[j].nth(i))
+        A, u = constant_system(M, zeros([dc + 1, 1]), D, T)
+        c = eye(m)
+        A = A.row_join(zeros([A.rows, m])).col_join(c.row_join(-c))
+        return (H, A)
+    else:
+        # TODO: implement this (requires recursive param_rischDE() call)
+        raise NotImplementedError
 
 def param_rischDE(fa, fd, G, D, T):
     """

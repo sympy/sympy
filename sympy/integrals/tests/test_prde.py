@@ -1,8 +1,9 @@
 """Most of these tests come from the examples in Bronstein's book."""
-from sympy import Poly, Matrix
+from sympy import Poly, Matrix, S
 from sympy.integrals.prde import (prde_normal_denom, prde_special_denom,
     prde_linear_constraints, constant_system, prde_spde, prde_no_cancel_b_large,
-    limited_integrate_reduce, is_log_deriv_k_t_radical, parametric_log_deriv_heu)
+    prde_no_cancel_b_small, limited_integrate_reduce, is_log_deriv_k_t_radical,
+    parametric_log_deriv_heu)
 
 from sympy.abc import x, t, n
 
@@ -75,10 +76,28 @@ def test_prde_no_cancel():
     assert prde_no_cancel_b_large(Poly(1, x), [Poly(x**2, x), Poly(1, x)], 2, D, [x]) == \
         ([Poly(x**2 - 2*x + 2, x), Poly(1, x)], Matrix([[1, 0, -1, 0],
                                                         [0, 1, 0, -1]]))
-
     assert prde_no_cancel_b_large(Poly(1, x), [Poly(x**3, x), Poly(1, x)], 3, D, [x]) == \
         ([Poly(x**3 - 3*x**2 + 6*x - 6, x), Poly(1, x)], Matrix([[1, 0, -1, 0],
                                                                  [0, 1, 0, -1]]))
+    # b small
+    D = [Poly(1, x), Poly(t**3 + 1, t)]
+    # XXX: Is there a better example of a monomial with D.degree() > 2?
+    G = [Poly(t**6, t), Poly(x*t**5, t), Poly(t**3, t), Poly(x*t**2, t), Poly(1 + x, t)]
+    assert prde_no_cancel_b_small(Poly(x*t, t), G, 4, D, [x, t]) == \
+        ([Poly(t**4/4 - x/12*t**3 + x**2/24*t**2 + (-S(11)/12 - x**3/24)*t + x/24, t),
+        Poly(x/3*t**3 - x**2/6*t**2 + (-S(1)/3 + x**3/6)*t - x/6, t), Poly(t, t),
+        Poly(0, t), Poly(0, t)], Matrix([[1, 0,      -1, 0, 0,  0,  0,  0,  0,  0],
+                                         [0, 1, -S(1)/4, 0, 0,  0,  0,  0,  0,  0],
+                                         [0, 0,       0, 0, 0,  0,  0,  0,  0,  0],
+                                         [0, 0,       0, 1, 0,  0,  0,  0,  0,  0],
+                                         [0, 0,       0, 0, 1,  0,  0,  0,  0,  0],
+                                         [1, 0,       0, 0, 0, -1,  0,  0,  0,  0],
+                                         [0, 1,       0, 0, 0,  0, -1,  0,  0,  0],
+                                         [0, 0,       1, 0, 0,  0,  0, -1,  0,  0],
+                                         [0, 0,       0, 1, 0,  0,  0,  0, -1,  0],
+                                         [0, 0,       0, 0, 1,  0,  0,  0,  0, -1]]))
+    # TODO: Add test for deg(b) <= 0 with b small
+
 def test_limited_integrate_reduce():
     D = [Poly(1, x), Poly(1/x, t)]
     assert limited_integrate_reduce(Poly(x, t), Poly(t**2, t), [(Poly(x, t),
