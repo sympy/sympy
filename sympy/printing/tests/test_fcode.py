@@ -260,21 +260,15 @@ def test_loops():
     printer = FCodePrinter({ 'source_format': 'free', 'assign_to':y, 'human':1})
 
     expected = (
-            '! Not Fortran:\n'
-            '! A(i, j)\n'
-            '! i\n'
-            '! j\n'
-            '! x(j)\n'
-            '! y(i)\n'
             'do i = 1, m\n'
             '   do j = 1, n\n'
             '      y(i) = %(rhs)s\n'
             '   end do\n'
             'end do'
-            )% {'rhs': str(A*x)}
-    assert str(A*x) == 'A(i, j)*x(j)' or str(A*x) == 'x(j)*A(i, j)'
+            )
     code = printer.doprint(A*x)
-    assert expected == code
+    assert (code == expected % {'rhs': 'A(i, j)*x(j)'} or
+            code == expected % {'rhs': 'x(j)*A(i, j)'})
 
 def test_derived_classes():
     class MyFancyFCodePrinter(FCodePrinter):

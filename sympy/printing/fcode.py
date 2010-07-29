@@ -118,17 +118,9 @@ class FCodePrinter(StrPrinter):
         # Setup loops if expression contain Indexed objects
         openloop, closeloop, local_ints = self._get_loop_opening_ending_ints(expr)
 
-        self._not_fortran |= set(local_ints)
-
         # the lhs may contain loops that are not in the rhs
         lhs = self._settings['assign_to']
         if lhs:
-            open_lhs, close_lhs, lhs_ints = self._get_loop_opening_ending_ints(lhs)
-            for n,ind in enumerate(lhs_ints):
-                if ind not in self._not_fortran:
-                    self._not_fortran.add(ind)
-                    openloop.insert(0,open_lhs[n])
-                    closeloop.append(close_lhs[n])
             lhs_printed = self._print(lhs)
 
         lines = []
@@ -276,6 +268,13 @@ class FCodePrinter(StrPrinter):
     def _print_Rational(self, expr):
         p, q = int(expr.p), int(expr.q)
         return '%d.0/%d.0' % (p, q)
+
+    def _print_Indexed(self, expr):
+        inds = [ self._print(i) for i in expr.indices ]
+        return "%s(%s)" % (self._print(expr.stem.label), ", ".join(inds))
+
+    def _print_Idx(self, expr):
+        return self._print(expr.label)
 
     def _print_not_fortran(self, expr):
         self._not_fortran.add(expr)
