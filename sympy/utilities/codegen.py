@@ -454,8 +454,14 @@ class CCodeGen(CodeGen):
             ctype = routine.results[0].datatype.cname
         else:
             ctype = "void"
-        arguments = ", ".join([ "%s %s" % (arg.datatype.cname, arg.name)
-                for arg in routine.arguments ])
+
+        type_args = []
+        for arg in routine.arguments:
+            if arg.dimensions:
+                type_args.append((arg.datatype.cname, "*%s" % arg.name))
+            else:
+                type_args.append((arg.datatype.cname, arg.name))
+        arguments = ", ".join([ "%s %s" % t for t in type_args])
         return "%s %s(%s)" % (ctype, routine.name, arguments)
 
     def _preprosessor_statements(self, prefix):
