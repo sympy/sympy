@@ -50,7 +50,7 @@ class Ellipse(GeometryEntity):
         hradius = sympify(hradius)
         vradius = sympify(vradius)
         eccentricity = sympify(eccentricity)
-        
+
         if eccentricity is not None:
             if hradius is None:
                 hradius = vradius / sqrt(1 - eccentricity**2)
@@ -63,7 +63,7 @@ class Ellipse(GeometryEntity):
 
         if center is None:
             center = Point(0, 0)
-        
+
         if not isinstance(center, Point):
             raise TypeError("center must be a Point")
 
@@ -97,48 +97,49 @@ class Ellipse(GeometryEntity):
         # TODO It's fairly complicated, but we could use Ramanujan's
         #      approximation.
         raise NotImplementedError
-    
+
     @property
     def eccentricity(self):
         """The eccentricity of the ellipse."""
-        
+
         return self.focus_distance / self.hradius
-    
+
     @property
     def periapsis(self):
         """The periapsis of the ellipse.
-        
+
         It's the shorter distance between the focus and the contour."""
-    
+
         return self.hradius * (1 - self.eccentricity)
-    
+
     @property
     def apoapsis(self):
         """The periapsis of the ellipse.
-        
+
         It's the greatest distance between the focus and the contour."""
-        
+
         return self.hradius * (1 + self.eccentricity)
-    
+
     @property
     def focus_distance(self):
         """The focale distance of the ellipse.
-        
+
         It's distance between the center and one focus."""
-        
-        return sqrt(self.hradius**2 - self.vradius**2)
-    
+
+        return Point.distance(self.center, self.foci[0])
+
     @property
     def foci(self):
         """The foci of the ellipse, if the radii are numerical."""
         c = self.center
         if self.hradius == self.vradius:
-            return c
+            return (c, c)
 
         hr, vr = self.hradius, self.vradius
         if hr.atoms(C.Symbol) or vr.atoms(C.Symbol):
             raise ValueError("foci can only be determined on non-symbolic radii")
 
+        # use focus_distance
         v = sqrt(abs(vr**2 - hr**2))
         if hr < vr:
             return (c+Point(0, -v), c+Point(0, v))
@@ -300,13 +301,13 @@ class Ellipse(GeometryEntity):
                 pass
 
         raise NotImplementedError()
-    
+
     def distance_to_center(self, t):
-        
+
         seg = Point.distance(self.center, self.arbitrary_point())
-        
+
         return seg.subs('t', t)
-    
+
     def __eq__(self, o):
         return ((self.center == o.center) \
                     and (self.hradius == o.hradius) \
