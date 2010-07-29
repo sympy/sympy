@@ -73,6 +73,7 @@ printing.
 
 
 from sympy.core.symbol import Symbol
+from sympy.core.singleton import S
 from sympy.core.expr import Expr
 from sympy.core.containers import Tuple
 from sympy.printing.ccode import ccode, CCodePrinter
@@ -479,7 +480,12 @@ class CCodeGen(CodeGen):
         return []
 
     def _init_resultvars(self, routine):
-        return []  #FIXME
+        code_lines = []
+        for arg in routine.result_variables:
+            if isinstance(arg, OutputArgument):
+                constants, not_c, expr_c = ccode(S.Zero, assign_to=arg.result_var, human=False)
+                code_lines.append("%s\n" % expr_c)
+        return code_lines
 
     def _declare_locals(self, routine):
         # loop variables are declared in loop statement

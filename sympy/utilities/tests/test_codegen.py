@@ -246,7 +246,6 @@ def test_complicated_codegen():
         '#endif\n'
     )
 
-@XFAIL
 def test_loops_c():
     from sympy.tensor import IndexedBase, Idx
     from sympy import symbols
@@ -263,12 +262,12 @@ def test_loops_c():
     expected = (
             '#include "file.h"\n'
             '#include <math.h>\n'
-            'void matrix_vector(double *A, int m, int n, double *x, double *y){\n'
-            '   for (int i=0, i<m; i++){\n'
-            '      y[i] = 0\n'
+            'void matrix_vector(double *A, int m, int n, double *x, double *y) {\n'
+            '   for (int i=0; i<m; i++){\n'
+            '      y[i] = 0;\n'
             '   }\n'
-            '   for (int i=0, i<m; i++){\n'
-            '      for (int j=0, j<n; j++){\n'
+            '   for (int i=0; i<m; i++){\n'
+            '      for (int j=0; j<n; j++){\n'
             '         y[i] = %(rhs)s + y[i];\n'
             '      }\n'
             '   }\n'
@@ -276,7 +275,9 @@ def test_loops_c():
             )
 
     assert (code == expected %{'rhs': 'A[i*n + j]*x[j]'} or
-            code == expected %{'rhs': 'x[j]*A[i*n + j]'})
+            code == expected %{'rhs': 'A[j + i*n]*x[j]'} or
+            code == expected %{'rhs': 'x[j]*A[i*n + j]'} or
+            code == expected %{'rhs': 'x[j]*A[j + i*n]'})
     assert f2 == 'file.h'
     assert interface == (
         '#ifndef PROJECT__FILE__H\n'
