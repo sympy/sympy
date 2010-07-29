@@ -2,8 +2,9 @@
 from sympy import Poly, S, Function, log, symbols, exp, tan, Integral
 from sympy.integrals.risch import (gcdex_diophantine, derivation, splitfactor,
     splitfactor_sqf, canonical_representation, hermite_reduce,
-    polynomial_reduce, residue_reduce, integrate_hyperexponential,
-    integrate_hypertangent_polynomial, integrate_nonlinear_no_specials)
+    polynomial_reduce, residue_reduce, integrate_primitive,
+    integrate_hyperexponential, integrate_hypertangent_polynomial,
+    integrate_nonlinear_no_specials)
 from sympy.utilities.pytest import XFAIL, skip
 
 from sympy.abc import x, t, nu, z, a
@@ -153,6 +154,13 @@ def test_integrate_hyperexponential():
     assert integrate_hyperexponential(Poly(1 + t, t), Poly(t, t), D, [x, t], [exp]) == \
         (Integral(1, x) - exp(-x), True) # (x - exp(-x), True)
     assert integrate_hyperexponential(Poly(x, t), Poly(t + 1, t), D, [x, t], [exp]) == \
+        (0, False)
+
+def test_integrate_primitive():
+    D = [Poly(1, x), Poly(1/x, t)]
+    assert integrate_primitive(Poly(t, t), Poly(1, t), D, [x, t], [log]) == \
+        (x*log(x) + Integral(-1, x), True) # (x*log(x) - x, True)
+    assert integrate_primitive(Poly(x, t), Poly(t, t), D, [x, t], [log]) == \
         (0, False)
 
 def test_integrate_hypertangent_polynomial():

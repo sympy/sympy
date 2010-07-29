@@ -393,6 +393,80 @@ def residue_reduce_derivation(H, D, T, z):
     return S(sum((RootSum(a[0].as_poly(z), Lambda(i, i*derivation(a[1], D,
         T).as_basic().subs(z, i)/a[1].as_basic().subs(z, i))) for a in H)))
 
+def integrate_primitive_polynomial(p, D, T):
+    """
+    Integration of primitive polynomials.
+
+    Given a primitive monomjial t over k, and p in k[t], return q in k[t],
+    r in k, and a bool b in {True, False} such that r = p - Dq is in k if b is
+    True, or r = p - Dq does not have an elementary integral over k(t) if b is
+    False.
+    """
+    from sympy.integrals.prde import limited_integrate
+    t = T[-1]
+
+    if not p.has_any_symbols(t):
+        return (Poly(0, t), p, True)
+
+    T1 = T[:-1] # We had better be integrating the lowest extension (x) with
+    D1 = D[:-1] # ratint().
+    t1 = T1[-1]
+    a = p.LC()
+    aa, ad = a.as_numer_denom()
+    aa, ad = Poly(aa, t1), Poly(ad, t1)
+    Dt = D[-1]
+    Dta, Dtb = Dt.as_basic().as_numer_denom()
+    Dta, Dtb = Poly(Dta, t1), Poly(Dtb, t1)
+
+    try:
+        (ba, bd), c = limited_integrate(aa, ad, [(Dta, Dtb)], D1, T1)
+        assert len(c) == 1
+    except NonElementaryIntegral:
+        return (Poly(0, t), p, False)
+
+    m = p.degree(t)
+    q0 = c[0].as_poly(t)*Poly(t**(m + 1)/(m + 1), t) + \
+        (ba.as_basic()/bd.as_basic()).as_poly(t)*Poly(t**m, t)
+
+    # TODO: Rewrite this non-recursively
+    q, r, b = integrate_primitive_polynomial(p - derivation(q0, D, T), D, T)
+    return (q + q0, r, b)
+
+def integrate_primitive(a, d, D, T, Tfuncs):
+    """
+    Integration of primitive functions.
+
+    Given a primitive monomial t over k and f in k(t), return g elementary over
+    k(t) and b in {True, False} such that f - Dg in k if b is True or f - Dg
+    does not have an elementary integral over k(t) if b is False.
+    """
+    # XXX: a and d must be canceled, or this might return incorrect results
+    t = T[-1]
+    x = T[0]
+    z = Symbol('z', dummy=True)
+    s = zip(reversed(T), [f(x) for f in Tfuncs])
+
+    g1, h, r = hermite_reduce(a, d, D, T)
+    g2, b = residue_reduce(h[0], h[1], D, T, z=z)
+    if not b:
+        return ((g1[0].as_basic()/g1[1].as_basic()).subs(s) +
+            residue_reduce_to_basic(g2, T, z, Tfuncs), b)
+
+    # h - Dg2 + r
+    p = cancel(h[0].as_basic()/h[1].as_basic() - residue_reduce_derivation(g2,
+        D, T, z) + r[0].as_basic()/r[1].as_basic())
+    p = p.as_poly(t)
+
+    q, i, b = integrate_primitive_polynomial(p, D, T)
+
+    ret = ((g1[0].as_basic()/g1[1].as_basic() + q.as_basic()).subs(s) +
+        residue_reduce_to_basic(g2, T, z, Tfuncs))
+    if not i.is_zero:
+        # TODO: This does not do the right thing when b is False
+        ret += Integral(i.as_basic().subs(s), x)
+
+    return (ret, b)
+
 def integrate_hyperexponential_polynomial(p, D, T, z):
     """
     Integration of hyperexponential polynomials.

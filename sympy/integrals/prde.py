@@ -369,7 +369,6 @@ def limited_integrate(fa, fd, G, D, T):
     """
     Solves the limited integration problem:  f = Dv + Sum(ci*wi, (i, 1, n))
     """
-    from pudb import set_trace; set_trace() # Debugging
     t = T[-1]
 
     A, B, h, N, g, V = limited_integrate_reduce(fa, fd, G, D, T)
@@ -396,7 +395,7 @@ def limited_integrate(fa, fd, G, D, T):
             B, C, m, alpha, beta = spde(A, B, C, N, D, T)
             y = solve_poly_rde(B, C, m, D, T)
 
-            return (alpha*y + beta, h)
+            return ((alpha*y + beta, h), list(l[0][1:]))
     else:
         raise NotImplementedError
 
