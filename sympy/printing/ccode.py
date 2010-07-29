@@ -61,8 +61,7 @@ class CCodePrinter(StrPrinter):
         not_c = self._not_c = set()
         self._number_symbols = set()
 
-        # We treat Piecewise here to ensure it is top-level and outside loops
-        expr = piecewise_fold(expr)
+        # We treat top level Piecewise here to get if tests outside loops
         lines = []
         if isinstance(expr, Piecewise):
             for i, (e, c) in enumerate(expr.args):
@@ -89,11 +88,11 @@ class CCodePrinter(StrPrinter):
             for name, value in sorted(self._number_symbols, key=str):
                 frontlines.append("double const %s = %s;" % (name, value))
             lines = frontlines + lines
-            lines = self.indent_code(lines)
-            result = "\n".join(lines)
+            lines = "\n".join(lines)
+            result = self.indent_code(lines)
         else:
-            lines = self.indent_code(lines)
-            result = self._number_symbols, not_c, "\n".join(lines)
+            lines = self.indent_code("\n".join(lines))
+            result = self._number_symbols, not_c, lines
         del self._not_c
         del self._number_symbols
         return result
@@ -223,6 +222,21 @@ class CCodePrinter(StrPrinter):
 
     def _print_NegativeInfinity(self, expr):
         return '-HUGE_VAL'
+
+    def _print_Piecewise(self, expr):
+        # This method is called only for inline if constructs
+        # Top level piecewise is handled in doprint()
+        ecpairs = ["(%s) {\n%s\n}\n" % (self._print(c), self._print(e)) \
+                       for e, c in expr.args[:-1]]
+        last_line = ""
+        if expr.args[-1].cond == True:
+            last_line = "else {\n%s\n}" % self._print(expr.args[-1].expr)
+        else:
+            ecpairs.append("(%s) {\n%s\n" % \
+                           (self._print(expr.args[-1].cond),
+                            self._print(expr.args[-1].expr)))
+        code = "if %s" + last_line
+        return code % "else if ".join(ecpairs)
 
     def _print_And(self, expr):
         PREC = precedence(expr)
