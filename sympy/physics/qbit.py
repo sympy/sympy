@@ -2,7 +2,7 @@
     Single qbits and their gates
 """
 from sympy.physics.hilbert import l2
-from sympy.physics.quantum import BasisSet, State, Operator, Representable, represent
+from sympy.physics.quantum import BasisSet, State, Operator, Representable, represent, OuterProduct
 from sympy import Expr, sympify, Add, Mul, Pow, I, Function, Integer, S, sympify, Matrix, elementary
 from sympy.core.numbers import *
 from sympy.core.basic import S, sympify

@@ -7,7 +7,10 @@ References
 [1] http://en.wikipedia.org/wiki/Hilbert_space
 """
 
-from sympy import Expr, Interval, oo, sympify
+from sympy import Expr, Interval, oo, sympify, Add, Mul, Pow
+
+class HilbertSpaceException(Exception):
+    pass
 
 class HilbertSpace(Expr):
     """
@@ -534,3 +537,22 @@ class TensorPowerHilbertSpace(HilbertSpace):
 
     def _sympystr(self, printer, *args):
         return "%s**(%s)" % (printer._print(self.base, *args), printer._print(self.exp, *args))
+
+#-----------------------------------------------------------------------------
+# Functions
+#-----------------------------------------------------------------------------
+
+def compare_hilbert(arg1, arg2):
+    if isinstance(arg1, (Add, Mul)):
+        for item in arg1.args:
+            compare_hilbert(item, arg2)
+    elif isinstance(arg2, (Add, Mul)):
+        for item in arg2.args:         
+            compare_hilbert(item, arg1)
+    elif isinstance(arg1, Pow):
+        compare_hilbert(arg1.base, arg2)
+    elif isinstance(arg2, Pow):
+        compare_hilbert(arg2.base, arg1)
+    else:
+        if (hasattr(arg1, 'hilbert_space') and hasattr(arg2, 'hilbert_space') and arg1.hilbert_space != arg2.hilbert_space):
+            raise HilbertSpaceException()

@@ -136,20 +136,24 @@ class State(Expr, Representable):
 
     @call_highest_priority('__rmul__')
     def __mul__(self, other):
+        compare_hilbert(self, other)
         return _qmul(self, other)
 
     @call_highest_priority('__mul__')
     def __rmul__(self, other):
+        compare_hilbert(other, self)
         return _qmul(other, self)
 
     @call_highest_priority('__radd__')
     def __add__(self, other):
+        compare_hilbert(self, other)
         _validate_add(self, other)
         return Add(self, other)
 
     @call_highest_priority('__add__')
     def __radd__(self, other):
-        _validate_add(self, other)
+        compare_hilbert(other, self)
+        _validate_add(other, self)
         return Add(other, self)
 
     @call_highest_priority('__rpow__')
@@ -240,26 +244,29 @@ class Operator(Expr, Representable):
 
     @call_highest_priority('__rmul__')
     def __mul__(self, other):
+        compare_hilbert(self, other)
         return _qmul(self, other)
 
     @call_highest_priority('__mul__')
     def __rmul__(self, other):
+        compare_hilbert(other, self)
         return _qmul(other, self)
 
     @call_highest_priority('__radd__')
     def __add__(self, other):
+        compare_hilbert(self, other)
         _validate_add(self, other)
         return Add(self, other)
 
     @call_highest_priority('__add__')
     def __radd__(self, other):
-        _validate_add(self, other)
+        compare_hilbert(other, self)
+        _validate_add(other, self)
         return Add(other, self)
 
     @call_highest_priority('__rpow__')
     def __pow__(self, other):
         #if not isinstance(other, (Mul, Add, Pow, Number, Symbol)):
-        #    raise QuantumError("Can't raise Operator to %s" % (other.__class__.__name__,))
         return Pow(self, other)
 
     @call_highest_priority('__pow__')
@@ -571,7 +578,7 @@ def is_bra(expr):
 
 def is_ket(expr):
     if isinstance(expr, State):
-        if expr.is_bra:
+        if expr.is_ket:
             return True
     return False
 
@@ -613,6 +620,8 @@ def _validate_add(expr1, expr2):
             if expr1.kind == expr2.kind:
                 return
         elif isinstance(expr1, Operator) and isinstance(expr2, Operator):
+            return
+        elif expr1 == 0 or expr2 == 0:
             return
         else:
             raise QuantumError("Can't add %s and %s" % (expr1.__class__.__name__, expr2.__class__.__name__))
