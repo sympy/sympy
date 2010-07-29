@@ -7,7 +7,7 @@ References
 [1] http://en.wikipedia.org/wiki/Hilbert_space
 """
 
-from sympy import Expr, Interval, oo, sympify
+from sympy import Expr, Interval, oo, sympify, Add, Mul, Pow
 
 class HilbertSpaceException(Exception):
     pass
