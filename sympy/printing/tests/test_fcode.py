@@ -246,9 +246,9 @@ def test_loops():
     from sympy import symbols
     i,j,n,m = symbols('i j n m', integer=True)
     A,x,y = symbols('A x y')
-    A = IndexedBase(A)(Idx(i, m), Idx(j, n))
-    x = IndexedBase(x)(Idx(j, n))
-    y = IndexedBase(y)(Idx(i, m))
+    A = IndexedBase(A)[Idx(i, m), Idx(j, n)]
+    x = IndexedBase(x)[Idx(j, n)]
+    y = IndexedBase(y)[Idx(i, m)]
 
     # human = False
     printer = FCodePrinter({ 'source_format': 'free', 'assign_to':y, 'human':0})
@@ -272,7 +272,7 @@ def test_loops():
             '   end do\n'
             'end do'
             )% {'rhs': str(A*x)}
-    assert str(A*x) == 'A(i, j)*x(j)' or str(A*x) == 'x(j)*Ai, j)'
+    assert str(A*x) == 'A(i, j)*x(j)' or str(A*x) == 'x(j)*A(i, j)'
     code = printer.doprint(A*x)
     assert expected == code
 

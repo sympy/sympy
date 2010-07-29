@@ -252,9 +252,9 @@ def test_loops_c():
     from sympy import symbols
     i,j,n,m = symbols('i j n m', integer=True)
     A,x,y = symbols('A x y')
-    A = IndexedBase(A)(Idx(i, m), Idx(j, n))
-    x = IndexedBase(x)(Idx(j, n))
-    y = IndexedBase(y)(Idx(i, m))
+    A = IndexedBase(A)[Idx(i, m), Idx(j, n)]
+    x = IndexedBase(x)[Idx(j, n)]
+    y = IndexedBase(y)[Idx(i, m)]
 
     (f1, code), (f2, interface) = codegen(
             ('matrix_vector', Eq(y, A*x)), "C", "file", header=False, empty=False)
@@ -719,9 +719,9 @@ def test_loops_InOut():
     from sympy import symbols
     i,j,n,m = symbols('i j n m', integer=True)
     A,x,y = symbols('A x y')
-    A = IndexedBase(A)(Idx(i, m), Idx(j, n))
-    x = IndexedBase(x)(Idx(j, n))
-    y = IndexedBase(y)(Idx(i, m))
+    A = IndexedBase(A)[Idx(i, m), Idx(j, n)]
+    x = IndexedBase(x)[Idx(j, n)]
+    y = IndexedBase(y)[Idx(i, m)]
 
     (f1, code), (f2, interface) = codegen(
             ('matrix_vector', Eq(y, y + A*x)), "F95", "file", header=False, empty=False)
@@ -743,10 +743,10 @@ def test_loops_InOut():
             '   end do\n'
             'end do\n'
             'end subroutine\n'
-            ) % {'rhs': str(A*x)}
-    assert str(A*x) == 'A(i, j)*x(j)' or str(A*x) == 'x(j)*A(i, j)'
+            )
 
-    assert expected == code
+    assert (code == expected % {'rhs': 'A(i, j)*x(j)'} or
+            code == expected % {'rhs': 'x(j)*A(i, j)'})
     assert f2 == 'file.h'
     assert interface == (
             'interface\n'

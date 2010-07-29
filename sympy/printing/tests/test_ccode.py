@@ -98,11 +98,11 @@ def test_ccode_Indexed():
     p = CCodePrinter()
     p._not_c = set()
 
-    x = IndexedBase('x')(Idx(j, n))
+    x = IndexedBase('x')[Idx(j, n)]
     assert p._print_Indexed(x) == 'x[j]'
-    A = IndexedBase('A')(Idx(i, m), Idx(j, n))
+    A = IndexedBase('A')[Idx(i, m), Idx(j, n)]
     assert p._print_Indexed(A) == 'A[%s]'% str(j + n*i)
-    B = IndexedBase('B')(Idx(i, m), Idx(j, n), Idx(k, o))
+    B = IndexedBase('B')[Idx(i, m), Idx(j, n), Idx(k, o)]
     assert p._print_Indexed(B) == 'B[%s]'% str(k + i*n*o + j*o)
 
     assert p._not_c == set()
@@ -125,7 +125,7 @@ def test_ccode_loops_matrix_vector():
             '   }\n'
             '}'
             )
-    c = ccode(A(i, j)*x(j), assign_to=y(i))
+    c = ccode(A[i, j]*x[j], assign_to=y[i])
     assert c == s
 
 def test_ccode_loops_add():
@@ -149,7 +149,7 @@ def test_ccode_loops_add():
             '   }\n'
             '}'
             )
-    c = ccode(A(i, j)*x(j) + x(i) + z(i), assign_to=y(i))
+    c = ccode(A[i, j]*x[j] + x[i] + z[i], assign_to=y[i])
     assert c == s
 
 def test_ccode_loops_multiple_contractions():
@@ -175,7 +175,7 @@ def test_ccode_loops_multiple_contractions():
 '   }\n'
 '}'
             )
-    c = ccode(a(i, j, k, l)*b(j, k, l), assign_to=y(i))
+    c = ccode(a[i, j, k, l]*b[j, k, l], assign_to=y[i])
     assert c == s
 
 def test_ccode_loops_addfactor():
@@ -202,7 +202,7 @@ def test_ccode_loops_addfactor():
 '   }\n'
 '}'
             )
-    c = ccode((a(i, j, k, l) + b(i, j, k, l))*c(j, k, l), assign_to=y(i))
+    c = ccode((a[i, j, k, l] + b[i, j, k, l])*c[j, k, l], assign_to=y[i])
     assert c == s
 
 def test_ccode_loops_multiple_terms():
@@ -217,7 +217,7 @@ def test_ccode_loops_multiple_terms():
     j = Idx('j', n)
     k = Idx('k', o)
 
-    s = (
+    s1 = (
 'for (int i=0; i<m; i++){\n'
 '   for (int j=0; j<n; j++){\n'
 '      for (int k=0; k<o; k++){\n'
@@ -225,16 +225,25 @@ def test_ccode_loops_multiple_terms():
 '      }\n'
 '   }\n'
 '}\n'
+    )
+    s2 = (
 'for (int i=0; i<m; i++){\n'
 '   for (int k=0; k<o; k++){\n'
 '      y[i] = b[k]*a[k + i*o] + y[i];\n'
 '   }\n'
 '}\n'
+    )
+    s3 = (
 'for (int i=0; i<m; i++){\n'
 '   for (int j=0; j<n; j++){\n'
 '      y[i] = b[j]*a[j + i*n] + y[i];\n'
 '   }\n'
-'}'
+'}\n'
             )
-    c = ccode(a(i, j)*b(j) + a(i, k)*b(k) + c(i, j, k)*b(j)*b(k), assign_to=y(i))
-    assert c == s
+    c = ccode(a[i, j]*b[j] + a[i, k]*b[k] + c[i, j, k]*b[j]*b[k], assign_to=y[i])
+    assert (c == s1 + s2 + s3[:-1] or
+            c == s1 + s3 + s2[:-1] or
+            c == s2 + s1 + s3[:-1] or
+            c == s2 + s3 + s1[:-1] or
+            c == s3 + s1 + s2[:-1] or
+            c == s3 + s2 + s1[:-1])

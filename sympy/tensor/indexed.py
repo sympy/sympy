@@ -27,8 +27,8 @@
     >>> from sympy import symbols
     >>> i, j, n, m = symbols('i j n m', integer=True)
     >>> M = IndexedBase('M')
-    >>> M(i, j)
-    M(i, j)
+    >>> M[i, j]
+    M[i, j]
 
     If the indexed objects will be converted to component based arrays, e.g.
     numpy arrays, you also need to provide (symbolic) dimensions.  This is done
@@ -36,18 +36,18 @@
 
     >>> ii = Idx(i, m)
     >>> jj = Idx(j, n)
-    >>> M(ii, jj)
-    M(i, j)
-    >>> M(ii, jj).dimensions
+    >>> M[ii, jj]
+    M[i, j]
+    >>> M[ii, jj].dimensions
     [m, n]
-    >>> M(ii, jj).ranges
+    >>> M[ii, jj].ranges
     [(0, -1 + m), (0, -1 + n)]
 
     To express a matrix-vector product in terms of IndexedBase objects:
 
     >>> x = IndexedBase('x')
-    >>> M(ii, jj)*x(jj)     #doctest: +SKIP
-    M(i, j)*x(j)
+    >>> M[ii, jj]*x[jj]     #doctest: +SKIP
+    M[i, j]*x[j]
 
 
     TODO:  (some ideas for improvement)
@@ -107,9 +107,9 @@ class IndexedBase(Expr):
     created whenever indices are supplied to the stem:
 
     >>> i, j, k = symbols('i j k', integer=True)
-    >>> a(i, j, k)
-    a(i, j, k)
-    >>> type(a(i, j, k))
+    >>> a[i, j, k]
+    a[i, j, k]
+    >>> type(a[i, j, k])
     <class 'sympy.tensor.indexed.Indexed'>
 
     """
@@ -124,6 +124,12 @@ class IndexedBase(Expr):
 
     def _hashable_content(self):
         return Expr._hashable_content(self) + (self._is_commutative, self._shape)
+
+    def __getitem__(self, indices, **kw_args):
+        if isinstance(indices, tuple):
+            return Indexed(self, *indices, **kw_args)
+        else:
+            return Indexed(self, indices, **kw_args)
 
     def __call__(self, *indices, **kw_args):
         return Indexed(self, *indices, **kw_args)
@@ -157,7 +163,7 @@ class Indexed(Expr):
     >>> from sympy import symbols
     >>> i, j, k = symbols('i j k', integer=True)
     >>> Indexed('a', i, j)
-    a(i, j)
+    a[i, j]
 
     """
 
@@ -205,7 +211,7 @@ class Indexed(Expr):
 
     def _sympystr(self, p):
         indices = map(p.doprint, self.indices)
-        return "%s(%s)" % (p.doprint(self.stem), ", ".join(indices))
+        return "%s[%s]" % (p.doprint(self.stem), ", ".join(indices))
 
 
 class Idx(Basic):

@@ -80,7 +80,7 @@ def test_Indexed_sugar():
     a = symbols('a')
     A1 = Indexed(a, i, j)
     A2 = IndexedBase(a)
-    assert A1 == A2(i, j)
+    assert A1 == A2[i, j]
 
 def test_Indexed_subs():
     i, j, k = symbols('i j k', integer=True)
@@ -108,8 +108,8 @@ def test_Indexed_subs():
     a, b = symbols('a b')
     A = IndexedBase(a)
     B = IndexedBase(b)
-    assert A(i, j) == B(i, j).subs(b, a)
-    assert A(i, j) == A(i, k).subs(k, j)
+    assert A[i, j] == B[i, j].subs(b, a)
+    assert A[i, j] == A[i, k].subs(k, j)
 
 def test_Indexed_properties():
     i, j = symbols('i j', integer=True)
@@ -130,10 +130,10 @@ def test_non_commutative():
     A = IndexedBase('A')
     B = IndexedBase('B')
     assert A.is_commutative
-    assert A(i).is_commutative
-    assert A(i)*B(j) == B(j)*A(i)
+    assert A[i].is_commutative
+    assert A[i]*B[j] == B[j]*A[i]
     A = IndexedBase('A', commutative=False)
     B = IndexedBase('B', commutative=False)
     assert not A.is_commutative
-    assert not A(i).is_commutative
-    assert A(i)*B(j) != B(j)*A(i)
+    assert not A[i].is_commutative
+    assert A[i]*B[j] != B[j]*A[i]

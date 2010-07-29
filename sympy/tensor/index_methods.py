@@ -90,34 +90,34 @@ def get_indices(expr):
     The indices of the total expression is determined, Repeated indices imply a
     summation, for instance the trace of a matrix A:
 
-    >>> get_indices(A(i, i))
+    >>> get_indices(A[i, i])
     ((), ())
 
     In the case of many terms, the terms are required to have identical
     outer indices.  Else an IndexConformanceException is raised.
 
-    >>> get_indices(x(i) + A(i, j)*y(j))
+    >>> get_indices(x[i] + A[i, j]*y[j])
     ((i,), ())
 
     The concept of `outer' indices applies recursively, starting on the deepest
     level.  This implies that dummies inside parenthesis are assumed to be
     summed first, and there following expression is handled gracefully:
 
-    >>> get_indices((x(i) + A(i, j)*y(j))*x(j))
+    >>> get_indices((x[i] + A[i, j]*y[j])*x[j])
     ((i, j), ())
 
     Note that if the indexed objects commute, the indices will be sorted so
     that the symbol of the stem should have no influence on the identified
     outer indices.
 
-    >>> get_indices(x(i)*y(j)) == get_indices(x(j)*y(i))
+    >>> get_indices(x[i]*y[j]) == get_indices(x[j]*y[i])
     True
 
     But the order of indices on a particular Indexed should be intact:
 
-    >>> get_indices(x(i, j))
+    >>> get_indices(x[i, j])
     ((i, j), ())
-    >>> get_indices(x(j, i))
+    >>> get_indices(x[j, i])
     ((j, i), ())
 
     Exceptions
@@ -125,7 +125,7 @@ def get_indices(expr):
 
     An IndexConformanceException means that the terms ar not compatible, e.g.
 
-    >>> get_indices(x(i) + y(j))                #doctest: +SKIP
+    >>> get_indices(x[i] + y[j])                #doctest: +SKIP
             (...)
     IndexConformanceException: Indices are not consistent: x(i) + y(j)
 
@@ -182,22 +182,22 @@ def get_contraction_structure(expr):
     >>> from sympy.tensor import IndexedBase, Idx
     >>> x, y, A = map(IndexedBase, ['x', 'y', 'A'])
     >>> i, j, k, l = symbols('i j k l', integer=True)
-    >>> get_contraction_structure(x(i)*y(i) + A(j, j))
-    {(i,): set([x(i)*y(i)]), (j,): set([A(j, j)])}
-    >>> get_contraction_structure(x(i)*y(j))
-    {None: set([x(i)*y(j)])}
+    >>> get_contraction_structure(x[i]*y[i] + A[j, j])
+    {(i,): set([x[i]*y[i]]), (j,): set([A[j, j]])}
+    >>> get_contraction_structure(x[i]*y[j])
+    {None: set([x[i]*y[j]])}
 
     A nested Add object is returned as a nested dictionary.  The term
     containing the parenthesis is used as the key, and it stores the dictionary
     resulting from a recursive call on the Add expression.
 
-    >>> d = get_contraction_structure(x(i)*(y(i) + A(i, j)*x(j)))
+    >>> d = get_contraction_structure(x[i]*(y[i] + A[i, j]*x[j]))
     >>> sorted(d.keys())
-    [(i,), (x(j)*A(i, j) + y(i))*x(i)]
+    [(i,), (x[j]*A[i, j] + y[i])*x[i]]
     >>> d[(Idx(i),)]
-    set([(x(j)*A(i, j) + y(i))*x(i)])
-    >>> d[(x(j)*A(i, j) + y(i))*x(i)]
-    [{None: set([y(i)]), (j,): set([x(j)*A(i, j)])}]
+    set([(x[j]*A[i, j] + y[i])*x[i]])
+    >>> d[(x[j]*A[i, j] + y[i])*x[i]]
+    [{None: set([y[i]]), (j,): set([x[j]*A[i, j]])}]
 
     Note that the presence of expressions among the dictinary keys indicates a
     factorization of the array contraction.  The summation in the deepest
