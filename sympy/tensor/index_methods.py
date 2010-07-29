@@ -142,6 +142,8 @@ def get_indices(expr):
             c = tuple()
             nc = expr.indices
         return _remove_repeated(c, nc)
+    elif expr is None:
+        return tuple(), tuple()
     elif expr.is_Atom:
         return tuple(), tuple()
 

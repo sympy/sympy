@@ -102,12 +102,15 @@ class CCodePrinter(StrPrinter):
         # variables or accumulate it in the assign_to object.
 
         rc, rnc = get_indices(expr)
-        if rc + rnc:
-            if not isinstance(assign_to, Indexed):
-                raise TypeError("array result requires that assign_to is an Indexed")
-            lc, lnc = get_indices(assign_to)
-            if rc + rnc != lc + lnc:
-                raise ValueError("lhs indices must match rhs indices")
+        lc, lnc = get_indices(assign_to)
+
+        # support broadcast of scalar
+        if lc + lnc and not rc + rnc:
+            rc = lc
+            rnc = lnc
+
+        if rc + rnc != lc + lnc:
+            raise ValueError("lhs indices must match rhs indices")
 
         # Setup loops over non-dummy indices  --  all terms need these
         openloop, closeloop, junk = self._get_loop_opening_ending_ints(rc + rnc)
