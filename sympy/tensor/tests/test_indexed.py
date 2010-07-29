@@ -1,5 +1,5 @@
 from sympy import symbols, Integer, Symbol
-from sympy.tensor import Indexed, Idx, IndexedElement
+from sympy.tensor import IndexedBase, Idx, IndexedElement
 from sympy.tensor.indexed import IndexException
 from sympy.utilities.pytest import raises
 from sympy import oo
@@ -79,21 +79,21 @@ def test_Indexed_sugar():
     i, j = symbols('i j', integer=True)
     a = symbols('a')
     A1 = IndexedElement(a, i, j)
-    A2 = Indexed(a)
+    A2 = IndexedBase(a)
     assert A1 == A2(i, j)
 
 def test_Indexed_subs():
     i, j, k = symbols('i j k', integer=True)
     a, b = symbols('a b')
-    A = Indexed(a)
-    B = Indexed(b)
+    A = IndexedBase(a)
+    B = IndexedBase(b)
     assert A == B.subs(b, a)
 
 def test_IndexedElement_constructor():
     i, j = symbols('i j', integer=True)
     A = IndexedElement('A', i, j)
     assert A == IndexedElement(Symbol('A'), i, j)
-    assert A == IndexedElement(Indexed('A'), i, j)
+    assert A == IndexedElement(IndexedBase('A'), i, j)
     raises(TypeError, 'IndexedElement(A, i, j)')
     raises(IndexException, 'IndexedElement("A")')
 
@@ -106,8 +106,8 @@ def test_IndexedElement_func_args():
 def test_IndexedElement_subs():
     i, j, k = symbols('i j k', integer=True)
     a, b = symbols('a b')
-    A = Indexed(a)
-    B = Indexed(b)
+    A = IndexedBase(a)
+    B = IndexedBase(b)
     assert A(i, j) == B(i, j).subs(b, a)
     assert A(i, j) == A(i, k).subs(k, j)
 
@@ -117,7 +117,7 @@ def test_IndexedElement_properties():
     A = IndexedElement(a, i, j)
     assert A.rank == 2
     assert A.indices == tuple(map(Idx, (i, j)))
-    assert A.stem == Indexed(a)
+    assert A.stem == IndexedBase(a)
     assert A.ranges == [(None, None), (None, None)]
     raises(IndexException, 'A.dimensions')
 
@@ -127,13 +127,13 @@ def test_IndexedElement_properties():
 
 def test_non_commutative():
     i, j, k = symbols('i j k', integer=True)
-    A = Indexed('A')
-    B = Indexed('B')
+    A = IndexedBase('A')
+    B = IndexedBase('B')
     assert A.is_commutative
     assert A(i).is_commutative
     assert A(i)*B(j) == B(j)*A(i)
-    A = Indexed('A', commutative=False)
-    B = Indexed('B', commutative=False)
+    A = IndexedBase('A', commutative=False)
+    B = IndexedBase('B', commutative=False)
     assert not A.is_commutative
     assert not A(i).is_commutative
     assert A(i)*B(j) != B(j)*A(i)

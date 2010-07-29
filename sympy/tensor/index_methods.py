@@ -1,4 +1,4 @@
-"""Module with functions operating on Indexed, IndexedElement and Idx objects
+"""Module with functions operating on IndexedBase, IndexedElement and Idx objects
 
     - Check shape conformance
     - Determine indices in resulting expression
@@ -6,7 +6,7 @@
     etc.
 """
 
-from sympy.tensor.indexed import Idx, Indexed, IndexedElement
+from sympy.tensor.indexed import Idx, IndexedBase, IndexedElement
 
 
 class IndexConformanceException(Exception):
@@ -82,8 +82,8 @@ def get_indices(expr):
 
     >>> from sympy.tensor.index_methods import get_indices
     >>> from sympy import symbols
-    >>> from sympy.tensor import Indexed, Idx
-    >>> x, y, A = map(Indexed, ['x', 'y', 'A'])
+    >>> from sympy.tensor import IndexedBase, Idx
+    >>> x, y, A = map(IndexedBase, ['x', 'y', 'A'])
     >>> i, j, a, z = symbols('i j a z', integer=True)
 
 
@@ -179,8 +179,8 @@ def get_contraction_structure(expr):
 
     >>> from sympy.tensor.index_methods import get_contraction_structure
     >>> from sympy import symbols
-    >>> from sympy.tensor import Indexed, Idx
-    >>> x, y, A = map(Indexed, ['x', 'y', 'A'])
+    >>> from sympy.tensor import IndexedBase, Idx
+    >>> x, y, A = map(IndexedBase, ['x', 'y', 'A'])
     >>> i, j, k, l = symbols('i j k l', integer=True)
     >>> get_contraction_structure(x(i)*y(i) + A(j, j))
     {(i,): set([x(i)*y(i)]), (j,): set([A(j, j)])}

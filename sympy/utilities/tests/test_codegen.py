@@ -248,13 +248,13 @@ def test_complicated_codegen():
 
 @XFAIL
 def test_loops_c():
-    from sympy.tensor import Indexed, Idx
+    from sympy.tensor import IndexedBase, Idx
     from sympy import symbols
     i,j,n,m = symbols('i j n m', integer=True)
     A,x,y = symbols('A x y')
-    A = Indexed(A)(Idx(i, m), Idx(j, n))
-    x = Indexed(x)(Idx(j, n))
-    y = Indexed(y)(Idx(i, m))
+    A = IndexedBase(A)(Idx(i, m), Idx(j, n))
+    x = IndexedBase(x)(Idx(j, n))
+    y = IndexedBase(y)(Idx(i, m))
 
     (f1, code), (f2, interface) = codegen(
             ('matrix_vector', Eq(y, A*x)), "C", "file", header=False, empty=False)
@@ -667,13 +667,13 @@ def test_complicated_codegen_f95():
 
 @XFAIL
 def test_loops():
-    from sympy.tensor import Indexed, Idx
+    from sympy.tensor import IndexedBase, Idx
     from sympy import symbols
     i,j,n,m = symbols('i j n m', integer=True)
     A,x,y = symbols('A x y')
-    A = Indexed(A)(Idx(i, m), Idx(j, n))
-    x = Indexed(x)(Idx(j, n))
-    y = Indexed(y)(Idx(i, m))
+    A = IndexedBase(A)(Idx(i, m), Idx(j, n))
+    x = IndexedBase(x)(Idx(j, n))
+    y = IndexedBase(y)(Idx(i, m))
 
     (f1, code), (f2, interface) = codegen(
             ('matrix_vector', Eq(y, A*x)), "F95", "file", header=False, empty=False)
@@ -715,13 +715,13 @@ def test_loops():
             )
 
 def test_loops_InOut():
-    from sympy.tensor import Indexed, Idx
+    from sympy.tensor import IndexedBase, Idx
     from sympy import symbols
     i,j,n,m = symbols('i j n m', integer=True)
     A,x,y = symbols('A x y')
-    A = Indexed(A)(Idx(i, m), Idx(j, n))
-    x = Indexed(x)(Idx(j, n))
-    y = Indexed(y)(Idx(i, m))
+    A = IndexedBase(A)(Idx(i, m), Idx(j, n))
+    x = IndexedBase(x)(Idx(j, n))
+    y = IndexedBase(y)(Idx(i, m))
 
     (f1, code), (f2, interface) = codegen(
             ('matrix_vector', Eq(y, y + A*x)), "F95", "file", header=False, empty=False)

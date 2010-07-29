@@ -1,6 +1,6 @@
 """Module that defines indexed objects with arbitrary transformation properties.
 
-    The classes Indexed, IndexedElement and Idx represent a matrix element M(i, j)
+    The classes IndexedBase, IndexedElement and Idx represent a matrix element M(i, j)
     as in the following graph:
 
        1) The IndexedElement class represents an element of the indexed object.
@@ -14,7 +14,7 @@
               |     2) The Idx class represent indices and each Idx can
               |        optionally contain information about its range.
               |
-    3) The Indexed class represents the `stem' of an indexed object, here `M'.
+    3) The IndexedBase class represents the `stem' of an indexed object, here `M'.
     The stem used by itself is usually taken to represent the entire array.
 
 
@@ -23,10 +23,10 @@
 
     To express the above matrix element example you would write:
 
-    >>> from sympy.tensor import Indexed, Idx
+    >>> from sympy.tensor import IndexedBase, Idx
     >>> from sympy import symbols
     >>> i, j, n, m = symbols('i j n m', integer=True)
-    >>> M = Indexed('M')
+    >>> M = IndexedBase('M')
     >>> M(i, j)
     M(i, j)
 
@@ -43,9 +43,9 @@
     >>> M(ii, jj).ranges
     [(0, -1 + m), (0, -1 + n)]
 
-    To express a matrix-vector product in terms of Indexed objects:
+    To express a matrix-vector product in terms of IndexedBase objects:
 
-    >>> x = Indexed('x')
+    >>> x = IndexedBase('x')
     >>> M(ii, jj)*x(jj)     #doctest: +SKIP
     M(i, j)*x(j)
 
@@ -75,33 +75,33 @@ from sympy import Expr, Basic, Tuple, Symbol, Integer, sympify, S
 class IndexException(Exception):
     pass
 
-class Indexed(Expr):
+class IndexedBase(Expr):
     """Represent the stem of an indexed object, e.g. a numpy array.
 
     The IndexedStem class represent an array that contains elements. An element
     i of an indexed object A is denoted A(i) and is represented by the
     IndexedElement class.
 
-    The Indexed class allows a simple notation for e.g. matrix equations,
-    resembling what you could do with the Symbol class.  But, the Indexed class
+    The IndexedBase class allows a simple notation for e.g. matrix equations,
+    resembling what you could do with the Symbol class.  But, the IndexedBase class
     adds functionality that is not available for Symbol instances:
 
-      -  An Indexed object can optionally store shape information.  This can
+      -  An IndexedBase object can optionally store shape information.  This can
          be used in functions that check array conformance and conditions for
          numpy broadcasting.
-      -  An Indexed object implements syntactic sugar that allows easy symbolic
+      -  An IndexedBase object implements syntactic sugar that allows easy symbolic
          representation of array elements,  e.g. you can type A(i, j) to
          create a symbol for element i,j of array A.
-      -  The Indexed object symbolizes a mathematical structure equivalent to
+      -  The IndexedBase object symbolizes a mathematical structure equivalent to
          arrays, and is recognized as such for code generation and
          TODO: conversion to a numpy array and sympy.Matrix objects.
 
-    >>> from sympy.tensor import Indexed
+    >>> from sympy.tensor import IndexedBase
     >>> from sympy import symbols
-    >>> a = Indexed('a'); a
+    >>> a = IndexedBase('a'); a
     a
     >>> type(a)
-    <class 'sympy.tensor.indexed.Indexed'>
+    <class 'sympy.tensor.indexed.IndexedBase'>
 
     Objects of type IndexedElement to symbolize elements of the array will by
     created whenever indices are supplied to the stem:
@@ -164,9 +164,9 @@ class IndexedElement(Expr):
     def __new__(cls, stem, *args, **kw_args):
         if not args: raise IndexException("IndexedElement needs at least one index")
         if isinstance(stem, (basestring, Symbol)):
-            stem = Indexed(stem)
-        elif not isinstance(stem, Indexed):
-            raise TypeError("IndexedElement expects string, Symbol or Indexed as stem")
+            stem = IndexedBase(stem)
+        elif not isinstance(stem, IndexedBase):
+            raise TypeError("IndexedElement expects string, Symbol or IndexedBase as stem")
         # FIXME: 2.4 compatibility
         args = map(_ensure_Idx, args)
         # args = tuple([ a if isinstance(a, Idx) else Idx(a) for a in args ])
@@ -226,7 +226,7 @@ class Idx(Basic):
     converted to an integer symbol.  (Note that this conversion is not done for
     range or dimension arguments.)
 
-    >>> from sympy.tensor import Indexed, Idx
+    >>> from sympy.tensor import IndexedBase, Idx
     >>> from sympy import symbols, oo
     >>> n, i, L, U = symbols('n i L U', integer=True)
 

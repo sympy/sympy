@@ -91,30 +91,30 @@ def test_ccode_settings():
     raises(TypeError, 'ccode(sin(x),method="garbage")')
 
 def test_ccode_Indexed():
-    from sympy.tensor import Indexed, Idx
+    from sympy.tensor import IndexedBase, Idx
     from sympy import symbols
     i,j,k,n,m,o = symbols('i j k n m o', integer=True)
 
     p = CCodePrinter()
     p._not_c = set()
 
-    x = Indexed('x')(Idx(j, n))
+    x = IndexedBase('x')(Idx(j, n))
     assert p._print_IndexedElement(x) == 'x[j]'
-    A = Indexed('A')(Idx(i, m), Idx(j, n))
+    A = IndexedBase('A')(Idx(i, m), Idx(j, n))
     assert p._print_IndexedElement(A) == 'A[%s]'% str(j + n*i)
-    B = Indexed('B')(Idx(i, m), Idx(j, n), Idx(k, o))
+    B = IndexedBase('B')(Idx(i, m), Idx(j, n), Idx(k, o))
     assert p._print_IndexedElement(B) == 'B[%s]'% str(k + i*n*o + j*o)
 
     assert p._not_c == set()
 
 
 def test_ccode_loops_matrix_vector():
-    from sympy.tensor import Indexed, Idx
+    from sympy.tensor import IndexedBase, Idx
     from sympy import symbols
     n,m = symbols('n m', integer=True)
-    A = Indexed('A')
-    x = Indexed('x')
-    y = Indexed('y')
+    A = IndexedBase('A')
+    x = IndexedBase('x')
+    y = IndexedBase('y')
     i = Idx('i', m)
     j = Idx('j', n)
 
@@ -129,13 +129,13 @@ def test_ccode_loops_matrix_vector():
     assert c == s
 
 def test_ccode_loops_add():
-    from sympy.tensor import Indexed, Idx
+    from sympy.tensor import IndexedBase, Idx
     from sympy import symbols
     n, m = symbols('n m', integer=True)
-    A = Indexed('A')
-    x = Indexed('x')
-    y = Indexed('y')
-    z = Indexed('z')
+    A = IndexedBase('A')
+    x = IndexedBase('x')
+    y = IndexedBase('y')
+    z = IndexedBase('z')
     i = Idx('i', m)
     j = Idx('j', n)
 
@@ -153,12 +153,12 @@ def test_ccode_loops_add():
     assert c == s
 
 def test_ccode_loops_multiple_contractions():
-    from sympy.tensor import Indexed, Idx
+    from sympy.tensor import IndexedBase, Idx
     from sympy import symbols
     n, m, o, p = symbols('n m o p', integer=True)
-    a = Indexed('a')
-    b = Indexed('b')
-    y = Indexed('y')
+    a = IndexedBase('a')
+    b = IndexedBase('b')
+    y = IndexedBase('y')
     i = Idx('i', m)
     j = Idx('j', n)
     k = Idx('k', o)
@@ -179,13 +179,13 @@ def test_ccode_loops_multiple_contractions():
     assert c == s
 
 def test_ccode_loops_addfactor():
-    from sympy.tensor import Indexed, Idx
+    from sympy.tensor import IndexedBase, Idx
     from sympy import symbols
     n, m, o, p = symbols('n m o p', integer=True)
-    a = Indexed('a')
-    b = Indexed('b')
-    c = Indexed('c')
-    y = Indexed('y')
+    a = IndexedBase('a')
+    b = IndexedBase('b')
+    c = IndexedBase('c')
+    y = IndexedBase('y')
     i = Idx('i', m)
     j = Idx('j', n)
     k = Idx('k', o)
@@ -206,13 +206,13 @@ def test_ccode_loops_addfactor():
     assert c == s
 
 def test_ccode_loops_multiple_terms():
-    from sympy.tensor import Indexed, Idx
+    from sympy.tensor import IndexedBase, Idx
     from sympy import symbols
     n, m, o, p = symbols('n m o p', integer=True)
-    a = Indexed('a')
-    b = Indexed('b')
-    c = Indexed('c')
-    y = Indexed('y')
+    a = IndexedBase('a')
+    b = IndexedBase('b')
+    c = IndexedBase('c')
+    y = IndexedBase('y')
     i = Idx('i', m)
     j = Idx('j', n)
     k = Idx('k', o)
