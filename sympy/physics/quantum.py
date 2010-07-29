@@ -4,6 +4,8 @@ from sympy import (
 )
 from sympy.core.decorators import call_highest_priority
 from sympy.physics.hilbert import *
+from sympy.core.numbers import Number
+from sympy.core.symbol import Symbol, symbols
 
 """
 Questions:
@@ -256,14 +258,14 @@ class Operator(Expr, Representable):
 
     @call_highest_priority('__rpow__')
     def __pow__(self, other):
-        if not isinstance(other, (Mul, Add, Pow, Number, Symbol)):
-            raise QuantumError("Can't raise Operator to %s" % (other.__class__.__name__,))
+        #if not isinstance(other, (Mul, Add, Pow, Number, Symbol)):
+        #    raise QuantumError("Can't raise Operator to %s" % (other.__class__.__name__,))
         return Pow(self, other)
 
     @call_highest_priority('__pow__')
     def __rpow__(self, other):
         #??operator**operator??
-        pass
+        return Pow(other, self)
 
     def doit(self,**kw_args):
         return self
