@@ -11,9 +11,7 @@ source code files that are compilable without further modifications.
 
 from str import StrPrinter
 from sympy.printing.precedence import precedence
-from sympy.core import S, Basic, Add
-from sympy.core.symbol import Symbol
-from sympy.core.numbers import NumberSymbol
+from sympy.core import S, Basic, Add, Symbol, NumberSymbol
 from sympy.functions import Piecewise, piecewise_fold
 from sympy.tensor import Idx, IndexedElement
 from sympy.tensor.index_methods import get_indices, get_contraction_structure
