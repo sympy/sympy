@@ -269,13 +269,14 @@ def test_loops_c():
             '   }\n'
             '   for (int i=0, i<m; i++){\n'
             '      for (int j=0, j<n; j++){\n'
-            '         y[i] = A[i*j + j]*x[j] + y[i];\n'
+            '         y[i] = %(rhs)s + y[i];\n'
             '      }\n'
             '   }\n'
             '}\n'
             )
 
-    assert expected == code
+    assert (code == expected %{'rhs': 'A[i*n + j]*x[j]'} or
+            code == expected %{'rhs': 'x[j]*A[i*n + j]'})
     assert f2 == 'file.h'
     assert interface == (
         '#ifndef PROJECT__FILE__H\n'
