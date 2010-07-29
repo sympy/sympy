@@ -1,9 +1,9 @@
 """Module that defines indexed objects with arbitrary transformation properties.
 
-    The classes IndexedBase, IndexedElement and Idx represent a matrix element M(i, j)
+    The classes IndexedBase, Indexed and Idx represent a matrix element M(i, j)
     as in the following graph:
 
-       1) The IndexedElement class represents an element of the indexed object.
+       1) The Indexed class represents an element of the indexed object.
                   |
                ___|___
               '       '
@@ -80,7 +80,7 @@ class IndexedBase(Expr):
 
     The IndexedStem class represent an array that contains elements. An element
     i of an indexed object A is denoted A(i) and is represented by the
-    IndexedElement class.
+    Indexed class.
 
     The IndexedBase class allows a simple notation for e.g. matrix equations,
     resembling what you could do with the Symbol class.  But, the IndexedBase class
@@ -103,14 +103,14 @@ class IndexedBase(Expr):
     >>> type(a)
     <class 'sympy.tensor.indexed.IndexedBase'>
 
-    Objects of type IndexedElement to symbolize elements of the array will by
+    Objects of type Indexed to symbolize elements of the array will by
     created whenever indices are supplied to the stem:
 
     >>> i, j, k = symbols('i j k', integer=True)
     >>> a(i, j, k)
     a(i, j, k)
     >>> type(a(i, j, k))
-    <class 'sympy.tensor.indexed.IndexedElement'>
+    <class 'sympy.tensor.indexed.Indexed'>
 
     """
     def __new__(cls, label, shape=None, commutative=True, **kw_args):
@@ -126,7 +126,7 @@ class IndexedBase(Expr):
         return Expr._hashable_content(self) + (self._is_commutative, self._shape)
 
     def __call__(self, *indices, **kw_args):
-        return IndexedElement(self, *indices, **kw_args)
+        return Indexed(self, *indices, **kw_args)
 
     @property
     def is_commutative(self):
@@ -150,23 +150,23 @@ def _ensure_Idx(arg):
     else:
         return Idx(arg)
 
-class IndexedElement(Expr):
+class Indexed(Expr):
     """Represent an indexed element, e.g. a symbolic array element.
 
-    >>> from sympy.tensor import IndexedElement
+    >>> from sympy.tensor import Indexed
     >>> from sympy import symbols
     >>> i, j, k = symbols('i j k', integer=True)
-    >>> IndexedElement('a', i, j)
+    >>> Indexed('a', i, j)
     a(i, j)
 
     """
 
     def __new__(cls, stem, *args, **kw_args):
-        if not args: raise IndexException("IndexedElement needs at least one index")
+        if not args: raise IndexException("Indexed needs at least one index")
         if isinstance(stem, (basestring, Symbol)):
             stem = IndexedBase(stem)
         elif not isinstance(stem, IndexedBase):
-            raise TypeError("IndexedElement expects string, Symbol or IndexedBase as stem")
+            raise TypeError("Indexed expects string, Symbol or IndexedBase as stem")
         # FIXME: 2.4 compatibility
         args = map(_ensure_Idx, args)
         # args = tuple([ a if isinstance(a, Idx) else Idx(a) for a in args ])

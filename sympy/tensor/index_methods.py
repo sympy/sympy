@@ -1,4 +1,4 @@
-"""Module with functions operating on IndexedBase, IndexedElement and Idx objects
+"""Module with functions operating on IndexedBase, Indexed and Idx objects
 
     - Check shape conformance
     - Determine indices in resulting expression
@@ -6,7 +6,7 @@
     etc.
 """
 
-from sympy.tensor.indexed import Idx, IndexedBase, IndexedElement
+from sympy.tensor.indexed import Idx, IndexedBase, Indexed
 
 
 class IndexConformanceException(Exception):
@@ -134,7 +134,7 @@ def get_indices(expr):
     # We call ourself recursively to determine indices of sub expressions.
 
     # break recursion
-    if isinstance(expr, IndexedElement):
+    if isinstance(expr, Indexed):
         if expr.is_commutative:
             c = expr.indices
             nc = tuple()
@@ -153,7 +153,7 @@ def get_indices(expr):
             return _get_indices_Add(expr)
 
         # this test is expensive, so it should be at the end
-        elif not expr.has(IndexedElement):
+        elif not expr.has(Indexed):
             return tuple(), tuple()
         else:
             raise NotImplementedError(
@@ -208,7 +208,7 @@ def get_contraction_structure(expr):
 
     # We call ourself recursively to inspect sub expressions.
 
-    if isinstance(expr, IndexedElement):
+    if isinstance(expr, Indexed):
         c = expr.indices
         nc = tuple()
         junk, junk, key = _remove_repeated(c, nc, return_dummies=True)
@@ -243,7 +243,7 @@ def get_contraction_structure(expr):
         return result
 
     # this test is expensive, so it should be at the end
-    elif not expr.has(IndexedElement):
+    elif not expr.has(Indexed):
         return {None: set([expr])}
     else:
         raise NotImplementedError(

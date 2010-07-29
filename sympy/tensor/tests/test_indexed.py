@@ -1,5 +1,5 @@
 from sympy import symbols, Integer, Symbol
-from sympy.tensor import IndexedBase, Idx, IndexedElement
+from sympy.tensor import IndexedBase, Idx, Indexed
 from sympy.tensor.indexed import IndexException
 from sympy.utilities.pytest import raises
 from sympy import oo
@@ -78,7 +78,7 @@ def test_Idx_subs():
 def test_Indexed_sugar():
     i, j = symbols('i j', integer=True)
     a = symbols('a')
-    A1 = IndexedElement(a, i, j)
+    A1 = Indexed(a, i, j)
     A2 = IndexedBase(a)
     assert A1 == A2(i, j)
 
@@ -89,21 +89,21 @@ def test_Indexed_subs():
     B = IndexedBase(b)
     assert A == B.subs(b, a)
 
-def test_IndexedElement_constructor():
+def test_Indexed_constructor():
     i, j = symbols('i j', integer=True)
-    A = IndexedElement('A', i, j)
-    assert A == IndexedElement(Symbol('A'), i, j)
-    assert A == IndexedElement(IndexedBase('A'), i, j)
-    raises(TypeError, 'IndexedElement(A, i, j)')
-    raises(IndexException, 'IndexedElement("A")')
+    A = Indexed('A', i, j)
+    assert A == Indexed(Symbol('A'), i, j)
+    assert A == Indexed(IndexedBase('A'), i, j)
+    raises(TypeError, 'Indexed(A, i, j)')
+    raises(IndexException, 'Indexed("A")')
 
-def test_IndexedElement_func_args():
+def test_Indexed_func_args():
     i, j = symbols('i j', integer=True)
     a = symbols('a')
-    A = IndexedElement(a, i, j)
+    A = Indexed(a, i, j)
     assert A.func(*A.args)
 
-def test_IndexedElement_subs():
+def test_Indexed_subs():
     i, j, k = symbols('i j k', integer=True)
     a, b = symbols('a b')
     A = IndexedBase(a)
@@ -111,10 +111,10 @@ def test_IndexedElement_subs():
     assert A(i, j) == B(i, j).subs(b, a)
     assert A(i, j) == A(i, k).subs(k, j)
 
-def test_IndexedElement_properties():
+def test_Indexed_properties():
     i, j = symbols('i j', integer=True)
     a = symbols('a')
-    A = IndexedElement(a, i, j)
+    A = Indexed(a, i, j)
     assert A.rank == 2
     assert A.indices == tuple(map(Idx, (i, j)))
     assert A.stem == IndexedBase(a)
@@ -122,8 +122,8 @@ def test_IndexedElement_properties():
     raises(IndexException, 'A.dimensions')
 
     n, m = symbols('n m', integer=True)
-    assert IndexedElement(a, Idx(i, m), Idx(j, n)).ranges == [(0, m - 1), (0, n - 1)]
-    assert IndexedElement(a, Idx(i, m), Idx(j, n)).dimensions == [m, n]
+    assert Indexed(a, Idx(i, m), Idx(j, n)).ranges == [(0, m - 1), (0, n - 1)]
+    assert Indexed(a, Idx(i, m), Idx(j, n)).dimensions == [m, n]
 
 def test_non_commutative():
     i, j, k = symbols('i j k', integer=True)

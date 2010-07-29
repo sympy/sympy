@@ -13,7 +13,7 @@ from str import StrPrinter
 from sympy.printing.precedence import precedence
 from sympy.core import S, Basic, Add, Symbol, NumberSymbol
 from sympy.functions import Piecewise, piecewise_fold
-from sympy.tensor import Idx, IndexedElement
+from sympy.tensor import Idx, Indexed
 from sympy.tensor.index_methods import get_indices, get_contraction_structure
 
 
@@ -96,15 +96,15 @@ class CCodePrinter(StrPrinter):
         return result
 
     def _doprint_a_piece(self, expr, assign_to=None):
-        # Here we print an expression that may contain IndexedElement objects, they
+        # Here we print an expression that may contain Indexed objects, they
         # correspond to arrays in the generated code.  The low-level implementation
         # involves looping over array elements and possibly storing results in temporary
         # variables or accumulate it in the assign_to object.
 
         rc, rnc = get_indices(expr)
         if rc + rnc:
-            if not isinstance(assign_to, IndexedElement):
-                raise TypeError("array result requires that assign_to is an IndexedElement")
+            if not isinstance(assign_to, Indexed):
+                raise TypeError("array result requires that assign_to is an Indexed")
             lc, lnc = get_indices(assign_to)
             if rc + rnc != lc + lnc:
                 raise ValueError("lhs indices must match rhs indices")
@@ -198,7 +198,7 @@ class CCodePrinter(StrPrinter):
         p, q = int(expr.p), int(expr.q)
         return '%d.0/%d.0' % (p, q)
 
-    def _print_IndexedElement(self, expr):
+    def _print_Indexed(self, expr):
         # calculate index for 1d array
         dims = expr.dimensions
         inds = [ i.label for i in expr.indices ]

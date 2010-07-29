@@ -1,4 +1,4 @@
-from sympy.tensor.indexed import Idx, IndexedBase, IndexedElement
+from sympy.tensor.indexed import Idx, IndexedBase, Indexed
 from sympy.tensor.index_methods import get_contraction_structure, get_indices, IndexConformanceException
 from sympy import symbols, S
 from sympy.utilities.pytest import raises
@@ -10,14 +10,14 @@ def test_trivial_indices():
     assert get_indices(x + y) == ((), ())
     assert get_indices(x**y) == ((), ())
 
-def test_get_indices_IndexedElement():
+def test_get_indices_Indexed():
     x = IndexedBase('x')
     y = IndexedBase('y')
     i, j = Idx('i'), Idx('j')
     assert get_indices(x(i, j)) == ((i, j), ())
     assert get_indices(x(j, i)) == ((j, i), ())
 
-def test_get_indices_IndexedElement_nc():
+def test_get_indices_Indexed_nc():
     x = IndexedBase('x', commutative=False)
     y = IndexedBase('y', commutative=False)
     i, j = Idx('i'), Idx('j')
