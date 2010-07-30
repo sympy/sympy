@@ -13,7 +13,17 @@ class IndexConformanceException(Exception):
     pass
 
 def _remove_repeated(c_inds, nc_inds, return_dummies=False):
-    """Removes summation indices from index sequences."""
+    """Removes repeated objects from sequences
+
+    >>> from sympy.tensor.index_methods import _remove_repeated
+    >>> l1 = [1, 2, 3]
+    >>> l2 = [2, 4, 4]
+    >>> _remove_repeated(l1, l2)
+    ([1, 3], [])
+    >>> _remove_repeated(l1, l2, return_dummies=True)   #doctest: +SKIP
+    ([1, 3], [], (2, 4))
+
+    """
 
     sum_index = {}
     for i in c_inds + nc_inds:
