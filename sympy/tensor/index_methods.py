@@ -44,7 +44,18 @@ def _remove_repeated(c_inds, nc_inds, return_dummies=False):
 def _get_indices_Mul(expr, return_dummies=False):
     """Determine the outer indices of a Mul object.
 
-    returns all non-repeated indices.
+    >>> from sympy.tensor.index_methods import _get_indices_Mul
+    >>> from sympy.tensor.indexed import IndexedBase, Idx
+    >>> i, j, k = map(Idx, ['i', 'j', 'k'])
+    >>> x = IndexedBase('x')
+    >>> y = IndexedBase('y')
+    >>> _get_indices_Mul(x[i, k]*y[j, k])
+    ((i, j), ())
+    >>> x = IndexedBase('x', commutative=False)
+    >>> y = IndexedBase('y', commutative=False)
+    >>> _get_indices_Mul(x[j, k]*y[i, k])
+    ((), (j, i))
+
     """
 
     junk, factors = expr.as_coeff_terms()
