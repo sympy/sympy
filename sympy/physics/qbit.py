@@ -742,91 +742,7 @@ def qbits_to_matrix(qbits):
         return qbits._represent_QbitZBasisSet(QbitZBasisSet(len(qbits))) #TODO other bases with getattr
     else:
         raise Exception("Malformed input")
-"""
-def represent(circuit, basis = ZBasisSet(), GateRep = False, HilbertSize = None, format = 'sympy'):
-    
-        Represents the elements in a certain basis
-    
-    basis_name = basis.__class__.__name__
-    rep_method_name = '_represent_%s' % basis_name
-    
-    circuit = circuit.expand()
-    # check if the last element in circuit is Gate
-    # if not raise exception becuase size of Hilbert space undefined
-    if isinstance(circuit, Qbit):
-        return getattr(circuit, rep_method_name)()
-    elif isinstance(circuit, Gate):
-        if HilbertSize == None:
-            raise HilbertSpaceException("User must specify HilbertSize when gates are not applied on Qbits")
-        gate = circuit
-        rep_method = getattr(gate, rep_method_name)
-        gate_rep = rep_method(HilbertSize, format)
-        return gate_rep
-    elif isinstance(circuit, Add):
-        out = 0
-        for i in circuit.args:
-            if not out:
-                out = represent(i, basis, GateRep, HilbertSize, format)
-            else:
-                out = out + represent(i, basis, GateRep, HilbertSize, format)
-        return out
-    elif isinstance(circuit, Pow):
-        if HilbertSize == None:
-            raise HilbertSpaceException("User must specify HilbertSize when gates are not applied on Qbits")
-        gate = circuit.base
-        rep_method = getattr(gate, rep_method_name)
-        for i in range(circuit.exp):
-            if i == 0:
-                gate_rep = rep_method(HilbertSize, format)
-            else:
-                gate_rep = rep_method(HilbertSize, format)*gate_rep
-        return gate_rep
-    elif not isinstance(circuit, Mul):
-        raise Exception("Malformed input")
-    
-    qbit = circuit.args[len(circuit.args)-1]
-    if isinstance(qbit, Qbit):
-        HilbertSize = len(qbit)
-        #Turn the definite state of Qbits |X> into a single one in the Xth element of its column vector
-        result = getattr(qbit, rep_method_name)()
-    elif HilbertSize == None:
-        raise HilbertSpaceException("User must specify HilbertSize when gates are not applied on Qbits")
-    elif isinstance(qbit, Pow):
-        gate = qbit.base
-        rep_method = getattr(gate, rep_method_name)
-        for i in range(qbit.exp):
-            if i == 0:
-                gate_rep = rep_method(HilbertSize, format)
-            else:
-                gate_rep = rep_method(HilbertSize, format)*gate_rep
-    else:
-        gate = qbit
-        rep_method = getattr(gate, rep_method_name)
-        gate_rep = rep_method(HilbertSize, format)
-        result = gate_rep
 
-    
-    #go through each gate (from left->right) and apply it in X basis
-    for gate in reversed(circuit.args[:len(circuit.args)-1]):
-        basis_name = basis.__class__.__name__
-        rep_method_name = '_represent_%s' % basis_name
-        if isinstance(gate, Pow) and isinstance(gate.base, Gate):
-            number_of_applications = gate.exp
-            gate = gate.base
-            rep_method = getattr(gate, rep_method_name)
-            gate_rep = rep_method(HilbertSize, format)
-            for i in range(number_of_applications):
-                result = gate_rep*result
-        elif hasattr(gate,  rep_method_name):
-            rep_method = getattr(gate, rep_method_name)
-            gate_rep = rep_method(HilbertSize, format)
-            result = gate_rep*result
-        else:
-            result = gate*result
-    
-    return result
-
-"""
 def gatesimp(circuit):
     """ will simplify gates symbolically"""
     #Pull gates out of inner Add's and Mul's?
@@ -857,7 +773,6 @@ def gatesimp(circuit):
                 pass
                 #check for Hadamard to right of that
                 #replace stuff
-            
     
     return circuit
 
