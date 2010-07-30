@@ -101,7 +101,9 @@ class State(Expr, Representable):
 
     hilbert_space = HilbertSpace()
 
-    def __new__(cls, name, kind='ket'):
+    def __new__(cls, name, **options):
+        if options.has_key('kind'): kind = options['kind']
+        else: kind = 'ket'
         if not (kind=='ket' or kind=='bra'):
             raise ValueError("kind must be either 'ket' or 'bra', got: %r" % kind)
         name = sympify(name)
@@ -292,6 +294,7 @@ class InnerProduct(Expr):
     """
 
     def __new__(cls, bra, ket):
+        #What about innerProd(1,1), should it auto simplify?
         if not (bra and ket):
             raise Exception('InnerProduct requires a leading Bra and a trailing Ket')
         assert (isinstance(bra, State) and bra.kind == 'bra'), 'First argument must be a Bra'
@@ -637,9 +640,9 @@ def _qmul(expr1, expr2):
             elif mul.args[i].kind == 'ket' and expr.kind == 'ket':
                 raise NotImplementedError
         if (isinstance(mul.args[i], Operator) or isinstance(mul.args[i], OuterProduct)) and (isinstance(expr, State) and expr.kind == 'bra'):
-            raise QuantumError('(Operator or OuterProduct)*Bra is invalid in quantum mechanics.')
+            raise QuantumError('(Operator or OuterProduct)*Bra is invalid in quantum mechanics.\n(Try using parentheses to form inner and outer products)')
         if (isinstance(mul.args[i], State) and mul.args[i].kind == 'ket') and (isinstance(expr, Operator) or isinstance(expr, OuterProduct)):
-            raise QuantumError('Ket*(Operator or OuterProduct) is invalid in quantum mechanics.')
+            raise QuantumError('Ket*(Operator or OuterProduct) is invalid in quantum mechanics.\n(Try using parentheses to form inner and outer products)')
         if i == -1:
             new_args = mul.args[:i] + (_qmul(mul.args[i], expr), )
             return Mul(*new_args)
@@ -656,6 +659,10 @@ def _qmul(expr1, expr2):
             return InnerProduct(expr1, expr2)
         elif (isinstance(expr1, State) and expr1.kind == 'ket') and (isinstance(expr2, State) and expr2.kind == 'bra'):
             return OuterProduct(expr1, expr2)
+        elif isinstance(expr1, State) and expr1.kind == 'ket' and isinstance(expr2, Operator):
+            raise QuantumError("|Ket>*Operator is invalid in Quantum Mechanics\n(Try using parentheses to form inner and outer products)")
+        elif isinstance(expr2, State) and expr2.kind == 'bra' and isinstance(expr1, Operator):
+            raise QuantumError("Operator*<Bra| is invalid in Quantum Mechanics\n(Try using parentheses to form inner and outer products)")
         else:
             return Mul(expr1, expr2)
 
