@@ -131,9 +131,6 @@ class IndexedBase(Expr):
         else:
             return Indexed(self, indices, **kw_args)
 
-    def __call__(self, *indices, **kw_args):
-        return Indexed(self, *indices, **kw_args)
-
     @property
     def is_commutative(self):
         return self._is_commutative
