@@ -1204,7 +1204,7 @@ def dup_rr_prs_gcd(f, g, K):
     """
     Computes polynomial GCD using subresultants over a ring.
 
-    Returns `(h, cff, cfg)` such that `a = gcd(f, g)`, `cff = quo(f, h)`,
+    Returns `(h, cff, cfg)` such that `h = gcd(f, g)`, `cff = quo(f, h)`,
     and `cfg = quo(g, h)`.
 
     Example
@@ -1241,7 +1241,7 @@ def dup_ff_prs_gcd(f, g, K):
     r"""
     Computes polynomial GCD using subresultants over a field.
 
-    Returns `(h, cff, cfg)` such that `a = gcd(f, g)`, `cff = quo(f, h)`,
+    Returns `(h, cff, cfg)` such that `h = gcd(f, g)`, `cff = quo(f, h)`,
     and `cfg = quo(g, h)`.
 
     Example
@@ -1270,7 +1270,7 @@ def dmp_rr_prs_gcd(f, g, u, K):
     """
     Computes polynomial GCD using subresultants over a ring.
 
-    Returns `(h, cff, cfg)` such that `a = gcd(f, g)`, `cff = quo(f, h)`,
+    Returns `(h, cff, cfg)` such that `h = gcd(f, g)`, `cff = quo(f, h)`,
     and `cfg = quo(g, h)`.
 
     Example
@@ -1310,7 +1310,7 @@ def dmp_ff_prs_gcd(f, g, u, K):
     r"""
     Computes polynomial GCD using subresultants over a field.
 
-    Returns `(h, cff, cfg)` such that `a = gcd(f, g)`, `cff = quo(f, h)`,
+    Returns `(h, cff, cfg)` such that `h = gcd(f, g)`, `cff = quo(f, h)`,
     and `cfg = quo(g, h)`.
 
     Example
@@ -1596,7 +1596,7 @@ def dup_qq_heu_gcd(f, g, K0):
     r"""
     Heuristic polynomial GCD in `Q[x]`.
 
-    Returns `(h, cff, cfg)` such that `a = gcd(f, g)`, `cff = quo(f, h)`,
+    Returns `(h, cff, cfg)` such that `h = gcd(f, g)`, `cff = quo(f, h)`,
     and `cfg = quo(g, h)`.
 
     Example
@@ -1641,7 +1641,7 @@ def dmp_qq_heu_gcd(f, g, u, K0):
     r"""
     Heuristic polynomial GCD in `Q[X]`.
 
-    Returns `(h, cff, cfg)` such that `a = gcd(f, g)`, `cff = quo(f, h)`,
+    Returns `(h, cff, cfg)` such that `h = gcd(f, g)`, `cff = quo(f, h)`,
     and `cfg = quo(g, h)`.
 
     Example
@@ -1686,7 +1686,7 @@ def dup_inner_gcd(f, g, K):
     """
     Computes polynomial GCD and cofactors of `f` and `g` in `K[x]`.
 
-    Returns `(h, cff, cfg)` such that `a = gcd(f, g)`, `cff = quo(f, h)`,
+    Returns `(h, cff, cfg)` such that `h = gcd(f, g)`, `cff = quo(f, h)`,
     and `cfg = quo(g, h)`.
 
     Example
@@ -1738,7 +1738,7 @@ def dmp_inner_gcd(f, g, u, K):
     """
     Computes polynomial GCD and cofactors of `f` and `g` in `K[X]`.
 
-    Returns `(h, cff, cfg)` such that `a = gcd(f, g)`, `cff = quo(f, h)`,
+    Returns `(h, cff, cfg)` such that `h = gcd(f, g)`, `cff = quo(f, h)`,
     and `cfg = quo(g, h)`.
 
     Example

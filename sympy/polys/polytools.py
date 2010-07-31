@@ -1910,7 +1910,7 @@ class Poly(Basic):
         """
         Returns the GCD of `f` and `g` and their cofactors.
 
-        Returns `(h, cff, cfg)` such that `a = gcd(f, g)`, `cff = quo(f, h)`,
+        Returns `(h, cff, cfg)` such that `h = gcd(f, g)`, `cff = quo(f, h)`,
         and `cfg = quo(g, h)`.
 
         **Example**
@@ -3417,7 +3417,7 @@ def cofactors(f, g, *gens, **args):
     """
     Returns the GCD of `f` and `g` and their cofactors.
 
-    Returns `(h, cff, cfg)` such that `a = gcd(f, g)`, `cff = quo(f, h)`,
+    Returns `(h, cff, cfg)` such that `h = gcd(f, g)`, `cff = quo(f, h)`,
     and `cfg = quo(g, h)`.
 
     **Example**
