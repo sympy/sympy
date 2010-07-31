@@ -85,6 +85,15 @@ def _get_indices_Add(expr):
         x(i)*y(j) - z(j)*z(j)
 
     FIXME: Add support for Numpy broadcasting
+
+    >>> from sympy.tensor.index_methods import _get_indices_Add
+    >>> from sympy.tensor.indexed import IndexedBase, Idx
+    >>> i, j, k = map(Idx, ['i', 'j', 'k'])
+    >>> x = IndexedBase('x')
+    >>> y = IndexedBase('y')
+    >>> _get_indices_Add(x[i] + x[k]*y[i, k])
+    ((i,), ())
+
     """
 
     inds = map(get_indices, expr.args)
