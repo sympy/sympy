@@ -121,7 +121,7 @@ def get_case(d, t):
         return 'other_nonlinear'
     return 'other_linear'
 
-def splitfactor(p, D, T, coefficientD=False):
+def splitfactor(p, D, T, coefficientD=False, z=None):
     """
     Splitting factorization.
 
@@ -133,6 +133,8 @@ def splitfactor(p, D, T, coefficientD=False):
     """
     t = T[-1]
     kinv = [1/x for x in T[:-1]]
+    if z:
+        kinv.append(z)
 
     One = Poly(1, t, domain=p.get_domain())
     Dp = derivation(p, D, T, coefficientD)
@@ -159,7 +161,7 @@ def splitfactor(p, D, T, coefficientD=False):
     else:
         return (p, One)
 
-def splitfactor_sqf(p, D, T, coefficientD=False):
+def splitfactor_sqf(p, D, T, coefficientD=False, z=None):
     """
     Splitting Square-free Factorization
 
@@ -172,6 +174,8 @@ def splitfactor_sqf(p, D, T, coefficientD=False):
     # TODO: Verify this and splitfactor() for multiple extensions
     t = T[-1]
     kkinv = [1/x for x in T[:-1]] + T[:-1]
+    if z:
+        kkinv.append(z)
 
     S = []
     N = []
@@ -334,7 +338,7 @@ def residue_reduce(a, d, D, T, z=None, invert=True):
         R_map[i.degree()] = i
 
     r = Poly(r, z)
-    Np, Sp = splitfactor_sqf(r, D, T, coefficientD=True)
+    Np, Sp = splitfactor_sqf(r, D, T, coefficientD=True, z=z)
 
     for s, i in Sp:
         if i == d.degree(t):
@@ -571,11 +575,15 @@ def integrate_nonlinear_no_specials(a, d, D, T, Tfuncs):
     """
     Integration of nonlinear monomials with no specials.
 
-    Given a nonlinear monomial t over k such that Sirr = p in k[t] such
-    that p is special, monic, and irreducible} is empty, and f in k(t),
-    returns g elementary over k(t) and a Boolean b in {True, False} such
-    that f - Dg is in k if b == True, or f - Dg does not have an
-    elementary integral over k(t) if b == False.
+    Given a nonlinear monomial t over k such that Sirr ({p in k[t] | p is
+    special, monic, and irreducible}) is empty, and f in k(t), returns g
+    elementary over k(t) and a Boolean b in {True, False} such that f - Dg is
+    in k if b == True, or f - Dg does not have an elementary integral over k(t)
+    if b == False.
+
+    This function is applicable to all nonlinear extensions, but in the case
+    where it returns b == False, it will only have proven that the integral of
+    f - Dg is non-elementary if Sirr is empty.
 
     This function returns a Basic expression.
     """

@@ -1,5 +1,5 @@
 """Most of these tests come from the examples in Bronstein's book."""
-from sympy import Poly, S, Function, log, symbols, exp, tan, Integral
+from sympy import Poly, S, Function, log, symbols, exp, tan, Integral, sqrt
 from sympy.integrals.risch import (gcdex_diophantine, derivation, splitfactor,
     splitfactor_sqf, canonical_representation, hermite_reduce,
     polynomial_reduce, residue_reduce, integrate_primitive,
@@ -116,6 +116,9 @@ def test_residue_reduce():
     assert residue_reduce(Poly(-2*x*t + 1 - x**2, t),
     Poly(t**2 + 2*x*t + 1 + x**2, t), D, [x, t], z) == \
         ([(Poly(z**2 + S(1)/4, z), Poly(t + x + 2*z, t))], True)
+    D = [Poly(1, x), Poly(t, t)]
+    assert residue_reduce(Poly(t, t), Poly(t + sqrt(2), t), D, [x, t], z) == \
+        ([(Poly(z - 1, z), Poly(t + sqrt(2), t))], True)
 
 def test_integrate_hyperexponential():
     # TODO: Add tests for integrate_hyperexponential() from the book
