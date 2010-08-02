@@ -127,12 +127,13 @@ class CCodePrinter(StrPrinter):
         else:
             # If all terms have summations we must initialize array to Zero
             text = StrPrinter.doprint(self, S.Zero)
-
-        lines.extend(openloop)
-        if assign_to is not None:
-            text = "%s = %s;" % (lhs_printed, text)
-        lines.append(text)
-        lines.extend(closeloop)
+        # skip redundant assignments
+        if text != lhs_printed:
+            lines.extend(openloop)
+            if assign_to is not None:
+                text = "%s = %s;" % (lhs_printed, text)
+            lines.append(text)
+            lines.extend(closeloop)
 
         for dummies in d:
             # then terms with summations
