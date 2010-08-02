@@ -327,6 +327,14 @@ class Matrix(object):
     def __array__(self):
         return matrix2numpy(self)
 
+    def __len__(self):
+        """
+        Return the number of elements of self.
+
+        Implemented mainly so bool(Matrix()) == False.
+        """
+        return self.rows * self.cols
+
     def tolist(self):
         """
         Return the Matrix converted in a python list.
