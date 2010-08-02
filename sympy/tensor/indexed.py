@@ -39,7 +39,7 @@
     >>> M[ii, jj]
     M[i, j]
     >>> M[ii, jj].dimensions
-    [m, n]
+    (m, n)
     >>> M[ii, jj].ranges
     [(0, -1 + m), (0, -1 + n)]
 
@@ -205,8 +205,10 @@ class Indexed(Expr):
     @property
     def dimensions(self):
         """returns a list with dimensions of each index"""
+        if self.stem.shape:
+            return self.stem.shape
         try:
-            return [ i.upper - i.lower + 1 for i in self.indices ]
+            return tuple( i.upper - i.lower + 1 for i in self.indices )
         except TypeError:
             # Let's return a more meaningful error
             raise IndexException("Dimensions are not defined")
