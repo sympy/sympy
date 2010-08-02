@@ -497,12 +497,14 @@ def parametric_log_deriv(fa, fd, wa, wd, D, T):
 
 def is_log_deriv_k_t_radical_structure_thm(fa, fd, L_K, E_K, L_args, D, T, Df=False):
     """
-    Checks if f can be written as the logarithmic derivative of a k(t)-radical.
+    Checks if Df (or f) is the logarithmic derivative of a k(t)-radical.
 
-    f in k(t) can be written as the logarithmic derivative of a k(t) radical if
-    there exist n in ZZ and u in k(t) with n, u != 0 such that n*f == Du/u.
-    Either returns (n, u) or None, which means that f cannot be written as the
-    logarithmic derivative of a k(t)-radical.
+    b in k(t) can be written as the logarithmic derivative of a k(t) radical if
+    there exist n in ZZ and u in k(t) with n, u != 0 such that n*b == Du/u.
+    Either returns (ans, u, n) or None, which means that Df cannot be written as
+    the logarithmic derivative of a k(t)-radical.  ans is a list of tuples
+    such that Mul(*[i**j for i, j in ans]) == u.  This is useful for seeing
+    exactly what elements of k(t) produce u.
 
     This function uses the structure theorem approach, which says that for any
     f in K, Df is the logarithmic derivative of a K-radical if and only if there
@@ -587,6 +589,8 @@ def is_log_deriv_k_t_radical_structure_thm(fa, fd, L_K, E_K, L_args, D, T, Df=Fa
     else:
         residues = []
         H = []
+        fa, fd = (fd*derivation(fa, D, T) - fa*derivation(fd, D, T)).cancel(fd**2,
+            include=True)
 
     cases = [get_case(i, j) for i, j in zip(D, T)]
 

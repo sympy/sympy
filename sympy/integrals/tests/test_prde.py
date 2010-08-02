@@ -120,11 +120,11 @@ def test_limited_integrate():
 
 def test_is_log_deriv_k_t_radical():
     D = [Poly(1, x)]
-    assert is_log_deriv_k_t_radical_structure_thm(Poly(2, t1), Poly(1, t1),
+    assert is_log_deriv_k_t_radical_structure_thm(Poly(2*x, x), Poly(1, x),
     [], [], [], D, [x]) is None
 
     D = [Poly(1, x), Poly(2*t1, t1), Poly(1/x, t2)]
-    assert is_log_deriv_k_t_radical_structure_thm(Poly(2*x + 1, t3),
-    Poly(2*x, t3), [2], [1], [x], D, [x, t1, t2]) == \
+    assert is_log_deriv_k_t_radical_structure_thm(Poly(x + t2/2, t2),
+    Poly(1, t2), [2], [1], [x], D, [x, t1, t2]) == \
         ([(t1, 1), (x, 1)], t1*x, 2)
     # TODO: Add more tests
