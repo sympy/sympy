@@ -1,6 +1,6 @@
 from sympy import (
     Expr, Basic, sympify, Add, Mul, Pow, 
-    I, Function, Integer, S, sympify, Matrix
+    I, Function, Integer, S, sympify, Matrix, oo
 )
 from sympy.core.decorators import call_highest_priority
 from sympy.physics.hilbert import *
@@ -66,73 +66,57 @@ class Representable(object):
                 'Object %r does not know how to represent itself in basis: %r' % (self, basis)
             )
 
+class StateBase(Expr, Representable):
 
-class BasisSet(Basic):
-    """A basis set for a Hilbert Space"""
+    # Slots are for instance variables that can always be computed dynamically
+    # from self.args, but that we don't want users to have to pass each time.
+    __slots__ = ['hilbert_space']
 
-    hilbert_space = HilbertSpace()
-
-    def __new__(cls, dimension):
-        dimension = sympify(dimension)
-        return Basic.__new__(cls, dimension)
-
-    @property
-    def dimension(self):
-        return self.args[0]
-
-    def __len__(self):
-        return self.dimension
-
-    @property
-    def unity(self):
-        """Return the unity operator for this basis set."""
-        raise NotImplementedError('Not implemented')
-
-
-class State(Expr, Representable):
-    """
-    General abstract quantum state.
-
-    Anywhere you can have a State, you can also have Integer(0).
-    All code must check for this!
-    """
+    # Class level attributes that are the same for all instances go here.
+    # Because the hilbert_space can change, it can't go here. All instance
+    # level things must go in self.args.
+    is_continuous = False
+    is_discrete = False
+    # I am a little worried that the basis set might need to be in self.args.
+    # Or maybe this needs to be a slot if it can be computed from self.args.
+    basis_set = None
 
     _op_priority = 100.0
 
-    hilbert_space = HilbertSpace()
-
-    def __new__(cls, name, kind='ket'):
-        if not (kind=='ket' or kind=='bra'):
-            raise ValueError("kind must be either 'ket' or 'bra', got: %r" % kind)
-        name = sympify(name)
-        obj = Expr.__new__(cls, name, kind, **{'commutative': False})
-        return obj
-
     @property
     def name(self):
-        return self.args[0]
+        raise NotImplementedError('name must be implemented in a subclass')
 
     @property
-    def kind(self):
-        return self.args[1]
+    def dual(self):
+        raise NotImplementedError('dual must be implemented in a subclass')
 
-    @property
-    def is_ket(self):
-        if self.kind == 'ket':
-            return True
-        elif self.kind == 'bra':
-            return False
-
-    @property
-    def is_bra(self):
-        if self.kind == 'bra':
-            return True
-        elif self.kind == 'ket':
-            return False
+    def _eval_dagger(self):
+        return self.dual
 
     @property
     def is_symbolic(self):
         return True
+
+    def _sympyrepr(self, printer, *args):
+        return '%s(%s)' % (self.__class__.__name__, self._print_name(printer, *args))
+
+    def _sympystr(self, printer, *args):
+        return '%s%s%s' % (self.lbracket, self._print_name(printer, *args), self.rbracket)
+
+    def _pretty(self, printer, *args):
+        from sympy.printing.pretty.stringpict import prettyForm
+        pform = self._print_name_pretty(printer, *args)
+        pform = prettyForm(*pform.left(prettyForm(self.lbracket)))
+        pform = prettyForm(*pform.right(prettyForm(self.rbracket)))
+        return pform
+
+    def _print_name(self, printer, *args):
+        return printer._print(self.name, *args)
+
+    def _print_name_pretty(self, printer, *args):
+        pform = printer._print(self.name, *args)
+        return pform
 
     @call_highest_priority('__rmul__')
     def __mul__(self, other):
@@ -164,59 +148,123 @@ class State(Expr, Representable):
     def __rpow__(self, other):
         raise QuantumError("Can't raise %s to a State" % (other.__class__.__name__,))
 
-    def _print_name(self, printer, *args):
-        return printer._print(self.args[0], *args)
+class KetBase(StateBase):
 
-    def _print_name_pretty(self, printer, *args):
-        pform = printer._print(self.args[0], *args)
-        return pform
+    lbracket = '|'
+    rbracket = '>'
+
+    @property
+    def dual(self):
+        return BraBase(*self.args)
+
+class BraBase(StateBase):
+
+    lbracket = '<'
+    rbracket = '|'
+
+    @property
+    def dual(self):
+        return KetBase(*self.args)
+
+
+class State(StateBase):
+    """
+    General abstract quantum state.
+
+    Anywhere you can have a State, you can also have Integer(0).
+    All code must check for this!
+    """
+
+    def __new__(cls, name):
+        # First compute args and call Expr.__new__ to create the instance
+        name = cls._eval_name(name)
+        inst = Expr.__new__(cls, name, **{'commutative':False})
+        # Now set the slots on the instance
+        inst.hilbert_space = cls._eval_hilbert_space(name)
+        return inst
+
+    @classmethod
+    def _eval_name(cls, name):
+        return sympify(name)
+
+    @property
+    def name(self):
+        return self.args[0]
+
+    @classmethod
+    def _eval_hilbert_space(cls, name):
+        return HilbertSpace()
 
     def doit(self, **kw_args):
         return self
 
-    def _eval_dagger(self):
-        return self.dual
+class Ket(State, KetBase):
 
     @property
     def dual(self):
-        if self.is_ket:
-            return State(self.args[0], 'bra')
-        elif self.is_bra:
-            return State(self.args[0], 'ket')
+        return Bra(*self.args)
+
+class Bra(State, BraBase):
 
     @property
-    def lbracket(self):
-        if self.is_ket:
-            return '|'
-        else:
-            return '<'
+    def dual(self):
+        return Ket(*self.args)
+
+class TimeDepState(StateBase):
+
+    def __new__(cls, name, time):
+        # First compute args and call Expr.__new__ to create the instance
+        name = cls._eval_name(name, time)
+        time = cls._eval_time(name, time)
+        inst = Expr.__new__(cls, name, time, **{'commutative':False})
+        # Now set the slots on the instance
+        inst.hilbert_space = cls._eval_hilbert_space(name, time)
+        return inst
+
+    @classmethod
+    def _eval_name(cls, name, time):
+        return sympify(name)
+
+    @classmethod
+    def _eval_time(cls, name, time):
+        return sympify(time)
+
+    @classmethod
+    def _eval_hilbert_space(cls, name, time):
+        return HilbertSpace()
+
+class TimeDepKet(TimeDepState, KetBase):
 
     @property
-    def rbracket(self):
-        if self.is_ket:
-            return '>'
-        else:
-            return '|'
+    def dual(self):
+        return TimeDepBra(*self.args)
 
-    def _sympyrepr(self, printer, *args):
-        return '%s(%s)' % (self.__class__.__name__, self._print_name(printer, *args))
+class TimeDepBra(TimeDepState, BraBase):
 
-    def _sympystr(self, printer, *args):
-        return '%s%s%s' % (self.lbracket, self._print_name(printer, *args), self.rbracket)
+    @property
+    def dual(self):
+        return TimeDepKet(*self.args)
 
-    def _pretty(self, printer, *args):
-        from sympy.printing.pretty.stringpict import prettyForm
-        pform = self._print_name_pretty(printer, *args)
-        pform = prettyForm(*pform.left(prettyForm(self.lbracket)))
-        pform = prettyForm(*pform.right(prettyForm(self.rbracket)))
-        return pform
+class BasisSet(Basic):
+    """A basis set for a Hilbert Space"""
 
-def Ket(name):
-    return State(name, kind='ket')
+    hilbert_space = HilbertSpace()
 
-def Bra(name):
-    return State(name, kind='bra')
+    def __new__(cls, dimension):
+        dimension = sympify(dimension)
+        return Basic.__new__(cls, dimension)
 
+    @property
+    def dimension(self):
+        return self.args[0]
+
+    def __len__(self):
+        return self.dimension
+
+    @property
+    def unity(self):
+        """Return the unity operator for this basis set."""
+        raise NotImplementedError('Not implemented')
 
 class Operator(Expr, Representable):
     """
@@ -228,15 +276,19 @@ class Operator(Expr, Representable):
     >>> print A
     A
     """
-
     _op_priority = 100.0
 
-    hilbert_space = HilbertSpace()
+    __slots__ = ['hilbert_space']
 
     def __new__(cls, name):
         name = sympify(name)
         obj = Expr.__new__(cls, name, **{'commutative': False})
+        obj.hilbert_space = eval_hilbert_space(cls, name)        
         return obj
+
+    @classmethod
+    def eval_hilbert_space(cls, name):
+        return HilbertSpace()
 
     @property
     def name(self):
@@ -295,8 +347,8 @@ class InnerProduct(Expr):
     def __new__(cls, bra, ket):
         if not (bra and ket):
             raise Exception('InnerProduct requires a leading Bra and a trailing Ket')
-        assert (isinstance(bra, State) and bra.kind == 'bra'), 'First argument must be a Bra'
-        assert (isinstance(ket, State) and ket.kind == 'ket'), 'Second argument must be a Ket'
+        assert isinstance(bra, Bra), 'First argument must be a Bra'
+        assert isinstance(ket, Ket), 'Second argument must be a Ket'
         r = cls.eval(bra, ket)
         if isinstance(r, Expr):
             return r
@@ -340,8 +392,8 @@ class OuterProduct(Expr):
     def __new__(cls, ket, bra):
         if not (ket and bra):
             raise Exception('OuterProduct requires a leading Ket and a trailing Bra')
-        assert (isinstance(ket, State) and ket.kind == 'ket'), 'First argument must be a Ket'
-        assert (isinstance(bra, State) and bra.kind == 'bra'), 'Second argument must be a Bra'
+        assert isinstance(ket, Ket), 'First argument must be a Ket'
+        assert isinstance(bra, Bra), 'Second argument must be a Bra'
         r = cls.eval(ket, bra)
         if isinstance(r, Expr):
             return r
