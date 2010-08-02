@@ -119,8 +119,18 @@ class IndexedBase(Expr):
 
         obj = Expr.__new__(cls, label, **kw_args)
         obj._is_commutative = commutative
-        obj._shape = shape
+        if isinstance(shape, (tuple, list)):
+            obj._shape = Tuple(*shape)
+        else:
+            obj._shape = shape
         return obj
+
+    @property
+    def args(self):
+        if self._shape:
+            return self._args + (self._shape,)
+        else:
+            return self._args
 
     def _hashable_content(self):
         return Expr._hashable_content(self) + (self._is_commutative, self._shape)

@@ -1,4 +1,4 @@
-from sympy import symbols, Integer, Symbol
+from sympy import symbols, Integer, Symbol, Tuple
 from sympy.tensor import IndexedBase, Idx, Indexed
 from sympy.tensor.indexed import IndexException
 from sympy.utilities.pytest import raises
@@ -75,19 +75,29 @@ def test_Idx_subs():
     assert Idx(i, a).subs(a, 2) == Idx(i, 2)
     assert Idx(i, (a, b)).subs(i, 2) == Idx(2, (a, b))
 
-def test_Indexed_sugar():
+def test_IndexedBase_sugar():
     i, j = symbols('i j', integer=True)
     a = symbols('a')
     A1 = Indexed(a, i, j)
     A2 = IndexedBase(a)
     assert A1 == A2[i, j]
 
-def test_Indexed_subs():
+def test_IndexedBase_subs():
     i, j, k = symbols('i j k', integer=True)
     a, b = symbols('a b')
     A = IndexedBase(a)
     B = IndexedBase(b)
-    assert A == B.subs(b, a)
+    assert A[i] == B[i].subs(b, a)
+
+def test_IndexedBase_shape():
+    i, j, m, n = symbols('i j m n', integer=True)
+    a = IndexedBase('a', shape=(m, m))
+    b = IndexedBase('a', shape=(m, n))
+    assert b.shape == Tuple(m, n)
+    assert a[i, j] != b[i, j]
+    assert a[i, j] == b[i, j].subs(n, m)
+    assert b.func(*b.args) == b
+    assert b[i].func(*b[i].args) == b[i]
 
 def test_Indexed_constructor():
     i, j = symbols('i j', integer=True)
@@ -101,7 +111,7 @@ def test_Indexed_func_args():
     i, j = symbols('i j', integer=True)
     a = symbols('a')
     A = Indexed(a, i, j)
-    assert A.func(*A.args)
+    assert A == A.func(*A.args)
 
 def test_Indexed_subs():
     i, j, k = symbols('i j k', integer=True)
