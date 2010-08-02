@@ -137,8 +137,12 @@ class IndexedBase(Expr):
 
     def __getitem__(self, indices, **kw_args):
         if isinstance(indices, tuple):
+            if self.shape and len(self.shape) != len(indices):
+                raise IndexException("Rank mismatch")
             return Indexed(self, *indices, **kw_args)
         else:
+            if self.shape and len(self.shape) != 1:
+                raise IndexException("Rank mismatch")
             return Indexed(self, indices, **kw_args)
 
     @property

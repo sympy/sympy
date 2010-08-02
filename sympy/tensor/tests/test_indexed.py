@@ -97,7 +97,9 @@ def test_IndexedBase_shape():
     assert a[i, j] != b[i, j]
     assert a[i, j] == b[i, j].subs(n, m)
     assert b.func(*b.args) == b
-    assert b[i].func(*b[i].args) == b[i]
+    assert b[i, j].func(*b[i, j].args) == b[i, j]
+    raises(IndexException, 'b[i]')
+    raises(IndexException, 'b[i, i, j]')
 
 def test_Indexed_constructor():
     i, j = symbols('i j', integer=True)
