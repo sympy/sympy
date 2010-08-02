@@ -41,32 +41,34 @@ class Qbit(State):
     """
     Represents a single definite quantum state
     """
-    lbracket = '|'
-    rbracket = '>'
     outDecimal = False
-    def __new__(cls, *args):
+    def __new__(cls, *args, **options):
         import math
+        if options.has_key('kind'): kind = options[kind]
+        else: kind = 'ket'
         #If they just give us one number, express it in the least number of bits possible
         if args[0] > 1 and len(args) == 1:
             array = [(args[0]>>i)&1 for i in reversed(range(int(math.ceil(math.log(args[0], 2)+.01)+.001)))]
             array = sympify(array)
-            return Expr.__new__(cls, *array, **{'commutative':False})
+            array = tuple(array)
+            return State.__new__(cls, array, **{'kind':kind})
         #if they give us two numbers, the second number is the number of bits on which it is expressed)
         #Thus, Qbit(0,5) == |00000>. second argument can't be one becuase of intersection and uslessesness of possibility
         elif len(args) == 2 and args[1] > 1:
             array = [(args[0]>>i)&1 for i in reversed(range(args[1]))]
             array = sympify(array)
-            return Expr.__new__(cls, *array, **{'commutative':False})
+            array = tuple(array)
+            return State.__new__(cls, array, **{'kind':kind})
         for element in args:
             if not (element == 1 or element == 0):
                 raise Exception("Values must be either one or zero")
         args = sympify(args)
-        obj = Expr.__new__(cls, *args, **{'commutative':False})
+        obj = State.__new__(cls, args, **{'kind':kind})
         return obj
     
     @property
     def dimension(self):
-        return len(self.args)
+        return len(self.args[0])
     
     def __len__(self):
         return self.dimension
@@ -74,9 +76,8 @@ class Qbit(State):
     def __getitem__(self, bit):
         if bit > self.dimension - 1:
             raise Exception()
-        return self.args[int(self.dimension-bit-1)]
+        return self.args[0][int(self.dimension-bit-1)]
 
-    #Todo OutDecimal
     def _print_name(self, printer, *args):
         string = self.to_string()
         return printer._print(string, *args)
@@ -90,21 +91,22 @@ class Qbit(State):
         if Qbit.outDecimal:
             number = 0
             n = 1
-            for i in reversed(self.args):
+            for i in reversed(self.args[0]):
                 number += n*i
                 n = n<<1
             string = str(number)
         else:
             string = ""
-            for i in self.args:
+            for i in self.args[0]:
                 string = string + str(i)
         return string
 
     def _sympyrepr(self, printer, *args):
-        return "%s%s" % (printer._print(self.__class__.__name__, *args), printer._print(str(self.args)))
+        return "%s%s" % (printer._print(self.__class__.__name__, *args), printer._print(str(self.args[0])))
     
     def flip(self, *args):
-        newargs = list(self.args[:])
+        #check now needed TODO
+        newargs = list(self.args[0])
         for i in args:
             bit = int(self.dimension-i-1)
             if newargs[bit] == 1:
@@ -119,7 +121,7 @@ class Qbit(State):
             raise HilbertSpaceException("Basis and Qbit dimensions do not match!")
         n = 1
         definiteState = 0
-        args = self.args
+        args = self.args[0]
         for it in reversed(args):
             definiteState += n*it
             n = n*2
@@ -189,7 +191,7 @@ class Gate(Operator):
             #now apply each column element to qbit
             result = 0
             for index in range(len(column.tolist())):
-                new_qbit = Qbit(*qbits.args)
+                new_qbit = Qbit(*qbits.args[0])
                 #flip the bits that need to be flipped
                 for bit in range(len(args)):
                     if new_qbit[args[bit]] != (index>>bit)&1:
@@ -382,7 +384,7 @@ def TensorProduct(*args):
         MatrixExpansion = Next
     return MatrixExpansion
 
-#This is black box, I need to find a way to do this more realistically
+#This is black box, I need to find a way to do this more realistically FIXME TODO
 class controlledMod(Gate):
     def __new__(cls, *args):
         return Expr.__new__(cls, *args, **{'commutative': False})
@@ -397,7 +399,7 @@ class controlledMod(Gate):
             k = k + n*qbits[t+i]
             n = n*2
         out = int(a**k%N)
-        outarray = list(qbits.args[0:t])
+        outarray = list(qbits.args[0][0:t])
         for i in reversed(range(t)):            
             outarray.append((out>>i)&1)
         return Qbit(*outarray)
@@ -740,91 +742,7 @@ def qbits_to_matrix(qbits):
         return qbits._represent_QbitZBasisSet(QbitZBasisSet(len(qbits))) #TODO other bases with getattr
     else:
         raise Exception("Malformed input")
-"""
-def represent(circuit, basis = ZBasisSet(), GateRep = False, HilbertSize = None, format = 'sympy'):
-    
-        Represents the elements in a certain basis
-    
-    basis_name = basis.__class__.__name__
-    rep_method_name = '_represent_%s' % basis_name
-    
-    circuit = circuit.expand()
-    # check if the last element in circuit is Gate
-    # if not raise exception becuase size of Hilbert space undefined
-    if isinstance(circuit, Qbit):
-        return getattr(circuit, rep_method_name)()
-    elif isinstance(circuit, Gate):
-        if HilbertSize == None:
-            raise HilbertSpaceException("User must specify HilbertSize when gates are not applied on Qbits")
-        gate = circuit
-        rep_method = getattr(gate, rep_method_name)
-        gate_rep = rep_method(HilbertSize, format)
-        return gate_rep
-    elif isinstance(circuit, Add):
-        out = 0
-        for i in circuit.args:
-            if not out:
-                out = represent(i, basis, GateRep, HilbertSize, format)
-            else:
-                out = out + represent(i, basis, GateRep, HilbertSize, format)
-        return out
-    elif isinstance(circuit, Pow):
-        if HilbertSize == None:
-            raise HilbertSpaceException("User must specify HilbertSize when gates are not applied on Qbits")
-        gate = circuit.base
-        rep_method = getattr(gate, rep_method_name)
-        for i in range(circuit.exp):
-            if i == 0:
-                gate_rep = rep_method(HilbertSize, format)
-            else:
-                gate_rep = rep_method(HilbertSize, format)*gate_rep
-        return gate_rep
-    elif not isinstance(circuit, Mul):
-        raise Exception("Malformed input")
-    
-    qbit = circuit.args[len(circuit.args)-1]
-    if isinstance(qbit, Qbit):
-        HilbertSize = len(qbit)
-        #Turn the definite state of Qbits |X> into a single one in the Xth element of its column vector
-        result = getattr(qbit, rep_method_name)()
-    elif HilbertSize == None:
-        raise HilbertSpaceException("User must specify HilbertSize when gates are not applied on Qbits")
-    elif isinstance(qbit, Pow):
-        gate = qbit.base
-        rep_method = getattr(gate, rep_method_name)
-        for i in range(qbit.exp):
-            if i == 0:
-                gate_rep = rep_method(HilbertSize, format)
-            else:
-                gate_rep = rep_method(HilbertSize, format)*gate_rep
-    else:
-        gate = qbit
-        rep_method = getattr(gate, rep_method_name)
-        gate_rep = rep_method(HilbertSize, format)
-        result = gate_rep
 
-    
-    #go through each gate (from left->right) and apply it in X basis
-    for gate in reversed(circuit.args[:len(circuit.args)-1]):
-        basis_name = basis.__class__.__name__
-        rep_method_name = '_represent_%s' % basis_name
-        if isinstance(gate, Pow) and isinstance(gate.base, Gate):
-            number_of_applications = gate.exp
-            gate = gate.base
-            rep_method = getattr(gate, rep_method_name)
-            gate_rep = rep_method(HilbertSize, format)
-            for i in range(number_of_applications):
-                result = gate_rep*result
-        elif hasattr(gate,  rep_method_name):
-            rep_method = getattr(gate, rep_method_name)
-            gate_rep = rep_method(HilbertSize, format)
-            result = gate_rep*result
-        else:
-            result = gate*result
-    
-    return result
-
-"""
 def gatesimp(circuit):
     """ will simplify gates symbolically"""
     #Pull gates out of inner Add's and Mul's?
@@ -855,7 +773,6 @@ def gatesimp(circuit):
                 pass
                 #check for Hadamard to right of that
                 #replace stuff
-            
     
     return circuit
 

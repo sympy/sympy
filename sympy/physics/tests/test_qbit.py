@@ -287,7 +287,7 @@ def test_reversible_add():
     for i in range(4):
         for k in range(4):
             result = apply_gates(ADD((0,1,2,3),(4,5,6,7),(8,9,10,11))*Qbit(*([0,0,0,0] + numtoarr(k) + numtoarr(i))))
-            assert list(result.args[4:8]) == numtoarr(i+k)
+            assert list(result.args[0][4:8]) == numtoarr(i+k)
 
 def test_reversible_bitshift():
     circuit = Qbit(0,0,0,1,0,1,1,1,1,0,1,0,1)
