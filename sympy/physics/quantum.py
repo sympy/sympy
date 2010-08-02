@@ -283,7 +283,7 @@ class Operator(Expr, Representable):
     def __new__(cls, name):
         name = sympify(name)
         obj = Expr.__new__(cls, name, **{'commutative': False})
-        obj.hilbert_space = eval_hilbert_space(cls, name)        
+        obj.hilbert_space = cls.eval_hilbert_space(name)        
         return obj
 
     @classmethod
@@ -298,7 +298,7 @@ class Operator(Expr, Representable):
     def __mul__(self, other):
         compare_hilbert(other, self)
         _validate_mul(self,other)
-        return _qmul(other, self)
+        return _qmul(self, other)
 
     @call_highest_priority('__mul__')
     def __rmul__(self, other):
@@ -678,13 +678,13 @@ def _evaluate_type(sympy_binop):
             elif issubclass(result[0], Operator):
                 if isinstance(item, (Number, Operator)):
                     result = [Operator, '']
-                elif isinstance(item, State) and item.kind == 'ket':
+                elif isinstance(item, KetBase):
                     return [State, 'ket']
                 else:
                     raise QuantumError("Can't multiply %s and %s" % (result.__name__, item.__class__.__name__))
             elif issubclass(result[0], State):
                 if result[1] == 'ket':
-                    if isinstance(item, State) and item.kind == 'bra':
+                    if isinstance(item, BraBase):
                         return [Number, '']
                     elif isinstance(item, Number):
                         return 
@@ -708,8 +708,8 @@ def _validate_add(expr1, expr2):
         _validate_add(expr1, expr2.args[0])
         return
     else:
-        if isinstance(expr1, State) and isinstance(expr2, State):
-            if expr1.kind == expr2.kind:
+        if isinstance(expr1, StateBase) and isinstance(expr2, StateBase):
+            if expr1.__class__ == expr2.__class__:
                 return
         elif isinstance(expr1, Operator) and isinstance(expr2, Operator):
             return
@@ -727,23 +727,23 @@ def _validate_mul(expr1, expr2):
         _validate_mul(expr1.args[-1], expr2)
     elif isinstance(expr2, Add):
         _validate_mul(expr1, expr2.args[-1])
-    elif isinstance(expr1, State) and isinstance(expr2, State):
-        if expr1.kind == 'ket' and expr2.kind == 'ket':
+    elif isinstance(expr1, State) and isinstance(expr2, StateBase):
+        if isinstance(expr1, Ket) and isinstance(expr2, KetBase):
             raise NotImplementedError("TensorProducts of ket%ket not implemented")
-        if expr1.kind == 'bra' and expr2.kind == 'bra':
+        if isinstance(expr1, Bra) and isinstance(expr2, BraBase):
             raise NotImplementedError("TensorProducts of bra%bra not implemented")
-    elif isinstance(expr1, (Operator, OuterProduct)) and isinstance(expr2, State) and expr2.kind == 'bra':
+    elif isinstance(expr1, (Operator, OuterProduct)) and isinstance(expr2, BraBase):
         raise QuantumError('(Operator or OuterProduct)*Bra is invalid.\n(Try using parentheses to form inner and outer products)')
-    elif isinstance(expr2, (Operator, OuterProduct)) and isinstance(expr1, State) and expr1.kind == 'ket':
+    elif isinstance(expr2, (Operator, OuterProduct)) and isinstance(expr1, Ket):
         raise QuantumError('Ket*(Operator or OuterProduct) is invalid.\n(Try using parentheses to form inner and outer products)')
 
 def _qmul(expr1, expr2):
     """
     Check to see if arg1 or arg2 can combine to be a valid Mul.
     """
-    if (isinstance(expr1, State) and expr1.kind == 'bra') and (isinstance(expr2, State) and expr2.kind == 'ket'):
+    if isinstance(expr1, Bra) and isinstance(expr2, Ket):
         return InnerProduct(expr1, expr2)
-    elif (isinstance(expr1, State) and expr1.kind == 'ket') and (isinstance(expr2, State) and expr2.kind == 'bra'):
+    elif isinstance(expr1, Ket) and isinstance(expr2, Bra):
         return OuterProduct(expr1, expr2)
     else:
         return Mul(expr1, expr2)
