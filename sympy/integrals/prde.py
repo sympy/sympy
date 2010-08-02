@@ -14,7 +14,7 @@ right hand side of the equation (i.e., gi in k(t)), and Q is a list of terms on
 the right hand side of the equation (i.e., qi in k[t]).  See the docstring of
 each function for more information.
 """
-from sympy.core import Symbol, ilcm, Mul, Pow
+from sympy.core import Symbol, ilcm, Add, Mul, Pow
 
 from sympy.matrices import Matrix, zeros, eye
 
@@ -495,6 +495,87 @@ def parametric_log_deriv(fa, fd, wa, wd, D, T):
     # TODO: Write the full algorithm using the structure theorems.
     return parametric_log_deriv_heu(fa, fd, wa, wd, D, T)
 
+def is_deriv_k_structure_thm(fa, fd, L_K, E_K, E_args, D, T):
+    """
+    Checks if Df/f is the derivatie of an element of k(t).
+
+    a in k(t) is the derivative of an element of k(t) if there exists b in k(t)
+    such that a = Db.  Either returns (ans, u), such that Df/f == Du, or None,
+    which means that Df/f is not the dericative of an element of k(t).  ans is
+    a list of tuples such that Add(*[i*j for i, j in ans]) == u.  This is useful
+    for seeing exactly what elements of k(t) produce u.
+
+    This function uses the structure theorem approach, which says that for any
+    f in K, Df/f is the derivative of a element of K if and only if there are ri
+    in QQ such that::
+
+            ---               ---       Dt       Df
+            \    r  * Dt   +  \    r  *   i   =  --.
+            /     i     i     /     i   ---       f
+            ---               ---        t
+         i in L            i in E         i
+               K/C(x)            K/C(x)
+
+
+    Where C = Const(K), L_K/C(x) = { i in {1, ..., n} such that t_i is
+    transcendental over C(x)(t_1, ..., t_i-1) and Dt_i = Da_i/a_i, for some a_i
+    in C(x)(t_1, ..., t_i-1)* } (i.e., the set of all indices of logarithmic
+    monomials of K over C(x)), and E_K/C(x) = { i in {1, ..., n} such that t_i
+    is transcendental over C(x)(t_1, ..., t_i-1) and Dt_i/t_i = Da_i, for some
+    a_i in C(x)(t_1, ..., t_i-1) } (i.e., the set of all indices of
+    hyperexponential monomials of K over C(x)).  If K is an elementary extension
+    over C(x), then the cardinality of L_K/C(x) U E_K/C(x) is exactly the
+    transcendence degree of K over C(x).  Furthermore, because Const_D(K) ==
+    Const_D(C(x)) == C, deg(Dt_i) == 1 when t_i is in E_K/C(x) and
+    deg(Dt_i) == 0 when t_i is in L_K/C(x), implying in particular that E_K/C(x)
+    and L_K/C(x) are disjoint.
+
+    The sets L_K/C(x) and E_K/C(x) must, by their nature, be computed
+    recursively using this same function.  Therefore, it is required to pass
+    them as indices to D (or T).  E_args are the arguments of the
+    hyperexponentials indexed by E_K (i.e., if i is in E_K, then T[i] ==
+    exp(E_args[i])).  This is needed to compute the final answer u such that
+    Df/f == Du.
+    """
+    t = T[-1]
+
+    # Compute Df/f
+    fa, fd = fd*(fd*derivation(fa, D, T) - fa*derivation(fd, D, T)), fd**2*fa
+    fa, fd = fa.cancel(fd, include=True)
+
+    cases = [get_case(i, j) for i, j in zip(D, T)]
+
+    # Our assumption here is that each monomial is recursively transcendental
+    if len(L_K) + len(E_K) != len(D) - 1:
+        if filter(lambda i: i == 'tan', cases) or \
+            set(filter(lambda i: i == 'primitive', cases)) - set(L_K):
+                raise NotImplementedError("Real version of the structure " +
+                "theorems with hypertangent support is not yet implemented.")
+
+        # TODO: What should really be done in this case?
+        raise NotImplementedError("Non-elementary extensions not supported " +
+            "in the structure theorems.")
+
+    E_part = [D[i].quo(Poly(T[i], T[i])).as_basic() for i in E_K]
+    L_part = [D[i].as_basic() for i in L_K]
+
+    lhs = Matrix([E_part + L_part])
+    rhs = Matrix([fa.as_basic()/fd.as_basic()])
+
+    A, u = constant_system(lhs, rhs, D, T)
+
+    if any(i.has_any_symbols(*T) for i in u) or not A:
+        return None
+    else:
+        if not all(i.is_Rational for i in u):
+            raise NotImplementedError("Cannot work with non-rational " +
+                "coefficients in this case.")
+        else:
+            terms = E_args + [T[i] for i in L_K]
+            ans = zip(terms, u)
+            result = Add(*[Mul(i, j) for i, j in ans])
+            return (ans, result)
+
 def is_log_deriv_k_t_radical_structure_thm(fa, fd, L_K, E_K, L_args, D, T, Df=False):
     """
     Checks if Df (or f) is the logarithmic derivative of a k(t)-radical.
@@ -552,8 +633,6 @@ def is_log_deriv_k_t_radical_structure_thm(fa, fd, L_K, E_K, L_args, D, T, Df=Fa
     This function still applies some of the heuristics from the modified
     integration algorithm version to exit early in the negative case.
     """
-    fa, fd = fa.cancel(fd, include=True)
-
     t = T[-1]
 
     if Df:
@@ -561,6 +640,8 @@ def is_log_deriv_k_t_radical_structure_thm(fa, fd, L_K, E_K, L_args, D, T, Df=Fa
         # the modified integration algorithm as per is_log_deriv_k_t_radical_old()
         # because the residue_reduce() does not give all recursive logarithms.
         raise NotImplementedError
+
+        fa, fd = fa.cancel(fd, include=True)
 
         # f must be simple
         n, s = splitfactor(fd, D, T)
@@ -623,7 +704,7 @@ def is_log_deriv_k_t_radical_structure_thm(fa, fd, L_K, E_K, L_args, D, T, Df=Fa
             n = reduce(ilcm, [i.as_numer_denom()[1] for i in u])
             u *= n
             residueterms = [j.subs(z, RootOf(f, i)) for f, j in H for i in xrange(0, f.degree())]
-            terms = [T[i] for i in E_K] + L_args +residueterms
+            terms = [T[i] for i in E_K] + L_args + residueterms
             ans = zip(terms, u)
             result = Mul(*[Pow(i, j) for i, j in ans])
             return (ans, result, n)

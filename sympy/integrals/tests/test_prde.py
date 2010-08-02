@@ -3,7 +3,8 @@ from sympy import Poly, Matrix, S, symbols
 from sympy.integrals.prde import (prde_normal_denom, prde_special_denom,
     prde_linear_constraints, constant_system, prde_spde, prde_no_cancel_b_large,
     prde_no_cancel_b_small, limited_integrate_reduce, limited_integrate,
-    is_log_deriv_k_t_radical_structure_thm, parametric_log_deriv_heu)
+    is_deriv_k_structure_thm, is_log_deriv_k_t_radical_structure_thm,
+    parametric_log_deriv_heu)
 
 from sympy.abc import x, t, n
 
@@ -128,3 +129,16 @@ def test_is_log_deriv_k_t_radical():
     Poly(1, t2), [2], [1], [x], D, [x, t1, t2]) == \
         ([(t1, 1), (x, 1)], t1*x, 2)
     # TODO: Add more tests
+
+def test_is_deriv_k():
+    D = [Poly(1, x), Poly(1/x, t1), Poly(1/(x + 1), t2)]
+    assert is_deriv_k_structure_thm(Poly(2*x**2 + 2*x, t2), Poly(1, t2),
+    [1, 2], [], [], D, [x, t1, t2]) == \
+        ([(t1, 1), (t2, 1)], t1 + t2)
+
+    D = [Poly(1, x), Poly(1/x, t1), Poly(t2, t2)]
+    T = [x, t1, t2]
+    assert is_deriv_k_structure_thm(Poly(x**2*t2**3, t2), Poly(1, t2), [1],
+    [2], [x], D, T) == \
+        ([(x, 3), (t1, 2)], 2*t1 + 3*x)
+    # TODO: Add more tests, include ones with exponentials
