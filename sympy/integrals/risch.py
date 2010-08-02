@@ -47,7 +47,7 @@ def gcdex_diophantine(a, b, c):
     < b.degree().
     """
     # Extended Euclidean Algorithm (Diophantine Version) pg. 13
-    # XXX: This should go in densetools.py.
+    # TODO: This should go in densetools.py.
     # XXX: Bettter name?
 
     s, g = a.half_gcdex(b)

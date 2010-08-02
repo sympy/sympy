@@ -2,9 +2,9 @@
 from sympy import Poly, S, Function, log, symbols, exp, tan, Integral, sqrt
 from sympy.integrals.risch import (gcdex_diophantine, derivation, splitfactor,
     splitfactor_sqf, canonical_representation, hermite_reduce,
-    polynomial_reduce, residue_reduce, integrate_primitive,
-    integrate_hyperexponential, integrate_hypertangent_polynomial,
-    integrate_nonlinear_no_specials)
+    polynomial_reduce, residue_reduce, residue_reduce_to_basic,
+    integrate_primitive, integrate_hyperexponential,
+    integrate_hypertangent_polynomial, integrate_nonlinear_no_specials)
 from sympy.utilities.pytest import XFAIL, skip
 
 from sympy.abc import x, t, nu, z, a
@@ -105,8 +105,10 @@ def test_residue_reduce():
         ([(Poly(z**2 - S(1)/4, z), Poly(t + 2*x*z, t))], False)
     assert residue_reduce(Poly(-2/x, t), Poly(t**2 - 1, t,), D, [x, t], z, invert=False) == \
         ([(Poly(z**2 - 1, z), Poly(-z*t - 1, t))], True)
-    assert residue_reduce(Poly(-2/x, t), Poly(t**2 - 1, t), D, [x, t], z, invert=True) == \
-        ([(Poly(z**2 - 1, z), Poly(t + z, t))], True)
+    ans = residue_reduce(Poly(-2/x, t), Poly(t**2 - 1, t), D, [x, t], z, invert=True)
+    assert ans == ([(Poly(z**2 - 1, z), Poly(t + z, t))], True)
+    assert residue_reduce_to_basic(ans[0], [x, t], z, [log]) == -log(-1 + log(x)) + log(1 + log(x))
+
     D = [Poly(1, x), Poly(-t**2 - t/x - (1 - nu**2/x**2), t)]
     # TODO: Skip or make faster
     assert residue_reduce(Poly((-2*nu**2 - x**4)/(2*x**2)*t - (1 + x**2)/x, t),
