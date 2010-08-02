@@ -249,14 +249,15 @@ def test_complicated_codegen():
 def test_loops_c():
     from sympy.tensor import IndexedBase, Idx
     from sympy import symbols
-    i,j,n,m = symbols('i j n m', integer=True)
-    A,x,y = symbols('A x y')
-    A = IndexedBase(A)[Idx(i, m), Idx(j, n)]
-    x = IndexedBase(x)[Idx(j, n)]
-    y = IndexedBase(y)[Idx(i, m)]
+    n,m = symbols('n m', integer=True)
+    A = IndexedBase('A')
+    x = IndexedBase('x')
+    y = IndexedBase('y')
+    i = Idx('i', m)
+    j = Idx('j', n)
 
     (f1, code), (f2, interface) = codegen(
-            ('matrix_vector', Eq(y, A*x)), "C", "file", header=False, empty=False)
+            ('matrix_vector', Eq(y[i], A[i, j]*x[j])), "C", "file", header=False, empty=False)
 
     assert f1 == 'file.c'
     expected = (
