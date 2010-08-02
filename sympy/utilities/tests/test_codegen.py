@@ -763,6 +763,7 @@ def test_loops_InOut():
             'end interface\n'
             )
 
+@XFAIL
 def test_output_arg_f():
     from sympy import sin, cos, Equality
     x, y, z = symbols("xyz")

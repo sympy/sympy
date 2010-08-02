@@ -120,14 +120,19 @@ class CCodePrinter(StrPrinter):
 
         # Setup loops over dummy indices  --  each term needs separate treatment
         d = get_contraction_structure(expr)
+
+        # terms with no summations first
         if None in d:
-            # terms with no summations first
-            lines.extend(openloop)
             text = StrPrinter.doprint(self, Add(*d[None]))
-            if assign_to is not None:
-                text = "%s = %s;" % (lhs_printed, text)
-            lines.append(text)
-            lines.extend(closeloop)
+        else:
+            # If all terms have summations we must initialize array to Zero
+            text = StrPrinter.doprint(self, S.Zero)
+
+        lines.extend(openloop)
+        if assign_to is not None:
+            text = "%s = %s;" % (lhs_printed, text)
+        lines.append(text)
+        lines.extend(closeloop)
 
         for dummies in d:
             # then terms with summations

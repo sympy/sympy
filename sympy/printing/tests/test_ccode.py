@@ -120,6 +120,9 @@ def test_ccode_loops_matrix_vector():
 
     s = (
             'for (int i=0; i<m; i++){\n'
+            '   y[i] = 0;\n'
+            '}\n'
+            'for (int i=0; i<m; i++){\n'
             '   for (int j=0; j<n; j++){\n'
             '      y[i] = x[j]*A[j + i*n] + y[i];\n'
             '   }\n'
@@ -166,6 +169,9 @@ def test_ccode_loops_multiple_contractions():
 
     s = (
 'for (int i=0; i<m; i++){\n'
+'   y[i] = 0;\n'
+'}\n'
+'for (int i=0; i<m; i++){\n'
 '   for (int l=0; l<p; l++){\n'
 '      for (int j=0; j<n; j++){\n'
 '         for (int k=0; k<o; k++){\n'
@@ -193,6 +199,9 @@ def test_ccode_loops_addfactor():
 
     s = (
 'for (int i=0; i<m; i++){\n'
+'   y[i] = 0;\n'
+'}\n'
+'for (int i=0; i<m; i++){\n'
 '   for (int l=0; l<p; l++){\n'
 '      for (int j=0; j<n; j++){\n'
 '         for (int k=0; k<o; k++){\n'
@@ -217,6 +226,11 @@ def test_ccode_loops_multiple_terms():
     j = Idx('j', n)
     k = Idx('k', o)
 
+    s0 = (
+'for (int i=0; i<m; i++){\n'
+'   y[i] = 0;\n'
+'}\n'
+    )
     s1 = (
 'for (int i=0; i<m; i++){\n'
 '   for (int j=0; j<n; j++){\n'
@@ -241,9 +255,9 @@ def test_ccode_loops_multiple_terms():
 '}\n'
             )
     c = ccode(a[i, j]*b[j] + a[i, k]*b[k] + c[i, j, k]*b[j]*b[k], assign_to=y[i])
-    assert (c == s1 + s2 + s3[:-1] or
-            c == s1 + s3 + s2[:-1] or
-            c == s2 + s1 + s3[:-1] or
-            c == s2 + s3 + s1[:-1] or
-            c == s3 + s1 + s2[:-1] or
-            c == s3 + s2 + s1[:-1])
+    assert (c == s0 + s1 + s2 + s3[:-1] or
+            c == s0 + s1 + s3 + s2[:-1] or
+            c == s0 + s2 + s1 + s3[:-1] or
+            c == s0 + s2 + s3 + s1[:-1] or
+            c == s0 + s3 + s1 + s2[:-1] or
+            c == s0 + s3 + s2 + s1[:-1])

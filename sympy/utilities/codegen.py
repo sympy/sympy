@@ -479,14 +479,6 @@ class CCodeGen(CodeGen):
         # arguments are declared in prototype
         return []
 
-    def _init_resultvars(self, routine):
-        code_lines = []
-        for arg in routine.result_variables:
-            if isinstance(arg, OutputArgument):
-                constants, not_c, expr_c = ccode(S.Zero, assign_to=arg.result_var, human=False)
-                code_lines.append("%s\n" % expr_c)
-        return code_lines
-
     def _declare_locals(self, routine):
         # loop variables are declared in loop statement
         return []
@@ -500,8 +492,6 @@ class CCodeGen(CodeGen):
 
             constants, not_c, c_expr = ccode(result.expr, assign_to=assign_to, human=False)
             code_lines = sorted(constants, key = str)
-            if result.needs_initialization:
-                code_lines.extend(self._init_resultvars(routine))
             if assign_to:
                 code_lines.append("%s\n" % c_expr)
             else:
@@ -668,22 +658,6 @@ class FCodeGen(CodeGen):
 
         return "".join(prototype)
 
-    def _init_resultvars(self, routine):
-        """Returns codelines that intialize the result variables if applicable."""
-        code_lines = []
-        for arg in routine.arguments:
-            if isinstance(arg, OutputArgument):
-                if arg.datatype.fname == 'REAL*8':
-                    code_lines.append("%s = 0.d0\n" % arg.name)
-                elif arg.datatype.fname == 'INTEGER*4':
-                    code_lines.append("%s = 0\n" % arg.name)
-                else:
-                    raise NotImplementedError
-        if routine.results:
-            code_lines.append("%s = 0.d0\n" % routine.name)
-
-        return code_lines
-
     def _call_printer(self, routine):
         code_lines = []
         for result in routine.result_variables:
@@ -695,8 +669,6 @@ class FCodeGen(CodeGen):
             constants, not_fortran, f_expr = fcode(result.expr,
                 assign_to=assign_to, source_format='free', human=False)
             code_lines.extend(constants)
-            if result.needs_initialization:
-                code_lines.extend(self._init_resultvars(routine))
             code_lines.append("%s\n" % f_expr)
         return code_lines
 
