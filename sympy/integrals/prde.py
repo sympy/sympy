@@ -14,7 +14,7 @@ right hand side of the equation (i.e., gi in k(t)), and Q is a list of terms on
 the right hand side of the equation (i.e., qi in k[t]).  See the docstring of
 each function for more information.
 """
-from sympy.core import Symbol
+from sympy.core import Symbol, ilcm, Mul, Pow
 
 from sympy.matrices import Matrix, zeros, eye
 
@@ -163,7 +163,7 @@ def constant_system(A, u, D, T):
     (B, v, s), where B is a Matrix with coefficients in C and v is a vector
     (Matrix) such that either v has coefficients in C, in which case s is True
     and the solutions in C of Ax == u are exactly all the solutions of Bx == v,
-    or v has a nonconstant coefficient, in which case s is False Ax == u has no
+    or v has a non-constant coefficient, in which case s is False Ax == u has no
     constant solution.
 
     This algorithm is used both in solving parametric problems and in
@@ -329,7 +329,7 @@ def limited_integrate_reduce(fa, fd, G, D, T):
     over k, then deg(p) <= N.
 
     So that the special part is always computed, this function calls the more
-    general prde_special_denom() automatically if it cannot determint that
+    general prde_special_denom() automatically if it cannot determine that
     S1irr == Sirr.  Furthermore, it will automatically call bound_degree() when
     t is linear and non-Liouvillian, which for the transcendental case, implies
     that Dt == a*t + b with for some a, b in k*.
@@ -495,7 +495,136 @@ def parametric_log_deriv(fa, fd, wa, wd, D, T):
     # TODO: Write the full algorithm using the structure theorems.
     return parametric_log_deriv_heu(fa, fd, wa, wd, D, T)
 
-def is_log_deriv_k_t_radical(fa, fd, D, T, case='auto'):
+def is_log_deriv_k_t_radical_structure_thm(fa, fd, L_K, E_K, L_args, D, T, Df=False):
+    """
+    Checks if f can be written as the logarithmic derivative of a k(t)-radical.
+
+    f in k(t) can be written as the logarithmic derivative of a k(t) radical if
+    there exist n in ZZ and u in k(t) with n, u != 0 such that n*f == Du/u.
+    Either returns (n, u) or None, which means that f cannot be written as the
+    logarithmic derivative of a k(t)-radical.
+
+    This function uses the structure theorem approach, which says that for any
+    f in K, Df is the logarithmic derivative of a K-radical if and only if there
+    are ri in QQ such that::
+
+            ---               ---       Dt
+            \    r  * Dt   +  \    r  *   i   =  Df.
+            /     i     i     /     i   ---
+            ---               ---        t
+         i in L            i in E         i
+               K/C(x)            K/C(x)
+
+
+    Where C = Const(K), L_K/C(x) = { i in {1, ..., n} such that t_i is
+    transcendental over C(x)(t_1, ..., t_i-1) and Dt_i = Da_i/a_i, for some a_i
+    in C(x)(t_1, ..., t_i-1)* } (i.e., the set of all indices of logarithmic
+    monomials of K over C(x)), and E_K/C(x) = { i in {1, ..., n} such that t_i
+    is transcendental over C(x)(t_1, ..., t_i-1) and Dt_i/t_i = Da_i, for some
+    a_i in C(x)(t_1, ..., t_i-1) } (i.e., the set of all indices of
+    hyperexponential monomials of K over C(x)).  If K is an elementary extension
+    over C(x), then the cardinality of L_K/C(x) U E_K/C(x) is exactly the
+    transcendence degree of K over C(x).  Furthermore, because Const_D(K) ==
+    Const_D(C(x)) == C, deg(Dt_i) == 1 when t_i is in E_K/C(x) and
+    deg(Dt_i) == 0 when t_i is in L_K/C(x), implying in particular that E_K/C(x)
+    and L_K/C(x) are disjoint.
+
+    If Df == False, it is assumed that we are given f.  If Df == True, it is
+    assumed that we are given fa/fd == Df.  In the first case, which arises when
+    building up the extension for an integrand, the calculation is easy because
+    we do not need to compute any additional logarithms for the extension.
+
+    But when Df == True, we are given an element f of k(t), not Df, so we need
+    to compute the residues of f so that we can have the necessary extension K
+    of k(t) such that f = Db for some b in K.  According to Liouville's Theorem,
+    the only elementary extensions necessary for K are logarithms of the
+    residues of f, which we can compute using the Lizard-Rioboo-Rothstein-Trager
+    resultant reduction (residue_reduce()).
+
+    The sets L_K/C(x) and E_K/C(x) must, by their nature, be computed
+    recursively using this same function.  Therefore, it is required to pass
+    them as indices to D (or T).  L_args are the arguments of the logarithms
+    indexed by L_K (i.e., if i is in L_K, then T[i] == log(L_args[i])).  This is
+    needed to compute the final answer u such that n*f == Du/u.
+
+    This function still applies some of the heuristics from the modified
+    integration algorithm version to exit early in the negative case.
+    """
+    fa, fd = fa.cancel(fd, include=True)
+
+    t = T[-1]
+
+    if Df:
+        # TODO: Finish this, which is started below and probably needs to use
+        # the modified integration algorithm as per is_log_deriv_k_t_radical_old()
+        # because the residue_reduce() does not give all recursive logarithms.
+        raise NotImplementedError
+
+        # f must be simple
+        n, s = splitfactor(fd, D, T)
+        if not s.is_one:
+            return None
+
+        z = Symbol('z', dummy=True)
+        H, b = residue_reduce(fa, fd, D, T, z=z)
+        if not b:
+            # I will have to verify, but I believe that the structure theorems
+            # cannot be applied in this case. This should never happen for the
+            # functions given when solving the parametric logarithmic
+            # derivative problem when integration elementary functions (see
+            # Bronstein's book, page 255), so most likely this indicates a bug.
+            raise NotImplementedError("f has a non-elementary integral, cannot " +
+                "determine if it is the logarithmic derivative of a k(t)-radical.")
+
+        roots = [(i, i.real_roots()) for i, _ in zip(*H)]
+        if not all(len(j) == i.degree() and all(k.is_Rational for k in j) for i, j in roots):
+            # If f is the logarithmic derivative of a k(t)-radical, then all the
+            # roots of the resultant must be rational numbers.
+            return None
+
+        residues = [residue_reduce_derivation(Hi, D, T, z) for Hi in H]
+
+    else:
+        residues = []
+        H = []
+
+    cases = [get_case(i, j) for i, j in zip(D, T)]
+
+    # Our assumption here is that each monomial is recursively transcendental
+    if len(L_K) + len(E_K) != len(D) - 1:
+        if filter(lambda i: i == 'tan', cases) or \
+            set(filter(lambda i: i == 'primitive', cases)) - set(L_K):
+                raise NotImplementedError("Real version of the structure " +
+                "theorems with hypertangent support is not yet implemented.")
+
+        # TODO: What should really be done in this case?
+        raise NotImplementedError("Non-elementary extensions not supported " +
+            "in the structure theorems.")
+
+    E_part = [D[i].quo(Poly(T[i], T[i])).as_basic() for i in E_K]
+    L_part = [D[i].as_basic() for i in L_K]
+
+    lhs = Matrix([E_part + L_part + residues])
+    rhs = Matrix([fa.as_basic()/fd.as_basic()])
+
+    A, u = constant_system(lhs, rhs, D, T)
+
+    if any(i.has_any_symbols(*T) for i in u) or not A:
+        return None
+    else:
+        if not all(i.is_Rational for i in u):
+            raise NotImplementedError("Cannot work with non-rational " +
+                "coefficients in this case.")
+        else:
+            n = reduce(ilcm, [i.as_numer_denom()[1] for i in u])
+            u *= n
+            residueterms = [j.subs(z, RootOf(f, i)) for f, j in H for i in xrange(0, f.degree())]
+            terms = [T[i] for i in E_K] + L_args +residueterms
+            ans = zip(terms, u)
+            result = Mul(*[Pow(i, j) for i, j in ans])
+            return (ans, result, n)
+
+def is_log_deriv_k_t_radical_old(fa, fd, D, T, case='auto'):
     """
     Checks if f can be written as the logarithmic derivative of a k(t)-radical.
 
@@ -512,18 +641,8 @@ def is_log_deriv_k_t_radical(fa, fd, D, T, case='auto'):
     from pudb import set_trace; set_trace() # Debugging
     fa, fd = fa.cancel(fd, include=True)
 
-    # TODO: Fix for x in T
-    if not T:
-        # Base case.
-        # These had better be True.
-        assert case in ['auto', 'primitive', 'base']
-        assert not D
-        t = x
-        d = Poly(1, x)
-        case = 'base'
-    else:
-        t = T[-1]
-        d = D[-1]
+    t = T[-1]
+    d = D[-1]
 
     if case == 'auto':
         case = get_case(d, t)
@@ -542,6 +661,8 @@ def is_log_deriv_k_t_radical(fa, fd, D, T, case='auto'):
         # the differential field for an integrand.
         raise NotImplementedError("f has a non-elementary integral, cannot " +
             "determine if it is the logarithmic derivative of a k(t)-radical.")
+
+    # TODO: Check if the roots of the resultant computation are all in QQ.
 
     p = cancel(fa.as_basic()/fd.as_basic() - residue_reduce_derivation(H, D, T, z))
     try:
@@ -564,7 +685,9 @@ def is_log_deriv_k_t_radical(fa, fd, D, T, case='auto'):
         "not yet completely implemented for is_log_deriv_k_t_radical().")
 
     elif case == 'primitive':
-        n, u = is_log_deriv_k_t_radical(fa, fd, D[:-1], T[:-1], case='auto')
+        pa, pd = p.as_basic().as_numer_denom()
+        pa, pd = Poly(pa, T[-2]), Poly(pd, T[-2])
+        n, u = is_log_deriv_k_t_radical(pa, pd, D[:-1], T[:-1], case='auto')
         raise NotImplementedError("The primitive case is " +
         "not yet completely implemented for is_log_deriv_k_t_radical()")
 
@@ -585,3 +708,6 @@ def is_log_deriv_k_t_radical(fa, fd, D, T, case='auto'):
         "'base', 'auto'}, not %s""" % case)
 
     return (n, u)
+
+def is_log_deriv_k_t_radical():
+    pass

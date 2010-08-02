@@ -1,11 +1,13 @@
 """Most of these tests come from the examples in Bronstein's book."""
-from sympy import Poly, Matrix, S
+from sympy import Poly, Matrix, S, symbols
 from sympy.integrals.prde import (prde_normal_denom, prde_special_denom,
     prde_linear_constraints, constant_system, prde_spde, prde_no_cancel_b_large,
     prde_no_cancel_b_small, limited_integrate_reduce, limited_integrate,
-    is_log_deriv_k_t_radical, parametric_log_deriv_heu)
+    is_log_deriv_k_t_radical_structure_thm, parametric_log_deriv_heu)
 
 from sympy.abc import x, t, n
+
+t0, t1, t2, t3 = symbols('t:4')
 
 def test_prde_normal_denom():
     D = [Poly(1, x), Poly(1 + t**2, t)]
@@ -117,4 +119,12 @@ def test_limited_integrate():
         ((Poly(x**2 - x + 2, x), Poly(x - 1, x)), [2])
 
 def test_is_log_deriv_k_t_radical():
-    pass
+    D = [Poly(1, x)]
+    assert is_log_deriv_k_t_radical_structure_thm(Poly(2, t1), Poly(1, t1),
+    [], [], [], D, [x]) is None
+
+    D = [Poly(1, x), Poly(2*t1, t1), Poly(1/x, t2)]
+    assert is_log_deriv_k_t_radical_structure_thm(Poly(2*x + 1, t3),
+    Poly(2*x, t3), [2], [1], [x], D, [x, t1, t2]) == \
+        ([(t1, 1), (x, 1)], t1*x, 2)
+    # TODO: Add more tests
