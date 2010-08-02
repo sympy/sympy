@@ -129,17 +129,17 @@ def test_Indexed_properties():
     assert A.indices == tuple(map(Idx, (i, j)))
     assert A.stem == IndexedBase(a)
     assert A.ranges == [(None, None), (None, None)]
-    raises(IndexException, 'A.dimensions')
+    raises(IndexException, 'A.shape')
 
     n, m = symbols('n m', integer=True)
     assert Indexed(a, Idx(i, m), Idx(j, n)).ranges == [(0, m - 1), (0, n - 1)]
-    assert Indexed(a, Idx(i, m), Idx(j, n)).dimensions == (m, n)
+    assert Indexed(a, Idx(i, m), Idx(j, n)).shape == (m, n)
 
     o, p = symbols('o p', integer=True)
     a = IndexedBase('a', shape=(o, p))
     assert a.shape == Tuple(o, p)
     assert Indexed(a, Idx(i, m), Idx(j, n)).ranges == [(0, m - 1), (0, n - 1)]
-    assert Indexed(a, Idx(i, m), Idx(j, n)).dimensions == Tuple(o, p)
+    assert Indexed(a, Idx(i, m), Idx(j, n)).shape == Tuple(o, p)
 
 def test_non_commutative():
     i, j, k = symbols('i j k', integer=True)

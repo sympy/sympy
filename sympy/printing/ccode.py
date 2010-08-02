@@ -209,7 +209,7 @@ class CCodePrinter(StrPrinter):
 
     def _print_Indexed(self, expr):
         # calculate index for 1d array
-        dims = expr.dimensions
+        dims = expr.shape
         inds = [ i.label for i in expr.indices ]
         elem = S.Zero
         offset = S.One

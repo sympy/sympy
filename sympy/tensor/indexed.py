@@ -38,7 +38,7 @@
     >>> jj = Idx(j, n)
     >>> M[ii, jj]
     M[i, j]
-    >>> M[ii, jj].dimensions
+    >>> M[ii, jj].shape
     (m, n)
     >>> M[ii, jj].ranges
     [(0, -1 + m), (0, -1 + n)]
@@ -203,7 +203,7 @@ class Indexed(Expr):
         return len(self.args)-1
 
     @property
-    def dimensions(self):
+    def shape(self):
         """returns a list with dimensions of each index"""
         if self.stem.shape:
             return self.stem.shape
@@ -211,7 +211,7 @@ class Indexed(Expr):
             return tuple( i.upper - i.lower + 1 for i in self.indices )
         except TypeError:
             # Let's return a more meaningful error
-            raise IndexException("Dimensions are not defined")
+            raise IndexException("Shape is not defined")
 
     @property
     def ranges(self):
