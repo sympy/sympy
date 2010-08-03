@@ -12,34 +12,27 @@ from sympy.tensor.indexed import Idx, IndexedBase, Indexed
 class IndexConformanceException(Exception):
     pass
 
-def _remove_repeated(c_inds, nc_inds, return_dummies=False):
+def _remove_repeated(inds):
     """Removes repeated objects from sequences
 
+    Returns a set of the unique objects and a tuple of all that have been
+    removed.
+
     >>> from sympy.tensor.index_methods import _remove_repeated
-    >>> l1 = [1, 2, 3]
-    >>> l2 = [2, 4, 4]
-    >>> _remove_repeated(l1, l2)
-    ([1, 3], [])
-    >>> _remove_repeated(l1, l2, return_dummies=True)   #doctest: +SKIP
-    ([1, 3], [], (2, 4))
+    >>> l1 = [1, 2, 3, 2]
+    >>> _remove_repeated(l1)
+    (set([1, 3]), (2,))
 
     """
-
     sum_index = {}
-    for i in c_inds + nc_inds:
+    for i in inds:
         if i in sum_index:
             sum_index[i] += 1
             assert sum_index[i] == 1, "Index %s repeated more than twice" % i
         else:
             sum_index[i] = 0
-
-    c_inds = filter(lambda x: not sum_index[x], c_inds)
-    nc_inds = filter(lambda x: not sum_index[x], nc_inds)
-
-    if return_dummies:
-        return c_inds, nc_inds, tuple([ i for i in sum_index if sum_index[i] ])
-    else:
-        return c_inds, nc_inds
+    inds = filter(lambda x: not sum_index[x], inds)
+    return set(inds), tuple([ i for i in sum_index if sum_index[i] ])
 
 def _get_indices_Mul(expr, return_dummies=False):
     """Determine the outer indices of a Mul object.
@@ -50,33 +43,39 @@ def _get_indices_Mul(expr, return_dummies=False):
     >>> x = IndexedBase('x')
     >>> y = IndexedBase('y')
     >>> _get_indices_Mul(x[i, k]*y[j, k])
-    ((i, j), ())
-    >>> x = IndexedBase('x', commutative=False)
-    >>> y = IndexedBase('y', commutative=False)
-    >>> _get_indices_Mul(x[j, k]*y[i, k])
-    ((), (j, i))
+    (set([i, j]), {})
+    >>> _get_indices_Mul(x[i, k]*y[j, k], return_dummies=True)
+    (set([i, j]), {}, (k,))
 
     """
 
     junk, factors = expr.as_coeff_terms()
     inds = map(get_indices, factors)
-    c_inds, nc_inds = zip(*inds)
+    inds, syms = zip(*inds)
 
-    # sort commuting objects according to their indices
-    c_inds = sorted(c_inds, key=hash)
+    inds = map(list, inds)
+    inds = reduce(lambda x, y: x + y, inds)
+    inds, dummies = _remove_repeated(inds)
 
-    # flatten
-    c_inds  = reduce(lambda x, y: x + y, c_inds)
-    nc_inds = reduce(lambda x, y: x + y, nc_inds)
+    symmetry = {}
+    for s in syms:
+        for pair in s:
+            if pair in symmetry:
+                symmetry[pair] *= s[pair]
+            else:
+                symmetry[pair] = s[pair]
 
-    return _remove_repeated(c_inds, nc_inds, return_dummies)
+    if return_dummies:
+        return inds, symmetry, dummies
+    else:
+        return inds, symmetry
 
 
 def _get_indices_Add(expr):
     """Determine outer indices of an Add object.
 
-    In a sum, each term must have identical outer indices.  A valid expression
-    could be (provided that x and y commutes):
+    In a sum, each term must have the same set of outer indices.  A valid
+    expression could be
 
         x(i)*y(j) - x(j)*y(i)
 
@@ -92,20 +91,28 @@ def _get_indices_Add(expr):
     >>> x = IndexedBase('x')
     >>> y = IndexedBase('y')
     >>> _get_indices_Add(x[i] + x[k]*y[i, k])
-    ((i,), ())
+    (set([i]), {})
 
     """
 
     inds = map(get_indices, expr.args)
+    inds, syms = zip(*inds)
     if not all(map(lambda x: x == inds[0], inds[1:])):
         raise IndexConformanceException("Indices are not consistent: %s"%expr)
-    return inds[0]
+    if not reduce(lambda x, y: x!=y or y, syms):
+        symmetries = syms[0]
+    else:
+        # FIXME: search for symmetries
+        symmetries = {}
+
+    return inds[0], symmetries
 
 def get_indices(expr):
     """Determine the outer indices of expression `expr'
 
-    By `outer' we mean indices that are not summation indices.  Returns two
-    tuples with indices of commuting and non-commuting terms respectively.
+    By `outer' we mean indices that are not summation indices.  Returns a set
+    and a dict.  The set contains outer indices and the dict contains
+    information about index symmetries.
 
     Examples
     ========
@@ -116,39 +123,33 @@ def get_indices(expr):
     >>> x, y, A = map(IndexedBase, ['x', 'y', 'A'])
     >>> i, j, a, z = symbols('i j a z', integer=True)
 
-
     The indices of the total expression is determined, Repeated indices imply a
     summation, for instance the trace of a matrix A:
 
     >>> get_indices(A[i, i])
-    ((), ())
+    (set(), {})
 
     In the case of many terms, the terms are required to have identical
     outer indices.  Else an IndexConformanceException is raised.
 
     >>> get_indices(x[i] + A[i, j]*y[j])
-    ((i,), ())
+    (set([i]), {})
 
     The concept of `outer' indices applies recursively, starting on the deepest
     level.  This implies that dummies inside parenthesis are assumed to be
-    summed first, and there following expression is handled gracefully:
+    summed first, so that the following expression is handled gracefully:
 
     >>> get_indices((x[i] + A[i, j]*y[j])*x[j])
-    ((i, j), ())
+    (set([i, j]), {})
 
-    Note that if the indexed objects commute, the indices will be sorted so
-    that the symbol of the stem should have no influence on the identified
-    outer indices.
+    The algorithm also searches for index symmetries, so that
 
-    >>> get_indices(x[i]*y[j]) == get_indices(x[j]*y[i])
-    True
+    FIXME: not implemented yet
 
-    But the order of indices on a particular Indexed should be intact:
-
-    >>> get_indices(x[i, j])
-    ((i, j), ())
-    >>> get_indices(x[j, i])
-    ((j, i), ())
+     >> get_indices(x[i]*y[j] + x[j]*y[i])
+    (set([i, j]), {(i, j): 1})
+     >> get_indices(x[i]*y[j] - x[j]*y[i])
+    (set([i, j]), {(i, j): -1})
 
     Exceptions
     ==========
@@ -165,17 +166,13 @@ def get_indices(expr):
 
     # break recursion
     if isinstance(expr, Indexed):
-        if expr.is_commutative:
-            c = expr.indices
-            nc = tuple()
-        else:
-            c = tuple()
-            nc = expr.indices
-        return _remove_repeated(c, nc)
+        c = expr.indices
+        inds, dummies = _remove_repeated(c)
+        return inds, {}
     elif expr is None:
-        return tuple(), tuple()
+        return set(), {}
     elif expr.is_Atom:
-        return tuple(), tuple()
+        return set(), {}
 
     # recurse via specialized functions
     else:
@@ -186,7 +183,7 @@ def get_indices(expr):
 
         # this test is expensive, so it should be at the end
         elif not expr.has(Indexed):
-            return tuple(), tuple()
+            return set(), {}
         else:
             raise NotImplementedError(
                     "FIXME: No specialized handling of type %s"%type(expr))
@@ -225,11 +222,11 @@ def get_contraction_structure(expr):
 
     >>> d = get_contraction_structure(x[i]*(y[i] + A[i, j]*x[j]))
     >>> sorted(d.keys())
-    [(i,), (x[j]*A[i, j] + y[i])*x[i]]
+    [(i,), x[i]*(A[i, j]*x[j] + y[i])]
     >>> d[(Idx(i),)]
-    set([(x[j]*A[i, j] + y[i])*x[i]])
-    >>> d[(x[j]*A[i, j] + y[i])*x[i]]
-    [{None: set([y[i]]), (j,): set([x[j]*A[i, j]])}]
+    set([x[i]*(A[i, j]*x[j] + y[i])])
+    >>> d[x[i]*(A[i, j]*x[j] + y[i])]
+    [{None: set([y[i]]), (j,): set([A[i, j]*x[j]])}]
 
     Note that the presence of expressions among the dictinary keys indicates a
     factorization of the array contraction.  The summation in the deepest
@@ -241,9 +238,7 @@ def get_contraction_structure(expr):
     # We call ourself recursively to inspect sub expressions.
 
     if isinstance(expr, Indexed):
-        c = expr.indices
-        nc = tuple()
-        junk, junk, key = _remove_repeated(c, nc, return_dummies=True)
+        junk, key = _remove_repeated(expr.indices)
         return {key or None: set([expr])}
     elif expr.is_Atom:
         return {None: set([expr])}

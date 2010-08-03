@@ -113,12 +113,13 @@ class IndexedBase(Expr):
     <class 'sympy.tensor.indexed.Indexed'>
 
     """
-    def __new__(cls, label, shape=None, commutative=True, **kw_args):
+    is_commutative = False
+
+    def __new__(cls, label, shape=None, **kw_args):
         if isinstance(label, basestring):
             label = Symbol(label)
 
         obj = Expr.__new__(cls, label, **kw_args)
-        obj._is_commutative = commutative
         if isinstance(shape, (tuple, list)):
             obj._shape = Tuple(*shape)
         else:
@@ -133,7 +134,7 @@ class IndexedBase(Expr):
             return self._args
 
     def _hashable_content(self):
-        return Expr._hashable_content(self) + (self._is_commutative, self._shape)
+        return Expr._hashable_content(self) + (self._shape,)
 
     def __getitem__(self, indices, **kw_args):
         if isinstance(indices, tuple):
@@ -144,10 +145,6 @@ class IndexedBase(Expr):
             if self.shape and len(self.shape) != 1:
                 raise IndexException("Rank mismatch")
             return Indexed(self, indices, **kw_args)
-
-    @property
-    def is_commutative(self):
-        return self._is_commutative
 
     @property
     def shape(self):
@@ -177,6 +174,7 @@ class Indexed(Expr):
     a[i, j]
 
     """
+    is_commutative = False
 
     def __new__(cls, stem, *args, **kw_args):
         if not args: raise IndexException("Indexed needs at least one index")
@@ -192,10 +190,6 @@ class Indexed(Expr):
     @property
     def stem(self):
         return self.args[0]
-
-    @property
-    def is_commutative(self):
-        return self.stem.is_commutative
 
     @property
     def indices(self):
