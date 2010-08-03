@@ -634,14 +634,93 @@ def dup_invert(f, g, K):
     else:
         raise NotInvertible("zero divisor")
 
+def dup_euclidean_prs(f, g, K):
+    """
+    Euclidean polynomial remainder sequence (PRS) in ``K[x]``.
+
+    Example
+    =======
+
+    >>> from sympy.polys.domains import QQ
+    >>> from sympy.polys.densetools import dup_euclidean_prs
+
+    >>> f = QQ.map([1, 0, 1, 0, -3, -3, 8, 2, -5])
+    >>> g = QQ.map([3, 0, 5, 0, -4, -9, 21])
+
+    >>> prs = dup_euclidean_prs(f, g, QQ)
+
+    >>> prs[0]
+    [1/1, 0/1, 1/1, 0/1, -3/1, -3/1, 8/1, 2/1, -5/1]
+    >>> prs[1]
+    [3/1, 0/1, 5/1, 0/1, -4/1, -9/1, 21/1]
+    >>> prs[2]
+    [-5/9, 0/1, 1/9, 0/1, -1/3]
+    >>> prs[3]
+    [-117/25, -9/1, 441/25]
+    >>> prs[4]
+    [233150/19773, -102500/6591]
+    >>> prs[5]
+    [-1288744821/543589225]
+
+    """
+    prs = [f, g]
+    h = dup_rem(f, g, K)
+
+    while h:
+        prs.append(h)
+        f, g = g, h
+        h = dup_rem(f, g, K)
+
+    return prs
+
+def dup_primitive_prs(f, g, K):
+    """
+    Primitive polynomial remainder sequence (PRS) in ``K[x]``.
+
+    Example
+    =======
+
+    >>> from sympy.polys.domains import ZZ
+    >>> from sympy.polys.densetools import dup_primitive_prs
+
+    >>> f = ZZ.map([1, 0, 1, 0, -3, -3, 8, 2, -5])
+    >>> g = ZZ.map([3, 0, 5, 0, -4, -9, 21])
+
+    >>> prs = dup_primitive_prs(f, g, ZZ)
+
+    >>> prs[0]
+    [1, 0, 1, 0, -3, -3, 8, 2, -5]
+    >>> prs[1]
+    [3, 0, 5, 0, -4, -9, 21]
+    >>> prs[2]
+    [-5, 0, 1, 0, -3]
+    >>> prs[3]
+    [13, 25, -49]
+    >>> prs[4]
+    [4663, -6150]
+    >>> prs[5]
+    [1]
+
+    """
+    prs = [f, g]
+    _, h = dup_primitive(dup_prem(f, g, K), K)
+
+    while h:
+        prs.append(h)
+        f, g = g, h
+        _, h = dup_primitive(dup_prem(f, g, K), K)
+
+    return prs
+
 @cythonized("n,m,d,k")
 def dup_inner_subresultants(f, g, K):
     """
     Subresultant PRS algorithm in ``K[x]``.
 
-    Returns the subresultant polynomial remainder sequence, values for beta,
-    and values for delta (the last two are necessary for computing the
-    resultant in dup_prs_resultant).
+    Computes the subresultant polynomial remainder sequence (PRS) of ``f``
+    and ``g``, and the values for $\\beta_i$ and $\\delta_i$. The last two
+    sequences of values are necessary for computing the resultant in
+    :func:`dup_prs_resultant`.
 
     Example
     =======
