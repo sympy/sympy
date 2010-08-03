@@ -1,6 +1,6 @@
-from sympy import legendre, Symbol, hermite, chebyshevu, chebyshevt, \
-        chebyshevt_root, chebyshevu_root, assoc_legendre, Rational,  \
-        roots, sympify, S
+from sympy import (legendre, Symbol, hermite, chebyshevu, chebyshevt,
+        chebyshevt_root, chebyshevu_root, assoc_legendre, Rational,
+        roots, sympify, S, laguerre_l, laguerre_poly)
 
 x = Symbol('x')
 
@@ -68,3 +68,22 @@ def test_chebyshev():
 def test_hermite():
     assert hermite(6, x) == 64*x**6 - 480*x**4 + 720*x**2 - 120
 
+def test_laguerre():
+    alpha = Symbol("alpha")
+
+    # generalized Laguerre polynomials:
+    assert laguerre_l(0, alpha, x) == 1
+    assert laguerre_l(1, alpha, x) == -x + alpha + 1
+    assert laguerre_l(2, alpha, x) == x**2/2 - (alpha+2)*x + (alpha+2)*(alpha+1)/2
+    assert laguerre_l(3, alpha, x) == -x**3/6 + (alpha+3)*x**2/2 - (alpha+2)*(alpha+3)*x/2 + (alpha+1)*(alpha+2)*(alpha+3)/6
+
+    # Laguerre polynomials:
+    assert laguerre_l(0, 0, x) == 1
+    assert laguerre_l(1, 0, x) == 1 - x
+    assert laguerre_l(2, 0, x) == 1 - 2*x + x**2/2
+    assert laguerre_l(3, 0, x) == 1 - 3*x + 3*x**2/2 - x**3/6
+
+    # Test the lowest 10 polynomials with laguerre_poly, to make sure that it
+    # works:
+    for i in range(10):
+        assert laguerre_l(i, 0, x) == laguerre_poly(i, x)

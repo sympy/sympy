@@ -10,6 +10,9 @@ from sympy.core.basic import S, C
 from sympy.core import Rational
 from sympy.core.function import Function
 
+from sympy.functions.combinatorial.factorials import factorial
+
+
 from sympy.polys.orthopolys import (
     chebyshevt_poly,
     chebyshevu_poly,
@@ -250,3 +253,46 @@ class hermite(PolynomialSequence):
 
     _ortho_poly = staticmethod(hermite_poly)
 
+#----------------------------------------------------------------------------
+# Laguerre polynomials
+#
+
+def laguerre_l(n, alpha, x):
+    """
+    Returns the generalized Laguerre polynomial.
+
+    n     ... 0, 1, 2, 3, ...
+    alpha ... any symbol (alpha=0 gives regular Laguerre polynomials)
+
+    Examples::
+
+    >>> from sympy import laguerre_l, var
+    >>> var("alpha, x")
+    (alpha, x)
+    >>> laguerre_l(0, alpha, x)
+    1
+    >>> laguerre_l(1, alpha, x)
+    1 + alpha - x
+    >>> laguerre_l(2, alpha, x)
+    (1 + alpha)*(2 + alpha)/2 - x*(2 + alpha) + x**2/2
+
+    If you set alpha=0, you get regular Laguerre polynomials::
+
+    >>> laguerre_l(1, 0, x)
+    1 - x
+    >>> laguerre_l(2, 0, x)
+    1 - 2*x + x**2/2
+    >>> laguerre_l(3, 0, x)
+    1 - 3*x + 3*x**2/2 - x**3/6
+    >>> laguerre_l(4, 0, x)
+    1 - 4*x + 3*x**2 - 2*x**3/3 + x**4/24
+
+    """
+    n, alpha, x = S(n), S(alpha), S(x)
+    r = 0
+    for m in range(n+1):
+        c = 1
+        for i in range(m+1, n+1):
+            c *= alpha+i
+        r += (-1)**m * c * x**m/(factorial(m)*factorial(n-m))
+    return r

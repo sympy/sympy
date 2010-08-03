@@ -99,13 +99,13 @@ def _import(module, reload="False"):
     for sympyname, translation in translations.iteritems():
         namespace[sympyname] = namespace[translation]
 
-def lambdify(args, expr, modules=None, printer=None):
+def lambdify(args, expr, modules=None, use_imps=True, printer=None):
     """
     Returns a lambda function for fast calculation of numerical values.
 
     Usage:
     >>> from sympy import sqrt, sin
-    >>> from sympy.utilities import lambdify
+    >>> from sympy.utilities.lambdify import lambdify
     >>> from sympy.abc import x, y, z
     >>> f = lambdify(x, x**2)
     >>> f(2)
@@ -156,6 +156,23 @@ def lambdify(args, expr, modules=None, printer=None):
 
         Now f would look like:
         >> lambda x: my_cool_function(x)
+
+    Functions present in `expr` can also carry their own numerical
+    implementations, in a callable attached to the ``_imp_``
+    attribute.  Usually you attach this using the
+    ``implemented_function`` factory:
+
+    >>> from sympy.abc import x, y, z
+    >>> from sympy.utilities.lambdify import lambdify, implemented_function
+    >>> from sympy import Function
+    >>> f = implemented_function(Function('f'), lambda x : x+1)
+    >>> func = lambdify(x, f(x))
+    >>> func(4)
+    5
+
+    ``lambdify`` always prefers ``_imp_`` implementations to
+    implementations in other namespaces, unless the ``use_imps`` input
+    parameter is False.
     """
     # If the user hasn't specified any modules, use what is available.
     if modules is None:
@@ -169,16 +186,20 @@ def lambdify(args, expr, modules=None, printer=None):
             modules = ("math", "mpmath", "sympy")
 
     # Get the needed namespaces.
-    if isinstance(modules, dict): # Check for dict before "__iter__"
-        namespace = _get_namespace(modules)
-    elif hasattr(modules, "__iter__"):
-        namespace = {}
-        # fill namespace with first having highest priority
-        for m in list(modules)[::-1]:
-            buf = _get_namespace(m)
-            namespace.update(buf)
+    namespaces = []
+    # First find any function implementations
+    if use_imps:
+        namespaces.append(_imp_namespace(expr))
+    # Check for dict before iterating
+    if isinstance(modules, dict) or not hasattr(modules, '__iter__'):
+        namespaces.append(modules)
     else:
-        namespace = _get_namespace(modules)
+        namespaces += list(modules)
+    # fill namespace with first having highest priority
+    namespace = {}
+    for m in namespaces[::-1]:
+        buf = _get_namespace(m)
+        namespace.update(buf)
 
     if hasattr(expr, "atoms") :
         #Try if you can extract symbols from the expression.
@@ -241,3 +262,108 @@ def lambdastr(args, expr, printer=None):
 
     return "lambda %s: (%s)" % (args, expr)
 
+def _imp_namespace(expr, namespace=None):
+    """ Return namespace dict with function implementations
+
+    We need to search for functions in anything that can be thrown at
+    us - that is - anything that could be passed as `expr`.  Examples
+    include sympy expressions, as well as tuples, lists and dicts that may
+    contain sympy expressions.
+
+    Parameters
+    ----------
+    expr : object
+       Something passed to lambdify, that will generate valid code from
+       ``str(expr)``.
+    namespace : None or mapping
+       Namespace to fill.  None results in new empty dict
+
+    Returns
+    -------
+    namespace : dict
+       dict with keys of implemented function names within `expr` and
+       corresponding values being the numerical implementation of
+       function
+
+    Examples
+    --------
+    >>> from sympy.abc import x, y, z
+    >>> from sympy.utilities.lambdify import implemented_function, _imp_namespace
+    >>> from sympy import Function
+    >>> f = implemented_function(Function('f'), lambda x : x+1)
+    >>> g = implemented_function(Function('g'), lambda x : x*10)
+    >>> namespace = _imp_namespace(f(g(x)))
+    >>> sorted(namespace.keys())
+    ['f', 'g']
+    """
+    # Delayed import to avoid circular imports
+    from sympy.core.function import FunctionClass
+    if namespace is None:
+        namespace = {}
+    # tuples, lists, dicts are valid expressions
+    if isinstance(expr, (list, tuple)):
+        for arg in expr:
+            _imp_namespace(arg, namespace)
+        return namespace
+    elif isinstance(expr, dict):
+        for key, val in expr.items():
+            # functions can be in dictionary keys
+            _imp_namespace(key, namespace)
+            _imp_namespace(val, namespace)
+        return namespace
+    # sympy expressions may be Functions themselves
+    func = getattr(expr, 'func', None)
+    if isinstance(func, FunctionClass):
+        imp = getattr(func, '_imp_', None)
+        if not imp is None:
+            name = expr.func.__name__
+            if name in namespace and namespace[name] != imp:
+                raise ValueError('We found more than one '
+                                 'implementation with name '
+                                 '"%s"' % name)
+            namespace[name] = imp
+    # and / or they may take Functions as arguments
+    if hasattr(expr, 'args'):
+        for arg in expr.args:
+            _imp_namespace(arg, namespace)
+    return namespace
+
+def implemented_function(symfunc, implementation):
+    """ Add numerical `implementation` to function `symfunc`
+
+    `symfunc` can by a Function, or a name, in which case we make an
+    anonymous function with this name.  The function is anonymous in the
+    sense that the name is not unique in the sympy namespace.
+
+    Parameters
+    ----------
+    symfunc : str or ``sympy.FunctionClass`` instance
+       If str, then create new anonymous sympy function with this as
+       name.  If `symfunc` is a sympy function, attach implementation to
+       function
+    implementation : callable
+       numerical implementation of function for use in ``lambdify``
+
+    Returns
+    -------
+    afunc : sympy.FunctionClass instance
+       function with attached implementation
+
+    Examples
+    --------
+    >>> from sympy.abc import x, y, z
+    >>> from sympy.utilities.lambdify import lambdify, implemented_function
+    >>> from sympy import Function
+    >>> f = implemented_function(Function('f'), lambda x : x+1)
+    >>> lam_f = lambdify(x, f(x))
+    >>> lam_f(4)
+    5
+    """
+    # Delayed import to avoid circular imports
+    from sympy.core.function import FunctionClass, Function
+    # if name, create anonymous function to hold implementation
+    if isinstance(symfunc, basestring):
+        symfunc = FunctionClass(Function, symfunc)
+    # We need to attach as a method because symfunc will be a class
+    symfunc._imp_ = staticmethod(implementation)
+    return symfunc

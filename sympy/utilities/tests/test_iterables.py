@@ -1,6 +1,7 @@
-from sympy import symbols, Integral, Basic, raises
-from sympy.utilities.iterables import postorder_traversal, preorder_traversal, \
-    flatten, group, split, subsets, variations, dict_merge
+from sympy import symbols, Basic, Integral, raises
+
+from sympy.utilities.iterables import (postorder_traversal,
+    preorder_traversal, flatten, group, split, subsets, variations, dict_merge, cartes)
 from sympy.functions.elementary.piecewise import Piecewise, ExprCondPair
 
 w,x,y,z= symbols('w,x,y,z')
@@ -90,15 +91,51 @@ def test_split():
     assert split([16, 8, 3, 7, 2, 5, 1], key=lambda a: a % 3) == [[3], [16, 7, 1], [8, 2, 5]]
 
 def test_subsets():
+    # combinations
+    assert list(subsets([1, 2, 3], 0)) == [[]]
     assert list(subsets([1, 2, 3], 1)) == [[1], [2], [3]]
     assert list(subsets([1, 2, 3], 2)) == [[1, 2], [1,3], [2, 3]]
     assert list(subsets([1, 2, 3], 3)) == [[1, 2, 3]]
+    l = range(4)
+    assert list(subsets(l, 0, repetition=True)) == [[]]
+    assert list(subsets(l, 1, repetition=True)) == [[0], [1], [2], [3]]
+    assert list(subsets(l, 2, repetition=True)) == [[0, 0], [0, 1], [0, 2],
+                                                    [0, 3], [1, 1], [1, 2],
+                                                    [1, 3], [2, 2], [2, 3], [3, 3]]
+    assert list(subsets(l, 3, repetition=True)) == [[0, 0, 0], [0, 0, 1], [0, 0, 2],
+                                                    [0, 0, 3], [0, 1, 1], [0, 1, 2],
+                                                    [0, 1, 3], [0, 2, 2], [0, 2, 3],
+                                                    [0, 3, 3], [1, 1, 1], [1, 1, 2],
+                                                    [1, 1, 3], [1, 2, 2], [1, 2, 3],
+                                                    [1, 3, 3], [2, 2, 2], [2, 2, 3],
+                                                    [2, 3, 3], [3, 3, 3]]
+    assert len(list(subsets(l, 4, repetition=True))) == 35
+
+    assert list(subsets(l[:2], 3, repetition=False)) == []
+    assert list(subsets(l[:2], 3, repetition=True)) == [[0, 0, 0], [0, 0, 1], [0, 1, 1], [1, 1, 1]]
 
 def test_variations():
-    assert variations([1,2,3], 2) == [[1, 2], [1, 3], [2, 1], [2, 3], [3, 1], [3, 2]]
-    assert variations([1,2,3], 2, True) == [[1, 1], [1, 2], [1, 3], [2, 1], [2, 2], [2, 3], \
-                        [3,1], [3,2], [3,3]]
-
+    # permutations
+    l = range(4)
+    assert list(variations(l, 0, repetition=False)) == [[]]
+    assert list(variations(l, 1, repetition=False)) == [[0], [1], [2], [3]]
+    assert list(variations(l, 2, repetition=False)) == [[0, 1], [0, 2], [0, 3], [1, 0], [1, 2], [1, 3], [2, 0], [2, 1], [2, 3], [3, 0], [3, 1], [3, 2]]
+    assert list(variations(l, 3, repetition=False)) == [[0, 1, 2], [0, 1, 3], [0, 2, 1], [0, 2, 3], [0, 3, 1], [0, 3, 2], [1, 0, 2], [1, 0, 3], [1, 2, 0], [1, 2, 3], [1, 3, 0], [1, 3, 2], [2, 0, 1], [2, 0, 3], [2, 1, 0], [2, 1, 3], [2, 3, 0], [2, 3, 1], [3, 0, 1], [3, 0, 2], [3, 1, 0], [3, 1, 2], [3, 2, 0], [3, 2, 1]]
+    assert list(variations(l, 0, repetition=True)) == [[]]
+    assert list(variations(l, 1, repetition=True)) == [[0], [1], [2], [3]]
+    assert list(variations(l, 2, repetition=True)) == [[0, 0], [0, 1], [0, 2],
+                                                       [0, 3], [1, 0], [1, 1],
+                                                       [1, 2], [1, 3], [2, 0],
+                                                       [2, 1], [2, 2], [2, 3],
+                                                       [3, 0], [3, 1], [3, 2],
+                                                       [3, 3]]
+    assert len(list(variations(l, 3, repetition=True))) == 64
+    assert len(list(variations(l, 4, repetition=True))) == 256
+    assert list(variations(l[:2], 3, repetition=False)) == []
+    assert list(variations(l[:2], 3, repetition=True)) == [[0, 0, 0], [0, 0, 1],
+                                                           [0, 1, 0], [0, 1, 1],
+                                                           [1, 0, 0], [1, 0, 1],
+                                                           [1, 1, 0], [1, 1, 1]]
 def test_dict_merge():
     assert dict_merge({}, {1: x, y: z}) == {1: x, y: z}
     assert dict_merge({1: x, y: z}, {}) == {1: x, y: z}
@@ -108,4 +145,10 @@ def test_dict_merge():
 
     assert dict_merge({1: y, 2: z}, {1: x, y: z}) == {1: x, 2: z, y: z}
     assert dict_merge({1: x, y: z}, {1: y, 2: z}) == {1: y, 2: z, y: z}
+
+
+def test_cartes():
+    assert list(cartes([1, 2], [3, 4, 5])) == \
+           [[1, 3], [1, 4], [1, 5], [2, 3], [2, 4], [2, 5]]
+    assert list(cartes()) == [[]]
 

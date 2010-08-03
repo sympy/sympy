@@ -25,7 +25,7 @@ def components(f, x):
 
        >>> from sympy import cos, sin
        >>> from sympy.abc import x, y
-       >>> from sympy.integrals.risch import components
+       >>> from sympy.integrals.poly_heurisch import components
 
        >>> components(sin(x)*cos(x)**2, x)
        set([x, cos(x), sin(x)])
@@ -115,7 +115,7 @@ def heurisch(f, x, **kwargs):
     ========
 
     >>> from sympy import tan
-    >>> from sympy.integrals.risch import heurisch
+    >>> from sympy.integrals.poly_heurisch import heurisch
     >>> from sympy.abc import x, y
 
     >>> heurisch(y*tan(x), x)

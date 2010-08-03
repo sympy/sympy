@@ -1,8 +1,9 @@
-from sympy.utilities.pytest import XFAIL
+from sympy.utilities.pytest import XFAIL, raises
 from sympy import (symbols, lambdify, sqrt, sin, cos, pi, atan, Rational, Real,
         Matrix, Lambda, exp, Integral, oo)
 from sympy.printing.lambdarepr import LambdaPrinter
 from sympy import mpmath
+from sympy.utilities.lambdify import implemented_function
 import math, sympy
 
 # high precision output of sin(0.2*pi) is used to detect if precision is lost unwanted
@@ -282,3 +283,55 @@ def test_special_printers():
     assert isinstance(func1(), mpi)
     assert isinstance(func2(), mpi)
 
+
+def test_imps():
+    # Here we check if the default returned functions are anonymous - in
+    # the sense that we can have more than one function with the same name
+    f = implemented_function('f', lambda x: 2*x)
+    g = implemented_function('f', lambda x: math.sqrt(x))
+    l1 = lambdify(x, f(x))
+    l2 = lambdify(x, g(x))
+    assert str(f(x)) == str(g(x))
+    assert l1(3) == 6
+    assert l2(3) == math.sqrt(3)
+    # check that we can pass in a Function as input
+    func = sympy.Function('myfunc')
+    assert not hasattr(func, '_imp_')
+    my_f = implemented_function(func, lambda x: 2*x)
+    assert hasattr(func, '_imp_')
+    # Error for functions with same name and different implementation
+    f2 = implemented_function("f", lambda x : x+101)
+    raises(ValueError, 'lambdify(x, f(f2(x)))')
+
+def test_lambdify_imps():
+    # Test lambdify with implemented functions
+    # first test basic (sympy) lambdify
+    f = sympy.cos
+    assert lambdify(x, f(x))(0) == 1
+    assert lambdify(x, 1 + f(x))(0) == 2
+    assert lambdify((x, y), y + f(x))(0, 1) == 2
+    # make an implemented function and test
+    f = implemented_function("f", lambda x : x+100)
+    assert lambdify(x, f(x))(0) == 100
+    assert lambdify(x, 1 + f(x))(0) == 101
+    assert lambdify((x, y), y + f(x))(0, 1) == 101
+    # Can also handle tuples, lists, dicts as expressions
+    lam = lambdify(x, (f(x), x))
+    assert lam(3) == (103, 3)
+    lam = lambdify(x, [f(x), x])
+    assert lam(3) == [103, 3]
+    lam = lambdify(x, [f(x), (f(x), x)])
+    assert lam(3) == [103, (103, 3)]
+    lam = lambdify(x, {f(x): x})
+    assert lam(3) == {103: 3}
+    lam = lambdify(x, {f(x): x})
+    assert lam(3) == {103: 3}
+    lam = lambdify(x, {x: f(x)})
+    assert lam(3) == {3: 103}
+    # Check that imp preferred to other namespaces by default
+    d = {'f': lambda x : x + 99}
+    lam = lambdify(x, f(x), d)
+    assert lam(3) == 103
+    # Unless flag passed
+    lam = lambdify(x, f(x), d, use_imps=False)
+    assert lam(3) == 102

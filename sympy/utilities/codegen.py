@@ -76,7 +76,7 @@ from sympy.core.symbol import Symbol
 from sympy.core.expr import Expr
 from sympy.core.containers import Tuple
 from sympy.printing.ccode import ccode
-from sympy.printing.fcode import FCodePrinter
+from sympy.printing.fcode import fcode
 from sympy.tensor import Idx, IndexedElement
 from sympy.core.relational import Equality
 from sympy.utilities import flatten
@@ -91,7 +91,7 @@ __all__ = [
     "Routine", "DataType", "default_datatypes", "get_default_datatype",
     "Argument", "InputArgument", "Result",
     # routines -> code
-    "CodeGen", "CCodeGen", "FCodeGen"
+    "CodeGen", "CCodeGen", "FCodeGen",
     # friendly functions
     "codegen",
 ]
@@ -577,7 +577,6 @@ class FCodeGen(CodeGen):
 
     def __init__(self, project='project'):
         CodeGen.__init__(self, project)
-        self._printer = FCodePrinter({'source_format':'free', 'human':False})
 
     def _dump_header(self, f):
         """Writes a common header for the generated files."""
@@ -710,7 +709,7 @@ class FCodeGen(CodeGen):
                 else:
                     raise NotImplementedError
         if routine.results:
-            code_lines.append("%s = 0.d0\n" % routine.results[0])
+            code_lines.append("%s = 0.d0\n" % routine.name)
 
         return code_lines
 
@@ -718,11 +717,12 @@ class FCodeGen(CodeGen):
         code_lines = []
         for result in routine.result_variables:
             if isinstance(result, Result):
-                self._printer.set_assign_to(routine.name)
+                assign_to = routine.name
             elif isinstance(result, (OutputArgument, InOutArgument)):
-                self._printer.set_assign_to(result.result_var)
+                assign_to = result.result_var
 
-            constants, not_fortran, f_expr = self._printer.doprint(result.expr)
+            constants, not_fortran, f_expr = fcode(result.expr,
+                assign_to=assign_to, source_format='free', human=False)
             code_lines.extend(constants)
             if result.needs_initialization:
                 code_lines.extend(self._init_resultvars(routine))

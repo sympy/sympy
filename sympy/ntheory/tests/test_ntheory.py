@@ -31,6 +31,8 @@ def test_multiplicity():
             assert multiplicity(b, (b**i) * 1000249) == i
     # Should be fast
     assert multiplicity(10, 10**10023) == 10023
+    # Should exit quick
+    assert multiplicity(1, 1) == 1
 
 def test_perfect_power():
     assert perfect_power(0) == None
