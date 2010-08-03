@@ -227,7 +227,7 @@ class Indexed(Expr):
         return "%s[%s]" % (p.doprint(self.stem), ", ".join(indices))
 
 
-class Idx(Basic):
+class Idx(Expr):
     """Represents an index, either symbolic or integer.
 
     Optionally you can specify a range [default=0]
@@ -310,7 +310,7 @@ class Idx(Basic):
         else:
             args = label,
 
-        obj = Basic.__new__(cls, *args, **kw_args)
+        obj = Expr.__new__(cls, *args, **kw_args)
         return obj
 
     @property
