@@ -2,6 +2,7 @@ from sympy import (
     Expr, Basic, sympify, Add, Mul, Pow, 
     I, Function, Integer, S, sympify, Matrix, oo
 )
+from sympy.core.sympify import _sympify
 from sympy.core.decorators import call_highest_priority
 from sympy.physics.hilbert import *
 from sympy.core.numbers import Number
@@ -120,15 +121,13 @@ class StateBase(Expr, Representable):
 
     @call_highest_priority('__rmul__')
     def __mul__(self, other):
-        compare_hilbert(self, other)
-        _validate_mul(self,other)
-        return _qmul(self, other)
+        from sympy.physics.qmul import QMul
+        return QMul(self, other)
 
     @call_highest_priority('__mul__')
     def __rmul__(self, other):
-        compare_hilbert(other, self)
-        _validate_mul(self,other)
-        return _qmul(other, self)
+        from sympy.physics.qmul import QMul
+        return QMul(other, self)
 
     @call_highest_priority('__radd__')
     def __add__(self, other):
@@ -296,15 +295,13 @@ class Operator(Expr, Representable):
 
     @call_highest_priority('__rmul__')
     def __mul__(self, other):
-        compare_hilbert(other, self)
-        _validate_mul(self,other)
-        return _qmul(self, other)
+        from sympy.physics.qmul import QMul
+        return QMul(self, other)
 
     @call_highest_priority('__mul__')
     def __rmul__(self, other):
-        compare_hilbert(other, self)
-        _validate_mul(self,other)
-        return _qmul(other, self)
+        from sympy.physics.qmul import QMul
+        return QMul(other, self)
 
     @call_highest_priority('__radd__')
     def __add__(self, other):
