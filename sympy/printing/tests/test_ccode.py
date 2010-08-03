@@ -124,7 +124,7 @@ def test_ccode_loops_matrix_vector():
             '}\n'
             'for (int i=0; i<m; i++){\n'
             '   for (int j=0; j<n; j++){\n'
-            '      y[i] = x[j]*A[j + i*n] + y[i];\n'
+            '      y[i] = A[j + i*n]*x[j] + y[i];\n'
             '   }\n'
             '}'
             )
@@ -148,7 +148,7 @@ def test_ccode_loops_add():
             '}\n'
             'for (int i=0; i<m; i++){\n'
             '   for (int j=0; j<n; j++){\n'
-            '      y[i] = x[j]*A[j + i*n] + y[i];\n'
+            '      y[i] = A[j + i*n]*x[j] + y[i];\n'
             '   }\n'
             '}'
             )
@@ -172,16 +172,16 @@ def test_ccode_loops_multiple_contractions():
 '   y[i] = 0;\n'
 '}\n'
 'for (int i=0; i<m; i++){\n'
-'   for (int l=0; l<p; l++){\n'
-'      for (int j=0; j<n; j++){\n'
-'         for (int k=0; k<o; k++){\n'
+'   for (int j=0; j<n; j++){\n'
+'      for (int k=0; k<o; k++){\n'
+'         for (int l=0; l<p; l++){\n'
 '            y[i] = b[l + k*p + j*o*p]*a[l + k*p + j*o*p + i*n*o*p] + y[i];\n'
 '         }\n'
 '      }\n'
 '   }\n'
 '}'
             )
-    c = ccode(a[i, j, k, l]*b[j, k, l], assign_to=y[i])
+    c = ccode(b[j, k, l]*a[i, j, k, l], assign_to=y[i])
     assert c == s
 
 def test_ccode_loops_addfactor():
@@ -202,9 +202,9 @@ def test_ccode_loops_addfactor():
 '   y[i] = 0;\n'
 '}\n'
 'for (int i=0; i<m; i++){\n'
-'   for (int l=0; l<p; l++){\n'
-'      for (int j=0; j<n; j++){\n'
-'         for (int k=0; k<o; k++){\n'
+'   for (int j=0; j<n; j++){\n'
+'      for (int k=0; k<o; k++){\n'
+'         for (int l=0; l<p; l++){\n'
 '            y[i] = (a[l + k*p + j*o*p + i*n*o*p] + b[l + k*p + j*o*p + i*n*o*p])*c[l + k*p + j*o*p] + y[i];\n'
 '         }\n'
 '      }\n'
@@ -254,7 +254,7 @@ def test_ccode_loops_multiple_terms():
 '   }\n'
 '}\n'
             )
-    c = ccode(a[i, j]*b[j] + a[i, k]*b[k] + c[i, j, k]*b[j]*b[k], assign_to=y[i])
+    c = ccode(b[j]*a[i, j] + b[k]*a[i, k] + b[j]*b[k]*c[i, j, k], assign_to=y[i])
     assert (c == s0 + s1 + s2 + s3[:-1] or
             c == s0 + s1 + s3 + s2[:-1] or
             c == s0 + s2 + s1 + s3[:-1] or

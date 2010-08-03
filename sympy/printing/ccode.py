@@ -95,25 +95,50 @@ class CCodePrinter(StrPrinter):
         del self._number_symbols
         return result
 
+    def _sort_optimized(self, indices, expr):
+
+        if not indices:
+            return []
+
+        # determine optimized loop order by giving a score to each index
+        # the index with the highest score are put in the innermost loop.
+        score_table = {}
+        for i in indices:
+            score_table[i] = 0
+
+        # function to calculate score based on position among indices
+        def points(p):
+            return p*5
+
+        arrays = expr.atoms(Indexed)
+        for arr in arrays:
+            for p, ind in enumerate(arr.indices):
+                try:
+                    score_table[ind] += points(p)
+                except KeyError:
+                    pass
+
+        return sorted(indices, key=lambda x: score_table[x])
+
     def _doprint_a_piece(self, expr, assign_to=None):
         # Here we print an expression that may contain Indexed objects, they
         # correspond to arrays in the generated code.  The low-level implementation
         # involves looping over array elements and possibly storing results in temporary
         # variables or accumulate it in the assign_to object.
 
-        rc, rnc = get_indices(expr)
-        lc, lnc = get_indices(assign_to)
+        rinds, junk = get_indices(expr)
+        linds, junk = get_indices(assign_to)
 
         # support broadcast of scalar
-        if lc + lnc and not rc + rnc:
-            rc = lc
-            rnc = lnc
+        if linds and not rinds:
+            rinds = linds
 
-        if rc + rnc != lc + lnc:
-            raise ValueError("lhs indices must match rhs indices")
+        if rinds != linds:
+            raise ValueError("lhs indices must match non-dummy rhs indices")
 
         # Setup loops over non-dummy indices  --  all terms need these
-        openloop, closeloop, junk = self._get_loop_opening_ending_ints(rc + rnc)
+        indices = self._sort_optimized(rinds, assign_to)
+        openloop, closeloop, junk = self._get_loop_opening_ending_ints(indices)
 
         lhs_printed = self._print(assign_to)
         lines = []
@@ -138,7 +163,8 @@ class CCodePrinter(StrPrinter):
         for dummies in d:
             # then terms with summations
             if isinstance(dummies, tuple):
-                openloop_d, closeloop_d, junk = self._get_loop_opening_ending_ints(dummies)
+                indices = self._sort_optimized(dummies, expr)
+                openloop_d, closeloop_d, junk = self._get_loop_opening_ending_ints(indices)
 
                 for term in d[dummies]:
                     if term in d and not ([f.keys() for f in d[term]]
@@ -177,7 +203,6 @@ class CCodePrinter(StrPrinter):
     def _get_loop_opening_ending_ints(self, indices):
         """Returns a tuple (open_lines, close_lines) containing lists of codelines
         """
-        # FIXME: sort indices in an optimized way
         open_lines = []
         close_lines = []
         local_ints = []
