@@ -27,6 +27,7 @@ Questions:
 """
 
 __all__ = [
+    'StateBase',
     'State',
     'Ket',
     'Bra',
