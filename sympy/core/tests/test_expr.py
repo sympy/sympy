@@ -1,4 +1,4 @@
-from sympy import Basic, S, Symbol, Wild,  Real, Integer, Rational,  \
+from sympy import Add, Basic, S, Symbol, Wild,  Real, Integer, Rational,  \
     sin, cos, exp, log, oo, sqrt, symbols, Integral, sympify, \
     WildFunction, Poly, Function, Derivative, Number, pi, var, \
     NumberSymbol, zoo, Piecewise, Mul, Pow, nsimplify, ratsimp, trigsimp, \
@@ -238,6 +238,12 @@ def test_atoms():
    assert list((I*pi).atoms(NumberSymbol)) == [pi]
    assert sorted((I*pi).atoms(NumberSymbol, I)) == \
           sorted((I*pi).atoms(I,NumberSymbol)) == [pi, I]
+
+   assert exp(exp(x)).atoms(exp) == set([exp(exp(x)), exp(x)])
+   assert (1 + x*(2 + y)+exp(3 + z)).atoms(Add) == set(
+                                                   [1 + x*(2 + y)+exp(3 + z),
+                                                    2 + y,
+                                                    3 + z])
 
 def test_is_polynomial():
     z = Symbol('z')
