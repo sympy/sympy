@@ -71,20 +71,16 @@ printing.
 - ...
 """
 
+import os
+from StringIO import StringIO
 
-from sympy.core.symbol import Symbol
-from sympy.core.singleton import S
-from sympy.core.expr import Expr
-from sympy.core.containers import Tuple
+from sympy import __version__ as sympy_version
+from sympy.core import Symbol, S, Expr, Tuple, Equality
 from sympy.printing.ccode import ccode, CCodePrinter
 from sympy.printing.fcode import fcode, FCodePrinter
 from sympy.tensor import Idx, Indexed
-from sympy.core.relational import Equality
 from sympy.utilities import flatten
 
-from StringIO import StringIO
-import sympy
-import os
 
 
 __all__ = [
@@ -435,7 +431,7 @@ class CCodeGen(CodeGen):
         """Writes a common header for the generated files."""
         code_lines = []
         code_lines.append("/" + "*"*78 + '\n')
-        tmp = header_comment % {"version": sympy.__version__, "project": self.project}
+        tmp = header_comment % {"version": sympy_version, "project": self.project}
         for line in tmp.splitlines():
             code_lines.append(" *%s*\n" % line.center(76))
         code_lines.append(" " + "*"*78 + "/\n")
@@ -560,7 +556,7 @@ class FCodeGen(CodeGen):
         """Writes a common header for the generated files."""
         code_lines = []
         code_lines.append("!" + "*"*78 + '\n')
-        tmp = header_comment % {"version": sympy.__version__, "project": self.project}
+        tmp = header_comment % {"version": sympy_version, "project": self.project}
         for line in tmp.splitlines():
             code_lines.append("!*%s*\n" % line.center(76))
         code_lines.append("!" + "*"*78 + '\n')

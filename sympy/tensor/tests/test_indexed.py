@@ -1,8 +1,9 @@
-from sympy import symbols, Integer, Symbol, Tuple
-from sympy.tensor import IndexedBase, Idx, Indexed
+from sympy.core import symbols, Integer, Symbol, Tuple, oo
 from sympy.tensor.indexed import IndexException
 from sympy.utilities.pytest import raises
-from sympy import oo
+
+# import test:
+from sympy import IndexedBase, Idx, Indexed
 
 def test_Idx_construction():
     i, a, b = symbols('i a b', integer=True)

@@ -1,7 +1,10 @@
-from sympy.tensor.indexed import Idx, IndexedBase, Indexed
-from sympy.tensor.index_methods import get_contraction_structure, get_indices, IndexConformanceException
-from sympy import symbols, S
+from sympy.core import symbols, S
 from sympy.utilities.pytest import raises
+from sympy.tensor.indexed import Idx, IndexedBase, Indexed
+from sympy.tensor.index_methods import IndexConformanceException
+
+# import test
+from sympy import get_contraction_structure, get_indices
 
 def test_trivial_indices():
     x, y = symbols('x y')

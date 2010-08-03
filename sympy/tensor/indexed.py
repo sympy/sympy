@@ -70,7 +70,7 @@
        - Idx with step determined by function call
 """
 
-from sympy import Expr, Basic, Tuple, Symbol, Integer, sympify, S
+from sympy.core import Expr, Basic, Tuple, Symbol, Integer, sympify, S
 
 class IndexException(Exception):
     pass

@@ -1,8 +1,10 @@
-from sympy import sin, cos, abs, exp, pi, oo, symbols, ceiling, raises, sqrt
-from sympy import Function, Piecewise, Rational, Integer, GoldenRatio, EulerGamma, Catalan
+from sympy.core import pi, oo, symbols, Function, Rational, Integer, GoldenRatio, EulerGamma, Catalan
+from sympy.functions import Piecewise, sin, cos, abs, exp, ceiling, sqrt
+from sympy.utilities.pytest import XFAIL, raises
+from sympy.printing.ccode import CCodePrinter
 
-from sympy.printing.ccode import ccode, CCodePrinter
-from sympy.utilities.pytest import XFAIL
+# import test
+from sympy import ccode
 
 x, y, z = symbols('xyz')
 g = Function('g')

@@ -9,12 +9,11 @@ sympy.utilities.codegen. The codegen module can be used to generate complete
 source code files that are compilable without further modifications.
 """
 
-from str import StrPrinter
+from sympy.printing.str import StrPrinter
 from sympy.printing.precedence import precedence
 from sympy.core import S, Basic, Add, Symbol, NumberSymbol
 from sympy.functions import Piecewise, piecewise_fold
-from sympy.tensor import Idx, Indexed
-from sympy.tensor.index_methods import get_indices, get_contraction_structure
+from sympy.tensor import Idx, Indexed, get_indices, get_contraction_structure
 
 
 # dictionary mapping sympy function to (argument_conditions, C_function).

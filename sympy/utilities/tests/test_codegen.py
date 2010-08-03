@@ -1,8 +1,13 @@
-from sympy import symbols, raises, Eq
-from sympy.utilities.codegen import CCodeGen, Routine, InputArgument, Result, \
-    codegen, CodeGenError, FCodeGen
 from StringIO import StringIO
-from sympy.utilities.pytest import XFAIL
+
+from sympy.core import symbols, Eq
+from sympy.utilities.codegen import CCodeGen, Routine, InputArgument, Result, \
+    CodeGenError, FCodeGen, codegen
+from sympy.utilities.pytest import XFAIL, raises
+
+# import test:
+#FIXME: Fails due to circular import in with core
+# from sympy import codegen
 
 def get_string(dump_fn, routines, prefix="file", header=False, empty=False):
     """Wrapper for dump_fn. dump_fn writes its results to a stream object and
