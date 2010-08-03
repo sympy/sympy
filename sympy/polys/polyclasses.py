@@ -78,7 +78,6 @@ from sympy.polys.densearith import (
     dmp_add_mul, dmp_sub_mul,
     dup_max_norm, dmp_max_norm,
     dup_l1_norm, dmp_l1_norm,
-    dup_revert,
 )
 
 from sympy.polys.densetools import (
@@ -107,6 +106,7 @@ from sympy.polys.densetools import (
     dup_decompose,
     dup_sturm,
     dmp_lift,
+    dup_revert,
 )
 
 from sympy.polys.rootisolation import (

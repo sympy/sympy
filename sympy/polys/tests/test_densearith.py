@@ -30,11 +30,10 @@ from sympy.polys.densearith import (
     dup_max_norm, dmp_max_norm,
     dup_l1_norm, dmp_l1_norm,
     dup_expand, dmp_expand,
-    dup_revert,
 )
 
 from sympy.polys.polyerrors import (
-    ExactQuotientFailed, NotReversible,
+    ExactQuotientFailed,
 )
 
 from sympy.polys.specialpolys import f_0
@@ -682,10 +681,3 @@ def test_dmp_expand():
     assert dmp_expand(([[1],[2],[3]], [[1],[2]], [[7],[5],[4],[3]]), 1, ZZ) == \
         dmp_mul([[1],[2],[3]], dmp_mul([[1],[2]], [[7],[5],[4],[3]], 1, ZZ), 1, ZZ)
 
-def test_dup_revert():
-    f = [-QQ(1,720),QQ(0),QQ(1,24),QQ(0),-QQ(1,2),QQ(0),QQ(1)]
-    g = [QQ(61,720),QQ(0),QQ(5,24),QQ(0), QQ(1,2),QQ(0),QQ(1)]
-
-    assert dup_revert(f, 8, QQ) == g
-
-    raises(NotReversible, "dup_revert([QQ(1), QQ(0)], 3, QQ)")

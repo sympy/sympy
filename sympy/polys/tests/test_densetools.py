@@ -55,6 +55,7 @@ from sympy.polys.densetools import (
     dup_sturm,
     dmp_lift,
     dup_sign_variations,
+    dup_revert,
 )
 
 from sympy.polys.polyclasses import DMP, ANP
@@ -63,6 +64,7 @@ from sympy.polys.polyerrors import (
     ExactQuotientFailed,
     HeuristicGCDFailed,
     RefinementFailed,
+    NotReversible,
     DomainError,
 )
 
@@ -316,6 +318,14 @@ def test_dup_gcdex():
 
 def test_dup_invert():
     assert dup_invert([QQ(2),QQ(0)], [QQ(1),QQ(0),QQ(-16)], QQ) == [QQ(1,32),QQ(0)]
+
+def test_dup_revert():
+    f = [-QQ(1,720),QQ(0),QQ(1,24),QQ(0),-QQ(1,2),QQ(0),QQ(1)]
+    g = [QQ(61,720),QQ(0),QQ(5,24),QQ(0), QQ(1,2),QQ(0),QQ(1)]
+
+    assert dup_revert(f, 8, QQ) == g
+
+    raises(NotReversible, "dup_revert([QQ(1), QQ(0)], 3, QQ)")
 
 def test_dup_euclidean_prs():
     f = QQ.map([1, 0, 1, 0, -3, -3, 8, 2, -5])

@@ -2,7 +2,6 @@
 
 from sympy.polys.densebasic import (
     dup_strip, dmp_strip,
-    dup_reverse,
     dup_convert, dmp_convert,
     dup_degree, dmp_degree, dmp_degree_in,
     dup_to_dict, dmp_to_dict,
@@ -26,6 +25,7 @@ from sympy.polys.densearith import (
     dup_add, dmp_add,
     dup_sub, dmp_sub,
     dup_mul, dmp_mul,
+    dup_sqr, dmp_sqr,
     dup_pow, dmp_pow,
     dup_div, dmp_div,
     dup_rem, dmp_rem,
@@ -62,6 +62,7 @@ from sympy.utilities import (
 
 from random import random as randfloat
 from operator import itemgetter
+from math import ceil, log
 
 def dup_clear_denoms(f, K0, K1=None, convert=False):
     """
@@ -633,6 +634,47 @@ def dup_invert(f, g, K):
         return dup_rem(s, g, K)
     else:
         raise NotInvertible("zero divisor")
+
+@cythonized('i,n')
+def dup_revert(f, n, K):
+    """
+    Compute ``f**(-1)`` mod ``x**n`` using Newton iteration.
+
+    This function computes first ``2**n`` terms of a polynomial that
+    is a result of inversion of a polynomial modulo ``x**n``. This is
+    useful to efficiently compute series expansion of ``1/f``.
+
+    Example
+    =======
+
+    >>> from sympy.polys.domains import QQ
+    >>> from sympy.polys.densetools import dup_revert
+
+    >>> f = [-QQ(1,720), QQ(0), QQ(1,24), QQ(0), -QQ(1,2), QQ(0), QQ(1)]
+
+    >>> dup_revert(f, 8, QQ)
+    [61/720, 0/1, 5/24, 0/1, 1/2, 0/1, 1/1]
+
+    """
+    g = [K.revert(dup_TC(f, K))]
+    h = [K.one, K.zero, K.zero]
+
+    N = int(ceil(log(n, 2)))
+
+    for i in xrange(1, N + 1):
+        a = dup_mul_ground(g, K(2), K)
+        b = dup_mul(f, dup_sqr(g, K), K)
+        g = dup_rem(dup_sub(a, b, K), h, K)
+        h = dup_lshift(h, dup_degree(h), K)
+
+    return g
+
+def dmp_revert(f, g, u, K):
+    """ """
+    if not u:
+        return dup_revert(f, g, K)
+    else:
+        raise MultivariatePolynomialError(f, g)
 
 def dup_euclidean_prs(f, g, K):
     """

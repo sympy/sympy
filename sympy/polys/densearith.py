@@ -16,8 +16,6 @@ from sympy.polys.polyerrors import (
 
 from sympy.utilities import cythonized
 
-from math import ceil, log
-
 @cythonized("i,n,m")
 def dup_add_term(f, c, i, K):
     """
@@ -1891,36 +1889,3 @@ def dmp_expand(polys, u, K):
 
     return f
 
-@cythonized('i,n')
-def dup_revert(f, n, K):
-    """
-    Compute ``f**(-1)`` mod ``x**n`` using Newton iteration.
-
-    This function computes first ``2**n`` terms of a polynomial that
-    is a result of inversion of a polynomial modulo ``x**n``. This is
-    useful to efficiently compute series expansion of ``1/f``.
-
-    Example
-    =======
-
-    >>> from sympy.polys.domains import QQ
-    >>> from sympy.polys.densearith import dup_revert
-
-    >>> f = [-QQ(1,720), QQ(0), QQ(1,24), QQ(0), -QQ(1,2), QQ(0), QQ(1)]
-
-    >>> dup_revert(f, 8, QQ)
-    [61/720, 0/1, 5/24, 0/1, 1/2, 0/1, 1/1]
-
-    """
-    g = [K.revert(dup_TC(f, K))]
-    h = [K.one, K.zero, K.zero]
-
-    N = int(ceil(log(n, 2)))
-
-    for i in xrange(1, N + 1):
-        a = dup_mul_ground(g, K(2), K)
-        b = dup_mul(f, dup_sqr(g, K), K)
-        g = dup_rem(dup_sub(a, b, K), h, K)
-        h = dup_lshift(h, dup_degree(h), K)
-
-    return g
