@@ -18,6 +18,7 @@ from sympy.polys.densetools import (
     dup_eval, dmp_eval, dmp_eval_in,
     dmp_eval_tail, dmp_diff_eval_in,
     dup_gcdex, dup_half_gcdex, dup_invert,
+    dup_euclidean_prs, dup_primitive_prs,
     dup_subresultants, dmp_subresultants,
     dup_prs_resultant, dmp_prs_resultant,
     dmp_zz_collins_resultant,
@@ -315,6 +316,26 @@ def test_dup_gcdex():
 
 def test_dup_invert():
     assert dup_invert([QQ(2),QQ(0)], [QQ(1),QQ(0),QQ(-16)], QQ) == [QQ(1,32),QQ(0)]
+
+def test_dup_euclidean_prs():
+    f = QQ.map([1, 0, 1, 0, -3, -3, 8, 2, -5])
+    g = QQ.map([3, 0, 5, 0, -4, -9, 21])
+
+    assert dup_euclidean_prs(f, g, QQ) == [f, g,
+        [-QQ(5,9), QQ(0,1), QQ(1,9), QQ(0,1), -QQ(1,3)],
+        [-QQ(117,25), -QQ(9,1), QQ(441,25)],
+        [QQ(233150,19773), -QQ(102500,6591)],
+        [-QQ(1288744821,543589225)]]
+
+def test_dup_primitive_prs():
+    f = ZZ.map([1, 0, 1, 0, -3, -3, 8, 2, -5])
+    g = ZZ.map([3, 0, 5, 0, -4, -9, 21])
+
+    assert dup_primitive_prs(f, g, ZZ) == [f, g,
+        [-ZZ(5), ZZ(0), ZZ(1), ZZ(0), -ZZ(3)],
+        [ZZ(13), ZZ(25), -ZZ(49)],
+        [ZZ(4663), -ZZ(6150)],
+        [ZZ(1)]]
 
 def test_dup_subresultants():
     assert dup_resultant([], [], ZZ) == ZZ(0)
