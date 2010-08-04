@@ -90,6 +90,14 @@ class exp(Function):
         if excluded:
             return C.Mul(*(excluded+[cls(C.Add(*included))]))
 
+    @property
+    def base(self):
+        return S.Exp1
+
+    @property
+    def exp(self):
+        return self.args[0]
+
     @staticmethod
     @cacheit
     def taylor_term(n, x, *previous_terms):

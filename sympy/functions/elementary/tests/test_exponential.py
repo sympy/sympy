@@ -1,5 +1,5 @@
-from sympy import symbols, log, Real, nan, oo, I, pi, E, exp, Symbol, \
-        LambertW, sqrt, Rational, sin, expand_log
+from sympy import (symbols, log, Real, nan, oo, I, pi, E, exp, Symbol,
+        LambertW, sqrt, Rational, sin, expand_log, S)
 from sympy.utilities.pytest import XFAIL
 
 def test_exp():
@@ -36,6 +36,9 @@ def test_exp():
 
     assert exp(x).as_Pow() == (E, x)
     assert exp(-x).as_Pow() == (E, -x)
+
+    assert exp(x).base is S.Exp1
+    assert exp(x).exp == x
 
 def test_log():
 
