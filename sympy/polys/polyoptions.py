@@ -71,11 +71,19 @@ class Options(dict):
     """
     Options manager for polynomial manipulation module.
 
-        >>> Options((x, y, z), {'domain': 'ZZ'})
-        {'gens': (x, y, z), 'domain': ZZ}
+    Example
+    =======
 
-        >>> build_options(x, y, z, domain='ZZ')
-        {'gens': (x, y, z), 'domain': ZZ}
+    >>> from sympy.polys.polyoptions import Options
+    >>> from sympy.polys.polyoptions import build_options
+
+    >>> from sympy.abc import x, y, z
+
+    >>> Options((x, y, z), {'domain': 'ZZ'})
+    {'domain': ZZ, 'gens': (x, y, z)}
+
+    >>> build_options((x, y, z), {'domain': 'ZZ'})
+    {'domain': ZZ, 'gens': (x, y, z)}
 
     Options
     =======
@@ -631,7 +639,25 @@ def build_options(gens, args=None):
         return args['opt']
 
 def allowed_flags(args, flags):
-    """ """
+    """
+    Allow specified flags to be used in the given context.
+
+    Example
+    =======
+
+    >>> from sympy.polys.polyoptions import allowed_flags
+    >>> from sympy.polys.domains import ZZ
+
+    >>> allowed_flags({'domain': ZZ}, [])
+
+    >>> allowed_flags({'domain': ZZ, 'frac': True}, [])
+    Traceback (most recent call last):
+    ...
+    FlagError: 'frac' flag is not allowed in this context
+
+    >>> allowed_flags({'domain': ZZ, 'frac': True}, ['frac'])
+
+    """
     flags = set(flags)
 
     for arg in args.iterkeys():
