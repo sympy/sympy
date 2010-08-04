@@ -495,9 +495,14 @@ def integrate_hyperexponential_polynomial(p, D, T, z):
         if not i:
             continue
         elif i < 0:
-            a = p.as_poly(z).nth(-i)
+            # If you get AttributeError: 'NoneType' object has no attribute 'nth'
+            # then this should really not have expand=False
+            # But it shouldn't happen because p is already a Poly in t and z
+            a = p.as_poly(z, expand=False).nth(-i)
         else:
-            a = p.as_poly(t).nth(i)
+            # If you get AttributeError: 'NoneType' object has no attribute 'nth'
+            # then this should really not have expand=False
+            a = p.as_poly(t, expand=False).nth(i)
 
         aa, ad = a.as_numer_denom()
         aa, ad = aa.as_poly(t1, field=True), ad.as_poly(t1, field=True)
