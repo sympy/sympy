@@ -1,6 +1,7 @@
-"""Tests for tools for real and complex root isolation and refinement. """
+"""Tests for real and complex root isolation and refinement algorithms. """
 
 from sympy.polys.rootisolation import (
+    dup_sturm,
     dup_refine_real_root,
     dup_isolate_real_roots,
     dup_isolate_real_roots_sqf,
@@ -9,25 +10,30 @@ from sympy.polys.rootisolation import (
     dup_count_complex_roots,
     dup_isolate_complex_roots_sqf,
     dup_isolate_all_roots,
-    dup_isolate_all_roots_sqf,
-)
+    dup_isolate_all_roots_sqf)
 
 from sympy.polys.densebasic import (
-    dup_from_raw_dict,
-)
+    dup_from_raw_dict)
 
-from sympy.polys.densetools import (
-    dup_sqf_part,
-)
+from sympy.polys.sqfreetools import (
+    dup_sqf_part)
 
 from sympy.polys.polyerrors import (
     RefinementFailed,
-    DomainError,
-)
+    DomainError)
 
 from sympy.polys.domains import ZZ, QQ, EX
 
 from sympy.utilities.pytest import raises
+
+def test_dup_sturm():
+    assert dup_sturm([QQ(5)], QQ) == [[QQ(1)]]
+    assert dup_sturm([QQ(1),QQ(0)], QQ) == [[QQ(1),QQ(0)], [QQ(1)]]
+
+    f = QQ.map([1,-2,3,-5])
+
+    assert dup_sturm(f, QQ) == \
+        [f, [QQ(3),QQ(-4),QQ(3)], [QQ(-10,9),QQ(13,3)], [QQ(-3303,100)]]
 
 def test_dup_refine_real_root():
     f = [1,0,-2]
