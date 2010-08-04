@@ -50,8 +50,7 @@ from sympy.polys.densebasic import (
     dup_deflate, dmp_deflate,
     dup_terms_gcd, dmp_terms_gcd,
     dmp_list_terms,
-    dmp_slice_in,
-)
+    dmp_slice_in)
 
 from sympy.polys.densearith import (
     dup_add_term, dmp_add_term,
@@ -77,37 +76,42 @@ from sympy.polys.densearith import (
     dup_exquo, dmp_exquo,
     dmp_add_mul, dmp_sub_mul,
     dup_max_norm, dmp_max_norm,
-    dup_l1_norm, dmp_l1_norm,
-)
+    dup_l1_norm, dmp_l1_norm)
 
 from sympy.polys.densetools import (
     dup_clear_denoms, dmp_clear_denoms,
     dup_integrate, dmp_integrate_in,
     dup_diff, dmp_diff_in,
     dup_eval, dmp_eval_in,
+    dup_revert,
+    dup_trunc, dmp_ground_trunc,
+    dup_content, dmp_ground_content,
+    dup_primitive, dmp_ground_primitive,
+    dup_monic, dmp_ground_monic,
+    dup_compose, dmp_compose,
+    dup_decompose,
+    dmp_lift)
+
+from sympy.polys.euclidtools import (
     dup_half_gcdex, dup_gcdex, dup_invert,
     dup_subresultants, dmp_subresultants,
     dup_resultant, dmp_resultant,
     dup_discriminant, dmp_discriminant,
     dup_inner_gcd, dmp_inner_gcd,
     dup_gcd, dmp_gcd,
-    dup_lcm, dmp_lcm,
-    dup_trunc, dmp_ground_trunc,
-    dup_content, dmp_ground_content,
-    dup_primitive, dmp_ground_primitive,
-    dup_monic, dmp_ground_monic,
+    dup_lcm, dmp_lcm)
+
+from sympy.polys.sqfreetools import (
     dup_gff_list,
     dup_sqf_p, dmp_sqf_p,
     dup_sqf_norm, dmp_sqf_norm,
     dup_sqf_part, dmp_sqf_part,
     dup_sqf_list, dup_sqf_list_include,
-    dmp_sqf_list, dmp_sqf_list_include,
-    dup_compose, dmp_compose,
-    dup_decompose,
-    dup_sturm,
-    dmp_lift,
-    dup_revert,
-)
+    dmp_sqf_list, dmp_sqf_list_include)
+
+from sympy.polys.factortools import (
+    dup_factor_list, dup_factor_list_include,
+    dmp_factor_list, dmp_factor_list_include)
 
 from sympy.polys.rootisolation import (
     dup_isolate_real_roots_sqf,
@@ -117,18 +121,12 @@ from sympy.polys.rootisolation import (
     dup_refine_real_root,
     dup_count_real_roots,
     dup_count_complex_roots,
-)
-
-from sympy.polys.factortools import (
-    dup_factor_list, dup_factor_list_include,
-    dmp_factor_list, dmp_factor_list_include,
-)
+    dup_sturm)
 
 from sympy.polys.polyerrors import (
     UnificationFailed,
     PolynomialError,
-    DomainError,
-)
+    DomainError)
 
 def init_normal_DMP(rep, lev, dom):
     return DMP(dmp_normal(rep, lev, dom), dom, lev)

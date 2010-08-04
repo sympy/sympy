@@ -3,20 +3,20 @@
 from sympy.polys.densearith import (
     dup_mul_ground, dmp_mul_ground,
     dup_pow, dmp_pow,
-    dmp_expand,
-)
+    dmp_expand)
 
 from sympy.polys.densebasic import (
     dup_degree, dmp_degree,
     dup_normal, dmp_normal,
     dup_from_raw_dict, dup_to_raw_dict,
     dmp_from_dict, dmp_to_dict,
-    dmp_nest, dmp_raise,
-)
+    dmp_nest, dmp_raise)
 
 from sympy.polys.densetools import (
-    dup_primitive, dup_sqf_p, dmp_eval_tail,
-)
+    dup_primitive, dmp_eval_tail)
+
+from sympy.polys.sqfreetools import (
+    dup_sqf_p)
 
 from sympy.polys.factortools import (
     dup_trial_division, dmp_trial_division,
@@ -33,12 +33,10 @@ from sympy.polys.factortools import (
     dup_zz_factor, dup_zz_factor_sqf, dmp_zz_factor,
     dup_ext_factor, dmp_ext_factor,
     dup_factor_list, dmp_factor_list,
-    dup_factor_list_include, dmp_factor_list_include,
-)
+    dup_factor_list_include, dmp_factor_list_include)
 
 from sympy.polys.specialpolys import (
-    f_1, f_2, f_3, f_4, f_5, f_6, w_1, w_2,
-)
+    f_1, f_2, f_3, f_4, f_5, f_6, w_1, w_2)
 
 from sympy.polys.polyconfig import setup
 from sympy.polys.polyerrors import DomainError

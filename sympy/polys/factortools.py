@@ -7,8 +7,7 @@ from sympy.polys.galoistools import (
     gf_div, gf_rem,
     gf_gcd, gf_gcdex,
     gf_sqf_p,
-    gf_factor_sqf, gf_factor
-)
+    gf_factor_sqf, gf_factor)
 
 from sympy.polys.densebasic import (
     dup_LC, dmp_LC, dmp_ground_LC,
@@ -25,8 +24,7 @@ from sympy.polys.densebasic import (
     dup_inflate,
     dmp_exclude, dmp_include,
     dmp_inject, dmp_eject,
-    dmp_terms_gcd
-)
+    dmp_terms_gcd)
 
 from sympy.polys.densearith import (
     dup_neg, dmp_neg,
@@ -43,32 +41,34 @@ from sympy.polys.densearith import (
     dup_max_norm, dmp_max_norm,
     dup_l1_norm, dmp_l1_norm,
     dup_mul_ground, dmp_mul_ground,
-    dup_exquo_ground, dmp_exquo_ground
-)
+    dup_exquo_ground, dmp_exquo_ground)
 
 from sympy.polys.densetools import (
-    dup_gcd, dmp_gcd,
-    dup_sqf_p, dmp_sqf_p,
-    dup_sqf_part, dmp_sqf_part,
+    dup_clear_denoms, dmp_clear_denoms,
     dup_trunc, dmp_ground_trunc,
     dup_content, dmp_ground_content,
     dup_monic, dmp_ground_monic,
-    dup_primitive, dmp_primitive, dmp_ground_primitive,
-    dup_clear_denoms, dmp_clear_denoms,
+    dup_primitive, dmp_ground_primitive,
     dup_eval, dmp_eval_tail,
     dmp_eval_in, dmp_diff_eval_in,
-    dup_inner_gcd, dmp_inner_gcd,
-    dup_sqf_norm, dmp_sqf_norm,
     dup_compose, dmp_compose,
-    dup_shift
-)
+    dup_shift)
+
+from sympy.polys.euclidtools import (
+    dmp_primitive,
+    dup_gcd, dmp_gcd,
+    dup_inner_gcd, dmp_inner_gcd)
+
+from sympy.polys.sqfreetools import (
+    dup_sqf_p, dmp_sqf_p,
+    dup_sqf_norm, dmp_sqf_norm,
+    dup_sqf_part, dmp_sqf_part)
 
 from sympy.polys.polyutils import _sort_factors
 from sympy.polys.polyconfig import query
 
 from sympy.polys.polyerrors import (
-    ExtraneousFactors, DomainError, EvaluationFailed
-)
+    ExtraneousFactors, DomainError, EvaluationFailed)
 
 from sympy.ntheory import nextprime, isprime, factorint
 from sympy.utilities import any, all, subsets, cythonized
