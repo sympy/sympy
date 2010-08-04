@@ -50,8 +50,8 @@ from sympy.polys.polyclasses import DMP, DMF
 from sympy.polys.domains import FF, ZZ, QQ, RR, EX
 
 from sympy import (
-    S, Integer, Rational, Mul, symbols, sqrt, exp,
-    sin, expand, raises, oo, I, pi, re, im, RootOf,
+    S, Integer, Rational, Mul, symbols, sqrt, exp, sin,
+    expand, raises, oo, I, pi, re, im, RootOf, all
 )
 
 x,y,z,p,q,r,s,t,u,v,w,a,b,c,d,e = symbols('x,y,z,p,q,r,s,t,u,v,w,a,b,c,d,e')

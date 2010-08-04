@@ -5,6 +5,7 @@ from sympy.polys.polyoptions import build_options
 from sympy.polys.domains import ZZ, QQ, RR, EX
 from sympy.assumptions import ask
 from sympy.core import S, sympify
+from sympy.utilities import any
 
 def _construct_simple(coeffs, opt):
     """Handle simple domains, e.g.: ZZ, QQ, RR and algebraic domains. """
