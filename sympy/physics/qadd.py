@@ -1,12 +1,15 @@
 from sympy.physics.qoperations import QAssocOp
 
 class QAdd(QAssocOp):
-    def _validate_QMul(self, other):
-        pass
-
-    def _validate_QAdd(self, other):
-        pass
+    name = 'QAdd'
 
     @property
     def eval_to(self):
-        pass
+        if hasattr(self[0], 'eval_to'):
+            return self[0].eval_to
+        else:
+            return self[0].__class__
+
+    @property
+    def identity(self):
+        return S.Zero

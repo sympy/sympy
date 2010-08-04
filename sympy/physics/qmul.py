@@ -1,32 +1,20 @@
-from sympy.physics.qoperations import QAssocOp, _Qrules_
+from sympy.physics.qoperations import QAssocOp, QRules
+from sympy.physics.qoperations import QRules
 
 class QMul(QAssocOp):
-    name = 'QMul'
-    def _validate_QMul(self, other):
-        from sympy.physics.quantum import KetBase, BraBase, Operator, InnerProduct
-        print 'validating'
-        if isinstance(other, (KetBase, BraBase, Operator, InnerProduct)):
-            _Qrules_(self.eval_to, other.__class__)
-        elif hasattr(other, 'eval_to'):
-            _Qrules_(self.eval_to, other.eval_to)
-        return
-
-    def _validate_QAdd(self, other):
-        from sympy.physics.quantum import KetBase, BraBase, Operator, InnerProduct
-        if isinstance(other, (KetBase, BraBase, Operator, InnerProduct)):
-            assert other.__class__ == self.eval_to
+    name = 'QMul'    
 
     @property
     def eval_to(self):
         previous = 0
-        for item in self.args:
-            if hasattr(item, 'eval_to'):
-                item = item.eval_to
-            else:
-                item = item.__class__
+        for item in self.args:               
             if previous:
-                previous = _Qrules_(previous, item)
+                previous = QRules._rules_QMul(previous, item)
             else:
                 previous = item
         return previous
+
+    @property
+    def identity(self):
+        return S.One
                 

@@ -5,36 +5,87 @@ from sympy.physics.quantum import Operator, KetBase, BraBase, OuterProduct, Inne
 from sympy.core.numbers import Number
 from sympy import Symbol
 
-def _Qrules_(class1, class2):
-    if issubclass(class1, (Number, Symbol)):
-        return class2
-    elif issubclass(class2, (Number, Symbol)):
-        return class1
-    elif issubclass(class1, (Operator, OuterProduct)):
-        if issubclass(class2, (Operator, OuterProduct)):
-            return class2
-        elif issubclass(class2, KetBase):
-            return class2
-        elif issubclass(class2, BraBase):
-            raise Exception("Operator*<Bra| is not allowed")
-    elif issubclass(class2, (Operator, OuterProduct)):
-        if issubclass(class1, (Operator, OuterProduct)):
-            return class2
-        elif issubclass(class1, BraBase):
-            return class1
-        elif issubclass(class1, KetBase):
-            raise Exception("|Ket>*Operator is not allowed")
-    elif issubclass(class1, KetBase):
-        if issubclass(class2, BraBase):
-            return Number
+class QRules(object):
+#also need to keep track of hilbert space
+    def __init__(self, qclass, hilbert_space):
+        self.qclass = qclass
+        self.hilbert_space = hilbert_space
+
+    def __getitem__(self, number):
+        if number == 1:
+            return self.hilbert_space
+        elif number == 0:
+            return self.qclass
         else:
-            raise Exception("%s*%s is not allowed" % (class1.__name__, class2.__name__))
-    elif issubclass(class1, InnerProduct):
-        return class2
-    elif issubclass(class2, InnerProduct):
-        return class1
-    else:
-        raise Exception("%s*%s is not allowed" % (class1.__name__, class2.__name__))
+            raise Exception("Index out of bounds")
+
+    @staticmethod
+    def _rules_QMul(Object1, Object2):
+        if isinstance(Object1, QRules):
+            class1 = Object1 
+        elif hasattr(Object1, 'eval_to'): 
+            class1 = Object1.eval_to
+        else:
+            class1 = QRules(Object1.__class__, Object1.hilbert_space)
+    
+        if isinstance(Object2, QRules):
+            class2 = Object2 
+        elif hasattr(Object2, 'eval_to'): 
+            class2 = Object2.eval_to
+        else:
+            class2 = QRules(Object2.__class__, Object2.hilbert_space)
+
+        if class1.hilbert_space != class2.hilbert_space:
+            raise Exception("Hilbert Spaces do not match")
+
+        if (not issubclass(class1[0], (Operator, OuterProduct, KetBase, BraBase))) and (not issubclass(class2[0], (Operator, OuterProduct,    KetBase, BraBase))):
+            return QRules(Number, None)    
+        elif issubclass(class1[0], (Number, Symbol)):
+            return class2
+        elif issubclass(class2[0], (Number, Symbol)):
+            return class1
+        elif issubclass(class1[0], (Operator, OuterProduct)):
+            if issubclass(class2[0], (Operator, OuterProduct)):
+                return class2
+            elif issubclass(class2[0], KetBase):
+                return class2
+        elif issubclass(class2[0], (Operator, OuterProduct)):
+            if issubclass(class1[0], (Operator, OuterProduct)):
+                return class2
+            elif issubclass(class1[0], BraBase):
+                return class1
+        elif issubclass(class1[0], KetBase) and issubclass(class2[0], BraBase):
+            return QRules(OuterProduct, class1.hilbert_space)
+        elif issubclass(class1[0], BraBase) and issubclass(class2[0], KetBase):
+            return QRules(InnerProduct, class1.hilbert_space)
+        elif issubclass(class1[0], InnerProduct):
+            return class2
+        elif issubclass(class2[0], InnerProduct):
+            return class1
+        raise Exception("%s*%s is not allowed" % (class1[0].__name__, class2[0].__name__))
+
+    @staticmethod    
+    def _rules_QAdd(Object1, Object2):
+        if isinstance(Object1, QRules):
+            class1 = Object1 
+        elif hasattr(Object1, 'eval_to'): 
+            class1 = Object1.eval_to
+        else:
+            class1 = QRules(Object1.__class__, Object1.hilbert_space) 
+    
+        if isinstance(Object2, type):
+            class2 = Object2
+        elif hasattr(Object2, 'eval_to'):
+            class2 = Object2.eval_to
+        else:
+            class2 = QRules(Object2.__class__, Object2.hilbert_space)
+            
+        if (not issubclass(class1, (Operator, OuterProduct, KetBase, BraBase))) and (not issubclass(class2, (Operator, OuterProduct,    KetBase, BraBase))):
+            return QRules(Number, None)
+        elif class1 == class2:
+            return class1
+        else:
+            raise Exception("Can't add (%s + %s)" % (class1[0].__name__, class2[0].__name__))
 
 class QAssocOp(Expr):
     _op_priority = 100.0
@@ -51,27 +102,33 @@ class QAssocOp(Expr):
 
     @classmethod
     def flatten(cls, seq):
-        print 'flatten', seq
         #determine if this will work
         validationMeth = '_validate_%s' % cls.name
-        print validationMeth
-        for i in range(len(seq)-1):
-            if hasattr(seq[i], validationMeth):
-                getattr(seq[i], validationMeth)(seq[i+1])
-            elif hasattr(seq[i+1], validationMeth):
-                getattr(seq[i+1], validationMeth)(seq[i]) #do rvalidate FIXME
+        rules = getattr(QRules, '_rules_%s' % cls.name)
+        result = 0
+        for i in range(len(seq)):
+            if result:
+                result = rules(result, seq[i])
             else:
-                _Qrules_(seq[i].__class__, seq[i+1].__class__)
+                if hasattr(seq[i], 'eval_to'):
+                    result = seq[i].eval_to
+                else:
+                    result = QRules(seq[i].__class__, seq[i].hilbert_space)
+                
         # apply associativity, no commutativity property is used
         new_seq = []
         while seq:
-            o = seq.pop(0)
+            o = seq.pop(0)                
             if o.__class__ is cls: # classes must match exactly
                 seq = list(o[:]) + seq
                 continue
             new_seq.append(o)
         # c_part, nc_part, order_symbols
         return new_seq
+
+    @property
+    def hilbert_space(self):
+        return self.args[0].hilbert_space 
         
     def __getitem__(self, number):
         return self.args[number]   
@@ -88,10 +145,12 @@ class QAssocOp(Expr):
 
     @call_highest_priority('__radd__')
     def __add__(self, other):
+        from sympy.physics.qadd import QAdd    
         return QAdd(self, other)
 
     @call_highest_priority('__add__')
     def __radd__(self, other):
+        from sympy.physics.qadd import QAdd       
         return QAdd(other, self)
 
     @call_highest_priority('__rpow__')
