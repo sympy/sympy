@@ -233,7 +233,10 @@ class Function(Application, Expr):
                 fname = MPMATH_TRANSLATIONS[fname]
             func = getattr(mpmath, fname)
         except (AttributeError, KeyError):
-            return
+            try:
+                return C.Real(self._imp_(*self.args), prec)
+            except (AttributeError, TypeError):
+                return
 
         # Convert all args to mpf or mpc
         try:

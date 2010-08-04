@@ -2,7 +2,8 @@ from sympy.core.evalf import PrecisionExhausted, complex_accuracy
 
 from sympy import pi, I, Symbol, Add, Rational, exp, sqrt, sin, cos, \
     fibonacci, Integral, oo, E, atan, log, integrate, floor, ceiling, \
-    factorial, binomial, Sum, zeta, Catalan, Pow, GoldenRatio, sympify, sstr
+    factorial, binomial, Sum, zeta, Catalan, Pow, GoldenRatio, sympify, \
+    sstr, Function
 
 from sympy.mpmath.libmp.libmpf import from_float
 
@@ -206,3 +207,13 @@ def test_evalf_power_subs_bugs():
 
 def test_evalf_arguments():
     raises(TypeError, 'pi.evalf(method="garbage")')
+
+def test_implemented_function_evalf():
+    from sympy.utilities.lambdify import implemented_function
+    f = Function('f')
+    x = Symbol('x')
+    f = implemented_function(f, lambda x: x + 1)
+    assert str(f(x)) == "f(x)"
+    assert str(f(2)) == "f(2)"
+    assert f(2).evalf() == 3
+    assert f(x).evalf() == f(x)
