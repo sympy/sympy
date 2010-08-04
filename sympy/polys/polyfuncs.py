@@ -4,21 +4,39 @@ from sympy.polys.polytools import poly_from_expr, Poly
 from sympy.polys.polyoptions import allowed_flags
 
 from sympy.polys.specialpolys import (
-    symmetric_poly, interpolating_poly,
-)
+    symmetric_poly, interpolating_poly)
 
 from sympy.polys.polyerrors import (
-    PolificationFailed, ComputationFailed,
-)
+    PolificationFailed, ComputationFailed)
 
 from sympy.utilities import (
-    all, any, numbered_symbols,
-)
+    all, any, numbered_symbols)
 
 from sympy.core import S, Add, Mul
 
 def symmetrize(f, *gens, **args):
-    """Rewrite a polynomial in terms of elementary symmetric polynomials. """
+    """
+    Rewrite a polynomial in terms of elementary symmetric polynomials.
+
+    Example
+    =======
+
+    >>> from sympy.polys.polyfuncs import symmetrize
+    >>> from sympy.abc import x, y
+
+    >>> symmetrize(x**2 + y**2)
+    (-2*x*y + (x + y)**2, 0)
+
+    >>> symmetrize(x**2 + y**2, formal=True)
+    (-2*s2 + s1**2, 0, {s1: x + y, s2: x*y})
+
+    >>> symmetrize(x**2 - y**2)
+    (-2*x*y + (x + y)**2, -2*y**2)
+
+    >>> symmetrize(x**2 - y**2, formal=True)
+    (-2*s2 + s1**2, -2*y**2, {s1: x + y, s2: x*y})
+
+    """
     allowed_flags(args, ['formal'])
 
     try:
@@ -83,7 +101,30 @@ def symmetrize(f, *gens, **args):
         return (Add(*symmetric).subs(polys), f.as_basic())
 
 def horner(f, *gens, **args):
-    """Rewrite a polynomial in Horner form. """
+    """
+    Rewrite a polynomial in Horner form.
+
+    Example
+    =======
+
+    >>> from sympy.polys.polyfuncs import horner
+    >>> from sympy.abc import x, y, a, b, c, d, e
+
+    >>> horner(9*x**4 + 8*x**3 + 7*x**2 + 6*x + 5)
+    5 + x*(6 + x*(7 + x*(8 + 9*x)))
+
+    >>> horner(a*x**4 + b*x**3 + c*x**2 + d*x + e)
+    e + x*(d + x*(c + x*(b + a*x)))
+
+    >>> f = 4*x**2*y**2 + 2*x**2*y + 2*x*y**2 + x*y
+
+    >>> horner(f, wrt=x)
+    x*(y*(1 + 2*y) + x*y*(2 + 4*y))
+
+    >>> horner(f, wrt=y)
+    y*(x*(1 + 2*x) + x*y*(2 + 4*x))
+
+    """
     allowed_flags(args, [])
 
     try:
@@ -105,16 +146,23 @@ def horner(f, *gens, **args):
     return form
 
 def interpolate(data, x):
-    """Construct an interpolating polynomial for the data points.
+    """
+    Construct an interpolating polynomial for the data points.
 
-       >>> interpolate([1,4,9,16], x)
-       x**2
-       >>> interpolate([(1, 1), (2, 4), (3, 9)], x)
-       x**2
-       >>> interpolate([(1, 2), (2, 5), (3, 10)], x)
-       1 + x**2
-       >>> interpolate({1: 2, 2: 5, 3: 10}, x)
-       1 + x**2
+    Example
+    =======
+
+    >>> from sympy.polys.polyfuncs import interpolate
+    >>> from sympy.abc import x
+
+    >>> interpolate([1, 4, 9, 16], x)
+    x**2
+    >>> interpolate([(1, 1), (2, 4), (3, 9)], x)
+    x**2
+    >>> interpolate([(1, 2), (2, 5), (3, 10)], x)
+    1 + x**2
+    >>> interpolate({1: 2, 2: 5, 3: 10}, x)
+    1 + x**2
 
     """
     n = len(data)
