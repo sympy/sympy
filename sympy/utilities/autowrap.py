@@ -8,10 +8,24 @@ binaries of acceptable performance with a one-button user interface, i.e.
 
     >>> from sympy.abc import x,y
     >>> from sympy.utilities.autowrap import autowrap
-    >>> expr = ((x - y)**(35)).expand()
-    >>> binary_func = autowrap(expr)
-    >>> binary_func.subs((x, 1), (y, 2))
-    -1.00000000
+    >>> expr = ((x - y)**(25)).expand()
+    >>> binary_callable = autowrap(expr)
+    >>> binary_callable(1, 2)           #doctest: +SKIP
+    -1.0
+
+The callable returned from autowrap() is a binary python function, not a
+Sympy object.  If it is desired to use the compiled function in symbolic
+expressions, it is better to use binary_function() which returns a Sympy
+Function object.  The binary callable is attached as the _imp_ attribute and
+invoked when a numerical evaluation is requested with evalf(), or with
+lambdify().
+
+    >>> from sympy.utilities.autowrap import binary_function
+    >>> f = binary_function('f', expr)
+    >>> 2*f(x, y) + y
+    y + 2*f(x, y)
+    >>> (2*f(x, y) + y).evalf(2, subs={x: 1, y:2})    #doctest: +SKIP
+    0.0
 
 Why?
 
@@ -46,6 +60,7 @@ When is this module NOT the best approach?
 
 """
 from sympy.utilities.codegen import codegen, get_code_generator, Routine
+from sympy.utilities.lambdify import implemented_function
 import sys, os, tempfile, subprocess
 
 class CodeWrapError(Exception): pass
@@ -144,3 +159,22 @@ def autowrap(expr, language='F95', backend='f2py', tempdir=None):
     code_wrapper = CodeWrapperClass(code_generator, tempdir)
     routine  = Routine('autofunc',expr)
     return code_wrapper.wrap_code(routine)
+
+def binary_function(symfunc, expr, **kwargs):
+    """Returns a sympy function with expr as binary implementation
+
+    This is a convenience function that relies on autowrap() and implemented_function()
+
+    >>> from sympy.abc import x, y, z
+    >>> from sympy.utilities.autowrap import binary_function
+    >>> expr = ((x - y)**(25)).expand()
+    >>> f = binary_function('f', expr)
+    >>> type(f)
+    <class 'sympy.core.function.FunctionClass'>
+    >>> 2*f(x, y)
+    2*f(x, y)
+    >>> f(x, y).evalf(2, subs={x: 1, y: 2})
+    -1.0
+    """
+    binary = autowrap(expr, **kwargs)
+    return implemented_function(symfunc, binary)
