@@ -1,37 +1,76 @@
-"""Tools for real and complex root isolation and refinement. """
+"""Real and complex root isolation and refinement algorithms. """
 
 from sympy.polys.densebasic import (
     dup_LC, dup_TC, dup_degree,
     dup_strip, dup_reverse,
     dup_convert, dmp_convert,
-    dup_terms_gcd,
-)
+    dup_terms_gcd)
 
 from sympy.polys.densearith import (
-    dup_neg, dup_rshift,
-)
+    dup_neg, dup_rshift, dup_rem)
 
 from sympy.polys.densetools import (
+    dup_clear_denoms,
     dup_mirror, dup_scale, dup_shift,
     dup_transform,
+    dup_diff,
     dup_eval, dmp_eval_in,
     dup_sign_variations,
-    dup_clear_denoms,
-    dup_real_imag,
-    dup_sqf_list,
-    dup_sturm,
-)
+    dup_real_imag)
+
+from sympy.polys.sqfreetools import (
+    dup_sqf_part, dup_sqf_list)
 
 from sympy.polys.factortools import (
-    dup_factor_list,
-)
+    dup_factor_list)
 
 from sympy.polys.polyerrors import (
     RefinementFailed,
-    DomainError,
-)
+    DomainError)
 
 import operator
+
+def dup_sturm(f, K):
+    """
+    Computes the Sturm sequence of ``f`` in ``F[x]``.
+
+    Given an univariate, square-free polynomial ``f(x)`` returns the
+    associated Sturm sequence ``f_0(x), ..., f_n(x)`` defined by::
+
+       f_0(x), f_1(x) = f(x), f'(x)
+       f_n = -rem(f_{n-2}(x), f_{n-1}(x))
+
+    Example
+    =======
+
+    >>> from sympy.polys.domains import QQ
+    >>> from sympy.polys.rootisolation import dup_sturm
+
+    >>> f = QQ.map([1, -2, 1, -3])
+
+    >>> dup_sturm(f, QQ)
+    [[1/1, -2/1, 1/1, -3/1], [3/1, -4/1, 1/1], [2/9, 25/9], [-2079/4]]
+
+    References
+    ==========
+
+    .. [Davenport88] J.H. Davenport, Y. Siret, E. Tournier, Computer Algebra
+    Systems and Algorithms for Algebraic Computation, Academic Press, London,
+    1988, pp. 124-128
+
+    """
+    if not (K.has_Field or not K.is_Exact):
+        raise DomainError("can't compute Sturm sequence over %s" % K)
+
+    f = dup_sqf_part(f, K)
+
+    sturm = [f, dup_diff(f, 1, K)]
+
+    while sturm[-1]:
+        s = dup_rem(sturm[-2], sturm[-1], K)
+        sturm.append(dup_neg(s, K))
+
+    return sturm[:-1]
 
 def dup_root_upper_bound(f, K):
     """Compute LMQ upper bound for `f`'s positive roots. """
