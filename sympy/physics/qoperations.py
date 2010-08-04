@@ -39,7 +39,11 @@ class QRules(object):
             raise Exception("Hilbert Spaces do not match")
 
         if (not issubclass(class1[0], (Operator, OuterProduct, KetBase, BraBase))) and (not issubclass(class2[0], (Operator, OuterProduct,    KetBase, BraBase))):
-            return QRules(Number, None)    
+            return QRules(Number, None)
+        elif issubclass(class1[0], InnerProduct):
+            return class2
+        elif issubclass(class2[0], InnerProduct):
+            return class1
         elif issubclass(class1[0], (Number, Symbol)):
             return class2
         elif issubclass(class2[0], (Number, Symbol)):
@@ -58,10 +62,6 @@ class QRules(object):
             return QRules(OuterProduct, class1.hilbert_space)
         elif issubclass(class1[0], BraBase) and issubclass(class2[0], KetBase):
             return QRules(InnerProduct, class1.hilbert_space)
-        elif issubclass(class1[0], InnerProduct):
-            return class2
-        elif issubclass(class2[0], InnerProduct):
-            return class1
         raise Exception("%s*%s is not allowed" % (class1[0].__name__, class2[0].__name__))
 
     @staticmethod    
