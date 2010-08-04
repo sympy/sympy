@@ -33,6 +33,12 @@ def test_issue_459():
     assert not integrate(cos(x*y), (x, -pi/2, pi/2), (y, 0, pi)).has(Integral)
 
 @XFAIL
+def test_issue_781():
+    t = 5 # Timeout time
+    # integrate_hyperexponential(Poly(t*2*(1 - t0**2)*t0*(x**3 + x**2), t), Poly((1 + t0**2)**2*2*(x**2 + x + 1), t), [Poly(1, x), Poly(1 + t0**2, t0), Poly(t, t)], [x, t0, t], [exp, tan])
+    assert not run_with_timeout("integrate(exp(x)*cos(2*x)*sin(2*x) * (x**3+x**2)/(2*(x**2+x+1)) , x)", t).has(Integral)
+
+@XFAIL
 def test_issue_841a():
     assert not integrate(exp(-x**2)*exp(I*k*x), (x, -oo, oo)).has(Integral)
 
