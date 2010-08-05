@@ -56,7 +56,7 @@ class QAssocOp(Expr):
     def __rpow__(self, other):
         return QPow(other, self)
 
-    """def _sympystr(self, printer, *args):
+    def _sympystr(self, printer, *args):
         string = ''
         length = len(self.args)
         for i in range(length):
@@ -64,7 +64,7 @@ class QAssocOp(Expr):
             if i != length-1:
                 string = string + self.__class__.binop
         return string 
-    """
+    
 
     def _new_rawargs(self, *args):
         """create new instance of own class with args exactly as provided by caller

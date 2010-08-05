@@ -2,6 +2,7 @@ from sympy.physics.qoperations import QAssocOp
 from sympy.physics.quantum import *
 from sympy.core.expr import Expr
 from sympy.core.cache import cacheit
+from sympy.core.mul import Mul
 
 class QMul(QAssocOp):
     binop = '*'

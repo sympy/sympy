@@ -39,7 +39,6 @@ class QAdd(QAssocOp):
         order_factors = []
 
         for o in seq:
-
             # O(x)
             if o.is_Order:
                 for o1 in order_factors:
@@ -52,7 +51,7 @@ class QAdd(QAssocOp):
                 continue
 
             # 3
-            elif o.is_Number:
+            elif not isinstance(o, (Operator, OuterProduct, StateBase, QAssocOp)):
                 coeff += o
                 continue
 
@@ -67,7 +66,7 @@ class QAdd(QAssocOp):
                 c = o.args[0]
 
                 # 3*...
-                if c.is_Number:
+                if not isinstance(c, (Operator, OuterProduct, StateBase, QAssocOp)):
                     if c is S.One:
                         s = o
                     else:
@@ -124,7 +123,7 @@ class QAdd(QAssocOp):
 
         # nan
         if coeff is S.NaN:
-            
+            raise Exception("NaN for some reason")
             
         # oo, -oo
         elif (coeff is S.Infinity) or (coeff is S.NegativeInfinity):
@@ -162,6 +161,8 @@ class QAdd(QAssocOp):
             newseq.insert(0, coeff)
 
         # we are done
+        if len(newseq) == 1:
+            return newseq[0]
         return Expr.__new__(cls, *newseq)
 
     @property
