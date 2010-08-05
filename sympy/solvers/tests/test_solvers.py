@@ -160,7 +160,6 @@ def test_solve_rational():
     x, y, a, b = symbols('x,y,a,b')
 
     assert solve( ( x - y**3 )/( (y**2)*sqrt(1 - y**2) ), x) == [y**3]
-    assert solve(y-b/(1+a*x), x) == [(b - y)/(a*y)]
 
 def test_linear_system():
     x, y, z, t, n = symbols('x,y,z,t,n')
@@ -243,7 +242,7 @@ def test_tsolve_1():
     assert solve(y - b*x/(a+x), x) in [[-a*y/(y - b)], [a*y/(b - y)]]
     assert solve(y - b*exp(a/x), x) == [a/(-log(b) + log(y))]
     # issue #1408
-    assert solve(y-b/(1+a*x),x) == [(b - y)/(a*y)]
+    assert solve(y-b/(1+a*x), x) in [[(b - y)/(a*y)], [-((y - b)/(a*y))]]
     # issue #1407
     assert solve(y-a*x**b , x) == [y**(1/b)*(1/a)**(1/b)]
     # issue #1406
