@@ -8,6 +8,7 @@ References:
   - http://bioinformatics.louisville.edu/ouyang/MingOuyangThesis.pdf
 """
 from sympy.core import Symbol
+from sympy import Predicate
 from sympy.logic.boolalg import Or, Not, conjuncts, disjuncts, to_cnf, \
     to_int_repr
 from sympy.logic.inference import pl_true, literal_symbol
@@ -25,7 +26,7 @@ def dpll_satisfiable(expr):
     False
 
     """
-    symbols = list(expr.atoms(Symbol))
+    symbols = list(expr.atoms(Symbol, Predicate))
     symbols_int_repr = set(range(1, len(symbols) + 1))
     clauses = conjuncts(to_cnf(expr))
     clauses_int_repr = to_int_repr(clauses, symbols)

@@ -7,8 +7,7 @@ from sympy.assumptions import global_assumptions, Assume, Predicate
 from sympy.assumptions.assume import eliminate_assume
 from sympy.logic.boolalg import to_cnf, conjuncts, disjuncts, \
     And, Not, Implies, Equivalent, to_int_repr
-from sympy.logic.inference import literal_symbol
-from sympy.logic.algorithms.dpll import dpll_int_repr
+from sympy.logic.inference import literal_symbol, satisfiable
 
 class Q:
     """Supported ask keys."""
@@ -108,33 +107,17 @@ def ask(expr, key, assumptions=True, context=global_assumptions):
 
     if not expr.is_Atom:
         return
-    clauses = copy.deepcopy(known_facts_compiled)
 
-    assumptions = conjuncts(to_cnf(assumptions))
-    # add assumptions to the knowledge base
-    for assump in assumptions:
-        conj = eliminate_assume(assump, symbol=expr)
-        if conj:
-            for clause in conjuncts(to_cnf(conj)):
-                out = set()
-                for atom in disjuncts(clause):
-                    lit, pos = literal_symbol(atom), type(atom) is not Not
-                    if pos:
-                        out.add(known_facts_keys.index(lit)+1)
-                    else:
-                        out.add(-(known_facts_keys.index(lit)+1))
-                clauses.append(out)
-
-    n = len(known_facts_keys)
-    clauses.append(set([known_facts_keys.index(key)+1]))
-    if not dpll_int_repr(clauses, set(range(1, n+1)), {}):
+    # If it's not consistent with the assumptions, then it can't be true
+    if not satisfiable(eliminate_assume(And(known_facts, assumptions, key), expr)):
         return False
-    clauses[-1] = set([-(known_facts_keys.index(key)+1)])
-    if not dpll_int_repr(clauses, set(range(1, n+1)), {}):
-        # if the negation is satisfiable, it is entailed
-        return True
-    del clauses
 
+    # If the negation is unsatisfiable, it is entailed
+    if not satisfiable(eliminate_assume(And(known_facts, assumptions, Not(key)), expr)):
+        return True
+
+    # Otherwise, we don't have enough information to conclude one way or the other
+    return None
 
 def register_handler(key, handler):
     """Register a handler in the ask system. key must be a string and handler a
