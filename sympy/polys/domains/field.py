@@ -1,12 +1,16 @@
 """Implementation of :class:`Field` class. """
 
 from sympy.polys.domains.ring import Ring
-from sympy.polys.polyerrors import NotReversible
+from sympy.polys.polyerrors import NotReversible, DomainError
 
 class Field(Ring):
     """Represents a field domain. """
 
     has_Field = True
+
+    def get_ring(self):
+        """Returns a ring associated with `self`. """
+        raise DomainError('there is no ring associated with %s' % self)
 
     def get_field(self):
         """Returns a field associated with `self`. """

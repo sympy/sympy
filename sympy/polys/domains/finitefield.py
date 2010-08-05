@@ -49,10 +49,6 @@ class FiniteField(Field, SimpleDomain):
         """Return the characteristic of this domain. """
         return self.mod
 
-    def get_ring(self):
-        """Returns a ring associated with `self`. """
-        return None
-
     def get_field(self):
         """Returns a field associated with `self`. """
         return self
