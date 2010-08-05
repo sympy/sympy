@@ -283,7 +283,7 @@ def test_plotting2():
 
 #================== polys =======================
 from sympy.polys.polytools import Poly
-from sympy.polys.polyclasses import GFP, DMP, DMF, ANP
+from sympy.polys.polyclasses import DMP, DMF, ANP
 from sympy.polys.rootoftools import RootOf, RootSum
 
 from sympy.polys.domains import (
@@ -340,7 +340,7 @@ def test_polys():
     if HAS_GMPY:
         from sympy.polys.domains import GMPYIntegerRing, GMPYRationalField
 
-        for c in (GMPYIntegerRing, GMPYIntegerRing())):
+        for c in (GMPYIntegerRing, GMPYIntegerRing()):
             check(c)
         for c in (GMPYRationalField, GMPYRationalField()):
             check(c)
