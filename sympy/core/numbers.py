@@ -673,7 +673,7 @@ class Rational(Number):
         return Rational(abs(self.p), self.q)
 
     def __int__(self):
-        return int(self.p//self.q)
+        return int(float(self.p)/self.q)
 
     def __eq__(self, other):
         try:
