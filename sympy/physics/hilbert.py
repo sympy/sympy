@@ -543,15 +543,15 @@ class TensorPowerHilbertSpace(HilbertSpace):
 #-----------------------------------------------------------------------------
 
 def compare_hilbert(arg1, arg2):
-    if isinstance(arg1, (Add, Mul)):
+    if isinstance(arg1, (QAdd, QMul)):
         for item in arg1.args:
             compare_hilbert(item, arg2)
-    elif isinstance(arg2, (Add, Mul)):
+    elif isinstance(arg2, (Qdd, QMul)):
         for item in arg2.args:         
             compare_hilbert(item, arg1)
-    elif isinstance(arg1, Pow):
+    elif isinstance(arg1, QPow):
         compare_hilbert(arg1.base, arg2)
-    elif isinstance(arg2, Pow):
+    elif isinstance(arg2, QPow):
         compare_hilbert(arg2.base, arg1)
     else:
         if (hasattr(arg1, 'hilbert_space') and hasattr(arg2, 'hilbert_space') and arg1.hilbert_space != arg2.hilbert_space):

@@ -28,6 +28,7 @@ Questions:
 """
 
 __all__ = [
+    'StateBase',
     'State',
     'Ket',
     'Bra',
@@ -152,6 +153,19 @@ class StateBase(Expr, Representable):
     @call_highest_priority('__pow__')
     def __rpow__(self, other):
         raise QuantumError("Can't raise %s to a State" % (other.__class__.__name__,))
+
+    def _sympyrepr(self, printer, *args):
+        return '%s(%s)' % (self.__class__.__name__, self._print_name(printer, *args))
+
+    def _sympystr(self, printer, *args):
+        return '%s%s%s' % (self.lbracket, self._print_name(printer, *args), self.rbracket)
+
+    def _pretty(self, printer, *args):
+        from sympy.printing.pretty.stringpict import prettyForm
+        pform = self._print_name_pretty(printer, *args)
+        pform = prettyForm(*pform.left(prettyForm(self.lbracket)))
+        pform = prettyForm(*pform.right(prettyForm(self.rbracket)))
+        return pform
 
 class KetBase(StateBase):
 
@@ -286,11 +300,11 @@ class Operator(Expr, Representable):
     def __new__(cls, name):
         name = sympify(name)
         obj = Expr.__new__(cls, name, **{'commutative': False})
-        obj.hilbert_space = cls.eval_hilbert_space(name)        
+        obj.hilbert_space = cls._eval_hilbert_space(name)        
         return obj
 
     @classmethod
-    def eval_hilbert_space(cls, name):
+    def _eval_hilbert_space(cls, name):
         return HilbertSpace()
 
     @property
