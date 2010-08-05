@@ -694,9 +694,7 @@ class Rational(Number):
         return Rational(abs(self.p), self.q)
 
     def __int__(self):
-        if self >= 0:
-            return int(self.p//self.q)
-        return -int(-self.p//self.q)
+        return int(float(self.p)/self.q)
 
     def __eq__(self, other):
         try:
