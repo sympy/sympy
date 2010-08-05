@@ -240,6 +240,8 @@ def test_subs_basic_funcs():
     assert (a*exp(x*y-w*z)+b*exp(x*y+w*z)).subs(z,0) == a*exp(x*y)+b*exp(x*y)
     assert ((a-b)/(c*d-a*b)).subs(c*d-a*b,K) == (a-b)/K
     assert (w*exp(a*b-c)*x*y/4).subs(x*y,L) == w*exp(a*b-c)*L/4
+    assert (x**(2*y)).subs(exp(3*y*log(x)), z) == \
+           (x**(2*y)).subs(x**(3*y), z) == z**Rational(2, 3)
     #assert (a/(b*c)).subs(b*c,K) == a/K,'Failed'; print '.' #FAILS DIVISION
 
 def test_subs_wild():
