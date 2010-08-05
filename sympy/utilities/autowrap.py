@@ -120,6 +120,31 @@ class CodeWrapper:
 
         return self._get_wrapped_function(mod)
 
+class DummyWrapper(CodeWrapper):
+    """Class used for testing independent of backends """
+
+    template = """# dummy module for testing of Sympy
+def %(name)s():
+    return "%(expr)s"
+"""
+    def _prepare_files(self, routine):
+        return
+
+    def _generate_code(self, routine):
+        f = file('%s.py' % self.module_name, 'w')
+        printed = ", ".join([str(res.expr) for res in routine.result_variables])
+        print >> f, DummyWrapper.template % {
+                'name': routine.name,
+                'expr': printed
+                }
+        f.close()
+
+    def _process_files(self, routine):
+        return
+
+    @classmethod
+    def _get_wrapped_function(cls, mod):
+        return mod.autofunc
 
 class CythonCodeWrapper(CodeWrapper):
     setup_template = """
@@ -179,7 +204,7 @@ class F2PyCodeWrapper(CodeWrapper):
         return mod.autofunc
 
 def _get_code_wrapper_class(backend):
-    wrappers = { 'F2PY': F2PyCodeWrapper, 'CYTHON': CythonCodeWrapper }
+    wrappers = { 'F2PY': F2PyCodeWrapper, 'CYTHON': CythonCodeWrapper, 'DUMMY': DummyWrapper}
     return wrappers[backend.upper()]
 
 def autowrap(expr, language='F95', backend='f2py', tempdir=None):
