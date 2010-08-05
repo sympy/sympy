@@ -88,7 +88,7 @@ elif GROUND_TYPES == 'gmpy':  # XXX: should be fine? sorry, but no, try -Qnew, d
         ZZ = ZZ_gmpy()
         QQ = QQ_gmpy()
     else:
-        FF = FF_python()
+        FF = FF_python
         ZZ = ZZ_python()
 
         if HAS_FRACTION:

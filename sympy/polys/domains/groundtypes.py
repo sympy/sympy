@@ -25,7 +25,9 @@ if HAS_FRACTION:
         Fraction as PythonRationalType,
     )
 else:
-    PythonRationalType = None
+    class PythonRationalType(object):
+        def __init__(self, obj):
+            pass
 
 from sympy.core.numbers import (
     ifactorial as python_factorial,
@@ -53,8 +55,14 @@ if HAS_GMPY:
         sqrt   as gmpy_sqrt,
     )
 else:
-    GMPYIntegerType  = None
-    GMPYRationalType = None
+    class GMPYIntegerType(object):
+        def __init__(self, obj):
+            pass
+
+    class GMPYRationalType(object):
+        def __init__(self, obj):
+            pass
+
     gmpy_factorial   = None
     gmpy_numer       = None
     gmpy_denom       = None
@@ -72,5 +80,5 @@ from sympy.mpmath import (
 from sympy.mpmath.libmp.libmpf import isqrt
 
 def python_sqrt(a):
-    return int(isqrt)
+    return int(isqrt(a))
 
