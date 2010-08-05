@@ -500,9 +500,9 @@ class Poly(Basic):
         Poly(x**2 + 1, x, domain='ZZ')
 
         """
-        try:
+        if hasattr(f.rep, 'to_ring'):
             result = f.rep.to_ring()
-        except AttributeError: # pragma: no cover
+        else: # pragma: no cover
             raise OperationNotSupported(f, 'to_ring')
 
         return f.per(result)
@@ -521,9 +521,9 @@ class Poly(Basic):
         Poly(x**2 + 1, x, domain='QQ')
 
         """
-        try:
+        if hasattr(f.rep, 'to_field'):
             result = f.rep.to_field()
-        except AttributeError: # pragma: no cover
+        else: # pragma: no cover
             raise OperationNotSupported(f, 'to_field')
 
         return f.per(result)
@@ -542,9 +542,9 @@ class Poly(Basic):
         Poly(x**2 + 1, x, RR, domain='QQ')
 
         """
-        try:
+        if hasattr(f.rep, 'to_exact'):
             result = f.rep.to_exact()
-        except AttributeError: # pragma: no cover
+        else: # pragma: no cover
             raise OperationNotSupported(f, 'to_exact')
 
         return f.per(result)
@@ -558,9 +558,9 @@ class Poly(Basic):
 
         m, n = int(m), int(n)
 
-        try:
+        if hasattr(f.rep, 'slice'):
             result = f.rep.slice(m, n, j)
-        except AttributeError: # pragma: no cover
+        else: # pragma: no cover
             raise OperationNotSupported(f, 'slice')
 
         return f.per(result)
@@ -735,9 +735,9 @@ class Poly(Basic):
         Poly(x**4 + 3*x**2 + 1, x, domain='QQ')
 
         """
-        try:
+        if hasattr(f.rep, 'lift'):
             result = f.rep.lift()
-        except AttributeError: # pragma: no cover
+        else: # pragma: no cover
             raise OperationNotSupported(f, 'lift')
 
         return f.per(result)
@@ -756,9 +756,9 @@ class Poly(Basic):
         ((3, 2), Poly(x**2*y + x + 1, x, y, domain='ZZ'))
 
         """
-        try:
+        if hasattr(f.rep, 'deflate'):
             J, result = f.rep.deflate()
-        except AttributeError: # pragma: no cover
+        else: # pragma: no cover
             raise OperationNotSupported(f, 'deflate')
 
         return J, f.per(result)
@@ -777,9 +777,9 @@ class Poly(Basic):
         ((3, 1), Poly(x**3*y + 1, x, y, domain='ZZ'))
 
         """
-        try:
+        if hasattr(f.rep, 'terms_gcd'):
             J, result = f.rep.terms_gcd()
-        except AttributeError: # pragma: no cover
+        else: # pragma: no cover
             raise OperationNotSupported(f, 'terms_gcd')
 
         return J, f.per(result)
@@ -798,9 +798,9 @@ class Poly(Basic):
         Poly(x**2 + 1, x, domain='ZZ')
 
         """
-        try:
+        if hasattr(f.rep, 'abs'):
             result = f.rep.abs()
-        except AttributeError: # pragma: no cover
+        else: # pragma: no cover
             raise OperationNotSupported(f, 'abs')
 
         return f.per(result)
@@ -822,9 +822,9 @@ class Poly(Basic):
         Poly(-x**2 + 1, x, domain='ZZ')
 
         """
-        try:
+        if hasattr(f.rep, 'neg'):
             result = f.rep.neg()
-        except AttributeError: # pragma: no cover
+        else: # pragma: no cover
             raise OperationNotSupported(f, 'neg')
 
         return f.per(result)
@@ -848,9 +848,9 @@ class Poly(Basic):
         """
         _, per, F, G = f._unify(g)
 
-        try:
+        if hasattr(f.rep, 'add'):
             result = F.add(G)
-        except AttributeError: # pragma: no cover
+        else: # pragma: no cover
             raise OperationNotSupported(f, 'add')
 
         return per(result)
@@ -874,9 +874,9 @@ class Poly(Basic):
         """
         _, per, F, G = f._unify(g)
 
-        try:
+        if hasattr(f.rep, 'sub'):
             result = F.sub(G)
-        except AttributeError: # pragma: no cover
+        else: # pragma: no cover
             raise OperationNotSupported(f, 'sub')
 
         return per(result)
@@ -900,9 +900,9 @@ class Poly(Basic):
         """
         _, per, F, G = f._unify(g)
 
-        try:
+        if hasattr(f.rep, 'mul'):
             result = F.mul(G)
-        except AttributeError: # pragma: no cover
+        else: # pragma: no cover
             raise OperationNotSupported(f, 'mul')
 
         return per(result)
@@ -924,9 +924,9 @@ class Poly(Basic):
         Poly(x**2 - 4*x + 4, x, domain='ZZ')
 
         """
-        try:
+        if hasattr(f.rep, 'sqr'):
             result = f.rep.sqr()
-        except AttributeError: # pragma: no cover
+        else: # pragma: no cover
             raise OperationNotSupported(f, 'sqr')
 
         return f.per(result)
@@ -950,9 +950,9 @@ class Poly(Basic):
         """
         n = int(n)
 
-        try:
+        if hasattr(f.rep, 'pow'):
             result = f.rep.pow(n)
-        except AttributeError: # pragma: no cover
+        else: # pragma: no cover
             raise OperationNotSupported(f, 'pow')
 
         return f.per(result)
@@ -973,9 +973,9 @@ class Poly(Basic):
         """
         _, per, F, G = f._unify(g)
 
-        try:
+        if hasattr(f.rep, 'pdiv'):
             q, r = F.pdiv(G)
-        except AttributeError: # pragma: no cover
+        else: # pragma: no cover
             raise OperationNotSupported(f, 'pdiv')
 
         return per(q), per(r)
@@ -996,9 +996,9 @@ class Poly(Basic):
         """
         _, per, F, G = f._unify(g)
 
-        try:
+        if hasattr(f.rep, 'prem'):
             result = F.prem(G)
-        except AttributeError: # pragma: no cover
+        else: # pragma: no cover
             raise OperationNotSupported(f, 'prem')
 
         return per(result)
@@ -1024,9 +1024,9 @@ class Poly(Basic):
         """
         _, per, F, G = f._unify(g)
 
-        try:
+        if hasattr(f.rep, 'pquo'):
             result = F.pquo(G)
-        except AttributeError: # pragma: no cover
+        else: # pragma: no cover
             raise OperationNotSupported(f, 'pquo')
 
         return per(result)
@@ -1050,9 +1050,9 @@ class Poly(Basic):
         """
         _, per, F, G = f._unify(g)
 
-        try:
+        if hasattr(f.rep, 'pexquo'):
             result = F.pexquo(G)
-        except AttributeError: # pragma: no cover
+        else: # pragma: no cover
             raise OperationNotSupported(f, 'pexquo')
 
         return per(result)
@@ -1076,9 +1076,9 @@ class Poly(Basic):
         """
         _, per, F, G = f._unify(g)
 
-        try:
+        if hasattr(f.rep, 'div'):
             q, r = F.div(G)
-        except AttributeError: # pragma: no cover
+        else: # pragma: no cover
             raise OperationNotSupported(f, 'div')
 
         return per(q), per(r)
@@ -1102,9 +1102,9 @@ class Poly(Basic):
         """
         _, per, F, G = f._unify(g)
 
-        try:
+        if hasattr(f.rep, 'rem'):
             result = F.rem(G)
-        except AttributeError: # pragma: no cover
+        else: # pragma: no cover
             raise OperationNotSupported(f, 'rem')
 
         return per(result)
@@ -1130,9 +1130,9 @@ class Poly(Basic):
         """
         _, per, F, G = f._unify(g)
 
-        try:
+        if hasattr(f.rep, 'quo'):
             result = F.quo(G)
-        except AttributeError: # pragma: no cover
+        else: # pragma: no cover
             raise OperationNotSupported(f, 'quo')
 
         return per(result)
@@ -1156,9 +1156,9 @@ class Poly(Basic):
         """
         _, per, F, G = f._unify(g)
 
-        try:
+        if hasattr(f.rep, 'exquo'):
             result = F.exquo(G)
-        except AttributeError: # pragma: no cover
+        else: # pragma: no cover
             raise OperationNotSupported(f, 'exquo')
 
         return per(result)
@@ -1199,9 +1199,9 @@ class Poly(Basic):
         """
         j = f._gen_to_level(gen)
 
-        try:
+        if hasattr(f.rep, 'degree'):
             return f.rep.degree(j)
-        except AttributeError: # pragma: no cover
+        else: # pragma: no cover
             raise OperationNotSupported(f, 'degree')
 
     def degree_list(f):
@@ -1218,9 +1218,9 @@ class Poly(Basic):
         (2, 1)
 
         """
-        try:
+        if hasattr(f.rep, 'degree_list'):
             return f.rep.degree_list()
-        except AttributeError: # pragma: no cover
+        else: # pragma: no cover
             raise OperationNotSupported(f, 'degree_list')
 
     def total_degree(f):
@@ -1237,9 +1237,9 @@ class Poly(Basic):
         3
 
         """
-        try:
+        if hasattr(f.rep, 'total_degree'):
             return f.rep.total_degree()
-        except AttributeError: # pragma: no cover
+        else: # pragma: no cover
             raise OperationNotSupported(f, 'total_degree')
 
     def LC(f, order=None):
@@ -1259,9 +1259,9 @@ class Poly(Basic):
         if order is not None:
             return f.coeffs(order)[0]
 
-        try:
+        if hasattr(f.rep, 'LC'):
             result = f.rep.LC()
-        except AttributeError: # pragma: no cover
+        else: # pragma: no cover
             raise OperationNotSupported(f, 'LC')
 
         return f.rep.dom.to_sympy(result)
@@ -1280,9 +1280,9 @@ class Poly(Basic):
         0
 
         """
-        try:
+        if hasattr(f.rep, 'TC'):
             result = f.rep.TC()
-        except AttributeError: # pragma: no cover
+        else: # pragma: no cover
             raise OperationNotSupported(f, 'TC')
 
         return f.rep.dom.to_sympy(result)
@@ -1301,9 +1301,9 @@ class Poly(Basic):
         3
 
         """
-        try:
+        if hasattr(f.rep, 'coeffs'):
             return f.coeffs(order)[-1]
-        except AttributeError: # pragma: no cover
+        else: # pragma: no cover
             raise OperationNotSupported(f, 'EC')
 
     def nth(f, *N):
@@ -1322,9 +1322,9 @@ class Poly(Basic):
         2
 
         """
-        try:
+        if hasattr(f.rep, 'nth'):
             result = f.rep.nth(*map(int, N))
-        except AttributeError: # pragma: no cover
+        else: # pragma: no cover
             raise OperationNotSupported(f, 'nth')
 
         return f.rep.dom.to_sympy(result)
@@ -1407,9 +1407,9 @@ class Poly(Basic):
         3
 
         """
-        try:
+        if hasattr(f.rep, 'max_norm'):
             result = f.rep.max_norm()
-        except AttributeError: # pragma: no cover
+        else: # pragma: no cover
             raise OperationNotSupported(f, 'max_norm')
 
         return f.rep.dom.to_sympy(result)
@@ -1428,9 +1428,9 @@ class Poly(Basic):
         6
 
         """
-        try:
+        if hasattr(f.rep, 'l1_norm'):
             result = f.rep.l1_norm()
-        except AttributeError: # pragma: no cover
+        else: # pragma: no cover
             raise OperationNotSupported(f, 'l1_norm')
 
         return f.rep.dom.to_sympy(result)
@@ -1453,9 +1453,9 @@ class Poly(Basic):
         (6, Poly(3*x + 2, x, domain='ZZ'))
 
         """
-        try:
+        if hasattr(f.rep, 'clear_denoms'):
             coeff, result = f.rep.clear_denoms()
-        except AttributeError: # pragma: no cover
+        else: # pragma: no cover
             raise OperationNotSupported(f, 'clear_denoms')
 
         coeff, f = f.rep.dom.to_sympy(coeff), f.per(result)
@@ -1485,7 +1485,7 @@ class Poly(Basic):
         if args.get('auto', True) and f.rep.dom.has_Ring:
             f = f.to_field()
 
-        try:
+        if hasattr(f.rep, 'integrate'):
             if not specs:
                 return f.per(f.rep.integrate(m=1))
 
@@ -1500,7 +1500,7 @@ class Poly(Basic):
                 rep = rep.integrate(int(m), f._gen_to_level(gen))
 
             return f.per(rep)
-        except AttributeError: # pragma: no cover
+        else: # pragma: no cover
             raise OperationNotSupported(f, 'integrate')
 
     def diff(f, *specs):
@@ -1520,7 +1520,7 @@ class Poly(Basic):
         Poly(2*x*y, x, y, domain='ZZ')
 
         """
-        try:
+        if hasattr(f.rep, 'diff'):
             if not specs:
                 return f.per(f.rep.diff(m=1))
 
@@ -1535,7 +1535,7 @@ class Poly(Basic):
                 rep = rep.diff(int(m), f._gen_to_level(gen))
 
             return f.per(rep)
-        except AttributeError: # pragma: no cover
+        else: # pragma: no cover
             raise OperationNotSupported(f, 'diff')
 
     def eval(f, x, a=None):
@@ -1565,9 +1565,9 @@ class Poly(Basic):
 
         # XXX: use DomainError when not convertible
 
-        try:
+        if hasattr(f.rep, 'eval'):
             result = f.rep.eval(a, j)
-        except AttributeError: # pragma: no cover
+        else: # pragma: no cover
             raise OperationNotSupported(f, 'eval')
 
         return f.per(result, remove=j)
@@ -1596,9 +1596,9 @@ class Poly(Basic):
         if auto and dom.has_Ring:
             F, G = F.to_field(), G.to_field()
 
-        try:
+        if hasattr(f.rep, 'half_gcdex'):
             s, h = F.half_gcdex(G)
-        except AttributeError: # pragma: no cover
+        else: # pragma: no cover
             raise OperationNotSupported(f, 'half_gcdex')
 
         return per(s), per(h)
@@ -1629,9 +1629,9 @@ class Poly(Basic):
         if auto and dom.has_Ring:
             F, G = F.to_field(), G.to_field()
 
-        try:
+        if hasattr(f.rep, 'gcdex'):
             s, t, h = F.gcdex(G)
-        except AttributeError: # pragma: no cover
+        else: # pragma: no cover
             raise OperationNotSupported(f, 'gcdex')
 
         return per(s), per(t), per(h)
@@ -1660,18 +1660,18 @@ class Poly(Basic):
         if auto and dom.has_Ring:
             F, G = F.to_field(), G.to_field()
 
-        try:
+        if hasattr(f.rep, 'invert'):
             result = F.invert(G)
-        except AttributeError: # pragma: no cover
+        else: # pragma: no cover
             raise OperationNotSupported(f, 'invert')
 
         return per(result)
 
     def revert(f, n):
         """Compute ``f**(-1)`` mod ``x**n``. """
-        try:
+        if hasattr(f.rep, 'revert'):
             result = f.rep.revert(int(n))
-        except AttributeError: # pragma: no cover
+        else: # pragma: no cover
             raise OperationNotSupported(f, 'revert')
 
         return f.per(result)
@@ -1694,9 +1694,9 @@ class Poly(Basic):
         """
         _, per, F, G = f._unify(g)
 
-        try:
+        if hasattr(f.rep, 'subresultants'):
             result = F.subresultants(G)
-        except AttributeError: # pragma: no cover
+        else: # pragma: no cover
             raise OperationNotSupported(f, 'subresultants')
 
         return map(per, result)
@@ -1717,9 +1717,9 @@ class Poly(Basic):
         """
         _, per, F, G = f._unify(g)
 
-        try:
+        if hasattr(f.rep, 'resultant'):
             result = F.resultant(G)
-        except AttributeError: # pragma: no cover
+        else: # pragma: no cover
             raise OperationNotSupported(f, 'resultant')
 
         return per(result, remove=0)
@@ -1738,9 +1738,9 @@ class Poly(Basic):
         -8
 
         """
-        try:
+        if hasattr(f.rep, 'discriminant'):
             result = f.rep.discriminant()
-        except AttributeError: # pragma: no cover
+        else: # pragma: no cover
             raise OperationNotSupported(f, 'discriminant')
 
         return f.per(result, remove=0)
@@ -1767,9 +1767,9 @@ class Poly(Basic):
         """
         _, per, F, G = f._unify(g)
 
-        try:
+        if hasattr(f.rep, 'cofactors'):
             h, cff, cfg = F.cofactors(G)
-        except AttributeError: # pragma: no cover
+        else: # pragma: no cover
             raise OperationNotSupported(f, 'cofactors')
 
         return per(h), per(cff), per(cfg)
@@ -1790,9 +1790,9 @@ class Poly(Basic):
         """
         _, per, F, G = f._unify(g)
 
-        try:
+        if hasattr(f.rep, 'gcd'):
             result = F.gcd(G)
-        except AttributeError: # pragma: no cover
+        else: # pragma: no cover
             raise OperationNotSupported(f, 'gcd')
 
         return per(result)
@@ -1813,9 +1813,9 @@ class Poly(Basic):
         """
         _, per, F, G = f._unify(g)
 
-        try:
+        if hasattr(f.rep, 'lcm'):
             result = F.lcm(G)
-        except AttributeError: # pragma: no cover
+        else: # pragma: no cover
             raise OperationNotSupported(f, 'lcm')
 
         return per(result)
@@ -1836,9 +1836,9 @@ class Poly(Basic):
         """
         p = f.rep.dom.convert(p)
 
-        try:
+        if hasattr(f.rep, 'trunc'):
             result = f.rep.trunc(p)
-        except AttributeError: # pragma: no cover
+        else: # pragma: no cover
             raise OperationNotSupported(f, 'trunc')
 
         return f.per(result)
@@ -1863,9 +1863,9 @@ class Poly(Basic):
         if auto and f.rep.dom.has_Ring:
             f = f.to_field()
 
-        try:
+        if hasattr(f.rep, 'monic'):
             result = f.rep.monic()
-        except AttributeError: # pragma: no cover
+        else: # pragma: no cover
             raise OperationNotSupported(f, 'monic')
 
         return f.per(result)
@@ -1884,9 +1884,9 @@ class Poly(Basic):
         2
 
         """
-        try:
+        if hasattr(f.rep, 'content'):
             result = f.rep.content()
-        except AttributeError: # pragma: no cover
+        else: # pragma: no cover
             raise OperationNotSupported(f, 'content')
 
         return f.rep.dom.to_sympy(result)
@@ -1905,9 +1905,9 @@ class Poly(Basic):
         (2, Poly(x**2 + 4*x + 6, x, domain='ZZ'))
 
         """
-        try:
+        if hasattr(f.rep, 'primitive'):
             cont, result = f.rep.primitive()
-        except AttributeError: # pragma: no cover
+        else: # pragma: no cover
             raise OperationNotSupported(f, 'primitive')
 
         return f.rep.dom.to_sympy(cont), f.per(result)
@@ -1928,9 +1928,9 @@ class Poly(Basic):
         """
         _, per, F, G = f._unify(g)
 
-        try:
+        if hasattr(f.rep, 'compose'):
             result = F.compose(G)
-        except AttributeError: # pragma: no cover
+        else: # pragma: no cover
             raise OperationNotSupported(f, 'compose')
 
         return per(result)
@@ -1949,9 +1949,9 @@ class Poly(Basic):
         [Poly(x**2 - x - 1, x, domain='ZZ'), Poly(x**2 + x, x, domain='ZZ')]
 
         """
-        try:
+        if hasattr(f.rep, 'decompose'):
             result = f.rep.decompose()
-        except AttributeError: # pragma: no cover
+        else: # pragma: no cover
             raise OperationNotSupported(f, 'decompose')
 
         return map(f.per, result)
@@ -1976,9 +1976,9 @@ class Poly(Basic):
         if auto and f.rep.dom.has_Ring:
             f = f.to_field()
 
-        try:
+        if hasattr(f.rep, 'sturm'):
             result = f.rep.sturm()
-        except AttributeError: # pragma: no cover
+        else: # pragma: no cover
             raise OperationNotSupported(f, 'sturm')
 
         return map(f.per, result)
@@ -1998,9 +1998,9 @@ class Poly(Basic):
            [(Poly(x, x, domain='ZZ'), 1), (Poly(x + 2, x, domain='ZZ'), 4)]
 
         """
-        try:
+        if hasattr(f.rep, 'gff_list'):
             result = f.rep.gff_list()
-        except AttributeError: # pragma: no cover
+        else: # pragma: no cover
             raise OperationNotSupported(f, 'gff_list')
 
         return [ (f.per(g), k) for g, k in result ]
@@ -2029,9 +2029,9 @@ class Poly(Basic):
         Poly(x**4 - 4*x**2 + 16, x, domain='QQ')
 
         """
-        try:
+        if hasattr(f.rep, 'sqf_norm'):
             s, g, r = f.rep.sqf_norm()
-        except AttributeError: # pragma: no cover
+        else: # pragma: no cover
             raise OperationNotSupported(f, 'sqf_norm')
 
         return s, f.per(g), f.per(r)
@@ -2050,9 +2050,9 @@ class Poly(Basic):
         Poly(x**2 - x - 2, x, domain='ZZ')
 
         """
-        try:
+        if hasattr(f.rep, 'sqf_part'):
             result = f.rep.sqf_part()
-        except AttributeError: # pragma: no cover
+        else: # pragma: no cover
             raise OperationNotSupported(f, 'sqf_part')
 
         return f.per(result)
@@ -2079,9 +2079,9 @@ class Poly(Basic):
              (Poly(x + 2, x, domain='ZZ'), 3)])
 
         """
-        try:
+        if hasattr(f.rep, 'sqf_list'):
             coeff, factors = f.rep.sqf_list(all)
-        except AttributeError: # pragma: no cover
+        else: # pragma: no cover
             raise OperationNotSupported(f, 'sqf_list')
 
         return f.rep.dom.to_sympy(coeff), [ (f.per(g), k) for g, k in factors ]
@@ -2108,9 +2108,9 @@ class Poly(Basic):
          (Poly(x + 2, x, domain='ZZ'), 3)]
 
         """
-        try:
+        if hasattr(f.rep, 'sqf_list_include'):
             factors = f.rep.sqf_list_include(all)
-        except AttributeError: # pragma: no cover
+        else: # pragma: no cover
             raise OperationNotSupported(f, 'sqf_list_include')
 
         return [ (f.per(g), k) for g, k in factors ]
@@ -2132,11 +2132,12 @@ class Poly(Basic):
              (Poly(x**2 + 1, x, y, domain='ZZ'), 2)])
 
         """
-        try:
-            coeff, factors = f.rep.factor_list()
-        except DomainError:
-            return S.One, [(f, 1)]
-        except AttributeError: # pragma: no cover
+        if hasattr(f.rep, 'factor_list'):
+            try:
+                coeff, factors = f.rep.factor_list()
+            except DomainError:
+                return S.One, [(f, 1)]
+        else: # pragma: no cover
             raise OperationNotSupported(f, 'factor_list')
 
         return f.rep.dom.to_sympy(coeff), [ (f.per(g), k) for g, k in factors ]
@@ -2158,11 +2159,12 @@ class Poly(Basic):
          (Poly(x**2 + 1, x, y, domain='ZZ'), 2)]
 
         """
-        try:
-            factors = f.rep.factor_list_include()
-        except DomainError:
-            return [(f, 1)]
-        except AttributeError: # pragma: no cover
+        if hasattr(f.rep, 'factor_list_include'):
+            try:
+                factors = f.rep.factor_list_include()
+            except DomainError:
+                return [(f, 1)]
+        else: # pragma: no cover
             raise OperationNotSupported(f, 'factor_list_include')
 
         return [ (f.per(g), k) for g, k in factors ]
@@ -2191,9 +2193,9 @@ class Poly(Basic):
         if sup is not None:
             sup = QQ.convert(sup)
 
-        try:
+        if hasattr(f.rep, 'intervals'):
             result = f.rep.intervals(all=all, eps=eps, inf=inf, sup=sup, fast=fast, sqf=sqf)
-        except AttributeError: # pragma: no cover
+        else: # pragma: no cover
             raise OperationNotSupported(f, 'intervals')
 
         if sqf:
@@ -2252,9 +2254,9 @@ class Poly(Basic):
         elif eps is None:
             steps = 1
 
-        try:
+        if hasattr(f.rep, 'refine_root'):
             S, T = f.rep.refine_root(s, t, eps=eps, steps=steps, fast=fast)
-        except AttributeError: # pragma: no cover
+        else: # pragma: no cover
             raise OperationNotSupported(f, 'refine_root')
 
         return QQ.to_sympy(S), QQ.to_sympy(T)
@@ -2304,9 +2306,9 @@ class Poly(Basic):
                     sup, sup_real = map(QQ.convert, (re, im)), False
 
         if inf_real and sup_real:
-            try:
+            if hasattr(f.rep, 'count_real_roots'):
                 count = f.rep.count_real_roots(inf=inf, sup=sup)
-            except AttributeError: # pragma: no cover
+            else: # pragma: no cover
                 raise OperationNotSupported(f, 'count_real_roots')
         else:
             if inf_real and inf is not None:
@@ -2315,9 +2317,9 @@ class Poly(Basic):
             if sup_real and sup is not None:
                 sup = (sup, QQ.zero)
 
-            try:
+            if hasattr(f.rep, 'count_complex_roots'):
                 count = f.rep.count_complex_roots(inf=inf, sup=sup)
-            except AttributeError: # pragma: no cover
+            else: # pragma: no cover
                 raise OperationNotSupported(f, 'count_complex_roots')
 
         return Integer(count)
@@ -2396,9 +2398,9 @@ class Poly(Basic):
             F = F.to_ring()
             G = G.to_ring()
 
-        try:
+        if hasattr(f.rep, 'cofactors'):
             _, P, Q = F.cofactors(G)
-        except AttributeError: # pragma: no cover
+        else: # pragma: no cover
             raise OperationNotSupported(f, 'cofactors')
 
         if dom.has_Field and dom.has_assoc_Ring:
