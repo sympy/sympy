@@ -46,7 +46,7 @@
     To express a matrix-vector product in terms of IndexedBase objects:
 
     >>> x = IndexedBase('x')
-    >>> M[ii, jj]*x[jj]     #doctest: +SKIP
+    >>> M[ii, jj]*x[jj]
     M[i, j]*x[j]
 
 

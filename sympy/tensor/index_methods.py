@@ -7,6 +7,7 @@
 """
 
 from sympy.tensor.indexed import Idx, IndexedBase, Indexed
+from sympy.utilities import all
 
 
 class IndexConformanceException(Exception):
