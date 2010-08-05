@@ -1,135 +1,30 @@
 from sympy.core.expr import Expr
 from sympy.core.decorators import call_highest_priority
-from sympy.core.sympify import _sympify
-from sympy.physics.quantum import Operator, KetBase, BraBase, OuterProduct, InnerProduct
+from sympy.core.sympify import sympify
+from sympy.physics.quantum import Operator, KetBase, BraBase, OuterProduct, InnerProduct, StateBase
 from sympy.core.numbers import Number
 from sympy import Symbol
-
-class QRules(object):
-#also need to keep track of hilbert space
-    def __init__(self, qclass, hilbert_space):
-        self.qclass = qclass
-        self.hilbert_space = hilbert_space
-
-    def __getitem__(self, number):
-        if number == 1:
-            return self.hilbert_space
-        elif number == 0:
-            return self.qclass
-        else:
-            raise Exception("Index out of bounds")
-
-    @staticmethod
-    def _rules_QMul(Object1, Object2):
-        if isinstance(Object1, QRules):
-            class1 = Object1 
-        elif hasattr(Object1, 'eval_to'): 
-            class1 = Object1.eval_to
-        else:
-            class1 = QRules(Object1.__class__, Object1.hilbert_space)
-    
-        if isinstance(Object2, QRules):
-            class2 = Object2 
-        elif hasattr(Object2, 'eval_to'): 
-            class2 = Object2.eval_to
-        else:
-            class2 = QRules(Object2.__class__, Object2.hilbert_space)
-
-        if class1.hilbert_space != class2.hilbert_space:
-            raise Exception("Hilbert Spaces do not match")
-
-        if (not issubclass(class1[0], (Operator, OuterProduct, KetBase, BraBase))) and (not issubclass(class2[0], (Operator, OuterProduct,    KetBase, BraBase))):
-            return QRules(Number, None)
-        elif issubclass(class1[0], InnerProduct):
-            return class2
-        elif issubclass(class2[0], InnerProduct):
-            return class1
-        elif issubclass(class1[0], (Number, Symbol)):
-            return class2
-        elif issubclass(class2[0], (Number, Symbol)):
-            return class1
-        elif issubclass(class1[0], (Operator, OuterProduct)):
-            if issubclass(class2[0], (Operator, OuterProduct)):
-                return class2
-            elif issubclass(class2[0], KetBase):
-                return class2
-        elif issubclass(class2[0], (Operator, OuterProduct)):
-            if issubclass(class1[0], (Operator, OuterProduct)):
-                return class2
-            elif issubclass(class1[0], BraBase):
-                return class1
-        elif issubclass(class1[0], KetBase) and issubclass(class2[0], BraBase):
-            return QRules(OuterProduct, class1.hilbert_space)
-        elif issubclass(class1[0], BraBase) and issubclass(class2[0], KetBase):
-            return QRules(InnerProduct, class1.hilbert_space)
-        raise Exception("%s*%s is not allowed" % (class1[0].__name__, class2[0].__name__))
-
-    @staticmethod    
-    def _rules_QAdd(Object1, Object2):
-        if isinstance(Object1, QRules):
-            class1 = Object1 
-        elif hasattr(Object1, 'eval_to'): 
-            class1 = Object1.eval_to
-        else:
-            class1 = QRules(Object1.__class__, Object1.hilbert_space) 
-    
-        if isinstance(Object2, type):
-            class2 = Object2
-        elif hasattr(Object2, 'eval_to'):
-            class2 = Object2.eval_to
-        else:
-            class2 = QRules(Object2.__class__, Object2.hilbert_space)
-            
-        if (not issubclass(class1, (Operator, OuterProduct, KetBase, BraBase))) and (not issubclass(class2, (Operator, OuterProduct,    KetBase, BraBase))):
-            return QRules(Number, None)
-        elif class1 == class2:
-            return class1
-        else:
-            raise Exception("Can't add (%s + %s)" % (class1[0].__name__, class2[0].__name__))
+from sympy.core.mul import Mul
+from sympy.printing.str import sstr
 
 class QAssocOp(Expr):
     _op_priority = 100.0
-    name = 'QAssocOp'
+    __slots__ = ['evaluates', 'hilbert_space']
 
-    #Mul and add need Expand Methods as well as Identity methods. I need to figure out how to set what something evaluates to
+    #Mul and add need Expand Methods as well as Identity methods. I need to figure out how to set what something evaluates
     def __new__(cls, *args, **assumptions):
-	if len(args) == 0:
-            return cls.identity #Every bin-op must define identity (something...something...group theory)
         if len(args) == 1:
-            return _sympify(args[0])
-        parts = cls.flatten(map(_sympify, args))
-        return Expr.__new__(cls, *parts, **assumptions)
+            return sympify(args[0])
+        return cls.instantiate(map(sympify, args))
 
     @classmethod
-    def flatten(cls, seq):
-        #determine if this will work
-        validationMeth = '_validate_%s' % cls.name
-        rules = getattr(QRules, '_rules_%s' % cls.name)
-        result = 0
-        for i in range(len(seq)):
-            if result:
-                result = rules(result, seq[i])
-            else:
-                if hasattr(seq[i], 'eval_to'):
-                    result = seq[i].eval_to
-                else:
-                    result = QRules(seq[i].__class__, seq[i].hilbert_space)
-                
-        # apply associativity, no commutativity property is used
-        new_seq = []
-        while seq:
-            o = seq.pop(0)                
-            if o.__class__ is cls: # classes must match exactly
-                seq = list(o[:]) + seq
-                continue
-            new_seq.append(o)
-        # c_part, nc_part, order_symbols
-        return new_seq
+    def instantiate(cls, seq):
+        #determine if this will work flatten needs to flattening (pull out non quantum parts as they belong to an abelian group
+        rules = getattr(cls, '_rules_%s' % cls.__name__)
+        for i in range(len(seq)-1):
+            result = rules(seq[i], seq[i+1])
+        return result
 
-    @property
-    def hilbert_space(self):
-        return self.args[0].hilbert_space 
-        
     def __getitem__(self, number):
         return self.args[number]   
 
@@ -155,9 +50,41 @@ class QAssocOp(Expr):
 
     @call_highest_priority('__rpow__')
     def __pow__(self, other):
+        from sympy.physics.qpow import QPow
         return QPow(self, other)
 
     @call_highest_priority('__pow__')
     def __rpow__(self, other):
+        from sympy.physics.qpow import QPow
         return QPow(other, self)
+
+    def _sympystr(self, printer, *args):
+        string = ''
+        length = len(self.args)
+        for i in range(length):
+            string = string + sstr(self.args[i])
+            if i != length-1:
+                string = string + self.__class__.binop
+        return string 
+    
+
+    def _new_rawargs(self, *args):
+        """create new instance of own class with args exactly as provided by caller
+
+           This is handy when we want to optimize things, e.g.
+
+           >>> from sympy import Mul, symbols
+           >>> from sympy.abc import x, y
+           >>> e = Mul(3,x,y)
+           >>> e.args
+           (3, x, y)
+           >>> Mul(*e.args[1:])
+           x*y
+           >>> e._new_rawargs(*e.args[1:])  # the same as above, but faster
+           x*y
+
+        """
+        obj = Expr.__new__(type(self), *args)  # NB no assumptions for Add/Mul
+
+        return obj
 

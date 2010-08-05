@@ -28,6 +28,7 @@ Questions:
 """
 
 __all__ = [
+    'StateBase',
     'State',
     'Ket',
     'Bra',
@@ -99,6 +100,10 @@ class StateBase(Expr, Representable):
     def is_symbolic(self):
         return True
 
+    @property
+    def evaluates(self):
+        return self.__class__
+
     def _sympyrepr(self, printer, *args):
         return '%s(%s)' % (self.__class__.__name__, self._print_name(printer, *args))
 
@@ -131,15 +136,13 @@ class StateBase(Expr, Representable):
 
     @call_highest_priority('__radd__')
     def __add__(self, other):
-        compare_hilbert(self, other)
-        _validate_add(self, other)
-        return Add(self, other)
+        from sympy.physics.qadd import QAdd
+        return QAdd(self, other)
 
     @call_highest_priority('__add__')
     def __radd__(self, other):
-        compare_hilbert(other, self)
-        _validate_add(other, self)
-        return Add(other, self)
+        from sympy.physics.qadd import QAdd
+        return QAdd(other, self)
 
     @call_highest_priority('__rpow__')
     def __pow__(self, other):
@@ -148,6 +151,19 @@ class StateBase(Expr, Representable):
     @call_highest_priority('__pow__')
     def __rpow__(self, other):
         raise QuantumError("Can't raise %s to a State" % (other.__class__.__name__,))
+
+    def _sympyrepr(self, printer, *args):
+        return '%s(%s)' % (self.__class__.__name__, self._print_name(printer, *args))
+
+    def _sympystr(self, printer, *args):
+        return '%s%s%s' % (self.lbracket, self._print_name(printer, *args), self.rbracket)
+
+    def _pretty(self, printer, *args):
+        from sympy.printing.pretty.stringpict import prettyForm
+        pform = self._print_name_pretty(printer, *args)
+        pform = prettyForm(*pform.left(prettyForm(self.lbracket)))
+        pform = prettyForm(*pform.right(prettyForm(self.rbracket)))
+        return pform
 
 class KetBase(StateBase):
 
@@ -282,16 +298,20 @@ class Operator(Expr, Representable):
     def __new__(cls, name):
         name = sympify(name)
         obj = Expr.__new__(cls, name, **{'commutative': False})
-        obj.hilbert_space = cls.eval_hilbert_space(name)        
+        obj.hilbert_space = cls._eval_hilbert_space(name)        
         return obj
 
     @classmethod
-    def eval_hilbert_space(cls, name):
+    def _eval_hilbert_space(cls, name):
         return HilbertSpace()
 
     @property
     def name(self):
         return self.args[0]
+
+    @property
+    def evaluates(self):
+        return self.__class__
 
     @call_highest_priority('__rmul__')
     def __mul__(self, other):
@@ -305,25 +325,23 @@ class Operator(Expr, Representable):
 
     @call_highest_priority('__radd__')
     def __add__(self, other):
-        compare_hilbert(self, other)
-        _validate_add(self, other)
-        return Add(self, other)
+        from sympy.physics.qadd import QAdd
+        return QAdd(self, other)
 
     @call_highest_priority('__add__')
     def __radd__(self, other):
-        compare_hilbert(other, self)
-        _validate_add(other, self)
-        return Add(other, self)
+        from sympy.physics.qadd import QAdd
+        return QAdd(other, self)
 
     @call_highest_priority('__rpow__')
     def __pow__(self, other):
-        #if not isinstance(other, (Mul, Add, Pow, Number, Symbol)):
-        return Pow(self, other)
+        from sympy.physics.qpow import QPow
+        return QPow(self, other)
 
     @call_highest_priority('__pow__')
     def __rpow__(self, other):
-        #??operator**operator??
-        return Pow(other, self)
+        from sympy.physics.qpow import QPow
+        return QPow(other, self)
 
     def doit(self,**kw_args):
         return self
@@ -346,8 +364,8 @@ class InnerProduct(Expr):
         #What about innerProd(1,1), should it auto simplify?
         if not (bra and ket):
             raise Exception('InnerProduct requires a leading Bra and a trailing Ket')
-        assert isinstance(bra, Bra), 'First argument must be a Bra'
-        assert isinstance(ket, Ket), 'Second argument must be a Ket'
+        assert issubclass(bra.evaluates, Bra), 'First argument must be a Bra'
+        assert issubclass(ket.evaluates, Ket), 'Second argument must be a Ket'
         r = cls.eval(bra, ket)
         if isinstance(r, Expr):
             return r
@@ -368,6 +386,10 @@ class InnerProduct(Expr):
     def ket(self):
         return self.args[1]
 
+    @property
+    def evaluates(self):
+        return Number
+
     def _eval_dagger(self):
         return InnerProduct(Dagger(self.ket), Dagger(self.bra))
 
@@ -383,20 +405,24 @@ class InnerProduct(Expr):
         return self.bra._pretty(printer, *args)*self.ket._pretty(printer, *args)
 
 
-class OuterProduct(Expr):
+class OuterProduct(Operator):
     """
     An unevaluated outer product between a Ket and Bra.
     """
 
+    __slots__ = ['hilbert_space']
+
     def __new__(cls, ket, bra):
         if not (ket and bra):
             raise Exception('OuterProduct requires a leading Ket and a trailing Bra')
-        assert isinstance(ket, Ket), 'First argument must be a Ket'
-        assert isinstance(bra, Bra), 'Second argument must be a Bra'
+        assert issubclass(ket.evaluates, Ket), 'First argument must be a Ket'
+        assert issubclass(bra.evaluates, Bra), 'Second argument must be a Bra'
+        assert ket.hilbert_space == bra.hilbert_space
         r = cls.eval(ket, bra)
         if isinstance(r, Expr):
             return r
         obj = Expr.__new__(cls, *(ket, bra), **{'commutative': False})
+        obj.hilbert_space = ket.hilbert_space
         return obj
 
     @classmethod
@@ -412,6 +438,10 @@ class OuterProduct(Expr):
     @property
     def bra(self):
         return self.args[1]
+
+    @property
+    def evaluates(self):
+        return self.__class__
 
     def _eval_dagger(self):
         return OuterProduct(Dagger(self.bra), Dagger(self.ket))
@@ -621,19 +651,6 @@ class Commutator(Function):
 #-----------------------------------------------------------------------------
 # Functions
 #-----------------------------------------------------------------------------
-
-def is_bra(expr):
-    if isinstance(expr, State):
-        if expr.is_bra:
-            return True
-    return False
-
-def is_ket(expr):
-    if isinstance(expr, State):
-        if expr.is_ket:
-            return True
-    return False
-
 
 def represent(expr, basis, **options):
     """Represent the quantum expression in the given basis."""
