@@ -123,7 +123,7 @@ class CodeWrapper:
 class F2PyCodeWrapper(CodeWrapper):
 
     def _process_files(self, routine):
-        filename = self._filename + '.' + self.generator.dump_f95.extension
+        filename = self._filename + '.' + self.generator.code_extension
         command = ["f2py", "-m", self.module_name, "-c" , filename]
         null = open(os.devnull, 'w')
         retcode = subprocess.call(command, stdout=null)

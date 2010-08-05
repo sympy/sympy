@@ -414,6 +414,9 @@ This file is part of '%(project)s'
 
 class CCodeGen(CodeGen):
 
+    code_extension = "c"
+    interface_extension = "h"
+
     def _get_header(self):
         """Writes a common header for the generated files."""
         code_lines = []
@@ -490,7 +493,7 @@ class CCodeGen(CodeGen):
 
     def dump_c(self, routines, f, prefix, header=True, empty=True):
         self.dump_code(routines, f, prefix, header, empty)
-    dump_c.extension = "c"
+    dump_c.extension = code_extension
 
     def dump_h(self, routines, f, prefix, header=True, empty=True):
         """Writes the C header file.
@@ -525,7 +528,7 @@ class CCodeGen(CodeGen):
         if empty: print >> f
         print >> f, "#endif"
         if empty: print >> f
-    dump_h.extension = "h"
+    dump_h.extension = interface_extension
 
     # This list of dump functions is used by CodeGen.write to know which dump
     # functions it has to call.
@@ -535,6 +538,9 @@ class FCodeGen(CodeGen):
     """
     Generator for Fortran 95 code
     """
+
+    code_extension = "f90"
+    interface_extension = "h"
 
     def __init__(self, project='project'):
         CodeGen.__init__(self, project)
@@ -661,7 +667,8 @@ class FCodeGen(CodeGen):
 
     def dump_f95(self, routines, f, prefix, header=True, empty=True):
         self.dump_code(routines, f, prefix, header, empty)
-    dump_f95.extension = "f90"
+    dump_f95.extension = code_extension
+
 
     def dump_h(self, routines, f, prefix, header=True, empty=True):
         """Writes the interface  header file.
@@ -688,7 +695,7 @@ class FCodeGen(CodeGen):
             prototype  = self.get_interface(routine)
             print >> f, prototype,
         if empty: print >> f
-    dump_h.extension = "h"
+    dump_h.extension = interface_extension
 
     # This list of dump functions is used by CodeGen.write to know which dump
     # functions it has to call.
