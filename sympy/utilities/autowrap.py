@@ -59,9 +59,14 @@ When is this module NOT the best approach?
     need the binaries for another project.
 
 """
+import sys
+import os
+import shutil
+import tempfile
+import subprocess
+
 from sympy.utilities.codegen import codegen, get_code_generator, Routine
 from sympy.utilities.lambdify import implemented_function
-import sys, os, tempfile, subprocess
 
 class CodeWrapError(Exception): pass
 
@@ -96,18 +101,22 @@ class CodeWrapper:
     def wrap_code(self, routine):
 
         workdir = self.filepath or tempfile.mkdtemp("_sympy_compile")
+        if not os.access(workdir, os.F_OK):
+            os.mkdir(workdir)
         oldwork = os.getcwd()
         os.chdir(workdir)
         try:
+            sys.path.append(workdir)
             self._generate_code(routine)
             self._prepare_files(routine)
             self._process_files(routine)
-            sys.path.append(workdir)
             mod = __import__(self.module_name)
-            sys.path.pop()
         finally:
+            sys.path.pop()
             CodeWrapper._module_counter +=1
             os.chdir(oldwork)
+            if not self.filepath:
+                shutil.rmtree(workdir)
 
         return self._get_wrapped_function(mod)
 
