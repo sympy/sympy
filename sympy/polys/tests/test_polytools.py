@@ -1934,6 +1934,9 @@ def test_reduced():
     assert reduced(f, G, polys=True) == (Q, r)
     assert reduced(f, G, x, y, polys=True) == (Q, r)
 
+    assert reduced(1, [1], x) == ([1], 0)
+    raises(ComputationFailed, "reduced(1, [1])")
+
 def test_groebner():
     assert groebner([], x, y, z) == []
 
@@ -1960,6 +1963,9 @@ def test_groebner():
     Q, r = reduced(f, G, x, y, z, modulus=7, symmetric=False, polys=True)
 
     assert sum([ q*g for q, g in zip(Q, G)]) + r == Poly(f, modulus=7)
+
+    assert groebner([1], x) == [1]
+    raises(ComputationFailed, "groebner([1])")
 
 def test_poly():
     assert poly(x) == Poly(x, x)

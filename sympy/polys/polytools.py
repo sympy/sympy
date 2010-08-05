@@ -2446,7 +2446,10 @@ def cancel(f, *gens, **args):
 
 def reduced(f, G, *gens, **args):
     """Reduce a polynomial ``f`` modulo a set of polynomials ``G``. """
-    polys, opt = parallel_poly_from_expr([f] + list(G), *gens, **args)
+    try:
+        polys, opt = parallel_poly_from_expr([f] + list(G), *gens, **args)
+    except PolificationFailed, exc:
+        raise ComputationFailed('reduced', 0, exc)
 
     for i, poly in enumerate(polys):
         polys[i] = sdp_from_dict(poly.rep.to_dict(), opt.order)
@@ -2467,7 +2470,10 @@ def groebner(F, *gens, **args):
     """Compute a reduced Groebner basis for a set of polynomials. """
     args = _update_args(args, 'field', True)
 
-    polys, opt = parallel_poly_from_expr(F, *gens, **args)
+    try:
+        polys, opt = parallel_poly_from_expr(F, *gens, **args)
+    except PolificationFailed, exc:
+        raise ComputationFailed('groebner', 0, exc)
 
     for i, poly in enumerate(polys):
         polys[i] = sdp_from_dict(poly.rep.to_dict(), opt.order)
