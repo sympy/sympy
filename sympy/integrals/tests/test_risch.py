@@ -1,10 +1,12 @@
 """Most of these tests come from the examples in Bronstein's book."""
-from sympy import Poly, S, Function, log, symbols, exp, tan, Integral, sqrt
+from sympy import (Poly, S, Function, log, symbols, exp, tan, Integral, sqrt,
+    Symbol, Lambda)
 from sympy.integrals.risch import (gcdex_diophantine, derivation, splitfactor,
     splitfactor_sqf, canonical_representation, hermite_reduce,
     polynomial_reduce, residue_reduce, residue_reduce_to_basic,
     integrate_primitive, integrate_hyperexponential,
-    integrate_hypertangent_polynomial, integrate_nonlinear_no_specials)
+    integrate_hypertangent_polynomial, integrate_nonlinear_no_specials,
+    integer_powers, build_extension)
 from sympy.utilities.pytest import XFAIL, skip
 
 from sympy.abc import x, t, nu, z, a
@@ -113,7 +115,7 @@ def test_residue_reduce():
     # TODO: Skip or make faster
     assert residue_reduce(Poly((-2*nu**2 - x**4)/(2*x**2)*t - (1 + x**2)/x, t),
     Poly(t**2 + 1 + x**2/2, t), D, [x, t], z) == \
-        ([(Poly(1, z), Poly(t, t)), (Poly(z + S(1)/2, z), Poly(t**2 + 1 + x**2/2, t))], True)
+        ([(Poly(z + S(1)/2, z, domain='QQ'), Poly(t**2 + 1 + x**2/2, t, domain='EX'))], True)
     D = [Poly(1, x), Poly(1 + t**2, t)]
     assert residue_reduce(Poly(-2*x*t + 1 - x**2, t),
     Poly(t**2 + 2*x*t + 1 + x**2, t), D, [x, t], z) == \
@@ -128,45 +130,57 @@ def test_integrate_hyperexponential():
     d = Poly(1, t)
     D = [Poly(1, x), Poly(1 + t1**2, t1), Poly(t*(1 + t1**2), t)]
     assert integrate_hyperexponential(a, d, D, [x, t1, t], [lambda x: exp(tan(x)), tan]) == \
-        (exp(2*tan(x))*tan(x) + Integral(1 + tan(x)**2, x) + exp(tan(x)), True)
-        # (exp(2*tan(x))*tan(x) + tan(x) + exp(tan(x)), True)
+        (exp(2*tan(x))*tan(x) + exp(tan(x)), 1 + t1**2, True)
+        # exp(2*tan(x))*tan(x) + tan(x) + exp(tan(x))
     a = Poly((t1**3 + (x + 1)*t1**2 + t1 + x + 2)*t, t)
     assert integrate_hyperexponential(a, d, D, [x, t1, t], [lambda x: exp(tan(x)), tan]) == \
-        (exp(tan(x))*tan(x) + x*exp(tan(x)), True)
+        (exp(tan(x))*tan(x) + x*exp(tan(x)), 0, True)
 
     a = Poly(t, t)
     d = Poly(1, t)
     D = [Poly(1, x), Poly(2*x*t, t)]
 
-    assert integrate_hyperexponential(a, d, D, [x, t], [lambda x: exp(x**2)]) == (0, False)
+    assert integrate_hyperexponential(a, d, D, [x, t], [lambda x: exp(x**2)]) == \
+        (0, Integral(exp(x**2), x), False)
 
     D = [Poly(1, x), Poly(t, t)]
-    assert integrate_hyperexponential(a, d, D, [x, t], [exp]) == (exp(x), True)
+    assert integrate_hyperexponential(a, d, D, [x, t], [exp]) == \
+        (exp(x), 0, True)
 
     a = Poly(25*t**6 - 10*t**5 + 7*t**4 - 8*t**3 + 13*t**2 + 2*t - 1, t)
     d = Poly(25*t**6 + 35*t**4 + 11*t**2 + 1, t)
     assert integrate_hyperexponential(a, d, D, [x, t], [exp]) == \
-        (-(55 - 50*exp(x))/(25 + 125*exp(2*x)) + Integral(-1, x) + log(1 + exp(2*x)), True)
-        # (-(55 - 50*exp(x))/(25 + 125*exp(2*x)) - x + log(1 + exp(2*x)), True)
+        (-(55 - 50*exp(x))/(25 + 125*exp(2*x)) + log(1 + exp(2*x)), -1, True)
+        # -(55 - 50*exp(x))/(25 + 125*exp(2*x)) - x + log(1 + exp(2*x))
     D = [Poly(1, x), Poly(t0, t0), Poly(t0*t, t)]
     assert integrate_hyperexponential(Poly(2*t0*t**2, t), Poly(1, t), D, [x, t0, t],
     [lambda x: exp(exp(x)), exp]) == \
-        (exp(2*exp(x)), True)
+        (exp(2*exp(x)), 0, True)
 
     D = [Poly(1, x), Poly(t, t)]
     assert integrate_hyperexponential(Poly(x**2/2*t, t), Poly(1, t), D, [x, t], [exp]) == \
-        (x**2*exp(x)/2 - x*exp(x) + exp(x), True)
+        (x**2*exp(x)/2 - x*exp(x) + exp(x), 0, True)
     assert integrate_hyperexponential(Poly(1 + t, t), Poly(t, t), D, [x, t], [exp]) == \
-        (Integral(1, x) - exp(-x), True) # (x - exp(-x), True)
+        (- exp(-x), 1, True) # x - exp(-x)
     assert integrate_hyperexponential(Poly(x, t), Poly(t + 1, t), D, [x, t], [exp]) == \
-        (0, False)
+        (0, Integral(x/(1 + exp(x)), x), False)
 
 def test_integrate_primitive():
     D = [Poly(1, x), Poly(1/x, t)]
     assert integrate_primitive(Poly(t, t), Poly(1, t), D, [x, t], [log]) == \
-        (x*log(x) + Integral(-1, x), True) # (x*log(x) - x, True)
+        (x*log(x), -1, True) # (x*log(x) - x, True)
     assert integrate_primitive(Poly(x, t), Poly(t, t), D, [x, t], [log]) == \
-        (0, False)
+        (0, Integral(x/log(x), x), False)
+
+    D = [Poly(1, x), Poly(1/x, t1), Poly(1/(x + 1), t2)]
+    assert integrate_primitive(Poly(t1, t2), Poly(t2, t2), D, [x, t1, t2],
+    [lambda x: log(x + 1), log]) == \
+        (0, Integral(log(x)/log(1 + x), x), False)
+
+    D = [Poly(1, x), Poly(1/x, t1), Poly(1/(x*t1), t2)]
+    assert integrate_primitive(Poly(t2, t2), Poly(t1, t2), D, [x, t1, t2],
+    [lambda x: log(log(x)), log]) == \
+        (0, Integral(log(log(x))/log(x), x), False)
 
 def test_integrate_hypertangent_polynomial():
     D = [Poly(1, x), Poly(t**2 + 1, t)]
@@ -187,3 +201,49 @@ def test_integrate_nonlinear_no_specials():
         (-log(1 + f(x)**2 + x**2/2)/2 - (4 + x**2)/(4 + 2*x**2 + 4*f(x)**2), True)
     assert integrate_nonlinear_no_specials(Poly(t, t), Poly(1, t), D, [x, t], [x, f]) == \
         (0, False)
+
+def test_integer_powers():
+    assert integer_powers([x, x/2, x**2 + 1, 2*x/3], index=True) == \
+        [(x/6, [(0, 6), (1, 3), (3, 4)]), (1 + x**2, [(2, 1)])]
+    assert integer_powers([x, x/2, x**2 + 1, 2*x/3], index=False) == \
+        [(x/6, [(x, 6), (x/2, 3), (2*x/3, 4)]), (1 + x**2, [(1 + x**2, 1)])]
+
+def test_build_extension():
+    # XXX: These might be different with different arg orderings
+    i = Symbol('i')
+    assert build_extension(exp(x) + exp(x**2), x) == \
+        (Poly(t1 + t0, t1), Poly(1, t1), [Poly(1, x,), Poly(t0, t0),
+        Poly(2*x*t1, t1)], [x, t0, t1], [Lambda(i, exp(i**2)),
+        Lambda(i, exp(i))], [])
+    assert build_extension(exp(x) + exp(2*x), x) == \
+        (Poly(t0**2 + t0, t0), Poly(1, t0), [Poly(1, x), Poly(t0, t0)], [x, t0],
+        [Lambda(i, exp(i))], [])
+    assert build_extension(exp(x) + exp(x/2), x) == \
+        (Poly(t0**2 + t0, t0), Poly(1, t0), [Poly(1, x), Poly(t0/2, t0)],
+        [x, t0], [Lambda(i, exp(i/2))], [])
+    assert build_extension(exp(x) + exp(x**2) + exp(x + x**2), x) == \
+        (Poly((1 + t0)*t1 + t0, t1), Poly(1, t1), [Poly(1, x), Poly(t0, t0),
+        Poly(2*x*t1, t1)], [x, t0, t1], [Lambda(i, exp(i**2)),
+        Lambda(i, exp(i))], [])
+    assert build_extension(exp(x) + exp(x**2) + exp(x + x**2 + 1), x) == \
+        (Poly((1 + S.Exp1*t0)*t1 + t0, t1), Poly(1, t1), [Poly(1, x),
+        Poly(t0, t0), Poly(2*x*t1, t1)], [x, t0, t1], [Lambda(i, exp(i**2)),
+        Lambda(i, exp(i))], [])
+    assert build_extension(exp(x) + exp(x**2) + exp(x/2 + x**2), x) == \
+        (Poly(t1**2 + t0*t1 + t0, t1), Poly(1, t1), [Poly(1, x),
+        Poly(2*x*t0, t0), Poly(t1/2, t1)], [x, t0, t1], [Lambda(i, exp(i/2)),
+        Lambda(i, exp(i**2))], [])
+    assert build_extension(exp(x) + exp(x**2) + exp(x/2 + x**2 + 3), x) == \
+        (Poly(t1**2 + t0*exp(3)*t1 + t0, t1), Poly(1, t1), [Poly(1, x),
+        Poly(2*x*t0, t0), Poly(t1/2, t1)], [x, t0, t1], [Lambda(i, exp(i/2)),
+        Lambda(i, exp(i**2))], [])
+
+    assert build_extension(log(x)*log(x + 1)*log(2*x**2 + 2*x), x) == \
+        (Poly(t0*t1**2 + (-t0*log(2) - t0**2)*t1, t1), Poly(1, t1),
+        [Poly(1, x), Poly(1/(1 + x), t0),
+        Poly((1 + 2*x)/(x + x**2), t1)], [x, t0, t1],
+        [Lambda(i, log(2*i + 2*i**2)), Lambda(i, log(1 + i))], [])
+    assert build_extension(x**x*log(x), x) == \
+        (Poly(t0*t1, t1), Poly(1, t1), [Poly(1, x), Poly(1/x, t0),
+        Poly((1 + t0)*t1, t1)], [x, t0, t1], [Lambda(i, exp(t0*i)),
+        Lambda(i, log(i))], [(exp(x*log(x)), x**x)])

@@ -495,7 +495,7 @@ def parametric_log_deriv(fa, fd, wa, wd, D, T):
     # TODO: Write the full algorithm using the structure theorems.
     return parametric_log_deriv_heu(fa, fd, wa, wd, D, T)
 
-def is_deriv_k_structure_thm(fa, fd, L_K, E_K, E_args, D, T):
+def is_deriv_k_structure_thm(fa, fd, L_K, E_K, L_args, E_args, D, T):
     """
     Checks if Df/f is the derivatie of an element of k(t).
 
@@ -536,12 +536,20 @@ def is_deriv_k_structure_thm(fa, fd, L_K, E_K, E_args, D, T):
     hyperexponentials indexed by E_K (i.e., if i is in E_K, then T[i] ==
     exp(E_args[i])).  This is needed to compute the final answer u such that
     Df/f == Du.
+
+    log(f) will be the same as u up to a additive constant.  This is because
+    they will both behaive the same as monomials. For example, both log(x) and
+    log(2*x) == log(x) + log(2) satisfy Dt == 1/x, because log(2) is constant.
+    Therefore, the term const is returned.  const is such that
+    log(const) + f == u.  This is calculated by dividing the arguments of one
+    logarithm from the other.  Therefore, it is necessary to pass the arguments
+    of the logarithmic terms in L_args.
     """
     t = T[-1]
 
     # Compute Df/f
-    fa, fd = fd*(fd*derivation(fa, D, T) - fa*derivation(fd, D, T)), fd**2*fa
-    fa, fd = fa.cancel(fd, include=True)
+    dfa, dfd = fd*(fd*derivation(fa, D, T) - fa*derivation(fd, D, T)), fd**2*fa
+    dfa, dfd = dfa.cancel(dfd, include=True)
 
     cases = [get_case(i, j) for i, j in zip(D, T)]
 
@@ -560,7 +568,7 @@ def is_deriv_k_structure_thm(fa, fd, L_K, E_K, E_args, D, T):
     L_part = [D[i].as_basic() for i in L_K]
 
     lhs = Matrix([E_part + L_part])
-    rhs = Matrix([fa.as_basic()/fd.as_basic()])
+    rhs = Matrix([dfa.as_basic()/dfd.as_basic()])
 
     A, u = constant_system(lhs, rhs, D, T)
 
@@ -574,18 +582,22 @@ def is_deriv_k_structure_thm(fa, fd, L_K, E_K, E_args, D, T):
             terms = E_args + [T[i] for i in L_K]
             ans = zip(terms, u)
             result = Add(*[Mul(i, j) for i, j in ans])
-            return (ans, result)
+            argterms = [T[i] for i in E_K] + L_args
+            const = cancel(fa.as_basic()/fd.as_basic()/
+                    Mul(*[Pow(i, j) for i, j in zip(argterms,u)]))
 
-def is_log_deriv_k_t_radical_structure_thm(fa, fd, L_K, E_K, L_args, D, T, Df=False):
+            return (ans, result, const)
+
+def is_log_deriv_k_t_radical_structure_thm(fa, fd, L_K, E_K, L_args, E_args, D, T, Df=False):
     """
     Checks if Df (or f) is the logarithmic derivative of a k(t)-radical.
 
     b in k(t) can be written as the logarithmic derivative of a k(t) radical if
     there exist n in ZZ and u in k(t) with n, u != 0 such that n*b == Du/u.
-    Either returns (ans, u, n) or None, which means that Df cannot be written as
-    the logarithmic derivative of a k(t)-radical.  ans is a list of tuples
-    such that Mul(*[i**j for i, j in ans]) == u.  This is useful for seeing
-    exactly what elements of k(t) produce u.
+    Either returns (ans, u, n, const) or None, which means that Df cannot be
+    written as the logarithmic derivative of a k(t)-radical.  ans is a list of
+    tuples such that Mul(*[i**j for i, j in ans]) == u.  This is useful for
+    seeing exactly what elements of k(t) produce u.
 
     This function uses the structure theorem approach, which says that for any
     f in K, Df is the logarithmic derivative of a K-radical if and only if there
@@ -630,6 +642,14 @@ def is_log_deriv_k_t_radical_structure_thm(fa, fd, L_K, E_K, L_args, D, T, Df=Fa
     indexed by L_K (i.e., if i is in L_K, then T[i] == log(L_args[i])).  This is
     needed to compute the final answer u such that n*f == Du/u.
 
+    If Df is False, exp(f) will be the same as u up to a multiplicative
+    constant.  This is because they will both behaive the same as monomials.
+    For example, both exp(x) and exp(x + 1) == E*exp(x) satisfy Dt == t, because
+    Therefore, the term const is returned.  const is such that
+    exp(const)*f == u.  This is calculated by subtracting the arguments of one
+    exponential from the other.  Therefore, it is necessary to pass the
+    arguments of the exponential terms in E_args.
+
     This function still applies some of the heuristics from the modified
     integration algorithm version to exit early in the negative case.
     """
@@ -666,11 +686,11 @@ def is_log_deriv_k_t_radical_structure_thm(fa, fd, L_K, E_K, L_args, D, T, Df=Fa
             return None
 
         residues = [residue_reduce_derivation(Hi, D, T, z) for Hi in H]
-
+        dfa, dfd = fa, fd
     else:
         residues = []
         H = []
-        fa, fd = (fd*derivation(fa, D, T) - fa*derivation(fd, D, T)).cancel(fd**2,
+        dfa, dfd = (fd*derivation(fa, D, T) - fa*derivation(fd, D, T)).cancel(fd**2,
             include=True)
 
     cases = [get_case(i, j) for i, j in zip(D, T)]
@@ -690,7 +710,7 @@ def is_log_deriv_k_t_radical_structure_thm(fa, fd, L_K, E_K, L_args, D, T, Df=Fa
     L_part = [D[i].as_basic() for i in L_K]
 
     lhs = Matrix([E_part + L_part + residues])
-    rhs = Matrix([fa.as_basic()/fd.as_basic()])
+    rhs = Matrix([dfa.as_basic()/dfd.as_basic()])
 
     A, u = constant_system(lhs, rhs, D, T)
 
@@ -707,7 +727,16 @@ def is_log_deriv_k_t_radical_structure_thm(fa, fd, L_K, E_K, L_args, D, T, Df=Fa
             terms = [T[i] for i in E_K] + L_args + residueterms
             ans = zip(terms, u)
             result = Mul(*[Pow(i, j) for i, j in ans])
-            return (ans, result, n)
+
+            # If not Df, exp(f) will be the same as result up to a multiplicative
+            # constant.  We now find the log of that constant.
+            if not Df:
+                argterms = E_args + [T[i] for i in L_K] # residues == []
+                const = cancel(fa.as_basic()/fd.as_basic() -
+                    Add(*[Mul(i, j/n) for i, j in zip(argterms,u)]))
+            else:
+                const = 0
+            return (ans, result, n, const)
 
 def is_log_deriv_k_t_radical_old(fa, fd, D, T, case='auto'):
     """
@@ -723,7 +752,6 @@ def is_log_deriv_k_t_radical_old(fa, fd, D, T, case='auto'):
     it will attempt to determine the type of the derivation automatically.
     """
     # TODO: finish writing this and write tests
-    from pudb import set_trace; set_trace() # Debugging
     fa, fd = fa.cancel(fd, include=True)
 
     t = T[-1]
@@ -794,5 +822,8 @@ def is_log_deriv_k_t_radical_old(fa, fd, D, T, case='auto'):
 
     return (n, u)
 
-def is_log_deriv_k_t_radical():
-    pass
+def is_log_deriv_k_t_radical(fa, fd, L_K, E_K, L_args, E_args, D, T, Df=False):
+    return is_log_deriv_k_t_radical_structure_thm(fa, fd, L_K, E_K, L_args, E_args, D, T, Df=False)
+
+def is_deriv_k(fa, fd, L_K, E_K, L_args, E_args, D, T):
+    return is_deriv_k_structure_thm(fa, fd, L_K, E_K, L_args, E_args, D, T)

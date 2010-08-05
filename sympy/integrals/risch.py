@@ -21,13 +21,17 @@ from the names used in Bronstein's book.
 from sympy.core.basic import S
 from sympy.core.function import Lambda
 from sympy.core.numbers import ilcm
+from sympy.core.mul import Mul
+from sympy.core.power import Pow
 from sympy.core.symbol import Symbol
 
-from sympy.functions import log
+from sympy.functions import log, exp, sin, cos, tan, asin, acos, atan
+
+from sympy.integrals import Integral, integrate
 
 from sympy.polys import (gcd, cancel, PolynomialError, Poly, reduced, RootSum)
 
-from sympy.integrals import Integral
+from sympy.utilities.iterables import numbered_symbols
 #    from pudb import set_trace; set_trace() # Debugging
 
 class NonElementaryIntegral(Exception):
@@ -176,7 +180,7 @@ def splitfactor_sqf(p, D, T, coefficientD=False, z=None):
     t = T[-1]
     kkinv = [1/x for x in T[:-1]] + T[:-1]
     if z:
-        kkinv.append(z)
+        kkinv = [z]
 
     S = []
     N = []
@@ -442,8 +446,14 @@ def integrate_primitive(a, d, D, T, Tfuncs):
     Integration of primitive functions.
 
     Given a primitive monomial t over k and f in k(t), return g elementary over
-    k(t) and b in {True, False} such that f - Dg in k if b is True or f - Dg
-    does not have an elementary integral over k(t) if b is False.
+    k(t), i in k(t), and b in {True, False} such that i = f - Dg is in k if b
+    is True or i = f - Dg does not have an elementary integral over k(t) if b
+    is False.
+
+    This function returns a Basic expression for the first argument.  If b is
+    True, the second argument is Basic expression in k to recursively integrate.
+    If b is False, the second argument is an unevaluated Integral, which has
+    been proven to be non-elementary.
     """
     # XXX: a and d must be canceled, or this might return incorrect results
     t = T[-1]
@@ -454,8 +464,12 @@ def integrate_primitive(a, d, D, T, Tfuncs):
     g1, h, r = hermite_reduce(a, d, D, T)
     g2, b = residue_reduce(h[0], h[1], D, T, z=z)
     if not b:
+        i = cancel(a.as_basic()/d.as_basic() - (g1[1]*derivation(g1[0], D, T) -
+            g1[0]*derivation(g1[0], D, T)).as_basic()/(g1[1]**2).as_basic() -
+            residue_reduce_derivation(g2, D, T, z))
+        i = Integral(i.subs(s), x)
         return ((g1[0].as_basic()/g1[1].as_basic()).subs(s) +
-            residue_reduce_to_basic(g2, T, z, Tfuncs), b)
+            residue_reduce_to_basic(g2, T, z, Tfuncs), i, b)
 
     # h - Dg2 + r
     p = cancel(h[0].as_basic()/h[1].as_basic() - residue_reduce_derivation(g2,
@@ -466,11 +480,13 @@ def integrate_primitive(a, d, D, T, Tfuncs):
 
     ret = ((g1[0].as_basic()/g1[1].as_basic() + q.as_basic()).subs(s) +
         residue_reduce_to_basic(g2, T, z, Tfuncs))
-    if not i.is_zero:
+    if not b:
         # TODO: This does not do the right thing when b is False
-        ret += Integral(i.as_basic().subs(s), x)
+        i = Integral(i.as_basic().subs(s), x)
+    else:
+        i = i.as_basic()
 
-    return (ret, b)
+    return (ret, i, b)
 
 def integrate_hyperexponential_polynomial(p, D, T, z):
     """
@@ -525,11 +541,14 @@ def integrate_hyperexponential(a, d, D, T, Tfuncs):
     Integration of hyperexponential functions.
 
     Given a hyperexponential monomial t over k and f in k(t), return g
-    elementary over k(t) and a bool b in {True, False} such that f - Dg in k
-    if b is True or f - Dg does not have an elementary integral over k(t) if b
-    is False.
+    elementary over k(t), i in k(t),  and a bool b in {True, False} such that
+    i = f - Dg is in k if b is True or i = f - Dg does not have an elementary
+    integral over k(t) if b is False.
 
-    This function returns a Basic expression.
+    This function returns a Basic expression for the first argument.  If b is
+    True, the second argument is Basic expression in k to recursively integrate.
+    If b is False, the second argument is an unevaluated Integral, which has
+    been proven to be non-elementary.
     """
     # XXX: a and d must be canceled, or this might return incorrect results
     t = T[-1]
@@ -540,26 +559,33 @@ def integrate_hyperexponential(a, d, D, T, Tfuncs):
     g1, h, r = hermite_reduce(a, d, D, T)
     g2, b = residue_reduce(h[0], h[1], D, T, z=z)
     if not b:
+        i = cancel(a.as_basic()/d.as_basic() - (g1[1]*derivation(g1[0], D, T) -
+            g1[0]*derivation(g1[0], D, T)).as_basic()/(g1[1]**2).as_basic() -
+            residue_reduce_derivation(g2, D, T, z))
+        i = Integral(i.subs(s), x)
         return ((g1[0].as_basic()/g1[1].as_basic()).subs(s) +
-            residue_reduce_to_basic(g2, T, z, Tfuncs), b)
+            residue_reduce_to_basic(g2, T, z, Tfuncs), i, b)
 
     # p should be a polynomial in t and 1/t, because Sirr == k[t, 1/t]
     # h - Dg2 + r
     p = cancel(h[0].as_basic()/h[1].as_basic() - residue_reduce_derivation(g2,
         D, T, z) + r[0].as_basic()/r[1].as_basic())
     # TODO: Use subs() in new polys10 (?)
-    p = p.as_poly(t, 1/t).replace(1/t, z)
+    pp = p.as_poly(t, 1/t).replace(1/t, z)
 
-    qa, qd, b = integrate_hyperexponential_polynomial(p, D, T, z)
+    qa, qd, b = integrate_hyperexponential_polynomial(pp, D, T, z)
 
-    i = p.as_poly(t).nth(0).as_poly(z).nth(0)
+    i = pp.as_poly(t).nth(0).as_poly(z).nth(0)
 
     ret = ((g1[0].as_basic()/g1[1].as_basic() + qa.as_basic()/
         qd.as_basic()).subs(s) + residue_reduce_to_basic(g2, T, z, Tfuncs))
-    if not i.is_zero:
-        ret += Integral(i.subs(s), x)
 
-    return (ret, b)
+    if not b:
+        i = p - (qd*derivation(qa, D, T) - qa*derivation(qd, D, T)).as_basic()/\
+            (qd**2).as_basic()
+        i = Integral(i.subs(s), x)
+
+    return (ret, i, b)
 
 def integrate_hypertangent_polynomial(p, D, T):
     """
@@ -594,6 +620,7 @@ def integrate_nonlinear_no_specials(a, d, D, T, Tfuncs):
     This function returns a Basic expression.
     """
     # TODO: Integral from k?
+    # TODO: split out non-elementary integral
     # XXX: a and d must be canceled, or this might not return correct results
     t = T[-1]
     x = T[0]
@@ -705,4 +732,289 @@ def integer_powers(exprs, index=True):
         newmults = [(i, j*common_denom) for i, j in terms[term]]
         newterms[newterm] = newmults
 
-    return sorted(list(newterms.iteritems()))# ---
+    return sorted(list(newterms.iteritems()))
+
+def build_extension(f, x, handle_first='log'):
+    """
+    Tries to build a transcendental extension tower from f with respect to x.
+
+    If it is successful, returns (fa, fd, D, T, Tfuncs, backsubs) such that fa
+    and fd are Polys in T[-1] with rational coefficients in T[:-1], fa/fd == f
+    and D[i] is a Poly in T[i] with rational coefficients in T[:i] representing
+    the derivative of T[i].  Tfuncs is a list of Lambda objects for back replacing
+    the funtions after integrating.  Lambda() is only used (instead of lambda)
+    to make this function easier to test and debug. Note that Tfuncs coresponds
+    to the elements of T (except for T[0] == x) in reverse order, because that
+    is the order that they have to be back-substituted in. backsubs is a
+    back-substitution list that should be applied on the completed integral to
+    make it look more like the original integrand.
+
+    If it is unsuccessful, it raises NotImplementedError.
+    """
+    from sympy.integrals.prde import (is_log_deriv_k_t_radical, is_deriv_k)
+
+    global t, T, D, L_K, E_K, L_args, E_args, ts, backsubs, Tfuncs, newf
+    def reset():
+        global t, T, D, L_K, E_K, L_args, E_args, ts, backsubs, Tfuncs, newf
+        t = x
+        T = [x]
+        D = [Poly(1, x)]
+        L_K, E_K, L_args, E_args = [], [], [], []
+        ts = numbered_symbols('t')
+        # For various things that we change to make things work that we need to
+        # change back when we are done.
+        backsubs = []
+        Tfuncs = []
+        newf = f
+
+    # Get common cases out of the way:
+    if f.has(sin, cos, tan, atan):
+        raise NotImplementedError("Trigonometric extensions are not " +
+        "supported (yet!)")
+    elif f.has(atan, acos):
+        pass
+    reset()
+    exp_new_extension, log_new_extension = True, True
+    while True:
+        restart = False
+        if newf.is_rational_function(*T):
+            break
+
+        if not exp_new_extension and not log_new_extension:
+            # We couldn't find a new extension on the last pass, so I guess
+            # we can't do it.
+            raise NotImplementedError("Couldn't find an elementary " +
+                "transcendental extension for %d.  Try using a manual " +
+                "extension with the extension flag." % f)
+        def exp_part(exps):
+            global t, T, D, L_K, E_K, L_args, E_args, ts, backsubs, Tfuncs, newf
+
+            new_extension = False
+            restart = False
+            expargs = [i.exp for i in exps]
+            ip = integer_powers(expargs)
+            for arg, others in ip:
+                # Minimize potential problems with algebraic substitution
+                others.sort(key=lambda i: i[1])
+
+                arga, argd = arg.as_numer_denom()
+                arga, argd = arga.as_poly(t), argd.as_poly(t)
+                A = is_log_deriv_k_t_radical(arga, argd, L_K, E_K, L_args,
+                    E_args, D, T)
+
+                if A is not None:
+                    ans, u, n, const = A
+                    # if n is 1 or -1, it's algebraic, but we can handle it
+                    if n == -1:
+                        # This probably will never happen, because
+                        # Rational.as_numer_denom() returns the negative term
+                        # in the numerator.  But in case that changes, reduce
+                        # it to n == 1.
+                        n = 1
+                        u **= -1
+                        const *= -1
+                        ans = [(i, -j) for i, j in ans]
+                    if n == 1:
+                        # Example: exp(x + x**2) over QQ(x, exp(x), exp(x**2))
+                        newf = newf.subs(exp(arg), exp(const)*Mul(*[u**power for
+                            u, power in ans]))
+                        newf = newf.subs([(exp(p*expargs[i]),
+                            exp(const*p)*Mul(*[u**power for u, power in ans]))
+                            for i, p in others])
+
+                        continue
+                    else:
+                        # Bad news, we have an algebraic radical.  But maybe we
+                        # could still aviod it by choosing a different
+                        # extension. For example, integer_powers() won't handle
+                        # exp(x/2 + 1) over QQ(x, exp(x)), but if we pull out
+                        # the exp(1), it will.  Or maybe we have
+                        # exp(x + x**2/2), over QQ(x, exp(x), exp(x**2)), which
+                        # is exp(x)*sqrt(exp(x**2)), but if we use QQ(x, exp(x),
+                        # exp(x**2/2)), then they will all work.
+                        #
+                        # So here is what we do. If there is a non-zero const,
+                        # pull it out and retry.  Also, if len(ans) > 1, then
+                        # rewrite exp(arg) as the product of exponentials from
+                        # ans, and retry that.  If const == 0 and len(ans) == 1,
+                        # then we assume that it would have been handled by
+                        # either integer_powers() or n == 1 above if it could be
+                        # handled, so we give up at that point.  For example,
+                        # you can never handle exp(log(x)/2) because it equals
+                        # sqrt(x).
+                        if const or len(ans) > 1:
+                            rad = Mul(*[term**(power/n) for term, power in ans])
+                            newf = newf.subs([(exp(p*expargs[i]),
+                                exp(const*p)*rad) for i, p in others])
+                            newf = newf.subs(zip(reversed(T), [f(x) for f in Tfuncs]))
+                            restart = True
+                            break
+                        else:
+                            # TODO: give algebraic dependence in error string
+                            raise NotImplementedError("Cannot integrate over " +
+                            "algebraic extensions.")
+                else:
+                    darg = derivation(Poly(arg, t), D, T)
+                    t = ts.next()
+                    T.append(t)
+                    E_args.append(arg)
+                    E_K.append(len(T) - 1)
+                    D.append(darg.as_poly(t)*Poly(t, t))
+                    i = Symbol('i', dummy=True)
+                    Tfuncs = [Lambda(i, exp(arg.subs(x, i)))] + Tfuncs
+                    newf = newf.subs([(exp(expargs[i]), t**p) for i, p in others])
+                    new_extension = True
+
+            if restart:
+                return None
+            return new_extension
+
+        def log_part(logs):
+            global t, T, D, L_K, E_K, L_args, E_args, ts, backsubs, Tfuncs, newf
+
+            new_extension = False
+            logargs = [i.args[0] for i in logs]
+            for arg in logargs:
+                # The log case is easier, because whenever a logarithm is
+                # algebraic over the base field, it is of the form
+                # a1*t1 + ... an*tn + c, which is a polynomial, so we can just
+                # replace it with that.  In other words, we don't have to worry
+                # about radicals.
+                arga, argd = arg.as_numer_denom()
+                arga, argd = arga.as_poly(t), argd.as_poly(t)
+                A = is_deriv_k(arga, argd, L_K, E_K, L_args, E_args, D, T)
+                if A is not None:
+                    ans, u, const = A
+                    newterm = log(const) + u
+                    newf = newf.subs(log(arg), newterm)
+                    continue
+
+                else:
+                    darg = derivation(Poly(arg, t), D, T)
+                    t = ts.next()
+                    T.append(t)
+                    L_args.append(arg)
+                    L_K.append(len(T) - 1)
+                    D.append(cancel(darg.as_basic()/arg).as_poly(t))
+                    i = Symbol('i', dummy=True)
+                    Tfuncs = [Lambda(i, log(arg.subs(x, i)))] + Tfuncs
+                    newf = newf.subs(log(arg), t)
+                    new_extension = True
+
+            return new_extension
+
+        # Pre-preparsing.
+        # Get all exp arguments, so we can aviod ahead of time doing something
+        # like t1 = exp(x), t2 = exp(x/2) == sqrt(t1).
+
+        exps = filter(lambda i: i.exp.is_rational_function(*T) and
+            i.exp.has_any_symbols(*T), newf.atoms(exp))
+        # 2**x
+        pows = filter(lambda i: i.exp.is_rational_function(*T) and
+            i.exp.has_any_symbols(*T), newf.atoms(Pow))
+        numpows = filter(lambda i: not i.base.has_any_symbols(*T), pows)
+        sympows = filter(lambda i: i.base.is_rational_function(*T) and
+            not i.exp.is_Integer, list(set(pows) - set(numpows)))
+
+        # The easiest way to deal with non-base E powers is to convert them
+        # into base E, integrate, and then convert back.
+        for i in pows:
+            old = i
+            # If exp is ever changed to automatically reduce exp(x*log(2)) to
+            # 2**x, then this will break.  The solution is to not change exp to
+            # do that :)
+            if i in sympows:
+                if i.exp.is_Rational:
+                    raise NotImplementedError("Algebraic extensions are not " +
+                    "supported (%d)" % i)
+                # We can add a**b only if log(a) in the extension, because
+                # a**b == exp(b*log(a)).
+                basea, based = i.base.as_numer_denom()
+                basea, based = Poly(basea, t), Poly(based, t)
+                A = is_deriv_k(basea, based, L_K, E_K, L_args, E_args, D, T)
+                if A is None:
+                    # Non-elementary monomial (so far)
+
+                    # TODO: Would there ever be any benefit from just adding
+                    # log(base) as a new monomial?
+                    continue
+                ans, u, const = A
+                newterm = exp(i.exp*(log(const) + u))
+                # Under the current implementation, exp kills terms
+                # only if they are of the form a*log(x), where a is a Number
+                # This should have already been killed by the above tests.
+                # Again, if this changes, this will break, which maybe is a
+                # sign that you shouldn't be changing that.
+
+                newf = newf.subs(i, newterm)
+
+            elif i not in numpows:
+                continue
+            new = exp(i.exp*log(i.base))
+            backsubs.append((new, old))
+            newf = newf.subs(old, new)
+            exps.append(new)
+
+        logs = filter(lambda i: i.args[0].is_rational_function(*T) and
+            i.args[0].has_any_symbols(*T), newf.atoms(log))
+
+        if handle_first == 'exp' or not log_new_extension:
+            exp_new_extension = exp_part(exps)
+            if exp_new_extension is None:
+                # reset and restart
+                f = newf
+                reset()
+                exp_new_extension = True
+                continue
+        if handle_first == 'log' or not exp_new_extension:
+            log_new_extension = log_part(logs)
+
+    fa, fd = map(lambda i:Poly(i, t), newf.as_numer_denom())
+    return (fa, fd, D, T, Tfuncs, backsubs)
+
+def risch_integrate(f, x, extension=None):
+    """
+    Prototype function for the Risch Integration Algorithm.
+
+    Only transcendental functions are supported.  Currently, only exponentials
+    and logarithms are supported, but support for trigonometric functions is
+    forthcoming.
+
+    If this function returns an unevaluated Integral in the result, it means
+    that it has proven that integral to be non-elementary.  Any errors will
+    result in raising NotImplementedError.
+    """
+    if extension:
+       raise NotImplementedError("Manual extensions are not supported yet.")
+
+    fa, fd, D, T, Tfuncs, backsubs = build_extension(f, x)
+    cases = [get_case(d, t) for d, t in zip(D, T)]
+    cases.reverse()
+    result = 0
+    t = T[-1]
+    for case in cases:
+        if not fa.has(t) and not fd.has(t) and not case == 'base':
+            T = T[:-1]
+            D = D[:-1]
+            t = T[-1]
+        if case == 'exp':
+            ans, i, b = integrate_hyperexponential(fa, fd, D, T, Tfuncs)
+        elif case == 'primitive':
+            ans, i, b = integrate_primitive(fa, fd, D, T, Tfuncs)
+        elif case == 'base':
+            # XXX: We can't call ratint() directly here because it doesn't
+            # handle polynomials correctly.
+            ans = integrate(fa.as_basic()/fd.as_basic(), x)
+            b = False
+            i = 0
+
+        result += ans
+        if b:
+            T = T[:-1]
+            D = D[:-1]
+            t = T[-1]
+            fa, fd = i.as_numer_denom()
+            fa, fd = Poly(fa, t), Poly(fd, t)
+        else:
+            result += i
+            return result

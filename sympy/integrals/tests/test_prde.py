@@ -122,23 +122,28 @@ def test_limited_integrate():
 def test_is_log_deriv_k_t_radical():
     D = [Poly(1, x)]
     assert is_log_deriv_k_t_radical_structure_thm(Poly(2*x, x), Poly(1, x),
-    [], [], [], D, [x]) is None
+    [], [], [], [], D, [x]) is None
 
     D = [Poly(1, x), Poly(2*t1, t1), Poly(1/x, t2)]
     assert is_log_deriv_k_t_radical_structure_thm(Poly(x + t2/2, t2),
-    Poly(1, t2), [2], [1], [x], D, [x, t1, t2]) == \
-        ([(t1, 1), (x, 1)], t1*x, 2)
+    Poly(1, t2), [2], [1], [x], [2*x], D, [x, t1, t2]) == \
+        ([(t1, 1), (x, 1)], t1*x, 2, 0)
     # TODO: Add more tests
+
+    D = [Poly(1, x), Poly(t0, t0), Poly(1/x, t)]
+    assert is_log_deriv_k_t_radical_structure_thm(Poly(x + t/2 + 3, t), Poly(1, t), [2],
+    [1], [x], [x], D, [x, t0, t]) == \
+        ([(t0, 2), (x, 1)], x*t0**2, 2, 3)
 
 def test_is_deriv_k():
     D = [Poly(1, x), Poly(1/x, t1), Poly(1/(x + 1), t2)]
     assert is_deriv_k_structure_thm(Poly(2*x**2 + 2*x, t2), Poly(1, t2),
-    [1, 2], [], [], D, [x, t1, t2]) == \
-        ([(t1, 1), (t2, 1)], t1 + t2)
+    [1, 2], [], [x, x + 1], [], D, [x, t1, t2]) == \
+        ([(t1, 1), (t2, 1)], t1 + t2, 2)
 
     D = [Poly(1, x), Poly(1/x, t1), Poly(t2, t2)]
     T = [x, t1, t2]
     assert is_deriv_k_structure_thm(Poly(x**2*t2**3, t2), Poly(1, t2), [1],
-    [2], [x], D, T) == \
-        ([(x, 3), (t1, 2)], 2*t1 + 3*x)
-    # TODO: Add more tests, include ones with exponentials
+    [2], [x], [x], D, T) == \
+        ([(x, 3), (t1, 2)], 2*t1 + 3*x, 1)
+    # TODO: Add more tests, including ones with exponentials

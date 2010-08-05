@@ -62,6 +62,8 @@ class exp(Function):
         included, excluded = [], []
 
         for arg in args:
+            # Warning: code in risch.py will be very sensitive to changes
+            # in this (see build_extension()).
             coeff, terms = arg.as_coeff_terms()
 
             if coeff is S.Infinity:

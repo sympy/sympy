@@ -8,3 +8,4 @@ log(x)
 -cos(x)
 """
 from integrals import integrate, Integral, line_integrate
+from risch import risch_integrate
