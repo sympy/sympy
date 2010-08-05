@@ -31,15 +31,13 @@ def ratint(f, x, **flags):
 
     p, q = Poly(p, x), Poly(q, x)
 
-    c, p, q = p.cancel(q)
+    coeff, p, q = p.cancel(q)
     poly, p = p.div(q)
 
-    poly = poly.to_field()
-
-    result = c*poly.integrate(x).as_basic()
+    result = poly.integrate(x).as_basic()
 
     if p.is_zero:
-        return result
+        return coeff*result
 
     g, h = ratint_ratpart(p, q, x)
 
@@ -96,7 +94,7 @@ def ratint(f, x, **flags):
 
         result += eps
 
-    return result
+    return coeff*result
 
 def ratint_ratpart(f, g, x):
     """Horowitz-Ostrogradsky algorithm.
