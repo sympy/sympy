@@ -972,7 +972,7 @@ def build_extension(f, x, handle_first='log'):
     fa, fd = map(lambda i:Poly(i, t), newf.as_numer_denom())
     return (fa, fd, D, T, Tfuncs, backsubs)
 
-def risch_integrate(f, x, extension=None):
+def risch_integrate(f, x, extension=None, handle_first='log'):
     """
     Prototype function for the Risch Integration Algorithm.
 
@@ -987,7 +987,11 @@ def risch_integrate(f, x, extension=None):
     if extension:
        raise NotImplementedError("Manual extensions are not supported yet.")
 
-    fa, fd, D, T, Tfuncs, backsubs = build_extension(f, x)
+    if handle_first not in ['log', 'exp']:
+        raise ValueError("handle_first must be 'log' or 'exp', not %d." %
+            handle_first)
+
+    fa, fd, D, T, Tfuncs, backsubs = build_extension(f, x, handle_first=handle_first)
     cases = [get_case(d, t) for d, t in zip(D, T)]
     cases.reverse()
     result = 0
@@ -997,6 +1001,7 @@ def risch_integrate(f, x, extension=None):
             T = T[:-1]
             D = D[:-1]
             t = T[-1]
+            continue
         if case == 'exp':
             ans, i, b = integrate_hyperexponential(fa, fd, D, T, Tfuncs)
         elif case == 'primitive':
