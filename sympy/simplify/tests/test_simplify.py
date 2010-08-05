@@ -27,9 +27,10 @@ def test_ratsimp():
     assert f != g and ratsimp(f) == g
 
     f = (a*c*x*y + a*c*z - b*d*x*y - b*d*z - b*t*x*y - b*t*x - b*t*z + e*x)/(x*y + z)
-    g = a*c - b*d - b*t + (-b*t*x + e*x)/(x*y + z)
+    G = [a*c - b*d - b*t + (-b*t*x + e*x)/(x*y + z),
+         a*c - b*d - b*t - ( b*t*x - e*x)/(x*y + z)]
 
-    assert f != g and ratsimp(f) == g
+    assert f != g and ratsimp(f) in G
 
     A = sqrt(pi)
 

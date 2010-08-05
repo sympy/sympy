@@ -32,6 +32,7 @@ from polyfuncs import (
 from polyerrors import (
     OperationNotSupported,
     ExactQuotientFailed,
+    ComputationFailed,
     UnificationFailed,
     GeneratorsNeeded,
     RefinementFailed,
