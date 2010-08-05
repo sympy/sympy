@@ -132,7 +132,12 @@ class exp(Function):
         return S.One,(self,)
 
     def _eval_subs(self, old, new):
-        if self==old: return new
+        if self==old:
+            return new
+        else:
+            # Temporarily hack, only allow exact substitution to make the
+            # Risch algorithm work.
+            return Function._eval_subs(self, old, new)
         arg = self.args[0]
         o = old
         if old.is_Pow: # handle (exp(3*log(x))).subs(x**2, z) -> z**(3/2)
