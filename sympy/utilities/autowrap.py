@@ -120,6 +120,47 @@ class CodeWrapper:
 
         return self._get_wrapped_function(mod)
 
+
+class CythonCodeWrapper(CodeWrapper):
+    setup_template = """
+from distutils.core import setup
+from distutils.extension import Extension
+from Cython.Distutils import build_ext
+
+setup(
+    cmdclass = {'build_ext': build_ext},
+    ext_modules = [Extension(%(args)s)]
+        )
+"""
+
+    def _process_files(self, routine):
+        command = ["python", "setup.py", "build_ext", "--inplace"]
+        null = open(os.devnull, 'w')
+        retcode = subprocess.call(command, stdout=null)
+        if retcode:
+            raise CodeWrapError
+
+    def _prepare_files(self, routine):
+        pyxfilename = self.module_name + '.' + self.generator.dump_pyx.extension
+        codefilename = "%s.%s" % (self._filename, self.generator.code_extension)
+
+        # pyx
+        f = file(pyxfilename, 'w')
+        self.generator.dump_pyx([routine], f, self._filename,
+                self.include_header, self.include_empty)
+        f.close()
+
+        # setup.py
+        ext_args = [repr(self.module_name), repr([pyxfilename, codefilename])]
+        f = file('setup.py', 'w')
+        print >> f, CythonCodeWrapper.setup_template % {'args': ", ".join(ext_args)}
+        f.close()
+
+    @classmethod
+    def _get_wrapped_function(cls, mod):
+        return mod.autofunc_c
+
+
 class F2PyCodeWrapper(CodeWrapper):
 
     def _process_files(self, routine):
@@ -138,9 +179,8 @@ class F2PyCodeWrapper(CodeWrapper):
         return mod.autofunc
 
 def _get_code_wrapper_class(backend):
-    wrappers = { 'F2PY': F2PyCodeWrapper }
+    wrappers = { 'F2PY': F2PyCodeWrapper, 'CYTHON': CythonCodeWrapper }
     return wrappers[backend.upper()]
-
 
 def autowrap(expr, language='F95', backend='f2py', tempdir=None):
     """Generates python callable binaries based on the math expression.

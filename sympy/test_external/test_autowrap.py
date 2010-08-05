@@ -17,3 +17,7 @@ def test_autowrap_f2py_f95():
     assert g(1, -2, 1) ==  1.0
 
 
+def test_autowrap_cython_C():
+    a, b, c = symbols('a b c')
+    f = autowrap(((a + b)/c).expand(), language='C', backend='cython')
+    assert f(1, -2, 1) == -1.0
