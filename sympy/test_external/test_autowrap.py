@@ -1,23 +1,25 @@
 from sympy import symbols
 from sympy.utilities.autowrap import autowrap
 
-def test_autowrap_f2py_f95():
+#
+# test runners used by several language-backend combinations
+#
 
+def runtest_autowrap_twice(language, backend):
     a, b, c = symbols('a b c')
+    f = autowrap((((a + b)/c)**5).expand(), language, backend)
+    g = autowrap((((a + b)/c)**4).expand(), language, backend)
 
-    f = autowrap((((a + b)/c)**5).expand(), language='f95', backend='f2py')
+    # check that autowrap updates the module name.  Else, g gives the same as f
     assert f(1, -2, 1) == -1.0
-    assert f(1.0, -2.0, 1.0) == -1.0
-    assert f(3, -4, 1) == -1.0
-    assert f(-3, 4, 1) ==  1.0
-
-    # check that autowrap updates the module name.  If not, the next line
-    # will calculate the above expression again and assertion will fail:
-    g = autowrap((((a + b)/ c)**4).expand(), language='f95', backend='f2py')
     assert g(1, -2, 1) ==  1.0
 
+#
+# tests of language-backend combinations
+#
 
-def test_autowrap_cython_C():
-    a, b, c = symbols('a b c')
-    f = autowrap(((a + b)/c).expand(), language='C', backend='cython')
-    assert f(1, -2, 1) == -1.0
+def test_wrap_twice_c_cython():
+    runtest_autowrap_twice('C', 'cython')
+
+def test_wrap_twice_f95_f2py():
+    runtest_autowrap_twice('f95', 'f2py')
