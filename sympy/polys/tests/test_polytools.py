@@ -616,7 +616,7 @@ def test_Poly_to_ring():
     assert Poly(2*x+1, domain='QQ').to_ring() == Poly(2*x+1, domain='ZZ')
 
     raises(CoercionFailed, "Poly(x/2+1).to_ring()")
-    raises(OperationNotSupported, "Poly(2*x+1, modulus=3).to_ring()")
+    raises(DomainError, "Poly(2*x+1, modulus=3).to_ring()")
 
 def test_Poly_to_field():
     assert Poly(2*x+1, domain='ZZ').to_field() == Poly(2*x+1, domain='QQ')
