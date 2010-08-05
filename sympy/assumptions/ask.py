@@ -109,11 +109,11 @@ def ask(expr, key, assumptions=True, context=global_assumptions):
         return
 
     # If it's not consistent with the assumptions, then it can't be true
-    if not satisfiable(eliminate_assume(And(known_facts, assumptions, key), expr)):
+    if not satisfiable(eliminate_assume(And(known_facts_compiled, assumptions, key), expr)):
         return False
 
     # If the negation is unsatisfiable, it is entailed
-    if not satisfiable(eliminate_assume(And(known_facts, assumptions, Not(key)), expr)):
+    if not satisfiable(eliminate_assume(And(known_facts_compiled, assumptions, Not(key)), expr)):
         return True
 
     # Otherwise, we don't have enough information to conclude one way or the other
@@ -194,4 +194,4 @@ known_facts = And(
     Equivalent(Q.nonzero, Q.positive | Q.negative)
 )
 
-known_facts_compiled = to_int_repr(conjuncts(to_cnf(known_facts)), known_facts_keys)
+known_facts_compiled = to_cnf(known_facts)
