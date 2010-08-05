@@ -43,6 +43,7 @@ from sympy.polys.polyerrors import (
     GeneratorsNeeded, PolynomialError,
     PolificationFailed, FlagError,
     MultivariatePolynomialError,
+    ExactQuotientFailed,
     ComputationFailed,
 )
 
@@ -1019,13 +1020,16 @@ class Poly(Basic):
         >>> Poly(x**2 + 1, x).pquo(Poly(2*x - 4, x))
         Traceback (most recent call last):
         ...
-        ExactQuotientFailed: [2, -4] does not divide [1, 0, 1]
+        ExactQuotientFailed: -4 + 2*x does not divide 1 + x**2
 
         """
         _, per, F, G = f._unify(g)
 
         if hasattr(f.rep, 'pquo'):
-            result = F.pquo(G)
+            try:
+                result = F.pquo(G)
+            except ExactQuotientFailed, exc:
+                raise exc.new(f.as_expr(), g.as_expr())
         else: # pragma: no cover
             raise OperationNotSupported(f, 'pquo')
 
@@ -1125,13 +1129,16 @@ class Poly(Basic):
         >>> Poly(x**2 + 1, x).quo(Poly(2*x - 4, x))
         Traceback (most recent call last):
         ...
-        ExactQuotientFailed: [2, -4] does not divide [1, 0, 1]
+        ExactQuotientFailed: -4 + 2*x does not divide 1 + x**2
 
         """
         _, per, F, G = f._unify(g)
 
         if hasattr(f.rep, 'quo'):
-            result = F.quo(G)
+            try:
+                result = F.quo(G)
+            except ExactQuotientFailed, exc:
+                raise exc.new(f.as_expr(), g.as_expr())
         else: # pragma: no cover
             raise OperationNotSupported(f, 'quo')
 
