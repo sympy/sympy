@@ -3,6 +3,9 @@ from sympy.core.expr import Expr
 from sympy.core.add import Add
 from sympy.core.basic import Basic, S, C
 from sympy.physics.qmul import QMul
+from sympy.physics.quantum import Dagger
+from sympy.physics.quantum import QuantumBasic
+from sympy.physics.quantumbasic import QuantumError
 
 class QAdd(QAssocOp):
     binop = '+'
@@ -11,9 +14,9 @@ class QAdd(QAssocOp):
     def _rules_QAdd(cls, Object1, Object2):
         from sympy.physics.quantum import StateBase, Operator, OuterProduct, KetBase, BraBase, OuterProduct, InnerProduct
         from sympy.core.add import Add    
-        if (not isinstance(Object1, (Operator, OuterProduct, StateBase, QAssocOp))) and (not isinstance(Object2, (Operator, OuterProduct, StateBase, QAssocOp))):
+        if (not isinstance(Object1, QuantumBasic)) and (not isinstance(Object2, QuantumBasic)):
             return Add(Object1, Object2)
-        elif (not isinstance(Object1, (Operator, OuterProduct, StateBase, QAssocOp))) or (not isinstance(Object2, (Operator, OuterProduct, StateBase, QAssocOp))):
+        elif (not isinstance(Object1, QuantumBasic)) or (not isinstance(Object2, QuantumBasic)):
             raise Exception("Can't add a %s and %s" % (Object1.__class__.__name__, Object2.__class__.__name__))
 
         if Object1.hilbert_space != Object2.hilbert_space:
@@ -51,7 +54,7 @@ class QAdd(QAssocOp):
                 continue
 
             # 3
-            elif not isinstance(o, (Operator, OuterProduct, StateBase, QAssocOp)):
+            elif not isinstance(o, QuantumBasic):
                 coeff += o
                 continue
 
@@ -66,7 +69,7 @@ class QAdd(QAssocOp):
                 c = o.args[0]
 
                 # 3*...
-                if not isinstance(c, (Operator, OuterProduct, StateBase, QAssocOp)):
+                if not isinstance(c, QuantumBasic):
                     if c is S.One:
                         s = o
                     else:
@@ -168,3 +171,9 @@ class QAdd(QAssocOp):
     @property
     def identity(self):
         return S.Zero
+
+    def _eval_dagger(self):
+        newargs = []
+        for item in self.args:
+            newargs.append(Dagger(item))
+        return QAdd(*newargs)

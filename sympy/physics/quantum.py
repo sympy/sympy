@@ -3,10 +3,11 @@ from sympy import (
     I, Function, Integer, S, sympify, Matrix, oo
 )
 from sympy.core.sympify import _sympify
-from sympy.core.decorators import call_highest_priority
 from sympy.physics.hilbert import *
 from sympy.core.numbers import Number
 from sympy.core.symbol import Symbol, symbols
+from sympy.physics.quantumbasic import QuantumBasic
+from sympy.physics.quantumbasic import QuantumError
 
 """
 Questions:
@@ -28,10 +29,15 @@ Questions:
 """
 
 __all__ = [
+    'KetBase',
+    'BraBase',
     'StateBase',
     'State',
     'Ket',
     'Bra',
+    'TimeDepState',
+    'TimeDepBra',
+    'TimeDepKet',
     'InnerProduct',
     'OuterProduct',
     'Operator',
@@ -40,15 +46,6 @@ __all__ = [
     'Commutator',
     # 'AntiCommutator',
 ]
-
-
-#-----------------------------------------------------------------------------
-# Error handling
-#-----------------------------------------------------------------------------
-
-class QuantumError(Exception):
-    pass
-
 
 #-----------------------------------------------------------------------------
 # Main objects
@@ -68,12 +65,10 @@ class Representable(object):
                 'Object %r does not know how to represent itself in basis: %r' % (self, basis)
             )
 
-class StateBase(Expr, Representable):
+class StateBase(QuantumBasic, Representable):
 
     # Slots are for instance variables that can always be computed dynamically
     # from self.args, but that we don't want users to have to pass each time.
-    __slots__ = ['hilbert_space']
-
     # Class level attributes that are the same for all instances go here.
     # Because the hilbert_space can change, it can't go here. All instance
     # level things must go in self.args.
@@ -82,8 +77,6 @@ class StateBase(Expr, Representable):
     # I am a little worried that the basis set might need to be in self.args.
     # Or maybe this needs to be a slot if it can be computed from self.args.
     basis_set = None
-
-    _op_priority = 100.0
 
     @property
     def name(self):
@@ -104,53 +97,12 @@ class StateBase(Expr, Representable):
     def evaluates(self):
         return self.__class__
 
-    def _sympyrepr(self, printer, *args):
-        return '%s(%s)' % (self.__class__.__name__, self._print_name(printer, *args))
-
-    def _sympystr(self, printer, *args):
-        return '%s%s%s' % (self.lbracket, self._print_name(printer, *args), self.rbracket)
-
-    def _pretty(self, printer, *args):
-        from sympy.printing.pretty.stringpict import prettyForm
-        pform = self._print_name_pretty(printer, *args)
-        pform = prettyForm(*pform.left(prettyForm(self.lbracket)))
-        pform = prettyForm(*pform.right(prettyForm(self.rbracket)))
-        return pform
-
     def _print_name(self, printer, *args):
         return printer._print(self.name, *args)
 
     def _print_name_pretty(self, printer, *args):
         pform = printer._print(self.name, *args)
         return pform
-
-    @call_highest_priority('__rmul__')
-    def __mul__(self, other):
-        from sympy.physics.qmul import QMul
-        return QMul(self, other)
-
-    @call_highest_priority('__mul__')
-    def __rmul__(self, other):
-        from sympy.physics.qmul import QMul
-        return QMul(other, self)
-
-    @call_highest_priority('__radd__')
-    def __add__(self, other):
-        from sympy.physics.qadd import QAdd
-        return QAdd(self, other)
-
-    @call_highest_priority('__add__')
-    def __radd__(self, other):
-        from sympy.physics.qadd import QAdd
-        return QAdd(other, self)
-
-    @call_highest_priority('__rpow__')
-    def __pow__(self, other):
-        raise NotImplementedError("Can't do Tensor Products of States Yet")
-
-    @call_highest_priority('__pow__')
-    def __rpow__(self, other):
-        raise QuantumError("Can't raise %s to a State" % (other.__class__.__name__,))
 
     def _sympyrepr(self, printer, *args):
         return '%s(%s)' % (self.__class__.__name__, self._print_name(printer, *args))
@@ -182,7 +134,6 @@ class BraBase(StateBase):
     @property
     def dual(self):
         return KetBase(*self.args)
-
 
 class State(StateBase):
     """
@@ -281,7 +232,7 @@ class BasisSet(Basic):
         """Return the unity operator for this basis set."""
         raise NotImplementedError('Not implemented')
 
-class Operator(Expr, Representable):
+class Operator(QuantumBasic, Representable):
     """
     Base class for non-commuting Quantum operators.
 
@@ -291,9 +242,6 @@ class Operator(Expr, Representable):
     >>> print A
     A
     """
-    _op_priority = 100.0
-
-    __slots__ = ['hilbert_space']
 
     def __new__(cls, name):
         name = sympify(name)
@@ -313,36 +261,6 @@ class Operator(Expr, Representable):
     def evaluates(self):
         return self.__class__
 
-    @call_highest_priority('__rmul__')
-    def __mul__(self, other):
-        from sympy.physics.qmul import QMul
-        return QMul(self, other)
-
-    @call_highest_priority('__mul__')
-    def __rmul__(self, other):
-        from sympy.physics.qmul import QMul
-        return QMul(other, self)
-
-    @call_highest_priority('__radd__')
-    def __add__(self, other):
-        from sympy.physics.qadd import QAdd
-        return QAdd(self, other)
-
-    @call_highest_priority('__add__')
-    def __radd__(self, other):
-        from sympy.physics.qadd import QAdd
-        return QAdd(other, self)
-
-    @call_highest_priority('__rpow__')
-    def __pow__(self, other):
-        from sympy.physics.qpow import QPow
-        return QPow(self, other)
-
-    @call_highest_priority('__pow__')
-    def __rpow__(self, other):
-        from sympy.physics.qpow import QPow
-        return QPow(other, self)
-
     def doit(self,**kw_args):
         return self
 
@@ -355,7 +273,7 @@ class Operator(Expr, Representable):
     def _pretty(self, printer, *args):
         return printer._print(self.name, *args)
 
-class InnerProduct(Expr):
+class InnerProduct(QuantumBasic):
     """
     An unevaluated inner product between a Bra and Ket.
     """
@@ -404,13 +322,10 @@ class InnerProduct(Expr):
     def _pretty(self, printer, *args):
         return self.bra._pretty(printer, *args)*self.ket._pretty(printer, *args)
 
-
 class OuterProduct(Operator):
     """
     An unevaluated outer product between a Ket and Bra.
     """
-
-    __slots__ = ['hilbert_space']
 
     def __new__(cls, ket, bra):
         if not (ket and bra):
@@ -455,15 +370,14 @@ class OuterProduct(Operator):
     def _pretty(self, printer, *args):
         return self.ket._pretty(printer, *args)*self.bra._pretty(printer, *args)
 
-
-class Dagger(Expr):
+class Dagger(QuantumBasic):
     """
     General hermitian conjugate operation.
     """
 
     def __new__(cls, arg):
         if isinstance(arg, Matrix):
-            return cls.eval(arg)
+            return arg.H
         arg = sympify(arg)
         r = cls.eval(arg)
         if isinstance(r, Expr):
@@ -480,29 +394,25 @@ class Dagger(Expr):
         """
         Evaluates the Dagger instance.
         """
-        try:
-            d = arg._eval_dagger()
-        except:
-            if isinstance(arg, Expr):
-                if arg.is_Add:
-                    return Add(*tuple(map(Dagger, arg.args)))
-                if arg.is_Mul:
-                    return Mul(*tuple(map(Dagger, reversed(arg.args))))
-                if arg.is_Number:
-                    return arg
-                if arg.is_Pow:
-                    return Pow(Dagger(arg.args[0]), Dagger(arg.args[1]))
-                if arg == I:
-                    return -arg
-            elif isinstance(arg, Matrix):
-                arg = arg.T
-                for i in range(arg.rows*arg.cols):
-                    arg[i] = Dagger(arg[i])
-                return arg
-            else:
-                return None
+        if hasattr(arg, '_eval_dagger'):
+            return arg._eval_dagger()
+        elif not isinstance(arg, (InnerProduct, OuterProduct, Operator, StateBase)):
+            return arg.conjugate()
+        elif isinstance(arg, Matrix):
+            arg = arg.T
+            for i in range(arg.rows*arg.cols):
+                arg[i] = Dagger(arg[i])
+            return arg
         else:
-            return d
+            return None
+
+    @property
+    def evaluates(self):
+        return self.args[0].evaluates
+
+    @property
+    def hilbert_space(self):
+        return self.args[0].hilbert_space
 
     def _eval_subs(self, old, new):
         r = Dagger(self.args[0].subs(old, new))
@@ -522,7 +432,6 @@ class Dagger(Expr):
         pform = printer._print(self.args[0], *args)
         pform = pform**prettyForm(u'\u2020')
         return pform
-
 
 class KroneckerDelta(Function):
     """
@@ -676,91 +585,6 @@ def represent(expr, basis, **options):
     for arg in reversed(expr.args):
         result = represent(arg, basis, **options)*result
     return result
-
-def _evaluate_type(sympy_binop):
-    #determines if a Mul or Add evaluates to a Ket, Bra, Operator, or Number
-    #Willbe Used in _validate_add; this is absurd, We should just have an extra thing in Mul that says "I am a ket"
-    #Mul is not extendable at all. When you can't implement Matrix operations in your data and bin-op model, your model is wrong.
-    #But I digress
-    if isinstance(sympy_binop, Add):
-        return _evaluate_type(sympy_binop.args[0])
-    elif isinstance(sympy_binop, Mul):
-        result = [Number, '']
-        for item in sympy_binop.args:
-            if issubclass(result[0], Number):
-                result = [item.__class__, ''] #FIXME 
-            elif issubclass(result[0], Operator):
-                if isinstance(item, (Number, Operator)):
-                    result = [Operator, '']
-                elif isinstance(item, KetBase):
-                    return [State, 'ket']
-                else:
-                    raise QuantumError("Can't multiply %s and %s" % (result.__name__, item.__class__.__name__))
-            elif issubclass(result[0], State):
-                if result[1] == 'ket':
-                    if isinstance(item, BraBase):
-                        return [Number, '']
-                    elif isinstance(item, Number):
-                        return 
-                else:
-                    pass                
-    #base case
-    elif isinstance(sympy_binop, (OuterProduct, Operator)):
-        return Operator
-    elif isinstance(sympy_binop, (InnerProduct, Number)):
-        return Number  
-    elif isinstance(sympy_binop, State):
-        return sympy_binop.__class__
-    else:
-        raise QuantumError("Don't Know how you got here. Contact your system administrator?")
-
-def _validate_add(expr1, expr2):
-    if isinstance(expr1, Add):
-        _validate_add(expr1.args[-1], expr2)
-        return 
-    elif isinstance(expr2, Add):
-        _validate_add(expr1, expr2.args[0])
-        return
-    else:
-        if isinstance(expr1, StateBase) and isinstance(expr2, StateBase):
-            if expr1.__class__ == expr2.__class__:
-                return
-        elif isinstance(expr1, Operator) and isinstance(expr2, Operator):
-            return
-        elif expr1 == 0 or expr2 == 0:
-            return
-        else:
-            raise QuantumError("Can't add %s and %s" % (expr1.__class__.__name__, expr2.__class__.__name__))
-
-def _validate_mul(expr1, expr2):
-    if isinstance(expr1, Mul):
-        _validate_mul(expr1.args[-1], expr2)
-    elif isinstance(expr2, Mul):
-        _validate_mul(expr1, expr2.args[0])
-    elif isinstance(expr1, Add):
-        _validate_mul(expr1.args[-1], expr2)
-    elif isinstance(expr2, Add):
-        _validate_mul(expr1, expr2.args[-1])
-    elif isinstance(expr1, State) and isinstance(expr2, StateBase):
-        if isinstance(expr1, Ket) and isinstance(expr2, KetBase):
-            raise NotImplementedError("TensorProducts of ket%ket not implemented")
-        if isinstance(expr1, Bra) and isinstance(expr2, BraBase):
-            raise NotImplementedError("TensorProducts of bra%bra not implemented")
-    elif isinstance(expr1, (Operator, OuterProduct)) and isinstance(expr2, BraBase):
-        raise QuantumError('(Operator or OuterProduct)*Bra is invalid.\n(Try using parentheses to form inner and outer products)')
-    elif isinstance(expr2, (Operator, OuterProduct)) and isinstance(expr1, Ket):
-        raise QuantumError('Ket*(Operator or OuterProduct) is invalid.\n(Try using parentheses to form inner and outer products)')
-
-def _qmul(expr1, expr2):
-    """
-    Check to see if arg1 or arg2 can combine to be a valid Mul.
-    """
-    if isinstance(expr1, Bra) and isinstance(expr2, Ket):
-        return InnerProduct(expr1, expr2)
-    elif isinstance(expr1, Ket) and isinstance(expr2, Bra):
-        return OuterProduct(expr1, expr2)
-    else:
-        return Mul(expr1, expr2)
 
 def split_product(expr):
     """

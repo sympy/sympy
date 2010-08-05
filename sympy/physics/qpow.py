@@ -4,13 +4,13 @@ from sympy.physics.qmul import QMul
 from sympy.physics.qadd import QAdd
 from sympy.physics.qoperations import QAssocOp
 from sympy.core.decorators import call_highest_priority
+from sympy.physics.quantumbasic import QuantumBasic
+from sympy.physics.quantumbasic import QuantumError
 
-class QPow(Expr):
+class QPow(QuantumBasic):
     """
     A class for the operator: ** (exponent) for quantum objects.
     """
-
-    __slots__ = ['evaluates', 'hilbert_space']
 
     def __new__(cls, base, exp):
         base = sympify(base)
@@ -20,16 +20,16 @@ class QPow(Expr):
     @classmethod
     def _rules_QPow(cls, base, exp):
         from sympy.physics.quantum import StateBase, Operator, OuterProduct, KetBase, BraBase, OuterProduct, InnerProduct
-        if not isinstance(base, (Operator, OuterProduct, StateBase, QAssocOp, QPow)):
-            if not isinstance(exp,(Operator, OuterProduct, StateBase, QAssocOp, QPow)):
+        if not isinstance(base, QuantumBasic):
+            if not isinstance(exp, QuantumBasic):
                 return Pow(base, exp)
-            elif issubclass(exp.evaluates, (Operator, OuterProduct, InnerProduct)):
+            elif issubclass(exp.evaluates, QuantumBasic):
                 ret = Expr.__new__(cls, base, exp)
                 ret.hilbert_space = exp.hilbert_space
                 ret.evaluates = exp.evaluates 
                 return ret                        
-        elif not isinstance(exp,(Operator, OuterProduct, StateBase, QAssocOp, QPow)):
-            if issubclass(base.evaluates, (Operator, OuterProduct, InnerProduct)):
+        elif not isinstance(exp, QuantumBasic):
+            if issubclass(base.evaluates, QuantumBasic):
                 if exp == S.Zero:
                     return S.One
                 elif exp == S.One:
@@ -71,33 +71,6 @@ class QPow(Expr):
     def exp(self):
         return self.args[1]
 
-    @call_highest_priority('__rmul__')
-    def __mul__(self, other):
-        from sympy.physics.qmul import QMul
-        return QMul(self, other)
-
-    @call_highest_priority('__mul__')
-    def __rmul__(self, other):
-        from sympy.physics.qmul import QMul
-        return QMul(other, self)
-
-    @call_highest_priority('__radd__')
-    def __add__(self, other):
-        from sympy.physics.qadd import QAdd    
-        return QAdd(self, other)
-
-    @call_highest_priority('__add__')
-    def __radd__(self, other):
-        from sympy.physics.qadd import QAdd       
-        return QAdd(other, self)
-
-    @call_highest_priority('__rpow__')
-    def __pow__(self, other):
-        from sympy.physics.qpow import QPow
-        return QPow(self, other)
-
-    @call_highest_priority('__pow__')
-    def __rpow__(self, other):
-        from sympy.physics.qpow import QPow
-        return QPow(other, self)
+    def _eval_dagger(self):
+        return QPow(Dagger(self.base), Dagger(self.exp))
 
