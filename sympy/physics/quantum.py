@@ -136,15 +136,13 @@ class StateBase(Expr, Representable):
 
     @call_highest_priority('__radd__')
     def __add__(self, other):
-        compare_hilbert(self, other)
-        _validate_add(self, other)
-        return Add(self, other)
+        from sympy.physics.qadd import QAdd
+        return QAdd(self, other)
 
     @call_highest_priority('__add__')
     def __radd__(self, other):
-        compare_hilbert(other, self)
-        _validate_add(other, self)
-        return Add(other, self)
+        from sympy.physics.qadd import QAdd
+        return QAdd(other, self)
 
     @call_highest_priority('__rpow__')
     def __pow__(self, other):
@@ -337,13 +335,13 @@ class Operator(Expr, Representable):
 
     @call_highest_priority('__rpow__')
     def __pow__(self, other):
-        #if not isinstance(other, (Mul, Add, Pow, Number, Symbol)):
-        return Pow(self, other)
+        from sympy.physics.qpow import QPow
+        return QPow(self, other)
 
     @call_highest_priority('__pow__')
     def __rpow__(self, other):
-        #??operator**operator??
-        return Pow(other, self)
+        from sympy.physics.qpow import QPow
+        return QPow(other, self)
 
     def doit(self,**kw_args):
         return self
@@ -407,7 +405,7 @@ class InnerProduct(Expr):
         return self.bra._pretty(printer, *args)*self.ket._pretty(printer, *args)
 
 
-class OuterProduct(Expr):
+class OuterProduct(Operator):
     """
     An unevaluated outer product between a Ket and Bra.
     """

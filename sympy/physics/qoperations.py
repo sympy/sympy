@@ -50,10 +50,12 @@ class QAssocOp(Expr):
 
     @call_highest_priority('__rpow__')
     def __pow__(self, other):
+        from sympy.physics.qpow import QPow
         return QPow(self, other)
 
     @call_highest_priority('__pow__')
     def __rpow__(self, other):
+        from sympy.physics.qpow import QPow
         return QPow(other, self)
 
     def _sympystr(self, printer, *args):
