@@ -12,7 +12,7 @@ from sympy.functions import gamma, exp, sqrt, log
 
 from sympy.simplify.cse_main import cse
 
-from sympy.polys import Poly, reduced, cancel, factor, GeneratorsNeeded
+from sympy.polys import Poly, reduced, cancel, factor, ComputationFailed
 
 import sympy.mpmath as mpmath
 
@@ -817,7 +817,7 @@ def ratsimp(expr):
     f, g = cancel(expr).as_numer_denom()
     try:
         Q, r = reduced(f, [g], field=True, expand=False)
-    except GeneratorsNeeded:
+    except ComputationFailed:
         return f/g
 
     return Add(*Q) + cancel(r/g)
