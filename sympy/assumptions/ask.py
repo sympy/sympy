@@ -62,7 +62,7 @@ def eval_predicate(predicate, expr, assumptions=True):
     return res
 
 
-def ask(expr, key, assumptions=True):
+def ask(expr, key, assumptions=True, context=global_assumptions):
     """
     Method for inferring properties about objects.
 
@@ -95,7 +95,7 @@ def ask(expr, key, assumptions=True):
     expr = sympify(expr)
     if type(key) is not Predicate:
         key = getattr(Q, str(key))
-    assumptions = And(assumptions, And(*global_assumptions))
+    assumptions = And(assumptions, And(*context))
 
     # direct resolution method, no logic
     res = eval_predicate(key, expr, assumptions)
