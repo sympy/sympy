@@ -1,16 +1,20 @@
-from sympy import Expr, S
+from sympy import Expr, Pow, S, Number, Symbol, sympify
 from sympy.physics.quantum import *
 
-def _rules_QPow(base, exp)
-    if issubclass(base, Operator) and issubclass(exp, (InnerProduct, Number, Symbol)):
+def _rules_QPow(base, exp):
+    if issubclass(base, Operator):
         return base
-    if issubclass(base, (InnerProduct, Number, Symbol)) and issubclass(exp, Operator):
+    elif issubclass(exp, Operator):
         return exp
-    if issubclass(base, Symbol) and issubclass(exp, (Symbol, Number)):
-        return base
-    if issubclass(base, Number) and issubclass(exp, (Symbol, Number)):
-        return base
-    return
+    else:
+        raise NotImplementedError("This object currently doesn't know what it evaluates to.")
+
+
+class QMul(Expr):
+    pass
+
+class QAdd(Expr):
+    pass
 
 class QPow(Expr):
     """
@@ -18,10 +22,12 @@ class QPow(Expr):
     """
 
     def __new__(cls, base, exp):
+        base = sympify(base)
+        exp = sympify(exp)
         qpow = cls.eval(base, exp)
         if isinstance(qpow, Expr):
             return qpow
-        return Expr.__new__(cls, base, exp, **{'commutative': False})
+        return Expr.__new__(cls, *qpow, **{'commutative': False})
 
     @classmethod
     def eval(cls, base, exp):
@@ -37,23 +43,23 @@ class QPow(Expr):
             raise NotImplementedError("Expressions that are effectively Operators cannot be raised to other Operators.")
         elif exp == S.Zero:
             return S.One
-        elif exp == S.One
+        elif exp == S.One:
             return base
         elif isinstance(base, (Number, Symbol)) and isinstance(exp, (Number, Symbol)):
             return Pow(base, exp)
         else:
-            return QPow(base, exp)
+            return base, exp
 
     @property
     def eval_to(self):
-        if isinstance(base, (QMul, QAdd, QPow)) and isinstance(exp, (QMul, QAdd, QPow)):
-            _rules_QPow(self.base.eval_to, self.exp.eval_to)
-        if isinstance(base, (QMul, QAdd, QPow)):
-            _rules_QPow(self.base.eval_to, self.exp.__class__)
-        if isinstance(exp, (QMul, QAdd, QPow)):
-            _rules_QPow(self.base.__class__, self.exp.eval_to)
+        if isinstance(self.base, (QMul, QAdd, QPow)) and isinstance(self.exp, (QMul, QAdd, QPow)):
+            return _rules_QPow(self.base.eval_to, self.exp.eval_to)
+        elif isinstance(self.base, (QMul, QAdd, QPow)):
+            return _rules_QPow(self.base.eval_to, self.exp.__class__)
+        elif isinstance(self.exp, (QMul, QAdd, QPow)):
+            return _rules_QPow(self.base.__class__, self.exp.eval_to)
         else:
-            _rules_QPow(self.base.__class__, self.exp.__class__)
+            return _rules_QPow(self.base.__class__, self.exp.__class__)
 
     @property
     def base(self):
