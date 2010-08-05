@@ -1,15 +1,12 @@
 """Definitions of common exceptions for `polys` module. """
 
-class OperationNotSupported(Exception):
+class BasePolynomialError(Exception):
+    """Base class for polynomial related exceptions. """
 
-    def __init__(self, poly, func):
-        self.poly = poly
-        self.func = func
+    def new(self, *args):
+        raise NotImplementedError("abstract base class")
 
-    def __str__(self): # pragma: no cover
-        return "`%s` operation not supported by %s representation" % (self.func, self.poly.rep.__class__.__name__)
-
-class ExactQuotientFailed(Exception):
+class ExactQuotientFailed(BasePolynomialError):
 
     def __init__(self, f, g, dom=None):
         self.f, self.g, self.dom = f, g, dom
@@ -21,6 +18,18 @@ class ExactQuotientFailed(Exception):
             return "%s does not divide %s" % (sstr(self.g), sstr(self.f))
         else:
             return "%s does not divide %s in %s" % (sstr(self.g), sstr(self.f), sstr(self.dom))
+
+    def new(self, f, g):
+        return self.__class__(f, g, self.dom)
+
+class OperationNotSupported(Exception):
+
+    def __init__(self, poly, func):
+        self.poly = poly
+        self.func = func
+
+    def __str__(self): # pragma: no cover
+        return "`%s` operation not supported by %s representation" % (self.func, self.poly.rep.__class__.__name__)
 
 class HeuristicGCDFailed(Exception):
     pass
