@@ -584,20 +584,28 @@ def dmp_ground_monic(f, u, K):
     else:
         return dmp_quo_ground(f, lc, u, K)
 
-def dup_rr_content(f, K):
+def dup_content(f, K):
     """
-    Returns GCD of coefficients over a ring.
+    Compute the GCD of coefficients of ``f`` in ``K[x]``.
 
     Example
     =======
 
-    >>> from sympy.polys.domains import ZZ
-    >>> from sympy.polys.densetools import dup_rr_content
+    >>> from sympy.polys.domains import ZZ, QQ
+    >>> from sympy.polys.densetools import dup_content
 
-    >>> dup_rr_content([ZZ(6), ZZ(8), ZZ(12)], ZZ)
+    >>> f = ZZ.map([6, 8, 12])
+    >>> g = QQ.map([6, 8, 12])
+
+    >>> dup_content(f, ZZ)
     2
+    >>> dup_content(g, QQ)
+    1/1
 
     """
+    if not f:
+        return K.zero
+
     cont = K.zero
 
     for c in f:
@@ -608,244 +616,89 @@ def dup_rr_content(f, K):
 
     return cont
 
-def dup_ff_content(f, K):
+@cythonized("u,v")
+def dmp_ground_content(f, u, K):
     """
-    Returns GCD of coefficients over a field.
+    Compute the GCD of coefficients of ``f`` in ``K[X]``.
 
     Example
     =======
 
-    >>> from sympy.polys.domains import QQ
-    >>> from sympy.polys.densetools import dup_ff_content
+    >>> from sympy.polys.domains import ZZ, QQ
+    >>> from sympy.polys.densetools import dmp_ground_content
 
-    >>> dup_ff_content([], QQ)
-    0/1
-    >>> dup_ff_content([QQ(1), QQ(1,2), QQ(2,3)], QQ)
+    >>> f = ZZ.map([[2, 6], [4, 12]])
+    >>> g = QQ.map([[2, 6], [4, 12]])
+
+    >>> dmp_ground_content(f, 1, ZZ)
+    2
+    >>> dmp_ground_content(g, 1, QQ)
     1/1
 
     """
-    if not f:
-        return K.zero
-    else:
-        return K.one
-
-def dup_content(f, K):
-    """
-    Returns GCD of coefficients in `K[x]`.
-
-    Example
-    =======
-
-    >>> from sympy.polys.domains import ZZ
-    >>> from sympy.polys.densetools import dup_content
-
-    >>> dup_content([ZZ(6), ZZ(8), ZZ(12)], ZZ)
-    2
-
-    """
-    if K.has_Field or not K.is_Exact:
-        return dup_ff_content(f, K)
-    else:
-        return dup_rr_content(f, K)
-
-@cythonized("u,v")
-def dmp_rr_ground_content(f, u, K):
-    """
-    Returns GCD of coefficients over a ring.
-
-    Example
-    =======
-
-    >>> from sympy.polys.domains import ZZ
-    >>> from sympy.polys.densetools import dmp_rr_ground_content
-
-    >>> f = ZZ.map([[2, 6], [4, 12]])
-
-    >>> dmp_rr_ground_content(f, 1, ZZ)
-    2
-
-    """
     if not u:
-        return dup_rr_content(f, K)
+        return dup_content(f, K)
+
+    if dmp_zero_p(f, u):
+        return K.zero
 
     cont, v = K.zero, u-1
 
     for c in f:
-        gc = dmp_rr_ground_content(c, v, K)
-        cont = K.gcd(cont, gc)
+        cont = K.gcd(cont, dmp_ground_content(c, v, K))
 
         if K.is_one(cont):
             break
 
     return cont
 
-@cythonized("u")
-def dmp_ff_ground_content(f, u, K):
-    """
-    Returns GCD of coefficients over a field.
-
-    Example
-    =======
-
-    >>> from sympy.polys.domains import QQ
-    >>> from sympy.polys.densetools import dmp_ff_ground_content
-
-    >>> dmp_ff_ground_content([[]], 1, QQ)
-    0/1
-    >>> dmp_ff_ground_content([[QQ(2), QQ(1,2)], [QQ(4)]], 1, QQ)
-    1/1
-
-    """
-    if dmp_zero_p(f, u):
-        return K.zero
-    else:
-        return K.one
-
-@cythonized("u")
-def dmp_ground_content(f, u, K):
-    """
-    Returns GCD of coefficients in ``K[X]``.
-
-    Example
-    =======
-
-    >>> from sympy.polys.domains import ZZ
-    >>> from sympy.polys.densetools import dmp_ground_content
-
-    >>> f = ZZ.map([[2, 6], [4, 12]])
-
-    >>> dmp_ground_content(f, 1, ZZ)
-    2
-
-    """
-    if not u:
-        return dup_content(f, K)
-
-    if K.has_Field or not K.is_Exact:
-        return dmp_ff_ground_content(f, u, K)
-    else:
-        return dmp_rr_ground_content(f, u, K)
-
-def dup_rr_primitive(f, K):
-    """
-    Returns content and a primitive polynomial over a ring.
-
-    Example
-    =======
-
-    >>> from sympy.polys.domains import ZZ
-    >>> from sympy.polys.densetools import dup_rr_primitive
-
-    >>> dup_rr_primitive([ZZ(6), ZZ(8), ZZ(12)], ZZ)
-    (2, [3, 4, 6])
-
-    """
-    cont = dup_content(f, K)
-
-    if not f or K.is_one(cont):
-        return cont, f
-    else:
-        return cont, dup_exquo_ground(f, cont, K)
-
-def dup_ff_primitive(f, K):
-    """
-    Returns content and a primitive polynomial over a field.
-
-    Example
-    =======
-
-    >>> from sympy.polys.domains import QQ
-    >>> from sympy.polys.densetools import dup_ff_primitive
-
-    >>> dup_ff_primitive([QQ(1), QQ(1,2), QQ(2,3)], QQ)
-    (1/1, [1/1, 1/2, 2/3])
-
-    """
-    if not f:
-        return K.zero, f
-    else:
-        return K.one, f
-
 def dup_primitive(f, K):
-    """
-    Returns content and a primitive polynomial in ``K[x]``.
-
-    Example
-    =======
-
-    >>> from sympy.polys.domains import ZZ
-    >>> from sympy.polys.densetools import dup_primitive
-
-    >>> dup_primitive([ZZ(2), ZZ(6), ZZ(12)], ZZ)
-    (2, [1, 3, 6])
-
-    """
-    if K.has_Field or not K.is_Exact:
-        return dup_ff_primitive(f, K)
-    else:
-        return dup_rr_primitive(f, K)
-
-@cythonized("u")
-def dmp_rr_ground_primitive(f, u, K):
-    """
-    Compute content and the primitive from of ``f`` over a ring.
-
-    Example
-    =======
-
-    >>> from sympy.polys.domains import ZZ
-    >>> from sympy.polys.densetools import dmp_rr_ground_primitive
-
-    >>> f = ZZ.map([[2, 6], [4, 12]])
-
-    >>> dmp_rr_ground_primitive(f, 1, ZZ)
-    (2, [[1, 3], [2, 6]])
-
-    """
-    cont = dmp_ground_content(f, u, K)
-
-    if K.is_one(cont):
-        return cont, f
-    else:
-        return cont, dmp_exquo_ground(f, cont, u, K)
-
-@cythonized("u")
-def dmp_ff_ground_primitive(f, u, K):
-    """
-    Compute content and the primitive from of ``f`` over a field.
-
-    Example
-    =======
-
-    >>> from sympy.polys.domains import QQ
-    >>> from sympy.polys.densetools import dmp_ff_ground_primitive
-
-    >>> f = [[QQ(2), QQ(1,2)], [QQ(4)]]
-
-    >>> dmp_ff_ground_primitive(f, 1, QQ)
-    (1/1, [[2/1, 1/2], [4/1]])
-
-    """
-    if dmp_zero_p(f, u):
-        return K.zero, f
-    else:
-        return K.one, f
-
-@cythonized("u")
-def dmp_ground_primitive(f, u, K):
     """
     Compute content and the primitive form of ``f`` in ``K[x]``.
 
     Example
     =======
 
-    >>> from sympy.polys.domains import ZZ
+    >>> from sympy.polys.domains import ZZ, QQ
+    >>> from sympy.polys.densetools import dup_primitive
+
+    >>> f = ZZ.map([6, 8, 12])
+    >>> g = QQ.map([6, 8, 12])
+
+    >>> dup_primitive(f, ZZ)
+    (2, [3, 4, 6])
+    >>> dup_primitive(g, QQ)
+    (1/1, [6/1, 8/1, 12/1])
+
+    """
+    if not f:
+        return K.zero, f
+
+    cont = dup_content(f, K)
+
+    if K.is_one(cont):
+        return cont, f
+    else:
+        return cont, dup_exquo_ground(f, cont, K)
+
+@cythonized("u")
+def dmp_ground_primitive(f, u, K):
+    """
+    Compute content and the primitive form of ``f`` in ``K[X]``.
+
+    Example
+    =======
+
+    >>> from sympy.polys.domains import ZZ, QQ
     >>> from sympy.polys.densetools import dmp_ground_primitive
 
     >>> f = ZZ.map([[2, 6], [4, 12]])
+    >>> g = QQ.map([[2, 6], [4, 12]])
 
     >>> dmp_ground_primitive(f, 1, ZZ)
     (2, [[1, 3], [2, 6]])
+    >>> dmp_ground_primitive(g, 1, QQ)
+    (1/1, [[2/1, 6/1], [4/1, 12/1]])
 
     """
     if not u:
@@ -854,10 +707,12 @@ def dmp_ground_primitive(f, u, K):
     if dmp_zero_p(f, u):
         return K.zero, f
 
-    if K.has_Field or not K.is_Exact:
-        return dmp_ff_ground_primitive(f, u, K)
+    cont = dmp_ground_content(f, u, K)
+
+    if K.is_one(cont):
+        return cont, f
     else:
-        return dmp_rr_ground_primitive(f, u, K)
+        return cont, dmp_exquo_ground(f, cont, u, K)
 
 def dup_extract(f, g, K):
     """
