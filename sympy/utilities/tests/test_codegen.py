@@ -23,6 +23,11 @@ def get_string(dump_fn, routines, prefix="file", header=False, empty=False):
     output.close()
     return source
 
+def test_Routine_argument_order():
+    x, y, z = symbols('x y z')
+    expr = (x+y)*z
+    raises(CodeGenError, 'Routine("test", expr, argument_sequence=[z, x])')
+
 def test_empty_c_code():
     code_gen = CCodeGen()
     source = get_string(code_gen.dump_c, [])
@@ -60,6 +65,21 @@ def test_simple_c_code():
         "#include \"file.h\"\n"
         "#include <math.h>\n"
         "double test(double x, double y, double z) {\n"
+        "   return z*(x + y);\n"
+        "}\n"
+    )
+    assert source == expected
+
+def test_c_code_argument_order():
+    x,y,z = symbols('xyz')
+    expr = (x+y)*z
+    routine = Routine("test", expr, argument_sequence=[z, x, y])
+    code_gen = CCodeGen()
+    source = get_string(code_gen.dump_c, [routine])
+    expected = (
+        "#include \"file.h\"\n"
+        "#include <math.h>\n"
+        "double test(double z, double x, double y) {\n"
         "   return z*(x + y);\n"
         "}\n"
     )
@@ -389,6 +409,23 @@ def test_simple_f_code():
             "REAL*8, intent(in) :: x\n"
             "REAL*8, intent(in) :: y\n"
             "REAL*8, intent(in) :: z\n"
+            "test = z*(x + y)\n"
+            "end function\n"
+    )
+    assert source == expected
+
+def test_f_code_argument_order():
+    x,y,z = symbols('xyz')
+    expr = (x+y)*z
+    routine = Routine("test", expr, argument_sequence=[z, x, y])
+    code_gen = FCodeGen()
+    source = get_string(code_gen.dump_f95, [routine])
+    expected = (
+            "REAL*8 function test(z, x, y)\n"
+            "implicit none\n"
+            "REAL*8, intent(in) :: z\n"
+            "REAL*8, intent(in) :: x\n"
+            "REAL*8, intent(in) :: y\n"
             "test = z*(x + y)\n"
             "end function\n"
     )

@@ -109,7 +109,7 @@ class Routine(object):
        values are possible in Python, but not in C or Fortran. Another example:
        Fortran and Python support complex numbers, while C does not.
     """
-    def __init__(self, name, expr):
+    def __init__(self, name, expr, argument_sequence=None):
         """Initialize a Routine instance.
 
            Arguments:
@@ -118,6 +118,11 @@ class Routine(object):
              expr  --  The sympy expression that the Routine instance will represent.
                        If given a list or tuple of expressions, the routine
                        will be considered to have multiple return values.
+             argument_sequence  --  optional list/tuple containing arguments for the
+                                    routine in a preferred order.  If omitted, arguments
+                                    will be ordered alphabetically, but with
+                                    all input aguments first, and then output
+                                    or in-out arguments.
 
             A decision about whether to use output arguments or return values,
             is made depending on the mathematical expressions.  For an expression
@@ -175,7 +180,7 @@ class Routine(object):
         for array in expressions.atoms(Indexed):
             array_symbols[array.stem.label] = array
 
-        for symbol in sorted(symbols):
+        for symbol in sorted(symbols, key=str):
             if symbol in array_symbols:
                 dims = []
                 array = array_symbols[symbol]
@@ -190,7 +195,16 @@ class Routine(object):
 
             arg_list.append(InputArgument(symbol, **metadata))
 
+        output_args.sort(key=lambda x:str(x.name))
         arg_list.extend(output_args)
+
+        if argument_sequence is not None:
+            missing = filter(lambda x: x.name not in argument_sequence, arg_list)
+            if missing:
+                raise CodeGenError("Argument list didn't specify: %s" %
+                        ", ".join([str(m) for m in missing]))
+            arg_pos_dict = dict([(arg, n) for (n, arg) in enumerate(argument_sequence)])
+            arg_list.sort(key=lambda x: arg_pos_dict[x.name])
 
         self.name = name
         self.arguments = arg_list
@@ -766,7 +780,8 @@ def get_code_generator(language, project):
 #
 
 
-def codegen(name_expr, language, prefix, project="project", to_files=False, header=True, empty=True):
+def codegen(name_expr, language, prefix, project="project", to_files=False, header=True, empty=True,
+        argument_sequence=None):
     """Write source code for the given expressions in the given language.
 
        Mandatory Arguments:
@@ -792,6 +807,13 @@ def codegen(name_expr, language, prefix, project="project", to_files=False, head
                      [DEFAULT=True]
          empty  --  When True, empty lines are used to structure the code.
                     [DEFAULT=True]
+         argument_sequence  --  sequence of arguments for the routine in a
+                                preferred order.  An CodeGenError is raised
+                                if arguments are missing, but unused arguments
+                                are silently ignored.  If omitted, arguments
+                                will be ordered alphabetically, but with all
+                                input aguments first, and then output or in-out
+                                arguments.
 
        >>> from sympy import symbols
        >>> from sympy.utilities.codegen import codegen
@@ -827,7 +849,7 @@ def codegen(name_expr, language, prefix, project="project", to_files=False, head
         name_expr = [name_expr]
 
     for name, expr in name_expr:
-        routines.append(Routine(name, expr))
+        routines.append(Routine(name, expr, argument_sequence))
 
     # Write the code.
     return code_gen.write(routines, prefix, to_files, header, empty)
