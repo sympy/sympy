@@ -112,7 +112,7 @@ class QAdd(QAssocOp):
                 newseq.append(s)
             # c*s
             else:
-                if s.is_Mul:
+                if isinstance(s, QMul):
                     # Mul, already keeps its arguments in perfect order.
                     # so we can simply put c in slot0 and go the fast way.
                     cs = s._new_rawargs(*((c,) + s.args))
@@ -177,3 +177,13 @@ class QAdd(QAssocOp):
         for item in self.args:
             newargs.append(Dagger(item))
         return QAdd(*newargs)
+
+    def _eval_expand_mul(self, deep=True, **hints):
+        sargs, terms = self.args, []
+        for term in sargs:
+            if hasattr(term, '_eval_expand_mul'):
+                newterm = term._eval_expand_mul(deep=deep, **hints)
+            else:
+                newterm = term
+            terms.append(newterm)
+        return self.new(*terms)

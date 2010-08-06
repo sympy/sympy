@@ -13,6 +13,7 @@ from sympy.physics.quantumbasic import QuantumError
 
 class QAssocOp(QuantumBasic):
     #Mul and add need Expand Methods as well as Identity methods. I need to figure out how to set what something evaluates
+  
     def __new__(cls, *args, **assumptions):
         if len(args) == 1:
             return sympify(args[0])
@@ -22,8 +23,9 @@ class QAssocOp(QuantumBasic):
     def instantiate(cls, seq):
         #determine if this will work flatten needs to flattening (pull out non quantum parts as they belong to an abelian group
         rules = getattr(cls, '_rules_%s' % cls.__name__)
+        result = seq[0]
         for i in range(len(seq)-1):
-            result = rules(seq[i], seq[i+1])
+            result = rules(result, seq[i+1])
         return result
 
     def __getitem__(self, number):
