@@ -1,5 +1,5 @@
 from sympy.logic.boolalg import to_cnf, eliminate_implications, distribute_and_over_or, \
-    compile_rule, conjuncts, disjuncts, to_int_repr, fuzzy_not, Boolean
+    compile_rule, conjuncts, disjuncts, to_int_repr, fuzzy_not, Boolean, is_cnf
 from sympy import symbols, And, Or, Xor, Not, Nand, Nor, Implies, Equivalent
 from sympy.utilities.pytest import raises, XFAIL
 
@@ -231,3 +231,10 @@ def test_fuzzy_not():
     assert fuzzy_not(False) == True
     assert fuzzy_not(True) == False
     assert fuzzy_not(None) == None
+
+def test_is_cnf():
+    x, y, z = symbols('xyz')
+    assert is_cnf(x | y | z) == True
+    assert is_cnf(x & y & z) == True
+    assert is_cnf((x | y) & z) == True
+    assert is_cnf((x & y) | z) == False

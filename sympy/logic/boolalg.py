@@ -228,9 +228,67 @@ def to_cnf(expr):
         And(Or(D, Not(A)), Or(D, Not(B)))
 
     """
+    # Don't convert unless we have to
+    if is_cnf(expr):
+        return expr
+
     expr = sympify(expr)
     expr = eliminate_implications(expr)
     return distribute_and_over_or(expr)
+
+def is_cnf(expr):
+    """Test whether or not an expression is in conjunctive normal form.
+
+    Examples:
+
+        >>> from sympy.logic.boolalg import is_cnf
+        >>> from sympy.abc import A, B, C
+        >>> is_cnf(A | B | C)
+        True
+        >>> is_cnf(A & B & C)
+        True
+        >>> is_cnf((A & B) | C)
+        False
+
+    """
+    expr = sympify(expr)
+
+    # Special case of a single disjunction
+    if expr.func is Or:
+        for lit in expr.args:
+            if lit.func is Not:
+                if not lit.args[0].is_Atom:
+                    return False
+            else:
+                if not lit.is_Atom:
+                    return False
+        return True
+
+    # Special case of a single negation
+    if expr.func is Not:
+        if not expr.args[0].is_Atom:
+            return False
+
+    if not expr.func is And:
+        return False
+
+    for cls in expr.args:
+        if cls.is_Atom:
+            continue
+        if cls.func is Not:
+            if not cls.args[0].is_Atom:
+                return False
+        elif not cls.func is Or:
+            return False
+        for lit in cls.args:
+            if lit.func is Not:
+                if not lit.args[0].is_Atom:
+                    return False
+            else:
+                if not lit.is_Atom:
+                    return False
+
+    return True
 
 def eliminate_implications(expr):
     """Change >>, <<, and Equivalent into &, |, and ~. That is, return an
