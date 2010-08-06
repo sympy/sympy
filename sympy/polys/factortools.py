@@ -122,7 +122,7 @@ def dup_zz_mignotte_bound(f, K):
     b = abs(dup_LC(f, K))
     n = dup_degree(f)
 
-    return K.sqrt(n+1)*2**n*a*b
+    return K.sqrt(K(n+1))*2**n*a*b
 
 def dmp_zz_mignotte_bound(f, u, K):
     """Mignotte bound for multivariate polynomials in `K[X]`. """
@@ -130,7 +130,7 @@ def dmp_zz_mignotte_bound(f, u, K):
     b = abs(dmp_ground_LC(f, u, K))
     n = sum(dmp_degree_list(f, u))
 
-    return K.sqrt(n+1)*2**n*a*b
+    return K.sqrt(K(n+1))*2**n*a*b
 
 def dup_zz_hensel_step(m, f, g, h, s, t, K):
     """One step in Hensel lifting in `Z[x]`.
@@ -256,7 +256,7 @@ def dup_zz_zassenhaus(f, K):
 
     A = dup_max_norm(f, K)
     b = dup_LC(f, K)
-    B = int(abs(K.sqrt(n+1)*2**n*A*b))
+    B = int(abs(K.sqrt(K(n+1))*2**n*A*b))
     C = int((n+1)**(2*n)*A**(2*n-1))
     gamma = int(ceil(2*log(C, 2)))
     bound = int(2*gamma*log(gamma))
