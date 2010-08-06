@@ -5,6 +5,7 @@ from sympy.physics.qadd import QAdd
 from sympy.physics.qoperations import QAssocOp
 from sympy.core.decorators import call_highest_priority
 from sympy.physics.quantumbasic import QuantumError, QuantumBasic
+from sympy.printing.str import sstr
 
 class QPow(QuantumBasic):
     """
@@ -21,18 +22,17 @@ class QPow(QuantumBasic):
         if not isinstance(base, QuantumBasic):
             if not isinstance(exp, QuantumBasic):
                 return Pow(base, exp)
-            elif issubclass(exp.evaluates, QuantumBasic):
+            elif issubclass(exp.evaluates, (Operator, OuterProduct, InnerProduct)):
                 ret = Expr.__new__(cls, base, exp)
                 ret.hilbert_space = exp.hilbert_space
                 ret.evaluates = exp.evaluates 
                 return ret                        
         elif not isinstance(exp, QuantumBasic):
-            if issubclass(base.evaluates, QuantumBasic):
+            if issubclass(base.evaluates, (Operator, OuterProduct, InnerProduct)):
                 if exp == S.Zero:
                     return S.One
                 elif exp == S.One:
                     return base
-                    
                 ret = Expr.__new__(cls, base, exp)
                 ret.hilbert_space = base.hilbert_space
                 ret.evaluates = base.evaluates 
@@ -73,6 +73,6 @@ class QPow(QuantumBasic):
         return QPow(Dagger(self.base), Dagger(self.exp))
 
     def _sympystr(self, printer, *args):
-        return '(' + sstr(self.base) + '**' + sstr(exp)
+        return '(' + sstr(self.base) + ')' '**' + sstr(self.exp)
     
 

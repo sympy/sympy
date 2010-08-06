@@ -536,7 +536,7 @@ class TensorPowerHilbertSpace(HilbertSpace):
         return "TensorPowerHilbertSpace(%s,%s)" % (printer._print(self.base, *args), printer._print(self.exp, *args))
 
     def _sympystr(self, printer, *args):
-        return "%s**(%s)" % (printer._print(self.base, *args), printer._print(self.exp, *args))
+        return "(%s)**(%s)" % (printer._print(self.base, *args), printer._print(self.exp, *args))
 
 #-----------------------------------------------------------------------------
 # Functions
