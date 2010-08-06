@@ -74,3 +74,7 @@ class QPow(QuantumBasic):
     def _eval_dagger(self):
         return QPow(Dagger(self.base), Dagger(self.exp))
 
+    def _sympystr(self, printer, *args):
+        return '(' + sstr(self.base) + '**' + sstr(exp)
+    
+
