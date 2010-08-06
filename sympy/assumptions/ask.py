@@ -108,12 +108,16 @@ def ask(expr, key, assumptions=True, context=global_assumptions):
     if not expr.is_Atom:
         return
 
+    assumptions = eliminate_assume(assumptions, expr)
+    if assumptions is None:
+        return
+
     # If it's not consistent with the assumptions, then it can't be true
-    if not satisfiable(eliminate_assume(And(known_facts_compiled, assumptions, key), expr)):
+    if not satisfiable(And(known_facts_compiled, assumptions, key)):
         return False
 
     # If the negation is unsatisfiable, it is entailed
-    if not satisfiable(eliminate_assume(And(known_facts_compiled, assumptions, Not(key)), expr)):
+    if not satisfiable(And(known_facts_compiled, assumptions, Not(key))):
         return True
 
     # Otherwise, we don't have enough information to conclude one way or the other
