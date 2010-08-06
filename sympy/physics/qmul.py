@@ -3,6 +3,7 @@ from sympy.physics.quantum import *
 from sympy.core.expr import Expr
 from sympy.core.cache import cacheit
 from sympy.core.mul import Mul
+from sympy.physics.quantumbasic import QuantumError, QuantumBasic
 
 class QMul(QAssocOp):
     binop = '*'
@@ -11,14 +12,14 @@ class QMul(QAssocOp):
     def _rules_QMul(cls, Object1, Object2):
         #built in flatten
         from sympy.physics.quantum import StateBase, Operator, OuterProduct, KetBase, BraBase, OuterProduct, InnerProduct
-        if (not isinstance(Object1, (Operator, OuterProduct, StateBase, QAssocOp))) and (not isinstance(Object2, (Operator, OuterProduct, StateBase, QAssocOp))):
+        if (not isinstance(Object1, QuantumBasic)) and (not isinstance(Object2, QuantumBasic)):
             return Mul(Object1, Object2)
-        elif not isinstance(Object1, (Operator, OuterProduct, StateBase, QAssocOp)):
+        elif not isinstance(Object1, QuantumBasic):
             retVal = cls.QMulflatten(Object1, Object2)
             retVal.hilbert_space = Object2.hilbert_space
             retVal.evaluates = Object2.evaluates 
             return retVal
-        elif not isinstance(Object2, (Operator, OuterProduct, StateBase, QAssocOp)):
+        elif not isinstance(Object2, QuantumBasic):
             retVal = cls.QMulflatten(Object1, Object2)
             retVal.hilbert_space = Object1.hilbert_space
             retVal.evaluates = Object1.evaluates 
@@ -97,4 +98,9 @@ class QMul(QAssocOp):
     @property
     def identity(self):
         return S.One
-                
+
+    def _eval_dagger(self):
+        newargs = []
+        for item in reversed(self.args):
+            newargs.append(Dagger(item))
+        return QMul(*newargs)        
