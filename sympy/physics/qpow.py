@@ -4,8 +4,7 @@ from sympy.physics.qmul import QMul
 from sympy.physics.qadd import QAdd
 from sympy.physics.qoperations import QAssocOp
 from sympy.core.decorators import call_highest_priority
-from sympy.physics.quantumbasic import QuantumBasic
-from sympy.physics.quantumbasic import QuantumError
+from sympy.physics.quantumbasic import QuantumError, QuantumBasic
 
 class QPow(QuantumBasic):
     """
@@ -19,7 +18,6 @@ class QPow(QuantumBasic):
         
     @classmethod
     def _rules_QPow(cls, base, exp):
-        from sympy.physics.quantum import StateBase, Operator, OuterProduct, KetBase, BraBase, OuterProduct, InnerProduct
         if not isinstance(base, QuantumBasic):
             if not isinstance(exp, QuantumBasic):
                 return Pow(base, exp)

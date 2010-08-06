@@ -6,8 +6,7 @@ from sympy.core.sympify import _sympify
 from sympy.physics.hilbert import *
 from sympy.core.numbers import Number
 from sympy.core.symbol import Symbol, symbols
-from sympy.physics.quantumbasic import QuantumBasic
-from sympy.physics.quantumbasic import QuantumError
+from sympy.physics.quantumbasic import QuantumError, QuantumBasic
 
 """
 Questions:

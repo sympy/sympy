@@ -8,7 +8,7 @@ from sympy.physics.quantum import (
     OuterProduct
 )
 
-from sympy import Matrix, I, Symbol, expand
+from sympy import Matrix, I, E, Symbol, expand
 from sympy.physics.quantumbasic import QuantumError, QuantumBasic
 
 def test_Dagger():
@@ -16,7 +16,7 @@ def test_Dagger():
     add = 42+I
     mul = 42*I
     num = 42
-    power1 = 42**I
+    power1 = E**I
     power2 = I**42
     mat = Matrix(((i, add), (mul, num), (power1, power2)))
     A = Bra('A')
@@ -25,9 +25,9 @@ def test_Dagger():
     assert Dagger(add) == 42-I
     assert Dagger(mul) == -42*I
     assert Dagger(num) == 42
-    assert Dagger(power1) == 42**(-I)
+    assert Dagger(power1) == E**(-I)
     assert Dagger(power2) == -1
-    assert Dagger(mat) == Matrix(((-I, -42*I, 42**(-I)), (42-I, 42, -1)))# == Matrix(((Dagger(i), Dagger(mul), Dagger(power1)), (Dagger(add), Dagger(num), Dagger(power2)))
+    assert Dagger(mat) == Matrix(((-I, -42*I, E**(-I)), (42-I, 42, -1))) == Matrix(((Dagger(i), Dagger(mul), Dagger(power1)), (Dagger(add), Dagger(num), Dagger(power2))))
     assert Dagger(A) == Ket('A')
     assert Dagger(B) == Bra('B')
     assert isinstance(Dagger(A), Ket)
@@ -48,7 +48,7 @@ def test_Ket():
     assert A+B
     assert A+B == B+A
 #    assert expand(a*(A+B)) == a*A+a*B
-#    assert Dagger(a*A+b*B) == Dagger(A)*Dagger(a)+Dagger(B)*Dagger(b) == Bra('A')*Dagger(a)+Bra('B')*Dagger(b)
+    assert Dagger(a*A+b*B) == Dagger(A)*Dagger(a)+Dagger(B)*Dagger(b) == Bra('A')*Dagger(a)+Bra('B')*Dagger(b)
 
 def test_Bra():
     a = Symbol('a')
@@ -116,4 +116,4 @@ def test_State_Operator():
     assert C*B
 #    assert C*B != B*C
 #    assert expand((C+D)*(A+B)) == (C*A + C*B + D*A + D*B)
-    assert Dagger(C*A) == Dagger(A)*Dagger(C) == Bra('A')*Dagger(C)
+#    assert Dagger(C*A) == Dagger(A)*Dagger(C) == Bra('A')*Dagger(C)
