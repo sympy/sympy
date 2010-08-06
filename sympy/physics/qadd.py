@@ -8,7 +8,7 @@ from sympy.physics.quantum import QuantumBasic
 from sympy.physics.quantumbasic import QuantumError
 
 class QAdd(QAssocOp):
-    binop = '+'
+    binop = ' + '
 
     @classmethod    
     def _rules_QAdd(cls, Object1, Object2):
