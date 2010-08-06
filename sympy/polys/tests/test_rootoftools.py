@@ -74,6 +74,7 @@ def test_RootOf___new__():
 
     raises(PolynomialError, "RootOf(Poly(0, x), 0)")
     raises(PolynomialError, "RootOf(Poly(1, x), 0)")
+    raises(PolynomialError, "RootOf(Poly(0, x))")
 
     raises(PolynomialError, "RootOf(x - y, 0)")
 
@@ -93,6 +94,8 @@ def test_RootOf___new__():
     assert RootOf(Poly(x**3 - y, x), 0) == y**Rational(1,3)
 
     raises(DomainError, "RootOf(Poly(x**3 + x - y, x), 0)")
+
+    assert RootOf(Poly(1, x)) == []
 
 def test_RootOf___new___indices():
     r0 = RootOf(x**3 + x + 3, 0)

@@ -274,6 +274,9 @@ class RootOf(Expr):
         if not poly.is_univariate:
             raise PolynomialError("only univariate polynomials are supported")
 
+        if poly.degree() == 0 and indices is None:
+            return []
+
         if poly.degree() <= 0:
             raise PolynomialError("can't construct RootOf object for %s" % f)
 
