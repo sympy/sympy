@@ -1001,7 +1001,10 @@ def risch_integrate(f, x, extension=None, handle_first='log'):
             T = T[:-1]
             D = D[:-1]
             t = T[-1]
+            fa, fd = (fa.as_basic()/fd.as_basic()).as_numer_denom()
+            fa, fd = Poly(fa, t), Poly(fd, t)
             continue
+        fa, fd = fa.cancel(fd, include=True)
         if case == 'exp':
             ans, i, b = integrate_hyperexponential(fa, fd, D, T, Tfuncs)
         elif case == 'primitive':

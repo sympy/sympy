@@ -144,6 +144,7 @@ def prde_linear_constraints(a, b, G, D, T):
     m = len(G)
 
     d = reduce(lambda i, j: i.lcm(j), zip(*G)[1])
+    d = Poly(d, field=True)
     Q = [(ga*(d).quo(gd)).div(d) for ga, gd in G]
 
     if not all([ri.is_zero for _, ri in Q]):
@@ -371,6 +372,7 @@ def limited_integrate(fa, fd, G, D, T):
     """
     t = T[-1]
 
+    fa, fd = fa*Poly(1/fd.LC(), t), fd.monic()
     A, B, h, N, g, V = limited_integrate_reduce(fa, fd, G, D, T)
     V = [g] + V
     g = A.gcd(B)

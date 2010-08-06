@@ -118,6 +118,9 @@ def test_limited_integrate():
     assert limited_integrate(Poly(-(1 + x + 5*x**2 - 3*x**3), x),
     Poly(1 - x - x**2 + x**3, x), G, D, [x]) == \
         ((Poly(x**2 - x + 2, x), Poly(x - 1, x)), [2])
+    G = [(Poly(1, x), Poly(x, x))]
+    assert limited_integrate(Poly(5*x**2, x), Poly(3, x), G, D, [x]) == \
+        ((Poly(5*x**3/9, x), Poly(1, x)), [0])
 
 def test_is_log_deriv_k_t_radical():
     D = [Poly(1, x)]
