@@ -119,22 +119,3 @@ class FiniteField(Field, SimpleDomain):
         if q == 1:
             return K1.dtype(self.dom.dtype(p))
 
-    def gcdex(self, a, b):
-        """Compute extended GCD of `a` and `b`. """
-        return self.dtype(a.gcdex(b))
-
-    def gcd(self, a, b):
-        """Compute GCD of `a` and `b`. """
-        return self.dtype(a.gcd(b))
-
-    def lcm(self, a, b):
-        """Compute LCM of `a` and `b`. """
-        return self.dtype(a.lcm(b))
-
-    def sqrt(self, a):
-        """Compute square root of `a`. """
-        return self.dtype(a.sqrt())
-
-    def factorial(self, a):
-        """Compute factorial of `a`. """
-        return self.dtype(self.dom.factorial(a))
