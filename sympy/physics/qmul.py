@@ -103,4 +103,54 @@ class QMul(QAssocOp):
         newargs = []
         for item in reversed(self.args):
             newargs.append(Dagger(item))
-        return QMul(*newargs)        
+        return QMul(*newargs)
+
+    @staticmethod
+    def _expandsums(sums):
+        """
+        Helper function for _eval_expand_mul.
+
+        sums must be a list of instances of Basic.
+        """
+        from sympy.utilities.iterables import make_list
+        from sympy.physics.qadd import QAdd
+        L = len(sums)
+        if L == 1:
+            return sums[0].args
+        terms = []
+        left = QMul._expandsums(sums[:L//2])
+        right = QMul._expandsums(sums[L//2:])
+
+        terms = [QMul(a, b) for a in left for b in right]
+        added = QAdd(*terms)
+        return make_list(added, QAdd) #it may have collapsed down to one term
+
+    def _eval_expand_mul(self, deep=True, **hints):
+        from sympy.physics.qadd import QAdd
+        plain, sums, rewrite = [], [], False
+        for factor in self.args:
+            if deep:
+                term = factor.expand(deep=deep, **hints)
+                if term != factor:
+                    factor = term
+                    rewrite = True
+
+            if factor.is_Add or isinstance(factor, QAdd):
+                sums.append(factor)
+                rewrite = True
+            else:
+                if factor.is_commutative:
+                    plain.append(factor)
+                else:
+                    Wrapper = QuantumBasic
+                    sums.append(Wrapper(factor))
+
+        if not rewrite:
+            return self
+        else:
+            if sums:
+                terms = QMul._expandsums(sums)
+                plain = QMul(*plain)
+                return QAdd(*[QMul(plain, term) for term in terms])
+            else:
+                return QMul(*plain)     
