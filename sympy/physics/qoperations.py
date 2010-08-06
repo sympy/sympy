@@ -6,6 +6,8 @@ from sympy.core.numbers import Number
 from sympy import Symbol
 from sympy.core.mul import Mul
 from sympy.printing.str import sstr
+from sympy.core.add import Add
+from sympy.core.power import Pow
 
 class QAssocOp(Expr):
     _op_priority = 100.0
@@ -59,10 +61,13 @@ class QAssocOp(Expr):
         return QPow(other, self)
 
     def _sympystr(self, printer, *args):
-        string = ''
         length = len(self.args)
         for i in range(length):
+            if isinstance(self.args[i], (Mul, Add, Pow, QPow, QAdd, QMul)):
+                string = string + '('
             string = string + sstr(self.args[i])
+            if isinstance(self.args[i], (Mul, Add, Pow, QPow, QAdd, QMul)):
+                string = string + ')'
             if i != length-1:
                 string = string + self.__class__.binop
         return string 
