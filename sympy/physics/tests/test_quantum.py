@@ -4,6 +4,9 @@ from sympy.physics.quantum import (
     State,
     Ket,
     Bra,
+    TimeDepKet,
+    TimeDepBra,
+    BasisSet
     InnerProduct,
     OuterProduct
 )
@@ -44,7 +47,6 @@ def test_Ket():
     assert B.name == Symbol('B')
     assert a*A
     assert a*A == A*a
-#    assert A*B != B*A
     assert A+B
     assert A+B == B+A
 #    assert expand(a*(A+B)) == a*A+a*B
@@ -60,7 +62,6 @@ def test_Bra():
     assert B.name == Symbol('B')
     assert a*A
     assert a*A == A*a
-#    assert A*B != B*A
     assert A+B
     assert A+B == B+A
 #    assert expand(a*(A+B)) == a*A+a*B
@@ -108,12 +109,11 @@ def test_Operator():
     assert A*B != B*A
     assert A*(B*C) == (A*B)*C
 
-def test_State_Operator():
+def test_mixed():
     A = Ket('A')
     B = Ket('B')
     C = Operator('C')
     D = Operator('D')
     assert C*B
-#    assert C*B != B*C
 #    assert expand((C+D)*(A+B)) == (C*A + C*B + D*A + D*B)
 #    assert Dagger(C*A) == Dagger(A)*Dagger(C) == Bra('A')*Dagger(C)
