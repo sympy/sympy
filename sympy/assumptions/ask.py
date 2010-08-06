@@ -61,7 +61,7 @@ def eval_predicate(predicate, expr, assumptions=True):
     return res
 
 
-def ask(expr, key, assumptions=True, context=global_assumptions):
+def ask(expr, key, assumptions=True, context=global_assumptions, disable_preprocessing=False):
     """
     Method for inferring properties about objects.
 
@@ -101,7 +101,6 @@ def ask(expr, key, assumptions=True, context=global_assumptions):
     if res is not None:
         return res
 
-    # use logic inference
     if assumptions is True:
         return
 
@@ -109,9 +108,33 @@ def ask(expr, key, assumptions=True, context=global_assumptions):
         return
 
     assumptions = eliminate_assume(assumptions, expr)
-    if assumptions is None:
+    if assumptions is None or assumptions is True:
         return
 
+    # See if there's a straight-forward conclusion we can make for the inference
+    if not disable_preprocessing:
+        if assumptions.is_Atom:
+            if key in known_facts_dict[assumptions]:
+                return True
+            if Not(key) in known_facts_dict[assumptions]:
+                return False
+        elif assumptions.func is And:
+            for assum in assumptions.args:
+                if assum.is_Atom:
+                    if key in known_facts_dict[assum]:
+                        return True
+                    if Not(key) in known_facts_dict[assum]:
+                        return False
+                elif assum.func is Not and assum.args[0].is_Atom:
+                    if key in known_facts_dict[assum]:
+                        return False
+                    if Not(key) in known_facts_dict[assum]:
+                        return True
+        elif assumptions.func is Not and assumptions.args[0].is_Atom:
+            if assumptions.args[0] in known_facts_dict[key]:
+                return False
+
+    # Failing all else, we do a full logical inference
     # If it's not consistent with the assumptions, then it can't be true
     if not satisfiable(And(known_facts_cnf, assumptions, key)):
         return False
@@ -168,8 +191,8 @@ def compute_known_facts():
         mapping[key] = set([])
         for other_key in known_facts_keys:
             if other_key != key:
-                if ask(x, other_key, Assume(x, key)):
-                    mapping[key].add(other_key)
+                if ask(x, other_key, Assume(x, key, False), disable_preprocessing=True):
+                    mapping[key].add(Not(other_key))
     fact_string += "\n\n -{ Known facts in compressed sets }-\n"
     fact_string += "known_facts_dict = { \\\n   ",
     fact_string += ", \\\n    ".join(["%s: %s" % item for item in mapping.items()])
@@ -253,24 +276,24 @@ known_facts_cnf = And( \
 )
 
 known_facts_dict = { \
-    Q.is_true: set([Q.commutative]), \
-    Q.complex: set([Q.commutative]), \
-    Q.odd: set([Q.complex, Q.real, Q.rational, Q.extended_real, Q.integer, Q.commutative]), \
-    Q.positive: set([Q.real, Q.commutative, Q.complex, Q.extended_real, Q.nonzero]), \
-    Q.real: set([Q.extended_real, Q.commutative, Q.complex]), \
-    Q.composite: set([Q.commutative]), \
-    Q.bounded: set([Q.commutative]), \
-    Q.prime: set([Q.complex, Q.positive, Q.nonzero, Q.real, Q.rational, Q.extended_real, Q.integer, Q.commutative]), \
-    Q.infinitesimal: set([Q.commutative]), \
-    Q.even: set([Q.complex, Q.real, Q.rational, Q.extended_real, Q.integer, Q.commutative]), \
-    Q.negative: set([Q.real, Q.commutative, Q.complex, Q.extended_real, Q.nonzero]), \
-    Q.rational: set([Q.real, Q.commutative, Q.complex, Q.extended_real]), \
-    Q.extended_real: set([Q.commutative]), \
-    Q.nonzero: set([Q.real, Q.commutative, Q.complex, Q.extended_real]), \
-    Q.integer: set([Q.real, Q.commutative, Q.rational, Q.complex, Q.extended_real]), \
-    Q.irrational: set([Q.real, Q.commutative, Q.complex, Q.extended_real]), \
+    Q.is_true: set([Q.commutative, Not(Q.commutative)]), \
+    Q.complex: set([Q.commutative, Not(Q.commutative)]), \
+    Q.odd: set([Q.complex, Not(Q.commutative), Q.real, Q.rational, Q.extended_real, Q.integer, Q.commutative]), \
+    Q.positive: set([Q.complex, Q.nonzero, Not(Q.commutative), Q.real, Q.extended_real, Q.commutative]), \
+    Q.real: set([Q.extended_real, Q.commutative, Q.complex, Not(Q.commutative)]), \
+    Q.composite: set([Q.commutative, Not(Q.commutative)]), \
+    Q.bounded: set([Q.commutative, Not(Q.commutative)]), \
+    Q.prime: set([Q.complex, Q.positive, Q.nonzero, Not(Q.commutative), Q.real, Q.rational, Q.extended_real, Q.integer, Q.commutative]), \
+    Q.infinitesimal: set([Q.commutative, Not(Q.commutative)]), \
+    Q.even: set([Q.complex, Not(Q.commutative), Q.real, Q.rational, Q.extended_real, Q.integer, Q.commutative]), \
+    Q.negative: set([Q.complex, Q.nonzero, Not(Q.commutative), Q.real, Q.extended_real, Q.commutative]), \
+    Q.rational: set([Q.real, Q.commutative, Q.complex, Not(Q.commutative), Q.extended_real]), \
+    Q.extended_real: set([Q.commutative, Not(Q.commutative)]), \
+    Q.nonzero: set([Q.real, Q.commutative, Q.complex, Not(Q.commutative), Q.extended_real]), \
+    Q.integer: set([Q.complex, Not(Q.commutative), Q.real, Q.rational, Q.extended_real, Q.commutative]), \
+    Q.irrational: set([Q.real, Q.commutative, Q.complex, Not(Q.commutative), Q.extended_real]), \
     Q.commutative: set([]), \
-    Q.infinity: set([Q.commutative, Q.extended_real]), \
-    Q.algebraic: set([Q.commutative]), \
-    Q.imaginary: set([Q.commutative, Q.complex])
+    Q.infinity: set([Q.commutative, Q.extended_real, Not(Q.commutative)]), \
+    Q.algebraic: set([Q.commutative, Not(Q.commutative)]), \
+    Q.imaginary: set([Q.commutative, Q.complex, Not(Q.commutative)])
 }
