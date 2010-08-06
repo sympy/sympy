@@ -65,7 +65,9 @@ import shutil
 import tempfile
 import subprocess
 
-from sympy.utilities.codegen import codegen, get_code_generator, Routine
+from sympy.utilities.codegen import (
+        codegen, get_code_generator, Routine, OutputArgument, InOutArgument
+        )
 from sympy.utilities.lambdify import implemented_function
 
 class CodeWrapError(Exception): pass
@@ -166,12 +168,12 @@ setup(
             raise CodeWrapError
 
     def _prepare_files(self, routine):
-        pyxfilename = self.module_name + '.' + self.generator.dump_pyx.extension
+        pyxfilename = self.module_name + '.pyx'
         codefilename = "%s.%s" % (self._filename, self.generator.code_extension)
 
         # pyx
         f = file(pyxfilename, 'w')
-        self.generator.dump_pyx([routine], f, self._filename,
+        self.dump_pyx([routine], f, self._filename,
                 self.include_header, self.include_empty)
         f.close()
 
@@ -185,6 +187,76 @@ setup(
     def _get_wrapped_function(cls, mod):
         return mod.autofunc_c
 
+    def dump_pyx(self, routines, f, prefix, header=True, empty=True):
+        """Write a Cython file with python wrappers
+
+           This file contains all the definitions of the routines in c code and
+           refers to the header file.
+
+           Arguments:
+             routines  --  a list of Routine instances
+             f  --  a file-like object to write the file to
+             prefix  --  the filename prefix, used to refer to the proper header
+                         file. Only the basename of the prefix is used.
+
+           Optional arguments:
+             empty  --  When True, empty lines are included to structure the
+                        source files. [DEFAULT=True]
+        """
+        for routine in routines:
+            prototype = self.generator.get_prototype(routine)
+            origname = routine.name
+            routine.name = "%s_c" % origname
+            prototype_c = self.generator.get_prototype(routine)
+            routine.name = origname
+
+            # declare
+            print >> f, 'cdef extern from "%s.h":' % prefix
+            print >> f, '   %s' % prototype
+            if empty: print >> f
+
+            # wrap
+            ret, args_py = self._split_retvals_inargs(routine.arguments)
+            args_c = ", ".join([str(a.name) for a in routine.arguments])
+            print >> f, "def %s_c(%s):" % (routine.name,
+                    ", ".join(self._declare_arg(arg) for arg in args_py))
+            for r in ret:
+                if not r in args_py:
+                    print >> f, "   cdef %s" % self._declare_arg(r)
+            rets = ", ".join([str(r.name) for r in ret])
+            if routine.results:
+                call = '   return %s(%s)' % (routine.name, args_c)
+                if rets:
+                    print >> f, call + ', ' + rets
+                else:
+                    print >> f, call
+            else:
+                print >> f, '   %s(%s)' % (routine.name, args_c)
+                print >> f, '   return %s' % rets
+
+            if empty: print >> f
+    dump_pyx.extension = "pyx"
+
+    def _split_retvals_inargs(self, args):
+        """Determines arguments and return values for python wrapper"""
+        py_args = []
+        py_returns = []
+        for arg in args:
+            if isinstance(arg, OutputArgument):
+                py_returns.append(arg)
+            elif isinstance(arg, InOutArgument):
+                py_returns.append(arg)
+                py_args.append(arg)
+            else:
+                py_args.append(arg)
+        return py_returns, py_args
+
+    def _declare_arg(self, arg):
+        t = arg.get_datatype('c')
+        if arg.dimensions:
+            return "%s *%s"%(t, str(arg.name))
+        else:
+            return "%s %s"%(t, str(arg.name))
 
 class F2PyCodeWrapper(CodeWrapper):
 
