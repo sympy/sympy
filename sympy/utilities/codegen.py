@@ -257,8 +257,6 @@ class Variable(object):
         self.dimensions = dimensions
         self.precision = precision
 
-        self.datatype = datatype
-
     @property
     def name(self):
         return self._name
@@ -352,13 +350,15 @@ class Result(ResultBase):
         temp_var = Variable(Symbol('result_%s'%hash(expr)),
                 datatype=datatype, dimensions=None, precision=precision)
         ResultBase.__init__(self, expr, temp_var.name)
-        self.datatype = temp_var.datatype
+        self._temp_variable = temp_var
+
+    def get_datatype(self, language):
+        return self._temp_variable.get_datatype(language)
 
 
 #
 # Transformation of routine objects into code
 #
-
 
 class CodeGen(object):
     """Abstract class for the code generators."""
@@ -483,16 +483,16 @@ class CCodeGen(CodeGen):
         if len(routine.results) > 1:
             raise CodeGenError("C only supports a single or no return value.")
         elif len(routine.results) == 1:
-            ctype = routine.results[0].datatype.cname
+            ctype = routine.results[0].get_datatype('C')
         else:
             ctype = "void"
 
         type_args = []
         for arg in routine.arguments:
             if arg.dimensions:
-                type_args.append((arg.datatype.cname, "*%s" % arg.name))
+                type_args.append((arg.get_datatype('C'), "*%s" % arg.name))
             else:
-                type_args.append((arg.datatype.cname, arg.name))
+                type_args.append((arg.get_datatype('C'), arg.name))
         arguments = ", ".join([ "%s %s" % t for t in type_args])
         return "%s %s(%s)" % (ctype, routine.name, arguments)
 
@@ -612,7 +612,7 @@ class FCodeGen(CodeGen):
             raise CodeGenError("Fortran only supports a single or no return value.")
         elif len(routine.results) == 1:
             result = routine.results[0]
-            code_list.append(result.datatype.fname)
+            code_list.append(result.get_datatype('fortran'))
             code_list.append("function")
         else:
             code_list.append("subroutine")
@@ -633,11 +633,11 @@ class FCodeGen(CodeGen):
         for arg in routine.arguments:
 
             if isinstance(arg, InputArgument):
-                typeinfo = "%s, intent(in)" % arg.datatype.fname
+                typeinfo = "%s, intent(in)" % arg.get_datatype('fortran')
             elif isinstance(arg, InOutArgument):
-                typeinfo = "%s, intent(inout)" % arg.datatype.fname
+                typeinfo = "%s, intent(inout)" % arg.get_datatype('fortran')
             elif isinstance(arg, OutputArgument):
-                typeinfo = "%s, intent(out)" % arg.datatype.fname
+                typeinfo = "%s, intent(out)" % arg.get_datatype('fortran')
             else:
                 raise CodeGenError("Unkown Argument type: %s"%type(arg))
 
