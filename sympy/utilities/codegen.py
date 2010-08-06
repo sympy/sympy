@@ -199,7 +199,10 @@ class Routine(object):
 
     @property
     def result_variables(self):
-        """Returns a tuple of OutputArgument, InOutArgument and Result."""
+        """Returns a list of OutputArgument, InOutArgument and Result.
+
+        If return values are present, they are at the end ot the list.
+        """
         args = [arg for arg in self.arguments if isinstance(arg, (OutputArgument, InOutArgument))]
         args.extend(self.results)
         return args
@@ -491,6 +494,8 @@ class CCodeGen(CodeGen):
         for arg in routine.arguments:
             if arg.dimensions:
                 type_args.append((arg.get_datatype('C'), "*%s" % arg.name))
+            elif isinstance(arg, ResultBase):
+                type_args.append((arg.get_datatype('C'), "&%s" % arg.name))
             else:
                 type_args.append((arg.get_datatype('C'), arg.name))
         arguments = ", ".join([ "%s %s" % t for t in type_args])
@@ -515,6 +520,7 @@ class CCodeGen(CodeGen):
         return []
 
     def _call_printer(self, routine):
+        code_lines = []
         for result in routine.result_variables:
             if isinstance(result, Result):
                 assign_to = None
@@ -522,7 +528,8 @@ class CCodeGen(CodeGen):
                 assign_to = result.result_var
 
             constants, not_c, c_expr = ccode(result.expr, assign_to=assign_to, human=False)
-            code_lines = sorted(constants, key = str)
+            for name, value in sorted(constants, key=str):
+                code_lines.append("double const %s = %s;" % (name, value))
             if assign_to:
                 code_lines.append("%s\n" % c_expr)
             else:

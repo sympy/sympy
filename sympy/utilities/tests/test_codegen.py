@@ -335,6 +335,23 @@ def test_partial_loops_c():
         '#endif\n'
             )
 
+def test_output_arg_c():
+    from sympy import sin, cos, Equality
+    x, y, z = symbols("xyz")
+    r = Routine("foo", [Equality(y, sin(x)), cos(x)])
+    c = CCodeGen()
+    result = c.write([r], "test", header=False, empty=False)
+    assert result[0][0] == "test.c"
+    expected = (
+        '#include "test.h"\n'
+        '#include <math.h>\n'
+        'double foo(double x, double &y) {\n'
+        '   y = sin(x);\n'
+        '   return cos(x);\n'
+        '}\n'
+    )
+    assert result[0][1] == expected
+
 def test_empty_f_code():
     code_gen = FCodeGen()
     source = get_string(code_gen.dump_f95, [])
