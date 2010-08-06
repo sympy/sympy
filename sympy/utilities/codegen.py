@@ -225,15 +225,11 @@ def get_default_datatype(expr):
     else:
         return default_datatypes["float"]
 
-
-class Argument(object):
-    """An abstract Argument data structure: a name and a data type.
-
-       This structure is refined in the descendants below.
-    """
+class Variable(object):
+    """Represents a typed variable."""
 
     def __init__(self, name, datatype=None, dimensions=None, precision=None):
-        """Initialize an input argument.
+        """Initializes a Variable instance
 
            name  --  must be of class Symbol
            datatype  --  When not given, the data type will be guessed based
@@ -243,7 +239,6 @@ class Argument(object):
                           (lower, upper) bounds for each index of the array
            precision  --  FIXME
         """
-
         if not isinstance(name, Symbol):
             raise TypeError("The first argument must be a sympy symbol.")
         if datatype is None:
@@ -252,15 +247,64 @@ class Argument(object):
             raise TypeError("The (optional) `datatype' argument must be an instance of the DataType class.")
         if dimensions and not isinstance(dimensions, (tuple, list)):
             raise TypeError("The dimension argument must be a sequence of tuples")
-        self.name = name
-        self.datatype = datatype
+
+        self._name = name
+        self._datatype = {
+                'C': datatype.cname,
+                'FORTRAN': datatype.fname,
+                'PYTHON': datatype.pyname
+                }
         self.dimensions = dimensions
         self.precision = precision
+
+        self.datatype = datatype
+
+    @property
+    def name(self):
+        return self._name
+
+    def get_datatype(self, language):
+        """Returns the datatype string for the requested langage.
+
+            >>> from sympy import Symbol
+            >>> from sympy.utilities.codegen import Variable
+            >>> x = Variable(Symbol('x'))
+            >>> x.get_datatype('c')
+            'double'
+            >>> x.get_datatype('fortran')
+            'REAL*8'
+        """
+        try:
+            return self._datatype[language.upper()]
+        except KeyError:
+            raise CodeGenError("Has datatypes for languages: %s" %
+                    ", ".join(self._datatype))
+
+class Argument(Variable):
+    """An abstract Argument data structure: a name and a data type.
+
+       This structure is refined in the descendants below.
+    """
+
+    def __init__(self, name, datatype=None, dimensions=None, precision=None):
+        """ See docstring of Variable.__init__
+        """
+
+        Variable.__init__(self, name, datatype, dimensions, precision)
 
 class InputArgument(Argument):
     pass
 
 class ResultBase(object):
+    """Base class for all ``outgoing'' information from a routine
+
+       Objects of this class stores a sympy expression, and a sympy object
+       representing a result variable that will be used in the generated code
+       only if necessary.
+   """
+    def __init__(self, expr, result_var):
+        self.expr = expr
+        self.result_var = result_var
 
     @property
     def needs_initialization(self):
@@ -271,9 +315,10 @@ class OutputArgument(Argument, ResultBase):
     """
     _need_initialization = True
     def __init__(self, name, result_var, expr, datatype=None, dimensions=None, precision=None):
+        """ See docstring of Variable.__init__
+        """
         Argument.__init__(self, name, datatype, dimensions, precision)
-        self.expr = expr
-        self.result_var = result_var
+        ResultBase.__init__(self, expr, result_var)
 
 class InOutArgument(Argument, ResultBase):
     """InOutArgument are never initialized in the routine
@@ -281,20 +326,21 @@ class InOutArgument(Argument, ResultBase):
     _need_initialization = False
 
     def __init__(self, name, result_var, expr, datatype=None, dimensions=None, precision=None):
+        """ See docstring of Variable.__init__
+        """
         Argument.__init__(self, name, datatype, dimensions, precision)
-        self.expr = expr
-        self.result_var = result_var
-
+        ResultBase.__init__(self, expr, result_var)
 
 class Result(ResultBase):
     """An expression for a scalar return value.
 
        The name result is used to avoid conflicts with the reserved word
        'return' in the python language. It is also shorter than ReturnValue.
+
     """
     _need_initialization = False
 
-    def __init__(self, expr, datatype=None):
+    def __init__(self, expr, datatype=None, precision=None):
         """Initialize a (scalar) return value.
 
            The second argument is optional. When not given, the data type will
@@ -302,13 +348,12 @@ class Result(ResultBase):
         """
         if not isinstance(expr, Expr):
             raise TypeError("The first argument must be a sympy expression.")
-        if datatype is None:
-            datatype = get_default_datatype(expr)
-        elif not isinstance(datatype, DataType):
-            raise TypeError("The (optional) second argument must be an instance of the DataType class.")
-        self.expr = expr
-        self.datatype = datatype
-        self.result_var = Symbol('result_%s'%hash(expr))
+
+        temp_var = Variable(Symbol('result_%s'%hash(expr)),
+                datatype=datatype, dimensions=None, precision=precision)
+        ResultBase.__init__(self, expr, temp_var.name)
+        self.datatype = temp_var.datatype
+
 
 #
 # Transformation of routine objects into code
