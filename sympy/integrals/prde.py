@@ -444,9 +444,9 @@ def parametric_log_deriv_heu(fa, fd, wa, wd, D, T):
         nfmwd = fd*wd
         Qv = is_log_deriv_k_t_radical(N*fa*wd - M*wa*fd, fd*wd, D, T, 'auto')
         if Qv is None:
-            raise NonElementaryIntegral("parametric_log_deriv_heu(): %s/%s " +
-                "(N*f - M*w) is not the logarithmic derivative of a k(t)-radical."
-                % (nfmwa, nfmwd))
+            raise NonElementaryIntegral("parametric_log_deriv_heu(): " +
+            "%s/%s "  % (nfmwa, nfmwd) + "(N*f - M*w) is not the logarithmic " +
+            "derivative of a k(t)-radical.")
         Q, v = Qv
 
         if Q.is_zero or v.is_zero:
@@ -484,9 +484,9 @@ def parametric_log_deriv_heu(fa, fd, wa, wd, D, T):
     nfmwd = fd*wd
     Qv = is_log_deriv_k_t_radical(nfmwa, nfmwd, D, T, 'auto')
     if Qv is None:
-        raise NonElementaryIntegral("parametric_log_deriv_heu(): %s/%s " +
-            "(N*f - M*w) is not the logarithmic derivative of a k(t)-radical."
-            % (nfmwa, nfmwd))
+        raise NonElementaryIntegral("parametric_log_deriv_heu(): " +
+            "%s/%s "  % (nfmwa, nfmwd) + "(N*f - M*w) is not the logarithmic " +
+            "derivative of a k(t)-radical.")
     Q, v = Qv
 
     if Q.is_zero or v.is_zero:

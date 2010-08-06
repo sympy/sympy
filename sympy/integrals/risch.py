@@ -406,7 +406,7 @@ def integrate_primitive_polynomial(p, D, T):
     """
     Integration of primitive polynomials.
 
-    Given a primitive monomjial t over k, and p in k[t], return q in k[t],
+    Given a primitive monomial t over k, and p in k[t], return q in k[t],
     r in k, and a bool b in {True, False} such that r = p - Dq is in k if b is
     True, or r = p - Dq does not have an elementary integral over k(t) if b is
     False.
@@ -741,13 +741,13 @@ def build_extension(f, x, handle_first='log'):
     If it is successful, returns (fa, fd, D, T, Tfuncs, backsubs) such that fa
     and fd are Polys in T[-1] with rational coefficients in T[:-1], fa/fd == f
     and D[i] is a Poly in T[i] with rational coefficients in T[:i] representing
-    the derivative of T[i].  Tfuncs is a list of Lambda objects for back replacing
-    the funtions after integrating.  Lambda() is only used (instead of lambda)
-    to make this function easier to test and debug. Note that Tfuncs coresponds
-    to the elements of T (except for T[0] == x) in reverse order, because that
-    is the order that they have to be back-substituted in. backsubs is a
-    back-substitution list that should be applied on the completed integral to
-    make it look more like the original integrand.
+    the derivative of T[i].  Tfuncs is a list of Lambda objects for back
+    replacing the functions after integrating.  Lambda() is only used (instead
+    of lambda) to make this function easier to test and debug. Note that Tfuncs
+    corresponds to the elements of T (except for T[0] == x) in reverse order,
+    because that is the order that they have to be back-substituted in.
+    backsubs is a back-substitution list that should be applied on the completed
+    integral to make it look more like the original integrand.
 
     If it is unsuccessful, it raises NotImplementedError.
     """
@@ -784,8 +784,8 @@ def build_extension(f, x, handle_first='log'):
             # We couldn't find a new extension on the last pass, so I guess
             # we can't do it.
             raise NotImplementedError("Couldn't find an elementary " +
-                "transcendental extension for %d.  Try using a manual " +
-                "extension with the extension flag." % f)
+                "transcendental extension for %s.  Try using a " % str(f) +
+                "manual extension with the extension flag.")
         def exp_part(exps):
             global t, T, D, L_K, E_K, L_args, E_args, ts, backsubs, Tfuncs, newf
 
@@ -825,7 +825,7 @@ def build_extension(f, x, handle_first='log'):
                         continue
                     else:
                         # Bad news, we have an algebraic radical.  But maybe we
-                        # could still aviod it by choosing a different
+                        # could still avoid it by choosing a different
                         # extension. For example, integer_powers() won't handle
                         # exp(x/2 + 1) over QQ(x, exp(x)), but if we pull out
                         # the exp(1), it will.  Or maybe we have
@@ -904,7 +904,7 @@ def build_extension(f, x, handle_first='log'):
             return new_extension
 
         # Pre-preparsing.
-        # Get all exp arguments, so we can aviod ahead of time doing something
+        # Get all exp arguments, so we can avoid ahead of time doing something
         # like t1 = exp(x), t2 = exp(x/2) == sqrt(t1).
 
         exps = filter(lambda i: i.exp.is_rational_function(*T) and
@@ -926,7 +926,7 @@ def build_extension(f, x, handle_first='log'):
             if i in sympows:
                 if i.exp.is_Rational:
                     raise NotImplementedError("Algebraic extensions are not " +
-                    "supported (%d)" % i)
+                    "supported (%s)" % str(i))
                 # We can add a**b only if log(a) in the extension, because
                 # a**b == exp(b*log(a)).
                 basea, based = i.base.as_numer_denom()
@@ -951,6 +951,7 @@ def build_extension(f, x, handle_first='log'):
             elif i not in numpows:
                 continue
             new = exp(i.exp*log(i.base))
+            # TODO: Just put it in Tfuncs
             backsubs.append((new, old))
             newf = newf.subs(old, new)
             exps.append(new)
@@ -988,8 +989,8 @@ def risch_integrate(f, x, extension=None, handle_first='log'):
        raise NotImplementedError("Manual extensions are not supported yet.")
 
     if handle_first not in ['log', 'exp']:
-        raise ValueError("handle_first must be 'log' or 'exp', not %d." %
-            handle_first)
+        raise ValueError("handle_first must be 'log' or 'exp', not %s." %
+            str(handle_first))
 
     fa, fd, D, T, Tfuncs, backsubs = build_extension(f, x, handle_first=handle_first)
     cases = [get_case(d, t) for d, t in zip(D, T)]
@@ -1015,6 +1016,9 @@ def risch_integrate(f, x, extension=None, handle_first='log'):
             ans = integrate(fa.as_basic()/fd.as_basic(), x)
             b = False
             i = 0
+        else:
+            raise NotImplementedError("Only exponential and logarithmic " +
+            "extensions are currently supported.")
 
         result += ans
         if b:
