@@ -475,7 +475,7 @@ class CCodeGen(CodeGen):
         code_lines.append(" " + "*"*78 + "/\n")
         return code_lines
 
-    def _get_prototype(self, routine):
+    def get_prototype(self, routine):
         """Returns a string for the function prototype for the given routine.
 
            If the routine has multiple result objects, an CodeGenError is
@@ -508,7 +508,7 @@ class CCodeGen(CodeGen):
         return code_lines
 
     def _get_routine_opening(self, routine):
-        prototype = self._get_prototype(routine)
+        prototype = self.get_prototype(routine)
         return ["%s {\n" % prototype]
 
     def _declare_arguments(self, routine):
@@ -574,7 +574,7 @@ class CCodeGen(CodeGen):
         if empty: print >> f
         # declaration of the function prototypes
         for routine in routines:
-            prototype = self._get_prototype(routine)
+            prototype = self.get_prototype(routine)
             print >> f, "%s;" % prototype
         # end if include guards
         if empty: print >> f
