@@ -1025,4 +1025,4 @@ def risch_integrate(f, x, extension=None, handle_first='log'):
             fa, fd = Poly(fa, t), Poly(fd, t)
         else:
             result += i
-            return result
+            return result.subs(backsubs)
