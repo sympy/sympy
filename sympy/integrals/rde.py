@@ -28,7 +28,10 @@ from sympy.polys import Poly, gcd, ZZ, cancel
 from sympy.integrals.risch import (gcdex_diophantine, derivation, splitfactor,
     NonElementaryIntegral, get_case)
 
+from sympy.utilities.iterables import any, all
+
 from operator import mul
+
 #    from pudb import set_trace; set_trace() # Debugging
 
 # TODO: Add messages to NonElementaryIntegral errors
