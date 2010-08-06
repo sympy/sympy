@@ -279,7 +279,7 @@ def _get_code_wrapper_class(backend):
     wrappers = { 'F2PY': F2PyCodeWrapper, 'CYTHON': CythonCodeWrapper, 'DUMMY': DummyWrapper}
     return wrappers[backend.upper()]
 
-def autowrap(expr, language='C', backend='cython', tempdir=None):
+def autowrap(expr, language='C', backend='cython', tempdir=None, args=None):
     """Generates python callable binaries based on the math expression.
 
     expr  --  the SymPy expression that should be wrapped as a binary routine
@@ -290,6 +290,8 @@ def autowrap(expr, language='C', backend='cython', tempdir=None):
     tempdir  --  path to directory for temporary files.  If this argument is
                  supplied, the generated code and the wrapper input files are
                  left intact in the specified path.
+    args --  sequence of the formal parameters of the generated code, if ommited the
+             function signature is determined by the code generator.
 
     >>> from sympy.abc import x, y, z
     >>> from sympy.utilities.autowrap import autowrap
@@ -303,8 +305,8 @@ def autowrap(expr, language='C', backend='cython', tempdir=None):
     code_generator = get_code_generator(language, "autowrap")
     CodeWrapperClass = _get_code_wrapper_class(backend)
     code_wrapper = CodeWrapperClass(code_generator, tempdir)
-    routine  = Routine('autofunc',expr)
-    return code_wrapper.wrap_code(routine)
+    routine  = Routine('autofunc', expr, args)
+    return code_wrapper.wrap_code(routine, args)
 
 def binary_function(symfunc, expr, **kwargs):
     """Returns a sympy function with expr as binary implementation
