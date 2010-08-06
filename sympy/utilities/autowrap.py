@@ -279,7 +279,7 @@ def _get_code_wrapper_class(backend):
     wrappers = { 'F2PY': F2PyCodeWrapper, 'CYTHON': CythonCodeWrapper, 'DUMMY': DummyWrapper}
     return wrappers[backend.upper()]
 
-def autowrap(expr, language='F95', backend='f2py', tempdir=None):
+def autowrap(expr, language='C', backend='cython', tempdir=None):
     """Generates python callable binaries based on the math expression.
 
     expr  --  the SymPy expression that should be wrapped as a binary routine
