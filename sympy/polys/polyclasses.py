@@ -781,6 +781,22 @@ class DMP(object):
 
         return True
 
+    def __lt__(f, g):
+        _, _, _, F, G = f.unify(g)
+        return F.__lt__(g)
+
+    def __le__(f, g):
+        _, _, _, F, G = f.unify(g)
+        return F.__le__(G)
+
+    def __gt__(f, g):
+        _, _, _, F, G = f.unify(g)
+        return F.__gt__(G)
+
+    def __ge__(f, g):
+        _, _, _, F, G = f.unify(g)
+        return F.__ge__(G)
+
     def __nonzero__(f):
         return not dmp_zero_p(f.rep, f.lev)
 

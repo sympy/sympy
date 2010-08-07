@@ -24,7 +24,7 @@ from sympy.polys.densebasic import (
     dup_inflate,
     dmp_exclude, dmp_include,
     dmp_inject, dmp_eject,
-    dmp_terms_gcd)
+    dup_terms_gcd, dmp_terms_gcd)
 
 from sympy.polys.densearith import (
     dup_neg, dmp_neg,
@@ -1066,6 +1066,8 @@ def dmp_gf_factor(f, u, K):
 @cythonized("i,k,u")
 def dup_factor_list(f, K0):
     """Factor polynomials into irreducibles in `K[x]`. """
+    j, f = dup_terms_gcd(f, K0)
+
     if not K0.has_CharacteristicZero:
         coeff, factors = dup_gf_factor(f, K0)
     elif K0.is_Algebraic:
@@ -1114,7 +1116,10 @@ def dup_factor_list(f, K0):
 
             coeff = K0_inexact.convert(coeff, K0)
 
-    return coeff, factors
+    if j:
+        factors.insert(0, ([K0.one, K.zero], j))
+
+    return coeff, _sort_factors(factors)
 
 def dup_factor_list_include(f, K):
     """Factor polynomials into irreducibles in `K[x]`. """
@@ -1127,30 +1132,12 @@ def dup_factor_list_include(f, K):
         return [(g, factors[0][1])] + factors[1:]
 
 @cythonized("u,v,i,k")
-def _dmp_inner_factor(f, u, K):
-    """Simplify factorization in `Z[X]` as much as possible. """
-    gcd, f = dmp_terms_gcd(f, u, K)
-    J, f, v = dmp_exclude(f, u, K)
-
-    coeff, factors = dmp_zz_factor(f, v, K)
-
-    for i, (f, k) in enumerate(factors):
-        factors[i] = (dmp_include(f, J, v, K), k)
-
-    for i, g in enumerate(reversed(gcd)):
-        if not g:
-            continue
-
-        term = {(0,)*(u-i) + (1,) + (0,)*i: K.one}
-        factors.insert(0, (dmp_from_dict(term, u, K), g))
-
-    return coeff, factors
-
-@cythonized("u,v,i,k")
 def dmp_factor_list(f, u, K0):
     """Factor polynomials into irreducibles in `K[X]`. """
     if not u:
         return dup_factor_list(f, K0)
+
+    J, f = dmp_terms_gcd(f, u, K0)
 
     if not K0.has_CharacteristicZero: # pragma: no cover
         coeff, factors = dmp_gf_factor(f, u, K0)
@@ -1172,7 +1159,11 @@ def dmp_factor_list(f, u, K0):
             K = K0
 
         if K.is_ZZ:
-            coeff, factors = _dmp_inner_factor(f, u, K)
+            levels, f, v = dmp_exclude(f, u, K)
+            coeff, factors = dmp_zz_factor(f, v, K)
+
+            for i, (f, k) in enumerate(factors):
+                factors[i] = (dmp_include(f, levels, v, K), k)
         elif K.is_Poly:
             f, v = dmp_inject(f, u, K)
 
@@ -1200,7 +1191,14 @@ def dmp_factor_list(f, u, K0):
 
             coeff = K0_inexact.convert(coeff, K0)
 
-    return coeff, factors
+    for i, j in enumerate(reversed(J)):
+        if not j:
+            continue
+
+        term = {(0,)*(u-i) + (1,) + (0,)*i: K0.one}
+        factors.insert(0, (dmp_from_dict(term, u, K0), j))
+
+    return coeff, _sort_factors(factors)
 
 @cythonized("u")
 def dmp_factor_list_include(f, u, K):

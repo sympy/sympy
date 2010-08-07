@@ -570,18 +570,20 @@ def test_dup_factor_list():
     assert dup_factor_list([RR(2.0),RR(4.0),RR(2.0)], RR) == \
         (RR(2.0), [([RR(1.0),RR(1.0)], 2)])
 
+
     f = [DMP([ZZ(4),ZZ(0)],ZZ),DMP([ZZ(4),ZZ(0),ZZ(0)],ZZ),DMP([],ZZ)]
 
     assert dup_factor_list(f, ZZ['y']) == \
-        (DMP([ZZ(4)],ZZ), [([DMP([ZZ(1)],ZZ),DMP([],ZZ)], 1),
-                           ([DMP([ZZ(1),ZZ(0)],ZZ)], 1),
+        (DMP([ZZ(4)],ZZ), [([DMP([ZZ(1),ZZ(0)],ZZ)], 1),
+                           ([DMP([ZZ(1)],ZZ),DMP([],ZZ)], 1),
                            ([DMP([ZZ(1)],ZZ),DMP([ZZ(1),ZZ(0)],ZZ)], 1)])
+
 
     f = [DMP([QQ(1,2),QQ(0)],ZZ),DMP([QQ(1,2),QQ(0),QQ(0)],ZZ),DMP([],ZZ)]
 
     assert dup_factor_list(f, QQ['y']) == \
-        (DMP([QQ(1,2)],QQ), [([DMP([QQ(1)],QQ),DMP([],QQ)], 1),
-                             ([DMP([QQ(1),QQ(0)],QQ)], 1),
+        (DMP([QQ(1,2)],QQ), [([DMP([QQ(1),QQ(0)],QQ)], 1),
+                             ([DMP([QQ(1)],QQ),DMP([],QQ)], 1),
                              ([DMP([QQ(1)],QQ),DMP([QQ(1),QQ(0)],QQ)], 1)])
 
     raises(DomainError, "dup_factor_list([EX(sin(1))], EX)")
@@ -622,20 +624,20 @@ def test_dmp_factor_list():
     f = [[ZZ(4),ZZ(0)],[ZZ(4),ZZ(0),ZZ(0)],[]]
 
     assert dmp_factor_list(f, 1, ZZ) == \
-        (ZZ(4), [([[ZZ(1)],[]], 1),
-                 ([[ZZ(1),ZZ(0)]], 1),
+        (ZZ(4), [([[ZZ(1),ZZ(0)]], 1),
+                 ([[ZZ(1)],[]], 1),
                  ([[ZZ(1)],[ZZ(1),ZZ(0)]], 1)])
 
     assert dmp_factor_list_include(f, 1, ZZ) == \
-        [([[ZZ(4)],[]], 1),
-         ([[ZZ(1),ZZ(0)]], 1),
+        [([[ZZ(4),ZZ(0)]], 1),
+         ([[ZZ(1)],[]], 1),
          ([[ZZ(1)],[ZZ(1),ZZ(0)]], 1)]
 
     f = [[QQ(1,2),QQ(0)],[QQ(1,2),QQ(0),QQ(0)],[]]
 
     assert dmp_factor_list(f, 1, QQ) == \
-        (QQ(1,2), [([[QQ(1)],[]], 1),
-                   ([[QQ(1),QQ(0)]], 1),
+        (QQ(1,2), [([[QQ(1),QQ(0)]], 1),
+                   ([[QQ(1)],[]], 1),
                    ([[QQ(1)],[QQ(1),QQ(0)]], 1)])
 
     f = [[RR(2.0)],[],[-RR(8.0),RR(0.0),RR(0.0)]]
@@ -647,15 +649,15 @@ def test_dmp_factor_list():
     f = [[DMP([ZZ(4),ZZ(0)],ZZ)],[DMP([ZZ(4),ZZ(0),ZZ(0)],ZZ)],[DMP([],ZZ)]]
 
     assert dmp_factor_list(f, 1, ZZ['y']) == \
-        (DMP([ZZ(4)],ZZ), [([[DMP([ZZ(1)],ZZ)],[]], 1),
-                           ([[DMP([ZZ(1),ZZ(0)],ZZ)]], 1),
+        (DMP([ZZ(4)],ZZ), [([[DMP([ZZ(1),ZZ(0)],ZZ)]], 1),
+                           ([[DMP([ZZ(1)],ZZ)],[]], 1),
                            ([[DMP([ZZ(1)],ZZ)],[DMP([ZZ(1),ZZ(0)],ZZ)]], 1)])
 
     f = [[DMP([QQ(1,2),QQ(0)],ZZ)],[DMP([QQ(1,2),QQ(0),QQ(0)],ZZ)],[DMP([],ZZ)]]
 
     assert dmp_factor_list(f, 1, QQ['y']) == \
-        (DMP([QQ(1,2)],QQ), [([[DMP([QQ(1)],QQ)],[]], 1),
-                             ([[DMP([QQ(1),QQ(0)],QQ)]], 1),
+        (DMP([QQ(1,2)],QQ), [([[DMP([QQ(1),QQ(0)],QQ)]], 1),
+                             ([[DMP([QQ(1)],QQ)],[]], 1),
                              ([[DMP([QQ(1)],QQ)],[DMP([QQ(1),QQ(0)],QQ)]], 1)])
 
     K = FF(2)
