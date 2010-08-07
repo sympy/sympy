@@ -73,9 +73,13 @@ from sympy.utilities.lambdify import implemented_function
 class CodeWrapError(Exception): pass
 
 class CodeWrapper:
-    _filename = "codewrapper"
-    _module_basename = "autowrapped"
+    _filename = "wrapped_code"
+    _module_basename = "wrapper_module"
     _module_counter = 0
+
+    @property
+    def filename(self):
+        return "%s_%s" % (self._filename, CodeWrapper._module_counter)
 
     @property
     def module_name(self):
@@ -97,7 +101,7 @@ class CodeWrapper:
         return bool(self.filepath)
 
     def _generate_code(self, routine):
-        self.generator.write([routine], self._filename, True, self.include_header,
+        self.generator.write([routine], self.filename, True, self.include_header,
                 self.include_empty)
 
     def wrap_code(self, routine):
@@ -169,11 +173,11 @@ setup(
 
     def _prepare_files(self, routine):
         pyxfilename = self.module_name + '.pyx'
-        codefilename = "%s.%s" % (self._filename, self.generator.code_extension)
+        codefilename = "%s.%s" % (self.filename, self.generator.code_extension)
 
         # pyx
         f = file(pyxfilename, 'w')
-        self.dump_pyx([routine], f, self._filename,
+        self.dump_pyx([routine], f, self.filename,
                 self.include_header, self.include_empty)
         f.close()
 
@@ -261,7 +265,7 @@ setup(
 class F2PyCodeWrapper(CodeWrapper):
 
     def _process_files(self, routine):
-        filename = self._filename + '.' + self.generator.code_extension
+        filename = self.filename + '.' + self.generator.code_extension
         command = ["f2py", "-m", self.module_name, "-c" , filename]
         null = open(os.devnull, 'w')
         retcode = subprocess.call(command, stdout=null)
