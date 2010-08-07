@@ -18,7 +18,7 @@ responsibility for generating properly cased Fortran code to the user.
 """
 
 
-from str import StrPrinter
+from sympy.printing.codeprinter import CodePrinter
 from sympy.printing.precedence import precedence
 from sympy.core import S, Add, I, Symbol, Basic
 from sympy.core.numbers import NumberSymbol
@@ -34,7 +34,7 @@ implicit_functions = set([
 ])
 
 
-class FCodePrinter(StrPrinter):
+class FCodePrinter(CodePrinter):
     """A printer to convert sympy expressions to strings of Fortran code"""
     printmethod = "_fcode"
 
@@ -48,7 +48,7 @@ class FCodePrinter(StrPrinter):
         'source_format': 'fixed',
     }
     def __init__(self, settings=None):
-        StrPrinter.__init__(self, settings)
+        CodePrinter.__init__(self, settings)
         self._init_leading_padding()
         assign_to = self._settings['assign_to']
         if isinstance(assign_to, basestring):
@@ -57,6 +57,16 @@ class FCodePrinter(StrPrinter):
             raise TypeError("FCodePrinter cannot assign to object of type %s"%
                     type(assign_to))
 
+    def _rate_index_position(self, p):
+        """function to calculate score based on position among indices
+
+        This method is used to sort loops in an optimized order, see
+        CodePrinter._sort_optimized()
+        """
+        return -p*5
+
+    def _get_statement(self, codestring):
+        return codestring
 
     def _init_leading_padding(self):
         # leading columns depend on fixed or free format
@@ -82,11 +92,10 @@ class FCodePrinter(StrPrinter):
                 result.append(self._lead_code + line)
         return result
 
-    def _get_loop_opening_ending_ints(self, expr):
+    def _get_loop_opening_ending_ints(self, indices):
         """Returns a tuple (open_lines, close_lines) containing lists of codelines
         """
 
-        indices = expr.atoms(Idx)
         # FIXME: sort indices in an optimized way
         open_lines = []
         close_lines = []
@@ -115,14 +124,6 @@ class FCodePrinter(StrPrinter):
         self._not_fortran = set([])
 
 
-        # Setup loops if expression contain Indexed objects
-        openloop, closeloop, local_ints = self._get_loop_opening_ending_ints(expr)
-
-        # the lhs may contain loops that are not in the rhs
-        lhs = self._settings['assign_to']
-        if lhs:
-            lhs_printed = self._print(lhs)
-
         lines = []
         if isinstance(expr, Piecewise):
             # support for top-level Piecewise function
@@ -133,24 +134,10 @@ class FCodePrinter(StrPrinter):
                     lines.append("else")
                 else:
                     lines.append("else if (%s) then" % self._print(c))
-                if self._settings["assign_to"] is None:
-                    lines.extend(openloop)
-                    lines.append("  %s" % self._print(e))
-                    lines.extend(closeloop)
-                else:
-                    lines.extend(openloop)
-                    lines.append("  %s = %s" % (lhs_printed, self._print(e)))
-                    lines.extend(closeloop)
+                lines.extend(self._doprint_a_piece(e, self._settings['assign_to']))
             lines.append("end if")
         else:
-            lines.extend(openloop)
-            line = StrPrinter.doprint(self, expr)
-            if self._settings["assign_to"] is None:
-                text = "%s" % line
-            else:
-                text = "%s = %s" % (lhs_printed, line)
-            lines.append(text)
-            lines.extend(closeloop)
+            lines.extend(self._doprint_a_piece(expr, self._settings['assign_to']))
 
         # format the output
         if self._settings["human"]:
@@ -163,14 +150,12 @@ class FCodePrinter(StrPrinter):
                 frontlines.append("parameter (%s = %s)" % (name, value))
             frontlines.extend(lines)
             lines = frontlines
-            lines = self._pad_leading_columns(lines)
-            lines = self._wrap_fortran(lines)
             lines = self.indent_code(lines)
+            lines = self._wrap_fortran(lines)
             result = "\n".join(lines)
         else:
-            lines = self._pad_leading_columns(lines)
-            lines = self._wrap_fortran(lines)
             lines = self.indent_code(lines)
+            lines = self._wrap_fortran(lines)
             result = number_symbols, self._not_fortran, "\n".join(lines)
 
         del self._not_fortran
@@ -213,7 +198,7 @@ class FCodePrinter(StrPrinter):
                     self._print(-I*Add(*pure_imaginary)),
                 )
         else:
-            return StrPrinter._print_Add(self, expr)
+            return CodePrinter._print_Add(self, expr)
 
     def _print_Function(self, expr):
         name = self._settings["user_functions"].get(expr.__class__)
@@ -242,7 +227,7 @@ class FCodePrinter(StrPrinter):
                 self._print(-I*expr)
             )
         else:
-            return StrPrinter._print_Mul(self, expr)
+            return CodePrinter._print_Mul(self, expr)
 
     def _print_NumberSymbol(self, expr):
         # Standard Fortran has no predefined constants. Write their string
@@ -263,7 +248,7 @@ class FCodePrinter(StrPrinter):
         elif expr.exp == 0.5:
             return 'sqrt(%s)' % self._print(expr.base)
         else:
-            return StrPrinter._print_Pow(self, expr)
+            return CodePrinter._print_Pow(self, expr)
 
     def _print_Rational(self, expr):
         p, q = int(expr.p), int(expr.q)
@@ -381,16 +366,15 @@ class FCodePrinter(StrPrinter):
 
     def indent_code(self, code):
         """Accepts a string of code or a list of code lines"""
-        if self._settings['source_format'] == 'fixed':
-            return code
         if isinstance(code, basestring):
             code_lines = self.indent_code(code.splitlines())
             return '\n'.join(code_lines)
 
+        free = self._settings['source_format'] == 'free'
         code = [ line.lstrip() for line in code ]
 
-        inc_keyword = ('do ', 'if(', 'if ', 'do\n')
-        dec_keyword = ('end ', 'enddo', 'end\n')
+        inc_keyword = ('do ', 'if(', 'if ', 'do\n', 'else')
+        dec_keyword = ('end ', 'enddo', 'end\n', 'else')
 
         increase = [ int(reduce(lambda x, y: x or line.startswith(y),
                                 inc_keyword, False)) \
@@ -409,14 +393,26 @@ class FCodePrinter(StrPrinter):
                 new_code.append(line)
                 continue
             level -= decrease[i]
-            padding = " "*(level*tabwidth + cont_padding)
-            new_code.append("%s%s" % (padding, line))
+
+            if free:
+                padding = " "*(level*tabwidth + cont_padding)
+            else:
+                padding = " "*level*tabwidth
+
+            line = "%s%s" % (padding, line)
+            if not free:
+                line = self._pad_leading_columns([line])[0]
+
+            new_code.append(line)
 
             if continuation[i]:
                 cont_padding = 2*tabwidth
             else:
                 cont_padding = 0
             level += increase[i]
+
+        if not free:
+            return self._wrap_fortran(new_code)
         return new_code
 
 def fcode(expr, **settings):

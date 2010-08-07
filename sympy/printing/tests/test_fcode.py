@@ -107,18 +107,20 @@ def test_line_wrapping():
 
 def test_fcode_Piecewise():
     x = symbols('x')
-    assert fcode(Piecewise((x,x<1),(x**2,True))) == (
+    code = fcode(Piecewise((x,x<1),(x**2,True)))
+    expected = (
         "      if (x < 1) then\n"
-        "        x\n"
+        "         x\n"
         "      else\n"
-        "        x**2\n"
+        "         x**2\n"
         "      end if"
     )
+    assert code == expected
     assert fcode(Piecewise((x,x<1),(x**2,True)), assign_to="var") == (
         "      if (x < 1) then\n"
-        "        var = x\n"
+        "         var = x\n"
         "      else\n"
-        "        var = x**2\n"
+        "         var = x**2\n"
         "      end if"
     )
     a = cos(x)/x
@@ -126,35 +128,37 @@ def test_fcode_Piecewise():
     for i in xrange(10):
         a = diff(a, x)
         b = diff(b, x)
-    assert fcode(Piecewise((a,x<0),(b,True)), assign_to="weird_name") == (
+    expected = (
         "      if (x < 0) then\n"
-        "        weird_name = -cos(x)/x - 1814400*cos(x)/x**9 - 604800*sin(x)/x\n"
+        "         weird_name = -cos(x)/x - 1814400*cos(x)/x**9 - 604800*sin(x)/x\n"
         "     @ **8 - 5040*cos(x)/x**5 - 720*sin(x)/x**4 + 10*sin(x)/x**2 + 90*\n"
         "     @ cos(x)/x**3 + 30240*sin(x)/x**6 + 151200*cos(x)/x**7 + 3628800*\n"
         "     @ cos(x)/x**11 + 3628800*sin(x)/x**10\n"
         "      else\n"
-        "        weird_name = -sin(x)/x - 3628800*cos(x)/x**10 - 1814400*sin(x)/x\n"
-        "     @ **9 - 30240*cos(x)/x**6 - 5040*sin(x)/x**5 - 10*cos(x)/x**2 + 90*\n"
-        "     @ sin(x)/x**3 + 720*cos(x)/x**4 + 151200*sin(x)/x**7 + 604800*cos(x\n"
-        "     @ )/x**8 + 3628800*sin(x)/x**11\n"
+        "         weird_name = -sin(x)/x - 3628800*cos(x)/x**10 - 1814400*sin(x)/\n"
+        "     @ x**9 - 30240*cos(x)/x**6 - 5040*sin(x)/x**5 - 10*cos(x)/x**2 +\n"
+        "     @ 90*sin(x)/x**3 + 720*cos(x)/x**4 + 151200*sin(x)/x**7 + 604800*\n"
+        "     @ cos(x)/x**8 + 3628800*sin(x)/x**11\n"
         "      end if"
     )
+    code = fcode(Piecewise((a,x<0),(b,True)), assign_to="weird_name")
+    assert code == expected
     assert fcode(Piecewise((x,x<1),(x**2,x>1),(sin(x),True))) == (
         "      if (x < 1) then\n"
-        "        x\n"
+        "         x\n"
         "      else if (1 < x) then\n"
-        "        x**2\n"
+        "         x**2\n"
         "      else\n"
-        "        sin(x)\n"
+        "         sin(x)\n"
         "      end if"
     )
     assert fcode(Piecewise((x,x<1),(x**2,x>1),(sin(x),x>0))) == (
         "      if (x < 1) then\n"
-        "        x\n"
+        "         x\n"
         "      else if (1 < x) then\n"
-        "        x**2\n"
+        "         x**2\n"
         "      else if (0 < x) then\n"
-        "        sin(x)\n"
+        "         sin(x)\n"
         "      end if"
     )
 
@@ -244,31 +248,26 @@ def test_free_form_comment_line():
 
 def test_loops():
     from sympy import symbols
-    i,j,n,m = symbols('i j n m', integer=True)
-    A,x,y = symbols('A x y')
-    A = IndexedBase(A)[Idx(i, m), Idx(j, n)]
-    x = IndexedBase(x)[Idx(j, n)]
-    y = IndexedBase(y)[Idx(i, m)]
-
-    # human = False
-    printer = FCodePrinter({ 'source_format': 'free', 'assign_to':y, 'human':0})
-    expected = ([], set([A, x, y, Idx(j, n), Idx(i, m)]), 'do i = 1, m\n   do j = 1, n\n      y(i) = A(i, j)*x(j)\n   end do\nend do')
-    code = printer.doprint(A*x)
-    # assert expected == code
-
-    # human = True
-    printer = FCodePrinter({ 'source_format': 'free', 'assign_to':y, 'human':1})
+    n,m = symbols('n m', integer=True)
+    A = IndexedBase('A')
+    x = IndexedBase('x')
+    y = IndexedBase('y')
+    i = Idx('i', m)
+    j = Idx('j', n)
 
     expected = (
+            'do i = 1, m\n'
+            '   y(i) = 0\n'
+            'end do\n'
             'do i = 1, m\n'
             '   do j = 1, n\n'
             '      y(i) = %(rhs)s\n'
             '   end do\n'
             'end do'
             )
-    code = printer.doprint(A*x)
-    assert (code == expected % {'rhs': 'A(i, j)*x(j)'} or
-            code == expected % {'rhs': 'x(j)*A(i, j)'})
+    code = fcode(A[i, j]*x[j], assign_to=y[i], source_format='free')
+    assert (code == expected % {'rhs': 'A(i, j)*x(j) + y(i)'} or
+            code == expected % {'rhs': 'x(j)*A(i, j) + y(i)'})
 
 def test_derived_classes():
     class MyFancyFCodePrinter(FCodePrinter):
