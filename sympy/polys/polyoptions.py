@@ -237,7 +237,9 @@ class Gens(Option):
         elif len(gens) == 1 and hasattr(gens[0], '__iter__'):
             gens = gens[0]
 
-        if len(set(gens)) != len(gens):
+        if gens == (None,):
+            gens = ()
+        elif len(set(gens)) != len(gens):
             raise GeneratorsError("duplicated generators: %s" % str(gens))
 
         return tuple(gens)
