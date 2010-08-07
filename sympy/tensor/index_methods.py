@@ -250,15 +250,27 @@ def get_contraction_structure(expr):
 
     By `dummy' we mean indices that are summation indices.
 
-    The stucture of the expression is determined and returned as follows:
+    The stucture of the expression is determined and described as follows:
 
-    1) The terms of a conforming summation are returned as a dict where the keys
-    are summation indices and the values are terms for which the dummies are
-    relevant.
+    1) The terms of a conforming summation are returned as a dict where the
+    keys are summation indices and the values are terms for which the dummies
+    are relevant.  This applies whenever an Add object is a node in the Sympy
+    expression tree.
 
-    2) If there are nested Add objects, we recurse to determine summation
-    indices for the the deeper terms. The resulting dict is returned as a value
-    in the dictionary, and the Add expression is the corresponding key.
+    2) For all nodes in the Sympy expression tree that are not of type Add, the
+    following applies:  If a node has nested contractions in one of it's
+    arguments, the node will be present as a key in the dict.  For that key,
+    the corresponding value is a list, containing dicts which are results of
+    recursive calls to get_contraction_structure().  The list contains only
+    dicts for the non-trivial deeper structures, ommitting dicts with None as
+    the one and only key.
+
+    Note that the presence of expressions among the dictinary keys indicates
+    multiple levels of index contractions.  A nested dict displays nested
+    contractions and may itself contain dicts from a deeper level.  In
+    practical calculations the summation in the deepest nested level must be
+    calculated first so that the outer expression can access the resulting
+    indexed object.
 
     Examples
     ========
@@ -267,28 +279,47 @@ def get_contraction_structure(expr):
     >>> from sympy import symbols
     >>> from sympy.tensor import IndexedBase, Idx
     >>> x, y, A = map(IndexedBase, ['x', 'y', 'A'])
-    >>> i, j, k, l = symbols('i j k l', integer=True)
+    >>> i, j, k, l = map(Idx, ['i', 'j', 'k', 'l'])
     >>> get_contraction_structure(x[i]*y[i] + A[j, j])
     {(i,): set([x[i]*y[i]]), (j,): set([A[j, j]])}
     >>> get_contraction_structure(x[i]*y[j])
     {None: set([x[i]*y[j]])}
 
-    A nested Add object is returned as a nested dictionary.  The term
-    containing the parenthesis is used as the key, and it stores the dictionary
-    resulting from a recursive call on the Add expression.
+    A multiplication of contracted factors results in nested dicts representing
+    the internal contractions.
+
+    >>> d = get_contraction_structure(x[i, i]*y[j, j])
+    >>> sorted(d.keys())
+    [None, x[i, i]*y[j, j]]
+    >>> d[None]  # Note that the product has no contractions
+    set([x[i, i]*y[j, j]])
+    >>> sorted(d[x[i, i]*y[j, j]])  # factors are contracted ``first''
+    [{(i,): set([x[i, i]])}, {(j,): set([y[j, j]])}]
+
+    A parenthesized Add object is also returned as a nested dictionary.  The
+    term containing the parenthesis is a Mul with a contraction among the
+    arguments, so it will be found as a key in the result.  It stores the
+    dictionary resulting from a recursive call on the Add expression.
 
     >>> d = get_contraction_structure(x[i]*(y[i] + A[i, j]*x[j]))
     >>> sorted(d.keys())
     [(i,), x[i]*(A[i, j]*x[j] + y[i])]
-    >>> d[(Idx(i),)]
+    >>> d[(i,)]
     set([x[i]*(A[i, j]*x[j] + y[i])])
     >>> d[x[i]*(A[i, j]*x[j] + y[i])]
     [{None: set([y[i]]), (j,): set([A[i, j]*x[j]])}]
 
-    Note that the presence of expressions among the dictinary keys indicates a
-    factorization of the array contraction.  The summation in the deepest
-    nested level must be calculated first so that the external contraction can access
-    the resulting array with index j.
+    Powers with contractions in either base or exponent will also be found as
+    keys in the dictionary, mapping to a list of results from recursive calls:
+
+    >>> d = get_contraction_structure(A[j, j]**A[i, i])
+    >>> d.keys()
+    [None, A[j, j]**A[i, i]]
+    >>> nested_contractions = d[A[j, j]**A[i, i]]
+    >>> nested_contractions[0]
+    {(j,): set([A[j, j]])}
+    >>> nested_contractions[1]
+    {(i,): set([A[i, i]])}
 
     """
 
