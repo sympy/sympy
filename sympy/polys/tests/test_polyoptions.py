@@ -49,6 +49,7 @@ def test_Expand_postprocess():
     assert opt == {'expand': True}
 
 def test_Gens_preprocess():
+    assert Gens.preprocess((None,)) == ()
     assert Gens.preprocess((x, y, z)) == (x, y, z)
     assert Gens.preprocess(((x, y, z),)) == (x, y, z)
 
