@@ -3607,7 +3607,44 @@ def cofactors(f, g, *gens, **args):
     else:
         return h, cff, cfg
 
-def gcd(f, g, *gens, **args):
+def gcd_list(polys, *gens, **args):
+    """
+    Compute GCD of a list of polynomials.
+
+    Example
+    =======
+
+    >>> from sympy import gcd_list
+    >>> from sympy.abc import x
+
+    >>> gcd_list([x**3 - 1, x**2 - 1, x**2 - 3*x + 2])
+    -1 + x
+
+    """
+    options.allowed_flags(args, ['polys'])
+
+    if not polys:
+        raise ValueError('expected non-empty iterable container, got %s' % polys)
+
+    try:
+        polys, opt = parallel_poly_from_expr(polys, *gens, **args)
+    except PolificationFailed, exc:
+        raise ComputationFailed('gcd_list', len(polys), exc)
+
+    result, polys = polys[0], polys[1:]
+
+    for poly in polys:
+        result = result.gcd(poly)
+
+        if result.is_one:
+            break
+
+    if not opt.polys:
+        return result.as_basic()
+    else:
+        return result
+
+def gcd(f, g=None, *gens, **args):
     """
     Compute GCD of ``f`` and ``g``.
 
@@ -3621,6 +3658,9 @@ def gcd(f, g, *gens, **args):
     -1 + x
 
     """
+    if hasattr(f, '__iter__'):
+        return gcd_list(f, *((g,) + gens), **args)
+
     options.allowed_flags(args, ['polys'])
 
     try:
@@ -3643,7 +3683,41 @@ def gcd(f, g, *gens, **args):
     else:
         return result
 
-def lcm(f, g, *gens, **args):
+def lcm_list(polys, *gens, **args):
+    """
+    Compute LCM of a list of polynomials.
+
+    Example
+    =======
+
+    >>> from sympy import lcm_list
+    >>> from sympy.abc import x
+
+    >>> lcm_list([x**3 - 1, x**2 - 1, x**2 - 3*x + 2])
+    2 + x - x**2 - 2*x**3 - x**4 + x**5
+
+    """
+    options.allowed_flags(args, ['polys'])
+
+    if not polys:
+        raise ValueError('expected non-empty iterable container, got %s' % polys)
+
+    try:
+        polys, opt = parallel_poly_from_expr(polys, *gens, **args)
+    except PolificationFailed, exc:
+        raise ComputationFailed('lcm_list', len(polys), exc)
+
+    result, polys = polys[0], polys[1:]
+
+    for poly in polys:
+        result = result.lcm(poly)
+
+    if not opt.polys:
+        return result.as_basic()
+    else:
+        return result
+
+def lcm(f, g=None, *gens, **args):
     """
     Compute LCM of ``f`` and ``g``.
 
@@ -3657,6 +3731,9 @@ def lcm(f, g, *gens, **args):
     2 - x - 2*x**2 + x**3
 
     """
+    if hasattr(f, '__iter__'):
+        return lcm_list(f, *((g,) + gens), **args)
+
     options.allowed_flags(args, ['polys'])
 
     try:
