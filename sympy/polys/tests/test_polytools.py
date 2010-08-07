@@ -10,7 +10,9 @@ from sympy.polys.polytools import (
     half_gcdex, gcdex, invert,
     subresultants,
     resultant, discriminant,
-    cofactors, gcd, lcm, terms_gcd,
+    terms_gcd, cofactors,
+    gcd, gcd_list,
+    lcm, lcm_list,
     trunc,
     monic, content, primitive,
     compose, decompose,
@@ -1242,6 +1244,14 @@ def test_discriminant():
     assert discriminant(F, polys=False) == g
 
     raises(ComputationFailed, "discriminant(4)")
+
+def test_gcd_list():
+    assert gcd_list([x**3 - 1, x**2 - 1, x**2 - 3*x + 2]) == -1 + x
+    raises(ValueError, "gcd_list([])")
+
+def test_lcm_list():
+    assert lcm_list([x**3 - 1, x**2 - 1, x**2 - 3*x + 2]) == 2 + x - x**2 - 2*x**3 - x**4 + x**5
+    raises(ValueError, "lcm_list([])")
 
 def test_gcd():
     f, g = x**3 - 1, x**2 - 1
