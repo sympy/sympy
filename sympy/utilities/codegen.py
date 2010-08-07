@@ -203,8 +203,16 @@ class Routine(object):
             if missing:
                 raise CodeGenError("Argument list didn't specify: %s" %
                         ", ".join([str(m) for m in missing]))
-            arg_pos_dict = dict([(arg, n) for (n, arg) in enumerate(argument_sequence)])
-            arg_list.sort(key=lambda x: arg_pos_dict[x.name])
+
+            # create redundant arguments to produce the requested sequence
+            name_arg_dict = dict([(x.name, x) for x in arg_list])
+            new_args = []
+            for symbol in argument_sequence:
+                try:
+                    new_args.append(name_arg_dict[symbol])
+                except KeyError:
+                    new_args.append(InputArgument(symbol))
+            arg_list = new_args
 
         self.name = name
         self.arguments = arg_list
@@ -808,12 +816,13 @@ def codegen(name_expr, language, prefix, project="project", to_files=False, head
          empty  --  When True, empty lines are used to structure the code.
                     [DEFAULT=True]
          argument_sequence  --  sequence of arguments for the routine in a
-                                preferred order.  An CodeGenError is raised
-                                if arguments are missing, but unused arguments
-                                are silently ignored.  If omitted, arguments
-                                will be ordered alphabetically, but with all
-                                input aguments first, and then output or in-out
-                                arguments.
+                                preferred order.  A CodeGenError is raised if
+                                required arguments are missing.  Redundant
+                                arguments are used without warning.
+
+                                If omitted, arguments will be ordered
+                                alphabetically, but with all input aguments
+                                first, and then output or in-out arguments.
 
        >>> from sympy import symbols
        >>> from sympy.utilities.codegen import codegen

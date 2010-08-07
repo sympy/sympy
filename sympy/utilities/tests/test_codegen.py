@@ -72,7 +72,7 @@ def test_simple_c_code():
 
 def test_c_code_argument_order():
     x,y,z = symbols('xyz')
-    expr = (x+y)*z
+    expr = x + y
     routine = Routine("test", expr, argument_sequence=[z, x, y])
     code_gen = CCodeGen()
     source = get_string(code_gen.dump_c, [routine])
@@ -80,7 +80,7 @@ def test_c_code_argument_order():
         "#include \"file.h\"\n"
         "#include <math.h>\n"
         "double test(double z, double x, double y) {\n"
-        "   return z*(x + y);\n"
+        "   return x + y;\n"
         "}\n"
     )
     assert source == expected
@@ -416,7 +416,7 @@ def test_simple_f_code():
 
 def test_f_code_argument_order():
     x,y,z = symbols('xyz')
-    expr = (x+y)*z
+    expr = x + y
     routine = Routine("test", expr, argument_sequence=[z, x, y])
     code_gen = FCodeGen()
     source = get_string(code_gen.dump_f95, [routine])
@@ -426,7 +426,7 @@ def test_f_code_argument_order():
             "REAL*8, intent(in) :: z\n"
             "REAL*8, intent(in) :: x\n"
             "REAL*8, intent(in) :: y\n"
-            "test = z*(x + y)\n"
+            "test = x + y\n"
             "end function\n"
     )
     assert source == expected
