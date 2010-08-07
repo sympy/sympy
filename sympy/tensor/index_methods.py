@@ -98,7 +98,13 @@ def _get_indices_Add(expr):
 
     inds = map(get_indices, expr.args)
     inds, syms = zip(*inds)
-    if not all(map(lambda x: x == inds[0], inds[1:])):
+
+    # allow broadcast of scalars
+    non_scalars = filter(lambda x: x != set(), inds)
+    if not non_scalars:
+        return set(), {}
+
+    if not all(map(lambda x: x == non_scalars[0], non_scalars[1:])):
         raise IndexConformanceException("Indices are not consistent: %s"%expr)
     if not reduce(lambda x, y: x!=y or y, syms):
         symmetries = syms[0]
@@ -106,7 +112,7 @@ def _get_indices_Add(expr):
         # FIXME: search for symmetries
         symmetries = {}
 
-    return inds[0], symmetries
+    return non_scalars[0], symmetries
 
 def get_indices(expr):
     """Determine the outer indices of expression `expr'

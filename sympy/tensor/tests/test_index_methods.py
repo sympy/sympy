@@ -32,7 +32,12 @@ def test_get_indices_exceptions():
     y = IndexedBase('y')
     i, j = Idx('i'), Idx('j')
     raises(IndexConformanceException, 'get_indices(x[i] + y[j])')
-    raises(IndexConformanceException, 'get_indices(x[i] + y[i, i])')
+
+def test_scalar_broadcast():
+    x = IndexedBase('x')
+    y = IndexedBase('y')
+    i, j = Idx('i'), Idx('j')
+    assert get_indices(x[i] + y[i, i]) == (set([i]), {})
 
 def test_get_indices_add():
     x = IndexedBase('x')
