@@ -8,8 +8,7 @@ from sympy.core.mul import Mul
 from sympy.printing.str import sstr
 from sympy.core.add import Add
 from sympy.core.power import Pow
-from sympy.physics.quantumbasic import QuantumBasic
-from sympy.physics.quantumbasic import QuantumError
+from sympy.physics.quantumbasic import QuantumError, QuantumBasic
 
 class QAssocOp(QuantumBasic):
     #Mul and add need Expand Methods as well as Identity methods. I need to figure out how to set what something evaluates

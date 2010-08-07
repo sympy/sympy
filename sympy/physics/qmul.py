@@ -24,10 +24,10 @@ class QMul(QAssocOp):
             retVal.hilbert_space = Object1.hilbert_space
             retVal.evaluates = Object1.evaluates 
             return retVal
-            
+
         if Object1.hilbert_space != Object2.hilbert_space:
             raise Exception("Hilbert Spaces do not match") 
-         
+
         if issubclass(Object1.evaluates, (Operator, OuterProduct)):
             if issubclass(Object2.evaluates, (Operator, OuterProduct)):
                 retVal = cls.QMulflatten(Object1, Object2)
@@ -49,7 +49,7 @@ class QMul(QAssocOp):
                 retVal = cls.QMulflatten(Object1, Object2)
                 retVal.hilbert_space = Object2.hilbert_space
                 retVal.evaluates = Object1.evaluates
-                return Object1
+                return retVal
         #figure out inner and outer products
         elif issubclass(Object1.evaluates, KetBase) and issubclass(Object2.evaluates, BraBase):
             retVal = cls.QMulflatten(Object1, Object2)

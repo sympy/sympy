@@ -6,7 +6,7 @@ from sympy.physics.quantum import (
     Bra,
     TimeDepKet,
     TimeDepBra,
-    BasisSet
+    BasisSet,
     InnerProduct,
     OuterProduct
 )
@@ -49,7 +49,7 @@ def test_Ket():
     assert a*A == A*a
     assert A+B
     assert A+B == B+A
-#    assert expand(a*(A+B)) == a*A+a*B
+    assert expand(a*(A+B)) == a*A+a*B
     assert Dagger(a*A+b*B) == Dagger(A)*Dagger(a)+Dagger(B)*Dagger(b) == Bra('A')*Dagger(a)+Bra('B')*Dagger(b)
 
 def test_Bra():
@@ -64,7 +64,7 @@ def test_Bra():
     assert a*A == A*a
     assert A+B
     assert A+B == B+A
-#    assert expand(a*(A+B)) == a*A+a*B
+    assert expand(a*(A+B)) == a*A+a*B
 
 def test_InnerProduct():
     A = Bra('A')
@@ -104,7 +104,7 @@ def test_Operator():
     assert a*A
     assert A+B == B+A
     assert (A+B)+C == A+(B+C)
-#    assert expand(a*(A+B)) == a*A+a*B
+    assert expand(a*(A+B)) == a*A+a*B
     assert Dagger(a*A) == Dagger(A)*Dagger(a)
     assert A*B != B*A
     assert A*(B*C) == (A*B)*C
@@ -115,5 +115,5 @@ def test_mixed():
     C = Operator('C')
     D = Operator('D')
     assert C*B
-#    assert expand((C+D)*(A+B)) == (C*A + C*B + D*A + D*B)
-#    assert Dagger(C*A) == Dagger(A)*Dagger(C) == Bra('A')*Dagger(C)
+    assert expand((C+D)*(A+B)) == (C*A + C*B + D*A + D*B)
+    assert Dagger(C*A) == Dagger(A)*Dagger(C) == Bra('A')*Dagger(C)
