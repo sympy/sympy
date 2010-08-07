@@ -860,12 +860,13 @@ def build_extension(f, x, handle_first='log'):
                     darga = (argd*derivation(Poly(arga, t), D, T) -
                         arga*derivation(Poly(argd, t), D, T))
                     dargd = argd**2
+                    darga, dargd = darga.cancel(dargd, include=True)
                     darg = darga.as_basic()/dargd.as_basic()
                     t = ts.next()
                     T.append(t)
                     E_args.append(arg)
                     E_K.append(len(T) - 1)
-                    D.append(darg.as_poly(t)*Poly(t, t))
+                    D.append(darg.as_poly(t, expand=False)*Poly(t, t, expand=False))
                     i = Symbol('i', dummy=True)
                     Tfuncs = [Lambda(i, exp(arg.subs(x, i)))] + Tfuncs
                     newf = newf.subs([(exp(expargs[i]), t**p) for i, p in others])
@@ -906,7 +907,7 @@ def build_extension(f, x, handle_first='log'):
                     T.append(t)
                     L_args.append(arg)
                     L_K.append(len(T) - 1)
-                    D.append(cancel(darg.as_basic()/arg).as_poly(t))
+                    D.append(cancel(darg.as_basic()/arg).as_poly(t, expand=False))
                     i = Symbol('i', dummy=True)
                     Tfuncs = [Lambda(i, log(arg.subs(x, i)))] + Tfuncs
                     newf = newf.subs(log(arg), t)
