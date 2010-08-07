@@ -16,13 +16,16 @@ def test_printmethod():
 
 def test_fcode_Pow():
     x, y = symbols('xy')
+    n = symbols('n', integer=True)
     assert fcode(x**3) == "      x**3"
     assert fcode(x**(y**3)) == "      x**(y**3)"
     assert fcode(1/(sin(x)*3.5)**(x - y**x)/(x**2 + y)) == \
         "      (3.5*sin(x))**(-x + y**x)/(y + x**2)"
     assert fcode(sqrt(x)) == '      sqrt(x)'
+    assert fcode(sqrt(n)) == '      sqrt(dble(n))'
     assert fcode(x**0.5) == '      sqrt(x)'
     assert fcode(x**Rational(1,2)) == '      sqrt(x)'
+    assert fcode(sqrt(10)) == '      sqrt(10.0)'
 
 def test_fcode_Rational():
     assert fcode(Rational(3,7)) == "      3.0/7.0"

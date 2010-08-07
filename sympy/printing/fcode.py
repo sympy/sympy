@@ -246,7 +246,13 @@ class FCodePrinter(CodePrinter):
         if expr.exp is S.NegativeOne:
             return '1.0/%s'%(self.parenthesize(expr.base, PREC))
         elif expr.exp == 0.5:
-            return 'sqrt(%s)' % self._print(expr.base)
+            if expr.base.is_integer:
+                if expr.base.is_Number:
+                    return 'sqrt(%s.0)' % self._print(expr.base)
+                else:
+                    return 'sqrt(dble(%s))' % self._print(expr.base)
+            else:
+                return 'sqrt(%s)' % self._print(expr.base)
         else:
             return CodePrinter._print_Pow(self, expr)
 
