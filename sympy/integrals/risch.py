@@ -308,13 +308,14 @@ def residue_reduce(a, d, D, T, z=None, invert=True):
 
     Returns (G, b), where G is a tuple of tuples of the form (s_i, S_i),
     such that g = Add(*[RootSum(s_i, lambda z: z*log(S_i(z, t))) for
-    S_i, s_i in G]). f - Dg is the remaining integral, which is
-    elementary if and only if b == True, and hence the integral of f is
-    elementary if and only if b == True.
+    S_i, s_i in G]). f - Dg is the remaining integral, which is elementary
+    only if b == True, and hence the integral of f is elementary only if
+    b == True.
 
     f - Dg is not calculated in this function because that would require
     explicitly calculating the RootSum.  Use residue_reduce_derivation().
     """
+    # TODO: Use log_to_atan() from rationaltools.py
     # If r = residue_reduce(...), then the logarithmic part is given by:
     # sum([RootSum(a[0].as_poly(z), lambda i: i*log(a[1].as_basic()).subs(z,
     # i)).subs(t, log(x)) for a in r[0]])
@@ -523,7 +524,7 @@ def integrate_hyperexponential_polynomial(p, D, T, z):
 
         aa, ad = a.as_numer_denom()
         aa, ad = aa.as_poly(t1, field=True), ad.as_poly(t1, field=True)
-        iDt = Poly(i, t1)*d.quo(Poly(t, t)).as_poly(t1)
+        iDt = Poly(i, t)*d.quo(Poly(t, t))
         iDta, iDtd = iDt.as_basic().as_numer_denom()
         iDta, iDtd = iDta.as_poly(t1, field=True), iDtd.as_poly(t1, field=True)
         try:
@@ -854,7 +855,12 @@ def build_extension(f, x, handle_first='log'):
                             raise NotImplementedError("Cannot integrate over " +
                             "algebraic extensions.")
                 else:
-                    darg = derivation(Poly(arg, t), D, T)
+                    arga, argd = map(lambda i: Poly(i, t),
+                        arg.as_basic().as_numer_denom())
+                    darga = (argd*derivation(Poly(arga, t), D, T) -
+                        arga*derivation(Poly(argd, t), D, T))
+                    dargd = argd**2
+                    darg = darga.as_basic()/dargd.as_basic()
                     t = ts.next()
                     T.append(t)
                     E_args.append(arg)
@@ -890,7 +896,12 @@ def build_extension(f, x, handle_first='log'):
                     continue
 
                 else:
-                    darg = derivation(Poly(arg, t), D, T)
+                    arga, argd = map(lambda i: Poly(i, t),
+                        arg.as_basic().as_numer_denom())
+                    darga = (argd*derivation(Poly(arga, t), D, T) -
+                        arga*derivation(Poly(argd, t), D, T))
+                    dargd = argd**2
+                    darg = darga.as_basic()/dargd.as_basic()
                     t = ts.next()
                     T.append(t)
                     L_args.append(arg)

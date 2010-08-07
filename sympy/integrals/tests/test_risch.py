@@ -247,3 +247,14 @@ def test_build_extension():
         (Poly(t0*t1, t1), Poly(1, t1), [Poly(1, x), Poly(1/x, t0),
         Poly((1 + t0)*t1, t1)], [x, t0, t1], [Lambda(i, exp(t0*i)),
         Lambda(i, log(i))], [(exp(x*log(x)), x**x)])
+
+    # Rothstein's integral
+    f = (25812845441*exp(x) + 1757211400)/(39916800*exp(3*x) +
+    119750400*exp(x)**2 + 119750400*exp(x) + 39916800)*exp(1/(exp(x) + 1) - 10*x)
+    # XXX: This is the only way to make this work
+    darg = -(10 + 21*t0 + 10*t0**2)/(1 + 2*t0 + t0**2)
+    assert build_extension(f, x) == \
+        (Poly((1757211400 + 25812845441*t0)*t1, t1), Poly(39916800 +
+        119750400*t0 + 119750400*t0**2 + 39916800*t0**3, t1),
+        [Poly(1, x), Poly(t0, t0), darg.as_poly(t1)*Poly(t1, t1)], [x, t0, t1],
+        [Lambda(i, exp(-10*i + 1/(1 + t0))), Lambda(i, exp(i))], [])
