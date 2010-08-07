@@ -8,6 +8,7 @@
 
 from sympy.tensor.indexed import Idx, IndexedBase, Indexed
 from sympy.utilities import all
+from sympy.functions import exp
 
 
 class IndexConformanceException(Exception):
@@ -71,6 +72,53 @@ def _get_indices_Mul(expr, return_dummies=False):
     else:
         return inds, symmetry
 
+def _get_indices_Pow(expr):
+    """Determine outer indices of a power or an exponential.
+
+    A power is considered a universal function, so that the indices of a Pow is
+    just the collection of indices present in the expression.  This may be
+    viewed as a bit inconsistent in the special case:
+
+        x[i]**2 = x[i]*x[i]                                                      (1)
+
+    The above expression could have been interpreted as the contraction of x[i]
+    with itself, but we choose instead to interpret it as a function
+
+        lambda y: y**2
+
+    applied to each element of x (a universal function in numpy terms).  In
+    order to allow an interpretation of (1) as a contraction, we need
+    contravariant and covariant Idx subclasses.  (FIXME: this is not yet
+    implemented)
+
+    Expressions in the base or exponent are subject to contraction as usual,
+    but an index that is present in the exponent, will not be considered
+    contractable with its own base.  Note however, that indices in the same
+    exponent can be contracted with each other.
+
+    >>> from sympy.tensor.index_methods import _get_indices_Pow
+    >>> from sympy import Pow, exp, IndexedBase, Idx
+    >>> A = IndexedBase('A')
+    >>> x = IndexedBase('x')
+    >>> i, j, k = map(Idx, ['i', 'j', 'k'])
+    >>> _get_indices_Pow(exp(A[i, j]*x[j]))
+    (set([i]), {})
+    >>> _get_indices_Pow(Pow(x[i], x[i]))
+    (set([i]), {})
+    >>> _get_indices_Pow(Pow(A[i, j]*x[j], x[i]))
+    (set([i]), {})
+
+    """
+    base, exp = expr.as_base_exp()
+    binds, bsyms = get_indices(base)
+    einds, esyms = get_indices(exp)
+
+    inds = binds | einds
+
+    # FIXME: symmetries from power needs to check special cases, else nothing
+    symmetries = {}
+
+    return inds, symmetries
 
 def _get_indices_Add(expr):
     """Determine outer indices of an Add object.
@@ -187,6 +235,8 @@ def get_indices(expr):
             return _get_indices_Mul(expr)
         elif expr.is_Add:
             return _get_indices_Add(expr)
+        elif expr.is_Pow or isinstance(expr, exp):
+            return _get_indices_Pow(expr)
 
         # this test is expensive, so it should be at the end
         elif not expr.has(Indexed):
@@ -252,13 +302,29 @@ def get_contraction_structure(expr):
     elif expr.is_Mul:
         junk, junk, key = _get_indices_Mul(expr, return_dummies=True)
         result = {key or None: set([expr])}
-        # recurse if we have any Add objects
-        addfactors = filter(lambda x: x.is_Add, expr.args)
-        if addfactors:
-            result[expr] = []
-            for factor in addfactors:
-                d = get_contraction_structure(factor)
-                result[expr].append(d)
+        # recurse on every factor
+        nested = []
+        for fac in expr.args:
+            facd = get_contraction_structure(fac)
+            if not (None in facd and len(facd) == 1):
+                nested.append(facd)
+        if nested:
+            result[expr] = nested
+        return result
+    elif expr.is_Pow or isinstance(expr, exp):
+        # recurse in base and exp separately.  If either has internal
+        # contractions we must include ourselves as a key in the returned dict
+        b, e = expr.as_base_exp()
+        dbase = get_contraction_structure(b)
+        dexp = get_contraction_structure(e)
+
+        dicts = []
+        for d in dbase, dexp:
+            if not (None in d and len(d) == 1):
+                dicts.append(d)
+        result = {None: set([expr])}
+        if dicts:
+            result[expr] = dicts
         return result
     elif expr.is_Add:
         # Note: we just collect all terms with identical summation indices, We
