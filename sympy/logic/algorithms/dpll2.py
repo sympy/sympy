@@ -52,11 +52,14 @@ class SATSolver(object):
      normal form.
     """
 
-    def __init__(self, clauses, variables, var_settings, heuristic = 'vsids', clause_learning = 'simple'):
+    def __init__(self, clauses, variables, var_settings, heuristic = 'vsids', \
+                 clause_learning = 'simple', INTERVAL = 500):
         self.var_settings = var_settings
         self.heuristic = heuristic
         self.is_unsatisfied = False
         self.unit_prop_queue = []
+        self.update_functions = []
+        self.INTERVAL = INTERVAL
 
         self.initialize_variables(variables)
         self.initialize_clauses(clauses)
@@ -67,12 +70,14 @@ class SATSolver(object):
             self.heur_lit_assigned = self.vsids_lit_assigned
             self.heur_lit_unset = self.vsids_lit_unset
             self.heur_clause_added = self.vsids_clause_added
+            self.update_functions.append(self.vsids_decay)
         else:
             raise NotImplementedError
 
         if 'simple' == clause_learning:
             self.add_learned_clause = self.simple_add_learned_clause
             self.compute_conflict = self.simple_compute_conflict
+            self.update_functions.append(self.simple_clean_clauses)
         else:
             raise NotImplementedError
 
@@ -83,6 +88,7 @@ class SATSolver(object):
         # Keep stats
         self.num_decisions = 0
         self.num_learned_clauses = 0
+        self.original_num_clauses = len(self.clauses)
 
     def initialize_variables(self, variables):
         """Set up the variable data structures needed."""
@@ -130,6 +136,10 @@ class SATSolver(object):
 
         # While the theory still has clauses remaining
         while True:
+            # Perform cleanup / fixup at regular intervals
+            if self.num_decisions % self.INTERVAL == 0:
+                for func in self.update_functions:
+                    func()
 
             if flip_var:
                 # We have just backtracked and we are trying to opposite literal
@@ -139,6 +149,7 @@ class SATSolver(object):
             else:
                 # Pick a literal to set
                 lit = self.heur_calculate()
+                self.num_decisions += 1
 
                 # Stopping condition for a satisfying theory
                 if 0 == lit:
@@ -270,15 +281,18 @@ class SATSolver(object):
     #########################
     def vsids_init(self):
         self.lit_heap = []
+        self.lit_scores = {}
         for var in range(1, len(self.variable_set)):
-            heappush(self.lit_heap, (float(-(self.occurrence_count[-var])), -var))
-            heappush(self.lit_heap, (float(-(self.occurrence_count[var])), var))
+            self.lit_scores[var] = -float(self.occurrence_count[var])
+            self.lit_scores[-var] = -float(self.occurrence_count[-var])
+            heappush(self.lit_heap, (self.lit_scores[var], var))
+            heappush(self.lit_heap, (self.lit_scores[-var], -var))
 
     def vsids_decay(self):
         # We divide every literal score by 2 for a decay factor
         #  Note: This doesn't change the heap property
-        for i in range(len(self.lit_heap)):
-            self.lit_heap[i] /= 2.0
+        for lit in self.lit_scores.keys():
+            self.lit_scores[lit] /= 2.0
 
     def vsids_calculate(self):
         """
@@ -287,7 +301,6 @@ class SATSolver(object):
         if len(self.lit_heap) == 0:
             return 0
 
-        self.num_decisions += 1
         while self.variable_set[abs(self.lit_heap[0][1])]:
             heappop(self.lit_heap)
             if len(self.lit_heap) == 0:
@@ -300,11 +313,13 @@ class SATSolver(object):
 
     def vsids_lit_unset(self, lit):
         var = abs(lit)
-        heappush(self.lit_heap, (float(-(self.occurrence_count[-var])), -var))
-        heappush(self.lit_heap, (float(-(self.occurrence_count[var])), var))
+        heappush(self.lit_heap, (self.lit_scores[var], var))
+        heappush(self.lit_heap, (self.lit_scores[-var], -var))
 
     def vsids_clause_added(self, cls):
         self.num_learned_clauses += 1
+        for lit in cls:
+            self.lit_scores[lit] += 1
 
 
     ########################
@@ -328,6 +343,9 @@ class SATSolver(object):
         # Build a clause representing the fact that at least one
         #  decision made so far is wrong.
         return [-(level.decision) for level in self.levels[1:]]
+
+    def simple_clean_clauses(self):
+        pass
 
 class Level(object):
     """
