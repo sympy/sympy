@@ -3607,7 +3607,7 @@ def cofactors(f, g, *gens, **args):
     else:
         return h, cff, cfg
 
-def gcd_list(polys, *gens, **args):
+def gcd_list(F, *gens, **args):
     """
     Compute GCD of a list of polynomials.
 
@@ -3623,13 +3623,13 @@ def gcd_list(polys, *gens, **args):
     """
     options.allowed_flags(args, ['polys'])
 
-    if not polys:
-        raise ValueError('expected non-empty iterable container, got %s' % polys)
+    if not F:
+        raise ValueError('expected non-empty iterable container, got %s' % F)
 
     try:
-        polys, opt = parallel_poly_from_expr(polys, *gens, **args)
+        polys, opt = parallel_poly_from_expr(F, *gens, **args)
     except PolificationFailed, exc:
-        raise ComputationFailed('gcd_list', len(polys), exc)
+        raise ComputationFailed('gcd_list', len(F), exc)
 
     result, polys = polys[0], polys[1:]
 
@@ -3683,7 +3683,7 @@ def gcd(f, g=None, *gens, **args):
     else:
         return result
 
-def lcm_list(polys, *gens, **args):
+def lcm_list(F, *gens, **args):
     """
     Compute LCM of a list of polynomials.
 
@@ -3699,13 +3699,13 @@ def lcm_list(polys, *gens, **args):
     """
     options.allowed_flags(args, ['polys'])
 
-    if not polys:
-        raise ValueError('expected non-empty iterable container, got %s' % polys)
+    if not F:
+        raise ValueError('expected non-empty iterable container, got %s' % F)
 
     try:
-        polys, opt = parallel_poly_from_expr(polys, *gens, **args)
+        polys, opt = parallel_poly_from_expr(F, *gens, **args)
     except PolificationFailed, exc:
-        raise ComputationFailed('lcm_list', len(polys), exc)
+        raise ComputationFailed('lcm_list', len(F), exc)
 
     result, polys = polys[0], polys[1:]
 
@@ -4465,6 +4465,8 @@ def reduced(f, G, *gens, **args):
     ([2*x, 1], y + x**2 + y**2)
 
     """
+    options.allowed_flags(args, ['polys'])
+
     try:
         polys, opt = parallel_poly_from_expr([f] + list(G), *gens, **args)
     except PolificationFailed, exc:
@@ -4517,12 +4519,13 @@ def groebner(F, *gens, **args):
         Algorithms, Springer, Second Edition, 1997, pp. 112
 
     """
+    options.allowed_flags(args, ['monic', 'polys'])
     args = _update_args(args, 'field', True)
 
     try:
         polys, opt = parallel_poly_from_expr(F, *gens, **args)
     except PolificationFailed, exc:
-        raise ComputationFailed('groebner', 0, exc)
+        raise ComputationFailed('groebner', len(F), exc)
 
     for i, poly in enumerate(polys):
         polys[i] = sdp_from_dict(poly.rep.to_dict(), opt.order)
