@@ -9,11 +9,10 @@ sympy.utilities.codegen. The codegen module can be used to generate complete
 source code files that are compilable without further modifications.
 """
 
-from sympy.printing.str import StrPrinter
+from sympy.printing.codeprinter import CodePrinter
 from sympy.printing.precedence import precedence
 from sympy.core import S, Basic, Add, Symbol, NumberSymbol
 from sympy.functions import Piecewise, piecewise_fold
-from sympy.tensor import Idx, Indexed, get_indices, get_contraction_structure
 
 
 # dictionary mapping sympy function to (argument_conditions, C_function).
@@ -23,7 +22,7 @@ known_functions = {
         "abs": [(lambda x: not x.is_integer, "fabs")],
         }
 
-class CCodePrinter(StrPrinter):
+class CCodePrinter(CodePrinter):
     """A printer to convert python expressions to strings of c code"""
     printmethod = "_ccode"
 
@@ -37,13 +36,24 @@ class CCodePrinter(StrPrinter):
 
     def __init__(self, settings={}):
         """Register function mappings supplied by user"""
-        StrPrinter.__init__(self, settings)
+        CodePrinter.__init__(self, settings)
         self.known_functions = dict(known_functions)
         userfuncs = settings.get('user_functions', {})
         for k,v in userfuncs.items():
             if not isinstance(v, tuple):
                 userfuncs[k] = (lambda *x: True, v)
         self.known_functions.update(userfuncs)
+
+    def _rate_index_position(self, p):
+        """function to calculate score based on position among indices
+
+        This method is used to sort loops in an optimized order, see
+        CodePrinter._sort_optimized()
+        """
+        return p*5
+
+    def _get_statement(self, codestring):
+        return "%s;" % codestring
 
     def doprint(self, expr, assign_to=None):
 
@@ -93,111 +103,6 @@ class CCodePrinter(StrPrinter):
         del self._not_c
         del self._number_symbols
         return result
-
-    def _sort_optimized(self, indices, expr):
-
-        if not indices:
-            return []
-
-        # determine optimized loop order by giving a score to each index
-        # the index with the highest score are put in the innermost loop.
-        score_table = {}
-        for i in indices:
-            score_table[i] = 0
-
-        # function to calculate score based on position among indices
-        def points(p):
-            return p*5
-
-        arrays = expr.atoms(Indexed)
-        for arr in arrays:
-            for p, ind in enumerate(arr.indices):
-                try:
-                    score_table[ind] += points(p)
-                except KeyError:
-                    pass
-
-        return sorted(indices, key=lambda x: score_table[x])
-
-    def _doprint_a_piece(self, expr, assign_to=None):
-        # Here we print an expression that may contain Indexed objects, they
-        # correspond to arrays in the generated code.  The low-level implementation
-        # involves looping over array elements and possibly storing results in temporary
-        # variables or accumulate it in the assign_to object.
-
-        rinds, junk = get_indices(expr)
-        linds, junk = get_indices(assign_to)
-
-        # support broadcast of scalar
-        if linds and not rinds:
-            rinds = linds
-
-        if rinds != linds:
-            raise ValueError("lhs indices must match non-dummy rhs indices")
-
-        # Setup loops over non-dummy indices  --  all terms need these
-        indices = self._sort_optimized(rinds, assign_to)
-        openloop, closeloop, junk = self._get_loop_opening_ending_ints(indices)
-
-        lhs_printed = self._print(assign_to)
-        lines = []
-
-        # Setup loops over dummy indices  --  each term needs separate treatment
-        d = get_contraction_structure(expr)
-
-        # terms with no summations first
-        if None in d:
-            text = StrPrinter.doprint(self, Add(*d[None]))
-        else:
-            # If all terms have summations we must initialize array to Zero
-            text = StrPrinter.doprint(self, S.Zero)
-        # skip redundant assignments
-        if text != lhs_printed:
-            lines.extend(openloop)
-            if assign_to is not None:
-                text = "%s = %s;" % (lhs_printed, text)
-            lines.append(text)
-            lines.extend(closeloop)
-
-        for dummies in d:
-            # then terms with summations
-            if isinstance(dummies, tuple):
-                indices = self._sort_optimized(dummies, expr)
-                openloop_d, closeloop_d, junk = self._get_loop_opening_ending_ints(indices)
-
-                for term in d[dummies]:
-                    if term in d and not ([f.keys() for f in d[term]]
-                            == [[None] for f in d[term]]):
-                        # If one factor in the term has it's own internal
-                        # contractions, those must be computed first.
-                        # (temporary variables?)
-                        raise NotImplementedError(
-                                "FIXME: no support for contractions in factor yet")
-                    else:
-
-                        # We need the lhs expression as an accumulator for
-                        # the loops, i.e
-                        #
-                        # for (int d=0; d < dim; d++){
-                        #    lhs[] = lhs[] + term[][d]
-                        # }           ^.................. the accumulator
-                        #
-                        # We check if the expression already contains the
-                        # lhs, and raise an exception if it does, as that
-                        # syntax is currently undefined.  FIXME: What would be
-                        # a good interpretation?
-                        if term.has(assign_to):
-                            raise(ValueError("FIXME: lhs present in rhs,\
-                                this is undefined in CCodePrinter"))
-
-                        lines.extend(openloop)
-                        lines.extend(openloop_d)
-                        text = "%s = %s;" % (lhs_printed, StrPrinter.doprint(self, assign_to + term))
-                        lines.append(text)
-                        lines.extend(closeloop_d)
-                        lines.extend(closeloop)
-
-        return lines
 
     def _get_loop_opening_ending_ints(self, indices):
         """Returns a tuple (open_lines, close_lines) containing lists of codelines
@@ -287,7 +192,7 @@ class CCodePrinter(StrPrinter):
             for cond, cfunc in cond_cfunc:
                 if cond(*expr.args):
                     return "%s(%s)" % (cfunc, self.stringify(expr.args, ", "))
-        return StrPrinter._print_Function(self, expr)
+        return CodePrinter._print_Function(self, expr)
 
     def _print_NumberSymbol(self, expr):
         # A Number symbol that is not implemented here or with _printmethod
