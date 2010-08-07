@@ -310,7 +310,7 @@ def autowrap(expr, language='C', backend='cython', tempdir=None, args=None):
     CodeWrapperClass = _get_code_wrapper_class(backend)
     code_wrapper = CodeWrapperClass(code_generator, tempdir)
     routine  = Routine('autofunc', expr, args)
-    return code_wrapper.wrap_code(routine, args)
+    return code_wrapper.wrap_code(routine)
 
 def binary_function(symfunc, expr, **kwargs):
     """Returns a sympy function with expr as binary implementation
