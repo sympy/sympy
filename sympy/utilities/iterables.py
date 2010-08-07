@@ -307,3 +307,44 @@ def capture(func):
     func()
     sys.stdout = stdout
     return file.getvalue()
+
+def sift(expr, keyfunc):
+    """Sift the arguments of expr into a dictionary according to keyfunc.
+
+    INPUT: expr may be an expression or iterable; if it is an expr then
+    it is converted to a list of expr's args or [expr] if there are no args.
+
+    OUTPUT: each element in expr is stored in a list keyed to the value
+    of keyfunc for the element.
+
+    EXAMPLES:
+
+    >>> from sympy.utilities import sift
+    >>> from sympy.abc import x, y
+    >>> from sympy import sqrt, exp
+
+    >>> sift(range(5), lambda x: x%2)
+    {1: [1, 3], 0: [0, 2, 4]}
+
+    It is possible that some keys are not present, in which case you should
+    used dict's .get() method:
+
+    >>> sift(x+y, lambda x: x.is_commutative)
+    {True: [y, x]}
+    >>> _.get(False, [])
+    []
+
+    Sometimes you won't know how many keys you will get:
+    >>> sift(sqrt(x) + x**2 + exp(x) + (y**x)**2,
+    ... lambda x: x.as_base_exp()[0])
+    {E: [exp(x)], x: [x**(1/2), x**2], y: [y**(2*x)]}
+    >>> _.keys()
+    [E, x, y]
+
+    """
+    d = {}
+    if hasattr(expr, 'args'):
+        expr = expr.args or [expr]
+    for e in expr:
+        d.setdefault(keyfunc(e), []).append(e)
+    return d
