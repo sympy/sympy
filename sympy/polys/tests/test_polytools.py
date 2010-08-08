@@ -409,6 +409,23 @@ def test_Poly_set_modulus():
 
     raises(CoercionFailed, "Poly(x/2 + 1).set_modulus(2)")
 
+def test_Poly_add_ground():
+    assert Poly(x + 1).add_ground(2) == Poly(x + 3)
+
+def test_Poly_sub_ground():
+    assert Poly(x + 1).sub_ground(2) == Poly(x - 1)
+
+def test_Poly_mul_ground():
+    assert Poly(x + 1).mul_ground(2) == Poly(2*x + 2)
+
+def test_Poly_quo_ground():
+    assert Poly(2*x + 4).quo_ground(2) == Poly(x + 2)
+    raises(ExactQuotientFailed, "Poly(2*x + 3).quo_ground(2)")
+
+def test_Poly_exquo_ground():
+    assert Poly(2*x + 4).exquo_ground(2) == Poly(x + 2)
+    assert Poly(2*x + 3).exquo_ground(2) == Poly(x + 1)
+
 def test_Poly_abs():
     assert Poly(-x+1, x).abs() == abs(Poly(-x+1, x)) == Poly(x+1, x)
 
