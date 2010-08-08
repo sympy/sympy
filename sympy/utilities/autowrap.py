@@ -128,6 +128,17 @@ class CodeWrapper:
 
         return self._get_wrapped_function(mod)
 
+    def _process_files(self, routine):
+        command = self.command
+        command.extend(self.flags)
+        if self.quiet:
+            null = open(os.devnull, 'w')
+            retcode = subprocess.call(command, stdout=null)
+        else:
+            retcode = subprocess.call(command)
+        if retcode:
+            raise CodeWrapError
+
 class DummyWrapper(CodeWrapper):
     """Class used for testing independent of backends """
 
@@ -166,15 +177,10 @@ setup(
         )
 """
 
-    def _process_files(self, routine):
+    @property
+    def command(self):
         command = ["python", "setup.py", "build_ext", "--inplace"]
-        if self.quiet:
-            null = open(os.devnull, 'w')
-            retcode = subprocess.call(command, stdout=null)
-        else:
-            retcode = subprocess.call(command)
-        if retcode:
-            raise CodeWrapError
+        return command
 
     def _prepare_files(self, routine):
         pyxfilename = self.module_name + '.pyx'
@@ -269,17 +275,11 @@ setup(
 
 class F2PyCodeWrapper(CodeWrapper):
 
-    def _process_files(self, routine):
+    @property
+    def command(self):
         filename = self.filename + '.' + self.generator.code_extension
         command = ["f2py", "-m", self.module_name, "-c" , filename]
-        command.extend(self.flags)
-        if self.quiet:
-            null = open(os.devnull, 'w')
-            retcode = subprocess.call(command, stdout=null)
-        else:
-            retcode = subprocess.call(command)
-        if retcode:
-            raise CodeWrapError
+        return command
 
     def _prepare_files(self, routine):
         pass
