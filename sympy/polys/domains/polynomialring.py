@@ -41,17 +41,11 @@ class PolynomialRing(Ring, CharacteristicZero, CompositeDomain):
 
     def __eq__(self, other):
         """Returns `True` if two domains are equivalent. """
-        if self.dtype == other.dtype:
-            return self.gens == other.gens
-        else:
-            return False
+        return self.dtype == other.dtype and self.dom == other.dom and self.gens == other.gens
 
     def __ne__(self, other):
         """Returns `False` if two domains are equivalent. """
-        if self.dtype == other.dtype:
-            return self.gens != other.gens
-        else:
-            return True
+        return not self.__eq__(other)
 
     def to_sympy(self, a):
         """Convert `a` to a SymPy object. """
