@@ -3,8 +3,8 @@ from sympy import Poly, Matrix, S, symbols
 from sympy.integrals.prde import (prde_normal_denom, prde_special_denom,
     prde_linear_constraints, constant_system, prde_spde, prde_no_cancel_b_large,
     prde_no_cancel_b_small, limited_integrate_reduce, limited_integrate,
-    is_deriv_k_structure_thm, is_log_deriv_k_t_radical_structure_thm,
-    parametric_log_deriv_heu)
+    is_deriv_k, is_log_deriv_k_t_radical, parametric_log_deriv_heu,
+    is_log_deriv_k_t_radical_in_field)
 
 from sympy.abc import x, t, n
 
@@ -124,29 +124,42 @@ def test_limited_integrate():
 
 def test_is_log_deriv_k_t_radical():
     D = [Poly(1, x)]
-    assert is_log_deriv_k_t_radical_structure_thm(Poly(2*x, x), Poly(1, x),
+    assert is_log_deriv_k_t_radical(Poly(2*x, x), Poly(1, x),
     [], [], [], [], D, [x]) is None
 
     D = [Poly(1, x), Poly(2*t1, t1), Poly(1/x, t2)]
-    assert is_log_deriv_k_t_radical_structure_thm(Poly(x + t2/2, t2),
+    assert is_log_deriv_k_t_radical(Poly(x + t2/2, t2),
     Poly(1, t2), [2], [1], [x], [2*x], D, [x, t1, t2]) == \
         ([(t1, 1), (x, 1)], t1*x, 2, 0)
     # TODO: Add more tests
 
     D = [Poly(1, x), Poly(t0, t0), Poly(1/x, t)]
-    assert is_log_deriv_k_t_radical_structure_thm(Poly(x + t/2 + 3, t), Poly(1, t), [2],
+    assert is_log_deriv_k_t_radical(Poly(x + t/2 + 3, t), Poly(1, t), [2],
     [1], [x], [x], D, [x, t0, t]) == \
         ([(t0, 2), (x, 1)], x*t0**2, 2, 3)
 
 def test_is_deriv_k():
     D = [Poly(1, x), Poly(1/x, t1), Poly(1/(x + 1), t2)]
-    assert is_deriv_k_structure_thm(Poly(2*x**2 + 2*x, t2), Poly(1, t2),
+    assert is_deriv_k(Poly(2*x**2 + 2*x, t2), Poly(1, t2),
     [1, 2], [], [x, x + 1], [], D, [x, t1, t2]) == \
         ([(t1, 1), (t2, 1)], t1 + t2, 2)
 
     D = [Poly(1, x), Poly(1/x, t1), Poly(t2, t2)]
     T = [x, t1, t2]
-    assert is_deriv_k_structure_thm(Poly(x**2*t2**3, t2), Poly(1, t2), [1],
+    assert is_deriv_k(Poly(x**2*t2**3, t2), Poly(1, t2), [1],
     [2], [x], [x], D, T) == \
         ([(x, 3), (t1, 2)], 2*t1 + 3*x, 1)
     # TODO: Add more tests, including ones with exponentials
+
+def test_is_log_deriv_k_t_radical_in_field():
+    # Note, any constant term in the second element of the result doesnt matter,
+    # because it cancels in Da/a.
+    D = [Poly(1, x), Poly(1/x, t)]
+    is_log_deriv_k_t_radical_in_field(Poly(5*t + 1, t), Poly(2*t*x, t), D, [x, t]) == \
+        (2, 2*t*x**5)
+
+def test_parametric_log_deriv():
+    D = [Poly(1, x), Poly(1/x, t)]
+    assert parametric_log_deriv_heu(Poly(5*t**2 + t - 6, t), Poly(2*x*t**2, t),
+    Poly(-1, t), Poly(x*t**2, t), D, [x, t]) == \
+        (2, 6, 2*t*x**5)
