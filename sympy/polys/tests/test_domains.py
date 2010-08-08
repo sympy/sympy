@@ -329,13 +329,13 @@ def test_Domain_get_ring():
     assert ZZ.get_ring() == ZZ
     assert QQ.get_ring() == ZZ
     assert ZZ[x].get_ring() == ZZ[x]
-    assert QQ[x].get_ring() == ZZ[x]
+    assert QQ[x].get_ring() == QQ[x]
     assert ZZ[x,y].get_ring() == ZZ[x,y]
-    assert QQ[x,y].get_ring() == ZZ[x,y]
+    assert QQ[x,y].get_ring() == QQ[x,y]
     assert ZZ.frac_field(x).get_ring() == ZZ[x]
-    assert QQ.frac_field(x).get_ring() == ZZ[x]
+    assert QQ.frac_field(x).get_ring() == QQ[x]
     assert ZZ.frac_field(x,y).get_ring() == ZZ[x,y]
-    assert QQ.frac_field(x,y).get_ring() == ZZ[x,y]
+    assert QQ.frac_field(x,y).get_ring() == QQ[x,y]
 
     raises(DomainError, "EX.get_ring()")
     raises(DomainError, "RR.get_ring()")
@@ -358,9 +358,9 @@ def test_Domain_get_field():
     assert QQ.get_field() == QQ
     assert ALG.get_field() == ALG
     assert ZZ[x].get_field() == ZZ.frac_field(x)
-    assert QQ[x].get_field() == ZZ.frac_field(x)
+    assert QQ[x].get_field() == QQ.frac_field(x)
     assert ZZ[x,y].get_field() == ZZ.frac_field(x,y)
-    assert QQ[x,y].get_field() == ZZ.frac_field(x,y)
+    assert QQ[x,y].get_field() == QQ.frac_field(x,y)
 
     raises(DomainError, "RR.get_field()")
 
@@ -401,3 +401,16 @@ def test_Domain_map():
     seq = ZZ.map([[1, 2, 3, 4]])
 
     assert all([ ZZ.of_type(elt) for elt in seq[0] ]) and len(seq) == 1
+
+def test_Domain___eq__():
+    assert (ZZ[x,y] == ZZ[x,y]) == True
+    assert (QQ[x,y] == QQ[x,y]) == True
+
+    assert (ZZ[x,y] == QQ[x,y]) == False
+    assert (QQ[x,y] == ZZ[x,y]) == False
+
+    assert (ZZ.frac_field(x,y) == ZZ.frac_field(x,y)) == True
+    assert (QQ.frac_field(x,y) == QQ.frac_field(x,y)) == True
+
+    assert (ZZ.frac_field(x,y) == QQ.frac_field(x,y)) == False
+    assert (QQ.frac_field(x,y) == ZZ.frac_field(x,y)) == False
