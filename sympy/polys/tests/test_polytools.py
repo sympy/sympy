@@ -41,6 +41,7 @@ from sympy.polys.polyerrors import (
     NotAlgebraic,
     DomainError,
     OptionError,
+    FlagError,
 )
 
 from sympy.polys.monomialtools import (
@@ -1653,6 +1654,8 @@ def test_factor():
 
     assert factor(f) == 3
     assert factor(f, frac=True) == 3
+
+    raises(FlagError, "factor(x**2 - 1, polys=True)")
 
 def test_intervals():
     assert intervals(0) == []
