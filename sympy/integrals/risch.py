@@ -986,7 +986,7 @@ def build_extension(f, x, handle_first='log'):
     return (fa, fd, D, T, Tfuncs, backsubs)
 
 def risch_integrate(f, x, extension=None, handle_first='log'):
-    """
+    r"""
     Prototype function for the Risch Integration Algorithm.
 
     Only transcendental functions are supported.  Currently, only exponentials
@@ -996,6 +996,78 @@ def risch_integrate(f, x, extension=None, handle_first='log'):
     If this function returns an unevaluated Integral in the result, it means
     that it has proven that integral to be non-elementary.  Any errors will
     result in raising NotImplementedError.
+
+    Examples
+    ========
+    >>> from sympy import risch_integrate, exp, log, pprint
+    >>> from sympy.abc import x
+
+    First, we try integrating exp(-x**2). Except for a constant factor of
+    2/sqrt(pi), this is the famous error function.
+
+    >>> pprint(risch_integrate(exp(-x**2), x))
+      /
+     |
+     |    2
+     |  -x
+     | e    dx
+     |
+    /
+
+    The Integral means that risch_integrate() has proven that exp(-x**2) does
+    not have an elementary anti-derivative.
+
+    In many cases, risch_integrate() can split out the elementary
+    anti-derivative part from the non-elementary anti-derivative part.
+    For example,
+
+    >>> pprint(risch_integrate((2*log(x)**2 - log(x) - x**2)/(log(x)**3 -
+    ... x**2*log(x)), x))
+                                           /
+                                          |
+    log(x + log(x))   log(-x + log(x))    |   1
+    --------------- - ---------------- +  | ------ dx
+           2                 2            | log(x)
+                                          |
+                                         /
+
+    This means that it has proven that the integral of 1/log(x) is
+    non-elementary.  This function is also known as the logarithmic integral,
+    and is often denoted as Li(x).
+
+    risch_integrate() currently only accepts purely transcendental functions
+    with exponentials and logarithms, though note that this can include
+    nested exponentials and logarithms, as well as exponentials with bases
+    other than E.
+
+    >>> pprint(risch_integrate(exp(x)*exp(exp(x)), x))
+     / x\
+     \e /
+    e
+    >>> pprint(risch_integrate(exp(exp(x)), x))
+      /
+     |
+     |  / x\
+     |  \e /
+     | e     dx
+     |
+    /
+
+    >>> pprint(risch_integrate(x*x**x*log(x) + x**x + x*x**x, x))
+       x
+    x*x
+    >>> pprint(risch_integrate(x**x*log(x), x))
+      /
+     |
+     |  x
+     | x *log(x) dx
+     |
+    /
+
+    >>> pprint(risch_integrate(-1/(x*log(x)*log(log(x))**2), x))
+         1
+    -----------
+    log(log(x))
     """
     if extension:
        raise NotImplementedError("Manual extensions are not supported yet.")
