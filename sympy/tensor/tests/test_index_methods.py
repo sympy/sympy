@@ -175,7 +175,9 @@ def test_ufunc_support():
     assert get_indices(f(y[i])*g(x[i])) == (set(), {})
     assert get_indices(f(a, x[i])) == (set([i]), {})
     assert get_indices(f(a, y[i], x[j])*g(x[i])) == (set([j]), {})
+    assert get_indices(g(f(x[i]))) == (set([i]), {})
 
     assert get_contraction_structure(f(x[i])) == {None: set([f(x[i])])}
     assert get_contraction_structure(f(y[i])*g(x[i])) == {(i,): set([f(y[i])*g(x[i])])}
+    assert get_contraction_structure(f(y[i])*g(f(x[i]))) == {(i,): set([f(y[i])*g(f(x[i]))])}
     assert get_contraction_structure(f(x[j], y[i])*g(x[i])) == {(i,): set([f(x[j], y[i])*g(x[i])])}
