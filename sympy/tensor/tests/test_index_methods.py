@@ -1,4 +1,4 @@
-from sympy.core import symbols, S, Pow
+from sympy.core import symbols, S, Pow, Function
 from sympy.functions import exp
 from sympy.utilities.pytest import raises
 from sympy.tensor.indexed import Idx, IndexedBase, Indexed
@@ -161,3 +161,21 @@ def test_contraction_structure_Pow_in_Pow():
                 ]
             }
     assert get_contraction_structure(ii_jj_kk) == expected
+
+def test_ufunc_support():
+    f = Function('f')
+    g = Function('g')
+    x = IndexedBase('x')
+    y = IndexedBase('y')
+    i, j, k = Idx('i'), Idx('j'), Idx('k')
+    a = symbols('a')
+
+    assert get_indices(f(x[i])) == (set([i]), {})
+    assert get_indices(f(x[i], y[j])) == (set([i, j]), {})
+    assert get_indices(f(y[i])*g(x[i])) == (set(), {})
+    assert get_indices(f(a, x[i])) == (set([i]), {})
+    assert get_indices(f(a, y[i], x[j])*g(x[i])) == (set([j]), {})
+
+    assert get_contraction_structure(f(x[i])) == {None: set([f(x[i])])}
+    assert get_contraction_structure(f(y[i])*g(x[i])) == {(i,): set([f(y[i])*g(x[i])])}
+    assert get_contraction_structure(f(x[j], y[i])*g(x[i])) == {(i,): set([f(x[j], y[i])*g(x[i])])}

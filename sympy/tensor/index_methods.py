@@ -9,6 +9,7 @@
 from sympy.tensor.indexed import Idx, IndexedBase, Indexed
 from sympy.utilities import all
 from sympy.functions import exp
+from sympy.core import Function
 
 
 class IndexConformanceException(Exception):
@@ -238,12 +239,21 @@ def get_indices(expr):
         elif expr.is_Pow or isinstance(expr, exp):
             return _get_indices_Pow(expr)
 
+        elif isinstance(expr, Function):
+            # Support ufunc like behaviour by returning indices from arguments.
+            # Functions do not interpret repeated indices across argumnts
+            # as summation
+            ind0 = set()
+            for arg in expr.args:
+                ind, sym = get_indices(arg)
+                ind0 |= ind
+            return ind0, sym
+
         # this test is expensive, so it should be at the end
         elif not expr.has(Indexed):
             return set(), {}
-        else:
-            raise NotImplementedError(
-                    "FIXME: No specialized handling of type %s"%type(expr))
+        raise NotImplementedError(
+                "FIXME: No specialized handling of type %s"%type(expr))
 
 def get_contraction_structure(expr):
     """Determine dummy indices of expression `expr' and describe structure of the expression
@@ -372,10 +382,22 @@ def get_contraction_structure(expr):
                 else:
                     result[key] = d[key]
         return result
+    elif isinstance(expr, Function):
+        # Collect non-trivial contraction structures in each argument
+        # We do not report repeated indices in separate arguments as a
+        # contraction
+        deeplist = []
+        for arg in expr.args:
+            deep = get_contraction_structure(arg)
+            if not (None in deep and len(deep) == 1):
+                deeplist.append(deep)
+        d = {None: set([expr])}
+        if deeplist:
+            d[expr] = deeplist
+        return d
 
     # this test is expensive, so it should be at the end
     elif not expr.has(Indexed):
         return {None: set([expr])}
-    else:
-        raise NotImplementedError(
-                "FIXME: No specialized handling of type %s"%type(expr))
+    raise NotImplementedError(
+            "FIXME: No specialized handling of type %s"%type(expr))
