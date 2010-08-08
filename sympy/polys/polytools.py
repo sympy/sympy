@@ -4244,7 +4244,7 @@ def factor(f, *gens, **args):
     -(1 + x)*(1 - x)/(2 + x)**2
 
     """
-    options.allowed_flags(args, ['frac', 'polys'])
+    options.allowed_flags(args, ['frac'])
 
     try:
         F, opt = poly_from_expr(f, *gens, **args)
