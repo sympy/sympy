@@ -2,6 +2,9 @@ from sympy.core import S, Add
 from sympy.printing.str import StrPrinter
 from sympy.tensor import Idx, Indexed, get_indices, get_contraction_structure
 
+class AssignmentError(Exception):
+    pass
+
 class CodePrinter(StrPrinter):
 
     def _doprint_a_piece(self, expr, assign_to=None):
@@ -61,6 +64,8 @@ class CodePrinter(StrPrinter):
                         # lhs, and raise an exception if it does, as that
                         # syntax is currently undefined.  FIXME: What would be
                         # a good interpretation?
+                        if assign_to is None:
+                            raise AssignmentError("need assignment variable for loops")
                         if term.has(assign_to):
                             raise(ValueError("FIXME: lhs present in rhs,\
                                 this is undefined in CCodePrinter"))

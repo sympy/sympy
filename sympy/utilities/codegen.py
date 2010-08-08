@@ -76,6 +76,7 @@ from StringIO import StringIO
 
 from sympy import __version__ as sympy_version
 from sympy.core import Symbol, S, Expr, Tuple, Equality
+from sympy.printing.codeprinter import AssignmentError
 from sympy.printing.ccode import ccode, CCodePrinter
 from sympy.printing.fcode import fcode, FCodePrinter
 from sympy.tensor import Idx, Indexed
@@ -549,7 +550,13 @@ class CCodeGen(CodeGen):
             elif isinstance(result, (OutputArgument, InOutArgument)):
                 assign_to = result.result_var
 
-            constants, not_c, c_expr = ccode(result.expr, assign_to=assign_to, human=False)
+            try:
+                constants, not_c, c_expr = ccode(result.expr, assign_to=assign_to, human=False)
+            except AssignmentError:
+                assign_to = result.result_var
+                code_lines.append("%s %s;\n" % (result.get_datatype('c'), str(assign_to)))
+                constants, not_c, c_expr = ccode(result.expr, assign_to=assign_to, human=False)
+
             for name, value in sorted(constants, key=str):
                 code_lines.append("double const %s = %s;" % (name, value))
             if assign_to:
