@@ -102,11 +102,12 @@ class CodeWrapper:
     def include_empty(self):
         return bool(self.filepath)
 
-    def _generate_code(self, routine):
-        self.generator.write([routine], self.filename, True, self.include_header,
+    def _generate_code(self, main_routine, routines):
+        routines.append(main_routine)
+        self.generator.write(routines, self.filename, True, self.include_header,
                 self.include_empty)
 
-    def wrap_code(self, routine):
+    def wrap_code(self, routine, helpers=[]):
 
         workdir = self.filepath or tempfile.mkdtemp("_sympy_compile")
         if not os.access(workdir, os.F_OK):
@@ -115,7 +116,7 @@ class CodeWrapper:
         os.chdir(workdir)
         try:
             sys.path.append(workdir)
-            self._generate_code(routine)
+            self._generate_code(routine, helpers)
             self._prepare_files(routine)
             self._process_files(routine)
             mod = __import__(self.module_name)
@@ -149,7 +150,7 @@ def %(name)s():
     def _prepare_files(self, routine):
         return
 
-    def _generate_code(self, routine):
+    def _generate_code(self, routine, helpers):
         f = file('%s.py' % self.module_name, 'w')
         printed = ", ".join([str(res.expr) for res in routine.result_variables])
         print >> f, DummyWrapper.template % {
@@ -292,7 +293,8 @@ def _get_code_wrapper_class(backend):
     wrappers = { 'F2PY': F2PyCodeWrapper, 'CYTHON': CythonCodeWrapper, 'DUMMY': DummyWrapper}
     return wrappers[backend.upper()]
 
-def autowrap(expr, language='F95', backend='f2py', tempdir=None, args=None, flags=[], quiet=True):
+def autowrap(expr, language='F95', backend='f2py', tempdir=None, args=None, flags=[],
+        quiet=True, help_routines=[]):
     """Generates python callable binaries based on the math expression.
 
     expr  --  the SymPy expression that should be wrapped as a binary routine
@@ -305,6 +307,9 @@ def autowrap(expr, language='F95', backend='f2py', tempdir=None, args=None, flag
                  left intact in the specified path.
     args --  sequence of the formal parameters of the generated code, if ommited the
              function signature is determined by the code generator.
+    help_routines  --  list defining supportive expressions, e.g. user defined
+                       functions that are called by the main expression.  Items should
+                       be tuples with (<funtion_name>, <sympy_expression>, <arguments>).
 
     >>> from sympy.abc import x, y, z
     >>> from sympy.utilities.autowrap import autowrap
@@ -319,7 +324,11 @@ def autowrap(expr, language='F95', backend='f2py', tempdir=None, args=None, flag
     CodeWrapperClass = _get_code_wrapper_class(backend)
     code_wrapper = CodeWrapperClass(code_generator, tempdir, flags, quiet)
     routine  = Routine('autofunc', expr, args)
-    return code_wrapper.wrap_code(routine)
+    helpers = []
+    for name, expr, args in help_routines:
+        helpers.append(Routine(name, expr, args))
+
+    return code_wrapper.wrap_code(routine, helpers=helpers)
 
 def binary_function(symfunc, expr, **kwargs):
     """Returns a sympy function with expr as binary implementation
