@@ -85,12 +85,14 @@ class CodeWrapper:
     def module_name(self):
         return "%s_%s" % (self._module_basename, CodeWrapper._module_counter)
 
-    def __init__(self, generator, filepath=None):
+    def __init__(self, generator, filepath=None, flags=[], quiet=True):
         """
         generator -- the code generator to use
         """
         self.generator = generator
         self.filepath = filepath
+        self.flags = flags
+        self.quiet = quiet
 
     @property
     def include_header(self):
@@ -166,8 +168,11 @@ setup(
 
     def _process_files(self, routine):
         command = ["python", "setup.py", "build_ext", "--inplace"]
-        null = open(os.devnull, 'w')
-        retcode = subprocess.call(command, stdout=null)
+        if self.quiet:
+            null = open(os.devnull, 'w')
+            retcode = subprocess.call(command, stdout=null)
+        else:
+            retcode = subprocess.call(command)
         if retcode:
             raise CodeWrapError
 
@@ -267,8 +272,12 @@ class F2PyCodeWrapper(CodeWrapper):
     def _process_files(self, routine):
         filename = self.filename + '.' + self.generator.code_extension
         command = ["f2py", "-m", self.module_name, "-c" , filename]
-        null = open(os.devnull, 'w')
-        retcode = subprocess.call(command, stdout=null)
+        command.extend(self.flags)
+        if self.quiet:
+            null = open(os.devnull, 'w')
+            retcode = subprocess.call(command, stdout=null)
+        else:
+            retcode = subprocess.call(command)
         if retcode:
             raise CodeWrapError
 
@@ -283,7 +292,7 @@ def _get_code_wrapper_class(backend):
     wrappers = { 'F2PY': F2PyCodeWrapper, 'CYTHON': CythonCodeWrapper, 'DUMMY': DummyWrapper}
     return wrappers[backend.upper()]
 
-def autowrap(expr, language='C', backend='cython', tempdir=None, args=None):
+def autowrap(expr, language='F95', backend='f2py', tempdir=None, args=None, flags=[], quiet=True):
     """Generates python callable binaries based on the math expression.
 
     expr  --  the SymPy expression that should be wrapped as a binary routine
@@ -308,7 +317,7 @@ def autowrap(expr, language='C', backend='cython', tempdir=None, args=None):
 
     code_generator = get_code_generator(language, "autowrap")
     CodeWrapperClass = _get_code_wrapper_class(backend)
-    code_wrapper = CodeWrapperClass(code_generator, tempdir)
+    code_wrapper = CodeWrapperClass(code_generator, tempdir, flags, quiet)
     routine  = Routine('autofunc', expr, args)
     return code_wrapper.wrap_code(routine)
 
