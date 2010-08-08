@@ -7,12 +7,10 @@ from sympy.polys.densebasic import (
     dup_strip, dmp_strip,
     dmp_zero_p, dmp_zero,
     dmp_one_p, dmp_one,
-    dmp_zeros
-)
+    dmp_ground, dmp_zeros)
 
 from sympy.polys.polyerrors import (
-    ExactQuotientFailed
-)
+    ExactQuotientFailed)
 
 from sympy.utilities import cythonized
 
@@ -203,6 +201,78 @@ def dmp_mul_term(f, c, i, u, K):
         return dmp_zero(u)
     else:
         return [ dmp_mul(cf, c, v, K) for cf in f ] + dmp_zeros(i, v, K)
+
+def dup_add_ground(f, c, K):
+    """
+    Add an element of the ground domain to ``f``.
+
+    Example
+    =======
+
+    >>> from sympy.polys.domains import ZZ
+    >>> from sympy.polys.densearith import dup_add_ground
+
+    >>> f = ZZ.map([1, 2, 3, 4])
+
+    >>> dup_add_ground(f, ZZ(4), ZZ)
+    [1, 2, 3, 8]
+
+    """
+    return dup_add_term(f, c, 0, K)
+
+def dmp_add_ground(f, c, u, K):
+    """
+    Add an element of the ground domain to ``f``.
+
+    Example
+    =======
+
+    >>> from sympy.polys.domains import ZZ
+    >>> from sympy.polys.densearith import dmp_add_ground
+
+    >>> f = ZZ.map([[1], [2], [3], [4]])
+
+    >>> dmp_add_ground(f, ZZ(4), 1, ZZ)
+    [[1], [2], [3], [8]]
+
+    """
+    return dmp_add_term(f, dmp_ground(c, u-1), 0, u, K)
+
+def dup_sub_ground(f, c, K):
+    """
+    Subtract an element of the ground domain from ``f``.
+
+    Example
+    =======
+
+    >>> from sympy.polys.domains import ZZ
+    >>> from sympy.polys.densearith import dup_sub_ground
+
+    >>> f = ZZ.map([1, 2, 3, 4])
+
+    >>> dup_sub_ground(f, ZZ(4), ZZ)
+    [1, 2, 3, 0]
+
+    """
+    return dup_sub_term(f, c, 0, K)
+
+def dmp_sub_ground(f, c, u, K):
+    """
+    Subtract an element of the ground domain from ``f``.
+
+    Example
+    =======
+
+    >>> from sympy.polys.domains import ZZ
+    >>> from sympy.polys.densearith import dmp_sub_ground
+
+    >>> f = ZZ.map([[1], [2], [3], [4]])
+
+    >>> dmp_sub_ground(f, ZZ(4), 1, ZZ)
+    [[1], [2], [3], []]
+
+    """
+    return dmp_sub_term(f, dmp_ground(c, u-1), 0, u, K)
 
 def dup_mul_ground(f, c, K):
     """

@@ -8,6 +8,8 @@ from sympy.polys.densearith import (
     dup_add_term, dmp_add_term,
     dup_sub_term, dmp_sub_term,
     dup_mul_term, dmp_mul_term,
+    dup_add_ground, dmp_add_ground,
+    dup_sub_ground, dmp_sub_ground,
     dup_mul_ground, dmp_mul_ground,
     dup_quo_ground, dmp_quo_ground,
     dup_exquo_ground, dmp_exquo_ground,
@@ -130,6 +132,30 @@ def test_dmp_mul_term():
 
     assert dmp_mul_term([[QQ(1,5),QQ(2,5)], [QQ(3,5)]], [QQ(2,3)], 2, 1, QQ) == \
                [[QQ(2,15),QQ(4,15)], [QQ(6,15)], [], []]
+
+def dup_add_ground():
+    f = ZZ.map([1, 2, 3, 4])
+    g = ZZ.map([1, 2, 3, 8])
+
+    assert dup_add_ground(f, ZZ(4), ZZ) == g
+
+def dmp_add_ground():
+    f = ZZ.map([[1], [2], [3], [4]])
+    g = ZZ.map([[1], [2], [3], [8]])
+
+    assert dmp_add_ground(f, ZZ(4), 1, ZZ) == g
+
+def dup_sub_ground():
+    f = ZZ.map([1, 2, 3, 4])
+    g = ZZ.map([1, 2, 3, 0])
+
+    assert dup_sub_ground(f, ZZ(4), ZZ) == g
+
+def dmp_sub_ground():
+    f = ZZ.map([[1], [2], [3], [4]])
+    g = ZZ.map([[1], [2], [3], []])
+
+    assert dmp_sub_ground(f, ZZ(4), 1, ZZ) == g
 
 def test_dup_mul_ground():
     f = dup_normal([], ZZ)

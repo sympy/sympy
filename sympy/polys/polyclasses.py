@@ -56,6 +56,8 @@ from sympy.polys.densearith import (
     dup_add_term, dmp_add_term,
     dup_sub_term, dmp_sub_term,
     dup_mul_term, dmp_mul_term,
+    dup_add_ground, dmp_add_ground,
+    dup_sub_ground, dmp_sub_ground,
     dup_mul_ground, dmp_mul_ground,
     dup_quo_ground, dmp_quo_ground,
     dup_exquo_ground, dmp_exquo_ground,
@@ -325,16 +327,24 @@ class DMP(object):
         J, F = dmp_terms_gcd(f.rep, f.lev, f.dom)
         return J, f.per(F)
 
+    def add_ground(f, c):
+        """Add an element of the ground domain to ``f``. """
+        return f.per(dmp_add_ground(f.rep, f.dom.convert(c), f.lev, f.dom))
+
+    def sub_ground(f, c):
+        """Subtract an element of the ground domain from ``f``. """
+        return f.per(dmp_sub_ground(f.rep, f.dom.convert(c), f.lev, f.dom))
+
     def mul_ground(f, c):
-        """Multiply `f` by a an element of the ground domain. """
+        """Multiply ``f`` by a an element of the ground domain. """
         return f.per(dmp_mul_ground(f.rep, f.dom.convert(c), f.lev, f.dom))
 
     def quo_ground(f, c):
-        """Quotient of `f` by a an element of the ground domain. """
+        """Quotient of ``f`` by a an element of the ground domain. """
         return f.per(dmp_quo_ground(f.rep, f.dom.convert(c), f.lev, f.dom))
 
     def exquo_ground(f, c):
-        """Exact quotient of `f` by a an element of the ground domain. """
+        """Exact quotient of ``f`` by a an element of the ground domain. """
         return f.per(dmp_exquo_ground(f.rep, f.dom.convert(c), f.lev, f.dom))
 
     def abs(f):

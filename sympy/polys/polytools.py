@@ -785,6 +785,119 @@ class Poly(Basic):
 
         return J, f.per(result)
 
+    def add_ground(f, coeff):
+        """
+        Add an element of the ground domain to ``f``.
+
+        Example
+        =======
+
+        >>> from sympy import Poly
+        >>> from sympy.abc import x
+
+        >>> Poly(x + 1).add_ground(2)
+        Poly(x + 3, x, domain='ZZ')
+
+        """
+        if hasattr(f.rep, 'add_ground'):
+            result = f.rep.add_ground(coeff)
+        else: # pragma: no cover
+            raise OperationNotSupported(f, 'add_ground')
+
+        return f.per(result)
+
+    def sub_ground(f, coeff):
+        """
+        Subtract an element of the ground domain from ``f``.
+
+        Example
+        =======
+
+        >>> from sympy import Poly
+        >>> from sympy.abc import x
+
+        >>> Poly(x + 1).sub_ground(2)
+        Poly(x - 1, x, domain='ZZ')
+
+        """
+        if hasattr(f.rep, 'sub_ground'):
+            result = f.rep.sub_ground(coeff)
+        else: # pragma: no cover
+            raise OperationNotSupported(f, 'sub_ground')
+
+        return f.per(result)
+
+    def mul_ground(f, coeff):
+        """
+        Multiply ``f`` by a an element of the ground domain.
+
+        Example
+        =======
+
+        >>> from sympy import Poly
+        >>> from sympy.abc import x
+
+        >>> Poly(x + 1).mul_ground(2)
+        Poly(2*x + 2, x, domain='ZZ')
+
+        """
+        if hasattr(f.rep, 'mul_ground'):
+            result = f.rep.mul_ground(coeff)
+        else: # pragma: no cover
+            raise OperationNotSupported(f, 'mul_ground')
+
+        return f.per(result)
+
+    def quo_ground(f, coeff):
+        """
+        Quotient of ``f`` by a an element of the ground domain.
+
+        Example
+        =======
+
+        >>> from sympy import Poly
+        >>> from sympy.abc import x
+
+        >>> Poly(2*x + 4).quo_ground(2)
+        Poly(x + 2, x, domain='ZZ')
+
+        >>> Poly(2*x + 3).quo_ground(2)
+        Traceback (most recent call last):
+        ...
+        ExactQuotientFailed: 2 does not divide 3 in ZZ
+
+        """
+        if hasattr(f.rep, 'quo_ground'):
+            result = f.rep.quo_ground(coeff)
+        else: # pragma: no cover
+            raise OperationNotSupported(f, 'quo_ground')
+
+        return f.per(result)
+
+    def exquo_ground(f, coeff):
+        """
+        Exact quotient of ``f`` by a an element of the ground domain.
+
+        Example
+        =======
+
+        >>> from sympy import Poly
+        >>> from sympy.abc import x
+
+        >>> Poly(2*x + 4).exquo_ground(2)
+        Poly(x + 2, x, domain='ZZ')
+
+        >>> Poly(2*x + 3).exquo_ground(2)
+        Poly(x + 1, x, domain='ZZ')
+
+        """
+        if hasattr(f.rep, 'exquo_ground'):
+            result = f.rep.exquo_ground(coeff)
+        else: # pragma: no cover
+            raise OperationNotSupported(f, 'exquo_ground')
+
+        return f.per(result)
+
     def abs(f):
         """
         Make all coefficients in ``f`` positive.
@@ -847,6 +960,11 @@ class Poly(Basic):
         Poly(x**2 + x - 1, x, domain='ZZ')
 
         """
+        g = sympify(g)
+
+        if not g.is_Poly:
+            return f.add_ground(g)
+
         _, per, F, G = f._unify(g)
 
         if hasattr(f.rep, 'add'):
@@ -873,6 +991,11 @@ class Poly(Basic):
         Poly(x**2 - x + 3, x, domain='ZZ')
 
         """
+        g = sympify(g)
+
+        if not g.is_Poly:
+            return f.sub_ground(g)
+
         _, per, F, G = f._unify(g)
 
         if hasattr(f.rep, 'sub'):
@@ -899,6 +1022,11 @@ class Poly(Basic):
         Poly(x**3 - 2*x**2 + x - 2, x, domain='ZZ')
 
         """
+        g = sympify(g)
+
+        if not g.is_Poly:
+            return f.mul_ground(g)
+
         _, per, F, G = f._unify(g)
 
         if hasattr(f.rep, 'mul'):
