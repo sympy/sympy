@@ -203,7 +203,7 @@ class Routine(object):
             missing = filter(lambda x: x.name not in argument_sequence, arg_list)
             if missing:
                 raise CodeGenError("Argument list didn't specify: %s" %
-                        ", ".join([str(m) for m in missing]))
+                        ", ".join([str(m.name) for m in missing]))
 
             # create redundant arguments to produce the requested sequence
             name_arg_dict = dict([(x.name, x) for x in arg_list])
