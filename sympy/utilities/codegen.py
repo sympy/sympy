@@ -75,7 +75,7 @@ import os
 from StringIO import StringIO
 
 from sympy import __version__ as sympy_version
-from sympy.core import Symbol, S, Expr, Tuple, Equality
+from sympy.core import Symbol, S, Expr, Tuple, Equality, Function
 from sympy.printing.codeprinter import AssignmentError
 from sympy.printing.ccode import ccode, CCodePrinter
 from sympy.printing.fcode import fcode, FCodePrinter
@@ -729,6 +729,7 @@ class FCodeGen(CodeGen):
         return "".join(prototype)
 
     def _call_printer(self, routine):
+        declarations = []
         code_lines = []
         for result in routine.result_variables:
             if isinstance(result, Result):
@@ -738,9 +739,18 @@ class FCodeGen(CodeGen):
 
             constants, not_fortran, f_expr = fcode(result.expr,
                 assign_to=assign_to, source_format='free', human=False)
+
+            for obj in not_fortran:
+                t = get_default_datatype(obj)
+                if isinstance(obj, Function):
+                    name = obj.func
+                else:
+                    name = obj
+                declarations.append("%s :: %s\n" % (t.fname, name))
+
             code_lines.extend(constants)
             code_lines.append("%s\n" % f_expr)
-        return code_lines
+        return declarations + code_lines
 
     def _indent_code(self, codelines):
         p = FCodePrinter({'source_format': 'free', 'human': False})
