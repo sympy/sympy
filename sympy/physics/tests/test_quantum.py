@@ -10,7 +10,15 @@ from sympy.physics.quantum import (
     InnerProduct,
     OuterProduct
 )
-
+from sympy.physics.hilbert import (
+    HilbertSpace,
+    l2, 
+    L2, 
+    FockSpace, 
+    TensorProductHilbertSpace, 
+    DirectSumHilbertSpace, 
+    TensorPowerHilbertSpace
+)
 from sympy import Matrix, I, E, Symbol, expand
 from sympy.physics.quantumbasic import QuantumError, QuantumBasic
 
@@ -45,11 +53,6 @@ def test_Ket():
     assert isinstance(B, Ket)
     assert A.name == Symbol('A')
     assert B.name == Symbol('B')
-    assert a*A
-    assert a*A == A*a
-    assert A+B
-    assert A+B == B+A
-    assert expand(a*(A+B)) == a*A+a*B
     assert Dagger(a*A+b*B) == Dagger(A)*Dagger(a)+Dagger(B)*Dagger(b) == Bra('A')*Dagger(a)+Bra('B')*Dagger(b)
 
 def test_Bra():
@@ -60,11 +63,6 @@ def test_Bra():
     assert isinstance(B, Bra)
     assert A.name == Symbol('A')
     assert B.name == Symbol('B')
-    assert a*A
-    assert a*A == A*a
-    assert A+B
-    assert A+B == B+A
-    assert expand(a*(A+B)) == a*A+a*B
 
 def test_InnerProduct():
     A = Bra('A')
@@ -101,19 +99,11 @@ def test_Operator():
     C = Operator('C')
     assert isinstance(A, Operator)
     assert isinstance(B, Operator)
-    assert a*A
-    assert A+B == B+A
-    assert (A+B)+C == A+(B+C)
-    assert expand(a*(A+B)) == a*A+a*B
     assert Dagger(a*A) == Dagger(A)*Dagger(a)
-    assert A*B != B*A
-    assert A*(B*C) == (A*B)*C
 
 def test_mixed():
     A = Ket('A')
     B = Ket('B')
     C = Operator('C')
     D = Operator('D')
-    assert C*B
-    assert expand((C+D)*(A+B)) == (C*A + C*B + D*A + D*B)
     assert Dagger(C*A) == Dagger(A)*Dagger(C) == Bra('A')*Dagger(C)

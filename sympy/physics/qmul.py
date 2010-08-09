@@ -55,7 +55,7 @@ class QMul(QAssocOp):
                 return retVal
             elif issubclass(Object1.evaluates, BraBase):
                 retVal = cls.QMulflatten(Object1, Object2)
-                retVal.hilbert_space = Object2.hilbert_space
+                retVal.hilbert_space = Object1.hilbert_space
                 retVal.evaluates = Object1.evaluates
                 return retVal
         #figure out inner and outer products
