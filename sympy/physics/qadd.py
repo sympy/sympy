@@ -175,7 +175,7 @@ class QAdd(QAssocOp):
         for item in self.args:
             newargs.append(Dagger(item))
         return QAdd(*newargs)
-    """
+
     def _eval_expand_mul(self, deep=True, **hints):
         sargs, terms = self.args, []
         for term in sargs:
@@ -185,4 +185,4 @@ class QAdd(QAssocOp):
                 newterm = term
             terms.append(newterm)
         return self.new(*terms)
-    """
+   
