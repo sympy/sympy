@@ -2959,6 +2959,10 @@ class Poly(Basic):
 def poly_from_expr(expr, *gens, **args):
     """Construct a polynomial from an expression. """
     opt = options.build_options(gens, args)
+    return _poly_from_expr(expr, opt)
+
+def _poly_from_expr(expr, opt):
+    """Construct a polynomial from an expression. """
     orig, expr = expr, sympify(expr)
 
     if not isinstance(expr, Basic):
@@ -4325,8 +4329,14 @@ def factor_list(f, *gens, **args):
         else:
             return factors
 
+def _prepare_arguments(exprs, gens, args, allow):
+    """Sympify expressions, build options, etc. """
+    options.allowed_flags(args, allow)
+    opt = options.build_options(gens, args)
+    return tuple(map(sympify, exprs)), opt
+
 def _inner_factor(f):
-    """Helper function for :func:`factor`. """
+    """Helper function for :func:`_formal_factor`. """
     (coeff, factors), result = f.factor_list(), S.One
 
     for g, k in factors:
@@ -4334,18 +4344,62 @@ def _inner_factor(f):
 
     return coeff, result
 
+def _formal_factor(f, opt):
+    """Helper function for :func:`_factor`. """
+    try:
+        F, opt = _poly_from_expr(f, opt)
+    except PolificationFailed, exc:
+        return exc.expr
+
+    if not opt.frac:
+        coeff, factors = _inner_factor(F)
+    else:
+        p, q = F
+
+        cp, fp = _inner_factor(p)
+        cq, fq = _inner_factor(q)
+
+        coeff, factors = cp/cq, fp/fq
+
+    return _keep_coeff(coeff, factors)
+
+def _symbolic_factor(f, opt):
+    """Helper function for :func:`_factor`. """
+    if isinstance(f, Basic):
+        if f.is_Add or f.is_Poly:
+            return _formal_factor(f, opt)
+        elif f.is_Mul:
+            return f.__class__(*[ _symbolic_factor(g, opt) for g in f.args ])
+        elif f.is_Pow:
+            return _symbolic_factor(f.base, opt)**f.exp
+        elif f.is_Relational:
+            return f.__class__(_symbolic_factor(f.lhs, opt), _symbolic_factor(f.rhs, opt))
+    elif hasattr(f, '__iter__'):
+        return f.__class__([ _symbolic_factor(g, opt) for g in f ])
+
+    return f
+
 def factor(f, *gens, **args):
     """
     Compute the factorization of ``f`` into irreducibles.
 
-    By default, the factorization is computed over the field of coefficients
-    of ``f``. To factor over an explict domain, e.g. an algebraic extension,
-    use appropriate options: ``extension``, ``modulus`` or ``domain``.
+    There two modes implemented: symbolic and formal. If ``f`` is not an
+    instance of :class:`Poly` and generators are not specified, then the
+    former mode is used. Otherwise, the formal mode is used.
 
-    To treat ``f`` as a rational function, set ``frac`` flag to ``True``.
-    In this case, :func:`factor` will find factorization into irreducibles
-    of the numerator and denominator of ``f`` separately and then return a
-    factored rational function.
+    In symbolic mode, :func:`factor` will traverse the expression tree and
+    factor its components without any prior expansion, unless an instance
+    of :class:`Add` is encountered (in this case formal factorization is
+    used). This way :func:`factor` can handle large or symbolic exponents.
+
+    In formal mode, the input expression is expanded first and then factored
+    over the specified domain. Expansion can be avoided by setting ``expand``
+    option to ``False``. To treat ``f`` as a rational function and obtain
+    factorization of numerator and denominator set ``frac`` flag to ``True``.
+
+    By default, the factorization is computed over the rationals. To factor
+    over other domain, e.g. an algebraic or finite field, use appropriate
+    options: ``extension``, ``modulus`` or ``domain``.
 
     Example
     =======
@@ -4367,29 +4421,20 @@ def factor(f, *gens, **args):
     (x + 2**(1/2))*(x - 2**(1/2))
 
     >>> factor((x**2 - 1)/(x**2 + 4*x + 4))
-    -(1 + x)*(1 - x)/(4 + 4*x + x**2)
-    >>> factor((x**2 - 1)/(x**2 + 4*x + 4), frac=True)
+    -(1 + x)*(1 - x)/(2 + x)**2
+    >>> factor((x**2 - 1)/(x**2 + 4*x + 4), x, frac=True)
     -(1 + x)*(1 - x)/(2 + x)**2
 
+    >>> factor((x**2 + 4*x + 4)**10000000*(x**2 + 1))
+    (2 + x)**20000000*(1 + x**2)
+
     """
-    options.allowed_flags(args, ['frac'])
+    (f,), opt = _prepare_arguments((f,), gens, args, ['frac'])
 
-    try:
-        F, opt = poly_from_expr(f, *gens, **args)
-    except PolificationFailed, exc:
-        return exc.expr
-
-    if not opt.frac:
-        coeff, factors = _inner_factor(F)
+    if opt.gens:
+        return _formal_factor(f, opt)
     else:
-        p, q = F
-
-        cp, fp = _inner_factor(p)
-        cq, fq = _inner_factor(q)
-
-        coeff, factors = cp/cq, fp/fq
-
-    return _keep_coeff(coeff, factors)
+        return _symbolic_factor(f, opt)
 
 def intervals(F, all=False, eps=None, inf=None, sup=None, strict=False, fast=False, sqf=False):
     """
