@@ -245,12 +245,11 @@ def hermite_reduce(a, d, D, T):
     l = Poly(1/d.LC(), t)
     a, d = a.mul(l), d.mul(l)
 
-    d_sqf = d.sqf_list()
-
+    d_sqf = d.sqf_list_include()
     ga = Poly(0, t)
     gd = Poly(1, t)
 
-    for v, i in d.sqf_list_include():
+    for v, i in d_sqf:
         if i < 2:
             continue
 
@@ -258,14 +257,16 @@ def hermite_reduce(a, d, D, T):
         for j in range(i - 1, 0, -1):
             udv = u*derivation(v, D, T)
             b, c = gcdex_diophantine(udv.as_poly(t), v.as_poly(t),
-                a.mul(Poly(-1/j, t)).as_poly(t))
+                a.mul(Poly(-S(1)/j, t)).as_poly(t))
             b, c = b.as_poly(t), c.as_poly(t)
 
-            ga = ga*v**j + b
-            gd = gd*v**j
+            vj = v**j
+            ga = ga*vj + b*gd
+            gd = gd*vj
             a = c.mul(Poly(-j, t)) - u*derivation(b, D, T)
 
         d = u*v
+
     q, r = a.div(d)
 
     ga, gd = ga.cancel(gd, include=True)
@@ -439,6 +440,7 @@ def integrate_primitive_polynomial(p, D, T):
         (ba.as_basic()/bd.as_basic()).as_poly(t)*Poly(t**m, t)
 
     # TODO: Rewrite this non-recursively
+    # c.f. risch_integrate(log(x)**1001, x)
     q, r, b = integrate_primitive_polynomial(p - derivation(q0, D, T), D, T)
     return (q + q0, r, b)
 

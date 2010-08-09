@@ -88,6 +88,11 @@ def test_hermite_reduce():
     Poly(x**4*t**6 - 2*x**2*t**3 + 1, t), D, [x, t]) == \
         ((Poly(x**5*t + x**2 + x**6, t), Poly(x**5*t**3 - x**3, t)), (Poly(0, t),
         Poly(1, t)), (Poly(-1, t), Poly(x**2, t)))
+    assert hermite_reduce(Poly((-2 + 3*x)*t0**3 + (-1 + x)*t0**2 +
+    (-4*x + 2*x**2)*t0 + x**2, t0), Poly(x*t0**6 - 4*x**2*t0**5 +
+    6*x**3*t0**4 - 4*x**4*t0**3 + x**5*t0**2, t0), D, [x, t0]) == \
+        ((Poly(t0**2 + t0/3 + x, t0), Poly(t0**4 - 3*x*t0**3 + 3*x**2*t0**2 -
+        x**3*t0, t0)), (Poly(0, t0), Poly(1, t0)), (Poly(0, t0), Poly(1, t0)))
 
 def test_polynomial_reduce():
     D = [Poly(1, x), Poly(1 + t**2, t)]
