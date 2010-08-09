@@ -20,7 +20,7 @@ responsibility for generating properly cased Fortran code to the user.
 
 from sympy.printing.codeprinter import CodePrinter
 from sympy.printing.precedence import precedence
-from sympy.core import S, Add, I, Symbol, Basic
+from sympy.core import S, Add, I, Symbol, Basic, C
 from sympy.core.numbers import NumberSymbol
 from sympy.functions import sin, cos, tan, asin, acos, atan, atan2, sinh, \
     cosh, tanh, sqrt, log, exp, abs, sign, conjugate, Piecewise
@@ -207,6 +207,9 @@ class FCodePrinter(CodePrinter):
                 name = "conjg"
             else:
                 name = expr.func.__name__
+            if hasattr(expr, '_imp_') and isinstance(expr._imp_, C.Lambda):
+                # inlined function
+                return self._print(expr._imp_(*expr.args))
             if expr.func not in implicit_functions:
                 self._not_fortran.add(expr)
         return "%s(%s)" % (name, self.stringify(expr.args, ", "))

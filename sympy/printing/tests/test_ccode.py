@@ -1,7 +1,9 @@
-from sympy.core import pi, oo, symbols, Function, Rational, Integer, GoldenRatio, EulerGamma, Catalan
+from sympy.core import pi, oo, symbols, Function, Rational, Integer, GoldenRatio, EulerGamma, Catalan, Lambda
 from sympy.functions import Piecewise, sin, cos, abs, exp, ceiling, sqrt
 from sympy.utilities.pytest import XFAIL, raises
 from sympy.printing.ccode import CCodePrinter
+from sympy.utilities.lambdify import implemented_function
+from sympy.tensor import IndexedBase, Idx
 
 # import test
 from sympy import ccode
@@ -49,6 +51,19 @@ def test_ccode_Integer():
 
 def test_ccode_functions():
     assert ccode(sin(x) ** cos(x)) == "pow(sin(x), cos(x))"
+
+def test_ccode_inline_function():
+    x = symbols('x')
+    g = implemented_function('g', Lambda(x, 2*x))
+    assert ccode(g(x)) == "2*x"
+    A = IndexedBase('A')
+    i = Idx('i', symbols('n', integer=True))
+    g = implemented_function('g', Lambda(x, x*(1+x)))
+    assert ccode(g(A[i]), assign_to=A[i]) == (
+            "for (int i=0; i<n; i++){\n"
+            "   A[i] = A[i]*(1 + A[i]);\n"
+            "}"
+            )
 
 def test_ccode_exceptions():
     assert ccode(ceiling(x)) == "ceil(x)"
@@ -111,8 +126,6 @@ def test_ccode_Indexed():
 
 
 def test_ccode_loops_matrix_vector():
-    from sympy.tensor import IndexedBase, Idx
-    from sympy import symbols
     n,m = symbols('n m', integer=True)
     A = IndexedBase('A')
     x = IndexedBase('x')

@@ -1,10 +1,11 @@
 from sympy import sin, cos, atan2, gamma, conjugate, sqrt, Factorial, \
     Integral, Piecewise, Add, diff, symbols, S, raises
 from sympy import Catalan, EulerGamma, E, GoldenRatio, I, pi
-from sympy import Function, Rational, Integer
+from sympy import Function, Rational, Integer, Lambda
 
 from sympy.printing.fcode import fcode, FCodePrinter
 from sympy.tensor import IndexedBase, Idx
+from sympy.utilities.lambdify import implemented_function
 
 
 def test_printmethod():
@@ -90,6 +91,19 @@ def test_user_functions():
     assert fcode(g(x), user_functions={g: "great"}) == "      great(x)"
     n = symbols('n', integer=True)
     assert fcode(Factorial(n), user_functions={Factorial: "fct"}) == "      fct(n)"
+
+def test_inline_function():
+    x = symbols('x')
+    g = implemented_function('g', Lambda(x, 2*x))
+    assert fcode(g(x)) == "      2*x"
+    A = IndexedBase('A')
+    i = Idx('i', symbols('n', integer=True))
+    g = implemented_function('g', Lambda(x, x*(1+x)))
+    assert fcode(g(A[i]), assign_to=A[i]) == (
+            "      do i = 1, n\n"
+            "         A(i) = A(i)*(1 + A(i))\n"
+            "      end do"
+            )
 
 def test_assign_to():
     x = symbols('x')

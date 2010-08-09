@@ -11,7 +11,7 @@ source code files that are compilable without further modifications.
 
 from sympy.printing.codeprinter import CodePrinter
 from sympy.printing.precedence import precedence
-from sympy.core import S, Basic, Add, Symbol, NumberSymbol
+from sympy.core import S, Basic, Add, Symbol, NumberSymbol, C
 from sympy.functions import Piecewise, piecewise_fold
 
 
@@ -192,6 +192,9 @@ class CCodePrinter(CodePrinter):
             for cond, cfunc in cond_cfunc:
                 if cond(*expr.args):
                     return "%s(%s)" % (cfunc, self.stringify(expr.args, ", "))
+        if hasattr(expr, '_imp_') and isinstance(expr._imp_, C.Lambda):
+            # inlined function
+            return self._print(expr._imp_(*expr.args))
         return CodePrinter._print_Function(self, expr)
 
     def _print_NumberSymbol(self, expr):

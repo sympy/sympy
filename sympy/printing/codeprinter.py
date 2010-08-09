@@ -111,4 +111,3 @@ class CodePrinter(StrPrinter):
                     pass
 
         return sorted(indices, key=lambda x: score_table[x])
-
