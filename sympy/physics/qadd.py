@@ -115,7 +115,7 @@ class QAdd(QAssocOp):
                 if isinstance(s, QMul):
                     # Mul, already keeps its arguments in perfect order.
                     # so we can simply put c in slot0 and go the fast way.
-                    cs = s._new_rawargs(*((c,) + s.args))
+                    cs = s._new_rawargs(s.evaluates, s.hilbert_space, *((c,) + s.args)) #figure out rawargs F
                     newseq.append(cs)
 
                 else:
@@ -164,8 +164,6 @@ class QAdd(QAssocOp):
             newseq.insert(0, coeff)
 
         # we are done
-        if len(newseq) == 1:
-            return newseq[0]
         return Expr.__new__(cls, *newseq)
 
     @property
@@ -187,3 +185,4 @@ class QAdd(QAssocOp):
                 newterm = term
             terms.append(newterm)
         return self.new(*terms)
+   

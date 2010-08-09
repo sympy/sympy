@@ -4,6 +4,10 @@ from sympy.core.expr import Expr
 from sympy.core.cache import cacheit
 from sympy.core.mul import Mul
 from sympy.physics.quantumbasic import QuantumError, QuantumBasic
+from sympy import (
+    Expr, Basic, sympify, Add, Mul, Pow, 
+    I, Function, Integer, S, sympify, Matrix, oo
+)
 
 class QMul(QAssocOp):
     binop = '*'
@@ -15,11 +19,15 @@ class QMul(QAssocOp):
         if (not isinstance(Object1, QuantumBasic)) and (not isinstance(Object2, QuantumBasic)):
             return Mul(Object1, Object2)
         elif not isinstance(Object1, QuantumBasic):
+            if Object1 == S.One:
+                return Object2
             retVal = cls.QMulflatten(Object1, Object2)
             retVal.hilbert_space = Object2.hilbert_space
             retVal.evaluates = Object2.evaluates 
             return retVal
         elif not isinstance(Object2, QuantumBasic):
+            if Object2 == S.One:
+                return Object1
             retVal = cls.QMulflatten(Object1, Object2)
             retVal.hilbert_space = Object1.hilbert_space
             retVal.evaluates = Object1.evaluates 
@@ -76,7 +84,7 @@ class QMul(QAssocOp):
             if o.__class__ is cls: # classes must match exactly
                 seq = list(o[:]) + seq
                 continue
-            if not isinstance(o, (Operator, OuterProduct, StateBase, QAssocOp)):
+            if not isinstance(o, (QuantumBasic)):
                 Eseq.append(o)
             else:
                 Qseq.append(o)
@@ -93,7 +101,7 @@ class QMul(QAssocOp):
             return args
 
         else:
-            return args[0], self._new_rawargs(*args[1:])
+            return args[0], self._new_rawargs(self.evaluates, self.hilbert_space, *args[1:]) #FIXME rawargs in second argument
 
     @property
     def identity(self):
@@ -143,7 +151,7 @@ class QMul(QAssocOp):
                     plain.append(factor)
                 else:
                     Wrapper = QuantumBasic
-                    sums.append(Wrapper(factor))
+                    sums.append(factor)
 
         if not rewrite:
             return self

@@ -1013,4 +1013,4 @@ class IQFT(Fourier):
                 circuit = IRkGate(level, level-i-1, i+2)*circuit
             circuit = HadamardGate(level)*circuit
         return circuit
-          
+         
