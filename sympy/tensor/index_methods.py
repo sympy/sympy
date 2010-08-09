@@ -12,7 +12,7 @@
 from sympy.tensor.indexed import Idx, IndexedBase, Indexed
 from sympy.utilities import all
 from sympy.functions import exp
-from sympy.core import Function
+from sympy.core import C
 
 
 class IndexConformanceException(Exception):
@@ -242,7 +242,10 @@ def get_indices(expr):
         elif expr.is_Pow or isinstance(expr, exp):
             return _get_indices_Pow(expr)
 
-        elif isinstance(expr, Function):
+        elif isinstance(expr, C.Piecewise):
+            # FIXME:  No support for Piecewise yet
+            return set(), {}
+        elif isinstance(expr, C.Function):
             # Support ufunc like behaviour by returning indices from arguments.
             # Functions do not interpret repeated indices across argumnts
             # as summation
@@ -385,7 +388,11 @@ def get_contraction_structure(expr):
                 else:
                     result[key] = d[key]
         return result
-    elif isinstance(expr, Function):
+
+    elif isinstance(expr, C.Piecewise):
+        # FIXME:  No support for Piecewise yet
+        return {None: expr}
+    elif isinstance(expr, C.Function):
         # Collect non-trivial contraction structures in each argument
         # We do not report repeated indices in separate arguments as a
         # contraction
