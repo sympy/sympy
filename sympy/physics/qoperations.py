@@ -47,7 +47,7 @@ class QAssocOp(QuantumBasic):
         return string 
     
 
-    def _new_rawargs(self, *args):
+    def _new_rawargs(self, evaluates, hilbert_space, *args):
         """create new instance of own class with args exactly as provided by caller
 
            This is handy when we want to optimize things, e.g.
@@ -64,6 +64,7 @@ class QAssocOp(QuantumBasic):
 
         """
         obj = Expr.__new__(type(self), *args)  # NB no assumptions for Add/Mul
-
+        obj.evaluates = evaluates
+        obj.hilbert_space = hilbert_space
         return obj
 
