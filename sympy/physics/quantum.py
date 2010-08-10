@@ -562,9 +562,12 @@ class Commutator(Function):
 
 def represent(expr, basis, **options):
     """Represent the quantum expression in the given basis."""
+    from sympy.physics.qadd import QAdd
+    from sympy.physics.qmul import QMul
+    from sympy.physics.qpow import QPow
     if isinstance(expr, Representable):
         return expr.represent(basis, **options)
-    elif isinstance(expr, Add):
+    elif isinstance(expr, QAdd):
         result = S.Zero
         for args in expr.args:
             if not result:
@@ -572,12 +575,12 @@ def represent(expr, basis, **options):
             else:
                 result += represent(args, basis, **options)
         return result
-    elif isinstance(expr, Pow):
+    elif isinstance(expr, QPow):
         return represent(expr.base, basis, **options)**expr.exp
-    elif not isinstance(expr, Mul):
+    elif not isinstance(expr, QMul):
         return expr
 
-    if not isinstance(expr, Mul):
+    if not isinstance(expr, QMul):
         raise TypeError('Mul expected, got: %r' % expr)
 
     result = S.One
