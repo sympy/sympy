@@ -8,7 +8,7 @@ References
 """
 
 from sympy import Expr, Interval, oo, sympify, Add, Mul, Pow
-from sympy.physics.quantum import QuantumError
+from sympy.physics.quantumbasic import QuantumError
 
 class HilbertSpaceException(QuantumError):
     pass
