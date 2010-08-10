@@ -287,10 +287,12 @@ class InnerProduct(QuantumBasic):
             raise Exception('InnerProduct requires a leading Bra and a trailing Ket')
         assert issubclass(bra.evaluates, Bra), 'First argument must be a Bra'
         assert issubclass(ket.evaluates, Ket), 'Second argument must be a Ket'
+        assert bra.hilbert_space == ket.hilbert_space
         r = cls.eval(bra, ket)
         if isinstance(r, Expr):
             return r
         obj = Expr.__new__(cls, bra, ket)
+        obj.hilbert_space = bra.hilbert_space
         return obj
 
     @classmethod
