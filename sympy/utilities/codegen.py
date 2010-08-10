@@ -330,14 +330,9 @@ class ResultBase(object):
         self.expr = expr
         self.result_var = result_var
 
-    @property
-    def needs_initialization(self):
-        return self._need_initialization
-
 class OutputArgument(Argument, ResultBase):
     """OutputArgument are always initialized in the routine
     """
-    _need_initialization = True
     def __init__(self, name, result_var, expr, datatype=None, dimensions=None, precision=None):
         """ See docstring of Variable.__init__
         """
@@ -347,7 +342,6 @@ class OutputArgument(Argument, ResultBase):
 class InOutArgument(Argument, ResultBase):
     """InOutArgument are never initialized in the routine
     """
-    _need_initialization = False
 
     def __init__(self, name, result_var, expr, datatype=None, dimensions=None, precision=None):
         """ See docstring of Variable.__init__
@@ -362,7 +356,6 @@ class Result(ResultBase):
        'return' in the python language. It is also shorter than ReturnValue.
 
     """
-    _need_initialization = False
 
     def __init__(self, expr, datatype=None, precision=None):
         """Initialize a (scalar) return value.
