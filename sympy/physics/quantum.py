@@ -3,11 +3,11 @@ from sympy import (
     I, Function, Integer, S, sympify, Matrix, oo
 )
 from sympy.core.sympify import _sympify
-from sympy.physics.hilbert import *
 from sympy.core.numbers import Number
 from sympy.core.symbol import Symbol, symbols
 from sympy.physics.quantumbasic import QuantumError, QuantumBasic
 from sympy.printing.pretty.stringpict import prettyForm
+from sympy.physics.hilbert import HilbertSpace
 
 """
 Questions:

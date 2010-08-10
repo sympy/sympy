@@ -59,9 +59,8 @@ class QMul(QAssocOp):
             retVal = cls.QMulflatten(Object1, Object2)
             retVal.hilbert_space = Object1.hilbert_space
             retVal.evaluates = Object1.evaluates
-            return retVal
-         
-        if issubclass(Object1.evaluates, (Operator)):
+            return retVal         
+        elif issubclass(Object1.evaluates, Operator):
             if issubclass(Object2.evaluates, (Operator, InnerProduct)):
                 retVal = cls.QMulflatten(Object1, Object2)
                 retVal.hilbert_space = Object1.hilbert_space
@@ -72,7 +71,7 @@ class QMul(QAssocOp):
                 retVal.hilbert_space = Object2.hilbert_space
                 retVal.evaluates = Object2.evaluates
                 return retVal
-        elif issubclass(Object2.evaluates, (Operator)):
+        elif issubclass(Object2.evaluates, Operator):
             if issubclass(Object1.evaluates, (Operator, InnerProduct)):
                 retVal = cls.QMulflatten(Object1, Object2)
                 retVal.hilbert_space = Object2.hilbert_space
