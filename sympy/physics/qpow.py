@@ -77,6 +77,3 @@ class QPow(QuantumBasic):
 
     def _pretty(self, printer, *args):
         return printer._print(self.args[0], *args)**printer._print(self.args[1], *args)
-         
-    
-

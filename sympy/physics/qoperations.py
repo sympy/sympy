@@ -79,7 +79,7 @@ class QAssocOp(QuantumBasic):
         """ Create new instance of own class with args exactly as provided by caller; 
             Sets evaluates and hilbert_space attributes to those specified in inputs 
 
-           This is handy when we want to optimize things, e.g.
+            This is handy when we want to optimize things, e.g.
         """
         obj = Expr.__new__(type(self), *args)  # NB no assumptions for Add/Mul
         obj.evaluates = evaluates
