@@ -508,6 +508,7 @@ def integrate_hyperexponential_polynomial(p, D, T, z):
     T1 = T[:-1]
     t1 = T1[-1]
 
+    dtt = d.quo(Poly(t, t))
     qa = Poly(0, t)
     qd = Poly(1, t)
     b = True
@@ -526,7 +527,7 @@ def integrate_hyperexponential_polynomial(p, D, T, z):
 
         aa, ad = a.as_numer_denom()
         aa, ad = aa.as_poly(t1, field=True), ad.as_poly(t1, field=True)
-        iDt = Poly(i, t)*d.quo(Poly(t, t))
+        iDt = Poly(i, t)*dtt
         iDta, iDtd = iDt.as_basic().as_numer_denom()
         iDta, iDtd = iDta.as_poly(t1, field=True), iDtd.as_poly(t1, field=True)
         try:
@@ -1016,8 +1017,8 @@ def risch_integrate(f, x, extension=None, handle_first='log'):
      |
     /
 
-    The Integral means that risch_integrate() has proven that exp(-x**2) does
-    not have an elementary anti-derivative.
+    The unevaluated Integral in the result means that risch_integrate() has
+    proven that exp(-x**2) does not have an elementary anti-derivative.
 
     In many cases, risch_integrate() can split out the elementary
     anti-derivative part from the non-elementary anti-derivative part.
@@ -1087,6 +1088,7 @@ def risch_integrate(f, x, extension=None, handle_first='log'):
         if not fa.has(t) and not fd.has(t) and not case == 'base':
             T = T[:-1]
             D = D[:-1]
+            Tfuncs = Tfuncs[1:]
             t = T[-1]
             fa, fd = (fa.as_basic()/fd.as_basic()).as_numer_denom()
             fa, fd = Poly(fa, t), Poly(fd, t)
@@ -1110,6 +1112,7 @@ def risch_integrate(f, x, extension=None, handle_first='log'):
         if b:
             T = T[:-1]
             D = D[:-1]
+            Tfuncs = Tfuncs[1:]
             t = T[-1]
             fa, fd = i.as_numer_denom()
             fa, fd = Poly(fa, t), Poly(fd, t)

@@ -172,6 +172,7 @@ def special_denom(a, ba, bd, ca, cd, D, T, case='auto'):
 
     This constitutes step 2 of the outline given in the rde.py docstring.
     """
+    from sympy.integrals.prde import parametric_log_deriv
     # TODO: finish writing this and write tests
     t = T[-1]
     d = D[-1]
@@ -198,9 +199,23 @@ def special_denom(a, ba, bd, ca, cd, D, T, case='auto'):
     n = min(0, nc - min(0, nb))
     if not nb:
         # Possible cancelation.
-        #
-        # if case == 'exp':
-        #     alpha = (-b/a).rem(p) == -b(0)/a(0)
+
+        if case == 'exp':
+            T1 = T[:-1] # We are guaranteed to not have problems, because
+            D1 = D[:-1] # case != 'base'.
+            t1 = T1[-1]
+            alphaa, alphad = (-ba.eval(0)/bd.eval(0)/a.eval(0)).as_numer_denom()
+            alphaa, alphad = alphaa.as_poly(t1), alphad.as_poly(t1)
+            etaa, etad = d.quo(Poly(t, t)).as_basic().as_numer_denom()
+            etaa, etad = Poly(etaa, t1), Poly(etad, t1)
+            A = parametric_log_deriv(alphaa, alphad, etaa, etad, D1, T1)
+            if A is not None:
+                a, m, z = A
+                if a == 1:
+                    n = min(n, m)
+        else:
+            raise NotImplementedError("Tangent case not implemented yet for " +
+                "RDE special_denom().")
         #     if alpha == m*Dt/t + Dz/z # parametric logarithmic derivative problem
         #         n = min(n, m)
         # elif case == 'tan':
@@ -210,8 +225,6 @@ def special_denom(a, ba, bd, ca, cd, D, T, case='auto'):
         #     alpha*sqrt(-1) + beta == 2*m*eta*sqrt(-1) + Dz/z:
         #     # parametric logarithmic derivative problem
         #         n = min(n, m)
-        raise NotImplementedError("The ability to solve the parametric " +
-            "logarithmic derivative problem is required to solve this RDE.")
 
     N = max(0, -nb, n - nc)
     pN = p**N
@@ -240,6 +253,7 @@ def bound_degree(a, b, cQ, D, T, case='auto', parametric=False):
 
     This constitutes step 3 of the outline given in the rde.py docstring.
     """
+    from sympy.integrals.prde import parametric_log_deriv
     # TODO: finish writing this and write tests
     t = T[-1]
     d = D[-1]
@@ -287,8 +301,18 @@ def bound_degree(a, b, cQ, D, T, case='auto', parametric=False):
     elif case == 'exp':
         n = max(0, dc - max(db, da))
         if da == db:
-            raise NotImplementedError("Possible cancellation cases are " +
-                "not yet implemented for the hyperexponential case.")
+            T1 = T[:-1] # We are guaranteed to not have problems, because
+            D1 = D[:-1] # case != 'base'.
+            t1 = T1[-1]
+            alphaa, alphad = alpha.as_numer_denom()
+            alphaa, alphad = alphaa.as_poly(t1), alphad.as_poly(t1)
+            etaa, etad = d.quo(Poly(t, t)).as_basic().as_numer_denom()
+            etaa, etad = Poly(etaa, t1), Poly(etad, t1)
+            A = parametric_log_deriv(alphaa, alphad, etaa, etad, D1, T1)
+            if A is not None:
+                a, m, z = A
+                if a == 1:
+                    n = max(n, m)
             # if alpha == m*Dt/t + Dz/z for z in k* and m in ZZ:
                 # n = max(n, m)
 
@@ -459,6 +483,65 @@ def no_cancel_equal(b, c, n, D, T):
 
     return q
 
+def cancel_exp(b, c, n, D, T):
+    """
+    Poly Risch Differential Equation - Cancelation: Hyperexponential case.
+
+    Given a derivation D on k[t], n either an integer or +oo, b in k, and
+    c in k[t] with Dt/t in k and b != 0, either raise NonElementaryIntegral, in
+    which case the equation Dq + b*q == c has no solution of degree at most n
+    in k[t], or a solution q in k[t] of this equation with deg(q) <= n.
+    """
+    from sympy.integrals.prde import parametric_log_deriv
+    t = T[-1]
+
+    T1 = T[:-1]
+    D1 = D[:-1]
+    t1 = T1[-1]
+    eta = D[-1].quo(Poly(t, t)).as_basic()
+    etaa, etad = eta.as_numer_denom()
+    etaa, etad = Poly(etaa, t1), Poly(etad, t1)
+    A = parametric_log_deriv(b.as_poly(t1), Poly(1, t1), etaa, etad, D1, T1)
+    if A is not None:
+        a, m, z = A
+        if a == 1:
+            raise NotImplementedError("is_deriv_in_field() is required to solve " +
+                "this problem.")
+            # if c*z*t**m == Dp for p in k<t> and q = p/(z*t**m) in k[t] and
+            # deg(q) <= n:
+            #     return q
+            # else:
+            #     raise NonElementaryIntegral
+
+    if c.is_zero:
+        return c # return 0
+
+    if n < c.degree(t):
+        raise NonElementaryIntegral
+
+    q = Poly(0, t)
+    while not c.is_zero:
+        m = c.degree(t)
+        if n < m:
+            raise NonElementaryIntegral
+        # a1 = b + m*Dt/t
+        a1 = b.as_basic()
+        # TODO: Write a dummy function that does this idiom
+        a1a, a1d = a1.as_numer_denom()
+        a1a, a1d = Poly(a1a, t1), Poly(a1d, t1)
+        a1a = a1a*etad + etaa*a1d*Poly(m, t1)
+        a1d = a1d*etad
+
+        a2a, a2d = c.LC().as_numer_denom()
+        a2a, a2d = Poly(a2a, t1), Poly(a2d, t1)
+
+        sa, sd = rischDE(a1a, a1d, a2a, a2d, D1, T1)
+        stm = Poly(sa.as_basic()/sd.as_basic()*t**m, t)
+        q += stm
+        n = m - 1
+        c -= b*stm + derivation(stm, D, T) # deg(c) becomes smaller
+    return q
+
 def solve_poly_rde(b, cQ, n, D, T, parametric=False):
     """
     Solve a Polynomial Risch Differential Equation with degree bound n.
@@ -474,6 +557,7 @@ def solve_poly_rde(b, cQ, n, D, T, parametric=False):
     t = T[-1]
     d = D[-1]
 
+    # No cancelation
     if not b.is_zero and (d.is_one or b.degree(t) > max(0, d.degree(t) - 1)):
         if parametric:
             return prde_no_cancel_b_large(b, cQ, n, D, T)
@@ -505,7 +589,7 @@ def solve_poly_rde(b, cQ, n, D, T, parametric=False):
         if parametric:
             raise NotImplementedError("prde_no_cancel_b_equal() is not yet implemented.")
 
-        R = no_cancel_equal(b, c, n, D, T)
+        R = no_cancel_equal(b, cQ, n, D, T)
 
         if isinstance(R, Poly):
             return R
@@ -516,6 +600,21 @@ def solve_poly_rde(b, cQ, n, D, T, parametric=False):
             return h + y
 
     else:
+        # Cancelation
+        if b.is_zero:
+            raise NotImplementedError("Remaining cases for Poly (P)RDE are " +
+            "not yet implemented (is_deriv_in_field() required).")
+        else:
+            case = get_case(d, t)
+            if case == 'exp':
+                if parametric:
+                    raise NotImplementedError("Parametric RDE cancelation " +
+                        "hyperexponential case is not yet implemeted.")
+                return cancel_exp(b, cQ, n, D, T)
+            else:
+                raise NotImplementedError("Other Poly (P)RDE cancelation " +
+                    "cases are not yet implemented (%s)." % case)
+
         if parametric:
             raise NotImplementedError("Remaining cases for Poly PRDE not yet implemented.")
         raise NotImplementedError("Remaining cases for Poly RDE not yet implemented.")

@@ -410,8 +410,8 @@ def parametric_log_deriv_heu(fa, fd, wa, wd, D, T):
 
     Given a derivation D on k[t], f in k(t), and a hyperexponential monomial
     theta over k(t), raises either NotImplementedError, in which case the
-    heuristic failed, or NonElementaryIntegral, in which case it has proven
-    that no solution exists, or returns a solution (n, m, v) of the equation
+    heuristic failed, or returns None, in which case it has proven that no
+    solution exists, or returns a solution (n, m, v) of the equation
     n*f == Dv/v + m*Dtheta/theta, with v in k(t)* and n, m in ZZ with n != 0.
 
     If this heuristic fails, the structure theorem approach will need to be
@@ -433,8 +433,9 @@ def parametric_log_deriv_heu(fa, fd, wa, wd, D, T):
         eqs = [p.nth(i) - c1*q.nth(i) for i in range(B + 1, C + 1)]
         s = solve(eqs, c1)
         if not s or not s[c1].is_Rational:
-            raise NonElementaryIntegral("parametric_log_deriv_heu(): deg(q) " +
-            "> B, no solution for c.")
+            # deg(q) > B, no solution for c.
+            return None
+
 
         N, M = s[c1].as_numer_denom() # N, M are integers
         N, M = Poly(N, t), Poly(M, t)
@@ -443,20 +444,19 @@ def parametric_log_deriv_heu(fa, fd, wa, wd, D, T):
         nfmwd = fd*wd
         Qv = is_log_deriv_k_t_radical(N*fa*wd - M*wa*fd, fd*wd, D, T, 'auto')
         if Qv is None:
-            raise NonElementaryIntegral("parametric_log_deriv_heu(): " +
-            "%s/%s "  % (nfmwa, nfmwd) + "(N*f - M*w) is not the logarithmic " +
-            "derivative of a k(t)-radical.")
+        # (N*f - M*w) is not the logarithmic derivative of a k(t)-radical.
+            return None
         Q, v = Qv
 
         if Q.is_zero or v.is_zero:
-            raise NonElementaryIntegral("parametric_log_deriv_heu(): Q == 0 " +
-                "or v == 0.")
+            # Q == 0 or v == 0.
+            return None
 
         return (Q*N, Q*M, v)
 
     if p.degree(t) > B:
-        raise NonElementaryIntegral("parametric_log_deriv_heu(): p.degree() " +
-            "B.")
+        # p.degree() > B.
+        return None
 
     c = lcm(fd.as_poly(t).LC(),wd.as_poly(t).LC())
     l = fd.monic().lcm(wd.monic())*Poly(c, t)
@@ -473,8 +473,8 @@ def parametric_log_deriv_heu(fa, fd, wa, wd, D, T):
     eqs = [r1.nth(i) - c1*r2.nth(i) for i in range(z.degree(t))]
     s = solve(eqs, c1)
     if not s or not s[c1].is_Rational:
-        raise NonElementaryIntegral("parametric_log_deriv_heu(): deg(q) " +
-            "<= B, no solution for c.")
+        # deg(q) <= B, no solution for c.
+        return None
 
     M, N = s[c1].as_numer_denom()
 
@@ -482,20 +482,28 @@ def parametric_log_deriv_heu(fa, fd, wa, wd, D, T):
     nfmwd = fd*wd
     Qv = is_log_deriv_k_t_radical_in_field(nfmwa, nfmwd, D, T)
     if Qv is None:
-        raise NonElementaryIntegral("parametric_log_deriv_heu(): " +
-            "%s/%s "  % (nfmwa, nfmwd) + "(N*f - M*w) is not the logarithmic " +
-            "derivative of a k(t)-radical.")
+        # (N*f - M*w) is not the logarithmic derivative of a k(t)-radical.
+        return None
+
     Q, v = Qv
 
     if Q.is_zero or v.is_zero:
-        raise NonElementaryIntegral("parametric_log_deriv_heu(): Q == 0 " +
-            "or v == 0.")
+        # Q == 0 or v == 0.
+        return None
 
     return (Q*N, Q*M, v)
 
 def parametric_log_deriv(fa, fd, wa, wd, D, T):
     # TODO: Write the full algorithm using the structure theorems.
-    return parametric_log_deriv_heu(fa, fd, wa, wd, D, T)
+#    try:
+    print fa, fd, wa, wd, D, T
+    A = parametric_log_deriv_heu(fa, fd, wa, wd, D, T)
+#    except NotImplementedError:
+        # Heuristic failed, we have to use the full method.
+        # TODO: This could be implemented more efficiently.
+        # It isn't too worisome, because the heuristic handles most difficult
+        # cases.
+    return A
 
 def is_deriv_k(fa, fd, L_K, E_K, L_args, E_args, D, T):
     """

@@ -3,7 +3,7 @@ from sympy import Poly, S, symbols, oo
 from sympy.integrals.risch import NonElementaryIntegral
 from sympy.integrals.rde import (order_at, order_at_oo, weak_normalizer,
     normal_denom, special_denom, bound_degree, spde, solve_poly_rde,
-    no_cancel_equal, rischDE)
+    no_cancel_equal, cancel_exp, rischDE)
 from sympy.utilities.pytest import raises
 from sympy.abc import x, t, z, n
 
@@ -108,6 +108,13 @@ def test_solve_poly_rde_no_cancel():
     assert no_cancel_equal(Poly(1 - t, t),
     Poly(t**3 + t**2 - 2*x*t - 2*x, t), oo, D, [x, t]) == \
         (Poly(t**2, t), 1, Poly((-2 - 2*x)*t - 2*x, t))
+
+def test_solve_poly_rde_cancel():
+    # exp
+    D = [Poly(1, x), Poly(t, t)]
+    assert cancel_exp(Poly(2*x, t), Poly(2*x, t), 0, D, [x, t]) == \
+        Poly(1, t)
+    # TODO: Add more exp tests
 
 def test_rischDE():
     # TODO: Add more tests for rischDE, including ones from the text
