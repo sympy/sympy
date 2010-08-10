@@ -7,6 +7,7 @@ from sympy.physics.hilbert import *
 from sympy.core.numbers import Number
 from sympy.core.symbol import Symbol, symbols
 from sympy.physics.quantumbasic import QuantumError, QuantumBasic
+from sympy.printing.pretty.stringpict import prettyForm
 
 """
 Questions:
@@ -305,7 +306,7 @@ class InnerProduct(QuantumBasic):
 
     @property
     def evaluates(self):
-        return Number
+        return self.__class__
 
     def _eval_dagger(self):
         return InnerProduct(Dagger(self.ket), Dagger(self.bra))
@@ -319,7 +320,9 @@ class InnerProduct(QuantumBasic):
         return '%s|%s' % (sbra[:-1], sket[1:])
 
     def _pretty(self, printer, *args):
-        return self.bra._pretty(printer, *args)*self.ket._pretty(printer, *args)
+        pform = printer._print('<')
+        pform = prettyForm(*pform.right(self.bra._print_name(printer, *args)))
+        return prettyForm(*pform.right(self.ket._pretty(printer, *args)))
 
 class OuterProduct(Operator):
     """
@@ -367,7 +370,8 @@ class OuterProduct(Operator):
         return str(self.ket)+str(self.bra)
 
     def _pretty(self, printer, *args):
-        return self.ket._pretty(printer, *args)*self.bra._pretty(printer, *args)
+        pform = self.ket._pretty(printer, *args)
+        return prettyForm(*pform.right(self.bra._pretty(printer, *args)))
 
 class Dagger(QuantumBasic):
     """

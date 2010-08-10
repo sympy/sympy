@@ -9,6 +9,7 @@ from sympy.printing.str import sstr
 from sympy.core.add import Add
 from sympy.core.power import Pow
 from sympy.physics.quantumbasic import QuantumError, QuantumBasic
+from sympy.printing.pretty.stringpict import prettyForm
 
 class QAssocOp(QuantumBasic):
     """
@@ -56,7 +57,6 @@ class QAssocOp(QuantumBasic):
         return string 
 
     def _pretty(self, printer, *args):
-        from sympy.printing.pretty.stringpict import prettyForm
         from sympy.physics.qmul import QMul
         from sympy.physics.qadd import QAdd
         length = len(self.args)
