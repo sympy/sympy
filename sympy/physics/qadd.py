@@ -13,7 +13,7 @@ class QAdd(QAssocOp):
         Quantum Add operation
     """
     binop = ' + '
-    binopPretty = prettyForm(u'\u002B')
+    binopPretty =  prettyForm(u' \u002B ') 
 
     @classmethod    
     def _rules_QAdd(cls, Object1, Object2):

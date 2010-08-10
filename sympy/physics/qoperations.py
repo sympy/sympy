@@ -55,7 +55,7 @@ class QAssocOp(QuantumBasic):
                 string = string + self.__class__.binop
         return string 
 
-    """def _pretty(self, printer, *args):
+    def _pretty(self, printer, *args):
         from sympy.printing.pretty.stringpict import prettyForm
         from sympy.physics.qmul import QMul
         from sympy.physics.qadd import QAdd
@@ -64,13 +64,16 @@ class QAssocOp(QuantumBasic):
         for i in range(length):
             if isinstance(self.args[i], (Add, Pow, QAdd)):
                 pform = prettyForm(*pform.right(prettyForm(u'\u0028')))
-            pform = prettyForm(*pform.right(sstr(self.args[i])))
+            if hasattr(self.args[i], '_pretty'):
+                pform = prettyForm(*pform.right(self.args[i]._pretty(printer, *args)))
+            else:
+                pform = prettyForm(*pform.right(sstr(self.args[i])))
             if isinstance(self.args[i], (Add, Pow, QAdd)):
                 pform = prettyForm(*pform.right(prettyForm(u'\u0029')))
             if i != length-1:
                 pform = prettyForm(*pform.right(self.binopPretty))
         return pform
-    """
+    
     
     def _new_rawargs(self, evaluates, hilbert_space, *args):
         """ Create new instance of own class with args exactly as provided by caller; 

@@ -23,13 +23,13 @@ class QMul(QAssocOp):
             Raises and exception if input violates quantum shape rules
         """
         from sympy.physics.quantum import StateBase, Operator, OuterProduct, KetBase, BraBase, OuterProduct, InnerProduct
-        """if Object1 == 1:
+        if Object1 == 1:
             return Object2
         if Object2 == 1:
             return Object1
         elif Object2 == 0 or Object1 == 0:
             return 0
-        """
+        
         if (not isinstance(Object1, QuantumBasic)) and (not isinstance(Object2, QuantumBasic)):
             return Mul(Object1, Object2)
         elif not isinstance(Object1, QuantumBasic):
@@ -49,6 +49,17 @@ class QMul(QAssocOp):
 
         if Object1.hilbert_space != Object2.hilbert_space:
             raise Exception("Hilbert Spaces do not match")
+
+        if issubclass(Object1.evaluates, InnerProduct):
+            retVal = cls.QMulflatten(Object1, Object2)
+            retVal.hilbert_space = Object2.hilbert_space
+            retVal.evaluates = Object2.evaluates
+            return retVal
+        elif issubclass(Object2.evaluates, InnerProduct):
+            retVal = cls.QMulflatten(Object1, Object2)
+            retVal.hilbert_space = Object1.hilbert_space
+            retVal.evaluates = Object1.evaluates
+            return retVal
          
         if issubclass(Object1.evaluates, (Operator)):
             if issubclass(Object2.evaluates, (Operator, InnerProduct)):
