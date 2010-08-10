@@ -113,14 +113,16 @@ class StateBase(QuantumBasic, Representable):
     def _pretty(self, printer, *args):
         from sympy.printing.pretty.stringpict import prettyForm
         pform = self._print_name_pretty(printer, *args)
-        pform = prettyForm(*pform.left(prettyForm(self.lbracket)))
-        pform = prettyForm(*pform.right(prettyForm(self.rbracket)))
+        pform = prettyForm(*pform.left((self.lbracketPretty)))
+        pform = prettyForm(*pform.right((self.rbracketPretty)))
         return pform
 
 class KetBase(StateBase):
 
     lbracket = '|'
     rbracket = '>'
+    rbracketPretty = prettyForm(u'\u2771')
+    lbracketPretty = prettyForm(u'\u275A') 
 
     @property
     def dual(self):
@@ -130,6 +132,8 @@ class BraBase(StateBase):
 
     lbracket = '<'
     rbracket = '|'
+    lbracketPretty = prettyForm(u'\u2770')
+    rbracketPretty = prettyForm(u'\u275A') 
 
     @property
     def dual(self):
@@ -326,7 +330,7 @@ class InnerProduct(QuantumBasic):
         return '%s|%s' % (sbra[:-1], sket[1:])
 
     def _pretty(self, printer, *args):
-        pform = printer._print('<')
+        pform = prettyForm(u'\u2770')
         pform = prettyForm(*pform.right(self.bra._print_name(printer, *args)))
         return prettyForm(*pform.right(self.ket._pretty(printer, *args)))
 
