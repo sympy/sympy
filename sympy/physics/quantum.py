@@ -188,6 +188,10 @@ class TimeDepState(StateBase):
         inst.hilbert_space = cls._eval_hilbert_space(name, time)
         return inst
 
+    @property
+    def name(self):
+        return self.args[0]
+
     @classmethod
     def _eval_name(cls, name, time):
         return sympify(name)
