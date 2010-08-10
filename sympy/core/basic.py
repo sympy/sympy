@@ -468,7 +468,7 @@ class Basic(AssumeMeths):
                     except TypeError:
                         #one or more types is in implicit form
                         for t in typ:
-                            if type(type(t)) is type:
+                            if isinstance(t, type):
                                 if isinstance(expr, t):
                                     result.add(expr)
                             else:
