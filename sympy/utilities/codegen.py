@@ -202,8 +202,8 @@ class Routine(object):
         if argument_sequence is not None:
             missing = filter(lambda x: x.name not in argument_sequence, arg_list)
             if missing:
-                raise CodeGenError("Argument list didn't specify: %s" %
-                        ", ".join([str(m.name) for m in missing]))
+                raise CodeGenArgumentListError("Argument list didn't specify: %s" %
+                        ", ".join([str(m.name) for m in missing]), missing)
 
             # create redundant arguments to produce the requested sequence
             name_arg_dict = dict([(x.name, x) for x in arg_list])
@@ -466,6 +466,11 @@ class CodeGen(object):
 
 class CodeGenError(Exception):
     pass
+
+class CodeGenArgumentListError(Exception):
+    @property
+    def missing_args(self):
+        return self.args[1]
 
 
 header_comment = """Code generated with sympy %(version)s

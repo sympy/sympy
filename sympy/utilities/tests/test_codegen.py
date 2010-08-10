@@ -2,7 +2,8 @@ from StringIO import StringIO
 
 from sympy.core import symbols, Eq
 from sympy.utilities.codegen import CCodeGen, Routine, InputArgument, Result, \
-    CodeGenError, FCodeGen, codegen
+    CodeGenError, FCodeGen, codegen, CodeGenArgumentListError, OutputArgument, \
+    InOutArgument
 from sympy.utilities.pytest import XFAIL, raises
 
 # import test:
@@ -24,9 +25,17 @@ def get_string(dump_fn, routines, prefix="file", header=False, empty=False):
     return source
 
 def test_Routine_argument_order():
-    x, y, z = symbols('x y z')
+    a, x, y, z = symbols('a x y z')
     expr = (x+y)*z
-    raises(CodeGenError, 'Routine("test", expr, argument_sequence=[z, x])')
+    raises(CodeGenArgumentListError, 'Routine("test", expr, argument_sequence=[z, x])')
+    raises(CodeGenArgumentListError, 'Routine("test", Eq(a, expr), argument_sequence=[z, x, y])')
+    r = Routine('test', Eq(a, expr), argument_sequence=[z, x, a, y])
+    assert [ arg.name for arg in r.arguments ] == [z, x, a, y]
+    assert [ type(arg) for arg in r.arguments ] == [
+            InputArgument, InputArgument, OutputArgument, InputArgument  ]
+    r = Routine('test', Eq(z, expr), argument_sequence=[z, x, y])
+    assert [ type(arg) for arg in r.arguments ] == [
+            InOutArgument, InputArgument, InputArgument ]
 
 def test_empty_c_code():
     code_gen = CCodeGen()
