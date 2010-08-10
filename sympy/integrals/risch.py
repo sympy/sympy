@@ -66,6 +66,24 @@ def gcdex_diophantine(a, b, c):
 
     return (s, t)
 
+def frac_in(f, t, **kwargs):
+    """
+    Returns the tuple (fa, fd), where fa and fd are Polys in t.
+
+    This is a common idiom in the Risch Algorithm functions, so we abstract
+    it out here.  f should be a basic expresion, a Poly, or a tuple (fa, fd),
+    where fa and fd are either basic expressions or Polys, and f == fa/fd.
+    **kwargs are applied to Poly.
+    """
+    if type(f) is tuple:
+        fa, fd = f
+        f = fa.as_basic()/fd.as_basic()
+    fa, fd = f.as_basic().as_numer_denom()
+    fa, fd = fa.as_poly(t, **kwargs), fd.as_poly(t, **kwargs)
+    if fa is None or fd is None:
+        raise ValueError("Could not turn %s into a fraction in %s." % (f, t))
+    return (fa, fd)
+
 def derivation(p, D, T, coefficientD=False, basic=False):
     """
     Computes Dp.
@@ -423,11 +441,9 @@ def integrate_primitive_polynomial(p, D, T):
     D1 = D[:-1] # ratint().
     t1 = T1[-1]
     a = p.LC()
-    aa, ad = a.as_numer_denom()
-    aa, ad = Poly(aa, t1), Poly(ad, t1)
+    aa, ad = frac_in(a, t1)
     Dt = D[-1]
-    Dta, Dtb = Dt.as_basic().as_numer_denom()
-    Dta, Dtb = Poly(Dta, t1), Poly(Dtb, t1)
+    Dta, Dtb = frac_in(Dt, t1)
 
     try:
         (ba, bd), c = limited_integrate(aa, ad, [(Dta, Dtb)], D1, T1)
@@ -525,11 +541,9 @@ def integrate_hyperexponential_polynomial(p, D, T, z):
             # then this should really not have expand=False
             a = p.as_poly(t, expand=False).nth(i)
 
-        aa, ad = a.as_numer_denom()
-        aa, ad = aa.as_poly(t1, field=True), ad.as_poly(t1, field=True)
+        aa, ad = frac_in(a, t1, field=True)
         iDt = Poly(i, t)*dtt
-        iDta, iDtd = iDt.as_basic().as_numer_denom()
-        iDta, iDtd = iDta.as_poly(t1, field=True), iDtd.as_poly(t1, field=True)
+        iDta, iDtd = frac_in(iDt, t1, field=True)
         try:
             va, vd = rischDE(iDta, iDtd, Poly(aa, t1), Poly(ad, t1), D1, T1)
         except NonElementaryIntegral:
@@ -801,8 +815,7 @@ def build_extension(f, x, handle_first='log'):
                 # Minimize potential problems with algebraic substitution
                 others.sort(key=lambda i: i[1])
 
-                arga, argd = arg.as_numer_denom()
-                arga, argd = arga.as_poly(t), argd.as_poly(t)
+                arga, argd = frac_in(arg, t)
                 A = is_log_deriv_k_t_radical(arga, argd, L_K, E_K, L_args,
                     E_args, D, T)
 
@@ -858,8 +871,7 @@ def build_extension(f, x, handle_first='log'):
                             raise NotImplementedError("Cannot integrate over " +
                             "algebraic extensions.")
                 else:
-                    arga, argd = map(lambda i: Poly(i, t),
-                        arg.as_basic().as_numer_denom())
+                    arga, argd = frac_in(arg, t)
                     darga = (argd*derivation(Poly(arga, t), D, T) -
                         arga*derivation(Poly(argd, t), D, T))
                     dargd = argd**2
@@ -890,8 +902,7 @@ def build_extension(f, x, handle_first='log'):
                 # a1*t1 + ... an*tn + c, which is a polynomial, so we can just
                 # replace it with that.  In other words, we don't have to worry
                 # about radicals.
-                arga, argd = arg.as_numer_denom()
-                arga, argd = arga.as_poly(t), argd.as_poly(t)
+                arga, argd = frac_in(arg, t)
                 A = is_deriv_k(arga, argd, L_K, E_K, L_args, E_args, D, T)
                 if A is not None:
                     ans, u, const = A
@@ -900,8 +911,7 @@ def build_extension(f, x, handle_first='log'):
                     continue
 
                 else:
-                    arga, argd = map(lambda i: Poly(i, t),
-                        arg.as_basic().as_numer_denom())
+                    arga, argd = frac_in(arg, t)
                     darga = (argd*derivation(Poly(arga, t), D, T) -
                         arga*derivation(Poly(argd, t), D, T))
                     dargd = argd**2
@@ -944,8 +954,7 @@ def build_extension(f, x, handle_first='log'):
                     "supported (%s)" % str(i))
                 # We can add a**b only if log(a) in the extension, because
                 # a**b == exp(b*log(a)).
-                basea, based = i.base.as_numer_denom()
-                basea, based = Poly(basea, t), Poly(based, t)
+                basea, based = frac_in(i.base, t)
                 A = is_deriv_k(basea, based, L_K, E_K, L_args, E_args, D, T)
                 if A is None:
                     # Non-elementary monomial (so far)
@@ -985,7 +994,7 @@ def build_extension(f, x, handle_first='log'):
         if handle_first == 'log' or not exp_new_extension:
             log_new_extension = log_part(logs)
 
-    fa, fd = map(lambda i:Poly(i, t), newf.as_numer_denom())
+    fa, fd = frac_in(newf, t)
     return (fa, fd, D, T, Tfuncs, backsubs)
 
 def risch_integrate(f, x, extension=None, handle_first='log'):
@@ -1090,8 +1099,7 @@ def risch_integrate(f, x, extension=None, handle_first='log'):
             D = D[:-1]
             Tfuncs = Tfuncs[1:]
             t = T[-1]
-            fa, fd = (fa.as_basic()/fd.as_basic()).as_numer_denom()
-            fa, fd = Poly(fa, t), Poly(fd, t)
+            fa, fd = frac_in((fa, fd), t)
             continue
         fa, fd = fa.cancel(fd, include=True)
         if case == 'exp':
@@ -1114,8 +1122,7 @@ def risch_integrate(f, x, extension=None, handle_first='log'):
             D = D[:-1]
             Tfuncs = Tfuncs[1:]
             t = T[-1]
-            fa, fd = i.as_numer_denom()
-            fa, fd = Poly(fa, t), Poly(fd, t)
+            fa, fd = frac_in(i, t)
         else:
             result += i
             return result.subs(backsubs)

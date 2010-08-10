@@ -25,8 +25,8 @@ from sympy.core.symbol import Symbol
 
 from sympy.polys import Poly, gcd, ZZ, cancel
 
-from sympy.integrals.risch import (gcdex_diophantine, derivation, splitfactor,
-    NonElementaryIntegral, get_case)
+from sympy.integrals.risch import (gcdex_diophantine, frac_in, derivation,
+    splitfactor, NonElementaryIntegral, get_case)
 
 from sympy.utilities.iterables import any, all
 
@@ -204,10 +204,8 @@ def special_denom(a, ba, bd, ca, cd, D, T, case='auto'):
             T1 = T[:-1] # We are guaranteed to not have problems, because
             D1 = D[:-1] # case != 'base'.
             t1 = T1[-1]
-            alphaa, alphad = (-ba.eval(0)/bd.eval(0)/a.eval(0)).as_numer_denom()
-            alphaa, alphad = alphaa.as_poly(t1), alphad.as_poly(t1)
-            etaa, etad = d.quo(Poly(t, t)).as_basic().as_numer_denom()
-            etaa, etad = Poly(etaa, t1), Poly(etad, t1)
+            alphaa, alphad = frac_in(-ba.eval(0)/bd.eval(0)/a.eval(0), t1)
+            etaa, etad = frac_in(d.quo(Poly(t, t)), t1)
             A = parametric_log_deriv(alphaa, alphad, etaa, etad, D1, T1)
             if A is not None:
                 a, m, z = A
@@ -304,10 +302,8 @@ def bound_degree(a, b, cQ, D, T, case='auto', parametric=False):
             T1 = T[:-1] # We are guaranteed to not have problems, because
             D1 = D[:-1] # case != 'base'.
             t1 = T1[-1]
-            alphaa, alphad = alpha.as_numer_denom()
-            alphaa, alphad = alphaa.as_poly(t1), alphad.as_poly(t1)
-            etaa, etad = d.quo(Poly(t, t)).as_basic().as_numer_denom()
-            etaa, etad = Poly(etaa, t1), Poly(etad, t1)
+            alphaa, alphad = frac_in(alpha, t1)
+            etaa, etad = frac_in(d.quo(Poly(t, t)), t1)
             A = parametric_log_deriv(alphaa, alphad, etaa, etad, D1, T1)
             if A is not None:
                 a, m, z = A
@@ -499,8 +495,7 @@ def cancel_exp(b, c, n, D, T):
     D1 = D[:-1]
     t1 = T1[-1]
     eta = D[-1].quo(Poly(t, t)).as_basic()
-    etaa, etad = eta.as_numer_denom()
-    etaa, etad = Poly(etaa, t1), Poly(etad, t1)
+    etaa, etad = frac_in(eta, t1)
     A = parametric_log_deriv(b.as_poly(t1), Poly(1, t1), etaa, etad, D1, T1)
     if A is not None:
         a, m, z = A
@@ -527,13 +522,11 @@ def cancel_exp(b, c, n, D, T):
         # a1 = b + m*Dt/t
         a1 = b.as_basic()
         # TODO: Write a dummy function that does this idiom
-        a1a, a1d = a1.as_numer_denom()
-        a1a, a1d = Poly(a1a, t1), Poly(a1d, t1)
+        a1a, a1d = frac_in(a1, t1)
         a1a = a1a*etad + etaa*a1d*Poly(m, t1)
         a1d = a1d*etad
 
-        a2a, a2d = c.LC().as_numer_denom()
-        a2a, a2d = Poly(a2a, t1), Poly(a2d, t1)
+        a2a, a2d = frac_in(c.LC(), t1)
 
         sa, sd = rischDE(a1a, a1d, a2a, a2d, D1, T1)
         stm = Poly(sa.as_basic()/sd.as_basic()*t**m, t)

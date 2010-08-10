@@ -22,8 +22,8 @@ from sympy.solvers import solve
 
 from sympy.polys import Poly, PolynomialError, lcm, cancel, RootOf
 
-from sympy.integrals.risch import (gcdex_diophantine, derivation, get_case,
-    NonElementaryIntegral, residue_reduce, splitfactor,
+from sympy.integrals.risch import (gcdex_diophantine, frac_in, derivation,
+    get_case, NonElementaryIntegral, residue_reduce, splitfactor,
     residue_reduce_derivation)
 from sympy.integrals.rde import (order_at, order_at_oo, weak_normalizer,
     bound_degree, spde, solve_poly_rde)
@@ -496,7 +496,6 @@ def parametric_log_deriv_heu(fa, fd, wa, wd, D, T):
 def parametric_log_deriv(fa, fd, wa, wd, D, T):
     # TODO: Write the full algorithm using the structure theorems.
 #    try:
-    print fa, fd, wa, wd, D, T
     A = parametric_log_deriv_heu(fa, fd, wa, wd, D, T)
 #    except NotImplementedError:
         # Heuristic failed, we have to use the full method.
@@ -770,8 +769,7 @@ def is_log_deriv_k_t_radical_in_field(fa, fd, D, T, case='auto'):
         "not yet completely implemented for is_log_deriv_k_t_radical_in_field().")
 
     elif case == 'primitive':
-        pa, pd = p.as_basic().as_numer_denom()
-        pa, pd = Poly(pa, T[-2]), Poly(pd, T[-2])
+        pa, pd = frac_in(p, T[-2])
         n, u = is_log_deriv_k_t_radical_in_field(pa, pd, D[:-1], T[:-1], case='auto')
 
     elif case == 'base':

@@ -1,13 +1,13 @@
 """Most of these tests come from the examples in Bronstein's book."""
 from sympy import (Poly, S, Function, log, symbols, exp, tan, Integral, sqrt,
     Symbol, Lambda)
-from sympy.integrals.risch import (gcdex_diophantine, derivation, splitfactor,
-    splitfactor_sqf, canonical_representation, hermite_reduce,
+from sympy.integrals.risch import (gcdex_diophantine, frac_in, derivation,
+    splitfactor, splitfactor_sqf, canonical_representation, hermite_reduce,
     polynomial_reduce, residue_reduce, residue_reduce_to_basic,
     integrate_primitive, integrate_hyperexponential,
     integrate_hypertangent_polynomial, integrate_nonlinear_no_specials,
     integer_powers, build_extension)
-from sympy.utilities.pytest import XFAIL, skip
+from sympy.utilities.pytest import XFAIL, skip, raises
 
 from sympy.abc import x, t, nu, z, a
 t0, t1, t2 = symbols('t0, t1, t2')
@@ -16,6 +16,15 @@ def test_gcdex_diophantine():
     assert gcdex_diophantine(Poly(x**4 - 2*x**3 - 6*x**2 + 12*x + 15),
     Poly(x**3 + x**2 - 4*x - 4), Poly(x**2 - 1)) == \
         (Poly((-x**2 + 4*x - 3)/5), Poly((x**3 - 7*x**2 + 16*x - 10)/5))
+
+def test_frac_in():
+    assert frac_in(Poly((x + 1)/x*t, t), x) == \
+        (Poly(t*x + t, x), Poly(x, x))
+    assert frac_in((x + 1)/x*t, x) == \
+        (Poly(t*x + t, x), Poly(x, x))
+    assert frac_in((Poly((x + 1)/x*t, t), Poly(t + 1, t)), x) == \
+        (Poly(t*x + t, x), Poly((1 + t)*x, x))
+    raises(ValueError, "frac_in((x + 1)/log(x)*t, x)")
 
 def test_derivation():
     p = Poly(4*x**4*t**5 + (-4*x**3 - 4*x**4)*t**4 + (-3*x**2 + 2*x**3)*t**3 +
