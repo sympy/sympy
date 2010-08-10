@@ -250,8 +250,9 @@ class FCodePrinter(CodePrinter):
             return '1.0/%s'%(self.parenthesize(expr.base, PREC))
         elif expr.exp == 0.5:
             if expr.base.is_integer:
+                # Fortan intrinsic sqrt() does not accept integer argument
                 if expr.base.is_Number:
-                    return 'sqrt(%s.0)' % self._print(expr.base)
+                    return 'sqrt(%s.0d0)' % self._print(expr.base)
                 else:
                     return 'sqrt(dble(%s))' % self._print(expr.base)
             else:
@@ -261,7 +262,10 @@ class FCodePrinter(CodePrinter):
 
     def _print_Rational(self, expr):
         p, q = int(expr.p), int(expr.q)
-        return '%d.0/%d.0' % (p, q)
+        return "%d.0d0/%d.0d0" % (p, q)
+
+    def _print_Real(self, expr):
+        return "%sd0" % CodePrinter._print_Real(self, expr)
 
     def _print_Indexed(self, expr):
         inds = [ self._print(i) for i in expr.indices ]

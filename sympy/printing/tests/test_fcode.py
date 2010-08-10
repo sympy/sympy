@@ -21,18 +21,18 @@ def test_fcode_Pow():
     assert fcode(x**3) == "      x**3"
     assert fcode(x**(y**3)) == "      x**(y**3)"
     assert fcode(1/(sin(x)*3.5)**(x - y**x)/(x**2 + y)) == \
-        "      (3.5*sin(x))**(-x + y**x)/(y + x**2)"
+        "      (3.5d0*sin(x))**(-x + y**x)/(y + x**2)"
     assert fcode(sqrt(x)) == '      sqrt(x)'
     assert fcode(sqrt(n)) == '      sqrt(dble(n))'
     assert fcode(x**0.5) == '      sqrt(x)'
     assert fcode(x**Rational(1,2)) == '      sqrt(x)'
-    assert fcode(sqrt(10)) == '      sqrt(10.0)'
+    assert fcode(sqrt(10)) == '      sqrt(10.0d0)'
 
 def test_fcode_Rational():
-    assert fcode(Rational(3,7)) == "      3.0/7.0"
+    assert fcode(Rational(3,7)) == "      3.0d0/7.0d0"
     assert fcode(Rational(18,9)) == "      2"
-    assert fcode(Rational(3,-7)) == "      -3.0/7.0"
-    assert fcode(Rational(-3,-7)) == "      3.0/7.0"
+    assert fcode(Rational(3,-7)) == "      -3.0d0/7.0d0"
+    assert fcode(Rational(-3,-7)) == "      3.0d0/7.0d0"
 
 def test_fcode_Integer():
     assert fcode(Integer(67)) == "      67"
