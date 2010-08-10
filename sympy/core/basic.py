@@ -397,8 +397,8 @@ class Basic(AssumeMeths):
 
            >>> from sympy import I, pi, sin
            >>> from sympy.abc import x, y
-           >>> list((1+x+2*sin(y+I*pi)).atoms())
-           [y, I, 2, x, 1, pi]
+           >>> set((1+x+2*sin(y+I*pi)).atoms())
+           set([1, 2, pi, x, y, I])
 
            If one or more types are given, the results will contain only
            those types of atoms::
@@ -406,25 +406,25 @@ class Basic(AssumeMeths):
            Examples::
 
            >>> from sympy import Number, NumberSymbol, Symbol
-           >>> sorted((1+x+2*sin(y+I*pi)).atoms(Symbol))
-           [x, y]
+           >>> (1+x+2*sin(y+I*pi)).atoms(Symbol)
+           set([x, y])
 
-           >>> sorted((1+x+2*sin(y+I*pi)).atoms(Number))
-           [1, 2]
+           >>> (1+x+2*sin(y+I*pi)).atoms(Number)
+           set([1, 2])
 
-           >>> sorted((1+x+2*sin(y+I*pi)).atoms(Number, NumberSymbol))
-           [1, 2, pi]
+           >>> (1+x+2*sin(y+I*pi)).atoms(Number, NumberSymbol)
+           set([1, 2, pi])
 
-           >>> sorted((1+x+2*sin(y+I*pi)).atoms(Number, NumberSymbol, I))
-           [1, 2, pi, I]
+           >>> (1+x+2*sin(y+I*pi)).atoms(Number, NumberSymbol, I)
+           set([1, 2, pi, I])
 
            Note that I (imaginary unit) and zoo (complex infinity) are special
            types of number symbols and are not part of the NumberSymbol class.
 
            The type can be given implicitly, too::
 
-           >>> sorted((1+x+2*sin(y+I*pi)).atoms(x)) # x is a Symbol
-           [x, y]
+           >>> (1+x+2*sin(y+I*pi)).atoms(x) # x is a Symbol
+           set([x, y])
 
            Be careful to check your assumptions when using the implicit option
            since S(1).is_Integer = True but type(S(1)) is One, a special type
@@ -432,23 +432,23 @@ class Basic(AssumeMeths):
            integers in an expression::
 
            >>> from sympy import S
-           >>> sorted((1+x+2*sin(y+I*pi)).atoms(S(1)))
-           [1]
+           >>> (1+x+2*sin(y+I*pi)).atoms(S(1))
+           set([1])
 
-           >>> sorted((1+x+2*sin(y+I*pi)).atoms(S(2)))
-           [1, 2]
+           >>> (1+x+2*sin(y+I*pi)).atoms(S(2))
+           set([1, 2])
 
            Finally, arguments to atoms() can select more than atomic atoms: any
            sympy type (loaded in core/__init__.py) can be listed as an argument
            and those types of "atoms" as found in scanning the arguments of the
-           expression nonrecursively::
+           expression recursively::
 
            >>> from sympy import Function, Mul
-           >>> sorted((1+x+2*sin(y+I*pi)).atoms(Function))
-           [sin(y + pi*I)]
+           >>> (1+x+2*sin(y+I*pi)).atoms(Function)
+           set([sin(y + pi*I)])
 
-           >>> sorted((1+x+2*sin(y+I*pi)).atoms(Mul))
-           [2*sin(y + pi*I)]
+           >>> (1+x+2*sin(y+I*pi)).atoms(Mul)
+           set([2*sin(y + pi*I), pi*I])
 
 
         """
@@ -456,22 +456,25 @@ class Basic(AssumeMeths):
 
         def _atoms(expr, typ):
             """Helper function for recursively denesting atoms"""
+
+            result = set()
             if isinstance(expr, Basic):
                 if expr.is_Atom and len(typ) == 0: # if we haven't specified types
-                    return [expr]
+                    return set([expr])
                 else:
                     try:
-                        if isinstance(expr, typ): return [expr]
+                        if isinstance(expr, typ):
+                            result.add(expr)
                     except TypeError:
                         #one or more types is in implicit form
                         for t in typ:
                             if type(type(t)) is type:
-                                if isinstance(expr, t): return [expr]
+                                if isinstance(expr, t):
+                                    result.add(expr)
                             else:
-                                if isinstance(expr, type(t)): return [expr]
-            result = []
-            #search for a suitable iterator
-            if isinstance(expr, Basic):
+                                if isinstance(expr, type(t)):
+                                    result.add(expr)
+
                 iter = expr.iter_basic_args()
             elif isinstance(expr, (tuple, list)):
                 iter = expr.__iter__()
@@ -479,10 +482,11 @@ class Basic(AssumeMeths):
                 iter = []
 
             for obj in iter:
-                result.extend(_atoms(obj, typ))
+                result.update(_atoms(obj, typ))
+
             return result
 
-        return set(_atoms(self, typ=types))
+        return _atoms(self, typ=types)
 
     def is_hypergeometric(self, k):
         from sympy.simplify import hypersimp
