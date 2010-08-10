@@ -66,7 +66,8 @@ import tempfile
 import subprocess
 
 from sympy.utilities.codegen import (
-        codegen, get_code_generator, Routine, OutputArgument, InOutArgument
+        codegen, get_code_generator, Routine, OutputArgument, InOutArgument,
+        CodeGenArgumentListError, Result
         )
 from sympy.utilities.lambdify import implemented_function
 
@@ -146,6 +147,8 @@ class DummyWrapper(CodeWrapper):
     template = """# dummy module for testing of Sympy
 def %(name)s():
     return "%(expr)s"
+%(name)s.args = "%(args)s"
+%(name)s.returns = "%(retvals)s"
 """
     def _prepare_files(self, routine):
         return
@@ -153,9 +156,20 @@ def %(name)s():
     def _generate_code(self, routine, helpers):
         f = file('%s.py' % self.module_name, 'w')
         printed = ", ".join([str(res.expr) for res in routine.result_variables])
+        # convert OutputArguments to return value like f2py
+        inargs = filter(lambda x: not isinstance(x, OutputArgument), routine.arguments)
+        retvals = []
+        for val in routine.result_variables:
+            if isinstance(val, Result):
+                retvals.append('nameless')
+            else:
+                retvals.append(val.result_var)
+
         print >> f, DummyWrapper.template % {
                 'name': routine.name,
-                'expr': printed
+                'expr': printed,
+                'args': ", ".join([str(arg.name) for arg in inargs]),
+                'retvals': ", ".join([str(val) for val in retvals])
                 }
         f.close()
 
