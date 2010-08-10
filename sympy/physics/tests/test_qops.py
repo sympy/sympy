@@ -21,6 +21,7 @@ from sympy.physics.hilbert import (
 )
 from sympy.physics.quantumbasic import QuantumError, QuantumBasic
 from sympy import Symbol, expand
+from sympy.utilities.pytest import XFAIL
 
 def test_QMul_Ket():
     a = Symbol('a')
@@ -30,6 +31,12 @@ def test_QMul_Ket():
     assert a*A
     assert a*A == A*a
     assert expand(a*(A+B)) == a*A+a*B
+
+@XFAIL
+def test_KetKet():
+    A = Ket('a')
+    B = Bra('b')
+    assert A*B
 
 def test_QMul_Bra():
     a = Symbol('a')
@@ -50,6 +57,7 @@ def test_QMul_Operator():
     assert expand(a*(E+F)) == a*E+a*F
     assert E*F != F*E
     assert E*(F*G) == (E*F)*G
+    assert Dagger(a*E) == Dagger(E)*Dagger(a)
 
 def test_QMul_mixed():
     a = Symbol('a')
@@ -61,6 +69,7 @@ def test_QMul_mixed():
     G = Operator('G')
     assert expand((E+F)*(A+B)) == (E*A + E*B + F*A + F*B)
     assert E*B
+    assert Dagger(E*A) == Dagger(A)*Dagger(E) == Bra('A')*Dagger(C)
 
 def test_QAdd():
     a = Symbol('a')
