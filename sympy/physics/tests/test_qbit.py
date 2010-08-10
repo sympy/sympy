@@ -108,7 +108,7 @@ def test_CPhase_Gate():
     assert matrix_to_qbits(represent(CPhaseGate(0,1)*Qbit(1,1), QbitZBasisSet(2))) == ImaginaryUnit()*Qbit(1,1)
 
 def test_gateSort():
-    assert gatesort(HadamardGate(0)*XGate(1)*HadamardGate(0)**2*CNOTGate(0,1)*XGate(1)*XGate(0)) == HadamardGate(0)**3*XGate(1)*CNOTGate(0,1)*XGate(0)*XGate(1)
+    assert gatesort(XGate(1)*HadamardGate(0)**2*CNOTGate(0,1)*XGate(1)*XGate(0)) == HadamardGate(0)**2*XGate(1)*CNOTGate(0,1)*XGate(0)*XGate(1)
 
 def test_gatesimp():
      assert gatesimp(HadamardGate(0)*XGate(1)*HadamardGate(0)**2*CNOTGate(0,1)*XGate(1)**3*XGate(0)*ZGate(3)**2*PhaseGate(4)**3) == HadamardGate(0)*XGate(1)*CNOTGate(0,1)*XGate(0)*XGate(1)*ZGate(4)*PhaseGate(4)
@@ -287,7 +287,7 @@ def test_reversible_add():
     for i in range(4):
         for k in range(4):
             result = apply_gates(ADD((0,1,2,3),(4,5,6,7),(8,9,10,11))*Qbit(*([0,0,0,0] + numtoarr(k) + numtoarr(i))))
-            assert list(result.args[0][4:8]) == numtoarr(i+k)
+            assert list(result.args[4:8]) == numtoarr(i+k)
 
 def test_reversible_bitshift():
     circuit = Qbit(0,0,0,1,0,1,1,1,1,0,1,0,1)

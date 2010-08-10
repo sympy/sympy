@@ -74,5 +74,9 @@ class QPow(QuantumBasic):
 
     def _sympystr(self, printer, *args):
         return '(' + sstr(self.base) + ')' '**' + sstr(self.exp)
+
+    def _pretty(self, printer, *args):
+        return printer._print(self.args[0], *args)**printer._print(self.args[1], *args)
+         
     
 

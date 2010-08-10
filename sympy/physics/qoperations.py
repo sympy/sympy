@@ -11,16 +11,23 @@ from sympy.core.power import Pow
 from sympy.physics.quantumbasic import QuantumError, QuantumBasic
 
 class QAssocOp(QuantumBasic):
-    #Mul and add need Expand Methods as well as Identity methods. I need to figure out how to set what something evaluates
+    """
+        QAssocOp is Quantum version of Sympy's AssocOp
+        This is the Base class of QAdd and QMul
+    """
   
     def __new__(cls, *args, **assumptions):
         if len(args) == 1:
             return sympify(args[0])
+        #try to instantiate an object of cls type
         return cls.instantiate(map(sympify, args))
 
     @classmethod
     def instantiate(cls, seq):
-        #determine if this will work flatten needs to flattening (pull out non quantum parts as they belong to an abelian group
+        """
+            Apply rules to each element in the input sequence
+            The rules check to see if the input is valid and then instantiate the objects if they can
+        """
         rules = getattr(cls, '_rules_%s' % cls.__name__)
         result = seq[0]
         for i in range(len(seq)-1):
@@ -28,6 +35,9 @@ class QAssocOp(QuantumBasic):
         return result
 
     def __getitem__(self, number):
+        """
+            This retrieves arguments from self.args        
+        """
         return self.args[number]   
 
     def _sympystr(self, printer, *args):
@@ -36,31 +46,40 @@ class QAssocOp(QuantumBasic):
         length = len(self.args)
         string = ''
         for i in range(length):
-            if isinstance(self.args[i], (Mul, Add, Pow, QAdd, QMul)):
+            if isinstance(self.args[i], (Add, Pow, QAdd)):
                 string = string + '('
             string = string + sstr(self.args[i])
-            if isinstance(self.args[i], (Mul, Add, Pow, QAdd, QMul)):
+            if isinstance(self.args[i], (Add, Pow, QAdd)):
                 string = string + ')'
             if i != length-1:
                 string = string + self.__class__.binop
         return string 
-    
 
+    def _pretty(self, printer, *args):
+        from sympy.printing.pretty.stringpict import prettyForm
+        from sympy.physics.qmul import QMul
+        from sympy.physics.qadd import QAdd
+        length = len(self.args)
+        pform = printer._print('', *args)
+        for i in range(length):
+            if isinstance(self.args[i], (Add, Pow, QAdd)):
+                pform = prettyForm(*pform.right(prettyForm(u'\u0028')))
+            if hasattr(self.args[i], '_pretty'):
+                pform = prettyForm(*pform.right(self.args[i]._pretty(printer, *args)))
+            else:
+                pform = prettyForm(*pform.right(sstr(self.args[i])))
+            if isinstance(self.args[i], (Add, Pow, QAdd)):
+                pform = prettyForm(*pform.right(prettyForm(u'\u0029')))
+            if i != length-1:
+                pform = prettyForm(*pform.right(self.binopPretty))
+        return pform
+    
+    
     def _new_rawargs(self, evaluates, hilbert_space, *args):
-        """create new instance of own class with args exactly as provided by caller
+        """ Create new instance of own class with args exactly as provided by caller; 
+            Sets evaluates and hilbert_space attributes to those specified in inputs 
 
            This is handy when we want to optimize things, e.g.
-
-           >>> from sympy import Mul, symbols
-           >>> from sympy.abc import x, y
-           >>> e = Mul(3,x,y)
-           >>> e.args
-           (3, x, y)
-           >>> Mul(*e.args[1:])
-           x*y
-           >>> e._new_rawargs(*e.args[1:])  # the same as above, but faster
-           x*y
-
         """
         obj = Expr.__new__(type(self), *args)  # NB no assumptions for Add/Mul
         obj.evaluates = evaluates

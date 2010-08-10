@@ -2,7 +2,7 @@
     Single qbits and their gates
 """
 from sympy.physics.hilbert import l2
-from sympy.physics.quantum import BasisSet, State, Operator, Representable, represent, OuterProduct
+from sympy.physics.quantum import BasisSet, Operator, Representable, represent, OuterProduct, Ket
 from sympy import Expr, sympify, Add, Mul, Pow, I, Function, Integer, S, sympify, Matrix, elementary
 from sympy.core.numbers import *
 from sympy.core.basic import S, sympify
@@ -11,7 +11,11 @@ from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.matrices.matrices import Matrix, eye
 from sympy.core.symbol import Symbol, symbols
+from sympy.physics.qmul import QMul
+from sympy.physics.qadd import QAdd
+from sympy.physics.qpow import QPow
 import math
+
 
 class QbitZBasisSet(BasisSet):
     
@@ -37,38 +41,40 @@ class QbitYBasis(BasisSet):
     def __new__(cls, nqbits):
         return BasisSet.__new__(cls, nqbits)
 
-class Qbit(State):
+class Qbit(Ket):
     """
-    Represents a single definite quantum state
+        Represents a single definite quantum state
     """
     outDecimal = False
     def __new__(cls, *args, **options):
         import math
-        if options.has_key('kind'): kind = options[kind]
-        else: kind = 'ket'
         #If they just give us one number, express it in the least number of bits possible
         if args[0] > 1 and len(args) == 1:
             array = [(args[0]>>i)&1 for i in reversed(range(int(math.ceil(math.log(args[0], 2)+.01)+.001)))]
             array = sympify(array)
-            array = tuple(array)
-            return State.__new__(cls, array, **{'kind':kind})
+            obj = Expr.__new__(cls, *array)
+            return obj
         #if they give us two numbers, the second number is the number of bits on which it is expressed)
         #Thus, Qbit(0,5) == |00000>. second argument can't be one becuase of intersection and uslessesness of possibility
         elif len(args) == 2 and args[1] > 1:
             array = [(args[0]>>i)&1 for i in reversed(range(args[1]))]
             array = sympify(array)
-            array = tuple(array)
-            return State.__new__(cls, array, **{'kind':kind})
+            obj = Expr.__new__(cls, *array)
+            return obj
         for element in args:
             if not (element == 1 or element == 0):
                 raise Exception("Values must be either one or zero")
         args = sympify(args)
-        obj = State.__new__(cls, args, **{'kind':kind})
+        obj = Expr.__new__(cls, *args)
         return obj
+
+    @property
+    def hilbert_space(self):
+        return l2(2)
     
     @property
     def dimension(self):
-        return len(self.args[0])
+        return len(self.args)
     
     def __len__(self):
         return self.dimension
@@ -76,7 +82,7 @@ class Qbit(State):
     def __getitem__(self, bit):
         if bit > self.dimension - 1:
             raise Exception()
-        return self.args[0][int(self.dimension-bit-1)]
+        return self.args[int(self.dimension-bit-1)]
 
     def _print_name(self, printer, *args):
         string = self.to_string()
@@ -91,13 +97,13 @@ class Qbit(State):
         if Qbit.outDecimal:
             number = 0
             n = 1
-            for i in reversed(self.args[0]):
+            for i in reversed(self.args):
                 number += n*i
                 n = n<<1
             string = str(number)
         else:
             string = ""
-            for i in self.args[0]:
+            for i in self.args:
                 string = string + str(i)
         return string
 
@@ -106,7 +112,7 @@ class Qbit(State):
     
     def flip(self, *args):
         #check now needed TODO
-        newargs = list(self.args[0])
+        newargs = list(self.args)
         for i in args:
             bit = int(self.dimension-i-1)
             if newargs[bit] == 1:
@@ -121,7 +127,7 @@ class Qbit(State):
             raise HilbertSpaceException("Basis and Qbit dimensions do not match!")
         n = 1
         definiteState = 0
-        args = self.args[0]
+        args = self.args
         for it in reversed(args):
             definiteState += n*it
             n = n*2
@@ -160,6 +166,10 @@ class Gate(Operator):
             if args[i] in (args[:i] + args[i+1:]):
                 raise Exception("Can't have duplicate control and target bits!")
         return obj
+
+    @property
+    def hilbert_space(self):
+        return l2(2)
     
     @property
     def matrix(self):
@@ -191,7 +201,7 @@ class Gate(Operator):
             #now apply each column element to qbit
             result = 0
             for index in range(len(column.tolist())):
-                new_qbit = Qbit(*qbits.args[0])
+                new_qbit = Qbit(*qbits.args)
                 #flip the bits that need to be flipped
                 for bit in range(len(args)):
                     if new_qbit[args[bit]] != (index>>bit)&1:
@@ -399,7 +409,7 @@ class controlledMod(Gate):
             k = k + n*qbits[t+i]
             n = n*2
         out = int(a**k%N)
-        outarray = list(qbits.args[0][0:t])
+        outarray = list(qbits.args[0:t])
         for i in reversed(range(t)):            
             outarray.append((out>>i)&1)
         return Qbit(*outarray)
@@ -600,12 +610,12 @@ def apply_gates(circuit, basis = QbitZBasisSet(1), floatingPoint = False):
         return circuit
     
     #if we have a Mul object, get the state of the system
-    elif isinstance(circuit, Mul):
+    elif isinstance(circuit, QMul):
         states = circuit.args[len(circuit.args)-1]
         states = states.expand()
     
     #if we have an add object with gates mixed in, apply_gates recursively
-    elif isinstance(circuit, Add):
+    elif isinstance(circuit, QAdd):
         result = 0
         for i in circuit.args:
             result = result + apply_gates(i, basis, floatingPoint)
@@ -623,7 +633,7 @@ def apply_gates(circuit, basis = QbitZBasisSet(1), floatingPoint = False):
             number_of_applications = 1
         
         #if the object that multiplies is a Pow who's base is a Gate, we will apply Pow.exp times
-        elif isinstance(multiplier, Pow) and isinstance(multiplier.base, Gate):
+        elif isinstance(multiplier, QPow) and isinstance(multiplier.base, Gate):
             gate = multiplier.base
             number_of_applications = multiplier.exp
         
@@ -633,7 +643,7 @@ def apply_gates(circuit, basis = QbitZBasisSet(1), floatingPoint = False):
             continue
         
         #if states is in superposition of states (a sum of qbits states), applyGates to each state contined within
-        if isinstance(states, Add):
+        if isinstance(states, QAdd):
             #special check for non-distributivity, do all at once
             if isinstance(gate, NondistributiveGate):
                 states = gate.measure(states)
@@ -647,9 +657,8 @@ def apply_gates(circuit, basis = QbitZBasisSet(1), floatingPoint = False):
                 states = states.expand()
         
         #if we have a mul, apply gate to each register and multiply result
-        elif isinstance(states, Mul):
+        elif isinstance(states, QMul):
             #find the Qbits in the Mul
-            states = Mul(*states.args)
             for i in range(len(states.args)):
                 if isinstance(states.args[i],Qbit):
                     break
@@ -659,7 +668,7 @@ def apply_gates(circuit, basis = QbitZBasisSet(1), floatingPoint = False):
                 raise Exception()
             
             #apply the gate the right number of times to this state
-            coefficient = Mul(*(states.args[:i]+states.args[i+1:]))
+            coefficient = states._new_rawargs(states.evaluates, states.hilbert_space, *(states.args[:i]+states.args[i+1:]))#TODO
             states = apply_gates(gate**(number_of_applications)*states.args[i], basis, floatingPoint)
             states = coefficient*states
             states = states.expand()
@@ -690,13 +699,6 @@ def apply_gates(circuit, basis = QbitZBasisSet(1), floatingPoint = False):
     return states
     
 
-"""
-# Look at dimension of basis, only work if it is not a symbol, the dispatch to Qbits._represent_BasisClass
-Qbits.represent(self, basis):
-Qbits._represent_XBasisSet(self, dimension):
-Qbits._represent_YBasisSet(self, dimension):
-"""
-
 def matrix_to_qbits(matrix):
     #make sure it is of correct dimensions for a qbit-matrix representation
     qbit_number = log(matrix.rows,2)
@@ -723,7 +725,7 @@ def qbits_to_matrix(qbits):
     qbits = qbits.expand()
     
     #if we have a Mul object, find the qbit part qbits to matrix it
-    if isinstance(qbits, Mul):
+    if isinstance(qbits, QMul):
         for i in range(len(qbits.args)):
             if isinstance(qbits.args[i], Qbit):
                 break
@@ -732,7 +734,7 @@ def qbits_to_matrix(qbits):
         #recursively turn qbit into matrix
         return Mul(*(qbits.args[:i] + qbits.args[i+1:]))*qbits_to_matrix(qbits.args[i])
     #recursively turn each item in an add into a matrix
-    elif isinstance(qbits, Add):
+    elif isinstance(qbits, QAdd):
         result = qbits_to_matrix(qbits.args[0])
         for element in qbits.args[1:]:
             result = result + qbits_to_matrix(element)
@@ -751,21 +753,21 @@ def gatesimp(circuit):
     circuit = gatesort(circuit)
     
     #do simplifications
-    if isinstance(circuit, Mul):
+    if isinstance(circuit, QMul):
         for i in range(len(circuit.args)):
             #H,X,Y or Z squared is 1. T**2 = S, S**2 = Z
-            if isinstance(circuit.args[i], Pow):
-                if isinstance(circuit.args[i].base, (HadamardGate, XGate, YGate, ZGate)) and isinstance(circuit.args[i].exp, Integer):
+            if isinstance(circuit.args[i], QPow):
+                if isinstance(circuit.args[i].base, (HadamardGate, XGate, YGate, ZGate)) and isinstance(circuit.args[i].exp, Number):
                     newargs = (circuit.args[:i] + (circuit.args[i].base**(circuit.args[i].exp % 2),) + circuit.args[i+1:])
-                    circuit = gatesimp(Mul(*newargs))
+                    circuit = gatesimp(QMul(*newargs))
                     break
                 elif isinstance(circuit.args[i].base, PhaseGate):
                     newargs = (circuit.args[:i] + (ZGate(circuit.args[i].base.args[0])**(Integer(circuit.args[i].exp/2)), circuit.args[i].base**(circuit.args[i].exp % 2)) + circuit.args[i+1:])
-                    circuit =  gatesimp(Mul(*newargs))
+                    circuit =  gatesimp(QMul(*newargs))
                     break
-                elif isinstance(circuit.args[i].base,TGate):
+                elif isinstance(circuit.args[i].base, TGate):
                     newargs = (circuit.args[:i] + (SGate(circuit.args[i].base.args[0])**Integer(circuit.args[i].exp/2), circuit.args[i].base**(circuit.args[i].exp % 2)) + circuit.args[i+1:])
-                    circuit =  gatesimp(Mul(*newargs))
+                    circuit =  gatesimp(QMul(*newargs))
                     break
             #Deal with HXH = Z, HZH = X, HYH = -Y
             if isinstance(circuit.args[i], HadamardGate):
@@ -782,15 +784,15 @@ def gatesort(circuit):
     while changes:
         changes = False
         cirArray = circuit.args
-        for i in range(len(cirArray)-2):
+        for i in range(len(cirArray)-1):
             #Go through each element and switch ones that are in wrong order
-            if isinstance(cirArray[i], (Gate, Pow)) and isinstance(cirArray[i+1], (Gate, Pow)):
-                if isinstance(cirArray[i], Pow):
+            if isinstance(cirArray[i], (Gate, QPow)) and isinstance(cirArray[i+1], (Gate, QPow)):
+                if isinstance(cirArray[i], QPow):
                     first = cirArray[i].base
                 else:
                     first = cirArray[i]
                 
-                if isinstance(cirArray[i+1], Pow):
+                if isinstance(cirArray[i+1], QPow):
                     second = cirArray[i+1].base
                 else:
                     second = cirArray[i+1]
@@ -804,7 +806,7 @@ def gatesort(circuit):
                                 commute = False
                     # if they do commute, switch them
                     if commute:
-                        circuit = Mul(*(circuit.args[:i] + (circuit.args[i+1],) + (circuit.args[i],) + circuit.args[i+2:]))
+                        circuit = QMul(*(circuit.args[:i] + (circuit.args[i+1],) + (circuit.args[i],) + circuit.args[i+2:]))
                         cirArray = circuit.args
                         changes = True
     return circuit

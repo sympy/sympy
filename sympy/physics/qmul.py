@@ -8,14 +8,28 @@ from sympy import (
     Expr, Basic, sympify, Add, Mul, Pow, 
     I, Function, Integer, S, sympify, Matrix, oo
 )
+from sympy.printing.pretty.stringpict import prettyForm
 
 class QMul(QAssocOp):
+    binopPretty = prettyForm(u'\u00B7')
     binop = '*'
 
     @classmethod
     def _rules_QMul(cls, Object1, Object2):
-        #built in flatten
+        """
+            This method is called by new to instantiate a QMul, InnerProduct, or OuterProduct class
+            Applies rules of what can and can't be added together by checking types and hilbert spaces
+            Returns a Mul, QMul, InnerProduct or OuterProduct object on success
+            Raises and exception if input violates quantum shape rules
+        """
         from sympy.physics.quantum import StateBase, Operator, OuterProduct, KetBase, BraBase, OuterProduct, InnerProduct
+        if Object1 == 1:
+            return Object2
+        if Object2 == 1:
+            return Object1
+        elif Object2 == 0 or Object1 == 0:
+            return 0
+        
         if (not isinstance(Object1, QuantumBasic)) and (not isinstance(Object2, QuantumBasic)):
             return Mul(Object1, Object2)
         elif not isinstance(Object1, QuantumBasic):
@@ -34,21 +48,32 @@ class QMul(QAssocOp):
             return retVal
 
         if Object1.hilbert_space != Object2.hilbert_space:
-            raise Exception("Hilbert Spaces do not match") 
+            raise Exception("Hilbert Spaces do not match")
 
-        if issubclass(Object1.evaluates, (Operator, OuterProduct)):
-            if issubclass(Object2.evaluates, (Operator, OuterProduct)):
+        if issubclass(Object1.evaluates, InnerProduct):
+            retVal = cls.QMulflatten(Object1, Object2)
+            retVal.hilbert_space = Object2.hilbert_space
+            retVal.evaluates = Object2.evaluates
+            return retVal
+        elif issubclass(Object2.evaluates, InnerProduct):
+            retVal = cls.QMulflatten(Object1, Object2)
+            retVal.hilbert_space = Object1.hilbert_space
+            retVal.evaluates = Object1.evaluates
+            return retVal
+         
+        if issubclass(Object1.evaluates, (Operator)):
+            if issubclass(Object2.evaluates, (Operator, InnerProduct)):
                 retVal = cls.QMulflatten(Object1, Object2)
-                retVal.hilbert_space = Object2.hilbert_space
-                retVal.evaluates = Object2.evaluates
+                retVal.hilbert_space = Object1.hilbert_space
+                retVal.evaluates = Object1.evaluates
                 return retVal
             elif issubclass(Object2.evaluates, KetBase):
                 retVal = cls.QMulflatten(Object1, Object2)            
                 retVal.hilbert_space = Object2.hilbert_space
                 retVal.evaluates = Object2.evaluates
                 return retVal
-        elif issubclass(Object2.evaluates, (Operator, OuterProduct)):
-            if issubclass(Object1.evaluates, (Operator, OuterProduct)):
+        elif issubclass(Object2.evaluates, (Operator)):
+            if issubclass(Object1.evaluates, (Operator, InnerProduct)):
                 retVal = cls.QMulflatten(Object1, Object2)
                 retVal.hilbert_space = Object2.hilbert_space
                 retVal.evaluates = Object2.evaluates
@@ -73,7 +98,10 @@ class QMul(QAssocOp):
 
     @classmethod
     def QMulflatten(cls, Object1, Object2):
-        # get Non-QUantum stuff out
+        """
+            Flattens out QMul objects.
+            Places Non-Quantum objects at front of Qmul in Mul object and Quantum objects behind it
+        """
         from sympy.physics.quantum import StateBase, Operator, OuterProduct, KetBase, BraBase, OuterProduct, InnerProduct
         from sympy.core.mul import Mul
         Qseq = []
@@ -134,6 +162,9 @@ class QMul(QAssocOp):
         return make_list(added, QAdd) #it may have collapsed down to one term
 
     def _eval_expand_mul(self, deep=True, **hints):
+        """
+            A facsimile of _eval_expand_mul in regular Mul
+        """
         from sympy.physics.qadd import QAdd
         plain, sums, rewrite = [], [], False
         for factor in self.args:

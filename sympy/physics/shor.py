@@ -11,18 +11,6 @@ from sympy.physics.qbit import *
 import math
 from sympy.core.numbers import igcd
 
-"""
-#This uses Euclid's Algorithm to find the gcd of a and b  
-def gcd(a,b):
-    remainder = a
-    while remainder >= b:
-        remainder = remainder - b
-    if remainder == 0:
-        return b
-    else:
-        return gcd(b, remainder)
-"""
-
 def shor(N):
     a = random.randrange(N-2)+2
     if igcd(N,a) != 1:
@@ -106,7 +94,7 @@ def periodfind(a, N):
     print circuit
     if isinstance(circuit, Qbit):
         register = circuit
-    elif isinstance(circuit, Mul):
+    elif isinstance(circuit, QMul):
         register = circuit.args[-1]
     else:
         register = circuit.args[-1].args[-1]

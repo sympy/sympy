@@ -6,16 +6,33 @@ from sympy.physics.qmul import QMul
 from sympy.physics.quantum import Dagger
 from sympy.physics.quantum import QuantumBasic
 from sympy.physics.quantumbasic import QuantumError
+from sympy.printing.pretty.stringpict import prettyForm
 
 class QAdd(QAssocOp):
+    """
+        Quantum Add operation
+    """
     binop = ' + '
+    binopPretty =  prettyForm(u' \u002B ') 
 
     @classmethod    
     def _rules_QAdd(cls, Object1, Object2):
+        """
+            This method is called by new to instantiate a QAdd class
+            Applies rules of what can and can't be added together by checking types and hilbert spaces
+            Returns an Add or QAdd objects on success
+            Raises and exception if input violates quantum shape rules
+        """
         from sympy.physics.quantum import StateBase, Operator, OuterProduct, KetBase, BraBase, OuterProduct, InnerProduct
-        from sympy.core.add import Add    
-        if (not isinstance(Object1, QuantumBasic)) and (not isinstance(Object2, QuantumBasic)):
-            return Add(Object1, Object2)
+        from sympy.core.add import Add
+        if Object2 == 0:
+            return Object1
+        elif Object1 == 0:
+            return Object2
+            
+        if (not isinstance(Object1, QuantumBasic)) :
+            if (not isinstance(Object2, QuantumBasic)):
+                return Add(Object1, Object2)
         elif (not isinstance(Object1, QuantumBasic)) or (not isinstance(Object2, QuantumBasic)):
             raise Exception("Can't add a %s and %s" % (Object1.__class__.__name__, Object2.__class__.__name__))
 
@@ -32,7 +49,10 @@ class QAdd(QAssocOp):
 
     @classmethod
     def QAddflatten(cls, seq):
-        # get Non-QUantum stuff out
+        """
+            This simplifies expressions by combining like terms
+            Assumes associativity and commutivity for addition
+        """
         from sympy.physics.quantum import StateBase, Operator, OuterProduct, KetBase, BraBase, OuterProduct, InnerProduct
         terms = {}      # term -> coeff
                         # e.g. x**2 -> 5   for ... + 5*x**2 + ...
