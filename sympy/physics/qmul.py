@@ -129,7 +129,7 @@ class QMul(QAssocOp):
             return args
 
         else:
-            return args[0], self._new_rawargs(self.evaluates, self.hilbert_space, *args[1:]) #FIXME rawargs in second argument
+            return args[0], self._new_rawargs(self.evaluates, self.hilbert_space, *args[1:]) 
 
     @property
     def identity(self):
