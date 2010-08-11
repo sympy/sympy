@@ -1,13 +1,13 @@
 """Module that defines indexed objects with arbitrary transformation properties.
 
-    The classes IndexedBase, Indexed and Idx represent a matrix element M(i, j)
+    The classes IndexedBase, Indexed and Idx represent a matrix element M[i, j]
     as in the following graph:
 
        1) The Indexed class represents an element of the indexed object.
                   |
                ___|___
               '       '
-               M(i, j)
+               M[i, j]
               /   \__\____
               |           \
               |            \
@@ -17,6 +17,7 @@
     3) The IndexedBase class represents the `stem' of an indexed object, here `M'.
     The stem used by itself is usually taken to represent the entire array.
 
+    There can be any number of indices on an Indexed object
 
     Examples
     ========
@@ -25,39 +26,41 @@
 
     >>> from sympy.tensor import IndexedBase, Idx
     >>> from sympy import symbols
-    >>> i, j, n, m = symbols('i j n m', integer=True)
+    >>> n, m = symbols('n m', integer=True)
     >>> M = IndexedBase('M')
+    >>> i, j = map(Idx, ['i', 'j'])
     >>> M[i, j]
     M[i, j]
 
     If the indexed objects will be converted to component based arrays, e.g.
-    numpy arrays, you also need to provide (symbolic) dimensions.  This is done
-    with the Idx class:
+    with the code printers or the autowrap framework, you also need to provide
+    (symbolic) dimensions.  This is done by passing another argument to the Idx
+    class:
 
-    >>> ii = Idx(i, m)
-    >>> jj = Idx(j, n)
-    >>> M[ii, jj]
+    >>> i = Idx('i', m)
+    >>> j = Idx('j', n)
+    >>> M[i, j]
     M[i, j]
-    >>> M[ii, jj].shape
+    >>> M[i, j].shape
     (m, n)
-    >>> M[ii, jj].ranges
+    >>> M[i, j].ranges
     [(0, -1 + m), (0, -1 + n)]
 
-    To express a matrix-vector product in terms of IndexedBase objects:
+    Repreated indices in a product implies a summation, so to express a
+    matrix-vector product in terms of Indexed objects:
 
     >>> x = IndexedBase('x')
-    >>> M[ii, jj]*x[jj]
+    >>> M[i, j]*x[j]
     M[i, j]*x[j]
 
 
     TODO:  (some ideas for improvement)
 
     o test and guarantee numpy compatibility
+       - implement full support for broadcasting
+       - strided arrays
 
-    o functions to operate on the indexed expressions
-       - check_conformance()
-       - determine_resulting_indices()
-       - determine_summation_indices()
+    o more functions to analyze indexed expressions
        - identify standard constructs, e.g matrix-vector product in a subexpression
 
     o functions to generate component based arrays (numpy and sympy.Matrix)
@@ -76,40 +79,42 @@ class IndexException(Exception):
     pass
 
 class IndexedBase(Expr):
-    """Represent the stem of an indexed object, e.g. a numpy array.
+    """Represent the base or stem of an indexed object
 
-    The IndexedStem class represent an array that contains elements. An element
-    i of an indexed object A is denoted A(i) and is represented by the
-    Indexed class.
-
-    The IndexedBase class allows a simple notation for e.g. matrix equations,
-    resembling what you could do with the Symbol class.  But, the IndexedBase class
-    adds functionality that is not available for Symbol instances:
+    The IndexedBase class represent an array that contains elements. The main purpose
+    of this class is to allow the convenient creation of objects of the Indexed
+    class.  The __getitem__ method of IndexedBase returns an instance of
+    Indexed.  Alone, without indices, the IndexedBase class can be used as a
+    notation for e.g. matrix equations, resembling what you could do with the
+    Symbol class.  But, the IndexedBase class adds functionality that is not
+    available for Symbol instances:
 
       -  An IndexedBase object can optionally store shape information.  This can
-         be used in functions that check array conformance and conditions for
-         numpy broadcasting.
+         be used in to check array conformance and conditions for numpy
+         broadcasting.  (TODO)
       -  An IndexedBase object implements syntactic sugar that allows easy symbolic
-         representation of array elements,  e.g. you can type A(i, j) to
-         create a symbol for element i,j of array A.
-      -  The IndexedBase object symbolizes a mathematical structure equivalent to
-         arrays, and is recognized as such for code generation and
-         TODO: conversion to a numpy array and sympy.Matrix objects.
+         representation of array elements:
+            - Using Symbols i and j, A[i, j] symbolize element i, j of array A.
+            - With Idx objects k, l, A[k, l] represent an array with named axes,
+              enabling implicit summation of repreated indices (tensor
+              contractions).
+      -  The IndexedBase object symbolizes a mathematical structure equivalent
+         to arrays, and is recognized as such for code generation and automatic
+         compilation and wrapping.
 
-    >>> from sympy.tensor import IndexedBase
+    >>> from sympy.tensor import IndexedBase, Idx
     >>> from sympy import symbols
-    >>> a = IndexedBase('a'); a
-    a
-    >>> type(a)
+    >>> A = IndexedBase('A'); A
+    A
+    >>> type(A)
     <class 'sympy.tensor.indexed.IndexedBase'>
 
-    Objects of type Indexed to symbolize elements of the array will by
-    created whenever indices are supplied to the stem:
+    When an IndexedBase object recieves indices, it returns an Indexed object:
 
-    >>> i, j, k = symbols('i j k', integer=True)
-    >>> a[i, j, k]
-    a[i, j, k]
-    >>> type(a[i, j, k])
+    >>> i, j = symbols('i j', integer=True)
+    >>> A[i, j, 2]
+    A[i, j, 2]
+    >>> type(A[i, j, 2])
     <class 'sympy.tensor.indexed.Indexed'>
 
     """
@@ -165,13 +170,19 @@ def _ensure_Idx(arg):
         return Idx(arg)
 
 class Indexed(Expr):
-    """Represent an indexed element, e.g. a symbolic array element.
+    """Represents a mathematical object with indices.
 
-    >>> from sympy.tensor import Indexed
+    >>> from sympy.tensor import Indexed, IndexedBase, Idx
     >>> from sympy import symbols
-    >>> i, j, k = symbols('i j k', integer=True)
-    >>> Indexed('a', i, j)
-    a[i, j]
+    >>> i, j = map(Idx, ['i', 'j'])
+    >>> Indexed('A', i, j)
+    A[i, j]
+
+    It is recommended that Indexed objects are created via IndexedBase:
+
+    >>> A = IndexedBase('A')
+    >>> Indexed('A', i, j) == A[i, j]
+    True
 
     """
     is_commutative = False
@@ -209,7 +220,7 @@ class Indexed(Expr):
             return tuple( i.upper - i.lower + 1 for i in self.indices )
         except TypeError:
             # Let's return a more meaningful error
-            raise IndexException("Shape is not defined")
+            raise IndexException("Shape is not defined for all indices")
 
     @property
     def ranges(self):
