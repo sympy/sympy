@@ -83,6 +83,8 @@ class QAssocOp(QuantumBasic):
 
             This is handy when we want to optimize things, e.g.
         """
+        if len(args) == 1:
+            return args[0]
         obj = Expr.__new__(type(self), *args)  # NB no assumptions for Add/Mul
         obj.evaluates = evaluates
         obj.hilbert_space = hilbert_space

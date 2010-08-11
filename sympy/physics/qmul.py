@@ -115,6 +115,8 @@ class QMul(QAssocOp):
                 Qseq.append(o)
         nqpart = Mul(*Eseq)
         if nqpart == 1:
+            if len(Qseq) ==1:
+                return Qseq[0]
             return Expr.__new__(cls, *Qseq)
         # c_part, nc_part, order_symbols
         return Expr.__new__(cls, Mul(*Eseq), *Qseq)

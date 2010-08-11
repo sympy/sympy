@@ -96,6 +96,8 @@ class Qbit(Ket):
             array = [(args[0]>>i)&1 for i in reversed(range(int(math.ceil(math.log(args[0], 2)+.01)+.001)))]
             array = sympify(array)
             obj = Expr.__new__(cls, *array)
+            obj.evaluates = cls
+            obj.hilbert_space = l2(2)
             return obj
         #if they give us two numbers, the second number is the number of bits on which it is expressed)
         #Thus, Qbit(0,5) == |00000>. second argument can't be one becuase of intersection and uslessesness of possibility
@@ -103,17 +105,17 @@ class Qbit(Ket):
             array = [(args[0]>>i)&1 for i in reversed(range(args[1]))]
             array = sympify(array)
             obj = Expr.__new__(cls, *array)
+            obj.evaluates = cls
+            obj.hilbert_space = l2(2)
             return obj
         for element in args:
             if not (element == 1 or element == 0):
                 raise QuantumError("Values must be either one or zero")
         args = sympify(args)
         obj = Expr.__new__(cls, *args)
+        obj.evaluates = cls
+        obj.hilbert_space = l2(2)
         return obj
-
-    @property
-    def hilbert_space(self):
-        return l2(2)
     
     @property
     def dimension(self):
@@ -1025,7 +1027,7 @@ def apply_gates(circuit, basis = QbitZBasisSet(1), floatingPoint = False):
                 raise QuantumError()
             
             #apply the gate the right number of times to this state
-            coefficient = states._new_rawargs(states.evaluates, states.hilbert_space, *(states.args[:i]+states.args[i+1:]))#TODO
+            coefficient = Mul(*(states.args[:i]+states.args[i+1:]))#TODO
             states = apply_gates(gate**(number_of_applications)*states.args[i], basis, floatingPoint)
             states = coefficient*states
             states = states.expand()
