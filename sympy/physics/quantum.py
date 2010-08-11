@@ -1,5 +1,5 @@
 from sympy import (
-    Expr, Basic, sympify, Add, Mul, Pow, 
+    Expr, Basic, sympify, Add, Mul, Pow,
     I, Function, Integer, S, sympify, Matrix, oo
 )
 from sympy.core.sympify import _sympify
@@ -127,7 +127,6 @@ class KetBase(StateBase):
     rbracket = '>'
     lbracketPretty = prettyForm(u'\u2758')
     rbracketPretty = prettyForm(u'\u276D')
- 
 
     @property
     def dual(self):
@@ -141,7 +140,7 @@ class BraBase(StateBase):
     lbracket = '<'
     rbracket = '|'
     lbracketPretty = prettyForm(u'\u276C')
-    rbracketPretty = prettyForm(u'\u2758') 
+    rbracketPretty = prettyForm(u'\u2758')
 
     @property
     def dual(self):
@@ -189,7 +188,7 @@ class Ket(State, KetBase):
     ========
 
     Creating and using a Ket:
-        
+
         >>> from sympy.physics.quantum import Ket
         >>> psi = Ket('psi')
         >>> psi
@@ -219,7 +218,7 @@ class Bra(State, BraBase):
     ========
 
     Creating and using a Bra:
-        
+
         >>> from sympy.physics.quantum import Bra
         >>> b = Bra('bus')
         >>> b
@@ -361,7 +360,7 @@ class Operator(QuantumBasic, Representable):
 
 class InnerProduct(QuantumBasic):
     """
-    An unevaluated inner product between a Bra and a Ket. Because a Bra is 
+    An unevaluated inner product between a Bra and a Ket. Because a Bra is
     essentially a row vector and a Ket is essentially a column vector, the
     inner product evaluates to a complex number.
 
@@ -764,7 +763,7 @@ def represent(expr, basis, **options):
 
 def split_product(expr):
     """
-    Separates a (valid) Mul of quantum objects and inner/outer products into a 
+    Separates a (valid) Mul of quantum objects and inner/outer products into a
     Mul.
 
     * Only works for simple Muls (e.g. a*b*c*d) right now.

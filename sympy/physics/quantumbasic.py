@@ -35,12 +35,12 @@ class QuantumBasic(Expr):
 
     @call_highest_priority('__radd__')
     def __add__(self, other):
-        from sympy.physics.qadd import QAdd    
+        from sympy.physics.qadd import QAdd
         return QAdd(self, other)
 
     @call_highest_priority('__add__')
     def __radd__(self, other):
-        from sympy.physics.qadd import QAdd       
+        from sympy.physics.qadd import QAdd
         return QAdd(other, self)
 
     @call_highest_priority('__rpow__')
