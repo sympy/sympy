@@ -36,7 +36,7 @@ def test_Fourier():
     assert QFT(0,3).decompose() == SwapGate(0,2)*HadamardGate(0)*RkGate(1,0,2)*HadamardGate(1)*RkGate(2,0,3)*RkGate(2,1,2)*HadamardGate(2)
     assert QFT(0,3).inputnumber == 2
     assert IQFT(0,3).decompose() == HadamardGate(2)*IRkGate(2,1,2)*IRkGate(2,0,3)*HadamardGate(1)*IRkGate(1,0,2)*HadamardGate(0)*SwapGate(0,2)
-    
+
 def test_represent_HilbertSpace():
     import numpy as np
     a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p = symbols('abcdefghijklmnop')
@@ -68,7 +68,7 @@ def test_represent_ZGate_Z():
 def test_represent_PhaseGate_Z():
     circuit = PhaseGate(0)*Qbit(0,1)
     answer = represent(circuit, QbitZBasisSet(2))
-    assert Matrix([0, ImaginaryUnit(),0,0]) == answer 
+    assert Matrix([0, ImaginaryUnit(),0,0]) == answer
 
 def test_represent_TGate_Z():
     circuit = TGate(0)*Qbit(0,1)
@@ -145,7 +145,7 @@ def test_ArbMat8_apply():
                 for j in range(8):
                     lin.append(symlist[i]**j)
                 lout.append(lin)
-            return Matrix(lout)    
+            return Matrix(lout)
 
     assert apply_gates(Arb(2,1,0)*Qbit(0,1,1,0,1)) == a**5*Qbit(0,1,0,0,0) + b**5*Qbit(0,1,0,0,1) + c**5*Qbit(0,1,0,1,0) + d**5*Qbit(0,1,0,1,1) + e**5*Qbit(0,1,1,0,0) + f**5*Qbit(0,1,1,0,1) + g**5*Qbit(0,1,1,1,0) + h**5*Qbit(0,1,1,1,1)
     assert apply_gates(Arb(0,4,3)*Qbit(1,1,0,1,0)) == a**3*Qbit(0,0,0,1,0) + b**3*Qbit(0,1,0,1,0) + c**3*Qbit(1,0,0,1,0) + d**3*Qbit(1,1,0,1,0) + e**3*Qbit(0,0,0,1,1) + f**3*Qbit(0,1,0,1,1) + g**3*Qbit(1,0,0,1,1) + h**3*Qbit(1,1,0,1,1)
@@ -154,7 +154,7 @@ def test_ArbMat8_apply():
     assert apply_gates(Arb(8,10,9)*Qbit(1,1,1,0,1,0,1,0,1,0,1)) == a**7*Qbit(0,0,0,0,1,0,1,0,1,0,1) + b**7*Qbit(0,1,0,0,1,0,1,0,1,0,1) + c**7*Qbit(1,0,0,0,1,0,1,0,1,0,1) + d**7*Qbit(1,1,0,0,1,0,1,0,1,0,1) + e**7*Qbit(0,0,1,0,1,0,1,0,1,0,1) + f**7*Qbit(0,1,1,0,1,0,1,0,1,0,1) + g**7*Qbit(1,0,1,0,1,0,1,0,1,0,1) + h**7*Qbit(1,1,1,0,1,0,1,0,1,0,1)
     assert apply_gates(Arb(9,2,3)*Qbit(0,1,1,1,1,1,1,0,1,1)) == a*Qbit(0,1,1,1,1,1,0,0,1,1) + b*Qbit(0,1,1,1,1,1,1,0,1,1) + c*Qbit(0,1,1,1,1,1,0,1,1,1) + d*Qbit(0,1,1,1,1,1,1,1,1,1) + e*Qbit(1,1,1,1,1,1,0,0,1,1) + f*Qbit(1,1,1,1,1,1,1,0,1,1) + g*Qbit(1,1,1,1,1,1,0,1,1,1) + h*Qbit(1,1,1,1,1,1,1,1,1,1)
     assert apply_gates(Arb(2,1,0)*Qbit(0,1,0)) == a**2*Qbit(0,0,0) + b**2*Qbit(0,0,1) + c**2*Qbit(0,1,0) + d**2*Qbit(0,1,1) + e**2*Qbit(1,0,0) + f**2*Qbit(1,0,1) + g**2*Qbit(1,1,0) + h**2*Qbit(1,1,1)
-    
+
 def test_ArbMat4_Equality():
 
     class Arb(Gate):
@@ -162,11 +162,11 @@ def test_ArbMat4_Equality():
         def matrix(self):
             a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p = symbols('abcdefghijklmnop')
             return Matrix([[a,b,c,d],[e,f,g,h],[i,j,k,l],[m,n,o,p]])
-        
+
     for i in range(4):
         for j in range(4):
             if j != i:
-                assert apply_gates(Arb(i,j)*(Qbit(1,0,1,1,0))) == matrix_to_qbits(represent(Arb(i,j)*Qbit(1,0,1,1,0), QbitZBasisSet(5)))   
+                assert apply_gates(Arb(i,j)*(Qbit(1,0,1,1,0))) == matrix_to_qbits(represent(Arb(i,j)*Qbit(1,0,1,1,0), QbitZBasisSet(5)))
 
 def test_Arb8_Matrix_Equality():
     class Arb(Gate):
@@ -186,13 +186,13 @@ def test_Arb8_Matrix_Equality():
         for j in range(4):
             for k in range(4):
                 if j != i and k != i and k != j:
-                    assert apply_gates(Arb(i,j,k)*(Qbit(0,1,1,1,0))) == matrix_to_qbits(represent(Arb(i,j,k)*Qbit(0,1,1,1,0), QbitZBasisSet(5)))     
+                    assert apply_gates(Arb(i,j,k)*(Qbit(0,1,1,1,0))) == matrix_to_qbits(represent(Arb(i,j,k)*Qbit(0,1,1,1,0), QbitZBasisSet(5)))
 
 def test_superposition_of_states():
     assert apply_gates(CNOTGate(0,1)*HadamardGate(0)*(1/sqrt(2)*Qbit(0,1) + 1/sqrt(2)*Qbit(1,0))) == (Qbit(0,1)/2 + Qbit(0,0)/2 - Qbit(1,1)/2 + Qbit(1,0)/2)
     assert matrix_to_qbits(represent(CNOTGate(0,1)*HadamardGate(0)*(1/sqrt(2)*Qbit(0,1) + 1/sqrt(2)*Qbit(1,0)), QbitZBasisSet(2))) == (Qbit(0,1)/2 + Qbit(0,0)/2 - Qbit(1,1)/2 + Qbit(1,0)/2)
-    
-    
+
+
 def test_tensor_product():
     try:
         import numpy as np
@@ -219,7 +219,7 @@ def test_tensor_product():
     assert numpy_product.tolist() == sympy_product.tolist()
     numpy_product = np.kron(numpyl2,numpyl1)
     args = [l2, l1]
-    sympy_product = TensorProduct(*args)    
+    sympy_product = TensorProduct(*args)
     assert numpy_product.tolist() == sympy_product.tolist()
 
     #test for other known matrix of different dimensions
@@ -230,8 +230,8 @@ def test_tensor_product():
     assert numpy_product.tolist() == sympy_product.tolist()
     numpy_product = np.kron(numpyl2,numpyl1)
     args = [l3, l1]
-    sympy_product = TensorProduct(*args)    
-    assert numpy_product.tolist() == sympy_product.tolist()    
+    sympy_product = TensorProduct(*args)
+    assert numpy_product.tolist() == sympy_product.tolist()
 
     #test for non square matrix
     numpyl2 = np.matrix(vec.tolist())
@@ -241,10 +241,10 @@ def test_tensor_product():
     assert numpy_product.tolist() == sympy_product.tolist()
     numpy_product = np.kron(numpyl2,numpyl1)
     args = [vec, l1]
-    sympy_product = TensorProduct(*args)    
-    assert numpy_product.tolist() == sympy_product.tolist()   
+    sympy_product = TensorProduct(*args)
+    assert numpy_product.tolist() == sympy_product.tolist()
 
-    #test for random matrix with random values that are floats    
+    #test for random matrix with random values that are floats
     random_matrix1 = np.random.rand(np.random.rand()*5+1,np.random.rand()*5+1)
     random_matrix2 = np.random.rand(np.random.rand()*5+1,np.random.rand()*5+1)
     numpy_product = np.kron(random_matrix1,random_matrix2)
@@ -258,13 +258,13 @@ def test_tensor_product():
     npl2 = np.matrix(l2.tolist())
     npvec = np.matrix(vec.tolist())
 
-    numpy_product = np.kron(l1,np.kron(vec,l2)) 
+    numpy_product = np.kron(l1,np.kron(vec,l2))
     assert numpy_product.tolist() == sympy_product.tolist()
 
 #test apply methods
 def test_apply_represent_equality():
     gates = [HadamardGate(int(3*random.random())), XGate(int(3*random.random())), ZGate(int(3*random.random())), YGate(int(3*random.random())), ZGate(int(3*random.random())), PhaseGate(int(3*random.random()))]
-    
+
     circuit = Qbit(int(random.random()*2),int(random.random()*2),int(random.random()*2),int(random.random()*2),int(random.random()*2),int(random.random()*2))
     for i in range(int(random.random()*6)):
         circuit = gates[int(random.random()*6)]*circuit
@@ -283,7 +283,7 @@ def test_reversible_add():
         for i in reversed(range(t)):
             car.append((num>>i)&1)
         return car
-            
+
     for i in range(4):
         for k in range(4):
             result = apply_gates(ADD((0,1,2,3),(4,5,6,7),(8,9,10,11))*Qbit(*([0,0,0,0] + numtoarr(k) + numtoarr(i))))
