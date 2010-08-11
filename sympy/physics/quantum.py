@@ -52,7 +52,9 @@ __all__ = [
 #-----------------------------------------------------------------------------
 
 class Representable(object):
-    """An object that can be represented."""
+    """
+    An object that can be represented.
+    """
 
     def represent(self, basis, **options):
         rep_method = '_represent_%s' % basis.__class__.__name__
@@ -66,6 +68,9 @@ class Representable(object):
             )
 
 class StateBase(QuantumBasic, Representable):
+    """
+    Base class for general abstract states in quantum mechanics.
+    """
 
     # Slots are for instance variables that can always be computed dynamically
     # from self.args, but that we don't want users to have to pass each time.
@@ -118,22 +123,29 @@ class StateBase(QuantumBasic, Representable):
         return pform
 
 class KetBase(StateBase):
+    """
+    Base class for Ket states.
+    """
 
     lbracket = '|'
     rbracket = '>'
-    rbracketPretty = prettyForm(u'\u2771')
-    lbracketPretty = prettyForm(u'\u275A') 
+    lbracketPretty = prettyForm(u'\u2758')
+    rbracketPretty = prettyForm(u'\u276D')
+ 
 
     @property
     def dual(self):
         return BraBase(*self.args)
 
 class BraBase(StateBase):
+    """
+    Base class for Bra states.
+    """
 
     lbracket = '<'
     rbracket = '|'
-    lbracketPretty = prettyForm(u'\u2770')
-    rbracketPretty = prettyForm(u'\u275A') 
+    lbracketPretty = prettyForm(u'\u276C')
+    rbracketPretty = prettyForm(u'\u2758') 
 
     @property
     def dual(self):
@@ -171,19 +183,70 @@ class State(StateBase):
         return self
 
 class Ket(State, KetBase):
+    """
+    A class for creating Ket objects in sympy. Inherits from State and KetBase.
+    In a state represented by a ray in Hilbert space, a Ket is a vector that
+    that points along that ray [1].
+
+    Examples
+    ========
+
+    Creating and using a Ket:
+        
+        >>> from sympy.physics.quantum import Ket
+        >>> psi = Ket('psi')
+        >>> psi
+        |psi>
+        >>> psi.name
+        psi
+        >>> psi.dual
+        <psi|
+
+
+    References
+    ==========
+
+    [1] http://en.wikipedia.org/wiki/Bra-ket_notation
+    """
 
     @property
     def dual(self):
         return Bra(*self.args)
 
 class Bra(State, BraBase):
+    """
+    A class for creating Bra objects in sympy. Inherits from State and BraBase.
+    A Bra is the dual of a Ket [1].
+
+    Examples
+    ========
+
+    Creating and using a Bra:
+        
+        >>> from sympy.physics.quantum import Bra
+        >>> b = Bra('bus')
+        >>> b
+        <bus|
+        >>> b.name
+        bus
+        >>> b.dual
+        |bus>
+
+
+    References
+    ==========
+
+    [1] http://en.wikipedia.org/wiki/Bra-ket_notation
+    """
 
     @property
     def dual(self):
         return Ket(*self.args)
 
 class TimeDepState(StateBase):
-
+    """
+    General abstract time dependent quantum state.
+    """
     def __new__(cls, name, time):
         # First compute args and call Expr.__new__ to create the instance
         name = cls._eval_name(name, time)
@@ -222,7 +285,9 @@ class TimeDepBra(TimeDepState, BraBase):
         return TimeDepKet(*self.args)
 
 class BasisSet(Basic):
-    """A basis set for a Hilbert Space"""
+    """
+    A basis set for a Hilbert space.
+    """
 
     def __new__(cls, dimension):
         dimension = sympify(dimension)
@@ -242,13 +307,28 @@ class BasisSet(Basic):
 
 class Operator(QuantumBasic, Representable):
     """
-    Base class for non-commuting Quantum operators.
+    Base class for non-commuting quantum operators. An operator is a map from
+    one vector space to another [1]. In quantum mechanics, operators correspond
+    to observables [2].
 
-    >>> from sympy import simplify
-    >>> from sympy.physics.quantum import Operator
-    >>> A = Operator('A')
-    >>> print A
-    A
+    Examples
+    ========
+
+    Creating and using an Operator.
+
+        >>> from sympy import sympify
+        >>> from sympy.physics.quantum import Operator
+        >>> a = Operator('A')
+        >>> a
+        A
+        >>> a.name
+        A
+
+    References
+    ==========
+
+    [1] http://en.wikipedia.org/wiki/Operator
+    [2] http://en.wikipedia.org/wiki/Observable
     """
 
     def __new__(cls, name):
@@ -283,7 +363,28 @@ class Operator(QuantumBasic, Representable):
 
 class InnerProduct(QuantumBasic):
     """
-    An unevaluated inner product between a Bra and Ket.
+    An unevaluated inner product between a Bra and a Ket. Because a Bra is 
+    essentially a row vector and a Ket is essentially a column vector, the
+    inner product evaluates to a complex number.
+
+    Examples
+    ========
+
+    Create an InnerProduct and check its properties:
+
+        >>> from sympy.physics.quantum import Bra, Ket, InnerProduct
+        >>> ip = InnerProduct(Bra('a'), Ket('b'))
+        >>> ip
+        <a|b>
+        >>> ip.bra
+        <a|
+        >>> ip.ket
+        |b>
+
+    References
+    ==========
+
+    http://en.wikipedia.org/wiki/Inner_product
     """
 
     def __new__(cls, bra, ket):
@@ -330,13 +431,34 @@ class InnerProduct(QuantumBasic):
         return '%s|%s' % (sbra[:-1], sket[1:])
 
     def _pretty(self, printer, *args):
-        pform = prettyForm(u'\u2770')
+        pform = prettyForm(u'\u276C')
         pform = prettyForm(*pform.right(self.bra._print_name(printer, *args)))
         return prettyForm(*pform.right(self.ket._pretty(printer, *args)))
 
 class OuterProduct(Operator):
     """
-    An unevaluated outer product between a Ket and Bra.
+    An unevaluated outer product between a Ket and Bra. Because a Ket is
+    essentially a column vector and a Bra is essentially a row vector, the
+    outer product evaluates to an operator (i.e. matrix) [1].
+
+    Examples
+    ========
+
+    Create an OuterProduct and check its properties:
+
+        >>> from sympy.physics.quantum import Ket, Bra, OuterProduct
+        >>> op = OuterProduct(Ket('a'), Bra('b'))
+        >>> op
+        |a><b|
+        >>> op.ket
+        |a>
+        >>> op.bra
+        <b|
+
+    References
+    ==========
+
+    [1] http://en.wikipedia.org/wiki/Outer_product
     """
 
     def __new__(cls, ket, bra):
@@ -385,7 +507,33 @@ class OuterProduct(Operator):
 
 class Dagger(QuantumBasic):
     """
-    General hermitian conjugate operation.
+    General Hermitian conjugate operation. When an object is daggered it is
+    transposed and then the complex conjugate is taken [1].
+
+    Examples
+    ========
+
+    Daggering various quantum objects:
+
+        >>> from sympy.physics.quantum import Dagger, Ket, Bra, InnerProduct, OuterProduct, Operator
+        >>> Dagger(Ket('psi'))
+        <psi|
+        >>> Dagger(Bra('bus'))
+        |bus>
+        >>> Dagger(InnerProduct(Bra('a'), Ket('b')))
+        <b|a>
+        >>> Dagger(OuterProduct(Ket('a'), Bra('b')))
+        |b><a|
+        >>> Dagger(Operator('A'))
+        Dagger(A)
+
+    Notice how daggering the operator 'A' results in isympy returning an
+    unevaluated Dagger object (because A had no _eval_dagger method).
+
+    References
+    ==========
+
+    [1] http://en.wikipedia.org/wiki/Hermitian_transpose
     """
 
     def __new__(cls, arg):
@@ -448,7 +596,22 @@ class Dagger(QuantumBasic):
 
 class KroneckerDelta(Function):
     """
-    Discrete delta function.
+    Discrete delta function. A function that takes in two integers i and j.
+    It returns 0 if i and j are not equal or it returns 1 if i and j are equal.
+
+    Examples
+    ========
+
+        >>> from sympy.physics.quantum import KroneckerDelta
+        >>> KroneckerDelta(1,2)
+        0
+        >>> KroneckerDelta(3,3)
+        1
+
+    References
+    ==========
+
+    http://en.wikipedia.org/wiki/Kronecker_delta
     """
 
     nargs = 2
@@ -491,10 +654,10 @@ class Commutator(Function):
     The arguments are ordered according to .__cmp__()
 
     >>> from sympy import symbols
-    >>> from sympy.physics.secondquant import Commutator
-    >>> A, B = symbols('A B', commutative=False)
+    >>> from sympy.physics.quantum import Commutator
+    >>> A, B = symbols('A B', **{'commutative':False})
     >>> Commutator(B, A)
-    Commutator(B, A)
+    -Commutator(A, B)
 
     Evaluate the commutator with .doit()
 
@@ -575,7 +738,9 @@ class Commutator(Function):
 #-----------------------------------------------------------------------------
 
 def represent(expr, basis, **options):
-    """Represent the quantum expression in the given basis."""
+    """
+    Represent the quantum expression in the given basis.
+    """
     from sympy.physics.qadd import QAdd
     from sympy.physics.qmul import QMul
     from sympy.physics.qpow import QPow
