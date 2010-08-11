@@ -25,7 +25,6 @@ from sympy.physics.hilbert import (
 )
 from sympy import Matrix, I, E, Symbol, expand, Number, symbols
 from sympy.physics.quantumbasic import QuantumError, QuantumBasic
-from sympy.utilities.pytest import XFAIL
 
 def test_Dagger():
     i = I
@@ -54,7 +53,7 @@ def test_Ket():
     assert isinstance(A.dual, Bra)
     assert A.dual == Bra('A')
     assert A.hilbert_space == HilbertSpace()
-    assert A.evaluates == A.__class__
+    assert A.evaluates == A.__class__ == Ket
     assert Dagger(B) == Bra('B')
     assert isinstance(Dagger(B), Bra)
     assert Dagger(B).hilbert_space == HilbertSpace()
@@ -67,7 +66,7 @@ def test_TimeDepKet():
     assert A.name == Symbol('A')
     assert A.hilbert_space == HilbertSpace()
     assert A.is_symbolic == True
-    assert A.evaluates == A.__class__
+    assert A.evaluates == A.__class__ == TimeDepKet
     assert isinstance(A.dual, TimeDepBra)
     assert A.dual == TimeDepBra('A', 't')
 
@@ -82,7 +81,7 @@ def test_Bra():
     assert isinstance(A.dual, Ket)
     assert A.dual == Ket('A')
     assert A.hilbert_space == HilbertSpace()
-    assert A.evaluates == A.__class__
+    assert A.evaluates == A.__class__ == Bra
     assert Dagger(A) == Ket('A')
     assert isinstance(Dagger(A), Ket)
     assert Dagger(A).hilbert_space == HilbertSpace()
@@ -95,7 +94,7 @@ def test_TimeDepBra():
     assert A.name == Symbol('A')
     assert A.hilbert_space == HilbertSpace()
     assert A.is_symbolic == True
-    assert A.evaluates == A.__class__
+    assert A.evaluates == A.__class__ == TimeDepBra
     assert isinstance(A.dual, TimeDepKet)
     assert A.dual == TimeDepKet('A', 't')
 
@@ -108,7 +107,7 @@ def test_InnerProduct():
     assert C.ket == B == Ket('B')
     assert C != B*A
     assert C == InnerProduct(Bra('A'), Ket('B'))
-    assert C.evaluates == InnerProduct
+    assert C.evaluates == C.__class__ == InnerProduct
     assert C.hilbert_space == HilbertSpace()
     assert Dagger(C) == InnerProduct(Dagger(B), Dagger(A)) == InnerProduct(Bra('B'), Ket('A'))
     assert isinstance(Dagger(C), InnerProduct)
@@ -124,7 +123,7 @@ def test_OuterProduct():
     assert C.ket == A == Ket('A')
     assert C != B*A
     assert C == OuterProduct(Ket('A'), Bra('B'))
-    assert C.evaluates == C.__class__
+    assert C.evaluates == C.__class__ == OuterProduct
     assert C.hilbert_space == HilbertSpace()
     assert Dagger(C) == OuterProduct(Dagger(B), Dagger(A)) == OuterProduct(Ket('B'), Bra('A'))
     assert isinstance(Dagger(C), OuterProduct)
@@ -139,10 +138,10 @@ def test_Operator():
     D = Bra('D')
     assert isinstance(A, Operator)
     assert A.name == Symbol('A')
-    assert A.evaluates == A.__class__
+    assert A.evaluates == A.__class__ == Operator
     assert A.hilbert_space == HilbertSpace()
     assert isinstance(Dagger(C), Dagger)
-    assert Dagger(C).evaluates == C.__class__
+    assert Dagger(C).evaluates == C.__class__ == Operator
     assert Dagger(C).subs(C, D) == Dagger(D) == Ket('D')
     assert isinstance(Dagger(Dagger(C)), Operator)
 
