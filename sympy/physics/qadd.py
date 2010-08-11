@@ -7,6 +7,7 @@ from sympy.physics.quantum import Dagger
 from sympy.physics.quantum import QuantumBasic
 from sympy.physics.quantumbasic import QuantumError
 from sympy.printing.pretty.stringpict import prettyForm
+from sympy.physics.quantum import StateBase, Operator, OuterProduct, KetBase, BraBase, OuterProduct, InnerProduct, Dagger
 
 class QAdd(QAssocOp):
     """
@@ -25,19 +26,20 @@ class QAdd(QAssocOp):
         """
         from sympy.physics.quantum import StateBase, Operator, OuterProduct, KetBase, BraBase, OuterProduct, InnerProduct
         from sympy.core.add import Add
+        from sympy.physics.qpow import QPow
         if Object2 == 0:
             return Object1
         elif Object1 == 0:
             return Object2
             
-        if (not isinstance(Object1, QuantumBasic)) :
-            if (not isinstance(Object2, QuantumBasic)):
+        if (not isinstance(Object1, (StateBase, Operator, QAssocOp, QPow))) :
+            if (not isinstance(Object2, (StateBase, Operator, QAssocOp, QPow))):
                 return Add(Object1, Object2)
-        elif (not isinstance(Object1, QuantumBasic)) or (not isinstance(Object2, QuantumBasic)):
-            raise Exception("Can't add a %s and %s" % (Object1.__class__.__name__, Object2.__class__.__name__))
+        elif (not isinstance(Object1, (StateBase, Operator, QAssocOp, QPow))) or (not isinstance(Object2, (StateBase, Operator, QAssocOp, QPow))):
+            raise QuantumError("Can't add a %s and %s" % (Object1.__class__.__name__, Object2.__class__.__name__))
 
         if Object1.hilbert_space != Object2.hilbert_space:
-            raise Exception("Hilbert Spaces do not match")  
+            raise QuantumError("Hilbert Spaces do not match")  
 
         if Object1.evaluates == Object2.evaluates:
             retVal = cls.QAddflatten([Object1, Object2])
@@ -45,7 +47,7 @@ class QAdd(QAssocOp):
             retVal.evaluates = Object1.evaluates
             return retVal
         else:
-            raise Exception("Can't add (%s + %s)" % (Object1.evaluates.__name__, Object2.evaluates.__name__))
+            raise QuantumError("Can't add (%s + %s)" % (Object1.evaluates.__name__, Object2.evaluates.__name__))
 
     @classmethod
     def QAddflatten(cls, seq):
@@ -146,7 +148,7 @@ class QAdd(QAssocOp):
 
         # nan
         if coeff is S.NaN:
-            raise Exception("NaN for some reason")
+            raise QuantumError("NaN for some reason")
             
         # oo, -oo
         elif (coeff is S.Infinity) or (coeff is S.NegativeInfinity):

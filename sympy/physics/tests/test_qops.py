@@ -25,6 +25,7 @@ from sympy.physics.qadd import QAdd
 from sympy.physics.qpow import QPow
 from sympy import Symbol, expand
 from sympy.utilities.pytest import XFAIL
+from sympy.core.add import Add
 
 def test_QMul_Ket():
     a = Symbol('a')
@@ -66,10 +67,10 @@ def test_QMul_Operator():
     E = Operator('E')
     F = Operator('F')
     G = Operator('G')
-    assert a*E
-    assert (a*E, QMul)
-    assert E*F
-    assert (E*F, QMul)
+    a*E 
+    assert isinstance(a*E, QMul)
+    E*F
+    assert isinstance(E*F, QMul)
     assert (E*F).evaluates == E.__class__ == Operator
     assert a*E == E*a
     assert expand(a*(E+F)) == a*E+a*F
@@ -97,38 +98,82 @@ def test_QMul_OuterProduct():
 def test_QMul_mixed():
     def helper(qmul, evaluates):
         assert isinstance(qmul, QMul)
-        assert qmul.evaluates == evaluates
-        assert qmul.hilbert_space = HilbertSpace()
+        assert issubclass(qmul.evaluates, evaluates)
+        assert qmul.hilbert_space == HilbertSpace()
+
+    def should_except(item1, item2):
+        try:
+            item1*item2
+            assert False
+        except QuantumError:
+            assert True
+
     a = Symbol('a')
     b = Symbol('b')
-    A = Ket('A')
-    B = Ket('B')
-    C = Bra('C')
-    E = Operator('E')
-    F = Operator('F')
-    G = Operator('G')
-    H = InnerProduct(C, B)
-    I = InnerProduct(C, A)
-    qmket = E*B
-    qmbra = C*F
-    qmop = F*G
-    assert E*B == qmket._new_rawargs(Ket, HilbertSpace(), 1, E, B)
-    assert C*F == qmket._new_rawargs(Bra, HilbertSpace(), 1, C, F)
-    assert C*F == qmket._new_rawargs(Bra, HilbertSpace(), 1, C, F)
-    assert A*H == qmket._new_rawargs(Ket, HilbertSpace(), 1, A, H)
-    assert C*H == qmket._new_rawargs(Bra, HilbertSpace(), 1, C, H)
-    assert E*H == qmket._new_rawargs(Ket, HilbertSpace(), 1, E, H)
-    assert I*H == qmket._new_rawargs(InnerProduct, HilbertSpace(), 1, I, H)
-    assert H*A == qmket._new_rawargs(Ket, HilbertSpace(), 1, H, A)
-    assert H*C == qmket._new_rawargs(Bra, HilbertSpace(), 1, H, C)
-    assert H*E == qmket._new_rawargs(Operator, HilbertSpace(), 1, H, E)
-    assert H*I == qmket._new_rawargs(InnerProduct, HilbertSpace(), 1, H, I)
-    helper(E*qmket, Ket)
-    assert qmbra*F == qmket._new_rawargs(Bra, HilbertSpace(), 1, qmbra, F)
-    assert E*qmop == qmket._new_rawargs(Operator, HilbertSpace(), 1, E, qmop)
-    assert expand((E+F)*(A+B)) == (E*A + E*B + F*A + F*B)
-    assert Dagger(E*A) == Dagger(A)*Dagger(E) == Bra('A')*Dagger(E)
+    ket = Ket('A')
+    ket1 = Ket('J')
+    bra = Bra('B')
+    bra2 = Bra('l')
+    op = Operator('C')
+    inner = InnerProduct(bra, ket)
+    qmket = op*ket
+    qmbra = bra*op
+    qmop = op*op
+    
+    assert op*op == qmket._new_rawargs(Operator, HilbertSpace(), 1, op, op)
+    assert op*ket == qmket._new_rawargs(Ket, HilbertSpace(), 1, op, ket)
+    should_except(op, bra)
+    assert op*inner == qmket._new_rawargs(Operator, HilbertSpace(), 1, op, inner)
+    
+    should_except(ket, op)
+    assert ket*bra == qmket._new_rawargs(Operator, HilbertSpace(), 1, ket, bra)
+    should_except(ket, ket)
+    assert ket*inner == qmket._new_rawargs(Ket, HilbertSpace(), 1, ket, inner)
+    
+    should_except(bra, bra)
+    assert bra*op == qmket._new_rawargs(Bra, HilbertSpace(), 1, bra, op)
+    assert bra*ket == qmket._new_rawargs(InnerProduct, HilbertSpace(), 1, bra, ket)
+    assert bra*inner == qmket._new_rawargs(Bra, HilbertSpace(), 1, bra, inner)
 
+    assert inner*op == qmket._new_rawargs(Operator, HilbertSpace(), 1, inner, op)
+    assert inner*bra == qmket._new_rawargs(Bra, HilbertSpace(), 1, inner, bra)
+    assert inner*ket == qmket._new_rawargs(Ket, HilbertSpace(), 1, inner, ket)
+    assert inner*inner == qmket._new_rawargs(InnerProduct, HilbertSpace(), 1, inner, inner)
+     
+    should_except(qmket, ket)
+    helper(qmket*bra, Operator) 
+    should_except(qmket, op)
+    helper(qmket*inner, Ket)
+
+    helper(qmbra*ket, InnerProduct)
+    should_except(qmbra, bra)
+    helper(qmbra*op, Bra)
+    helper(qmbra*inner, Bra)
+
+    helper(qmop*op, Operator)
+    helper(qmop*ket, Ket)
+    should_except(qmop, bra)
+    helper(qmop*inner, Operator)
+    
+    assert expand((ket+ket1)*(bra+bra2)) == (ket*bra + ket*bra2 + ket1*bra + ket1*bra2)
+    assert Dagger(op*ket) == Dagger(ket)*Dagger(op) == Bra('A')*Dagger(op)
+
+def test_QAdd_mixed():
+    a = Symbol('a')
+    b = Symbol('b')
+    ket = Ket('A')
+    ket1 = Ket('J')
+    bra = Bra('B')
+    bra1 = Bra('l')
+    op = Operator('C')
+    op1 = Operator('d')
+    inner = InnerProduct(bra, ket)
+    qmop = op + op1
+    assert ket + ket1 == qmop._new_rawargs(Ket, HilbertSpace(), ket, ket1)
+    assert bra + bra1 == qmop._new_rawargs(Bra, HilbertSpace(), bra, bra1)
+    assert op + op1 == qmop._new_rawargs(Operator, HilbertSpace(), op1, op)
+    assert inner + a == Add(a, inner)
+      
 @XFAIL
 def test_QMul_mixed_fail():
     A = Ket('a')

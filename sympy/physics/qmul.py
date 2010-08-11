@@ -1,5 +1,5 @@
 from sympy.physics.qoperations import QAssocOp
-from sympy.physics.quantum import StateBase, Operator, OuterProduct, KetBase, BraBase, OuterProduct, InnerProduct
+from sympy.physics.quantum import StateBase, Operator, OuterProduct, KetBase, BraBase, OuterProduct, InnerProduct, Dagger
 from sympy.core.expr import Expr
 from sympy.core.cache import cacheit
 from sympy.core.mul import Mul
@@ -9,6 +9,7 @@ from sympy import (
     I, Function, Integer, S, sympify, Matrix, oo
 )
 from sympy.printing.pretty.stringpict import prettyForm
+from sympy.physics.hilbert import HilbertSpaceException
 
 class QMul(QAssocOp):
     binopPretty = prettyForm(u'\u00B7')
@@ -47,7 +48,7 @@ class QMul(QAssocOp):
             return retVal
 
         if Object1.hilbert_space != Object2.hilbert_space:
-            raise Exception("Hilbert Spaces do not match")
+            raise HilbertSpaceException("Hilbert Spaces do not match")
 
         if issubclass(Object1.evaluates, InnerProduct):
             retVal = cls.QMulflatten(Object1, Object2)
@@ -92,7 +93,7 @@ class QMul(QAssocOp):
             retVal.hilbert_space = Object2.hilbert_space
             retVal.evaluates = InnerProduct
             return retVal
-        raise Exception("%s*%s is not allowed" % (Object1.evaluates.__name__, Object2.evaluates.__name__))  
+        raise QuantumError("%s*%s is not allowed" % (Object1.evaluates.__name__, Object2.evaluates.__name__))  
 
     @classmethod
     def QMulflatten(cls, Object1, Object2):
