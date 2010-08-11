@@ -1,5 +1,5 @@
 from sympy import (
-    Expr, Basic, sympify, Add, Mul, Pow, 
+    Expr, Basic, sympify, Add, Mul, Pow,
     I, Function, Integer, S, sympify, Matrix, oo
 )
 from sympy.core.sympify import _sympify
@@ -131,7 +131,6 @@ class KetBase(StateBase):
     rbracket = '>'
     lbracketPretty = prettyForm(u'\u2758')
     rbracketPretty = prettyForm(u'\u276D')
- 
 
     @property
     def dual(self):
@@ -145,7 +144,7 @@ class BraBase(StateBase):
     lbracket = '<'
     rbracket = '|'
     lbracketPretty = prettyForm(u'\u276C')
-    rbracketPretty = prettyForm(u'\u2758') 
+    rbracketPretty = prettyForm(u'\u2758')
 
     @property
     def dual(self):
@@ -192,7 +191,7 @@ class Ket(State, KetBase):
     ========
 
     Creating and using a Ket:
-        
+
         >>> from sympy.physics.quantum import Ket
         >>> psi = Ket('psi')
         >>> psi
@@ -222,7 +221,7 @@ class Bra(State, BraBase):
     ========
 
     Creating and using a Bra:
-        
+
         >>> from sympy.physics.quantum import Bra
         >>> b = Bra('bus')
         >>> b
@@ -334,7 +333,7 @@ class Operator(QuantumBasic, Representable):
     def __new__(cls, name):
         name = sympify(name)
         obj = Expr.__new__(cls, name, **{'commutative': False})
-        obj.hilbert_space = cls._eval_hilbert_space(name)        
+        obj.hilbert_space = cls._eval_hilbert_space(name)
         return obj
 
     @classmethod
@@ -363,7 +362,7 @@ class Operator(QuantumBasic, Representable):
 
 class InnerProduct(QuantumBasic):
     """
-    An unevaluated inner product between a Bra and a Ket. Because a Bra is 
+    An unevaluated inner product between a Bra and a Ket. Because a Bra is
     essentially a row vector and a Ket is essentially a column vector, the
     inner product evaluates to a complex number.
 
@@ -390,7 +389,7 @@ class InnerProduct(QuantumBasic):
     def __new__(cls, bra, ket):
         #What about innerProd(1,1), should it auto simplify?
         if not (bra and ket):
-            raise Exception('InnerProduct requires a leading Bra and a trailing Ket')
+            raise QuantumError('InnerProduct requires a leading Bra and a trailing Ket')
         assert issubclass(bra.evaluates, Bra), 'First argument must be a Bra'
         assert issubclass(ket.evaluates, Ket), 'Second argument must be a Ket'
         assert bra.hilbert_space == ket.hilbert_space
@@ -463,7 +462,7 @@ class OuterProduct(Operator):
 
     def __new__(cls, ket, bra):
         if not (ket and bra):
-            raise Exception('OuterProduct requires a leading Ket and a trailing Bra')
+            raise QuantumError('OuterProduct requires a leading Ket and a trailing Bra')
         assert issubclass(ket.evaluates, Ket), 'First argument must be a Ket'
         assert issubclass(bra.evaluates, Bra), 'Second argument must be a Bra'
         assert ket.hilbert_space == bra.hilbert_space
@@ -769,7 +768,7 @@ def represent(expr, basis, **options):
 
 def split_product(expr):
     """
-    Separates a (valid) Mul of quantum objects and inner/outer products into a 
+    Separates a (valid) Mul of quantum objects and inner/outer products into a
     Mul.
 
     * Only works for simple Muls (e.g. a*b*c*d) right now.

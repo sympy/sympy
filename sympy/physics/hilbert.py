@@ -262,7 +262,7 @@ class TensorProductHilbertSpace(HilbertSpace):
 
         >>> ms = hs*hs*hs
         >>> ms
-        l2(2)**(3)
+        (l2(2))**(3)
 
     References
     ==========
@@ -375,7 +375,7 @@ class DirectSumHilbertSpace(HilbertSpace):
         >>> direct_sum.dimension
         oo
         >>> direct_sum.spaces
-        (l2(x), L2([0, 1]))
+        set([L2([0, 1]), l2(x)])
 
     References
     ==========
@@ -450,17 +450,17 @@ class TensorPowerHilbertSpace(HilbertSpace):
         >>> from sympy.abc import x
         >>> p1 = l2(3)**2
         >>> p1
-        l2(3)**(2)
+        (l2(3))**(2)
 
         >>> hs = l2(2)
         >>> direct_power = hs*hs*(hs**2)*hs**x
         >>> direct_power
-        l2(2)**(4 + x)
+        (l2(2))**(4 + x)
 
         >>> HS = L2(Interval(-21, 21))
         >>> dir_pow = HS**(42+x)
         >>> dir_pow
-        L2([-21, 21])**(42 + x)
+        (L2([-21, 21]))**(42 + x)
 
     You can check certain properties of direct powers such as their
     dimensions, bases, exponents, etc:
@@ -548,7 +548,7 @@ def compare_hilbert(arg1, arg2):
         for item in arg1.args:
             compare_hilbert(item, arg2)
     elif isinstance(arg2, (Qdd, QMul)):
-        for item in arg2.args:         
+        for item in arg2.args:
             compare_hilbert(item, arg1)
     elif isinstance(arg1, QPow):
         compare_hilbert(arg1.base, arg2)
