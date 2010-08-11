@@ -149,7 +149,7 @@ function.
           parameter (pi = 3.141592653589793238462643)
           x - E - pi**2
     >>> print fcode(N(x - pi**2, 25))
-          -9.869604401089358618834491 + x
+          -9.869604401089358618834491d0 + x
 
 When some functions are not part of the Fortran standard, it might be desirable
 to introduce the names of user-defined functions in the Fortran expression.
