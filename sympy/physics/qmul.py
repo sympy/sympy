@@ -1,5 +1,5 @@
 from sympy.physics.qoperations import QAssocOp
-from sympy.physics.quantum import *
+from sympy.physics.quantum import StateBase, Operator, OuterProduct, KetBase, BraBase, OuterProduct, InnerProduct
 from sympy.core.expr import Expr
 from sympy.core.cache import cacheit
 from sympy.core.mul import Mul
@@ -22,7 +22,6 @@ class QMul(QAssocOp):
             Returns a Mul, QMul, InnerProduct or OuterProduct object on success
             Raises and exception if input violates quantum shape rules
         """
-        from sympy.physics.quantum import StateBase, Operator, OuterProduct, KetBase, BraBase, OuterProduct, InnerProduct
         if Object1 == 1:
             return Object2
         if Object2 == 1:
@@ -101,8 +100,6 @@ class QMul(QAssocOp):
             Flattens out QMul objects.
             Places Non-Quantum objects at front of Qmul in Mul object and Quantum objects behind it
         """
-        from sympy.physics.quantum import StateBase, Operator, OuterProduct, KetBase, BraBase, OuterProduct, InnerProduct
-        from sympy.core.mul import Mul
         Qseq = []
         Eseq = []
         seq = [Object1, Object2]

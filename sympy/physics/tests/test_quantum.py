@@ -108,7 +108,7 @@ def test_InnerProduct():
     assert C.ket == B == Ket('B')
     assert C != B*A
     assert C == InnerProduct(Bra('A'), Ket('B'))
-    assert C.evaluates == Number
+    assert C.evaluates == InnerProduct
     assert C.hilbert_space == HilbertSpace()
     assert Dagger(C) == InnerProduct(Dagger(B), Dagger(A)) == InnerProduct(Bra('B'), Ket('A'))
     assert isinstance(Dagger(C), InnerProduct)

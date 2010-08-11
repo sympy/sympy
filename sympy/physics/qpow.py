@@ -1,8 +1,7 @@
 from sympy import Expr, Pow, S, Number, Symbol, sympify
-from sympy.physics.quantum import *
+from sympy.physics.quantum import InnerProduct, OuterProduct, Operator, KetBase, BraBase
 from sympy.physics.qmul import QMul
 from sympy.physics.qadd import QAdd
-from sympy.physics.qoperations import QAssocOp
 from sympy.core.decorators import call_highest_priority
 from sympy.physics.quantumbasic import QuantumError, QuantumBasic
 from sympy.printing.str import sstr
@@ -37,12 +36,12 @@ class QPow(QuantumBasic):
                 ret.hilbert_space = base.hilbert_space
                 ret.evaluates = base.evaluates 
                 return ret
-        elif issubclass(exp.evaluates, InnerProduct) and issubclass(base.evaluates, (OuterProduct, InnerProduct, Operator)):
+        elif issubclass(exp.evaluates, InnerProduct) and issubclass(base.evaluates, (InnerProduct, Operator)):
                 ret = Expr.__new__(cls, base, exp)
                 ret.hilbert_space = base.hilbert_space
                 ret.evaluates = base.evaluates 
                 return ret
-        elif issubclass(base.evaluates, InnerProduct) and issubclass(exp.evaluates, (OuterProduct, InnerProduct, Operator)):           
+        elif issubclass(base.evaluates, InnerProduct) and issubclass(exp.evaluates, (InnerProduct, Operator)):           
                 ret = Expr.__new__(cls, base, exp)
                 ret.hilbert_space = exp.hilbert_space
                 ret.evaluates = exp.evaluates 
