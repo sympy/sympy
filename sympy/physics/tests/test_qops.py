@@ -199,6 +199,50 @@ def test_QAdd_mixed():
                 should_except(possibilities1[i], possibilities2[j])
                 should_except(possibilities2[i], possibilities2[j])
     
+def test_QPow_mixed():
+    def helper(qmul, evaluates, arg1, arg2):
+        assert isinstance(qmul, QPow)
+        assert issubclass(qmul.evaluates, evaluates)
+        assert qmul.base == arg1
+        assert qmul.exp == arg2
+        assert qmul.hilbert_space == HilbertSpace()
+
+    def should_except(item1, item2):
+        try:
+            item1**item2
+            assert False
+        except QuantumError:
+            assert True
+
+    a = Symbol('a')
+    b = Symbol('b')
+    ket = Ket('A')
+    ket1 = Ket('J')
+    bra = Bra('B')
+    bra1 = Bra('l')
+    op = Operator('C')
+    op1 = Operator('d')
+    inner = InnerProduct(bra, ket)
+    qmop = op + op1
+    qmbra = bra + bra1
+    qmket = ket + ket1
+    should_except(qmbra, bra)
+    should_except(a, bra)
+    should_except(bra, op)
+    should_except(op, qmbra)
+    should_except(qmbra, qmket)
+    should_except(qmket, qmbra)
+    should_except(a, ket)
+    should_except(ket, a)
+    should_except(ket, ket1)
+    should_except(op, op1)
+    should_except(op, ket)
+    should_except(ket, op)
+    helper(a**op, Operator, a, op)
+    helper(op**inner, Operator, op, inner)
+    helper(inner**op, Operator, inner, op)
+    helper(op**a, Operator, op, a)
+       
       
 @XFAIL
 def test_QMul_mixed_fail():

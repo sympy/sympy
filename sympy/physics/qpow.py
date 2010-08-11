@@ -58,7 +58,7 @@ class QPow(QuantumBasic):
         else:
             basename = base.__class__.__name__
             
-        raise Exception("Can't do (%s)**(%s)" % (basename, expname))
+        raise QuantumError("Can't do (%s)**(%s)" % (basename, expname))
 
     @property
     def base(self):
