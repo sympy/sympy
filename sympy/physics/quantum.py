@@ -98,10 +98,6 @@ class StateBase(QuantumBasic, Representable):
     def is_symbolic(self):
         return True
 
-    @property
-    def evaluates(self):
-        return self.__class__
-
     def _print_name(self, printer, *args):
         return printer._print(self.name, *args)
 
@@ -164,6 +160,7 @@ class State(StateBase):
         inst = Expr.__new__(cls, name, **{'commutative':False})
         # Now set the slots on the instance
         inst.hilbert_space = cls._eval_hilbert_space(name)
+        inst.evaluates = self.__class__
         return inst
 
     @classmethod
@@ -253,6 +250,7 @@ class TimeDepState(StateBase):
         inst = Expr.__new__(cls, name, time, **{'commutative':False})
         # Now set the slots on the instance
         inst.hilbert_space = cls._eval_hilbert_space(name, time)
+        inst.evaluates = self.__class__
         return inst
 
     @property
@@ -341,12 +339,12 @@ class Operator(QuantumBasic, Representable):
         return HilbertSpace()
 
     @property
-    def name(self):
-        return self.args[0]
-
-    @property
     def evaluates(self):
         return self.__class__
+
+    @property
+    def name(self):
+        return self.args[0]
 
     def doit(self,**kw_args):
         return self
@@ -398,6 +396,7 @@ class InnerProduct(QuantumBasic):
             return r
         obj = Expr.__new__(cls, bra, ket)
         obj.hilbert_space = bra.hilbert_space
+        obj.evaluates = self.__class__
         return obj
 
     @classmethod
@@ -413,10 +412,6 @@ class InnerProduct(QuantumBasic):
     @property
     def ket(self):
         return self.args[1]
-
-    @property
-    def evaluates(self):
-        return self.__class__
 
     def _eval_dagger(self):
         return InnerProduct(Dagger(self.ket), Dagger(self.bra))
