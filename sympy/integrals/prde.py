@@ -722,7 +722,8 @@ def is_log_deriv_k_t_radical_in_field(fa, fd, D, T, case='auto'):
     # f must be simple
     n, s = splitfactor(fd, D, T)
     if not s.is_one:
-        return None
+        pass
+        #return None
 
     z = Symbol('z', dummy=True)
     H, b = residue_reduce(fa, fd, D, T, z=z)
