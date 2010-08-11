@@ -1,7 +1,20 @@
-from sympy import var, sqrt, exp, simplify, S, integrate, oo
-from sympy.physics.hydrogen import R_nl
+from sympy import var, sqrt, exp, simplify, S, integrate, oo, Symbol, raises
+from sympy.physics.hydrogen import R_nl, E_nl, E_nl_dirac
 
 var("r Z")
+
+def feq(a, b, max_relative_error=1e-12, max_absolute_error=1e-12):
+    a = float(a)
+    b = float(b)
+    # if the numbers are close enough (absolutely), then they are equal
+    if abs(a-b) < max_absolute_error:
+        return True
+    # if not, they can still be equal if their relative error is small
+    if abs(b) > abs(a):
+        relative_error = abs((a-b)/b)
+    else:
+        relative_error = abs((a-b)/a)
+    return relative_error <= max_relative_error
 
 def test_wavefunction():
     a = 1/Z
@@ -33,3 +46,44 @@ def test_norm():
     for n in range(n_max+1):
         for l in range(n):
             assert integrate(R_nl(n, l, r)**2 * r**2, (r, 0, oo)) == 1
+
+def test_hydrogen_energies():
+    n = Symbol("n")
+    assert E_nl(n, Z) == -Z**2/(2*n**2)
+    assert E_nl(n) == -1/(2*n**2)
+
+    assert E_nl(1, 47) == -S(47)**2/(2*1**2)
+    assert E_nl(2, 47) == -S(47)**2/(2*2**2)
+
+    assert E_nl(1) == -S(1)/(2*1**2)
+    assert E_nl(2) == -S(1)/(2*2**2)
+    assert E_nl(3) == -S(1)/(2*3**2)
+    assert E_nl(4) == -S(1)/(2*4**2)
+    assert E_nl(100) == -S(1)/(2*100**2)
+
+    raises(ValueError, "E_nl(0)")
+
+def test_hydrogen_energies_relat():
+    for n in range(1, 5):
+        for l in range(n):
+            assert feq(E_nl_dirac(n, l), E_nl(n), 1e-5, 1e-5)
+            if l > 0:
+                assert feq(E_nl_dirac(n, l, False), E_nl(n), 1e-5, 1e-5)
+
+    Z = 2
+    for n in range(1, 5):
+        for l in range(n):
+            assert feq(E_nl_dirac(n, l, Z=Z), E_nl(n, Z), 1e-4, 1e-4)
+            if l > 0:
+                assert feq(E_nl_dirac(n, l, False, Z), E_nl(n, Z), 1e-4, 1e-4)
+
+    Z = 3
+    for n in range(1, 5):
+        for l in range(n):
+            assert feq(E_nl_dirac(n, l, Z=Z), E_nl(n, Z), 1e-3, 1e-3)
+            if l > 0:
+                assert feq(E_nl_dirac(n, l, False, Z), E_nl(n, Z), 1e-3, 1e-3)
+
+    raises(ValueError, "E_nl_dirac(0, 0)")
+    raises(ValueError, "E_nl_dirac(1, -1)")
+    raises(ValueError, "E_nl_dirac(1, 0, False)")
