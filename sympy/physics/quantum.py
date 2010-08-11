@@ -289,7 +289,7 @@ class InnerProduct(QuantumBasic):
     def __new__(cls, bra, ket):
         #What about innerProd(1,1), should it auto simplify?
         if not (bra and ket):
-            raise Exception('InnerProduct requires a leading Bra and a trailing Ket')
+            raise QuantumError('InnerProduct requires a leading Bra and a trailing Ket')
         assert issubclass(bra.evaluates, Bra), 'First argument must be a Bra'
         assert issubclass(ket.evaluates, Ket), 'Second argument must be a Ket'
         assert bra.hilbert_space == ket.hilbert_space
@@ -341,7 +341,7 @@ class OuterProduct(Operator):
 
     def __new__(cls, ket, bra):
         if not (ket and bra):
-            raise Exception('OuterProduct requires a leading Ket and a trailing Bra')
+            raise QuantumError('OuterProduct requires a leading Ket and a trailing Bra')
         assert issubclass(ket.evaluates, Ket), 'First argument must be a Ket'
         assert issubclass(bra.evaluates, Bra), 'Second argument must be a Bra'
         assert ket.hilbert_space == bra.hilbert_space

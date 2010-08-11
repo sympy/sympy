@@ -1,6 +1,3 @@
-"""
-    Single qbits and their gates
-"""
 from sympy.physics.hilbert import l2, HilbertSpaceException
 from sympy.physics.quantum import BasisSet, Operator, Representable, represent, OuterProduct, Ket
 from sympy import Expr, sympify, Add, Mul, Pow, I, Function, Integer, S, sympify, Matrix, elementary
@@ -21,6 +18,9 @@ import math
 # BasisSets for Qbit
 #-----------------------------------------------------------------------------
 class QbitZBasisSet(BasisSet):
+    """
+        ZBasisSet formed using the eigenvectors of the Pauli-Z Matrix
+    """
     __slots__ = ['hilbert_space', 'qbit_number']
    
     def __new__(cls, nqbits):
@@ -29,7 +29,10 @@ class QbitZBasisSet(BasisSet):
         obj.qbit_number = nqbits
         return obj
 
-class QbitXBasis(BasisSet):
+class QbitXBasisSet(BasisSet):
+    """
+        XBasisSet formed using the eigenvectors of the Pauli-X Matrix
+    """
     __slots__ = ['hilbert_space', 'qbit_number']
     
     def __new__(cls, nqbits):
@@ -38,7 +41,10 @@ class QbitXBasis(BasisSet):
         obj.qbit_number = nqbits
         return obj
 
-class QbitYBasis(BasisSet):
+class QbitYBasisSet(BasisSet):
+    """
+        XBasisSet formed using the eigenvectors of the Pauli-X Matrix
+    """
     __slots__ = ['hilbert_space', 'qbit_number']
     
     def __new__(cls, nqbits):
@@ -53,7 +59,34 @@ class QbitYBasis(BasisSet):
 
 class Qbit(Ket):
     """
-        Represents a single definite quantum state
+        Represents a single definite eigenstate of the ZBasisSet
+        Object can be instantiated by:
+            - *args with each representing the value of a single Qbit 
+            - A single decimal value. Code will convert to binary using least number of bits
+            - A decimal value and the number of bits you wish to express it in (The size of the Hilbert Space)
+
+        Qbit object can have individual bits flipped such that a one becomes a zero and vice versa
+
+        Qbit object is also callable allowing user to pick out the value of a particular bit
+
+        All of this is seen in the doc test
+
+        >>> from sympy.physics.qbit import Qbit
+        >>> Qbit(0,0,0)
+        |'000'>
+        >>> Qbit(5)
+        |'101'>
+        >>> a = Qbit(5,4)
+        >>> a
+        |'0101'>
+        >>> a.flip(0)
+        |'0100'>
+        >>> len(a)
+        4
+        >>> a.dimension
+        4
+        >>> a[0]
+        1
     """
     outDecimal = False
     def __new__(cls, *args, **options):
@@ -121,7 +154,6 @@ class Qbit(Ket):
         return "%s%s" % (printer._print(self.__class__.__name__, *args), printer._print(str(self.args[0])))
     
     def flip(self, *args):
-        #check now needed TODO
         newargs = list(self.args)
         for i in args:
             bit = int(self.dimension-i-1)
@@ -165,8 +197,13 @@ class QbitX(Qbit):
 #-----------------------------------------------------------------------------
 class Gate(Operator):
     """
-    A gate operator that acts on qubit(s)
-    (will need tensor product to get it working for multiple Qbits)
+        The superclass of gate operators that acts on qubit(s)
+            - *args stores the information about which qbits it will act on
+            - minimumdimension is the least size a set fo qbits must be for the gate to be applied
+            - input number is the number of qbits the gate acts on (e.g. a three qbit gate acts on three qbits
+            - name returns the string of the qbit
+            - apply applies gate onto qbits
+            - _represent_Qbit?BasisSet represents the gates matrix in the given basis
     """
 
     def __new__(cls, *args):
@@ -263,8 +300,12 @@ class Gate(Operator):
     def YBasisTransform(self):
         return Matrix([[ImaginaryUnit(),0],[0,-ImaginaryUnit()]])
 
-#class keeps track of fact that it can't be distributed
 class NondistributiveGate(Gate):
+    """
+        Superclass for all non-distributive gates (e.g. measurement)
+        Gates that do not distribute should subclass off this and implement an appropriate 'measure' function
+        TODO: Get Nondistributive Gates working with represent and not just apply 
+    """
     def __new__(cls, *args):
         args = sympify(args)
         if len(args) != 1:
@@ -275,86 +316,157 @@ class NondistributiveGate(Gate):
         raise NotImplementedError("This type of measure has not been implemented")
 
 #-----------------------------------------------------------------------------
-# Gate sub-Classes
+# Single Qbit Gates
 #-----------------------------------------------------------------------------
-class ensembleMeasure(NondistributiveGate): #for now, ensemble measure does not do partial measurements
-    def __new__(cls, *args):
-        return Expr.__new__(cls, *args, **{'commutative': False})
-    
-    def measure(self, state):
-        state = state.expand()
-        if isinstance(state, (Qbit, Mul)):
-                return state
-        if len(self.args) == 0:
-            #Do whole measuremnet
-            retVal = []
-            for each_item in state.args:
-                retVal.append((Mul(*each_item.args[0:-1])*Mul(*each_item.args[0:-1]).conjugate(), each_item.args[-1]))
-            return retVal
-        else:
-            raise NotImplementedError("Don't have partial ensemble measures done yet, check back later")
-            #Do partial measurement
 
-class measure(NondistributiveGate):
-    def __new__(cls, *args):
-        if len(args) != 1:
-            raise QuantumError("Can only measure one at a time for now")
-        return Expr.__new__(cls, *args, **{'commutative': False})
-    
-    def measure(self, state):
-        import random
-        qbit = self.args[0]
-        state = state.expand()
-        prob1 = 0
-        #Go through each item in the add and grab its probability
-        #This will be used to determine probability of getting a 1
-        if isinstance(state, (Mul, Qbit)):
-            return state
-        for item in state.args:
-            if item.args[-1][qbit] == 1:
-                prob1 += Mul(*item.args[0:-1])*Mul(*item.args[0:-1]).conjugate()
-        if prob1 < random.random():
-            choice = 0
-        else:
-            choice = 1
-        result = 0
-        for item in state.args:
-            if item.args[-1][qbit] == choice:
-                result = result + item
-        if choice:
-            result = result/sqrt(prob1)
-        else:
-            result = result/sqrt(1-prob1)
-        #TODO FIXME I evalf'd becuase of wierdness, need to get measure working in apply for real 
-        return result.expand().evalf()
-
-
-class controlledMod(Gate):
+class HadamardGate(Gate):
     """
-        This is black box controlled Mod function for use by shor's algorithm. 
-        TODO implement a decompose property that returns how to do this 
-    """
-    __slots__ = ['t', 'a', 'N']
-    def __new__(cls, *args):
-        obj = Expr.__new__(cls, (), **{'commutative': False})
-        obj.t = args[0] #t is size of half input register. First half is assumed
-        obj.a = args[1] #a is base of controlled Mod function
-        obj.N = args[2] #N is the type of modular arithmetic we are doing 
-        return obj
-    
-    def _apply_QbitZBasisSet(self, qbits):
-        n = 1
-        k = 0
-        for i in range(self.t):
-            k = k + n*qbits[self.t+i]
-            n = n*2
-        out = int(self.a**k%self.N)
-        outarray = list(qbits.args[0:self.t])
-        for i in reversed(range(self.t)):            
-            outarray.append((out>>i)&1)
-        return Qbit(*outarray)
+        An object representing a Hadamard Gate
+        >>> from sympy.physics.qbit import HadamardGate, Qbit, apply_gates, QbitZBasisSet
+        >>> HadamardGate(0)*Qbit(0,0)
+        HadamardGate(0)*|00>
+        >>> apply_gates(_)
+        2**(1/2)/2*|00> + 2**(1/2)/2*|01>      
+        >>> from sympy.physics.quantum import represent
+        >>> represent(HadamardGate(0)*Qbit(0,0), QbitZBasisSet(2))
+        [2**(1/2)/2]
+        [2**(1/2)/2]
+        [         0]
+        [         0]
 
-class RkGate(Gate): 
+    """
+  
+    @property
+    def matrix(self):
+        from sympy.functions.elementary.miscellaneous import sqrt
+        return Matrix([[1, 1], [1, -1]])*(1/sqrt(2))
+
+class XGate(Gate):
+    """
+        An object representing a Pauli-X gate 
+        Also Known as a NOT Gate because it flips the value of a bit to its opposit like the classical Not Gate
+
+        >>> from sympy.physics.qbit import Qbit, XGate, apply_gates, QbitZBasisSet
+        >>> XGate(0)*Qbit(0,0)
+        XGate(0)*|00>
+        >>> apply_gates(_)
+        |01>
+        >>> from sympy.physics.quantum import represent
+        >>>represent(XGate(0)*Qbit(0,0), QBitZBasisSet(2))
+        >>> represent(XGate(0)*Qbit(0,0), QbitZBasisSet(2))
+        [1]
+        [1]
+        [0]
+        [0]
+    """
+    @property
+    def matrix(self):
+        return Matrix([[0, 1], [1, 0]])
+
+class YGate(Gate):
+    """
+        An object representing a Pauli-Y gate
+        >>> from sympy.physics.qbit import Qbit, YGate, apply_gates, QbitZBasisSet
+        >>> YGate(0)*Qbit(0,1)
+        YGate(0)*|01>
+        >>> apply_gates(_)
+        -1.0*I*|00>
+        >>> from sympy.physics.quantum import represent
+        >>> represent(YGate(0)*Qbit(0,0), QbitZBasisSet(2))
+        [0] 
+        [I]
+        [0]
+        [0]
+    """
+   
+    @property
+    def matrix(self):
+        return Matrix([[0, complex(0,-1)], [complex(0,1), 0]])
+
+class ZGate(Gate):
+    """
+        An object representing a Pauli-Z gate:
+        >>> from sympy.physics.qbit import Qbit, ZGate, apply_gates, QbitZBasisSet
+        >>> from sympy.physics.quantum import represent
+        >>> ZGate(0)*Qbit(0,1)
+        ZGate(0)*|01>
+        >>> apply_gates(_)
+        -1*|01>
+        >>> represent(ZGate(0)*Qbit(0,0), QbitZBasisSet(2))
+        [1]
+        [0]
+        [0]
+        [0]
+
+    """
+   
+    @property
+    def matrix(self):
+        return Matrix([[1, 0], [0, -1]])
+
+class PhaseGate(Gate):
+    """
+        An object representing a phase gate
+
+        >>> from sympy.physics.qbit import Qbit, PhaseGate, apply_gates, QbitZBasisSet
+        >>> from sympy.physics.quantum import represent
+        >>> represent(PhaseGate(0)*Qbit(0,1), QbitZBasisSet(2))
+        [0]
+        [I]
+        [0]
+        [0]
+        >>> apply_gates(PhaseGate(0)*Qbit(0,1))
+        I*|01>
+        >>> PhaseGate(0)*Qbit(0,1)
+        PhaseGate(0)*|01>
+
+    """
+   
+    @property
+    def matrix(self):
+        return Matrix([[1, 0], [0, complex(0,1)]])
+
+class TGate(Gate):
+    """
+        An object representing a pi/8 gate
+        >>> from sympy.physics.qbit import Qbit, TGate, apply_gates, QbitZBasisSet
+        >>> from sympy.physics.quantum import represent
+        >>> TGate(0)*Qbit(0,1)
+        TGate(0)*|01>
+        >>> apply_gates(_)
+        exp(pi*I/4)*|01>
+        >>> represent(TGate(0)*Qbit(0,1), QbitZBasisSet(2))
+        [          0]
+        [exp(pi*I/4)]
+        [          0]
+        [          0]
+    """
+    
+    @property
+    def matrix(self):
+        return Matrix([[1, 0], [0, exp(I*Pi()/4)]])
+#-----------------------------------------------------------------------------
+# 2 Qbit Gates
+#-----------------------------------------------------------------------------
+class RkGate(Gate):
+    """
+        A Controlled phase gate. 
+        If qbits specified in self.args[0] and self.args[1] are 1, then changes the phase of the state by e**(2*i*pi/2**k)
+        k is set by the thrird argument in the input
+        >>> from sympy.physics.qbit import Qbit, RkGate, apply_gates, QbitZBasisSet
+        >>> RkGate(1,0,2)
+        R2(1, 0)
+        >>> from sympy.physics.quantum import represent
+        >>> represent(_, QbitZBasisSet(2))
+        [1, 0, 0, 0]
+        [0, 1, 0, 0]
+        [0, 0, 1, 0]
+        [0, 0, 0, I]
+        >>> RkGate(1,0,3)*Qbit(1,1)
+        R3(1, 0)*|11>
+        >>> apply_gates(_)
+        exp(pi*I/4)*|11>
+    """
     __slots__ = ['k']
 
     def __new__(cls, *args):
@@ -387,6 +499,24 @@ class RkGate(Gate):
         return 3
 
 class IRkGate(RkGate):
+    """
+        Inverse Controlled-Phase Gate
+        Does the same thing as the RkGate, but rotates in the opposite direction within the complex plane
+        >>> from sympy.physics.qbit import Qbit, IRkGate, apply_gates, QbitZBasisSet
+        >>> IRkGate(1,0,2)
+        IR2(1, 0)
+        >>> from sympy.physics.quantum import represent
+        >>> represent(_, QbitZBasisSet(2))
+        [1, 0, 0,  0]
+        [0, 1, 0,  0]
+        [0, 0, 1,  0]
+        [0, 0, 0, -I]
+        >>> IRkGate(1,0,3)*Qbit(1,1)
+        IR3(1, 0)*|11>
+        >>> apply_gates(_)
+        exp(-pi*I/4)*|11>
+
+    """
     def _apply_ZBasisSet(self, qbits):
         #switch qbit basis and matrix basis when fully implemented
         mat = self.matrix
@@ -394,7 +524,7 @@ class IRkGate(RkGate):
         return self._apply(qbits, mat, args)
     
     def _sympystr(self, printer, *args):
-        return "IR%s(%s, %s)" % (printer._print(self.args[2], *args), printer._print(self.args[0], *args), printer._print(self.args[1], *args))
+        return "IR%s(%s, %s)" % (printer._print(self.k, *args), printer._print(self.args[0], *args), printer._print(self.args[1], *args))
 
     @property
     def matrix(self):
@@ -404,95 +534,128 @@ class IRkGate(RkGate):
     def name(self):
         return "IR%s(%s, %s)" % (self.k, self.args[0], self.args[1])
 
-class CZGate(Gate):
-    @property
-    def matrix(self):
-        return Matrix([[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,-1]])
-
-class SwapGate(Gate):
-    @property
-    def matrix(self):
-        return Matrix([[1,0,0,0],[0,0,1,0],[0,1,0,0],[0,0,0,1]])
-
-class CPhaseGate(Gate):
-    @property
-    def matrix(self):
-        return Matrix([[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,ImaginaryUnit()]])
-
-class ToffoliGate(Gate):
-    @property
-    def matrix(self):
-        return Matrix([[1,0,0,0,0,0,0,0],[0,1,0,0,0,0,0,0],[0,0,1,0,0,0,0,0],[0,0,0,1,0,0,0,0],[0,0,0,0,1,0,0,0],[0,0,0,0,0,1,0,0],[0,0,0,0,0,0,0,1],[0,0,0,0,0,0,1,0]])
-
-class CNOTGate(Gate):
-    @property
-    def matrix(self):
-        return Matrix([[1,0,0,0],[0,1,0,0],[0,0,0,1],[0,0,1,0]])
-
-class HadamardGate(Gate):
-    """
-    An object representing a Hadamard Gate
-    """
-  
-    @property
-    def matrix(self):
-        from sympy.functions.elementary.miscellaneous import sqrt
-        return Matrix([[1, 1], [1, -1]])*(1/sqrt(2))
-
-class XGate(Gate):
-    """
-    An object representing a Pauli-X gate:
-    """
-    @property
-    def matrix(self):
-        return Matrix([[0, 1], [1, 0]])
-
-class YGate(Gate):
-    """
-    An object representing a Pauli-Y gate:
-    """
-   
-    @property
-    def matrix(self):
-        return Matrix([[0, complex(0,-1)], [complex(0,1), 0]])
-
 class CTGate(Gate):
+    """
+        Controlled Pi/8 Gate  
+        >>> from sympy.physics.qbit import Qbit, CTGate, apply_gates, QbitZBasisSet
+        >>> apply_gates(CTGate(0,1)*Qbit(1,1))
+        exp(pi*I/4)*|11>      
+    """
     @property
     def matrix(self):
         return Matrix([[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,exp(I*Pi()/4)]])
 
-class ZGate(Gate):
+class CZGate(Gate):
     """
-    An object representing a Pauli-Z gate:
+        Controlled Z-Gate
+        >>> from sympy.physics.qbit import Qbit, CZGate, apply_gates, QbitZBasisSet
+        >>> apply_gates(CZGate(0,1)*Qbit(1,1))
+        -1*|11>
     """
-   
     @property
     def matrix(self):
-        return Matrix([[1, 0], [0, -1]])
+        return Matrix([[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,-1]])
 
-class PhaseGate(Gate):
-    """
-    An object representing a phase gate:
-    """
-   
-    @property
-    def matrix(self):
-        return Matrix([[1, 0], [0, complex(0,1)]])
 
-class TGate(Gate):
+class CPhaseGate(Gate):
     """
-    An object representing a pi/8 gate:
+        Controlled Phase-Gate
+        >>> from sympy.physics.qbit import Qbit, CPhaseGate, apply_gates, QbitZBasisSet
+        >>> apply_gates(CPhaseGate(0,1)*Qbit(1,1))
+        I*|11>
     """
-    
     @property
     def matrix(self):
-        return Matrix([[1, 0], [0, exp(I*Pi()/4)]])
+        return Matrix([[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,ImaginaryUnit()]])
+
+class CNOTGate(Gate):
+    """
+        Controlled NOT-Gate (This is the 'entangling gate' most often made refrence to in the literature)
+        CNOT, Hadamard and the Pauli-Gates make a universal group in quantum computation
+        Flips the second qbit (The target) contingent on the first qbit being 1 (first qbit -> controll bit)
+        
+        >>> from sympy.physics.qbit import Qbit, CNOTGate, apply_gates, QbitZBasisSet
+        >>> from sympy.physics.quantum import represent
+        >>> represent(CNOTGate(0,1), QbitZBasisSet(2))
+        [1, 0, 0, 0]
+        [0, 0, 0, 1]
+        [0, 0, 1, 0]
+        [0, 1, 0, 0]
+        >>> apply_gates(CNOTGate(0,1)*Qbit(0,1))
+        |'11'>
+ 
+    """
+    @property
+    def matrix(self):
+        return Matrix([[1,0,0,0],[0,1,0,0],[0,0,0,1],[0,0,1,0]])
+
+class SwapGate(Gate):
+    """ 
+        SwapGate: swaps two qbits location within the Tensor Product
+        
+        >>> from sympy.physics.qbit import Qbit, SwapGate, apply_gates, QbitZBasisSet
+        >>> from sympy.physics.quantum import represent
+        >>> represent(SwapGate(0,1), QbitZBasisSet(2))
+        [1, 0, 0, 0]
+        [0, 0, 1, 0]
+        [0, 1, 0, 0]
+        [0, 0, 0, 1]
+        >>> apply_gates(SwapGate(0,1)*Qbit(0,1))
+        |'10'>
+    """
+    @property
+    def matrix(self):
+        return Matrix([[1,0,0,0],[0,0,1,0],[0,1,0,0],[0,0,0,1]])
+
+class ToffoliGate(Gate):
+    """
+        ToffoliGate: Also known as the Controlled-Controlled (double controlled) NOT-Gate
+        Flips the third qbit (the target) contingent on the first and second qbits being 1 (first && second qbits are controll bits)
+        >>> from sympy.physics.qbit import Qbit, ToffoliGate, apply_gates, QbitZBasisSet
+        >>> from sympy.physics.quantum import represent
+        >>> represent(ToffoliGate(1,0,2), QbitZBasisSet(3))
+        [1, 0, 0, 0, 0, 0, 0, 0]
+        [0, 1, 0, 0, 0, 0, 0, 0]
+        [0, 0, 1, 0, 0, 0, 0, 0]
+        [0, 0, 0, 0, 0, 0, 0, 1]
+        [0, 0, 0, 0, 1, 0, 0, 0]
+        [0, 0, 0, 0, 0, 1, 0, 0]
+        [0, 0, 0, 0, 0, 0, 1, 0]
+        [0, 0, 0, 1, 0, 0, 0, 0]
+        >>> apply_gates(ToffoliGate(1,0,2)*Qbit(1,1,1))
+        |'011'>
+    """
+    @property
+    def matrix(self):
+        return Matrix([[1,0,0,0,0,0,0,0],[0,1,0,0,0,0,0,0],[0,0,1,0,0,0,0,0],[0,0,0,1,0,0,0,0],[0,0,0,0,1,0,0,0],[0,0,0,0,0,1,0,0],[0,0,0,0,0,0,0,1],[0,0,0,0,0,0,1,0]])
 
 #-----------------------------------------------------------------------------
 # Fourier stuff
 #-----------------------------------------------------------------------------
    
 class Fourier(Gate):
+    """
+        Superclass of Quantum Fourier and Inverse Quantum Fourier Gates
+        Takes in two args telling which qbits to start and stop doing the (I)QFT on
+
+        >>> from sympy.physics.qbit import Qbit, QFT, IQFT, QbitZBasisSet
+        >>> from sympy.physics.quantum import represent
+        >>> represent(QFT(0,2).decompose(), QbitZBasisSet(2))
+        [1/2,  1/2,  1/2,  1/2]
+        [1/2,  I/2, -1/2, -I/2]
+        [1/2, -1/2,  1/2, -1/2]
+        [1/2, -I/2, -1/2,  I/2]
+        >>> QFT(0,2).decompose()
+        SwapGate(0,1)*HadamardGate(0)*R2(1, 0)*HadamardGate(1)
+        >>> represent(IQFT(0,2).decompose(), QbitZBasisSet(2))
+        [1/2,  1/2,  1/2,  1/2]
+        [1/2, -I/2, -1/2,  I/2]
+        [1/2, -1/2,  1/2, -1/2]
+        [1/2,  I/2, -1/2, -I/2]
+        >>> IQFT(0,2).decompose()
+        HadamardGate(1)*IR2(1, 0)*HadamardGate(0)*SwapGate(0,1)        
+    """
+
     def __new__(self, *args):
         if args[0] >= args[1]:
             raise QuantumError("Start must be smaller than finish")
@@ -521,45 +684,10 @@ class Fourier(Gate):
     
     @property
     def matrix(self):
-        N = 2**(self.args[1]-self.args[0])
-        if isinstance(self, QFT):
-            omega = exp(2*I*Pi()/(N))
-        else:
-            omega =  exp(-2*I*Pi()/(N))
-        mat = 0
-        for i in range(N):
-            temp = 0
-            for j in range(N):
-                if temp == 0:
-                    temp = Matrix([[1]])
-                else:
-                    temp = temp.row_join(Matrix([[omega**(i*j%N)]]))
-            if mat == 0:
-                mat = temp
-            else:
-                mat = mat.col_join(temp)
-        mat = mat/sqrt(N)
-        return mat
+        NotImplementedError("Fourier Transforms don't know how to do this just yet")
     
     def _apply_ZBasisSet(self, qbits):
         return apply_gates(self.decompose*qbits)
-    
-    def DFT(self, qbitmat):
-        N = qbitmat.rows
-        if isinstance(self, QFT):
-            omega = exp(2*I*Pi()/(N))
-        else:
-            omega = exp(-2*I*Pi()/(N))
-        retVal = 0
-        for i in range(N):
-            if qbitmat[i] == 0:
-                continue
-            temp = [omega**(j*i)/sqrt(N) for j in range(N)]
-            if retVal == 0:
-                retVal = Matrix(temp)
-            else:
-                retVal = retVal + Matrix(temp)
-        return retVal
 
 class QFT(Fourier):
     def decompose(self):
@@ -588,11 +716,107 @@ class IQFT(Fourier):
         return circuit
 
 #-----------------------------------------------------------------------------
+# Miscilaneous Gate sub-classes (Measurement and Controlled Mod)
+#-----------------------------------------------------------------------------
+class measure(NondistributiveGate):
+    """
+        A one-shot measurement gate that returns a single outcome from measureing a single gate
+    """
+    
+    def __new__(cls, *args):
+        if len(args) != 1:
+            raise QuantumError("Can only measure one at a time for now")
+        return Expr.__new__(cls, *args, **{'commutative': False})
+    
+    def measure(self, state):
+        import random
+        qbit = self.args[0]
+        state = state.expand()
+        prob1 = 0
+        #Go through each item in the add and grab its probability
+        #This will be used to determine probability of getting a 1
+        if isinstance(state, (Mul, Qbit)):
+            return state
+        for item in state.args:
+            if item.args[-1][qbit] == 1:
+                prob1 += Mul(*item.args[0:-1])*Mul(*item.args[0:-1]).conjugate()
+        if prob1 < random.random():
+            choice = 0
+        else:
+            choice = 1
+        result = 0
+        for item in state.args:
+            if item.args[-1][qbit] == choice:
+                result = result + item
+        if choice:
+            result = result/sqrt(prob1)
+        else:
+            result = result/sqrt(1-prob1)
+        #TODO FIXME I evalf'd becuase of wierdness, need to get measure working in apply for real 
+        return result.expand().evalf()
+
+class SetZero(NondistributiveGate):
+    """
+        Gate measures the state of a Qbit within a set of qbits:
+            - If the measurement returns 0, it does nothing
+            - If the measurement return 1, it applies an XGate
+    """
+    def measure(self, circuit):
+        item = self.args[0]
+        circuit = measure(item)*circuit
+        circuit = apply_gates(circuit)
+        circuit = circuit.expand()
+        if isinstance(circuit, QAdd):
+            if circuit.args[-1][-1][item] == 0:
+                return circuit
+            part = 0
+            for i in circuit.args:
+                part = part + QMul(*i.args[:-1])*i.args[-1].flip(item)
+            return part
+        if isinstance(circuit, Qbit):
+            if circuit[item] == 0:
+                return circuit
+            return circuit.flip(item)
+        if isinstance(circuit, QMul):
+            if circuit.args[-1][item] == 0:
+                return circuit
+            return QMul(*circuit.args[:-1])*circuit.args[-1].flip(item)
+        return circuit
+
+class controlledMod(Gate):
+    """
+        This is black box controlled Mod function for use by shor's algorithm. 
+        TODO implement a decompose property that returns how to do this in terms of elementary gates like in QALU
+    """
+    __slots__ = ['t', 'a', 'N']
+    def __new__(cls, *args):
+        obj = Expr.__new__(cls, (), **{'commutative': False})
+        obj.t = args[0] #t is size of half input register. First half is assumed
+        obj.a = args[1] #a is base of controlled Mod function
+        obj.N = args[2] #N is the type of modular arithmetic we are doing 
+        return obj
+    
+    def _apply_QbitZBasisSet(self, qbits):
+        n = 1
+        k = 0
+        for i in range(self.t):
+            k = k + n*qbits[self.t+i]
+            n = n*2
+        out = int(self.a**k%self.N)
+        outarray = list(qbits.args[0:self.t])
+        for i in reversed(range(self.t)):            
+            outarray.append((out>>i)&1)
+        return Qbit(*outarray)
+
+#-----------------------------------------------------------------------------
 # Functions
 #-----------------------------------------------------------------------------
 
 def representHilbertSpace(gateMatrix, HilbertSize, qbits, format='sympy'):
-    
+    """
+        This is a helper function used by Gates represent functions to represent their matricies in a given HilbertSpace
+        e.g. a Hadamard Gate matrix looks different if applied to a different number of gates
+    """
     #returns |first><second|, if first and second are 0 or 1.
     def _operator(first, second, format):
         if (first != 1 and first != 0) or (second != 1 and second != 0):
@@ -703,6 +927,11 @@ def representHilbertSpace(gateMatrix, HilbertSize, qbits, format='sympy'):
         return answer
 
 def TensorProduct(*args):
+    """ 
+        Does the Kronecker product of the matricies in the *args tuple (e.g. the tensor product of the matricies)
+        For info on how to do Kronecker products, see:
+            http://en.wikipedia.org/wiki/Kronecker_product
+    """
     #pull out the first element in the product
     MatrixExpansion  = args[len(args)-1]
     
@@ -725,6 +954,14 @@ def TensorProduct(*args):
     return MatrixExpansion
 
 def apply_gates(circuit, basis = QbitZBasisSet(1), floatingPoint = False):
+    """
+        Uses the Gate sequence to map initial state into final state without creating a representative matrix first
+        Thus, It maps HadamardGate(0)*Qbit(0,0) -> Qbit(0,1)/sqrt(2) + Qbit(0,0)/sqrt(2)
+
+        >>> from sympy.physics.qbit import HadamardGate, Qbit, apply_gates
+        >>> apply_gates(HadamardGate(0)*Qbit(0,1))
+        -2**(1/2)/2*|01> + 2**(1/2)/2*|00>
+    """
     # if all we have is a Qbit without any gates, return the qbit
     if isinstance(circuit, Qbit):
         return circuit
@@ -819,6 +1056,18 @@ def apply_gates(circuit, basis = QbitZBasisSet(1), floatingPoint = False):
     return states
 
 def matrix_to_qbits(matrix):
+    """
+        Takes a matrix representation of a qbit and puts in into a sum of Qbit eigenstates of the ZBasisSet
+        >>> from sympy.physics.qbit import matrix_to_qbits, Qbit, QbitZBasisSet
+        >>> from sympy.physics.quantum import represent
+        >>> represent(Qbit(0,1), QbitZBasisSet(2))
+        [0]
+        [1]
+        [0]
+        [0]
+        >>> matrix_to_qbits(represent(Qbit(0,1), QbitZBasisSet(2)))
+        |'01'>
+    """
     #make sure it is of correct dimensions for a qbit-matrix representation
     qbit_number = log(matrix.rows,2)
     if matrix.cols != 1 or not isinstance(qbit_number, Integer):
@@ -840,6 +1089,17 @@ def matrix_to_qbits(matrix):
     return result
 
 def qbits_to_matrix(qbits):
+    """
+        Coverts a QAdd of qbit objects into 
+        
+        >>> from sympy.physics.qbit import qbits_to_matrix, Qbit
+        >>> from sympy.functions.elementary.miscellaneous import sqrt
+        >>> qbits_to_matrix(Qbit(0,0)/sqrt(2) + Qbit(0,1)/sqrt(2))
+        [2**(1/2)/2]
+        [2**(1/2)/2]
+        [         0]
+        [         0]
+    """
     #get rid of multiplicative constants
     qbits = qbits.expand()
     
@@ -865,8 +1125,9 @@ def qbits_to_matrix(qbits):
         raise QuantumError("Malformed input")
 
 def gatesimp(circuit):
-    """ will simplify gates symbolically"""
-    #Pull gates out of inner Add's and Mul's?
+    """
+        simplifies gates symbolically        
+    """
     
     #bubble sort(?) out gates that commute
     circuit = gatesort(circuit)
@@ -888,16 +1149,18 @@ def gatesimp(circuit):
                     newargs = (circuit.args[:i] + (SGate(circuit.args[i].base.args[0])**Integer(circuit.args[i].exp/2), circuit.args[i].base**(circuit.args[i].exp % 2)) + circuit.args[i+1:])
                     circuit =  gatesimp(QMul(*newargs))
                     break
-            #Deal with HXH = Z, HZH = X, HYH = -Y
-            if isinstance(circuit.args[i], HadamardGate):
-                #check for X,Y,Z in front
-                pass
-                #check for Hadamard to right of that
-                #replace stuff
     
     return circuit
 
 def gatesort(circuit):
+    """
+        Sorts the gates while keeping track of commutation relations
+        (things that apply to the same qbit do not commute with each other)
+
+        >>> from sympy.physics.qbit import HadamardGate, XGate, YGate, CNOTGate, gatesort
+        >>> gatesort(YGate(2)**2*HadamardGate(0)*CNOTGate(0,1)*XGate(1)*YGate(0))
+        HadamardGate(0)*CNOTGate(0,1)*YGate(0)*XGate(1)*(YGate(2))**2
+    """
     #bubble sort of gates checking for commutivity of neighbor (Python doesn't have a do-while)
     changes = True
     while changes:
@@ -932,108 +1195,78 @@ def gatesort(circuit):
 
 #-----------------------------------------------------------------------------
 # Quantum ALU contains quantum versions of arithmetic operations
+# These use elementary gates to preform arithmetic operations
 #-----------------------------------------------------------------------------
 
-class ADD(Gate): #TODO check what happens when we carry for diff number of in-out sizes
-    def __new__(cls, *args):
-        InReg = args[0]
-        InOutReg = args[1]
-        carryReg = args[2]
-        circuit = 1
-        for item in carryReg:
-            circuit = SetZero(item)*circuit
-        for i in range(len(InReg)):
-            if i != (len(InReg)-1):
-                circuit = ToffoliGate(InReg[i], InOutReg[i], carryReg[i+1])*circuit
-                circuit = ToffoliGate(InReg[i], carryReg[i], carryReg[i+1])*circuit
-                circuit = ToffoliGate(InOutReg[i], carryReg[i], carryReg[i+1])*circuit
-            circuit = CNOTGate(InReg[i], InOutReg[i])*circuit
-            circuit = CNOTGate(carryReg[i], InOutReg[i])*circuit
-        for item in carryReg:
-            circuit = SetZero(item)*circuit
-        return circuit
+def ADD(InReg, InOutReg, carryReg): 
+    """
+        Add's the InReg to the InOutReg, and stores the result in InOutReg
+        CarryReg is used as extra storage space to preform calculation
 
-class ControlledADD(Gate): #TODO check what happens when we carry for diff number of in-out sizes
-    def __new__(cls, *args):
-        InReg = args[0]
-        InOutReg = args[1]
-        carryReg = args[2]
-        control = args[3]
-        circuit = 1
-        for item in carryReg:
-            circuit = SetZero(item)*circuit
-        for i in range(len(InReg)):
-            if i != (len(InReg)-1):
-                circuit = ToffoliGate(InReg[i], InOutReg[i], carryReg[i+1])*circuit
-                circuit = ToffoliGate(InReg[i], carryReg[i], carryReg[i+1])*circuit
-                circuit = ToffoliGate(InOutReg[i], carryReg[i], carryReg[i+1])*circuit
-            circuit = ToffoliGate(control, InReg[i], InOutReg[i])*circuit
-            circuit = ToffoliGate(control, carryReg[i], InOutReg[i])*circuit
-        for item in carryReg:
-            circuit = SetZero(item)*circuit
-        return circuit
+        Doctest does 2 + 2 == 4:
+        >>> from sympy.physics.qbit import ADD, apply_gates, ToffoliGate, SetZero, CNOTGate, Qbit
+        >>> apply_gates(ADD((0,1,2,3), (4,5,6,7), (8,9,10,11))*Qbit(1,1,1,1,0,0,1,0,0,0,1,0))
+        |'000001000010'>         
+    """
+    circuit = 1
+    for item in carryReg:
+        circuit = SetZero(item)*circuit
+    for i in range(len(InReg)):
+        if i != (len(InReg)-1):
+            circuit = ToffoliGate(InReg[i], InOutReg[i], carryReg[i+1])*circuit
+            circuit = ToffoliGate(InReg[i], carryReg[i], carryReg[i+1])*circuit
+            circuit = ToffoliGate(InOutReg[i], carryReg[i], carryReg[i+1])*circuit
+        circuit = CNOTGate(InReg[i], InOutReg[i])*circuit
+        circuit = CNOTGate(carryReg[i], InOutReg[i])*circuit
+    for item in carryReg:
+        circuit = SetZero(item)*circuit
+    return circuit
 
-class Bitshift(Gate): #check
-    def __new__(cls, *args):
-        Register = args[0]
-        number = args[1]
-        tempStorage = args[2]
-        circuit = SetZero(tempStorage)
-        if number > 0:
-            for i in range(abs(number)):
-                circuit = SwapGate(Register[-1], tempStorage)*circuit
-                for i in reversed(range(len(Register)-1)):
-                    circuit = SwapGate(i, i+1)*circuit
-                circuit = SetZero(tempStorage)*circuit
-            return circuit
-        elif number < 0:
-            for i in range(abs(number)):
-                circuit = SwapGate(Register[0], tempStorage)*circuit
-                for i in range(len(Register)-1):
-                    circuit = SwapGate(i, i+1)*circuit
-                circuit = SetZero(tempStorage)*circuit
-            return circuit
-        else:
-            return 1
+def ControlledADD(InReg, InOutReg, carryReg, control):
+    """
+        Same as ADD, but only does the add if control bit is true
+        Add's InReg and InOutReg to each other and stores result in InOutReg contingent on control being true               
+    """
+    circuit = 1
+    for item in carryReg:
+        circuit = SetZero(item)*circuit
+    for i in range(len(InReg)):
+        if i != (len(InReg)-1):
+            circuit = ToffoliGate(InReg[i], InOutReg[i], carryReg[i+1])*circuit
+            circuit = ToffoliGate(InReg[i], carryReg[i], carryReg[i+1])*circuit
+            circuit = ToffoliGate(InOutReg[i], carryReg[i], carryReg[i+1])*circuit
+        circuit = ToffoliGate(control, InReg[i], InOutReg[i])*circuit
+        circuit = ToffoliGate(control, carryReg[i], InOutReg[i])*circuit
+    for item in carryReg:
+        circuit = SetZero(item)*circuit
+    return circuit
 
-class Multiply(NondistributiveGate): #This is harder than I thought will need to fix-it (Controlled-Add?)
-    def __new__(cls, *args):
-        if len(args) != 4:
-            raise QuantumError("Must input InReg1, InReg2, OutReg, carryReg Tuples")
-        InReg1 = args[0]
-        InReg2 = args[1]
-        OutReg = args[2]
-        carryReg = args[3]
-        circuit = 1
-        for item in OutReg:
-            circuit = SetZero(item)*circuit
-        for item in carryReg:
-            circuit = SetZero(item)*circuit
-        for i in InReg2:
-            circuit = ControlledADD(InReg1, OutReg, carryReg, i)*circuit
-            circuit = Bitshift(InReg1, 1, carryReg[0])*circuit
+def Bitshift(Register, number, tempStorage): #check
+    circuit = SetZero(tempStorage)
+    if number > 0:
+        for i in range(abs(number)):
+            circuit = SwapGate(Register[-1], tempStorage)*circuit
+            for i in reversed(range(len(Register)-1)):
+                circuit = SwapGate(i, i+1)*circuit
+            circuit = SetZero(tempStorage)*circuit
         return circuit
+    elif number < 0:
+        for i in range(abs(number)):
+            circuit = SwapGate(Register[0], tempStorage)*circuit
+            for i in range(len(Register)-1):
+                circuit = SwapGate(i, i+1)*circuit
+            circuit = SetZero(tempStorage)*circuit
+        return circuit
+    else:
+        return 1
 
-class SetZero(NondistributiveGate):
-    def measure(self, circuit):
-        item = self.args[0]
-        circuit = measure(item)*circuit
-        circuit = apply_gates(circuit)
-        circuit = circuit.expand()
-        if isinstance(circuit, Add):
-            if circuit.args[-1].args[-1][item] == 0:
-                return circuit
-            part = 0
-            for i in circuit.args:
-                part = part + i.args[:-1]*i.args[-1].flip(item)
-            return part
-        if isinstance(circuit, Qbit):
-            if circuit[item] == 0:
-                return circuit
-            return circuit.flip(item)
-        if isinstance(circuit, Mul):
-            if circuit.args[-1][item] == 0:
-                return circuit
-            return circuit.args[:-1]*circuit.args[-1].flip(item)
-        return circuit
-         
+def Multiply(InReg1, InReg2, OutReg, carryReg):
+    circuit = 1
+    for item in OutReg:
+        circuit = SetZero(item)*circuit
+    for item in carryReg:
+        circuit = SetZero(item)*circuit
+    for i in InReg2:
+        circuit = ControlledADD(InReg1, OutReg, carryReg, i)*circuit
+        circuit = Bitshift(InReg1, 1, carryReg[0])*circuit
+    return circuit        

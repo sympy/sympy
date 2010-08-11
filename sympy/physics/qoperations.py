@@ -20,6 +20,8 @@ class QAssocOp(QuantumBasic):
     def __new__(cls, *args, **assumptions):
         if len(args) == 1:
             return sympify(args[0])
+        if len(args) == 0:
+            return sympify(1)
         #try to instantiate an object of cls type
         return cls.instantiate(map(sympify, args))
 
