@@ -160,7 +160,7 @@ class State(StateBase):
         inst = Expr.__new__(cls, name, **{'commutative':False})
         # Now set the slots on the instance
         inst.hilbert_space = cls._eval_hilbert_space(name)
-        inst.evaluates = self.__class__
+        inst.evaluates = inst.__class__
         return inst
 
     @classmethod
@@ -250,7 +250,7 @@ class TimeDepState(StateBase):
         inst = Expr.__new__(cls, name, time, **{'commutative':False})
         # Now set the slots on the instance
         inst.hilbert_space = cls._eval_hilbert_space(name, time)
-        inst.evaluates = self.__class__
+        inst.evaluates = inst.__class__
         return inst
 
     @property
@@ -396,7 +396,7 @@ class InnerProduct(QuantumBasic):
             return r
         obj = Expr.__new__(cls, bra, ket)
         obj.hilbert_space = bra.hilbert_space
-        obj.evaluates = self.__class__
+        obj.evaluates = obj.__class__
         return obj
 
     @classmethod
