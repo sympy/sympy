@@ -32,8 +32,7 @@ class QAdd(QAssocOp):
         elif Object1 == 0:
             return Object2
             
-        if (not isinstance(Object1, (StateBase, Operator, QAssocOp, QPow))) :
-            if (not isinstance(Object2, (StateBase, Operator, QAssocOp, QPow))):
+        if (not isinstance(Object1, (StateBase, Operator, QAssocOp, QPow))) and (not isinstance(Object2, (StateBase, Operator, QAssocOp, QPow))):
                 return Add(Object1, Object2)
         elif (not isinstance(Object1, (StateBase, Operator, QAssocOp, QPow))) or (not isinstance(Object2, (StateBase, Operator, QAssocOp, QPow))):
             raise QuantumError("Can't add a %s and %s" % (Object1.__class__.__name__, Object2.__class__.__name__))
@@ -41,7 +40,7 @@ class QAdd(QAssocOp):
         if Object1.hilbert_space != Object2.hilbert_space:
             raise QuantumError("Hilbert Spaces do not match")  
 
-        if Object1.evaluates == Object2.evaluates:
+        if issubclass(Object1.evaluates, Object2.evaluates) or issubclass(Object2.evaluates, Object1.evaluates):
             retVal = cls.QAddflatten([Object1, Object2])
             retVal.hilbert_space = Object1.hilbert_space
             retVal.evaluates = Object1.evaluates

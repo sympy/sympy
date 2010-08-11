@@ -159,6 +159,18 @@ def test_QMul_mixed():
     assert Dagger(op*ket) == Dagger(ket)*Dagger(op) == Bra('A')*Dagger(op)
 
 def test_QAdd_mixed():
+    def helper(qmul, evaluates):
+        assert isinstance(qmul, QAdd)
+        assert issubclass(qmul.evaluates, evaluates)
+        assert qmul.hilbert_space == HilbertSpace()
+
+    def should_except(item1, item2):
+        try:
+            item1+item2
+            assert False
+        except QuantumError:
+            assert True
+
     a = Symbol('a')
     b = Symbol('b')
     ket = Ket('A')
@@ -169,10 +181,24 @@ def test_QAdd_mixed():
     op1 = Operator('d')
     inner = InnerProduct(bra, ket)
     qmop = op + op1
+    qmbra = bra + bra1
+    qmket = ket + ket1
+    possibilities1 = [a, qmket, qmbra, qmop]
+    possibilities2 = [inner, op*ket, bra*op, ket*bra]
     assert ket + ket1 == qmop._new_rawargs(Ket, HilbertSpace(), ket, ket1)
     assert bra + bra1 == qmop._new_rawargs(Bra, HilbertSpace(), bra, bra1)
     assert op + op1 == qmop._new_rawargs(Operator, HilbertSpace(), op1, op)
     assert inner + a == Add(a, inner)
+    helper(qmket + op*ket, Ket)
+    helper(qmbra + possibilities2[2], Bra)
+    helper(possibilities1[3] + possibilities2[3], Operator)
+
+    for i in range(4):
+        for j in range(4):
+            if i != j:
+                should_except(possibilities1[i], possibilities2[j])
+                should_except(possibilities2[i], possibilities2[j])
+    
       
 @XFAIL
 def test_QMul_mixed_fail():
