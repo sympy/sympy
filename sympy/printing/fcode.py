@@ -112,16 +112,11 @@ class FCodePrinter(CodePrinter):
     def doprint(self, expr):
         """Returns Fortran code for expr (as a string)"""
         # find all number symbols
-        number_symbols = set([])
-        for sub in postorder_traversal(expr):
-            if isinstance(sub, NumberSymbol):
-                number_symbols.add(sub)
-        number_symbols = [(str(ns), ns.evalf(self._settings["precision"]))
-                          for ns in sorted(number_symbols)]
+        self._number_symbols = set()
 
         # keep a set of expressions that are not strictly translatable to
         # Fortran.
-        self._not_fortran = set([])
+        self._not_supported = set()
 
 
         lines = []
@@ -142,11 +137,11 @@ class FCodePrinter(CodePrinter):
         # format the output
         if self._settings["human"]:
             frontlines = []
-            if len(self._not_fortran) > 0:
+            if len(self._not_supported) > 0:
                 frontlines.append("! Not Fortran:")
-                for expr in sorted(self._not_fortran, key=self._print):
+                for expr in sorted(self._not_supported, key=self._print):
                     frontlines.append("! %s" % expr)
-            for name, value in number_symbols:
+            for name, value in sorted(self._number_symbols, key=str):
                 frontlines.append("parameter (%s = %s)" % (name, value))
             frontlines.extend(lines)
             lines = frontlines
@@ -156,9 +151,10 @@ class FCodePrinter(CodePrinter):
         else:
             lines = self.indent_code(lines)
             lines = self._wrap_fortran(lines)
-            result = number_symbols, self._not_fortran, "\n".join(lines)
+            result = self._number_symbols, self._not_supported, "\n".join(lines)
 
-        del self._not_fortran
+        del self._not_supported
+        del self._number_symbols
         return result
 
     def _print_Add(self, expr):
@@ -211,7 +207,7 @@ class FCodePrinter(CodePrinter):
                 # inlined function
                 return self._print(expr._imp_(*expr.args))
             if expr.func not in implicit_functions:
-                self._not_fortran.add(expr)
+                self._not_supported.add(expr)
         return "%s(%s)" % (name, self.stringify(expr.args, ", "))
 
     _print_Factorial = _print_Function
@@ -232,17 +228,8 @@ class FCodePrinter(CodePrinter):
         else:
             return CodePrinter._print_Mul(self, expr)
 
-    def _print_NumberSymbol(self, expr):
-        # Standard Fortran has no predefined constants. Write their string
-        # representation, and assume parameter statements are defined elsewhere
-        # in the code to make this work.
-        return str(expr)
-
-    _print_Catalan = _print_NumberSymbol
-    _print_EulerGamma = _print_NumberSymbol
-    _print_Exp1 = _print_NumberSymbol
-    _print_GoldenRatio = _print_NumberSymbol
-    _print_Pi = _print_NumberSymbol
+    _print_Exp1 = CodePrinter._print_NumberSymbol
+    _print_Pi = CodePrinter._print_NumberSymbol
 
     def _print_Pow(self, expr):
         PREC = precedence(expr)
@@ -273,41 +260,6 @@ class FCodePrinter(CodePrinter):
 
     def _print_Idx(self, expr):
         return self._print(expr.label)
-
-    def _print_not_fortran(self, expr):
-        self._not_fortran.add(expr)
-        return self.emptyPrinter(expr)
-
-    # The following can not be simply translated into Fortran.
-    _print_Basic = _print_not_fortran
-    _print_ComplexInfinity = _print_not_fortran
-    _print_Derivative = _print_not_fortran
-    _print_dict = _print_not_fortran
-    _print_Dummy = _print_not_fortran
-    _print_ExprCondPair = _print_not_fortran
-    _print_GeometryEntity = _print_not_fortran
-    _print_Infinity = _print_not_fortran
-    _print_Integral = _print_not_fortran
-    _print_Interval = _print_not_fortran
-    _print_Limit = _print_not_fortran
-    _print_list = _print_not_fortran
-    _print_Matrix = _print_not_fortran
-    _print_DeferredVector = _print_not_fortran
-    _print_NaN = _print_not_fortran
-    _print_NegativeInfinity = _print_not_fortran
-    _print_Normal = _print_not_fortran
-    _print_Order = _print_not_fortran
-    _print_PDF = _print_not_fortran
-    _print_RootOf = _print_not_fortran
-    _print_RootsOf = _print_not_fortran
-    _print_RootSum = _print_not_fortran
-    _print_Sample = _print_not_fortran
-    _print_SMatrix = _print_not_fortran
-    _print_tuple = _print_not_fortran
-    _print_Uniform = _print_not_fortran
-    _print_Unit = _print_not_fortran
-    _print_Wild = _print_not_fortran
-    _print_WildFunction = _print_not_fortran
 
     def _wrap_fortran(self, lines):
         """Wrap long Fortran lines

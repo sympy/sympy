@@ -49,12 +49,12 @@ def test_fcode_NumberSymbol():
     assert fcode(GoldenRatio) == '      parameter (GoldenRatio = 1.61803398874989)\n      GoldenRatio'
     assert fcode(pi) == '      parameter (pi = 3.14159265358979)\n      pi'
     assert fcode(pi,precision=5) == '      parameter (pi = 3.1416)\n      pi'
-    assert fcode(Catalan,human=False) == ([('Catalan', Catalan.evalf(15))], set([]), '      Catalan')
-    assert fcode(EulerGamma,human=False) == ([('EulerGamma', EulerGamma.evalf(15))], set([]), '      EulerGamma')
-    assert fcode(E,human=False) == ([('E', E.evalf(15))], set([]), '      E')
-    assert fcode(GoldenRatio,human=False) == ([('GoldenRatio', GoldenRatio.evalf(15))], set([]), '      GoldenRatio')
-    assert fcode(pi,human=False) == ([('pi', pi.evalf(15))], set([]), '      pi')
-    assert fcode(pi,precision=5,human=False) == ([('pi', pi.evalf(5))], set([]), '      pi')
+    assert fcode(Catalan,human=False) == (set([('Catalan', Catalan.evalf(15))]), set([]), '      Catalan')
+    assert fcode(EulerGamma,human=False) == (set([('EulerGamma', EulerGamma.evalf(15))]), set([]), '      EulerGamma')
+    assert fcode(E,human=False) == (set([('E', E.evalf(15))]), set([]), '      E')
+    assert fcode(GoldenRatio,human=False) == (set([('GoldenRatio', GoldenRatio.evalf(15))]), set([]), '      GoldenRatio')
+    assert fcode(pi,human=False) == (set([('pi', pi.evalf(15))]), set([]), '      pi')
+    assert fcode(pi,precision=5,human=False) == (set([('pi', pi.evalf(5))]), set([]), '      pi')
 
 def test_fcode_complex():
     assert fcode(I) == "      cmplx(0,1)"
