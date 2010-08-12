@@ -14,7 +14,7 @@ from special.polynomials import (legendre, assoc_legendre, hermite, chebyshevt,
         chebyshevu, chebyshevu_root, chebyshevt_root, laguerre_l)
 
 # see #391
-from combinatorial.factorials import factorial, rf, ff, binomial
+from combinatorial.factorials import factorial, factorial2, rf, ff, binomial
 from combinatorial.factorials import Factorial, RisingFactorial, FallingFactorial, Binomial
 from combinatorial.numbers import fibonacci, lucas, harmonic, bernoulli, bell
 
