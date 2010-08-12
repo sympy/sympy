@@ -97,6 +97,11 @@ def test_inline_function():
     x = symbols('x')
     g = implemented_function('g', Lambda(x, 2*x))
     assert fcode(g(x)) == "      2*x"
+    g = implemented_function('g', Lambda(x, 2*pi/x))
+    assert fcode(g(x)) == (
+            "      parameter (pi = 3.14159265358979d0)\n"
+            "      2*pi/x"
+            )
     A = IndexedBase('A')
     i = Idx('i', symbols('n', integer=True))
     g = implemented_function('g', Lambda(x, x*(1+x)))

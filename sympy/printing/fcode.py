@@ -204,7 +204,13 @@ class FCodePrinter(CodePrinter):
             else:
                 name = expr.func.__name__
             if hasattr(expr, '_imp_') and isinstance(expr._imp_, C.Lambda):
-                # inlined function
+                # inlined function. We print it through fcode just to
+                # collect all constants and number symbols
+                f = C.Function('f')
+                consts, junk, junk = fcode(expr._imp_(*expr.args),
+                        assign_to=f(*expr.args), human=False)
+
+                # the expression is printed with _print to avoid loops
                 return self._print(expr._imp_(*expr.args))
             if expr.func not in implicit_functions:
                 self._not_supported.add(expr)
