@@ -43,18 +43,19 @@ def test_fcode_functions():
     assert fcode(sin(x) ** cos(y)) == "      sin(x)**cos(y)"
 
 def test_fcode_NumberSymbol():
-    assert fcode(Catalan) == '      parameter (Catalan = 0.915965594177219)\n      Catalan'
-    assert fcode(EulerGamma) == '      parameter (EulerGamma = 0.577215664901533)\n      EulerGamma'
-    assert fcode(E) == '      parameter (E = 2.71828182845905)\n      E'
-    assert fcode(GoldenRatio) == '      parameter (GoldenRatio = 1.61803398874989)\n      GoldenRatio'
-    assert fcode(pi) == '      parameter (pi = 3.14159265358979)\n      pi'
-    assert fcode(pi,precision=5) == '      parameter (pi = 3.1416)\n      pi'
-    assert fcode(Catalan,human=False) == (set([('Catalan', Catalan.evalf(15))]), set([]), '      Catalan')
-    assert fcode(EulerGamma,human=False) == (set([('EulerGamma', EulerGamma.evalf(15))]), set([]), '      EulerGamma')
-    assert fcode(E,human=False) == (set([('E', E.evalf(15))]), set([]), '      E')
-    assert fcode(GoldenRatio,human=False) == (set([('GoldenRatio', GoldenRatio.evalf(15))]), set([]), '      GoldenRatio')
-    assert fcode(pi,human=False) == (set([('pi', pi.evalf(15))]), set([]), '      pi')
-    assert fcode(pi,precision=5,human=False) == (set([('pi', pi.evalf(5))]), set([]), '      pi')
+    p = FCodePrinter()
+    assert fcode(Catalan) == '      parameter (Catalan = 0.915965594177219d0)\n      Catalan'
+    assert fcode(EulerGamma) == '      parameter (EulerGamma = 0.577215664901533d0)\n      EulerGamma'
+    assert fcode(E) == '      parameter (E = 2.71828182845905d0)\n      E'
+    assert fcode(GoldenRatio) == '      parameter (GoldenRatio = 1.61803398874989d0)\n      GoldenRatio'
+    assert fcode(pi) == '      parameter (pi = 3.14159265358979d0)\n      pi'
+    assert fcode(pi,precision=5) == '      parameter (pi = 3.1416d0)\n      pi'
+    assert fcode(Catalan,human=False) == (set([(Catalan, p._print(Catalan.evalf(15)))]), set([]), '      Catalan')
+    assert fcode(EulerGamma,human=False) == (set([(EulerGamma, p._print(EulerGamma.evalf(15)))]), set([]), '      EulerGamma')
+    assert fcode(E,human=False) == (set([(E, p._print(E.evalf(15)))]), set([]), '      E')
+    assert fcode(GoldenRatio,human=False) == (set([(GoldenRatio, p._print(GoldenRatio.evalf(15)))]), set([]), '      GoldenRatio')
+    assert fcode(pi,human=False) == (set([(pi, p._print(pi.evalf(15)))]), set([]), '      pi')
+    assert fcode(pi,precision=5,human=False) == (set([(pi, p._print(pi.evalf(5)))]), set([]), '      pi')
 
 def test_fcode_complex():
     assert fcode(I) == "      cmplx(0,1)"

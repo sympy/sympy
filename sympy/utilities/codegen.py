@@ -556,11 +556,11 @@ class CCodeGen(CodeGen):
                 constants, not_c, c_expr = ccode(result.expr, assign_to=assign_to, human=False)
 
             for name, value in sorted(constants, key=str):
-                code_lines.append("double const %s = %s;" % (name, value))
+                code_lines.append("double const %s = %s;\n" % (name, value))
             if assign_to:
                 code_lines.append("%s\n" % c_expr)
             else:
-                code_lines.append("   return %s;\n" % ccode(result.expr))
+                code_lines.append("   return %s;\n" % c_expr)
         return code_lines
 
     def _indent_code(self, codelines):
@@ -738,7 +738,10 @@ class FCodeGen(CodeGen):
             constants, not_fortran, f_expr = fcode(result.expr,
                 assign_to=assign_to, source_format='free', human=False)
 
-            for obj in not_fortran:
+            for obj, v in sorted(constants, key=str):
+                t = get_default_datatype(obj)
+                declarations.append("%s, parameter :: %s = %s\n" % (t.fname, obj, v))
+            for obj in sorted(not_fortran, key=str):
                 t = get_default_datatype(obj)
                 if isinstance(obj, Function):
                     name = obj.func
@@ -746,7 +749,6 @@ class FCodeGen(CodeGen):
                     name = obj
                 declarations.append("%s :: %s\n" % (t.fname, name))
 
-            code_lines.extend(constants)
             code_lines.append("%s\n" % f_expr)
         return declarations + code_lines
 

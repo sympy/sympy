@@ -1,6 +1,6 @@
 from StringIO import StringIO
 
-from sympy.core import symbols, Eq
+from sympy.core import symbols, Eq, pi, Catalan
 from sympy.utilities.codegen import CCodeGen, Routine, InputArgument, Result, \
     CodeGenError, FCodeGen, codegen, CodeGenArgumentListError, OutputArgument, \
     InOutArgument
@@ -75,6 +75,20 @@ def test_simple_c_code():
         "#include <math.h>\n"
         "double test(double x, double y, double z) {\n"
         "   return z*(x + y);\n"
+        "}\n"
+    )
+    assert source == expected
+
+def test_numbersymbol_c_code():
+    routine = Routine("test", pi**Catalan)
+    code_gen = CCodeGen()
+    source = get_string(code_gen.dump_c, [routine])
+    expected = (
+        "#include \"file.h\"\n"
+        "#include <math.h>\n"
+        "double test() {\n"
+        "   double const Catalan = 0.915965594177219;\n"
+        "   return pow(M_PI, Catalan);\n"
         "}\n"
     )
     assert source == expected
@@ -419,6 +433,20 @@ def test_simple_f_code():
             "REAL*8, intent(in) :: y\n"
             "REAL*8, intent(in) :: z\n"
             "test = z*(x + y)\n"
+            "end function\n"
+    )
+    assert source == expected
+
+def test_numbersymbol_f_code():
+    routine = Routine("test", pi**Catalan)
+    code_gen = FCodeGen()
+    source = get_string(code_gen.dump_f95, [routine])
+    expected = (
+            "REAL*8 function test()\n"
+            "implicit none\n"
+            "REAL*8, parameter :: Catalan = 0.915965594177219d0\n"
+            "REAL*8, parameter :: pi = 3.14159265358979d0\n"
+            "test = pi**Catalan\n"
             "end function\n"
     )
     assert source == expected

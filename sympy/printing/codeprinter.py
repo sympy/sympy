@@ -114,8 +114,9 @@ class CodePrinter(StrPrinter):
 
     def _print_NumberSymbol(self, expr):
         # A Number symbol that is not implemented here or with _printmethod
-        # is registered and printed with str().
-        self._number_symbols.add((str(expr), expr.evalf(self._settings["precision"])))
+        # is registered and evaluated
+        self._number_symbols.add((expr,
+            self._print(expr.evalf(self._settings["precision"]))))
         return str(expr)
 
     _print_Catalan = _print_NumberSymbol
