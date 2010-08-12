@@ -413,7 +413,7 @@ def fcode(expr, **settings):
        >>> fcode(sin(x), assign_to="s")
        '      s = sin(x)'
        >>> print fcode(pi)
-             parameter (pi = 3.14159265358979)
+             parameter (pi = 3.14159265358979d0)
              pi
 
     """
