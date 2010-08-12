@@ -11,6 +11,36 @@ from sympy.physics.qbit import *
 import math
 from sympy.core.numbers import igcd
 
+
+class controlledMod(Gate):
+    """
+        This is black box controlled Mod function for use by shor's algorithm.
+        TODO implement a decompose property that returns how to do this in terms of elementary gates
+    """
+    __slots__ = ['t', 'a', 'N']
+    def __new__(cls, *args):
+        obj = Expr.__new__(cls, (), **{'commutative': False})
+        obj.t = args[0] #t is size of half input register. First half holds output, last holds input
+        obj.a = args[1] #a is base of controlled Mod function
+        obj.N = args[2] #N is the type of modular arithmetic we are doing
+        return obj
+
+    def _apply_QbitZBasisSet(self, qbits):
+        """
+            This directly calculates the controlled mod of the second half of the register and puts it in the second
+            This will look pretty when we get Tensor Symbolically working
+        """
+        n = 1
+        k = 0
+        for i in range(self.t):
+            k = k + n*qbits[self.t+i]
+            n = n*2
+        out = int(self.a**k%self.N)
+        outarray = list(qbits.args[0:self.t])
+        for i in reversed(range(self.t)):
+            outarray.append((out>>i)&1)
+        return Qbit(*outarray)
+
 def shor(N):
     a = random.randrange(N-2)+2
     if igcd(N,a) != 1:
@@ -47,7 +77,7 @@ def ratioize(list, N):
     if len(list) == 1:
         return list[0]
     return list[0] + ratioize(list[1:], N)
-     
+
 def continuedFraction(x, y):
     x = int(x)
     y = int(y)
@@ -59,9 +89,9 @@ def continuedFraction(x, y):
     list.insert(0, temp)
     return list
 
-    
+
 # This is quantum part of Shor's algorithm
-# Takes two registers, puts first in superposition of states with Hadamards so: |k>|0> with k being all possible choices 
+# Takes two registers, puts first in superposition of states with Hadamards so: |k>|0> with k being all possible choices
 def periodfind(a, N):
     epsilon = .5
     #picks out t's such that maintains accuracy within epsilon
@@ -78,7 +108,7 @@ def periodfind(a, N):
     #Controlled second half of register so that we have:
     # |1>x|a**1 %N> + |2>x|a**2 %N> + ... + |k>x|a**k %N >+ ... + |2**n-1=k>x|a**k % n>
     circuit = controlledMod(t,a,N)*circuit
-    #will measure first half of register giving one of the a**k%N's 
+    #will measure first half of register giving one of the a**k%N's
     circuit = apply_gates(circuit)
     print "controlled Mod'd"
     for i in range(t):
@@ -98,7 +128,7 @@ def periodfind(a, N):
         register = circuit.args[-1]
     else:
         register = circuit.args[-1].args[-1]
-    
+
     print register
     n = 1
     answer = 0
@@ -111,7 +141,7 @@ def periodfind(a, N):
     g = getr(answer, 2**t, N)
     print g
     return g
-        
+
 class OrderFindingException(Exception):
     pass
 

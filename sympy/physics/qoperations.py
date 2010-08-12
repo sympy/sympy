@@ -16,7 +16,7 @@ class QAssocOp(QuantumBasic):
         QAssocOp is Quantum version of Sympy's AssocOp
         This is the Base class of QAdd and QMul
     """
-  
+
     def __new__(cls, *args, **assumptions):
         if len(args) == 1:
             return sympify(args[0])
@@ -39,9 +39,9 @@ class QAssocOp(QuantumBasic):
 
     def __getitem__(self, number):
         """
-            This retrieves arguments from self.args        
+            This retrieves arguments from self.args
         """
-        return self.args[number]   
+        return self.args[number]
 
     def _sympystr(self, printer, *args):
         from sympy.physics.qmul import QMul
@@ -56,7 +56,7 @@ class QAssocOp(QuantumBasic):
                 string = string + ')'
             if i != length-1:
                 string = string + self.__class__.binop
-        return string 
+        return string
 
     def _pretty(self, printer, *args):
         from sympy.physics.qmul import QMul
@@ -75,11 +75,11 @@ class QAssocOp(QuantumBasic):
             if i != length-1:
                 pform = prettyForm(*pform.right(self.binopPretty))
         return pform
-    
-    
+
+
     def _new_rawargs(self, evaluates, hilbert_space, *args):
-        """ Create new instance of own class with args exactly as provided by caller; 
-            Sets evaluates and hilbert_space attributes to those specified in inputs 
+        """ Create new instance of own class with args exactly as provided by caller;
+            Sets evaluates and hilbert_space attributes to those specified in inputs
 
             This is handy when we want to optimize things, e.g.
         """

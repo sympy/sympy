@@ -14,9 +14,9 @@ class QAdd(QAssocOp):
         Quantum Add operation
     """
     binop = ' + '
-    binopPretty =  prettyForm(u' \u002B ') 
+    binopPretty =  prettyForm(u' \u002B ')
 
-    @classmethod    
+    @classmethod
     def _rules_QAdd(cls, Object1, Object2):
         """
             This method is called by new to instantiate a QAdd class
@@ -31,14 +31,14 @@ class QAdd(QAssocOp):
             return Object1
         elif Object1 == 0:
             return Object2
-            
+
         if (not isinstance(Object1, (StateBase, Operator, QAssocOp, QPow))) and (not isinstance(Object2, (StateBase, Operator, QAssocOp, QPow))):
                 return Add(Object1, Object2)
         elif (not isinstance(Object1, (StateBase, Operator, QAssocOp, QPow))) or (not isinstance(Object2, (StateBase, Operator, QAssocOp, QPow))):
             raise QuantumError("Can't add a %s and %s" % (Object1.__class__.__name__, Object2.__class__.__name__))
 
         if Object1.hilbert_space != Object2.hilbert_space:
-            raise QuantumError("Hilbert Spaces do not match")  
+            raise QuantumError("Hilbert Spaces do not match")
 
         if issubclass(Object1.evaluates, Object2.evaluates) or issubclass(Object2.evaluates, Object1.evaluates):
             retVal = cls.QAddflatten([Object1, Object2])
@@ -148,7 +148,7 @@ class QAdd(QAssocOp):
         # nan
         if coeff is S.NaN:
             raise QuantumError("NaN for some reason")
-            
+
         # oo, -oo
         elif (coeff is S.Infinity) or (coeff is S.NegativeInfinity):
             newseq = [f for f in newseq if not f.is_real]
@@ -206,4 +206,4 @@ class QAdd(QAssocOp):
                 newterm = term
             terms.append(newterm)
         return self.new(*terms)
-   
+
