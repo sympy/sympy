@@ -15,7 +15,7 @@ class QPow(QuantumBasic):
         base = sympify(base)
         exp = sympify(exp)
         return cls._rules_QPow(base, exp)
-        
+
     @classmethod
     def _rules_QPow(cls, base, exp):
         if not isinstance(base, QuantumBasic):
@@ -24,8 +24,8 @@ class QPow(QuantumBasic):
             elif issubclass(exp.evaluates, (Operator, OuterProduct, InnerProduct)):
                 ret = Expr.__new__(cls, base, exp)
                 ret.hilbert_space = exp.hilbert_space
-                ret.evaluates = exp.evaluates 
-                return ret                        
+                ret.evaluates = exp.evaluates
+                return ret
         elif not isinstance(exp, QuantumBasic):
             if issubclass(base.evaluates, (Operator, OuterProduct, InnerProduct)):
                 if exp == S.Zero:
@@ -34,30 +34,30 @@ class QPow(QuantumBasic):
                     return base
                 ret = Expr.__new__(cls, base, exp)
                 ret.hilbert_space = base.hilbert_space
-                ret.evaluates = base.evaluates 
+                ret.evaluates = base.evaluates
                 return ret
         elif issubclass(exp.evaluates, InnerProduct) and issubclass(base.evaluates, (InnerProduct, Operator)):
                 ret = Expr.__new__(cls, base, exp)
                 ret.hilbert_space = base.hilbert_space
-                ret.evaluates = base.evaluates 
+                ret.evaluates = base.evaluates
                 return ret
-        elif issubclass(base.evaluates, InnerProduct) and issubclass(exp.evaluates, (InnerProduct, Operator)):           
+        elif issubclass(base.evaluates, InnerProduct) and issubclass(exp.evaluates, (InnerProduct, Operator)):
                 ret = Expr.__new__(cls, base, exp)
                 ret.hilbert_space = exp.hilbert_space
-                ret.evaluates = exp.evaluates 
+                ret.evaluates = exp.evaluates
                 return ret
 
-        #make a pretty error message if you have left everything a mess   
+        #make a pretty error message if you have left everything a mess
         if hasattr(exp, 'evaluates'):
             expname = exp.evaluates.__name__
         else:
             expname = exp.__class__.__name__
-            
+
         if hasattr(base, 'evaluates'):
             basename = base.evaluates.__name__
         else:
             basename = base.__class__.__name__
-            
+
         raise QuantumError("Can't do (%s)**(%s)" % (basename, expname))
 
     @property

@@ -16,11 +16,11 @@ from sympy.physics.quantum import (
 )
 from sympy.physics.hilbert import (
     HilbertSpace,
-    l2, 
-    L2, 
-    FockSpace, 
-    TensorProductHilbertSpace, 
-    DirectSumHilbertSpace, 
+    l2,
+    L2,
+    FockSpace,
+    TensorProductHilbertSpace,
+    DirectSumHilbertSpace,
     TensorPowerHilbertSpace
 )
 from sympy import Matrix, I, E, Symbol, expand, Number, symbols

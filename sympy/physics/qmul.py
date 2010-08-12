@@ -5,7 +5,7 @@ from sympy.core.cache import cacheit
 from sympy.core.mul import Mul
 from sympy.physics.quantumbasic import QuantumError, QuantumBasic
 from sympy import (
-    Expr, Basic, sympify, Add, Mul, Pow, 
+    Expr, Basic, sympify, Add, Mul, Pow,
     I, Function, Integer, S, sympify, Matrix, oo
 )
 from sympy.printing.pretty.stringpict import prettyForm
@@ -29,7 +29,7 @@ class QMul(QAssocOp):
             return Object1
         elif Object2 == 0 or Object1 == 0:
             return 0
-        
+
         if (not isinstance(Object1, QuantumBasic)) and (not isinstance(Object2, QuantumBasic)):
             return Mul(Object1, Object2)
         elif not isinstance(Object1, QuantumBasic):
@@ -37,14 +37,14 @@ class QMul(QAssocOp):
                 return Object2
             retVal = cls.QMulflatten(Object1, Object2)
             retVal.hilbert_space = Object2.hilbert_space
-            retVal.evaluates = Object2.evaluates 
+            retVal.evaluates = Object2.evaluates
             return retVal
         elif not isinstance(Object2, QuantumBasic):
             if Object2 == S.One:
                 return Object1
             retVal = cls.QMulflatten(Object1, Object2)
             retVal.hilbert_space = Object1.hilbert_space
-            retVal.evaluates = Object1.evaluates 
+            retVal.evaluates = Object1.evaluates
             return retVal
 
         if Object1.hilbert_space != Object2.hilbert_space:
@@ -59,7 +59,7 @@ class QMul(QAssocOp):
             retVal = cls.QMulflatten(Object1, Object2)
             retVal.hilbert_space = Object1.hilbert_space
             retVal.evaluates = Object1.evaluates
-            return retVal         
+            return retVal
         elif issubclass(Object1.evaluates, Operator):
             if issubclass(Object2.evaluates, (Operator, InnerProduct)):
                 retVal = cls.QMulflatten(Object1, Object2)
@@ -67,7 +67,7 @@ class QMul(QAssocOp):
                 retVal.evaluates = Object1.evaluates
                 return retVal
             elif issubclass(Object2.evaluates, KetBase):
-                retVal = cls.QMulflatten(Object1, Object2)            
+                retVal = cls.QMulflatten(Object1, Object2)
                 retVal.hilbert_space = Object2.hilbert_space
                 retVal.evaluates = Object2.evaluates
                 return retVal
@@ -86,14 +86,14 @@ class QMul(QAssocOp):
         elif issubclass(Object1.evaluates, KetBase) and issubclass(Object2.evaluates, BraBase):
             retVal = cls.QMulflatten(Object1, Object2)
             retVal.hilbert_space = Object2.hilbert_space
-            retVal.evaluates = OuterProduct           
+            retVal.evaluates = OuterProduct
             return retVal
         elif issubclass(Object1.evaluates, BraBase) and issubclass(Object2.evaluates, KetBase):
             retVal = cls.QMulflatten(Object1, Object2)
             retVal.hilbert_space = Object2.hilbert_space
             retVal.evaluates = InnerProduct
             return retVal
-        raise QuantumError("%s*%s is not allowed" % (Object1.evaluates.__name__, Object2.evaluates.__name__))  
+        raise QuantumError("%s*%s is not allowed" % (Object1.evaluates.__name__, Object2.evaluates.__name__))
 
     @classmethod
     def QMulflatten(cls, Object1, Object2):
@@ -105,7 +105,7 @@ class QMul(QAssocOp):
         Eseq = []
         seq = [Object1, Object2]
         while seq:
-            o = seq.pop(0)                
+            o = seq.pop(0)
             if o.__class__ is cls: # classes must match exactly
                 seq = list(o[:]) + seq
                 continue
@@ -131,7 +131,7 @@ class QMul(QAssocOp):
             return args
 
         else:
-            return args[0], self._new_rawargs(self.evaluates, self.hilbert_space, *args[1:]) 
+            return args[0], self._new_rawargs(self.evaluates, self.hilbert_space, *args[1:])
 
     @property
     def identity(self):
@@ -194,4 +194,4 @@ class QMul(QAssocOp):
                 plain = QMul(*plain)
                 return QAdd(*[QMul(plain, term) for term in terms])
             else:
-                return QMul(*plain)     
+                return QMul(*plain)

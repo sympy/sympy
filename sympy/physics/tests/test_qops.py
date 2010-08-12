@@ -12,11 +12,11 @@ from sympy.physics.quantum import (
 )
 from sympy.physics.hilbert import (
     HilbertSpace,
-    l2, 
-    L2, 
-    FockSpace, 
-    TensorProductHilbertSpace, 
-    DirectSumHilbertSpace, 
+    l2,
+    L2,
+    FockSpace,
+    TensorProductHilbertSpace,
+    DirectSumHilbertSpace,
     TensorPowerHilbertSpace
 )
 from sympy.physics.quantumbasic import QuantumError, QuantumBasic
@@ -67,7 +67,7 @@ def test_QMul_Operator():
     E = Operator('E')
     F = Operator('F')
     G = Operator('G')
-    a*E 
+    a*E
     assert isinstance(a*E, QMul)
     E*F
     assert isinstance(E*F, QMul)
@@ -119,17 +119,17 @@ def test_QMul_mixed():
     qmket = op*ket
     qmbra = bra*op
     qmop = op*op
-    
+
     assert op*op == qmket._new_rawargs(Operator, HilbertSpace(), op, op)
     assert op*ket == qmket._new_rawargs(Ket, HilbertSpace(), op, ket)
     should_except(op, bra)
     assert op*inner == qmket._new_rawargs(Operator, HilbertSpace(), op, inner)
-    
+
     should_except(ket, op)
     assert ket*bra == qmket._new_rawargs(Operator, HilbertSpace(), ket, bra)
     should_except(ket, ket)
     assert ket*inner == qmket._new_rawargs(Ket, HilbertSpace(), ket, inner)
-    
+
     should_except(bra, bra)
     assert bra*op == qmket._new_rawargs(Bra, HilbertSpace(), bra, op)
     assert bra*ket == qmket._new_rawargs(InnerProduct, HilbertSpace(), bra, ket)
@@ -139,9 +139,9 @@ def test_QMul_mixed():
     assert inner*bra == qmket._new_rawargs(Bra, HilbertSpace(), inner, bra)
     assert inner*ket == qmket._new_rawargs(Ket, HilbertSpace(), inner, ket)
     assert inner*inner == qmket._new_rawargs(InnerProduct, HilbertSpace(), inner, inner)
-     
+
     should_except(qmket, ket)
-    helper(qmket*bra, Operator) 
+    helper(qmket*bra, Operator)
     should_except(qmket, op)
     helper(qmket*inner, Ket)
 
@@ -154,7 +154,7 @@ def test_QMul_mixed():
     helper(qmop*ket, Ket)
     should_except(qmop, bra)
     helper(qmop*inner, Operator)
-    
+
     assert expand((ket+ket1)*(bra+bra2)) == (ket*bra + ket*bra2 + ket1*bra + ket1*bra2)
     assert Dagger(op*ket) == Dagger(ket)*Dagger(op) == Bra('A')*Dagger(op)
 
@@ -198,7 +198,7 @@ def test_QAdd_mixed():
             if i != j:
                 should_except(possibilities1[i], possibilities2[j])
                 should_except(possibilities2[i], possibilities2[j])
-    
+
 def test_QPow_mixed():
     def helper(qmul, evaluates, arg1, arg2):
         assert isinstance(qmul, QPow)
