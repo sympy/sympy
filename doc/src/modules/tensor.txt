@@ -1,0 +1,22 @@
+Tensor Module
+=============
+
+.. automodule:: sympy.tensor.indexed
+
+Classes
+-------
+
+.. autoclass:: sympy.tensor.indexed.IndexedBase
+   :members:
+
+.. autoclass:: sympy.tensor.indexed.Idx
+   :members:
+
+.. autoclass:: sympy.tensor.indexed.Indexed
+   :members:
+
+Methods
+-------
+.. automethod:: sympy.tensor.index_methods.get_indices
+
+.. automethod:: sympy.tensor.index_methods.get_contraction_structure

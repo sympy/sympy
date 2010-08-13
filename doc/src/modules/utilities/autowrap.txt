@@ -1,0 +1,12 @@
+Autowrap module
+===============
+
+.. automodule:: sympy.utilities.autowrap
+
+autowrap
+--------
+.. autofunction:: sympy.utilities.autowrap.autowrap
+
+binary_function
+---------------
+.. autofunction:: sympy.utilities.autowrap.binary_function

@@ -1,0 +1,43 @@
+Codegen
+=======
+
+.. currentmodule:: sympy.utilities.codegen
+
+This module provides functionality to generate directly compilable code from
+Sympy expressions.  Most users will just use the codegen() function.  For a discussion
+about implementation details, see further below.
+
+codegen
+-------
+.. autofunction:: codegen
+
+
+Impementation Details
+---------------------
+
+Here we present the most important pieces of the internal structure, as
+advanced users may want to use it directly, for instance by subclassing a code
+generator for a specialized application.  **It is very likely that you would
+prefer to use the codegen() function documented above.**
+
+Basic assumptions:
+
+* A generic Routine data structure describes the routine that must be translated
+  into C/Fortran/... code. This data structure covers all features present in
+  one or more of the supported languages.
+
+* Descendants from the CodeGen class transform multiple Routine instances into
+  compilable code. Each derived class translates into a specific language.
+
+* In many cases, one wants a simple workflow. The friendly functions in the last
+  part are a simple api on top of the Routine/CodeGen stuff. They are easier to
+  use, but are less powerful.
+
+.. autoclass:: Routine
+   :members: __init__, result_variables
+
+.. automethod:: CodeGen.write
+
+.. autoclass:: FCodeGen
+
+.. autoclass:: CCodeGen
