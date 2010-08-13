@@ -1,13 +1,13 @@
 from sympy.physics.qoperations import QAssocOp
 from sympy.core.expr import Expr
 from sympy.core.add import Add
-from sympy.core.basic import Basic, S, C
+from sympy.core.basic import S
 from sympy.physics.qmul import QMul
-from sympy.physics.quantum import Dagger
 from sympy.physics.quantum import QuantumBasic
 from sympy.physics.quantumbasic import QuantumError
 from sympy.printing.pretty.stringpict import prettyForm
-from sympy.physics.quantum import StateBase, Operator, OuterProduct, KetBase, BraBase, OuterProduct, InnerProduct, Dagger
+from sympy.physics.quantum import StateBase, Operator, Dagger
+from sympy.physics.qpow import QPow
 
 class QAdd(QAssocOp):
     """
@@ -17,36 +17,33 @@ class QAdd(QAssocOp):
     binopPretty =  prettyForm(u' \u002B ')
 
     @classmethod
-    def _rules_QAdd(cls, Object1, Object2):
+    def _rules_QAdd(cls, object1, object2):
         """
             This method is called by new to instantiate a QAdd class
             Applies rules of what can and can't be added together by checking types and hilbert spaces
             Returns an Add or QAdd objects on success
             Raises and exception if input violates quantum shape rules
         """
-        from sympy.physics.quantum import StateBase, Operator, OuterProduct, KetBase, BraBase, OuterProduct, InnerProduct
-        from sympy.core.add import Add
-        from sympy.physics.qpow import QPow
-        if Object2 == 0:
-            return Object1
-        elif Object1 == 0:
-            return Object2
+        if object2 is S.Zero:
+            return object1
+        elif object1 is S.Zero:
+            return object2
 
-        if (not isinstance(Object1, (StateBase, Operator, QAssocOp, QPow))) and (not isinstance(Object2, (StateBase, Operator, QAssocOp, QPow))):
-                return Add(Object1, Object2)
-        elif (not isinstance(Object1, (StateBase, Operator, QAssocOp, QPow))) or (not isinstance(Object2, (StateBase, Operator, QAssocOp, QPow))):
-            raise QuantumError("Can't add a %s and %s" % (Object1.__class__.__name__, Object2.__class__.__name__))
+        if (not isinstance(object1, (StateBase, Operator, QAssocOp, QPow))) and (not isinstance(object2, (StateBase, Operator, QAssocOp, QPow))):
+                return Add(object1, object2)
+        elif (not isinstance(object1, (StateBase, Operator, QAssocOp, QPow))) or (not isinstance(object2, (StateBase, Operator, QAssocOp, QPow))):
+            raise QuantumError("Can't add a %s and %s" % (object1.__class__.__name__, object2.__class__.__name__))
 
-        if Object1.hilbert_space != Object2.hilbert_space:
+        if object1.hilbert_space != object2.hilbert_space:
             raise QuantumError("Hilbert Spaces do not match")
 
-        if issubclass(Object1.evaluates, Object2.evaluates) or issubclass(Object2.evaluates, Object1.evaluates):
-            retVal = cls.QAddflatten([Object1, Object2])
-            retVal.hilbert_space = Object1.hilbert_space
-            retVal.evaluates = Object1.evaluates
+        if issubclass(object1.acts_like, object2.acts_like) or issubclass(object2.acts_like, object1.acts_like):
+            retVal = cls.QAddflatten([object1, object2])
+            retVal.hilbert_space = object1.hilbert_space
+            retVal.acts_like = object1.acts_like
             return retVal
         else:
-            raise QuantumError("Can't add (%s + %s)" % (Object1.evaluates.__name__, Object2.evaluates.__name__))
+            raise QuantumError("Can't add (%s + %s)" % (object1.acts_like.__name__, object2.acts_like.__name__))
 
     @classmethod
     def QAddflatten(cls, seq):
@@ -54,7 +51,6 @@ class QAdd(QAssocOp):
             This simplifies expressions by combining like terms
             Assumes associativity and commutivity for addition
         """
-        from sympy.physics.quantum import StateBase, Operator, OuterProduct, KetBase, BraBase, OuterProduct, InnerProduct
         terms = {}      # term -> coeff
                         # e.g. x**2 -> 5   for ... + 5*x**2 + ...
 
@@ -136,7 +132,7 @@ class QAdd(QAssocOp):
                 if isinstance(s, QMul):
                     # Mul, already keeps its arguments in perfect order.
                     # so we can simply put c in slot0 and go the fast way.
-                    cs = s._new_rawargs(s.evaluates, s.hilbert_space, *((c,) + s.args)) #figure out rawargs F
+                    cs = QMul._new_rawargs(s.acts_like, s.hilbert_space, *((c,) + s.args)) #figure out rawargs F
                     newseq.append(cs)
 
                 else:

@@ -34,7 +34,7 @@ def test_QMul_Ket():
     B = Ket('B')
     assert a*A
     assert isinstance(a*A, QMul)
-    assert (a*A).evaluates == A.__class__ == Ket
+    assert (a*A).acts_like == A.__class__ == Ket
     assert a*A == A*a
     assert expand(a*(A+B)) == a*A+a*B
 
@@ -51,7 +51,7 @@ def test_QMul_Bra():
     D = Bra('D')
     assert a*C
     assert isinstance(a*C, QMul)
-    assert (a*C).evaluates == C.__class__ == Bra
+    assert (a*C).acts_like == C.__class__ == Bra
     assert a*C == C*a
     assert expand(a*(C+D)) == a*C+a*D
 
@@ -71,13 +71,13 @@ def test_QMul_Operator():
     assert isinstance(a*E, QMul)
     E*F
     assert isinstance(E*F, QMul)
-    assert (E*F).evaluates == E.__class__ == Operator
+    assert (E*F).acts_like == E.__class__ == Operator
     assert a*E == E*a
     assert expand(a*(E+F)) == a*E+a*F
     assert E*F != F*E
     assert E*(F*G) == (E*F)*G
     assert Dagger(a*E) == Dagger(E)*Dagger(a)
-    assert Dagger(a*E).evaluates == E.__class__ == Operator
+    assert Dagger(a*E).acts_like == E.__class__ == Operator
 
 def test_QMul_InnerProduct():
     inner1 = InnerProduct(Bra('a'), Ket('b'))
@@ -85,7 +85,7 @@ def test_QMul_InnerProduct():
     prod = inner1*inner2
     assert prod*inner1
     assert isinstance(prod, QMul)
-    assert prod.evaluates == inner1.__class__ == InnerProduct
+    assert prod.acts_like == inner1.__class__ == InnerProduct
 
 def test_QMul_OuterProduct():
     outer1 = OuterProduct(Ket('a'), Bra('b'))
@@ -93,12 +93,12 @@ def test_QMul_OuterProduct():
     prod = outer1*outer2
     assert prod*outer1
     assert isinstance(prod, QMul)
-    assert prod.evaluates == outer1.__class__ == OuterProduct
+    assert prod.acts_like == outer1.__class__ == OuterProduct
 
 def test_QMul_mixed():
-    def helper(qmul, evaluates):
+    def helper(qmul, acts_like):
         assert isinstance(qmul, QMul)
-        assert issubclass(qmul.evaluates, evaluates)
+        assert issubclass(qmul.acts_like, acts_like)
         assert qmul.hilbert_space == HilbertSpace()
 
     def should_except(item1, item2):
@@ -120,25 +120,25 @@ def test_QMul_mixed():
     qmbra = bra*op
     qmop = op*op
 
-    assert op*op == qmket._new_rawargs(Operator, HilbertSpace(), op, op)
-    assert op*ket == qmket._new_rawargs(Ket, HilbertSpace(), op, ket)
+    assert op*op == op**2
+    assert op*ket == QMul._new_rawargs(Ket, HilbertSpace(), op, ket)
     should_except(op, bra)
-    assert op*inner == qmket._new_rawargs(Operator, HilbertSpace(), op, inner)
+    assert op*inner == QMul._new_rawargs(Operator, HilbertSpace(), op, inner)
 
     should_except(ket, op)
-    assert ket*bra == qmket._new_rawargs(Operator, HilbertSpace(), ket, bra)
+    assert ket*bra == QMul._new_rawargs(Operator, HilbertSpace(), ket, bra)
     should_except(ket, ket)
-    assert ket*inner == qmket._new_rawargs(Ket, HilbertSpace(), ket, inner)
+    assert ket*inner == QMul._new_rawargs(Ket, HilbertSpace(), ket, inner)
 
     should_except(bra, bra)
-    assert bra*op == qmket._new_rawargs(Bra, HilbertSpace(), bra, op)
-    assert bra*ket == qmket._new_rawargs(InnerProduct, HilbertSpace(), bra, ket)
-    assert bra*inner == qmket._new_rawargs(Bra, HilbertSpace(), bra, inner)
+    assert bra*op == QMul._new_rawargs(Bra, HilbertSpace(), bra, op)
+    assert bra*ket == QMul._new_rawargs(InnerProduct, HilbertSpace(), bra, ket)
+    assert bra*inner == QMul._new_rawargs(Bra, HilbertSpace(), bra, inner)
 
-    assert inner*op == qmket._new_rawargs(Operator, HilbertSpace(), inner, op)
-    assert inner*bra == qmket._new_rawargs(Bra, HilbertSpace(), inner, bra)
-    assert inner*ket == qmket._new_rawargs(Ket, HilbertSpace(), inner, ket)
-    assert inner*inner == qmket._new_rawargs(InnerProduct, HilbertSpace(), inner, inner)
+    assert inner*op == QMul._new_rawargs(Operator, HilbertSpace(), inner, op)
+    assert inner*bra == QMul._new_rawargs(Bra, HilbertSpace(), inner, bra)
+    assert inner*ket == QMul._new_rawargs(Ket, HilbertSpace(), inner, ket)
+    assert inner*inner == inner**2
 
     should_except(qmket, ket)
     helper(qmket*bra, Operator)
@@ -150,7 +150,7 @@ def test_QMul_mixed():
     helper(qmbra*op, Bra)
     helper(qmbra*inner, Bra)
 
-    helper(qmop*op, Operator)
+    assert qmop*op == op**3
     helper(qmop*ket, Ket)
     should_except(qmop, bra)
     helper(qmop*inner, Operator)
@@ -159,9 +159,9 @@ def test_QMul_mixed():
     assert Dagger(op*ket) == Dagger(ket)*Dagger(op) == Bra('A')*Dagger(op)
 
 def test_QAdd_mixed():
-    def helper(qmul, evaluates):
+    def helper(qmul, acts_like):
         assert isinstance(qmul, QAdd)
-        assert issubclass(qmul.evaluates, evaluates)
+        assert issubclass(qmul.acts_like, acts_like)
         assert qmul.hilbert_space == HilbertSpace()
 
     def should_except(item1, item2):
@@ -185,9 +185,9 @@ def test_QAdd_mixed():
     qmket = ket + ket1
     possibilities1 = [a, qmket, qmbra, qmop]
     possibilities2 = [inner, op*ket, bra*op, ket*bra]
-    assert ket + ket1 == qmop._new_rawargs(Ket, HilbertSpace(), ket, ket1)
-    assert bra + bra1 == qmop._new_rawargs(Bra, HilbertSpace(), bra, bra1)
-    assert op + op1 == qmop._new_rawargs(Operator, HilbertSpace(), op1, op)
+    assert ket + ket1 == QAdd._new_rawargs(Ket, HilbertSpace(), ket, ket1)
+    assert bra + bra1 == QAdd._new_rawargs(Bra, HilbertSpace(), bra, bra1)
+    assert op + op1 == QAdd._new_rawargs(Operator, HilbertSpace(), op1, op)
     assert inner + a == Add(a, inner)
     helper(qmket + op*ket, Ket)
     helper(qmbra + possibilities2[2], Bra)
@@ -199,10 +199,21 @@ def test_QAdd_mixed():
                 should_except(possibilities1[i], possibilities2[j])
                 should_except(possibilities2[i], possibilities2[j])
 
+def test_QPow_combinations():
+    op = Operator('A')
+    op1 = Operator('B')
+    ket = Ket('C')
+    qmop = op*op1
+    assert op*op*op == op**3
+    assert op*qmop*op1 == op**2*op1**2
+    assert (op*op1)*(op1*ket) == op*op1**2*ket
+    assert 2**op*2**op1 != 2**(op+op1)
+    assert 2**(op*op1)*2**(op*op) != 2**(op*op1+op**2)
+
 def test_QPow_mixed():
-    def helper(qmul, evaluates, arg1, arg2):
+    def helper(qmul, acts_like, arg1, arg2):
         assert isinstance(qmul, QPow)
-        assert issubclass(qmul.evaluates, evaluates)
+        assert issubclass(qmul.acts_like, acts_like)
         assert qmul.base == arg1
         assert qmul.exp == arg2
         assert qmul.hilbert_space == HilbertSpace()

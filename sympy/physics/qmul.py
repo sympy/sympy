@@ -10,100 +10,102 @@ from sympy import (
 )
 from sympy.printing.pretty.stringpict import prettyForm
 from sympy.physics.hilbert import HilbertSpaceException
+from sympy.physics.qpow import QPow
 
 class QMul(QAssocOp):
     binopPretty = prettyForm(u'\u00B7')
     binop = '*'
 
     @classmethod
-    def _rules_QMul(cls, Object1, Object2):
+    def _rules_QMul(cls, object1, object2):
         """
             This method is called by new to instantiate a QMul, InnerProduct, or OuterProduct class
             Applies rules of what can and can't be added together by checking types and hilbert spaces
             Returns a Mul, QMul, InnerProduct or OuterProduct object on success
             Raises and exception if input violates quantum shape rules
         """
-        if Object1 == 1:
-            return Object2
-        if Object2 == 1:
-            return Object1
-        elif Object2 == 0 or Object1 == 0:
+        if object1 is S.One:
+            return object2
+        if object2 is S.One:
+            return object1
+        elif object2 is S.Zero or object1 is S.Zero:
             return 0
 
-        if (not isinstance(Object1, QuantumBasic)) and (not isinstance(Object2, QuantumBasic)):
-            return Mul(Object1, Object2)
-        elif not isinstance(Object1, QuantumBasic):
-            if Object1 == S.One:
-                return Object2
-            retVal = cls.QMulflatten(Object1, Object2)
-            retVal.hilbert_space = Object2.hilbert_space
-            retVal.evaluates = Object2.evaluates
+        if (not isinstance(object1, QuantumBasic)) and (not isinstance(object2, QuantumBasic)):
+            return Mul(object1, object2)
+        elif not isinstance(object1, QuantumBasic):
+            if object1 == S.One:
+                return object2
+            retVal = cls.QMulflatten(object1, object2)
+            retVal.hilbert_space = object2.hilbert_space
+            retVal.acts_like = object2.acts_like
             return retVal
-        elif not isinstance(Object2, QuantumBasic):
-            if Object2 == S.One:
-                return Object1
-            retVal = cls.QMulflatten(Object1, Object2)
-            retVal.hilbert_space = Object1.hilbert_space
-            retVal.evaluates = Object1.evaluates
+        elif not isinstance(object2, QuantumBasic):
+            if object2 == S.One:
+                return object1
+            retVal = cls.QMulflatten(object1, object2)
+            retVal.hilbert_space = object1.hilbert_space
+            retVal.acts_like = object1.acts_like
             return retVal
 
-        if Object1.hilbert_space != Object2.hilbert_space:
+        if object1.hilbert_space != object2.hilbert_space:
             raise HilbertSpaceException("Hilbert Spaces do not match")
 
-        if issubclass(Object1.evaluates, InnerProduct):
-            retVal = cls.QMulflatten(Object1, Object2)
-            retVal.hilbert_space = Object2.hilbert_space
-            retVal.evaluates = Object2.evaluates
+        if issubclass(object1.acts_like, InnerProduct):
+            retVal = cls.QMulflatten(object1, object2)
+            retVal.hilbert_space = object2.hilbert_space
+            retVal.acts_like = object2.acts_like
             return retVal
-        elif issubclass(Object2.evaluates, InnerProduct):
-            retVal = cls.QMulflatten(Object1, Object2)
-            retVal.hilbert_space = Object1.hilbert_space
-            retVal.evaluates = Object1.evaluates
+        elif issubclass(object2.acts_like, InnerProduct):
+            retVal = cls.QMulflatten(object1, object2)
+            retVal.hilbert_space = object1.hilbert_space
+            retVal.acts_like = object1.acts_like
             return retVal
-        elif issubclass(Object1.evaluates, Operator):
-            if issubclass(Object2.evaluates, (Operator, InnerProduct)):
-                retVal = cls.QMulflatten(Object1, Object2)
-                retVal.hilbert_space = Object1.hilbert_space
-                retVal.evaluates = Object1.evaluates
+        elif issubclass(object1.acts_like, Operator):
+            if issubclass(object2.acts_like, (Operator, InnerProduct)):
+                retVal = cls.QMulflatten(object1, object2)
+                retVal.hilbert_space = object1.hilbert_space
+                retVal.acts_like = object1.acts_like
                 return retVal
-            elif issubclass(Object2.evaluates, KetBase):
-                retVal = cls.QMulflatten(Object1, Object2)
-                retVal.hilbert_space = Object2.hilbert_space
-                retVal.evaluates = Object2.evaluates
+            elif issubclass(object2.acts_like, KetBase):
+                retVal = cls.QMulflatten(object1, object2)
+                retVal.hilbert_space = object2.hilbert_space
+                retVal.acts_like = object2.acts_like
                 return retVal
-        elif issubclass(Object2.evaluates, Operator):
-            if issubclass(Object1.evaluates, (Operator, InnerProduct)):
-                retVal = cls.QMulflatten(Object1, Object2)
-                retVal.hilbert_space = Object2.hilbert_space
-                retVal.evaluates = Object2.evaluates
+        elif issubclass(object2.acts_like, Operator):
+            if issubclass(object1.acts_like, (Operator, InnerProduct)):
+                retVal = cls.QMulflatten(object1, object2)
+                retVal.hilbert_space = object2.hilbert_space
+                retVal.acts_like = object2.acts_like
                 return retVal
-            elif issubclass(Object1.evaluates, BraBase):
-                retVal = cls.QMulflatten(Object1, Object2)
-                retVal.hilbert_space = Object1.hilbert_space
-                retVal.evaluates = Object1.evaluates
+            elif issubclass(object1.acts_like, BraBase):
+                retVal = cls.QMulflatten(object1, object2)
+                retVal.hilbert_space = object1.hilbert_space
+                retVal.acts_like = object1.acts_like
                 return retVal
         #figure out inner and outer products
-        elif issubclass(Object1.evaluates, KetBase) and issubclass(Object2.evaluates, BraBase):
-            retVal = cls.QMulflatten(Object1, Object2)
-            retVal.hilbert_space = Object2.hilbert_space
-            retVal.evaluates = OuterProduct
+        elif issubclass(object1.acts_like, KetBase) and issubclass(object2.acts_like, BraBase):
+            retVal = cls.QMulflatten(object1, object2)
+            retVal.hilbert_space = object2.hilbert_space
+            retVal.acts_like = OuterProduct
             return retVal
-        elif issubclass(Object1.evaluates, BraBase) and issubclass(Object2.evaluates, KetBase):
-            retVal = cls.QMulflatten(Object1, Object2)
-            retVal.hilbert_space = Object2.hilbert_space
-            retVal.evaluates = InnerProduct
+        elif issubclass(object1.acts_like, BraBase) and issubclass(object2.acts_like, KetBase):
+            retVal = cls.QMulflatten(object1, object2)
+            retVal.hilbert_space = object2.hilbert_space
+            retVal.acts_like = InnerProduct
             return retVal
-        raise QuantumError("%s*%s is not allowed" % (Object1.evaluates.__name__, Object2.evaluates.__name__))
+        raise QuantumError("%s*%s is not allowed" % (object1.acts_like.__name__, object2.acts_like.__name__))
 
     @classmethod
-    def QMulflatten(cls, Object1, Object2):
+    def QMulflatten(cls, object1, object2):
         """
             Flattens out QMul objects.
             Places Non-Quantum objects at front of Qmul in Mul object and Quantum objects behind it
         """
         Qseq = []
         Eseq = []
-        seq = [Object1, Object2]
+        seq = [object1, object2]
+        last_argument = None
         while seq:
             o = seq.pop(0)
             if o.__class__ is cls: # classes must match exactly
@@ -112,7 +114,30 @@ class QMul(QAssocOp):
             if not isinstance(o, (QuantumBasic)):
                 Eseq.append(o)
             else:
+                #now, figure out if we should combine terms inside a Pow                          
+                if not last_argument is None:
+                    if isinstance(last_argument, QPow):
+                        basel = last_argument.base
+                        powerl = last_argument.exp
+                    else:
+                        basel = last_argument
+                        powerl = 1
+
+                    if isinstance(o, QPow):
+                        baseo = o.base
+                        powero = o.exp
+                    else:
+                        baseo = o
+                        powero = 1
+
+                    #for now we won't combine anything questionable into a QPow
+                    #(e.g. complicated expressions whose exponent's act_like == InnerProduct) 
+                    if baseo == basel and not isinstance(powero, QuantumBasic) and not isinstance(powero, QuantumBasic):
+                        Qseq.pop(-1)
+                        o = baseo**(powero+powerl)
+                        
                 Qseq.append(o)
+                last_argument = o
         nqpart = Mul(*Eseq)
         if nqpart == 1:
             if len(Qseq) ==1:
@@ -131,7 +156,7 @@ class QMul(QAssocOp):
             return args
 
         else:
-            return args[0], self._new_rawargs(self.evaluates, self.hilbert_space, *args[1:])
+            return args[0], self.__class__._new_rawargs(self.acts_like, self.hilbert_space, *args[1:])
 
     @property
     def identity(self):
