@@ -807,18 +807,16 @@ def test_complicated_codegen_f95():
     )
     assert result[1][1] == expected
 
-@XFAIL
 def test_loops():
     from sympy.tensor import IndexedBase, Idx
     from sympy import symbols
-    i,j,n,m = symbols('i j n m', integer=True)
-    A,x,y = symbols('A x y')
-    A = IndexedBase(A)(Idx(i, m), Idx(j, n))
-    x = IndexedBase(x)(Idx(j, n))
-    y = IndexedBase(y)(Idx(i, m))
+    n,m = symbols('n m', integer=True)
+    A, x, y = map(IndexedBase, 'Axy')
+    i = Idx('i', m)
+    j = Idx('j', n)
 
     (f1, code), (f2, interface) = codegen(
-            ('matrix_vector', Eq(y, A*x)), "F95", "file", header=False, empty=False)
+            ('matrix_vector', Eq(y[i], A[i, j]*x[j])), "F95", "file", header=False, empty=False)
 
     assert f1 == 'file.f90'
     expected = (
@@ -831,15 +829,16 @@ def test_loops():
             'REAL*8, intent(out), dimension(1:m) :: y\n'
             'INTEGER*4 :: i\n'
             'INTEGER*4 :: j\n'
-            'y = 0.d0\n'
+            'do i = 1, m\n'
+            '   y(i) = 0\n'
+            'end do\n'
             'do i = 1, m\n'
             '   do j = 1, n\n'
             '      y(i) = %(rhs)s + y(i)\n'
             '   end do\n'
             'end do\n'
             'end subroutine\n'
-            ) % {'rhs': str(A*x)}
-    assert str(A*x) == 'A(i, j)*x(j)' or str(A*x) == 'x(j)*A(i, j)'
+            ) % {'rhs': 'A(i, j)*x(j)'}
 
     assert expected == code
     assert f2 == 'file.h'
@@ -903,7 +902,6 @@ def test_loops_InOut():
             'end interface\n'
             )
 
-@XFAIL
 def test_output_arg_f():
     from sympy import sin, cos, Equality
     x, y, z = symbols("xyz")
@@ -916,8 +914,6 @@ def test_output_arg_f():
         'implicit none\n'
         'REAL*8, intent(in) :: x\n'
         'REAL*8, intent(out) :: y\n'
-        'y = 0.d0\n'
-        'foo = 0.d0\n'
         'y = sin(x)\n'
         'foo = cos(x)\n'
         'end function\n'
