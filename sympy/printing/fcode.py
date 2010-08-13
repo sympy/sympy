@@ -18,14 +18,11 @@ responsibility for generating properly cased Fortran code to the user.
 """
 
 
+from sympy.core import S, C
 from sympy.printing.codeprinter import CodePrinter
 from sympy.printing.precedence import precedence
-from sympy.core import S, Add, I, C
 from sympy.functions import sin, cos, tan, asin, acos, atan, atan2, sinh, \
     cosh, tanh, sqrt, log, exp, abs, sign, conjugate, Piecewise
-from sympy.utilities.iterables import postorder_traversal
-from sympy.tensor import Idx
-
 
 implicit_functions = set([
     sin, cos, tan, asin, acos, atan, atan2, sinh, cosh, tanh, sqrt, log, exp,
@@ -172,7 +169,7 @@ class FCodePrinter(CodePrinter):
         if len(pure_imaginary) > 0:
             if len(mixed) > 0:
                 PREC = precedence(expr)
-                term = Add(*mixed)
+                term = C.Add(*mixed)
                 t = self._print(term)
                 if t.startswith('-'):
                     sign = "-"
@@ -183,14 +180,14 @@ class FCodePrinter(CodePrinter):
                     t = "(%s)" % t
 
                 return "cmplx(%s,%s) %s %s" % (
-                    self._print(Add(*pure_real)),
-                    self._print(-I*Add(*pure_imaginary)),
+                    self._print(C.Add(*pure_real)),
+                    self._print(-S.ImaginaryUnit*C.Add(*pure_imaginary)),
                     sign, t,
                 )
             else:
                 return "cmplx(%s,%s)" % (
-                    self._print(Add(*pure_real)),
-                    self._print(-I*Add(*pure_imaginary)),
+                    self._print(C.Add(*pure_real)),
+                    self._print(-S.ImaginaryUnit*C.Add(*pure_imaginary)),
                 )
         else:
             return CodePrinter._print_Add(self, expr)
@@ -228,7 +225,7 @@ class FCodePrinter(CodePrinter):
         # purpose: print complex numbers nicely in Fortran.
         if expr.is_imaginary and expr.is_number:
             return "cmplx(0,%s)" % (
-                self._print(-I*expr)
+                self._print(-S.ImaginaryUnit*expr)
             )
         else:
             return CodePrinter._print_Mul(self, expr)
