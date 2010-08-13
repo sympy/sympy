@@ -160,7 +160,7 @@ class State(StateBase):
         inst = Expr.__new__(cls, name, **{'commutative':False})
         # Now set the slots on the instance
         inst.hilbert_space = cls._eval_hilbert_space(name)
-        inst.evaluates = inst.__class__
+        inst.acts_like = inst.__class__
         return inst
 
     @classmethod
@@ -250,7 +250,7 @@ class TimeDepState(StateBase):
         inst = Expr.__new__(cls, name, time, **{'commutative':False})
         # Now set the slots on the instance
         inst.hilbert_space = cls._eval_hilbert_space(name, time)
-        inst.evaluates = inst.__class__
+        inst.acts_like = inst.__class__
         return inst
 
     @property
@@ -339,7 +339,7 @@ class Operator(QuantumBasic, Representable):
         return HilbertSpace()
 
     @property
-    def evaluates(self):
+    def acts_like(self):
         return self.__class__
 
     @property
@@ -362,7 +362,7 @@ class InnerProduct(QuantumBasic):
     """
     An unevaluated inner product between a Bra and a Ket. Because a Bra is
     essentially a row vector and a Ket is essentially a column vector, the
-    inner product evaluates to a complex number.
+    inner product acts_like to a complex number.
 
     Examples
     ========
@@ -388,15 +388,15 @@ class InnerProduct(QuantumBasic):
         #What about innerProd(1,1), should it auto simplify?
         if not (bra and ket):
             raise QuantumError('InnerProduct requires a leading Bra and a trailing Ket')
-        assert issubclass(bra.evaluates, Bra), 'First argument must be a Bra'
-        assert issubclass(ket.evaluates, Ket), 'Second argument must be a Ket'
+        assert issubclass(bra.acts_like, Bra), 'First argument must be a Bra'
+        assert issubclass(ket.acts_like, Ket), 'Second argument must be a Ket'
         assert bra.hilbert_space == ket.hilbert_space
         r = cls.eval(bra, ket)
         if isinstance(r, Expr):
             return r
         obj = Expr.__new__(cls, bra, ket)
         obj.hilbert_space = bra.hilbert_space
-        obj.evaluates = obj.__class__
+        obj.acts_like = obj.__class__
         return obj
 
     @classmethod
@@ -433,7 +433,7 @@ class OuterProduct(Operator):
     """
     An unevaluated outer product between a Ket and Bra. Because a Ket is
     essentially a column vector and a Bra is essentially a row vector, the
-    outer product evaluates to an operator (i.e. matrix) [1].
+    outer product acts_like to an operator (i.e. matrix) [1].
 
     Examples
     ========
@@ -458,8 +458,8 @@ class OuterProduct(Operator):
     def __new__(cls, ket, bra):
         if not (ket and bra):
             raise QuantumError('OuterProduct requires a leading Ket and a trailing Bra')
-        assert issubclass(ket.evaluates, Ket), 'First argument must be a Ket'
-        assert issubclass(bra.evaluates, Bra), 'Second argument must be a Bra'
+        assert issubclass(ket.acts_like, Ket), 'First argument must be a Ket'
+        assert issubclass(bra.acts_like, Bra), 'Second argument must be a Bra'
         assert ket.hilbert_space == bra.hilbert_space
         r = cls.eval(ket, bra)
         if isinstance(r, Expr):
@@ -483,7 +483,7 @@ class OuterProduct(Operator):
         return self.args[1]
 
     @property
-    def evaluates(self):
+    def acts_like(self):
         return self.__class__
 
     def _eval_dagger(self):
@@ -562,8 +562,8 @@ class Dagger(QuantumBasic):
             return None
 
     @property
-    def evaluates(self):
-        return self.args[0].evaluates
+    def acts_like(self):
+        return self.args[0].acts_like
 
     @property
     def hilbert_space(self):

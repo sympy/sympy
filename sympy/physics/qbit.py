@@ -103,7 +103,7 @@ class Qbit(Ket):
             array = [(args[0]>>i)&1 for i in reversed(range(int(math.ceil(math.log(args[0], 2)+.01)+.001)))]
             array = sympify(array)
             obj = Expr.__new__(cls, *array)
-            obj.evaluates = cls
+            obj.acts_like = cls
             obj.hilbert_space = l2(2)
             return obj
         #if they give us two numbers, the second number is the number of bits on which it is expressed)
@@ -112,7 +112,7 @@ class Qbit(Ket):
             array = [(args[0]>>i)&1 for i in reversed(range(args[1]))]
             array = sympify(array)
             obj = Expr.__new__(cls, *array)
-            obj.evaluates = cls
+            obj.acts_like = cls
             obj.hilbert_space = l2(2)
             return obj
         for element in args:
@@ -120,7 +120,7 @@ class Qbit(Ket):
                 raise QuantumError("Values must be either one or zero")
         args = sympify(args)
         obj = Expr.__new__(cls, *args)
-        obj.evaluates = cls
+        obj.acts_like = cls
         obj.hilbert_space = l2(2)
         return obj
 
@@ -1217,6 +1217,7 @@ def gatesort(circuit):
                         circuit = QMul(*(circuit.args[:i] + (circuit.args[i+1],) + (circuit.args[i],) + circuit.args[i+2:]))
                         cirArray = circuit.args
                         changes = True
+                        break
     return circuit
 
 #-----------------------------------------------------------------------------

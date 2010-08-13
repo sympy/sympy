@@ -1,7 +1,5 @@
 from sympy import Expr, Pow, S, Number, Symbol, sympify
-from sympy.physics.quantum import InnerProduct, OuterProduct, Operator, KetBase, BraBase
-from sympy.physics.qmul import QMul
-from sympy.physics.qadd import QAdd
+from sympy.physics.quantum import InnerProduct, OuterProduct, Operator, KetBase, BraBase, Dagger
 from sympy.core.decorators import call_highest_priority
 from sympy.physics.quantumbasic import QuantumError, QuantumBasic
 from sympy.printing.str import sstr
@@ -18,43 +16,45 @@ class QPow(QuantumBasic):
 
     @classmethod
     def _rules_QPow(cls, base, exp):
+        from sympy.physics.qadd import QAdd
+        from sympy.physics.qmul import QMul
         if not isinstance(base, QuantumBasic):
             if not isinstance(exp, QuantumBasic):
                 return Pow(base, exp)
-            elif issubclass(exp.evaluates, (Operator, OuterProduct, InnerProduct)):
+            elif issubclass(exp.acts_like, (Operator, OuterProduct, InnerProduct)):
                 ret = Expr.__new__(cls, base, exp)
                 ret.hilbert_space = exp.hilbert_space
-                ret.evaluates = exp.evaluates
+                ret.acts_like = exp.acts_like
                 return ret
         elif not isinstance(exp, QuantumBasic):
-            if issubclass(base.evaluates, (Operator, OuterProduct, InnerProduct)):
+            if issubclass(base.acts_like, (Operator, OuterProduct, InnerProduct)):
                 if exp == S.Zero:
                     return S.One
                 elif exp == S.One:
                     return base
                 ret = Expr.__new__(cls, base, exp)
                 ret.hilbert_space = base.hilbert_space
-                ret.evaluates = base.evaluates
+                ret.acts_like = base.acts_like
                 return ret
-        elif issubclass(exp.evaluates, InnerProduct) and issubclass(base.evaluates, (InnerProduct, Operator)):
+        elif issubclass(exp.acts_like, InnerProduct) and issubclass(base.acts_like, (InnerProduct, Operator)):
                 ret = Expr.__new__(cls, base, exp)
                 ret.hilbert_space = base.hilbert_space
-                ret.evaluates = base.evaluates
+                ret.acts_like = base.acts_like
                 return ret
-        elif issubclass(base.evaluates, InnerProduct) and issubclass(exp.evaluates, (InnerProduct, Operator)):
+        elif issubclass(base.acts_like, InnerProduct) and issubclass(exp.acts_like, (InnerProduct, Operator)):
                 ret = Expr.__new__(cls, base, exp)
                 ret.hilbert_space = exp.hilbert_space
-                ret.evaluates = exp.evaluates
+                ret.acts_like = exp.acts_like
                 return ret
 
         #make a pretty error message if you have left everything a mess
-        if hasattr(exp, 'evaluates'):
-            expname = exp.evaluates.__name__
+        if hasattr(exp, 'acts_like'):
+            expname = exp.acts_like.__name__
         else:
             expname = exp.__class__.__name__
 
-        if hasattr(base, 'evaluates'):
-            basename = base.evaluates.__name__
+        if hasattr(base, 'acts_like'):
+            basename = base.acts_like.__name__
         else:
             basename = base.__class__.__name__
 

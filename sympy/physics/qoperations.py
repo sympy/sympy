@@ -1,14 +1,9 @@
 from sympy.core.expr import Expr
-from sympy.core.decorators import call_highest_priority
 from sympy.core.sympify import sympify
-from sympy.physics.quantum import Operator, KetBase, BraBase, OuterProduct, InnerProduct, StateBase
-from sympy.core.numbers import Number
-from sympy import Symbol
-from sympy.core.mul import Mul
 from sympy.printing.str import sstr
 from sympy.core.add import Add
 from sympy.core.power import Pow
-from sympy.physics.quantumbasic import QuantumError, QuantumBasic
+from sympy.physics.quantumbasic import QuantumBasic
 from sympy.printing.pretty.stringpict import prettyForm
 
 class QAssocOp(QuantumBasic):
@@ -44,7 +39,6 @@ class QAssocOp(QuantumBasic):
         return self.args[number]
 
     def _sympystr(self, printer, *args):
-        from sympy.physics.qmul import QMul
         from sympy.physics.qadd import QAdd
         length = len(self.args)
         string = ''
@@ -59,7 +53,6 @@ class QAssocOp(QuantumBasic):
         return string
 
     def _pretty(self, printer, *args):
-        from sympy.physics.qmul import QMul
         from sympy.physics.qadd import QAdd
         length = len(self.args)
         pform = printer._print('', *args)
@@ -69,7 +62,7 @@ class QAssocOp(QuantumBasic):
             if hasattr(self.args[i], '_pretty'):
                 pform = prettyForm(*pform.right(self.args[i]._pretty(printer, *args)))
             else:
-                pform = prettyForm(*pform.right(sstr(self.args[i])))
+                pform = prettyForm(*pform.right(printer._print(self.args[i], *args)))
             if isinstance(self.args[i], (Add, Pow, QAdd)):
                 pform = prettyForm(*pform.right(prettyForm(u'\u0029')))
             if i != length-1:
@@ -77,16 +70,19 @@ class QAssocOp(QuantumBasic):
         return pform
 
 
-    def _new_rawargs(self, evaluates, hilbert_space, *args):
+    @classmethod
+    def _new_rawargs(cls, acts_like, hilbert_space, *args):
         """ Create new instance of own class with args exactly as provided by caller;
-            Sets evaluates and hilbert_space attributes to those specified in inputs
+            Sets acts_like and hilbert_space attributes to those specified in inputs
 
-            This is handy when we want to optimize things, e.g.
+            This is handy when we want to optimize things This is because we do not have 
+            to call the special '_qrules_*' to create a new object           
         """
+        
         if len(args) == 1:
             return args[0]
-        obj = Expr.__new__(type(self), *args)  # NB no assumptions for Add/Mul
-        obj.evaluates = evaluates
+        obj = Expr.__new__(cls, *args)  # NB no assumptions for Add/Mul
+        obj.acts_like = acts_like
         obj.hilbert_space = hilbert_space
         return obj
 
