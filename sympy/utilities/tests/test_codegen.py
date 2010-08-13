@@ -1,10 +1,11 @@
 from StringIO import StringIO
 
-from sympy.core import symbols, Eq, pi, Catalan
+from sympy.core import symbols, Eq, pi, Catalan, Lambda
 from sympy.utilities.codegen import CCodeGen, Routine, InputArgument, Result, \
     CodeGenError, FCodeGen, codegen, CodeGenArgumentListError, OutputArgument, \
     InOutArgument
 from sympy.utilities.pytest import XFAIL, raises
+from sympy.utilities.lambdify import implemented_function
 
 # import test:
 #FIXME: Fails due to circular import in with core
@@ -918,3 +919,31 @@ def test_output_arg_f():
         'foo = cos(x)\n'
         'end function\n'
     )
+
+def test_inline_function():
+    from sympy.tensor import IndexedBase, Idx
+    from sympy import symbols
+    n,m = symbols('n m', integer=True)
+    A, x, y = map(IndexedBase, 'Axy')
+    i = Idx('i', m)
+    j = Idx('j', n)
+    p = FCodeGen()
+    func = implemented_function('func', Lambda(n, n*(n+1)))
+    routine = Routine('test_inline', Eq(y[i], func(x[i])))
+    code = get_string(p.dump_f95, [routine])
+    expected = (
+            'subroutine test_inline(m, x, y)\n'
+            'implicit none\n'
+            'INTEGER*4, intent(in) :: m\n'
+            'REAL*8, intent(in), dimension(1:m) :: x\n'
+            'REAL*8, intent(out), dimension(1:m) :: y\n'
+            'INTEGER*4 :: i\n'
+            'do i = 1, m\n'
+            '   y(i) = x(i)*(1 + x(i))\n'
+            'end do\n'
+            'end subroutine\n'
+        )
+    assert code == expected
+
+
+
