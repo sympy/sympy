@@ -167,14 +167,13 @@ def _get_indices_Add(expr):
     return non_scalars[0], symmetries
 
 def get_indices(expr):
-    """Determine the outer indices of expression `expr'
+    """Determine the outer indices of expression ``expr``
 
-    By `outer' we mean indices that are not summation indices.  Returns a set
+    By *outer* we mean indices that are not summation indices.  Returns a set
     and a dict.  The set contains outer indices and the dict contains
     information about index symmetries.
 
-    Examples
-    ========
+    :Examples:
 
     >>> from sympy.tensor.index_methods import get_indices
     >>> from sympy import symbols
@@ -194,24 +193,7 @@ def get_indices(expr):
     >>> get_indices(x[i] + A[i, j]*y[j])
     (set([i]), {})
 
-    The concept of `outer' indices applies recursively, starting on the deepest
-    level.  This implies that dummies inside parenthesis are assumed to be
-    summed first, so that the following expression is handled gracefully:
-
-    >>> get_indices((x[i] + A[i, j]*y[j])*x[j])
-    (set([i, j]), {})
-
-    The algorithm also searches for index symmetries, so that
-
-    FIXME: not implemented yet
-
-     >> get_indices(x[i]*y[j] + x[j]*y[i])
-    (set([i, j]), {(i, j): 1})
-     >> get_indices(x[i]*y[j] - x[j]*y[i])
-    (set([i, j]), {(i, j): -1})
-
-    Exceptions
-    ==========
+    :Exceptions:
 
     An IndexConformanceException means that the terms ar not compatible, e.g.
 
@@ -219,6 +201,20 @@ def get_indices(expr):
             (...)
     IndexConformanceException: Indices are not consistent: x(i) + y(j)
 
+    .. warning::
+       The concept of *outer* indices applies recursively, starting on the deepest
+       level.  This implies that dummies inside parenthesis are assumed to be
+       summed first, so that the following expression is handled gracefully:
+
+       >>> get_indices((x[i] + A[i, j]*y[j])*x[j])
+       (set([i, j]), {})
+
+       This is correct and may appear convenient, but you need to be careful
+       with this as Sympy wil happily .expand() the product, if requested.  The
+       resulting expression would mix the outer ``j`` with the dummies inside
+       the parenthesis, which makes it a different expression.  To be on the
+       safe side, it is best to avoid such ambiguities by using unique indices
+       for all contractions that should be held separate.
 
     """
     # We call ourself recursively to determine indices of sub expressions.
@@ -262,34 +258,35 @@ def get_indices(expr):
                 "FIXME: No specialized handling of type %s"%type(expr))
 
 def get_contraction_structure(expr):
-    """Determine dummy indices of expression `expr' and describe structure of the expression
+    """Determine dummy indices of ``expr`` and describe it's structure
 
-    By `dummy' we mean indices that are summation indices.
+    By *dummy* we mean indices that are summation indices.
 
     The stucture of the expression is determined and described as follows:
 
-    1) The terms of a conforming summation are returned as a dict where the
-    keys are summation indices and the values are terms for which the dummies
-    are relevant.  This applies whenever an Add object is a node in the Sympy
-    expression tree.
+    1) A conforming summation of Indexed objects is described with a dict where
+       the keys are summation indices and the corresponding values are sets
+       containing all terms for which the summation applies.  All Add objects
+       in the Sympy expression tree are described like this.
 
-    2) For all nodes in the Sympy expression tree that are not of type Add, the
-    following applies:  If a node has nested contractions in one of it's
-    arguments, the node will be present as a key in the dict.  For that key,
-    the corresponding value is a list, containing dicts which are results of
-    recursive calls to get_contraction_structure().  The list contains only
-    dicts for the non-trivial deeper structures, ommitting dicts with None as
-    the one and only key.
+    2) For all nodes in the Sympy expression tree that are *not* of type Add, the
+       following applies:
 
-    Note that the presence of expressions among the dictinary keys indicates
-    multiple levels of index contractions.  A nested dict displays nested
-    contractions and may itself contain dicts from a deeper level.  In
-    practical calculations the summation in the deepest nested level must be
-    calculated first so that the outer expression can access the resulting
-    indexed object.
+       If a node discovers contractions in one of it's arguments, the node
+       itself will be stored as a key in the dict.  For that key, the
+       corresponding value is a list of dicts, each of which is the result of a
+       recursive call to get_contraction_structure().  The list contains only
+       dicts for the non-trivial deeper contractions, ommitting dicts with None
+       as the one and only key.
 
-    Examples
-    ========
+    .. Note:: The presence of expressions among the dictinary keys indicates
+       multiple levels of index contractions.  A nested dict displays nested
+       contractions and may itself contain dicts from a deeper level.  In
+       practical calculations the summation in the deepest nested level must be
+       calculated first so that the outer expression can access the resulting
+       indexed object.
+
+    :Examples:
 
     >>> from sympy.tensor.index_methods import get_contraction_structure
     >>> from sympy import symbols
@@ -336,6 +333,20 @@ def get_contraction_structure(expr):
     {(j,): set([A[j, j]])}
     >>> nested_contractions[1]
     {(i,): set([A[i, i]])}
+
+    The description of the contraction structure may appear complicated when
+    represented with a string in the above examples, but it is easy to iterate
+    over:
+
+    >>> from sympy import Expr
+    >>> for key in d:
+    ...     if isinstance(key, Expr):
+    ...         continue
+    ...     for term in d[key]:
+    ...         if term in d:
+    ...             # treat deepest contraction first
+    ...             pass
+    ...     # treat outermost contactions here
 
     """
 
