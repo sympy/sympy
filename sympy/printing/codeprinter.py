@@ -1,6 +1,6 @@
-from sympy.core import S, Add
+from sympy.core import S, C
 from sympy.printing.str import StrPrinter
-from sympy.tensor import Idx, Indexed, get_indices, get_contraction_structure
+from sympy.tensor import get_indices, get_contraction_structure
 
 class AssignmentError(Exception):
     pass
@@ -25,7 +25,7 @@ class CodePrinter(StrPrinter):
 
         # terms with no summations first
         if None in d:
-            text = CodePrinter.doprint(self, Add(*d[None]))
+            text = CodePrinter.doprint(self, C.Add(*d[None]))
         else:
             # If all terms have summations we must initialize array to Zero
             text = CodePrinter.doprint(self, 0)
@@ -102,7 +102,7 @@ class CodePrinter(StrPrinter):
         for i in indices:
             score_table[i] = 0
 
-        arrays = expr.atoms(Indexed)
+        arrays = expr.atoms(C.Indexed)
         for arr in arrays:
             for p, ind in enumerate(arr.indices):
                 try:
