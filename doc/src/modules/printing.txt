@@ -111,8 +111,8 @@ An example where line wrapping is required:
 
     >>> expr = sqrt(1-x**2).series(x,n=20).removeO()
     >>> print fcode(expr)
-          1 - x**2/2 - x**4/8 - x**6/16 - 5*x**8/128 - 7*x**10/256 - 21*x
-         @ **12/1024 - 33*x**14/2048 - 429*x**16/32768 - 715*x**18/65536
+          1 - x**2/2 - x**4/8 - x**6/16 - 5*x**8/128 - 7*x**10/256 - 21*x**
+         @ 12/1024 - 33*x**14/2048 - 429*x**16/32768 - 715*x**18/65536
 
 In case of line wrapping, it is handy to include the assignment so that lines
 are wrapped properly when the assignment part is added.

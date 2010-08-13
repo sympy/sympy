@@ -159,9 +159,9 @@ def test_fcode_Piecewise():
         "     @ cos(x)/x**11 + 3628800*sin(x)/x**10\n"
         "      else\n"
         "         weird_name = -sin(x)/x - 3628800*cos(x)/x**10 - 1814400*sin(x)/\n"
-        "     @ x**9 - 30240*cos(x)/x**6 - 5040*sin(x)/x**5 - 10*cos(x)/x**2 +\n"
-        "     @ 90*sin(x)/x**3 + 720*cos(x)/x**4 + 151200*sin(x)/x**7 + 604800*\n"
-        "     @ cos(x)/x**8 + 3628800*sin(x)/x**11\n"
+        "     @ x**9 - 30240*cos(x)/x**6 - 5040*sin(x)/x**5 - 10*cos(x)/x**2 + 90\n"
+        "     @ *sin(x)/x**3 + 720*cos(x)/x**4 + 151200*sin(x)/x**7 + 604800*cos(\n"
+        "     @ x)/x**8 + 3628800*sin(x)/x**11\n"
         "      end if"
     )
     code = fcode(Piecewise((a,x<0),(b,True)), assign_to="weird_name")
@@ -243,6 +243,31 @@ def test_wrap_fortran():
     for w, e in zip(wrapped_lines, expected_lines):
         assert w == e
     assert len(wrapped_lines) == len(expected_lines)
+
+def test_wrap_fortran_keep_d0():
+    printer = FCodePrinter()
+    lines = [
+        '      this_variable_is_very_long_because_we_try_to_test_line_break=1.0d0',
+        '      this_variable_is_very_long_because_we_try_to_test_line_break =1.0d0',
+        '      this_variable_is_very_long_because_we_try_to_test_line_break  = 1.0d0',
+        '      this_variable_is_very_long_because_we_try_to_test_line_break   = 1.0d0',
+        '      this_variable_is_very_long_because_we_try_to_test_line_break    = 1.0d0',
+        '      this_variable_is_very_long_because_we_try_to_test_line_break = 10.0d0'
+        ]
+    expected = [
+        '      this_variable_is_very_long_because_we_try_to_test_line_break=1.0d0',
+        '      this_variable_is_very_long_because_we_try_to_test_line_break =',
+        '     @ 1.0d0',
+        '      this_variable_is_very_long_because_we_try_to_test_line_break  =',
+        '     @ 1.0d0',
+        '      this_variable_is_very_long_because_we_try_to_test_line_break   =',
+        '     @ 1.0d0',
+        '      this_variable_is_very_long_because_we_try_to_test_line_break    =',
+        '     @ 1.0d0',
+        '      this_variable_is_very_long_because_we_try_to_test_line_break =',
+        '     @ 10.0d0'
+        ]
+    assert printer._wrap_fortran(lines) == expected
 
 def test_settings():
     raises(TypeError, 'fcode(S(4), method="garbage")')
