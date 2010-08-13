@@ -42,7 +42,7 @@
     >>> M[i, j]
     M[i, j]
     >>> M[i, j].shape
-    (m, n)
+    Tuple(m, n)
     >>> M[i, j].ranges
     [(0, -1 + m), (0, -1 + n)]
 
@@ -117,6 +117,18 @@ class IndexedBase(Expr):
     >>> type(A[i, j, 2])
     <class 'sympy.tensor.indexed.Indexed'>
 
+    The IndexedBase constructor takes an optional shape argument.  If given,
+    it overrides any shape information in the indices.
+
+    >>> m, n, o, p = symbols('m n o p', integer=True)
+    >>> i = Idx('i', m)
+    >>> j = Idx('j', n)
+    >>> A[i, j].shape
+    Tuple(m, n)
+    >>> B = IndexedBase('B', shape=(o, p))
+    >>> B[i, j].shape
+    Tuple(o, p)
+
     """
     is_commutative = False
 
@@ -187,19 +199,19 @@ class Indexed(Expr):
     """
     is_commutative = False
 
-    def __new__(cls, stem, *args, **kw_args):
+    def __new__(cls, base, *args, **kw_args):
         if not args: raise IndexException("Indexed needs at least one index")
-        if isinstance(stem, (basestring, Symbol)):
-            stem = IndexedBase(stem)
-        elif not isinstance(stem, IndexedBase):
-            raise TypeError("Indexed expects string, Symbol or IndexedBase as stem")
+        if isinstance(base, (basestring, Symbol)):
+            base = IndexedBase(base)
+        elif not isinstance(base, IndexedBase):
+            raise TypeError("Indexed expects string, Symbol or IndexedBase as base")
         # FIXME: 2.4 compatibility
         args = map(_ensure_Idx, args)
         # args = tuple([ a if isinstance(a, Idx) else Idx(a) for a in args ])
-        return Expr.__new__(cls, stem, *args, **kw_args)
+        return Expr.__new__(cls, base, *args, **kw_args)
 
     @property
-    def stem(self):
+    def base(self):
         return self.args[0]
 
     @property
@@ -214,22 +226,23 @@ class Indexed(Expr):
     @property
     def shape(self):
         """returns a list with dimensions of each index"""
-        if self.stem.shape:
-            return self.stem.shape
+        if self.base.shape:
+            return self.base.shape
         try:
-            return tuple( i.upper - i.lower + 1 for i in self.indices )
+            return Tuple(*[i.upper - i.lower + 1 for i in self.indices])
         except TypeError:
             # Let's return a more meaningful error
             raise IndexException("Shape is not defined for all indices")
 
     @property
     def ranges(self):
-        """returns a list of tuples with lower and upper range of each index"""
+        """returns a list of tuples with lower and upper range of each index
+        """
         return [ (i.lower, i.upper) for i in self.indices ]
 
     def _sympystr(self, p):
         indices = map(p.doprint, self.indices)
-        return "%s[%s]" % (p.doprint(self.stem), ", ".join(indices))
+        return "%s[%s]" % (p.doprint(self.base), ", ".join(indices))
 
 
 class Idx(Expr):

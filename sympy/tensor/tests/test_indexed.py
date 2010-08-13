@@ -126,20 +126,25 @@ def test_Indexed_subs():
 
 def test_Indexed_properties():
     i, j = symbols('i j', integer=True)
-    a = symbols('a')
-    A = Indexed(a, i, j)
+    A = Indexed('A', i, j)
     assert A.rank == 2
     assert A.indices == tuple(map(Idx, (i, j)))
-    assert A.stem == IndexedBase(a)
+    assert A.base == IndexedBase('A')
     assert A.ranges == [(None, None), (None, None)]
     raises(IndexException, 'A.shape')
 
     n, m = symbols('n m', integer=True)
-    assert Indexed(a, Idx(i, m), Idx(j, n)).ranges == [(0, m - 1), (0, n - 1)]
-    assert Indexed(a, Idx(i, m), Idx(j, n)).shape == (m, n)
+    assert Indexed('A', Idx(i, m), Idx(j, n)).ranges == [(0, m - 1), (0, n - 1)]
+    assert Indexed('A', Idx(i, m), Idx(j, n)).shape == Tuple(m, n)
+    raises(IndexException, 'Indexed("A", Idx(i, m), Idx(j)).shape')
 
+def test_Indexed_shape_precedence():
+    i, j = symbols('i j', integer=True)
     o, p = symbols('o p', integer=True)
+    n, m = symbols('n m', integer=True)
     a = IndexedBase('a', shape=(o, p))
     assert a.shape == Tuple(o, p)
     assert Indexed(a, Idx(i, m), Idx(j, n)).ranges == [(0, m - 1), (0, n - 1)]
     assert Indexed(a, Idx(i, m), Idx(j, n)).shape == Tuple(o, p)
+    assert Indexed(a, Idx(i, m), Idx(j)).ranges == [(0, m - 1), (None, None)]
+    assert Indexed(a, Idx(i, m), Idx(j)).shape == Tuple(o, p)

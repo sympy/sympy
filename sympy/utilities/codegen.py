@@ -159,7 +159,7 @@ class Routine(object):
                 expr = expr.rhs
                 if isinstance(out_arg, Indexed):
                     dims = out_arg.ranges
-                    symbol = out_arg.stem.label
+                    symbol = out_arg.base.label
                 elif isinstance(out_arg, Symbol):
                     dims = []
                     symbol = out_arg
@@ -179,7 +179,7 @@ class Routine(object):
         # setup input argument list
         array_symbols = {}
         for array in expressions.atoms(Indexed):
-            array_symbols[array.stem.label] = array
+            array_symbols[array.base.label] = array
 
         for symbol in sorted(symbols, key=str):
             if symbol in array_symbols:

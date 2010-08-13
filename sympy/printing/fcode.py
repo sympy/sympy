@@ -262,7 +262,7 @@ class FCodePrinter(CodePrinter):
 
     def _print_Indexed(self, expr):
         inds = [ self._print(i) for i in expr.indices ]
-        return "%s(%s)" % (self._print(expr.stem.label), ", ".join(inds))
+        return "%s(%s)" % (self._print(expr.base.label), ", ".join(inds))
 
     def _print_Idx(self, expr):
         return self._print(expr.label)
