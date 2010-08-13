@@ -1,7 +1,7 @@
 from sympy import symbols
 from sympy.tensor import Indexed, Idx
 from sympy.utilities.autowrap import autowrap
-from sympy.utilities.pytest import XFAIL
+from sympy.utilities.pytest import XFAIL, skip
 
 #
 # test runners used by several language-backend combinations
@@ -40,13 +40,28 @@ def runtest_autowrap_arrays(language, backend):
 #
 # tests of language-backend combinations
 #
+try:
+    import Cython
+    has_Cython = True
+except ImportError:
+    has_Cython = False
+
+try:
+    import numpy.f2py
+    has_f2py = True
+except ImportError:
+    has_f2py = False
+
 
 def test_wrap_twice_c_cython():
+    if not has_Cython: skip()
     runtest_autowrap_twice('C', 'cython')
 
 def test_wrap_twice_f95_f2py():
+    if not has_f2py: skip()
     runtest_autowrap_twice('f95', 'f2py')
 
 @XFAIL
 def test_autowrap_arrays_cython_C():
+    if not has_Cython: skip()
     runtest_autowrap_arrays('C', 'cython')
