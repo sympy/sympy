@@ -9,10 +9,9 @@ sympy.utilities.codegen. The codegen module can be used to generate complete
 source code files that are compilable without further modifications.
 """
 
+from sympy.core import S, C
 from sympy.printing.codeprinter import CodePrinter
 from sympy.printing.precedence import precedence
-from sympy.core import S, Basic, Add, Symbol, NumberSymbol, C
-from sympy.functions import Piecewise, piecewise_fold
 
 
 # dictionary mapping sympy function to (argument_conditions, C_function).
@@ -58,8 +57,8 @@ class CCodePrinter(CodePrinter):
     def doprint(self, expr, assign_to=None):
 
         if isinstance(assign_to, basestring):
-            assign_to = Symbol(assign_to)
-        elif not isinstance(assign_to, (Basic, type(None))):
+            assign_to = C.Symbol(assign_to)
+        elif not isinstance(assign_to, (C.Basic, type(None))):
             raise TypeError("CCodePrinter cannot assign to object of type %s"%
                     type(result_variable))
 
@@ -70,7 +69,7 @@ class CCodePrinter(CodePrinter):
 
         # We treat top level Piecewise here to get if tests outside loops
         lines = []
-        if isinstance(expr, Piecewise):
+        if isinstance(expr, C.Piecewise):
             for i, (e, c) in enumerate(expr.args):
                 if i == 0:
                     lines.append("if (%s) {" % self._print(c))

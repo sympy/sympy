@@ -20,8 +20,7 @@ responsibility for generating properly cased Fortran code to the user.
 
 from sympy.printing.codeprinter import CodePrinter
 from sympy.printing.precedence import precedence
-from sympy.core import S, Add, I, Symbol, Basic, C
-from sympy.core.numbers import NumberSymbol
+from sympy.core import S, Add, I, C
 from sympy.functions import sin, cos, tan, asin, acos, atan, atan2, sinh, \
     cosh, tanh, sqrt, log, exp, abs, sign, conjugate, Piecewise
 from sympy.utilities.iterables import postorder_traversal
@@ -52,8 +51,8 @@ class FCodePrinter(CodePrinter):
         self._init_leading_padding()
         assign_to = self._settings['assign_to']
         if isinstance(assign_to, basestring):
-            self._settings['assign_to'] = Symbol(assign_to)
-        elif not isinstance(assign_to, (Basic, type(None))):
+            self._settings['assign_to'] = C.Symbol(assign_to)
+        elif not isinstance(assign_to, (C.Basic, type(None))):
             raise TypeError("FCodePrinter cannot assign to object of type %s"%
                     type(assign_to))
 
