@@ -945,5 +945,8 @@ def test_inline_function():
         )
     assert code == expected
 
+def test_check_case():
+    x, X = symbols('xX')
+    raises(CodeGenError, "codegen(('test', x*X), 'f95', 'prefix')")
 
 

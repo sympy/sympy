@@ -222,6 +222,20 @@ class Routine(object):
         self.local_vars = local_vars
 
     @property
+    def variables(self):
+        """Returns a set containing all variables possibly used in this routine.
+
+        For routines with unnamed return values, the dummies that may or may
+        not be used will be included in the set.
+        """
+        vars = set(self.local_vars)
+        for arg in self.arguments:
+            vars.add(arg.name)
+        for res in self.results:
+            vars.add(res.result_var)
+        return vars
+
+    @property
     def result_variables(self):
         """Returns a list of OutputArgument, InOutArgument and Result.
 
@@ -783,6 +797,12 @@ class FCodeGen(CodeGen):
         return p.indent_code(codelines)
 
     def dump_f95(self, routines, f, prefix, header=True, empty=True):
+        # check that symbols are unique with ignorecase
+        for r in routines:
+            lowercase = set(map(lambda x: str(x).lower(), r.variables))
+            if len(lowercase) < len(r.variables):
+                raise CodeGenError("Fortran ignores case. Got symbols: %s"
+                        ", ".join([str(var) for var in r.variables]))
         self.dump_code(routines, f, prefix, header, empty)
     dump_f95.extension = code_extension
 
