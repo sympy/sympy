@@ -137,7 +137,7 @@ class CodeWrapper:
         command.extend(self.flags)
         if self.quiet:
             null = open(os.devnull, 'w')
-            retcode = subprocess.call(command, stdout=null)
+            retcode = subprocess.call(command, stdout=null, stderr=subprocess.STDOUT)
         else:
             retcode = subprocess.call(command)
         if retcode:
