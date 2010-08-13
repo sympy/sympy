@@ -113,26 +113,26 @@ class Routine(object):
     def __init__(self, name, expr, argument_sequence=None):
         """Initialize a Routine instance.
 
-           Arguments:
-             name  --  A string with the name of this routine in the generated
-                       code
-             expr  --  The sympy expression that the Routine instance will represent.
-                       If given a list or tuple of expressions, the routine
-                       will be considered to have multiple return values.
-             argument_sequence  --  optional list/tuple containing arguments for the
-                                    routine in a preferred order.  If omitted, arguments
-                                    will be ordered alphabetically, but with
-                                    all input aguments first, and then output
-                                    or in-out arguments.
+        ``name``
+            A string with the name of this routine in the generated code
+        ``expr``
+            The sympy expression that the Routine instance will represent.  If
+            given a list or tuple of expressions, the routine will be
+            considered to have multiple return values.
+        ``argument_sequence``
+            Optional list/tuple containing arguments for the routine in a
+            preferred order.  If omitted, arguments will be ordered
+            alphabetically, but with all input aguments first, and then output
+            or in-out arguments.
 
-            A decision about whether to use output arguments or return values,
-            is made depending on the mathematical expressions.  For an expression
-            of type Equality, the left hand side is made into an OutputArgument
-            (or an InOutArgument if appropriate).  Else, the calculated
-            expression is the return values of the routine.
+        A decision about whether to use output arguments or return values,
+        is made depending on the mathematical expressions.  For an expression
+        of type Equality, the left hand side is made into an OutputArgument
+        (or an InOutArgument if appropriate).  Else, the calculated
+        expression is the return values of the routine.
 
-            A tuple of exressions can be used to create a routine with both
-            return value(s) and output argument(s).
+        A tuple of exressions can be used to create a routine with both
+        return value(s) and output argument(s).
 
         """
         arg_list = []
@@ -393,22 +393,25 @@ class CodeGen(object):
     def write(self, routines, prefix, to_files=False, header=True, empty=True):
         """Writes all the source code files for the given routines.
 
-           The generate source is returned as a list of (filename, contents)
-           tuples, or is written to files (see options). Each filename consists
-           of the given prefix, appended with an appropriate extension.
+            The generate source is returned as a list of (filename, contents)
+            tuples, or is written to files (see options). Each filename consists
+            of the given prefix, appended with an appropriate extension.
 
-           Arguments:
-             routines  --  A list of Routine instances to be written
-             prefix  --  The prefix for the output files
+            ``routines``
+                A list of Routine instances to be written
+            ``prefix``
+                The prefix for the output files
+            ``to_files``
+                When True, the output is effectively written to files.
+                [DEFAULT=False] Otherwise, a list of (filename, contents)
+                tuples is returned.
+            ``header``
+                When True, a header comment is included on top of each source
+                file. [DEFAULT=True]
+            ``empty``
+                When True, empty lines are included to structure the source
+                files. [DEFAULT=True]
 
-           Optional arguments:
-             to_files  --  When True, the output is effectively written to
-                           files. [DEFAULT=False] Otherwise, a list of
-                           (filename, contents) tuples is returned.
-             header  --  When True, a header comment is included on top of each
-                         source file. [DEFAULT=True]
-             empty  --  When True, empty lines are included to structure the
-                        source files. [DEFAULT=True]
         """
         if to_files:
             for dump_fn in self.dump_fns:
@@ -428,20 +431,27 @@ class CodeGen(object):
     def dump_code(self, routines, f, prefix, header=True, empty=True):
         """Write the code file by calling language specific methods in correct order
 
-           The generated file contains all the definitions of the routines in
-           low-level code and refers to the header file if appropriate.
+        The generated file contains all the definitions of the routines in
+        low-level code and refers to the header file if appropriate.
 
-           Arguments:
-             routines  --  a list of Routine instances
-             f  --  a file-like object to write the file to
-             prefix  --  the filename prefix, used to refer to the proper header
-                         file. Only the basename of the prefix is used.
+        :Arguments:
 
-           Optional arguments:
-             header  --  When True, a header comment is included on top of each
-                         source file. [DEFAULT=True]
-             empty  --  When True, empty lines are included to structure the
-                        source files. [DEFAULT=True]
+        routines
+            A list of Routine instances
+        f
+            A file-like object to write the file to
+        prefix
+            The filename prefix, used to refer to the proper header file. Only
+            the basename of the prefix is used.
+
+        :Optional arguments:
+
+        header
+            When True, a header comment is included on top of each source file.
+            [DEFAULT=True]
+        empty
+            When True, empty lines are included to structure the source files.
+            [DEFAULT=True]
         """
 
         code_lines = self._preprosessor_statements(prefix)
@@ -482,6 +492,12 @@ This file is part of '%(project)s'
 
 
 class CCodeGen(CodeGen):
+    """
+    Generator for C code
+
+    The .write() method inherited from CodeGen will output a code file and an
+    inteface file, <prefix>.c and <prefix>.h respectively.
+    """
 
     code_extension = "c"
     interface_extension = "h"
@@ -579,17 +595,23 @@ class CCodeGen(CodeGen):
 
            This file contains all the function declarations.
 
-           Arguments:
-             routines  --  a list of Routine instances
-             f  --  a file-like object to write the file to
-             prefix  --  the filename prefix, used to construct the include
-                         guards.
+           :Arguments:
 
-           Optional arguments:
-             header  --  When True, a header comment is included on top of each
-                         source file. [DEFAULT=True]
-             empty  --  When True, empty lines are included to structure the
-                        source files. [DEFAULT=True]
+           routines
+                A list of Routine instances
+           f
+                A file-like object to write the file to
+           prefix
+                The filename prefix, used to construct the include guards.
+
+           :Optional arguments:
+
+           header
+                When True, a header comment is included on top of each source
+                file. [DEFAULT=True]
+           empty
+                When True, empty lines are included to structure the source
+                files. [DEFAULT=True]
         """
         if header:
             print >> f, ''.join(self._get_header())
@@ -616,6 +638,9 @@ class CCodeGen(CodeGen):
 class FCodeGen(CodeGen):
     """
     Generator for Fortran 95 code
+
+    The .write() method inherited from CodeGen will output a code file and an
+    inteface file, <prefix>.f90 and <prefix>.h respectively.
     """
 
     code_extension = "f90"
@@ -762,21 +787,27 @@ class FCodeGen(CodeGen):
 
 
     def dump_h(self, routines, f, prefix, header=True, empty=True):
-        """Writes the interface  header file.
+        """Writes the interface to a header file.
 
            This file contains all the function declarations.
 
-           Arguments:
-             routines  --  a list of Routine instances
-             f  --  a file-like object to write the file to
-             prefix  --  the filename prefix, used to construct the include
-                         guards.
+           :Arguments:
 
-           Optional arguments:
-             header  --  When True, a header comment is included on top of each
-                         source file. [DEFAULT=True]
-             empty  --  When True, empty lines are included to structure the
-                        source files. [DEFAULT=True]
+           routines
+                A list of Routine instances
+           f
+                A file-like object to write the file to
+           prefix
+                The filename prefix
+
+           :Optional arguments:
+
+           header
+                When True, a header comment is included on top of each source
+                file. [DEFAULT=True]
+           empty
+                When True, empty lines are included to structure the source
+                files. [DEFAULT=True]
         """
         if header:
             print >> f, ''.join(self._get_header())
@@ -809,58 +840,62 @@ def codegen(name_expr, language, prefix, project="project", to_files=False, head
         argument_sequence=None):
     """Write source code for the given expressions in the given language.
 
-       Mandatory Arguments:
-         name_expr  --  A single (name, expression) tuple or a list of
-                        (name, expression) tuples. Each tuple corresponds to a
-                        routine.  If the expression is an equality (an
-                        insance of class Equality) the left hand side is considered
-                        an output argument.
-         language  --  A string that indicates the source code language. This
-                       is case insensitive. For the moment, only 'C' is
-                       supported.
-         prefix  --  A prefix for the names of the files that contain the source
-                     code. Proper (language dependent) suffixes will be
-                     appended.
+    :Mandatory Arguments:
 
-       Optional Arguments:
-         project  --  A project name, used for making unique preprocessor
-                      instructions. [DEFAULT="project"]
-         to_files  --  When True, the code will be written to one or more files
-                       with the given prefix, otherwise strings with the names
-                       and contents of these files are returned. [DEFAULT=False]
-         header  --  When True, a header is written on top of each source file.
-                     [DEFAULT=True]
-         empty  --  When True, empty lines are used to structure the code.
-                    [DEFAULT=True]
-         argument_sequence  --  sequence of arguments for the routine in a
-                                preferred order.  A CodeGenError is raised if
-                                required arguments are missing.  Redundant
-                                arguments are used without warning.
+    ``name_expr``
+        A single (name, expression) tuple or a list of (name, expression)
+        tuples. Each tuple corresponds to a routine.  If the expression is an
+        equality (an instance of class Equality) the left hand side is
+        considered an output argument.
+    ``language``
+            A string that indicates the source code language. This is case
+            insensitive. For the moment, only 'C' and 'F95' is supported.
+    ``prefix``
+            A prefix for the names of the files that contain the source code.
+            Proper (language dependent) suffixes will be appended.
 
-                                If omitted, arguments will be ordered
-                                alphabetically, but with all input aguments
-                                first, and then output or in-out arguments.
+    :Optional Arguments:
 
-       >>> from sympy import symbols
-       >>> from sympy.utilities.codegen import codegen
-       >>> from sympy.abc import x, y, z
-       >>> [(c_name, c_code), (h_name, c_header)] = \\
-       ...     codegen(("f", x+y*z), "C", "test", header=False, empty=False)
-       >>> print c_name
-       test.c
-       >>> print c_code,
-       #include "test.h"
-       #include <math.h>
-       double f(double x, double y, double z) {
-         return x + y*z;
-       }
-       >>> print h_name
-       test.h
-       >>> print c_header,
-       #ifndef PROJECT__TEST__H
-       #define PROJECT__TEST__H
-       double f(double x, double y, double z);
-       #endif
+    ``project``
+        A project name, used for making unique preprocessor instructions.
+        [DEFAULT="project"]
+    ``to_files``
+        When True, the code will be written to one or more files with the given
+        prefix, otherwise strings with the names and contents of these files
+        are returned. [DEFAULT=False]
+    ``header``
+        When True, a header is written on top of each source file.
+        [DEFAULT=True]
+    ``empty``
+        When True, empty lines are used to structure the code.  [DEFAULT=True]
+    ``argument_sequence``
+        sequence of arguments for the routine in a preferred order.  A
+        CodeGenError is raised if required arguments are missing.  Redundant
+        arguments are used without warning.
+
+        If omitted, arguments will be ordered alphabetically, but with all
+        input aguments first, and then output or in-out arguments.
+
+    >>> from sympy import symbols
+    >>> from sympy.utilities.codegen import codegen
+    >>> from sympy.abc import x, y, z
+    >>> [(c_name, c_code), (h_name, c_header)] = \\
+    ...     codegen(("f", x+y*z), "C", "test", header=False, empty=False)
+    >>> print c_name
+    test.c
+    >>> print c_code,
+    #include "test.h"
+    #include <math.h>
+    double f(double x, double y, double z) {
+      return x + y*z;
+    }
+    >>> print h_name
+    test.h
+    >>> print c_header,
+    #ifndef PROJECT__TEST__H
+    #define PROJECT__TEST__H
+    double f(double x, double y, double z);
+    #endif
 
     """
 
