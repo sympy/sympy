@@ -604,6 +604,7 @@ class CCodeGen(CodeGen):
     def dump_c(self, routines, f, prefix, header=True, empty=True):
         self.dump_code(routines, f, prefix, header, empty)
     dump_c.extension = code_extension
+    dump_c.__doc__ = CodeGen.dump_code.__doc__
 
     def dump_h(self, routines, f, prefix, header=True, empty=True):
         """Writes the C header file.
@@ -805,6 +806,7 @@ class FCodeGen(CodeGen):
                         ", ".join([str(var) for var in r.variables]))
         self.dump_code(routines, f, prefix, header, empty)
     dump_f95.extension = code_extension
+    dump_f95.__doc__ = CodeGen.dump_code.__doc__
 
 
     def dump_h(self, routines, f, prefix, header=True, empty=True):
