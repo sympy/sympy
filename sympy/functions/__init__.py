@@ -15,7 +15,8 @@ from special.polynomials import (legendre, assoc_legendre, hermite, chebyshevt,
 
 # see #391
 from combinatorial.factorials import factorial, factorial2, rf, ff, binomial
-from combinatorial.factorials import Factorial, RisingFactorial, FallingFactorial, Binomial
+from combinatorial.factorials import Factorial, RisingFactorial, FallingFactorial
+from combinatorial.factorials import Binomial, Factorial2
 from combinatorial.numbers import fibonacci, lucas, harmonic, bernoulli, bell
 
 from elementary.miscellaneous import sqrt, min_, max_
