@@ -66,51 +66,51 @@ def runtest_autowrap_matrix_matrix(language, backend):
 #
 try:
     import Cython
-    has_Cython = True
+    def has_Cython(): return True
 except ImportError:
-    has_Cython = False
+    def has_Cython(): skip("Couldn't import Cython")
 
 try:
     import numpy.f2py
-    has_f2py = True
+    def has_f2py(): return True
 except ImportError:
-    has_f2py = False
+    def has_f2py(): skip("Couldn't import f2py")
 
 # f2py
 
 def test_wrap_twice_f95_f2py():
-    if not has_f2py: skip()
+    has_f2py()
     runtest_autowrap_twice('f95', 'f2py')
 
 def test_autowrap_trace_f95_f2py():
-    if not has_f2py: skip()
+    has_f2py()
     runtest_autowrap_trace('f95', 'f2py')
 
 def test_autowrap_matrix_vector_f95_f2py():
-    if not has_f2py: skip()
+    has_f2py()
     runtest_autowrap_matrix_vector('f95', 'f2py')
 
 def test_autowrap_matrix_matrix_f95_f2py():
-    if not has_f2py: skip()
+    has_f2py()
     runtest_autowrap_matrix_matrix('f95', 'f2py')
 
 # Cython
 
 def test_wrap_twice_c_cython():
-    if not has_Cython: skip()
+    has_Cython()
     runtest_autowrap_twice('C', 'cython')
 
 @XFAIL
 def test_autowrap_trace_C_Cython():
-    if not has_Cython: skip()
+    has_Cython()
     runtest_autowrap_trace('C', 'cython')
 
 @XFAIL
 def test_autowrap_matrix_vector_C_cython():
-    if not has_Cython: skip()
+    has_Cython()
     runtest_autowrap_matrix_vector('C', 'cython')
 
 @XFAIL
 def test_autowrap_matrix_matrix_C_cython():
-    if not has_Cython: skip()
+    has_Cython()
     runtest_autowrap_matrix_matrix('C', 'cython')
