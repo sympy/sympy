@@ -25,24 +25,24 @@ def test_Gate():
     c = CNOTGate(0,3)
     t = ToffoliGate(0,1,6)
     h = HadamardGate(2)
-    assert c.minimumdimension == 3
-    assert t.minimumdimension == 6
-    assert h.minimumdimension == 2
-    assert c.inputnumber == 2
-    assert t.inputnumber == 3
-    assert h.inputnumber == 1
+    assert c.minimum_dimension == 3
+    assert t.minimum_dimension == 6
+    assert h.minimum_dimension == 2
+    assert c.input_number == 2
+    assert t.input_number == 3
+    assert h.input_number == 1
 
 def test_Fourier():
     assert QFT(0,3).decompose() == SwapGate(0,2)*HadamardGate(0)*RkGate(1,0,2)*HadamardGate(1)*RkGate(2,0,3)*RkGate(2,1,2)*HadamardGate(2)
-    assert QFT(0,3).inputnumber == 2
+    assert QFT(0,3).input_number == 2
     assert IQFT(0,3).decompose() == HadamardGate(2)*IRkGate(2,1,2)*IRkGate(2,0,3)*HadamardGate(1)*IRkGate(1,0,2)*HadamardGate(0)*SwapGate(0,2)
 
 def test_represent_HilbertSpace():
     import numpy as np
     a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p = symbols('abcdefghijklmnop')
     gateMat = Matrix([[a,b,c,d],[e,f,g,h],[i,j,k,l],[m,n,o,p]])
-    assert representHilbertSpace(gateMat, 3, (0,1)) == Matrix([[a,c,b,d,0,0,0,0],[i,k,j,l,0,0,0,0],[e,g,f,h,0,0,0,0],[m,o,n,p,0,0,0,0],[0,0,0,0,a,c,b,d],[0,0,0,0,i,k,j,l],[0,0,0,0,e,g,f,h],[0,0,0,0,m,o,n,p]])
-    assert type(representHilbertSpace(gateMat, 2, (0,1), format = 'numpy')) == type(np.matrix(1))
+    assert represent_hilbert_space(gateMat, 3, (0,1)) == Matrix([[a,c,b,d,0,0,0,0],[i,k,j,l,0,0,0,0],[e,g,f,h,0,0,0,0],[m,o,n,p,0,0,0,0],[0,0,0,0,a,c,b,d],[0,0,0,0,i,k,j,l],[0,0,0,0,e,g,f,h],[0,0,0,0,m,o,n,p]])
+    assert type(represent_hilbert_space(gateMat, 2, (0,1), format = 'numpy')) == type(np.matrix(1))
 
 def test_represent_Hadamard_():
     circuit = HadamardGate(0)*Qbit(0, 0)
@@ -108,10 +108,10 @@ def test_CPhase_Gate():
     assert matrix_to_qbits(represent(CPhaseGate(0,1)*Qbit(1,1), QbitZBasisSet(2))) == ImaginaryUnit()*Qbit(1,1)
 
 def test_gateSort():
-    assert gatesort(XGate(1)*HadamardGate(0)**2*CNOTGate(0,1)*XGate(1)*XGate(0)) == HadamardGate(0)**2*XGate(1)*CNOTGate(0,1)*XGate(0)*XGate(1)
+    assert gate_sort(XGate(1)*HadamardGate(0)**2*CNOTGate(0,1)*XGate(1)*XGate(0)) == HadamardGate(0)**2*XGate(1)*CNOTGate(0,1)*XGate(0)*XGate(1)
 
-def test_gatesimp():
-     assert gatesimp(HadamardGate(0)*XGate(1)*HadamardGate(0)**2*CNOTGate(0,1)*XGate(1)**3*XGate(0)*ZGate(3)**2*PhaseGate(4)**3) == HadamardGate(0)*XGate(1)*CNOTGate(0,1)*XGate(0)*XGate(1)*ZGate(4)*PhaseGate(4)
+def test_gate_simp():
+     assert gate_simp(HadamardGate(0)*XGate(1)*HadamardGate(0)**2*CNOTGate(0,1)*XGate(1)**3*XGate(0)*ZGate(3)**2*PhaseGate(4)**3) == HadamardGate(0)*XGate(1)*CNOTGate(0,1)*XGate(0)*XGate(1)*ZGate(4)*PhaseGate(4)
 
 def test_gate_qbit_strings():
     assert sstr(Qbit(0,1)) == "|01>"
@@ -214,33 +214,33 @@ def test_tensor_product():
     numpyl2 = np.matrix(l2.tolist())
     numpy_product = np.kron(numpyl1,numpyl2)
     args = [l1, l2]
-    sympy_product = TensorProduct(*args)
+    sympy_product = tensor_product(*args)
     assert numpy_product.tolist() == sympy_product.tolist()
     numpy_product = np.kron(numpyl2,numpyl1)
     args = [l2, l1]
-    sympy_product = TensorProduct(*args)
+    sympy_product = tensor_product(*args)
     assert numpy_product.tolist() == sympy_product.tolist()
 
     #test for other known matrix of different dimensions
     numpyl2 = np.matrix(l3.tolist())
     numpy_product = np.kron(numpyl1,numpyl2)
     args = [l1, l3]
-    sympy_product = TensorProduct(*args)
+    sympy_product = tensor_product(*args)
     assert numpy_product.tolist() == sympy_product.tolist()
     numpy_product = np.kron(numpyl2,numpyl1)
     args = [l3, l1]
-    sympy_product = TensorProduct(*args)
+    sympy_product = tensor_product(*args)
     assert numpy_product.tolist() == sympy_product.tolist()
 
     #test for non square matrix
     numpyl2 = np.matrix(vec.tolist())
     numpy_product = np.kron(numpyl1,numpyl2)
     args = [l1, vec]
-    sympy_product = TensorProduct(*args)
+    sympy_product = tensor_product(*args)
     assert numpy_product.tolist() == sympy_product.tolist()
     numpy_product = np.kron(numpyl2,numpyl1)
     args = [vec, l1]
-    sympy_product = TensorProduct(*args)
+    sympy_product = tensor_product(*args)
     assert numpy_product.tolist() == sympy_product.tolist()
 
     #test for random matrix with random values that are floats
@@ -248,11 +248,11 @@ def test_tensor_product():
     random_matrix2 = np.random.rand(np.random.rand()*5+1,np.random.rand()*5+1)
     numpy_product = np.kron(random_matrix1,random_matrix2)
     args = [Matrix(random_matrix1.tolist()),Matrix(random_matrix2.tolist())]
-    sympy_product = TensorProduct(*args)
+    sympy_product = tensor_product(*args)
     assert not (sympy_product - Matrix(numpy_product.tolist())).tolist() > (ones((sympy_product.rows,sympy_product.cols))*epsilon).tolist()
 
     #test for three matrix kronecker
-    sympy_product = TensorProduct(l1,vec,l2)
+    sympy_product = tensor_product(l1,vec,l2)
     npl1 = np.matrix(l1.tolist())
     npl2 = np.matrix(l2.tolist())
     npvec = np.matrix(vec.tolist())
@@ -285,7 +285,7 @@ def test_reversible_add():
 
     for i in range(4):
         for k in range(4):
-            result = apply_gates(ADD((0,1,2,3),(4,5,6,7),(8,9,10,11))*Qbit(*([0,0,0,0] + numtoarr(k) + numtoarr(i))))
+            result = apply_gates(add((0,1,2,3),(4,5,6,7),(8,9,10,11))*Qbit(*([0,0,0,0] + numtoarr(k) + numtoarr(i))))
             assert list(result.args[4:8]) == numtoarr(i+k)
 
 def test_reversible_bitshift():
@@ -293,15 +293,15 @@ def test_reversible_bitshift():
     Register = range(12)
     tempStorage = 12
     number = 2
-    assert apply_gates(Bitshift(Register, number, tempStorage)*circuit) == Qbit(0,1,0,1,1,1,1,0,1,0,1,0,0)
+    assert apply_gates(bitshift(Register, number, tempStorage)*circuit) == Qbit(0,1,0,1,1,1,1,0,1,0,1,0,0)
     number = -1
-    assert apply_gates(Bitshift(Register, number, tempStorage)*circuit) == Qbit(0,0,0,0,1,0,1,1,1,1,0,1,0)
+    assert apply_gates(bitshift(Register, number, tempStorage)*circuit) == Qbit(0,0,0,0,1,0,1,1,1,1,0,1,0)
     number = -2
-    assert apply_gates(Bitshift(Register, number, tempStorage)*circuit) == Qbit(0,0,0,0,0,1,0,1,1,1,1,0,1)
+    assert apply_gates(bitshift(Register, number, tempStorage)*circuit) == Qbit(0,0,0,0,0,1,0,1,1,1,1,0,1)
     number = 1
-    assert apply_gates(Bitshift(Register, number, tempStorage)*circuit) == Qbit(0,0,1,0,1,1,1,1,0,1,0,1,0)
+    assert apply_gates(bitshift(Register, number, tempStorage)*circuit) == Qbit(0,0,1,0,1,1,1,1,0,1,0,1,0)
     number = 12
-    assert apply_gates(Bitshift(Register, number, tempStorage)*circuit) == Qbit(0,0,0,0,0,0,0,0,0,0,0,0,0)
+    assert apply_gates(bitshift(Register, number, tempStorage)*circuit) == Qbit(0,0,0,0,0,0,0,0,0,0,0,0,0)
 
 def test_reversible_multiply():
     InReg1 = (0,1,2,3)
@@ -309,7 +309,7 @@ def test_reversible_multiply():
     OutReg = (8,9,10,11)
     carryReg = (12,13,14,15)
     circuit =  Qbit(0,0,0,0,0,0,0,0,0,0,1,0,0,0,1,0)
-    assert apply_gates(Multiply(InReg1, InReg2, OutReg, carryReg)*circuit) == Qbit(0,0,0,0,0,1,0,0,0,0,1,0,0,0,0,0)
+    assert apply_gates(multiply(InReg1, InReg2, OutReg, carryReg)*circuit) == Qbit(0,0,0,0,0,1,0,0,0,0,1,0,0,0,0,0)
 
 def test_represent_decimal():
     assert Qbit(9) == Qbit(1,0,0,1)
