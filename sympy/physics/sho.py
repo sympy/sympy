@@ -55,3 +55,22 @@ def R_nl(n, l, nu, r):
             (sqrt(pi)*(factorial2(2*n + 2*l - 1)))
             )
     return  C*r**(l)*exp(-nu*r**2)*laguerre_l(n-1, l + S(1)/2, 2*nu*r**2)
+
+def E_nl(n, l, hw):
+    """
+    Returns the Energy of an isotropic harmonic oscillator
+
+    ``n``
+        the "nodal" quantum number
+    ``l``
+        the orbital angular momentum
+    ``hw``
+        the harmonic oscillator parameter.
+
+    The unit of the returned value matches the unit of hw, since the energy is
+    calculated as:
+
+        E_nl = (2*n + l + 3/2)*hw
+
+    """
+    return (2*n + l + Rational(3, 2))*hw
