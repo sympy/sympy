@@ -194,7 +194,7 @@ setup(
 
     @property
     def command(self):
-        command = ["python", "setup.py", "build_ext", "--inplace"]
+        command = [sys.executable, "setup.py", "build_ext", "--inplace"]
         return command
 
     def _prepare_files(self, routine):
