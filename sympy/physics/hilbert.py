@@ -1,25 +1,19 @@
-"""
-Hilbert spaces for quantum mechanics [1].
-
-References
-==========
-
-[1] http://en.wikipedia.org/wiki/Hilbert_space
-"""
-
-from sympy import Expr, Interval, oo, sympify, Add, Mul, Pow
+from sympy import Expr, Interval, oo, sympify
 from sympy.physics.quantumbasic import QuantumError
 
 class HilbertSpaceException(QuantumError):
     pass
 
 class HilbertSpace(Expr):
-    """
-    An abstract Hilbert space for quantum mechanics.
+    """An abstract Hilbert space for quantum mechanics.
 
-    Examples
-    ========
+    In short, a Hilbert space is an abstract vector space that is complete with
+    inner products defined [1].
 
+    References
+    ==========
+
+    [1] http://en.wikipedia.org/wiki/Hilbert_space
     """
 
     description = 'General abstract Hilbert space.'
@@ -47,7 +41,8 @@ class HilbertSpace(Expr):
 
     def __pow__(self, other, mod=None):
         if mod is not None:
-            raise ValueError('The third argument to __pow__ is not supported for Hilbert spaces.')
+            raise ValueError('The third argument to __pow__ is not supported\
+for Hilbert spaces.')
         return TensorPowerHilbertSpace(self, other)
 
     def __contains__(self, other):
@@ -59,8 +54,7 @@ class HilbertSpace(Expr):
             return False
 
 class l2(HilbertSpace):
-    """
-    l2 Hilbert space of any dimension.
+    """l2 Hilbert space of any dimension.
 
     l2 (little-ell-two) is a Hilbert space of complex valued vectors. The
     number of components of the vectors in the space is the dimension of
@@ -70,6 +64,8 @@ class l2(HilbertSpace):
     A classic example of an l2 space is spin-1/2, which is l2(2). For spin-s,
     the space is l2(2*s+1). Quantum computing with N qubits is done with
     the direct product space l2(2)**N.
+
+    An l2 object takes in a single argument that is its dimension.
 
     Examples
     ========
@@ -114,12 +110,15 @@ class l2(HilbertSpace):
     @classmethod
     def eval(cls, dimension):
         if len(dimension.atoms()) == 1:
-            if not (dimension.is_Integer and dimension > 0 or dimension is oo or dimension.is_Symbol):
-                raise TypeError('l2 dimension can only be a positive integer, oo, or a Symbol: %r' % dimension)
+            if not (dimension.is_Integer and dimension > 0 or dimension is oo\
+or dimension.is_Symbol):
+                raise TypeError('l2 dimension can only be a positive integer,\
+oo, or a Symbol: %r' % dimension)
         else:
             for dim in dimension.atoms():
                 if not (dim.is_Integer or dim is oo or dim.is_Symbol):
-                    raise TypeError('l2 dimension can only contain integers, oo, or a Symbol: %r' % dim)
+                    raise TypeError('l2 dimension can only contain integers,\
+oo, or a Symbol: %r' % dim)
 
     @property
     def dimension(self):
@@ -127,7 +126,8 @@ class l2(HilbertSpace):
 
     @property
     def description(self):
-        return 'Hilbert space of length %s complex valued vectors.' % str(self.dimension)
+        return 'Hilbert space of length %s complex valued vectors.' % str(
+        self.dimension)
 
     def _sympyrepr(self, printer, *args):
         return "l2(%s)" % printer._print(self.dimension, *args)
@@ -136,12 +136,14 @@ class l2(HilbertSpace):
         return "l2(%s)" % printer._print(self.dimension, *args)
 
 class L2(HilbertSpace):
-    """
-    The Hilbert space of square integrable functions on an interval.
+    """The Hilbert space of square integrable functions on an interval.
 
     L2 (big-ell-two) has a dimension of infinity. L2 is different than
     l2(oo) because the elements of L2 have an uncountable number of components,
     that is, they are functions.
+
+    An L2 object takes in a single sympy Interval argument which represents
+    the interval its functions (vectors) are defined across.
 
     Examples
     ========
@@ -155,8 +157,8 @@ class L2(HilbertSpace):
         >>> HS
         L2([-2, 42])
 
-    If you want to call an L2 Hilbert space's dimension or interval, simply follow
-    these commands:
+    If you want to call an L2 Hilbert space's dimension or interval, simply
+    follow these commands:
 
         >>> HS.interval
         [-2, 42]
@@ -166,7 +168,8 @@ class L2(HilbertSpace):
 
     def __new__(cls, interval):
         if not isinstance(interval, Interval):
-            raise TypeError('L2 interval must be an Interval instance: %r' % interval)
+            raise TypeError('L2 interval must be an Interval instance: %r'\
+% interval)
         obj = Expr.__new__(cls, interval, **{'commutative': False})
         return obj
 
@@ -180,7 +183,8 @@ class L2(HilbertSpace):
 
     @property
     def description(self):
-        return 'Hilbert space of square integrable functions on the interval %s.' % str(self.interval)
+        return 'Hilbert space of square integrable functions on the interval\
+ %s.' % str(self.interval)
 
     def _sympyrepr(self, printer, *args):
         return "L2(%s)" % printer._print(self.interval, *args)
@@ -189,8 +193,7 @@ class L2(HilbertSpace):
         return "L2(%s)" % printer._print(self.interval, *args)
 
 class FockSpace(HilbertSpace):
-    """
-    The Hilbert space for second quantization and field theory.
+    """The Hilbert space for second quantization and field theory.
 
     Technically, this Hilbert space is a symmetrized/anti-symmetrized infinite
     direct sum of direct products of single particle Hilbert spaces [1]. This
@@ -231,16 +234,21 @@ class FockSpace(HilbertSpace):
         return "FS()"
 
 class TensorProductHilbertSpace(HilbertSpace):
-    """
-    A direct or tensor product of Hilbert spaces [1].
+    """A tensor product of Hilbert spaces [1].
+
+    The tensor product between Hilbert spaces is represented by the
+    operator "*" Only the same type of Hilbert space with the same
+    dimension and/or interval will be combined into a tensor power,
+    otherwise the tensor product behaves as in the examples below.
+
+    A TensorProductHilbertSpace object takes in an indefinite number of
+    HilbertSpace objects as its arguments. In addition, multiplication of
+    HilbertSpace objects will automatically return a Tensor product object.
 
     Examples
     ========
 
-    The tensor product between two Hilbert spaces is represented by the
-    operator "*" Only the same type of Hilbert space with the same
-    dimension and/or interval will be combined into a tensor power,
-    otherwise the tensor product behaves as follows:
+    Creating a tensor product:
 
         >>> from sympy import Expr, Interval, oo, sympify
         >>> from sympy.physics.hilbert import l2, L2, FockSpace, TensorProductHilbertSpace, TensorPowerHilbertSpace
@@ -290,17 +298,22 @@ class TensorProductHilbertSpace(HilbertSpace):
             elif isinstance(arg, (HilbertSpace, TensorPowerHilbertSpace)):
                 new_args.append(arg)
             else:
-                raise TypeError('Hilbert spaces can only be multiplied by other Hilbert spaces: %r' % arg)
+                raise TypeError('Hilbert spaces can only be multiplied by\
+other Hilbert spaces: %r' % arg)
         #combine like arguments into direct powers
         comb_args = []
         prev_arg = None
         for new_arg in new_args:
             if prev_arg != None:
-                if isinstance(new_arg, TensorPowerHilbertSpace) and isinstance(prev_arg, TensorPowerHilbertSpace) and new_arg.base == prev_arg.base:
+                if isinstance(new_arg, TensorPowerHilbertSpace) and\
+isinstance(prev_arg, TensorPowerHilbertSpace) and new_arg.base ==\
+prev_arg.base:
                     prev_arg = new_arg.base**(new_arg.exp+prev_arg.exp)
-                elif isinstance(new_arg, TensorPowerHilbertSpace) and new_arg.base == prev_arg:
+                elif isinstance(new_arg, TensorPowerHilbertSpace) and\
+new_arg.base == prev_arg:
                     prev_arg = prev_arg**(new_arg.exp+1)
-                elif isinstance(prev_arg, TensorPowerHilbertSpace) and new_arg == prev_arg.base:
+                elif isinstance(prev_arg, TensorPowerHilbertSpace) and\
+new_arg == prev_arg.base:
                     prev_arg = new_arg**(prev_arg.exp+1)
                 elif new_arg == prev_arg:
                     prev_arg = new_arg**2
@@ -352,14 +365,19 @@ class TensorProductHilbertSpace(HilbertSpace):
         return '*'.join(spaces_strs)
 
 class DirectSumHilbertSpace(HilbertSpace):
-    """
-    A direct sum of Hilbert spaces [1].
+    """A direct sum of Hilbert spaces [1].
+
+    This class uses the "+" operator to represent direct sums between
+    different Hilbert spaces.
+
+    A DirectSumHilbertSpace object takes in an indefinite number of
+    HilbertSpace objects as its arguments. Also, addition of HilbertSpace
+    objects will automatically return a direct sum object.
 
     Examples
     ========
 
-    This class uses the "+" operator to represent direct sums between
-    different Hilbert spaces. Here is a basic example:
+    Here is a basic example of creating a direct sum:
 
         >>> from sympy import Expr, Interval, oo, sympify
         >>> from sympy.physics.hilbert import l2, L2, DirectSumHilbertSpace
@@ -402,7 +420,8 @@ class DirectSumHilbertSpace(HilbertSpace):
             elif isinstance(arg, HilbertSpace):
                 new_args.append(arg)
             else:
-                raise TypeError('Hilbert spaces can only be summed with other Hilbert spaces: %r' % arg)
+                raise TypeError('Hilbert spaces can only be summed with other\
+Hilbert spaces: %r' % arg)
         if recall:
             return DirectSumHilbertSpace(*new_args)
         else:
@@ -434,16 +453,20 @@ class DirectSumHilbertSpace(HilbertSpace):
         return '+'.join(spaces_strs)
 
 class TensorPowerHilbertSpace(HilbertSpace):
-    """
-    An exponentiated (iterated tensor/direct product) Hilbert space [1].
+    """An exponentiated Hilbert space [1].
+
+    Tensor powers (repeated tensor products) are represented by the
+    operator "**" Identical Hilbert spaces that are multiplied together
+    will be automatically combined into a single tensor power object.
+
+    Any Hilbert space, product, or sum may be raised to a tensor power. The
+    TensorPowerHilbertSpace takes two arguments: the Hilbert space; and the
+    tensor power (number).
 
     Examples
     ========
 
-    Tensor powers (repeated tensor products) are represented by the
-    operator "**" Identical Hilbert spaces that are multiplied together
-    will be automatically combined into a single direct power. Here
-    are some examples:
+    Here are some examples of creating tensor powers:
 
         >>> from sympy import Expr, Interval, oo, sympify
         >>> from sympy.physics.hilbert import l2, L2, TensorPowerHilbertSpace, TensorProductHilbertSpace
@@ -453,16 +476,16 @@ class TensorPowerHilbertSpace(HilbertSpace):
         (l2(3))**(2)
 
         >>> hs = l2(2)
-        >>> direct_power = hs*hs*(hs**2)*hs**x
-        >>> direct_power
+        >>> tensor_power = hs*hs*(hs**2)*hs**x
+        >>> tensor_power
         (l2(2))**(4 + x)
 
         >>> HS = L2(Interval(-21, 21))
-        >>> dir_pow = HS**(42+x)
-        >>> dir_pow
+        >>> tens_pow = HS**(42+x)
+        >>> tens_pow
         (L2([-21, 21]))**(42 + x)
 
-    You can check certain properties of direct powers such as their
+    You can check certain properties of tensor powers such as their
     dimensions, bases, exponents, etc:
 
         >>> p1.base
@@ -472,14 +495,14 @@ class TensorPowerHilbertSpace(HilbertSpace):
         >>> p1.dimension
         9
 
-        >>> direct_power.dimension
+        >>> tensor_power.dimension
         2**(4 + x)
 
-        >>> dir_pow.base
+        >>> tens_pow.base
         L2([-21, 21])
-        >>> dir_pow.exp
+        >>> tens_pow.exp
         42 + x
-        >>> dir_pow.dimension
+        >>> tens_pow.dimension
         oo
 
     References
@@ -507,11 +530,13 @@ class TensorPowerHilbertSpace(HilbertSpace):
         #check (and allow) for hs**(x+42+y...) case
         if len(exp.atoms()) == 1:
             if not (exp.is_Integer and exp >= 0 or exp.is_Symbol):
-                raise ValueError('Hilbert spaces can only be raised to positive integers or Symbols: %r' % exp)
+                raise ValueError('Hilbert spaces can only be raised to\
+positive integers or Symbols: %r' % exp)
         else:
             for power in exp.atoms():
                 if not (power.is_Integer or power.is_Symbol):
-                    raise ValueError('Tensor powers can only contain integers or Symbols: %r' % power)
+                    raise ValueError('Tensor powers can only contain integers\
+or Symbols: %r' % power)
         return new_args
 
     @property
@@ -534,10 +559,12 @@ class TensorPowerHilbertSpace(HilbertSpace):
         return "An exponentiated Hilbert space."
 
     def _sympyrepr(self, printer, *args):
-        return "TensorPowerHilbertSpace(%s,%s)" % (printer._print(self.base, *args), printer._print(self.exp, *args))
+        return "TensorPowerHilbertSpace(%s,%s)" % (printer._print(self.base,
+*args), printer._print(self.exp, *args))
 
     def _sympystr(self, printer, *args):
-        return "(%s)**(%s)" % (printer._print(self.base, *args), printer._print(self.exp, *args))
+        return "(%s)**(%s)" % (printer._print(self.base, *args),
+printer._print(self.exp, *args))
 
 #-----------------------------------------------------------------------------
 # Functions
@@ -555,5 +582,6 @@ def compare_hilbert(arg1, arg2):
     elif isinstance(arg2, QPow):
         compare_hilbert(arg2.base, arg1)
     else:
-        if (hasattr(arg1, 'hilbert_space') and hasattr(arg2, 'hilbert_space') and arg1.hilbert_space != arg2.hilbert_space):
+        if (hasattr(arg1, 'hilbert_space') and hasattr(arg2, 'hilbert_space')\
+and arg1.hilbert_space != arg2.hilbert_space):
             raise HilbertSpaceException()
