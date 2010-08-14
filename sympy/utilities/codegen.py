@@ -50,22 +50,23 @@ printing.
 - Optional extra include lines for libraries/objects that can eval special
   functions
 - Test other C compilers and libraries: gcc, tcc, libtcc, gcc+gsl, ...
-- Output arguments
-- InputOutput arguments
-- Sort input/output arguments properly
++ Output arguments
++ InputOutput arguments
++ Sort input/output arguments properly
++ Contiguous array arguments (numpy matrices)
 - Contiguous array arguments (sympy matrices)
 - Non-contiguous array arguments (sympy matrices)
 - ccode must raise an error when it encounters something that can not be
   translated into c. ccode(integrate(sin(x)/x, x)) does not make sense.
 - Complex numbers as input and output
-- Also generate .pyf code for f2py
++ Also generate .pyf code for f2py (in autowrap module)
 - A default complex datatype
 - Include extra information in the header: date, user, hostname, sha1 hash, ...
-- Isolate constants and evaluate them beforehand in double precision
++ Isolate constants and evaluate them beforehand in double precision
 - Common Subexpression Elimination
 - User defined comments in the generated code
 - Fortran 77
-- Fortran 90
++ Fortran 90
 - C++
 - Python
 - ...
