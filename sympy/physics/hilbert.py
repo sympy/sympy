@@ -42,7 +42,7 @@ class HilbertSpace(Expr):
     def __pow__(self, other, mod=None):
         if mod is not None:
             raise ValueError('The third argument to __pow__ is not supported\
-for Hilbert spaces.')
+            for Hilbert spaces.')
         return TensorPowerHilbertSpace(self, other)
 
     def __contains__(self, other):
@@ -111,14 +111,14 @@ class l2(HilbertSpace):
     def eval(cls, dimension):
         if len(dimension.atoms()) == 1:
             if not (dimension.is_Integer and dimension > 0 or dimension is oo\
-or dimension.is_Symbol):
+            or dimension.is_Symbol):
                 raise TypeError('l2 dimension can only be a positive integer,\
-oo, or a Symbol: %r' % dimension)
+                oo, or a Symbol: %r' % dimension)
         else:
             for dim in dimension.atoms():
                 if not (dim.is_Integer or dim is oo or dim.is_Symbol):
                     raise TypeError('l2 dimension can only contain integers,\
-oo, or a Symbol: %r' % dim)
+                    oo, or a Symbol: %r' % dim)
 
     @property
     def dimension(self):
@@ -169,7 +169,7 @@ class L2(HilbertSpace):
     def __new__(cls, interval):
         if not isinstance(interval, Interval):
             raise TypeError('L2 interval must be an Interval instance: %r'\
-% interval)
+            % interval)
         obj = Expr.__new__(cls, interval, **{'commutative': False})
         return obj
 
@@ -184,7 +184,7 @@ class L2(HilbertSpace):
     @property
     def description(self):
         return 'Hilbert space of square integrable functions on the interval\
- %s.' % str(self.interval)
+        %s.' % str(self.interval)
 
     def _sympyrepr(self, printer, *args):
         return "L2(%s)" % printer._print(self.interval, *args)
@@ -299,21 +299,21 @@ class TensorProductHilbertSpace(HilbertSpace):
                 new_args.append(arg)
             else:
                 raise TypeError('Hilbert spaces can only be multiplied by\
-other Hilbert spaces: %r' % arg)
+                other Hilbert spaces: %r' % arg)
         #combine like arguments into direct powers
         comb_args = []
         prev_arg = None
         for new_arg in new_args:
             if prev_arg != None:
                 if isinstance(new_arg, TensorPowerHilbertSpace) and\
-isinstance(prev_arg, TensorPowerHilbertSpace) and new_arg.base ==\
-prev_arg.base:
+                isinstance(prev_arg, TensorPowerHilbertSpace) and\
+                new_arg.base == prev_arg.base:
                     prev_arg = new_arg.base**(new_arg.exp+prev_arg.exp)
                 elif isinstance(new_arg, TensorPowerHilbertSpace) and\
-new_arg.base == prev_arg:
+                new_arg.base == prev_arg:
                     prev_arg = prev_arg**(new_arg.exp+1)
                 elif isinstance(prev_arg, TensorPowerHilbertSpace) and\
-new_arg == prev_arg.base:
+                new_arg == prev_arg.base:
                     prev_arg = new_arg**(prev_arg.exp+1)
                 elif new_arg == prev_arg:
                     prev_arg = new_arg**2
@@ -421,7 +421,7 @@ class DirectSumHilbertSpace(HilbertSpace):
                 new_args.append(arg)
             else:
                 raise TypeError('Hilbert spaces can only be summed with other\
-Hilbert spaces: %r' % arg)
+                Hilbert spaces: %r' % arg)
         if recall:
             return DirectSumHilbertSpace(*new_args)
         else:
@@ -531,12 +531,12 @@ class TensorPowerHilbertSpace(HilbertSpace):
         if len(exp.atoms()) == 1:
             if not (exp.is_Integer and exp >= 0 or exp.is_Symbol):
                 raise ValueError('Hilbert spaces can only be raised to\
-positive integers or Symbols: %r' % exp)
+                positive integers or Symbols: %r' % exp)
         else:
             for power in exp.atoms():
                 if not (power.is_Integer or power.is_Symbol):
                     raise ValueError('Tensor powers can only contain integers\
-or Symbols: %r' % power)
+                    or Symbols: %r' % power)
         return new_args
 
     @property
@@ -559,12 +559,12 @@ or Symbols: %r' % power)
         return "An exponentiated Hilbert space."
 
     def _sympyrepr(self, printer, *args):
-        return "TensorPowerHilbertSpace(%s,%s)" % (printer._print(self.base,
-*args), printer._print(self.exp, *args))
+        return "TensorPowerHilbertSpace(%s,%s)" % (printer._print(self.base,\
+        *args), printer._print(self.exp, *args))
 
     def _sympystr(self, printer, *args):
-        return "(%s)**(%s)" % (printer._print(self.base, *args),
-printer._print(self.exp, *args))
+        return "(%s)**(%s)" % (printer._print(self.base, *args),\
+        printer._print(self.exp, *args))
 
 #-----------------------------------------------------------------------------
 # Functions
@@ -583,5 +583,5 @@ def compare_hilbert(arg1, arg2):
         compare_hilbert(arg2.base, arg1)
     else:
         if (hasattr(arg1, 'hilbert_space') and hasattr(arg2, 'hilbert_space')\
-and arg1.hilbert_space != arg2.hilbert_space):
+        and arg1.hilbert_space != arg2.hilbert_space):
             raise HilbertSpaceException()
