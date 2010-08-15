@@ -1,10 +1,5 @@
-from sympy import (
-    Expr, Basic, sympify, Add, Mul, Pow,
-    I, Function, Integer, S, sympify, Matrix, oo
-)
-from sympy.core.sympify import _sympify
-from sympy.core.numbers import Number
-from sympy.core.symbol import Symbol, symbols
+from sympy import Expr, Basic, sympify, Add, Mul, Function, Integer, S, Matrix
+from sympy.core.symbol import symbols
 from sympy.physics.quantumbasic import QuantumError, QuantumBasic
 from sympy.printing.pretty.stringpict import prettyForm
 from sympy.physics.hilbert import HilbertSpace
@@ -52,8 +47,7 @@ __all__ = [
 #-----------------------------------------------------------------------------
 
 class Representable(object):
-    """
-    An object that can be represented.
+    """An object that can be represented.
     """
 
     def represent(self, basis, **options):
@@ -63,13 +57,15 @@ class Representable(object):
             rep = f(basis, **options)
             return rep
         else:
-            raise QuantumError(
-                'Object %r does not know how to represent itself in basis: %r' % (self, basis)
-            )
+            raise QuantumError('Object %r does not know how to represent\
+            itself in basis: %r' % (self, basis))
 
 class StateBase(QuantumBasic, Representable):
-    """
-    Base class for general abstract states in quantum mechanics.
+    """Base class for general abstract states in quantum mechanics.
+
+    All other state classes defined will need to inherit from this class. It
+    carries the basic structure for all other states such as dual, _eval_dagger
+    and name.
     """
 
     # Slots are for instance variables that can always be computed dynamically
@@ -106,52 +102,59 @@ class StateBase(QuantumBasic, Representable):
         return pform
 
     def _sympyrepr(self, printer, *args):
-        return '%s(%s)' % (self.__class__.__name__, self._print_name(printer, *args))
+        return '%s(%s)' % (self.__class__.__name__, self._print_name(printer,\
+        *args))
 
     def _sympystr(self, printer, *args):
-        return '%s%s%s' % (self.lbracket, self._print_name(printer, *args), self.rbracket)
+        return '%s%s%s' % (self.lbracket, self._print_name(printer, *args),\
+        self.rbracket)
 
     def _pretty(self, printer, *args):
         from sympy.printing.pretty.stringpict import prettyForm
         pform = self._print_name_pretty(printer, *args)
-        pform = prettyForm(*pform.left((self.lbracketPretty)))
-        pform = prettyForm(*pform.right((self.rbracketPretty)))
+        pform = prettyForm(*pform.left((self.lbracket_pretty)))
+        pform = prettyForm(*pform.right((self.rbracket_pretty)))
         return pform
 
 class KetBase(StateBase):
-    """
-    Base class for Ket states.
+    """Base class for Ket states.
+
+    Includes what the Ket's dual property is and how its brackets look when
+    they are printed.
     """
 
     lbracket = '|'
     rbracket = '>'
-    lbracketPretty = prettyForm(u'\u2758')
-    rbracketPretty = prettyForm(u'\u276D')
+    lbracket_pretty = prettyForm(u'\u2758')
+    rbracket_pretty = prettyForm(u'\u276D')
 
     @property
     def dual(self):
         return BraBase(*self.args)
 
 class BraBase(StateBase):
-    """
-    Base class for Bra states.
+    """Base class for Bra states.
+
+    Includes what the Bra's dual property is and how its brackets look when
+    they are printed.
     """
 
     lbracket = '<'
     rbracket = '|'
-    lbracketPretty = prettyForm(u'\u276C')
-    rbracketPretty = prettyForm(u'\u2758')
+    lbracket_pretty = prettyForm(u'\u276C')
+    rbracket_pretty = prettyForm(u'\u2758')
 
     @property
     def dual(self):
         return KetBase(*self.args)
 
 class State(StateBase):
-    """
-    General abstract quantum state.
+    """General abstract quantum state.
 
     Anywhere you can have a State, you can also have Integer(0).
     All code must check for this!
+
+    A state takes in a name as its argument.
     """
 
     def __new__(cls, name):
@@ -179,10 +182,13 @@ class State(StateBase):
         return self
 
 class Ket(State, KetBase):
-    """
-    A class for creating Ket objects in sympy. Inherits from State and KetBase.
-    In a state represented by a ray in Hilbert space, a Ket is a vector that
-    that points along that ray [1].
+    """A Ket state for quantum mechanics. 
+
+    Inherits from State and KetBase. In a state represented by a ray in Hilbert
+    space, a Ket is a vector that points along that ray [1].
+
+    A Ket takes in a name as its argument in order to be differentiated from
+    other Kets.
 
     Examples
     ========
@@ -210,9 +216,12 @@ class Ket(State, KetBase):
         return Bra(*self.args)
 
 class Bra(State, BraBase):
-    """
-    A class for creating Bra objects in sympy. Inherits from State and BraBase.
-    A Bra is the dual of a Ket [1].
+    """A Bra state for quantum mechanics.
+
+    Inherits from State and BraBase. A Bra is the dual of a Ket [1].
+
+    A Bra takes in a name as its argument in order to be differentiated from
+    other Bras.
 
     Examples
     ========
@@ -240,8 +249,11 @@ class Bra(State, BraBase):
         return Ket(*self.args)
 
 class TimeDepState(StateBase):
-    """
-    General abstract time dependent quantum state.
+    """General abstract time dependent quantum state.
+
+    Used for sub-classing time dependent states in quantum mechanics.
+
+    Takes in name and time arguments.
     """
     def __new__(cls, name, time):
         # First compute args and call Expr.__new__ to create the instance
@@ -270,20 +282,33 @@ class TimeDepState(StateBase):
         return HilbertSpace()
 
 class TimeDepKet(TimeDepState, KetBase):
+    """A time dependent Ket state for quantum mechanics.
+
+    Inherits from TimeDepState and KetBase. Its dual is a time dependent
+    Bra state.
+
+    Takes in name and time arguments.
+    """
 
     @property
     def dual(self):
         return TimeDepBra(*self.args)
 
 class TimeDepBra(TimeDepState, BraBase):
+    """A time dependent Bra state for quantum mechanics.
+
+    Inherits from TimeDepState and BraBase. Its dual is a time dependent
+    Ket state.
+
+    Takes in name and time arguments.
+    """
 
     @property
     def dual(self):
         return TimeDepKet(*self.args)
 
 class BasisSet(Basic):
-    """
-    A basis set for a Hilbert space.
+    """A basis set for a Hilbert space.
     """
 
     def __new__(cls, dimension):
@@ -303,10 +328,13 @@ class BasisSet(Basic):
         raise NotImplementedError('Not implemented')
 
 class Operator(QuantumBasic, Representable):
-    """
-    Base class for non-commuting quantum operators. An operator is a map from
-    one vector space to another [1]. In quantum mechanics, operators correspond
-    to observables [2].
+    """Base class for non-commuting quantum operators. 
+
+    An operator is a map from one vector space to another [1]. In quantum
+    mechanics, operators correspond to observables [2].
+
+    An operator takes in a name argument to differentiate it from other
+    operators.
 
     Examples
     ========
@@ -350,7 +378,8 @@ class Operator(QuantumBasic, Representable):
         return self
 
     def _sympyrepr(self, printer, *args):
-        return '%s(%s)' % (self.__class__.__name__, printer._print(self.name, *args))
+        return '%s(%s)' % (self.__class__.__name__, printer._print(self.name,\
+        *args))
 
     def _sympystr(self, printer, *args):
         return printer._print(self.name, *args)
@@ -359,10 +388,12 @@ class Operator(QuantumBasic, Representable):
         return printer._print(self.name, *args)
 
 class InnerProduct(QuantumBasic):
-    """
-    An unevaluated inner product between a Bra and a Ket. Because a Bra is
-    essentially a row vector and a Ket is essentially a column vector, the
-    inner product acts_like to a complex number.
+    """An unevaluated inner product between a Bra and a Ket. 
+
+    Because a Bra is essentially a row vector and a Ket is essentially a column
+    vector, the inner product evaluates (acts_like) to a complex number.
+
+    An InnerProduct takes first a Bra and then a Ket as its arguments.
 
     Examples
     ========
@@ -387,7 +418,8 @@ class InnerProduct(QuantumBasic):
     def __new__(cls, bra, ket):
         #What about innerProd(1,1), should it auto simplify?
         if not (bra and ket):
-            raise QuantumError('InnerProduct requires a leading Bra and a trailing Ket')
+            raise QuantumError('InnerProduct requires a leading Bra and a\
+            trailing Ket')
         assert issubclass(bra.acts_like, Bra), 'First argument must be a Bra'
         assert issubclass(ket.acts_like, Ket), 'Second argument must be a Ket'
         assert bra.hilbert_space == ket.hilbert_space
@@ -417,7 +449,8 @@ class InnerProduct(QuantumBasic):
         return InnerProduct(Dagger(self.ket), Dagger(self.bra))
 
     def _sympyrepr(self, printer, *args):
-        return '%s(%s,%s)' % (self.__class__.__name__, printer._print(self.bra, *args), printer._print(self.ket, *args))
+        return '%s(%s,%s)' % (self.__class__.__name__, printer._print(self.bra,\
+        *args), printer._print(self.ket, *args))
 
     def _sympystr(self, printer, *args):
         sbra = str(self.bra)
@@ -430,10 +463,13 @@ class InnerProduct(QuantumBasic):
         return prettyForm(*pform.right(self.ket._pretty(printer, *args)))
 
 class OuterProduct(Operator):
-    """
-    An unevaluated outer product between a Ket and Bra. Because a Ket is
-    essentially a column vector and a Bra is essentially a row vector, the
-    outer product acts_like to an operator (i.e. matrix) [1].
+    """An unevaluated outer product between a Ket and Bra. 
+
+    Because a Ket is essentially a column vector and a Bra is essentially a row
+    vector, the outer product evaluates (acts_like) to an operator
+    (i.e. a matrix) [1].
+
+    An InnerProduct takes first a Ket and then a Bra as its arguments.
 
     Examples
     ========
@@ -457,7 +493,8 @@ class OuterProduct(Operator):
 
     def __new__(cls, ket, bra):
         if not (ket and bra):
-            raise QuantumError('OuterProduct requires a leading Ket and a trailing Bra')
+            raise QuantumError('OuterProduct requires a leading Ket and a\
+            trailing Bra')
         assert issubclass(ket.acts_like, Ket), 'First argument must be a Ket'
         assert issubclass(bra.acts_like, Bra), 'Second argument must be a Bra'
         assert ket.hilbert_space == bra.hilbert_space
@@ -490,7 +527,8 @@ class OuterProduct(Operator):
         return OuterProduct(Dagger(self.bra), Dagger(self.ket))
 
     def _sympyrepr(self, printer, *args):
-        return '%s(%s,%s)' % (self.__class__.__name__, printer._print(self.ket, *args), printer._print(self.bra, *args))
+        return '%s(%s,%s)' % (self.__class__.__name__, printer._print(self.ket,\
+        *args), printer._print(self.bra, *args))
 
     def _sympystr(self, printer, *args):
         return str(self.ket)+str(self.bra)
@@ -500,16 +538,20 @@ class OuterProduct(Operator):
         return prettyForm(*pform.right(self.bra._pretty(printer, *args)))
 
 class Dagger(QuantumBasic):
-    """
-    General Hermitian conjugate operation. When an object is daggered it is
-    transposed and then the complex conjugate is taken [1].
+    """General Hermitian conjugate operation. 
+
+    When an object is daggered it is transposed and then the complex conjugate
+    is taken [1].
+
+    A Dagger can take in any quantum object as its argument.
 
     Examples
     ========
 
     Daggering various quantum objects:
 
-        >>> from sympy.physics.quantum import Dagger, Ket, Bra, InnerProduct, OuterProduct, Operator
+        >>> from sympy.physics.quantum import Dagger, Ket, Bra, InnerProduct,\
+        OuterProduct, Operator
         >>> Dagger(Ket('psi'))
         <psi|
         >>> Dagger(Bra('bus'))
@@ -551,7 +593,8 @@ class Dagger(QuantumBasic):
         """
         if hasattr(arg, '_eval_dagger'):
             return arg._eval_dagger()
-        elif not isinstance(arg, (InnerProduct, OuterProduct, Operator, StateBase)):
+        elif not isinstance(arg, (InnerProduct, OuterProduct, Operator,\
+        StateBase)):
             return arg.conjugate()
         elif isinstance(arg, Matrix):
             arg = arg.T
@@ -589,9 +632,10 @@ class Dagger(QuantumBasic):
         return pform
 
 class KroneckerDelta(Function):
-    """
-    Discrete delta function. A function that takes in two integers i and j.
-    It returns 0 if i and j are not equal or it returns 1 if i and j are equal.
+    """The discrete delta function.
+    
+    A function that takes in two integers i and j. It returns 0 if i and j are
+    not equal or it returns 1 if i and j are equal.
 
     Examples
     ========
@@ -620,12 +664,13 @@ class KroneckerDelta(Function):
             return cls(j,i)
         diff = i-j
         if diff == 0:
-            return Integer(1)
+            return S.One
         elif diff.is_number:
             return S.Zero
 
     def _eval_subs(self, old, new):
-        r = KroneckerDelta(self.args[0].subs(old, new), self.args[1].subs(old, new))
+        r = KroneckerDelta(self.args[0].subs(old, new), self.args[1].subs(old,\
+        new))
         return r
 
     def _eval_dagger(self):
@@ -634,18 +679,22 @@ class KroneckerDelta(Function):
     def _latex_(self,printer):
         return "\\delta_{%s%s}"% (self.args[0].name,self.args[1].name)
 
-    def __repr__(self):
-        return "KroneckerDelta(%s,%s)"% (self.args[0],self.args[1])
+    def __sympyrepr__(self):
+        return "%s(%s,%s)"% (self.__class__.__name__, self.args[0],\
+        self.args[1])
 
-    def __str__(self):
+    def __sympystr__(self):
         return 'd(%s,%s)'% (self.args[0],self.args[1])
 
+class Commutator(Function, QuantumBasic):
+    """The commutator function for quantum mechanics.
 
-class Commutator(Function):
-    """
-    The Commutator:  [A, B] = A*B - B*A
+    This function behaves as such: [A, B] = A*B - B*A
 
     The arguments are ordered according to .__cmp__()
+
+    Examples
+    ========
 
     >>> from sympy import symbols
     >>> from sympy.physics.quantum import Commutator
@@ -659,6 +708,11 @@ class Commutator(Function):
     Commutator(A, B)
     >>> comm.doit()
     A*B - B*A
+
+    References
+    ==========
+
+    http://en.wikipedia.org/wiki/Commutator
     """
 
     is_commutative = False
@@ -713,14 +767,22 @@ class Commutator(Function):
         b = self.args[1]
         return (a*b - b*a).doit(**hints)
 
+    @property
+    def acts_like(self):
+        if isinstance(self.doit(), QuantumBasic):
+            return self.doit().acts_like
+        else:
+            return self.doit().__class__
+
     def _eval_dagger(self):
         return Commutator(Dagger(self.args[1]), Dagger(self.args[0]))
 
-    def __repr__(self):
-        return "Commutator(%s,%s)" %(self.args[0], self.args[1])
+    def __sympyrepr__(self):
+        return "%s(%s,%s)" % (self.__class__.__name__, self.args[0],\
+        self.args[1])
 
-    def __str__(self):
-        return "[%s,%s]" %(self.args[0], self.args[1])
+    def __sympystr__(self):
+        return "[%s,%s]" % (self.args[0], self.args[1])
 
     def _latex_(self,printer):
         return "\\left[%s,%s\\right]"%tuple([
@@ -732,8 +794,7 @@ class Commutator(Function):
 #-----------------------------------------------------------------------------
 
 def represent(expr, basis, **options):
-    """
-    Represent the quantum expression in the given basis.
+    """Represent the quantum expression in the given basis.
     """
     from sympy.physics.qadd import QAdd
     from sympy.physics.qmul import QMul
@@ -762,18 +823,17 @@ def represent(expr, basis, **options):
     return result
 
 def split_product(expr):
-    """
-    Separates a (valid) Mul of quantum objects and inner/outer products into a
-    Mul.
+    """Separates inner/outer products into a QMul.
 
     * Only works for simple Muls (e.g. a*b*c*d) right now.
     """
-    new_expr = Mul()
+    from sympy.physics.qmul import QMul
+    new_expr = QMul(1)
     for arg in expr.args:
         if isinstance(arg, InnerProduct):
-            new_expr = new_expr*Mul(*arg.args)
+            new_expr = new_expr*QMul(*arg.args)
         elif isinstance(arg, OuterProduct):
-            new_expr = new_expr*Mul(*arg.args)
+            new_expr = new_expr*QMul(*arg.args)
         else:
             new_expr = new_expr*arg
     return new_expr

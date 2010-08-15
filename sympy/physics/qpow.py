@@ -21,13 +21,15 @@ class QPow(QuantumBasic):
         if not isinstance(base, QuantumBasic):
             if not isinstance(exp, QuantumBasic):
                 return Pow(base, exp)
-            elif issubclass(exp.acts_like, (Operator, OuterProduct, InnerProduct)):
+            elif issubclass(exp.acts_like, (Operator, OuterProduct,\
+            InnerProduct)):
                 ret = Expr.__new__(cls, base, exp)
                 ret.hilbert_space = exp.hilbert_space
                 ret.acts_like = exp.acts_like
                 return ret
         elif not isinstance(exp, QuantumBasic):
-            if issubclass(base.acts_like, (Operator, OuterProduct, InnerProduct)):
+            if issubclass(base.acts_like, (Operator, OuterProduct,\
+            InnerProduct)):
                 if exp == S.Zero:
                     return S.One
                 elif exp == S.One:
@@ -36,12 +38,14 @@ class QPow(QuantumBasic):
                 ret.hilbert_space = base.hilbert_space
                 ret.acts_like = base.acts_like
                 return ret
-        elif issubclass(exp.acts_like, InnerProduct) and issubclass(base.acts_like, (InnerProduct, Operator)):
+        elif issubclass(exp.acts_like, InnerProduct) and issubclass(\
+        base.acts_like, (InnerProduct, Operator)):
                 ret = Expr.__new__(cls, base, exp)
                 ret.hilbert_space = base.hilbert_space
                 ret.acts_like = base.acts_like
                 return ret
-        elif issubclass(base.acts_like, InnerProduct) and issubclass(exp.acts_like, (InnerProduct, Operator)):
+        elif issubclass(base.acts_like, InnerProduct) and issubclass(\
+        exp.acts_like, (InnerProduct, Operator)):
                 ret = Expr.__new__(cls, base, exp)
                 ret.hilbert_space = exp.hilbert_space
                 ret.acts_like = exp.acts_like
@@ -75,4 +79,5 @@ class QPow(QuantumBasic):
         return '(' + sstr(self.base) + ')' '**' + sstr(self.exp)
 
     def _pretty(self, printer, *args):
-        return printer._print(self.args[0], *args)**printer._print(self.args[1], *args)
+        return printer._print(self.args[0], *args)**printer._print(\
+        self.args[1], *args)
