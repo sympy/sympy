@@ -1,4 +1,5 @@
-from sympy.physics.hilbert import l2, L2, FockSpace, TensorProductHilbertSpace, DirectSumHilbertSpace, TensorPowerHilbertSpace
+from sympy.physics.hilbert import l2, L2, FockSpace, TensorProductHilbertSpace,\
+DirectSumHilbertSpace, TensorPowerHilbertSpace
 
 from sympy import Interval, oo, Symbol
 
@@ -116,7 +117,8 @@ def test_TensorProductHilbertSpace_L2_oo():
     b3 = b1*b2
     assert isinstance(b3, TensorProductHilbertSpace)
     assert b3.dimension == oo
-    assert b3.subs(oo, 42) == L2(Interval(-42, 42, False, True))*L2(Interval(-oo, 42))
+    assert b3.subs(oo, 42) == L2(Interval(-42, 42, False, True))*L2(Interval(\
+    -oo, 42))
     assert b3.spaces == (L2(Interval(-42, oo)), L2(Interval(-oo, 42)))
     assert b1*b2 != b2*b1
     assert list((b1*b2).spaces) == list(reversed((b2*b1).spaces))
@@ -140,7 +142,8 @@ def test_TensorProductHilbertSpace_FockSpace():
     f1 = FockSpace()
     f2 = FockSpace()
     f3 = f1*f2
-    # will never be a tensor product instance due to power combining (Fock spaces can't be different as of now)
+    # will never be a tensor product instance due to power combining (Fock 
+    # spaces can't be different as of now)
     assert isinstance(f3, TensorPowerHilbertSpace)
     assert f3.dimension == oo
 
@@ -173,7 +176,9 @@ def test_TensorProductHilbertSpace_mixed():
     true_test = s3*s6*s9*b3*b6*b9*f3
     assert isinstance(true_test, TensorProductHilbertSpace)
     assert true_test.dimension == oo
-    assert true_test.spaces == (l2(2), l2(42), l2(oo)**2, l2(x)**2, L2(Interval(-42, 42)), L2(Interval(-21, 21)), L2(Interval(-oo, oo))**2, L2(Interval(x, y)), L2(Interval(q, p)), FockSpace()**2)
+    assert true_test.spaces == (l2(2), l2(42), l2(oo)**2, l2(x)**2,\
+    L2(Interval(-42, 42)), L2(Interval(-21, 21)), L2(Interval(-oo, oo))**2,\
+    L2(Interval(x, y)), L2(Interval(q, p)), FockSpace()**2)
 
 def test_DirectSumHilbertSpace_l2_int():
     s1 = l2(2)
@@ -223,7 +228,8 @@ def test_DirectSumHilbertSpace_L2_oo():
     b3 = b1+b2
     assert isinstance(b3, DirectSumHilbertSpace)
     assert b3.dimension == oo
-    assert b3.subs(oo, 42) == L2(Interval(-oo, 42, False, True))+L2(Interval(-oo, 42, False, True))
+    assert b3.subs(oo, 42) == L2(Interval(-oo, 42, False, True))+\
+    L2(Interval(-oo, 42, False, True))
     assert b3.spaces == set((L2(Interval(-oo, oo)), L2(Interval(-oo, oo))))
     assert (b1+b2).spaces == (b2+b1).spaces
 
@@ -279,7 +285,8 @@ def test_DirectSumHilbertSpace_mixed():
     true_test = s3+s6+s9+b3+b6+b9+f3
     assert isinstance(true_test, DirectSumHilbertSpace)
     assert true_test.dimension == oo
-    assert true_test.subs(-oo, -42) == s3+s6+s9+b3+L2(Interval(-42, oo, True))+L2(Interval(-42, oo, True))+b9+f3
+    assert true_test.subs(-oo, -42) == s3+s6+s9+b3+L2(Interval(-42, oo, True))+\
+    L2(Interval(-42, oo, True))+b9+f3
 
 def test_TensorPowerHilbertSpace_l2_int():
     x = Symbol('x')
@@ -446,5 +453,9 @@ def test_TensorPowerHilbertSpace_mixed():
     true_test = s2*s3*s6*s22*s32*s62*s23*s33*s63*b3*b4*b32*b42*b33*b43*b53*f2
     assert isinstance(true_test, TensorProductHilbertSpace)
     assert true_test.dimension == oo
-    assert true_test == l2(5)**(8+x)*l2(oo)**(8+x)*l2(y)**(8+x)*L2(Interval(-42,42))**7*L2(Interval(-oo,oo))**7*L2(Interval(x, y))**(12+x)*FockSpace()**(10+x+y)
-    assert true_test.spaces == (l2(5)**(8+x), l2(oo)**(8+x), l2(y)**(8+x), L2(Interval(-42,42))**7, L2(Interval(-oo,oo))**7, L2(Interval(x, y))**(12+x), FockSpace()**(10+x+y))
+    assert true_test == l2(5)**(8+x)*l2(oo)**(8+x)*l2(y)**(8+x)*\
+    L2(Interval(-42,42))**7*L2(Interval(-oo,oo))**7*L2(Interval(x, y))**(12+x)*\
+    FockSpace()**(10+x+y)
+    assert true_test.spaces == (l2(5)**(8+x), l2(oo)**(8+x), l2(y)**(8+x),\
+    L2(Interval(-42,42))**7, L2(Interval(-oo,oo))**7,\
+    L2(Interval(x, y))**(12+x), FockSpace()**(10+x+y))

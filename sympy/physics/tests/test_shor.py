@@ -9,9 +9,12 @@ x, y = symbols('xy')
 epsilon = .000001
 
 def test_controlledMod():
-    assert apply_gates(controlledMod(4, 2, 2)*Qbit(0,0,1,0,0,0,0,0)) == Qbit(0,0,1,0,0,0,0,0)
-    assert apply_gates(controlledMod(5, 5, 7)*Qbit(0,0,1,0,0,0,0,0,0,0)) == Qbit(0,0,1,0,0,0,0,0,1,0)
-    assert apply_gates(controlledMod(3, 2, 3)*Qbit(0,1,0,0,0,0)) == Qbit(0,1,0,0,0,1)
+    assert apply_gates(controlledMod(4, 2, 2)*Qbit(0,0,1,0,0,0,0,0)) ==\
+    Qbit(0,0,1,0,0,0,0,0)
+    assert apply_gates(controlledMod(5, 5, 7)*Qbit(0,0,1,0,0,0,0,0,0,0)) ==\
+    Qbit(0,0,1,0,0,0,0,0,1,0)
+    assert apply_gates(controlledMod(3, 2, 3)*Qbit(0,1,0,0,0,0)) ==\
+    Qbit(0,1,0,0,0,1)
 
 def test_continuedFrac():
     assert continuedFraction(3245, 10000) == [0,3,12,4,13]

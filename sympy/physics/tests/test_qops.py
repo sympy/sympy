@@ -155,7 +155,8 @@ def test_QMul_mixed():
     should_except(qmop, bra)
     helper(qmop*inner, Operator)
 
-    assert expand((ket+ket1)*(bra+bra2)) == (ket*bra + ket*bra2 + ket1*bra + ket1*bra2)
+    assert expand((ket+ket1)*(bra+bra2)) == (ket*bra + ket*bra2 + ket1*bra +\
+    ket1*bra2)
     assert Dagger(op*ket) == Dagger(ket)*Dagger(op) == Bra('A')*Dagger(op)
 
 def test_QAdd_mixed():
