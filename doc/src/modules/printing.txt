@@ -121,7 +121,7 @@ are wrapped properly when the assignment part is added.
           var = 1 - x**2/2 - x**4/8 - x**6/16 - 5*x**8/128 - 7*x**10/256 -
          @ 21*x**12/1024 - 33*x**14/2048 - 429*x**16/32768 - 715*x**18/65536
 
-Also for piecewise functions, the assign_to option can be helpful:
+For piecewise functions, the assign_to option is mandatory:
 
     >>> print fcode(Piecewise((x,x<1),(x**2,True)), assign_to="var")
           if (x < 1) then
@@ -134,6 +134,27 @@ Note that only top-level piecewise functions are supported due to the lack of
 a conditional operator in Fortran. Nested piecewise functions would require the
 introduction of temporary variables, which is a type of expression manipulation
 that goes beyond the scope of fcode.
+
+Loops are generated if there are Indexed objects in the expression.  This
+also requires use of the assign_to option.
+
+    >>> A, B = map(IndexedBase, ['A', 'B'])
+    >>> m = Symbol('m', integer=True)
+    >>> i = Idx('i', m)
+    >>> print fcode(2*B[i], assign_to=A[i])
+        do i = 1, m
+            A(i) = 2*B(i)
+        end do
+
+Repeated indices in an expression with Indexed objects are interpreted as
+summation. For instance, code for the trace of a matrix can be generated
+with
+
+    >>> print fcode(A[i, i], assign_to=x)
+          x = 0
+          do i = 1, m
+              x = x + A(i, i)
+          end do
 
 By default, number symbols such as ``pi`` and ``E`` are detected and defined as
 Fortran parameters. The precision of the constants can be tuned with the
