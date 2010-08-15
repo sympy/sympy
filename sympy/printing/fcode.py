@@ -95,7 +95,9 @@ class FCodePrinter(CodePrinter):
         close_lines = []
         for i in indices:
             # fortran arrays start at 1 and end at dimension
-            open_lines.append("do %s = %s, %s" % (i.label, i.lower+1, i.upper+1))
+            var, start, stop = map(self._print,
+                    [i.label, i.lower+1, i.upper+1])
+            open_lines.append("do %s = %s, %s" % (var, start, stop))
             close_lines.append("end do")
         return open_lines, close_lines
 

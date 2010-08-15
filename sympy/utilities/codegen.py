@@ -544,12 +544,13 @@ class CCodeGen(CodeGen):
 
         type_args = []
         for arg in routine.arguments:
+            name = ccode(arg.name)
             if arg.dimensions:
-                type_args.append((arg.get_datatype('C'), "*%s" % arg.name))
+                type_args.append((arg.get_datatype('C'), "*%s" % name))
             elif isinstance(arg, ResultBase):
-                type_args.append((arg.get_datatype('C'), "&%s" % arg.name))
+                type_args.append((arg.get_datatype('C'), "&%s" % name))
             else:
-                type_args.append((arg.get_datatype('C'), arg.name))
+                type_args.append((arg.get_datatype('C'), name))
         arguments = ", ".join([ "%s %s" % t for t in type_args])
         return "%s %s(%s)" % (ctype, routine.name, arguments)
 
@@ -665,6 +666,10 @@ class FCodeGen(CodeGen):
     def __init__(self, project='project'):
         CodeGen.__init__(self, project)
 
+    def _get_symbol(self, s):
+        """returns the symbol as fcode print it"""
+        return fcode(s).strip()
+
     def _get_header(self):
         """Writes a common header for the generated files."""
         code_lines = []
@@ -692,9 +697,11 @@ class FCodeGen(CodeGen):
         else:
             code_list.append("subroutine")
 
+        args = ", ".join("%s" % self._get_symbol(arg.name)
+                for arg in routine.arguments)
+
         # name of the routine + arguments
-        code_list.append("%s(%s)\n" % (routine.name,
-            ", ".join("%s" % arg.name for arg in routine.arguments)))
+        code_list.append("%s(%s)\n" % (routine.name, args))
         code_list = [ " ".join(code_list) ]
 
         code_list.append('implicit none\n')
@@ -716,14 +723,17 @@ class FCodeGen(CodeGen):
             else:
                 raise CodeGenError("Unkown Argument type: %s"%type(arg))
 
+            fprint = self._get_symbol
+
             if arg.dimensions:
                 # fortran arrays start at 1
-                dimstr = ", ".join(["%s:%s"%(dim[0]+1, dim[1]+1)
+                dimstr = ", ".join(["%s:%s"%(
+                    fprint(dim[0]+1), fprint(dim[1]+1))
                     for dim in arg.dimensions])
                 typeinfo += ", dimension(%s)" % dimstr
-                array_list.append("%s :: %s\n" % (typeinfo, arg.name))
+                array_list.append("%s :: %s\n" % (typeinfo, fprint(arg.name)))
             else:
-                scalar_list.append("%s :: %s\n" % (typeinfo, arg.name))
+                scalar_list.append("%s :: %s\n" % (typeinfo, fprint(arg.name)))
 
         # scalars first, because they can be used in array declarations
         code_list.extend(scalar_list)
@@ -735,10 +745,9 @@ class FCodeGen(CodeGen):
         code_list = []
         for var in sorted(routine.local_vars, key=str):
             typeinfo = get_default_datatype(var)
-            code_list.append("%s :: %s\n" % (typeinfo.fname, var))
-
+            code_list.append("%s :: %s\n" % (
+                typeinfo.fname, self._get_symbol(var)))
         return code_list
-
 
     def _get_routine_ending(self, routine):
         """

@@ -112,9 +112,9 @@ class CCodePrinter(CodePrinter):
         for i in indices:
             # C arrays start at 0 and end at dimension-1
             open_lines.append(loopstart % {
-                'var': i.label,
-                'start': i.lower,
-                'end': i.upper + 1})
+                'var': self._print(i.label),
+                'start': self._print(i.lower),
+                'end': self._print(i.upper + 1)})
             close_lines.append("}")
         return open_lines, close_lines
 
