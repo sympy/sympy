@@ -261,6 +261,11 @@ def test_build_extension():
         (Poly(t0*t1, t1), Poly(1, t1), [Poly(1, x), Poly(1/x, t0),
         Poly((1 + t0)*t1, t1)], [x, t0, t1], [Lambda(i, exp(t0*i)),
         Lambda(i, log(i))], [(exp(x*log(x)), x**x)])
+    assert build_extension(-x**x*log(x)**2 + x**x - x**x/x, x,
+    handle_first='exp', dummy=False) == \
+        (Poly((-1 + x - x*t0**2)*t1, t1), Poly(x, t1, domain='ZZ[x]'),
+        [Poly(1, x), Poly(1/x, t0), Poly((1 + t0)*t1, t1)], [x, t0, t1],
+        [Lambda(i, exp(t0*i)), Lambda(i, log(i))], [(exp(x*log(x)), x**x)])
 
     # Rothstein's integral
     f = (2581284541*exp(x) + 1757211400)/(39916800*exp(3*x) +

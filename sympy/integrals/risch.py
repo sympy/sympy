@@ -982,8 +982,8 @@ def build_extension(f, x, handle_first='log', dummy=True):
             new = exp(i.exp*log(i.base))
             # TODO: Just put it in Tfuncs
             backsubs.append((new, old))
-            newf = newf.subs(old, new)
-            exps.append(new)
+            newf = newf.subs(old, newterm)
+            exps.append(newterm)
 
         logs = filter(lambda i: i.args[0].is_rational_function(*T) and
             i.args[0].has_any_symbols(*T), newf.atoms(log))
