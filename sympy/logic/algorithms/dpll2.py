@@ -110,7 +110,13 @@ class SATSolver(object):
         self.variable_set = [False] * (len(variables) + 1)
 
     def initialize_clauses(self, clauses):
-        """Set up the clause data structures needed."""
+        """Set up the clause data structures needed.
+
+        For each clause, the following changes are made:
+        - Unit clauses are queued for propagation right away.
+        - Non-unit clauses have their first and last literals set as sentinels.
+        - The number of clauses a literal appears in is computed.
+        """
         self.clauses = []
         for cls in clauses:
             self.clauses.append(list(cls))
@@ -130,7 +136,13 @@ class SATSolver(object):
 
 
     def find_model(self):
-        """Main DPLL loop."""
+        """Main DPLL loop.
+
+        Variables are chosen successively, and assigned to be either
+        True or False. If a solution is not found with this setting,
+        the opposite is chosen and the search continues. The solver
+        halts when every variable has a setting.
+        """
 
         # We use this variable to keep track of if we should flip a
         #  variable setting in successive rounds
@@ -187,6 +199,7 @@ class SATSolver(object):
                 # Detect and add a learned clause
                 self.add_learned_clause(self.compute_conflict())
 
+                # Try the opposite setting of the most recent decision
                 flip_lit = -self.current_level.decision
                 self.undo()
                 self.levels.append(Level(flip_lit, flipped = True))
@@ -198,18 +211,29 @@ class SATSolver(object):
     ########################
     @property
     def current_level(self):
+        """The current decision level data structure"""
         return self.levels[-1]
 
     def clause_sat(self, cls):
+        """Check if a clause is satisfied by the current variable setting."""
         for lit in self.clauses[cls]:
             if lit in self.var_settings:
                 return True
         return False
 
     def is_sentinel(self, lit, cls):
+        """Check if a literal is a sentinel of a given clause."""
         return cls in self.sentinels[lit]
 
     def assign_literal(self, lit):
+        """Make a literal assignment.
+
+        The literal assignment must be recorded as part of the current
+        decision level. Additionally, if the literal is marked as a
+        sentinel of any clause, then a new sentinel must be chosen. If
+        this is not possible, then unit propagation is triggered and
+        another literal is added to the queue to be set in the future.
+        """
         self.var_settings.add(lit)
         self.current_level.var_settings.add(lit)
         self.variable_set[abs(lit)] = True
@@ -287,6 +311,7 @@ class SATSolver(object):
     #      Heuristics       #
     #########################
     def vsids_init(self):
+        """Initialize the data structures needed for the VSIDS heuristic."""
         self.lit_heap = []
         self.lit_scores = {}
         for var in range(1, len(self.variable_set)):
@@ -296,6 +321,7 @@ class SATSolver(object):
             heappush(self.lit_heap, (self.lit_scores[-var], -var))
 
     def vsids_decay(self):
+        """Decay the VSIDS scores for every literal."""
         # We divide every literal score by 2 for a decay factor
         #  Note: This doesn't change the heap property
         for lit in self.lit_scores.keys():
@@ -303,11 +329,12 @@ class SATSolver(object):
 
     def vsids_calculate(self):
         """
-            VSIDS Heuristic
+            VSIDS Heuristic Calculation
         """
         if len(self.lit_heap) == 0:
             return 0
 
+        # Clean out the front of the heap as long the variables are set
         while self.variable_set[abs(self.lit_heap[0][1])]:
             heappop(self.lit_heap)
             if len(self.lit_heap) == 0:
@@ -316,14 +343,17 @@ class SATSolver(object):
         return heappop(self.lit_heap)[1]
 
     def vsids_lit_assigned(self, lit):
+        """Handle the assignment of a literal for the VSIDS heuristic."""
         pass
 
     def vsids_lit_unset(self, lit):
+        """Handle the unsetting of a literal for the VSIDS heuristic."""
         var = abs(lit)
         heappush(self.lit_heap, (self.lit_scores[var], var))
         heappush(self.lit_heap, (self.lit_scores[-var], -var))
 
     def vsids_clause_added(self, cls):
+        """Handle the addition of a new clause for the VSIDS heuristic."""
         self.num_learned_clauses += 1
         for lit in cls:
             self.lit_scores[lit] += 1
@@ -334,6 +364,7 @@ class SATSolver(object):
     ########################
 
     def simple_add_learned_clause(self, cls):
+        """Add a new clause to the theory."""
 
         cls_num = len(self.clauses)
         self.clauses.append(cls)
@@ -347,11 +378,13 @@ class SATSolver(object):
         self.heur_clause_added(cls)
 
     def simple_compute_conflict(self):
-        # Build a clause representing the fact that at least one
-        #  decision made so far is wrong.
+        """ Build a clause representing the fact that at least one decision made
+        so far is wrong.
+        """
         return [-(level.decision) for level in self.levels[1:]]
 
     def simple_clean_clauses(self):
+        """Clean up learned clauses."""
         pass
 
 class Level(object):

@@ -178,6 +178,9 @@ def remove_handler(key, handler):
     getattr(Q, key).remove_handler(handler)
 
 def compute_known_facts():
+    """Compute the various forms of knowledge compilation used by the
+    assumptions system.
+    """
     # Compute the known facts in CNF form for logical inference
     fact_string = " -{ Known facts in CNF }-\n"
     cnf = to_cnf(known_facts)
