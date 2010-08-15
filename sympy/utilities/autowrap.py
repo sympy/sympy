@@ -70,6 +70,7 @@ from sympy.utilities.codegen import (
         CodeGenArgumentListError, Result
         )
 from sympy.utilities.lambdify import implemented_function
+from sympy import C
 
 class CodeWrapError(Exception): pass
 
@@ -390,3 +391,47 @@ def binary_function(symfunc, expr, **kwargs):
     """
     binary = autowrap(expr, **kwargs)
     return implemented_function(symfunc, binary)
+
+def ufuncify(args, expr, **kwargs):
+    """Generates a binary ufunc-like lambda function for numpy arrays
+
+    ``args``
+        The argument sequence for the ufuncified function.  Either a Symbol or
+        a tuple of symbols.
+
+    ``expr``
+        A Sympy expression that defines the scalar ufunc operation
+
+    ``kwargs``
+        Any keyword arguments are forwarded to autowrap()
+
+    The returned function can only act on one array at a time, as only the
+    first argument accept arrays as input.
+
+    :Examples:
+
+    >>> from sympy.utilities.autowrap import ufuncify
+    >>> from sympy.abc import x, y, z
+    >>> f = ufuncify([x, y], y + x**2)
+    >>> f([1, 2, 3], 2)                    # doctest: +SKIP
+    [2.  5.  10.]
+
+    See http://docs.scipy.org/doc/numpy/reference/ufuncs.html
+
+    """
+    y = C.IndexedBase(C.Symbol('y', dummy=True))
+    x = C.IndexedBase(C.Symbol('x', dummy=True))
+    m = C.Symbol('m', dummy=True, integer=True)
+    i = C.Symbol('i', dummy=True, integer=True)
+    i = C.Idx(i, m)
+    l = C.Lambda(args, expr)
+    f = implemented_function('f', l)
+
+    if isinstance(args, C.Symbol):
+        args = [args]
+    else:
+        args = list(args)
+
+    # first argument accepts an array
+    args[0] = x[i]
+    return autowrap(C.Equality(y[i], f(*args)), **kwargs)

@@ -6,7 +6,8 @@ import tempfile
 import shutil
 from StringIO import StringIO
 
-from sympy.utilities.autowrap import autowrap, binary_function, CythonCodeWrapper
+from sympy.utilities.autowrap import autowrap, binary_function, CythonCodeWrapper,\
+        ufuncify
 from sympy.utilities.codegen import Routine, CCodeGen, CodeGenArgumentListError
 from sympy.utilities.pytest import raises
 from sympy.core import symbols, Eq
@@ -118,3 +119,8 @@ def test_binary_function():
     x, y = symbols('x y')
     f = binary_function('f', x + y, backend='dummy')
     assert f._imp_() == str(x + y)
+
+def test_ufuncify():
+    x, y = symbols('x y')
+    f = ufuncify((x, y), x + y, backend='dummy')
+    assert f() == "f(_x[_i], y)"
