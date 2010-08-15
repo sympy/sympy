@@ -88,21 +88,16 @@ class FCodePrinter(CodePrinter):
                 result.append(self._lead_code + line)
         return result
 
-    def _get_loop_opening_ending_ints(self, indices):
+    def _get_loop_opening_ending(self, indices):
         """Returns a tuple (open_lines, close_lines) containing lists of codelines
         """
-
-        # FIXME: sort indices in an optimized way
         open_lines = []
         close_lines = []
-        local_ints = []
-
         for i in indices:
             # fortran arrays start at 1 and end at dimension
             open_lines.append("do %s = %s, %s" % (i.label, i.lower+1, i.upper+1))
             close_lines.append("end do")
-            local_ints.append(i)
-        return open_lines, close_lines, local_ints
+        return open_lines, close_lines
 
 
     def doprint(self, expr):

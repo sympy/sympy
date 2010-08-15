@@ -103,13 +103,11 @@ class CCodePrinter(CodePrinter):
         del self._number_symbols
         return result
 
-    def _get_loop_opening_ending_ints(self, indices):
+    def _get_loop_opening_ending(self, indices):
         """Returns a tuple (open_lines, close_lines) containing lists of codelines
         """
         open_lines = []
         close_lines = []
-        local_ints = []
-
         loopstart = "for (int %(var)s=%(start)s; %(var)s<%(end)s; %(var)s++){"
         for i in indices:
             # C arrays start at 0 and end at dimension-1
@@ -118,8 +116,7 @@ class CCodePrinter(CodePrinter):
                 'start': i.lower,
                 'end': i.upper + 1})
             close_lines.append("}")
-            local_ints.append(i)
-        return open_lines, close_lines, local_ints
+        return open_lines, close_lines
 
     def _print_Pow(self, expr):
         PREC = precedence(expr)

@@ -18,7 +18,7 @@ class CodePrinter(StrPrinter):
 
         # Setup loops over non-dummy indices  --  all terms need these
         indices = self.get_expression_indices(expr, assign_to)
-        openloop, closeloop, junk = self._get_loop_opening_ending_ints(indices)
+        openloop, closeloop = self._get_loop_opening_ending(indices)
 
         # Setup loops over dummy indices  --  each term needs separate treatment
         d = get_contraction_structure(expr)
@@ -41,7 +41,7 @@ class CodePrinter(StrPrinter):
             # then terms with summations
             if isinstance(dummies, tuple):
                 indices = self._sort_optimized(dummies, expr)
-                openloop_d, closeloop_d, junk = self._get_loop_opening_ending_ints(indices)
+                openloop_d, closeloop_d = self._get_loop_opening_ending(indices)
 
                 for term in d[dummies]:
                     if term in d and not ([f.keys() for f in d[term]]
