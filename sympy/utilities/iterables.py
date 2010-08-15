@@ -467,7 +467,7 @@ def numbered_symbols(prefix='x', cls=None, start=0, *args, **assumptions):
         the form "x0", "x1", etc.
 
     cls : class, optional
-        The class to use. By default, it uses Symbol, but you can also use Wild.
+        The class to use. By default, it uses Symbol, but you can also use Wild or Dummy.
 
     start : int, optional
         The start number.  By default, it is 0.
