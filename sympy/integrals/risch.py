@@ -75,11 +75,14 @@ def frac_in(f, t, **kwargs):
     where fa and fd are either basic expressions or Polys, and f == fa/fd.
     **kwargs are applied to Poly.
     """
+    cancel = kwargs.pop('cancel', False)
     if type(f) is tuple:
         fa, fd = f
         f = fa.as_basic()/fd.as_basic()
     fa, fd = f.as_basic().as_numer_denom()
     fa, fd = fa.as_poly(t, **kwargs), fd.as_poly(t, **kwargs)
+    if cancel:
+        fa, fd = fa.cancel(fd, include=True)
     if fa is None or fd is None:
         raise ValueError("Could not turn %s into a fraction in %s." % (f, t))
     return (fa, fd)

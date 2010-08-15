@@ -14,7 +14,7 @@ right hand side of the equation (i.e., gi in k(t)), and Q is a list of terms on
 the right hand side of the equation (i.e., qi in k[t]).  See the docstring of
 each function for more information.
 """
-from sympy.core import Symbol, ilcm, Add, Mul, Pow
+from sympy.core import Symbol, ilcm, Add, Mul, Pow, S
 
 from sympy.matrices import Matrix, zeros, eye
 
@@ -761,22 +761,38 @@ def is_log_deriv_k_t_radical_in_field(fa, fd, D, T, case='auto'):
 
     if case == 'exp':
         wa, wd = derivation(t, D, T).cancel(Poly(t, t), include=True)
-        try:
-            n, e, u = parametric_log_deriv(p, Poly(1, t), wa, wd, D, T)
-        except NonElementaryIntegral:
+        T1 = T[:-1]
+        D1 = D[:-1]
+        t1 = T1[-1]
+        pa, pd = frac_in(p, t1, cancel=True)
+        wa, wd = frac_in((wa, wd), t1)
+        A = parametric_log_deriv(pa, pd, wa, wd, D1, T1)
+        if A is None:
             return None
-        u **= e
-        raise NotImplementedError("The hyperexponential case is " +
-        "not yet completely implemented for is_log_deriv_k_t_radical_in_field().")
+        n, e, u = A
+        u *= t**e
+#        raise NotImplementedError("The hyperexponential case is " +
+ #       "not yet completely implemented for is_log_deriv_k_t_radical_in_field().")
 
     elif case == 'primitive':
         pa, pd = frac_in(p, T[-2])
-        n, u = is_log_deriv_k_t_radical_in_field(pa, pd, D[:-1], T[:-1], case='auto')
+        A = is_log_deriv_k_t_radical_in_field(pa, pd, D[:-1], T[:-1], case='auto')
+        if A is None:
+            return None
+        n, u = A
 
     elif case == 'base':
-        n = reduce(ilcm, [i.as_numer_denom()[1] for _, i in residueterms])
+        # TODO: we can use more efficient residue reduction from ratint()
+        if not fd.is_sqf or fa.degree() >= fd.degree():
+            # f is the logarithmic derivative in the base case if and only if
+            # f = fa/fd, fd is square-free, deg(fa) < deg(fd), and
+            # gcd(fa, fd) == 1.  The last condition is handled by cancel() above.
+            return None
+        # Note: if residueterms = [], returns (1, 1)
+        # f had better be 0 in that case.
+        n = reduce(ilcm, [i.as_numer_denom()[1] for _, i in residueterms], S(1))
         u = Mul(*[Pow(i, j*n) for i, j in residueterms])
-        return n, u
+        return (n, u)
 
     elif case == 'tan':
         raise NotImplementedError("The hypertangent case is " +
@@ -791,9 +807,10 @@ def is_log_deriv_k_t_radical_in_field(fa, fd, D, T, case='auto'):
         "'base', 'auto'}, not %s""" % case)
 
     common_denom = reduce(ilcm, [i.as_numer_denom()[1] for i in
-        zip(*residueterms)[1] + (n,)])
+        zip(*residueterms or [[S(1), S(1)]])[1]] + [n])
     residueterms = [(i, j*common_denom) for i, j in residueterms]
-    n = common_denom*n
-    u = u**n*Mul(*[Pow(i, j) for i, j in residueterms])
+    m = common_denom//n
+    assert common_denom == n*m # Verify exact division
+    u = cancel(u**m*Mul(*[Pow(i, j) for i, j in residueterms]))
 
-    return (n, u)
+    return (common_denom, u)
