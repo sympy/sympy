@@ -104,10 +104,10 @@ def test_inline_function():
             )
     A = IndexedBase('A')
     i = Idx('i', symbols('n', integer=True))
-    g = implemented_function('g', Lambda(x, x*(1+x)))
+    g = implemented_function('g', Lambda(x, x*(1 + x)*(2 + x)))
     assert fcode(g(A[i]), assign_to=A[i]) == (
             "      do i = 1, n\n"
-            "         A(i) = A(i)*(1 + A(i))\n"
+            "         A(i) = A(i)*(1 + A(i))*(2 + A(i))\n"
             "      end do"
             )
 
