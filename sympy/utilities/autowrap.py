@@ -8,8 +8,8 @@ performance with a one-button user interface, i.e.
     >>> from sympy.abc import x,y
     >>> from sympy.utilities.autowrap import autowrap
     >>> expr = ((x - y)**(25)).expand()
-    >>> binary_callable = autowrap(expr)
-    >>> binary_callable(1, 2)           #doctest: +SKIP
+    >>> binary_callable = autowrap(expr)           # doctest: +SKIP
+    >>> binary_callable(1, 2)                      # doctest: +SKIP
     -1.0
 
 The callable returned from autowrap() is a binary python function, not a
@@ -20,10 +20,10 @@ invoked when a numerical evaluation is requested with evalf(), or with
 lambdify().
 
     >>> from sympy.utilities.autowrap import binary_function
-    >>> f = binary_function('f', expr)
-    >>> 2*f(x, y) + y
+    >>> f = binary_function('f', expr)             # doctest: +SKIP
+    >>> 2*f(x, y) + y                              # doctest: +SKIP
     y + 2*f(x, y)
-    >>> (2*f(x, y) + y).evalf(2, subs={x: 1, y:2})    #doctest: +SKIP
+    >>> (2*f(x, y) + y).evalf(2, subs={x: 1, y:2}) # doctest: +SKIP
     0.0
 
 The idea is that a SymPy user will primarily be interested in working with
@@ -344,8 +344,8 @@ def autowrap(expr, language='F95', backend='f2py', tempdir=None, args=None, flag
     >>> from sympy.abc import x, y, z
     >>> from sympy.utilities.autowrap import autowrap
     >>> expr = ((x - y + z)**(13)).expand()
-    >>> binary_func = autowrap(expr)
-    >>> binary_func(1, 4, 2)
+    >>> binary_func = autowrap(expr)               # doctest: +SKIP
+    >>> binary_func(1, 4, 2)                       # doctest: +SKIP
     -1.0
 
     """
@@ -381,12 +381,12 @@ def binary_function(symfunc, expr, **kwargs):
     >>> from sympy.abc import x, y, z
     >>> from sympy.utilities.autowrap import binary_function
     >>> expr = ((x - y)**(25)).expand()
-    >>> f = binary_function('f', expr)
-    >>> type(f)
+    >>> f = binary_function('f', expr)             # doctest: +SKIP
+    >>> type(f)                                    # doctest: +SKIP
     <class 'sympy.core.function.FunctionClass'>
-    >>> 2*f(x, y)
+    >>> 2*f(x, y)                                  # doctest: +SKIP
     2*f(x, y)
-    >>> f(x, y).evalf(2, subs={x: 1, y: 2})
+    >>> f(x, y).evalf(2, subs={x: 1, y: 2})        # doctest: +SKIP
     -1.0
     """
     binary = autowrap(expr, **kwargs)
@@ -412,8 +412,8 @@ def ufuncify(args, expr, **kwargs):
 
     >>> from sympy.utilities.autowrap import ufuncify
     >>> from sympy.abc import x, y, z
-    >>> f = ufuncify([x, y], y + x**2)
-    >>> f([1, 2, 3], 2)                    # doctest: +SKIP
+    >>> f = ufuncify([x, y], y + x**2)             # doctest: +SKIP
+    >>> f([1, 2, 3], 2)                            # doctest: +SKIP
     [2.  5.  10.]
 
     See http://docs.scipy.org/doc/numpy/reference/ufuncs.html
