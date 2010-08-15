@@ -4,6 +4,10 @@ from sympy.physics.quantumbasic import QuantumError
 class HilbertSpaceException(QuantumError):
     pass
 
+#-----------------------------------------------------------------------------
+# Main objects
+#-----------------------------------------------------------------------------
+
 class HilbertSpace(Expr):
     """An abstract Hilbert space for quantum mechanics.
 
@@ -251,7 +255,8 @@ class TensorProductHilbertSpace(HilbertSpace):
     Creating a tensor product:
 
         >>> from sympy import Expr, Interval, oo, sympify
-        >>> from sympy.physics.hilbert import l2, L2, FockSpace, TensorProductHilbertSpace, TensorPowerHilbertSpace
+        >>> from sympy.physics.hilbert import l2, L2, FockSpace,\
+        TensorProductHilbertSpace, TensorPowerHilbertSpace
         >>> hs = l2(2)
         >>> HS = L2(Interval(-42, 42))
         >>> fs = FockSpace()
@@ -469,7 +474,8 @@ class TensorPowerHilbertSpace(HilbertSpace):
     Here are some examples of creating tensor powers:
 
         >>> from sympy import Expr, Interval, oo, sympify
-        >>> from sympy.physics.hilbert import l2, L2, TensorPowerHilbertSpace, TensorProductHilbertSpace
+        >>> from sympy.physics.hilbert import l2, L2, TensorPowerHilbertSpace,\
+        TensorProductHilbertSpace
         >>> from sympy.abc import x
         >>> p1 = l2(3)**2
         >>> p1

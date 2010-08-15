@@ -40,7 +40,9 @@ def test_Dagger():
     assert Dagger(num) == 42
     assert Dagger(power1) == E**(-I)
     assert Dagger(power2) == -1
-    assert Dagger(mat) == Matrix(((-I, -42*I, E**(-I)), (42-I, 42, -1))) == Matrix(((Dagger(i), Dagger(mul), Dagger(power1)), (Dagger(add), Dagger(num), Dagger(power2))))
+    assert Dagger(mat) == Matrix(((-I, -42*I, E**(-I)), (42-I, 42, -1))) ==\
+    Matrix(((Dagger(i), Dagger(mul), Dagger(power1)), (Dagger(add),\
+    Dagger(num), Dagger(power2))))
 
 def test_Ket():
     a = Symbol('a')
@@ -57,7 +59,8 @@ def test_Ket():
     assert Dagger(B) == Bra('B')
     assert isinstance(Dagger(B), Bra)
     assert Dagger(B).hilbert_space == HilbertSpace()
-    assert Dagger(a*A+b*B) == Dagger(A)*Dagger(a)+Dagger(B)*Dagger(b) == Bra('A')*Dagger(a)+Bra('B')*Dagger(b)
+    assert Dagger(a*A+b*B) == Dagger(A)*Dagger(a)+Dagger(B)*Dagger(b) ==\
+    Bra('A')*Dagger(a)+Bra('B')*Dagger(b)
 
 
 def test_TimeDepKet():
@@ -85,7 +88,8 @@ def test_Bra():
     assert Dagger(A) == Ket('A')
     assert isinstance(Dagger(A), Ket)
     assert Dagger(A).hilbert_space == HilbertSpace()
-    assert Dagger(a*A+b*B) == Dagger(A)*Dagger(a)+Dagger(B)*Dagger(b) == Ket('A')*Dagger(a)+Ket('B')*Dagger(b)
+    assert Dagger(a*A+b*B) == Dagger(A)*Dagger(a)+Dagger(B)*Dagger(b) ==\
+    Ket('A')*Dagger(a)+Ket('B')*Dagger(b)
 
 
 def test_TimeDepBra():
@@ -109,10 +113,13 @@ def test_InnerProduct():
     assert C == InnerProduct(Bra('A'), Ket('B'))
     assert C.acts_like == C.__class__ == InnerProduct
     assert C.hilbert_space == HilbertSpace()
-    assert Dagger(C) == InnerProduct(Dagger(B), Dagger(A)) == InnerProduct(Bra('B'), Ket('A'))
+    assert Dagger(C) == InnerProduct(Dagger(B), Dagger(A)) ==\
+    InnerProduct(Bra('B'), Ket('A'))
     assert isinstance(Dagger(C), InnerProduct)
-    assert C.subs(Bra('A'), Bra('S')) == InnerProduct(Bra('S'), Ket('B')) == InnerProduct(Bra('S'), B)
-    assert C.subs(Ket('B'), Ket('S')) == InnerProduct(Bra('A'), Ket('S')) == InnerProduct(A, Ket('S'))
+    assert C.subs(Bra('A'), Bra('S')) == InnerProduct(Bra('S'), Ket('B')) ==\
+    InnerProduct(Bra('S'), B)
+    assert C.subs(Ket('B'), Ket('S')) == InnerProduct(Bra('A'), Ket('S')) ==\
+    InnerProduct(A, Ket('S'))
 
 def test_OuterProduct():
     A = Ket('A')
@@ -125,10 +132,13 @@ def test_OuterProduct():
     assert C == OuterProduct(Ket('A'), Bra('B'))
     assert C.acts_like == C.__class__ == OuterProduct
     assert C.hilbert_space == HilbertSpace()
-    assert Dagger(C) == OuterProduct(Dagger(B), Dagger(A)) == OuterProduct(Ket('B'), Bra('A'))
+    assert Dagger(C) == OuterProduct(Dagger(B), Dagger(A)) ==\
+    OuterProduct(Ket('B'), Bra('A'))
     assert isinstance(Dagger(C), OuterProduct)
-    assert C.subs(Bra('B'), Bra('S')) == OuterProduct(Ket('A'), Bra('S')) == OuterProduct(A, Bra('S'))
-    assert C.subs(Ket('A'), Ket('S')) == OuterProduct(Ket('S'), Bra('B')) == OuterProduct(Ket('S'), B)
+    assert C.subs(Bra('B'), Bra('S')) == OuterProduct(Ket('A'), Bra('S')) ==\
+    OuterProduct(A, Bra('S'))
+    assert C.subs(Ket('A'), Ket('S')) == OuterProduct(Ket('S'), Bra('B')) ==\
+    OuterProduct(Ket('S'), B)
 
 def test_Operator():
     a = Symbol('a')

@@ -17,11 +17,16 @@ class QuantumExpr(Expr):
 
     # These slots are needed to keep track of the character of what is contained 
     # inside a given QuantumBinary Operation (they must be a __slots__ because 
-    # Expr contains slots which prohibits us from declaring adding new non-slot variables):
-    #    * 'acts_like' tells whether an object has the dimension of a Ket, Bra, or Operator.
-    #       This helps determine what is and is not allowed for the quantum binary Operation
-    #    * 'hilbert_space' tells us to which Hilbert space a quantum Object belongs
-    #[see http://www.network-theory.co.uk/docs/pylang/__slots__.html for info on __slots__]
+    # Expr contains slots which prohibits us from declaring adding new non-slot 
+    # variables):
+    #    * 'acts_like' tells whether an object has the dimension of a Ket, Bra,
+    #        or Operator.
+    #       This helps determine what is and is not allowed for the quantum
+    #        binary Operation
+    #    * 'hilbert_space' tells us to which Hilbert space a quantum Object
+    #        belongs
+    #[see http://www.network-theory.co.uk/docs/pylang/__slots__.html for info on
+    #__slots__]
     __slots__ = ['acts_like', 'hilbert_space']
 
     def __pos__(self):

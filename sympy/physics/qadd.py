@@ -20,7 +20,8 @@ class QAdd(QAssocOp):
     def _rules_QAdd(cls, object1, object2):
         """
             This method is called by new to instantiate a QAdd class
-            Applies rules of what can and can't be added together by checking types and hilbert spaces
+            Applies rules of what can and can't be added together by checking
+            types and hilbert spaces
             Returns an Add or QAdd objects on success
             Raises and exception if input violates quantum shape rules
         """
@@ -29,21 +30,26 @@ class QAdd(QAssocOp):
         elif object1 is S.Zero:
             return object2
 
-        if (not isinstance(object1, (StateBase, Operator, QAssocOp, QPow))) and (not isinstance(object2, (StateBase, Operator, QAssocOp, QPow))):
+        if (not isinstance(object1, (StateBase, Operator, QAssocOp, QPow))) and\
+        (not isinstance(object2, (StateBase, Operator, QAssocOp, QPow))):
                 return Add(object1, object2)
-        elif (not isinstance(object1, (StateBase, Operator, QAssocOp, QPow))) or (not isinstance(object2, (StateBase, Operator, QAssocOp, QPow))):
-            raise QuantumError("Can't add a %s and %s" % (object1.__class__.__name__, object2.__class__.__name__))
+        elif (not isinstance(object1, (StateBase, Operator, QAssocOp, QPow)))\
+        or (not isinstance(object2, (StateBase, Operator, QAssocOp, QPow))):
+            raise QuantumError("Can't add a %s and %s"\
+            % (object1.__class__.__name__, object2.__class__.__name__))
 
         if object1.hilbert_space != object2.hilbert_space:
             raise QuantumError("Hilbert Spaces do not match")
 
-        if issubclass(object1.acts_like, object2.acts_like) or issubclass(object2.acts_like, object1.acts_like):
+        if issubclass(object1.acts_like, object2.acts_like)\
+        or issubclass(object2.acts_like, object1.acts_like):
             retVal = cls.QAddflatten([object1, object2])
             retVal.hilbert_space = object1.hilbert_space
             retVal.acts_like = object1.acts_like
             return retVal
         else:
-            raise QuantumError("Can't add (%s + %s)" % (object1.acts_like.__name__, object2.acts_like.__name__))
+            raise QuantumError("Can't add (%s + %s)"\
+            % (object1.acts_like.__name__, object2.acts_like.__name__))
 
     @classmethod
     def QAddflatten(cls, seq):
@@ -67,7 +73,8 @@ class QAdd(QAssocOp):
                         break
                 if o is None:
                     continue
-                order_factors = [o]+[o1 for o1 in order_factors if not o.contains(o1)]
+                order_factors = [o]+[o1 for o1 in order_factors if not\
+                o.contains(o1)]
                 continue
 
             # 3
@@ -132,7 +139,8 @@ class QAdd(QAssocOp):
                 if isinstance(s, QMul):
                     # Mul, already keeps its arguments in perfect order.
                     # so we can simply put c in slot0 and go the fast way.
-                    cs = QMul._new_rawargs(s.acts_like, s.hilbert_space, *((c,) + s.args)) #figure out rawargs F
+                    cs = QMul._new_rawargs(s.acts_like, s.hilbert_space, *((c,)\
+                    + s.args)) #figure out rawargs F
                     newseq.append(cs)
 
                 else:

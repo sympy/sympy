@@ -24,7 +24,8 @@ class QAssocOp(QuantumBasic):
     def instantiate(cls, seq):
         """
             Apply rules to each element in the input sequence
-            The rules check to see if the input is valid and then instantiate the objects if they can
+            The rules check to see if the input is valid and then instantiate
+            the objects if they can
         """
         rules = getattr(cls, '_rules_%s' % cls.__name__)
         result = seq[0]
@@ -60,9 +61,11 @@ class QAssocOp(QuantumBasic):
             if isinstance(self.args[i], (Add, Pow, QAdd)):
                 pform = prettyForm(*pform.right(prettyForm(u'\u0028')))
             if hasattr(self.args[i], '_pretty'):
-                pform = prettyForm(*pform.right(self.args[i]._pretty(printer, *args)))
+                pform = prettyForm(*pform.right(self.args[i]._pretty(printer,\
+                *args)))
             else:
-                pform = prettyForm(*pform.right(printer._print(self.args[i], *args)))
+                pform = prettyForm(*pform.right(printer._print(self.args[i],\
+                *args)))
             if isinstance(self.args[i], (Add, Pow, QAdd)):
                 pform = prettyForm(*pform.right(prettyForm(u'\u0029')))
             if i != length-1:
@@ -72,11 +75,12 @@ class QAssocOp(QuantumBasic):
 
     @classmethod
     def _new_rawargs(cls, acts_like, hilbert_space, *args):
-        """ Create new instance of own class with args exactly as provided by caller;
-            Sets acts_like and hilbert_space attributes to those specified in inputs
+        """ Create new instance of own class with args exactly as provided by
+            caller; Sets acts_like and hilbert_space attributes to those
+            specified in inputs
 
-            This is handy when we want to optimize things This is because we do not have 
-            to call the special '_qrules_*' to create a new object           
+            This is handy when we want to optimize things This is because we do
+            not have to call the special '_qrules_*' to create a new object           
         """
         
         if len(args) == 1:
