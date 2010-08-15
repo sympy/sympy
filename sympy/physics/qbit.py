@@ -1,15 +1,13 @@
 from sympy.physics.hilbert import l2, HilbertSpaceException
 from sympy.physics.quantum import BasisSet, Operator, Representable, represent,\
      OuterProduct, Ket
-from sympy import Expr, sympify, Add, Mul, Pow, I, Function, Integer, S, \
-     sympify, Matrix, elementary
-from sympy.core.numbers import *
+from sympy import Expr, Add, Mul, Pow, S, Integer
+from sympy.core.numbers import ImaginaryUnit, Pi, Number
 from sympy.core.basic import S, sympify
-from sympy.core.function import Function
 from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.matrices.matrices import Matrix, eye
-from sympy.core.symbol import Symbol, symbols
+from sympy.core.symbol import Symbol
 from sympy.physics.qmul import QMul
 from sympy.physics.qadd import QAdd
 from sympy.physics.qpow import QPow
@@ -77,8 +75,6 @@ class Qbit(Ket):
             - A decimal value and the number of bits you wish to express it in 
               (The size of the Hilbert Space)
 
-        All of this is seen in the doc test:
-
         >>> from sympy.physics.qbit import Qbit
         >>> Qbit(0,0,0)
         |'000'>
@@ -103,7 +99,6 @@ class Qbit(Ket):
     """
     outDecimal = False
     def __new__(cls, *args, **options):
-        import math
         #If they just give us one number, express it in the least number of 
         # bits possible
         if args[0] > 1 and len(args) == 1:
@@ -221,8 +216,9 @@ class QbitX(Qbit):
 #-----------------------------------------------------------------------------
 class Gate(Operator):
     """
+        A Gate is an Operator that acts on qbits (This is a Superclass tobe subclassed
+        
         The superclass of gate operators that acts on qubit(s)
-            - *args stores the information about which qbits it will act on
             - minimum_dimension is the least size a set fo qbits must be for
               the gate to be applied
             - input number is the number of qbits the gate acts on (e.g. a 
@@ -230,6 +226,7 @@ class Gate(Operator):
             - name returns the string of the qbit
             - apply applies gate onto qbits
             - _represent_Qbit?BasisSet represents the gates matrix in the basis
+       
     """
 
     def __new__(cls, *args):
@@ -334,8 +331,8 @@ class Gate(Operator):
 
 class NondistributiveGate(Gate):
     """
-        Superclass for all non-distributive gates (e.g. measurement)
-        Gates that do not distribute should subclass off this and implement\
+        Superclass for all non-distributive (non-hermitian) gates (measurement)
+        Gates that do not distribute should subclass off this and implement
         an appropriate 'measure' function
         TODO: Get Nondistributive Gates working with represent 
     """
@@ -356,6 +353,12 @@ class NondistributiveGate(Gate):
 class HadamardGate(Gate):
     """
         An object representing a Hadamard Gate
+
+        This gate puts creates an even superposition of eigenstates.
+        It maps the state |0> -> |0>/sqrt(2) + |1>/sqrt(2)
+        and |1> -> |0>/sqrt(2) - |1>/sqrt(2). Can be applied or represented 
+        using apply_gates and represent.
+        
         >>> from sympy.physics.qbit import HadamardGate, Qbit, apply_gates,\
          QbitZBasisSet
         >>> HadamardGate(0)*Qbit(0,0)
@@ -378,8 +381,12 @@ class HadamardGate(Gate):
 
 class XGate(Gate):
     """
-        An object representing a Pauli-X gate
-        AKA a NOT Gate because it flips the value of a bit to its opposite
+        An object representing a Pauli-X gate (AKA NOT Gate)
+        
+        This is a NOT Gate because it flips the value of a bit to its opposite
+        just like the classical-NOT gate. Thus it maps the states:
+        |1> -> |0> and |0> -> |1>
+        
 
         >>> from sympy.physics.qbit import Qbit, XGate, apply_gates,\
         QbitZBasisSet
@@ -402,6 +409,12 @@ class XGate(Gate):
 class YGate(Gate):
     """
         An object representing a Pauli-Y gate
+
+        This gate flips the bit given in self.args[0] and then applies a relative
+        phase shift (pi/2 if 1, and -pi/2 if 0).
+        Thus it maps the states:
+        |0> -> I*|1> and |1> -> -I*|0>
+        
         >>> from sympy.physics.qbit import Qbit, YGate, apply_gates, \
         QbitZBasisSet
         >>> YGate(0)*Qbit(0,1)
@@ -422,7 +435,12 @@ class YGate(Gate):
 
 class ZGate(Gate):
     """
-        An object representing a Pauli-Z gate:
+        An object representing a Pauli-Z gate
+
+        This gate rotates the relative phase of an eigenstate by pi if the state
+        is 1. Thus the gate maps the states:
+        |0> -> |0> and |1> -> -|1>
+        
         >>> from sympy.physics.qbit import Qbit, ZGate, apply_gates, \
         QbitZBasisSet
         >>> from sympy.physics.quantum import represent
@@ -446,6 +464,10 @@ class PhaseGate(Gate):
     """
         An object representing a phase gate
 
+        This gate rotates the phase of the eigenstate by pi/2 if the state is 1.
+        Thus the gate maps the states:
+        |0> -> |0> and |1> -> I*|1>
+
         >>> from sympy.physics.qbit import Qbit, PhaseGate, apply_gates,\
         QbitZBasisSet
         >>> from sympy.physics.quantum import represent
@@ -467,6 +489,11 @@ class PhaseGate(Gate):
 class TGate(Gate):
     """
         An object representing a pi/8 gate
+
+        This gate rotates the phase of the eigenstate by pi/2 if the state is 1.
+        Thus the gate maps the states:
+        |0> -> |0> and |1> -> exp(I*pi/4)*|1>        
+        
         >>> from sympy.physics.qbit import Qbit, TGate, apply_gates,\
         QbitZBasisSet
         >>> from sympy.physics.quantum import represent
@@ -483,7 +510,7 @@ class TGate(Gate):
 
     @property
     def matrix(self):
-        return Matrix([[1, 0], [0, exp(I*Pi()/4)]])
+        return Matrix([[1, 0], [0, exp(ImaginaryUnit()*Pi()/4)]])
 #-----------------------------------------------------------------------------
 # 2 Qbit Gates
 #-----------------------------------------------------------------------------
@@ -493,7 +520,11 @@ class RkGate(Gate):
         
         If qbits specified in self.args[0] and self.args[1] are 1, then changes
         the phase of the state by e**(2*i*pi/2**k)
-        k is set by the thrird argument in the input
+
+        *args are is the tuple describing which qbits it should effect
+        k is set by the third argument in the input, and describes how big of a 
+        phase shift it should apply
+
         >>> from sympy.physics.qbit import Qbit, RkGate, apply_gates,\
         QbitZBasisSet
         >>> RkGate(1,0,2)
@@ -545,8 +576,16 @@ class RkGate(Gate):
 class IRkGate(RkGate):
     """
         Inverse Controlled-Phase Gate
+        
         Does the same thing as the RkGate, but rotates in the opposite direction
-        within the complex plane
+        within the complex plane. If qbits specified in self.args[0] 
+        and self.args[1] are 1, then changes the phase of the state by
+        e**(2*i*pi/2**k)
+
+        *args are is the tuple describing which qbits it should effect
+        k is set by the third argument in the input, and describes how big of a 
+        phase shift it should apply
+
         >>> from sympy.physics.qbit import Qbit, IRkGate, apply_gates,\
         QbitZBasisSet
         >>> IRkGate(1,0,2)
@@ -583,7 +622,13 @@ class IRkGate(RkGate):
 
 class CTGate(Gate):
     """
-        Controlled Pi/8 Gate
+        Controlled Pi/8 Gate (Controlled Version of TGate)
+
+        Applies a TGate if the qbit specified by self.args[0] is True.
+        Thus, it rotates the phase by pi/2 if both qbits are true.
+        It maps the state:
+        |11> -> exp(I*pi/4)*|11> (leaves others unaffected) 
+        
         >>> from sympy.physics.qbit import Qbit, CTGate, apply_gates,\
         QbitZBasisSet
         >>> apply_gates(CTGate(0,1)*Qbit(1,1))
@@ -595,7 +640,12 @@ class CTGate(Gate):
 
 class CZGate(Gate):
     """
-        Controlled Z-Gate
+        Controlled Z-Gate 
+
+        Applies a ZGate if the qbit specified by self.args[0] is true. Thus, it
+        rotates the phase by pi if both qbits are true.
+        i.e It maps the state: |11> -> -|11>
+        
         >>> from sympy.physics.qbit import Qbit, CZGate, apply_gates,\
         QbitZBasisSet
         >>> apply_gates(CZGate(0,1)*Qbit(1,1))
@@ -609,6 +659,11 @@ class CZGate(Gate):
 class CPhaseGate(Gate):
     """
         Controlled Phase-Gate
+
+        Applies the phase gate contingent on the value specified in self.args[0]
+        being true. Thus, it rotates the phase by pi/2 if both qbits are true.
+        i.e. It maps the state: |11> -> exp(I*pi/4)*|11>
+        
         >>> from sympy.physics.qbit import Qbit, CPhaseGate, apply_gates,\
         QbitZBasisSet
         >>> apply_gates(CPhaseGate(0,1)*Qbit(1,1))
@@ -620,10 +675,13 @@ class CPhaseGate(Gate):
 
 class CNOTGate(Gate):
     """
-        Controlled NOT-Gate (This is the 'entangling gate' most often made
-        reference to in the literature) CNOT, Hadamard and the Pauli-Gates make
+        Controlled NOT-Gate
+
+        Note: (This is the 'entangling gate' most often made reference to in the
+        literature) CNOT, Hadamard and the Pauli-Gates make
         a universal group in quantum computation. Flips the second qbit
-        (The target) contingent on the first qbit being 1 (first qbit -> control bit)
+        (The target) contingent on the first qbit being 1. Can be thought of as
+        a reversible XOR Gate.
 
         >>> from sympy.physics.qbit import Qbit, CNOTGate, apply_gates,\
         QbitZBasisSet
@@ -643,7 +701,9 @@ class CNOTGate(Gate):
 
 class SwapGate(Gate):
     """
-        SwapGate: swaps two qbits location within the Tensor Product
+        A SwapGate Object
+
+        Thus swaps two qbits locations within the Tensor Product. 
 
         >>> from sympy.physics.qbit import Qbit, SwapGate, apply_gates,\
         QbitZBasisSet
@@ -662,9 +722,12 @@ class SwapGate(Gate):
 
 class ToffoliGate(Gate):
     """
-        ToffoliGate: Also known as the Controlled-Controlled (double controlled)
-        NOT-Gate Flips the third qbit (the target) contingent on the first and
-        second qbits being 1 (first && second qbits are controll bits)
+        A ToffoliGate (AKA the Controlled-Controlled (double controlled) NOT
+        
+        Flips the third qbit (the target) contingent on the first and
+        second qbits being 1 (first and second qbits are control bits)
+        It can be thought of as a Controlled CNOTGate
+        
         >>> from sympy.physics.qbit import Qbit, ToffoliGate, apply_gates,\
         QbitZBasisSet
         >>> from sympy.physics.quantum import represent
@@ -693,6 +756,10 @@ class ToffoliGate(Gate):
 class Fourier(Gate):
     """
         Superclass of Quantum Fourier and Inverse Quantum Fourier Gates
+
+        This gate represents the quantum fourier tranform. It can be decomposed
+        into elementary gates using the famous QFT decomposition. 
+        
         Takes in two args telling which qbits to start and stop doing the (I)QFT
         
         >>> from sympy.physics.qbit import Qbit, QFT, IQFT, QbitZBasisSet
@@ -788,6 +855,13 @@ class IQFT(Fourier):
 class measure(NondistributiveGate):
     """
         A one-shot measurement gate that returns a single outcome from meaure
+
+        When applied measurement gates count up the probability of the 
+        qbit specified in self.args[0] being 1. It then uses a pseudo-random
+        number to determine which way the measurement went conistent with the 
+        probabilities predicted by Born Rule
+
+        self.args[0] is the qbit which should be measured
     """
 
     def __new__(cls, *args):
@@ -819,15 +893,24 @@ class measure(NondistributiveGate):
             result = result/sqrt(prob1)
         else:
             result = result/sqrt(1-prob1)
-        #TODO FIXME I evalf'd becuase of wierdness, need to get measure working
-        #in apply for real
+        #TODO Don't do evalf
         return result.expand().evalf()
 
 class SetZero(NondistributiveGate):
     """
+        Set's a qbit to zero using measurment
+    
         Gate measures the state of a Qbit within a set of qbits:
             - If the measurement returns 0, it does nothing
             - If the measurement return 1, it applies an XGate
+        Thus, it set's the specified gate to zero using the measurement Gate
+        and the XGate
+
+        self.args[0] is the bit to be set to zero
+
+        >>> from sympy.physics.qbit import Qbit, apply_gates, SetZero
+        >>> apply_gates(SetZero(0)*(Qbit(0,0)/sqrt(2) + Qbit(0,1)/sqrt(2)))
+        |00>
     """
     def measure(self, circuit):
         # Turns item self.args[0]th bit to a zero
@@ -858,8 +941,8 @@ class SetZero(NondistributiveGate):
 def represent_hilbert_space(gateMatrix, hilbert_size, qbits, format='sympy'):
     """
         This is a helper function used by Gates represent functions to represent
-        their matricies in a given HilbertSpace e.g. a Hadamard Gate matrix 
-        looks different if applied to a different number of qbits
+        their matricies in a given HilbertSpace (i.e. a Hadamard Gate matrix 
+        looks different if applied to a different number of qbits)
     """
     def _operator(first, second, format):
         """
@@ -985,10 +1068,15 @@ def represent_hilbert_space(gateMatrix, hilbert_size, qbits, format='sympy'):
 
 def tensor_product(*args):
     """
-        Does the Kronecker product of the matricies in the *args tuple 
-        (e.g. the tensor product of the matricies)
+        Does the Kronecker product of two or more matricies
+        
+        Does the Kronecker product of the sympy matricies in the *args tuple 
+        (e.g. the tensor product of the matricies) 
         For info on how to do Kronecker products, see:
             http://en.wikipedia.org/wiki/Kronecker_product
+
+        Each item in *args must be a Sympy matrix that are to be 
+        Tensor Product'd 
 
         >>> from sympy.physics.qbit import tensor_product
         >>> from sympy.matrices.matrices import Matrix
@@ -1024,9 +1112,19 @@ def tensor_product(*args):
 
 def apply_gates(circuit, basis = QbitZBasisSet(1), floatingPoint = False):
     """
-        Uses the Gate sequence to map initial state into final state without
-        creating a representative matrix first
-        Thus, HadamardGate(0)*Qbit(0,0) -> Qbit(0,1)/sqrt(2) + Qbit(0,0)/sqrt(2)
+        A function that applies the gates in the quantum circuit to the qbits
+        
+        Uses the Gate sequence to map initial state into final state without 
+        first creating a representative matrix. It outputs the result as a 
+        Quantum-Binary operation containing Qbit-eigenket objects
+        Thus, we can apply_gates HadamardGate(0)*Qbit(0,0) to produce
+        Qbit(0,1)/sqrt(2) + Qbit(0,0)/sqrt(2) directly
+
+        circuit is the QMul or QAdd which represents the gates and states of 
+        the system
+        basis is the basis in which it will be expressed (ZBasis is default)
+        floatingpoint tells the function that numbers should be turned into 
+        floats (this can sometimes make things faster)
 
         >>> from sympy.physics.qbit import HadamardGate, Qbit, apply_gates
         >>> apply_gates(HadamardGate(0)*Qbit(0,1))
@@ -1133,8 +1231,16 @@ def apply_gates(circuit, basis = QbitZBasisSet(1), floatingPoint = False):
 
 def matrix_to_qbits(matrix):
     """
+        Converts a matrix representation of the state of a system into a Sum
+        of Qbit objects
+    
         Takes a matrix representation of a qbit and puts in into a sum of Qbit
-        eigenstates of the ZBasisSet
+        eigenstates of the ZBasisSet. Can be used in conjunction with represent
+        to turn the matrix representation returned into dirac notation.
+
+        matrix argument is the matrix that shall be converted to the QAdd/QMul
+        of Qbit eigenkets
+        
         >>> from sympy.physics.qbit import matrix_to_qbits, Qbit, QbitZBasisSet
         >>> from sympy.physics.quantum import represent
         >>> represent(Qbit(0,1), QbitZBasisSet(2))
@@ -1169,7 +1275,10 @@ def matrix_to_qbits(matrix):
 
 def qbits_to_matrix(qbits):
     """
-        Coverts a QAdd of qbit objects into
+        Coverts a QAdd/QMul of qbit objects into it's matrix representation
+
+        This function takes in a dirac notation-like expression and express it
+        as a Sympy matrix.
 
         >>> from sympy.physics.qbit import qbits_to_matrix, Qbit
         >>> from sympy.functions.elementary.miscellaneous import sqrt
@@ -1208,6 +1317,10 @@ def qbits_to_matrix(qbits):
 def gate_simp(circuit):
     """
         Simplifies gates symbolically
+
+        It first sorts gates using gate_sort. It then applies basic 
+        simplification rules to the circuit, e.g., XGate**2 = Identity          
+        
         >>> from sympy.physics.qbit import gate_simp, HadamardGate
         >>> gate_simp(HadamardGate(1)**3*HadamardGate(0))
         HadamardGate(0)*HadamardGate(1)
@@ -1248,7 +1361,13 @@ def gate_simp(circuit):
 def gate_sort(circuit):
     """
         Sorts the gates while keeping track of commutation relations
-        (things that apply to the same qbit do not commute with each other)
+
+        This function uses a bubble sort to rearrange the order of gate 
+        application. Keeps track of Quantum computations special commutation
+        relations (e.g. things that apply to the same qbit do not commute with
+        each other)
+
+        circuit is the QMul of gates that are to be sorted.
 
         >>> from sympy.physics.qbit import HadamardGate, XGate, YGate, CNOTGate,\
         gate_sort
@@ -1298,6 +1417,8 @@ def gate_sort(circuit):
 
 def add(InReg, InOutReg, carryReg):
     """
+        A add operation for Quantum Registers using elementary gates
+        
         Add's the InReg to the InOutReg, and stores the result in InOutReg
         CarryReg is used as extra storage space to preform calculation
 
@@ -1325,9 +1446,12 @@ def add(InReg, InOutReg, carryReg):
 
 def controlled_add(InReg, InOutReg, carryReg, control):
     """
-        Same as add, but only does the add if control bit is true
-        Add's InReg and InOutReg to each other and stores result in InOutReg
-        contingent on control being true
+        Does an add operation on the Quantum Register if the control is true
+    
+        Controlled-add is the Same as add, but only does the add if control bit
+        is true Add's InReg and InOutReg to each other and stores result in
+        InOutReg contingent on control being true
+
         >>> from sympy.physics.qbit import controlled_add, Qbit, apply_gates
         >>> apply_gates(controlled_add((0,1,2,3), (4,5,6,7), (8,9,10,11), 12)\
         *Qbit(1,0,0,0,0,0,0,1,0,0,0,1,0))
@@ -1353,8 +1477,15 @@ def controlled_add(InReg, InOutReg, carryReg, control):
 
 def bitshift(Register, number, tempStorage):
     """
-        Shifts the given Register by the given number
+        Does the bitshift operation on Quantum registers
+        
+        Shifts the given Register by the given number. Does this in the way a 
+        classical register would shift, but with elementary quantum gates.
+
+        Register is the tuple describing which qbits contain the register
+        number is the number of bit to shift by
         tempStorage is the single qbit of storage needed
+        
         >>> from sympy.physics.qbit import bitshift, Qbit, apply_gates
         >>> apply_gates(bitshift((0,1,2,3,4), 1, 5)*Qbit(0,0,0,0,1,0))
         |'000100'>
@@ -1381,8 +1512,16 @@ def bitshift(Register, number, tempStorage):
 
 def multiply(InReg1, InReg2, OutReg, carryReg):
     """
+        Multiplies two quantum registers and stores the result in OutReg
+        
         Multiplies the first register by second and puts the result in OutReg
-        CarryReg is used to keep carry information
+        CarryReg is used to keep carry information. Does this with elementary 
+        gates
+
+        InReg1, and InReg2 describe which registers to multiply
+        InReg1 is destroyed in the process 
+        OutReg should be empty at start. This is where multiply info will be 
+        stored
 
         Here is 2*2
         >>> from sympy.physics.qbit import multiply, Qbit, apply_gates
