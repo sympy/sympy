@@ -44,7 +44,7 @@ When is this useful?
        in another project, the automatic python wrappers let you test the
        binaries immediately from within SymPy.
 
-    4) To create customized ufuncs for use with numpy arrays.
+    4) To create customized ufuncs for use with numpy arrays.  See :ref:`ufuncify`
 
 When is this module NOT the best approach?
 
@@ -375,8 +375,9 @@ def autowrap(expr, language='F95', backend='f2py', tempdir=None, args=None, flag
 def binary_function(symfunc, expr, **kwargs):
     """Returns a sympy function with expr as binary implementation
 
-    This is a convenience function that relies on autowrap() and
-    implemented_function().
+    This is a convenience function that automates the steps needed to
+    autowrap the Sympy expression and attaching it to a Function object
+    with implemented_function().
 
     >>> from sympy.abc import x, y, z
     >>> from sympy.utilities.autowrap import binary_function
@@ -396,17 +397,23 @@ def ufuncify(args, expr, **kwargs):
     """Generates a binary ufunc-like lambda function for numpy arrays
 
     ``args``
-        The argument sequence for the ufuncified function.  Either a Symbol or
-        a tuple of symbols.
+        Either a Symbol or a tuple of symbols. Specifies the argument sequence
+        for the ufunc-like function.
 
     ``expr``
-        A Sympy expression that defines the scalar ufunc operation
+        A Sympy expression that defines the element wise operation
 
     ``kwargs``
-        Any keyword arguments are forwarded to autowrap()
+        Optional keyword arguments are forwarded to autowrap().
 
     The returned function can only act on one array at a time, as only the
     first argument accept arrays as input.
+
+    .. Note:: a *proper* numpy ufunc is required to support broadcasting, type
+       casting and more.  The function returned here, may not qualify for
+       numpy's definition of a ufunc.  That why we use the term ufunc-like.
+
+       See http://docs.scipy.org/doc/numpy/reference/ufuncs.html
 
     :Examples:
 
@@ -415,8 +422,6 @@ def ufuncify(args, expr, **kwargs):
     >>> f = ufuncify([x, y], y + x**2)             # doctest: +SKIP
     >>> f([1, 2, 3], 2)                            # doctest: +SKIP
     [2.  5.  10.]
-
-    See http://docs.scipy.org/doc/numpy/reference/ufuncs.html
 
     """
     y = C.IndexedBase(C.Symbol('y', dummy=True))

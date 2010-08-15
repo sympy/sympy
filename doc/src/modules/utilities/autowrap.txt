@@ -7,6 +7,13 @@ autowrap
 --------
 .. autofunction:: sympy.utilities.autowrap.autowrap
 
+
+.. _ufuncify:
+
+ufuncify
+---------------
+.. autofunction:: sympy.utilities.autowrap.ufuncify
+
 binary_function
 ---------------
 .. autofunction:: sympy.utilities.autowrap.binary_function
