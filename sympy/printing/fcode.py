@@ -249,7 +249,11 @@ class FCodePrinter(CodePrinter):
         return "%d.0d0/%d.0d0" % (p, q)
 
     def _print_Real(self, expr):
-        return "%sd0" % CodePrinter._print_Real(self, expr)
+        printed = CodePrinter._print_Real(self, expr)
+        e = printed.find('e')
+        if e > -1:
+            return "%sd%s" % (printed[:e], printed[e+1:])
+        return "%sd0" % printed
 
     def _print_Indexed(self, expr):
         inds = [ self._print(i) for i in expr.indices ]
@@ -268,7 +272,7 @@ class FCodePrinter(CodePrinter):
            complex rule to give nice results.
         """
         # routine to find split point in a code line
-        my_alnum = set(".0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_")
+        my_alnum = set("+-.0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_")
         my_white = set(" \t()")
         def split_pos_code(line, endpos):
             if len(line) <= endpos:

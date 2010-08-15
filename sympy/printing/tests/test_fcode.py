@@ -1,5 +1,5 @@
 from sympy import sin, cos, atan2, gamma, conjugate, sqrt, Factorial, \
-    Integral, Piecewise, Add, diff, symbols, S, raises
+    Integral, Piecewise, Add, diff, symbols, S, raises, Real
 from sympy import Catalan, EulerGamma, E, GoldenRatio, I, pi
 from sympy import Function, Rational, Integer, Lambda
 
@@ -37,6 +37,10 @@ def test_fcode_Rational():
 def test_fcode_Integer():
     assert fcode(Integer(67)) == "      67"
     assert fcode(Integer(-1)) == "      -1"
+
+def test_fcode_Real():
+    assert fcode(Real(42.0)) == "      42.0000000000000d0"
+    assert fcode(Real(-1e20)) == "      -1.00000000000000d+20"
 
 def test_fcode_functions():
     x, y = symbols('xy')
