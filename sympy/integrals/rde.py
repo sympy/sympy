@@ -185,8 +185,8 @@ def special_denom(a, ba, bd, ca, cd, D, T, case='auto'):
     elif case == 'tan':
         p = Poly(t**2 + 1, t)
     elif case in ['primitive', 'base']:
-        B = ba.quo(bd)
-        C = ca.quo(cd)
+        B = (ba.as_basic()/bd.as_basic()).as_poly(t)
+        C = (ca.as_basic()/cd.as_basic()).as_poly(t)
         return (a, B, C, Poly(1, t))
     else:
         raise ValueError("case must be one of {'exp', 'tan', 'primitive', " +
