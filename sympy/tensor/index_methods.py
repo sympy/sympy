@@ -34,7 +34,6 @@ def _remove_repeated(inds):
     for i in inds:
         if i in sum_index:
             sum_index[i] += 1
-            assert sum_index[i] == 1, "Index %s repeated more than twice" % i
         else:
             sum_index[i] = 0
     inds = filter(lambda x: not sum_index[x], inds)
