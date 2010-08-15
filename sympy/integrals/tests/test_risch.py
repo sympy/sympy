@@ -6,7 +6,7 @@ from sympy.integrals.risch import (gcdex_diophantine, frac_in, derivation,
     polynomial_reduce, residue_reduce, residue_reduce_to_basic,
     integrate_primitive, integrate_hyperexponential,
     integrate_hypertangent_polynomial, integrate_nonlinear_no_specials,
-    integer_powers, build_extension)
+    integer_powers, build_extension, risch_integrate)
 from sympy.utilities.pytest import XFAIL, skip, raises
 
 from sympy.abc import x, t, nu, z, a
@@ -225,39 +225,39 @@ def test_integer_powers():
 def test_build_extension():
     # XXX: These might be different with different arg orderings
     i = Symbol('i')
-    assert build_extension(exp(x) + exp(x**2), x) == \
+    assert build_extension(exp(x) + exp(x**2), x, dummy=False) == \
         (Poly(t1 + t0, t1), Poly(1, t1), [Poly(1, x,), Poly(t0, t0),
         Poly(2*x*t1, t1)], [x, t0, t1], [Lambda(i, exp(i**2)),
         Lambda(i, exp(i))], [])
-    assert build_extension(exp(x) + exp(2*x), x) == \
+    assert build_extension(exp(x) + exp(2*x), x, dummy=False) == \
         (Poly(t0**2 + t0, t0), Poly(1, t0), [Poly(1, x), Poly(t0, t0)], [x, t0],
         [Lambda(i, exp(i))], [])
-    assert build_extension(exp(x) + exp(x/2), x) == \
+    assert build_extension(exp(x) + exp(x/2), x, dummy=False) == \
         (Poly(t0**2 + t0, t0), Poly(1, t0), [Poly(1, x), Poly(t0/2, t0)],
         [x, t0], [Lambda(i, exp(i/2))], [])
-    assert build_extension(exp(x) + exp(x**2) + exp(x + x**2), x) == \
+    assert build_extension(exp(x) + exp(x**2) + exp(x + x**2), x, dummy=False) == \
         (Poly((1 + t0)*t1 + t0, t1), Poly(1, t1), [Poly(1, x), Poly(t0, t0),
         Poly(2*x*t1, t1)], [x, t0, t1], [Lambda(i, exp(i**2)),
         Lambda(i, exp(i))], [])
-    assert build_extension(exp(x) + exp(x**2) + exp(x + x**2 + 1), x) == \
+    assert build_extension(exp(x) + exp(x**2) + exp(x + x**2 + 1), x, dummy=False) == \
         (Poly((1 + S.Exp1*t0)*t1 + t0, t1), Poly(1, t1), [Poly(1, x),
         Poly(t0, t0), Poly(2*x*t1, t1)], [x, t0, t1], [Lambda(i, exp(i**2)),
         Lambda(i, exp(i))], [])
-    assert build_extension(exp(x) + exp(x**2) + exp(x/2 + x**2), x) == \
+    assert build_extension(exp(x) + exp(x**2) + exp(x/2 + x**2), x, dummy=False) == \
         (Poly(t1**2 + t0*t1 + t0, t1), Poly(1, t1), [Poly(1, x),
         Poly(2*x*t0, t0), Poly(t1/2, t1)], [x, t0, t1], [Lambda(i, exp(i/2)),
         Lambda(i, exp(i**2))], [])
-    assert build_extension(exp(x) + exp(x**2) + exp(x/2 + x**2 + 3), x) == \
+    assert build_extension(exp(x) + exp(x**2) + exp(x/2 + x**2 + 3), x, dummy=False) == \
         (Poly(t1**2 + t0*exp(3)*t1 + t0, t1), Poly(1, t1), [Poly(1, x),
         Poly(2*x*t0, t0), Poly(t1/2, t1)], [x, t0, t1], [Lambda(i, exp(i/2)),
         Lambda(i, exp(i**2))], [])
 
-    assert build_extension(log(x)*log(x + 1)*log(2*x**2 + 2*x), x) == \
+    assert build_extension(log(x)*log(x + 1)*log(2*x**2 + 2*x), x, dummy=False) == \
         (Poly(t0*t1**2 + (-t0*log(2) - t0**2)*t1, t1), Poly(1, t1),
         [Poly(1, x), Poly(1/(1 + x), t0),
         Poly((1 + 2*x)/(x + x**2), t1, expand=False)], [x, t0, t1],
         [Lambda(i, log(2*i + 2*i**2)), Lambda(i, log(1 + i))], [])
-    assert build_extension(x**x*log(x), x) == \
+    assert build_extension(x**x*log(x), x, dummy=False) == \
         (Poly(t0*t1, t1), Poly(1, t1), [Poly(1, x), Poly(1/x, t0),
         Poly((1 + t0)*t1, t1)], [x, t0, t1], [Lambda(i, exp(t0*i)),
         Lambda(i, log(i))], [(exp(x*log(x)), x**x)])
@@ -268,9 +268,12 @@ def test_build_extension():
     # XXX: This is the only way to make this work
     # But the polys11 options manager fixes it, so let's just wait until that.
     darg = -(10 + 21*t0 + 10*t0**2)/(1 + 2*t0 + t0**2)
-    assert build_extension(f, x) == \
+    assert build_extension(f, x, dummy=False) == \
         (Poly((1757211400 + 2581284541*t0)*t1, t1), Poly(39916800 +
         119750400*t0 + 119750400*t0**2 + 39916800*t0**3, t1),
         [Poly(1, x), Poly(t0, t0), darg.as_poly(t1, expand=False)*Poly(t1, t1,
         expand=False)], [x, t0, t1], [Lambda(i, exp(-10*i + 1/(1 + t0))),
         Lambda(i, exp(i))], [])
+
+def test_risch_integrate():
+    assert risch_integrate(t0*exp(x), x) == t0*exp(x)

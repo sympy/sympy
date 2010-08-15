@@ -23,7 +23,7 @@ from sympy.core.function import Lambda
 from sympy.core.numbers import ilcm
 from sympy.core.mul import Mul
 from sympy.core.power import Pow
-from sympy.core.symbol import Symbol
+from sympy.core.symbol import Symbol, Dummy
 
 from sympy.functions import log, exp, sin, cos, tan, asin, acos, atan
 
@@ -752,7 +752,7 @@ def integer_powers(exprs, index=True):
 
     return sorted(list(newterms.iteritems()))
 
-def build_extension(f, x, handle_first='log'):
+def build_extension(f, x, handle_first='log', dummy=True):
     """
     Tries to build a transcendental extension tower from f with respect to x.
 
@@ -778,7 +778,11 @@ def build_extension(f, x, handle_first='log'):
         T = [x]
         D = [Poly(1, x)]
         L_K, E_K, L_args, E_args = [], [], [], []
-        ts = numbered_symbols('t')
+        if dummy:
+            ts = numbered_symbols('t', cls=Dummy)
+        else:
+            # For testing
+            ts = numbered_symbols('t')
         # For various things that we change to make things work that we need to
         # change back when we are done.
         backsubs = []
@@ -965,10 +969,11 @@ def build_extension(f, x, handle_first='log'):
                 ans, u, const = A
                 newterm = exp(i.exp*(log(const) + u))
                 # Under the current implementation, exp kills terms
-                # only if they are of the form a*log(x), where a is a Number
-                # This should have already been killed by the above tests.
-                # Again, if this changes, this will break, which maybe is a
-                # sign that you shouldn't be changing that.
+                # only if they are of the form a*log(x), where a is a Number.
+                # This case should have already been killed by the above tests.
+                # Again, if this changes to kill more than that, this will
+                # break, which maybe is a sign that you shouldn't be changing
+                # that.
 
                 newf = newf.subs(i, newterm)
 
