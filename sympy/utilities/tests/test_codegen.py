@@ -336,6 +336,26 @@ def test_loops_c():
         '#endif\n'
             )
 
+def test_dummy_loops_c():
+    from sympy.tensor import IndexedBase, Idx
+    i, m = symbols('i m', integer=True, dummy=True)
+    x = IndexedBase('x')
+    y = IndexedBase('y')
+    i = Idx(i, m)
+    expected = (
+            '#include "file.h"\n'
+            '#include <math.h>\n'
+            'void test_dummies(int m_%(mno)i, double *x, double *y) {\n'
+            '   for (int i_%(ino)i=0; i_%(ino)i<m_%(mno)i; i_%(ino)i++){\n'
+            '      y[i_%(ino)i] = x[i_%(ino)i];\n'
+            '   }\n'
+            '}\n'
+            ) % {'ino': i.label.dummy_index, 'mno': m.dummy_index}
+    r = Routine('test_dummies', Eq(y[i], x[i]))
+    c = CCodeGen()
+    code = get_string(c.dump_c, [r])
+    assert code == expected
+
 def test_partial_loops_c():
     # check that loop boundaries are determined by Idx, and array strides
     # determined by shape of IndexedBase object.
@@ -855,6 +875,29 @@ def test_loops():
             'end subroutine\n'
             'end interface\n'
             )
+
+def test_dummy_loops_f95():
+    from sympy.tensor import IndexedBase, Idx
+    i, m = symbols('i m', integer=True, dummy=True)
+    x = IndexedBase('x')
+    y = IndexedBase('y')
+    i = Idx(i, m)
+    expected = (
+            'subroutine test_dummies(m_%(mcount)i, x, y)\n'
+            'implicit none\n'
+            'INTEGER*4, intent(in) :: m_%(mcount)i\n'
+            'REAL*8, intent(in), dimension(1:m_%(mcount)i) :: x\n'
+            'REAL*8, intent(out), dimension(1:m_%(mcount)i) :: y\n'
+            'INTEGER*4 :: i_%(icount)i\n'
+            'do i_%(icount)i = 1, m_%(mcount)i\n'
+            '   y(i_%(icount)i) = x(i_%(icount)i)\n'
+            'end do\n'
+            'end subroutine\n'
+            ) % {'icount': i.label.dummy_index, 'mcount': m.dummy_index}
+    r = Routine('test_dummies', Eq(y[i], x[i]))
+    c = FCodeGen()
+    code = get_string(c.dump_f95, [r])
+    assert code == expected
 
 def test_loops_InOut():
     from sympy.tensor import IndexedBase, Idx

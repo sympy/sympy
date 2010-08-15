@@ -148,6 +148,20 @@ def test_ccode_loops_matrix_vector():
     c = ccode(A[i, j]*x[j], assign_to=y[i])
     assert c == s
 
+def test_dummy_loops():
+    i, m = symbols('i m', integer=True, dummy=True)
+    x = IndexedBase('x')
+    y = IndexedBase('y')
+    i = Idx(i, m)
+
+    expected = (
+        'for (int i_%(icount)i=0; i_%(icount)i<m_%(mcount)i; i_%(icount)i++){\n'
+        '   y[i_%(icount)i] = x[i_%(icount)i];\n'
+        '}'
+        ) % {'icount': i.label.dummy_index, 'mcount': m.dummy_index}
+    code = ccode(x[i], assign_to=y[i])
+    assert code == expected
+
 def test_ccode_loops_add():
     from sympy.tensor import IndexedBase, Idx
     from sympy import symbols

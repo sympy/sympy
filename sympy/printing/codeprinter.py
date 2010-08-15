@@ -119,6 +119,10 @@ class CodePrinter(StrPrinter):
             self._print(expr.evalf(self._settings["precision"]))))
         return str(expr)
 
+    def _print_Dummy(self, expr):
+        # dummies must be printed as unique symbols
+        return "%s_%i" %(expr.name, expr.dummy_index)  # Dummy
+
     _print_Catalan = _print_NumberSymbol
     _print_EulerGamma = _print_NumberSymbol
     _print_GoldenRatio = _print_NumberSymbol
@@ -133,7 +137,6 @@ class CodePrinter(StrPrinter):
     _print_ComplexInfinity = _print_not_supported
     _print_Derivative = _print_not_supported
     _print_dict = _print_not_supported
-    _print_Dummy = _print_not_supported
     _print_ExprCondPair = _print_not_supported
     _print_GeometryEntity = _print_not_supported
     _print_Infinity = _print_not_supported

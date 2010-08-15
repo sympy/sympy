@@ -321,6 +321,20 @@ def test_loops():
     assert (code == expected % {'rhs': 'A(i, j)*x(j) + y(i)'} or
             code == expected % {'rhs': 'x(j)*A(i, j) + y(i)'})
 
+def test_dummy_loops():
+    i, m = symbols('i m', integer=True, dummy=True)
+    x = IndexedBase('x')
+    y = IndexedBase('y')
+    i = Idx(i, m)
+
+    expected = (
+            'do i_%(icount)i = 1, m_%(mcount)i\n'
+            '   y(i_%(icount)i) = x(i_%(icount)i)\n'
+            'end do'
+            ) % {'icount': i.label.dummy_index, 'mcount': m.dummy_index}
+    code = fcode(x[i], assign_to=y[i], source_format='free')
+    assert code == expected
+
 def test_derived_classes():
     class MyFancyFCodePrinter(FCodePrinter):
         _default_settings = FCodePrinter._default_settings.copy()
