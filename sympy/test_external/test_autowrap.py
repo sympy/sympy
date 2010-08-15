@@ -1,7 +1,8 @@
 try:
     import numpy
+    def has_numpy(): return True
 except:
-    numpy = None
+    def has_numpy(): skip("Couldn't import numpy")
 
 from sympy import symbols, Eq
 from sympy.tensor import IndexedBase, Idx
@@ -22,7 +23,7 @@ def runtest_autowrap_twice(language, backend):
     assert g(1, -2, 1) ==  1.0
 
 def runtest_autowrap_trace(language, backend):
-    if not numpy: skip()
+    has_numpy()
     A = IndexedBase('A')
     n = symbols('n', integer=True)
     i = Idx('i', n)
@@ -30,7 +31,7 @@ def runtest_autowrap_trace(language, backend):
     assert trace(numpy.eye(100)) == 100
 
 def runtest_autowrap_matrix_vector(language, backend):
-    if not numpy: skip()
+    has_numpy()
     A, x, y = map(IndexedBase, ['A', 'x', 'y'])
     n, m = symbols('n m', integer=True)
     i = Idx('i', m)
@@ -45,7 +46,7 @@ def runtest_autowrap_matrix_vector(language, backend):
     assert numpy.sum(numpy.abs(y - mv(M, x))) < 1e-13
 
 def runtest_autowrap_matrix_matrix(language, backend):
-    if not numpy: skip()
+    has_numpy()
     A, B, C = map(IndexedBase, ['A', 'B', 'C'])
     n, m, d = symbols('n m d', integer=True)
     i = Idx('i', m)
