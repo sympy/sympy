@@ -1,6 +1,7 @@
 from sympy.physics.qoperations import QAssocOp
 from sympy.physics.quantum import Operator, OuterProduct, KetBase, BraBase,\
 InnerProduct, Dagger
+from sympy.core.basic import Basic
 from sympy.core.expr import Expr
 from sympy.core.cache import cacheit
 from sympy.core.mul import Mul
@@ -215,8 +216,8 @@ class QMul(QAssocOp):
                 if factor.is_commutative:
                     plain.append(factor)
                 else:
-                    Wrapper = QuantumBasic
-                    sums.append(factor)
+                    Wrapper = Basic
+                    sums.append(Wrapper(factor))
 
         if not rewrite:
             return self
