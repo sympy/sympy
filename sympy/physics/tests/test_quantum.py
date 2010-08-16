@@ -166,6 +166,10 @@ def test_Commutator():
     B = Symbol('B', **{'commutative':False})
     C = Symbol('C', **{'commutative':False})
     x,y = symbols('xy')
+    bra = Bra('b')
+    ket = Ket('a')
+    E = Operator('E')
+    F = Operator('F')
     assert Commutator(0, 2) == 0
     assert Commutator(A+B, C) == Commutator(A, C) + Commutator(B, C)
     assert Commutator(x*A, y*B) == x*y*Commutator(A, B)
