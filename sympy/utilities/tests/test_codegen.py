@@ -38,6 +38,14 @@ def test_Routine_argument_order():
     assert [ type(arg) for arg in r.arguments ] == [
             InOutArgument, InputArgument, InputArgument ]
 
+    from sympy.tensor import IndexedBase, Idx
+    A, B = map(IndexedBase, ['A', 'B'])
+    m = symbols('m', integer=True)
+    i = Idx('i', m)
+    r = Routine('test', Eq(A[i], B[i]), argument_sequence=[B, A, m])
+    assert [ arg.name for arg in r.arguments ] == [B.label, A.label, m]
+
+
 def test_empty_c_code():
     code_gen = CCodeGen()
     source = get_string(code_gen.dump_c, [])

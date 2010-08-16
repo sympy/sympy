@@ -80,7 +80,7 @@ from sympy.core import Symbol, S, Expr, Tuple, Equality, Function
 from sympy.printing.codeprinter import AssignmentError
 from sympy.printing.ccode import ccode, CCodePrinter
 from sympy.printing.fcode import fcode, FCodePrinter
-from sympy.tensor import Idx, Indexed
+from sympy.tensor import Idx, Indexed, IndexedBase
 from sympy.utilities import flatten
 
 
@@ -201,6 +201,15 @@ class Routine(object):
         arg_list.extend(output_args)
 
         if argument_sequence is not None:
+            # if the user has supplied IndexedBase instances, we'll accept that
+            new_sequence = []
+            for arg in argument_sequence:
+                if isinstance(arg, IndexedBase):
+                    new_sequence.append(arg.label)
+                else:
+                    new_sequence.append(arg)
+            argument_sequence = new_sequence
+
             missing = filter(lambda x: x.name not in argument_sequence, arg_list)
             if missing:
                 raise CodeGenArgumentListError("Argument list didn't specify: %s" %
