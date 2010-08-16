@@ -521,6 +521,46 @@ class Add(AssocOp):
         return s
 
 
+    def primitive(self):
+        """
+        Divide ``self`` by the GCD of coefficients of ``self``.
+
+        Example
+        =======
+
+        >>> from sympy.abc import x, y
+
+        >>> (2*x + 4*y).primitive()
+        (2, x + 2*y)
+
+        >>> (2*x/3 + 4*y/9).primitive()
+        (2/9, 2*y + 3*x)
+
+        >>> (2*x/3 + 4.1*y).primitive()
+        (1, 2*x/3 + 4.1*y)
+
+        """
+        terms = []
+        cont = S.Zero
+
+        for term in self.args:
+            coeff = term.as_coeff_mul()[0]
+
+            if coeff.is_Rational:
+                cont = cont.gcd(coeff)
+
+                if cont is not S.One:
+                    terms.append(term)
+                    continue
+
+            return S.One, self
+
+        for i, term in enumerate(terms):
+            # XXX: this is extremely slow
+            terms[i] = term/cont
+
+        return cont, self._new_rawargs(*terms)
+
 from function import FunctionClass
 from mul import Mul
 from symbol import Symbol
