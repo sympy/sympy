@@ -679,11 +679,11 @@ class KroneckerDelta(Function):
     def _latex_(self,printer):
         return "\\delta_{%s%s}"% (self.args[0].name,self.args[1].name)
 
-    def __sympyrepr__(self):
+    def _sympyrepr(self, printer, *args):
         return "%s(%s,%s)"% (self.__class__.__name__, self.args[0],\
         self.args[1])
 
-    def __sympystr__(self):
+    def _sympystr(self, printer, *args):
         return 'd(%s,%s)'% (self.args[0],self.args[1])
 
 class Commutator(Function, QuantumBasic):
@@ -781,11 +781,11 @@ class Commutator(Function, QuantumBasic):
     def _eval_dagger(self):
         return Commutator(Dagger(self.args[1]), Dagger(self.args[0]))
 
-    def __sympyrepr__(self):
+    def _sympyrepr(self, printer, *args):
         return "%s(%s,%s)" % (self.__class__.__name__, self.args[0],\
         self.args[1])
 
-    def __sympystr__(self):
+    def _sympystr(self, printer, *args):
         return "[%s,%s]" % (self.args[0], self.args[1])
 
     def _latex_(self,printer):

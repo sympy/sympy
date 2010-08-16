@@ -170,6 +170,9 @@ def test_Commutator():
     ket = Ket('a')
     E = Operator('E')
     F = Operator('F')
+    ip_com = bra*Commutator(E, F)*ket
     assert Commutator(0, 2) == 0
     assert Commutator(A+B, C) == Commutator(A, C) + Commutator(B, C)
     assert Commutator(x*A, y*B) == x*y*Commutator(A, B)
+    assert ip_com.doit().expand() == -1*bra*F*E*ket + bra*E*F*ket
+    assert ip_com.acts_like == InnerProduct
