@@ -1,3 +1,5 @@
+.. _tensor_module:
+
 Tensor Module
 =============
 

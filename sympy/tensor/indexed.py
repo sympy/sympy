@@ -19,7 +19,7 @@
            array.
 
     There can be any number of indices on an Indexed object.  No transformation
-    properties are impplemented in these Base objects, but implicit contraction
+    properties are implemented in these Base objects, but implicit contraction
     of repeated indices is supported.
 
     Examples
@@ -71,6 +71,16 @@
     >>> A[i, 2, j].ranges
     [(0, -1 + m), (None, None), (0, -1 + n)]
 
+    To analyze the structure of indexed expressions, you can use the methods
+    get_indices() and get_contraction_structure():
+
+    >>> from sympy.tensor import get_indices, get_contraction_structure
+    >>> get_indices(A[i, j, j])
+    (set([i]), {})
+    >>> get_contraction_structure(A[i, j, j])
+    {(j,): set([A[i, j, j]])}
+
+    See the appropriate docstrings for a detailed explanation of the output.
 
 """
 

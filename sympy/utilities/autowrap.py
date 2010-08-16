@@ -1,12 +1,15 @@
 """Module for compiling codegen output, and wrap the binary for use in python.
 
+.. note:: To use the autowrap module it must first be imported
+
+   >>> from sympy.utilities.autowrap import autowrap
+
 This module provides a common interface for different external backends, such
 as f2py, fwrap, Cython, SWIG(?) etc. (Currently only f2py and Cython are
 implemented) The goal is to provide access to compiled binaries of acceptable
 performance with a one-button user interface, i.e.
 
     >>> from sympy.abc import x,y
-    >>> from sympy.utilities.autowrap import autowrap
     >>> expr = ((x - y)**(25)).expand()
     >>> binary_callable = autowrap(expr)           # doctest: +SKIP
     >>> binary_callable(1, 2)                      # doctest: +SKIP
@@ -75,6 +78,7 @@ from sympy import C
 class CodeWrapError(Exception): pass
 
 class CodeWrapper:
+    """Base Class for code wrappers"""
     _filename = "wrapped_code"
     _module_basename = "wrapper_module"
     _module_counter = 0
@@ -182,6 +186,8 @@ def %(name)s():
         return mod.autofunc
 
 class CythonCodeWrapper(CodeWrapper):
+    """Wrapper that uses Cython"""
+
     setup_template = """
 from distutils.core import setup
 from distutils.extension import Extension
@@ -224,15 +230,18 @@ setup(
            This file contains all the definitions of the routines in c code and
            refers to the header file.
 
-           Arguments:
-             routines  --  a list of Routine instances
-             f  --  a file-like object to write the file to
-             prefix  --  the filename prefix, used to refer to the proper header
-                         file. Only the basename of the prefix is used.
+           :Arguments:
 
-           Optional arguments:
-             empty  --  When True, empty lines are included to structure the
-                        source files. [DEFAULT=True]
+           routines
+                List of Routine instances
+           f
+                File-like object to write the file to
+           prefix
+                The filename prefix, used to refer to the proper header file.
+                Only the basename of the prefix is used.
+           empty
+                Optional. When True, empty lines are included to structure the
+                source files. [DEFAULT=True]
         """
         for routine in routines:
             prototype = self.generator.get_prototype(routine)
@@ -290,6 +299,7 @@ setup(
             return "%s %s"%(t, str(arg.name))
 
 class F2PyCodeWrapper(CodeWrapper):
+    """Wrapper that uses f2py"""
 
     @property
     def command(self):
