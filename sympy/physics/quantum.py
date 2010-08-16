@@ -737,10 +737,10 @@ class Commutator(Function, QuantumBasic):
         #
         from sympy.physics.qadd import QAdd
         a = a.expand()
-        if isinstance(a, QAdd):
+        if isinstance(a, (Add, QAdd)):
             return QAdd(*[cls(term,b) for term in a.args])
         b = b.expand()
-        if isinstance(b, QAdd):
+        if isinstance(b, (Add, QAdd)):
             return QAdd(*[cls(a,term) for term in b.args])
 
         #
@@ -750,9 +750,9 @@ class Commutator(Function, QuantumBasic):
         c_part = []
         nc_part = []
         nc_part2 = []
-        if isinstance(a, QMul):
+        if isinstance(a, (Mul, QMul)):
             c_part,nc_part = split_commutative_parts(a)
-        if isinstance(b, QMul):
+        if isinstance(b, (Mul, QMul)):
             c_part2,nc_part2 = split_commutative_parts(b)
             c_part.extend(c_part2)
         if c_part:
