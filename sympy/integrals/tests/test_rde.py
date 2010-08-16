@@ -3,8 +3,9 @@ from sympy import Poly, S, symbols, oo
 from sympy.integrals.risch import NonElementaryIntegral
 from sympy.integrals.rde import (order_at, order_at_oo, weak_normalizer,
     normal_denom, special_denom, bound_degree, spde, solve_poly_rde,
-    no_cancel_equal, cancel_exp, rischDE)
-from sympy.utilities.pytest import raises
+    no_cancel_equal, cancel_primitive, cancel_exp, rischDE)
+
+from sympy.utilities.pytest import raises, XFAIL
 from sympy.abc import x, t, z, n
 
 t0, t1, t2 = symbols('t0, t1, t2')
@@ -56,14 +57,23 @@ def test_special_denom():
     Poly(t, t), D, [t]) == \
         (Poly(1, t), Poly(t**2 - 1, t), Poly(t**2 - 1, t), Poly(t, t))
 
-def test_bound_degree():
-    # Primitive (TODO)
+@XFAIL
+def test_bound_degree_fail():
+    # Primitive
+    D = [Poly(1, x), Poly(t0/x**2, t0), Poly(1/x, t)]
+    assert bound_degree(Poly(t**2, t), Poly(-(1/x**2*t**2 + 1/x), t),
+        Poly((2*x - 1)*t**4 + (t0 + x)/x*t**3 - (t0 + 4*x**2)/2*x*t**2 + x*t,
+        t), D, [x, t0, t]) == 3
+    # TODO: Add test for db == da - 1 case
 
-    # Base (TODO)
+def test_bound_degree():
+    # Base
     D = [Poly(1, x)]
     assert bound_degree(Poly(1, x), Poly(-2*x, x), Poly(1, x), D, [x]) == 0
+    # TODO: Add another test (?)
 
     # Exp (TODO)
+    # TODO: Add tests for exp case
 
     # Nonlinear
     D = [Poly(1, x), Poly(t**2 + 1, t)]
@@ -114,7 +124,17 @@ def test_solve_poly_rde_cancel():
     D = [Poly(1, x), Poly(t, t)]
     assert cancel_exp(Poly(2*x, t), Poly(2*x, t), 0, D, [x, t]) == \
         Poly(1, t)
-    # TODO: Add more exp tests
+    # TODO: Add more exp tests, including tests that require is_deriv_in_field()
+
+    # primitive
+    D = [Poly(1, x), Poly(1/x, t)]
+    raises(NonElementaryIntegral,
+    "cancel_primitive(Poly(1, t), Poly(t, t), oo, D, [x, t])")
+    assert cancel_primitive(Poly(1, t), Poly(t + 1/x, t), 2, D, [x, t]) == \
+        Poly(t, t)
+    assert cancel_primitive(Poly(4*x, t), Poly(4*x*t**2 + 2*t/x, t), 3, D, [x, t]) == \
+        Poly(t**2, t)
+    # TODO: Add more primitive tests, including tests that require is_deriv_in_field()
 
 def test_rischDE():
     # TODO: Add more tests for rischDE, including ones from the text

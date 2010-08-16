@@ -251,7 +251,8 @@ def bound_degree(a, b, cQ, D, T, case='auto', parametric=False):
 
     This constitutes step 3 of the outline given in the rde.py docstring.
     """
-    from sympy.integrals.prde import parametric_log_deriv
+    from sympy.integrals.prde import (parametric_log_deriv, limited_integrate,
+        is_log_deriv_k_t_radical_in_field)
     # TODO: finish writing this and write tests
     t = T[-1]
     d = D[-1]
@@ -268,8 +269,7 @@ def bound_degree(a, b, cQ, D, T, case='auto', parametric=False):
     else:
         dc = cQ.degree(t)
 
-    alpha = -b.as_poly(t).LC().as_basic()/a.as_poly(t).LC().as_basic()
-    alpha = cancel(alpha)
+    alpha = cancel(-b.as_poly(t).LC().as_basic()/a.as_poly(t).LC().as_basic())
 
     if case == 'base':
         n = max(0, dc - max(db, da - 1))
@@ -280,21 +280,44 @@ def bound_degree(a, b, cQ, D, T, case='auto', parametric=False):
         if db > da:
             n = max(0, dc - db)
         else:
-            max(0, dc - da + 1)
+            n = max(0, dc - da + 1)
 
+        D1 = D[:-1]
+        T1 = T[:-1]
+        t1 = T1[-1]
+        alphaa, alphad = frac_in(alpha, t1)
+        etaa, etad = frac_in(D[-1], t1)
         if db == da - 1:
-            raise NotImplementedError("Possible cancellation cases are " +
-                "not yet implemented for the primitive case.")
             # if alpha == m*Dt + Dz for z in k and m in ZZ:
-                # n = max(n, m)
+            try:
+                (za, zd), m = limited_integrate(alphaa, alphad, [(etaa, etad)],
+                    D1, T1)
+            except NonElementaryIntegral:
+                pass
+            else:
+                assert len(m) == 1
+                n = max(n, m[0])
 
         if db == da:
-            raise NotImplementedError("Possible cancellation cases are " +
-            "not yet implemented for the primitive case.")
             # if alpha == Dz/z for z in k*:
                 # beta = -lc(a*Dz + b*z)/(z*lc(a))
                 # if beta == m*Dt + Dw for w in k and m in ZZ:
                     # n = max(n, m)
+            A = is_log_deriv_k_t_radical_in_field(alphaa, alphad, D1, T1)
+            if A is not None:
+                aa, z = A
+                if aa == 1:
+                    beta = -(a*derivation(z, D1, T1).as_poly(t) +
+                        b*z.as_poly(t)).LC()/(z.as_basic()*a.LC())
+                    betaa, betad = frac_in(beta, t1)
+                    try:
+                        (za, zd), m = limited_integrate(betaa, betad,
+                            [(etaa, etad)], D1, T1)
+                    except NonElementaryIntegral:
+                        pass
+                    else:
+                        assert len(m) == 1
+                        n = max(n, m[0])
 
     elif case == 'exp':
         n = max(0, dc - max(db, da))
@@ -358,8 +381,7 @@ def spde(a, b, c, n, D, T):
         c = Poly(c.as_basic()/a.as_basic(), t)
         return (b, c, n, Poly(1, t), zero)
 
-    r, z = gcdex_diophantine(b.as_poly(t), a.as_poly(t), c.as_poly(t))
-    r, z = Poly(r, t), Poly(z, t)
+    r, z = gcdex_diophantine(b, a, c)
     u = (a, b + derivation(a, D, T), z - derivation(r, D, T), n - a.degree(t),
         D) + (T,)
     B, C, m, alpha, beta = spde(*u)
@@ -481,6 +503,55 @@ def no_cancel_equal(b, c, n, D, T):
 
     return q
 
+def cancel_primitive(b, c, n, D, T):
+    """
+    Poly Risch Differential Equation - Cancelation: Primitive case.
+
+    Given a derivation D on k[t], n either an integer or +oo, b in k, and
+    c in k[t] with Dt in k and b != 0, either raise NonElementaryIntegral, in
+    which case the equation Dq + b*q == c has no solution of degree at most n
+    in k[t], or a solution q in k[t] of this equation with deg(q) <= n.
+    """
+    from sympy.integrals.prde import is_log_deriv_k_t_radical_in_field
+    t = T[-1]
+    T1 = T[:-1]
+    D1 = D[:-1]
+    t1 = T1[-1]
+
+    ba, bd = frac_in(b, t1)
+    A = is_log_deriv_k_t_radical_in_field(ba, bd, D1, T1)
+    if A is not None:
+        print "Add a cancel_primitive() test."
+        print b, c, n, D, T
+        n, z = A
+        if n == 1: # b == Dz/z
+            raise NotImplementedError("is_deriv_in_field() is required to " +
+                " solve this problem.")
+            # if z*c == Dp for p in k[t] and deg(p) <= n:
+            #     return p/z
+            # else:
+            #     raise NonElementaryIntegral
+
+    if c.is_zero:
+        return c # return 0
+
+    if n < c.degree(t):
+        raise NonElementaryIntegral
+
+    q = Poly(0, t)
+    while not c.is_zero:
+        m = c.degree(t)
+        if n < m:
+            raise NonElementaryIntegral
+        a2a, a2d = frac_in(c.LC(), t1)
+        sa, sd = rischDE(ba, bd, a2a, a2d, D1, T1)
+        stm = Poly(sa.as_basic()/sd.as_basic()*t**m, t)
+        q += stm
+        n = m - 1
+        c -= b*stm + derivation(stm, D, T)
+
+    return q
+
 def cancel_exp(b, c, n, D, T):
     """
     Poly Risch Differential Equation - Cancelation: Hyperexponential case.
@@ -498,12 +569,13 @@ def cancel_exp(b, c, n, D, T):
     t1 = T1[-1]
     eta = D[-1].quo(Poly(t, t)).as_basic()
     etaa, etad = frac_in(eta, t1)
-    A = parametric_log_deriv(b.as_poly(t1), Poly(1, t1), etaa, etad, D1, T1)
+    ba, bd = frac_in(b, t1)
+    A = parametric_log_deriv(ba, bd, etaa, etad, D1, T1)
     if A is not None:
         a, m, z = A
         if a == 1:
-            raise NotImplementedError("is_deriv_in_field() is required to solve " +
-                "this problem.")
+            raise NotImplementedError("is_deriv_in_field() is required to " +
+                "solve this problem.")
             # if c*z*t**m == Dp for p in k<t> and q = p/(z*t**m) in k[t] and
             # deg(q) <= n:
             #     return q
@@ -590,7 +662,7 @@ def solve_poly_rde(b, cQ, n, D, T, parametric=False):
             return R
         else:
             h, m, C = R
-            # XXX: Or should it be risch_DE()?
+            # XXX: Or should it be rischDE()?
             y = solve_poly_rde(b, C, m, D, T)
             return h + y
 
@@ -606,6 +678,13 @@ def solve_poly_rde(b, cQ, n, D, T, parametric=False):
                     raise NotImplementedError("Parametric RDE cancelation " +
                         "hyperexponential case is not yet implemeted.")
                 return cancel_exp(b, cQ, n, D, T)
+
+            elif case == 'primitive':
+                if parametric:
+                    raise NotImplementedError("Parametric RDE cancelation " +
+                        "primitive case is not yet implemented.")
+                return cancel_primitive(b, cQ, n, D, T)
+
             else:
                 raise NotImplementedError("Other Poly (P)RDE cancelation " +
                     "cases are not yet implemented (%s)." % case)
@@ -633,12 +712,14 @@ def rischDE(fa, fd, ga, gd, D, T):
         # Until this is fully implemented, use oo.  Note that this, will almost
         # certaintly cause non-termination in spde() (unless A == 1), and
         # *might* lead to non-termination in the next step for a non-elementary
-        # integral (I don't know for certain yet).
+        # integral (I don't know for certain yet).  Fortunately, spde() is
+        # currently written recursively, so this will just give
+        # RuntimeError: maximum recursion depth exceeded.
         n = bound_degree(A, B, C, D, T)
     except NotImplementedError:
         # TODO: Remove warnings
         import warnings
-        warnings.warn("risch_DE: Proceeding with n = oo; may cause non-termination.")
+        warnings.warn("rischDE: Proceeding with n = oo; may cause non-termination.")
         n = oo
 
     B, C, m, alpha, beta = spde(A, B, C, n, D, T)
