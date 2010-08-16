@@ -96,6 +96,7 @@ class Qbit(Ket):
         |'5'>
         >>> a.name
         '5'
+        >>> Qbit.outDecimal = False
     """
     outDecimal = False
     def __new__(cls, *args, **options):
@@ -894,8 +895,7 @@ class measure(NondistributiveGate):
             result = result/sqrt(prob1)
         else:
             result = result/sqrt(1-prob1)
-        #TODO Don't do evalf
-        return result.expand().evalf()
+        return result.expand()
 
 class SetZero(NondistributiveGate):
     """
