@@ -179,22 +179,22 @@ def test_ArbMat8_apply():
     a**5*Qbit(0,1,0,0,0) + b**5*Qbit(0,1,0,0,1) + c**5*Qbit(0,1,0,1,0) +\
      d**5*Qbit(0,1,0,1,1) + e**5*Qbit(0,1,1,0,0) + f**5*Qbit(0,1,1,0,1) +\
       g**5*Qbit(0,1,1,1,0) + h**5*Qbit(0,1,1,1,1)
-      
+
     assert apply_gates(Arb(0,4,3)*Qbit(1,1,0,1,0)) == \
     a**3*Qbit(0,0,0,1,0) + b**3*Qbit(0,1,0,1,0) + c**3*Qbit(1,0,0,1,0)\
      + d**3*Qbit(1,1,0,1,0) + e**3*Qbit(0,0,0,1,1) + f**3*Qbit(0,1,0,1,1)\
       + g**3*Qbit(1,0,0,1,1) + h**3*Qbit(1,1,0,1,1)
-      
+
     assert apply_gates(Arb(4,1,3)*Qbit(0,1,0,0,1,0)) ==\
      a**6*Qbit(0,0,0,0,0,0) + b**6*Qbit(0,0,1,0,0,0) + c**6*Qbit(0,0,0,0,1,0) \
      + d**6*Qbit(0,0,1,0,1,0) + e**6*Qbit(0,1,0,0,0,0) + f**6*Qbit(0,1,1,0,0,0)\
      + g**6*Qbit(0,1,0,0,1,0) + h**6*Qbit(0,1,1,0,1,0)
-     
+
     assert apply_gates(Arb(3,1,4)*Qbit(0,1,0,1,0,0,1,0,1)) == \
     Qbit(0,1,0,1,0,0,1,0,1) + Qbit(0,1,0,1,1,0,1,0,1) + Qbit(0,1,0,1,0,0,1,1,1)\
      + Qbit(0,1,0,1,1,0,1,1,1) + Qbit(0,1,0,1,0,1,1,0,1) +\
      Qbit(0,1,0,1,1,1,1,0,1) + Qbit(0,1,0,1,0,1,1,1,1) + Qbit(0,1,0,1,1,1,1,1,1)
-     
+
     assert apply_gates(Arb(8,10,9)*Qbit(1,1,1,0,1,0,1,0,1,0,1)) ==\
     a**7*Qbit(0,0,0,0,1,0,1,0,1,0,1) + b**7*Qbit(0,1,0,0,1,0,1,0,1,0,1)\
     + c**7*Qbit(1,0,0,0,1,0,1,0,1,0,1) + d**7*Qbit(1,1,0,0,1,0,1,0,1,0,1)\
@@ -206,7 +206,7 @@ def test_ArbMat8_apply():
       + c*Qbit(0,1,1,1,1,1,0,1,1,1) + d*Qbit(0,1,1,1,1,1,1,1,1,1)\
        + e*Qbit(1,1,1,1,1,1,0,0,1,1) + f*Qbit(1,1,1,1,1,1,1,0,1,1)\
         + g*Qbit(1,1,1,1,1,1,0,1,1,1) + h*Qbit(1,1,1,1,1,1,1,1,1,1)
-        
+
     assert apply_gates(Arb(2,1,0)*Qbit(0,1,0)) ==\
     a**2*Qbit(0,0,0) + b**2*Qbit(0,0,1) + c**2*Qbit(0,1,0) + d**2*Qbit(0,1,1)\
     + e**2*Qbit(1,0,0) + f**2*Qbit(1,0,1) + g**2*Qbit(1,1,0) + h**2*Qbit(1,1,1)
@@ -252,7 +252,7 @@ def test_superposition_of_states():
     assert apply_gates(CNOTGate(0,1)*HadamardGate(0)*(1/sqrt(2)*Qbit(0,1)\
      + 1/sqrt(2)*Qbit(1,0))) == (Qbit(0,1)/2 + Qbit(0,0)/2 - Qbit(1,1)/2 +\
      Qbit(1,0)/2)
-     
+
     assert matrix_to_qbits(represent(CNOTGate(0,1)*HadamardGate(0)\
     *(1/sqrt(2)*Qbit(0,1) + 1/sqrt(2)*Qbit(1,0)), QbitZBasisSet(2)))\
      == (Qbit(0,1)/2 + Qbit(0,0)/2 - Qbit(1,1)/2 + Qbit(1,0)/2)
@@ -415,11 +415,11 @@ def test_RkGate_and_inverse():
     assert RkGate(1,2,x).args == (1,2)
     assert IRkGate(1,2,x).k == x
     assert IRkGate(1,2,x).args == (1,2)
-    
+
     assert represent(RkGate(0,1,2), QbitZBasisSet(2)) ==\
     Matrix([[1,0,0,0], [0,1,0,0], [0,0,1,0], [0,0,0,\
     exp(2*ImaginaryUnit()*Pi()/2**2)]])
-    
+
     assert represent(IRkGate(0,1,3), QbitZBasisSet(2)) ==\
     Matrix([[1,0,0,0], [0,1,0,0], [0,0,1,0], [0,0,0,\
     exp(-2*ImaginaryUnit()*Pi()/2**3)]])

@@ -118,7 +118,7 @@ class QMul(QAssocOp):
             if not isinstance(o, (QuantumBasic)):
                 Eseq.append(o)
             else:
-                #now, figure out if we should combine terms inside a Pow                          
+                #now, figure out if we should combine terms inside a Pow
                 if not last_argument is None:
                     if isinstance(last_argument, QPow):
                         basel = last_argument.base
@@ -135,13 +135,13 @@ class QMul(QAssocOp):
                         powero = 1
 
                     #for now we won't combine anything questionable into a QPow
-                    #(e.g. complicated expressions whose exponent's act_like == 
-                    #InnerProduct) 
+                    #(e.g. complicated expressions whose exponent's act_like ==
+                    #InnerProduct)
                     if baseo == basel and not isinstance(powero, QuantumBasic)\
                     and not isinstance(powero, QuantumBasic):
                         Qseq.pop(-1)
                         o = baseo**(powero+powerl)
-                        
+
                 Qseq.append(o)
                 last_argument = o
         nqpart = Mul(*Eseq)

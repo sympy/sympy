@@ -33,16 +33,16 @@ class PIABHamiltonian(Operator, PIAB):
 
 class PIABState(State, PIAB):
     __slots__ = ['n']
-    
+
     def __new__(cls, name, n):
         obj = State.__new__(cls, name)
         obj.n = n
         return obj
 
     @property
-    def name(self):        
+    def name(self):
         return self.args[0]
-        
+
     @property
     def Hamiltonian(self):
         return PIABHamiltonian()
@@ -60,7 +60,7 @@ class PIABKet(PIABState, Ket):
 
     @property
     def dual(self):
-        return PIABBra(*self.args) 
+        return PIABBra(*self.args)
 
 class PIABBra(PIABState, Bra):
 

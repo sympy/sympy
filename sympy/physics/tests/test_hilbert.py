@@ -142,7 +142,7 @@ def test_TensorProductHilbertSpace_FockSpace():
     f1 = FockSpace()
     f2 = FockSpace()
     f3 = f1*f2
-    # will never be a tensor product instance due to power combining (Fock 
+    # will never be a tensor product instance due to power combining (Fock
     # spaces can't be different as of now)
     assert isinstance(f3, TensorPowerHilbertSpace)
     assert f3.dimension == oo

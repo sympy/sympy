@@ -182,7 +182,7 @@ class State(StateBase):
         return self
 
 class Ket(State, KetBase):
-    """A Ket state for quantum mechanics. 
+    """A Ket state for quantum mechanics.
 
     Inherits from State and KetBase. In a state represented by a ray in Hilbert
     space, a Ket is a vector that points along that ray [1].
@@ -328,7 +328,7 @@ class BasisSet(Basic):
         raise NotImplementedError('Not implemented')
 
 class Operator(QuantumBasic, Representable):
-    """Base class for non-commuting quantum operators. 
+    """Base class for non-commuting quantum operators.
 
     An operator is a map from one vector space to another [1]. In quantum
     mechanics, operators correspond to observables [2].
@@ -388,7 +388,7 @@ class Operator(QuantumBasic, Representable):
         return printer._print(self.name, *args)
 
 class InnerProduct(QuantumBasic):
-    """An unevaluated inner product between a Bra and a Ket. 
+    """An unevaluated inner product between a Bra and a Ket.
 
     Because a Bra is essentially a row vector and a Ket is essentially a column
     vector, the inner product evaluates (acts_like) to a complex number.
@@ -463,7 +463,7 @@ class InnerProduct(QuantumBasic):
         return prettyForm(*pform.right(self.ket._pretty(printer, *args)))
 
 class OuterProduct(Operator):
-    """An unevaluated outer product between a Ket and Bra. 
+    """An unevaluated outer product between a Ket and Bra.
 
     Because a Ket is essentially a column vector and a Bra is essentially a row
     vector, the outer product evaluates (acts_like) to an operator
@@ -538,7 +538,7 @@ class OuterProduct(Operator):
         return prettyForm(*pform.right(self.bra._pretty(printer, *args)))
 
 class Dagger(QuantumBasic):
-    """General Hermitian conjugate operation. 
+    """General Hermitian conjugate operation.
 
     When an object is daggered it is transposed and then the complex conjugate
     is taken [1].
@@ -633,7 +633,7 @@ class Dagger(QuantumBasic):
 
 class KroneckerDelta(Function):
     """The discrete delta function.
-    
+
     A function that takes in two integers i and j. It returns 0 if i and j are
     not equal or it returns 1 if i and j are equal.
 

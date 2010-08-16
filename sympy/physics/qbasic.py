@@ -15,9 +15,9 @@ class QuantumExpr(Expr):
 
     _op_priority = 100.0
 
-    # These slots are needed to keep track of the character of what is contained 
-    # inside a given QuantumBinary Operation (they must be a __slots__ because 
-    # Expr contains slots which prohibits us from declaring adding new non-slot 
+    # These slots are needed to keep track of the character of what is contained
+    # inside a given QuantumBinary Operation (they must be a __slots__ because
+    # Expr contains slots which prohibits us from declaring adding new non-slot
     # variables):
     #    * 'acts_like' tells whether an object has the dimension of a Ket, Bra,
     #        or Operator.
@@ -31,7 +31,7 @@ class QuantumExpr(Expr):
 
     def __pos__(self):
         return self
-        
+
     def __neg__(self):
         from sympy.physics.qmul import QMul
         return QMul(S.NegativeOne, self)
