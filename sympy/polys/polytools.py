@@ -4363,11 +4363,49 @@ def _formal_factor(f, opt):
 
     return _keep_coeff(coeff, factors)
 
+from sympy.core.exprtools import Term
+
+def _gcd_terms(expr):
+    """Helper function for :func:`_symbolic_factor`. """
+    terms = []
+
+    for term in expr.as_Add():
+        terms.append(Term(term))
+
+    common = terms[0]
+
+    for term in terms[1:]:
+        common = common.gcd(term)
+
+    for i, term in enumerate(terms):
+        terms[i] = term.quo(common)
+
+    denom = terms[0].denom
+
+    for term in terms[1:]:
+        denom = denom.lcm(term.denom)
+
+    numers = []
+
+    for term in terms:
+        numer = term.numer.mul(denom.quo(term.denom))
+        numers.append(term.coeff*numer.as_expr())
+
+    return common.as_expr(), Add(*numers), denom.as_expr()
+
 def _symbolic_factor(f, opt):
     """Helper function for :func:`_factor`. """
     if isinstance(f, Basic):
-        if f.is_Add or f.is_Poly:
+        if f.is_Poly:
             return _formal_factor(f, opt)
+        elif f.is_Add:
+            cont, numer, denom = _gcd_terms(f)
+
+            cont = _symbolic_factor(cont, opt)
+            numer = _formal_factor(numer, opt)
+            denom = _formal_factor(denom, opt)
+
+            return cont*(numer/denom)
         elif f.is_Mul:
             return f.__class__(*[ _symbolic_factor(g, opt) for g in f.args ])
         elif f.is_Pow:

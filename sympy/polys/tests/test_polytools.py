@@ -57,7 +57,7 @@ from sympy import (
     expand, oo, I, pi, re, im, RootOf, all
 )
 
-from sympy.utilities.pytest import raises
+from sympy.utilities.pytest import raises, XFAIL
 
 x,y,z,p,q,r,s,t,u,v,w,a,b,c,d,e = symbols('x,y,z,p,q,r,s,t,u,v,w,a,b,c,d,e')
 
@@ -1648,24 +1648,22 @@ def test_factor():
     assert factor(x - 1) == x - 1
     assert factor(-x - 1) == -x - 1
 
-    assert factor(x - 1) != Mul(1, x - 1, evaluate=False)
-    assert factor(6*x - 10) == Mul(2, 3*x - 5, evaluate=False)
-
-    assert factor((6*x - 10)/(3*x - 6), frac=True) == S(2)/3*((3*x - 5)/(x - 2))
-
     assert factor(x**11 + x + 1, modulus=65537, symmetric=True) == \
         (x**2 + x + 1)*(x**9 - x**8 + x**6 - x**5 + x**3 - x** 2 + 1)
     assert factor(x**11 + x + 1, modulus=65537, symmetric=False) == \
         (x**2 + x + 1)*(x**9 + 65536*x**8 + x**6 + 65536*x**5 + x**3 + 65536*x** 2 + 1)
 
-    assert factor((x**2 + 4*x + 4)**10000000*(x**2 + 1)) == (2 + x)**20000000*(1 + x**2)
+    f = x/pi + x*sin(x)/pi
+    g = y/(pi**2 + 2*pi + 1) + y*sin(x)/(pi**2 + 2*pi + 1)
 
-    assert factor(x/pi + x*sin(x)/pi) == x*(sin(x) + 1)/pi
+    assert factor(f) == x*(sin(x) + 1)/pi
+    assert factor(g) == y*(sin(x) + 1)/(pi + 1)**2
 
-    f = y/(pi**2 + 2*pi + 1) + y*sin(x)/(pi**2 + 2*pi + 1)
+    f = (x**2 + 4*x + 4)**10000000*(x**2 + 1)/(x**2 + 2*x + 1)**1234567
+    g = ((x**2 + 2*x + 1)**3000*y**2 + (x**2 + 2*x + 1)**3000*2*y + (x**2 + 2*x + 1)**3000)
 
-    assert factor(f) == y*(sin(x) + 1)/(pi**2 + 2*pi + 1)
-    assert factor(f, frac=True) == y*(sin(x) + 1)/(pi + 1)**2
+    assert factor(f) == (x + 2)**20000000*(x**2 + 1)/(x + 1)**2469134
+    assert factor(g) == (x + 1)**6000*(y + 1)**2
 
     f = (x**2 - 1)/(x**2 + 4*x + 4)
 
@@ -1685,6 +1683,11 @@ def test_factor():
     raises(PolynomialError, "factor(f, x, expand=False)")
 
     raises(FlagError, "factor(x**2 - 1, polys=True)")
+
+@XFAIL
+def test_factor_noeval():
+    assert factor(6*x - 10) == 2*(3*x - 5)
+    assert factor((6*x - 10)/(3*x - 6)) == S(2)/3*((3*x - 5)/(x - 2))
 
 def test_intervals():
     assert intervals(0) == []
