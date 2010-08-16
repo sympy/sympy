@@ -358,12 +358,12 @@ class Idx(Expr):
                 if not (bound.is_integer or abs(bound) is S.Infinity):
                     raise TypeError("Idx object requires integer bounds")
             args = label, Tuple(*range)
-        elif isinstance(range, (Symbol, Integer)) or range is S.Infinity:
+        elif isinstance(range, Expr):
             if not (range.is_integer or range is S.Infinity):
                 raise TypeError("Idx object requires an integer dimension")
             args = label, Tuple(S.Zero, range-S.One)
         elif range:
-            raise TypeError("range must be tuple, symbol or integer")
+            raise TypeError("range must be  tuple or integer sympy expression")
         else:
             args = label,
 
