@@ -718,6 +718,8 @@ class Commutator(Function, QuantumBasic):
     is_commutative = False
     nargs = 2
 
+    hilbert_space = HilbertSpace()
+
     @classmethod
     def eval(cls, a, b):
         """
