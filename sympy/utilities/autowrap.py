@@ -138,13 +138,17 @@ class CodeWrapper:
     def _process_files(self, routine):
         command = self.command
         command.extend(self.flags)
-        if self.quiet:
-            null = open(os.devnull, 'w')
-            retcode = subprocess.call(command, stdout=null, stderr=subprocess.STDOUT)
-        else:
-            retcode = subprocess.call(command)
+        null = open(os.devnull, 'w')
+        try:
+            if self.quiet:
+                retcode = subprocess.call(command, stdout=null, stderr=subprocess.STDOUT)
+            else:
+                retcode = subprocess.call(command)
+        except OSError:
+            retcode = 1
         if retcode:
-            raise CodeWrapError
+            raise CodeWrapError(
+                    "Error while executing command: %s" % " ".join(command))
 
 class DummyWrapper(CodeWrapper):
     """Class used for testing independent of backends """
