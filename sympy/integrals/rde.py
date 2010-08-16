@@ -354,7 +354,9 @@ def spde(a, b, c, n, D, T):
 
     a, b, c = a.quo(g), b.quo(g), c.quo(g)
     if a.degree(t) == 0:
-        return (b.quo(a), c.quo(a), n, Poly(1, t), zero)
+        b = Poly(b.as_basic()/a.as_basic(), t)
+        c = Poly(c.as_basic()/a.as_basic(), t)
+        return (b, c, n, Poly(1, t), zero)
 
     r, z = gcdex_diophantine(b.as_poly(t), a.as_poly(t), c.as_poly(t))
     r, z = Poly(r, t), Poly(z, t)
