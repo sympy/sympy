@@ -159,7 +159,7 @@ class Routine(object):
                 out_arg = expr.lhs
                 expr = expr.rhs
                 if isinstance(out_arg, Indexed):
-                    dims = out_arg.ranges
+                    dims = tuple([ (S.Zero, dim-1) for dim in out_arg.shape])
                     symbol = out_arg.base.label
                 elif isinstance(out_arg, Symbol):
                     dims = []
@@ -186,11 +186,8 @@ class Routine(object):
             if symbol in array_symbols:
                 dims = []
                 array = array_symbols[symbol]
-                for i in array.indices:
-                    if i.lower == None:
-                        dims.append((S.Zero, S.Zero))
-                    else:
-                        dims.append((i.lower, i.upper))
+                for dim in array.shape:
+                    dims.append((S.Zero, dim - 1))
                 metadata = {'dimensions': dims}
             else:
                 metadata = {}
