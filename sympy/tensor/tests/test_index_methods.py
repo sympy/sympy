@@ -21,6 +21,13 @@ def test_get_indices_Indexed():
     assert get_indices(x[i, j]) == (set([i, j]), {})
     assert get_indices(x[j, i]) == (set([j, i]), {})
 
+def test_get_indices_Idx():
+    f = Function('f')
+    i, j = Idx('i'), Idx('j')
+    assert get_indices(f(i)*j) == (set([i, j]), {})
+    assert get_indices(f(j, i)) == (set([j, i]), {})
+    assert get_indices(f(i)*i) == (set(), {})
+
 def test_get_indices_mul():
     x = IndexedBase('x')
     y = IndexedBase('y')

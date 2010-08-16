@@ -227,6 +227,8 @@ def get_indices(expr):
         return set(), {}
     elif expr.is_Atom:
         return set(), {}
+    elif isinstance(expr, Idx):
+        return set([expr]), {}
 
     # recurse via specialized functions
     else:
