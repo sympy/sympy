@@ -64,7 +64,7 @@ def runtest_autowrap_matrix_matrix(language, backend):
 def runtest_ufuncify(language, backend):
     has_numpy()
     a, b, c = symbols('a b c')
-    f = ufuncify([a, b, c], a*b + c, tempdir='/tmp/ufuncify')
+    f = ufuncify([a, b, c], a*b + c, language=language, backend=backend)
     grid = numpy.linspace(-2, 2, 50)
     for b in numpy.linspace(-5, 4, 3):
         for c in numpy.linspace(-1, 1, 3):
