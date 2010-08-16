@@ -1117,7 +1117,7 @@ def dup_factor_list(f, K0):
             coeff = K0_inexact.convert(coeff, K0)
 
     if j:
-        factors.insert(0, ([K0.one, K.zero], j))
+        factors.insert(0, ([K0.one, K0.zero], j))
 
     return coeff, _sort_factors(factors)
 

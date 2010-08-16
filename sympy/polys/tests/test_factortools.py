@@ -586,6 +586,15 @@ def test_dup_factor_list():
                              ([DMP([QQ(1)],QQ),DMP([],QQ)], 1),
                              ([DMP([QQ(1)],QQ),DMP([QQ(1),QQ(0)],QQ)], 1)])
 
+    K = QQ.algebraic_field(I)
+    h = [QQ(1,1), QQ(0,1), QQ(1,1)]
+
+    f = [ANP([QQ(1,1)], h, QQ), ANP([], h, QQ), ANP([QQ(2,1)], h, QQ), ANP([], h, QQ), ANP([], h, QQ)]
+
+    assert dup_factor_list(f, K) == \
+        (ANP([QQ(1,1)], h, QQ), [([ANP([QQ(1,1)], h, QQ), ANP([], h, QQ)], 2),
+                                 ([ANP([QQ(1,1)], h, QQ), ANP([], h, QQ), ANP([QQ(2,1)], h, QQ)], 1)])
+
     raises(DomainError, "dup_factor_list([EX(sin(1))], EX)")
 
 def test_dmp_factor_list():
