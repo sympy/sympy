@@ -700,7 +700,7 @@ class Commutator(Function, QuantumBasic):
     >>> from sympy.physics.quantum import Commutator
     >>> A, B = symbols('A B', **{'commutative':False})
     >>> Commutator(B, A)
-    -Commutator(A, B)
+    -1*Commutator(A, B)
 
     Evaluate the commutator with .doit()
 
