@@ -780,6 +780,56 @@ class Rational(Number):
         if len(f)>1 and 1 in f: del f[1]
         return f
 
+    def gcd(self, other):
+        """Compute greatest common divisor of input arguments. """
+        if type(other) in (int, long):
+            p = igcd(self.p, other)
+
+            if self.is_Integer:
+                return Integer(p)
+            else:
+                return Rational(p, self.q)
+        else:
+            other = _sympify(other)
+
+            if other.is_Rational:
+                p = igcd(self.p, other.p)
+
+                if other.is_Integer:
+                    if self.is_Integer:
+                        return Integer(p)
+                    else:
+                        return Rational(p, self.q)
+                else:
+                    if self.is_Integer:
+                        return Rational(p, other.q)
+                    else:
+                        return Rational(p, ilcm(self.q, other.q))
+            else:
+                raise TypeError("expected an integer or rational, got %s" % other)
+
+    def lcm(self, other):
+        """Compute least common multiple of input arguments. """
+        if type(other) in (int, long):
+            return Integer(ilcm(self.p, other))
+        else:
+            other = _sympify(other)
+
+            if other.is_Rational:
+                p = ilcm(self.p, other.p)
+
+                if self.is_Integer or other.is_Integer:
+                    return Integer(p)
+                else:
+                    return Rational(p, igcd(self.q, other.q))
+            else:
+                raise TypeError("expected an integer or rational, got %s" % other)
+
+    def cofactors(self, other):
+        """Compute GCD and cofactors of input arguments. """
+        gcd = self.gcd(other)
+        return gcd, self/gcd, other/gcd
+
     def as_numer_denom(self):
         return Integer(self.p), Integer(self.q)
 
@@ -1160,44 +1210,6 @@ class Integer(Rational):
             return Integer(s % b)
         else:
             raise ZeroDivisionError("zero divisor")
-
-    def cofactors(a, b):
-        """Returns GCD and cofactors of input arguments. """
-        if isinstance(b, (int, long)):
-            gcd = Integer(igcd(int(a), b))
-            return gcd, a//gcd, Integer(b)//gcd
-        else:
-            b = _sympify(b)
-
-            if b.is_Integer:
-                gcd = Integer(igcd(int(a), int(b)))
-                return gcd, a//gcd, b//gcd
-            else:
-                raise ValueError("expected an integer, got %s" % b)
-
-    def gcd(a, b):
-        """Returns greates common divisor of input arguments. """
-        if isinstance(b, (int, long)):
-            return Integer(igcd(int(a), b))
-        else:
-            b = _sympify(b)
-
-            if b.is_Integer:
-                return Integer(igcd(int(a), int(b)))
-            else:
-                raise ValueError("expected an integer, got %s" % b)
-
-    def lcm(a, b):
-        """Returns least common multiple of input arguments. """
-        if isinstance(b, (int, long)):
-            return Integer(ilcm(int(a), b))
-        else:
-            b = _sympify(b)
-
-            if b.is_Integer:
-                return Integer(ilcm(int(a), int(b)))
-            else:
-                raise ValueError("expected an integer, got %s" % b)
 
 # Add sympify converters
 converter[int] = converter[long] = Integer
