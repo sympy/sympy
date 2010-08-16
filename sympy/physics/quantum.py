@@ -735,28 +735,30 @@ class Commutator(Function, QuantumBasic):
         #
         # [A+B,C]  ->  [A,C] + [B,C]
         #
+        from sympy.physics.qadd import QAdd
         a = a.expand()
-        if isinstance(a,Add):
-            return Add(*[cls(term,b) for term in a.args])
+        if isinstance(a, QAdd):
+            return QAdd(*[cls(term,b) for term in a.args])
         b = b.expand()
-        if isinstance(b,Add):
-            return Add(*[cls(a,term) for term in b.args])
+        if isinstance(b, QAdd):
+            return QAdd(*[cls(a,term) for term in b.args])
 
         #
         # [xA,yB]  ->  xy*[A,B]
         #
+        from sympy.physics.qmul import QMul
         c_part = []
         nc_part = []
         nc_part2 = []
-        if isinstance(a,Mul):
+        if isinstance(a, QMul):
             c_part,nc_part = split_commutative_parts(a)
-        if isinstance(b,Mul):
+        if isinstance(b, QMul):
             c_part2,nc_part2 = split_commutative_parts(b)
             c_part.extend(c_part2)
         if c_part:
             a = nc_part or [a]
             b = nc_part2 or [b]
-            return Mul(*c_part)*cls(Mul(*a),Mul(*b))
+            return QMul(*c_part)*cls(QMul(*a), QMul(*b))
 
         #
         # Canonical ordering of arguments
