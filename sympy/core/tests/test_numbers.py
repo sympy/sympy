@@ -2,7 +2,7 @@ from sympy import Rational, Symbol, Real, I, sqrt, oo, nan, pi, E, Integer, \
         S, factorial, Catalan, EulerGamma, GoldenRatio, cos
 from sympy.core.power import integer_nthroot
 
-from sympy.core.numbers import igcd, ilcm, igcdex, seterr, _intcache
+from sympy.core.numbers import igcd, ilcm, igcdex, ifactorial, seterr, _intcache
 from sympy.utilities.pytest import raises
 from sympy import mpmath
 
@@ -104,6 +104,13 @@ def test_igcdex():
     assert igcdex(2, 3) == (-1, 1, 1)
     assert igcdex(10, 12) == (-1, 1, 2)
     assert igcdex(100, 2004) == (-20, 1, 4)
+
+def test_ifactorial():
+    assert ifactorial(0) == 1
+    assert ifactorial(1) == 1
+    assert ifactorial(2) == 2
+    assert ifactorial(3) == 6
+    assert ifactorial(10) == 3628800
 
 def _strictly_equal(a, b):
     return (a.p, a.q, type(a.p), type(a.q)) == \
@@ -521,6 +528,14 @@ def test_IntegerInteger():
     assert a == b
 
 def test_Integer_methods():
+    assert Integer(0).factorial() == Integer(1)
+    assert Integer(1).factorial() == Integer(1)
+    assert Integer(10).factorial() == Integer(3628800)
+
+    assert Integer(100).sqrt() == Integer(10)
+    assert Integer(110).sqrt() == Integer(10)
+    assert Integer(121).sqrt() == Integer(11)
+
     assert Integer(100).half_gcdex(2004) == \
         (Integer(-20), Integer(4))
     assert Integer(100).half_gcdex(Integer(2004)) == \
@@ -588,4 +603,10 @@ def test_relational():
     x = pi
     assert (x != cos) is True
     assert (x == cos) is False
+
+def test_Rational_int():
+    assert int( Rational(7, 5)) ==  1
+    assert int( Rational(1, 2)) ==  0
+    assert int(-Rational(1, 2)) ==  0
+    assert int(-Rational(7, 5)) == -1
 

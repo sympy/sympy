@@ -8,8 +8,6 @@ from simplify import collect, separate, together, radsimp, ratsimp, fraction, \
     simplify, trigsimp, powsimp, combsimp, hypersimp, hypersimilar, nsimplify, \
     logcombine, separatevars
 
-from rewrite import apart
-
 from sqrtdenest import sqrtdenest
 
 from cse_main import cse

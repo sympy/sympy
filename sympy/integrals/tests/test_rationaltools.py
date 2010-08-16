@@ -13,6 +13,7 @@ def test_ratint():
 
     assert ratint(x, x) == x**2/2
     assert ratint(2*x, x) == x**2
+    assert ratint(-2*x, x) == -x**2
 
     assert ratint(8*x**7+2*x+1, x) == x**8+x**2+x
 
@@ -88,6 +89,9 @@ def test_ratint():
         (a**(-6))**(S(1)/2)*log(x + (2*a*b - 2*b*a**4*(a**(-6))**(S(1)/2))/(4*b**2)) + \
         (3*a + 2*b*x)/(2*a**2*b**2*x**2 + 4*b*x*a**3 + 2*a**4) - \
         (a**(-6))**(S(1)/2)*log(x + (2*a*b + 2*b*a**4*(a**(-6))**(S(1)/2))/(4*b**2))
+
+    assert ratint(x/(1 - x**2), x) == -log(1 - x**2)/2
+    assert ratint(-x/(1 - x**2), x) == log(1 - x**2)/2
 
 def test_ratint_logpart():
     assert ratint_logpart(x, x**2-9, x, t) == \

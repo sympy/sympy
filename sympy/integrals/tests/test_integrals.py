@@ -448,7 +448,8 @@ def test_issue_1301():
 
 def test_issue1428():
     assert integrate(sin(k*x)*sin(m*x),(x,0,pi)) in [k*cos(pi*k)*sin(pi*m)/(m**2 - k**2),
-    k*cos(pi*k)*sin(pi*m)/(m**2 - k**2) - m*cos(pi*m)*sin(pi*k)/(m**2 - k**2)]
+    k*cos(pi*k)*sin(pi*m)/(m**2 - k**2) - m*cos(pi*m)*sin(pi*k)/(m**2 - k**2),
+    m*cos(pi*m)*sin(pi*k)/(k**2 - m**2) - k*cos(pi*k)*sin(pi*m)/(k**2 - m**2)]
 
 def test_issue1054():
     assert integrate(1/(1+x+y+z), (x, 0, 1), (y, 0, 1), (z, 0, 1)) in \

@@ -1,14 +1,12 @@
 """Tests for OO layer of several polynomial representations. """
 
 from sympy.polys.polyclasses import (
-    GFP, init_normal_GFP,
     DMP, init_normal_DMP,
-    SDP, init_normal_SDP,
     DMF, init_normal_DMF,
     ANP, init_normal_ANP,
 )
 
-from sympy.polys.algebratools import ZZ, QQ
+from sympy.polys.domains import ZZ, QQ
 from sympy.polys.specialpolys import f_4
 
 from sympy.polys.polyerrors import (

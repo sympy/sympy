@@ -74,7 +74,8 @@ def minimal_polynomial(ex, x=None, **args):
 
                     alg = ex.base - coeff
 
-                    inverse = invert(elt.gen + coeff, elt)
+                    # XXX: turn this into eval()
+                    inverse = invert(elt.gen + coeff, elt).as_basic()
                     base = inverse.subs(elt.gen, alg).expand()
 
                     if ex.exp == -1:
@@ -461,12 +462,12 @@ class AlgebraicNumber(Expr):
     def as_poly(self, x=None):
         """Create a Poly instance from `self`. """
         if x is not None:
-            return Poly(self.rep, x)
+            return Poly.new(self.rep, x)
         else:
             if self.alias is not None:
-                return Poly(self.rep, self.alias)
+                return Poly.new(self.rep, self.alias)
             else:
-                return Poly(self.rep, Symbol('x', dummy=True))
+                return Poly.new(self.rep, Symbol('x', dummy=True))
 
     def as_basic(self, x=None):
         """Create a Basic expression from `self`. """

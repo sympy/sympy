@@ -1,37 +1,76 @@
-"""Tools for real and complex root isolation and refinement. """
+"""Real and complex root isolation and refinement algorithms. """
 
 from sympy.polys.densebasic import (
     dup_LC, dup_TC, dup_degree,
     dup_strip, dup_reverse,
     dup_convert, dmp_convert,
-    dup_terms_gcd,
-)
+    dup_terms_gcd)
 
 from sympy.polys.densearith import (
-    dup_neg, dup_rshift,
-)
+    dup_neg, dup_rshift, dup_rem)
 
 from sympy.polys.densetools import (
-    dup_scale, dup_taylor, dup_mirror,
+    dup_clear_denoms,
+    dup_mirror, dup_scale, dup_shift,
     dup_transform,
+    dup_diff,
     dup_eval, dmp_eval_in,
     dup_sign_variations,
-    dup_clear_denoms,
-    dup_real_imag,
-    dup_sqf_list,
-    dup_sturm,
-)
+    dup_real_imag)
+
+from sympy.polys.sqfreetools import (
+    dup_sqf_part, dup_sqf_list)
 
 from sympy.polys.factortools import (
-    dup_factor_list,
-)
+    dup_factor_list)
 
 from sympy.polys.polyerrors import (
     RefinementFailed,
-    DomainError,
-)
+    DomainError)
 
 import operator
+
+def dup_sturm(f, K):
+    """
+    Computes the Sturm sequence of ``f`` in ``F[x]``.
+
+    Given an univariate, square-free polynomial ``f(x)`` returns the
+    associated Sturm sequence ``f_0(x), ..., f_n(x)`` defined by::
+
+       f_0(x), f_1(x) = f(x), f'(x)
+       f_n = -rem(f_{n-2}(x), f_{n-1}(x))
+
+    Example
+    =======
+
+    >>> from sympy.polys.domains import QQ
+    >>> from sympy.polys.rootisolation import dup_sturm
+
+    >>> f = QQ.map([1, -2, 1, -3])
+
+    >>> dup_sturm(f, QQ)
+    [[1/1, -2/1, 1/1, -3/1], [3/1, -4/1, 1/1], [2/9, 25/9], [-2079/4]]
+
+    References
+    ==========
+
+    .. [Davenport88] J.H. Davenport, Y. Siret, E. Tournier, Computer Algebra
+    Systems and Algorithms for Algebraic Computation, Academic Press, London,
+    1988, pp. 124-128
+
+    """
+    if not (K.has_Field or not K.is_Exact):
+        raise DomainError("can't compute Sturm sequence over %s" % K)
+
+    f = dup_sqf_part(f, K)
+
+    sturm = [f, dup_diff(f, 1, K)]
+
+    while sturm[-1]:
+        s = dup_rem(sturm[-2], sturm[-1], K)
+        sturm.append(dup_neg(s, K))
+
+    return sturm[:-1]
 
 def dup_root_upper_bound(f, K):
     """Compute LMQ upper bound for `f`'s positive roots. """
@@ -116,13 +155,13 @@ def dup_step_refine_real_root(f, M, K, fast=False):
         a, c, A = A*a, A*c, K.one
 
     if A >= K.one:
-        f = dup_taylor(f, A, K)
+        f = dup_shift(f, A, K)
         b, d = A*a + b, A*c + d
 
         if not dup_eval(f, K.zero, K):
             return f, (b, b, d, d)
 
-    f, g = dup_taylor(f, K.one, K), f
+    f, g = dup_shift(f, K.one, K), f
 
     a1, b1, c1, d1 = a, a+b, c, c+d
 
@@ -134,7 +173,7 @@ def dup_step_refine_real_root(f, M, K, fast=False):
     if k == 1:
         a, b, c, d = a1, b1, c1, d1
     else:
-        f = dup_taylor(dup_reverse(g), K.one, K)
+        f = dup_shift(dup_reverse(g), K.one, K)
 
         if not dup_eval(f, K.zero, K):
             f = dup_rshift(f, 1, K)
@@ -260,7 +299,7 @@ def dup_inner_isolate_real_roots(f, K, eps=None, fast=False):
                 a, c, A = A*a, A*c, K.one
 
             if A >= K.one:
-                f = dup_taylor(f, A, K)
+                f = dup_shift(f, A, K)
                 b, d = A*a + b, A*c + d
 
                 if not dup_TC(f, K):
@@ -275,7 +314,7 @@ def dup_inner_isolate_real_roots(f, K, eps=None, fast=False):
                     roots.append(dup_inner_refine_real_root(f, (a, b, c, d), K, eps=eps, fast=fast, mobius=True))
                     continue
 
-            f1 = dup_taylor(f, K.one, K)
+            f1 = dup_shift(f, K.one, K)
 
             a1, b1, c1, d1, r = a, a+b, c, c+d, 0
 
@@ -289,7 +328,7 @@ def dup_inner_isolate_real_roots(f, K, eps=None, fast=False):
             a2, b2, c2, d2 = b, a+b, d, c+d
 
             if k2 > 1:
-                f2 = dup_taylor(dup_reverse(f), K.one, K)
+                f2 = dup_shift(dup_reverse(f), K.one, K)
 
                 if not dup_TC(f2, K):
                     f2 = dup_rshift(f2, 1, K)
@@ -307,7 +346,7 @@ def dup_inner_isolate_real_roots(f, K, eps=None, fast=False):
                 continue
 
             if f1 is None:
-                f1 = dup_taylor(dup_reverse(f), K.one, K)
+                f1 = dup_shift(dup_reverse(f), K.one, K)
 
                 if not dup_TC(f1, K):
                     f1 = dup_rshift(f1, 1, K)
@@ -321,7 +360,7 @@ def dup_inner_isolate_real_roots(f, K, eps=None, fast=False):
                 continue
 
             if f2 is None:
-                f2 = dup_taylor(dup_reverse(f), K.one, K)
+                f2 = dup_shift(dup_reverse(f), K.one, K)
 
                 if not dup_TC(f2, K):
                     f2 = dup_rshift(f2, 1, K)

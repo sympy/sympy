@@ -1,4 +1,4 @@
-from sympy import Symbol, log, Rational as R
+from sympy import Symbol, log, sqrt, Rational as R, raises
 
 from sympy.abc import x, y
 
@@ -48,4 +48,11 @@ def test_expand_radicals():
     assert (a**4).expand() == x*a + y*a
     assert (a**5).expand() == x*a**2 + y*a**2
     assert (a**7).expand() == x**2*a + 2*x*y*a + y**2*a
+
+def test_expand_modulus():
+    assert ((x + y)**11).expand(modulus=11) == x**11 + y**11
+    assert ((x + sqrt(2)*y)**11).expand(modulus=11) == x**11 + 10*sqrt(2)*y**11
+
+    raises(ValueError, "((x + y)**11).expand(modulus=0)")
+    raises(ValueError, "((x + y)**11).expand(modulus=x)")
 

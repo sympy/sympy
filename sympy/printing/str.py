@@ -128,9 +128,6 @@ class StrPrinter(Printer):
     def _print_Infinity(self, expr):
         return 'oo'
 
-    def _print_Integer(self, expr):
-        return self._print(expr.p)
-
     def _print_Integral(self, expr):
         def _xab_tostr(xab):
             x, ab = xab
@@ -223,14 +220,8 @@ class StrPrinter(Printer):
     def _print_NegativeInfinity(self, expr):
         return '-oo'
 
-    def _print_NegativeOne(self, expr):
-        return "-1"
-
     def _print_Normal(self, expr):
         return "Normal(%s, %s)"%(expr.mu, expr.sigma)
-
-    def _print_One(self, expr):
-        return "1"
 
     def _print_Order(self, expr):
         if len(expr.symbols) <= 1:
@@ -319,11 +310,23 @@ class StrPrinter(Printer):
             return '%s**%s'%(self.parenthesize(expr.base, PREC),
                              self.parenthesize(expr.exp, PREC))
 
+    def _print_Integer(self, expr):
+        return str(expr.p)
+
+    def _print_int(self, expr):
+        return str(expr)
+
+    def _print_mpz(self, expr):
+        return str(expr)
+
     def _print_Rational(self, expr):
         return '%s/%s' % (expr.p, expr.q)
 
     def _print_Fraction(self, expr):
         return '%s/%s' % (expr.numerator, expr.denominator)
+
+    def _print_mpq(self, expr):
+        return '%s/%s' % (expr.numer(), expr.denom())
 
     def _print_Real(self, expr):
         prec = expr._prec
@@ -343,6 +346,9 @@ class StrPrinter(Printer):
         return '%s %s %s'%(self.parenthesize(expr.lhs, precedence(expr)),
                            expr.rel_op,
                            self.parenthesize(expr.rhs, precedence(expr)))
+
+    def _print_DMP(self, expr):
+        return "%s(%s, %s)" % (expr.__class__.__name__, self._print(expr.rep), self._print(expr.dom))
 
     def _print_RootOf(self, expr):
         return "RootOf(%s, %d)" % (self._print_Add(expr.expr, order='lex'), expr.index)

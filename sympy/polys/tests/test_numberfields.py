@@ -19,7 +19,7 @@ from sympy.polys.polyerrors import (
 )
 
 from sympy.polys.polyclasses import DMP
-from sympy.polys.algebratools import QQ
+from sympy.polys.domains import QQ
 
 from sympy.abc import x, y
 

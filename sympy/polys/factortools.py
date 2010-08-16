@@ -7,8 +7,7 @@ from sympy.polys.galoistools import (
     gf_div, gf_rem,
     gf_gcd, gf_gcdex,
     gf_sqf_p,
-    gf_factor_sqf
-)
+    gf_factor_sqf, gf_factor)
 
 from sympy.polys.densebasic import (
     dup_LC, dmp_LC, dmp_ground_LC,
@@ -25,8 +24,7 @@ from sympy.polys.densebasic import (
     dup_inflate,
     dmp_exclude, dmp_include,
     dmp_inject, dmp_eject,
-    dmp_terms_gcd
-)
+    dup_terms_gcd, dmp_terms_gcd)
 
 from sympy.polys.densearith import (
     dup_neg, dmp_neg,
@@ -43,32 +41,34 @@ from sympy.polys.densearith import (
     dup_max_norm, dmp_max_norm,
     dup_l1_norm, dmp_l1_norm,
     dup_mul_ground, dmp_mul_ground,
-    dup_exquo_ground, dmp_exquo_ground
-)
+    dup_exquo_ground, dmp_exquo_ground)
 
 from sympy.polys.densetools import (
-    dup_gcd, dmp_gcd,
-    dup_sqf_p, dmp_sqf_p,
-    dup_sqf_part, dmp_sqf_part,
+    dup_clear_denoms, dmp_clear_denoms,
     dup_trunc, dmp_ground_trunc,
     dup_content, dmp_ground_content,
     dup_monic, dmp_ground_monic,
-    dup_primitive, dmp_primitive, dmp_ground_primitive,
-    dup_clear_denoms, dmp_clear_denoms,
+    dup_primitive, dmp_ground_primitive,
     dup_eval, dmp_eval_tail,
     dmp_eval_in, dmp_diff_eval_in,
-    dup_inner_gcd, dmp_inner_gcd,
-    dup_sqf_norm, dmp_sqf_norm,
     dup_compose, dmp_compose,
-    dup_taylor
-)
+    dup_shift)
+
+from sympy.polys.euclidtools import (
+    dmp_primitive,
+    dup_gcd, dmp_gcd,
+    dup_inner_gcd, dmp_inner_gcd)
+
+from sympy.polys.sqfreetools import (
+    dup_sqf_p, dmp_sqf_p,
+    dup_sqf_norm, dmp_sqf_norm,
+    dup_sqf_part, dmp_sqf_part)
 
 from sympy.polys.polyutils import _sort_factors
 from sympy.polys.polyconfig import query
 
 from sympy.polys.polyerrors import (
-    ExtraneousFactors, DomainError, EvaluationFailed
-)
+    ExtraneousFactors, DomainError, EvaluationFailed)
 
 from sympy.ntheory import nextprime, isprime, factorint
 from sympy.utilities import any, all, subsets, cythonized
@@ -122,7 +122,7 @@ def dup_zz_mignotte_bound(f, K):
     b = abs(dup_LC(f, K))
     n = dup_degree(f)
 
-    return K.sqrt(n+1)*2**n*a*b
+    return K.sqrt(K(n+1))*2**n*a*b
 
 def dmp_zz_mignotte_bound(f, u, K):
     """Mignotte bound for multivariate polynomials in `K[X]`. """
@@ -130,7 +130,7 @@ def dmp_zz_mignotte_bound(f, u, K):
     b = abs(dmp_ground_LC(f, u, K))
     n = sum(dmp_degree_list(f, u))
 
-    return K.sqrt(n+1)*2**n*a*b
+    return K.sqrt(K(n+1))*2**n*a*b
 
 def dup_zz_hensel_step(m, f, g, h, s, t, K):
     """One step in Hensel lifting in `Z[x]`.
@@ -256,7 +256,7 @@ def dup_zz_zassenhaus(f, K):
 
     A = dup_max_norm(f, K)
     b = dup_LC(f, K)
-    B = int(abs(K.sqrt(n+1)*2**n*A*b))
+    B = int(abs(K.sqrt(K(n+1))*2**n*A*b))
     C = int((n+1)**(2*n)*A**(2*n-1))
     gamma = int(ceil(2*log(C, 2)))
     bound = int(2*gamma*log(gamma))
@@ -446,7 +446,7 @@ def dup_zz_factor(f, K):
        Consider polynomial `f = 2*x**4 - 2`::
 
            >>> from sympy.polys.factortools import dup_zz_factor
-           >>> from sympy.polys.algebratools import ZZ
+           >>> from sympy.polys.domains import ZZ
 
            >>> dup_zz_factor([2, 0, 0, 0, -2], ZZ)
            (2, [([1, -1], 1), ([1, 1], 1), ([1, 0, 1], 1)])
@@ -930,7 +930,7 @@ def dmp_zz_factor(f, u, K):
        Consider polynomial `f = 2*(x**2 - y**2)`::
 
            >>> from sympy.polys.factortools import dmp_zz_factor
-           >>> from sympy.polys.algebratools import ZZ
+           >>> from sympy.polys.domains import ZZ
 
            >>> dmp_zz_factor([[2], [], [-2, 0, 0]], 1, ZZ)
            (2, [([[1], [-1, 0]], 1), ([[1], [1, 0]], 1)])
@@ -987,7 +987,7 @@ def dmp_zz_factor(f, u, K):
     return cont, _sort_factors(factors)
 
 def dup_ext_factor(f, K):
-    """Factor polynomials over algebraic number fields. """
+    """Factor univariate polynomials over algebraic number fields. """
     n, lc = dup_degree(f), dup_LC(f, K)
 
     f = dup_monic(f, K)
@@ -1010,7 +1010,7 @@ def dup_ext_factor(f, K):
     for i, (factor, _) in enumerate(factors):
         h = dup_convert(factor, K.dom, K)
         h, _, g = dup_inner_gcd(h, g, K)
-        h = dup_taylor(h, H, K)
+        h = dup_shift(h, H, K)
         factors[i] = h
 
     factors = dup_trial_division(F, factors, K)
@@ -1019,7 +1019,7 @@ def dup_ext_factor(f, K):
 
 @cythonized("u")
 def dmp_ext_factor(f, u, K):
-    """Factor polynomials over algebraic number fields. """
+    """Factor multivariate polynomials over algebraic number fields. """
     if not u:
         return dup_ext_factor(f, K)
 
@@ -1047,13 +1047,30 @@ def dmp_ext_factor(f, u, K):
 
     return lc, dmp_trial_division(F, factors, u, K)
 
+@cythonized("i")
+def dup_gf_factor(f, K):
+    """Factor univariate polynomials over finite fields. """
+    f = dup_convert(f, K, K.dom)
+
+    coeff, factors = gf_factor(f, K.mod, K.dom)
+
+    for i, (f, k) in enumerate(factors):
+        factors[i] = (dup_convert(f, K.dom, K), k)
+
+    return K.convert(coeff, K.dom), factors
+
+def dmp_gf_factor(f, u, K):
+    """Factor multivariate polynomials over finite fields. """
+    raise DomainError('multivariate polynomials over %s' % K)
+
 @cythonized("i,k,u")
 def dup_factor_list(f, K0):
     """Factor polynomials into irreducibles in `K[x]`. """
-    if not K0.has_CharacteristicZero: # pragma: no cover
-        raise DomainError('only characteristic zero allowed')
+    j, f = dup_terms_gcd(f, K0)
 
-    if K0.is_Algebraic:
+    if not K0.has_CharacteristicZero:
+        coeff, factors = dup_gf_factor(f, K0)
+    elif K0.is_Algebraic:
         coeff, factors = dup_ext_factor(f, K0)
     else:
         if not K0.is_Exact:
@@ -1099,7 +1116,10 @@ def dup_factor_list(f, K0):
 
             coeff = K0_inexact.convert(coeff, K0)
 
-    return coeff, factors
+    if j:
+        factors.insert(0, ([K0.one, K.zero], j))
+
+    return coeff, _sort_factors(factors)
 
 def dup_factor_list_include(f, K):
     """Factor polynomials into irreducibles in `K[x]`. """
@@ -1112,35 +1132,16 @@ def dup_factor_list_include(f, K):
         return [(g, factors[0][1])] + factors[1:]
 
 @cythonized("u,v,i,k")
-def _dmp_inner_factor(f, u, K):
-    """Simplify factorization in `Z[X]` as much as possible. """
-    gcd, f = dmp_terms_gcd(f, u, K)
-    J, f, v = dmp_exclude(f, u, K)
-
-    coeff, factors = dmp_zz_factor(f, v, K)
-
-    for i, (f, k) in enumerate(factors):
-        factors[i] = (dmp_include(f, J, v, K), k)
-
-    for i, g in enumerate(reversed(gcd)):
-        if not g:
-            continue
-
-        term = {(0,)*(u-i) + (1,) + (0,)*i: K.one}
-        factors.insert(0, (dmp_from_dict(term, u, K), g))
-
-    return coeff, factors
-
-@cythonized("u,v,i,k")
 def dmp_factor_list(f, u, K0):
     """Factor polynomials into irreducibles in `K[X]`. """
     if not u:
         return dup_factor_list(f, K0)
 
-    if not K0.has_CharacteristicZero: # pragma: no cover
-        raise DomainError('only characteristic zero allowed')
+    J, f = dmp_terms_gcd(f, u, K0)
 
-    if K0.is_Algebraic:
+    if not K0.has_CharacteristicZero: # pragma: no cover
+        coeff, factors = dmp_gf_factor(f, u, K0)
+    elif K0.is_Algebraic:
         coeff, factors = dmp_ext_factor(f, u, K0)
     else:
         if not K0.is_Exact:
@@ -1158,7 +1159,11 @@ def dmp_factor_list(f, u, K0):
             K = K0
 
         if K.is_ZZ:
-            coeff, factors = _dmp_inner_factor(f, u, K)
+            levels, f, v = dmp_exclude(f, u, K)
+            coeff, factors = dmp_zz_factor(f, v, K)
+
+            for i, (f, k) in enumerate(factors):
+                factors[i] = (dmp_include(f, levels, v, K), k)
         elif K.is_Poly:
             f, v = dmp_inject(f, u, K)
 
@@ -1186,7 +1191,14 @@ def dmp_factor_list(f, u, K0):
 
             coeff = K0_inexact.convert(coeff, K0)
 
-    return coeff, factors
+    for i, j in enumerate(reversed(J)):
+        if not j:
+            continue
+
+        term = {(0,)*(u-i) + (1,) + (0,)*i: K0.one}
+        factors.insert(0, (dmp_from_dict(term, u, K0), j))
+
+    return coeff, _sort_factors(factors)
 
 @cythonized("u")
 def dmp_factor_list_include(f, u, K):

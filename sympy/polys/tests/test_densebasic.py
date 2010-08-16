@@ -32,6 +32,7 @@ from sympy.polys.densebasic import (
     dmp_inject, dmp_eject,
     dup_terms_gcd, dmp_terms_gcd,
     dmp_list_terms, dmp_apply_pairs,
+    dup_slice, dmp_slice, dmp_slice_in,
     dup_random,
 )
 
@@ -41,7 +42,7 @@ from sympy.polys.specialpolys import (
 
 from sympy.polys.polyclasses import DMP
 
-from sympy.polys.algebratools import ZZ, QQ
+from sympy.polys.domains import ZZ, QQ
 
 from sympy import raises, all, S
 
@@ -603,6 +604,24 @@ def test_dmp_apply_pairs():
 
     assert dmp_apply_pairs([[1,2],[3]], [[4],[5,6]], h, [], 1, ZZ) == [[8],[18]]
     assert dmp_apply_pairs([[1],[2,3]], [[4,5],[6]], h, [], 1, ZZ) == [[5],[18]]
+
+def test_dup_slice():
+    f = [1, 2, 3, 4]
+
+    assert dup_slice(f, 0, 0, ZZ) == []
+    assert dup_slice(f, 0, 1, ZZ) == [4]
+    assert dup_slice(f, 0, 2, ZZ) == [3,4]
+    assert dup_slice(f, 0, 3, ZZ) == [2,3,4]
+    assert dup_slice(f, 0, 4, ZZ) == [1,2,3,4]
+
+    assert dup_slice(f, 0, 4, ZZ) == f
+    assert dup_slice(f, 0, 9, ZZ) == f
+
+    assert dup_slice(f, 1, 0, ZZ) == []
+    assert dup_slice(f, 1, 1, ZZ) == []
+    assert dup_slice(f, 1, 2, ZZ) == [3,0]
+    assert dup_slice(f, 1, 3, ZZ) == [2,3,0]
+    assert dup_slice(f, 1, 4, ZZ) == [1,2,3,0]
 
 def test_dup_random():
     f = dup_random(0, -10, 10, ZZ)

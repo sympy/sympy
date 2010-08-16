@@ -766,6 +766,50 @@ class PrettyPrinter(Printer):
         pform = prettyForm(*pform.left('RootSum'))
         return pform
 
+    def _print_FiniteField(self, expr):
+        if pretty_use_unicode():
+            form = u'\u2124_%d'
+        else:
+            form = 'GF(%d)'
+
+        return prettyForm(pretty_symbol(form % expr.mod))
+
+    def _print_IntegerRing(self, expr):
+        if pretty_use_unicode():
+            return prettyForm(u'\u2124')
+        else:
+            return prettyForm('ZZ')
+
+    def _print_RationalField(self, expr):
+        if pretty_use_unicode():
+            return prettyForm(u'\u211A')
+        else:
+            return prettyForm('QQ')
+
+    def _print_RealDomain(self, expr):
+        if pretty_use_unicode():
+            return prettyForm(u'\u211D')
+        else:
+            return prettyForm('RR')
+
+    def _print_ComplexDomain(self, expr):
+        if pretty_use_unicode():
+            return prettyForm(u'\u2102')
+        else:
+            return prettyForm('CC')
+
+    def _print_PolynomialRing(self, expr):
+        pform = self._print_seq(expr.gens, '[', ']')
+        pform = prettyForm(*pform.left(self._print(expr.dom)))
+
+        return pform
+
+    def _print_FractionField(self, expr):
+        pform = self._print_seq(expr.gens, '(', ')')
+        pform = prettyForm(*pform.left(self._print(expr.dom)))
+
+        return pform
+
 def pretty(expr, **settings):
     """
     Returns a string containing the prettified form of expr.

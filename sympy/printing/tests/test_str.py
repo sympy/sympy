@@ -103,8 +103,9 @@ def test_Infinity():
     assert str(I * oo) == "(oo)*I"
 
 def test_Integer():
-    assert str(Integer(-3)) == "-3"
+    assert str(Integer(-1)) == "-1"
     assert str(Integer(1)) == "1"
+    assert str(Integer(-3)) == "-3"
     assert str(Integer(0)) == "0"
     assert str(Integer(25)) == "25"
 
@@ -168,14 +169,8 @@ def test_NaN():
 def test_NegativeInfinity():
     assert str(-oo) == "-oo"
 
-def test_NegativeOne():
-    assert str(-1) == "-1"
-
 def test_Normal():
     assert str(Normal(x+y, z)) == "Normal(x + y, z)"
-
-def test_One():
-    assert str(S.One) == "1"
 
 def test_Order():
     assert str(O(x)) == "O(x)"

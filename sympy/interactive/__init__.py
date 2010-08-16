@@ -130,7 +130,7 @@ def init_session(session="ipython", pretty_print=True, order=None, use_unicode=N
         else:
             py_name = "Python"
 
-        from sympy.polys.algebratools import GROUND_TYPES
+        from sympy.polys.domains import GROUND_TYPES
 
         info = ['ground types: %s' % GROUND_TYPES]
 

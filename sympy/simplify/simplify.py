@@ -12,7 +12,7 @@ from sympy.functions import gamma, exp, sqrt, log
 
 from sympy.simplify.cse_main import cse
 
-from sympy.polys import Poly, reduced, cancel, factor, GeneratorsNeeded
+from sympy.polys import Poly, reduced, cancel, factor, ComputationFailed
 
 import sympy.mpmath as mpmath
 
@@ -340,8 +340,6 @@ def together(expr, deep=False):
             return expr
 
     return powsimp(_together(separate(expr)), deep=True, combine='exp')
-
-#apart -> partial fractions decomposition (will be here :)
 
 def collect(expr, syms, evaluate=True, exact=False):
     """
@@ -819,7 +817,7 @@ def ratsimp(expr):
 
     try:
         Q, r = reduced(f, [g], field=True, expand=False)
-    except GeneratorsNeeded:
+    except ComputationFailed:
         return f/g
 
     return Add(*Q) + cancel(r/g)

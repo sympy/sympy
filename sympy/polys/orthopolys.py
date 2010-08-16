@@ -12,7 +12,7 @@ from sympy.polys.densearith import (
     dup_mul, dup_mul_ground, dup_lshift, dup_sub
 )
 
-from sympy.polys.algebratools import ZZ, QQ
+from sympy.polys.domains import ZZ, QQ
 
 @cythonized("n,i")
 def dup_chebyshevt(n, K):
@@ -35,7 +35,7 @@ def chebyshevt_poly(n, x=None, **args):
     else:
         x = Symbol('x', dummy=True)
 
-    poly = Poly(DMP(dup_chebyshevt(int(n), ZZ), ZZ), x)
+    poly = Poly.new(DMP(dup_chebyshevt(int(n), ZZ), ZZ), x)
 
     if not args.get('polys', False):
         return poly.as_basic()
@@ -63,7 +63,7 @@ def chebyshevu_poly(n, x=None, **args):
     else:
         x = Symbol('x', dummy=True)
 
-    poly = Poly(DMP(dup_chebyshevu(int(n), ZZ), ZZ), x)
+    poly = Poly.new(DMP(dup_chebyshevu(int(n), ZZ), ZZ), x)
 
     if not args.get('polys', False):
         return poly.as_basic()
@@ -95,7 +95,7 @@ def hermite_poly(n, x=None, **args):
     else:
         x = Symbol('x', dummy=True)
 
-    poly = Poly(DMP(dup_hermite(int(n), ZZ), ZZ), x)
+    poly = Poly.new(DMP(dup_hermite(int(n), ZZ), ZZ), x)
 
     if not args.get('polys', False):
         return poly.as_basic()
@@ -125,7 +125,7 @@ def legendre_poly(n, x=None, **args):
     else:
         x = Symbol('x', dummy=True)
 
-    poly = Poly(DMP(dup_legendre(int(n), QQ), QQ), x)
+    poly = Poly.new(DMP(dup_legendre(int(n), QQ), QQ), x)
 
     if not args.get('polys', False):
         return poly.as_basic()
@@ -155,7 +155,7 @@ def laguerre_poly(n, x=None, **args):
     else:
         x = Symbol('x', dummy=True)
 
-    poly = Poly(DMP(dup_laguerre(int(n), QQ), QQ), x)
+    poly = Poly.new(DMP(dup_laguerre(int(n), QQ), QQ), x)
 
     if not args.get('polys', False):
         return poly.as_basic()

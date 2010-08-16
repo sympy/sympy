@@ -100,6 +100,19 @@ def igcdex(a, b):
 
     return (x*x_sign, y*y_sign, a)
 
+def ifactorial(m):
+    """Computes factorial of ``m``. """
+    if not m:
+        return 1
+
+    k = m
+
+    while m > 1:
+        m -= 1
+        k *= m
+
+    return k
+
 @Memoizer((int, long), return_value_converter = lambda d: d.copy())
 def factor_trial_division(n):
     """
@@ -660,7 +673,7 @@ class Rational(Number):
         return Rational(abs(self.p), self.q)
 
     def __int__(self):
-        return int(self.p//self.q)
+        return int(float(self.p)/self.q)
 
     def __eq__(self, other):
         try:
@@ -1056,6 +1069,14 @@ class Integer(Rational):
     def __rfloordiv__(self, other):
         return Integer(Integer(other).p // self.p)
 
+    def factorial(a):
+        """Compute factorial of `a`. """
+        return Integer(ifactorial(int(a)))
+
+    def sqrt(a):
+        """Compute integer square root of `a`. """
+        return Integer(mlib.isqrt(int(a)))
+
     def half_gcdex(a, b):
         """Half Extended Euclidean Algorithm. """
         s, _, h = a.gcdex(b)
@@ -1093,7 +1114,7 @@ class Integer(Rational):
             raise ZeroDivisionError("zero divisor")
 
     def cofactors(a, b):
-        """Returns GCD and cofactors of input arguments. """
+        """Compute GCD and cofactors of input arguments. """
         if type(b) is int:
             gcd = Integer(igcd(int(a), b))
             return gcd, a//gcd, Integer(b)//gcd
@@ -1107,7 +1128,7 @@ class Integer(Rational):
                 raise ValueError("expected an integer, got %s" % b)
 
     def gcd(a, b):
-        """Returns greates common divisor of input arguments. """
+        """Compute greatest common divisor of input arguments. """
         if type(b) is int:
             return Integer(igcd(int(a), b))
         else:
@@ -1119,7 +1140,7 @@ class Integer(Rational):
                 raise ValueError("expected an integer, got %s" % b)
 
     def lcm(a, b):
-        """Returns least common multiple of input arguments. """
+        """Compute least common multiple of input arguments. """
         if type(b) is int:
             return Integer(ilcm(int(a), b))
         else:
@@ -1132,7 +1153,6 @@ class Integer(Rational):
 
 # Add sympify converters
 converter[int] = converter[long] = Integer
-
 
 class Zero(Integer):
     __metaclass__ = SingletonMeta
@@ -1749,3 +1769,4 @@ Basic.singleton['Catalan'] = Catalan
 from function import FunctionClass
 from power import Pow, integer_nthroot
 from mul import Mul
+

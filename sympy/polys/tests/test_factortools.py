@@ -3,20 +3,20 @@
 from sympy.polys.densearith import (
     dup_mul_ground, dmp_mul_ground,
     dup_pow, dmp_pow,
-    dmp_expand,
-)
+    dmp_expand)
 
 from sympy.polys.densebasic import (
     dup_degree, dmp_degree,
     dup_normal, dmp_normal,
     dup_from_raw_dict, dup_to_raw_dict,
     dmp_from_dict, dmp_to_dict,
-    dmp_nest, dmp_raise,
-)
+    dmp_nest, dmp_raise)
 
 from sympy.polys.densetools import (
-    dup_primitive, dup_sqf_p, dmp_eval_tail,
-)
+    dup_primitive, dmp_eval_tail)
+
+from sympy.polys.sqfreetools import (
+    dup_sqf_p)
 
 from sympy.polys.factortools import (
     dup_trial_division, dmp_trial_division,
@@ -33,17 +33,15 @@ from sympy.polys.factortools import (
     dup_zz_factor, dup_zz_factor_sqf, dmp_zz_factor,
     dup_ext_factor, dmp_ext_factor,
     dup_factor_list, dmp_factor_list,
-    dup_factor_list_include, dmp_factor_list_include,
-)
+    dup_factor_list_include, dmp_factor_list_include)
 
 from sympy.polys.specialpolys import (
-    f_1, f_2, f_3, f_4, f_5, f_6, w_1, w_2,
-)
+    f_1, f_2, f_3, f_4, f_5, f_6, w_1, w_2)
 
 from sympy.polys.polyconfig import setup
 from sympy.polys.polyerrors import DomainError
 from sympy.polys.polyclasses import DMP, DMF, ANP
-from sympy.polys.algebratools import ZZ, QQ, RR, EX
+from sympy.polys.domains import FF, ZZ, QQ, RR, EX
 
 from sympy import raises, nextprime, sin, sqrt, I
 
@@ -560,23 +558,30 @@ def test_dup_factor_list():
     assert dup_factor_list_include([ZZ(1),ZZ(2),ZZ(1)], ZZ) == \
         [([ZZ(1), ZZ(1)], 2)]
 
+    K = FF(2)
+
+    assert dup_factor_list([K(1),K(0),K(1)], K) == \
+        (K(1), [([K(1), K(1)], 2)])
+
     assert dup_factor_list([RR(1.0),RR(2.0),RR(1.0)], RR) == \
         (RR(1.0), [([RR(1.0),RR(1.0)], 2)])
     assert dup_factor_list([RR(2.0),RR(4.0),RR(2.0)], RR) == \
         (RR(2.0), [([RR(1.0),RR(1.0)], 2)])
 
+
     f = [DMP([ZZ(4),ZZ(0)],ZZ),DMP([ZZ(4),ZZ(0),ZZ(0)],ZZ),DMP([],ZZ)]
 
     assert dup_factor_list(f, ZZ['y']) == \
-        (DMP([ZZ(4)],ZZ), [([DMP([ZZ(1)],ZZ),DMP([],ZZ)], 1),
-                           ([DMP([ZZ(1),ZZ(0)],ZZ)], 1),
+        (DMP([ZZ(4)],ZZ), [([DMP([ZZ(1),ZZ(0)],ZZ)], 1),
+                           ([DMP([ZZ(1)],ZZ),DMP([],ZZ)], 1),
                            ([DMP([ZZ(1)],ZZ),DMP([ZZ(1),ZZ(0)],ZZ)], 1)])
+
 
     f = [DMP([QQ(1,2),QQ(0)],ZZ),DMP([QQ(1,2),QQ(0),QQ(0)],ZZ),DMP([],ZZ)]
 
     assert dup_factor_list(f, QQ['y']) == \
-        (DMP([QQ(1,2)],QQ), [([DMP([QQ(1)],QQ),DMP([],QQ)], 1),
-                             ([DMP([QQ(1),QQ(0)],QQ)], 1),
+        (DMP([QQ(1,2)],QQ), [([DMP([QQ(1),QQ(0)],QQ)], 1),
+                             ([DMP([QQ(1)],QQ),DMP([],QQ)], 1),
                              ([DMP([QQ(1)],QQ),DMP([QQ(1),QQ(0)],QQ)], 1)])
 
     raises(DomainError, "dup_factor_list([EX(sin(1))], EX)")
@@ -617,20 +622,20 @@ def test_dmp_factor_list():
     f = [[ZZ(4),ZZ(0)],[ZZ(4),ZZ(0),ZZ(0)],[]]
 
     assert dmp_factor_list(f, 1, ZZ) == \
-        (ZZ(4), [([[ZZ(1)],[]], 1),
-                 ([[ZZ(1),ZZ(0)]], 1),
+        (ZZ(4), [([[ZZ(1),ZZ(0)]], 1),
+                 ([[ZZ(1)],[]], 1),
                  ([[ZZ(1)],[ZZ(1),ZZ(0)]], 1)])
 
     assert dmp_factor_list_include(f, 1, ZZ) == \
-        [([[ZZ(4)],[]], 1),
-         ([[ZZ(1),ZZ(0)]], 1),
+        [([[ZZ(4),ZZ(0)]], 1),
+         ([[ZZ(1)],[]], 1),
          ([[ZZ(1)],[ZZ(1),ZZ(0)]], 1)]
 
     f = [[QQ(1,2),QQ(0)],[QQ(1,2),QQ(0),QQ(0)],[]]
 
     assert dmp_factor_list(f, 1, QQ) == \
-        (QQ(1,2), [([[QQ(1)],[]], 1),
-                   ([[QQ(1),QQ(0)]], 1),
+        (QQ(1,2), [([[QQ(1),QQ(0)]], 1),
+                   ([[QQ(1)],[]], 1),
                    ([[QQ(1)],[QQ(1),QQ(0)]], 1)])
 
     f = [[RR(2.0)],[],[-RR(8.0),RR(0.0),RR(0.0)]]
@@ -642,16 +647,19 @@ def test_dmp_factor_list():
     f = [[DMP([ZZ(4),ZZ(0)],ZZ)],[DMP([ZZ(4),ZZ(0),ZZ(0)],ZZ)],[DMP([],ZZ)]]
 
     assert dmp_factor_list(f, 1, ZZ['y']) == \
-        (DMP([ZZ(4)],ZZ), [([[DMP([ZZ(1)],ZZ)],[]], 1),
-                           ([[DMP([ZZ(1),ZZ(0)],ZZ)]], 1),
+        (DMP([ZZ(4)],ZZ), [([[DMP([ZZ(1),ZZ(0)],ZZ)]], 1),
+                           ([[DMP([ZZ(1)],ZZ)],[]], 1),
                            ([[DMP([ZZ(1)],ZZ)],[DMP([ZZ(1),ZZ(0)],ZZ)]], 1)])
 
     f = [[DMP([QQ(1,2),QQ(0)],ZZ)],[DMP([QQ(1,2),QQ(0),QQ(0)],ZZ)],[DMP([],ZZ)]]
 
     assert dmp_factor_list(f, 1, QQ['y']) == \
-        (DMP([QQ(1,2)],QQ), [([[DMP([QQ(1)],QQ)],[]], 1),
-                             ([[DMP([QQ(1),QQ(0)],QQ)]], 1),
+        (DMP([QQ(1,2)],QQ), [([[DMP([QQ(1),QQ(0)],QQ)]], 1),
+                             ([[DMP([QQ(1)],QQ)],[]], 1),
                              ([[DMP([QQ(1)],QQ)],[DMP([QQ(1),QQ(0)],QQ)]], 1)])
 
+    K = FF(2)
+
+    raises(DomainError, "dmp_factor_list([[K(1)],[],[K(1),K(0),K(0)]], 1, K)")
     raises(DomainError, "dmp_factor_list([[EX(sin(1))]], 1, EX)")
 

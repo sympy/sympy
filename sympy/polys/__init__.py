@@ -2,6 +2,8 @@
 
 from polytools import (
     Poly, poly,
+    poly_from_expr,
+    parallel_poly_from_expr,
     degree, degree_list,
     LC, LM, LT,
     pdiv, prem, pquo, pexquo,
@@ -9,30 +11,37 @@ from polytools import (
     half_gcdex, gcdex, invert,
     subresultants,
     resultant, discriminant,
-    cofactors, gcd, lcm, terms_gcd,
+    terms_gcd, cofactors,
+    gcd, gcd_list,
+    lcm, lcm_list,
     trunc,
     monic, content, primitive,
     compose, decompose,
     sturm,
+    gff_list, gff,
     sqf_norm, sqf_part, sqf_list, sqf,
     factor_list, factor,
     intervals, refine_root, count_roots,
     real_roots, nroots,
     cancel,
     reduced, groebner,
-    symmetrize,
-    horner,
+)
+
+from polyfuncs import (
+    symmetrize, horner, interpolate,
 )
 
 from polyerrors import (
     OperationNotSupported,
     ExactQuotientFailed,
+    ComputationFailed,
     UnificationFailed,
     GeneratorsNeeded,
     RefinementFailed,
     PolynomialError,
     CoercionFailed,
     NotInvertible,
+    NotReversible,
     NotAlgebraic,
     DomainError,
 )
@@ -58,12 +67,17 @@ from polyroots import (
     roots,
 )
 
-from algebratools import (
-    ZZ, QQ, RR, EX,
+from domains import (
+    FF, GF, ZZ, QQ, RR, EX,
+)
+
+from constructor import (
+    construct_domain,
 )
 
 from specialpolys import (
     swinnerton_dyer_poly,
+    interpolating_poly,
     cyclotomic_poly,
     symmetric_poly,
     random_poly,
@@ -75,6 +89,10 @@ from orthopolys import (
     hermite_poly,
     legendre_poly,
     laguerre_poly,
+)
+
+from partfrac import (
+    apart,
 )
 
 from polyoptions import Options

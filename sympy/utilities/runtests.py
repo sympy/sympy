@@ -783,8 +783,8 @@ class PyTestReporter(Reporter):
         v = tuple(sys.version_info)
         python_version = "%s.%s.%s-%s-%s" % v
         self.write("executable:   %s  (%s)\n" % (executable, python_version))
-        from sympy.polys.algebratools import GROUND_TYPES
-        self.write("Ground types: %s\n\n" % GROUND_TYPES)
+        from sympy.polys.domains import GROUND_TYPES
+        self.write("ground types: %s\n\n" % GROUND_TYPES)
         self._t_start = clock()
 
     def finish(self):

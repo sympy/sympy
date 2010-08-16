@@ -8,6 +8,8 @@ from sympy.polys.densearith import (
     dup_add_term, dmp_add_term,
     dup_sub_term, dmp_sub_term,
     dup_mul_term, dmp_mul_term,
+    dup_add_ground, dmp_add_ground,
+    dup_sub_ground, dmp_sub_ground,
     dup_mul_ground, dmp_mul_ground,
     dup_quo_ground, dmp_quo_ground,
     dup_exquo_ground, dmp_exquo_ground,
@@ -37,7 +39,7 @@ from sympy.polys.polyerrors import (
 )
 
 from sympy.polys.specialpolys import f_0
-from sympy.polys.algebratools import ZZ, QQ
+from sympy.polys.domains import FF, ZZ, QQ
 
 from sympy import raises
 
@@ -130,6 +132,30 @@ def test_dmp_mul_term():
 
     assert dmp_mul_term([[QQ(1,5),QQ(2,5)], [QQ(3,5)]], [QQ(2,3)], 2, 1, QQ) == \
                [[QQ(2,15),QQ(4,15)], [QQ(6,15)], [], []]
+
+def dup_add_ground():
+    f = ZZ.map([1, 2, 3, 4])
+    g = ZZ.map([1, 2, 3, 8])
+
+    assert dup_add_ground(f, ZZ(4), ZZ) == g
+
+def dmp_add_ground():
+    f = ZZ.map([[1], [2], [3], [4]])
+    g = ZZ.map([[1], [2], [3], [8]])
+
+    assert dmp_add_ground(f, ZZ(4), 1, ZZ) == g
+
+def dup_sub_ground():
+    f = ZZ.map([1, 2, 3, 4])
+    g = ZZ.map([1, 2, 3, 0])
+
+    assert dup_sub_ground(f, ZZ(4), ZZ) == g
+
+def dmp_sub_ground():
+    f = ZZ.map([[1], [2], [3], [4]])
+    g = ZZ.map([[1], [2], [3], []])
+
+    assert dmp_sub_ground(f, ZZ(4), 1, ZZ) == g
 
 def test_dup_mul_ground():
     f = dup_normal([], ZZ)
@@ -384,6 +410,10 @@ def test_dup_mul():
 
     assert dup_mul(f, f, ZZ) == h
 
+    K = FF(6)
+
+    assert dup_mul([K(2),K(1)], [K(3),K(4)], K) == [K(5),K(4)]
+
 def test_dmp_mul():
     assert dmp_mul([ZZ(5)], [ZZ(7)], 0, ZZ) == \
            dup_mul([ZZ(5)], [ZZ(7)], ZZ)
@@ -402,6 +432,10 @@ def test_dmp_mul():
     assert dmp_mul([[[QQ(2,7)]]], [[[QQ(1,3)]]], 2, QQ) == [[[QQ(2,21)]]]
     assert dmp_mul([[[QQ(1,7)]]], [[[QQ(2,3)]]], 2, QQ) == [[[QQ(2,21)]]]
 
+    K = FF(6)
+
+    assert dmp_mul([[K(2)],[K(1)]], [[K(3)],[K(4)]], 1, K) == [[K(5)],[K(4)]]
+
 def test_dup_sqr():
     assert dup_sqr([], ZZ) == []
     assert dup_sqr([ZZ(2)], ZZ) == [ZZ(4)]
@@ -415,6 +449,10 @@ def test_dup_sqr():
 
     assert dup_sqr(f, ZZ) == dup_normal([4,0,0,4,28,0,1,14,49], ZZ)
 
+    K = FF(9)
+
+    assert dup_sqr([K(3),K(4)], K) == [K(6),K(7)]
+
 def test_dmp_sqr():
     assert dmp_sqr([ZZ(1),ZZ(2)], 0, ZZ) == \
            dup_sqr([ZZ(1),ZZ(2)], ZZ)
@@ -424,6 +462,10 @@ def test_dmp_sqr():
 
     assert dmp_sqr([[[]]], 2, QQ) == [[[]]]
     assert dmp_sqr([[[QQ(2,3)]]], 2, QQ) == [[[QQ(4,9)]]]
+
+    K = FF(9)
+
+    assert dmp_sqr([[K(3)],[K(4)]], 1, K) == [[K(6)],[K(7)]]
 
 def test_dup_pow():
     assert dup_pow([], 0, ZZ) == [ZZ(1)]

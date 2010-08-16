@@ -4,7 +4,7 @@ from sympy.integrals.trigonometry import trigintegrate
 from sympy.integrals.deltafunctions import deltaintegrate
 from sympy.integrals.rationaltools import ratint
 from sympy.integrals.heurisch import heurisch
-from sympy.utilities import threaded, flatten
+from sympy.utilities import xthreaded, flatten
 from sympy.utilities.iterables import make_list
 from sympy.polys import Poly
 from sympy.solvers import solve
@@ -488,7 +488,7 @@ class Integral(Expr):
 
 
 
-@threaded(use_add=False)
+@xthreaded
 def integrate(*args, **kwargs):
     """integrate(f, var, ...)
 
@@ -541,7 +541,7 @@ def integrate(*args, **kwargs):
         return integral
 
 
-@threaded(use_add=False)
+@xthreaded
 def line_integrate(field, curve, vars):
     """line_integrate(field, Curve, variables)
 

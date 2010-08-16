@@ -317,7 +317,7 @@ class Monomial(object):
             if result is not None:
                 return Monomial(*result)
             else:
-                raise ExactQuotientFailed("%s monomial doesn't divide %s" % (self, other))
+                raise ExactQuotientFailed(self, other)
         else:
             raise TypeError("an instance of Monomial class expected, got %s" % other)
 
