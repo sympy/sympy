@@ -126,7 +126,7 @@ class KetBase(StateBase):
     lbracket = '|'
     rbracket = '>'
     lbracket_pretty = prettyForm(u'\u2758')
-    rbracket_pretty = prettyForm(u'\u276D')
+    rbracket_pretty = prettyForm(u'\u27E9')
 
     @property
     def dual(self):
@@ -141,7 +141,7 @@ class BraBase(StateBase):
 
     lbracket = '<'
     rbracket = '|'
-    lbracket_pretty = prettyForm(u'\u276C')
+    lbracket_pretty = prettyForm(u'\u27E8')
     rbracket_pretty = prettyForm(u'\u2758')
 
     @property

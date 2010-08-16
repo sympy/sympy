@@ -636,7 +636,8 @@ class CTGate(Gate):
     """
     @property
     def matrix(self):
-        return Matrix([[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,exp(I*Pi()/4)]])
+        return Matrix([[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,\
+        exp(ImaginaryUnit()*Pi()/4)]])
 
 class CZGate(Gate):
     """
@@ -909,8 +910,9 @@ class SetZero(NondistributiveGate):
         self.args[0] is the bit to be set to zero
 
         >>> from sympy.physics.qbit import Qbit, apply_gates, SetZero
+        >>> from sympy import sqrt
         >>> apply_gates(SetZero(0)*(Qbit(0,0)/sqrt(2) + Qbit(0,1)/sqrt(2)))
-        |00>
+        |'00'>
     """
     def measure(self, circuit):
         # Turns item self.args[0]th bit to a zero

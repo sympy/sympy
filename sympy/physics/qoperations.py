@@ -80,9 +80,24 @@ class QAssocOp(QuantumBasic):
             specified in inputs
 
             This is handy when we want to optimize things This is because we do
-            not have to call the special '_qrules_*' to create a new object           
+            not have to call the special '_qrules_*' to create a new object. If
+            we know what it evaluates to and to what hilbert_space it will
+            belong, one can hardcode that in. Thus, It's a quicker way of
+            instantiating a Quantum op If we know what type we will get.
+            [Idea stolen from Sympy's Operations]
+
+            >>> from sympy.physics.hilbert import HilbertSpace
+            >>> from sympy.physics.quantum import Ket, Operator
+            >>> from sympy.physics.qmul import QMul
+            >>> QMul._new_rawargs(Ket, HilbertSpace(), Operator('psi'), Ket('a'))
+            psi*|a>
+            >>> a = _
+            >>> a.acts_like
+            <class 'sympy.physics.quantum.Ket'>
+            >>> a.hilbert_space
+            HilbertSpace()
         """
-        
+
         if len(args) == 1:
             return args[0]
         obj = Expr.__new__(cls, *args)  # NB no assumptions for Add/Mul
