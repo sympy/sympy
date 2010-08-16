@@ -6,7 +6,8 @@ from sympy.physics.qmul import QMul
 from sympy.physics.quantum import QuantumBasic
 from sympy.physics.quantumbasic import QuantumError
 from sympy.printing.pretty.stringpict import prettyForm
-from sympy.physics.quantum import StateBase, Operator, Dagger
+from sympy.physics.quantum import StateBase, Operator, Dagger, Commutator,\
+KroneckerDelta, InnerProduct
 from sympy.physics.qpow import QPow
 
 class QAdd(QAssocOp):
@@ -30,11 +31,16 @@ class QAdd(QAssocOp):
         elif object1 is S.Zero:
             return object2
 
-        if (not isinstance(object1, (StateBase, Operator, QAssocOp, QPow))) and\
-        (not isinstance(object2, (StateBase, Operator, QAssocOp, QPow))):
+        if (not isinstance(object1, QuantumBasic) or\
+        issubclass(object1.acts_like, InnerProduct))\
+        and\
+        (not isinstance(object2, (QuantumBasic) or\
+        issubclass(object2.acts_like, InnerProduct))):
                 return Add(object1, object2)
-        elif (not isinstance(object1, (StateBase, Operator, QAssocOp, QPow)))\
-        or (not isinstance(object2, (StateBase, Operator, QAssocOp, QPow))):
+        elif (not isinstance(object1, (StateBase, Operator, QAssocOp, QPow, \
+        Dagger, Commutator, KroneckerDelta)))\
+        or (not isinstance(object2, (StateBase, Operator, QAssocOp, QPow, \
+        Dagger, Commutator, KroneckerDelta))):
             raise QuantumError("Can't add a %s and %s"\
             % (object1.__class__.__name__, object2.__class__.__name__))
 

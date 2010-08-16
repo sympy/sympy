@@ -1,13 +1,11 @@
 from sympy.physics.qoperations import QAssocOp
-from sympy.physics.quantum import StateBase, Operator, OuterProduct, KetBase, BraBase, OuterProduct, InnerProduct, Dagger
+from sympy.physics.quantum import Operator, OuterProduct, KetBase, BraBase,\
+InnerProduct, Dagger
 from sympy.core.expr import Expr
 from sympy.core.cache import cacheit
 from sympy.core.mul import Mul
 from sympy.physics.quantumbasic import QuantumError, QuantumBasic
-from sympy import (
-    Expr, Basic, sympify, Add, Mul, Pow,
-    I, Function, Integer, S, sympify, Matrix, oo
-)
+from sympy import  Mul, S
 from sympy.printing.pretty.stringpict import prettyForm
 from sympy.physics.hilbert import HilbertSpaceException
 from sympy.physics.qpow import QPow
@@ -98,7 +96,8 @@ class QMul(QAssocOp):
             retVal.hilbert_space = object2.hilbert_space
             retVal.acts_like = InnerProduct
             return retVal
-        raise QuantumError("%s*%s is not allowed" % (object1.acts_like.__name__, object2.acts_like.__name__))
+        raise QuantumError("%s*%s is not allowed" % (object1.acts_like.__name__,\
+        object2.acts_like.__name__))
 
     @classmethod
     def QMulflatten(cls, object1, object2):

@@ -1,12 +1,13 @@
-from sympy import Expr, Pow, S, Number, Symbol, sympify
-from sympy.physics.quantum import InnerProduct, OuterProduct, Operator, KetBase, BraBase, Dagger
+from sympy import Expr, Pow, S, sympify
+from sympy.physics.quantum import InnerProduct, OuterProduct, Operator,\
+Dagger
 from sympy.core.decorators import call_highest_priority
 from sympy.physics.quantumbasic import QuantumError, QuantumBasic
 from sympy.printing.str import sstr
 
 class QPow(QuantumBasic):
     """
-    A class for the operator: ** (exponent) for quantum objects.
+        A class for the operator: ** (exponent) for quantum objects.
     """
 
     def __new__(cls, base, exp):
