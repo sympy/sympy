@@ -8,14 +8,13 @@ from sympy.polys.polyutils import (
     _unify_gens,
     _analyze_gens,
     _sort_factors,
-    _analyze_power,
-    _parallel_dict_from_basic_if_gens,
-    _parallel_dict_from_basic_no_gens,
-    _dict_from_basic_if_gens,
-    _dict_from_basic_no_gens,
-    parallel_dict_from_basic,
-    dict_from_basic,
-    basic_from_dict,
+    _parallel_dict_from_expr_if_gens,
+    _parallel_dict_from_expr_no_gens,
+    _dict_from_expr_if_gens,
+    _dict_from_expr_no_gens,
+    parallel_dict_from_expr,
+    dict_from_expr,
+    expr_from_dict,
 )
 
 from sympy.polys.polyerrors import (
@@ -151,102 +150,71 @@ def test__sort_factors():
 
     assert _sort_factors(F, multiple=True) == G
 
-def test__analyze_power():
-    assert _analyze_power(x, S(1)) == (x, S(1))
-    assert _analyze_power(x, S(2)) == (x, S(2))
-    assert _analyze_power(x, -S(1)) == (x**(-1), S(1))
-    assert _analyze_power(x, -S(2)) == (x**(-1), S(2))
+def test__dict_from_expr_if_gens():
+    assert dict_from_expr(Integer(17), gens=(x,)) == ({(0,): Integer(17)}, (x,))
+    assert dict_from_expr(Integer(17), gens=(x,y)) == ({(0,0): Integer(17)}, (x,y))
+    assert dict_from_expr(Integer(17), gens=(x,y,z)) == ({(0,0,0): Integer(17)}, (x,y,z))
 
-    assert _analyze_power(x, S(1)/3) == (x**(S(1)/3), S(1))
-    assert _analyze_power(x, S(2)/3) == (x**(S(1)/3), S(2))
-    assert _analyze_power(x, -S(1)/3) == (x**(-S(1)/3), S(1))
-    assert _analyze_power(x, -S(2)/3) == (x**(-S(1)/3), S(2))
+    assert dict_from_expr(Integer(-17), gens=(x,)) == ({(0,): Integer(-17)}, (x,))
+    assert dict_from_expr(Integer(-17), gens=(x,y)) == ({(0,0): Integer(-17)}, (x,y))
+    assert dict_from_expr(Integer(-17), gens=(x,y,z)) == ({(0,0,0): Integer(-17)}, (x,y,z))
 
-    assert _analyze_power(x, y) == (x**y, S(1))
-    assert _analyze_power(x, -y) == (x**(-y), S(1))
-    assert _analyze_power(x, 2*y) == (x**y, S(2))
-    assert _analyze_power(x, -2*y) == (x**(-y), S(2))
+    assert dict_from_expr(Integer(17)*x, gens=(x,)) == ({(1,): Integer(17)}, (x,))
+    assert dict_from_expr(Integer(17)*x, gens=(x,y)) == ({(1,0): Integer(17)}, (x,y))
+    assert dict_from_expr(Integer(17)*x, gens=(x,y,z)) == ({(1,0,0): Integer(17)}, (x,y,z))
 
-    assert _analyze_power(x, y/3) == (x**(y/3), S(1))
-    assert _analyze_power(x, -y/3) == (x**(-y/3), S(1))
-    assert _analyze_power(x, 2*y/3) == (x**(y/3), S(2))
-    assert _analyze_power(x, -2*y/3) == (x**(-y/3), S(2))
+    assert dict_from_expr(Integer(17)*x**7, gens=(x,)) == ({(7,): Integer(17)}, (x,))
+    assert dict_from_expr(Integer(17)*x**7*y, gens=(x,y)) == ({(7,1): Integer(17)}, (x,y))
+    assert dict_from_expr(Integer(17)*x**7*y*z**12, gens=(x,y,z)) == ({(7,1,12): Integer(17)}, (x,y,z))
 
-    assert _analyze_power(x, S(1.0)) == (x**S(1.0), S(1))
-    assert _analyze_power(x, S(2.0)) == (x**S(2.0), S(1))
-    assert _analyze_power(x, -S(1.0)) == (x**(-S(1.0)), S(1))
-    assert _analyze_power(x, -S(2.0)) == (x**(-S(2.0)), S(1))
-
-    assert _analyze_power(x, S(1.0)*y) == (x**(S(1.0)*y), S(1))
-    assert _analyze_power(x, S(2.0)*y) == (x**(S(2.0)*y), S(1))
-    assert _analyze_power(x, -S(1.0)*y) == (x**(-S(1.0)*y), S(1))
-    assert _analyze_power(x, -S(2.0)*y) == (x**(-S(2.0)*y), S(1))
-
-def test__dict_from_basic_if_gens():
-    assert dict_from_basic(Integer(17), gens=(x,)) == ({(0,): Integer(17)}, (x,))
-    assert dict_from_basic(Integer(17), gens=(x,y)) == ({(0,0): Integer(17)}, (x,y))
-    assert dict_from_basic(Integer(17), gens=(x,y,z)) == ({(0,0,0): Integer(17)}, (x,y,z))
-
-    assert dict_from_basic(Integer(-17), gens=(x,)) == ({(0,): Integer(-17)}, (x,))
-    assert dict_from_basic(Integer(-17), gens=(x,y)) == ({(0,0): Integer(-17)}, (x,y))
-    assert dict_from_basic(Integer(-17), gens=(x,y,z)) == ({(0,0,0): Integer(-17)}, (x,y,z))
-
-    assert dict_from_basic(Integer(17)*x, gens=(x,)) == ({(1,): Integer(17)}, (x,))
-    assert dict_from_basic(Integer(17)*x, gens=(x,y)) == ({(1,0): Integer(17)}, (x,y))
-    assert dict_from_basic(Integer(17)*x, gens=(x,y,z)) == ({(1,0,0): Integer(17)}, (x,y,z))
-
-    assert dict_from_basic(Integer(17)*x**7, gens=(x,)) == ({(7,): Integer(17)}, (x,))
-    assert dict_from_basic(Integer(17)*x**7*y, gens=(x,y)) == ({(7,1): Integer(17)}, (x,y))
-    assert dict_from_basic(Integer(17)*x**7*y*z**12, gens=(x,y,z)) == ({(7,1,12): Integer(17)}, (x,y,z))
-
-    assert dict_from_basic(x+2*y+3*z, gens=(x,)) == \
+    assert dict_from_expr(x+2*y+3*z, gens=(x,)) == \
         ({(1,): Integer(1), (0,): 2*y+3*z}, (x,))
-    assert dict_from_basic(x+2*y+3*z, gens=(x,y)) == \
+    assert dict_from_expr(x+2*y+3*z, gens=(x,y)) == \
         ({(1,0): Integer(1), (0,1): Integer(2), (0,0): 3*z}, (x,y))
-    assert dict_from_basic(x+2*y+3*z, gens=(x,y,z)) == \
+    assert dict_from_expr(x+2*y+3*z, gens=(x,y,z)) == \
         ({(1,0,0): Integer(1), (0,1,0): Integer(2), (0,0,1): Integer(3)}, (x,y,z))
 
-    assert dict_from_basic(x*y+2*x*z+3*y*z, gens=(x,)) == \
+    assert dict_from_expr(x*y+2*x*z+3*y*z, gens=(x,)) == \
         ({(1,): y+2*z, (0,): 3*y*z}, (x,))
-    assert dict_from_basic(x*y+2*x*z+3*y*z, gens=(x,y)) == \
+    assert dict_from_expr(x*y+2*x*z+3*y*z, gens=(x,y)) == \
         ({(1,1): Integer(1), (1,0): 2*z, (0,1): 3*z}, (x,y))
-    assert dict_from_basic(x*y+2*x*z+3*y*z, gens=(x,y,z)) == \
+    assert dict_from_expr(x*y+2*x*z+3*y*z, gens=(x,y,z)) == \
         ({(1,1,0): Integer(1), (1,0,1): Integer(2), (0,1,1): Integer(3)}, (x,y,z))
 
-    assert dict_from_basic(2**y*x, gens=(x,)) == ({(1,): 2**y}, (x,))
-    raises(PolynomialError, "dict_from_basic(2**y*x, gens=(x,y))")
+    assert dict_from_expr(2**y*x, gens=(x,)) == ({(1,): 2**y}, (x,))
+    raises(PolynomialError, "dict_from_expr(2**y*x, gens=(x,y))")
 
-def test__dict_from_basic_no_gens():
-    raises(GeneratorsNeeded, "dict_from_basic(Integer(17))")
+def test__dict_from_expr_no_gens():
+    raises(GeneratorsNeeded, "dict_from_expr(Integer(17))")
 
-    assert dict_from_basic(x) == ({(1,): Integer(1)}, (x,))
-    assert dict_from_basic(y) == ({(1,): Integer(1)}, (y,))
+    assert dict_from_expr(x) == ({(1,): Integer(1)}, (x,))
+    assert dict_from_expr(y) == ({(1,): Integer(1)}, (y,))
 
-    assert dict_from_basic(x*y) == ({(1,1): Integer(1)}, (x,y))
-    assert dict_from_basic(x+y) == ({(1,0): Integer(1), (0,1): Integer(1)}, (x,y))
+    assert dict_from_expr(x*y) == ({(1,1): Integer(1)}, (x,y))
+    assert dict_from_expr(x+y) == ({(1,0): Integer(1), (0,1): Integer(1)}, (x,y))
 
-    assert dict_from_basic(sqrt(2)) == ({(1,): Integer(1)}, (sqrt(2),))
-    raises(GeneratorsNeeded, "dict_from_basic(sqrt(2), greedy=False)")
+    assert dict_from_expr(sqrt(2)) == ({(1,): Integer(1)}, (sqrt(2),))
+    raises(GeneratorsNeeded, "dict_from_expr(sqrt(2), greedy=False)")
 
-    assert dict_from_basic(x*y, domain=ZZ[x]) == ({(1,): x}, (y,))
-    assert dict_from_basic(x*y, domain=ZZ[y]) == ({(1,): y}, (x,))
+    assert dict_from_expr(x*y, domain=ZZ[x]) == ({(1,): x}, (y,))
+    assert dict_from_expr(x*y, domain=ZZ[y]) == ({(1,): y}, (x,))
 
-    assert dict_from_basic(3*sqrt(2)*pi*x*y, extension=None) == ({(1,1,1,1): 3}, (x,y,sqrt(2),pi))
-    assert dict_from_basic(3*sqrt(2)*pi*x*y, extension=True) == ({(1,1,1): 3*sqrt(2)}, (x,y,pi))
+    assert dict_from_expr(3*sqrt(2)*pi*x*y, extension=None) == ({(1,1,1,1): 3}, (x,y,sqrt(2),pi))
+    assert dict_from_expr(3*sqrt(2)*pi*x*y, extension=True) == ({(1,1,1): 3*sqrt(2)}, (x,y,pi))
 
-    assert dict_from_basic(3*sqrt(2)*pi*x*y, extension=True) == ({(1,1,1): 3*sqrt(2)}, (x,y,pi))
+    assert dict_from_expr(3*sqrt(2)*pi*x*y, extension=True) == ({(1,1,1): 3*sqrt(2)}, (x,y,pi))
 
     f = cos(x)*sin(x) + cos(x)*sin(y) + cos(y)*sin(x) + cos(y)*sin(y)
 
-    assert dict_from_basic(f) == ({(0, 1, 0, 1): 1, (0, 1, 1, 0): 1,
+    assert dict_from_expr(f) == ({(0, 1, 0, 1): 1, (0, 1, 1, 0): 1,
         (1, 0, 0, 1): 1, (1, 0, 1, 0): 1}, (cos(x), cos(y), sin(x), sin(y)))
 
-def test__parallel_dict_from_basic_if_gens():
-    assert parallel_dict_from_basic([x+2*y+3*z, Integer(7)], gens=(x,)) == \
+def test__parallel_dict_from_expr_if_gens():
+    assert parallel_dict_from_expr([x+2*y+3*z, Integer(7)], gens=(x,)) == \
         ([{(1,): Integer(1), (0,): 2*y+3*z}, {(0,): Integer(7)}], (x,))
 
-def test__parallel_dict_from_basic_no_gens():
-    assert parallel_dict_from_basic([x*y, Integer(3)]) == \
+def test__parallel_dict_from_expr_no_gens():
+    assert parallel_dict_from_expr([x*y, Integer(3)]) == \
         ([{(1,1): Integer(1)}, {(0,0): Integer(3)}], (x,y))
-    assert parallel_dict_from_basic([x*y, 2*z, Integer(3)]) == \
+    assert parallel_dict_from_expr([x*y, 2*z, Integer(3)]) == \
         ([{(1,1,0): Integer(1)}, {(0,0,1): Integer(2)}, {(0,0,0): Integer(3)}], (x,y,z))
