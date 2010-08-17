@@ -7,7 +7,7 @@ from sympy.integrals.deltafunctions import deltaintegrate
 from sympy.integrals.rationaltools import ratint
 from sympy.integrals.risch import heurisch
 from sympy.utilities import xthreaded, flatten, any, all
-from sympy.polys import Poly
+from sympy.polys import Poly, PolynomialError
 from sympy.solvers import solve
 from sympy.functions import Piecewise, sign
 from sympy.geometry import Curve
@@ -543,7 +543,13 @@ class Integral(Expr):
                 continue
 
             # fall back to the more general algorithm
-            h = heurisch(g, x, hints=[])
+            try:
+                h = heurisch(g, x, hints=[])
+            except PolynomialError:
+                # XXX: this exception means there is a bug in the
+                # implementation of heuristic Risch integration
+                # algorithm.
+                h = None
 
             # if we failed maybe it was because we had
             # a product that could have been expanded,

@@ -901,7 +901,7 @@ def odesimp(eq, func, order, hint):
 
             # XXX: the rest of odesimp() expects each ``t`` to be in a
             # specific normal form: rational expression with numerator
-            # expanded, but which combined exponential functions (at
+            # expanded, but with combined exponential functions (at
             # least in this setup all tests pass).
             eq = [Eq(f(x), _expand(t)) for t in eqsol]
 
@@ -1802,7 +1802,7 @@ def ode_1st_homogeneous_coeff_subs_indep_div_dep(eq, func, order, match):
     u2 = Dummy('u2') # u2 == x/f(x)
     r = match # d+e*diff(f(x),x)
     C1 = Symbol('C1')
-    int = C.Integral((-r[r['d']]/(r[r['e']]+u2*r[r['d']])).subs({x:u2, r['y']:1}),
+    int = C.Integral(simplify((-r[r['d']]/(r[r['e']]+u2*r[r['d']])).subs({x:u2, r['y']:1})),
         (u2, None, x/f(x)))
     sol = logcombine(Eq(log(f(x)), int + log(C1)), force=True)
     return sol
