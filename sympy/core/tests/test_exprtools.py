@@ -1,9 +1,10 @@
 """Tests for tools for manipulating of large commutative expressions. """
 
-from sympy.core.exprtools import decompose_power, Factors, Term
+from sympy.core.exprtools import (
+    decompose_power, Factors, Term, _gcd_terms, gcd_terms)
 
+from sympy import S, Add, sin
 from sympy.abc import x, y, z, t
-from sympy import S, sin
 
 def test_decompose_power():
     assert decompose_power(x) == (x, 1)
@@ -66,3 +67,12 @@ def test_Term():
     b = Term(2*x**3*y**5*t**7)
 
     assert a.mul(b) == Term(8, Factors({x: 4, y: 7, t: 4}), Factors({z: 1}))
+
+def test_gcd_terms():
+    f = 2*(x + 1)*(x + 4)/(5*x**2 + 5) + (2*x + 2)*(x + 5)/(x**2 + 1)/5 + (2*x + 2)*(x + 6)/(5*x**2 + 5)
+
+    assert _gcd_terms(f) == ((S(6)/5)*((1 + x)/(1 + x**2)), 5 + x, 1)
+    assert _gcd_terms(Add.make_args(f)) == ((S(6)/5)*((1 + x)/(1 + x**2)), 5 + x, 1)
+
+    assert gcd_terms(f) == (S(6)/5)*((1 + x)*(5 + x)/(1 + x**2))
+    assert gcd_terms(Add.make_args(f)) == (S(6)/5)*((1 + x)*(5 + x)/(1 + x**2))

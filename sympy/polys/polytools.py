@@ -68,6 +68,8 @@ from sympy.polys.constructor import construct_domain
 
 from sympy.polys import polyoptions as options
 
+from sympy.core.exprtools import _gcd_terms
+
 class Poly(Basic):
     """Generic class for representing polynomials in SymPy. """
 
@@ -4362,36 +4364,6 @@ def _formal_factor(f, opt):
         coeff, factors = cp/cq, fp/fq
 
     return _keep_coeff(coeff, factors)
-
-from sympy.core.exprtools import Term
-
-def _gcd_terms(expr):
-    """Helper function for :func:`_symbolic_factor`. """
-    terms = []
-
-    for term in expr.as_Add():
-        terms.append(Term(term))
-
-    common = terms[0]
-
-    for term in terms[1:]:
-        common = common.gcd(term)
-
-    for i, term in enumerate(terms):
-        terms[i] = term.quo(common)
-
-    denom = terms[0].denom
-
-    for term in terms[1:]:
-        denom = denom.lcm(term.denom)
-
-    numers = []
-
-    for term in terms:
-        numer = term.numer.mul(denom.quo(term.denom))
-        numers.append(term.coeff*numer.as_expr())
-
-    return common.as_expr(), Add(*numers), denom.as_expr()
 
 def _symbolic_factor(f, opt):
     """Helper function for :func:`_factor`. """

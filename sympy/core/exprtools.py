@@ -1,7 +1,9 @@
 """Tools for manipulating of large commutative expressions. """
 
+from sympy.core.add import Add
 from sympy.core.mul import Mul
 from sympy.core.power import Pow
+from sympy.core.basic import Basic
 from sympy.core.numbers import Rational
 from sympy.core.singleton import S
 from sympy.core.coreerrors import NonCommutativeExpression
@@ -224,7 +226,11 @@ class Term(object):
 
                 if base.is_Add:
                     cont, base = base.primitive()
-                    coeff *= cont
+
+                    if exp > 0:
+                        coeff *= cont
+                    else:
+                        coeff /= cont
 
                 if exp > 0:
                     numer[base] = exp
@@ -312,3 +318,43 @@ class Term(object):
 
     def __ne__(self, other):
         return not self.__eq__(other)
+
+def _gcd_terms(terms):
+    """Helper function for :func:`gcd_terms`. """
+    if isinstance(terms, Basic):
+        terms = Add.make_args(terms)
+
+    terms = map(Term, terms)
+    cont = terms[0]
+
+    for term in terms[1:]:
+        cont = cont.gcd(term)
+
+    for i, term in enumerate(terms):
+        terms[i] = term.quo(cont)
+
+    denom = terms[0].denom
+
+    for term in terms[1:]:
+        denom = denom.lcm(term.denom)
+
+    numers = []
+
+    for term in terms:
+        numer = term.numer.mul(denom.quo(term.denom))
+        numers.append(term.coeff*numer.as_expr())
+
+    cont = cont.as_expr()
+    numer = Add(*numers)
+    denom = denom.as_expr()
+
+    if numer.is_Add:
+        _cont, numer = numer.primitive()
+        cont *= _cont
+
+    return cont, numer, denom
+
+def gcd_terms(terms):
+    """Compute the GCD of ``terms`` and put them together. """
+    cont, numer, denom = _gcd_terms(terms)
+    return cont*(numer/denom)
