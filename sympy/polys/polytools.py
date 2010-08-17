@@ -4368,8 +4368,8 @@ def _formal_factor(f, opt):
 def _symbolic_factor(f, opt):
     """Helper function for :func:`_factor`. """
     if isinstance(f, Basic):
-        if f.is_Poly:
-            return _formal_factor(f, opt)
+        if f.is_Atom:
+            return f
         elif f.is_Add:
             cont, numer, denom = _gcd_terms(f)
 
@@ -4378,12 +4378,12 @@ def _symbolic_factor(f, opt):
             denom = _formal_factor(denom, opt)
 
             return cont*(numer/denom)
-        elif f.is_Mul:
-            return f.__class__(*[ _symbolic_factor(g, opt) for g in f.args ])
+        elif f.is_Poly:
+            return _formal_factor(f, opt)
         elif f.is_Pow:
             return _symbolic_factor(f.base, opt)**f.exp
-        elif f.is_Relational:
-            return f.__class__(_symbolic_factor(f.lhs, opt), _symbolic_factor(f.rhs, opt))
+        elif f.is_Mul or f.is_Relational:
+            return f.__class__(*[ _symbolic_factor(g, opt) for g in f.args ])
     elif hasattr(f, '__iter__'):
         return f.__class__([ _symbolic_factor(g, opt) for g in f ])
 

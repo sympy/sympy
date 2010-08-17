@@ -23,8 +23,7 @@ from sympy.polys.polytools import (
     intervals, refine_root, count_roots,
     real_roots, nroots,
     cancel,
-    reduced, groebner,
-)
+    reduced, groebner)
 
 from sympy.polys.polyerrors import (
     MultivariatePolynomialError,
@@ -41,12 +40,10 @@ from sympy.polys.polyerrors import (
     NotAlgebraic,
     DomainError,
     OptionError,
-    FlagError,
-)
+    FlagError)
 
 from sympy.polys.monomialtools import (
-    monomial_lex_key,
-)
+    monomial_lex_key)
 
 from sympy.polys.polyclasses import DMP, DMF
 
@@ -54,7 +51,7 @@ from sympy.polys.domains import FF, ZZ, QQ, RR, EX
 
 from sympy import (
     S, Integer, Rational, Mul, symbols, sqrt, exp, sin,
-    expand, oo, I, pi, re, im, RootOf, all
+    expand, oo, I, pi, re, im, RootOf, all, Eq
 )
 
 from sympy.utilities.pytest import raises, XFAIL
@@ -1664,6 +1661,8 @@ def test_factor():
 
     assert factor(f) == (x + 2)**20000000*(x**2 + 1)/(x + 1)**2469134
     assert factor(g) == (x + 1)**6000*(y + 1)**2
+
+    assert factor(Eq(x**2 + 2*x + 1, x**3 + 1)) == Eq((x + 1)**2, (x + 1)*(x**2 - x + 1))
 
     f = (x**2 - 1)/(x**2 + 4*x + 4)
 
