@@ -176,7 +176,7 @@ def test_linear_system():
                 [-1, 0, 1, 0, 0]])
 
     assert solve_linear_system(M, x, y, z, t) == \
-           {y: 0, z: -((t+t*n)/n), x: -((t+t*n)/n)}
+           {y: 0, z: -t*(1 + n)/n, x: -t*(1 + n)/n}
 
 def test_linear_systemLU():
     x, y, z, n = symbols('x,y,z,n')

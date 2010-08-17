@@ -889,7 +889,21 @@ def odesimp(eq, func, order, hint):
         except NotImplementedError:
             eq = [eq]
         else:
-            eq = [Eq(f(x), t) for t in eqsol]
+            def _expand(expr):
+                numer, denom = expr.as_numer_denom()
+
+                if denom.is_Add:
+                    return expr
+                else:
+                    # XXX: why using expand() must be so complicated?
+                    expr = expr.expand(deep=False, power_base=False, power_exp=False, log=False)
+                    return powsimp(expr, combine='exp', deep=True)
+
+            # XXX: the rest of odesimp() expects each ``t`` to be in a
+            # specific normal form: rational expression with numerator
+            # expanded, but which combined exponential functions (at
+            # least in this setup all tests pass).
+            eq = [Eq(f(x), _expand(t)) for t in eqsol]
 
         # special simplification of the lhs.
         if hint.startswith("1st_homogeneous_coeff"):
@@ -1075,11 +1089,12 @@ def checkodesol(ode, func, sol, order='auto', solve_for_func=True):
                     lhs = sub_func_doit(lhs, func.diff(x, i), diffsols[i])
                     rhs = sub_func_doit(rhs, func.diff(x, i), diffsols[i])
                     ode_or_bool = Eq(lhs,rhs)
+                    ode_or_bool = simplify(ode_or_bool)
+
                     if isinstance(ode_or_bool, bool):
                         if ode_or_bool:
                             lhs = rhs = S.Zero
                     else:
-                        ode_or_bool = simplify(ode_or_bool)
                         lhs = ode_or_bool.lhs
                         rhs = ode_or_bool.rhs
                 # No sense in overworking simplify--just prove the numerator goes to zero

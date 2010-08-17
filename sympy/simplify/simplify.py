@@ -11,6 +11,7 @@ from sympy.utilities import all, any, flatten
 from sympy.functions import gamma, exp, sqrt, log
 
 from sympy.simplify.cse_main import cse
+from sympy.simplify.rationalsimplify import together
 
 from sympy.polys import Poly, reduced, cancel, factor, ComputationFailed
 
@@ -162,168 +163,6 @@ def separate(expr, deep=False):
         return expr.func(*[separate(t) for t in expr.args])
     else:
         return expr
-
-
-def together(expr, deep=False):
-    """Combine together and denest rational functions into a single
-       fraction. By default the resulting expression is simplified
-       to reduce the total order of both numerator and denominator
-       and minimize the number of terms.
-
-       Denesting is done recursively on the fractions level. However this
-       function will not attempt to rewrite the interior of composite
-       objects, like functions, unless 'deep' is True.
-
-       By definition, 'together' is a complement to 'apart', so
-       apart(together(expr)) should return expr unchanged.
-
-       >>> from sympy.abc import x, y, z
-       >>> from sympy import together
-
-       You can work with sums of fractions easily. The algorithm
-       used here will, in an iterative style, collect numerators
-       and denominator of all expressions involved and perform
-       needed simplifications:
-
-       >>> together(1/x + 1/y)
-       (x + y)/(x*y)
-
-       >>> together(1/x + 1/y + 1/z)
-       (x*y + x*z + y*z)/(x*y*z)
-
-       >>> together(1/(x*y) + 1/y**2)
-       (x + y)/(x*y**2)
-
-       Or you can just denest multi-level fractional expressions:
-
-       >>> together(1/(1 + 1/x))
-       x/(1 + x)
-
-       together() can also work perfectly well with symbolic powers and/or
-       exponential functions:
-
-       >>> together(1/x**y + 1/x**(y-1))
-       x**(-y)*(1 + x)
-
-       #>>> together(1/x**(2*y) + 1/x**(y-z))
-       #x**(-2*y)*(1 + x**(y + z))
-
-       #>>> together(1/exp(x) + 1/(x*exp(x)))
-       #(1+x)/(x*exp(x))
-
-       #>>> together(1/exp(2*x) + 1/(x*exp(3*x)))
-       #(1+exp(x)*x)/(x*exp(3*x))
-
-    """
-
-    def _together(expr):
-
-        from sympy.core.function import Function
-
-        if expr.is_Add:
-            items, coeffs, basis = [], [], {}
-
-            for elem in expr.args:
-                numer, q = fraction(_together(elem))
-
-                denom = {}
-
-                for term in Mul.make_args(q.expand()) or [S.One]:
-                    expo = S.One
-                    coeff = S.One
-
-                    if term.is_Pow:
-                        b, e = term.as_base_exp()
-                        if e.is_Rational:
-                            term, expo = b, e
-                        elif e.is_Mul:
-                            coeff, t = e.as_coeff_mul()
-                            if coeff.is_Rational:
-                                term, expo = Pow(b, e._new_rawargs(*t)), coeff
-                        coeff = S.One
-                    elif term.func is C.exp:
-                        arg = term.args[0]
-                        if arg.is_Rational:
-                            term, expo = S.Exp1, arg
-                        elif arg.is_Mul:
-                            coeff, t = arg.as_coeff_mul()
-                            if coeff.is_Rational:
-                                term, expo = C.exp(arg._new_rawargs(*t)), coeff
-                        coeff = S.One
-                    elif term.is_Rational:
-                        coeff = Integer(term.q)
-                        term = Integer(term.p)
-
-                    if term in denom:
-                        denom[term] += expo
-                    else:
-                        denom[term] = expo
-
-                    if term in basis:
-                        total, maxi = basis[term]
-
-                        n_total = total + expo
-                        n_maxi = max(maxi, expo)
-
-                        basis[term] = (n_total, n_maxi)
-                    else:
-                        basis[term] = (expo, expo)
-
-                    coeffs.append(coeff)
-                items.append((numer, denom))
-
-            numerator, denominator = [], []
-
-            for (term, (total, maxi)) in basis.iteritems():
-                basis[term] = (total, total-maxi)
-
-                if term.func is C.exp:
-                    denominator.append(C.exp(maxi*term.args[0]))
-                else:
-                    if maxi is S.One:
-                        denominator.append(term)
-                    else:
-                        denominator.append(Pow(term, maxi))
-
-            if coeffs and all([c.is_integer for c in coeffs]):
-                gcds = lambda x, y: igcd(int(x), int(y))
-                common = Rational(reduce(gcds, coeffs))
-            else:
-                common = S.One
-
-            product = Mul(*coeffs) / common
-
-            for ((numer, denom), coeff) in zip(items, coeffs):
-
-                expr, coeff = [], product / (coeff*common)
-
-                for term in basis.iterkeys():
-                    total, sub = basis[term]
-
-                    if term in denom:
-                        expo = total-denom[term]-sub
-                    else:
-                        expo = total-sub
-
-                    if term.func is C.exp:
-                        expr.append(C.exp(expo*term.args[0]))
-                    else:
-                        if expo is S.One:
-                            expr.append(term)
-                        else:
-                            expr.append(Pow(term, expo))
-
-                numerator.append(coeff*Mul(*([numer] + expr)))
-
-            return Add(*numerator)/(product*Mul(*denominator))
-        elif expr.is_Mul or expr.is_Pow:
-            return type(expr)(*[_together(t) for t in expr.args])
-        elif expr.is_Function and deep:
-            return expr.func(*[_together(t) for t in expr.args])
-        else:
-            return expr
-
-    return powsimp(_together(separate(expr)), deep=True, combine='exp')
 
 def collect(expr, syms, evaluate=True, exact=False):
     """
@@ -1541,9 +1380,17 @@ def simplify(expr):
        will be robust.
 
     """
-    expr = together(cancel(powsimp(expr)).expand())
-    expr = powsimp(expr, combine='exp', deep=True)
+    expr = sympify(expr)
 
+    if not isinstance(expr, Basic): # XXX: temporary hack
+        return expr
+
+    expr = together(cancel(powsimp(expr)).expand())
+
+    if not isinstance(expr, Basic): # XXX: temporary hack
+        return expr
+
+    expr = powsimp(expr, combine='exp', deep=True)
     numer, denom = expr.as_numer_denom()
 
     if denom.is_Add:

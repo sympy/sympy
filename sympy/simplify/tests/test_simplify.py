@@ -1,4 +1,4 @@
-from sympy import Symbol, symbols, together, hypersimp, factorial, binomial, \
+from sympy import Symbol, symbols, hypersimp, factorial, binomial, \
         collect, Function, powsimp, separate, sin, exp, Rational, fraction, \
         simplify, trigsimp, cos, tan, cot, log, ratsimp, Matrix, pi, integrate, \
         solve, nsimplify, GoldenRatio, sqrt, E, I, sympify, atan, Derivative, \
@@ -131,7 +131,7 @@ def test_simplify():
     assert simplify(e) == 1 + y
 
     e = (2 * (1/n - cos(n * pi)/n))/pi
-    assert simplify(e) == (2 - 2*cos(pi*n))/(pi*n)
+    assert simplify(e) == 2*((1 - 1*cos(pi*n))/(pi*n))
 
     e = integrate(1/(x**3+1), x).diff(x)
     assert simplify(e) == 1/(x**3+1)
@@ -142,7 +142,7 @@ def test_simplify():
     A = Matrix([[2*k-m*w**2, -k], [-k, k-m*w**2]]).inv()
 
     assert simplify((A*Matrix([0,f]))[1]) == \
-        (2*k*f - f*m*w**2)/(k**2 - 3*k*m*w**2 + m**2*w**4)
+        (f*(2*k - m*w**2))/(k**2 - 3*k*m*w**2 + m**2*w**4)
 
     a, b, c, d, e, f, g, h, i = symbols('a,b,c,d,e,f,g,h,i')
 
@@ -191,33 +191,6 @@ def test_fraction():
     assert fraction(x*(y+1)/y**7) == (x*(y+1), y**7)
 
     assert fraction(exp(-x), exact=True) == (exp(-x), 1)
-
-def test_together():
-    x, y, z = map(Symbol, 'xyz')
-
-    assert together(1/x) == 1/x
-
-    assert together(1/x + 1) == (x+1)/x
-    assert together(1/x + x) == (x**2+1)/x
-
-    assert together(1/x + Rational(1, 2)) == (x+2)/(2*x)
-
-    assert together(1/x + 2/y) == (2*x+y)/(y*x)
-    assert together(1/(1 + 1/x)) == x/(1+x)
-    assert together(x/(1 + 1/x)) == x**2/(1+x)
-
-    assert together(1/x + 1/y + 1/z) == (x*y + x*z + y*z)/(x*y*z)
-
-    assert together(1/(x*y) + 1/(x*y)**2) == y**(-2)*x**(-2)*(1+x*y)
-    assert together(1/(x*y) + 1/(x*y)**4) == y**(-4)*x**(-4)*(1+x**3*y**3)
-    assert together(1/(x**7*y) + 1/(x*y)**4) == y**(-4)*x**(-7)*(x**3+y**3)
-
-    assert together(sin(1/x+1/y)) == sin(1/x+1/y)
-    assert together(sin(1/x+1/y), deep=True) == sin((x+y)/(x*y))
-
-    assert together(Rational(1, 2) + x/2) == (x+1)/2
-
-    assert together(1/x**y + 1/x**(y-1)) == x**(-y)*(1 + x)
 
 def test_separate():
     x, y, z = symbols('x,y,z')
@@ -451,21 +424,13 @@ def test_hypersimp():
     assert hypersimp(binomial(n+1, k), k) == (n-k+1)/(k+1)
 
     term = (4*k+1)*factorial(k)/factorial(2*k+1)
-    assert hypersimp(term, k) == (4*k + 5)/(6 + 16*k**2 + 28*k)
+    assert hypersimp(term, k) == (S(1)/2)*((4*k + 5)/(3 + 14*k + 8*k**2))
 
     term = 1/((2*k-1)*factorial(2*k+1))
     assert hypersimp(term, k) == (2*k-1)/(6 + 22*k + 24*k**2 + 8*k**3)
 
     term = binomial(n, k)*(-1)**k/factorial(k)
     assert hypersimp(term, k) == (k - n)/(k**2+2*k+1)
-
-def test_together2():
-    x, y, z = symbols("x,y,z")
-    assert together(1/(x*y) + 1/y**2) == 1/x*y**(-2)*(x + y)
-    assert together(1/(1 + 1/x)) == x/(1 + x)
-    x = symbols("x", nonnegative=True)
-    y = symbols("y", real=True)
-    assert together(1/x**y + 1/x**(y-1)) == x**(-y)*(1 + x)
 
 def test_nsimplify():
     x = Symbol("x")
