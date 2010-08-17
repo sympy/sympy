@@ -3,7 +3,6 @@
 from sympy.core import S, Basic, sympify
 
 from sympy.polys.polyerrors import (
-    PolynomialError,
     GeneratorsError,
     OptionError,
     FlagError,
@@ -241,6 +240,8 @@ class Gens(Option):
             gens = ()
         elif len(set(gens)) != len(gens):
             raise GeneratorsError("duplicated generators: %s" % str(gens))
+        elif any(gen.is_commutative is False for gen in gens):
+            raise GeneratorsError("non-commutative generators: %s" % str(gens))
 
         return tuple(gens)
 

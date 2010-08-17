@@ -12,7 +12,7 @@ from sympy.polys.domains import FF, GF, ZZ, QQ, RR, EX
 
 from sympy.polys.polyerrors import OptionError, GeneratorsError
 
-from sympy import Integer, I, sqrt
+from sympy import Integer, Symbol, I, sqrt
 from sympy.utilities.pytest import raises
 from sympy.abc import x, y, z
 
@@ -53,7 +53,10 @@ def test_Gens_preprocess():
     assert Gens.preprocess((x, y, z)) == (x, y, z)
     assert Gens.preprocess(((x, y, z),)) == (x, y, z)
 
+    a = Symbol('a', commutative=False)
+
     raises(GeneratorsError, "Gens.preprocess((x, x, y))")
+    raises(GeneratorsError, "Gens.preprocess((x, y, a))")
 
 def test_Gens_postprocess():
     opt = {'gens': (x, y)}
