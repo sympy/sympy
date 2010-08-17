@@ -872,8 +872,8 @@ def test_simplify():
                  [(f(x) + y*f(x))/f(x), 2 * (1/n - cos(n * pi)/n)/ pi ]
                  ])
     M.simplify()
-    assert M ==  Matrix([[(x + y)/(x * y),               1 + y           ],
-                         [   1 + y,       (2 - 2*cos(pi*n))/(pi*n) ]])
+    assert M ==  Matrix([[(x + y)/(x * y),              1 + y           ],
+                         [   1 + y,        2*((1 - 1*cos(pi*n))/(pi*n)) ]])
 
 def test_transpose():
     M = Matrix([[1,2,3,4,5,6,7,8,9,0],
@@ -1137,7 +1137,7 @@ def test_vech():
     x,y = symbols('x,y')
     m = Matrix([ [1, x*(x+y)], [y*x+x**2, 1] ])
     m_vech = m.vech(diagonal=False)
-    assert m_vech[0] == y*x+x**2
+    assert m_vech[0] == x*(x + y)
     x,y = symbols('x,y')
     m = Matrix([ [1, x*(x+y)], [y*x, 1] ])
     m_vech = m.vech(diagonal=False, check_symmetry=False)
