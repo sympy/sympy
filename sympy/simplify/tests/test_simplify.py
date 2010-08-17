@@ -159,6 +159,10 @@ def test_simplify():
 
     assert simplify(f) == (y + a*z)/(z + t)
 
+    A, B = symbols('A,B', commutative=False)
+
+    assert simplify(A*B - B*A) == A*B - B*A
+
 def test_simplify_issue_1308():
     assert simplify(exp(-Rational(1, 2)) + exp(-Rational(3, 2))) == \
         (1 + E)*exp(-Rational(3, 2))

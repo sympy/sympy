@@ -3,7 +3,6 @@
 from sympy.polys.polyerrors import PolynomialError, GeneratorsNeeded
 from sympy.polys.polyoptions import build_options
 
-from sympy.core.coreerrors import NonCommutativeExpression
 from sympy.core.exprtools import decompose_power
 
 from sympy.core import S, Add, Mul, Pow
@@ -261,6 +260,9 @@ def _parallel_dict_from_expr(exprs, opt):
     if opt.expand is not False:
         exprs = [ expr.expand() for expr in exprs ]
 
+    if any(expr.is_commutative is False for expr in exprs):
+        raise PolynomialError('non-commutative expressions are not supported')
+
     if opt.gens:
         reps, gens = _parallel_dict_from_expr_if_gens(exprs, opt)
     else:
@@ -277,6 +279,9 @@ def _dict_from_expr(expr, opt):
     """Transform an expression into a multinomial form. """
     if opt.expand is not False:
         expr = expr.expand()
+
+    if expr.is_commutative is False:
+        raise PolynomialError('non-commutative expressions are not supported')
 
     if opt.gens:
         rep, gens = _dict_from_expr_if_gens(expr, opt)

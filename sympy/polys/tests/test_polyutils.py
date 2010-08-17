@@ -25,6 +25,7 @@ from sympy.polys.polyerrors import (
 from sympy.polys.domains import ZZ, QQ, EX
 
 x,y,z,p,q,r,s,t,u,v,w = symbols('x,y,z,p,q,r,s,t,u,v,w')
+A, B = symbols('A,B', commutative=False)
 
 def test__sort_gens():
     assert _sort_gens([]) == ()
@@ -218,3 +219,9 @@ def test__parallel_dict_from_expr_no_gens():
         ([{(1,1): Integer(1)}, {(0,0): Integer(3)}], (x,y))
     assert parallel_dict_from_expr([x*y, 2*z, Integer(3)]) == \
         ([{(1,1,0): Integer(1)}, {(0,0,1): Integer(2)}, {(0,0,0): Integer(3)}], (x,y,z))
+
+def test_parallel_dict_from_expr():
+    raises(PolynomialError, "parallel_dict_from_expr([A*B - B*A])")
+
+def test_dict_from_expr():
+    raises(PolynomialError, "dict_from_expr(A*B - B*A)")
