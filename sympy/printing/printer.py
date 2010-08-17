@@ -67,7 +67,7 @@ Some more information how the single concepts work and who should use which:
 
 from sympy import Basic, Mul, Add
 
-from sympy.polys.polyutils import _analyze_power
+from sympy.core.exprtools import decompose_power
 from sympy.polys.monomialtools import monomial_cmp
 from sympy.core.basic import BasicMeta
 
@@ -254,7 +254,10 @@ class Printer(object):
                     if factor.is_Number:
                         coeff.append(factor)
                     else:
-                        base, exp = _analyze_power(*factor.as_base_exp())
+                        base, exp = decompose_power(factor)
+
+                        if exp < 0:
+                            exp, base = -exp, 1/base
 
                         cpart[base] = exp
                         gens.add(base)
