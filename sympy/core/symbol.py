@@ -204,6 +204,7 @@ class Pure(Expr):
     is_Pure   = True
 
 _re_var_range = re.compile(r"^(.*?)(\d*):(\d+)$")
+_re_var_scope = re.compile(r"^(.):(.)$")
 _re_var_split = re.compile(r"\s|,")
 
 def symbols(names, **args):
@@ -250,6 +251,17 @@ def symbols(names, **args):
         >>> symbols(('x5:10', 'y:5'))
         ((x5, x6, x7, x8, x9), (y0, y1, y2, y3, y4))
 
+    To cut on typing even more, lexicographic range syntax is supported::
+
+        >>> symbols('x:z')
+        (x, y, z)
+
+        >>> symbols('a:d,x:z')
+        (a, b, c, d, x, y, z)
+
+        >>> symbols(('a:d', 'x:z'))
+        ((a, b, c, d), (x, y, z))
+
     All newly created symbols have assumptions set accordingly to ``args``::
 
         >>> a = symbols('a', integer=True)
@@ -283,6 +295,11 @@ def symbols(names, **args):
             if not name:
                 continue
 
+            if ':' not in name:
+                symbol = cls(name, **args)
+                result.append(symbol)
+                continue
+
             match = _re_var_range.match(name)
 
             if match is not None:
@@ -298,9 +315,21 @@ def symbols(names, **args):
                     result.append(symbol)
 
                 seq = True
-            else:
-                symbol = cls(name, **args)
-                result.append(symbol)
+                continue
+
+            match = _re_var_scope.match(name)
+
+            if match is not None:
+                start, end = match.groups()
+
+                for name in xrange(ord(start), ord(end)+1):
+                    symbol = cls(chr(name), **args)
+                    result.append(symbol)
+
+                seq = True
+                continue
+
+            raise ValueError("'%s' is not a valid symbol range specification" % name)
 
         if not seq and len(result) <= 1:
             if not result:
