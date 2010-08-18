@@ -793,11 +793,9 @@ def build_extension(f, x, handle_first='log', dummy=True):
         newf = f
 
     # Get common cases out of the way:
-    if f.has(sin, cos, tan, atan):
+    if any(i.has(x) for i in f.atoms(sin, cos, tan, atan, asin, acos)):
         raise NotImplementedError("Trigonometric extensions are not " +
         "supported (yet!)")
-    elif f.has(atan, acos):
-        pass
     reset()
     exp_new_extension, log_new_extension = True, True
     while True:

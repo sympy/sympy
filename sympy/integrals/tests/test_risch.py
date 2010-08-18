@@ -1,6 +1,6 @@
 """Most of these tests come from the examples in Bronstein's book."""
 from sympy import (Poly, S, Function, log, symbols, exp, tan, Integral, sqrt,
-    Symbol, Lambda)
+    Symbol, Lambda, sin)
 from sympy.integrals.risch import (gcdex_diophantine, frac_in, derivation,
     splitfactor, splitfactor_sqf, canonical_representation, hermite_reduce,
     polynomial_reduce, residue_reduce, residue_reduce_to_basic,
@@ -9,7 +9,7 @@ from sympy.integrals.risch import (gcdex_diophantine, frac_in, derivation,
     integer_powers, build_extension, risch_integrate)
 from sympy.utilities.pytest import XFAIL, skip, raises
 
-from sympy.abc import x, t, nu, z, a
+from sympy.abc import x, t, nu, z, a, y
 t0, t1, t2 = symbols('t0, t1, t2')
 
 def test_gcdex_diophantine():
@@ -270,6 +270,12 @@ def test_build_extension():
         (Poly((-1 + x - x*t0**2)*t1, t1), Poly(x, t1, domain='ZZ[x]'),
         [Poly(1, x), Poly(1/x, t0), Poly((1 + t0)*t1, t1)], [x, t0, t1],
         [Lambda(i, exp(t0*i)), Lambda(i, log(i))], [(exp(x*log(x)), x**x)])
+
+    assert build_extension(sin(y)*exp(x), x, dummy=False) == \
+        (Poly(sin(y)*t0, t0, domain='ZZ[sin(y)]'), Poly(1, t0, domain='ZZ'),
+        [Poly(1, x, domain='ZZ'), Poly(t0, t0, domain='ZZ')], [x, t0],
+        [Lambda(i, exp(i))], [])
+    raises(NotImplementedError, "build_extension(sin(x), x)")
 
     # Rothstein's integral
     f = (2581284541*exp(x) + 1757211400)/(39916800*exp(3*x) +
