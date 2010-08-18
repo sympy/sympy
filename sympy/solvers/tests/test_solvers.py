@@ -1,6 +1,7 @@
 from sympy import (Matrix, Symbol, solve, exp, log, cos, acos, Rational, Eq,
     sqrt, oo, LambertW, pi, I, sin, asin, Function, diff, Derivative, symbols,
-    S, sympify, var, simplify, Integral, sstr, Interval, And, Or, Lt, Gt)
+    S, sympify, var, simplify, Integral, sstr, Interval, And, Or, Lt, Gt,
+    Assume, re, im)
 
 from sympy.solvers import solve_linear_system, solve_linear_system_LU,dsolve,\
      tsolve
@@ -9,6 +10,8 @@ from sympy.solvers.solvers import guess_solve_strategy, GS_POLY, GS_POLY_CV_1, G
     GS_TRANSCENDENTAL, GS_RATIONAL, GS_RATIONAL_CV_1
 
 from sympy.utilities.pytest import XFAIL, raises
+
+from sympy.abc import x
 
 def NS(e, n=15, **options):
     return sstr(sympify(e).evalf(n, **options), full_prec=True)
@@ -299,9 +302,13 @@ def test_issue626():
     assert solve(e, f(x).diff(x)) == [(2-x)/f(x)]
 
 def test_solve_inequalities():
-    a = Symbol('a', real=True)
+    assert solve([Lt(x**2 - 2, 0), Gt(x**2 - 1, 0)]) == \
+        And(Or(And(Lt(-sqrt(2), re(x)), Lt(re(x), -1)),
+               And(Lt(1, re(x)), Lt(re(x), sqrt(2)))), Eq(im(x), 0))
 
-    assert solve([Lt(a**2 - 2, 0), Gt(a**2 - 1, 0)]) == \
+@XFAIL
+def test_solve_inequalities_real():
+    assert solve([Lt(x**2 - 2, 0), Gt(x**2 - 1, 0)], assume=Assume(x, Q.real)) == \
         [Interval(-sqrt(2), -1, True, True), Interval(1, sqrt(2), True, True)]
-    assert solve([Lt(a**2 - 2, 0), Gt(a**2 - 1, 0)], relational=True) == \
-        Or(And(Lt(-sqrt(2), a), Lt(a, -1)), And(Lt(1, a), Lt(a, sqrt(2))))
+    assert solve([Lt(x**2 - 2, 0), Gt(x**2 - 1, 0)], assume=Assume(x, Q.real), relational=True) == \
+        Or(And(Lt(-sqrt(2), x), Lt(x, -1)), And(Lt(1, x), Lt(x, sqrt(2))))
