@@ -149,7 +149,7 @@ def solve(f, *symbols, **flags):
     bare_f = not isinstance(f, (list, tuple, set))
     f, symbols = (sympit(w) for w in [f, symbols])
 
-    relational = flags.get('relational', False)
+    relational = flags.get('relational', True)
 
     if any(fi.is_Relational and not fi.is_Equality for fi in f):
         return solve_poly_inequalities(f, relational=relational)

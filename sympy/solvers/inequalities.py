@@ -1,36 +1,21 @@
 """Tools for solving inequalities and systems of inequalities. """
 
-from sympy import S, Poly, Interval, Or, Eq
+from sympy import S, Poly, Interval, And, Or, Eq, DomainError, ask, re, im
 
-def solve_poly_inequality(inequality):
+def solve_poly_inequality(poly, rel):
     """Solve a polynomial inequality with rational coefficients.  """
-    poly = Poly(inequality.lhs - inequality.rhs, greedy=False)
+    reals, intervals = poly.real_roots(multiple=False), []
 
-    if not poly.is_univariate or not poly.gen.is_real:
-        raise ValueError("only real univariate inequalities are supported")
-
-    exact = True
-
-    if not poly.get_domain().is_Exact:
-        poly, exact = poly.to_exact(), False
-
-    domain = poly.get_domain()
-
-    if not (domain.is_ZZ or domain.is_QQ):
-        raise ValueError("inequality solving is not supported over %s" % domain)
-
-    reals, result = poly.real_roots(multiple=False), []
-
-    if inequality.rel_op == '==':
+    if rel == '==':
         for root, _ in reals:
             interval = Interval(root, root)
-            result.append(interval)
-    elif inequality.rel_op == '!=':
+            intervals.append(interval)
+    elif rel == '!=':
         left = S.NegativeInfinity
 
         for right, _ in reals + [(S.Infinity, 1)]:
             interval = Interval(left, right, True, True)
-            result.append(interval)
+            intervals.append(interval)
             left = right
     else:
         if poly.LC() > 0:
@@ -40,16 +25,16 @@ def solve_poly_inequality(inequality):
 
         eq_sign, equal = None, False
 
-        if inequality.rel_op == '>':
+        if rel == '>':
             eq_sign = +1
 
-        if inequality.rel_op == '<':
+        if rel == '<':
             eq_sign = -1
 
-        if inequality.rel_op == '>=':
+        if rel == '>=':
             eq_sign, equal = +1, True
 
-        if inequality.rel_op == '<=':
+        if rel == '<=':
             eq_sign, equal = -1, True
 
         right, right_open = S.Infinity, True
@@ -57,64 +42,112 @@ def solve_poly_inequality(inequality):
         for left, multiplicity in reversed(reals):
             if multiplicity % 2:
                 if sign == eq_sign:
-                    result.insert(0, Interval(left, right, not equal, right_open))
+                    intervals.insert(0, Interval(left, right, not equal, right_open))
 
                 sign, right, right_open = -sign, left, not equal
             else:
                 if sign == eq_sign and not equal:
-                    result.insert(0, Interval(left, right, True, right_open))
+                    intervals.insert(0, Interval(left, right, True, right_open))
                     right, right_open = left, True
                 elif sign != eq_sign and equal:
-                    result.insert(0, Interval(left, left))
+                    intervals.insert(0, Interval(left, left))
 
         if sign == eq_sign:
-            result.insert(0, Interval(S.NegativeInfinity, right, True, right_open))
+            intervals.insert(0, Interval(S.NegativeInfinity, right, True, right_open))
 
-    return result, exact, poly.gen
+    return intervals
 
-def solve_poly_inequalities(inequalities, relational=False):
+def solve_poly_inequalities(inequalities, relational=True):
     """Solve a system of polynomial inequalities with rational coefficients.  """
-    results, exact, gen = None, True, None
-
     if not hasattr(inequalities, '__iter__'):
         inequalities = [inequalities]
 
+    polys, exact = {}, {}
+
     for inequality in inequalities:
-        if not inequality.is_Relational:
-            inequality = Eq(inequality, S.Zero)
-
-        intervals, _exact, _gen = solve_poly_inequality(inequality)
-
-        if gen is None:
-            gen = _gen
-        elif gen != _gen:
-            raise ValueError("only real univariate inequality systems are supported")
-
-        if results is None:
-            results = intervals
+        if inequality.is_Relational:
+            expr, rel = inequality.lhs - inequality.rhs, inequality.rel_op
         else:
-            _results = []
+            expr, rel = inequality, '=='
 
-            for interval in intervals:
-                for result in results:
-                    _interval = interval.intersect(result)
+        poly = Poly(expr, greedy=False)
 
-                    if _interval is not S.EmptySet:
-                        _results.append(_interval)
+        if not poly.gen.is_Symbol:
+            raise NotImplementedError("only polynomial inequalities are supported")
 
-            results = _results
+        if not poly.is_univariate:
+            raise NotImplementedError("only univariate inequalities are supported")
 
-        exact &= _exact
+        _exact = True
 
-        if not results:
-            break
+        if not poly.get_domain().is_Exact:
+            poly, _exact = poly.to_exact(), False
 
-    if not exact:
-        results = [ Interval(r.left.evalf(), r.right.evalf(),
-            left_open=r.left_open, right_open=r.right_open) for r in results ]
+        domain = poly.get_domain()
 
-    if relational:
-        results = Or(*[ r.as_relational(gen) for r in results ])
+        if not (domain.is_ZZ or domain.is_QQ):
+            raise DomainError("inequality solving is not supported over %s" % domain)
 
-    return results
+        if poly.gen in polys:
+            polys[poly.gen].append((poly, rel))
+            exact[poly.gen] &= _exact
+        else:
+            polys[poly.gen] = [(poly, rel)]
+            exact[poly.gen] = _exact
+
+    results = {}
+
+    for gen, polys_group in polys.iteritems():
+        global_intervals = None
+
+        for poly, rel in polys_group:
+            local_intervals = solve_poly_inequality(poly, rel)
+
+            if global_intervals is None:
+                global_intervals = local_intervals
+            else:
+                intervals = []
+
+                for local_interval in local_intervals:
+                    for global_interval in global_intervals:
+                        interval = local_interval.intersect(global_interval)
+
+                        if interval is not S.EmptySet:
+                            intervals.append(interval)
+
+                global_intervals = intervals
+
+            if not global_intervals:
+                break
+
+        intervals = global_intervals
+
+        if not exact[gen]:
+            intervals = [ Interval(i.left.evalf(), i.right.evalf(),
+                left_open=i.left_open, right_open=i.right_open) for i in intervals ]
+
+        real = ask(gen, 'real')
+
+        if relational or not real:
+            def relationalize(gen):
+                return Or(*[ i.as_relational(gen) for i in intervals ])
+
+            if not real:
+                result = And(relationalize(re(gen)), Eq(im(gen), 0))
+            else:
+                result = relationalize(gen)
+        else:
+            result = intervals
+
+        results[gen] = result
+
+    if relational or not real:
+        solution = And(*results.values())
+    else:
+        if len(results) == 1:
+            solution = results.popitem()[1]
+        else:
+            solution = results
+
+    return solution
 
