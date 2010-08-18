@@ -201,7 +201,7 @@ def test_Interval_is_right_unbounded():
     assert Interval(3, Real("+inf")).is_right_unbounded == True
 
 def test_Interval_as_relational():
-    x = Symbol('x', real=True)
+    x = Symbol('x')
 
     assert Interval(3, 3).as_relational(x) == Eq(x, 3)
 
@@ -218,4 +218,3 @@ def test_Interval_as_relational():
 
     assert Interval(-oo, oo).as_relational(x) == True
 
-    raises(ValueError, "Interval(-1, 2).as_relational(Symbol('x'))")
