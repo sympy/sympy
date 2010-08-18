@@ -423,9 +423,6 @@ class Interval(Set, EvalfMixin):
         from sympy.core.relational import Eq, Lt, Le
         from sympy.logic.boolalg import And
 
-        if not symbol.is_real:
-            raise ValueError("only real intervals are supported")
-
         if self.is_point:
             return Eq(symbol, self.start)
         else:
