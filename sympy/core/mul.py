@@ -94,10 +94,11 @@ class Mul(AssocOp):
                 # 3
                 if o.is_Pow and b.is_Number:
                     # get all the factors with numeric base so they can be
-                    # combined below
-                    num_exp.append((b,e))
-                    continue
-
+                    # combined below, but don't combine negatives unless
+                    # the exponent is an integer
+                    if b.is_positive or e.is_integer:
+                        num_exp.append((b, e))
+                        continue
 
                 #         n          n          n
                 # (-3 + y)   ->  (-1)  * (3 - y)
@@ -155,6 +156,7 @@ class Mul(AssocOp):
                     else:
                         nc_part.append(o1)
                         nc_part.append(o)
+
         # We do want a combined exponent if it would not be an Add, such as
         #  y    2y     3y
         # x  * x   -> x

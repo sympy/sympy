@@ -309,8 +309,8 @@ def test_powers_Integer():
     assert (2)  ** (S(-3)/2) == sqrt(2) / 4
     assert (81) ** (S(2)/3)  == 9 * (S(3) ** (S(2)/3))
     assert (-81) ** (S(2)/3)  == 9 * (S(-3) ** (S(2)/3))
-    assert (-3) ** Rational(-7, 3) == -(-3) ** Rational(2, 3) / 27
-    assert (-3) ** Rational(-2, 3) == -(-3) ** Rational(1, 3) / 3
+    assert (-3) ** Rational(-7, 3) == -(-1)**Rational(2, 3)*3**Rational(2, 3)/27
+    assert (-3) ** Rational(-2, 3) == -(-1)**Rational(1, 3)*3**Rational(1, 3)/3
 
     # join roots
     assert sqrt(6) + sqrt(24) == 3*sqrt(6)
@@ -326,8 +326,8 @@ def test_powers_Integer():
     assert (2**64+1) ** Rational(17,25)
 
     # negative rational power and negative base
-    assert (-3) ** Rational(-7, 3) == -(-3) ** Rational(2, 3) / 27
-    assert (-3) ** Rational(-2, 3) == -(-3) ** (S(1) / 3) / 3
+    assert (-3) ** Rational(-7, 3) == -(-1)**Rational(2, 3)*3**Rational(2, 3)/27
+    assert (-3) ** Rational(-2, 3) == -(-1)**Rational(1, 3)*3**Rational(1, 3)/3
 
     assert S(1234).factors() == {617: 1, 2: 1}
     assert Rational(2*3, 3*5*7).factors() == {2: 1, 5: -1, 7: -1}
@@ -370,9 +370,9 @@ def test_powers_Rational():
     assert Rational(1,2)  ** Rational(1,2) == sqrt(2) / 2
     assert Rational(-4,7) ** Rational(1,2) == I * Rational(4,7) ** Rational(1,2)
     assert Rational(-3, 2)**Rational(-7, 3) == \
-           -4 * (-3) ** Rational(2, 3)*2 ** Rational(1, 3)/27
+           -4*(-1)**Rational(2, 3)*2**Rational(1, 3)*3**Rational(2, 3)/27
     assert Rational(-3, 2)**Rational(-2, 3) == \
-           -(-3) ** (S(1) / 3) * 2 ** (S(2) / 3) / 3
+           -(-1)**Rational(1, 3)*2**Rational(2, 3)*3**Rational(1, 3)/3
 
     # negative integer power and negative rational base
     assert Rational(-2, 3) ** Rational(-2, 1) == Rational(9, 4)

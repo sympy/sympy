@@ -146,13 +146,13 @@ def test_pow():
     assert (-2)**k == 2**k
     assert (-1)**k == 1
 
-@XFAIL
 def test_pow2():
-    # XXX These fail - they are maybe discutable,
-    # let's see SAGE and similar.
-    assert ((-x)**2)**Rational(1,3) == ((-x)**Rational(1,3))**2
-    assert (-x)**Rational(2,3) == x**Rational(2,3)
-    assert (-x)**Rational(5,7) == -x**Rational(5,7)
+    # x**(2*y) is always (x**y)**2 but is only (x**2)**y if
+    #                                  x.is_positive or y.is_integer
+    # let x = 1 to see why the following are not true.
+    assert ((-x)**2)**Rational(1,3) != ((-x)**Rational(1,3))**2
+    assert (-x)**Rational(2,3) != x**Rational(2,3)
+    assert (-x)**Rational(5,7) != -x**Rational(5,7)
 
 def test_pow_issue417():
     assert 4**Rational(1, 4) == 2**Rational(1, 2)
@@ -1093,3 +1093,8 @@ def test_make_args():
 
     assert Add.make_args((x+y)**z) == ((x+y)**z,)
     assert Mul.make_args((x+y)**z) == ((x+y)**z,)
+
+def test_issue2027():
+    assert (-2)**x*(-3)**x != 6**x
+    i = Symbol('i', integer=1)
+    assert (-2)**i*(-3)**i == 6**i
