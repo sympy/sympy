@@ -108,6 +108,9 @@ def test_solve_poly_inequalities_boolean():
     assert solve_poly_inequalities([Eq(x**2, 0), True]) == And(Eq(re(x), 0), Eq(im(x), 0))
     assert solve_poly_inequalities([Eq(x**2, 0), False]) == False
 
+def test_solve_poly_inequalities_assume():
+    assert solve_poly_inequalities([Le(x**2, 1), Assume(x, Q.real)]) == And(Le(-1, x), Le(x, 1))
+
 def test_solve_poly_inequalities_multivariate():
     assert solve_poly_inequalities([Ge(x**2, 1), Ge(y**2, 1)]) == \
         And(And(Or(Le(re(x), -1), Le(1, re(x))), Eq(im(x), 0)),
