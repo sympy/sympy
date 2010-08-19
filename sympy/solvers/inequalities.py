@@ -65,6 +65,12 @@ def solve_poly_inequalities(inequalities, relational=True):
     polys, exact = {}, {}
 
     for inequality in inequalities:
+        if isinstance(inequality, bool):
+            if inequality is False:
+                return False
+            else:
+                continue
+
         if inequality.is_Relational:
             expr, rel = inequality.lhs - inequality.rhs, inequality.rel_op
         else:
