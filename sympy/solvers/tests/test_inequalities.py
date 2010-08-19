@@ -104,6 +104,10 @@ def test_solve_poly_inequalities_complex():
     assert solve_poly_inequalities(Gt(x**2, 1.0), relational=True) == And(Or(Lt(re(x), -1.0), Lt(1.0, re(x))), cond)
     assert solve_poly_inequalities(Ne(x**2, 1.0), relational=True) == And(Or(Lt(re(x), -1.0), And(Lt(-1.0, re(x)), Lt(re(x), 1.0)), Lt(1.0, re(x))), cond)
 
+def test_solve_poly_inequalities_boolean():
+    assert solve_poly_inequalities([Eq(x**2, 0), True]) == And(Eq(re(x), 0), Eq(im(x), 0))
+    assert solve_poly_inequalities([Eq(x**2, 0), False]) == False
+
 def test_solve_poly_inequalities_multivariate():
     assert solve_poly_inequalities([Ge(x**2, 1), Ge(y**2, 1)]) == \
         And(And(Or(Le(re(x), -1), Le(1, re(x))), Eq(im(x), 0)),

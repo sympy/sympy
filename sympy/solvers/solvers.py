@@ -151,7 +151,7 @@ def solve(f, *symbols, **flags):
 
     relational = flags.get('relational', True)
 
-    if any(fi.is_Relational and not fi.is_Equality for fi in f):
+    if any(isinstance(fi, bool) or (fi.is_Relational and not fi.is_Equality) for fi in f):
         return solve_poly_inequalities(f, relational=relational)
 
     for i, fi in enumerate(f):
