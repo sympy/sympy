@@ -1,6 +1,6 @@
 """Tools for solving inequalities and systems of inequalities. """
 
-from sympy import S, Poly, Interval, And, Or, Eq, DomainError, ask, re, im
+from sympy import S, Poly, Interval, And, Or, Eq, DomainError, ask, re, im, Assume
 
 def solve_poly_inequality(poly, rel):
     """Solve a polynomial inequality with rational coefficients.  """
@@ -62,7 +62,7 @@ def solve_poly_inequalities(inequalities, relational=True):
     if not hasattr(inequalities, '__iter__'):
         inequalities = [inequalities]
 
-    polys, exact = {}, {}
+    polys, exact, assume = {}, {}, []
 
     for inequality in inequalities:
         if isinstance(inequality, bool):
@@ -70,6 +70,10 @@ def solve_poly_inequalities(inequalities, relational=True):
                 return False
             else:
                 continue
+
+        if isinstance(inequality, Assume):
+            assume.append(inequality)
+            continue
 
         if inequality.is_Relational:
             expr, rel = inequality.lhs - inequality.rhs, inequality.rel_op
@@ -132,7 +136,7 @@ def solve_poly_inequalities(inequalities, relational=True):
             intervals = [ Interval(i.left.evalf(), i.right.evalf(),
                 left_open=i.left_open, right_open=i.right_open) for i in intervals ]
 
-        real = ask(gen, 'real')
+        real = ask(gen, 'real', And(*assume))
 
         if relational or not real:
             def relationalize(gen):
