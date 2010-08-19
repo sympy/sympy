@@ -38,7 +38,7 @@ $(SPHINXBUILDpy):
 #	cd sphinx; wget http://pypi.python.org/packages/source/S/Sphinx/Sphinx-$(SPHINXVER).tar.gz;
 #	cd sphinx; tar xzf Sphinx-$(SPHINXVER).tar.gz
 
-html: $(SPHINXBUILDpy) spt-printable
+html: $(SPHINXBUILDpy)
 	mkdir -p src/.static
 	mkdir -p _build/html
 	mkdir -p _build/doctrees
