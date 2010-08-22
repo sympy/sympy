@@ -8,7 +8,7 @@ from singleton import S
 from expr import Expr, AtomicExpr
 from symbol import Symbol, Wild, symbols, var
 from numbers import Number, Real, Rational, Integer, NumberSymbol,\
-        RealNumber, igcd, ilcm, seterr
+        RealNumber, igcd, ilcm, seterr, E, I, nan, oo, pi, zoo
 from power import Pow, integer_nthroot
 from mul import Mul
 from add import Add
@@ -22,14 +22,9 @@ from sets import Set, Interval, Union, EmptySet
 from evalf import PrecisionExhausted, N
 from containers import Tuple
 
-# expose singletons like oo, I, etc.
+# expose singletons
 Catalan = S.Catalan
-E = S.Exp1
 EulerGamma = S.EulerGamma
 GoldenRatio = S.GoldenRatio
-I = S.ImaginaryUnit
-nan = S.NaN
-oo = S.Infinity
-pi= S.Pi
-zoo = S.ComplexInfinity
+
 

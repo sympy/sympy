@@ -1371,7 +1371,7 @@ class Infinity(Rational):
         return S.NaN
 
     __rmod__ = __mod__
-
+oo = S.Infinity
 
 class NegativeInfinity(Rational):
     __metaclass__ = SingletonMeta
@@ -1471,6 +1471,7 @@ class NaN(Rational):
     def _sage_(self):
         import sage.all as sage
         return sage.NaN
+nan = S.NaN
 
 class ComplexInfinity(AtomicExpr):
     __metaclass__ = SingletonMeta
@@ -1501,6 +1502,7 @@ class ComplexInfinity(AtomicExpr):
                     return S.ComplexInfinity
                 else:
                     return S.Zero
+zoo = S.ComplexInfinity
 
 class NumberSymbol(AtomicExpr):
     __metaclass__ = SingletonMeta
@@ -1610,6 +1612,7 @@ class Exp1(NumberSymbol):
     def _sage_(self):
         import sage.all as sage
         return sage.e
+E = S.Exp1
 
 class Pi(NumberSymbol):
 
@@ -1636,6 +1639,7 @@ class Pi(NumberSymbol):
     def _sage_(self):
         import sage.all as sage
         return sage.pi
+pi = S.Pi
 
 class GoldenRatio(NumberSymbol):
 
@@ -1762,7 +1766,7 @@ class ImaginaryUnit(AtomicExpr):
     def _sage_(self):
         import sage.all as sage
         return sage.I
-
+I = S.ImaginaryUnit
 
 def sympify_complex(a):
     real, imag = map(sympify, (a.real, a.imag))
