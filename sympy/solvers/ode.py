@@ -853,7 +853,7 @@ def odesimp(eq, func, order, hint):
     # everytime instead of an Equality.
     """
     if hint[:21] == "1st_homogeneous_coeff":
-        eq = logcombine(eq, assume_pos_real=True)
+        eq = logcombine(eq, force=True)
         if eq.lhs.is_Function and eq.lhs.func is log and eq.rhs == 0:
             eq = Eq(eq.lhs.args[0]/C1,C1)
     """
@@ -880,7 +880,7 @@ def odesimp(eq, func, order, hint):
             neweq = []
             for i in eq:
                 # Solutions from this hint can almost always be logcombined
-                newi = logcombine(i, assume_pos_real=True)
+                newi = logcombine(i, force=True)
                 if newi.lhs.is_Function and newi.lhs.func is log and newi.rhs == 0:
                     # log(C1*stuff) == 0 --> stuff == C1
                     # Note that this is a form of constant simplification.
@@ -1705,7 +1705,7 @@ def ode_1st_homogeneous_coeff_subs_dep_div_indep(eq, func, order, match):
     C1 = Symbol('C1')
     int = C.Integral((-r[r['e']]/(r[r['d']]+u1*r[r['e']])).subs({x:1, r['y']:u1}),
         (u1, None, f(x)/x))
-    sol = logcombine(Eq(log(x), int + log(C1)), assume_pos_real=True)
+    sol = logcombine(Eq(log(x), int + log(C1)), force=True)
     return sol
 
 def ode_1st_homogeneous_coeff_subs_indep_div_dep(eq, func, order, match):
@@ -1786,7 +1786,7 @@ def ode_1st_homogeneous_coeff_subs_indep_div_dep(eq, func, order, match):
     C1 = Symbol('C1')
     int = C.Integral((-r[r['d']]/(r[r['e']]+u2*r[r['d']])).subs({x:u2, r['y']:1}),
         (u2, None, x/f(x)))
-    sol = logcombine(Eq(log(f(x)), int + log(C1)), assume_pos_real=True)
+    sol = logcombine(Eq(log(f(x)), int + log(C1)), force=True)
     return sol
 
 # XXX: Should this function maybe go somewhere else?
@@ -1830,7 +1830,7 @@ def homogeneous_order(eq, *symbols):
 
     """
     if eq.has(log):
-        eq = logcombine(eq, assume_pos_real=True)
+        eq = logcombine(eq, force=True)
     return _homogeneous_order(eq, *symbols)
 
 def _homogeneous_order(eq, *symbols):

@@ -147,15 +147,43 @@ def test_subs_dict2():
     assert e.subs(r) == 3 * sin(4*x) / 4
 
 def test_mul():
-    x, y, z, a = map(Symbol, 'xyza')
-    assert (x*y*z).subs(z*x,y) == y**2
-    assert (z*x).subs(1/x,z) == z*x
-    assert (x*y/z).subs(1/z,a) == a*x*y
-    assert (x*y/z).subs(x/z,a) == a*y
-    assert (x*y/z).subs(y/z,a) == a*x
-    assert (x*y/z).subs(x/z,1/a) == y/a
-    assert (x*y/z).subs(x,1/a) == y/(z*a)
-    assert (2*x*y).subs(5*x*y,z) != 2*z/5
+    x, y, z, a, b, c = symbols('xyzabc')
+    A, B, C = symbols('A B C', commutative=0)
+    assert (x*y*z).subs(z*x, y) == y**2
+    assert (z*x).subs(1/x, z) == z*x
+    assert (x*y/z).subs(1/z, a) == a*x*y
+    assert (x*y/z).subs(x/z, a) == a*y
+    assert (x*y/z).subs(y/z, a) == a*x
+    assert (x*y/z).subs(x/z, 1/a) == y/a
+    assert (x*y/z).subs(x, 1/a) == y/(z*a)
+    assert (2*x*y).subs(5*x*y, z) != 2*z/5
+    assert (x*y*A).subs(x*y, a) == a*A
+    assert (x**2*y**(3*x/2)).subs(x*y**(x/2), 2) == 4*y**(x/2)
+    assert (x*exp(x*2)).subs(x*exp(x), 2) == 2*exp(x)
+    assert ((x**(2*y))**3).subs(x**y, 2) == 64
+    assert (x*A*B).subs(x*A, y) == y*B
+    assert (x*y*(1 + x)*(1 + x*y)).subs(x*y, 2) == 6*(1 + x)
+    assert ((1 + A*B)*A*B).subs(A*B, x*A*B)
+    assert (x*a/z).subs(x/z, A) == a*A
+    assert (x**3*A).subs(x**2*A, a) == a*x
+    assert (x**2*A*B).subs(x**2*B, a) == a*A
+    assert (x**2*A*B).subs(x**2*A, a) == a*B
+    assert (b*A**3/(a**3*c**3)).subs(a**4*c**3*A**3/b**4, z) == \
+            b*A**3/(a**3*c**3)
+    assert (6*x).subs(2*x, y) == 3*y
+    assert (y*exp(3*x/2)).subs(y*exp(x), 2) == 2*exp(x/2)
+    assert (y*exp(3*x/2)).subs(y*exp(x), 2) == 2*exp(x/2)
+    assert (A**2*B*A**2*B*A**2).subs(A*B*A, C) == \
+            A*C**2*A
+    assert (x*A**3).subs(x*A, y) == y*A**2
+    assert (x**2*A**3).subs(x*A, y) == y**2*A
+    assert (x*A**3).subs(x*A, B) == B*A**2
+    assert (x*A*B*A*exp(x*A*B)).subs(x*A, B) == B**2*A*exp(B*B)
+    assert (x**2*A*B*A*exp(x*A*B)).subs(x*A, B) == B**3*exp(B**2)
+    assert (x**3*A*exp(x*A*B)*A*exp(x*A*B)).subs(x*A, B) == \
+            x*B*exp(B**2)*B*exp(B**2)
+    assert (x*A*B*C*A*B).subs(x*A*B, C) == C**2*A*B
+    assert (-I*a*b).subs(a*b, 2) == -2*I
 
 def test_subs_simple():
     # Define symbols
@@ -281,7 +309,6 @@ def test_division():
     assert (   1/x**2 ).subs(x,z)  == 1/z**2
     assert (   1/x**2 ).subs(x,-2) == Rational(1,4)
     assert ( -(1/x**2)).subs(x,-2) == -Rational(1,4)
-
 
 def test_add():
     a, b, c, d, x = abc.a, abc.b, abc.c, abc.d, abc.x

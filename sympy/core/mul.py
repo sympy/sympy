@@ -1,4 +1,4 @@
-from basic import Basic, S
+from basic import Basic, S, C
 from operations import AssocOp
 from cache import cacheit
 from logic import fuzzy_not
@@ -823,130 +823,247 @@ class Mul(AssocOp):
             return False
 
     def _eval_subs(self, old, new):
-        # base cases
-        # simplest
+
+        from __builtin__ import min as pymin
+
+        from sympy import sign
+        from sympy.simplify.simplify import powdenest
+        from sympy.utilities.iterables import any
+
         if self == old:
             return new
-        # pass it off to its own class
-        if isinstance(old, FunctionClass):
-            return self.__class__(*[s._eval_subs(old, new) for s in self.args ])
 
-        # break up self and old into terms
-        coeff_self,terms_self = self.as_coeff_terms()
-        coeff_old,terms_old = old.as_coeff_terms()
+        def fallback():
+            """Return this value when partial subs has failed."""
 
-        # NEW - implementation of strict substitution
-        # if the coefficients are not the same, do not substitute.
-        # the only exception is if old has a coefficient of 1, then always to the sub.
-        if coeff_self != coeff_old and coeff_old != 1:
-            return self.__class__(*[s._eval_subs(old, new) for s in self.args])
+            return self.__class__(*[s._eval_subs(old, new) for s in
+                                  self.args])
 
-        # break up powers, i.e., x**2 -> x*x
-        def breakup(terms):
-            temp = []
-            for t in terms:
-                if isinstance(t,Pow) and isinstance(t.exp, Integer):
-                    if t.exp.is_positive:
-                        temp.extend([t.base]*int(t.exp))
-                    elif t.exp.is_negative:
-                        temp.extend([1/t.base]*int(abs(t.exp)))
-                else:
-                    temp.append(t)
-            return temp
-        terms_old = breakup(terms_old)
-        terms_self = breakup(terms_self)
+        def breakup(eq):
+            """break up powers assuming (not checking) that eq is a Mul:
+                   b**(Rational*e) -> b**e, Rational
+                commutatives come back as a dictionary {b**e: Rational}
+                noncommutatives come back as a list [(b**e, Rational)]
+            """
 
-        # break up old and self terms into commutative and noncommutative lists
-        comm_old = []; noncomm_old = []
-        comm_self = []; noncomm_self = []
-        for o in terms_old:
-            if o.is_commutative:
-                comm_old.append(o)
-            else:
-                noncomm_old.append(o)
-        for s in terms_self:
-            if s.is_commutative:
-                comm_self.append(s)
-            else:
-                noncomm_self.append(s)
-        comm_old_len, noncomm_old_len = len(comm_old), len(noncomm_old)
-        comm_self_len, noncomm_self_len = len(comm_self), len(noncomm_self)
-
-        # if the noncommutative part of the 'to-be-replaced' expression is
-        # smaller than the noncommutative part of the whole expression, scan
-        # to see if the whole thing is there
-        if noncomm_old_len <= noncomm_self_len and noncomm_old_len > 0:
-            for i in range(noncomm_self_len):
-                if noncomm_self[i] == noncomm_old[0]:
-                    for j in range(noncomm_old_len):
-                        # make sure each noncommutative term matches in order
-                        if (i+j) < noncomm_self_len and \
-                           noncomm_self[i+j] == noncomm_old[j]:
-                            # we only care once we've reached the end of old's
-                            # noncommutative part.
-                            if j == noncomm_old_len-1:
-                                # get rid of noncommutative terms and
-                                # substitute new expression into total
-                                # expression
-                                noncomms_final = noncomm_self[:i] + \
-                                                 noncomm_self[i+j+1:]
-                                noncomms_final.insert(i,new)
-
-                                myFlag = True
-                                comms_final = comm_self[:]
-                                # check commutative terms
-                                for ele in comm_old:
-                                    # flag to make sure all the commutative
-                                    # terms in old are in self
-                                    if ele not in comm_self:
-                                        myFlag = False
-                                    # collect commutative terms
-                                    else:
-                                        comms_final.remove(ele)
-
-                                # continue only if all commutative terms in
-                                # old are present
-                                if myFlag == True:
-                                    expr = comms_final+noncomms_final
-                                    return Mul(coeff_self/coeff_old,
-                                               Mul(*expr)._eval_subs(old,new))
-                                               #*[e._eval_subs(old,new) for e in expr])
-
-            return self.__class__(*[s._eval_subs(old, new) for s in self.args])
-
-        # but what if the noncommutative lists subexpression and the whole
-        # expression are both empty
-        elif noncomm_old_len == noncomm_self_len == 0:
-            # just check commutative parts then.
-            if comm_old_len > 0 and comm_old_len<=comm_self_len:
-                if comm_self == comm_old:
-                    return Mul(coeff_self/coeff_old*new)
-                myFlag = True
-                comms_final = comm_self[:]
-                # check commutative terms
-                for ele in comm_old:
-                    # flag to make sure all the commutative terms in old are
-                    # in self
-                    if ele not in comm_self:
-                        myFlag = False
-                    # collect commutative terms
+            (c, nc) = (dict(), list())
+            for (i, a) in enumerate(Mul.make_args(eq) or [eq]): # remove or [eq] after 2114 accepted
+                a = powdenest(a)
+                (b, e) = a.as_base_exp()
+                if not e is S.One:
+                    (co, _) = e.as_coeff_terms()
+                    b = Pow(b, e/co)
+                    e = co
+                if a.is_commutative:
+                    if b in c: # handle I and -1 like things where b, e for I is -1, 1/2
+                        c[b] += e
                     else:
-                        # needed if old has an element to an integer power
-                        if ele in comms_final:
-                            comms_final.remove(ele)
-                        else:
-                            myFlag = False
-
-                # continue only if all commutative terms in old are present
-                if myFlag == True:
-                    return Mul(coeff_self/coeff_old, new,
-                               Mul(*comms_final)._eval_subs(old,new))#*[c._eval_subs(old,new) for c in comms_final])
+                        c[b] = e
                 else:
-                    return self.__class__(*[s._eval_subs(old, new) for
-                                            s in self.args])
+                    nc.append([b, e])
+            return (c, nc)
 
-        # else the subexpression isn't in the totaly expression
-        return self.__class__(*[s._eval_subs(old, new) for s in self.args])
+        def rejoin(b, co):
+            """
+            Put rational back with exponent; in general this is not ok, but
+            since we took it from the exponent for analysis, it's ok to put
+            it back.
+            """
+
+            (b, e) = b.as_base_exp()
+            return Pow(b, e*co)
+
+        def ndiv(a, b):
+            """if b divides a in an extractive way (like 1/4 divides 1/2
+            but not vice versa, and 2/5 does not divide 1/3) then return
+            the integer number of times it divides, else return 0.
+            """
+
+            if not b.q % a.q or not a.q % b.q:
+                return int(a/b)
+            return 0
+
+        if not old.is_Mul:
+            return fallback()
+
+        # handle the leading coefficient and use it to decide if anything
+        # should even be started; we always know where to find the Rational
+        # so it's a quick test
+
+        coeff = S.One
+        co_self = self.args[0]
+        co_old = old.args[0]
+        if co_old.is_Rational and co_self.is_Rational:
+            co_xmul = co_self.extract_multiplicatively(co_old)
+        elif co_old.is_Rational:
+            co_xmul = None
+        else:
+            co_xmul = True
+
+        if not co_xmul:
+            return fallback()
+
+        (c, nc) = breakup(self)
+        (old_c, old_nc) = breakup(old)
+
+        # update the coefficients if we had an extraction
+
+        if getattr(co_xmul, 'is_Rational', False):
+            c.pop(co_self)
+            c[co_xmul] = S.One
+            old_c.pop(co_old)
+
+        # do quick tests to see if we can't succeed
+
+        ok = True
+        if (\
+            # more non-commutative terms
+            len(old_nc) > len(nc)):
+            ok = False
+        elif (\
+            # more commutative terms
+            len(old_c) > len(c)):
+            ok = False
+        elif (\
+            # unmatched non-commutative bases
+            set(_[0] for _ in  old_nc).difference(set(_[0] for _ in nc))):
+            ok = False
+        elif (\
+            # unmatched commutative terms
+            set(old_c).difference(set(c))):
+            ok = False
+        elif (\
+            # differences in sign
+            any(sign(c[b]) != sign(old_c[b]) for b in old_c)):
+            ok = False
+        if not ok:
+            return fallback()
+
+        if not old_c:
+            cdid = None
+        else:
+            rat = []
+            for (b, old_e) in old_c.items():
+                c_e = c[b]
+                rat.append(ndiv(c_e, old_e))
+            cdid = pymin(rat)
+
+        if not old_nc:
+            ncdid = None
+            for i in range(len(nc)):
+                nc[i] = rejoin(*nc[i])
+        else:
+            ncdid = 0  # number of nc replacements we did
+            take = len(old_nc)  # how much to look at each time
+            limit = cdid or S.Infinity  # max number to take
+            failed = []  # failed terms will need subs if other terms pass
+            i = 0
+            while limit and i + take <= len(nc):
+                hit = False
+
+                # the bases must be equivalent in succession, and
+                # the powers must be extractively compatible on the
+                # first and last factor but equal inbetween.
+
+                rat = []
+                for j in range(take):
+                    if nc[i + j][0] != old_nc[j][0]:
+                        break
+                    elif j == 0:
+                        rat.append(ndiv(nc[i + j][1], old_nc[j][1]))
+                    elif j == take - 1:
+                        rat.append(ndiv(nc[i + j][1], old_nc[j][1]))
+                    elif nc[i + j][1] != old_nc[j][1]:
+                        break
+                    else:
+                        rat.append(1)
+                    j += 1
+                else:
+                    ndo = pymin(rat)
+                    if ndo:
+                        if take == 1:
+                            if cdid:
+                                ndo = pymin(cdid, ndo)
+                            nc[i] = Pow(new, ndo)*rejoin(nc[i][0],
+                                    nc[i][1] - ndo*old_nc[0][1])
+                        else:
+                            ndo = 1
+
+                            # the left residual
+
+                            l = rejoin(nc[i][0], nc[i][1] - ndo*
+                                    old_nc[0][1])
+
+                            # eliminate all middle terms
+
+                            mid = new
+
+                            # the right residual (which may be the same as the middle if take == 2)
+
+                            ir = i + take - 1
+                            r = (nc[ir][0], nc[ir][1] - ndo*
+                                 old_nc[-1][1])
+                            if r[1]:
+                                if i + take < len(nc):
+                                    nc[i:i + take] = [l*mid, r]
+                                else:
+                                    r = rejoin(*r)
+                                    nc[i:i + take] = [l*mid*r]
+                            else:
+
+                                # there was nothing left on the right
+
+                                nc[i:i + take] = [l*mid]
+
+                        limit -= ndo
+                        ncdid += ndo
+                        hit = True
+                if not hit:
+
+                    # do the subs on this failing factor
+
+                    failed.append(i)
+                i += 1
+            else:
+
+                if not ncdid:
+                    return fallback()
+
+                # although we didn't fail, certain nc terms may have
+                # failed so we rebuild them after attempting a partial
+                # subs on them
+
+                failed.extend(range(i, len(nc)))
+                for i in failed:
+                    nc[i] = rejoin(*nc[i]).subs(old, new)
+
+        # rebuild the expression
+
+        if cdid is None:
+            do = ncdid
+        elif ncdid is None:
+            do = cdid
+        else:
+            do = pymin(ncdid, cdid)
+
+        margs = []
+        for b in c:
+            if b in old_c:
+
+                # calculate the new exponent
+
+                e = c[b] - old_c[b]*do
+                margs.append(rejoin(b, e))
+            else:
+                margs.append(rejoin(b.subs(old, new), c[b]))
+        if cdid and not ncdid:
+
+            # in case we are replacing commutative with non-commutative,
+            # we want the new term to come at the front just like the
+            # rest of this routine
+
+            margs = [Pow(new, cdid)] + margs
+        return Mul(*margs)*Mul(*nc)
 
     def _eval_nseries(self, x, x0, n):
         from sympy import powsimp
@@ -971,4 +1088,3 @@ from numbers import Real, Integer, Rational
 from function import FunctionClass
 from sympify import sympify
 from add import Add
-
