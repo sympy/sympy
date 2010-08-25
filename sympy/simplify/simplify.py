@@ -1065,6 +1065,240 @@ def radsimp(expr):
 
     return n/d
 
+def posify(eq):
+    """Return eq (with generic symbols made positive) and a restore dictionary.
+
+    Any symbol that has positive=None will be replaced with a positive dummy
+    symbol having the same name. This replacement will allow more symbolic
+    processing of expressions, especially those involving powers and logarithms.
+
+    A dictionary that can be sent to subs to restore eq to its original symbols
+    is also returned.
+
+    >>> from sympy import posify, Symbol, log
+    >>> from sympy.abc import x
+    >>> posify(x + Symbol('p', positive=True) + Symbol('n', negative=True))
+    (n + p + _x, {_x: x})
+
+    >> log(1/x).expand() # should be log(1/x) but it comes back as -log(x)
+    log(1/x)
+
+    >>> log(posify(1/x)[0]).expand() # take [0] and ignore replacements
+    -log(_x)
+    >>> eq, rep = posify(1/x)
+    >>> log(eq).expand().subs(rep)
+    -log(x)
+    >>> posify([x, 1 + x])
+    ([_x, 1 + _x], {_x: x})
+    """
+    eq = sympify(eq)
+    if type(eq) in (list, set, tuple):
+        f = type(eq)
+        eq = list(eq)
+        syms = set()
+        for e in eq:
+            syms = syms.union(e.atoms(C.Symbol))
+        reps = {}
+        for s in syms:
+            reps.update(dict((v, k) for k, v in posify(s)[1].items()))
+        for i, e in enumerate(eq):
+            eq[i] = e.subs(reps)
+        return f(eq), dict([(r,s) for s, r in reps.iteritems()])
+
+    reps = dict([(s, Symbol(s.name, dummy=True, positive=True))
+                 for s in eq.atoms(Symbol) if s.is_positive is None])
+    eq = eq.subs(reps)
+    return eq, dict([(r,s) for s, r in reps.iteritems()])
+
+def powdenest(eq, force=False):
+    """
+    Collect exponents on powers as assumptions allow.
+
+    Given (bb**be)**e, this can be simplified as follows:
+        o if bb is positive or e is an integer, bb**(be*e)
+        o if be has an integer in the denominatory, then
+          all integers from its numerator can be joined with e
+    Given a product of powers raised to a power, (bb1**be1 * bb2**be2...)**e,
+    simplification can be done as follows:
+        o if e is positive, the gcd of all bei can be joined with e;
+        o all non-negative bb can be separated from those that are negative
+          and their gcd can be joined with e; autosimplification already
+          handles this separation.
+        o integer factors from powers that have integers in the denominator
+          of the exponent can be removed from any term and the gcd of such
+          integers can be joined with e
+
+    Setting `force` to True will make symbols that are not explicitly
+    negative behave as though they are positive, resulting in more
+    denesting.
+
+    When there are sums of logs in exp() then a product of powers may be
+    obtained e.g. exp(3*(log(a) + 2*log(b))) - > a**3*b**6.
+
+    Examples:
+
+    >>> from sympy.abc import a, b, x, y, z
+    >>> from sympy import Symbol, exp, log, sqrt, symbols, powdenest
+
+    >>> powdenest((x**(2*a/3))**(3*x))
+    (x**(a/3))**(6*x)
+    >>> powdenest(exp(3*x*log(2)))
+    2**(3*x)
+
+    Assumptions may prevent expansion:
+
+    >> powdenest(sqrt(x**2))  # activate when log rules are fixed
+    (x**2)**(1/2)
+
+    >>> p = symbols('p', positive=True)
+    >>> powdenest(sqrt(p**2))
+    p
+
+    No other expansion is done.
+
+    >>> i, j = symbols('ij', integer=1)
+    >>> powdenest((x**x)**(i + j)) # -X-> (x**x)**i*(x**x)**j
+    x**(x*(i + j))
+
+    But exp() will be denested by moving all non-log terms outside of
+    the function; this may result in the collapsing of the exp to a power
+    with a different base:
+
+    >>> powdenest(exp(3*y*log(x)))
+    x**(3*y)
+    >>> powdenest(exp(y*(log(a) + log(b))))
+    (a*b)**y
+    >>> powdenest(exp(3*(log(a) + log(b))))
+    a**3*b**3
+
+    If assumptions allow, symbols can also be moved to the outermost exponent:
+
+    >>> i = Symbol('i', integer=True)
+    >>> p = Symbol('p', positive=True)
+    >>> powdenest(((x**(2*i))**(3*y))**x)
+    ((x**(2*i))**(3*y))**x
+    >>> powdenest(((x**(2*i))**(3*y))**x, force=1)
+    x**(6*i*x*y)
+
+    >> powdenest(((p**(2*a))**(3*y))**x)  # activate when log rules are fixed
+    p**(6*a*x*y)
+
+    >>> powdenest(((x**(2*a/3))**(3*y/i))**x)
+    ((x**(a/3))**(y/i))**(6*x)
+    >>> powdenest((x**(2*i)*y**(4*i))**z,1)
+    (x*y**2)**(2*i*z)
+
+    >>> n = Symbol('n', negative=1)
+
+    >> powdenest((x**i)**y, force=1)  # activate when log rules are fixed
+    x**(i*y)
+    >> powdenest((n**i)**x, force=1)  # activate when log rules are fixed
+    (n**i)**x
+
+    """
+
+    from sympy import terms_gcd
+
+    if force:
+        eq, rep = posify(eq)
+        return powdenest(eq, force=0).subs(rep)
+
+    eq = S(eq)
+    if eq.is_Atom:
+        return eq
+
+    # handle everything that is not a power
+    #   if subs would work then one could replace the following with
+    #      return eq.subs(dict([(p, powdenest(p)) for p in eq.atoms(Pow)]))
+    #   but subs expands (3**x)**2 to 3**x * 3**x so the 3**(5*x)
+    #   is not recognized; in addition, that would take 2 passes through
+    #   the expression (once to find Pows and again to replace them). The
+    #   following does it in one pass. Which is more important, efficiency
+    #   or simplicity? On the other hand, this only does a shallow replacement
+    #   and doesn't enter Integrals or functions, etc... so perhaps the subs
+    #   approach (or adding a deep flag) is the thing to do.
+    if not eq.is_Pow and not eq.func is exp:
+        args = list(Add.make_args(eq))
+        rebuild = False
+        for i, arg in enumerate(args):
+            margs = list(Mul.make_args(arg))
+            changed = False
+            for j, m in enumerate(margs):
+                if not m.is_Pow:
+                    continue
+                m = powdenest(m, force=force)
+                if m != margs[j]:
+                    changed = True
+                    margs[j] = m
+            if changed:
+                rebuild = True
+                args[i] = C.Mul(*margs)
+        if rebuild:
+            eq = eq.func(*args)
+        return eq
+
+    b, e = eq.as_base_exp()
+
+    # denest exp with log terms in exponent
+    if b is S.Exp1 and e.is_Mul:
+        logs = []
+        other = []
+        efunc = C.Mul
+        for ei in Mul.make_args(e):
+            if any(aj.func is C.log for a in Mul.make_args(ei)
+                   for ai in Add.make_args(a) for aj in Mul.make_args(ai)):
+                logs.append(ei)
+            else:
+                other.append(ei)
+        logs = logcombine(efunc(*logs), force=force)
+        return C.Pow(C.exp(logs), efunc(*other))
+
+    bb, be = b.as_base_exp()
+    if be is S.One and not (b.is_Mul or b.is_Rational):
+        return eq
+
+    # denest eq which is either Pow**e or Mul**e
+    if force or e.is_integer:
+        # replace all non-explicitly negative symbols with positive dummies
+        syms = eq.atoms(Symbol)
+        rep = [(s, C.Dummy(s.name, positive=True)) for s in syms if not s.is_negative]
+        sub = eq.subs(rep)
+    else:
+        rep = []
+        sub = eq
+
+    # if any factor is a bare symbol then there is nothing to be done
+    b, e = sub.as_base_exp()
+    if e is S.One or any(s.is_Symbol for s in Mul.make_args(b)):
+        return sub.subs([(new, old) for old, new in rep])
+    # let log handle the case of the base of the argument being a mul, e.g.
+    # sqrt(x**(2*i)*y**(6*i)) -> x**i*y**(3**i)
+    gcd = terms_gcd(log(b).expand(log=1))
+    if gcd.func is C.log or not gcd.is_Mul:
+        if hasattr(gcd.args[0], 'exp'):
+            gcd = powdenest(gcd.args[0])
+            c, _ = gcd.exp.as_coeff_mul()
+            ok = c.p != 1
+            if ok:
+                ok = c.q != 1
+                if not ok:
+                    n, d = gcd.exp.as_numer_denom()
+                    ok = d is not S.One and any(di.is_integer for di in Mul.make_args(d))
+            if ok:
+                return C.Pow(C.Pow(gcd.base, gcd.exp/c.p), c.p*e)
+        elif e.is_Mul:
+            return C.Pow(b, e).subs([(new, old) for old, new in rep])
+        return eq
+    else:
+        add= []
+        other = []
+        for g in gcd.args:
+            if g.is_Add:
+                add.append(g)
+            else:
+                other.append(g)
+        return powdenest(C.Pow(exp(logcombine(Mul(*add))), e*Mul(*other))).subs([(new, old) for old, new in rep])
+
 def powsimp(expr, deep=False, combine='all'):
     """
     == Usage ==
@@ -1455,7 +1689,7 @@ def nsimplify(expr, constants=[], tolerance=None, full=False, rational=False):
     return re + im*S.ImaginaryUnit
 
 
-def logcombine(expr, assume_pos_real=False):
+def logcombine(expr, force=False):
     """
     Takes logarithms and combines them using the following rules:
 
@@ -1464,7 +1698,7 @@ def logcombine(expr, assume_pos_real=False):
 
     These identities are only valid if x and y are positive and if a is real, so
     the function will not combine the terms unless the arguments have the proper
-    assumptions on them.  Use logcombine(func, assume_pos_real=True) to
+    assumptions on them.  Use logcombine(func, force=True) to
     automatically assume that the arguments of logs are positive and that
     coefficients are real.  Note that this will not change any assumptions
     already in place, so if the coefficient is imaginary or the argument
@@ -1476,7 +1710,7 @@ def logcombine(expr, assume_pos_real=False):
     >>> from sympy.abc import a, x, y, z
     >>> logcombine(a*log(x)+log(y)-log(z))
     -log(z) + a*log(x) + log(y)
-    >>> logcombine(a*log(x)+log(y)-log(z), assume_pos_real=True)
+    >>> logcombine(a*log(x)+log(y)-log(z), force=True)
     log(y*x**a/z)
     >>> x,y,z = symbols('xyz', positive=True)
     >>> a = Symbol('a', real=True)
@@ -1487,9 +1721,9 @@ def logcombine(expr, assume_pos_real=False):
     # Try to make (a+bi)*log(x) == a*log(x)+bi*log(x).  This needs to be a
     # separate function call to avoid infinite recursion.
     expr = expand_mul(expr, deep=False)
-    return _logcombine(expr, assume_pos_real)
+    return _logcombine(expr, force)
 
-def _logcombine(expr, assume_pos_real=False):
+def _logcombine(expr, force=False):
     """
     Does the main work for logcombine, it's a separate function to avoid an
     infinite recursion. See the docstrings of logcombine() for help.
@@ -1516,14 +1750,14 @@ def _logcombine(expr, assume_pos_real=False):
         return expr
 
     if isinstance(expr, Equality):
-        retval = Equality(_logcombine(expr.lhs-expr.rhs, assume_pos_real),\
+        retval = Equality(_logcombine(expr.lhs-expr.rhs, force),\
         Integer(0))
         # If logcombine couldn't do much with the equality, try to make it like
         # it was.  Hopefully extract_additively won't become smart enought to
         # take logs apart :)
         right = retval.lhs.extract_additively(expr.lhs)
         if right:
-            return Equality(expr.lhs, _logcombine(-right, assume_pos_real))
+            return Equality(expr.lhs, _logcombine(-right, force))
         else:
             return retval
 
@@ -1533,9 +1767,9 @@ def _logcombine(expr, assume_pos_real=False):
         coeflogs = 0
         for i in expr.args:
             if i.func is log:
-                if (i.args[0].is_positive or (assume_pos_real and not \
+                if (i.args[0].is_positive or (force and not \
                 i.args[0].is_nonpositive)):
-                    argslist *= _logcombine(i.args[0], assume_pos_real)
+                    argslist *= _logcombine(i.args[0], force)
                 else:
                     notlogs += i
             elif i.is_Mul and any(map(lambda t: getattr(t,'func', False)==log,\
@@ -1548,22 +1782,22 @@ def _logcombine(expr, assume_pos_real=False):
 
                 if  all(getattr(t,'is_positive') for t in largs)\
                     and getattr(i.extract_multiplicatively(loglargs),'is_real', False)\
-                    or (assume_pos_real\
+                    or (force\
                         and not all(getattr(t,'is_nonpositive') for t in largs)\
                         and not getattr(i.extract_multiplicatively(loglargs),\
                         'is_real')==False):
 
-                    coeflogs += _logcombine(i, assume_pos_real)
+                    coeflogs += _logcombine(i, force)
                 else:
                     notlogs += i
             elif i.has(log):
-                notlogs += _logcombine(i, assume_pos_real)
+                notlogs += _logcombine(i, force)
             else:
                 notlogs += i
         if notlogs + log(argslist) + coeflogs == expr:
             return expr
         else:
-            alllogs = _logcombine(log(argslist) + coeflogs, assume_pos_real)
+            alllogs = _logcombine(log(argslist) + coeflogs, force)
             return notlogs + alllogs
 
     if expr.is_Mul:
@@ -1575,26 +1809,26 @@ def _logcombine(expr, assume_pos_real=False):
                 or expr.is_Number\
                 or expr.is_NumberSymbol\
                 or type(coef[a]) in (int, float)\
-                or (assume_pos_real\
+                or (force\
                 and not coef[a].is_imaginary))\
             and (coef[a].func != log\
-                or assume_pos_real\
+                or force\
                 or (not getattr(coef[a],'is_real')==False\
                     and getattr(x, 'is_positive'))):
 
             return log(coef[x]**coef[a])
         else:
-            return _logcombine(expr.args[0], assume_pos_real)*reduce(lambda x, y:\
-             _logcombine(x, assume_pos_real)*_logcombine(y, assume_pos_real),\
+            return _logcombine(expr.args[0], force)*reduce(lambda x, y:\
+             _logcombine(x, force)*_logcombine(y, force),\
              expr.args[1:], 1)
 
     if expr.is_Function:
-        return apply(expr.func,map(lambda t: _logcombine(t, assume_pos_real)\
+        return apply(expr.func,map(lambda t: _logcombine(t, force)\
         , expr.args))
 
     if expr.is_Pow:
-        return _logcombine(expr.args[0], assume_pos_real)**\
-        _logcombine(expr.args[1], assume_pos_real)
+        return _logcombine(expr.args[0], force)**\
+        _logcombine(expr.args[1], force)
 
     return expr
 

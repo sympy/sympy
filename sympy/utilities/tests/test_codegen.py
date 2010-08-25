@@ -1035,7 +1035,7 @@ def test_inline_function():
             'REAL*8, intent(out), dimension(1:m) :: y\n'
             'INTEGER*4 :: i\n'
             'do i = 1, m\n'
-            '   y(i) = x(i)*(1 + x(i))\n'
+            '   y(i) = (1 + x(i))*x(i)\n'
             'end do\n'
             'end subroutine\n'
         )
