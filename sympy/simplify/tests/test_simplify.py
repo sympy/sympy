@@ -477,38 +477,38 @@ def test_logcombine_1():
     z, w = symbols("zw", positive=True)
     b = Symbol("b", real=True)
     assert logcombine(log(x)+2*log(y)) == log(x) + 2*log(y)
-    assert logcombine(log(x)+2*log(y), assume_pos_real=True) == log(x*y**2)
+    assert logcombine(log(x)+2*log(y), force=True) == log(x*y**2)
     assert logcombine(a*log(w)+log(z)) == a*log(w) + log(z)
     assert logcombine(b*log(z)+b*log(x)) == log(z**b) + b*log(x)
     assert logcombine(b*log(z)-log(w)) == log(z**b/w)
     assert logcombine(log(x)*log(z)) == log(x)*log(z)
     assert logcombine(log(w)*log(x)) == log(w)*log(x)
     assert logcombine(cos(-2*log(z)+b*log(w))) == cos(log(w**b/z**2))
-    assert logcombine(log(log(x)-log(y))-log(z), assume_pos_real=True) == \
+    assert logcombine(log(log(x)-log(y))-log(z), force=True) == \
         log(log((x/y)**(1/z)))
-    assert logcombine((2+I)*log(x), assume_pos_real=True) == I*log(x)+log(x**2)
-    assert logcombine((x**2+log(x)-log(y))/(x*y), assume_pos_real=True) == \
+    assert logcombine((2+I)*log(x), force=True) == I*log(x)+log(x**2)
+    assert logcombine((x**2+log(x)-log(y))/(x*y), force=True) == \
         log(x**(1/(x*y))*y**(-1/(x*y)))+x/y
-    assert logcombine(log(x)*2*log(y)+log(z), assume_pos_real=True) == \
+    assert logcombine(log(x)*2*log(y)+log(z), force=True) == \
         log(z*y**log(x**2))
     assert logcombine((x*y+sqrt(x**4+y**4)+log(x)-log(y))/(pi*x**Rational(2, 3)*\
-        y**Rational(3, 2)), assume_pos_real=True) == \
+        y**Rational(3, 2)), force=True) == \
         log(x**(1/(pi*x**Rational(2, 3)*y**Rational(3, 2)))*y**(-1/(pi*\
         x**Rational(2, 3)*y**Rational(3, 2)))) + (x**4 + y**4)**Rational(1, 2)/(pi*\
         x**Rational(2, 3)*y**Rational(3, 2)) + x**Rational(1, 3)/(pi*y**Rational(1, 2))
-    assert logcombine(Eq(log(x), -2*log(y)), assume_pos_real=True) == \
+    assert logcombine(Eq(log(x), -2*log(y)), force=True) == \
         Eq(log(x*y**2), Integer(0))
-    assert logcombine(Eq(y, x*acos(-log(x/y))), assume_pos_real=True) == \
+    assert logcombine(Eq(y, x*acos(-log(x/y))), force=True) == \
         Eq(y, x*acos(log(y/x)))
-    assert logcombine(gamma(-log(x/y))*acos(-log(x/y)), assume_pos_real=True) == \
+    assert logcombine(gamma(-log(x/y))*acos(-log(x/y)), force=True) == \
         acos(log(y/x))*gamma(log(y/x))
-    assert logcombine((2+3*I)*log(x), assume_pos_real=True) == \
+    assert logcombine((2+3*I)*log(x), force=True) == \
         log(x**2)+3*I*log(x)
-    assert logcombine(Eq(y, -log(x)), assume_pos_real=True) == Eq(y, log(1/x))
-    assert logcombine(Integral((sin(x**2)+cos(x**3))/x, x), assume_pos_real=True) == \
+    assert logcombine(Eq(y, -log(x)), force=True) == Eq(y, log(1/x))
+    assert logcombine(Integral((sin(x**2)+cos(x**3))/x, x), force=True) == \
         Integral((sin(x**2)+cos(x**3))/x, x)
     assert logcombine(Integral((sin(x**2)+cos(x**3))/x, x)+ (2+3*I)*log(x), \
-        assume_pos_real=True) == log(x**2)+3*I*log(x) + \
+        force=True) == log(x**2)+3*I*log(x) + \
         Integral((sin(x**2)+cos(x**3))/x, x)
 
 @XFAIL
@@ -517,7 +517,45 @@ def test_logcombine_2():
     # This fails because of a bug in matches.  See issue 1274.
     x, y = symbols("xy")
     assert logcombine((x*y+sqrt(x**4+y**4)+log(x)-log(y))/(pi*x**(2/3)*y**(3/2)), \
-        assume_pos_real=True) == log(x**(1/(pi*x**(2/3)*y**(3/2)))*y**(-1/\
+        force=True) == log(x**(1/(pi*x**(2/3)*y**(3/2)))*y**(-1/\
         (pi*x**(2/3)*y**(3/2)))) + (x**4 + y**4)**(1/2)/(pi*x**(2/3)*y**(3/2)) + \
         x**(1/3)/(pi*y**(1/2))
 
+def test_posify():
+    from sympy import posify, Symbol, log
+    from sympy.abc import x
+
+    assert str(posify(
+        x +
+        Symbol('p', positive=True) +
+        Symbol('n', negative=True))) == '(n + p + _x, {_x: x})'
+
+    # log(1/x).expand() should be log(1/x) but it comes back as -log(x)
+    # when it is corrected, posify will allow the change to be made:
+    eq, rep = posify(1/x)
+    assert log(eq).expand().subs(rep) == -log(x)
+    assert str(posify([x, 1 + x])) == '([_x, 1 + _x], {_x: x})'
+
+def test_powdenest():
+    from sympy import powdenest
+    from sympy.abc import x, y, z, a, b
+    assert powdenest(x) == x
+    assert powdenest(x + 2*(x**(2*a/3))**(3*x)) == x + 2*(x**(a/3))**(6*x)
+    assert powdenest((exp(2*a/3))**(3*x)) == (exp(a/3))**(6*x)
+    assert powdenest((x**(2*a/3))**(3*x)) == (x**(a/3))**(6*x)
+    assert powdenest(exp(3*x*log(2))) == 2**(3*x)
+    p = symbols('p', positive=True)
+    assert powdenest(sqrt(p**2)) == p
+    i, j = symbols('ij', integer=1)
+    assert powdenest((x**x)**(i + j)) # -X-> (x**x)**i*(x**x)**j == x**(x*(i + j))
+    assert powdenest(exp(3*y*log(x))) == x**(3*y)
+    assert powdenest(exp(y*(log(a) + log(b)))) == (a*b)**y
+    assert powdenest(exp(3*(log(a) + log(b)))) == a**3*b**3
+    i = Symbol('i', integer=True)
+    p = Symbol('p', positive=True)
+    assert powdenest(((x**(2*i))**(3*y))**x) == ((x**(2*i))**(3*y))**x
+    assert powdenest(((x**(2*i))**(3*y))**x, force=1) == x**(6*i*x*y)
+    assert powdenest(((x**(2*a/3))**(3*y/i))**x) == ((x**(a/3))**(y/i))**(6*x)
+    assert powdenest((x**(2*i)*y**(4*i))**z,1) == (x*y**2)**(2*i*z)
+    assert powdenest((((x**2*y**4)**a)**(x*y))**3) == (x**2*y**4)**(3*a*x*y)
+    assert powdenest((((x**2*y**4)**a)**(x*y)), force=1) == (x**2*y**4)**(a*x*y)
