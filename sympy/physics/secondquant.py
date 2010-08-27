@@ -11,8 +11,8 @@ from sympy import (
 )
 
 from sympy.utilities import iff
+from sympy.core.sympify import sympify
 from sympy.core.cache import cacheit
-from sympy.core.containers import tuple_wrapper
 
 
 __all__ = [
@@ -140,63 +140,63 @@ class Dagger(Expr):
         return self.args[0]
 
 
-class TensorSymbol(Function):
+class TensorSymbol(Expr):
 
     is_commutative = True
 
 
 class AntiSymmetricTensor(TensorSymbol):
+    """Stores upper and lower indices in separate Tuple's.
+
+    Each group of indices is assumed to be antisymmetric.
+
+    Examples:
+
+    >>> from sympy import symbols
+    >>> from sympy.physics.secondquant import AntiSymmetricTensor
+    >>> i, j = symbols('i j', below_fermi=True)
+    >>> a, b = symbols('a b', above_fermi=True)
+    >>> AntiSymmetricTensor('t', (a, b), (i, j))
+    AntiSymmetricTensor(t, Tuple(a, b), Tuple(i, j))
+    >>> AntiSymmetricTensor('t', (b, a), (i, j))
+    -AntiSymmetricTensor(t, Tuple(a, b), Tuple(i, j))
+    >>> -AntiSymmetricTensor('t', (b, a), (i, j))
+    AntiSymmetricTensor(t, Tuple(a, b), Tuple(i, j))
+
+    As you can see, the eval() method is automatically called.
+
+    """
 
     nargs = 3
 
-    @tuple_wrapper
     def __new__(cls, symbol, upper, lower):
-        return TensorSymbol.__new__(cls, symbol, upper, lower)
 
-    @classmethod
-    def eval(cls, symbol, upper, lower):
-        """
-        Simplifies the tensor.
-
-        Upper and lower are tuples with indices.
-
-        Examples:
-
-        >>> from sympy import symbols
-        >>> from sympy.physics.secondquant import AntiSymmetricTensor
-        >>> i, j = symbols('i j', below_fermi=True)
-        >>> a, b = symbols('a b', above_fermi=True)
-        >>> AntiSymmetricTensor('t', (a, b), (i, j))
-        AntiSymmetricTensor(t, Tuple(a, b), Tuple(i, j))
-        >>> AntiSymmetricTensor('t', (b, a), (i, j))
-        -AntiSymmetricTensor(t, Tuple(a, b), Tuple(i, j))
-        >>> -AntiSymmetricTensor('t', (b, a), (i, j))
-        AntiSymmetricTensor(t, Tuple(a, b), Tuple(i, j))
-
-        As you can see, the eval() method is automatically called.
-
-        """
         try:
-            upper,sign = _sort_anticommuting_fermions(upper)
-            if sign%2:
-                upper = tuple(upper)
-                return -cls(symbol,upper,lower)
-            if sign:
-                upper = tuple(upper)
-                return cls(symbol,upper,lower)
-
-            lower,sign = _sort_anticommuting_fermions(lower)
-            if sign%2:
-                upper = tuple(upper)
-                lower = tuple(lower)
-                return -cls(symbol,upper,lower)
-            if sign:
-                upper = tuple(upper)
-                lower = tuple(lower)
-                return cls(symbol,upper,lower)
+            upper, signu = _sort_anticommuting_fermions(upper)
+            lower, signl = _sort_anticommuting_fermions(lower)
+            sign = 1
+            if signu:
+                upper = Tuple(*upper)
+                if signu %2:
+                    sign = -sign
+            if signl:
+                lower = Tuple(*lower)
+                if signl %2:
+                    sign = -sign
+            if signl or signu:
+                return sign*cls(symbol, upper, lower)
 
         except ViolationOfPauliPrinciple:
             return S.Zero
+
+        symbol = sympify(symbol)
+        upper = Tuple(*upper)
+        lower = Tuple(*lower)
+
+        if (signu + signl) % 2:
+            return -TensorSymbol.__new__(cls, symbol, upper, lower)
+        else:
+            return  TensorSymbol.__new__(cls, symbol, upper, lower)
 
     def _latex(self,printer):
         return "%s^{%s}_{%s}" %(
