@@ -468,6 +468,9 @@ def test_Tensors():
     assert tabij.subs(b,c) == AT('t',(a,c),(i,j))
     assert (2*tabij).subs(i,c) == 2*AT('t',(a,b),(c,j))
 
+    assert AT('t', (a, a), (i, j)).subs(a, b) == AT('t', (b, b), (i, j))
+    assert AT('t', (a, i), (a, j)).subs(a, b) == AT('t', (b, i), (b, j))
+
 
 def test_fully_contracted():
     i,j,k,l = symbols('ijkl',below_fermi=True)
