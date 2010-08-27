@@ -269,18 +269,6 @@ class AntiSymmetricTensor(TensorSymbol):
     def doit(self, **kw_args):
         return self
 
-    def _eval_subs(self, old, new):
-        if old == self:
-            return new
-        if old in self.upper:
-            return self.__class__(self.symbol,
-                    self.args[1]._eval_subs(old,new),self.args[2])
-        if old in self.lower:
-            return self.__class__(self.symbol,
-                    self.args[1], self.args[2]._eval_subs(old,new))
-        return self
-
-
 
 class KroneckerDelta(Function):
     """
