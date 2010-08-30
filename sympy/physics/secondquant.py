@@ -14,6 +14,7 @@ from sympy.utilities import iff
 from sympy.core.sympify import sympify
 from sympy.core.cache import cacheit
 from sympy.core.symbol import Dummy
+from sympy.printing.str import StrPrinter
 
 __all__ = [
     'Dagger',
@@ -2357,131 +2358,8 @@ def evaluate_deltas(e):
     else:
         return e
 
-def _get_dummies(expr, arg_iterator, **require):
-    """
-    Collects dummies recursively in predictable order as defined by arg_iterator.
 
-    FIXME: A more sophisticated predictable order would work better.
-    Current implementation does not always work if factors commute. Since
-    commuting factors are sorted also by dummy indices, it may happen that
-    all terms have exactly the same index order, so that no term will
-    obtain a substitution of dummies.
-
-    """
-    result = []
-    for arg in arg_iterator(expr.args):
-        try:
-            if arg.dummy_index:
-                # here we check that the dummy matches requirements
-                for key,val in require.items():
-                    if val != arg.assumptions0.get(key, False):
-                        break
-                else:
-                    result.append(arg)
-        except AttributeError:
-            try:
-                if arg.args:
-                    result.extend(_get_dummies(arg, arg_iterator, **require))
-            except AttributeError:
-                pass
-    return result
-
-def _remove_duplicates(list):
-    """
-    Returns list of unique dummies.
-
-    """
-    result = []
-    while list:
-        i = list.pop()
-        if i in result:
-            pass
-        else:
-            result.append(i)
-    result.reverse()
-    return result
-
-def _get_subslist(chaos,order):
-    """
-    Return list of subs needed to bring list chaos into list order.
-
-    If len(chaos) < len(order), we want chaos to match start of order,
-    thus, chaos might end up with different elements than upon entry.
-
-    If chaos has elements not present in order, we append them to order
-    so that we have a canonical ordering of all elements present in
-    the expression.
-    """
-    for el in chaos:
-        if not el in order:
-            order.append(el)
-
-    subslist = []
-    for i in xrange(len(chaos)):
-        if chaos[i] == order[i]:
-            continue
-        else:
-            if not order[i] in chaos[i:]:
-                subslist.append((chaos[i],order[i]))
-            else:
-                tmp = Symbol('x',dummy=True)
-                subslist.append((order[i], tmp))
-                subslist.append((chaos[i], order[i]))
-
-                ind = chaos.index(order[i])
-                chaos.pop(ind)
-                chaos.insert(ind,tmp)
-
-    return subslist
-
-def _substitute(expr, ordered_dummies, arg_iterator, **require):
-    """
-    Substitute dummies in expr
-
-    If keyword arguments are given, those dummies that have an identical
-    keyword in .assumptions0 must provide the same value (True or False)
-    to be substituted.
-
-    Dummies without the keyword in .assumptions0 will be default to
-    give the value False.
-
-    Warning
-    =======
-
-    Apart from checking the keyword requirements, nothing is done to prevent
-    loss of information during substitution.
-
-
-    Examples
-    ========
-
-    >>> from sympy import Symbol
-    >>> from sympy.physics.secondquant import substitute_dummies, _substitute,F
-    >>> q = Symbol('q', dummy=True)
-    >>> i = Symbol('i', below_fermi=True, dummy=True)
-    >>> a = Symbol('a', above_fermi=True, dummy=True)
-    >>> reverse = lambda x: reversed(x)
-
-    >>> _substitute(F(a), [q], reverse, above_fermi=True)   # will succeed
-    AnnihilateFermion(_q)
-    >>> _substitute(F(i), [q], reverse, above_fermi=True)   # will not succeed
-    AnnihilateFermion(_i)
-    >>> _substitute(F(i), [q], reverse, above_fermi=False)  # will succeed
-    AnnihilateFermion(_q)
-
-    With no keywords, all dummies are substituted.
-
-    >>> _substitute(F(i), [q], reverse)   # will succeed
-    AnnihilateFermion(_q)
-    """
-
-    dummies = _remove_duplicates(_get_dummies(expr, arg_iterator, **require))
-    subslist = _get_subslist(dummies, ordered_dummies)
-    result =  expr.subs(subslist)
-    return result
-
-
-def substitute_dummies(expr, new_indices=False, reverse_order=True, pretty_indices={}):
+def substitute_dummies(expr, new_indices=False, pretty_indices={}):
     """
     Collect terms by substitution of dummy variables.
 
@@ -2489,12 +2367,14 @@ def substitute_dummies(expr, new_indices=False, reverse_order=True, pretty_indic
     which differ only due to dummy variables.
 
     The idea is to substitute all dummy variables consistently depending on
-    position in the term.  For each term, we collect a sequence of all dummy
-    variables, where the order is determined by index position.  These indices
-    are then substituted consistently in each term.
+    the structure of the term.  For each term, we obtain a sequence of all
+    dummy variables, where the order is determined by the index range, what
+    factors the index belongs to and its position in each factor.  See
+    _get_ordered_dummies() for more inforation about the sorting of dummies.
+    The index sequence is then substituted consistently in each term.
 
     Examples
-    ========
+    --------
 
     >>> from sympy import symbols, Function
     >>> from sympy.physics.secondquant import substitute_dummies
@@ -2508,27 +2388,17 @@ def substitute_dummies(expr, new_indices=False, reverse_order=True, pretty_indic
     Since a, b, c and d are equivalent summation indices, the expression can be
     simplified to a single term (for which the dummy indices are still summed over)
 
-    >>> substitute_dummies(expr, reverse_order=False)
+    >>> substitute_dummies(expr)
     2*f(_a, _b)
 
-    In order to simplify as much as possible, the indices related to
-    non-commuting factors have highest priority when approaching canonical
-    indexing.  This is done by giving highest priority to the rightmost
-    dummy indices in each term.  (reverse_order=True by default)  The default
-    substitution gives:
-
-    >>> substitute_dummies(expr, reverse_order=True)
-    2*f(_b, _a)
 
     Controlling output
-    ==================
+    ------------------
 
     By default the dummy symbols that are already present in the expression
-    will be reused.  However, if new_indices=True, new dummies will be
-    generated and inserted.
-
-    The keyword 'pretty_indices' can be used to control this generation of new
-    symbols.
+    will be reused in a different permuation.  However, if new_indices=True,
+    new dummies will be generated and inserted.  The keyword 'pretty_indices'
+    can be used to control this generation of new symbols.
 
     By default the new dummies will be generated on the form i_1, i_2, a_1,
     etc.  If you supply a dictionary with key:value pairs in the form:
@@ -2541,7 +2411,7 @@ def substitute_dummies(expr, new_indices=False, reverse_order=True, pretty_indic
     >>> expr = f(a,b,i,j)
     >>> my_dummies = { 'above':'st','below':'uv' }
     >>> substitute_dummies(expr, new_indices=True, pretty_indices=my_dummies)
-    f(_t, _s, _v, _u)
+    f(_s, _t, _u, _v)
 
     If we run out of letters, or if there is no keyword for some index_group
     the default dummy generator will be used as a fallback:
@@ -2549,7 +2419,7 @@ def substitute_dummies(expr, new_indices=False, reverse_order=True, pretty_indic
     >>> p,q = symbols('pq',dummy=True)  # general indices
     >>> expr = f(p,q)
     >>> substitute_dummies(expr, new_indices=True, pretty_indices=my_dummies)
-    f(_p_1, _p_0)
+    f(_p_0, _p_1)
 
     """
 
@@ -2582,28 +2452,15 @@ def substitute_dummies(expr, new_indices=False, reverse_order=True, pretty_indic
 
 
 
-    # reverse iterator for use in _get_dummies()
-    if reverse_order:
-        def arg_iterator(seq):
-            i=len(seq)
-            while i>0:
-                i += -1
-                yield seq[i]
-    else:
-        def arg_iterator(seq):
-            for i in xrange(len(seq)):
-                yield seq[i]
 
-
-    expr = expr.expand()
 
     aboves = []
     belows = []
     generals = []
 
-    Dummy = type(Symbol('x',dummy=True))
-    dummies = [ d for d in expr.atoms() if isinstance(d,Dummy) ]
-    dummies.sort()
+    dummies = expr.atoms(Dummy)
+    if not new_indices:
+        dummies = sorted(dummies)
 
     # generate lists with the dummies we will insert
     a = i = p = 0
@@ -2627,21 +2484,276 @@ def substitute_dummies(expr, new_indices=False, reverse_order=True, pretty_indic
             l1.append(d)
 
 
-    cases = (
-            ({'above_fermi':True}, aboves),
-            ({'below_fermi':True}, belows),
-            ({'below_fermi':False,'above_fermi':False},generals)
-            )
+    expr = expr.expand()
+    if isinstance(expr,Add):
+        terms = expr.args
+    else:
+        terms = [expr]
+    new_terms = []
+    for term in terms:
+        i = iter(belows)
+        a = iter(aboves)
+        p = iter(generals)
+        ordered  = _get_ordered_dummies(term)
+        subsdict = {}
+        for d in ordered:
+            if d.assumptions0.get('below_fermi'):
+                subsdict[d] = i.next()
+            elif d.assumptions0.get('above_fermi'):
+                subsdict[d] = a.next()
+            else:
+                subsdict[d] = p.next()
+        subslist = []
+        final_subs = []
+        for k,v in subsdict.iteritems():
+            if k == v: continue
+            if v in subsdict:
+                if subsdict[v] in subsdict:
+                    # (x, y) -> (y, x),  we need a temporary variable
+                    x = Symbol('x', dummy=True)
+                    subslist.append((k, x))
+                    final_subs.append((x, v))
+                else:
+                    # (x, y) -> (y, a),  x->y must be done last
+                    # but before temporary variables are resolved
+                    final_subs.insert(0, (k, v))
+            else:
+                subslist.append((k, v))
+        subslist.extend(final_subs)
+        new_terms.append(term.subs(subslist))
+    return Add(*new_terms)
+
+class KeyPrinter(StrPrinter):
+    """Printer for which only equal objects are equal in print"""
+    def _print_Dummy(self, expr):
+        return "(%s_%i)" % (expr.name, expr.dummy_index)
+
+def __kprint(expr):
+    p = KeyPrinter()
+    return p.doprint(expr)
+
+def _get_ordered_dummies(mul, verbose = False):
+    """Returns all dummies in the mul sorted in canonical order
+
+    The purpose of the canonical ordering is that dummies can be substituted
+    consistently accross terms with the result that equivalent terms can be
+    simplified.
+
+    It is not possible to determine if two terms are equivalent based solely on
+    the dummy order.  However, a consistent substitution guided by the ordered
+    dummies should lead to trivially (non-)equivalent terms, thereby revealing
+    the equivalence.  This also means that if two terms have identical sequences of
+    dummies, the (non-)equivalence should already be apparent.
+
+    Strategy
+    --------
+
+    The canoncial order is given by an arbitrary sorting rule.  A sort key
+    is determined for each dummy as a tuple that depends on all factors where
+    the index is present.  The dummies are thereby sorted according to the
+    contraction structure of the term, instead of sorting based solely on the
+    dummy symbol itself.
+
+    After all dummies in the term has been assigned a key, we check for identical
+    keys, i.e. unorderable dummies.  If any are found, we call a specialized
+    method, _determine_ambiguous(), that will determine a unique order based
+    on recursive calls to _get_ordered_dummies().
+
+    Key description
+    ---------------
+
+    A high level description of the sort key:
+
+        1. Range of the dummy index
+        2. Relation to external (non-dummy) indices
+        3. Position of the index in the first factor
+        4. Position of the index in the second factor
+
+    The sort key is a tuple contaning the following components:
+
+        1. A single character indicating the range of the dummy (above, below
+           or general.)
+        2. A list of strings with fully masked string representations of all
+           factors where the dummy is present.  By masked, we mean that dummies
+           are represented by a symbol to indicate either below fermi, above or
+           general.  No other information is displayed about the dummies at
+           this point.  The list is sorted stringwise.
+        3. An integer number indicating the position of the index, in the first
+           factor as sorted in 2.
+        4. An integer number indicating the position of the index, in the second
+           factor as sorted in 2.
+
+    If a factor is either of type AntiSymmetricTensor or SqOperator, the index
+    position in items 3 and 4 is indicated as 'upper' or 'lower' only.
+    (Creation operators are considered upper and annihilation operators lower.)
+
+    If the masked factors are identical, the two factors cannot be ordered
+    unambiguously in item 2.  In this case, items 3, 4 are left out.  If several
+    indices are contracted between the unorderable factors, it will be handled by
+    _determine_ambiguous()
 
 
-    for req, dummylist in cases:
-        if isinstance(expr,Add):
-            expr = (Add(*[_substitute(term, dummylist, arg_iterator, **req) for term in expr.args]))
+    """
+    # setup dicts to avoid repeated calculations in key()
+    if not isinstance(mul, Mul):
+        fac_dum = {mul: mul.atoms(Dummy)}
+        fac_repr = {mul: __kprint(mul)}
+    else:
+        fac_dum = dict([ (fac, fac.atoms(Dummy)) for fac in mul.args] )
+        fac_repr = dict([ (fac, __kprint(fac)) for fac in mul.args] )
+    all_dums = list(reduce(lambda x, y: x | y, [ fac_dum[fac] for fac in fac_dum ]))
+    mask = {}
+    for d in all_dums:
+        if d.assumptions0.get('below_fermi'):
+            mask[d] = '0'
+        elif d.assumptions0.get('above_fermi'):
+            mask[d] = '1'
         else:
-            expr = _substitute(expr, dummylist, arg_iterator, **req)
+            mask[d] = '2'
+    dum_repr = dict([ (d, __kprint(d)) for d in all_dums ])
 
+    def key(d):
+        dumstruct = [ fac for fac in fac_dum if d in fac_dum[fac] ]
+        other_dums = reduce(lambda x, y: x | y,
+                [ fac_dum[fac] for fac in dumstruct ])
+        if other_dums is fac_dum[fac]:
+            other_dums = fac_dum[fac].copy()
+        other_dums.remove(d)
+        masked_facs = [ fac_repr[fac] for fac in dumstruct ]
+        for d2 in other_dums:
+            masked_facs = [ fac.replace(dum_repr[d2], mask[d2])
+                    for fac in masked_facs ]
+        all_masked = [ fac.replace(dum_repr[d], mask[d]) for fac in masked_facs ]
+        masked_facs = dict(zip(dumstruct, masked_facs))
 
-    return expr
+        # dummies for which the ordering cannot be determined
+        if len(set(all_masked)) < len(all_masked):
+            all_masked.sort()
+            return mask[d], tuple(all_masked) # positions are ambiguous
+
+        # sort factors according to fully masked strings
+        keydict = dict(zip(dumstruct, all_masked))
+        dumstruct.sort(key=lambda x: keydict[x])
+        all_masked.sort()
+
+        pos_val = []
+        for fac in dumstruct:
+            if isinstance(fac,AntiSymmetricTensor):
+                if d in fac.upper:
+                    pos_val.append('u')
+                if d in fac.lower:
+                    pos_val.append('l')
+            elif isinstance(fac, Creator):
+                pos_val.append('u')
+            elif isinstance(fac, Annihilator):
+                pos_val.append('l')
+            elif isinstance(fac, NO):
+                ops = [ op for op in fac.args if op.has(d) ]
+                for op in ops:
+                    if isinstance(op, Creator):
+                        pos_val.append('u')
+                    else:
+                        pos_val.append('l')
+            else:
+                # fallback to position in string representation
+                facpos = -1
+                while 1:
+                    facpos = masked_facs[fac].find(dum_repr[d], facpos+1)
+                    if facpos == -1:
+                        break
+                    pos_val.append(facpos)
+        return (mask[d], tuple(all_masked), pos_val[0], pos_val[-1])
+    dumkey = dict(zip(all_dums, map(key, all_dums)))
+    result = sorted(all_dums, key=lambda x: dumkey[x])
+    if len(set(dumkey.itervalues())) < len(dumkey):
+        # We have ambiguities
+        unordered = {}
+        for d, k in dumkey.iteritems():
+            if k in unordered:
+                unordered[k].add(d)
+            else:
+                unordered[k] = set([d])
+        for k in [ k for k in unordered if len(unordered[k]) < 2 ]:
+            del unordered[k]
+
+        unordered = [ unordered[k] for k in sorted(unordered) ]
+        result = _determine_ambiguous(mul, result, unordered)
+    return result
+
+def _determine_ambiguous(term, ordered, ambiguous_groups):
+    # We encountered a term for which the dummy substitution is ambiguous.
+    # This happens for terms with 2 or more contractions between factors that
+    # cannot be uniquely ordered independent of summation indices.  For
+    # example:
+    #
+    # Sum(p, q) v^{p, .}_{q, .}v^{q, .}_{p, .}
+    #
+    # Assuming that the indices represented by . are dummies with the
+    # same range, the factors cannot be ordered, and there is no
+    # way to determine a consistent ordering of p and q.
+    #
+    # The strategy employed here, is to relabel all unambiguous dummies with
+    # non-dummy symbols and call _get_ordered_dummies again.  This procedure is
+    # applied to the entire term so there is a possibility that
+    # _determine_ambiguous() is called again from a deeper recursion level.
+
+    # break recursion if there are no ordered dummies
+    all_ambiguous = set()
+    for dummies in ambiguous_groups:
+        all_ambiguous |= dummies
+    all_ordered = set(ordered) - all_ambiguous
+    if not all_ordered:
+        # FIXME: If we arrive here, there are no ordered dummies. A method to
+        # handle this needs to be implemented.  In order to return something
+        # useful nevertheless, we choose arbitrarily the first dummy and
+        # determine the rest from this one.  This method is dependent on the
+        # actual dummy labels which violates an assumption for the canonization
+        # procedure.  A better implementation is needed.
+        group = [ d for d in ordered if d in ambiguous_groups[0] ]
+        d = group[0]
+        all_ordered.add(d)
+        ambiguous_groups[0].remove(d)
+
+    stored_counter = __symbol_factory.counter
+    subslist = []
+    for d in [ d for d in ordered if d in all_ordered ]:
+        nondum = __symbol_factory.next()
+        subslist.append((d, nondum))
+    newterm = term.subs(subslist)
+    neworder = _get_ordered_dummies(newterm)
+    __symbol_factory.set_counter(stored_counter)
+
+    # update ordered list with new information
+    for group in ambiguous_groups:
+        ordered_group = [ d for d in neworder if d in group ]
+        ordered_group.reverse()
+        result = []
+        for d in ordered:
+            if d in group:
+                result.append(ordered_group.pop())
+            else:
+                result.append(d)
+        ordered = result
+    return ordered
+
+class _SymbolFactory:
+    def __init__(self, label):
+        self._counter = 0
+        self._label = label
+
+    def set_counter(self, value):
+        self._counter = value
+
+    @property
+    def counter(self):
+        return self._counter
+
+    def next(self):
+        s = Symbol("%s%i" % (self._label, self._counter))
+        self._counter += 1
+        return s
+__symbol_factory = _SymbolFactory('_]"]_') # most certainly a unique label
+
 
 @cacheit
 def _get_contractions(string1, keep_only_fully_contracted=False):
