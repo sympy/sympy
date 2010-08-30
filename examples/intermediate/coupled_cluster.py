@@ -52,35 +52,39 @@ def main():
     v = AntiSymmetricTensor('v',(p,q),(r,s))
     pqsr = NO(Fd(p)*Fd(q)*F(s)*F(r))
 
-    H=f*pr
-
-    # Uncomment the next line to use a 2-body hamiltonian:
-    # H=f*pr + Number(1,4)*v*pqsr
-
+    H=f*pr + Number(1,4)*v*pqsr
     print "Using the hamiltonian:", latex(H)
 
-    print "Calculating nested commutators"
+    print "Calculating 4 nested commutators"
     C = Commutator
 
     T1,T2 = get_CC_operators()
     T = T1+ T2
-    print "comm1..."
-    comm1 = wicks(C(H,T),simplify_dummies=True, simplify_kronecker_deltas=True)
+    print "commutator 1..."
+    comm1 = wicks(C(H,T))
+    comm1 = evaluate_deltas(comm1)
+    comm1 = substitute_dummies(comm1)
 
     T1,T2 = get_CC_operators()
     T = T1+ T2
-    print "comm2..."
-    comm2 = wicks(C(comm1,T),simplify_dummies=True, simplify_kronecker_deltas=True)
+    print "commutator 2..."
+    comm2 = wicks(C(comm1,T))
+    comm2 = evaluate_deltas(comm2)
+    comm2 = substitute_dummies(comm2)
 
     T1,T2 = get_CC_operators()
     T = T1+ T2
-    print "comm3..."
-    comm3 = wicks(C(comm2,T),simplify_dummies=True, simplify_kronecker_deltas=True)
+    print "commutator 3..."
+    comm3 = wicks(C(comm2,T))
+    comm3 = evaluate_deltas(comm3)
+    comm3 = substitute_dummies(comm3)
 
     T1,T2 = get_CC_operators()
     T = T1+ T2
-    print "comm4..."
-    comm4 = wicks(C(comm3,T),simplify_dummies=True, simplify_kronecker_deltas=True)
+    print "commutator 4..."
+    comm4 = wicks(C(comm3,T))
+    comm4 = evaluate_deltas(comm4)
+    comm4 = substitute_dummies(comm4)
 
     print "construct Hausdoff expansion..."
     eq = H + comm1+comm2/2  +comm3/6+comm4/24
