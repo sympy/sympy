@@ -170,8 +170,8 @@ class AntiSymmetricTensor(TensorSymbol):
     def __new__(cls, symbol, upper, lower):
 
         try:
-            upper, signu = _sort_anticommuting_fermions(upper)
-            lower, signl = _sort_anticommuting_fermions(lower)
+            upper, signu = _sort_anticommuting_fermions(upper, key=lambda x: x)
+            lower, signl = _sort_anticommuting_fermions(lower, key=lambda x: x)
             sign = 1
             if signu:
                 upper = Tuple(*upper)
@@ -808,47 +808,17 @@ class FermionicOperator(SqOperator):
         """
         return self.is_above_fermi and not self.is_below_fermi
 
-    def __cmp__(self,other):
-        if self is other: return 0
+    def _sortkey(self):
+        h = hash(self)
 
-        # check that we have only FermionicOperator
-        if not isinstance(other, FermionicOperator):
-            return SqOperator.__cmp__(other)
-
-        # only q-creator or only q-annihilator
-        if self.is_only_q_creator and other.is_q_annihilator: return -1
-        if self.is_q_creator and other.is_only_q_annihilator: return -1
-        if other.is_only_q_creator and self.is_q_annihilator: return +1
-        if other.is_q_creator and self.is_only_q_annihilator: return +1
-
-        # push creators to the left by reversing sign of class compare
-        c = cmp(self.__class__, other.__class__)
-        if c: return -c
-
-        # standard hash-sorting from Basic, pasted here for speed
-        st = self._hashable_content()
-        ot = other._hashable_content()
-        c = cmp(len(st),len(ot))
-        if c: return c
-        for l,r in zip(st,ot):
-            if isinstance(l, Basic):
-                c = l.compare(r)
-            else:
-                c = cmp(l, r)
-            if c: return c
-        return 0
-
-    def __lt__(self,other):
-        return self.__cmp__(other) == -1
-
-    def __gt__(self,other):
-        return self.__cmp__(other) ==  1
-
-    def __ge__(self,other):
-        return self.__cmp__(other) >= 0
-
-    def __le__(self,other):
-        return self.__cmp__(other) <= 0
+        if self.is_only_q_creator:
+            return "a%i" % h
+        if self.is_only_q_annihilator:
+            return "d%i" % h
+        if isinstance(self, Annihilator):
+            return "c%i" % h
+        if isinstance(self, Creator):
+            return "b%i" % h
 
 
 class AnnihilateFermion(FermionicOperator, Annihilator):
@@ -1185,7 +1155,7 @@ class FermionState(FockState):
         occupations = map(sympify,occupations)
         if len(occupations) >1:
             try:
-                (occupations,sign) = _sort_anticommuting_fermions(occupations)
+                (occupations,sign) = _sort_anticommuting_fermions(occupations, key=hash)
             except ViolationOfPauliPrinciple:
                 return S.Zero
         else:
@@ -2206,8 +2176,11 @@ def contraction(a,b):
         t = ( isinstance(i,FermionicOperator) for i in (a,b) )
         raise ContractionAppliesOnlyToFermions(*t)
 
+def sqkey(sq_operator):
+    """Generates key for canonical sorting of SQ operators"""
+    return sq_operator._sortkey()
 
-def _sort_anticommuting_fermions(string1):
+def _sort_anticommuting_fermions(string1, key=sqkey):
     """Sort fermionic operators to canonical order, assuming all pairs anticommute.
 
     Uses a bidirectional bubble sort.  Items in string1 are not referenced
@@ -2227,31 +2200,33 @@ def _sort_anticommuting_fermions(string1):
     sign = 0
     rng = range(len(string1)-1)
     rev = range(len(string1)-3,-1,-1)
-    string1 = list(string1)
+
+    keys = list(map(key, string1))
+    key_val = dict(zip(keys, string1))
 
     while not verified:
         verified = True
         for i in rng:
-            left = string1[i]
-            right = string1[i+1]
+            left = keys[i]
+            right = keys[i+1]
             if left == right:
                 raise ViolationOfPauliPrinciple([left,right])
             if left > right:
                 verified = False
-                string1[i:i+2] = [right, left]
+                keys[i:i+2] = [right, left]
                 sign = sign+1
         if verified:
             break
         for i in rev:
-            left = string1[i]
-            right = string1[i+1]
+            left = keys[i]
+            right = keys[i+1]
             if left == right:
                 raise ViolationOfPauliPrinciple([left,right])
             if left > right:
                 verified = False
-                string1[i:i+2] = [right, left]
+                keys[i:i+2] = [right, left]
                 sign = sign+1
-
+    string1 = [ key_val[k] for k in keys ]
     return (string1,sign)
 
 def evaluate_deltas(e):
