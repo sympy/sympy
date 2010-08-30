@@ -86,7 +86,7 @@ def main():
     eq = H + comm1+comm2/2  +comm3/6+comm4/24
     eq = eq.expand()
     eq = evaluate_deltas(eq)
-    eq = substitute_dummies(eq, new_indices=True, reverse_order=False,
+    eq = substitute_dummies(eq, new_indices=True,
             pretty_indices=pretty_dummies_dict)
     print "*********************"
     print
@@ -101,7 +101,7 @@ def main():
     print
     print "CC T1:"
     eqT1 = wicks(NO(Fd(i)*F(a))*eq, simplify_kronecker_deltas=True, keep_only_fully_contracted=True)
-    eqT1 = substitute_dummies(eqT1,reverse_order=False)
+    eqT1 = substitute_dummies(eqT1)
     print latex(eqT1)
     print
     print "CC T2:"
