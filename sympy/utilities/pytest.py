@@ -22,6 +22,22 @@ except ImportError:
     USE_PYTEST = False
 
 def raises(ExpectedException, code):
+    """
+    Tests that ``code`` raises the exception ``ExpectedException``.
+
+    Does nothing if the right exception is raised, otherwise raises an
+    AssertionError.
+
+    Example:
+
+    >>> from sympy import raises
+    >>> raises(ZeroDivisionError, "1/0")
+    >>> raises(ZeroDivisionError, "1/2")
+    Traceback (most recent call last):
+    ...
+    AssertionError: DID NOT RAISE
+
+    """
     assert isinstance(code, str)
     frame = sys._getframe(1)
     loc = frame.f_locals.copy()
