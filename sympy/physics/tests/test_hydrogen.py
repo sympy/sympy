@@ -1,9 +1,10 @@
 from sympy import var, sqrt, exp, simplify, S, integrate, oo
 from sympy.physics.hydrogen import R_nl
 
-var("a r")
+var("r Z")
 
 def test_wavefunction():
+    a = 1/Z
     R = {
             (1, 0): 2*sqrt(1/a**3) * exp(-r/a),
             (2, 0): sqrt(1/(2*a**3)) * exp(-r/(2*a)) * (1-r/(2*a)),
@@ -22,7 +23,7 @@ def test_wavefunction():
             (4, 3): S(1)/768 * sqrt(1/(35*a**3)) * exp(-r/(4*a)) * (r/a)**3,
             }
     for n, l in R:
-        assert simplify(R_nl(n, l, a, r) - R[(n, l)]) == 0
+        assert simplify(R_nl(n, l, r, Z) - R[(n, l)]) == 0
 
 def test_norm():
     # Maximum "n" which is tested:
@@ -31,4 +32,4 @@ def test_norm():
     #n_max = 4
     for n in range(n_max+1):
         for l in range(n):
-            assert integrate(R_nl(n, l, 1, r)**2 * r**2, (r, 0, oo)) == 1
+            assert integrate(R_nl(n, l, r)**2 * r**2, (r, 0, oo)) == 1

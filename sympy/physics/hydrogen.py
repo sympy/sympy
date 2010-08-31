@@ -1,51 +1,72 @@
 from sympy import factorial, sqrt, exp, S, laguerre_l
 
-def R_nl(n, l, a, r):
+def R_nl(n, l, r, Z=1):
     """
     Returns the Hydrogen radial wavefunction R_{nl}.
 
     n, l .... quantum numbers 'n' and 'l'
-    a    .... Bohr radius \hbar^2 / (Z*M)
     r    .... radial coordinate
+    Z    .... atomic number (1 for Hydrogen, 2 for Helium, ...)
+
+    Everything is in Hartree atomic units.
 
     Examples::
 
     >>> from sympy.physics.hydrogen import R_nl
     >>> from sympy import var
-    >>> var("r a")
-    (r, a)
-    >>> R_nl(1, 0, a, r)
-    2*(a**(-3))**(1/2)*exp(-r/a)
-    >>> R_nl(2, 0, a, r)
-    2**(1/2)*(a**(-3))**(1/2)*(2 - r/a)*exp(-r/(2*a))/4
-    >>> R_nl(2, 1, a, r)
-    r*6**(1/2)*(a**(-3))**(1/2)*exp(-r/(2*a))/(12*a)
+    >>> var("r Z")
+    (r, Z)
+    >>> R_nl(1, 0, r, Z)
+    2*(Z**3)**(1/2)*exp(-Z*r)
+    >>> R_nl(2, 0, r, Z)
+    2**(1/2)*(Z**3)**(1/2)*(2 - Z*r)*exp(-Z*r/2)/4
+    >>> R_nl(2, 1, r, Z)
+    Z*r*6**(1/2)*(Z**3)**(1/2)*exp(-Z*r/2)/12
 
-    In most cases you probably want to set a=1::
+    For Hydrogen atom, you can just use the default value of Z=1::
 
-    >>> R_nl(1, 0, 1, r)
+    >>> R_nl(1, 0, r)
     2*exp(-r)
-    >>> R_nl(2, 0, 1, r)
+    >>> R_nl(2, 0, r)
     2**(1/2)*(2 - r)*exp(-r/2)/4
-    >>> R_nl(3, 0, 1, r)
+    >>> R_nl(3, 0, r)
     2*3**(1/2)*(3 - 2*r + 2*r**2/9)*exp(-r/3)/27
+
+    For Silver atom, you would use Z=47::
+
+    >>> R_nl(1, 0, r, Z=47)
+    94*47**(1/2)*exp(-47*r)
+    >>> R_nl(2, 0, r, Z=47)
+    47*94**(1/2)*(2 - 47*r)*exp(-47*r/2)/4
+    >>> R_nl(3, 0, r, Z=47)
+    94*141**(1/2)*(3 - 94*r + 4418*r**2/9)*exp(-47*r/3)/27
 
     The normalization of the radial wavefunction is::
 
     >>> from sympy import integrate, oo
-    >>> integrate(R_nl(1, 0, 1, r)**2 * r**2, (r, 0, oo))
+    >>> integrate(R_nl(1, 0, r)**2 * r**2, (r, 0, oo))
     1
-    >>> integrate(R_nl(2, 0, 1, r)**2 * r**2, (r, 0, oo))
+    >>> integrate(R_nl(2, 0, r)**2 * r**2, (r, 0, oo))
     1
-    >>> integrate(R_nl(2, 1, 1, r)**2 * r**2, (r, 0, oo))
+    >>> integrate(R_nl(2, 1, r)**2 * r**2, (r, 0, oo))
+    1
+
+    It holds for any atomic number:
+
+    >>> integrate(R_nl(1, 0, r, Z=2)**2 * r**2, (r, 0, oo))
+    1
+    >>> integrate(R_nl(2, 0, r, Z=3)**2 * r**2, (r, 0, oo))
+    1
+    >>> integrate(R_nl(2, 1, r, Z=4)**2 * r**2, (r, 0, oo))
     1
 
     """
     # sympify arguments
-    n, l, a, r = S(n), S(l), S(a), S(r)
+    n, l, r, Z = S(n), S(l), S(r), S(Z)
     # radial quantum number
     n_r = n - l - 1
     # rescaled "r"
+    a = 1/Z # Bohr radius
     r0 = 2 * r / (n * a)
     # normalization coefficient
     C =  sqrt((S(2)/(n*a))**3 * factorial(n_r) / (2*n*factorial(n+l)))
