@@ -20,7 +20,7 @@ def literal_symbol(literal):
     else:
         return literal
 
-def satisfiable(expr, algorithm="dpll"):
+def satisfiable(expr, algorithm="dpll2"):
     """Check satisfiability of a propositional sentence.
     Returns a model when it succeeds
 
@@ -36,6 +36,9 @@ def satisfiable(expr, algorithm="dpll"):
     expr = to_cnf(expr)
     if algorithm == "dpll":
         from sympy.logic.algorithms.dpll import dpll_satisfiable
+        return dpll_satisfiable(expr)
+    elif algorithm == "dpll2":
+        from sympy.logic.algorithms.dpll2 import dpll_satisfiable
         return dpll_satisfiable(expr)
     raise NotImplementedError
 

@@ -154,6 +154,28 @@ class Sum(Expr):
             g = g.diff(i, 2)
         return s + iterm, abs(term)
 
+    def _subs_atoms(self, subs_dict):
+        substituted_something = False
+        a1 = self.args[1][0][1]._subs_dict(subs_dict)
+        a2 = self.args[1][0][2]._subs_dict(subs_dict)
+        arg = self.args[0]._subs_dict(subs_dict)
+        if a1 is None:
+            a1 = self.args[1][0][1]
+        else:
+            substituted_something = True
+        if a2 is None:
+            a2 = self.args[1][0][2]
+        else:
+            substituted_something = True
+        if arg is None:
+            arg = self.args[0]
+        else:
+            substituted_something = True
+        if substituted_something:
+            return Sum(arg, (self.args[1][0][0], a1, a2))
+        else:
+            return None
+
     def _eval_subs(self, old, new):
         newargs = (self.args[1][0][0], self.args[1][0][1].subs(old,new),
                    self.args[1][0][2].subs(old,new))

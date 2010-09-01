@@ -125,7 +125,13 @@ def eliminate_assume(expr, symbol=None):
             if not expr.expr.has(symbol):
                 return
         return expr.key
-    return expr.func(*[eliminate_assume(arg, symbol) for arg in expr.args])
+
+    if expr.func is Predicate:
+        return expr
+
+    # To be used when Python 2.4 compatability is no longer required
+    #return expr.func(*[x for x in (eliminate_assume(arg, symbol) for arg in expr.args) if x is not None])
+    return expr.func(*filter(lambda x: x is not None, [eliminate_assume(arg, symbol) for arg in expr.args]))
 
 class Predicate(Boolean):
 

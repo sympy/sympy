@@ -6,9 +6,8 @@ from sympy.utilities.source import get_class
 from sympy.assumptions import global_assumptions, Assume, Predicate
 from sympy.assumptions.assume import eliminate_assume
 from sympy.logic.boolalg import to_cnf, conjuncts, disjuncts, \
-    And, Not, Implies, Equivalent, to_int_repr
-from sympy.logic.inference import literal_symbol
-from sympy.logic.algorithms.dpll import dpll_int_repr
+    And, Not, Or, Implies, Equivalent, to_int_repr
+from sympy.logic.inference import literal_symbol, satisfiable
 
 class Q:
     """Supported ask keys."""
@@ -62,7 +61,7 @@ def eval_predicate(predicate, expr, assumptions=True):
     return res
 
 
-def ask(expr, key, assumptions=True):
+def ask(expr, key, assumptions=True, context=global_assumptions, disable_preprocessing=False):
     """
     Method for inferring properties about objects.
 
@@ -95,46 +94,58 @@ def ask(expr, key, assumptions=True):
     expr = sympify(expr)
     if type(key) is not Predicate:
         key = getattr(Q, str(key))
-    assumptions = And(assumptions, And(*global_assumptions))
+    assumptions = And(assumptions, And(*context))
 
     # direct resolution method, no logic
-    res = eval_predicate(key, expr, assumptions)
-    if res is not None:
-        return res
+    if not disable_preprocessing:
+        res = eval_predicate(key, expr, assumptions)
+        if res is not None:
+            return res
 
-    # use logic inference
     if assumptions is True:
         return
 
     if not expr.is_Atom:
         return
-    clauses = copy.deepcopy(known_facts_compiled)
 
-    assumptions = conjuncts(to_cnf(assumptions))
-    # add assumptions to the knowledge base
-    for assump in assumptions:
-        conj = eliminate_assume(assump, symbol=expr)
-        if conj:
-            for clause in conjuncts(to_cnf(conj)):
-                out = set()
-                for atom in disjuncts(clause):
-                    lit, pos = literal_symbol(atom), type(atom) is not Not
-                    if pos:
-                        out.add(known_facts_keys.index(lit)+1)
-                    else:
-                        out.add(-(known_facts_keys.index(lit)+1))
-                clauses.append(out)
+    assumptions = eliminate_assume(assumptions, expr)
+    if assumptions is None or assumptions is True:
+        return
 
-    n = len(known_facts_keys)
-    clauses.append(set([known_facts_keys.index(key)+1]))
-    if not dpll_int_repr(clauses, set(range(1, n+1)), {}):
+    # See if there's a straight-forward conclusion we can make for the inference
+    if not disable_preprocessing:
+        if assumptions.is_Atom:
+            if key in known_facts_dict[assumptions]:
+                return True
+            if Not(key) in known_facts_dict[assumptions]:
+                return False
+        elif assumptions.func is And:
+            for assum in assumptions.args:
+                if assum.is_Atom:
+                    if key in known_facts_dict[assum]:
+                        return True
+                    if Not(key) in known_facts_dict[assum]:
+                        return False
+                elif assum.func is Not and assum.args[0].is_Atom:
+                    if key in known_facts_dict[assum]:
+                        return False
+                    if Not(key) in known_facts_dict[assum]:
+                        return True
+        elif assumptions.func is Not and assumptions.args[0].is_Atom:
+            if assumptions.args[0] in known_facts_dict[key]:
+                return False
+
+    # Failing all else, we do a full logical inference
+    # If it's not consistent with the assumptions, then it can't be true
+    if not satisfiable(And(known_facts_cnf, assumptions, key)):
         return False
-    clauses[-1] = set([-(known_facts_keys.index(key)+1)])
-    if not dpll_int_repr(clauses, set(range(1, n+1)), {}):
-        # if the negation is satisfiable, it is entailed
-        return True
-    del clauses
 
+    # If the negation is unsatisfiable, it is entailed
+    if not satisfiable(And(known_facts_cnf, assumptions, Not(key))):
+        return True
+
+    # Otherwise, we don't have enough information to conclude one way or the other
+    return None
 
 def register_handler(key, handler):
     """Register a handler in the ask system. key must be a string and handler a
@@ -165,6 +176,32 @@ def remove_handler(key, handler):
     if type(key) is Predicate:
         key = key.name
     getattr(Q, key).remove_handler(handler)
+
+def compute_known_facts():
+    """Compute the various forms of knowledge compilation used by the
+    assumptions system.
+    """
+    # Compute the known facts in CNF form for logical inference
+    fact_string = " -{ Known facts in CNF }-\n"
+    cnf = to_cnf(known_facts)
+    fact_string += "known_facts_cnf = And( \\\n   ",
+    fact_string += ", \\\n    ".join(map(str, cnf.args))
+    fact_string += "\n)\n"
+
+    # Compute the quick lookup for single facts
+    from sympy.abc import x
+    mapping = {}
+    for key in known_facts_keys:
+        mapping[key] = set([key])
+        for other_key in known_facts_keys:
+            if other_key != key:
+                if ask(x, other_key, Assume(x, key, False), disable_preprocessing=True):
+                    mapping[key].add(Not(other_key))
+    fact_string += "\n\n -{ Known facts in compressed sets }-\n"
+    fact_string += "known_facts_dict = { \\\n   ",
+    fact_string += ", \\\n    ".join(["%s: %s" % item for item in mapping.items()])
+    fact_string += "\n}\n"
+    return fact_string
 
 # handlers_dict tells us what ask handler we should use
 # for a particular key
@@ -211,4 +248,56 @@ known_facts = And(
     Equivalent(Q.nonzero, Q.positive | Q.negative)
 )
 
-known_facts_compiled = to_int_repr(conjuncts(to_cnf(known_facts)), known_facts_keys)
+################################################################################
+# Note: The following facts are generated by the compute_known_facts function. #
+################################################################################
+
+known_facts_cnf = And(
+    Or(Not(Q.integer), Q.even, Q.odd),
+    Or(Not(Q.extended_real), Q.infinity, Q.real),
+    Or(Not(Q.real), Q.irrational, Q.rational),
+    Or(Not(Q.real), Q.complex),
+    Or(Not(Q.integer), Not(Q.positive), Q.composite, Q.prime),
+    Or(Not(Q.integer), Q.rational),
+    Or(Not(Q.imaginary), Q.complex),
+    Or(Not(Q.even), Q.integer),
+    Or(Not(Q.positive), Q.nonzero),
+    Or(Not(Q.nonzero), Q.negative, Q.positive),
+    Or(Not(Q.prime), Q.positive),
+    Or(Not(Q.rational), Q.real),
+    Or(Not(Q.imaginary), Not(Q.real)),
+    Or(Not(Q.odd), Q.integer),
+    Or(Not(Q.real), Q.extended_real),
+    Or(Not(Q.composite), Not(Q.prime)),
+    Or(Not(Q.negative), Q.nonzero),
+    Or(Not(Q.negative), Not(Q.positive)),
+    Or(Not(Q.prime), Q.integer),
+    Or(Not(Q.even), Not(Q.odd)),
+    Or(Not(Q.nonzero), Q.real),
+    Or(Not(Q.irrational), Q.real),
+    Or(Not(Q.irrational), Not(Q.rational)),
+    Or(Not(Q.infinity), Q.extended_real)
+)
+
+known_facts_dict = {
+    Q.is_true: set([Q.is_true]),
+    Q.complex: set([Q.complex]),
+    Q.odd: set([Q.complex, Q.odd, Q.real, Q.rational, Q.extended_real, Q.integer]),
+    Q.positive: set([Q.real, Q.complex, Q.extended_real, Q.positive, Q.nonzero]),
+    Q.real: set([Q.real, Q.complex, Q.extended_real]),
+    Q.composite: set([Q.composite]),
+    Q.bounded: set([Q.bounded]),
+    Q.prime: set([Q.real, Q.complex, Q.positive, Q.nonzero, Q.prime, Q.rational, Q.extended_real, Q.integer]),
+    Q.infinitesimal: set([Q.infinitesimal]),
+    Q.even: set([Q.complex, Q.real, Q.even, Q.rational, Q.extended_real, Q.integer]),
+    Q.negative: set([Q.real, Q.negative, Q.complex, Q.extended_real, Q.nonzero]),
+    Q.rational: set([Q.real, Q.rational, Q.complex, Q.extended_real]),
+    Q.extended_real: set([Q.extended_real]),
+    Q.nonzero: set([Q.nonzero, Q.complex, Q.extended_real, Q.real]),
+    Q.integer: set([Q.real, Q.rational, Q.complex, Q.extended_real, Q.integer]),
+    Q.irrational: set([Q.real, Q.irrational, Q.complex, Q.extended_real]),
+    Q.commutative: set([Q.commutative]),
+    Q.infinity: set([Q.extended_real, Q.infinity]),
+    Q.algebraic: set([Q.algebraic]),
+    Q.imaginary: set([Q.complex, Q.imaginary])
+}

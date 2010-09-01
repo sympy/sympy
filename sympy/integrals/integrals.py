@@ -388,6 +388,40 @@ class Integral(Expr):
         else:
             return integrate(arg.removeO(), x) + arg.getO()*x
 
+    def _subs_atoms(self, subs_dict):
+        arg1 = []
+        substituted_something = False
+        for sym, limits in self.args[1]:
+            if sym in subs_dict:
+                subs_dict = subs_dict.copy()
+                subs_dict.pop(sym)
+            if limits is None:
+                arg1.append((sym, limits))
+            else:
+                a, b = limits
+                if a is not None:
+                    a = a._subs_atoms(subs_dict)
+                    if a is None:
+                        a = limits[0]
+                    else:
+                        substituted_something = True
+                if b is not None:
+                    b = b._subs_atoms(subs_dict)
+                    if b is None:
+                        b = limits[1]
+                    else:
+                        substituted_something = True
+                arg1.append((sym, a, b))
+        arg0 = self.args[0]._subs_atoms(subs_dict)
+        if arg0 is None:
+            arg0 = self.args[0]
+        else:
+            substituted_something = True
+        if substituted_something:
+            return Integral(arg0, *arg1)
+        else:
+            return None
+
     def _eval_subs(self, old, new):
         arg0 = self.args[0].subs(old, new)
         arg1 = []

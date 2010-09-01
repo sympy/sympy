@@ -145,7 +145,6 @@ class TensorSymbol(Function):
     is_commutative = True
 
 
-
 class AntiSymmetricTensor(TensorSymbol):
 
     nargs = 3

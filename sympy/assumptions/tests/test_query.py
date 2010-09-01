@@ -1,7 +1,7 @@
 from sympy.core import Symbol, symbols, S, Rational, Integer, I, pi, oo
 from sympy.functions import exp, log, sin, cos, sign, re, im, sqrt
 from sympy.assumptions import (Assume, global_assumptions, Q, ask,
-    register_handler, remove_handler)
+    register_handler, remove_handler, AssumptionsContext)
 from sympy.assumptions.handlers import AskHandler
 from sympy.utilities.pytest import raises, XFAIL
 
@@ -942,6 +942,15 @@ def test_global():
     global_assumptions.add(Assume(x, Q.integer))
     assert ask(x, Q.integer) == True
     global_assumptions.clear()
+    assert ask(x, Q.integer) == None
+
+def test_custom_context():
+    """Test ask with custom assumptions context"""
+    x = symbols('x')
+    assert ask(x, Q.integer) == None
+    local_context = AssumptionsContext()
+    local_context.add(Assume(x, Q.integer))
+    assert ask(x, Q.integer, context = local_context) == True
     assert ask(x, Q.integer) == None
 
 def test_functions_in_assumptions():
