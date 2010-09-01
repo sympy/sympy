@@ -1811,9 +1811,9 @@ class Commutator(Function):
 
 
 
-class NO(Function):
+class NO(Expr):
     """
-    This function is used to represent normal ordering brackets.
+    This Object is used to represent normal ordering brackets.
 
     i.e.  {abcd}  sometimes written  :abcd:
 
@@ -1842,8 +1842,7 @@ class NO(Function):
     is_commutative = False
 
 
-    @classmethod
-    def eval(cls,arg):
+    def __new__(cls,arg):
         """
         Use anticommutation to get canonical form of operators.
 
@@ -1857,6 +1856,7 @@ class NO(Function):
         """
 
         # {ab + cd} = {ab} + {cd}
+        arg = sympify(arg)
         arg = arg.expand()
         if arg.is_Add:
             return Add(*[ cls(term) for term in arg.args])
@@ -1903,10 +1903,9 @@ class NO(Function):
 
             # if we couldn't do anything with Mul object, we just
             # mark it as normal ordered
-            if coeff == S.One:
-                return None
-            else:
+            if coeff != S.One:
                 return coeff*cls(Mul(*newseq))
+            return Expr.__new__(cls, Mul(*newseq))
 
         if isinstance(arg,NO):
             return arg
@@ -2042,7 +2041,7 @@ class NO(Function):
             if ops[i] == old:
                 l1 = ops[:i]+(new,)+ops[i+1:]
                 return self.__class__(Mul(*l1))
-        return Function._eval_subs(self,old,new)
+        return Expr._eval_subs(self,old,new)
 
     def __getitem__(self,i):
         if isinstance(i,slice):
