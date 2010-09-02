@@ -1335,7 +1335,7 @@ def powsimp(expr, deep=False, combine='all'):
         powsimp(powsimp(expr, combine='base'), combine='exp').
 
     == Examples ==
-        >>> from sympy import powsimp, exp, log
+        >>> from sympy import powsimp, exp, log, symbols
         >>> from sympy.abc import x, y, z, n
         >>> powsimp(x**y*x**z*y**z, combine='all')
         x**(y + z)*y**z
@@ -1351,6 +1351,7 @@ def powsimp(expr, deep=False, combine='all'):
         >>> powsimp(x**z*x**y*n**z*n**y, combine='base')
         (n*x)**y*(n*x)**z
 
+        >>> x, y = symbols('x y', positive=True)
         >>> powsimp(log(exp(x)*exp(y)))
         log(exp(x)*exp(y))
         >>> powsimp(log(exp(x)*exp(y)), deep=True)

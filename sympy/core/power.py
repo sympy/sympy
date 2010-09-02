@@ -608,20 +608,20 @@ class Pow(Expr):
         return d
 
     def _eval_nseries(self, x, n):
-        from sympy import powsimp, collect, O, log
+        from sympy import powsimp, collect, exp, log, O, ceiling
 
-        base, exp = self.args
-        if exp.is_Integer:
-            if exp > 0:
+        b, e = self.args
+        if e.is_Integer:
+            if e > 0:
                 # positive integer powers are easy to expand, e.g.:
                 # sin(x)**4 = (x-x**3/3+...)**4 = ...
-                return Pow(base.nseries(x, n=n), exp
+                return Pow(b.nseries(x, n=n), e
                            )._eval_expand_multinomial(deep = False)
-            elif exp == -1:
+            elif e == -1:
                 # this is also easy to expand using the formula:
                 # 1/(1 + x) = 1 + x + x**2 + x**3 ...
                 # so we need to rewrite base to the form "1+x"
-                if base.has(log(x)):
+                if b.has(log(x)):
                     # we need to handle the log(x) singularity:
                     y = Symbol("y", dummy=True)
                     p = self.subs(log(x), -1/y)
@@ -630,25 +630,25 @@ class Pow(Expr):
                         p = p.subs(y, -1/log(x))
                         return p
 
-                base = base.nseries(x, n=n)
-                if base.has(log(x)):
+                b = b.nseries(x, n=n)
+                if b.has(log(x)):
                     # we need to handle the log(x) singularity:
                     y = Symbol("y", dummy=True)
-                    self0 = 1/base
+                    self0 = 1/b
                     p = self0.subs(log(x), -1/y)
                     if not p.has(x):
                         p = p.nseries(y, n=n)
                         p = p.subs(y, -1/log(x))
                         return p
-                prefactor = base.as_leading_term(x)
+                prefactor = b.as_leading_term(x)
                 # express "rest" as: rest = 1 + k*x**l + ... + O(x**n)
-                rest = ((base-prefactor)/prefactor)._eval_expand_mul()
+                rest = ((b - prefactor)/prefactor)._eval_expand_mul()
                 if rest == 0:
                     # if prefactor == w**4 + x**2*w**4 + 2*x*w**4, we need to
                     # factor the w**4 out using collect:
                     return 1/collect(prefactor, x)
                 if rest.is_Order:
-                    return (1+rest)/prefactor
+                    return (1 + rest)/prefactor
                 n2 = rest.getn()
                 if n2 is not None:
                     n = n2
@@ -657,41 +657,39 @@ class Pow(Expr):
                 k, l = C.Wild("k"), C.Wild("l")
                 r = term2.match(k*x**l)
                 k, l = r[k], r[l]
-                if l.is_Rational and l>0:
+                if l.is_Rational and l > 0:
                     pass
-                elif l.is_number and l>0:
+                elif l.is_number and l > 0:
                     l = l.evalf()
                 else:
                     raise NotImplementedError()
 
-                from sympy.functions import ceiling
                 terms = [1/prefactor]
-                for m in xrange(1,ceiling(n/l)):
+                for m in xrange(1, ceiling(n/l)):
                     new_term = terms[-1]*(-rest)
                     if new_term.is_Pow:
                         new_term = new_term._eval_expand_multinomial(deep = False)
                     else:
                         new_term = new_term._eval_expand_mul(deep = False)
                     terms.append(new_term)
-                r = Add(*terms)
                 if n2 is None:
                     # Append O(...) because it is not included in "r"
-                    r += O(x**n)
-                return powsimp(r, deep=True, combine='exp')
+                    terms.append(O(x**n))
+                return powsimp(Add(*terms), deep=True, combine='exp')
             else:
                 # negative powers are rewritten to the cases above, for example:
                 # sin(x)**(-4) = 1/( sin(x)**4) = ...
                 # and expand the denominator:
-                denominator = (base**(-exp)).nseries(x, n=n)
+                denominator = (b**(-e)).nseries(x, n=n)
                 if 1/denominator == self:
                     return self
                 # now we have a type 1/f(x), that we know how to expand
                 return (1/denominator).nseries(x, n=n)
 
-        if exp.has(x):
-            return C.exp(exp*log(base)).nseries(x, n=n)
+        if e.has(x):
+            return exp(e*log(b)).nseries(x, n=n)
 
-        if base == x:
+        if b == x:
             return powsimp(self, deep=True, combine='exp')
 
         # work for b(x)**e where e is not an Integer and does not contain x
@@ -719,7 +717,6 @@ class Pow(Expr):
             return n, unbounded
 
         order = O(x**n, x)
-        b, e = base, exp
         ei, unbounded = e2int(e)
         b0 = b.limit(x, 0)
 
@@ -754,7 +751,7 @@ class Pow(Expr):
                 # bs -> lt + rest -> lt*(1 + (bs/lt - 1))
                 return ((Pow(lt, e)*
                          Pow((bs/lt).expand(), e).
-                         nseries(x, n=n-e)).expand() +
+                         nseries(x, n=nuse)).expand() +
                          order)
 
             return bs**e + order

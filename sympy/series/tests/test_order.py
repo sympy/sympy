@@ -1,4 +1,4 @@
-from sympy import Symbol, Rational, Order, C, exp, ln, log, O, var, nan, pi, S
+from sympy import Symbol, Rational, Order, C, exp, ln, log, O, var, nan, pi, S, symbols
 from sympy.utilities.pytest import XFAIL
 from sympy.abc import w, x, y, z
 
