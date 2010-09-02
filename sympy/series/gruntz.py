@@ -34,7 +34,7 @@ We define >, < ~ according to::
         we say that:
         - f is lower than any power of g
 
-    3. f ~ g .... L!=0,+-oo
+    3. f ~ g .... L!=0, +-oo
 
         we say that:
         - both f and g are bounded from above and below by suitable integral
@@ -62,9 +62,9 @@ say it is {exp(x), exp(2x)}. Using the rule f ~ 1/f we find an element "w"
 (either from the list or a new one) from the same comparability class which
 goes to zero at infinity. In our example we set w=exp(-x) (but we could also
 set w=exp(-2x) or w=exp(-3x) ...). We rewrite the mrv set using w, in our case
-{1/w,1/w^2}, and substitute it into f. Then we expand f into a series in w::
+{1/w, 1/w^2}, and substitute it into f. Then we expand f into a series in w::
 
-    f = c0*w^e0 + c1*w^e1 + ... + O(w^en),        where e0<e1<...<en, c0!=0
+    f = c0*w^e0 + c1*w^e1 + ... + O(w^en),       where e0<e1<...<en, c0!=0
 
 but for x->oo, lim f = lim c0*w^e0, because all the other terms go to zero,
 because w goes to zero faster than the ci and ei. So::
@@ -78,13 +78,13 @@ as is shown in the PhD thesis, it always finishes.
 
 Important functions from the implementation:
 
-compare(a,b,x) compares "a" and "b" by computing the limit L.
-mrv(e,x) returns the list of most rapidly varying (mrv) subexpressions of "e"
-rewrite(e,Omega,x,wsym) rewrites "e" in terms of w
-leadterm(f,x) returns the lowest power term in the series of f
-mrv_leadterm(e,x) returns the lead term (c0,e0) for e
-limitinf(e,x) computes lim e  (for x->oo)
-limit(e,z,z0) computes any limit by converting it to the case x->oo
+compare(a, b, x) compares "a" and "b" by computing the limit L.
+mrv(e, x) returns the list of most rapidly varying (mrv) subexpressions of "e"
+rewrite(e, Omega, x, wsym) rewrites "e" in terms of w
+leadterm(f, x) returns the lowest power term in the series of f
+mrv_leadterm(e, x) returns the lead term (c0, e0) for e
+limitinf(e, x) computes lim e  (for x->oo)
+limit(e, z, z0) computes any limit by converting it to the case x->oo
 
 All the functions are really simple and straightforward except rewrite(), which
 is the most difficult/complex part of the algorithm. When the algorithm fails,
@@ -143,51 +143,54 @@ def debug(func):
 
 def tree(subtrees):
     "Only debugging purposes: prints a tree"
-    def indent(s,type=1):
+    def indent(s, type=1):
         x = s.split("\n")
         r = "+-%s\n"%x[0]
         for a in x[1:]:
-            if a=="": continue
-            if type==1:
+            if a == "":
+                continue
+            if type == 1:
                 r += "| %s\n"%a
             else:
                 r += "  %s\n"%a
         return r
-    if len(subtrees)==0: return ""
-    f="";
+    if len(subtrees) == 0:
+        return ""
+    f = []
     for a in subtrees[:-1]:
-        f += indent(a)
-    f += indent(subtrees[-1],2)
-    return f
+        f.append(indent(a))
+    f.append(indent(subtrees[-1], 2))
+    return ''.join(f)
 
-tmp=[]
-iter=0
-def maketree(f,*args,**kw):
+tmp = []
+iter = 0
+def maketree(f, *args, **kw):
     "Only debugging purposes: prints a tree"
     global tmp
     global iter
-    oldtmp=tmp
-    tmp=[]
-    iter+=1
+    oldtmp = tmp
+    tmp = []
+    iter += 1
 
-    r = f(*args,**kw)
+    r = f(*args, **kw)
 
-    iter-=1
-    s = "%s%s = %s\n" % (f.func_name,args,r)
-    if tmp!=[]: s += tree(tmp)
-    tmp=oldtmp
+    iter -= 1
+    s = "%s%s = %s\n" % (f.func_name, args, r)
+    if tmp != []:
+        s += tree(tmp)
+    tmp = oldtmp
     tmp.append(s)
     if iter == 0:
         print tmp[0]
-        tmp=[]
+        tmp = []
     return r
 
-def compare(a,b,x):
-    """Returns "<" if a<b, "=" for a==b, ">" for a>b"""
+def compare(a, b, x):
+    """Returns "<" if a<b, "=" for a == b, ">" for a>b"""
     c = limitinf(log(a)/log(b), x)
     if c == 0:
         return "<"
-    elif c in [oo,-oo]:
+    elif c in [oo, -oo]:
         return ">"
     else:
         return "="
@@ -203,19 +206,20 @@ def mrv(e, x):
         return set([x])
     elif e.is_Mul:
         a, b = e.as_two_terms()
-        return mrv_max(mrv(a,x), mrv(b,x), x)
+        return mrv_max(mrv(a, x), mrv(b, x), x)
     elif e.is_Add:
         a, b = e.as_two_terms()
-        return mrv_max(mrv(a,x), mrv(b,x), x)
+        return mrv_max(mrv(a, x), mrv(b, x), x)
     elif e.is_Pow:
-        if e.exp.has(x):
-            return mrv(exp(e.exp * log(e.base)), x)
+        b, e = e.as_base_exp()
+        if e.has(x):
+            return mrv(exp(e * log(b)), x)
         else:
-            return mrv(e.base, x)
+            return mrv(b, x)
     elif e.func is log:
         return mrv(e.args[0], x)
     elif e.func is exp:
-        if limitinf(e.args[0], x) in [oo,-oo]:
+        if limitinf(e.args[0], x).is_unbounded:
             return mrv_max(set([e]), mrv(e.args[0], x), x)
         else:
             return mrv(e.args[0], x)
@@ -236,62 +240,25 @@ def mrv_max(f, g, x):
     """
     assert isinstance(f, set)
     assert isinstance(g, set)
-    if f==set([]): return g
-    elif g==set([]): return f
-    elif f.intersection(g) != set([]): return f.union(g)
-    elif x in f: return g
-    elif x in g: return f
+    if f == set([]):
+        return g
+    elif g == set([]):
+        return f
+    elif f.intersection(g) != set([]):
+        return f.union(g)
+    elif x in f:
+        return g
+    elif x in g:
+        return f
 
-    c=compare(list(f)[0], list(g)[0], x)
-    if c == ">": return f
-    elif c == "<": return g
+    c = compare(list(f)[0], list(g)[0], x)
+    if c == ">":
+        return f
+    elif c == "<":
+        return g
     else:
         assert c == "="
         return f.union(g)
-
-@debug
-def rewrite(e,Omega,x,wsym):
-    """e(x) ... the function
-    Omega ... the mrv set
-    wsym ... the symbol which is going to be used for w
-
-    Returns the rewritten e in terms of w and log(w). See test_rewrite1()
-    for examples and correct results.
-    """
-    assert isinstance(Omega, set)
-    assert len(Omega)!=0
-    #all items in Omega must be exponentials
-    for t in Omega: assert t.func is exp
-    def cmpfunc(a,b):
-        return -cmp(len(mrv(a,x)), len(mrv(b,x)))
-    #sort Omega (mrv set) from the most complicated to the simplest ones
-    #the complexity of "a" from Omega: the length of the mrv set of "a"
-    Omega = list(Omega)
-    Omega.sort(cmp=cmpfunc)
-    g=Omega[-1] #g is going to be the "w" - the simplest one in the mrv set
-    sig = (sign(g.args[0], x) == 1)
-    if sig: wsym=1/wsym #if g goes to oo, substitute 1/w
-    #O2 is a list, which results by rewriting each item in Omega using "w"
-    O2=[]
-    for f in Omega:
-        c=mrv_leadterm(f.args[0]/g.args[0], x)
-        #the c is a constant, because both f and g are from Omega:
-        assert c[1] == 0
-        O2.append(exp((f.args[0]-c[0]*g.args[0]).expand())*wsym**c[0])
-    #Remember that Omega contains subexpressions of "e". So now we find
-    #them in "e" and substitute them for our rewriting, stored in O2
-    f = e
-    # the following powsimp is necessary to automatically combine exponentials,
-    # so that the .subs() below succeeds:
-    from sympy import powsimp
-    f = powsimp(f, deep=True, combine='exp')
-    for a, b in zip(Omega, O2):
-        f = f.subs(a, b)
-
-    #finally compute the logarithm of w (logw).
-    logw=g.args[0]
-    if sig: logw=-logw     #log(w)->log(1/w)=-log(w)
-    return f, logw
 
 @debug
 def sign(e, x):
@@ -324,7 +291,7 @@ def sign(e, x):
     elif e == x:
         return 1
     elif e.is_Mul:
-        a,b = e.as_two_terms()
+        a, b = e.as_two_terms()
         return sign(a, x) * sign(b, x)
     elif e.func is exp:
         return 1
@@ -340,35 +307,41 @@ def sign(e, x):
 @debug
 def limitinf(e, x):
     """Limit e(x) for x-> oo"""
-    if not e.has(x): return e #e is a constant
-    #this is needed to simplify 1/log(exp(-x**2))*log(exp(x**2)) to 1
-    if e.has(log):
-        e = e.normal()
-    c0, e0 = mrv_leadterm(e,x)
-    sig=sign(e0,x)
-    if sig==1: return S.Zero # e0>0: lim f = 0
-    elif sig==-1: #e0<0: lim f = +-oo   (the sign depends on the sign of c0)
+    if not e.has(x):
+        return e #e is a constant
+    if not x.is_positive:
+        # We make sure that x.is_positive is True so we
+        # get all the correct mathematical bechavior from the expression.
+        # We need a fresh variable.
+        p = C.Dummy('p', positive=True)
+        e = e.subs(x, p)
+        x = p
+    c0, e0 = mrv_leadterm(e, x)
+    sig = sign(e0, x)
+    if sig == 1:
+        return S.Zero # e0>0: lim f = 0
+    elif sig == -1: #e0<0: lim f = +-oo (the sign depends on the sign of c0)
         if c0.match(I*C.Wild("a", exclude=[I])):
             return c0*oo
         s = sign(c0, x)
         #the leading term shouldn't be 0:
         assert s != 0
-        return s * oo
-    elif sig==0: return limitinf(c0, x) #e0=0: lim f = lim c0
+        return s*oo
+    elif sig == 0:
+        return limitinf(c0, x) #e0=0: lim f = lim c0
 
 def moveup(l, x):
-    return [e.subs(x,exp(x)) for e in l]
+    return [e.subs(x, exp(x)) for e in l]
 
 def movedown(l, x):
-    return [e.subs(x,log(x)) for e in l]
+    return [e.subs(x, log(x)) for e in l]
 
-_x = Symbol("x", dummy=True)
-def subexp(e,sub):
+def subexp(e, sub):
     """Is "sub" a subexpression of "e"? """
     #we substitute some symbol for the "sub", and if the
     #expression changes, the substitution was successful, thus the answer
     #is yes.
-    return e.subs(sub, _x) != e
+    return e.subs(sub, C.Dummy('u')) != e
 
 def calculate_series(e, x):
     """ Calculates at least one term of the series of "e" in "x".
@@ -377,16 +350,16 @@ def calculate_series(e, x):
     """
 
     f = e
-    series=f.nseries(x, n=2).removeO()
+    series = f.nseries(x, n=2).removeO()
     if series == 0:
         #we need to calculate more terms, let's try 4:
-        series=f.nseries(x, n=4).removeO()
+        series = f.nseries(x, n=4).removeO()
     if series == 0:
         #we need to calculate more terms, let's try 6:
-        series=f.nseries(x, n=6).removeO()
+        series = f.nseries(x, n=6).removeO()
     if series == 0:
         #we need to calculate more terms, let's try 8:
-        series=f.nseries(x, n=8).removeO()
+        series = f.nseries(x, n=8).removeO()
     if not series:
         assert ValueError('(%s).series(%s, n=8) gave no terms.' % (f, x))
     return series
@@ -394,27 +367,79 @@ def calculate_series(e, x):
 @debug
 def mrv_leadterm(e, x, Omega=[]):
     """Returns (c0, e0) for e."""
-    if not e.has(x): return (e, S.Zero)
-    Omega = [t for t in Omega if subexp(e,t)]
+    if not e.has(x):
+        return (e, S.Zero)
+    Omega = [t for t in Omega if subexp(e, t)]
     if Omega == []:
-        Omega = mrv(e,x)
+        Omega = mrv(e, x)
     if x in set(Omega):
         #move the whole omega up (exponentiate each term):
-        Omega_up = set(moveup(Omega,x))
-        e_up = moveup([e],x)[0]
+        Omega_up = set(moveup(Omega, x))
+        e_up = moveup([e], x)[0]
         #calculate the lead term
         mrv_leadterm_up = mrv_leadterm(e_up, x, Omega_up)
         #move the result (c0, e0) down
         return tuple(movedown(mrv_leadterm_up, x))
-    # The wsym is set as real, so that log(wsym*2) etc. expand (this is needed
-    # in the algorithm). For limits of complex functions, the algorithm would
-    # have to be improved, or just use limits of Re and Im components
-    # separately.
-    wsym = Symbol("w", real=True, positive=True, dummy=True)
-    f, logw=rewrite(e, set(Omega), x, wsym)
-    series = calculate_series(f, wsym)
-    series=series.subs(log(wsym), logw)
-    return series.leadterm(wsym)
+    #
+    # The positive dummy, w, is used here so log(w*2) etc. will expand;
+    # a unique dummy is needed in this algorithm
+    #
+    # For limits of complex functions, the algorithm would have to be
+    # improved, or just find limits of Re and Im components separately.
+    #
+    w = C.Dummy("w", real=True, positive=True)
+    f, logw = rewrite(e, set(Omega), x, w)
+    series = calculate_series(f, w)
+    series = series.subs(log(w), logw)
+    return series.leadterm(w)
+
+@debug
+def rewrite(e, Omega, x, wsym):
+    """e(x) ... the function
+    Omega ... the mrv set
+    wsym ... the symbol which is going to be used for w
+
+    Returns the rewritten e in terms of w and log(w). See test_rewrite1()
+    for examples and correct results.
+    """
+    assert isinstance(Omega, set)
+    assert len(Omega) != 0
+    #all items in Omega must be exponentials
+    for t in Omega:
+        assert t.func is exp
+    def cmpfunc(a, b):
+        return -cmp(len(mrv(a, x)), len(mrv(b, x)))
+    #sort Omega (mrv set) from the most complicated to the simplest ones
+    #the complexity of "a" from Omega: the length of the mrv set of "a"
+    Omega = list(Omega)
+    Omega.sort(cmp=cmpfunc)
+    g = Omega[-1] #g is going to be the "w" - the simplest one in the mrv set
+    sig = (sign(g.args[0], x) == 1)
+    if sig:
+        wsym = 1/wsym #if g goes to oo, substitute 1/w
+    #O2 is a list, which results by rewriting each item in Omega using "w"
+    O2 = []
+    for f in Omega:
+        c = mrv_leadterm(f.args[0]/g.args[0], x)
+        #the c is a constant, because both f and g are from Omega:
+        assert c[1] == 0
+        O2.append(exp((f.args[0] - c[0]*g.args[0]).expand())*wsym**c[0])
+
+    #Remember that Omega contains subexpressions of "e". So now we find
+    #them in "e" and substitute them for our rewriting, stored in O2
+
+    # the following powsimp is necessary to automatically combine exponentials,
+    # so that the .subs() below succeeds:
+    f = powsimp(e, deep=True, combine='exp')
+    for a, b in zip(Omega, O2):
+        f = f.subs(a, b)
+
+    #finally compute the logarithm of w (logw).
+    logw = g.args[0]
+    if sig:
+        logw = -logw     #log(w)->log(1/w)=-log(w)
+
+    return f, logw
 
 def gruntz(e, z, z0, dir="+"):
     """
@@ -433,17 +458,16 @@ def gruntz(e, z, z0, dir="+"):
     if not isinstance(z, Symbol):
         raise NotImplementedError("Second argument must be a Symbol")
 
-    #convert all limits to the limit z->oo
-    elif z0 == oo:
+    #convert all limits to the limit z->oo; sign of z is handled in limitinf
+    if z0 == oo:
         return limitinf(e, z)
     elif z0 == -oo:
-        return limitinf(e.subs(z,-z), z)
+        return limitinf(e.subs(z, -z), z)
     else:
-        x = Symbol("x", dummy=True)
         if dir == "-":
-            e0 = e.subs(z,z0-1/x)
+            e0 = e.subs(z, z0 - 1/z)
         elif dir == "+":
-            e0 = e.subs(z,z0+1/x)
+            e0 = e.subs(z, z0 + 1/z)
         else:
             raise NotImplementedError("dir must be '+' or '-'")
-        return limitinf(e0, x)
+        return limitinf(e0, z)

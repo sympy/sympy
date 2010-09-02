@@ -191,7 +191,7 @@ def heuristics(e, z, z0, dir):
 
 
 class Limit(Expr):
-    """Represents unevaluated limit.
+    """Represents an unevaluated limit.
 
     Examples:
 
@@ -214,10 +214,8 @@ class Limit(Expr):
 
     def doit(self, **hints):
         e, z, z0, dir = self.args
-
         if hints.get('deep', True):
             e = e.doit(**hints)
             z = z.doit(**hints)
             z0 = z0.doit(**hints)
-
         return limit(e, z, z0, dir)

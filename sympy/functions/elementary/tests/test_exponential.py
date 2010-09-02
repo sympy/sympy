@@ -80,41 +80,35 @@ def test_log():
 
     x, y = symbols('xy')
 
+    assert log(x, exp(1)) == log(x)
+    assert log(exp(x)) != x
+
     assert log(x) == log(x)
-    assert log(x,exp(1)) == log(x)
+    assert log(x, exp(1)) == log(x)
     assert log(x*y) != log(x) + log(y)
 
-    assert log(x**2) != 2*log(x)
-    x = Symbol('x', positive=True)
-    assert log(x**2).expand() == 2*log(x)
-    assert log(x**y) != y*log(x)
+    assert log(x, 2) == log(x)/log(2)
+    assert log(E, 2) == 1/log(2)
 
-    #I commented this test out, because it doesn't work well with caching and
-    #thus completely breaks limits, that rely on log(exp(x)) -> x
-    #simplification. --Ondrej
-    #assert log(exp(x)) != x
 
-    x, y = symbols('xy', positive=True)
+    p, q = symbols('pq', positive=True)
+    r = Symbol('r', real=1)
 
-    assert log(x) == log(x)
-    #assert log(x*y) != log(x) + log(y)
-    assert log(x*y).expand() == log(x) + log(y)
+    assert log(p**2) != 2*log(p)
+    assert log(p**2).expand() == 2*log(p)
+    assert log(p**q) != q*log(p)
+    assert log(exp(p)) == p
+    assert log(p*q) != log(p) + log(q)
+    assert log(p*q).expand() == log(p) + log(q)
 
-    #assert log(x**2) != 2*log(x)
-    assert log(x**2).expand() == 2*log(x)
-    assert log(x**y) != y*log(x)
-
-    assert log(exp(x)) == x
-    #assert log(-exp(x)) != x + I*pi
-    assert log(-exp(x)).expand() == x + I*pi
+    assert log(-exp(x)) != x + I*pi
+    assert log(-exp(x)).expand() != x + I*pi
+    assert log(-exp(r)).expand() == r + I*pi
 
     k = Symbol('k', positive=True)
 
     assert log(-x) == log(-x)
     assert log(-k) == log(-k)
-
-    assert log(x, 2) == log(x)/log(2)
-    assert log(E, 2) == 1/log(2)
 
 def test_log_expand_complex():
     assert log(1+I).expand(complex=True) == log(2)/2 + I*pi/4

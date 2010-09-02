@@ -309,7 +309,7 @@ class log(Function):
         #this doesn't work due to caching: :(
         #elif arg.func is exp and arg.args[0].is_real:
         #using this one instead:
-        elif arg.func is exp:
+        elif arg.func is exp and arg.args[0].is_real:
             return arg.args[0]
         #this shouldn't happen automatically (see the issue 252):
         #elif arg.is_Pow:
@@ -432,7 +432,7 @@ class log(Function):
         if r is not None:
             k, l = r[k], r[l]
             if l != 0 and not l.has(x) and not k.has(x):
-                r = log(k) + l*log(x)
+                r = log(k) + l*log(x) # XXX true regardless of assumptions?
                 return r
         order = C.Order(x**n, x)
         arg = self.args[0]
@@ -452,8 +452,6 @@ class log(Function):
         else:
             # arg -> arg0 + (arg - arg0) -> arg0 * (1 + (arg/arg0 - 1))
             z = (arg/arg0 - 1)
-            x = order.variables[0]
-            ln = C.log
             o = C.Order(z, x)
             if o is S.Zero:
                 return log(1 + z) + log(arg0)
