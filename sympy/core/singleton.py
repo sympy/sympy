@@ -1,8 +1,23 @@
 """Singleton mechanism"""
 
-from core import BasicMeta
+from core import BasicMeta, Registry
 from sympify import sympify
 from basic import Basic
+
+class SingletonRegistry(Registry):
+    """
+    A map between singleton classes and the corresponding instances.
+    E.g. S.Exp == C.Exp()
+    """
+    __slots__ = []
+
+    __call__ = staticmethod(sympify)
+
+    def __repr__(self):
+        return "S"
+
+S = SingletonRegistry()
+
 
 class SingletonMeta(BasicMeta):
     """Metaclass for all singletons
@@ -56,27 +71,3 @@ class SingletonMeta(BasicMeta):
         # tag the class appropriately (so we could verify it later when doing
         # S.<something>
         cls.is_Singleton = True
-
-
-class Registry(object):
-    __slots__=[]
-
-    def __setattr__(self, name, obj):
-        setattr(self.__class__, name, obj)
-
-    def __delattr__(self, name):
-        delattr(self.__class__, name)
-
-class SingletonRegistry(Registry):
-    """
-    A map between singleton classes and the corresponding instances.
-    E.g. S.Exp == C.Exp()
-    """
-    __slots__ = []
-
-    __call__ = staticmethod(sympify)
-
-    def __repr__(self):
-        return "S"
-
-S = SingletonRegistry()
