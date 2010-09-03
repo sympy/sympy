@@ -145,49 +145,6 @@ class TensorSymbol(Function):
     is_commutative = True
 
 
-class SymTuple(Basic):
-
-    def __new__(cls, arg_tuple, **kw_args):
-        """
-        the wrapped tuple is available as self.args
-        """
-        obj = Basic.__new__(cls,*arg_tuple, **kw_args)
-        return obj
-
-    def __getitem__(self,i):
-        if isinstance(i,slice):
-            indices = i.indices(len(self))
-            return SymTuple(tuple([self.args[i] for i in range(*indices)]))
-        return self.args[i]
-
-    def __len__(self):
-        return len(self.args)
-
-    def __contains__(self,item):
-        return item in self.args
-
-    def _eval_subs(self,old,new):
-        if self==old:
-            return new
-        t=tuple([ el._eval_subs(old,new)  for el in self.args])
-        return self.__class__(t)
-
-
-def _tuple_wrapper(method):
-    """
-    Decorator that makes any tuple in arguments into SymTuple
-    """
-    def wrap_tuples(*args, **kw_args):
-        newargs=[]
-        for arg in args:
-            if type(arg) is tuple:
-                newargs.append(SymTuple(arg))
-            else:
-                newargs.append(arg)
-        return method(*newargs, **kw_args)
-    return wrap_tuples
-
-
 class AntiSymmetricTensor(TensorSymbol):
 
     nargs = 3
