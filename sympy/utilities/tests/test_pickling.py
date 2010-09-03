@@ -6,7 +6,7 @@ from sympy.utilities.pytest import XFAIL
 from sympy.core.assumptions import AssumeMeths
 from sympy.core.basic import Atom, Basic
 from sympy.core.core import BasicMeta, BasicType, ClassesRegistry
-from sympy.core.singleton import SingletonFactory
+from sympy.core.singleton import SingletonRegistry
 from sympy.core.symbol import Dummy, Symbol, Temporary, Wild
 from sympy.core.numbers import Catalan, ComplexInfinity, EulerGamma, Exp1,\
         GoldenRatio, Half, ImaginaryUnit, Infinity, Integer, NaN,\
@@ -66,7 +66,7 @@ def test_core_assumptions():
 def test_core_basic():
     for c in (Atom, Atom(), Basic, Basic(), BasicMeta, BasicMeta("test"),
               BasicType, BasicType("test"), ClassesRegistry, ClassesRegistry(),
-              SingletonFactory, SingletonFactory()):
+              SingletonRegistry, SingletonRegistry()):
         check(c)
 
 def test_core_symbol():

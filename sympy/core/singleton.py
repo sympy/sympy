@@ -1,6 +1,6 @@
 """Singleton mechanism"""
 
-from core import BasicMeta, C
+from core import BasicMeta
 from sympify import sympify
 from basic import Basic
 
@@ -25,11 +25,11 @@ class SingletonMeta(BasicMeta):
         # we are going to inject singletonic __new__, here it is:
         def cls_new(cls):
             try:
-                obj = getattr(SingletonFactory, cls.__name__)
+                obj = getattr(S, cls.__name__)
 
             except AttributeError:
-                obj = Basic.__new__(cls, *(), **{})
-                setattr(SingletonFactory, cls.__name__, obj)
+                obj = Basic.__new__(cls)
+                setattr(S, cls.__name__, obj)
 
             return obj
 
@@ -40,6 +40,8 @@ class SingletonMeta(BasicMeta):
 
         # inject singletonic __new__
         cls.__new__      = staticmethod(cls_new)
+
+        setattr(S, cls.__name__, cls())
 
         # Inject pickling support.
         def cls_getnewargs(self):
@@ -56,25 +58,25 @@ class SingletonMeta(BasicMeta):
         cls.is_Singleton = True
 
 
-class SingletonFactory:
+class Registry(object):
+    __slots__=[]
+
+    def __setattr__(self, name, obj):
+        setattr(self.__class__, name, obj)
+
+    def __delattr__(self, name):
+        delattr(self.__class__, name)
+
+class SingletonRegistry(Registry):
     """
     A map between singleton classes and the corresponding instances.
     E.g. S.Exp == C.Exp()
     """
+    __slots__ = []
 
-    def __getattr__(self, clsname):
-        if clsname == "__repr__":
-            return lambda: "S"
+    __call__ = staticmethod(sympify)
 
-        cls = getattr(C, clsname)
-        assert cls.is_Singleton
-        obj = cls()
+    def __repr__(self):
+        return "S"
 
-        # store found object in own __dict__, so the next lookups will be
-        # serviced without entering __getattr__, and so will be fast
-        setattr(self, clsname, obj)
-        return obj
-
-S = SingletonFactory()
-
-S.__call__ = sympify
+S = SingletonRegistry()
