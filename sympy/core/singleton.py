@@ -20,54 +20,56 @@ S = SingletonRegistry()
 
 
 class Singleton(BasicMeta):
-    """Metaclass for all singletons
+    """
+    Metaclass for singleton classes.
 
-       All singleton classes should put this into their __metaclass__, and
-       _not_ to define __new__
+    A singleton class has only one instance which is returned every time the
+    class is instanciated. Additionally, this instance can be accessed through
+    the global registry object S as S.<class_name>.
 
-       example:
+    Example::
+        >>> from sympy import S, Basic
+        >>> from sympy.core.singleton import Singleton
+        >>> class MySingleton(Basic):
+        ...     __metaclass__ = Singleton
+        >>> Basic() is Basic()
+        False
+        >>> MySingleton() is MySingleton()
+        True
+        >>> S.MySingleton is MySingleton()
+        True
 
-       class Zero(Integer):
-           __metaclass__ = Singleton
+    ** Developer notes **
+        The class is instanciated immediately at the point where it is defined
+        by calling cls.__new__(cls). This instance is cached and cls.__new__ is
+        rebound to return it directly.
 
-           p = 0
-           q = 1
+        The original constructor is also cached to allow subclasses to access it
+        and have their own instance.
+
     """
 
-    def __init__(cls, *args, **kw):
-        BasicMeta.__init__(cls, *args, **kw)
+    def __init__(cls, name, bases, dict_):
+        super(Singleton, cls).__init__(cls, name, bases, dict_)
 
-        # we are going to inject singletonic __new__, here it is:
-        def cls_new(cls):
-            try:
-                obj = getattr(S, cls.__name__)
+        for ancestor in cls.mro():
+            if '__new__' in ancestor.__dict__:
+                break
+        if isinstance(ancestor, Singleton) and ancestor is not cls:
+            ctor = ancestor._new_instance
+        else:
+            ctor = cls.__new__
+        cls._new_instance = staticmethod(ctor)
 
-            except AttributeError:
-                obj = Basic.__new__(cls)
-                setattr(S, cls.__name__, obj)
+        the_instance = ctor(cls)
 
-            return obj
+        def __new__(cls):
+            return the_instance
+        cls.__new__ = staticmethod(__new__)
 
-        cls_new.__name__ = '%s.__new__' % (cls.__name__)
-
-        assert not cls.__dict__.has_key('__new__'), \
-                'Singleton classes are not allowed to redefine __new__'
-
-        # inject singletonic __new__
-        cls.__new__      = staticmethod(cls_new)
-
-        setattr(S, cls.__name__, cls())
+        setattr(S, name, the_instance)
 
         # Inject pickling support.
-        def cls_getnewargs(self):
+        def __getnewargs__(self):
             return ()
-        cls_getnewargs.__name__ = '%s.__getnewargs__' % cls.__name__
-
-        assert not cls.__dict__.has_key('__getnewargs__'), \
-                'Singleton classes are not allowed to redefine __getnewargs__'
-        cls.__getnewargs__ = cls_getnewargs
-
-
-        # tag the class appropriately (so we could verify it later when doing
-        # S.<something>
-        cls.is_Singleton = True
+        cls.__getnewargs__ = __getnewargs__

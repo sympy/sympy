@@ -1182,9 +1182,15 @@ class RationalConstant(Rational):
     """
     __slots__ = []
 
+    def __new__(cls):
+        return AtomicExpr.__new__(cls)
+
+
 class IntegerConstant(Integer):
     __slots__ = []
 
+    def __new__(cls):
+        return AtomicExpr.__new__(cls)
 
 class Zero(IntegerConstant):
     __metaclass__ = Singleton
@@ -1494,6 +1500,9 @@ class ComplexInfinity(AtomicExpr):
 
     __slots__ = []
 
+    def __new__(cls):
+        return AtomicExpr.__new__(cls)
+
     @staticmethod
     def __abs__():
         return S.Infinity
@@ -1527,6 +1536,9 @@ class NumberSymbol(AtomicExpr):
     __slots__ = []
 
     is_NumberSymbol = True
+
+    def __new__(cls):
+        return AtomicExpr.__new__(cls)
 
     def approximation(self, number_cls):
         """ Return an interval with number_cls endpoints
@@ -1609,6 +1621,7 @@ class NumberSymbol(AtomicExpr):
 
 
 class Exp1(NumberSymbol):
+    __metaclass__ = Singleton
 
     is_real = True
     is_positive = True
@@ -1639,6 +1652,8 @@ class Exp1(NumberSymbol):
 E = S.Exp1
 
 class Pi(NumberSymbol):
+    __metaclass__ = Singleton
+
 
     is_real = True
     is_positive = True
@@ -1666,6 +1681,7 @@ class Pi(NumberSymbol):
 pi = S.Pi
 
 class GoldenRatio(NumberSymbol):
+    __metaclass__ = Singleton
 
     is_real = True
     is_positive = True
@@ -1691,6 +1707,7 @@ class GoldenRatio(NumberSymbol):
         return sage.golden_ratio
 
 class EulerGamma(NumberSymbol):
+    __metaclass__ = Singleton
 
     is_real = True
     is_positive = True
@@ -1714,6 +1731,7 @@ class EulerGamma(NumberSymbol):
         return sage.euler_gamma
 
 class Catalan(NumberSymbol):
+    __metaclass__ = Singleton
 
     is_real = True
     is_positive = True
