@@ -1173,8 +1173,20 @@ class Integer(Rational):
 # Add sympify converters
 converter[int] = converter[long] = Integer
 
+class RationalConstant(Rational):
+    """
+    Abstract base class for rationals with specific behaviors
 
-class Zero(Integer):
+    Derived classes must define class attributes p and q and should probably all
+    be singletons.
+    """
+    __slots__ = []
+
+class IntegerConstant(Integer):
+    __slots__ = []
+
+
+class Zero(IntegerConstant):
     __metaclass__ = SingletonMeta
 
     p = 0
@@ -1219,7 +1231,7 @@ class Zero(Integer):
     def __nonzero__(self):
         return False
 
-class One(Integer):
+class One(IntegerConstant):
     __metaclass__ = SingletonMeta
 
     p = 1
@@ -1247,7 +1259,7 @@ class One(Integer):
     def factors():
         return {1: 1}
 
-class NegativeOne(Integer):
+class NegativeOne(IntegerConstant):
     __metaclass__ = SingletonMeta
 
     p = -1
@@ -1287,7 +1299,7 @@ class NegativeOne(Integer):
                     return b ** q * b ** (e - q)
         return
 
-class Half(Rational):
+class Half(RationalConstant):
     __metaclass__ = SingletonMeta
 
     p = 1
@@ -1300,7 +1312,7 @@ class Half(Rational):
         return S.Half
 
 
-class Infinity(Rational):
+class Infinity(RationalConstant):
     __metaclass__ = SingletonMeta
 
     p = 1
@@ -1373,7 +1385,7 @@ class Infinity(Rational):
     __rmod__ = __mod__
 oo = S.Infinity
 
-class NegativeInfinity(Rational):
+class NegativeInfinity(RationalConstant):
     __metaclass__ = SingletonMeta
 
     p = -1
@@ -1440,7 +1452,7 @@ class NegativeInfinity(Rational):
         return True
 
 
-class NaN(Rational):
+class NaN(RationalConstant):
     __metaclass__ = SingletonMeta
 
     p = 0
@@ -1533,8 +1545,10 @@ class NumberSymbol(AtomicExpr):
             other = _sympify(other)
         except SympifyError:
             return False    # sympy != other  -->  not ==
-        if self is other: return True
-        if isinstance(other, Number) and self.is_irrational: return False
+        if self is other:
+            return True
+        if isinstance(other, Number) and self.is_irrational:
+            return False
 
         return False    # NumberSymbol != non-(Number|self)
 
@@ -1543,8 +1557,10 @@ class NumberSymbol(AtomicExpr):
             other = _sympify(other)
         except SympifyError:
             return True     # sympy != other
-        if self is other: return False
-        if isinstance(other, Number) and self.is_irrational: return True
+        if self is other:
+            return False
+        if isinstance(other, Number) and self.is_irrational:
+            return True
 
         return True     # NumberSymbol != non(Number|self)
 
@@ -1553,30 +1569,38 @@ class NumberSymbol(AtomicExpr):
             other = _sympify(other)
         except SympifyError:
             return False    # sympy > other  --> not <
-        if self is other: return False
+        if self is other:
+            return False
         if isinstance(other, Number):
             approx = self.approximation_interval(other.__class__)
             if approx is not None:
                 l,u = approx
-                if other < l: return False
-                if other > u: return True
+                if other < l:
+                    return False
+                if other > u:
+                    return True
             return self.evalf()<other
         if other.is_comparable:
             other = other.evalf()
             return self.evalf()<other
         return Expr.__lt__(self, other)
+
     def __le__(self, other):
         try:
             other = _sympify(other)
         except SympifyError:
             return False    # sympy > other  --> not <=
-        if self is other: return True
-        if other.is_comparable: other = other.evalf()
+        if self is other:
+            return True
+        if other.is_comparable:
+            other = other.evalf()
         if isinstance(other, Number):
             return self.evalf()<=other
         return Expr.__le__(self, other)
+
     def __gt__(self, other):
         return (-self) < (-other)
+
     def __ge__(self, other):
         return (-self) <= (-other)
 
@@ -1748,14 +1772,14 @@ class ImaginaryUnit(AtomicExpr):
 
 
         if isinstance(e, Number):
-            #if isinstance(e, Decimal):
-            #    a = decimal_math.pi() * exponent.num / 2
-            #    return Decimal(decimal_math.sin(a) + decimal_math.cos(a) * ImaginaryUnit())
             if isinstance(e, Integer):
                 e = e.p % 4
-                if e==0: return S.One
-                if e==1: return S.ImaginaryUnit
-                if e==2: return -S.One
+                if e==0:
+                    return S.One
+                if e==1:
+                    return S.ImaginaryUnit
+                if e==2:
+                    return -S.One
                 return -S.ImaginaryUnit
             return (-S.One) ** (e * S.Half)
         return
