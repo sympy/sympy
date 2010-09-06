@@ -183,5 +183,5 @@ def test_derivatives_issue1658():
     assert im(f(x)).diff(x) == im(f(x).diff(x))
 
     x = Symbol('x', real=True)
-    assert abs(f(x)).diff(x).subs(f(x), 1+I*x) == x/sqrt(1 + x**2)
-    assert arg(f(x)).diff(x).subs(f(x), 1+I*x**2) == 2*x/(1+x**4)
+    assert abs(f(x)).diff(x).subs(f(x), 1+I*x).doit() == x/sqrt(1 + x**2)
+    assert arg(f(x)).diff(x).subs(f(x), 1+I*x**2).doit() == 2*x/(1+x**4)

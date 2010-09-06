@@ -623,7 +623,7 @@ class Derivative(Expr):
     def _eval_subs(self, old, new):
         if self==old:
             return new
-        return Derivative(*map(lambda x: x._eval_subs(old, new), self.args), **{'evaluate': True})
+        return Derivative(*map(lambda x: x._eval_subs(old, new), self.args))
 
     def matches(self, expr, repl_dict={}, evaluate=False):
         # this method needs a cleanup.

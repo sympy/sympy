@@ -63,7 +63,7 @@ def pde_separate(eq, fun, sep, strategy='mul'):
         raise ValueError("Arguments do not match")
 
     # Substitute original function with separated...
-    result = eq.lhs.subs(fun, functions)
+    result = eq.lhs.subs(fun, functions).doit()
 
     # Divide by terms when doing multiplicative separation
     if not do_add:

@@ -242,6 +242,23 @@ allhints = ("separable", "1st_exact", "1st_linear", "Bernoulli",
 "nth_linear_constant_coeff_variation_of_parameters_Integral",
 "Liouville_Integral")
 
+def sub_func_doit(eq, func, new):
+    """When replacing the func with something else, we usually
+    want the derivative evaluated, so this function helps in
+    making that happen.
+
+    To keep subs from having to look through all derivatives, we
+    mask them off with dummy variables, do the func sub, and then
+    replace masked off derivatives with their doit values.
+    """
+    reps = {}
+    repu = {}
+    for d in eq.atoms(Derivative):
+        u = C.Dummy('u')
+        repu[u] = d.subs(func, new).doit()
+        reps[d] = u
+
+    return eq.subs(reps).subs(func, new).subs(repu)
 
 def dsolve(eq, func, hint="default", simplify=True, **kwargs):
     """
@@ -985,9 +1002,9 @@ def checkodesol(ode, func, sol, order='auto', solve_for_func=True):
             ode_diff = ode.lhs - ode.rhs
 
             if sol.lhs == func:
-                s = ode_diff.subs(func, sol.rhs)
+                s = sub_func_doit(ode_diff, func, sol.rhs)
             elif sol.rhs == func:
-                s = ode_diff.subs(func, sol.lhs)
+                s = sub_func_doit(ode_diff, func, sol.lhs)
             else:
                 testnum += 1
                 continue
@@ -1057,8 +1074,8 @@ def checkodesol(ode, func, sol, order='auto', solve_for_func=True):
                         # We can only substitute f(x) if the solution was
                         # solved for f(x).
                         break
-                    lhs = lhs.subs(func.diff(x, i), diffsols[i])
-                    rhs = rhs.subs(func.diff(x, i), diffsols[i])
+                    lhs = sub_func_doit(lhs, func.diff(x, i), diffsols[i])
+                    rhs = sub_func_doit(rhs, func.diff(x, i), diffsols[i])
                     ode_or_bool = Eq(lhs,rhs)
                     if isinstance(ode_or_bool, bool):
                         if ode_or_bool:
@@ -2439,7 +2456,8 @@ def _solve_undetermined_coefficients(eq, func, order, match):
         coefflist.append(c)
         trialfunc += c*i
 
-    eqs = eq.subs(f(x), trialfunc)
+    eqs = sub_func_doit(eq, f(x), trialfunc)
+
     coeffsdict = dict(zip(trialset, [0]*(len(trialset) + 1)))
 
     # XXX: Replace this with as_Add when Mateusz's Polys branch gets merged in

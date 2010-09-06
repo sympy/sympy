@@ -115,10 +115,10 @@ def test_derivative_subs_bug():
 
     e = diff(n(x), x)
     assert e.subs(n(x), l(x)) != e
-    assert e.subs(n(x), l(x)) == diff(l(x), x)
-    assert e.subs(n(x), -l(x)) == diff(-l(x), x)
+    assert e.subs(n(x), l(x)) == Derivative(l(x), x)
+    assert e.subs(n(x), -l(x)) == Derivative(-l(x), x)
 
-    assert e.subs(x, y) == diff(n(y), y)
+    assert e.subs(x, y) == Derivative(n(y), y)
 
 def test_derivative_subs_self_bug():
     f = Function('f')
