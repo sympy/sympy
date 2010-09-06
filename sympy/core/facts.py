@@ -49,11 +49,6 @@ http://en.wikipedia.org/wiki/List_of_rules_of_inference
 """
 from logic import fuzzy_not, name_not, Logic, And, Not
 
-def list_populate(l, item, skipif=None):
-    """update list with an item, but only if it is not already there"""
-    if item != skipif and (item not in l):
-        l.append(item)
-
 # XXX this prepares forward-chaining rules for alpha-network
 def deduce_alpha_implications(implications):
     """deduce all implications
@@ -73,37 +68,28 @@ def deduce_alpha_implications(implications):
 
 
        implications: [] of (a,b)
-       return:       {} of a -> [b, c, ...]
+       return:       {} of a -> set([b, c, ...])
     """
     res = {}
-    for a,b in implications:
+    for a, b in implications:
         if a == b:
             continue    # skip a->a cyclic input
 
-        I = res.setdefault(a,[])
-        list_populate(I,b)
+        res.setdefault(a, set()).add(b)
 
-        # UC:  -------------------------
-        #     |                         |
-        #     v                         |
-        # a='rat' -> b='real' ==> (a_='int') -> 'real'
-        for a_ in res:
-            ra_ = res[a_]
-            if a in ra_:
-                list_populate(ra_, b, skipif=a_)
+        # (x >> a) & (a >> b) => x >> b
+        for fact in res:
+            implied = res[fact]
+            if a in implied:
+                implied.add(b)
 
-        # UC:
-        # a='pos' -> b='real' && (already have b='real' -> 'complex')
-        #                   ||
-        #                   vv
-        # a='pos' -> 'complex'
+        # (a >> b) & (b >> x) => a >> x
         if b in res:
-            ra = res[a]
-            for b_ in res[b]:
-                list_populate(ra, b_, skipif=a)
+            res[a] |= res[b]
 
-    # let's see if the result is consistent
+    # Clean up tautologies and check consistency
     for a, impl in res.iteritems():
+        impl.discard(a)
         na = name_not(a)
         if na in impl:
             raise ValueError('implications are inconsistent: %s -> %s %s' % (a, na, impl))
@@ -140,12 +126,12 @@ def apply_beta_to_alpha_route(alpha_implications, beta_rules):
     """
     x_impl = {}
     for x in alpha_implications.keys():
-        x_impl[x] = (alpha_implications[x][:], [])
+        x_impl[x] = (set(alpha_implications[x]), [])
     for bcond, bimpl in beta_rules:
         for bk in bcond.args:
             if bk in x_impl:
                 continue
-            x_impl[bk] = ([], [])
+            x_impl[bk] = (set(), [])
 
     # we do it in 2 phases:
     #
@@ -160,7 +146,7 @@ def apply_beta_to_alpha_route(alpha_implications, beta_rules):
             assert isinstance(bcond, And)
             for x, (ximpls, bb) in x_impl.iteritems():
                 # A: x -> a     B: &(...) -> x      (non-informative)
-                if x == bimpl:  # XXX bimpl may become a list
+                if x == bimpl:
                     continue
                 # A: ... -> a   B: &(...) -> a      (non-informative)
                 if bimpl in ximpls:
@@ -181,14 +167,13 @@ def apply_beta_to_alpha_route(alpha_implications, beta_rules):
                         break
                 else:
                     assert phase==1
-                    list_populate(ximpls, bimpl)    # XXX bimpl may become a list
+                    ximpls.add(bimpl)
 
                     # we introduced new implication - now we have to restore
                     # completness of the whole set.
                     bimpl_impl = x_impl.get(bimpl)
                     if bimpl_impl is not None:
-                        for _ in bimpl_impl[0]:
-                            list_populate(ximpls, _)
+                        ximpls |= bimpl_impl[0]
                     seen_static_extension=True
                     continue
 
@@ -237,8 +222,7 @@ def rules_2prereq(rules):
     prereq = {}
     for a, impl in rules.iteritems():
         for i in impl:
-            pa = prereq.setdefault(i,[])
-            pa.append(a)
+            prereq.setdefault(i, set()).add(a)
     return prereq
 
 def split_rules_tt_tf_ft_ff(rules):
@@ -266,7 +250,7 @@ def split_rules_tt_tf_ft_ff(rules):
     tt = {}
     tf = {}
     ft = {}
-    for k,impl in rules.iteritems():
+    for k, impl in rules.iteritems():
         if k[:1] != '!':
             for i in impl:
                 if i[:1] != '!':
@@ -274,8 +258,7 @@ def split_rules_tt_tf_ft_ff(rules):
                 else:
                     dd = tf
                     i  = i[1:]
-                I = dd.setdefault(k,[])
-                list_populate(I, i)
+                dd.setdefault(k, set()).add(i)
         else:
             k = k[1:]
             for i in impl:
@@ -284,15 +267,13 @@ def split_rules_tt_tf_ft_ff(rules):
                 else:
                     dd = tt
                     i  = i[1:]
-                I = dd.setdefault(i,[])
-                list_populate(I, k)
+                dd.setdefault(i, set()).add(k)
 
     # FF is related to TT
     ff = {}
-    for k,impl in tt.iteritems():
+    for k, impl in tt.iteritems():
         for i in impl:
-            I = ff.setdefault(i,[])
-            I.append(k)
+            ff.setdefault(i, set()).add(k)
 
     return tt, tf, ft, ff
 
@@ -562,10 +543,9 @@ class FactRules(object):
         prereq = {}
         for rel in [rel_tt, rel_tf, rel_ff, rel_ft]:
             rel_prereq = rules_2prereq(rel)
-            for k,pitems in rel_prereq.iteritems():
-                kp = prereq.setdefault(k,[])
-                for p in pitems:
-                    list_populate(kp, p)
+            for k, pitems in rel_prereq.iteritems():
+                kp = prereq.setdefault(k, set())
+                kp |= pitems
         self.prereq = prereq
 
     # --- DEDUCTION ENGINE: RUNTIME CORE ---

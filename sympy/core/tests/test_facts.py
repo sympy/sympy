@@ -16,17 +16,17 @@ def test_deduce_alpha_implications():
 
     # transitivity
     I,P = D([('a','b'), ('b','c')])
-    assert I == {'a': ['b','c'], 'b': ['c']}
-    assert P == {'b': ['a'], 'c': ['a', 'b']}   # XXX a,b order unstable
+    assert I == {'a': set(['b','c']), 'b': set(['c'])}
+    assert P == {'b': set(['a']), 'c': set(['a', 'b'])}
 
     # see if the output does not contain repeated implications
     I,P = D([('a','b'), ('b','c'), ('b','c')])
-    assert I == {'a': ['b','c'], 'b': ['c']}
-    assert P == {'b': ['a'], 'c': ['a', 'b']}   # XXX a,b order unstable
+    assert I == {'a': set(['b','c']), 'b': set(['c'])}
+    assert P == {'b': set(['a']), 'c': set(['a', 'b'])}
 
     # see if it is tolerant to cycles
     assert D([('a','a'), ('a','a')]) == ({}, {})
-    assert D([('a','b'), ('b','a')]) == ({'a': ['b'], 'b': ['a']},  {'a': ['b'], 'b': ['a']})
+    assert D([('a','b'), ('b','a')]) == ({'a': set(['b']), 'b': set(['a'])},  {'a': set(['b']), 'b': set(['a'])})
 
     # see if it catches inconsistency
     raises(ValueError, "D([('a','!a')])")
@@ -37,8 +37,8 @@ def test_deduce_alpha_implications():
     # something related to real-world
     I,P = D([('rat','real'), ('int','rat')])
 
-    assert I == {'int': ['rat', 'real'],  'rat': ['real']}
-    assert P == {'rat': ['int'], 'real': ['int', 'rat']}    # XXX int,rat order unstable
+    assert I == {'int': set(['rat', 'real']),  'rat': set(['real'])}
+    assert P == {'rat': set(['int']), 'real': set(['int', 'rat'])}
 
 
 # TODO move me to appropriate place
@@ -47,134 +47,133 @@ def test_apply_beta_to_alpha_route():
 
     # indicates empty alpha-chain with attached beta-rule #bidx
     def Q(bidx):
-        return ([],[bidx])
+        return (set(), [bidx])
 
     # x -> a        &(a,b) -> x     --  x -> a
-    A = {'x': ['a']};       B = [ (And('a','b'), 'x') ]
-    assert APPLY(A, B) == {'x': (['a'], []),    'a':Q(0), 'b':Q(0)}
+    A = {'x': set(['a'])};       B = [ (And('a','b'), 'x') ]
+    assert APPLY(A, B) == {'x': (set(['a']), []),    'a':Q(0), 'b':Q(0)}
 
     # x -> a        &(a,!x) -> b    --  x -> a
-    A = {'x': ['a']};       B = [ (And('a','!x'), 'b') ]
-    assert APPLY(A, B) == {'x': (['a'], []),    '!x':Q(0), 'a':Q(0)}
+    A = {'x': set(['a'])};       B = [ (And('a','!x'), 'b') ]
+    assert APPLY(A, B) == {'x': (set(['a']), []),    '!x':Q(0), 'a':Q(0)}
 
     # x -> a b      &(a,b) -> c     --  x -> a b c
-    A = {'x': ['a','b']};   B = [ (And('a','b'), 'c') ]
-    assert APPLY(A, B) == {'x': (['a','b','c'], []),    'a':Q(0), 'b':Q(0)}
+    A = {'x': set(['a','b'])};   B = [ (And('a','b'), 'c') ]
+    assert APPLY(A, B) == {'x': (set(['a','b','c']), []),    'a':Q(0), 'b':Q(0)}
 
     # x -> a        &(a,b) -> y     --  x -> a [#0]
-    A = {'x': ['a']};   B = [ (And('a','b'), 'y') ]
-    assert APPLY(A, B) == {'x': (['a'], [0]),    'a':Q(0), 'b':Q(0)}
+    A = {'x': set(['a'])};   B = [ (And('a','b'), 'y') ]
+    assert APPLY(A, B) == {'x': (set(['a']), [0]),    'a':Q(0), 'b':Q(0)}
 
     # x -> a b c    &(a,b) -> c     --  x -> a b c
-    A = {'x': ['a','b','c']}
+    A = {'x': set(['a','b','c'])}
     B = [ (And('a','b'), 'c') ]
-    assert APPLY(A, B) == {'x': (['a','b','c'], []),    'a':Q(0), 'b':Q(0)}
+    assert APPLY(A, B) == {'x': (set(['a','b','c']), []),    'a':Q(0), 'b':Q(0)}
 
     # x -> a b      &(a,b,c) -> y   --  x -> a b [#0]
-    A = {'x': ['a','b']};   B = [ (And('a','b','c'), 'y') ]
-    assert APPLY(A, B) == {'x': (['a','b'], [0]),    'a':Q(0), 'b':Q(0), 'c':Q(0)}
+    A = {'x': set(['a','b'])};   B = [ (And('a','b','c'), 'y') ]
+    assert APPLY(A, B) == {'x': (set(['a','b']), [0]),    'a':Q(0), 'b':Q(0), 'c':Q(0)}
 
     # x -> a b      &(a,b) -> c     --  x -> a b c d
     # c -> d                            c -> d
-    A = {'x': ['a','b'], 'c': ['d']}
+    A = {'x': set(['a','b']), 'c': set(['d'])}
     B = [ (And('a','b'), 'c') ]
-    assert APPLY(A, B) == {'x': (['a','b','c','d'], []), 'c': (['d'], []),    'a':Q(0), 'b':Q(0)}
+    assert APPLY(A, B) == {'x': (set(['a','b','c','d']), []), 'c': (set(['d']), []), 'a':Q(0), 'b':Q(0)}
 
     # x -> a b      &(a,b) -> c     --  x -> a b c d e
     # c -> d        &(c,d) -> e         c -> d e
-    A = {'x': ['a','b'], 'c': ['d']}
+    A = {'x': set(['a','b']), 'c': set(['d'])}
     B = [ (And('a','b'), 'c'), (And('c','d'), 'e') ]
-    assert APPLY(A, B) == {'x': (['a','b','c','d','e'], []), 'c': (['d','e'], []),    'a':Q(0), 'b':Q(0), 'd':Q(1)}
+    assert APPLY(A, B) == {'x': (set(['a','b','c','d','e']), []), 'c': (set(['d','e']), []), 'a':Q(0), 'b':Q(0), 'd':Q(1)}
 
     # x -> a b      &(a,y) -> z     --  x -> a b y z
     #               &(a,b) -> y
-    A = {'x': ['a','b']}
+    A = {'x': set(['a','b'])}
     B = [ (And('a','y'), 'z'),
           (And('a','b'), 'y') ]
-    assert APPLY(A,B)  == {'x': (['a','b','y','z'], []),    'a':([],[0,1]), 'y':Q(0), 'b':Q(1)}
+    assert APPLY(A,B)  == {'x': (set(['a','b','y','z']), []), 'a':(set(), [0,1]), 'y':Q(0), 'b':Q(1)}
 
     # x -> a b      &(a,!b) -> c    --  x -> a b
-    A = {'x': ['a', 'b']}
+    A = {'x': set(['a', 'b'])}
     B = [ (And('a','!b'), 'c') ]
-    assert APPLY(A,B)  == {'x': (['a', 'b'], []),    'a':Q(0), '!b':Q(0)}
+    assert APPLY(A,B)  == {'x': (set(['a', 'b']), []), 'a':Q(0), '!b':Q(0)}
 
     # !x -> !a !b   &(!a,b) -> c    --  !x -> !a !b
-    A = {'!x': ['!a', '!b']}
+    A = {'!x': set(['!a', '!b'])}
     B = [ (And('!a','b'), 'c') ]
-    assert APPLY(A,B)  == {'!x': (['!a', '!b'], []),    '!a':Q(0), 'b':Q(0)}
+    assert APPLY(A,B)  == {'!x': (set(['!a', '!b']), []), '!a':Q(0), 'b':Q(0)}
 
     # x -> a b      &(b,c) -> !a    --  x -> a b
-    A = {'x': ['a','b']}
+    A = {'x': set(['a','b'])}
     B = [ (And('b','c'), '!a') ]
-    assert APPLY(A,B)  == {'x': (['a','b'], []),    'b':Q(0), 'c':Q(0)}
+    assert APPLY(A,B)  == {'x': (set(['a','b']), []), 'b':Q(0), 'c':Q(0)}
 
     # x -> a b      &(a, b) -> c    --  x -> a b c p
     # c -> p a
-    A = {'x': ['a','b'], 'c': ['p','a']}
+    A = {'x': set(['a','b']), 'c': set(['p','a'])}
     B = [ (And('a','b'), 'c') ]
-    assert APPLY(A,B)  == {'x': (['a','b','c','p'], []), 'c': (['p','a'], []),    'a':Q(0), 'b':Q(0)}
-
-    # TODO more tests?
+    assert APPLY(A,B)  == {'x': (set(['a','b','c','p']), []),
+                            'c': (set(['p','a']), []), 'a':Q(0), 'b':Q(0)}
 
 
 def test_split_rules_tf():
     S = split_rules_tt_tf_ft_ff
 
-    r = {'a': ['b', '!c', 'd'],
-         'b': ['e', '!f'] }
+    r = {'a': set(['b', '!c', 'd']),
+         'b': set(['e', '!f']) }
 
     tt, tf, ft, ff = S(r)
-    assert tt == {'a': ['b', 'd'], 'b': ['e']}
-    assert tf == {'a': ['c'],      'b': ['f']}
+    assert tt == {'a': set(['b', 'd']), 'b': set(['e'])}
+    assert tf == {'a': set(['c']),      'b': set(['f'])}
     assert ft == {}
-    assert ff == {'b': ['a'], 'd': ['a'], 'e': ['b']}
+    assert ff == {'b': set(['a']), 'd': set(['a']), 'e': set(['b'])}
 
-    r = {'!a': ['b', '!c'],
-         'b' : ['e', '!f'] }
+    r = {'!a': set(['b', '!c']),
+         'b' : set(['e', '!f']) }
 
     tt, tf, ft, ff = S(r)
-    assert tt == {'b': ['e'], 'c': ['a']    }
-    assert tf == {'b': ['f']    }
-    assert ft == {'b': ['a']    }   # XXX ok? maybe vice versa?
-    assert ff == {'e': ['b'], 'a': ['c']    }
+    assert tt == {'b': set(['e']), 'c': set(['a'])    }
+    assert tf == {'b': set(['f'])    }
+    assert ft == {'b': set(['a'])    }   # XXX ok? maybe vice versa?
+    assert ff == {'e': set(['b']), 'a': set(['c'])    }
 
 
 def test_FactRules_parse():
     f = FactRules('a -> b')
 #   assert f.negs       == {}
-    assert f.rel_tt     == {'a': ['b']}
+    assert f.rel_tt     == {'a': set(['b'])}
     assert f.rel_tf     == {}
-    assert f.rel_ff     == {'b': ['a']}
+    assert f.rel_ff     == {'b': set(['a'])}
     assert f.rel_ft     == {}
-    assert f.prereq     == {'b': ['a'], 'a': ['b']}
+    assert f.prereq     == {'b': set(['a']), 'a': set(['b'])}
 
     f = FactRules('a -> !b')
     assert f.rel_tt     == {}
-    assert f.rel_tf     == {'a': ['b'], 'b': ['a']}
+    assert f.rel_tf     == {'a': set(['b']), 'b': set(['a'])}
     assert f.rel_ff     == {}
     assert f.rel_ft     == {}
-    assert f.prereq     == {'b': ['a'], 'a': ['b']}
+    assert f.prereq     == {'b': set(['a']), 'a': set(['b'])}
 
     f = FactRules('!a -> b')
     assert f.rel_tt     == {}
     assert f.rel_tf     == {}
     assert f.rel_ff     == {}
-    assert f.rel_ft     == {'a': ['b'], 'b': ['a']}
-    assert f.prereq     == {'b': ['a'], 'a': ['b']}
+    assert f.rel_ft     == {'a': set(['b']), 'b': set(['a'])}
+    assert f.prereq     == {'b': set(['a']), 'a': set(['b'])}
 
     f = FactRules('!a -> !b')
-    assert f.rel_tt     == {'b': ['a']}
+    assert f.rel_tt     == {'b': set(['a'])}
     assert f.rel_tf     == {}
-    assert f.rel_ff     == {'a': ['b']}
+    assert f.rel_ff     == {'a': set(['b'])}
     assert f.rel_ft     == {}
-    assert f.prereq     == {'b': ['a'], 'a': ['b']}
+    assert f.prereq     == {'b': set(['a']), 'a': set(['b'])}
 
     f = FactRules('!z == nz')
     assert f.rel_tt     == {}
-    assert f.rel_tf     == {'nz': ['z'], 'z': ['nz']}
+    assert f.rel_tf     == {'nz': set(['z']), 'z': set(['nz'])}
     assert f.rel_ff     == {}
-    assert f.rel_ft     == {'nz': ['z'], 'z': ['nz']}
-    assert f.prereq     == {'z': ['nz'], 'nz': ['z']}
+    assert f.rel_ft     == {'nz': set(['z']), 'z': set(['nz'])}
+    assert f.prereq     == {'z': set(['nz']), 'nz': set(['z'])}
 
     # TODO add parsing with | and & ?
 
