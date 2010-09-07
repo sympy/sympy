@@ -19,7 +19,7 @@ class SingletonRegistry(Registry):
 S = SingletonRegistry()
 
 
-class SingletonMeta(BasicMeta):
+class Singleton(BasicMeta):
     """Metaclass for all singletons
 
        All singleton classes should put this into their __metaclass__, and
@@ -28,7 +28,7 @@ class SingletonMeta(BasicMeta):
        example:
 
        class Zero(Integer):
-           __metaclass__ = SingletonMeta
+           __metaclass__ = Singleton
 
            p = 0
            q = 1

@@ -1,7 +1,7 @@
 from core import C
 from sympify import converter, sympify, _sympify, SympifyError
 from basic import Basic
-from singleton import S, SingletonMeta
+from singleton import S, Singleton
 from expr import Expr, AtomicExpr
 from decorators import _sympifyit
 from cache import cacheit, clear_cache
@@ -1187,7 +1187,7 @@ class IntegerConstant(Integer):
 
 
 class Zero(IntegerConstant):
-    __metaclass__ = SingletonMeta
+    __metaclass__ = Singleton
 
     p = 0
     q = 1
@@ -1232,7 +1232,7 @@ class Zero(IntegerConstant):
         return False
 
 class One(IntegerConstant):
-    __metaclass__ = SingletonMeta
+    __metaclass__ = Singleton
 
     p = 1
     q = 1
@@ -1260,7 +1260,7 @@ class One(IntegerConstant):
         return {1: 1}
 
 class NegativeOne(IntegerConstant):
-    __metaclass__ = SingletonMeta
+    __metaclass__ = Singleton
 
     p = -1
     q = 1
@@ -1300,7 +1300,7 @@ class NegativeOne(IntegerConstant):
         return
 
 class Half(RationalConstant):
-    __metaclass__ = SingletonMeta
+    __metaclass__ = Singleton
 
     p = 1
     q = 2
@@ -1313,7 +1313,7 @@ class Half(RationalConstant):
 
 
 class Infinity(RationalConstant):
-    __metaclass__ = SingletonMeta
+    __metaclass__ = Singleton
 
     p = 1
     q = 0
@@ -1386,7 +1386,7 @@ class Infinity(RationalConstant):
 oo = S.Infinity
 
 class NegativeInfinity(RationalConstant):
-    __metaclass__ = SingletonMeta
+    __metaclass__ = Singleton
 
     p = -1
     q = 0
@@ -1453,7 +1453,7 @@ class NegativeInfinity(RationalConstant):
 
 
 class NaN(RationalConstant):
-    __metaclass__ = SingletonMeta
+    __metaclass__ = Singleton
 
     p = 0
     q = 0
@@ -1486,7 +1486,7 @@ class NaN(RationalConstant):
 nan = S.NaN
 
 class ComplexInfinity(AtomicExpr):
-    __metaclass__ = SingletonMeta
+    __metaclass__ = Singleton
     is_commutative = True
     is_comparable = None
     is_bounded = False
@@ -1517,7 +1517,7 @@ class ComplexInfinity(AtomicExpr):
 zoo = S.ComplexInfinity
 
 class NumberSymbol(AtomicExpr):
-    __metaclass__ = SingletonMeta
+    __metaclass__ = Singleton
 
     is_commutative = True
     is_comparable = True
@@ -1736,7 +1736,7 @@ class Catalan(NumberSymbol):
         return sage.catalan
 
 class ImaginaryUnit(AtomicExpr):
-    __metaclass__ = SingletonMeta
+    __metaclass__ = Singleton
 
     is_commutative = True
     is_imaginary = True
