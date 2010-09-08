@@ -3044,18 +3044,36 @@ def simplify_index_permutations(expr, permutation_operators):
 
         for P in permutation_operators:
             new_terms = set([])
+            on_hold = set([])
             while terms:
                 term = terms.pop()
                 permuted = P.get_permuted(term)
-                if permuted in terms:
-                    terms.remove(permuted)
+                if permuted in terms | on_hold:
+                    try:
+                        terms.remove(permuted)
+                    except KeyError:
+                        on_hold.remove(permuted)
                     keep = _choose_one_to_keep(term, permuted, P.args)
                     new_terms.add(P*keep)
                 else:
-                    new_terms.add(term)
 
-            terms = new_terms
-
+                    # Some terms must get a second chance because the permuted
+                    # term may already have canonical dummy ordering.  Then
+                    # substitute_dummies() does nothing.  However, the other
+                    # term, if it exists, will be able to match with us.
+                    permuted1 = permuted
+                    permuted = substitute_dummies(permuted)
+                    if permuted1 == permuted:
+                        on_hold.add(term)
+                    elif permuted in terms | on_hold:
+                        try:
+                            terms.remove(permuted)
+                        except KeyError:
+                            on_hold.remove(permuted)
+                        keep = _choose_one_to_keep(term, permuted, P.args)
+                        new_terms.add(P*keep)
+                    else:
+                        new_terms.add(term)
+            terms = new_terms | on_hold
         return Add(*terms)
-
     return expr
