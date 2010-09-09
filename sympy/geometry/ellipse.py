@@ -2,6 +2,7 @@ from sympy.core import S, C, sympify
 from sympy.simplify import simplify, trigsimp
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.geometry.exceptions import GeometryError
+from sympy.solvers import solve
 from entity import GeometryEntity
 from point import Point
 from line import LinearEntity, Line
@@ -425,9 +426,25 @@ class Circle(Ellipse):
                 ret.append(Point(xi_2, yi_2))
             return ret
         elif isinstance(o, Ellipse):
-            a, b, r = o.hradius, o.vradius, self.radius
-            x = a*sqrt(simplify((r**2 - b**2)/(a**2 - b**2)))
-            y = b*sqrt(simplify((a**2 - r**2)/(a**2 - b**2)))
-            return list(set([Point(x,y), Point(x,-y), Point(-x,y), Point(-x,-y)]))
+            variables = self.equation().atoms(C.Symbol)
+            if len(variables) > 2:
+                return None
+            if self.center == o.center:
+                a, b, r = o.hradius, o.vradius, self.radius
+                x = a*sqrt(simplify((r**2 - b**2)/(a**2 - b**2)))
+                y = b*sqrt(simplify((a**2 - r**2)/(a**2 - b**2)))
+                return list(set([Point(x,y), Point(x,-y), Point(-x,y), Point(-x,-y)]))
+            else:
+                xo, yo = self.center
+                xe, ye = o.center
+                x, y = variables
+                xx = solve(self.equation(), x)
+                intersect = []
+                for xi in xx:
+                    yy = solve(o.equation().subs(x, xi), y)
+                    for yi in yy:
+                        intersect.append(Point(xi, yi))
+                return list(set(intersect))
+
 
         return Ellipse.intersection(self, o)
