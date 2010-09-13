@@ -13,7 +13,7 @@ from sympy import (
 from sympy.utilities import iff
 from sympy.core.sympify import sympify
 from sympy.core.cache import cacheit
-
+from sympy.core.symbol import Dummy
 
 __all__ = [
     'Dagger',
@@ -170,8 +170,8 @@ class AntiSymmetricTensor(TensorSymbol):
     def __new__(cls, symbol, upper, lower):
 
         try:
-            upper, signu = _sort_anticommuting_fermions(upper, key=lambda x: x)
-            lower, signl = _sort_anticommuting_fermions(lower, key=lambda x: x)
+            upper, signu = _sort_anticommuting_fermions(upper, key=cls._sortkey)
+            lower, signl = _sort_anticommuting_fermions(lower, key=cls._sortkey)
             sign = 1
             if signu:
                 upper = Tuple(*upper)
@@ -195,6 +195,30 @@ class AntiSymmetricTensor(TensorSymbol):
             return -TensorSymbol.__new__(cls, symbol, upper, lower)
         else:
             return  TensorSymbol.__new__(cls, symbol, upper, lower)
+
+    @classmethod
+    def _sortkey(cls, index):
+        """Key for sorting of indices.
+
+        particle < hole < general
+
+        FIXME: This is a bottle-neck, can we do it faster?
+        """
+        if isinstance(index, Dummy):
+            if index.assumptions0.get('above_fermi'):
+                return "10%i" %hash(index)
+            elif index.assumptions0.get('below_fermi'):
+                return "11%i" %hash(index)
+            else:
+                return "12%i" %hash(index)
+
+        if index.assumptions0.get('above_fermi'):
+            return "00%i" %hash(index)
+        elif index.assumptions0.get('below_fermi'):
+            return "01%i" %hash(index)
+        else:
+            return "02%i" %hash(index)
+
 
     def _latex(self,printer):
         return "%s^{%s}_{%s}" %(
