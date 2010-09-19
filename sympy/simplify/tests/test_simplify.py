@@ -2,7 +2,8 @@ from sympy import Symbol, symbols, together, hypersimp, factorial, binomial, \
         collect, Function, powsimp, separate, sin, exp, Rational, fraction, \
         simplify, trigsimp, cos, tan, cot, log, ratsimp, Matrix, pi, integrate, \
         solve, nsimplify, GoldenRatio, sqrt, E, I, sympify, atan, Derivative, \
-        S, diff, oo, Eq, Integer, gamma, acos, Integral, logcombine, separatevars
+        S, diff, oo, Eq, Integer, gamma, acos, Integral, logcombine, Wild, \
+        separatevars
 from sympy.utilities import all
 from sympy.utilities.pytest import XFAIL
 
@@ -353,6 +354,30 @@ def test_collect_D_0():
     # collect does not distinguish nested derivatives, so it returns
     #                                           -- (a + b)*D(D(f, x), x)
     assert collect(a*fxx     + b*fxx    , fxx)  == (a + b)*fxx
+
+def test_collect_Wild():
+    """Collect with respect to functions with Wild argument"""
+    a, b, x, y = symbols('a b x y')
+    f = Function('f')
+    w1 = Wild('.1')
+    w2 = Wild('.2')
+    assert collect(f(x) + a*f(x), f(w1)) == (1 + a)*f(x)
+    assert collect(f(x, y) + a*f(x, y), f(w1)) == f(x, y) + a*f(x, y)
+    assert collect(f(x, y) + a*f(x, y), f(w1, w2)) == (1 + a)*f(x, y)
+    assert collect(f(x, y) + a*f(x, y), f(w1, w1)) == f(x, y) + a*f(x, y)
+    assert collect(f(x, x) + a*f(x, x), f(w1, w1)) == (1 + a)*f(x, x)
+    assert collect(a*(x + 1)**y + (x + 1)**y, w1**y) == (1 + a)*(x + 1)**y
+    assert collect(a*(x + 1)**y + (x + 1)**y, w1**b) == a*(x + 1)**y + (x + 1)**y
+
+@XFAIL
+def test_collect_Wild_power():
+    # Collect with respect to Wild power.  I couldn't figure out this one
+    # because of the more complicated treatment of powers
+    a, x, y = symbols('a x y')
+    w1 = Wild('.1')
+    w2 = Wild('.2')
+    assert collect(a*(x + 1)**y + (x + 1)**y, (x + 1)**w2) == (1 + a)*(x + 1)**y
+    assert collect(a*(x + 1)**y + (x + 1)**y, w1**w2) == (1 + a)*(x + 1)**y
 
 def test_separatevars():
     x,y,z,n = symbols('xyzn')
