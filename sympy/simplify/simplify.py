@@ -364,7 +364,7 @@ def collect(expr, syms, evaluate=True, exact=False):
         up to rational powers as keys and collected sub-expressions
         as values respectively.
 
-        >>> from sympy import collect, sympify
+        >>> from sympy import collect, sympify, Wild
         >>> from sympy.abc import a, b, c, x, y, z
 
         This function can collect symbolic coefficients in polynomial
@@ -399,6 +399,12 @@ def collect(expr, syms, evaluate=True, exact=False):
 
         >>> collect(a*x*log(x) + b*(x*log(x)), x*log(x))
         x*(a + b)*log(x)
+
+        You can use wildcards in the pattern
+
+        >>> w = Wild('w1')
+        >>> collect(a*x**y - b*x**y, w**y)
+        x**y*(a - b)
 
         It is also possible to work with symbolic powers, although
         it has more complicated behavior, because in this case
@@ -585,7 +591,7 @@ def collect(expr, syms, evaluate=True, exact=False):
                         # a constant is a match for everything
                         break
 
-                    if elem == term and e_sym == t_sym:
+                    if (elem == term or term.match(elem)) and e_sym == t_sym:
                         if exact == False:
                             # we don't have to be exact so find common exponent
                             # for both expression's term and pattern's element
