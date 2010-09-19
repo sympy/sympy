@@ -368,14 +368,6 @@ def test_collect_Wild():
     assert collect(f(x, x) + a*f(x, x), f(w1, w1)) == (1 + a)*f(x, x)
     assert collect(a*(x + 1)**y + (x + 1)**y, w1**y) == (1 + a)*(x + 1)**y
     assert collect(a*(x + 1)**y + (x + 1)**y, w1**b) == a*(x + 1)**y + (x + 1)**y
-
-@XFAIL
-def test_collect_Wild_power():
-    # Collect with respect to Wild power.  I couldn't figure out this one
-    # because of the more complicated treatment of powers
-    a, x, y = symbols('a x y')
-    w1 = Wild('.1')
-    w2 = Wild('.2')
     assert collect(a*(x + 1)**y + (x + 1)**y, (x + 1)**w2) == (1 + a)*(x + 1)**y
     assert collect(a*(x + 1)**y + (x + 1)**y, w1**w2) == (1 + a)*(x + 1)**y
 
