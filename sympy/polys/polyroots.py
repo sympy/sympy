@@ -634,6 +634,7 @@ class RootOf(Expr):
             if index < len(exact):
                 return exact[index]
             else:
+                index = sympify(index)
                 return Expr.__new__(cls, f, index)
 
     @property
