@@ -266,3 +266,6 @@ def test_RootsOf():
 
     assert RootSum(Lambda(x, x), Poly(x-1, x), evaluate=False).doit() == S.One
 
+    a, b = symbols('a b')
+    f = Poly(x**6 - x**5 - 1, x)
+    assert RootOf(f, 0).subs(a, b) == RootOf(f.subs(a, b), 0)
