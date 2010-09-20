@@ -591,9 +591,8 @@ def collect(expr, syms, evaluate=True, exact=False):
                         # a constant is a match for everything
                         break
 
-                    if (elem == term or term.match(elem) is not None) and \
-                    (e_sym == t_sym or t_sym is not None and e_sym is not None
-                    and t_sym.match(e_sym)):
+                    if (term.match(elem) is not None and (t_sym == e_sym or t_sym is not None and
+                    e_sym is not None and t_sym.match(e_sym)is not None)):
                         if exact == False:
                             # we don't have to be exact so find common exponent
                             # for both expression's term and pattern's element
