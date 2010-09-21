@@ -256,13 +256,20 @@ class Integral(Expr):
 
         deep = hints.get('deep', True)
 
+        # check for the trivial case of equal upper and lower limits
+        for xab in self.limits:
+            if len(xab) == 3 and xab[1] == xab[2]:
+                return S.Zero
+        # now compute and check the function
         function = self.function
         if deep:
             function = function.doit(**hints)
+        if function.is_zero:
+            return S.Zero
 
+        # There is no trivial answer, so continue
         for lim in self.limits:
-            x = lim[0]
-            antideriv = self._eval_integral(function, x)
+            antideriv = self._eval_integral(function, lim[0])
 
             if antideriv is None:
                 newargs = (function, self.__getnewargs__()[1])
@@ -272,11 +279,10 @@ class Integral(Expr):
                     function = antideriv
                 else:
                     if len(lim) == 3:
-                        a = lim[1]
-                        b = lim[2]
+                        x, a, b = lim
                     if len(lim) == 2:
+                        x, b = lim
                         a = None
-                        b = lim[1]
 
                     if deep:
                         if isinstance(a, Basic):

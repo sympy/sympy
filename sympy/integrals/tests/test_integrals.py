@@ -15,6 +15,9 @@ def test_improper_integral():
 
 def test_basics():
 
+    assert Integral(0, x) != 0
+    assert Integral(x, (x, 1, 1)) != 0
+
     assert diff(Integral(y, y), x)       == 0
     assert diff(Integral(x, (x,0,1)), x) == 0
     assert diff(Integral(x, x), x)       == x
@@ -144,7 +147,6 @@ def test_issue565():
     assert integrate(-1./2 * x * sin(n * pi * x/2), [x, -2, 0])  == 2*cos(pi*n)/(pi*n)
     assert integrate(-Rational(1)/2 * x * sin(n * pi * x/2), [x, -2, 0]) \
                                                                  == 2*cos(pi*n)/(pi*n)
-
 def test_issue580():
     # definite integration of rational functions gives wrong answers
     assert NS(Integral(1/(x**2-8*x+17), (x, 2, 4))) == '1.10714871779409'
@@ -402,6 +404,11 @@ def test_integral_reconstruct():
 def test_doit():
     e = Integral(Integral(2*x), (x, 0, 1))
     assert e.doit() == Rational(1, 3)
+    f = Function('f')
+    # doesn't matter if the integral can't be performed
+    assert Integral(f(x), (x, 1, 1)).doit() == 0
+    # doesn't matter if the limits can't be evaluated
+    assert Integral(0, (x, 1, Integral(f(x), x))).doit() == 0
 
 @XFAIL
 def test_doit2():
