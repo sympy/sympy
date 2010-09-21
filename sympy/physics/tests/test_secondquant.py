@@ -934,3 +934,244 @@ def test_dummy_order_ambiguous():
         subslist = zip([p1, p2, p3, p4, p5], permut)
         expr = template.subs(subslist)
         assert substitute_dummies(expr) == substitute_dummies(base)
+
+def atv(*args):
+    return AntiSymmetricTensor('v', args[:2], args[2:] )
+def att(*args):
+    if len(args) == 4:
+        return AntiSymmetricTensor('t', args[:2], args[2:] )
+    elif len(args) == 2:
+        return AntiSymmetricTensor('t', (args[0],), (args[1],))
+
+def test_dummy_order_inner_outer_lines_VT1T1T1_AT():
+    ii = symbols('i',below_fermi=True, dummy=False)
+    aa = symbols('a',above_fermi=True, dummy=False)
+    k, l = symbols('kl',below_fermi=True, dummy=True)
+    c, d = symbols('cd',above_fermi=True, dummy=True)
+
+
+    # Coupled-Cluster T1 terms with V*T1*T1*T1
+    # t^{a}_{k} t^{c}_{i} t^{d}_{l} v^{lk}_{dc}
+    exprs = [
+            # permut v and t <=> swapping internal lines, equivalent
+            # irrespective of symmetries in v
+            atv(k, l, c, d)*att(c, ii)*att(d, l)*att(aa, k),
+            atv(l, k, c, d)*att(c, ii)*att(d, k)*att(aa, l),
+            atv(k, l, d, c)*att(d, ii)*att(c, l)*att(aa, k),
+            atv(l, k, d, c)*att(d, ii)*att(c, k)*att(aa, l),
+            ]
+    for permut in exprs[1:]:
+        assert substitute_dummies(exprs[0]) == substitute_dummies(permut)
+
+def test_dummy_order_inner_outer_lines_VT1T1T1T1_AT():
+    ii,jj = symbols('ij',below_fermi=True, dummy=False)
+    aa,bb = symbols('ab',above_fermi=True, dummy=False)
+    k, l = symbols('kl',below_fermi=True, dummy=True)
+    c, d = symbols('cd',above_fermi=True, dummy=True)
+
+
+    # Coupled-Cluster T2 terms with V*T1*T1*T1*T1
+    # non-equivalent substitutions (change of sign)
+    exprs = [
+            # permut t <=> swapping external lines
+            atv(k, l, c, d)*att(c, ii)*att(d, jj)*att(aa, k)*att(bb, l),
+            atv(k, l, c, d)*att(c, jj)*att(d, ii)*att(aa, k)*att(bb, l),
+            atv(k, l, c, d)*att(c, ii)*att(d, jj)*att(bb, k)*att(aa, l),
+            ]
+    for permut in exprs[1:]:
+        assert substitute_dummies(exprs[0]) == -substitute_dummies(permut)
+
+    # equivalent substitutions
+    exprs = [
+            atv(k, l, c, d)*att(c, ii)*att(d, jj)*att(aa, k)*att(bb, l),
+            # permut t <=> swapping external lines
+            atv(k, l, c, d)*att(c, jj)*att(d, ii)*att(bb, k)*att(aa, l),
+            ]
+    for permut in exprs[1:]:
+        assert substitute_dummies(exprs[0]) == substitute_dummies(permut)
+
+def test_equivalent_internal_lines_VT1T1_AT():
+    i,j,k,l = symbols('ijkl',below_fermi=True, dummy=True)
+    a,b,c,d = symbols('abcd',above_fermi=True, dummy=True)
+
+
+    exprs = [ # permute v.  Different dummy order. Not equivalent.
+            atv(i, j, a, b)*att(a, i)*att(b, j),
+            atv(j, i, a, b)*att(a, i)*att(b, j),
+            atv(i, j, b, a)*att(a, i)*att(b, j),
+            ]
+    for permut in exprs[1:]:
+        assert substitute_dummies(exprs[0]) != substitute_dummies(permut)
+
+    exprs = [ # permute v.  Different dummy order. Equivalent
+            atv(i, j, a, b)*att(a, i)*att(b, j),
+            atv(j, i, b, a)*att(a, i)*att(b, j),
+            ]
+    for permut in exprs[1:]:
+        assert substitute_dummies(exprs[0]) == substitute_dummies(permut)
+
+    exprs = [ # permute t.  Same dummy order, not equivalent.
+            atv(i, j, a, b)*att(a, i)*att(b, j),
+            atv(i, j, a, b)*att(b, i)*att(a, j),
+            ]
+    for permut in exprs[1:]:
+        assert substitute_dummies(exprs[0]) != substitute_dummies(permut)
+
+    exprs = [ # permute v and t.  Different dummy order, equivalent
+            atv(i, j, a, b)*att(a, i)*att(b, j),
+            atv(j, i, a, b)*att(a, j)*att(b, i),
+            atv(i, j, b, a)*att(b, i)*att(a, j),
+            atv(j, i, b, a)*att(b, j)*att(a, i),
+            ]
+    for permut in exprs[1:]:
+        assert substitute_dummies(exprs[0]) == substitute_dummies(permut)
+
+def test_equivalent_internal_lines_VT2conjT2_AT():
+    # this diagram requires special handling in TCE
+    i,j,k,l,m,n = symbols('ijklmn',below_fermi=True, dummy=True)
+    a,b,c,d,e,f = symbols('abcdef',above_fermi=True, dummy=True)
+    p1,p2,p3,p4 = symbols('p1 p2 p3 p4',above_fermi=True, dummy=True)
+    h1,h2,h3,h4 = symbols('h1 h2 h3 h4',below_fermi=True, dummy=True)
+
+    from sympy.utilities.iterables import variations
+
+
+    # atv(abcd)att(abij)att(ijcd)
+    template = atv(p1, p2, p3, p4)*att(p1, p2, i, j)*att(i, j, p3, p4)
+    permutator = variations([a,b,c,d], 4)
+    base = template.subs(zip([p1, p2, p3, p4], permutator.next()))
+    for permut in permutator:
+        subslist = zip([p1, p2, p3, p4], permut)
+        expr = template.subs(subslist)
+        assert substitute_dummies(expr) == substitute_dummies(base)
+    template = atv(p1, p2, p3, p4)*att(p1, p2, j, i)*att(j, i, p3, p4)
+    permutator = variations([a,b,c,d], 4)
+    base = template.subs(zip([p1, p2, p3, p4], permutator.next()))
+    for permut in permutator:
+        subslist = zip([p1, p2, p3, p4], permut)
+        expr = template.subs(subslist)
+        assert substitute_dummies(expr) == substitute_dummies(base)
+
+    # atv(abcd)att(abij)att(jicd)
+    template = atv(p1, p2, p3, p4)*att(p1, p2, i, j)*att(j, i, p3, p4)
+    permutator = variations([a,b,c,d], 4)
+    base = template.subs(zip([p1, p2, p3, p4], permutator.next()))
+    for permut in permutator:
+        subslist = zip([p1, p2, p3, p4], permut)
+        expr = template.subs(subslist)
+        assert substitute_dummies(expr) == substitute_dummies(base)
+    template = atv(p1, p2, p3, p4)*att(p1, p2, j, i)*att(i, j, p3, p4)
+    permutator = variations([a,b,c,d], 4)
+    base = template.subs(zip([p1, p2, p3, p4], permutator.next()))
+    for permut in permutator:
+        subslist = zip([p1, p2, p3, p4], permut)
+        expr = template.subs(subslist)
+        assert substitute_dummies(expr) == substitute_dummies(base)
+
+def test_equivalent_internal_lines_VT2conjT2_ambiguous_order_AT():
+    # These diagrams invokes _determine_ambiguous() because the
+    # dummies can not be ordered unambiguously by the key alone
+    i,j,k,l,m,n = symbols('ijklmn',below_fermi=True, dummy=True)
+    a,b,c,d,e,f = symbols('abcdef',above_fermi=True, dummy=True)
+    p1,p2,p3,p4 = symbols('p1 p2 p3 p4',above_fermi=True, dummy=True)
+    h1,h2,h3,h4 = symbols('h1 h2 h3 h4',below_fermi=True, dummy=True)
+
+    from sympy.utilities.iterables import variations
+
+
+    # atv(abcd)att(abij)att(cdij)
+    template = atv(p1, p2, p3, p4)*att(p1, p2, i, j)*att(p3, p4, i, j)
+    permutator = variations([a,b,c,d], 4)
+    base = template.subs(zip([p1, p2, p3, p4], permutator.next()))
+    for permut in permutator:
+        subslist = zip([p1, p2, p3, p4], permut)
+        expr = template.subs(subslist)
+        assert substitute_dummies(expr) == substitute_dummies(base)
+    template = atv(p1, p2, p3, p4)*att(p1, p2, j, i)*att(p3, p4, i, j)
+    permutator = variations([a,b,c,d], 4)
+    base = template.subs(zip([p1, p2, p3, p4], permutator.next()))
+    for permut in permutator:
+        subslist = zip([p1, p2, p3, p4], permut)
+        expr = template.subs(subslist)
+        assert substitute_dummies(expr) == substitute_dummies(base)
+
+def test_equivalent_internal_lines_VT2_AT():
+    i,j,k,l = symbols('ijkl',below_fermi=True, dummy=True)
+    a,b,c,d = symbols('abcd',above_fermi=True, dummy=True)
+
+    exprs = [
+            # permute v. Same dummy order, not equivalent.
+            atv(i, j, a, b)*att(a, b, i, j),
+            atv(j, i, a, b)*att(a, b, i, j),
+            atv(i, j, b, a)*att(a, b, i, j),
+            ]
+    for permut in exprs[1:]:
+        assert substitute_dummies(exprs[0]) != substitute_dummies(permut)
+
+    exprs = [
+            # permute t.
+            atv(i, j, a, b)*att(a, b, i, j),
+            atv(i, j, a, b)*att(b, a, i, j),
+            atv(i, j, a, b)*att(a, b, j, i),
+            ]
+    for permut in exprs[1:]:
+        assert substitute_dummies(exprs[0]) != substitute_dummies(permut)
+
+    exprs = [ # permute v and t.  Relabelling of dummies should be equivalent.
+            atv(i, j, a, b)*att(a, b, i, j),
+            atv(j, i, a, b)*att(a, b, j, i),
+            atv(i, j, b, a)*att(b, a, i, j),
+            atv(j, i, b, a)*att(b, a, j, i),
+            ]
+    for permut in exprs[1:]:
+        assert substitute_dummies(exprs[0]) == substitute_dummies(permut)
+
+def test_internal_external_VT2T2_AT():
+    ii, jj = symbols('ij',below_fermi=True, dummy=False)
+    aa, bb = symbols('ab',above_fermi=True, dummy=False)
+    k, l = symbols('kl'  ,below_fermi=True, dummy=True)
+    c, d = symbols('cd'  ,above_fermi=True, dummy=True)
+
+    dums = _get_ordered_dummies
+
+    exprs = [
+            atv(k,l,c,d)*att(aa, c, ii, k)*att(bb, d, jj, l),
+            atv(l,k,c,d)*att(aa, c, ii, l)*att(bb, d, jj, k),
+            atv(k,l,d,c)*att(aa, d, ii, k)*att(bb, c, jj, l),
+            atv(l,k,d,c)*att(aa, d, ii, l)*att(bb, c, jj, k),
+            ]
+    for permut in exprs[1:]:
+        assert substitute_dummies(exprs[0]) == substitute_dummies(permut)
+    exprs = [
+            atv(k,l,c,d)*att(aa, c, ii, k)*att(d, bb, jj, l),
+            atv(l,k,c,d)*att(aa, c, ii, l)*att(d, bb, jj, k),
+            atv(k,l,d,c)*att(aa, d, ii, k)*att(c, bb, jj, l),
+            atv(l,k,d,c)*att(aa, d, ii, l)*att(c, bb, jj, k),
+            ]
+    for permut in exprs[1:]:
+        assert substitute_dummies(exprs[0]) == substitute_dummies(permut)
+    exprs = [
+            atv(k,l,c,d)*att(c, aa, ii, k)*att(bb, d, jj, l),
+            atv(l,k,c,d)*att(c, aa, ii, l)*att(bb, d, jj, k),
+            atv(k,l,d,c)*att(d, aa, ii, k)*att(bb, c, jj, l),
+            atv(l,k,d,c)*att(d, aa, ii, l)*att(bb, c, jj, k),
+            ]
+    for permut in exprs[1:]:
+        assert substitute_dummies(exprs[0]) == substitute_dummies(permut)
+
+def test_internal_external_pqrs_AT():
+    ii, jj = symbols('ij', dummy=False)
+    aa, bb = symbols('ab', dummy=False)
+    k, l = symbols('kl'  , dummy=True)
+    c, d = symbols('cd'  , dummy=True)
+
+
+    exprs = [
+            atv(k,l,c,d)*att(aa, c, ii, k)*att(bb, d, jj, l),
+            atv(l,k,c,d)*att(aa, c, ii, l)*att(bb, d, jj, k),
+            atv(k,l,d,c)*att(aa, d, ii, k)*att(bb, c, jj, l),
+            atv(l,k,d,c)*att(aa, d, ii, l)*att(bb, c, jj, k),
+            ]
+    for permut in exprs[1:]:
+        assert substitute_dummies(exprs[0]) == substitute_dummies(permut)
+
