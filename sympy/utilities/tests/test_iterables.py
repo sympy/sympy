@@ -1,4 +1,4 @@
-from sympy import symbols, Integral, raises
+from sympy import symbols, Integral, raises, Tuple
 from sympy.utilities.iterables import postorder_traversal, \
     preorder_traversal, flatten, subsets, variations, cartes
 from sympy.functions.elementary.piecewise import Piecewise, ExprCondPair
@@ -18,8 +18,8 @@ def test_postorder_traversal():
         ExprCondPair(x**2, True), Piecewise((x, x < 1), (x**2, True))
     ]
     assert list(preorder_traversal(Integral(x**2, (x, 0, 1)))) == [
-        Integral(x**2, (x, 0, 1)), x**2, x, 2, ((x, (0, 1)),), (x, (0, 1)),
-        x, (0, 1), 0, 1
+        Integral(x**2, (x, 0, 1)), x**2, x, 2, Tuple((x, Tuple(0, 1)),), (x, Tuple(0, 1)),
+        x, Tuple(0, 1), 0, 1
     ]
     assert list(preorder_traversal(('abc', ('d', 'ef')))) == [
         ('abc', ('d', 'ef')), 'abc', ('d', 'ef'), 'd', 'ef']
@@ -39,7 +39,7 @@ def test_preorder_traversal():
         x, 1, ExprCondPair(x**2, True), x**2, x, 2, True
     ]
     assert list(postorder_traversal(Integral(x**2, (x, 0, 1)))) == [
-        x, 2, x**2, x, 0, 1, (0, 1), (x, (0, 1)), ((x, (0, 1)),),
+        x, 2, x**2, x, 0, 1, Tuple(0, 1), (x, Tuple(0, 1)), Tuple((x, Tuple(0, 1)),),
         Integral(x**2, (x, 0, 1))
     ]
     assert list(postorder_traversal(('abc', ('d', 'ef')))) == [

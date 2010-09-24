@@ -1,4 +1,4 @@
-from sympy.core import Expr, S, C, Symbol, Equality, Interval, sympify, Wild
+from sympy.core import Expr, S, C, Symbol, Equality, Interval, sympify, Wild, Tuple
 from sympy.solvers import solve
 from sympy.utilities import flatten
 
@@ -34,7 +34,7 @@ class Sum(Expr):
                             limits.append((V.lhs, V.rhs))
 
                         continue
-                elif isinstance(V, (tuple, list)):
+                elif isinstance(V, (tuple, list, Tuple)):
                     V = flatten(V)
                     if len(V) == 1:
                         if isinstance(V[0], Symbol):
@@ -42,13 +42,13 @@ class Sum(Expr):
                             continue
                     elif len(V) in (2, 3):
                         if isinstance(V[0], Symbol):
-                            limits.append(tuple(map(sympify, V)))
+                            limits.append(Tuple(*map(sympify, V)))
                             continue
 
                 raise ValueError("Invalid summation variable or limits")
 
         obj = Expr.__new__(cls, **assumptions)
-        obj._args = (f, tuple(limits))
+        obj._args = (f, Tuple(*limits))
 
         return obj
 

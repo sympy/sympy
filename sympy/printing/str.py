@@ -124,7 +124,7 @@ class StrPrinter(Printer):
             if ab is None:
                 return self._print(x)
             else:
-                return self._print((x,) + ab)
+                return self._print((x,) + tuple(ab))
         L = ', '.join([_xab_tostr(l) for l in expr.limits])
         return 'Integral(%s, %s)' % (self._print(expr.function), L)
 

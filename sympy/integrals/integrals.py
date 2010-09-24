@@ -1,4 +1,4 @@
-from sympy.core import Basic, Expr, S, C, Symbol, Wild, Add, sympify, diff, oo
+from sympy.core import Basic, Expr, S, C, Symbol, Wild, Add, sympify, diff, oo, Tuple
 
 from sympy.integrals.trigonometry import trigintegrate
 from sympy.integrals.deltafunctions import deltaintegrate
@@ -35,7 +35,7 @@ class Integral(Expr):
                 if isinstance(V, Symbol):
                     limits.append((V,None))
                     continue
-                elif isinstance(V, (tuple, list)):
+                elif isinstance(V, (tuple, list, Tuple)):
                     V = flatten(V)
                     newsymbol = sympify(V[0])
                     if len(V) == 3:
@@ -45,7 +45,7 @@ class Integral(Expr):
                                 nlim[0] = None
                             if V[2] is None:
                                 nlim[1] = None
-                            limits.append( (newsymbol, tuple(nlim) ))
+                            limits.append( (newsymbol, Tuple(*nlim) ))
                             continue
                     elif len(V) == 1 or (len(V) == 2 and V[1] is None):
                         if isinstance(newsymbol, Symbol):
@@ -61,7 +61,7 @@ class Integral(Expr):
                 return function
 
         obj = Expr.__new__(cls, **assumptions)
-        obj._args = (function, tuple(limits))
+        obj._args = (function, Tuple(*limits))
 
         return obj
 
