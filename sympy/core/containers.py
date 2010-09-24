@@ -38,6 +38,9 @@ class Tuple(Basic):
     def __contains__(self,item):
         return item in self.args
 
+    def __iter__(self):
+        return iter(self.args)
+
 
 def tuple_wrapper(method):
     """

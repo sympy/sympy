@@ -22,6 +22,7 @@ from sympy.mpmath.libmp.gammazeta import mpf_bernoulli
 import math
 
 from basic import C, S
+from containers import Tuple
 from sympify import sympify
 
 LG10 = math.log(10,2)
@@ -867,7 +868,7 @@ def hypsum(expr, n, start, prec):
 def evalf_sum(expr, prec, options):
     func = expr.function
     limits = expr.limits
-    if len(limits) != 1 or not isinstance(limits[0], tuple) or \
+    if len(limits) != 1 or not isinstance(limits[0], Tuple) or \
         len(limits[0]) != 3:
         raise NotImplementedError
     prec2 = prec+10
