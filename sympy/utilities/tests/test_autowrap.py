@@ -77,7 +77,7 @@ def test_autowrap_dummy():
 
     # Uses DummyWrapper to test that codegen works as expected
 
-    f = autowrap(x + y, backend='dummy', tempdir='/tmp/dummy')
+    f = autowrap(x + y, backend='dummy')
     assert f() == str(x + y)
     assert f.args == "x, y"
     assert f.returns == "nameless"
