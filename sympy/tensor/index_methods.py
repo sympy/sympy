@@ -327,8 +327,8 @@ def get_contraction_structure(expr):
     keys in the dictionary, mapping to a list of results from recursive calls:
 
     >>> d = get_contraction_structure(A[j, j]**A[i, i])
-    >>> d.keys()
-    [None, A[j, j]**A[i, i]]
+    >>> d[None]
+    set([A[j, j]**A[i, i]])
     >>> nested_contractions = d[A[j, j]**A[i, i]]
     >>> nested_contractions[0]
     {(j,): set([A[j, j]])}
