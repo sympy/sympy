@@ -380,3 +380,25 @@ def numbered_symbols(prefix='x', function=None, start=0, *args, **assumptions):
         name = '%s%s' % (prefix, start)
         yield function(name, *args, **assumptions)
         start += 1
+
+def capture(func):
+    """Return the printed output of func().
+
+    `func` should be an argumentless function that produces output with
+    print statements.
+
+    >>> from sympy.utilities.iterables import capture
+    >>> def foo():
+    ...     print 'hello world!'
+    ...
+    >>> 'hello' in capture(foo) # foo, not foo()
+    True
+    """
+    import StringIO
+    import sys
+
+    stdout = sys.stdout
+    sys.stdout = file = StringIO.StringIO()
+    func()
+    sys.stdout = stdout
+    return file.getvalue()

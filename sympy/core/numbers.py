@@ -4,10 +4,11 @@ from basic import Atom, Basic
 from singleton import S, SingletonMeta
 from expr import Expr
 from decorators import _sympifyit
-from cache import Memoizer, cacheit, clear_cache
+from cache import cacheit, clear_cache
 import sympy.mpmath as mpmath
 import sympy.mpmath.libmp as mlib
 from sympy.mpmath.libmp import mpf_pow, mpf_pi, mpf_e, phi_fixed
+
 import decimal
 
 
@@ -100,45 +101,6 @@ def igcdex(a, b):
         (a, b, r, s, x, y) = (b, c, x-q*r, y-q*s, r, s)
 
     return (x*x_sign, y*y_sign, a)
-
-@Memoizer((int, long), return_value_converter = lambda d: d.copy())
-def factor_trial_division(n):
-    """
-    Factor any integer into a product of primes, 0, 1, and -1.
-    Returns a dictionary {<prime: exponent>}.
-    """
-    if not n:
-        return {0:1}
-    factors = {}
-    if n < 0:
-        factors[-1] = 1
-        n = -n
-    if n==1:
-        factors[1] = 1
-        return factors
-    d = 2
-    while n % d == 0:
-        try:
-            factors[d] += 1
-        except KeyError:
-            factors[d] = 1
-        n //= d
-    d = 3
-    while n > 1 and d*d <= n:
-        if n % d:
-            d += 2
-        else:
-            try:
-                factors[d] += 1
-            except KeyError:
-                factors[d] = 1
-            n //= d
-    if n>1:
-        try:
-            factors[n] += 1
-        except KeyError:
-            factors[n] = 1
-    return factors
 
 
 class Number(Atom, Expr):
@@ -784,9 +746,13 @@ class Rational(Number):
     def __hash__(self):
         return super(Rational, self).__hash__()
 
-    def factors(self):
-        f = factor_trial_division(self.p).copy()
-        for p,e in factor_trial_division(self.q).items():
+    def factors(self, limit=None, verbose=False):
+        """A wrapper to factorint which return factors of self that are
+        smaller than limit (or cheap to compute)."""
+        from sympy.ntheory import factorint
+
+        f = factorint(self.p, limit=limit, verbose=verbose).copy()
+        for p, e in factorint(self.q, limit=limit, verbose=verbose).items():
             try: f[p] += -e
             except KeyError: f[p] = -e
 
@@ -1023,75 +989,99 @@ class Integer(Rational):
         Returns None if no further simplifications can be done
 
         When exponent is a fraction (so we have for example a square root),
-        we try to find the simplest possible representation, so that
+        we try to find a simpler representation by factoring the argument
+        up to factors of 2**15, e.g.
+
           - 4**Rational(1,2) becomes 2
           - (-4)**Rational(1,2) becomes 2*I
-        We will
+          - (2**(3+7)*3**(6+7))**Rational(1,7) becomes 6*18**(3/7)
+
+        Further simplification would require a special call to factorint on
+        the argument which is not done here for sake of speed.
+
         """
-        if e is S.NaN: return S.NaN
-        if b is S.One: return S.One
-        if b is S.NegativeOne: return
+        from sympy import perfect_power
+
+        if e is S.NaN:
+            return S.NaN
+        if b is S.One:
+            return S.One
+        if b is S.NegativeOne:
+            return
         if e is S.Infinity:
-            if b.p > S.One: return S.Infinity
-            if b.p == -1: return S.NaN
-            # cases 0, 1 are done in their respective classes
+            if b > S.One:
+                return S.Infinity
+            if b == -1:
+                return S.NaN
+            # cases for 0 and 1 are done in their respective classes
             return S.Infinity + S.ImaginaryUnit * S.Infinity
         if not isinstance(e, Number):
             # simplify when exp is even
             # (-2) ** k --> 2 ** k
-            c,t = b.as_coeff_terms()
+            c, t = b.as_coeff_terms()
             if e.is_even and isinstance(c, Number) and c < 0:
-                return (-c * Mul(*t)) ** e
-        if not isinstance(e, Rational): return
+                return (-c*Mul(*t))**e
+        if not isinstance(e, Rational):
+            return
         if e is S.Half and b < 0:
             # we extract I for this special case since everyone is doing so
-            return S.ImaginaryUnit * Pow(-b, e)
+            return S.ImaginaryUnit*Pow(-b, e)
         if e < 0:
             # invert base and change sign on exponent
             ne = -e
             if b < 0:
                 if e.q != 1:
-                    return -(S.NegativeOne) ** ((e.p % e.q) / S(e.q)) * Rational(1, -b) ** ne
+                    return -(S.NegativeOne)**((e.p % e.q) /
+                                             S(e.q)) * Rational(1, -b)**ne
                 else:
-                    return (S.NegativeOne) ** ne * Rational(1, -b) ** ne
+                    return (S.NegativeOne)**ne*Rational(1, -b)**ne
             else:
-                return Rational(1, b.p) ** ne
+                return Rational(1, b)**ne
         # see if base is a perfect root, sqrt(4) --> 2
-        x, xexact = integer_nthroot(abs(b.p), e.q)
+        b_pos = int(abs(b))
+        x, xexact = integer_nthroot(b_pos, e.q)
         if xexact:
             # if it's a perfect root we've finished
-            result = Integer(x ** abs(e.p))
-            if b < 0: result *= (-1)**e
+            result = Integer(x**abs(e.p))
+            if b < 0:
+                result *= (-1)**e
             return result
+
         # The following is an algorithm where we collect perfect roots
-        # from the factors of base
-        if b > 4294967296:
-            # Prevent from factorizing too big integers
-            return None
-        dict = b.factors()
+        # from the factors of base.
+
+        # if it's not an nth root, it still might be a perfect power
+        p = perfect_power(b_pos)
+        if p:
+            dict = {p[0]: p[1]}
+        else:
+            dict = Integer(b_pos).factors(limit=2**15)
+
+        # now process the dict of factors
+        if b.is_negative:
+            dict[-1] = 1
         out_int = 1
         sqr_int = 1
         sqr_gcd = 0
         sqr_dict = {}
-        for prime,exponent in dict.iteritems():
+        for prime, exponent in dict.iteritems():
             exponent *= e.p
-            div_e = exponent // e.q
-            div_m = exponent % e.q
+            div_e, div_m = divmod(exponent, e.q)
             if div_e > 0:
                 out_int *= prime**div_e
             if div_m > 0:
                 sqr_dict[prime] = div_m
-        for p,ex in sqr_dict.iteritems():
+        for p, ex in sqr_dict.iteritems():
             if sqr_gcd == 0:
                 sqr_gcd = ex
             else:
                 sqr_gcd = igcd(sqr_gcd, ex)
-        for k,v in sqr_dict.iteritems():
-            sqr_int *= k**(v // sqr_gcd)
-        if sqr_int == b.p and out_int == 1:
+        for k, v in sqr_dict.iteritems():
+            sqr_int *= k**(v//sqr_gcd)
+        if sqr_int == b and out_int == 1:
             result = None
         else:
-            result = out_int * Pow(sqr_int , Rational(sqr_gcd, e.q))
+            result = out_int*Pow(sqr_int , Rational(sqr_gcd, e.q))
         return result
 
     def _eval_is_prime(self):

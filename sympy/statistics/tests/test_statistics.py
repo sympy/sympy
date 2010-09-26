@@ -2,7 +2,7 @@ from sympy import sqrt, Rational, oo, Symbol, exp, pi
 from sympy.functions import erf
 from sympy.statistics import Normal, Uniform
 from sympy.statistics.distributions import PDF
-import operator # XXX weird abs/sympy.abs conflict
+from operator import abs
 
 from sympy.mpmath import mp
 
@@ -22,7 +22,7 @@ def test_normal():
     assert N.pdf(1).evalf() == (exp(Rational(-1,32)) / (4*sqrt(2*pi))).evalf()
     for p in [0.1, 0.3, 0.7, 0.9, 0.995]:
         a, b = N.confidence(p)
-        assert operator.abs(float(N.probability(a, b).evalf()) - p) < 1e-10
+        assert abs(float(N.probability(a, b).evalf()) - p) < 1e-10
 
     N = Normal(0, 2/sqrt(2*pi))
     assert N.pdf(0) == Rational(1,2)
