@@ -135,5 +135,5 @@ def test_autowrap_matrix_matrix_C_cython():
 
 @XFAIL
 def test_ufuncify_C_Cython():
-    has_f2py()
+    has_cython()
     runtest_ufuncify('C', 'cython')
