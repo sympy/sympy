@@ -6,7 +6,7 @@ except:
 
 from sympy import symbols, Eq
 from sympy.tensor import IndexedBase, Idx
-from sympy.utilities.autowrap import autowrap, ufuncify
+from sympy.utilities.autowrap import autowrap, ufuncify, CodeWrapError
 from sympy.utilities.pytest import XFAIL, skip
 
 #
@@ -82,9 +82,12 @@ except ImportError:
 
 try:
     import numpy.f2py
+    autowrap(symbols('x'), 'f95', 'f2py')
     def has_f2py(): return True
 except ImportError:
     def has_f2py(): skip("Couldn't import f2py")
+except CodeWrapError:
+    def has_f2py(): skip("Couldn't run f2py")
 
 # f2py
 
