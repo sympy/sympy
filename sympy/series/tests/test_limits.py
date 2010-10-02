@@ -166,3 +166,10 @@ def test_issue991():
 def test_issue1448():
     assert limit(cot(x),x,0,dir='+') == oo
     assert limit(cot(x),x,pi/2,dir='+') == 0
+
+def test_issue2065():
+    assert limit(x**0.5, x, oo) == oo**0.5 == oo
+    assert limit(x**0.5, x, 16) == S(16)**0.5
+    assert limit(x**0.5, x, 0) == 0
+    assert limit(x**(-0.5), x, oo) == 0
+    assert limit(x**(-0.5), x, 4) == S(4)**(-0.5)
