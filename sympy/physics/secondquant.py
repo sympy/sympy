@@ -1732,7 +1732,7 @@ class Commutator(Function):
 
     >>> comm = Commutator(Fd(p)*Fd(q),F(i)); comm
     Commutator(CreateFermion(p)*CreateFermion(q), AnnihilateFermion(i))
-    >>> comm.doit()
+    >>> comm.doit(wicks=True)
     KroneckerDelta(i, q)*CreateFermion(p) - KroneckerDelta(i, p)*CreateFermion(q)
 
     """
@@ -1803,7 +1803,7 @@ class Commutator(Function):
         a = self.args[0]
         b = self.args[1]
 
-        if not hints.get("wicks"):
+        if hints.get("wicks"):
             a = a.doit(**hints)
             b = b.doit(**hints)
             try:
@@ -2782,7 +2782,7 @@ def wicks(e, **kw_args):
             return e
 
     # break up any NO-objects, and evaluate commutators
-    e = e.doit()
+    e = e.doit(wicks=True)
 
     # make sure we have only one term to consider
     e = e.expand()

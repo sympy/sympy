@@ -266,8 +266,8 @@ def test_commutation():
     D=KroneckerDelta
 
     assert C(Fd(a),F(i)) == -2*NO(F(i)*Fd(a))
-    assert C(Fd(j),NO(Fd(a)*F(i))).doit() == -D(j,i)*Fd(a)
-    assert C(Fd(a)*F(i),Fd(b)*F(j)).doit() == 0
+    assert C(Fd(j),NO(Fd(a)*F(i))).doit(wicks=True) == -D(j,i)*Fd(a)
+    assert C(Fd(a)*F(i),Fd(b)*F(j)).doit(wicks=True) == 0
 
 def test_create_f():
     i, j, n, m = symbols('i j n m')
