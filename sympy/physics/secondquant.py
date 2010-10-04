@@ -2134,7 +2134,7 @@ class NO(Function):
         >>> from sympy.physics.secondquant import F, NO
         >>> p,q,r = symbols('pqr')
 
-        >>> NO(F(p)*F(q)*F(r)).get_subNO(1)
+        >>> NO(F(p)*F(q)*F(r)).get_subNO(1)  # doctest: +SKIP
         NO(AnnihilateFermion(p)*AnnihilateFermion(r))
 
         """
