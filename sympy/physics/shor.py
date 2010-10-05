@@ -15,7 +15,14 @@ from sympy.core.numbers import igcd
 class controlledMod(Gate):
     """
         This is black box controlled Mod function for use by shor's algorithm.
-        TODO implement a decompose property that returns how to do this in terms of elementary gates
+        TODO implement a decompose property that returns how to do this in terms
+        of elementary gates
+
+        >>> from sympy.physics.qbit import Qbit, apply_gates
+        >>> from sympy.physics.shor import controlledMod
+        >>> apply_gates(controlledMod(4, 2, 2)*Qbit(0,0,1,0,0,0,0,0))
+        |'00100000'>
+
     """
     __slots__ = ['t', 'a', 'N']
     def __new__(cls, *args):
@@ -27,7 +34,8 @@ class controlledMod(Gate):
 
     def _apply_QbitZBasisSet(self, qbits):
         """
-            This directly calculates the controlled mod of the second half of the register and puts it in the second
+            This directly calculates the controlled mod of the second half of
+            the register and puts it in the second
             This will look pretty when we get Tensor Symbolically working
         """
         n = 1
@@ -42,6 +50,16 @@ class controlledMod(Gate):
         return Qbit(*outarray)
 
 def shor(N):
+    """
+        This function implements Shor's factoring algorithm on the Integer N
+
+        The algorithm starts by picking a random number (a) and seeing if it is
+        coprime with N. If it isn't, then the gcd of the two numbers is a factor
+        and we are done. Otherwise, it begins the periodfinding subroutine which
+        finds the period of a in modulo N arithmetic. This period, if even, can
+        be used to calculate factors by taking a**(r/2)-1 and a**(r/2)+1.
+        These values are returned.
+    """
     a = random.randrange(N-2)+2
     if igcd(N,a) != 1:
         print "got lucky with rand"
@@ -51,21 +69,30 @@ def shor(N):
     r = periodfind(a,N)
     print "r= ",r
     if r%2 == 1:
-        print "r not even, begin again"
-        shor(N)
-    if a**(r/2)%N == -1:
-        print "r not meet prereques, begin again"
+        print "r is not even, begin again"
         shor(N)
     answer = (igcd(a**(r/2)-1, N), igcd(a**(r/2)+1, N))
     return answer
 
 def arr(num, t):
-    car = []
+    """
+        This function returns num as an array in binary
+
+        It does this with the 0th digit being on the right
+
+        >>> from sympy.physics.shor import arr
+        >>> arr(5, 4)
+        [0, 1, 0, 1]
+    """
+    binary_array = []
     for i in reversed(range(t)):
-        car.append((num>>i)&1)
-    return car
+        binary_array.append((num>>i)&1)
+    return binary_array
 
 def getr(x, y, N):
+    """
+
+    """
     fraction = continuedFraction(x,y)
     #now convert into r
     total = ratioize(fraction, N)
@@ -79,6 +106,15 @@ def ratioize(list, N):
     return list[0] + ratioize(list[1:], N)
 
 def continuedFraction(x, y):
+    """
+        This applies the continued fraction expansion to two numbers x/y
+
+        x is the numerator and y is the denominator
+
+        >>> from sympy.physics.shor import continuedFraction
+        >>> continuedFraction(3, 8)
+        [0, 2, 1, 2]
+    """
     x = int(x)
     y = int(y)
     temp = x/y
@@ -90,9 +126,15 @@ def continuedFraction(x, y):
     return list
 
 
-# This is quantum part of Shor's algorithm
-# Takes two registers, puts first in superposition of states with Hadamards so: |k>|0> with k being all possible choices
 def periodfind(a, N):
+    """
+        Finds the period of a in modulo N arithmetic
+
+        This is quantum part of Shor's algorithm.It takes two registers,
+        puts first in superposition of states with Hadamards so: |k>|0>
+        with k being all possible choices. It then does a controlled mod and
+        a QFT to determine the order of a.
+    """
     epsilon = .5
     #picks out t's such that maintains accuracy within epsilon
     t = int(2*math.ceil(log(N,2)))

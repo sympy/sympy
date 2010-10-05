@@ -261,7 +261,7 @@ def test_tensor_product():
     try:
         import numpy as np
     except ImportError:
-        print 'import error'
+        print 'import error numpy'
         return
     l1 = zeros(4)
     for i in range(16):
