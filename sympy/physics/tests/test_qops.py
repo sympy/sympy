@@ -19,7 +19,7 @@ from sympy.physics.hilbert import (
     DirectSumHilbertSpace,
     TensorPowerHilbertSpace
 )
-from sympy.physics.quantumbasic import QuantumError, QuantumBasic
+from sympy.physics.qexpr import QuantumError, QExpr
 from sympy.physics.qmul import QMul
 from sympy.physics.qadd import QAdd
 from sympy.physics.qpow import QPow

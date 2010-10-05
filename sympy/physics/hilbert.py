@@ -1,5 +1,5 @@
 from sympy import Expr, Interval, oo, sympify
-from sympy.physics.quantumbasic import QuantumError
+from sympy.physics.qexpr import QuantumError
 
 class HilbertSpaceException(QuantumError):
     pass

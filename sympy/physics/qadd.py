@@ -3,8 +3,8 @@ from sympy.core.expr import Expr
 from sympy.core.add import Add
 from sympy.core.basic import S
 from sympy.physics.qmul import QMul
-from sympy.physics.quantum import QuantumBasic
-from sympy.physics.quantumbasic import QuantumError
+from sympy.physics.quantum import QExpr
+from sympy.physics.qexpr import QuantumError
 from sympy.printing.pretty.stringpict import prettyForm
 from sympy.physics.quantum import StateBase, Operator, Dagger, Commutator,\
 KroneckerDelta, InnerProduct
@@ -31,10 +31,10 @@ class QAdd(QAssocOp):
         elif object1 is S.Zero:
             return object2
 
-        if (not isinstance(object1, QuantumBasic) or\
+        if (not isinstance(object1, QExpr) or\
         issubclass(object1.acts_like, InnerProduct))\
         and\
-        (not isinstance(object2, (QuantumBasic) or\
+        (not isinstance(object2, (QExpr) or\
         issubclass(object2.acts_like, InnerProduct))):
                 return Add(object1, object2)
         elif (not isinstance(object1, (StateBase, Operator, QAssocOp, QPow, \
@@ -84,7 +84,7 @@ class QAdd(QAssocOp):
                 continue
 
             # 3
-            elif not isinstance(o, QuantumBasic):
+            elif not isinstance(o, QExpr):
                 coeff += o
                 continue
 
@@ -99,7 +99,7 @@ class QAdd(QAssocOp):
                 c = o.args[0]
 
                 # 3*...
-                if not isinstance(c, QuantumBasic):
+                if not isinstance(c, QExpr):
                     if c is S.One:
                         s = o
                     else:

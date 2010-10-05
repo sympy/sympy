@@ -2,10 +2,10 @@ from sympy import Expr, Pow, S, sympify
 from sympy.physics.quantum import InnerProduct, OuterProduct, Operator,\
 Dagger
 from sympy.core.decorators import call_highest_priority
-from sympy.physics.quantumbasic import QuantumError, QuantumBasic
+from sympy.physics.qexpr import QuantumError, QExpr
 from sympy.printing.str import sstr
 
-class QPow(QuantumBasic):
+class QPow(QExpr):
     """
         A class for the operator: ** (exponent) for quantum objects.
     """
@@ -19,8 +19,8 @@ class QPow(QuantumBasic):
     def _rules_QPow(cls, base, exp):
         from sympy.physics.qadd import QAdd
         from sympy.physics.qmul import QMul
-        if not isinstance(base, QuantumBasic):
-            if not isinstance(exp, QuantumBasic):
+        if not isinstance(base, QExpr):
+            if not isinstance(exp, QExpr):
                 return Pow(base, exp)
             elif issubclass(exp.acts_like, (Operator, OuterProduct,\
             InnerProduct)):
@@ -28,7 +28,7 @@ class QPow(QuantumBasic):
                 ret.hilbert_space = exp.hilbert_space
                 ret.acts_like = exp.acts_like
                 return ret
-        elif not isinstance(exp, QuantumBasic):
+        elif not isinstance(exp, QExpr):
             if issubclass(base.acts_like, (Operator, OuterProduct,\
             InnerProduct)):
                 if exp == S.Zero:

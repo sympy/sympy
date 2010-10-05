@@ -1,6 +1,6 @@
 from sympy import Expr, Basic, sympify, Add, Mul, Function, Integer, S, Matrix
 from sympy.core.symbol import symbols
-from sympy.physics.quantumbasic import QuantumError, QuantumBasic
+from sympy.physics.qexpr import QuantumError, QExpr
 from sympy.printing.pretty.stringpict import prettyForm
 from sympy.physics.hilbert import HilbertSpace
 
@@ -60,7 +60,7 @@ class Representable(object):
             raise QuantumError('Object %r does not know how to represent\
             itself in basis: %r' % (self, basis))
 
-class StateBase(QuantumBasic, Representable):
+class StateBase(QExpr, Representable):
     """Base class for general abstract states in quantum mechanics.
 
     All other state classes defined will need to inherit from this class. It
@@ -327,7 +327,7 @@ class BasisSet(Basic):
         """Return the unity operator for this basis set."""
         raise NotImplementedError('Not implemented')
 
-class Operator(QuantumBasic, Representable):
+class Operator(QExpr, Representable):
     """Base class for non-commuting quantum operators.
 
     An operator is a map from one vector space to another [1]. In quantum
@@ -387,7 +387,7 @@ class Operator(QuantumBasic, Representable):
     def _pretty(self, printer, *args):
         return printer._print(self.name, *args)
 
-class InnerProduct(QuantumBasic):
+class InnerProduct(QExpr):
     """An unevaluated inner product between a Bra and a Ket.
 
     Because a Bra is essentially a row vector and a Ket is essentially a column
@@ -537,7 +537,7 @@ class OuterProduct(Operator):
         pform = self.ket._pretty(printer, *args)
         return prettyForm(*pform.right(self.bra._pretty(printer, *args)))
 
-class Dagger(QuantumBasic):
+class Dagger(QExpr):
     """General Hermitian conjugate operation.
 
     When an object is daggered it is transposed and then the complex conjugate
@@ -686,7 +686,7 @@ class KroneckerDelta(Function):
     def _sympystr(self, printer, *args):
         return 'd(%s,%s)'% (self.args[0],self.args[1])
 
-class Commutator(Function, QuantumBasic):
+class Commutator(Function, QExpr):
     """The commutator function for quantum mechanics.
 
     This function behaves as such: [A, B] = A*B - B*A
@@ -773,7 +773,7 @@ class Commutator(Function, QuantumBasic):
 
     @property
     def acts_like(self):
-        if isinstance(self.doit(), QuantumBasic):
+        if isinstance(self.doit(), QExpr):
             return self.doit().acts_like
         else:
             return self.doit().__class__

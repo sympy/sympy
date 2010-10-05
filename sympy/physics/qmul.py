@@ -5,7 +5,7 @@ from sympy.core.basic import Basic
 from sympy.core.expr import Expr
 from sympy.core.cache import cacheit
 from sympy.core.mul import Mul
-from sympy.physics.quantumbasic import QuantumError, QuantumBasic
+from sympy.physics.qexpr import QuantumError, QExpr
 from sympy import  Mul, S
 from sympy.printing.pretty.stringpict import prettyForm
 from sympy.physics.hilbert import HilbertSpaceException
@@ -31,17 +31,17 @@ class QMul(QAssocOp):
         elif object2 is S.Zero or object1 is S.Zero:
             return 0
 
-        if (not isinstance(object1, QuantumBasic)) and (not isinstance(object2,\
-        QuantumBasic)):
+        if (not isinstance(object1, QExpr)) and (not isinstance(object2,\
+        QExpr)):
             return Mul(object1, object2)
-        elif not isinstance(object1, QuantumBasic):
+        elif not isinstance(object1, QExpr):
             if object1 == S.One:
                 return object2
             retVal = cls.QMulflatten(object1, object2)
             retVal.hilbert_space = object2.hilbert_space
             retVal.acts_like = object2.acts_like
             return retVal
-        elif not isinstance(object2, QuantumBasic):
+        elif not isinstance(object2, QExpr):
             if object2 == S.One:
                 return object1
             retVal = cls.QMulflatten(object1, object2)
@@ -116,7 +116,7 @@ class QMul(QAssocOp):
             if o.__class__ is cls: # classes must match exactly
                 seq = list(o[:]) + seq
                 continue
-            if not isinstance(o, (QuantumBasic)):
+            if not isinstance(o, (QExpr)):
                 Eseq.append(o)
             else:
                 #now, figure out if we should combine terms inside a Pow
@@ -138,8 +138,8 @@ class QMul(QAssocOp):
                     #for now we won't combine anything questionable into a QPow
                     #(e.g. complicated expressions whose exponent's act_like ==
                     #InnerProduct)
-                    if baseo == basel and not isinstance(powero, QuantumBasic)\
-                    and not isinstance(powero, QuantumBasic):
+                    if baseo == basel and not isinstance(powero, QExpr)\
+                    and not isinstance(powero, QExpr):
                         Qseq.pop(-1)
                         o = baseo**(powero+powerl)
 

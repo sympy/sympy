@@ -11,7 +11,7 @@ from sympy.core.symbol import Symbol
 from sympy.physics.qmul import QMul
 from sympy.physics.qadd import QAdd
 from sympy.physics.qpow import QPow
-from sympy.physics.quantumbasic import QuantumError
+from sympy.physics.qexpr import QuantumError
 import math
 
 #-----------------------------------------------------------------------------

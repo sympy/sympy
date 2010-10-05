@@ -24,7 +24,7 @@ from sympy.physics.hilbert import (
     TensorPowerHilbertSpace
 )
 from sympy import Matrix, I, E, Symbol, expand, Number, symbols
-from sympy.physics.quantumbasic import QuantumError, QuantumBasic
+from sympy.physics.qexpr import QuantumError, QExpr
 
 def test_Dagger():
     i = I
