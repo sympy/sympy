@@ -596,7 +596,7 @@ def integrate_hyperexponential(a, d, D, T, Tfuncs):
 
     qa, qd, b = integrate_hyperexponential_polynomial(pp, D, T, z)
 
-    i = pp.as_poly(t).nth(0).as_poly(z).nth(0)
+    i = pp.as_poly(t, expand=False).nth(0).as_poly(z, expand=False).nth(0)
 
     ret = ((g1[0].as_basic()/g1[1].as_basic() + qa.as_basic()/
         qd.as_basic()).subs(s) + residue_reduce_to_basic(g2, T, z, Tfuncs))
