@@ -3,8 +3,10 @@ from sympy.core.sympify import sympify
 from sympy.printing.str import sstr
 from sympy.core.add import Add
 from sympy.core.power import Pow
-from sympy.physics.qexpr import QExpr
 from sympy.printing.pretty.stringpict import prettyForm
+
+from sympy.physics.qexpr import QExpr
+
 
 class QAssocOp(QExpr):
     """QAssocOp is Quantum version of Sympy's AssocOp.

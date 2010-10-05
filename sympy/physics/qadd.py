@@ -1,68 +1,87 @@
-from sympy.physics.qoperations import QAssocOp
 from sympy.core.expr import Expr
 from sympy.core.add import Add
 from sympy.core.basic import S
-from sympy.physics.qmul import QMul
-from sympy.physics.quantum import QExpr
-from sympy.physics.qexpr import QuantumError
 from sympy.printing.pretty.stringpict import prettyForm
-from sympy.physics.quantum import StateBase, Operator, Dagger, Commutator,\
-KroneckerDelta, InnerProduct
-from sympy.physics.qpow import QPow
+
+from sympy.physics.qoperations import QAssocOp
+from sympy.physics.qexpr import QuantumError, QExpr
+
 
 class QAdd(QAssocOp):
     """
         Quantum Add operation
     """
     binop = ' + '
-    binopPretty =  prettyForm(u' \u002B ')
+    binop_pretty =  prettyForm(u' \u002B ')
 
     @classmethod
-    def _rules_QAdd(cls, object1, object2):
-        """
-            This method is called by new to instantiate a QAdd class
-            Applies rules of what can and can't be added together by checking
-            types and hilbert spaces
-            Returns an Add or QAdd objects on success
-            Raises and exception if input violates quantum shape rules
+    def _is_qscalar(cls, e):
+        """Is the expression a non QExpr or InnerProduct."""
+        from sympy.physics.quantum import InnerProduct
+        r = not isinstance(e, QExpr) or issubclass(e.acts_like, InnerProduct)
+        return r
+
+    @classmethod
+    def _is_qadd_allowed(cls, e):
+        """Is the expression an instance that can be QAdd'd."""
+        from sympy.physics.qpow import QPow
+        from sympy.physics.quantum import (
+            StateBase, Operator, Dagger, Commutator, KroneckerDelta
+        )
+        _allowed = (
+            StateBase, Operator, QAssocOp, QPow, Dagger, 
+            Commutator, KroneckerDelta
+        )
+        return isinstance(e, _allowed)
+
+    @classmethod
+    def _acts_the_same(cls, e1, e2):
+        """Do the two expressions act the same."""
+        return issubclass(e1.acts_like, e2.acts_like) \
+        or issubclass(e2.acts_like, e1.acts_like)
+
+    @classmethod
+    def _apply_rules(cls, object1, object2):
+        """Apply rules to simplify a new QAdd instance.
+
+        This method is called by ``eval`` to instantiate a QAdd class and
+        applies rules of what can and can't be added together by checking
+        types and hilbert spaces.
         """
         if object2 is S.Zero:
             return object1
         elif object1 is S.Zero:
             return object2
 
-        if (not isinstance(object1, QExpr) or\
-        issubclass(object1.acts_like, InnerProduct))\
-        and\
-        (not isinstance(object2, (QExpr) or\
-        issubclass(object2.acts_like, InnerProduct))):
-                return Add(object1, object2)
-        elif (not isinstance(object1, (StateBase, Operator, QAssocOp, QPow, \
-        Dagger, Commutator, KroneckerDelta)))\
-        or (not isinstance(object2, (StateBase, Operator, QAssocOp, QPow, \
-        Dagger, Commutator, KroneckerDelta))):
-            raise QuantumError("Can't add a %s and %s"\
-            % (object1.__class__.__name__, object2.__class__.__name__))
+        if cls._is_qscalar(object1) and cls._is_qscalar(object1):
+            return Add(object1, object2)
+
+        if not cls._is_qadd_allowed(object1) or \
+           not cls._is_qadd_allowed(object2):
+            raise QuantumError("Can't add %s and %s" % (
+                object1.__class__.__name__, object2.__class__.__name__
+            ))
 
         if object1.hilbert_space != object2.hilbert_space:
             raise QuantumError("Hilbert Spaces do not match")
 
-        if issubclass(object1.acts_like, object2.acts_like)\
-        or issubclass(object2.acts_like, object1.acts_like):
-            retVal = cls.QAddflatten([object1, object2])
+        if cls._acts_the_same(object1, object2):
+            retVal = cls.flatten([object1, object2])
             retVal.hilbert_space = object1.hilbert_space
             retVal.acts_like = object1.acts_like
             return retVal
         else:
-            raise QuantumError("Can't add (%s + %s)"\
+            raise QuantumError("Can't add two objects that act like %s and %s"\
             % (object1.acts_like.__name__, object2.acts_like.__name__))
 
     @classmethod
-    def QAddflatten(cls, seq):
+    def flatten(cls, seq):
+        """Flatten additive expressions.
+
+        This simplifies sums by combining like terms. This assumes
+        associativity for multiplication and assoc. and comm. for addition.
         """
-            This simplifies expressions by combining like terms
-            Assumes associativity and commutivity for addition
-        """
+        from sympy.physics.qmul import QMul
         terms = {}      # term -> coeff
                         # e.g. x**2 -> 5   for ... + 5*x**2 + ...
 
@@ -202,9 +221,8 @@ class QAdd(QAssocOp):
         return S.Zero
 
     def _eval_dagger(self):
-        newargs = []
-        for item in self.args:
-            newargs.append(Dagger(item))
+        from sympy.physics.quantum import Dagger
+        newargs = [Dagger(item) for item in self.args]
         return QAdd(*newargs)
 
     def _eval_expand_mul(self, deep=True, **hints):
