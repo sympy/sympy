@@ -1,14 +1,11 @@
 from sympy import Expr, Pow, S, sympify
-from sympy.physics.quantum import InnerProduct, OuterProduct, Operator,\
-Dagger
-from sympy.core.decorators import call_highest_priority
-from sympy.physics.qexpr import QuantumError, QExpr
 from sympy.printing.str import sstr
 
+from sympy.physics.qexpr import QuantumError, QExpr
+
+
 class QPow(QExpr):
-    """
-        A class for the operator: ** (exponent) for quantum objects.
-    """
+    """A quantum version of the Pow class for base**exp operations."""
 
     def __new__(cls, base, exp):
         base = sympify(base)
@@ -16,43 +13,51 @@ class QPow(QExpr):
         return cls._rules_QPow(base, exp)
 
     @classmethod
-    def _rules_QPow(cls, base, exp):
-        from sympy.physics.qadd import QAdd
-        from sympy.physics.qmul import QMul
-        if not isinstance(base, QExpr):
-            if not isinstance(exp, QExpr):
+    def eval(cls, base, exp):
+        return cls._apply_rules(base, exp)
+
+    @classmethod
+    def _apply_rules(cls, base, exp):
+        """Apply rules to transform the base and exp and validate the expr."""
+
+        from sympy.physics.quantum import InnerProduct, OuterProduct, Operator
+
+        allowed = (Operator, OuterProduct, InnerProduct)
+        base_is_qexpr = isinstance(base, QExpr)
+        exp_is_qexpr = isinstance(exp, QExpr)
+
+        if not base_is_qexpr:
+            if not exp_is_qexpr:
                 return Pow(base, exp)
-            elif issubclass(exp.acts_like, (Operator, OuterProduct,\
-            InnerProduct)):
-                ret = Expr.__new__(cls, base, exp)
-                ret.hilbert_space = exp.hilbert_space
-                ret.acts_like = exp.acts_like
-                return ret
-        elif not isinstance(exp, QExpr):
-            if issubclass(base.acts_like, (Operator, OuterProduct,\
-            InnerProduct)):
+            elif issubclass(exp.acts_like, allowed):
+                result = Expr.__new__(cls, base, exp)
+                result.hilbert_space = exp.hilbert_space
+                result.acts_like = exp.acts_like
+                return result
+        elif not exp_is_qexpr:
+            if issubclass(base.acts_like, allowed):
                 if exp == S.Zero:
                     return S.One
                 elif exp == S.One:
                     return base
-                ret = Expr.__new__(cls, base, exp)
-                ret.hilbert_space = base.hilbert_space
-                ret.acts_like = base.acts_like
-                return ret
-        elif issubclass(exp.acts_like, InnerProduct) and issubclass(\
-        base.acts_like, (InnerProduct, Operator)):
-                ret = Expr.__new__(cls, base, exp)
-                ret.hilbert_space = base.hilbert_space
-                ret.acts_like = base.acts_like
-                return ret
-        elif issubclass(base.acts_like, InnerProduct) and issubclass(\
-        exp.acts_like, (InnerProduct, Operator)):
-                ret = Expr.__new__(cls, base, exp)
-                ret.hilbert_space = exp.hilbert_space
-                ret.acts_like = exp.acts_like
-                return ret
+                result = Expr.__new__(cls, base, exp)
+                result.hilbert_space = base.hilbert_space
+                result.acts_like = base.acts_like
+                return result
+        elif issubclass(exp.acts_like, InnerProduct) and \
+             issubclass(base.acts_like, (InnerProduct, Operator)):
+                result = Expr.__new__(cls, base, exp)
+                result.hilbert_space = base.hilbert_space
+                result.acts_like = base.acts_like
+                return result
+        elif issubclass(base.acts_like, InnerProduct) and \
+             issubclass(exp.acts_like, (InnerProduct, Operator)):
+                result = Expr.__new__(cls, base, exp)
+                result.hilbert_space = exp.hilbert_space
+                result.acts_like = exp.acts_like
+                return result
 
-        #make a pretty error message if you have left everything a mess
+        # Make a pretty error message if the base**exp can't be done.
         if hasattr(exp, 'acts_like'):
             expname = exp.acts_like.__name__
         else:
@@ -63,7 +68,7 @@ class QPow(QExpr):
         else:
             basename = base.__class__.__name__
 
-        raise QuantumError("Can't do (%s)**(%s)" % (basename, expname))
+        raise QuantumError("Invalid operation: %s**%s" % (basename, expname))
 
     @property
     def base(self):
@@ -74,6 +79,7 @@ class QPow(QExpr):
         return self.args[1]
 
     def _eval_dagger(self):
+        from sympy.physics.quantum import Dagger
         return QPow(Dagger(self.base), Dagger(self.exp))
 
     def _sympystr(self, printer, *args):
