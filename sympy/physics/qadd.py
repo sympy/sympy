@@ -15,7 +15,7 @@ class QAdd(QAssocOp):
     binop_pretty =  prettyForm(u' \u002B ')
 
     @classmethod
-    def _is_qscalar(cls, e):
+    def _is_not_qexpr(cls, e):
         """Is the expression a non QExpr or InnerProduct."""
         from sympy.physics.quantum import InnerProduct
         r = not isinstance(e, QExpr) or issubclass(e.acts_like, InnerProduct)
@@ -53,7 +53,7 @@ class QAdd(QAssocOp):
         elif object1 is S.Zero:
             return object2
 
-        if cls._is_qscalar(object1) and cls._is_qscalar(object1):
+        if cls._is_not_qexpr(object1) and cls._is_not_qexpr(object1):
             return Add(object1, object2)
 
         if not cls._is_qadd_allowed(object1) or \
