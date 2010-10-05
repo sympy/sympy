@@ -105,5 +105,5 @@ class QAssocOp(QExpr):
             if isinstance(self.args[i], (Add, Pow, QAdd)):
                 pform = prettyForm(*pform.right(prettyForm(u'\u0029')))
             if i != length-1:
-                pform = prettyForm(*pform.right(self.binopPretty))
+                pform = prettyForm(*pform.right(self.binop_pretty))
         return pform

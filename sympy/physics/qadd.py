@@ -41,38 +41,38 @@ class QAdd(QAssocOp):
         or issubclass(e2.acts_like, e1.acts_like)
 
     @classmethod
-    def _apply_rules(cls, object1, object2):
+    def _apply_rules(cls, obj1, obj2):
         """Apply rules to simplify a new QAdd instance.
 
         This method is called by ``eval`` to instantiate a QAdd class and
         applies rules of what can and can't be added together by checking
         types and hilbert spaces.
         """
-        if object2 is S.Zero:
-            return object1
-        elif object1 is S.Zero:
-            return object2
+        if obj2 is S.Zero:
+            return obj1
+        elif obj1 is S.Zero:
+            return obj2
 
-        if cls._is_not_qexpr(object1) and cls._is_not_qexpr(object1):
-            return Add(object1, object2)
+        if cls._is_not_qexpr(obj1) and cls._is_not_qexpr(obj1):
+            return Add(obj1, obj2)
 
-        if not cls._is_qadd_allowed(object1) or \
-           not cls._is_qadd_allowed(object2):
+        if not cls._is_qadd_allowed(obj1) or \
+           not cls._is_qadd_allowed(obj2):
             raise QuantumError("Can't add %s and %s" % (
-                object1.__class__.__name__, object2.__class__.__name__
+                obj1.__class__.__name__, obj2.__class__.__name__
             ))
 
-        if object1.hilbert_space != object2.hilbert_space:
+        if obj1.hilbert_space != obj2.hilbert_space:
             raise QuantumError("Hilbert Spaces do not match")
 
-        if cls._acts_the_same(object1, object2):
-            retVal = cls.flatten([object1, object2])
-            retVal.hilbert_space = object1.hilbert_space
-            retVal.acts_like = object1.acts_like
+        if cls._acts_the_same(obj1, obj2):
+            retVal = cls.flatten([obj1, obj2])
+            retVal.hilbert_space = obj1.hilbert_space
+            retVal.acts_like = obj1.acts_like
             return retVal
         else:
             raise QuantumError("Can't add two objects that act like %s and %s"\
-            % (object1.acts_like.__name__, object2.acts_like.__name__))
+            % (obj1.acts_like.__name__, obj2.acts_like.__name__))
 
     @classmethod
     def flatten(cls, seq):
