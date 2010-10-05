@@ -5,28 +5,30 @@ from sympy.core.basic import S, C
 #-----------------------------------------------------------------------------
 # Error handling
 #-----------------------------------------------------------------------------
+
 class QuantumError(Exception):
     pass
 
 #-----------------------------------------------------------------------------
-# Basic Quantum Object from which all objects descend
+# Basic Quantum Expression from which all objects descend
 #-----------------------------------------------------------------------------
-class QuantumExpr(Expr):
 
+class QExpr(Expr):
+
+    # All quantum objects have a _op_priority that is higher than that of
+    # Expr so that all operators are overloaded and the quantum versions
+    # of Pow, Add, Mul, etc. are used.
     _op_priority = 100.0
 
-    # These slots are needed to keep track of the character of what is contained
-    # inside a given QuantumBinary Operation (they must be a __slots__ because
-    # Expr contains slots which prohibits us from declaring adding new non-slot
-    # variables):
-    #    * 'acts_like' tells whether an object has the dimension of a Ket, Bra,
-    #        or Operator.
-    #       This helps determine what is and is not allowed for the quantum
-    #        binary Operation
-    #    * 'hilbert_space' tells us to which Hilbert space a quantum Object
-    #        belongs
-    #[see http://www.network-theory.co.uk/docs/pylang/__slots__.html for info on
-    #__slots__]
+    # In sympy, slots are for instance attributes that are computed
+    # dynamically by the __new__ method. They are not part of args, but they
+    # derive from args.
+    # * 'acts_like' tells whether a binary operation acts like a Bra, Ket
+    #   or Operator. This help us determine what types of subsequent
+    #   operations are possible with that expression. This slot is set
+    #   to the class that the object acts like.
+    # * 'hilbert_space' tells us to which Hilbert space a quantum Object
+    #   belongs. It is an instance of a HilbertSpace subclass.
     __slots__ = ['acts_like', 'hilbert_space']
 
     def __pos__(self):
