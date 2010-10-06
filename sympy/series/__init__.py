@@ -7,4 +7,4 @@ from series import series
 
 O = Order
 
-__all__ = [gruntz, limit, series, O, Order, Limit]
+__all__ = ['gruntz', 'limit', 'series', 'O', 'Order', 'Limit']
