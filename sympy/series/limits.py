@@ -43,39 +43,35 @@ def limit(e, z, z0, dir="+"):
     if e.is_Pow and e.args[0] == z and e.args[1].is_number:
         if e.args[1] > 0:
             return z0**e.args[1]
-        else:
-            if z0 == 0:
-                if dir == "+":
-                    return S.Infinity
-                else:
-                    return -S.Infinity
-            else:
-                return z0**e.args[1]
+        if z0 == 0:
+            if dir == "+":
+                return S.Infinity
+            return -S.Infinity
+        return z0**e.args[1]
 
     if e.is_Add:
         if e.is_polynomial() and z0.is_finite:
             return Add(*[limit(term, z, z0, dir) for term in e.args])
-        else:
-            # this is a case like limit(x*y+x*z, z, 2) == x*y+2*x
-            # but we need to make sure, that the general gruntz() algorithm is
-            # executed for a case like "limit(sqrt(x+1)-sqrt(x),x,oo)==0"
-            unbounded = []; unbounded_result=[]
-            finite = []
-            for term in e.args:
-                result = term.subs(z, z0)
-                if result.is_unbounded or result is S.NaN:
-                    unbounded.append(term)
-                    unbounded_result.append(result)
-                else:
-                    finite.append(result)
-            if unbounded:
-                inf_limit = Add(*unbounded_result)
-                if inf_limit is not S.NaN:
-                    return inf_limit
-                if finite:
-                    return Add(*finite) + limit(Add(*unbounded), z, z0, dir)
+        # this is a case like limit(x*y+x*z, z, 2) == x*y+2*x
+        # but we need to make sure, that the general gruntz() algorithm is
+        # executed for a case like "limit(sqrt(x+1)-sqrt(x),x,oo)==0"
+        unbounded = []; unbounded_result=[]
+        finite = []
+        for term in e.args:
+            result = term.subs(z, z0)
+            if result.is_unbounded or result is S.NaN:
+                unbounded.append(term)
+                unbounded_result.append(result)
             else:
-                return Add(*finite)
+                finite.append(result)
+        if unbounded:
+            inf_limit = Add(*unbounded_result)
+            if inf_limit is not S.NaN:
+                return inf_limit
+            if finite:
+                return Add(*finite) + limit(Add(*unbounded), z, z0, dir)
+        else:
+            return Add(*finite)
 
     try:
         r = gruntz(e, z, z0, dir)
