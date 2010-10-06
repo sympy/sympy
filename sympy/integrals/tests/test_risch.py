@@ -289,3 +289,8 @@ def test_build_extension():
 
 def test_risch_integrate():
     assert risch_integrate(t0*exp(x), x) == t0*exp(x)
+
+    # From my GSoC writeup
+    assert risch_integrate((1 + 2*x**2 + x**4 + 2*x**3*exp(2*x**2))/
+    (x**4*exp(x**2) + 2*x**2*exp(x**2) + exp(x**2)), x) == \
+        Integral(exp(-x**2), x) + exp(x**2)/(1 + x**2)
