@@ -1,26 +1,19 @@
-from sympy import Expr, Basic, sympify, Add, Mul, Function, Integer, S, Matrix
-from sympy.core.symbol import symbols
-from sympy.physics.qexpr import QuantumError, QExpr
+from sympy import Expr, sympify, Add, Mul, Function, S, Matrix
 from sympy.printing.pretty.stringpict import prettyForm
-from sympy.physics.hilbert import HilbertSpace
+from sympy.core.containers import Tuple
+from sympy.physics.qexpr import QuantumError, QExpr
+from sympy.physics.hilbert import HilbertSpace, HilbertSpaceError
 
 """
 Questions:
 
-* What is an appropriate base class for Operator?
 * What does doit do and should be use it to do things like apply operators?
 * How should we handle assumptions?  New or old system?
 * How should we handle different types of operators like symmetric, hermitian,
   etc? Assumptions?
-* How do we handle the null state?  Do we use Integer(0) or an actual
-  ZeroState Singleton?
-* Should we allow states to have names that are composite from the ground up?
-* Should __repr__ return a nice representation of things or the more pythonic
-  thing.  |a> or Ket('a').
 * What should a basis set consist of?  Somehow it needs to know about a set
   of states and maybe the operator they are eigenvectors of. We need a way
   of labeling these states by name and index: |a[0]>, |a[1]>, etc.
-* Should Operator.name and State.name be a string or symbol?
 """
 
 __all__ = [
@@ -33,9 +26,11 @@ __all__ = [
     'TimeDepState',
     'TimeDepBra',
     'TimeDepKet',
-    'InnerProduct',
-    'OuterProduct',
     'Operator',
+    'HermitianOperator',
+    'UnitaryOperator',
+    'OuterProduct',
+    'InnerProduct',
     'Dagger',
     'KroneckerDelta',
     'Commutator',
@@ -43,7 +38,7 @@ __all__ = [
 ]
 
 #-----------------------------------------------------------------------------
-# Main objects
+# Abstract base classes
 #-----------------------------------------------------------------------------
 
 class Representable(object):
@@ -57,70 +52,142 @@ class Representable(object):
             rep = f(basis, **options)
             return rep
         else:
-            raise QuantumError('Object %r does not know how to represent\
-            itself in basis: %r' % (self, basis))
+            raise NotImplementedError("Can't represent %r in basis: %r" % (
+                self, basis
+            ))
+
+#-----------------------------------------------------------------------------
+# States, bras and kets.
+#-----------------------------------------------------------------------------
 
 class StateBase(QExpr, Representable):
-    """Base class for general abstract states in quantum mechanics.
+    """Abstract base class for general abstract states in quantum mechanics.
 
     All other state classes defined will need to inherit from this class. It
     carries the basic structure for all other states such as dual, _eval_dagger
-    and name.
+    and label.
+
+    This is an abstract base class and you should not instantiate it directly,
+    instead use State.
     """
 
-    # Slots are for instance variables that can always be computed dynamically
-    # from self.args, but that we don't want users to have to pass each time.
-    # Class level attributes that are the same for all instances go here.
-    # Because the hilbert_space can change, it can't go here. All instance
-    # level things must go in self.args.
     is_continuous = False
     is_discrete = False
-    # I am a little worried that the basis set might need to be in self.args.
-    # Or maybe this needs to be a slot if it can be computed from self.args.
-    basis_set = None
+
+    #-------------------------------------------------------------------------
+    # Properties
+    #-------------------------------------------------------------------------
 
     @property
-    def name(self):
-        raise NotImplementedError('name must be implemented in a subclass')
+    def label(self):
+        """The label is the unique set of identifiers for the state.
+
+        The label of a state is what distinguishes it from other states. For
+        eigenstates, the label is usually a sympy.core.containers.Tuple of the
+        quantum numbers. For an abstract state, it would just be a single
+        element Tuple of the symbol of the state.
+        """
+        return self.args[0]
 
     @property
     def dual(self):
+        """Return the dual state of this one."""
         raise NotImplementedError('dual must be implemented in a subclass')
-
-    def _eval_dagger(self):
-        return self.dual
 
     @property
     def is_symbolic(self):
         return True
 
-    def _print_name(self, printer, *args):
-        return printer._print(self.name, *args)
+    #-------------------------------------------------------------------------
+    # _eval_* methods
+    #-------------------------------------------------------------------------
 
-    def _print_name_pretty(self, printer, *args):
-        pform = printer._print(self.name, *args)
+    @classmethod
+    def _eval_label(cls, label):
+        """Make sure that label is a sympy.core.containers.Tuple.
+
+        The elements of the Tuple must be run through sympify.
+        """
+        if not isinstance(label, Tuple):
+            if isinstance(label, (list, tuple)):
+                # Convert a raw tuple or list to a Tuple
+                newlabel = Tuple(*label)
+            else:
+                # Single element label gets wrapped into a tuple.
+                newlabel = Tuple(label)
+        else:
+            newlabel = label
+        newlabel = Tuple(*[sympify(item) for item in newlabel])
+        return newlabel
+
+    @classmethod
+    def _eval_hilbert_space(cls, label):
+        """Compute the Hilbert space instance from the label."""
+        return HilbertSpace()
+
+    def _eval_dagger(self):
+        """Compute the Dagger of this state."""
+        return self.dual
+
+    #-------------------------------------------------------------------------
+    # Printing
+    #-------------------------------------------------------------------------
+
+    def _print_label(self, printer, *args):
+        result = []
+        for item in self.label:
+            result.append(printer._print(item, *args))
+        return ''.join(result)
+
+    def _print_label_repr(self, printer, *args):
+        return printer._print(self.label, *args)
+
+    def _print_label_pretty(self, printer, *args):
+        pform = printer._print(self.label[0], *args)
+        for item in self.label[1:]:
+            nextpform = printer._print(item, *args)
+            pform = prettyForm(*pform.right((nextpform)))
         return pform
 
-    def _sympyrepr(self, printer, *args):
-        return '%s(%s)' % (self.__class__.__name__, self._print_name(printer,\
-        *args))
+    def _print_contents(self, printer, *args):
+        return self._print_label(printer, *args)
+
+    def _print_contents_repr(self, printer, *args):
+        return self._print_label_repr(printer, *args)
+
+    def _print_contents_pretty(self, printer, *args):
+        return self._print_label_pretty(printer, *args)
 
     def _sympystr(self, printer, *args):
-        return '%s%s%s' % (self.lbracket, self._print_name(printer, *args),\
-        self.rbracket)
+        return '%s%s%s' % (self.lbracket, self._print_contents(printer, *args),
+                           self.rbracket)
+
+    def _sympyrepr(self, printer, *args):
+        return '%s(%s)' % (
+            self.__class__.__name__, self._print_contents_repr(printer, *args)
+        )
 
     def _pretty(self, printer, *args):
         from sympy.printing.pretty.stringpict import prettyForm
-        pform = self._print_name_pretty(printer, *args)
+        pform = self._print_contents_pretty(printer, *args)
         pform = prettyForm(*pform.left((self.lbracket_pretty)))
         pform = prettyForm(*pform.right((self.rbracket_pretty)))
         return pform
 
-class KetBase(StateBase):
-    """Base class for Ket states.
+    #-------------------------------------------------------------------------
+    # Methods from Basic and Expr
+    #-------------------------------------------------------------------------
+    
+    def doit(self, **kw_args):
+        return self
 
-    Includes what the Ket's dual property is and how its brackets look when
-    they are printed.
+
+class KetBase(StateBase):
+    """Base class for Kets.
+
+    This class defines the dual property and the brackets for printing. This
+    is an abstract base class and you should not instantiate it directly,
+    instead use Ket.
     """
 
     lbracket = '|'
@@ -132,11 +199,13 @@ class KetBase(StateBase):
     def dual(self):
         return BraBase(*self.args)
 
-class BraBase(StateBase):
-    """Base class for Bra states.
 
-    Includes what the Bra's dual property is and how its brackets look when
-    they are printed.
+class BraBase(StateBase):
+    """Base class for Bras.
+
+    This class defines the dual property and the brackets for printing. This
+    is an abstract base class and you should not instantiate it directly,
+    instead use Bra.
     """
 
     lbracket = '<'
@@ -148,38 +217,19 @@ class BraBase(StateBase):
     def dual(self):
         return KetBase(*self.args)
 
+
 class State(StateBase):
-    """General abstract quantum state.
+    """General abstract quantum state."""
 
-    Anywhere you can have a State, you can also have Integer(0).
-    All code must check for this!
-
-    A state takes in a name as its argument.
-    """
-
-    def __new__(cls, name):
+    def __new__(cls, label):
         # First compute args and call Expr.__new__ to create the instance
-        name = cls._eval_name(name)
-        inst = Expr.__new__(cls, name, **{'commutative':False})
+        label = cls._eval_label(label)
+        inst = Expr.__new__(cls, label, **{'commutative':False})
         # Now set the slots on the instance
-        inst.hilbert_space = cls._eval_hilbert_space(name)
+        inst.hilbert_space = cls._eval_hilbert_space(label)
         inst.acts_like = inst.__class__
         return inst
 
-    @classmethod
-    def _eval_name(cls, name):
-        return sympify(name)
-
-    @property
-    def name(self):
-        return self.args[0]
-
-    @classmethod
-    def _eval_hilbert_space(cls, name):
-        return HilbertSpace()
-
-    def doit(self, **kw_args):
-        return self
 
 class Ket(State, KetBase):
     """A Ket state for quantum mechanics.
@@ -187,7 +237,7 @@ class Ket(State, KetBase):
     Inherits from State and KetBase. In a state represented by a ray in Hilbert
     space, a Ket is a vector that points along that ray [1].
 
-    A Ket takes in a name as its argument in order to be differentiated from
+    A Ket takes in a label as its argument in order to be differentiated from
     other Kets.
 
     Examples
@@ -199,7 +249,7 @@ class Ket(State, KetBase):
         >>> psi = Ket('psi')
         >>> psi
         |psi>
-        >>> psi.name
+        >>> psi.label
         psi
         >>> psi.dual
         <psi|
@@ -215,12 +265,13 @@ class Ket(State, KetBase):
     def dual(self):
         return Bra(*self.args)
 
+
 class Bra(State, BraBase):
     """A Bra state for quantum mechanics.
 
     Inherits from State and BraBase. A Bra is the dual of a Ket [1].
 
-    A Bra takes in a name as its argument in order to be differentiated from
+    A Bra takes in a label as its argument in order to be differentiated from
     other Bras.
 
     Examples
@@ -232,7 +283,7 @@ class Bra(State, BraBase):
         >>> b = Bra('bus')
         >>> b
         <bus|
-        >>> b.name
+        >>> b.label
         bus
         >>> b.dual
         |bus>
@@ -248,38 +299,62 @@ class Bra(State, BraBase):
     def dual(self):
         return Ket(*self.args)
 
+#-----------------------------------------------------------------------------
+# Time dependent states, bras and kets.
+#-----------------------------------------------------------------------------
+
 class TimeDepState(StateBase):
     """General abstract time dependent quantum state.
 
     Used for sub-classing time dependent states in quantum mechanics.
 
-    Takes in name and time arguments.
+    Takes in label and time arguments.
     """
-    def __new__(cls, name, time):
+    def __new__(cls, label, time):
         # First compute args and call Expr.__new__ to create the instance
-        name = cls._eval_name(name, time)
-        time = cls._eval_time(name, time)
-        inst = Expr.__new__(cls, name, time, **{'commutative':False})
+        label = cls._eval_label(label)
+        time = cls._eval_time(time)
+        inst = Expr.__new__(cls, label, time, **{'commutative':False})
         # Now set the slots on the instance
-        inst.hilbert_space = cls._eval_hilbert_space(name, time)
+        inst.hilbert_space = cls._eval_hilbert_space(label)
         inst.acts_like = inst.__class__
         return inst
 
     @property
-    def name(self):
-        return self.args[0]
+    def time(self):
+        return self.args[1]
 
     @classmethod
-    def _eval_name(cls, name, time):
-        return sympify(name)
-
-    @classmethod
-    def _eval_time(cls, name, time):
+    def _eval_time(cls, time):
         return sympify(time)
 
-    @classmethod
-    def _eval_hilbert_space(cls, name, time):
-        return HilbertSpace()
+    def _print_time(self, printer, *args):
+        return printer._print(self.time, *args)
+
+    def _print_time_repr(self, printer, *args):
+        return printer._print(self.time, *args)
+
+    def _print_time_pretty(self, printer, *args):
+        pform = printer._print(self.time, *args)
+        return pform
+
+    def _print_contents(self, printer, *args):
+        label = self._print_label(printer, *args)
+        time = self._print_time(printer, *args)
+        return '%s;%s' % (label, time)
+
+    def _print_contents_repr(self, printer, *args):
+        label = self._print_label_repr(printer, *args)
+        time = self._print_time_repr(printer, *args)
+        return '%s,%s' % (label, time)
+
+    def _print_contents_pretty(self, printer, *args):
+        pform = self._print_label_pretty(printer, *args)
+        pform = prettyForm(*pform.right((';')))
+        nextpform = self._print_time_pretty(printer, *args)
+        pform = prettyForm(*pform.right((nextpform)))
+        return pform
+
 
 class TimeDepKet(TimeDepState, KetBase):
     """A time dependent Ket state for quantum mechanics.
@@ -287,12 +362,13 @@ class TimeDepKet(TimeDepState, KetBase):
     Inherits from TimeDepState and KetBase. Its dual is a time dependent
     Bra state.
 
-    Takes in name and time arguments.
+    Takes in label and time arguments.
     """
 
     @property
     def dual(self):
         return TimeDepBra(*self.args)
+
 
 class TimeDepBra(TimeDepState, BraBase):
     """A time dependent Bra state for quantum mechanics.
@@ -300,32 +376,16 @@ class TimeDepBra(TimeDepState, BraBase):
     Inherits from TimeDepState and BraBase. Its dual is a time dependent
     Ket state.
 
-    Takes in name and time arguments.
+    Takes in label and time arguments.
     """
 
     @property
     def dual(self):
         return TimeDepKet(*self.args)
 
-class BasisSet(Basic):
-    """A basis set for a Hilbert space.
-    """
-
-    def __new__(cls, dimension):
-        dimension = sympify(dimension)
-        return Basic.__new__(cls, dimension)
-
-    @property
-    def dimension(self):
-        return self.args[0]
-
-    def __len__(self):
-        return self.dimension
-
-    @property
-    def unity(self):
-        """Return the unity operator for this basis set."""
-        raise NotImplementedError('Not implemented')
+#-----------------------------------------------------------------------------
+# Operators and outer products
+#-----------------------------------------------------------------------------
 
 class Operator(QExpr, Representable):
     """Base class for non-commuting quantum operators.
@@ -356,14 +416,14 @@ class Operator(QExpr, Representable):
     [2] http://en.wikipedia.org/wiki/Observable
     """
 
-    def __new__(cls, name):
-        name = sympify(name)
-        obj = Expr.__new__(cls, name, **{'commutative': False})
-        obj.hilbert_space = cls._eval_hilbert_space(name)
+    def __new__(cls, label):
+        label = sympify(label)
+        obj = Expr.__new__(cls, label, **{'commutative': False})
+        obj.hilbert_space = cls._eval_hilbert_space(label)
         return obj
 
     @classmethod
-    def _eval_hilbert_space(cls, name):
+    def _eval_hilbert_space(cls, label):
         return HilbertSpace()
 
     @property
@@ -371,96 +431,38 @@ class Operator(QExpr, Representable):
         return self.__class__
 
     @property
-    def name(self):
+    def label(self):
         return self.args[0]
+
+    @property
+    def is_symbolic(self):
+        return True
+
+    def _sympyrepr(self, printer, *args):
+        return '%s(%s)' % (self.__class__.__name__, printer._print(self.label,\
+        *args))
+
+    def _sympystr(self, printer, *args):
+        return printer._print(self.label, *args)
+
+    def _pretty(self, printer, *args):
+        return printer._print(self.label, *args)
 
     def doit(self,**kw_args):
         return self
 
-    def _sympyrepr(self, printer, *args):
-        return '%s(%s)' % (self.__class__.__name__, printer._print(self.name,\
-        *args))
 
-    def _sympystr(self, printer, *args):
-        return printer._print(self.name, *args)
-
-    def _pretty(self, printer, *args):
-        return printer._print(self.name, *args)
-
-class InnerProduct(QExpr):
-    """An unevaluated inner product between a Bra and a Ket.
-
-    Because a Bra is essentially a row vector and a Ket is essentially a column
-    vector, the inner product evaluates (acts_like) to a complex number.
-
-    An InnerProduct takes first a Bra and then a Ket as its arguments.
-
-    Examples
-    ========
-
-    Create an InnerProduct and check its properties:
-
-        >>> from sympy.physics.quantum import Bra, Ket, InnerProduct
-        >>> ip = InnerProduct(Bra('a'), Ket('b'))
-        >>> ip
-        <a|b>
-        >>> ip.bra
-        <a|
-        >>> ip.ket
-        |b>
-
-    References
-    ==========
-
-    http://en.wikipedia.org/wiki/Inner_product
-    """
-
-    def __new__(cls, bra, ket):
-        #What about innerProd(1,1), should it auto simplify?
-        if not (bra and ket):
-            raise QuantumError('InnerProduct requires a leading Bra and a\
-            trailing Ket')
-        assert issubclass(bra.acts_like, Bra), 'First argument must be a Bra'
-        assert issubclass(ket.acts_like, Ket), 'Second argument must be a Ket'
-        assert bra.hilbert_space == ket.hilbert_space
-        r = cls.eval(bra, ket)
-        if isinstance(r, Expr):
-            return r
-        obj = Expr.__new__(cls, bra, ket)
-        obj.hilbert_space = bra.hilbert_space
-        obj.acts_like = obj.__class__
-        return obj
-
-    @classmethod
-    def eval(cls, bra, ket):
-        # We need to decide what to do here. We probably will ask if the
-        # bra and ket know how to do the inner product.
-        return None
-
-    @property
-    def bra(self):
-        return self.args[0]
-
-    @property
-    def ket(self):
-        return self.args[1]
+class HermitianOperator(Operator):
+    """A Hermitian operator"""
 
     def _eval_dagger(self):
-        return InnerProduct(Dagger(self.ket), Dagger(self.bra))
+        return self
 
-    def _sympyrepr(self, printer, *args):
-        return '%s(%s,%s)' % (self.__class__.__name__, printer._print(self.bra,\
-        *args), printer._print(self.ket, *args))
+class UnitaryOperator(Operator):
+    """A unitary operator."""
 
-    def _sympystr(self, printer, *args):
-        sbra = str(self.bra)
-        sket = str(self.ket)
-        return '%s|%s' % (sbra[:-1], sket[1:])
-
-    def _pretty(self, printer, *args):
-        pform = prettyForm(u'\u276C')
-        pform = prettyForm(*pform.right(self.bra._print_name(printer, *args)))
-        return prettyForm(*pform.right(self.ket._pretty(printer, *args)))
+    def _eval_dagger(self):
+        return self**(-1)
 
 class OuterProduct(Operator):
     """An unevaluated outer product between a Ket and Bra.
@@ -492,24 +494,16 @@ class OuterProduct(Operator):
     """
 
     def __new__(cls, ket, bra):
-        if not (ket and bra):
-            raise QuantumError('OuterProduct requires a leading Ket and a\
-            trailing Bra')
-        assert issubclass(ket.acts_like, Ket), 'First argument must be a Ket'
-        assert issubclass(bra.acts_like, Bra), 'Second argument must be a Bra'
-        assert ket.hilbert_space == bra.hilbert_space
-        r = cls.eval(ket, bra)
-        if isinstance(r, Expr):
-            return r
+        if not isinstance(ket, KetBase):
+            raise TypeError('KetBase subclass expected, got: %r' % ket)
+        if not isinstance(bra, BraBase):
+            raise TypeError('BraBase subclass expected, got: %r' % ket)
+        if not ket.hilbert_space == bra.hilbert_space:
+            raise HilbertSpaceError(
+                'Incompatible hilbert spaces: %r and %r' % (ket, bra))
         obj = Expr.__new__(cls, *(ket, bra), **{'commutative': False})
         obj.hilbert_space = ket.hilbert_space
         return obj
-
-    @classmethod
-    def eval(cls, ket, bra):
-        # We need to decide what to do here. We probably will ask if the
-        # bra and ket know how to do the outer product.
-        return None
 
     @property
     def ket(self):
@@ -527,8 +521,8 @@ class OuterProduct(Operator):
         return OuterProduct(Dagger(self.bra), Dagger(self.ket))
 
     def _sympyrepr(self, printer, *args):
-        return '%s(%s,%s)' % (self.__class__.__name__, printer._print(self.ket,\
-        *args), printer._print(self.bra, *args))
+        return '%s(%s,%s)' % (self.__class__.__name__, 
+            printer._print(self.ket, *args), printer._print(self.bra, *args))
 
     def _sympystr(self, printer, *args):
         return str(self.ket)+str(self.bra)
@@ -536,6 +530,86 @@ class OuterProduct(Operator):
     def _pretty(self, printer, *args):
         pform = self.ket._pretty(printer, *args)
         return prettyForm(*pform.right(self.bra._pretty(printer, *args)))
+
+    def doit(self,**kw_args):
+        return self
+    
+#-----------------------------------------------------------------------------
+# Other subclases of QExpr
+#-----------------------------------------------------------------------------
+
+class InnerProduct(QExpr):
+    """An unevaluated inner product between a Bra and a Ket.
+
+    Because a Bra is essentially a row vector and a Ket is essentially a column
+    vector, the inner product evaluates (acts_like) to a complex number.
+
+    An InnerProduct takes first a Bra and then a Ket as its arguments.
+
+    Examples
+    ========
+
+    Create an InnerProduct and check its properties:
+
+        >>> from sympy.physics.quantum import Bra, Ket, InnerProduct
+        >>> ip = InnerProduct(Bra('a'), Ket('b'))
+        >>> ip
+        <a|b>
+        >>> ip.bra
+        <a|
+        >>> ip.ket
+        |b>
+
+    References
+    ==========
+
+    http://en.wikipedia.org/wiki/Inner_product
+    """
+
+    def __new__(cls, bra, ket):
+        if not isinstance(ket, KetBase):
+            raise TypeError('KetBase subclass expected, got: %r' % ket)
+        if not isinstance(bra, BraBase):
+            raise TypeError('BraBase subclass expected, got: %r' % ket)
+        if not ket.hilbert_space == bra.hilbert_space:
+            raise HilbertSpaceError(
+                'Incompatible hilbert spaces: %r and %r' % (ket, bra))
+        obj = Expr.__new__(cls, *(bra, ket), **{'commutative': False})
+        obj.hilbert_space = ket.hilbert_space
+        return obj
+
+    @property
+    def bra(self):
+        return self.args[0]
+
+    @property
+    def ket(self):
+        return self.args[1]
+
+    @property
+    def acts_like(self):
+        return self.__class__
+
+    def _eval_dagger(self):
+        return InnerProduct(Dagger(self.ket), Dagger(self.bra))
+
+    def _sympyrepr(self, printer, *args):
+        return '%s(%s,%s)' % (self.__class__.__name__, 
+            printer._print(self.bra, *args), printer._print(self.ket, *args))
+
+    def _sympystr(self, printer, *args):
+        sbra = str(self.bra)
+        sket = str(self.ket)
+        return '%s|%s' % (sbra[:-1], sket[1:])
+
+    def _pretty(self, printer, *args):
+        pform = prettyForm(u'\u276C')
+        pform = prettyForm(*pform.right(self.bra._print_label_pretty(printer, *args)))
+        return prettyForm(*pform.right(self.ket._pretty(printer, *args)))
+
+    def doit(self,**kw_args):
+        return self
+
 
 class Dagger(QExpr):
     """General Hermitian conjugate operation.
@@ -631,60 +705,6 @@ class Dagger(QExpr):
         pform = pform**prettyForm(u'\u2020')
         return pform
 
-class KroneckerDelta(Function):
-    """The discrete delta function.
-
-    A function that takes in two integers i and j. It returns 0 if i and j are
-    not equal or it returns 1 if i and j are equal.
-
-    Examples
-    ========
-
-        >>> from sympy.physics.quantum import KroneckerDelta
-        >>> KroneckerDelta(1,2)
-        0
-        >>> KroneckerDelta(3,3)
-        1
-
-    References
-    ==========
-
-    http://en.wikipedia.org/wiki/Kronecker_delta
-    """
-
-    nargs = 2
-    is_commutative=True
-
-    @classmethod
-    def eval(cls, i, j):
-        """
-        Evaluates the discrete delta function.
-        """
-        if i > j:
-            return cls(j,i)
-        diff = i-j
-        if diff == 0:
-            return S.One
-        elif diff.is_number:
-            return S.Zero
-
-    def _eval_subs(self, old, new):
-        r = KroneckerDelta(self.args[0].subs(old, new), self.args[1].subs(old,\
-        new))
-        return r
-
-    def _eval_dagger(self):
-        return self
-
-    def _latex_(self,printer):
-        return "\\delta_{%s%s}"% (self.args[0].name,self.args[1].name)
-
-    def _sympyrepr(self, printer, *args):
-        return "%s(%s,%s)"% (self.__class__.__name__, self.args[0],\
-        self.args[1])
-
-    def _sympystr(self, printer, *args):
-        return 'd(%s,%s)'% (self.args[0],self.args[1])
 
 class Commutator(Function, QExpr):
     """The commutator function for quantum mechanics.
@@ -792,6 +812,64 @@ class Commutator(Function, QExpr):
         return "\\left[%s,%s\\right]"%tuple([
             printer._print(arg) for arg in self.args])
 
+#-----------------------------------------------------------------------------
+# Misc classes
+#-----------------------------------------------------------------------------
+
+class KroneckerDelta(Function):
+    """The discrete delta function.
+
+    A function that takes in two integers i and j. It returns 0 if i and j are
+    not equal or it returns 1 if i and j are equal.
+
+    Examples
+    ========
+
+        >>> from sympy.physics.quantum import KroneckerDelta
+        >>> KroneckerDelta(1,2)
+        0
+        >>> KroneckerDelta(3,3)
+        1
+
+    References
+    ==========
+
+    http://en.wikipedia.org/wiki/Kronecker_delta
+    """
+
+    nargs = 2
+    is_commutative=True
+
+    @classmethod
+    def eval(cls, i, j):
+        """
+        Evaluates the discrete delta function.
+        """
+        if i > j:
+            return cls(j,i)
+        diff = i-j
+        if diff == 0:
+            return S.One
+        elif diff.is_number:
+            return S.Zero
+
+    def _eval_subs(self, old, new):
+        r = KroneckerDelta(self.args[0].subs(old, new), self.args[1].subs(old,\
+        new))
+        return r
+
+    def _eval_dagger(self):
+        return self
+
+    def _latex_(self,printer):
+        return "\\delta_{%s%s}"% (self.args[0].name,self.args[1].name)
+
+    def _sympyrepr(self, printer, *args):
+        return "%s(%s,%s)"% (self.__class__.__name__, self.args[0],\
+        self.args[1])
+
+    def _sympystr(self, printer, *args):
+        return 'd(%s,%s)'% (self.args[0],self.args[1])
 
 #-----------------------------------------------------------------------------
 # Functions
@@ -819,12 +897,13 @@ def represent(expr, basis, **options):
         return expr
 
     if not isinstance(expr, QMul):
-        raise TypeError('Mul expected, got: %r' % expr)
+        raise TypeError('QMul expected, got: %r' % expr)
 
     result = S.One
     for arg in reversed(expr.args):
         result = represent(arg, basis, **options)*result
     return result
+
 
 def split_product(expr):
     """Separates inner/outer products into a QMul.
@@ -841,6 +920,7 @@ def split_product(expr):
         else:
             new_expr = new_expr*arg
     return new_expr
+
 
 def split_commutative_parts(m):
     c_part = [p for p in m.args if p.is_commutative]

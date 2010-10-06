@@ -10,7 +10,7 @@ class QPow(QExpr):
     def __new__(cls, base, exp):
         base = sympify(base)
         exp = sympify(exp)
-        return cls._rules_QPow(base, exp)
+        return cls._apply_rules(base, exp)
 
     @classmethod
     def eval(cls, base, exp):

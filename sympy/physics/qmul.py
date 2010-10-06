@@ -7,7 +7,7 @@ from sympy.printing.pretty.stringpict import prettyForm
 
 from sympy.physics.qoperations import QAssocOp
 from sympy.physics.qexpr import QuantumError, QExpr
-from sympy.physics.hilbert import HilbertSpaceException
+from sympy.physics.hilbert import HilbertSpaceError
 from sympy.physics.qpow import QPow
 
 
@@ -42,10 +42,12 @@ class QMul(QAssocOp):
 
         if (not obj1_is_qexpr) and (not obj2_is_qexpr):
             return Mul(obj1, obj2)
-        elif not obj2_is_qexpr:
+        elif not obj1_is_qexpr:
             if obj1 == S.One:
                 return obj2
             result = cls.flatten(obj1, obj2)
+            if not isinstance(result, QExpr):
+                return result
             result.hilbert_space = obj2.hilbert_space
             result.acts_like = obj2.acts_like
             return result
@@ -53,42 +55,59 @@ class QMul(QAssocOp):
             if obj2 == S.One:
                 return obj1
             result = cls.flatten(obj1, obj2)
+            if not isinstance(result, QExpr):
+                return result
             result.hilbert_space = obj1.hilbert_space
             result.acts_like = obj1.acts_like
             return result
 
         if obj1.hilbert_space != obj2.hilbert_space:
-            raise HilbertSpaceException("Hilbert Spaces do not match")
+            raise HilbertSpaceError("Hilbert Spaces do not match")
 
         if issubclass(obj1.acts_like, InnerProduct):
             result = cls.flatten(obj1, obj2)
+            if not isinstance(result, QExpr):
+                return result
             result.hilbert_space = obj2.hilbert_space
             result.acts_like = obj2.acts_like
             return result
         elif issubclass(obj2.acts_like, InnerProduct):
             result = cls.flatten(obj1, obj2)
+            if not isinstance(result, QExpr):
+                return result
             result.hilbert_space = obj1.hilbert_space
             result.acts_like = obj1.acts_like
             return result
         elif issubclass(obj1.acts_like, Operator):
             if issubclass(obj2.acts_like, (Operator, InnerProduct)):
                 result = cls.flatten(obj1, obj2)
+                if not isinstance(result, QExpr):
+                    return result
+                elif isinstance(result, Operator):
+                    result.hilbert_space = obj1.hilbert_space
+                    return result
                 result.hilbert_space = obj1.hilbert_space
                 result.acts_like = obj1.acts_like
                 return result
             elif issubclass(obj2.acts_like, KetBase):
                 result = cls.flatten(obj1, obj2)
+                if not isinstance(result, QExpr):
+                    return result
                 result.hilbert_space = obj2.hilbert_space
                 result.acts_like = obj2.acts_like
                 return result
         elif issubclass(obj2.acts_like, Operator):
             if issubclass(obj1.acts_like, (Operator, InnerProduct)):
                 result = cls.flatten(obj1, obj2)
+                if not isinstance(result, QExpr):
+                    return result
                 result.hilbert_space = obj2.hilbert_space
                 result.acts_like = obj2.acts_like
                 return result
             elif issubclass(obj1.acts_like, BraBase):
                 result = cls.flatten(obj1, obj2)
+                if not isinstance(result, QExpr):
+                    return result
                 result.hilbert_space = obj1.hilbert_space
                 result.acts_like = obj1.acts_like
                 return result
@@ -96,13 +115,39 @@ class QMul(QAssocOp):
         # Figure out inner and outer products.
         elif issubclass(obj1.acts_like, KetBase) and\
         issubclass(obj2.acts_like, BraBase):
+            # TODO: this only works if obj1 is a Ket and obj2 is a Bra. We
+            # need to make it work in the middle of an expression like
+            # A*|a>*<b|*B.
+            try:
+                result = OuterProduct(obj1, obj2)
+            except TypeError:
+                pass
+            except HilbertSpaceError:
+                pass
+            else:
+                return result
             result = cls.flatten(obj1, obj2)
+            if not isinstance(result, QExpr):
+                return result
             result.hilbert_space = obj2.hilbert_space
             result.acts_like = OuterProduct
             return result
         elif issubclass(obj1.acts_like, BraBase) and\
         issubclass(obj2.acts_like, KetBase):
+            # TODO: this only works if obj1 is a Bra and obj2 is a Ket. We
+            # need to make it work more generally. The only case I have 
+            # found to fail is 2*Bra('b')*Ket('b').
+            try:
+                result = InnerProduct(obj1, obj2)
+            except TypeError:
+                pass
+            except HilbertSpaceError:
+                pass
+            else:
+                return result
             result = cls.flatten(obj1, obj2)
+            if not isinstance(result, QExpr):
+                return result
             result.hilbert_space = obj2.hilbert_space
             result.acts_like = InnerProduct
             return result

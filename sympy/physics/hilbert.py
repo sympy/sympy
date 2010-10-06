@@ -1,7 +1,7 @@
 from sympy import Expr, Interval, oo, sympify
 from sympy.physics.qexpr import QuantumError
 
-class HilbertSpaceException(QuantumError):
+class HilbertSpaceError(QuantumError):
     pass
 
 #-----------------------------------------------------------------------------
@@ -590,4 +590,4 @@ def compare_hilbert(arg1, arg2):
     else:
         if (hasattr(arg1, 'hilbert_space') and hasattr(arg2, 'hilbert_space')\
         and arg1.hilbert_space != arg2.hilbert_space):
-            raise HilbertSpaceException()
+            raise HilbertSpaceError()
