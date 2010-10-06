@@ -1,5 +1,5 @@
 from sympy import SYMPY_DEBUG
-from sympy.core import Basic, S, oo, Symbol, sympify, C, I
+from sympy.core import Basic, S, oo, Symbol, C, I
 from sympy.functions import log, exp
 from sympy.series.order import Order
 from sympy.simplify import powsimp
@@ -405,73 +405,6 @@ def mrv_leadterm(e, x, Omega=[]):
     series = calculate_series(f, wsym)
     series=series.subs(log(wsym), logw)
     return series.leadterm(wsym)
-
-
-#this class is not yet adapted for the new core.
-class Limit2(Basic):
-
-    mathml_tag = 'limit'
-
-    def __init__(self,e,x,x0):
-        Basic.__init__(self)
-        self._args = list()
-        self._args.append(sympify(e))
-        self._args.append(sympify(x))
-        self._args.append(sympify(x0))
-
-
-    def __pretty__(self):
-        e, x, t = [a.__pretty__() for a in (self.e,self.x,self.x0)]
-        a = prettyForm('lim')
-        a = prettyForm(*a.below('%s->%s' % (x, t)))
-        a = prettyForm(*stringPict.next(a, e))
-        return a
-
-    def __latex__(self):
-        return r"\lim_{%s \to %s}%s" % (self.x.__latex__(), \
-                                                self.x0.__latex__(),
-                                                self.e.__latex__() )
-
-    @property
-    def e(self):
-        return self._args[0]
-
-    @property
-    def x(self):
-        return self._args[1]
-
-    @property
-    def x0(self):
-        return self._args[2]
-
-    def doit(self, **hints):
-        if hints.get('deep', True):
-            e = self.e.doit(**hints)
-            z = self.z.doit(**hints)
-            z0 = self.z0.doit(**hints)
-
-        return limit(e, x, x0)
-
-    def __mathml__(self):
-        if self._mathml:
-            return self._mathml
-        import xml.dom.minidom
-        dom = xml.dom.minidom.Document()
-        x = dom.createElement("apply")
-        x.appendChild(dom.createElement(self.mathml_tag))
-
-        x_1 = dom.createElement('bvar')
-
-        x_2 = dom.createElement('lowlimit')
-
-        x.appendChild(x_1)
-        x.appendChild(x_2)
-        x.appendChild( self.e.__mathml__() )
-        x.childNodes[1].appendChild( self.x.__mathml__() )
-        x.childNodes[2].appendChild( self.x0.__mathml__() )
-        self._mathml = x
-
-        return self._mathml
 
 def gruntz(e, z, z0, dir="+"):
     """
