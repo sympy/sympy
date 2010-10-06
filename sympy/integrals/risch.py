@@ -489,7 +489,7 @@ def integrate_primitive(a, d, D, T, Tfuncs):
         i = cancel(a.as_basic()/d.as_basic() - (g1[1]*derivation(g1[0], D, T) -
             g1[0]*derivation(g1[0], D, T)).as_basic()/(g1[1]**2).as_basic() -
             residue_reduce_derivation(g2, D, T, z))
-        i = Integral(i.subs(s), x)
+        i = Integral(cancel(i).subs(s), x)
         return ((g1[0].as_basic()/g1[1].as_basic()).subs(s) +
             residue_reduce_to_basic(g2, T, z, Tfuncs), i, b)
 
@@ -504,9 +504,9 @@ def integrate_primitive(a, d, D, T, Tfuncs):
         residue_reduce_to_basic(g2, T, z, Tfuncs))
     if not b:
         # TODO: This does not do the right thing when b is False
-        i = Integral(i.as_basic().subs(s), x)
+        i = Integral(cancel(i.as_basic()).subs(s), x)
     else:
-        i = i.as_basic()
+        i = cancel(i.as_basic())
 
     return (ret, i, b)
 
@@ -583,7 +583,7 @@ def integrate_hyperexponential(a, d, D, T, Tfuncs):
         i = cancel(a.as_basic()/d.as_basic() - (g1[1]*derivation(g1[0], D, T) -
             g1[0]*derivation(g1[0], D, T)).as_basic()/(g1[1]**2).as_basic() -
             residue_reduce_derivation(g2, D, T, z))
-        i = Integral(i.subs(s), x)
+        i = Integral(cancel(i.subs(s)), x)
         return ((g1[0].as_basic()/g1[1].as_basic()).subs(s) +
             residue_reduce_to_basic(g2, T, z, Tfuncs), i, b)
 
@@ -604,7 +604,7 @@ def integrate_hyperexponential(a, d, D, T, Tfuncs):
     if not b:
         i = p - (qd*derivation(qa, D, T) - qa*derivation(qd, D, T)).as_basic()/\
             (qd**2).as_basic()
-        i = Integral(i.subs(s), x)
+        i = Integral(cancel(i).subs(s), x)
 
     return (ret, i, b)
 
