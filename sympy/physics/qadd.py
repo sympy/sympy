@@ -5,6 +5,7 @@ from sympy.printing.pretty.stringpict import prettyForm
 
 from sympy.physics.qoperations import QAssocOp
 from sympy.physics.qexpr import QuantumError, QExpr
+from sympy.physics.hilbert import HilbertSpaceError
 
 
 class QAdd(QAssocOp):
@@ -58,20 +59,22 @@ class QAdd(QAssocOp):
 
         if not cls._is_qadd_allowed(obj1) or \
            not cls._is_qadd_allowed(obj2):
-            raise QuantumError("Can't add %s and %s" % (
+            raise TypeError("Can't add: %s and %s" % (
                 obj1.__class__.__name__, obj2.__class__.__name__
             ))
 
         if obj1.hilbert_space != obj2.hilbert_space:
-            raise QuantumError("Hilbert Spaces do not match")
+            raise HilbertSpaceError(
+                "Incompatible hilbert spaces: %r and %r" % (obj1, obj2)
+            )
 
         if cls._acts_the_same(obj1, obj2):
-            retVal = cls.flatten([obj1, obj2])
-            retVal.hilbert_space = obj1.hilbert_space
-            retVal.acts_like = obj1.acts_like
-            return retVal
+            result = cls.flatten([obj1, obj2])
+            result.hilbert_space = obj1.hilbert_space
+            result.acts_like = obj1.acts_like
+            return result
         else:
-            raise QuantumError("Can't add two objects that act like %s and %s"\
+            raise TypeError("Can't add two objects that act like: %s and %s"\
             % (obj1.acts_like.__name__, obj2.acts_like.__name__))
 
     @classmethod
@@ -176,7 +179,7 @@ class QAdd(QAssocOp):
 
         # nan
         if coeff is S.NaN:
-            raise QuantumError("NaN for some reason")
+            raise QuantumError("NaN in QMul.flatten")
 
         # oo, -oo
         elif (coeff is S.Infinity) or (coeff is S.NegativeInfinity):

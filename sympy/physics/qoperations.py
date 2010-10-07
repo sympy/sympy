@@ -16,11 +16,16 @@ class QAssocOp(QExpr):
     """
 
     def __new__(cls, *args, **assumptions):
-        if len(args) == 1:
-            return sympify(args[0])
         if len(args) == 0:
             return sympify(1)
-        return cls.eval(map(sympify, args))
+        newargs = []
+        for arg in args:
+            if isinstance(arg, QExpr):
+                newarg = arg
+            else:
+                newarg = sympify(arg)
+            newargs.append(newarg)
+        return cls.eval(newargs)
 
     @classmethod
     def eval(cls, args):

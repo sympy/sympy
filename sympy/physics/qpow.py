@@ -68,7 +68,7 @@ class QPow(QExpr):
         else:
             basename = base.__class__.__name__
 
-        raise QuantumError("Invalid operation: %s**%s" % (basename, expname))
+        raise TypeError("Can't exponentiate: %s**%s" % (basename, expname))
 
     @property
     def base(self):

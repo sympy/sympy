@@ -23,10 +23,10 @@ class QExpr(Expr):
     # In sympy, slots are for instance attributes that are computed
     # dynamically by the __new__ method. They are not part of args, but they
     # derive from args.
-    # * 'acts_like' tells whether a binary operation acts like a Bra, Ket
-    #   or Operator. This help us determine what types of subsequent
-    #   operations are possible with that expression. This slot is set
-    #   to the class that the object acts like.
+    # * 'acts_like' tells whether a binary operation acts like a BraBase,
+    #   KetBase or Operator. These are the only possibilities. This help us
+    #   determine what types of subsequent operations are possible with that
+    #   expression. This slot is set to the class that the object acts like.
     # * 'hilbert_space' tells us to which Hilbert space a quantum Object
     #   belongs. It is an instance of a HilbertSpace subclass.
     __slots__ = ['acts_like', 'hilbert_space']

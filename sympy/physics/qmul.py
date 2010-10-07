@@ -62,7 +62,9 @@ class QMul(QAssocOp):
             return result
 
         if obj1.hilbert_space != obj2.hilbert_space:
-            raise HilbertSpaceError("Hilbert Spaces do not match")
+            raise HilbertSpaceError(
+                "Incompatible hilbert spaces: %r and %r" % (obj1, obj2)
+            )
 
         if issubclass(obj1.acts_like, InnerProduct):
             result = cls.flatten(obj1, obj2)
@@ -79,6 +81,8 @@ class QMul(QAssocOp):
             result.acts_like = obj1.acts_like
             return result
         elif issubclass(obj1.acts_like, Operator):
+            # TODO: It seems a bit odd to have the Operator, InnerProduct
+            # code together?
             if issubclass(obj2.acts_like, (Operator, InnerProduct)):
                 result = cls.flatten(obj1, obj2)
                 if not isinstance(result, QExpr):
@@ -97,6 +101,8 @@ class QMul(QAssocOp):
                 result.acts_like = obj2.acts_like
                 return result
         elif issubclass(obj2.acts_like, Operator):
+            # TODO: It seems a bit odd to have the Operator, InnerProduct
+            # code together?
             if issubclass(obj1.acts_like, (Operator, InnerProduct)):
                 result = cls.flatten(obj1, obj2)
                 if not isinstance(result, QExpr):
@@ -113,8 +119,8 @@ class QMul(QAssocOp):
                 return result
 
         # Figure out inner and outer products.
-        elif issubclass(obj1.acts_like, KetBase) and\
-        issubclass(obj2.acts_like, BraBase):
+        elif issubclass(obj1.acts_like, KetBase) and \
+             issubclass(obj2.acts_like, BraBase):
             # TODO: this only works if obj1 is a Ket and obj2 is a Bra. We
             # need to make it work in the middle of an expression like
             # A*|a>*<b|*B.
@@ -132,8 +138,8 @@ class QMul(QAssocOp):
             result.hilbert_space = obj2.hilbert_space
             result.acts_like = OuterProduct
             return result
-        elif issubclass(obj1.acts_like, BraBase) and\
-        issubclass(obj2.acts_like, KetBase):
+        elif issubclass(obj1.acts_like, BraBase) and \
+             issubclass(obj2.acts_like, KetBase):
             # TODO: this only works if obj1 is a Bra and obj2 is a Ket. We
             # need to make it work more generally. The only case I have 
             # found to fail is 2*Bra('b')*Ket('b').
@@ -152,7 +158,7 @@ class QMul(QAssocOp):
             result.acts_like = InnerProduct
             return result
 
-        raise QuantumError("%s*%s is not allowed" % (
+        raise TypeError("Can't multiply: %s and %s" % (
             obj1.acts_like.__name__, obj2.acts_like.__name__
         ))
 
@@ -206,7 +212,6 @@ class QMul(QAssocOp):
             if len(Qseq) ==1:
                 return Qseq[0]
             return Expr.__new__(cls, *Qseq)
-        # c_part, nc_part, order_symbols
         return Expr.__new__(cls, Mul(*Eseq), *Qseq)
 
     @cacheit
