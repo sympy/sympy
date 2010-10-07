@@ -1,12 +1,12 @@
 from sympy import I, Symbol, S
 from sympy.printing.pretty.stringpict import prettyForm, stringPict
 
-from sympy.physics.quantum import Operator
+from sympy.physics.quantum import HermitianOperator
 from sympy.physics.hilbert import l2
 
 hbar = Symbol('hbar')
 
-class SpinBase(Operator):
+class SpinBase(HermitianOperator):
 
     @classmethod
     def _eval_hilbert_space(cls, label):

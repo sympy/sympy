@@ -129,6 +129,9 @@ class StateBase(QExpr, Representable):
         """Compute the Dagger of this state."""
         return self.dual
 
+    def _eval_innerproduct(self, other):
+        return None
+
     @classmethod
     def _default_acts_like(cls):
         return StateBase
@@ -227,7 +230,7 @@ class BraBase(StateBase):
 
     @classmethod
     def _default_acts_like(cls):
-        return KetBase
+        return BraBase
 
 
 class State(StateBase):
@@ -834,80 +837,10 @@ class AntiCommutator(Operator):
     def _latex_(self,printer):
         return "\\left{%s,%s\\right}"%tuple([
             printer._print(arg) for arg in self.args])
+
 #-----------------------------------------------------------------------------
 # Other subclases of QExpr
 #-----------------------------------------------------------------------------
-
-class InnerProduct(QExpr):
-    """An unevaluated inner product between a Bra and a Ket.
-
-    Because a Bra is essentially a row vector and a Ket is essentially a column
-    vector, the inner product evaluates (acts_like) to a complex number.
-
-    An InnerProduct takes first a Bra and then a Ket as its arguments.
-
-    Examples
-    ========
-
-    Create an InnerProduct and check its properties:
-
-        >>> from sympy.physics.quantum import Bra, Ket, InnerProduct
-        >>> ip = InnerProduct(Bra('a'), Ket('b'))
-        >>> ip
-        <a|b>
-        >>> ip.bra
-        <a|
-        >>> ip.ket
-        |b>
-
-    References
-    ==========
-
-    http://en.wikipedia.org/wiki/Inner_product
-    """
-
-    def __new__(cls, bra, ket, **old_assumptions):
-        if not isinstance(ket, KetBase):
-            raise TypeError('KetBase subclass expected, got: %r' % ket)
-        if not isinstance(bra, BraBase):
-            raise TypeError('BraBase subclass expected, got: %r' % ket)
-        if not ket.hilbert_space == bra.hilbert_space:
-            raise HilbertSpaceError(
-                'Incompatible hilbert spaces: %r and %r' % (ket, bra)
-        )
-        obj = Expr.__new__(cls, *(bra, ket), **{'commutative': False})
-        obj.hilbert_space = ket.hilbert_space
-        obj.acts_like = InnerProduct
-        return obj
-
-    @property
-    def bra(self):
-        return self.args[0]
-
-    @property
-    def ket(self):
-        return self.args[1]
-
-    def _eval_dagger(self):
-        return InnerProduct(Dagger(self.ket), Dagger(self.bra))
-
-    def _sympyrepr(self, printer, *args):
-        return '%s(%s,%s)' % (self.__class__.__name__, 
-            printer._print(self.bra, *args), printer._print(self.ket, *args))
-
-    def _sympystr(self, printer, *args):
-        sbra = str(self.bra)
-        sket = str(self.ket)
-        return '%s|%s' % (sbra[:-1], sket[1:])
-
-    def _pretty(self, printer, *args):
-        pform = prettyForm(u'\u276C')
-        pform = prettyForm(*pform.right(self.bra._print_label_pretty(printer, *args)))
-        return prettyForm(*pform.right(self.ket._pretty(printer, *args)))
-
-    def doit(self,**kw_args):
-        return self
-
 
 class Dagger(QExpr):
     """General Hermitian conjugate operation.
@@ -998,9 +931,6 @@ class Dagger(QExpr):
         pform = pform**prettyForm(u'\u2020')
         return pform
 
-
-
-
 #-----------------------------------------------------------------------------
 # Misc classes
 #-----------------------------------------------------------------------------
@@ -1059,6 +989,80 @@ class KroneckerDelta(Function):
 
     def _sympystr(self, printer, *args):
         return 'd(%s,%s)'% (self.args[0],self.args[1])
+
+
+class InnerProduct(Expr, Representable):
+    """An unevaluated inner product between a Bra and a Ket.
+
+    Because a Bra is essentially a row vector and a Ket is essentially a column
+    vector, the inner product evaluates (acts_like) to a complex number.
+
+    An InnerProduct takes first a Bra and then a Ket as its arguments.
+
+    Examples
+    ========
+
+    Create an InnerProduct and check its properties:
+
+        >>> from sympy.physics.quantum import Bra, Ket, InnerProduct
+        >>> ip = InnerProduct(Bra('a'), Ket('b'))
+        >>> ip
+        <a|b>
+        >>> ip.bra
+        <a|
+        >>> ip.ket
+        |b>
+
+    References
+    ==========
+
+    http://en.wikipedia.org/wiki/Inner_product
+    """
+
+    def __new__(cls, bra, ket, **old_assumptions):
+        if not isinstance(ket, KetBase):
+            raise TypeError('KetBase subclass expected, got: %r' % ket)
+        if not isinstance(bra, BraBase):
+            raise TypeError('BraBase subclass expected, got: %r' % ket)
+        if not ket.hilbert_space == bra.hilbert_space:
+            raise HilbertSpaceError(
+                'Incompatible hilbert spaces: %r and %r' % (ket, bra)
+        )
+        obj = Expr.__new__(cls, *(bra, ket), **{'commutative': True})
+        return obj
+
+    @property
+    def bra(self):
+        return self.args[0]
+
+    @property
+    def ket(self):
+        return self.args[1]
+
+    def _eval_dagger(self):
+        return InnerProduct(Dagger(self.ket), Dagger(self.bra))
+
+    def _sympyrepr(self, printer, *args):
+        return '%s(%s,%s)' % (self.__class__.__name__, 
+            printer._print(self.bra, *args), printer._print(self.ket, *args))
+
+    def _sympystr(self, printer, *args):
+        sbra = str(self.bra)
+        sket = str(self.ket)
+        return '%s|%s' % (sbra[:-1], sket[1:])
+
+    def _pretty(self, printer, *args):
+        pform = prettyForm(u'\u276C')
+        pform = prettyForm(*pform.right(self.bra._print_label_pretty(printer, *args)))
+        return prettyForm(*pform.right(self.ket._pretty(printer, *args)))
+
+    def doit(self, **hints):
+        r = self.bra._eval_innerproduct(self.ket)
+        if r is None:
+            r = self.ket._eval_innerproduct(self.bra)
+        if r is not None:
+            return r
+        return self
 
 #-----------------------------------------------------------------------------
 # Functions
