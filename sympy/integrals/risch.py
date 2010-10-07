@@ -29,7 +29,8 @@ from sympy.functions import log, exp, sin, cos, tan, asin, acos, atan
 
 from sympy.integrals import Integral, integrate
 
-from sympy.polys import (gcd, cancel, PolynomialError, Poly, reduced, RootSum)
+from sympy.polys import (gcd, cancel, PolynomialError, Poly, reduced, RootSum,
+    apart)
 
 from sympy.utilities.iterables import numbered_symbols, any, all
 #    from pudb import set_trace; set_trace() # Debugging
@@ -592,12 +593,16 @@ def integrate_hyperexponential(a, d, D, T, Tfuncs):
     # h - Dg2 + r
     p = cancel(h[0].as_basic()/h[1].as_basic() - residue_reduce_derivation(g2,
         D, T, z) + r[0].as_basic()/r[1].as_basic())
+    p = apart(p, t) # Try to get in a form where Poly will recognize it as an
+                    # element of k[t, 1/t].
     # TODO: Use subs() in new polys10 (?)
     pp = p.as_poly(t, 1/t).replace(1/t, z)
 
     qa, qd, b = integrate_hyperexponential_polynomial(pp, D, T, z)
 
-    i = pp.as_poly(t, expand=False).nth(0).as_poly(z, expand=False).nth(0)
+    # TODO: Replace apart() with a more robust routine, as per issue 2032
+
+    i = apart(pp.as_poly(t, expand=False).nth(0), z).as_poly(z, expand=False).nth(0)
 
     ret = ((g1[0].as_basic()/g1[1].as_basic() + qa.as_basic()/
         qd.as_basic()).subs(s) + residue_reduce_to_basic(g2, T, z, Tfuncs))

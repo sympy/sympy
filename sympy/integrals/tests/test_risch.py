@@ -175,6 +175,12 @@ def test_integrate_hyperexponential():
     [lambda x: exp(exp(x)), exp]) == \
         (exp(2*exp(x)), 0, True)
 
+    D = [Poly(1, x), Poly(t0, t0), Poly(-t0*t, t)]
+    assert integrate_hyperexponential(Poly(-27*exp(9) - 162*t0*exp(9) +
+    27*x*t0*exp(9), t), Poly((36*exp(18) + x**2*exp(18) - 12*x*exp(18))*t, t),
+    D, [x, t0, t], [lambda x: exp(exp(x)), exp]) == \
+        (27*exp(-exp(x))/(-6*exp(9) + x*exp(9)), 0, True)
+
     D = [Poly(1, x), Poly(t, t)]
     assert integrate_hyperexponential(Poly(x**2/2*t, t), Poly(1, t), D, [x, t], [exp]) == \
         ((2 - 2*x + x**2)*exp(x)/2, 0, True)
