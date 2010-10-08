@@ -24,21 +24,21 @@ class Sum(Expr):
 
             for V in symbols:
                 if isinstance(V, Symbol):
-                    limits.append(V)
+                    limits.append(Tuple(V))
                     continue
                 elif isinstance(V, Equality):
                     if isinstance(V.lhs, Symbol):
                         if isinstance(V.rhs, Interval):
-                            limits.append((V.lhs, V.rhs.start, V.rhs.end))
+                            limits.append(Tuple(V.lhs, V.rhs.start, V.rhs.end))
                         else:
-                            limits.append((V.lhs, V.rhs))
+                            limits.append(Tuple(V.lhs, V.rhs))
 
                         continue
                 elif isinstance(V, (tuple, list, Tuple)):
                     V = flatten(V)
                     if len(V) == 1:
                         if isinstance(V[0], Symbol):
-                            limits.append(V[0])
+                            limits.append(Tuple(V[0]))
                             continue
                     elif len(V) in (2, 3):
                         if isinstance(V[0], Symbol):

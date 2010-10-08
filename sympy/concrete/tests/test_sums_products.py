@@ -1,5 +1,5 @@
 from sympy import (Symbol, Sum, oo, Real, Rational, sum, pi, cos, zeta,
-Catalan, exp, log, factorial, sqrt, E, sympify, binomial, EulerGamma, Function, Integral, Product, product)
+Catalan, exp, log, factorial, sqrt, E, sympify, binomial, EulerGamma, Function, Integral, Product, product, Tuple, Eq, Interval)
 from sympy.concrete.summations import getab
 from sympy.concrete.sums_products import Sum2
 from sympy.utilities.pytest import XFAIL
@@ -177,6 +177,22 @@ def test_Sum2():
     x = Symbol('x')
     y = Symbol('y')
     assert Sum2(x**y, (x, 1, 3)) == 1 + 2**y + 3**y
+
+def test_sum_constructor():
+    s1 = Sum(n,n)
+    assert s1.limits == Tuple(Tuple(n))
+    s2 = Sum(n,(n,))
+    assert s2.limits == Tuple(Tuple(n))
+    s3 = Sum(n,((n,)))
+    assert s3.limits == Tuple(Tuple(n))
+    s4 = Sum(n,(Tuple(n,)))
+    assert s4.limits == Tuple(Tuple(n))
+
+    s5 = Sum(n,Eq(n,1))
+    assert s5.limits == Tuple(Tuple(n,1))
+    s6 = Sum(n,Eq(n,Interval(1,2)))
+    assert s6.limits == Tuple(Tuple(n,1,2))
+
 
 def test_Sum_doit():
     assert Sum(n*Integral(a**2), (n, 0, 2)).doit() == a**3
