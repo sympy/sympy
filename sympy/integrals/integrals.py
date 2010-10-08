@@ -33,7 +33,7 @@ class Integral(Expr):
 
             for V in symbols:
                 if isinstance(V, Symbol):
-                    limits.append((V,None))
+                    limits.append(Tuple(V,None))
                     continue
                 elif isinstance(V, (tuple, list, Tuple)):
                     V = flatten(V)
@@ -45,17 +45,17 @@ class Integral(Expr):
                                 nlim[0] = None
                             if V[2] is None:
                                 nlim[1] = None
-                            limits.append( (newsymbol, Tuple(*nlim) ))
+                            limits.append( Tuple(newsymbol, Tuple(*nlim) ))
                             continue
                     elif len(V) == 1 or (len(V) == 2 and V[1] is None):
                         if isinstance(newsymbol, Symbol):
-                            limits.append((newsymbol,None))
+                            limits.append(Tuple(newsymbol,None))
                             continue
 
                 raise ValueError("Invalid integration variable or limits: %s" % str(symbols))
         else:
             # no symbols provided -- let's compute full anti-derivative
-            limits = [(symb,None) for symb in function.atoms(Symbol)]
+            limits = [Tuple(symb,None) for symb in function.atoms(Symbol)]
 
             if not limits:
                 return function
@@ -206,13 +206,13 @@ class Integral(Expr):
         if not sym in self.atoms(Symbol):
             return S.Zero
 
-        if (sym, None) in self.limits:
+        if Tuple(sym, None) in self.limits:
             #case undefinite integral
             if len(self.limits) == 1:
                 return self.function
             else:
                 _limits = list(self.limits)
-                _limits.pop( _limits.index((sym, None)) )
+                _limits.pop( _limits.index(Tuple(sym, None)) )
                 return Integral(self.function, *tuple(_limits))
 
         #diff under the integral sign
