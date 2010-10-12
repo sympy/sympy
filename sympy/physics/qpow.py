@@ -1,5 +1,6 @@
 from sympy import Expr, Pow, S, sympify
 from sympy.printing.str import sstr
+from sympy.printing.pretty.stringpict import prettyForm
 
 from sympy.physics.qexpr import QuantumError, QExpr
 
@@ -83,8 +84,20 @@ class QPow(QExpr):
         return QPow(Dagger(self.base), Dagger(self.exp))
 
     def _sympystr(self, printer, *args):
-        return '(' + sstr(self.base) + ')' '**' + sstr(self.exp)
+        from sympy.physics.qmul import QMul
+        from sympy.physics.qadd import QAdd
+        base_str = printer._print(self.base, *args)
+        exp_str = printer._print(self.exp, *args)
+        if isinstance(self.base, (QMul, QAdd)):
+            return '(' + base_str + ')' '**' + exp_str
+        else:
+            return base_str + '**' + exp_str
 
     def _pretty(self, printer, *args):
-        return printer._print(self.args[0], *args)**printer._print(\
-        self.args[1], *args)
+        from sympy.physics.qmul import QMul
+        from sympy.physics.qadd import QAdd
+        base_pform = printer._print(self.base, *args)
+        if isinstance(self.base, (QMul, QAdd)):
+            base_pform = prettyForm(*base_pform.parens(left='(', right=')'))
+        exp_pform = printer._print(self.exp, *args)
+        return base_pform**exp_pform

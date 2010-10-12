@@ -42,119 +42,81 @@ class QMul(QAssocOp):
 
         if (not obj1_is_qexpr) and (not obj2_is_qexpr):
             return Mul(obj1, obj2)
-        elif not obj1_is_qexpr:
-            if obj1 == S.One:
-                return obj2
-            result = cls.flatten(obj1, obj2)
-            if not isinstance(result, QExpr):
-                return result
+
+        e_part, qec_part, qenc_part = cls._flatten_to_parts(obj1, obj2)
+
+        # Try to create InnerProduct or OuterProduct, but we first need
+        # to make sure both obj1 and obj2 are QExprs.
+        if len(qenc_part)==2 and obj1_is_qexpr and obj2_is_qexpr:
+            if issubclass(obj1.acts_like, KetBase) and \
+                 issubclass(obj2.acts_like, BraBase):
+                try:
+                    result = OuterProduct(qenc_part[0], qenc_part[1])
+                except (TypeError, QuantumError):
+                    pass
+                else:
+                    qenc_part = [result]
+            elif issubclass(obj1.acts_like, BraBase) and \
+                 issubclass(obj2.acts_like, KetBase):
+                try:
+                    result = InnerProduct(qenc_part[0], qenc_part[1])
+                except (TypeError, QuantumError):
+                    pass
+                else:
+                    qenc_part = [result]
+
+        result = cls._new_from_parts(e_part, qec_part, qenc_part)
+        if not isinstance(result, QExpr):
+            return result
+
+        if not obj1_is_qexpr:
             result.hilbert_space = obj2.hilbert_space
             result.acts_like = obj2.acts_like
             return result
         elif not obj2_is_qexpr:
-            if obj2 == S.One:
-                return obj1
-            result = cls.flatten(obj1, obj2)
-            if not isinstance(result, QExpr):
-                return result
             result.hilbert_space = obj1.hilbert_space
             result.acts_like = obj1.acts_like
             return result
+
+        # Both obj1 and obj2 are QExprs from here on out.
+        obj1_acts_like = obj1.acts_like
+        obj2_acts_like = obj2.acts_like
 
         if obj1.hilbert_space != obj2.hilbert_space:
             raise HilbertSpaceError(
                 "Incompatible hilbert spaces: %r and %r" % (obj1, obj2)
             )
 
-        if issubclass(obj1.acts_like, InnerProduct):
-            result = cls.flatten(obj1, obj2)
-            if not isinstance(result, QExpr):
-                return result
-            result.hilbert_space = obj2.hilbert_space
-            result.acts_like = obj2.acts_like
+        result.hilbert_space = obj1.hilbert_space
+        
+        if issubclass(obj1_acts_like, InnerProduct):
+            result.acts_like = obj2_acts_like
             return result
-        elif issubclass(obj2.acts_like, InnerProduct):
-            result = cls.flatten(obj1, obj2)
-            if not isinstance(result, QExpr):
-                return result
-            result.hilbert_space = obj1.hilbert_space
-            result.acts_like = obj1.acts_like
+        elif issubclass(obj2_acts_like, InnerProduct):
+            result.acts_like = obj1_acts_like
             return result
-        elif issubclass(obj1.acts_like, Operator):
-            # TODO: It seems a bit odd to have the Operator, InnerProduct
-            # code together?
-            if issubclass(obj2.acts_like, (Operator, InnerProduct)):
-                result = cls.flatten(obj1, obj2)
-                if not isinstance(result, QExpr):
-                    return result
-                elif isinstance(result, Operator):
-                    result.hilbert_space = obj1.hilbert_space
-                    return result
-                result.hilbert_space = obj1.hilbert_space
-                result.acts_like = obj1.acts_like
+
+        if issubclass(obj1_acts_like, Operator):
+            if issubclass(obj2_acts_like, Operator):
+                result.acts_like = obj1_acts_like
                 return result
-            elif issubclass(obj2.acts_like, KetBase):
-                result = cls.flatten(obj1, obj2)
-                if not isinstance(result, QExpr):
-                    return result
-                result.hilbert_space = obj2.hilbert_space
-                result.acts_like = obj2.acts_like
+            elif issubclass(obj2_acts_like, KetBase):
+                result.acts_like = obj2_acts_like
                 return result
-        elif issubclass(obj2.acts_like, Operator):
-            # TODO: It seems a bit odd to have the Operator, InnerProduct
-            # code together?
-            if issubclass(obj1.acts_like, (Operator, InnerProduct)):
-                result = cls.flatten(obj1, obj2)
-                if not isinstance(result, QExpr):
-                    return result
-                result.hilbert_space = obj2.hilbert_space
-                result.acts_like = obj2.acts_like
+        elif issubclass(obj2_acts_like, Operator):
+            if issubclass(obj1_acts_like, Operator):
+                result.acts_like = obj2_acts_like
                 return result
-            elif issubclass(obj1.acts_like, BraBase):
-                result = cls.flatten(obj1, obj2)
-                if not isinstance(result, QExpr):
-                    return result
-                result.hilbert_space = obj1.hilbert_space
-                result.acts_like = obj1.acts_like
+            elif issubclass(obj1_acts_like, BraBase):
+                result.acts_like = obj1_acts_like
                 return result
 
-        # Figure out inner and outer products.
-        elif issubclass(obj1.acts_like, KetBase) and \
-             issubclass(obj2.acts_like, BraBase):
-            # TODO: this only works if obj1 is a Ket and obj2 is a Bra. We
-            # need to make it work in the middle of an expression like
-            # A*|a>*<b|*B.
-            try:
-                result = OuterProduct(obj1, obj2)
-            except TypeError:
-                pass
-            except HilbertSpaceError:
-                pass
-            else:
-                return result
-            result = cls.flatten(obj1, obj2)
-            if not isinstance(result, QExpr):
-                return result
-            result.hilbert_space = obj2.hilbert_space
+        if issubclass(obj1_acts_like, KetBase) and \
+           issubclass(obj2_acts_like, BraBase):
             result.acts_like = OuterProduct
             return result
-        elif issubclass(obj1.acts_like, BraBase) and \
-             issubclass(obj2.acts_like, KetBase):
-            # TODO: this only works if obj1 is a Bra and obj2 is a Ket. We
-            # need to make it work more generally. The only case I have 
-            # found to fail is 2*Bra('b')*Ket('b').
-            try:
-                result = InnerProduct(obj1, obj2)
-            except TypeError:
-                pass
-            except HilbertSpaceError:
-                pass
-            else:
-                return result
-            result = cls.flatten(obj1, obj2)
-            if not isinstance(result, QExpr):
-                return result
-            result.hilbert_space = obj2.hilbert_space
+        elif issubclass(obj1_acts_like, BraBase) and \
+             issubclass(obj2_acts_like, KetBase):
             result.acts_like = InnerProduct
             return result
 
@@ -164,55 +126,85 @@ class QMul(QAssocOp):
 
     @classmethod
     def flatten(cls, obj1, obj2):
+        e_part, qec_part, qenc_part = cls._flatten_to_parts(obj1, obj2)
+        return cls._new_from_parts(e_part, qec_part, qenc_part)
+
+    @classmethod
+    def _flatten_to_parts(cls, obj1, obj2):
+        """Flattens out QMul args.
+
+        This method splits the args into three parts: objects that are not
+        QExpr instances, objects that are commutative QExpr instances and
+        object that are non-commutative QExpr instances.
         """
-            Flattens out QMul objects.
-            Places Non-Quantum objects at front of Qmul in Mul object and
-            Quantum objects behind it
-        """
-        Qseq = []
-        Eseq = []
+        e_part = []  # Expr parts
+        qec_part = []  # Commuting QExpr parts (InnerProduct)
+        qenc_part = []  # Non-commuting QExpr parts (Operator, State, etc.)
         seq = [obj1, obj2]
         last_argument = None
         while seq:
             o = seq.pop(0)
-            if o.__class__ is cls: # classes must match exactly
+
+            # Here we flatten args that are also QMuls - the classes must
+            # match exactly.
+            if o.__class__ is cls:
                 seq = list(o[:]) + seq
                 continue
-            if not isinstance(o, (QExpr)):
-                Eseq.append(o)
+
+            if not isinstance(o, QExpr):
+                e_part.append(o)
             else:
-                #now, figure out if we should combine terms inside a Pow
-                if not last_argument is None:
-                    if isinstance(last_argument, QPow):
-                        basel = last_argument.base
-                        powerl = last_argument.exp
-                    else:
-                        basel = last_argument
-                        powerl = 1
+                if o.is_commutative:
+                    # TODO: combine powers of InnerProducts
+                    qec_part.append(o)
+                else:
+                    #now, figure out if we should combine terms inside a Pow
+                    if not last_argument is None:
+                        if isinstance(last_argument, QPow):
+                            basel = last_argument.base
+                            powerl = last_argument.exp
+                        else:
+                            basel = last_argument
+                            powerl = 1
 
-                    if isinstance(o, QPow):
-                        baseo = o.base
-                        powero = o.exp
-                    else:
-                        baseo = o
-                        powero = 1
+                        if isinstance(o, QPow):
+                            baseo = o.base
+                            powero = o.exp
+                        else:
+                            baseo = o
+                            powero = 1
 
-                    #for now we won't combine anything questionable into a QPow
-                    #(e.g. complicated expressions whose exponent's act_like ==
-                    #InnerProduct)
-                    if baseo == basel and not isinstance(powero, QExpr)\
-                    and not isinstance(powero, QExpr):
-                        Qseq.pop(-1)
-                        o = baseo**(powero+powerl)
+                        #for now we won't combine anything questionable into a QPow
+                        #(e.g. complicated expressions whose exponent's act_like ==
+                        #InnerProduct)
+                        if baseo == basel and not isinstance(powero, QExpr)\
+                        and not isinstance(powero, QExpr):
+                            qenc_part.pop(-1)
+                            o = baseo**(powero+powerl)
 
-                Qseq.append(o)
-                last_argument = o
-        nqpart = Mul(*Eseq)
-        if nqpart == 1:
-            if len(Qseq) ==1:
-                return Qseq[0]
-            return Expr.__new__(cls, *Qseq)
-        return Expr.__new__(cls, Mul(*Eseq), *Qseq)
+                    qenc_part.append(o)
+                    last_argument = o
+        return e_part, qec_part, qenc_part
+
+    @classmethod
+    def _new_from_parts(cls, e_part, qec_part, qenc_part):
+        # Sort the commutative QExpr part.
+        qec_part.sort(Basic.compare)
+        e_part = Mul(*e_part)
+        # Build list of all the QExpr parts with nc part first.
+        qe_part = qec_part + qenc_part
+        # Set the assumptions dict to reflect if things commute.
+        if len(qenc_part) == 0:
+            assumpt_dict = {'commutative': True}
+        else:
+            assumpt_dict = {'commutative': False}
+        # Flatten if we have all QExpr
+        if e_part == 1:
+            if len(qe_part) ==1:
+                return qe_part[0]
+            return Expr.__new__(cls, *qe_part, **assumpt_dict)
+        # Both Expr and QExpr parts
+        return Expr.__new__(cls, e_part, *qe_part, **assumpt_dict)
 
     @cacheit
     def as_two_terms(self):

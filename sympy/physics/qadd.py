@@ -16,22 +16,16 @@ class QAdd(QAssocOp):
     binop_pretty =  prettyForm(u' \u002B ')
 
     @classmethod
-    def _is_not_qexpr(cls, e):
-        """Is the expression a non QExpr or InnerProduct."""
-        from sympy.physics.quantum import InnerProduct
-        r = not isinstance(e, QExpr) or issubclass(e.acts_like, InnerProduct)
-        return r
-
-    @classmethod
     def _is_qadd_allowed(cls, e):
         """Is the expression an instance that can be QAdd'd."""
         from sympy.physics.qpow import QPow
         from sympy.physics.quantum import (
-            StateBase, Operator, Dagger, Commutator, KroneckerDelta
+            StateBase, Operator, Dagger, Commutator, KroneckerDelta,
+            InnerProduct
         )
         _allowed = (
             StateBase, Operator, QAssocOp, QPow, Dagger, 
-            Commutator, KroneckerDelta
+            Commutator, KroneckerDelta, InnerProduct
         )
         return isinstance(e, _allowed)
 
@@ -54,7 +48,7 @@ class QAdd(QAssocOp):
         elif obj1 is S.Zero:
             return obj2
 
-        if cls._is_not_qexpr(obj1) and cls._is_not_qexpr(obj1):
+        if not isinstance(obj1, QExpr) and not isinstance(obj2, QExpr):
             return Add(obj1, obj2)
 
         if not cls._is_qadd_allowed(obj1) or \
@@ -170,7 +164,6 @@ class QAdd(QAssocOp):
                     cs = QMul._new_rawargs(s.acts_like, s.hilbert_space, *((c,)\
                     + s.args)) #figure out rawargs F
                     newseq.append(cs)
-
                 else:
                     # alternatively we have to call all Mul's machinery (slow)
                     newseq.append(QMul(c,s))
@@ -217,7 +210,11 @@ class QAdd(QAssocOp):
             newseq.insert(0, coeff)
 
         # we are done
-        return Expr.__new__(cls, *newseq)
+        # TODO: should this propagate is_commutative?
+        if noncommutative:
+            return Expr.__new__(cls, *newseq, **{'commutative': False})
+        else:
+            return Expr.__new__(cls, *newseq)
 
     @property
     def identity(self):

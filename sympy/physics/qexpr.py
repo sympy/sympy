@@ -24,9 +24,10 @@ class QExpr(Expr):
     # dynamically by the __new__ method. They are not part of args, but they
     # derive from args.
     # * 'acts_like' tells whether a binary operation acts like a BraBase,
-    #   KetBase or Operator. These are the only possibilities. This help us
-    #   determine what types of subsequent operations are possible with that
-    #   expression. This slot is set to the class that the object acts like.
+    #   KetBase, Operator or InnerProduct. These are the only possibilities.
+    #   This help us determine what types of subsequent operations are possible
+    #   with that expression. This slot is set to the class that the object acts
+    #   like.
     # * 'hilbert_space' tells us to which Hilbert space a quantum Object
     #   belongs. It is an instance of a HilbertSpace subclass.
     __slots__ = ['acts_like', 'hilbert_space']
@@ -132,3 +133,27 @@ class QExpr(Expr):
 
     __rtruediv__ = __rdiv__
 
+    # TODO: add an _eval_subs that calls subs on the hilbert_space attribute.
+
+
+def split_commutative_parts(m):
+    """Split into commutative and non-commutative parts."""
+    c_part = [p for p in m.args if p.is_commutative]
+    nc_part = [p for p in m.args if not p.is_commutative]
+    return c_part, nc_part
+
+
+def split_qexpr_parts(e):
+    """Split an expression into Expr, and commutative/non-commutative QExpr."""
+    expr_part = []
+    qexpr_comm_part = []
+    qexpr_noncomm_part = []
+    for arg in e.args:
+        if not isinstance(arg, QExpr):
+            expr_part.append(arg)
+        else:
+            if arg.is_commutative:
+                qexpr_comm_part.append(arg)
+            else:
+                qexpr_noncomm_part.append(arg)
+    return expr_part, qexpr_comm_part, qexpr_noncomm_part

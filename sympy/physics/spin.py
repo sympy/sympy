@@ -1,7 +1,7 @@
-from sympy import I, Symbol, S
+from sympy import I, Symbol, S, Integer, Rational
 from sympy.printing.pretty.stringpict import prettyForm, stringPict
 
-from sympy.physics.quantum import HermitianOperator
+from sympy.physics.quantum import HermitianOperator, State, Ket, Bra
 from sympy.physics.hilbert import l2
 
 hbar = Symbol('hbar')
@@ -71,3 +71,34 @@ class S2(SpinBase):
         top = stringPict(*b.left(' '*a.width()))
         bot = stringPict(*a.right(' '*b.width()))
         return prettyForm(binding=prettyForm.POW, *bot.above(top))
+
+
+class SpinState(State):
+    pass
+
+
+class SzKet(SpinState, Ket):
+
+    def _apply_operator_Sz(self, op):
+        return (hbar*self.label[1])*self
+
+    def _apply_operator_S2(self, op):
+        s = self.label[0]
+        return (hbar*hbar*s*(s+1))
+
+    def _eval_innerproduct(self, bra):
+        if isinstance(bra, SzBra):
+            d1 = KroneckerDelta(self.label[0], bra.label[0])
+            d2 = KroneckerDelta(self.label[1], bra.label[1])
+            return d1*d2
+
+    @property
+    def dual(self):
+        return SzBra(*self.label)
+
+
+class SzBra(SpinState, Bra):
+
+    @property
+    def dual(self):
+        return SzKet(*self.label)

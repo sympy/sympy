@@ -1,7 +1,9 @@
 from sympy import Expr, sympify, Add, Mul, Function, S, Matrix
 from sympy.printing.pretty.stringpict import prettyForm
 from sympy.core.containers import Tuple
-from sympy.physics.qexpr import QuantumError, QExpr
+from sympy.physics.qexpr import (
+    QuantumError, QExpr, split_commutative_parts, split_qexpr_parts
+)
 from sympy.physics.hilbert import HilbertSpace, HilbertSpaceError
 
 """
@@ -209,6 +211,19 @@ class KetBase(StateBase):
     @classmethod
     def _default_acts_like(cls):
         return KetBase
+
+    def apply_operator(self, op):
+        if not isinstance(op, Operator):
+            raise TypeError('Operator expected, got: %r' % op)
+        apply_method = '_apply_operator_%s' % op.__class__.__name__
+        if hasattr(self, apply_method):
+            f = getattr(self, apply_method)
+            result = f(op)
+            return result
+        else:
+            NotImplementedError(
+            "Don't know how apply operator %r to Ket %r" % (op, self)
+        )
 
 
 class BraBase(StateBase):
@@ -549,10 +564,6 @@ class OuterProduct(Operator):
     def bra(self):
         return self.args[1]
 
-    @property
-    def acts_like(self):
-        return Operator
-
     def _eval_dagger(self):
         return OuterProduct(Dagger(self.bra), Dagger(self.ket))
 
@@ -633,18 +644,19 @@ class Commutator(Operator):
 
         # [xA,yB]  ->  xy*[A,B]
         from sympy.physics.qmul import QMul
-        c_part = []
-        nc_part = []
-        nc_part2 = []
+        e_part = e_part2 = []
+        qec_part = qec_part2 = []
+        qenc_part = qenc_part2 = []
         if isinstance(a, (Mul, QMul)):
-            c_part, nc_part = split_commutative_parts(a)
+            e_part, qec_part, qenc_part = split_qexpr_parts(a)
         if isinstance(b, (Mul, QMul)):
-            c_part2, nc_part2 = split_commutative_parts(b)
-            c_part.extend(c_part2)
-        if c_part:
-            a = nc_part or [a]
-            b = nc_part2 or [b]
-            return QMul(Mul(*c_part), cls(QMul(*a), QMul(*b)))
+            e_part2, qec_part2, qenc_part2 = split_qexpr_parts(b)
+            e_part.extend(e_part2)
+            qec_part.extend(qec_part2)
+        if e_part or qec_part:
+            a = qenc_part or [a]
+            b = qenc_part2 or [b]
+            return QMul(Mul(*e_part), QMul(*qec_part), cls(QMul(*a), QMul(*b)))
 
         #
         # Canonical ordering of arguments
@@ -793,16 +805,11 @@ class AntiCommutator(Operator):
             b = nc_part2 or [b]
             return QMul(Mul(*c_part), cls(QMul(*a), QMul(*b)))
 
-        #
         # Canonical ordering of arguments
-        #
         if a.compare(b) == 1:
             return cls(b,a)
 
     def _eval_expand_anticommutator(self, **hints):
-        A = self.args[0].expand(**hints)
-        B = self.args[1].expand(**hints)
-
         # No changes, so return self
         return self
 
@@ -991,7 +998,7 @@ class KroneckerDelta(Function):
         return 'd(%s,%s)'% (self.args[0],self.args[1])
 
 
-class InnerProduct(Expr, Representable):
+class InnerProduct(QExpr, Representable):
     """An unevaluated inner product between a Bra and a Ket.
 
     Because a Bra is essentially a row vector and a Ket is essentially a column
@@ -1029,6 +1036,8 @@ class InnerProduct(Expr, Representable):
                 'Incompatible hilbert spaces: %r and %r' % (ket, bra)
         )
         obj = Expr.__new__(cls, *(bra, ket), **{'commutative': True})
+        obj.hilbert_space = ket.hilbert_space
+        obj.acts_like = InnerProduct
         return obj
 
     @property
@@ -1096,26 +1105,3 @@ def represent(expr, basis, **options):
     for arg in reversed(expr.args):
         result = represent(arg, basis, **options)*result
     return result
-
-
-def split_product(expr):
-    """Separates inner/outer products into a QMul.
-
-    * Only works for simple Muls (e.g. a*b*c*d) right now.
-    """
-    from sympy.physics.qmul import QMul
-    new_expr = QMul(1)
-    for arg in expr.args:
-        if isinstance(arg, InnerProduct):
-            new_expr = new_expr*QMul(*arg.args)
-        elif isinstance(arg, OuterProduct):
-            new_expr = new_expr*QMul(*arg.args)
-        else:
-            new_expr = new_expr*arg
-    return new_expr
-
-
-def split_commutative_parts(m):
-    c_part = [p for p in m.args if p.is_commutative]
-    nc_part = [p for p in m.args if not p.is_commutative]
-    return c_part, nc_part

@@ -36,6 +36,10 @@ class QAssocOp(QExpr):
         ``acts_like`` and ``hilbert_space`` slots are computed. The
         application of rule also validates the quantum expression.
         """
+        # TODO: I think this scales as O(N^2) where N is the number of args.
+        # This is because we have to call _apply_rules once for each arg,
+        # but it, in turn calls flatten, which runs through the entire 
+        # sequence.
         result = args[0]
         for i in range(len(args)-1):
             result = cls._apply_rules(result, args[i+1])
