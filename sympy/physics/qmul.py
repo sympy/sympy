@@ -43,29 +43,30 @@ class QMul(QAssocOp):
         if (not obj1_is_qexpr) and (not obj2_is_qexpr):
             return Mul(obj1, obj2)
 
-        e_part, qec_part, qenc_part = cls._flatten_to_parts(obj1, obj2)
+        e_part, q_part = cls._flatten_to_parts(obj1, obj2)
 
         # Try to create InnerProduct or OuterProduct, but we first need
         # to make sure both obj1 and obj2 are QExprs.
-        if len(qenc_part)==2 and obj1_is_qexpr and obj2_is_qexpr:
+        if len(q_part)==2 and obj1_is_qexpr and obj2_is_qexpr:
             if issubclass(obj1.acts_like, KetBase) and \
                  issubclass(obj2.acts_like, BraBase):
                 try:
-                    result = OuterProduct(qenc_part[0], qenc_part[1])
+                    result = OuterProduct(q_part[0], q_part[1])
                 except (TypeError, QuantumError):
                     pass
                 else:
-                    qenc_part = [result]
+                    q_part = [result]
             elif issubclass(obj1.acts_like, BraBase) and \
                  issubclass(obj2.acts_like, KetBase):
                 try:
-                    result = InnerProduct(qenc_part[0], qenc_part[1])
+                    result = InnerProduct(q_part[0], q_part[1])
                 except (TypeError, QuantumError):
                     pass
                 else:
-                    qenc_part = [result]
+                    e_part.append(result)
+                    q_part = []
 
-        result = cls._new_from_parts(e_part, qec_part, qenc_part)
+        result = cls._new_from_parts(e_part, q_part)
         if not isinstance(result, QExpr):
             return result
 
@@ -126,20 +127,18 @@ class QMul(QAssocOp):
 
     @classmethod
     def flatten(cls, obj1, obj2):
-        e_part, qec_part, qenc_part = cls._flatten_to_parts(obj1, obj2)
-        return cls._new_from_parts(e_part, qec_part, qenc_part)
+        e_part, q_part = cls._flatten_to_parts(obj1, obj2)
+        return cls._new_from_parts(e_part, q_part)
 
     @classmethod
     def _flatten_to_parts(cls, obj1, obj2):
         """Flattens out QMul args.
 
-        This method splits the args into three parts: objects that are not
-        QExpr instances, objects that are commutative QExpr instances and
-        object that are non-commutative QExpr instances.
+        This method splits the args into two parts: objects that are not QExpr
+        instances and object that are non-commutative QExpr instances.
         """
         e_part = []  # Expr parts
-        qec_part = []  # Commuting QExpr parts (InnerProduct)
-        qenc_part = []  # Non-commuting QExpr parts (Operator, State, etc.)
+        q_part = []  # Non-commuting QExpr parts (Operator, State, etc.)
         seq = [obj1, obj2]
         last_argument = None
         while seq:
@@ -154,57 +153,47 @@ class QMul(QAssocOp):
             if not isinstance(o, QExpr):
                 e_part.append(o)
             else:
-                if o.is_commutative:
-                    # TODO: combine powers of InnerProducts
-                    qec_part.append(o)
-                else:
-                    #now, figure out if we should combine terms inside a Pow
-                    if not last_argument is None:
-                        if isinstance(last_argument, QPow):
-                            basel = last_argument.base
-                            powerl = last_argument.exp
-                        else:
-                            basel = last_argument
-                            powerl = 1
+                #now, figure out if we should combine terms inside a Pow
+                if not last_argument is None:
+                    if isinstance(last_argument, QPow):
+                        basel = last_argument.base
+                        powerl = last_argument.exp
+                    else:
+                        basel = last_argument
+                        powerl = 1
 
-                        if isinstance(o, QPow):
-                            baseo = o.base
-                            powero = o.exp
-                        else:
-                            baseo = o
-                            powero = 1
+                    if isinstance(o, QPow):
+                        baseo = o.base
+                        powero = o.exp
+                    else:
+                        baseo = o
+                        powero = 1
 
-                        #for now we won't combine anything questionable into a QPow
-                        #(e.g. complicated expressions whose exponent's act_like ==
-                        #InnerProduct)
-                        if baseo == basel and not isinstance(powero, QExpr)\
-                        and not isinstance(powero, QExpr):
-                            qenc_part.pop(-1)
-                            o = baseo**(powero+powerl)
+                    #for now we won't combine anything questionable into a QPow
+                    #(e.g. complicated expressions whose exponent's act_like ==
+                    #InnerProduct)
+                    if baseo == basel and not isinstance(powero, QExpr)\
+                    and not isinstance(powero, QExpr):
+                        q_part.pop(-1)
+                        o = baseo**(powero+powerl)
 
-                    qenc_part.append(o)
-                    last_argument = o
-        return e_part, qec_part, qenc_part
+                q_part.append(o)
+                last_argument = o
+        return e_part, q_part
 
     @classmethod
-    def _new_from_parts(cls, e_part, qec_part, qenc_part):
-        # Sort the commutative QExpr part.
-        qec_part.sort(Basic.compare)
+    def _new_from_parts(cls, e_part, q_part):
         e_part = Mul(*e_part)
-        # Build list of all the QExpr parts with nc part first.
-        qe_part = qec_part + qenc_part
-        # Set the assumptions dict to reflect if things commute.
-        if len(qenc_part) == 0:
-            assumpt_dict = {'commutative': True}
-        else:
-            assumpt_dict = {'commutative': False}
-        # Flatten if we have all QExpr
+        # Handle the case where we only have a commuting Expr part.
+        if len(q_part) == 0:
+            return e_part
+        # Now the case where we only have a QExpr part.
         if e_part == 1:
-            if len(qe_part) ==1:
-                return qe_part[0]
-            return Expr.__new__(cls, *qe_part, **assumpt_dict)
+            if len(q_part) == 1:
+                return q_part[0]
+            return Expr.__new__(cls, *q_part, **{'commutative': False})
         # Both Expr and QExpr parts
-        return Expr.__new__(cls, e_part, *qe_part, **assumpt_dict)
+        return Expr.__new__(cls, e_part, *q_part, **{'commutative': False})
 
     @cacheit
     def as_two_terms(self):

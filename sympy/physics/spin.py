@@ -86,7 +86,7 @@ class SzKet(SpinState, Ket):
         s = self.label[0]
         return (hbar*hbar*s*(s+1))
 
-    def _eval_innerproduct(self, bra):
+    def _eval_innerproduct(self, bra, **hints):
         if isinstance(bra, SzBra):
             d1 = KroneckerDelta(self.label[0], bra.label[0])
             d2 = KroneckerDelta(self.label[1], bra.label[1])

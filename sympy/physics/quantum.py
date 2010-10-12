@@ -131,7 +131,7 @@ class StateBase(QExpr, Representable):
         """Compute the Dagger of this state."""
         return self.dual
 
-    def _eval_innerproduct(self, other):
+    def _eval_innerproduct(self, other, **hints):
         return None
 
     @classmethod
@@ -997,8 +997,14 @@ class KroneckerDelta(Function):
     def _sympystr(self, printer, *args):
         return 'd(%s,%s)'% (self.args[0],self.args[1])
 
+# InnerProduct is not an QExpr because it is really just a regular comutative
+# number. We have gone back and forth about this, but we gain a lot by having
+# this. The main challenges were getting Dagger to work (we use _eval_conjugate)
+# and represent (we can use atoms and subs). Having it be an Expr, mean that
+# there are no commutative QExpr subclasses, which simplifies the logic in QMul
+# a lot.
 
-class InnerProduct(QExpr, Representable):
+class InnerProduct(Expr, Representable):
     """An unevaluated inner product between a Bra and a Ket.
 
     Because a Bra is essentially a row vector and a Ket is essentially a column
@@ -1035,9 +1041,7 @@ class InnerProduct(QExpr, Representable):
             raise HilbertSpaceError(
                 'Incompatible hilbert spaces: %r and %r' % (ket, bra)
         )
-        obj = Expr.__new__(cls, *(bra, ket), **{'commutative': True})
-        obj.hilbert_space = ket.hilbert_space
-        obj.acts_like = InnerProduct
+        obj = Expr.__new__(cls, *(bra, ket))
         return obj
 
     @property
@@ -1050,6 +1054,9 @@ class InnerProduct(QExpr, Representable):
 
     def _eval_dagger(self):
         return InnerProduct(Dagger(self.ket), Dagger(self.bra))
+
+    def _eval_conjugate(self):
+        return self._eval_dagger()
 
     def _sympyrepr(self, printer, *args):
         return '%s(%s,%s)' % (self.__class__.__name__, 
@@ -1066,9 +1073,9 @@ class InnerProduct(QExpr, Representable):
         return prettyForm(*pform.right(self.ket._pretty(printer, *args)))
 
     def doit(self, **hints):
-        r = self.bra._eval_innerproduct(self.ket)
+        r = self.bra._eval_innerproduct(self.ket, **hints)
         if r is None:
-            r = self.ket._eval_innerproduct(self.bra)
+            r = self.ket._eval_innerproduct(self.bra, **hints)
         if r is not None:
             return r
         return self
