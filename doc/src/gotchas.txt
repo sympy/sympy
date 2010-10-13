@@ -358,6 +358,39 @@ You only need to be careful with number/number.
     2/x
 
 
+.. _Immutibility-of-Expressions:
+
+Immutibility of Expressions
+----------------------------
+
+Expressions in sympy are immutable, and cannot be modified by an in-place operation.  This means
+that a function will always return an object, and the original expression
+will not be modified.  The following example program demonstrates how this works::
+
+	from sympy import *
+
+	def main():
+	    var('x y a b')
+	    expr = 3*x + 4*y
+	    print 'original =', expr
+	    expr_modified = expr.subs({x:a, y:b})
+	    print 'modified = ', expr_modified
+	    
+	if __name__ == "__main__":
+	    main()
+
+The output shows that the :func:`subs` function has replaced variable :obj:`x` with variable :obj:`a`, and
+variable :obj:`y` with variable :obj:`b`::
+
+	original = 3*x + 4*y
+	modified =  3*a + 4*b
+
+The :func:`subs` function does not modify the original expression :obj:`expr`. Rather, a modified copy
+of the expression is returned. This returned object is stored in the variable :obj:`expr_modified`.
+Note that unlike C/C++ and other high-level languages, Python does not require you to
+declare a variable before it is used.
+
+
 Mathematical Operators
 ----------------------
 SymPy uses the same default operators as Python.  Most of these, like
