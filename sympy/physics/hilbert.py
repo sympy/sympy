@@ -1,4 +1,6 @@
 from sympy import Expr, Interval, oo, sympify
+from sympy.printing.pretty.stringpict import prettyForm
+
 from sympy.physics.qexpr import QuantumError
 
 class HilbertSpaceError(QuantumError):
@@ -57,7 +59,7 @@ class HilbertSpace(Expr):
         else:
             return False
 
-class l2(HilbertSpace):
+class ComplexSpace(HilbertSpace):
     """l2 Hilbert space of any dimension.
 
     l2 (little-ell-two) is a Hilbert space of complex valued vectors. The
@@ -134,10 +136,16 @@ class l2(HilbertSpace):
         self.dimension)
 
     def _sympyrepr(self, printer, *args):
-        return "l2(%s)" % printer._print(self.dimension, *args)
+        return "%s(%s)" % (self.__class__.__name__,
+                           printer._print(self.dimension, *args))
 
     def _sympystr(self, printer, *args):
-        return "l2(%s)" % printer._print(self.dimension, *args)
+        return "C(%s)" % printer._print(self.dimension, *args)
+
+    def _pretty(self, printer, *args):
+        pform_exp = printer._print(self.dimension, *args)
+        pform_base = prettyForm(u"\u2102")
+        return pform_base**pform_exp
 
 class L2(HilbertSpace):
     """The Hilbert space of square integrable functions on an interval.
@@ -576,18 +584,3 @@ class TensorPowerHilbertSpace(HilbertSpace):
 # Functions
 #-----------------------------------------------------------------------------
 
-def compare_hilbert(arg1, arg2):
-    if isinstance(arg1, (QAdd, QMul)):
-        for item in arg1.args:
-            compare_hilbert(item, arg2)
-    elif isinstance(arg2, (Qdd, QMul)):
-        for item in arg2.args:
-            compare_hilbert(item, arg1)
-    elif isinstance(arg1, QPow):
-        compare_hilbert(arg1.base, arg2)
-    elif isinstance(arg2, QPow):
-        compare_hilbert(arg2.base, arg1)
-    else:
-        if (hasattr(arg1, 'hilbert_space') and hasattr(arg2, 'hilbert_space')\
-        and arg1.hilbert_space != arg2.hilbert_space):
-            raise HilbertSpaceError()

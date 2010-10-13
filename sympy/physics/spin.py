@@ -2,7 +2,7 @@ from sympy import I, Symbol, S, Integer, Rational
 from sympy.printing.pretty.stringpict import prettyForm, stringPict
 
 from sympy.physics.quantum import HermitianOperator, State, Ket, Bra
-from sympy.physics.hilbert import l2
+from sympy.physics.hilbert import ComplexSpace
 
 hbar = Symbol('hbar')
 
@@ -10,7 +10,7 @@ class SpinBase(HermitianOperator):
 
     @classmethod
     def _eval_hilbert_space(cls, label):
-        return l2(2*label+1)
+        return ComplexSpace(2*label+1)
 
     def _sympystr(self, printer, *args):
         return printer._print(self.__class__.__name__, *args)
