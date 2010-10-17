@@ -46,10 +46,15 @@ class Ellipse(GeometryEntity):
     t*sin(1.546086215036205357975518382), 'mode=parametric'
     """
 
-    def __new__(cls, center=None, hradius=None, vradius=None, eccentricity=None, **kwargs):
+    def __new__(cls, center=None, hradius=None, vradius=None, eccentricity=None,
+                **kwargs):
         hradius = sympify(hradius)
         vradius = sympify(vradius)
         eccentricity = sympify(eccentricity)
+
+        if len(filter(None, (hradius, vradius, eccentricity))) != 2:
+            raise ValueError, 'Exactly two arguments between "hradius", '\
+                '"vradius", and "eccentricity" must be not None."'
 
         if eccentricity is not None:
             if hradius is None:
@@ -108,7 +113,7 @@ class Ellipse(GeometryEntity):
     def periapsis(self):
         """The periapsis of the ellipse.
 
-        It's the shorter distance between the focus and the contour."""
+        It's the shortest distance between the focus and the contour."""
 
         return self.hradius * (1 - self.eccentricity)
 
@@ -139,12 +144,11 @@ class Ellipse(GeometryEntity):
         if hr.atoms(C.Symbol) or vr.atoms(C.Symbol):
             raise ValueError("foci can only be determined on non-symbolic radii")
 
-        # use focus_distance
-        v = sqrt(abs(vr**2 - hr**2))
+        h = sqrt(abs(vr**2 - hr**2))
         if hr < vr:
-            return (c+Point(0, -v), c+Point(0, v))
+            return (c+Point(0, -h), c+Point(0, h))
         else:
-            return (c+Point(-v, 0), c+Point(v, 0))
+            return (c+Point(-h, 0), c+Point(h, 0))
 
     def tangent_line(self, p):
         """
