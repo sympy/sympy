@@ -1,22 +1,10 @@
-from sympy import Expr, sympify, Add, Mul, Function, S, Matrix
+from sympy import Expr, sympify, Add, Mul, Function, S, Matrix, Pow
 from sympy.printing.pretty.stringpict import prettyForm
 from sympy.core.containers import Tuple
 from sympy.physics.qexpr import (
     QuantumError, QExpr, split_commutative_parts, split_qexpr_parts
 )
 from sympy.physics.hilbert import HilbertSpace, HilbertSpaceError
-
-"""
-Questions:
-
-* What does doit do and should be use it to do things like apply operators?
-* How should we handle assumptions?  New or old system?
-* How should we handle different types of operators like symmetric, hermitian,
-  etc? Assumptions?
-* What should a basis set consist of?  Somehow it needs to know about a set
-  of states and maybe the operator they are eigenvectors of. We need a way
-  of labeling these states by name and index: |a[0]>, |a[1]>, etc.
-"""
 
 __all__ = [
     'KetBase',
@@ -134,10 +122,6 @@ class StateBase(QExpr, Representable):
     def _eval_innerproduct(self, other, **hints):
         return None
 
-    @classmethod
-    def _default_acts_like(cls):
-        return StateBase
-
     #-------------------------------------------------------------------------
     # Printing
     #-------------------------------------------------------------------------
@@ -205,25 +189,26 @@ class KetBase(StateBase):
     rbracket_pretty = prettyForm(u'\u27E9')
 
     @property
+    def dual_class(self):
+        return BraBase
+
+    @property
     def dual(self):
-        return BraBase(*self.args)
+        return self.dual_class(*self.args)
 
-    @classmethod
-    def _default_acts_like(cls):
-        return KetBase
-
-    def apply_operator(self, op):
-        if not isinstance(op, Operator):
-            raise TypeError('Operator expected, got: %r' % op)
-        apply_method = '_apply_operator_%s' % op.__class__.__name__
-        if hasattr(self, apply_method):
-            f = getattr(self, apply_method)
-            result = f(op)
-            return result
+    def __mul__(self, other):
+        """KetBase*other"""
+        if isinstance(other, self.dual_class):
+            return OuterProduct(self, other)
         else:
-            NotImplementedError(
-            "Don't know how apply operator %r to Ket %r" % (op, self)
-        )
+            return Expr.__mul__(self, other)
+
+    def __rmul__(self, other):
+        """other*KetBase"""
+        if isinstance(other, self.dual_class):
+            return InnerProduct(other, self)
+        else:
+            return Expr.__rmul__(self, other)
 
 
 class BraBase(StateBase):
@@ -240,13 +225,26 @@ class BraBase(StateBase):
     rbracket_pretty = prettyForm(u'\u2758')
 
     @property
+    def dual_class(self):
+        return KetBase
+
+    @property
     def dual(self):
-        return KetBase(*self.args)
+        return self.dual_class(*self.args)
 
-    @classmethod
-    def _default_acts_like(cls):
-        return BraBase
+    def __mul__(self, other):
+        """BraBase*other"""
+        if isinstance(other, self.dual_class):
+            return InnerProduct(self, other)
+        else:
+            return Expr.__mul__(self, other)
 
+    def __rmul__(self, other):
+        """other*BraBase"""
+        if isinstance(other, self.dual_class):
+            return OuterProduct(other, self)
+        else:
+            return Expr.__rmul__(self, other)
 
 class State(StateBase):
     """General abstract quantum state."""
@@ -257,7 +255,6 @@ class State(StateBase):
         inst = Expr.__new__(cls, label, **{'commutative':False})
         # Now set the slots on the instance
         inst.hilbert_space = cls._eval_hilbert_space(label)
-        inst.acts_like = cls._default_acts_like()
         return inst
 
 
@@ -292,8 +289,8 @@ class Ket(State, KetBase):
     """
 
     @property
-    def dual(self):
-        return Bra(*self.args)
+    def dual_class(self):
+        return Bra
 
 
 class Bra(State, BraBase):
@@ -326,8 +323,8 @@ class Bra(State, BraBase):
     """
 
     @property
-    def dual(self):
-        return Ket(*self.args)
+    def dual_class(self):
+        return Ket
 
 #-----------------------------------------------------------------------------
 # Time dependent states, bras and kets.
@@ -347,7 +344,6 @@ class TimeDepState(StateBase):
         inst = Expr.__new__(cls, label, time, **{'commutative':False})
         # Now set the slots on the instance
         inst.hilbert_space = cls._eval_hilbert_space(label)
-        inst.acts_like = cls._default_acts_like()
         return inst
 
     @property
@@ -396,8 +392,8 @@ class TimeDepKet(TimeDepState, KetBase):
     """
 
     @property
-    def dual(self):
-        return TimeDepBra(*self.args)
+    def dual_class(self):
+        return TimeDepBra
 
 
 class TimeDepBra(TimeDepState, BraBase):
@@ -410,8 +406,8 @@ class TimeDepBra(TimeDepState, BraBase):
     """
 
     @property
-    def dual(self):
-        return TimeDepKet(*self.args)
+    def dual_class(self):
+        return TimeDepKet
 
 #-----------------------------------------------------------------------------
 # Operators and outer products
@@ -450,16 +446,11 @@ class Operator(QExpr, Representable):
         label = sympify(label)
         obj = Expr.__new__(cls, label, **{'commutative': False})
         obj.hilbert_space = cls._eval_hilbert_space(label)
-        obj.acts_like = cls._default_acts_like()
         return obj
 
     @classmethod
     def _eval_hilbert_space(cls, label):
         return HilbertSpace()
-
-    @classmethod
-    def _default_acts_like(cls):
-        return Operator
 
     @property
     def label(self):
@@ -497,6 +488,19 @@ class Operator(QExpr, Representable):
     def _eval_ranticommutator(self, other):
         """Evaluate [other, self] if known."""
         return None
+
+    def apply_operator(self, state):
+        if not isinstance(state, KetBase):
+            raise TypeError('KetBase expected, got: %r' % state)
+        apply_method = '_apply_operator_%s' % state.__class__.__name__
+        if hasattr(self, apply_method):
+            f = getattr(self, apply_method)
+            result = f(state)
+            return result
+        else:
+            NotImplementedError(
+            "Don't know how apply operator %r to Ket %r" % (state, self)
+        )
 
 
 class HermitianOperator(Operator):
@@ -547,13 +551,17 @@ class OuterProduct(Operator):
             raise TypeError('KetBase subclass expected, got: %r' % ket)
         if not isinstance(bra, BraBase):
             raise TypeError('BraBase subclass expected, got: %r' % ket)
+        if not ket.dual_class == bra.__class__:
+            raise TypeError(
+                'ket and bra are not dual classes: %r, %r' % \
+                (ket.__class__, bra.__class__)
+            )
         if not ket.hilbert_space == bra.hilbert_space:
             raise HilbertSpaceError(
                 'Incompatible hilbert spaces: %r and %r' % (ket, bra)
             )
         obj = Expr.__new__(cls, *(ket, bra), **{'commutative': False})
         obj.hilbert_space = ket.hilbert_space
-        obj.acts_like = cls._default_acts_like()
         return obj
 
     @property
@@ -581,366 +589,10 @@ class OuterProduct(Operator):
     def doit(self,**kw_args):
         return self
 
-
-class Commutator(Operator):
-    """The commutator function for quantum mechanics.
-
-    This function behaves as such: [A, B] = A*B - B*A
-
-    The arguments are ordered according to .__cmp__()
-
-    Examples
-    ========
-
-    >>> from sympy import symbols
-    >>> from sympy.physics.quantum import Commutator
-    >>> A, B = symbols('A B', **{'commutative':False})
-    >>> Commutator(B, A)
-    -1*Commutator(A, B)
-
-    Evaluate the commutator with .doit()
-
-    >>> comm = Commutator(A,B); comm
-    Commutator(A, B)
-    >>> comm.doit()
-    A*B - B*A
-
-    References
-    ==========
-
-    http://en.wikipedia.org/wiki/Commutator
-    """
-
-    def __new__(cls, A, B, **old_assumptions):
-        # Only check these things if A, B are QExprs. This allows commutators
-        # to work with scalars (Expr), even though they will always vanish. 
-        # This happens when you take the expectation values of a commutator.
-        if isinstance(A, QExpr) and isinstance(B, QExpr):
-            if not issubclass(A.acts_like, Operator):
-                raise TypeError('Acts like Operator expected, got: %r' % A)
-            if not issubclass(B.acts_like, Operator):
-                raise TypeError('Acts like Operator expected, got: %r' % B)
-            if not A.hilbert_space == B.hilbert_space:
-                raise HilbertSpaceError(
-                    'Incompatible hilbert spaces: %r and %r' % (A, B)
-                )
-        r = cls.eval(A, B)
-        if r is not None:
-            # TODO: do I need to set the hilbert_space attribute of this?
-            return r
-        obj = Expr.__new__(cls, *(A, B), **{'commutative': False})
-        obj.hilbert_space = A.hilbert_space
-        obj.acts_like = cls._default_acts_like()
-        return obj
-
-    @classmethod
-    def eval(cls, a, b):
-        """The Commutator [A,B] is on canonical form if A < B.
-        """
-        if not (a and b): return S.Zero
-        if a == b: return S.Zero
-        if a.is_commutative or b.is_commutative:
-            return S.Zero
-
-        # [xA,yB]  ->  xy*[A,B]
-        from sympy.physics.qmul import QMul
-        e_part = e_part2 = []
-        qec_part = qec_part2 = []
-        qenc_part = qenc_part2 = []
-        if isinstance(a, (Mul, QMul)):
-            e_part, qec_part, qenc_part = split_qexpr_parts(a)
-        if isinstance(b, (Mul, QMul)):
-            e_part2, qec_part2, qenc_part2 = split_qexpr_parts(b)
-            e_part.extend(e_part2)
-            qec_part.extend(qec_part2)
-        if e_part or qec_part:
-            a = qenc_part or [a]
-            b = qenc_part2 or [b]
-            return QMul(Mul(*e_part), QMul(*qec_part), cls(QMul(*a), QMul(*b)))
-
-        #
-        # Canonical ordering of arguments
-        #
-        if a.compare(b) == 1:
-            return S.NegativeOne*cls(b,a)
-
-    def _eval_expand_commutator(self, **hints):
-        from sympy.physics.qadd import QAdd
-        from sympy.physics.qmul import QMul
-
-        A = self.args[0].expand(**hints)
-        B = self.args[1].expand(**hints)
-
-        # [A+B,C]  ->  [A,C] + [B,C]
-        if isinstance(A, (Add, QAdd)):
-            return QAdd(*[Commutator(term,B) for term in A.args])
-        if isinstance(B, (Add, QAdd)):
-            return QAdd(*[Commutator(A,term) for term in B.args])
-
-        if isinstance(A, QMul):
-            # [a*b,c] -> a*[b,c] + [a,c]*b
-            a = A.args[0]
-            b = QMul(*A.args[1:])
-            c = B
-            first = QMul(a, Commutator(b, c))
-            second = QMul(Commutator(a, c), b)
-            return QAdd(first, second)
-        if isinstance(B, QMul):
-            # [a,b*c] -> [a,b]*c + b*[a,c]
-            a = A
-            b = B.args[0]
-            c = QMul(*B.args[1:])
-            first = QMul(Commutator(a, b), c)
-            second = QMul(b, Commutator(a, c))
-            return QAdd(first, second)
-
-        # No changes, so return self
-        return self
-
-    def doit(self, **hints):
-        A = self.args[0]
-        B = self.args[1]
-        if isinstance(A, Operator) and isinstance(B, Operator):
-            comm = A._eval_commutator(B)
-            if comm is None:
-                comm = B._eval_rcommutator(A)
-            if comm is not None:
-                return comm.doit(**hints)
-        return (A*B - B*A).doit(**hints)
-
-    def _eval_dagger(self):
-        return Commutator(Dagger(self.args[1]), Dagger(self.args[0]))
-
-    def _sympyrepr(self, printer, *args):
-        return "%s(%s,%s)" % (self.__class__.__name__, self.args[0],\
-        self.args[1])
-
-    def _sympystr(self, printer, *args):
-        return "[%s,%s]" % (self.args[0], self.args[1])
-
-    def _pretty(self, printer, *args):
-        pform = printer._print(self.args[0], *args)
-        pform = prettyForm(*pform.right((prettyForm(u','))))
-        pform = prettyForm(*pform.right((printer._print(self.args[1], *args))))
-        pform = prettyForm(*pform.parens(left='[', right=']'))
-        return pform
-
-    def _latex_(self,printer):
-        return "\\left[%s,%s\\right]"%tuple([
-            printer._print(arg) for arg in self.args])
-
-
-class AntiCommutator(Operator):
-    """The commutator function for quantum mechanics.
-
-    This function behaves as such: [A, B] = A*B - B*A
-
-    The arguments are ordered according to .__cmp__()
-
-    Examples
-    ========
-
-    >>> from sympy import symbols
-    >>> from sympy.physics.quantum import Commutator
-    >>> A, B = symbols('A B', **{'commutative':False})
-    >>> Commutator(B, A)
-    -1*Commutator(A, B)
-
-    Evaluate the commutator with .doit()
-
-    >>> comm = Commutator(A,B); comm
-    Commutator(A, B)
-    >>> comm.doit()
-    A*B - B*A
-
-    References
-    ==========
-
-    http://en.wikipedia.org/wiki/Commutator
-    """
-
-    def __new__(cls, A, B, **old_assumptions):
-        # Only check these things if A, B are QExprs. This allows commutators
-        # to work with scalars (Expr), even though they will always vanish. 
-        # This happens when you take the expectation values of a commutator.
-        if isinstance(A, QExpr) and isinstance(B, QExpr):
-            if not issubclass(A.acts_like, Operator):
-                raise TypeError('Acts like Operator expected, got: %r' % A)
-            if not issubclass(B.acts_like, Operator):
-                raise TypeError('Acts like Operator expected, got: %r' % B)
-            if not A.hilbert_space == B.hilbert_space:
-                raise HilbertSpaceError(
-                    'Incompatible hilbert spaces: %r and %r' % (A, B)
-                )
-        r = cls.eval(A, B)
-        if r is not None:
-            # TODO: do I need to set the hilbert_space attribute of this?
-            return r
-        obj = Expr.__new__(cls, *(A, B), **{'commutative': False})
-        obj.hilbert_space = A.hilbert_space
-        obj.acts_like = cls._default_acts_like()
-        return obj
-
-    @classmethod
-    def eval(cls, a, b):
-        """The Commutator [A,B] is on canonical form if A < B.
-        """
-        if not (a and b): return S.Zero
-        if a == b: return sympify(2)*a**2
-        if a.is_commutative or b.is_commutative:
-            return sympify(2)*a*b
-
-        # [xA,yB]  ->  xy*[A,B]
-        from sympy.physics.qmul import QMul
-        c_part = []
-        nc_part = []
-        nc_part2 = []
-        if isinstance(a, (Mul, QMul)):
-            c_part, nc_part = split_commutative_parts(a)
-        if isinstance(b, (Mul, QMul)):
-            c_part2, nc_part2 = split_commutative_parts(b)
-            c_part.extend(c_part2)
-        if c_part:
-            a = nc_part or [a]
-            b = nc_part2 or [b]
-            return QMul(Mul(*c_part), cls(QMul(*a), QMul(*b)))
-
-        # Canonical ordering of arguments
-        if a.compare(b) == 1:
-            return cls(b,a)
-
-    def _eval_expand_anticommutator(self, **hints):
-        # No changes, so return self
-        return self
-
-    def doit(self, **hints):
-        A = self.args[0]
-        B = self.args[1]
-        if isinstance(A, Operator) and isinstance(B, Operator):
-            comm = A._eval_anticommutator(B)
-            if comm is None:
-                comm = B._eval_ranticommutator(A)
-            if comm is not None:
-                return comm.doit(**hints)
-        return (A*B + B*A).doit(**hints)
-
-    def _eval_dagger(self):
-        return Commutator(Dagger(self.args[0]), Dagger(self.args[1]))
-
-    def _sympyrepr(self, printer, *args):
-        return "%s(%s,%s)" % (self.__class__.__name__, self.args[0],\
-        self.args[1])
-
-    def _sympystr(self, printer, *args):
-        return "{%s,%s}" % (self.args[0], self.args[1])
-
-    def _pretty(self, printer, *args):
-        pform = printer._print(self.args[0], *args)
-        pform = prettyForm(*pform.right((prettyForm(u','))))
-        pform = prettyForm(*pform.right((printer._print(self.args[1], *args))))
-        pform = prettyForm(*pform.parens(left='{', right='}'))
-        return pform
-
-    def _latex_(self,printer):
-        return "\\left{%s,%s\\right}"%tuple([
-            printer._print(arg) for arg in self.args])
-
 #-----------------------------------------------------------------------------
-# Other subclases of QExpr
+# Subclasses of Expr
 #-----------------------------------------------------------------------------
 
-class Dagger(QExpr):
-    """General Hermitian conjugate operation.
-
-    When an object is daggered it is transposed and then the complex conjugate
-    is taken [1].
-
-    A Dagger can take in any quantum object as its argument.
-
-    Examples
-    ========
-
-    Daggering various quantum objects:
-
-        >>> from sympy.physics.quantum import Dagger, Ket, Bra, InnerProduct,\
-        OuterProduct, Operator
-        >>> Dagger(Ket('psi'))
-        <psi|
-        >>> Dagger(Bra('bus'))
-        |bus>
-        >>> Dagger(InnerProduct(Bra('a'), Ket('b')))
-        <b|a>
-        >>> Dagger(OuterProduct(Ket('a'), Bra('b')))
-        |b><a|
-        >>> Dagger(Operator('A'))
-        Dagger(A)
-
-    Notice how daggering the operator 'A' results in isympy returning an
-    unevaluated Dagger object (because A had no _eval_dagger method).
-
-    References
-    ==========
-
-    [1] http://en.wikipedia.org/wiki/Hermitian_transpose
-    """
-
-    def __new__(cls, arg, **old_assumptions):
-        if isinstance(arg, Matrix):
-            return arg.H
-        arg = sympify(arg)
-        r = cls.eval(arg)
-        if isinstance(r, Expr):
-            return r
-        #make unevaluated dagger commutative or non-commutative depending on arg
-        if arg.is_commutative:
-            obj = Expr.__new__(cls, arg)
-        else:
-            obj = Expr.__new__(cls, arg, **{'commutative':False})
-        if isinstance(obj, QExpr):
-            obj.hilbert_space = arg.hilbert_space
-            obj.acts_like = arg.acts_like
-        return obj
-
-    @classmethod
-    def eval(cls, arg):
-        """
-        Evaluates the Dagger instance.
-        """
-        if hasattr(arg, '_eval_dagger'):
-            return arg._eval_dagger()
-        elif not isinstance(arg, (InnerProduct, OuterProduct, Operator,\
-        StateBase)):
-            return arg.conjugate()
-        elif isinstance(arg, Matrix):
-            arg = arg.T
-            for i in range(arg.rows*arg.cols):
-                arg[i] = Dagger(arg[i])
-            return arg
-        else:
-            return None
-
-    def _eval_subs(self, old, new):
-        r = Dagger(self.args[0].subs(old, new))
-        return r
-
-    def _eval_dagger(self):
-        return self.args[0]
-
-    def _sympyrepr(self, printer, *args):
-        return '%s(%s)' % (self.__class__.__name__, self.args[0])
-
-    def _sympystr(self, printer, *args):
-        return '%s(%s)' % (self.__class__.__name__, self.args[0])
-
-    def _pretty(self, printer, *args):
-        from sympy.printing.pretty.stringpict import prettyForm
-        pform = printer._print(self.args[0], *args)
-        pform = pform**prettyForm(u'\u2020')
-        return pform
-
-#-----------------------------------------------------------------------------
-# Misc classes
-#-----------------------------------------------------------------------------
 
 class KroneckerDelta(Function):
     """The discrete delta function.
@@ -997,6 +649,104 @@ class KroneckerDelta(Function):
     def _sympystr(self, printer, *args):
         return 'd(%s,%s)'% (self.args[0],self.args[1])
 
+
+class Dagger(Expr):
+    """General Hermitian conjugate operation.
+
+    When an object is daggered it is transposed and then the complex conjugate
+    is taken [1].
+
+    A Dagger can take in any quantum object as its argument.
+
+    Examples
+    ========
+
+    Daggering various quantum objects:
+
+        >>> from sympy.physics.quantum import Dagger, Ket, Bra, InnerProduct,\
+        OuterProduct, Operator
+        >>> Dagger(Ket('psi'))
+        <psi|
+        >>> Dagger(Bra('bus'))
+        |bus>
+        >>> Dagger(InnerProduct(Bra('a'), Ket('b')))
+        <b|a>
+        >>> Dagger(OuterProduct(Ket('a'), Bra('b')))
+        |b><a|
+        >>> Dagger(Operator('A'))
+        Dagger(A)
+
+    Notice how daggering the operator 'A' results in isympy returning an
+    unevaluated Dagger object (because A had no _eval_dagger method).
+
+    References
+    ==========
+
+    [1] http://en.wikipedia.org/wiki/Hermitian_transpose
+    """
+
+    def __new__(cls, arg, **old_assumptions):
+        # Matrices are not sympify friendly
+        if isinstance(arg, Matrix):
+            return arg.H
+        arg = sympify(arg)
+        r = cls.eval(arg)
+        if isinstance(r, Expr):
+            return r
+        #make unevaluated dagger commutative or non-commutative depending on arg
+        if arg.is_commutative:
+            obj = Expr.__new__(cls, arg, **{'commutative':True})
+        else:
+            obj = Expr.__new__(cls, arg, **{'commutative':False})
+        if isinstance(obj, QExpr):
+            obj.hilbert_space = arg.hilbert_space
+        return obj
+
+    @classmethod
+    def eval(cls, arg):
+        """
+        Evaluates the Dagger instance.
+        """
+        try:
+            d = arg._eval_dagger()
+        except:
+            if isinstance(arg, Expr):
+                if isinstance(arg, Operator):
+                    # Operator without _eval_dagger
+                    return None
+                if arg.is_Add:
+                    return Add(*[Dagger(i) for i in arg.args])
+                if arg.is_Mul:
+                    return Mul(*[Dagger(i) for i in reversed(arg.args)])                    
+                if arg.is_Pow:
+                    return Pow(Dagger(arg.args[0]),arg.args[1])
+                else:
+                    return arg.conjugate()
+            else:
+                return None
+        else:
+            return d
+
+    def _eval_subs(self, old, new):
+        r = Dagger(self.args[0].subs(old, new))
+        return r
+
+    def _eval_dagger(self):
+        return self.args[0]
+
+    def _sympyrepr(self, printer, *args):
+        return '%s(%s)' % (self.__class__.__name__, self.args[0])
+
+    def _sympystr(self, printer, *args):
+        return '%s(%s)' % (self.__class__.__name__, self.args[0])
+
+    def _pretty(self, printer, *args):
+        from sympy.printing.pretty.stringpict import prettyForm
+        pform = printer._print(self.args[0], *args)
+        pform = pform**prettyForm(u'\u2020')
+        return pform
+
+
 # InnerProduct is not an QExpr because it is really just a regular comutative
 # number. We have gone back and forth about this, but we gain a lot by having
 # this. The main challenges were getting Dagger to work (we use _eval_conjugate)
@@ -1037,11 +787,16 @@ class InnerProduct(Expr, Representable):
             raise TypeError('KetBase subclass expected, got: %r' % ket)
         if not isinstance(bra, BraBase):
             raise TypeError('BraBase subclass expected, got: %r' % ket)
+        if not ket.dual_class == bra.__class__:
+            raise TypeError(
+                'bra and ket are not dual classes: %r, %r' % \
+                (bra.__class__, ket.__class__)
+            )
         if not ket.hilbert_space == bra.hilbert_space:
             raise HilbertSpaceError(
                 'Incompatible hilbert spaces: %r and %r' % (ket, bra)
         )
-        obj = Expr.__new__(cls, *(bra, ket))
+        obj = Expr.__new__(cls, *(bra, ket), **{'commutative':True})
         return obj
 
     @property
@@ -1080,6 +835,237 @@ class InnerProduct(Expr, Representable):
             return r
         return self
 
+
+class Commutator(Expr):
+    """The commutator function for quantum mechanics.
+
+    This function behaves as such: [A, B] = A*B - B*A
+
+    The arguments are ordered according to .__cmp__()
+
+    Examples
+    ========
+
+    >>> from sympy import symbols
+    >>> from sympy.physics.quantum import Commutator
+    >>> A, B = symbols('A B', **{'commutative':False})
+    >>> Commutator(B, A)
+    -1*Commutator(A, B)
+
+    Evaluate the commutator with .doit()
+
+    >>> comm = Commutator(A,B); comm
+    Commutator(A, B)
+    >>> comm.doit()
+    A*B - B*A
+
+    References
+    ==========
+
+    http://en.wikipedia.org/wiki/Commutator
+    """
+
+    def __new__(cls, A, B, **old_assumptions):
+        r = cls.eval(A, B)
+        if r is not None:
+            return r
+        obj = Expr.__new__(cls, *(A, B), **{'commutative': False})
+        return obj
+
+    @classmethod
+    def eval(cls, a, b):
+        """The Commutator [A,B] is on canonical form if A < B.
+        """
+        if not (a and b): return S.Zero
+        if a == b: return S.Zero
+        if a.is_commutative or b.is_commutative:
+            return S.Zero
+
+        # [xA,yB]  ->  xy*[A,B]
+        # from sympy.physics.qmul import QMul
+        c_part = c_part2 = []
+        nc_part = nc_part2 = []
+        if isinstance(a, Mul):
+            c_part, nc_part = split_commutative_parts(a)
+        if isinstance(b, Mul):
+            c_part2, nc_part2 = split_commutative_parts(b)
+            c_part.extend(c_part2)
+            nc_part.extend(nc_part2)
+        if c_part:
+            a = nc_part or [a]
+            b = nc_part2 or [b]
+            return Mul(*c_part)*cls(Mul(*a),Mul(*b))
+
+        # Canonical ordering of arguments
+        if a.compare(b) == 1:
+            return S.NegativeOne*cls(b,a)
+
+    def _eval_expand_commutator(self, **hints):
+        # from sympy.physics.qadd import QAdd
+        # from sympy.physics.qmul import QMul
+
+        A = self.args[0].expand(**hints)
+        B = self.args[1].expand(**hints)
+
+        # [A+B,C]  ->  [A,C] + [B,C]
+        if isinstance(A, Add):
+            return Add(*[Commutator(term,B) for term in A.args])
+        if isinstance(B, Add):
+            return Add(*[Commutator(A,term) for term in B.args])
+
+        if isinstance(A, Mul):
+            # [a*b,c] -> a*[b,c] + [a,c]*b
+            a = A.args[0]
+            b = Mul(*A.args[1:])
+            c = B
+            first = Mul(a, Commutator(b, c))
+            second = Mul(Commutator(a, c), b)
+            return Add(first, second)
+        if isinstance(B, Mul):
+            # [a,b*c] -> [a,b]*c + b*[a,c]
+            a = A
+            b = B.args[0]
+            c = Mul(*B.args[1:])
+            first = Mul(Commutator(a, b), c)
+            second = Mul(b, Commutator(a, c))
+            return Add(first, second)
+
+        # No changes, so return self
+        return self
+
+    def doit(self, **hints):
+        A = self.args[0]
+        B = self.args[1]
+        if isinstance(A, Operator) and isinstance(B, Operator):
+            comm = A._eval_commutator(B)
+            if comm is None:
+                comm = B._eval_rcommutator(A)
+            if comm is not None:
+                return comm.doit(**hints)
+        return (A*B - B*A).doit(**hints)
+
+    def _eval_dagger(self):
+        return Commutator(Dagger(self.args[1]), Dagger(self.args[0]))
+
+    def _sympyrepr(self, printer, *args):
+        return "%s(%s,%s)" % (self.__class__.__name__, self.args[0],\
+        self.args[1])
+
+    def _sympystr(self, printer, *args):
+        return "[%s,%s]" % (self.args[0], self.args[1])
+
+    def _pretty(self, printer, *args):
+        pform = printer._print(self.args[0], *args)
+        pform = prettyForm(*pform.right((prettyForm(u','))))
+        pform = prettyForm(*pform.right((printer._print(self.args[1], *args))))
+        pform = prettyForm(*pform.parens(left='[', right=']'))
+        return pform
+
+    def _latex_(self,printer):
+        return "\\left[%s,%s\\right]"%tuple([
+            printer._print(arg) for arg in self.args])
+
+
+class AntiCommutator(Expr):
+    """The commutator function for quantum mechanics.
+
+    This function behaves as such: [A, B] = A*B - B*A
+
+    The arguments are ordered according to .__cmp__()
+
+    Examples
+    ========
+
+    >>> from sympy import symbols
+    >>> from sympy.physics.quantum import Commutator
+    >>> A, B = symbols('A B', **{'commutative':False})
+    >>> Commutator(B, A)
+    -1*Commutator(A, B)
+
+    Evaluate the commutator with .doit()
+
+    >>> comm = Commutator(A,B); comm
+    Commutator(A, B)
+    >>> comm.doit()
+    A*B - B*A
+
+    References
+    ==========
+
+    http://en.wikipedia.org/wiki/Commutator
+    """
+
+    def __new__(cls, A, B, **old_assumptions):
+        r = cls.eval(A, B)
+        if r is not None:
+            return r
+        obj = Expr.__new__(cls, *(A, B), **{'commutative': False})
+        return obj
+
+    @classmethod
+    def eval(cls, a, b):
+        """The Commutator [A,B] is on canonical form if A < B.
+        """
+        if not (a and b): return S.Zero
+        if a == b: return sympify(2)*a**2
+        if a.is_commutative or b.is_commutative:
+            return sympify(2)*a*b
+
+        # [xA,yB]  ->  xy*[A,B]
+        # from sympy.physics.qmul import QMul
+        c_part = []
+        nc_part = []
+        nc_part2 = []
+        if isinstance(a, Mul):
+            c_part, nc_part = split_commutative_parts(a)
+        if isinstance(b, Mul):
+            c_part2, nc_part2 = split_commutative_parts(b)
+            c_part.extend(c_part2)
+        if c_part:
+            a = nc_part or [a]
+            b = nc_part2 or [b]
+            return Mul(Mul(*c_part), cls(Mul(*a), Mul(*b)))
+
+        # Canonical ordering of arguments
+        if a.compare(b) == 1:
+            return cls(b,a)
+
+    def _eval_expand_anticommutator(self, **hints):
+        # No changes, so return self
+        return self
+
+    def doit(self, **hints):
+        A = self.args[0]
+        B = self.args[1]
+        if isinstance(A, Operator) and isinstance(B, Operator):
+            comm = A._eval_anticommutator(B)
+            if comm is None:
+                comm = B._eval_ranticommutator(A)
+            if comm is not None:
+                return comm.doit(**hints)
+        return (A*B + B*A).doit(**hints)
+
+    def _eval_dagger(self):
+        return Commutator(Dagger(self.args[0]), Dagger(self.args[1]))
+
+    def _sympyrepr(self, printer, *args):
+        return "%s(%s,%s)" % (self.__class__.__name__, self.args[0],\
+        self.args[1])
+
+    def _sympystr(self, printer, *args):
+        return "{%s,%s}" % (self.args[0], self.args[1])
+
+    def _pretty(self, printer, *args):
+        pform = printer._print(self.args[0], *args)
+        pform = prettyForm(*pform.right((prettyForm(u','))))
+        pform = prettyForm(*pform.right((printer._print(self.args[1], *args))))
+        pform = prettyForm(*pform.parens(left='{', right='}'))
+        return pform
+
+    def _latex_(self,printer):
+        return "\\left{%s,%s\\right}"%tuple([
+            printer._print(arg) for arg in self.args])
+
 #-----------------------------------------------------------------------------
 # Functions
 #-----------------------------------------------------------------------------
@@ -1087,12 +1073,12 @@ class InnerProduct(Expr, Representable):
 def represent(expr, basis, **options):
     """Represent the quantum expression in the given basis.
     """
-    from sympy.physics.qadd import QAdd
-    from sympy.physics.qmul import QMul
-    from sympy.physics.qpow import QPow
+    # from sympy.physics.qadd import QAdd
+    # from sympy.physics.qmul import QMul
+    # from sympy.physics.qpow import QPow
     if isinstance(expr, Representable):
         return expr.represent(basis, **options)
-    elif isinstance(expr, QAdd):
+    elif isinstance(expr, Add):
         result = S.Zero
         for args in expr.args:
             if not result:
@@ -1100,13 +1086,13 @@ def represent(expr, basis, **options):
             else:
                 result += represent(args, basis, **options)
         return result
-    elif isinstance(expr, QPow):
+    elif isinstance(expr, Pow):
         return represent(expr.base, basis, **options)**expr.exp
-    elif not isinstance(expr, QMul):
+    elif not isinstance(expr, Mul):
         return expr
 
-    if not isinstance(expr, QMul):
-        raise TypeError('QMul expected, got: %r' % expr)
+    if not isinstance(expr, Mul):
+        raise TypeError('Mul expected, got: %r' % expr)
 
     result = S.One
     for arg in reversed(expr.args):

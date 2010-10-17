@@ -1,6 +1,4 @@
 from sympy import Expr
-from sympy.core.decorators import call_highest_priority
-from sympy.core.basic import S, C
 
 #-----------------------------------------------------------------------------
 # Error handling
@@ -15,25 +13,15 @@ class QuantumError(Exception):
 
 class QExpr(Expr):
 
-    # All quantum objects have a _op_priority that is higher than that of
-    # Expr so that all operators are overloaded and the quantum versions
-    # of Pow, Add, Mul, etc. are used.
-    _op_priority = 100.0
-
     # In sympy, slots are for instance attributes that are computed
     # dynamically by the __new__ method. They are not part of args, but they
     # derive from args.
-    # * 'acts_like' tells whether a binary operation acts like a BraBase,
-    #   KetBase, Operator or InnerProduct. These are the only possibilities.
-    #   This help us determine what types of subsequent operations are possible
-    #   with that expression. This slot is set to the class that the object acts
-    #   like.
     # * 'hilbert_space' tells us to which Hilbert space a quantum Object
     #   belongs. It is an instance of a HilbertSpace subclass.
-    __slots__ = ['acts_like', 'hilbert_space']
+    __slots__ = ['hilbert_space']
 
     @classmethod
-    def _new_rawargs(cls, acts_like, hilbert_space, *args):
+    def _new_rawargs(cls, hilbert_space, *args):
         """Create new instance of own class with args exactly as provided.
 
         This class method sets the ``acts_like`` and ``hilbert_space`` slots
@@ -60,86 +48,15 @@ class QExpr(Expr):
             HilbertSpace()
         """
 
-        if len(args) == 1:
-            return args[0]
         obj = Expr.__new__(cls, *args)
-        obj.acts_like = acts_like
         obj.hilbert_space = hilbert_space
         return obj
 
-    def __pos__(self):
-        return self
 
-    def __neg__(self):
-        from sympy.physics.qmul import QMul
-        return QMul(S.NegativeOne, self)
-
-    def __abs__(self):
-        return C.abs(self)
-
-    @call_highest_priority('__rmul__')
-    def __mul__(self, other):
-        from sympy.physics.qmul import QMul
-        return QMul(self, other)
-
-    @call_highest_priority('__mul__')
-    def __rmul__(self, other):
-        from sympy.physics.qmul import QMul
-        return QMul(other, self)
-
-    @call_highest_priority('__radd__')
-    def __add__(self, other):
-        from sympy.physics.qadd import QAdd
-        return QAdd(self, other)
-
-    @call_highest_priority('__add__')
-    def __radd__(self, other):
-        from sympy.physics.qadd import QAdd
-        return QAdd(other, self)
-
-    @call_highest_priority('__rpow__')
-    def __pow__(self, other):
-        from sympy.physics.qpow import QPow
-        return QPow(self, other)
-
-    @call_highest_priority('__pow__')
-    def __rpow__(self, other):
-        from sympy.physics.qpow import QPow
-        return QPow(other, self)
-
-    @call_highest_priority('__rdiv__')
-    def __div__(self, other):
-        from sympy.physics.qpow import QPow
-        from sympy.physics.qmul import QMul
-        return QMul(self, QPow(other, S.NegativeOne))
-
-    @call_highest_priority('__div__')
-    def __rdiv__(self, other):
-        from sympy.physics.qpow import QPow
-        from sympy.physics.qmul import QMul
-        return QMul(other, QPow(self, S.NegativeOne))
-
-    @call_highest_priority('__rsub__')
-    def __sub__(self, other):
-        from sympy.physics.qadd import QAdd
-        return QAdd(self, -other)
-
-    @call_highest_priority('__sub__')
-    def __rsub__(self, other):
-        from sympy.physics.qadd import QAdd
-        return QAdd(other, -self)
-
-    __truediv__ = __div__
-
-    __rtruediv__ = __rdiv__
-
-    # TODO: add an _eval_subs that calls subs on the hilbert_space attribute.
-
-
-def split_commutative_parts(m):
+def split_commutative_parts(e):
     """Split into commutative and non-commutative parts."""
-    c_part = [p for p in m.args if p.is_commutative]
-    nc_part = [p for p in m.args if not p.is_commutative]
+    c_part = [p for p in e.args if p.is_commutative]
+    nc_part = [p for p in e.args if not p.is_commutative]
     return c_part, nc_part
 
 
