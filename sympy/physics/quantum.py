@@ -1,6 +1,9 @@
-from sympy import Expr, sympify, Add, Mul, Function, S, Matrix, Pow
+from sympy import Expr, sympify, Add, Mul, Function, S, Matrix, Pow, Integer
 from sympy.printing.pretty.stringpict import prettyForm
 from sympy.core.containers import Tuple
+from sympy.core.numbers import NumberSymbol
+import sympy.mpmath.libmp as mlib
+
 from sympy.physics.qexpr import (
     QuantumError, QExpr, split_commutative_parts, split_qexpr_parts
 )
@@ -25,6 +28,10 @@ __all__ = [
     'KroneckerDelta',
     'Commutator',
     'AntiCommutator',
+    'represent',
+    'hbar',
+    'TensorProduct',
+    'tpsimp'
 ]
 
 #-----------------------------------------------------------------------------
@@ -40,11 +47,11 @@ class Representable(object):
         if hasattr(self, rep_method):
             f = getattr(self, rep_method)
             rep = f(basis, **options)
-            return rep
-        else:
-            raise NotImplementedError("Can't represent %r in basis: %r" % (
-                self, basis
-            ))
+            if rep is not None:
+                return rep
+        raise NotImplementedError("Can't represent %r in basis: %r" % (
+            self, basis
+        ))
 
 #-----------------------------------------------------------------------------
 # States, bras and kets.
@@ -210,6 +217,18 @@ class KetBase(StateBase):
         else:
             return Expr.__rmul__(self, other)
 
+    def apply_operator(self, op):
+        if not isinstance(op, Operator):
+            raise TypeError('Operator expected, got: %r' % op)
+        apply_method = '_apply_operator_%s' % op.__class__.__name__
+        if hasattr(self, apply_method):
+            f = getattr(self, apply_method)
+            result = f(op)
+            if result is not None:
+                return result
+        raise NotImplementedError(
+            "Don't know how apply operator %r to Ket %r" % (op, self)
+        )
 
 class BraBase(StateBase):
     """Base class for Bras.
@@ -489,17 +508,17 @@ class Operator(QExpr, Representable):
         """Evaluate [other, self] if known."""
         return None
 
-    def apply_operator(self, state):
-        if not isinstance(state, KetBase):
-            raise TypeError('KetBase expected, got: %r' % state)
-        apply_method = '_apply_operator_%s' % state.__class__.__name__
+    def apply_to_ket(self, ket):
+        if not isinstance(ket, KetBase):
+            raise TypeError('KetBase expected, got: %r' % ket)
+        apply_method = '_apply_to_ket_%s' % ket.__class__.__name__
         if hasattr(self, apply_method):
             f = getattr(self, apply_method)
-            result = f(state)
-            return result
-        else:
-            NotImplementedError(
-            "Don't know how apply operator %r to Ket %r" % (state, self)
+            result = f(ket)
+            if result is not None:
+                return result
+        raise NotImplementedError(
+            "Don't know how apply operator %r to Ket %r" % (self, ket)
         )
 
 
@@ -890,7 +909,6 @@ class Commutator(Expr):
         if isinstance(b, Mul):
             c_part2, nc_part2 = split_commutative_parts(b)
             c_part.extend(c_part2)
-            nc_part.extend(nc_part2)
         if c_part:
             a = nc_part or [a]
             b = nc_part2 or [b]
@@ -901,8 +919,7 @@ class Commutator(Expr):
             return S.NegativeOne*cls(b,a)
 
     def _eval_expand_commutator(self, **hints):
-        # from sympy.physics.qadd import QAdd
-        # from sympy.physics.qmul import QMul
+        # TODO: apply this recursively to handle mutiple rules at once.
 
         A = self.args[0].expand(**hints)
         B = self.args[1].expand(**hints)
@@ -962,7 +979,7 @@ class Commutator(Expr):
         return pform
 
     def _latex_(self,printer):
-        return "\\left[%s,%s\\right]"%tuple([
+        return "\\left[%s,%s\\right]" % tuple([
             printer._print(arg) for arg in self.args])
 
 
@@ -1007,9 +1024,9 @@ class AntiCommutator(Expr):
         """The Commutator [A,B] is on canonical form if A < B.
         """
         if not (a and b): return S.Zero
-        if a == b: return sympify(2)*a**2
+        if a == b: return Integer(2)*a**2
         if a.is_commutative or b.is_commutative:
-            return sympify(2)*a*b
+            return Integer(2)*a*b
 
         # [xA,yB]  ->  xy*[A,B]
         # from sympy.physics.qmul import QMul
@@ -1046,7 +1063,7 @@ class AntiCommutator(Expr):
         return (A*B + B*A).doit(**hints)
 
     def _eval_dagger(self):
-        return Commutator(Dagger(self.args[0]), Dagger(self.args[1]))
+        return AntiCommutator(Dagger(self.args[0]), Dagger(self.args[1]))
 
     def _sympyrepr(self, printer, *args):
         return "%s(%s,%s)" % (self.__class__.__name__, self.args[0],\
@@ -1065,6 +1082,170 @@ class AntiCommutator(Expr):
     def _latex_(self,printer):
         return "\\left{%s,%s\\right}"%tuple([
             printer._print(arg) for arg in self.args])
+
+
+#-----------------------------------------------------------------------------
+# Tensor product
+#-----------------------------------------------------------------------------
+
+class TensorProduct(Expr):
+
+    def __new__(cls, *args):
+        matrix = False
+        new_args = []
+        for arg in args:
+            if isinstance(arg, Matrix):
+                matrix = True
+                new_args.append(arg)
+            else:
+                if matrix:
+                    raise TypeError('Matrix expected, got: %r' % arg)
+                else:
+                    new_args.append(sympify(arg))
+        if not matrix:
+            c_part, new_args = cls.flatten(new_args)
+            c_part = Mul(*c_part)
+        else:
+            c_part = 1
+        if len(new_args) == 0:
+            return c_part
+        elif len(new_args) == 1:
+            return c_part*new_args[0]
+        else:
+            tp = Expr.__new__(cls, *new_args, **{'commutative': False})
+            return c_part*tp
+
+    @classmethod
+    def flatten(cls, args):
+        # TODO: disallow nested TensorProducts.
+        c_part = []
+        nc_parts = []
+        for arg in args:
+            if isinstance(arg, Mul):
+                cp, ncp = split_commutative_parts(arg)
+                ncp = Mul(*ncp)
+            else:
+                if arg.is_commutative:
+                    cp = [arg]; ncp = 1
+                else:
+                    cp = []; ncp = arg
+            c_part.extend(cp)
+            nc_parts.append(ncp)
+        return c_part, nc_parts
+
+    def _eval_dagger(self):
+        return TensorProduct(*[Dagger(i) for i in self.args])
+
+    def _sympystr(self, printer, *args):
+        from sympy.printing.str import sstr
+        length = len(self.args)
+        string = ''
+        for i in range(length):
+            if isinstance(self.args[i], (Add, Pow)):
+                string = string + '('
+            string = string + sstr(self.args[i])
+            if isinstance(self.args[i], (Add, Pow)):
+                string = string + ')'
+            if i != length-1:
+                string = string + 'x'
+        return string
+
+    def _pretty(self, printer, *args):
+        length = len(self.args)
+        pform = printer._print('', *args)
+        for i in range(length):
+            next_pform = printer._print(self.args[i], *args)
+            if isinstance(self.args[i], (Add, Pow, Mul)):
+                next_pform = prettyForm(
+                    *next_pform.parens(left='(', right=')')
+                )
+            pform = prettyForm(*pform.right(next_pform))
+            if i != length-1:
+                pform = prettyForm(*pform.right(u'\u2a02' + u' '))
+        if length > 1:
+            pform = prettyForm(*pform.parens(left='(', right=')'))
+        return pform
+
+    def doit(self, **hints):
+        # TODO: doit doesn't work with a Mul of TensorProducts of Matrices.
+        # Possibly want to switch to using expand instead?
+        new_args = self.args
+        if isinstance(new_args[0], Matrix):
+            # Pull out the first element in the product.
+            matrix_expansion  = new_args[-1]
+            # Do the tensor product working from right to left.
+            for mat in reversed(new_args[:-1]):
+                rows = mat.rows
+                cols = mat.cols
+                # Go through each row appending tensor product to.
+                # running matrix_expansion.
+                for i in range(rows):
+                    start = matrix_expansion*mat[i*cols]
+                    # Go through each column joining each item
+                    for j in range(cols-1):
+                        start = start.row_join(
+                            matrix_expansion*mat[i*cols+j+1]
+                        )
+                    # If this is the first element, make it the start of the
+                    # new row.
+                    if i == 0:
+                        next = start
+                    else:
+                        next = next.col_join(start)
+                matrix_expansion = next
+            return matrix_expansion
+        else:
+            new_args = [arg.doit(**hints) for arg in self.args]
+            return TensorProduct(*new_args)
+
+def tpsimp_Mul(e):
+    # TODO: This won't work with Muls that have other composites of 
+    # TensorProducts, like an Add, Pow, Commutator, etc. We need to move
+    # to the full parallel subs approach.
+    if not isinstance(e, Mul):
+        return e
+    c_part, nc_part = split_commutative_parts(e)
+    n_nc = len(nc_part)
+    if n_nc == 0 or n_nc == 1:
+        return e
+    elif e.has(TensorProduct):
+        current = nc_part[0]
+        if not isinstance(current, TensorProduct):
+            raise TypeError('TensorProduct expected, got: %r' % current)
+        n_terms = len(current.args)
+        new_args = list(current.args)
+        for next in nc_part[1:]:
+            if not isinstance(next, TensorProduct):
+                raise TypeError('TensorProduct expected, got: %r' % next)
+            if n_terms != len(next.args):
+                raise QuantumError(
+                    'TensorProducts of different lengths: %r and %r' % \
+                    (current, next)
+                )
+            for i in range(len(new_args)):
+                new_args[i] = new_args[i]*next.args[i]
+            current = next
+        return Mul(*c_part)*TensorProduct(*new_args)
+    else:
+        return e
+
+
+def tpsimp(e):
+    # e = e.expand()
+    if isinstance(e, Add):
+        return Add(*[tpsimp(arg) for arg in e.args])
+    elif isinstance(e, Pow):
+        return tpsimp(e.base)**e.exp
+    elif isinstance(e, Mul):
+        return tpsimp_Mul(e)
+    elif isinstance(e, (Commutator,)):
+        return Commutator(*[tpsimp(arg) for arg in e.args])
+    else:
+        return e
+
+    muls = e.atoms(Mul)
+    subs_list = [(m,tpsimp_Mul(m)) for m in iter(muls)]
+    return e.subs(subs_list)
 
 #-----------------------------------------------------------------------------
 # Functions
@@ -1098,3 +1279,212 @@ def represent(expr, basis, **options):
     for arg in reversed(expr.args):
         result = represent(arg, basis, **options)*result
     return result
+
+
+# def apply_Mul(m):
+#     """
+#     Take a Mul instance with operators and apply them to states.
+# 
+#     This method applies all operators with integer state labels
+#     to the actual states.  For symbolic state labels, nothing is done.
+#     When inner products of FockStates are encountered (like <a|b>),
+#     the are converted to instances of InnerProduct.
+# 
+#     This does not currently work on double inner products like,
+#     <a|b><c|d>.
+# 
+#     If the argument is not a Mul, it is simply returned as is.
+#     """
+#     if not isinstance(m, Mul):
+#         return m
+#     c_part, nc_part = split_commutative_parts(m)
+#     n_nc = len(nc_part)
+#     if n_nc == 0 or n_nc == 1:
+#         return m
+#     else:
+#         last = nc_part[-1]
+#         next_to_last = nc_part[-2]
+#         if isinstance(last, KetBase):
+#             if isinstance(next_to_last, Operator):
+#                 try:
+#                     result = next_to_last.apply_to_ket(last)
+#                 except NotImplementedError:
+#                     try:
+#                         result = last.apply_operator(next_to_last)
+#                     except NotImplementedError:
+#                         return m
+#                 if result == 0:
+#                     return 0
+#                 else:
+#                     return apply_Mul(Mul(*(c_part+nc_part[:-2]+[result])))
+#             elif isinstance(next_to_last, Pow):
+#                 if isinstance(next_to_last.base, Operator) and \
+#                     next_to_last.exp.is_Integer:
+#                     result = last
+#                     op = next_to_last.base
+#                     for i in range(next_to_last.exp):
+#                         try:
+#                             result = op.apply_to_ket(result)
+#                         except NotImplementedError:
+#                             try:
+#                                 result = result.apply_operator(op)
+#                             except NotImplementedError:
+#                                 return m
+#                         if result == 0: break
+#                     if result == 0:
+#                         return 0
+#                     else:
+#                         return apply_Mul(Mul(*(c_part+nc_part[:-2]+[result])))
+#                 else:
+#                     return m
+#             elif isinstance(next_to_last, last.dual_class):
+#                 result = InnerProduct(next_to_last, last)
+#                 if result == 0:
+#                     return 0
+#                 else:
+#                     return apply_Mul(Mul(*(c_part+nc_part[:-2]+[result])))
+#             else:
+#                 return m
+#         else:
+#             return m
+# 
+# 
+# def apply_operators(e):
+#     """
+#     Take a sympy expression with operators and states and apply the operators.
+#     """
+#     e = e.expand()
+#     muls = e.atoms(Mul)
+#     subs_list = [(m,apply_Mul(m)) for m in iter(muls)]
+#     return e.subs(subs_list)
+#     
+#     
+# def apply_operators(e):
+# 
+#     # if all we have is a Qbit without any gates, return the qbit
+#     if isinstance(circuit, Qbit):
+#         return circuit
+# 
+#     #if we have a Mul object, get the state of the system
+#     elif isinstance(circuit, QMul):
+#         states = circuit.args[len(circuit.args)-1]
+#         states = states.expand()
+# 
+#     #if we have an add object with gates mixed in, apply_gates recursively
+#     elif isinstance(circuit, QAdd):
+#         result = 0
+#         for i in circuit.args:
+#             result = result + apply_gates(i, basis, floatingPoint)
+#         if floatingPoint:
+#             result = result.evalf()
+#         return result
+# 
+#     state_coeff = 1
+#     #pick out each object that multiplies the state
+#     for multiplier in reversed(circuit.args[:len(circuit.args)-1]):
+# 
+#         #if the object that mutliplies is a Gate, we will apply it once
+#         if isinstance(multiplier, Gate):
+#             gate = multiplier
+#             number_of_applications = 1
+# 
+#         #if the object that multiplies is a Pow who's base is a Gate, we will
+#         # apply Pow.exp times
+#         elif isinstance(multiplier, QPow) and isinstance(multiplier.base, Gate):
+#             gate = multiplier.base
+#             number_of_applications = multiplier.exp
+# 
+#         #if the object that multiplies is not a gate of any sort,
+#         # we apply it by multiplying
+#         else:
+#             state_coeff = multiplier*state_coeff
+#             continue
+# 
+#         #if states is in superposition of states (a sum of qbits states),
+#         # applyGates to each state contined within
+#         if isinstance(states, QAdd):
+#             #special check for non-distributivity, do all at once
+#             if isinstance(gate, NondistributiveGate):
+#                 states = gate.measure(states)
+#             else:
+#                 result = 0
+#                 for state in states.args:
+#                     result = result + \
+#                     apply_gates(gate**number_of_applications*state, basis,\
+#                     floatingPoint)
+#                 if floatingPoint:
+#                     result = result.evalf()
+#                 states = result
+#                 states = states.expand()
+# 
+#         #if we have a mul, apply gate to each register and multiply result
+#         elif isinstance(states, QMul):
+#             #find the Qbits in the Mul
+#             for i in range(len(states.args)):
+#                 if isinstance(states.args[i],Qbit):
+#                     break
+#             #if we didn't find one, something is wrong
+#             if not isinstance(states.args[i],Qbit):
+#                 print states
+#                 raise QuantumError()
+# 
+#             #apply the gate the right number of times to this state
+#             coefficient = Mul(*(states.args[:i]+states.args[i+1:]))#TODO
+#             states = apply_gates(gate**(number_of_applications)*states.args[i],\
+#             basis, floatingPoint)
+#             states = coefficient*states
+#             states = states.expand()
+# 
+#         #If we have a single Qbit, apply to this Qbit
+#         elif isinstance(states, Qbit):
+#             if isinstance(gate, NondistributiveGate):
+#                 states = gate.measure(states)
+#             else:
+#                 basis_name = basis.__class__.__name__
+#                 apply_method_name = '_apply_%s' % basis_name
+#                 apply_method = getattr(gate, apply_method_name)
+#                 states = apply_method(states)
+#                 states = states.expand()
+#                 number_of_applications -= 1
+#                 while number_of_applications > 0:
+#                     states = apply_gates(gate*states, basis, floatingPoint)
+#                     number_of_applications -= 1
+# 
+#         #if it's not one of those, there is something wrong
+#         else:
+#             raise QuantumError()
+# 
+#     #tack on any coefficients that were there before and simplify
+#     states = state_coeff*states
+#     if isinstance(states, (Add,Pow, Mul)):
+#         states = states.expand()
+#     return states
+
+
+#-----------------------------------------------------------------------------
+# Constants
+#-----------------------------------------------------------------------------
+
+class HBar(NumberSymbol):
+
+    is_real = True
+    is_positive = True
+    is_negative = False
+    is_irrational = True
+
+    __slots__ = []
+
+    def _as_mpf_val(self, prec):
+        return mlib.from_float(1.05457162e-34, prec)
+
+    def _sympyrepr(self, printer, *args):
+        return 'HBar()'
+
+    def _sympystr(self, printer, *args):
+        return 'hbar'
+
+    def _pretty(self, printer, *args):
+        return prettyForm(u'\u210f')
+
+hbar = HBar()
+

@@ -2,9 +2,8 @@ from sympy import I, Symbol, S, Integer, Rational
 from sympy.printing.pretty.stringpict import prettyForm, stringPict
 
 from sympy.physics.quantum import HermitianOperator, State, Ket, Bra
+from sympy.physics.quantum import KroneckerDelta, hbar
 from sympy.physics.hilbert import ComplexSpace
-
-hbar = Symbol('hbar')
 
 class SpinBase(HermitianOperator):
 
@@ -59,6 +58,10 @@ class Sz(SpinBase):
         elif isinstance(other, Sz):
             return I*hbar*Sy(self.label)
 
+    def _apply_to_ket_SzKet(self, ket):
+        return (hbar*ket.label[1])*ket
+
+
 class S2(SpinBase):
 
     def _eval_commutator(self, other):
@@ -93,12 +96,12 @@ class SzKet(SpinState, Ket):
             return d1*d2
 
     @property
-    def dual(self):
-        return SzBra(*self.label)
+    def dual_class(self):
+        return SzBra
 
 
 class SzBra(SpinState, Bra):
 
     @property
-    def dual(self):
-        return SzKet(*self.label)
+    def dual_class(self):
+        return SzKet
