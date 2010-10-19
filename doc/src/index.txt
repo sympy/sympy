@@ -8,7 +8,7 @@ Welcome to SymPy's documentation!
 `SymPy <http://sympy.org>`_ is a Python library for symbolic mathematics.
 If you are new to SymPy, start with the Tutorial.
 
-This is the central page for all SymPy's documentation.
+This is the central page for all of SymPy's documentation.
 
 
 Contents:
@@ -27,9 +27,9 @@ Contents:
    outreach.txt
    aboutus.txt
 
-If something cannot be easily accesible from this page, it's a bug (`please
+If something cannot be easily accessed from this page, it's a bug (`please
 report it`_).
 
-This documentation is maintaned with doctutils, so you might see some comments in the form #doctest:... . You can safely ignore them.
+This documentation is maintained with docutils, so you might see some comments in the form #doctest:... . You can safely ignore them.
 
 .. _please report it: http://code.google.com/p/sympy/issues/list
