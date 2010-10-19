@@ -9,21 +9,28 @@ class SpinBase(HermitianOperator):
 
     @classmethod
     def _eval_hilbert_space(cls, label):
-        return ComplexSpace(2*label+1)
-
-    def _sympystr(self, printer, *args):
-        return printer._print(self.__class__.__name__, *args)
+        return ComplexSpace(2*label[0]+1)
 
     def _sympyrepr(self, printer, *args):
         return '%s(%s)' % (self.__class__.__name__, printer._print(self.label,\
         *args))
 
-    def _pretty(self, printer, *args):
+    def _print_operator_name(self, printer, *args):
+        return self.__class__.__name__
+
+    def _print_operator_name_pretty(self, printer, *args):
         a = stringPict('S')
         b = stringPict(self._coord)
         top = stringPict(*b.left(' '*a.width()))
         bot = stringPict(*a.right(' '*b.width()))
         return prettyForm(binding=prettyForm.POW, *bot.below(top))
+
+    def _print_contents(self, printer, *args):
+        return self._print_operator_name(printer, *args)
+
+    def _print_contents_pretty(self, printer, *args):
+        pform = self._print_operator_name_pretty(printer, *args)
+        return pform
 
 
 class Sx(SpinBase):
@@ -32,9 +39,9 @@ class Sx(SpinBase):
 
     def _eval_commutator(self, other):
         if isinstance(other, Sy):
-            return I*hbar*Sz(self.label)
+            return I*hbar*Sz(self.label[0])
         elif isinstance(other, Sz):
-            return -I*hbar*Sy(self.label)
+            return -I*hbar*Sy(self.label[0])
 
 
 class Sy(SpinBase):
@@ -43,9 +50,9 @@ class Sy(SpinBase):
 
     def _eval_commutator(self, other):
         if isinstance(other, Sx):
-            return -I*hbar*Sz(self.label)
+            return -I*hbar*Sz(self.label[0])
         elif isinstance(other, Sz):
-            return I*hbar*Sy(self.label)
+            return I*hbar*Sy(self.label[0])
 
 
 class Sz(SpinBase):
@@ -54,9 +61,9 @@ class Sz(SpinBase):
 
     def _eval_commutator(self, other):
         if isinstance(other, Sx):
-            return -I*hbar*Sz(self.label)
+            return -I*hbar*Sz(self.label[0])
         elif isinstance(other, Sz):
-            return I*hbar*Sy(self.label)
+            return I*hbar*Sy(self.label[0])
 
     def _apply_to_ket_SzKet(self, ket):
         return (hbar*ket.label[1])*ket
@@ -82,6 +89,8 @@ class SpinState(State):
 
 class SzKet(SpinState, Ket):
 
+    _label_separator = ','
+
     def _apply_operator_Sz(self, op):
         return (hbar*self.label[1])*self
 
@@ -101,6 +110,8 @@ class SzKet(SpinState, Ket):
 
 
 class SzBra(SpinState, Bra):
+
+    _label_separator = ','
 
     @property
     def dual_class(self):

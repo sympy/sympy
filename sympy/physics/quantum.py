@@ -1,6 +1,5 @@
 from sympy import Expr, sympify, Add, Mul, Function, S, Matrix, Pow, Integer
 from sympy.printing.pretty.stringpict import prettyForm
-from sympy.core.containers import Tuple
 from sympy.core.numbers import NumberSymbol
 import sympy.mpmath.libmp as mlib
 
@@ -72,91 +71,34 @@ class StateBase(QExpr, Representable):
     is_discrete = False
 
     #-------------------------------------------------------------------------
-    # Properties
-    #-------------------------------------------------------------------------
-
-    @property
-    def label(self):
-        """The label is the unique set of identifiers for the state.
-
-        The label of a state is what distinguishes it from other states. For
-        eigenstates, the label is usually a sympy.core.containers.Tuple of the
-        quantum numbers. For an abstract state, it would just be a single
-        element Tuple of the symbol of the state.
-        """
-        return self.args[0]
-
-    @property
-    def dual(self):
-        """Return the dual state of this one."""
-        raise NotImplementedError('dual must be implemented in a subclass')
-
-    @property
-    def is_symbolic(self):
-        return True
-
-    #-------------------------------------------------------------------------
     # _eval_* methods
     #-------------------------------------------------------------------------
-
-    @classmethod
-    def _eval_label(cls, label):
-        """Make sure that label is a sympy.core.containers.Tuple.
-
-        The elements of the Tuple must be run through sympify.
-        """
-        if not isinstance(label, Tuple):
-            if isinstance(label, (list, tuple)):
-                # Convert a raw tuple or list to a Tuple
-                newlabel = Tuple(*label)
-            else:
-                # Single element label gets wrapped into a tuple.
-                newlabel = Tuple(label)
-        else:
-            newlabel = label
-        newlabel = Tuple(*[sympify(item) for item in newlabel])
-        return newlabel
-
-    @classmethod
-    def _eval_hilbert_space(cls, label):
-        """Compute the Hilbert space instance from the label."""
-        return HilbertSpace()
-
-    def _eval_dagger(self):
-        """Compute the Dagger of this state."""
-        return self.dual
 
     def _eval_innerproduct(self, other, **hints):
         return None
 
     #-------------------------------------------------------------------------
-    # Printing
+    # Dagger/dual
     #-------------------------------------------------------------------------
 
-    def _print_label(self, printer, *args):
-        result = []
-        for item in self.label:
-            result.append(printer._print(item, *args))
-        return ''.join(result)
+    @property
+    def dual(self):
+        """Return the dual state of this one."""
+        return self.dual_class._new_rawargs(self.hilbert_space, *self.args)
 
-    def _print_label_repr(self, printer, *args):
-        return printer._print(self.label, *args)
+    @property
+    def dual_class(self):
+        raise NotImplementedError(
+            'dual_class must be implemented in a subclass'
+        )
 
-    def _print_label_pretty(self, printer, *args):
-        pform = printer._print(self.label[0], *args)
-        for item in self.label[1:]:
-            nextpform = printer._print(item, *args)
-            pform = prettyForm(*pform.right((nextpform)))
-        return pform
+    def _eval_dagger(self):
+        """Compute the Dagger of this state."""
+        return self.dual
 
-    def _print_contents(self, printer, *args):
-        return self._print_label(printer, *args)
-
-    def _print_contents_repr(self, printer, *args):
-        return self._print_label_repr(printer, *args)
-
-    def _print_contents_pretty(self, printer, *args):
-        return self._print_label_pretty(printer, *args)
+    #-------------------------------------------------------------------------
+    # Printing
+    #-------------------------------------------------------------------------
 
     def _sympystr(self, printer, *args):
         return '%s%s%s' % (self.lbracket, self._print_contents(printer, *args),
@@ -173,13 +115,6 @@ class StateBase(QExpr, Representable):
         pform = prettyForm(*pform.left((self.lbracket_pretty)))
         pform = prettyForm(*pform.right((self.rbracket_pretty)))
         return pform
-
-    #-------------------------------------------------------------------------
-    # Methods from Basic and Expr
-    #-------------------------------------------------------------------------
-    
-    def doit(self, **kw_args):
-        return self
 
 
 class KetBase(StateBase):
@@ -198,10 +133,6 @@ class KetBase(StateBase):
     @property
     def dual_class(self):
         return BraBase
-
-    @property
-    def dual(self):
-        return self.dual_class(*self.args)
 
     def __mul__(self, other):
         """KetBase*other"""
@@ -230,6 +161,7 @@ class KetBase(StateBase):
             "Don't know how apply operator %r to Ket %r" % (op, self)
         )
 
+
 class BraBase(StateBase):
     """Base class for Bras.
 
@@ -247,10 +179,6 @@ class BraBase(StateBase):
     def dual_class(self):
         return KetBase
 
-    @property
-    def dual(self):
-        return self.dual_class(*self.args)
-
     def __mul__(self, other):
         """BraBase*other"""
         if isinstance(other, self.dual_class):
@@ -265,16 +193,11 @@ class BraBase(StateBase):
         else:
             return Expr.__rmul__(self, other)
 
+
 class State(StateBase):
     """General abstract quantum state."""
+    pass
 
-    def __new__(cls, label, **old_assumptions):
-        # First compute args and call Expr.__new__ to create the instance
-        label = cls._eval_label(label)
-        inst = Expr.__new__(cls, label, **{'commutative':False})
-        # Now set the slots on the instance
-        inst.hilbert_space = cls._eval_hilbert_space(label)
-        return inst
 
 
 class Ket(State, KetBase):
@@ -461,36 +384,42 @@ class Operator(QExpr, Representable):
     [2] http://en.wikipedia.org/wiki/Observable
     """
 
-    def __new__(cls, label, **old_assumptions):
-        label = sympify(label)
-        obj = Expr.__new__(cls, label, **{'commutative': False})
-        obj.hilbert_space = cls._eval_hilbert_space(label)
-        return obj
+    #-------------------------------------------------------------------------
+    # Printing
+    #-------------------------------------------------------------------------
 
-    @classmethod
-    def _eval_hilbert_space(cls, label):
-        return HilbertSpace()
+    _label_separator = ','
 
-    @property
-    def label(self):
-        return self.args[0]
+    def _print_operator_name(self, printer, *args):
+        return printer._print(self.__class__.__name__, *args)
 
-    @property
-    def is_symbolic(self):
-        return True
+    def _print_operator_name_pretty(self, printer, *args):
+        return prettyForm(self.__class__.__name__)
 
-    def _sympyrepr(self, printer, *args):
-        return '%s(%s)' % (self.__class__.__name__, printer._print(self.label,\
-        *args))
+    def _print_contents(self, printer, *args):
+        if len(self.label) == 1:
+            return self._print_label(printer, *args)
+        else:
+            return '%s(%s)' % (
+                self._print_operator_name(printer, *args),
+                self._print_label(printer, *args)
+            )
 
-    def _sympystr(self, printer, *args):
-        return printer._print(self.label, *args)
+    def _print_contents_pretty(self, printer, *args):
+        if len(self.label) == 1:
+            return self._print_label_pretty(printer, *args)
+        else:
+            pform = self._print_operator_name_pretty(printer, *args)
+            label_pform = self._print_label_pretty(printer, *args)
+            label_pform = prettyForm(
+                *label_pform.parens(left='(', right=')')
+            )
+            pform = prettyForm(*pform.right((label_pform)))
+            return pform
 
-    def _pretty(self, printer, *args):
-        return printer._print(self.label, *args)
-
-    def doit(self,**kw_args):
-        return self
+    #-------------------------------------------------------------------------
+    # _eval_* methods
+    #-------------------------------------------------------------------------
 
     def _eval_commutator(self, other):
         """Evaluate [self, other] if known, return None if not known."""
@@ -508,6 +437,10 @@ class Operator(QExpr, Representable):
         """Evaluate [other, self] if known."""
         return None
 
+    #-------------------------------------------------------------------------
+    # Operator application
+    #-------------------------------------------------------------------------
+
     def apply_to_ket(self, ket):
         if not isinstance(ket, KetBase):
             raise TypeError('KetBase expected, got: %r' % ket)
@@ -521,6 +454,19 @@ class Operator(QExpr, Representable):
             "Don't know how apply operator %r to Ket %r" % (self, ket)
         )
 
+    #-------------------------------------------------------------------------
+    # Printing
+    #-------------------------------------------------------------------------
+
+    def inverse(self):
+        return self._eval_inverse()
+
+    inv = inverse
+
+    def _eval_inverse(self):
+        # TODO: make non-commutative Exprs print powers using A**-1, not 1/A.
+        return self**(-1)
+
 
 class HermitianOperator(Operator):
     """A Hermitian operator"""
@@ -533,7 +479,7 @@ class UnitaryOperator(Operator):
     """A unitary operator."""
 
     def _eval_dagger(self):
-        return self**(-1)
+        return self._eval_inverse()
 
 
 class OuterProduct(Operator):
@@ -728,7 +674,7 @@ class Dagger(Expr):
         """
         try:
             d = arg._eval_dagger()
-        except:
+        except (NotImplementedError, AttributeError):
             if isinstance(arg, Expr):
                 if isinstance(arg, Operator):
                     # Operator without _eval_dagger
@@ -1215,15 +1161,19 @@ def tpsimp_Mul(e):
         n_terms = len(current.args)
         new_args = list(current.args)
         for next in nc_part[1:]:
-            if not isinstance(next, TensorProduct):
-                raise TypeError('TensorProduct expected, got: %r' % next)
-            if n_terms != len(next.args):
-                raise QuantumError(
-                    'TensorProducts of different lengths: %r and %r' % \
-                    (current, next)
-                )
-            for i in range(len(new_args)):
-                new_args[i] = new_args[i]*next.args[i]
+            # TODO: check the hilbert spaces of next and current here.
+            if isinstance(next, TensorProduct):
+                if n_terms != len(next.args):
+                    raise QuantumError(
+                        'TensorProducts of different lengths: %r and %r' % \
+                        (current, next)
+                    )
+                for i in range(len(new_args)):
+                    new_args[i] = new_args[i]*next.args[i]
+            else:
+                # this won't quite work as we don't want next in the TensorProduct
+                for i in range(len(new_args)):
+                    new_args[i] = new_args[i]*next
             current = next
         return Mul(*c_part)*TensorProduct(*new_args)
     else:
