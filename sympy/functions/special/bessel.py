@@ -80,9 +80,9 @@ def jn_zeros(n, k, method="sympy"):
 
     This returns an array of zeros of jn up to the k-th zero.
 
-    method = "sympy": uses the sympy's jn and findroot to find all roots
-    method = "scipy": uses the scipy's sph_jn and newton to find all roots,
-            which if faster than method="sympy", but it requires scipy and only
+    method = "sympy": uses the SymPy's jn and findroot to find all roots
+    method = "scipy": uses the SciPy's sph_jn and newton to find all roots,
+            which if faster than method="sympy", but it requires SciPy and only
             works with low precision floating point numbers
 
     Examples:
