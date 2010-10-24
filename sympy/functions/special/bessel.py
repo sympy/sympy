@@ -30,7 +30,9 @@ def fn(n, z):
     1/z + 105/z**5 - 45/z**3
 
     """
-    n = int(n)
+    n = sympify(n)
+    if not n.is_Integer:
+        raise TypeError("'n' must be an Integer")
     if n == 0:
         return 1/z
     elif n == 1:

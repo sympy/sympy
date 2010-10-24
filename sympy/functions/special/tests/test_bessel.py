@@ -9,6 +9,8 @@ def test_fn():
     assert fn(4, z) == 1/z - 45/z**3 + 105/z**5
 
     raises(TypeError, "fn(x, z)")
+    raises(TypeError, "fn(1.5, z)")
+    raises(TypeError, "fn(S(1)/2, z)")
 
 def test_jn():
     z = symbols("z")
