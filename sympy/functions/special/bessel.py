@@ -30,6 +30,7 @@ def fn(n, z):
     1/z + 105/z**5 - 45/z**3
 
     """
+    n = int(n)
     if n == 0:
         return 1/z
     elif n == 1:
