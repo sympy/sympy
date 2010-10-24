@@ -30,8 +30,8 @@ def residue(expr, x, x0):
     if x0 != 0:
         expr = expr.subs(x, x+x0)
     s = expr.series(x, 0, 0).removeO()
-    # this sometimes helps, but the series expansion should rather be fixed,
-    # see #1627:
+    # TODO: this sometimes helps, but the series expansion should rather be
+    # fixed, see #1627:
     if s == 0:
         s = expr.series(x, 0, 6).removeO()
     if x0 != 0:
@@ -42,7 +42,7 @@ def residue(expr, x, x0):
     if r:
         return r[a]
     elif isinstance(s, Add):
-        # this is to overcome a bug in match (#1626)
+        # TODO: this is to overcome a bug in match (#1626)
         for t in s.args:
             r = t.match(a/(x-x0)+c)
             if r:
