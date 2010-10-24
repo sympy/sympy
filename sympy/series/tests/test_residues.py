@@ -23,7 +23,7 @@ def test_basic2():
     assert residue(x**2, x, 5) == 0
 
 def _test_f():
-    #we get infinite recursion here:
+    # FIXME: we get infinite recursion here:
     x = Symbol("x")
     f = Function("f")
     assert residue(f(x)/x**5, x, 0) == f.diff(x, 4)/24
@@ -33,7 +33,7 @@ def test_functions():
     assert residue(1/sin(x), x, 0) == 1
     assert residue(2/sin(x), x, 0) == 2
     assert residue(1/sin(x)**2, x, 0) == 0
-    # the series expansion fails to return the right answer:
+    # FIXME: the series expansion fails to return the right answer:
     #assert residue(1/sin(x)**5, x, 0) == S(3)/8
 
 def test_expressions():
@@ -44,5 +44,5 @@ def test_expressions():
     assert residue(1/(x**2+1), x, I) == -I/2
     assert residue(1/(x**2+1), x, -I) == I/2
     assert residue(1/(x**4+1), x, 0) == 0
-    # this fails:
+    # FIXME: this fails:
     #assert residue(1/(x**4+1), x, exp(I*pi/4)) == -(S(1)/4+I/4)/sqrt(2)
