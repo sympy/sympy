@@ -55,7 +55,7 @@ def jn(n, z):
         >>> jn(3, z) ==(1/z - 15/z**3)*cos(z) + (15/z**4 - 6/z**2)*sin(z)
         True
 
-    The spherical Bessel functions are calculated using the formula[0]:
+    The spherical Bessel functions are calculated using the formula:
 
     jn(n, z) == fn(n, z) * sin(z) + (-1)**(n+1) * fn(-n-1, z) * cos(z)
 
