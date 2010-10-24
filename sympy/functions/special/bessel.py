@@ -122,9 +122,12 @@ def jn_zeros(n, k, method="sympy"):
         raise NotImplementedError("Unknown method.")
     def solver(f, x):
         if method == "sympy":
-            # The findroot() is fragile, it sometimes returns complex numbers,
-            # so we chop all complex parts (that are small anyway). Also we
-            # need to set the tolerance, as it sometimes fail without it.
+            # findroot(solver="newton") or findroot(solver="secant") can't find
+            # the root within the given tolerance. So we use solver="muller",
+            # which converges towards complex roots (even for real starting
+            # points), and so we need to chop all complex parts (that are small
+            # anyway). Also we need to set the tolerance, as it sometimes fail
+            # without it.
             def f_real(x):
                 return f(complex(x).real)
             root = findroot(f_real, x, solver="muller", tol=1e-9)
