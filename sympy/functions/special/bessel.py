@@ -14,6 +14,21 @@ def fn(n, z):
     fn(0, z) = 1/z
     fn(1, z) = 1/z**2
     fn(n-1, z) + fn(n+1, z) == (2*n+1)/z * fn(n, z)
+
+    Examples:
+
+    >>> from sympy.functions.special.bessel import fn
+    >>> from sympy import Symbol
+    >>> z = Symbol("z")
+    >>> fn(1, z)
+    z**(-2)
+    >>> fn(2, z)
+    -1/z + 3/z**3
+    >>> fn(3, z)
+    15/z**4 - 6/z**2
+    >>> fn(4, z)
+    1/z + 105/z**5 - 45/z**3
+
     """
     if n == 0:
         return 1/z
