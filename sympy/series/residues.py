@@ -10,9 +10,7 @@ def residue(expr, x, x0):
     Finds the residue of ``expr`` at the point x=x0.
 
     The residue is defined as the coefficient of 1/(x-x0) in the power series
-    expansion about x=x0. The motivation behind this is that the limit(expr, x,
-    x0) tells you the value of expr when x goes to x0. If the limit is
-    infinite, it is often useful to know the residue.
+    expansion about x=x0.
 
     Examples:
 
@@ -24,6 +22,20 @@ def residue(expr, x, x0):
     0
     >>> residue(2/sin(x), x, 0)
     2
+
+    This function is essential for the Residue Theorem [1].
+
+    The current implementation uses series expansion to calculate it. A more
+    general implementation is explained in the section 5.6 of the Bronstein's
+    book [2]. For purely rational functions, the algorithm is much easier. See
+    sections 2.4, 2.5, and 2.7 (this section actually gives an algorithm for
+    computing any Laurent series coefficient for a rational function). The
+    theory in section 2.4 will help to understand why the resultant works in
+    the general algorithm. For the definition of a resultant, see section 1.4
+    (and any previous sections for more review).
+
+    [1] http://en.wikipedia.org/wiki/Residue_theorem
+    [2] M. Bronstein: Symbolic Integration I, Springer Verlag (2005)
 
     """
     expr = sympify(expr)
