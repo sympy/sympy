@@ -46,7 +46,7 @@ def jn(n, z):
 
     Examples:
 
-        >>> from sympy import Symbol
+        >>> from sympy import Symbol, jn, sin, cos
         >>> z = Symbol("z")
         >>> print jn(0, z)
         sin(z)/z
@@ -73,7 +73,7 @@ def yn(n, z):
 
     Examples:
 
-        >>> from sympy import Symbol
+        >>> from sympy import Symbol, yn, sin, cos
         >>> z = Symbol("z")
         >>> print yn(0, z)
         -cos(z)/z
@@ -103,6 +103,7 @@ def jn_zeros(n, k, method="sympy"):
     Examples:
 
         >>> from sympy.mpmath import nprint
+        >>> from sympy import jn_zeros
         >>> nprint(jn_zeros(2, 4))
         [5.76345919689, 9.09501133048, 12.3229409706, 15.5146030109]
 
