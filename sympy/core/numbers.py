@@ -467,8 +467,6 @@ class Rational(Number):
         1/100
         >>> Rational(".1")
         1/10
-        >>> Rational(repr(.1))
-        10000000000000001/100000000000000000
 
     Parsing needs for any other type of string for which a Rational is desired
     can be handled with the rational=True option in sympify() which produces
