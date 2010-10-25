@@ -5,6 +5,7 @@ TODO:
 * tpsimp.
 * Fix early 0 in apply_operators.
 * Debug and test apply_operators.
+* Get cse working with classes in this file.
 """
 
 import copy
@@ -133,14 +134,14 @@ class KetBase(StateBase):
 
     def __mul__(self, other):
         """KetBase*other"""
-        if isinstance(other, self.dual_class):
+        if isinstance(other, BraBase):
             return OuterProduct(self, other)
         else:
             return Expr.__mul__(self, other)
 
     def __rmul__(self, other):
         """other*KetBase"""
-        if isinstance(other, self.dual_class):
+        if isinstance(other, BraBase):
             return InnerProduct(other, self)
         else:
             return Expr.__rmul__(self, other)
@@ -168,14 +169,14 @@ class BraBase(StateBase):
 
     def __mul__(self, other):
         """BraBase*other"""
-        if isinstance(other, self.dual_class):
+        if isinstance(other, KetBase):
             return InnerProduct(self, other)
         else:
             return Expr.__mul__(self, other)
 
     def __rmul__(self, other):
         """other*BraBase"""
-        if isinstance(other, self.dual_class):
+        if isinstance(other, KetBase):
             return OuterProduct(other, self)
         else:
             return Expr.__rmul__(self, other)
@@ -735,11 +736,6 @@ class InnerProduct(Expr):
             raise TypeError('KetBase subclass expected, got: %r' % ket)
         if not isinstance(bra, BraBase):
             raise TypeError('BraBase subclass expected, got: %r' % ket)
-        if not ket.dual_class == bra.__class__:
-            raise TypeError(
-                'bra and ket are not dual classes: %r, %r' % \
-                (bra.__class__, ket.__class__)
-            )
         obj = Expr.__new__(cls, *(bra, ket), **{'commutative':True})
         return obj
 
