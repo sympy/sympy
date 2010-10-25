@@ -1,24 +1,62 @@
-from sympy import I, Symbol, S, Integer, Rational, Matrix, sqrt
+"""Quantum mechanical angular momemtum.
+
+TODO:
+* Improve the algorithm for the Wigner D-Function.
+* Fix printing of Wigner D-Function.
+* Implement inner products using Wigner D-Function.
+* Implement rewrite logic for everything.
+* Test
+"""
+
+from sympy import I, Symbol, S, Integer, Rational, Matrix, sqrt, sympify
+from sympy import exp, cos, sin, diff, factorial
 from sympy.printing.pretty.stringpict import prettyForm, stringPict
+from sympy.matrices.matrices import zeros
 
-from sympy.physics.quantum import HermitianOperator, State, Ket, Bra
-from sympy.physics.quantum import KroneckerDelta, hbar
-from sympy.physics.hilbert import ComplexSpace, HilbertSpaceError
-from sympy.physics.matrices import msigma
+from sympy.core.containers import Tuple
 
-
-class SpinBase(object):
-
-    @property
-    def s(self):
-        return self.label[0]
-
-    @classmethod
-    def _eval_hilbert_space(cls, label):
-        return ComplexSpace(2*label[0]+1)
+from sympy.physics.qexpr import QExpr
+from sympy.physics.quantum import HermitianOperator, Operator, State, Ket, Bra
+from sympy.physics.quantum import KroneckerDelta, hbar, UnitaryOperator
+from sympy.physics.hilbert import ComplexSpace
 
 
-class SpinOpBase(HermitianOperator, SpinBase):
+__all__ = [
+    'm_values',
+    'Jplus',
+    'Jminus',
+    'Jx',
+    'Jy',
+    'Jz',
+    'J2',
+    'JzKet',
+    'JzBra',
+    'JxKet',
+    'JxBra',
+    'JyKet',
+    'JyBra',
+    'Rotation'
+]
+
+def m_values(j):
+    j = sympify(j)
+    size = 2*j + 1
+    if not size.is_Integer or not size > 0:
+        raise ValueError(
+            'Only integer or half-integer values allowed for j, got: : %r' % j
+        )
+    return size, [j-i for i in range(int(2*j+1))]
+
+
+#-----------------------------------------------------------------------------
+# SpinOperators
+#-----------------------------------------------------------------------------
+
+
+class SpinOpBase(object):
+
+    def __new__(cls, **assumptions):
+        return QExpr.__new__(cls, Tuple(), **assumptions)
 
     def _sympyrepr(self, printer, *args):
         return '%s(%s)' % (
@@ -29,7 +67,7 @@ class SpinOpBase(HermitianOperator, SpinBase):
         return self.__class__.__name__
 
     def _print_operator_name_pretty(self, printer, *args):
-        a = stringPict('S')
+        a = stringPict('J')
         b = stringPict(self._coord)
         top = stringPict(*b.left(' '*a.width()))
         bot = stringPict(*a.right(' '*b.width()))
@@ -42,206 +80,376 @@ class SpinOpBase(HermitianOperator, SpinBase):
         pform = self._print_operator_name_pretty(printer, *args)
         return pform
 
-    def _check_hilbert_space_and_spin(self, other):
-        if not self.hilbert_space == other.hilbert_space:
-            raise HilbertSpaceError(
-                'Incompatible hilbert spaces: %r and %r' % (self, other)
-            )
-        if not self.label[0] == other.label[0]:
-            raise ValueError(
-                'Spin value must be equal: %r != %r' % (
-                    self.label[0], other.label[0]
-                )
-            )
+    @classmethod
+    def _eval_hilbert_space(cls, label):
+        # We consider all j values so our space is infinite.
+        return ComplexSpace(S.Infinity)
+
+    def _represent_base(self, basis, **options):
+        j = options.get('j', Rational(1,2))
+        size, mvals = m_values(j)
+        result = zeros((size, size))
+        for p in range(size):
+            for q in range(size):
+                me = self.matrix_element(j, mvals[p], j, mvals[q])
+                result[p, q] = me
+        return result
 
 
-class Sx(SpinOpBase):
+class JplusOp(SpinOpBase, Operator):
+
+    _coord = '+'
+
+    def _eval_commutator_JminusOp(self, other):
+        return 2*hbar*JzOp()
+
+    def _apply_operator_JzKet(self, ket, **options):
+        j = ket.j
+        m = ket.m
+        if m.is_Number and j.is_Number:
+            if m >=j:
+                return S.Zero
+        return hbar*sqrt(j*(j+S.One)-m*(m+S.One))*JzKet((j, m+S.One))
+
+    def matrix_element(self, j, m, jp, mp):
+        result = hbar*sqrt(j*(j+S.One)-mp*(mp+S.One))
+        result *= KroneckerDelta(m, mp+1)
+        result *= KroneckerDelta(j, jp)
+        return result
+
+    def _represent_JzOp(self, basis, **options):
+        return self._represent_base(basis, **options)
+
+
+class JminusOp(SpinOpBase, Operator):
+
+    _coord = '-'
+
+    def _apply_operator_JzKet(self, ket, **options):
+        j = ket.j
+        m = ket.m
+        if m.is_Number and j.is_Number:
+            if m <= j:
+                return S.Zero
+        return hbar*sqrt(j*(j+S.One)-m*(m-S.One))*JzKet((j, m-S.One))
+
+    def matrix_element(self, j, m, jp, mp):
+        result = hbar*sqrt(j*(j+S.One)-mp*(mp-S.One))
+        result *= KroneckerDelta(m, mp-1)
+        result *= KroneckerDelta(j, jp)
+        return result
+
+    def _represent_JzOp(self, basis, **options):
+        return self._represent_base(basis, **options)
+
+
+class JxOp(SpinOpBase, HermitianOperator):
 
     _coord = 'x'
 
-    def _eval_commutator(self, other):
-        if isinstance(other, Sy):
-            return I*hbar*Sz(self.label[0])
-        elif isinstance(other, Sz):
-            return -I*hbar*Sy(self.label[0])
+    def _eval_commutator_JyOp(self, other):
+        return I*hbar*JzOp()
 
-    def _represent_Sz(self, basis, **options):
-        self._check_hilbert_space_and_spin(basis)
+    def _eval_commutator_JzOp(self, other):
+        return -I*hbar*JyOp()
 
-        if self.label[0] == Rational(1,2):
-            return (hbar/2)*msigma(1)
+    def _apply_operator_JzKet(self, ket, **options):
+        jp = JplusOp()._apply_operator_JzKet(ket)
+        jm = JminusOp()._apply_operator_JzKet(ket)
+        return (jp + jm)/Integer(2)
 
-    def _represent_Sx(self, basis, **options):
-        self._check_hilbert_space_and_spin(basis)
-
-        if self.label[0] == Rational(1,2):
-            return (hbar/2)*msigma(3)
+    def _represent_JzOp(self, basis, **options):
+        jp = JplusOp()._represent_JzOp(basis, **options)
+        jm = JminusOp()._represent_JzOp(basis, **options)
+        return (jp + jm)/Integer(2)
 
 
-class Sy(SpinOpBase):
+class JyOp(SpinOpBase, HermitianOperator):
 
     _coord = 'y'
 
-    def _eval_commutator(self, other):
-        if isinstance(other, Sx):
-            return -I*hbar*Sz(self.label[0])
-        elif isinstance(other, Sz):
-            return I*hbar*Sy(self.label[0])
+    def _eval_commutator_JzOp(self, other):
+        return I*hbar*JxOp()
 
-    def _represent_Sz(self, basis, **options):
-        self._check_hilbert_space_and_spin(basis)
+    def _eval_commutator_JxOp(self, other):
+        return -I*hbar*JzOp()
 
-        if self.label[0] == Rational(1,2):
-            return (hbar/2)*msigma(2)
+    def _apply_operator_JzKet(self, ket, **options):
+        jp = JplusOp()._apply_operator_JzKet(ket)
+        jm = JminusOp()._apply_operator_JzKet(ket)
+        return (jp - jm)/(Integer(2)*I)
 
-    def _represent_Sy(self, basis, **options):
-        self._check_hilbert_space_and_spin(basis)
-
-        if self.label[0] == Rational(1,2):
-            return (hbar/2)*msigma(3)
+    def _represent_JzOp(self, basis, **options):
+        jp = JplusOp()._represent_JzOp(basis, **options)
+        jm = JminusOp()._represent_JzOp(basis, **options)
+        return (jp - jm)/(Integer(2)*I)
 
 
-class Sz(SpinOpBase):
+class JzOp(SpinOpBase, HermitianOperator):
 
     _coord = 'z'
 
-    def _eval_commutator(self, other):
-        if isinstance(other, Sx):
-            return -I*hbar*Sz(self.label[0])
-        elif isinstance(other, Sz):
-            return I*hbar*Sy(self.label[0])
+    def _eval_commutator_JxOp(self, other):
+        return I*hbar*JyOp()
 
-    def _apply_to_ket_SzKet(self, ket):
-        return (hbar*ket.label[1])*ket
+    def _eval_commutator_JyOp(self, other):
+        return -I*hbar*JxOp()
 
-    def _represent_Sz(self, basis, **options):
-        self._check_hilbert_space_and_spin(basis)
+    def _eval_commutator_JplusOp(self, other):
+        return hbar*JplusOp()
 
-        if self.label[0] == Rational(1,2):
-            return (hbar/2)*msigma(3)
+    def _eval_commutator_JminusOp(self, other):
+        return -hbar*JminusOp()
+
+    def _apply_operator_JzKet(self, ket):
+        return (hbar*ket.m)*ket
+
+    def matrix_element(self, j, m, jp, mp):
+        result = hbar*mp
+        result *= KroneckerDelta(m, mp)
+        result *= KroneckerDelta(j, jp)
+        return result
+
+    def _represent_JzOp(self, basis, **options):
+        print "I am here"
+        return self._represent_base(basis, **options)
 
 
-class S2(SpinOpBase):
+class J2Op(SpinOpBase, HermitianOperator):
 
-    def _eval_commutator(self, other):
-        if isinstance(other, (Sx, Sy, Sz)):
-            return S.Zero
+    def _eval_commutator_JxOp(self, other):
+        return S.Zero
+
+    def _eval_commutator_JyOp(self, other):
+        return S.Zero
+
+    def _eval_commutator_JzOp(self, other):
+        return S.Zero
+
+    def _eval_commutator_JplusOp(self, other):
+        return S.Zero
+
+    def _eval_commutator_JminusOp(self, other):
+        return S.Zero
+
+    def _apply_operator_JzKet(self, ket):
+        j = ket.j
+        return hbar**2**j(j+1)*ket
+
+    def matrix_element(self, j, m, jp, mp):
+        result = (hbar**2)*j*(j+1)
+        result *= KroneckerDelta(m, mp)
+        result *= KroneckerDelta(j, jp)
+        return result
+
+    def _represent_JzOp(self, basis, **options):
+        return self._represent_base(basis, **options)
 
     def _pretty(self, printer, *args):
-        a = stringPict('S')
+        a = stringPict('J')
         b = stringPict('2')
         top = stringPict(*b.left(' '*a.width()))
         bot = stringPict(*a.right(' '*b.width()))
         return prettyForm(binding=prettyForm.POW, *bot.above(top))
 
 
-class SpinState(SpinBase, State):
+class Rotation(UnitaryOperator):
+
+    @classmethod
+    def _eval_label(cls, label):
+        label = QExpr._eval_label(label)
+        if len(label) != 3:
+            raise ValueError('3 Euler angles required, got: %r' % label)
+        return label
+
+    @property
+    def alpha(self):
+        return self.label[0]
+
+    @property
+    def beta(self):
+        return self.label[1]
+
+    @property
+    def gamma(self):
+        return self.label[2]
+
+    def _eval_inverse(self):
+        return Rotation((-self.gamma, -self.beta, -self.alpha))
+
+    @classmethod
+    def D(cls, j, m, mp, alpha, beta, gamma):
+        """Wigner-D function."""
+        result = exp(-I*m*alpha)*exp(-I*mp*gamma)
+        result *= cls.d(j, m, mp, beta)
+        return result
+
+    @classmethod
+    def d(cls, j, m, mp, beta):
+        """Wigner's lowercase d function."""
+        # TODO: This does not do a good job of simplifying the trig functions.
+        # The Jacobi Polynomial expansion is probably best as it is a simple
+        # sum. But, this version does give correct answers and uses
+        # Eq. 7 in Section 4.3.2 of Varshalovich.
+        cosbeta = Symbol('cosbeta')
+        x = 1-cosbeta
+        y = 1+cosbeta
+        jmmp = j-mp
+        jpm = j+m
+        jpmp = j+mp
+        jmm = j-m
+        mpmm2 = (mp-m)/2
+        mpmp2 = (m+mp)/2
+        result = (-1)**jmmp
+        result *= 2**(-j)
+        result *= sqrt(factorial(jpm)/(factorial(jmm)*factorial(jpmp)*factorial(jmmp)))
+        result *= (x**mpmm2)*(y**(-mpmp2))
+        result *= diff((x**jmmp)*(y**jpmp), cosbeta, jmm)
+        if (2*j).is_Integer and not j.is_Integer:
+            result = result.subs(1+cosbeta, 2*cos(beta/2)**2)
+            result = result.subs(1-cosbeta, 2*sin(beta/2)**2)
+        else:
+            result = result.subs(cosbeta, cos(beta))
+        return result
+
+    def matrix_element(self, j, m, jp, mp):
+        result = self.__class__.D(
+            jp, m, mp, self.alpha, self.beta, self.gamma
+        )
+        result *= KroneckerDelta(j,jp)
+        return result
+
+    @classmethod
+    def _eval_hilbert_space(cls, label):
+        # We consider all j values so our space is infinite.
+        return ComplexSpace(S.Infinity)
+
+    def _represent_base(self, basis, **options):
+        j = options.get('j', Rational(1,2))
+        size, mvals = m_values(j)
+        result = zeros((size, size))
+        for p in range(size):
+            for q in range(size):
+                me = self.matrix_element(j, mvals[p], j, mvals[q])
+                result[p, q] = me
+        return result
+
+    def _represent_JzOp(self, basis, **options):
+        return self._represent_base(basis, **options)
+
+
+Jx = JxOp()
+Jy = JyOp()
+Jz = JzOp()
+J2 = J2Op()
+Jplus = JplusOp()
+Jminus = JminusOp()
+
+
+#-----------------------------------------------------------------------------
+# Spin States
+#-----------------------------------------------------------------------------
+
+
+class SpinState(State):
 
     _label_separator = ','
 
     @property
-    def ms(self):
+    def j(self):
+        return self.label[0]
+
+    @property
+    def m(self):
         return self.label[1]
 
+    @classmethod
+    def _eval_hilbert_space(cls, label):
+        return ComplexSpace(2*label[0]+1)
 
-class SzKet(SpinState, Ket):
 
-    def _apply_operator_Sz(self, op):
-        return (hbar*self.ms)*self
+class JzKet(SpinState, Ket):
 
-    def _apply_operator_S2(self, op):
-        s = self.s
-        return (hbar*hbar*s*(s+1))
-
-    def _eval_innerproduct(self, bra, **hints):
-        if isinstance(bra, SzBra):
-            d1 = KroneckerDelta(self.s, bra.s)
-            d2 = KroneckerDelta(self.ms, bra.ms)
-            return d1*d2
+    def _eval_innerproduct_JzBra(self, bra, **hints):
+        d1 = KroneckerDelta(self.j, bra.j)
+        d2 = KroneckerDelta(self.m, bra.m)
+        return d1*d2
 
     @property
     def dual_class(self):
-        return SzBra
+        return JzBra
 
-    def _represent_Sz(self, basis, **options):
-        if self.s == Rational(1,2):
-            if self.ms == Rational(1,2):
+    def _represent_JzOp(self, basis, **options):
+        if self.j == Rational(1,2):
+            if self.m == Rational(1,2):
                 return Matrix([1,0])
-            elif self.ms == -Rational(1,2):
+            elif self.m == -Rational(1,2):
                 return Matrix([0,1])
 
 
-class SzBra(SpinState, Bra):
+class JzBra(SpinState, Bra):
 
     @property
     def dual_class(self):
-        return SzKet
+        return JzKet
 
-    def _represent_Sz(self, basis, **options):
-        return self.dual._represent_Sz(basis, **options).H
+    def _represent_JzOp(self, basis, **options):
+        return self.dual._represent_JzOp(basis, **options).H
 
-class SxKet(SpinState, Ket):
+
+class JxKet(SpinState, Ket):
 
     @property
     def dual_class(self):
-        return SxBra
+        return JxBra
 
-    def _apply_operator_S2(self, op):
-        s = self.s
-        return (hbar*hbar*s*(s+1))
+    def _eval_innerproduct_JxBra(self, bra, **hints):
+        d1 = KroneckerDelta(self.j, bra.j)
+        d2 = KroneckerDelta(self.m, bra.m)
+        return d1*d2
 
-    def _eval_innerproduct(self, bra, **hints):
-        if isinstance(bra, SxBra):
-            d1 = KroneckerDelta(self.s, bra.s)
-            d2 = KroneckerDelta(self.ms, bra.ms)
-            return d1*d2
-
-    def _represent_Sz(self, basis, **options):
-        if self.s == Rational(1,2):
-            if self.ms == Rational(1,2):
+    def _represent_JzOp(self, basis, **options):
+        if self.j == Rational(1,2):
+            if self.m == Rational(1,2):
                 return Matrix([1,1])/sqrt(2)
-            elif self.ms == -Rational(1,2):
+            elif self.m == -Rational(1,2):
                 return Matrix([1,-1])/sqrt(2)
 
 
-class SxBra(SpinState, Bra):
+class JxBra(SpinState, Bra):
 
     @property
     def dual_class(self):
-        return SxKet
+        return JxKet
 
-    def _represent_Sz(self, basis, **options):
-        return self.dual._represent_Sz(basis, **options).H
+    def _represent_JzOp(self, basis, **options):
+        return self.dual._represent_JzOp(basis, **options).H
 
-class SyKet(SpinState, Ket):
+
+class JyKet(SpinState, Ket):
 
     @property
     def dual_class(self):
-        return SyBra
+        return JyBra
 
-    def _apply_operator_S2(self, op):
-        s = self.s
-        return (hbar*hbar*s*(s+1))
+    def _eval_innerproduct_JyBar(self, bra, **hints):
+        d1 = KroneckerDelta(self.s, bra.s)
+        d2 = KroneckerDelta(self.ms, bra.ms)
+        return d1*d2
 
-    def _eval_innerproduct(self, bra, **hints):
-        if isinstance(bra, SyBra):
-            d1 = KroneckerDelta(self.s, bra.s)
-            d2 = KroneckerDelta(self.ms, bra.ms)
-            return d1*d2
-
-    def _represent_Sz(self, basis, **options):
-        if self.s == Rational(1,2):
-            if self.ms == Rational(1,2):
+    def _represent_JzOp(self, basis, **options):
+        if self.j == Rational(1,2):
+            if self.m == Rational(1,2):
                 return Matrix([1,I])/sqrt(2)
-            elif self.ms == -Rational(1,2):
+            elif self.m == -Rational(1,2):
                 return Matrix([1,-I])/sqrt(2)
 
 
-class SyBra(SpinState, Bra):
+class JyBra(SpinState, Bra):
 
     @property
     def dual_class(self):
-        return SyKet
+        return JyKet
 
-    def _represent_Sz(self, basis, **options):
-        return self.dual._represent_Sz(basis, **options).H
+    def _represent_JzOp(self, basis, **options):
+        return self.dual._represent_JzOp(basis, **options).H

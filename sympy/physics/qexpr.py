@@ -163,6 +163,14 @@ class QExpr(Expr):
     def doit(self, **kw_args):
         return self
 
+    #-------------------------------------------------------------------------
+    # Represent
+    #-------------------------------------------------------------------------
+
+    def _represent(self, basis, **options):
+        return dispatch_method(self, '_represent', basis, **options)
+
+
 def split_commutative_parts(e):
     """Split into commutative and non-commutative parts."""
     c_part = [p for p in e.args if p.is_commutative]
@@ -180,3 +188,18 @@ def split_qexpr_parts(e):
         else:
             qexpr_part.append(arg)
     return expr_part, qexpr_part
+
+def dispatch_method(self, basename, arg, **options):
+    # print "self: ", repr(self)
+    method_name = '%s_%s' % (basename, arg.__class__.__name__)
+    # print "method_name: ", method_name
+    if hasattr(self, method_name):
+        f = getattr(self, method_name)
+        # This can raise and we will allow it to propagate.
+        result = f(arg, **options)
+        if result is not None:
+            return result
+    raise NotImplementedError(
+        "%s.%s can't handle: %r" % \
+            (self.__class__.__name__, basename, arg)
+    )

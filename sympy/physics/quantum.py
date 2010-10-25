@@ -1,13 +1,23 @@
-from sympy import Expr, sympify, Add, Mul, Function, S, Matrix, Pow, Integer
-from sympy.printing.pretty.stringpict import prettyForm
+"""Dirac notation for Bras, Kets, Operators, and so on.
+
+TODO:
+
+* tpsimp.
+* Fix early 0 in apply_operators.
+* Debug and test apply_operators.
+"""
+
+import copy
+
+from sympy import S, Expr, sympify, Add, Mul, Function, Matrix, Pow, Integer
+from sympy.printing.pretty.stringpict import prettyForm, stringPict
 from sympy.core.numbers import NumberSymbol
 import sympy.mpmath.libmp as mlib
 from sympy.utilities.iterables import all
 
 from sympy.physics.qexpr import (
-    QuantumError, QExpr, split_commutative_parts, split_qexpr_parts
+    QuantumError, QExpr, split_commutative_parts, dispatch_method
 )
-from sympy.physics.hilbert import HilbertSpace, HilbertSpaceError
 
 __all__ = [
     'KetBase',
@@ -31,42 +41,19 @@ __all__ = [
     'represent',
     'hbar',
     'TensorProduct',
-    'tpsimp'
+    'tpsimp',
+    'apply_operators',
+    'apply_operators_Mul',
+    'apply_single_op',
+    'apply_list_of_ops'
 ]
 
-"""
-TODO:
-
-* tpsimp.
-* Operator application logic.
-* TensorProduct and representations.
-* API for Operators and Eigenstates.
-"""
-
-#-----------------------------------------------------------------------------
-# Abstract base classes
-#-----------------------------------------------------------------------------
-
-class Representable(object):
-    """An object that can be represented.
-    """
-
-    def represent(self, basis, **options):
-        rep_method = '_represent_%s' % basis.__class__.__name__
-        if hasattr(self, rep_method):
-            f = getattr(self, rep_method)
-            rep = f(basis, **options)
-            if rep is not None:
-                return rep
-        raise NotImplementedError("Can't represent %r in basis: %r" % (
-            self, basis
-        ))
 
 #-----------------------------------------------------------------------------
 # States, bras and kets.
 #-----------------------------------------------------------------------------
 
-class StateBase(QExpr, Representable):
+class StateBase(QExpr):
     """Abstract base class for general abstract states in quantum mechanics.
 
     All other state classes defined will need to inherit from this class. It
@@ -85,7 +72,7 @@ class StateBase(QExpr, Representable):
     #-------------------------------------------------------------------------
 
     def _eval_innerproduct(self, other, **hints):
-        return None
+        return dispatch_method(self, '_eval_innerproduct', other, **hints)
 
     #-------------------------------------------------------------------------
     # Dagger/dual
@@ -158,18 +145,8 @@ class KetBase(StateBase):
         else:
             return Expr.__rmul__(self, other)
 
-    def apply_operator(self, op):
-        if not isinstance(op, Operator):
-            raise TypeError('Operator expected, got: %r' % op)
-        apply_method = '_apply_operator_%s' % op.__class__.__name__
-        if hasattr(self, apply_method):
-            f = getattr(self, apply_method)
-            result = f(op)
-            if result is not None:
-                return result
-        raise NotImplementedError(
-            "Don't know how apply operator %r to Ket %r" % (op, self)
-        )
+    def _apply_operator(self, op, **options):
+        return dispatch_method(self, '_apply_operator', op, **options)
 
 
 class BraBase(StateBase):
@@ -365,7 +342,7 @@ class TimeDepBra(TimeDepState, BraBase):
 # Operators and outer products
 #-----------------------------------------------------------------------------
 
-class Operator(QExpr, Representable):
+class Operator(QExpr):
     """Base class for non-commuting quantum operators.
 
     An operator is a map from one vector space to another [1]. In quantum
@@ -431,38 +408,25 @@ class Operator(QExpr, Representable):
     # _eval_* methods
     #-------------------------------------------------------------------------
 
-    def _eval_commutator(self, other):
+    def _eval_commutator(self, other, **options):
         """Evaluate [self, other] if known, return None if not known."""
-        return None
+        return dispatch_method(self, '_eval_commutator', other, **options)
 
-    def _eval_rcommutator(self, other):
-        """Evaluate [other, self] if known, return None if not known."""
-        return None
-
-    def _eval_anticommutator(self, other):
+    def _eval_anticommutator(self, other, **options):
         """Evaluate [self, other] if known."""
-        return None
-
-    def _eval_ranticommutator(self, other):
-        """Evaluate [other, self] if known."""
-        return None
+        return dispatch_method(self, '_eval_anticommutator', other, **options)
 
     #-------------------------------------------------------------------------
     # Operator application
     #-------------------------------------------------------------------------
 
-    def apply_to_ket(self, ket):
+    def _apply_operator(self, ket, **options):
         if not isinstance(ket, KetBase):
             raise TypeError('KetBase expected, got: %r' % ket)
-        apply_method = '_apply_to_ket_%s' % ket.__class__.__name__
-        if hasattr(self, apply_method):
-            f = getattr(self, apply_method)
-            result = f(ket)
-            if result is not None:
-                return result
-        raise NotImplementedError(
-            "Don't know how apply operator %r to Ket %r" % (self, ket)
-        )
+        return dispatch_method(self, '_apply_operator', ket, **options)
+
+    def matrix_element(self, *args):
+        raise NotImplementedError('matrix_elements is not defined')
 
     #-------------------------------------------------------------------------
     # Printing
@@ -531,10 +495,11 @@ class OuterProduct(Operator):
                 'ket and bra are not dual classes: %r, %r' % \
                 (ket.__class__, bra.__class__)
             )
-        if not ket.hilbert_space == bra.hilbert_space:
-            raise HilbertSpaceError(
-                'Incompatible hilbert spaces: %r and %r' % (ket, bra)
-            )
+        # TODO: fix this, to allow different symbolic dimensions
+        # if not ket.hilbert_space == bra.hilbert_space:
+        #     raise HilbertSpaceError(
+        #         'Incompatible hilbert spaces: %r and %r' % (ket, bra)
+        #     )
         obj = Expr.__new__(cls, *(ket, bra), **{'commutative': False})
         obj.hilbert_space = ket.hilbert_space
         return obj
@@ -621,6 +586,16 @@ class KroneckerDelta(Function):
 
     def _sympystr(self, printer, *args):
         return 'd(%s,%s)'% (self.args[0],self.args[1])
+
+    def _pretty(self, printer, *args):
+        pform = printer._print(self.args[0], *args)
+        pform = prettyForm(*pform.right((prettyForm(','))))
+        pform = prettyForm(*pform.right((printer._print(self.args[1], *args))))        
+        a = stringPict(u'\u03b4')
+        b = pform
+        top = stringPict(*b.left(' '*a.width()))
+        bot = stringPict(*a.right(' '*b.width()))
+        return prettyForm(binding=prettyForm.POW, *bot.below(top))
 
 
 class Dagger(Expr):
@@ -727,7 +702,7 @@ class Dagger(Expr):
 # there are no commutative QExpr subclasses, which simplifies the logic in QMul
 # a lot.
 
-class InnerProduct(Expr, Representable):
+class InnerProduct(Expr):
     """An unevaluated inner product between a Bra and a Ket.
 
     Because a Bra is essentially a row vector and a Ket is essentially a column
@@ -765,10 +740,6 @@ class InnerProduct(Expr, Representable):
                 'bra and ket are not dual classes: %r, %r' % \
                 (bra.__class__, ket.__class__)
             )
-        if not ket.hilbert_space == bra.hilbert_space:
-            raise HilbertSpaceError(
-                'Incompatible hilbert spaces: %r and %r' % (ket, bra)
-        )
         obj = Expr.__new__(cls, *(bra, ket), **{'commutative':True})
         return obj
 
@@ -801,9 +772,13 @@ class InnerProduct(Expr, Representable):
         return prettyForm(*pform.right(self.ket._pretty(printer, *args)))
 
     def doit(self, **hints):
-        r = self.bra._eval_innerproduct(self.ket, **hints)
-        if r is None:
+        try:
             r = self.ket._eval_innerproduct(self.bra, **hints)
+        except NotImplementedError:
+            try:
+                r = self.bra._eval_innerproduct(self.ket, **hints)
+            except NotImplementedError:
+                r = None
         if r is not None:
             return r
         return self
@@ -873,47 +848,75 @@ class Commutator(Expr):
             return S.NegativeOne*cls(b,a)
 
     def _eval_expand_commutator(self, **hints):
-        # TODO: apply this recursively to handle mutiple rules at once.
-
         A = self.args[0].expand(**hints)
         B = self.args[1].expand(**hints)
 
-        # [A+B,C]  ->  [A,C] + [B,C]
-        if isinstance(A, Add):
-            return Add(*[Commutator(term,B) for term in A.args])
-        if isinstance(B, Add):
-            return Add(*[Commutator(A,term) for term in B.args])
+        result = None
 
-        if isinstance(A, Mul):
-            # [a*b,c] -> a*[b,c] + [a,c]*b
+        if isinstance(A, Add):
+            # [A+B,C]  ->  [A,C] + [B,C]
+            result = Add(
+                *[Commutator(term,B).expand(**hints)\
+                  for term in A.args]
+            )
+        elif isinstance(B, Add):
+            # [A,B+C]  ->  [A,B] + [A,C]
+            result = Add(
+                *[Commutator(A,term).expand(**hints)\
+                  for term in B.args]
+            )
+        elif isinstance(A, Mul):
+            # [A*B,C] -> A*[B,C] + [A,C]*B
             a = A.args[0]
             b = Mul(*A.args[1:])
             c = B
-            first = Mul(a, Commutator(b, c))
-            second = Mul(Commutator(a, c), b)
-            return Add(first, second)
-        if isinstance(B, Mul):
-            # [a,b*c] -> [a,b]*c + b*[a,c]
+            comm1 = Commutator(b,c).expand(**hints)
+            comm2 = Commutator(a,c).expand(**hints)
+            first = Mul(a, comm1)
+            second = Mul(comm2, b)
+            result = Add(first, second)
+        elif isinstance(B, Mul):
+            # [A,B*C] -> [A,B]*C + B*[A,C]
             a = A
             b = B.args[0]
             c = Mul(*B.args[1:])
-            first = Mul(Commutator(a, b), c)
-            second = Mul(b, Commutator(a, c))
-            return Add(first, second)
+            comm1 = Commutator(a,b).expand(**hints)
+            comm2 = Commutator(a,c).expand(**hints)
+            first = Mul(comm1, c)
+            second = Mul(b, comm2)
+            result = Add(first, second)
 
-        # No changes, so return self
-        return self
+        if result is None:
+            # No changes, so return self
+            return self
+        else:
+            return result
 
     def doit(self, **hints):
         A = self.args[0]
         B = self.args[1]
         if isinstance(A, Operator) and isinstance(B, Operator):
-            comm = A._eval_commutator(B)
-            if comm is None:
-                comm = B._eval_rcommutator(A)
+            try:
+                comm = A._eval_commutator(B, **hints)
+            except NotImplementedError:
+                try:
+                    comm = -1*B._eval_commutator(A, **hints)
+                except NotImplementedError:
+                    comm = None
             if comm is not None:
                 return comm.doit(**hints)
         return (A*B - B*A).doit(**hints)
+
+    def represent(self, basis, **options):
+        rep_method = '_represent_%s' % basis.__class__.__name__
+        if hasattr(self, rep_method):
+            f = getattr(self, rep_method)
+            rep = f(basis, **options)
+            if rep is not None:
+                return rep
+        raise NotImplementedError("Can't represent %r in basis: %r" % (
+            self, basis
+        ))
 
     def _eval_dagger(self):
         return Commutator(Dagger(self.args[1]), Dagger(self.args[0]))
@@ -1009,9 +1012,13 @@ class AntiCommutator(Expr):
         A = self.args[0]
         B = self.args[1]
         if isinstance(A, Operator) and isinstance(B, Operator):
-            comm = A._eval_anticommutator(B)
-            if comm is None:
-                comm = B._eval_ranticommutator(A)
+            try:
+                comm = A._eval_anticommutator(B, **hints)
+            except NotImplementedError:
+                try:
+                    comm = -1*B._eval_anticommutator(A, **hints)
+                except NotImplementedError:
+                    comm = None
             if comm is not None:
                 return comm.doit(**hints)
         return (A*B + B*A).doit(**hints)
@@ -1220,14 +1227,12 @@ def tpsimp(e, **hints):
 # Functions
 #-----------------------------------------------------------------------------
 
+
 def represent(expr, basis, **options):
     """Represent the quantum expression in the given basis.
     """
-    # from sympy.physics.qadd import QAdd
-    # from sympy.physics.qmul import QMul
-    # from sympy.physics.qpow import QPow
-    if isinstance(expr, Representable):
-        return expr.represent(basis, **options)
+    if isinstance(expr, QExpr):
+        return expr._represent(basis, **options)
     elif isinstance(expr, Add):
         result = S.Zero
         for args in expr.args:
@@ -1256,184 +1261,184 @@ def represent(expr, basis, **options):
     return result
 
 
-def apply_Mul(m):
-    """
-    Take a Mul instance with operators and apply them to states.
+def apply_operators(e, **options):
 
-    This method applies all operators with integer state labels
-    to the actual states.  For symbolic state labels, nothing is done.
-    When inner products of FockStates are encountered (like <a|b>),
-    the are converted to instances of InnerProduct.
+    # This may be a bit aggressive but ensures that everything gets expanded
+    # to its simplest form before trying to apply operators. This includes
+    # things like (A+B+C)*|a> and A*(|a>+|b>) and all Commutators and
+    # TensorProducts. The only problem with this is that if we can't apply
+    # all the Operators, we have just expanded everything.
+    # TODO: don't expand the scalars in front of each Mul.
+    e = e.expand(commutator=True, tensorproduct=True).doit()
 
-    This does not currently work on double inner products like,
-    <a|b><c|d>.
+    # If we just have a raw ket, return it.
+    # TODO: make this acts_like_KetBase
+    if isinstance(e, KetBase):
+        return e
 
-    If the argument is not a Mul, it is simply returned as is.
-    """
-    if not isinstance(m, Mul):
-        return m
-    c_part, nc_part = split_commutative_parts(m)
-    n_nc = len(nc_part)
-    if n_nc == 0 or n_nc == 1:
-        return m
-    else:
-        last = nc_part[-1]
-        next_to_last = nc_part[-2]
-        if isinstance(last, KetBase):
-            if isinstance(next_to_last, Operator):
-                try:
-                    result = next_to_last.apply_to_ket(last)
-                except NotImplementedError:
-                    try:
-                        result = last.apply_operator(next_to_last)
-                    except NotImplementedError:
-                        return m
-                if result == 0:
-                    return 0
-                else:
-                    return apply_Mul(Mul(*(c_part+nc_part[:-2]+[result])))
-            elif isinstance(next_to_last, Pow):
-                if isinstance(next_to_last.base, Operator) and \
-                    next_to_last.exp.is_Integer:
-                    result = last
-                    op = next_to_last.base
-                    for i in range(next_to_last.exp):
-                        try:
-                            result = op.apply_to_ket(result)
-                        except NotImplementedError:
-                            try:
-                                result = result.apply_operator(op)
-                            except NotImplementedError:
-                                return m
-                        if result == 0: break
-                    if result == 0:
-                        return 0
-                    else:
-                        return apply_Mul(Mul(*(c_part+nc_part[:-2]+[result])))
-                else:
-                    return m
-            elif isinstance(next_to_last, last.dual_class):
-                result = InnerProduct(next_to_last, last)
-                if result == 0:
-                    return 0
-                else:
-                    return apply_Mul(Mul(*(c_part+nc_part[:-2]+[result])))
-            else:
-                return m
-        else:
-            return m
-
-
-def apply_operators(e):
-    """
-    Take a sympy expression with operators and states and apply the operators.
-    """
-    e = e.expand()
-    muls = e.atoms(Mul)
-    subs_list = [(m,apply_Mul(m)) for m in iter(muls)]
-    return e.subs(subs_list)
-    
-    
-def apply_operators(e):
-
-    # if all we have is a Qbit without any gates, return the qbit
-    if isinstance(circuit, Qbit):
-        return circuit
-
-    #if we have a Mul object, get the state of the system
-    elif isinstance(circuit, QMul):
-        states = circuit.args[len(circuit.args)-1]
-        states = states.expand()
-
-    #if we have an add object with gates mixed in, apply_gates recursively
-    elif isinstance(circuit, QAdd):
+    # We have an Add(a, b, c, ...) and compute 
+    # Add(apply_operators(a), apply_operators(b), ...)
+    elif isinstance(e, Add):
         result = 0
-        for i in circuit.args:
-            result = result + apply_gates(i, basis, floatingPoint)
-        if floatingPoint:
-            result = result.evalf()
+        for arg in e.args:
+            result += apply_operators(arg, **options)
         return result
 
-    state_coeff = 1
-    #pick out each object that multiplies the state
-    for multiplier in reversed(circuit.args[:len(circuit.args)-1]):
+    # We have a Mul where there might be actual operators to apply to kets.
+    elif isinstance(e, Mul):
+        return apply_operators_Mul(e, **options)
 
-        #if the object that mutliplies is a Gate, we will apply it once
-        if isinstance(multiplier, Gate):
-            gate = multiplier
-            number_of_applications = 1
+    # In all other cases (State, Operator, Pow, Commutator, InnerProduct,
+    # OuterProduct) we won't ever have operators to apply to kets.
+    else:
+        return e
 
-        #if the object that multiplies is a Pow who's base is a Gate, we will
-        # apply Pow.exp times
-        elif isinstance(multiplier, QPow) and isinstance(multiplier.base, Gate):
-            gate = multiplier.base
-            number_of_applications = multiplier.exp
+def apply_operators_Mul(e, **options):
 
-        #if the object that multiplies is not a gate of any sort,
-        # we apply it by multiplying
-        else:
-            state_coeff = multiplier*state_coeff
-            continue
+    # The general form of e at this point is:
+    #
+    # ZeroOrMore(scalars)*ZeroOrMore(Bra)*ZeroOrMore(Operators)*Ket*
+    # ZeroOrMore(Bra*ZeroMore(Operators)*Ket)
+    # 
+    # We want to pick out pieces that look like:
+    #
+    # Bra*ZeroOrMore(Operators)*Ket
 
-        #if states is in superposition of states (a sum of qbits states),
-        # applyGates to each state contined within
-        if isinstance(states, QAdd):
-            #special check for non-distributivity, do all at once
-            if isinstance(gate, NondistributiveGate):
-                states = gate.measure(states)
+    if not isinstance(e, Mul):
+        return e
+
+    # Split the Mul into a Mul of scalars and a list of non-commutative parts.
+    c_part, nc_part = split_commutative_parts(e)
+    c_part = Mul(*c_part)
+    n_nc = len(nc_part)
+    if n_nc == 0 or n_nc == 1:
+        return c_part
+
+    terms = []
+    last_ket = 0
+    for i in range(n_nc):
+        # Make this acts_like_KetBase
+        if isinstance(nc_part[i], KetBase):
+            terms.append(nc_part[last_ket:i+1])
+            last_ket = i+1
+    last_part = nc_part[last_ket:]
+    if last_part:
+        terms.append(last_part)
+
+    result = 1
+    for term in terms:
+        # print 'term', term
+
+        bra = 1
+        # TODO: make this acts_like_BraBase
+        if isinstance(term[0], BraBase):
+            bra = term.pop(0)
+
+        ket = 1
+        # TODO: make this acts_like(term[-1], KetBase)
+        if isinstance(term[-1], KetBase):
+            ket = term.pop(-1)
+
+        # print 'bra', bra
+        # print 'ket', ket
+
+        if bra == 1 and ket == 1:
+            tresult = Mul(*term)
+
+        elif len(term) == 0:
+            # This cover the cases where either bra or ket is 1 and will also
+            # automatically create an InnerProduct if neither are 1.
+            tresult = bra*ket
+
+        # The <bra|*A*B case
+        elif ket == 1:
+            try:
+                new_term = [Dagger(i) for i in reversed(term)]
+            except NotImplementedError:
+                tresult = bra*Mul(*term)
             else:
-                result = 0
-                for state in states.args:
-                    result = result + \
-                    apply_gates(gate**number_of_applications*state, basis,\
-                    floatingPoint)
-                if floatingPoint:
-                    result = result.evalf()
-                states = result
-                states = states.expand()
+                # TODO: what is the best way of handling copy.copy in all this
+                tresult = Dagger(
+                    apply_list_of_ops(1, copy.copy(new_term), Dagger(bra))
+                )
 
-        #if we have a mul, apply gate to each register and multiply result
-        elif isinstance(states, QMul):
-            #find the Qbits in the Mul
-            for i in range(len(states.args)):
-                if isinstance(states.args[i],Qbit):
-                    break
-            #if we didn't find one, something is wrong
-            if not isinstance(states.args[i],Qbit):
-                print states
-                raise QuantumError()
-
-            #apply the gate the right number of times to this state
-            coefficient = Mul(*(states.args[:i]+states.args[i+1:]))#TODO
-            states = apply_gates(gate**(number_of_applications)*states.args[i],\
-            basis, floatingPoint)
-            states = coefficient*states
-            states = states.expand()
-
-        #If we have a single Qbit, apply to this Qbit
-        elif isinstance(states, Qbit):
-            if isinstance(gate, NondistributiveGate):
-                states = gate.measure(states)
-            else:
-                basis_name = basis.__class__.__name__
-                apply_method_name = '_apply_%s' % basis_name
-                apply_method = getattr(gate, apply_method_name)
-                states = apply_method(states)
-                states = states.expand()
-                number_of_applications -= 1
-                while number_of_applications > 0:
-                    states = apply_gates(gate*states, basis, floatingPoint)
-                    number_of_applications -= 1
-
-        #if it's not one of those, there is something wrong
+        # The full <bra|*A*B*|ket> case
         else:
-            raise QuantumError()
+            try:
+                tresult = apply_list_of_ops(1, copy.copy(term), ket)
+            except NotImplementedError:
+                tresult = bra*Mul(*term)*ket
 
-    #tack on any coefficients that were there before and simplify
-    states = state_coeff*states
-    if isinstance(states, (Add,Pow, Mul)):
-        states = states.expand()
-    return states
+        # print 'tresult', tresult
+        # print
+        result *= tresult
+
+    return c_part*result
+
+
+def apply_list_of_ops(scalar, ops, ket):
+    # scalar is a number
+    # ops is a list of Operators or Powers of Operators.
+    # ket can be a*|alpha> + b*|beta> + ... but cannot include any Operators.
+
+    if scalar == 0 or ket == 0:
+        return S.Zero
+
+    print scalar, ops, ket
+
+    if not ops:
+        return scalar*ket
+
+    if isinstance(ket, Add):
+        result = 0
+        for arg in ket.args:
+            if isinstance(arg, KetBase):
+                result += apply_list_of_ops(scalar, ops, arg)
+            elif isinstance(arg, Mul):
+                k = arg.args[-1]
+                s = Mul(scalar, *arg.args[:-1])
+                result += apply_list_of_ops(s, copy.copy(ops), k)
+            else:
+                raise TypeError('Ket or Mul expected, got: %r' % arg)
+        return result
+
+    if isinstance(ket, Mul):
+        scalar = Mul(scalar, *ket.args[:-1])
+        ket = ket.args[-1]
+
+    next_op = ops.pop(-1)
+    if isinstance(next_op, Pow):
+        ops.append(next_op.base**(next_op.exp-1))
+        next_op = next_op.base
+
+    # If unsuccessful, this will raise NotImplementedError which we let
+    # propagate.
+    new_ket = apply_single_op(next_op, ket)
+
+    if new_ket == 0:
+        return 0
+
+    # TODO: Try is without this expand, I don't think we will need it.
+    # new_ket = new_ket.expand()
+
+    return apply_list_of_ops(scalar, ops, new_ket)
+
+
+def apply_single_op(op, ket):
+    # Apply a single Operator to a Ket, at this point, we must have only an
+    # Operator and a Ket and nothing else!
+    if not isinstance(ket, KetBase):
+        raise TypeError('Ket expected, got: %r' % ket)
+    if not isinstance(op, Operator):
+        raise TypeError('Operator expected, got: %r' % op)
+    try:
+        result = op._apply_operator(ket)
+    except NotImplementedError:
+        try:
+            result = ket._apply_operator(op)
+        except NotImplementedError:
+            raise
+    return result
 
 
 #-----------------------------------------------------------------------------
