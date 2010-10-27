@@ -150,7 +150,9 @@ class QExpr(Expr):
         return self._print_contents(printer, *args)
 
     def _sympyrepr(self, printer, *args):
-        return self._print_contents_repr(printer, *args)
+        return '%s(%s)' % (
+            self.__class__.__name__, self._print_contents_repr(printer, *args)
+        )
 
     def _pretty(self, printer, *args):
         pform = self._print_contents_pretty(printer, *args)
@@ -161,6 +163,24 @@ class QExpr(Expr):
     #-------------------------------------------------------------------------
     
     def doit(self, **kw_args):
+        return self
+
+    def _eval_rewrite(self, pattern, rule, **hints):
+        # TODO: Make Basic.rewrite get the rule using the class name rather
+        # than str(). See L1072 of basic.py.
+        # This will call self.rule(*self.args) for rewritting.
+        if hints.get('deep', False):
+            args = [ a._eval_rewrite(pattern, rule, **hints) for a in self ]
+        else:
+            args = self.args
+
+        if pattern is None or isinstance(self, pattern):
+            if hasattr(self, rule):
+                rewritten = getattr(self, rule)(*args)
+
+                if rewritten is not None:
+                    return rewritten
+
         return self
 
     #-------------------------------------------------------------------------

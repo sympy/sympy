@@ -102,11 +102,6 @@ class StateBase(QExpr):
         return '%s%s%s' % (self.lbracket, self._print_contents(printer, *args),
                            self.rbracket)
 
-    def _sympyrepr(self, printer, *args):
-        return '%s(%s)' % (
-            self.__class__.__name__, self._print_contents_repr(printer, *args)
-        )
-
     def _pretty(self, printer, *args):
         from sympy.printing.pretty.stringpict import prettyForm
         pform = self._print_contents_pretty(printer, *args)
@@ -1359,9 +1354,10 @@ def apply_operators_Mul(e, **options):
                 )
 
         # The full <bra|*A*B*|ket> case
+        # TODO: Get scalar<bra|*|ket> into an InnerProduct.
         else:
             try:
-                tresult = apply_list_of_ops(1, copy.copy(term), ket)
+                tresult = bra*apply_list_of_ops(1, copy.copy(term), ket)
             except NotImplementedError:
                 tresult = bra*Mul(*term)*ket
 
@@ -1380,7 +1376,7 @@ def apply_list_of_ops(scalar, ops, ket):
     if scalar == 0 or ket == 0:
         return S.Zero
 
-    print scalar, ops, ket
+    # print scalar, ops, ket
 
     if not ops:
         return scalar*ket
@@ -1415,7 +1411,8 @@ def apply_list_of_ops(scalar, ops, ket):
         return 0
 
     # TODO: Try is without this expand, I don't think we will need it.
-    # new_ket = new_ket.expand()
+    # We definitely need it!!!
+    new_ket = new_ket.expand()
 
     return apply_list_of_ops(scalar, ops, new_ket)
 
