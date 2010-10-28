@@ -261,20 +261,20 @@ def variations(seq, n, repetition=False):
     variations(seq, n) will return N! / (N - n)! permutations without
     repetition of seq's elements:
         >>> from sympy.utilities.iterables import variations
-        >>> list(variations([1,2], 2))
+        >>> list(variations([1, 2], 2))
         [[1, 2], [2, 1]]
 
     variations(seq, n, True) will return the N**n permutations obtained
     by allowing repetition of elements:
-        >>> list(variations([1,2], 2, True))
+        >>> list(variations([1, 2], 2, repetition=True))
         [[1, 1], [1, 2], [2, 1], [2, 2]]
 
     If you ask for more items than are in the set you get the empty set unless
     you allow repetitions:
-    >>> list(variations([0,1], 3, repetition=False))
-    []
-    >>> list(variations([0,1], 3, repetition=True))[:4]
-    [[0, 0, 0], [0, 0, 1], [0, 1, 0], [0, 1, 1]]
+        >>> list(variations([0, 1], 3, repetition=False))
+        []
+        >>> list(variations([0, 1], 3, repetition=True))[:4]
+        [[0, 0, 0], [0, 0, 1], [0, 1, 0], [0, 1, 1]]
 
 
     Reference:
@@ -293,12 +293,13 @@ def variations(seq, n, repetition=False):
                 for cc in variations(seq, n - 1, True):
                     yield [seq[i]] + cc
 
-def subsets(seq, k, repetition=False):
+def subsets(seq, k=None, repetition=False):
     """Generates all k-subsets (combinations) from an n-element set, seq.
 
-       A k-subset of n-element set is any subset of length exactly k. The
-       number of k-subsets on n elements is given by binomial(n, k), whereas
-       there are 2**n subsets all together.
+       A k-subset of an n-element set is any subset of length exactly k. The
+       number of k-subsets of an n-element set is given by binomial(n, k),
+       whereas there are 2**n subsets all together. If k is None then all
+       2**n subsets will be returned from shortest to longest.
 
        Examples:
            >>> from sympy.utilities.iterables import subsets
@@ -306,22 +307,24 @@ def subsets(seq, k, repetition=False):
        subsets(seq, k) will return the n!/k!/(n - k)! k-subsets (combinations)
        without repetition, i.e. once an item has been removed, it can no
        longer be "taken":
-           >>> list(subsets([1,2], 2))
+           >>> list(subsets([1, 2], 2))
            [[1, 2]]
+           >>> list(subsets([1, 2]))
+           [[], [1], [2], [1, 2]]
            >>> list(subsets([1, 2, 3], 2))
            [[1, 2], [1, 3], [2, 3]]
 
 
        subsets(seq, k, repetition=True) will return the (n - 1 + k)!/k!/(n - 1)!
        combinations *with* repetition:
-           >>> list(subsets([1,2], 2, repetition=True))
+           >>> list(subsets([1, 2], 2, repetition=True))
            [[1, 1], [1, 2], [2, 2]]
 
        If you ask for more items than are in the set you get the empty set unless
        you allow repetitions:
-           >>> list(subsets([0,1], 3, repetition=False))
+           >>> list(subsets([0, 1], 3, repetition=False))
            []
-           >>> list(subsets([0,1], 3, repetition=True))
+           >>> list(subsets([0, 1], 3, repetition=True))
            [[0, 0, 0], [0, 0, 1], [0, 1, 1], [1, 1, 1]]
        """
 
@@ -329,6 +332,11 @@ def subsets(seq, k, repetition=False):
         seq = list(seq)
     if k == 0:
         yield []
+    elif k is None:
+        yield []
+        for k in range(1, len(seq) + 1):
+            for s in subsets(seq, k, repetition=repetition):
+                yield list(s)
     else:
         if not repetition:
             for i in xrange(len(seq)):
