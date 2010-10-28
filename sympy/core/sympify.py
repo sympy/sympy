@@ -52,6 +52,14 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False):
     >>> sympify("2e-45").is_real
     True
 
+    If the expression could not be converted, a SympifyError is raised.
+
+    >>> sympify("x***2")
+    Traceback (most recent call last):
+    ...
+    SympifyError: SympifyError: "Cannot parse u'x***2'."
+
+
     If the option `strict` is set to `True`, only the types for which an
     explicit conversion has been defined are converted. In the other
     cases, a SympifyError is raised.
