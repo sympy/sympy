@@ -81,7 +81,7 @@ def limit(e, z, z0, dir="+"):
 
 def heuristics(e, z, z0, dir):
     if z0 == oo:
-        return heuristics(e.subs(z, 1/z), z, sympify(0), "+")
+        return limit(e.subs(z, 1/z), z, sympify(0), "+")
     elif e.is_Mul:
         r = []
         for a in e.args:
@@ -95,7 +95,7 @@ def heuristics(e, z, z0, dir):
             r.append(a.limit(z, z0, dir))
         return Add(*r)
     elif e.is_Function:
-        return e.subs(e.args[0], heuristics(e.args[0], z, z0, dir))
+        return e.subs(e.args[0], limit(e.args[0], z, z0, dir))
     msg = "Don't know how to calculate the limit(%s, %s, %s, dir=%s), sorry."
     raise PoleError(msg % (e, z, z0, dir))
 
