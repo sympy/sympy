@@ -273,6 +273,8 @@ class cos(Function):
                 return S.NaN
             elif arg is S.Zero:
                 return S.One
+            elif arg is S.Infinity:
+                return
 
         if arg.could_extract_minus_sign():
             return cls(-arg)
