@@ -1,6 +1,6 @@
 from sympy import (Matrix, Symbol, solve, exp, log, cos, acos, Rational, Eq,
     sqrt, oo, LambertW, pi, I, sin, asin, Function, diff, Derivative, symbols,
-    S, sympify, var, simplify, Integral, sstr)
+    S, sympify, var, simplify, Integral, sstr, Wild, solve_linear)
 
 from sympy.solvers import solve_linear_system, solve_linear_system_LU,dsolve,\
      tsolve
@@ -297,3 +297,19 @@ def test_issue626():
     F = x**2 + f(x)**2 - 4*x - 1
     e = F.diff(x)
     assert solve(e, f(x).diff(x)) == [(2-x)/f(x)]
+
+def test_solve_linear():
+    x, y = symbols('xy')
+    w = Wild('w')
+    assert solve_linear(x, x) == (0, 1)
+    assert solve_linear(x, y - 2*x) in [(x, y/3), (y, 3*x)]
+    assert solve_linear(x, y - 2*x, exclude=[x]) ==(y, 3*x)
+    assert solve_linear(3*x - y, 0) in [(x, y/3), (y, 3*x)]
+    assert solve_linear(3*x - y, 0, [x]) == (x, y/3)
+    assert solve_linear(3*x - y, 0, [y]) == (y, 3*x)
+    assert solve_linear(x**2/y, 1) == (y, x**2)
+    assert solve_linear(w, x) in [(w, x), (x, w)]
+    assert solve_linear(cos(x)**2 + sin(x)**2 + 2 + y) == \
+           (y, -2 - cos(x)**2 - sin(x)**2)
+    assert solve_linear(cos(x)**2 + sin(x)**2 + 2 + y, x=[x]) == \
+           (2 + y + cos(x)**2 + sin(x)**2, 1)

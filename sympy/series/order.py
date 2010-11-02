@@ -87,6 +87,7 @@ class Order(Expr):
 
     @cacheit
     def __new__(cls, expr, *symbols, **assumptions):
+
         expr = sympify(expr).expand()
         if expr is S.NaN:
             return S.NaN
