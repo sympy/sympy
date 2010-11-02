@@ -28,15 +28,20 @@ class Symbol(AtomicExpr, Boolean):
 
     is_Symbol = True
 
-    def __new__(cls, name, commutative=True, dummy=False,
+    def __new__(cls, name=None, commutative=True, dummy=False,
                 **assumptions):
-        """if dummy == True, then this Symbol is totally unique, i.e.::
+        """Symbols are identified by name and commutivity::
 
         >>> from sympy import Symbol
         >>> bool(Symbol("x") == Symbol("x")) == True
         True
+        >>> bool(Symbol("x", real=True) == Symbol("x", real=False)) == True
+        True
+        >>> bool(Symbol("x", commutative=True) ==
+        ...      Symbol("x", commutative=False)) == True
+        False
 
-        but with the dummy variable ::
+        When the dummy flag is used, a totally unique symbol is created::
 
         >>> bool(Symbol("x", dummy = True) == Symbol("x", dummy = True)) == True
         False
@@ -47,6 +52,8 @@ class Symbol(AtomicExpr, Boolean):
         if dummy==True:
             return Dummy(name, commutative=commutative, **assumptions)
         else:
+            if not name:
+                raise ValueError('A symbol name must be provided.')
             return Symbol.__xnew_cached_(cls, name, commutative, **assumptions)
 
     def __new_stage2__(cls, name, commutative=True, **assumptions):
@@ -88,47 +95,35 @@ class Symbol(AtomicExpr, Boolean):
         return False
 
 class Dummy(Symbol):
-    """Dummy Symbol
+    """Dummy symbols are each unique, identified by an internal count index ::
 
-       use this through Symbol:
+    >>> from sympy import Dummy
+    >>> bool(Dummy("x") == Dummy("x")) == True
+    False
 
-       >>> from sympy import Symbol
-       >>> x1 = Symbol('x', dummy=True)
-       >>> x2 = Symbol('x', dummy=True)
-       >>> bool(x1 == x2)
-       False
+    If a name is not supplied then a string value of the count index will be
+    used ::
+    >>> Dummy.count = 0 # /!\ this should generally not be changed
+    >>> Dummy()
+    _0
 
     """
 
-    dummycount = 0
+    count = 0
 
     __slots__ = ['dummy_index']
 
-    def __new__(cls, name, commutative=True, **assumptions):
+    def __new__(cls, name=None, commutative=True, **assumptions):
+        if name is None:
+            name = str(Dummy.count)
         obj = Symbol.__xnew__(cls, name, commutative=commutative, **assumptions)
 
-        Dummy.dummycount += 1
-        obj.dummy_index = Dummy.dummycount
+        Dummy.count += 1
+        obj.dummy_index = Dummy.count
         return obj
 
     def _hashable_content(self):
         return Symbol._hashable_content(self) + (self.dummy_index,)
-
-
-class Temporary(Dummy):
-    """
-    Indexed dummy symbol.
-    """
-
-    __slots__ = []
-
-    def __new__(cls, **assumptions):
-        obj = Dummy.__new__(cls, 'T%i' % Dummy.dummycount, **assumptions)
-        return obj
-
-    def __getnewargs__(self):
-        return ()
-
 
 class Wild(Symbol):
     """

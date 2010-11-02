@@ -483,10 +483,7 @@ class WildFunction(Function, AtomicExpr):
 
     nargs = 1
 
-    def __new__(cls, name=None, **assumptions):
-        if name is None:
-            name = 'Wf%s' % (C.Symbol.dummycount + 1) # XXX refactor dummy counting
-            C.Symbol.dummycount += 1
+    def __new__(cls, name, **assumptions):
         obj = Function.__new__(cls, name, **assumptions)
         obj.name = name
         return obj
