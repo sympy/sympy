@@ -236,13 +236,6 @@ class Add(AssocOp):
         return Add(*[Mul(*(denoms[:i]+[numers[i]]+denoms[i+1:]))
                      for i in r]), Mul(*denoms)
 
-    def count_ops(self, symbolic=True):
-        if symbolic:
-            return Add(*[t.count_ops(symbolic) for t in self.args]) + \
-                Symbol('ADD') * (len(self.args) - 1)
-        return Add(*[t.count_ops(symbolic) for t in self.args]) + \
-            (len(self.args) - 1)
-
     def _eval_is_polynomial(self, syms):
         for term in self.args:
             if not term._eval_is_polynomial(syms):

@@ -244,6 +244,11 @@ class Expr(Basic, EvalfMixin):
 
         raise NotImplementedError('not sure of order of %s' % o)
 
+    def count_ops(self, visual=None):
+        """wrapper for count_ops that returns the operation count."""
+        from sympy import count_ops
+        return count_ops(self, visual)
+
     def coeff(self, x, expand=True):
         """
         Returns the coefficient of the term "x" or None if there is no "x".
@@ -1276,9 +1281,6 @@ class AtomicExpr(Atom, Expr):
 
     def as_numer_denom(self):
         return self, S.One
-
-    def count_ops(self, symbolic=True):
-        return S.Zero
 
     def _eval_is_polynomial(self, syms):
         return True

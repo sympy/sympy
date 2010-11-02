@@ -683,15 +683,6 @@ class Mul(AssocOp):
             denoms.append(d)
         return Mul(*numers), Mul(*denoms)
 
-    @cacheit
-    def count_ops(self, symbolic=True):
-        from symbol import Symbol
-        if symbolic:
-            return Add(*[t.count_ops(symbolic) for t in self.args]) + \
-                Symbol('MUL') * (len(self.args) - 1)
-        return Add(*[t.count_ops(symbolic) for t in self.args]) + \
-            (len(self.args) - 1)
-
     def _eval_is_polynomial(self, syms):
         for term in self.args:
             if not term._eval_is_polynomial(syms):

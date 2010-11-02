@@ -7,6 +7,7 @@ from core import BasicMeta, BasicType, C
 from sympify import _sympify, sympify, SympifyError
 from compatibility import any, all
 
+
 class Basic(AssumeMeths):
     """
     Base class for all objects in sympy.
@@ -923,20 +924,11 @@ class Basic(AssumeMeths):
         pattern = sympify(pattern)
         return pattern.matches(self)
 
-    @cacheit
-    def count_ops(self, symbolic=True):
-        """ Return the number of operations in expressions.
-
-        Examples:
-        >>> from sympy.abc import a, b, x
-        >>> from sympy import sin
-        >>> (1+a+b**2).count_ops()
-        POW + 2*ADD
-        >>> (sin(x)*x+sin(x)**2).count_ops()
-        2 + ADD + MUL + POW
-
-        """
-        return Integer(len(self)-1) + sum([t.count_ops(symbolic=symbolic) for t in self])
+    def count_ops(self, visual=None):
+        """wrapper for count_ops that returns the operation count."""
+        from sympy import count_ops
+        return count_ops(self, visual)
+        return sum(a.count_ops(visual) for a in self.args)
 
     def doit(self, **hints):
         """Evaluate objects that are not evaluated by default like limits,
@@ -1034,9 +1026,10 @@ class Atom(Basic):
         else:
             return self
 
-    def count_ops(self, symbolic=True):
-        from singleton import S
-        return S.Zero
+    def as_numer_denom(self):
+        return self, S.One
 
     def doit(self, **hints):
         return self
+
+from sympy.core.singleton import S
