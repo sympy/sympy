@@ -1,5 +1,5 @@
 from sympy import (Symbol, Wild, Inequality, StrictInequality, pi, I, Rational,
-    sympify, symbols)
+    sympify, symbols, Dummy)
 
 from sympy.utilities.pytest import raises
 
@@ -18,6 +18,14 @@ def test_Symbol():
 
     assert Symbol("x") == Symbol("x")
     assert Symbol("x", dummy=True) != Symbol("x", dummy=True)
+    raises(ValueError, 'Symbol()')
+
+def test_Dummy():
+    assert Dummy() != Dummy()
+    Dummy.count = 0
+    d1 = Dummy()
+    Dummy.count = 0
+    assert d1 == Dummy()
 
 def test_as_dummy_nondummy():
     x = Symbol('x')

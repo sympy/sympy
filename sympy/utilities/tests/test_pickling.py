@@ -7,7 +7,7 @@ from sympy.core.assumptions import AssumeMeths
 from sympy.core.basic import Atom, Basic
 from sympy.core.core import BasicMeta, BasicType, ClassRegistry
 from sympy.core.singleton import SingletonRegistry
-from sympy.core.symbol import Dummy, Symbol, Temporary, Wild
+from sympy.core.symbol import Dummy, Symbol, Wild
 from sympy.core.numbers import Catalan, ComplexInfinity, EulerGamma, Exp1,\
         GoldenRatio, Half, ImaginaryUnit, Infinity, Integer, NaN,\
         NegativeInfinity,  NegativeOne, Number, NumberSymbol, One, Pi,\
@@ -70,8 +70,9 @@ def test_core_basic():
         check(c)
 
 def test_core_symbol():
-    for c in (Dummy, Dummy("x", False), Symbol, Symbol("x", False),
-              Temporary, Temporary(), Wild, Wild("x")):
+    for c in (Dummy, Dummy("x", False),
+              Symbol, Symbol("x", False),
+              Wild, Wild("x")):
         check(c)
 
 def test_core_numbers():
