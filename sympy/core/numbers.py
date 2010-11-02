@@ -1191,12 +1191,12 @@ class RationalConstant(Rational):
     def __new__(cls):
         return AtomicExpr.__new__(cls)
 
-
 class IntegerConstant(Integer):
     __slots__ = []
 
     def __new__(cls):
         return AtomicExpr.__new__(cls)
+
 
 class Zero(IntegerConstant):
     __metaclass__ = Singleton

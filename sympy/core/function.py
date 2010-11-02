@@ -34,14 +34,16 @@ from core import BasicMeta, C
 from basic import Basic
 from singleton import S
 from expr import Expr, AtomicExpr
+
 from cache import cacheit
-from itertools import repeat
 #from numbers import Rational, Integer
 #from symbol import Symbol, Dummy
 from sympy.utilities.decorator import deprecated
 from sympy.utilities import all
 
 from sympy import mpmath
+
+from itertools import repeat
 
 class PoleError(Exception):
     pass
@@ -132,11 +134,6 @@ class Application(Basic):
 
         """
         return
-
-
-    def count_ops(self, symbolic=True):
-        #      f()             args
-        return 1 + Add(*[ t.count_ops(symbolic) for t in self.args ])
 
     @property
     def func(self):
@@ -1011,6 +1008,172 @@ def expand_complex(expr, deep=True):
     """
     return sympify(expr).expand(deep=deep, complex=True, basic=False,\
     log=False, mul=False, power_exp=False, power_base=False, multinomial=False)
+
+def count_ops(expr, visual=False):
+    """
+    Return a representation (integer or expression) of the operations in expr.
+
+    If `visual` is False (default) then the sum of the coefficients of the
+    visual expression will be returned.
+
+    If `visual` is True then the number of each type of operation is shown
+    with the core class types (or their virtual equivalent) multiplied by the
+    number of times they occur.
+
+    If expr is an iterable, the sum of the op counts of the
+    items will be returned.
+
+    Examples:
+        >>> from sympy.abc import a, b, x, y
+        >>> from sympy import sin, count_ops
+
+    Although there isn't a SUB object, minus signs are interpreted as
+    either negations or subtractions:
+        >>> (x - y).count_ops(visual=True)
+        SUB
+        >>> (-x).count_ops(visual=True)
+        NEG
+
+    Here, there are two Adds and a Pow:
+        >>> (1 + a + b**2).count_ops(visual=True)
+        POW + 2*ADD
+
+    In the following, an Add, Mul, Pow and two functions:
+        >>> (sin(x)*x + sin(x)**2).count_ops(visual=True)
+        ADD + MUL + POW + 2*SIN
+
+    for a total of 5:
+        >>> (sin(x)*x + sin(x)**2).count_ops(visual=False)
+        5
+
+    Note that "what you type" is not always what you get. The expression
+    1/x/y is translated by sympy into 1/(x*y) so it gives a DIV and MUL rather
+    than two DIVs:
+        >>> (1/x/y).count_ops(visual=True)
+        DIV + MUL
+
+    The visual option can be used to demonstrate the difference in
+    operations for expressions in different forms. Here, the Horner
+    representation is compared with the expanded form of a polynomial:
+        >>> eq=x*(1 + x*(2 + x*(3 + x)))
+        >>> count_ops(eq.expand(), visual=True) - count_ops(eq, visual=True)
+        -MUL + 3*POW
+
+    The count_ops function also handles iterables:
+        >>> count_ops([x, sin(x), None, True, x + 2], visual=False)
+        2
+        >>> count_ops([x, sin(x), None, True, x + 2], visual=True)
+        ADD + SIN
+        >>> count_ops({x: sin(x), x + 2: y + 1}, visual=True)
+        SIN + 2*ADD
+
+    """
+    from sympy.simplify.simplify import fraction
+
+    expr = sympify(expr)
+    if isinstance(expr, Expr):
+
+        ops = []
+        args = [expr]
+        NEG = C.Symbol('NEG')
+        DIV = C.Symbol('DIV')
+        SUB = C.Symbol('SUB')
+        ADD = C.Symbol('ADD')
+        def isneg(a):
+            c = a.as_coeff_mul()[0]
+            return c.is_Number and c.is_negative
+        while args:
+            a = args.pop()
+            if a.is_Rational:
+                #-1/3 = NEG + DIV
+                if a is not S.One:
+                    if a.p < 0:
+                        ops.append(NEG)
+                    if a.q != 1:
+                        ops.append(DIV)
+                    continue
+            elif a.is_Mul:
+                if isneg(a):
+                    ops.append(NEG)
+                    if a.args[0] is S.NegativeOne:
+                        a = a.as_two_terms()[1]
+                    else:
+                        a = -a
+                n, d = fraction(a)
+                if n.is_Integer:
+                    ops.append(DIV)
+                    if n < 0:
+                        ops.append(NEG)
+                    args.append(d)
+                    continue # won't be -Mul but could be Add
+                elif d is not S.One:
+                    if not d.is_Integer:
+                        args.append(d)
+                    ops.append(DIV)
+                    args.append(n)
+                    continue # could be -Mul
+            elif a.is_Add:
+                aargs = list(a.args)
+                negs = 0
+                for i, ai in enumerate(aargs):
+                    if isneg(ai):
+                        negs += 1
+                        args.append(-ai)
+                        if i > 0:
+                            ops.append(SUB)
+                    else:
+                        args.append(ai)
+                        if i > 0:
+                            ops.append(ADD)
+                if negs == len(aargs): # -x - y = NEG + SUB
+                    ops.append(NEG)
+                elif isneg(aargs[0]): # -x + y = SUB, but we already recorded an ADD
+                    ops.append(SUB - ADD)
+                continue
+            if a.is_Pow and a.exp is S.NegativeOne:
+                ops.append(DIV)
+                args.append(a.base) # won't be -Mul but could be Add
+                continue
+            if (a.is_Mul or
+                a.is_Pow or
+                a.is_Function or
+                isinstance(a, Derivative) or
+                isinstance(a, C.Integral)):
+
+                o = C.Symbol(a.func.__name__.upper())
+                # count the args
+                if (a.is_Mul or
+                    isinstance(a, C.LatticeOp)):
+                   ops.append(o*(len(a.args) - 1))
+                else:
+                    ops.append(o)
+            args.extend(a.args)
+
+    elif type(expr) is dict:
+        ops = [count_ops(k, visual=visual) +
+               count_ops(v, visual=visual) for k, v in expr.iteritems()]
+    elif hasattr(expr, '__iter__'):
+        ops = [count_ops(i, visual=visual) for i in expr]
+    elif not isinstance(expr, Basic):
+        ops = []
+    else: # it's Basic not isinstance(expr, Expr):
+        assert isinstance(expr, Basic)
+        ops = [count_ops(a, visual=visual) for a in expr.args]
+
+    if not ops:
+        if visual:
+            return S.Zero
+        return 0
+
+    ops = Add(*ops)
+
+    if visual:
+        return ops
+
+    if ops.is_Number:
+        return int(ops)
+
+    return sum(int((a.args or [1])[0]) for a in Add.make_args(ops))
 
 from numbers import Rational, Integer
 from sympify import sympify

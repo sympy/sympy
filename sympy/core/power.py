@@ -534,12 +534,6 @@ class Pow(Expr):
             exp = -exp
         return Pow(base, exp).expand()
 
-    @cacheit
-    def count_ops(self, symbolic=True):
-        if symbolic:
-            return Add(*[t.count_ops(symbolic) for t in self.args]) + C.Symbol('POW')
-        return Add(*[t.count_ops(symbolic) for t in self.args]) + 1
-
     def _eval_is_polynomial(self, syms):
         if self.exp.has(*syms):
             return False
