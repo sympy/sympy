@@ -196,6 +196,10 @@ class sign(Function):
     def _eval_is_zero(self):
         return (self.args[0] is S.Zero)
 
+    def _sage_(self):
+        import sage.all as sage
+        return sage.sgn(self.args[0]._sage_())
+
 class abs(Function):
     """Return the absolute value of the argument. This is an extension of the built-in
     function abs to accept symbolic values
