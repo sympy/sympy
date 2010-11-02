@@ -70,6 +70,21 @@ def test_roots_quartic():
 
     assert sorted(lhs, key=hash) == sorted(rhs, key=hash)
 
+    # test of all branches of roots quartic
+    for i, (a, b, c, d) in enumerate([(1, 2, 3, 0),
+                                      (3, -7, -9, 9),
+                                      (1, 2, 3, 4),
+                                      (1, 2, 3, 4),
+                                      (-7, -3, 3, -6),
+                                      (-3, 5, -6, -4)]):
+        if i == 2:
+            c = -a*(a**2/S(8) - b/S(2))
+        elif i == 3:
+            d = a*(a*(3*a**2/S(256) - b/S(16)) + c/S(4))
+        eq = x**4 + a*x**3 + b*x**2 + c*x + d
+        ans = roots_quartic(Poly(eq, x))
+        assert all([eq.subs(x, ai).n(chop=True) == 0 for ai in ans])
+
 def test_roots_binomial():
     assert roots_binomial(Poly(5*x, x)) == [0]
     assert roots_binomial(Poly(5*x**4, x)) == [0, 0, 0, 0]
