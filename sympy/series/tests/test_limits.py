@@ -1,5 +1,5 @@
 from sympy import limit, exp, oo, log, sqrt, Limit, sin, floor, cos, ceiling, \
-        atan, gamma, Symbol, S, pi, Integral, cot
+        atan, gamma, Symbol, S, pi, Integral, cot, Rational, I, zoo
 from sympy.abc import x, y, z
 from sympy.utilities.pytest import XFAIL
 
@@ -17,9 +17,18 @@ def test_basic1():
     assert limit(1/x-exp(-x),x,oo) == 0
     assert limit(x+1/x,x,oo) == oo
     assert limit(x-x**2,x,oo) == -oo
-    assert limit(1 + 1/x, x, 0) == oo
-    assert limit(1 + 1/x, x, 0, dir='-') == -oo
 
+    # approaching 0 from dir='-'
+    # Add
+    assert limit(1 + 1/x, x, 0, dir='-') == -oo
+    # Pow
+    r = Symbol('r', real=True)
+    assert limit(x**(-2), x, 0, dir='-') == oo
+    assert limit(x**(-3), x, 0, dir='-') == -oo
+    assert limit(x**(-Rational(1, 2)), x, 0, dir='-') == (oo)*I
+    assert limit(r**(-Rational(1, 2)), r, 0, dir='-') == oo
+    assert limit(x**2, x, 0, dir='-') == 0
+    assert limit(x**(Rational(1, 2)), x, 0, dir='-') == 0
 
 def test_basic2():
     assert limit(x**x, x, 0, dir="+") == 1
@@ -184,4 +193,4 @@ def test_issue2085():
 @XFAIL
 def test_issue2085_unresolved():
     assert limit(cos(x)/x, x, oo) == 0 # Raises ZeroDivisionError
-    assert limit(gamma(x), x, 1/2) == sqrt(pi) # Raises AssertionError
+    assert limit(gamma(x), x, Rational(1, 2)) == sqrt(pi) # Raises AssertionError

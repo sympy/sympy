@@ -40,14 +40,23 @@ def limit(e, z, z0, dir="+"):
     if e.is_Rational:
         return e
 
-    if e.is_Pow and e.args[0] == z and e.args[1].is_number:
-        if e.args[1] > 0:
-            return z0**e.args[1]
-        if z0 == 0:
-            if dir == "+":
-                return S.Infinity
-            return -S.Infinity
-        return z0**e.args[1]
+    if e.is_Pow:
+        b, ex = e.args
+        if b == z and ex.is_number:
+            if dir == '-' and z0 == 0 and ex < 0:
+                # integer
+                if ex.is_even:
+                    return S.Infinity
+                elif ex.is_odd:
+                    return S.NegativeInfinity
+                # rational
+                elif ex.is_Rational:
+                    if b.is_real:
+                        return S.Infinity
+                    return S.ImaginaryUnit*S.Infinity
+                else:
+                    return S.ComplexInfinity
+            return z0**ex
 
     if e.is_Add:
         if e.is_polynomial() and z0.is_finite:
