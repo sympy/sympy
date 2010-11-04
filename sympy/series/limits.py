@@ -1,5 +1,6 @@
 from sympy.core import S, Add, sympify, Expr, PoleError, Mul, oo
 from gruntz import gruntz
+from sympy.functions import sign
 
 def limit(e, z, z0, dir="+"):
     """
@@ -40,18 +41,35 @@ def limit(e, z, z0, dir="+"):
     if e.is_Rational:
         return e
 
-    if e.is_Pow and e.args[0] == z and e.args[1].is_number:
-        if e.args[1] > 0:
-            return z0**e.args[1]
-        if z0 == 0:
-            if dir == "+":
+    if e.is_Pow:
+        b, ex = e.args
+        c = None # records sign of b if b is +/-z
+        if b.is_Mul:
+            c, b = b.as_two_terms()
+            if c is S.NegativeOne and b == z:
+                c = '-'
+        elif b == z:
+            c = '+'
+        if c and ex.is_number:
+            if z0 == 0 and ex < 0:
+                if dir != c:
+                    # integer
+                    if ex.is_even:
+                        return S.Infinity
+                    elif ex.is_odd:
+                        return S.NegativeInfinity
+                    # rational
+                    elif ex.is_Rational:
+                        return (S.NegativeOne**ex)*S.Infinity
+                    else:
+                        return S.ComplexInfinity
                 return S.Infinity
-            return -S.Infinity
-        return z0**e.args[1]
+            return z0**ex
 
     if e.is_Add:
         if e.is_polynomial() and z0.is_finite:
             return Add(*[limit(term, z, z0, dir) for term in e.args])
+
         # this is a case like limit(x*y+x*z, z, 2) == x*y+2*x
         # but we need to make sure, that the general gruntz() algorithm is
         # executed for a case like "limit(sqrt(x+1)-sqrt(x),x,oo)==0"
@@ -61,6 +79,9 @@ def limit(e, z, z0, dir="+"):
             result = term.subs(z, z0)
             if result.is_unbounded or result is S.NaN:
                 unbounded.append(term)
+                if result != S.NaN:
+                    # take result from direction given
+                    result = limit(term, z, z0, dir)
                 unbounded_result.append(result)
             else:
                 finite.append(result)

@@ -1,7 +1,8 @@
 from sympy import limit, exp, oo, log, sqrt, Limit, sin, floor, cos, ceiling, \
-        atan, gamma, Symbol, S, pi, Integral, cot
+        atan, gamma, Symbol, S, pi, Integral, cot, Rational, I, zoo
 from sympy.abc import x, y, z
 from sympy.utilities.pytest import XFAIL
+from sympy.utilities.iterables import cartes
 
 def test_basic1():
     assert limit(x, x, oo) == oo
@@ -10,24 +11,38 @@ def test_basic1():
     assert limit(x**2, x, -oo) == oo
     assert limit(-x**2, x, oo) == -oo
     assert limit(x*log(x), x, 0, dir="+") == 0
-    assert limit(1/x,x,oo) == 0
-    assert limit(exp(x),x,oo) == oo
-    assert limit(-exp(x),x,oo) == -oo
-    assert limit(exp(x)/x,x,oo) == oo
-    assert limit(1/x-exp(-x),x,oo) == 0
-    assert limit(x+1/x,x,oo) == oo
-    assert limit(x-x**2,x,oo) == -oo
+    assert limit(1/x, x, oo) == 0
+    assert limit(exp(x), x, oo) == oo
+    assert limit(-exp(x), x, oo) == -oo
+    assert limit(exp(x)/x, x, oo) == oo
+    assert limit(1/x - exp(-x), x, oo) == 0
+    assert limit(x+1/x, x, oo) == oo
+    assert limit(x-x**2, x, oo) == -oo
 
+
+    # approaching 0
+    # from dir="+"
+    assert limit(1 + 1/x, x, 0) == oo
+    # from dir='-'
+    # Add
+    assert limit(1 + 1/x, x, 0, dir='-') == -oo
+    # Pow
+    assert limit(x**(-2), x, 0, dir='-') == oo
+    assert limit(x**(-3), x, 0, dir='-') == -oo
+    assert limit(x**(-Rational(1, 2)), x, 0, dir='-') == (-oo)*I
+    assert limit(x**2, x, 0, dir='-') == 0
+    assert limit(x**(Rational(1, 2)), x, 0, dir='-') == 0
+    assert limit(x**-pi, x, 0, dir='-') == zoo
 
 def test_basic2():
     assert limit(x**x, x, 0, dir="+") == 1
     assert limit((exp(x)-1)/x, x, 0) == 1
-    assert limit(1+1/x,x,oo) == 1
-    assert limit(-exp(1/x),x,oo) == -1
-    assert limit(x+exp(-x),x,oo) == oo
-    assert limit(x+exp(-x**2),x,oo) == oo
-    assert limit(x+exp(-exp(x)),x,oo) == oo
-    assert limit(13+1/x-exp(-x),x,oo) == 13
+    assert limit(1 + 1/x, x, oo) == 1
+    assert limit(-exp(1/x), x, oo) == -1
+    assert limit(x + exp(-x), x, oo) == oo
+    assert limit(x + exp(-x**2), x, oo) == oo
+    assert limit(x + exp(-exp(x)), x, oo) == oo
+    assert limit(13 + 1/x - exp(-x), x, oo) == 13
 
 def test_basic3():
     assert limit(1/x, x, 0, dir="+") == oo
@@ -36,11 +51,11 @@ def test_basic3():
 def test_basic4():
     assert limit(2*x + y*x, x, 0) == 0
     assert limit(2*x + y*x, x, 1) == 2+y
-    assert limit(2*x**8 + y*x**(-3), x, -2) == 512-y/8
-    assert limit(sqrt(x+1)-sqrt(x),x,oo)==0
+    assert limit(2*x**8 + y*x**(-3), x, -2) == 512 - y/8
+    assert limit(sqrt(x + 1) - sqrt(x), x, oo)==0
 
 def test_issue786():
-    assert limit(x*y+x*z, z, 2) == x*y+2*x
+    assert limit(x*y + x*z, z, 2) == x*y+2*x
 
 def test_Limit():
     assert Limit(sin(x)/x, x, 0) != 1
@@ -173,6 +188,29 @@ def test_issue2065():
     assert limit(x**0.5, x, 0) == 0
     assert limit(x**(-0.5), x, oo) == 0
     assert limit(x**(-0.5), x, 4) == S(4)**(-0.5)
+
+def test_issue2084():
+    # using list(...) so py.test can recalculate values
+    tests = list(cartes([x, -x],
+                        [-1, 1],
+                        [2, 3, Rational(1, 2), Rational(2, 3)],
+                        ['-', '+']))
+    results = (oo, oo, -oo, oo, -oo*I, oo, -oo*(-1)**Rational(1, 3), oo,
+               0, 0, 0, 0, 0, 0, 0, 0,
+               oo, oo, oo, -oo, oo, -oo*I, oo, -oo*(-1)**Rational(1, 3),
+               0, 0, 0, 0, 0, 0, 0, 0)
+    assert len(tests) == len(results)
+    for i, (args, res) in enumerate(zip(tests, results)):
+        y, s, e, d = args
+        eq=y**(s*e)
+        try:
+            assert limit(eq, x, 0, dir=d) == res
+        except AssertionError:
+            if 0: # change to 1 if you want to see the failing tests
+                print
+                print i, res, eq, d, limit(eq, x, 0, dir=d)
+            else:
+                assert None
 
 def test_issue2085():
     assert limit(sin(x)/x, x, oo) == 0
