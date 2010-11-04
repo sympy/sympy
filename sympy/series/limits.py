@@ -52,6 +52,7 @@ def limit(e, z, z0, dir="+"):
     if e.is_Add:
         if e.is_polynomial() and z0.is_finite:
             return Add(*[limit(term, z, z0, dir) for term in e.args])
+
         # this is a case like limit(x*y+x*z, z, 2) == x*y+2*x
         # but we need to make sure, that the general gruntz() algorithm is
         # executed for a case like "limit(sqrt(x+1)-sqrt(x),x,oo)==0"
@@ -61,6 +62,9 @@ def limit(e, z, z0, dir="+"):
             result = term.subs(z, z0)
             if result.is_unbounded or result is S.NaN:
                 unbounded.append(term)
+                if result != S.NaN:
+                    # take result from direction given
+                    result = limit(term, z, z0, dir)
                 unbounded_result.append(result)
             else:
                 finite.append(result)

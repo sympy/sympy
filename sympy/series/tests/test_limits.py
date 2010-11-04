@@ -17,6 +17,8 @@ def test_basic1():
     assert limit(1/x-exp(-x),x,oo) == 0
     assert limit(x+1/x,x,oo) == oo
     assert limit(x-x**2,x,oo) == -oo
+    assert limit(1 + 1/x, x, 0) == oo
+    assert limit(1 + 1/x, x, 0, dir='-') == -oo
 
 
 def test_basic2():
