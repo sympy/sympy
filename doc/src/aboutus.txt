@@ -102,7 +102,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Jezreel Ng: Fix hyperbolic functions rewrite
 #. Nicholas J.S. Kinar: improved documentation about "Immutability of Expressions"
 #. Thomas Dixon: Fix a limit bug
-#. csousa: Implements _sage_ method for sign function.
+#. Cristóvão Sousa: Implements _sage_ method for sign function.
 
 
 
