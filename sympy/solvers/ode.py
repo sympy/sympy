@@ -216,7 +216,7 @@ from sympy.simplify import collect, logcombine, powsimp, separatevars, \
     simplify, trigsimp
 from sympy.solvers import solve
 
-from sympy.utilities import numbered_symbols, all, any, make_list
+from sympy.utilities import numbered_symbols, all, any
 from sympy.utilities.iterables import minkey
 
 # This is a list of hints in the order that they should be applied.  That means
@@ -1897,7 +1897,7 @@ def _homogeneous_order(eq, *symbols):
         if eq.func is log:
             # The only possibility to pull a t out of a function is a power in
             # a logarithm.  This is very likely due to calling of logcombine().
-            args = make_list(eq.args[0], Mul)
+            args = Mul.make_args(eq.args[0])
             if all(i.is_Pow for i in args):
                 base = 1
                 expos = set()
@@ -2151,12 +2151,10 @@ def _nth_linear_match(eq, func, order):
         True
 
     """
-    from sympy import S
-
     x = func.args[0]
     one_x = set([x])
     terms = dict([(i, S.Zero) for i in range(-1, order+1)])
-    for i in make_list(eq, Add):
+    for i in Add.make_args(eq):
         if not i.has(func):
             terms[-1] += i
         else:
@@ -2449,7 +2447,7 @@ def _solve_undetermined_coefficients(eq, func, order, match):
     # term, in which case it must be a derivative term and so will be inhomogeneous
     eqs = expand_mul(eqs)
 
-    for i in make_list(eqs, Add):
+    for i in Add.make_args(eqs):
         s = separatevars(i, dict=True, symbols=[x])
         coeffsdict[s[x]] += s['coeff']
 

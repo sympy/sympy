@@ -315,7 +315,7 @@ class Pow(Expr):
                 else:
                     radical, result = Pow(base, exp - n), []
 
-                    for term in Pow(base, n)._eval_expand_multinomial(deep=False).as_Add():
+                    for term in Add.make_args(Pow(base, n)._eval_expand_multinomial(deep=False)):
                         result.append(term*radical)
 
                     return Add(*result)

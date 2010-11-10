@@ -2,7 +2,7 @@ from sympy.core.basic import S, C
 from sympy.core.function import Function, Derivative
 from sympy.functions.elementary.miscellaneous import sqrt
 
-from sympy.utilities.iterables import make_list, iff
+from sympy.utilities.iterables import iff
 
 ###############################################################################
 ######################### REAL and IMAGINARY PARTS ############################
@@ -46,7 +46,7 @@ class re(Function):
         else:
 
             included, reverted, excluded = [], [], []
-            arg = make_list(arg, C.Add)
+            arg = C.Add.make_args(arg)
             for term in arg:
                 coeff = term.as_coefficient(S.ImaginaryUnit)
 
@@ -119,7 +119,7 @@ class im(Function):
             return -im(arg.args[0])
         else:
             included, reverted, excluded = [], [], []
-            arg = make_list(arg, C.Add)
+            arg = C.Add.make_args(arg)
             for term in arg:
                 coeff = term.as_coefficient(S.ImaginaryUnit)
 

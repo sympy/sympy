@@ -15,8 +15,6 @@ from sympy.polys import quo, gcd, lcm, \
     monomials, factor, cancel, PolynomialError
 from sympy.polys.polyroots import root_factors
 
-from sympy.utilities.iterables import make_list
-
 def components(f, x):
     """Returns a set of all functional components of the given expression
        which includes symbols, function applications and compositions and
@@ -353,7 +351,7 @@ def heurisch(f, x, **kwargs):
 
         equations = {}
 
-        for term in make_list(numer, Add):
+        for term in Add.make_args(numer):
             coeff, dependent = term.as_independent(*V)
 
             if dependent in equations:

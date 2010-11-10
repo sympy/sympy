@@ -65,7 +65,7 @@ Some more information how the single concepts work and who should use which:
     not defined in the Printer subclass this will be the same as str(expr)
 """
 
-from sympy import Basic, Mul
+from sympy import Basic, Mul, Add
 
 from sympy.polys.polyutils import _analyze_power
 from sympy.polys.monomialtools import monomial_cmp
@@ -249,10 +249,10 @@ class Printer(object):
         """Rewrite an expression as sorted list of terms. """
         gens, terms = set([]), []
 
-        for term in expr.as_Add():
+        for term in Add.make_args(expr):
             coeff, cpart, ncpart = [], {}, []
 
-            for factor in term.as_Mul():
+            for factor in Mul.make_args(term):
                 if not factor.is_commutative:
                     ncpart.append(factor)
                 else:

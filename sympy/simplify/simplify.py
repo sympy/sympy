@@ -7,7 +7,7 @@ from sympy.core import Basic, S, C, Add, Mul, Pow, Rational, Integer, \
 from sympy.core.numbers import igcd
 from sympy.core.relational import Equality
 
-from sympy.utilities import make_list, all, any, flatten
+from sympy.utilities import all, any, flatten
 from sympy.functions import gamma, exp, sqrt, log
 
 from sympy.simplify.cse_main import cse
@@ -68,7 +68,7 @@ def fraction(expr, exact=False):
 
     numer, denom = [], []
 
-    for term in make_list(expr, Mul):
+    for term in Mul.make_args(expr):
         if term.is_Pow:
             if term.exp.is_negative:
                 if term.exp is S.NegativeOne:
@@ -244,7 +244,7 @@ def together(expr, deep=False):
 
                 denom = {}
 
-                for term in make_list(q.expand(), Mul):
+                for term in Mul.make_args(q.expand()) or [S.One]:
                     expo = S.One
                     coeff = S.One
 
@@ -565,7 +565,7 @@ def collect(expr, syms, evaluate=True, exact=False):
         terms is a list of tuples as returned by parse_terms
         pattern is an expression
         """
-        pattern = make_list(pattern, Mul)
+        pattern = Mul.make_args(pattern)
 
         if len(terms) < len(pattern):
             # pattern is longer than  matched product
@@ -637,7 +637,7 @@ def collect(expr, syms, evaluate=True, exact=False):
             b = collect(expr.base, syms, True, exact)
             return C.Pow(b, expr.exp)
 
-    summa = [separate(i) for i in make_list(sympify(expr), Add)]
+    summa = [separate(i) for i in Add.make_args(sympify(expr))]
 
     if isinstance(syms, list):
         syms = [separate(s) for s in syms]
@@ -647,7 +647,7 @@ def collect(expr, syms, evaluate=True, exact=False):
     collected, disliked = {}, S.Zero
 
     for product in summa:
-        terms = [parse_term(i) for i in make_list(product, Mul)]
+        terms = [parse_term(i) for i in Mul.make_args(product)]
 
         for symbol in syms:
             if SYMPY_DEBUG:
