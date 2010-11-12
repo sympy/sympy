@@ -1,6 +1,7 @@
 """Tests for useful utilities for higher level polynomial classes. """
 
-from sympy import S, I, Integer, sqrt, symbols, raises, pi
+from sympy import S, I, Integer, sqrt, symbols, pi
+from sympy.utilities.pytest import raises
 
 from sympy.polys.polyutils import (
     _sort_gens,

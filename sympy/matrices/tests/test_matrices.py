@@ -1,8 +1,9 @@
 from sympy import symbols, Matrix, eye, I, Symbol, Rational, wronskian, cos, \
         sin, exp, hessian, sqrt, zeros, ones, randMatrix, Poly, S, pi, \
-        oo, raises, trigsimp, Integer, block_diag, N
+        oo, trigsimp, Integer, block_diag, N
 from sympy.matrices.matrices import ShapeError, MatrixError, \
         matrix_multiply_elementwise
+from sympy.utilities.pytest import raises
 
 def test_division():
     x, y, z = symbols('x','y','z')

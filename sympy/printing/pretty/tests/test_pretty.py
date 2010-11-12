@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
-from sympy import Matrix, Piecewise, Ne, symbols, sqrt, Function, raises, \
+from sympy import Matrix, Piecewise, Ne, symbols, sqrt, Function, \
     Rational, conjugate, Derivative, tan, Function, log, floor, Symbol, \
     pprint, sqrt, factorial, pi, sin, ceiling, pprint_use_unicode, I, S, \
     Limit, oo, cos, Pow, Integral, exp, Eq, Lt, Gt, Ge, Le, gamma
+from sympy.utilities.pytest import raises
 
 from sympy.printing.pretty import pretty as xpretty
 from sympy.printing.pretty import pprint

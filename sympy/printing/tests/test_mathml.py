@@ -1,6 +1,8 @@
 from sympy import diff, Integral, Limit, sin, Symbol, Integer, Rational, cos, \
     tan, asin, acos, atan, sinh, cosh, tanh, asinh, acosh, atanh, E, I, oo, \
-    pi, GoldenRatio, EulerGamma, raises
+    pi, GoldenRatio, EulerGamma
+from sympy.utilities.pytest import raises
+
 from sympy.printing.mathml import mathml, MathMLPrinter
 from xml.dom.minidom import parseString
 

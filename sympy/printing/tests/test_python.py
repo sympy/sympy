@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 
 from sympy import Symbol, symbols, oo, limit, Rational, Integral, Derivative, \
-    log, exp, sqrt, pi, Function, sin, Eq, Le, Gt, Ne, raises
+    log, exp, sqrt, pi, Function, sin, Eq, Le, Gt, Ne
+from sympy.utilities.pytest import raises
 
 from sympy.printing.python import python
 

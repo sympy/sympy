@@ -1,6 +1,6 @@
 
-from sympy import S, symbols, Integer, Rational, \
-    sqrt, I, solve_poly_system, raises, Poly
+from sympy import S, symbols, Integer, Rational, sqrt, I, solve_poly_system, Poly
+from sympy.utilities.pytest import raises
 
 x, y, z = symbols('xyz')
 

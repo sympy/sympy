@@ -30,7 +30,8 @@ from sympy.polys.polyerrors import (
 )
 
 from sympy.polys.algebratools import ZZ
-from sympy import pi, nextprime, raises
+from sympy import pi, nextprime
+from sympy.utilities.pytest import raises
 
 def test_gf_crt():
     U = [49, 76, 65]

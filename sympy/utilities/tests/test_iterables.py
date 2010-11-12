@@ -1,4 +1,6 @@
-from sympy import symbols, Integral, raises
+from sympy import symbols, Integral
+from sympy.utilities.pytest import raises
+
 from sympy.utilities.iterables import postorder_traversal, \
     preorder_traversal, flatten, subsets, variations, cartes
 from sympy.functions.elementary.piecewise import Piecewise, ExprCondPair

@@ -1,6 +1,7 @@
 from sympy import Symbol, Rational, ln, exp, log, sqrt, E, O, pi, I, sinh, \
         sin, cosh, cos, tanh, coth, asinh, acosh, atanh, acoth, tan, Integer, \
-        PoleError, floor, ceiling, raises, asin, symbols
+        PoleError, floor, ceiling, asin, symbols
+from sympy.utilities.pytest import raises
 from sympy.abc import x, y, z
 
 def test_simple_1():

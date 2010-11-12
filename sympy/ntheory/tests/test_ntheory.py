@@ -1,14 +1,15 @@
 from sympy import Sieve, binomial_coefficients, binomial_coefficients_list, \
-        multinomial_coefficients, raises, Mul, S, Pow
+        multinomial_coefficients, Mul, S, Pow
+from sympy import factorial as fac
+
 from sympy.ntheory import isprime, n_order, is_primitive_root, \
     is_quad_residue, legendre_symbol, npartitions, totient, \
     factorint, primefactors, divisors, randprime, nextprime, prevprime, \
     primerange, primepi, prime, pollard_rho, perfect_power, multiplicity, \
     trailing, divisor_count
 from sympy.ntheory.bbp_pi import pi_hex_digits
-from sympy import factorial as fac
-
 from sympy.ntheory.modular import crt, crt1, crt2
+from sympy.utilities.pytest import raises
 
 def test_trailing():
     assert trailing(0) == 0

@@ -1,7 +1,8 @@
 from sympy import (
     Symbol, Set, Union, Interval, oo, S,
-    Inequality, max_, min_, raises, And, Or
+    Inequality, max_, min_, And, Or
 )
+from sympy.utilities.pytest import raises
 from sympy.mpmath import mpi
 
 def test_interval_arguments():

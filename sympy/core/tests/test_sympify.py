@@ -1,8 +1,9 @@
 from sympy import Symbol, exp, Integer, Real, sin, cos, log, Poly, Lambda, \
-        Function, I, S, sqrt,  raises, srepr, Rational
+        Function, I, S, sqrt, srepr, Rational
 from sympy.abc import x, y
 from sympy.core.sympify import sympify, _sympify, SympifyError
 from sympy.core.decorators import _sympifyit
+from sympy.utilities.pytest import raises
 
 def test_439():
     v = sympify("exp(x)")

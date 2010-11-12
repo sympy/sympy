@@ -1,6 +1,7 @@
 from sympy.solvers.pde import pde_separate_add, pde_separate_mul, _separate
-from sympy import Eq, exp, Function, raises, Symbol, symbols
+from sympy import Eq, exp, Function, Symbol, symbols
 from sympy import Derivative as D
+from sympy.utilities.pytest import raises
 
 def test_pde_separate_add():
     x, y, z, t = symbols("xyzt")

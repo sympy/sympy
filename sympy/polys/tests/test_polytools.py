@@ -45,7 +45,8 @@ from sympy.polys.polyclasses import GFP, DMP, DMF
 
 from sympy.polys.algebratools import ZZ, QQ, RR, EX
 
-from sympy import S, Integer, Rational, Mul, symbols, sqrt, exp, sin, expand, raises, oo, I
+from sympy import S, Integer, Rational, Mul, symbols, sqrt, exp, sin, expand, oo, I
+from sympy.utilities.pytest import raises
 
 x,y,z,p,q,r,s,t,u,v,w,a,b,c,d,e = symbols('x,y,z,p,q,r,s,t,u,v,w,a,b,c,d,e')
 

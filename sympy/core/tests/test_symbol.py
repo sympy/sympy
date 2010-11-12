@@ -1,6 +1,6 @@
 from sympy import Symbol, Wild, Inequality, StrictInequality, pi, I, Rational, \
-        sympify, raises, symbols
-
+        sympify, symbols
+from sympy.utilities.pytest import raises
 
 def test_Symbol():
     a = Symbol("a")

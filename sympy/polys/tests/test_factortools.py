@@ -45,7 +45,8 @@ from sympy.polys.polyclasses import DMP, DMF, ANP
 
 from sympy.polys.algebratools import ZZ, QQ, RR, EX
 
-from sympy import raises, nextprime, sin, sqrt, I
+from sympy import nextprime, sin, sqrt, I
+from sympy.utilities.pytest import raises
 
 def test_dup_trial_division():
     assert dup_trial_division([1,8,25,38,28,8],

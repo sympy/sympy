@@ -2,13 +2,13 @@ from sympy import abs, Catalan, cos, Derivative, E, EulerGamma, exp, factorial,\
                   Function, GoldenRatio, I, Integer, Integral, Interval, Lambda,\
                   Limit, log, Matrix, nan, O, oo, pi, Rational, Real, Rel, S,\
                   sin, SMatrix, sqrt, sum, Sum, Sum2, Symbol, symbols, Wild,\
-                  WildFunction, zeta, zoo, raises
+                  WildFunction, zeta, zoo
 from sympy.core import Expr
 from sympy.physics.units import second
 from sympy.polys import Poly, RootsOf, RootOf, RootSum
 from sympy.statistics.distributions import Normal, Sample, Uniform
 from sympy.geometry import Point, Circle
-from sympy.utilities.pytest import XFAIL
+from sympy.utilities.pytest import XFAIL, raises
 
 from sympy.printing import sstr, sstrrepr, StrPrinter
 

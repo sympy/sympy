@@ -1,6 +1,7 @@
 """Tests for functions for generating interesting polynomials. """
 
-from sympy import Poly, ZZ, raises
+from sympy import Poly, ZZ
+from sympy.utilities.pytest import raises
 
 from sympy.polys.specialpolys import (
     swinnerton_dyer_poly,

@@ -34,7 +34,9 @@ parser.set_usage("test [options ...] [tests ...]")
 parser.epilog = '"options" are any of the options above.  "tests" are 0 or more glob strings of tests to run.  If no test arguments are given, all tests will be run.'
 options, args = parser.parse_args()
 
-ok = sympy.test(*args, **{"verbose": options.verbose, "kw": options.kw,
+from sympy.utilities.runtests import test
+
+ok = test(*args, **{"verbose": options.verbose, "kw": options.kw,
     "tb": options.tb, "pdb": options.pdb, "colors": options.colors,
     "sort": options.sort})
 if ok:

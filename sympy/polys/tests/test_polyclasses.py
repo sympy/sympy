@@ -16,7 +16,7 @@ from sympy.polys.polyerrors import (
     ExactQuotientFailed,
 )
 
-from sympy import raises
+from sympy.utilities.pytest import raises
 
 def test_DUP___init__():
     f = DUP([0,0,1,2,3], ZZ)

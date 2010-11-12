@@ -1,7 +1,6 @@
 from sympy import diff, Integral, integrate, log, oo, Piecewise, \
-    piecewise_fold, raises, symbols, pi, solve, Rational, Interval, \
-    lambdify, expand
-from sympy.utilities.pytest import XFAIL
+    piecewise_fold, symbols, pi, solve, Rational, Interval, lambdify, expand
+from sympy.utilities.pytest import XFAIL, raises
 
 x,y = symbols('xy')
 

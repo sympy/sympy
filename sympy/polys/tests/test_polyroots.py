@@ -1,6 +1,7 @@
 
 from sympy import S, symbols, Symbol, Integer, Rational, \
-    sqrt, I, raises, powsimp, Lambda
+    sqrt, I, powsimp, Lambda
+from sympy.utilities.pytest import raises
 
 from sympy.polys import Poly
 

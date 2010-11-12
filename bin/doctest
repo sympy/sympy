@@ -16,7 +16,7 @@ from optparse import OptionParser
 
 from get_sympy import path_hack
 path_hack()
-import sympy
+from sympy.utilities.runtests import doctest
 
 parser = OptionParser()
 parser.add_option("-v", "--verbose", action="store_true", dest="verbose",
@@ -34,7 +34,7 @@ parser.epilog = '"options" are any of the options above.  "files" are 0 or more 
 
 options, args = parser.parse_args()
 
-ok = sympy.doctest(*args, **{"verbose": options.verbose,
+ok = doctest(*args, **{"verbose": options.verbose,
     "blacklist": blacklist, "normal": options.normal})
 if ok:
     sys.exit(0)
