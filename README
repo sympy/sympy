@@ -3,7 +3,7 @@ SymPy
 
 A Python library for symbolic mathematics.
 
-http://code.google.com/p/sympy/
+http://sympy.org/
 
 See the AUTHORS file for the list of authors.
 
@@ -17,7 +17,7 @@ covers all files in the sympy repository unless stated otherwise.
 0. Download
 -----------
 
-$ git clone git://git.sympy.org/sympy.git
+$ git clone git://github.com/sympy/sympy.git
 
 For other options (tarballs, debs, etc.), see the web page of SymPy.
 
