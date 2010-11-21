@@ -103,6 +103,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Nicholas J.S. Kinar: improved documentation about "Immutability of Expressions"
 #. Thomas Dixon: Fix a limit bug
 #. Cristóvão Sousa: Implements _sage_ method for sign function.
+#. Andre de Fortier Smit: Doctests in matrices improved
 
 
 
