@@ -531,7 +531,7 @@ class Matrix(object):
     def row(self, i, f):
         """
         Elementary row operation using functor
-        
+
         >>> from sympy import ones
         >>> I = ones(3)
         >>> I.row(1,lambda i,j: i*3)
@@ -539,7 +539,7 @@ class Matrix(object):
         [1, 1, 1]
         [3, 3, 3]
         [1, 1, 1]
-        
+
         """
         for j in range(0, self.cols):
             self[i, j] = f(self[i, j], j)
@@ -547,7 +547,7 @@ class Matrix(object):
     def col(self, j, f):
         """
         Elementary column operation using functor
-        
+
         >>> from sympy import ones
         >>> I = ones(3)
         >>> I.col(0,lambda i,j: i*3)
@@ -555,7 +555,7 @@ class Matrix(object):
         [3, 1, 1]
         [3, 1, 1]
         [3, 1, 1]
-        
+
         """
         for i in range(0, self.rows):
             self[i, j] = f(self[i, j], i)
