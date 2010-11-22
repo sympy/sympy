@@ -1,6 +1,6 @@
 from sympy import diff, Integral, Limit, sin, Symbol, Integer, Rational, cos, \
     tan, asin, acos, atan, sinh, cosh, tanh, asinh, acosh, atanh, E, I, oo, \
-    pi, GoldenRatio, EulerGamma, raises
+    pi, GoldenRatio, EulerGamma, raises, Sum
 from sympy.printing.mathml import mathml, MathMLPrinter
 from xml.dom.minidom import parseString
 
@@ -68,6 +68,15 @@ def test_mathml_integrals():
     assert mml_1.childNodes[2].nodeName == 'lowlimit'
     assert mml_1.childNodes[3].nodeName == 'uplimit'
     assert mml_1.childNodes[4].toxml() == mp._print(integrand).toxml()
+
+def test_mathml_sums():
+    summand = x
+    mml_1 = mp._print(Sum(summand, (x, 1, 10)))
+    assert mml_1.childNodes[0].nodeName == 'sum'
+    assert mml_1.childNodes[1].nodeName == 'bvar'
+    assert mml_1.childNodes[2].nodeName == 'lowlimit'
+    assert mml_1.childNodes[3].nodeName == 'uplimit'
+    assert mml_1.childNodes[4].toxml() == mp._print(summand).toxml()
 
 def test_mathml_tuples():
     mml_1 = mp._print([2])

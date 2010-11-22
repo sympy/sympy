@@ -157,8 +157,8 @@ class PrettyPrinter(Printer):
 
         # dx dy dz ...
         arg = prettyF
-        for x,ab in integral.limits:
-            prettyArg = self._print(x)
+        for x in integral.limits:
+            prettyArg = self._print(x[0])
             # XXX qparens   (parens if needs-parens)
             if prettyArg.width() > 1:
                 prettyArg = prettyForm(*prettyArg.parens())
@@ -169,7 +169,8 @@ class PrettyPrinter(Printer):
         # \int \int \int ...
         firstterm = True
         s = None
-        for x,ab in integral.limits:
+        for lim in integral.limits:
+            x = lim[0]
             # Create bar based on the height of the argument
             h = arg.height()
             H = h+2
@@ -187,17 +188,15 @@ class PrettyPrinter(Printer):
             pform.baseline = arg.baseline + (H-h)//2    # covering the whole argument
 
 
-            if ab is not None:
+            if len(lim) > 1:
                 # Create pretty forms for endpoints, if definite integral.
                 # Do not print empty endpoints.
-                if ab[0] is None:
+                if len(lim) == 2:
                     prettyA = prettyForm("")
-                else:
-                    prettyA = self._print(ab[0])
-                if ab[1] is None:
-                    prettyB = prettyForm("")
-                else:
-                    prettyB = self._print(ab[1])
+                    prettyB = self._print(lim[1])
+                if len(lim) == 3:
+                    prettyA = self._print(lim[1])
+                    prettyB = self._print(lim[2])
 
                 if ascii_mode:  # XXX hack
                     # Add spacing so that endpoint can more easily be
