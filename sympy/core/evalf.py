@@ -672,7 +672,7 @@ def as_mpmath(x, prec, options):
 
 def do_integral(expr, prec, options):
     func = expr.args[0]
-    x, (xlow, xhigh) = expr.args[1][0]
+    x, xlow, xhigh = expr.args[1]
     orig = mp.prec
 
     oldmaxprec = options.get('maxprec', DEFAULT_MAXPREC)

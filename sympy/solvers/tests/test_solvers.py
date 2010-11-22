@@ -19,10 +19,10 @@ def test_swap_back():
     # test should be removed. For now, since there are ode's that come back
     # with these sorts of solutions, the swap_back feature is performed in
     # solve and tested here.
+    # This appears to be fixed - the equation is not solved.
     x = Symbol('x')
     f = Function('f', dummy = True)
-    assert solve(Eq(log(f(x)), Integral(x, (x, 1, f(x)))), f(x)) == \
-    [exp(Integral(x, (x, 1, f(x))))]
+    raises(NotImplementedError, "solve(Eq(log(f(x)), Integral(x, (x, 1, f(x)))), f(x))")
 
 def test_guess_poly():
     """
