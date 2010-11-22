@@ -1,4 +1,4 @@
-from sympy import Integer
+from sympy import Integer, S
 from sympy.core.operations import LatticeOp
 from sympy.utilities.pytest import raises
 from sympy.core.sympify import SympifyError
@@ -26,3 +26,8 @@ def test_lattice_shortcircuit():
 
 def test_lattice_print():
     assert str(join(5, 4, 3, 2)) == 'join(2, 3, 4, 5)'
+
+def test_lattice_make_args():
+    assert join.make_args(0) == set([0])
+    assert join.make_args(1) == set()
+    assert join.make_args(join(2, 3, 4)) == set([S(2), S(3), S(4)])

@@ -180,19 +180,19 @@ def test_eliminate_implications():
 
 def test_conjuncts():
     A, B, C = map(Boolean, symbols('ABC'))
-    assert set(conjuncts(A & B & C)) == set([A, B, C])
-    assert set(conjuncts((A | B) & C)) == set([A | B, C])
-    assert conjuncts(A) == [A]
-    assert conjuncts(True) == [True]
-    assert conjuncts(False) == [False]
+    assert conjuncts(A & B & C) == set([A, B, C])
+    assert conjuncts((A | B) & C) == set([A | B, C])
+    assert conjuncts(A) == set([A])
+    assert conjuncts(True) == set()
+    assert conjuncts(False) == set([False])
 
 def test_disjuncts():
     A, B, C = map(Boolean, symbols('ABC'))
-    assert set(disjuncts(A | B | C)) == set([A, B, C])
-    assert disjuncts((A | B) & C) == [(A | B) & C]
-    assert disjuncts(A) == [A]
-    assert disjuncts(True) == [True]
-    assert disjuncts(False) == [False]
+    assert disjuncts(A | B | C) == set([A, B, C])
+    assert disjuncts((A | B) & C) == set([(A | B) & C])
+    assert disjuncts(A) == set([A])
+    assert disjuncts(True) == set([True])
+    assert disjuncts(False) == set([])
 
 def test_distribute():
     A, B, C = map(Boolean, symbols('ABC'))

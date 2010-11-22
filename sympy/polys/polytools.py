@@ -2478,10 +2478,10 @@ def poly(expr, **args):
 
     terms, poly_terms = [], []
 
-    for term in expr.as_Add():
+    for term in Add.make_args(expr):
         factors, poly_factors = [], []
 
-        for factor in term.as_Mul():
+        for factor in Mul.make_args(term):
             if factor.is_Add:
                 poly_factors.append(poly(factor))
             elif factor.is_Pow and factor.base.is_Add and factor.exp.is_Integer:

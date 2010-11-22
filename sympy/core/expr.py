@@ -608,7 +608,6 @@ class Expr(Basic, EvalfMixin):
            True
 
         """
-        from sympy.utilities.iterables import make_list
         negative_self = -self
         self_has_minus = (self.extract_multiplicatively(-1) != None)
         negative_self_has_minus = ((negative_self).extract_multiplicatively(-1) != None)
@@ -627,7 +626,7 @@ class Expr(Basic, EvalfMixin):
             elif self.is_Mul:
                 # We choose the one with an odd number of minus signs
                 num, den = self.as_numer_denom()
-                args = (make_list(num, Mul)) + (make_list(den, Mul))
+                args = Mul.make_args(num) + Mul.make_args(den)
                 arg_signs = [arg.could_extract_minus_sign() for arg in args]
                 negative_args = filter(None, arg_signs)
                 return len(negative_args) % 2 == 1
@@ -820,14 +819,6 @@ class Expr(Basic, EvalfMixin):
         if not c.has(x):
             return c,e
         raise ValueError("cannot compute leadterm(%s, %s), got c=%s" % (self, x, c))
-
-    def as_Add(self):
-        """Returns `self` as it was `Add` instance. """
-        return [self]
-
-    def as_Mul(self):
-        """Returns `self` as it was `Mul` instance. """
-        return [self]
 
     def as_Pow(self):
         """Returns `self` as it was `Pow` instance. """

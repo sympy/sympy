@@ -20,6 +20,9 @@ class Mul(AssocOp):
 
     is_Mul = True
 
+    #identity = S.One
+    # cyclic import, so defined in numbers.py
+
     @classmethod
     def flatten(cls, seq):
 
@@ -422,8 +425,6 @@ class Mul(AssocOp):
 
         sums must be a list of instances of Basic.
         """
-        from sympy.utilities.iterables import make_list
-
         L = len(sums)
         if L == 1:
             return sums[0].args
@@ -433,7 +434,7 @@ class Mul(AssocOp):
 
         terms = [Mul(a, b) for a in left for b in right]
         added = Add(*terms)
-        return make_list(added, Add) #it may have collapsed down to one term
+        return Add.make_args(added) #it may have collapsed down to one term
 
     def _eval_expand_basic(self, deep=True, **hints):
         sargs, terms = self.args, []
@@ -957,10 +958,6 @@ class Mul(AssocOp):
         for x in self.args:
             s *= x._sage_()
         return s
-
-    def as_Mul(self):
-        """Returns `self` as it was `Mul` instance. """
-        return list(self.args)
 
 from power import Pow
 from numbers import Real, Integer, Rational
