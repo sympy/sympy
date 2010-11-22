@@ -374,16 +374,20 @@ class LatexPrinter(Printer):
     def _print_Integral(self, expr):
         tex, symbols = "", []
 
-        for symbol, limits in reversed(expr.limits):
+        for lim in reversed(expr.limits):
+            symbol = lim[0]
             tex += r"\int"
 
-            if limits is not None:
+            if len(lim) > 1:
                 if self._settings['mode'] in ['equation','equation*'] \
                    and not self._settings['itex']:
                     tex += r"\limits"
 
-                tex += "_{%s}^{%s}" % (self._print(limits[0]),
-                                       self._print(limits[1]))
+                if len(lim) == 3:
+                    tex += "_{%s}^{%s}" % (self._print(lim[1]),
+                                           self._print(lim[2]))
+                if len(lim) == 2:
+                    tex += "^{%s}" % (self._print(lim[1]))
 
             symbols.insert(0, "d%s" % self._print(symbol))
 

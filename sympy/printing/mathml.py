@@ -41,6 +41,7 @@ class MathMLPrinter(Printer):
             'Pow': 'power',
             'Symbol': 'ci',
             'Integral': 'int',
+            'Sum': 'sum',
             'sin': 'sin',
             'cos': 'cos',
             'tan': 'tan',
@@ -203,12 +204,16 @@ class MathMLPrinter(Printer):
             bvar_elem.appendChild(self._print(limits[0][0]))
             x.appendChild(bvar_elem)
 
-            if limits[0][1]:
+            if len(limits[0]) == 3:
                 low_elem = self.dom.createElement('lowlimit')
-                low_elem.appendChild(self._print(limits[0][1][0]))
+                low_elem.appendChild(self._print(limits[0][1]))
                 x.appendChild(low_elem)
                 up_elem = self.dom.createElement('uplimit')
-                up_elem.appendChild(self._print(limits[0][1][1]))
+                up_elem.appendChild(self._print(limits[0][2]))
+                x.appendChild(up_elem)
+            if len(limits[0]) == 2:
+                up_elem = self.dom.createElement('uplimit')
+                up_elem.appendChild(self._print(limits[0][1]))
                 x.appendChild(up_elem)
             if len(limits) == 1:
                 x.appendChild(self._print(e.function))
@@ -219,6 +224,9 @@ class MathMLPrinter(Printer):
         limits = list(e.limits)
         limits.reverse()
         return lime_recur(limits)
+
+    def _print_Sum(self, e):
+        return self._print_Integral(e)
 
     def _print_Symbol(self, sym):
         ci = self.dom.createElement(self.mathml_tag(sym))

@@ -33,7 +33,7 @@ class Integral(Expr):
 
             for V in symbols:
                 if isinstance(V, Symbol):
-                    limits.append(Tuple(V,None))
+                    limits.append(Tuple(V))
                     continue
                 elif isinstance(V, (tuple, list, Tuple)):
                     V = flatten(V)
@@ -41,38 +41,51 @@ class Integral(Expr):
                     if len(V) == 3:
                         if isinstance(newsymbol, Symbol):
                             nlim = map(sympify, V[1:])
-                            if V[1] is None:
-                                nlim[0] = None
-                            if V[2] is None:
-                                nlim[1] = None
-                            limits.append( Tuple(newsymbol, Tuple(*nlim) ))
+                            if V[1] is None and V[2] is not None:
+                                nlim = [V[2]]
+                            if V[2] is None and V[1] is not None:
+                                function = -function
+                                nlim = [V[1]]
+                            if V[1] is None and V[2] is None:
+                                nlim = []
+                            limits.append( Tuple(newsymbol, *nlim ))
                             continue
                     elif len(V) == 1 or (len(V) == 2 and V[1] is None):
                         if isinstance(newsymbol, Symbol):
-                            limits.append(Tuple(newsymbol,None))
+                            limits.append(Tuple(newsymbol))
                             continue
+                    elif len(V) == 2:
+                        if isinstance(newsymbol, Symbol):
+                            limits.append(Tuple(newsymbol,V[1]))
+                            continue
+
 
                 raise ValueError("Invalid integration variable or limits: %s" % str(symbols))
         else:
             # no symbols provided -- let's compute full anti-derivative
-            limits = [Tuple(symb,None) for symb in function.atoms(Symbol)]
+            limits = [Tuple(symb) for symb in function.atoms(Symbol)]
 
             if not limits:
                 return function
 
         obj = Expr.__new__(cls, **assumptions)
-        obj._args = (function, Tuple(*limits))
+        arglist = [function]
+        arglist.extend(limits)
+        obj._args = tuple(arglist)
 
         return obj
 
     def __getnewargs__(self):
-        function, limits = self.args
+        function = self.args[0]
+        limits = self.args[1:]
         newlimits = []
-        for i in limits:
-            if i[1] == None:
-                newlimits.append((i[0]))
+        for lim in limits:
+            if len(lim) == 1:
+                newlimits.append((lim[0]))
+            elif len(lim) == 2:
+                newlimits.append((lim[0], lim[1]))
             else:
-                newlimits.append((i[0], i[1][0], i[1][1]))
+                newlimits.append((lim[0], lim[1], lim[2]))
         return (function,) + tuple(newlimits)
 
     @property
@@ -81,14 +94,14 @@ class Integral(Expr):
 
     @property
     def limits(self):
-        return self._args[1]
+        return self._args[1:]
 
     @property
     def variables(self):
         variables = []
 
-        for x,ab in self.limits:
-            variables.append(x)
+        for xab in self.limits:
+            variables.append(xab[0])
 
         return variables
 
@@ -121,9 +134,10 @@ class Integral(Expr):
             mapping, inverse_mapping = inverse_mapping, mapping
         function = function.subs(x, mapping) * mapping.diff(x)
         newlimits = []
-        for sym, limit in limits:
-            if sym == x and limit and len(limit) == 2:
-                a, b = limit
+        for lim in limits:
+            sym = lim[0]
+            if sym == x and len(lim) == 3:
+                a, b = lim[1:3]
                 a = inverse_mapping.subs(x, a)
                 b = inverse_mapping.subs(x, b)
                 if a == b:
@@ -137,6 +151,7 @@ class Integral(Expr):
                 newlimits.append((sym, limit))
         return Integral(function, *newlimits)
 
+
     def doit(self, **hints):
         if not hints.get('integrals', True):
             return self
@@ -147,17 +162,23 @@ class Integral(Expr):
         if deep:
             function = function.doit(**hints)
 
-        for x,ab in self.limits:
+        for lim in self.limits:
+            x = lim[0]
             antideriv = self._eval_integral(function, x)
 
             if antideriv is None:
                 newargs = (function, self.__getnewargs__()[1])
                 return self.new(*newargs)
             else:
-                if ab is None:
+                if len(lim) == 1:
                     function = antideriv
                 else:
-                    a, b = ab
+                    if len(lim) == 3:
+                        a = lim[1]
+                        b = lim[2]
+                    if len(lim) == 2:
+                        a = None
+                        b = lim[1]
 
                     if deep:
                         if isinstance(a, Basic):
@@ -206,13 +227,13 @@ class Integral(Expr):
         if not sym in self.atoms(Symbol):
             return S.Zero
 
-        if Tuple(sym, None) in self.limits:
+        if Tuple(sym) in self.limits:
             #case undefinite integral
             if len(self.limits) == 1:
                 return self.function
             else:
                 _limits = list(self.limits)
-                _limits.pop( _limits.index(Tuple(sym, None)) )
+                _limits.pop( _limits.index(Tuple(sym)) )
                 return Integral(self.function, *tuple(_limits))
 
         #diff under the integral sign
@@ -221,7 +242,7 @@ class Integral(Expr):
             # TODO:implement the multidimensional case
             raise NotImplementedError
         int_var = self.limits[0][0]
-        lower_limit, upper_limit = self.limits[0][1]
+        lower_limit, upper_limit = self.limits[0][1],self.limits[0][2]
         if sym == int_var:
             sym = Symbol(str(int_var), dummy=True)
         return self.function.subs(int_var, upper_limit)*diff(upper_limit, sym) - \
@@ -369,20 +390,20 @@ class Integral(Expr):
 
     def _eval_lseries(self, x, x0):
         arg = self.args[0]
-        dx, bounds = self.args[1][0]
+        dx = self.args[1][0]
         for term in arg.lseries(dx, x0):
-            if bounds:
-                a, b = bounds
+            if len(self.args[1]) == 3:
+                a, b = self.args[1][1:3]
                 yield integrate(term, (dx, a, b))
             else:
                 yield integrate(term, x)
 
     def _eval_nseries(self, x, x0, n):
         arg = self.args[0]
-        x, bounds = self.args[1][0]
+        x = self.args[1][0]
         arg = arg.nseries(x, x0, n)
-        if bounds:
-            a, b = bounds
+        if len(self.args[1]) == 3:
+            a, b = self.args[1][1:3]
             return integrate(arg.removeO(), (x, a, b)) + arg.getO()*x
         else:
             return integrate(arg.removeO(), x) + arg.getO()*x
@@ -390,21 +411,18 @@ class Integral(Expr):
     def _eval_subs(self, old, new):
         arg0 = self.args[0].subs(old, new)
         arg1 = []
-        for sym, limits in self.args[1]:
+        for lim in self.args[1:]:
+            sym = lim[0]
             if sym == old:
                 return self
-            if limits is not None:
-                if limits[0] is None:
-                    b = limits[1]
-                    arg1.append((sym, None, b.subs(old, new)))
-                elif limits[1] is None:
-                    a = limits[0]
-                    arg1.append((sym, a.subs(old, new), None))
-                else:
-                    a, b, = limits
-                    arg1.append((sym, a.subs(old, new), b.subs(old, new)))
+            if len(lim) == 1:
+                arg1.append((sym,))
+            elif len(lim) == 2:
+                b = lim[1]
+                arg1.append((sym, None, b.subs(old, new)))
             else:
-                arg1.append((sym, limits))
+                a, b, = lim[1:3]
+                arg1.append((sym, a.subs(old, new), b.subs(old, new)))
         return Integral(arg0, *arg1)
 
     def as_sum(self, n, method="midpoint"):
@@ -464,22 +482,22 @@ class Integral(Expr):
 
         """
 
-        if len(self.args[1]) > 1:
+        if len(self.args[1:]) > 1:
             raise NotImplementedError("Multidimensional midpoint rule not implemented yet")
         if n <= 0:
             raise ValueError("n must be > 0")
         if n == oo:
             raise NotImplementedError("Infinite summation not yet implemented")
-        sym, limits = self.args[1][0]
-        dx = (limits[1]-limits[0])/n
+        sym, lower_limit,upper_limit = self.args[1]
+        dx = (upper_limit-lower_limit)/n
         result = 0.
         for i in range(n):
             if method == "midpoint":
-                xi = limits[0] + i*dx + dx/2
+                xi = lower_limit + i*dx + dx/2
             elif method == "left":
-                xi = limits[0] + i*dx
+                xi = lower_limit + i*dx
             elif method == "right":
-                xi = limits[0] + i*dx + dx
+                xi = lower_limit + i*dx + dx
             else:
                 raise NotImplementedError("Unknown method %s" % method)
             result += self.args[0].subs(sym, xi)
