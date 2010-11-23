@@ -111,8 +111,8 @@ An example where line wrapping is required:
 
     >>> expr = sqrt(1-x**2).series(x,n=20).removeO()
     >>> print fcode(expr)
-          1 - x**2/2 - x**4/8 - x**6/16 - 5*x**8/128 - 7*x**10/256 - 21*x
-         @ **12/1024 - 33*x**14/2048 - 429*x**16/32768 - 715*x**18/65536
+          1 - x**2/2 - x**4/8 - x**6/16 - 5*x**8/128 - 7*x**10/256 - 21*x**
+         @ 12/1024 - 33*x**14/2048 - 429*x**16/32768 - 715*x**18/65536
 
 In case of line wrapping, it is handy to include the assignment so that lines
 are wrapped properly when the assignment part is added.
@@ -121,7 +121,7 @@ are wrapped properly when the assignment part is added.
           var = 1 - x**2/2 - x**4/8 - x**6/16 - 5*x**8/128 - 7*x**10/256 -
          @ 21*x**12/1024 - 33*x**14/2048 - 429*x**16/32768 - 715*x**18/65536
 
-Also for piecewise functions, the assign_to option can be helpful:
+For piecewise functions, the assign_to option is mandatory:
 
     >>> print fcode(Piecewise((x,x<1),(x**2,True)), assign_to="var")
           if (x < 1) then
@@ -135,21 +135,42 @@ a conditional operator in Fortran. Nested piecewise functions would require the
 introduction of temporary variables, which is a type of expression manipulation
 that goes beyond the scope of fcode.
 
+Loops are generated if there are Indexed objects in the expression.  This
+also requires use of the assign_to option.
+
+    >>> A, B = map(IndexedBase, ['A', 'B'])
+    >>> m = Symbol('m', integer=True)
+    >>> i = Idx('i', m)
+    >>> print fcode(2*B[i], assign_to=A[i])
+        do i = 1, m
+            A(i) = 2*B(i)
+        end do
+
+Repeated indices in an expression with Indexed objects are interpreted as
+summation. For instance, code for the trace of a matrix can be generated
+with
+
+    >>> print fcode(A[i, i], assign_to=x)
+          x = 0
+          do i = 1, m
+              x = x + A(i, i)
+          end do
+
 By default, number symbols such as ``pi`` and ``E`` are detected and defined as
 Fortran parameters. The precision of the constants can be tuned with the
 precision argument. Parameter definitions are easily avoided using the ``N``
 function.
 
     >>> print fcode(x - pi**2 - E)
-          parameter (E = 2.71828182845905)
-          parameter (pi = 3.14159265358979)
+          parameter (E = 2.71828182845905d0)
+          parameter (pi = 3.14159265358979d0)
           x - E - pi**2
     >>> print fcode(x - pi**2 - E, precision=25)
-          parameter (E = 2.718281828459045235360287)
-          parameter (pi = 3.141592653589793238462643)
+          parameter (E = 2.718281828459045235360287d0)
+          parameter (pi = 3.141592653589793238462643d0)
           x - E - pi**2
     >>> print fcode(N(x - pi**2, 25))
-          -9.869604401089358618834491 + x
+          -9.869604401089358618834491d0 + x
 
 When some functions are not part of the Fortran standard, it might be desirable
 to introduce the names of user-defined functions in the Fortran expression.
@@ -168,16 +189,16 @@ use a reasonable default and adds a comment to inform the user of the issue.
 By default the output is human readable code, ready for copy and paste. With the
 option ``human=False``, the return value is suitable for post-processing with
 source code generators that write routines with multiple instructions. The
-return value is a three-tuple containing: (i) the list of number symbols that
-must be defined as 'Fortran parameters', (ii) a list functions that can not be
+return value is a three-tuple containing: (i) a set of number symbols that must
+be defined as 'Fortran parameters', (ii) a list functions that can not be
 translated in pure Fortran and (iii) a string of Fortran code. A few examples:
 
     >>> fcode(1 - gamma(x)**2, human=False)
-    ([], set([gamma(x)]), '      1 - gamma(x)**2')
+    (set(), set([gamma(x)]), '      1 - gamma(x)**2')
     >>> fcode(1 - sin(x)**2, human=False)
-    ([], set(), '      1 - sin(x)**2')
+    (set(), set(), '      1 - sin(x)**2')
     >>> fcode(x - pi**2, human=False)
-    ([('pi', 3.14159265358979)], set(), '      x - pi**2')
+    (set([(pi, '3.14159265358979d0')]), set(), '      x - pi**2')
 
 
 Preview

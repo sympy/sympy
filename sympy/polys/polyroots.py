@@ -23,18 +23,18 @@ def roots_quadratic(f):
     if c is S.Zero:
         return [c, -b/a]
 
-    d = ((b**2).expand() - 4*a*c)**S.Half
+    d = sqrt((b**2).expand() - 4*a*c)
 
     roots = [
-        (-b + d) / (2*a),
-        (-b - d) / (2*a),
+        (-b + d)/(2*a),
+        (-b - d)/(2*a),
     ]
 
     return roots
 
 def roots_cubic(f):
     """Returns a list of roots of a cubic polynomial."""
-    one, a, b, c = f.monic().all_coeffs()
+    _, a, b, c = f.monic().all_coeffs()
 
     if c is S.Zero:
         x1, x2 = roots([1,a,b], multiple = True)
@@ -48,16 +48,16 @@ def roots_cubic(f):
 
     if p is S.Zero:
         if q is S.Zero:
-            return [-aon3] * 3
+            return [-aon3]*3
         else:
             u1 = q**Rational(1, 3)
     elif q is S.Zero:
         y1, y2 = roots([1, 0, p], multiple=True)
         return [tmp - aon3 for tmp in [y1, S.Zero, y2]]
     else:
-        u1 = (q/2 + (q**2/4 + pon3**3)**S.Half)**Rational(1, 3)
+        u1 = (q/2 + sqrt(q**2/4 + pon3**3))**Rational(1, 3)
 
-    coeff = S.ImaginaryUnit*3**S.Half / 2
+    coeff = S.ImaginaryUnit*sqrt(3)/2
 
     u2 = u1*(-S.Half + coeff)
     u3 = u1*(-S.Half - coeff)
@@ -83,39 +83,18 @@ def roots_quartic(f):
        The quasisymmetric case solution [6] looks for quartics that have the form
        `x**4 + A*x**3 + B*x**2 + C*x + D = 0` where `(C/A)**2 = D`.
 
-       NOTE: There is not a single symbolic solution that is valid for all
-       possible values of `A`, `B`, `C` and `D`. There are 4 sets of solutions
-       possible based on the code below. These solutions (determined by the values
-       of the reduced quartic coefficients, `a = B/A`, `b = C/A`, `c = D/A` and
-       `d = E/A`, are:
+       Although there is a general solution, simpler results can be obtained for
+       certain values of the coefficients. In all cases, 4 roots are returned:
 
-         1) `f = c + a * (a**2 / 8 - b / 2) == 0`
-         2) `g = d - a * (a * (3 * a**2 / 256 - b / 16) + c / 4) = 0`
-         3) if `f != 0` and `g != 0` but
-           a) `p = -d + a*c/4 - b**2/12 = 0` and
-              `q = b*d/3 + a*b*c/24 - c**2/8 - d*a**2/8 - b**3/108 >= 0`
-              then `u` (see code) will be zero, otherwise
-           b) `u != 0`
-
-               Schematically, it looks like this::
-
-                   f = 0    g = 0           f != 0 and g != 0
-                     |        |                   /   \
-                     |        |       p=0 and q>=0     p!=0 or q<0
-                     |        |       (i.e. u = 0     (i.e. u != 0)
-                     |        |            |                |
-                   4 solns  4 solns      4 solns          4 solns
-                                                (default symbolic solution)
-
-       These branches do not count the special cases that have a particularly
-       simple form of the roots. Those special cases can often be solved by the
-       general procedure. In the test suite, there are tests for those cases,
-       and each of them marked with "general soln ok, too" in the code below
-       still gave the same for the tests.
+         1) `f = c + a*(a**2/8 - b/2) == 0`
+         2) `g = d - a*(a*(3*a**2/256 - b/16) + c/4) = 0`
+         3) if `f != 0` and `g != 0` and `p = -d + a*c/4 - b**2/12` then
+           a) `p == 0`
+           b) `p != 0`
 
        Example::
 
-           >>> from sympy import Poly
+           >>> from sympy import Poly, symbols, I
            >>> from sympy.polys.polyroots import roots_quartic
 
            >>> r = roots_quartic(Poly('x**4-6*x**3+17*x**2-26*x+20'))
@@ -128,8 +107,10 @@ def roots_quartic(f):
        ==========
 
        .. [1] http://mathforum.org/dr.math/faq/faq.cubic.equations.html
-       .. [2] http://en.wikipedia.org/wiki/Quartic_function#Summary_of_Ferrari.27s_method
-       .. [3] http://planetmath.org/encyclopedia/GaloisTheoreticDerivationOfTheQuarticFormula.html
+       .. [2] http://en.wikipedia.org/wiki/Quartic_function#
+                     Summary_of_Ferrari.27s_method
+       .. [3] http://planetmath.org/encyclopedia/
+                     GaloisTheoreticDerivationOfTheQuarticFormula.html
        .. [4] http://staff.bath.ac.uk/masjhd/JHD-CA.pdf
        .. [5] http://www.albmath.org/files/Math_5713.pdf
        .. [6] http://www.statemaster.com/encyclopedia/Quartic-equation
@@ -140,7 +121,7 @@ def roots_quartic(f):
     if not d:
         return [S.Zero] + roots([1, a, b, c], multiple=True)
     elif (c/a)**2 == d:
-        x, m = f.gen, sqrt(d)
+        x, m = f.gen, c/a
 
         g = Poly(x**2 + a*x + b - 2*m, x)
 
@@ -154,54 +135,39 @@ def roots_quartic(f):
 
         return r1 + r2
     else:
-        a2 = a ** 2
-        e = b - 3 * a2 / 8
-        f = c + a * (a2 / 8 - b / 2)
-        g = d - a * (a * (3 * a2 / 256 - b / 16) + c / 4)
-        aon4 = a / 4
+        a2 = a**2
+        e = b - 3*a2/8
+        f = c + a*(a2/8 - b/2)
+        g = d - a*(a*(3*a2/256 - b/16) + c/4)
+        aon4 = a/4
         ans = []
 
-        if f.is_zero: # general solution not valid if f = 0.
-            y1, y2 = [tmp ** S.Half for tmp in
+        if f is S.Zero:
+            y1, y2 = [tmp**S.Half for tmp in
                       roots([1, e, g], multiple = True)]
             return [tmp - aon4 for tmp in [-y1, -y2, y1, y2]]
-        if g.is_zero: # general solution not valid if g = 0
+        if g is S.Zero:
             y = [S.Zero] + roots([1, 0, e, f], multiple = True)
             return [tmp - aon4 for tmp in y]
         else:
-            TH = Rational(1, 3)
             p = -e**2/12 - g
             q = -e**3/108 + e*g/3 - f**2/8
-            root = sqrt(q**2/4 + p**3/27)
-            rr = [-q/2 + s*root for s in [1]] # in [1,-1], either will do, so pick 1
-            for r in rr:
-                uu = [r**TH] # solve(x**3-r,x), any one will do, so take primary
-                for u in uu:
-                    if u.is_zero:
-                        y = -5*e/6 + u - q**TH
-                    else:
-                        y = -5*e/6 + u - p/u/3
-                    w = sqrt(e + 2*y)
-                    # try to return the real solutions first if the
-                    # sign can be determined. The term tested is the
-                    # argument to `root` below.
-                    arg1 = 3*e + 2*y
-                    arg2 = 2*f/w
-                    if -(arg1 + arg2) > S.Zero:
-                        ss = [-1, 1]
-                    else:
-                        ss= [1, -1]
-                    for s in ss:
-                        root = sqrt(-(arg1 + s*arg2))
-                        # return the more negative root first;
-                        # note that t and s have opposite signs
-                        # in the formula: s=+/-1 while t=-/+1.
-                        if aon4 > S.Zero:
-                            tt = [-1, 1]
-                        else:
-                            tt = [1, -1]
-                        for t in tt:
-                            ans.append((s*w - t*root)/2 - aon4)
+            TH = Rational(1, 3)
+            if p is S.Zero:
+                y = -5*e/6 - q**TH
+            else:
+                # with p !=0 then u below is not 0
+                root = sqrt(q**2/4 + p**3/27)
+                r = -q/2 + root # or -q/2 - root
+                u = r**TH # primary root of solve(x**3-r, x)
+                y = -5*e/6 + u - p/u/3
+            w = sqrt(e + 2*y)
+            arg1 = 3*e + 2*y
+            arg2 = 2*f/w
+            for s in [-1, 1]:
+                root = sqrt(-(arg1 + s*arg2))
+                for t in [-1, 1]:
+                    ans.append((s*w - t*root)/2 - aon4)
     return ans
 
 def roots_binomial(f):
@@ -359,7 +325,7 @@ def roots(f, *gens, **flags):
         if f.is_ground:
             return []
         if f.is_monomial:
-            return [S(0)] * f.degree()
+            return [S(0)]*f.degree()
 
         if f.length() == 2:
             if f.degree() == 1:
@@ -459,7 +425,7 @@ def roots(f, *gens, **flags):
         zeros = []
 
         for zero, k in result.iteritems():
-            zeros.extend([zero] * k)
+            zeros.extend([zero]*k)
 
         return zeros
 
@@ -588,7 +554,7 @@ def number_of_real_roots(f, *gens, **args):
     sturm = F.sturm()
 
     if inf is None:
-        signs_inf = sign_changes([ s.LC() * (-1)**s.degree() for s in sturm ])
+        signs_inf = sign_changes([ s.LC()*(-1)**s.degree() for s in sturm ])
     else:
         signs_inf = sign_changes([ s.eval(inf) for s in sturm ])
 
@@ -608,7 +574,7 @@ def _exact_roots(f):
         exact, zeros = roots(f), []
 
         for zero, k in exact.iteritems():
-            zeros += [zero] * k
+            zeros += [zero]*k
 
         _exact_roots_cache[f] = zeros
 
@@ -634,6 +600,7 @@ class RootOf(Expr):
             if index < len(exact):
                 return exact[index]
             else:
+                index = sympify(index)
                 return Expr.__new__(cls, f, index)
 
     @property

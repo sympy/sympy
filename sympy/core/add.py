@@ -8,6 +8,9 @@ class Add(AssocOp):
 
     is_Add = True
 
+    #identity = S.Zero
+    # cyclic import, so defined in numbers.py
+
     @classmethod
     def flatten(cls, seq):
         """
@@ -345,6 +348,15 @@ class Add(AssocOp):
             lst = new_lst
         return tuple(lst)
 
+    def as_real_imag(self, deep=True):
+        sargs, terms = self.args, []
+        re_part, im_part = [], []
+        for term in sargs:
+            re, im = term.as_real_imag(deep=deep)
+            re_part.append(re)
+            im_part.append(im)
+        return (self.new(*re_part), self.new(*im_part))
+
     def _eval_as_leading_term(self, x):
         coeff, factors = self.as_coeff_factors(x)
         has_unbounded = bool([f for f in self.args if f.is_unbounded])
@@ -491,9 +503,6 @@ class Add(AssocOp):
             s += x._sage_()
         return s
 
-    def as_Add(self):
-        """Returns `self` as it was `Add` instance. """
-        return list(self.args)
 
 from mul import Mul
 from symbol import Symbol

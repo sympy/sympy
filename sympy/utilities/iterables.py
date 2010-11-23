@@ -109,29 +109,6 @@ def any(iterable):
             return True
     return False
 
-def make_list(expr, kind):
-    """
-    Returns a list of elements taken from specified expression
-    when it is of sequence type (Add or Mul) or singleton list
-    otherwise (Rational, Pow etc.).
-
-    >>> from sympy import Symbol, make_list, Mul, Add
-    >>> x, y = map(Symbol, 'xy')
-
-    >>> make_list(x*y, Mul)
-    [x, y]
-    >>> make_list(x*y, Add)
-    [x*y]
-    >>> set(make_list(x*y + y, Add)) == set([y, x*y])
-    True
-
-    """
-    if isinstance(expr, kind):
-        return list(expr.args)
-    else:
-        return [expr]
-
-
 def flatten(iterable, cls=None):
     """
     Recursively denest iterable containers.

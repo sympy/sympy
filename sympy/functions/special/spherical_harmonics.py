@@ -20,6 +20,21 @@ def Plmcos(l, m, th):
     return P
 
 def Ylm(l, m, theta, phi):
+    """
+    Spherical harmonics Ylm.
+
+    Examples:
+
+        >>> from sympy import symbols, Ylm
+        >>> theta, phi = symbols("theta phi")
+        >>> Ylm(0, 0, theta, phi)
+        1/(2*pi**(1/2))
+        >>> Ylm(1, -1, theta, phi)
+        6**(1/2)*exp(-I*phi)*sin(theta)/(4*pi**(1/2))
+        >>> Ylm(1, 0, theta, phi)
+        3**(1/2)*cos(theta)/(2*pi**(1/2))
+
+    """
     l, m, theta, phi = [sympify(x) for x in (l, m, theta, phi)]
     factorial = C.Factorial
     return sqrt((2*l+1)/(4*pi) * factorial(l-m)/factorial(l+m)) * \
@@ -30,6 +45,9 @@ def Ylm_c(l, m, theta, phi):
     return (-1)**m * Ylm(l, -m, theta, phi)
 
 def Zlm(l, m, th, ph):
+    """
+    Real spherical harmonics.
+    """
     from sympy import simplify
     if m > 0:
         zz = C.NegativeOne()**m*(Ylm(l, m, th, ph) + Ylm_c(l, m, th, ph))/sqrt(2)

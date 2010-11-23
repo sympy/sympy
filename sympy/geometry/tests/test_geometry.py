@@ -265,6 +265,16 @@ def test_ellipse():
     # Combinations of above
     assert e3.is_tangent(e3.tangent_line(p1 + Point(y1, 0)))
 
+    major = 3
+    minor = 1
+    e4 = Ellipse(p2, major, minor)
+    assert e4.focus_distance == sqrt(abs(major**2 - minor**2))
+    ecc = e4.focus_distance / major
+    assert e4.eccentricity == ecc
+    assert e4.periapsis == major*(1 - ecc)
+    assert e4.apoapsis == major*(1 + ecc)
+
+
 def test_polygon():
     p1 = Polygon(
         Point(0, 0), Point(3,-1),

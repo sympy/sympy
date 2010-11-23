@@ -1,8 +1,9 @@
-from sympy import symbols, Integer
-from sympy.tensor import Indexed, Idx, IndexedElement
+from sympy.core import symbols, Integer, Symbol, Tuple, oo
 from sympy.tensor.indexed import IndexException
 from sympy.utilities.pytest import raises
-from sympy import oo
+
+# import test:
+from sympy import IndexedBase, Idx, Indexed
 
 def test_Idx_construction():
     i, a, b = symbols('i a b', integer=True)
@@ -75,42 +76,75 @@ def test_Idx_subs():
     assert Idx(i, a).subs(a, 2) == Idx(i, 2)
     assert Idx(i, (a, b)).subs(i, 2) == Idx(2, (a, b))
 
-def test_Indexed_sugar():
+def test_IndexedBase_sugar():
     i, j = symbols('i j', integer=True)
     a = symbols('a')
-    A1 = IndexedElement(a, i, j)
-    A2 = Indexed(a)
-    assert A1 == A2(i, j)
+    A1 = Indexed(a, i, j)
+    A2 = IndexedBase(a)
+    assert A1 == A2[i, j]
+
+def test_IndexedBase_subs():
+    i, j, k = symbols('i j k', integer=True)
+    a, b = symbols('a b')
+    A = IndexedBase(a)
+    B = IndexedBase(b)
+    assert A[i] == B[i].subs(b, a)
+
+def test_IndexedBase_shape():
+    i, j, m, n = symbols('i j m n', integer=True)
+    a = IndexedBase('a', shape=(m, m))
+    b = IndexedBase('a', shape=(m, n))
+    assert b.shape == Tuple(m, n)
+    assert a[i, j] != b[i, j]
+    assert a[i, j] == b[i, j].subs(n, m)
+    assert b.func(*b.args) == b
+    assert b[i, j].func(*b[i, j].args) == b[i, j]
+    raises(IndexException, 'b[i]')
+    raises(IndexException, 'b[i, i, j]')
+
+def test_Indexed_constructor():
+    i, j = symbols('i j', integer=True)
+    A = Indexed('A', i, j)
+    assert A == Indexed(Symbol('A'), i, j)
+    assert A == Indexed(IndexedBase('A'), i, j)
+    raises(TypeError, 'Indexed(A, i, j)')
+    raises(IndexException, 'Indexed("A")')
+
+def test_Indexed_func_args():
+    i, j = symbols('i j', integer=True)
+    a = symbols('a')
+    A = Indexed(a, i, j)
+    assert A == A.func(*A.args)
 
 def test_Indexed_subs():
     i, j, k = symbols('i j k', integer=True)
     a, b = symbols('a b')
-    A = Indexed(a)
-    B = Indexed(b)
-    assert A == B.subs(b, a)
+    A = IndexedBase(a)
+    B = IndexedBase(b)
+    assert A[i, j] == B[i, j].subs(b, a)
+    assert A[i, j] == A[i, k].subs(k, j)
 
-def test_IndexedElement_func_args():
+def test_Indexed_properties():
     i, j = symbols('i j', integer=True)
-    a = symbols('a')
-    A = IndexedElement(a, i, j)
-    assert A.func(*A.args)
-
-def test_IndexedElement_subs():
-    i, j, k = symbols('i j k', integer=True)
-    a, b = symbols('a b')
-    A = Indexed(a)
-    B = Indexed(b)
-    assert A(i, j) == B(i, j).subs(b, a)
-    assert A(i, j) == A(i, k).subs(k, j)
-
-def test_IndexedElement_properties():
-    i, j = symbols('i j', integer=True)
-    a = symbols('a')
-    A = IndexedElement(a, i, j)
+    A = Indexed('A', i, j)
     assert A.rank == 2
     assert A.indices == tuple(map(Idx, (i, j)))
-    assert A.stem == Indexed(a)
-    assert A.dimensions == [(None, None), (None, None)]
+    assert A.base == IndexedBase('A')
+    assert A.ranges == [(None, None), (None, None)]
+    raises(IndexException, 'A.shape')
 
     n, m = symbols('n m', integer=True)
-    assert IndexedElement(a, Idx(i, m), Idx(j, n)).dimensions == [(0, m - 1), (0, n - 1)]
+    assert Indexed('A', Idx(i, m), Idx(j, n)).ranges == [(0, m - 1), (0, n - 1)]
+    assert Indexed('A', Idx(i, m), Idx(j, n)).shape == Tuple(m, n)
+    raises(IndexException, 'Indexed("A", Idx(i, m), Idx(j)).shape')
+
+def test_Indexed_shape_precedence():
+    i, j = symbols('i j', integer=True)
+    o, p = symbols('o p', integer=True)
+    n, m = symbols('n m', integer=True)
+    a = IndexedBase('a', shape=(o, p))
+    assert a.shape == Tuple(o, p)
+    assert Indexed(a, Idx(i, m), Idx(j, n)).ranges == [(0, m - 1), (0, n - 1)]
+    assert Indexed(a, Idx(i, m), Idx(j, n)).shape == Tuple(o, p)
+    assert Indexed(a, Idx(i, m), Idx(j)).ranges == [(0, m - 1), (None, None)]
+    assert Indexed(a, Idx(i, m), Idx(j)).shape == Tuple(o, p)

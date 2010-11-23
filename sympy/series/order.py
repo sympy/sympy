@@ -1,4 +1,4 @@
-from sympy.core import Basic, S, C, sympify, Expr, oo, Rational
+from sympy.core import Basic, S, C, sympify, Expr, oo, Rational, Symbol
 from sympy.core.cache import cacheit
 
 def solve4linearsymbol(eqn, rhs, symbols = None):
@@ -11,6 +11,7 @@ def solve4linearsymbol(eqn, rhs, symbols = None):
     if eqn.is_Symbol:
         return (eqn, rhs)
     if symbols is None:
+        # TODO: Need test that calls this branch
         symbols = eqn.atoms(Symbol)
     if symbols:
         # find  symbol

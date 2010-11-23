@@ -7,7 +7,7 @@ from sympy.core import Basic, S, C, Add, Mul, Pow, Rational, Integer, \
 from sympy.core.numbers import igcd
 from sympy.core.relational import Equality
 
-from sympy.utilities import make_list, all, any, flatten
+from sympy.utilities import all, any, flatten
 from sympy.functions import gamma, exp, sqrt, log
 
 from sympy.simplify.cse_main import cse
@@ -68,7 +68,7 @@ def fraction(expr, exact=False):
 
     numer, denom = [], []
 
-    for term in make_list(expr, Mul):
+    for term in Mul.make_args(expr):
         if term.is_Pow:
             if term.exp.is_negative:
                 if term.exp is S.NegativeOne:
@@ -244,7 +244,7 @@ def together(expr, deep=False):
 
                 denom = {}
 
-                for term in make_list(q.expand(), Mul):
+                for term in Mul.make_args(q.expand()) or [S.One]:
                     expo = S.One
                     coeff = S.One
 
@@ -301,7 +301,7 @@ def together(expr, deep=False):
                     else:
                         denominator.append(Pow(term, maxi))
 
-            if all([c.is_integer for c in coeffs]):
+            if coeffs and all([c.is_integer for c in coeffs]):
                 gcds = lambda x, y: igcd(int(x), int(y))
                 common = Rational(reduce(gcds, coeffs))
             else:
@@ -364,7 +364,7 @@ def collect(expr, syms, evaluate=True, exact=False):
         up to rational powers as keys and collected sub-expressions
         as values respectively.
 
-        >>> from sympy import collect, sympify
+        >>> from sympy import collect, sympify, Wild
         >>> from sympy.abc import a, b, c, x, y, z
 
         This function can collect symbolic coefficients in polynomial
@@ -399,6 +399,12 @@ def collect(expr, syms, evaluate=True, exact=False):
 
         >>> collect(a*x*log(x) + b*(x*log(x)), x*log(x))
         x*(a + b)*log(x)
+
+        You can use wildcards in the pattern
+
+        >>> w = Wild('w1')
+        >>> collect(a*x**y - b*x**y, w**y)
+        x**y*(a - b)
 
         It is also possible to work with symbolic powers, although
         it has more complicated behavior, because in this case
@@ -559,7 +565,7 @@ def collect(expr, syms, evaluate=True, exact=False):
         terms is a list of tuples as returned by parse_terms
         pattern is an expression
         """
-        pattern = make_list(pattern, Mul)
+        pattern = Mul.make_args(pattern)
 
         if len(terms) < len(pattern):
             # pattern is longer than  matched product
@@ -585,7 +591,10 @@ def collect(expr, syms, evaluate=True, exact=False):
                         # a constant is a match for everything
                         break
 
-                    if elem == term and e_sym == t_sym:
+                    if (term.match(elem) is not None and \
+                            (t_sym == e_sym or t_sym is not None and \
+                            e_sym is not None and \
+                            t_sym.match(e_sym) is not None)):
                         if exact == False:
                             # we don't have to be exact so find common exponent
                             # for both expression's term and pattern's element
@@ -628,7 +637,7 @@ def collect(expr, syms, evaluate=True, exact=False):
             b = collect(expr.base, syms, True, exact)
             return C.Pow(b, expr.exp)
 
-    summa = [separate(i) for i in make_list(sympify(expr), Add)]
+    summa = [separate(i) for i in Add.make_args(sympify(expr))]
 
     if isinstance(syms, list):
         syms = [separate(s) for s in syms]
@@ -638,7 +647,7 @@ def collect(expr, syms, evaluate=True, exact=False):
     collected, disliked = {}, S.Zero
 
     for product in summa:
-        terms = [parse_term(i) for i in make_list(product, Mul)]
+        terms = [parse_term(i) for i in Mul.make_args(product)]
 
         for symbol in syms:
             if SYMPY_DEBUG:
@@ -1337,12 +1346,40 @@ def simplify(expr):
 
     return expr
 
-
-def nsimplify(expr, constants=[], tolerance=None, full=False):
+def _real_to_rational(expr):
     """
-    Numerical simplification -- tries to find a simple formula
-    that numerically matches the given expression. The input should
-    be possible to evalf to a precision of at least 30 digits.
+    Replace all reals in expr with rationals.
+    >>> from sympy import nsimplify
+    >>> from sympy.abc import x
+    >>> nsimplify(.76 + .1*x**.5, rational=1)
+    19/25 + x**(1/2)/10
+    """
+    p = sympify(expr)
+    for r in p.atoms(C.Real):
+        newr = nsimplify(r)
+        if not newr.is_Rational or \
+           r.is_finite and not newr.is_finite:
+            newr = r
+            if newr < 0:
+                s = -1
+                newr *= s
+            else:
+                s = 1
+            d = Pow(10, int((mpmath.log(newr)/mpmath.log(10))))
+            newr = s*Rational(str(nsimplify(newr/d)))*d
+        p = p.subs(r, newr)
+    return p
+
+def nsimplify(expr, constants=[], tolerance=None, full=False, rational=False):
+    """
+    Replace numbers with simple representations.
+
+    If rational=True then numbers are simply replaced with their rational
+    equivalents.
+
+    If rational=False, a simple formula that numerically matches the
+    given expression is sought (and the input should be possible to evalf
+    to a precision of at least 30 digits).
 
     Optionally, a list of (rationally independent) constants to
     include in the formula may be given.
@@ -1366,6 +1403,9 @@ def nsimplify(expr, constants=[], tolerance=None, full=False):
         22/7
 
     """
+    if rational:
+        return _real_to_rational(expr)
+
     expr = sympify(expr)
 
     prec = 30

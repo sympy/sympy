@@ -179,6 +179,7 @@ def doctest(*paths, **kwargs):
                     "doc/src/modules/plotting.txt", # generates live plots
                     "sympy/plotting", # generates live plots
                     "sympy/utilities/compilef.py", # needs tcc
+                    "sympy/utilities/autowrap.py", # needs installed compiler
                     "sympy/galgebra/GA.py", # needs numpy
                     "sympy/galgebra/latex_ex.py", # needs numpy
                     "sympy/conftest.py", # needs py.test
@@ -642,7 +643,7 @@ class SymPyDocTestFinder(DocTestFinder):
         # Find the docstring's location in the file.
         lineno = self._find_lineno(obj, source_lines)
 
-        if not lineno:
+        if lineno is None:
             # if None, then it wasn't really in this source
             return None
 

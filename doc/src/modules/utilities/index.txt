@@ -8,4 +8,6 @@ Contents:
 .. toctree::
    :maxdepth: 2
 
+   autowrap.txt
+   codegen.txt
    iterables.txt

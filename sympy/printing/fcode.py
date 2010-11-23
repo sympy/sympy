@@ -18,15 +18,11 @@ responsibility for generating properly cased Fortran code to the user.
 """
 
 
-from str import StrPrinter
+from sympy.core import S, C
+from sympy.printing.codeprinter import CodePrinter
 from sympy.printing.precedence import precedence
-from sympy.core import S, Add, I, Symbol, Basic
-from sympy.core.numbers import NumberSymbol
 from sympy.functions import sin, cos, tan, asin, acos, atan, atan2, sinh, \
     cosh, tanh, sqrt, log, exp, abs, sign, conjugate, Piecewise
-from sympy.utilities.iterables import postorder_traversal
-from sympy.tensor import Idx
-
 
 implicit_functions = set([
     sin, cos, tan, asin, acos, atan, atan2, sinh, cosh, tanh, sqrt, log, exp,
@@ -34,7 +30,7 @@ implicit_functions = set([
 ])
 
 
-class FCodePrinter(StrPrinter):
+class FCodePrinter(CodePrinter):
     """A printer to convert sympy expressions to strings of Fortran code"""
     printmethod = "_fcode"
 
@@ -48,15 +44,25 @@ class FCodePrinter(StrPrinter):
         'source_format': 'fixed',
     }
     def __init__(self, settings=None):
-        StrPrinter.__init__(self, settings)
+        CodePrinter.__init__(self, settings)
         self._init_leading_padding()
         assign_to = self._settings['assign_to']
         if isinstance(assign_to, basestring):
-            self._settings['assign_to'] = Symbol(assign_to)
-        elif not isinstance(assign_to, (Basic, type(None))):
+            self._settings['assign_to'] = C.Symbol(assign_to)
+        elif not isinstance(assign_to, (C.Basic, type(None))):
             raise TypeError("FCodePrinter cannot assign to object of type %s"%
                     type(assign_to))
 
+    def _rate_index_position(self, p):
+        """function to calculate score based on position among indices
+
+        This method is used to sort loops in an optimized order, see
+        CodePrinter._sort_optimized()
+        """
+        return -p*5
+
+    def _get_statement(self, codestring):
+        return codestring
 
     def _init_leading_padding(self):
         # leading columns depend on fixed or free format
@@ -82,54 +88,29 @@ class FCodePrinter(StrPrinter):
                 result.append(self._lead_code + line)
         return result
 
-    def _get_loop_opening_ending_ints(self, expr):
+    def _get_loop_opening_ending(self, indices):
         """Returns a tuple (open_lines, close_lines) containing lists of codelines
         """
-
-        indices = expr.atoms(Idx)
-        # FIXME: sort indices in an optimized way
         open_lines = []
         close_lines = []
-        local_ints = []
-
         for i in indices:
             # fortran arrays start at 1 and end at dimension
-            open_lines.append("do %s = %s, %s" % (i.label, i.lower+1, i.upper+1))
+            var, start, stop = map(self._print,
+                    [i.label, i.lower+1, i.upper+1])
+            open_lines.append("do %s = %s, %s" % (var, start, stop))
             close_lines.append("end do")
-            local_ints.append(i)
-        return open_lines, close_lines, local_ints
+        return open_lines, close_lines
 
 
     def doprint(self, expr):
         """Returns Fortran code for expr (as a string)"""
         # find all number symbols
-        number_symbols = set([])
-        for sub in postorder_traversal(expr):
-            if isinstance(sub, NumberSymbol):
-                number_symbols.add(sub)
-        number_symbols = [(str(ns), ns.evalf(self._settings["precision"]))
-                          for ns in sorted(number_symbols)]
+        self._number_symbols = set()
 
         # keep a set of expressions that are not strictly translatable to
         # Fortran.
-        self._not_fortran = set([])
+        self._not_supported = set()
 
-
-        # Setup loops if expression contain Indexed objects
-        openloop, closeloop, local_ints = self._get_loop_opening_ending_ints(expr)
-
-        self._not_fortran |= set(local_ints)
-
-        # the lhs may contain loops that are not in the rhs
-        lhs = self._settings['assign_to']
-        if lhs:
-            open_lhs, close_lhs, lhs_ints = self._get_loop_opening_ending_ints(lhs)
-            for n,ind in enumerate(lhs_ints):
-                if ind not in self._not_fortran:
-                    self._not_fortran.add(ind)
-                    openloop.insert(0,open_lhs[n])
-                    closeloop.append(close_lhs[n])
-            lhs_printed = self._print(lhs)
 
         lines = []
         if isinstance(expr, Piecewise):
@@ -141,47 +122,32 @@ class FCodePrinter(StrPrinter):
                     lines.append("else")
                 else:
                     lines.append("else if (%s) then" % self._print(c))
-                if self._settings["assign_to"] is None:
-                    lines.extend(openloop)
-                    lines.append("  %s" % self._print(e))
-                    lines.extend(closeloop)
-                else:
-                    lines.extend(openloop)
-                    lines.append("  %s = %s" % (lhs_printed, self._print(e)))
-                    lines.extend(closeloop)
+                lines.extend(self._doprint_a_piece(e, self._settings['assign_to']))
             lines.append("end if")
         else:
-            lines.extend(openloop)
-            line = StrPrinter.doprint(self, expr)
-            if self._settings["assign_to"] is None:
-                text = "%s" % line
-            else:
-                text = "%s = %s" % (lhs_printed, line)
-            lines.append(text)
-            lines.extend(closeloop)
+            lines.extend(self._doprint_a_piece(expr, self._settings['assign_to']))
 
         # format the output
         if self._settings["human"]:
             frontlines = []
-            if len(self._not_fortran) > 0:
+            if len(self._not_supported) > 0:
                 frontlines.append("! Not Fortran:")
-                for expr in sorted(self._not_fortran, key=self._print):
+                for expr in sorted(self._not_supported, key=self._print):
                     frontlines.append("! %s" % expr)
-            for name, value in number_symbols:
-                frontlines.append("parameter (%s = %s)" % (name, value))
+            for name, value in sorted(self._number_symbols, key=str):
+                frontlines.append("parameter (%s = %s)" % (str(name), value))
             frontlines.extend(lines)
             lines = frontlines
-            lines = self._pad_leading_columns(lines)
-            lines = self._wrap_fortran(lines)
             lines = self.indent_code(lines)
+            lines = self._wrap_fortran(lines)
             result = "\n".join(lines)
         else:
-            lines = self._pad_leading_columns(lines)
-            lines = self._wrap_fortran(lines)
             lines = self.indent_code(lines)
-            result = number_symbols, self._not_fortran, "\n".join(lines)
+            lines = self._wrap_fortran(lines)
+            result = self._number_symbols, self._not_supported, "\n".join(lines)
 
-        del self._not_fortran
+        del self._not_supported
+        del self._number_symbols
         return result
 
     def _print_Add(self, expr):
@@ -200,7 +166,7 @@ class FCodePrinter(StrPrinter):
         if len(pure_imaginary) > 0:
             if len(mixed) > 0:
                 PREC = precedence(expr)
-                term = Add(*mixed)
+                term = C.Add(*mixed)
                 t = self._print(term)
                 if t.startswith('-'):
                     sign = "-"
@@ -211,17 +177,17 @@ class FCodePrinter(StrPrinter):
                     t = "(%s)" % t
 
                 return "cmplx(%s,%s) %s %s" % (
-                    self._print(Add(*pure_real)),
-                    self._print(-I*Add(*pure_imaginary)),
+                    self._print(C.Add(*pure_real)),
+                    self._print(-S.ImaginaryUnit*C.Add(*pure_imaginary)),
                     sign, t,
                 )
             else:
                 return "cmplx(%s,%s)" % (
-                    self._print(Add(*pure_real)),
-                    self._print(-I*Add(*pure_imaginary)),
+                    self._print(C.Add(*pure_real)),
+                    self._print(-S.ImaginaryUnit*C.Add(*pure_imaginary)),
                 )
         else:
-            return StrPrinter._print_Add(self, expr)
+            return CodePrinter._print_Add(self, expr)
 
     def _print_Function(self, expr):
         name = self._settings["user_functions"].get(expr.__class__)
@@ -230,8 +196,12 @@ class FCodePrinter(StrPrinter):
                 name = "conjg"
             else:
                 name = expr.func.__name__
+            if hasattr(expr, '_imp_') and isinstance(expr._imp_, C.Lambda):
+                # inlined function.
+                # the expression is printed with _print to avoid loops
+                return self._print(expr._imp_(*expr.args))
             if expr.func not in implicit_functions:
-                self._not_fortran.add(expr)
+                self._not_supported.add(expr)
         return "%s(%s)" % (name, self.stringify(expr.args, ", "))
 
     _print_Factorial = _print_Function
@@ -247,70 +217,47 @@ class FCodePrinter(StrPrinter):
         # purpose: print complex numbers nicely in Fortran.
         if expr.is_imaginary and expr.is_number:
             return "cmplx(0,%s)" % (
-                self._print(-I*expr)
+                self._print(-S.ImaginaryUnit*expr)
             )
         else:
-            return StrPrinter._print_Mul(self, expr)
+            return CodePrinter._print_Mul(self, expr)
 
-    def _print_NumberSymbol(self, expr):
-        # Standard Fortran has no predefined constants. Write their string
-        # representation, and assume parameter statements are defined elsewhere
-        # in the code to make this work.
-        return str(expr)
-
-    _print_Catalan = _print_NumberSymbol
-    _print_EulerGamma = _print_NumberSymbol
-    _print_Exp1 = _print_NumberSymbol
-    _print_GoldenRatio = _print_NumberSymbol
-    _print_Pi = _print_NumberSymbol
+    _print_Exp1 = CodePrinter._print_NumberSymbol
+    _print_Pi = CodePrinter._print_NumberSymbol
 
     def _print_Pow(self, expr):
         PREC = precedence(expr)
         if expr.exp is S.NegativeOne:
             return '1.0/%s'%(self.parenthesize(expr.base, PREC))
         elif expr.exp == 0.5:
-            return 'sqrt(%s)' % self._print(expr.base)
+            if expr.base.is_integer:
+                # Fortan intrinsic sqrt() does not accept integer argument
+                if expr.base.is_Number:
+                    return 'sqrt(%s.0d0)' % self._print(expr.base)
+                else:
+                    return 'sqrt(dble(%s))' % self._print(expr.base)
+            else:
+                return 'sqrt(%s)' % self._print(expr.base)
         else:
-            return StrPrinter._print_Pow(self, expr)
+            return CodePrinter._print_Pow(self, expr)
 
     def _print_Rational(self, expr):
         p, q = int(expr.p), int(expr.q)
-        return '%d.0/%d.0' % (p, q)
+        return "%d.0d0/%d.0d0" % (p, q)
 
-    def _print_not_fortran(self, expr):
-        self._not_fortran.add(expr)
-        return self.emptyPrinter(expr)
+    def _print_Real(self, expr):
+        printed = CodePrinter._print_Real(self, expr)
+        e = printed.find('e')
+        if e > -1:
+            return "%sd%s" % (printed[:e], printed[e+1:])
+        return "%sd0" % printed
 
-    # The following can not be simply translated into Fortran.
-    _print_Basic = _print_not_fortran
-    _print_ComplexInfinity = _print_not_fortran
-    _print_Derivative = _print_not_fortran
-    _print_dict = _print_not_fortran
-    _print_Dummy = _print_not_fortran
-    _print_ExprCondPair = _print_not_fortran
-    _print_GeometryEntity = _print_not_fortran
-    _print_Infinity = _print_not_fortran
-    _print_Integral = _print_not_fortran
-    _print_Interval = _print_not_fortran
-    _print_Limit = _print_not_fortran
-    _print_list = _print_not_fortran
-    _print_Matrix = _print_not_fortran
-    _print_DeferredVector = _print_not_fortran
-    _print_NaN = _print_not_fortran
-    _print_NegativeInfinity = _print_not_fortran
-    _print_Normal = _print_not_fortran
-    _print_Order = _print_not_fortran
-    _print_PDF = _print_not_fortran
-    _print_RootOf = _print_not_fortran
-    _print_RootsOf = _print_not_fortran
-    _print_RootSum = _print_not_fortran
-    _print_Sample = _print_not_fortran
-    _print_SMatrix = _print_not_fortran
-    _print_tuple = _print_not_fortran
-    _print_Uniform = _print_not_fortran
-    _print_Unit = _print_not_fortran
-    _print_Wild = _print_not_fortran
-    _print_WildFunction = _print_not_fortran
+    def _print_Indexed(self, expr):
+        inds = [ self._print(i) for i in expr.indices ]
+        return "%s(%s)" % (self._print(expr.base.label), ", ".join(inds))
+
+    def _print_Idx(self, expr):
+        return self._print(expr.label)
 
     def _wrap_fortran(self, lines):
         """Wrap long Fortran lines
@@ -322,7 +269,7 @@ class FCodePrinter(StrPrinter):
            complex rule to give nice results.
         """
         # routine to find split point in a code line
-        my_alnum = set("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_")
+        my_alnum = set("_+-.0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_")
         my_white = set(" \t()")
         def split_pos_code(line, endpos):
             if len(line) <= endpos:
@@ -381,18 +328,16 @@ class FCodePrinter(StrPrinter):
         return result
 
     def indent_code(self, code):
-        """Accepts a string of code or a list of code lines
-        """
-        if self._settings['source_format'] == 'fixed':
-            return code
+        """Accepts a string of code or a list of code lines"""
         if isinstance(code, basestring):
             code_lines = self.indent_code(code.splitlines())
             return '\n'.join(code_lines)
 
+        free = self._settings['source_format'] == 'free'
         code = [ line.lstrip() for line in code ]
 
-        inc_keyword = ('do ', 'if(', 'if ', 'do\n')
-        dec_keyword = ('end ', 'enddo', 'end\n')
+        inc_keyword = ('do ', 'if(', 'if ', 'do\n', 'else')
+        dec_keyword = ('end ', 'enddo', 'end\n', 'else')
 
         increase = [ int(reduce(lambda x, y: x or line.startswith(y),
                                 inc_keyword, False)) \
@@ -400,22 +345,37 @@ class FCodePrinter(StrPrinter):
         decrease = [ int(reduce(lambda x, y: x or line.startswith(y),
                                 dec_keyword, False)) \
                      for line in code ]
-        continuation = [ line[-1] == '&' for line in code ]
+        continuation = [ line.endswith('&') for line in code ]
 
         level = 0
         cont_padding = 0
         tabwidth = 3
         new_code = []
-        for i in range(len(code)):
+        for i, line in enumerate(code):
+            if not line:
+                new_code.append(line)
+                continue
             level -= decrease[i]
-            padding = " "*(level*tabwidth + cont_padding)
-            new_code.append("%s%s" % (padding, code[i]))
+
+            if free:
+                padding = " "*(level*tabwidth + cont_padding)
+            else:
+                padding = " "*level*tabwidth
+
+            line = "%s%s" % (padding, line)
+            if not free:
+                line = self._pad_leading_columns([line])[0]
+
+            new_code.append(line)
 
             if continuation[i]:
                 cont_padding = 2*tabwidth
             else:
                 cont_padding = 0
             level += increase[i]
+
+        if not free:
+            return self._wrap_fortran(new_code)
         return new_code
 
 def fcode(expr, **settings):
@@ -441,11 +401,11 @@ def fcode(expr, **settings):
        >>> from sympy import fcode, symbols, Rational, pi, sin
        >>> x, tau = symbols(["x", "tau"])
        >>> fcode((2*tau)**Rational(7,2))
-       '      8*sqrt(2)*tau**(7.0/2.0)'
+       '      8*sqrt(2.0d0)*tau**(7.0d0/2.0d0)'
        >>> fcode(sin(x), assign_to="s")
        '      s = sin(x)'
        >>> print fcode(pi)
-             parameter (pi = 3.14159265358979)
+             parameter (pi = 3.14159265358979d0)
              pi
 
     """

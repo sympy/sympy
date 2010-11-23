@@ -315,7 +315,7 @@ class Pow(Expr):
                 else:
                     radical, result = Pow(base, exp - n), []
 
-                    for term in Pow(base, n)._eval_expand_multinomial(deep=False).as_Add():
+                    for term in Add.make_args(Pow(base, n)._eval_expand_multinomial(deep=False)):
                         result.append(term*radical)
 
                     return Add(*result)
@@ -432,36 +432,66 @@ class Pow(Expr):
         return self.new(*terms)
 
     def _eval_expand_complex(self, deep=True, **hints):
+        re_part, im_part = self.as_real_imag(deep=deep, **hints)
+        return re_part + im_part*S.ImaginaryUnit
+
+    def as_real_imag(self, deep=True, **hints):
+        from sympy.core.symbol import symbols
+        from sympy.polys.polytools import poly
+        from sympy.core.function import expand_multinomial
         if self.exp.is_Integer:
             exp = self.exp
-            re, im = self.base.as_real_imag()
+            re, im = self.base.as_real_imag(deep=deep)
+            a, b = symbols('a, b', dummy=True)
             if exp >= 0:
-                base = re + S.ImaginaryUnit*im
+                if re.is_Number and im.is_Number:
+                    # We can be more efficient in this case
+                    expr = expand_multinomial(self.base**exp)
+                    return expr.as_real_imag()
+
+                expr = poly((a + b)**exp) # a = re, b = im; expr = (a + b*I)**exp
             else:
                 mag = re**2 + im**2
-                base = re/mag - S.ImaginaryUnit*(im/mag)
-                exp = -exp
-            return (base**exp).expand()
+                re, im = re/mag, -im/mag
+                if re.is_Number and im.is_Number:
+                    # We can be more efficient in this case
+                    expr = expand_multinomial((re + im*S.ImaginaryUnit)**-exp)
+                    return expr.as_real_imag()
+
+                expr = poly((a + b)**-exp)
+
+            # Terms with even b powers will be real
+            r = [i for i in expr.terms() if not i[0][1] % 2]
+            re_part = Add(*[cc*a**aa*b**bb for (aa, bb), cc in r])
+            # Terms odd b powers will be imaginary
+            r = [i for i in expr.terms() if i[0][1] % 4 == 1]
+            im_part1 = Add(*[cc*a**aa*b**bb for (aa, bb), cc in r])
+            r = [i for i in expr.terms() if i[0][1] % 4 == 3]
+            im_part3 = Add(*[cc*a**a*b**bb for (aa, bb), cc in r])
+
+            return (re_part.subs({a: re, b: S.ImaginaryUnit*im}),
+            im_part1.subs({a: re, b: im}) + im_part3.subs({a: re, b: -im}))
+
         elif self.exp.is_Rational:
             # NOTE: This is not totally correct since for x**(p/q) with
             #       x being imaginary there are actually q roots, but
             #       only a single one is returned from here.
-            re, im = self.base.as_real_imag()
+            re, im = self.base.as_real_imag(deep=deep)
 
             r = (re**2 + im**2)**S.Half
             t = C.atan2(im, re)
 
             rp, tp = r**self.exp, t*self.exp
 
-            return rp*C.cos(tp) + rp*C.sin(tp)*S.ImaginaryUnit
+            return (rp*C.cos(tp), rp*C.sin(tp))
         else:
+
             if deep:
                 hints['complex'] = False
-                return C.re(self.expand(deep, **hints)) + \
-                S.ImaginaryUnit*C.im(self. expand(deep, **hints))
+                return (C.re(self.expand(deep, complex=False)),
+                C.im(self. expand(deep, **hints)))
             else:
-                return C.re(self) + S.ImaginaryUnit*C.im(self)
-            return C.re(self) + S.ImaginaryUnit*C.im(self)
+                return (C.re(self), C.im(self))
 
     def _eval_expand_trig(self, deep=True, **hints):
         sargs, terms = self.args, []

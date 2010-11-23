@@ -33,6 +33,7 @@ from matrices import *
 from geometry import *
 from utilities import *
 from integrals import *
+from tensor import *
 # This module is slow to import:
 #from physics import units
 from plotting import Plot, textplot

@@ -1,126 +1,199 @@
-"""Module that defines indexed objects with arbitrary transformation properties.
+"""Module that defines indexed objects
 
-    The classes Indexed, IndexedElement and Idx represent a matrix element M(i, j)
-    as in the following graph:
+    The classes IndexedBase, Indexed and Idx would represent a matrix element
+    M[i, j] as in the following graph::
 
-       1) The IndexedElement class represents an element of the indexed object.
+       1) The Indexed class represents the entire indexed object.
                   |
                ___|___
               '       '
-               M(i, j)
-              /   \__\____
-              |           \
-              |            \
+               M[i, j]
+              /   \__\______
+              |             |
+              |             |
               |     2) The Idx class represent indices and each Idx can
               |        optionally contain information about its range.
               |
-    3) The Indexed class represents the `stem' of an indexed object, here `M'.
-    The stem used by itself is usually taken to represent the entire array.
+        3) IndexedBase represents the `stem' of an indexed object, here `M'.
+           The stem used by itself is usually taken to represent the entire
+           array.
 
+    There can be any number of indices on an Indexed object.  No transformation
+    properties are implemented in these Base objects, but implicit contraction
+    of repeated indices is supported.
 
     Examples
     ========
 
     To express the above matrix element example you would write:
 
-    >>> from sympy.tensor import Indexed, Idx
+    >>> from sympy.tensor import IndexedBase, Idx
     >>> from sympy import symbols
-    >>> i, j, n, m = symbols('i j n m', integer=True)
-    >>> M = Indexed('M')
-    >>> M(i, j)
-    M(i, j)
+    >>> M = IndexedBase('M')
+    >>> i, j = map(Idx, ['i', 'j'])
+    >>> M[i, j]
+    M[i, j]
+
+    Repreated indices in a product implies a summation, so to express a
+    matrix-vector product in terms of Indexed objects:
+
+    >>> x = IndexedBase('x')
+    >>> M[i, j]*x[j]
+    M[i, j]*x[j]
 
     If the indexed objects will be converted to component based arrays, e.g.
-    numpy arrays, you also need to provide (symbolic) dimensions.  This is done
-    with the Idx class:
+    with the code printers or the autowrap framework, you also need to provide
+    (symbolic or numerical) dimensions.  This can be done by passing an
+    optional shape parameter to IndexedBase upon construction:
 
-    >>> ii = Idx(i, m)
-    >>> jj = Idx(j, n)
-    >>> M(ii, jj)
-    M(i, j)
-    >>> M(ii, jj).dimensions
+    >>> dim1, dim2 = symbols('dim1 dim2', integer=True)
+    >>> A = IndexedBase('A', shape=(dim1, 2*dim1, dim2))
+    >>> A.shape
+    Tuple(dim1, 2*dim1, dim2)
+    >>> A[i, j, 3].shape
+    Tuple(dim1, 2*dim1, dim2)
+
+    If an IndexedBase object has no shape information, it is assumed that the
+    array is as large as the ranges of it's indices:
+
+    >>> n, m = symbols('n m', integer=True)
+    >>> i = Idx('i', m)
+    >>> j = Idx('j', n)
+    >>> M[i, j].shape
+    Tuple(m, n)
+    >>> M[i, j].ranges
     [(0, -1 + m), (0, -1 + n)]
 
-    To express a matrix-vector product in terms of Indexed objects:
+    The above is can be contrasted with the following:
 
-    >>> x = Indexed('x')
-    >>> M(ii, jj)*x(jj)
-    M(i, j)*x(j)
+    >>> A[i, 2, j].shape
+    Tuple(dim1, 2*dim1, dim2)
+    >>> A[i, 2, j].ranges
+    [(0, -1 + m), (None, None), (0, -1 + n)]
 
+    To analyze the structure of indexed expressions, you can use the methods
+    get_indices() and get_contraction_structure():
 
-    TODO:  (some ideas for improvement)
+    >>> from sympy.tensor import get_indices, get_contraction_structure
+    >>> get_indices(A[i, j, j])
+    (set([i]), {})
+    >>> get_contraction_structure(A[i, j, j])
+    {(j,): set([A[i, j, j]])}
 
-    o test and guarantee numpy compatibility
+    See the appropriate docstrings for a detailed explanation of the output.
 
-    o functions to operate on the indexed expressions
-       - check_conformance()
-       - determine_resulting_indices()
-       - determine_summation_indices()
-       - identify standard constructs, e.g matrix-vector product in a subexpression
-
-    o functions to generate component based arrays (numpy and sympy.Matrix)
-       - generate a single array directly from Indexed
-       - convert simple sub-expressions
-
-    o sophisticated indexing (possibly in subclasses to preserve simplicity)
-       - Idx with range smaller than dimension of Indexed
-       - Idx with stepsize != 1
-       - Idx with step determined by function call
 """
 
-from sympy import Expr, Basic, Tuple, Symbol, Integer, sympify, S
+#   TODO:  (some ideas for improvement)
+#
+#   o test and guarantee numpy compatibility
+#      - implement full support for broadcasting
+#      - strided arrays
+#
+#   o more functions to analyze indexed expressions
+#      - identify standard constructs, e.g matrix-vector product in a subexpression
+#
+#   o functions to generate component based arrays (numpy and sympy.Matrix)
+#      - generate a single array directly from Indexed
+#      - convert simple sub-expressions
+#
+#   o sophisticated indexing (possibly in subclasses to preserve simplicity)
+#      - Idx with range smaller than dimension of Indexed
+#      - Idx with stepsize != 1
+#      - Idx with step determined by function call
+
+from sympy.core import Expr, Basic, Tuple, Symbol, Integer, sympify, S
 
 class IndexException(Exception):
     pass
 
-class Indexed(Expr):
-    """Represent the stem of an indexed object, e.g. a numpy array.
+class IndexedBase(Expr):
+    """Represent the base or stem of an indexed object
 
-    The IndexedStem class represent an array that contains elements. An element
-    i of an indexed object A is denoted A(i) and is represented by the
-    IndexedElement class.
+    The IndexedBase class represent an array that contains elements. The main purpose
+    of this class is to allow the convenient creation of objects of the Indexed
+    class.  The __getitem__ method of IndexedBase returns an instance of
+    Indexed.  Alone, without indices, the IndexedBase class can be used as a
+    notation for e.g. matrix equations, resembling what you could do with the
+    Symbol class.  But, the IndexedBase class adds functionality that is not
+    available for Symbol instances:
 
-    The Indexed class allows a simple notation for e.g. matrix equations,
-    resembling what you could do with the Symbol class.  But, the Indexed class
-    adds functionality that is not available for Symbol instances:
+      -  An IndexedBase object can optionally store shape information.  This can
+         be used in to check array conformance and conditions for numpy
+         broadcasting.  (TODO)
+      -  An IndexedBase object implements syntactic sugar that allows easy symbolic
+         representation of array operations, using implicit summation of
+         repeated indices.
+      -  The IndexedBase object symbolizes a mathematical structure equivalent
+         to arrays, and is recognized as such for code generation and automatic
+         compilation and wrapping.
 
-      -  An Indexed object can optionally store shape information.  This can
-         be used in functions that check array conformance and conditions for
-         numpy broadcasting.
-      -  An Indexed object implements syntactic sugar that allows easy symbolic
-         representation of array elements,  e.g. you can type A(i, j) to
-         create a symbol for element i,j of array A.
-      -  The Indexed object symbolizes a mathematical structure equivalent to
-         arrays, and is recognized as such for code generation and
-         TODO: conversion to a numpy array and sympy.Matrix objects.
-
-    >>> from sympy.tensor import Indexed
+    >>> from sympy.tensor import IndexedBase, Idx
     >>> from sympy import symbols
-    >>> a = Indexed('a'); a
-    a
-    >>> type(a)
+    >>> A = IndexedBase('A'); A
+    A
+    >>> type(A)
+    <class 'sympy.tensor.indexed.IndexedBase'>
+
+    When an IndexedBase object recieves indices, it returns an array with named
+    axes, represented by an Indexed object:
+
+    >>> i, j = symbols('i j', integer=True)
+    >>> A[i, j, 2]
+    A[i, j, 2]
+    >>> type(A[i, j, 2])
     <class 'sympy.tensor.indexed.Indexed'>
 
-    Objects of type IndexedElement to symbolize elements of the array will by
-    created whenever indices are supplied to the stem:
+    The IndexedBase constructor takes an optional shape argument.  If given,
+    it overrides any shape information in the indices. (But not the index
+    ranges!)
 
-    >>> i, j, k = symbols('i j k', integer=True)
-    >>> a(i, j, k)
-    a(i, j, k)
-    >>> type(a(i, j, k))
-    <class 'sympy.tensor.indexed.IndexedElement'>
+    >>> m, n, o, p = symbols('m n o p', integer=True)
+    >>> i = Idx('i', m)
+    >>> j = Idx('j', n)
+    >>> A[i, j].shape
+    Tuple(m, n)
+    >>> B = IndexedBase('B', shape=(o, p))
+    >>> B[i, j].shape
+    Tuple(o, p)
 
     """
-    def __new__(cls, label, **kw_args):
+    is_commutative = False
+
+    def __new__(cls, label, shape=None, **kw_args):
         if isinstance(label, basestring):
             label = Symbol(label)
 
-        # TODO: implement optional shape argument
+        obj = Expr.__new__(cls, label, **kw_args)
+        if isinstance(shape, (tuple, list)):
+            obj._shape = Tuple(*shape)
+        else:
+            obj._shape = shape
+        return obj
 
-        return Expr.__new__(cls, label, **kw_args)
+    @property
+    def args(self):
+        if self._shape:
+            return self._args + (self._shape,)
+        else:
+            return self._args
 
-    def __call__(self, *indices, **kw_args):
-        return IndexedElement(self, *indices, **kw_args)
+    def _hashable_content(self):
+        return Expr._hashable_content(self) + (self._shape,)
+
+    def __getitem__(self, indices, **kw_args):
+        if isinstance(indices, tuple):
+            if self.shape and len(self.shape) != len(indices):
+                raise IndexException("Rank mismatch")
+            return Indexed(self, *indices, **kw_args)
+        else:
+            if self.shape and len(self.shape) != 1:
+                raise IndexException("Rank mismatch")
+            return Indexed(self, indices, **kw_args)
+
+    @property
+    def shape(self):
+        return self._shape
 
     @property
     def label(self):
@@ -136,29 +209,37 @@ def _ensure_Idx(arg):
     else:
         return Idx(arg)
 
-class IndexedElement(Expr):
-    """Represent an indexed element, e.g. a symbolic array element.
+class Indexed(Expr):
+    """Represents a mathematical object with indices.
 
-    >>> from sympy.tensor import IndexedElement
+    >>> from sympy.tensor import Indexed, IndexedBase, Idx
     >>> from sympy import symbols
-    >>> i, j, k = symbols('i j k', integer=True)
-    >>> IndexedElement('a', i, j)
-    a(i, j)
+    >>> i, j = map(Idx, ['i', 'j'])
+    >>> Indexed('A', i, j)
+    A[i, j]
+
+    It is recommended that Indexed objects are created via IndexedBase:
+
+    >>> A = IndexedBase('A')
+    >>> Indexed('A', i, j) == A[i, j]
+    True
 
     """
+    is_commutative = False
 
-    def __new__(cls, stem, *args, **kw_args):
-        assert args
-        if isinstance(stem, (basestring, Symbol)):
-            stem = Indexed(stem)
-
+    def __new__(cls, base, *args, **kw_args):
+        if not args: raise IndexException("Indexed needs at least one index")
+        if isinstance(base, (basestring, Symbol)):
+            base = IndexedBase(base)
+        elif not isinstance(base, IndexedBase):
+            raise TypeError("Indexed expects string, Symbol or IndexedBase as base")
         # FIXME: 2.4 compatibility
         args = map(_ensure_Idx, args)
         # args = tuple([ a if isinstance(a, Idx) else Idx(a) for a in args ])
-        return Expr.__new__(cls, stem, *args, **kw_args)
+        return Expr.__new__(cls, base, *args, **kw_args)
 
     @property
-    def stem(self):
+    def base(self):
         return self.args[0]
 
     @property
@@ -171,31 +252,64 @@ class IndexedElement(Expr):
         return len(self.args)-1
 
     @property
-    def dimensions(self):
-        return [(i.lower, i.upper) for i in self.indices]
+    def shape(self):
+        """returns a list with dimensions of each index"""
+        if self.base.shape:
+            return self.base.shape
+        try:
+            return Tuple(*[i.upper - i.lower + 1 for i in self.indices])
+        except TypeError:
+            # Let's return a more meaningful error
+            raise IndexException("Shape is not defined for all indices")
+
+    @property
+    def ranges(self):
+        """returns a list of tuples with lower and upper range of each index
+        """
+        return [ (i.lower, i.upper) for i in self.indices ]
 
     def _sympystr(self, p):
         indices = map(p.doprint, self.indices)
-        return "%s(%s)" % (p.doprint(self.stem), ", ".join(indices))
+        return "%s[%s]" % (p.doprint(self.base), ", ".join(indices))
 
 
-class Idx(Basic):
+class Idx(Expr):
     """Represents an index, either symbolic or integer.
 
-    Optionally you can specify a range [default=0]
-    .. Symbol, integer  --  interpreted as dimension, lower and upper ranges are
-                            set to 0 and range-1
-    .. tuple  --  interpreted as lower, upper elements in range.
+    There are a number of ways to create an Idx object.  The constructor
+    takes two arguments:
+
+    ``label``
+        An integer or a symbol that labels the index.
+    ``range``
+        Optionally you can specify a range as either
+
+            - Symbol or integer: This is interpreted as dimension. lower and
+              upper ranges are set to 0 and range-1
+            - tuple: This is interpreted as the lower and upper bounds in the
+              range.
 
     Note that the Idx constructor is rather pedantic, and will not accept
     non-integer symbols.  The only exception is that you can use oo and -oo to
     specify an unbounded range.  For all other cases, both label and bounds
-    must be declared as integers, in the sense that for a symbol n,
+    must be declared as integers, in the sense that for a index label n,
     n.is_integer must return True.
 
-    >>> from sympy.tensor import Indexed, Idx
+    For convenience, if the label is given as a string, it is automatically
+    converted to an integer symbol.  (Note that this conversion is not done for
+    range or dimension arguments.)
+
+    :Examples:
+
+    >>> from sympy.tensor import IndexedBase, Idx
     >>> from sympy import symbols, oo
     >>> n, i, L, U = symbols('n i L U', integer=True)
+
+    0) Construction from a string.  An integer symbol is created from the
+    string.
+
+    >>> Idx('qwerty')
+    qwerty
 
     1) Both upper and lower bound specified
 
@@ -231,6 +345,8 @@ class Idx(Basic):
 
     def __new__(cls, label, range=None, **kw_args):
 
+        if isinstance(label, basestring):
+            label = Symbol(label, integer=True)
         label, range = map(sympify, (label, range))
 
         if not label.is_integer:
@@ -242,32 +358,34 @@ class Idx(Basic):
                 if not (bound.is_integer or abs(bound) is S.Infinity):
                     raise TypeError("Idx object requires integer bounds")
             args = label, Tuple(*range)
-        elif isinstance(range, (Symbol, Integer)) or range is S.Infinity:
+        elif isinstance(range, Expr):
             if not (range.is_integer or range is S.Infinity):
                 raise TypeError("Idx object requires an integer dimension")
             args = label, Tuple(S.Zero, range-S.One)
         elif range:
-            raise TypeError("range must be tuple, symbol or integer")
+            raise TypeError("range must be  tuple or integer sympy expression")
         else:
             args = label,
 
-        obj = Basic.__new__(cls, *args, **kw_args)
+        obj = Expr.__new__(cls, *args, **kw_args)
         return obj
 
     @property
     def label(self):
+        """Returns the name/label of the index, or it's integer value"""
         return self.args[0]
 
     @property
     def lower(self):
+        """Returns the lower bound of the index"""
         try:
             return self.args[1][0]
         except IndexError:
             return
 
-
     @property
     def upper(self):
+        """Returns the upper bound of the index"""
         try:
             return self.args[1][1]
         except IndexError:
@@ -275,4 +393,3 @@ class Idx(Basic):
 
     def _sympystr(self, p):
         return p.doprint(self.label)
-

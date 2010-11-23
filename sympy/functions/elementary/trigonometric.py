@@ -164,18 +164,22 @@ class sin(Function):
     def _eval_conjugate(self):
         return self.func(self.args[0].conjugate())
 
-    def _eval_expand_complex(self, deep=True, **hints):
+    def as_real_imag(self, deep=True, **hints):
         if self.args[0].is_real:
             if deep:
                 hints['complex'] = False
-                return self.expand(deep, **hints)
+                return (self.expand(deep, **hints), S.Zero)
             else:
-                return self
+                return (self, S.Zero)
         if deep:
             re, im = self.args[0].expand(deep, **hints).as_real_imag()
         else:
             re, im = self.args[0].as_real_imag()
-        return sin(re)*C.cosh(im) + S.ImaginaryUnit*cos(re)*C.sinh(im)
+        return (sin(re)*C.cosh(im), cos(re)*C.sinh(im))
+
+    def _eval_expand_complex(self, deep=True, **hints):
+        re_part, im_part = self.as_real_imag(deep=deep, **hints)
+        return re_part + im_part*S.ImaginaryUnit
 
     def _eval_expand_trig(self, deep=True, **hints):
         if deep:
@@ -370,19 +374,22 @@ class cos(Function):
     def _eval_conjugate(self):
         return self.func(self.args[0].conjugate())
 
-    def _eval_expand_complex(self, deep=True, **hints):
+    def as_real_imag(self, deep=True, **hints):
         if self.args[0].is_real:
             if deep:
                 hints['complex'] = False
-                return self.expand(deep, **hints)
+                return (self.expand(deep, **hints), S.Zero)
             else:
-                return self
+                return (self, S.Zero)
         if deep:
             re, im = self.args[0].expand(deep, **hints).as_real_imag()
         else:
             re, im = self.args[0].as_real_imag()
-        return cos(re)*C.cosh(im) - \
-            S.ImaginaryUnit*sin(re)*C.sinh(im)
+        return (cos(re)*C.cosh(im), -sin(re)*C.sinh(im))
+
+    def _eval_expand_complex(self, deep=True, **hints):
+        re_part, im_part = self.as_real_imag(deep=deep, **hints)
+        return re_part + im_part*S.ImaginaryUnit
 
     def _eval_expand_trig(self, deep=True, **hints):
         if deep:
@@ -534,20 +541,23 @@ class tan(Function):
     def _eval_conjugate(self):
         return self.func(self.args[0].conjugate())
 
-    def _eval_expand_complex(self, deep=True, **hints):
+    def as_real_imag(self, deep=True, **hints):
         if self.args[0].is_real:
             if deep:
                 hints['complex'] = False
-                return self.expand(deep, **hints)
+                return (self.expand(deep, **hints), S.Zero)
             else:
-                return self
+                return (self, S.Zero)
         if deep:
             re, im = self.args[0].expand(deep, **hints).as_real_imag()
         else:
             re, im = self.args[0].as_real_imag()
         denom = cos(re)**2 + C.sinh(im)**2
-        return (sin(re)*cos(re) + \
-            S.ImaginaryUnit*C.sinh(im)*C.cosh(im))/denom
+        return (sin(re)*cos(re)/denom, C.sinh(im)*C.cosh(im)/denom)
+
+    def _eval_expand_complex(self, deep=True, **hints):
+        re_part, im_part = self.as_real_imag(deep=deep, **hints)
+        return re_part + im_part*S.ImaginaryUnit
 
     def _eval_expand_trig(self, deep=True, **hints):
         return self
@@ -672,20 +682,23 @@ class cot(Function):
         assert len(self.args) == 1
         return self.func(self.args[0].conjugate())
 
-    def _eval_expand_complex(self, deep=True, **hints):
+    def as_real_imag(self, deep=True, **hints):
         if self.args[0].is_real:
             if deep:
                 hints['complex'] = False
-                return self.expand(deep, **hints)
+                return (self.expand(deep, **hints), S.Zero)
             else:
-                return self
+                return (self, S.Zero)
         if deep:
             re, im = self.args[0].expand(deep, **hints).as_real_imag()
         else:
             re, im = self.args[0].as_real_imag()
         denom = sin(re)**2 + C.sinh(im)**2
-        return (sin(re)*cos(re) - \
-            S.ImaginaryUnit*C.sinh(im)*C.cosh(im))/denom
+        return (sin(re)*cos(re)/denom, -C.sinh(im)*C.cosh(im)/denom)
+
+    def _eval_expand_complex(self, deep=True, **hints):
+        re_part, im_part = self.as_real_imag(deep=deep, **hints)
+        return re_part + im_part*S.ImaginaryUnit
 
     def _eval_rewrite_as_exp(self, arg):
         exp, I = C.exp, S.ImaginaryUnit

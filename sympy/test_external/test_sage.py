@@ -123,6 +123,7 @@ def test_functions():
     check_expression("exp(x)", "x")
     check_expression("log(x)", "x")
     check_expression("abs(x)", "x")
+    check_expression("sign(x)", "x")
 
 def test_issue924():
     sage.var("a x")

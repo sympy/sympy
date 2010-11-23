@@ -144,8 +144,43 @@ class Factorial(Function):
 class MultiFactorial(Function):
     pass
 
+class Factorial2(Function):
+    """The double factorial n!!, not to be confused with (n!)!
+
+    The double facotrial is defined for integers >= -1 as
+                 ,
+                |  n*(n - 2)*(n - 4)* ... * 1    for n odd
+        n!! =  -|  n*(n - 2)*(n - 4)* ... * 2    for n even
+                |  1                             for n = 0, -1
+                 '
+
+    >>> from sympy import factorial2, var
+    >>> var('n')
+    n
+    >>> factorial2(n + 1)
+    (1 + n)!!
+    >>> factorial2(5)
+    15
+    >>> factorial2(-1)
+    1
+    """
+    nargs = 1
+
+    @classmethod
+    def eval(cls, arg):
+        if arg.is_Number:
+            if arg == S.Zero or arg == S.NegativeOne:
+                return S.One
+            return Factorial2(arg - 2)*arg
+
+    def _sympystr(self, p):
+        if self.args[0].is_Atom:
+            return "%s!!" % p.doprint(self.args[0])
+        else:
+            return "(%s)!!" % p.doprint(self.args[0])
 
 factorial   = Factorial
+factorial2  = Factorial2
 
 ###############################################################################
 ######################## RISING and FALLING FACTORIALS ########################

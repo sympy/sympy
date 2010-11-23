@@ -1,5 +1,5 @@
 from sympy import Symbol, exp, Integer, Real, sin, cos, log, Poly, Lambda, \
-        Function, I, S, sqrt,  raises, srepr
+        Function, I, S, sqrt,  raises, srepr, Rational
 from sympy.abc import x, y
 from sympy.core.sympify import sympify, _sympify, SympifyError
 from sympy.core.decorators import _sympifyit
@@ -15,6 +15,36 @@ def test_sympify1():
     assert sympify("x") == Symbol("x")
     assert sympify("   x") == Symbol("x")
     assert sympify("   x   ") == Symbol("x")
+    # 1778
+    n1 = Rational(1, 2)
+    assert sympify('--.5') == n1
+    assert sympify('-1/2') == -n1
+    assert sympify('-+--.5') == -n1
+    assert sympify('-.[3]') == Rational(-1, 3)
+    assert sympify('.[3]') == Rational(1, 3)
+    assert sympify('+.[3]') == Rational(1, 3)
+    assert sympify('+0.[3]*10**-2') == Rational(1, 300)
+    # options to make reals into rationals
+    assert sympify('1.22[345]', rational=1) == \
+           1 + Rational(22, 100) + Rational(345, 99900)
+    assert sympify('2/2.6', rational=1) == Rational(10, 13)
+    assert sympify('2.6/2', rational=1) == Rational(13, 10)
+    assert sympify('2.6e2/17', rational=1) == Rational(260, 17)
+    assert sympify('2.6e+2/17', rational=1) == Rational(260, 17)
+    assert sympify('2.6e-2/17', rational=1) == Rational(26, 17000)
+    assert sympify('2.1+3/4', rational=1) == Rational(21, 10) + Rational(3, 4)
+    assert sympify('2.234456', rational=1) == Rational(279307, 125000)
+    assert sympify('2.234456e23', rational=1) == 223445600000000000000000
+    assert sympify('2.234456e-23', rational=1) == Rational(279307, 12500000000000000000000000000)
+    assert sympify('-2.234456e-23', rational=1) == Rational(-279307, 12500000000000000000000000000)
+    assert sympify('12345678901/17', rational=1) == Rational(12345678901, 17)
+    assert sympify('1/.3 + x', rational=1) == Rational(10, 3) + x
+    # make sure longs in fractions work
+    assert sympify('222222222222/11111111111') == Rational(222222222222, 11111111111)
+    # ... even if they come from repetend notation
+    assert sympify('1/.2[123456789012]') == Rational(333333333333, 70781892967)
+    # ... or from high precision reals
+    assert sympify('.1234567890123456', rational=1) == Rational(19290123283179,  156250000000000)
 
 def test_sympify2():
     class A:
@@ -40,6 +70,12 @@ def test_sympify_bool():
     and that output leaves them unchanged"""
     assert sympify(True) == True
     assert sympify(False)== False
+
+def test_sympyify_iterables():
+    ans = [Rational(3, 10), Rational(1, 5)]
+    assert sympify(['.3', '.2'], rational=1) == ans
+    assert sympify(set(['.3', '.2']), rational=1) == set(ans)
+    assert sympify(tuple(['.3', '.2']), rational=1) == tuple(ans)
 
 def test_sympify4():
     class A:

@@ -2,7 +2,8 @@ from sympy import Symbol, symbols, together, hypersimp, factorial, binomial, \
         collect, Function, powsimp, separate, sin, exp, Rational, fraction, \
         simplify, trigsimp, cos, tan, cot, log, ratsimp, Matrix, pi, integrate, \
         solve, nsimplify, GoldenRatio, sqrt, E, I, sympify, atan, Derivative, \
-        S, diff, oo, Eq, Integer, gamma, acos, Integral, logcombine, separatevars
+        S, diff, oo, Eq, Integer, gamma, acos, Integral, logcombine, \
+        separatevars, Wild
 from sympy.utilities import all
 from sympy.utilities.pytest import XFAIL
 
@@ -354,6 +355,22 @@ def test_collect_D_0():
     #                                           -- (a + b)*D(D(f, x), x)
     assert collect(a*fxx     + b*fxx    , fxx)  == (a + b)*fxx
 
+def test_collect_Wild():
+    """Collect with respect to functions with Wild argument"""
+    a, b, x, y = symbols('a b x y')
+    f = Function('f')
+    w1 = Wild('.1')
+    w2 = Wild('.2')
+    assert collect(f(x) + a*f(x), f(w1)) == (1 + a)*f(x)
+    assert collect(f(x, y) + a*f(x, y), f(w1)) == f(x, y) + a*f(x, y)
+    assert collect(f(x, y) + a*f(x, y), f(w1, w2)) == (1 + a)*f(x, y)
+    assert collect(f(x, y) + a*f(x, y), f(w1, w1)) == f(x, y) + a*f(x, y)
+    assert collect(f(x, x) + a*f(x, x), f(w1, w1)) == (1 + a)*f(x, x)
+    assert collect(a*(x + 1)**y + (x + 1)**y, w1**y) == (1 + a)*(x + 1)**y
+    assert collect(a*(x + 1)**y + (x + 1)**y, w1**b) == a*(x + 1)**y + (x + 1)**y
+    assert collect(a*(x + 1)**y + (x + 1)**y, (x + 1)**w2) == (1 + a)*(x + 1)**y
+    assert collect(a*(x + 1)**y + (x + 1)**y, w1**w2) == (1 + a)*(x + 1)**y
+
 def test_separatevars():
     x,y,z,n = symbols('xyzn')
     assert separatevars(2*n*x*z+2*x*y*z) == 2*x*z*(n+y)
@@ -427,6 +444,8 @@ def test_nsimplify():
     assert nsimplify(0.33333, tolerance=1e-4) == Rational(1, 3)
     assert nsimplify(2.0**(1/3.), tolerance=0.001) == Rational(635, 504)
     assert nsimplify(2.0**(1/3.), tolerance=0.001, full=True) == 2**Rational(1, 3)
+    assert nsimplify(x + .5, rational=True) == Rational(1, 2) + x
+    assert nsimplify(1/.3 + x, rational=True) == Rational(10, 3) + x
 
 def test_extract_minus_sign():
     x = Symbol("x")

@@ -46,11 +46,31 @@ class Ellipse(GeometryEntity):
     t*sin(1.546086215036205357975518382), 'mode=parametric'
     """
 
-    def __new__(cls, center, hradius, vradius, **kwargs):
+    def __new__(cls, center=None, hradius=None, vradius=None, eccentricity=None,
+                **kwargs):
         hradius = sympify(hradius)
         vradius = sympify(vradius)
+        eccentricity = sympify(eccentricity)
+
+        if len(filter(None, (hradius, vradius, eccentricity))) != 2:
+            raise ValueError, 'Exactly two arguments between "hradius", '\
+                '"vradius", and "eccentricity" must be not None."'
+
+        if eccentricity is not None:
+            if hradius is None:
+                hradius = vradius / sqrt(1 - eccentricity**2)
+            elif vradius is None:
+                vradius = hradius * sqrt(1 - eccentricity**2)
+        else:
+            if hradius is None and vradius is None:
+                raise ValueError("At least two arguments between hradius, "
+                    "vradius and eccentricity must not be none.")
+
+        if center is None:
+            center = Point(0, 0)
+
         if not isinstance(center, Point):
-            raise TypeError("center must be be a Point")
+            raise TypeError("center must be a Point")
 
         if hradius == vradius:
             return Circle(center, hradius, **kwargs)
@@ -84,21 +104,52 @@ class Ellipse(GeometryEntity):
         raise NotImplementedError
 
     @property
+    def eccentricity(self):
+        """The eccentricity of the ellipse."""
+
+        return self.focus_distance / self.hradius
+
+    @property
+    def periapsis(self):
+        """The periapsis of the ellipse.
+
+        It's the shortest distance between the focus and the contour."""
+
+        return self.hradius * (1 - self.eccentricity)
+
+    @property
+    def apoapsis(self):
+        """The periapsis of the ellipse.
+
+        It's the greatest distance between the focus and the contour."""
+
+        return self.hradius * (1 + self.eccentricity)
+
+    @property
+    def focus_distance(self):
+        """The focale distance of the ellipse.
+
+        It's distance between the center and one focus."""
+
+        return Point.distance(self.center, self.foci[0])
+
+    @property
     def foci(self):
         """The foci of the ellipse, if the radii are numerical."""
         c = self.center
         if self.hradius == self.vradius:
-            return c
+            return (c, c)
 
         hr, vr = self.hradius, self.vradius
         if hr.atoms(C.Symbol) or vr.atoms(C.Symbol):
             raise ValueError("foci can only be determined on non-symbolic radii")
 
-        v = sqrt(abs(vr**2 - hr**2))
+        # calculate focus distance (manually, since focus_distance calls this routine)
+        h = sqrt(abs(vr**2 - hr**2))
         if hr < vr:
-            return (c+Point(0, -v), c+Point(0, v))
+            return (c+Point(0, -h), c+Point(0, h))
         else:
-            return (c+Point(-v, 0), c+Point(v, 0))
+            return (c+Point(-h, 0), c+Point(h, 0))
 
     def tangent_line(self, p):
         """
@@ -255,6 +306,12 @@ class Ellipse(GeometryEntity):
                 pass
 
         raise NotImplementedError()
+
+    def distance_to_center(self, t):
+
+        seg = Point.distance(self.center, self.arbitrary_point())
+
+        return seg.subs('t', t)
 
     def __eq__(self, o):
         return ((self.center == o.center) \

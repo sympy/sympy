@@ -1,5 +1,5 @@
 from sympy import limit, exp, oo, log, sqrt, Limit, sin, floor, cos, ceiling, \
-        atan, Symbol, S, pi, Integral, cot
+        atan, gamma, Symbol, S, pi, Integral, cot
 from sympy.abc import x, y, z
 from sympy.utilities.pytest import XFAIL
 
@@ -166,3 +166,20 @@ def test_issue991():
 def test_issue1448():
     assert limit(cot(x),x,0,dir='+') == oo
     assert limit(cot(x),x,pi/2,dir='+') == 0
+
+def test_issue2065():
+    assert limit(x**0.5, x, oo) == oo**0.5 == oo
+    assert limit(x**0.5, x, 16) == S(16)**0.5
+    assert limit(x**0.5, x, 0) == 0
+    assert limit(x**(-0.5), x, oo) == 0
+    assert limit(x**(-0.5), x, 4) == S(4)**(-0.5)
+
+def test_issue2085():
+    assert limit(sin(x)/x, x, oo) == 0
+    assert limit(atan(x), x, oo) == pi/2
+    assert limit(gamma(x), x, oo) == oo
+
+@XFAIL
+def test_issue2085_unresolved():
+    assert limit(cos(x)/x, x, oo) == 0 # Raises ZeroDivisionError
+    assert limit(gamma(x), x, 1/2) == sqrt(pi) # Raises AssertionError

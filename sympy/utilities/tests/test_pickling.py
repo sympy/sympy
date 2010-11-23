@@ -372,14 +372,13 @@ def test_printing2():
     check(PrettyPrinter())
 
 #================== series ======================
-from sympy.series.gruntz import Limit2
 from sympy.series.limits import Limit
 from sympy.series.order import Order
 
 def test_series():
     e = Symbol("e")
     x = Symbol("x")
-    for c in (Limit2, Limit2(e, x, 1), Limit, Limit(e, x, 1), Order, Order(e)):
+    for c in (Limit, Limit(e, x, 1), Order, Order(e)):
         check(c)
 
 #================== statistics ==================

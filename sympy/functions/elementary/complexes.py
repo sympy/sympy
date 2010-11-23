@@ -2,7 +2,7 @@ from sympy.core.basic import S, C
 from sympy.core.function import Function, Derivative
 from sympy.functions.elementary.miscellaneous import sqrt
 
-from sympy.utilities.iterables import make_list, iff
+from sympy.utilities.iterables import iff
 
 ###############################################################################
 ######################### REAL and IMAGINARY PARTS ############################
@@ -31,7 +31,6 @@ class re(Function):
        2
 
     """
-
     nargs = 1
 
     is_real = True
@@ -47,7 +46,7 @@ class re(Function):
         else:
 
             included, reverted, excluded = [], [], []
-            arg = make_list(arg, C.Add)
+            arg = C.Add.make_args(arg)
             for term in arg:
                 coeff = term.as_coefficient(S.ImaginaryUnit)
 
@@ -67,6 +66,9 @@ class re(Function):
 
     def _eval_conjugate(self):
         return self
+
+    def as_real_imag(self, deep=True):
+        return (self, S.Zero)
 
     def _eval_expand_complex(self, deep=True, **hints):
 #        if deep:
@@ -117,7 +119,7 @@ class im(Function):
             return -im(arg.args[0])
         else:
             included, reverted, excluded = [], [], []
-            arg = make_list(arg, C.Add)
+            arg = C.Add.make_args(arg)
             for term in arg:
                 coeff = term.as_coefficient(S.ImaginaryUnit)
 
@@ -137,6 +139,9 @@ class im(Function):
 
     def _eval_conjugate(self):
         return self
+
+    def as_real_imag(self, deep=True):
+        return (self, S.Zero)
 
     def _eval_expand_complex(self, deep=True, **hints):
 #        if deep:
@@ -190,6 +195,10 @@ class sign(Function):
 
     def _eval_is_zero(self):
         return (self.args[0] is S.Zero)
+
+    def _sage_(self):
+        import sage.all as sage
+        return sage.sgn(self.args[0]._sage_())
 
 class abs(Function):
     """Return the absolute value of the argument. This is an extension of the built-in

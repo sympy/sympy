@@ -233,7 +233,10 @@ class Function(Application, Expr):
                 fname = MPMATH_TRANSLATIONS[fname]
             func = getattr(mpmath, fname)
         except (AttributeError, KeyError):
-            return
+            try:
+                return C.Real(self._imp_(*self.args), prec)
+            except (AttributeError, TypeError):
+                return
 
         # Convert all args to mpf or mpc
         try:
@@ -1006,6 +1009,22 @@ def expand_mul(expr, deep=True):
     """
     return sympify(expr).expand(deep=deep, mul=True, power_exp=False,\
     power_base=False, basic=False, multinomial=False, log=False)
+
+def expand_multinomial(expr, deep=True):
+    """
+    Wrapper around expand that only uses the multinomial hint.  See the expand
+    docstring for more information.
+
+    Example:
+    >>> from sympy import symbols, expand_multinomial, exp
+    >>> x, y = symbols('xy', positive=True)
+    >>> expand_multinomial((x + exp(x + 1))**2)
+    x**2 + 2*x*exp(1 + x) + exp(2 + 2*x)
+
+    """
+    return sympify(expr).expand(deep=deep, mul=False, power_exp=False,\
+    power_base=False, basic=False, multinomial=True, log=False)
+
 
 def expand_log(expr, deep=True):
     """

@@ -5,7 +5,6 @@ from sympy.integrals.deltafunctions import deltaintegrate
 from sympy.integrals.rationaltools import ratint
 from sympy.integrals.risch import heurisch
 from sympy.utilities import threaded, flatten
-from sympy.utilities.iterables import make_list
 from sympy.polys import Poly
 from sympy.solvers import solve
 from sympy.functions import Piecewise
@@ -317,7 +316,7 @@ class Integral(Expr):
         # we are going to handle Add terms separately,
         # if `f` is not Add -- we only have one term
         parts = []
-        args = make_list(f, Add)
+        args = Add.make_args(f)
         for g in args:
             coeff, g = g.as_independent(x)
 

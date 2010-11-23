@@ -37,6 +37,7 @@ access any SymPy module, or use this contens:
    statistics.txt
    solvers/ode.txt
    solvers/solvers.txt
+   tensor.txt
    utilities/index.txt
 
 Contributions to docs

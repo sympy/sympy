@@ -100,6 +100,11 @@ want to be mentioned here, so see our repository history for a full list).
 #. Christian Muise: fixes to logic module
 #. Kazuo Thow: Cleanup pretty printing tests
 #. Jezreel Ng: Fix hyperbolic functions rewrite
+#. Nicholas J.S. Kinar: improved documentation about "Immutability of Expressions"
+#. Thomas Dixon: Fix a limit bug
+#. Cristóvão Sousa: Implements _sage_ method for sign function.
+#. Andre de Fortier Smit: Doctests in matrices improved
+
 
 
 Up-to-date list in the order of the first contribution is given in the `AUTHORS

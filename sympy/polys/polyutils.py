@@ -151,10 +151,10 @@ def _dict_from_basic_if_gens(ex, gens, **args):
 
     result = {}
 
-    for term in ex.as_Add():
+    for term in Add.make_args(ex):
         coeff, monom = [], [0]*k
 
-        for factor in term.as_Mul():
+        for factor in Mul.make_args(term):
             if factor.is_Number:
                 coeff.append(factor)
             else:
@@ -201,10 +201,10 @@ def _dict_from_basic_no_gens(ex, **args):
 
     gens, terms = set([]), []
 
-    for term in ex.as_Add():
+    for term in Add.make_args(ex):
         coeff, elements = [], {}
 
-        for factor in term.as_Mul():
+        for factor in Mul.make_args(term):
             if factor.is_Number or _is_coeff(factor):
                 coeff.append(factor)
             else:

@@ -9,25 +9,139 @@ sympy.utilities.codegen. The codegen module can be used to generate complete
 source code files that are compilable without further modifications.
 """
 
-from str import StrPrinter
+from sympy.core import S, C
+from sympy.printing.codeprinter import CodePrinter
 from sympy.printing.precedence import precedence
-from sympy.core.basic import S
 
-class CCodePrinter(StrPrinter):
+
+# dictionary mapping sympy function to (argument_conditions, C_function).
+# Used in CCodePrinter._print_Function(self)
+known_functions = {
+        "ceiling": [(lambda x: True, "ceil")],
+        "abs": [(lambda x: not x.is_integer, "fabs")],
+        }
+
+class CCodePrinter(CodePrinter):
     """A printer to convert python expressions to strings of c code"""
     printmethod = "_ccode"
+
+    _default_settings = {
+        'order': None,
+        'full_prec': 'auto',
+        'precision': 15,
+        'user_functions': {},
+        'human': True,
+    }
+
+    def __init__(self, settings={}):
+        """Register function mappings supplied by user"""
+        CodePrinter.__init__(self, settings)
+        self.known_functions = dict(known_functions)
+        userfuncs = settings.get('user_functions', {})
+        for k,v in userfuncs.items():
+            if not isinstance(v, tuple):
+                userfuncs[k] = (lambda *x: True, v)
+        self.known_functions.update(userfuncs)
+
+    def _rate_index_position(self, p):
+        """function to calculate score based on position among indices
+
+        This method is used to sort loops in an optimized order, see
+        CodePrinter._sort_optimized()
+        """
+        return p*5
+
+    def _get_statement(self, codestring):
+        return "%s;" % codestring
+
+    def doprint(self, expr, assign_to=None):
+
+        if isinstance(assign_to, basestring):
+            assign_to = C.Symbol(assign_to)
+        elif not isinstance(assign_to, (C.Basic, type(None))):
+            raise TypeError("CCodePrinter cannot assign to object of type %s"%
+                    type(result_variable))
+
+        # keep a set of expressions that are not strictly translatable to C
+        # and number constants that must be declared and initialized
+        not_c = self._not_supported = set()
+        self._number_symbols = set()
+
+        # We treat top level Piecewise here to get if tests outside loops
+        lines = []
+        if isinstance(expr, C.Piecewise):
+            for i, (e, c) in enumerate(expr.args):
+                if i == 0:
+                    lines.append("if (%s) {" % self._print(c))
+                elif i == len(expr.args)-1 and c == True:
+                    lines.append("else {")
+                else:
+                    lines.append("else if (%s) {" % self._print(c))
+                code0 = self._doprint_a_piece(e, assign_to)
+                lines.extend(code0)
+                lines.append("}")
+        else:
+            code0 = self._doprint_a_piece(expr, assign_to)
+            lines.extend(code0)
+
+        # format the output
+        if self._settings["human"]:
+            frontlines = []
+            if len(not_c) > 0:
+                frontlines.append("// Not C:")
+                for expr in sorted(not_c, key=str):
+                    frontlines.append("// %s" % expr)
+            for name, value in sorted(self._number_symbols, key=str):
+                frontlines.append("double const %s = %s;" % (name, value))
+            lines = frontlines + lines
+            lines = "\n".join(lines)
+            result = self.indent_code(lines)
+        else:
+            lines = self.indent_code("\n".join(lines))
+            result = self._number_symbols, not_c, lines
+        del self._not_supported
+        del self._number_symbols
+        return result
+
+    def _get_loop_opening_ending(self, indices):
+        """Returns a tuple (open_lines, close_lines) containing lists of codelines
+        """
+        open_lines = []
+        close_lines = []
+        loopstart = "for (int %(var)s=%(start)s; %(var)s<%(end)s; %(var)s++){"
+        for i in indices:
+            # C arrays start at 0 and end at dimension-1
+            open_lines.append(loopstart % {
+                'var': self._print(i.label),
+                'start': self._print(i.lower),
+                'end': self._print(i.upper + 1)})
+            close_lines.append("}")
+        return open_lines, close_lines
 
     def _print_Pow(self, expr):
         PREC = precedence(expr)
         if expr.exp is S.NegativeOne:
             return '1.0/%s'%(self.parenthesize(expr.base, PREC))
+        elif expr.exp == 0.5:
+            return 'sqrt(%s)' % self._print(expr.base)
         else:
-            return 'pow(%s,%s)'%(self.parenthesize(expr.base, PREC),
-                                 self.parenthesize(expr.exp, PREC))
+            return 'pow(%s, %s)'%(self._print(expr.base),
+                                 self._print(expr.exp))
 
     def _print_Rational(self, expr):
         p, q = int(expr.p), int(expr.q)
         return '%d.0/%d.0' % (p, q)
+
+    def _print_Indexed(self, expr):
+        # calculate index for 1d array
+        dims = expr.shape
+        inds = [ i.label for i in expr.indices ]
+        elem = S.Zero
+        offset = S.One
+        for i in reversed(range(expr.rank)):
+            elem += offset*inds[i]
+            offset *= dims[i]
+        return "%s[%s]" % (self._print(expr.base.label), self._print(elem))
 
     def _print_Exp1(self, expr):
         return "M_E"
@@ -42,6 +156,8 @@ class CCodePrinter(StrPrinter):
         return '-HUGE_VAL'
 
     def _print_Piecewise(self, expr):
+        # This method is called only for inline if constructs
+        # Top level piecewise is handled in doprint()
         ecpairs = ["(%s) {\n%s\n}\n" % (self._print(c), self._print(e)) \
                        for e, c in expr.args[:-1]]
         last_line = ""
@@ -67,27 +183,73 @@ class CCodePrinter(StrPrinter):
         return '!'+self.parenthesize(expr.args[0], PREC)
 
     def _print_Function(self, expr):
-        if expr.func.__name__ == "ceiling":
-            return "ceil(%s)" % self.stringify(expr.args, ", ")
-        elif expr.func.__name__ == "abs" and not expr.args[0].is_integer:
-            return "fabs(%s)" % self.stringify(expr.args, ", ")
-        else:
-            return StrPrinter._print_Function(self, expr)
+        if expr.func.__name__ in self.known_functions:
+            cond_cfunc = self.known_functions[expr.func.__name__]
+            for cond, cfunc in cond_cfunc:
+                if cond(*expr.args):
+                    return "%s(%s)" % (cfunc, self.stringify(expr.args, ", "))
+        if hasattr(expr, '_imp_') and isinstance(expr._imp_, C.Lambda):
+            # inlined function
+            return self._print(expr._imp_(*expr.args))
+        return CodePrinter._print_Function(self, expr)
+
+    def indent_code(self, code):
+        """Accepts a string of code or a list of code lines"""
+
+        if isinstance(code, basestring):
+           code_lines = self.indent_code(code.splitlines())
+           return '\n'.join(code_lines)
+
+        tab = "   "
+        inc_token = ('{', '(', '{\n', '(\n')
+        dec_token = ('}', ')')
+
+        code = [ line.lstrip() for line in code ]
+
+        from sympy.utilities.iterables import any  # 2.4 support
+        increase = [ int(any(map(line.endswith, inc_token))) for line in code ]
+        decrease = [ int(any(map(line.startswith, dec_token))) for line in code ]
+
+        pretty = []
+        level = 0
+        for n, line in enumerate(code):
+            if not line:
+                pretty.append(line)
+                continue
+            level -= decrease[n]
+            pretty.append("%s%s" % (tab*level, line))
+            level += increase[n]
+        return pretty
 
 
-def ccode(expr, **settings):
+def ccode(expr, assign_to=None, **settings):
     r"""Converts an expr to a string of c code
 
-        Works for simple expressions using math.h functions.
+        Arguments:
+          expr  --  a sympy expression to be converted
 
-        >>> from sympy import ccode, Rational
-        >>> from sympy.abc import tau
+        Optional arguments:
+          precision  --  the precision for numbers such as pi [default=15]
+          user_functions  --  A dictionary where keys are FunctionClass instances
+                              and values are there string representations.
+                              Alternatively, the dictionary value can be a list
+                              of tuples i.e. [(argument_test, cfunction_string)].
+                              See below for examples.
+          human  --  If True, the result is a single string that may contain
+                     some constant declarations for the number symbols. If
+                     False, the same information is returned in a more
+                     programmer-friendly data structure.
 
+        >>> from sympy import ccode, symbols, Rational, sin
+        >>> x, tau = symbols(["x", "tau"])
         >>> ccode((2*tau)**Rational(7,2))
-        '8*pow(2,(1.0/2.0))*pow(tau,(7.0/2.0))'
+        '8*sqrt(2)*pow(tau, 7.0/2.0)'
+        >>> ccode(sin(x), assign_to="s")
+        's = sin(x);'
+
 
     """
-    return CCodePrinter(settings).doprint(expr)
+    return CCodePrinter(settings).doprint(expr, assign_to)
 
 def print_ccode(expr, **settings):
     """Prints C representation of the given expression."""

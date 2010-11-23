@@ -14,8 +14,9 @@ from special.polynomials import (legendre, assoc_legendre, hermite, chebyshevt,
         chebyshevu, chebyshevu_root, chebyshevt_root, laguerre_l)
 
 # see #391
-from combinatorial.factorials import factorial, rf, ff, binomial
-from combinatorial.factorials import Factorial, RisingFactorial, FallingFactorial, Binomial
+from combinatorial.factorials import factorial, factorial2, rf, ff, binomial
+from combinatorial.factorials import Factorial, RisingFactorial, FallingFactorial
+from combinatorial.factorials import Binomial, Factorial2
 from combinatorial.numbers import fibonacci, lucas, harmonic, bernoulli, bell
 
 from elementary.miscellaneous import sqrt, min_, max_
@@ -33,6 +34,7 @@ from special.spherical_harmonics import Ylm, Zlm
 from special.tensor_functions import Dij, Eijk
 from special.delta_functions import DiracDelta, Heaviside
 from special.bsplines import bspline_basis, bspline_basis_set
+from special.bessel import jn, yn, jn_zeros
 
 ln = log
 
