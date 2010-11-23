@@ -401,7 +401,6 @@ def test_NO():
                NO(Fd(a)*Fd(b)*F(c)) +
                NO(Fd(a)*Fd(b)*F(d)))
 
-    assert NO(Fd(a)*F(i))._remove_brackets()==Fd(a)*F(i)
     assert NO(Fd(a)*F(b))._remove_brackets()==Fd(a)*F(b)
     assert NO(F(j)*Fd(i))._remove_brackets()==F(j)*Fd(i)
 
@@ -417,15 +416,10 @@ def test_NO():
     assert NO(Fd(a)*F(b)) == - NO(F(b)*Fd(a))
 
     no =  NO(Fd(a)*F(i)*Fd(j)*F(b))
-    assert no[0] == Fd(a)
-    assert no[1] == F(i)
-    assert no[2] == Fd(j)
-    assert no[3] == F(b)
     l1 = [ ind for ind in no.iter_q_creators() ]
     assert l1 == [0,1]
     l2 = [ ind for ind in no.iter_q_annihilators() ]
     assert l2 == [3,2]
-    assert no.get_subNO(1) == NO(Fd(a)*Fd(j)*F(b))
 
 
 def test_contraction():
