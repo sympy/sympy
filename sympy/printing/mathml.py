@@ -53,7 +53,11 @@ class MathMLPrinter(Printer):
             'atanh': 'arctanh',
             'acot': 'arccot',
             'atan2': 'arctan',
-            'log': 'ln'
+            'log': 'ln',
+            'Equality': 'eq',
+            'Unequality': 'neq',
+            'StrictInequality': 'lt',
+            'Inequality': 'leq'
         }
 
         for cls in e.__class__.__mro__:
@@ -322,6 +326,13 @@ class MathMLPrinter(Printer):
         x.appendChild(x_1)
         for arg in e.args:
             x.appendChild(self._print(arg))
+        return x
+
+    def _print_Relational(self, e):
+        x = self.dom.createElement('apply')
+        x.appendChild(self.dom.createElement(self.mathml_tag(e)))
+        x.appendChild(self._print(e.lhs))
+        x.appendChild(self._print(e.rhs))
         return x
 
     def _print_list(self, seq):

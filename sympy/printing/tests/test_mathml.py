@@ -1,6 +1,6 @@
 from sympy import diff, Integral, Limit, sin, Symbol, Integer, Rational, cos, \
     tan, asin, acos, atan, sinh, cosh, tanh, asinh, acosh, atanh, E, I, oo, \
-    pi, GoldenRatio, EulerGamma, raises
+    pi, GoldenRatio, EulerGamma, raises, Eq, Ne, Ge, Lt
 from sympy.printing.mathml import mathml, MathMLPrinter
 from xml.dom.minidom import parseString
 
@@ -153,6 +153,40 @@ def test_mathml_trig():
 
     mml = mp._print(acosh(x))
     assert mml.childNodes[0].nodeName == 'arccosh'
+
+def test_mathml_relational():
+    mml_1 = mp._print(Eq(x,1))
+    assert mml_1.nodeName == 'apply'
+    assert mml_1.childNodes[0].nodeName == 'eq'
+    assert mml_1.childNodes[1].nodeName == 'ci'
+    assert mml_1.childNodes[1].childNodes[0].nodeValue == 'x'
+    assert mml_1.childNodes[2].nodeName == 'cn'
+    assert mml_1.childNodes[2].childNodes[0].nodeValue == '1'
+
+    mml_2 = mp._print(Ne(1,x))
+    assert mml_2.nodeName == 'apply'
+    assert mml_2.childNodes[0].nodeName == 'neq'
+    assert mml_2.childNodes[1].nodeName == 'cn'
+    assert mml_2.childNodes[1].childNodes[0].nodeValue == '1'
+    assert mml_2.childNodes[2].nodeName == 'ci'
+    assert mml_2.childNodes[2].childNodes[0].nodeValue == 'x'
+
+    mml_3 = mp._print(Ge(1,x))
+    assert mml_3.nodeName == 'apply'
+    assert mml_3.childNodes[0].nodeName == 'leq'
+    assert mml_3.childNodes[1].nodeName == 'ci'
+    assert mml_3.childNodes[1].childNodes[0].nodeValue == 'x'
+    assert mml_3.childNodes[2].nodeName == 'cn'
+    assert mml_3.childNodes[2].childNodes[0].nodeValue == '1'
+
+    mml_4 = mp._print(Lt(1,x))
+    assert mml_4.nodeName == 'apply'
+    assert mml_4.childNodes[0].nodeName == 'lt'
+    assert mml_4.childNodes[1].nodeName == 'cn'
+    assert mml_4.childNodes[1].childNodes[0].nodeValue == '1'
+    assert mml_4.childNodes[2].nodeName == 'ci'
+    assert mml_4.childNodes[2].childNodes[0].nodeValue == 'x'
+
 
 def test_c2p():
     """This tests some optional routines that depend on libxslt1 (which is optional)"""
