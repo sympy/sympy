@@ -2731,7 +2731,7 @@ def _determine_ambiguous(term, ordered, ambiguous_groups):
         ordered = result
     return ordered
 
-class _SymbolFactory:
+class _SymbolFactory(object):
     def __init__(self, label):
         self._counter = 0
         self._label = label
