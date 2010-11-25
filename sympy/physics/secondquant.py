@@ -156,14 +156,12 @@ class AntiSymmetricTensor(TensorSymbol):
     >>> from sympy.physics.secondquant import AntiSymmetricTensor
     >>> i, j = symbols('i j', below_fermi=True)
     >>> a, b = symbols('a b', above_fermi=True)
-    >>> AntiSymmetricTensor('t', (a, b), (i, j))
-    AntiSymmetricTensor(t, Tuple(a, b), Tuple(i, j))
-    >>> AntiSymmetricTensor('t', (b, a), (i, j))
-    -AntiSymmetricTensor(t, Tuple(a, b), Tuple(i, j))
-    >>> -AntiSymmetricTensor('t', (b, a), (i, j))
-    AntiSymmetricTensor(t, Tuple(a, b), Tuple(i, j))
+    >>> AntiSymmetricTensor('v', (a, i), (b, j))
+    AntiSymmetricTensor(v, Tuple(a, i), Tuple(b, j))
+    >>> AntiSymmetricTensor('v', (i, a), (b, j))
+    -AntiSymmetricTensor(v, Tuple(a, i), Tuple(b, j))
 
-    As you can see, the eval() method is automatically called.
+    As you can see, the indices are automatically sorted to a canonical form.
 
     """
 
