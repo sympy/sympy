@@ -205,20 +205,21 @@ class AntiSymmetricTensor(TensorSymbol):
 
         FIXME: This is a bottle-neck, can we do it faster?
         """
+        h = hash(index)
         if isinstance(index, Dummy):
             if index.assumptions0.get('above_fermi'):
-                return "10%i" %hash(index)
+                return (20, h)
             elif index.assumptions0.get('below_fermi'):
-                return "11%i" %hash(index)
+                return (21, h)
             else:
-                return "12%i" %hash(index)
+                return (22, h)
 
         if index.assumptions0.get('above_fermi'):
-            return "00%i" %hash(index)
+            return (10, h)
         elif index.assumptions0.get('below_fermi'):
-            return "01%i" %hash(index)
+            return (11, h)
         else:
-            return "02%i" %hash(index)
+            return (12, h)
 
 
     def _latex(self,printer):
@@ -837,13 +838,13 @@ class FermionicOperator(SqOperator):
         h = hash(self)
 
         if self.is_only_q_creator:
-            return "a%i" % h
+            return 1, h
         if self.is_only_q_annihilator:
-            return "d%i" % h
+            return 4, h
         if isinstance(self, Annihilator):
-            return "c%i" % h
+            return 3, h
         if isinstance(self, Creator):
-            return "b%i" % h
+            return 2, h
 
 
 class AnnihilateFermion(FermionicOperator, Annihilator):
