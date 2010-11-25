@@ -465,6 +465,13 @@ class Rational(Number):
         if q is None:
             if isinstance(p, Rational):
                return p
+            try:
+                # fractions only available for python 2.6+
+                import fractions
+                if isinstance(p, fractions.Fraction):
+                    return Rational(p.numerator, p.denominator)
+            except ImportError:
+                pass
             if isinstance(p, basestring):
                 try:
                     # we might have a Real
@@ -1808,7 +1815,17 @@ class ImaginaryUnit(AtomicExpr):
     def _sage_(self):
         import sage.all as sage
         return sage.I
+
 I = S.ImaginaryUnit
+
+try:
+    # fractions is only available for python 2.6+
+    import fractions
+    def sympify_fractions(f):
+        return Rational(f.numerator, f.denominator)
+    converter[fractions.Fraction] = sympify_fractions
+except ImportError:
+    pass
 
 def sympify_complex(a):
     real, imag = map(sympify, (a.real, a.imag))
