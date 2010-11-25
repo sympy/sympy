@@ -130,6 +130,13 @@ def test_Rational_new():
     assert Rational(19, 25).limit_denominator(4) == n3_4
     assert Rational('19/25').limit_denominator(4) == n3_4
 
+    # handle fractions.Fraction instances
+    try:
+        import fractions
+        assert Rational(fractions.Fraction(1, 2)) == Rational(1, 2)
+    except ImportError:
+        pass
+
 def test_Rational_cmp():
     n1 = Rational(1,4)
     n2 = Rational(1,3)
