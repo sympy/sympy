@@ -10,7 +10,7 @@ from sympy.physics.secondquant import (AntiSymmetricTensor, wicks,
         F, Fd, NO, evaluate_deltas, substitute_dummies, Commutator,
         simplify_index_permutations, PermutationOperator)
 from sympy import (
-    symbols, expand, pprint, Number, latex
+    symbols, expand, pprint, Rational, latex
 )
 
 pretty_dummies_dict={
@@ -34,7 +34,7 @@ def get_CC_operators():
     abji = NO(Fd(a)*Fd(b)*F(j)*F(i))
 
     T1 = t_ai*ai
-    T2 = Number((1,4))*t_abij*abji
+    T2 = Rational(1, 4)*t_abij*abji
     return (T1,T2)
 
 def main():
@@ -52,7 +52,7 @@ def main():
     v = AntiSymmetricTensor('v',(p,q),(r,s))
     pqsr = NO(Fd(p)*Fd(q)*F(s)*F(r))
 
-    H=f*pr + Number(1,4)*v*pqsr
+    H = f*pr + Rational(1, 4)*v*pqsr
     print "Using the hamiltonian:", latex(H)
 
     print "Calculating 4 nested commutators"
