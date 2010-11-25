@@ -2451,10 +2451,6 @@ def substitute_dummies(expr, new_indices=False, pretty_indices={}):
             except IndexError:
                 return 'p_'+str(number-len_general)
 
-
-
-
-
     aboves = []
     belows = []
     generals = []
@@ -2506,9 +2502,13 @@ def substitute_dummies(expr, new_indices=False, pretty_indices={}):
                 subsdict[d] = p.next()
         subslist = []
         final_subs = []
-        for k,v in subsdict.iteritems():
-            if k == v: continue
+        for k, v in subsdict.iteritems():
+            if k == v:
+                continue
             if v in subsdict:
+                # We check if the sequence of substitutions end quickly.  In
+                # that case, we can avoid temporary symbols if we ensure the
+                # correct substitution order.
                 if subsdict[v] in subsdict:
                     # (x, y) -> (y, x),  we need a temporary variable
                     x = Symbol('x', dummy=True)
@@ -2570,7 +2570,7 @@ def _get_ordered_dummies(mul, verbose = False):
         3. Position of the index in the first factor
         4. Position of the index in the second factor
 
-    The sort key is a tuple contaning the following components:
+    The sort key is a tuple with the following components:
 
         1. A single character indicating the range of the dummy (above, below
            or general.)
