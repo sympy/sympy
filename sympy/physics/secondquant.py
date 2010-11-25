@@ -2482,10 +2482,7 @@ def substitute_dummies(expr, new_indices=False, pretty_indices={}):
 
 
     expr = expr.expand()
-    if isinstance(expr,Add):
-        terms = expr.args
-    else:
-        terms = [expr]
+    terms = Add.make_args(expr)
     new_terms = []
     for term in terms:
         i = iter(belows)
@@ -2596,13 +2593,10 @@ def _get_ordered_dummies(mul, verbose = False):
 
     """
     # setup dicts to avoid repeated calculations in key()
-    if not isinstance(mul, Mul):
-        fac_dum = {mul: mul.atoms(Dummy)}
-        fac_repr = {mul: __kprint(mul)}
-    else:
-        fac_dum = dict([ (fac, fac.atoms(Dummy)) for fac in mul.args] )
-        fac_repr = dict([ (fac, __kprint(fac)) for fac in mul.args] )
-    all_dums = list(reduce(lambda x, y: x | y, [ fac_dum[fac] for fac in fac_dum ]))
+    args = Mul.make_args(mul)
+    fac_dum = dict([ (fac, fac.atoms(Dummy)) for fac in args] )
+    fac_repr = dict([ (fac, __kprint(fac)) for fac in args] )
+    all_dums = list(reduce(lambda x, y: x | y, fac_dum.values()))
     mask = {}
     for d in all_dums:
         if d.assumptions0.get('below_fermi'):
