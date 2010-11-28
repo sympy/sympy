@@ -180,18 +180,18 @@ def test_Sum2():
 
 def test_sum_constructor():
     s1 = Sum(n,n)
-    assert s1.limits == Tuple(Tuple(n))
+    assert s1.limits == (Tuple(n),)
     s2 = Sum(n,(n,))
-    assert s2.limits == Tuple(Tuple(n))
+    assert s2.limits == (Tuple(n),)
     s3 = Sum(n,((n,)))
-    assert s3.limits == Tuple(Tuple(n))
+    assert s3.limits == (Tuple(n),)
     s4 = Sum(n,(Tuple(n,)))
-    assert s4.limits == Tuple(Tuple(n))
+    assert s4.limits == (Tuple(n),)
 
     s5 = Sum(n,Eq(n,1))
-    assert s5.limits == Tuple(Tuple(n,1))
+    assert s5.limits == (Tuple(n,1),)
     s6 = Sum(n,Eq(n,Interval(1,2)))
-    assert s6.limits == Tuple(Tuple(n,1,2))
+    assert s6.limits == (Tuple(n,1,2),)
 
 
 def test_Sum_doit():

@@ -48,7 +48,9 @@ class Sum(Expr):
                 raise ValueError("Invalid summation variable or limits")
 
         obj = Expr.__new__(cls, **assumptions)
-        obj._args = (f, Tuple(*limits))
+        arglist = [f]
+        arglist.extend(limits)
+        obj._args = tuple(arglist)
 
         return obj
 
@@ -58,7 +60,7 @@ class Sum(Expr):
 
     @property
     def limits(self):
-        return self._args[1]
+        return self._args[1:]
 
     def doit(self, **hints):
         #if not hints.get('sums', True):
@@ -155,9 +157,13 @@ class Sum(Expr):
         return s + iterm, abs(term)
 
     def _eval_subs(self, old, new):
-        newargs = (self.args[1][0][0], self.args[1][0][1].subs(old,new),
-                   self.args[1][0][2].subs(old,new))
-        return Sum(self.args[0].subs(old, new), newargs)
+        newlimits = []
+        for lim in self.limits:
+            if lim[0] == old:
+                return self
+            newlimits.append( (lim[0],lim[1].subs(old,new),lim[2].subs(old,new)) )
+
+        return Sum(self.args[0].subs(old, new), *newlimits)
 
 
 def sum(*args, **kwargs):
