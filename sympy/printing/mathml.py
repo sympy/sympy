@@ -226,6 +226,8 @@ class MathMLPrinter(Printer):
         return lime_recur(limits)
 
     def _print_Sum(self, e):
+        # Printer can be shared because Sum and Integral have the
+        # same internal representation.
         return self._print_Integral(e)
 
     def _print_Symbol(self, sym):
