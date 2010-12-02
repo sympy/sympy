@@ -226,11 +226,16 @@ def test_tsolve_1():
     assert solve(exp(x)+1, x) == [pi*I]
     assert solve(x**2 - 2**x, x) == [2]
     assert solve(x**3 - 3**x, x) == [-3/log(3)*LambertW(-log(3)/3)]
-    assert solve(2*(3*x+4)**5 - 6*7**(3*x+9), x) in \
-        [[Rational(-4,3) - 5/log(7)/3*LambertW(-7*2**Rational(4,5)*6**Rational(1,5)*log(7)/10)],\
-         [(-5*LambertW(-7*2**(Rational(4, 5))*6**(Rational(1, 5))*log(7)/10) - 4*log(7))/(3*log(7))], \
-         [-((4*log(7) + 5*LambertW(-7*2**Rational(4,5)*6**Rational(1,5)*log(7)/10))/(3*log(7)))]]
-
+    assert solve(2*(3*x+4)**5 - 6*7**(3*x+9), x) in (
+    [[(S(-4)/3) - 5/log(7)/3*LambertW(-7*2**(S(4)/5)*6**(S(1)/5)*log(7)/10)],
+     [(-5*LambertW(-7*2**((S(4)/5))*6**((S(1)/5))*log(7)/10)
+      - 4*log(7))/(3*log(7))],
+     [-((4*log(7)
+         + 5*LambertW(-7*2**(S(4)/5)*6**(S(1)/5)*log(7)/10))/(3*log(7)))],
+     [(-5*LambertW(-7*3**(S(1)/5)*log(7)/5) - 4*log(7))/(3*log(7))],
+     [-((4*log(7) + 5*LambertW(-7*3**(S(1)/5)*log(7)/5))/(3*log(7)))],
+    ]
+    )
     assert solve(z*cos(x)-y, x)      == [acos(y/z)]
     assert solve(z*cos(2*x)-y, x)    == [acos(y/z)/2]
     assert solve(z*cos(sin(x))-y, x) == [asin(acos(y/z))]
