@@ -118,6 +118,10 @@ def jn_zeros(n, k, method="sympy"):
         from scipy.special import sph_jn
         from scipy.optimize import newton
         f  = lambda x: sph_jn(n, x)[0][-1]
+    elif method == 'mpmath':
+        # this needs a recent version of mpmath, newer than in sympy
+        from mpmath import besseljzero
+        return [besseljzero(n + 0.5, k) for k in xrange(1, k + 1)]
     else:
         raise NotImplementedError("Unknown method.")
     def solver(f, x):
