@@ -329,6 +329,16 @@ def test_powers_Integer():
     assert (-3) ** Rational(-7, 3) == -(-3) ** Rational(2, 3) / 27
     assert (-3) ** Rational(-2, 3) == -(-3) ** (S(1) / 3) / 3
 
+    assert S(1234).factors() == {617: 1, 2: 1}
+    assert Rational(2*3, 3*5*7).factors() == {2: 1, 5: -1, 7: -1}
+    # test that eval_power factors numbers bigger than limit (2**15)
+    from sympy import nextprime
+    n = nextprime(2**15) # bigger than the current limit in factor_trial_division
+    assert sqrt(n**2) == n
+    assert sqrt(n**3) == n*sqrt(n)
+    assert sqrt(4*n) == 2*sqrt(n)
+
+
 def test_powers_Rational():
     """Test Rational._eval_power"""
     # check infinity

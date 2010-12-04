@@ -3,10 +3,6 @@ Primality testing
 
 """
 
-_tiny_primes = [2, 3, 5, 7, 11, 13, 17, 19]
-_max_tiny_prime = 19
-_tiny_primes_set = set(_tiny_primes)
-
 # prime list to use when number must be tested as a probable prime.
 #>>> list(primerange(2, 200))
 _isprime_fallback_primes = [
@@ -18,19 +14,19 @@ _isprime_fallback_primes = [
 #46
 # pseudoprimes that will pass through last mr_safe test
 _pseudos = set([
-        669094855201,
-        1052516956501,2007193456621,2744715551581,9542968210729,
-        17699592963781,19671510288601,
-        24983920772821,24984938689453,29661584268781,37473222618541,
-        46856248255981,47922612926653,48103703944453,49110566041153,
-        49752242681221,91206655032481,91481980096033,119034193492321,
-        123645258399601,128928036060253,137364148720147,150753857310253,
-        153131886327421,155216912613121,185610214763821,224334357392701,
-        227752294950181,230058334559041,304562854940401,306001576998253,
-        335788261073821,377133492079081,379242177424951,389970770948461,
-        397319638319521,448114903362253,523235160050221,628999496281621,
-        699349238838253,746667678235753,790198268451301,794036495175661,
-        823820871230281,867739535711821,1039918661294761,1099127938585141,
+            669094855201,
+           1052516956501,2007193456621,2744715551581,9542968210729,
+          17699592963781,19671510288601,
+          24983920772821,24984938689453,29661584268781,37473222618541,
+          46856248255981,47922612926653,48103703944453,49110566041153,
+          49752242681221,91206655032481,91481980096033,119034193492321,
+         123645258399601,128928036060253,137364148720147,150753857310253,
+         153131886327421,155216912613121,185610214763821,224334357392701,
+         227752294950181,230058334559041,304562854940401,306001576998253,
+         335788261073821,377133492079081,379242177424951,389970770948461,
+         397319638319521,448114903362253,523235160050221,628999496281621,
+         699349238838253,746667678235753,790198268451301,794036495175661,
+         823820871230281,867739535711821,1039918661294761,1099127938585141,
         1104388025338153,1173374598605653,1262797719066157,1265872947674653,
         1325898212229667,1327034517143653,1418575746675583,1666122072463621,
         1837400535259453,1857422490084961,1870756820971741,1914550540480717,
@@ -51,34 +47,20 @@ _pseudos = set([
         8757647355282841,8903933671696381,8996133652295653,9074421465661261,
         9157536631454221,9188353522314541])
 
-def _is_tiny_prime(n):
-    return n <= _max_tiny_prime and n in _tiny_primes_set
-
-def _has_tiny_factor(n):
-    for p in _tiny_primes:
-        if n % p == 0:
-            return True
-    return False
-
-def _factor_pow2(n):
-    """Factor powers of two from n. Return (s, t), with t odd, such
-    that n = 2**s * t."""
-    s, t = 0, n
-    while not t & 1:
-        t >>= 1
-        s += 1
-    return s, t
-
 def _test(n, base):
     """Miller-Rabin strong pseudoprime test for one base.
     Return False if n is definitely composite, True if n is
     probably prime, with a probability greater than 3/4.
     """
+    from sympy.ntheory.factor_ import trailing
 
     n = int(n)
     if n < 2:
         return False
-    s, t = _factor_pow2(n-1)
+    # remove powers of 2 from n (= t * 2**s)
+    s = trailing(n - 1)
+    t = n >> s
+    # do the Fermat test
     b = pow(base, t, n)
     if b == 1 or b == n-1:
         return True
@@ -104,25 +86,27 @@ def mr(n, bases):
     return True
 
 def _mr_safe(n):
-    """For n < 1e16, use the Miller-Rabin test to determine with
+    """For n < 10**16, use the Miller-Rabin test to determine with
     certainty (unless the code is buggy!) whether n is prime.
 
-    NOTE: If the list of bases to test includes a base that is composite,
-    then n must not contain any factors of the bases or
-    else an incorrect result will be returned. e.g. 1943 (the product of
-    67 and 29) and the prime 679067 cannot be tested with the bases 350 and
-    3958281543 (specifically, the latter) since the factors of the latter are
-    29, 67 and 679067. The way to make sure that a valid n is tested is
-    to make sure that a preceding test allows only n values greater than
-    the largest prime factor in a successive test e.g. testing n < 1373653
-    before testing with bases 350 and 3958281543 guarantees that n will not
-    have any factor less than 1373653.
+    Although the primes 2 through 17 are sufficient to confirm that a number
+    less than 341550071728322 (that is not prime 2 through 17) is prime, this
+    range is broken up into smaller ranges with earlier ranges requiring less
+    work. For example, for n < 1373653 only the bases 2 and 3 need be tested.
 
-    If new ranges are added below it would be nice to indicate what the largest
-    prime of a given base set is so it is clear whether this condition is being
-    met.
+    What makes this a "safe" Miller-Rabin routine is that for n less than
+    the indicated limit, the given bases have been confirmed to detect all
+    composite numbers. What can potentially make this routine "unsafe" is
+    including ranges for which previous tests do not removes prime factors of
+    the bases being used. For example, this routine assumes that 2 and 3 have
+    already been removed as prime; but if the first test were the one for
+    n < 170584961 (that uses bases 350 and 3958281543) the routine would have
+    to ensure that the primes 5, 7, 29, 67, 679067 are already removed or else
+    they will be reported as being composite. For this reason it is helpful to
+    list the prime factors of the bases being tested as is done below. The
+    _mr_safe_helper can be used to generate this info-tag.
 
-    Reference for the bounds:
+    References for the bounds:
     [1] http://primes.utm.edu/prove/prove2_3.html
     [2] http://www.trnicely.net/misc/mpzspsp.html
     [3] http://en.wikipedia.org/wiki/Miller-Rabin_primality_test#
@@ -134,41 +118,40 @@ def _mr_safe(n):
     [6] http://uucode.com/obf/dalbec/alg.html#sprp
     """
 
-    n = int(n)
     if n < 1373653:
         return mr(n, [2, 3])
-        #[2, 3] stot = 1 pmax = 3
+        #[2, 3] stot = 1 clear == bases
         # these two (and similar below) are commented out since they are
         # more expensive in terms of stot than a later test.
         #if n < 9080191: return mr(n, [31, 73]) # ref [3]
-        #[31, 73] stot = 4 pmax = 73
+        # [31, 73] stot = 4 clear == bases
         #if n < 25326001: return mr(n, [2, 3, 5])
-        #[2, 3, 5] stot = 3 pmax = 5
+        # [2, 3, 5] stot = 3 clear == bases
     if n < 170584961:
         return mr(n, [350, 3958281543])
-        #[350, 3958281543L] stot = 1 pmax = 1319427181
+        # [350, 3958281543] stot = 1 clear [2, 3, 5, 7, 29, 67, 679067]
     if n < 4759123141:
         return mr(n, [2, 7, 61]) # ref [3]
-        #[2, 7, 61] stot = 3 pmax = 61
+        # [2, 7, 61] stot = 3 clear == bases
     if n < 75792980677:
         return mr(n, [2, 379215, 457083754])
-        #[2, 379215, 457083754] stot = 1 pmax = 228541877
+        # [2, 379215, 457083754] stot = 1 clear [2, 3, 5, 53, 228541877]
         #if n < 118670087467: return n is not 3215031751 and mr(n, [2, 3, 5, 7]) # ref [3]
-        #[2, 3, 5, 7] stot = 4 pmax = 7
+        # [2, 3, 5, 7] stot = 4 clear == bases
     if n < 1000000000000:
         return mr(n, [2, 13, 23, 1662803])
-        #[2, 13, 23, 1662803] stot = 4 pmax = 1662803
+        # [2, 13, 23, 1662803] stot = 4 clear == bases
         #if n < 2152302898747: return mr(n, [2, 3, 5, 7, 11])
-        #[2, 3, 5, 7, 11] stot = 5 pmax = 11
+        # [2, 3, 5, 7, 11] stot = 5 clear == bases
         #if n < 3474749660383: return mr(n, [2, 3, 5, 7, 11, 13])
-        #[2, 3, 5, 7, 11, 13] stot = 7 pmax = 13
+        # [2, 3, 5, 7, 11, 13] stot = 7 clear == bases
         #if n < 21652684502221: return mr(n, [2, 1215, 34862, 574237825])
-        #[2, 1215, 34862, 574237825] stot = 8 pmax = 114847565
+        # [2, 1215, 34862, 574237825] stot = 8 clear [2, 3, 5, 7, 17431, 3281359]
         #if n < 341550071728321: return mr(n, [2, 3, 5, 7, 11, 13, 17])
-        #[2, 3, 5, 7, 11, 13, 17] stot = 11 pmax = 17
+        # [2, 3, 5, 7, 11, 13, 17] stot = 11 clear == bases
     if n < 10000000000000000:
         return mr(n, [2, 3, 7, 61, 24251]) and n not in _pseudos
-        #[2, 3, 7, 61, 24251] stot = 5 pmax = 24251
+        # [2, 3, 7, 61, 24251] stot = 5 clear == bases
     raise ValueError("n too large")
 
 def isprime(n):
@@ -200,10 +183,15 @@ def isprime(n):
         return False
     if n & 1 == 0:
         return n == 2
-    if _is_tiny_prime(n):
-        return True
-    if _has_tiny_factor(n):
-        return False
+    if n <= 23001:
+        return pow(2, n, n) == 2 and n not in [341, 561, 645, 1105, 1387, 1729,
+                                               1905, 2047, 2465, 2701, 2821,
+                                               3277, 4033, 4369, 4371, 4681,
+                                               5461, 6601, 7957, 8321, 8481,
+                                               8911, 10261, 10585, 11305,
+                                               12801, 13741, 13747, 13981,
+                                               14491, 15709, 15841, 16705,
+                                               18705, 18721, 19951, 23001]
     try:
         return _mr_safe(n)
     except ValueError:
@@ -212,50 +200,43 @@ def isprime(n):
 def _mr_safe_helper(_s):
     """
     Analyze a (new) mr_safe line for for total number of s's to
-    be tested in _test along with the highest prime that occurs
-    in the list within that line.
+    be tested in _test along with the primes that must be cleared
+    by a previous test.
 
     e.g.
     >>> from sympy.ntheory.primetest import _mr_safe_helper
     >>> print _mr_safe_helper("if n < 170584961: return mr(n, [350, 3958281543])")
-     # [350, 3958281543] stot = 1 pmax = 1319427181
+     # [350, 3958281543] stot = 1 clear [2, 3, 5, 7, 29, 67, 679067]
+    >>> print _mr_safe_helper('return mr(n, [2, 379215, 457083754])')
+     # [2, 379215, 457083754] stot = 1 clear [2, 3, 5, 53, 228541877]
     """
-
-    def _maxfac(smalln):
-        """
-        Find the largest prime factor of smalln without resorting to
-        sympy's own functions.
-        """
-        from math import sqrt
-        assert smalln > 1
-        assert _max_tiny_prime > 2
-        maxp = int(sqrt(smalln))
-        for p in _tiny_primes:
-            if p > maxp:
-                return smalln
-            if smalln % p == 0:
-                return max([smalln//p, p])
-        for p in range(_max_tiny_prime + 2, maxp, 2):
-            if smalln % p == 0:
-                return max([smalln//p, p])
-        return smalln
 
     def _info(bases):
         """
         Analyze the list of bases, reporting the number of 'j-loops' that
-        will be required if this list is passed to _test and the maximum
-        prime that occurs (perhaps as a factor of a composite base) in the
-        list. This info tag should then be appended to any new mr_safe line
+        will be required if this list is passed to _test (stot) and the primes
+        that must be cleared by a previous test.
+
+        This info tag should then be appended to any new mr_safe line
         that is added so someone can easily see whether that line satisfies
         the requirements of mr_safe (see docstring there for details).
         """
-        pmax = 0
+        from sympy.ntheory.factor_ import factorint, trailing
+
+        factors = []
         tot = 0
         for b in bases:
-            tot += _factor_pow2(b-1)[0]
-            pmax = max([pmax, _maxfac(b)])
-        return ' # %s stot = %s pmax = %s' % tuple(
-                [str(x).replace('L','') for x in (list(bases), tot, pmax)])
+            tot += trailing(b-1)
+            f = factorint(b)
+            factors.extend(f)
+        factors = sorted(set(factors))
+        bases = sorted(set(bases))
+        if bases == factors:
+            factors = '== bases'
+        else:
+            factors = str(factors)
+        return ' # %s stot = %s clear %s' % tuple(
+                [str(x).replace('L','') for x in (list(bases), tot, factors)])
 
     _r = [int(_x) for _x in _s.split('[')[1].split(']')[0].split(',')]
     return _info(_r)

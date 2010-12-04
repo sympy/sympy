@@ -654,7 +654,14 @@ class Mul(AssocOp):
         return lhs / rhs
 
     def as_powers_dict(self):
-        return dict([ term.as_base_exp() for term in self ])
+        d = {}
+        for term in self.args:
+            b, e = term.as_base_exp()
+            if b not in d:
+                d[b] = e
+            else:
+                d[b] += e
+        return d
 
     def as_numer_denom(self):
         numers, denoms = [],[]

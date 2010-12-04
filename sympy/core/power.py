@@ -20,6 +20,7 @@ def integer_nthroot(y, n):
     (5, False)
 
     """
+    y, n = int(y), int(n)
     if y < 0: raise ValueError("y must be nonnegative")
     if n < 1: raise ValueError("n must be positive")
     if y in (0, 1): return y, True

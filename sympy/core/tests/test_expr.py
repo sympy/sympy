@@ -762,3 +762,7 @@ def test_action_verbs():
     assert factor(x**2+5*x+6) == (x**2+5*x+6).factor()
     assert refine(sqrt(x**2)) == sqrt(x**2).refine()
     assert cancel((x**2+5*x+6)/(x+2)) == ((x**2+5*x+6)/(x+2)).cancel()
+
+def test_as_powers_dict():
+    assert (x**y*z).as_powers_dict() == {x: y, z: 1}
+    assert Mul(2, 2, **dict(evaluate=False)).as_powers_dict() == {S(2): S(2)}
