@@ -260,6 +260,24 @@ def test_tsolve_2():
     x, y, a, b = symbols('xyab')
     assert solve(y-a*x**b, x) == [y**(1/b)*(1/a)**(1/b)]
 
+@XFAIL
+def test_tsolve_rebuild():
+    x = Symbol('x')
+    s = solve(2*(3*x+4)**5 - 6*7**(3*x+9), x)
+    # this fails, because tsolve() returns a term like
+    #    log(...) + LambertW(...)
+    # but, if you try to recreate it using e.g. eval() you get
+    #    LambertW(...) + log(...)
+    assert s in (
+    [[(S(-4)/3) - 5/log(7)/3*LambertW(-7*2**(S(4)/5)*6**(S(1)/5)*log(7)/10)],
+     [(-5*LambertW(-7*2**((S(4)/5))*6**((S(1)/5))*log(7)/10)
+      - 4*log(7))/(3*log(7))],
+     [-((4*log(7)
+         + 5*LambertW(-7*2**(S(4)/5)*6**(S(1)/5)*log(7)/10))/(3*log(7)))],
+     [(-5*LambertW(-7*3**(S(1)/5)*log(7)/5) - 4*log(7))/(3*log(7))],
+    ]
+    )
+
 def test_solve_for_functions_derivatives():
     t = Symbol('t')
     x = Function('x')(t)
