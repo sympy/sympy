@@ -217,8 +217,6 @@ class AssocOp(Expr):
         """
         if isinstance(expr, cls):
             return expr.args
-        elif expr == cls.identity:
-            return ()
         else:
             return (expr,)
 
@@ -306,8 +304,6 @@ class LatticeOp(AssocOp):
         """
         if isinstance(expr, cls):
             return expr._argset
-        elif expr == cls.identity:
-            return frozenset()
         else:
             return frozenset([expr])
 
