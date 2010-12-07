@@ -183,7 +183,7 @@ def test_conjuncts():
     assert conjuncts(A & B & C) == set([A, B, C])
     assert conjuncts((A | B) & C) == set([A | B, C])
     assert conjuncts(A) == set([A])
-    assert conjuncts(True) == set()
+    assert conjuncts(True) == set([True])
     assert conjuncts(False) == set([False])
 
 def test_disjuncts():
@@ -192,7 +192,7 @@ def test_disjuncts():
     assert disjuncts((A | B) & C) == set([(A | B) & C])
     assert disjuncts(A) == set([A])
     assert disjuncts(True) == set([True])
-    assert disjuncts(False) == set([])
+    assert disjuncts(False) == set([False])
 
 def test_distribute():
     A, B, C = map(Boolean, symbols('ABC'))
