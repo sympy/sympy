@@ -2596,7 +2596,8 @@ def _get_ordered_dummies(mul, verbose = False):
     args = Mul.make_args(mul)
     fac_dum = dict([ (fac, fac.atoms(Dummy)) for fac in args] )
     fac_repr = dict([ (fac, __kprint(fac)) for fac in args] )
-    all_dums = list(reduce(lambda x, y: x | y, fac_dum.values()))
+    all_dums = list(reduce(
+        lambda x, y: x | y, fac_dum.values(), set()))
     mask = {}
     for d in all_dums:
         if d.assumptions0.get('below_fermi'):
