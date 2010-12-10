@@ -31,7 +31,32 @@ def test_PermutationOperator():
     assert (simplify_index_permutations(expr,perms) ==
         P(p,q)*P(r,s)*f(p)*g(q)*h(r)*i(s))
 
+def test_index_permutations_with_dummies():
+    a,b,c,d = symbols('abcd')
+    p,q,r,s = symbols('pqrs', dummy=True)
+    f,g = map(Function, 'fg')
+    P = PermutationOperator
 
+    # No dummy substitution necessary
+    expr = f(a, b, p, q) - f(b, a, p, q)
+    assert simplify_index_permutations(
+            expr, [P(a, b)]) == P(a, b)*f(a, b, p, q)
+
+    # Cases where dummy substitution is needed
+    expected = P(a, b)*substitute_dummies(f(a, b, p, q))
+
+    expr = f(a, b, p, q) - f(b, a, q, p)
+    result = simplify_index_permutations(expr, [P(a, b)])
+    assert expected == substitute_dummies(result)
+
+    expr = f(a, b, q, p) - f(b, a, p, q)
+    result = simplify_index_permutations(expr, [P(a, b)])
+    assert expected == substitute_dummies(result)
+
+    # A case where nothing can be done
+    expr = f(a, b, q, p) - g(b, a, p, q)
+    result = simplify_index_permutations(expr, [P(a, b)])
+    assert expr == result
 
 def test_dagger():
     i, j, n, m = symbols('i j n m')
@@ -533,6 +558,25 @@ def test_substitute_dummies_NO_operator():
     i,j = symbols('ij', dummy=True)
     assert substitute_dummies(att(i, j)*NO(Fd(i)*F(j))
                 - att(j, i)*NO(Fd(j)*F(i))) == 0
+
+def test_substitute_dummies_SQ_operator():
+    i,j = symbols('ij', dummy=True)
+    assert substitute_dummies(att(i, j)*Fd(i)*F(j)
+                - att(j, i)*Fd(j)*F(i)) == 0
+
+def test_substitute_dummies_new_indices():
+    i,j = symbols('ij',below_fermi=True, dummy=True)
+    a,b = symbols('ab',above_fermi=True, dummy=True)
+    p,q = symbols('pq', dummy=True)
+    f = Function('f')
+    assert substitute_dummies(f(i,a,p) - f(j,b,q), new_indices=True) == 0
+
+def test_substitute_dummies_substitution_order():
+    i,j,k,l = symbols('ijkl',below_fermi=True, dummy=True)
+    f = Function('f')
+    from sympy.utilities.iterables import variations
+    for permut in variations([i,j,k,l], 4):
+        assert substitute_dummies(f(*permut) - f(i,j,k,l)) == 0
 
 def test_dummy_order_inner_outer_lines_VT1T1T1():
     ii = symbols('i',below_fermi=True, dummy=False)
@@ -1179,4 +1223,3 @@ def test_internal_external_pqrs_AT():
             ]
     for permut in exprs[1:]:
         assert substitute_dummies(exprs[0]) == substitute_dummies(permut)
-
