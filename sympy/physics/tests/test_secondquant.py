@@ -20,8 +20,9 @@ def test_PermutationOperator():
     p,q,r,s = symbols('pqrs')
     f,g,h,i = map(Function, 'fghi')
     P = PermutationOperator
-    assert (P(p,q).get_permuted(f(p)*g(q)) ==
-            -f(q)*g(p))
+    assert P(p,q).get_permuted(f(p)*g(q)) == -f(q)*g(p)
+    assert P(p,q).get_permuted(f(p, q)) == -f(q, p)
+    assert P(p,q).get_permuted(f(p)) == f(p)
     expr = (f(p)*g(q)*h(r)*i(s)
         - f(q)*g(p)*h(r)*i(s)
         - f(p)*g(q)*h(s)*i(r)
