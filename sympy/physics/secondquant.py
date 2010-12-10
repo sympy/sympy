@@ -3017,11 +3017,8 @@ def simplify_index_permutations(expr, permutation_operators):
             if arg in ind:
                 result.append(arg)
             else:
-                try:
-                    if arg.args:
-                        result.extend(_get_indices(arg,ind))
-                except AttributeError:
-                    pass
+                if arg.args:
+                    result.extend(_get_indices(arg,ind))
         return result
 
     def _choose_one_to_keep(a,b,ind):
