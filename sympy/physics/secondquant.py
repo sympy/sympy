@@ -2644,7 +2644,7 @@ def _get_ordered_dummies(mul, verbose = False):
             elif isinstance(fac, Annihilator):
                 pos_val.append('l')
             elif isinstance(fac, NO):
-                ops = [ op for op in fac.args if op.has(d) ]
+                ops = [ op for op in fac if op.has(d) ]
                 for op in ops:
                     if isinstance(op, Creator):
                         pos_val.append('u')

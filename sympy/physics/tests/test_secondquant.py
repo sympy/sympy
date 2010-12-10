@@ -529,6 +529,11 @@ def test_substitute_dummies_without_dummies():
     assert substitute_dummies(att(i, j) + 2) == att(i, j) + 2
     assert substitute_dummies(att(i, j) + 1) == att(i, j) + 1
 
+def test_substitute_dummies_NO_operator():
+    i,j = symbols('ij', dummy=True)
+    assert substitute_dummies(att(i, j)*NO(Fd(i)*F(j))
+                - att(j, i)*NO(Fd(j)*F(i))) == 0
+
 def test_dummy_order_inner_outer_lines_VT1T1T1():
     ii = symbols('i',below_fermi=True, dummy=False)
     aa = symbols('a',above_fermi=True, dummy=False)
