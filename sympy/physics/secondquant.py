@@ -2959,15 +2959,16 @@ class PermutationOperator(Expr):
         -f(q, p)
 
         """
-        tmp = Symbol('t',dummy=True)
         i = self.args[0]
         j = self.args[1]
-
-        expr = expr.subs(i,tmp)
-        expr = expr.subs(j,i)
-        expr = expr.subs(tmp,j)
-
-        return S.NegativeOne*expr
+        if expr.has(i) and expr.has(j):
+            tmp = Symbol('t',dummy=True)
+            expr = expr.subs(i,tmp)
+            expr = expr.subs(j,i)
+            expr = expr.subs(tmp,j)
+            return S.NegativeOne*expr
+        else:
+            return expr
 
     def _latex(self, printer):
         return "P(%s%s)"%self.args
