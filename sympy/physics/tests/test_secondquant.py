@@ -524,6 +524,11 @@ def test_fully_contracted():
             simplify_kronecker_deltas=True)
     assert Vabij==AntiSymmetricTensor('v',(a,b),(i,j))
 
+def test_substitute_dummies_without_dummies():
+    i,j = symbols('ij')
+    assert substitute_dummies(att(i, j) + 2) == att(i, j) + 2
+    assert substitute_dummies(att(i, j) + 1) == att(i, j) + 1
+
 def test_dummy_order_inner_outer_lines_VT1T1T1():
     ii = symbols('i',below_fermi=True, dummy=False)
     aa = symbols('a',above_fermi=True, dummy=False)
