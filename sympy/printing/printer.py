@@ -259,7 +259,7 @@ class Printer(object):
                     if factor.is_Number:
                         coeff.append(factor)
                     else:
-                        base, exp = _analyze_power(*factor.as_Pow())
+                        base, exp = _analyze_power(*factor.as_base_exp())
 
                         cpart[base] = exp
                         gens.add(base)

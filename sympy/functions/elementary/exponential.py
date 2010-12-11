@@ -254,9 +254,6 @@ class exp(Function):
         import sage.all as sage
         return sage.exp(self.args[0]._sage_())
 
-    def as_Pow(self):
-        return S.Exp1, self.args[0]
-
 class log(Function):
 
     nargs = (1,2)

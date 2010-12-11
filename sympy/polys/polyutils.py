@@ -159,7 +159,7 @@ def _dict_from_basic_if_gens(ex, gens, **args):
                 coeff.append(factor)
             else:
                 try:
-                    base, exp = _analyze_power(*factor.as_Pow())
+                    base, exp = _analyze_power(*factor.as_base_exp())
                     monom[indices[base]] = exp
                 except KeyError:
                     if not factor.has(*gens):
@@ -208,7 +208,7 @@ def _dict_from_basic_no_gens(ex, **args):
             if factor.is_Number or _is_coeff(factor):
                 coeff.append(factor)
             else:
-                base, exp = _analyze_power(*factor.as_Pow())
+                base, exp = _analyze_power(*factor.as_base_exp())
 
                 elements[base] = exp
                 gens.add(base)

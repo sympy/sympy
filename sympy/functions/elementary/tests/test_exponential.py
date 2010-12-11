@@ -35,8 +35,8 @@ def test_exp():
     assert exp(x*log(x)) != x**x
     assert exp(sin(x)*log(x)) != x
 
-    assert exp(x).as_Pow() == (E, x)
-    assert exp(-x).as_Pow() == (E, -x)
+    assert exp(x).as_base_exp() == (E, x)
+    assert exp(-x).as_base_exp() == (E, -x)
 
 def test_log():
 

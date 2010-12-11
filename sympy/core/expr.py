@@ -820,10 +820,6 @@ class Expr(Basic, EvalfMixin):
             return c,e
         raise ValueError("cannot compute leadterm(%s, %s), got c=%s" % (self, x, c))
 
-    def as_Pow(self):
-        """Returns `self` as it was `Pow` instance. """
-        return (self, S.One)
-
     ###################################################################################
     ##################### DERIVATIVE, INTEGRAL, FUNCTIONAL METHODS ####################
     ###################################################################################

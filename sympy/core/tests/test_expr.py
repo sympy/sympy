@@ -720,12 +720,11 @@ def test_contains():
     assert g in p
     assert not h in p
 
-def test_as_Pow():
-    assert x.as_Pow() == (x, S.One)
-    assert (x*y*z).as_Pow() == (x*y*z, S.One)
-    assert (x+y+z).as_Pow() == (x+y+z, S.One)
-    assert ((x+y)**z).as_Pow() == (x+y, z)
-
+def test_as_base_exp():
+    assert x.as_base_exp() == (x, S.One)
+    assert (x*y*z).as_base_exp() == (x*y*z, S.One)
+    assert (x+y+z).as_base_exp() == (x+y+z, S.One)
+    assert ((x+y)**z).as_base_exp() == (x+y, z)
 
 def test_Basic_keep_sign():
     Basic.keep_sign = True
