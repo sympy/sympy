@@ -1798,13 +1798,13 @@ def GramSchmidt(vlist, orthog=False):
 def wronskian(functions, var, method='bareis'):
     """Compute Wronskian for [] of functions
 
-                   | f1    f2     ...   fn  |
-                   | f1'   f2'    ...   fn' |
-                   |  .     .     .      .  |
-    W(f1,...,fn) = |  .     .      .     .  |
-                   |  .     .       .    .  |
-                   |  n     n           n   |
-                   | D(f1) D(f2)  ...  D(fn)|
+                   | f1       f2        ...   fn      |
+                   | f1'      f2'       ...   fn'     |
+                   |  .        .        .      .      |
+    W(f1,...,fn) = |  .        .         .     .      |
+                   |  .        .          .    .      |
+                   |  (n)      (n)            (n)     |
+                   | D   (f1) D   (f2)  ...  D   (fn) |
 
     see: http://en.wikipedia.org/wiki/Wronskian
     """
