@@ -2669,7 +2669,7 @@ def _solve_variation_of_parameters(eq, func, order, match):
     """
     Helper function for the method of variation of parameters.
 
-    See the ode_nth_linear_constant_coeff_undetermined_coefficients()
+    See the ode_nth_linear_constant_coeff_variation_of_parameters()
     docstring for more information on this method.
 
     match should be a dictionary that has the following keys:
