@@ -1,6 +1,6 @@
 from sympy import *
 
-x, y, z = symbols('xyz')
+x, y, z, t = symbols('xyzt')
 k, m, n = symbols('kmn', integer=True)
 f, g, h = map(Function, 'fgh')
 
