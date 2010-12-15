@@ -1,4 +1,5 @@
 from sympy.core import S, C, sympify, Wild
+from sympy.core.add import Add
 from sympy.core.function import Lambda, Function, expand_log
 from sympy.core.cache import cacheit
 from sympy.core.symbol import Wild
@@ -54,10 +55,7 @@ class exp(Function):
             if r and r[a] != 0:
                 return S.NaN
 
-        if arg.is_Add:
-            args = arg.args
-        else:
-            args = [arg]
+        args = Add.make_args(arg)
 
         included, excluded = [], []
 
