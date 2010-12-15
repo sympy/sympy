@@ -93,6 +93,8 @@ def test_ratint():
     assert ratint(x/(1 - x**2), x) == -log(1 - x**2)/2
     assert ratint(-x/(1 - x**2), x) == log(1 - x**2)/2
 
+    assert ratint((x/4 - 4/(1 - x)).diff(x), x) ==  x/4 - 4/(1 - x)
+
 def test_ratint_logpart():
     assert ratint_logpart(x, x**2-9, x, t) == \
         [(Poly(x**2 - 9, x), Poly(-2*t + 1, t))]

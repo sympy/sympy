@@ -29,7 +29,7 @@ def ratint(f, x, **flags):
     else:
         p, q = f
 
-    p, q = Poly(p, x, composite=False), Poly(q, x, composite=False)
+    p, q = Poly(p, x, composite=False, field=True), Poly(q, x, composite=False, field=True)
 
     coeff, p, q = p.cancel(q)
     poly, p = p.div(q)
