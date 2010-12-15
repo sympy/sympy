@@ -546,6 +546,7 @@ def integrate_hyperexponential_polynomial(p, D, T, z):
             a = p.as_poly(t, expand=False).nth(i)
 
         aa, ad = frac_in(a, t1, field=True)
+        aa, ad = aa.cancel(ad, include=True)
         iDt = Poly(i, t)*dtt
         iDta, iDtd = frac_in(iDt, t1, field=True)
         try:

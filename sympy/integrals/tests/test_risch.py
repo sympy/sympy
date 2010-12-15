@@ -4,9 +4,10 @@ from sympy import (Poly, S, Function, log, symbols, exp, tan, Integral, sqrt,
 from sympy.integrals.risch import (gcdex_diophantine, frac_in, derivation,
     splitfactor, splitfactor_sqf, canonical_representation, hermite_reduce,
     polynomial_reduce, residue_reduce, residue_reduce_to_basic,
-    integrate_primitive, integrate_hyperexponential,
-    integrate_hypertangent_polynomial, integrate_nonlinear_no_specials,
-    integer_powers, build_extension, risch_integrate)
+    integrate_primitive, integrate_hyperexponential_polynomial,
+    integrate_hyperexponential, integrate_hypertangent_polynomial,
+    integrate_nonlinear_no_specials, integer_powers, build_extension,
+    risch_integrate)
 from sympy.utilities.pytest import XFAIL, skip, raises
 
 from sympy.abc import x, t, nu, z, a, y
@@ -188,6 +189,33 @@ def test_integrate_hyperexponential():
         (- exp(-x), 1, True) # x - exp(-x)
     assert integrate_hyperexponential(Poly(x, t), Poly(t + 1, t), D, [x, t], [exp]) == \
         (0, Integral(x/(1 + exp(x)), x), False)
+
+def test_integrate_hyperexponential_polynomial():
+    # Without proper cancelation within integrate_hyperexponential_polynomial(),
+    # this will take a long time to complete, and will return a complicated
+    # expression
+    p = Poly((-28*x**11*t0 - 6*x**8*t0 + 6*x**9*t0 - 15*x**8*t0**2 +
+        15*x**7*t0**2 + 84*x**10*t0**2 - 140*x**9*t0**3 - 20*x**6*t0**3 +
+        20*x**7*t0**3 - 15*x**6*t0**4 + 15*x**5*t0**4 + 140*x**8*t0**4 -
+        84*x**7*t0**5 - 6*x**4*t0**5 + 6*x**5*t0**5 + x**3*t0**6 - x**4*t0**6 +
+        28*x**6*t0**6 - 4*x**5*t0**7 + x**9 - x**10 + 4*x**12)/(-8*x**11*t0 +
+        28*x**10*t0**2 - 56*x**9*t0**3 + 70*x**8*t0**4 - 56*x**7*t0**5 +
+        28*x**6*t0**6 - 8*x**5*t0**7 + x**4*t0**8 + x**12)*t1**2 +
+        (-28*x**11*t0 - 12*x**8*t0 + 12*x**9*t0 - 30*x**8*t0**2 +
+        30*x**7*t0**2 + 84*x**10*t0**2 - 140*x**9*t0**3 - 40*x**6*t0**3 +
+        40*x**7*t0**3 - 30*x**6*t0**4 + 30*x**5*t0**4 + 140*x**8*t0**4 -
+        84*x**7*t0**5 - 12*x**4*t0**5 + 12*x**5*t0**5 - 2*x**4*t0**6 +
+        2*x**3*t0**6 + 28*x**6*t0**6 - 4*x**5*t0**7 + 2*x**9 - 2*x**10 +
+        4*x**12)/(-8*x**11*t0 + 28*x**10*t0**2 - 56*x**9*t0**3 +
+        70*x**8*t0**4 - 56*x**7*t0**5 + 28*x**6*t0**6 - 8*x**5*t0**7 +
+        x**4*t0**8 + x**12)*t1 + (-2*x**2*t0 + 2*x**3*t0 + x*t0**2 -
+        x**2*t0**2 + x**3 - x**4)/(-4*x**5*t0 + 6*x**4*t0**2 - 4*x**3*t0**3 +
+        x**2*t0**4 + x**6), t1, z, expand=False)
+    D = [Poly(1, x), Poly(1/x, t0), Poly(2*x*t1, t1)]
+    T = [x, t0, t1]
+    assert integrate_hyperexponential_polynomial(p, D, T, z) == (
+        Poly((x - t0)*t1**2 + (-2*t0 + 2*x)*t1, t1), Poly(-2*x*t0 + x**2 +
+        t0**2, t1), True)
 
 def test_integrate_primitive():
     D = [Poly(1, x), Poly(1/x, t)]
