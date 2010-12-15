@@ -407,7 +407,7 @@ def no_cancel_b_large(b, c, n, D, T):
         if not 0 <= m <= n: # n < 0 or m < 0 or m > n
             raise NonElementaryIntegral
 
-        p = Poly(c.as_poly(t).LC()/b.as_poly(t).LC()*t**m, t)
+        p = Poly(c.as_poly(t).LC()/b.as_poly(t).LC()*t**m, t, expand=False)
         q = q + p
         n = m - 1
         c = c - derivation(p, D, T) - b*p
@@ -442,13 +442,13 @@ def no_cancel_b_small(b, c, n, D, T):
             raise NonElementaryIntegral
 
         if m > 0:
-            p = Poly(c.as_poly(t).LC()/(m*d.as_poly(t).LC())*t**m, t)
+            p = Poly(c.as_poly(t).LC()/(m*d.as_poly(t).LC())*t**m, t, expand=False)
         else:
             if b.degree(t) != c.degree(t):
                 raise NonElementaryIntegral
             if b.degree(t) == 0:
                 return (q, b.as_poly(T[-2]), c.as_poly(T[-2]))
-            p = Poly(c.as_poly(t).LC()/b.as_poly(t).LC(), t)
+            p = Poly(c.as_poly(t).LC()/b.as_poly(t).LC(), t, expand=False)
 
         q = q + p
         n = m - 1
@@ -490,7 +490,7 @@ def no_cancel_equal(b, c, n, D, T):
         if u.is_zero:
             return (q, m, c)
         if m > 0:
-            p = Poly(c.as_poly(t).LC()/u*t**m, t)
+            p = Poly(c.as_poly(t).LC()/u*t**m, t, expand=False)
         else:
             if c.degree(t) != d.degree(t) - 1:
                 raise NonElementaryIntegral
@@ -545,7 +545,7 @@ def cancel_primitive(b, c, n, D, T):
             raise NonElementaryIntegral
         a2a, a2d = frac_in(c.LC(), t1)
         sa, sd = rischDE(ba, bd, a2a, a2d, D1, T1)
-        stm = Poly(sa.as_basic()/sd.as_basic()*t**m, t)
+        stm = Poly(sa.as_basic()/sd.as_basic()*t**m, t, expand=False)
         q += stm
         n = m - 1
         c -= b*stm + derivation(stm, D, T)
@@ -603,7 +603,7 @@ def cancel_exp(b, c, n, D, T):
         a2a, a2d = frac_in(c.LC(), t1)
 
         sa, sd = rischDE(a1a, a1d, a2a, a2d, D1, T1)
-        stm = Poly(sa.as_basic()/sd.as_basic()*t**m, t)
+        stm = Poly(sa.as_basic()/sd.as_basic()*t**m, t, expand=False)
         q += stm
         n = m - 1
         c -= b*stm + derivation(stm, D, T) # deg(c) becomes smaller
