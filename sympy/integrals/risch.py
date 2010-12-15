@@ -799,6 +799,130 @@ def build_extension(f, x, handle_first='log', dummy=True):
         Tfuncs = []
         newf = f
 
+    def exp_part(exps):
+        global t, T, D, L_K, E_K, L_args, E_args, ts, backsubs, Tfuncs, newf
+
+        new_extension = False
+        restart = False
+        expargs = [i.exp for i in exps]
+        ip = integer_powers(expargs)
+        for arg, others in ip:
+            # Minimize potential problems with algebraic substitution
+            others.sort(key=lambda i: i[1])
+
+            arga, argd = frac_in(arg, t)
+            A = is_log_deriv_k_t_radical(arga, argd, L_K, E_K, L_args, E_args,
+                D, T)
+
+            if A is not None:
+                ans, u, n, const = A
+                # if n is 1 or -1, it's algebraic, but we can handle it
+                if n == -1:
+                    # This probably will never happen, because
+                    # Rational.as_numer_denom() returns the negative term in
+                    # the numerator.  But in case that changes, reduce it to
+                    # n == 1.
+                    n = 1
+                    u **= -1
+                    const *= -1
+                    ans = [(i, -j) for i, j in ans]
+                if n == 1:
+                    # Example: exp(x + x**2) over QQ(x, exp(x), exp(x**2))
+                    newf = newf.subs(exp(arg), exp(const)*Mul(*[u**power for u,
+                        power in ans]))
+                    newf = newf.subs([(exp(p*expargs[i]),
+                        exp(const*p)*Mul(*[u**power for u, power in ans]))
+                        for i, p in others])
+                    # TODO: Add something to back subs to put exp(const*p)
+                    # back together.
+
+                    continue
+                else:
+                    # Bad news, we have an algebraic radical.  But maybe we
+                    # could still avoid it by choosing a different extension.
+                    # For example, integer_powers() won't handle exp(x/2 + 1)
+                    # over QQ(x, exp(x)), but if we pull out the exp(1), it
+                    # will.  Or maybe we have exp(x + x**2/2), over
+                    # QQ(x, exp(x), exp(x**2)), which is exp(x)*sqrt(exp(x**2)),
+                    # but if we use QQ(x, exp(x), exp(x**2/2)), then they will
+                    # all work.
+                    #
+                    # So here is what we do. If there is a non-zero const, pull
+                    # it out and retry.  Also, if len(ans) > 1, then rewrite
+                    # exp(arg) as the product of exponentials from ans, and
+                    # retry that.  If const == 0 and len(ans) == 1, then we
+                    # assume that it would have been handled by either
+                    # integer_powers() or n == 1 above if it could be handled,
+                    # so we give up at that point.  For example, you can never
+                    # handle exp(log(x)/2) because it equals sqrt(x).
+                    if const or len(ans) > 1:
+                        rad = Mul(*[term**(power/n) for term, power in ans])
+                        newf = newf.subs([(exp(p*expargs[i]), exp(const*p)*rad)
+                            for i, p in others])
+                        newf = newf.subs(zip(reversed(T), [f(x) for f in Tfuncs]))
+                        restart = True
+                        break
+                    else:
+                        # TODO: give algebraic dependence in error string
+                        raise NotImplementedError("Cannot integrate over " +
+                        "algebraic extensions.")
+            else:
+                arga, argd = frac_in(arg, t)
+                darga = (argd*derivation(Poly(arga, t), D, T) -
+                    arga*derivation(Poly(argd, t), D, T))
+                dargd = argd**2
+                darga, dargd = darga.cancel(dargd, include=True)
+                darg = darga.as_basic()/dargd.as_basic()
+                t = ts.next()
+                T.append(t)
+                E_args.append(arg)
+                E_K.append(len(T) - 1)
+                D.append(darg.as_poly(t, expand=False)*Poly(t, t, expand=False))
+                i = Symbol('i', dummy=True)
+                Tfuncs = [Lambda(i, exp(arg.subs(x, i)))] + Tfuncs
+                newf = newf.subs([(exp(expargs[i]), t**p) for i, p in others])
+                new_extension = True
+
+        if restart:
+            return None
+        return new_extension
+
+    def log_part(logs):
+        global t, T, D, L_K, E_K, L_args, E_args, ts, backsubs, Tfuncs, newf
+
+        new_extension = False
+        logargs = [i.args[0] for i in logs]
+        for arg in logargs:
+            # The log case is easier, because whenever a logarithm is algebraic
+            # over the base field, it is of the form a1*t1 + ... an*tn + c,
+            # which is a polynomial, so we can just replace it with that.
+            # In other words, we don't have to worry about radicals.
+            arga, argd = frac_in(arg, t)
+            A = is_deriv_k(arga, argd, L_K, E_K, L_args, E_args, D, T)
+            if A is not None:
+                ans, u, const = A
+                newterm = log(const) + u
+                newf = newf.subs(log(arg), newterm)
+                continue
+
+            else:
+                arga, argd = frac_in(arg, t)
+                darga = (argd*derivation(Poly(arga, t), D, T) -
+                    arga*derivation(Poly(argd, t), D, T))
+                dargd = argd**2
+                darg = darga.as_basic()/dargd.as_basic()
+                t = ts.next()
+                T.append(t)
+                L_args.append(arg)
+                L_K.append(len(T) - 1)
+                D.append(cancel(darg.as_basic()/arg).as_poly(t, expand=False))
+                i = Symbol('i', dummy=True)
+                Tfuncs = [Lambda(i, log(arg.subs(x, i)))] + Tfuncs
+                newf = newf.subs(log(arg), t)
+                new_extension = True
+
+        return new_extension
+
     # Get common cases out of the way:
     if any(i.has(x) for i in f.atoms(sin, cos, tan, atan, asin, acos)):
         raise NotImplementedError("Trigonometric extensions are not " +
@@ -816,129 +940,6 @@ def build_extension(f, x, handle_first='log', dummy=True):
             raise NotImplementedError("Couldn't find an elementary " +
                 "transcendental extension for %s.  Try using a " % str(f) +
                 "manual extension with the extension flag.")
-        def exp_part(exps):
-            global t, T, D, L_K, E_K, L_args, E_args, ts, backsubs, Tfuncs, newf
-
-            new_extension = False
-            restart = False
-            expargs = [i.exp for i in exps]
-            ip = integer_powers(expargs)
-            for arg, others in ip:
-                # Minimize potential problems with algebraic substitution
-                others.sort(key=lambda i: i[1])
-
-                arga, argd = frac_in(arg, t)
-                A = is_log_deriv_k_t_radical(arga, argd, L_K, E_K, L_args,
-                    E_args, D, T)
-
-                if A is not None:
-                    ans, u, n, const = A
-                    # if n is 1 or -1, it's algebraic, but we can handle it
-                    if n == -1:
-                        # This probably will never happen, because
-                        # Rational.as_numer_denom() returns the negative term
-                        # in the numerator.  But in case that changes, reduce
-                        # it to n == 1.
-                        n = 1
-                        u **= -1
-                        const *= -1
-                        ans = [(i, -j) for i, j in ans]
-                    if n == 1:
-                        # Example: exp(x + x**2) over QQ(x, exp(x), exp(x**2))
-                        newf = newf.subs(exp(arg), exp(const)*Mul(*[u**power for
-                            u, power in ans]))
-                        newf = newf.subs([(exp(p*expargs[i]),
-                            exp(const*p)*Mul(*[u**power for u, power in ans]))
-                            for i, p in others])
-
-                        continue
-                    else:
-                        # Bad news, we have an algebraic radical.  But maybe we
-                        # could still avoid it by choosing a different
-                        # extension. For example, integer_powers() won't handle
-                        # exp(x/2 + 1) over QQ(x, exp(x)), but if we pull out
-                        # the exp(1), it will.  Or maybe we have
-                        # exp(x + x**2/2), over QQ(x, exp(x), exp(x**2)), which
-                        # is exp(x)*sqrt(exp(x**2)), but if we use QQ(x, exp(x),
-                        # exp(x**2/2)), then they will all work.
-                        #
-                        # So here is what we do. If there is a non-zero const,
-                        # pull it out and retry.  Also, if len(ans) > 1, then
-                        # rewrite exp(arg) as the product of exponentials from
-                        # ans, and retry that.  If const == 0 and len(ans) == 1,
-                        # then we assume that it would have been handled by
-                        # either integer_powers() or n == 1 above if it could be
-                        # handled, so we give up at that point.  For example,
-                        # you can never handle exp(log(x)/2) because it equals
-                        # sqrt(x).
-                        if const or len(ans) > 1:
-                            rad = Mul(*[term**(power/n) for term, power in ans])
-                            newf = newf.subs([(exp(p*expargs[i]),
-                                exp(const*p)*rad) for i, p in others])
-                            newf = newf.subs(zip(reversed(T), [f(x) for f in Tfuncs]))
-                            restart = True
-                            break
-                        else:
-                            # TODO: give algebraic dependence in error string
-                            raise NotImplementedError("Cannot integrate over " +
-                            "algebraic extensions.")
-                else:
-                    arga, argd = frac_in(arg, t)
-                    darga = (argd*derivation(Poly(arga, t), D, T) -
-                        arga*derivation(Poly(argd, t), D, T))
-                    dargd = argd**2
-                    darga, dargd = darga.cancel(dargd, include=True)
-                    darg = darga.as_basic()/dargd.as_basic()
-                    t = ts.next()
-                    T.append(t)
-                    E_args.append(arg)
-                    E_K.append(len(T) - 1)
-                    D.append(darg.as_poly(t, expand=False)*Poly(t, t, expand=False))
-                    i = Symbol('i', dummy=True)
-                    Tfuncs = [Lambda(i, exp(arg.subs(x, i)))] + Tfuncs
-                    newf = newf.subs([(exp(expargs[i]), t**p) for i, p in others])
-                    new_extension = True
-
-            if restart:
-                return None
-            return new_extension
-
-        def log_part(logs):
-            global t, T, D, L_K, E_K, L_args, E_args, ts, backsubs, Tfuncs, newf
-
-            new_extension = False
-            logargs = [i.args[0] for i in logs]
-            for arg in logargs:
-                # The log case is easier, because whenever a logarithm is
-                # algebraic over the base field, it is of the form
-                # a1*t1 + ... an*tn + c, which is a polynomial, so we can just
-                # replace it with that.  In other words, we don't have to worry
-                # about radicals.
-                arga, argd = frac_in(arg, t)
-                A = is_deriv_k(arga, argd, L_K, E_K, L_args, E_args, D, T)
-                if A is not None:
-                    ans, u, const = A
-                    newterm = log(const) + u
-                    newf = newf.subs(log(arg), newterm)
-                    continue
-
-                else:
-                    arga, argd = frac_in(arg, t)
-                    darga = (argd*derivation(Poly(arga, t), D, T) -
-                        arga*derivation(Poly(argd, t), D, T))
-                    dargd = argd**2
-                    darg = darga.as_basic()/dargd.as_basic()
-                    t = ts.next()
-                    T.append(t)
-                    L_args.append(arg)
-                    L_K.append(len(T) - 1)
-                    D.append(cancel(darg.as_basic()/arg).as_poly(t, expand=False))
-                    i = Symbol('i', dummy=True)
-                    Tfuncs = [Lambda(i, log(arg.subs(x, i)))] + Tfuncs
-                    newf = newf.subs(log(arg), t)
-                    new_extension = True
-
-            return new_extension
 
         # Pre-preparsing.
         # Get all exp arguments, so we can avoid ahead of time doing something
