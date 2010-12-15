@@ -185,8 +185,8 @@ def special_denom(a, ba, bd, ca, cd, D, T, case='auto'):
     elif case == 'tan':
         p = Poly(t**2 + 1, t)
     elif case in ['primitive', 'base']:
-        B = (ba.as_basic()/bd.as_basic()).as_poly(t)
-        C = (ca.as_basic()/cd.as_basic()).as_poly(t)
+        B = ba.to_field().quo(bd)
+        C = ca.to_field().quo(cd)
         return (a, B, C, Poly(1, t))
     else:
         raise ValueError("case must be one of {'exp', 'tan', 'primitive', " +
@@ -377,8 +377,8 @@ def spde(a, b, c, n, D, T):
 
     a, b, c = a.quo(g), b.quo(g), c.quo(g)
     if a.degree(t) == 0:
-        b = Poly(b.as_basic()/a.as_basic(), t)
-        c = Poly(c.as_basic()/a.as_basic(), t)
+        b = b.to_field().quo(a)
+        c = c.to_field().quo(a)
         return (b, c, n, Poly(1, t), zero)
 
     r, z = gcdex_diophantine(b, a, c)
