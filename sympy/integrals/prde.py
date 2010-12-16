@@ -593,7 +593,7 @@ def is_deriv_k(fa, fd, L_K, E_K, L_args, E_args, D, T):
                 "theorems with hypertangent support is not yet implemented.")
 
         # TODO: What should really be done in this case?
-        raise NotImplementedError("Non-elementary extensions not supported " +
+        raise NotImplementedError("Nonelementary extensions not supported " +
             "in the structure theorems.")
 
     E_part = [D[i].quo(Poly(T[i], T[i])).as_basic() for i in E_K]
@@ -690,7 +690,7 @@ def is_log_deriv_k_t_radical(fa, fd, L_K, E_K, L_args, E_args, D, T, Df=True):
                 "theorems with hypertangent support is not yet implemented.")
 
         # TODO: What should really be done in this case?
-        raise NotImplementedError("Non-elementary extensions not supported " +
+        raise NotImplementedError("Nonelementary extensions not supported " +
             "in the structure theorems.")
 
     E_part = [D[i].quo(Poly(T[i], T[i])).as_basic() for i in E_K]

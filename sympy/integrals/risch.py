@@ -476,7 +476,7 @@ def integrate_primitive(a, d, D, T, Tfuncs):
     This function returns a Basic expression for the first argument.  If b is
     True, the second argument is Basic expression in k to recursively integrate.
     If b is False, the second argument is an unevaluated Integral, which has
-    been proven to be non-elementary.
+    been proven to be nonelementary.
     """
     # XXX: a and d must be canceled, or this might return incorrect results
     t = T[-1]
@@ -572,7 +572,7 @@ def integrate_hyperexponential(a, d, D, T, Tfuncs):
     This function returns a Basic expression for the first argument.  If b is
     True, the second argument is Basic expression in k to recursively integrate.
     If b is False, the second argument is an unevaluated Integral, which has
-    been proven to be non-elementary.
+    been proven to be nonelementary.
     """
     # XXX: a and d must be canceled, or this might return incorrect results
     t = T[-1]
@@ -643,12 +643,12 @@ def integrate_nonlinear_no_specials(a, d, D, T, Tfuncs):
 
     This function is applicable to all nonlinear extensions, but in the case
     where it returns b == False, it will only have proven that the integral of
-    f - Dg is non-elementary if Sirr is empty.
+    f - Dg is nonelementary if Sirr is empty.
 
     This function returns a Basic expression.
     """
     # TODO: Integral from k?
-    # TODO: split out non-elementary integral
+    # TODO: split out nonelementary integral
     # XXX: a and d must be canceled, or this might not return correct results
     t = T[-1]
     x = T[0]
@@ -970,7 +970,7 @@ def build_extension(f, x, handle_first='log', dummy=True):
                 basea, based = frac_in(i.base, t)
                 A = is_deriv_k(basea, based, L_K, E_K, L_args, E_args, D, T)
                 if A is None:
-                    # Non-elementary monomial (so far)
+                    # Nonelementary monomial (so far)
 
                     # TODO: Would there ever be any benefit from just adding
                     # log(base) as a new monomial?
@@ -1020,7 +1020,7 @@ def risch_integrate(f, x, extension=None, handle_first='log'):
     forthcoming.
 
     If this function returns an unevaluated Integral in the result, it means
-    that it has proven that integral to be non-elementary.  Any errors will
+    that it has proven that integral to be nonelementary.  Any errors will
     result in raising NotImplementedError.
 
     Examples
@@ -1044,7 +1044,7 @@ def risch_integrate(f, x, extension=None, handle_first='log'):
     proven that exp(-x**2) does not have an elementary anti-derivative.
 
     In many cases, risch_integrate() can split out the elementary
-    anti-derivative part from the non-elementary anti-derivative part.
+    anti-derivative part from the nonelementary anti-derivative part.
     For example,
 
     >>> pprint(risch_integrate((2*log(x)**2 - log(x) - x**2)/(log(x)**3 -
@@ -1058,7 +1058,7 @@ def risch_integrate(f, x, extension=None, handle_first='log'):
                                          /
 
     This means that it has proven that the integral of 1/log(x) is
-    non-elementary.  This function is also known as the logarithmic integral,
+    nonelementary.  This function is also known as the logarithmic integral,
     and is often denoted as Li(x).
 
     risch_integrate() currently only accepts purely transcendental functions

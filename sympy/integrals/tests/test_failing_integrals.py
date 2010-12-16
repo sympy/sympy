@@ -148,7 +148,7 @@ def test_issue_1426():
 
 @XFAIL
 def test_issue_1441():
-    # Note, this integral is probably non-elementary
+    # Note, this integral is probably nonelementary
     t = 5 # Timeout time
     assert not run_with_timeout("integrate((sin(1/x) - x*exp(x))/((-sin(1/x) + x*exp(x))*x + x*sin(1/x)), x)", t).has(Integral)
 
@@ -237,7 +237,7 @@ def test_issue_1869():
 
 @XFAIL
 def test_issue_1893():
-    # Non-elementary integral.  Requires hypergeometric/Meijer-G handling.
+    # Nonelementary integral.  Requires hypergeometric/Meijer-G handling.
     t = 5 # Timeout
     assert not run_with_timeout("integrate(log(x) * x**(k-1) * exp(-x) / gamma(k), (x, 0, oo))", t).has(Integral)
 

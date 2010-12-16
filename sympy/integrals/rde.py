@@ -711,7 +711,7 @@ def rischDE(fa, fd, ga, gd, D, T):
     try:
         # Until this is fully implemented, use oo.  Note that this, will almost
         # certaintly cause non-termination in spde() (unless A == 1), and
-        # *might* lead to non-termination in the next step for a non-elementary
+        # *might* lead to non-termination in the next step for a nonelementary
         # integral (I don't know for certain yet).  Fortunately, spde() is
         # currently written recursively, so this will just give
         # RuntimeError: maximum recursion depth exceeded.
