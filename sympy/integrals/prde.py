@@ -180,6 +180,27 @@ def constant_system(A, u, D, T):
 
     Au = A.row_join(u)
     Au = Au.rref(simplified=True, simplify=cancel)[0]
+    # Warning: This will NOT return correct results if cancel() cannot reduce
+    # an identically zero expression to 0.  The danger is that we might
+    # incorrectly prove that in integral is nonelementary (such as
+    # risch_integrate(exp((sin(x)**2 + cos(x)**2 - 1)*x**2), x).
+    # But this is a limitation in computer algebra in general, and implicit
+    # in the correctness of the Risch Algorithm is the computability of the
+    # constant field (actually, this same correctness problem exists in any
+    # algorithm that uses rref()).
+    #
+    # We therefore limit ourselves to constant fields that are computable
+    # via the cancel() function, in order to prevent a speed bottleneck from
+    # calling some more complex simplification function (rational function
+    # coefficients will fall into this class).  Furthermore, (I believe) this
+    # problem will only crop up if the integral explicitly contains an
+    # expression in the constant field that is identically zero, but cannot
+    # be reduced to such by cancel().  Therefore, a careful user can avoid this
+    # problem entirely by being careful with the sorts of expressions that
+    # appear in his integrand in the variables other than the integration
+    # variable (the structure theorems should be able to completely decide these
+    # problems in the integration variable).
+
     Au = Au.applyfunc(cancel)
     A, u = Au[:, :-1], Au[:, -1]
 
@@ -680,6 +701,8 @@ def is_log_deriv_k_t_radical(fa, fd, L_K, E_K, L_args, E_args, D, T, Df=True):
 
     A, u = constant_system(lhs, rhs, D, T)
     if not all(derivation(i, D, T, basic=True).is_zero for i in u) or not A:
+        # If the elements of u are not all constant
+        # Note: See comment in constant_system
 
         # derivation(basic=True) calls cancel()
         return None
