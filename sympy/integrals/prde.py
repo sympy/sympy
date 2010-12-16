@@ -679,8 +679,9 @@ def is_log_deriv_k_t_radical(fa, fd, L_K, E_K, L_args, E_args, D, T, Df=True):
     rhs = Matrix([dfa.as_basic()/dfd.as_basic()])
 
     A, u = constant_system(lhs, rhs, D, T)
+    if not all(derivation(i, D, T, basic=True).is_zero for i in u) or not A:
 
-    if any(i.has_any_symbols(*T) for i in u) or not A:
+        # derivation(basic=True) calls cancel()
         return None
     else:
         if not all(i.is_Rational for i in u):
