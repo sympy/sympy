@@ -52,10 +52,12 @@ def test_normal_denom():
 
 def test_special_denom():
     # TODO: add more tests here
-    D = [Poly(t, t)]
+    D = [Poly(1, x), Poly(t, t)]
     assert special_denom(Poly(1, t), Poly(t**2, t), Poly(1, t), Poly(t**2 - 1, t),
-    Poly(t, t), D, [t]) == \
+    Poly(t, t), D, [x, t]) == \
         (Poly(1, t), Poly(t**2 - 1, t), Poly(t**2 - 1, t), Poly(t, t))
+#    assert special_denom(Poly(1, t), Poly(2*x, t), Poly((1 + 2*x)*t, t), D,
+#        [x, t]) == 1
 
 @XFAIL
 def test_bound_degree_fail():
@@ -127,6 +129,8 @@ def test_solve_poly_rde_cancel():
     D = [Poly(1, x), Poly(t, t)]
     assert cancel_exp(Poly(2*x, t), Poly(2*x, t), 0, D, [x, t]) == \
         Poly(1, t)
+    assert cancel_exp(Poly(2*x, t), Poly((1 + 2*x)*t, t), 1, D, [x, t]) == \
+        Poly(t, t)
     # TODO: Add more exp tests, including tests that require is_deriv_in_field()
 
     # primitive
