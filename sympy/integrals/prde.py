@@ -335,8 +335,23 @@ def param_rischDE(fa, fd, G, D, T):
     Solve a Parametric Risch Differential Equation: Dy + f*y == Sum(ci*Gi, (i, 1, m)).
     """
     _, (fa, fd) = weak_normalizer(fa, fd, D, T)
-    a, (ba, bd), G, hn = prde_normal_denom(a, ga, gd, G, D, T)
+    a, (ba, bd), G, hn = prde_normal_denom(ga, gd, G, D, T)
     A, B, G, hs = prde_special_denom(a, ba, bd, G, D, T)
+    g = gcd(A, B)
+    A, B, G = A.quo(g), B.quo(g), [gia.cancel(gid*g, include=True) for gia, gid in G]
+    Q, M = prde_linear_constraints(A, B, G, D, T)
+    M, _ = constant_system(M, zeros([M.rows, 1]), D, T)
+    # Reduce number of constants at this point
+    try:
+        # Similar to rischDE(), we try oo, even though it might lead to
+        # non-termination when there is no solution.  At least for prde_spde,
+        # it will always terminate no matter what n is.
+        n = bound_degree(A, B, G, D, T, parametric=True)
+    except NotImplementedError:
+        # TODO: Remove warnings
+        import warnings
+        warnings.warn("param_rischDE: Proceeding with n = oo; may cause non-termination.")
+        n = oo
 
     A, B, Q, R, n1 = prde_spde(A, B, Q, n, D, T)
 
