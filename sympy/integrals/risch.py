@@ -676,9 +676,8 @@ def integrate_nonlinear_no_specials(a, d, D, T, Tfuncs):
         residue_reduce_to_basic(g2, T, z, Tfuncs))
     return (ret, b)
 
-# TODO: This should go in the regular namespace
-# TODO: Better name?
-# XXX: What should be the default value for index?
+# TODO: Should this go in the regular namespace?
+# If so, index should default to False, I think.
 def integer_powers(exprs, index=True):
     """
     Rewrites a list of expressions as integer multiples of each other.

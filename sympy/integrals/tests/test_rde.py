@@ -64,16 +64,19 @@ def test_bound_degree_fail():
     assert bound_degree(Poly(t**2, t), Poly(-(1/x**2*t**2 + 1/x), t),
         Poly((2*x - 1)*t**4 + (t0 + x)/x*t**3 - (t0 + 4*x**2)/2*x*t**2 + x*t,
         t), D, [x, t0, t]) == 3
-    # TODO: Add test for db == da - 1 case
 
 def test_bound_degree():
     # Base
     D = [Poly(1, x)]
     assert bound_degree(Poly(1, x), Poly(-2*x, x), Poly(1, x), D, [x]) == 0
-    # TODO: Add another test (?)
 
-    # Exp (TODO)
-    # TODO: Add tests for exp case
+    # Primitive (see above test_bound_degree_fail)
+    # TODO: Add test for when the degree bound becomes larger after limited_integrate
+    # TODO: Add test for db == da - 1 case
+
+    # Exp
+    # TODO: Add tests
+    # TODO: Add test for when the degree becomes larger after parametric_log_deriv()
 
     # Nonlinear
     D = [Poly(1, x), Poly(t**2 + 1, t)]

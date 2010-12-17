@@ -226,7 +226,7 @@ def special_denom(a, ba, bd, ca, cd, D, T, case='auto'):
 
     N = max(0, -nb, n - nc)
     pN = p**N
-    pn = p**-n # This is 1/h
+    pn = p**-n
 
     A = a*pN
     B = ba*pN.quo(bd) + Poly(n, t)*a*derivation(p, D, T).quo(p)*pN
@@ -329,11 +329,11 @@ def bound_degree(a, b, cQ, D, T, case='auto', parametric=False):
             etaa, etad = frac_in(d.quo(Poly(t, t)), t1)
             A = parametric_log_deriv(alphaa, alphad, etaa, etad, D1, T1)
             if A is not None:
+                # if alpha == m*Dt/t + Dz/z for z in k* and m in ZZ:
+                    # n = max(n, m)
                 a, m, z = A
                 if a == 1:
                     n = max(n, m)
-            # if alpha == m*Dt/t + Dz/z for z in k* and m in ZZ:
-                # n = max(n, m)
 
     elif case in ['tan', 'other_nonlinear']:
         delta = d.degree(t)
