@@ -463,11 +463,14 @@ def parametric_log_deriv_heu(fa, fd, wa, wd, D, T):
 
         nfmwa = N*fa*wd - M*wa*fd
         nfmwd = fd*wd
-        Qv = is_log_deriv_k_t_radical(N*fa*wd - M*wa*fd, fd*wd, D, T, 'auto')
+        Qv = is_log_deriv_k_t_radical_in_field(N*fa*wd - M*wa*fd, fd*wd, D, T, 'auto')
         if Qv is None:
-        # (N*f - M*w) is not the logarithmic derivative of a k(t)-radical.
+            # (N*f - M*w) is not the logarithmic derivative of a k(t)-radical.
             return None
-        Q, v = Qv
+
+        Q, e, v = Qv
+        if e != 1:
+            return None
 
         if Q.is_zero or v.is_zero:
             # Q == 0 or v == 0.
