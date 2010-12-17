@@ -1,6 +1,6 @@
 """Most of these tests come from the examples in Bronstein's book."""
 from sympy import Poly, S, symbols, oo
-from sympy.integrals.risch import NonElementaryIntegral
+from sympy.integrals.risch import NonElementaryIntegralException
 from sympy.integrals.rde import (order_at, order_at_oo, weak_normalizer,
     normal_denom, special_denom, bound_degree, spde, solve_poly_rde,
     no_cancel_equal, cancel_primitive, cancel_exp, rischDE)
@@ -41,7 +41,7 @@ def test_weak_normalizer():
     assert weak_normalizer(r[1][0], r[1][1], D, [x, t]) == (Poly(1, t), r[1])
 
 def test_normal_denom():
-    raises(NonElementaryIntegral, """normal_denom(Poly(1, x), Poly(1, x),
+    raises(NonElementaryIntegralException, """normal_denom(Poly(1, x), Poly(1, x),
     Poly(1, x), Poly(x, x), [Poly(1, x)], [x])""")
     fa, fd = Poly(t**2 + 1, t), Poly(1, t)
     ga, gd = Poly(1, t), Poly(t**2, t)
@@ -86,7 +86,7 @@ def test_bound_degree():
         D, [x, t]) == 0
 
 def test_spde():
-    raises(NonElementaryIntegral, "spde(Poly(t, t), Poly((t - 1)*(t**2 + 1), " +
+    raises(NonElementaryIntegralException, "spde(Poly(t, t), Poly((t - 1)*(t**2 + 1), " +
         "t), Poly(1, t), 0, [Poly(1, x), Poly(1 + t**2, t)], [x, t])")
     D = [Poly(1, x), Poly(t, t)]
     assert spde(Poly(t**2 + x*t*2 + x**2, t), Poly(t**2/x**2 + (2/x - 1)*t, t),
@@ -135,7 +135,7 @@ def test_solve_poly_rde_cancel():
 
     # primitive
     D = [Poly(1, x), Poly(1/x, t)]
-    raises(NonElementaryIntegral,
+    raises(NonElementaryIntegralException,
     "cancel_primitive(Poly(1, t), Poly(t, t), oo, D, [x, t])")
     assert cancel_primitive(Poly(1, t), Poly(t + 1/x, t), 2, D, [x, t]) == \
         Poly(t, t)

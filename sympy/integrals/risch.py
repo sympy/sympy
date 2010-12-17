@@ -35,7 +35,7 @@ from sympy.polys import (gcd, cancel, PolynomialError, Poly, reduced, RootSum,
 from sympy.utilities.iterables import numbered_symbols, any, all
 #    from pudb import set_trace; set_trace() # Debugging
 
-class NonElementaryIntegral(Exception):
+class NonElementaryIntegralException(Exception):
     """
     Exception used by subroutines within the Risch algorithm to indicate to one
     another that the function being integrated does not have an elementary
@@ -452,7 +452,7 @@ def integrate_primitive_polynomial(p, D, T):
     try:
         (ba, bd), c = limited_integrate(aa, ad, [(Dta, Dtb)], D1, T1)
         assert len(c) == 1
-    except NonElementaryIntegral:
+    except NonElementaryIntegralException:
         return (Poly(0, t), p, False)
 
     m = p.degree(t)
@@ -552,7 +552,7 @@ def integrate_hyperexponential_polynomial(p, D, T, z):
         try:
             va, vd = rischDE(iDta, iDtd, Poly(aa, t1), Poly(ad, t1), D1, T1)
             va, vd = frac_in((va, vd), t)
-        except NonElementaryIntegral:
+        except NonElementaryIntegralException:
             b = False
         else:
             qa = qa*vd + va*Poly(t**i)*qd

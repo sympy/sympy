@@ -23,7 +23,7 @@ from sympy.solvers import solve
 from sympy.polys import Poly, PolynomialError, lcm, cancel, RootOf
 
 from sympy.integrals.risch import (gcdex_diophantine, frac_in, derivation,
-    get_case, NonElementaryIntegral, residue_reduce, splitfactor,
+    get_case, NonElementaryIntegralException, residue_reduce, splitfactor,
     residue_reduce_derivation)
 from sympy.integrals.rde import (order_at, order_at_oo, weak_normalizer,
     bound_degree, spde, solve_poly_rde)
@@ -422,11 +422,11 @@ def limited_integrate(fa, fd, G, D, T):
         # Continue with param_rischDE()
         raise NotImplementedError("param_rischDE() is required to solve this integral.")
     elif len(l) == 0:
-        raise NonElementaryIntegral
+        raise NonElementaryIntegralException
     elif len(l) == 1:
         # The c1 == 1.  In this case, we can assume a normal Risch DE
         if l[0][0].is_zero:
-            raise NonElementaryIntegral
+            raise NonElementaryIntegralException
         else:
             l[0] *= 1/l[0][0]
             C = sum([Poly(i, t)*q for (i, q) in zip(l[0], Q)])

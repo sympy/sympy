@@ -26,7 +26,7 @@ from sympy.core.symbol import Symbol
 from sympy.polys import Poly, gcd, ZZ, cancel
 
 from sympy.integrals.risch import (gcdex_diophantine, frac_in, derivation,
-    splitfactor, NonElementaryIntegral, get_case)
+    splitfactor, NonElementaryIntegralException, get_case)
 
 from sympy.utilities.iterables import any, all
 
@@ -34,7 +34,7 @@ from operator import mul
 
 #    from pudb import set_trace; set_trace() # Debugging
 
-# TODO: Add messages to NonElementaryIntegral errors
+# TODO: Add messages to NonElementaryIntegralException errors
 def order_at(a, p, t):
     """
     Computes the order of a at p, with respect to t.
@@ -125,11 +125,11 @@ def normal_denom(fa, fd, ga, gd, D, T):
     Normal part of the denominator.
 
     Given a derivation D on k[t] and f, g in k(t) with f weakly
-    normalized with respect to t, either raise NonElementaryIntegral, in
-    which case the equation Dy + f*y == g has no solution in k(t), or
-    the quadruplet (a, b, c, h) such that a, h in k[t], b, c in k<t>,
-    and for any solution y in k(t) of Dy + f*y == g, q = y*h in k<t>
-    satisfies a*Dq + b*q == c.
+    normalized with respect to t, either raise NonElementaryIntegralException,
+    in which case the equation Dy + f*y == g has no solution in k(t), or the
+    quadruplet (a, b, c, h) such that a, h in k[t], b, c in k<t>, and for any
+    solution y in k(t) of Dy + f*y == g, q = y*h in k<t> satisfies
+    a*Dq + b*q == c.
 
     This constitutes step 1 in the outline given in the rde.py docstring.
     """
@@ -144,7 +144,7 @@ def normal_denom(fa, fd, ga, gd, D, T):
     c = a*h
     if c.div(en)[1]:
         # en does not divide dn*h**2
-        raise NonElementaryIntegral
+        raise NonElementaryIntegralException
     ca = c*ga
     ca, cd = ca.cancel(gd, include=True)
 
@@ -292,7 +292,7 @@ def bound_degree(a, b, cQ, D, T, case='auto', parametric=False):
             try:
                 (za, zd), m = limited_integrate(alphaa, alphad, [(etaa, etad)],
                     D1, T1)
-            except NonElementaryIntegral:
+            except NonElementaryIntegralException:
                 pass
             else:
                 assert len(m) == 1
@@ -313,7 +313,7 @@ def bound_degree(a, b, cQ, D, T, case='auto', parametric=False):
                     try:
                         (za, zd), m = limited_integrate(betaa, betad,
                             [(etaa, etad)], D1, T1)
-                    except NonElementaryIntegral:
+                    except NonElementaryIntegralException:
                         pass
                     else:
                         assert len(m) == 1
@@ -354,7 +354,7 @@ def spde(a, b, c, n, D, T):
     Rothstein's Special Polynomial Differential Equation algorithm.
 
     Given a derivation D on k[t], an integer n and a, b, c in k[t] with
-    a != 0, either raise NonElementaryIntegral, in which case the
+    a != 0, either raise NonElementaryIntegralException, in which case the
     equation a*Dq + b*q == c has no solution of degree at most n in
     k[t], or return the tuple (B, C, m, alpha, beta) such that B, C,
     alpha, beta in k[t], m in ZZ, and any solution q in k[t] of degree
@@ -369,11 +369,11 @@ def spde(a, b, c, n, D, T):
     if n < 0:
         if c.is_zero:
             return (zero, zero, 0, zero, zero)
-        raise NonElementaryIntegral
+        raise NonElementaryIntegralException
 
     g = a.gcd(b)
     if not c.rem(g).is_zero: # g does not divide c
-        raise NonElementaryIntegral
+        raise NonElementaryIntegralException
 
     a, b, c = a.quo(g), b.quo(g), c.quo(g)
     if a.degree(t) == 0:
@@ -394,7 +394,7 @@ def no_cancel_b_large(b, c, n, D, T):
 
     Given a derivation D on k[t], n either an integer or +oo, and b, c
     in k[t] with b != 0 and either D == d/dt or
-    deg(b) > max(0, deg(D) - 1), either raise NonElementaryIntegral, in
+    deg(b) > max(0, deg(D) - 1), either raise NonElementaryIntegralException, in
     which case the equation Dq + b*q == c has no solution of degree at
     most n in k[t], or a solution q in k[t] of this equation with
     deg(q) < n.
@@ -405,7 +405,7 @@ def no_cancel_b_large(b, c, n, D, T):
     while not c.is_zero:
         m = c.degree(t) - b.degree(t)
         if not 0 <= m <= n: # n < 0 or m < 0 or m > n
-            raise NonElementaryIntegral
+            raise NonElementaryIntegralException
 
         p = Poly(c.as_poly(t).LC()/b.as_poly(t).LC()*t**m, t, expand=False)
         q = q + p
@@ -420,7 +420,7 @@ def no_cancel_b_small(b, c, n, D, T):
 
     Given a derivation D on k[t], n either an integer or +oo, and b, c
     in k[t] with deg(b) < deg(D) - 1 and either D == d/dt or
-    deg(D) >= 2, either raise NonElementaryIntegral, in which case the
+    deg(D) >= 2, either raise NonElementaryIntegralException, in which case the
     equation Dq + b*q == c has no solution of degree at most n in k[t],
     or a solution q in k[t] of this equation with deg(q) <= n, or the
     tuple (h, b0, c0) such that h in k[t], b0, c0, in k, and for any
@@ -439,13 +439,13 @@ def no_cancel_b_small(b, c, n, D, T):
             m = c.degree(t) - d.degree(t) + 1
 
         if not 0 <= m <= n: # n < 0 or m < 0 or m > n
-            raise NonElementaryIntegral
+            raise NonElementaryIntegralException
 
         if m > 0:
             p = Poly(c.as_poly(t).LC()/(m*d.as_poly(t).LC())*t**m, t, expand=False)
         else:
             if b.degree(t) != c.degree(t):
-                raise NonElementaryIntegral
+                raise NonElementaryIntegralException
             if b.degree(t) == 0:
                 return (q, b.as_poly(T[-2]), c.as_poly(T[-2]))
             p = Poly(c.as_poly(t).LC()/b.as_poly(t).LC(), t, expand=False)
@@ -463,7 +463,7 @@ def no_cancel_equal(b, c, n, D, T):
 
     Given a derivation D on k[t] with deg(D) >= 2, n either an integer
     or +oo, and b, c in k[t] with deg(b) == deg(D) - 1, either raise
-    NonElementaryIntegral, in which case the equation Dq + b*q == c has
+    NonElementaryIntegralException, in which case the equation Dq + b*q == c has
     no solution of degree at most n in k[t], or a solution q in k[t] of
     this equation with deg(q) <= n, or the tuple (h, m, C) such that h
     in k[t], m in ZZ, and C in k[t], and for any solution q in k[t] of
@@ -484,7 +484,7 @@ def no_cancel_equal(b, c, n, D, T):
         m = max(M, c.degree(t) - d.degree(t) + 1)
 
         if not 0 <= m <= n: # n < 0 or m < 0 or m > n
-            raise NonElementaryIntegral
+            raise NonElementaryIntegralException
 
         u = cancel(m*d.as_poly(t).LC() + b.as_poly(t).LC())
         if u.is_zero:
@@ -493,7 +493,7 @@ def no_cancel_equal(b, c, n, D, T):
             p = Poly(c.as_poly(t).LC()/u*t**m, t, expand=False)
         else:
             if c.degree(t) != d.degree(t) - 1:
-                raise NonElementaryIntegral
+                raise NonElementaryIntegralException
             else:
                 p = c.as_poly(t).LC()/b.as_poly(t).LC()
 
@@ -508,9 +508,10 @@ def cancel_primitive(b, c, n, D, T):
     Poly Risch Differential Equation - Cancelation: Primitive case.
 
     Given a derivation D on k[t], n either an integer or +oo, b in k, and
-    c in k[t] with Dt in k and b != 0, either raise NonElementaryIntegral, in
-    which case the equation Dq + b*q == c has no solution of degree at most n
-    in k[t], or a solution q in k[t] of this equation with deg(q) <= n.
+    c in k[t] with Dt in k and b != 0, either raise
+    NonElementaryIntegralException, in which case the equation Dq + b*q == c
+    has no solution of degree at most n in k[t], or a solution q in k[t] of
+    this equation with deg(q) <= n.
     """
     from sympy.integrals.prde import is_log_deriv_k_t_radical_in_field
     t = T[-1]
@@ -530,19 +531,19 @@ def cancel_primitive(b, c, n, D, T):
             # if z*c == Dp for p in k[t] and deg(p) <= n:
             #     return p/z
             # else:
-            #     raise NonElementaryIntegral
+            #     raise NonElementaryIntegralException
 
     if c.is_zero:
         return c # return 0
 
     if n < c.degree(t):
-        raise NonElementaryIntegral
+        raise NonElementaryIntegralException
 
     q = Poly(0, t)
     while not c.is_zero:
         m = c.degree(t)
         if n < m:
-            raise NonElementaryIntegral
+            raise NonElementaryIntegralException
         a2a, a2d = frac_in(c.LC(), t1)
         sa, sd = rischDE(ba, bd, a2a, a2d, D1, T1)
         stm = Poly(sa.as_basic()/sd.as_basic()*t**m, t, expand=False)
@@ -557,9 +558,10 @@ def cancel_exp(b, c, n, D, T):
     Poly Risch Differential Equation - Cancelation: Hyperexponential case.
 
     Given a derivation D on k[t], n either an integer or +oo, b in k, and
-    c in k[t] with Dt/t in k and b != 0, either raise NonElementaryIntegral, in
-    which case the equation Dq + b*q == c has no solution of degree at most n
-    in k[t], or a solution q in k[t] of this equation with deg(q) <= n.
+    c in k[t] with Dt/t in k and b != 0, either raise
+    NonElementaryIntegralException, in which case the equation Dq + b*q == c
+    has no solution of degree at most n in k[t], or a solution q in k[t] of
+    this equation with deg(q) <= n.
     """
     from sympy.integrals.prde import parametric_log_deriv
     t = T[-1]
@@ -580,19 +582,19 @@ def cancel_exp(b, c, n, D, T):
             # deg(q) <= n:
             #     return q
             # else:
-            #     raise NonElementaryIntegral
+            #     raise NonElementaryIntegralException
 
     if c.is_zero:
         return c # return 0
 
     if n < c.degree(t):
-        raise NonElementaryIntegral
+        raise NonElementaryIntegralException
 
     q = Poly(0, t)
     while not c.is_zero:
         m = c.degree(t)
         if n < m:
-            raise NonElementaryIntegral
+            raise NonElementaryIntegralException
         # a1 = b + m*Dt/t
         a1 = b.as_basic()
         # TODO: Write a dummy function that does this idiom
@@ -698,7 +700,7 @@ def rischDE(fa, fd, ga, gd, D, T):
     Solve a Risch Differential Equation: Dy + f*y == g.
 
     See the outline in the docstring of rde.py for more information
-    about the procedure used.  Either raise NonElementaryIntegral, in
+    about the procedure used.  Either raise NonElementaryIntegralException, in
     which case there is no solution y in the diven differential field,
     or return y in k(t) satisfying Dy + f*y == g, or raise
     NotImplementedError, in which case, the algorithms necessary to
