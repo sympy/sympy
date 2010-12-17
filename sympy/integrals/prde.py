@@ -405,7 +405,7 @@ def limited_integrate(fa, fd, G, D, T):
     l = M.nullspace()
     if M == Matrix() or len(l) > 1:
         # Continue with param_rischDE()
-        raise NotImplementedError
+        raise NotImplementedError("param_rischDE() is required to solve this integral.")
     elif len(l) == 0:
         raise NonElementaryIntegral
     elif len(l) == 1:
