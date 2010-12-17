@@ -406,13 +406,17 @@ def test_dir():
     assert floor(x+2).series(x,0,dir='+') == 2
     assert floor(x+2).series(x,0,dir='-') == 1
     assert floor(x+2.2).series(x,0,dir='-') == 2
+    assert ceiling(x+2.2).series(x,0,dir='-') == 3
     assert sin(x+y).series(x,0,dir='-') == sin(x+y).series(x,0,dir='+')
 
 def test_issue405():
     a = Symbol("a")
     e = asin(a*x)/x
-    assert e.series(x, 4) == a + a**3*x**2/6 + 3*a**5*x**4/40 + O(x**5)
-
+    o = Symbol('x - 4')
+    # == a + a**3*x**2/6 + 3*a**5*x**4/40 + O(o**5) # ?
+    assert e.series(x, 4, n=2) == (asin(4*a)/4 + x*asin(4*a)/16 -
+                                   a*x/(4*(1 - 16*a**2)**(1/2)) + O(o**2))
+test_issue405()
 def test_issue1342():
     x, a, b = symbols('x a b')
     f = 1/(1+a*x)

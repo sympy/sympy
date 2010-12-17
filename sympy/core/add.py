@@ -180,8 +180,8 @@ class Add(AssocOp):
     def _eval_derivative(self, s):
         return Add(*[f.diff(s) for f in self.args])
 
-    def _eval_nseries(self, x, x0, n):
-        terms = [t.nseries(x, x0, n) for t in self.args]
+    def _eval_nseries(self, x, n):
+        terms = [t.nseries(x, 0, n) for t in self.args]
         return Add(*terms)
 
     def _matches_simple(self, expr, repl_dict):

@@ -1,4 +1,4 @@
-from sympy import Add, Basic, S, Symbol, Wild,  Real, Integer, Rational,  \
+from sympy import Add, Basic, S, Symbol, Wild,  Real, Integer, Rational, O, \
     sin, cos, exp, log, oo, sqrt, symbols, Integral, sympify, \
     WildFunction, Poly, Function, Derivative, Number, pi, var, \
     NumberSymbol, zoo, Piecewise, Mul, Pow, nsimplify, ratsimp, trigsimp, \
@@ -770,3 +770,14 @@ def test_new_rawargs():
     assert 2 + x == Add._new_rawargs(3 + x, *[S(2), x])
     assert x == Mul._new_rawargs(3*x, *[x])
     assert x == Add._new_rawargs(3 + x, *[x])
+
+def test_2124():
+    e = cos(x).series(x, 1, n=None, dir='-')
+    assert [e.next() for i in range(2)] == [cos(1), (1 - x)*sin(1)]
+    assert S(0).lseries(x).next() == 0
+    assert Derivative(x**2 + x**3*y**2, x, 2, y, 1).series(x) == 12*x*y
+    assert Integral(x, (x, 1, 3),(y, 1, x)).series(x) == -4 + 4*x
+    assert (cos(x).series(x, 1).removeO() -
+            cos(x + 1).series(x).removeO().subs(x, x - 1)).expand() == 0
+    assert (1 + x + O(x**2)).getn() == 2
+    assert (1 + x).getn() == None

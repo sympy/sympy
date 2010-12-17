@@ -1597,4 +1597,3 @@ def _logcombine(expr, assume_pos_real=False):
         _logcombine(expr.args[1], assume_pos_real)
 
     return expr
-

@@ -1,4 +1,4 @@
-from sympy import sin, cos, exp, E
+from sympy import sin, cos, exp, E, S
 from sympy.abc import x
 
 def test_sin():
@@ -26,3 +26,7 @@ def test_exp2():
     assert e.next() == -E*x**2/2
     assert e.next() == E*x**4/6
     assert e.next() == -31*E*x**6/720
+
+def test_simple():
+    assert [t for t in x.lseries(x, 0)] == [x]
+    assert [t for t in S.One.lseries(x, 0)] == [1]

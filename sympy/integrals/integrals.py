@@ -388,25 +388,13 @@ class Integral(Expr):
 
         return C.Add(*parts)
 
-    def _eval_lseries(self, x, x0):
-        arg = self.args[0]
-        dx = self.args[1][0]
-        for term in arg.lseries(dx, x0):
-            if len(self.args[1]) == 3:
-                a, b = self.args[1][1:3]
-                yield integrate(term, (dx, a, b))
-            else:
-                yield integrate(term, x)
+    def _eval_lseries(self, x):
+        for term in self.function.lseries(x):
+            yield integrate(term, *self.limits)
 
-    def _eval_nseries(self, x, x0, n):
-        arg = self.args[0]
-        x = self.args[1][0]
-        arg = arg.nseries(x, x0, n)
-        if len(self.args[1]) == 3:
-            a, b = self.args[1][1:3]
-            return integrate(arg.removeO(), (x, a, b)) + arg.getO()*x
-        else:
-            return integrate(arg.removeO(), x) + arg.getO()*x
+    def _eval_nseries(self, x, n):
+        terms, order = self.function.nseries(x, 0, n).as_coeff_factors(C.Order)
+        return integrate(terms, *self.limits) + Add(*order)*x
 
     def _eval_subs(self, old, new):
         arg0 = self.args[0].subs(old, new)

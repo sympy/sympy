@@ -20,3 +20,7 @@ def test_exp2():
     e1 = exp(cos(x)).series(x, 0)
     e2 = series(exp(cos(x)),x,0)
     assert e1 == e2
+
+def test_series_coverage():
+    e = cos(x).series(x, 1, n = None)
+    assert [e.next() for i in range(2)] == [cos(1), (1 - x)*sin(1)]

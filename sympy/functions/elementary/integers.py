@@ -55,7 +55,7 @@ class RoundFunction(Function):
         if not spart:
             return ipart
         elif spart.is_imaginary:
-            return ipart + cls(C.im(spart),evaluate=False)*S.ImaginaryUnit
+            return ipart + cls(C.im(spart), evaluate=False)*S.ImaginaryUnit
         else:
             return ipart + cls(spart, evaluate=False)
 
@@ -104,18 +104,18 @@ class floor(RoundFunction):
         if arg.is_NumberSymbol:
             return arg.approximation_interval(C.Integer)[0]
 
-    def _eval_nseries(self, x, x0, n):
-        r = self.subs(x, x0)
+    def _eval_nseries(self, x, n):
+        r = self.subs(x, 0)
         args = self.args[0]
-        if args.subs(x, x0) == r:
-            direction = (args.subs(x, x+x0) - args.subs(x, x0)).leadterm(x)[0]
+        args0 = args.subs(x, 0)
+        if args0 == r:
+            direction = (args - args0).leadterm(x)[0]
             if direction.is_positive:
                 return r
             else:
                 return r-1
         else:
             return r
-
 
 class ceiling(RoundFunction):
     """
@@ -153,14 +153,16 @@ class ceiling(RoundFunction):
         if arg.is_NumberSymbol:
             return arg.approximation_interval(C.Integer)[1]
 
-    def _eval_nseries(self, x, x0, n):
-        r = self.subs(x, x0)
+    def _eval_nseries(self, x, n):
+        r = self.subs(x, 0)
         args = self.args[0]
-        if args.subs(x,x0) == r:
-            direction = (args.subs(x, x+x0) - args.subs(x, x0)).leadterm(x)[0]
+        args0 = args.subs(x, 0)
+        if args0 == r:
+            direction = (args - args0).leadterm(x)[0]
             if direction.is_positive:
-                return r+1
+                return r + 1
             else:
                 return r
         else:
             return r
+

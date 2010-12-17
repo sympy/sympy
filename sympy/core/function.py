@@ -293,14 +293,14 @@ class Function(Application, Expr):
     def as_base_exp(self):
         return self, S.One
 
-    def _eval_nseries(self, x, x0, n):
+    def _eval_nseries(self, x, n):
         assert len(self.args) == 1
         arg = self.args[0]
         arg0 = arg.limit(x, 0)
         from sympy import oo
         if arg0 in [-oo, oo]:
-            raise PoleError("Cannot expand around %s" % (arg))
-        if arg0 is not S.Zero:
+            raise PoleError("Cannot expand %s around 0" % (arg))
+        if not arg0 is S.Zero:
             e = self
             e1 = e.expand()
             if e == e1:
@@ -317,12 +317,12 @@ class Function(Application, Expr):
                     term = term.expand()
                     series += term
                 return series + C.Order(x**n, x)
-            return e1.nseries(x, x0, n)
+            return e1.nseries(x, 0, n)
         l = []
         g = None
         for i in xrange(n+2):
             g = self.taylor_term(i, arg, g)
-            g = g.nseries(x, x0, n)
+            g = g.nseries(x, 0, n)
             l.append(g)
         return Add(*l) + C.Order(x**n, x)
 
@@ -650,22 +650,19 @@ class Derivative(Expr):
         repl_dict[self] = expr
         return repl_dict
 
-    def _eval_lseries(self, x, x0):
-        stop
-        arg = self.args[0]
-        dx = self.args[1]
-        for term in arg.lseries(x, x0):
-            yield term.diff(dx)
+    def _eval_lseries(self, x):
+        dx = self.args[1:]
+        for term in self.args[0].lseries(x):
+            yield term.diff(*dx)
 
-    def _eval_nseries(self, x, x0, n):
-        arg = self.args[0]
-        arg = arg.nseries(x, x0, n)
+    def _eval_nseries(self, x, n):
+        arg = self.args[0].nseries(x, 0, n)
         o = arg.getO()
-        dx = self.args[1]
+        dx = self.args[1:]
+        rv = arg.removeO().diff(*dx)
         if o:
-            return arg.removeO().diff(dx) + arg.getO()/dx
-        else:
-            return arg.removeO().diff(dx)
+            rv += arg.getO()/x
+        return rv
 
 class Lambda(Function):
     """

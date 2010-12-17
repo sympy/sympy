@@ -1113,6 +1113,3 @@ class Atom(Basic):
 
     def doit(self, **hints):
         return self
-
-
-

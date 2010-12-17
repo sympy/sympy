@@ -1,7 +1,7 @@
 from sympy import (S, symbols, integrate, Integral, Derivative, exp, oo, Symbol,
         Function, Rational, log, sin, cos, pi, E, I, Poly, LambertW, diff,
         Matrix, sympify, sqrt, atan, asin, acos, atan, DiracDelta, Heaviside,
-        Lambda, sstr)
+        Lambda, sstr, Add)
 from sympy.utilities.pytest import XFAIL, skip, raises
 from sympy.physics.units import m, s
 
@@ -418,3 +418,8 @@ def issue_1785():
 def issue_1785_fail():
     assert integrate(x**x*(1+log(x)).expand(mul=True)) is None
 
+def test_series():
+    from sympy.abc import x
+    i = Integral(cos(x))
+    e = i.lseries(x)
+    assert i.nseries(x, 0, 8).removeO() == Add(*[e.next() for j in range(4)])
