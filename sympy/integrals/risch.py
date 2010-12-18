@@ -38,21 +38,58 @@ from sympy.utilities.iterables import numbered_symbols, any, all
 class DifferentialExtension(object):
     """
     A container for all the information relating to a differential extension.
+
+    The attributes of this object are (see also the docstring of __init__):
+
+    - f: The original (Expr) integrand.
+    - x: The variable of integration.
+    - T: List of variables in the extension.
+    - D: List of derivations in the extension; corresponds to the elements of T.
+    - fa: Poly of the numerator of the integrand.
+    - fd: Poly of the denominator of the integrand.
+    - Tfuncs: Lambda() representations of each element of T, in reverse order.
+      For back-substitution after integration.
+    - backsubs: A (possibly empty) list of further substitutions to be made on
+      the final integral to make it look more like the integrand.
+    - E_K: List of the positions of the exponential extensions in T.
+    - E_args: The arguments of each of the exponentials in E_K.
+    - E_L: List of the positions of the logarithmic extensions in T.
+    - L_args: The arguments of each of the logarithms in L_K.
+    (See the docstrings of is_deriv_k() and is_log_deriv_k_t_radical() for
+    more information on E_K, E_args, L_K, and L_args)
+    - cases: List of string representations of the cases of T, in reverse order.
+    - t: The top level extension variable, as defined by the current level
+      (see level below).
+    - d: The top level extension derivation, as defined by the current
+      derivation (see level below).
+    (Note that self.T and self.D will always contain the complete extension,
+    regardless of the level.  Therefore, you should ALWAYS use DE.t and DE.d
+    instead of DE.T[-1] and DE.D[-1].)
+
+    The following are also attributes, but will probably not be useful other
+    than in internal use:
+    - newf: Expr form of fa/fd.
+    - level: The number (between -1 and -len(self.T)) such that
+      self.T[self.level] == self.t and self.D[self.level] == self.d.
+      Use the methods self.increase_level() and self.decrease_level() to change
+      the current level.
     """
     def __init__(self, f, x, handle_first='log', dummy=True):
         """
         Tries to build a transcendental extension tower from f with respect to x.
 
-        If it is successful, returns (fa, fd, D, T, Tfuncs, backsubs) such that fa
-        and fd are Polys in T[-1] with rational coefficients in T[:-1], fa/fd == f
-        and D[i] is a Poly in T[i] with rational coefficients in T[:i] representing
-        the derivative of T[i].  Tfuncs is a list of Lambda objects for back
-        replacing the functions after integrating.  Lambda() is only used (instead
-        of lambda) to make this function easier to test and debug. Note that Tfuncs
-        corresponds to the elements of T (except for T[0] == x) in reverse order,
-        because that is the order that they have to be back-substituted in.
-        backsubs is a back-substitution list that should be applied on the completed
-        integral to make it look more like the original integrand.
+        If it is successful, creates a DifferentialExtension object with, among
+        other attributes, attributes (fa, fd, D, T, Tfuncs, backsubs) such that
+        fa and fd are Polys in T[-1] with rational coefficients in T[:-1],
+        fa/fd == f, and D[i] is a Poly in T[i] with rational coefficients in
+        T[:i] representing the derivative of T[i] for each i from 1 to len(T).
+        Tfuncs is a list of Lambda objects for back replacing the functions
+        after integrating.  Lambda() is only used (instead of lambda) to make
+        them easier to test and debug. Note that Tfuncs corresponds to the
+        elements of T (except for T[0] == x) in reverse order, because that is
+        the order that they have to be back-substituted in.  backsubs is a
+        (possibly empty) back-substitution list that should be applied on the
+        completed integral to make it look more like the original integrand.
 
         If it is unsuccessful, it raises NotImplementedError.
         """
@@ -133,7 +170,7 @@ class DifferentialExtension(object):
                     # above tests.  Again, if this changes to kill more than
                     # that, this will break, which maybe is a sign that you
                     # shouldn't be changing that.  Actually, if anything, this
-                    # auto-simplificaiton should be removed.  See
+                    # auto-simplification should be removed.  See
                     # http://groups.google.com/group/sympy/browse_thread/thread/a61d48235f16867f
 
                     self.newf = self.newf.subs(i, newterm)
@@ -172,7 +209,7 @@ class DifferentialExtension(object):
         Try to build an exponential extension.
 
         Returns True if there was a new extension, False if there was no new
-        exetension but it was able to rewrit the given exponentials in terms
+        extension but it was able to rewrite the given exponentials in terms
         of the existing extension, and None if the entire extension building
         process should be restarted.  If the process fails because there is no
         way around an algebraic extension (e.g., exp(log(x)/2)), it will raise
@@ -273,7 +310,7 @@ class DifferentialExtension(object):
         Try to build a logarithmic extension.
 
         Returns True if there was a new extension and False if there was no new
-        exetension but it was able to rewrit the given exponentials in terms
+        extension but it was able to rewrite the given logarithms in terms
         of the existing extension.  Unlike with exponential extensions, there
         is no way that a logarithm is not transcendental over and cannot be
         rewritten in terms of an already existing extension in a non-algebraic
@@ -320,7 +357,7 @@ class DifferentialExtension(object):
     @property
     def _important_attrs(self):
         """
-        Returns some of the more imporant attributes of self.
+        Returns some of the more important attributes of self.
 
         Used for testing and debugging purposes.
         """
@@ -331,6 +368,9 @@ class DifferentialExtension(object):
         return str(self._important_attrs)
 
     def reset(self, dummy=True):
+        """
+        Reset self to an initial state.  Used by __init__.
+        """
         self.t = self.x
         self.T = [self.x]
         self.D = [Poly(1, self.x)]
@@ -366,7 +406,7 @@ class DifferentialExtension(object):
 
     def decrement_level(self):
         """
-        Decrese the level of self.
+        Decrease the level of self.
 
         This makes the working differential extension smaller.  self.level is
         given relative to the end of the list (-1, -2, etc.), so we don't need
