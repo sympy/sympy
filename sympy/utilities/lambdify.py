@@ -145,7 +145,14 @@ def lambdify(args, expr, modules=None, use_imps=True):
         Attention: There are naming differences between numpy and sympy. So if
                    you simply take the numpy module, e.g. sympy.atan will not be
                    translated to numpy.arctan. Use the modified module instead
-                   by passing the string "numpy".
+                   by passing the string "numpy":
+
+        >> f = lambdify((x,y), tan(x*y), "numpy")
+        >> f(1, 2)
+        -2.18503986326
+        >> from numpy import array
+        >> f(array([1, 2, 3]), array([2, 3, 5]))
+        [-2.18503986 -0.29100619 -0.8559934 ]
 
     (3) Use own dictionaries:
         >> def my_cool_function(x): ...
