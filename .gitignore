@@ -2,7 +2,7 @@
 *.rej
 *.pyc
 *.pyo
-*.swp
+.*.sw[op]
 tags
 
 my/
