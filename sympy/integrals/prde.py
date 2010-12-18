@@ -557,10 +557,10 @@ def is_deriv_k(fa, fd, L_K, E_K, L_args, E_args, D, T):
     f in K, Df/f is the derivative of a element of K if and only if there are ri
     in QQ such that::
 
-            ---               ---       Dt       Df
-            \    r  * Dt   +  \    r  *   i   =  --.
-            /     i     i     /     i   ---       f
-            ---               ---        t
+            ---               ---       Dt
+            \    r  * Dt   +  \    r  *   i      Df
+            /     i     i     /     i   ---   =  --.
+            ---               ---        t        f
          i in L            i in E         i
                K/C(x)            K/C(x)
 
@@ -654,8 +654,8 @@ def is_log_deriv_k_t_radical(fa, fd, L_K, E_K, L_args, E_args, D, T, Df=True):
     are ri in QQ such that::
 
             ---               ---       Dt
-            \    r  * Dt   +  \    r  *   i   =  Df.
-            /     i     i     /     i   ---
+            \    r  * Dt   +  \    r  *   i
+            /     i     i     /     i   ---   =  Df.
             ---               ---        t
          i in L            i in E         i
                K/C(x)            K/C(x)
