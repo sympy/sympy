@@ -1,9 +1,9 @@
 """Most of these tests come from the examples in Bronstein's book."""
 from sympy import (Poly, S, Function, log, symbols, exp, tan, Integral, sqrt,
     Symbol, Lambda, sin)
-from sympy.integrals.risch import (gcdex_diophantine, frac_in, derivation,
-    splitfactor, splitfactor_sqf, canonical_representation, hermite_reduce,
-    polynomial_reduce, residue_reduce, residue_reduce_to_basic,
+from sympy.integrals.risch import (gcdex_diophantine, frac_in, as_poly_1t,
+    derivation, splitfactor, splitfactor_sqf, canonical_representation,
+    hermite_reduce, polynomial_reduce, residue_reduce, residue_reduce_to_basic,
     integrate_primitive, integrate_hyperexponential_polynomial,
     integrate_hyperexponential, integrate_hypertangent_polynomial,
     integrate_nonlinear_no_specials, integer_powers, DifferentialExtension,
@@ -28,6 +28,16 @@ def test_frac_in():
     raises(ValueError, "frac_in((x + 1)/log(x)*t, x)")
     assert frac_in(Poly((2 + 2*x + x*(1 + x))/(1 + x)**2, t), x, cancel=True) == \
         (Poly(x + 2, x), Poly(x + 1, x))
+
+def test_as_poly_1t():
+    assert as_poly_1t(2/t + t, t, z) in [
+        Poly(t + 2*z, t, z), Poly(t + 2*z, z, t)]
+    assert as_poly_1t(2/t + 3/t**2, t, z) in [
+        Poly(2*z + 3*z**2, t, z), Poly(2*z + 3*z**2, z, t)]
+    assert as_poly_1t(2/((exp(2) + 1)*t), t, z) in [
+        Poly(2/(exp(2) + 1)*z, t, z), Poly(2/(exp(2) + 1)*z, z, t)]
+    assert as_poly_1t(2/((exp(2) + 1)*t) + t, t, z) in [
+        Poly(t + 2/(exp(2) + 1)*z, t, z), Poly(t + 2/(exp(2) + 1)*z, z, t)]
 
 def test_derivation():
     p = Poly(4*x**4*t**5 + (-4*x**3 - 4*x**4)*t**4 + (-3*x**2 + 2*x**3)*t**3 +

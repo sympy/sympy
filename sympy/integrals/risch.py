@@ -29,8 +29,7 @@ from sympy.functions import log, exp, sin, cos, tan, asin, acos, atan
 
 from sympy.integrals import Integral, integrate
 
-from sympy.polys import (gcd, cancel, PolynomialError, Poly, reduced, RootSum,
-    apart)
+from sympy.polys import gcd, cancel, PolynomialError, Poly, reduced, RootSum
 
 from sympy.utilities.iterables import numbered_symbols, any, all
 #    from pudb import set_trace; set_trace() # Debugging
@@ -473,6 +472,53 @@ def frac_in(f, t, **kwargs):
     if fa is None or fd is None:
         raise ValueError("Could not turn %s into a fraction in %s." % (f, t))
     return (fa, fd)
+
+def as_poly_1t(p, t, z):
+    """
+    (Hackish) way to convert an element p of K[t, 1/t] to K[t, z].
+
+    In other words, z == 1/t will be a dummy variable that Poly can handle
+    better.
+
+    See issue 2032.
+
+    Doctest
+    =======
+    >>> from sympy import Symbol, random_poly
+    >>> from sympy.integrals.risch import as_poly_1t
+    >>> x = Symbol('x')
+    >>> z = Symbol('z')
+
+    >>> p1 = random_poly(x, 10, -10, 10)
+    >>> p2 = random_poly(x, 10, -10, 10)
+    >>> p = p1 + p2.subs(x, 1/x)
+    >>> as_poly_1t(p, x, z).as_basic().subs(z, 1/x) == p
+    True
+    """
+    pa, pd = frac_in(p, t, cancel=True)
+    if not pd.is_monomial:
+        # XXX: Is there a better Poly exception that we could raise here
+        # Either way, if you see this (from the Risch Algorithm) it indicates
+        # a bug.
+        raise PolynomialError("%s is not an element of K[%s, 1/%s]." % (p, t, t))
+    d = pd.degree(t)
+    one_t_part = pa.slice(0, d + 1) # requires polys11
+    r = pd.degree() - pa.degree()
+    t_part = pa - one_t_part
+    t_part = t_part.to_field().quo(pd)
+    # Compute the negative degree parts.  Also requires polys11.
+    one_t_part = Poly.from_list(reversed(one_t_part.rep.rep), *one_t_part.gens,
+        **{'domain':one_t_part.domain})
+    if r > 0:
+        one_t_part *= Poly(t**r, t)
+
+    one_t_part = one_t_part.replace(t, z) # z will be 1/t
+    if pd.nth(d):
+        one_t_part *= Poly(1/pd.nth(d), z, expand=False)
+    ans = t_part.as_poly(t, z, expand=False) + one_t_part.as_poly(t, z, expand=False)
+
+    return ans
+
 
 def derivation(p, D, T, coefficientD=False, basic=False):
     """
@@ -980,16 +1026,11 @@ def integrate_hyperexponential(a, d, D, T, Tfuncs):
     # h - Dg2 + r
     p = cancel(h[0].as_basic()/h[1].as_basic() - residue_reduce_derivation(g2,
         D, T, z) + r[0].as_basic()/r[1].as_basic())
-    p = apart(p, t) # Try to get in a form where Poly will recognize it as an
-                    # element of k[t, 1/t].
-    # TODO: Use subs() in new polys10 (?)
-    pp = p.as_poly(t, 1/t).replace(1/t, z)
+    pp = as_poly_1t(p, t, z) #
 
     qa, qd, b = integrate_hyperexponential_polynomial(pp, D, T, z)
 
-    # TODO: Replace apart() with a more robust routine, as per issue 2032
-
-    i = apart(pp.as_poly(t, expand=False).nth(0), z).as_poly(z, expand=False).nth(0)
+    i = pp.nth(0, 0)
 
     ret = ((g1[0].as_basic()/g1[1].as_basic() + qa.as_basic()/
         qd.as_basic()).subs(s) + residue_reduce_to_basic(g2, T, z, Tfuncs))
