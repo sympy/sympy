@@ -1741,8 +1741,14 @@ def dup_slice(f, m, n, K):
     """Take a continuous subsequence of terms of ``f`` in ``K[x]``. """
     k = len(f)
 
-    M = k - m
-    N = k - n
+    if k >= m:
+        M = k - m
+    else:
+        M = 0
+    if k >= n:
+        N = k - n
+    else:
+        N = 0
 
     f = f[N:M]
 

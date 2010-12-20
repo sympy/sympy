@@ -623,6 +623,8 @@ def test_dup_slice():
     assert dup_slice(f, 1, 3, ZZ) == [2,3,0]
     assert dup_slice(f, 1, 4, ZZ) == [1,2,3,0]
 
+    assert dup_slice([1, 2], 0, 3, ZZ) == [1, 2]
+
 def test_dup_random():
     f = dup_random(0, -10, 10, ZZ)
 
