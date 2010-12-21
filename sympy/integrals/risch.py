@@ -997,7 +997,7 @@ def integrate_hyperexponential(a, d, D, T, Tfuncs):
     Integration of hyperexponential functions.
 
     Given a hyperexponential monomial t over k and f in k(t), return g
-    elementary over k(t), i in k(t),  and a bool b in {True, False} such that
+    elementary over k(t), i in k(t), and a bool b in {True, False} such that
     i = f - Dg is in k if b is True or i = f - Dg does not have an elementary
     integral over k(t) if b is False.
 
