@@ -486,8 +486,7 @@ def as_poly_1t(p, t, z):
     =======
     >>> from sympy import Symbol, random_poly
     >>> from sympy.integrals.risch import as_poly_1t
-    >>> x = Symbol('x')
-    >>> z = Symbol('z')
+    >>> from sympy.abc import x, z
 
     >>> p1 = random_poly(x, 10, -10, 10)
     >>> p2 = random_poly(x, 10, -10, 10)
