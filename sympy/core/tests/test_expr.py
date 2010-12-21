@@ -770,3 +770,8 @@ def test_new_rawargs():
     assert 2 + x == Add._new_rawargs(3 + x, *[S(2), x])
     assert x == Mul._new_rawargs(3*x, *[x])
     assert x == Add._new_rawargs(3 + x, *[x])
+
+def test_2127():
+    assert Add(evaluate=False) == 0
+    assert Mul(evaluate=False) == 1
+    assert Mul(x+y, evaluate=False).is_Add
