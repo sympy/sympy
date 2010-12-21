@@ -52,7 +52,7 @@ class DifferentialExtension(object):
       the final integral to make it look more like the integrand.
     - E_K: List of the positions of the exponential extensions in T.
     - E_args: The arguments of each of the exponentials in E_K.
-    - E_L: List of the positions of the logarithmic extensions in T.
+    - L_K: List of the positions of the logarithmic extensions in T.
     - L_args: The arguments of each of the logarithms in L_K.
     (See the docstrings of is_deriv_k() and is_log_deriv_k_t_radical() for
     more information on E_K, E_args, L_K, and L_args)
@@ -73,7 +73,10 @@ class DifferentialExtension(object):
       Use the methods self.increase_level() and self.decrease_level() to change
       the current level.
     """
-    def __init__(self, f, x, handle_first='log', dummy=True):
+    __slots__ = ('f', 'x', 'T', 'D', 'fa', 'fd', 'Tfuncs', 'backsubs', 'E_K',
+        'E_args', 'L_K', 'L_args', 'cases', 't', 'd', 'newf', 'level', 'ts')
+
+    def __init__(self, f, x, handle_first='log', dummy=True, extension=None):
         """
         Tries to build a transcendental extension tower from f with respect to x.
 
@@ -91,7 +94,31 @@ class DifferentialExtension(object):
         completed integral to make it look more like the original integrand.
 
         If it is unsuccessful, it raises NotImplementedError.
+
+        You can also create an object by manually setting the attributes as a
+        dictionary to the extension keyword argument.  You must include at least
+        D.  Warning, any attribute that is not given will be set to None. The
+        attributes T, t, d, cases, and level are set automatically and do not
+        need to be given.  The functions in the Risch Algorithm will NOT check
+        to see if an attribute is None before using it.  This also does not
+        check to see if the extension is valid (non-algebraic) or even if it is
+        self-consistent.  Therefore, this should only be used for
+        testing/debugging purposes
         """
+        if extension:
+            for attr in self.__slots__:
+                setattr(self, attr, None)
+
+            if not extension.has_key('D'):
+                raise ValueError("At least the key D must be included with " +
+                    "the extension flag to DifferentialExtension.")
+            for attr in extension:
+                setattr(self, attr, extension[attr])
+
+            self._auto_attrs()
+
+            return
+
         from sympy.integrals.prde import is_deriv_k
 
         if handle_first not in ['log', 'exp']:
@@ -197,6 +224,17 @@ class DifferentialExtension(object):
                 log_new_extension = self._log_part(logs)
 
         self.fa, self.fd = frac_in(self.newf, self.t)
+        self._auto_attrs()
+
+        return
+
+    def _auto_attrs(self):
+        """
+        Set attributes that are generated automatically.
+        """
+        if not self.T:
+            # i.e., when using the extension flag and T isn't given
+            self.T = [i.gen for i in self.D]
         self.cases = [get_case(d, t) for d, t in zip(self.D, self.T)]
         self.cases.reverse()
         self.level = -1
@@ -359,6 +397,9 @@ class DifferentialExtension(object):
         Returns some of the more important attributes of self.
 
         Used for testing and debugging purposes.
+
+        The attributes are (fa, fd, D, T, Tfuncts, backsubs, E_K, E_args,
+        L_K, L_args).
         """
         return (self.fa, self.fd, self.D, self.T, self.Tfuncs,
             self.backsubs, self.E_K, self.E_args, self.L_K, self.L_args)
@@ -395,7 +436,7 @@ class DifferentialExtension(object):
         do worry about it when building the extension.
         """
         if self.level >= -1:
-            raise ValueError("The level of the differential extension cannot" +
+            raise ValueError("The level of the differential extension cannot " +
                 "be increased any further.")
 
         self.level += 1
@@ -412,7 +453,7 @@ class DifferentialExtension(object):
         do worry about it when building the extension.
         """
         if self.level <= -len(self.T):
-            raise ValueError("The level of the differential extension cannot" +
+            raise ValueError("The level of the differential extension cannot " +
                 "be increased any further.")
 
         self.level -= 1
