@@ -162,7 +162,7 @@ class DifferentialExtension(object):
     __slots__ = ('f', 'x', 'T', 'D', 'fa', 'fd', 'Tfuncs', 'backsubs', 'E_K',
         'E_args', 'L_K', 'L_args', 'cases', 't', 'd', 'newf', 'level', 'ts')
 
-    def __init__(self, f, x, handle_first='log', dummy=True, extension=None):
+    def __init__(self, f=None, x=None, handle_first='log', dummy=True, extension=None):
         """
         Tries to build a transcendental extension tower from f with respect to x.
 
@@ -184,7 +184,7 @@ class DifferentialExtension(object):
         You can also create an object by manually setting the attributes as a
         dictionary to the extension keyword argument.  You must include at least
         D.  Warning, any attribute that is not given will be set to None. The
-        attributes T, t, d, cases, and level are set automatically and do not
+        attributes T, t, d, cases, x, and level are set automatically and do not
         need to be given.  The functions in the Risch Algorithm will NOT check
         to see if an attribute is None before using it.  This also does not
         check to see if the extension is valid (non-algebraic) or even if it is
@@ -204,6 +204,9 @@ class DifferentialExtension(object):
             self._auto_attrs()
 
             return
+        elif not f or not x:
+            raise ValueError("Either both f and x or a manual extension must " +
+            "be given.")
 
         from sympy.integrals.prde import is_deriv_k
 
@@ -321,6 +324,8 @@ class DifferentialExtension(object):
         if not self.T:
             # i.e., when using the extension flag and T isn't given
             self.T = [i.gen for i in self.D]
+        if not self.x:
+            self.x = self.T[0]
         self.cases = [get_case(d, t) for d, t in zip(self.D, self.T)]
         self.cases.reverse()
         self.level = -1

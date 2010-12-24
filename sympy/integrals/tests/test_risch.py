@@ -373,19 +373,21 @@ def test_DifferentialExtension():
     assert DE.d == Poly(1/x, t1) == DE.D[DE.level]
 
     # Test the extension flag
-    raises(ValueError, "DifferentialExtension(None, None, extension={'T':[x, t]})")
-    DE = DifferentialExtension(None, None, extension={'D':[Poly(1, x), Poly(t, t)]})
+    raises(ValueError, "DifferentialExtension(extension={'T':[x, t]})")
+    DE = DifferentialExtension(extension={'D':[Poly(1, x), Poly(t, t)]})
     assert DE._important_attrs == (None, None, [Poly(1, x), Poly(t, t)], [x, t],
         None, None, None, None, None, None)
     assert DE.d == Poly(t, t)
     assert DE.t == t
     assert DE.level == -1
     assert DE.cases == ['exp', 'base']
+    assert DE.x == x
 
-    DE = DifferentialExtension(None, None, extension={'D':[Poly(1, x),
+    DE = DifferentialExtension(extension={'D':[Poly(1, x),
         Poly(t, t)], 'E_K':[1], 'E_args':[x], 'L_K':[], 'L_args':[]})
     assert DE._important_attrs == (None, None, [Poly(1, x), Poly(t, t)], [x, t],
         None, None, [1], [x], [], [])
+    raises(ValueError, "DifferentialExtension()")
 
     # Odd ends
     assert DifferentialExtension(sin(y)*exp(x), x,
