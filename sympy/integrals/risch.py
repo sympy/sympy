@@ -132,7 +132,7 @@ class DifferentialExtension(object):
     - D: List of derivations in the extension; corresponds to the elements of T.
     - fa: Poly of the numerator of the integrand.
     - fd: Poly of the denominator of the integrand.
-    - Tfuncs: Lambda() representations of each element of T, in reverse order.
+    - Tfuncs: Lambda() representations of each element of T (except for x).
       For back-substitution after integration.
     - backsubs: A (possibly empty) list of further substitutions to be made on
       the final integral to make it look more like the integrand.
@@ -174,10 +174,10 @@ class DifferentialExtension(object):
         Tfuncs is a list of Lambda objects for back replacing the functions
         after integrating.  Lambda() is only used (instead of lambda) to make
         them easier to test and debug. Note that Tfuncs corresponds to the
-        elements of T (except for T[0] == x) in reverse order, because that is
-        the order that they have to be back-substituted in.  backsubs is a
-        (possibly empty) back-substitution list that should be applied on the
-        completed integral to make it look more like the original integrand.
+        elements of T, except for T[0] == x, but they should be back-substituted
+        in reverse order.  backsubs is a (possibly empty) back-substitution list
+        that should be applied on the completed integral to make it look more
+        like the original integrand.
 
         If it is unsuccessful, it raises NotImplementedError.
 
@@ -398,7 +398,7 @@ class DifferentialExtension(object):
                         self.newf = self.newf.subs([(exp(p*expargs[i]),
                             exp(const*p)*rad) for i, p in others])
                         self.newf = self.newf.subs(zip(reversed(self.T),
-                            [f(self.x) for f in self.Tfuncs]))
+                            reversed([f(self.x) for f in self.Tfuncs])))
                         restart = True
                         break
                     else:
@@ -419,7 +419,7 @@ class DifferentialExtension(object):
                 self.D.append(darg.as_poly(self.t, expand=False)*Poly(self.t,
                     self.t, expand=False))
                 i = Symbol('i', dummy=True)
-                self.Tfuncs = [Lambda(i, exp(arg.subs(self.x, i)))] + self.Tfuncs
+                self.Tfuncs = self.Tfuncs + [Lambda(i, exp(arg.subs(self.x, i)))]
                 self.newf = self.newf.subs([(exp(expargs[i]), self.t**p) for i,
                     p in others])
                 new_extension = True
@@ -471,7 +471,7 @@ class DifferentialExtension(object):
                 self.D.append(cancel(darg.as_basic()/arg).as_poly(self.t,
                     expand=False))
                 i = Symbol('i', dummy=True)
-                self.Tfuncs = [Lambda(i, log(arg.subs(self.x, i)))] + self.Tfuncs
+                self.Tfuncs = self.Tfuncs + [Lambda(i, log(arg.subs(self.x, i)))]
                 self.newf = self.newf.subs(log(arg), self.t)
                 new_extension = True
 
@@ -967,7 +967,7 @@ def residue_reduce_to_basic(H, T, z, Tfuncs):
     # TODO: check what Lambda does with RootOf
     x = T[0]
     i = Symbol('i', dummy=True)
-    s = zip(reversed(T), [f(x) for f in Tfuncs])
+    s = zip(reversed(T), reversed([f(x) for f in Tfuncs]))
 
     return sum((RootSum(a[0].as_poly(z), Lambda(i, i*log(a[1].as_basic()).subs(
         {z: i}).subs(s))) for a in H))
@@ -1040,7 +1040,7 @@ def integrate_primitive(a, d, D, T, Tfuncs):
     t = T[-1]
     x = T[0]
     z = Symbol('z', dummy=True)
-    s = zip(reversed(T), [f(x) for f in Tfuncs])
+    s = zip(reversed(T), reversed([f(x) for f in Tfuncs]))
 
     g1, h, r = hermite_reduce(a, d, D, T)
     g2, b = residue_reduce(h[0], h[1], D, T, z=z)
@@ -1136,7 +1136,7 @@ def integrate_hyperexponential(a, d, D, T, Tfuncs):
     t = T[-1]
     x = T[0]
     z = Symbol('z', dummy=True)
-    s = zip(reversed(T), [f(x) for f in Tfuncs])
+    s = zip(reversed(T), reversed([f(x) for f in Tfuncs]))
 
     g1, h, r = hermite_reduce(a, d, D, T)
     g2, b = residue_reduce(h[0], h[1], D, T, z=z)
@@ -1206,7 +1206,7 @@ def integrate_nonlinear_no_specials(a, d, D, T, Tfuncs):
     t = T[-1]
     x = T[0]
     z = Symbol('z', dummy=True)
-    s = zip(reversed(T), [f(x) for f in Tfuncs])
+    s = zip(reversed(T), reversed([f(x) for f in Tfuncs]))
 
     g1, h, r = hermite_reduce(a, d, D, T)
     g2, b = residue_reduce(h[0], h[1], D, T, z=z)
