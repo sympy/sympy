@@ -34,6 +34,92 @@ from sympy.polys import gcd, cancel, PolynomialError, Poly, reduced, RootSum
 from sympy.utilities.iterables import numbered_symbols, any, all
 #    from pudb import set_trace; set_trace() # Debugging
 
+# TODO: Should this go in the regular namespace?
+# If so, index should default to False, I think.
+def integer_powers(exprs, index=True):
+    """
+    Rewrites a list of expressions as integer multiples of each other.
+
+    For example, if you have [x, x/2, x**2 + 1, 2*x/3], then you can rewrite
+    this as [(x/6) * 6, (x/6) * 3, (x**2 + 1) * 1, (x/6) * 4].  This is useful
+    in the Risch integration algorithm, where we must write exp(x) + exp(x/2) as
+    (exp(x/2))**2 + exp(x/2), but we cannot write it as exp(x) + sqrt(exp(x))
+    (this is because only the transcendental case is implemented and we
+    therefore cannot integrate algebraic extensions).  The integer multiples
+    returned by this function for each term are the smallest possible (their
+    content equals 1).
+
+    Returns a list of tuples where the first element is the base term and the
+    second element is a list of `(index, factor)` terms, where `index` is the
+    index of the other terms that can be rewritten in terms of the base term,
+    and `factor` is the (rational number) multiplicative factor that must
+    multiply the base term to obtain the original item indexed by `index`.
+
+    If index=False, then the original expression will appear, instead of its
+    index in the original list.
+
+    The easiest way to understand this is to look at an example:
+
+    >>> from sympy.abc import x
+    >>> from sympy.integrals.risch import integer_powers
+    >>> integer_powers([x, x/2, x**2 + 1, 2*x/3], index=True)
+    [(x/6, [(0, 6), (1, 3), (3, 4)]), (1 + x**2, [(2, 1)])]
+    >>> integer_powers([x, x/2, x**2 + 1, 2*x/3], index=False)
+    [(x/6, [(x, 6), (x/2, 3), (2*x/3, 4)]), (1 + x**2, [(1 + x**2, 1)])]
+
+    We can see how this relates to the example at the beginning of the
+    docstring.  It chose x/6 as the first base term.  Then, the element 0 (x)
+    can be written as (x/2) * 2, so we get (0, 2), and so on.  Now only element
+    2 (x**2 + 1) remains, and there are no other terms that can be written as a
+    rational multiple of that, so we get that it can be written as
+    (x**2 + 1) * 1.
+
+    The function only accepts rational number multiples because only those are
+    useful for arguments of exponentials, but it could easily be extended to
+    support any kind of coefficient.
+    """
+    # Here is the strategy:
+
+    # First, go through each term and determine if it can be rewritten as a
+    # rational multiple of any of the terms gathered so far.  Because we only
+    # care about rational number coefficients to rational functions (that is all
+    # Risch cares about), cancel(a/b).is_Rational is sufficient for this. If it
+    # is a multiple, we add its multiple to the dictionary.
+
+    terms = {}
+    for i, term in enumerate(exprs):
+        added = False
+        for j in terms:
+            a = cancel(term/j)
+            if a.is_Rational:
+                if index:
+                    terms[j].append((i, a))
+                else:
+                    terms[j].append((term, a))
+                added = True
+                break
+
+        if not added:
+            # It wasn't in there
+            if index:
+                terms[term] = [(i, S(1))]
+            else:
+                terms[term] = [(term, S(1))]
+
+    # After we have done this, we have all the like terms together, so we just
+    # need to find a common denominator so that we can get the base term and
+    # integer multiples such that each term can be written as an integer
+    # multiple of the base term, and the content of the integers is 1.
+
+    newterms = {}
+    for term in terms:
+        common_denom = reduce(ilcm, [i.as_numer_denom()[1] for _, i in terms[term]])
+        newterm = term/common_denom
+        newmults = [(i, j*common_denom) for i, j in terms[term]]
+        newterms[newterm] = newmults
+
+    return sorted(list(newterms.iteritems()))
+
 class DifferentialExtension(object):
     """
     A container for all the information relating to a differential extension.
@@ -1142,91 +1228,6 @@ def integrate_nonlinear_no_specials(a, d, D, T, Tfuncs):
     ret = (cancel(g1[0].as_basic()/g1[1].as_basic() + q1.as_basic()).subs(s) +
         residue_reduce_to_basic(g2, T, z, Tfuncs))
     return (ret, b)
-
-# TODO: Should this go in the regular namespace?
-# If so, index should default to False, I think.
-def integer_powers(exprs, index=True):
-    """
-    Rewrites a list of expressions as integer multiples of each other.
-
-    For example, if you have [x, x/2, x**2 + 1, 2*x/3], then you can rewrite
-    this as [(x/6) * 6, (x/6) * 3, (x**2 + 1) * 1, (x/6) * 4].  This is useful
-    in the Risch integration algorithm, where we must write exp(x) + exp(x/2) as
-    (exp(x/2))**2 + exp(x/2), but we cannot write it as exp(x) + sqrt(exp(x))
-    (this is because only the transcendental case is implemented and we
-    therefore cannot integrate algebraic extensions).  The integer multiples
-    returned by this function for each term are the smallest possible (their
-    content equals 1).
-
-    Returns a list of tuples where the first element is the base term and the
-    second element is a list of `(index, factor)` terms, where `index` is the
-    index of the other terms that can be rewritten in terms of the base term,
-    and `factor` is the (rational number) multiplicative factor that must
-    multiply the base term to obtain the original item indexed by `index`.
-
-    If index=False, then the original expression will appear, instead of its
-    index in the original list.
-
-    The easiest way to understand this is to look at an example:
-
-    >>> from sympy.abc import x
-    >>> from sympy.integrals.risch import integer_powers
-    >>> integer_powers([x, x/2, x**2 + 1, 2*x/3], index=True)
-    [(x/6, [(0, 6), (1, 3), (3, 4)]), (1 + x**2, [(2, 1)])]
-    >>> integer_powers([x, x/2, x**2 + 1, 2*x/3], index=False)
-    [(x/6, [(x, 6), (x/2, 3), (2*x/3, 4)]), (1 + x**2, [(1 + x**2, 1)])]
-
-    We can see how this relates to the example at the e of the docstring.  It
-    chose x/6 as the first base term.  Then, the element 0 (x) can be written
-    as (x/2) * 2, so we get (0, 2), and so on.  Now only element 2 (x**2 + 1)
-    remains, and there are no other terms that can be written as a rational
-    multiple of that, so we get that it can be written as (x**2 + 1) * 1.
-
-    The function only accepts rational number multiples because only those are
-    useful for arguments of exponentials, but it could easily be extended to
-    support any kind of coefficient.
-    """
-    # Here is the strategy:
-
-    # First, go through each term and determine if it can be rewritten as a
-    # rational multiple of any of the terms gathered so far.  Because we only
-    # care about rational number coefficients to rational functions (that is all
-    # Risch cares about), cancel(a/b).is_Rational is sufficient for this. If it
-    # is a multiple, we add its multiple to the dictionary.
-
-    terms = {}
-    for i, term in enumerate(exprs):
-        added = False
-        for j in terms:
-            a = cancel(term/j)
-            if a.is_Rational:
-                if index:
-                    terms[j].append((i, a))
-                else:
-                    terms[j].append((term, a))
-                added = True
-                break
-
-        if not added:
-            # It wasn't in there
-            if index:
-                terms[term] = [(i, S(1))]
-            else:
-                terms[term] = [(term, S(1))]
-
-    # After we have done this, we have all the like terms together, so we just
-    # need to find a common denominator so that we can get the base term and
-    # integer multiples such that each term can be written as an integer
-    # multiple of the base term, and the content of the integers is 1.
-
-    newterms = {}
-    for term in terms:
-        common_denom = reduce(ilcm, [i.as_numer_denom()[1] for _, i in terms[term]])
-        newterm = term/common_denom
-        newmults = [(i, j*common_denom) for i, j in terms[term]]
-        newterms[newterm] = newmults
-
-    return sorted(list(newterms.iteritems()))
 
 def risch_integrate(f, x, extension=None, handle_first='log'):
     r"""
