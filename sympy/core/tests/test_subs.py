@@ -1,5 +1,6 @@
 from sympy import Symbol, Wild, sin, cos, exp, sqrt, pi, Function, Derivative,\
-        abc, Integer, Eq, symbols, Add, I, Real, log, Rational, Lambda, atan2
+        abc, Integer, Eq, symbols, Add, I, Real, log, Rational, Lambda, atan2,\
+        cse
 
 def test_subs():
     n3=Rational(3)
@@ -300,8 +301,6 @@ def test_add():
 def test_subs_issue910():
     assert (I*Symbol("a")).subs(1, 2) == I*Symbol("a")
 
-
-
 def test_functions_subs():
     x, y = map(Symbol, 'xy')
     f, g = map(Function, 'fg')
@@ -312,3 +311,13 @@ def test_functions_subs():
     assert (f(x,y)).subs(f,sin) == f(x,y)
     assert (sin(x)+atan2(x,y)).subs([[atan2,f],[sin,g]]) == f(x,y) + g(x)
     assert (g(f(x+y, x))).subs([[f, l], [g, exp]]) == exp(x + sin(x + y))
+
+def test_derivative_subs():
+    x = Symbol('x')
+    y = Symbol('y')
+    f = Function('f')
+    assert Derivative(f(x), x).subs(f(x), y) != 0
+    assert Derivative(f(x), x).subs(f(x), y).subs(y, f(x)) == Derivative(f(x), x)
+    # issues 1986, 1938
+    assert cse(Derivative(f(x), x) + f(x))[1][0].has(Derivative)
+    assert cse(Derivative(f(x, y), x) + Derivative(f(x, y), y))[1][0].has(Derivative)
