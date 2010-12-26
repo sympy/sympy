@@ -1237,7 +1237,7 @@ def dmp_clear_denoms(f, u, K0, K1=None, convert=False):
 
     """
     if not u:
-        return dup_clear_denoms(f, K0, K1)
+        return dup_clear_denoms(f, K0, K1, convert=convert)
 
     if K1 is None:
         K1 = K0.get_ring()

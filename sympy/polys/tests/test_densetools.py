@@ -542,6 +542,9 @@ def test_dmp_clear_denoms():
     assert dmp_clear_denoms([[QQ(3)],[QQ(1)],[]], 1, QQ, ZZ) == (ZZ(1), [[QQ(3)],[QQ(1)],[]])
     assert dmp_clear_denoms([[QQ(1)],[QQ(1,2)],[]], 1, QQ, ZZ) == (ZZ(2), [[QQ(2)],[QQ(1)],[]])
 
+    assert dmp_clear_denoms([QQ(3),QQ(1),QQ(0)], 0, QQ, ZZ, convert=True) == (ZZ(1), [ZZ(3),ZZ(1),ZZ(0)])
+    assert dmp_clear_denoms([QQ(1),QQ(1,2),QQ(0)], 0, QQ, ZZ, convert=True) == (ZZ(2), [ZZ(2),ZZ(1),ZZ(0)])
+
     assert dmp_clear_denoms([[QQ(3)],[QQ(1)],[]], 1, QQ, ZZ, convert=True) == (ZZ(1), [[QQ(3)],[QQ(1)],[]])
     assert dmp_clear_denoms([[QQ(1)],[QQ(1,2)],[]], 1, QQ, ZZ, convert=True) == (ZZ(2), [[QQ(2)],[QQ(1)],[]])
 
