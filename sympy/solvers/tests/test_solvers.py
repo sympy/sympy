@@ -91,7 +91,7 @@ def test_solve_args():
     raises(TypeError, "solve(x**2-pi, pi)")
 
 def test_solve_polynomial1():
-    x, y = symbols('x,y')
+    x, y, a = symbols('x,y,a')
 
     assert solve(3*x-2, x) == [Rational(2,3)]
     assert solve(Eq(3*x, 2), x) == [Rational(2,3)]
@@ -121,6 +121,10 @@ def test_solve_polynomial1():
     assert solve( x**3 - 15*x - 4, x) == [-2 + 3**Rational(1,2),
                                            4,
                                            -2 - 3**Rational(1,2) ]
+
+    assert sorted(solve((x**2 - 1)**2 - a, x)) == \
+           sorted([(1 + a**S.Half)**S.Half, -(1 + a**S.Half)**S.Half,
+                   (1 - a**S.Half)**S.Half, -(1 - a**S.Half)**S.Half])
 
 def test_solve_polynomial2():
     x = Symbol('x')
