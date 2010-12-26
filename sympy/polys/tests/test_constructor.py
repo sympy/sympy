@@ -51,6 +51,16 @@ def test_construct_domain():
     assert construct_domain([x/2, 3*y]) == \
         (dom, [dom.convert(x/2), dom.convert(3*y)])
 
+    dom = RR[x]
+
+    assert construct_domain([x/2, 3.5]) == \
+        (dom, [dom.convert(x/2), dom.convert(3.5)])
+
+    dom = RR[x,y]
+
+    assert construct_domain([x/2, 3.5*y]) == \
+        (dom, [dom.convert(x/2), dom.convert(3.5*y)])
+
     dom = ZZ.frac_field(x)
 
     assert construct_domain([2/x, 3]) == \
