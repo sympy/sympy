@@ -179,7 +179,6 @@ def doctest(*paths, **kwargs):
                     "doc/src/modules/plotting.txt", # generates live plots
                     "sympy/plotting", # generates live plots
                     "sympy/utilities/compilef.py", # needs tcc
-                    "sympy/utilities/autowrap.py", # needs installed compiler
                     "sympy/galgebra/GA.py", # needs numpy
                     "sympy/galgebra/latex_ex.py", # needs numpy
                     "sympy/conftest.py", # needs py.test
@@ -643,7 +642,7 @@ class SymPyDocTestFinder(DocTestFinder):
         # Find the docstring's location in the file.
         lineno = self._find_lineno(obj, source_lines)
 
-        if lineno is None:
+        if not lineno:
             # if None, then it wasn't really in this source
             return None
 
@@ -783,7 +782,9 @@ class PyTestReporter(Reporter):
         executable = sys.executable
         v = tuple(sys.version_info)
         python_version = "%s.%s.%s-%s-%s" % v
-        self.write("executable:   %s  (%s)\n\n" % (executable, python_version))
+        self.write("executable:   %s  (%s)\n" % (executable, python_version))
+        from sympy.polys.domains import GROUND_TYPES
+        self.write("ground types: %s\n\n" % GROUND_TYPES)
         self._t_start = clock()
 
     def finish(self):
@@ -885,45 +886,45 @@ class PyTestReporter(Reporter):
 
     def test_xfail(self):
         self._xfailed += 1
-        self.write("f")
+        self.write("f", "Green")
 
     def test_xpass(self, fname):
         self._xpassed.append((self._active_file, fname))
-        self.write("X")
+        self.write("X", "Green")
 
     def test_fail(self, exc_info):
         self._failed.append((self._active_file, self._active_f, exc_info))
-        self.write("F")
+        self.write("F", "Red")
         self._active_file_error = True
 
     def doctest_fail(self, name, error_msg):
         # the first line contains "******", remove it:
         error_msg = "\n".join(error_msg.split("\n")[1:])
         self._failed_doctest.append((name, error_msg))
-        self.write("F")
+        self.write("F", "Red")
         self._active_file_error = True
 
     def test_pass(self):
         self._passed += 1
         if self._verbose:
-            self.write("ok")
+            self.write("ok", "Green")
         else:
-            self.write(".")
+            self.write(".", "Green")
 
     def test_skip(self):
         self._skipped += 1
-        self.write("s")
+        self.write("s", "Green")
 
     def test_exception(self, exc_info):
         self._exceptions.append((self._active_file, self._active_f, exc_info))
-        self.write("E")
+        self.write("E", "Red")
         self._active_file_error = True
 
     def import_error(self, filename, exc_info):
         self._exceptions.append((filename, None, exc_info))
         rel_name = filename[len(self._root_dir)+1:]
         self.write(rel_name)
-        self.write("[?]   Failed to import")
+        self.write("[?]   Failed to import", "Red")
         if self._colors:
             self.write(" ")
             self.write("[FAIL]", "Red", align="right")
