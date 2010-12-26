@@ -351,7 +351,8 @@ def test_DifferentialExtension():
     assert DE.f == exp(x)*log(x)
     assert DE.newf == t0*t1
     assert DE.x == x
-    assert DE.cases == ['primitive', 'exp', 'base']
+    assert DE.cases == ['base', 'exp', 'primitive']
+    assert DE.case == 'primitive'
 
     assert DE.level == -1
     assert DE.t == t1 == DE.T[DE.level]
@@ -361,16 +362,19 @@ def test_DifferentialExtension():
     assert DE.level == -2
     assert DE.t == t0 == DE.T[DE.level]
     assert DE.d == Poly(t0, t0) == DE.D[DE.level]
+    assert DE.case == 'exp'
     DE.decrement_level()
     assert DE.level == -3
     assert DE.t == x == DE.T[DE.level] == DE.x
     assert DE.d == Poly(1, x) == DE.D[DE.level]
+    assert DE.case == 'base'
     raises(ValueError, 'DE.decrement_level()')
     DE.increment_level()
     DE.increment_level()
     assert DE.level == -1
     assert DE.t == t1 == DE.T[DE.level]
     assert DE.d == Poly(1/x, t1) == DE.D[DE.level]
+    assert DE.case == 'exp'
 
     # Test the extension flag
     raises(ValueError, "DifferentialExtension(extension={'T':[x, t]})")
@@ -380,8 +384,9 @@ def test_DifferentialExtension():
     assert DE.d == Poly(t, t)
     assert DE.t == t
     assert DE.level == -1
-    assert DE.cases == ['exp', 'base']
+    assert DE.cases == ['base', 'exp']
     assert DE.x == x
+    assert DE.case == 'exp'
 
     DE = DifferentialExtension(extension={'D':[Poly(1, x),
         Poly(t, t)], 'E_K':[1], 'E_args':[x], 'L_K':[], 'L_args':[]})

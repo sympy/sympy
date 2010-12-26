@@ -142,11 +142,12 @@ class DifferentialExtension(object):
     - L_args: The arguments of each of the logarithms in L_K.
     (See the docstrings of is_deriv_k() and is_log_deriv_k_t_radical() for
     more information on E_K, E_args, L_K, and L_args)
-    - cases: List of string representations of the cases of T, in reverse order.
+    - cases: List of string representations of the cases of T.
     - t: The top level extension variable, as defined by the current level
       (see level below).
     - d: The top level extension derivation, as defined by the current
       derivation (see level below).
+    - case: The string representation of the case of self.d.
     (Note that self.T and self.D will always contain the complete extension,
     regardless of the level.  Therefore, you should ALWAYS use DE.t and DE.d
     instead of DE.T[-1] and DE.D[-1].)
@@ -160,7 +161,8 @@ class DifferentialExtension(object):
       the current level.
     """
     __slots__ = ('f', 'x', 'T', 'D', 'fa', 'fd', 'Tfuncs', 'backsubs', 'E_K',
-        'E_args', 'L_K', 'L_args', 'cases', 't', 'd', 'newf', 'level', 'ts')
+        'E_args', 'L_K', 'L_args', 'cases', 'case', 't', 'd', 'newf', 'level',
+        'ts')
 
     def __init__(self, f=None, x=None, handle_first='log', dummy=True, extension=None):
         """
@@ -184,12 +186,12 @@ class DifferentialExtension(object):
         You can also create an object by manually setting the attributes as a
         dictionary to the extension keyword argument.  You must include at least
         D.  Warning, any attribute that is not given will be set to None. The
-        attributes T, t, d, cases, x, and level are set automatically and do not
-        need to be given.  The functions in the Risch Algorithm will NOT check
-        to see if an attribute is None before using it.  This also does not
+        attributes T, t, d, cases, case, x, and level are set automatically and
+        do not need to be given.  The functions in the Risch Algorithm will NOT
+        checkto see if an attribute is None before using it.  This also does not
         check to see if the extension is valid (non-algebraic) or even if it is
         self-consistent.  Therefore, this should only be used for
-        testing/debugging purposes
+        testing/debugging purposes.
         """
         if extension:
             for attr in self.__slots__:
@@ -327,10 +329,10 @@ class DifferentialExtension(object):
         if not self.x:
             self.x = self.T[0]
         self.cases = [get_case(d, t) for d, t in zip(self.D, self.T)]
-        self.cases.reverse()
         self.level = -1
         self.t = self.T[self.level]
         self.d = self.D[self.level]
+        self.case = self.cases[self.level]
 
     def _exp_part(self, exps):
         """
@@ -533,6 +535,7 @@ class DifferentialExtension(object):
         self.level += 1
         self.t = self.T[self.level]
         self.d = self.D[self.level]
+        self.case = self.cases[self.level]
         return None
 
     def decrement_level(self):
@@ -550,6 +553,7 @@ class DifferentialExtension(object):
         self.level -= 1
         self.t = self.T[self.level]
         self.d = self.D[self.level]
+        self.case = self.cases[self.level]
         return None
 
 class NonElementaryIntegralException(Exception):
@@ -1327,7 +1331,7 @@ def risch_integrate(f, x, extension=None, handle_first='log'):
     t = DE.t
 
     result = 0
-    for case in cases:
+    for case in reversed(DE.cases):
         if not fa.has(t) and not fd.has(t) and not case == 'base':
             T = T[:-1]
             D = D[:-1]
@@ -1335,6 +1339,7 @@ def risch_integrate(f, x, extension=None, handle_first='log'):
             t = T[-1]
             fa, fd = frac_in((fa, fd), t)
             continue
+
         fa, fd = fa.cancel(fd, include=True)
         if case == 'exp':
             ans, i, b = integrate_hyperexponential(fa, fd, D, T, Tfuncs)
