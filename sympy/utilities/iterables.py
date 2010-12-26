@@ -1,6 +1,8 @@
 from sympy.core import Basic, C
 from sympy.core.compatibility import minkey, iff, all, any #for backwards compatibility
 
+import random
+
 def flatten(iterable, levels=None, cls=None):
     """
     Recursively denest iterable containers.
@@ -197,6 +199,81 @@ def preorder_traversal(node):
         for item in node:
             for subtree in preorder_traversal(item):
                 yield subtree
+
+def interactive_traversal(expr):
+    """Traverse a tree asking a user which branch to choose. """
+    from sympy.printing import pprint
+
+    RED, BRED = '\033[0;31m', '\033[1;31m'
+    GREEN, BGREEN = '\033[0;32m', '\033[1;32m'
+    YELLOW, BYELLOW = '\033[0;33m', '\033[1;33m'
+    BLUE, BBLUE = '\033[0;34m', '\033[1;34m'
+    MAGENTA, BMAGENTA = '\033[0;35m', '\033[1;35m'
+    CYAN, BCYAN = '\033[0;36m', '\033[1;36m'
+    END = '\033[0m'
+
+    def cprint(*args):
+        print "".join(map(str, args))
+
+    def _interactive_traversal(expr, stage):
+        if stage > 0:
+            print
+
+        cprint("Current expression (stage ", BYELLOW, stage, END, "):")
+        print BCYAN
+        pprint(expr)
+        print END
+
+        if isinstance(expr, Basic):
+            args = expr.args
+        elif hasattr(expr, "__iter__"):
+            args = list(expr)
+        else:
+            return expr
+
+        n_args = len(args)
+
+        if not n_args:
+            return expr
+
+        for i, arg in enumerate(args):
+            cprint(GREEN, "[", BGREEN, i, GREEN, "] ", BLUE, type(arg), END)
+            pprint(arg)
+            print
+
+        if n_args == 1:
+            choices = '0'
+        else:
+            choices = '0-%d' % (n_args-1)
+
+        try:
+            choice = raw_input("Your choice [%s,f,l,r,d]: " % choices)
+        except EOFError:
+            result = expr
+            print
+        else:
+            if choice in ['d', '']:
+                result = expr
+            elif choice == 'f':
+                result = _interactive_traversal(args[0], stage+1)
+            elif choice == 'l':
+                result = _interactive_traversal(args[-1], stage+1)
+            elif choice == 'r':
+                result = _interactive_traversal(random.choice(args), stage+1)
+            else:
+                try:
+                    choice = int(choice)
+                except ValueError:
+                    result = _interactive_traversal(expr, stage)
+                else:
+                    if choice < 0 or choice >= n_args:
+                        result = _interactive_traversal(expr, stage)
+                    else:
+                        result = _interactive_traversal(args[choice], stage+1)
+
+        return result
+
+    return _interactive_traversal(expr, 0)
 
 def cartes(*seqs):
     """Return Cartesian product (combinations) of items from iterable
