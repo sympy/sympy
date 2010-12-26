@@ -121,41 +121,50 @@ def _construct_composite(coeffs, opt):
     if opt.field:
         fractions = True
     else:
-        fractions, monom = False, (0,)*n
+        fractions, zeros = False, (0,)*n
 
         for denom in denoms:
-            if len(denom) > 1 or monom not in denom:
+            if len(denom) > 1 or zeros not in denom:
                 fractions = True
                 break
 
     result = []
 
     if not fractions:
-        rationals = False
+        coeffs = set([])
 
-        for i, denom in enumerate(denoms):
-            coeff = denom[monom]
-            denoms[i] = coeff
+        for numer, denom in zip(numers, denoms):
+            denom = denom[zeros]
 
-            if coeff is not S.One:
-                rationals = True
+            for monom, coeff in numer.iteritems():
+                coeff /= denom
+                coeffs.add(coeff)
+                numer[monom] = coeff
 
-        if not rationals:
-            domain = ZZ.poly_ring(*gens)
+        rationals, reals = False, False
 
-            for numer in numers:
-                for monom, coeff in numer.iteritems():
-                    numer[monom] = ZZ.from_sympy(coeff)
+        for coeff in coeffs:
+            if coeff.is_Rational:
+                if not coeff.is_Integer:
+                    rationals = True
+            elif coeff.is_Real:
+                reals = True
+                break
 
-                result.append(domain(numer))
+        if reals:
+            ground = RR
+        elif rationals:
+            ground = QQ
         else:
-            domain = QQ.poly_ring(*gens)
+            ground = ZZ
 
-            for numer, denom in zip(numers, denoms):
-                for monom, coeff in numer.iteritems():
-                    numer[monom] = QQ.from_sympy(coeff/denom)
+        domain = ground.poly_ring(*gens)
 
-                result.append(domain(numer))
+        for numer in numers:
+            for monom, coeff in numer.iteritems():
+                numer[monom] = ground.from_sympy(coeff)
+
+            result.append(domain(numer))
     else:
         domain = ZZ.frac_field(*gens)
 
