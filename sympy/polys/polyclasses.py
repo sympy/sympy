@@ -101,7 +101,8 @@ from sympy.polys.euclidtools import (
     dup_discriminant, dmp_discriminant,
     dup_inner_gcd, dmp_inner_gcd,
     dup_gcd, dmp_gcd,
-    dup_lcm, dmp_lcm)
+    dup_lcm, dmp_lcm,
+    dup_cancel, dmp_cancel)
 
 from sympy.polys.sqfreetools import (
     dup_gff_list,
@@ -560,6 +561,22 @@ class DMP(object):
         """Returns polynomial LCM of `f` and `g`. """
         lev, dom, per, F, G = f.unify(g)
         return per(dmp_lcm(F, G, lev, dom))
+
+    def cancel(f, g, multout=True):
+        """Cancel common factors in a rational function ``f/g``. """
+        lev, dom, per, F, G = f.unify(g)
+
+        if multout:
+                    F, G = dmp_cancel(F, G, lev, dom, multout=True)
+        else:
+            cF, cG, F, G = dmp_cancel(F, G, lev, dom, multout=False)
+
+        F, G = per(F), per(G)
+
+        if multout:
+            return F, G
+        else:
+            return cF, cG, F, G
 
     def trunc(f, p):
         """Reduce `f` modulo a constant `p`. """

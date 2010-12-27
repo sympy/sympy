@@ -2525,42 +2525,15 @@ class Poly(Basic):
         """
         dom, per, F, G = f._unify(g)
 
-        if F.is_zero or G.is_zero:
-            return S.One, per(F), per(G)
-
-        if dom.has_Field and dom.has_assoc_Ring:
-            cF, F = F.clear_denoms()
-            cG, G = G.clear_denoms()
-
-            F = F.to_ring()
-            G = G.to_ring()
-
-        if hasattr(f.rep, 'cofactors'):
-            _, P, Q = F.cofactors(G)
+        if hasattr(F, 'cancel'):
+            cp, cq, p, q = F.cancel(G, multout=False)
         else: # pragma: no cover
-            raise OperationNotSupported(f, 'cofactors')
+            raise OperationNotSupported(f, 'cancel')
 
-        if dom.has_Field and dom.has_assoc_Ring:
-            P, Q = P.to_field(), Q.to_field()
+        cp = dom.to_sympy(cp)
+        cq = dom.to_sympy(cq)
 
-            cF = dom.to_sympy(cF)
-            cG = dom.to_sympy(cG)
-
-            coeff = cG/cF
-        else:
-            coeff = S.One
-
-        p_neg = dom.is_negative(P.LC())
-        q_neg = dom.is_negative(Q.LC())
-
-        if p_neg and q_neg:
-            P, Q = -P, -Q
-        elif p_neg:
-            coeff, P = -coeff, -P
-        elif q_neg:
-            coeff, Q = -coeff, -Q
-
-        return coeff, per(P), per(Q)
+        return cp/cq, per(p), per(q)
 
     @property
     def is_zero(f):
