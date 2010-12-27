@@ -20,7 +20,7 @@ from sympy.matrices import Matrix, zeros, eye
 
 from sympy.solvers import solve
 
-from sympy.polys import Poly, PolynomialError, lcm, cancel, RootOf
+from sympy.polys import Poly, lcm, cancel
 
 from sympy.integrals.risch import (gcdex_diophantine, frac_in, derivation,
     NonElementaryIntegralException, residue_reduce, splitfactor,
@@ -28,7 +28,7 @@ from sympy.integrals.risch import (gcdex_diophantine, frac_in, derivation,
 from sympy.integrals.rde import (order_at, order_at_oo, weak_normalizer,
     bound_degree, spde, solve_poly_rde)
 
-from sympy.utilities.iterables import any, all
+from sympy.utilities.iterables import all
 
 #    from pudb import set_trace; set_trace() # Debugging
 
@@ -327,7 +327,8 @@ def param_rischDE(fa, fd, G, DE):
     a, (ba, bd), G, hn = prde_normal_denom(ga, gd, G, DE)
     A, B, G, hs = prde_special_denom(a, ba, bd, G, DE)
     g = gcd(A, B)
-    A, B, G = A.quo(g), B.quo(g), [gia.cancel(gid*g, include=True) for gia, gid in G]
+    A, B, G = A.quo(g), B.quo(g), [gia.cancel(gid*g, include=True) for
+        gia, gid in G]
     Q, M = prde_linear_constraints(A, B, G, DE)
     M, _ = constant_system(M, zeros([M.rows, 1]), DE)
     # Reduce number of constants at this point
@@ -339,7 +340,8 @@ def param_rischDE(fa, fd, G, DE):
     except NotImplementedError:
         # TODO: Remove warnings
         import warnings
-        warnings.warn("param_rischDE: Proceeding with n = oo; may cause non-termination.")
+        warnings.warn("param_rischDE: Proceeding with n = oo; may cause " +
+            "non-termination.")
         n = oo
 
     A, B, Q, R, n1 = prde_spde(A, B, Q, n, DE)
@@ -397,13 +399,15 @@ def limited_integrate(fa, fd, G, DE):
     A, B, h, N, g, V = limited_integrate_reduce(fa, fd, G, DE)
     V = [g] + V
     g = A.gcd(B)
-    A, B, V = A.quo(g), B.quo(g), [via.cancel(vid*g, include=True) for via, vid in V]
+    A, B, V = A.quo(g), B.quo(g), [via.cancel(vid*g, include=True) for
+        via, vid in V]
     Q, M = prde_linear_constraints(A, B, V, DE)
     M, _ = constant_system(M, zeros([M.rows, 1]), DE)
     l = M.nullspace()
     if M == Matrix() or len(l) > 1:
         # Continue with param_rischDE()
-        raise NotImplementedError("param_rischDE() is required to solve this integral.")
+        raise NotImplementedError("param_rischDE() is required to solve this " +
+            "integral.")
     elif len(l) == 0:
         raise NonElementaryIntegralException
     elif len(l) == 1:
@@ -460,7 +464,8 @@ def parametric_log_deriv_heu(fa, fd, wa, wd, DE):
 
         nfmwa = N*fa*wd - M*wa*fd
         nfmwd = fd*wd
-        Qv = is_log_deriv_k_t_radical_in_field(N*fa*wd - M*wa*fd, fd*wd, DE, 'auto')
+        Qv = is_log_deriv_k_t_radical_in_field(N*fa*wd - M*wa*fd, fd*wd, DE,
+            'auto')
         if Qv is None:
             # (N*f - M*w) is not the logarithmic derivative of a k(t)-radical.
             return None
@@ -479,7 +484,7 @@ def parametric_log_deriv_heu(fa, fd, wa, wd, DE):
         # p.degree() > B.
         return None
 
-    c = lcm(fd.as_poly(DE.t).LC(),wd.as_poly(DE.t).LC())
+    c = lcm(fd.as_poly(DE.t).LC(), wd.as_poly(DE.t).LC())
     l = fd.monic().lcm(wd.monic())*Poly(c, DE.t)
     ln, ls = splitfactor(l, DE)
     z = ls*ln.gcd(ln.diff(DE.t))
@@ -586,7 +591,7 @@ def is_deriv_k(fa, fd, DE):
         if filter(lambda i: i == 'tan', DE.cases) or \
             set(filter(lambda i: i == 'primitive', DE.cases)) - set(DE.L_K):
                 raise NotImplementedError("Real version of the structure " +
-                "theorems with hypertangent support is not yet implemented.")
+                    "theorems with hypertangent support is not yet implemented.")
 
         # TODO: What should really be done in this case?
         raise NotImplementedError("Nonelementary extensions not supported " +
@@ -684,7 +689,7 @@ def is_log_deriv_k_t_radical(fa, fd, DE, Df=True):
         if filter(lambda i: i == 'tan', DE.cases) or \
             set(filter(lambda i: i == 'primitive', DE.cases)) - set(DE.L_K):
                 raise NotImplementedError("Real version of the structure " +
-                "theorems with hypertangent support is not yet implemented.")
+                    "theorems with hypertangent support is not yet implemented.")
 
         # TODO: What should really be done in this case?
         raise NotImplementedError("Nonelementary extensions not supported " +
@@ -754,13 +759,15 @@ def is_log_deriv_k_t_radical_in_field(fa, fd, DE, case='auto'):
         return None
 
     roots = [(i, i.real_roots()) for i, _ in H]
-    if not all(len(j) == i.degree() and all(k.is_Rational for k in j) for i, j in roots):
-        # If f is the logarithmic derivative of a k(t)-radical, then all the
-        # roots of the resultant must be rational numbers.
-        return None
+    if not all(len(j) == i.degree() and all(k.is_Rational for k in j) for
+        i, j in roots):
+            # If f is the logarithmic derivative of a k(t)-radical, then all the
+            # roots of the resultant must be rational numbers.
+            return None
 
     # [(a, i), ...], where i*log(a) is a term in the log-part of the integral of f
-    residueterms = [(H[j][1].subs(z, i), i) for j in xrange(len(H)) for i in zip(*roots)[1][j]]
+    residueterms = [(H[j][1].subs(z, i), i) for j in xrange(len(H)) for
+        i in zip(*roots)[1][j]]
 
     # TODO: finish writing this and write tests
 

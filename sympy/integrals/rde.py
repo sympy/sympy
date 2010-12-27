@@ -28,8 +28,6 @@ from sympy.polys import Poly, gcd, ZZ, cancel
 from sympy.integrals.risch import (gcdex_diophantine, frac_in, derivation,
     splitfactor, NonElementaryIntegralException)
 
-from sympy.utilities.iterables import any, all
-
 from operator import mul
 
 #    from pudb import set_trace; set_trace() # Debugging
@@ -102,7 +100,8 @@ def weak_normalizer(a, d, DE, z=None):
 
     a1, b = gcdex_diophantine(d.quo(d1).as_poly(DE.t), d1.as_poly(DE.t),
         a.as_poly(DE.t))
-    r = (a - Poly(z, DE.t)*derivation(d1, DE)).as_poly(DE.t).resultant(d1.as_poly(DE.t))
+    r = (a - Poly(z, DE.t)*derivation(d1, DE)).as_poly(DE.t).resultant(
+        d1.as_poly(DE.t))
     r = Poly(r, z)
 
     if not r.has(z):
@@ -266,7 +265,8 @@ def bound_degree(a, b, cQ, DE, case='auto', parametric=False):
     else:
         dc = cQ.degree(DE.t)
 
-    alpha = cancel(-b.as_poly(DE.t).LC().as_basic()/a.as_poly(DE.t).LC().as_basic())
+    alpha = cancel(-b.as_poly(DE.t).LC().as_basic()/
+        a.as_poly(DE.t).LC().as_basic())
 
     if case == 'base':
         n = max(0, dc - max(db, da - 1))
@@ -659,7 +659,8 @@ def solve_poly_rde(b, cQ, n, DE, parametric=False):
         assert b.as_poly(DE.t).LC().is_number
 
         if parametric:
-            raise NotImplementedError("prde_no_cancel_b_equal() is not yet implemented.")
+            raise NotImplementedError("prde_no_cancel_b_equal() is not yet " +
+                "implemented.")
 
         R = no_cancel_equal(b, cQ, n, DE)
 
@@ -694,8 +695,10 @@ def solve_poly_rde(b, cQ, n, DE, parametric=False):
                     "cases are not yet implemented (%s)." % case)
 
         if parametric:
-            raise NotImplementedError("Remaining cases for Poly PRDE not yet implemented.")
-        raise NotImplementedError("Remaining cases for Poly RDE not yet implemented.")
+            raise NotImplementedError("Remaining cases for Poly PRDE not yet " +
+                "implemented.")
+        raise NotImplementedError("Remaining cases for Poly RDE not yet " +
+            "implemented.")
 
 def rischDE(fa, fd, ga, gd, DE):
     """
@@ -723,7 +726,8 @@ def rischDE(fa, fd, ga, gd, DE):
     except NotImplementedError:
         # TODO: Remove warnings
         import warnings
-        warnings.warn("rischDE: Proceeding with n = oo; may cause non-termination.")
+        warnings.warn("rischDE: Proceeding with n = oo; may cause " +
+            "non-termination.")
         n = oo
 
     B, C, m, alpha, beta = spde(A, B, C, n, DE)

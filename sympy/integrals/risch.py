@@ -118,7 +118,8 @@ def integer_powers(exprs, index=True):
 
     newterms = {}
     for term in terms:
-        common_denom = reduce(ilcm, [i.as_numer_denom()[1] for _, i in terms[term]])
+        common_denom = reduce(ilcm, [i.as_numer_denom()[1] for _, i in
+            terms[term]])
         newterm = term/common_denom
         newmults = [(i, j*common_denom) for i, j in terms[term]]
         newterms[newterm] = newmults
@@ -250,8 +251,8 @@ class DifferentialExtension(object):
 
             # Pre-preparsing.
             #################
-            # Get all exp arguments, so we can avoid ahead of time doing something
-            # like t1 = exp(x), t2 = exp(x/2) == sqrt(t1).
+            # Get all exp arguments, so we can avoid ahead of time doing
+            # something like t1 = exp(x), t2 = exp(x/2) == sqrt(t1).
 
             exps = filter(lambda i: i.exp.is_rational_function(*self.T) and
                 i.exp.has_any_symbols(*self.T), self.newf.atoms(exp))
@@ -659,7 +660,8 @@ def as_poly_1t(p, t, z):
     one_t_part = one_t_part.replace(t, z) # z will be 1/t
     if pd.nth(d):
         one_t_part *= Poly(1/pd.nth(d), z, expand=False)
-    ans = t_part.as_poly(t, z, expand=False) + one_t_part.as_poly(t, z, expand=False)
+    ans = t_part.as_poly(t, z, expand=False) + one_t_part.as_poly(t, z,
+        expand=False)
 
     return ans
 
@@ -957,7 +959,8 @@ def residue_reduce(a, d, DE, z=None, invert=True):
             h_lc_sqf = h_lc.sqf_list_include(all=True)
 
             for a, j in h_lc_sqf:
-                h = Poly(h, DE.t, field=True).quo(Poly(gcd(a, s**j, *kkinv), DE.t))
+                h = Poly(h, DE.t, field=True).quo(Poly(gcd(a, s**j, *kkinv),
+                    DE.t))
 
             s = Poly(s, z).monic()
 
@@ -1324,12 +1327,12 @@ def risch_integrate(f, x, extension=None, handle_first='log'):
     log(log(x))
     """
     if extension:
-       raise NotImplementedError("Manual extensions are not supported yet.")
+        raise NotImplementedError("Manual extensions are not supported yet.")
 
     DE = DifferentialExtension(f, x, handle_first=handle_first)
     fa, fd = DE.fa, DE.fd
 
-    result = 0
+    result = S(0)
     for case in reversed(DE.cases):
         if not DE.fa.has(DE.t) and not fd.has(DE.t) and not case == 'base':
             DE.decrement_level()
@@ -1346,7 +1349,7 @@ def risch_integrate(f, x, extension=None, handle_first='log'):
             # handle polynomials correctly.
             ans = integrate(fa.as_basic()/fd.as_basic(), DE.x)
             b = False
-            i = 0
+            i = S(0)
         else:
             raise NotImplementedError("Only exponential and logarithmic " +
             "extensions are currently supported.")
