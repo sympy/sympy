@@ -9,37 +9,71 @@ from sympy.ntheory import divisors
 from sympy.functions import exp, sqrt, re, im
 
 from sympy.polys import (
-    Poly, cancel, PolynomialError, GeneratorsNeeded,
+    Poly, cancel, factor, PolynomialError, GeneratorsNeeded,
 )
+
+from sympy.simplify import together, simplify
 
 from sympy.utilities import all
 
 def roots_linear(f):
     """Returns a list of roots of a linear polynomial."""
-    return [-f.nth(0)/f.nth(1)]
+    r = -f.nth(0)/f.nth(1)
+    dom = f.get_domain()
+
+    if not dom.is_Numerical:
+        if dom.is_Composite:
+            r = factor(together(r))
+        else:
+            r = simplify(r)
+
+    return [r]
 
 def roots_quadratic(f):
     """Returns a list of roots of a quadratic polynomial."""
     a, b, c = f.all_coeffs()
+    dom = f.get_domain()
+
+    def _simplify(expr):
+        if dom.is_Composite:
+            return factor(together(expr)) # XXX: fix factor
+        else:
+            return simplify(expr)
 
     if c is S.Zero:
-        r0, r1, d = c, -b/a, 0
-    else:
-        d = (b**2).expand() - 4*a*c
-        D = d**S.Half
+        r0, r1 = S.Zero, -b/a
 
-        r0 = (-b + D) / (2*a)
-        r1 = (-b - D) / (2*a)
+        if not dom.is_Numerical:
+            r1 = _simplify(r1)
+    elif b is S.Zero:
+        r = -c/a
 
-    if r0.is_number and r1.is_number:
-        if d >= 0:
-            if r0 > r1:
-                r0, r1 = r1, r0
+        if not dom.is_Numerical:
+            R = sqrt(_simplify(r))
         else:
-            if im(r0) < im(r1):
-                r0, r1 = r1, r0
+            R = sqrt(r)
 
-    return [r0, r1]
+        r0 =  R
+        r1 = -R
+    else:
+        d = b**2 - 4*a*c
+
+        if dom.is_Numerical:
+            D = sqrt(d)
+
+            r0 = (-b + D) / (2*a)
+            r1 = (-b - D) / (2*a)
+        else:
+            D = sqrt(_simplify(d))
+            A = 2*a
+
+            E = _simplify(-b/A)
+            F = D/A
+
+            r0 = E + F
+            r1 = E - F
+
+    return sorted([r0, r1])
 
 def roots_cubic(f):
     """Returns a list of roots of a cubic polynomial."""
@@ -399,15 +433,14 @@ def roots(f, *gens, **flags):
 
         result = {}
 
-        if f.length() == 2:
-            if f.degree() == 1:
-                result[cancel(roots_linear(f)[0])] = 1
-            else:
-                for r in roots_binomial(f):
-                    _update_dict(result, r, 1)
+        if f.degree() == 1:
+            result[roots_linear(f)[0]] = 1
         elif f.degree() == 2:
             for r in roots_quadratic(f):
-                _update_dict(result, cancel(r), 1)
+                _update_dict(result, r, 1)
+        elif f.length() == 2:
+            for r in roots_binomial(f):
+                _update_dict(result, r, 1)
         else:
             _, factors = Poly(f.as_basic()).factor_list()
 
