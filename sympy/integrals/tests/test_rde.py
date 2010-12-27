@@ -1,6 +1,7 @@
 """Most of these tests come from the examples in Bronstein's book."""
 from sympy import Poly, S, symbols, oo
-from sympy.integrals.risch import NonElementaryIntegralException
+from sympy.integrals.risch import (DifferentialExtension,
+    NonElementaryIntegralException)
 from sympy.integrals.rde import (order_at, order_at_oo, weak_normalizer,
     normal_denom, special_denom, bound_degree, spde, solve_poly_rde,
     no_cancel_equal, cancel_primitive, cancel_exp, rischDE)
@@ -27,50 +28,51 @@ def test_order_at():
 def test_weak_normalizer():
     a = Poly((1 + x)*t**5 + 4*t**4 + (-1 - 3*x)*t**3 - 4*t**2 + (-2 + 2*x)*t, t)
     d = Poly(t**4 - 3*t**2 + 2, t)
-    D = [Poly(1, x), Poly(t, t)]
-    r = weak_normalizer(a, d, D, [x, t])
+    DE = DifferentialExtension(extension={'D':[Poly(1, x), Poly(t, t)]})
+    r = weak_normalizer(a, d, DE, z)
     assert r == (Poly(t**5 - t**4 - 4*t**3 + 4*t**2 + 4*t - 4, t),
         (Poly((1 + x)*t**2 + x*t, t), Poly(t + 1, t)))
-    assert weak_normalizer(r[1][0], r[1][1], D, [x, t]) == (Poly(1, t), r[1])
-    r = weak_normalizer(Poly(1 + t**2), Poly(t**2 - 1, t), D, [x, t], z)
+    assert weak_normalizer(r[1][0], r[1][1], DE) == (Poly(1, t), r[1])
+    r = weak_normalizer(Poly(1 + t**2), Poly(t**2 - 1, t), DE, z)
     assert r == (Poly(t**4 - 2*t**2 + 1, t), (Poly(-3*t**2 + 1, t), Poly(t**2 - 1, t)))
-    assert weak_normalizer(r[1][0], r[1][1], D, [x, t]) == (Poly(1, t), r[1])
-    D = [Poly(1, x), Poly(1 + t**2)]
-    r = weak_normalizer(Poly(1 + t**2), Poly(t, t), D, [x, t], z)
+    assert weak_normalizer(r[1][0], r[1][1], DE, z) == (Poly(1, t), r[1])
+    DE = DifferentialExtension(extension={'D':[Poly(1, x), Poly(1 + t**2)]})
+    r = weak_normalizer(Poly(1 + t**2), Poly(t, t), DE, z)
     assert r == (Poly(t, t), (Poly(0, t), Poly(1, t)))
-    assert weak_normalizer(r[1][0], r[1][1], D, [x, t]) == (Poly(1, t), r[1])
+    assert weak_normalizer(r[1][0], r[1][1], DE, z) == (Poly(1, t), r[1])
 
 def test_normal_denom():
+    DE = DifferentialExtension(extension={'D':[Poly(1, x)]})
     raises(NonElementaryIntegralException, """normal_denom(Poly(1, x), Poly(1, x),
-    Poly(1, x), Poly(x, x), [Poly(1, x)], [x])""")
+    Poly(1, x), Poly(x, x), DE)""")
     fa, fd = Poly(t**2 + 1, t), Poly(1, t)
     ga, gd = Poly(1, t), Poly(t**2, t)
-    D = [Poly(1, x), Poly(t**2 + 1, t)]
-    assert normal_denom(fa, fd, ga, gd, D, [x, t]) == \
+    DE = DifferentialExtension(extension={'D':[Poly(1, x), Poly(t**2 + 1, t)]})
+    assert normal_denom(fa, fd, ga, gd, DE) == \
         (Poly(t, t), (Poly(t**3 - t**2 + t - 1, t), Poly(1, t)), (Poly(1, t),
         Poly(1, t)), Poly(t, t))
 
 def test_special_denom():
     # TODO: add more tests here
-    D = [Poly(1, x), Poly(t, t)]
+    DE = DifferentialExtension(extension={'D':[Poly(1, x), Poly(t, t)]})
     assert special_denom(Poly(1, t), Poly(t**2, t), Poly(1, t), Poly(t**2 - 1, t),
-    Poly(t, t), D, [x, t]) == \
+    Poly(t, t), DE) == \
         (Poly(1, t), Poly(t**2 - 1, t), Poly(t**2 - 1, t), Poly(t, t))
-#    assert special_denom(Poly(1, t), Poly(2*x, t), Poly((1 + 2*x)*t, t), D,
-#        [x, t]) == 1
+#    assert special_denom(Poly(1, t), Poly(2*x, t), Poly((1 + 2*x)*t, t), DE) == 1
 
 @XFAIL
 def test_bound_degree_fail():
     # Primitive
-    D = [Poly(1, x), Poly(t0/x**2, t0), Poly(1/x, t)]
+    DE = DifferentialExtension(extension={'D':[Poly(1, x),
+        Poly(t0/x**2, t0), Poly(1/x, t)]})
     assert bound_degree(Poly(t**2, t), Poly(-(1/x**2*t**2 + 1/x), t),
         Poly((2*x - 1)*t**4 + (t0 + x)/x*t**3 - (t0 + 4*x**2)/2*x*t**2 + x*t,
-        t), D, [x, t0, t]) == 3
+        t), DE) == 3
 
 def test_bound_degree():
     # Base
-    D = [Poly(1, x)]
-    assert bound_degree(Poly(1, x), Poly(-2*x, x), Poly(1, x), D, [x]) == 0
+    DE = DifferentialExtension(extension={'D':[Poly(1, x)]})
+    assert bound_degree(Poly(1, x), Poly(-2*x, x), Poly(1, x), DE) == 0
 
     # Primitive (see above test_bound_degree_fail)
     # TODO: Add test for when the degree bound becomes larger after limited_integrate
@@ -81,70 +83,74 @@ def test_bound_degree():
     # TODO: Add test for when the degree becomes larger after parametric_log_deriv()
 
     # Nonlinear
-    D = [Poly(1, x), Poly(t**2 + 1, t)]
-    assert bound_degree(Poly(t, t), Poly((t - 1)*(t**2 + 1), t), Poly(1, t),
-        D, [x, t]) == 0
+    DE = DifferentialExtension(extension={'D':[Poly(1, x), Poly(t**2 + 1, t)]})
+    assert bound_degree(Poly(t, t), Poly((t - 1)*(t**2 + 1), t), Poly(1, t), DE) == 0
 
 def test_spde():
+    DE = DifferentialExtension(extension={'D':[Poly(1, x), Poly(t**2 + 1, t)]})
     raises(NonElementaryIntegralException, "spde(Poly(t, t), Poly((t - 1)*(t**2 + 1), " +
-        "t), Poly(1, t), 0, [Poly(1, x), Poly(1 + t**2, t)], [x, t])")
-    D = [Poly(1, x), Poly(t, t)]
+        "t), Poly(1, t), 0, DE)")
+    DE = DifferentialExtension(extension={'D':[Poly(1, x), Poly(t, t)]})
     assert spde(Poly(t**2 + x*t*2 + x**2, t), Poly(t**2/x**2 + (2/x - 1)*t, t),
-    Poly(t**2/x**2 + (2/x - 1)*t, t), 0, D, [x, t]) == \
+    Poly(t**2/x**2 + (2/x - 1)*t, t), 0, DE) == \
         (Poly(0, t), Poly(0, t), 0, Poly(0, t), Poly(1, t))
-    D = [Poly(1, x), Poly(t0/x**2, t0), Poly(1/x, t)]
+    DE = DifferentialExtension(extension={'D':[Poly(1, x), Poly(t0/x**2, t0), Poly(1/x, t)]})
     assert spde(Poly(t**2, t), Poly(-t**2/x**2 - 1/x, t),
-    Poly((2*x - 1)*t**4 + (t0 + x)/x*t**3 - (t0 + 4*x**2)/(2*x)*t**2 + x*t, t),
-    3, D, [x, t0, t]) == \
+    Poly((2*x - 1)*t**4 + (t0 + x)/x*t**3 - (t0 + 4*x**2)/(2*x)*t**2 + x*t, t), 3, DE) == \
         (Poly(0, t), Poly(0, t), 0, Poly(0, t),
         Poly(t0*t**2/2 + x**2*t**2 - x**2*t, t))
-    D = [Poly(1, x)]
+    DE = DifferentialExtension(extension={'D':[Poly(1, x)]})
     assert spde(Poly(x**2 + x + 1, x), Poly(-2*x - 1, x), Poly(x**5/2 +
-    3*x**4/4 + x**3 - x**2 + 1, x), 4, D, [x]) == \
+    3*x**4/4 + x**3 - x**2 + 1, x), 4, DE) == \
         (Poly(0, x), Poly(x/2 - S(1)/4, x), 2, Poly(x**2 + x + 1, x), Poly(5*x/4, x))
     assert spde(Poly(x**2 + x + 1, x), Poly(-2*x - 1, x), Poly(x**5/2 +
-    3*x**4/4 + x**3 - x**2 + 1, x), n, D, [x]) == \
+    3*x**4/4 + x**3 - x**2 + 1, x), n, DE) == \
         (Poly(0, x), Poly(x/2 - S(1)/4, x), -2 + n, Poly(x**2 + x + 1, x), Poly(5*x/4, x))
 
 def test_solve_poly_rde_no_cancel():
     # deg(b) large
-    D = [Poly(1, x), Poly(1 + t**2, t)]
+    DE = DifferentialExtension(extension={'D':[Poly(1, x), Poly(1 + t**2, t)]})
     assert solve_poly_rde(Poly(t**2 + 1, t), Poly(t**3 + (x + 1)*t**2 + t + x + 2, t),
-    oo, D, [x, t]) == Poly(t + x, t)
+    oo, DE) == Poly(t + x, t)
     # deg(b) small
-    D = [Poly(1, x)]
-    assert solve_poly_rde(Poly(0, x), Poly(x/2 - S(1)/4, x), oo, D, [x]) == \
+    DE = DifferentialExtension(extension={'D':[Poly(1, x)]})
+    assert solve_poly_rde(Poly(0, x), Poly(x/2 - S(1)/4, x), oo, DE) == \
         Poly(x**2/4 - x/4, x)
-    D = [Poly(1, x), Poly(t**2 + 1, t)]
-    assert solve_poly_rde(Poly(2, t), Poly(t**2 + 2*t + 3, t), 1, D, [x, t]) == \
+    DE = DifferentialExtension(extension={'D':[Poly(1, x), Poly(t**2 + 1, t)]})
+    assert solve_poly_rde(Poly(2, t), Poly(t**2 + 2*t + 3, t), 1, DE) == \
         Poly(t + 1, t, x)
     # deg(b) == deg(D) - 1
-    D = [Poly(1, x), Poly(t**2 + 1, t)]
+    DE = DifferentialExtension(extension={'D':[Poly(1, x), Poly(t**2 + 1, t)]})
     assert no_cancel_equal(Poly(1 - t, t),
-    Poly(t**3 + t**2 - 2*x*t - 2*x, t), oo, D, [x, t]) == \
+    Poly(t**3 + t**2 - 2*x*t - 2*x, t), oo, DE) == \
         (Poly(t**2, t), 1, Poly((-2 - 2*x)*t - 2*x, t))
 
 def test_solve_poly_rde_cancel():
     # exp
-    D = [Poly(1, x), Poly(t, t)]
-    assert cancel_exp(Poly(2*x, t), Poly(2*x, t), 0, D, [x, t]) == \
+    DE = DifferentialExtension(extension={'D':[Poly(1, x), Poly(t, t)]})
+    assert cancel_exp(Poly(2*x, t), Poly(2*x, t), 0, DE) == \
         Poly(1, t)
-    assert cancel_exp(Poly(2*x, t), Poly((1 + 2*x)*t, t), 1, D, [x, t]) == \
+    assert cancel_exp(Poly(2*x, t), Poly((1 + 2*x)*t, t), 1, DE) == \
         Poly(t, t)
     # TODO: Add more exp tests, including tests that require is_deriv_in_field()
 
     # primitive
-    D = [Poly(1, x), Poly(1/x, t)]
-    raises(NonElementaryIntegralException,
-    "cancel_primitive(Poly(1, t), Poly(t, t), oo, D, [x, t])")
-    assert cancel_primitive(Poly(1, t), Poly(t + 1/x, t), 2, D, [x, t]) == \
+    DE = DifferentialExtension(extension={'D':[Poly(1, x), Poly(1/x, t)]})
+    assert cancel_primitive(Poly(1, t), Poly(t + 1/x, t), 2, DE) == \
         Poly(t, t)
-    assert cancel_primitive(Poly(4*x, t), Poly(4*x*t**2 + 2*t/x, t), 3, D, [x, t]) == \
+    assert cancel_primitive(Poly(4*x, t), Poly(4*x*t**2 + 2*t/x, t), 3, DE) == \
         Poly(t**2, t)
+    # XXX: This test decrements the level without incrementing it again, so
+    # it needs to be the last one that uses this DE.
+    # Ditto for any other raises() test.
+    raises(NonElementaryIntegralException,
+    "cancel_primitive(Poly(1, t), Poly(t, t), oo, DE)")
     # TODO: Add more primitive tests, including tests that require is_deriv_in_field()
 
 def test_rischDE():
     # TODO: Add more tests for rischDE, including ones from the text
+    DE = DifferentialExtension(extension={'D':[Poly(1, x), Poly(t, t)]})
+    DE.decrement_level()
     assert rischDE(Poly(-2*x, x), Poly(1, x), Poly(1 - 2*x - 2*x**2, x),
-    Poly(1, x), [Poly(1, x)], [x]) == \
+    Poly(1, x), DE) == \
         (Poly(x + 1, x), Poly(1, x))
