@@ -1843,3 +1843,81 @@ def dmp_primitive(f, u, K):
         return cont, f
     else:
         return cont, [ dmp_exquo(c, cont, v, K) for c in f ]
+
+def dup_cancel(f, g, K, multout=True):
+    """
+    Cancel common factors in a rational function ``f/g``.
+
+    Example
+    =======
+
+    >>> from sympy.polys.domains import ZZ
+    >>> from sympy.polys.euclidtools import dup_cancel
+
+    >>> f = ZZ.map([2, 0, -2])
+    >>> g = ZZ.map([1, -2, 1])
+
+    >>> dmp_cancel(f, g, ZZ)
+    (1, 1, [2, 2], [1, -1])
+
+    """
+    return dmp_cancel(f, g, 0, K, multout=multout)
+
+def dmp_cancel(f, g, u, K, multout=True):
+    """
+    Cancel common factors in a rational function ``f/g``.
+
+    Example
+    =======
+
+    >>> from sympy.polys.domains import ZZ
+    >>> from sympy.polys.euclidtools import dmp_cancel
+
+    >>> f = ZZ.map([[2], [0], [-2]])
+    >>> g = ZZ.map([[1], [-2], [1]])
+
+    >>> dmp_cancel(f, g, 1, ZZ)
+    (1, 1, [[2], [2]], [[1], [-1]])
+
+    """
+    if dmp_zero_p(f, u) or dmp_zero_p(g, u):
+        if multout:
+            return f, g
+        else:
+            return K.one, K.one, f, g
+
+    K0 = None
+
+    if K.has_Field and K.has_assoc_Ring:
+        K0, K = K, K.get_ring()
+
+        cq, f = dmp_clear_denoms(f, u, K0, K, convert=True)
+        cp, g = dmp_clear_denoms(g, u, K0, K, convert=True)
+    else:
+        cp, cq = K.one, K.one
+
+    _, p, q = dmp_inner_gcd(f, g, u, K)
+
+    if K0 is not None:
+        p = dmp_convert(p, u, K, K0)
+        q = dmp_convert(q, u, K, K0)
+
+        K = K0
+
+    p_neg = K.is_negative(dmp_ground_LC(p, u, K))
+    q_neg = K.is_negative(dmp_ground_LC(q, u, K))
+
+    if p_neg and q_neg:
+        p, q = dmp_neg(p, u, K), dmp_neg(q, u, K)
+    elif p_neg:
+        cp, p = -cp, dmp_neg(p, u, K)
+    elif q_neg:
+        cp, q = -cp, dmp_neg(q, u, K)
+
+    if not multout:
+        return cp, cq, p, q
+
+    p = dmp_mul_ground(p, cp, u, K)
+    q = dmp_mul_ground(q, cq, u, K)
+
+    return p, q

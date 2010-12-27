@@ -16,7 +16,8 @@ from sympy.polys.euclidtools import (
     dup_ff_prs_gcd, dmp_ff_prs_gcd,
     dup_inner_gcd, dmp_inner_gcd,
     dup_lcm, dmp_lcm,
-    dmp_content, dmp_primitive)
+    dmp_content, dmp_primitive,
+    dup_cancel, dmp_cancel)
 
 from sympy.polys.densebasic import (
     dmp_one_p,
@@ -583,3 +584,32 @@ def test_dmp_primitive():
     assert dmp_one_p(cont, 1, ZZ) and f == f_5
     cont, f = dmp_primitive(f_6, 3, ZZ)
     assert dmp_one_p(cont, 2, ZZ) and f == f_6
+
+def test_dup_cancel():
+    f = ZZ.map([2, 0, -2])
+    g = ZZ.map([1, -2, 1])
+
+    p = [ZZ(2), ZZ(2)]
+    q = [ZZ(1), -ZZ(1)]
+
+    assert dup_cancel(f, g, ZZ) == (p, q)
+    assert dup_cancel(f, g, ZZ, multout=False) == (ZZ(1), ZZ(1), p, q)
+
+    f = [-ZZ(1),-ZZ(2)]
+    g = [ ZZ(3),-ZZ(4)]
+
+    F = [ ZZ(1), ZZ(2)]
+    G = [-ZZ(3), ZZ(4)]
+
+    dup_cancel(f, g, ZZ) == (f, g)
+    dup_cancel(F, G, ZZ) == (f, g)
+
+def test_dmp_cancel():
+    f = ZZ.map([[2], [0], [-2]])
+    g = ZZ.map([[1], [-2], [1]])
+
+    p = [[ZZ(2)], [ZZ(2)]]
+    q = [[ZZ(1)], [-ZZ(1)]]
+
+    assert dmp_cancel(f, g, 1, ZZ) == (p, q)
+    assert dmp_cancel(f, g, 1, ZZ, multout=False) == (ZZ(1), ZZ(1), p, q)
