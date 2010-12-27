@@ -1,6 +1,7 @@
 """Options manager for :class:`Poly` and public API functions. """
 
 from sympy.core import S, Basic, sympify
+from sympy.utilities import any, all
 
 from sympy.polys.polyerrors import (
     GeneratorsError,

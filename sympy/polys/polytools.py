@@ -536,11 +536,12 @@ class Poly(Basic):
         False
 
         """
+        f_gens = list(f.gens)
         indices = set([])
 
         for gen in gens:
             try:
-                index = f.gens.index(gen)
+                index = f_gens.index(gen)
             except ValueError:
                 raise GeneratorsError("%s doesn't have %s as generator" % (f, gen))
             else:
