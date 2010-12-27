@@ -2,6 +2,7 @@
 from sympy.polys import Poly, groebner, roots
 from sympy.simplify import simplify
 from sympy.utilities import any, postfixes
+from sympy.utilities.iterables import minkey
 
 def solve_poly_system(system, *gens):
     """Solves a system of polynomial equations.
@@ -143,7 +144,7 @@ def solve_triangulated(polys, *gens, **args):
     Algebraic Algorithms and Error-Correcting Codes, LNCS 356 247--257, 1989
 
     """
-    G = groebner(polys, *gens, order='lex', polys=True)
+    G = groebner(polys, gens, polys=True)
     G = list(reversed(G))
 
     domain = args.get('domain')
@@ -179,7 +180,7 @@ def solve_triangulated(polys, *gens, **args):
                     if g.degree(var) == h.degree():
                         H.append(h)
 
-            p = min(H, key=lambda h: h.degree())
+            p = minkey(H, key=lambda h: h.degree())
             zeros = p.ground_roots()
 
             for zero in zeros:
