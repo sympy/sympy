@@ -640,6 +640,12 @@ def test_Poly_ltrim():
 
     raises(PolynomialError, "Poly(x*y**2 + y**2, x, y).ltrim(y)")
 
+def test_Poly_has_only_gens():
+    assert Poly(x*y + 1, x, y, z).has_only_gens(x, y) == True
+    assert Poly(x*y + z, x, y, z).has_only_gens(x, y) == False
+
+    raises(GeneratorsError, "Poly(x*y**2 + y**2, x, y).has_only_gens(t)")
+
 def test_Poly_to_ring():
     assert Poly(2*x+1, domain='ZZ').to_ring() == Poly(2*x+1, domain='ZZ')
     assert Poly(2*x+1, domain='QQ').to_ring() == Poly(2*x+1, domain='ZZ')

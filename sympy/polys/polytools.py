@@ -45,6 +45,7 @@ from sympy.polys.polyerrors import (
     MultivariatePolynomialError,
     ExactQuotientFailed,
     ComputationFailed,
+    GeneratorsError,
 )
 
 from sympy.polys.polycontext import (
@@ -518,6 +519,39 @@ class Poly(Basic):
         gens = f.gens[j:]
 
         return f.new(DMP.from_dict(terms, len(gens)-1, f.rep.dom), *gens)
+
+    def has_only_gens(f, *gens):
+        """
+        Return ``True`` if ``Poly(f, *gens)`` retains ground domain.
+
+        Example
+        =======
+
+        >>> from sympy import Poly
+        >>> from sympy.abc import x, y, z
+
+        >>> Poly(x*y + 1, x, y, z).has_only_gens(x, y)
+        True
+        >>> Poly(x*y + z, x, y, z).has_only_gens(x, y)
+        False
+
+        """
+        indices = set([])
+
+        for gen in gens:
+            try:
+                index = f.gens.index(gen)
+            except ValueError:
+                raise GeneratorsError("%s doesn't have %s as generator" % (f, gen))
+            else:
+                indices.add(index)
+
+        for monom in f.monoms():
+            for i, elt in enumerate(monom):
+                if i not in indices and elt:
+                    return False
+
+        return True
 
     def to_ring(f):
         """
