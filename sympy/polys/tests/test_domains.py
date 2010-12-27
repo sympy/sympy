@@ -307,6 +307,8 @@ def test_Domain__contains__():
     assert (x**2 + y**2 in QQ[x,y]) == True
     assert (x**2 + y**2 in RR[x,y]) == True
 
+    assert (S(3)/2*x/(y + 1) - z in QQ[x, y, z]) == False
+
 def test_Domain_get_ring():
     assert ZZ.has_assoc_Ring == True
     assert QQ.has_assoc_Ring == True

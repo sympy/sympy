@@ -5,7 +5,7 @@ from sympy.polys.domains.compositedomain import CompositeDomain
 from sympy.polys.domains.characteristiczero import CharacteristicZero
 
 from sympy.polys.polyclasses import DMP
-from sympy.polys.polyerrors import GeneratorsNeeded, GeneratorsError
+from sympy.polys.polyerrors import GeneratorsNeeded, GeneratorsError, PolynomialError, CoercionFailed
 from sympy.polys.polyutils import dict_from_basic, basic_from_dict, _dict_reorder
 
 class PolynomialRing(Ring, CharacteristicZero, CompositeDomain):
@@ -53,7 +53,10 @@ class PolynomialRing(Ring, CharacteristicZero, CompositeDomain):
 
     def from_sympy(self, a):
         """Convert SymPy's expression to `dtype`. """
-        rep, _ = dict_from_basic(a, gens=self.gens)
+        try:
+            rep, _ = dict_from_basic(a, gens=self.gens)
+        except PolynomialError:
+            raise CoercionFailed("can't convert %s to type %s" % (a, self))
 
         for k, v in rep.iteritems():
             rep[k] = self.dom.from_sympy(v)
