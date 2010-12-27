@@ -1,7 +1,7 @@
 from sympy import symbols, Integral, Tuple, Dummy, Basic
 from sympy.utilities.iterables import (postorder_traversal, preorder_traversal,
     flatten, group, split, take, subsets, variations, cartes, numbered_symbols,
-    dict_merge)
+    dict_merge, prefixes, postfixes)
 from sympy.functions.elementary.piecewise import Piecewise, ExprCondPair
 from sympy.utilities.pytest import raises
 
@@ -176,3 +176,19 @@ def test_dict_merge():
 
     assert dict_merge({1: y, 2: z}, {1: x, y: z}) == {1: x, 2: z, y: z}
     assert dict_merge({1: x, y: z}, {1: y, 2: z}) == {1: y, 2: z, y: z}
+
+def test_prefixes():
+    assert list(prefixes([])) == []
+    assert list(prefixes([1])) == [[1]]
+    assert list(prefixes([1, 2])) == [[1], [1, 2]]
+
+    assert list(prefixes([1,2,3,4,5])) == \
+        [[1], [1, 2], [1, 2, 3], [1, 2, 3, 4], [1, 2, 3, 4, 5]]
+
+def test_postfixes():
+    assert list(postfixes([])) == []
+    assert list(postfixes([1])) == [[1]]
+    assert list(postfixes([1, 2])) == [[2], [1, 2]]
+
+    assert list(postfixes([1,2,3,4,5])) == \
+        [[5], [4, 5], [3, 4, 5], [2, 3, 4, 5], [1, 2, 3, 4, 5]]

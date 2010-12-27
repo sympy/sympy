@@ -480,3 +480,39 @@ def dict_merge(*dicts):
         merged.update(dict)
 
     return merged
+
+def prefixes(seq):
+    """
+    Generate all prefixes of a sequence.
+
+    Example
+    =======
+
+    >>> from sympy.utilities.iterables import prefixes
+
+    >>> list(prefixes([1,2,3,4]))
+    [[1], [1, 2], [1, 2, 3], [1, 2, 3, 4]]
+
+    """
+    n = len(seq)
+
+    for i in xrange(n):
+        yield seq[:i+1]
+
+def postfixes(seq):
+    """
+    Generate all postfixes of a sequence.
+
+    Example
+    =======
+
+    >>> from sympy.utilities.iterables import postfixes
+
+    >>> list(postfixes([1,2,3,4]))
+    [[4], [3, 4], [2, 3, 4], [1, 2, 3, 4]]
+
+    """
+    n = len(seq)
+
+    for i in xrange(n):
+        yield seq[n-i-1:]
