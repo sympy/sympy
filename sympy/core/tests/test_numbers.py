@@ -622,13 +622,22 @@ def test_Rational_gcd_lcm_cofactors():
     assert Integer(4).cofactors(2) == (Integer(2), Integer(2), Integer(1))
     assert Integer(4).cofactors(Integer(2)) == (Integer(2), Integer(2), Integer(1))
 
-    raises(TypeError, "Integer(4).gcd(Real(2.0))")
-    raises(TypeError, "Integer(4).lcm(Real(2.0))")
-    raises(TypeError, "Integer(4).cofactors(Real(2.0))")
+    assert Integer(4).gcd(Real(2.0)) == S.One
+    assert Integer(4).lcm(Real(2.0)) == Real(8.0)
+    assert Integer(4).cofactors(Real(2.0)) == (S.One, Integer(4), Real(2.0))
 
-    raises(TypeError, "Rational(4,3).gcd(Real(2.0))")
-    raises(TypeError, "Rational(4,3).lcm(Real(2.0))")
-    raises(TypeError, "Rational(4,3).cofactors(Real(2.0))")
+    assert Rational(1,2).gcd(Real(2.0)) == S.One
+    assert Rational(1,2).lcm(Real(2.0)) == Real(1.0)
+    assert Rational(1,2).cofactors(Real(2.0)) == (S.One, Rational(1,2), Real(2.0))
+
+def test_Real_gcd_lcm_cofactors():
+    assert Real(2.0).gcd(Integer(4)) == S.One
+    assert Real(2.0).lcm(Integer(4)) == Real(8.0)
+    assert Real(2.0).cofactors(Integer(4)) == (S.One, Real(2.0), Integer(4))
+
+    assert Real(2.0).gcd(Rational(1,2)) == S.One
+    assert Real(2.0).lcm(Rational(1,2)) == Real(1.0)
+    assert Real(2.0).cofactors(Rational(1,2)) == (S.One, Real(2.0), Rational(1,2))
 
 def test_issue1512():
     assert abs(pi._evalf(50) - 3.14159265358979) < 1e-10
