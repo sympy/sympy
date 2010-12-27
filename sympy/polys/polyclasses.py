@@ -837,8 +837,29 @@ class DMF(object):
     __slots__ = ['num', 'den', 'lev', 'dom']
 
     def __init__(self, rep, dom, lev=None):
-        assert dom.has_Ring, "QQ in ground not supported, yet"
+        num, den, lev = self._parse(rep, dom, lev)
+        num, den = dmp_cancel(num, den, lev, dom)
 
+        self.num = num
+        self.den = den
+        self.lev = lev
+        self.dom = dom
+
+    @classmethod
+    def new(cls, rep, dom, lev=None):
+        num, den, lev = cls._parse(rep, dom, lev)
+
+        obj = object.__new__(cls)
+
+        obj.num = num
+        obj.den = den
+        obj.lev = lev
+        obj.dom = dom
+
+        return obj
+
+    @classmethod
+    def _parse(cls, rep, dom, lev=None):
         if type(rep) is tuple:
             num, den = rep
 
@@ -879,10 +900,7 @@ class DMF(object):
 
             den = dmp_one(lev, dom)
 
-        self.num = num
-        self.den = den
-        self.lev = lev
-        self.dom = dom
+        return num, den, lev
 
     def __repr__(f):
         return "%s((%s, %s), %s)" % (f.__class__.__name__, f.num, f.den, f.dom)
@@ -911,18 +929,17 @@ class DMF(object):
 
             G = dmp_convert(g.rep, lev, g.dom, dom)
 
-            def per(num, den, dom=dom, lev=lev,
-                    cancel=True, kill=False):
+            def per(num, den, cancel=True, kill=False):
                 if kill:
                     if not lev:
                         return num/den
                     else:
-                        lev -= 1
+                        lev = lev - 1
 
                 if cancel:
-                    _, num, den = dmp_inner_gcd(num, den, lev, dom)
+                    num, den = dmp_cancel(num, den, lev, dom)
 
-                return DMF((num, den), dom, lev)
+                return f.__class__.new((num, den), dom, lev)
 
             return lev, dom, per, F, G
 
@@ -943,18 +960,17 @@ class DMF(object):
             G = (dmp_convert(g.num, lev, g.dom, dom),
                  dmp_convert(g.den, lev, g.dom, dom))
 
-            def per(num, den, dom=dom, lev=lev,
-                    cancel=True, kill=False):
+            def per(num, den, cancel=True, kill=False):
                 if kill:
                     if not lev:
                         return num/den
                     else:
-                        lev -= 1
+                        lev = lev - 1
 
                 if cancel:
-                    _, num, den = dmp_inner_gcd(num, den, lev, dom)
+                    num, den = dmp_cancel(num, den, lev, dom)
 
-                return DMF((num, den), dom, lev)
+                return f.__class__.new((num, den), dom, lev)
 
             return lev, dom, per, F, G
 
@@ -969,9 +985,9 @@ class DMF(object):
                 lev -= 1
 
         if cancel:
-            _, num, den = dmp_inner_gcd(num, den, lev, dom)
+            num, den = dmp_cancel(num, den, lev, dom)
 
-        return DMF((num, den), dom, lev)
+        return f.__class__.new((num, den), dom, lev)
 
     def half_per(f, rep, kill=False):
         """Create a DMP out of the given representation. """
@@ -987,11 +1003,11 @@ class DMF(object):
 
     @classmethod
     def zero(cls, lev, dom):
-        return DMF(0, dom, lev)
+        return cls.new(0, dom, lev)
 
     @classmethod
     def one(cls, lev, dom):
-        return DMF(1, dom, lev)
+        return cls.new(1, dom, lev)
 
     def numer(f):
         """Returns numerator of `f`. """
