@@ -415,8 +415,13 @@ def test_Domain___eq__():
     assert (QQ.frac_field(x,y) == ZZ.frac_field(x,y)) == False
 
 def test_Domain__algebraic_field():
+    alg = ZZ.algebraic_field(sqrt(2))
+    assert alg.ext.minpoly == pure**2 - 2
+    assert alg.dom == QQ
+
     alg = QQ.algebraic_field(sqrt(2))
     assert alg.ext.minpoly == pure**2 - 2
+    assert alg.dom == QQ
 
     alg = alg.algebraic_field(sqrt(3))
     assert alg.ext.minpoly == pure**4 - 10*pure**2 + 1

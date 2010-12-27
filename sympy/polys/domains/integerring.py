@@ -22,6 +22,10 @@ class IntegerRing(Ring, CharacteristicZero, SimpleDomain):
         from sympy.polys.domains import QQ
         return QQ
 
+    def algebraic_field(self, *extension):
+        """Returns an algebraic field, i.e. `QQ(alpha, ...)`. """
+        return self.get_field().algebraic_field(*extension)
+
     def from_AlgebraicField(K1, a, K0):
         """Convert a `ANP` object to `dtype`. """
         if a.is_ground:
