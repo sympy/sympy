@@ -489,6 +489,36 @@ class Poly(Basic):
 
         return f.per(DMP(rep, f.rep.dom, len(gens)-1), gens=gens)
 
+    def ltrim(f, gen):
+        """
+        Remove dummy generators from the "left" of ``f``.
+
+        Example
+        =======
+
+        >>> from sympy import Poly
+        >>> from sympy.abc import x, y, z
+
+        >>> Poly(y**2 + y*z**2, x, y, z).ltrim(y)
+        Poly(y**2 + y*z**2, y, z, domain='ZZ')
+
+        """
+        rep = f.as_dict(native=True)
+        j = f._gen_to_level(gen)
+        terms = {}
+
+        for monom, coeff in rep.iteritems():
+            monom = monom[j:]
+
+            if monom not in terms:
+                terms[monom] = coeff
+            else:
+                raise PolynomialError("can't left trim %s" % f)
+
+        gens = f.gens[j:]
+
+        return f.new(DMP.from_dict(terms, len(gens)-1, f.rep.dom), *gens)
+
     def to_ring(f):
         """
         Make the ground domain a ring.
