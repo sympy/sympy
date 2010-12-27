@@ -10,7 +10,7 @@ from sympy.polys.polyroots import root_factors, roots_linear,  \
 
 from sympy.utilities import all
 
-a, b, c, d, t, x, y, z = symbols('a,b,c,d,t,x,y,z')
+a, b, c, d, e, t, x, y, z = symbols('a,b,c,d,e,t,x,y,z')
 
 def test_roots_linear():
     assert roots_linear(Poly(2*x+1, x)) == [-Rational(1, 2)]
@@ -20,6 +20,12 @@ def test_roots_quadratic():
     assert roots_quadratic(Poly(2*x**2 + 3*x, x)) == [-Rational(3, 2), 0]
     assert roots_quadratic(Poly(2*x**2 + 3, x)) == [I*sqrt(6)/2, -I*sqrt(6)/2]
     assert roots_quadratic(Poly(2*x**2 + 4*x+3, x)) == [-1 + I*sqrt(2)/2, -1 - I*sqrt(2)/2]
+
+    f = x**2 + (2*a*e + 2*c*e)/(a - c)*x + (d - b + a*e**2 - c*e**2)/(a - c)
+
+    assert roots_quadratic(Poly(f, x)) == \
+        [-e*(a + c)/(a - c) + ((a*b + c*d - a*d - b*c + 4*a*c*e**2)/(a - c)**2)**S.Half,
+         -e*(a + c)/(a - c) - ((a*b + c*d - a*d - b*c + 4*a*c*e**2)/(a - c)**2)**S.Half]
 
 def test_roots_cubic():
     assert roots_cubic(Poly(2*x**3, x)) == [0, 0, 0]
@@ -139,8 +145,7 @@ def test_roots():
         - 224*x**7 - 384*x**8 - 64*x**9, x) == {S(0): 2, -S(2): 2, S(2): 1, -S(7)/2: 1,\
                                             -S(3)/2: 1, -S(1)/2: 1, S(3)/2: 1}
 
-    assert roots((a+b+c)*x + a+b+c+d, x) == \
-        { -((a+b+c+d)/(a+b+c)) : 1 }
+    assert roots((a+b+c)*x + a+b+c+d, x) == {(-a-b-c-d)/(a+b+c): 1}
 
     assert roots(x**3+x**2-x+1, x, cubics=False) == {}
     assert roots(((x-2)*(x+3)*(x-4)).expand(), x, cubics=False) == {-S(3): 1, S(2): 1, S(4): 1}
