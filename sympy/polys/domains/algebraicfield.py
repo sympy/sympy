@@ -59,6 +59,10 @@ class AlgebraicField(Field, CharacteristicZero, SimpleDomain):
         else:
             return True
 
+    def algebraic_field(self, *extension):
+        """Returns an algebraic field, i.e. `QQ(alpha, ...)`. """
+        return AlgebraicField(self.dom, *((self.ext,) + extension))
+
     def to_sympy(self, a):
         """Convert `a` to a SymPy object. """
         from sympy.polys.numberfields import AlgebraicNumber
