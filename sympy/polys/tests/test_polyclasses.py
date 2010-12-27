@@ -323,6 +323,20 @@ def test_DMF__init__():
     assert f.lev == 1
     assert f.dom == ZZ
 
+    f = DMF(([[QQ(1)],[QQ(2)]], [[-QQ(3)],[QQ(4)]]), QQ)
+
+    assert f.num == [[-QQ(1)],[-QQ(2)]]
+    assert f.den == [[QQ(3)],[-QQ(4)]]
+    assert f.lev == 1
+    assert f.dom == QQ
+
+    f = DMF(([[QQ(1,5)],[QQ(2,5)]], [[-QQ(3,7)],[QQ(4,7)]]), QQ)
+
+    assert f.num == [[-QQ(7)],[-QQ(14)]]
+    assert f.den == [[QQ(15)],[-QQ(20)]]
+    assert f.lev == 1
+    assert f.dom == QQ
+
     raises(ValueError, "DMF(([1], [[1]]), ZZ)")
     raises(ZeroDivisionError, "DMF(([1], []), ZZ)")
 
