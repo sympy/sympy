@@ -541,8 +541,8 @@ class Poly(Basic):
         >>> from sympy import Poly, RR
         >>> from sympy.abc import x
 
-        >>> Poly(x**2 + 1.0, x, RR).to_exact()
-        Poly(x**2 + 1, x, RR, domain='QQ')
+        >>> Poly(x**2 + 1.0, x, domain=RR).to_exact()
+        Poly(x**2 + 1, x, domain='QQ')
 
         """
         if hasattr(f.rep, 'to_exact'):
