@@ -1,8 +1,9 @@
-from sympy import S, symbols, Integer, Rational, sqrt, I, solve_poly_system, Poly
-
-from sympy.utilities.pytest import raises
+from sympy import S, symbols, Integer, Rational, sqrt, I, Poly, QQ
 
 from sympy.abc import x, y, z
+from sympy.solvers.polysys import solve_poly_system, solve_triangulated
+from sympy.utilities.pytest import raises
+
 
 def test_solve_poly_system():
     assert solve_poly_system([x-1], x) == [(S.One,)]
@@ -41,4 +42,19 @@ def test_solve_poly_system_slow():
     a, b = -sqrt(2) - 1, sqrt(2) - 1
 
     assert solve_poly_system([f_1, f_2, f_3], x, y, z) == \
+        [(a, a, a), (0, 0, 1), (0, 1, 0), (b, b, b), (1, 0, 0)]
+
+def test_solve_triangualted():
+    f_1 = x**2 + y + z - 1
+    f_2 = x + y**2 + z - 1
+    f_3 = x + y + z**2 - 1
+
+    a, b = -sqrt(2) - 1, sqrt(2) - 1
+
+    assert solve_triangulated([f_1, f_2, f_3], x, y, z) == \
+        [(0, 0, 1), (0, 1, 0), (1, 0, 0)]
+
+    dom = QQ.algebraic_field(sqrt(2))
+
+    assert solve_triangulated([f_1, f_2, f_3], x, y, z, domain=dom) == \
         [(a, a, a), (0, 0, 1), (0, 1, 0), (b, b, b), (1, 0, 0)]

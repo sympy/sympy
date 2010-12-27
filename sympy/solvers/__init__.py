@@ -11,6 +11,6 @@ from recurr import rsolve, rsolve_poly, rsolve_ratio, rsolve_hyper
 from ode import checkodesol, classify_ode, ode_order, dsolve, \
     homogeneous_order
 
-from polysys import solve_poly_system
+from polysys import solve_poly_system, solve_triangulated
 
 from pde import pde_separate, pde_separate_add, pde_separate_mul
