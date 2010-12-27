@@ -1683,7 +1683,7 @@ class Poly(Basic):
         =======
 
         >>> from sympy import Poly
-        >>> from sympy.abc import x, y
+        >>> from sympy.abc import x, y, z
 
         >>> Poly(x**2 + 2*x + 3, x).eval(2)
         11
@@ -1691,10 +1691,27 @@ class Poly(Basic):
         >>> Poly(2*x*y + 3*x + y + 2, x, y).eval(x, 2)
         Poly(5*y + 8, y, domain='ZZ')
 
+        >>> f = Poly(2*x*y + 3*x + y + 2*z, x, y, z)
+
+        >>> f.eval({x: 2})
+        Poly(5*y + 2*z + 6, y, z, domain='ZZ')
+        >>> f.eval({x: 2, y: 5})
+        Poly(2*z + 31, z, domain='ZZ')
+        >>> f.eval({x: 2, y: 5, z: 7})
+        45
+
         """
         if a is None:
-            if isinstance(x, dict):
-                raise NotImplementedError('dict syntax')
+            if isinstance(x, (list, dict)):
+                try:
+                    mapping = x.items()
+                except AttributeError:
+                    mapping = x
+
+                for gen, value in mapping:
+                    f = f.eval(gen, value)
+
+                return f
             else:
                 j, a = 0, x
         else:

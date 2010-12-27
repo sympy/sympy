@@ -1031,7 +1031,12 @@ def test_Poly_eval():
     assert Poly(2*y, x, y).eval(y, 7) == Poly(14, x)
     assert Poly(x*y, x, y).eval(y, 7) == Poly(7*x, x)
 
-    raises(NotImplementedError, "Poly(x*y).eval({x: 7})")
+    assert Poly(x*y + y, x, y).eval({x: 7}) == Poly(8*y, y)
+    assert Poly(x*y + y, x, y).eval({y: 7}) == Poly(7*x + 7, x)
+
+    assert Poly(x*y + y, x, y).eval({x: 6, y: 7}) == 49
+    assert Poly(x*y + y, x, y).eval({x: 7, y: 6}) == 48
+
     raises(CoercionFailed, "Poly(x+1, domain='ZZ').eval(S(1)/2)")
 
 def test_parallel_poly_from_expr():
