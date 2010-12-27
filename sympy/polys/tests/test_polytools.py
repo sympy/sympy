@@ -1909,7 +1909,7 @@ def test_nroots():
     assert Poly(0.2*x + 0.1).nroots() == [-0.5]
 
     raises(DomainError, "Poly(x+y, x).nroots()")
-    raises(PolynomialError, "Poly(x+y).nroots()")
+    raises(MultivariatePolynomialError, "Poly(x+y).nroots()")
 
     assert nroots(x**2 - 1) == [-1.0, 1.0]
 
