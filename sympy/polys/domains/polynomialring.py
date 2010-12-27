@@ -117,12 +117,14 @@ class PolynomialRing(Ring, CharacteristicZero, CompositeDomain):
         Example
         =======
 
-        >>> from sympy.abc import x
         >>> from sympy.polys.polyclasses import DMP, DMF
-        >>> from sympy.polys.algebratools import ZZ
+        >>> from sympy.polys.domains import ZZ
+        >>> from sympy.abc import x
 
         >>> f = DMF(([ZZ(1), ZZ(1)], [ZZ(1)]), ZZ)
-        >>> F = ZZ[x].from_FractionField(f, ZZ[x])
+        >>> K = ZZ.frac_field(x)
+
+        >>> F = ZZ[x].from_FractionField(f, K)
 
         >>> F == DMP([ZZ(1), ZZ(1)], ZZ)
         True

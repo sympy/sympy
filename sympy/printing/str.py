@@ -344,7 +344,19 @@ class StrPrinter(Printer):
                            self.parenthesize(expr.rhs, precedence(expr)))
 
     def _print_DMP(self, expr):
-        return "%s(%s, %s)" % (expr.__class__.__name__, self._print(expr.rep), self._print(expr.dom))
+        cls = expr.__class__.__name__
+        rep = self._print(expr.rep)
+        dom = self._print(expr.dom)
+
+        return "%s(%s, %s)" % (cls, rep, dom)
+
+    def _print_DMF(self, expr):
+        cls = expr.__class__.__name__
+        num = self._print(expr.num)
+        den = self._print(expr.den)
+        dom = self._print(expr.dom)
+
+        return "%s((%s, %s), %s)" % (cls, num, den, dom)
 
     def _print_RootOf(self, expr):
         return "RootOf(%s, %d)" % (self._print_Add(expr.expr, order='lex'), expr.index)

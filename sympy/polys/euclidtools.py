@@ -1857,8 +1857,8 @@ def dup_cancel(f, g, K, multout=True):
     >>> f = ZZ.map([2, 0, -2])
     >>> g = ZZ.map([1, -2, 1])
 
-    >>> dmp_cancel(f, g, ZZ)
-    (1, 1, [2, 2], [1, -1])
+    >>> dup_cancel(f, g, ZZ)
+    ([2, 2], [1, -1])
 
     """
     return dmp_cancel(f, g, 0, K, multout=multout)
@@ -1877,7 +1877,7 @@ def dmp_cancel(f, g, u, K, multout=True):
     >>> g = ZZ.map([[1], [-2], [1]])
 
     >>> dmp_cancel(f, g, 1, ZZ)
-    (1, 1, [[2], [2]], [[1], [-1]])
+    ([[2], [2]], [[1], [-1]])
 
     """
     if dmp_zero_p(f, u) or dmp_zero_p(g, u):
