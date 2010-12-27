@@ -205,6 +205,22 @@ class Number(AtomicExpr):
             return self, tuple()
         return S.Zero, (self,)
 
+    def gcd(self, other):
+        """Compute greatest common divisor of input arguments. """
+        _ = _sympify(other)
+        return S.One
+
+    def lcm(self, other):
+        """Compute least common multiple of input arguments. """
+        other = _sympify(other)
+        return self*other
+
+    def cofactors(self, other):
+        """Compute GCD and cofactors of input arguments. """
+        other = _sympify(other)
+        return S.One, self, other
+
+
 class Real(Number):
     """
     Represents a floating point number. It is capable of representing
@@ -805,6 +821,8 @@ class Rational(Number):
                         return Rational(p, other.q)
                     else:
                         return Rational(p, ilcm(self.q, other.q))
+            elif other.is_Number:
+                return S.One
             else:
                 raise TypeError("expected an integer or rational, got %s" % other)
 
@@ -822,13 +840,20 @@ class Rational(Number):
                     return Integer(p)
                 else:
                     return Rational(p, igcd(self.q, other.q))
+            elif other.is_Number:
+                return self*other
             else:
                 raise TypeError("expected an integer or rational, got %s" % other)
 
     def cofactors(self, other):
         """Compute GCD and cofactors of input arguments. """
+        other = _sympify(other)
         gcd = self.gcd(other)
-        return gcd, self/gcd, other/gcd
+
+        if gcd is S.One:
+            return gcd, self, other
+        else:
+            return gcd, self/gcd, other/gcd
 
     def as_numer_denom(self):
         return Integer(self.p), Integer(self.q)
