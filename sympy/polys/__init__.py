@@ -22,7 +22,7 @@ from polytools import (
     sqf_norm, sqf_part, sqf_list, sqf,
     factor_list, factor,
     intervals, refine_root, count_roots,
-    real_roots, nroots,
+    real_roots, nroots, ground_roots,
     cancel,
     reduced, groebner,
 )

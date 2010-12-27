@@ -21,7 +21,7 @@ from sympy.polys.polytools import (
     sqf_norm, sqf_part, sqf_list, sqf,
     factor_list, factor,
     intervals, refine_root, count_roots,
-    real_roots, nroots,
+    real_roots, nroots, ground_roots,
     cancel,
     reduced, groebner)
 
@@ -1920,6 +1920,12 @@ def test_nroots():
     assert nroots(x + 2*I) == [-2*I]
 
     raises(PolynomialError, "nroots(0)")
+
+def test_ground_roots():
+    f = x**6 - 4*x**4 + 4*x**3 - x**2
+
+    assert Poly(f).ground_roots() == {S(1): 2, S(0): 2}
+    assert ground_roots(f) == {S(1): 2, S(0): 2}
 
 def test_cancel():
     assert cancel(0) == 0

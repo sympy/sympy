@@ -2526,6 +2526,32 @@ class Poly(Basic):
 
         return sympify(npolyroots(coeffs, maxsteps=maxsteps, cleanup=cleanup, error=error))
 
+    def ground_roots(f):
+        """
+        Compute roots of ``f`` by factorization in the ground domain.
+
+        Example
+        =======
+
+        >>> from sympy import Poly
+        >>> from sympy.abc import x
+
+        >>> Poly(x**6 - 4*x**4 + 4*x**3 - x**2).ground_roots()
+        {1: 2, 0: 2}
+
+        """
+        if f.is_multivariate:
+            raise MultivariatePolynomialError("can't compute ground roots of %s" % f)
+
+        roots = {}
+
+        for factor, k in f.factor_list()[1]:
+            if factor.is_linear:
+                a, b = factor.all_coeffs()
+                roots[-b/a] = k
+
+        return roots
+
     def cancel(f, g):
         """
         Cancel common factors in a rational function ``f/g``.
@@ -4574,6 +4600,29 @@ def nroots(f, maxsteps=50, cleanup=True, error=False):
         raise PolynomialError("can't compute numerical roots of %s, not a polynomial" % f)
 
     return F.nroots(maxsteps=maxsteps, cleanup=cleanup, error=error)
+
+def ground_roots(f, *gens, **args):
+    """
+    Compute roots of ``f`` by factorization in the ground domain.
+
+    Example
+    =======
+
+    >>> from sympy import ground_roots
+    >>> from sympy.abc import x
+
+    >>> ground_roots(x**6 - 4*x**4 + 4*x**3 - x**2)
+    {1: 2, 0: 2}
+
+    """
+    options.allowed_flags(args, [])
+
+    try:
+        F, opt = poly_from_expr(f, *gens, **args)
+    except PolificationFailed, exc:
+        raise ComputationFailed('ground_roots', 1, exc)
+
+    return F.ground_roots()
 
 def cancel(f, *gens, **args):
     """
