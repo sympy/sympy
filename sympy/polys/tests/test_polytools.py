@@ -634,6 +634,12 @@ def test_Poly_reorder():
     assert Poly(x + y, x, y).reorder(wrt=x) == Poly(x + y, x, y)
     assert Poly(x + y, x, y).reorder(wrt=y) == Poly(x + y, y, x)
 
+def test_Poly_ltrim():
+    f = Poly(y**2 + y*z**2, x, y, z).ltrim(y)
+    assert f.as_basic() == y**2 + y*z**2 and f.gens == (y, z)
+
+    raises(PolynomialError, "Poly(x*y**2 + y**2, x, y).ltrim(y)")
+
 def test_Poly_to_ring():
     assert Poly(2*x+1, domain='ZZ').to_ring() == Poly(2*x+1, domain='ZZ')
     assert Poly(2*x+1, domain='QQ').to_ring() == Poly(2*x+1, domain='ZZ')
