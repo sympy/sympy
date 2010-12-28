@@ -1720,6 +1720,8 @@ def test_factor():
     assert factor(f) == 3
     assert factor(f, x) == 3
 
+    assert factor(1/(x**2 + 2*x + 1/x) - 1) == -((1 - x + 2*x**2 + x**3)/(1 + 2*x**2 + x**3))
+
     assert factor(f, expand=False) == f
     raises(PolynomialError, "factor(f, x, expand=False)")
 

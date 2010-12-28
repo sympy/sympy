@@ -10,7 +10,6 @@ from sympy.functions import exp, sqrt, re, im
 
 from sympy.polys.polytools import Poly, cancel, factor
 from sympy.polys.polyerrors import PolynomialError, GeneratorsNeeded
-from sympy.polys.rationaltools import together
 
 from sympy.simplify import simplify
 from sympy.utilities import all
@@ -22,7 +21,7 @@ def roots_linear(f):
 
     if not dom.is_Numerical:
         if dom.is_Composite:
-            r = factor(together(r))
+            r = factor(r)
         else:
             r = simplify(r)
 
@@ -35,7 +34,7 @@ def roots_quadratic(f):
 
     def _simplify(expr):
         if dom.is_Composite:
-            return factor(together(expr)) # XXX: fix factor
+            return factor(expr)
         else:
             return simplify(expr)
 
