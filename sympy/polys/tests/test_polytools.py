@@ -805,6 +805,12 @@ def test_Poly_deflate():
 
     assert Poly(x**2*y*z**11+x**4*z**11).deflate() == ((2,1,11), Poly(x*y*z+x**2*z))
 
+def test_Poly_inject():
+    f = Poly(x**2*y + x*y**3 + x*y + 1, x)
+
+    assert f.inject() == Poly(x**2*y + x*y**3 + x*y + 1, x, y)
+    assert f.inject(front=True) == Poly(y**3*x + y*x**2 + y*x + 1, y, x)
+
 def test_Poly__gen_to_level():
     assert Poly(1, x, y)._gen_to_level(-2) == 0
     assert Poly(1, x, y)._gen_to_level(-1) == 1
