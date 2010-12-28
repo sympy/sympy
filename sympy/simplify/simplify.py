@@ -11,9 +11,8 @@ from sympy.utilities import all, any, flatten
 from sympy.functions import gamma, exp, sqrt, log
 
 from sympy.simplify.cse_main import cse
-from sympy.simplify.rationalsimplify import together
 
-from sympy.polys import Poly, reduced, cancel, factor, ComputationFailed
+from sympy.polys import Poly, together, reduced, cancel, factor, ComputationFailed
 
 import sympy.mpmath as mpmath
 
