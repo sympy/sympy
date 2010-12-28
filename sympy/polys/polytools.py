@@ -3863,15 +3863,35 @@ def gcd_list(F, *gens, **args):
     -1 + x
 
     """
-    options.allowed_flags(args, ['polys'])
+    if not gens and not args:
+        if not F:
+            return S.Zero
+        else:
+            F = sympify(F)
 
-    if not F:
-        raise ValueError('expected non-empty iterable container, got %s' % F)
+            if all(f.is_Number for f in F):
+                result, numbers = F[0], F[1:]
+
+                for number in numbers:
+                    result = result.gcd(number)
+
+                    if result is S.One:
+                        break
+
+                return result
+
+    options.allowed_flags(args, ['polys'])
 
     try:
         polys, opt = parallel_poly_from_expr(F, *gens, **args)
     except PolificationFailed, exc:
         raise ComputationFailed('gcd_list', len(F), exc)
+
+    if not polys:
+        if not opt.polys:
+            return S.Zero
+        else:
+            return Poly(0, opt=opt)
 
     result, polys = polys[0], polys[1:]
 
@@ -3901,7 +3921,10 @@ def gcd(f, g=None, *gens, **args):
 
     """
     if hasattr(f, '__iter__'):
-        return gcd_list(f, *((g,) + gens), **args)
+        if g is not None:
+            gens = (g,) + gens
+
+        return gcd_list(f, *gens, **args)
 
     options.allowed_flags(args, ['polys'])
 
