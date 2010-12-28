@@ -636,7 +636,7 @@ def test_Poly_reorder():
 
 def test_Poly_ltrim():
     f = Poly(y**2 + y*z**2, x, y, z).ltrim(y)
-    assert f.as_basic() == y**2 + y*z**2 and f.gens == (y, z)
+    assert f.as_expr() == y**2 + y*z**2 and f.gens == (y, z)
 
     raises(PolynomialError, "Poly(x*y**2 + y**2, x, y).ltrim(y)")
 
@@ -767,17 +767,29 @@ def test_Poly_as_dict():
 
     assert Poly(3*x**2*y*z**3+4*x*y+5*x*z).as_dict() == {(2,1,3): 3, (1,1,0): 4, (1,0,1): 5}
 
-def test_Poly_as_basic():
-    assert Poly(0, x).as_basic() == 0
-    assert Poly(0, x, y, z).as_basic() == 0
+def test_Poly_as_expr():
+    assert Poly(0, x).as_expr() == 0
+    assert Poly(0, x, y, z).as_expr() == 0
 
-    assert Poly(1, x).as_basic() == 1
-    assert Poly(1, x, y, z).as_basic() == 1
+    assert Poly(1, x).as_expr() == 1
+    assert Poly(1, x, y, z).as_expr() == 1
 
-    assert Poly(x**2+3, x).as_basic() == x**2+3
-    assert Poly(x**2+3, x, y, z).as_basic() == x**2+3
+    assert Poly(x**2+3, x).as_expr() == x**2 + 3
+    assert Poly(x**2+3, x, y, z).as_expr() == x**2 + 3
 
-    assert Poly(3*x**2*y*z**3+4*x*y+5*x*z).as_basic() == 3*x**2*y*z**3+4*x*y+5*x*z
+    assert Poly(3*x**2*y*z**3+4*x*y+5*x*z).as_expr() == 3*x**2*y*z**3 + 4*x*y + 5*x*z
+
+    f = Poly(x**2 + 2*x*y**2 - y, x, y)
+
+    assert f.as_expr() == -y + x**2 + 2*x*y**2
+
+    assert f.as_expr({x: 5}) == 25 - y + 10*y**2
+    assert f.as_expr({y: 6}) == -6 + 72*x + x**2
+
+    assert f.as_expr({x: 5, y: 6}) == 379
+    assert f.as_expr(5, 6) == 379
+
+    raises(GeneratorsError, "f.as_expr({z: 7})")
 
 def test_Poly_lift():
     assert Poly(x**4 - I*x + 17*I, x, gaussian=True).lift() == \
