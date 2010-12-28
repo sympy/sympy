@@ -25,6 +25,10 @@ from sympy.polys.polyutils import (
     _parallel_dict_from_expr,
 )
 
+from sympy.polys.rationaltools import (
+    together,
+)
+
 from sympy.polys.rootisolation import (
     dup_isolate_real_roots_list,
 )
@@ -68,8 +72,6 @@ from sympy.polys.domains import FF, QQ
 from sympy.polys.constructor import construct_domain
 
 from sympy.polys import polyoptions as options
-
-from sympy.core.exprtools import _gcd_terms
 
 class Poly(Basic):
     """Generic class for representing polynomials in SymPy. """
@@ -4466,25 +4468,24 @@ def _formal_factor(f, opt):
 
     return _keep_coeff(coeff, factors)
 
+def _expr_factor(f, opt):
+    """Helper function for :func:`_symbolic_factor`. """
+    if f.is_Atom:
+        return f
+    elif f.is_Add:
+        return _formal_factor(f, opt)
+    else:
+        return f.__class__(*[ _expr_factor(g, opt) for g in f.args ])
+
 def _symbolic_factor(f, opt):
     """Helper function for :func:`_factor`. """
     if isinstance(f, Basic):
         if f.is_Atom:
             return f
-        elif f.is_Add:
-            cont, numer, denom = _gcd_terms(f)
-
-            cont = _symbolic_factor(cont, opt)
-            numer = _formal_factor(numer, opt)
-            denom = _formal_factor(denom, opt)
-
-            return cont*(numer/denom)
         elif f.is_Poly:
             return _formal_factor(f, opt)
-        elif f.is_Pow:
-            return _symbolic_factor(f.base, opt)**f.exp
-        elif f.is_Mul or f.is_Relational:
-            return f.__class__(*[ _symbolic_factor(g, opt) for g in f.args ])
+        else:
+            return _expr_factor(together(f), opt)
     elif hasattr(f, '__iter__'):
         return f.__class__([ _symbolic_factor(g, opt) for g in f ])
 
