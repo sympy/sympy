@@ -1,8 +1,8 @@
 """Implementation of RootOf class and related tools. """
 
-from sympy import Expr, Integer, Real, I, Add, Lambda
+from sympy import S, Expr, Integer, Real, I, Add, Lambda
 
-from sympy.polys.polytools import Poly
+from sympy.polys.polytools import Poly, gcd_list
 
 from sympy.polys.rootisolation import (
     dup_isolate_complex_roots_sqf,
@@ -16,6 +16,8 @@ from sympy.polys.polyroots import (
 from sympy.polys.polyerrors import (
     PolynomialError, DomainError,
 )
+
+from sympy.ntheory import divisors
 
 from sympy.mpmath import (
     mp, mpf, mpc, mpi, findroot,
@@ -262,6 +264,103 @@ def _rootof_data(poly, indices):
                 if index >= real_count:
                     yield _rootof_complexes_index(complexes, index-real_count)
 
+def _rootof_preprocess(poly):
+    """Try to get rid of symbolic coefficients from ``poly``. """
+    _, poly = poly.clear_denoms(convert=True)
+    _, poly = poly.primitive()
+
+    dom = poly.get_domain()
+    coeff = S.One
+
+    if dom.is_Poly:
+        poly = poly.inject()
+
+        strips = zip(*poly.monoms())
+        gens = poly.gens[1:]
+
+        base, strips = strips[0], strips[1:]
+
+        for gen, strip in zip(gens, strips):
+            reverse = False
+
+            if strip[0] < strip[-1]:
+                strip = reversed(strip)
+                reverse = True
+
+            ratio = None
+
+            for a, b in zip(base, strip):
+                if not a and not b:
+                    continue
+                elif not a or not b:
+                    break
+                elif b % a != 0:
+                    break
+                else:
+                    _ratio = b // a
+
+                    if ratio is None:
+                        ratio = _ratio
+                    elif ratio != _ratio:
+                        break
+            else:
+                if reverse:
+                    ratio = -ratio
+
+                coeff *= gen**(-ratio)
+                poly = poly.eval(gen, 1)
+
+        if poly.is_multivariate:
+            raise DomainError("RootOf failed to integerize the input polynomial")
+
+        def integer_basis(poly):
+            monoms, coeffs = zip(*poly.terms())
+
+            monoms, = zip(*monoms)
+            coeffs = map(abs, coeffs)
+
+            if coeffs[0] < coeffs[-1]:
+                coeffs = list(reversed(coeffs))
+            else:
+                return None
+
+            monoms = monoms[:-1]
+            coeffs = coeffs[:-1]
+
+            divs = reversed(divisors(gcd_list(coeffs))[1:])
+
+            if not divs:
+                return None
+
+            div = divs.next()
+
+            while True:
+                for monom, coeff in zip(monoms, coeffs):
+                    if coeff % div**monom != 0:
+                        try:
+                            div = divs.next()
+                        except StopIteration:
+                            return None
+                        else:
+                            break
+                else:
+                    return div
+
+        basis = integer_basis(poly)
+
+        if basis is not None:
+            n = poly.degree()
+
+            def func((k,), coeff):
+                return coeff//basis**(n-k)
+
+            poly = poly.termwise(func)
+            coeff *= basis
+    elif not dom.is_ZZ:
+        raise DomainError("RootOf is not supported over %s" % dom)
+
+    return coeff, poly
+
 class RootOf(Expr):
     """Represents ``k``-th root of a univariate polynomial. """
 
@@ -293,7 +392,9 @@ class RootOf(Expr):
         else:
             iterable = True
 
-        if not poly.get_domain().is_Exact:
+        dom = poly.get_domain()
+
+        if not dom.is_Exact:
             poly = poly.to_exact()
 
         roots = roots_trivial(poly, radicals)
@@ -304,12 +405,7 @@ class RootOf(Expr):
             else:
                 result = [ root for root in roots if root.is_real ]
         else:
-            dom = poly.get_domain()
-
-            if dom.is_QQ:
-                _, poly = poly.clear_denoms(convert=True)
-            elif not dom.is_ZZ:
-                raise DomainError("RootOf is not supported over %s" % dom)
+            coeff, poly = _rootof_preprocess(poly)
 
             result = []
 
@@ -319,9 +415,9 @@ class RootOf(Expr):
                 roots = roots_trivial(poly, radicals)
 
                 if roots is not None:
-                    result.append(roots[index])
+                    result.append(coeff*roots[index])
                 else:
-                    result.append(cls._inner_new(poly, index, pointer, conjugate))
+                    result.append(coeff*cls._inner_new(poly, index, pointer, conjugate))
 
         if not iterable:
             return result[0]

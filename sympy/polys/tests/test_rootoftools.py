@@ -3,7 +3,7 @@
 from sympy.polys.polytools import Poly
 
 from sympy.polys.rootoftools import (
-    RootOf, RootSum,
+    RootOf, RootSum, _rootof_preprocess,
 )
 
 from sympy.polys.polyerrors import (
@@ -13,7 +13,7 @@ from sympy.polys.polyerrors import (
 )
 
 from sympy import (
-    sqrt, I, Rational, Real, Lambda,
+    symbols, sqrt, I, Rational, Real, Lambda,
 )
 
 from sympy.utilities.pytest import raises
@@ -141,6 +141,25 @@ def test_RootOf_evalf():
 
     assert re.epsilon_eq( Real("0.60670583138111481707"))
     assert im.epsilon_eq(-Real("1.45061224918844152650"))
+
+def test_RootOf_preprocessing():
+    E, F, J, L = symbols("E,F,J,L")
+
+    f = -21601054687500000000*E**8*J**8/L**16 + \
+         508232812500000000*F*x*E**7*J**7/L**14 - \
+         4269543750000000*E**6*F**2*J**6*x**2/L**12 + \
+         16194716250000*E**5*F**3*J**5*x**3/L**10 - \
+         27633173750*E**4*F**4*J**4*x**4/L**8 + \
+         14840215*E**3*F**5*J**3*x**5/L**6 + \
+         54794*E**2*F**6*J**2*x**6/(5*L**4) - \
+         1153*E*J*F**7*x**7/(80*L**2) + \
+         633*F**8*x**8/160000
+
+    coeff, poly = _rootof_preprocess(Poly(f, x))
+
+    assert coeff == 20*E*J/(F*L**2)
+    assert poly == 633*x**8 - 115300*x**7 + 4383520*x**6 + 296804300*x**5 - 27633173750*x**4 + \
+        809735812500*x**3 - 10673859375000*x**2 + 63529101562500*x - 135006591796875
 
 def test_RootSum___new__():
     f = x**3 + x + 3
