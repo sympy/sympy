@@ -731,6 +731,41 @@ class Poly(Basic):
         """
         return [ (m, f.rep.dom.to_sympy(c)) for m, c in f.rep.all_terms() ]
 
+    def termwise(f, func, *gens, **args):
+        """
+        Apply a function to all terms of ``f``.
+
+        Example
+        =======
+
+        >>> from sympy import Poly
+        >>> from sympy.abc import x
+
+        >>> def func((k,), coeff):
+        ...     return coeff//10**(2-k)
+
+        >>> Poly(x**2 + 20*x + 400).termwise(func)
+        Poly(x**2 + 2*x + 4, x, domain='ZZ')
+
+        """
+        terms = {}
+
+        for monom, coeff in f.terms():
+            result = func(monom, coeff)
+
+            if isinstance(result, tuple):
+                monom, coeff = result
+            else:
+                coeff = result
+
+            if coeff:
+                if monom not in terms:
+                    terms[monom] = coeff
+                else:
+                    raise PolynomialError("%s monomial was generated twice" % monom)
+
+        return f.from_dict(terms, *(gens or f.gens), **args)
+
     def length(f):
         """
         Returns the number of non--zero terms in ``f``.
