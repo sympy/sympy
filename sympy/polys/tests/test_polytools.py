@@ -926,6 +926,13 @@ def test_Poly_LM():
     assert LM(x*y**7 + 2*x**2*y**3, order='lex') == x**2*y**3
     assert LM(x*y**7 + 2*x**2*y**3, order='grlex') == x*y**7
 
+def test_Poly_LM_custom_order():
+    f = Poly(x**2*y**3*z + x**2*y*z**3 + x*y*z + 1)
+    rev_lex = lambda monom: tuple(reversed(monom))
+
+    assert f.LM(order='lex') == (2, 3, 1)
+    assert f.LM(order=rev_lex) == (2, 1, 3)
+
 def test_Poly_EM():
     assert Poly(0, x).EM() == (0,)
     assert Poly(1, x).EM() == (0,)
