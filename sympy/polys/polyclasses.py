@@ -48,6 +48,7 @@ from sympy.polys.densebasic import (
     dup_from_dict, dmp_from_dict,
     dup_to_raw_dict, dmp_to_dict,
     dup_deflate, dmp_deflate,
+    dmp_inject,
     dup_terms_gcd, dmp_terms_gcd,
     dmp_list_terms,
     dmp_slice_in)
@@ -322,6 +323,11 @@ class DMP(object):
         """Reduce degree of `f` by mapping `x_i**m` to `y_i`. """
         J, F = dmp_deflate(f.rep, f.lev, f.dom)
         return J, f.per(F)
+
+    def inject(f, front=False):
+        """Inject ground domain generators into ``f``. """
+        F, lev = dmp_inject(f.rep, f.lev, f.dom, front=front)
+        return f.__class__(F, f.dom.dom, lev)
 
     def terms_gcd(f):
         """Remove GCD of terms from the polynomial `f`. """

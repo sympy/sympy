@@ -853,6 +853,43 @@ class Poly(Basic):
 
         return J, f.per(result)
 
+    def inject(f, front=False):
+        """
+        Inject ground domain generators into ``f``.
+
+        Example
+        =======
+
+        >>> from sympy import Poly
+        >>> from sympy.abc import x, y
+
+        >>> f = Poly(x**2*y + x*y**3 + x*y + 1, x)
+
+        >>> f.inject()
+        Poly(x**2*y + x*y**3 + x*y + 1, x, y, domain='ZZ')
+        >>> f.inject(front=True)
+        Poly(y**3*x + y*x**2 + y*x + 1, y, x, domain='ZZ')
+
+        """
+        dom = f.rep.dom
+
+        if dom.is_Numerical:
+            return f
+        elif not dom.is_Poly:
+            raise DomainError("can't inject generators over %s" % dom)
+
+        if hasattr(f.rep, 'inject'):
+            result = f.rep.inject(front=front)
+        else: # pragma: no cover
+            raise OperationNotSupported(f, 'inject')
+
+        if front:
+            gens = dom.gens + f.gens
+        else:
+            gens = f.gens + dom.gens
+
+        return f.new(result, *gens)
+
     def terms_gcd(f):
         """
         Remove GCD of terms from the polynomial ``f``.

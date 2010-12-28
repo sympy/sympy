@@ -1516,7 +1516,6 @@ def dmp_inject(f, u, K, front=False):
             else:
                 h[f_monom + g_monom] = c
 
-
     w = u + v + 1
 
     return dmp_from_dict(h, w, K.dom), w
