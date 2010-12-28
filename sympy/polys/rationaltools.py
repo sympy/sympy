@@ -1,9 +1,9 @@
-"""Tools for simplification of rational expressions. """
+"""Tools for manipulation of rational expressions. """
 
 from sympy.core import Basic, Add, sympify
 from sympy.core.exprtools import gcd_terms
 
-def together(expr, deep=False, symbolic=False):
+def together(expr, deep=False):
     """
     Denest and combine rational expressions using symbolic methods.
 
@@ -80,8 +80,4 @@ def together(expr, deep=False, symbolic=False):
 
         return expr
 
-    if not symbolic:
-        return _together(sympify(expr))
-    else:
-        from sympy.simplify.simplify import powsimp, separate
-        return powsimp(_together(separate(expr)), deep=True, combine='exp')
+    return _together(sympify(expr))

@@ -31,6 +31,10 @@ from polyfuncs import (
     symmetrize, horner, interpolate,
 )
 
+from rationaltools import (
+    together,
+)
+
 from polyerrors import (
     OperationNotSupported,
     ExactQuotientFailed,

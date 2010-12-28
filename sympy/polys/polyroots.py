@@ -8,12 +8,11 @@ from sympy.core.numbers import Rational
 from sympy.ntheory import divisors
 from sympy.functions import exp, sqrt, re, im
 
-from sympy.polys import (
-    Poly, cancel, factor, PolynomialError, GeneratorsNeeded,
-)
+from sympy.polys.polytools import Poly, cancel, factor
+from sympy.polys.polyerrors import PolynomialError, GeneratorsNeeded
+from sympy.polys.rationaltools import together
 
-from sympy.simplify import together, simplify
-
+from sympy.simplify import simplify
 from sympy.utilities import all
 
 def roots_linear(f):

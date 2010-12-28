@@ -1206,11 +1206,6 @@ class Expr(Basic, EvalfMixin):
         from sympy.simplify import simplify
         return simplify(self)
 
-    def together(self, *args, **kwargs):
-        """See the together function in sympy.simplify"""
-        from sympy.simplify import together
-        return together(self, *args, **kwargs)
-
     def nsimplify(self, constants=[], tolerance=None, full=False):
         """See the nsimplify function in sympy.simplify"""
         from sympy.simplify import nsimplify
@@ -1226,10 +1221,15 @@ class Expr(Basic, EvalfMixin):
         from sympy.simplify import collect
         return collect(self, syms, evaluate, exact)
 
+    def together(self, *args, **kwargs):
+        """See the together function in sympy.polys"""
+        from sympy.polys import together
+        return together(self, *args, **kwargs)
+
     def apart(self, x=None, **args):
-        """See the apart function in sympy.simplify"""
+        """See the apart function in sympy.polys"""
         from sympy.polys import apart
-        return apart(self, x=None, **args)
+        return apart(self, x, **args)
 
     def ratsimp(self):
         """See the ratsimp function in sympy.simplify"""

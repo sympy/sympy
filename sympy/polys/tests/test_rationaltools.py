@@ -1,11 +1,9 @@
-"""Tests for tools for simplification of rational expressions. """
+"""Tests for tools for manipulation of rational expressions. """
 
-from sympy.simplify.rationalsimplify import together
+from sympy.polys.rationaltools import together
 
 from sympy import S, symbols, Rational, sin, exp, Eq, Integral
 from sympy.abc import x, y, z
-
-from sympy.utilities.pytest import XFAIL
 
 A, B = symbols('A,B', commutative=False)
 
@@ -49,14 +47,7 @@ def test_together():
     assert together(1/exp(x) + 1/(x*exp(x))) == (1+x)/(x*exp(x))
     assert together(1/exp(2*x) + 1/(x*exp(3*x))) == (1+exp(x)*x)/(x*exp(3*x))
 
-    assert together(1/x**y + 1/x**(y-1)) != x**(-y)*(1 + x)
-    assert together(1/x**y + 1/x**(y-1), symbolic=True) == x**(-y)*(1 + x)
-
     assert together(Integral(1/x + 1/y, x)) == Integral((x + y)/(x*y), x)
     assert together(Eq(1/x + 1/y, 1 + 1/z)) == Eq((x + y)/(x*y), (z + 1)/z)
 
     assert together(1/(A*B) + 1/(B*A)) == (A*B + B*A)/(B*A**2*B)
-
-@XFAIL
-def test_together_symbolic():
-    assert together(1/x**(2*y) + 1/x**(y-z), symbolic=True) == x**(-2*y)*(1 + x**(y + z))
