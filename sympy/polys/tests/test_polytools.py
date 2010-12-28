@@ -983,17 +983,21 @@ def test_Poly_l1_norm():
     assert Poly( 1, x).l1_norm() == 1
 
 def test_Poly_clear_denoms():
-    coeff, poly = Poly(x + 2).clear_denoms()
+    coeff, poly = Poly(x + 2, x).clear_denoms()
 
-    assert coeff == 1 and poly == Poly(x + 2, domain='ZZ') and poly.get_domain() == ZZ
+    assert coeff == 1 and poly == Poly(x + 2, x, domain='ZZ') and poly.get_domain() == ZZ
 
-    coeff, poly = Poly(x/2 + 1).clear_denoms()
+    coeff, poly = Poly(x/2 + 1, x).clear_denoms()
 
-    assert coeff == 2 and poly == Poly(x + 2, domain='QQ') and poly.get_domain() == QQ
+    assert coeff == 2 and poly == Poly(x + 2, x, domain='QQ') and poly.get_domain() == QQ
 
-    coeff, poly = Poly(x/2 + 1).clear_denoms(convert=True)
+    coeff, poly = Poly(x/2 + 1, x).clear_denoms(convert=True)
 
-    assert coeff == 2 and poly == Poly(x + 2, domain='ZZ') and poly.get_domain() == ZZ
+    assert coeff == 2 and poly == Poly(x + 2, x, domain='ZZ') and poly.get_domain() == ZZ
+
+    coeff, poly = Poly(x/y + 1, x).clear_denoms(convert=True)
+
+    assert coeff == y and poly == Poly(x + y, x, domain='ZZ[y]') and poly.get_domain() == ZZ[y]
 
 def test_Poly_integrate():
     assert Poly(x + 1).integrate() == Poly(x**2/2 + x)

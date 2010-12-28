@@ -1677,12 +1677,17 @@ class Poly(Basic):
         (6, Poly(3*x + 2, x, domain='ZZ'))
 
         """
+        if not f.rep.dom.has_Field:
+            return S.One, f
+
+        dom = f.rep.dom.get_ring()
+
         if hasattr(f.rep, 'clear_denoms'):
             coeff, result = f.rep.clear_denoms()
         else: # pragma: no cover
             raise OperationNotSupported(f, 'clear_denoms')
 
-        coeff, f = f.rep.dom.to_sympy(coeff), f.per(result)
+        coeff, f = dom.to_sympy(coeff), f.per(result)
 
         if not convert:
             return coeff, f
