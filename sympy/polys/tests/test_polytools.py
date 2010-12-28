@@ -1312,7 +1312,17 @@ def test_gcd_list():
     assert gcd_list(F) == x - 1
     assert gcd_list(F, polys=True) == Poly(x - 1)
 
-    raises(ValueError, "gcd_list([])")
+    assert gcd_list([]) == 0
+    assert gcd_list([1, 2]) == 1
+    assert gcd_list([4, 6, 8]) == 2
+
+    gcd = gcd_list([], x)
+    assert gcd.is_Number and gcd.is_zero
+
+    gcd = gcd_list([], x, polys=True)
+    assert gcd.is_Poly and gcd.is_zero
+
+    raises(ComputationFailed, "gcd_list([], polys=True)")
 
 def test_lcm_list():
     F = [x**3 - 1, x**2 - 1, x**2 - 3*x + 2]
