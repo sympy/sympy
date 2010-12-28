@@ -781,11 +781,31 @@ class Poly(Basic):
         >>> from sympy import Poly
         >>> from sympy.abc import x, y
 
-        >>> Poly(x**2 + 2*x*y**2 - y, x, y).as_expr()
+        >>> f = Poly(x**2 + 2*x*y**2 - y, x, y)
+
+        >>> f.as_expr()
         -y + x**2 + 2*x*y**2
+        >>> f.as_expr({x: 5})
+        25 - y + 10*y**2
+        >>> f.as_expr(5, 6)
+        379
 
         """
-        return basic_from_dict(f.rep.to_sympy_dict(), *(gens or f.gens))
+        if not gens:
+            gens = f.gens
+        elif len(gens) == 1 and isinstance(gens[0], dict):
+            mapping = gens[0]
+            gens = list(f.gens)
+
+            for gen, value in mapping.iteritems():
+                try:
+                    index = gens.index(gen)
+                except ValueError:
+                    raise GeneratorsError("%s doesn't have %s as generator" % (f, gen))
+                else:
+                    gens[index] = value
+
+        return basic_from_dict(f.rep.to_sympy_dict(), *gens)
 
     as_basic = as_expr
 
