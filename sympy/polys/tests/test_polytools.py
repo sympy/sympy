@@ -244,8 +244,7 @@ def test_Poly__new__():
 
     raises(CoercionFailed, "Poly(3*x**2/5 + 2*x/5 + 1, domain='ZZ')")
     assert Poly(3*x**2/5 + 2*x/5 + 1, domain='QQ').all_coeffs() == [S(3)/5, S(2)/5, 1]
-    assert _eq(Poly(3*x**2/5 + 2*x/5 + 1, domain='RR').all_coeffs(),
-            [0.6, 0.4, 1.0])
+    assert _eq(Poly(3*x**2/5 + 2*x/5 + 1, domain='RR').all_coeffs(), [0.6, 0.4, 1.0])
 
     assert Poly(3.0*x**2 + 2.0*x + 1, domain='ZZ').all_coeffs() == [3, 2, 1]
     assert Poly(3.0*x**2 + 2.0*x + 1, domain='QQ').all_coeffs() == [3, 2, 1]

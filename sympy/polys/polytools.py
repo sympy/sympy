@@ -2737,6 +2737,9 @@ class Poly(Basic):
         else: # pragma: no cover
             raise OperationNotSupported(f, 'cancel')
 
+        if dom.has_assoc_Ring:
+            dom = dom.get_ring()
+
         cp = dom.to_sympy(cp)
         cq = dom.to_sympy(cq)
 

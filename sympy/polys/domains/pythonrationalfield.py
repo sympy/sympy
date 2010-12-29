@@ -1,4 +1,4 @@
-"""Implementaton of :class:`PythonRationalField` class. """
+"""Implementation of :class:`PythonRationalField` class. """
 
 from sympy.polys.domains.rationalfield import RationalField
 
@@ -9,7 +9,7 @@ from sympy.polys.domains.groundtypes import SymPyRationalType
 from sympy.polys.polyerrors import CoercionFailed
 
 class PythonRationalField(RationalField):
-    """Rational field based on Python Fraction class. """
+    """Rational field based on Python rational number type. """
 
     dtype = PythonRationalType
     zero  = dtype(0)
