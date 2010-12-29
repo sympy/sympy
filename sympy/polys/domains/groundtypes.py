@@ -2,13 +2,6 @@
 
 import warnings
 
-HAS_FRACTION = True
-
-try:
-    import fractions
-except ImportError:
-    HAS_FRACTION = False
-
 HAS_GMPY = True
 
 try:
@@ -28,14 +21,7 @@ from __builtin__ import (
     complex as PythonComplexType,
 )
 
-if HAS_FRACTION:
-    from fractions import (
-        Fraction as PythonRationalType,
-    )
-else:
-    class PythonRationalType(object):
-        def __init__(self, obj):
-            pass
+from pythonrationaltype import PythonRationalType
 
 from sympy.core.numbers import (
     ifactorial as python_factorial,
