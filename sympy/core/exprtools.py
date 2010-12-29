@@ -4,6 +4,7 @@ from sympy.core.add import Add
 from sympy.core.mul import Mul
 from sympy.core.power import Pow
 from sympy.core.basic import Basic
+from sympy.core.sympify import sympify
 from sympy.core.numbers import Rational
 from sympy.core.singleton import S
 from sympy.core.coreerrors import NonCommutativeExpression
@@ -324,6 +325,12 @@ def _gcd_terms(terms):
     if isinstance(terms, Basic):
         terms = Add.make_args(terms)
 
+    if len(terms) <= 1:
+        if not terms:
+            return S.Zero, S.Zero, S.One
+        else:
+            return terms[0], S.One, S.One
+
     terms = map(Term, terms)
     cont = terms[0]
 
@@ -355,6 +362,18 @@ def _gcd_terms(terms):
     return cont, numer, denom
 
 def gcd_terms(terms):
-    """Compute the GCD of ``terms`` and put them together. """
-    cont, numer, denom = _gcd_terms(terms)
+    """
+    Compute the GCD of ``terms`` and put them together.
+
+    Example
+    =======
+
+    >>> from sympy.core import gcd_terms
+    >>> from sympy.abc import x, y
+
+    >>> gcd_terms((x + 1)**2*y + (x + 1)*y**2)
+    y*(1 + x)*(1 + x + y)
+
+    """
+    cont, numer, denom = _gcd_terms(sympify(terms))
     return cont*(numer/denom)
