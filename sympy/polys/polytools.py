@@ -3924,7 +3924,7 @@ def cofactors(f, g, *gens, **args):
     else:
         return h, cff, cfg
 
-def gcd_list(F, *gens, **args):
+def gcd_list(seq, *gens, **args):
     """
     Compute GCD of a list of polynomials.
 
@@ -3939,28 +3939,28 @@ def gcd_list(F, *gens, **args):
 
     """
     if not gens and not args:
-        if not F:
+        if not seq:
             return S.Zero
-        else:
-            F = sympify(F)
 
-            if all(f.is_Number for f in F):
-                result, numbers = F[0], F[1:]
+        seq = sympify(seq)
 
-                for number in numbers:
-                    result = result.gcd(number)
+        if all(s.is_Number for s in seq):
+            result, numbers = seq[0], seq[1:]
 
-                    if result is S.One:
-                        break
+            for number in numbers:
+                result = result.gcd(number)
 
-                return result
+                if result is S.One:
+                    break
+
+            return result
 
     options.allowed_flags(args, ['polys'])
 
     try:
-        polys, opt = parallel_poly_from_expr(F, *gens, **args)
+        polys, opt = parallel_poly_from_expr(seq, *gens, **args)
     except PolificationFailed, exc:
-        raise ComputationFailed('gcd_list', len(F), exc)
+        raise ComputationFailed('gcd_list', len(seq), exc)
 
     if not polys:
         if not opt.polys:
@@ -4023,7 +4023,7 @@ def gcd(f, g=None, *gens, **args):
     else:
         return result
 
-def lcm_list(F, *gens, **args):
+def lcm_list(seq, *gens, **args):
     """
     Compute LCM of a list of polynomials.
 
@@ -4037,15 +4037,32 @@ def lcm_list(F, *gens, **args):
     2 + x - x**2 - 2*x**3 - x**4 + x**5
 
     """
+    if not gens and not args:
+        if not seq:
+            return S.One
+
+        seq = sympify(seq)
+
+        if all(s.is_Number for s in seq):
+            result, numbers = seq[0], seq[1:]
+
+            for number in numbers:
+                result = result.lcm(number)
+
+            return result
+
     options.allowed_flags(args, ['polys'])
 
-    if not F:
-        raise ValueError('expected non-empty iterable container, got %s' % F)
-
     try:
-        polys, opt = parallel_poly_from_expr(F, *gens, **args)
+        polys, opt = parallel_poly_from_expr(seq, *gens, **args)
     except PolificationFailed, exc:
-        raise ComputationFailed('lcm_list', len(F), exc)
+        raise ComputationFailed('lcm_list', len(seq), exc)
+
+    if not polys:
+        if not opt.polys:
+            return S.One
+        else:
+            return Poly(1, opt=opt)
 
     result, polys = polys[0], polys[1:]
 
@@ -4072,7 +4089,10 @@ def lcm(f, g=None, *gens, **args):
 
     """
     if hasattr(f, '__iter__'):
-        return lcm_list(f, *((g,) + gens), **args)
+        if g is not None:
+            gens = (g,) + gens
+
+        return lcm_list(f, *gens, **args)
 
     options.allowed_flags(args, ['polys'])
 
