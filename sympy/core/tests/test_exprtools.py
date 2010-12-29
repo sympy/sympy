@@ -76,3 +76,7 @@ def test_gcd_terms():
 
     assert gcd_terms(f) == (S(6)/5)*((1 + x)*(5 + x)/(1 + x**2))
     assert gcd_terms(Add.make_args(f)) == (S(6)/5)*((1 + x)*(5 + x)/(1 + x**2))
+
+    assert gcd_terms(0) == 0
+    assert gcd_terms(1) == 1
+    assert gcd_terms(x) == x
