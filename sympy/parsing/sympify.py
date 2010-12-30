@@ -3,7 +3,7 @@
 from types import NoneType
 from inspect import getmro
 
-from core import BasicMeta
+from sympy.core.core import BasicMeta
 
 class SympifyError(ValueError):
     def __init__(self, expr, base_exc=None):

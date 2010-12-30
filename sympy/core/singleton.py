@@ -1,8 +1,9 @@
 """Singleton mechanism"""
 
 from core import BasicMeta, C
-from sympify import sympify
 from basic import Basic
+
+from sympy.parsing.sympify import sympify
 
 class SingletonMeta(BasicMeta):
     """Metaclass for all singletons

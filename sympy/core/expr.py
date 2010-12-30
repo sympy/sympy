@@ -1,9 +1,9 @@
-
 from basic import Basic, S, C
 from evalf import EvalfMixin
 from decorators import _sympifyit, call_highest_priority
 from cache import cacheit
 
+from sympy.parsing.sympify import _sympify, sympify, SympifyError
 
 def call_other(self, other):
     if hasattr(other, '_op_priority'):
@@ -980,5 +980,4 @@ from add import Add
 from relational import Inequality, StrictInequality
 from function import FunctionClass, Derivative
 from numbers import Rational, Integer
-from sympify import _sympify, sympify, SympifyError
 from symbol import Wild

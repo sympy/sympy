@@ -1,5 +1,5 @@
 from sympy.core import Basic, C, Rational, Pow, Symbol, Wild, oo
-from sympy.core import sympify
+from sympy.parsing.sympify import sympify
 #from sympy.specfun import rising_factorial, factorial, factorial_simplify
 #from sympy.specfun.factorials import unfac
 #from sympy.specfun import bernoulli

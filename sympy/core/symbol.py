@@ -1,8 +1,8 @@
-from sympify import sympify
 from basic import Atom, S, C
 from expr import Expr
 from cache import cacheit
 from sympy.logic.boolalg import Boolean
+from sympy.parsing.sympify import sympify
 
 import re
 

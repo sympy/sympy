@@ -1,5 +1,7 @@
-from sympy.core import Basic, S, C, sympify, Expr, oo, Rational, Symbol
+from sympy.core import Basic, S, C, Expr, oo, Rational, Symbol
 from sympy.core.cache import cacheit
+
+from sympy.parsing.sympify import sympify
 
 def solve4linearsymbol(eqn, rhs, symbols = None):
     """

@@ -2,7 +2,7 @@
 from sympy.logic.boolalg import And, Or, Not, Implies, Equivalent, \
     conjuncts, to_cnf
 from sympy.core.basic import C
-from sympy.core.sympify import sympify
+from sympy.parsing.sympify import sympify
 
 def literal_symbol(literal):
     """The symbol in this literal (without the negation).

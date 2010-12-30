@@ -1,6 +1,8 @@
 """Classes defining properties of ground domains, e.g. ZZ, QQ, ZZ[x] ... """
 
-from sympy.core import S, Basic, sympify
+from sympy.core import S, Basic
+
+from sympy.parsing.sympify import sympify
 
 from sympy.polys.polyerrors import (
     ExactQuotientFailed,

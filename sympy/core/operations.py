@@ -1,7 +1,8 @@
 from basic import S, C
 from expr import Expr
-from sympify import _sympify, sympify
 from cache import cacheit
+
+from sympy.parsing.sympify import _sympify, sympify
 from sympy.utilities.iterables import all
 
 # from add import Add   /cyclic/

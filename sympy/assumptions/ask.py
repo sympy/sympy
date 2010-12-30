@@ -1,7 +1,7 @@
 """Module for querying SymPy objects about assumptions."""
 import inspect
 import copy
-from sympy.core import sympify
+from sympy.parsing.sympify import sympify
 from sympy.utilities.source import get_class
 from sympy.assumptions import global_assumptions, Assume, Predicate
 from sympy.assumptions.assume import eliminate_assume

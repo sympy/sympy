@@ -1,7 +1,7 @@
 from sympy import SYMPY_DEBUG
 
 from sympy.core import Basic, S, C, Add, Mul, Pow, Rational, Integer, \
-        Derivative, Wild, Symbol, sympify, expand, expand_mul, expand_func, \
+        Derivative, Wild, Symbol, expand, expand_mul, expand_func, \
         Function, Equality
 
 from sympy.core.numbers import igcd
@@ -9,6 +9,7 @@ from sympy.core.relational import Equality
 
 from sympy.utilities import all, any, flatten
 from sympy.functions import gamma, exp, sqrt, log
+from sympy.parsing.sympify import sympify
 
 from sympy.simplify.cse_main import cse
 

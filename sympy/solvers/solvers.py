@@ -13,10 +13,10 @@
 
 """
 
-from sympy.core.sympify import sympify
 from sympy.core import S, Mul, Add, Pow, Symbol, Wild, Equality
 from sympy.core.numbers import ilcm
 
+from sympy.parsing.sympify import sympify
 from sympy.functions import log, exp, LambertW
 from sympy.simplify import simplify, collect
 from sympy.matrices import Matrix, zeros

@@ -206,8 +206,8 @@ from sympy.core.function import Derivative, diff, expand_mul
 from sympy.core.multidimensional import vectorize
 from sympy.core.relational import Equality, Eq
 from sympy.core.symbol import Symbol, Wild
-from sympy.core.sympify import sympify
 
+from sympy.parsing.sympify import sympify
 from sympy.functions import cos, exp, im, log, re, sin, sign
 from sympy.matrices import wronskian
 from sympy.polys import RootsOf, discriminant, RootOf

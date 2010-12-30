@@ -1,4 +1,5 @@
-from sympy.core import sympify, Lambda, Symbol, Integer, Rational, oo, Real, pi
+from sympy.core import Lambda, Symbol, Integer, Rational, oo, Real, pi
+from sympy.parsing.sympify import sympify
 from sympy.functions import sqrt, exp, erf
 from sympy.printing import sstr
 import random

@@ -1,4 +1,5 @@
-from sympy.core import Expr, S, C, Symbol, Equality, Interval, sympify, Wild, Tuple
+from sympy.core import Expr, S, C, Symbol, Equality, Interval, Wild, Tuple
+from sympy.parsing.sympify import sympify
 from sympy.solvers import solve
 from sympy.utilities import flatten
 

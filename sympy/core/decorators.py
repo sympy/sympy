@@ -5,7 +5,7 @@ The purpose of this module is to expose decorators without any other
 dependencies, so that they can be easily imported anywhere in sympy/core.
 """
 
-from sympify import SympifyError, sympify
+from sympy.parsing.sympify import SympifyError, sympify
 
 def _sympifyit(arg, retval=None):
     """decorator to smartly _sympify function arguments

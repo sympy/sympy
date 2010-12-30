@@ -1,7 +1,8 @@
 from sympy.core.basic import S
 from sympy.core.symbol import Symbol
 from sympy.core.mul import Mul
-from sympy.core import sympify
+
+from sympy.parsing.sympify import sympify
 
 from sympy.polys import gcd, quo, roots, resultant
 

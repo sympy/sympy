@@ -1,5 +1,6 @@
-from sympy.core import S, Add, sympify, Expr, PoleError, Mul, oo
+from sympy.core import S, Add, Expr, PoleError, Mul, oo
 from gruntz import gruntz
+from sympy.parsing.sympify import sympify
 
 def limit(e, z, z0, dir="+"):
     """

@@ -1,6 +1,6 @@
 """Functions for generating interesting polynomials, e.g. for benchmarking. """
 
-from sympy.core import S, Add, Mul, Symbol, Rational, sympify
+from sympy.core import S, Add, Mul, Symbol, Rational
 
 from sympy.polys.polytools import Poly
 from sympy.polys.polyutils import _analyze_gens
@@ -23,6 +23,8 @@ from sympy.polys.factortools import (
 from sympy.polys.algebratools import ZZ
 
 from sympy.ntheory import nextprime
+
+from sympy.parsing.sympify import sympify
 
 from sympy.utilities import cythonized, subsets
 

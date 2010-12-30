@@ -39,6 +39,7 @@ from itertools import repeat
 from multidimensional import vectorize
 from sympy.utilities.decorator import deprecated
 from sympy.utilities import all
+from sympy.parsing.sympify import sympify
 
 from sympy import mpmath
 
@@ -1087,5 +1088,4 @@ def expand_complex(expr, deep=True):
     log=False, mul=False, power_exp=False, power_base=False, multinomial=False)
 
 from numbers import Rational, Integer
-from sympify import sympify
 from add    import Add

@@ -3,6 +3,8 @@ from operations import AssocOp
 from cache import cacheit
 from logic import fuzzy_not
 
+from sympy.parsing.sympify import sympify
+
 # internal marker to indicate:
 #   "there are still non-commutative objects -- don't forget to process them"
 class NC_Marker:
@@ -969,6 +971,5 @@ class Mul(AssocOp):
 from power import Pow
 from numbers import Real, Integer, Rational
 from function import FunctionClass
-from sympify import sympify
 from add import Add
 

@@ -4,7 +4,8 @@ from decorators import _sympifyit
 from assumptions import AssumeMeths, make__get_assumption
 from cache import cacheit
 from core import BasicMeta, BasicType, C
-from sympify import _sympify, sympify, SympifyError
+
+from sympy.parsing.sympify import _sympify, sympify, SympifyError
 
 class Basic(AssumeMeths):
     """

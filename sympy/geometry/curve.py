@@ -1,4 +1,4 @@
-from sympy.core import sympify
+from sympy.parsing.sympify import sympify
 from sympy.geometry.exceptions import GeometryError
 from entity import GeometryEntity
 

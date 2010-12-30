@@ -1,5 +1,6 @@
 from expr import Expr
-from sympify import _sympify
+
+from sympy.parsing.sympify import _sympify
 
 def Rel(a, b, op):
     """

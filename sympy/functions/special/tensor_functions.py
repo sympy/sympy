@@ -1,5 +1,7 @@
 from sympy.core.function import Function
-from sympy.core import sympify, S
+from sympy.core import S
+
+from sympy.parsing.sympify import sympify
 
 ###############################################################################
 ###################### Kronecker Delta, Levi-Civita etc. ######################

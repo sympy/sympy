@@ -3,7 +3,6 @@
 
 from basic import Basic, Atom, S, C
 from expr import Expr
-from sympify import sympify
 from symbol import Symbol, Wild, symbols, var
 from numbers import Number, Real, Rational, Integer, NumberSymbol,\
         RealNumber, igcd, ilcm, seterr

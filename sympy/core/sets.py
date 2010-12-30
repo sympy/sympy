@@ -1,8 +1,9 @@
 from basic import Basic
 from singleton import SingletonMeta, S
 from evalf import EvalfMixin
-from sympify import _sympify
 from sympy.mpmath import mpi, mpf
+
+from sympy.parsing.sympify import _sympify
 
 
 class Set(Basic):

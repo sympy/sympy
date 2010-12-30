@@ -1,6 +1,6 @@
 import warnings
-from sympy.core.sympify import sympify
 from sympy.core.relational import Relational
+from sympy.parsing.sympify import sympify
 
 def threaded(**flags):
     """Call a function on all elements of composite objects.

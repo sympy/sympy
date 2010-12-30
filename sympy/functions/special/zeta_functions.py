@@ -1,4 +1,6 @@
-from sympy.core import Function, S, C, sympify, pi
+from sympy.core import Function, S, C, pi
+
+from sympy.parsing.sympify import sympify
 
 ###############################################################################
 ###################### HURWITZ GENERALIZED ZETA FUNCTION ######################

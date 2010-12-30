@@ -1,7 +1,7 @@
 from math import pi
 
-from sympy.core import sympify
 from sympy.functions.elementary.trigonometric import sin, cos
+from sympy.parsing.sympify import sympify
 
 def fn(n, z):
     """

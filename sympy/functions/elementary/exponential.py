@@ -1,9 +1,11 @@
-from sympy.core import S, C, sympify, Wild
+from sympy.core import S, C, Wild
 from sympy.core.add import Add
 from sympy.core.function import Lambda, Function, expand_log
 from sympy.core.cache import cacheit
 from sympy.core.symbol import Wild
 from sympy.core.mul import Mul
+
+from sympy.parsing.sympify import sympify
 
 from sympy.ntheory import multiplicity
 

@@ -1,7 +1,8 @@
 from sympy import C, pi, I
-from sympy.core import Symbol, sympify
+from sympy.core import Symbol
 from sympy.functions import legendre, assoc_legendre
 from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.parsing.sympify import sympify
 
 Pl = legendre
 Plm= assoc_legendre

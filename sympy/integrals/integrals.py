@@ -1,5 +1,6 @@
-from sympy.core import Basic, Expr, S, C, Symbol, Wild, Add, sympify, diff, oo, Tuple
+from sympy.core import Basic, Expr, S, C, Symbol, Wild, Add, diff, oo, Tuple
 
+from sympy.parsing.sympify import sympify
 from sympy.integrals.trigonometry import trigintegrate
 from sympy.integrals.deltafunctions import deltaintegrate
 from sympy.integrals.rationaltools import ratint

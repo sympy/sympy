@@ -1,7 +1,7 @@
 from sympy import Integer, S
 from sympy.core.operations import LatticeOp
 from sympy.utilities.pytest import raises
-from sympy.core.sympify import SympifyError
+from sympy.parsing.sympify import SympifyError
 
 # create the simplest possible Lattice class
 class join(LatticeOp):

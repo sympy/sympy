@@ -23,7 +23,8 @@ import math
 
 from basic import C, S
 from containers import Tuple
-from sympify import sympify
+
+from sympy.parsing.sympify import sympify
 
 LG10 = math.log(10,2)
 

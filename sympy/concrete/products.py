@@ -1,6 +1,7 @@
-from sympy.core import Expr, S, C, Mul, sympify
+from sympy.core import Expr, S, C, Mul
 from sympy.polys import quo, roots
 from sympy.simplify import powsimp
+from sympy.parsing.sympify import sympify
 
 class Product(Expr):
     """Represents unevaluated product.

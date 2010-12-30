@@ -4,7 +4,7 @@ lambda functions which can be used to calculate numerical values very fast.
 """
 
 from __future__ import division
-from sympy.core.sympify import sympify
+from sympy.parsing.sympify import sympify
 
 # These are the namespaces the lambda functions will use.
 MATH = {}
