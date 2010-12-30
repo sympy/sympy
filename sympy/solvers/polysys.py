@@ -1,48 +1,113 @@
+"""Solvers of systems of polynomial equations. """
 
 from sympy.polys import Poly, groebner, roots
-from sympy.simplify import simplify
-from sympy.utilities import any, postfixes
+from sympy.polys.polytools import parallel_poly_from_expr
+from sympy.polys.polyerrors import ComputationFailed
+from sympy.utilities import any, all, postfixes
 from sympy.utilities.iterables import minkey
+from sympy.simplify import rcollect
+from sympy.core import S
 
-def solve_poly_system(system, *gens):
-    """Solves a system of polynomial equations.
+class SolveFailed(Exception):
+    """Raised when solver's conditions weren't met. """
 
-       Returns all possible solutions over C[x_1, x_2, ..., x_m] of a
-       set F = { f_1, f_2, ..., f_n } of polynomial equations,  using
-       Groebner basis approach. For now only zero-dimensional systems
-       are supported, which means F can have at most a finite number
-       of solutions.
+def solve_poly_system(seq, *gens, **args):
+    """
+    Solve a system of polynomial equations.
 
-       The algorithm works by the fact that, supposing G is the basis
-       of F with respect to an elimination order  (here lexicographic
-       order is used), G and F generate the same ideal, they have the
-       same set of solutions. By the elimination property,  if G is a
-       reduced, zero-dimensional Groebner basis, then there exists an
-       univariate polynomial in G (in its last variable). This can be
-       solved by computing its roots. Substituting all computed roots
-       for the last (eliminated) variable in other elements of G, new
-       polynomial system is generated. Applying the above procedure
-       recursively, a finite number of solutions can be found.
+    Example
+    =======
 
-       The ability of finding all solutions by this procedure depends
-       on the root finding algorithms. If no solutions were found, it
-       means only that roots() failed, but the system is solvable. To
-       overcome this difficulty use numerical algorithms instead.
+    >>> from sympy import solve_poly_system
+    >>> from sympy.abc import x, y
 
-       >>> from sympy import solve_poly_system
-       >>> from sympy.abc import x, y
+    >>> solve_poly_system([x*y - 2*y, 2*y**2 - x**2], x, y)
+    [(0, 0), (2, -2**(1/2)), (2, 2**(1/2))]
 
-       >>> solve_poly_system([x*y - 2*y, 2*y**2 - x**2], x, y)
-       [(0, 0), (2, -2**(1/2)), (2, 2**(1/2))]
+    """
+    try:
+        polys, opt = parallel_poly_from_expr(seq, *gens, **args)
+    except PolificationFailed, exc:
+        raise ComputationFailed('solve_poly_system', len(seq), exc)
 
-       For more information on the implemented algorithm refer to:
+    if len(polys) == len(opt.gens) == 2:
+        f, g = polys
 
-       [1] B. Buchberger, Groebner Bases: A Short Introduction for
-           Systems Theorists,  In: R. Moreno-Diaz,  B. Buchberger,
-           J.L. Freire, Proceedings of EUROCAST'01, February, 2001
+        a, b = f.degree_list()
+        c, d = g.degree_list()
 
-       [2] D. Cox, J. Little, D. O'Shea, Ideals, Varieties and
-           Algorithms, Springer, Second Edition, 1997, pp. 112
+        if a <= 2 and b <= 2 and c <= 2 and d <= 2:
+            try:
+                return solve_biquadratic(f, g, opt)
+            except SolveFailed:
+                pass
+
+    return solve_generic(polys, opt)
+
+def solve_biquadratic(f, g, opt):
+    """Solve a system of two bivariate quadratic polynomial equations. """
+    G = groebner([f, g])
+
+    if len(G) == 1 and G[0].is_ground:
+        return None
+
+    if len(G) != 2:
+        raise SolveFailed
+
+    p, q = G
+    x, y = opt.gens
+
+    p = Poly(p, x, expand=False)
+    q = q.ltrim(-1)
+
+    p_roots = [ rcollect(expr, y) for expr in roots(p).keys() ]
+    q_roots = roots(q).keys()
+
+    solutions = []
+
+    for q_root in q_roots:
+        for p_root in p_roots:
+            solution = (p_root.subs(y, q_root), q_root)
+            solutions.append(solution)
+
+    return sorted(solutions)
+
+def solve_generic(polys, opt):
+    """
+    Solve a generic system of polynomial equations.
+
+    Returns all possible solutions over C[x_1, x_2, ..., x_m] of a
+    set F = { f_1, f_2, ..., f_n } of polynomial equations,  using
+    Groebner basis approach. For now only zero-dimensional systems
+    are supported, which means F can have at most a finite number
+    of solutions.
+
+    The algorithm works by the fact that, supposing G is the basis
+    of F with respect to an elimination order  (here lexicographic
+    order is used), G and F generate the same ideal, they have the
+    same set of solutions. By the elimination property,  if G is a
+    reduced, zero-dimensional Groebner basis, then there exists an
+    univariate polynomial in G (in its last variable). This can be
+    solved by computing its roots. Substituting all computed roots
+    for the last (eliminated) variable in other elements of G, new
+    polynomial system is generated. Applying the above procedure
+    recursively, a finite number of solutions can be found.
+
+    The ability of finding all solutions by this procedure depends
+    on the root finding algorithms. If no solutions were found, it
+    means only that roots() failed, but the system is solvable. To
+    overcome this difficulty use numerical algorithms instead.
+
+    References
+    ==========
+
+    .. [Buchberger01] B. Buchberger, Groebner Bases: A Short
+    Introduction for Systems Theorists, In: R. Moreno-Diaz,
+    B. Buchberger, J.L. Freire, Proceedings of EUROCAST'01,
+    February, 2001
+
+    .. [Cox97] D. Cox, J. Little, D. O'Shea, Ideals, Varieties
+    and Algorithms, Springer, Second Edition, 1997, pp. 112
 
     """
     def is_univariate(f):
@@ -53,8 +118,21 @@ def solve_poly_system(system, *gens):
 
         return True
 
+    def subs_root(f, gen, zero):
+        """Replace generator with a root so that the result is nice. """
+        p = f.as_expr({gen: zero})
+
+        if f.degree(gen) >= 2:
+            p = p.expand(deep=False)
+
+        return p
+
     def solve_reduced_system(system, gens, entry=False):
         """Recursively solves reduced polynomial systems. """
+        if len(system) == len(gens) == 1:
+            zeros = roots(system[0], gens[-1]).keys()
+            return [ (zero,) for zero in zeros ]
+
         basis = groebner(system, gens, polys=True)
 
         if len(basis) == 1 and basis[0].is_ground:
@@ -64,7 +142,6 @@ def solve_poly_system(system, *gens):
                 return None
 
         univariate = filter(is_univariate, basis)
-        basis = [ b.as_basic() for b in basis ]
 
         if len(univariate) == 1:
             f = univariate.pop()
@@ -72,15 +149,15 @@ def solve_poly_system(system, *gens):
             raise NotImplementedError("only zero-dimensional systems supported (finite number of solutions)")
 
         gens = f.gens
-        f = f.as_basic()
+        gen = gens[-1]
 
-        zeros = roots(f, gens[-1]).keys()
+        zeros = roots(f.ltrim(gen)).keys()
 
         if not zeros:
             return []
 
         if len(basis) == 1:
-            return [ [zero] for zero in zeros ]
+            return [ (zero,) for zero in zeros ]
 
         solutions = []
 
@@ -89,33 +166,22 @@ def solve_poly_system(system, *gens):
             new_gens = gens[:-1]
 
             for b in basis[:-1]:
-                eq = b.subs(gens[-1], zero).expand()
+                eq = subs_root(b, gen, zero)
 
-                if not eq.is_zero:
+                if eq is not S.Zero:
                     new_system.append(eq)
 
             for solution in solve_reduced_system(new_system, new_gens):
-                solutions.append(solution + [zero])
+                solutions.append(solution + (zero,))
 
         return solutions
 
-    if hasattr(system, "__iter__"):
-        system = list(system)
+    result = solve_reduced_system(polys, opt.gens, entry=True)
+
+    if result is not None:
+        return sorted(result)
     else:
-        raise TypeError("expected iterable container, got %s" % system)
-
-    solutions = solve_reduced_system(system, gens, entry=True)
-
-    if solutions is None:
         return None
-    else:
-        for i, s in enumerate(solutions):
-            solutions[i] = tuple(map(simplify, s))
-
-        try:
-            return sorted(solutions)
-        except TypeError:
-            return solutions
 
 def solve_triangulated(polys, *gens, **args):
     """
@@ -153,7 +219,7 @@ def solve_triangulated(polys, *gens, **args):
         for i, g in enumerate(G):
             G[i] = g.set_domain(domain)
 
-    f, G = G[0].ltrim(gens[-1]), G[1:]
+    f, G = G[0].ltrim(-1), G[1:]
     dom = f.get_domain()
 
     zeros = f.ground_roots()
