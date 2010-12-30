@@ -3,7 +3,7 @@ from sympy import Symbol, symbols, hypersimp, factorial, binomial, \
         simplify, trigsimp, cos, tan, cot, log, ratsimp, Matrix, pi, integrate, \
         solve, nsimplify, GoldenRatio, sqrt, E, I, sympify, atan, Derivative, \
         S, diff, oo, Eq, Integer, gamma, acos, Integral, logcombine, Wild, \
-        separatevars, erf
+        separatevars, erf, rcollect
 from sympy.utilities import all
 from sympy.utilities.pytest import XFAIL
 
@@ -389,6 +389,10 @@ def test_collect_Wild():
     assert collect(a*(x + 1)**y + (x + 1)**y, w1**b) == a*(x + 1)**y + (x + 1)**y
     assert collect(a*(x + 1)**y + (x + 1)**y, (x + 1)**w2) == (1 + a)*(x + 1)**y
     assert collect(a*(x + 1)**y + (x + 1)**y, w1**w2) == (1 + a)*(x + 1)**y
+
+def test_rcollect():
+    assert rcollect((x**2*y + x*y + x + y)/(x + y), y) == (x + y*(1 + x + x**2))/(x + y)
+    assert rcollect(sqrt(-((x + 1)*(y + 1))), z) == sqrt(-((x + 1)*(y + 1)))
 
 def test_separatevars():
     x,y,z,n = symbols('x,y,z,n')

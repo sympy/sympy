@@ -460,7 +460,7 @@ def collect(expr, syms, evaluate=True, exact=False):
 
     summa = [separate(i) for i in Add.make_args(sympify(expr))]
 
-    if isinstance(syms, list):
+    if isinstance(syms, (tuple, list)):
         syms = [separate(s) for s in syms]
     else:
         syms = [separate(syms)]
@@ -512,6 +512,32 @@ def collect(expr, syms, evaluate=True, exact=False):
         return Add(*[a*b for a, b in collected.iteritems()])
     else:
         return collected
+
+def rcollect(expr, *vars):
+    """
+    Recursively collect sums in an expression.
+
+    Example
+    =======
+
+    >>> from sympy.simplify import rcollect
+    >>> from sympy.abc import x, y
+
+    >>> expr = (x**2*y + x*y + x + y)/(x + y)
+
+    >>> rcollect(expr, y)
+    (x + y*(1 + x + x**2))/(x + y)
+
+    """
+    if expr.is_Atom or not expr.has(*vars):
+        return expr
+    else:
+        expr = expr.__class__(*[ rcollect(arg, *vars) for arg in expr.args ])
+
+        if expr.is_Add:
+            return collect(expr, vars)
+        else:
+            return expr
 
 def separatevars(expr, symbols=[], dict=False):
     """
