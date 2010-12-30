@@ -461,6 +461,10 @@ def test_call():
     raises(TypeError, "sin(x)({ x : 1, sin(x) : 2})")
     raises(TypeError, "sin(x)(1)")
 
+def test_find():
+    assert (x + y + 2).find(lambda u: u.is_Number) == [S(2)]
+    assert (x + y + 2).find(lambda u: u.is_Symbol) in [[x, y], [y, x]]
+
 def test_has_any():
     x,y,z,t,u = symbols('x,y,z,t,u')
     f = Function("f")
