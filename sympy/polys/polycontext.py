@@ -1,4 +1,4 @@
-"""Tools for mananaging evaluation contexts. """
+"""Tools for managing evaluation contexts. """
 
 from sympy.utilities.iterables import dict_merge
 
@@ -16,7 +16,6 @@ for option in __known_options__:
     exec __template__ % { 'option': option }
 
 class Context(object):
-    """ """
 
     __slots__ = ['__options__']
 
@@ -46,7 +45,6 @@ class Context(object):
             raise TypeError("a context manager expected, got %s" % other)
 
     def __enter__(self):
-        #for key, value in self.__options__.iteritems():
         raise NotImplementedError('global context')
 
     def __exit__(self, exc_type, exc_val, exc_tb):
