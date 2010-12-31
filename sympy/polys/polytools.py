@@ -1839,7 +1839,7 @@ class Poly(Basic):
         else: # pragma: no cover
             raise OperationNotSupported(f, 'diff')
 
-    def eval(f, x, a=None):
+    def eval(f, x, a=None, auto=True):
         """
         Evaluate ``f`` at ``a`` in the given variable.
 
@@ -1881,12 +1881,18 @@ class Poly(Basic):
         else:
             j = f._gen_to_level(x)
 
-        # XXX: use DomainError when not convertible
-
-        if hasattr(f.rep, 'eval'):
-            result = f.rep.eval(a, j)
-        else: # pragma: no cover
+        if not hasattr(f.rep, 'eval'): # pragma: no cover
             raise OperationNotSupported(f, 'eval')
+
+        try:
+            result = f.rep.eval(a, j)
+        except CoercionFailed:
+            if not auto:
+                raise DomainError("can't evaluate at %s in %s" % (a, f.rep.dom))
+            else:
+                domain, [a] = construct_domain([a])
+                f = f.set_domain(domain)
+                result = f.rep.eval(a, j)
 
         return f.per(result, remove=j)
 
