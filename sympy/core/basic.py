@@ -868,19 +868,42 @@ class Basic(AssumeMeths):
         patterns = map(sympify, patterns)
         return any(search(self, _match(p)) for p in patterns)
 
-    def find(self, query):
+    def find(self, query, group=False):
         """Find all subexpressions matching a query. """
+        if isinstance(query, type):
+            _query = lambda expr: isinstance(expr, query)
+        elif isinstance(query, Basic):
+            _query = lambda expr: expr.match(query)
+        else:
+            _query = query
+
         results = []
 
         def rec_find(expr):
-            if query(expr):
+            if _query(expr):
                 results.append(expr)
 
             for arg in expr.args:
                 rec_find(arg)
 
         rec_find(self)
-        return results
+
+        if not group:
+            return set(results)
+        else:
+            groups = {}
+
+            for result in results:
+                if result in groups:
+                    groups[result] += 1
+                else:
+                    groups[result] = 1
+
+            return groups
+
+    def count(self, query):
+        """Count the number of matching subexpressions. """
+        return sum(self.find(query, group=True).values())
 
     def matches(self, expr, repl_dict={}, evaluate=False):
         """
