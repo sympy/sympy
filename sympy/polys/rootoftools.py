@@ -26,7 +26,6 @@ from sympy.mpmath import (
 from sympy.utilities import any, lambdify
 
 def dup_minpoly_add(f, g, K):
-    """ """
     F = dmp_raise(f, 1, 0, K)
     G = dmp_raise(g, 1, 0, K)
 
@@ -36,7 +35,6 @@ def dup_minpoly_add(f, g, K):
     return dmp_resultant(F, G, 1, K)
 
 def dup_minpoly_sub(f, g, K):
-    """ """
     F = dmp_raise(f, 1, 0, K)
     G = dmp_raise(g, 1, 0, K)
 
@@ -46,7 +44,6 @@ def dup_minpoly_sub(f, g, K):
     return dmp_resultant(F, G, 1, K)
 
 def dup_minpoly_mul(f, g, K):
-    """ """
     f, F = reversed(f), []
 
     for i, c in enumerate(f):
@@ -61,7 +58,6 @@ def dup_minpoly_mul(f, g, K):
     return dmp_resultant(F, G, 1, K)
 
 def dup_minpoly_div(f, g, K):
-    """ """
     F = dmp_raise(f, 1, 0, K)
     G = dmp_raise(g, 1, 0, K)
 
@@ -71,7 +67,6 @@ def dup_minpoly_div(f, g, K):
     return dmp_resultant(F, G, 1, K)
 
 def dup_minpoly_pow(f, p, q, K):
-    """ """
     d = {(p, 0): -K.one, (0, q): K.one}
 
     F = dmp_raise(f, 1, 0, K)

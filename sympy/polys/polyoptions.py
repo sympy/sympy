@@ -25,17 +25,14 @@ class Option(object):
 
     @classmethod
     def default(cls):
-        """ """
         return None
 
     @classmethod
     def preprocess(cls, option):
-        """ """
         return None
 
     @classmethod
     def postprocess(cls, options):
-        """ """
         pass
 
 class Flag(Option):
@@ -203,7 +200,7 @@ class Options(dict):
         return flags
 
 class Expand(BooleanOption):
-    """ """
+    """``expand`` option to polynomial manipulation functions. """
 
     __metaclass__ = OptionType
 
@@ -217,7 +214,7 @@ class Expand(BooleanOption):
         return True
 
 class Gens(Option):
-    """ """
+    """``gens`` option to polynomial manipulation functions. """
 
     __metaclass__ = OptionType
 
@@ -247,7 +244,7 @@ class Gens(Option):
         return tuple(gens)
 
 class Wrt(Option):
-    """ """
+    """``wrt`` option to polynomial manipulation functions. """
 
     __metaclass__ = OptionType
 
@@ -270,7 +267,7 @@ class Wrt(Option):
             raise OptionError("invalid argument for 'wrt' option")
 
 class Sort(Option):
-    """ """
+    """``sort`` option to polynomial manipulation functions. """
 
     __metaclass__ = OptionType
 
@@ -293,7 +290,7 @@ class Sort(Option):
             raise OptionError("invalid argument for 'sort' option")
 
 class Order(Option):
-    """ """
+    """``order`` option to polynomial manipulation functions. """
 
     __metaclass__ = OptionType
 
@@ -311,7 +308,7 @@ class Order(Option):
         return sympy.polys.monomialtools.monomial_key(order)
 
 class Field(BooleanOption):
-    """ """
+    """``field`` option to polynomial manipulation functions. """
 
     __metaclass__ = OptionType
 
@@ -321,7 +318,7 @@ class Field(BooleanOption):
     excludes = ['domain', 'split', 'gaussian', 'extension']
 
 class Greedy(BooleanOption):
-    """ """
+    """``greedy`` option to polynomial manipulation functions. """
 
     __metaclass__ = OptionType
 
@@ -331,7 +328,7 @@ class Greedy(BooleanOption):
     excludes = ['domain', 'split', 'gaussian', 'extension', 'modulus', 'symmetric']
 
 class Domain(Option):
-    """ """
+    """``domain`` option to polynomial manipulation functions. """
 
     __metaclass__ = OptionType
 
@@ -406,7 +403,7 @@ class Domain(Option):
                 raise GeneratorsError("ground domain and generators interferes together")
 
 class Split(BooleanOption):
-    """ """
+    """``split`` option to polynomial manipulation functions. """
 
     __metaclass__ = OptionType
 
@@ -420,7 +417,7 @@ class Split(BooleanOption):
         raise NotImplementedError("'split' option is not implemented yet")
 
 class Gaussian(BooleanOption):
-    """ """
+    """``gaussian`` option to polynomial manipulation functions. """
 
     __metaclass__ = OptionType
 
@@ -436,7 +433,7 @@ class Gaussian(BooleanOption):
             Extension.postprocess(options)
 
 class Extension(Option):
-    """ """
+    """``extension`` option to polynomial manipulation functions. """
 
     __metaclass__ = OptionType
 
@@ -468,7 +465,7 @@ class Extension(Option):
             options['domain'] = sympy.polys.domains.QQ.algebraic_field(*options['extension'])
 
 class Modulus(Option):
-    """ """
+    """``modulus`` option to polynomial manipulation functions. """
 
     __metaclass__ = OptionType
 
@@ -493,7 +490,7 @@ class Modulus(Option):
         options['domain'] = sympy.polys.domains.FF(modulus, symmetric)
 
 class Symmetric(BooleanOption):
-    """ """
+    """``symmetric`` option to polynomial manipulation functions. """
 
     __metaclass__ = OptionType
 
@@ -503,7 +500,7 @@ class Symmetric(BooleanOption):
     excludes = ['greedy', 'domain', 'split', 'gaussian', 'extension']
 
 class Strict(BooleanOption):
-    """ """
+    """``strict`` option to polynomial manipulation functions. """
 
     __metaclass__ = OptionType
 
@@ -514,7 +511,7 @@ class Strict(BooleanOption):
         return True
 
 class Repr(Option):
-    """ """
+    """``repr`` option to polynomial manipulation functions. """
 
     __metaclass__ = OptionType
 
@@ -539,7 +536,7 @@ class Repr(Option):
             raise OptionError("'repr' must a string or a class, got %s" % repr)
 
 class Auto(BooleanOption, Flag):
-    """ """
+    """``auto`` flag to polynomial manipulation functions. """
 
     __metaclass__ = OptionType
 
@@ -550,7 +547,7 @@ class Auto(BooleanOption, Flag):
         return True
 
 class Frac(BooleanOption, Flag):
-    """ """
+    """``auto`` option to polynomial manipulation functions. """
 
     __metaclass__ = OptionType
 
@@ -561,7 +558,7 @@ class Frac(BooleanOption, Flag):
         return False
 
 class Formal(BooleanOption, Flag):
-    """ """
+    """``formal`` flag to polynomial manipulation functions. """
 
     __metaclass__ = OptionType
 
@@ -572,14 +569,14 @@ class Formal(BooleanOption, Flag):
         return False
 
 class Polys(BooleanOption, Flag):
-    """ """
+    """``polys`` flag to polynomial manipulation functions. """
 
     __metaclass__ = OptionType
 
     option = 'polys'
 
 class Include(BooleanOption, Flag):
-    """ """
+    """``include`` flag to polynomial manipulation functions. """
 
     __metaclass__ = OptionType
 
@@ -590,7 +587,7 @@ class Include(BooleanOption, Flag):
         return False
 
 class Monic(BooleanOption, Flag):
-    """ """
+    """``monic`` flag to polynomial manipulation functions. """
 
     __metaclass__ = OptionType
 
@@ -601,7 +598,7 @@ class Monic(BooleanOption, Flag):
         return True
 
 class All(BooleanOption, Flag):
-    """ """
+    """``all`` flag to polynomial manipulation functions. """
 
     __metaclass__ = OptionType
 
@@ -612,7 +609,7 @@ class All(BooleanOption, Flag):
         return False
 
 class Gen(Flag):
-    """ """
+    """``gen`` flag to polynomial manipulation functions. """
 
     __metaclass__ = OptionType
 
