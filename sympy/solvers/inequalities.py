@@ -1,6 +1,18 @@
 """Tools for solving inequalities and systems of inequalities. """
 
-from sympy import S, Poly, Interval, And, Or, Eq, DomainError, ask, re, im, Assume
+from sympy.core import Symbol, Interval, Union
+from sympy.core.relational import Relational, Eq, Ge, Lt
+from sympy.core.singleton import S
+from sympy.assumptions import ask, Assume
+from sympy.functions import re, im, Abs
+from sympy.logic import And, Or
+from sympy.polys import Poly
+from sympy.utilities import all
+
+def interval_evalf(interval):
+    """Proper implementation of evalf() on Interval. """
+    return Interval(interval.left.evalf(), interval.right.evalf(),
+        left_open=interval.left_open, right_open=interval.right_open)
 
 def solve_poly_inequality(poly, rel):
     """Solve a polynomial inequality with rational coefficients.  """
@@ -27,15 +39,14 @@ def solve_poly_inequality(poly, rel):
 
         if rel == '>':
             eq_sign = +1
-
-        if rel == '<':
+        elif rel == '<':
             eq_sign = -1
-
-        if rel == '>=':
+        elif rel == '>=':
             eq_sign, equal = +1, True
-
-        if rel == '<=':
+        elif rel == '<=':
             eq_sign, equal = -1, True
+        else:
+            raise ValueError("'%s' is not a valid relation" % rel)
 
         right, right_open = S.Infinity, True
 
@@ -57,60 +68,14 @@ def solve_poly_inequality(poly, rel):
 
     return intervals
 
-def solve_poly_inequalities(inequalities, relational=True):
-    """Solve a system of polynomial inequalities with rational coefficients.  """
-    if not hasattr(inequalities, '__iter__'):
-        inequalities = [inequalities]
+def solve_poly_inequalities(polys):
+    """Solve a system of polynomial inequalities with rational coefficients. """
+    result = S.EmptySet
 
-    polys, exact, assume = {}, {}, []
-
-    for inequality in inequalities:
-        if isinstance(inequality, bool):
-            if inequality is False:
-                return False
-            else:
-                continue
-
-        if isinstance(inequality, Assume):
-            assume.append(inequality)
-            continue
-
-        if inequality.is_Relational:
-            expr, rel = inequality.lhs - inequality.rhs, inequality.rel_op
-        else:
-            expr, rel = inequality, '=='
-
-        poly = Poly(expr, greedy=False)
-
-        if not poly.gen.is_Symbol:
-            raise NotImplementedError("only polynomial inequalities are supported")
-
-        if not poly.is_univariate:
-            raise NotImplementedError("only univariate inequalities are supported")
-
-        _exact = True
-
-        if not poly.get_domain().is_Exact:
-            poly, _exact = poly.to_exact(), False
-
-        domain = poly.get_domain()
-
-        if not (domain.is_ZZ or domain.is_QQ):
-            raise DomainError("inequality solving is not supported over %s" % domain)
-
-        if poly.gen in polys:
-            polys[poly.gen].append((poly, rel))
-            exact[poly.gen] &= _exact
-        else:
-            polys[poly.gen] = [(poly, rel)]
-            exact[poly.gen] = _exact
-
-    results = {}
-
-    for gen, polys_group in polys.iteritems():
+    for _polys in polys:
         global_intervals = None
 
-        for poly, rel in polys_group:
+        for poly, rel in _polys:
             local_intervals = solve_poly_inequality(poly, rel)
 
             if global_intervals is None:
@@ -130,34 +95,196 @@ def solve_poly_inequalities(inequalities, relational=True):
             if not global_intervals:
                 break
 
-        intervals = global_intervals
+        for interval in global_intervals:
+            result = result.union(interval)
 
-        if not exact[gen]:
-            intervals = [ Interval(i.left.evalf(), i.right.evalf(),
-                left_open=i.left_open, right_open=i.right_open) for i in intervals ]
+    return result
 
-        real = ask(gen, 'real', And(*assume))
+def reduce_poly_inequalities(exprs, gen, assume=True, relational=True):
+    """Reduce a system of polynomial inequalities with rational coefficients. """
+    exact = True
+    polys = []
 
-        if relational or not real:
-            def relationalize(gen):
-                return Or(*[ i.as_relational(gen) for i in intervals ])
+    for _exprs in exprs:
+        _polys = []
 
-            if not real:
-                result = And(relationalize(re(gen)), Eq(im(gen), 0))
+        for expr in _exprs:
+            if isinstance(expr, tuple):
+                expr, rel = expr
             else:
-                result = relationalize(gen)
-        else:
-            result = intervals
+                if expr.is_Relational:
+                    expr, rel = expr.lhs - expr.rhs, expr.rel_op
+                else:
+                    expr, rel = expr, '=='
 
-        results[gen] = result
+            poly = Poly(expr, gen)
 
-    if relational or not real:
-        solution = And(*results.values())
+            if not poly.get_domain().is_Exact:
+                poly, exact = poly.to_exact(), False
+
+            domain = poly.get_domain()
+
+            if not (domain.is_ZZ or domain.is_QQ):
+                raise NotImplementedError("inequality solving is not supported over %s" % domain)
+
+            _polys.append((poly, rel))
+
+        polys.append(_polys)
+
+    solution = solve_poly_inequalities(polys)
+
+    if isinstance(solution, Union):
+        intervals = list(solution.args)
+    elif isinstance(solution, Interval):
+        intervals = [solution]
     else:
-        if len(results) == 1:
-            solution = results.popitem()[1]
-        else:
-            solution = results
+        intervals = []
 
-    return solution
+    if not exact:
+        intervals = map(interval_evalf, intervals)
+
+    if not relational:
+        return intervals
+
+    real = ask(gen, 'real', assume)
+
+    def relationalize(gen):
+        return Or(*[ i.as_relational(gen) for i in intervals ])
+
+    if not real:
+        result = And(relationalize(re(gen)), Eq(im(gen), 0))
+    else:
+        result = relationalize(gen)
+
+    return result
+
+def reduce_abs_inequality(expr, rel, gen, assume=True):
+    """Reduce an inequality with nested absolute values. """
+    if not ask(gen, 'real', assume):
+        raise NotImplementedError("can't solve inequalities with absolute values")
+
+    def bottom_up_scan(expr):
+        exprs = []
+
+        if expr.is_Add or expr.is_Mul:
+            op = expr.__class__
+
+            for arg in expr.args:
+                _exprs = bottom_up_scan(arg)
+
+                if not exprs:
+                    exprs = _exprs
+                else:
+                    args = []
+
+                    for expr, conds in exprs:
+                        for _expr, _conds in _exprs:
+                            args.append((op(expr, _expr), conds + _conds))
+
+                    exprs = args
+        elif expr.is_Pow:
+            n = expr.exp
+
+            if not n.is_Integer or n < 0:
+                raise ValueError("only non-negative integer powers are allowed")
+
+            _exprs = bottom_up_scan(expr.base)
+
+            for expr, conds in _exprs:
+                exprs.append((expr**n, conds))
+        elif isinstance(expr, Abs):
+            _exprs = bottom_up_scan(expr.args[0])
+
+            for expr, conds in _exprs:
+                exprs.append(( expr, conds + [Ge(expr, 0)]))
+                exprs.append((-expr, conds + [Lt(expr, 0)]))
+        else:
+            exprs = [(expr, [])]
+
+        return exprs
+
+    exprs = bottom_up_scan(expr)
+
+    mapping = {'<': '>', '<=': '>='}
+    inequalities = []
+
+    for expr, conds in exprs:
+        if rel not in mapping.keys():
+            expr = Relational( expr, 0, rel)
+        else:
+            expr = Relational(-expr, 0, mapping[rel])
+
+        inequalities.append([expr] + conds)
+
+    return reduce_poly_inequalities(inequalities, gen, assume)
+
+def reduce_abs_inequalities(exprs, gen, assume=True):
+    """Reduce a system of inequalities with nested absolute values. """
+    return And(*[ reduce_abs_inequality(expr, rel, gen, assume) for expr, rel in exprs ])
+
+def reduce_inequalities(inequalities, assume=True):
+    """Reduce a system of inequalities with rational coefficients. """
+    if not hasattr(inequalities, '__iter__'):
+        inequalities = [inequalities]
+
+    poly_part, abs_part, extra_assume = {}, {}, []
+
+    for inequality in inequalities:
+        if isinstance(inequality, bool):
+            if inequality is False:
+                return False
+            else:
+                continue
+
+        if isinstance(inequality, Assume):
+            extra_assume.append(inequality)
+            continue
+
+        if inequality.is_Relational:
+            expr, rel = inequality.lhs - inequality.rhs, inequality.rel_op
+        else:
+            expr, rel = inequality, '=='
+
+        gens = expr.atoms(Symbol)
+
+        if not gens:
+            return False
+        elif len(gens) == 1:
+            gen = gens.pop()
+        else:
+            raise NotImplementedError("only univariate inequalities are supported")
+
+        components = expr.find(lambda u: u.is_Function)
+
+        if not components:
+            if gen in poly_part:
+                poly_part[gen].append((expr, rel))
+            else:
+                poly_part[gen] = [(expr, rel)]
+        else:
+            if all(isinstance(comp, Abs) for comp in components):
+                if gen in abs_part:
+                    abs_part[gen].append((expr, rel))
+                else:
+                    abs_part[gen] = [(expr, rel)]
+            else:
+                raise NotImplementedError("can't reduce %s" % inequalities)
+
+    extra_assume = And(*extra_assume)
+
+    if assume is not None:
+        assume = And(assume, extra_assume)
+    else:
+        assume = extra_assume
+
+    poly_reduced = []
+    abs_reduced = []
+
+    for gen, exprs in poly_part.iteritems():
+        poly_reduced.append(reduce_poly_inequalities([exprs], gen, assume))
+
+    for gen, exprs in abs_part.iteritems():
+        abs_reduced.append(reduce_abs_inequalities(exprs, gen, assume))
+
+    return And(*(poly_reduced + abs_reduced))
 

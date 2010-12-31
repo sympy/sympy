@@ -1,7 +1,7 @@
 from sympy import (Matrix, Symbol, solve, exp, log, cos, acos, Rational, Eq,
     sqrt, oo, LambertW, pi, I, sin, asin, Function, diff, Derivative, symbols,
     S, sympify, var, simplify, Integral, sstr, Interval, And, Or, Lt, Gt,
-    Assume, re, im)
+    Assume, Q, re, im)
 
 from sympy.solvers import solve_linear_system, solve_linear_system_LU,dsolve,\
      tsolve
@@ -306,13 +306,10 @@ def test_issue626():
     assert solve(e, f(x).diff(x)) == [(2-x)/f(x)]
 
 def test_solve_inequalities():
-    assert solve([Lt(x**2 - 2, 0), Gt(x**2 - 1, 0)]) == \
+    system = [Lt(x**2 - 2, 0), Gt(x**2 - 1, 0)]
+
+    assert solve(system) == \
         And(Or(And(Lt(-sqrt(2), re(x)), Lt(re(x), -1)),
                And(Lt(1, re(x)), Lt(re(x), sqrt(2)))), Eq(im(x), 0))
-
-@XFAIL
-def test_solve_inequalities_real():
-    assert solve([Lt(x**2 - 2, 0), Gt(x**2 - 1, 0)], assume=Assume(x, Q.real)) == \
-        [Interval(-sqrt(2), -1, True, True), Interval(1, sqrt(2), True, True)]
-    assert solve([Lt(x**2 - 2, 0), Gt(x**2 - 1, 0)], assume=Assume(x, Q.real), relational=True) == \
+    assert solve(system, assume=Assume(x, Q.real)) == \
         Or(And(Lt(-sqrt(2), x), Lt(x, -1)), And(Lt(1, x), Lt(x, sqrt(2))))
