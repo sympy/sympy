@@ -462,8 +462,47 @@ def test_call():
     raises(TypeError, "sin(x)(1)")
 
 def test_find():
-    assert (x + y + 2).find(lambda u: u.is_Number) == [S(2)]
-    assert (x + y + 2).find(lambda u: u.is_Symbol) in [[x, y], [y, x]]
+    expr = (x + y + 2 + sin(3*x))
+
+    assert expr.find(lambda u: u.is_Integer) == set([S(2), S(3)])
+    assert expr.find(lambda u: u.is_Symbol) == set([x, y])
+
+    assert expr.find(lambda u: u.is_Integer, group=True) == {S(2): 1, S(3): 1}
+    assert expr.find(lambda u: u.is_Symbol, group=True) == {x: 2, y: 1}
+
+    assert expr.find(Integer) == set([S(2), S(3)])
+    assert expr.find(Symbol) == set([x, y])
+
+    assert expr.find(Integer, group=True) == {S(2): 1, S(3): 1}
+    assert expr.find(Symbol, group=True) == {x: 2, y: 1}
+
+    a = Wild('a')
+
+    expr = sin(sin(x)) + sin(x) + cos(x) + x
+
+    assert expr.find(lambda u: type(u) is sin) == set([sin(x), sin(sin(x))])
+    assert expr.find(lambda u: type(u) is sin, group=True) == {sin(x): 2, sin(sin(x)): 1}
+
+    assert expr.find(sin(a)) == set([sin(x), sin(sin(x))])
+    assert expr.find(sin(a), group=True) == {sin(x): 2, sin(sin(x)): 1}
+
+    assert expr.find(sin) == set([sin(x), sin(sin(x))])
+    assert expr.find(sin, group=True) == {sin(x): 2, sin(sin(x)): 1}
+
+def test_count():
+    expr = (x + y + 2 + sin(3*x))
+
+    assert expr.count(lambda u: u.is_Integer) == 2
+    assert expr.count(lambda u: u.is_Symbol) == 3
+
+    assert expr.count(Integer) == 2
+    assert expr.count(Symbol) == 3
+
+    a = Wild('a')
+
+    assert expr.count(sin) == 1
+    assert expr.count(sin(a)) == 1
+    assert expr.count(lambda u: type(u) is sin) == 1
 
 def test_has_any():
     x,y,z,t,u = symbols('x,y,z,t,u')
