@@ -161,7 +161,7 @@ def reduce_poly_inequalities(exprs, gen, assume=True, relational=True):
 def reduce_abs_inequality(expr, rel, gen, assume=True):
     """Reduce an inequality with nested absolute values. """
     if not ask(gen, 'real', assume):
-        raise NotImplementedError("can't solve inequalities with absolute values")
+        raise NotImplementedError("can't solve inequalities with absolute values of a complex variable")
 
     def bottom_up_scan(expr):
         exprs = []
