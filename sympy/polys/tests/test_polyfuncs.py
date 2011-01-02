@@ -41,6 +41,11 @@ def test_symmetrize():
     assert symmetrize(x**3 + y**2 + a*x**2 + b*y**3, x, y) == \
         (-3*x*y*(x + y) - 2*a*x*y + a*(x + y)**2 + (x + y)**3, y**2*(1 - a) - y**3*(1 - b))
 
+    U = [u0, u1, u2] = symbols('u:3')
+
+    assert symmetrize(x + 1, x, y, z, formal=True, symbols=U) == \
+        (u0 + 1, -y - z, {u1: x*y + x*z + y*z, u2: x*y*z, u0: x + y + z})
+
 def test_horner():
     assert horner(0) == 0
     assert horner(1) == 1

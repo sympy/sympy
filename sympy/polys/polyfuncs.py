@@ -38,7 +38,7 @@ def symmetrize(f, *gens, **args):
     (-2*s2 + s1**2, -2*y**2, {s1: x + y, s2: x*y})
 
     """
-    allowed_flags(args, ['formal'])
+    allowed_flags(args, ['formal', 'symbols'])
 
     try:
         f, opt = poly_from_expr(f, *gens, **args)
@@ -51,8 +51,7 @@ def symmetrize(f, *gens, **args):
         else:
             raise ComputationFailed('symmetrize', 1, exc)
 
-    polys, symbols = [], numbered_symbols('s', start=1)
-
+    polys, symbols = [], opt.symbols
     gens, dom = f.gens, f.get_domain()
 
     for i in xrange(0, len(f.gens)):
