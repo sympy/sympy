@@ -7,10 +7,11 @@ from sympy.polys.specialpolys import (
     symmetric_poly, interpolating_poly)
 
 from sympy.polys.polyerrors import (
-    PolificationFailed, ComputationFailed)
+    PolificationFailed, ComputationFailed,
+    MultivariatePolynomialError)
 
 from sympy.utilities import (
-    all, any, numbered_symbols)
+    all, any, numbered_symbols, take)
 
 from sympy.core import S, Basic, Add, Mul
 
@@ -185,3 +186,56 @@ def interpolate(data, x):
     poly = interpolating_poly(n, x, X, Y)
 
     return poly.expand()
+
+def viete(f, roots=None, *gens, **args):
+    """
+    Generate Viete's formulas for ``f``.
+
+    Example
+    =======
+
+    >>> from sympy.polys.polyfuncs import viete
+    >>> from sympy import symbols
+
+    >>> a, b, c, r1, r2 = symbols('a,b,c,r1,r2')
+
+    >>> viete(a*x**2 + b*x + c, [r1, r2], x)
+    [(r1 + r2, -b/a), (r1*r2, c/a)]
+
+    """
+    allowed_flags(args, [])
+
+    if isinstance(roots, Basic):
+        gens, roots = (roots,) + gens, None
+
+    try:
+        f, opt = poly_from_expr(f, *gens, **args)
+    except PolificationFailed, exc:
+        raise ComputationFailed('viete', 1, exc)
+
+    if f.is_multivariate:
+        raise MultivariatePolynomialError("multivariate polynomials are not allowed")
+
+    n = f.degree()
+
+    if n < 1:
+        raise ValueError("can't derive Viete's formulas for a constant polynomial")
+
+    if roots is None:
+        roots = numbered_symbols('r', start=1)
+
+    roots = take(roots, n)
+
+    if n != len(roots):
+        raise ValueError("required %s roots, got %s" % (n, len(roots)))
+
+    lc, coeffs = f.LC(), f.all_coeffs()
+    result, sign = [], -1
+
+    for i, coeff in enumerate(coeffs[1:]):
+        poly = symmetric_poly(i+1, roots)
+        coeff = sign*(coeff/lc)
+        result.append((poly, coeff))
+        sign = -sign
+
+    return result
