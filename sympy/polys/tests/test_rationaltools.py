@@ -50,4 +50,4 @@ def test_together():
     assert together(Integral(1/x + 1/y, x)) == Integral((x + y)/(x*y), x)
     assert together(Eq(1/x + 1/y, 1 + 1/z)) == Eq((x + y)/(x*y), (z + 1)/z)
 
-    assert together(1/(A*B) + 1/(B*A)) == (A*B + B*A)/(B*A**2*B)
+    assert together(1/(A*B) + 1/(B*A)) in [(A*B + B*A)/(B*A**2*B), (A*B + B*A)/(A*B**2*A)]

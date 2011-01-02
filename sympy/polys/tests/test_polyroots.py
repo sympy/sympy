@@ -24,8 +24,8 @@ def test_roots_quadratic():
     f = x**2 + (2*a*e + 2*c*e)/(a - c)*x + (d - b + a*e**2 - c*e**2)/(a - c)
 
     assert roots_quadratic(Poly(f, x)) == \
-        [-e*(a + c)/(a - c) + ((a*b + c*d - a*d - b*c + 4*a*c*e**2)/(a - c)**2)**S.Half,
-         -e*(a + c)/(a - c) - ((a*b + c*d - a*d - b*c + 4*a*c*e**2)/(a - c)**2)**S.Half]
+        sorted([-e*(a + c)/(a - c) + ((a*b + c*d - a*d - b*c + 4*a*c*e**2)/(a - c)**2)**S.Half,
+                -e*(a + c)/(a - c) - ((a*b + c*d - a*d - b*c + 4*a*c*e**2)/(a - c)**2)**S.Half])
 
 def test_roots_cubic():
     assert roots_cubic(Poly(2*x**3, x)) == [0, 0, 0]
