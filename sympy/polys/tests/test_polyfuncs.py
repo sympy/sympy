@@ -22,7 +22,7 @@ def test_symmetrize():
     s3 = x*y*z
 
     assert symmetrize(1) == (1, 0)
-    assert symmetrize(1, formal=True) == (1, 0, {})
+    assert symmetrize(1, formal=True) == (1, 0, [])
 
     assert symmetrize(x) == (x, 0)
     assert symmetrize(x + 1) == (x + 1, 0)
@@ -44,7 +44,12 @@ def test_symmetrize():
     U = [u0, u1, u2] = symbols('u:3')
 
     assert symmetrize(x + 1, x, y, z, formal=True, symbols=U) == \
-        (u0 + 1, -y - z, {u1: x*y + x*z + y*z, u2: x*y*z, u0: x + y + z})
+        (u0 + 1, -y - z, [(u0, x + y + z), (u1, x*y + x*z + y*z), (u2, x*y*z)])
+
+    assert symmetrize([1, 2, 3]) == [(1, 0), (2, 0), (3, 0)]
+    assert symmetrize([1, 2, 3], formal=True) == ([(1, 0), (2, 0), (3, 0)], [])
+
+    assert symmetrize([x + y, x - y]) == [(x + y, 0), (x + y, -2*y)]
 
 def test_horner():
     assert horner(0) == 0
