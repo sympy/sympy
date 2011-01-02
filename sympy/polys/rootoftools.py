@@ -1,6 +1,6 @@
 """Implementation of RootOf class and related tools. """
 
-from sympy import S, Expr, Integer, Real, I, Add, Lambda
+from sympy import S, Expr, Integer, Real, I, Add, Lambda, symbols
 
 from sympy.polys.polytools import Poly, gcd_list
 
@@ -15,6 +15,7 @@ from sympy.polys.polyroots import (
 
 from sympy.polys.polyerrors import (
     PolynomialError, DomainError,
+    MultivariatePolynomialError,
 )
 
 from sympy.ntheory import divisors
@@ -520,43 +521,70 @@ class RootOf(Expr):
 class RootSum(Expr):
     """Represents a sum of all roots of a univariate polynomial. """
 
-    __slots__ = ['poly', 'func', 'roots']
+    __slots__ = ['poly', 'func']
 
-    def __new__(cls, poly, func=None, formal=True):
-        """Construct new ``RootSum`` instance carrying all formal roots of ``poly``. """
-        poly = Poly(poly, greedy=False)
+    def __new__(cls, expr, func=None, x=None):
+        """Construct a new ``RootSum`` instance carrying all roots of a polynomial. """
+        coeff, poly = cls._transform(expr, x)
 
         if not poly.is_univariate:
-            raise PolynomialError("only univariate polynomials are supported")
+            raise MultivariatePolynomialError("only univariate polynomials are allowed")
 
         if func is None:
             func = Lambda(poly.gen, poly.gen)
-        elif not hasattr(func, '__call__'):
-            raise TypeError("%s is not a callable object" % func)
+        elif not isinstance(func, Lambda) or func.nargs != 1:
+            raise ValueError("expected a univariate Lambda, got %s" % func)
 
+        rational = func.expr.is_rational_function()
         (_, factors), terms = poly.factor_list(), []
 
+        if coeff is not S.One:
+            var, expr = func.args
+            func = Lambda(var, expr.subs(var, coeff*var))
+
         for poly, k in factors:
-            roots = []
-
-            for i in xrange(0, poly.degree()):
-                root = RootOf(poly, i)
-
-                if formal and root.has(RootOf):
-                    roots.append(root)
+            if poly.is_linear:
+                term = func(roots_linear(poly)[0])
+            else:
+                if not rational:
+                    term = cls._new(poly, func)
                 else:
-                    terms.append(k*func(root))
+                    term = cls._rational_case(poly, func)
 
-            if formal and roots:
-                obj = Expr.__new__(cls)
-
-                obj.poly = poly
-                obj.func = func
-                obj.roots = roots
-
-                terms.append(k*obj)
+            terms.append(k*term)
 
         return Add(*terms)
+
+    @classmethod
+    def _new(cls, poly, func):
+        """Construct new raw ``RootSum`` instance. """
+        obj = Expr.__new__(cls)
+
+        obj.poly = poly
+        obj.func = func
+
+        return obj
+
+    @classmethod
+    def new(cls, poly, func):
+        """Construct new ``RootSum`` instance. """
+        rational = func.expr.is_rational_function()
+
+        if not rational:
+            return cls._new(poly, func)
+        else:
+            return cls._rational_case(poly, func)
+
+    @classmethod
+    def _transform(cls, expr, x):
+        """Transform an expression to a polynomial. """
+        poly = Poly(expr, x, greedy=False)
+        return _rootof_preprocess(poly)
+
+    @classmethod
+    def _rational_case(cls, poly, func):
+        """Handle the rational function case. """
+        return cls._new(poly, func)
 
     def _hashable_content(self):
         return (self.expr, self.func)
@@ -567,10 +595,15 @@ class RootSum(Expr):
 
     @property
     def args(self):
-        return [self.expr, self.func]
+        return (self.expr, self.func)
 
     def doit(self, **hints):
         if hints.get('roots', True):
-            return Add(*map(self.func, self.roots))
+            return Add(*map(self.func, RootOf(self.poly, True)))
         else:
             return self
+
+    def _eval_derivative(self, x):
+        var, expr = self.func.args
+        func = Lambda(var, expr.diff(x))
+        return self.new(self.poly, func)
