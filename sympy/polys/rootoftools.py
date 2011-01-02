@@ -13,6 +13,14 @@ from sympy.polys.polyroots import (
     roots_linear, roots_quadratic, roots_binomial,
 )
 
+from sympy.polys.rationaltools import (
+    together,
+)
+
+from sympy.polys.polyfuncs import (
+    symmetrize, viete,
+)
+
 from sympy.polys.polyerrors import (
     PolynomialError, DomainError,
     MultivariatePolynomialError,
@@ -24,7 +32,10 @@ from sympy.mpmath import (
     mp, mpf, mpc, mpi, findroot,
 )
 
+from sympy.simplify import collect
 from sympy.utilities import any, lambdify
+
+import operator
 
 def dup_minpoly_add(f, g, K):
     F = dmp_raise(f, 1, 0, K)
@@ -535,8 +546,8 @@ class RootSum(Expr):
         elif not isinstance(func, Lambda) or func.nargs != 1:
             raise ValueError("expected a univariate Lambda, got %s" % func)
 
-        rational = func.expr.is_rational_function()
         (_, factors), terms = poly.factor_list(), []
+        rational = cls._is_func_rational(poly, func)
 
         if coeff is not S.One:
             var, expr = func.args
@@ -568,7 +579,7 @@ class RootSum(Expr):
     @classmethod
     def new(cls, poly, func):
         """Construct new ``RootSum`` instance. """
-        rational = func.expr.is_rational_function()
+        rational = cls._is_func_rational(poly, func)
 
         if not rational:
             return cls._new(poly, func)
@@ -582,9 +593,46 @@ class RootSum(Expr):
         return _rootof_preprocess(poly)
 
     @classmethod
+    def _is_func_rational(cls, poly, func):
+        """Check if a lambda is areational function. """
+        gen, (var, expr) = poly.gen, func.args
+        return expr.is_rational_function(gen, var)
+
+    @classmethod
     def _rational_case(cls, poly, func):
         """Handle the rational function case. """
-        return cls._new(poly, func)
+        roots = symbols('r:%d' % poly.degree())
+        var, expr = func.args
+
+        f = sum(expr.subs(var, r) for r in roots)
+        p, q = together(f).as_numer_denom()
+
+        gen = poly.gen
+
+        p = collect(p.expand(), gen, evaluate=False)
+        q = collect(q.expand(), gen, evaluate=False)
+
+        p_monom, p_coeff = zip(*p.items())
+        q_monom, q_coeff = zip(*q.items())
+
+        coeffs, mapping = symmetrize(p_coeff + q_coeff, formal=True)
+        formulas, values = viete(poly, roots), []
+
+        for (sym, _), (_, val) in zip(mapping, formulas):
+            values.append((sym, val))
+
+        for i, (coeff, _) in enumerate(coeffs):
+            coeffs[i] = coeff.subs(values)
+
+        n = len(p_coeff)
+
+        p_coeff = coeffs[:n]
+        q_coeff = coeffs[n:]
+
+        p = Add(*map(operator.mul, p_coeff, p_monom))
+        q = Add(*map(operator.mul, q_coeff, q_monom))
+
+        return p/q
 
     def _hashable_content(self):
         return (self.expr, self.func)
