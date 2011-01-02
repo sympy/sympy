@@ -368,24 +368,27 @@ class RootOf(Expr):
         if not poly.is_univariate:
             raise PolynomialError("only univariate polynomials are supported")
 
-        if poly.degree() <= 0:
+        degree = poly.degree()
+
+        if degree <= 0:
             raise PolynomialError("can't construct RootOf object for %s" % f)
 
-        if indices is not None:
+        if indices is not None and indices is not True:
             if hasattr(indices, '__iter__'):
                 indices, iterable = list(indices), True
             else:
                 indices, iterable = [indices], False
 
-            deg = poly.degree()
-
             for i, index in enumerate(indices):
-                if index < -deg or index >= deg:
-                    raise IndexError("root index out of [%d, %d] range, got %d" % (-deg, deg-1, index))
+                if index < -degree or index >= degree:
+                    raise IndexError("root index out of [%d, %d] range, got %d" % (-degree, degree-1, index))
                 elif index < 0:
-                    indices[i] += deg
+                    indices[i] += degree
         else:
             iterable = True
+
+            if indices is True:
+                indices = range(degree)
 
         dom = poly.get_domain()
 
