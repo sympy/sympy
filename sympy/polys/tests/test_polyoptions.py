@@ -3,8 +3,7 @@
 from sympy.polys.polyoptions import (
     Options, Expand, Gens, Wrt, Sort, Order, Field, Greedy, Domain,
     Split, Gaussian, Extension, Modulus, Symmetric, Strict, Auto,
-    Frac, Formal, Polys, Include, Monic, All, Gen,
-)
+    Frac, Formal, Polys, Include, Monic, All, Gen, Symbols)
 
 from sympy.polys.monomialtools import monomial_lex_key
 
@@ -418,3 +417,12 @@ def test_Gen_postprocess():
     Gen.postprocess(opt)
 
     assert opt == {'gen': x}
+
+def test_Symbols_preprocess():
+    raises(OptionError, "Symbols.preprocess(x)")
+
+def test_Symbols_postprocess():
+    opt = {'symbols': [x, y, z]}
+    Symbols.postprocess(opt)
+
+    assert opt == {'symbols': [x, y, z]}
