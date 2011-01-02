@@ -28,7 +28,7 @@ from polytools import (
 )
 
 from polyfuncs import (
-    symmetrize, horner, interpolate,
+    symmetrize, horner, interpolate, viete,
 )
 
 from rationaltools import (

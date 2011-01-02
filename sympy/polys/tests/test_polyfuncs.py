@@ -1,8 +1,15 @@
 """Tests for high--level polynomials manipulation functions. """
 
 from sympy.polys.polyfuncs import (
-    symmetrize, horner, interpolate,
+    symmetrize, horner, interpolate, viete,
 )
+
+from sympy.polys.polyerrors import (
+    MultivariatePolynomialError,
+)
+
+from sympy import symbols
+from sympy.utilities.pytest import raises
 
 from sympy.abc import a, b, c, d, e, x, y, z
 
@@ -55,3 +62,13 @@ def test_interpolate():
     assert interpolate([(1, 1), (2, 4), (3, 9)], x) == x**2
     assert interpolate([(1, 2), (2, 5), (3, 10)], x) == 1 + x**2
     assert interpolate({1: 2, 2: 5, 3: 10}, x) == 1 + x**2
+
+def test_viete():
+    r1, r2 = symbols('r1, r2')
+
+    assert viete(a*x**2 + b*x + c, [r1, r2], x) == [(r1 + r2, -b/a), (r1*r2, c/a)]
+
+    raises(ValueError, "viete(1, [], x)")
+    raises(ValueError, "viete(x**2 + 1, [r1])")
+
+    raises(MultivariatePolynomialError, "viete(x + y, [r1])")
