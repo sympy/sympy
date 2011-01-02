@@ -12,7 +12,7 @@ from sympy.polys.polyerrors import (
 from sympy.utilities import (
     all, any, numbered_symbols)
 
-from sympy.core import S, Add, Mul
+from sympy.core import S, Basic, Add, Mul
 
 def symmetrize(f, *gens, **args):
     """
@@ -42,13 +42,19 @@ def symmetrize(f, *gens, **args):
     try:
         f, opt = poly_from_expr(f, *gens, **args)
     except PolificationFailed, exc:
-        return ComputationFailed('symmetrize', 1, exc)
+        if exc.expr.is_Number:
+            if exc.opt.formal:
+                return (exc.expr, S.Zero, {})
+            else:
+                return (exc.expr, S.Zero)
+        else:
+            raise ComputationFailed('symmetrize', 1, exc)
 
     polys, symbols = [], numbered_symbols('s', start=1)
 
     gens, dom = f.gens, f.get_domain()
 
-    for i in range(0, len(f.gens)):
+    for i in xrange(0, len(f.gens)):
         poly = symmetric_poly(i+1, gens, polys=True)
         polys.append((symbols.next(), poly.set_domain(dom)))
 
