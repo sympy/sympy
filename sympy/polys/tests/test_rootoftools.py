@@ -7,17 +7,19 @@ from sympy.polys.rootoftools import (
 )
 
 from sympy.polys.polyerrors import (
+    MultivariatePolynomialError,
     GeneratorsNeeded,
     PolynomialError,
     DomainError,
 )
 
 from sympy import (
-    symbols, sqrt, I, Rational, Real, Lambda,
+    symbols, sqrt, I, Rational, Real, Lambda, log, exp,
 )
 
 from sympy.utilities.pytest import raises
-from sympy.abc import x, y
+
+from sympy.abc import x, y, r
 
 def test_RootOf___new__():
     assert RootOf(x, 0) == 0
@@ -167,27 +169,28 @@ def test_RootOf_preprocessing():
 def test_RootSum___new__():
     f = x**3 + x + 3
 
-    assert isinstance(RootSum(f), RootSum) == True
-    assert RootSum(f).doit() == RootOf(f, 0) + RootOf(f, 1) + RootOf(f, 2)
+    g = Lambda(r, log(r*x))
+    s = RootSum(f, g)
 
-    assert RootSum(f**2) == 2*RootSum(f)
-    assert RootSum(f**2).doit() == 2*(RootOf(f, 0) + RootOf(f, 1) + RootOf(f, 2))
+    rootofs = sum(log(RootOf(f, i)*x) for i in (0, 1, 2))
 
-    assert RootSum((x - 7)*f**3) == 7 + 3*RootSum(f)
-    assert RootSum((x - 7)*f**3).doit() == 7 + 3*(RootOf(f, 0) + RootOf(f, 1) + RootOf(f, 2))
+    assert isinstance(s, RootSum) == True
+    assert s.doit() == rootofs
 
-    g = Lambda(x, x**2)
+    assert RootSum(f**2, g) == 2*RootSum(f, g)
+    assert RootSum(f**2, g).doit() == 2*rootofs
 
-    assert isinstance(RootSum(f, g), RootSum) == True
-    assert RootSum(f, g).doit() == RootOf(f, 0)**2 + RootOf(f, 1)**2 + RootOf(f, 2)**2
+    assert RootSum((x - 7)*f**3, g) == log(7*x) + 3*RootSum(f, g)
+    assert RootSum((x - 7)*f**3, g).doit() == log(7*x) + 3*rootofs
 
-    assert RootSum(f**2, g) == 2*RootSum(f, Lambda(x, x**2))
-    assert RootSum(f**2, g).doit() == 2*(RootOf(f, 0)**2 + RootOf(f, 1)**2 + RootOf(f, 2)**2)
+    raises(MultivariatePolynomialError, "RootSum(x**3 + x + y)")
+    raises(ValueError, "RootSum(x**2 + 3, lambda x: x)")
 
-    assert RootSum((x - 7)*f**3, g) == 49 + 3*RootSum(f, Lambda(x, x**2))
-    assert RootSum((x - 7)*f**3, g).doit() == 49 + 3*(RootOf(f, 0)**2 + RootOf(f, 1)**2 + RootOf(f, 2)**2)
+def test_RootSum_diff():
+    f = x**3 + x + 3
 
-    assert RootSum(f, formal=False) == RootOf(f, 0) + RootOf(f, 1) + RootOf(f, 2)
+    g = Lambda(r,   exp(r*x))
+    h = Lambda(r, r*exp(r*x))
 
-    raises(PolynomialError, "RootSum(x**3 + x + y)")
-    raises(TypeError, "RootSum(x**2 + 3, 10)")
+    assert RootSum(f, g).diff(x) == RootSum(f, h)
+

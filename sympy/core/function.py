@@ -764,6 +764,14 @@ class Lambda(Function):
         else:
             return None
 
+    @property
+    def vars(self):
+        return self.args[:-1]
+
+    @property
+    def expr(self):
+        return self.args[-1]
+
 def diff(f, *symbols, **kwargs):
     """
     Differentiate f with respect to symbols.
