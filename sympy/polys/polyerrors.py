@@ -100,7 +100,7 @@ class FlagError(OptionError):
 
 class PolificationFailed(PolynomialError):
 
-    def __init__(self, origs, exprs, seq=False):
+    def __init__(self, opt, origs, exprs, seq=False):
         if not seq:
             self.orig = origs
             self.expr = exprs
@@ -110,6 +110,7 @@ class PolificationFailed(PolynomialError):
             self.origs = origs
             self.exprs = exprs
 
+        self.opt = opt
         self.seq = seq
 
     def __str__(self): # pragma: no cover
