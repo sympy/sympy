@@ -1,7 +1,7 @@
 """Options manager for :class:`Poly` and public API functions. """
 
 from sympy.core import S, Basic, sympify
-from sympy.utilities import any, all
+from sympy.utilities import any, all, numbered_symbols
 
 from sympy.polys.polyerrors import (
     GeneratorsError,
@@ -615,9 +615,6 @@ class Gen(Flag):
 
     option = 'gen'
 
-    requires = []
-    excludes = []
-
     @classmethod
     def default(cls):
         return 0
@@ -628,6 +625,24 @@ class Gen(Flag):
             return gen
         else:
             raise OptionError("invalid argument for 'gen' option")
+
+class Symbols(Flag):
+    """``symbols`` flag to polynomial manipulation functions. """
+
+    __metaclass__ = OptionType
+
+    option = 'symbols'
+
+    @classmethod
+    def default(cls):
+        return numbered_symbols('s', start=1)
+
+    @classmethod
+    def preprocess(cls, symbols):
+        if hasattr(symbols, '__iter__'):
+            return iter(symbols)
+        else:
+            raise OptionError("expected an iterator or iterable container, got %s" % symbols)
 
 def build_options(gens, args=None):
     """Construct options from keyword arguments or ... options. """
