@@ -3157,7 +3157,7 @@ def _poly_from_expr(expr, opt):
     orig, expr = expr, sympify(expr)
 
     if not isinstance(expr, Basic):
-        raise PolificationFailed(orig, expr)
+        raise PolificationFailed(opt, orig, expr)
     elif expr.is_Poly:
         poly = Poly(expr, opt=opt)
 
@@ -3181,14 +3181,14 @@ def _poly_from_expr(expr, opt):
         try:
             return _parallel_poly_from_expr((numer, denom), opt)
         except PolificationFailed:
-            raise PolificationFailed(orig, numer/denom)
+            raise PolificationFailed(opt, orig, numer/denom)
     elif opt.expand:
         expr = expr.expand()
 
     try:
         rep, opt = _dict_from_expr(expr, opt)
     except GeneratorsNeeded:
-        raise PolificationFailed(orig, expr)
+        raise PolificationFailed(opt, orig, expr)
 
     monoms, coeffs = zip(*rep.items())
     domain = opt.domain
@@ -3255,7 +3255,7 @@ def _parallel_poly_from_expr(exprs, opt):
         exprs.append(expr)
 
     if failed:
-        raise PolificationFailed(origs, exprs, True)
+        raise PolificationFailed(opt, origs, exprs, True)
 
     if _polys:
         # XXX: this is a temporary solution
@@ -3265,7 +3265,7 @@ def _parallel_poly_from_expr(exprs, opt):
     try:
         reps, opt = _parallel_dict_from_expr(exprs, opt)
     except GeneratorsNeeded:
-        raise PolificationFailed(origs, exprs, True)
+        raise PolificationFailed(opt, origs, exprs, True)
 
     coeffs_list, lengths = [], []
 
