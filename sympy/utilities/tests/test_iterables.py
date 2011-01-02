@@ -167,6 +167,8 @@ def test_take():
     assert take(X, 5) == list(symbols('x0:5'))
     assert take(X, 5) == list(symbols('x5:10'))
 
+    assert take([1,2,3,4,5], 5) == [1,2,3,4,5]
+
 def test_dict_merge():
     assert dict_merge({}, {1: x, y: z}) == {1: x, y: z}
     assert dict_merge({1: x, y: z}, {}) == {1: x, y: z}
