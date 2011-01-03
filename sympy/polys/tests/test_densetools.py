@@ -29,12 +29,13 @@ from sympy.polys.densetools import (
     dup_decompose,
     dmp_lift,
     dup_sign_variations,
-    dup_revert,
+    dup_revert, dmp_revert,
 )
 
 from sympy.polys.polyclasses import DMP, ANP
 
 from sympy.polys.polyerrors import (
+    MultivariatePolynomialError,
     ExactQuotientFailed,
     NotReversible,
     DomainError,
@@ -229,6 +230,14 @@ def test_dup_revert():
     assert dup_revert(f, 8, QQ) == g
 
     raises(NotReversible, "dup_revert([QQ(1), QQ(0)], 3, QQ)")
+
+def test_dmp_revert():
+    f = [-QQ(1,720),QQ(0),QQ(1,24),QQ(0),-QQ(1,2),QQ(0),QQ(1)]
+    g = [QQ(61,720),QQ(0),QQ(5,24),QQ(0), QQ(1,2),QQ(0),QQ(1)]
+
+    assert dmp_revert(f, 8, 0, QQ) == g
+
+    raises(MultivariatePolynomialError, "dmp_revert([[1]], 2, 1, QQ)")
 
 def test_dup_trunc():
     assert dup_trunc([1,2,3,4,5,6], ZZ(3), ZZ) == [1, -1, 0, 1, -1, 0]

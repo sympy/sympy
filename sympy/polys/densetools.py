@@ -41,6 +41,7 @@ from sympy.polys.densearith import (
 )
 
 from sympy.polys.polyerrors import (
+    MultivariatePolynomialError,
     HeuristicGCDFailed,
     HomomorphismFailed,
     RefinementFailed,
