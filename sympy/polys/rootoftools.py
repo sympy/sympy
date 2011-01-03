@@ -1,6 +1,8 @@
 """Implementation of RootOf class and related tools. """
 
-from sympy import S, Basic, Expr, Integer, Real, I, Add, Lambda, symbols
+from sympy.core import (
+    S, Basic, Expr, Integer, Real, I, Add, Lambda, symbols,
+)
 
 from sympy.polys.polytools import Poly, gcd_list
 
@@ -550,8 +552,19 @@ class RootSum(Expr):
 
         if func is None:
             func = Lambda(poly.gen, poly.gen)
-        elif not isinstance(func, Lambda) or func.nargs != 1:
-            raise ValueError("expected a univariate Lambda, got %s" % func)
+        else:
+            try:
+                is_func = func.is_Function
+            except AttributeError:
+                is_func = False
+
+            if is_func and (func.nargs == 1 or 1 in func.nargs):
+                if not isinstance(func, Lambda):
+                    func = Lambda(poly.gen, func(poly.gen))
+                elif not func.expr.has(*func.vars):
+                    return func.expr
+            else:
+                raise ValueError("expected a univariate function, got %s" % func)
 
         (_, factors), terms = poly.factor_list(), []
         rational = cls._is_func_rational(poly, func)
