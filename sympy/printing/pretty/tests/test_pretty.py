@@ -1898,7 +1898,7 @@ RootOf⎝x  + 11⋅x - 2, 0⎠\
     assert upretty(expr) == ucode_str
 
 def test_pretty_RootSum():
-    expr = RootSum(x**5 + 11*x - 2)
+    expr = RootSum(x**5 + 11*x - 2, auto=False)
     ascii_str = \
 """\
        / 5           \\\n\
