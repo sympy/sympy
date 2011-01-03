@@ -68,7 +68,5 @@ def test_apart_full_decomposition():
     p = Poly(1, x)
     q = Poly(x**5 + 1, x)
 
-    assert str(apart_full_decomposition(p, q)) in [
-        "RootSum(x**4 - x**3 + x**2 - x + 1, Lambda(_a, -1/5/(x - _a)*_a)) + 1/(5*(1 + x))",
-        "RootSum(x**4 - x**3 + x**2 - x + 1, Lambda(_a, -_a/(5*(x - _a)))) + 1/(5*(1 + x))",
-    ]
+    assert apart_full_decomposition(p, q) == \
+        (-x**3 + 2*x**2 - 3*x + 4)/(5*x**4 - 5*x**3 + 5*x**2 - 5*x + 5) + (S(1)/5)/(x + 1)
