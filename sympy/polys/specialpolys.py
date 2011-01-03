@@ -109,10 +109,10 @@ def random_poly(x, n, inf, sup, domain=ZZ, polys=False):
 def interpolating_poly(n, x, X='x', Y='y'):
     """Construct Lagrange interpolating polynomial for ``n`` data points. """
     if isinstance(X, str):
-        X = symbols("%s:%s" % (xn, n))
+        X = symbols("%s:%s" % (X, n))
 
     if isinstance(Y, str):
-        Y = symbols("%s:%s" % (yn, n))
+        Y = symbols("%s:%s" % (Y, n))
 
     coeffs = []
 
