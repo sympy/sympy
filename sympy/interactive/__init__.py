@@ -136,37 +136,35 @@ def init_session(session="ipython", pretty_print=True, order=None, use_unicode=N
 
     ip.runcode(ip.compile("init_printing(pretty_print=%s, order=%r, use_unicode=%s)" % (pretty_print, order, use_unicode)))
 
+    from sympy import __version__ as sympy_version
+    py_version = "%d.%d.%d" % sys.version_info[:3]
+
+    if session == "ipython":
+        py_name = "IPython"
+    else:
+        py_name = "Python"
+
+    from sympy.polys.domains import GROUND_TYPES
+
+    info = ['ground types: %s' % GROUND_TYPES]
+
+    cache = os.getenv('SYMPY_USE_CACHE')
+
+    if cache is not None and cache.lower() == 'no':
+        info.append('cache: off')
+
+    welcome = "%s console for SymPy %s (Python %s) (%s)" % \
+        (py_name, sympy_version, py_version, ', '.join(info))
+
+    if message is not None:
+        message = welcome + '\n\n' + message
+    else:
+        message = welcome + '\n'
+
     if not in_ipyshell:
-        from sympy import __version__ as sympy_version
-        py_version = "%d.%d.%d" % sys.version_info[:3]
-
-        if session == "ipython":
-            py_name = "IPython"
-        else:
-            py_name = "Python"
-
-        from sympy.polys.domains import GROUND_TYPES
-
-        info = ['ground types: %s' % GROUND_TYPES]
-
-        cache = os.getenv('SYMPY_USE_CACHE')
-
-        if cache is not None and cache.lower() == 'no':
-            info.append('cache: off')
-
-        welcome = "%s console for SymPy %s (Python %s) (%s)" % \
-            (py_name, sympy_version, py_version, ', '.join(info))
-
-        if message is not None:
-            message = welcome + '\n\n' + message
-        else:
-            message = welcome + '\n'
-
         ip.interact(message)
         sys.exit('Exiting ...')
     else:
-        def shutdown_hook(self):
-            print "Exiting ..."
-
-        ip.set_hook('shutdown_hook', shutdown_hook)
+        ip.write(message)
+        ip.set_hook('shutdown_hook', lambda ip: ip.write("Exiting ...\n"))
 
