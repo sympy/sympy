@@ -24,8 +24,10 @@ from sympy.polys.polyfuncs import (
 )
 
 from sympy.polys.polyerrors import (
-    PolynomialError, DomainError,
     MultivariatePolynomialError,
+    GeneratorsNeeded,
+    PolynomialError,
+    DomainError,
 )
 
 from sympy.polys.domains import QQ
@@ -632,11 +634,19 @@ class RootSum(Expr):
 
         domain = QQ[roots]
 
-        p = Poly(p, domain=domain)
-        q = Poly(q, domain=domain)
+        try:
+            p = Poly(p, domain=domain)
+        except GeneratorsNeeded:
+            p, p_coeff = None, [p]
+        else:
+            p_monom, p_coeff = zip(*p.terms())
 
-        p_monom, p_coeff = zip(*p.terms())
-        q_monom, q_coeff = zip(*q.terms())
+        try:
+            q = Poly(q, domain=domain)
+        except GeneratorsNeeded:
+            q, q_coeff = None, [q]
+        else:
+            q_monom, q_coeff = zip(*q.terms())
 
         coeffs, mapping = symmetrize(p_coeff + q_coeff, formal=True)
         formulas, values = viete(poly, roots), []
@@ -652,10 +662,17 @@ class RootSum(Expr):
         p_coeff = coeffs[:n]
         q_coeff = coeffs[n:]
 
-        p = Poly(dict(zip(p_monom, p_coeff)), *p.gens)
-        q = Poly(dict(zip(q_monom, q_coeff)), *q.gens)
+        if p is not None:
+            p = Poly(dict(zip(p_monom, p_coeff)), *p.gens).as_expr()
+        else:
+            (p,) = p_coeff
 
-        return p.as_expr()/q.as_expr()
+        if q is not None:
+            q = Poly(dict(zip(q_monom, q_coeff)), *q.gens).as_expr()
+        else:
+            (q,) = q_coeff
+
+        return p/q
 
     def _hashable_content(self):
         return (self.expr, self.func)

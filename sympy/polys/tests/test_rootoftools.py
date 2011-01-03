@@ -192,6 +192,10 @@ def test_RootSum___new__():
 
     assert isinstance(RootSum(f, auto=False), RootSum) == True
 
+    assert RootSum(f) == 0
+    assert RootSum(f, Lambda(x, x)) == 0
+    assert RootSum(f, Lambda(x, x**2)) == -2
+
 def test_RootSum_diff():
     f = x**3 + x + 3
 
