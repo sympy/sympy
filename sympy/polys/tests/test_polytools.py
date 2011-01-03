@@ -266,6 +266,8 @@ def test_Poly__new__():
     assert Poly(f, x, modulus=65537, symmetric=False) == \
         Poly(3*x**5 + 65536*x**4 + x**3 + 65536*x** 2 + 1, x, modulus=65537, symmetric=False)
 
+    assert Poly(x**2 + x + 1.0).get_domain() == RR
+
 def test_Poly__args():
     assert Poly(x**2 + 1).args == [x**2 + 1]
 

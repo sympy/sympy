@@ -139,7 +139,7 @@ def _parallel_dict_from_expr_if_gens(exprs, opt):
     for expr in exprs:
         poly = {}
 
-        for term in Add.make_args(expr) or (S.Zero,):
+        for term in Add.make_args(expr):
             coeff, monom = [], [0]*k
 
             for factor in Mul.make_args(term):
@@ -190,7 +190,7 @@ def _parallel_dict_from_expr_no_gens(exprs, opt):
     for expr in exprs:
         terms = []
 
-        for term in Add.make_args(expr) or (S.Zero,):
+        for term in Add.make_args(expr):
             coeff, elements = [], {}
 
             for factor in Mul.make_args(term):
