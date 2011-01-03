@@ -26,6 +26,8 @@ from sympy.polys.polyerrors import (
     MultivariatePolynomialError,
 )
 
+from sympy.polys.domains import QQ
+
 from sympy.ntheory import divisors
 
 from sympy.mpmath import (
@@ -600,8 +602,7 @@ class RootSum(Expr):
     @classmethod
     def _is_func_rational(cls, poly, func):
         """Check if a lambda is areational function. """
-        gen, (var, expr) = poly.gen, func.args
-        return expr.is_rational_function(gen, var)
+        return func.expr.is_rational_function()
 
     @classmethod
     def _rational_case(cls, poly, func):
@@ -612,13 +613,13 @@ class RootSum(Expr):
         f = sum(expr.subs(var, r) for r in roots)
         p, q = together(f).as_numer_denom()
 
-        gen = poly.gen
+        domain = QQ[roots]
 
-        p = collect(p.expand(), gen, evaluate=False)
-        q = collect(q.expand(), gen, evaluate=False)
+        p = Poly(p, domain=domain)
+        q = Poly(q, domain=domain)
 
-        p_monom, p_coeff = zip(*p.items())
-        q_monom, q_coeff = zip(*q.items())
+        p_monom, p_coeff = zip(*p.terms())
+        q_monom, q_coeff = zip(*q.terms())
 
         coeffs, mapping = symmetrize(p_coeff + q_coeff, formal=True)
         formulas, values = viete(poly, roots), []
@@ -634,10 +635,10 @@ class RootSum(Expr):
         p_coeff = coeffs[:n]
         q_coeff = coeffs[n:]
 
-        p = Add(*map(operator.mul, p_coeff, p_monom))
-        q = Add(*map(operator.mul, q_coeff, q_monom))
+        p = Poly(dict(zip(p_monom, p_coeff)), *p.gens)
+        q = Poly(dict(zip(q_monom, q_coeff)), *q.gens)
 
-        return p/q
+        return p.as_expr()/q.as_expr()
 
     def _hashable_content(self):
         return (self.expr, self.func)
