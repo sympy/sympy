@@ -667,6 +667,12 @@ def test_Poly_to_exact():
 
     assert Poly(0.1*x).to_exact() == Poly(x/10)
 
+def test_Poly_retract():
+    f = Poly(x**2 + 1, x, domain=QQ[y])
+
+    assert f.retract() == Poly(x**2 + 1, x, domain='ZZ')
+    assert f.retract(field=True) == Poly(x**2 + 1, x, domain='QQ')
+
 def test_Poly_slice():
     f = Poly(x**3 + 2*x**2 + 3*x + 4)
 

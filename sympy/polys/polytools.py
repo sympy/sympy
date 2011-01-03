@@ -619,6 +619,29 @@ class Poly(Basic):
 
         return f.per(result)
 
+    def retract(f, field=None):
+        """
+        Recalculate the ground domain of a polynomial.
+
+        Example
+        =======
+
+        >>> from sympy import Poly
+        >>> from sympy.abc import x, y
+
+        >>> f = Poly(x**2 + 1, x, domain='QQ[y]')
+        >>> f
+        Poly(x**2 + 1, x, domain='QQ[y]')
+
+        >>> f.retract()
+        Poly(x**2 + 1, x, domain='ZZ')
+        >>> f.retract(field=True)
+        Poly(x**2 + 1, x, domain='QQ')
+
+        """
+        dom, rep = construct_domain(f.as_dict(), field=field)
+        return f.from_dict(rep, *f.gens, domain=dom)
+
     def slice(f, x, m, n=None):
         """Take a continuous subsequence of terms of ``f``. """
         if n is None:
