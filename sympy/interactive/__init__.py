@@ -72,7 +72,18 @@ def init_printing(pretty_print=True, order=None, use_unicode=None, wrap_line=Non
         else:
             _init_python_printing(stringify_func)
 
-def init_session(session="ipython", pretty_print=True, order=None, use_unicode=None, message=None, argv=[]):
+verbose_message = """\
+These commands were executed:
+>>> from __future__ import division
+>>> from sympy import *
+>>> x, y, z = symbols('xyz')
+>>> k, m, n = symbols('kmn', integer=True)
+>>> f, g, h = map(Function, 'fgh')
+
+Documentation can be found at http://sympy.org/
+"""
+
+def init_session(session="ipython", pretty_print=True, order=None, use_unicode=None, quiet=False, argv=[]):
     """Initialize embedded IPython or Python session. """
     import os, sys
 
@@ -156,8 +167,8 @@ def init_session(session="ipython", pretty_print=True, order=None, use_unicode=N
     welcome = "%s console for SymPy %s (Python %s) (%s)" % \
         (py_name, sympy_version, py_version, ', '.join(info))
 
-    if message is not None:
-        message = welcome + '\n\n' + message
+    if not quiet:
+        message = welcome + '\n\n' + verbose_message
     else:
         message = welcome + '\n'
 
