@@ -13,10 +13,13 @@ compiled_modules = [
     "sympy.polys.densearith",
     "sympy.polys.densebasic",
     "sympy.polys.densetools",
-    "sympy.polys.galoistools",
+    "sympy.polys.euclidtools",
     "sympy.polys.factortools",
-    "sympy.polys.specialpolys",
+    "sympy.polys.galoistools",
     "sympy.polys.monomialtools",
+    "sympy.polys.orthopolys",
+    "sympy.polys.specialpolys",
+    "sympy.polys.sqfreetools",
 ]
 
 extensions = []
@@ -31,7 +34,7 @@ for module in compiled_modules:
         raise RuntimeError("failed to compile %s" % module)
 
     extensions.append(
-        Extension(module, sources=[result.c_file],
+        Extension(module, sources=[str(result.c_file)],
             extra_compile_args=['-O2', '-Wall'],
         )
     )
