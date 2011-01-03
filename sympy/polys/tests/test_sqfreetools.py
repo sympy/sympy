@@ -126,6 +126,9 @@ def test_dmp_sqf():
     assert dup_sqf_list([], ZZ) == (ZZ(0), [])
     assert dup_sqf_list_include([], ZZ) == [([], 1)]
 
+    assert dmp_sqf_list([[ZZ(3)]], 1, ZZ) == (ZZ(3), [])
+    assert dmp_sqf_list_include([[ZZ(3)]], 1, ZZ) == [([[ZZ(3)]], 1)]
+
     f = [-1,1,0,0,1,-1]
 
     assert dmp_sqf_list(f, 0, ZZ) == \
