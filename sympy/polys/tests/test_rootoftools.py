@@ -187,6 +187,9 @@ def test_RootSum___new__():
     raises(MultivariatePolynomialError, "RootSum(x**3 + x + y)")
     raises(ValueError, "RootSum(x**2 + 3, lambda x: x)")
 
+    assert RootSum(f, exp) == RootSum(f, Lambda(x, exp(x)))
+    assert RootSum(f, log) == RootSum(f, Lambda(x, log(x)))
+
 def test_RootSum_diff():
     f = x**3 + x + 3
 
