@@ -58,19 +58,6 @@ sympy_dir  = os.path.join(sympy_top, 'sympy')  # ../sympy/
 if os.path.isdir(sympy_dir):
     sys.path.insert(0, sympy_top)
 
-# some longer messages
-
-long_message = """\
-These commands were executed:
->>> from __future__ import division
->>> from sympy import *
->>> x, y, z, t = symbols('x,y,z,t')
->>> k, m, n = symbols('k,m,n', integer=True)
->>> f, g, h = map(Function, 'fgh')
-
-Documentation can be found at http://sympy.org/
-"""
-
 no_ipython = """\
 Couldn't locate IPython. Having IPython installed is greatly recommended.
 See http://ipython.scipy.org for more details.  If you use Debian/Ubuntu,
@@ -161,8 +148,7 @@ def main():
     if order != 'old':
         args['order'] = order
 
-    if not options.quiet:
-        args['message'] = long_message
+    args['quiet'] = options.quiet
 
     try:
         init_session(session, **args)
