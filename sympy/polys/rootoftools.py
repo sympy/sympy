@@ -1,6 +1,6 @@
 """Implementation of RootOf class and related tools. """
 
-from sympy import S, Expr, Integer, Real, I, Add, Lambda, symbols
+from sympy import S, Basic, Expr, Integer, Real, I, Add, Lambda, symbols
 
 from sympy.polys.polytools import Poly, gcd_list
 
@@ -276,6 +276,8 @@ def _rootof_preprocess(poly):
     _, poly = poly.clear_denoms(convert=True)
     _, poly = poly.primitive()
 
+    poly = poly.retract()
+
     dom = poly.get_domain()
     coeff = S.One
 
@@ -373,9 +375,12 @@ class RootOf(Expr):
 
     __slots__ = ['poly', 'index', 'pointer', 'conjugate']
 
-    def __new__(cls, f, indices=None, radicals=True, expand=True):
+    def __new__(cls, f, x=None, indices=None, radicals=True, expand=True):
         """Construct a new ``RootOf`` object for ``k``-th root of ``f``. """
-        poly = Poly(f, greedy=False, expand=expand)
+        if indices is None and not isinstance(x, Basic):
+            x, indices = None, x
+
+        poly = Poly(f, x, greedy=False, expand=expand)
 
         if not poly.is_univariate:
             raise PolynomialError("only univariate polynomials are supported")
