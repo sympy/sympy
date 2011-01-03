@@ -145,7 +145,7 @@ class Set(Basic):
         if isinstance(other, Set):
             return self.intersect(other) == other
         else:
-            raise ValueError, "Unknown argument '%s'" % other
+            raise ValueError("Unknown argument '%s'" % other)
 
     @property
     def measure(self):
@@ -239,7 +239,7 @@ class Interval(Set, EvalfMixin):
 
         # Only allow real intervals (use symbols with 'is_real=True').
         if not start.is_real or not end.is_real:
-            raise ValueError, "Only real intervals are supported"
+            raise ValueError("Only real intervals are supported")
 
         # Make sure that the created interval will be valid.
         if end.is_comparable and start.is_comparable:
@@ -479,7 +479,7 @@ class Union(Set):
                 other_sets.append(arg)
 
             else:
-                raise ValueError, "Unknown argument '%s'" % arg
+                raise ValueError("Unknown argument '%s'" % arg)
 
         # Any non-empty sets at all?
         if len(intervals) == 0 and len(other_sets) == 0:
@@ -622,3 +622,4 @@ class EmptySet(Set):
 
     def _contains(self, other):
         return False
+
