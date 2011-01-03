@@ -28,4 +28,4 @@ banner 0
 
 import_all sympy.interactive
 
-execute init_ipython()
+execute init_session()
