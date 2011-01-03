@@ -541,9 +541,9 @@ class RootOf(Expr):
 class RootSum(Expr):
     """Represents a sum of all roots of a univariate polynomial. """
 
-    __slots__ = ['poly', 'func']
+    __slots__ = ['poly', 'func', 'auto']
 
-    def __new__(cls, expr, func=None, x=None):
+    def __new__(cls, expr, func=None, x=None, auto=True):
         """Construct a new ``RootSum`` instance carrying all roots of a polynomial. """
         coeff, poly = cls._transform(expr, x)
 
@@ -577,8 +577,8 @@ class RootSum(Expr):
             if poly.is_linear:
                 term = func(roots_linear(poly)[0])
             else:
-                if not rational:
-                    term = cls._new(poly, func)
+                if not rational or not auto:
+                    term = cls._new(poly, func, auto)
                 else:
                     term = cls._rational_case(poly, func)
 
@@ -587,22 +587,26 @@ class RootSum(Expr):
         return Add(*terms)
 
     @classmethod
-    def _new(cls, poly, func):
+    def _new(cls, poly, func, auto=True):
         """Construct new raw ``RootSum`` instance. """
         obj = Expr.__new__(cls)
 
         obj.poly = poly
         obj.func = func
+        obj.auto = auto
 
         return obj
 
     @classmethod
-    def new(cls, poly, func):
+    def new(cls, poly, func, auto=True):
         """Construct new ``RootSum`` instance. """
+        if not func.expr.has(*func.vars):
+            return func.expr
+
         rational = cls._is_func_rational(poly, func)
 
-        if not rational:
-            return cls._new(poly, func)
+        if not rational or not auto:
+            return cls._new(poly, func, auto)
         else:
             return cls._rational_case(poly, func)
 
@@ -673,4 +677,4 @@ class RootSum(Expr):
     def _eval_derivative(self, x):
         var, expr = self.func.args
         func = Lambda(var, expr.diff(x))
-        return self.new(self.poly, func)
+        return self.new(self.poly, func, self.auto)
