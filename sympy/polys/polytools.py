@@ -640,7 +640,7 @@ class Poly(Basic):
 
         """
         dom, rep = construct_domain(f.as_dict(), field=field)
-        return f.from_dict(rep, *f.gens, domain=dom)
+        return f.from_dict(rep, f.gens, domain=dom)
 
     def slice(f, x, m, n=None):
         """Take a continuous subsequence of terms of ``f``. """
