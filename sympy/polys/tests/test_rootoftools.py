@@ -196,4 +196,4 @@ def test_RootSum_diff():
     assert RootSum(f, g).diff(x) == RootSum(f, h)
 
 def test_RootSum_rational():
-    assert RootSum(x**5 - x + 1, Lambda(z, z/(x - z))) == (4*x - 5)/(x**5 - x + 1)
+    assert RootSum(z**5 - z + 1, Lambda(z, z/(x - z))) == (4*x - 5)/(x**5 - x + 1)
