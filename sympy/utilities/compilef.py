@@ -390,7 +390,7 @@ def evalonarray(lambdastr, array, length=None, **kwargs):
         pointer = array
         assert isinstance(length,  int) and not length < 0
     else:
-        raise ValueError,  'array type not recognized'
+        raise ValueError('array type not recognized')
     # generate code
     code = """
 # include <math.h>
@@ -599,3 +599,4 @@ if __name__ == '__main__':
         print
     print 'Running benchmark...'
     benchmark()
+

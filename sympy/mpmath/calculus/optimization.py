@@ -344,7 +344,7 @@ def _getm(method):
             else:
                 return 0.5
     else:
-        raise ValueError, "method '%s' not recognized" % method
+        raise ValueError("method '%s' not recognized" % method)
     return getm
 
 class Illinois:
@@ -1085,3 +1085,4 @@ OptimizationMethods.multiplicity = multiplicity
 if __name__ == '__main__':
     import doctest
     doctest.testmod()
+

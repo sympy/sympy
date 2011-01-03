@@ -130,7 +130,7 @@ class Implies(BooleanFunction):
     @classmethod
     def eval(cls, *args):
         if len(args) != 2:
-            raise ValueError, "%d operand(s) used for an Implies (pairs are required): %s" % (len(args), str(args))
+            raise ValueError("%d operand(s) used for an Implies (pairs are required): %s" % (len(args), str(args)))
         else:
             return Or(Not(args[0]), args[1])
 
@@ -344,3 +344,4 @@ def to_int_repr(clauses, symbols):
 
     return [set(append_symbol(arg, symbols) for arg in Or.make_args(c)) \
                                                             for c in clauses]
+

@@ -76,9 +76,9 @@ class Piecewise(Function):
             cond_type = type(pair.cond)
             if not (cond_type is bool or issubclass(cond_type, Relational) or \
                     issubclass(cond_type, Number) or issubclass(cond_type, Set)):
-                raise TypeError, \
+                raise TypeError(
                     "Cond %s is of type %s, but must be a bool," \
-                    " Relational, Number or Set" % (pair.cond, cond_type)
+                    " Relational, Number or Set" % (pair.cond, cond_type))
             newargs.append(pair)
 
         r = cls.eval(*newargs)
@@ -290,3 +290,4 @@ def piecewise_fold(expr):
         if len(piecewise_args) > 1:
             return piecewise_fold(Piecewise(*new_args))
     return Piecewise(*new_args)
+
