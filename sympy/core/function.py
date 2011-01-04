@@ -976,7 +976,7 @@ def expand_multinomial(expr, deep=True):
 
     Example:
     >>> from sympy import symbols, expand_multinomial, exp
-    >>> x, y = symbols('xy', positive=True)
+    >>> x, y = symbols('x,y', positive=True)
     >>> expand_multinomial((x + exp(x + 1))**2)
     x**2 + 2*x*exp(1 + x) + exp(2 + 2*x)
 
