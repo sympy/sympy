@@ -2546,13 +2546,15 @@ class Poly(Basic):
             raise OperationNotSupported(f, 'intervals')
 
         if sqf:
-            def _real((s, t)):
+            def _real(interval):
+                s, t = interval
                 return (QQ.to_sympy(s), QQ.to_sympy(t))
 
             if not all:
                 return map(_real, result)
 
-            def _complex(((u, v), (s, t))):
+            def _complex(rectangle):
+                (u, v), (s, t) = rectangle
                 return (QQ.to_sympy(u) + I*QQ.to_sympy(v),
                         QQ.to_sympy(s) + I*QQ.to_sympy(t))
 
@@ -2560,13 +2562,15 @@ class Poly(Basic):
 
             return map(_real, real_part), map(_complex, complex_part)
         else:
-            def _real(((s, t), k)):
+            def _real(interval):
+                (s, t), k = interval
                 return ((QQ.to_sympy(s), QQ.to_sympy(t)), k)
 
             if not all:
                 return map(_real, result)
 
-            def _complex((((u, v), (s, t)), k)):
+            def _complex(rectangle):
+                ((u, v), (s, t)), k = rectangle
                 return ((QQ.to_sympy(u) + I*QQ.to_sympy(v),
                          QQ.to_sympy(s) + I*QQ.to_sympy(t)), k)
 

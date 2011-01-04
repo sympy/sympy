@@ -1132,7 +1132,7 @@ def _reverse_intervals(intervals):
 
 def _winding_number(T, field):
     """Compute the winding number of the input polynomial, i.e. the number of roots. """
-    return int(sum([ field(*_values[t][i]) for t, i in T ]) / 2)
+    return int(sum([ field(*_values[t][i]) for t, i in T ]) / field(2))
 
 def dup_count_complex_roots(f, K, inf=None, sup=None, exclude=None):
     """Count all roots in [u + v*I, s + t*I] rectangle using Collins-Krandick algorithm. """
@@ -1208,8 +1208,10 @@ def dup_count_complex_roots(f, K, inf=None, sup=None, exclude=None):
 
     return _winding_number(T, F)
 
-def _vertical_bisection(N, (u, v), (s, t), I, Q, F1, F2, f1, f2, F):
+def _vertical_bisection(N, a, b, I, Q, F1, F2, f1, f2, F):
     """Vertical bisection step in Collins-Krandick root isolation algorithm. """
+    (u, v), (s, t) = a, b
+
     I_L1, I_L2, I_L3, I_L4 = I
     Q_L1, Q_L2, Q_L3, Q_L4 = Q
 
@@ -1312,8 +1314,10 @@ def _vertical_bisection(N, (u, v), (s, t), I, Q, F1, F2, f1, f2, F):
 
     return D_L, D_R
 
-def _horizontal_bisection(N, (u, v), (s, t), I, Q, F1, F2, f1, f2, F):
+def _horizontal_bisection(N, a, b, I, Q, F1, F2, f1, f2, F):
     """Horizontal bisection step in Collins-Krandick root isolation algorithm. """
+    (u, v), (s, t) = a, b
+
     I_L1, I_L2, I_L3, I_L4 = I
     Q_L1, Q_L2, Q_L3, Q_L4 = Q
 
@@ -1428,8 +1432,10 @@ def _depth_first_select(rectangles):
 
     return rectangles.pop(j)
 
-def _rectangle_small_p((u, v), (s, t), eps):
+def _rectangle_small_p(a, b, eps):
     """Return ``True`` if the given rectangle is small enough. """
+    (u, v), (s, t) = a, b
+
     if eps is not None:
         return s - u < eps and t - v < eps
     else:

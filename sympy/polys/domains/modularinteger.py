@@ -10,6 +10,9 @@ class ModularInteger(object):
     def __init__(self, val):
         self.val = val % self.mod
 
+    def __hash__(self):
+        return hash((self.val, self.mod))
+
     def __repr__(self):
         return "%s(%s)" % (self.__class__.__name__, self.val)
 
