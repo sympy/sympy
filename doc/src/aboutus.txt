@@ -12,7 +12,7 @@ wiki pages (if they have one on the page `People
 more details what they do and what they are interested in (some people didn't
 want to be mentioned here, so see our repository history for a full list).
 
-#. `Ondřej Čertík <http://wiki.sympy.org/wiki/Ond%C5%99ej_%C4%8Cert%C3%ADk>`_: project leader
+#. `Ondřej Čertík <http://wiki.sympy.org/wiki/Ond%C5%99ej_%C4%8Cert%C3%ADk>`_: started the project in 2006, on Jan 4, 2011 passed the project leadership to Aaron Meurer
 #. Fabian Pedregosa: everything, reviewing patches, releases, general advice (issues and mailinglist), GSoC 2009
 #. Jurjen N.E. Bos: pretty printing and other patches
 #. Mateusz Paprocki: GSoC 2007, concrete math module, integration module, new core integration, a lot of patches, general advice, new polynomial module, improvements to solvers, simplifications, patch review
@@ -70,7 +70,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Kaifeng Zhu: factorint() fix
 #. Ted Horst: Basic.__call__() fix, pretty printing fix
 #. Akshay Srinivasan: Printing fix, improvements to integration
-#. Aaron Meurer: ODE solvers (GSoC 2009), other fixes
+#. Aaron Meurer: ODE solvers (GSoC 2009), other fixes, project leader
 #. Barry Wardell: implement series as function, several tests added
 #. Tomasz Buchert: ccode printing fixes, code quality concerning exceptions, documentation
 #. Vinay Kumar: polygamma tests
