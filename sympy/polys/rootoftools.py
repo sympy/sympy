@@ -547,7 +547,7 @@ class RootOf(Expr):
 class RootSum(Expr):
     """Represents a sum of all roots of a univariate polynomial. """
 
-    __slots__ = ['poly', 'func', 'auto']
+    __slots__ = ['poly', 'fun', 'auto']
 
     def __new__(cls, expr, func=None, x=None, auto=True):
         """Construct a new ``RootSum`` instance carrying all roots of a polynomial. """
@@ -598,7 +598,7 @@ class RootSum(Expr):
         obj = Expr.__new__(cls)
 
         obj.poly = poly
-        obj.func = func
+        obj.fun  = func
         obj.auto = auto
 
         return obj
@@ -679,7 +679,7 @@ class RootSum(Expr):
         return p/q
 
     def _hashable_content(self):
-        return (self.expr, self.func)
+        return (self.expr, self.fun)
 
     @property
     def expr(self):
@@ -687,7 +687,7 @@ class RootSum(Expr):
 
     @property
     def args(self):
-        return (self.expr, self.func)
+        return (self.expr, self.fun)
 
     @property
     def is_commutative(self):
@@ -695,11 +695,11 @@ class RootSum(Expr):
 
     def doit(self, **hints):
         if hints.get('roots', True):
-            return Add(*map(self.func, RootOf(self.poly, True)))
+            return Add(*map(self.fun, RootOf(self.poly, True)))
         else:
             return self
 
     def _eval_derivative(self, x):
-        var, expr = self.func.args
+        var, expr = self.fun.args
         func = Lambda(var, expr.diff(x))
         return self.new(self.poly, func, self.auto)

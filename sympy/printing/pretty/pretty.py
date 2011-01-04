@@ -755,11 +755,12 @@ class PrettyPrinter(Printer):
     def _print_RootSum(self, expr):
         args = [self._print_Add(expr.expr, order='lex')]
 
-        if not (isinstance(expr.func, Basic) and expr.func.is_identity):
-            args.append(self._print(expr.func))
+        if not expr.fun.is_identity:
+            args.append(self._print(expr.fun))
 
         pform = prettyForm(*self._print_seq(args).parens())
         pform = prettyForm(*pform.left('RootSum'))
+
         return pform
 
     def _print_FiniteField(self, expr):
