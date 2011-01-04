@@ -438,7 +438,7 @@ class RootOf(Expr):
                 if roots is not None:
                     result.append(coeff*roots[index])
                 else:
-                    result.append(coeff*cls._inner_new(poly, index, pointer, conjugate))
+                    result.append(coeff*cls._new(poly, index, pointer, conjugate))
 
         if not iterable:
             return result[0]
@@ -446,7 +446,7 @@ class RootOf(Expr):
             return result
 
     @classmethod
-    def _inner_new(cls, poly, index, pointer=None, conjugate=None):
+    def _new(cls, poly, index, pointer=None, conjugate=None):
         """Construct new ``RootOf`` instance from valid ``RootOf`` data. """
         obj = Expr.__new__(cls)
 
@@ -472,6 +472,10 @@ class RootOf(Expr):
     @property
     def args(self):
         return [self.expr, Integer(self.index)]
+
+    @property
+    def is_commutative(self):
+        return True
 
     @property
     def is_real(self):
@@ -684,6 +688,10 @@ class RootSum(Expr):
     @property
     def args(self):
         return (self.expr, self.func)
+
+    @property
+    def is_commutative(self):
+        return True
 
     def doit(self, **hints):
         if hints.get('roots', True):

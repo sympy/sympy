@@ -98,6 +98,8 @@ def test_RootOf___new__():
     assert RootOf(y*x**3 + y*x + 2*y, x, 0) == -1
     raises(DomainError, "RootOf(x**3 + x + 2*y, x, 0)")
 
+    assert RootOf(x**3 + x + 1, 0).is_commutative == True
+
 def test_RootOf___new___indices():
     f = x**3 + x + 3
     r0 = RootOf(f, 0)
@@ -195,6 +197,8 @@ def test_RootSum___new__():
     assert RootSum(f) == 0
     assert RootSum(f, Lambda(x, x)) == 0
     assert RootSum(f, Lambda(x, x**2)) == -2
+
+    assert RootSum(f, auto=False).is_commutative == True
 
 def test_RootSum_diff():
     f = x**3 + x + 3
