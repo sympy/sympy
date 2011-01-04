@@ -64,6 +64,9 @@ class Factors(object):
         self.factors = factors
         self.gens = frozenset(factors.keys())
 
+    def __hash__(self):
+        return hash((tuple(self.factors), self.gens))
+
     def __repr__(self):
         return "Factors(%s)" % self.factors
 
@@ -252,6 +255,9 @@ class Term(object):
         self.coeff = coeff
         self.numer = numer
         self.denom = denom
+
+    def __hash__(self):
+        return hash((self.coeff, self.numer, self.denom))
 
     def __repr__(self):
         return "Term(%s, %s, %s)" % (self.coeff, self.numer, self.denom)
