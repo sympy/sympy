@@ -364,8 +364,8 @@ class StrPrinter(Printer):
     def _print_RootSum(self, expr):
         args = [self._print_Add(expr.expr, order='lex')]
 
-        if not (isinstance(expr.func, Basic) and expr.func.is_identity):
-            args.append(self._print(expr.func))
+        if not expr.fun.is_identity:
+            args.append(self._print(expr.fun))
 
         return "RootSum(%s)" % ", ".join(args)
 
