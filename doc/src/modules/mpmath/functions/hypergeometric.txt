@@ -112,4 +112,3 @@ Hypergeometric functions of two variables
 :func:`appellf4`
 ^^^^^^^^^^^^^^^^^
 .. autofunction:: mpmath.appellf4(a,b,c1,c2,x,y,**kwargs)
-

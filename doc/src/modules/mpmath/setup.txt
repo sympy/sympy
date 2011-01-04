@@ -162,11 +162,11 @@ In Sage, mpmath can alternatively be imported via the interface library
     sage: import sage.libs.mpmath.all as mpmath
 
 This module provides a few extra conversion functions, including :func:`call`
-which permits calling any mpmath function with Sage numbers as input, and getting 
+which permits calling any mpmath function with Sage numbers as input, and getting
 Sage ``RealNumber`` or ``ComplexNumber`` instances
 with the appropriate precision back::
 
-    sage: w = mpmath.call(mpmath.erf, 2+3*I, prec=100)   
+    sage: w = mpmath.call(mpmath.erf, 2+3*I, prec=100)
     sage: w
     -20.829461427614568389103088452 + 8.6873182714701631444280787545*I
     sage: type(w)
@@ -175,4 +175,3 @@ with the appropriate precision back::
     100
 
 See the help for ``sage.libs.mpmath.all`` for further information.
-
