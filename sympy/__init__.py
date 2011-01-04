@@ -11,6 +11,14 @@ See the webpage for more information and documentation:
 
 __version__ = "0.6.7-git"
 
+import sys
+import warnings
+
+if sys.version_info[1] == 4:
+    warnings.warn("Support for Python 2.4 in SymPy is deprecated.")
+
+del sys
+del warnings
 
 def __sympy_debug():
     # helper function so we don't import os globally
