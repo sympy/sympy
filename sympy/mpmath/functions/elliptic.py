@@ -71,7 +71,7 @@ def nome(ctx, m):
     if m == ctx.one:
         return m
     if ctx.isnan(m):
-        return n
+        return m
     if ctx.isinf(m):
         if m == ctx.ninf:
             return type(m)(-1)
@@ -284,1054 +284,6 @@ def mfrom(ctx, q=None, m=None, k=None, tau=None, qbar=None):
         v = v.real
     return v
 
-@defun
-def _jacobi_theta2(ctx, z, q):
-    extra1 = 10
-    extra2 = 20
-    # the loops below break when the fixed precision quantities
-    # a and b go to zero;
-    # right shifting small negative numbers by wp one obtains -1, not zero,
-    # so the condition a**2 + b**2 > MIN is used to break the loops.
-    MIN = 2
-    if z == ctx.zero:
-        if (not ctx._im(q)):
-            wp = ctx.prec + extra1
-            x = ctx.to_fixed(ctx._re(q), wp)
-            x2 = (x*x) >> wp
-            a = b = x2
-            s = x2
-            while abs(a) > MIN:
-                b = (b*x2) >> wp
-                a = (a*b) >> wp
-                s += a
-            s = (1 << (wp+1)) + (s << 1)
-            s = ctx.ldexp(s, -wp)
-        else:
-            wp = ctx.prec + extra1
-            xre = ctx.to_fixed(ctx._re(q), wp)
-            xim = ctx.to_fixed(ctx._im(q), wp)
-            x2re = (xre*xre - xim*xim) >> wp
-            x2im = (xre*xim) >> (wp-1)
-            are = bre = x2re
-            aim = bim = x2im
-            sre = (1<<wp) + are
-            sim = aim
-            while are**2 + aim**2 > MIN:
-                bre, bim = (bre * x2re - bim * x2im) >> wp, \
-                           (bre * x2im + bim * x2re) >> wp
-                are, aim = (are * bre - aim * bim) >> wp,   \
-                           (are * bim + aim * bre) >> wp
-                sre += are
-                sim += aim
-            sre = (sre << 1)
-            sim = (sim << 1)
-            sre = ctx.ldexp(sre, -wp)
-            sim = ctx.ldexp(sim, -wp)
-            s = ctx.mpc(sre, sim)
-    else:
-        if (not ctx._im(q)) and (not ctx._im(z)):
-            wp = ctx.prec + extra1
-            x = ctx.to_fixed(ctx._re(q), wp)
-            x2 = (x*x) >> wp
-            a = b = x2
-            c1, s1 = ctx.cos_sin(ctx._re(z), prec=wp)
-            cn = c1 = ctx.to_fixed(c1, wp)
-            sn = s1 = ctx.to_fixed(s1, wp)
-            c2 = (c1*c1 - s1*s1) >> wp
-            s2 = (c1 * s1) >> (wp - 1)
-            cn, sn = (cn*c2 - sn*s2) >> wp, (sn*c2 + cn*s2) >> wp
-            s = c1 + ((a * cn) >> wp)
-            while abs(a) > MIN:
-                b = (b*x2) >> wp
-                a = (a*b) >> wp
-                cn, sn = (cn*c2 - sn*s2) >> wp, (sn*c2 + cn*s2) >> wp
-                s += (a * cn) >> wp
-            s = (s << 1)
-            s = ctx.ldexp(s, -wp)
-            s *= ctx.nthroot(q, 4)
-            return s
-        # case z real, q complex
-        elif not ctx._im(z):
-            wp = ctx.prec + extra2
-            xre = ctx.to_fixed(ctx._re(q), wp)
-            xim = ctx.to_fixed(ctx._im(q), wp)
-            x2re = (xre*xre - xim*xim) >> wp
-            x2im = (xre*xim) >> (wp - 1)
-            are = bre = x2re
-            aim = bim = x2im
-            c1, s1 = ctx.cos_sin(ctx._re(z), prec=wp)
-            cn = c1 = ctx.to_fixed(c1, wp)
-            sn = s1 = ctx.to_fixed(s1, wp)
-            c2 = (c1*c1 - s1*s1) >> wp
-            s2 = (c1 * s1) >> (wp - 1)
-            cn, sn = (cn*c2 - sn*s2) >> wp, (sn*c2 + cn*s2) >> wp
-            sre = c1 + ((are * cn) >> wp)
-            sim = ((aim * cn) >> wp)
-            while are**2 + aim**2 > MIN:
-                bre, bim = (bre * x2re - bim * x2im) >> wp, \
-                           (bre * x2im + bim * x2re) >> wp
-                are, aim = (are * bre - aim * bim) >> wp,   \
-                           (are * bim + aim * bre) >> wp
-                cn, sn = (cn*c2 - sn*s2) >> wp, (sn*c2 + cn*s2) >> wp
-                sre += ((are * cn) >> wp)
-                sim += ((aim * cn) >> wp)
-            sre = (sre << 1)
-            sim = (sim << 1)
-            sre = ctx.ldexp(sre, -wp)
-            sim = ctx.ldexp(sim, -wp)
-            s = ctx.mpc(sre, sim)
-        #case z complex, q real
-        elif not ctx._im(q):
-            wp = ctx.prec + extra2
-            x = ctx.to_fixed(ctx._re(q), wp)
-            x2 = (x*x) >> wp
-            a = b = x2
-            prec0 = ctx.prec
-            ctx.prec = wp
-            c1, s1 = ctx.cos_sin(z)
-            ctx.prec = prec0
-            cnre = c1re = ctx.to_fixed(ctx._re(c1), wp)
-            cnim = c1im = ctx.to_fixed(ctx._im(c1), wp)
-            snre = s1re = ctx.to_fixed(ctx._re(s1), wp)
-            snim = s1im = ctx.to_fixed(ctx._im(s1), wp)
-            #c2 = (c1*c1 - s1*s1) >> wp
-            c2re = (c1re*c1re - c1im*c1im - s1re*s1re + s1im*s1im) >> wp
-            c2im = (c1re*c1im - s1re*s1im) >> (wp - 1)
-            #s2 = (c1 * s1) >> (wp - 1)
-            s2re = (c1re*s1re - c1im*s1im) >> (wp - 1)
-            s2im = (c1re*s1im + c1im*s1re) >> (wp - 1)
-            #cn, sn = (cn*c2 - sn*s2) >> wp, (sn*c2 + cn*s2) >> wp
-            t1 = (cnre*c2re - cnim*c2im - snre*s2re + snim*s2im) >> wp
-            t2 = (cnre*c2im + cnim*c2re - snre*s2im - snim*s2re) >> wp
-            t3 = (snre*c2re - snim*c2im + cnre*s2re - cnim*s2im) >> wp
-            t4 = (snre*c2im + snim*c2re + cnre*s2im + cnim*s2re) >> wp
-            cnre = t1
-            cnim = t2
-            snre = t3
-            snim = t4
-            sre = c1re + ((a * cnre) >> wp)
-            sim = c1im + ((a * cnim) >> wp)
-            while abs(a) > MIN:
-                b = (b*x2) >> wp
-                a = (a*b) >> wp
-                t1 = (cnre*c2re - cnim*c2im - snre*s2re + snim*s2im) >> wp
-                t2 = (cnre*c2im + cnim*c2re - snre*s2im - snim*s2re) >> wp
-                t3 = (snre*c2re - snim*c2im + cnre*s2re - cnim*s2im) >> wp
-                t4 = (snre*c2im + snim*c2re + cnre*s2im + cnim*s2re) >> wp
-                cnre = t1
-                cnim = t2
-                snre = t3
-                snim = t4
-                sre += ((a * cnre) >> wp)
-                sim += ((a * cnim) >> wp)
-            sre = (sre << 1)
-            sim = (sim << 1)
-            sre = ctx.ldexp(sre, -wp)
-            sim = ctx.ldexp(sim, -wp)
-            s = ctx.mpc(sre, sim)
-        # case z and q complex
-        else:
-            wp = ctx.prec + extra2
-            xre = ctx.to_fixed(ctx._re(q), wp)
-            xim = ctx.to_fixed(ctx._im(q), wp)
-            x2re = (xre*xre - xim*xim) >> wp
-            x2im = (xre*xim) >> (wp - 1)
-            are = bre = x2re
-            aim = bim = x2im
-            prec0 = ctx.prec
-            ctx.prec = wp
-            # cos(z), sin(z) with z complex
-            c1, s1 = ctx.cos_sin(z)
-            ctx.prec = prec0
-            cnre = c1re = ctx.to_fixed(ctx._re(c1), wp)
-            cnim = c1im = ctx.to_fixed(ctx._im(c1), wp)
-            snre = s1re = ctx.to_fixed(ctx._re(s1), wp)
-            snim = s1im = ctx.to_fixed(ctx._im(s1), wp)
-            c2re = (c1re*c1re - c1im*c1im - s1re*s1re + s1im*s1im) >> wp
-            c2im = (c1re*c1im - s1re*s1im) >> (wp - 1)
-            s2re = (c1re*s1re - c1im*s1im) >> (wp - 1)
-            s2im = (c1re*s1im + c1im*s1re) >> (wp - 1)
-            t1 = (cnre*c2re - cnim*c2im - snre*s2re + snim*s2im) >> wp
-            t2 = (cnre*c2im + cnim*c2re - snre*s2im - snim*s2re) >> wp
-            t3 = (snre*c2re - snim*c2im + cnre*s2re - cnim*s2im) >> wp
-            t4 = (snre*c2im + snim*c2re + cnre*s2im + cnim*s2re) >> wp
-            cnre = t1
-            cnim = t2
-            snre = t3
-            snim = t4
-            n = 1
-            termre = c1re
-            termim = c1im
-            sre = c1re + ((are * cnre - aim * cnim) >> wp)
-            sim = c1im + ((are * cnim + aim * cnre) >> wp)
-            n = 3
-            termre = ((are * cnre - aim * cnim) >> wp)
-            termim = ((are * cnim + aim * cnre) >> wp)
-            sre = c1re + ((are * cnre - aim * cnim) >> wp)
-            sim = c1im + ((are * cnim + aim * cnre) >> wp)
-            n = 5
-            while are**2 + aim**2 > MIN:
-                bre, bim = (bre * x2re - bim * x2im) >> wp, \
-                           (bre * x2im + bim * x2re) >> wp
-                are, aim = (are * bre - aim * bim) >> wp,   \
-                           (are * bim + aim * bre) >> wp
-                #cn, sn = (cn*c1 - sn*s1) >> wp, (sn*c1 + cn*s1) >> wp
-                t1 = (cnre*c2re - cnim*c2im - snre*s2re + snim*s2im) >> wp
-                t2 = (cnre*c2im + cnim*c2re - snre*s2im - snim*s2re) >> wp
-                t3 = (snre*c2re - snim*c2im + cnre*s2re - cnim*s2im) >> wp
-                t4 = (snre*c2im + snim*c2re + cnre*s2im + cnim*s2re) >> wp
-                cnre = t1
-                cnim = t2
-                snre = t3
-                snim = t4
-                termre = ((are * cnre - aim * cnim) >> wp)
-                termim = ((aim * cnre + are * cnim) >> wp)
-                sre += ((are * cnre - aim * cnim) >> wp)
-                sim += ((aim * cnre + are * cnim) >> wp)
-                n += 2
-            sre = (sre << 1)
-            sim = (sim << 1)
-            sre = ctx.ldexp(sre, -wp)
-            sim = ctx.ldexp(sim, -wp)
-            s = ctx.mpc(sre, sim)
-    s *= ctx.nthroot(q, 4)
-    return s
-
-@defun
-def _djacobi_theta2(ctx, z, q, nd):
-    MIN = 2
-    extra1 = 10
-    extra2 = 20
-    if (not ctx._im(q)) and (not ctx._im(z)):
-        wp = ctx.prec + extra1
-        x = ctx.to_fixed(ctx._re(q), wp)
-        x2 = (x*x) >> wp
-        a = b = x2
-        c1, s1 = ctx.cos_sin(ctx._re(z), prec=wp)
-        cn = c1 = ctx.to_fixed(c1, wp)
-        sn = s1 = ctx.to_fixed(s1, wp)
-        c2 = (c1*c1 - s1*s1) >> wp
-        s2 = (c1 * s1) >> (wp - 1)
-        cn, sn = (cn*c2 - sn*s2) >> wp, (sn*c2 + cn*s2) >> wp
-        if (nd&1):
-            s = s1 + ((a * sn * 3**nd) >> wp)
-        else:
-            s = c1 + ((a * cn * 3**nd) >> wp)
-        n = 2
-        while abs(a) > MIN:
-            b = (b*x2) >> wp
-            a = (a*b) >> wp
-            cn, sn = (cn*c2 - sn*s2) >> wp, (sn*c2 + cn*s2) >> wp
-            if nd&1:
-                s += (a * sn * (2*n+1)**nd) >> wp
-            else:
-                s += (a * cn * (2*n+1)**nd) >> wp
-            n += 1
-        s = -(s << 1)
-        s = ctx.ldexp(s, -wp)
-        # case z real, q complex
-    elif not ctx._im(z):
-        wp = ctx.prec + extra2
-        xre = ctx.to_fixed(ctx._re(q), wp)
-        xim = ctx.to_fixed(ctx._im(q), wp)
-        x2re = (xre*xre - xim*xim) >> wp
-        x2im = (xre*xim) >> (wp - 1)
-        are = bre = x2re
-        aim = bim = x2im
-        c1, s1 = ctx.cos_sin(ctx._re(z), prec=wp)
-        cn = c1 = ctx.to_fixed(c1, wp)
-        sn = s1 = ctx.to_fixed(s1, wp)
-        c2 = (c1*c1 - s1*s1) >> wp
-        s2 = (c1 * s1) >> (wp - 1)
-        cn, sn = (cn*c2 - sn*s2) >> wp, (sn*c2 + cn*s2) >> wp
-        if (nd&1):
-            sre = s1 + ((are * sn * 3**nd) >> wp)
-            sim = ((aim * sn * 3**nd) >> wp)
-        else:
-            sre = c1 + ((are * cn * 3**nd) >> wp)
-            sim = ((aim * cn * 3**nd) >> wp)
-        n = 5
-        while are**2 + aim**2 > MIN:
-            bre, bim = (bre * x2re - bim * x2im) >> wp, \
-                       (bre * x2im + bim * x2re) >> wp
-            are, aim = (are * bre - aim * bim) >> wp,   \
-                       (are * bim + aim * bre) >> wp
-            cn, sn = (cn*c2 - sn*s2) >> wp, (sn*c2 + cn*s2) >> wp
-
-            if (nd&1):
-                sre += ((are * sn * n**nd) >> wp)
-                sim += ((aim * sn * n**nd) >> wp)
-            else:
-                sre += ((are * cn * n**nd) >> wp)
-                sim += ((aim * cn * n**nd) >> wp)
-            n += 2
-        sre = -(sre << 1)
-        sim = -(sim << 1)
-        sre = ctx.ldexp(sre, -wp)
-        sim = ctx.ldexp(sim, -wp)
-        s = ctx.mpc(sre, sim)
-    #case z complex, q real
-    elif not ctx._im(q):
-        wp = ctx.prec + extra2
-        x = ctx.to_fixed(ctx._re(q), wp)
-        x2 = (x*x) >> wp
-        a = b = x2
-        prec0 = ctx.prec
-        ctx.prec = wp
-        c1, s1 = ctx.cos_sin(z)
-        ctx.prec = prec0
-        cnre = c1re = ctx.to_fixed(ctx._re(c1), wp)
-        cnim = c1im = ctx.to_fixed(ctx._im(c1), wp)
-        snre = s1re = ctx.to_fixed(ctx._re(s1), wp)
-        snim = s1im = ctx.to_fixed(ctx._im(s1), wp)
-        #c2 = (c1*c1 - s1*s1) >> wp
-        c2re = (c1re*c1re - c1im*c1im - s1re*s1re + s1im*s1im) >> wp
-        c2im = (c1re*c1im - s1re*s1im) >> (wp - 1)
-        #s2 = (c1 * s1) >> (wp - 1)
-        s2re = (c1re*s1re - c1im*s1im) >> (wp - 1)
-        s2im = (c1re*s1im + c1im*s1re) >> (wp - 1)
-        #cn, sn = (cn*c2 - sn*s2) >> wp, (sn*c2 + cn*s2) >> wp
-        t1 = (cnre*c2re - cnim*c2im - snre*s2re + snim*s2im) >> wp
-        t2 = (cnre*c2im + cnim*c2re - snre*s2im - snim*s2re) >> wp
-        t3 = (snre*c2re - snim*c2im + cnre*s2re - cnim*s2im) >> wp
-        t4 = (snre*c2im + snim*c2re + cnre*s2im + cnim*s2re) >> wp
-        cnre = t1
-        cnim = t2
-        snre = t3
-        snim = t4
-        if (nd&1):
-            sre = s1re + ((a * snre * 3**nd) >> wp)
-            sim = s1im + ((a * snim * 3**nd) >> wp)
-        else:
-            sre = c1re + ((a * cnre * 3**nd) >> wp)
-            sim = c1im + ((a * cnim * 3**nd) >> wp)
-        n = 5
-        while abs(a) > MIN:
-            b = (b*x2) >> wp
-            a = (a*b) >> wp
-            t1 = (cnre*c2re - cnim*c2im - snre*s2re + snim*s2im) >> wp
-            t2 = (cnre*c2im + cnim*c2re - snre*s2im - snim*s2re) >> wp
-            t3 = (snre*c2re - snim*c2im + cnre*s2re - cnim*s2im) >> wp
-            t4 = (snre*c2im + snim*c2re + cnre*s2im + cnim*s2re) >> wp
-            cnre = t1
-            cnim = t2
-            snre = t3
-            snim = t4
-            if (nd&1):
-                sre += ((a * snre * n**nd) >> wp)
-                sim += ((a * snim * n**nd) >> wp)
-            else:
-                sre += ((a * cnre * n**nd) >> wp)
-                sim += ((a * cnim * n**nd) >> wp)
-            n += 2
-        sre = -(sre << 1)
-        sim = -(sim << 1)
-        sre = ctx.ldexp(sre, -wp)
-        sim = ctx.ldexp(sim, -wp)
-        s = ctx.mpc(sre, sim)
-    # case z and q complex
-    else:
-        wp = ctx.prec + extra2
-        xre = ctx.to_fixed(ctx._re(q), wp)
-        xim = ctx.to_fixed(ctx._im(q), wp)
-        x2re = (xre*xre - xim*xim) >> wp
-        x2im = (xre*xim) >> (wp - 1)
-        are = bre = x2re
-        aim = bim = x2im
-        prec0 = ctx.prec
-        ctx.prec = wp
-        # cos(2*z), sin(2*z) with z complex
-        c1, s1 = ctx.cos_sin(z)
-        ctx.prec = prec0
-        cnre = c1re = ctx.to_fixed(ctx._re(c1), wp)
-        cnim = c1im = ctx.to_fixed(ctx._im(c1), wp)
-        snre = s1re = ctx.to_fixed(ctx._re(s1), wp)
-        snim = s1im = ctx.to_fixed(ctx._im(s1), wp)
-        c2re = (c1re*c1re - c1im*c1im - s1re*s1re + s1im*s1im) >> wp
-        c2im = (c1re*c1im - s1re*s1im) >> (wp - 1)
-        s2re = (c1re*s1re - c1im*s1im) >> (wp - 1)
-        s2im = (c1re*s1im + c1im*s1re) >> (wp - 1)
-        t1 = (cnre*c2re - cnim*c2im - snre*s2re + snim*s2im) >> wp
-        t2 = (cnre*c2im + cnim*c2re - snre*s2im - snim*s2re) >> wp
-        t3 = (snre*c2re - snim*c2im + cnre*s2re - cnim*s2im) >> wp
-        t4 = (snre*c2im + snim*c2re + cnre*s2im + cnim*s2re) >> wp
-        cnre = t1
-        cnim = t2
-        snre = t3
-        snim = t4
-        if (nd&1):
-            sre = s1re + (((are * snre - aim * snim) * 3**nd) >> wp)
-            sim = s1im + (((are * snim + aim * snre)* 3**nd) >> wp)
-        else:
-            sre = c1re + (((are * cnre - aim * cnim) * 3**nd) >> wp)
-            sim = c1im + (((are * cnim + aim * cnre)* 3**nd) >> wp)
-        n = 5
-        while are**2 + aim**2 > MIN:
-            bre, bim = (bre * x2re - bim * x2im) >> wp, \
-                       (bre * x2im + bim * x2re) >> wp
-            are, aim = (are * bre - aim * bim) >> wp,   \
-                       (are * bim + aim * bre) >> wp
-            #cn, sn = (cn*c1 - sn*s1) >> wp, (sn*c1 + cn*s1) >> wp
-            t1 = (cnre*c2re - cnim*c2im - snre*s2re + snim*s2im) >> wp
-            t2 = (cnre*c2im + cnim*c2re - snre*s2im - snim*s2re) >> wp
-            t3 = (snre*c2re - snim*c2im + cnre*s2re - cnim*s2im) >> wp
-            t4 = (snre*c2im + snim*c2re + cnre*s2im + cnim*s2re) >> wp
-            cnre = t1
-            cnim = t2
-            snre = t3
-            snim = t4
-            if (nd&1):
-                sre += (((are * snre - aim * snim) * n**nd) >> wp)
-                sim += (((aim * snre + are * snim) * n**nd) >> wp)
-            else:
-                sre += (((are * cnre - aim * cnim) * n**nd) >> wp)
-                sim += (((aim * cnre + are * cnim) * n**nd) >> wp)
-            n += 2
-        sre = -(sre << 1)
-        sim = -(sim << 1)
-        sre = ctx.ldexp(sre, -wp)
-        sim = ctx.ldexp(sim, -wp)
-        s = ctx.mpc(sre, sim)
-    s *= ctx.nthroot(q, 4)
-    if (nd&1):
-        return (-1)**(nd//2) * s
-    else:
-        return (-1)**(1 + nd//2) * s
-
-@defun
-def _jacobi_theta3(ctx, z, q):
-    extra1 = 10
-    extra2 = 20
-    MIN = 2
-    if z == ctx.zero:
-        if not ctx._im(q):
-            wp = ctx.prec + extra1
-            x = ctx.to_fixed(ctx._re(q), wp)
-            s = x
-            a = b = x
-            x2 = (x*x) >> wp
-            while abs(a) > MIN:
-                b = (b*x2) >> wp
-                a = (a*b) >> wp
-                s += a
-            s = (1 << wp) + (s << 1)
-            s = ctx.ldexp(s, -wp)
-            return s
-        else:
-            wp = ctx.prec + extra1
-            xre = ctx.to_fixed(ctx._re(q), wp)
-            xim = ctx.to_fixed(ctx._im(q), wp)
-            x2re = (xre*xre - xim*xim) >> wp
-            x2im = (xre*xim) >> (wp - 1)
-            sre = are = bre = xre
-            sim = aim = bim = xim
-            while are**2 + aim**2 > MIN:
-                bre, bim = (bre * x2re - bim * x2im) >> wp, \
-                           (bre * x2im + bim * x2re) >> wp
-                are, aim = (are * bre - aim * bim) >> wp,   \
-                           (are * bim + aim * bre) >> wp
-                sre += are
-                sim += aim
-            sre = (1 << wp) + (sre << 1)
-            sim = (sim << 1)
-            sre = ctx.ldexp(sre, -wp)
-            sim = ctx.ldexp(sim, -wp)
-            s = ctx.mpc(sre, sim)
-            return s
-    else:
-        if (not ctx._im(q)) and (not ctx._im(z)):
-            s = 0
-            wp = ctx.prec + extra1
-            x = ctx.to_fixed(ctx._re(q), wp)
-            a = b = x
-            x2 = (x*x) >> wp
-            c1, s1 = ctx.cos_sin(ctx._re(z)*2, prec=wp)
-            c1 = ctx.to_fixed(c1, wp)
-            s1 = ctx.to_fixed(s1, wp)
-            cn = c1
-            sn = s1
-            s += (a * cn) >> wp
-            while abs(a) > MIN:
-                b = (b*x2) >> wp
-                a = (a*b) >> wp
-                cn, sn = (cn*c1 - sn*s1) >> wp, (sn*c1 + cn*s1) >> wp
-                s += (a * cn) >> wp
-            s = (1 << wp) + (s << 1)
-            s = ctx.ldexp(s, -wp)
-            return s
-        # case z real, q complex
-        elif not ctx._im(z):
-            wp = ctx.prec + extra2
-            xre = ctx.to_fixed(ctx._re(q), wp)
-            xim = ctx.to_fixed(ctx._im(q), wp)
-            x2re = (xre*xre - xim*xim) >> wp
-            x2im = (xre*xim) >> (wp - 1)
-            are = bre = xre
-            aim = bim = xim
-            c1, s1 = ctx.cos_sin(ctx._re(z)*2, prec=wp)
-            c1 = ctx.to_fixed(c1, wp)
-            s1 = ctx.to_fixed(s1, wp)
-            cn = c1
-            sn = s1
-            sre = (are * cn) >> wp
-            sim = (aim * cn) >> wp
-            while are**2 + aim**2 > MIN:
-                bre, bim = (bre * x2re - bim * x2im) >> wp, \
-                           (bre * x2im + bim * x2re) >> wp
-                are, aim = (are * bre - aim * bim) >> wp,   \
-                           (are * bim + aim * bre) >> wp
-                cn, sn = (cn*c1 - sn*s1) >> wp, (sn*c1 + cn*s1) >> wp
-                sre += (are * cn) >> wp
-                sim += (aim * cn) >> wp
-            sre = (1 << wp) + (sre << 1)
-            sim = (sim << 1)
-            sre = ctx.ldexp(sre, -wp)
-            sim = ctx.ldexp(sim, -wp)
-            s = ctx.mpc(sre, sim)
-            return s
-        #case z complex, q real
-        elif not ctx._im(q):
-            wp = ctx.prec + extra2
-            x = ctx.to_fixed(ctx._re(q), wp)
-            a = b = x
-            x2 = (x*x) >> wp
-            prec0 = ctx.prec
-            ctx.prec = wp
-            c1, s1 = ctx.cos_sin(2*z)
-            ctx.prec = prec0
-            cnre = c1re = ctx.to_fixed(ctx._re(c1), wp)
-            cnim = c1im = ctx.to_fixed(ctx._im(c1), wp)
-            snre = s1re = ctx.to_fixed(ctx._re(s1), wp)
-            snim = s1im = ctx.to_fixed(ctx._im(s1), wp)
-            sre = (a * cnre) >> wp
-            sim = (a * cnim) >> wp
-            while abs(a) > MIN:
-                b = (b*x2) >> wp
-                a = (a*b) >> wp
-                t1 = (cnre*c1re - cnim*c1im - snre*s1re + snim*s1im) >> wp
-                t2 = (cnre*c1im + cnim*c1re - snre*s1im - snim*s1re) >> wp
-                t3 = (snre*c1re - snim*c1im + cnre*s1re - cnim*s1im) >> wp
-                t4 = (snre*c1im + snim*c1re + cnre*s1im + cnim*s1re) >> wp
-                cnre = t1
-                cnim = t2
-                snre = t3
-                snim = t4
-                sre += (a * cnre) >> wp
-                sim += (a * cnim) >> wp
-            sre = (1 << wp) + (sre << 1)
-            sim = (sim << 1)
-            sre = ctx.ldexp(sre, -wp)
-            sim = ctx.ldexp(sim, -wp)
-            s = ctx.mpc(sre, sim)
-            return s
-        # case z and q complex
-        else:
-            wp = ctx.prec + extra2
-            xre = ctx.to_fixed(ctx._re(q), wp)
-            xim = ctx.to_fixed(ctx._im(q), wp)
-            x2re = (xre*xre - xim*xim) >> wp
-            x2im = (xre*xim) >> (wp - 1)
-            are = bre = xre
-            aim = bim = xim
-            prec0 = ctx.prec
-            ctx.prec = wp
-            # cos(2*z), sin(2*z) with z complex
-            c1, s1 = ctx.cos_sin(2*z)
-            ctx.prec = prec0
-            cnre = c1re = ctx.to_fixed(ctx._re(c1), wp)
-            cnim = c1im = ctx.to_fixed(ctx._im(c1), wp)
-            snre = s1re = ctx.to_fixed(ctx._re(s1), wp)
-            snim = s1im = ctx.to_fixed(ctx._im(s1), wp)
-            sre = (are * cnre - aim * cnim) >> wp
-            sim = (aim * cnre + are * cnim) >> wp
-            while are**2 + aim**2 > MIN:
-                bre, bim = (bre * x2re - bim * x2im) >> wp, \
-                           (bre * x2im + bim * x2re) >> wp
-                are, aim = (are * bre - aim * bim) >> wp,   \
-                           (are * bim + aim * bre) >> wp
-                t1 = (cnre*c1re - cnim*c1im - snre*s1re + snim*s1im) >> wp
-                t2 = (cnre*c1im + cnim*c1re - snre*s1im - snim*s1re) >> wp
-                t3 = (snre*c1re - snim*c1im + cnre*s1re - cnim*s1im) >> wp
-                t4 = (snre*c1im + snim*c1re + cnre*s1im + cnim*s1re) >> wp
-                cnre = t1
-                cnim = t2
-                snre = t3
-                snim = t4
-                sre += (are * cnre - aim * cnim) >> wp
-                sim += (aim * cnre + are * cnim) >> wp
-            sre = (1 << wp) + (sre << 1)
-            sim = (sim << 1)
-            sre = ctx.ldexp(sre, -wp)
-            sim = ctx.ldexp(sim, -wp)
-            s = ctx.mpc(sre, sim)
-            return s
-
-@defun
-def _djacobi_theta3(ctx, z, q, nd):
-    """nd=1,2,3 order of the derivative with respect to z"""
-    MIN = 2
-    extra1 = 10
-    extra2 = 20
-    if (not ctx._im(q)) and (not ctx._im(z)):
-        s = 0
-        wp = ctx.prec + extra1
-        x = ctx.to_fixed(ctx._re(q), wp)
-        a = b = x
-        x2 = (x*x) >> wp
-        c1, s1 = ctx.cos_sin(ctx._re(z)*2, prec=wp)
-        c1 = ctx.to_fixed(c1, wp)
-        s1 = ctx.to_fixed(s1, wp)
-        cn = c1
-        sn = s1
-        if (nd&1):
-            s += (a * sn) >> wp
-        else:
-            s += (a * cn) >> wp
-        n = 2
-        while abs(a) > MIN:
-            b = (b*x2) >> wp
-            a = (a*b) >> wp
-            cn, sn = (cn*c1 - sn*s1) >> wp, (sn*c1 + cn*s1) >> wp
-            if nd&1:
-                s += (a * sn * n**nd) >> wp
-            else:
-                s += (a * cn * n**nd) >> wp
-            n += 1
-        s = -(s << (nd+1))
-        s = ctx.ldexp(s, -wp)
-    # case z real, q complex
-    elif not ctx._im(z):
-        wp = ctx.prec + extra2
-        xre = ctx.to_fixed(ctx._re(q), wp)
-        xim = ctx.to_fixed(ctx._im(q), wp)
-        x2re = (xre*xre - xim*xim) >> wp
-        x2im = (xre*xim) >> (wp - 1)
-        are = bre = xre
-        aim = bim = xim
-        c1, s1 = ctx.cos_sin(ctx._re(z)*2, prec=wp)
-        c1 = ctx.to_fixed(c1, wp)
-        s1 = ctx.to_fixed(s1, wp)
-        cn = c1
-        sn = s1
-        if (nd&1):
-            sre = (are * sn) >> wp
-            sim = (aim * sn) >> wp
-        else:
-            sre = (are * cn) >> wp
-            sim = (aim * cn) >> wp
-        n = 2
-        while are**2 + aim**2 > MIN:
-            bre, bim = (bre * x2re - bim * x2im) >> wp, \
-                       (bre * x2im + bim * x2re) >> wp
-            are, aim = (are * bre - aim * bim) >> wp,   \
-                       (are * bim + aim * bre) >> wp
-            cn, sn = (cn*c1 - sn*s1) >> wp, (sn*c1 + cn*s1) >> wp
-            if nd&1:
-                sre += (are * sn * n**nd) >> wp
-                sim += (aim * sn * n**nd) >> wp
-            else:
-                sre += (are * cn * n**nd) >> wp
-                sim += (aim * cn * n**nd) >> wp
-            n += 1
-        sre = -(sre << (nd+1))
-        sim = -(sim << (nd+1))
-        sre = ctx.ldexp(sre, -wp)
-        sim = ctx.ldexp(sim, -wp)
-        s = ctx.mpc(sre, sim)
-    #case z complex, q real
-    elif not ctx._im(q):
-        wp = ctx.prec + extra2
-        x = ctx.to_fixed(ctx._re(q), wp)
-        a = b = x
-        x2 = (x*x) >> wp
-        prec0 = ctx.prec
-        ctx.prec = wp
-        c1, s1 = ctx.cos_sin(2*z)
-        ctx.prec = prec0
-        cnre = c1re = ctx.to_fixed(ctx._re(c1), wp)
-        cnim = c1im = ctx.to_fixed(ctx._im(c1), wp)
-        snre = s1re = ctx.to_fixed(ctx._re(s1), wp)
-        snim = s1im = ctx.to_fixed(ctx._im(s1), wp)
-        if (nd&1):
-            sre = (a * snre) >> wp
-            sim = (a * snim) >> wp
-        else:
-            sre = (a * cnre) >> wp
-            sim = (a * cnim) >> wp
-        n = 2
-        while abs(a) > MIN:
-            b = (b*x2) >> wp
-            a = (a*b) >> wp
-            t1 = (cnre*c1re - cnim*c1im - snre*s1re + snim*s1im) >> wp
-            t2 = (cnre*c1im + cnim*c1re - snre*s1im - snim*s1re) >> wp
-            t3 = (snre*c1re - snim*c1im + cnre*s1re - cnim*s1im) >> wp
-            t4 = (snre*c1im + snim*c1re + cnre*s1im + cnim*s1re) >> wp
-            cnre = t1
-            cnim = t2
-            snre = t3
-            snim = t4
-            if (nd&1):
-                sre += (a * snre * n**nd) >> wp
-                sim += (a * snim * n**nd) >> wp
-            else:
-                sre += (a * cnre * n**nd) >> wp
-                sim += (a * cnim * n**nd) >> wp
-            n += 1
-        sre = -(sre << (nd+1))
-        sim = -(sim << (nd+1))
-        sre = ctx.ldexp(sre, -wp)
-        sim = ctx.ldexp(sim, -wp)
-        s = ctx.mpc(sre, sim)
-    # case z and q complex
-    else:
-        wp = ctx.prec + extra2
-        xre = ctx.to_fixed(ctx._re(q), wp)
-        xim = ctx.to_fixed(ctx._im(q), wp)
-        x2re = (xre*xre - xim*xim) >> wp
-        x2im = (xre*xim) >> (wp - 1)
-        are = bre = xre
-        aim = bim = xim
-        prec0 = ctx.prec
-        ctx.prec = wp
-        # cos(2*z), sin(2*z) with z complex
-        c1, s1 = ctx.cos_sin(2*z)
-        ctx.prec = prec0
-        cnre = c1re = ctx.to_fixed(ctx._re(c1), wp)
-        cnim = c1im = ctx.to_fixed(ctx._im(c1), wp)
-        snre = s1re = ctx.to_fixed(ctx._re(s1), wp)
-        snim = s1im = ctx.to_fixed(ctx._im(s1), wp)
-        if (nd&1):
-            sre = (are * snre - aim * snim) >> wp
-            sim = (aim * snre + are * snim) >> wp
-        else:
-            sre = (are * cnre - aim * cnim) >> wp
-            sim = (aim * cnre + are * cnim) >> wp
-        n = 2
-        while are**2 + aim**2 > MIN:
-            bre, bim = (bre * x2re - bim * x2im) >> wp, \
-                       (bre * x2im + bim * x2re) >> wp
-            are, aim = (are * bre - aim * bim) >> wp,   \
-                       (are * bim + aim * bre) >> wp
-            t1 = (cnre*c1re - cnim*c1im - snre*s1re + snim*s1im) >> wp
-            t2 = (cnre*c1im + cnim*c1re - snre*s1im - snim*s1re) >> wp
-            t3 = (snre*c1re - snim*c1im + cnre*s1re - cnim*s1im) >> wp
-            t4 = (snre*c1im + snim*c1re + cnre*s1im + cnim*s1re) >> wp
-            cnre = t1
-            cnim = t2
-            snre = t3
-            snim = t4
-            if(nd&1):
-                sre += ((are * snre - aim * snim) * n**nd) >> wp
-                sim += ((aim * snre + are * snim) * n**nd) >> wp
-            else:
-                sre += ((are * cnre - aim * cnim) * n**nd) >> wp
-                sim += ((aim * cnre + are * cnim) * n**nd) >> wp
-            n += 1
-        sre = -(sre << (nd+1))
-        sim = -(sim << (nd+1))
-        sre = ctx.ldexp(sre, -wp)
-        sim = ctx.ldexp(sim, -wp)
-        s = ctx.mpc(sre, sim)
-    if (nd&1):
-        return (-1)**(nd//2) * s
-    else:
-        return (-1)**(1 + nd//2) * s
-
-@defun
-def _jacobi_theta2a(ctx, z, q):
-    """
-    case ctx._im(z) != 0
-    theta(2, z, q) =
-    q**1/4 * Sum(q**(n*n + n) * exp(j*(2*n + 1)*z), n=-inf, inf)
-    max term for minimum (2*n+1)*log(q).real - 2* ctx._im(z)
-    n0 = int(ctx._im(z)/log(q).real - 1/2)
-    theta(2, z, q) =
-    q**1/4 * Sum(q**(n*n + n) * exp(j*(2*n + 1)*z), n=n0, inf) +
-    q**1/4 * Sum(q**(n*n + n) * exp(j*(2*n + 1)*z), n, n0-1, -inf)
-    """
-    n = n0 = int(ctx._im(z)/ctx._re(ctx.log(q)) - 1/2)
-    e2 = ctx.expj(2*z)
-    e = e0 = ctx.expj((2*n+1)*z)
-    a = q**(n*n + n)
-    # leading term
-    term = a * e
-    s = term
-    eps1 = ctx.eps*abs(term)
-    while 1:
-        n += 1
-        e = e * e2
-        term = q**(n*n + n) * e
-        if abs(term) < eps1:
-            break
-        s += term
-    e = e0
-    e2 = ctx.expj(-2*z)
-    n = n0
-    while 1:
-        n -= 1
-        e = e * e2
-        term = q**(n*n + n) * e
-        if abs(term) < eps1:
-            break
-        s += term
-    s = s * ctx.nthroot(q, 4)
-    return s
-
-@defun
-def _jacobi_theta3a(ctx, z, q):
-    """
-    case ctx._im(z) != 0
-    theta3(z, q) = Sum(q**(n*n) * exp(j*2*n*z), n, -inf, inf)
-    max term for n*abs(log(q).real) + ctx._im(z) ~= 0
-    n0 = int(- ctx._im(z)/abs(log(q).real))
-    """
-    n = n0 = int(-ctx._im(z)/abs(ctx._re(ctx.log(q))))
-    e2 = ctx.expj(2*z)
-    e = e0 = ctx.expj(2*n*z)
-    s = term = q**(n*n) * e
-    eps1 = ctx.eps*abs(term)
-    while 1:
-        n += 1
-        e = e * e2
-        term = q**(n*n) * e
-        if abs(term) < eps1:
-            break
-        s += term
-    e = e0
-    e2 = ctx.expj(-2*z)
-    n = n0
-    while 1:
-        n -= 1
-        e = e * e2
-        term = q**(n*n) * e
-        if abs(term) < eps1:
-            break
-        s += term
-    return s
-
-@defun
-def _djacobi_theta2a(ctx, z, q, nd):
-    """
-    case ctx._im(z) != 0
-    dtheta(2, z, q, nd) =
-    j* q**1/4 * Sum(q**(n*n + n) * (2*n+1)*exp(j*(2*n + 1)*z), n=-inf, inf)
-    max term for (2*n0+1)*log(q).real - 2* ctx._im(z) ~= 0
-    n0 = int(ctx._im(z)/log(q).real - 1/2)
-    """
-    n = n0 = int(ctx._im(z)/ctx._re(ctx.log(q)) - 1/2)
-    e2 = ctx.expj(2*z)
-    e = e0 = ctx.expj((2*n + 1)*z)
-    a = q**(n*n + n)
-    # leading term
-    term = (2*n+1)**nd * a * e
-    s = term
-    eps1 = ctx.eps*abs(term)
-    while 1:
-        n += 1
-        e = e * e2
-        term = (2*n+1)**nd * q**(n*n + n) * e
-        if abs(term) < eps1:
-            break
-        s += term
-    e = e0
-    e2 = ctx.expj(-2*z)
-    n = n0
-    while 1:
-        n -= 1
-        e = e * e2
-        term = (2*n+1)**nd * q**(n*n + n) * e
-        if abs(term) < eps1:
-            break
-        s += term
-    return ctx.j**nd * s * ctx.nthroot(q, 4)
-
-@defun
-def _djacobi_theta3a(ctx, z, q, nd):
-    """
-    case ctx._im(z) != 0
-    djtheta3(z, q, nd) = (2*j)**nd *
-      Sum(q**(n*n) * n**nd * exp(j*2*n*z), n, -inf, inf)
-    max term for minimum n*abs(log(q).real) + ctx._im(z)
-    """
-    n = n0 = int(-ctx._im(z)/abs(ctx._re(ctx.log(q))))
-    e2 = ctx.expj(2*z)
-    e = e0 = ctx.expj(2*n*z)
-    a = q**(n*n) * e
-    s = term = n**nd * a
-    if n != 0:
-        eps1 = ctx.eps*abs(term)
-    else:
-        eps1 = ctx.eps*abs(a)
-    while 1:
-        n += 1
-        e = e * e2
-        a = q**(n*n) * e
-        term = n**nd * a
-        if n != 0:
-            aterm = abs(term)
-        else:
-            aterm = abs(a)
-        if aterm < eps1:
-            break
-        s += term
-    e = e0
-    e2 = ctx.expj(-2*z)
-    n = n0
-    while 1:
-        n -= 1
-        e = e * e2
-        a = q**(n*n) * e
-        term = n**nd * a
-        if n != 0:
-            aterm = abs(term)
-        else:
-            aterm = abs(a)
-        if aterm < eps1:
-            break
-        s += term
-    return (2*ctx.j)**nd * s
-
-@defun
-def jtheta(ctx, n, z, q, derivative=0):
-    if derivative:
-        return ctx._djtheta(n, z, q, derivative)
-
-    z = ctx.convert(z)
-    q = ctx.convert(q)
-
-    # Implementation note
-    # If ctx._im(z) is close to zero, _jacobi_theta2 and _jacobi_theta3
-    # are used,
-    # which compute the series starting from n=0 using fixed precision
-    # numbers;
-    # otherwise  _jacobi_theta2a and _jacobi_theta3a are used, which compute
-    # the series starting from n=n0, which is the largest term.
-
-    # TODO: write _jacobi_theta2a and _jacobi_theta3a using fixed-point
-
-    if abs(q) > ctx.THETA_Q_LIM:
-        raise ValueError('abs(q) > THETA_Q_LIM = %f' % ctx.THETA_Q_LIM)
-
-    extra = 10
-    if z:
-        M = ctx.mag(z)
-        if M > 5 or (n == 1 and M < -5):
-            extra += 2*abs(M)
-    cz = 0.5
-    extra2 = 50
-    prec0 = ctx.prec
-    try:
-        ctx.prec += extra
-        if n == 1:
-            if ctx._im(z):
-                if abs(ctx._im(z)) < cz * abs(ctx._re(ctx.log(q))):
-                    ctx.dps += extra2
-                    res = ctx._jacobi_theta2(z - ctx.pi/2, q)
-                else:
-                    ctx.dps += 10
-                    res = ctx._jacobi_theta2a(z - ctx.pi/2, q)
-            else:
-                res = ctx._jacobi_theta2(z - ctx.pi/2, q)
-        elif n == 2:
-            if ctx._im(z):
-                if abs(ctx._im(z)) < cz * abs(ctx._re(ctx.log(q))):
-                    ctx.dps += extra2
-                    res = ctx._jacobi_theta2(z, q)
-                else:
-                    ctx.dps += 10
-                    res = ctx._jacobi_theta2a(z, q)
-            else:
-                res = ctx._jacobi_theta2(z, q)
-        elif n == 3:
-            if ctx._im(z):
-                if abs(ctx._im(z)) < cz * abs(ctx._re(ctx.log(q))):
-                    ctx.dps += extra2
-                    res = ctx._jacobi_theta3(z, q)
-                else:
-                    ctx.dps += 10
-                    res = ctx._jacobi_theta3a(z, q)
-            else:
-                res = ctx._jacobi_theta3(z, q)
-        elif n == 4:
-            if ctx._im(z):
-                if abs(ctx._im(z)) < cz * abs(ctx._re(ctx.log(q))):
-                    ctx.dps += extra2
-                    res = ctx._jacobi_theta3(z, -q)
-                else:
-                    ctx.dps += 10
-                    res = ctx._jacobi_theta3a(z, -q)
-            else:
-                res = ctx._jacobi_theta3(z, -q)
-        else:
-            raise ValueError
-    finally:
-        ctx.prec = prec0
-    return res
-
-@defun
-def _djtheta(ctx, n, z, q, derivative=1):
-    z = ctx.convert(z)
-    q = ctx.convert(q)
-    nd = int(derivative)
-
-    if abs(q) > ctx.THETA_Q_LIM:
-        raise ValueError('abs(q) > THETA_Q_LIM = %f' % ctx.THETA_Q_LIM)
-    extra = 10 + ctx.prec * nd // 10
-    if z:
-        M = ctx.mag(z)
-        if M > 5 or (n != 1 and M < -5):
-            extra += 2*abs(M)
-    cz = 0.5
-    extra2 = 50
-    prec0 = ctx.prec
-    try:
-        ctx.prec += extra
-        if n == 1:
-            if ctx._im(z):
-                if abs(ctx._im(z)) < cz * abs(ctx._re(ctx.log(q))):
-                    ctx.dps += extra2
-                    res = ctx._djacobi_theta2(z - ctx.pi/2, q, nd)
-                else:
-                    ctx.dps += 10
-                    res = ctx._djacobi_theta2a(z - ctx.pi/2, q, nd)
-            else:
-                res = ctx._djacobi_theta2(z - ctx.pi/2, q, nd)
-        elif n == 2:
-            if ctx._im(z):
-                if abs(ctx._im(z)) < cz * abs(ctx._re(ctx.log(q))):
-                    ctx.dps += extra2
-                    res = ctx._djacobi_theta2(z, q, nd)
-                else:
-                    ctx.dps += 10
-                    res = ctx._djacobi_theta2a(z, q, nd)
-            else:
-                res = ctx._djacobi_theta2(z, q, nd)
-        elif n == 3:
-            if ctx._im(z):
-                if abs(ctx._im(z)) < cz * abs(ctx._re(ctx.log(q))):
-                    ctx.dps += extra2
-                    res = ctx._djacobi_theta3(z, q, nd)
-                else:
-                    ctx.dps += 10
-                    res = ctx._djacobi_theta3a(z, q, nd)
-            else:
-                res = ctx._djacobi_theta3(z, q, nd)
-        elif n == 4:
-            if ctx._im(z):
-                if abs(ctx._im(z)) < cz * abs(ctx._re(ctx.log(q))):
-                    ctx.dps += extra2
-                    res = ctx._djacobi_theta3(z, -q, nd)
-                else:
-                    ctx.dps += 10
-                    res = ctx._djacobi_theta3a(z, -q, nd)
-            else:
-                res = ctx._djacobi_theta3(z, -q, nd)
-        else:
-            raise ValueError
-    finally:
-        ctx.prec = prec0
-    return +res
-
 jacobi_spec = {
   'sn' : ([3],[2],[1],[4], 'sin', 'tanh'),
   'cn' : ([4],[2],[2],[4], 'cos', 'sech'),
@@ -1411,6 +363,13 @@ def kleinj(ctx, tau=None, **kwargs):
     An alternative, common notation is that of the j-function
     `j(\tau) = 1728 J(\tau)`.
 
+    **Plots**
+
+    .. literalinclude :: /plots/kleinj.py
+    .. image :: /plots/kleinj.png
+    .. literalinclude :: /plots/kleinj2.py
+    .. image :: /plots/kleinj2.png
+
     **Examples**
 
     Verifying the functional equation `J(\tau) = J(\tau+1) = J(-\tau^{-1})`::
@@ -1476,3 +435,897 @@ def kleinj(ctx, tau=None, **kwargs):
     Q = 54*(t2*t3*t4)**8
     return P/Q
 
+
+def RF_calc(ctx, x, y, z, r):
+    if y == z: return RC_calc(ctx, x, y, r)
+    if x == z: return RC_calc(ctx, y, x, r)
+    if x == y: return RC_calc(ctx, z, x, r)
+    if not (ctx.isnormal(x) and ctx.isnormal(y) and ctx.isnormal(z)):
+        if ctx.isnan(x) or ctx.isnan(y) or ctx.isnan(z):
+            return x*y*z
+        if ctx.isinf(x) or ctx.isinf(y) or ctx.isinf(z):
+            return ctx.zero
+    xm,ym,zm = x,y,z
+    A0 = Am = (x+y+z)/3
+    Q = ctx.root(3*r, -6) * max(abs(A0-x),abs(A0-y),abs(A0-z))
+    g = ctx.mpf(0.25)
+    pow4 = ctx.one
+    m = 0
+    while 1:
+        xs = ctx.sqrt(xm)
+        ys = ctx.sqrt(ym)
+        zs = ctx.sqrt(zm)
+        lm = xs*ys + xs*zs + ys*zs
+        Am1 = (Am+lm)*g
+        xm, ym, zm = (xm+lm)*g, (ym+lm)*g, (zm+lm)*g
+        if pow4 * Q < abs(Am):
+            break
+        Am = Am1
+        m += 1
+        pow4 *= g
+    t = pow4/Am
+    X = (A0-x)*t
+    Y = (A0-y)*t
+    Z = -X-Y
+    E2 = X*Y-Z**2
+    E3 = X*Y*Z
+    return ctx.power(Am,-0.5) * (9240-924*E2+385*E2**2+660*E3-630*E2*E3)/9240
+
+def RC_calc(ctx, x, y, r, pv=True):
+    if not (ctx.isnormal(x) and ctx.isnormal(y)):
+        if ctx.isinf(x) or ctx.isinf(y):
+            return 1/(x*y)
+        if y == 0:
+            return ctx.inf
+        if x == 0:
+            return ctx.pi / ctx.sqrt(y) / 2
+        raise ValueError
+    # Cauchy principal value
+    if pv and ctx._im(y) == 0 and ctx._re(y) < 0:
+        return ctx.sqrt(x/(x-y)) * RC_calc(ctx, x-y, -y, r)
+    if x == y:
+        return 1/ctx.sqrt(x)
+    extraprec = 2*max(0,-ctx.mag(x-y)+ctx.mag(x))
+    ctx.prec += extraprec
+    if ctx._is_real_type(x) and ctx._is_real_type(y):
+        x = ctx._re(x)
+        y = ctx._re(y)
+        a = ctx.sqrt(x/y)
+        if x < y:
+            b = ctx.sqrt(y-x)
+            v = ctx.acos(a)/b
+        else:
+            b = ctx.sqrt(x-y)
+            v = ctx.acosh(a)/b
+    else:
+        sx = ctx.sqrt(x)
+        sy = ctx.sqrt(y)
+        v = ctx.acos(sx/sy)/(ctx.sqrt((1-x/y))*sy)
+    ctx.prec -= extraprec
+    return v
+
+def RJ_calc(ctx, x, y, z, p, r):
+    if not (ctx.isnormal(x) and ctx.isnormal(y) and \
+        ctx.isnormal(z) and ctx.isnormal(p)):
+        if ctx.isnan(x) or ctx.isnan(y) or ctx.isnan(z) or ctx.isnan(p):
+            return x*y*z
+        if ctx.isinf(x) or ctx.isinf(y) or ctx.isinf(z) or ctx.isinf(p):
+            return ctx.zero
+    if not p:
+        return ctx.inf
+    xm,ym,zm,pm = x,y,z,p
+    A0 = Am = (x + y + z + 2*p)/5
+    delta = (p-x)*(p-y)*(p-z)
+    Q = ctx.root(0.25*r, -6) * max(abs(A0-x),abs(A0-y),abs(A0-z),abs(A0-p))
+    m = 0
+    g = ctx.mpf(0.25)
+    pow4 = ctx.one
+    S = 0
+    while 1:
+        sx = ctx.sqrt(xm)
+        sy = ctx.sqrt(ym)
+        sz = ctx.sqrt(zm)
+        sp = ctx.sqrt(pm)
+        lm = sx*sy + sx*sz + sy*sz
+        Am1 = (Am+lm)*g
+        xm = (xm+lm)*g; ym = (ym+lm)*g; zm = (zm+lm)*g; pm = (pm+lm)*g
+        dm = (sp+sx) * (sp+sy) * (sp+sz)
+        em = delta * ctx.power(4, -3*m) / dm**2
+        if pow4 * Q < abs(Am):
+            break
+        T = RC_calc(ctx, ctx.one, ctx.one+em, r) * pow4 / dm
+        S += T
+        pow4 *= g
+        m += 1
+        Am = Am1
+    t = ctx.ldexp(1,-2*m) / Am
+    X = (A0-x)*t
+    Y = (A0-y)*t
+    Z = (A0-z)*t
+    P = (-X-Y-Z)/2
+    E2 = X*Y + X*Z + Y*Z - 3*P**2
+    E3 = X*Y*Z + 2*E2*P + 4*P**3
+    E4 = (2*X*Y*Z + E2*P + 3*P**3)*P
+    E5 = X*Y*Z*P**2
+    P = 24024 - 5148*E2 + 2457*E2**2 + 4004*E3 - 4158*E2*E3 - 3276*E4 + 2772*E5
+    Q = 24024
+    v1 = g**m * ctx.power(Am, -1.5) * P/Q
+    v2 = 6*S
+    return v1 + v2
+
+@defun
+def elliprf(ctx, x, y, z):
+    r"""
+    Evaluates the Carlson symmetric elliptic integral of the first kind
+
+    .. math ::
+
+        R_F(x,y,z) = \frac{1}{2}
+            \int_0^{\infty} \frac{dt}{\sqrt{(t+x)(t+y)(t+z)}}
+
+    which is defined for `x,y,z \notin (-\infty,0)`, and with
+    at most one of `x,y,z` being zero.
+
+    For real `x,y,z \ge 0`, the principal square root is taken in the integrand.
+    For complex `x,y,z`, the principal square root is taken as `t \to \infty`
+    and as `t \to 0` non-principal branches are chosen as necessary so as to
+    make the integrand continuous.
+
+    **Examples**
+
+    Some basic values and limits::
+
+        >>> from mpmath import *
+        >>> mp.dps = 25; mp.pretty = True
+        >>> elliprf(0,1,1); pi/2
+        1.570796326794896619231322
+        1.570796326794896619231322
+        >>> elliprf(0,1,inf)
+        0.0
+        >>> elliprf(1,1,1)
+        1.0
+        >>> elliprf(2,2,2)**2
+        0.5
+        >>> elliprf(1,0,0); elliprf(0,0,1); elliprf(0,1,0); elliprf(0,0,0)
+        +inf
+        +inf
+        +inf
+        +inf
+
+    Representing complete elliptic integrals in terms of `R_F`::
+
+        >>> m = mpf(0.75)
+        >>> ellipk(m); elliprf(0,1-m,1)
+        2.156515647499643235438675
+        2.156515647499643235438675
+        >>> ellipe(m); elliprf(0,1-m,1)-m*elliprd(0,1-m,1)/3
+        1.211056027568459524803563
+        1.211056027568459524803563
+
+    Some symmetries and argument transformations::
+
+        >>> x,y,z = 2,3,4
+        >>> elliprf(x,y,z); elliprf(y,x,z); elliprf(z,y,x)
+        0.5840828416771517066928492
+        0.5840828416771517066928492
+        0.5840828416771517066928492
+        >>> k = mpf(100000)
+        >>> elliprf(k*x,k*y,k*z); k**(-0.5) * elliprf(x,y,z)
+        0.001847032121923321253219284
+        0.001847032121923321253219284
+        >>> l = sqrt(x*y) + sqrt(y*z) + sqrt(z*x)
+        >>> elliprf(x,y,z); 2*elliprf(x+l,y+l,z+l)
+        0.5840828416771517066928492
+        0.5840828416771517066928492
+        >>> elliprf((x+l)/4,(y+l)/4,(z+l)/4)
+        0.5840828416771517066928492
+
+    Comparing with numerical integration::
+
+        >>> x,y,z = 2,3,4
+        >>> elliprf(x,y,z)
+        0.5840828416771517066928492
+        >>> f = lambda t: 0.5*((t+x)*(t+y)*(t+z))**(-0.5)
+        >>> q = extradps(25)(quad)
+        >>> q(f, [0,inf])
+        0.5840828416771517066928492
+
+    With the following arguments, the square root in the integrand becomes
+    discontinuous at `t = 1/2` if the principal branch is used. To obtain
+    the right value, `-\sqrt{r}` must be taken instead of `\sqrt{r}`
+    on `t \in (0, 1/2)`::
+
+        >>> x,y,z = j-1,j,0
+        >>> elliprf(x,y,z)
+        (0.7961258658423391329305694 - 1.213856669836495986430094j)
+        >>> -q(f, [0,0.5]) + q(f, [0.5,inf])
+        (0.7961258658423391329305694 - 1.213856669836495986430094j)
+
+    The so-called *first lemniscate constant*, a transcendental number::
+
+        >>> elliprf(0,1,2)
+        1.31102877714605990523242
+        >>> extradps(25)(quad)(lambda t: 1/sqrt(1-t**4), [0,1])
+        1.31102877714605990523242
+        >>> gamma('1/4')**2/(4*sqrt(2*pi))
+        1.31102877714605990523242
+
+    **References**
+
+    1. [Carlson]_
+    2. [DLMF]_ Chapter 19. Elliptic Integrals
+
+    """
+    x = ctx.convert(x)
+    y = ctx.convert(y)
+    z = ctx.convert(z)
+    prec = ctx.prec
+    try:
+        ctx.prec += 20
+        tol = ctx.eps * 2**10
+        v = RF_calc(ctx, x, y, z, tol)
+    finally:
+        ctx.prec = prec
+    return +v
+
+@defun
+def elliprc(ctx, x, y, pv=True):
+    r"""
+    Evaluates the degenerate Carlson symmetric elliptic integral
+    of the first kind
+
+    .. math ::
+
+        R_C(x,y) = R_F(x,y,y) =
+            \frac{1}{2} \int_0^{\infty} \frac{dt}{(t+y) \sqrt{(t+x)}}.
+
+    If `y \in (-\infty,0)`, either a value defined by continuity,
+    or with *pv=True* the Cauchy principal value, can be computed.
+
+    If `x \ge 0, y > 0`, the value can be expressed in terms of
+    elementary functions as
+
+    .. math ::
+
+        R_C(x,y) =
+        \begin{cases}
+          \dfrac{1}{\sqrt{y-x}}
+            \cos^{-1}\left(\sqrt{\dfrac{x}{y}}\right),   & x < y \\
+          \dfrac{1}{\sqrt{y}},                          & x = y \\
+          \dfrac{1}{\sqrt{x-y}}
+            \cosh^{-1}\left(\sqrt{\dfrac{x}{y}}\right),  & x > y \\
+        \end{cases}.
+
+    **Examples**
+
+    Some special values and limits::
+
+        >>> from mpmath import *
+        >>> mp.dps = 25; mp.pretty = True
+        >>> elliprc(1,2)*4; elliprc(0,1)*2; +pi
+        3.141592653589793238462643
+        3.141592653589793238462643
+        3.141592653589793238462643
+        >>> elliprc(1,0)
+        +inf
+        >>> elliprc(5,5)**2
+        0.2
+        >>> elliprc(1,inf); elliprc(inf,1); elliprc(inf,inf)
+        0.0
+        0.0
+        0.0
+
+    Comparing with the elementary closed-form solution::
+
+        >>> elliprc('1/3', '1/5'); sqrt(7.5)*acosh(sqrt('5/3'))
+        2.041630778983498390751238
+        2.041630778983498390751238
+        >>> elliprc('1/5', '1/3'); sqrt(7.5)*acos(sqrt('3/5'))
+        1.875180765206547065111085
+        1.875180765206547065111085
+
+    Comparing with numerical integration::
+
+        >>> q = extradps(25)(quad)
+        >>> elliprc(2, -3, pv=True)
+        0.3333969101113672670749334
+        >>> elliprc(2, -3, pv=False)
+        (0.3333969101113672670749334 + 0.7024814731040726393156375j)
+        >>> 0.5*q(lambda t: 1/(sqrt(t+2)*(t-3)), [0,3-j,6,inf])
+        (0.3333969101113672670749334 + 0.7024814731040726393156375j)
+
+    """
+    x = ctx.convert(x)
+    y = ctx.convert(y)
+    prec = ctx.prec
+    try:
+        ctx.prec += 20
+        tol = ctx.eps * 2**10
+        v = RC_calc(ctx, x, y, tol, pv)
+    finally:
+        ctx.prec = prec
+    return +v
+
+@defun
+def elliprj(ctx, x, y, z, p):
+    r"""
+    Evaluates the Carlson symmetric elliptic integral of the third kind
+
+    .. math ::
+
+        R_J(x,y,z,p) = \frac{3}{2}
+            \int_0^{\infty} \frac{dt}{(t+p)\sqrt{(t+x)(t+y)(t+z)}}.
+
+    Like :func:`~mpmath.elliprf`, the branch of the square root in the integrand
+    is defined so as to be continuous along the path of integration for
+    complex values of the arguments.
+
+    **Examples**
+
+    Some values and limits::
+
+        >>> from mpmath import *
+        >>> mp.dps = 25; mp.pretty = True
+        >>> elliprj(1,1,1,1)
+        1.0
+        >>> elliprj(2,2,2,2); 1/(2*sqrt(2))
+        0.3535533905932737622004222
+        0.3535533905932737622004222
+        >>> elliprj(0,1,2,2)
+        1.067937989667395702268688
+        >>> 3*(2*gamma('5/4')**2-pi**2/gamma('1/4')**2)/(sqrt(2*pi))
+        1.067937989667395702268688
+        >>> elliprj(0,1,1,2); 3*pi*(2-sqrt(2))/4
+        1.380226776765915172432054
+        1.380226776765915172432054
+        >>> elliprj(1,3,2,0); elliprj(0,1,1,0); elliprj(0,0,0,0)
+        +inf
+        +inf
+        +inf
+        >>> elliprj(1,inf,1,0); elliprj(1,1,1,inf)
+        0.0
+        0.0
+        >>> chop(elliprj(1+j, 1-j, 1, 1))
+        0.8505007163686739432927844
+
+    Scale transformation::
+
+        >>> x,y,z,p = 2,3,4,5
+        >>> k = mpf(100000)
+        >>> elliprj(k*x,k*y,k*z,k*p); k**(-1.5)*elliprj(x,y,z,p)
+        4.521291677592745527851168e-9
+        4.521291677592745527851168e-9
+
+    Comparing with numerical integration::
+
+        >>> elliprj(1,2,3,4)
+        0.2398480997495677621758617
+        >>> f = lambda t: 1/((t+4)*sqrt((t+1)*(t+2)*(t+3)))
+        >>> 1.5*quad(f, [0,inf])
+        0.2398480997495677621758617
+        >>> elliprj(1,2+1j,3,4-2j)
+        (0.216888906014633498739952 + 0.04081912627366673332369512j)
+        >>> f = lambda t: 1/((t+4-2j)*sqrt((t+1)*(t+2+1j)*(t+3)))
+        >>> 1.5*quad(f, [0,inf])
+        (0.216888906014633498739952 + 0.04081912627366673332369511j)
+
+    """
+    x = ctx.convert(x)
+    y = ctx.convert(y)
+    z = ctx.convert(z)
+    p = ctx.convert(p)
+    prec = ctx.prec
+    try:
+        ctx.prec += 20
+        tol = ctx.eps * 2**10
+        v = RJ_calc(ctx, x, y, z, p, tol)
+    finally:
+        ctx.prec = prec
+    return +v
+
+@defun
+def elliprd(ctx, x, y, z):
+    r"""
+    Evaluates the degenerate Carlson symmetric elliptic integral
+    of the third kind or Carlson elliptic integral of the
+    second kind `R_D(x,y,z) = R_J(x,y,z,z)`.
+
+    See :func:`~mpmath.elliprj` for additional information.
+
+    **Examples**
+
+        >>> from mpmath import *
+        >>> mp.dps = 25; mp.pretty = True
+        >>> elliprd(1,2,3)
+        0.2904602810289906442326534
+        >>> elliprj(1,2,3,3)
+        0.2904602810289906442326534
+
+    The so-called *second lemniscate constant*, a transcendental number::
+
+        >>> elliprd(0,2,1)/3
+        0.5990701173677961037199612
+        >>> extradps(25)(quad)(lambda t: t**2/sqrt(1-t**4), [0,1])
+        0.5990701173677961037199612
+        >>> gamma('3/4')**2/sqrt(2*pi)
+        0.5990701173677961037199612
+
+    """
+    return ctx.elliprj(x,y,z,z)
+
+@defun
+def elliprg(ctx, x, y, z):
+    r"""
+    Evaluates the Carlson completely symmetric elliptic integral
+    of the second kind
+
+    .. math ::
+
+        R_G(x,y,z) = \frac{1}{4} \int_0^{\infty}
+            \frac{t}{\sqrt{(t+x)(t+y)(t+z)}}
+            \left( \frac{x}{t+x} + \frac{y}{t+y} + \frac{z}{t+z}\right) dt.
+
+    **Examples**
+
+    Evaluation for real and complex arguments::
+
+        >>> from mpmath import *
+        >>> mp.dps = 25; mp.pretty = True
+        >>> elliprg(0,1,1)*4; +pi
+        3.141592653589793238462643
+        3.141592653589793238462643
+        >>> elliprg(0,0.5,1)
+        0.6753219405238377512600874
+        >>> chop(elliprg(1+j, 1-j, 2))
+        1.172431327676416604532822
+
+    A double integral that can be evaluated in terms of `R_G`::
+
+        >>> x,y,z = 2,3,4
+        >>> def f(t,u):
+        ...     st = fp.sin(t); ct = fp.cos(t)
+        ...     su = fp.sin(u); cu = fp.cos(u)
+        ...     return (x*(st*cu)**2 + y*(st*su)**2 + z*ct**2)**0.5 * st
+        ...
+        >>> nprint(mpf(fp.quad(f, [0,fp.pi], [0,2*fp.pi])/(4*fp.pi)), 13)
+        1.725503028069
+        >>> nprint(elliprg(x,y,z), 13)
+        1.725503028069
+
+    """
+    x = ctx.convert(x)
+    y = ctx.convert(y)
+    z = ctx.convert(z)
+    if not z: x, z = z, x
+    if not z: y, z = x, y
+    if not z: return ctx.inf
+    def terms():
+        T1 = 0.5*z*ctx.elliprf(x,y,z)
+        T2 = -0.5*(x-z)*(y-z)*ctx.elliprd(x,y,z)/3
+        T3 = 0.5*ctx.sqrt(x*y/z)
+        return T1,T2,T3
+    return ctx.sum_accurately(terms)
+
+
+@defun_wrapped
+def ellipf(ctx, phi, m):
+    r"""
+    Evaluates the Legendre incomplete elliptic integral of the first kind
+
+     .. math ::
+
+        F(\phi,m) = \int_0^{\phi} \frac{dt}{\sqrt{1-m \sin^2 t}}
+
+    or equivalently
+
+    .. math ::
+
+        F(\phi,m) = \int_0^{\sin z}
+        \frac{dt}{\left(\sqrt{1-t^2}\right)\left(\sqrt{1-mt^2}\right)}.
+
+    The function reduces to a complete elliptic integral of the first kind
+    (see :func:`~mpmath.ellipk`) when `\phi = \frac{\pi}{2}`; that is,
+
+    .. math ::
+
+        F\left(\frac{\pi}{2}, m\right) = K(m).
+
+    In the defining integral, it is assumed that the principal branch
+    of the square root is taken and that the path of integration avoids
+    crossing any branch cuts. Outside `-\pi/2 \le \Re(z) \le \pi/2`,
+    the function extends quasi-periodically as
+
+    .. math ::
+
+        F(\phi + n \pi, m) = 2 n K(m) + F(\phi,m), n \in \mathbb{Z}.
+
+    **Plots**
+
+    .. literalinclude :: /plots/ellipf.py
+    .. image :: /plots/ellipf.png
+
+    **Examples**
+
+    Basic values and limits::
+
+        >>> from mpmath import *
+        >>> mp.dps = 25; mp.pretty = True
+        >>> ellipf(0,1)
+        0.0
+        >>> ellipf(0,0)
+        0.0
+        >>> ellipf(1,0); ellipf(2+3j,0)
+        1.0
+        (2.0 + 3.0j)
+        >>> ellipf(1,1); log(sec(1)+tan(1))
+        1.226191170883517070813061
+        1.226191170883517070813061
+        >>> ellipf(pi/2, -0.5); ellipk(-0.5)
+        1.415737208425956198892166
+        1.415737208425956198892166
+        >>> ellipf(pi/2+eps, 1); ellipf(-pi/2-eps, 1)
+        +inf
+        +inf
+        >>> ellipf(1.5, 1)
+        3.340677542798311003320813
+
+    Comparing with numerical integration::
+
+        >>> z,m = 0.5, 1.25
+        >>> ellipf(z,m)
+        0.5287219202206327872978255
+        >>> quad(lambda t: (1-m*sin(t)**2)**(-0.5), [0,z])
+        0.5287219202206327872978255
+
+    The arguments may be complex numbers::
+
+        >>> ellipf(3j, 0.5)
+        (0.0 + 1.713602407841590234804143j)
+        >>> ellipf(3+4j, 5-6j)
+        (1.269131241950351323305741 - 0.3561052815014558335412538j)
+        >>> z,m = 2+3j, 1.25
+        >>> k = 1011
+        >>> ellipf(z+pi*k,m); ellipf(z,m) + 2*k*ellipk(m)
+        (4086.184383622179764082821 - 3003.003538923749396546871j)
+        (4086.184383622179764082821 - 3003.003538923749396546871j)
+
+    For `|\Re(z)| < \pi/2`, the function can be expressed as a
+    hypergeometric series of two variables
+    (see :func:`~mpmath.appellf1`)::
+
+        >>> z,m = 0.5, 0.25
+        >>> ellipf(z,m)
+        0.5050887275786480788831083
+        >>> sin(z)*appellf1(0.5,0.5,0.5,1.5,sin(z)**2,m*sin(z)**2)
+        0.5050887275786480788831083
+
+    """
+    z = phi
+    if not (ctx.isnormal(z) and ctx.isnormal(m)):
+        if m == 0:
+            return z + m
+        if z == 0:
+            return z * m
+        if m == ctx.inf or m == ctx.ninf: return z/m
+        raise ValueError
+    x = z.real
+    ctx.prec += max(0, ctx.mag(x))
+    pi = +ctx.pi
+    away = abs(x) > pi/2
+    if m == 1:
+        if away:
+            return ctx.inf
+    if away:
+        d = ctx.nint(x/pi)
+        z = z-pi*d
+        P = 2*d*ctx.ellipk(m)
+    else:
+        P = 0
+    c, s = ctx.cos_sin(z)
+    return s * ctx.elliprf(c**2, 1-m*s**2, 1) + P
+
+@defun_wrapped
+def ellipe(ctx, *args):
+    r"""
+    Called with a single argument `m`, evaluates the Legendre complete
+    elliptic integral of the second kind, `E(m)`, defined by
+
+        .. math :: E(m) = \int_0^{\pi/2} \sqrt{1-m \sin^2 t} \, dt \,=\,
+            \frac{\pi}{2}
+            \,_2F_1\left(\frac{1}{2}, -\frac{1}{2}, 1, m\right).
+
+    Called with two arguments `\phi, m`, evaluates the incomplete elliptic
+    integral of the second kind
+
+     .. math ::
+
+        E(\phi,m) = \int_0^{\phi} \sqrt{1-m \sin^2 t} \, dt =
+                    \int_0^{\sin z}
+                    \frac{\sqrt{1-mt^2}}{\sqrt{1-t^2}} \, dt.
+
+    The incomplete integral reduces to a complete integral when
+    `\phi = \frac{\pi}{2}`; that is,
+
+    .. math ::
+
+        E\left(\frac{\pi}{2}, m\right) = E(m).
+
+    In the defining integral, it is assumed that the principal branch
+    of the square root is taken and that the path of integration avoids
+    crossing any branch cuts. Outside `-\pi/2 \le \Re(z) \le \pi/2`,
+    the function extends quasi-periodically as
+
+    .. math ::
+
+        E(\phi + n \pi, m) = 2 n E(m) + F(\phi,m), n \in \mathbb{Z}.
+
+    **Plots**
+
+    .. literalinclude :: /plots/ellipe.py
+    .. image :: /plots/ellipe.png
+
+    **Examples for the complete integral**
+
+    Basic values and limits::
+
+        >>> from mpmath import *
+        >>> mp.dps = 25; mp.pretty = True
+        >>> ellipe(0)
+        1.570796326794896619231322
+        >>> ellipe(1)
+        1.0
+        >>> ellipe(-1)
+        1.910098894513856008952381
+        >>> ellipe(2)
+        (0.5990701173677961037199612 + 0.5990701173677961037199612j)
+        >>> ellipe(inf)
+        (0.0 + +infj)
+        >>> ellipe(-inf)
+        +inf
+
+    Verifying the defining integral and hypergeometric
+    representation::
+
+        >>> ellipe(0.5)
+        1.350643881047675502520175
+        >>> quad(lambda t: sqrt(1-0.5*sin(t)**2), [0, pi/2])
+        1.350643881047675502520175
+        >>> pi/2*hyp2f1(0.5,-0.5,1,0.5)
+        1.350643881047675502520175
+
+    Evaluation is supported for arbitrary complex `m`::
+
+        >>> ellipe(0.5+0.25j)
+        (1.360868682163129682716687 - 0.1238733442561786843557315j)
+        >>> ellipe(3+4j)
+        (1.499553520933346954333612 - 1.577879007912758274533309j)
+
+    A definite integral::
+
+        >>> quad(ellipe, [0,1])
+        1.333333333333333333333333
+
+    **Examples for the incomplete integral**
+
+    Basic values and limits::
+
+        >>> ellipe(0,1)
+        0.0
+        >>> ellipe(0,0)
+        0.0
+        >>> ellipe(1,0)
+        1.0
+        >>> ellipe(2+3j,0)
+        (2.0 + 3.0j)
+        >>> ellipe(1,1); sin(1)
+        0.8414709848078965066525023
+        0.8414709848078965066525023
+        >>> ellipe(pi/2, -0.5); ellipe(-0.5)
+        1.751771275694817862026502
+        1.751771275694817862026502
+        >>> ellipe(pi/2, 1); ellipe(-pi/2, 1)
+        1.0
+        -1.0
+        >>> ellipe(1.5, 1)
+        0.9974949866040544309417234
+
+    Comparing with numerical integration::
+
+        >>> z,m = 0.5, 1.25
+        >>> ellipe(z,m)
+        0.4740152182652628394264449
+        >>> quad(lambda t: sqrt(1-m*sin(t)**2), [0,z])
+        0.4740152182652628394264449
+
+    The arguments may be complex numbers::
+
+        >>> ellipe(3j, 0.5)
+        (0.0 + 7.551991234890371873502105j)
+        >>> ellipe(3+4j, 5-6j)
+        (24.15299022574220502424466 + 75.2503670480325997418156j)
+        >>> k = 35
+        >>> z,m = 2+3j, 1.25
+        >>> ellipe(z+pi*k,m); ellipe(z,m) + 2*k*ellipe(m)
+        (48.30138799412005235090766 + 17.47255216721987688224357j)
+        (48.30138799412005235090766 + 17.47255216721987688224357j)
+
+    For `|\Re(z)| < \pi/2`, the function can be expressed as a
+    hypergeometric series of two variables
+    (see :func:`~mpmath.appellf1`)::
+
+        >>> z,m = 0.5, 0.25
+        >>> ellipe(z,m)
+        0.4950017030164151928870375
+        >>> sin(z)*appellf1(0.5,0.5,-0.5,1.5,sin(z)**2,m*sin(z)**2)
+        0.4950017030164151928870376
+
+    """
+    if len(args) == 1:
+        return ctx._ellipe(args[0])
+    else:
+        phi, m = args
+    z = phi
+    if not (ctx.isnormal(z) and ctx.isnormal(m)):
+        if m == 0:
+            return z + m
+        if z == 0:
+            return z * m
+        if m == ctx.inf or m == ctx.ninf:
+            return ctx.inf
+        raise ValueError
+    x = z.real
+    ctx.prec += max(0, ctx.mag(x))
+    pi = +ctx.pi
+    away = abs(x) > pi/2
+    if away:
+        d = ctx.nint(x/pi)
+        z = z-pi*d
+        P = 2*d*ctx.ellipe(m)
+    else:
+        P = 0
+    def terms():
+        c, s = ctx.cos_sin(z)
+        x = c**2
+        y = 1-m*s**2
+        RF = ctx.elliprf(x, y, 1)
+        RD = ctx.elliprd(x, y, 1)
+        return s*RF, -m*s**3*RD/3
+    return ctx.sum_accurately(terms) + P
+
+@defun_wrapped
+def ellippi(ctx, *args):
+    r"""
+    Called with three arguments `n, \phi, m`, evaluates the Legendre
+    incomplete elliptic integral of the third kind
+
+    .. math ::
+
+        \Pi(n; \phi, m) = \int_0^{\phi}
+            \frac{dt}{(1-n \sin^2 t) \sqrt{1-m \sin^2 t}} =
+            \int_0^{\sin \phi}
+            \frac{dt}{(1-nt^2) \sqrt{1-t^2} \sqrt{1-mt^2}}.
+
+    Called with two arguments `n, m`, evaluates the complete
+    elliptic integral of the third kind
+    `\Pi(n,m) = \Pi(n; \frac{\pi}{2},m)`.
+
+    In the defining integral, it is assumed that the principal branch
+    of the square root is taken and that the path of integration avoids
+    crossing any branch cuts. Outside `-\pi/2 \le \Re(z) \le \pi/2`,
+    the function extends quasi-periodically as
+
+    .. math ::
+
+        \Pi(n,\phi+k\pi,m) = 2k\Pi(n,m) + \Pi(n,\phi,m), k \in \mathbb{Z}.
+
+    **Plots**
+
+    .. literalinclude :: /plots/ellippi.py
+    .. image :: /plots/ellippi.png
+
+    **Examples for the complete integral**
+
+    Some basic values and limits::
+
+        >>> from mpmath import *
+        >>> mp.dps = 25; mp.pretty = True
+        >>> ellippi(0,-5); ellipk(-5)
+        0.9555039270640439337379334
+        0.9555039270640439337379334
+        >>> ellippi(inf,2)
+        0.0
+        >>> ellippi(2,inf)
+        0.0
+        >>> abs(ellippi(1,5))
+        +inf
+        >>> abs(ellippi(0.25,1))
+        +inf
+
+    Evaluation in terms of simpler functions::
+
+        >>> ellippi(0.25,0.25); ellipe(0.25)/(1-0.25)
+        1.956616279119236207279727
+        1.956616279119236207279727
+        >>> ellippi(3,0); pi/(2*sqrt(-2))
+        (0.0 - 1.11072073453959156175397j)
+        (0.0 - 1.11072073453959156175397j)
+        >>> ellippi(-3,0); pi/(2*sqrt(4))
+        0.7853981633974483096156609
+        0.7853981633974483096156609
+
+    **Examples for the incomplete integral**
+
+    Basic values and limits::
+
+        >>> ellippi(0.25,-0.5); ellippi(0.25,pi/2,-0.5)
+        1.622944760954741603710555
+        1.622944760954741603710555
+        >>> ellippi(1,0,1)
+        0.0
+        >>> ellippi(inf,0,1)
+        0.0
+        >>> ellippi(0,0.25,0.5); ellipf(0.25,0.5)
+        0.2513040086544925794134591
+        0.2513040086544925794134591
+        >>> ellippi(1,1,1); (log(sec(1)+tan(1))+sec(1)*tan(1))/2
+        2.054332933256248668692452
+        2.054332933256248668692452
+        >>> ellippi(0.25, 53*pi/2, 0.75); 53*ellippi(0.25,0.75)
+        135.240868757890840755058
+        135.240868757890840755058
+        >>> ellippi(0.5,pi/4,0.5); 2*ellipe(pi/4,0.5)-1/sqrt(3)
+        0.9190227391656969903987269
+        0.9190227391656969903987269
+
+    Complex arguments are supported::
+
+        >>> ellippi(0.5, 5+6j-2*pi, -7-8j)
+        (-0.3612856620076747660410167 + 0.5217735339984807829755815j)
+
+    """
+    if len(args) == 2:
+        n, m = args
+        complete = True
+        z = phi = ctx.pi/2
+    else:
+        n, phi, m = args
+        complete = False
+        z = phi
+    if not (ctx.isnormal(n) and ctx.isnormal(z) and ctx.isnormal(m)):
+        if ctx.isnan(n) or ctx.isnan(z) or ctx.isnan(m):
+            raise ValueError
+        if complete:
+            if m == 0: return ctx.pi/(2*ctx.sqrt(1-n))
+            if n == 0: return ctx.ellipk(m)
+            if ctx.isinf(n) or ctx.isinf(m): return ctx.zero
+        else:
+            if z == 0: return z
+            if ctx.isinf(n): return ctx.zero
+            if ctx.isinf(m): return ctx.zero
+        if ctx.isinf(n) or ctx.isinf(z) or ctx.isinf(m):
+            raise ValueError
+    if complete:
+        if m == 1: return -ctx.inf/ctx.sign(n-1)
+        away = False
+    else:
+        x = z.real
+        ctx.prec += max(0, ctx.mag(x))
+        pi = +ctx.pi
+        away = abs(x) > pi/2
+    if away:
+        d = ctx.nint(x/pi)
+        z = z-pi*d
+        P = 2*d*ctx.ellippi(n,m)
+    else:
+        P = 0
+    def terms():
+        if complete:
+            c, s = ctx.zero, ctx.one
+        else:
+            c, s = ctx.cos_sin(z)
+        x = c**2
+        y = 1-m*s**2
+        RF = ctx.elliprf(x, y, 1)
+        RJ = ctx.elliprj(x, y, 1, 1-n*s**2)
+        return s*RF, n*s**3*RJ/3
+    return ctx.sum_accurately(terms) + P

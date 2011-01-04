@@ -4,22 +4,19 @@ sure that passing custom Axes works.
 
 """
 
-try:
-    import matplotlib
-    version = matplotlib.__version__.split("-")[0]
-    version = version.split(".")[:2]
-    if map(int, version) < [0,99]:
-        raise ImportError
-    from pylab import figure
-    f = figure()
-    disabled = False
-except:
-    disabled = True
-
 from sympy.mpmath import mp, fp
 
 def test_axes():
-    import pylab
+    try:
+        import matplotlib
+        version = matplotlib.__version__.split("-")[0]
+        version = version.split(".")[:2]
+        if map(int, version) < [0,99]:
+            raise ImportError
+        import pylab
+    except ImportError:
+        print "\nSkipping test (pylab not available or too old version)\n"
+        return
     fig = pylab.figure()
     axes = fig.add_subplot(111)
     for ctx in [mp, fp]:

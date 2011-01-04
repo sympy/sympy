@@ -158,12 +158,19 @@ class MPContext(BaseMPContext, StandardBaseContext):
         ctx._ci = ctx._wrap_libmp_function(libmp.mpf_ci, libmp.mpc_ci)
         ctx._si = ctx._wrap_libmp_function(libmp.mpf_si, libmp.mpc_si)
         ctx.ellipk = ctx._wrap_libmp_function(libmp.mpf_ellipk, libmp.mpc_ellipk)
-        ctx.ellipe = ctx._wrap_libmp_function(libmp.mpf_ellipe, libmp.mpc_ellipe)
+        ctx._ellipe = ctx._wrap_libmp_function(libmp.mpf_ellipe, libmp.mpc_ellipe)
         ctx.agm1 = ctx._wrap_libmp_function(libmp.mpf_agm1, libmp.mpc_agm1)
         ctx._erf = ctx._wrap_libmp_function(libmp.mpf_erf, None)
         ctx._erfc = ctx._wrap_libmp_function(libmp.mpf_erfc, None)
         ctx._zeta = ctx._wrap_libmp_function(libmp.mpf_zeta, libmp.mpc_zeta)
         ctx._altzeta = ctx._wrap_libmp_function(libmp.mpf_altzeta, libmp.mpc_altzeta)
+
+        # Faster versions
+        ctx.sqrt = getattr(ctx, "_sage_sqrt", ctx.sqrt)
+        ctx.exp = getattr(ctx, "_sage_exp", ctx.exp)
+        ctx.ln = getattr(ctx, "_sage_ln", ctx.ln)
+        ctx.cos = getattr(ctx, "_sage_cos", ctx.cos)
+        ctx.sin = getattr(ctx, "_sage_sin", ctx.sin)
 
     def to_fixed(ctx, x, prec):
         return x.to_fixed(prec)
@@ -302,6 +309,9 @@ class MPContext(BaseMPContext, StandardBaseContext):
         return False
 
     def isnpint(ctx, x):
+        """
+        Determine if *x* is a nonpositive integer.
+        """
         if not x:
             return True
         if hasattr(x, '_mpf_'):
@@ -312,11 +322,10 @@ class MPContext(BaseMPContext, StandardBaseContext):
         if type(x) in int_types:
             return x <= 0
         if isinstance(x, ctx.mpq):
-            # XXX: WRONG
             p, q = x._mpq_
             if not p:
                 return True
-            return (not (q % p)) and p <= 0
+            return q == 1 and p <= 0
         return ctx.isnpint(ctx.convert(x))
 
     def __str__(ctx):
@@ -650,11 +659,13 @@ maxterms, or set zeroprec."""
             epsshift += 5
             extraprec += 5
 
-        if have_complex:
-            z = ctx.make_mpc(zv)
+        if type(zv) is tuple:
+            if have_complex:
+                return ctx.make_mpc(zv)
+            else:
+                return ctx.make_mpf(zv)
         else:
-            z = ctx.make_mpf(zv)
-        return z
+            return zv
 
     def ldexp(ctx, x, n):
         r"""
@@ -1045,6 +1056,19 @@ maxterms, or set zeroprec."""
             5 -19
 
         """
+        typx = type(x)
+        if typx in int_types:
+            return int(x), ctx.ninf
+        elif typx is rational.mpq:
+            p, q = x._mpq_
+            n, r = divmod(p, q)
+            if 2*r >= q:
+                n += 1
+            elif not r:
+                return n, ctx.ninf
+            # log(p/q-n) = log((p-nq)/q) = log(p-nq) - log(q)
+            d = bitcount(abs(p-n*q)) - bitcount(q)
+            return n, d
         if hasattr(x, "_mpf_"):
             re = x._mpf_
             im_dist = ctx.ninf
@@ -1057,18 +1081,6 @@ maxterms, or set zeroprec."""
                 im_dist = ctx.ninf
             else:
                 raise ValueError("requires a finite number")
-        elif isinstance(x, int_types):
-            return int(x), ctx.ninf
-        elif isinstance(x, rational.mpq):
-            p, q = x._mpq_
-            n, r = divmod(p, q)
-            if 2*r >= q:
-                n += 1
-            elif not r:
-                return n, ctx.ninf
-            # log(p/q-n) = log((p-nq)/q) = log(p-nq) - log(q)
-            d = bitcount(abs(p-n*q)) - bitcount(q)
-            return n, d
         else:
             x = ctx.convert(x)
             if hasattr(x, "_mpf_") or hasattr(x, "_mpc_"):
@@ -1076,35 +1088,32 @@ maxterms, or set zeroprec."""
             else:
                 raise TypeError("requires an mpf/mpc")
         sign, man, exp, bc = re
-        shift = exp+bc
-        if sign:
-            man = -man
-        if shift < -1:
+        mag = exp+bc
+        # |x| < 0.5
+        if mag < 0:
             n = 0
-            re_dist = shift
+            re_dist = mag
         elif man:
+            # exact integer
             if exp >= 0:
                 n = man << exp
                 re_dist = ctx.ninf
+            # exact half-integer
+            elif exp == -1:
+                n = (man>>1)+1
+                re_dist = 0
             else:
-                if shift >= 0:
-                    xfixed = man << shift
+                d = (-exp-1)
+                t = man >> d
+                if t & 1:
+                    t += 1
+                    man = (t<<d) - man
                 else:
-                    xfixed = man >> (-shift)
-                n1 = xfixed >> bc
-                n2 = -((-xfixed) >> bc)
-                dist1 = abs(xfixed - (n1<<bc))
-                dist2 = abs(xfixed - (n2<<bc))
-                if dist1 < dist2:
-                    re_dist = dist1
-                    n = n1
-                else:
-                    re_dist = dist2
-                    n = n2
-                if re_dist:
-                    re_dist = bitcount(re_dist) - bc
-                else:
-                    re_dist = ctx.ninf
+                    man -= (t<<d)
+                n = t>>1   # int(t)>>1
+                re_dist = exp+bitcount(man)
+            if sign:
+                n = -n
         elif re == fzero:
             re_dist = ctx.ninf
             n = 0

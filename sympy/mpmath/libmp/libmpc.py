@@ -2,7 +2,7 @@
 Low-level functions for complex arithmetic.
 """
 
-from backend import MPZ, MPZ_ZERO, MPZ_ONE, MPZ_TWO
+from backend import MPZ, MPZ_ZERO, MPZ_ONE, MPZ_TWO, BACKEND
 
 from libmpf import (\
     round_floor, round_ceiling, round_down, round_up,
@@ -22,6 +22,7 @@ from libelefun import (\
     mpf_pi, mpf_exp, mpf_log, mpf_cos_sin, mpf_cosh_sinh, mpf_tan, mpf_pow_int,
     mpf_log_hypot,
     mpf_cos_sin_pi, mpf_phi,
+    mpf_cos, mpf_sin, mpf_cos_pi, mpf_sin_pi,
     mpf_atan, mpf_atan2, mpf_cosh, mpf_sinh, mpf_tanh,
     mpf_asin, mpf_acos, mpf_acosh, mpf_nthroot, mpf_fibonacci
 )
@@ -423,6 +424,8 @@ def mpc_exp(z, prec, rnd=round_fast):
     a, b = z
     if a == fzero:
         return mpf_cos_sin(b, prec, rnd)
+    if b == fzero:
+        return mpf_exp(a, prec, rnd), fzero
     mag = mpf_exp(a, prec+4, rnd)
     c, s = mpf_cos_sin(b, prec+4, rnd)
     re = mpf_mul(mag, c, prec, rnd)
@@ -443,6 +446,8 @@ def mpc_cos(z, prec, rnd=round_fast):
     possible. The formula is also efficient since we can compute both
     pairs (cos, sin) and (cosh, sinh) in single stwps."""
     a, b = z
+    if b == fzero:
+        return mpf_cos(a, prec, rnd), fzero
     if a == fzero:
         return mpf_cosh(b, prec, rnd), fzero
     wp = prec + 6
@@ -457,6 +462,8 @@ def mpc_sin(z, prec, rnd=round_fast):
     cos(a)*sinh(b)*i. See the docstring for mpc_cos for additional
     comments."""
     a, b = z
+    if b == fzero:
+        return mpf_sin(a, prec, rnd), fzero
     if a == fzero:
         return fzero, mpf_sinh(b, prec, rnd)
     wp = prec + 6
@@ -487,6 +494,8 @@ def mpc_tan(z, prec, rnd=round_fast):
 
 def mpc_cos_pi(z, prec, rnd=round_fast):
     a, b = z
+    if b == fzero:
+        return mpf_cos_pi(a, prec, rnd), fzero
     b = mpf_mul(b, mpf_pi(prec+5), prec+5)
     if a == fzero:
         return mpf_cosh(b, prec, rnd), fzero
@@ -499,6 +508,8 @@ def mpc_cos_pi(z, prec, rnd=round_fast):
 
 def mpc_sin_pi(z, prec, rnd=round_fast):
     a, b = z
+    if b == fzero:
+        return mpf_sin_pi(a, prec, rnd), fzero
     b = mpf_mul(b, mpf_pi(prec+5), prec+5)
     if a == fzero:
         return fzero, mpf_sinh(b, prec, rnd)
@@ -513,7 +524,10 @@ def mpc_cos_sin(z, prec, rnd=round_fast):
     a, b = z
     if a == fzero:
         ch, sh = mpf_cosh_sinh(b, prec, rnd)
-        return (ch, fzero), (sh, fzero)
+        return (ch, fzero), (fzero, sh)
+    if b == fzero:
+        c, s = mpf_cos_sin(a, prec, rnd)
+        return (c, fzero), (s, fzero)
     wp = prec + 6
     c, s = mpf_cos_sin(a, wp)
     ch, sh = mpf_cosh_sinh(b, wp)
@@ -525,6 +539,9 @@ def mpc_cos_sin(z, prec, rnd=round_fast):
 
 def mpc_cos_sin_pi(z, prec, rnd=round_fast):
     a, b = z
+    if b == fzero:
+        c, s = mpf_cos_sin_pi(a, prec, rnd)
+        return (c, fzero), (s, fzero)
     b = mpf_mul(b, mpf_pi(prec+5), prec+5)
     if a == fzero:
         ch, sh = mpf_cosh_sinh(b, prec, rnd)
@@ -798,3 +815,12 @@ def mpc_expjpi(z, prec, rnd='f'):
     re = mpf_mul(ey, c, prec, rnd)
     im = mpf_mul(ey, s, prec, rnd)
     return re, im
+
+
+if BACKEND == 'sage':
+    try:
+        import sage.libs.mpmath.ext_libmp as _lbmp
+        mpc_exp = _lbmp.mpc_exp
+        mpc_sqrt = _lbmp.mpc_sqrt
+    except (ImportError, AttributeError):
+        print "Warning: Sage imports in libmpc failed"

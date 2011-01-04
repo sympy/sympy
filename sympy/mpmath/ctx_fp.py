@@ -79,6 +79,7 @@ class FPContext(StandardBaseContext):
     catalan = 0.91596559417721901505
     khinchin = 2.6854520010653064453
     apery = 1.2020569031595942854
+    glaisher = 1.2824271291006226369
 
     absmin = absmax = abs
 
@@ -90,6 +91,11 @@ class FPContext(StandardBaseContext):
 
     def isinf(ctx, x):
         return abs(x) == math2.INF
+
+    def isnormal(ctx, x):
+        if x:
+            return x - x == 0.0
+        return False
 
     def isnpint(ctx, x):
         if type(x) is complex:

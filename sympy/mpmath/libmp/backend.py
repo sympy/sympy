@@ -27,7 +27,13 @@ MPZ = long
 
 if 'MPMATH_NOGMPY' not in os.environ:
     try:
-        import gmpy
+        try:
+            import gmpy2 as gmpy
+        except ImportError:
+            try:
+                import gmpy
+            except ImportError:
+                raise ImportError
         if gmpy.version() >= '1.03':
             BACKEND = 'gmpy'
             MPZ = gmpy.mpz
