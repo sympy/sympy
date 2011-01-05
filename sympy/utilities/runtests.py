@@ -16,11 +16,12 @@ import sys
 import inspect
 import traceback
 import pdb
+import linecache
 from fnmatch import fnmatch
 from timeit import default_timer as clock
 import doctest as pdoctest # avoid clashing with our doctest() function
 from sympy.utilities import any
-from doctest import DocTestFinder
+from doctest import DocTestFinder, DocTestRunner
 import re as pre
 
 def sys_normcase(f):
@@ -254,7 +255,7 @@ def doctest(*paths, **kwargs):
                 continue
             old_displayhook = sys.displayhook
             try:
-                out = pdoctest.testfile(txt_file, module_relative=False,
+                out = sympytestfile(txt_file, module_relative=False,
                         optionflags=pdoctest.ELLIPSIS | \
                         pdoctest.NORMALIZE_WHITESPACE)
             finally:
@@ -287,6 +288,137 @@ def doctest(*paths, **kwargs):
             print
             print("DO *NOT* COMMIT!")
     return not failed
+
+# The Python 2.5 doctest runner uses a tuple, but in 2.6+, it uses a namedtuple
+# (which doesn't exist in 2.5-)
+if sys.version_info[:2] > (2,5):
+    from collections import namedtuple
+    SymPyTestResults = namedtuple('TestResults', 'failed attempted')
+else:
+    SymPyTestResults = lambda a, b: (a, b)
+
+def sympytestfile(filename, module_relative=True, name=None, package=None,
+             globs=None, verbose=None, report=True, optionflags=0,
+             extraglobs=None, raise_on_error=False,
+             parser=pdoctest.DocTestParser(), encoding=None):
+    """
+    Test examples in the given file.  Return (#failures, #tests).
+
+    Optional keyword arg "module_relative" specifies how filenames
+    should be interpreted:
+
+      - If "module_relative" is True (the default), then "filename"
+         specifies a module-relative path.  By default, this path is
+         relative to the calling module's directory; but if the
+         "package" argument is specified, then it is relative to that
+         package.  To ensure os-independence, "filename" should use
+         "/" characters to separate path segments, and should not
+         be an absolute path (i.e., it may not begin with "/").
+
+      - If "module_relative" is False, then "filename" specifies an
+        os-specific path.  The path may be absolute or relative (to
+        the current working directory).
+
+    Optional keyword arg "name" gives the name of the test; by default
+    use the file's basename.
+
+    Optional keyword argument "package" is a Python package or the
+    name of a Python package whose directory should be used as the
+    base directory for a module relative filename.  If no package is
+    specified, then the calling module's directory is used as the base
+    directory for module relative filenames.  It is an error to
+    specify "package" if "module_relative" is False.
+
+    Optional keyword arg "globs" gives a dict to be used as the globals
+    when executing examples; by default, use {}.  A copy of this dict
+    is actually used for each docstring, so that each docstring's
+    examples start with a clean slate.
+
+    Optional keyword arg "extraglobs" gives a dictionary that should be
+    merged into the globals that are used to execute examples.  By
+    default, no extra globals are used.
+
+    Optional keyword arg "verbose" prints lots of stuff if true, prints
+    only failures if false; by default, it's true iff "-v" is in sys.argv.
+
+    Optional keyword arg "report" prints a summary at the end when true,
+    else prints nothing at the end.  In verbose mode, the summary is
+    detailed, else very brief (in fact, empty if all tests passed).
+
+    Optional keyword arg "optionflags" or's together module constants,
+    and defaults to 0.  Possible values (see the docs for details):
+
+        DONT_ACCEPT_TRUE_FOR_1
+        DONT_ACCEPT_BLANKLINE
+        NORMALIZE_WHITESPACE
+        ELLIPSIS
+        SKIP
+        IGNORE_EXCEPTION_DETAIL
+        REPORT_UDIFF
+        REPORT_CDIFF
+        REPORT_NDIFF
+        REPORT_ONLY_FIRST_FAILURE
+
+    Optional keyword arg "raise_on_error" raises an exception on the
+    first unexpected exception or failure. This allows failures to be
+    post-mortem debugged.
+
+    Optional keyword arg "parser" specifies a DocTestParser (or
+    subclass) that should be used to extract tests from the files.
+
+    Optional keyword arg "encoding" specifies an encoding that should
+    be used to convert the file to unicode.
+
+    Advanced tomfoolery:  testmod runs methods of a local instance of
+    class doctest.Tester, then merges the results into (or creates)
+    global Tester instance doctest.master.  Methods of doctest.master
+    can be called directly too, if you want to do something unusual.
+    Passing report=0 to testmod is especially useful then, to delay
+    displaying a summary.  Invoke doctest.master.summarize(verbose)
+    when you're done fiddling.
+    """
+    if package and not module_relative:
+        raise ValueError("Package may only be specified for module-"
+                         "relative paths.")
+
+    # Relativize the path
+    text, filename = pdoctest._load_testfile(filename, package, module_relative)
+
+    # If no name was given, then use the file's name.
+    if name is None:
+        name = os.path.basename(filename)
+
+    # Assemble the globals.
+    if globs is None:
+        globs = {}
+    else:
+        globs = globs.copy()
+    if extraglobs is not None:
+        globs.update(extraglobs)
+    if '__name__' not in globs:
+        globs['__name__'] = '__main__'
+
+    if raise_on_error:
+        runner = pdoctest.DebugRunner(verbose=verbose, optionflags=optionflags)
+    else:
+        runner = SymPyDocTestRunner(verbose=verbose, optionflags=optionflags)
+
+    if encoding is not None:
+        text = text.decode(encoding)
+
+    # Read the file, convert it to a test, and run it.
+    test = parser.get_doctest(text, globs, name, filename, 0)
+    runner.run(test)
+
+    if report:
+        runner.summarize()
+
+    if pdoctest.master is None:
+        pdoctest.master = runner
+    else:
+        pdoctest.master.merge(runner)
+
+    return SymPyTestResults(runner.failures, runner.tries)
 
 class SymPyTests(object):
 
@@ -467,7 +599,7 @@ class SymPyDocTests(object):
         self._reporter.entering_filename(filename, len(tests))
         for test in tests:
             assert len(test.examples) != 0
-            runner = pdoctest.DocTestRunner(optionflags=pdoctest.ELLIPSIS | \
+            runner = SymPyDocTestRunner(optionflags=pdoctest.ELLIPSIS | \
                     pdoctest.NORMALIZE_WHITESPACE)
             old = sys.stdout
             new = StringIO()
@@ -660,6 +792,80 @@ class SymPyDocTestFinder(DocTestFinder):
                 filename = filename[:-1]
         return self._parser.get_doctest(docstring, globs, name,
                                         filename, lineno)
+
+class SymPyDocTestRunner(DocTestRunner):
+    """
+    A class used to run DocTest test cases, and accumulate statistics.
+    The `run` method is used to process a single DocTest case.  It
+    returns a tuple `(f, t)`, where `t` is the number of test cases
+    tried, and `f` is the number of test cases that failed.
+
+    Modified from the doctest version to not reset the sys.displayhook (see
+    issue 2041).
+
+    See the docstring of the original DocTestRunner for more information.
+    """
+
+    def run(self, test, compileflags=None, out=None, clear_globs=True):
+        """
+        Run the examples in `test`, and display the results using the
+        writer function `out`.
+
+        The examples are run in the namespace `test.globs`.  If
+        `clear_globs` is true (the default), then this namespace will
+        be cleared after the test runs, to help with garbage
+        collection.  If you would like to examine the namespace after
+        the test completes, then use `clear_globs=False`.
+
+        `compileflags` gives the set of flags that should be used by
+        the Python compiler when running the examples.  If not
+        specified, then it will default to the set of future-import
+        flags that apply to `globs`.
+
+        The output of each example is checked using
+        `SymPyDocTestRunner.check_output`, and the results are formatted by
+        the `SymPyDocTestRunner.report_*` methods.
+        """
+        self.test = test
+
+        if compileflags is None:
+            compileflags = pdoctest._extract_future_flags(test.globs)
+
+        save_stdout = sys.stdout
+        if out is None:
+            out = save_stdout.write
+        sys.stdout = self._fakeout
+
+        # Patch pdb.set_trace to restore sys.stdout during interactive
+        # debugging (so it's not still redirected to self._fakeout).
+        # Note that the interactive output will go to *our*
+        # save_stdout, even if that's not the real sys.stdout; this
+        # allows us to write test cases for the set_trace behavior.
+        save_set_trace = pdb.set_trace
+        self.debugger = pdoctest._OutputRedirectingPdb(save_stdout)
+        self.debugger.reset()
+        pdb.set_trace = self.debugger.set_trace
+
+        # Patch linecache.getlines, so we can see the example's source
+        # when we're inside the debugger.
+        self.save_linecache_getlines = pdoctest.linecache.getlines
+        linecache.getlines = self.__patched_linecache_getlines
+
+        try:
+            return self.__run(test, compileflags, out)
+        finally:
+            sys.stdout = save_stdout
+            pdb.set_trace = save_set_trace
+            linecache.getlines = self.save_linecache_getlines
+            if clear_globs:
+                test.globs.clear()
+
+# We have to override the name mangled methods.
+SymPyDocTestRunner._SymPyDocTestRunner__patched_linecache_getlines = \
+    DocTestRunner._DocTestRunner__patched_linecache_getlines
+SymPyDocTestRunner._SymPyDocTestRunner__run = DocTestRunner._DocTestRunner__run
+SymPyDocTestRunner._SymPyDocTestRunner__record_outcome = \
+    DocTestRunner._DocTestRunner__record_outcome
 
 class Reporter(object):
     """
