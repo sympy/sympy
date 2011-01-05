@@ -464,11 +464,11 @@ class Pow(Expr):
             # Terms with even b powers will be real
             r = [i for i in expr.terms() if not i[0][1] % 2]
             re_part = Add(*[cc*a**aa*b**bb for (aa, bb), cc in r])
-            # Terms odd b powers will be imaginary
+            # Terms with odd b powers will be imaginary
             r = [i for i in expr.terms() if i[0][1] % 4 == 1]
             im_part1 = Add(*[cc*a**aa*b**bb for (aa, bb), cc in r])
             r = [i for i in expr.terms() if i[0][1] % 4 == 3]
-            im_part3 = Add(*[cc*a**a*b**bb for (aa, bb), cc in r])
+            im_part3 = Add(*[cc*a**aa*b**bb for (aa, bb), cc in r])
 
             return (re_part.subs({a: re, b: S.ImaginaryUnit*im}),
             im_part1.subs({a: re, b: im}) + im_part3.subs({a: re, b: -im}))
