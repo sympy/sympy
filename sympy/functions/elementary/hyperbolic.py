@@ -44,7 +44,7 @@ class sinh(Function):
             if i_coeff is not None:
                 return S.ImaginaryUnit * C.sin(i_coeff)
             else:
-                coeff, terms = arg.as_coeff_terms()
+                coeff, terms = arg.as_coeff_mul()
 
                 if coeff.is_negative:
                     return -cls(-arg)
@@ -166,7 +166,7 @@ class cosh(Function):
             if i_coeff is not None:
                 return C.cos(i_coeff)
             else:
-                coeff, terms = arg.as_coeff_terms()
+                coeff, terms = arg.as_coeff_mul()
 
                 if coeff.is_negative:
                     return cls(-arg)
@@ -287,7 +287,7 @@ class tanh(Function):
             if i_coeff is not None:
                 return S.ImaginaryUnit * C.tan(i_coeff)
             else:
-                coeff, terms = arg.as_coeff_terms()
+                coeff, terms = arg.as_coeff_mul()
 
                 if coeff.is_negative:
                     return -cls(-arg)
@@ -410,7 +410,7 @@ class coth(Function):
             if i_coeff is not None:
                 return -S.ImaginaryUnit * C.cot(i_coeff)
             else:
-                coeff, terms = arg.as_coeff_terms()
+                coeff, terms = arg.as_coeff_mul()
 
                 if coeff.is_negative:
                     return -cls(-arg)
@@ -519,7 +519,7 @@ class asinh(Function):
             if i_coeff is not None:
                 return S.ImaginaryUnit * C.asin(i_coeff)
             else:
-                coeff, terms = arg.as_coeff_terms()
+                coeff, terms = arg.as_coeff_mul()
 
                 if coeff.is_negative:
                     return -cls(-arg)
@@ -663,7 +663,7 @@ class atanh(Function):
             if i_coeff is not None:
                 return S.ImaginaryUnit * C.atan(i_coeff)
             else:
-                coeff, terms = arg.as_coeff_terms()
+                coeff, terms = arg.as_coeff_mul()
 
                 if coeff.is_negative:
                     return -cls(-arg)
@@ -728,7 +728,7 @@ class acoth(Function):
             if i_coeff is not None:
                 return -S.ImaginaryUnit * C.acot(i_coeff)
             else:
-                coeff, terms = arg.as_coeff_terms()
+                coeff, terms = arg.as_coeff_mul()
 
                 if coeff.is_negative:
                     return -cls(-arg)

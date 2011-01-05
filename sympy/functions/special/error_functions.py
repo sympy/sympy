@@ -29,7 +29,7 @@ class erf(Function):
             elif arg.is_negative:
                 return -cls(-arg)
         elif arg.is_Mul:
-            coeff, terms = arg.as_coeff_terms()
+            coeff, terms = arg.as_coeff_mul()
 
             if coeff.is_negative:
                 return -cls(-arg)

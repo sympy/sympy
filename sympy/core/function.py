@@ -140,7 +140,7 @@ class Application(Basic):
             if arg.is_positive: return S.One
             if arg.is_negative: return S.NegativeOne
             if isinstance(arg, C.Mul):
-                coeff, terms = arg.as_coeff_terms()
+                coeff, terms = arg.as_coeff_mul()
                 if coeff is not S.One:
                     return cls(coeff) * cls(C.Mul(*terms))
 

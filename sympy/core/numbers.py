@@ -182,7 +182,7 @@ class Number(AtomicExpr):
     def __hash__(self):
         return super(Number, self).__hash__()
 
-    def as_coeff_terms(self, x=None):
+    def as_coeff_mul(self, x=None):
         # a -> c * t
         return self, tuple()
 
@@ -662,7 +662,7 @@ class Rational(Number):
                 else:
                     return (-1)**e * (-b)**e
 
-        c,t = b.as_coeff_terms()
+        c,t = b.as_coeff_mul()
         if e.is_even and isinstance(c, Number) and c < 0:
             return (-c * Mul(*t)) ** e
 
@@ -1017,7 +1017,7 @@ class Integer(Rational):
         if not isinstance(e, Number):
             # simplify when exp is even
             # (-2) ** k --> 2 ** k
-            c, t = b.as_coeff_terms()
+            c, t = b.as_coeff_mul()
             if e.is_even and isinstance(c, Number) and c < 0:
                 return (-c*Mul(*t))**e
         if not isinstance(e, Rational):
@@ -1224,7 +1224,7 @@ class Zero(IntegerConstant):
             if d.is_negative:
                 return S.Infinity
             return b
-        coeff, terms = e.as_coeff_terms()
+        coeff, terms = e.as_coeff_mul()
         if coeff.is_negative:
             return S.Infinity ** Mul(*terms)
         if coeff is not S.One:

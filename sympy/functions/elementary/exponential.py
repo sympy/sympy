@@ -60,7 +60,7 @@ class exp(Function):
         included, excluded = [], []
 
         for arg in args:
-            coeff, terms = arg.as_coeff_terms()
+            coeff, terms = arg.as_coeff_mul()
 
             if coeff is S.Infinity:
                 excluded.append(coeff**C.Mul(*terms))
@@ -118,11 +118,11 @@ class exp(Function):
     def as_base_exp(self):
         return S.Exp1, C.Mul(*self.args)
 
-    def as_coeff_terms(self, x=None):
+    def as_coeff_mul(self, x=None):
         arg = self.args[0]
         if x is not None:
-            c,f = arg.as_coeff_factors(x)
-            return self.func(c), tuple( self.func(a) for a in f )
+            c, t = arg.as_coeff_add(x)
+            return self.func(c), tuple( self.func(a) for a in t )
         return S.One,(self,)
 
     def _eval_subs(self, old, new):
@@ -133,8 +133,8 @@ class exp(Function):
             old = exp(old.exp * log(old.base))
         if old.func is exp:
             # exp(a*expr) .subs( exp(b*expr), y )  ->  y ** (a/b)
-            a, expr_terms = self.args[0].as_coeff_terms()
-            b, expr_terms_= old .args[0].as_coeff_terms()
+            a, expr_terms = self.args[0].as_coeff_mul()
+            b, expr_terms_= old .args[0].as_coeff_mul()
 
             if expr_terms == expr_terms_:
                 return new ** (a/b)
@@ -145,10 +145,10 @@ class exp(Function):
                 oarg = old.args[0]
                 new_l = []
                 old_al = []
-                coeff2,terms2 = oarg.as_coeff_terms()
+                coeff2,terms2 = oarg.as_coeff_mul()
                 for a in arg.args:
                     a = a._eval_subs(old, new)
-                    coeff1,terms1 = a.as_coeff_terms()
+                    coeff1,terms1 = a.as_coeff_mul()
                     if terms1==terms2:
                         new_l.append(new**(coeff1/coeff2))
                     else:

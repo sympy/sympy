@@ -188,7 +188,7 @@ class sin(Function):
         if arg.is_Add: # TODO, implement more if deep stuff here
             x, y = arg.as_two_terms()
         else:
-            coeff, terms = arg.as_coeff_terms()
+            coeff, terms = arg.as_coeff_mul()
             if not (coeff is S.One) and coeff.is_Integer and terms:
                 x = C.Mul(*terms)
                 y = (coeff-1)*x
@@ -400,7 +400,7 @@ class cos(Function):
             x, y = arg.as_two_terms()
             return (cos(x)*cos(y) - sin(y)*sin(x)).expand(trig=True)
         else:
-            coeff, terms = arg.as_coeff_terms()
+            coeff, terms = arg.as_coeff_mul()
             if not (coeff is S.One) and coeff.is_Integer and terms:
                 x = C.Mul(*terms)
                 return C.chebyshevt(coeff, cos(x))

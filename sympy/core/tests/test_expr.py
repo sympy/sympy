@@ -588,14 +588,14 @@ def test_is_number():
     assert a.is_number == False
 
 
-# TODO write more tests for as_coeff_factors
-def test_as_coeff_factors():
+# TODO write more tests for as_coeff_add
+def test_as_coeff_add():
     x = Symbol('x')
 
-    assert     x .as_coeff_factors() == ( 0, (x,))
-    assert (-1+x).as_coeff_factors() == (-1, (x,))
-    assert ( 2+x).as_coeff_factors() == ( 2, (x,))
-    assert ( 1+x).as_coeff_factors() == ( 1, (x,))
+    assert     x .as_coeff_add() == ( 0, (x,))
+    assert (-1+x).as_coeff_add() == (-1, (x,))
+    assert ( 2+x).as_coeff_add() == ( 2, (x,))
+    assert ( 1+x).as_coeff_add() == ( 1, (x,))
 
 
 def test_as_coeff_exponent():
@@ -727,13 +727,13 @@ def test_as_base_exp():
 def test_Basic_keep_sign():
     Basic.keep_sign = True
     assert Mul(x - 1, x + 1) == (x - 1)*(x + 1)
-    assert (1/(x - 1)).as_coeff_terms()[0] == +1
+    assert (1/(x - 1)).as_coeff_mul()[0] == +1
 
     clear_cache()
 
     Basic.keep_sign = False
     assert Mul(x - 1, x + 1) == -(1 - x)*(1 + x)
-    assert (1/(x - 1)).as_coeff_terms()[0] == -1
+    assert (1/(x - 1)).as_coeff_mul()[0] == -1
 
 def test_issue1864():
     assert hasattr(Mul(x, y), "is_commutative")

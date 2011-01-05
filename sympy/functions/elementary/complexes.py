@@ -175,7 +175,7 @@ class sign(Function):
         if arg.is_Function:
             if arg.func is sign: return arg
         if arg.is_Mul:
-            c, args = arg.as_coeff_terms()
+            c, args = arg.as_coeff_mul()
             unk = []
             is_neg = c.is_negative
             for ai in args:
@@ -249,7 +249,7 @@ class Abs(Function):
         if arg.is_zero:     return arg
         if arg.is_positive: return arg
         if arg.is_negative: return -arg
-        coeff, terms = arg.as_coeff_terms()
+        coeff, terms = arg.as_coeff_mul()
         if coeff is not S.One:
             return cls(coeff) * cls(C.Mul(*terms))
         if arg.is_real is False:

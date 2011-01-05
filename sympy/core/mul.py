@@ -150,7 +150,7 @@ class Mul(AssocOp):
         # We do want a combined exponent if it would not be an Add, such as
         #  y    2y     3y
         # x  * x   -> x
-        # We determine this if two exponents have the same term in as_coeff_terms
+        # We determine this if two exponents have the same term in as_coeff_mul
         #
         # Unfortunately, this isn't smart enough to consider combining into
         # exponents that might already be adds, so things like:
@@ -162,7 +162,7 @@ class Mul(AssocOp):
 
         # First gather exponents of common bases
         for b, e in c_powers:
-            co = e.as_coeff_terms()
+            co = e.as_coeff_mul()
             if b in common_b:
                 if  co[1] in common_b[b]:
                     common_b[b][co[1]] += co[0]
@@ -180,7 +180,7 @@ class Mul(AssocOp):
         new_num_exp = []
         common_b = {} # b:e
         for b, e in num_exp:
-            co = e.as_coeff_terms()
+            co = e.as_coeff_mul()
             if b in common_b:
                 if  co[1] in common_b[b]:
                     common_b[b][co[1]] += co[0]
@@ -321,7 +321,7 @@ class Mul(AssocOp):
                     return Mul(*[s**e for s in b.args])
 
                 if e.is_rational:
-                    coeff, rest = b.as_coeff_terms()
+                    coeff, rest = b.as_coeff_mul()
                     unk=[]
                     nonneg=[]
                     neg=[]
@@ -362,18 +362,18 @@ class Mul(AssocOp):
                        Pow(Mul(*unk), e)
 
 
-                coeff, rest = b.as_coeff_terms()
+                coeff, rest = b.as_coeff_mul()
                 if coeff is not S.One:
                     # (2*a)**3 -> 2**3 * a**3
                     return Mul(Pow(coeff, e), Mul(*[s**e for s in rest]))
             elif e.is_Integer:
-                coeff, rest = b.as_coeff_terms()
+                coeff, rest = b.as_coeff_mul()
                 if coeff == S.One:
                     return
                 else:
                     return Mul(Pow(coeff, e), Pow(Mul(*rest), e))
 
-        c, t = b.as_coeff_terms()
+        c, t = b.as_coeff_mul()
         if e.is_even and c.is_Number and c < 0:
             return Pow((Mul(-c, Mul(*t))), e)
 
@@ -396,7 +396,7 @@ class Mul(AssocOp):
             return args[0], self._new_rawargs(*args[1:])
 
     @cacheit
-    def as_coeff_terms(self, x=None):
+    def as_coeff_mul(self, x=None):
         if x is not None:
             l1 = []
             l2 = []
@@ -551,7 +551,7 @@ class Mul(AssocOp):
 
     def _matches_simple(self, expr, repl_dict):
         # handle (w*3).matches('x*5') -> {w: x*5/3}
-        coeff, terms = self.as_coeff_terms()
+        coeff, terms = self.as_coeff_mul()
         if len(terms)==1:
             return terms[0].matches(expr / coeff, repl_dict)
         return
@@ -825,8 +825,8 @@ class Mul(AssocOp):
             return self.__class__(*[s._eval_subs(old, new) for s in self.args ])
 
         # break up self and old into terms
-        coeff_self,terms_self = self.as_coeff_terms()
-        coeff_old,terms_old = old.as_coeff_terms()
+        coeff_self,terms_self = self.as_coeff_mul()
+        coeff_old,terms_old = old.as_coeff_mul()
 
         # NEW - implementation of strict substitution
         # if the coefficients are not the same, do not substitute.
