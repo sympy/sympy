@@ -153,7 +153,7 @@ class Order(Expr):
                     expr = Add(*[f.expr for (e,f) in lst])
                 else:
                     expr = expr.as_leading_term(*symbols)
-                    coeff, terms = expr.as_coeff_terms()
+                    coeff, terms = expr.as_coeff_mul()
                     if coeff is S.Zero:
                         return coeff
                     expr = Mul(*[t for t in terms if t.has(*symbols)])

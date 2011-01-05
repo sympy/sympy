@@ -442,7 +442,7 @@ class Integral(Expr):
 
     def _eval_nseries(self, x, n):
         terms, order = self.function.nseries(x, n=n
-                                             ).as_coeff_factors(C.Order)
+                                             ).as_coeff_add(C.Order)
         return integrate(terms, *self.limits) + Add(*order)*x
 
     def _eval_subs(self, old, new):
