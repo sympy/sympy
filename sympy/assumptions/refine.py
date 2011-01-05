@@ -104,7 +104,7 @@ def refine_Pow(expr, assumptions):
                 #  - a single odd term + 1
                 #  - A numerical constant N can be replaced with mod(N,2)
 
-                coeff, terms = expr.exp.as_coeff_factors()
+                coeff, terms = expr.exp.as_coeff_add()
                 terms = set(terms)
                 even_terms = set([])
                 odd_terms = set([])

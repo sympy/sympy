@@ -414,7 +414,7 @@ class PrettyPrinter(Printer):
         pforms = []
 
         for term in terms:
-            if term.is_Mul and term.as_coeff_terms()[0] < 0:
+            if term.is_Mul and term.as_coeff_mul()[0] < 0:
                 pform1 = self._print(-term)
 
                 if len(pforms) == 0:

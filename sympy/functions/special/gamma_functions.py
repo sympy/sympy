@@ -197,8 +197,8 @@ class polygamma(Function):
 
         if n.is_Integer and n.is_nonnegative:
             if z.is_Add:
-                coeff, factors = z.as_coeff_factors()
-                if coeff and coeff.is_Integer:
+                coeff = z.args[0]
+                if coeff.is_Integer:
                     e = -(n + 1)
                     if coeff > 0:
                         tail = Add(*[C.Pow(z - i, e)  for i in xrange(1, int(coeff) + 1)])
@@ -207,9 +207,8 @@ class polygamma(Function):
                     return polygamma(n, z - coeff) + (-1)**n*C.Factorial(n)*tail
 
             elif z.is_Mul:
-                coeff, terms = z.as_coeff_terms()
-                if coeff != 1 and coeff.is_Integer and coeff.is_positive:
-                    z = z._new_rawargs(*terms)
+                coeff, z = z.as_two_terms()
+                if coeff.is_Integer and coeff.is_positive:
                     tail = [ polygamma(n, z + C.Rational(i, coeff)) for i in xrange(0, int(coeff)) ]
                     if n == 0:
                         return Add(*tail)/coeff + log(coeff)

@@ -252,7 +252,7 @@ def together(expr, deep=False):
                         if term.exp.is_Rational:
                             term, expo = term.base, term.exp
                         elif term.exp.is_Mul:
-                            coeff, tail = term.exp.as_coeff_terms()
+                            coeff, tail = term.exp.as_coeff_mul()
                             if coeff.is_Rational:
                                 tail = Mul(*tail)
                                 term, expo = Pow(term.base, tail), coeff
@@ -261,7 +261,7 @@ def together(expr, deep=False):
                         if term.args[0].is_Rational:
                             term, expo = S.Exp1, term.args[0]
                         elif term.args[0].is_Mul:
-                            coeff, tail = term.args[0].as_coeff_terms()
+                            coeff, tail = term.args[0].as_coeff_mul()
                             if coeff.is_Rational:
                                 tail = Mul(*tail)
                                 term, expo = C.exp(tail), coeff
@@ -539,7 +539,7 @@ def collect(expr, syms, evaluate=True, exact=False):
             if expr.exp.is_Rational:
                 rat_expo = expr.exp
             elif expr.exp.is_Mul:
-                coeff, tail = expr.exp.as_coeff_terms()
+                coeff, tail = expr.exp.as_coeff_mul()
 
                 if coeff.is_Rational:
                     rat_expo, sym_expo = coeff, Mul(*tail)
@@ -551,7 +551,7 @@ def collect(expr, syms, evaluate=True, exact=False):
             if expr.args[0].is_Rational:
                 sexpr, rat_expo = S.Exp1, expr.args[0]
             elif expr.args[0].is_Mul:
-                coeff, tail = expr.args[0].as_coeff_terms()
+                coeff, tail = expr.args[0].as_coeff_mul()
 
                 if coeff.is_Rational:
                     sexpr, rat_expo = C.exp(Mul(*tail)), coeff
@@ -1281,7 +1281,7 @@ def powdenest(eq, force=False):
     if gcd.func is C.log or not gcd.is_Mul:
         if hasattr(gcd.args[0], 'exp'):
             gcd = powdenest(gcd.args[0])
-            c, _ = gcd.exp.as_coeff_terms()
+            c, _ = gcd.exp.as_coeff_mul()
             ok = c.p != 1
             if ok:
                 ok = c.q != 1
@@ -1475,7 +1475,7 @@ def powsimp(expr, deep=False, combine='all'):
             # e.g., 2**(2*x) => 4**x
             for i in xrange(len(c_powers)):
                 b, e = c_powers[i]
-                exp_c, exp_t = e.as_coeff_terms()
+                exp_c, exp_t = e.as_coeff_mul()
                 if not (exp_c is S.One) and exp_t:
                     c_powers[i] = [C.Pow(b, exp_c), Mul(*exp_t)]
 

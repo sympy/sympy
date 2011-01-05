@@ -95,10 +95,10 @@ def _construct_domain(rep, **args):
                 if coeff.is_Rational:
                     coeff = (None, 0, QQ.from_sympy(coeff))
                 else:
-                    a, _ = coeff.as_coeff_factors()
+                    a, _ = coeff.as_coeff_add()
                     coeff -= a
 
-                    b, _ = coeff.as_coeff_terms()
+                    b, _ = coeff.as_coeff_mul()
                     coeff /= b
 
                     exts.add(coeff)

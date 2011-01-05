@@ -50,7 +50,7 @@ def minimal_polynomial(ex, x=None, **args):
         elif ex.is_Pow:
             if ex.exp.is_Rational:
                 if ex.exp < 0 and ex.base.is_Add:
-                    coeff, terms = ex.base.as_coeff_factors()
+                    coeff, terms = ex.base.as_coeff_add()
                     elt, _ = primitive_element(terms, polys=True)
 
                     alg = ex.base - coeff

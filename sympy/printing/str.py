@@ -159,7 +159,7 @@ class StrPrinter(Printer):
         return expr.name
 
     def _print_Mul(self, expr):
-        coeff, terms = expr.as_coeff_terms()
+        coeff, terms = expr.as_coeff_mul()
         if coeff.is_negative:
             coeff = -coeff
             if coeff is not S.One:

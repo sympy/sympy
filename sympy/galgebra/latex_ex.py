@@ -400,7 +400,7 @@ class LatexPrinter(Printer):
         tex = str(self._print(expr.args[0]))
 
         for term in expr.args[1:]:
-            coeff = term.as_coeff_terms()[0]
+            coeff = term.as_coeff_mul()[0]
 
             if coeff.is_negative:
                 tex += r" %s" % self._print(term)
@@ -410,7 +410,7 @@ class LatexPrinter(Printer):
         return tex
 
     def _print_Mul(self, expr):
-        coeff, terms = expr.as_coeff_terms()
+        coeff, terms = expr.as_coeff_mul()
 
         if not coeff.is_negative:
             tex = ""

@@ -257,7 +257,7 @@ class Expr(Basic, EvalfMixin):
         """
         from sympy import collect
         x = sympify(x)
-        const = x.as_coeff_terms()[0] # constant multiplying x
+        const = x.as_coeff_mul()[0] # constant multiplying x
         if const != S.One: # get rid of constants
             result = self.coeff(x/const)
             if result is not None:
@@ -389,14 +389,24 @@ class Expr(Basic, EvalfMixin):
         return self, S.One
 
     def as_coeff_terms(self, x=None):
+        import warnings
+        warnings.warn("\nuse as_coeff_mul() instead of as_coeff_terms().",
+                      DeprecationWarning)
+
+    def as_coeff_factors(self, x=None):
+        import warnings
+        warnings.warn("\nuse as_coeff_add() instead of as_coeff_factors().",
+                      DeprecationWarning)
+
+    def as_coeff_mul(self, x=None):
         # a -> c * t
         if x is not None:
             if not self.has(x):
                 return self, tuple()
         return S.One, (self,)
 
-    def as_coeff_factors(self, x=None):
-        # a -> c + f
+    def as_coeff_add(self, x=None):
+        # a -> c + t
         if x is not None:
             if not self.has(x):
                 return self, tuple()
@@ -421,7 +431,7 @@ class Expr(Basic, EvalfMixin):
         #               n.subs({l: 0, r: -1})), d.subs({l: 1, r: 1})
 
         base, exp = self.as_base_exp()
-        coeff, terms = exp.as_coeff_terms()
+        coeff, terms = exp.as_coeff_mul()
         if coeff.is_negative:
             # b**-e -> 1, b**e
             return S.One, base ** (-exp)
@@ -606,9 +616,9 @@ class Expr(Basic, EvalfMixin):
                 if subs1 != None:
                     return subs1 + terms[0]
         elif self.is_Mul:
-            self_coeff, self_terms = self.as_coeff_terms()
+            self_coeff, self_terms = self.as_coeff_mul()
             if c.is_Mul:
-                c_coeff, c_terms = c.as_coeff_terms()
+                c_coeff, c_terms = c.as_coeff_mul()
                 if c_terms == self_terms:
                     new_coeff = self_coeff.extract_additively(c_coeff)
                     if new_coeff != None:
