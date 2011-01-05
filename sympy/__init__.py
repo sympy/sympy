@@ -15,7 +15,8 @@ import sys
 import warnings
 
 if sys.version_info[1] == 4:
-    warnings.warn("Support for Python 2.4 in SymPy is deprecated.")
+    warnings.warn("Support for Python 2.4 in SymPy is deprecated.",
+        DeprecationWarning)
 
 del sys
 del warnings
