@@ -39,15 +39,7 @@ class StrPrinter(Printer):
             return str(expr)
 
     def _print_Add(self, expr, order=None):
-        # Now we need to sort the factors in Add, which are in "rest". Any
-        # ordering is fine, but some ordering looks better and some looks bad.
-        # This particular solution is slow, but it ensures a sane ordering. It
-        # can of course be improved:
-
-        if order is None and self.order is None:
-            terms = sorted(expr.args, Basic._compare_pretty)
-        else:
-            terms = [ elt[-1] for elt in self.analyze(expr, order) ]
+        terms = self._as_ordered_terms(expr, order=order)
 
         PREC = precedence(expr)
         l = []
