@@ -4,7 +4,7 @@ from sympy.core import (
     S, Basic, Expr, Integer, Real, I, Add, Lambda, symbols,
 )
 
-from sympy.polys.polytools import Poly, gcd_list
+from sympy.polys.polytools import Poly, gcd_list, factor
 
 from sympy.polys.rootisolation import (
     dup_isolate_complex_roots_sqf,
@@ -625,7 +625,8 @@ class RootSum(Expr):
     @classmethod
     def _is_func_rational(cls, poly, func):
         """Check if a lambda is areational function. """
-        return func.expr.is_rational_function()
+        var, expr = func.args
+        return expr.is_rational_function(var)
 
     @classmethod
     def _rational_case(cls, poly, func):
@@ -676,7 +677,7 @@ class RootSum(Expr):
         else:
             (q,) = q_coeff
 
-        return p/q
+        return factor(p/q)
 
     def _hashable_content(self):
         return (self.expr, self.fun)
