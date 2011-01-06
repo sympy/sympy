@@ -14,7 +14,7 @@ from sympy.polys.polyerrors import (
 )
 
 from sympy import (
-    symbols, sqrt, I, Rational, Real, Lambda, log, exp,
+    S, symbols, sqrt, I, Rational, Real, Lambda, log, exp,
 )
 
 from sympy.utilities.pytest import raises
@@ -24,6 +24,8 @@ from sympy.abc import x, y, z, r
 def test_RootOf___new__():
     assert RootOf(x, 0) == 0
     assert RootOf(x,-1) == 0
+
+    assert RootOf(x, S.Zero) == 0
 
     assert RootOf(x - 1, 0) == 1
     assert RootOf(x - 1,-1) == 1
@@ -134,6 +136,9 @@ def test_RootOf_is_complex():
     assert RootOf(x**3 + x + 3, 0).is_complex == False
     assert RootOf(x**3 + x + 3, 1).is_complex == True
     assert RootOf(x**3 + x + 3, 2).is_complex == True
+
+def test_RootOf_subs():
+    assert RootOf(x**3 + x + 1, 0).subs(x, y) == RootOf(y**3 + y + 1, 0)
 
 def test_RootOf_evalf():
     real = RootOf(x**3 + x + 3, 0).evalf(n=20)
