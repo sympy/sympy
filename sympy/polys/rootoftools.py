@@ -383,7 +383,7 @@ class RootOf(Expr):
 
     def __new__(cls, f, x=None, indices=None, radicals=True, expand=True):
         """Construct a new ``RootOf`` object for ``k``-th root of ``f``. """
-        if indices is None and not isinstance(x, Basic):
+        if indices is None and (not isinstance(x, Basic) or x.is_Integer):
             x, indices = None, x
 
         poly = Poly(f, x, greedy=False, expand=expand)
@@ -401,6 +401,8 @@ class RootOf(Expr):
                 indices, iterable = list(indices), True
             else:
                 indices, iterable = [indices], False
+
+            indices = map(int, indices)
 
             for i, index in enumerate(indices):
                 if index < -degree or index >= degree:
@@ -471,7 +473,7 @@ class RootOf(Expr):
 
     @property
     def args(self):
-        return [self.expr, Integer(self.index)]
+        return (self.expr, Integer(self.index))
 
     @property
     def is_commutative(self):
