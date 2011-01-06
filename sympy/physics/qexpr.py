@@ -15,17 +15,45 @@ class QuantumError(Exception):
 #-----------------------------------------------------------------------------
 
 class QExpr(Expr):
+    """A base class for all quantum object like operators and states."""
 
     # In sympy, slots are for instance attributes that are computed
     # dynamically by the __new__ method. They are not part of args, but they
     # derive from args.
-    # * 'hilbert_space' tells us to which Hilbert space a quantum Object
-    #   belongs. It is an instance of a HilbertSpace subclass.
+
+    # * The Hilbert space a quantum Object belongs to. It is an instance of
+    # a HilbertSpace subclass.
     __slots__ = ['hilbert_space']
 
+    # The separator used in printing the label
     _label_separator = ''
 
     def __new__(cls, label, **old_assumptions):
+        """Construct a new quantum object.
+
+        Parameters
+        ==========
+        label : tuple, sympy.core.containers.Tuple
+            The list of numbers or parameters that uniquely specify the
+            quantum object. For a state, this will be its symbol or its
+            set of quantum numbers. The label does not include time for
+            time dependent operators or states.
+
+        Examples
+        ========
+
+        >>> from sympy.physics.qexpr import QExpr
+        >>> q = QExpr(0)
+        >>> q
+        0
+        >>> q.label
+        Tuple(0)
+        >>> q.hilbert_space
+        H
+        >>> q.is_commutative
+        False
+        """
+
         # First compute args and call Expr.__new__ to create the instance
         label = cls._eval_label(label)
         inst = Expr.__new__(cls, label, **{'commutative':False})
@@ -35,30 +63,13 @@ class QExpr(Expr):
 
     @classmethod
     def _new_rawargs(cls, hilbert_space, *args):
-        """Create new instance of own class with args exactly as provided.
+        """Create new instance of this class with hilbert_space and args.
 
-        This class method sets the ``acts_like`` and ``hilbert_space`` slots
-        to those specified by the caller, rather than computing them
-        dynamically.
-
-        This is handy when we want to optimize things by not having to do
-        a careful application of the rules and dynamically computing the
-         ``acts_like`` and ``hilbert_space`` slots. If we
-        know what it evaluates to and to what hilbert_space it will belong,
-        one can hardcode that in. Thus, It's a quicker way of instantiating a
-        QAssocOp If we know what type we will get. This was stolen from
-        sympy.core.operations.
-
-            >>> from sympy.physics.hilbert import HilbertSpace
-            >>> from sympy.physics.quantum import Ket, Operator
-            >>> from sympy.physics.qmul import QMul
-            >>> QMul._new_rawargs(Ket, HilbertSpace(), Operator('psi'), Ket('a'))
-            psi*|a>
-            >>> a = _
-            >>> a.acts_like
-            <class 'sympy.physics.quantum.Ket'>
-            >>> a.hilbert_space
-            HilbertSpace()
+        This is used to bypass the more complex logic in the ``__new__``
+        method in cases where you already have the exact ``hilbert_space``
+        and ``args``. This should be used when you are positive these
+        arguments are valid, in their final, proper form and want to optimize
+        the creation of the object.
         """
 
         obj = Expr.__new__(cls, *args)
@@ -168,7 +179,7 @@ class QExpr(Expr):
     def _eval_rewrite(self, pattern, rule, **hints):
         # TODO: Make Basic.rewrite get the rule using the class name rather
         # than str(). See L1072 of basic.py.
-        # This will call self.rule(*self.args) for rewritting.
+        # This will call self.rule(*self.args) for rewriting.
         if hints.get('deep', False):
             args = [ a._eval_rewrite(pattern, rule, **hints) for a in self ]
         else:
@@ -188,6 +199,11 @@ class QExpr(Expr):
     #-------------------------------------------------------------------------
 
     def _represent(self, basis, **options):
+        """Represent this object in a given basis.
+
+        This method dispatches to the actual methods that perform the
+        representation.
+        """
         return dispatch_method(self, '_represent', basis, **options)
 
 
@@ -209,10 +225,10 @@ def split_qexpr_parts(e):
             qexpr_part.append(arg)
     return expr_part, qexpr_part
 
+
 def dispatch_method(self, basename, arg, **options):
-    # print "self: ", repr(self)
+    """Dispatch a method to the proper handlers."""
     method_name = '%s_%s' % (basename, arg.__class__.__name__)
-    # print "method_name: ", method_name
     if hasattr(self, method_name):
         f = getattr(self, method_name)
         # This can raise and we will allow it to propagate.
