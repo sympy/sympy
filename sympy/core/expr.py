@@ -380,21 +380,22 @@ class Expr(Basic, EvalfMixin):
         return S.Zero, (self,)
 
     def as_numer_denom(self):
-        """ a/b -> a,b
-
-        The following is a possible way to modify Eq which are now
-        just returned as (Eq(), 1). It is not a trivial change,
-        however, and it causes many failures.
-
-        from sympy.core.relational import Equality
-        from sympy import Eq
-        if isinstance(self, Equality):
-            l = Symbol('l', dummy=True)
-            r = Symbol('r', dummy=True)
-            n, d = (l*self.lhs - r*self.rhs).as_numer_denom()
-            return Eq(n.subs({l: 1, r: 0}),
-                      n.subs({l: 0, r: -1})), d.subs({l: 1, r: 1})
         """
+        a/b -> a,b
+        """
+
+        # The following is a possible way to modify Eq which are now
+        # just returned as (Eq(), 1). It is not a trivial change,
+        # however, and it causes many failures.
+        #
+        # from sympy.core.relational import Equality
+        # from sympy import Eq
+        # if isinstance(self, Equality):
+        #     l = Symbol('l', dummy=True)
+        #     r = Symbol('r', dummy=True)
+        #     n, d = (l*self.lhs - r*self.rhs).as_numer_denom()
+        #     return Eq(n.subs({l: 1, r: 0}),
+        #               n.subs({l: 0, r: -1})), d.subs({l: 1, r: 1})
 
         base, exp = self.as_base_exp()
         coeff, terms = exp.as_coeff_terms()

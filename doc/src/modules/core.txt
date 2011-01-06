@@ -7,6 +7,12 @@ Basic
 .. autoclass:: Basic
    :members:
 
+Expr
+----
+.. module:: sympy.core.expr
+.. autoclass:: Expr
+   :members:
+
 Symbol
 ------
 .. module:: sympy.core.symbol
