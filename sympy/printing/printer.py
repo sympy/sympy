@@ -178,6 +178,8 @@ class Printer(object):
 
     """
 
+    _global_settings = {}
+
     _default_settings = {
         "order": None,
     }
@@ -187,9 +189,16 @@ class Printer(object):
 
     def __init__(self, settings=None):
         self._str = str
+
         self._settings = self._default_settings.copy()
+
+        for key, val in self._global_settings.iteritems():
+            if key in self._default_settings:
+                self._settings[key] = val
+
         if settings is not None:
             self._settings.update(settings)
+
             if len(self._settings) > len(self._default_settings):
                 for key in self._settings:
                     if key not in self._default_settings:
@@ -201,6 +210,11 @@ class Printer(object):
 
         # configure ordering of terms in Add (e.g. lexicographic ordering)
         self.order, self.reverse = self.parse_order(self._settings["order"])
+
+    @classmethod
+    def set_global_settings(cls, **settings):
+        """Set system-wide printing settings. """
+        cls._global_settings.update(settings)
 
     def doprint(self, expr):
         """Returns printer's representation for expr (as a string)"""
