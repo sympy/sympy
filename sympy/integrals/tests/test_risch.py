@@ -11,7 +11,7 @@ from sympy.integrals.risch import (gcdex_diophantine, frac_in, as_poly_1t,
 from sympy.utilities.pytest import raises
 
 from sympy.abc import x, t, nu, z, a, y
-t0, t1, t2 = symbols('t0, t1, t2')
+t0, t1, t2 = symbols('t:3')
 
 def test_gcdex_diophantine():
     assert gcdex_diophantine(Poly(x**4 - 2*x**3 - 6*x**2 + 12*x + 15),

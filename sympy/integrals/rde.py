@@ -200,8 +200,8 @@ def special_denom(a, ba, bd, ca, cd, DE, case='auto'):
             dcoeff = DE.d.quo(Poly(DE.t, DE.t))
             DE.decrement_level() # We are guaranteed to not have problems,
                                  # because case != 'base'.
-            alphaa, alphad = frac_in(-ba.eval(0)/bd.eval(0)/a.eval(0), t)
-            etaa, etad = frac_in(dcoeff, t1)
+            alphaa, alphad = frac_in(-ba.eval(0)/bd.eval(0)/a.eval(0), DE.t)
+            etaa, etad = frac_in(dcoeff, DE.t)
             A = parametric_log_deriv(alphaa, alphad, etaa, etad, DE)
             if A is not None:
                 a, m, z = A

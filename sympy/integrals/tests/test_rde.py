@@ -1,5 +1,5 @@
 """Most of these tests come from the examples in Bronstein's book."""
-from sympy import Poly, S, symbols, oo
+from sympy import Poly, S, symbols, oo, I
 from sympy.integrals.risch import (DifferentialExtension,
     NonElementaryIntegralException)
 from sympy.integrals.rde import (order_at, order_at_oo, weak_normalizer,
@@ -9,7 +9,7 @@ from sympy.integrals.rde import (order_at, order_at_oo, weak_normalizer,
 from sympy.utilities.pytest import raises, XFAIL
 from sympy.abc import x, t, z, n
 
-t0, t1, t2 = symbols('t0, t1, t2')
+t0, t1, t2, k = symbols('t:3 k')
 
 def test_order_at():
     a = Poly(t**4, t)
@@ -59,6 +59,16 @@ def test_special_denom():
     Poly(t, t), DE) == \
         (Poly(1, t), Poly(t**2 - 1, t), Poly(t**2 - 1, t), Poly(t, t))
 #    assert special_denom(Poly(1, t), Poly(2*x, t), Poly((1 + 2*x)*t, t), DE) == 1
+
+    # Issue 841
+    # Note, this isn't a very good test, because the denominator is just 1,
+    # but at least it tests the exp cancelation case
+    DE = DifferentialExtension(extension={'D':[Poly(1, x), Poly(-2*x*t0, t0),
+        Poly(I*k*t1, t1)]})
+    DE.decrement_level()
+    assert special_denom(Poly(1, t0), Poly(I*k, t0), Poly(1, t0), Poly(t0, t0),
+    Poly(1, t0), DE) == \
+        (Poly(1, t0), Poly(I*k, t0), Poly(t0, t0), Poly(1, t0))
 
 @XFAIL
 def test_bound_degree_fail():
