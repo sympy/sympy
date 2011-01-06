@@ -1,7 +1,18 @@
-from sympy import Expr, Interval, oo, sympify
+"""Hilbert spaces for quantum mechanics.
+
+Authors:
+* Brian Granger
+* Matt Curry
+"""
+
+from sympy import Basic, Interval, oo, sympify
 from sympy.printing.pretty.stringpict import prettyForm
 
 from sympy.physics.qexpr import QuantumError
+
+#-----------------------------------------------------------------------------
+# Main objects
+#-----------------------------------------------------------------------------
 
 class HilbertSpaceError(QuantumError):
     pass
@@ -10,11 +21,21 @@ class HilbertSpaceError(QuantumError):
 # Main objects
 #-----------------------------------------------------------------------------
 
-class HilbertSpace(Expr):
+class HilbertSpace(Basic):
     """An abstract Hilbert space for quantum mechanics.
 
-    In short, a Hilbert space is an abstract vector space that is complete with
-    inner products defined [1].
+    In short, a Hilbert space is an abstract vector space that is complete
+    with inner products defined [1].
+
+    Examples
+    ========
+
+    >>> from sympy.physics.hilbert import HilbertSpace
+    >>> hs = HilbertSpace()
+    >>> hs
+    H
+    >>> hs.description
+    'General abstract Hilbert space.'
 
     References
     ==========
@@ -25,7 +46,7 @@ class HilbertSpace(Expr):
     description = 'General abstract Hilbert space.'
 
     def __new__(cls):
-        obj = Expr.__new__(cls, **{'commutative': False})
+        obj = Basic.__new__(cls, **{'commutative': False})
         return obj
 
     @property
@@ -52,65 +73,62 @@ class HilbertSpace(Expr):
         return TensorPowerHilbertSpace(self, other)
 
     def __contains__(self, other):
-        """Is the operator or state in this Hilbert space."""
-        hs = other.hilbert_space
-        if hs == self:
+        """Is the operator or state in this Hilbert space.
+
+        This is checked by comparing the classes of the Hilbert spaces, not
+        the instances. This is to allow Hilbert Spaces with symbolic
+        dimensions.
+        """
+        if other.hilbert_space.__class__ == self.__class__:
             return True
         else:
             return False
 
+    def _sympystr(self, printer, *args):
+        return u'H'
+
+    def _pretty(self, printer, *args):
+        return prettyForm(u"\u210B")
+
+
 class ComplexSpace(HilbertSpace):
-    """l2 Hilbert space of any dimension.
+    """Finite dimensional Hilbert space of complex vectors.
 
-    l2 (little-ell-two) is a Hilbert space of complex valued vectors. The
-    number of components of the vectors in the space is the dimension of
-    the Hilbert space. l2 can have a dimension of infinity, but it is a
-    countable infinity (vector components labeled by the natural numbers).
+    The elements of this Hilbert space are n-dimensional complex valued
+    vectors with the usual inner product that takes the complex conjugate
+    of the vector on the right.
 
-    A classic example of an l2 space is spin-1/2, which is l2(2). For spin-s,
-    the space is l2(2*s+1). Quantum computing with N qubits is done with
-    the direct product space l2(2)**N.
-
-    An l2 object takes in a single argument that is its dimension.
+    A classic example of this type of Hilbert space is spin-1/2, which is
+    ComplexSpace(2). Likewise, for spin-s, the space is ComplexSpace(2*s+1).
+    Quantum computing with N qubits is done with the direct product space
+    ComplexSpace(2)**N.
 
     Examples
     ========
 
-    Let's say you want to create an l2(2) Hilbert space (2 dimensional). All
-    you need to do simply type these commands in:
+    >>> from sympy import symbols
+    >>> from sympy.physics.hilbert import ComplexSpace
+    >>> c1 = ComplexSpace(2)
+    >>> c1
+    C(2)
+    >>> c1.dimension
+    2
 
-        >>> from sympy import Expr, Interval, oo, sympify
-        >>> from sympy.physics.hilbert import l2
-        >>> hs = l2(2)
-        >>> hs
-        l2(2)
+    >>> n = symbols('n')
+    >>> c2 = ComplexSpace(n)
+    >>> c2
+    C(n)
+    >>> c2.dimension
+    n
 
-    And creating l2 Hilbert spaces of different dimensions (e.g. infinite or
-    symbolic) is quite simple as well:
-
-        >>> from sympy import oo
-        >>> from sympy.abc import x
-        >>> hs = l2(oo)
-        >>> hs
-        l2(oo)
-        >>> hs = l2(x)
-        >>> hs
-        l2(x)
-
-    If you want to call an l2 Hilbert space's dimension, simply follow these
-    commands:
-
-        >>> hs = l2(42)
-        >>> hs.dimension
-        42
     """
 
     def __new__(cls, dimension):
         dimension = sympify(dimension)
         r = cls.eval(dimension)
-        if isinstance(r, Expr):
+        if isinstance(r, Basic):
             return r
-        obj = Expr.__new__(cls, dimension, **{'commutative': False})
+        obj = Basic.__new__(cls, dimension, **{'commutative': False})
         return obj
 
     @classmethod
@@ -118,13 +136,15 @@ class ComplexSpace(HilbertSpace):
         if len(dimension.atoms()) == 1:
             if not (dimension.is_Integer and dimension > 0 or dimension is oo\
             or dimension.is_Symbol):
-                raise TypeError('l2 dimension can only be a positive integer,\
-                oo, or a Symbol: %r' % dimension)
+                raise TypeError('The dimension of a ComplexSpace can only'
+                                'be a positive integer, oo, or a Symbol: %r' \
+                                % dimension)
         else:
             for dim in dimension.atoms():
                 if not (dim.is_Integer or dim is oo or dim.is_Symbol):
-                    raise TypeError('l2 dimension can only contain integers,\
-                    oo, or a Symbol: %r' % dim)
+                    raise TypeError('The dimension of a ComplexSpace can only'
+                                    ' contain integers, oo, or a Symbol: %r' \
+                                    % dim)
 
     @property
     def dimension(self):
@@ -132,8 +152,8 @@ class ComplexSpace(HilbertSpace):
 
     @property
     def description(self):
-        return 'Hilbert space of length %s complex valued vectors.' % str(
-        self.dimension)
+        return 'Hilbert space of length %s complex valued vectors.' % \
+            str(self.dimension)
 
     def _sympyrepr(self, printer, *args):
         return "%s(%s)" % (self.__class__.__name__,
@@ -147,42 +167,33 @@ class ComplexSpace(HilbertSpace):
         pform_base = prettyForm(u"\u2102")
         return pform_base**pform_exp
 
+
 class L2(HilbertSpace):
     """The Hilbert space of square integrable functions on an interval.
 
-    L2 (big-ell-two) has a dimension of infinity. L2 is different than
-    l2(oo) because the elements of L2 have an uncountable number of components,
-    that is, they are functions.
-
     An L2 object takes in a single sympy Interval argument which represents
-    the interval its functions (vectors) are defined across.
+    the interval its functions (vectors) are defined on.
 
     Examples
     ========
 
-    If you want to create an L2 space over certain intervals (integers are used
-    here, but you can use oo or symbols), use commands such as these:
+    >>> from sympy import Interval, oo
+    >>> from sympy.physics.hilbert import L2
+    >>> hs = L2(Interval(0,oo))
+    >>> hs
+    L2([0, oo))
+    >>> hs.dimension
+    oo
+    >>> hs.interval
+    [0, oo)
 
-        >>> from sympy import Expr, Interval, oo, sympify
-        >>> from sympy.physics.hilbert import L2
-        >>> HS = L2(Interval(-2, 42))
-        >>> HS
-        L2([-2, 42])
-
-    If you want to call an L2 Hilbert space's dimension or interval, simply
-    follow these commands:
-
-        >>> HS.interval
-        [-2, 42]
-        >>> HS.dimension
-        oo
     """
 
     def __new__(cls, interval):
         if not isinstance(interval, Interval):
             raise TypeError('L2 interval must be an Interval instance: %r'\
             % interval)
-        obj = Expr.__new__(cls, interval, **{'commutative': False})
+        obj = Basic.__new__(cls, interval, **{'commutative': False})
         return obj
 
     @property
@@ -204,22 +215,28 @@ class L2(HilbertSpace):
     def _sympystr(self, printer, *args):
         return "L2(%s)" % printer._print(self.interval, *args)
 
-class FockSpace(HilbertSpace):
-    """The Hilbert space for second quantization and field theory.
+    def _pretty(self, printer, *args):
+        pform_exp = prettyForm(u"2")
+        pform_base = prettyForm(u"L")
+        return pform_base**pform_exp
 
-    Technically, this Hilbert space is a symmetrized/anti-symmetrized infinite
-    direct sum of direct products of single particle Hilbert spaces [1]. This
-    is a mess, so we have a class to represent it directly.
+
+class FockSpace(HilbertSpace):
+    """The Hilbert space for second quantization.
+
+    Technically, this Hilbert space is a infinite direct sum of direct
+    products of single particle Hilbert spaces [1]. This is a mess, so we have
+    a class to represent it directly.
 
     Examples
     ========
 
-    Creating a Fock space is quite simple:
-
-        >>> from sympy.physics.hilbert import FockSpace
-        >>> fs = FockSpace()
-        >>> fs
-        FS()
+    >>> from sympy.physics.hilbert import FockSpace
+    >>> hs = FockSpace()
+    >>> hs
+    F
+    >>> hs.dimension
+    oo
 
     References
     ==========
@@ -228,7 +245,7 @@ class FockSpace(HilbertSpace):
     """
 
     def __new__(cls):
-        obj = Expr.__new__(cls, **{'commutative': False})
+        obj = Basic.__new__(cls, **{'commutative': False})
         return obj
 
     @property
@@ -237,21 +254,24 @@ class FockSpace(HilbertSpace):
 
     @property
     def description(self):
-        return 'Hilbert space of Fock space.'
+        return 'Fock space.'
 
     def _sympyrepr(self, printer, *args):
         return "FockSpace()"
 
     def _sympystr(self, printer, *args):
-        return "FS()"
+        return "F"
+
+    def _pretty(self, printer, *args):
+        return prettyForm(u"\u2131")
+
 
 class TensorProductHilbertSpace(HilbertSpace):
     """A tensor product of Hilbert spaces [1].
 
     The tensor product between Hilbert spaces is represented by the
-    operator "*" Only the same type of Hilbert space with the same
-    dimension and/or interval will be combined into a tensor power,
-    otherwise the tensor product behaves as in the examples below.
+    operator "*" Products of the same Hilbert space will be combined into
+    tensor powers.
 
     A TensorProductHilbertSpace object takes in an indefinite number of
     HilbertSpace objects as its arguments. In addition, multiplication of
@@ -260,30 +280,27 @@ class TensorProductHilbertSpace(HilbertSpace):
     Examples
     ========
 
-    Creating a tensor product:
+    >>> from sympy.physics.hilbert import ComplexSpace, FockSpace
+    >>> from sympy import symbols
 
-        >>> from sympy import Expr, Interval, oo, sympify
-        >>> from sympy.physics.hilbert import l2, L2, FockSpace,\
-        TensorProductHilbertSpace, TensorPowerHilbertSpace
-        >>> hs = l2(2)
-        >>> HS = L2(Interval(-42, 42))
-        >>> fs = FockSpace()
-        >>> tensor_product = hs*HS*fs
-        >>> tensor_product
-        l2(2)*L2([-42, 42])*FS()
+    >>> c = ComplexSpace(2)
+    >>> f = FockSpace()
+    >>> hs = c*f
+    >>> hs
+    C(2)*F
+    >>> hs.dimension
+    oo
+    >>> list(hs.spaces)
+    [C(2), F]
 
-    Here is how the properties work:
-
-        >>> tensor_product.dimension
-        oo
-        >>> tensor_product.spaces
-        (l2(2), L2([-42, 42]), FS())
-
-    Identical Hilbert spaces will be combined into one tensor power:
-
-        >>> ms = hs*hs*hs
-        >>> ms
-        (l2(2))**(3)
+    >>> c1 = ComplexSpace(2)
+    >>> n = symbols('n')
+    >>> c2 = ComplexSpace(n)
+    >>> hs = c1*c2
+    >>> hs
+    C(2)*C(n)
+    >>> hs.dimension
+    2*n
 
     References
     ==========
@@ -293,9 +310,9 @@ class TensorProductHilbertSpace(HilbertSpace):
 
     def __new__(cls, *args):
         r = cls.eval(args)
-        if isinstance(r, Expr):
+        if isinstance(r, Basic):
             return r
-        obj = Expr.__new__(cls, *args, **{'commutative': False})
+        obj = Basic.__new__(cls, *args, **{'commutative': False})
         return obj
 
     @classmethod
@@ -353,12 +370,12 @@ class TensorProductHilbertSpace(HilbertSpace):
 
     @property
     def description(self):
-        return "A direct product Hilbert space."
+        return "A direct product Hilbert spaces."
 
     @property
     def spaces(self):
         """A tuple of the Hilbert spaces in this tensor product."""
-        return self.args
+        return set(self.args)
 
     def _spaces_printer(self, printer, *args):
         spaces_strs = []
@@ -377,6 +394,27 @@ class TensorProductHilbertSpace(HilbertSpace):
         spaces_strs = self._spaces_printer(printer, *args)
         return '*'.join(spaces_strs)
 
+    def _pretty(self, printer, *args):
+        length = len(self.args)
+        pform = printer._print('', *args)
+        for i in range(length):
+            next_pform = printer._print(self.args[i], *args)
+            if isinstance(
+                self.args[i],
+                (DirectSumHilbertSpace,
+                 TensorPowerHilbertSpace,
+                 TensorProductHilbertSpace)):
+                next_pform = prettyForm(
+                    *next_pform.parens(left='(', right=')')
+                )
+            pform = prettyForm(*pform.right(next_pform))
+            if i != length-1:
+                pform = prettyForm(*pform.right(u' ' + u'\u2a02' + u' '))
+        if length > 1:
+            pform = prettyForm(*pform.parens(left='(', right=')'))
+        return pform
+
+
 class DirectSumHilbertSpace(HilbertSpace):
     """A direct sum of Hilbert spaces [1].
 
@@ -390,23 +428,18 @@ class DirectSumHilbertSpace(HilbertSpace):
     Examples
     ========
 
-    Here is a basic example of creating a direct sum:
+    >>> from sympy.physics.hilbert import ComplexSpace, FockSpace
+    >>> from sympy import symbols
 
-        >>> from sympy import Expr, Interval, oo, sympify
-        >>> from sympy.physics.hilbert import l2, L2, DirectSumHilbertSpace
-        >>> from sympy.abc import x
-        >>> hs = l2(x)
-        >>> HS = L2(Interval(0, 1))
-        >>> direct_sum = hs+HS
-        >>> direct_sum
-        l2(x)+L2([0, 1])
-
-    Here is how the properties work:
-
-        >>> direct_sum.dimension
-        oo
-        >>> direct_sum.spaces
-        set([L2([0, 1]), l2(x)])
+    >>> c = ComplexSpace(2)
+    >>> f = FockSpace()
+    >>> hs = c+f
+    >>> hs
+    C(2)+F
+    >>> hs.dimension
+    oo
+    >>> list(hs.spaces)
+    [C(2), F]
 
     References
     ==========
@@ -415,9 +448,9 @@ class DirectSumHilbertSpace(HilbertSpace):
     """
     def __new__(cls, *args):
         r = cls.eval(args)
-        if isinstance(r, Expr):
+        if isinstance(r, Basic):
             return r
-        obj = Expr.__new__(cls, *args, **{'commutative': True})
+        obj = Basic.__new__(cls, *args, **{'commutative': True})
         return obj
 
     @classmethod
@@ -465,6 +498,27 @@ class DirectSumHilbertSpace(HilbertSpace):
         spaces_strs = [printer._print(arg, *args) for arg in self.args]
         return '+'.join(spaces_strs)
 
+    def _pretty(self, printer, *args):
+        length = len(self.args)
+        pform = printer._print('', *args)
+        for i in range(length):
+            next_pform = printer._print(self.args[i], *args)
+            if isinstance(
+                self.args[i],
+                (DirectSumHilbertSpace,
+                 TensorPowerHilbertSpace,
+                 TensorProductHilbertSpace)):
+                next_pform = prettyForm(
+                    *next_pform.parens(left='(', right=')')
+                )
+            pform = prettyForm(*pform.right(next_pform))
+            if i != length-1:
+                pform = prettyForm(*pform.right(u' ' + u'\u2295' + u' '))
+        if length > 1:
+            pform = prettyForm(*pform.parens(left='(', right=')'))
+        return pform
+
+
 class TensorPowerHilbertSpace(HilbertSpace):
     """An exponentiated Hilbert space [1].
 
@@ -479,45 +533,23 @@ class TensorPowerHilbertSpace(HilbertSpace):
     Examples
     ========
 
-    Here are some examples of creating tensor powers:
+    >>> from sympy.physics.hilbert import ComplexSpace, FockSpace
+    >>> from sympy import symbols
 
-        >>> from sympy import Expr, Interval, oo, sympify
-        >>> from sympy.physics.hilbert import l2, L2, TensorPowerHilbertSpace,\
-        TensorProductHilbertSpace
-        >>> from sympy.abc import x
-        >>> p1 = l2(3)**2
-        >>> p1
-        (l2(3))**(2)
+    >>> n = symbols('n')
+    >>> c = ComplexSpace(2)
+    >>> hs = c**n
+    >>> hs
+    C(2)**n
+    >>> hs.dimension
+    2**n
 
-        >>> hs = l2(2)
-        >>> tensor_power = hs*hs*(hs**2)*hs**x
-        >>> tensor_power
-        (l2(2))**(4 + x)
-
-        >>> HS = L2(Interval(-21, 21))
-        >>> tens_pow = HS**(42+x)
-        >>> tens_pow
-        (L2([-21, 21]))**(42 + x)
-
-    You can check certain properties of tensor powers such as their
-    dimensions, bases, exponents, etc:
-
-        >>> p1.base
-        l2(3)
-        >>> p1.exp
-        2
-        >>> p1.dimension
-        9
-
-        >>> tensor_power.dimension
-        2**(4 + x)
-
-        >>> tens_pow.base
-        L2([-21, 21])
-        >>> tens_pow.exp
-        42 + x
-        >>> tens_pow.dimension
-        oo
+    >>> c = ComplexSpace(2)
+    >>> c*c
+    C(2)**2
+    >>> f = FockSpace()
+    >>> c*f*f
+    C(2)*F**2
 
     References
     ==========
@@ -527,9 +559,9 @@ class TensorPowerHilbertSpace(HilbertSpace):
 
     def __new__(cls, *args):
         r = cls.eval(args)
-        if isinstance(r, Expr):
+        if isinstance(r, Basic):
             return r
-        return Expr.__new__(cls, *r, **{'commutative': False})
+        return Basic.__new__(cls, *r, **{'commutative': False})
 
     @classmethod
     def eval(cls, args):
@@ -570,17 +602,19 @@ class TensorPowerHilbertSpace(HilbertSpace):
 
     @property
     def description(self):
-        return "An exponentiated Hilbert space."
+        return "A Hilbert space to some power."
 
     def _sympyrepr(self, printer, *args):
         return "TensorPowerHilbertSpace(%s,%s)" % (printer._print(self.base,\
         *args), printer._print(self.exp, *args))
 
     def _sympystr(self, printer, *args):
-        return "(%s)**(%s)" % (printer._print(self.base, *args),\
+        return "%s**%s" % (printer._print(self.base, *args),\
         printer._print(self.exp, *args))
 
-#-----------------------------------------------------------------------------
-# Functions
-#-----------------------------------------------------------------------------
+    def _pretty(self, printer, *args):
+        pform_exp = printer._print(self.exp, *args)
+        pform_exp = prettyForm(*pform_exp.left(u' ' + u'\u2a02'+ u' '))
+        pform_base = printer._print(self.base, *args)
+        return pform_base**pform_exp
 
