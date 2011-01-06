@@ -359,6 +359,8 @@ class Triangle(Polygon):
 
         Example:
         ========
+            >>> from sympy.geometry import Point, Triangle
+
             >>> p1,p2,p3 = Point(0,0), Point(1,0), Point(0,1)
             >>> t = Triangle(p1, p2, p3)
             >>> t.altitudes[p1]
@@ -401,6 +403,8 @@ class Triangle(Polygon):
 
         Example:
         ========
+            >>> from sympy.geometry import Point, Triangle, Segment
+
             >>> p1,p2,p3 = Point(0,0), Point(1,0), Point(0,1)
             >>> t = Triangle(p1, p2, p3)
 
@@ -446,6 +450,8 @@ class Triangle(Polygon):
 
         Example:
         ========
+            >>> from sympy.geometry import Point, Triangle
+
             >>> p1,p2,p3 = Point(0,0), Point(1,0), Point(0,1)
             >>> t = Triangle(p1, p2, p3)
             >>> t.medians[p1]
