@@ -33,4 +33,4 @@ class IntegerRing(Ring, CharacteristicZero, SimpleDomain):
 
     def log(self, a, b):
         """Returns b-base logarithm of `a`. """
-        return self.dtype(math.log(a, b))
+        return self.dtype(math.log(int(a), b))
