@@ -329,11 +329,15 @@ def to_int_repr(clauses, symbols):
         True
 
     """
+
+    # Convert the symbol list into a dict
+    symbols = dict([(symbols[i], i+1) for i in range(len(symbols))])
+
     def append_symbol(arg, symbols):
         if arg.func is Not:
-            return -(symbols.index(arg.args[0])+1)
+            return -symbols[arg.args[0]]
         else:
-            return symbols.index(arg)+1
+            return symbols[arg]
 
     return [set(append_symbol(arg, symbols) for arg in Or.make_args(c)) \
                                                             for c in clauses]
