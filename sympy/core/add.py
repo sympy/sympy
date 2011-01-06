@@ -206,7 +206,7 @@ class Add(AssocOp):
     def as_two_terms(self):
         if len(self.args) == 1:
             return S.Zero, self
-        return self.args[0], Add(*self.args[1:])
+        return self.args[0], self._new_rawargs(*self.args[1:])
 
     def as_numer_denom(self):
         numers, denoms = [],[]
@@ -241,7 +241,7 @@ class Add(AssocOp):
         if not l:
             return False
         if l[0].is_odd:
-            return Add(*l[1:]).is_even
+            return self._new_rawargs(*l[1:]).is_even
 
     def _eval_is_irrational(self):
         for t in self.args:
@@ -252,7 +252,7 @@ class Add(AssocOp):
 
     def _eval_is_positive(self):
         c = self.args[0]
-        r = Add(*self.args[1:])
+        r = self._new_rawargs(*self.args[1:])
         if c.is_positive and r.is_positive:
             return True
         if c.is_unbounded:
@@ -272,7 +272,7 @@ class Add(AssocOp):
 
     def _eval_is_negative(self):
         c = self.args[0]
-        r = Add(*self.args[1:])
+        r = self._new_rawargs(*self.args[1:])
         if c.is_negative and r.is_negative:
             return True
         if c.is_unbounded:

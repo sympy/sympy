@@ -76,7 +76,7 @@ def fraction(expr, exact=False):
                 else:
                     denom.append(Pow(term.base, -term.exp))
             elif not exact and term.exp.is_Mul:
-                coeff, tail = term.exp.args[0], Mul(*term.exp.args[1:])#term.exp.getab()
+                coeff, tail = term.exp.args[0], term.exp._new_rawargs(*term.exp.args[1:])#term.exp.getab()
 
                 if coeff.is_Rational and coeff.is_negative:
                     denom.append(Pow(term.base, -term.exp))
@@ -88,7 +88,7 @@ def fraction(expr, exact=False):
             if term.args[0].is_negative:
                 denom.append(C.exp(-term.args[0]))
             elif not exact and term.args[0].is_Mul:
-                coeff, tail = term.args[0], Mul(*term.args[1:])#term.args.getab()
+                coeff, tail = term.args[0], term.args[0]._new_rawargs(*term.args[1:])#term.args.getab()
 
                 if coeff.is_Rational and coeff.is_negative:
                     denom.append(C.exp(-term.args[0]))
@@ -862,8 +862,7 @@ def ratsimp(expr):
             return r[a],r[b]
         return x, S.One
 
-    x = expr.args[0]
-    y = Add(*expr.args[1:])
+    x, y = expr.as_two_terms()
 
     a,b = get_num_denum(ratsimp(x))
     c,d = get_num_denum(ratsimp(y))

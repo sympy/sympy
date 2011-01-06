@@ -583,7 +583,7 @@ class Mul(AssocOp):
         expr = sympify(expr)
         if not isinstance(expr, self.__class__):
             # if we can omit the first factor, we can match it to sign * one
-            if Mul(*self.args[1:]) == expr:
+            if self._new_rawargs(*self.args[1:]) == expr:
                 return self.args[0].matches(Rational(sign), repl_dict, evaluate)
             # two-factor product: if the 2nd factor matches, the first part must be sign * one
             if len(self.args[:]) == 2:
@@ -757,7 +757,7 @@ class Mul(AssocOp):
             if c.is_nonpositive:
                 return False
             return
-        r = Mul(*terms[1:])
+        r = self._new_rawargs(*terms[1:])
         if c.is_negative and r.is_negative:
             return True
         if r.is_negative and c.is_negative:
@@ -785,7 +785,7 @@ class Mul(AssocOp):
         c = terms[0]
         if len(terms)==1:
             return c.is_negative
-        r = Mul(*terms[1:])
+        r = self._new_rawargs(*terms[1:])
         # check for nonnegativity, >=0
         if c.is_negative and r.is_nonpositive:
             return False

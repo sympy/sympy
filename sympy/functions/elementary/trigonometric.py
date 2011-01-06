@@ -188,8 +188,7 @@ class sin(Function):
             arg = self.args[0]
         x = None
         if arg.is_Add: # TODO, implement more if deep stuff here
-            x = arg.args[0]
-            y = C.Add(*arg.args[1:])
+            x, y = arg.as_two_terms()
         else:
             coeff, terms = arg.as_coeff_terms()
             if not (coeff is S.One) and coeff.is_Integer and terms:
@@ -400,8 +399,7 @@ class cos(Function):
             arg = self.args[0]
         x = None
         if arg.is_Add: # TODO, implement more if deep stuff here
-            x = arg.args[0]
-            y = C.Add(*arg.args[1:])
+            x, y = arg.as_two_terms()
             return (cos(x)*cos(y) - sin(y)*sin(x)).expand(trig=True)
         else:
             coeff, terms = arg.as_coeff_terms()
