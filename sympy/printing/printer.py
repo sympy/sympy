@@ -68,7 +68,7 @@ Some more information how the single concepts work and who should use which:
 from sympy import Basic, Mul, Add
 
 from sympy.core.exprtools import decompose_power
-from sympy.polys.monomialtools import monomial_cmp
+from sympy.polys.monomialtools import monomial_key
 from sympy.core.basic import BasicMeta
 
 class Printer(object):
@@ -208,9 +208,6 @@ class Printer(object):
         # called. See StrPrinter._print_Real() for an example of usage
         self._print_level = 0
 
-        # configure ordering of terms in Add (e.g. lexicographic ordering)
-        self.order, self.reverse = self.parse_order(self._settings["order"])
-
     @classmethod
     def set_global_settings(cls, **settings):
         """Set system-wide printing settings. """
@@ -249,13 +246,44 @@ class Printer(object):
         finally:
             self._print_level -= 1
 
-    def analyze(self, expr, order=None):
-        """Rewrite an expression as sorted list of terms. """
-        if order is not None:
-            order, reverse = self.parse_order(order)
-        else:
-            order, reverse = None, None
+    @classmethod
+    def _parse_order(cls, order):
+        """Parse and configure ordering of terms in Add. """
+        rev = False
 
+        if order is not None:
+            if order.startswith('rev-'):
+                order = order[4:]
+                rev = True
+
+        key = monomial_key(order)
+        return key, rev
+
+    def _as_ordered_terms(self, expr, order=None):
+        order = order or self._settings['order']
+
+        if order is None:
+            return sorted(Add.make_args(expr), Basic._compare_pretty)
+        else:
+            terms, _ = self.as_ordered_terms(expr, order)
+            return [ term for _, _, _, term in terms ]
+
+    def as_ordered_terms(self, expr, order=None):
+        """Transform an expression to an ordered list of terms. """
+        order = order or self._settings['order']
+        monom_key, rev = self._parse_order(order)
+
+        def key(term):
+            coeff, monom, ncpart, _ = term
+            return monom_key(monom), ncpart, -coeff
+
+        terms, gens = self.as_terms(expr)
+        ordered = sorted(terms, key=key, reverse=not rev)
+
+        return ordered, gens
+
+    def as_terms(self, expr):
+        """Transform an expression to a list of terms. """
         gens, terms = set([]), []
 
         for term in Add.make_args(expr):
@@ -276,7 +304,7 @@ class Printer(object):
                         cpart[base] = exp
                         gens.add(base)
 
-            terms.append((coeff, cpart, ncpart, term))
+            terms.append((Mul(*coeff), cpart, ncpart, term))
 
         gens = sorted(gens, Basic._compare_pretty)
 
@@ -293,52 +321,7 @@ class Printer(object):
             for base, exp in cpart.iteritems():
                 monom[indices[base]] = exp
 
-            result.append((coeff, monom, ncpart, term))
+            result.append((coeff, tuple(monom), tuple(ncpart), term))
 
-        if order is None and self.order is None:
-            return sorted(result, Basic._compare_pretty)
-        else:
-            return sorted(result, lambda a, b: \
-                self._compare_terms(a, b, order=order, reverse=reverse))
+        return result, gens
 
-    def _compare_terms(self, a, b, order=None, reverse=None):
-        """Compare two terms using data from Printer.analyze(). """
-        a_coeff, a_monom, a_ncpart, _ = a
-        b_coeff, b_monom, b_ncpart, _ = b
-
-        if order is None:
-            order = self.order
-        if reverse is None:
-            reverse = self.reverse
-
-        result = order(a_monom, b_monom)
-
-        if not result:
-            if not (a_ncpart or b_ncpart):
-                result = cmp(a_coeff, b_coeff)
-            else:
-                result = Basic._compare_pretty(Mul(*a_ncpart), Mul(*b_ncpart))
-
-                if not result:
-                    result = cmp(a_coeff, b_coeff)
-
-        if not reverse:
-            return -result
-        else:
-            return result
-
-    @classmethod
-    def parse_order(cls, order):
-        """Parse and configure ordering of terms in Add. """
-        if order is not None:
-            if order.startswith('rev-'):
-                order = monomial_cmp(order[4:])
-                reverse = True
-            else:
-                order = monomial_cmp(order)
-                reverse = False
-        else:
-            order = None
-            reverse = False
-
-        return order, reverse

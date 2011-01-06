@@ -488,11 +488,7 @@ class PrettyPrinter(Printer):
             return self._print_Function(e)
 
     def _print_Add(self, expr, order=None):
-        if order is None and self.order is None:
-            terms = sorted(expr.args, Basic._compare_pretty)
-        else:
-            terms = [ elt[-1] for elt in self.analyze(expr, order) ]
-
+        terms = self._as_ordered_terms(expr, order=order)
         pforms = []
 
         for term in terms:
