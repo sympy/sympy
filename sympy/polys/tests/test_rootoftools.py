@@ -208,6 +208,9 @@ def test_RootSum___new__():
 
     assert RootSum(f, auto=False).is_commutative == True
 
+    assert RootSum(f, Lambda(x, 1/(x + x**2))) == S(11)/3
+    assert RootSum(f, Lambda(x, y/(x + x**2))) == S(11)/3*y
+
 def test_RootSum_diff():
     f = x**3 + x + 3
 
