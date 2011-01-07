@@ -108,7 +108,7 @@ want to be mentioned here, so see our repository history for a full list).
 
 
 Up-to-date list in the order of the first contribution is given in the `AUTHORS
-<http://git.sympy.org/?p=sympy.git;f=AUTHORS;hb=HEAD>`_ file.
+<https://github.com/sympy/sympy/blob/master/AUTHORS>`_ file.
 
 You can find a brief history of SymPy in the README.
 

@@ -1079,7 +1079,7 @@ Download the latest SymPy git and fix something:
 
 .. parsed-literal::
 
-    $ :input:`git clone git://git.sympy.org/sympy.git`
+    $ :input:`git clone git://github.com/sympy/sympy.git`
     Initialized empty Git repository in /tmp/abb/sympy/.git/
     remote: Counting objects: 15421, done.
     remote: Compressing objects: 100% (4171/4171), done.
