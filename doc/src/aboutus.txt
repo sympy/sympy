@@ -70,7 +70,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Kaifeng Zhu: factorint() fix
 #. Ted Horst: Basic.__call__() fix, pretty printing fix
 #. Akshay Srinivasan: Printing fix, improvements to integration
-#. Aaron Meurer: ODE solvers (GSoC 2009), other fixes, project leader
+#. Aaron Meurer: ODE solvers (GSoC 2009), The Risch Algorithm for integration (GSoC 2010), other fixes, project leader as of Jan 4, 2011
 #. Barry Wardell: implement series as function, several tests added
 #. Tomasz Buchert: ccode printing fixes, code quality concerning exceptions, documentation
 #. Vinay Kumar: polygamma tests
