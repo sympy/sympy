@@ -277,7 +277,7 @@ def _rootof_data(poly, indices):
                 if index >= real_count:
                     yield _rootof_complexes_index(complexes, index-real_count)
 
-def _rootof_preprocess(poly):
+def _rootof_preprocess(poly, strict=True):
     """Try to get rid of symbolic coefficients from ``poly``. """
     _, poly = poly.clear_denoms(convert=True)
     _, poly = poly.primitive()
@@ -288,7 +288,7 @@ def _rootof_preprocess(poly):
     coeff = S.One
 
     if dom.is_Poly:
-        poly = poly.inject()
+        poly, _poly = poly.inject(), poly
 
         strips = zip(*poly.monoms())
         gens = poly.gens[1:]
@@ -326,7 +326,10 @@ def _rootof_preprocess(poly):
                 poly = poly.eval(gen, 1)
 
         if poly.is_multivariate:
-            raise DomainError("RootOf failed to integerize the input polynomial")
+            if not strict:
+                return coeff, _poly
+            else:
+                raise DomainError("failed to integerize the input polynomial")
 
         def integer_basis(poly):
             monoms, coeffs = zip(*poly.terms())
@@ -371,7 +374,7 @@ def _rootof_preprocess(poly):
 
             poly = poly.termwise(func)
             coeff *= basis
-    elif not dom.is_ZZ:
+    elif strict and not dom.is_ZZ:
         raise DomainError("RootOf is not supported over %s" % dom)
 
     return coeff, poly
@@ -624,7 +627,7 @@ class RootSum(Expr):
     def _transform(cls, expr, x):
         """Transform an expression to a polynomial. """
         poly = Poly(expr, x, greedy=False)
-        return _rootof_preprocess(poly)
+        return _rootof_preprocess(poly, strict=False)
 
     @classmethod
     def _is_func_rational(cls, poly, func):

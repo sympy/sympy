@@ -211,6 +211,12 @@ def test_RootSum___new__():
     assert RootSum(f, Lambda(x, 1/(x + x**2))) == S(11)/3
     assert RootSum(f, Lambda(x, y/(x + x**2))) == S(11)/3*y
 
+    assert RootSum(x**2 - 1, Lambda(x, 3*x**2), x) == 6
+    assert RootSum(x**2 - y, Lambda(x, 3*x**2), x) == 6*y
+
+    assert RootSum(x**2 - 1, Lambda(x, z*x**2), x) == 2*z
+    assert RootSum(x**2 - y, Lambda(x, z*x**2), x) == 2*z*y
+
 def test_RootSum_diff():
     f = x**3 + x + 3
 
