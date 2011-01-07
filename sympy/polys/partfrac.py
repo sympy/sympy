@@ -30,18 +30,15 @@ def apart(f, x=None, full=False):
     else:
         P, Q = f.as_numer_denom()
 
-    if x is None:
-        gens = ()
-    else:
-        gens = (x,)
-
-    (P, Q), opt = parallel_poly_from_expr((P, Q), *gens)
+    (P, Q), opt = parallel_poly_from_expr((P, Q), x)
 
     if P.is_multivariate:
         raise NotImplementedError("multivariate partial fraction decomposition")
 
     common, P, Q = P.cancel(Q)
-    poly_part, P = P.div(Q)
+
+    poly, P = P.div(Q, auto=True)
+    P, Q = P.rat_clear_denoms(Q)
 
     if Q.degree() <= 1:
         partial = P/Q
@@ -51,7 +48,7 @@ def apart(f, x=None, full=False):
         else:
             partial = apart_full_decomposition(P, Q)
 
-    return common*(poly_part.as_basic() + partial)
+    return common*(poly.as_expr() + partial)
 
 def apart_undetermined_coeffs(P, Q):
     """Partial fractions via method of undetermined coefficients. """

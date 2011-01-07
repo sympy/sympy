@@ -8,7 +8,7 @@ from sympy.polys.partfrac import (
 
 from sympy import S, Poly, E, pi, Matrix, Eq
 from sympy.utilities.pytest import raises
-from sympy.abc import x, y, a, b
+from sympy.abc import x, y, a, b, c
 
 def test_apart():
     assert apart(1) == 1
@@ -50,6 +50,11 @@ def test_apart():
     ]
 
     assert apart(Eq((x**2 + 1)/(x + 1), x), x) == Eq(x - 1 + 2/(x + 1), x)
+
+    f = a*x**4 + (2*b + 2*a*c)*x**3 + (4*b*c - a**2 + a*c**2)*x**2 + (-2*a*b + 2*b*c**2)*x - b**2
+    g = a**2*x**4 + (2*a*b + 2*c*a**2)*x**3 + (4*a*b*c + b**2 + a**2*c**2)*x**2 + (2*c*b**2 + 2*a*b*c**2)*x + b**2*c**2
+
+    assert apart(f/g, x) == 1/a - 1/(x + c)**2 - b**2/(a*(a*x + b)**2)
 
 def test_apart_undetermined_coeffs():
     p = Poly(2*x - 3)
