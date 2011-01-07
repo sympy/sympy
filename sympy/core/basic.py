@@ -1084,12 +1084,6 @@ class Basic(AssumeMeths):
                 else:
                     return self
 
-    def __call__(self, subsdict):
-        """Use call as a shortcut for subs, but only support the dictionary version"""
-        if not isinstance(subsdict, dict):
-            raise TypeError("argument must be a dictionary")
-        return self.subs(subsdict)
-
 class Atom(Basic):
     """
     A parent class for atomic things. An atom is an expression with no subexpressions.
