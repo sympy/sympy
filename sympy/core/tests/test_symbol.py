@@ -106,5 +106,3 @@ def test_symbols():
 def test_call():
     f = Symbol('f')
     assert f(2)
-    f = Wild('f')
-    assert f({})

@@ -442,11 +442,8 @@ def test_subs_list():
 def test_call():
     a,b,c,d,e = symbols('abcde')
 
-    assert sin(x)({ x : 1, sin(x) : 2}) == 2
-
-    expr = sqrt(sin(2*x))*sin(exp(x)*x)*cos(2*x) + sin(2*x)
-
-    assert expr({ sqrt(sin(2*x)) : a, cos(2*x) : b, sin(2*x) : c, x : d, exp(x) : e}) == c + a*b*sin(d*e)
+    raises(TypeError, "sin(x)({ x : 1, sin(x) : 2})")
+    raises(TypeError, "sin(x)(1)")
 
 def test_has():
     x, y = symbols("xy")
