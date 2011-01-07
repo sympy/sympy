@@ -3,8 +3,9 @@
 """
 Program to execute tests using the py.test like interface.
 
-The advantage over py.test is that it only depends on sympy and should just
-work in any circumstances. See "sympy.test?" for documentation.
+The advantage over py.test is that it only depends on sympy and should
+just work in any circumstances. See the docstring of test in
+sympy/utilities/runtests.py for documentation.
 """
 
 import sys
@@ -13,7 +14,7 @@ from optparse import OptionParser
 
 from get_sympy import path_hack
 path_hack()
-import sympy
+from sympy.utilities.runtests import test
 
 parser = OptionParser()
 parser.add_option("-v", "--verbose", action="store_true", dest="verbose",
@@ -34,7 +35,7 @@ parser.set_usage("test [options ...] [tests ...]")
 parser.epilog = '"options" are any of the options above.  "tests" are 0 or more glob strings of tests to run.  If no test arguments are given, all tests will be run.'
 options, args = parser.parse_args()
 
-ok = sympy.test(*args, **{"verbose": options.verbose, "kw": options.kw,
+ok = test(*args, **{"verbose": options.verbose, "kw": options.kw,
     "tb": options.tb, "pdb": options.pdb, "colors": options.colors,
     "sort": options.sort})
 if ok:
