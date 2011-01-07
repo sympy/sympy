@@ -202,7 +202,30 @@ class QExpr(Expr):
         """Represent this object in a given basis.
 
         This method dispatches to the actual methods that perform the
-        representation.
+        representation. Subclases of QExpr should define various methods to
+        determine how the object will be represented in various bases. The
+        format of these methods is::
+        
+            def _represent_BasisName(self, basis, **options):
+
+        This to define how a quantum object is represented in the basis of
+        the operator Position, you would define::
+
+            def _represent_Position(self, basis, **options):
+
+        Usually, Basis object will be instances of Operator subclasses, but
+        there is a chance we will relax this in the future to accomodate other
+        types of basis sets that are not associated with an operator.
+
+        Parameters
+        ==========
+        basis : Operator
+            The Operator whose basis functions will be used as the basis for
+            representation.
+        options : dict
+            A dictionary of key/value pairs that give options and hints for
+            the representation, such as the number of basis functions to
+            be used.
         """
         return dispatch_method(self, '_represent', basis, **options)
 

@@ -2,10 +2,11 @@
 
 TODO:
 
-* tpsimp.
 * Fix early 0 in apply_operators.
 * Debug and test apply_operators.
 * Get cse working with classes in this file.
+* Doctests and documentation of special methods for InnerProduct, Commutator,
+  AntiCommutator, represent, apply_operators.
 """
 
 import copy
@@ -42,7 +43,7 @@ __all__ = [
     'represent',
     'hbar',
     'TensorProduct',
-    'tpsimp',
+    'tensor_product_simp',
     'apply_operators',
     'apply_operators_Mul',
     'apply_single_op',
@@ -86,12 +87,13 @@ class StateBase(QExpr):
 
     @property
     def dual_class(self):
+        """Return the class used to construt the dual."""
         raise NotImplementedError(
             'dual_class must be implemented in a subclass'
         )
 
     def _eval_dagger(self):
-        """Compute the Dagger of this state."""
+        """Compute the dagger of this state using the dual."""
         return self.dual
 
     #-------------------------------------------------------------------------
@@ -142,6 +144,23 @@ class KetBase(StateBase):
             return Expr.__rmul__(self, other)
 
     def _apply_operator(self, op, **options):
+        """Apply an Operator to this Ket.
+
+        This method will dispatch to methods having the format::
+
+            def _apply_operator_OperatorName(op, **options):
+
+        Subclasses should define these methods (one for each OperatorName) to
+        teach the Ket how operators act on it.
+
+        Parameters
+        ==========
+        op : Operator
+            The Operator that is acting on the Ket.
+        options : dict
+            A dict of key/value pairs that control how the operator is applied
+            to the Ket.
+        """
         return dispatch_method(self, '_apply_operator', op, **options)
 
 
@@ -178,34 +197,62 @@ class BraBase(StateBase):
 
 
 class State(StateBase):
-    """General abstract quantum state."""
+    """General abstract quantum state used as a base class for Ket and Bra."""
     pass
 
 
 
 class Ket(State, KetBase):
-    """A Ket state for quantum mechanics.
+    """A general time-independent Ket in quantum mechanics.
 
-    Inherits from State and KetBase. In a state represented by a ray in Hilbert
-    space, a Ket is a vector that points along that ray [1].
+    Inherits from State and KetBase. This class should be used as the base
+    class for all physical, time-independent Kets in a system. This class
+    and its subclasses will be the main classes that users will use for 
+    expressing Kets in Dirac notation.
 
-    A Ket takes in a label as its argument in order to be differentiated from
-    other Kets.
+    Parameters
+    ==========
+    label : tuple, sympy.core.containers.Tuple
+        The list of numbers or parameters that uniquely specify the
+        ket. This will usually be its symbol or its quantum numbers.
 
     Examples
     ========
 
-    Creating and using a Ket:
+    Create a simple Ket and looking at its properties::
 
-        >>> from sympy.physics.quantum import Ket
-        >>> psi = Ket('psi')
-        >>> psi
+        >>> from sympy.physics.quantum import Ket, Bra
+        >>> from sympy import symbols, I
+        >>> k = Ket('psi')
+        >>> k
         |psi>
-        >>> psi.label
-        psi
-        >>> psi.dual
-        <psi|
+        >>> k.hilbert_space
+        H
+        >>> k.is_commutative
+        False
+        >>> k.label
+        Tuple(psi)
 
+    Ket's know about their associated bra::
+
+        >>> k.dual
+        <psi|
+        >>> k.dual_class
+        <class 'sympy.physics.quantum.Bra'>
+
+    Take a linear combination of two kets::
+
+        >>> k0 = Ket(0)
+        >>> k1 = Ket(1)
+        >>> 2*I*k0 - 4*k1
+        -4*|1> + 2*I*|0>
+
+    Compound labels are passed as tuples::
+
+        >>> n, m = symbols('nm')
+        >>> k = Ket((n,m))
+        >>> k
+        |nm>
 
     References
     ==========
@@ -219,27 +266,51 @@ class Ket(State, KetBase):
 
 
 class Bra(State, BraBase):
-    """A Bra state for quantum mechanics.
+    """A general time-independent Bra in quantum mechanics.
 
-    Inherits from State and BraBase. A Bra is the dual of a Ket [1].
+    Inherits from State and BraBase. A Bra is the dual of a Ket [1]. This
+    class and its subclasses will be the main classes that users will use for 
+    expressing Bras in Dirac notation.
 
-    A Bra takes in a label as its argument in order to be differentiated from
-    other Bras.
+    Parameters
+    ==========
+    label : tuple, sympy.core.containers.Tuple
+        The list of numbers or parameters that uniquely specify the
+        ket. This will usually be its symbol or its quantum numbers.
 
     Examples
     ========
 
-    Creating and using a Bra:
+    Create a simple Bra and looking at its properties::
 
-        >>> from sympy.physics.quantum import Bra
-        >>> b = Bra('bus')
+        >>> from sympy.physics.quantum import Ket, Bra
+        >>> from sympy import symbols, I
+        >>> b = Bra('psi')
         >>> b
-        <bus|
-        >>> b.label
-        bus
-        >>> b.dual
-        |bus>
+        <psi|
+        >>> b.hilbert_space
+        H
+        >>> b.is_commutative
+        False
 
+    Bra's know about their dual Ket's::
+
+        >>> b.dual
+        |psi>
+        >>> b.dual_class
+        <class 'sympy.physics.quantum.Ket'>
+
+    Like Ket's Bras can have compound labels and be manipulated::
+
+        >>> n, m = symbols('nm')
+        >>> b = Bra((n,m)) - I*Bra((m,n))
+        >>> b
+        -I*<mn| + <nm|
+
+    Symbols ina Bra can be substituted using ``.subs``::
+
+        >>> b.subs(n,m)
+        -I*<mm| + <mm|
 
     References
     ==========
@@ -256,12 +327,22 @@ class Bra(State, BraBase):
 #-----------------------------------------------------------------------------
 
 class TimeDepState(StateBase):
-    """General abstract time dependent quantum state.
+    """Base class for a general time-dependent quantum state.
 
-    Used for sub-classing time dependent states in quantum mechanics.
+    This class is used as a base class for any time-dependent state. The main
+    difference between this class and the time-independent state is that this
+    class takes a second argument that is the time in addition to the usual
+    label argument.
 
-    Takes in label and time arguments.
+    Parameters
+    ==========
+    label : tuple, sympy.core.containers.Tuple
+        The list of numbers or parameters that uniquely specify the
+        ket. This will usually be its symbol or its quantum numbers.
+    time : float
+        The time of the state.
     """
+
     def __new__(cls, label, time, **old_assumptions):
         # First compute args and call Expr.__new__ to create the instance
         label = cls._eval_label(label)
@@ -273,6 +354,7 @@ class TimeDepState(StateBase):
 
     @property
     def time(self):
+        """The time of the state."""
         return self.args[1]
 
     @classmethod
@@ -308,12 +390,41 @@ class TimeDepState(StateBase):
 
 
 class TimeDepKet(TimeDepState, KetBase):
-    """A time dependent Ket state for quantum mechanics.
+    """General time-dependent Ket in quantum mechanics.
 
-    Inherits from TimeDepState and KetBase. Its dual is a time dependent
-    Bra state.
+    This inherits from TimeDepState and KetBase and is the main class that
+    should be used for Kets that vary with time. Its dual is a TimeDepBra.
 
-    Takes in label and time arguments.
+    Parameters
+    ==========
+    label : tuple, sympy.core.containers.Tuple
+        The list of numbers or parameters that uniquely specify the
+        ket. This will usually be its symbol or its quantum numbers.
+    time : float
+        The time of the state.
+
+    Examples
+    ========
+
+    Create a TimeDepKet and look at its attributes::
+
+        >>> from sympy.physics.quantum import TimeDepKet
+        >>> k = TimeDepKet('psi', 't')
+        >>> k
+        |psi;t>
+        >>> k.time
+        t
+        >>> k.label
+        Tuple(psi)
+        >>> k.hilbert_space
+        H
+
+    TimeDepKets know about their dual bra::
+
+        >>> k.dual
+        <psi;t|
+        >>> k.dual_class
+        <class 'sympy.physics.quantum.TimeDepBra'>
     """
 
     @property
@@ -322,12 +433,35 @@ class TimeDepKet(TimeDepState, KetBase):
 
 
 class TimeDepBra(TimeDepState, BraBase):
-    """A time dependent Bra state for quantum mechanics.
+    """General time-dependent Bra in quantum mechanics.
 
-    Inherits from TimeDepState and BraBase. Its dual is a time dependent
-    Ket state.
+    This inherits from TimeDepState and BraBase and is the main class that
+    should be used for Bras that vary with time. Its dual is a TimeDepBra.
 
-    Takes in label and time arguments.
+    Parameters
+    ==========
+    label : tuple, sympy.core.containers.Tuple
+        The list of numbers or parameters that uniquely specify the
+        ket. This will usually be its symbol or its quantum numbers.
+    time : float
+        The time of the state.
+
+    Examples
+    ========
+
+        >>> from sympy.physics.quantum import TimeDepBra
+        >>> from sympy import symbols, I
+        >>> b = TimeDepBra('psi', 't')
+        >>> b
+        <psi;t|
+        >>> b.time
+        t
+        >>> b.label
+        Tuple(psi)
+        >>> b.hilbert_space
+        H
+        >>> b.dual
+        |psi;t>
     """
 
     @property
@@ -341,24 +475,60 @@ class TimeDepBra(TimeDepState, BraBase):
 class Operator(QExpr):
     """Base class for non-commuting quantum operators.
 
-    An operator is a map from one vector space to another [1]. In quantum
-    mechanics, operators correspond to observables [2].
+    An operator maps one ket to another [1]. In quantum mechanics, Hermitian
+    operators correspond to observables [2].
 
-    An operator takes in a name argument to differentiate it from other
-    operators.
+    Parameters
+    ==========
+    label : tuple, sympy.core.containers.Tuple
+        The list of numbers or parameters that uniquely specify the
+        operator.
 
     Examples
     ========
 
-    Creating and using an Operator.
+    Create an operator and examine its attributes::
 
-        >>> from sympy import sympify
         >>> from sympy.physics.quantum import Operator
-        >>> a = Operator('A')
-        >>> a
+        >>> from sympy import symbols, I
+        >>> A = Operator('A')
+        >>> A
         A
-        >>> a.name
-        A
+        >>> A.hilbert_space
+        H
+        >>> A.label
+        Tuple(A)
+        >>> A.is_commutative
+        False
+
+    Create another operator and do some arithmetic operations::
+
+        >>> B = Operator('B')
+        >>> C = 2*A*A + I*B
+        >>> C
+        I*B + 2*A**2
+
+    Operators don't commute::
+
+        >>> A.is_commutative
+        False
+        >>> B.is_commutative
+        False
+        >>> A*B == B*A
+        False
+
+    Polymonials of operators respect the commutation properties::
+
+        >>> e = (A+B)**3
+        >>> e.expand()
+        A**2*B + B**2*A + A*B**2 + B*A**2 + A**3 + B**3 + A*B*A + B*A*B
+
+    Operator inverses are handle symbolically::
+
+        >>> A.inv()
+        1/A
+        >>> A*A.inv()
+        1
 
     References
     ==========
@@ -439,41 +609,103 @@ class Operator(QExpr):
 
 
 class HermitianOperator(Operator):
-    """A Hermitian operator"""
+    """A Hermitian operator that satisfies H == Dagger(H).
+
+    Parameters
+    ==========
+    label : tuple, sympy.core.containers.Tuple
+        The list of numbers or parameters that uniquely specify the
+        operator.
+
+    Examples
+    ========
+
+    >>> from sympy.physics.quantum import Dagger, HermitianOperator
+    >>> H = HermitianOperator('H')
+    >>> Dagger(H)
+    H
+    """
 
     def _eval_dagger(self):
         return self
 
 
 class UnitaryOperator(Operator):
-    """A unitary operator."""
+    """A unitary operator that satisfies U*Dagger(U) == 1.
+
+    Parameters
+    ==========
+    label : tuple, sympy.core.containers.Tuple
+        The list of numbers or parameters that uniquely specify the
+        operator.
+
+    Examples
+    ========
+
+    >>> from sympy.physics.quantum import Dagger, UnitaryOperator
+    >>> U = UnitaryOperator('U')
+    >>> U*Dagger(U)
+    1
+    """
 
     def _eval_dagger(self):
         return self._eval_inverse()
 
 
 class OuterProduct(Operator):
-    """An unevaluated outer product between a Ket and Bra.
+    """An unevaluated outer product between a ket and kra.
 
-    Because a Ket is essentially a column vector and a Bra is essentially a row
-    vector, the outer product evaluates (acts_like) to an operator
-    (i.e. a matrix) [1].
+    This constructs an outer product between any subclass of KetBase and
+    BraBase as |a><b|. An OuterProduct inherits from Operator as they act as
+    operators in quantum expressions.  For reference see [1].
 
-    An InnerProduct takes first a Ket and then a Bra as its arguments.
+    Parameters
+    ==========
+    ket : KetBase or subclass
+        The ket on the left side of the outer product.
+    bar : BraBase or subclass
+        The bra on the right side of the outer product.
 
     Examples
     ========
 
-    Create an OuterProduct and check its properties:
+    Create a simple outer product by hand and take its dagger::
 
-        >>> from sympy.physics.quantum import Ket, Bra, OuterProduct
-        >>> op = OuterProduct(Ket('a'), Bra('b'))
+        >>> from sympy.physics.quantum import Ket, Bra, OuterProduct, Dagger
+        >>> from sympy.physics.quantum import Operator
+
+        >>> k = Ket('k')
+        >>> b = Bra('b')
+        >>> op = OuterProduct(k, b)
         >>> op
-        |a><b|
+        |k><b|
+        >>> op.hilbert_space
+        H
         >>> op.ket
-        |a>
+        |k>
         >>> op.bra
         <b|
+        >>> Dagger(op)
+        |b><k|
+
+    In simple products of kets and bras outer products will be automatically
+    identified and created::
+
+        >>> k*b
+        |k><b|
+
+    But in more complex expressions, outer products are not automatically
+    created::
+
+        >>> A = Operator('A')
+        >>> A*k*b
+        A*|k>*<b|
+
+    A user can force the creation of an outer product in a complex expression
+    by using parentheses to group the ket and bra::
+
+        >>> A*(k*b)
+        A*|k><b|
 
     References
     ==========
@@ -491,21 +723,19 @@ class OuterProduct(Operator):
                 'ket and bra are not dual classes: %r, %r' % \
                 (ket.__class__, bra.__class__)
             )
-        # TODO: fix this, to allow different symbolic dimensions
-        # if not ket.hilbert_space == bra.hilbert_space:
-        #     raise HilbertSpaceError(
-        #         'Incompatible hilbert spaces: %r and %r' % (ket, bra)
-        #     )
+        # TODO: make sure the hilbert spaces of the bra and ket are compatible
         obj = Expr.__new__(cls, *(ket, bra), **{'commutative': False})
         obj.hilbert_space = ket.hilbert_space
         return obj
 
     @property
     def ket(self):
+        """Return the ket on the left side of the outer product."""
         return self.args[0]
 
     @property
     def bra(self):
+        """Return the bra on the right side of the outer product."""
         return self.args[1]
 
     def _eval_dagger(self):
@@ -529,19 +759,41 @@ class OuterProduct(Operator):
 
 
 class KroneckerDelta(Function):
-    """The discrete delta function.
+    """The discrete, or Kronecker, delta function.
 
     A function that takes in two integers i and j. It returns 0 if i and j are
     not equal or it returns 1 if i and j are equal.
 
+    Parameters
+    ==========
+    i : Number, Symbol
+        The first index of the delta function.
+    j : Number, Symbol
+        The second index of the delta function.
+
     Examples
     ========
+
+    A simple example with integer indices::
 
         >>> from sympy.physics.quantum import KroneckerDelta
         >>> KroneckerDelta(1,2)
         0
         >>> KroneckerDelta(3,3)
         1
+
+    Symbolic indices::
+
+        >>> from sympy import symbols
+        >>> i, j, k = symbols('i j k')
+        >>> KroneckerDelta(i, j)
+        d(i,j)
+        >>> KroneckerDelta(i, i)
+        1
+        >>> KroneckerDelta(i, i+1)
+        0
+        >>> KroneckerDelta(i, i+1+k)
+        d(i,1 + i + k)
 
     References
     ==========
@@ -597,31 +849,56 @@ class KroneckerDelta(Function):
 class Dagger(Expr):
     """General Hermitian conjugate operation.
 
-    When an object is daggered it is transposed and then the complex conjugate
-    is taken [1].
+    For matrices this operation is equivalent to transpose and complex
+    conjugate [1].
 
-    A Dagger can take in any quantum object as its argument.
+    Parameters
+    ==========
+    arg : Expr
+        The sympy expression that we want to take the dagger of.
 
     Examples
     ========
 
     Daggering various quantum objects:
 
-        >>> from sympy.physics.quantum import Dagger, Ket, Bra, InnerProduct,\
-        OuterProduct, Operator
+        >>> from sympy.physics.quantum import Dagger, Ket, Bra, Operator
         >>> Dagger(Ket('psi'))
         <psi|
-        >>> Dagger(Bra('bus'))
-        |bus>
+        >>> Dagger(Bra('phi'))
+        |phi>
+        >>> Dagger(Operator('A'))
+        Dagger(A)
+
+    Inner and outer products::
+
+        >>> from sympy.physics.quantum import InnerProduct, OuterProduct
         >>> Dagger(InnerProduct(Bra('a'), Ket('b')))
         <b|a>
         >>> Dagger(OuterProduct(Ket('a'), Bra('b')))
         |b><a|
-        >>> Dagger(Operator('A'))
-        Dagger(A)
 
-    Notice how daggering the operator 'A' results in isympy returning an
-    unevaluated Dagger object (because A had no _eval_dagger method).
+    Powers, sums and products::
+
+        >>> A = Operator('A')
+        >>> B = Operator('B')
+        >>> Dagger(A*B)
+        Dagger(B)*Dagger(A)
+        >>> Dagger(A+B)
+        Dagger(A) + Dagger(B)
+        >>> Dagger(A**2)
+        Dagger(A)**2
+
+    Dagger also seamlessly handles complex numbers and matrices::
+
+        >>> from sympy import Matrix, I
+        >>> m = Matrix([[1,I],[2,I]])
+        >>> m
+        [1, I]
+        [2, I]
+        >>> Dagger(m)
+        [ 1,  2]
+        [-I, -I]
 
     References
     ==========
@@ -693,18 +970,20 @@ class Dagger(Expr):
 
 # InnerProduct is not an QExpr because it is really just a regular comutative
 # number. We have gone back and forth about this, but we gain a lot by having
-# this. The main challenges were getting Dagger to work (we use _eval_conjugate)
-# and represent (we can use atoms and subs). Having it be an Expr, mean that
-# there are no commutative QExpr subclasses, which simplifies the logic in QMul
-# a lot.
+# it subclass Expr. The main challenges were getting Dagger to work
+# (we use _eval_conjugate) and represent (we can use atoms and subs). Having
+# it be an Expr, mean that there are no commutative QExpr subclasses, 
+# which simplifies the design of everything.
 
 class InnerProduct(Expr):
     """An unevaluated inner product between a Bra and a Ket.
 
-    Because a Bra is essentially a row vector and a Ket is essentially a column
-    vector, the inner product evaluates (acts_like) to a complex number.
-
-    An InnerProduct takes first a Bra and then a Ket as its arguments.
+    Parameters
+    ==========
+    bra : BraBase or subclass
+        The bra on the left side of the inner product.
+    ket : KetBase or subclass
+        The ket on the right side of the inner product.
 
     Examples
     ========
@@ -712,13 +991,36 @@ class InnerProduct(Expr):
     Create an InnerProduct and check its properties:
 
         >>> from sympy.physics.quantum import Bra, Ket, InnerProduct
-        >>> ip = InnerProduct(Bra('a'), Ket('b'))
+        >>> b = Bra('b')
+        >>> k = Ket('k')
+        >>> ip = b*k
         >>> ip
-        <a|b>
+        <b|k>
         >>> ip.bra
-        <a|
+        <b|
         >>> ip.ket
-        |b>
+        |k>
+
+    In simple products of kets and bras inner products will be automatically
+    identified and created::
+
+        >>> b*k
+        <b|k>
+
+    But in more complex expressions, there is ambiguity in whether inner or
+    outer products should be created::
+
+        >>> k*b*k*b
+        |k><b|*|k>*<b|
+
+    A user can force the creation of a inner products in a complex expression
+    by using parentheses to group the bra and ket::
+
+        >>> k*(b*k)*b
+        <b|k>*|k>*<b|
+
+    Notice how the inner product <b|k> moved to the left of the expression
+    because inner products are commutative complex numbers.
 
     References
     ==========
@@ -776,32 +1078,70 @@ class InnerProduct(Expr):
 
 
 class Commutator(Expr):
-    """The commutator function for quantum mechanics.
+    """The standard commutator, in an unevaluated state.
 
-    This function behaves as such: [A, B] = A*B - B*A
+    The commutator is defined [1] as: [A, B] = A*B - B*A, but in this class
+    the commutator is initially unevaluated. To muliple the commutator out,
+    use the ``doit`` method.
 
-    The arguments are ordered according to .__cmp__()
+    The arguments of the commutator are put into canonical order using
+    ``__cmp__``, so that [B,A] becomes -[A,B].
+
+    Parameters
+    ==========
+    A : Expr
+        The first argument of the commutator [A,B].
+    B : Expr
+        The second argument of the commutator [A,B].
 
     Examples
     ========
 
-    >>> from sympy import symbols
-    >>> from sympy.physics.quantum import Commutator
-    >>> A, B = symbols('A B', **{'commutative':False})
-    >>> Commutator(B, A)
-    -1*Commutator(A, B)
+        >>> from sympy import symbols
+        >>> from sympy.physics.quantum import Commutator, Operator, Dagger
+        >>> x, y = symbols('xy')
+        >>> A = Operator('A')
+        >>> B = Operator('B')
+        >>> C = Operator('C')
 
-    Evaluate the commutator with .doit()
+    Create some commutators and use ``doit`` to multiply them out.
 
-    >>> comm = Commutator(A,B); comm
-    Commutator(A, B)
-    >>> comm.doit()
-    A*B - B*A
+        >>> comm = Commutator(A,B); comm
+        [A,B]
+        >>> comm.doit()
+        A*B - B*A
+
+    The commutator orders it arguments in canonical order::
+
+        >>> comm = Commutator(B,A); comm
+        -[A,B]
+
+    Scalar constants are factored out::
+
+        >>> Commutator(3*x*A,x*y*B)
+        3*y*x**2*[A,B]
+
+    Using ``expand(commutator=True)``, the standard commutator expansion rules
+    can be applied::
+
+        >>> Commutator(A+B,C).expand(commutator=True)
+        [A,C] + [B,C]
+        >>> Commutator(A,B+C).expand(commutator=True)
+        [A,B] + [A,C]
+        >>> Commutator(A*B,C).expand(commutator=True)
+        [A,C]*B + A*[B,C]
+        >>> Commutator(A,B*C).expand(commutator=True)
+        [A,B]*C + B*[A,C]
+
+    Commutator works with Dagger::
+
+        >>> Dagger(Commutator(A,B))
+        -[Dagger(A),Dagger(B)]
 
     References
     ==========
 
-    http://en.wikipedia.org/wiki/Commutator
+    [1] http://en.wikipedia.org/wiki/Commutator
     """
 
     def __new__(cls, A, B, **old_assumptions):
@@ -899,6 +1239,7 @@ class Commutator(Expr):
         return (A*B - B*A).doit(**hints)
 
     def represent(self, basis, **options):
+        # TODO: should Commutator know how to represent?
         rep_method = '_represent_%s' % basis.__class__.__name__
         if hasattr(self, rep_method):
             f = getattr(self, rep_method)
@@ -932,32 +1273,57 @@ class Commutator(Expr):
 
 
 class AntiCommutator(Expr):
-    """The commutator function for quantum mechanics.
+    """The standard anicommutator, in an unevaluated state.
 
-    This function behaves as such: [A, B] = A*B - B*A
+    The commutator is defined [1] as: {A, B} = A*B + B*A, but in this class
+    the anticommutator is initially unevaluated. To muliple the anticommutator
+    out, use the ``doit`` method.
 
-    The arguments are ordered according to .__cmp__()
+    The arguments of the anticommutator are put into canonical order using
+    ``__cmp__``, so that {B,A} becomes {A,B}.
+
+    Parameters
+    ==========
+    A : Expr
+        The first argument of the anticommutator {A,B}.
+    B : Expr
+        The second argument of the anticommutator {A,B}.
 
     Examples
     ========
 
-    >>> from sympy import symbols
-    >>> from sympy.physics.quantum import Commutator
-    >>> A, B = symbols('A B', **{'commutative':False})
-    >>> Commutator(B, A)
-    -1*Commutator(A, B)
+        >>> from sympy import symbols
+        >>> from sympy.physics.quantum import AntiCommutator, Operator, Dagger
+        >>> x, y = symbols('xy')
+        >>> A = Operator('A')
+        >>> B = Operator('B')
 
-    Evaluate the commutator with .doit()
+    Create an anticommutator and use ``doit`` to multiply them out.
 
-    >>> comm = Commutator(A,B); comm
-    Commutator(A, B)
-    >>> comm.doit()
-    A*B - B*A
+        >>> ac = AntiCommutator(A,B); ac
+        {A,B}
+        >>> ac.doit()
+        A*B + B*A
+
+    The commutator orders it arguments in canonical order::
+
+        >>> ac = AntiCommutator(B,A); ac
+        {A,B}
+
+    Scalar constants are factored out::
+
+        >>> AntiCommutator(3*x*A,x*y*B)
+        3*y*x**2*{A,B}
+
+    Dagger is alto handled::
+
+        >>> Dagger(AntiCommutator(A,B))
+        {Dagger(A),Dagger(B)}
 
     References
     ==========
 
-    http://en.wikipedia.org/wiki/Commutator
+    [1] http://en.wikipedia.org/wiki/Commutator
     """
 
     def __new__(cls, A, B, **old_assumptions):
@@ -1040,8 +1406,46 @@ class AntiCommutator(Expr):
 # Tensor product
 #-----------------------------------------------------------------------------
 
+# TODO: move this to the main sympy.matrices module.
 def matrix_tensor_product(*matrices):
-    """Compute the tensor product of a sequence of sympy Matrices."""
+    """Compute the tensor product of a sequence of sympy Matrices.
+
+    This is the standard Kronecker product of matrices [1].
+
+    Parameters
+    ==========
+    matrices : tuple of Matrix instances
+        The matrices to take the tensor product of.
+
+    Returns
+    =======
+    matrix : Matrix
+        The tensor product matrix.
+
+    Examples
+    ========
+
+        >>> from sympy import I, Matrix, symbols
+        >>> from sympy.physics.quantum import matrix_tensor_product
+
+        >>> m1 = Matrix([[1,2],[3,4]])
+        >>> m2 = Matrix([[1,0],[0,1]])
+        >>> matrix_tensor_product(m1, m2)
+        [1, 0, 2, 0]
+        [0, 1, 0, 2]
+        [3, 0, 4, 0]
+        [0, 3, 0, 4]
+        >>> matrix_tensor_product(m2, m1)
+        [1, 2, 0, 0]
+        [3, 4, 0, 0]
+        [0, 0, 1, 2]
+        [0, 0, 3, 4]
+
+    References
+    ==========
+
+    [1] http://en.wikipedia.org/wiki/Kronecker_product
+    """
     # Make sure we have a sequence of Matrices
     testmat = [isinstance(m, Matrix) for m in matrices]
     if not all(testmat):
@@ -1073,6 +1477,69 @@ def matrix_tensor_product(*matrices):
 
 
 class TensorProduct(Expr):
+    """The tensor product of two or more arguments.
+
+    For matrices, this uses ``matrix_tensor_product`` to compute the 
+    Kronecker or tensor product matrix. For other objects a symbolic
+    ``TensorProduct`` instance is returned. The tensor product is a
+    non-commutative multiplication that is used primarily with operators
+    and states in quantum mechanics.
+
+    Current, the tensor product distinguishes between commutative and non-
+    commutative arguments.  Commutative arguments are assumed to be scalars
+    and are pulled out in front of the ``TensorProduct``. Non-commutative
+    arguments remain in the resulting ``TensorProduct``.
+
+    Parameters
+    ==========
+    args : tuple
+        The objects to take the tensor product of.
+
+    Examples
+    ========
+
+    Start with a simple tensor product of sympy matrices::
+
+        >>> from sympy import I, Matrix, symbols
+        >>> from sympy.physics.quantum import TensorProduct
+
+        >>> m1 = Matrix([[1,2],[3,4]])
+        >>> m2 = Matrix([[1,0],[0,1]])
+        >>> TensorProduct(m1, m2)
+        [1, 0, 2, 0]
+        [0, 1, 0, 2]
+        [3, 0, 4, 0]
+        [0, 3, 0, 4]
+        >>> TensorProduct(m2, m1)
+        [1, 2, 0, 0]
+        [3, 4, 0, 0]
+        [0, 0, 1, 2]
+        [0, 0, 3, 4]
+
+    We can also construct tensor products of non-commutative symbols::
+
+        >>> from sympy import Symbol
+        >>> A = Symbol('A',commutative=False)
+        >>> B = Symbol('B',commutative=False)
+        >>> tp = TensorProduct(A, B)
+        >>> tp
+        (AxB)
+
+    We can take the dagger of a tensor product::
+
+        >>> from sympy.physics.quantum import Dagger
+        >>> Dagger(tp)
+        (conjugate(A)xconjugate(B))
+
+    Expand can be used to distribute a tensor product across addition::
+
+        >>> C = Symbol('C',commutative=False)
+        >>> tp = TensorProduct(A+B,C)
+        >>> tp
+        ((A + B)xC)
+        >>> tp.expand(tensorproduct=True)
+        (AxC) + (BxC)
+    """
 
     def __new__(cls, *args, **assumptions):
         if isinstance(args[0], Matrix):
@@ -1164,10 +1631,46 @@ class TensorProduct(Expr):
         return Expr.expand(tp, **hints)
 
 
-def tpsimp_Mul(e):
+def tensor_product_simp_Mul(e):
+    """Simplify a Mul with TensorProducts.
+
+    Current the main use of this is to simplify a ``Mul`` of
+    ``TensorProduct``s to a ``TensorProduct`` of ``Muls``. It currently only
+    works for relatively simple cases where the initial ``Mul`` only has
+    scalars and raw ``TensorProduct``s, not ``Add``, ``Pow``, ``Commutator``s
+    of ``TensorProduct``s.
+
+    Parameters
+    ==========
+    e : Expr
+        A ``Mul`` containing ``TensorProduct``s to be simplified.
+
+    Returns
+    =======
+    e : Expr
+        A ``TensorProduct`` of ``Mul``s.
+
+    Examples
+    ========
+
+    This is an example of the type of simplification that this function
+    performs::
+
+        >>> from sympy.physics.quantum import tensor_product_simp_Mul, TensorProduct
+        >>> from sympy import Symbol
+        >>> A = Symbol('A',commutative=False)
+        >>> B = Symbol('B',commutative=False)
+        >>> C = Symbol('C',commutative=False)
+        >>> D = Symbol('D',commutative=False)
+        >>> e = TensorProduct(A,B)*TensorProduct(C,D)
+        >>> e
+        (AxB)*(CxD)
+        >>> tensor_product_simp_Mul(e)
+        ((A*C)x(B*D))
+
+    """
     # TODO: This won't work with Muls that have other composites of 
-    # TensorProducts, like an Add, Pow, Commutator, etc. We need to move
-    # to the full parallel subs approach.
+    # TensorProducts, like an Add, Pow, Commutator, etc.
     # TODO: This only works for the equivalent of single Qbit gates.
     if not isinstance(e, Mul):
         return e
@@ -1201,16 +1704,47 @@ def tpsimp_Mul(e):
         return e
 
 
-def tpsimp(e, **hints):
-    """Try to simplify and combine TensorProducts."""
+def tensor_product_simp(e, **hints):
+    """Try to simplify and combine TensorProducts.
+
+    In general this will try to pull expressions inside of ``TensorProducts``.
+    It is best to see what it does by showing examples.
+
+    Examples
+    ========
+
+        >>> from sympy.physics.quantum import tensor_product_simp
+        >>> from sympy.physics.quantum import TensorProduct
+        >>> from sympy import Symbol
+        >>> A = Symbol('A',commutative=False)
+        >>> B = Symbol('B',commutative=False)
+        >>> C = Symbol('C',commutative=False)
+        >>> D = Symbol('D',commutative=False)
+
+    First see what happens to products of tensor products::
+
+        >>> e = TensorProduct(A,B)*TensorProduct(C,D)
+        >>> e
+        (AxB)*(CxD)
+        >>> tensor_product_simp(e)
+        ((A*C)x(B*D))
+
+    This is the core logic of this function, and it works inside, powers,
+    sums, commutators and anticommutators as well::
+
+        >>> tensor_product_simp(e**2)
+        ((A*C)x(B*D))**2    
+    """
     if isinstance(e, Add):
-        return Add(*[tpsimp(arg) for arg in e.args])
+        return Add(*[tensor_product_simp(arg) for arg in e.args])
     elif isinstance(e, Pow):
-        return tpsimp(e.base)**e.exp
+        return tensor_product_simp(e.base)**e.exp
     elif isinstance(e, Mul):
-        return tpsimp_Mul(e)
-    elif isinstance(e, (Commutator,)):
-        return Commutator(*[tpsimp(arg) for arg in e.args])
+        return tensor_product_simp_Mul(e)
+    elif isinstance(e, Commutator):
+        return Commutator(*[tensor_product_simp(arg) for arg in e.args])
+    elif isinstance(e, AntiCommutator):
+        return AntiCommutator(*[tensor_product_simp(arg) for arg in e.args])
     else:
         return e
 
@@ -1221,6 +1755,66 @@ def tpsimp(e, **hints):
 
 def represent(expr, basis, **options):
     """Represent the quantum expression in the given basis.
+
+    In quantum mechanics abstract states and operators can be represented in
+    various basis sets. Under this operator, states become vectors or
+    functions and operators become matrices or differential operators. This
+    function is the top-level interface for this action.
+
+    This function walks the sympy expression tree looking for ``QExpr``
+    instances that have a ``_represent`` method. This method is then called
+    and the object is replaced by the representation returned by this method.
+    By default, the ``_represent`` method will dispatch to other methods
+    that handle the representation logic for a particular basis set. The
+    naming convention for these methods is the following::
+
+        def _represent_FooBasis(self, e, basis, **options)
+
+    This function will have the logic for representing instances of its class
+    in the basis set having a class named ``FooBasis``.
+
+    Parameters
+    ==========
+    expr  : Expr
+        The expression to represent.
+    basis : Operator, basis set
+        An object that contains the information about the basis set. If an
+        operator is used, the basis is assumed to be the orthonormal
+        eigenvectors of that operator. In general though, the basis argument
+        can be any object that contains the basis set information.
+    options : dict
+        Key/value pairs of options that are passed to the underlying method
+        that does finds the representation. These options can be used to
+        control how the representation is done. For example, this is where
+        the size of the basis set would be set.
+
+    Returns
+    =======
+    e : Expr
+        The sympy expression of the represented quantum expression.
+
+    Examples
+    ========
+
+    Here we subclass ``Operator`` and ``Ket`` to create the z-spin operator
+    and its spin 1/2 up eigenstate. By definining the ``_represent_SzOp``
+    method, the ket can be represented in the z-spin basis.
+
+        >>> from sympy.physics.quantum import Operator, represent, Ket
+        >>> from sympy import Matrix
+
+        >>> class SzUpKet(Ket):
+        ...     def _represent_SzOp(self, basis, **options):
+        ...         return Matrix([1,0])
+        ...     
+        >>> class SzOp(Operator):
+        ...     pass
+        ... 
+        >>> sz = SzOp('Sz')
+        >>> up = SzUpKet('up')
+        >>> represent(up, sz)
+        [1]
+        [0]
     """
     if isinstance(expr, QExpr):
         return expr._represent(basis, **options)
@@ -1253,6 +1847,32 @@ def represent(expr, basis, **options):
 
 
 def apply_operators(e, **options):
+    """Apply operators to states in a quantum expression.
+
+    By default, operators acting on states (O|psi>) are left in symbolic,
+    unevaluated form. This function uses various special methods to attempt
+    and apply operators to states. When this happens there are two possible
+    outcomes: i) it is not known how the operator acts on the state, which
+    will result in the expression being unchanged and ii) it is known how the
+    operator acts on the sate, which will result in the action being carried
+    out.
+
+    Parameters
+    ==========
+    e : Expr
+        The expression containing operators and states. This expression tree
+        will be walked to find operators acting on states symbolically.
+    options : dict
+        A dict of key/value pairs that determine how the operator actions
+        are carried out.
+
+    Returns
+    =======
+    e : Expr
+        The original expression, but with the operators applied to states.
+    """
+
+    # TODO: Fix early 0 in apply_operators.
 
     # This may be a bit aggressive but ensures that everything gets expanded
     # to its simplest form before trying to apply operators. This includes
@@ -1283,6 +1903,7 @@ def apply_operators(e, **options):
     # OuterProduct) we won't ever have operators to apply to kets.
     else:
         return e
+
 
 def apply_operators_Mul(e, **options):
 
@@ -1439,6 +2060,13 @@ def apply_single_op(op, ket):
 #-----------------------------------------------------------------------------
 
 class HBar(NumberSymbol):
+    """Reduced Plank's constant in numerical and symbolic form [1].
+
+    References
+    ==========
+
+    [1] http://en.wikipedia.org/wiki/Planck_constant
+    """
 
     is_real = True
     is_positive = True
@@ -1459,5 +2087,6 @@ class HBar(NumberSymbol):
     def _pretty(self, printer, *args):
         return prettyForm(u'\u210f')
 
+# Create an instance for everyone to use.
 hbar = HBar()
 
