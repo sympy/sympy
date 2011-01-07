@@ -643,17 +643,20 @@ class RootSum(Expr):
 
         domain = QQ[roots]
 
+        p = p.expand()
+        q = q.expand()
+
         try:
-            p = Poly(p, domain=domain)
+            p = Poly(p, domain=domain, expand=False)
         except GeneratorsNeeded:
-            p, p_coeff = None, [p]
+            p, p_coeff = None, (p,)
         else:
             p_monom, p_coeff = zip(*p.terms())
 
         try:
-            q = Poly(q, domain=domain)
+            q = Poly(q, domain=domain, expand=False)
         except GeneratorsNeeded:
-            q, q_coeff = None, [q]
+            q, q_coeff = None, (q,)
         else:
             q_monom, q_coeff = zip(*q.terms())
 
