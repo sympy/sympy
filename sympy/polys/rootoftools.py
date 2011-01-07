@@ -569,17 +569,19 @@ class RootSum(Expr):
             if is_func and (func.nargs == 1 or 1 in func.nargs):
                 if not isinstance(func, Lambda):
                     func = Lambda(poly.gen, func(poly.gen))
-                elif not func.expr.has(*func.vars):
-                    return func.expr
             else:
                 raise ValueError("expected a univariate function, got %s" % func)
 
-        (_, factors), terms = poly.factor_list(), []
-        rational = cls._is_func_rational(poly, func)
+        var, expr = func.args
+
+        if not expr.has(var):
+            return poly.degree()*expr
 
         if coeff is not S.One:
-            var, expr = func.args
             func = Lambda(var, expr.subs(var, coeff*var))
+
+        rational = cls._is_func_rational(poly, func)
+        (_, factors), terms = poly.factor_list(), []
 
         for poly, k in factors:
             if poly.is_linear:
