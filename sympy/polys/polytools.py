@@ -1373,7 +1373,7 @@ class Poly(Basic):
 
         return per(result)
 
-    def div(f, g):
+    def div(f, g, auto=False):
         """
         Polynomial division with remainder of ``f`` by ``g``.
 
@@ -1390,7 +1390,10 @@ class Poly(Basic):
         (Poly(1/2*x + 1, x, domain='QQ'), Poly(5, x, domain='QQ'))
 
         """
-        _, per, F, G = f._unify(g)
+        dom, per, F, G = f._unify(g)
+
+        if auto and dom.has_Ring:
+            F, G = F.to_field(), G.to_field()
 
         if hasattr(f.rep, 'div'):
             q, r = F.div(G)
@@ -1399,7 +1402,7 @@ class Poly(Basic):
 
         return per(q), per(r)
 
-    def rem(f, g):
+    def rem(f, g, auto=False):
         """
         Computes the polynomial remainder of ``f`` by ``g``.
 
@@ -1416,7 +1419,10 @@ class Poly(Basic):
         Poly(5, x, domain='QQ')
 
         """
-        _, per, F, G = f._unify(g)
+        dom, per, F, G = f._unify(g)
+
+        if auto and dom.has_Ring:
+            F, G = F.to_field(), G.to_field()
 
         if hasattr(f.rep, 'rem'):
             result = F.rem(G)
@@ -1425,7 +1431,7 @@ class Poly(Basic):
 
         return per(result)
 
-    def quo(f, g):
+    def quo(f, g, auto=False):
         """
         Computes polynomial quotient of ``f`` by ``g``.
 
@@ -1444,7 +1450,10 @@ class Poly(Basic):
         ExactQuotientFailed: -4 + 2*x does not divide 1 + x**2
 
         """
-        _, per, F, G = f._unify(g)
+        dom, per, F, G = f._unify(g)
+
+        if auto and dom.has_Ring:
+            F, G = F.to_field(), G.to_field()
 
         if hasattr(f.rep, 'quo'):
             try:
@@ -1456,7 +1465,7 @@ class Poly(Basic):
 
         return per(result)
 
-    def exquo(f, g):
+    def exquo(f, g, auto=False):
         """
         Computes polynomial exact quotient of ``f`` by ``g``.
 
@@ -1473,7 +1482,10 @@ class Poly(Basic):
         Poly(x + 1, x, domain='ZZ')
 
         """
-        _, per, F, G = f._unify(g)
+        dom, per, F, G = f._unify(g)
+
+        if auto and dom.has_Ring:
+            F, G = F.to_field(), G.to_field()
 
         if hasattr(f.rep, 'exquo'):
             result = F.exquo(G)
