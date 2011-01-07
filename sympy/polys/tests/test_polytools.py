@@ -1028,6 +1028,13 @@ def test_Poly_clear_denoms():
 
     assert coeff == y and poly == Poly(x + y, x, domain='ZZ[y]') and poly.get_domain() == ZZ[y]
 
+def test_Poly_rat_clear_denoms():
+    f = Poly(x**2/y + 1, x)
+    g = Poly(x**3 + y, x)
+
+    assert f.rat_clear_denoms(g) == \
+        (Poly(x**2 + y, x), Poly(y*x**3 + y**2, x))
+
 def test_Poly_integrate():
     assert Poly(x + 1).integrate() == Poly(x**2/2 + x)
     assert Poly(x + 1).integrate(x) == Poly(x**2/2 + x)

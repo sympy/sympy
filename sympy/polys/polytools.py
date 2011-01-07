@@ -1789,6 +1789,37 @@ class Poly(Basic):
         else:
             return coeff, f.to_ring()
 
+    def rat_clear_denoms(f, g):
+        """
+        Clear denominators in a rational function ``f/g``.
+
+        Example
+        =======
+
+        >>> from sympy import Poly
+        >>> from sympy.abc import x, y
+
+        >>> f = Poly(x**2/y + 1, x)
+        >>> g = Poly(x**3 + y, x)
+
+        >>> p, q = f.rat_clear_denoms(g)
+
+        >>> p
+        Poly(x**2 + y, x, domain='ZZ[y]')
+        >>> q
+        Poly(y*x**3 + y**2, x, domain='ZZ[y]')
+
+        """
+        f, g = f.unify(g)
+
+        a, f = f.clear_denoms(convert=True)
+        b, g = g.clear_denoms(convert=True)
+
+        f = f.mul_ground(b)
+        g = g.mul_ground(a)
+
+        return f, g
+
     def integrate(f, *specs, **args):
         """
         Computes indefinite integral of ``f``.
