@@ -1035,6 +1035,11 @@ def test_Poly_rat_clear_denoms():
     assert f.rat_clear_denoms(g) == \
         (Poly(x**2 + y, x), Poly(y*x**3 + y**2, x))
 
+    f = f.set_domain(EX)
+    g = g.set_domain(EX)
+
+    assert f.rat_clear_denoms(g) == (f, g)
+
 def test_Poly_integrate():
     assert Poly(x + 1).integrate() == Poly(x**2/2 + x)
     assert Poly(x + 1).integrate(x) == Poly(x**2/2 + x)
