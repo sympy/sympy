@@ -331,7 +331,7 @@ def to_int_repr(clauses, symbols):
     """
 
     # Convert the symbol list into a dict
-    symbols = dict([(symbols[i], i+1) for i in range(len(symbols))])
+    symbols = dict(zip(symbols, xrange(1, len(symbols) + 1)))
 
     def append_symbol(arg, symbols):
         if arg.func is Not:
