@@ -1,5 +1,7 @@
 """Base class for all objects in sympy"""
 
+import warnings
+
 from decorators import _sympifyit
 from assumptions import AssumeMeths, make__get_assumption
 from cache import cacheit
@@ -1086,6 +1088,8 @@ class Basic(AssumeMeths):
 
     def __call__(self, subsdict):
         """Use call as a shortcut for subs, but only support the dictionary version"""
+        # See issue 1927
+        warnings.warn("__call__ as a shortcut to subs is deprecated.", DeprecationWarning)
         if not isinstance(subsdict, dict):
             raise TypeError("argument must be a dictionary")
         return self.subs(subsdict)

@@ -1,3 +1,5 @@
+import warnings
+
 from sympy import Add, Basic, S, Symbol, Wild,  Real, Integer, Rational,  \
     sin, cos, exp, log, oo, sqrt, symbols, Integral, sympify, \
     WildFunction, Poly, Function, Derivative, Number, pi, var, \
@@ -440,6 +442,8 @@ def test_subs_list():
     assert (x+y)._subs_list([(y, x**2), (x, 3)]) == 12
 
 def test_call():
+    # This is deprecated.
+    warnings.filterwarnings("ignore", r"__call__ as a shortcut to subs is deprecated\.")
     a,b,c,d,e = symbols('abcde')
 
     assert sin(x)({ x : 1, sin(x) : 2}) == 2

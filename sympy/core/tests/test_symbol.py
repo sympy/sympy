@@ -1,3 +1,5 @@
+import warnings
+
 from sympy import Symbol, Wild, Inequality, StrictInequality, pi, I, Rational, \
         sympify, raises, symbols
 
@@ -106,5 +108,7 @@ def test_symbols():
 def test_call():
     f = Symbol('f')
     assert f(2)
+    # This is deprecated.
+    warnings.filterwarnings("ignore", r"__call__ as a shortcut to subs is deprecated\.")
     f = Wild('f')
     assert f({})
