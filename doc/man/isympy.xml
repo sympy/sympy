@@ -66,8 +66,8 @@ this will generate isympy.1 in the current directory. -->
 			</author>
 		</authorgroup>
 		<copyright>
-			<year>2007</year>
-			<holder>Ondrej Certik</holder>
+			<year>2011</year>
+			<holder>SymPy Development Team</holder>
 		</copyright>
 		<legalnotice>
 			<para>Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:</para>
