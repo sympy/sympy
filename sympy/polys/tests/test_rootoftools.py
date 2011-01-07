@@ -203,6 +203,9 @@ def test_RootSum___new__():
     assert RootSum(f, Lambda(x, x)) == 0
     assert RootSum(f, Lambda(x, x**2)) == -2
 
+    assert RootSum(f, Lambda(x, 1)) == 3
+    assert RootSum(f, Lambda(x, 2)) == 6
+
     assert RootSum(f, auto=False).is_commutative == True
 
 def test_RootSum_diff():
