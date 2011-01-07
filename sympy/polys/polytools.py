@@ -1822,7 +1822,13 @@ class Poly(Basic):
         Poly(y*x**3 + y**2, x, domain='ZZ[y]')
 
         """
-        f, g = f.unify(g)
+        dom, per, f, g = f._unify(g)
+
+        f = per(f)
+        g = per(g)
+
+        if not (dom.has_Field and dom.has_assoc_Ring):
+            return f, g
 
         a, f = f.clear_denoms(convert=True)
         b, g = g.clear_denoms(convert=True)
