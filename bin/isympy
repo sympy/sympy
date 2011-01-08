@@ -119,7 +119,14 @@ def main():
     session = options.console
 
     if session is not None:
-        session = session.lower()
+        _session = session.lower()
+
+        if _session in ['ipython', 'python']:
+            ipython = (_session == 'ipython')
+        else:
+            raise RuntimeError('invalid session type: %s' % session)
+    else:
+        ipython = None
 
     args = {
         'argv'         : ipy_args,
@@ -150,14 +157,8 @@ def main():
 
     args['quiet'] = options.quiet
 
-    try:
-        init_session(session, **args)
-    except ValueError:
-        try:
-            init_session('ipython', **args)
-        except ImportError:
-            print no_ipython
-            init_session('python', **args)
+    from sympy.interactive import init_session
+    init_session(ipython, **args)
 
 if __name__ == "__main__":
     main()
