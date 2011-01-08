@@ -90,7 +90,7 @@ Multivariate GCD and factorization
 
 What can be done in univariate case, can be also done for multivariate
 polynomials. Consider the following polynomials ``f``, ``g`` and ``h``
-in :math:`\mathbb{Z}[x,y,z]`::
+in $\mathbb{Z}[x,y,z]$::
 
     >>> f = 24*x*y**19*z**8 - 47*x**17*y**5*z**8 + 6*x**15*y**9*z**2 - 3*x**22 + 5
     >>> g = 34*x**5*y**8*z**13 + 20*x**7*y**7*z**7 + 12*x**9*y**16*z**4 + 80*y**14*z
@@ -143,8 +143,8 @@ We can visualize this fact by factoring the polynomials::
             ⎛ 2          ⎞
     (x + 1)⋅⎝x  - 4⋅x + 5⎠
 
-In both cases we obtained the factor :math:`x + 1` which tells us that the
-common root is :math:`x = -1`.
+In both cases we obtained the factor $x + 1$ which tells us that the common
+root is $x = -1$.
 
 Normalizing simple rational functions
 -------------------------------------
@@ -181,14 +181,14 @@ The same can be achieved in factored form::
 Factoring in terms of cyclotomic polynomials
 --------------------------------------------
 
-SymPy can very efficiently decompose polynomials of the form :math:`x^n \pm 1`
-in terms of cyclotomic polynomials::
+SymPy can very efficiently decompose polynomials of the form $x^n \pm 1$ in
+terms of cyclotomic polynomials::
 
     >>> factor(x**15 - 1)
             ⎛ 2        ⎞ ⎛ 4    3    2        ⎞ ⎛ 8    7    5    4    3       ⎞
     (x - 1)⋅⎝x  + x + 1⎠⋅⎝x  + x  + x  + x + 1⎠⋅⎝x  - x  + x  - x  + x - x + 1⎠
 
-The original Wester`s example was :math:`x^{100} - 1`, but was truncated for
+The original Wester`s example was $x^{100} - 1$, but was truncated for
 readability purpose. Note that this is not a big struggle for :func:`factor`
 to decompose polynomials of degree 1000 or greater.
 
@@ -237,9 +237,9 @@ rational function ``f/g``. Do do this we employ :func:`cancel` function::
                          x - 2
 
 Unfortunately nothing interesting happened. This is because by default SymPy
-treats :math:`\sqrt{2}` as a generator, obtaining a bivariate polynomial for
-the numerator. To make :func:`cancel` recognize algebraic properties of
-:math:`\sqrt{2}`, one needs to use ``extension`` keyword::
+treats $\sqrt{2}$ as a generator, obtaining a bivariate polynomial for the
+numerator. To make :func:`cancel` recognize algebraic properties of $\sqrt{2}$,
+one needs to use ``extension`` keyword::
 
     >>> cancel(f/g, extension=True)
      2
@@ -250,9 +250,9 @@ the numerator. To make :func:`cancel` recognize algebraic properties of
 
 Setting ``extension=True`` tells :func:`cancel` to find minimal algebraic
 number domain for the coefficients of ``f/g``. The automatically inferred
-domain is :math:`\mathbb{Q}(\sqrt{2})`. If one doesn't want to rely on
-automatic inference, the same result can be obtained by setting the
-``extension`` keyword with an explicit algebraic number::
+domain is $\mathbb{Q}(\sqrt{2})$. If one doesn't want to rely on automatic
+inference, the same result can be obtained by setting the ``extension``
+keyword with an explicit algebraic number::
 
     >>> cancel(f/g, extension=sqrt(2))
      2
@@ -316,7 +316,7 @@ Consider a univariate polynomial ``f`` with integer coefficients::
 
     >>> f = x**11 + x + 1
 
-We can factor ``f`` over a large finite field :math:`F_{65537}`::
+We can factor ``f`` over a large finite field $F_{65537}$::
 
     >>> factor(f, modulus=65537)
     ⎛ 2        ⎞ ⎛ 9    8    6    5    3    2    ⎞
@@ -347,7 +347,7 @@ truncate coefficients of the expanded polynomial modulo 65537::
 Working with expressions as polynomials
 ---------------------------------------
 
-Consider a multivariate polynomial ``f`` in :math:`\mathbb{Z}[x,y,z]`::
+Consider a multivariate polynomial ``f`` in $\mathbb{Z}[x,y,z]$::
 
     >>> f = expand((x - 2*y**2 + 3*z**3)**20)
 
@@ -411,7 +411,7 @@ Multivariate factoring over algebraic numbers
 
 Computing with multivariate polynomials over various domains is as simple as
 in univariate case. For example consider the following factorization over
-:math:`\mathbb{Q}(\sqrt{-3})`::
+$\mathbb{Q}(\sqrt{-3})$::
 
     >>> factor(x**3 + y**3, extension=sqrt(-3))
             ⎛      ⎛    ⎽⎽⎽      ⎞⎞ ⎛      ⎛      ⎽⎽⎽      ⎞⎞
