@@ -981,7 +981,7 @@ def dmp_sqr(f, u, K):
 @cythonized("n,m")
 def dup_pow(f, n, K):
     """
-    Raise ``f`` to the ``n``--th power in ``K[x]``.
+    Raise ``f`` to the ``n``-th power in ``K[x]``.
 
     Example
     =======
@@ -1018,7 +1018,7 @@ def dup_pow(f, n, K):
 @cythonized("u,n,m")
 def dmp_pow(f, n, u, K):
     """
-    Raise ``f`` to the ``n``--th power in ``K[X]``.
+    Raise ``f`` to the ``n``-th power in ``K[X]``.
 
     Example
     =======
@@ -1060,7 +1060,7 @@ def dmp_pow(f, n, u, K):
 @cythonized("df,dg,dr,N,j")
 def dup_pdiv(f, g, K):
     """
-    Polynomial pseudo--division in ``K[x]``.
+    Polynomial pseudo-division in ``K[x]``.
 
     Example
     =======
@@ -1114,7 +1114,7 @@ def dup_pdiv(f, g, K):
 @cythonized("df,dg,dr,N,j")
 def dup_prem(f, g, K):
     """
-    Polynomial pseudo--remainder in ``K[x]``.
+    Polynomial pseudo-remainder in ``K[x]``.
 
     Example
     =======
@@ -1159,7 +1159,7 @@ def dup_prem(f, g, K):
 
 def dup_pquo(f, g, K):
     """
-    Polynomial pseudo--quotient in ``K[x]``.
+    Polynomial pseudo-quotient in ``K[x]``.
 
     Example
     =======
