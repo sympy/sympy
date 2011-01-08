@@ -1180,10 +1180,7 @@ def dup_zz_heu_gcd(f, g, K):
 
     **References**
 
-    .. [Liao95] Hsin-Chao Liao,  R. Fateman, Evaluation of the heuristic
-    polynomial GCD, International Symposium on Symbolic and Algebraic
-    Computation (ISSAC), ACM Press, Montreal, Quebec, Canada, 1995,
-    pp. 240--247
+    1. [Liao95]_
 
     """
     result = _dup_rr_trivial_gcd(f, g, K)
@@ -1309,10 +1306,7 @@ def dmp_zz_heu_gcd(f, g, u, K):
 
     **References**
 
-    .. [Liao95] Hsin-Chao Liao,  R. Fateman, Evaluation of the heuristic
-    polynomial GCD, International Symposium on Symbolic and Algebraic
-    Computation (ISSAC), ACM Press, Montreal, Quebec, Canada, 1995,
-    pp. 240--247
+    1. [Liao95]_
 
     """
     if not u:

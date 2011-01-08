@@ -651,12 +651,8 @@ def gf_div(f, g, p, K):
 
     **References**
 
-    .. [Monagan93] Michael Monagan, In-place Arithmetic for Polynomials
-    over Z_n, Proceedings of DISCO '92, Springer-Verlag LNCS, 721,
-    1993, pp. 22--34
-
-    .. [Gathen99] J. von zur Gathen, J. Gerhard, Modern Computer Algebra,
-    First Edition, Cambridge University Press, 1999, pp. 247
+    1. [Monagan93]_
+    2. [Gathen99]_
 
     """
     df = gf_degree(f)
@@ -854,8 +850,7 @@ def gf_pow_mod(f, n, g, p, K):
 
     **References**
 
-    .. [Gathen99] J. von zur Gathen, J. Gerhard, Modern Computer Algebra,
-    First Edition, Cambridge University Press, 1999, pp. 69
+    1. [Gathen99]_
 
     """
     if not n:
@@ -972,8 +967,7 @@ def gf_gcdex(f, g, p, K):
 
     **References**
 
-    .. [Gathen99] J. von zur Gathen, J. Gerhard, Modern Computer Algebra,
-    First Edition, Cambridge University Press, 1999, pp. 46
+    1. [Gathen99]_
 
     """
     if not (f or g):
@@ -1176,9 +1170,7 @@ def gf_trace_map(a, b, c, n, f, p, K):
 
     **References**
 
-    .. [Gathen92] J. von zur Gathen, V. Shoup, Computing Frobenius Maps
-    and Factoring Polynomials, ACM Symposium on Theory of Computing, 1992,
-    pp. 187--224
+    1. [Gathen92]_
 
     """
     u = gf_compose_mod(a, b, f, p, K)
@@ -1427,8 +1419,7 @@ def gf_sqf_list(f, p, K, all=False):
 
     **References**
 
-    .. [Geddes92] K. Geddes, S. Czapor, G. Labahn, Algorithms for
-    Computer Algebra, First Edition, Springer, 1992, pp. 343--347
+    1. [Geddes92]_
 
     """
     n, sqf, factors, r = 1, False, [], int(p)
@@ -1650,11 +1641,8 @@ def gf_ddf_zassenhaus(f, p, K):
 
     **References**
 
-    .. [Gathen99] J. von zur Gathen, J. Gerhard, Modern Computer Algebra,
-    First Edition, Cambridge University Press, 1999, pp. 356
-
-    .. [Geddes92] K. Geddes, S. Czapor, G. Labahn, Algorithms for Computer
-    Algebra, First Edition, Springer, 1992, pp. 368--371
+    1. [Gathen99]_
+    2. [Geddes92]_
 
     """
     i, g, factors = 1, [K.one, K.zero], []
@@ -1697,11 +1685,8 @@ def gf_edf_zassenhaus(f, n, p, K):
 
     **References**
 
-    .. [Gathen99] J. von zur Gathen, J. Gerhard, Modern Computer Algebra,
-    First Edition, Cambridge University Press, 1999, pp. 358
-
-    .. [Geddes92] K. Geddes, S. Czapor, G. Labahn, Algorithms for Computer
-    Algebra, First Edition, Springer, 1992, pp. 371--373
+    1. [Gathen99]_
+    2. [Geddes92]_
 
     """
     factors, q = [f], int(p)
@@ -1758,17 +1743,9 @@ def gf_ddf_shoup(f, p, K):
 
     **References**
 
-    .. [Kaltofen98] E. Kaltofen, V. Shoup, Subquadratic-time Factoring of
-    Polynomials over Finite Fields, Mathematics of Computation, Volume 67,
-    Issue 223, 1998, pp. 1179--1197
-
-    .. [Shoup95] V. Shoup, A New Polynomial Factorization Algorithm and
-    its Implementation, Journal of Symbolic Computation, Volume 20,
-    Issue 4, 1995, pp. 363--397
-
-    .. [Gathen92] J. von zur Gathen, V. Shoup, Computing Frobenius Maps
-    and Factoring Polynomials, ACM Symposium on Theory of Computing,
-    1992, pp. 187--224
+    1. [Kaltofen98]_
+    2. [Shoup95]_
+    3. [Gathen92]_
 
     """
     n = gf_degree(f)
@@ -1837,14 +1814,8 @@ def gf_edf_shoup(f, n, p, K):
 
     **References**
 
-    .. [Shoup91] V. Shoup, A Fast Deterministic Algorithm for Factoring
-    Polynomials over Finite Fields of Small Characteristic, In Proceedings
-    of International Symposium on Symbolic and Algebraic Computation, 1991,
-    pp. 14--21
-
-    .. [Gathen92] J. von zur Gathen, V. Shoup, Computing Frobenius Maps and
-    Factoring Polynomials, ACM Symposium on Theory of Computing, 1992, pp.
-    187--224
+    1. [Shoup91]_
+    2. [Gathen92]_
 
     """
     N, q = gf_degree(f), int(p)
@@ -2002,8 +1973,7 @@ def gf_factor(f, p, K):
 
     **References**
 
-    .. [Gathen99] J. von zur Gathen, J. Gerhard, Modern Computer Algebra,
-    First Edition, Cambridge University Press, 1999, pp. 365
+    1. [Gathen99]_
 
     """
     lc, f = gf_monic(f, p, K)

@@ -1050,8 +1050,7 @@ def dup_decompose(f, K):
 
     **References**
 
-    .. [Kozen89] D. Kozen, S. Landau, Polynomial decomposition algorithms,
-    Journal of Symbolic Computation 7 (1989), pp. 445-456
+    1. [Kozen89]_
 
     """
     F = []

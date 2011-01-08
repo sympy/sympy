@@ -52,9 +52,7 @@ def dup_sturm(f, K):
 
     **References**
 
-    .. [Davenport88] J.H. Davenport, Y. Siret, E. Tournier, Computer Algebra
-    Systems and Algorithms for Algebraic Computation, Academic Press, London,
-    1988, pp. 124-128
+    1. [Davenport88]_
 
     """
     if not (K.has_Field or not K.is_Exact):

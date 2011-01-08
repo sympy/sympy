@@ -23,4 +23,5 @@ Contents
     basics.txt
     wester.txt
     reference.txt
+    literature.txt
 

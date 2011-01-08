@@ -366,11 +366,8 @@ def sdp_div(f, G, u, O, K):
 
     **References**
 
-    .. [Cox97] D. Cox, J. Little, D. O'Shea, Ideals, Varieties and
-        Algorithms, Springer, Second Edition, 1997, pp. 62
-
-    .. [Ajwa95] I.A. Ajwa, Z. Liu, P.S. Wang, Groebner Bases Algorithm,
-        http://citeseer.ist.psu.edu/ajwa95grbner.html, 1995
+    1. [Cox97]_
+    2. [Ajwa95]_
 
     """
     Q, r = [ [] for _ in xrange(len(G)) ], []
@@ -424,8 +421,7 @@ def sdp_lcm(f, g, u, O, K):
 
     **References**
 
-    .. [Cox97] D. Cox, J. Little, D. O'Shea, Ideals, Varieties and
-        Algorithms, Springer, Second Edition, 1997, pp. 187
+    1. [Cox97]_
 
     """
     if not f or not g:
@@ -514,17 +510,10 @@ def sdp_groebner(F, u, O, K, monic=True):
 
     **References**
 
-    .. [Bose03] N.K. Bose, B. Buchberger, J.P. Guiver, Multidimensional
-        Systems Theory and Applications, Springer, 2003, pp. 98+
-
-    .. [Giovini91] A. Giovini, T. Mora, "One sugar cube, please" or
-        Selection strategies in Buchberger algorithm, ISSAC '91, ACM
-
-    .. [Ajwa95] I.A. Ajwa, Z. Liu, P.S. Wang, Groebner Bases Algorithm,
-        http://citeseer.ist.psu.edu/ajwa95grbner.html, 1995
-
-    .. [Cox97] D. Cox, J. Little, D. O'Shea, Ideals, Varieties and
-        Algorithms, Springer, Second Edition, 1997, pp. 62
+    1. [Bose03]_
+    2. [Giovini91]_
+    3. [Ajwa95]_
+    4. [Cox97]_
 
     """
     if not K.has_Field:

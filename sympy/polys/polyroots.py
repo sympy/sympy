@@ -147,14 +147,12 @@ def roots_quartic(f):
 
     **References**
 
-    .. [1] http://mathforum.org/dr.math/faq/faq.cubic.equations.html
-    .. [2] http://en.wikipedia.org/wiki/Quartic_function#
-                  Summary_of_Ferrari.27s_method
-    .. [3] http://planetmath.org/encyclopedia/
-                  GaloisTheoreticDerivationOfTheQuarticFormula.html
-    .. [4] http://staff.bath.ac.uk/masjhd/JHD-CA.pdf
-    .. [5] http://www.albmath.org/files/Math_5713.pdf
-    .. [6] http://www.statemaster.com/encyclopedia/Quartic-equation
+    1. http://mathforum.org/dr.math/faq/faq.cubic.equations.html
+    2. http://en.wikipedia.org/wiki/Quartic_function#Summary_of_Ferrari.27s_method
+    3. http://planetmath.org/encyclopedia/GaloisTheoreticDerivationOfTheQuarticFormula.html
+    4. http://staff.bath.ac.uk/masjhd/JHD-CA.pdf
+    5. http://www.albmath.org/files/Math_5713.pdf
+    6. http://www.statemaster.com/encyclopedia/Quartic-equation
 
     """
     _, a, b, c, d = f.monic().all_coeffs()
