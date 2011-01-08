@@ -1,7 +1,8 @@
-from sympy import Symbol, Rational, sqrt, pi, cos, oo, simplify, Real, raises
-from sympy.geometry import Point, Polygon, convex_hull, Segment, \
-        RegularPolygon, Circle, Ellipse, GeometryError, Line, intersection, \
-        Ray, Triangle, are_similar, Curve
+from sympy import Symbol, Rational, sqrt, pi, cos, oo, simplify, Real
+from sympy.geometry import (Point, Polygon, convex_hull, Segment,
+    RegularPolygon, Circle, Ellipse, GeometryError, Line, intersection, Ray,
+    Triangle, are_similar, Curve)
+from sympy.utilities.pytest import raises
 
 x = Symbol('x', real=True)
 y = Symbol('y', real=True)

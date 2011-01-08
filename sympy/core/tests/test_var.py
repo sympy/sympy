@@ -1,6 +1,7 @@
 # Tests for var are in their own file, because var pollutes global namespace.
 
-from sympy import Symbol, var, raises
+from sympy import Symbol, var
+from sympy.utilities.pytest import raises
 
 # make z1 with call-depth = 1
 def make_z1():

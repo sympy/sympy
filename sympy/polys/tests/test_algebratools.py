@@ -10,9 +10,11 @@ from sympy.polys.polyerrors import (
     DomainError,
 )
 
-from sympy import S, sqrt, sin, oo, raises
+from sympy import S, sqrt, sin, oo
 
 from sympy.abc import x, y
+
+from sympy.utilities.pytest import raises
 
 ALG = QQ.algebraic_field(sqrt(2)+sqrt(3))
 

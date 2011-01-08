@@ -1,8 +1,10 @@
 from sympy import (
     Symbol, Set, Union, Interval, oo, S,
-    Inequality, max_, min_, raises, And, Or
+    Inequality, max_, min_, And, Or
 )
 from sympy.mpmath import mpi
+
+from sympy.utilities.pytest import raises
 
 def test_interval_arguments():
     assert Interval(0, oo) == Interval(0, oo, False, True)

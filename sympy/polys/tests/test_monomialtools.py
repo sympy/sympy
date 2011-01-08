@@ -7,7 +7,7 @@ from sympy.polys.monomialtools import (
 )
 
 from sympy.abc import x, y
-from sympy import raises
+from sympy.utilities.pytest import raises
 
 def test_monomials():
     assert sorted(monomials([], 0)) == [1]

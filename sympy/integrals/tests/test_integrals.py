@@ -1,8 +1,8 @@
 from sympy import (S, symbols, integrate, Integral, Derivative, exp, oo, Symbol,
         Function, Rational, log, sin, cos, pi, E, I, Poly, LambertW, diff,
         Matrix, sympify, sqrt, atan, asin, acos, atan, DiracDelta, Heaviside,
-        raises, Lambda, sstr)
-from sympy.utilities.pytest import XFAIL, skip
+        Lambda, sstr)
+from sympy.utilities.pytest import XFAIL, skip, raises
 from sympy.physics.units import m, s
 
 x,y,a,t = symbols('xyat')

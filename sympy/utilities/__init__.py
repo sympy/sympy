@@ -16,7 +16,5 @@ from source import source
 
 from decorator import threaded, deprecated
 
-from pytest import raises
-
 from cythonutils import cythonized
 

@@ -1,6 +1,6 @@
-from sympy.utilities.pytest import XFAIL
+from sympy.utilities.pytest import XFAIL, raises
 from sympy import Symbol, symbols, Function, Integer, Matrix, nan, oo, abs, \
-    Rational, Real, S, WildFunction, raises
+    Rational, Real, S, WildFunction
 from sympy.geometry import Point, Circle, Ellipse
 from sympy.printing import srepr
 

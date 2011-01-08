@@ -30,7 +30,7 @@ def raises(ExpectedException, code):
 
     Example:
 
-    >>> from sympy import raises
+    >>> from sympy.utilities.pytest import raises
     >>> raises(ZeroDivisionError, "1/0")
     >>> raises(ZeroDivisionError, "1/2")
     Traceback (most recent call last):
