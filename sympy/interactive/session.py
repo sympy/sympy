@@ -13,7 +13,13 @@ f, g, h = symbols('f,g,h', cls=Function)
 verbose_message = """\
 These commands were executed:
 %(code)s
-Documentation can be found at http://sympy.org/
+Documentation can be found at http://www.sympy.org
+"""
+
+no_ipython = """\
+Couldn't locate IPython. Having IPython installed is greatly recommended.
+See http://ipython.scipy.org for more details. If you use Debian/Ubuntu,
+just install the 'ipython' package and start isympy again.
 """
 
 def _make_message(ipython=True, quiet=False):
@@ -54,72 +60,75 @@ def _make_message(ipython=True, quiet=False):
 
     return message
 
-def init_session(session="ipython", pretty_print=True, order=None, use_unicode=None, quiet=False, argv=[]):
-    """Initialize embedded IPython or Python session. """
-    import os, sys
+def _init_ipython_session(argv=[]):
+    """Construct new IPython session. """
+    from IPython.Shell import make_IPython
+    return make_IPython(argv)
 
-    def init_IPython():
-        return IPython.Shell.make_IPython(argv)
+def _init_python_session():
+    """Construct new Python session. """
+    from code import InteractiveConsole
 
-    def init_Python():
-        import code
+    class SymPyConsole(InteractiveConsole):
+        """An interactive console with readline support. """
 
-        class HistoryConsole(code.InteractiveConsole):
-            def __init__(self):
-                code.InteractiveConsole.__init__(self)
+        def __init__(self):
+            InteractiveConsole.__init__(self)
 
-                history = os.path.expanduser('~/.sympy-history')
-
-                try:
-                    import readline, atexit
-
-                    readline.parse_and_bind('tab: complete')
-
-                    if hasattr(readline, 'read_history_file'):
-                        try:
-                            readline.read_history_file(history)
-                        except IOError:
-                            pass
-
-                        atexit.register(readline.write_history_file, history)
-                except ImportError:
-                    pass
-
-        return HistoryConsole()
-
-    if session not in ['ipython', 'python']:
-        raise ValueError("'%s' is not a valid session name" % session)
-
-    in_ipyshell = False
-
-    try:
-        import IPython
-
-        ip = IPython.ipapi.get()
-
-        if ip is not None:
-            if session == 'ipython':
-                ip, in_ipyshell = ip.IP, True
+            try:
+                import readline
+            except ImportError:
+                pass
             else:
-                raise ValueError("Can't start Python shell from IPython")
-        else:
-            if session == 'ipython':
-                ip = init_IPython()
+                import os
+                import atexit
+
+                readline.parse_and_bind('tab: complete')
+
+                if hasattr(readline, 'read_history_file'):
+                    history = os.path.expanduser('~/.sympy-history')
+
+                    try:
+                        readline.read_history_file(history)
+                    except IOError:
+                        pass
+
+                    atexit.register(readline.write_history_file, history)
+
+    return SymPyConsole()
+
+def init_session(ipython=None, pretty_print=True, order=None, use_unicode=None, quiet=False, argv=[]):
+    """Initialize an embedded IPython or Python session. """
+    import sys
+
+    in_ipython = False
+
+    if ipython is False:
+        ip = _init_python_session()
+    else:
+        try:
+            import IPython
+        except ImportError:
+            if ipython is not True:
+                print no_ipython
+                ip = _init_python_session()
             else:
-                ip = init_Python()
-    except ImportError:
-        if session == 'ipython':
-            raise
+                raise RuntimeError("IPython is not available on this system")
         else:
-            ip = init_Python()
+            ip = IPython.ipapi.get()
+            ipython = True
+
+            if ip is not None:
+                ip, in_ipython = ip.IP, True
+            else:
+                ip = _init_ipython_session(argv)
 
     ip.runsource(preexec_code, symbol='exec')
     init_printing(pretty_print=pretty_print, order=order, use_unicode=use_unicode)
 
-    ipython = session == 'ipython'
     message = _make_message(ipython, quiet)
 
-    if not in_ipyshell:
+    if not in_ipython:
         ip.interact(message)
         sys.exit('Exiting ...')
     else:
