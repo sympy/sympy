@@ -25,10 +25,11 @@ form of SymPy expression, like symbols, sums etc.
 Division
 --------
 
-The function ``div()`` provides division of polynomials with remainder. That
-is, for polynomials f and g, it computes q and r, such that f == g*q + r and
-degree(r) < q. For polynomials in one variables with coefficients in a field,
-say, the rational numbers, q and r are uniquely defined this way::
+The function :func:`div` provides division of polynomials with remainder.
+That is, for polynomials ``f`` and ``g``, it computes ``q`` and ``r``, such
+that $f = g \cdot q + r$ and $\deg(r) < q$. For polynomials in one variables
+with coefficients in a field, say, the rational numbers, ``q`` and ``r`` are
+uniquely defined this way::
 
     >>> f = 5*x**2 + 10*x + 3
     >>> g = 2*x + 2
@@ -44,8 +45,8 @@ say, the rational numbers, q and r are uniquely defined this way::
                   2
     3 + 10*x + 5*x
 
-As you can see, q has a non-integer coefficient. If you want to do division
-only in the ring of polynomials with integer coefficients you can specify an
+As you can see, ``q`` has a non-integer coefficient. If you want to do division
+only in the ring of polynomials with integer coefficients, you can specify an
 additional parameter::
 
     >>> q, r = div(f, g, domain='ZZ')
@@ -55,9 +56,9 @@ additional parameter::
                   2
     3 + 10*x + 5*x
 
-But be warned, that this ring is no longer euclidean and that the degree of the
-remainder doesn't need to be smaller than that of f. Since 2 doesn't divide 5,
-2*x doesn't divide 5*x**2, even if the degree is smaller. But::
+But be warned, that this ring is no longer Euclidean and that the degree of the
+remainder doesn't need to be smaller than that of ``f``. Since 2 doesn't divide 5,
+$2 x$ doesn't divide $5 x^2$, even if the degree is smaller. But::
 
     >>> g = 5*x + 1
 
@@ -83,9 +84,9 @@ This also works for polynomials with multiple variables::
     >>> r
     0
 
-In the last examples, all of the three variables x, y and z are assumed to be
-variables of the polynomials. But if you have some unrelated constant as
-coefficient, you can specify the variables explicitly::
+In the last examples, all of the three variables ``x``, ``y`` and ``z`` are
+assumed to be variables of the polynomials. But if you have some unrelated
+constant as coefficient, you can specify the variables explicitly::
 
     >>> a, b, c = symbols('a,b,c')
     >>> f = a*x**2 + b*x + c
