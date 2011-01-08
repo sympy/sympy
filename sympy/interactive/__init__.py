@@ -46,7 +46,7 @@ def _init_ipython_printing(ip, stringify_func):
 
     ip.set_hook('result_display', result_display)
 
-def init_printing(pretty_print=True, order=None, use_unicode=None):
+def init_printing(pretty_print=True, order=None, use_unicode=None, wrap_line=None):
     """Initializes pretty-printer depending on the environment. """
     from sympy.printing.printer import Printer
 
@@ -58,7 +58,7 @@ def init_printing(pretty_print=True, order=None, use_unicode=None):
     else:
         stringify_func = pretty_print
 
-    Printer.set_global_settings(order=order, use_unicode=use_unicode)
+    Printer.set_global_settings(order=order, use_unicode=use_unicode, wrap_line=wrap_line)
 
     try:
         import IPython
