@@ -23,7 +23,7 @@ computations were done using the following setup::
     >>> from sympy import *
 
     >>> Basic.keep_sign = True
-    >>> init_printing(True, 'lex')
+    >>> init_printing(True, order='lex', use_unicode=True, wrap_line=False)
 
     >>> var('x,y,z,s,c,n')
     (x, y, z, s, c, n)
@@ -119,7 +119,8 @@ used with integer exponents. However, it's perfectly valid to compute with
 symbolic exponents, e.g.::
 
     >>> gcd(2*x**(n + 4) - x**(n + 2), 4*x**(n + 1) + 3*x**n)
-    x**n
+     n
+    x
 
 Testing if polynomials have common zeros
 ----------------------------------------
@@ -300,7 +301,7 @@ implemented::
     >>> factor(x**3 + x**2 - 7, split=True)
     Traceback (most recent call last):
     ...
-    NotImplementedError: splitting extensions are not supported
+    NotImplementedError: 'split' option is not implemented yet
 
 Note this is different from ``extension=True``, because the later only tells how
 expression parsing should be done, not what should be the domain of computation.
@@ -394,8 +395,8 @@ The result is an ordinary Python list, so we can easily apply a function to
 all its elements, for example we can factor those elements::
 
     >>> map(factor, _)
-    ⎡ 2    2        10        5         5⎤
-    ⎣c  + s  - 1, -c  ⋅(c + 1) ⋅(-c + 1) ⎦
+    ⎡ 2    2       10        5        5⎤
+    ⎣c  + s  - 1, c  ⋅(c + 1) ⋅(c - 1) ⎦
 
 From the above we can easily find all solutions of the system of polynomial
 equations. Or we can use :func:`solve` to achieve this in a more systematic
@@ -414,7 +415,7 @@ in univariate case. For example consider the following factorization over
     >>> factor(x**3 + y**3, extension=sqrt(-3))
             ⎛      ⎛    ⎽⎽⎽      ⎞⎞ ⎛      ⎛      ⎽⎽⎽      ⎞⎞
             ⎜      ⎜ⅈ⋅╲╱ 3       ⎟⎟ ⎜      ⎜  ⅈ⋅╲╱ 3       ⎟⎟
-    (x + y)⋅⎜x - y⋅⎜─────── + 1/2⎟⎟⋅⎜x - y⋅⎜- ─────── + 1/2⎟⎟
+    (x + y)⋅⎜x + y⋅⎜─────── - 1/2⎟⎟⋅⎜x + y⋅⎜- ─────── - 1/2⎟⎟
             ⎝      ⎝   2         ⎠⎠ ⎝      ⎝     2         ⎠⎠
 
 .. note:: Currently multivariate polynomials over finite fields aren't supported.

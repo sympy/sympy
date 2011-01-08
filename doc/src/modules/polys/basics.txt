@@ -1,10 +1,11 @@
-Polynomials Module
-==================
+.. _polys-basics:
 
-.. module:: sympy.polys
+=================================
+Basic functionality of the module
+=================================
 
 Introduction
-------------
+============
 
 This tutorial tries to give an overview of the functionality concerning
 polynomials within SymPy. All code examples assume::
@@ -12,24 +13,22 @@ polynomials within SymPy. All code examples assume::
     >>> from sympy import *
     >>> x, y, z = symbols('x,y,z')
 
+    >>> import sys
+    >>> sys.displayhook = pprint
+
 Basic functionality
--------------------
+===================
 
 These functions provide different algorithms dealing with polynomials in the
 form of SymPy expression, like symbols, sums etc.
 
 Division
-~~~~~~~~
+--------
 
 The function ``div()`` provides division of polynomials with remainder. That
 is, for polynomials f and g, it computes q and r, such that f == g*q + r and
 degree(r) < q. For polynomials in one variables with coefficients in a field,
 say, the rational numbers, q and r are uniquely defined this way::
-
-    >>> from sympy import pprint
-
-    >>> import sys
-    >>> sys.displayhook = pprint
 
     >>> f = 5*x**2 + 10*x + 3
     >>> g = 2*x + 2
@@ -102,7 +101,7 @@ coefficient, you can specify the variables explicitly::
          3     9
 
 GCD and LCM
-~~~~~~~~~~~
+-----------
 
 With division, there is also the computation of the greatest common divisor and
 the least common multiple.
@@ -141,7 +140,7 @@ The lcm is connected with the gcd and one can be computed using the other::
     x *y  + x *y
 
 Square-free factorization
-~~~~~~~~~~~~~~~~~~~~~~~~~
+-------------------------
 
 The square-free factorization of a univariate polynomial is the product of all
 factors (not necessarily irreducible) of degree 1, 2 etc.::
@@ -158,7 +157,7 @@ factors (not necessarily irreducible) of degree 1, 2 etc.::
     \x + x / *(2 + x)
 
 Factorization
-~~~~~~~~~~~~~
+-------------
 
 This function provides factorization of univariate and multivariate polynomials
 with rational coefficients::
@@ -174,7 +173,7 @@ with rational coefficients::
     (x + 2*y)
 
 Groebner bases
-~~~~~~~~~~~~~~
+--------------
 
 Buchberger's algorithm is implemented, supporting various monomial orders::
 
@@ -187,7 +186,7 @@ Buchberger's algorithm is implemented, supporting various monomial orders::
     [-1 + y , z , 1 + x ]
 
 Solving Equations
-~~~~~~~~~~~~~~~~~
+-----------------
 
 We have (incomplete) methods to find the complex or even symbolic roots of
 polynomials and to solve some systems of polynomial equations::
@@ -218,11 +217,3 @@ polynomials and to solve some systems of polynomial equations::
                                       I*\/ 3               I*\/ 3
     [(0, I), (0, -I), (1, 0), (-1/2 + -------, 0), (-1/2 - -------, 0)]
                                          2                    2
-
-
-Poly
-~~~~
-
-.. autoclass:: Poly
-   :members:
-
