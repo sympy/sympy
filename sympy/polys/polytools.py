@@ -4869,12 +4869,8 @@ def groebner(F, *gens, **args):
 
     **References**
 
-    [1] B. Buchberger, Groebner Bases: A Short Introduction for
-        Systems Theorists,  In: R. Moreno-Diaz,  B. Buchberger,
-        J.L. Freire, Proceedings of EUROCAST'01, February, 2001
-
-    [2] D. Cox, J. Little, D. O'Shea, Ideals, Varieties and
-        Algorithms, Springer, Second Edition, 1997, pp. 112
+    1. [Buchberger01]_
+    2. [Cox97]_
 
     """
     options.allowed_flags(args, ['monic', 'polys'])

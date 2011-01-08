@@ -103,9 +103,7 @@ def apart_full_decomposition(P, Q):
 
     **References**
 
-    .. [Bronstein93] M. Bronstein, B. Salvy, Full partial fraction
-        decomposition of rational functions, Proceedings ISSAC '93,
-        ACM Press, Kiev, Ukraine, 1993, pp. 157-160.
+    1. [Bronstein93]_
 
     """
     f, x, U = P/Q, P.gen, []

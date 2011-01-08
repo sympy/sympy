@@ -156,8 +156,7 @@ def dup_zz_hensel_step(m, f, g, h, s, t, K):
 
     **References**
 
-    .. [Gathen99] J. von zur Gathen, J. Gerhard, Modern Computer Algebra,
-        First Edition, Cambridge University Press, 1999, pp. 418
+    1. [Gathen99]_
 
     """
     M = m**2
@@ -208,8 +207,7 @@ def dup_zz_hensel_lift(p, f, f_list, l, K):
 
     **References**
 
-    .. [Gathen99] J. von zur Gathen, J. Gerhard, Modern Computer Algebra,
-        First Edition, Cambridge University Press, 1999, pp. 424
+    1. [Gathen99]_
 
     """
     r = len(f_list)
@@ -370,8 +368,7 @@ def dup_zz_cyclotomic_factor(f, K):
 
     **References**
 
-    .. [Weisstein09] Eric W. Weisstein, Cyclotomic Polynomial, From MathWorld - A
-        Wolfram Web Resource, http://mathworld.wolfram.com/CyclotomicPolynomial.html
+    1. [Weisstein09]_
 
     """
     lc_f, tc_f = dup_LC(f, K), dup_TC(f, K)
@@ -465,8 +462,7 @@ def dup_zz_factor(f, K):
 
     **References**
 
-    .. [Gathen99] J. von zur Gathen, J. Gerhard, Modern Computer Algebra,
-        First Edition, Cambridge University Press, 1999, pp. 427
+    1. [Gathen99]_
 
     """
     cont, g = dup_primitive(f, K)
@@ -798,11 +794,8 @@ def dmp_zz_wang(f, u, K, mod=None):
 
     **References**
 
-    .. [Wang78] P. S. Wang, An Improved Multivariate Polynomial Factoring
-        Algorithm, Math. of Computation 32, 1978, pp. 1215--1231
-
-    .. [Geddes92] K. Geddes, S. R. Czapor, G. Labahn, Algorithms for
-        Computer Algebra, Springer, 1992, pp. 264--272
+    1. [Wang78]_
+    2. [Geddes92]_
 
     """
     ct, T = dmp_zz_factor(dmp_LC(f, K), u-1, K)
@@ -944,8 +937,7 @@ def dmp_zz_factor(f, u, K):
 
     **References**
 
-    .. [Gathen99] J. von zur Gathen, J. Gerhard, Modern Computer Algebra,
-        First Edition, Cambridge University Press, 1999, pp. 427
+    1. [Gathen99]_
 
     """
     if not u:
