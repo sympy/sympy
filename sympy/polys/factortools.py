@@ -153,8 +153,7 @@ def dup_zz_hensel_step(m, f, g, h, s, t, K):
            f == G*H (mod m**2)
            S*G + T**H == 1 (mod m**2)
 
-       References
-       ==========
+       **References**
 
        .. [Gathen99] J. von zur Gathen, J. Gerhard, Modern Computer Algebra,
            First Edition, Cambridge University Press, 1999, pp. 418
@@ -205,8 +204,7 @@ def dup_zz_hensel_lift(p, f, f_list, l, K):
 
           F_i = f_i (mod p), i = 1..r
 
-       References
-       ==========
+       **References**
 
        .. [Gathen99] J. von zur Gathen, J. Gerhard, Modern Computer Algebra,
            First Edition, Cambridge University Press, 1999, pp. 424
@@ -367,8 +365,7 @@ def dup_zz_cyclotomic_factor(f, K):
        which makes this method much faster that any other direct factorization
        approach (e.g. Zassenhaus's).
 
-       References
-       ==========
+       **References**
 
        .. [Weisstein09] Eric W. Weisstein, Cyclotomic Polynomial, From MathWorld - A
            Wolfram Web Resource, http://mathworld.wolfram.com/CyclotomicPolynomial.html
@@ -462,8 +459,7 @@ def dup_zz_factor(f, K):
        using cyclotomic decomposition to speedup computations. To
        disable this behaviour set cyclotomic=False.
 
-       References
-       ==========
+       **References**
 
        .. [Gathen99] J. von zur Gathen, J. Gerhard, Modern Computer Algebra,
            First Edition, Cambridge University Press, 1999, pp. 427
@@ -794,8 +790,7 @@ def dmp_zz_wang(f, u, K, mod=None):
        true multivariate factors. For this purpose a parallel Hensel
        lifting procedure is used.
 
-       References
-       ==========
+       **References**
 
        .. [Wang78] P. S. Wang, An Improved Multivariate Polynomial Factoring
            Algorithm, Math. of Computation 32, 1978, pp. 1215--1231
@@ -939,8 +934,7 @@ def dmp_zz_factor(f, u, K):
 
                        f = 2 (x - y) (x + y)
 
-       References
-       ==========
+       **References**
 
        .. [Gathen99] J. von zur Gathen, J. Gerhard, Modern Computer Algebra,
            First Edition, Cambridge University Press, 1999, pp. 427

@@ -8,8 +8,7 @@ class PythonRationalType(object):
     """
     Rational number type based on Python integers.
 
-    Examples
-    ========
+    **Examples**
 
     >>> from sympy.polys.domains import PythonRationalType
 

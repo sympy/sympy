@@ -118,8 +118,7 @@ class FractionField(Field, CharacteristicZero, CompositeDomain):
         """
         Convert a fraction field element to another fraction field.
 
-        Example
-        =======
+        **Examples**
 
         >>> from sympy.polys.polyclasses import DMF
         >>> from sympy.polys.domains import ZZ, QQ

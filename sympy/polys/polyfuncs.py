@@ -20,8 +20,7 @@ def symmetrize(F, *gens, **args):
     """
     Rewrite a polynomial in terms of elementary symmetric polynomials.
 
-    Example
-    =======
+    **Examples**
 
     >>> from sympy.polys.polyfuncs import symmetrize
     >>> from sympy.abc import x, y
@@ -142,8 +141,7 @@ def horner(f, *gens, **args):
     """
     Rewrite a polynomial in Horner form.
 
-    Example
-    =======
+    **Examples**
 
     >>> from sympy.polys.polyfuncs import horner
     >>> from sympy.abc import x, y, a, b, c, d, e
@@ -187,8 +185,7 @@ def interpolate(data, x):
     """
     Construct an interpolating polynomial for the data points.
 
-    Example
-    =======
+    **Examples**
 
     >>> from sympy.polys.polyfuncs import interpolate
     >>> from sympy.abc import x
@@ -222,8 +219,7 @@ def viete(f, roots=None, *gens, **args):
     """
     Generate Viete's formulas for ``f``.
 
-    Example
-    =======
+    **Examples**
 
     >>> from sympy.polys.polyfuncs import viete
     >>> from sympy import symbols
