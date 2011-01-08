@@ -114,8 +114,7 @@ class PolynomialRing(Ring, CharacteristicZero, CompositeDomain):
         """
         Convert a ``DMF`` object to ``DMP``.
 
-        Example
-        =======
+        **Examples**
 
         >>> from sympy.polys.polyclasses import DMP, DMF
         >>> from sympy.polys.domains import ZZ

@@ -68,8 +68,7 @@ class Options(dict):
     """
     Options manager for polynomial manipulation module.
 
-    Example
-    =======
+    **Examples**
 
     >>> from sympy.polys.polyoptions import Options
     >>> from sympy.polys.polyoptions import build_options
@@ -82,8 +81,7 @@ class Options(dict):
     >>> build_options((x, y, z), {'domain': 'ZZ'})
     {'domain': ZZ, 'gens': (x, y, z)}
 
-    Options
-    =======
+    **Options**
 
     * Expand --- boolean option
     * Gens --- option
@@ -101,8 +99,7 @@ class Options(dict):
     * Strict --- boolean option
     * Repr --- option
 
-    Flags
-    =====
+    **Flags**
 
     * Auto --- boolean flag
     * Frac --- boolean flag
@@ -658,8 +655,7 @@ def allowed_flags(args, flags):
     """
     Allow specified flags to be used in the given context.
 
-    Example
-    =======
+    **Examples**
 
     >>> from sympy.polys.polyoptions import allowed_flags
     >>> from sympy.polys.domains import ZZ

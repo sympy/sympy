@@ -363,8 +363,7 @@ def sdp_div(f, G, u, O, K):
        such that `f = q_1*f_1 + ... + q_n*f_n + r`, where `r = 0` or `r`
        is a completely reduced polynomial with respect to `g`.
 
-       References
-       ==========
+       **References**
 
        .. [Cox97] D. Cox, J. Little, D. O'Shea, Ideals, Varieties and
            Algorithms, Springer, Second Edition, 1997, pp. 62
@@ -421,8 +420,7 @@ def sdp_lcm(f, g, u, O, K):
        of `t*f` and `(1 - t)*g`, where `t` is an unrealted variable and
        then filtering out the solution that doesn't contain `t`.
 
-       References
-       ==========
+       **References**
 
        .. [Cox97] D. Cox, J. Little, D. O'Shea, Ideals, Varieties and
            Algorithms, Springer, Second Edition, 1997, pp. 187
@@ -511,8 +509,7 @@ def sdp_groebner(F, u, O, K, monic=True):
        variable at a time, provided that the ideal is zero-dimensional
        (finite number of solutions).
 
-       References
-       ==========
+       **References**
 
        .. [Bose03] N.K. Bose, B. Buchberger, J.P. Guiver, Multidimensional
            Systems Theory and Applications, Springer, 2003, pp. 98+

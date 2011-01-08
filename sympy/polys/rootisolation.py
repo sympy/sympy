@@ -40,8 +40,7 @@ def dup_sturm(f, K):
        f_0(x), f_1(x) = f(x), f'(x)
        f_n = -rem(f_{n-2}(x), f_{n-1}(x))
 
-    Example
-    =======
+    **Examples**
 
     >>> from sympy.polys.domains import QQ
     >>> from sympy.polys.rootisolation import dup_sturm
@@ -51,8 +50,7 @@ def dup_sturm(f, K):
     >>> dup_sturm(f, QQ)
     [[1/1, -2/1, 1/1, -3/1], [3/1, -4/1, 1/1], [2/9, 25/9], [-2079/4]]
 
-    References
-    ==========
+    **References**
 
     .. [Davenport88] J.H. Davenport, Y. Siret, E. Tournier, Computer Algebra
     Systems and Algorithms for Algebraic Computation, Academic Press, London,

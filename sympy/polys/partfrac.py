@@ -13,8 +13,7 @@ def apart(f, x=None, full=False):
        coefficients method and the other is Bronstein's full partial fraction
        decomposition algorithm.
 
-       Examples
-       ========
+       **Examples**
 
            >>> from sympy.polys.partfrac import apart
            >>> from sympy.abc import x, y
@@ -100,8 +99,7 @@ def apart_full_decomposition(P, Q):
        performed. The final decomposition is formed in terms of a sum of
        :class:`RootSum` instances.
 
-       References
-       ==========
+       **References**
 
        .. [Bronstein93] M. Bronstein, B. Salvy, Full partial fraction
            decomposition of rational functions, Proceedings ISSAC '93,

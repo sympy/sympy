@@ -26,8 +26,7 @@ def together(expr, deep=False):
     it might be necessary to use :func:`cancel` to perform algebraic
     simplification and minimise degree of the numerator and denominator.
 
-    Example
-    =======
+    **Example**
 
     >>> from sympy import together, exp
     >>> from sympy.abc import x, y, z
