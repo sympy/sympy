@@ -9,20 +9,26 @@ from sympy.polys.polyerrors import ExactQuotientFailed
 from sympy.utilities import all, any, cythonized
 
 def monomials(variables, degree):
-    """
+    r"""
     Generate a set of monomials of the given total degree or less.
 
-    Given a set of variables `V` and a total degree `N` generate a set
-    of monomials of degree at most `N`. The total number of monomials
-    is defined as `(#V + N)! / (#V! N!)`, so is huge.
+    Given a set of variables ``V`` and a total degree ``N`` generate
+    a set of monomials of degree at most ``N``. The total number of
+    monomials is huge and is given by the following formula:
+
+    .. math::
+
+        \frac{(\#V + N)!}{\#V! N!}
 
     For example if we would like to generate a dense polynomial of
-    a total degree `N = 50` in 5 variables, assuming that exponents
-    and all of coefficients are 32-bit long and stored in an array
-    we would need almost 80 GiB of memory! Fortunately most
-    polynomials, that we will encounter, are sparse.
+    a total degree $N = 50$ in 5 variables, assuming that exponents
+    and all of coefficients are 32-bit long and stored in an array we
+    would need almost 80 GiB of memory! Fortunately most polynomials,
+    that we will encounter, are sparse.
 
-    For example consider monomials in variables `x` and `y`::
+    **Examples**
+
+    Consider monomials in variables ``x`` and ``y``::
 
         >>> from sympy import monomials
         >>> from sympy.abc import x, y
@@ -47,23 +53,31 @@ def monomials(variables, degree):
         return monoms
 
 def monomial_count(V, N):
-    """
-    Computes the number of monomials of degree `N` in `#V` variables.
+    r"""
+    Computes the number of monomials.
 
-    The number of monomials is given as `(#V + N)! / (#V! N!)`, e.g.::
+    The number of monomials is given by the following formula:
 
-        >>> from sympy import monomials, monomial_count
-        >>> from sympy.abc import x, y
+    .. math::
 
-        >>> monomial_count(2, 2)
-        6
+        \frac{(\#V + N)!}{\#V! N!}
 
-        >>> M = monomials([x, y], 2)
+    where ``N`` is a total degree and ``V`` is a set of variables.
 
-        >>> sorted(M)
-        [1, x, y, x**2, y**2, x*y]
-        >>> len(M)
-        6
+    **Examples**
+
+    >>> from sympy import monomials, monomial_count
+    >>> from sympy.abc import x, y
+
+    >>> monomial_count(2, 2)
+    6
+
+    >>> M = monomials([x, y], 2)
+
+    >>> sorted(M)
+    [1, x, y, x**2, y**2, x*y]
+    >>> len(M)
+    6
 
     """
     return C.Factorial(V + N) / C.Factorial(V) / C.Factorial(N)
