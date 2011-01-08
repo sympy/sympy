@@ -461,6 +461,21 @@ def test_call():
     raises(TypeError, "sin(x)({ x : 1, sin(x) : 2})")
     raises(TypeError, "sin(x)(1)")
 
+def test_replace():
+    f = log(sin(x)) + tan(sin(x**2))
+
+    assert f.replace(sin, cos) == log(cos(x)) + tan(cos(x**2))
+    assert f.replace(sin, lambda a: sin(2*a)) == log(sin(2*x)) + tan(sin(2*x**2))
+
+    a = Wild('a')
+
+    assert f.replace(sin(a), cos(a)) == log(cos(x)) + tan(cos(x**2))
+    assert f.replace(sin(a), lambda a: sin(2*a)) == log(sin(2*x)) + tan(sin(2*x**2))
+
+    g = 2*sin(x**3)
+
+    assert g.replace(lambda expr: expr.is_Number, lambda expr: expr**2) == 4*sin(x**9)
+
 def test_find():
     expr = (x + y + 2 + sin(3*x))
 
