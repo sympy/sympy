@@ -211,7 +211,9 @@ class Printer(object):
     @classmethod
     def set_global_settings(cls, **settings):
         """Set system-wide printing settings. """
-        cls._global_settings.update(settings)
+        for key, val in settings.iteritems():
+            if val is not None:
+                cls._global_settings[key] = val
 
     def doprint(self, expr):
         """Returns printer's representation for expr (as a string)"""
