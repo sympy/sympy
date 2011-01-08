@@ -6,20 +6,21 @@ from sympy.utilities import numbered_symbols, take, threaded
 
 @threaded
 def apart(f, x=None, full=False):
-    """Compute partial fraction decomposition of a rational function.
+    """
+    Compute partial fraction decomposition of a rational function.
 
-       Given a rational function ``f`` compute partial fraction decomposition
-       of ``f``. Two algorithms are available: one is based on undetermined
-       coefficients method and the other is Bronstein's full partial fraction
-       decomposition algorithm.
+    Given a rational function ``f`` compute partial fraction decomposition
+    of ``f``. Two algorithms are available: one is based on undetermined
+    coefficients method and the other is Bronstein's full partial fraction
+    decomposition algorithm.
 
-       **Examples**
+    **Examples**
 
-           >>> from sympy.polys.partfrac import apart
-           >>> from sympy.abc import x, y
+    >>> from sympy.polys.partfrac import apart
+    >>> from sympy.abc import x, y
 
-           >>> apart(y/(x+2)/(x+1), x)
-           y/(1 + x) - y/(2 + x)
+    >>> apart(y/(x+2)/(x+1), x)
+    y/(1 + x) - y/(2 + x)
 
     """
     f = sympify(f)
@@ -88,22 +89,23 @@ def apart_undetermined_coeffs(P, Q):
     return result
 
 def apart_full_decomposition(P, Q):
-    """Bronstein's full partial fraction decomposition algorithm.
+    """
+    Bronstein's full partial fraction decomposition algorithm.
 
-       Given a univariate rational function ``f``, performing only GCD
-       operations over the algebraic closure of the initial ground domain
-       of definition, compute full partial fraction decomposition with
-       fractions having linear denominators.
+    Given a univariate rational function ``f``, performing only GCD
+    operations over the algebraic closure of the initial ground domain
+    of definition, compute full partial fraction decomposition with
+    fractions having linear denominators.
 
-       Note that no factorization of the initial denominator of ``f`` is
-       performed. The final decomposition is formed in terms of a sum of
-       :class:`RootSum` instances.
+    Note that no factorization of the initial denominator of ``f`` is
+    performed. The final decomposition is formed in terms of a sum of
+    :class:`RootSum` instances.
 
-       **References**
+    **References**
 
-       .. [Bronstein93] M. Bronstein, B. Salvy, Full partial fraction
-           decomposition of rational functions, Proceedings ISSAC '93,
-           ACM Press, Kiev, Ukraine, 1993, pp. 157-160.
+    .. [Bronstein93] M. Bronstein, B. Salvy, Full partial fraction
+        decomposition of rational functions, Proceedings ISSAC '93,
+        ACM Press, Kiev, Ukraine, 1993, pp. 157-160.
 
     """
     f, x, U = P/Q, P.gen, []
