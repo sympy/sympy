@@ -23,7 +23,8 @@ computations were done using the following setup::
     >>> from sympy import *
 
     >>> Basic.keep_sign = True
-    >>> init_printing(True, order='lex', use_unicode=True, wrap_line=False)
+    >>> init_printing(pretty_print=True, order='lex',
+    ...     use_unicode=True, wrap_line=False, no_global=True)
 
     >>> var('x,y,z,s,c,n')
     (x, y, z, s, c, n)

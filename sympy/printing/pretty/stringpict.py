@@ -238,7 +238,7 @@ class stringPict(object):
            break the expression in a form that can be printed
            on the terminal without being broken up.
          """
-        if not kwargs["wrap_line"]:
+        if kwargs["wrap_line"] is False:
             return "\n".join(self.picture)
 
         # Attempt to get a terminal width
