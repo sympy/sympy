@@ -4,9 +4,9 @@ verbose_message = """\
 These commands were executed:
 >>> from __future__ import division
 >>> from sympy import *
->>> x, y, z = symbols('xyz')
->>> k, m, n = symbols('kmn', integer=True)
->>> f, g, h = map(Function, 'fgh')
+>>> x, y, z = symbols('x,y,z')
+>>> k, m, n = symbols('k,m,n', integer=True)
+>>> f, g, h = symbols('f,g,h', cls=Function)
 
 Documentation can be found at http://sympy.org/
 """
