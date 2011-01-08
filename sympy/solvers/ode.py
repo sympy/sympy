@@ -815,13 +815,13 @@ def odesimp(eq, func, order, hint):
            f(x)
              /
             |
-            |                  /1 \
-            |        1 + u2*sin|--|
-            |                  \u2/                  /f(x)\
-        -   |  -------------------------- d(u2) + log|----| = 0
-            |    /          /1 \\                    \ C1 /
-            |  - |1 + u2*sin|--||*u2 + u2
-            |    \          \u2//
+            |   /          /1 \\
+            |  -|1 + u2*sin|--||
+            |   \          \u2//            /f(x)\
+        -   |  ----------------- d(u2) + log|----| = 0
+            |       2    /1 \               \ C1 /
+            |     u2 *sin|--|
+            |            \u2/
             |
            /
 
@@ -1763,13 +1763,13 @@ def ode_1st_homogeneous_coeff_subs_indep_div_dep(eq, func, order, match):
                 f(x)
                   /
                  |
-                 |       -g(u2)
-                 |  ---------------- d(u2)
-                 |  u2*g(u2) + h(u2)
+                 |        g(u2)
+                 |  ----------------- d(u2)
+                 |  -h(u2) - u2*g(u2)
                  |
                 /
+    <BLANKLINE>
     f(x) = C1*e
-
 
     Where u2*g(u2) + h(u2) != 0 and f(x) != 0.
 
@@ -2132,8 +2132,8 @@ def ode_Liouville(eq, func, order, match):
         >>> f = Function('f')
         >>> pprint(dsolve(diff(f(x), x, x) + diff(f(x), x)**2/f(x) +
         ... diff(f(x), x)/x, f(x), hint='Liouville'))
-                   ________________           ________________
-        [f(x) = -\/ C1 + C2*log(x) , f(x) = \/ C1 + C2*log(x) ]
+                   ___   ________________           ___   ________________
+        [f(x) = -\/ 2 *\/ C1 + C2*log(x) , f(x) = \/ 2 *\/ C1 + C2*log(x) ]
 
 
     **References**
