@@ -868,6 +868,126 @@ class Basic(AssumeMeths):
         patterns = map(sympify, patterns)
         return any(search(self, _match(p)) for p in patterns)
 
+    def replace(self, query, value, map=False):
+        """
+        Replace matching subexpressions of ``self`` with ``value``.
+
+        Traverses an expression tree and performs replacement of matching
+        subexpressions from the bottom to the top of the tree. The list of
+        possible combinations of queries and replacement values is listed
+        below:
+
+        1.1. type -> type
+             obj.replace(sin, tan)
+        1.2. type -> func
+             obj.replace(sin, lambda expr, arg: ...)
+
+        2.1. expr -> expr
+             obj.replace(sin(a), tan(a))
+        2.2. expr -> func
+             obj.replace(sin(a), lambda a: ...)
+
+        3.1. func -> func
+             obj.replace(lambda expr: ..., lambda expr: ...)
+
+        Examples:
+
+        >>> from sympy import log, sin, cos, tan, Wild
+        >>> from sympy.abc import x
+
+        >>> f = log(sin(x)) + tan(sin(x**2))
+
+        >>> f.replace(sin, cos)
+        log(cos(x)) + tan(cos(x**2))
+        >>> f.replace(sin, lambda arg: sin(2*arg))
+        log(sin(2*x)) + tan(sin(2*x**2))
+
+        >>> a = Wild('a')
+
+        >>> f.replace(sin(a), cos(a))
+        log(cos(x)) + tan(cos(x**2))
+        >>> f.replace(sin(a), lambda a: sin(2*a))
+        log(sin(2*x)) + tan(sin(2*x**2))
+
+        >>> g = 2*sin(x**3)
+
+        >>> g.replace(lambda expr: expr.is_Number, lambda expr: expr**2)
+        4*sin(x**9)
+
+        """
+        if isinstance(query, type):
+            _query = lambda expr: isinstance(expr, query)
+
+            if isinstance(value, type):
+                _value = lambda expr, result: value(*expr.args)
+            elif callable(value):
+                _value = lambda expr, result: value(*expr.args)
+            else:
+                raise TypeError("given a type, replace() expects another type or a callable")
+        elif isinstance(query, Basic):
+            _query = lambda expr: expr.match(query)
+
+            if isinstance(value, Basic):
+                _value = lambda expr, result: value.subs(result)
+            elif callable(value):
+                _value = lambda expr, result: value(**dict([ (str(key)[:-1], val) for key, val in result.iteritems() ]))
+            else:
+                raise TypeError("given an expression, replace() expects another expression or a callable")
+        elif callable(query):
+            _query = query
+
+            if callable(value):
+                _value = lambda expr, result: value(expr)
+            else:
+                raise TypeError("given a callable, replace() expects another callable")
+        else:
+            raise TypeError("first argument to replace() must be a type, an expression or a callable")
+
+        mapping = {}
+
+        def rec_replace(expr):
+            args, construct = [], False
+
+            for arg in expr.args:
+                result = rec_replace(arg)
+
+                if result is not None:
+                    construct = True
+                else:
+                    result = arg
+
+                args.append(result)
+
+            if construct:
+                expr = expr.__class__(*args)
+
+            result = _query(expr)
+
+            if result:
+                value = _value(expr, result)
+
+                if map:
+                    if expr not in mapping:
+                        mapping[expr] = set([value])
+                    else:
+                        mapping[expr].add(value)
+
+                return value
+            elif construct:
+                return expr
+            else:
+                return None
+
+        result = rec_replace(self)
+
+        if result is None:
+            result = self
+
+        if not map:
+            return result
+        else:
+            return result, mapping
+
     def find(self, query, group=False):
         """Find all subexpressions matching a query. """
         if isinstance(query, type):
