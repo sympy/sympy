@@ -23,7 +23,8 @@ If the ast module is not available (python2.4 and 2.5), we use the old compiler
 module.
 """
 
-from sympy import Basic
+from sympy.core.basic import Basic
+from sympy.core.sympify import SympifyError
 
 try:
     from ast import parse, NodeTransformer, Call, Name, Load, \
@@ -80,7 +81,6 @@ def parse_expr(s, local_dict):
     It converts all numbers to Integers before feeding it to Python and
     automatically creates Symbols.
     """
-    from sympify import SympifyError
     if ast_enabled:
         global_dict = {}
         exec 'from sympy import *' in global_dict

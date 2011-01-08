@@ -18,7 +18,6 @@ def __sympy_debug():
     return eval(os.getenv('SYMPY_DEBUG', 'False'))
 SYMPY_DEBUG = __sympy_debug()
 
-import symbol as stdlib_symbol
 from sympy.core import *
 from assumptions import *
 from polys import *
