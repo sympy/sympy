@@ -1,15 +1,58 @@
 """Tools for setting up interactive sessions. """
 
+from sympy.interactive.printing import init_printing
+
+preexec_code = """\
+from __future__ import division
+from sympy import *
+x, y, z = symbols('x,y,z')
+k, m, n = symbols('k,m,n', integer=True)
+f, g, h = symbols('f,g,h', cls=Function)
+"""
+
 verbose_message = """\
 These commands were executed:
->>> from __future__ import division
->>> from sympy import *
->>> x, y, z = symbols('x,y,z')
->>> k, m, n = symbols('k,m,n', integer=True)
->>> f, g, h = symbols('f,g,h', cls=Function)
-
+%(code)s
 Documentation can be found at http://sympy.org/
 """
+
+def _make_message(ipython=True, quiet=False):
+    """Create a banner for an interactive session. """
+    from sympy import __version__ as sympy_version
+    from sympy.polys.domains import GROUND_TYPES
+
+    import sys
+    import os
+
+    python_version = "%d.%d.%d" % sys.version_info[:3]
+
+    if ipython:
+        shell_name = "IPython"
+    else:
+        shell_name = "Python"
+
+    info = ['ground types: %s' % GROUND_TYPES]
+
+    cache = os.getenv('SYMPY_USE_CACHE')
+
+    if cache is not None and cache.lower() == 'no':
+        info.append('cache: off')
+
+    args = shell_name, sympy_version, python_version, ', '.join(info)
+    message = "%s console for SymPy %s (Python %s) (%s)\n" % args
+
+    if not quiet:
+        code = ""
+
+        for line in preexec_code.split('\n')[:-1]:
+            if not line:
+                code += '\n'
+            else:
+                code += '>>> ' + line + '\n'
+
+        message += '\n' + verbose_message % {'code': code}
+
+    return message
 
 def init_session(session="ipython", pretty_print=True, order=None, use_unicode=None, quiet=False, argv=[]):
     """Initialize embedded IPython or Python session. """
@@ -70,35 +113,11 @@ def init_session(session="ipython", pretty_print=True, order=None, use_unicode=N
         else:
             ip = init_Python()
 
-    ip.runcode(ip.compile("from __future__ import division"))
-    ip.runcode(ip.compile("from sympy.interactive import *"))
+    ip.runsource(preexec_code, symbol='exec')
+    init_printing(pretty_print=pretty_print, order=order, use_unicode=use_unicode)
 
-    ip.runcode(ip.compile("init_printing(pretty_print=%s, order=%r, use_unicode=%s)" % (pretty_print, order, use_unicode)))
-
-    from sympy import __version__ as sympy_version
-    py_version = "%d.%d.%d" % sys.version_info[:3]
-
-    if session == "ipython":
-        py_name = "IPython"
-    else:
-        py_name = "Python"
-
-    from sympy.polys.domains import GROUND_TYPES
-
-    info = ['ground types: %s' % GROUND_TYPES]
-
-    cache = os.getenv('SYMPY_USE_CACHE')
-
-    if cache is not None and cache.lower() == 'no':
-        info.append('cache: off')
-
-    welcome = "%s console for SymPy %s (Python %s) (%s)" % \
-        (py_name, sympy_version, py_version, ', '.join(info))
-
-    if not quiet:
-        message = welcome + '\n\n' + verbose_message
-    else:
-        message = welcome + '\n'
+    ipython = session == 'ipython'
+    message = _make_message(ipython, quiet)
 
     if not in_ipyshell:
         ip.interact(message)
