@@ -19,13 +19,20 @@ class PrettyPrinter(Printer):
     _default_settings = {
         "order": None,
         "full_prec": "auto",
-        "use_unicode": True,
+        "use_unicode": None,
         "wrap_line": True,
     }
 
     def __init__(self, settings=None):
         Printer.__init__(self, settings)
-        self.emptyPrinter = lambda x : prettyForm(xstr(x))
+        self.emptyPrinter = lambda x: prettyForm(xstr(x))
+
+    @property
+    def _use_unicode(self):
+        if self._settings['use_unicode']:
+            return True
+        else:
+            return pretty_use_unicode()
 
     def doprint(self, expr):
         return self._print(expr).render(**self._settings)
@@ -42,12 +49,10 @@ class PrettyPrinter(Printer):
         return prettyForm(symb)
 
     def _print_Pure(self, e):
-        use_unicode = self._settings["use_unicode"]
-
-        if use_unicode is False:
-            symb = pretty_symbol('pure')
-        else:
+        if self._use_unicode:
             symb = pretty_symbol(u"\u2118")
+        else:
+            symb = pretty_symbol('pure')
 
         return prettyForm(symb)
 
@@ -89,7 +94,7 @@ class PrettyPrinter(Printer):
         return pform
 
     def _print_Not(self, e):
-        if pretty_use_unicode():
+        if self._use_unicode:
             arg = e.args[0]
             pform = self._print(arg)
 
@@ -119,43 +124,43 @@ class PrettyPrinter(Printer):
         return pform
 
     def _print_And(self, e):
-        if pretty_use_unicode():
+        if self._use_unicode:
             return self.__print_Boolean(e, u"\u2227")
         else:
             return self._print_Function(e)
 
     def _print_Or(self, e):
-        if pretty_use_unicode():
+        if self._use_unicode:
             return self.__print_Boolean(e, u"\u2228")
         else:
             return self._print_Function(e)
 
     def _print_Xor(self, e):
-        if pretty_use_unicode():
+        if self._use_unicode:
             return self.__print_Boolean(e, u"\u22bb")
         else:
             return self._print_Function(e)
 
     def _print_Nand(self, e):
-        if pretty_use_unicode():
+        if self._use_unicode:
             return self.__print_Boolean(e, u"\u22bc")
         else:
             return self._print_Function(e)
 
     def _print_Nor(self, e):
-        if pretty_use_unicode():
+        if self._use_unicode:
             return self.__print_Boolean(e, u"\u22bd")
         else:
             return self._print_Function(e)
 
     def _print_Implies(self, e):
-        if pretty_use_unicode():
+        if self._use_unicode:
             return self.__print_Boolean(e, u"\u2192")
         else:
             return self._print_Function(e)
 
     def _print_Equivalent(self, e):
-        if pretty_use_unicode():
+        if self._use_unicode:
             return self.__print_Boolean(e, u"\u2261")
         else:
             return self._print_Function(e)
@@ -170,7 +175,7 @@ class PrettyPrinter(Printer):
         return pform
 
     def _print_floor(self, e):
-        if pretty_use_unicode():
+        if self._use_unicode:
             pform = self._print(e.args[0])
             pform = prettyForm(*pform.parens('lfloor', 'rfloor'))
             return pform
@@ -178,7 +183,7 @@ class PrettyPrinter(Printer):
             return self._print_Function(e)
 
     def _print_ceiling(self, e):
-        if pretty_use_unicode():
+        if self._use_unicode:
             pform = self._print(e.args[0])
             pform = prettyForm(*pform.parens('lceil', 'rceil'))
             return pform
@@ -258,7 +263,7 @@ class PrettyPrinter(Printer):
             H = h+2
 
             # XXX hack!
-            ascii_mode = not pretty_use_unicode()
+            ascii_mode = not self._use_unicode
             if ascii_mode:
                 H += 2
 
@@ -479,7 +484,7 @@ class PrettyPrinter(Printer):
         return pform
 
     def _print_gamma(self, e):
-        if pretty_use_unicode():
+        if self._use_unicode:
             pform = self._print(e.args[0])
             pform = prettyForm(*pform.parens())
             pform = prettyForm(*pform.left(greek['gamma'][1]))
@@ -760,7 +765,7 @@ class PrettyPrinter(Printer):
         return pform
 
     def _print_FiniteField(self, expr):
-        if pretty_use_unicode():
+        if self._use_unicode:
             form = u'\u2124_%d'
         else:
             form = 'GF(%d)'
@@ -768,25 +773,25 @@ class PrettyPrinter(Printer):
         return prettyForm(pretty_symbol(form % expr.mod))
 
     def _print_IntegerRing(self, expr):
-        if pretty_use_unicode():
+        if self._use_unicode:
             return prettyForm(u'\u2124')
         else:
             return prettyForm('ZZ')
 
     def _print_RationalField(self, expr):
-        if pretty_use_unicode():
+        if self._use_unicode:
             return prettyForm(u'\u211A')
         else:
             return prettyForm('QQ')
 
     def _print_RealDomain(self, expr):
-        if pretty_use_unicode():
+        if self._use_unicode:
             return prettyForm(u'\u211D')
         else:
             return prettyForm('RR')
 
     def _print_ComplexDomain(self, expr):
-        if pretty_use_unicode():
+        if self._use_unicode:
             return prettyForm(u'\u2102')
         else:
             return prettyForm('CC')
@@ -815,13 +820,16 @@ def pretty(expr, **settings):
         the string pi. Values should be boolean or None
     full_prec: use full precision. Default to "auto"
     """
-    uflag = pretty_use_unicode(settings.get("use_unicode", None))
+    pp = PrettyPrinter(settings)
+
+    # XXX: this is an ugly hack, but at least it works
+    use_unicode = pp._settings['use_unicode']
+    uflag = pretty_use_unicode(use_unicode)
+
     try:
-        pp = PrettyPrinter(settings)
         return pp.doprint(expr)
     finally:
         pretty_use_unicode(uflag)
-
 
 def pretty_print(expr, **settings):
     """
