@@ -1,13 +1,12 @@
 from sympy import S, symbols, Symbol, Integer, Rational, \
     sqrt, I, powsimp, Lambda
+from sympy.utilities.pytest import raises
 
 from sympy.polys import Poly
 
 from sympy.polys.polyroots import root_factors, roots_linear,  \
     roots_quadratic, roots_cubic, roots_quartic, roots_binomial, \
     roots_rational, roots, number_of_real_roots, RootOf, RootsOf, RootSum
-
-from sympy.utilities.pytest import raises
 
 a, b, c, d, t, x, y, z = symbols('a,b,c,d,t,x,y,z')
 

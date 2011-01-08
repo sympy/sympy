@@ -1,7 +1,7 @@
 from sympy import symbols, sin, Matrix, Interval, Piecewise
-from sympy.printing.lambdarepr import lambdarepr
 from sympy.utilities.pytest import raises
 
+from sympy.printing.lambdarepr import lambdarepr
 x,y,z = symbols("xyz")
 
 def test_basic():

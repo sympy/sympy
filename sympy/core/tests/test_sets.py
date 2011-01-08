@@ -2,6 +2,7 @@ from sympy import (
     Symbol, Set, Union, Interval, oo, S,
     Inequality, max_, min_, And, Or
 )
+from sympy.utilities.pytest import raises
 from sympy.mpmath import mpi
 
 from sympy.utilities.pytest import raises

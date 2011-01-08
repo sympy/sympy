@@ -408,19 +408,3 @@ def test_concyclic_doctest_bug():
     p3,p4 = Point(0, 1), Point(-1, 2)
     assert Point.is_concyclic(p1, p2, p3)
     assert not Point.is_concyclic(p1, p2, p3, p4)
-
-if __name__ == "__main__":
-    from sys import modules,stderr,exc_info,excepthook
-    import hotshot, hotshot.stats
-    curr_module = modules[__name__]
-    for member in dir(curr_module):
-        if member.startswith("test_"):
-            try:
-                sys.stderr.write("Testing %s..." % member)
-                curr_module.__dict__[member]()
-                sys.stderr.write("SUCCESS!\n")
-            except AssertionError, e:
-                sys.stderr.write("FAILED!\n")
-                sys.stderr.write('-' * 25 + '\n')
-                excepthook(*exc_info())
-                sys.stderr.write('-' * 25 + '\n')

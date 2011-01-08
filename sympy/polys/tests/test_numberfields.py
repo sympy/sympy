@@ -1,6 +1,7 @@
 """Tests for computational algebraic number field theory. """
 
 from sympy import S, Rational, Symbol, Poly, sin, sqrt, I, oo
+from sympy.utilities.pytest import raises
 
 from sympy.polys.numberfields import (
     minimal_polynomial,
@@ -21,8 +22,6 @@ from sympy.polys.polyclasses import DMP
 from sympy.polys.algebratools import QQ
 
 from sympy.abc import x, y
-
-from sympy.utilities.pytest import raises
 
 Q = Rational
 

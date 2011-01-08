@@ -1,6 +1,7 @@
 """Tests for useful utilities for higher level polynomial classes. """
 
 from sympy import S, I, Integer, sqrt, symbols, pi
+from sympy.utilities.pytest import raises
 
 from sympy.polys.polyutils import (
     _sort_gens,
@@ -20,8 +21,6 @@ from sympy.polys.polyerrors import (
 )
 
 from sympy.polys.algebratools import ZZ, QQ, EX
-
-from sympy.utilities.pytest import raises
 
 x,y,z,p,q,r,s,t,u,v,w = symbols('x,y,z,p,q,r,s,t,u,v,w')
 

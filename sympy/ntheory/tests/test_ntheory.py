@@ -1,5 +1,7 @@
 from sympy import Sieve, binomial_coefficients, binomial_coefficients_list, \
         multinomial_coefficients, Mul, S, Pow
+from sympy import factorial as fac
+
 from sympy.ntheory import isprime, n_order, is_primitive_root, \
     is_quad_residue, legendre_symbol, npartitions, totient, \
     factorint, primefactors, divisors, randprime, nextprime, prevprime, \
@@ -9,7 +11,6 @@ from sympy.ntheory.factor_ import smoothness, smoothness_p
 from sympy.ntheory.generate import cycle_length
 from sympy.ntheory.primetest import _mr_safe_helper, mr
 from sympy.ntheory.bbp_pi import pi_hex_digits
-from sympy import factorial as fac
 from sympy.ntheory.modular import crt, crt1, crt2
 
 from sympy.utilities.pytest import raises
