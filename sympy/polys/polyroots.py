@@ -112,48 +112,49 @@ def roots_cubic(f):
     return soln
 
 def roots_quartic(f):
-    r"""Returns a list of roots of a quartic polynomial.
+    r"""
+    Returns a list of roots of a quartic polynomial.
 
-       There are many references for solving quartic expressions available [1-5].
-       This reviewer has found that many of them require one to select from among
-       2 or more possible sets of solutions and that some solutions work when one
-       is searching for real roots but don't work when searching for complex roots
-       (though this is not always stated clearly). The following routine has been
-       tested and found to be correct for 0, 2 or 4 complex roots.
+    There are many references for solving quartic expressions available [1-5].
+    This reviewer has found that many of them require one to select from among
+    2 or more possible sets of solutions and that some solutions work when one
+    is searching for real roots but don't work when searching for complex roots
+    (though this is not always stated clearly). The following routine has been
+    tested and found to be correct for 0, 2 or 4 complex roots.
 
-       The quasisymmetric case solution [6] looks for quartics that have the form
-       `x**4 + A*x**3 + B*x**2 + C*x + D = 0` where `(C/A)**2 = D`.
+    The quasisymmetric case solution [6] looks for quartics that have the form
+    `x**4 + A*x**3 + B*x**2 + C*x + D = 0` where `(C/A)**2 = D`.
 
-       Although there is a general solution, simpler results can be obtained for
-       certain values of the coefficients. In all cases, 4 roots are returned:
+    Although there is a general solution, simpler results can be obtained for
+    certain values of the coefficients. In all cases, 4 roots are returned:
 
-         1) `f = c + a*(a**2/8 - b/2) == 0`
-         2) `g = d - a*(a*(3*a**2/256 - b/16) + c/4) = 0`
-         3) if `f != 0` and `g != 0` and `p = -d + a*c/4 - b**2/12` then
-           a) `p == 0`
-           b) `p != 0`
+      1) `f = c + a*(a**2/8 - b/2) == 0`
+      2) `g = d - a*(a*(3*a**2/256 - b/16) + c/4) = 0`
+      3) if `f != 0` and `g != 0` and `p = -d + a*c/4 - b**2/12` then
+        a) `p == 0`
+        b) `p != 0`
 
-       **Examples**
+    **Examples**
 
-           >>> from sympy import Poly, symbols, I
-           >>> from sympy.polys.polyroots import roots_quartic
+        >>> from sympy import Poly, symbols, I
+        >>> from sympy.polys.polyroots import roots_quartic
 
-           >>> r = roots_quartic(Poly('x**4-6*x**3+17*x**2-26*x+20'))
+        >>> r = roots_quartic(Poly('x**4-6*x**3+17*x**2-26*x+20'))
 
-           >>> # 4 complex roots: 1+-I*sqrt(3), 2+-I
-           >>> sorted(str(tmp.evalf(n=2)) for tmp in r)
-           ['1.0 + 1.7*I', '1.0 - 1.7*I', '2.0 + I', '2.0 - 1.0*I']
+        >>> # 4 complex roots: 1+-I*sqrt(3), 2+-I
+        >>> sorted(str(tmp.evalf(n=2)) for tmp in r)
+        ['1.0 + 1.7*I', '1.0 - 1.7*I', '2.0 + I', '2.0 - 1.0*I']
 
-       **References**
+    **References**
 
-       .. [1] http://mathforum.org/dr.math/faq/faq.cubic.equations.html
-       .. [2] http://en.wikipedia.org/wiki/Quartic_function#
-                     Summary_of_Ferrari.27s_method
-       .. [3] http://planetmath.org/encyclopedia/
-                     GaloisTheoreticDerivationOfTheQuarticFormula.html
-       .. [4] http://staff.bath.ac.uk/masjhd/JHD-CA.pdf
-       .. [5] http://www.albmath.org/files/Math_5713.pdf
-       .. [6] http://www.statemaster.com/encyclopedia/Quartic-equation
+    .. [1] http://mathforum.org/dr.math/faq/faq.cubic.equations.html
+    .. [2] http://en.wikipedia.org/wiki/Quartic_function#
+                  Summary_of_Ferrari.27s_method
+    .. [3] http://planetmath.org/encyclopedia/
+                  GaloisTheoreticDerivationOfTheQuarticFormula.html
+    .. [4] http://staff.bath.ac.uk/masjhd/JHD-CA.pdf
+    .. [5] http://www.albmath.org/files/Math_5713.pdf
+    .. [6] http://www.statemaster.com/encyclopedia/Quartic-equation
 
     """
     _, a, b, c, d = f.monic().all_coeffs()
@@ -271,48 +272,49 @@ def roots_rational(f):
     return zeros
 
 def roots(f, *gens, **flags):
-    """Computes symbolic roots of a univariate polynomial.
+    """
+    Computes symbolic roots of a univariate polynomial.
 
-       Given a univariate polynomial f with symbolic coefficients (or
-       a list of the polynomial's coefficients), returns a dictionary
-       with its roots and their multiplicities.
+    Given a univariate polynomial f with symbolic coefficients (or
+    a list of the polynomial's coefficients), returns a dictionary
+    with its roots and their multiplicities.
 
-       Only roots expressible via radicals will be returned.  To get
-       a complete set of roots use RootOf class or numerical methods
-       instead. By default cubic and quartic formulas are used in
-       the algorithm. To disable them because of unreadable output
-       set `cubics=False` or `quartics=False` respectively.
+    Only roots expressible via radicals will be returned.  To get
+    a complete set of roots use RootOf class or numerical methods
+    instead. By default cubic and quartic formulas are used in
+    the algorithm. To disable them because of unreadable output
+    set `cubics=False` or `quartics=False` respectively.
 
-       To get roots from a specific domain set the `filter` flag with
-       one of the following specifiers: Z, Q, R, I, C. By default all
-       roots are returned (this is equivalent to setting `filter='C'`).
+    To get roots from a specific domain set the `filter` flag with
+    one of the following specifiers: Z, Q, R, I, C. By default all
+    roots are returned (this is equivalent to setting `filter='C'`).
 
-       By default a dictionary is returned giving a compact result in
-       case of multiple roots.  However to get a tuple containing all
-       those roots set the `multiple` flag to True.
+    By default a dictionary is returned giving a compact result in
+    case of multiple roots.  However to get a tuple containing all
+    those roots set the `multiple` flag to True.
 
-       **Examples**
+    **Examples**
 
-           >>> from sympy import Poly, roots
-           >>> from sympy.abc import x, y
+    >>> from sympy import Poly, roots
+    >>> from sympy.abc import x, y
 
-           >>> roots(x**2 - 1, x)
-           {1: 1, -1: 1}
+    >>> roots(x**2 - 1, x)
+    {1: 1, -1: 1}
 
-           >>> p = Poly(x**2-1, x)
-           >>> roots(p)
-           {1: 1, -1: 1}
+    >>> p = Poly(x**2-1, x)
+    >>> roots(p)
+    {1: 1, -1: 1}
 
-           >>> p = Poly(x**2-y, x, y)
+    >>> p = Poly(x**2-y, x, y)
 
-           >>> roots(Poly(p, x))
-           {y**(1/2): 1, -y**(1/2): 1}
+    >>> roots(Poly(p, x))
+    {y**(1/2): 1, -y**(1/2): 1}
 
-           >>> roots(x**2 - y, x)
-           {y**(1/2): 1, -y**(1/2): 1}
+    >>> roots(x**2 - y, x)
+    {y**(1/2): 1, -y**(1/2): 1}
 
-           >>> roots([1, 0, -1])
-           {1: 1, -1: 1}
+    >>> roots([1, 0, -1])
+    {1: 1, -1: 1}
 
     """
     flags = dict(flags)
@@ -483,15 +485,16 @@ def roots(f, *gens, **flags):
         return zeros
 
 def root_factors(f, *gens, **args):
-    """Returns all factors of a univariate polynomial.
+    """
+    Returns all factors of a univariate polynomial.
 
-       **Examples**
+    **Examples**
 
-           >>> from sympy.abc import x, y
-           >>> from sympy.polys.polyroots import root_factors
+    >>> from sympy.abc import x, y
+    >>> from sympy.polys.polyroots import root_factors
 
-           >>> root_factors(x**2-y, x)
-           [x - y**(1/2), x + y**(1/2)]
+    >>> root_factors(x**2-y, x)
+    [x - y**(1/2), x + y**(1/2)]
 
     """
     args = dict(args)

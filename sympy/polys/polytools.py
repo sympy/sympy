@@ -2298,17 +2298,18 @@ class Poly(Basic):
         return map(f.per, result)
 
     def gff_list(f):
-        """Computes greatest factorial factorization of ``f``.
+        """
+        Computes greatest factorial factorization of ``f``.
 
-           **Examples**
+        **Examples**
 
-           >>> from sympy import Poly
-           >>> from sympy.abc import x
+        >>> from sympy import Poly
+        >>> from sympy.abc import x
 
-           >>> f = x**5 + 2*x**4 - x**3 - 2*x**2
+        >>> f = x**5 + 2*x**4 - x**3 - 2*x**2
 
-           >>> Poly(f).gff_list()
-           [(Poly(x, x, domain='ZZ'), 1), (Poly(x + 2, x, domain='ZZ'), 4)]
+        >>> Poly(f).gff_list()
+        [(Poly(x, x, domain='ZZ'), 1), (Poly(x + 2, x, domain='ZZ'), 4)]
 
         """
         if hasattr(f.rep, 'gff_list'):
@@ -4288,20 +4289,21 @@ def sturm(f, *gens, **args):
         return result
 
 def gff_list(f, *gens, **args):
-    """Compute a list of greatest factorial factors of ``f``.
+    """
+    Compute a list of greatest factorial factors of ``f``.
 
-       **Examples**
+    **Examples**
 
-       >>> from sympy import gff_list, ff
-       >>> from sympy.abc import x
+    >>> from sympy import gff_list, ff
+    >>> from sympy.abc import x
 
-       >>> f = x**5 + 2*x**4 - x**3 - 2*x**2
+    >>> f = x**5 + 2*x**4 - x**3 - 2*x**2
 
-       >>> gff_list(f)
-       [(x, 1), (2 + x, 4)]
+    >>> gff_list(f)
+    [(x, 1), (2 + x, 4)]
 
-       >>> (ff(x, 1)*ff(x + 2, 4)).expand() == f
-       True
+    >>> (ff(x, 1)*ff(x + 2, 4)).expand() == f
+    True
 
     """
     options.allowed_flags(args, ['polys'])
