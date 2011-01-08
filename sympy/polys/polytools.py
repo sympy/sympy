@@ -1,4 +1,4 @@
-"""User--friendly public interface to polynomial functions. """
+"""User-friendly public interface to polynomial functions. """
 
 from sympy import (
     S, Basic, I, Integer, Add, Mul, sympify, ask,
@@ -660,7 +660,7 @@ class Poly(Basic):
 
     def coeffs(f, order=None):
         """
-        Returns all non--zero coefficients from ``f`` in lex order.
+        Returns all non-zero coefficients from ``f`` in lex order.
 
         Example
         =======
@@ -676,7 +676,7 @@ class Poly(Basic):
 
     def monoms(f, order=None):
         """
-        Returns all non--zero monomials from ``f`` in lex order.
+        Returns all non-zero monomials from ``f`` in lex order.
 
         Example
         =======
@@ -692,7 +692,7 @@ class Poly(Basic):
 
     def terms(f, order=None):
         """
-        Returns all non--zero terms from ``f`` in lex order.
+        Returns all non-zero terms from ``f`` in lex order.
 
         Example
         =======
@@ -791,7 +791,7 @@ class Poly(Basic):
 
     def length(f):
         """
-        Returns the number of non--zero terms in ``f``.
+        Returns the number of non-zero terms in ``f``.
 
         Example
         =======
@@ -1246,7 +1246,7 @@ class Poly(Basic):
 
     def pow(f, n):
         """
-        Raise ``f`` to a non--negative power ``n``.
+        Raise ``f`` to a non-negative power ``n``.
 
         Example
         =======
@@ -1272,7 +1272,7 @@ class Poly(Basic):
 
     def pdiv(f, g):
         """
-        Polynomial pseudo--division of ``f`` by ``g``.
+        Polynomial pseudo-division of ``f`` by ``g``.
 
         Example
         =======
@@ -1295,7 +1295,7 @@ class Poly(Basic):
 
     def prem(f, g):
         """
-        Polynomial pseudo--remainder of ``f`` by ``g``.
+        Polynomial pseudo-remainder of ``f`` by ``g``.
 
         Example
         =======
@@ -1318,7 +1318,7 @@ class Poly(Basic):
 
     def pquo(f, g):
         """
-        Polynomial pseudo--quotient of ``f`` by ``g``.
+        Polynomial pseudo-quotient of ``f`` by ``g``.
 
         Example
         =======
@@ -1349,7 +1349,7 @@ class Poly(Basic):
 
     def pexquo(f, g):
         """
-        Polynomial exact pseudo--quotient of ``f`` by ``g``.
+        Polynomial exact pseudo-quotient of ``f`` by ``g``.
 
         Example
         =======
@@ -1620,7 +1620,7 @@ class Poly(Basic):
 
     def EC(f, order=None):
         """
-        Returns the last non--zero coefficient of ``f``.
+        Returns the last non-zero coefficient of ``f``.
 
         Example
         =======
@@ -1639,7 +1639,7 @@ class Poly(Basic):
 
     def nth(f, *N):
         """
-        Returns the ``n``--th coefficient of ``f``.
+        Returns the ``n``-th coefficient of ``f``.
 
         Example
         =======
@@ -1678,7 +1678,7 @@ class Poly(Basic):
 
     def EM(f, order=None):
         """
-        Returns the last non--zero monomial of ``f``.
+        Returns the last non-zero monomial of ``f``.
 
         Example
         =======
@@ -1710,7 +1710,7 @@ class Poly(Basic):
 
     def ET(f, order=None):
         """
-        Returns the last non--zero term of ``f``.
+        Returns the last non-zero term of ``f``.
 
         Example
         =======
@@ -2403,10 +2403,10 @@ class Poly(Basic):
 
     def sqf_norm(f):
         """
-        Computes square--free norm of ``f``.
+        Computes square-free norm of ``f``.
 
         Returns ``s``, ``f``, ``r``, such that ``g(x) = f(x-sa)`` and
-        ``r(x) = Norm(g(x))`` is a square--free polynomial over ``K``,
+        ``r(x) = Norm(g(x))`` is a square-free polynomial over ``K``,
         where ``a`` is the algebraic extension of the ground domain.
 
         Example
@@ -2434,7 +2434,7 @@ class Poly(Basic):
 
     def sqf_part(f):
         """
-        Computes square--free part of ``f``.
+        Computes square-free part of ``f``.
 
         Example
         =======
@@ -2455,7 +2455,7 @@ class Poly(Basic):
 
     def sqf_list(f, all=False):
         """
-        Returns a list of square--free factors of ``f``.
+        Returns a list of square-free factors of ``f``.
 
         Example
         =======
@@ -2484,7 +2484,7 @@ class Poly(Basic):
 
     def sqf_list_include(f, all=False):
         """
-        Returns a list of square--free factors of ``f``.
+        Returns a list of square-free factors of ``f``.
 
         Example
         =======
@@ -2868,7 +2868,7 @@ class Poly(Basic):
     @property
     def is_sqf(f):
         """
-        Returns ``True`` if ``f`` is a square--free polynomial.
+        Returns ``True`` if ``f`` is a square-free polynomial.
 
         Example
         =======
@@ -3525,7 +3525,7 @@ def LT(f, *gens, **args):
 
 def pdiv(f, g, *gens, **args):
     """
-    Compute polynomial pseudo--division of ``f`` and ``g``.
+    Compute polynomial pseudo-division of ``f`` and ``g``.
 
     Example
     =======
@@ -3553,7 +3553,7 @@ def pdiv(f, g, *gens, **args):
 
 def prem(f, g, *gens, **args):
     """
-    Compute polynomial pseudo--remainder of ``f`` and ``g``.
+    Compute polynomial pseudo-remainder of ``f`` and ``g``.
 
     Example
     =======
@@ -3581,7 +3581,7 @@ def prem(f, g, *gens, **args):
 
 def pquo(f, g, *gens, **args):
     """
-    Compute polynomial pseudo--quotient of ``f`` and ``g``.
+    Compute polynomial pseudo-quotient of ``f`` and ``g``.
 
     Example
     =======
@@ -3614,7 +3614,7 @@ def pquo(f, g, *gens, **args):
 
 def pexquo(f, g, *gens, **args):
     """
-    Compute polynomial exact pseudo--quotient of ``f`` and ``g``.
+    Compute polynomial exact pseudo-quotient of ``f`` and ``g``.
 
     Example
     =======
@@ -4465,10 +4465,10 @@ def gff(f, *gens, **args):
 
 def sqf_norm(f, *gens, **args):
     """
-    Compute square--free norm of ``f``.
+    Compute square-free norm of ``f``.
 
     Returns ``s``, ``f``, ``r``, such that ``g(x) = f(x-sa)`` and
-    ``r(x) = Norm(g(x))`` is a square--free polynomial over ``K``,
+    ``r(x) = Norm(g(x))`` is a square-free polynomial over ``K``,
     where ``a`` is the algebraic extension of the ground domain.
 
     Example
@@ -4497,7 +4497,7 @@ def sqf_norm(f, *gens, **args):
 
 def sqf_part(f, *gens, **args):
     """
-    Compute square--free part of ``f``.
+    Compute square-free part of ``f``.
 
     Example
     =======
@@ -4525,7 +4525,7 @@ def sqf_part(f, *gens, **args):
 
 def sqf_list(f, *gens, **args):
     """
-    Compute a list of square--free factors of ``f``.
+    Compute a list of square-free factors of ``f``.
 
     Example
     =======
@@ -4572,7 +4572,7 @@ def _inner_sqf(f):
 
 def sqf(f, *gens, **args):
     """
-    Compute square--free decomposition of ``f``.
+    Compute square-free decomposition of ``f``.
 
     Example
     =======
@@ -5025,7 +5025,7 @@ def groebner(F, *gens, **args):
     ==========
 
     [1] B. Buchberger, Groebner Bases: A Short Introduction for
-        Systems Theorists,  In: R. Moreno--Diaz,  B. Buchberger,
+        Systems Theorists,  In: R. Moreno-Diaz,  B. Buchberger,
         J.L. Freire, Proceedings of EUROCAST'01, February, 2001
 
     [2] D. Cox, J. Little, D. O'Shea, Ideals, Varieties and

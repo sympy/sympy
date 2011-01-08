@@ -1,4 +1,4 @@
-"""Tests for square--free decomposition algorithms and related tools. """
+"""Tests for square-free decomposition algorithms and related tools. """
 
 from sympy.polys.sqfreetools import (
     dup_sqf_p, dmp_sqf_p,

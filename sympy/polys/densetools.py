@@ -157,7 +157,7 @@ def dmp_integrate_in(f, m, j, u, K):
 @cythonized("m,n,k,i")
 def dup_diff(f, m, K):
     """
-    ``m``--th order derivative of a polynomial in ``K[x]``.
+    ``m``-th order derivative of a polynomial in ``K[x]``.
 
     Example
     =======
@@ -257,7 +257,7 @@ def _rec_diff_in(g, m, v, i, j, K):
 @cythonized("m,j,u")
 def dmp_diff_in(f, m, j, u, K):
     """
-    ``m``--th order derivative in ``x_j`` of a polynomial in ``K[X]``.
+    ``m``-th order derivative in ``x_j`` of a polynomial in ``K[X]``.
 
     Example
     =======

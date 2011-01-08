@@ -1,4 +1,4 @@
-"""High--level polynomials manipulation functions. """
+"""High-level polynomials manipulation functions. """
 
 from sympy.polys.polytools import (
     poly_from_expr, parallel_poly_from_expr, Poly)

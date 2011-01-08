@@ -1,4 +1,4 @@
-"""Object--oriented interface to dense polynomial representation. """
+"""Object-oriented interface to dense polynomial representation. """
 
 from sympy.polys.polyclasses import GenericPoly
 
@@ -69,12 +69,12 @@ class DensePoly(GenericPoly):
 
     @classmethod
     def zero(cls, lev, ord, dom):
-        """Construct a zero--polynomial with appropriate properties. """
+        """Construct a zero-polynomial with appropriate properties. """
         return cls(dmp_zero(lev), dom, lev)
 
     @classmethod
     def one(cls, lev, ord, dom):
-        """Construct a one--polynomial with appropriate properties. """
+        """Construct a one-polynomial with appropriate properties. """
         return cls(dmp_one(lev, dom), dom, lev)
 
     @classmethod
@@ -166,31 +166,31 @@ class DensePoly(GenericPoly):
         return dmp_ground_TT(f.rep, f.lev, f.dom)
 
     def EC(f):
-        """Return the last non--zero coefficient of $f$. """
+        """Return the last non-zero coefficient of $f$. """
         return dmp_ground_EC(f.rep, f.lev, f.dom)
 
     def EM(f):
-        """Return the last non--zero monomial of $f$. """
+        """Return the last non-zero monomial of $f$. """
         return dmp_ground_EM(f.rep, f.lev, f.dom)
 
     def ET(f):
-        """Return the last non--zero coefficient of $f$. """
+        """Return the last non-zero coefficient of $f$. """
         return dmp_ground_ET(f.rep, f.lev, f.dom)
 
     def nth(f, *N):
-        """Return $n$--th coefficient of $f$. """
+        """Return $n$-th coefficient of $f$. """
         return dmp_ground_nth(f.rep, N, f.lev, f.dom)
 
     def coeffs(f):
-        """Return all non--zero coefficients of $f$. """
+        """Return all non-zero coefficients of $f$. """
         return dmp_coeffs(f.rep, f.lev, f.dom)
 
     def monoms(f):
-        """Return all non--zero monomials of $f$. """
+        """Return all non-zero monomials of $f$. """
         return dmp_monoms(f.rep, f.lev, f.dom)
 
     def terms(f):
-        """Return all non--zero terms from $f$. """
+        """Return all non-zero terms from $f$. """
         return dmp_terms(f.rep, f.lev, f.dom)
 
     def all_coeffs(f):
@@ -279,27 +279,27 @@ class DensePoly(GenericPoly):
         return f.per(dmp_sqr(f.rep, f.lev, f.dom))
 
     def pow(f, n):
-        """Raise $f$ to a non--negative power $n$. """
+        """Raise $f$ to a non-negative power $n$. """
         return f.per(dmp_pow(f.rep, n, f.lev, f.dom))
 
     def pdiv(f, g):
-        """Polynomial pseudo--division of $f$ and $g$. """
+        """Polynomial pseudo-division of $f$ and $g$. """
         lev, dom, per, F, G = f.unify(g)
         q, r = dmp_pdiv(F, G, lev, dom)
         return per(q), per(r)
 
     def prem(f, g):
-        """Polynomial pseudo--remainder of $f$ and $g$. """
+        """Polynomial pseudo-remainder of $f$ and $g$. """
         lev, dom, per, F, G = f.unify(g)
         return per(dmp_prem(F, G, lev, dom))
 
     def pquo(f, g):
-        """Polynomial pseudo--quotient of $f$ and $g$. """
+        """Polynomial pseudo-quotient of $f$ and $g$. """
         lev, dom, per, F, G = f.unify(g)
         return per(dmp_pquo(F, G, lev, dom))
 
     def pexquo(f, g):
-        """Polynomial exact pseudo--quotient of $f$ and $g$. """
+        """Polynomial exact pseudo-quotient of $f$ and $g$. """
         lev, dom, per, F, G = f.unify(g)
         return per(dmp_pexquo(F, G, lev, dom))
 
@@ -412,11 +412,11 @@ class DensePoly(GenericPoly):
         return cont, f.per(F)
 
     def integrate(f, m=1, j=0):
-        """Compute $m$--th order indefinite integral of $f$ in $x_j$. """
+        """Compute $m$-th order indefinite integral of $f$ in $x_j$. """
         return f.per(dmp_integrate_in(f.rep, m, j, f.lev, f.dom))
 
     def diff(f, m=1, j=0):
-        """Compute $m$--th order derivative of $f$ in $x_j$. """
+        """Compute $m$-th order derivative of $f$ in $x_j$. """
         return f.per(dmp_diff_in(f.rep, m, j, f.lev, f.dom))
 
     def eval(f, a, j=0):
@@ -454,21 +454,21 @@ class DensePoly(GenericPoly):
         return map(f.per, dmp_sturm(f.rep, f.lev, f.dom))
 
     def sqf_norm(f):
-        """Computes square--free norm of $f$. """
+        """Computes square-free norm of $f$. """
         s, g, r = dmp_sqf_norm(f.rep, f.lev, f.dom)
         return s, f.per(g), f.per(r, dom=f.dom.dom)
 
     def sqf_part(f):
-        """Computes square--free part of $f$. """
+        """Computes square-free part of $f$. """
         return f.per(dmp_sqf_part(f.rep, f.lev, f.dom))
 
     def sqf_list(f, all=False):
-        """Returns a list of square--free factors of $f$. """
+        """Returns a list of square-free factors of $f$. """
         coeff, factors = dmp_sqf_list(f.rep, f.lev, f.dom, all=all)
         return coeff, [ (f.per(g), k) for g, k in factors ]
 
     def sqf_list_include(f, all=False):
-        """Returns a list of square--free factors of $f$. """
+        """Returns a list of square-free factors of $f$. """
         factors = dmp_sqf_list_include(f.rep, f.lev, f.dom, all=all)
         return [ (f.per(g), k) for g, k in factors ]
 
@@ -523,7 +523,7 @@ class DensePoly(GenericPoly):
 
     @property
     def is_sqf(f):
-        """Return ``True`` if $f$ is a square--free polynomial. """
+        """Return ``True`` if $f$ is a square-free polynomial. """
         return dmp_sqf_p(f.rep, f.lev, f.dom)
 
     @property

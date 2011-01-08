@@ -556,7 +556,7 @@ def dmp_from_sympy(f, u, K):
 @cythonized("n")
 def dup_nth(f, n, K):
     """
-    Return ``n``--th coefficient of ``f`` in ``K[x]``.
+    Return ``n``-th coefficient of ``f`` in ``K[x]``.
 
     Example
     =======
@@ -582,7 +582,7 @@ def dup_nth(f, n, K):
 @cythonized("n,u")
 def dmp_nth(f, n, u, K):
     """
-    Return ``n``--th coefficient of ``f`` in ``K[x]``.
+    Return ``n``-th coefficient of ``f`` in ``K[x]``.
 
     Example
     =======
@@ -607,7 +607,7 @@ def dmp_nth(f, n, u, K):
 @cythonized("n,u,v")
 def dmp_ground_nth(f, N, u, K):
     """
-    Return ground ``n``--th coefficient of ``f`` in ``K[x]``.
+    Return ground ``n``-th coefficient of ``f`` in ``K[x]``.
 
     Example
     =======
@@ -1101,7 +1101,7 @@ def dmp_permute(f, P, u, K):
 @cythonized("i,l")
 def dmp_nest(f, l, K):
     """
-    Return multivariate value nested ``l``--levels.
+    Return multivariate value nested ``l``-levels.
 
     Example
     =======
@@ -1124,7 +1124,7 @@ def dmp_nest(f, l, K):
 @cythonized("l,k,u,v")
 def dmp_raise(f, l, u, K):
     """
-    Return multivariate polynomial raised ``l``--levels.
+    Return multivariate polynomial raised ``l``-levels.
 
     Example
     =======
@@ -1642,7 +1642,7 @@ def _rec_list_terms(g, v, monom):
 @cythonized("u")
 def dmp_list_terms(f, u, K, order=None):
     """
-    List all non--zero terms from ``f`` in the given order ``order``.
+    List all non-zero terms from ``f`` in the given order ``order``.
 
     Example
     =======

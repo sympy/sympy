@@ -1,4 +1,4 @@
-"""Object--oriented interface to sparse polynomial representation. """
+"""Object-oriented interface to sparse polynomial representation. """
 
 from sympy.polys.polyclasses import GenericPoly
 
@@ -73,12 +73,12 @@ class SparsePoly(GenericPoly):
 
     @classmethod
     def zero(cls, lev, ord, dom):
-        """Construct a zero--polynomial with appropriate properties. """
+        """Construct a zero-polynomial with appropriate properties. """
         return cls(smp_zero(lev), ord, dom, lev)
 
     @classmethod
     def one(cls, lev, ord, dom):
-        """Construct a one--polynomial with appropriate properties. """
+        """Construct a one-polynomial with appropriate properties. """
         return cls(smp_one(lev, dom), ord, dom, lev)
 
     @classmethod
@@ -165,31 +165,31 @@ class SparsePoly(GenericPoly):
         return smp_ground_TT(f.rep, f.lev, f.ord, f.dom)
 
     def EC(f):
-        """Return the last non--zero coefficient of $f$. """
+        """Return the last non-zero coefficient of $f$. """
         return smp_ground_EC(f.rep, f.lev, f.ord, f.dom)
 
     def EM(f):
-        """Return the last non--zero monomial of $f$. """
+        """Return the last non-zero monomial of $f$. """
         return smp_ground_EM(f.rep, f.lev, f.ord, f.dom)
 
     def ET(f):
-        """Return the last non--zero coefficient of $f$. """
+        """Return the last non-zero coefficient of $f$. """
         return smp_ground_ET(f.rep, f.lev, f.ord, f.dom)
 
     def nth(f, *N):
-        """Return $n$--th coefficient of $f$. """
+        """Return $n$-th coefficient of $f$. """
         return smp_ground_nth(f.rep, N, f.lev, f.dom)
 
     def coeffs(f):
-        """Return all non--zero coefficients of $f$. """
+        """Return all non-zero coefficients of $f$. """
         return smp_coeffs(f.rep, f.lev, f.ord, f.dom)
 
     def monoms(f):
-        """Return all non--zero monomials of $f$. """
+        """Return all non-zero monomials of $f$. """
         return smp_monoms(f.rep, f.lev, f.ord, f.dom)
 
     def terms(f):
-        """Return all non--zero terms from $f$. """
+        """Return all non-zero terms from $f$. """
         return smp_terms(f.rep, f.lev, f.ord, f.dom)
 
     def all_coeffs(f):
@@ -278,27 +278,27 @@ class SparsePoly(GenericPoly):
         return f.per(smp_sqr(f.rep, f.lev, f.ord, f.dom))
 
     def pow(f, n):
-        """Raise $f$ to a non--negative power $n$. """
+        """Raise $f$ to a non-negative power $n$. """
         return f.per(smp_pow(f.rep, n, f.lev, f.ord, f.dom))
 
     def pdiv(f, g):
-        """Polynomial pseudo--division of $f$ and $g$. """
+        """Polynomial pseudo-division of $f$ and $g$. """
         lev, ord, dom, per, F, G = f.unify(g)
         q, r = smp_pdiv(F, G, lev, ord, dom)
         return per(q), per(r)
 
     def prem(f, g):
-        """Polynomial pseudo--remainder of $f$ and $g$. """
+        """Polynomial pseudo-remainder of $f$ and $g$. """
         lev, ord, dom, per, F, G = f.unify(g)
         return per(smp_prem(F, G, lev, dom))
 
     def pquo(f, g):
-        """Polynomial pseudo--quotient of $f$ and $g$. """
+        """Polynomial pseudo-quotient of $f$ and $g$. """
         lev, ord, dom, per, F, G = f.unify(g)
         return per(smp_pquo(F, G, lev, ord, dom))
 
     def pexquo(f, g):
-        """Polynomial exact pseudo--quotient of $f$ and $g$. """
+        """Polynomial exact pseudo-quotient of $f$ and $g$. """
         lev, ord, dom, per, F, G = f.unify(g)
         return per(smp_pexquo(F, G, lev, ord, dom))
 
@@ -411,11 +411,11 @@ class SparsePoly(GenericPoly):
         return cont, f.per(F)
 
     def integrate(f, m=1, j=0):
-        """Compute $m$--th order indefinite integral of $f$ in $x_j$. """
+        """Compute $m$-th order indefinite integral of $f$ in $x_j$. """
         return f.per(smp_integrate_in(f.rep, m, j, f.lev, f.ord, f.dom))
 
     def diff(f, m=1, j=0):
-        """Compute $m$--th order derivative of $f$ in $x_j$. """
+        """Compute $m$-th order derivative of $f$ in $x_j$. """
         return f.per(smp_diff_in(f.rep, m, j, f.lev, f.ord, f.dom))
 
     def eval(f, a, j=0):
@@ -453,16 +453,16 @@ class SparsePoly(GenericPoly):
         return map(f.per, smp_sturm(f.rep, f.lev, f.ord, f.dom))
 
     def sqf_norm(f):
-        """Compute square--free norm of $f$. """
+        """Compute square-free norm of $f$. """
         s, g, r = smp_sqf_norm(f.rep, f.lev, f.ord, f.dom)
         return s, f.per(g), f.per(r, dom=f.dom.dom)
 
     def sqf_part(f):
-        """Compute square--free part of $f$. """
+        """Compute square-free part of $f$. """
         return f.per(smp_sqf_part(f.rep, f.lev, f.ord, f.dom))
 
     def sqf_list(f, all=False, include=False):
-        """Return a list of square--free factors of $f$. """
+        """Return a list of square-free factors of $f$. """
         result = smp_sqf_list(f.rep, f.lev, f.ord, f.dom, all=all, include=include)
         return f._perify_factors(result, include)
 
@@ -512,7 +512,7 @@ class SparsePoly(GenericPoly):
 
     @property
     def is_sqf(f):
-        """Return ``True`` if $f$ is a square--free polynomial. """
+        """Return ``True`` if $f$ is a square-free polynomial. """
         return smp_sqf_p(f.rep, f.lev, f.ord, f.dom)
 
     @property

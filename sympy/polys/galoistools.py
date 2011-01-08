@@ -19,7 +19,7 @@ def gf_crt(U, M, K):
     Chinese Remainder Theorem.
 
     Given a set of integer residues ``u_0,...,u_n`` and a set of
-    co--prime integer moduli ``m_0,...,m_n``, returns an integer
+    co-prime integer moduli ``m_0,...,m_n``, returns an integer
     ``u``, such that ``u = u_i mod m_i`` for ``i = ``0,...,n``.
 
     As an example consider a set of residues ``U = [49, 76, 65]``
@@ -678,8 +678,8 @@ def gf_div(f, g, p, K):
     References
     ==========
 
-    .. [Monagan93] Michael Monagan, In--place Arithmetic for Polynomials
-    over Z_n, Proceedings of DISCO '92, Springer--Verlag LNCS, 721,
+    .. [Monagan93] Michael Monagan, In-place Arithmetic for Polynomials
+    over Z_n, Proceedings of DISCO '92, Springer-Verlag LNCS, 721,
     1993, pp. 22--34
 
     .. [Gathen99] J. von zur Gathen, J. Gerhard, Modern Computer Algebra,
@@ -873,7 +873,7 @@ def gf_pow_mod(f, n, g, p, K):
     """
     Compute ``f**n`` in ``GF(p)[x]/(g)`` using repeated squaring.
 
-    Given polynomials ``f`` and ``g`` in ``GF(p)[x]`` and a non--negative
+    Given polynomials ``f`` and ``g`` in ``GF(p)[x]`` and a non-negative
     integer ``n``, efficiently computes ``f**n (mod g)`` i.e. remainder
     from division ``f**n`` by ``g`` using repeated squaring algorithm.
 
@@ -1291,7 +1291,7 @@ def gf_irreducible(n, p, K):
 @cythonized("i,n")
 def gf_irred_p_ben_or(f, p, K):
     """
-    Ben--Or's polynomial irreducibility test over finite fields.
+    Ben-Or's polynomial irreducibility test over finite fields.
 
     Example
     =======
@@ -1397,7 +1397,7 @@ def gf_irreducible_p(f, p, K):
 
 def gf_sqf_p(f, p, K):
     """
-    Return ``True`` if ``f`` is square--free in ``GF(p)[x]``.
+    Return ``True`` if ``f`` is square-free in ``GF(p)[x]``.
 
     Example
     =======
@@ -1420,7 +1420,7 @@ def gf_sqf_p(f, p, K):
 
 def gf_sqf_part(f, p, K):
     """
-    Return square--free part of a ``GF(p)[x]`` polynomial.
+    Return square-free part of a ``GF(p)[x]`` polynomial.
 
     Example
     =======
@@ -1444,12 +1444,12 @@ def gf_sqf_part(f, p, K):
 @cythonized("i,n,d,r")
 def gf_sqf_list(f, p, K, all=False):
     """
-    Return square--free decomposition of a ``GF(p)[x]`` polynomial.
+    Return square-free decomposition of a ``GF(p)[x]`` polynomial.
 
     Given a polynomial ``f`` in ``GF(p)[x]``, returns the leading coefficient
-    of ``f`` and a square--free decomposition ``f_1**e_1 f_2**e_2 ... f_k**e_k``
+    of ``f`` and a square-free decomposition ``f_1**e_1 f_2**e_2 ... f_k**e_k``
     such that all ``f_i`` are monic polynomials and ``(f_i, f_j)`` for ``i != j``
-    are co--prime and ``e_1 ... e_k`` are given in increasing order. All trivial
+    are co-prime and ``e_1 ... e_k`` are given in increasing order. All trivial
     terms (i.e. ``f_i = 1``) aren't included in the output.
 
     Consider polynomial ``f = x**11 + 1`` over ``GF(11)[x]``::
@@ -1469,7 +1469,7 @@ def gf_sqf_list(f, p, K, all=False):
        []
 
     This phenomenon doesn't happen in characteristic zero. However we can
-    still compute square--free decomposition of ``f`` using ``gf_sqf()``::
+    still compute square-free decomposition of ``f`` using ``gf_sqf()``::
 
        >>> gf_sqf_list(f, 11, ZZ)
        (1, [([1, 1], 11)])
@@ -1636,7 +1636,7 @@ def gf_Qbasis(Q, p, K):
 @cythonized("i,k")
 def gf_berlekamp(f, p, K):
     """
-    Factor a square--free ``f`` in ``GF(p)[x]`` for small ``p``.
+    Factor a square-free ``f`` in ``GF(p)[x]`` for small ``p``.
 
     Example
     =======
@@ -1680,9 +1680,9 @@ def gf_berlekamp(f, p, K):
 @cythonized("i")
 def gf_ddf_zassenhaus(f, p, K):
     """
-    Cantor--Zassenhaus: Deterministic Distinct Degree Factorization
+    Cantor-Zassenhaus: Deterministic Distinct Degree Factorization
 
-    Given a monic square--free polynomial ``f`` in ``GF(p)[x]``, computes
+    Given a monic square-free polynomial ``f`` in ``GF(p)[x]``, computes
     partial distinct degree factorization ``f_1 ... f_d`` of ``f`` where
     ``deg(f_i) != deg(f_j)`` for ``i != j``. The result is returned as a
     list of pairs ``(f_i, e_i)`` where ``deg(f_i) > 0`` and ``e_i > 0``
@@ -1738,14 +1738,14 @@ def gf_ddf_zassenhaus(f, p, K):
 @cythonized("n,N,i")
 def gf_edf_zassenhaus(f, n, p, K):
     """
-    Cantor--Zassenhaus: Probabilistic Equal Degree Factorization
+    Cantor-Zassenhaus: Probabilistic Equal Degree Factorization
 
-    Given a monic square--free polynomial ``f`` in ``GF(p)[x]`` and
+    Given a monic square-free polynomial ``f`` in ``GF(p)[x]`` and
     an integer ``n``, such that ``n`` divides ``deg(f)``, returns all
     irreducible factors ``f_1,...,f_d`` of ``f``, each of degree ``n``.
     EDF procedure gives complete factorization over Galois fields.
 
-    Consider the square--free polynomial ``f = x**3 + x**2 + x + 1`` in
+    Consider the square-free polynomial ``f = x**3 + x**2 + x + 1`` in
     ``GF(5)[x]``. Let's compute its irreducible factors of degree one::
 
        >>> from sympy.polys.domains import ZZ
@@ -1795,9 +1795,9 @@ def gf_edf_zassenhaus(f, n, p, K):
 @cythonized("n,k,i,j")
 def gf_ddf_shoup(f, p, K):
     """
-    Kaltofen--Shoup: Deterministic Distinct Degree Factorization
+    Kaltofen-Shoup: Deterministic Distinct Degree Factorization
 
-    Given a monic square--free polynomial ``f`` in ``GF(p)[x]``, computes
+    Given a monic square-free polynomial ``f`` in ``GF(p)[x]``, computes
     partial distinct degree factorization ``f_1,...,f_d`` of ``f`` where
     ``deg(f_i) != deg(f_j)`` for ``i != j``. The result is returned as a
     list of pairs ``(f_i, e_i)`` where ``deg(f_i) > 0`` and ``e_i > 0``
@@ -1820,9 +1820,9 @@ def gf_ddf_shoup(f, p, K):
     References
     ==========
 
-    .. [Kaltofen98] E. Kaltofen, V. Shoup, Subquadratic--time Factoring
-    of Polynomials over Finite Fields, Mathematics of Computation, Volume
-    67, Issue 223, 1998, pp. 1179--1197
+    .. [Kaltofen98] E. Kaltofen, V. Shoup, Subquadratic-time Factoring of
+    Polynomials over Finite Fields, Mathematics of Computation, Volume 67,
+    Issue 223, 1998, pp. 1179--1197
 
     .. [Shoup95] V. Shoup, A New Polynomial Factorization Algorithm and
     its Implementation, Journal of Symbolic Computation, Volume 20,
@@ -1879,9 +1879,9 @@ def gf_ddf_shoup(f, p, K):
 @cythonized("n,N,q")
 def gf_edf_shoup(f, n, p, K):
     """
-    Gathen--Shoup: Probabilistic Equal Degree Factorization
+    Gathen-Shoup: Probabilistic Equal Degree Factorization
 
-    Given a monic square--free polynomial ``f`` in ``GF(p)[x]`` and integer
+    Given a monic square-free polynomial ``f`` in ``GF(p)[x]`` and integer
     ``n`` such that ``n`` divides ``deg(f)``, returns all irreducible factors
     ``f_1,...,f_d`` of ``f``, each of degree ``n``. This is a complete
     factorization over Galois fields.
@@ -1947,7 +1947,7 @@ def gf_edf_shoup(f, n, p, K):
 @cythonized("n")
 def gf_zassenhaus(f, p, K):
     """
-    Factor a square--free ``f`` in ``GF(p)[x]`` for medium ``p``.
+    Factor a square-free ``f`` in ``GF(p)[x]`` for medium ``p``.
 
     Example
     =======
@@ -1969,7 +1969,7 @@ def gf_zassenhaus(f, p, K):
 @cythonized("n")
 def gf_shoup(f, p, K):
     """
-    Factor a square--free ``f`` in ``GF(p)[x]`` for large ``p``.
+    Factor a square-free ``f`` in ``GF(p)[x]`` for large ``p``.
 
     Example
     =======
@@ -1996,7 +1996,7 @@ _factor_methods = {
 
 def gf_factor_sqf(f, p, K):
     """
-    Factor a square--free polynomial ``f`` in ``GF(p)[x]``.
+    Factor a square-free polynomial ``f`` in ``GF(p)[x]``.
 
     Example
     =======
@@ -2025,9 +2025,9 @@ def gf_factor_sqf(f, p, K):
 @cythonized("n")
 def gf_factor(f, p, K):
     """
-    Factor (non square--free) polynomials in ``GF(p)[x]``.
+    Factor (non square-free) polynomials in ``GF(p)[x]``.
 
-    Given a possibly non square--free polynomial ``f`` in ``GF(p)[x]``,
+    Given a possibly non square-free polynomial ``f`` in ``GF(p)[x]``,
     returns its complete factorization into irreducibles::
 
                  f_1(x)**e_1 f_2(x)**e_2 ... f_d(x)**e_d
@@ -2037,10 +2037,10 @@ def gf_factor(f, p, K):
     leading coefficient of ``f`` and a list of factors of ``f`` with
     their multiplicities.
 
-    The algorithm proceeds by first computing square--free decomposition
-    of ``f`` and then iteratively factoring each of square--free factors.
+    The algorithm proceeds by first computing square-free decomposition
+    of ``f`` and then iteratively factoring each of square-free factors.
 
-    Consider a non square--free polynomial ``f = (7*x + 1) (x + 2)**2`` in
+    Consider a non square-free polynomial ``f = (7*x + 1) (x + 2)**2`` in
     ``GF(11)[x]``. We obtain its factorization into irreducibles as follows::
 
        >>> from sympy.polys.domains import ZZ
@@ -2053,14 +2053,14 @@ def gf_factor(f, p, K):
     recover the exact form of the input polynomial because we requested to
     get monic factors of ``f`` and its leading coefficient separately.
 
-    Square--free factors of ``f`` can be factored into irreducibles over
+    Square-free factors of ``f`` can be factored into irreducibles over
     ``GF(p)`` using three very different methods:
 
     Berlekamp
         efficient for very small values of ``p`` (usually ``p < 25``)
-    Cantor--Zassenhaus
+    Cantor-Zassenhaus
         efficient on average input and with "typical" ``p``
-    Shoup--Kaltofen--Gathen
+    Shoup-Kaltofen-Gathen
         efficient with very large inputs and modulus
 
     If you want to use a specific factorization method, instead of the default

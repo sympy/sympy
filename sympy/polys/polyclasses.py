@@ -1,7 +1,7 @@
 """OO layer for several polynomial representations. """
 
 class GenericPoly(object):
-    """Base class for low--level polynomial representations. """
+    """Base class for low-level polynomial representations. """
 
     def ground_to_ring(f):
         """Make the ground domain a ring. """

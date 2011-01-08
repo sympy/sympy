@@ -1,4 +1,4 @@
-"""Square--free decomposition algorithms and related tools. """
+"""Square-free decomposition algorithms and related tools. """
 
 from sympy.polys.densebasic import (
     dup_strip,
@@ -38,7 +38,7 @@ from sympy.utilities import cythonized
 
 def dup_sqf_p(f, K):
     """
-    Return ``True`` if ``f`` is a square--free polynomial in ``K[x]``.
+    Return ``True`` if ``f`` is a square-free polynomial in ``K[x]``.
 
     Example
     =======
@@ -60,7 +60,7 @@ def dup_sqf_p(f, K):
 @cythonized("u")
 def dmp_sqf_p(f, u, K):
     """
-    Return ``True`` if ``f`` is a square--free polynomial in ``K[X]``.
+    Return ``True`` if ``f`` is a square-free polynomial in ``K[X]``.
 
     Example
     =======
@@ -85,7 +85,7 @@ def dmp_sqf_p(f, u, K):
 @cythonized("s")
 def dup_sqf_norm(f, K):
     """
-    Square--free norm of ``f`` in ``K[x]``, useful over algebraic domains.
+    Square-free norm of ``f`` in ``K[x]``, useful over algebraic domains.
 
     Returns ``s``, ``f``, ``r``, such that ``g(x) = f(x-sa)`` and ``r(x) = Norm(g(x))``
     is a square-free polynomial over K, where ``a`` is the algebraic extension of ``K``.
@@ -131,7 +131,7 @@ def dmp_sqf_norm(f, u, K):
     Square-free norm of ``f`` in ``K[X]``, useful over algebraic domains.
 
     Returns ``s``, ``f``, ``r``, such that ``g(x) = f(x-sa)`` and ``r(x) = Norm(g(x))``
-    is a square--free polynomial over K, where ``a`` is the algebraic extension of ``K``.
+    is a square-free polynomial over K, where ``a`` is the algebraic extension of ``K``.
 
     Example
     =======
@@ -176,18 +176,18 @@ def dmp_sqf_norm(f, u, K):
 
 @cythonized("i")
 def dup_gf_sqf_part(f, K):
-    """Compute square--free part of ``f`` in ``GF(p)[x]``. """
+    """Compute square-free part of ``f`` in ``GF(p)[x]``. """
     f = dup_convert(f, K, K.dom)
     g = gf_sqf_part(f, K.mod, K.dom)
     return dup_convert(g, K.dom, K)
 
 def dmp_gf_sqf_part(f, K):
-    """Compute square--free part of ``f`` in ``GF(p)[X]``. """
+    """Compute square-free part of ``f`` in ``GF(p)[X]``. """
     raise DomainError('multivariate polynomials over %s' % K)
 
 def dup_sqf_part(f, K):
     """
-    Returns square--free part of a polynomial in ``K[x]``.
+    Returns square-free part of a polynomial in ``K[x]``.
 
     Example
     =======
@@ -219,7 +219,7 @@ def dup_sqf_part(f, K):
 @cythonized("u")
 def dmp_sqf_part(f, u, K):
     """
-    Returns square--free part of a polynomial in ``K[X]``.
+    Returns square-free part of a polynomial in ``K[X]``.
 
     Example
     =======
@@ -255,7 +255,7 @@ def dmp_sqf_part(f, u, K):
 
 @cythonized("i")
 def dup_gf_sqf_list(f, K, all=False):
-    """Compute square--free decomposition of ``f`` in ``GF(p)[x]``. """
+    """Compute square-free decomposition of ``f`` in ``GF(p)[x]``. """
     f = dup_convert(f, K, K.dom)
 
     coeff, factors = gf_sqf_list(f, K.mod, K.dom, all=all)
@@ -266,13 +266,13 @@ def dup_gf_sqf_list(f, K, all=False):
     return K.convert(coeff, K.dom), factors
 
 def dmp_gf_sqf_list(f, u, K, all=False):
-    """Compute square--free decomposition of ``f`` in ``GF(p)[X]``. """
+    """Compute square-free decomposition of ``f`` in ``GF(p)[X]``. """
     raise DomainError('multivariate polynomials over %s' % K)
 
 @cythonized("i")
 def dup_sqf_list(f, K, all=False):
     """
-    Return square--free decomposition of a polynomial in ``K[x]``.
+    Return square-free decomposition of a polynomial in ``K[x]``.
 
     Example
     =======
@@ -329,7 +329,7 @@ def dup_sqf_list(f, K, all=False):
 
 def dup_sqf_list_include(f, K, all=False):
     """
-    Return square--free decomposition of a polynomial in ``K[x]``.
+    Return square-free decomposition of a polynomial in ``K[x]``.
 
     Example
     =======
@@ -357,7 +357,7 @@ def dup_sqf_list_include(f, K, all=False):
 @cythonized("u,i")
 def dmp_sqf_list(f, u, K, all=False):
     """
-    Return square--free decomposition of a polynomial in ``K[X]``.
+    Return square-free decomposition of a polynomial in ``K[X]``.
 
     Example
     =======
@@ -418,7 +418,7 @@ def dmp_sqf_list(f, u, K, all=False):
 @cythonized("u")
 def dmp_sqf_list_include(f, u, K, all=False):
     """
-    Return square--free decomposition of a polynomial in ``K[x]``.
+    Return square-free decomposition of a polynomial in ``K[x]``.
 
     Example
     =======
