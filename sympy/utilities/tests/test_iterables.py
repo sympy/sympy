@@ -85,10 +85,15 @@ def test_group():
     assert group([1,1,2,2,2,1,3,3], multiple=False) == [(1, 2), (2, 3), (1, 1), (3, 2)]
 
 def test_split():
-    assert split([], key=lambda a: a % 3) == []
+    key = lambda elt: elt % 3
 
-    assert split([16, 8, 3, 1, 2, 5, 7], key=lambda a: a % 3) == [[3], [16, 1, 7], [8, 2, 5]]
-    assert split([16, 8, 3, 7, 2, 5, 1], key=lambda a: a % 3) == [[3], [16, 7, 1], [8, 2, 5]]
+    assert split([], key) == []
+
+    assert split([16, 8, 3, 1, 2, 5, 7], key) == [[3], [16, 1, 7], [8, 2, 5]]
+    assert split([16, 8, 3, 7, 2, 5, 1], key) == [[3], [16, 7, 1], [8, 2, 5]]
+
+    assert split([16, 8, 3, 1, 2, 5, 7], key, keys=True) == \
+        [(0, [3]), (1, [16, 1, 7]), (2, [8, 2, 5])]
 
 def test_subsets():
     # combinations

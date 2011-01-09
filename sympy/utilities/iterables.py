@@ -99,30 +99,38 @@ def group(container, multiple=True):
 
     return groups
 
-def split(container, key, reverse=False):
+def split(seq, key, keys=False, reverse=False):
     """
     Splits a container into a list of lists with elements equivalent wrt ``key``.
 
     >>> from sympy.utilities.iterables import split
 
-    >>> split([16, 8, 3, 1, 2, 5, 7], key=lambda a: a % 3)
+    >>> seq = [16, 8, 3, 1, 2, 5, 7]
+    >>> key = lambda elt: elt % 3
+
+    >>> split(seq, key)
     [[3], [16, 1, 7], [8, 2, 5]]
+    >>> split(seq, key, keys=True)
+    [(0, [3]), (1, [16, 1, 7]), (2, [8, 2, 5])]
 
     """
-    spliter, result = {}, []
+    splitter, result = {}, []
 
-    for elem in container:
+    for elem in seq:
         _key = key(elem)
 
-        if _key in spliter:
-            spliter[_key].append(elem)
+        if _key in splitter:
+            splitter[_key].append(elem)
         else:
-            spliter[_key] = [elem]
+            splitter[_key] = [elem]
 
-    keys = sorted(spliter.keys(), reverse=reverse)
+    _keys = sorted(splitter.keys(), reverse=reverse)
 
-    for _key in keys:
-        result.append(spliter[_key])
+    for _key in _keys:
+        if keys:
+            result.append((_key, splitter[_key]))
+        else:
+            result.append(splitter[_key])
 
     return result
 
