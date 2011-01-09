@@ -496,38 +496,29 @@ class PrettyPrinter(Printer):
         terms = self._as_ordered_terms(expr, order=order)
         pforms, indices = [], []
 
+        def pretty_negative(pform, index):
+            """Prepend a minus sign to a pretty form. """
+            if index == 0:
+                if pform.height() > 1:
+                    pform_neg = '- '
+                else:
+                    pform_neg = '-'
+            else:
+                pform_neg = ' - '
+
+            pform = stringPict.next(pform_neg, pform)
+            return prettyForm(binding=prettyForm.NEG, *pform)
+
         for i, term in enumerate(terms):
             if term.is_Mul and term.as_coeff_mul()[0] < 0:
-                pform1 = self._print(-term)
-
-                if len(pforms) == 0:
-                    if pform1.height() > 1:
-                        pform2 = '- '
-                    else:
-                        pform2 = '-'
-                else:
-                    pform2 = ' - '
-
-                pform = stringPict.next(pform2, pform1)
-                pforms.append(prettyForm(binding=prettyForm.NEG, *pform))
+                pform = self._print(-term)
+                pforms.append(pretty_negative(pform, i))
             elif term.is_Rational and term.q > 1:
                 pforms.append(None)
                 indices.append(i)
             elif term.is_Number and term < 0:
-                pform1 = self._print(-term)
-
-                if len(pforms) == 0:
-                    if pform1.height() > 1:
-                        pform2 = '- '
-                    else:
-                        pform2 = '-'
-
-                    pform = stringPict.next(pform2, pform1)
-                else:
-                    pform = stringPict.next(' - ', pform1)
-
-                pform = prettyForm(binding=prettyForm.NEG, *pform)
-                pforms.append(pform)
+                pform = self._print(-term)
+                pforms.append(pretty_negative(pform, i))
             else:
                 pforms.append(self._print(term))
 
@@ -552,16 +543,7 @@ class PrettyPrinter(Printer):
                     pform = self._print(term)
 
                 if negative:
-                    if i == 0:
-                        if large:
-                            pform_neg = '- '
-                        else:
-                            pform_neg = '-'
-                    else:
-                        pform_neg = ' - '
-
-                    pform = stringPict.next(pform_neg, pform)
-                    pform = prettyForm(binding=prettyForm.NEG, *pform)
+                    pform = pretty_negative(pform, i)
 
                 pforms[i] = pform
 
