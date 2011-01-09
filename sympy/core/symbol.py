@@ -103,23 +103,23 @@ class Dummy(Symbol):
 
     If a name is not supplied then a string value of the count index will be
     used ::
-    >>> Dummy.count = 0 # /!\ this should generally not be changed
+    >>> Dummy._count = 0 # /!\ this should generally not be changed
     >>> Dummy()
     _0
 
     """
 
-    count = 0
+    _count = 0
 
     __slots__ = ['dummy_index']
 
     def __new__(cls, name=None, commutative=True, **assumptions):
         if name is None:
-            name = str(Dummy.count)
+            name = str(Dummy._count)
         obj = Symbol.__xnew__(cls, name, commutative=commutative, **assumptions)
 
-        Dummy.count += 1
-        obj.dummy_index = Dummy.count
+        Dummy._count += 1
+        obj.dummy_index = Dummy._count
         return obj
 
     def _hashable_content(self):
