@@ -36,9 +36,9 @@ uniquely defined this way::
 
     >>> q, r = div(f, g, domain='QQ')
     >>> q
-          5*x
-    5/2 + ---
-           2
+    5   5*x
+    - + ---
+    2    2
     >>> r
     -2
     >>> (q*g + r).expand()
@@ -195,10 +195,10 @@ polynomials and to solve some systems of polynomial equations::
     >>> from sympy import roots, solve_poly_system
 
     >>> solve(x**3 + 2*x + 3, x)
-               ____                ____
-           I*\/ 11             I*\/ 11
-    [1/2 - --------, -1, 1/2 + --------]
-              2                   2
+             ____              ____
+     1   I*\/ 11       1   I*\/ 11
+    [- - --------, -1, - + --------]
+     2      2          2      2
 
     >>> p = Symbol('p')
     >>> q = Symbol('q')
@@ -214,7 +214,7 @@ polynomials and to solve some systems of polynomial equations::
     [(5, 5)]
 
     >>> solve_poly_system([y**2 - x**3 + 1, y*x], x, y)
-                                         ___                  ___
-                                      I*\/ 3               I*\/ 3
-    [(0, I), (0, -I), (1, 0), (-1/2 + -------, 0), (-1/2 - -------, 0)]
-                                         2                    2
+                                         ___                 ___
+                                 1   I*\/ 3          1   I*\/ 3
+    [(0, I), (0, -I), (1, 0), (- - + -------, 0), (- - - -------, 0)]
+                                 2      2            2      2
