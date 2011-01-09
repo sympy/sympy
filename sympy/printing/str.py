@@ -174,8 +174,13 @@ class StrPrinter(Printer):
         a = [] # items in the numerator
         b = [] # items that are in the denominator (if any)
 
-        # Gather terms for numerator/denominator
-        for item in terms:
+        if self.order:
+            args = sorted(terms, key=Basic.sorted_key)
+        else:
+            args = terms
+
+        # Gather args for numerator/denominator
+        for item in args:
             if item.is_Pow and item.exp.is_Rational and item.exp.is_negative:
                 b.append(Pow(item.base, -item.exp))
             elif item.is_Rational and item is not S.Infinity:
