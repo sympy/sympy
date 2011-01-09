@@ -7,7 +7,7 @@ of Many-Particle Systems."
 
 from sympy import (
     Basic, Expr, Function, Mul, sympify, Integer, Add, sqrt,
-    zeros, Pow, I, S, Symbol, Tuple
+    zeros, Pow, I, S, Symbol, Tuple, Dummy
 )
 
 from sympy.utilities import iff
@@ -1237,10 +1237,10 @@ class FermionState(FockState):
                 return S.Zero
         else:
             if present:
-                hole = Symbol("i",below_fermi=True,dummy=True)
+                hole = Dummy("i",below_fermi=True)
                 return KroneckerDelta(i,hole)*self._remove_orbit(i)
             else:
-                particle = Symbol("a",above_fermi=True,dummy=True)
+                particle = Dummy("a",above_fermi=True)
                 return KroneckerDelta(i,particle)*self._add_orbit(i)
 
     def down(self, i):
@@ -1285,10 +1285,10 @@ class FermionState(FockState):
                 return self._add_orbit(i)
         else:
             if present:
-                hole = Symbol("i",below_fermi=True,dummy=True)
+                hole = Dummy("i",below_fermi=True)
                 return KroneckerDelta(i,hole)*self._add_orbit(i)
             else:
-                particle = Symbol("a",above_fermi=True,dummy=True)
+                particle = Dummy("a",above_fermi=True)
                 return KroneckerDelta(i,particle)*self._remove_orbit(i)
 
 
@@ -1978,7 +1978,6 @@ class NO(Expr):
             if self[i].is_q_annihilator:
                 assume = self[i].state.assumptions0
                 assume["dummy"]=True
-                Dummy = type(Symbol('x',dummy=True))
 
                 # only operators with a dummy index can be split in two terms
                 if isinstance(self[i].state, Dummy):
@@ -2171,7 +2170,7 @@ def contraction(a,b):
                 return KroneckerDelta(a.state,b.state)
 
             return (KroneckerDelta(a.state,b.state)*
-                    KroneckerDelta(b.state,Symbol('a',dummy=True,above_fermi=True)))
+                    KroneckerDelta(b.state,Dummy('a',above_fermi=True)))
         if isinstance(b,AnnihilateFermion) and isinstance(a,CreateFermion):
             if b.state.assumptions0.get("above_fermi"):
                 return S.Zero
@@ -2183,7 +2182,7 @@ def contraction(a,b):
                 return KroneckerDelta(a.state,b.state)
 
             return (KroneckerDelta(a.state,b.state)*
-                    KroneckerDelta(b.state,Symbol('i',dummy=True,below_fermi=True)))
+                    KroneckerDelta(b.state,Dummy('i',below_fermi=True)))
 
         # vanish if 2xAnnihilator or 2xCreator
         return S.Zero
@@ -2951,7 +2950,7 @@ class PermutationOperator(Expr):
         i = self.args[0]
         j = self.args[1]
         if expr.has(i) and expr.has(j):
-            tmp = Symbol('t',dummy=True)
+            tmp = Dummy()
             expr = expr.subs(i,tmp)
             expr = expr.subs(j,i)
             expr = expr.subs(tmp,j)

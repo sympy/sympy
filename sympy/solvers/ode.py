@@ -205,7 +205,7 @@ from sympy.core import Add, Basic, C, S, Mul, Pow, oo
 from sympy.core.function import Derivative, diff, expand_mul
 from sympy.core.multidimensional import vectorize
 from sympy.core.relational import Equality, Eq
-from sympy.core.symbol import Symbol, Wild
+from sympy.core.symbol import Symbol, Wild, Dummy
 from sympy.core.sympify import sympify
 
 from sympy.functions import cos, exp, im, log, re, sin, sign
@@ -597,7 +597,7 @@ def classify_ode(eq, func, dict=False):
 
     x = func.args[0]
     f = func.func
-    y = Symbol('y', dummy=True)
+    y = Dummy('y')
     if isinstance(eq, Equality):
         if eq.rhs != 0:
             return classify_ode(eq.lhs-eq.rhs, func)
@@ -644,7 +644,7 @@ def classify_ode(eq, func, dict=False):
         if eq.is_Add:
             ind, dep = reduced_eq.as_independent(f)
         else:
-            u = Symbol('u', dummy=True)
+            u = Dummy('u')
             ind, dep = (reduced_eq + u).as_independent(f)
             ind, dep = [tmp.subs(u, 0) for tmp in [ind, dep]]
         r = {a: dep.coeff(df, expand=False) or S.Zero, # if we get None for coeff, take 0
@@ -708,8 +708,8 @@ def classify_ode(eq, func, dict=False):
             orderb = homogeneous_order(r[e], x, y)
             if ordera == orderb and ordera is not None:
                 # u1=y/x and u2=x/y
-                u1 = Symbol('u1', dummy=True)
-                u2 = Symbol('u2', dummy=True)
+                u1 = Dummy('u1')
+                u2 = Dummy('u2')
                 if simplify((r[d]+u1*r[e]).subs({x:1, y:u1})) != 0:
                     matching_hints["1st_homogeneous_coeff_subs_dep_div_indep"] = r
                     matching_hints["1st_homogeneous_coeff_subs_dep_div_indep_Integral"] = r
@@ -728,7 +728,7 @@ def classify_ode(eq, func, dict=False):
         s = d*f(x).diff(x, 2) + e*df**2 + k*df
         r = reduced_eq.match(s)
         if r and r[d] != 0:
-            y = Symbol('y', dummy=True)
+            y = Dummy('y')
             g = simplify(r[e]/r[d]).subs(f(x), y)
             h = simplify(r[k]/r[d])
             if h.has(f(x)) or g.has(x):
@@ -1567,8 +1567,8 @@ def ode_1st_exact(eq, func, order, match):
     f = func.func
     r = match # d+e*diff(f(x),x)
     C1 = Symbol('C1')
-    x0 = Symbol('x0', dummy=True)
-    y0 = Symbol('y0', dummy=True)
+    x0 = Dummy('x0')
+    y0 = Dummy('y0')
     global exactvars # This is the only way to pass these dummy variables to
     # _handle_Integral
     exactvars = {'y0':y0, 'x0':x0, 'y':r['y']}
@@ -1699,7 +1699,7 @@ def ode_1st_homogeneous_coeff_subs_dep_div_indep(eq, func, order, match):
     """
     x = func.args[0]
     f = func.func
-    u1 = Symbol('u1', dummy=True) # u1 == f(x)/x
+    u1 = Dummy('u1') # u1 == f(x)/x
     r = match # d+e*diff(f(x),x)
     C1 = Symbol('C1')
     int = C.Integral((-r[r['e']]/(r[r['d']]+u1*r[r['e']])).subs({x:1, r['y']:u1}),
@@ -1780,7 +1780,7 @@ def ode_1st_homogeneous_coeff_subs_indep_div_dep(eq, func, order, match):
     """
     x = func.args[0]
     f = func.func
-    u2 = Symbol('u2', dummy=True) # u2 == x/f(x)
+    u2 = Dummy('u2') # u2 == x/f(x)
     r = match # d+e*diff(f(x),x)
     C1 = Symbol('C1')
     int = C.Integral((-r[r['d']]/(r[r['e']]+u2*r[r['d']])).subs({x:u2, r['y']:1}),
@@ -1887,7 +1887,7 @@ def _homogeneous_order(eq, *symbols):
         else:
             n.add(sympify(o*eq.exp))
 
-    t = Symbol('t', dummy=True, positive=True) # It is sufficient that t > 0
+    t = Dummy('t', positive=True) # It is sufficient that t > 0
     r = Wild('r', exclude=[t])
     a = Wild('a', exclude=[t])
     eqs = eq.subs(dict(zip(symbols,(t*i for i in symbols))))
@@ -2260,7 +2260,7 @@ def ode_nth_linear_constant_coeff_homogeneous(eq, func, order, match, returns='s
     # A generator of constants
     constants = numbered_symbols(prefix='C', function=Symbol, start=1)
     # First, set up characteristic equation.
-    m = Symbol('m', dummy=True)
+    m = Dummy('m')
     chareq = S.Zero
     for i in r.keys():
         if type(i) == str or i < 0:

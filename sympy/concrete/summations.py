@@ -1,4 +1,5 @@
-from sympy.core import Expr, S, C, Symbol, Equality, Interval, sympify, Wild, Tuple
+from sympy.core import (Expr, S, C, Symbol, Equality, Interval, sympify, Wild,
+                        Tuple, Dummy)
 from sympy.solvers import solve
 from sympy.utilities import flatten
 
@@ -127,7 +128,7 @@ class Sum(Expr):
                     return s, abs(term)
                 s += term
             a += m
-        x = Symbol('x', dummy=True)
+        x = Dummy('x')
         I = C.Integral(f.subs(i, x), (x, a, b))
         if eval_integral:
             I = I.doit()

@@ -1,7 +1,7 @@
 from sympy import Function, dsolve, Symbol, sin, cos, sinh, acos, tan, cosh, \
         I, exp, log, simplify, normal, together, ratsimp, powsimp, \
         fraction, radsimp, Eq, sqrt, pi, erf,  diff, Rational, asinh, trigsimp, \
-        S, RootOf, Poly, Integral, atan, Equality, solve, O, LambertW
+        S, RootOf, Poly, Integral, atan, Equality, solve, O, LambertW, Dummy
 from sympy.abc import x, y, z
 from sympy.solvers.ode import ode_order, homogeneous_order, \
         _undetermined_coefficients_match, classify_ode, checkodesol, constant_renumber
@@ -468,8 +468,8 @@ def test_1st_homogeneous_coeff_ode1_sol():
 @XFAIL
 def test_1st_homogeneous_coeff_ode1_sol_fail():
     #skip("Takes too long.")
-    _u2 = Symbol('u2', dummy=True)
-    __a = Symbol('a', dummy=True)
+    _u2 = Dummy('u2')
+    __a = Dummy('a')
     eq2 = x*f(x).diff(x) - f(x) - x*sin(f(x)/x)
     eq7 = (x + sqrt(f(x)**2 - x*f(x)))*f(x).diff(x) - f(x)
     # test_1st_homogeneous_coeff_ode3

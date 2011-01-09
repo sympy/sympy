@@ -187,15 +187,15 @@ class exp(Function):
     def _eval_lseries(self, x, x0):
         s = self.args[0]
         yield exp(s.subs(x, x0))
-        from sympy import Integral, Derivative
-        t = Symbol("t", dummy=True)
+        from sympy import Dummy, Integral, Derivative
+        t = Dummy("t")
         f = s.subs(x, t)
         g = Integral(exp(f) * Derivative(f, t), (t, x0, x)).lseries(x, x0)
         for term in g:
             yield term
 
     def _eval_nseries(self, x, x0, n):
-        from sympy import limit, oo, powsimp
+        from sympy import limit, Dummy, oo, powsimp
         arg = self.args[0]
         arg_series = arg.nseries(x, x0, n)
         if arg_series.is_Order:
@@ -203,7 +203,7 @@ class exp(Function):
         arg0 = limit(arg_series, x, x0)
         if arg0 in [-oo, oo]:
             return self
-        s = Symbol("s", dummy=True)
+        s = Dummy("s")
         exp_series = exp(s)._taylor(s, x0, n)
         r = exp(arg0)*exp_series.subs(s, arg_series-arg0)
         r = r.expand()
@@ -260,7 +260,7 @@ class log(Function):
     def fdiff(self, argindex=1):
         if argindex == 1:
             return 1/self.args[0]
-            s = C.Symbol('x', dummy=True)
+            s = C.Dummy('x')
             return Lambda(s**(-1), s)
         else:
             raise ArgumentIndexError(self, argindex)

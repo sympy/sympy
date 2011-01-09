@@ -662,7 +662,7 @@ class Pow(Expr):
                 if base.has(log(x)):
                     # we need to handle the log(x) singularity:
                     assert x0 == 0
-                    y = Symbol("y", dummy=True)
+                    y = Dummy("y")
                     p = self.subs(log(x), -1/y)
                     if not p.has(x):
                         p = p.nseries(y, x0, n)
@@ -673,7 +673,7 @@ class Pow(Expr):
                 if base.has(log(x)):
                     # we need to handle the log(x) singularity:
                     assert x0 == 0
-                    y = Symbol("y", dummy=True)
+                    y = Dummy("y")
                     self0 = 1/base
                     p = self0.subs(log(x), -1/y)
                     if not p.has(x):
@@ -811,4 +811,4 @@ class Pow(Expr):
 from add import Add
 from numbers import Integer
 from mul import Mul
-from symbol import Symbol
+from symbol import Symbol, Dummy

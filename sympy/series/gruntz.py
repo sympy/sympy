@@ -1,5 +1,5 @@
 from sympy import SYMPY_DEBUG
-from sympy.core import Basic, S, oo, Symbol, C, I
+from sympy.core import Basic, S, oo, Symbol, C, I, Dummy, Wild
 from sympy.functions import log, exp
 from sympy.series.order import Order
 from sympy.simplify import powsimp
@@ -339,7 +339,7 @@ def limitinf(e, x):
     sig=sign(e0,x)
     if sig==1: return S.Zero # e0>0: lim f = 0
     elif sig==-1: #e0<0: lim f = +-oo   (the sign depends on the sign of c0)
-        if c0.match(I*C.Wild("a", exclude=[I])):
+        if c0.match(I*Wild("a", exclude=[I])):
             return c0*oo
         s = sign(c0, x)
         #the leading term shouldn't be 0:
@@ -353,7 +353,7 @@ def moveup(l, x):
 def movedown(l, x):
     return [e.subs(x,log(x)) for e in l]
 
-_x = Symbol("x", dummy=True)
+_x = Dummy("x")
 def subexp(e,sub):
     """Is "sub" a subexpression of "e"? """
     #we substitute some symbol for the "sub", and if the
@@ -400,7 +400,7 @@ def mrv_leadterm(e, x, Omega=[]):
     # in the algorithm). For limits of complex functions, the algorithm would
     # have to be improved, or just use limits of Re and Im components
     # separately.
-    wsym = Symbol("w", real=True, positive=True, dummy=True)
+    wsym = Dummy("w", real=True, positive=True)
     f, logw=rewrite(e, set(Omega), x, wsym)
     series = calculate_series(f, wsym)
     series=series.subs(log(wsym), logw)
@@ -431,7 +431,7 @@ def gruntz(e, z, z0, dir="+"):
     elif z0 == -oo:
         return limitinf(e.subs(z,-z), z)
     else:
-        x = Symbol("x", dummy=True)
+        x = Dummy("x")
         if dir == "-":
             e0 = e.subs(z,z0-1/x)
         elif dir == "+":

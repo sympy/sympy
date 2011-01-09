@@ -1,4 +1,4 @@
-from sympy.core import Basic, S, C, sympify, Expr, oo, Rational, Symbol
+from sympy.core import Basic, S, C, sympify, Expr, oo, Rational, Symbol, Dummy
 from sympy.core import Add, Mul
 from sympy.core.cache import cacheit
 
@@ -110,7 +110,7 @@ class Order(Expr):
         if symbols:
             symbols = map(sympify, symbols)
         else:
-            symbols = list(expr.atoms(C.Symbol))
+            symbols = list(expr.atoms(Symbol))
 
         symbols.sort(Basic.compare)
 
@@ -129,10 +129,10 @@ class Order(Expr):
             symbol_map = {}
             new_symbols = []
             for s in symbols:
-                if isinstance(s, C.Symbol):
+                if isinstance(s, Symbol):
                     new_symbols.append(s)
                     continue
-                z = C.Symbol('z',dummy=True)
+                z = Dummy('z')
                 x1,s1 = solve4linearsymbol(s, z)
                 expr = expr.subs(x1,s1)
                 symbol_map[z] = s
@@ -288,9 +288,9 @@ class Order(Expr):
     def _eval_subs(self, old, new):
         if self==old:
             return new
-        if isinstance(old, C.Symbol) and old in self.symbols:
+        if isinstance(old, Symbol) and old in self.symbols:
             i = list(self.symbols).index(old)
-            if isinstance(new, C.Symbol):
+            if isinstance(new, Symbol):
                 return Order(self.expr._eval_subs(old, new), *(self.symbols[:i]+(new,)+self.symbols[i+1:]))
             return Order(self.expr._eval_subs(old, new), *(self.symbols[:i]+self.symbols[i+1:]))
         return Order(self.expr._eval_subs(old, new), *self.symbols)

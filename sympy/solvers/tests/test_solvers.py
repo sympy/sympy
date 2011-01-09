@@ -21,7 +21,7 @@ def test_swap_back():
     # solve and tested here.
     # This appears to be fixed - the equation is not solved.
     x = Symbol('x')
-    f = Function('f', dummy = True)
+    f = Function('f')
     raises(NotImplementedError, "solve(Eq(log(f(x)), Integral(x, (x, 1, f(x)))), f(x))")
 
 def test_guess_poly():

@@ -2,7 +2,7 @@ from sympy import SYMPY_DEBUG
 
 from sympy.core import Basic, S, C, Add, Mul, Pow, Rational, Integer, \
         Derivative, Wild, Symbol, sympify, expand, expand_mul, expand_func, \
-        Function, Equality
+        Function, Equality, Dummy
 
 from sympy.core.numbers import igcd
 from sympy.core.relational import Equality
@@ -760,7 +760,7 @@ def _separatevars(expr):
     if not _expr.is_Add:
         expr = _expr
 
-    _coeff = Symbol('_coeff', dummy=True)
+    _coeff = Dummy('_coeff')
 
     if expr.is_Add:
 
@@ -1359,7 +1359,7 @@ def powsimp(expr, deep=False, combine='all'):
     """
     if combine not in ['all', 'exp', 'base']:
         raise ValueError, "combine must be one of ('all', 'exp', 'base')."
-    y = Symbol('y', dummy=True)
+    y = Dummy('y')
     if expr.is_Pow:
         if deep:
             return powsimp(y*powsimp(expr.base, deep, combine)**powsimp(\

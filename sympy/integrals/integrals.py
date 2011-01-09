@@ -1,4 +1,5 @@
-from sympy.core import Basic, Expr, S, C, Symbol, Wild, Add, sympify, diff, oo, Tuple
+from sympy.core import (Basic, Expr, S, C, Symbol, Wild, Add, sympify, diff,
+                        oo, Tuple, Dummy)
 
 from sympy.integrals.trigonometry import trigintegrate
 from sympy.integrals.deltafunctions import deltaintegrate
@@ -125,7 +126,7 @@ class Integral(Expr):
             return self
         limits = self.limits
         function = self.function
-        y = Symbol('y', dummy=True)
+        y = Dummy('y')
         inverse_mapping = solve(mapping.subs(x,y)-x, y)
         if len(inverse_mapping) != 1 or not inverse_mapping[0].has(x):
             raise ValueError("The mapping must be uniquely invertible")
@@ -244,7 +245,7 @@ class Integral(Expr):
         int_var = self.limits[0][0]
         lower_limit, upper_limit = self.limits[0][1],self.limits[0][2]
         if sym == int_var:
-            sym = Symbol(str(int_var), dummy=True)
+            sym = Dummy(str(int_var))
         return self.function.subs(int_var, upper_limit)*diff(upper_limit, sym) - \
                self.function.subs(int_var, lower_limit)*diff(lower_limit, sym) + \
                integrate(diff(self.function, sym), (int_var, lower_limit, upper_limit))
