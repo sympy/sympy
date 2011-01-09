@@ -280,7 +280,20 @@ class Printer(object):
             return monom_key(monom), ncpart, -coeff
 
         terms, gens = self.as_terms(expr)
-        ordered = sorted(terms, key=key, reverse=not rev)
+
+        if not any(term[-1].is_Order for term in terms):
+            ordered = sorted(terms, key=key, reverse=not rev)
+        else:
+            _terms, _order = [], []
+
+            for term in terms:
+                if not term[-1].is_Order:
+                    _terms.append(term)
+                else:
+                    _order.append(term)
+
+            ordered = sorted(_terms, key=key) \
+                    + sorted(_order, key=key)
 
         return ordered, gens
 
