@@ -1,6 +1,6 @@
 """Functions for generating interesting polynomials, e.g. for benchmarking. """
 
-from sympy.core import S, Add, Mul, Symbol, Rational, sympify
+from sympy.core import S, Add, Mul, Symbol, Rational, sympify, Dummy
 
 from sympy.polys.polytools import Poly
 from sympy.polys.polyutils import _analyze_gens
@@ -35,7 +35,7 @@ def swinnerton_dyer_poly(n, x=None, **args):
     if x is not None:
         x = sympify(x)
     else:
-        x = Symbol('x', dummy=True)
+        x = Dummy('x')
 
     p, elts = 2, [[x, -2**Rational(1,2)],
                   [x,  2**Rational(1,2)]]
@@ -70,7 +70,7 @@ def cyclotomic_poly(n, x=None, **args):
     if x is not None:
         x = sympify(x)
     else:
-        x = Symbol('x', dummy=True)
+        x = Dummy('x')
 
     poly = Poly(DMP(dup_zz_cyclotomic_poly(int(n), ZZ), ZZ), x)
 

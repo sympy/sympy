@@ -623,7 +623,7 @@ class Pow(Expr):
                 # so we need to rewrite base to the form "1+x"
                 if b.has(log(x)):
                     # we need to handle the log(x) singularity:
-                    y = Symbol("y", dummy=True)
+                    y = Dummy("y")
                     p = self.subs(log(x), -1/y)
                     if not p.has(x):
                         p = p._eval_nseries(y, n=n)
@@ -633,7 +633,7 @@ class Pow(Expr):
                 b = b._eval_nseries(x, n=n)
                 if b.has(log(x)):
                     # we need to handle the log(x) singularity:
-                    y = Symbol("y", dummy=True)
+                    y = Dummy("y")
                     self0 = 1/b
                     p = self0.subs(log(x), -1/y)
                     if not p.has(x):
@@ -802,4 +802,4 @@ class Pow(Expr):
 from add import Add
 from numbers import Integer
 from mul import Mul
-from symbol import Symbol
+from symbol import Symbol, Dummy

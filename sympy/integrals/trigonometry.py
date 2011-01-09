@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import sympy
-from sympy.core import Symbol, Wild, S
+from sympy.core import Dummy, Wild, S
 from sympy.core.numbers import Rational
 from sympy.functions import sin, cos, binomial
 from sympy.core.cache import cacheit
@@ -21,7 +21,7 @@ def _pat_sincos(x):
 
     return pat, a,n,m
 
-_u = Symbol('u', dummy=True)
+_u = Dummy('u')
 
 
 

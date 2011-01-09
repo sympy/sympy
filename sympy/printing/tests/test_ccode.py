@@ -149,6 +149,9 @@ def test_ccode_loops_matrix_vector():
     assert c == s
 
 def test_dummy_loops():
+    # the following line could also be
+    # [Dummy(s, integer=True) for s in 'im']
+    # or [Dummy(integer=True) for s in 'im']
     i, m = symbols('i m', integer=True, dummy=True)
     x = IndexedBase('x')
     y = IndexedBase('y')

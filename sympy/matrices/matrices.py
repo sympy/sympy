@@ -1,5 +1,8 @@
 import warnings
-from sympy.core import S, Basic, Symbol, Integer
+from sympy.core.basic import Basic
+from sympy.core.symbol import Symbol, Dummy
+from sympy.core.numbers import Integer
+from sympy.core.singleton import S
 from sympy.core.sympify import sympify, converter, SympifyError
 
 from sympy.polys import Poly, roots, cancel
@@ -1492,7 +1495,7 @@ class Matrix(object):
 
     def berkowitz_eigenvals(self, **flags):
         """Computes eigenvalues of a Matrix using Berkowitz method. """
-        return roots(self.berkowitz_charpoly(Symbol('x', dummy=True)), **flags)
+        return roots(self.berkowitz_charpoly(Dummy('x')), **flags)
 
     eigenvals = berkowitz_eigenvals
 

@@ -37,7 +37,7 @@ from expr import Expr, AtomicExpr
 from cache import cacheit
 from itertools import repeat
 #from numbers import Rational, Integer
-#from symbol import Symbol
+#from symbol import Symbol, Dummy
 from multidimensional import vectorize
 from sympy.utilities.decorator import deprecated
 from sympy.utilities import all
@@ -710,7 +710,7 @@ class Lambda(Function):
         nargs = len(args)-1
 
         expression = args[nargs]
-        funargs = [C.Symbol(arg.name, dummy=True) for arg in args[:nargs]]
+        funargs = [C.Dummy(arg.name) for arg in args[:nargs]]
         #probably could use something like foldl here
         for arg,funarg in zip(args[:nargs],funargs):
             expression = expression.subs(arg,funarg)

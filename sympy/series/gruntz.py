@@ -1,5 +1,5 @@
 from sympy import SYMPY_DEBUG
-from sympy.core import Basic, S, oo, Symbol, C, I
+from sympy.core import Basic, S, oo, Symbol, C, I, Dummy, Wild
 from sympy.functions import log, exp
 from sympy.series.order import Order
 from sympy.simplify import powsimp
@@ -320,7 +320,7 @@ def limitinf(e, x):
         # We make sure that x.is_positive is True so we
         # get all the correct mathematical bechavior from the expression.
         # We need a fresh variable.
-        p = C.Dummy('p', positive=True)
+        p = Dummy('p', positive=True)
         e = e.subs(x, p)
         x = p
     c0, e0 = mrv_leadterm(e, x)
@@ -328,7 +328,7 @@ def limitinf(e, x):
     if sig == 1:
         return S.Zero # e0>0: lim f = 0
     elif sig == -1: #e0<0: lim f = +-oo (the sign depends on the sign of c0)
-        if c0.match(I*C.Wild("a", exclude=[I])):
+        if c0.match(I*Wild("a", exclude=[I])):
             return c0*oo
         s = sign(c0, x)
         #the leading term shouldn't be 0:
@@ -389,7 +389,7 @@ def mrv_leadterm(e, x, Omega=[]):
     # For limits of complex functions, the algorithm would have to be
     # improved, or just find limits of Re and Im components separately.
     #
-    w = C.Dummy("w", real=True, positive=True)
+    w = Dummy("w", real=True, positive=True)
     f, logw = rewrite(e, set(Omega), x, w)
     series = calculate_series(f, w)
     series = series.subs(log(w), logw)

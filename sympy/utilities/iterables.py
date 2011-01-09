@@ -383,7 +383,11 @@ def numbered_symbols(prefix='x', function=None, start=0, *args, **assumptions):
     """
 
     if function is None:
-        function = C.Symbol
+        if 'dummy' in assumptions:
+            assumptions.pop('dummy')
+            function = C.Dummy
+        else:
+            function = C.Symbol
 
     while True:
         name = '%s%s' % (prefix, start)

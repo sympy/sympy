@@ -1,12 +1,12 @@
 from sympy import C, pi, I
-from sympy.core import Symbol, sympify
+from sympy.core import Dummy, sympify
 from sympy.functions import legendre, assoc_legendre
 from sympy.functions.elementary.miscellaneous import sqrt
 
 Pl = legendre
 Plm= assoc_legendre
 
-_x = Symbol("x", dummy = True)
+_x = Dummy("x")
 
 def Plmcos(l, m, th):
     l = sympify(l)
@@ -15,7 +15,7 @@ def Plmcos(l, m, th):
     cos = C.cos
     P = Plm(l, m, _x).subs(_x, cos(th))
     # assume th in (0,pi) => sin(th) is nonegative
-    _sinth = Symbol("_sinth", nonnegative=True)
+    _sinth = Dummy("_sinth", nonnegative=True)
     P = P.subs(1-cos(th)**2, _sinth**2).subs(_sinth, sin(th))
     return P
 

@@ -346,6 +346,9 @@ def test_loops_c():
 
 def test_dummy_loops_c():
     from sympy.tensor import IndexedBase, Idx
+    # the following line could also be
+    # [Dummy(s, integer=True) for s in 'im']
+    # or [Dummy(integer=True) for s in 'im']
     i, m = symbols('i m', integer=True, dummy=True)
     x = IndexedBase('x')
     y = IndexedBase('y')
@@ -886,6 +889,9 @@ def test_loops():
 
 def test_dummy_loops_f95():
     from sympy.tensor import IndexedBase, Idx
+    # the following line could also be
+    # [Dummy(s, integer=True) for s in 'im']
+    # or [Dummy(integer=True) for s in 'im']
     i, m = symbols('i m', integer=True, dummy=True)
     x = IndexedBase('x')
     y = IndexedBase('y')

@@ -28,8 +28,7 @@ class Symbol(AtomicExpr, Boolean):
 
     is_Symbol = True
 
-    def __new__(cls, name=None, commutative=True, dummy=False,
-                **assumptions):
+    def __new__(cls, name, commutative=True, **assumptions):
         """Symbols are identified by name and commutivity::
 
         >>> from sympy import Symbol
@@ -41,20 +40,12 @@ class Symbol(AtomicExpr, Boolean):
         ...      Symbol("x", commutative=False)) == True
         False
 
-        When the dummy flag is used, a totally unique symbol is created::
-
-        >>> bool(Symbol("x", dummy = True) == Symbol("x", dummy = True)) == True
-        False
-
         """
 
-        # XXX compatibility stuff
-        if dummy==True:
-            return Dummy(name, commutative=commutative, **assumptions)
-        else:
-            if not name:
-                raise ValueError('A symbol name must be provided.')
-            return Symbol.__xnew_cached_(cls, name, commutative, **assumptions)
+        if 'dummy' in assumptions:
+            if assumptions.pop('dummy'):
+                return Dummy(name, commutative, **assumptions)
+        return Symbol.__xnew_cached_(cls, name, commutative, **assumptions)
 
     def __new_stage2__(cls, name, commutative=True, **assumptions):
         assert isinstance(name, str),`type(name)`
@@ -102,10 +93,11 @@ class Dummy(Symbol):
     False
 
     If a name is not supplied then a string value of the count index will be
-    used ::
+    used. This is useful when a temporary variable is needed and the name
+    of the variable used in the expression is not important. ::
     >>> Dummy._count = 0 # /!\ this should generally not be changed
-    >>> Dummy()
-    _0
+    >>> Dummy()          # it is being used here to make sure that the doctest
+    _0                   # passes.
 
     """
 

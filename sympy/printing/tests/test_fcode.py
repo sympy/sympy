@@ -325,6 +325,9 @@ def test_loops():
             code == expected % {'rhs': 'x(j)*A(i, j) + y(i)'})
 
 def test_dummy_loops():
+    # the following line could also be
+    # [Dummy(s, integer=True) for s in 'im']
+    # or [Dummy(integer=True) for s in 'im']
     i, m = symbols('i m', integer=True, dummy=True)
     x = IndexedBase('x')
     y = IndexedBase('y')

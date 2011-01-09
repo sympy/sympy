@@ -7,8 +7,8 @@ def test_Symbol():
     a = Symbol("a")
     x1 = Symbol("x")
     x2 = Symbol("x")
-    xdummy1 = Symbol("x", dummy=True)
-    xdummy2 = Symbol("x", dummy=True)
+    xdummy1 = Dummy("x")
+    xdummy2 = Dummy("x")
 
     assert a != x1
     assert a != x2
@@ -17,8 +17,8 @@ def test_Symbol():
     assert xdummy1 != xdummy2
 
     assert Symbol("x") == Symbol("x")
-    assert Symbol("x", dummy=True) != Symbol("x", dummy=True)
-    raises(ValueError, 'Symbol()')
+    assert Dummy("x") != Dummy("x")
+    raises(TypeError, 'Symbol()')
 
 def test_Dummy():
     assert Dummy() != Dummy()

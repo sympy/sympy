@@ -3,7 +3,7 @@ from sympy.core.add import Add
 from sympy.core.function import Lambda, Function, expand_log
 from sympy.core.cache import cacheit
 from sympy.core.singleton import S
-from sympy.core.symbol import Wild, Symbol
+from sympy.core.symbol import Wild, Symbol, Dummy
 from sympy.core.mul import Mul
 
 from sympy.ntheory import multiplicity
@@ -187,7 +187,7 @@ class exp(Function):
         s = self.args[0]
         yield exp(s.subs(x, 0))
         from sympy import integrate
-        t = Symbol("t", dummy=True)
+        t = Dummy("t")
         f = s.subs(x, t)
         for term in (exp(f)*f.diff(t)).lseries(t):
             yield integrate(term, (t, 0, x))
@@ -201,7 +201,7 @@ class exp(Function):
         arg0 = limit(arg_series.removeO(), x, 0)
         if arg0 in [-oo, oo]:
             return self
-        t = Symbol("t", dummy=True)
+        t = Dummy("t")
         exp_series = exp(t)._taylor(t, n)
         r = exp(arg0)*exp_series.subs(t, arg_series - arg0)
         r = r.expand()
@@ -258,7 +258,7 @@ class log(Function):
     def fdiff(self, argindex=1):
         if argindex == 1:
             return 1/self.args[0]
-            s = C.Symbol('x', dummy=True)
+            s = C.Dummy('x')
             return Lambda(s**(-1), s)
         else:
             raise ArgumentIndexError(self, argindex)

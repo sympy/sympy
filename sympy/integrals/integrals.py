@@ -1,4 +1,5 @@
-from sympy.core import Basic, Expr, S, C, Symbol, Wild, Add, sympify, diff, oo, Tuple
+from sympy.core import (Basic, Expr, S, C, Symbol, Wild, Add, sympify, diff,
+                        oo, Tuple, Dummy)
 
 from sympy.core.symbol import Dummy
 from sympy.integrals.trigonometry import trigintegrate

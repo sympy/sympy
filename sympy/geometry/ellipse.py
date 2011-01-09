@@ -323,8 +323,8 @@ class Ellipse(GeometryEntity):
 
     def __contains__(self, o):
         if isinstance(o, Point):
-            x = C.Symbol('x', real=True, dummy=True)
-            y = C.Symbol('y', real=True, dummy=True)
+            x = C.Dummy('x', real=True)
+            y = C.Dummy('y', real=True)
 
             res = self.equation(x, y).subs({x: o[0], y: o[1]})
             res = trigsimp(simplify(res))

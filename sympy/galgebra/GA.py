@@ -719,7 +719,7 @@ class MV(object):
         else:
             value = (mv.mv[0][0]).__str__()
             value = value.replace(' ','')
-        dummy = sympy.Symbol('dummy', dummy=True)
+        dummy = sympy.Dummy('dummy')
         for igrade in MV.n1rg[1:]:
             if isinstance(mv.mv[igrade],numpy.ndarray):
                 j = 0

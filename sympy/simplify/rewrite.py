@@ -1,6 +1,6 @@
 """Partial fraction decomposition algorithms. """
 
-from sympy.core import sympify, Symbol, Function, Lambda
+from sympy.core import sympify, Symbol, Function, Lambda, Dummy
 from sympy.polys import Poly, RootSum, div, cancel
 from sympy.utilities import threaded
 
@@ -63,7 +63,7 @@ def apart(f, z=None, **args):
     f, q, U = r / Q, Q, []
 
     u = Function('u')(z)
-    a = Symbol('a', dummy=True)
+    a = Dummy('a')
 
     q = Poly(q, z)
 
