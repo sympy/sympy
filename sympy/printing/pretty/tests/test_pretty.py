@@ -4,7 +4,7 @@ from sympy import (Matrix, Piecewise, Ne, symbols, sqrt, Function,
     pprint, sqrt, factorial, pi, sin, ceiling, pprint_use_unicode, I, S,
     Limit, oo, cos, Pow, Integral, exp, Eq, Lt, Gt, Ge, Le, gamma, Abs, RootOf,
     RootSum, Lambda, Not, And, Or, Xor, Nand, Nor, Implies, Equivalent,
-    FF, ZZ, QQ, RR)
+    FF, ZZ, QQ, RR, O)
 
 from sympy.printing.pretty import pretty as xpretty
 from sympy.printing.pretty import pprint
@@ -165,9 +165,9 @@ def pretty(expr, order=None):
     return xpretty(expr, order=order, use_unicode=False)
 
 
-def upretty(expr):
+def upretty(expr, order=None):
     """Unicode pretty-printing"""
-    return xpretty(expr, use_unicode=True)
+    return xpretty(expr, order=order, use_unicode=True)
 
 
 def test_pretty_ascii_str():
@@ -641,6 +641,31 @@ y  - x  + y  + 2*x \
 y  + y  - x  + 2*x \
 """
 
+    expr = x - x**3/6 + x**5/120 + O(x**6)
+
+    ascii_str = \
+"""\
+     3     5          \n\
+    x     x           \n\
+x - -- + --- + O(x**6)\n\
+    6    120          \
+"""
+    ucode_str = \
+u"""\
+     3     5          \n\
+    x     x           \n\
+x - ── + ─── + O(x**6)\n\
+    6    120          \
+"""
+
+    assert  pretty(expr, order=None) == ascii_str
+    assert upretty(expr, order=None) == ucode_str
+
+    assert  pretty(expr, order='lex') == ascii_str
+    assert upretty(expr, order='lex') == ucode_str
+
+    assert  pretty(expr, order='rev-lex') == ascii_str
+    assert upretty(expr, order='rev-lex') == ucode_str
 
 def test_pretty_relational():
     expr = Eq(x, y)
