@@ -877,3 +877,19 @@ def test_issue2201():
 
 def test_issue_2061():
     assert sqrt(-1.0*x) == I*sqrt(x)
+
+def test_as_coeff_Mul():
+    Integer(3).as_coeff_Mul() == (Integer(3), Integer(1))
+    Rational(3, 4).as_coeff_Mul() == (Rational(3, 4), Integer(1))
+    Real(5.0).as_coeff_Mul() == (Real(5.0), Integer(1))
+
+    (Integer(3)*x).as_coeff_Mul() == (Integer(3), x)
+    (Rational(3, 4)*x).as_coeff_Mul() == (Rational(3, 4), x)
+    (Real(5.0)*x).as_coeff_Mul() == (Real(5.0), x)
+
+    (Integer(3)*x*y).as_coeff_Mul() == (Integer(3), x*y)
+    (Rational(3, 4)*x*y).as_coeff_Mul() == (Rational(3, 4), x*y)
+    (Real(5.0)*x*y).as_coeff_Mul() == (Real(5.0), x*y)
+
+    (x).as_coeff_Mul() == (S.One, x)
+    (x*y).as_coeff_Mul() == (S.One, x*y)
