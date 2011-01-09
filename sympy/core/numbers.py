@@ -220,6 +220,9 @@ class Number(AtomicExpr):
         other = _sympify(other)
         return S.One, self, other
 
+    def as_coeff_Mul(self):
+        """Efficiently extract the coefficient of a product. """
+        return self, S.One
 
 class Real(Number):
     """
