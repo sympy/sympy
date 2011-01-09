@@ -10,6 +10,7 @@ and related tools. Its contents can be imported with the following statement::
     >>> from sympy.statistics import *
     >>> import sys
     >>> sys.displayhook = pprint
+    >>> Basic.keep_sign = True
 
 Normal distributions
 --------------------
@@ -57,11 +58,11 @@ particular values:
     >>> N.pdf(3).evalf()
     0.0539909665131881
     >>> N.cdf(x)
-           /  ___        \
-           |\/ 2 *(1 - x)|
-        erf|-------------|
-    1      \      2      /
-    - - ------------------
+           /  ___         \
+           |\/ 2 *(-1 + x)|
+        erf|--------------|
+    1      \      2       /
+    - + -------------------
     2            2
     >>> N.cdf(-oo), N.cdf(1), N.cdf(oo)
     (0, 1/2, 1)
