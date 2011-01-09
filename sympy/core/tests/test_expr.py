@@ -95,7 +95,7 @@ class F1_1(DummyNumber):
     def __float__(self):
         return self.number
 
-x,y,z,t = symbols('x,y,z,t')
+x,y,z,t,n = symbols('x,y,z,t,n')
 
 i5 = I5()
 f1_1 = F1_1()
@@ -893,3 +893,12 @@ def test_as_coeff_Mul():
 
     (x).as_coeff_Mul() == (S.One, x)
     (x*y).as_coeff_Mul() == (S.One, x*y)
+
+def test_expr_sorting():
+    exprs = [1/x**2, 1/x, sqrt(sqrt(x)), sqrt(x), x, x**Rational(3,2), x**2]
+
+    assert sorted(exprs, key=Basic.sorted_key) == exprs
+
+    exprs = [x, 2*x, 2*x**2, 2*x**3, x**n, 2*x**n, sin(x), sin(x)**n, sin(x**2), cos(x), cos(x**2), tan(x)]
+
+    assert sorted(exprs, key=Basic.sorted_key) == exprs

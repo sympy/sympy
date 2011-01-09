@@ -335,6 +335,99 @@ class Basic(AssumeMeths):
         # now both objects are from SymPy, so we can proceed to usual comparison
         return Basic._compare_pretty(a, b)
 
+    def as_tuple_tree(self):
+        """Construct a tuple-tree version of ``self``. """
+
+        funcs = {
+            'exp': 0, 'log': 1,
+            'sin': 2, 'cos': 3, 'tan': 4, 'cot': 5,
+            'sinh': 6, 'cosh': 7, 'tanh': 8, 'coth': 9,
+        }
+
+        def head(expr):
+            """Nice order of classes. """
+            name = expr.__class__.__name__
+
+            if expr.is_Number:
+                return 1, 0, 'Number'
+            elif expr.is_Atom:
+                return 2, 0, name
+            elif expr.is_Function:
+                try:
+                    i = funcs[name]
+                except KeyError:
+                    i = len(funcs)
+
+                return 3, i, name
+            else:
+                return 4, 0, name
+
+        def rmap(args):
+            """Recursively map a tree. """
+            result = []
+
+            for arg in args:
+                if isinstance(arg, Basic):
+                    arg = arg.as_tuple_tree()
+                elif hasattr(arg, '__iter__'):
+                    arg = rmap(arg)
+
+                result.append(arg)
+
+            return tuple(result)
+
+        if self.is_Atom:
+            if self.is_Number:
+                return head(self), (), (), self
+            else:
+                exp = head(S.One), (), (), S.One
+
+                if self.is_Symbol:
+                    args = (str(self),)
+                else:
+                    args = (self,)
+
+                return head(self), args, exp, S.One
+        else:
+            coeff, expr = self.as_coeff_Mul()
+
+            if expr.is_Pow:
+                expr, exp = expr.args
+            else:
+                expr, exp = expr, S.One
+
+            if expr.is_Atom:
+                if expr.is_Symbol:
+                    args = (str(expr),)
+                else:
+                    args = (expr,)
+            else:
+                args = sorted(rmap(expr.args))
+
+            exp = exp.as_tuple_tree()
+
+            return head(expr), args, exp, coeff
+
+    @classmethod
+    def sorted_key(cls, expr):
+        """
+        A key function for sorting expressions.
+
+        **Examples**
+
+        >>> from sympy.core import Basic, S, I
+        >>> from sympy.abc import x
+
+        >>> sorted([S(1)/2, I, -I], key=Basic.sorted_key)
+        [1/2, -I, I]
+
+        >>> S("[x, 1/x, 1/x**2, x**2, x**(1/2), x**(1/4), x**(3/2)]")
+        [x, 1/x, x**(-2), x**2, x**(1/2), x**(1/4), x**(3/2)]
+        >>> sorted(_, key=Basic.sorted_key)
+        [x**(-2), 1/x, x**(1/4), x**(1/2), x, x**(3/2), x**2]
+
+        """
+        return expr.as_tuple_tree()
 
     def __eq__(self, other):
         """a == b  -> Compare two symbolic trees and see whether they are equal
