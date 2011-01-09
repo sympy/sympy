@@ -551,22 +551,61 @@ x + 10\
     assert  pretty(expr) in [ascii_str_1, ascii_str_2]
     assert upretty(expr) in [ucode_str_1, ucode_str_2]
 
-    expr = 1 - Rational(3,2)*(x+1)
+    expr = -S(1)/2 - 3*x
     ascii_str = \
 """\
-       3*x\n\
--1/2 - ---\n\
-        2 \
+-1/2 - 3*x\
 """
     ucode_str = \
 u"""\
-       3⋅x\n\
--1/2 - ───\n\
-        2 \
+-1/2 - 3⋅x\
 """
     assert  pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
+    expr = S(1)/2 - 3*x
+    ascii_str = \
+"""\
+1/2 - 3*x\
+"""
+    ucode_str = \
+u"""\
+1/2 - 3⋅x\
+"""
+    assert  pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    expr = -S(1)/2 - 3*x/2
+    ascii_str = \
+"""\
+  1   3*x\n\
+- - - ---\n\
+  2    2 \
+"""
+    ucode_str = \
+u"""\
+  1   3⋅x\n\
+- ─ - ───\n\
+  2    2 \
+"""
+    assert  pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    expr = S(1)/2 - 3*x/2
+    ascii_str = \
+"""\
+1   3*x\n\
+- - ---\n\
+2    2 \
+"""
+    ucode_str = \
+u"""\
+1   3⋅x\n\
+─ - ───\n\
+2    2 \
+"""
+    assert  pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
 
 def test_pretty_ordering():
     assert pretty(x**2 + x + 1, order='lex') == \
