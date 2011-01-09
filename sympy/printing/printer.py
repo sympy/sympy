@@ -65,7 +65,7 @@ Some more information how the single concepts work and who should use which:
     not defined in the Printer subclass this will be the same as str(expr)
 """
 
-from sympy import Basic, Mul, Add
+from sympy import S, Basic, Mul, Add
 
 from sympy.core.exprtools import decompose_power
 from sympy.polys.monomialtools import monomial_key
@@ -215,6 +215,10 @@ class Printer(object):
             if val is not None:
                 cls._global_settings[key] = val
 
+    @property
+    def order(self):
+        return self._settings['order']
+
     def doprint(self, expr):
         """Returns printer's representation for expr (as a string)"""
         return self._str(self._print(expr))
@@ -248,49 +252,48 @@ class Printer(object):
         finally:
             self._print_level -= 1
 
-    @classmethod
-    def _parse_order(cls, order):
+    def _parse_order(self, order):
         """Parse and configure ordering of terms in Add. """
-        rev = False
+        order = order or self.order
+        reverse = False
 
         if order is not None:
             if order.startswith('rev-'):
                 order = order[4:]
-                rev = True
+                reverse = True
 
-        key = monomial_key(order)
-        return key, rev
+        return monomial_key(order), reverse
 
     def _as_ordered_terms(self, expr, order=None):
-        order = order or self._settings['order']
+        order = order or self.order
 
         if order is None:
             return sorted(Add.make_args(expr), Basic._compare_pretty)
         else:
             terms, _ = self.as_ordered_terms(expr, order)
-            return [ term for _, _, _, term in terms ]
+            return [ term for term, _ in terms ]
 
     def as_ordered_terms(self, expr, order=None):
         """Transform an expression to an ordered list of terms. """
-        order = order or self._settings['order']
-        monom_key, rev = self._parse_order(order)
+        monom_key, reverse = self._parse_order(order)
 
         def key(term):
-            coeff, monom, ncpart, _ = term
-            return monom_key(monom), ncpart, -coeff
+            _, (coeff, monom, ncpart) = term
+            ncpart = [ e.as_tuple_tree() for e in ncpart ]
+            return monom_key(monom), tuple(ncpart), -coeff
 
         terms, gens = self.as_terms(expr)
 
-        if not any(term[-1].is_Order for term in terms):
-            ordered = sorted(terms, key=key, reverse=not rev)
+        if not any(term.is_Order for term, _ in terms):
+            ordered = sorted(terms, key=key, reverse=not reverse)
         else:
             _terms, _order = [], []
 
-            for term in terms:
-                if not term[-1].is_Order:
-                    _terms.append(term)
+            for term, data in terms:
+                if not term.is_Order:
+                    _terms.append((term, data))
                 else:
-                    _order.append(term)
+                    _order.append((term, data))
 
             ordered = sorted(_terms, key=key) \
                     + sorted(_order, key=key)
@@ -302,26 +305,22 @@ class Printer(object):
         gens, terms = set([]), []
 
         for term in Add.make_args(expr):
-            coeff, cpart, ncpart = [], {}, []
+            coeff, _term = term.as_coeff_Mul()
+            cpart, ncpart = {}, []
 
-            for factor in Mul.make_args(term):
-                if not factor.is_commutative:
-                    ncpart.append(factor)
-                else:
-                    if factor.is_Number:
-                        coeff.append(factor)
-                    else:
+            if _term is not S.One:
+                for factor in Mul.make_args(_term):
+                    if factor.is_commutative:
                         base, exp = decompose_power(factor)
-
-                        if exp < 0:
-                            exp, base = -exp, 1/base
 
                         cpart[base] = exp
                         gens.add(base)
+                    else:
+                        ncpart.append(factor)
 
-            terms.append((Mul(*coeff), cpart, ncpart, term))
+            terms.append((term, (coeff, cpart, tuple(ncpart))))
 
-        gens = sorted(gens, Basic._compare_pretty)
+        gens = sorted(gens, key=Basic.sorted_key)
 
         k, indices = len(gens), {}
 
@@ -330,13 +329,13 @@ class Printer(object):
 
         result = []
 
-        for coeff, cpart, ncpart, term in terms:
+        for term, (coeff, cpart, ncpart) in terms:
             monom = [0]*k
 
             for base, exp in cpart.iteritems():
                 monom[indices[base]] = exp
 
-            result.append((coeff, tuple(monom), tuple(ncpart), term))
+            result.append((term, (coeff, tuple(monom), ncpart)))
 
         return result, gens
 

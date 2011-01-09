@@ -553,8 +553,13 @@ class PrettyPrinter(Printer):
         a = [] # items in the numerator
         b = [] # items that are in the denominator (if any)
 
+        if self.order:
+            args = sorted(product.args, key=Basic.sorted_key)
+        else:
+            args = product.args
+
         # Gather terms for numerator/denominator
-        for item in product.args:
+        for item in args:
             if item.is_Pow and item.exp.is_Rational and item.exp.is_negative:
                 b.append(C.Pow(item.base, -item.exp))
             elif item.is_Rational and item is not S.Infinity:
