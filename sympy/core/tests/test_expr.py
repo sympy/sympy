@@ -902,3 +902,7 @@ def test_expr_sorting():
     exprs = [x, 2*x, 2*x**2, 2*x**3, x**n, 2*x**n, sin(x), sin(x)**n, sin(x**2), cos(x), cos(x**2), tan(x)]
 
     assert sorted(exprs, key=Basic.sorted_key) == exprs
+
+    exprs = [x + 1, x**2 + x + 1, x**3 + x**2 + x + 1]
+
+    assert sorted(exprs, key=Basic.sorted_key) == exprs
