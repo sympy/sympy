@@ -94,7 +94,14 @@ def main():
         dest='order',
         action='store',
         default='old',
-        help='setup terms ordering: old | [rev-]lex, [rev-]grlex, [rev-]grevlex')
+        help='setup ordering of terms: old | [rev-]lex, [rev-]grlex, [rev-]grevlex')
+
+    parser.add_option(
+        '-s', '--keep-sign',
+        dest='keep_sign',
+        action='store_true',
+        default=False,
+        help='force SymPy not to alter sums with negative leading term')
 
     parser.add_option(
         '-q', '--quiet',
@@ -156,6 +163,7 @@ def main():
         args['order'] = order
 
     args['quiet'] = options.quiet
+    args['keep_sign'] = options.keep_sign
 
     from sympy.interactive import init_session
     init_session(ipython, **args)
