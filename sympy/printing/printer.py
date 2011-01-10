@@ -252,90 +252,12 @@ class Printer(object):
         finally:
             self._print_level -= 1
 
-    def _parse_order(self, order):
-        """Parse and configure ordering of terms in Add. """
-        order = order or self.order
-        reverse = False
-
-        if order is not None:
-            if order.startswith('rev-'):
-                order = order[4:]
-                reverse = True
-
-        return monomial_key(order), reverse
-
     def _as_ordered_terms(self, expr, order=None):
+        """A compatibility function for ordering terms in Add. """
         order = order or self.order
 
         if order is None:
             return sorted(Add.make_args(expr), Basic._compare_pretty)
         else:
-            terms, _ = self.as_ordered_terms(expr, order)
-            return [ term for term, _ in terms ]
-
-    def as_ordered_terms(self, expr, order=None):
-        """Transform an expression to an ordered list of terms. """
-        monom_key, reverse = self._parse_order(order)
-
-        def key(term):
-            _, (coeff, monom, ncpart) = term
-            ncpart = [ e.as_tuple_tree() for e in ncpart ]
-            return monom_key(monom), tuple(ncpart), -coeff
-
-        terms, gens = self.as_terms(expr)
-
-        if not any(term.is_Order for term, _ in terms):
-            ordered = sorted(terms, key=key, reverse=not reverse)
-        else:
-            _terms, _order = [], []
-
-            for term, data in terms:
-                if not term.is_Order:
-                    _terms.append((term, data))
-                else:
-                    _order.append((term, data))
-
-            ordered = sorted(_terms, key=key) \
-                    + sorted(_order, key=key)
-
-        return ordered, gens
-
-    def as_terms(self, expr):
-        """Transform an expression to a list of terms. """
-        gens, terms = set([]), []
-
-        for term in Add.make_args(expr):
-            coeff, _term = term.as_coeff_Mul()
-            cpart, ncpart = {}, []
-
-            if _term is not S.One:
-                for factor in Mul.make_args(_term):
-                    if factor.is_commutative:
-                        base, exp = decompose_power(factor)
-
-                        cpart[base] = exp
-                        gens.add(base)
-                    else:
-                        ncpart.append(factor)
-
-            terms.append((term, (coeff, cpart, tuple(ncpart))))
-
-        gens = sorted(gens, key=Basic.sorted_key)
-
-        k, indices = len(gens), {}
-
-        for i, g in enumerate(gens):
-            indices[g] = i
-
-        result = []
-
-        for term, (coeff, cpart, ncpart) in terms:
-            monom = [0]*k
-
-            for base, exp in cpart.iteritems():
-                monom[indices[base]] = exp
-
-            result.append((term, (coeff, tuple(monom), ncpart)))
-
-        return result, gens
+            return expr.as_ordered_terms(order=order, data=False)
 
