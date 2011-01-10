@@ -2,7 +2,7 @@
 
 from sympy.interactive.printing import init_printing
 
-preexec_code = """\
+preexec_source = """\
 from __future__ import division
 from sympy import *
 x, y, z = symbols('x,y,z')
@@ -12,7 +12,7 @@ f, g, h = symbols('f,g,h', cls=Function)
 
 verbose_message = """\
 These commands were executed:
-%(code)s
+%(source)s
 Documentation can be found at http://www.sympy.org
 """
 
@@ -22,7 +22,7 @@ See http://ipython.scipy.org for more details. If you use Debian/Ubuntu,
 just install the 'ipython' package and start isympy again.
 """
 
-def _make_message(ipython=True, quiet=False):
+def _make_message(ipython=True, quiet=False, source=None):
     """Create a banner for an interactive session. """
     from sympy import __version__ as sympy_version
     from sympy.polys.domains import GROUND_TYPES
@@ -48,15 +48,18 @@ def _make_message(ipython=True, quiet=False):
     message = "%s console for SymPy %s (Python %s) (%s)\n" % args
 
     if not quiet:
-        code = ""
+        if source is None:
+            source = preexec_source
 
-        for line in preexec_code.split('\n')[:-1]:
+        _source = ""
+
+        for line in source.split('\n')[:-1]:
             if not line:
-                code += '\n'
+                _source += '\n'
             else:
-                code += '>>> ' + line + '\n'
+                _source += '>>> ' + line + '\n'
 
-        message += '\n' + verbose_message % {'code': code}
+        message += '\n' + verbose_message % {'source': _source}
 
     return message
 
@@ -97,7 +100,8 @@ def _init_python_session():
 
     return SymPyConsole()
 
-def init_session(ipython=None, pretty_print=True, order=None, use_unicode=None, quiet=False, argv=[]):
+def init_session(ipython=None, pretty_print=True, order=None,
+        use_unicode=None, quiet=False, keep_sign=False, argv=[]):
     """Initialize an embedded IPython or Python session. """
     import sys
 
@@ -123,10 +127,15 @@ def init_session(ipython=None, pretty_print=True, order=None, use_unicode=None, 
             else:
                 ip = _init_ipython_session(argv)
 
-    ip.runsource(preexec_code, symbol='exec')
+    _preexec_source = preexec_source
+
+    if keep_sign:
+        _preexec_source += "Basic.keep_sign = True\n"
+
+    ip.runsource(_preexec_source, symbol='exec')
     init_printing(pretty_print=pretty_print, order=order, use_unicode=use_unicode)
 
-    message = _make_message(ipython, quiet)
+    message = _make_message(ipython, quiet, _preexec_source)
 
     if not in_ipython:
         ip.interact(message)
