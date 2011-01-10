@@ -7,6 +7,8 @@ TODO:
 * Get cse working with classes in this file.
 * Doctests and documentation of special methods for InnerProduct, Commutator,
   AntiCommutator, represent, apply_operators.
+* Decide how to handle the label of Operators. Currently, if there is only
+  1 element in label, we treat it differently.
 """
 
 import copy
@@ -111,6 +113,10 @@ class StateBase(QExpr):
         pform = prettyForm(*pform.right((self.rbracket_pretty)))
         return pform
 
+    def _latex(self, printer, *args):
+        contents = self._print_contents(printer, *args)
+        return '%s%s%s' % (self.lbracket_latex, contents, self.rbracket_latex)
+
 
 class KetBase(StateBase):
     """Base class for Kets.
@@ -124,6 +130,8 @@ class KetBase(StateBase):
     rbracket = '>'
     lbracket_pretty = prettyForm(u'\u2758')
     rbracket_pretty = prettyForm(u'\u27E9')
+    lbracket_latex = r'\left|'
+    rbracket_latex = r'\right\rangle '
 
     @property
     def dual_class(self):
@@ -176,6 +184,8 @@ class BraBase(StateBase):
     rbracket = '|'
     lbracket_pretty = prettyForm(u'\u27E8')
     rbracket_pretty = prettyForm(u'\u2758')
+    lbracket_latex = r'\left\langle '
+    rbracket_latex = r'\right|'
 
     @property
     def dual_class(self):
@@ -752,6 +762,10 @@ class OuterProduct(Operator):
         pform = self.ket._pretty(printer, *args)
         return prettyForm(*pform.right(self.bra._pretty(printer, *args)))
 
+    def _latex(self, printer, *args):
+        k = printer._print(self.ket, *args)
+        b = printer._print(self.bra, *args)
+        return k+b
 
 #-----------------------------------------------------------------------------
 # Subclasses of Expr
@@ -844,6 +858,11 @@ class KroneckerDelta(Function):
         top = stringPict(*b.left(' '*a.width()))
         bot = stringPict(*a.right(' '*b.width()))
         return prettyForm(binding=prettyForm.POW, *bot.below(top))
+
+    def _latex(self, printer, *args):
+        i = printer._print(self.args[0], *args)
+        j = printer._print(self.args[1], *args)
+        return '\\delta_{%s %s}' % (i,j)
 
 
 class Dagger(Expr):
@@ -967,6 +986,10 @@ class Dagger(Expr):
         pform = pform**prettyForm(u'\u2020')
         return pform
 
+    def _latex(self, printer, *args):
+        arg = printer._print(self.args[0])
+        return '%s^{\\dag}' % arg
+
 
 # InnerProduct is not an QExpr because it is really just a regular comutative
 # number. We have gone back and forth about this, but we gain a lot by having
@@ -1061,8 +1084,13 @@ class InnerProduct(Expr):
 
     def _pretty(self, printer, *args):
         pform = prettyForm(u'\u276C')
-        pform = prettyForm(*pform.right(self.bra._print_label_pretty(printer, *args)))
+        pform = prettyForm(*pform.right(self.bra._print_contents_pretty(printer, *args)))
         return prettyForm(*pform.right(self.ket._pretty(printer, *args)))
+
+    def _latex(self, printer, *args):
+        bra_label = self.bra._print_contents(printer, *args)
+        ket = printer._print(self.ket, *args)
+        return r'\left\langle %s \right. %s' % (bra_label, ket)
 
     def doit(self, **hints):
         try:
@@ -1267,9 +1295,9 @@ class Commutator(Expr):
         pform = prettyForm(*pform.parens(left='[', right=']'))
         return pform
 
-    def _latex_(self,printer):
+    def _latex(self, printer, *args):
         return "\\left[%s,%s\\right]" % tuple([
-            printer._print(arg) for arg in self.args])
+            printer._print(arg, *args) for arg in self.args])
 
 
 class AntiCommutator(Expr):
@@ -1397,9 +1425,9 @@ class AntiCommutator(Expr):
         pform = prettyForm(*pform.parens(left='{', right='}'))
         return pform
 
-    def _latex_(self,printer):
-        return "\\left{%s,%s\\right}"%tuple([
-            printer._print(arg) for arg in self.args])
+    def _latex(self, printer, *args):
+        return "\\left{}%s,%s\\right}" % tuple([
+            printer._print(arg, *args) for arg in self.args])
 
 
 #-----------------------------------------------------------------------------
@@ -1587,8 +1615,6 @@ class TensorProduct(Expr):
                 s = s + ')'
             if i != length-1:
                 s = s + 'x'
-        if length > 1:
-            s = '(%s)' % s
         return s
 
     def _pretty(self, printer, *args):
@@ -1596,16 +1622,27 @@ class TensorProduct(Expr):
         pform = printer._print('', *args)
         for i in range(length):
             next_pform = printer._print(self.args[i], *args)
-            if isinstance(self.args[i], (Add, Pow, Mul)):
+            if isinstance(self.args[i], (Add, Mul)):
                 next_pform = prettyForm(
                     *next_pform.parens(left='(', right=')')
                 )
             pform = prettyForm(*pform.right(next_pform))
             if i != length-1:
                 pform = prettyForm(*pform.right(u'\u2a02' + u' '))
-        if length > 1:
-            pform = prettyForm(*pform.parens(left='(', right=')'))
         return pform
+
+    def _latex(self, printer, *args):
+        length = len(self.args)
+        s = ''
+        for i in range(length):
+            if isinstance(self.args[i], (Add, Mul)):
+                s = s + '\\left('
+            s = s + printer._print(self.args[i], *args)
+            if isinstance(self.args[i], (Add, Mul)):
+                s = s + '\\right)'
+            if i != length-1:
+                s = s + '\\otimes '
+        return s
 
     def doit(self, **hints):
         return TensorProduct(*[item.doit(**hints) for item in self.args])
