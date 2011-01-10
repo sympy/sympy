@@ -16,6 +16,7 @@ import sys
 import inspect
 import traceback
 import pdb
+import re
 import linecache
 from fnmatch import fnmatch
 from timeit import default_timer as clock
@@ -23,6 +24,25 @@ import doctest as pdoctest # avoid clashing with our doctest() function
 from sympy.utilities import any
 from doctest import DocTestFinder, DocTestRunner
 import re as pre
+
+# Use sys.stdout encoding for ouput.
+# This was only added to Python's doctest in Python 2.6, so we must duplicate
+# it here to make utf8 files work in Python 2.5.
+pdoctest._encoding = getattr(sys.__stdout__, 'encoding', None) or 'utf-8'
+
+def _indent(s, indent=4):
+    """
+    Add the given number of space characters to the beginning of
+    every non-blank line in `s`, and return the result.
+    If the string `s` is Unicode, it is encoded using the stdout
+    encoding and the `backslashreplace` error handler.
+    """
+    if isinstance(s, unicode):
+        s = s.encode(pdoctest._encoding, 'backslashreplace')
+    # This regexp matches the start of non-blank lines:
+    return re.sub('(?m)^(?!$)', indent*' ', s)
+
+pdoctest._indent = _indent
 
 def sys_normcase(f):
     if sys_case_insensitive:
