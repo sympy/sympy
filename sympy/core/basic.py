@@ -335,6 +335,96 @@ class Basic(AssumeMeths):
         # now both objects are from SymPy, so we can proceed to usual comparison
         return Basic._compare_pretty(a, b)
 
+    @classmethod
+    def _parse_order(cls, order):
+        """Parse and configure the ordering of terms. """
+        from sympy.polys.monomialtools import monomial_key
+
+        try:
+            reverse = order.startswith('rev-')
+        except AttributeError:
+            reverse = False
+        else:
+            if reverse:
+                order = order[4:]
+
+        monom_key = monomial_key(order)
+
+        def key(term):
+            _, (coeff, monom, ncpart) = term
+            ncpart = [ e.as_tuple_tree() for e in ncpart ]
+            return monom_key(monom), tuple(ncpart), -coeff
+
+        return key, reverse
+
+    def as_ordered_terms(self, order=None, data=True):
+        """Transform an expression to an ordered list of terms. """
+        from sympy.utilities import any
+
+        key, reverse = self._parse_order(order)
+        terms, gens = self.as_terms()
+
+        if not any(term.is_Order for term, _ in terms):
+            ordered = sorted(terms, key=key, reverse=not reverse)
+        else:
+            _terms, _order = [], []
+
+            for term, repr in terms:
+                if not term.is_Order:
+                    _terms.append((term, repr))
+                else:
+                    _order.append((term, repr))
+
+            ordered = sorted(_terms, key=key) \
+                    + sorted(_order, key=key)
+
+        if data:
+            return ordered, gens
+        else:
+            return [ term for term, _ in ordered ]
+
+    def as_terms(self):
+        """Transform an expression to a list of terms. """
+        from sympy.core import Add, Mul
+        from sympy.core.exprtools import decompose_power
+
+        gens, terms = set([]), []
+
+        for term in Add.make_args(self):
+            coeff, _term = term.as_coeff_Mul()
+            cpart, ncpart = {}, []
+
+            if _term is not S.One:
+                for factor in Mul.make_args(_term):
+                    if factor.is_commutative:
+                        base, exp = decompose_power(factor)
+
+                        cpart[base] = exp
+                        gens.add(base)
+                    else:
+                        ncpart.append(factor)
+
+            terms.append((term, (coeff, cpart, tuple(ncpart))))
+
+        gens = sorted(gens, key=Basic.sorted_key)
+
+        k, indices = len(gens), {}
+
+        for i, g in enumerate(gens):
+            indices[g] = i
+
+        result = []
+
+        for term, (coeff, cpart, ncpart) in terms:
+            monom = [0]*k
+
+            for base, exp in cpart.iteritems():
+                monom[indices[base]] = exp
+
+            result.append((term, (coeff, tuple(monom), ncpart)))
+
+        return result, gens
+
     def as_tuple_tree(self):
         """Construct a tuple-tree version of ``self``. """
 
@@ -402,7 +492,15 @@ class Basic(AssumeMeths):
                 else:
                     args = (expr,)
             else:
-                args = sorted(rmap(expr.args))
+                if expr.is_Add:
+                    args = expr.as_ordered_terms(data=False)
+                else:
+                    args = expr.args
+
+                args = rmap(args)
+
+                if expr.is_Mul:
+                    args = sorted(args)
 
             args = (len(args), args)
             exp = exp.as_tuple_tree()
@@ -412,7 +510,7 @@ class Basic(AssumeMeths):
     @classmethod
     def sorted_key(cls, expr):
         """
-        A key function for sorting expressions.
+        A key-function for sorting expressions.
 
         **Examples**
 
