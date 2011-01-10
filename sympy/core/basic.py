@@ -378,16 +378,16 @@ class Basic(AssumeMeths):
 
         if self.is_Atom:
             if self.is_Number:
-                return head(self), (), (), self
+                return head(self), (0, ()), (), self
             else:
-                exp = head(S.One), (), (), S.One
+                exp = head(S.One), (0, ()), (), S.One
 
                 if self.is_Symbol:
                     args = (str(self),)
                 else:
                     args = (self,)
 
-                return head(self), args, exp, S.One
+                return head(self), (1, args), exp, S.One
         else:
             coeff, expr = self.as_coeff_Mul()
 
@@ -404,6 +404,7 @@ class Basic(AssumeMeths):
             else:
                 args = sorted(rmap(expr.args))
 
+            args = (len(args), args)
             exp = exp.as_tuple_tree()
 
             return head(expr), args, exp, coeff
