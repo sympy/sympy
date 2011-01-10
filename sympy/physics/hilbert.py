@@ -88,7 +88,12 @@ class HilbertSpace(Basic):
         return u'H'
 
     def _pretty(self, printer, *args):
-        return prettyForm(u"\u210B")
+        # u = u'\u2108' # script
+        u = u'\u0048'
+        return prettyForm(u)
+
+    def _latex(self, printer, *args):
+        return r'\mathcal{H}'
 
 
 class ComplexSpace(HilbertSpace):
@@ -163,9 +168,14 @@ class ComplexSpace(HilbertSpace):
         return "C(%s)" % printer._print(self.dimension, *args)
 
     def _pretty(self, printer, *args):
+        # u = u'\u2102' # script
+        u = u'\u0043'
         pform_exp = printer._print(self.dimension, *args)
-        pform_base = prettyForm(u"\u2102")
+        pform_base = prettyForm(u)
         return pform_base**pform_exp
+
+    def _latex(self, printer, *args):
+        return r'\mathcal{C}^{%s}' % printer._print(self.dimension, *args)
 
 
 class L2(HilbertSpace):
@@ -220,6 +230,10 @@ class L2(HilbertSpace):
         pform_base = prettyForm(u"L")
         return pform_base**pform_exp
 
+    def _latex(self, printer, *args):
+        interval = printer._print(self.interval, *args)
+        return r'{\mathcal{L}^2}\left( %s \right)' % interval
+
 
 class FockSpace(HilbertSpace):
     """The Hilbert space for second quantization.
@@ -263,7 +277,12 @@ class FockSpace(HilbertSpace):
         return "F"
 
     def _pretty(self, printer, *args):
-        return prettyForm(u"\u2131")
+        # u = u'\u2131' # script
+        u = u'\u0046'
+        return prettyForm(u)
+
+    def _latex(self, printer, *args):
+        return r'\mathcal{F}'
 
 
 class TensorProductHilbertSpace(HilbertSpace):
@@ -399,20 +418,28 @@ class TensorProductHilbertSpace(HilbertSpace):
         pform = printer._print('', *args)
         for i in range(length):
             next_pform = printer._print(self.args[i], *args)
-            if isinstance(
-                self.args[i],
-                (DirectSumHilbertSpace,
-                 TensorPowerHilbertSpace,
-                 TensorProductHilbertSpace)):
+            if isinstance(self.args[i], (DirectSumHilbertSpace,
+                          TensorProductHilbertSpace)):
                 next_pform = prettyForm(
                     *next_pform.parens(left='(', right=')')
                 )
             pform = prettyForm(*pform.right(next_pform))
             if i != length-1:
                 pform = prettyForm(*pform.right(u' ' + u'\u2a02' + u' '))
-        if length > 1:
-            pform = prettyForm(*pform.parens(left='(', right=')'))
         return pform
+
+    def _latex(self, printer, *args):
+        length = len(self.args)
+        s = ''
+        for i in range(length):
+            arg_s = printer._print(self.args[i], *args)
+            if isinstance(self.args[i], (DirectSumHilbertSpace,
+                 TensorProductHilbertSpace)):
+                arg_s = r'\left(%s\right)' % arg_s
+            s = s + arg_s
+            if i != length-1:
+                s = s + r'\otimes '
+        return s
 
 
 class DirectSumHilbertSpace(HilbertSpace):
@@ -503,20 +530,28 @@ class DirectSumHilbertSpace(HilbertSpace):
         pform = printer._print('', *args)
         for i in range(length):
             next_pform = printer._print(self.args[i], *args)
-            if isinstance(
-                self.args[i],
-                (DirectSumHilbertSpace,
-                 TensorPowerHilbertSpace,
-                 TensorProductHilbertSpace)):
+            if isinstance(self.args[i], (DirectSumHilbertSpace,
+                          TensorProductHilbertSpace)):
                 next_pform = prettyForm(
                     *next_pform.parens(left='(', right=')')
                 )
             pform = prettyForm(*pform.right(next_pform))
             if i != length-1:
                 pform = prettyForm(*pform.right(u' ' + u'\u2295' + u' '))
-        if length > 1:
-            pform = prettyForm(*pform.parens(left='(', right=')'))
         return pform
+
+    def _latex(self, printer, *args):
+        length = len(self.args)
+        s = ''
+        for i in range(length):
+            arg_s = printer._print(self.args[i], *args)
+            if isinstance(self.args[i], (DirectSumHilbertSpace,
+                 TensorProductHilbertSpace)):
+                arg_s = r'\left(%s\right)' % arg_s
+            s = s + arg_s
+            if i != length-1:
+                s = s + r'\oplus '
+        return s
 
 
 class TensorPowerHilbertSpace(HilbertSpace):
@@ -614,7 +649,11 @@ class TensorPowerHilbertSpace(HilbertSpace):
 
     def _pretty(self, printer, *args):
         pform_exp = printer._print(self.exp, *args)
-        pform_exp = prettyForm(*pform_exp.left(u' ' + u'\u2a02'+ u' '))
+        pform_exp = prettyForm(*pform_exp.left(prettyForm(u'\u2a02')))
         pform_base = printer._print(self.base, *args)
         return pform_base**pform_exp
 
+    def _latex(self, printer, *args):
+        base = printer._print(self.base, *args)
+        exp = printer._print(self.exp, *args)
+        return r'{%s}^{\otimes %s}' % (base, exp)

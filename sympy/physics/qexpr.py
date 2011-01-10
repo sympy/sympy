@@ -1,4 +1,4 @@
-from sympy import Expr, sympify
+from sympy import Expr, sympify, Symbol
 from sympy.printing.pretty.stringpict import prettyForm
 from sympy.core.containers import Tuple
 
@@ -114,7 +114,14 @@ class QExpr(Expr):
                 newlabel = Tuple(label)
         else:
             newlabel = label
-        newlabel = Tuple(*[sympify(item) for item in newlabel])
+        l = []
+        for item in newlabel:
+            if isinstance(item, basestring):
+                i = Symbol(item)
+            else:
+                i = sympify(item)
+            l.append(i)
+        newlabel = Tuple(*l)
         return newlabel
 
     @classmethod
@@ -168,6 +175,9 @@ class QExpr(Expr):
     def _pretty(self, printer, *args):
         pform = self._print_contents_pretty(printer, *args)
         return pform
+
+    def _latex(self, printer, *args):
+        return self._print_contents(printer, *args)
 
     #-------------------------------------------------------------------------
     # Methods from Basic and Expr
