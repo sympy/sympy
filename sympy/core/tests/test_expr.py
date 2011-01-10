@@ -1,9 +1,9 @@
-from sympy import Add, Basic, S, Symbol, Wild,  Real, Integer, Rational, I, \
-    sin, cos, exp, log, oo, sqrt, symbols, Integral, sympify, \
-    WildFunction, Poly, Function, Derivative, Number, pi, var, \
-    NumberSymbol, zoo, Piecewise, Mul, Pow, nsimplify, ratsimp, trigsimp, \
-    radsimp, powsimp, simplify, together, separate, collect, \
-    apart, combsimp, factor, refine, cancel, invert
+from sympy import (Add, Basic, S, I, O, Symbol, Wild,  Real, Integer, Rational,
+    sin, cos, tan, exp, log, oo, sqrt, symbols, Integral, sympify,
+    WildFunction, Poly, Function, Derivative, Number, pi, var,
+    NumberSymbol, zoo, Piecewise, Mul, Pow, nsimplify, ratsimp, trigsimp,
+    radsimp, powsimp, simplify, together, separate, collect,
+    apart, combsimp, factor, refine, cancel, invert)
 from sympy.physics.secondquant import FockState
 
 from sympy.core.cache import clear_cache
@@ -896,13 +896,13 @@ def test_as_coeff_Mul():
 
 def test_expr_sorting():
     exprs = [1/x**2, 1/x, sqrt(sqrt(x)), sqrt(x), x, x**Rational(3,2), x**2]
-
     assert sorted(exprs, key=Basic.sorted_key) == exprs
 
     exprs = [x, 2*x, 2*x**2, 2*x**3, x**n, 2*x**n, sin(x), sin(x)**n, sin(x**2), cos(x), cos(x**2), tan(x)]
-
     assert sorted(exprs, key=Basic.sorted_key) == exprs
 
     exprs = [x + 1, x**2 + x + 1, x**3 + x**2 + x + 1]
+    assert sorted(exprs, key=Basic.sorted_key) == exprs
 
+    exprs = [S(4), x - 3*I/2, x + 3*I/2, x - 4*I + 1, x + 4*I + 1]
     assert sorted(exprs, key=Basic.sorted_key) == exprs

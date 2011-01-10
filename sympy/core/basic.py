@@ -351,9 +351,9 @@ class Basic(AssumeMeths):
         monom_key = monomial_key(order)
 
         def key(term):
-            _, (coeff, monom, ncpart) = term
+            _, ((re, im), monom, ncpart) = term
             ncpart = [ e.as_tuple_tree() for e in ncpart ]
-            return monom_key(monom), tuple(ncpart), -coeff
+            return monom_key(monom), tuple(ncpart), (-re, -im)
 
         return key, reverse
 
@@ -392,11 +392,15 @@ class Basic(AssumeMeths):
 
         for term in Add.make_args(self):
             coeff, _term = term.as_coeff_Mul()
+
+            coeff = complex(coeff)
             cpart, ncpart = {}, []
 
             if _term is not S.One:
                 for factor in Mul.make_args(_term):
-                    if factor.is_commutative:
+                    if factor.is_number:
+                        coeff *= complex(factor)
+                    elif factor.is_commutative:
                         base, exp = decompose_power(factor)
 
                         cpart[base] = exp
@@ -404,7 +408,10 @@ class Basic(AssumeMeths):
                     else:
                         ncpart.append(factor)
 
-            terms.append((term, (coeff, cpart, tuple(ncpart))))
+            coeff = coeff.real, coeff.imag
+            ncpart = tuple(ncpart)
+
+            terms.append((term, (coeff, cpart, ncpart)))
 
         gens = sorted(gens, key=Basic.sorted_key)
 
