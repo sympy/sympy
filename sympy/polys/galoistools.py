@@ -1899,7 +1899,7 @@ _factor_methods = {
     'shoup'      : gf_shoup,      # ``p`` : large
 }
 
-def gf_factor_sqf(f, p, K):
+def gf_factor_sqf(f, p, K, method=None):
     """
     Factor a square-free polynomial ``f`` in ``GF(p)[x]``.
 
@@ -1917,7 +1917,7 @@ def gf_factor_sqf(f, p, K):
     if gf_degree(f) < 1:
         return lc, []
 
-    method = query('GF_FACTOR_METHOD')
+    method = method or query('GF_FACTOR_METHOD')
 
     if method is not None:
         factors = _factor_methods[method](f, p, K)
