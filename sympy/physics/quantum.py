@@ -2124,6 +2124,9 @@ class HBar(NumberSymbol):
     def _pretty(self, printer, *args):
         return prettyForm(u'\u210f')
 
+    def _latex(self, printer, *args):
+        return r'\hbar'
+
 # Create an instance for everyone to use.
 hbar = HBar()
 

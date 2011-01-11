@@ -70,11 +70,13 @@ class SpinOpBase(object):
 
     def _print_contents(self, printer, *args):
         return '%s%s' % (str(self.label[0]), self._coord)
-        return self._print_operator_name(printer, *args)
 
     def _print_contents_pretty(self, printer, *args):
         pform = self._print_operator_name_pretty(printer, *args)
         return pform
+
+    def _latex(self, printer, *args):
+        return r'%s_%s' % ((str(self.label[0]), self._coord))
 
     @classmethod
     def _eval_hilbert_space(cls, label):
@@ -168,6 +170,7 @@ class JxOp(SpinOpBase, HermitianOperator):
     def _eval_rewrite_as_plusminus(self, *args):
         return (JplusOp(args[0]) + JminusOp(args[0]))/2
 
+
 class JyOp(SpinOpBase, HermitianOperator):
 
     _coord = 'y'
@@ -259,6 +262,9 @@ class J2Op(SpinOpBase, HermitianOperator):
         top = stringPict(*b.left(' '*a.width()))
         bot = stringPict(*a.right(' '*b.width()))
         return prettyForm(binding=prettyForm.POW, *bot.above(top))
+
+    def _latex(self, printer, *args):
+        return r'%s^2' % str(self.label[0])
 
     def _eval_rewrite_as_xyz(self, *args):
         return JxOp(args[0])**2 + JyOp(args[0])**2 + JzOp(args[0])**2
