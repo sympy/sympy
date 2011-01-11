@@ -2,7 +2,7 @@
 from timeit import default_timer as clock
 from random import random
 from sympy import Symbol, I, sqrt, Integer, factorial, pi, exp, pprint, \
-    simplify, trim, sin, sympify, factor
+    simplify, sin, sympify, factor
 
 x = Symbol("x")
 y = Symbol("y")
@@ -49,8 +49,8 @@ def bench_R5():
     L = uniq(L)
 
 def bench_R6():
-    "sum(trim((x+sin(i))/x+(x-sin(i))/x) for i in xrange(100))"
-    s = sum(trim((x+sin(i))/x+(x-sin(i))/x) for i in xrange(100))
+    "sum(simplify((x+sin(i))/x+(x-sin(i))/x) for i in xrange(100))"
+    s = sum(simplify((x+sin(i))/x+(x-sin(i))/x) for i in xrange(100))
 
 def bench_R7():
     "[f.subs(x, random()) for _ in xrange(10**4)]"

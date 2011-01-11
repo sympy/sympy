@@ -1327,9 +1327,6 @@ documentation on :func:`TrigSimp`).
 .. function:: cancel(self)
 
 
-.. function:: trim(self)
-
-
 .. function:: expand(self)
 
 
