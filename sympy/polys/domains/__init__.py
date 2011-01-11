@@ -77,7 +77,8 @@ else:
     GROUND_TYPES = GROUND_TYPES.lower()
 
     if GROUND_TYPES == 'gmpy' and not HAS_GMPY:
-        print "gmpy is not installed, switching to 'python' ground types\n"
+        from warnings import warn
+        warn("gmpy library is not installed, switching to 'python' ground types")
         GROUND_TYPES = 'python'
 
 if GROUND_TYPES == 'gmpy':
