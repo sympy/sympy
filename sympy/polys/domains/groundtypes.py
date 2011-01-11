@@ -1,7 +1,5 @@
 """Ground types for various mathematical domains in SymPy. """
 
-import warnings
-
 HAS_GMPY = True
 
 try:
@@ -12,7 +10,8 @@ else:
     try:
         int(gmpy.mpz(2**256))
     except OverflowError:
-        warnings.warn("gmpy library too old, can't take advantage of it")
+        from warnings import warn
+        warn("gmpy library is too old, can't take advantage of it")
         HAS_GMPY = False
 
 from __builtin__ import (
