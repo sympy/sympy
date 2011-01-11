@@ -128,9 +128,9 @@ def test_Indexed_properties():
     i, j = symbols('i j', integer=True)
     A = Indexed('A', i, j)
     assert A.rank == 2
-    assert A.indices == tuple(map(Idx, (i, j)))
+    assert A.indices == (i, j)
     assert A.base == IndexedBase('A')
-    assert A.ranges == [(None, None), (None, None)]
+    assert A.ranges == [None, None]
     raises(IndexException, 'A.shape')
 
     n, m = symbols('n m', integer=True)
@@ -148,3 +148,9 @@ def test_Indexed_shape_precedence():
     assert Indexed(a, Idx(i, m), Idx(j, n)).shape == Tuple(o, p)
     assert Indexed(a, Idx(i, m), Idx(j)).ranges == [(0, m - 1), (None, None)]
     assert Indexed(a, Idx(i, m), Idx(j)).shape == Tuple(o, p)
+
+def test_complex_indices():
+    i, j = symbols('i j', integer=True)
+    A = Indexed('A', i, i + j)
+    assert A.rank == 2
+    assert A.indices == (i, i + j)

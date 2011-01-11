@@ -13,6 +13,8 @@
               |             |
               |     2) The Idx class represent indices and each Idx can
               |        optionally contain information about its range.
+              |        Any integer expression can be used as an index, but
+              |        only the Idx class implies implicit summation.
               |
         3) IndexedBase represents the `stem' of an indexed object, here `M'.
            The stem used by itself is usually taken to represent the entire
@@ -20,7 +22,10 @@
 
     There can be any number of indices on an Indexed object.  No transformation
     properties are implemented in these Base objects, but implicit contraction
-    of repeated indices is supported.
+    of repeated indices is supported for indices of type Idx.
+
+    Note that the support for complex (i.e. non-atomic) integer expressions as
+    indices is limited.  (This should be improved in future releases.)
 
     Examples
     ========
@@ -34,7 +39,7 @@
     >>> M[i, j]
     M[i, j]
 
-    Repreated indices in a product implies a summation, so to express a
+    Repreated indices of type Idx implies a summation, so to express a
     matrix-vector product in terms of Indexed objects:
 
     >>> x = IndexedBase('x')
@@ -64,12 +69,12 @@
     >>> M[i, j].ranges
     [(0, -1 + m), (0, -1 + n)]
 
-    The above is can be contrasted with the following:
+    The above can be compared with the following:
 
     >>> A[i, 2, j].shape
     Tuple(dim1, 2*dim1, dim2)
     >>> A[i, 2, j].ranges
-    [(0, -1 + m), (None, None), (0, -1 + n)]
+    [(0, -1 + m), None, (0, -1 + n)]
 
     To analyze the structure of indexed expressions, you can use the methods
     get_indices() and get_contraction_structure():
@@ -89,6 +94,7 @@
 #   o test and guarantee numpy compatibility
 #      - implement full support for broadcasting
 #      - strided arrays
+#      - arrays with an offset for the indices
 #
 #   o more functions to analyze indexed expressions
 #      - identify standard constructs, e.g matrix-vector product in a subexpression
@@ -202,12 +208,6 @@ class IndexedBase(Expr):
     def _sympystr(self, p):
         return p.doprint(self.label)
 
-#FIXME only needed for 2.4 compatibility
-def _ensure_Idx(arg):
-    if isinstance(arg, Idx):
-        return arg
-    else:
-        return Idx(arg)
 
 class Indexed(Expr):
     """Represents a mathematical object with indices.
@@ -233,9 +233,6 @@ class Indexed(Expr):
             base = IndexedBase(base)
         elif not isinstance(base, IndexedBase):
             raise TypeError("Indexed expects string, Symbol or IndexedBase as base")
-        # FIXME: 2.4 compatibility
-        args = map(_ensure_Idx, args)
-        # args = tuple([ a if isinstance(a, Idx) else Idx(a) for a in args ])
         return Expr.__new__(cls, base, *args, **kw_args)
 
     @property
@@ -253,20 +250,45 @@ class Indexed(Expr):
 
     @property
     def shape(self):
-        """returns a list with dimensions of each index"""
+        """returns a list with dimensions of each index.
+
+        Dimensions is a property of the array, not of the indices.  Still, if
+        the IndexedBase does not define a shape attribute, it is assumed that
+        the ranges of the indices correspond to the shape of the array.
+
+        >>> from sympy.tensor.indexed import IndexedBase, Idx
+        >>> from sympy import symbols
+        >>> n, m = symbols('n m', integer=True)
+        >>> i = Idx('i', m)
+        >>> j = Idx('j', m)
+        >>> A = IndexedBase('A', shape=(n, n))
+        >>> B = IndexedBase('B')
+        >>> A[i, j].shape == (n, n)
+        >>> B[i, j].shape == (m, m)
+        """
         if self.base.shape:
             return self.base.shape
         try:
             return Tuple(*[i.upper - i.lower + 1 for i in self.indices])
+        except AttributeError:
+            raise IndexException("Range is not defined for all indices in: %s" % self)
         except TypeError:
-            # Let's return a more meaningful error
-            raise IndexException("Shape is not defined for all indices")
+            raise IndexException("Shape cannot be inferred from Idx with undefined range: %s"%self)
 
     @property
     def ranges(self):
         """returns a list of tuples with lower and upper range of each index
+
+        If an index does not define data menbers upper and lower, the
+        corresponding slot in the list contains ``None'' instead of a tuple.
         """
-        return [ (i.lower, i.upper) for i in self.indices ]
+        ranges = []
+        for i in self.indices:
+            try:
+                ranges.append((i.lower, i.upper))
+            except AttributeError:
+                ranges.append(None)
+        return ranges
 
     def _sympystr(self, p):
         indices = map(p.doprint, self.indices)
