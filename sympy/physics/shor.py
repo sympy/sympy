@@ -7,7 +7,7 @@ from sympy.functions.elementary.miscellaneous import *
 from sympy.matrices.matrices import *
 from sympy.simplify import *
 from sympy.core.symbol import *
-from sympy.physics.qbit import *
+from sympy.physics.qubit import *
 import math
 from sympy.core.numbers import igcd
 
@@ -32,7 +32,7 @@ class controlledMod(Gate):
         obj.N = args[2] #N is the type of modular arithmetic we are doing
         return obj
 
-    def _apply_QbitZBasisSet(self, qbits):
+    def _apply_operator(self, qbits):
         """
             This directly calculates the controlled mod of the second half of
             the register and puts it in the second
@@ -40,14 +40,22 @@ class controlledMod(Gate):
         """
         n = 1
         k = 0
+        #determine the value stored in high memory
         for i in range(self.t):
             k = k + n*qbits[self.t+i]
             n = n*2
+
+        #The value to go in low memory will be out
         out = int(self.a**k%self.N)
-        outarray = list(qbits.args[0:self.t])
+
+        #create array for new qbit-ket which will have high memory unaffected
+        outarray = list(qbits.args[0][0:self.t])
+
+        #place out in low memory
         for i in reversed(range(self.t)):
             outarray.append((out>>i)&1)
-        return Qbit(*outarray)
+        #return new Qubit object
+        return Qubit(outarray)
 
 def shor(N):
     """
