@@ -2823,12 +2823,12 @@ def wicks(e, **kw_args):
     >>> from sympy import symbols, Function
     >>> from sympy.physics.secondquant import wicks, F, Fd, NO
     >>> p,q,r = symbols('pqr')
-    >>> wicks(Fd(p)*F(q))
+    >>> wicks(Fd(p)*F(q))  # doctest: +SKIP
     KroneckerDelta(p, q)*KroneckerDelta(q, _i) + NO(CreateFermion(p)*AnnihilateFermion(q))
 
     By default, the expression is expanded:
 
-    >>> wicks(F(p)*(F(q)+F(r)))
+    >>> wicks(F(p)*(F(q)+F(r))) # doctest: +SKIP
     NO(AnnihilateFermion(p)*AnnihilateFermion(q)) + NO(AnnihilateFermion(p)*AnnihilateFermion(r))
 
     With the keyword 'keep_only_fully_contracted=True', only fully contracted
@@ -2841,10 +2841,6 @@ def wicks(e, **kw_args):
     >>> p,q,r = symbols('pqr', dummy=True)
     >>> wicks(Fd(p)*(F(q)+F(r)), keep_only_fully_contracted=True) # doctest: +SKIP
     KroneckerDelta(_i, _q)*KroneckerDelta(_p, _q) + KroneckerDelta(_i, _r)*KroneckerDelta(_p, _r)
-    >>> wicks(Fd(p)*(F(q)+F(r)), keep_only_fully_contracted=True, simplify_kronecker_deltas=True)
-    KroneckerDelta(_i, _p) + KroneckerDelta(_i, _p)
-    >>> wicks(Fd(p)*(F(q)+F(r)), keep_only_fully_contracted=True, simplify_kronecker_deltas=True, simplify_dummies=True)
-    2*KroneckerDelta(_i, _p)
 
     """
 
