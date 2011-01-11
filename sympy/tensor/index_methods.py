@@ -19,25 +19,27 @@ class IndexConformanceException(Exception):
     pass
 
 def _remove_repeated(inds):
-    """Removes repeated objects from sequences
+    """Removes repeated Idx from a sequence
 
     Returns a set of the unique objects and a tuple of all that have been
     removed.
 
     >>> from sympy.tensor.index_methods import _remove_repeated
-    >>> l1 = [1, 2, 3, 2]
+    >>> from sympy.tensor import Idx
+    >>> l1 = map(Idx, 'abb')
     >>> _remove_repeated(l1)
-    (set([1, 3]), (2,))
+    (set([a]), (b,))
 
     """
     sum_index = {}
     for i in inds:
-        if i in sum_index:
+        if i in sum_index and isinstance(i, Idx):
             sum_index[i] += 1
         else:
             sum_index[i] = 0
     inds = filter(lambda x: not sum_index[x], inds)
-    return set(inds), tuple([ i for i in sum_index if sum_index[i] ])
+    dummies = tuple([ i for i in sum_index if sum_index[i] ])
+    return set(inds), dummies
 
 def _get_indices_Mul(expr, return_dummies=False):
     """Determine the outer indices of a Mul object.
@@ -170,15 +172,15 @@ def get_indices(expr):
 
     By *outer* we mean indices that are not summation indices.  Returns a set
     and a dict.  The set contains outer indices and the dict contains
-    information about index symmetries.
+    information about index symmetries.  Only indices of class Idx are subject
+    to implicit summation.
 
     :Examples:
 
     >>> from sympy.tensor.index_methods import get_indices
-    >>> from sympy import symbols
     >>> from sympy.tensor import IndexedBase, Idx
     >>> x, y, A = map(IndexedBase, ['x', 'y', 'A'])
-    >>> i, j, a, z = symbols('i j a z', integer=True)
+    >>> i, j = map(Idx, ['i', 'j'])
 
     The indices of the total expression is determined, Repeated indices imply a
     summation, for instance the trace of a matrix A:
@@ -220,8 +222,7 @@ def get_indices(expr):
 
     # break recursion
     if isinstance(expr, Indexed):
-        c = expr.indices
-        inds, dummies = _remove_repeated(c)
+        inds, dummies = _remove_repeated(expr.indices)
         return inds, {}
     elif expr is None:
         return set(), {}
@@ -290,7 +291,6 @@ def get_contraction_structure(expr):
     :Examples:
 
     >>> from sympy.tensor.index_methods import get_contraction_structure
-    >>> from sympy import symbols
     >>> from sympy.tensor import IndexedBase, Idx
     >>> x, y, A = map(IndexedBase, ['x', 'y', 'A'])
     >>> i, j, k, l = map(Idx, ['i', 'j', 'k', 'l'])

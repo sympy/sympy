@@ -21,6 +21,10 @@ def test_get_indices_Indexed():
     assert get_indices(x[i, j]) == (set([i, j]), {})
     assert get_indices(x[j, i]) == (set([j, i]), {})
 
+    m, n = symbols('m n', integer=True)
+    assert get_indices(y[m]*x[m, n]) == (set([m, n]), {})
+    assert get_indices(y[m]*x[m, i]) == (set([m, i]), {})
+
 def test_get_indices_Idx():
     f = Function('f')
     i, j = Idx('i'), Idx('j')
@@ -80,6 +84,10 @@ def test_get_contraction_structure_basic():
     assert get_contraction_structure(x[i]*y[i]) == {(i,): set([x[i]*y[i]])}
     assert get_contraction_structure(1 + x[i]*y[i]) == {None: set([S.One]), (i,): set([x[i]*y[i]])}
     assert get_contraction_structure(x[i]**y[i]) == {None: set([x[i]**y[i]])}
+
+    m, n = symbols('m n', integer=True)
+    assert get_contraction_structure(y[m]*x[m, n]) == {None: set([y[m]*x[m, n]])}
+    assert get_contraction_structure(y[m]*x[m, i]) == {None: set([y[m]*x[m, i]])}
 
 def test_get_contraction_structure_complex():
     x = IndexedBase('x')
