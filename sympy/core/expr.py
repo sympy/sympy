@@ -32,7 +32,7 @@ class Expr(Basic, EvalfMixin):
     def __neg__(self):
         return Mul(S.NegativeOne, self)
     def __abs__(self):
-        return C.abs(self)
+        return C.Abs(self)
 
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__radd__')

@@ -67,9 +67,9 @@ class DiracDelta(Function):
            >>> from sympy.abc import x, y
 
            >>> DiracDelta(x*y).simplify(x)
-           DiracDelta(x)/abs(y)
+           DiracDelta(x)/Abs(y)
            >>> DiracDelta(x*y).simplify(y)
-           DiracDelta(y)/abs(x)
+           DiracDelta(y)/Abs(x)
 
            >>> DiracDelta(x**2+x-2).simplify(x)
            DiracDelta(-1 + x)/3 + DiracDelta(2 + x)/3

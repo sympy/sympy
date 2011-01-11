@@ -1,5 +1,5 @@
 from sympy.core import pi, oo, symbols, Function, Rational, Integer, GoldenRatio, EulerGamma, Catalan, Lambda
-from sympy.functions import Piecewise, sin, cos, abs, exp, ceiling, sqrt
+from sympy.functions import Piecewise, sin, cos, Abs, exp, ceiling, sqrt
 from sympy.utilities.pytest import XFAIL, raises
 from sympy.printing.ccode import CCodePrinter
 from sympy.utilities.lambdify import implemented_function
@@ -12,7 +12,7 @@ x, y, z = symbols('xyz')
 g = Function('g')
 
 def test_printmethod():
-    class fabs(abs):
+    class fabs(Abs):
         def _ccode(self, printer):
             return "fabs(%s)" % printer._print(self.args[0])
     assert ccode(fabs(x)) == "fabs(x)"
@@ -69,7 +69,7 @@ def test_ccode_inline_function():
 
 def test_ccode_exceptions():
     assert ccode(ceiling(x)) == "ceil(x)"
-    assert ccode(abs(x)) == "fabs(x)"
+    assert ccode(Abs(x)) == "fabs(x)"
 
 def test_ccode_boolean():
     assert ccode(x&y) == "x&&y"

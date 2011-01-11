@@ -1,4 +1,4 @@
-from sympy import abs, Catalan, cos, Derivative, E, EulerGamma, exp, factorial,\
+from sympy import Abs, Catalan, cos, Derivative, E, EulerGamma, exp, factorial,\
                   Function, GoldenRatio, I, Integer, Integral, Interval, Lambda,\
                   Limit, log, Matrix, nan, O, oo, pi, Rational, Real, Rel, S,\
                   sin, SMatrix, sqrt, sum, Sum, Sum2, Symbol, symbols, Wild,\
@@ -16,19 +16,19 @@ x, y, z, w = symbols('xyzw')
 d = Symbol('d', dummy=True)
 
 def test_printmethod():
-    class R(abs):
+    class R(Abs):
         def _sympystr(self, printer):
             return "foo(%s)" % printer._print(self.args[0])
     assert sstr(R(x)) == "foo(x)"
-    class R(abs):
+    class R(Abs):
         def _sympystr(self, printer):
             return "foo"
     assert sstr(R(x)) == "foo"
 
-def test_abs():
-    assert str(abs(x)) == "abs(x)"
-    assert str(abs(Rational(1,6))) == "1/6"
-    assert str(abs(Rational(-1,6))) == "1/6"
+def test_Abs():
+    assert str(Abs(x)) == "Abs(x)"
+    assert str(Abs(Rational(1,6))) == "1/6"
+    assert str(Abs(Rational(-1,6))) == "1/6"
 
 def test_Add():
     assert str(x+y) == "x + y"

@@ -6,20 +6,20 @@ Functions Module
 Elementary
 ==========
 
-This module implements elementary functions (abs, max, etc.)
+This module implements elementary functions, as well as functions like abs, max, etc.
 
 
-abs
+Abs
 ---
 
 Returns the absolute value of the argument.
 
 Examples::
-    >>> from sympy.functions import abs
-    >>> abs(-1)
+    >>> from sympy.functions import Abs
+    >>> Abs(-1)
     1
 
-.. autoclass:: sympy.functions.elementary.abs
+.. autoclass:: sympy.functions.elementary.Abs
 
 
 arg

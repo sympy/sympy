@@ -1,5 +1,5 @@
 from sympy.core import Symbol, symbols, S, Rational, Integer, I, pi, oo
-from sympy.functions import exp, log, sin, cos, sign, re, im, sqrt
+from sympy.functions import exp, log, sin, cos, sign, re, im, sqrt, Abs
 from sympy.assumptions import (Assume, global_assumptions, Q, ask,
     register_handler, remove_handler, AssumptionsContext)
 from sympy.assumptions.handlers import AskHandler
@@ -524,7 +524,7 @@ def test_complex():
     assert ask(exp(x), Q.complex) == True
 
     # Q.complexes
-    assert ask(abs(x), Q.complex) == True
+    assert ask(Abs(x), Q.complex) == True
     assert ask(re(x),  Q.complex) == True
     assert ask(im(x),  Q.complex) == True
 
@@ -565,8 +565,8 @@ def test_even():
     assert ask(x+y+z+t, Q.even, Assume(x, Q.odd) & Assume(y, Q.odd) & \
                      Assume(z, Q.even) & Assume(t, Q.integer)) == None
 
-    assert ask(abs(x), Q.even, Assume(x, Q.even)) == True
-    assert ask(abs(x), Q.even, Assume(x, Q.even, False)) == None
+    assert ask(Abs(x), Q.even, Assume(x, Q.even)) == True
+    assert ask(Abs(x), Q.even, Assume(x, Q.even, False)) == None
     assert ask(re(x),  Q.even, Assume(x, Q.even)) == True
     assert ask(re(x),  Q.even, Assume(x, Q.even, False)) == None
     assert ask(im(x),  Q.even, Assume(x, Q.even)) == True
@@ -734,7 +734,7 @@ def test_negative():
     assert ask(x**y, Q.negative, Assume(x, Q.positive) & \
                      Assume(y, Q.integer)) == False
 
-    assert ask(abs(x), Q.negative) == False
+    assert ask(Abs(x), Q.negative) == False
 
 def test_nonzero():
     x, y = symbols('xy')
@@ -755,8 +755,8 @@ def test_nonzero():
     assert ask(x*y, Q.nonzero, Assume(x, Q.nonzero)) == None
     assert ask(x*y, Q.nonzero, Assume(x, Q.nonzero) & Assume(y, Q.nonzero)) == True
 
-    assert ask(abs(x), Q.nonzero) == None
-    assert ask(abs(x), Q.nonzero, Assume(x, Q.nonzero)) == True
+    assert ask(Abs(x), Q.nonzero) == None
+    assert ask(Abs(x), Q.nonzero, Assume(x, Q.nonzero)) == True
 
 def test_odd():
     x, y, z, t = symbols('x y z t')
@@ -805,7 +805,7 @@ def test_odd():
     assert ask(2*x*y, Q.odd, Assume(x, Q.rational) & Assume(x, Q.rational)) == None
     assert ask(2*x*y, Q.odd, Assume(x, Q.irrational) & Assume(x, Q.irrational)) == None
 
-    assert ask(abs(x), Q.odd, Assume(x, Q.odd)) == True
+    assert ask(Abs(x), Q.odd, Assume(x, Q.odd)) == True
 
 def test_prime():
     x, y = symbols('x y')
@@ -854,8 +854,8 @@ def test_positive():
     assert ask(x + exp(x), Q.positive, Assume(x, Q.real)) == None
 
     #absolute value
-    assert ask(abs(x), Q.positive) == None # abs(0) = 0
-    assert ask(abs(x), Q.positive, Assume(x, Q.positive)) == True
+    assert ask(Abs(x), Q.positive) == None # Abs(0) = 0
+    assert ask(Abs(x), Q.positive, Assume(x, Q.positive)) == True
 
 @XFAIL
 def test_positive_xfail():

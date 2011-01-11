@@ -82,7 +82,7 @@ class PrettyPrinter(Printer):
         pform = self._print(e.args[0])
         return prettyForm( *pform.above( hobj('_',pform.width())) )
 
-    def _print_abs(self, e):
+    def _print_Abs(self, e):
         pform = self._print(e.args[0])
         pform = prettyForm(*pform.parens('|', '|'))
         return pform

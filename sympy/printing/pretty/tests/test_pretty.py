@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
-from sympy import Matrix, Piecewise, Ne, symbols, sqrt, Function, raises, \
-    Rational, conjugate, Derivative, tan, Function, log, floor, Symbol, \
-    pprint, sqrt, factorial, pi, sin, ceiling, pprint_use_unicode, I, S, \
-    Limit, oo, cos, Pow, Integral, exp, Eq, Lt, Gt, Ge, Le, gamma
+from sympy import (Matrix, Piecewise, Ne, symbols, sqrt, Function, raises,
+    Rational, conjugate, Derivative, tan, Function, log, floor, Symbol,
+    pprint, sqrt, factorial, pi, sin, ceiling, pprint_use_unicode, I, S,
+    Limit, oo, cos, Pow, Integral, exp, Eq, Lt, Gt, Ge, Le, gamma, Abs)
 
 from sympy.printing.pretty import pretty as xpretty
 from sympy.printing.pretty import pprint
@@ -66,9 +66,9 @@ sin(x)**3/tan(x)**2
 FUNCTIONS (ABS, CONJ, EXP, FUNCTION BRACES, FACTORIAL, FLOOR, CEILING):
 
 (2*x + exp(x))  #
-abs(x)
-abs(x/(x**2+1)) #
-abs(1 / (y - abs(x)))
+Abs(x)
+Abs(x/(x**2+1)) #
+Abs(1 / (y - Abs(x)))
 factorial(n)
 factorial(2*n)
 factorial(factorial(factorial(n)))
@@ -751,7 +751,7 @@ tan (x)\
 
 
 def test_pretty_functions():
-    """Tests for abs, conjugate, exp, function braces, and factorial."""
+    """Tests for Abs, conjugate, exp, function braces, and factorial."""
     expr = (2*x + exp(x))
     ascii_str_1 = \
 """\
@@ -776,7 +776,7 @@ u"""\
     assert  pretty(expr) in [ascii_str_1, ascii_str_2]
     assert upretty(expr) in [ucode_str_1, ucode_str_2]
 
-    expr = abs(x)
+    expr = Abs(x)
     ascii_str = \
 """\
 |x|\
@@ -788,7 +788,7 @@ u"""\
     assert  pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
-    expr = abs(x/(x**2+1))
+    expr = Abs(x/(x**2+1))
     ascii_str_1 = \
 """\
 |  x   |\n\
@@ -820,7 +820,7 @@ u"""\
     assert  pretty(expr) in [ascii_str_1, ascii_str_2]
     assert upretty(expr) in [ucode_str_1, ucode_str_2]
 
-    expr = abs(1 / (y - abs(x)))
+    expr = Abs(1 / (y - Abs(x)))
     ascii_str = \
 """\
 |   1   |\n\

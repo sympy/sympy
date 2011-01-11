@@ -16,7 +16,7 @@ def refine(expr, assumptions=True):
         >>> from sympy import refine, sqrt, Assume, Q
         >>> from sympy.abc import x
         >>> refine(sqrt(x**2), Assume(x, Q.real))
-        abs(x)
+        Abs(x)
         >>> refine(sqrt(x**2), Assume(x, Q.positive))
         x
 
@@ -39,13 +39,13 @@ def refine_abs(expr, assumptions):
 
     Examples::
 
-    >>> from sympy import Symbol, Assume, Q, refine
+    >>> from sympy import Symbol, Assume, Q, refine, Abs
     >>> from sympy.assumptions.refine import refine_abs
     >>> from sympy.abc import x
-    >>> refine_abs(abs(x), Assume(x, Q.real))
-    >>> refine_abs(abs(x), Assume(x, Q.positive))
+    >>> refine_abs(Abs(x), Assume(x, Q.real))
+    >>> refine_abs(Abs(x), Assume(x, Q.positive))
     x
-    >>> refine_abs(abs(x), Assume(x, Q.negative))
+    >>> refine_abs(Abs(x), Assume(x, Q.negative))
     -x
 
     """
@@ -156,7 +156,7 @@ def refine_exp(expr, assumptions):
                     return S.ImaginaryUnit
 
 handlers_dict = {
-    'abs'        : refine_abs,
+    'Abs'        : refine_abs,
     'Pow'        : refine_Pow,
     'exp'        : refine_exp,
 }

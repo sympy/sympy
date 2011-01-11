@@ -13,7 +13,7 @@ See:
  * http://en.wikipedia.org/wiki/Gibbs_phenomena
 """
 
-from sympy import var, sqrt, integrate, conjugate, seterr, abs, pprint, I, pi,\
+from sympy import var, sqrt, integrate, conjugate, seterr, Abs, pprint, I, pi,\
         sin, cos, sign, Plot, msolve, lambdify, Integral, S
 
 #seterr(True)
@@ -35,7 +35,7 @@ def l2_norm(f, lim):
     1/3*6**(1/2)
 
     """
-    return sqrt(integrate(abs(f)**2, lim))
+    return sqrt(integrate(Abs(f)**2, lim))
 
 def l2_inner_product(a, b, lim):
     """

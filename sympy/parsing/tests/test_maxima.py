@@ -1,12 +1,12 @@
 from sympy.parsing.maxima import parse_maxima
-from sympy import Rational, abs, Symbol, sin, cos, E, oo, log, factorial
+from sympy import Rational, Abs, Symbol, sin, cos, E, oo, log, factorial
 from sympy.abc import x
 
 n = Symbol('n', integer=True)
 
 
 def test_parser():
-    assert abs(parse_maxima('float(1/3)') - 0.333333333) < 10**(-5)
+    assert Abs(parse_maxima('float(1/3)') - 0.333333333) < 10**(-5)
     assert parse_maxima('13^26') == 91733330193268616658399616009
     assert parse_maxima('sin(%pi/2) + cos(%pi/3)') == Rational(3,2)
     assert parse_maxima('log(%e)') == 1
@@ -35,4 +35,4 @@ def test_maxima_functions():
                 )
             )  == factorial(n)
     assert parse_maxima('ratsimp((x^2-1)/(x+1))') == x-1
-    assert abs( parse_maxima('float(sec(%pi/3) + csc(%pi/3))') - 3.154700538379252) < 10**(-5)
+    assert Abs( parse_maxima('float(sec(%pi/3) + csc(%pi/3))') - 3.154700538379252) < 10**(-5)

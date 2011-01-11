@@ -109,7 +109,7 @@ class Sum(Expr):
             >>> s
             -log(a) + log(b) + 1/(2*a) + 1/(2*b)
             >>> e
-            abs(-1/(12*b**2) + 1/(12*a**2))
+            Abs(-1/(12*b**2) + 1/(12*a**2))
 
         If the function is a polynomial of degree at most 2n+1, the
         Euler-Maclaurin formula becomes exact (and e = 0 is returned):

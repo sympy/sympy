@@ -187,7 +187,7 @@ class AskEvenHandler(CommonHandler):
         return False
 
     @staticmethod
-    def abs(expr, assumptions):
+    def Abs(expr, assumptions):
         if ask(expr.args[0], Q.real, assumptions):
             return ask(expr.args[0], Q.even, assumptions)
 

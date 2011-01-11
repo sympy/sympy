@@ -166,11 +166,11 @@ def test_no_results_c():
 
 def test_ansi_math1_codegen():
     # not included: log10
-    from sympy import acos, asin, atan, ceiling, cos, cosh, floor, log, ln, \
-        sin, sinh, sqrt, tan, tanh, N
+    from sympy import (acos, asin, atan, ceiling, cos, cosh, floor, log, ln,
+        sin, sinh, sqrt, tan, tanh, N, Abs)
     x = symbols('x')
     name_expr = [
-        ("test_fabs", abs(x)),
+        ("test_fabs", Abs(x)),
         ("test_acos", acos(x)),
         ("test_asin", asin(x)),
         ("test_atan", atan(x)),
@@ -556,11 +556,11 @@ def test_no_results_f():
 
 def test_intrinsic_math_codegen():
     # not included: log10
-    from sympy import acos, asin, atan, ceiling, cos, cosh, floor, log, ln, \
-            sin, sinh, sqrt, tan, tanh, N
+    from sympy import (acos, asin, atan, ceiling, cos, cosh, floor, log, ln,
+            sin, sinh, sqrt, tan, tanh, N, Abs)
     x = symbols('x')
     name_expr = [
-            ("test_abs", abs(x)),
+            ("test_abs", Abs(x)),
             ("test_acos", acos(x)),
             ("test_asin", asin(x)),
             ("test_atan", atan(x)),
@@ -582,7 +582,7 @@ def test_intrinsic_math_codegen():
             'REAL*8 function test_abs(x)\n'
             'implicit none\n'
             'REAL*8, intent(in) :: x\n'
-            'test_abs = abs(x)\n'
+            'test_abs = Abs(x)\n'
             'end function\n'
             'REAL*8 function test_acos(x)\n'
             'implicit none\n'
