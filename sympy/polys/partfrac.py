@@ -1,7 +1,9 @@
 """Algorithms for partial fraction decomposition of rational functions. """
 
-from sympy.core import S, sympify, Symbol, Function, Lambda
-from sympy.polys import Poly, RootSum, cancel, parallel_poly_from_expr
+from sympy.polys import Poly, RootSum, cancel, factor
+from sympy.polys.polytools import parallel_poly_from_expr
+
+from sympy.core import S, Add, sympify, Symbol, Function, Lambda, Dummy
 from sympy.utilities import numbered_symbols, take, threaded
 
 @threaded
@@ -48,7 +50,12 @@ def apart(f, x=None, full=False):
         else:
             partial = apart_full_decomposition(P, Q)
 
-    return common*(poly.as_expr() + partial)
+    terms = S.Zero
+
+    for term in Add.make_args(partial):
+        terms += factor(term)
+
+    return common*(poly.as_expr() + terms)
 
 def apart_undetermined_coeffs(P, Q):
     """Partial fractions via method of undetermined coefficients. """
@@ -109,7 +116,7 @@ def apart_full_decomposition(P, Q):
     f, x, U = P/Q, P.gen, []
 
     u = Function('u')(x)
-    a = Symbol('a', dummy=True)
+    a = Dummy('a')
 
     partial = S(0)
 
