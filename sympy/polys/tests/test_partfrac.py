@@ -29,13 +29,14 @@ def test_apart():
     assert apart(f, full=False) == g
     assert apart(f, full=True) == g
 
+    assert apart((E*x+2)/(x-pi)*(x-1), x) == \
+        2 - E + E*pi + E*x - (2 + E*pi)*(-pi + 1)/(x - pi)
+
+    assert apart(Eq((x**2 + 1)/(x + 1), x), x) == Eq(x - 1 + 2/(x + 1), x)
+
     raises(NotImplementedError, "apart(1/(x + 1)/(y + 2))")
 
-    assert apart((E*x+2)/(x-pi)*(x-1), x) in [
-        2 - E + E*pi + E*x - 1/(x - pi)*( 2 - 2*pi + E*pi - E*pi**2),
-        2 - E + E*pi + E*x + 1/(x - pi)*(-2 + 2*pi - E*pi + E*pi**2),
-    ]
-
+def test_apart_matrix():
     M = Matrix(2, 2, lambda i, j: 1/(x - (i+1))/(x - (1-j)))
 
     assert apart(M) in [
@@ -49,12 +50,14 @@ def test_apart():
         ]),
     ]
 
-    assert apart(Eq((x**2 + 1)/(x + 1), x), x) == Eq(x - 1 + 2/(x + 1), x)
-
+def test_apart_symbolic():
     f = a*x**4 + (2*b + 2*a*c)*x**3 + (4*b*c - a**2 + a*c**2)*x**2 + (-2*a*b + 2*b*c**2)*x - b**2
     g = a**2*x**4 + (2*a*b + 2*c*a**2)*x**3 + (4*a*b*c + b**2 + a**2*c**2)*x**2 + (2*c*b**2 + 2*a*b*c**2)*x + b**2*c**2
 
     assert apart(f/g, x) == 1/a - 1/(x + c)**2 - b**2/(a*(a*x + b)**2)
+
+    assert apart(1/((x + a)*(x + b)*(x + c)), x) == \
+        1/((a - c)*(b - c)*(c + x)) - 1/((a - b)*(b - c)*(b + x)) + 1/((a - b)*(a - c)*(a + x))
 
 def test_apart_undetermined_coeffs():
     p = Poly(2*x - 3)
