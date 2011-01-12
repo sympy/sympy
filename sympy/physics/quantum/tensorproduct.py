@@ -38,7 +38,7 @@ def matrix_tensor_product(*matrices):
     ========
 
         >>> from sympy import I, Matrix, symbols
-        >>> from sympy.physics.quantum import matrix_tensor_product
+        >>> from sympy.physics.quantum.tensorproduct import matrix_tensor_product
 
         >>> m1 = Matrix([[1,2],[3,4]])
         >>> m2 = Matrix([[1,0],[0,1]])
@@ -135,22 +135,22 @@ class TensorProduct(Expr):
         >>> B = Symbol('B',commutative=False)
         >>> tp = TensorProduct(A, B)
         >>> tp
-        (AxB)
+        AxB
 
     We can take the dagger of a tensor product::
 
         >>> from sympy.physics.quantum import Dagger
         >>> Dagger(tp)
-        (conjugate(A)xconjugate(B))
+        conjugate(A)xconjugate(B)
 
     Expand can be used to distribute a tensor product across addition::
 
         >>> C = Symbol('C',commutative=False)
         >>> tp = TensorProduct(A+B,C)
         >>> tp
-        ((A + B)xC)
+        (A + B)xC
         >>> tp.expand(tensorproduct=True)
-        (AxC) + (BxC)
+        AxC + BxC
     """
 
     def __new__(cls, *args, **assumptions):
@@ -277,7 +277,7 @@ def tensor_product_simp_Mul(e):
     This is an example of the type of simplification that this function
     performs::
 
-        >>> from sympy.physics.quantum import tensor_product_simp_Mul, TensorProduct
+        >>> from sympy.physics.quantum.tensorproduct import tensor_product_simp_Mul, TensorProduct
         >>> from sympy import Symbol
         >>> A = Symbol('A',commutative=False)
         >>> B = Symbol('B',commutative=False)
@@ -285,9 +285,9 @@ def tensor_product_simp_Mul(e):
         >>> D = Symbol('D',commutative=False)
         >>> e = TensorProduct(A,B)*TensorProduct(C,D)
         >>> e
-        (AxB)*(CxD)
+        AxB*CxD
         >>> tensor_product_simp_Mul(e)
-        ((A*C)x(B*D))
+        (A*C)x(B*D)
 
     """
     # TODO: This won't work with Muls that have other composites of 
@@ -346,15 +346,15 @@ def tensor_product_simp(e, **hints):
 
         >>> e = TensorProduct(A,B)*TensorProduct(C,D)
         >>> e
-        (AxB)*(CxD)
+        AxB*CxD
         >>> tensor_product_simp(e)
-        ((A*C)x(B*D))
+        (A*C)x(B*D)
 
     This is the core logic of this function, and it works inside, powers,
     sums, commutators and anticommutators as well::
 
         >>> tensor_product_simp(e**2)
-        ((A*C)x(B*D))**2    
+        (A*C)x(B*D)**2    
     """
     if isinstance(e, Add):
         return Add(*[tensor_product_simp(arg) for arg in e.args])

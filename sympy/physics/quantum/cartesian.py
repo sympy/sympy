@@ -5,7 +5,7 @@ from sympy import Interval, DiracDelta
 from sympy.physics.quantum.operator import HermitianOperator
 from sympy.physics.quantum.state import Ket, Bra
 from sympy.physics.quantum.constants import hbar
-from sympy.physics.hilbert import L2
+from sympy.physics.quantum.hilbert import L2
 
 
 class XOp(HermitianOperator):

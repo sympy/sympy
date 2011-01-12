@@ -220,7 +220,7 @@ class Ket(State, KetBase):
         >>> k.dual
         <psi|
         >>> k.dual_class
-        <class 'sympy.physics.quantum.Bra'>
+        <class 'sympy.physics.quantum.state.Bra'>
 
     Take a linear combination of two kets::
 
@@ -280,7 +280,7 @@ class Bra(State, BraBase):
         >>> b.dual
         |psi>
         >>> b.dual_class
-        <class 'sympy.physics.quantum.Ket'>
+        <class 'sympy.physics.quantum.state.Ket'>
 
     Like Ket's Bras can have compound labels and be manipulated::
 
@@ -406,7 +406,7 @@ class TimeDepKet(TimeDepState, KetBase):
         >>> k.dual
         <psi;t|
         >>> k.dual_class
-        <class 'sympy.physics.quantum.TimeDepBra'>
+        <class 'sympy.physics.quantum.state.TimeDepBra'>
     """
 
     @property

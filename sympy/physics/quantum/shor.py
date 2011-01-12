@@ -1,18 +1,13 @@
 import math
+import random
 
-from sympy import Expr, Function
-
-# FIXME: get rid is these from foo import * statements.
-from sympy.core.numbers import *
-from sympy.core.function import Function
-from sympy.functions.elementary.exponential import *
-from sympy.functions.elementary.miscellaneous import *
-from sympy.matrices.matrices import *
-from sympy.simplify import *
-from sympy.core.symbol import *
-from sympy.physics.qubit import *
-
+from sympy import Expr, Mul
+from sympy import log, sqrt
 from sympy.core.numbers import igcd
+
+from sympy.physics.quantum.gate import Gate
+from sympy.physics.quantum.qubit import QubitKet
+from sympy.physics.quantum.qft import QFT
 
 
 class controlledMod(Gate):
@@ -57,8 +52,8 @@ class controlledMod(Gate):
         #place out in low memory
         for i in reversed(range(self.t)):
             outarray.append((out>>i)&1)
-        #return new Qubit object
-        return Qubit(outarray)
+        #return new QubitKet object
+        return QubitKet(outarray)
 
 def shor(N):
     """
@@ -156,7 +151,7 @@ def periodfind(a, N):
     qbits = 0
     for i in range(2**t):
         qbitArray = arr(i, t) + start
-        qbits = qbits + Qbit(*qbitArray)
+        qbits = qbits + QubitKet(*qbitArray)
     circuit = (factor*qbits).expand()
     #Controlled second half of register so that we have:
     # |1>x|a**1 %N> + |2>x|a**2 %N> + ... + |k>x|a**k %N >+ ... + |2**n-1=k>x|a**k % n>
@@ -175,9 +170,9 @@ def periodfind(a, N):
         circuit = measure(i+t)*circuit
     circuit = apply_gates(circuit)
     print circuit
-    if isinstance(circuit, Qbit):
+    if isinstance(circuit, QubitKet):
         register = circuit
-    elif isinstance(circuit, QMul):
+    elif isinstance(circuit, Mul):
         register = circuit.args[-1]
     else:
         register = circuit.args[-1].args[-1]

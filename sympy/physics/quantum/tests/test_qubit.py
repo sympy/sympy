@@ -96,7 +96,7 @@ def test_CNOTGate():
     assert represent(circuit, ZGate(0)**2) == \
     Matrix([[1,0,0,0],[0,1,0,0],[0,0,0,1],[0,0,1,0]])
     circuit = circuit*Qubit('111')
-    assert matrix_to_Qubits(represent(circuit, ZGate(0)**3)) == \
+    assert matrix_to_qubits(represent(circuit, ZGate(0)**3)) == \
     apply_operators(circuit)
 
 def test_ToffoliGate():
@@ -108,26 +108,26 @@ def test_ToffoliGate():
 
     circuit = ToffoliGate(3,0,1)
     assert apply_operators(circuit*Qubit('1001')) == \
-    matrix_to_Qubits(represent(circuit*Qubit('1001'), ZGate(0)**4))
+    matrix_to_qubits(represent(circuit*Qubit('1001'), ZGate(0)**4))
     assert apply_operators(circuit*Qubit('0000')) == \
-    matrix_to_Qubits(represent(circuit*Qubit('0000'), ZGate(0)**4))
+    matrix_to_qubits(represent(circuit*Qubit('0000'), ZGate(0)**4))
 
 def test_SwapGate():
     assert apply_operators(SwapGate(0,1)*Qubit('10')) == Qubit('01')
     assert Qubit('010') == apply_operators(SwapGate(1,0)*SwapGate(0,1)*Qubit('010'))
-    assert matrix_to_Qubits(represent(SwapGate(0,1)*Qubit('10'), ZGate(0)**2))\
+    assert matrix_to_qubits(represent(SwapGate(0,1)*Qubit('10'), ZGate(0)**2))\
      == Qubit('01')
-    assert Qubit('010') == matrix_to_Qubits(represent(SwapGate(1,0)\
+    assert Qubit('010') == matrix_to_qubits(represent(SwapGate(1,0)\
     *SwapGate(0,1)*Qubit('010'), ZGate(0)**3))
 
 def test_ControlledZ_Gate():
     assert apply_operators(CZGate(0,1)*Qubit('11')) == -Qubit('11')
-    assert matrix_to_Qubits(represent(CZGate(0,1)*Qubit('11'),\
+    assert matrix_to_qubits(represent(CZGate(0,1)*Qubit('11'),\
      ZGate(0)**2)) == -Qubit('11')
 
 def test_CPhase_Gate():
     assert apply_operators(CPhaseGate(0,1)*Qubit('11')) == ImaginaryUnit()*Qubit('11')
-    assert matrix_to_Qubits(represent(CPhaseGate(0,1)*Qubit('11'),\
+    assert matrix_to_qubits(represent(CPhaseGate(0,1)*Qubit('11'),\
      ZGate(0)**2)) == ImaginaryUnit()*Qubit('11')
 
 def test_gateSort():
@@ -226,7 +226,7 @@ def test_ArbMat4_Equality():
         for j in range(4):
             if j != i:
                 assert apply_operators(Arb(i,j)*(Qubit('10110'))) ==\
-                matrix_to_Qubits(represent(Arb(i,j)*Qubit('10110'),\
+                matrix_to_qubits(represent(Arb(i,j)*Qubit('10110'),\
                 ZGate(0)**5))
 
 def test_Arb8_Matrix_Equality():
@@ -248,7 +248,7 @@ def test_Arb8_Matrix_Equality():
             for k in range(4):
                 if j != i and k != i and k != j:
                     assert apply_operators(Arb(i,j,k)*(Qubit((0,1,1,1,0)))) ==\
-                     matrix_to_Qubits(represent(Arb(i,j,k)*Qubit((0,1,1,1,0)),\
+                     matrix_to_qubits(represent(Arb(i,j,k)*Qubit((0,1,1,1,0)),\
                      ZGate(0)**5))
 
 def test_superposition_of_states():
@@ -256,7 +256,7 @@ def test_superposition_of_states():
      + 1/sqrt(2)*Qubit((1,0)))).expand() == (Qubit((0,1))/2 + Qubit((0,0))/2 - Qubit((1,1))/2 +\
      Qubit((1,0))/2)
 
-    assert matrix_to_Qubits(represent(CNOTGate(0,1)*HadamardGate(0)\
+    assert matrix_to_qubits(represent(CNOTGate(0,1)*HadamardGate(0)\
     *(1/sqrt(2)*Qubit((0,1)) + 1/sqrt(2)*Qubit((1,0))), ZGate(0)**(2)))\
      == (Qubit((0,1))/2 + Qubit((0,0))/2 - Qubit((1,1))/2 + Qubit((1,0))/2)
 
@@ -345,20 +345,20 @@ def test_apply_represent_equality():
 
     mat = represent(circuit, ZGate(0)**(6))
     states = apply_operators(circuit)
-    state_rep = matrix_to_Qubits(mat)
+    state_rep = matrix_to_qubits(mat)
     states = states.expand()
     state_rep = state_rep.expand()
     assert state_rep == states
 
-def test_matrix_to_Qubits():
-    assert matrix_to_Qubits(Matrix([1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]))\
+def test_matrix_to_qubits():
+    assert matrix_to_qubits(Matrix([1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]))\
     == Qubit((0,0,0,0))
-    assert Qubits_to_matrix(Qubit((0,0,0,0))) ==\
+    assert qubits_to_matrix(Qubit((0,0,0,0))) ==\
     Matrix([1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0])
-    assert matrix_to_Qubits(sqrt(2)*2*Matrix([1,1,1,1,1,1,1,1])) ==\
+    assert matrix_to_qubits(sqrt(2)*2*Matrix([1,1,1,1,1,1,1,1])) ==\
     (2*sqrt(2)*(Qubit((0,0,0)) + Qubit((0,0,1)) + Qubit((0,1,0)) + Qubit((0,1,1))\
     + Qubit((1,0,0)) + Qubit((1,0,1)) + Qubit((1,1,0)) + Qubit((1,1,1)))).expand()
-    assert Qubits_to_matrix(2*sqrt(2)*(Qubit((0,0,0)) + Qubit((0,0,1)) + Qubit((0,1,0))\
+    assert qubits_to_matrix(2*sqrt(2)*(Qubit((0,0,0)) + Qubit((0,0,1)) + Qubit((0,1,0))\
     + Qubit((0,1,1)) + Qubit((1,0,0)) + Qubit((1,0,1)) + Qubit((1,1,0)) + Qubit((1,1,1))))\
     == sqrt(2)*2*Matrix([1,1,1,1,1,1,1,1])
 

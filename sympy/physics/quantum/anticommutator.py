@@ -37,7 +37,8 @@ class AntiCommutator(Expr):
     ========
 
         >>> from sympy import symbols
-        >>> from sympy.physics.quantum import AntiCommutator, Operator, Dagger
+        >>> from sympy.physics.quantum import AntiCommutator
+        >>> from sympy.physics.quantum import Operator, Dagger
         >>> x, y = symbols('xy')
         >>> A = Operator('A')
         >>> B = Operator('B')
