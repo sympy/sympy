@@ -718,6 +718,35 @@ class Matrix(object):
             outMat[i*outCols:(i+1)*outCols] = self.mat[(i+rlo)*self.cols+clo:(i+rlo)*self.cols+chi]
         return Matrix(outLines,outCols,outMat)
 
+    def extract(self, rowsList, colsList):
+        """
+        Extract a submatrix by specifying a list of rows and columns
+
+        Examples
+        -------
+        >>> from sympy import Matrix
+        >>> m = Matrix(4, 3, lambda i, j: i*3 + j)
+        >>> m   #doctest: +NORMALIZE_WHITESPACE
+        [0,  1,  2]
+        [3,  4,  5]
+        [6,  7,  8]
+        [9, 10, 11]
+        >>> m.extract([0,1,3],[0,1])   #doctest: +NORMALIZE_WHITESPACE
+        [0,  1]
+        [3,  4]
+        [9, 10]
+
+        See also: .submatrix()
+        """
+        cols = self.cols
+        rows = self.rows
+        mat = self.mat
+        if not all(i < rows for i in rowsList):
+            raise IndexError("Row indices out of range")
+        if not all(j < cols for j in colsList):
+            raise IndexError("Column indices out of range")
+        return Matrix(len(rowsList), len(colsList), lambda i,j: mat[rowsList[i]*cols + colsList[j]])
+
     def slice2bounds(self, key, defmax):
         """
             Takes slice or number and returns (min,max) for iteration
