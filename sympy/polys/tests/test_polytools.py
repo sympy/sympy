@@ -572,6 +572,9 @@ def test_Poly_properties():
     assert Poly(x+y+z+1).is_linear == True
     assert Poly(x*y*z+1).is_linear == False
 
+    assert Poly(x*y+z+1).is_quadratic == True
+    assert Poly(x*y*z+1).is_quadratic == False
+
     assert Poly(x*y).is_monomial == True
     assert Poly(x*y+1).is_monomial == False
 
