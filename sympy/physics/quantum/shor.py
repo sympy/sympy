@@ -6,7 +6,7 @@ from sympy import log, sqrt
 from sympy.core.numbers import igcd
 
 from sympy.physics.quantum.gate import Gate
-from sympy.physics.quantum.qubit import QubitKet
+from sympy.physics.quantum.qubit import Qubit
 from sympy.physics.quantum.qft import QFT
 
 
@@ -52,8 +52,8 @@ class controlledMod(Gate):
         #place out in low memory
         for i in reversed(range(self.t)):
             outarray.append((out>>i)&1)
-        #return new QubitKet object
-        return QubitKet(outarray)
+        #return new Qubit object
+        return Qubit(outarray)
 
 def shor(N):
     """
@@ -151,7 +151,7 @@ def periodfind(a, N):
     qbits = 0
     for i in range(2**t):
         qbitArray = arr(i, t) + start
-        qbits = qbits + QubitKet(*qbitArray)
+        qbits = qbits + Qubit(*qbitArray)
     circuit = (factor*qbits).expand()
     #Controlled second half of register so that we have:
     # |1>x|a**1 %N> + |2>x|a**2 %N> + ... + |k>x|a**k %N >+ ... + |2**n-1=k>x|a**k % n>
@@ -170,7 +170,7 @@ def periodfind(a, N):
         circuit = measure(i+t)*circuit
     circuit = apply_gates(circuit)
     print circuit
-    if isinstance(circuit, QubitKet):
+    if isinstance(circuit, Qubit):
         register = circuit
     elif isinstance(circuit, Mul):
         register = circuit.args[-1]

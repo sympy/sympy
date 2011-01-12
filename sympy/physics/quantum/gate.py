@@ -129,9 +129,9 @@ class Gate(Operator):
     # Apply
     #-------------------------------------------------------------------------
 
-    def _apply_operator_QubitKet(self, qubits, **options):
-        """Apply this gate to a QubitKet."""
-        from sympy.physics.quantum.qubit import QubitKet
+    def _apply_operator_Qubit(self, qubits, **options):
+        """Apply this gate to a Qubit."""
+        from sympy.physics.quantum.qubit import Qubit
         mat = self.matrix
         label = self.label
 
@@ -153,7 +153,7 @@ class Gate(Operator):
         # Now apply each column element to Qubit.
         result = 0
         for index in range(len(column.tolist())):
-            new_qubit = QubitKet(*qubits.args)
+            new_qubit = Qubit(*qubits.args)
             # Flip the bits that need to be flipped.
             for bit in range(len(label)):
                 if new_qubit[label[bit]] != (index>>bit)&1:
