@@ -14,7 +14,7 @@ from sympy.physics.quantum.represent import represent
 
 __all__ = [
     'Qubit',
-    'QubitKet',
+    'Qubit',
     'QubitBra',
     'qubit_to_matrix',
     'matrix_to_qubit'
@@ -144,7 +144,7 @@ class QubitState(State):
         return self.__class__(newargs)
 
 
-class QubitKet(QubitState, Ket):
+class Qubit(QubitState, Ket):
 
     @property
     def dual_class(self):
@@ -177,11 +177,8 @@ class QubitBra(QubitState, Bra):
 
     @property
     def dual_class(self):
-        return QubitKet
+        return Qubit
 
-
-# Shorthand notation for the ket.
-Qubit = QubitKet
 
 def matrix_to_qubit(matrix):
     """Converts a matrix representation of the state of a system into a Sum
