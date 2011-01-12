@@ -104,7 +104,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Thomas Dixon: Fix a limit bug
 #. Cristóvão Sousa: Implements _sage_ method for sign function.
 #. Andre de Fortier Smit: Doctests in matrices improved
-
+#. Alexey U. Goodchenko: Implemented Matrix.extract()
 
 
 Up-to-date list in the order of the first contribution is given in the `AUTHORS
