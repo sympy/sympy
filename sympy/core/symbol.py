@@ -43,8 +43,9 @@ class Symbol(AtomicExpr, Boolean):
         """
 
         if 'dummy' in assumptions:
-            if assumptions.pop('dummy'):
-                return Dummy(name, commutative, **assumptions)
+            import warnings
+            warnings.warn("\nuse Dummy() or symbols() to create dummy symbols.",
+                          DeprecationWarning)
         return Symbol.__xnew_cached_(cls, name, commutative, **assumptions)
 
     def __new_stage2__(cls, name, commutative=True, **assumptions):
