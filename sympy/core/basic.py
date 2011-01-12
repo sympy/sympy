@@ -357,8 +357,37 @@ class Basic(AssumeMeths):
 
         return key, reverse
 
-    def as_ordered_terms(self, order=None, data=True):
-        """Transform an expression to an ordered list of terms. """
+    def as_ordered_factors(self, order=None):
+        """
+        Transform an expression to an ordered list of factors.
+
+        **Examples**
+
+        >>> from sympy import sin, cos
+        >>> from sympy.abc import x, y
+
+        >>> (2*x*y*sin(x)*cos(x)).as_ordered_factors()
+        [2, x, y, sin(x), cos(x)]
+
+        """
+        if not self.is_Mul:
+            return [self]
+        else:
+            return sorted(self.args, key=lambda expr: Basic.sorted_key(expr, order=order))
+
+    def as_ordered_terms(self, order=None, data=False):
+        """
+        Transform an expression to an ordered list of terms.
+
+        **Examples**
+
+        >>> from sympy import sin, cos
+        >>> from sympy.abc import x, y
+
+        >>> (sin(x)**2*cos(x) + sin(x)**2 + 1).as_ordered_terms()
+        [sin(x)**2*cos(x), sin(x)**2, 1]
+
+        """
         from sympy.utilities import any
 
         key, reverse = self._parse_order(order)
@@ -432,7 +461,7 @@ class Basic(AssumeMeths):
 
         return result, gens
 
-    def as_tuple_tree(self):
+    def as_tuple_tree(self, order=None):
         """Construct a tuple-tree version of ``self``. """
 
         funcs = {
@@ -465,7 +494,7 @@ class Basic(AssumeMeths):
 
             for arg in args:
                 if isinstance(arg, Basic):
-                    arg = arg.as_tuple_tree()
+                    arg = arg.as_tuple_tree(order=order)
                 elif hasattr(arg, '__iter__'):
                     arg = rmap(arg)
 
@@ -500,7 +529,7 @@ class Basic(AssumeMeths):
                     args = (expr,)
             else:
                 if expr.is_Add:
-                    args = expr.as_ordered_terms(data=False)
+                    args = expr.as_ordered_terms(order=order)
                 else:
                     args = expr.args
 
@@ -510,12 +539,12 @@ class Basic(AssumeMeths):
                     args = sorted(args)
 
             args = (len(args), args)
-            exp = exp.as_tuple_tree()
+            exp = exp.as_tuple_tree(order=order)
 
             return head(expr), args, exp, coeff
 
     @classmethod
-    def sorted_key(cls, expr):
+    def sorted_key(cls, expr, order=None):
         """
         A key-function for sorting expressions.
 
@@ -533,7 +562,7 @@ class Basic(AssumeMeths):
         [x**(-2), 1/x, x**(1/4), x**(1/2), x, x**(3/2), x**2]
 
         """
-        return expr.as_tuple_tree()
+        return expr.as_tuple_tree(order=order)
 
     def __eq__(self, other):
         """a == b  -> Compare two symbolic trees and see whether they are equal
