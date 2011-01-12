@@ -233,7 +233,12 @@ def interactive_traversal(expr):
         print END
 
         if isinstance(expr, Basic):
-            args = expr.args
+            if expr.is_Add:
+                args = expr.as_ordered_terms()
+            elif expr.is_Mul:
+                args = expr.as_ordered_factors()
+            else:
+                args = expr.args
         elif hasattr(expr, "__iter__"):
             args = list(expr)
         else:
