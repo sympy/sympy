@@ -259,5 +259,5 @@ class Printer(object):
         if order is None:
             return sorted(Add.make_args(expr), Basic._compare_pretty)
         else:
-            return expr.as_ordered_terms(order=order, data=False)
+            return expr.as_ordered_terms(order=order)
 

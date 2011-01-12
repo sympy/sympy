@@ -906,3 +906,11 @@ def test_expr_sorting():
 
     exprs = [S(4), x - 3*I/2, x + 3*I/2, x - 4*I + 1, x + 4*I + 1]
     assert sorted(exprs, key=Basic.sorted_key) == exprs
+
+def test_as_ordered_factors():
+    assert x.as_ordered_factors() == [x]
+    assert (2*x*x**n*sin(x)*cos(x)).as_ordered_factors() == [Integer(2), x, x**n, sin(x), cos(x)]
+
+def test_as_ordered_terms():
+    assert x.as_ordered_terms() == [x]
+    assert (sin(x)**2*cos(x) + sin(x)*cos(x)**2 + 1).as_ordered_terms() == [sin(x)**2*cos(x), sin(x)*cos(x)**2, 1]
