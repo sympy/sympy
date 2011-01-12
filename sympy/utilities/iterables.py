@@ -221,7 +221,7 @@ def interactive_traversal(expr):
     END = '\033[0m'
 
     def cprint(*args):
-        print "".join(map(str, args))
+        print "".join(map(str, args)) + END
 
     def _interactive_traversal(expr, stage):
         if stage > 0:
@@ -255,12 +255,20 @@ def interactive_traversal(expr):
             choices = '0-%d' % (n_args-1)
 
         try:
-            choice = raw_input("Your choice [%s,f,l,r,d]: " % choices)
+            choice = raw_input("Your choice [%s,f,l,r,d,?]: " % choices)
         except EOFError:
             result = expr
             print
         else:
-            if choice in ['d', '']:
+            if choice == '?':
+                cprint(RED, "%s - select subexpression with the given index" % choices)
+                cprint(RED, "f - select the first subexpression")
+                cprint(RED, "l - select the last subexpression")
+                cprint(RED, "r - select a random subexpression")
+                cprint(RED, "d - done\n")
+
+                result = _interactive_traversal(expr, stage)
+            elif choice in ['d', '']:
                 result = expr
             elif choice == 'f':
                 result = _interactive_traversal(args[0], stage+1)
@@ -272,9 +280,11 @@ def interactive_traversal(expr):
                 try:
                     choice = int(choice)
                 except ValueError:
+                    cprint(BRED, "Choice must be a number in %s range\n" % choices)
                     result = _interactive_traversal(expr, stage)
                 else:
                     if choice < 0 or choice >= n_args:
+                        cprint(BRED, "Choice must be in %s range\n" % choices)
                         result = _interactive_traversal(expr, stage)
                     else:
                         result = _interactive_traversal(args[choice], stage+1)
