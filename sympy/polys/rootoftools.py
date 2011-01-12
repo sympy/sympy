@@ -554,7 +554,7 @@ class RootSum(Expr):
 
     __slots__ = ['poly', 'fun', 'auto']
 
-    def __new__(cls, expr, func=None, x=None, auto=True):
+    def __new__(cls, expr, func=None, x=None, auto=True, quadratic=False):
         """Construct a new ``RootSum`` instance carrying all roots of a polynomial. """
         coeff, poly = cls._transform(expr, x)
 
@@ -589,6 +589,8 @@ class RootSum(Expr):
         for poly, k in factors:
             if poly.is_linear:
                 term = func(roots_linear(poly)[0])
+            elif quadratic and poly.is_quadratic:
+                term = sum(map(func, roots_quadratic(poly)))
             else:
                 if not rational or not auto:
                     term = cls._new(poly, func, auto)
