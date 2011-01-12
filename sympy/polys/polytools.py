@@ -2861,6 +2861,24 @@ class Poly(Basic):
         return f.rep.is_linear
 
     @property
+    def is_quadratic(f):
+        """
+        Returns ``True`` if ``f`` is quadratic in all its variables.
+
+        **Examples**
+
+        >>> from sympy import Poly
+        >>> from sympy.abc import x, y
+
+        >>> Poly(x*y + 2, x, y).is_quadratic
+        True
+        >>> Poly(x*y**2 + 2, x, y).is_quadratic
+        False
+
+        """
+        return f.rep.is_quadratic
+
+    @property
     def is_monomial(f):
         """
         Returns ``True`` if ``f`` is zero or has only one term.

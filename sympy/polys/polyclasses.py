@@ -728,6 +728,11 @@ class DMP(object):
         return all([ sum(monom) <= 1 for monom in dmp_to_dict(f.rep, f.lev).keys() ])
 
     @property
+    def is_quadratic(f):
+        """Returns `True` if `f` is quadratic in all its variables. """
+        return all([ sum(monom) <= 2 for monom in dmp_to_dict(f.rep, f.lev).keys() ])
+
+    @property
     def is_homogeneous(f):
         """Returns `True` if `f` has zero trailing coefficient. """
         return f.dom.is_zero(dmp_ground_TC(f.rep, f.lev, f.dom))
