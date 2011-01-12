@@ -95,9 +95,9 @@ class Dummy(Symbol):
     If a name is not supplied then a string value of the count index will be
     used. This is useful when a temporary variable is needed and the name
     of the variable used in the expression is not important. ::
-    >>> Dummy._count = 0 # /!\ this should generally not be changed
-    >>> Dummy()          # it is being used here to make sure that the doctest
-    _0                   # passes.
+    >>> Dummy._count = 0 # /!\ this should generally not be changed; it is being
+    >>> Dummy()          # used here to make sure that the doctest passes.
+    _0
 
     """
 
