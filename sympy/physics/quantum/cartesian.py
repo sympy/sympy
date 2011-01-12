@@ -1,9 +1,10 @@
 from sympy import I, S, sqrt, pi
-from sympy import exp, diff, conjugate
+from sympy import exp, conjugate
 from sympy import Interval, DiracDelta
 
-from sympy.physics.quantum import HermitianOperator, Ket, Bra
-from sympy.physics.quantum import hbar
+from sympy.physics.quantum.operator import HermitianOperator
+from sympy.physics.quantum.state import Ket, Bra
+from sympy.physics.quantum.constants import hbar
 from sympy.physics.hilbert import L2
 
 

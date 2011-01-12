@@ -13,10 +13,14 @@ from sympy import exp, cos, sin, diff, factorial
 from sympy.printing.pretty.stringpict import prettyForm, stringPict
 from sympy.matrices.matrices import zeros
 
-from sympy.physics.qexpr import QExpr
-from sympy.physics.quantum import HermitianOperator, Operator, State, Ket, Bra
-from sympy.physics.quantum import KroneckerDelta, hbar, UnitaryOperator
-from sympy.physics.hilbert import ComplexSpace
+from sympy.physics.quantum.qexpr import QExpr
+from sympy.physics.quantum.operator import (
+    HermitianOperator, Operator, UnitaryOperator
+)
+from sympy.physics.quantum.state import State, Ket, Bra
+from sympy.physics.quantum.kronecker import KroneckerDelta
+from sympy.physics.quantum.constants import hbar 
+from sympy.physics.quantum.hilbert import ComplexSpace
 
 
 __all__ = [

@@ -1,6 +1,9 @@
-from sympy import Expr, sympify, Add, Mul, Pow, I, Function, Integer, S, sympify, Matrix, elementary
+import math
+
+from sympy import Expr, Function
+
+# FIXME: get rid is these from foo import * statements.
 from sympy.core.numbers import *
-from sympy.core.basic import S, sympify
 from sympy.core.function import Function
 from sympy.functions.elementary.exponential import *
 from sympy.functions.elementary.miscellaneous import *
@@ -8,7 +11,7 @@ from sympy.matrices.matrices import *
 from sympy.simplify import *
 from sympy.core.symbol import *
 from sympy.physics.qubit import *
-import math
+
 from sympy.core.numbers import igcd
 
 

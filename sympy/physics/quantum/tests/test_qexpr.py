@@ -1,5 +1,5 @@
 from sympy import Symbol, Tuple
-from sympy.physics.qexpr import QExpr
+from sympy.physics.quantum.qexpr import QExpr
 from sympy.physics.hilbert import HilbertSpace
 
 x = Symbol('x')

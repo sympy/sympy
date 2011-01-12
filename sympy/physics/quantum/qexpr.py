@@ -2,6 +2,11 @@ from sympy import Expr, sympify, Symbol
 from sympy.printing.pretty.stringpict import prettyForm
 from sympy.core.containers import Tuple
 
+__all__ = [
+    'QuantumError',
+    'QExpr'
+]
+
 
 #-----------------------------------------------------------------------------
 # Error handling
@@ -42,7 +47,7 @@ class QExpr(Expr):
         Examples
         ========
 
-        >>> from sympy.physics.qexpr import QExpr
+        >>> from sympy.physics.quantum.qexpr import QExpr
         >>> q = QExpr(0)
         >>> q
         0
@@ -127,7 +132,7 @@ class QExpr(Expr):
     @classmethod
     def _eval_hilbert_space(cls, label):
         """Compute the Hilbert space instance from the label."""
-        from sympy.physics.hilbert import HilbertSpace
+        from sympy.physics.quantum.hilbert import HilbertSpace
         return HilbertSpace()
 
     def _eval_dagger(self):

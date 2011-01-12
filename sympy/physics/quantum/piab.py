@@ -1,7 +1,9 @@
 from sympy import Symbol, pi, sqrt, sin, conjugate, Interval, S
 
-from sympy.physics.quantum import HermitianOperator, Ket, Bra, hbar
-from sympy.physics.quantum import KroneckerDelta
+from sympy.physics.quantum.operator import HermitianOperator
+from sympy.physics.quantum.state import Ket, Bra
+from sympy.physics.quantum.constants import hbar
+from sympy.physics.quantum.kronecker import KroneckerDelta
 from sympy.physics.hilbert import L2
 
 m = Symbol('m')

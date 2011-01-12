@@ -9,13 +9,13 @@ from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.matrices.matrices import Matrix, eye
 from sympy.printing.pretty.stringpict import prettyForm, stringPict
 
-from sympy.physics.qexpr import QuantumError, QExpr
-from sympy.physics.hilbert import ComplexSpace, HilbertSpaceError
-from sympy.physics.quantum import (
-    Operator, Ket, Bra, State,
-    represent, apply_operators,
-    matrix_tensor_product
-)
+from sympy.physics.quantum.qexpr import QuantumError
+from sympy.physics.quantum.hilbert import ComplexSpace, HilbertSpaceError
+from sympy.physics.quantum.state import Ket, Bra, State
+from sympy.physics.quantum.operator import Operator
+from sympy.physics.quantum.tensor_product import matrix_tensor_product
+from sympy.physics.quantum.represent import represent
+from sympy.physics.quantum.applyops import apply_operators
 
 #-----------------------------------------------------------------------------
 # Qubit Classes

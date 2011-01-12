@@ -8,7 +8,15 @@ Authors:
 from sympy import Basic, Interval, oo, sympify
 from sympy.printing.pretty.stringpict import prettyForm
 
-from sympy.physics.qexpr import QuantumError
+from sympy.physics.quantum.qexpr import QuantumError
+
+__all__ = [
+    'HilbertSpaceError',
+    'HilbertSpace',
+    'ComplexSpace',
+    'L2',
+    'FockSpace'
+]
 
 #-----------------------------------------------------------------------------
 # Main objects
