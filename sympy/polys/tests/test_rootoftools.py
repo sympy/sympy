@@ -217,6 +217,8 @@ def test_RootSum___new__():
     assert RootSum(x**2 - 1, Lambda(x, z*x**2), x) == 2*z
     assert RootSum(x**2 - y, Lambda(x, z*x**2), x) == 2*z*y
 
+    assert RootSum(x**2 - 1, Lambda(x, exp(x)), quadratic=True) == exp(-1) + exp(1)
+
 def test_RootSum_diff():
     f = x**3 + x + 3
 
