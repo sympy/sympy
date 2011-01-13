@@ -209,7 +209,7 @@ class Abs(Function):
 
     Examples
 
-        >>> from sympy import Abs, Symbol
+        >>> from sympy import Abs, Symbol, S
         >>> Abs(-1)
         1
         >>> x = Symbol('x', real=True)
@@ -219,6 +219,16 @@ class Abs(Function):
         x**2
         >>> abs(-x) # The Python built-in
         Abs(x)
+
+    Note that the Python built-in will return either an Expr or int depending on
+    the argument::
+
+        >>> type(abs(-1))
+        <type 'int'>
+        >>> type(abs(S.NegativeOne))
+        <class 'sympy.core.numbers.One'>
+
+    Abs will always return a sympy object.
 
     """
 

@@ -322,7 +322,7 @@ class AskComplexHandler(CommonHandler):
         return True
 
     @staticmethod
-    def _complex(expr, assumptions):
+    def Abs(expr, assumptions):
         return True
 
     @staticmethod
@@ -337,7 +337,7 @@ class AskComplexHandler(CommonHandler):
     def NegativeInfinity(expr, assumptions):
         return False
 
-    sin, cos, exp, re, im, Abs = [_complex]*6 # they are all complex functions
+    sin, cos, exp, re, im = [Abs]*5 # they are all complex functions
 
 class AskImaginaryHandler(CommonHandler):
     """
