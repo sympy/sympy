@@ -12,34 +12,53 @@ def sqrt(arg):
 ############################# MINIMUM and MAXIMUM #############################
 ###############################################################################
 
-class max_(Function):
+class Max(Function):
 
     nargs = 2
 
     @classmethod
     def eval(cls, x, y):
+        """Return, if possible, the value from (a, b) that is >= the other.
+
+        >>> from sympy import Max, Symbol
+        >>> from sympy.abc import x
+        >>> Max(x, -2)
+        Max(x, -2)
+        >>> _.subs(x, 3)
+        3
+
+        Assumptions are used to make the decision:
+
+        >>> p = Symbol('p', positive=True)
+        >>> Max(p, -2)
+        p
+        """
+
+        if x == y:
+            return x
         if x.is_Number and y.is_Number:
             return max(x, y)
-        if x.is_positive:
-            if y.is_negative:
+        xy = x > y
+        if isinstance(xy, bool):
+            if xy:
                 return x
-            if y.is_positive:
-                if x.is_unbounded:
-                    if y.is_unbounded:
-                        return
-                    return x
-        elif x.is_negative:
-            if y.is_negative:
-                if y.is_unbounded:
-                    if x.is_unbounded:
-                        return
-                    return x
+            return y
+        yx = y > x
+        if isinstance(yx, bool):
+            if yx:
+                return y # never occurs?
+            return x
 
-class min_(Function):
+
+class Min(Function):
 
     nargs = 2
 
     @classmethod
     def eval(cls, x, y):
-        if x.is_Number and y.is_Number:
-            return min(x, y)
+        """Return, if possible, the value from (a, b) that is <= the other."""
+        rv = Max(x, y)
+        if rv == x:
+            return y
+        elif rv == y:
+            return x

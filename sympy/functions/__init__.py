@@ -19,7 +19,7 @@ from combinatorial.factorials import Factorial, RisingFactorial, FallingFactoria
 from combinatorial.factorials import Binomial, Factorial2
 from combinatorial.numbers import fibonacci, lucas, harmonic, bernoulli, bell
 
-from elementary.miscellaneous import sqrt, min_, max_
+from elementary.miscellaneous import sqrt, Min, Max
 from elementary.complexes import re, im, sign, Abs, conjugate, arg
 from elementary.trigonometric import acot, cot, tan, cos, sin, asin, acos, atan, atan2
 from elementary.exponential import exp, log, LambertW

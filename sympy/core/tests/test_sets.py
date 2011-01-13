@@ -1,6 +1,6 @@
 from sympy import (
     Symbol, Set, Union, Interval, oo, S,
-    Inequality, max_, min_, And, Or
+    Inequality, Max, Min, And, Or
 )
 from sympy.utilities.pytest import raises
 from sympy.mpmath import mpi
@@ -30,8 +30,8 @@ def test_interval_arguments():
 def test_interval_symbolic_end_points():
     a = Symbol('a', real=True)
 
-    assert Union(Interval(0, a), Interval(0, 3)).sup == max_(a, 3)
-    assert Union(Interval(a, 0), Interval(-3, 0)).inf == min_(-3, a)
+    assert Union(Interval(0, a), Interval(0, 3)).sup == Max(a, 3)
+    assert Union(Interval(a, 0), Interval(-3, 0)).inf == Min(-3, a)
 
     assert Interval(0, a).contains(1) == Inequality(1, a)
 
