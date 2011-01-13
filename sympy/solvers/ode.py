@@ -895,9 +895,7 @@ def odesimp(eq, func, order, hint):
                 if denom.is_Add:
                     return expr
                 else:
-                    # XXX: why using expand() must be so complicated?
-                    expr = expr.expand(deep=False, power_base=False, power_exp=False, log=False)
-                    return powsimp(expr, combine='exp', deep=True)
+                    return powsimp(expr.expand(), combine='exp', deep=True)
 
             # XXX: the rest of odesimp() expects each ``t`` to be in a
             # specific normal form: rational expression with numerator
