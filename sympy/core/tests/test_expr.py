@@ -440,6 +440,8 @@ def test_subs_list():
     assert (x+y)._subs_list([(y, x**2), (x, 3)]) == 12
 
 def test_call():
+    # Unlike what used to be the case, the following should NOT work.
+    # See issue 1927.
     a,b,c,d,e = symbols('abcde')
 
     raises(TypeError, "sin(x)({ x : 1, sin(x) : 2})")
