@@ -442,7 +442,6 @@ def test_subs_list():
 def test_call():
     # Unlike what used to be the case, the following should NOT work.
     # See issue 1927.
-    a,b,c,d,e = symbols('abcde')
 
     raises(TypeError, "sin(x)({ x : 1, sin(x) : 2})")
     raises(TypeError, "sin(x)(1)")
