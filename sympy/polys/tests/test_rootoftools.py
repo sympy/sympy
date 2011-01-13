@@ -14,12 +14,12 @@ from sympy.polys.polyerrors import (
 )
 
 from sympy import (
-    S, symbols, sqrt, I, Rational, Real, Lambda, log, exp,
+    S, symbols, sqrt, I, Rational, Real, Lambda, log, exp, tan,
 )
 
 from sympy.utilities.pytest import raises
 
-from sympy.abc import x, y, z, r
+from sympy.abc import a, b, x, y, z, r
 
 def test_RootOf___new__():
     assert RootOf(x, 0) == 0
@@ -244,3 +244,11 @@ def test_RootSum_rational():
     g = Lambda(z, z*log(-3381*z**4/4 - 3381*z**3/4 - 625*z**2/2 - 125*z/2 - 5 + exp(x)))
 
     assert RootSum(f, g).diff(x) == -((5*exp(2*x) - 6*exp(x) + 4)*exp(x)/(exp(3*x) - exp(2*x) + 1))/7
+
+def test_RootSum_independent():
+    f = (x**3 - a)**2*(x**4 - b)**3
+    g = Lambda(x, 5*tan(x) + 7)
+
+    assert RootSum(f, g, x) == \
+        10*RootSum(x**3 - a, Lambda(x, tan(x)), x) + \
+        15*RootSum(x**4 - b, Lambda(x, tan(x)), x) + 126
