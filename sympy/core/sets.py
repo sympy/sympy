@@ -490,24 +490,24 @@ class Union(Set):
 
     @property
     def _inf(self):
-        # We use min_ so that sup is meaningful in combination with symbolic
+        # We use Min so that sup is meaningful in combination with symbolic
         # interval end points.
-        from sympy.functions.elementary.miscellaneous import min_
+        from sympy.functions.elementary.miscellaneous import Min
 
         inf = self.args[0].inf
         for set in self.args[1:]:
-            inf = min_(inf, set.inf)
+            inf = Min(inf, set.inf)
         return inf
 
     @property
     def _sup(self):
-        # We use max_ so that sup is meaningful in combination with symbolic
+        # We use Max so that sup is meaningful in combination with symbolic
         # end points.
-        from sympy.functions.elementary.miscellaneous import max_
+        from sympy.functions.elementary.miscellaneous import Max
 
         sup = self.args[0].sup
         for set in self.args[1:]:
-            sup = max_(sup, set.sup)
+            sup = Max(sup, set.sup)
         return sup
 
     def _intersect(self, other):

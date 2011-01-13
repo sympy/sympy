@@ -49,8 +49,8 @@ NUMPY_TRANSLATIONS = {
     "im":"imag",
     "ln":"log",
     "Matrix":"matrix",
-    "max_":"amax",
-    "min_":"amin",
+    "Max":"amax",
+    "Min":"amin",
     "oo":"inf",
     "re":"real",
 }

@@ -6,7 +6,7 @@ Functions Module
 Elementary
 ==========
 
-This module implements elementary functions, as well as functions like abs, max, etc.
+This module implements elementary functions, as well as functions like Abs, Max, etc.
 
 
 Abs
@@ -64,33 +64,32 @@ Examples::
 .. autoclass:: sympy.functions.elementary.complexes.conjugate
 
 
-min_
-----
+Min
+---
 
 Returns the minimum of two (comparable) expressions.
 
 Examples::
-    >>> from sympy.functions import min_
-    >>> min_(1,2)
+    >>> from sympy.functions import Min
+    >>> Min(1,2)
     1
-    >>> from sympy import Symbol
-    >>> x = Symbol('x')
-    >>> min_(1,x)
-    min_(1, x)
+    >>> from sympy.abc import x
+    >>> Min(1, x)
+    Min(1, x)
 
-It is named min_ and not min to avoid conflicts with built-in function min.
+It is named Min and not min to avoid conflicts with the built-in function min.
 
-.. autoclass:: sympy.functions.elementary.miscellaneous.min_
+.. autoclass:: sympy.functions.elementary.miscellaneous.Min
 
 
-max_
-----
+Max
+---
 
 Returns the maximum of two (comparable) expressions
 
-It is named max_ and not max to avoid conflicts with built-in function min.
+It is named Max and not max to avoid conflicts with the built-in function max.
 
-.. autoclass:: sympy.functions.elementary.miscellaneous.max_
+.. autoclass:: sympy.functions.elementary.miscellaneous.Max
 
 
 re
