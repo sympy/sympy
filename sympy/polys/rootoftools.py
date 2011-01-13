@@ -575,13 +575,26 @@ class RootSum(Expr):
             else:
                 raise ValueError("expected a univariate function, got %s" % func)
 
-        var, expr = func.args
-
-        if not expr.has(var):
-            return poly.degree()*expr
-
         if coeff is not S.One:
             func = Lambda(var, expr.subs(var, coeff*var))
+
+        var, expr = func.args
+        deg = poly.degree()
+
+        if not expr.has(var):
+            return deg*expr
+
+        if expr.is_Add:
+            add_const, expr = expr.as_independent(var)
+        else:
+            add_const = S.Zero
+
+        if expr.is_Mul:
+            mul_const, expr = expr.as_independent(var)
+        else:
+            mul_const = S.One
+
+        func = Lambda(var, expr)
 
         rational = cls._is_func_rational(poly, func)
         (_, factors), terms = poly.factor_list(), []
@@ -599,7 +612,7 @@ class RootSum(Expr):
 
             terms.append(k*term)
 
-        return Add(*terms)
+        return mul_const*Add(*terms) + deg*add_const
 
     @classmethod
     def _new(cls, poly, func, auto=True):
@@ -700,7 +713,7 @@ class RootSum(Expr):
 
     @property
     def args(self):
-        return (self.expr, self.fun)
+        return (self.expr, self.fun, self.poly.gen)
 
     @property
     def is_commutative(self):
