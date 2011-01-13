@@ -5,7 +5,7 @@ from sympy.core.sympify import sympify, converter, SympifyError
 from sympy.core.basic import S
 from sympy.polys import Poly, roots, cancel
 from sympy.simplify import simplify
-from sympy.utilities import any
+from sympy.utilities import any, all
 from sympy.printing import sstr
 
 
