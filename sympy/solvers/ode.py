@@ -481,6 +481,10 @@ def dsolve(eq, func, hint="default", simplify=True, **kwargs):
     return rv
 
 
+    if not isinstance(result, Basic):
+        result = sorted(result, key=Basic.sorted_key)
+
+    return result
 
 def classify_ode(eq, func, dict=False):
     """

@@ -490,7 +490,7 @@ def test_1st_homogeneous_coeff_ode2():
     eq2 = x**2 + f(x)**2 - 2*x*f(x)*f(x).diff(x)
     eq3 = x*exp(f(x)/x) + f(x) - x*f(x).diff(x)
     sol1 = Eq(f(x), x*acos(log(C1*x)))
-    sol2 = [Eq(f(x), sqrt(C1*x + x**2)), Eq(f(x), -sqrt(C1*x + x**2))]
+    sol2 = [Eq(f(x), -sqrt(C1*x + x**2)), Eq(f(x), sqrt(C1*x + x**2))]
     sol3 = Eq(f(x), log(log(C1/x)**(-x)))
     # specific hints are applied for speed reasons
     assert dsolve(eq1, f(x), hint='1st_homogeneous_coeff_subs_dep_div_indep') == sol1
