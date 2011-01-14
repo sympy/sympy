@@ -85,7 +85,7 @@ def test_ratint():
         (S(1)/6 + I*3**half/6)*log(-half + x - I*3**half/2)
 
     assert ratint(1/(x*(a+b*x)**3), x) == \
-        (3*a + 2*b*x)/(2*a**2*b**2*x**2 + 4*b*x*a**3 + 2*a**4) + log(x)/a**3 - log(x + a/b)/a**3
+        (3*a + 2*b*x)/(2*a**2*b**2*x**2 + 4*b*x*a**3 + 2*a**4) + (log(x) - log(x + a/b))/a**3
 
     assert ratint(x/(1 - x**2), x) == -log(1 - x**2)/2
     assert ratint(-x/(1 - x**2), x) == log(1 - x**2)/2
