@@ -96,7 +96,6 @@ class F1_1(DummyNumber):
         return self.number
 
 x,y,z,t,n = symbols('x,y,z,t,n')
-f,g = symbols('f,g', cls=Function)
 
 i5 = I5()
 f1_1 = F1_1()
@@ -896,6 +895,8 @@ def test_as_coeff_Mul():
     (x*y).as_coeff_Mul() == (S.One, x*y)
 
 def test_expr_sorting():
+    f, g = symbols('f,g', cls=Function)
+
     exprs = [1/x**2, 1/x, sqrt(sqrt(x)), sqrt(x), x, x**Rational(3,2), x**2]
     assert sorted(exprs, key=Basic.sorted_key) == exprs
 
@@ -912,6 +913,8 @@ def test_expr_sorting():
     assert sorted(exprs, key=Basic.sorted_key) == exprs
 
 def test_as_ordered_factors():
+    f, g = symbols('f,g', cls=Function)
+
     assert x.as_ordered_factors() == [x]
     assert (2*x*x**n*sin(x)*cos(x)).as_ordered_factors() == [Integer(2), x, x**n, sin(x), cos(x)]
 
@@ -921,6 +924,8 @@ def test_as_ordered_factors():
         [f(1), f(2), f(3), f(1, 2, 3), g(1), g(2), g(3), g(1, 2, 3)]
 
 def test_as_ordered_terms():
+    f, g = symbols('f,g', cls=Function)
+
     assert x.as_ordered_terms() == [x]
     assert (sin(x)**2*cos(x) + sin(x)*cos(x)**2 + 1).as_ordered_terms() == [sin(x)**2*cos(x), sin(x)*cos(x)**2, 1]
 
