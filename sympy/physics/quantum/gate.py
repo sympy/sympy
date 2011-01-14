@@ -1,18 +1,35 @@
-"""An implementation of qubits and gates acting on them."""
+"""An implementation of qubits and gates acting on them.
 
-from sympy import Mul, Pow, Integer, I, pi, Matrix
+Todo:
+* Optimize Gate._apply_operators_Qubit to remove the creation of many 
+  intermediate Qubit objects.
+* Optimize the get_target_matrix by using slots to precompute the matrices.
+* Get UGate to work with either sympy/numpy matrices and output either
+  format. This should also use the matrix slots.
+* Add commutation relationships to all operators and use this in gate_sort.
+* Get represent working and test.
+* Test apply_operators.
+"""
+
+from itertools import chain
+
+from sympy import Mul, Pow, Integer, I, pi, Matrix, Rational
 from sympy.core.numbers import Number
+from sympy.core.containers import Tuple
 from sympy.functions.elementary.exponential import exp
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.printing.pretty.stringpict import prettyForm, stringPict
+from sympy.utilities.iterables import all
 
 from sympy.physics.quantum.qexpr import QuantumError
 from sympy.physics.quantum.hilbert import ComplexSpace, HilbertSpaceError
-from sympy.physics.quantum.operator import Operator
+from sympy.physics.quantum.operator import UnitaryOperator
 from sympy.physics.quantum.tensorproduct import matrix_tensor_product
 
 __all__ = [
     'Gate',
+    'CGate',
+    'UGate',
     'OneQubitGate',
     'TwoQubitGate',
     'HadamardGate',
@@ -22,65 +39,70 @@ __all__ = [
     'TGate',
     'PhaseGate',
     'SwapGate',
-    'RkGate',
-    'IRkGate',
-    'CTGate',
-    'CZGate',
-    'CPhaseGate',
     'CNotGate',
     'ToffoliGate',
-    
+    # Aliased gate names
+    'U',
+    'CNOT',
+    'SWAP',
+    'TOFFOLI',
+    'H',
+    'X',
+    'Y',
+    'Z',
+    'T',
+    'S',
+    'Phase'
 ]
+
+sqrt2_inv = Pow(2, Rational(-1,2), evaluate=False)
 
 #-----------------------------------------------------------------------------
 # Gate Super-Classes
 #-----------------------------------------------------------------------------
 
-class Gate(Operator):
-    """A unitary operator that acts on qubits.
+def _validate_targets_controls(tandc):
+    tandc = list(tandc)
+    # Check for integers
+    for bit in tandc:
+        if not bit.is_Integer:
+            raise TypeError('Integer expected, got: %r' % tandc[bit])
+    # Detect duplicates
+    if len(list(set(tandc))) != len(tandc):
+        raise QuantumError(
+            'Target/control qubits in a gate cannot be duplicated'
+        )
 
-    The superclass of gate operators that acts on qubit(s)
-        - minimum_dimension is the least size a set fo Qubits must be for
-          the gate to be applied
-        - input number is the number of Qubits the gate acts on (e.g. a
-          three Qubit gate acts on three Qubits)
-        - name returns the string of the Qubit
-        - apply applies gate onto Qubits
-        - _represent_Qubit?BasisSet represents the gates matrix in the basis
+class Gate(UnitaryOperator):
+    """Non-controlled unitary gate operator that acts on qubits.
+
+    This is a general abstract gate that needs to be subclassed to do anything
+    useful.
+
+    Parameters
+    ----------
+    label : tuple, int
+        A list of the target qubits (as ints) that the gate will apply to.
+
+    Examples
+    --------
+
+
     """
 
     _label_separator = ','
 
     gate_name = u'G'
-    gate_name_pretty = u'G'
     gate_name_latex = u'G'
-
-    nqubits = Integer(1)
-    __slots__ = ['min_qubits']
 
     #-------------------------------------------------------------------------
     # Initialization/creation
     #-------------------------------------------------------------------------
 
-    def __new__(cls, label, **assumptions):
-        gate = Operator.__new__(cls, label, **assumptions)
-        gate.min_qubits = max(gate.label)
-        return gate
-
     @classmethod
     def _eval_label(cls, label):
-        label = Operator._eval_label(label)
-        temp_nqubits = len(label)
-        if not temp_nqubits == cls.nqubits:
-            raise QuantumError(
-                'Gate acts on %r qubits, but got %r qubit indices' % \
-                (cls.nqubits, temp_nqubits)
-            )
-        for i in range(temp_nqubits):
-            if not label[i].is_Integer:
-                raise TypeError('Integer expected, got: %r' % label[i])
-            if (label[i] in label[:i]) or (label[i] in label[i+1:]):
-                raise QuantumError('Qubit indices in a gate cannot be duplicated')
+        label = UnitaryOperator._eval_label(label) # Make label a Tuple and sympify.
+        _validate_targets_controls(label)
         return label
 
     @classmethod
@@ -93,18 +115,112 @@ class Gate(Operator):
     #-------------------------------------------------------------------------
 
     @property
-    def matrix(self):
-        raise NotImplementedError("matrixRep Not implemented")
+    def nqubits(self):
+        """The total number of qubits this gate acts on.
+
+        For controlled gate subclasses this includes both target and control
+        qubits, so that, for examples the CNOT gate acts on 2 qubits.
+        """
+        return len(self.targets)
 
     @property
-    def x_basis_transform(self):
-        #Transform matrix from ZBasis to XBasis and back again
-        return 1/sqrt(2)*Matrix([[1,1],[1,-1]])
+    def min_qubits(self):
+        """The minimum number of qubits this gate needs to act on."""
+        return max(self.targets)+1
 
     @property
-    def y_basis_transform(self):
-        #Transform matrix from ZBasis to YBasis and back again
-        return Matrix([[I,0],[0,-I]])
+    def targets(self):
+        """A tuple of target qubits."""
+        return self.label
+
+    #-------------------------------------------------------------------------
+    # Gate methods
+    #-------------------------------------------------------------------------
+
+    def get_target_matrix(self, format='sympy'):
+        """The matrix rep. of the target part of the gate.
+
+        Parameters
+        ----------
+        format : str
+            The format string ('sympy','numpy', etc.)
+        """
+        raise NotImplementedError('get_target_matrix is not implemented in Gate.')
+
+    #-------------------------------------------------------------------------
+    # Apply
+    #-------------------------------------------------------------------------
+
+    def _apply_operator_Qubit(self, qubits, **options):
+        """Apply this gate to a Qubit."""
+
+        # Check number of qubits this gate acts on.
+        if qubits.nqubits < self.min_qubits:
+            raise QuantumError(
+                'Gate needs a minimum of %r qubits to act on, got: %r' %\
+                    (self.min_qubits, qubits.nqubits)
+            )
+
+        # If the controls are not met, just return
+        if isinstance(self, CGate):
+            if not self.eval_controls(qubits):
+                return qubits
+
+        targets = self.targets
+        target_matrix = self.get_target_matrix(format='sympy')
+
+        # Find which column of the target matrix this applies to.
+        column_index = 0
+        n = 1
+        for target in targets:
+            column_index += n*qubits[target]
+            n = n<<1
+        column = target_matrix[:,int(column_index)]
+    
+        # Now apply each column element to the qubit.
+        result = 0
+        for index in range(column.rows):
+            # TODO: This can be optimized to reduce the number of Qubit
+            # creations. We should simply manipulate the raw list of qubit
+            # values and then build the new Qubit object once.
+            # Make a copy of the incoming qubits.
+            new_qubit = qubits.__class__(*qubits.args)
+            # Flip the bits that need to be flipped.
+            for bit in range(len(targets)):
+                if new_qubit[targets[bit]] != (index>>bit)&1:
+                    new_qubit = new_qubit.flip(targets[bit])
+            # The value in that row and column times the flipped-bit qubit
+            # is the result for that part.
+            result += column[index]*new_qubit
+        return result
+
+    #-------------------------------------------------------------------------
+    # Represent
+    #-------------------------------------------------------------------------
+
+    # def _represent(self, basis, format='sympy'):
+    #     if isinstance(basis, Gate):
+    #         basis_size = 1
+    #     elif isinstance(basis, Pow) and isinstance(basis.base, Gate):
+    #         basis_size = basis.exp
+    #     else:
+    #         raise QuantumError(
+    #             'Basis must be a gate operator, or tensor product of gate operators.'
+    #         )
+    # 
+    #     if basis_size < self.min_qubits:
+    #         raise QuantumError(
+    #             'The basis given is too small for the given Gate objects.'
+    #         )
+    # 
+    #     gate = self.matrix
+    #     if isinstance(basis, Gate):
+    #         return gate
+    #     else:
+    #         m = represent_hilbert_space(
+    #             gate, basis_size, self.label, format
+    #         )
+    #         return m
 
     #-------------------------------------------------------------------------
     # Print methods
@@ -115,7 +231,7 @@ class Gate(Operator):
         return '%s(%s)' % (self.gate_name, label)
 
     def _print_contents_pretty(self, printer, *args):
-        a = stringPict(unicode(self.gate_name_pretty))
+        a = stringPict(unicode(self.gate_name))
         b = self._print_label_pretty(printer, *args)
         top = stringPict(*b.left(' '*a.width()))
         bot = stringPict(*a.right(' '*b.width()))
@@ -125,532 +241,559 @@ class Gate(Operator):
         label = self._print_label(printer, *args)
         return '%s_{%s}' % (self.gate_name_latex, label)
 
+
+class CGate(Gate):
+    """A general unitary gate with control qubits.
+
+    A general control gate applies a target gate to a set of targets if all
+    of the control qubits have a particular values (set by
+    ``CGate.control_value``).
+
+    Parameters
+    ----------
+    label : tuple
+        The label in this case has the form (controls, gate), where controls
+        is a tuple/list of control qubits (as ints) and gate is a ``Gate``
+        instance that is the target operator.
+
+    Examples
+    --------
+
+    """
+
+    gate_name = u'C'
+    gate_name_latex = u'C'
+
+    # The values this class controls for.
+    control_value = Integer(1)
+
     #-------------------------------------------------------------------------
-    # Apply
+    # Initialization
     #-------------------------------------------------------------------------
 
-    def _apply_operator_Qubit(self, qubits, **options):
-        """Apply this gate to a Qubit."""
-        from sympy.physics.quantum.qubit import Qubit
-        mat = self.matrix
-        label = self.label
+    # CGate(((0,1),Gate(0)))
 
-        # Check number of qubits this gate acts on.
-        if qubits.nqubits < self.min_qubits:
-            raise HilbertSpaceError(
-                'Gate needs a minimum of %r qubits to act on, got: %r' %\
-                    (self.min_qubits, qubits.nqubits)
+    @classmethod
+    def _eval_label(cls, label):
+        # _eval_label has the right logic for the controls argument.
+        controls = UnitaryOperator._eval_label(label[0])
+        gate = label[1]
+        _validate_targets_controls(chain(controls,gate.targets))
+        return Tuple(controls, gate)
+
+    @classmethod
+    def _eval_hilbert_space(cls, label):
+        """This returns the smallest possible Hilbert space."""
+        return ComplexSpace(2)**max(max(label[0])+1,label[1].min_qubits)
+
+    #-------------------------------------------------------------------------
+    # Properties
+    #-------------------------------------------------------------------------
+
+    @property
+    def nqubits(self):
+        """The total number of qubits this gate acts on.
+
+        For controlled gate subclasses this includes both target and control
+        qubits, so that, for examples the CNOT gate acts on 2 qubits.
+        """
+        return len(self.targets)+len(self.controls)
+
+    @property
+    def min_qubits(self):
+        """The minimum number of qubits this gate needs to act on."""
+        return max(max(self.controls),max(self.targets))+1
+
+    @property
+    def targets(self):
+        """A tuple of target qubits."""
+        return self.gate.targets
+
+    @property
+    def controls(self):
+        """A tuple of control qubits."""
+        return self.label[0]
+
+    @property
+    def gate(self):
+        """The non-controlled gate that will be applied to the targets."""
+        return self.label[1]
+
+    #-------------------------------------------------------------------------
+    # Gate methods
+    #-------------------------------------------------------------------------
+
+    def get_target_matrix(self, format='sympy'):
+        return self.gate.get_target_matrix(format)
+
+    def eval_controls(self, qubit):
+        """Return True/False to indicate if the controls are satisfied."""
+        return all([qubit[bit]==self.control_value for bit in self.controls])
+
+    #-------------------------------------------------------------------------
+    # Print methods
+    #-------------------------------------------------------------------------
+
+    def _print_controls(self, printer, *args):
+        result = []
+        for item in self.controls:
+            result.append(printer._print(item, *args))
+        return self._label_separator.join(result)
+
+    def _print_controls_pretty(self, printer, *args):
+        pform = printer._print(self.controls[0], *args)
+        for item in self.controls[1:]:
+            pform = prettyForm(*pform.right((self._label_separator)))
+            nextpform = printer._print(item, *args)
+            pform = prettyForm(*pform.right((nextpform)))
+        return pform
+
+    def _print_contents(self, printer, *args):
+        controls = self._print_controls(printer, *args)
+        gate = printer._print(self.gate, *args)
+        return '%s(((%s),%s))' %\
+            (self.gate_name, controls, gate)
+
+    def _print_contents_pretty(self, printer, *args):
+        controls = self._print_controls_pretty(printer, *args)
+        gate = printer._print(self.gate)
+        gate_name = stringPict(unicode(self.gate_name))
+        top = stringPict(*controls.left(' '*gate_name.width()))
+        bot = stringPict(*gate_name.right(' '*controls.width()))
+        first = prettyForm(binding=prettyForm.POW, *bot.below(top))
+        gate = prettyForm(*gate.parens(left='(', right=')'))
+        final = prettyForm(*first.right((gate)))
+        return final
+
+    def _latex(self, printer, *args):
+        controls = self._print_controls(printer, *args)
+        gate = printer._print(self.gate, *args)
+        return r'%s_{%s}{\left(%s\right)}' %\
+            (self.gate_name_latex, controls, gate)
+
+
+class UGate(Gate):
+    """General gate specified by a set of targets and a target matrix.
+
+    Parameters
+    ----------
+    label : tuple
+        A tuple of the form (targets, U), where targets is a tuple of the
+        target qubits and U is a unitary matrix with dimension of
+        len(targets).
+    """
+    gate_name = u'U'
+    gate_name_latex = u'U'
+
+    #-------------------------------------------------------------------------
+    # Initialization
+    #-------------------------------------------------------------------------
+
+    @classmethod
+    def _eval_label(cls, label):
+        # Gate._eval_label has the right logic.
+        targets = Gate._eval_label(label[0])
+        mat = label[1]
+        if not isinstance(mat, Matrix):
+            raise TypeError('Matrix expected, got: %r' % mat)
+        dim = 2**len(targets)
+        if not all([dim == shape for shape in mat.shape]):
+        # if (dim != mat.shape[0]) or (dim != mat.shape[1]):
+            raise IndexError(
+                'Number of targets must match the matrix size: %r %r' %\
+                (targets, mat)
             )
+        return Tuple(targets, mat)
 
-        # Find which column of the matrix this Qubit applies to.
-        column_index = 0
-        n = 1
-        for element in label:
-            column_index += n*qubits[element]
-            n = n<<1
-        column = mat[:,int(column_index)]
+    @classmethod
+    def _eval_hilbert_space(cls, label):
+        """This returns the smallest possible Hilbert space."""
+        return ComplexSpace(2)**(max(label[0])+1)
 
-        # Now apply each column element to Qubit.
-        result = 0
-        for index in range(len(column.tolist())):
-            new_qubit = Qubit(*qubits.args)
-            # Flip the bits that need to be flipped.
-            for bit in range(len(label)):
-                if new_qubit[label[bit]] != (index>>bit)&1:
-                    new_qubit = new_qubit.flip(label[bit])
-            # The value in that row and column times the flipped-bit qubit
-            # is the result for that part.
-            result += column[index]*new_qubit
+    #-------------------------------------------------------------------------
+    # Properties
+    #-------------------------------------------------------------------------
+
+    @property
+    def targets(self):
+        """A tuple of target qubits."""
+        return self.label[0]
+
+    #-------------------------------------------------------------------------
+    # Gate methods
+    #-------------------------------------------------------------------------
+
+    def get_target_matrix(self, format='sympy'):
+        """The matrix rep. of the target part of the gate.
+
+        Parameters
+        ----------
+        format : str
+            The format string ('sympy','numpy', etc.)
+        """
+        return self.label[1]
+
+    #-------------------------------------------------------------------------
+    # Print methods
+    #-------------------------------------------------------------------------
+
+    def _print_targets(self, printer, *args):
+        result = []
+        for item in self.targets:
+            result.append(printer._print(item, *args))
+        return self._label_separator.join(result)
+
+    def _print_targets_pretty(self, printer, *args):
+        pform = printer._print(self.targets[0], *args)
+        for item in self.targets[1:]:
+            pform = prettyForm(*pform.right((self._label_separator)))
+            nextpform = printer._print(item, *args)
+            pform = prettyForm(*pform.right((nextpform)))
+        return pform
+
+    def _print_contents(self, printer, *args):
+        targets = self._print_targets(printer, *args)
+        return '%s(%s)' % (self.gate_name, targets)
+
+    def _print_contents_pretty(self, printer, *args):
+        targets = self._print_targets_pretty(printer, *args)
+        gate_name = stringPict(unicode(self.gate_name))
+        top = stringPict(*targets.left(' '*gate_name.width()))
+        bot = stringPict(*gate_name.right(' '*targets.width()))
+        result = prettyForm(binding=prettyForm.POW, *bot.below(top))
         return result
 
-    #-------------------------------------------------------------------------
-    # Represent
-    #-------------------------------------------------------------------------
+    def _latex(self, printer, *args):
+        targets = self._print_targets(printer, *args)
+        return r'%s_{%s}' % (self.gate_name_latex, targets)
 
-    def _represent(self, basis, format='sympy'):
-        if isinstance(basis, Gate):
-            basis_size = 1
-        elif isinstance(basis, Pow) and isinstance(basis.base, Gate):
-            basis_size = basis.exp
-        else:
-            raise QuantumError(
-                'Basis must be a gate operator, or tensor product of gate operators.'
-            )
 
-        if basis_size < self.min_qubits:
-            raise QuantumError(
-                'The basis given is too small for the given Gate objects.'
-            )
+class OneQubitGate(Gate):
+    """A single qubit unitary gate base class."""
 
-        gate = self.matrix
-        if isinstance(basis, Gate):
-            return gate
-        else:
-            m = represent_hilbert_space(
-                gate, basis_size, self.label, format
-            )
-            return m
+    nqubits = Integer(1)
 
+
+class TwoQubitGate(Gate):
+    """A two qubit unitary gate base class."""
+
+    nqubits = Integer(2)
+
+
+# Aliases for gate names.
+U = UGate
 
 #-----------------------------------------------------------------------------
 # Single Qubit Gates
 #-----------------------------------------------------------------------------
 
-class OneQubitGate(Gate):
-
-    nqubits = Integer(1)
-
 
 class HadamardGate(OneQubitGate):
-    """An object representing a Hadamard Gate
+    """The single qubit Hadamard gate.
 
-    This gate puts creates an even superposition of eigenstates.
-    It maps the state |0> -> |0>/sqrt(2) + |1>/sqrt(2)
-    and |1> -> |0>/sqrt(2) - |1>/sqrt(2). Can be applied or represented
-    using apply_gates and represent.
+    Parameters
+    ----------
+    target : int
+        The target qubit this gate will apply to.
 
-    >>> from sympy.physics.Qubit import HadamardGate, Qubit, apply_gates,
-    >>> HadamardGate(0)*Qubit(0,0)
-    HadamardGate(0)*|00>
-    >>> apply_gates(_)
-    2**(1/2)/2*|00> + 2**(1/2)/2*|01>
-    >>> from sympy.physics.quantum import represent
-    >>> represent(HadamardGate(0)*Qubit(0,0), QubitZBasisSet(2))
-    [2**(1/2)/2]
-    [2**(1/2)/2]
-    [         0]
-    [         0]
+    Examples
+    --------
+
     """
     gate_name = u'H'
-    gate_name_pretty = u'H'
     gate_name_latex = u'H'
         
-    @property
-    def matrix(self):
-        from sympy.functions.elementary.miscellaneous import sqrt
-        return Matrix([[1, 1], [1, -1]])*(1/sqrt(2))
+    def get_target_matrix(self, format='sympy'):
+        if format == 'sympy':
+            return sqrt2_inv*Matrix([[1, 1], [1, -1]])
+        raise NotImplementedError('Invalid format: %r' % format)
 
 
 class XGate(OneQubitGate):
-    """An object representing a Pauli-X gate (AKA NOT Gate)
+    """The single qubit X, or NOT, gate.
 
-    This is a NOT Gate because it flips the value of a bit to its opposite
-    just like the classical-NOT gate. Thus it maps the states:
-    |1> -> |0> and |0> -> |1>
+    Parameters
+    ----------
+    target : int
+        The target qubit this gate will apply to.
 
+    Examples
+    --------
 
-    >>> from sympy.physics.Qubit import Qubit, XGate, apply_gates,\
-    QubitZBasisSet
-    >>> XGate(0)*Qubit(0,0)
-    XGate(0)*|00>
-    >>> apply_gates(_)
-    |01>
-    >>> from sympy.physics.quantum import represent
-    >>>represent(XGate(0)*Qubit(0,0), QubitZBasisSet(2))
-    >>> represent(XGate(0)*Qubit(0,0), QubitZBasisSet(2))
-    [1]
-    [1]
-    [0]
-    [0]
     """
     gate_name = u'X'
-    gate_name_pretty = u'X'
     gate_name_latex = u'X'
-            
-    @property
-    def matrix(self):
-        return Matrix([[0, 1], [1, 0]])
+
+    def get_target_matrix(self, format='sympy'):
+        if format == 'sympy':
+            return Matrix([[0, 1], [1, 0]])
+        raise NotImplementedError('Invalid format: %r' % format)
 
 
 class YGate(OneQubitGate):
-    """An object representing a Pauli-Y gate
+    """The single qubit Y gate.
 
-    This gate flips the bit given in self.args[0] and then applies a relative
-    phase shift (pi/2 if 1, and -pi/2 if 0).
-    Thus it maps the states:
-    |0> -> I*|1> and |1> -> -I*|0>
+    Parameters
+    ----------
+    target : int
+        The target qubit this gate will apply to.
 
-    >>> from sympy.physics.Qubit import Qubit, YGate, apply_gates, \
-    QubitZBasisSet
-    >>> YGate(0)*Qubit(0,1)
-    YGate(0)*|01>
-    >>> apply_gates(_)
-    -1.0*I*|00>
-    >>> from sympy.physics.quantum import represent
-    >>> represent(YGate(0)*Qubit(0,0), QubitZBasisSet(2))
-    [0]
-    [I]
-    [0]
-    [0]
+    Examples
+    --------
+
     """
     gate_name = u'Y'
-    gate_name_pretty = u'Y'
     gate_name_latex = u'Y'
         
-    @property
-    def matrix(self):
-        return Matrix([[0, complex(0,-1)], [complex(0,1), 0]])
+    def get_target_matrix(self, format='sympy'):
+        if format == 'sympy':
+            return Matrix([[0, complex(0,-1)], [complex(0,1), 0]])
+        raise NotImplementedError('Invalid format: %r' % format)
 
 
 class ZGate(OneQubitGate):
-    """An object representing a Pauli-Z gate
+    """The single qubit Z gate.
 
-    This gate rotates the relative phase of an eigenstate by pi if the state
-    is 1. Thus the gate maps the states:
-    |0> -> |0> and |1> -> -|1>
+    Parameters
+    ----------
+    target : int
+        The target qubit this gate will apply to.
 
-    >>> from sympy.physics.Qubit import Qubit, ZGate, apply_gates, \
-    QubitZBasisSet
-    >>> from sympy.physics.quantum import represent
-    >>> ZGate(0)*Qubit(0,1)
-    ZGate(0)*|01>
-    >>> apply_gates(_)
-    -1*|01>
-    >>> represent(ZGate(0)*Qubit(0,0), QubitZBasisSet(2))
-    [1]
-    [0]
-    [0]
-    [0]
+    Examples
+    --------
+
     """
     gate_name = u'Z'
-    gate_name_pretty = u'Z'
     gate_name_latex = u'Z'
 
-    @property
-    def matrix(self):
-        return Matrix([[1, 0], [0, -1]])
+    def get_target_matrix(self, format='sympy'):
+        if format == 'sympy':
+            return Matrix([[1, 0], [0, -1]])
+        raise NotImplementedError('Invalid format: %r' % format)
 
 
 class PhaseGate(OneQubitGate):
-    """An object representing a phase gate
+    """The single qubit phase gate.
 
-    This gate rotates the phase of the eigenstate by pi/2 if the state is 1.
-    Thus the gate maps the states:
-    |0> -> |0> and |1> -> I*|1>
+    This gate rotates the phase of the state by pi/2 if the state is |1> and
+    does nothing if the state is |0>.
 
-    >>> from sympy.physics.Qubit import Qubit, PhaseGate, apply_gates,\
-    QubitZBasisSet
-    >>> from sympy.physics.quantum import represent
-    >>> represent(PhaseGate(0)*Qubit(0,1), QubitZBasisSet(2))
-    [0]
-    [I]
-    [0]
-    [0]
-    >>> apply_gates(PhaseGate(0)*Qubit(0,1))
-    I*|01>
-    >>> PhaseGate(0)*Qubit(0,1)
-    PhaseGate(0)*|01>
+    Parameters
+    ----------
+    target : int
+        The target qubit this gate will apply to.
+
+    Examples
+    --------
+
     """
     gate_name = u'S'
-    gate_name_pretty = u'S'
     gate_name_latex = u'S'
 
-    @property
-    def matrix(self):
-        return Matrix([[1, 0], [0, complex(0,1)]])
+    def get_target_matrix(self, format='sympy'):
+        if format == 'sympy':
+            return Matrix([[1, 0], [0, complex(0,1)]])
+        raise NotImplementedError('Invalid format: %r' % format)
 
 
 class TGate(OneQubitGate):
-    """An object representing a pi/8 gate
+    """The single qubit pi/8 gate.
 
-    This gate rotates the phase of the eigenstate by pi/2 if the state is 1.
-    Thus the gate maps the states:
-    |0> -> |0> and |1> -> exp(I*pi/4)*|1>
+    This gate rotates the phase of the state by pi/4 if the state is |1> and
+    does nothing if the state is |0>.
 
-    >>> from sympy.physics.Qubit import Qubit, TGate, apply_gates,\
-    QubitZBasisSet
-    >>> from sympy.physics.quantum import represent
-    >>> TGate(0)*Qubit(0,1)
-    TGate(0)*|01>
-    >>> apply_gates(_)
-    exp(pi*I/4)*|01>
-    >>> represent(TGate(0)*Qubit(0,1), QubitZBasisSet(2))
-    [          0]
-    [exp(pi*I/4)]
-    [          0]
-    [          0]
+    Parameters
+    ----------
+    target : int
+        The target qubit this gate will apply to.
+
+    Examples
+    --------
+
     """
     gate_name = u'T'
-    gate_name_pretty = u'T'
     gate_name_latex = u'T'
 
-    @property
-    def matrix(self):
-        return Matrix([[1, 0], [0, exp(I*pi/4)]])
+    def get_target_matrix(self, format='sympy'):
+        if format == 'sympy':
+            return Matrix([[1, 0], [0, exp(I*pi/4)]])
+        raise NotImplementedError('Invalid format: %r' % format)
+
+# Aliases for gate names.
+H = HadamardGate
+X = XGate
+Y = YGate
+Z = ZGate
+T = TGate
+Phase = S = PhaseGate
+
 
 #-----------------------------------------------------------------------------
 # 2 Qubit Gates
 #-----------------------------------------------------------------------------
 
-class TwoQubitGate(Gate):
 
-    nqubits = Integer(2)
+class CNotGate(CGate, TwoQubitGate):
+    """Two qubit controlled-NOT.
 
+    This gate performs the NOT or X gate on the target qubit if the control
+    qubits all have the value 1.
 
-class RkGate(Gate):
-    """A Controlled phase gate.
+    Parameters
+    ----------
+    label : tuple
+        A tuple of the form (control, target).
 
-    If Qubits specified in self.args[0] and self.args[1] are 1, then changes
-    the phase of the state by e**(2*i*pi/2**k)
+    Examples
+    --------
 
-    *args are is the tuple describing which Qubits it should effect
-    k is set by the third argument in the input, and describes how big of a
-    phase shift it should apply
-
-    >>> from sympy.physics.Qubit import Qubit, RkGate, apply_gates,\
-    QubitZBasisSet
-    >>> RkGate(1,0,2)
-    R2(1, 0)
-    >>> from sympy.physics.quantum import represent
-    >>> represent(_, QubitZBasisSet(2))
-    [1, 0, 0, 0]
-    [0, 1, 0, 0]
-    [0, 0, 1, 0]
-    [0, 0, 0, I]
-    >>> RkGate(1,0,3)*Qubit(1,1)
-    R3(1, 0)*|11>
-    >>> apply_gates(_)
-    exp(pi*I/4)*|11>
     """
-    gate_name = u'Rk'
-    gate_name_pretty = u'Rk'
-    gate_name_latex = u'Rk'
+    gate_name = 'CNOT'
+    gate_name_latex = u'CNOT'
 
-    __slots__ = ['k']
+    #-------------------------------------------------------------------------
+    # Initialization
+    #-------------------------------------------------------------------------
 
-    def __new__(cls, *args):
-        obj = Gate.__new__(cls, *args[:-1])
-        if 3 != len(args):
-            num = obj.input_number
-            raise QuantumError("This gate applies to %d Qubits" % (num))
-        obj.k = args[-1]
-        return obj
+    @classmethod
+    def _eval_label(cls, label):
+        label = Gate._eval_label(label)
+        return label
 
-    def _apply_operator(self, Qubits):
-        #switch Qubit basis and matrix basis when fully implemented
-        mat = self.matrix
-        args = [self.args[0][i] for i in reversed(range(2))]
-        return self._apply(Qubits, mat, args)
+    @classmethod
+    def _eval_hilbert_space(cls, label):
+        """This returns the smallest possible Hilbert space."""
+        return ComplexSpace(2)**(max(label)+1)
 
-    def _sympystr(self, printer, *args):
-        return "R%s(%s, %s)" % (printer._print(self.k, *args),\
-        printer._print(self.args[0][0], *args), printer._print(self.args[0][1], *args))
+    #-------------------------------------------------------------------------
+    # Properties
+    #-------------------------------------------------------------------------
 
     @property
-    def matrix(self):
-        return Matrix([[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,\
-        exp(2*I*pi/2**self.k)]])
+    def min_qubits(self):
+        """The minimum number of qubits this gate needs to act on."""
+        return max(self.label)+1
 
     @property
-    def name(self):
-        return "R%s(%s, %s)" % (self.k, self.args[0], self.args[1])
+    def targets(self):
+        """A tuple of target qubits."""
+        return Tuple(self.label[1])
 
     @property
-    def input_number(self):
-        return 2
+    def controls(self):
+        """A tuple of control qubits."""
+        return Tuple(self.label[0])
 
-    def _print_operator_name_pretty(self, printer, *args):
-        return prettyForm('R%s' % self.k)
+    @property
+    def gate(self):
+        """The non-controlled gate that will be applied to the targets."""
+        return XGate(self.label[1])
+
+    #-------------------------------------------------------------------------
+    # Properties
+    #-------------------------------------------------------------------------
+
+    # The default printing of Gate works better than those of CGate, so we
+    # go around the overridden methods in CGate.
+
+    def _print_contents(self, printer, *args):
+        return Gate._print_contents(self, printer, *args)
+
+    def _print_contents_pretty(self, printer, *args):
+        return Gate._print_contents_pretty(self, printer, *args)
+
+    def _latex(self, printer, *args):
+        return Gate._latex(self, printer, *args)
 
 
-class IRkGate(RkGate):
-    """Inverse Controlled-Phase Gate
+class SwapGate(TwoQubitGate):
+    """Two qubit SWAP gate.
 
-    Does the same thing as the RkGate, but rotates in the opposite direction
-    within the complex plane. If Qubits specified in self.args[0]
-    and self.args[1] are 1, then changes the phase of the state by
-    e**(2*i*pi/2**k)
+    This gate swap the values of the two qubits.
 
-    *args are is the tuple describing which Qubits it should effect
-    k is set by the third argument in the input, and describes how big of a
-    phase shift it should apply
+    Parameters
+    ----------
+    label : tuple
+        A tuple of the form (target1, target2).
 
-    >>> from sympy.physics.Qubit import Qubit, IRkGate, apply_gates,\
-    QubitZBasisSet
-    >>> IRkGate(1,0,2)
-    IR2(1, 0)
-    >>> from sympy.physics.quantum import represent
-    >>> represent(_, QubitZBasisSet(2))
-    [1, 0, 0,  0]
-    [0, 1, 0,  0]
-    [0, 0, 1,  0]
-    [0, 0, 0, -I]
-    >>> IRkGate(1,0,3)*Qubit(1,1)
-    IR3(1, 0)*|11>
-    >>> apply_gates(_)
-    exp(-pi*I/4)*|11>
+    Examples
+    --------
+
     """
-    gate_name = u'IRk'
-    gate_name_pretty = u'IRk'
-    gate_name_latex = u'IRk'
+    gate_name = 'SWAP'
+    gate_name_latex = u'SWAP'
 
-    def _sympystr(self, printer, *args):
-        return "IR%s(%s, %s)" % (printer._print(self.k, *args),\
-        printer._print(self.args[0][0], *args), printer._print(self.args[0][1], *args))
-
-    @property
-    def matrix(self):
-        return Matrix([[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,\
-        exp(-2*I*pi/2**self.k)]])
-
-    @property
-    def name(self):
-        return "IR%s(%s, %s)" % (self.k, self.args[0], self.args[1])
-
-    def _print_operator_name_pretty(self, printer, *args):
-        return prettyForm('IR%s' % self.k)
-
-
-class CTGate(Gate):
-    """Controlled Pi/8 Gate (Controlled Version of TGate)
-
-    Applies a TGate if the Qubit specified by self.args[0] is True.
-    Thus, it rotates the phase by pi/2 if both Qubits are true.
-    It maps the state:
-    |11> -> exp(I*pi/4)*|11> (leaves others unaffected)
-
-    >>> from sympy.physics.Qubit import Qubit, CTGate, apply_gates,\
-    QubitZBasisSet
-    >>> apply_gates(CTGate(0,1)*Qubit(1,1))
-    exp(pi*I/4)*|11>
-    """
-    gate_name = u'CT'
-    gate_name_pretty = u'CT'
-    gate_name_latex = u'CT'
-
-    @property
-    def matrix(self):
-        return Matrix([[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,\
-        exp(I*pi/4)]])
-
-
-class CZGate(Gate):
-    """Controlled Z-Gate
-
-    Applies a ZGate if the Qubit specified by self.args[0] is true. Thus, it
-    rotates the phase by pi if both Qubits are true.
-    i.e It maps the state: |11> -> -|11>
-
-    >>> from sympy.physics.Qubit import Qubit, CZGate, apply_gates,\
-    QubitZBasisSet
-    >>> apply_gates(CZGate(0,1)*Qubit(1,1))
-    -1*|11>
-    """
-    gate_name = u'CZ'
-    gate_name_pretty = u'CZ'
-    gate_name_latex = u'CZ'
-    @property
-    def matrix(self):
-        return Matrix([[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,-1]])
-
-
-class CPhaseGate(Gate):
-    """Controlled Phase-Gate
-
-    Applies the phase gate contingent on the value specified in self.args[0]
-    being true. Thus, it rotates the phase by pi/2 if both Qubits are true.
-    i.e. It maps the state: |11> -> exp(I*pi/4)*|11>
-
-    >>> from sympy.physics.Qubit import Qubit, CPhaseGate, apply_gates,\
-    QubitZBasisSet
-    >>> apply_gates(CPhaseGate(0,1)*Qubit(1,1))
-    I*|11>
-    """
-    gate_name = 'CS'
-    gate_name_pretty = u'CS'
-    gate_name_latex = u'CS'
-
-    @property
-    def matrix(self):
-        return Matrix([[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,I]])
-
-
-class CNotGate(Gate):
-    """Controlled NOT-Gate
-
-    Note: (This is the 'entangling gate' most often made reference to in the
-    literature) CNot, Hadamard and the Pauli-Gates make
-    a universal group in quantum computation. Flips the second Qubit
-    (The target) contingent on the first Qubit being 1. Can be thought of as
-    a reversible XOR Gate.
-
-    >>> from sympy.physics.Qubit import Qubit, CNotGate, apply_gates,\
-    QubitZBasisSet
-    >>> from sympy.physics.quantum import represent
-    >>> represent(CNotGate(0,1), QubitZBasisSet(2))
-    [1, 0, 0, 0]
-    [0, 0, 0, 1]
-    [0, 0, 1, 0]
-    [0, 1, 0, 0]
-    >>> apply_gates(CNotGate(0,1)*Qubit(0,1))
-    |'11'>
-    """
-    gate_name = 'CNot'
-    gate_name_pretty = u'CNot'
-    gate_name_latex = u'CNot'
-
-    @property
-    def matrix(self):
-        return Matrix([[1,0,0,0],[0,1,0,0],[0,0,0,1],[0,0,1,0]])
-
-
-class SwapGate(Gate):
-    """A SwapGate Object
-
-    Thus swaps two Qubits locations within the Tensor Product.
-
-    >>> from sympy.physics.Qubit import Qubit, SwapGate, apply_gates,\
-    QubitZBasisSet
-    >>> from sympy.physics.quantum import represent
-    >>> represent(SwapGate(0,1), QubitZBasisSet(2))
-    [1, 0, 0, 0]
-    [0, 0, 1, 0]
-    [0, 1, 0, 0]
-    [0, 0, 0, 1]
-    >>> apply_gates(SwapGate(0,1)*Qubit(0,1))
-    |'10'>
-    """
-    gate_name = 'Swap'
-    gate_name_pretty = u'Swap'
-    gate_name_latex = u'Swap'
-
-    @property
-    def matrix(self):
-        return Matrix([[1,0,0,0],[0,0,1,0],[0,1,0,0],[0,0,0,1]])
+    def get_target_matrix(self, format='sympy'):
+        if format == 'sympy':
+            return Matrix([[1,0,0,0],[0,0,1,0],[0,1,0,0],[0,0,0,1]])
+        raise NotImplementedError('Invalid format: %r' % format)
 
 
 class ToffoliGate(Gate):
-    """A ToffoliGate (AKA the Controlled-Controlled (double controlled) NOT
+    """The ToffoliGate, also known as the double-controlled-NOT gate.
 
     Flips the third Qubit (the target) contingent on the first and
-    second Qubits being 1 (first and second Qubits are control bits)
-    It can be thought of as a Controlled CNotGate
+    second qubits (the controls) being 1.
 
-    >>> from sympy.physics.Qubit import Qubit, ToffoliGate, apply_gates,\
-    QubitZBasisSet
-    >>> from sympy.physics.quantum import represent
-    >>> represent(ToffoliGate(1,0,2), QubitZBasisSet(3))
-    [1, 0, 0, 0, 0, 0, 0, 0]
-    [0, 1, 0, 0, 0, 0, 0, 0]
-    [0, 0, 1, 0, 0, 0, 0, 0]
-    [0, 0, 0, 0, 0, 0, 0, 1]
-    [0, 0, 0, 0, 1, 0, 0, 0]
-    [0, 0, 0, 0, 0, 1, 0, 0]
-    [0, 0, 0, 0, 0, 0, 1, 0]
-    [0, 0, 0, 1, 0, 0, 0, 0]
-    >>> apply_gates(ToffoliGate(1,0,2)*Qubit(1,1,1))
-    |'011'>
+    Parameters
+    ----------
+    label : tuple
+        A tuple of the form (control1, control2, target).
+
+    Examples
+    --------
+
     """
-    gate_name = u'Toffoli'
-    gate_name_pretty = u'Toffoli'
-    gate_name_latex = u'Toffoli'
+
+    nqubits = Integer(3)
+
+    gate_name = u'TOFFOLI'
+    gate_name_latex = u'TOFFOLI'
+
+    #-------------------------------------------------------------------------
+    # Initialization
+    #-------------------------------------------------------------------------
+
+    # Toffoli((0,1,2))
+
+    @classmethod
+    def _eval_label(cls, label):
+        label = Gate._eval_label(label)
+        return label
+
+    @classmethod
+    def _eval_hilbert_space(cls, label):
+        """This returns the smallest possible Hilbert space."""
+        return ComplexSpace(2)**(max(label)+1)
+
+    #-------------------------------------------------------------------------
+    # Properties
+    #-------------------------------------------------------------------------
 
     @property
-    def matrix(self):
-        return Matrix([[1,0,0,0,0,0,0,0],[0,1,0,0,0,0,0,0],[0,0,1,0,0,0,0,0],\
-        [0,0,0,1,0,0,0,0],[0,0,0,0,1,0,0,0],[0,0,0,0,0,1,0,0],[0,0,0,0,0,0,0,1]\
-        ,[0,0,0,0,0,0,1,0]])
+    def min_qubits(self):
+        """The minimum number of qubits this gate needs to act on."""
+        return max(self.label)+1
 
+    @property
+    def targets(self):
+        """A tuple of target qubits."""
+        return Tuple(self.label[2])
+
+    @property
+    def controls(self):
+        """A tuple of control qubits."""
+        return self.label[:2]
+
+    @property
+    def gate(self):
+        """The non-controlled gate that will be applied to the targets."""
+        return XGate(self.label[2])
+
+# Aliases for gate names.
+CNOT = CNotGate
+SWAP = SwapGate
+TOFFOLI = ToffoliGate
 
 #-----------------------------------------------------------------------------
 # Utility functions
@@ -906,3 +1049,17 @@ def gate_sort(circuit):
                         changes = True
                         break
     return circuit
+
+
+def zx_basis_transform(self, format='sympy'):
+    """Transformation matrix from Z to X basis."""
+    if format == 'sympy':
+        return sqrt2_inv*Matrix([[1,1],[1,-1]])
+    raise NotImplementedError('Invalid format: %r' % format)
+
+
+def zy_basis_transform(self, format='sympy'):
+    """Transformation matrix from Z to Y basis."""
+    if format == 'sympy':
+        return Matrix([[I,0],[0,-I]])
+    raise NotImplementedError('Invalid format: %r' % format)

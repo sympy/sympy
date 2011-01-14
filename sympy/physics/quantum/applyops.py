@@ -1,4 +1,8 @@
-"""Logic for applying operators to states."""
+"""Logic for applying operators to states.
+
+Todo:
+* Sometimes the final result needs to be expanded, we should do this by hand.
+"""
 
 import copy
 

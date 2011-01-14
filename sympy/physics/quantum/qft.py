@@ -1,7 +1,8 @@
 """An implementation of qubits and gates acting on them."""
 
-from sympy import Expr
+from sympy import Expr, Matrix, exp, I, pi
 from sympy.matrices.matrices import eye
+from sympy.printing.pretty.stringpict import prettyForm
 
 from sympy.physics.quantum.qexpr import QuantumError
 from sympy.physics.quantum.hilbert import HilbertSpaceError
@@ -9,7 +10,7 @@ from sympy.physics.quantum.tensorproduct import matrix_tensor_product
 from sympy.physics.quantum.applyops import apply_operators
 
 from sympy.physics.quantum.gate import (
-    Gate, HadamardGate, RkGate, SwapGate, IRkGate
+    Gate, HadamardGate, SwapGate, TwoQubitGate
 
 )
 
@@ -21,6 +22,119 @@ __all__ = [
 #-----------------------------------------------------------------------------
 # Fourier stuff
 #-----------------------------------------------------------------------------
+
+
+class RkGate(TwoQubitGate):
+    """A Controlled phase gate.
+
+    If Qubits specified in self.args[0] and self.args[1] are 1, then changes
+    the phase of the state by e**(2*i*pi/2**k)
+
+    *args are is the tuple describing which Qubits it should effect
+    k is set by the third argument in the input, and describes how big of a
+    phase shift it should apply
+
+    >>> from sympy.physics.Qubit import Qubit, RkGate, apply_gates,\
+    QubitZBasisSet
+    >>> RkGate(1,0,2)
+    R2(1, 0)
+    >>> from sympy.physics.quantum import represent
+    >>> represent(_, QubitZBasisSet(2))
+    [1, 0, 0, 0]
+    [0, 1, 0, 0]
+    [0, 0, 1, 0]
+    [0, 0, 0, I]
+    >>> RkGate(1,0,3)*Qubit(1,1)
+    R3(1, 0)*|11>
+    >>> apply_gates(_)
+    exp(pi*I/4)*|11>
+    """
+    gate_name = u'Rk'
+    gate_name_latex = u'Rk'
+
+    __slots__ = ['k']
+
+    def __new__(cls, *args):
+        obj = Gate.__new__(cls, *args[:-1])
+        if 3 != len(args):
+            num = obj.input_number
+            raise QuantumError("This gate applies to %d Qubits" % (num))
+        obj.k = args[-1]
+        return obj
+
+    def _apply_operator(self, Qubits):
+        #switch Qubit basis and matrix basis when fully implemented
+        mat = self.matrix
+        args = [self.args[0][i] for i in reversed(range(2))]
+        return self._apply(Qubits, mat, args)
+
+    def _sympystr(self, printer, *args):
+        return "R%s(%s, %s)" % (printer._print(self.k, *args),\
+        printer._print(self.args[0][0], *args), printer._print(self.args[0][1], *args))
+
+    @property
+    def matrix(self):
+        return Matrix([[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,\
+        exp(2*I*pi/2**self.k)]])
+
+    @property
+    def name(self):
+        return "R%s(%s, %s)" % (self.k, self.args[0], self.args[1])
+
+    @property
+    def input_number(self):
+        return 2
+
+    def _print_operator_name_pretty(self, printer, *args):
+        return prettyForm('R%s' % self.k)
+
+
+class IRkGate(TwoQubitGate):
+    """Inverse Controlled-Phase Gate
+
+    Does the same thing as the RkGate, but rotates in the opposite direction
+    within the complex plane. If Qubits specified in self.args[0]
+    and self.args[1] are 1, then changes the phase of the state by
+    e**(2*i*pi/2**k)
+
+    *args are is the tuple describing which Qubits it should effect
+    k is set by the third argument in the input, and describes how big of a
+    phase shift it should apply
+
+    >>> from sympy.physics.Qubit import Qubit, IRkGate, apply_gates,\
+    QubitZBasisSet
+    >>> IRkGate(1,0,2)
+    IR2(1, 0)
+    >>> from sympy.physics.quantum import represent
+    >>> represent(_, QubitZBasisSet(2))
+    [1, 0, 0,  0]
+    [0, 1, 0,  0]
+    [0, 0, 1,  0]
+    [0, 0, 0, -I]
+    >>> IRkGate(1,0,3)*Qubit(1,1)
+    IR3(1, 0)*|11>
+    >>> apply_gates(_)
+    exp(-pi*I/4)*|11>
+    """
+    gate_name = u'IRk'
+    gate_name_latex = u'IRk'
+
+    def _sympystr(self, printer, *args):
+        return "IR%s(%s, %s)" % (printer._print(self.k, *args),\
+        printer._print(self.args[0][0], *args), printer._print(self.args[0][1], *args))
+
+    @property
+    def matrix(self):
+        return Matrix([[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,\
+        exp(-2*I*pi/2**self.k)]])
+
+    @property
+    def name(self):
+        return "IR%s(%s, %s)" % (self.k, self.args[0], self.args[1])
+
+    def _print_operator_name_pretty(self, printer, *args):
+        return prettyForm('IR%s' % self.k)
+
 
 class Fourier(Gate):
     """Superclass of Quantum Fourier and Inverse Quantum Fourier Gates

@@ -1,4 +1,10 @@
-"""Qubits for quantum computing."""
+"""Qubits for quantum computing.
+
+Todo:
+* Get things here to use a new MultiZGate as a basis for represent.
+* Fix represent, matrix_to_qubit, qubit_to_matrix.
+* Update docstrings.
+"""
 
 from sympy import Integer, I, log, Mul, Add, Pow
 from sympy.core.basic import sympify
@@ -99,18 +105,8 @@ class QubitState(State):
 
     @property
     def qubit_values(self):
-        """Returns the values of the qubits as a list."""
+        """Returns the values of the qubits as a tuple."""
         return self.label
-
-    @property
-    def x_basis_transform(self):
-        #Transform matrix from ZBasis to XBasis and back again
-        return 1/sqrt(2)*Matrix([[1,1],[1,-1]])
-
-    @property
-    def y_basis_transform(self):
-        #Transform matrix from ZBasis to YBasis and back again
-        return Matrix([[I,0],[0,-I]])
 
     #-------------------------------------------------------------------------
     # Special methods
@@ -120,13 +116,7 @@ class QubitState(State):
         return self.dimension
 
     def __getitem__(self, bit):
-        if bit > self.dimension - 1:
-            raise IndexError('bit index out of range: %r' % bit)
-        return self.self.qubit_values[int(self.dimension-bit-1)]
-
-    #-------------------------------------------------------------------------
-    # Printing methods
-    #-------------------------------------------------------------------------
+        return self.qubit_values[int(self.dimension-bit-1)]
 
     #-------------------------------------------------------------------------
     # Utility methods
