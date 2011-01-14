@@ -575,10 +575,11 @@ class RootSum(Expr):
             else:
                 raise ValueError("expected a univariate function, got %s" % func)
 
-        if coeff is not S.One:
-            func = Lambda(var, expr.subs(var, coeff*var))
-
         var, expr = func.args
+
+        if coeff is not S.One:
+            expr = expr.subs(var, coeff*var)
+
         deg = poly.degree()
 
         if not expr.has(var):
