@@ -30,17 +30,22 @@ def test_basics():
     assert diff(Integral(y, y), x)       == 0
     assert diff(Integral(x, (x,0,1)), x) == 0
     assert diff(Integral(x, x), x)       == x
-    assert diff(Integral(t, (t,0,x)), x) == x
+    assert diff(Integral(t, (t,0,x)), x) == x + Integral(0, (t, 0, x))
 
     e=(t+1)**2
-    assert diff(integrate(e, (t,0,x)), x) == diff(Integral(e, (t, 0, x)), x).expand() == ((1+x)**2).expand()
-    assert diff(integrate(e, (t,0,x)), t) == diff(Integral(e, (t,0,x)), t)            == 0
-    assert diff(integrate(e, (t,0,x)), a) == diff(Integral(e, (t, 0, x)), a)          == 0
-    assert diff(integrate(e, t), a)       == diff(Integral(e, t), a)                  == 0
+    assert diff(integrate(e, (t,0,x)), x) == \
+           diff(Integral(e, (t, 0, x)), x).doit().expand() == \
+           ((1+x)**2).expand()
+    assert diff(integrate(e, (t,0,x)), t) == \
+           diff(Integral(e, (t,0,x)), t) == 0
+    assert diff(integrate(e, (t,0,x)), a) == \
+           diff(Integral(e, (t, 0, x)), a) == 0
+    assert diff(integrate(e, t), a) == diff(Integral(e, t), a) == 0
 
-    assert integrate(e, (t,a,x)).diff(x) == Integral(e, (t, a, x)).diff(x).expand()
-    assert Integral(e, (t, a, x)).diff(x) == ((1+x)**2)
-    assert integrate(e, (t,x,a)).diff(x) == (-(1+x)**2).expand()
+    assert integrate(e, (t,a,x)).diff(x) == \
+           Integral(e, (t, a, x)).diff(x).doit().expand()
+    assert Integral(e, (t, a, x)).diff(x).doit() == ((1+x)**2)
+    assert integrate(e, (t,x,a)).diff(x).doit() == (-(1+x)**2).expand()
 
     assert integrate(t**2, (t,x,2*x)).diff(x) == 7*x**2
 

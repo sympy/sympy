@@ -371,7 +371,7 @@ class Integral(Expr):
         >>> from sympy.abc import x, y
         >>> i = Integral(x + y, y, (y, 1, x))
         >>> i.diff(x)
-        Integral(y, (y, 1, x)) + Integral(x + y, (y, x))
+        Integral(x + y, (y, x)) + Integral(Integral(1, (y, y)), (y, 1, x))
         >>> i.doit().diff(x) == i.diff(x).doit()
         True
         >>> i.diff(y)
@@ -410,22 +410,15 @@ class Integral(Expr):
             f = Integral(f, *tuple(limits))
 
         # assemble the pieces
-        rv = []
-        def update_rv(i):
-            """update rv with i if i is not zero; this is primarily for the
-            purpose of not making the expression complicated with non-autosimplifying
-            Integrals that are equal to 0"""
-            if not i.is_zero:
-                rv.append(i)
-
+        rv = 0
         if b is not None:
-            update_rv(+f.subs(x, b)*diff(b, sym))
+            rv += f.subs(x, b)*diff(b, sym)
         if a is not None:
-            update_rv(-f.subs(x, a)*diff(a, sym))
+            rv -= f.subs(x, a)*diff(a, sym)
         if len(limit) == 1 and sym == x:
             # the dummy variable *is* also the real-world variable
             arg = f
-            rv.append(arg)
+            rv += arg
         else:
             # the dummy variable might match sym but it's
             # only a dummy and the actual variable is determined
@@ -433,15 +426,8 @@ class Integral(Expr):
             # while differentiating
             u = Dummy('u')
             arg = f.subs(x, u).diff(sym).subs(u, x)
-            if isinstance(arg, Integral):
-                do = not arg.function.has(x) # can this ever happen?
-            else:
-                do = not arg.has(x)
-            if do:
-                rv.append(integrate(arg, Tuple(x, a, b)))
-            else:
-                update_rv(Integral(arg, Tuple(x, a, b)))
-        return Add(*rv)
+            rv += Integral(arg, Tuple(x, a, b))
+        return rv
 
     def _eval_integral(self, f, x):
         """Calculate the anti-derivative to the function f(x).
