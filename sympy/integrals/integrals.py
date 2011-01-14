@@ -205,6 +205,42 @@ class Integral(Expr):
         # if there are no surviving symbols then the result is a number
         return len(isyms) == 0
 
+    def as_dummy(self):
+        """
+        Replace instances of the integration variables with their dummy
+        counterparts to make clear what are dummy variables and what
+        are real-world symbols in an Integral. The "integral at" limit
+        that has a length of 1 will be explicated with its length-2
+        equivalent.
+
+        >>> from sympy import Integral
+        >>> from sympy.abc import x, y
+        >>> Integral(x).as_dummy()
+        Integral(_x, (_x, x))
+        >>> Integral(x, (x, x, y), (y, x, y)).as_dummy()
+        Integral(_x, (_x, x, _y), (_y, x, y))
+
+        If there were no dummies in the original expression, then the
+        output of this function will show which symbols cannot be
+        changed by subs(), those with an underscore prefix.
+
+        """
+        reps = {}
+        f = self.function
+        limits = list(self.limits)
+        for i in xrange(-1, -len(limits) - 1, -1):
+            xab = list(limits[i])
+            if len(xab) == 1:
+                xab = xab*2
+            x = xab[0]
+            xab[0] = x.as_dummy()
+            for j in range(1, len(xab)):
+                xab[j] = xab[j].subs(reps)
+            reps[x] = xab[0]
+            limits[i] = xab
+        f = f.subs(reps)
+        return Integral(f, *limits)
+
     def transform(self, x, mapping, inverse=False):
         """
         Replace the integration variable x in the integrand with the
