@@ -1,6 +1,6 @@
 from sympy import (Add, Basic, S, I, O, Symbol, Wild,  Real, Integer, Rational,
     sin, cos, tan, exp, log, oo, sqrt, symbols, Integral, sympify,
-    WildFunction, Poly, Function, Derivative, Number, pi, var,
+    WildFunction, Poly, Function, Derivative, Number, Tuple, pi, var,
     NumberSymbol, zoo, Piecewise, Mul, Pow, nsimplify, ratsimp, trigsimp,
     radsimp, powsimp, simplify, together, separate, collect,
     apart, combsimp, factor, refine, cancel, invert)
@@ -910,6 +910,9 @@ def test_expr_sorting():
     assert sorted(exprs, key=Basic.sorted_key) == exprs
 
     exprs = [f(1), f(2), f(3), f(1, 2, 3), g(1), g(2), g(3), g(1, 2, 3)]
+    assert sorted(exprs, key=Basic.sorted_key) == exprs
+
+    exprs = [Tuple(x, y), Tuple(x, z), Tuple(x, y, z)]
     assert sorted(exprs, key=Basic.sorted_key) == exprs
 
 def test_as_ordered_factors():

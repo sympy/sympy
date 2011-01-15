@@ -508,46 +508,51 @@ class Basic(AssumeMeths):
 
             return tuple(result)
 
+        def number(expr):
+            """Tuple of a number. """
+            return head(expr), (0, ()), (), expr
+
         if self.is_Atom:
             if self.is_Number:
-                return head(self), (0, ()), (), self
+                return number(self)
             else:
-                exp = head(S.One), (0, ()), (), S.One
-
                 if self.is_Symbol:
                     args = (str(self),)
                 else:
                     args = (self,)
 
-                return head(self), (1, args), exp, S.One
+                return head(self), (1, args), number(S.One), S.One
         else:
-            coeff, expr = self.as_coeff_Mul()
-
-            if expr.is_Pow:
-                expr, exp = expr.args
+            try:
+                coeff, expr = self.as_coeff_Mul()
+            except AttributeError:
+                return head(self), (len(self.args), self.args), number(S.One), S.One
             else:
-                expr, exp = expr, S.One
-
-            if expr.is_Atom:
-                if expr.is_Symbol:
-                    args = (str(expr),)
+                if expr.is_Pow:
+                    expr, exp = expr.args
                 else:
-                    args = (expr,)
-            else:
-                if expr.is_Add:
-                    args = expr.as_ordered_terms(order=order)
+                    expr, exp = expr, S.One
+
+                if expr.is_Atom:
+                    if expr.is_Symbol:
+                        args = (str(expr),)
+                    else:
+                        args = (expr,)
                 else:
-                    args = expr.args
+                    if expr.is_Add:
+                        args = expr.as_ordered_terms(order=order)
+                    else:
+                        args = expr.args
 
-                args = rmap(args)
+                    args = rmap(args)
 
-                if expr.is_Mul:
-                    args = sorted(args)
+                    if expr.is_Mul:
+                        args = sorted(args)
 
-            args = (len(args), args)
-            exp = exp.as_tuple_tree(order=order)
+                args = (len(args), args)
+                exp = exp.as_tuple_tree(order=order)
 
-            return head(expr), args, exp, coeff
+                return head(expr), args, exp, coeff
 
     @classmethod
     def sorted_key(cls, expr, order=None):
@@ -1434,4 +1439,4 @@ class Atom(Basic):
     def doit(self, **hints):
         return self
 
-from sympy.core.singleton import S
+from singleton import S
