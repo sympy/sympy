@@ -102,27 +102,16 @@ class Mul(AssocOp):
 
                 #         n          n          n
                 # (-3 + y)   ->  (-1)  * (3 - y)
+                #
+                # Give powers a chance to become a Mul if that's the
+                # behavior obtained from Add._eval_power()
                 if not Basic.keep_sign and b.is_Add and e.is_Number:
-                    #found factor (x+y)**number; split off initial coefficient
-                    c, t = b.as_coeff_terms()
-                    #last time I checked, Add.as_coeff_terms returns One or NegativeOne
-                    #but this might change
-                    if c.is_negative and not e.is_integer:
-                        # extracting root from negative number: ignore sign
-                        if c is not S.NegativeOne:
-                            # make c positive (probably never occurs)
-                            coeff *= (-c) ** e
-                            assert len(t)==1,`t`
-                            b = -t[0]
-                        #else: ignoring sign from NegativeOne: nothing to do!
-                    elif c is not S.One:
-                        coeff *= c ** e
-                        assert len(t)==1,`t`
-                        b = t[0]
-                    #else: c is One, so pass
+                    cb = b._eval_power(e, terms=1)
+                    if cb:
+                        c, b = cb
+                        coeff *= c
 
                 c_powers.append((b,e))
-
 
             # NON-COMMUTATIVE
             # TODO: Make non-commutative exponents not combine automatically
@@ -228,7 +217,7 @@ class Mul(AssocOp):
                 else:
                     c_part.append(b)
             elif e.is_Integer and b.is_Number:
-                coeff *= b ** e
+                coeff *= Pow(b, e)
             else:
                 c_part.append(Pow(b, e))
 
@@ -254,7 +243,7 @@ class Mul(AssocOp):
                 else:
                     c_part.append(b)
             elif e.is_Integer and b.is_Number:
-                coeff *= b ** e
+                coeff *= Pow(b, e)
             else:
                 obj = b**e
                 if obj.is_Mul:
@@ -270,11 +259,12 @@ class Mul(AssocOp):
         # oo, -oo
         if (coeff is S.Infinity) or (coeff is S.NegativeInfinity):
             new_c_part = []
+            coeff_sign = 1
             for t in c_part:
                 if t.is_positive:
                     continue
                 if t.is_negative:
-                    coeff = -coeff
+                    coeff_sign *= -1
                     continue
                 new_c_part.append(t)
             c_part = new_c_part
@@ -283,10 +273,11 @@ class Mul(AssocOp):
                 if t.is_positive:
                     continue
                 if t.is_negative:
-                    coeff = -coeff
+                    coeff_sign *= -1
                     continue
                 new_nc_part.append(t)
             nc_part = new_nc_part
+            coeff *= coeff_sign
 
         # 0, nan
         elif (coeff is S.Zero) or (coeff is S.NaN):
@@ -346,11 +337,10 @@ class Mul(AssocOp):
                         # single negative term then it shouldn't be pulled out
                         # either.
                         if coeff < 0:
-                            coeff = -coeff
+                            coeff *= -1
                         if coeff is S.One:
                             return None
-                        b = b / coeff
-                        return coeff ** e * b ** e
+                        return Mul(Pow(coeff, e), Pow(b/coeff, e))
 
                     # otherwise return the new expression expanding out the
                     # known terms; those that are not known can be expanded
@@ -366,24 +356,24 @@ class Mul(AssocOp):
                         if coeff.is_negative:
                             coeff = -coeff
                             unk.append(S.NegativeOne)
-                    return Mul(*[s**e for s in nonneg + neg + [coeff]])* \
-                       Mul(*(unk)) ** e
+                    return Mul(*[Pow(s, e) for s in nonneg + neg + [coeff]])* \
+                       Pow(Mul(*unk), e)
 
 
                 coeff, rest = b.as_coeff_terms()
                 if coeff is not S.One:
                     # (2*a)**3 -> 2**3 * a**3
-                    return coeff**e * Mul(*[s**e for s in rest])
+                    return Mul(Pow(coeff, e), Mul(*[s**e for s in rest]))
             elif e.is_Integer:
                 coeff, rest = b.as_coeff_terms()
                 if coeff == S.One:
                     return
                 else:
-                    return coeff**e * Mul(*rest)**e
+                    return Mul(Pow(coeff, e), Pow(Mul(*rest), e))
 
         c, t = b.as_coeff_terms()
         if e.is_even and c.is_Number and c < 0:
-            return (-c * Mul(*t)) ** e
+            return Pow((Mul(-c, Mul(*t))), e)
 
         #if e.atoms(Wild):
         #    return Mul(*[t**e for t in b])

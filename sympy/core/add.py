@@ -382,26 +382,32 @@ class Add(AssocOp):
             return Add(*[e for (e,f) in lst])
         return s.as_leading_term(x)
 
-    def _eval_power(self, other):
+    def _eval_power(self, other, terms=False):
         #         n          n          n
         # (-3 + y)   ->  (-1)  * (3 - y)
-        # similar to Mul.flatten()
+        #
+        # At present, as_coeff_terms return +/-1 but the
+        # following should work even if that changes.
         if Basic.keep_sign:
             return None
 
+        rv = None
         c, t = self.as_coeff_terms()
         if c.is_negative and not other.is_integer:
-            if c is not S.NegativeOne:
-                coeff = (-c) ** other
+            if c is not S.NegativeOne and self.is_positive:
+                coeff = C.Pow(-c, other)
                 assert len(t) == 1, 't'
                 b = -t[0]
-                return coeff*b**other
+                rv = (coeff, C.Pow(b, other))
         elif c is not S.One:
-            coeff = c ** other
+            coeff = C.Pow(c, other)
             assert len(t) == 1, 't'
             b = t[0]
-            return coeff*b**other
-        return
+            rv = (coeff, C.Pow(b, other))
+        if not rv or terms:
+            return rv
+        else:
+            return C.Mul(*rv)
 
     def _eval_conjugate(self):
         return Add(*[t.conjugate() for t in self.args])
