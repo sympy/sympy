@@ -37,18 +37,12 @@ def test_apart():
     raises(NotImplementedError, "apart(1/(x + 1)/(y + 2))")
 
 def test_apart_matrix():
-    M = Matrix(2, 2, lambda i, j: 1/(x - (i+1))/(x - (1-j)))
+    M = Matrix(2, 2, lambda i, j: 1/(x + i + 1)/(x + j))
 
-    assert apart(M) in [
-        Matrix([
-            [(x - 1)**(-2),         -1/x - 1/(1 - x)          ],
-            [1/(1 - x) - 1/(2 - x), -S.Half/x - S.Half/(2 - x)],
-        ]),
-        Matrix([
-            [(x - 1)**(-2),          -1/x + 1/(x - 1)          ],
-            [-1/(x - 1) + 1/(x - 2), -S.Half/x + S.Half/(x - 2)],
-        ]),
-    ]
+    assert apart(M) == Matrix([
+        [1/x - 1/(x + 1),            (x + 1)**(-2)        ],
+        [1/(2*x) - (S(1)/2)/(x + 2), 1/(x + 1) - 1/(x + 2)],
+    ])
 
 def test_apart_symbolic():
     f = a*x**4 + (2*b + 2*a*c)*x**3 + (4*b*c - a**2 + a*c**2)*x**2 + (-2*a*b + 2*b*c**2)*x - b**2
