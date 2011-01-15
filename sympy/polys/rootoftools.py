@@ -277,21 +277,56 @@ def _rootof_data(poly, indices):
                 if index >= real_count:
                     yield _rootof_complexes_index(complexes, index-real_count)
 
-def _rootof_preprocess(poly, strict=True):
+def integer_basis(poly):
+    monoms, coeffs = zip(*poly.terms())
+
+    monoms, = zip(*monoms)
+    coeffs = map(abs, coeffs)
+
+    if coeffs[0] < coeffs[-1]:
+        coeffs = list(reversed(coeffs))
+    else:
+        return None
+
+    monoms = monoms[:-1]
+    coeffs = coeffs[:-1]
+
+    divs = reversed(divisors(gcd_list(coeffs))[1:])
+
+    try:
+        div = divs.next()
+    except StopIteration:
+        return None
+
+    while True:
+        for monom, coeff in zip(monoms, coeffs):
+            if coeff % div**monom != 0:
+                try:
+                    div = divs.next()
+                except StopIteration:
+                    return None
+                else:
+                    break
+        else:
+            return div
+
+def _rootof_preprocess(poly):
     """Try to get rid of symbolic coefficients from ``poly``. """
-    _, poly = poly.clear_denoms(convert=True)
-    _, poly = poly.primitive()
-
-    poly = poly.retract()
-
-    dom = poly.get_domain()
     coeff = S.One
 
-    if dom.is_Poly:
-        poly, _poly = poly.inject(), poly
+    try:
+        _, poly = poly.clear_denoms(convert=True)
+    except DomainError:
+        return coeff, poly
+
+    poly = poly.primitive()[1]
+    poly = poly.retract()
+
+    if poly.get_domain().is_Poly:
+        poly = poly.inject()
 
         strips = zip(*poly.monoms())
-        gens = poly.gens[1:]
+        gens = list(poly.gens[1:])
 
         base, strips = strips[0], strips[1:]
 
@@ -322,48 +357,14 @@ def _rootof_preprocess(poly, strict=True):
                 if reverse:
                     ratio = -ratio
 
-                coeff *= gen**(-ratio)
                 poly = poly.eval(gen, 1)
+                coeff *= gen**(-ratio)
+                gens.remove(gen)
 
-        if poly.is_multivariate:
-            if not strict:
-                return coeff, _poly
-            else:
-                raise DomainError("failed to integerize the input polynomial")
+        if gens:
+            poly = poly.eject(*gens)
 
-        def integer_basis(poly):
-            monoms, coeffs = zip(*poly.terms())
-
-            monoms, = zip(*monoms)
-            coeffs = map(abs, coeffs)
-
-            if coeffs[0] < coeffs[-1]:
-                coeffs = list(reversed(coeffs))
-            else:
-                return None
-
-            monoms = monoms[:-1]
-            coeffs = coeffs[:-1]
-
-            divs = reversed(divisors(gcd_list(coeffs))[1:])
-
-            if not divs:
-                return None
-
-            div = divs.next()
-
-            while True:
-                for monom, coeff in zip(monoms, coeffs):
-                    if coeff % div**monom != 0:
-                        try:
-                            div = divs.next()
-                        except StopIteration:
-                            return None
-                        else:
-                            break
-                else:
-                    return div
-
+    if poly.is_univariate and poly.get_domain().is_ZZ:
         basis = integer_basis(poly)
 
         if basis is not None:
@@ -374,8 +375,6 @@ def _rootof_preprocess(poly, strict=True):
 
             poly = poly.termwise(func)
             coeff *= basis
-    elif strict and not dom.is_ZZ:
-        raise DomainError("RootOf is not supported over %s" % dom)
 
     return coeff, poly
 
@@ -392,7 +391,7 @@ class RootOf(Expr):
         poly = Poly(f, x, greedy=False, expand=expand)
 
         if not poly.is_univariate:
-            raise PolynomialError("only univariate polynomials are supported")
+            raise PolynomialError("only univariate polynomials are allowed")
 
         degree = poly.degree()
 
@@ -432,6 +431,10 @@ class RootOf(Expr):
                 result = [ root for root in roots if root.is_real ]
         else:
             coeff, poly = _rootof_preprocess(poly)
+            dom = poly.get_domain()
+
+            if not dom.is_ZZ:
+                raise NotImplementedError("RootOf is not supported over %s" % dom)
 
             result = []
 
@@ -643,7 +646,7 @@ class RootSum(Expr):
     def _transform(cls, expr, x):
         """Transform an expression to a polynomial. """
         poly = Poly(expr, x, greedy=False)
-        return _rootof_preprocess(poly, strict=False)
+        return _rootof_preprocess(poly)
 
     @classmethod
     def _is_func_rational(cls, poly, func):

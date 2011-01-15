@@ -10,7 +10,6 @@ from sympy.polys.polyerrors import (
     MultivariatePolynomialError,
     GeneratorsNeeded,
     PolynomialError,
-    DomainError,
 )
 
 from sympy import (
@@ -19,7 +18,7 @@ from sympy import (
 
 from sympy.utilities.pytest import raises
 
-from sympy.abc import a, b, x, y, z, r
+from sympy.abc import a, b, c, d, x, y, z, r
 
 def test_RootOf___new__():
     assert RootOf(x, 0) == 0
@@ -82,8 +81,8 @@ def test_RootOf___new__():
 
     raises(PolynomialError, "RootOf(x - y, 0)")
 
-    raises(DomainError, "RootOf(x**3 - x + sqrt(2), 0)")
-    raises(DomainError, "RootOf(x**3 - x + I, 0)")
+    raises(NotImplementedError, "RootOf(x**3 - x + sqrt(2), 0)")
+    raises(NotImplementedError, "RootOf(x**3 - x + I, 0)")
 
     raises(IndexError, "RootOf(x**2 - 1,-4)")
     raises(IndexError, "RootOf(x**2 - 1,-3)")
@@ -98,7 +97,7 @@ def test_RootOf___new__():
     assert RootOf(Poly(x**3 - y, x), 0) == y**Rational(1,3)
 
     assert RootOf(y*x**3 + y*x + 2*y, x, 0) == -1
-    raises(DomainError, "RootOf(x**3 + x + 2*y, x, 0)")
+    raises(NotImplementedError, "RootOf(x**3 + x + 2*y, x, 0)")
 
     assert RootOf(x**3 + x + 1, 0).is_commutative == True
 
@@ -156,6 +155,34 @@ def test_RootOf_evalf():
     assert im.epsilon_eq(-Real("1.45061224918844152650"))
 
 def test_RootOf_preprocessing():
+    f = c**3*x**3 + c**2*x**2 + c*x + a
+
+    coeff, poly = _rootof_preprocess(Poly(f, x))
+
+    assert coeff == 1/c
+    assert poly == Poly(x**3 + x**2 + x + a, x)
+
+    f = c**3*x**3 + c**2*x**2 + a
+
+    coeff, poly = _rootof_preprocess(Poly(f, x))
+
+    assert coeff == 1/c
+    assert poly == Poly(x**3 + x**2 + a, x)
+
+    f = c**3*x**3 + c*x + a
+
+    coeff, poly = _rootof_preprocess(Poly(f, x))
+
+    assert coeff == 1/c
+    assert poly == Poly(x**3 + x + a, x)
+
+    f = c**3*x**3 + a
+
+    coeff, poly = _rootof_preprocess(Poly(f, x))
+
+    assert coeff == 1/c
+    assert poly == Poly(x**3 + a, x)
+
     E, F, J, L = symbols("E,F,J,L")
 
     f = -21601054687500000000*E**8*J**8/L**16 + \
