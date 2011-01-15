@@ -100,20 +100,20 @@ def test(*paths, **kwargs):
 
     Examples:
 
-    >> import sympy
+    >> from sympy.utilities.runtests import test
 
     Run all tests:
-    >> sympy.test()
+    >> test()
 
     Run one file:
-    >> sympy.test("sympy/core/tests/test_basic.py")
-    >> sympy.test("_basic")
+    >> test("sympy/core/tests/test_basic.py")
+    >> test("_basic")
 
     Run all tests in sympy/functions/ and some particular file:
-    >> sympy.test("sympy/core/tests/test_basic.py", "sympy/functions")
+    >> test("sympy/core/tests/test_basic.py", "sympy/functions")
 
     Run all tests in sympy/core and sympy/utilities:
-    >> sympy.test("/core", "/util")
+    >> test("/core", "/util")
     """
     verbose = kwargs.get("verbose", False)
     tb = kwargs.get("tb", "short")
@@ -153,21 +153,21 @@ def doctest(*paths, **kwargs):
 
     Examples:
 
-    >> import sympy
+    >> froms sympy.utilities.runtests import doctest
 
     Run all tests:
-    >> sympy.doctest()
+    >> doctest()
 
     Run one file:
-    >> sympy.doctest("sympy/core/basic.py")
-    >> sympy.doctest("polynomial.txt")
+    >> doctest("sympy/core/basic.py")
+    >> doctest("polynomial.txt")
 
     Run all tests in sympy/functions/ and some particular file:
-    >> sympy.doctest("/functions", "basic.py")
+    >> doctest("/functions", "basic.py")
 
     Run any file having polynomial in its name, doc/src/modules/polynomial.txt,
     sympy\functions\special\polynomials.py, and sympy\polys\polynomial.py:
-    >> sympy.doctest("polynomial")
+    >> doctest("polynomial")
     """
     normal = kwargs.get("normal", False)
     verbose = kwargs.get("verbose", False)

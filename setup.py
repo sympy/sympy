@@ -32,6 +32,7 @@ from distutils.core import Command
 import sys
 
 import sympy
+from sympy.utilities.runtests import test, doctest
 
 # Make sure I have the right Python version.
 if sys.version_info[:2] < (2,4):
@@ -155,10 +156,10 @@ class test_sympy(Command):
         pass
 
     def run(self):
-        if sympy.test():
+        if test():
             # all regular tests run successfuly, so let's also run doctests
             # (if some regular test fails, the doctests are not run)
-            sympy.doctest()
+            doctest()
 
 
 class run_benchmarks(Command):

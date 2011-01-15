@@ -43,7 +43,7 @@ from sympy.polys.polyclasses import (
 
 from sympy.polys.algebratools import ZZ, QQ
 
-from sympy import raises
+from sympy.utilities.pytest import raises
 
 def test_dup_LC():
     assert dup_LC([], ZZ) == 0

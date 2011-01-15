@@ -1,6 +1,7 @@
 """Tests for efficient functions for generating orthogonal polynomials. """
 
-from sympy import Poly, raises, Rational as Q
+from sympy import Poly, Rational as Q
+from sympy.utilities.pytest import raises
 
 from sympy.polys.orthopolys import (
     chebyshevt_poly,

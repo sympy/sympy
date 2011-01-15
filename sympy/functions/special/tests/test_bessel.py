@@ -1,5 +1,6 @@
-from sympy import jn, yn, symbols, sin, cos, pi, S, jn_zeros, raises
+from sympy import jn, yn, symbols, sin, cos, pi, S, jn_zeros
 from sympy.functions.special.bessel import fn
+from sympy.utilities.pytest import raises
 
 def test_fn():
     x, z = symbols("x z")

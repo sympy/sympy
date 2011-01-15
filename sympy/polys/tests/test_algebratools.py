@@ -1,18 +1,13 @@
 """Tests for classes defining properties of ground domains, e.g. ZZ, QQ, ZZ[x] ... """
 
-from sympy.polys.algebratools import (
-    ZZ, QQ, RR, PolynomialRing, FractionField, EX
-)
+from sympy.polys.algebratools import ZZ, QQ, RR, PolynomialRing, FractionField, EX
+from sympy.polys.polyerrors import (UnificationFailed, GeneratorsNeeded,
+    DomainError,)
 
-from sympy.polys.polyerrors import (
-    UnificationFailed,
-    GeneratorsNeeded,
-    DomainError,
-)
-
-from sympy import S, sqrt, sin, oo, raises
-
+from sympy import S, sqrt, sin, oo
 from sympy.abc import x, y
+
+from sympy.utilities.pytest import raises
 
 ALG = QQ.algebraic_field(sqrt(2)+sqrt(3))
 

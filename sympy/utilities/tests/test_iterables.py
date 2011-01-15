@@ -1,7 +1,8 @@
-from sympy import symbols, Integral, raises, Tuple
+from sympy import symbols, Integral, Tuple
 from sympy.utilities.iterables import postorder_traversal, \
     preorder_traversal, flatten, subsets, variations, cartes
 from sympy.functions.elementary.piecewise import Piecewise, ExprCondPair
+from sympy.utilities.pytest import raises
 
 w,x,y,z= symbols('wxyz')
 

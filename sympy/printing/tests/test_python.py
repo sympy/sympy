@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
 
 from sympy import (Symbol, symbols, oo, limit, Rational, Integral, Derivative,
-    log, exp, sqrt, pi, Function, sin, Eq, Le, Gt, Ne, raises, Abs)
+    log, exp, sqrt, pi, Function, sin, Eq, Le, Gt, Ne, Abs)
 
 from sympy.printing.python import python
+
+from sympy.utilities.pytest import raises
 
 x, y = symbols('xy')
 th  = Symbol('theta')

@@ -1,8 +1,10 @@
 from sympy import diff, Integral, Limit, sin, Symbol, Integer, Rational, cos, \
     tan, asin, acos, atan, sinh, cosh, tanh, asinh, acosh, atanh, E, I, oo, \
-    pi, GoldenRatio, EulerGamma, raises, Sum
+    pi, GoldenRatio, EulerGamma, Sum
 from sympy.printing.mathml import mathml, MathMLPrinter
 from xml.dom.minidom import parseString
+
+from sympy.utilities.pytest import raises
 
 x = Symbol('x')
 mp = MathMLPrinter()

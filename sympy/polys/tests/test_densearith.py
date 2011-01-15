@@ -39,7 +39,7 @@ from sympy.polys.polyerrors import (
 from sympy.polys.specialpolys import f_0
 from sympy.polys.algebratools import ZZ, QQ
 
-from sympy import raises
+from sympy.utilities.pytest import raises
 
 F_0 = dmp_mul_ground(dmp_normal(f_0, 2, QQ), QQ(1,7), 2, QQ)
 

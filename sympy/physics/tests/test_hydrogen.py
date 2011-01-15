@@ -1,5 +1,6 @@
-from sympy import var, sqrt, exp, simplify, S, integrate, oo, Symbol, raises
+from sympy import var, sqrt, exp, simplify, S, integrate, oo, Symbol
 from sympy.physics.hydrogen import R_nl, E_nl, E_nl_dirac
+from sympy.utilities.pytest import raises
 
 var("r Z")
 

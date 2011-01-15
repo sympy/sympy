@@ -73,7 +73,9 @@ from sympy.polys.specialpolys import (
 
 from sympy.polys.algebratools import ZZ, QQ, EX
 
-from sympy import raises, I
+from sympy import I
+
+from sympy.utilities.pytest import raises
 
 def test_dup_ground_to_ring():
     assert dup_ground_to_ring([], QQ, ZZ) == (ZZ(1), [])

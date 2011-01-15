@@ -1,7 +1,7 @@
 from sympy import Lambda, Symbol, Function, WildFunction, Derivative, sqrt, \
         log, exp, Rational, Real, sign, Basic, sin, cos, diff, I, re, im, \
-        oo, zoo, nan, E, expand, pi, raises, O, Sum
-from sympy.utilities.pytest import XFAIL
+        oo, zoo, nan, E, expand, pi, O, Sum
+from sympy.utilities.pytest import XFAIL, raises
 from sympy.abc import x, y
 from sympy.core.function import PoleError
 

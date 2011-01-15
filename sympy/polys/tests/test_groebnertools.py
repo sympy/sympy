@@ -24,7 +24,7 @@ from sympy.polys.monomialtools import (
 
 from sympy.polys.algebratools import ZZ, QQ
 
-from sympy import raises
+from sympy.utilities.pytest import raises
 
 def test_sdp_LC():
     assert sdp_LC([], QQ) == QQ(0)
