@@ -146,7 +146,7 @@ class Qubit(QubitState, Ket):
         else:
             return Integer(0)
 
-    def _represent_MultiZGate(self, basis, **options):
+    def _represent_ZGate(self, basis, **options):
         """
         if basis.hilbert_space != l2(2)**self.dimension:
             raise HilbertSpaceException("Basis and Qubit\

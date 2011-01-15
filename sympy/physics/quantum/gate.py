@@ -18,6 +18,7 @@ from sympy.core.numbers import Number
 from sympy.core.containers import Tuple
 from sympy.functions.elementary.exponential import exp
 from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.matrices import matrices
 from sympy.printing.pretty.stringpict import prettyForm, stringPict
 from sympy.utilities.iterables import all
 
@@ -198,29 +199,28 @@ class Gate(UnitaryOperator):
     # Represent
     #-------------------------------------------------------------------------
 
-    # def _represent(self, basis, format='sympy'):
-    #     if isinstance(basis, Gate):
-    #         basis_size = 1
-    #     elif isinstance(basis, Pow) and isinstance(basis.base, Gate):
-    #         basis_size = basis.exp
-    #     else:
-    #         raise QuantumError(
-    #             'Basis must be a gate operator, or tensor product of gate operators.'
-    #         )
-    # 
-    #     if basis_size < self.min_qubits:
-    #         raise QuantumError(
-    #             'The basis given is too small for the given Gate objects.'
-    #         )
-    # 
-    #     gate = self.matrix
-    #     if isinstance(basis, Gate):
-    #         return gate
-    #     else:
-    #         m = represent_hilbert_space(
-    #             gate, basis_size, self.label, format
-    #         )
-    #         return m
+    def _represent_ZGate(self, basis, **options):
+        format = options.pop('format','sympy')
+        nqubits = options.pop('nqubits',0)
+        if nqubits == 0:
+            raise QuantumError('The number of qubits must be given as nqubits.')
+
+        # Make sure we have enough qubits for the gate.
+        if nqubits < self.min_qubits:
+            raise QuantumError(
+                'The number of qubits %r is too small for the gate.' % nqubits
+            )
+
+        target_matrix = self.get_target_matrix(format)
+        targets = self.targets
+        if isinstance(self, CGate):
+            controls = self.controls
+        else:
+            controls = []
+        m = represent_zbasis(
+            controls, targets, target_matrix, nqubits, format
+        )
+        return m
 
     #-------------------------------------------------------------------------
     # Print methods
@@ -329,6 +329,9 @@ class CGate(Gate):
     def eval_controls(self, qubit):
         """Return True/False to indicate if the controls are satisfied."""
         return all([qubit[bit]==self.control_value for bit in self.controls])
+
+    def decompose(self, **options):
+        return self
 
     #-------------------------------------------------------------------------
     # Print methods
@@ -796,11 +799,12 @@ SWAP = SwapGate
 TOFFOLI = ToffoliGate
 
 #-----------------------------------------------------------------------------
-# Utility functions
+# Represent
 #-----------------------------------------------------------------------------
 
 
-def _operator(first, second, format):
+
+def _operator(first, second, format='sympy'):
     """Returns the Outer product of a one or zero ket and bra"""
     if (first != 1 and first != 0) or (second != 1 and second != 0):
         raise QuantumError("can only make matricies |0><0|, |1><1|, |0><1|,\
@@ -823,10 +827,6 @@ def _operator(first, second, format):
 
 
 def _np_tensor_product(*product):
-    """
-        Wrapper Function that abstracts away numpy kron function as a
-        tensor_product function
-    """
     import numpy as np
     answer = product[0]
     for item in product[1:]:
@@ -834,104 +834,73 @@ def _np_tensor_product(*product):
     return answer
 
 
-def represent_hilbert_space(gateMatrix, hilbert_size, Qubits, format='sympy'):
-    """
-        This is a helper function used by Gates represent functions to represent
-        their matricies in a given HilbertSpace (i.e. a Hadamard Gate matrix
-        looks different if applied to a different number of Qubits)
+def _np_eye(n):
+    import numpy as np
+    return np.matrix(np.eye(n, dtype=np.complex))
 
-        Inputs: gateMatrix      -- The fundamental input matrix
-                hilbert_size    -- the number of qbits in the hilbertspace
-                Qubits          -- the qubit(s) we will be applying to 
-    """
+
+def _get_represent_utils(format='sympy'):
     if format == 'sympy':
-        eye = getattr(gateMatrix, 'eye')
-        kron = matrix_tensor_product
-    elif format=='numpy':
-        #if user specified numpy as matrix format, try to import
-        try:
-            import numpy as np
-        except Exception:
-            #If we couldn't load, just revert to sympy
-            represent_hilbert_space(gateMatrix, hilbert_size,\
-            Qubits, format='sympy')
-        #redirect eye to np.eye function, and kron to a modified numpy function
-        gateMatrix = np.matrix(gateMatrix.tolist())
-        aeye = getattr(np, 'eye')
-        eye = lambda x: np.matrix(aeye(x))
-        kron = _np_tensor_product
+        e = matrices.eye
+        tp = matrix_tensor_product
+    elif format == 'numpy':
+        e = _np_eye
+        tp = _np_tensor_product
     else:
-        raise ValueError()
+        raise NotImplementedError('Invalid format: %r' % format) 
+    return e, tp
 
-    if gateMatrix.shape[1] == 2:
+
+# def represent_hilbert_space(gateMatrix, hilbert_size, targets, format='sympy'):
+def represent_zbasis(controls, targets, target_matrix, nqubits, format='sympy'):
+    """Docstring.
+
+    This uses the formula:
+
+    1_{2**n} + (|1><1|)^{x*(n-1)} x (target-matrix - 1_{2})
+
+    See http://www.johnlapeyre.com/qinf/qinf_html/node6.html.
+    """
+    controls = [int(x) for x in controls]
+    targets = [int(x) for x in targets]
+    nqubits = int(nqubits)
+
+    # This checks for the format as well.
+    eye, tensor_product = _get_represent_utils(format)
+
+    # Plain single qubit case
+    if len(controls) == 0 and len(targets) == 1:
         product = []
-        Qubit = Qubits[0]
-        #fill product with [I1,Gate,I2] such that the unitaries,
+        bit = targets[0]
+        # Fill product with [I1,Gate,I2] such that the unitaries,
         # I, cause the gate to be applied to the correct Qubit
-        if Qubit != hilbert_size-1:
-            product.append(eye(2**(hilbert_size-Qubit-1)))
-        product.append(gateMatrix)
-        if Qubit != 0:
-            product.append(eye(2**Qubit))
+        if bit != nqubits-1:
+            product.append(eye(2**(nqubits-bit-1)))
+        product.append(target_matrix)
+        if bit != 0:
+            product.append(eye(2**bit))
+        return tensor_product(*product)
 
-        #do the tensor product of these I's and gates
-        if format == 'sympy' or format == 'numpy':
-            MatrixRep = kron(*product)
-        else:
-            raise ValueError()
-        return MatrixRep
+    # Single target, multiple controls.
+    elif len(targets) == 1 and len(controls) >= 1:
+        target =  targets[0]
 
-    #If we are dealing with a matrix that is inheritely multi-qubit
+        # Now build the op part
+        product2 = []
+        for i in range(nqubits):
+            product2.append(eye(2))
+        for control in controls:
+            product2[nqubits-1-control] = _operator(1, 1, format)
+        product2[nqubits-1-target] = target_matrix-eye(2)
+
+        return eye(2**nqubits) + tensor_product(*product2)
+
+    # Multi-target, multi-control is not yet implemented.
     else:
-        #find the control and target Qubit(s)
-        controls = Qubits[:-1]
-        controls = [x for x in reversed(controls)]
-        target =  Qubits[-1]
-        answer = 0
-        product = []
-        #break up gateMatrix into list of 2x2 matricies's
-        #This list will be used for determining what matrix goes where
-        matrixArray = []
-        for i in range(gateMatrix.shape[1]/2):
-            for j in range(gateMatrix.shape[1]/2):
-                matrixArray.append(gateMatrix[i*2:i*2+2,j*2:j*2+2])
-
-        #Build up tensor products and additions, so that we can form matrix
-        for i in range((gateMatrix.shape[1]/2)**2):
-            product = []
-            #Put Unities in all locations
-            for j in range(hilbert_size):
-                product.append(eye(2))
-            n = 0
-            #put Operators |0><0|, |1><1|, |0><1|, or |1><0|
-            # in place of I's for all control bits
-            for item in controls:
-                product.pop(hilbert_size-1-item)
-                #Operator is picked so that if i = 0xyab
-                #(base 2; x,y,a,b = 0 or 1),
-                #then operator is |xy><ab| = |x><a|X|y><b| each of (|x><a|)
-                # which goes in control bit location
-                product.insert(hilbert_size-1-item,\
-                 _operator(i>>(n+len(controls))&1,(i>>n)&1, format))
-                n = n+1
-            #put the correct submatrix from matrixarray into target-bit location
-            product.pop(hilbert_size-1-target)
-            product.insert(hilbert_size-1-target, matrixArray[i])
-
-            #preform Tensor product first time
-            if isinstance(answer, (int, Integer)):
-                if format == 'sympy' or format == 'numpy':
-                    answer = kron(*product)
-                else:
-                    raise ValueError()
-            #add last answer to tensor_product of what we have
-            else:
-                if format == 'sympy' or format == 'numpy':
-                    answer = answer + kron(*product)
-                else:
-                    raise ValueError()
-        return answer
-
+        raise NotImplementedError(
+            'The representation of multi-target, multi-control gates '
+            'is not implemented.'
+        )
 
 def gate_simp(circuit):
     """Simplifies gates symbolically
@@ -984,7 +953,7 @@ def gate_simp(circuit):
                     newargs = circuit.args[:i]
                     
                     #put an Phasegate in place of any TGate**2
-                    newargs = newargs + (SGate(circuit.args[i].base.args[0][0])**\
+                    newargs = newargs + (PhaseGate(circuit.args[i].base.args[0][0])**\
                     Integer(circuit.args[i].exp/2), circuit.args[i].base**\
                     (circuit.args[i].exp % 2))
                     
@@ -1035,7 +1004,7 @@ def gate_sort(circuit):
                 #If the elements should sort
                 if first.args[0][0] > second.args[0][0]:
                     #make sure elements commute
-                    #meaning they do not affect ANY of the same Qubits
+                    #meaning they do not affect ANY of the same targets
                     commute = True
                     for arg1 in first.args[0]:
                        for arg2 in second.args[0]:
@@ -1049,6 +1018,11 @@ def gate_sort(circuit):
                         changes = True
                         break
     return circuit
+
+
+#-----------------------------------------------------------------------------
+# Utility functions
+#-----------------------------------------------------------------------------
 
 
 def zx_basis_transform(self, format='sympy'):
