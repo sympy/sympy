@@ -97,7 +97,7 @@ class AskIntegerHandler(CommonHandler):
         return False
 
     @staticmethod
-    def abs(expr, assumptions):
+    def Abs(expr, assumptions):
         return ask(expr.args[0], Q.integer, assumptions)
 
 class AskRationalHandler(CommonHandler):
@@ -252,7 +252,7 @@ class AskRealHandler(CommonHandler):
         return True
 
     @staticmethod
-    def abs(expr, assumptions):
+    def Abs(expr, assumptions):
         return True
 
     @staticmethod
@@ -322,7 +322,7 @@ class AskComplexHandler(CommonHandler):
         return True
 
     @staticmethod
-    def abs(expr, assumptions):
+    def Abs(expr, assumptions):
         return True
 
     @staticmethod
@@ -337,7 +337,7 @@ class AskComplexHandler(CommonHandler):
     def NegativeInfinity(expr, assumptions):
         return False
 
-    sin, cos, exp, re, im = [abs]*5 # they are all complex functions
+    sin, cos, exp, re, im = [Abs]*5 # they are all complex functions
 
 class AskImaginaryHandler(CommonHandler):
     """

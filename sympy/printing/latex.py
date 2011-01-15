@@ -474,7 +474,7 @@ class LatexPrinter(Printer):
         else:
             return tex
 
-    def _print_abs(self, expr, exp=None):
+    def _print_Abs(self, expr, exp=None):
         tex = r"\lvert{%s}\rvert" % self._print(expr.args[0])
 
         if exp is not None:

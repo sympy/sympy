@@ -5,8 +5,11 @@ from compiler.ast import CallFunc, Name, Const
 from compiler.pycodegen import ExpressionCodeGenerator
 import re
 
-from basic import Basic
-from symbol import Symbol
+#this is python stdlib symbol, not SymPy symbol:
+import symbol
+
+from sympy.core.basic import Basic
+from sympy.core.symbol import Symbol
 
 _is_integer = re.compile(r'\A\d+(l|L)?\Z').match
 
@@ -51,9 +54,7 @@ class SymPyTransformer(Transformer):
         return Const(symbol_obj, lineno=lineno)
 
     def lambdef(self, nodelist):
-        #this is python stdlib symbol, not SymPy symbol:
-        from sympy import stdlib_symbol
-        if nodelist[2][0] == stdlib_symbol.varargslist:
+        if nodelist[2][0] == symbol.varargslist:
             names, defaults, flags = self.com_arglist(nodelist[2][1:])
         else:
             names = defaults = ()

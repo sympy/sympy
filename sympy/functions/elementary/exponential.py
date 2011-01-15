@@ -378,10 +378,10 @@ class log(Function):
 
     def as_real_imag(self, deep=True, **hints):
         if deep:
-            abs = C.abs(self.args[0].expand(deep, **hints))
+            abs = C.Abs(self.args[0].expand(deep, **hints))
             arg = C.arg(self.args[0].expand(deep, **hints))
         else:
-            abs = C.abs(self.args[0])
+            abs = C.Abs(self.args[0])
             arg = C.arg(self.args[0])
         if hints['log']: # Expand the log
             hints['complex'] = False

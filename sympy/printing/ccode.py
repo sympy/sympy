@@ -18,7 +18,7 @@ from sympy.printing.precedence import precedence
 # Used in CCodePrinter._print_Function(self)
 known_functions = {
         "ceiling": [(lambda x: True, "ceil")],
-        "abs": [(lambda x: not x.is_integer, "fabs")],
+        "Abs": [(lambda x: not x.is_integer, "fabs")],
         }
 
 class CCodePrinter(CodePrinter):

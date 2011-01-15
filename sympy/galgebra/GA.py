@@ -28,7 +28,7 @@ HALF = sympy.Rational(1,2)
 
 from sympy.core import Symbol as sym_type
 from sympy.core import Pow as pow_type
-from sympy import abs as abs_type
+from sympy import Abs as abs_type
 from sympy.core import Mul as mul_type
 from sympy.core import Add as add_type
 
@@ -55,7 +55,7 @@ def is_quasi_unit_numpy_array(array):
                 if array[ix][iy] != ZERO:
                     return(False)
                 iy += 1
-            if sympy.abs(array[ix][ix]) != ONE:
+            if sympy.Abs(array[ix][ix]) != ONE:
                 return(False)
             ix += 1
         return(True)

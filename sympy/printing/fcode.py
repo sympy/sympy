@@ -22,11 +22,11 @@ from sympy.core import S, C
 from sympy.printing.codeprinter import CodePrinter
 from sympy.printing.precedence import precedence
 from sympy.functions import sin, cos, tan, asin, acos, atan, atan2, sinh, \
-    cosh, tanh, sqrt, log, exp, abs, sign, conjugate, Piecewise
+    cosh, tanh, sqrt, log, exp, Abs, sign, conjugate, Piecewise
 
 implicit_functions = set([
     sin, cos, tan, asin, acos, atan, atan2, sinh, cosh, tanh, sqrt, log, exp,
-    abs, sign, conjugate
+    Abs, sign, conjugate
 ])
 
 

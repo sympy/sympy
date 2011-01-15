@@ -64,10 +64,17 @@ def python_trailing(n):
         t += 1
     return t
 
-def gmpy_trailing(n):
-    """Count the number of trailing zero bits in abs(n) using gmpy."""
-    if n: return MPZ(n).scan1()
-    else: return 0
+if BACKEND == 'gmpy':
+    if gmpy.version() >= '2':
+        def gmpy_trailing(n):
+            """Count the number of trailing zero bits in abs(n) using gmpy."""
+            if n: return MPZ(n).bit_scan1()
+            else: return 0
+    else:
+        def gmpy_trailing(n):
+            """Count the number of trailing zero bits in abs(n) using gmpy."""
+            if n: return MPZ(n).scan1()
+            else: return 0
 
 # Small powers of 2
 powers = [1<<_ for _ in range(300)]
@@ -293,7 +300,8 @@ if BACKEND == 'gmpy':
     isqrt_small = isqrt_fast = isqrt = gmpy.sqrt
     sqrtrem = gmpy.sqrtrem
 elif BACKEND == 'sage':
-    isqrt_small = isqrt_fast = isqrt = lambda n: MPZ(n).isqrt()
+    isqrt_small = isqrt_fast = isqrt = \
+        getattr(sage_utils, "isqrt", lambda n: MPZ(n).isqrt())
     sqrtrem = lambda n: MPZ(n).sqrtrem()
 else:
     isqrt_small = isqrt_small_python
@@ -377,8 +385,10 @@ def list_primes(n):
     return [p for p in sieve if p]
 
 if BACKEND == 'sage':
+    # Note: it is *VERY* important for performance that we convert
+    # the list to Python ints.
     def list_primes(n):
-        return list(sage.primes(n+1))
+        return map(int, sage.primes(n+1))
 
 def moebius(n):
     """

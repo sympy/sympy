@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
-from sympy import Symbol, symbols, oo, limit, Rational, Integral, Derivative, \
-    log, exp, sqrt, pi, Function, sin, Eq, Le, Gt, Ne, raises
+from sympy import (Symbol, symbols, oo, limit, Rational, Integral, Derivative,
+    log, exp, sqrt, pi, Function, sin, Eq, Le, Gt, Ne, raises, Abs)
 
 from sympy.printing.python import python
 
@@ -70,9 +70,9 @@ def test_python_functions():
     assert python((2*x + exp(x))) in "x = Symbol('x')\ne = 2*x + exp(x)"
     assert python(sqrt(2)) == 'e = 2**(Half(1, 2))'
     assert python(sqrt(2+pi)) == 'e = (2 + pi)**(Half(1, 2))'
-    assert python(abs(x)) == "x = Symbol('x')\ne = abs(x)"
-    assert python(abs(x/(x**2+1))) in ["x = Symbol('x')\ne = abs(x/(1 + x**2))",
-            "x = Symbol('x')\ne = abs(x/(x**2 + 1))"]
+    assert python(Abs(x)) == "x = Symbol('x')\ne = Abs(x)"
+    assert python(Abs(x/(x**2+1))) in ["x = Symbol('x')\ne = Abs(x/(1 + x**2))",
+            "x = Symbol('x')\ne = Abs(x/(x**2 + 1))"]
 
     # Univariate/Multivariate functions
     f = Function('f')

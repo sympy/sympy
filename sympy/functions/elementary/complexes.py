@@ -200,20 +200,35 @@ class sign(Function):
         import sage.all as sage
         return sage.sgn(self.args[0]._sage_())
 
-class abs(Function):
-    """Return the absolute value of the argument. This is an extension of the built-in
-    function abs to accept symbolic values
+class Abs(Function):
+    """Return the absolute value of the argument.
+
+    This is an extension of the built-in function abs() to accept symbolic
+    values.  If you pass a SymPy expression to the built-in abs(), it will
+    pass it automatically to Abs().
 
     Examples
 
-        >>> from sympy import abs, Symbol
-        >>> abs(-1)
+        >>> from sympy import Abs, Symbol, S
+        >>> Abs(-1)
         1
         >>> x = Symbol('x', real=True)
-        >>> abs(-x)
-        abs(x)
-        >>> abs(x**2)
+        >>> Abs(-x)
+        Abs(x)
+        >>> Abs(x**2)
         x**2
+        >>> abs(-x) # The Python built-in
+        Abs(x)
+
+    Note that the Python built-in will return either an Expr or int depending on
+    the argument::
+
+        >>> type(abs(-1))
+        <type 'int'>
+        >>> type(abs(S.NegativeOne))
+        <class 'sympy.core.numbers.One'>
+
+    Abs will always return a sympy object.
 
     """
 
@@ -276,7 +291,7 @@ class abs(Function):
             return Derivative(self.args[0], x, **{'evaluate': True}) * sign(self.args[0])
         return (re(self.args[0]) * re(Derivative(self.args[0], x,
             **{'evaluate': True})) + im(self.args[0]) * im(Derivative(self.args[0],
-                x, **{'evaluate': True}))) / abs(self.args[0])
+                x, **{'evaluate': True}))) / Abs(self.args[0])
 
 class arg(Function):
     """Returns the argument (in radians) of a complex number"""
@@ -331,5 +346,5 @@ class conjugate(Function):
 
 # /cyclic/
 from sympy.core import basic as _
-_.abs_ = abs
+_.abs_ = Abs
 del _

@@ -57,7 +57,7 @@ class Set(Basic):
 
         As a shortcut it is possible to use the '~' or '-' operators:
 
-        >>> ##
+        >>> from sympy import Interval
 
         >>> Interval(0, 1).complement
         Union((-oo, 0), (1, oo))
@@ -78,7 +78,7 @@ class Set(Basic):
         """
         The infimum of 'self'.
 
-        >>> ##
+        >>> from sympy import Interval, Union
 
         >>> Interval(0, 1).inf
         0
@@ -96,7 +96,7 @@ class Set(Basic):
     def sup(self):
         """ The supremum of 'self'.
 
-        >>> ##
+        >>> from sympy import Interval, Union
 
         >>> Interval(0, 1).sup
         1
@@ -151,7 +151,7 @@ class Set(Basic):
         """
         The (Lebesgue) measure of 'self'.
 
-        >>> ##
+        >>> from sympy import Interval, Union
 
         >>> Interval(0, 1).measure
         1
@@ -263,7 +263,7 @@ class Interval(Set, EvalfMixin):
         The left end point of 'self'. This property takes the same value as the
         'inf' property.
 
-        >>> ##
+        >>> from sympy import Interval
 
         >>> Interval(0, 1).start
         0
@@ -279,7 +279,7 @@ class Interval(Set, EvalfMixin):
         The right end point of 'self'. This property takes the same value as the
         'sup' property.
 
-        >>> ##
+        >>> from sympy import Interval
 
         >>> Interval(0, 1).end
         1
@@ -294,7 +294,7 @@ class Interval(Set, EvalfMixin):
         """
         True if 'self' is left-open.
 
-        >>> ##
+        >>> from sympy import Interval
 
         >>> Interval(0, 1, left_open=True).left_open
         True
@@ -309,7 +309,7 @@ class Interval(Set, EvalfMixin):
         """
         True if 'self' is right-open.
 
-        >>> ##
+        >>> from sympy import Interval
 
         >>> Interval(0, 1, right_open=True).right_open
         True

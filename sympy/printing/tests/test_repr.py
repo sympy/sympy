@@ -1,5 +1,5 @@
 from sympy.utilities.pytest import XFAIL
-from sympy import Symbol, symbols, Function, Integer, Matrix, nan, oo, abs, \
+from sympy import Symbol, symbols, Function, Integer, Matrix, nan, oo, Abs, \
     Rational, Real, S, WildFunction, raises
 from sympy.geometry import Point, Circle, Ellipse
 from sympy.printing import srepr
@@ -32,7 +32,7 @@ def test_printmethod():
         def _sympyrepr(self, printer):
             return "foo"
     assert srepr(R()) == "foo"
-    class R(abs):
+    class R(Abs):
         def _sympyrepr(self, printer):
             return "foo(%s)" % printer._print(self.args[0])
     assert srepr(R(x)) == "foo(Symbol('x'))"

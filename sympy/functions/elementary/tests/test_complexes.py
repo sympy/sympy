@@ -1,5 +1,5 @@
 from sympy import symbols, Symbol, sqrt, oo, re, nan, im, sign, I, E, log, \
-        pi, arg, conjugate, expand, exp, sin, cos, Function
+        pi, arg, conjugate, expand, exp, sin, cos, Function, Abs
 from sympy.utilities.pytest import XFAIL
 
 
@@ -99,42 +99,43 @@ def test_sign():
     assert sign(x).is_zero == True
 
 
-def test_abs():
+def test_Abs():
     x, y = symbols('xy')
-    assert abs(0) == 0
-    assert abs(1) == 1
-    assert abs(-1)== 1
+    assert Abs(0) == 0
+    assert Abs(1) == 1
+    assert Abs(-1)== 1
     x = Symbol('x',real=True)
     n = Symbol('n',integer=True)
-    assert x**(2*n) == abs(x)**(2*n)
-    assert abs(x).diff(x) == sign(x)
+    assert x**(2*n) == Abs(x)**(2*n)
+    assert Abs(x).diff(x) == sign(x)
+    assert abs(x) == Abs(x) # Python built-in
 
 def test_abs_real():
     # test some properties of abs that only apply
     # to real numbers
     x = Symbol('x', complex=True)
-    assert sqrt(x**2) != abs(x)
-    assert abs(x**2) != x**2
+    assert sqrt(x**2) != Abs(x)
+    assert Abs(x**2) != x**2
 
     x = Symbol('x', real=True)
-    assert sqrt(x**2) == abs(x)
-    assert abs(x**2) == x**2
+    assert sqrt(x**2) == Abs(x)
+    assert Abs(x**2) == x**2
 
 def test_abs_properties():
     x = Symbol('x')
-    assert abs(x).is_real == True
-    assert abs(x).is_positive == None
-    assert abs(x).is_nonnegative == True
+    assert Abs(x).is_real == True
+    assert Abs(x).is_positive == None
+    assert Abs(x).is_nonnegative == True
 
     w = Symbol('w', complex=True, zero=False)
-    assert abs(w).is_real == True
-    assert abs(w).is_positive == True
-    assert abs(w).is_zero == False
+    assert Abs(w).is_real == True
+    assert Abs(w).is_positive == True
+    assert Abs(w).is_zero == False
 
     q = Symbol('q', positive=True)
-    assert abs(q).is_real == True
-    assert abs(q).is_positive == True
-    assert abs(q).is_zero == False
+    assert Abs(q).is_real == True
+    assert Abs(q).is_positive == True
+    assert Abs(q).is_zero == False
 
 def test_arg():
     assert arg(0) == nan
@@ -167,7 +168,7 @@ def test_conjugate():
 
 def test_issue936():
     x = Symbol('x')
-    assert abs(x).expand(trig=True)     == abs(x)
+    assert Abs(x).expand(trig=True)     == Abs(x)
     assert sign(x).expand(trig=True)    == sign(x)
     assert arg(x).expand(trig=True)     == arg(x)
 
@@ -183,5 +184,5 @@ def test_derivatives_issue1658():
     assert im(f(x)).diff(x) == im(f(x).diff(x))
 
     x = Symbol('x', real=True)
-    assert abs(f(x)).diff(x).subs(f(x), 1+I*x).doit() == x/sqrt(1 + x**2)
+    assert Abs(f(x)).diff(x).subs(f(x), 1+I*x).doit() == x/sqrt(1 + x**2)
     assert arg(f(x)).diff(x).subs(f(x), 1+I*x**2).doit() == 2*x/(1+x**4)

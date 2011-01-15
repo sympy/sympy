@@ -1,5 +1,5 @@
 import operator
-from libmp import int_types, mpf_hash, bitcount
+from libmp import int_types, mpf_hash, bitcount, from_man_exp
 
 new = object.__new__
 

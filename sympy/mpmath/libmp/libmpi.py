@@ -7,6 +7,8 @@ from libmpf import (
     ComplexResult,
     round_down, round_up, round_floor, round_ceiling, round_nearest,
     prec_to_dps, repr_dps, dps_to_prec,
+    bitcount,
+    from_float,
     fnan, finf, fninf, fzero, fhalf, fone, fnone,
     mpf_sign, mpf_lt, mpf_le, mpf_gt, mpf_ge, mpf_eq, mpf_cmp,
     mpf_min_max,
@@ -19,6 +21,8 @@ from libelefun import (
     mpf_log, mpf_exp, mpf_sqrt, mpf_atan, mpf_atan2,
     mpf_pi, mod_pi2, mpf_cos_sin
 )
+
+from gammazeta import mpf_gamma, mpf_rgamma, mpf_loggamma, mpc_loggamma
 
 def mpi_str(s, prec):
     sa, sb = s
@@ -613,7 +617,7 @@ def mpci_sub(x, y, prec):
     c, d = y
     return mpi_sub(a, c, prec), mpi_sub(b, d, prec)
 
-def mpci_neg(x, prec):
+def mpci_neg(x, prec=0):
     a, b = x
     return mpi_neg(a, prec), mpi_neg(b, prec)
 
@@ -790,3 +794,140 @@ def mpci_pow_int(x, n, prec):
         x = mpci_square(x, wp)
         n >>= 1
     return mpci_pos(result, prec)
+
+gamma_min_a = from_float(1.46163214496)
+gamma_min_b = from_float(1.46163214497)
+gamma_min = (gamma_min_a, gamma_min_b)
+gamma_mono_imag_a = from_float(-1.1)
+gamma_mono_imag_b = from_float(1.1)
+
+def mpi_overlap(x, y):
+    a, b = x
+    c, d = y
+    if mpf_lt(d, a): return False
+    if mpf_gt(c, b): return False
+    return True
+
+# type = 0 -- gamma
+# type = 1 -- factorial
+# type = 2 -- 1/gamma
+# type = 3 -- log-gamma
+
+def mpi_gamma(z, prec, type=0):
+    a, b = z
+    wp = prec+20
+
+    if type == 1:
+        return mpi_gamma(mpi_add(z, mpi_one, wp), prec, 0)
+
+    # increasing
+    if mpf_gt(a, gamma_min_b):
+        if type == 0:
+            c = mpf_gamma(a, prec, round_floor)
+            d = mpf_gamma(b, prec, round_ceiling)
+        elif type == 2:
+            c = mpf_rgamma(b, prec, round_floor)
+            d = mpf_rgamma(a, prec, round_ceiling)
+        elif type == 3:
+            c = mpf_loggamma(a, prec, round_floor)
+            d = mpf_loggamma(b, prec, round_ceiling)
+    # decreasing
+    elif mpf_gt(a, fzero) and mpf_lt(b, gamma_min_a):
+        if type == 0:
+            c = mpf_gamma(b, prec, round_floor)
+            d = mpf_gamma(a, prec, round_ceiling)
+        elif type == 2:
+            c = mpf_rgamma(a, prec, round_floor)
+            d = mpf_rgamma(b, prec, round_ceiling)
+        elif type == 3:
+            c = mpf_loggamma(b, prec, round_floor)
+            d = mpf_loggamma(a, prec, round_ceiling)
+    else:
+        # TODO: reflection formula
+        znew = mpi_add(z, mpi_one, wp)
+        if type == 0: return mpi_div(mpi_gamma(znew, prec+2, 0), z, prec)
+        if type == 2: return mpi_mul(mpi_gamma(znew, prec+2, 2), z, prec)
+        if type == 3: return mpi_sub(mpi_gamma(znew, prec+2, 3), mpi_log(z, prec+2), prec)
+    return c, d
+
+def mpci_gamma(z, prec, type=0):
+    (a1,a2), (b1,b2) = z
+
+    # Real case
+    if b1 == b2 == fzero and (type != 3 or mpf_gt(a1,fzero)):
+        return mpi_gamma(z, prec, type), mpi_zero
+
+    # Estimate precision
+    wp = prec+20
+    if type != 3:
+        amag = a2[2]+a2[3]
+        bmag = b2[2]+b2[3]
+        if a2 != fzero:
+            mag = max(amag, bmag)
+        else:
+            mag = bmag
+        an = abs(to_int(a2))
+        bn = abs(to_int(b2))
+        absn = max(an, bn)
+        gamma_size = max(0,absn*mag)
+        wp += bitcount(gamma_size)
+
+    # Assume type != 1
+    if type == 1:
+        (a1,a2) = mpi_add((a1,a2), mpi_one, wp); z = (a1,a2), (b1,b2)
+        type = 0
+
+    # Avoid non-monotonic region near the negative real axis
+    if mpf_lt(a1, gamma_min_b):
+        if mpi_overlap((b1,b2), (gamma_mono_imag_a, gamma_mono_imag_b)):
+            # TODO: reflection formula
+            #if mpf_lt(a2, mpf_shift(fone,-1)):
+            #    znew = mpci_sub((mpi_one,mpi_zero),z,wp)
+            #    ...
+            # Recurrence:
+            # gamma(z) = gamma(z+1)/z
+            znew = mpi_add((a1,a2), mpi_one, wp), (b1,b2)
+            if type == 0: return mpci_div(mpci_gamma(znew, prec+2, 0), z, prec)
+            if type == 2: return mpci_mul(mpci_gamma(znew, prec+2, 2), z, prec)
+            if type == 3: return mpci_sub(mpci_gamma(znew, prec+2, 3), mpci_log(z,prec+2), prec)
+
+    # Use monotonicity (except for a small region close to the
+    # origin and near poles)
+    # upper half-plane
+    if mpf_ge(b1, fzero):
+        minre = mpc_loggamma((a1,b2), wp, round_floor)
+        maxre = mpc_loggamma((a2,b1), wp, round_ceiling)
+        minim = mpc_loggamma((a1,b1), wp, round_floor)
+        maxim = mpc_loggamma((a2,b2), wp, round_ceiling)
+    # lower half-plane
+    elif mpf_le(b2, fzero):
+        minre = mpc_loggamma((a1,b1), wp, round_floor)
+        maxre = mpc_loggamma((a2,b2), wp, round_ceiling)
+        minim = mpc_loggamma((a2,b1), wp, round_floor)
+        maxim = mpc_loggamma((a1,b2), wp, round_ceiling)
+    # crosses real axis
+    else:
+        maxre = mpc_loggamma((a2,fzero), wp, round_ceiling)
+        # stretches more into the lower half-plane
+        if mpf_gt(mpf_neg(b1), b2):
+            minre = mpc_loggamma((a1,b1), wp, round_ceiling)
+        else:
+            minre = mpc_loggamma((a1,b2), wp, round_ceiling)
+        minim = mpc_loggamma((a2,b1), wp, round_floor)
+        maxim = mpc_loggamma((a2,b2), wp, round_floor)
+
+    w = (minre[0], maxre[0]), (minim[1], maxim[1])
+    if type == 3:
+        return mpi_pos(w[0], prec), mpi_pos(w[1], prec)
+    if type == 2:
+        w = mpci_neg(w)
+    return mpci_exp(w, prec)
+
+def mpi_loggamma(z, prec): return mpi_gamma(z, prec, type=3)
+def mpci_loggamma(z, prec): return mpci_gamma(z, prec, type=3)
+
+def mpi_rgamma(z, prec): return mpi_gamma(z, prec, type=2)
+def mpci_rgamma(z, prec): return mpci_gamma(z, prec, type=2)
+
+def mpi_factorial(z, prec): return mpi_gamma(z, prec, type=1)
+def mpci_factorial(z, prec): return mpci_gamma(z, prec, type=1)

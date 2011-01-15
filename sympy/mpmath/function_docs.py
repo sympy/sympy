@@ -409,7 +409,7 @@ Square root evaluation is fast at huge precision::
     >>> str(a)[-10:]
     '9329332814'
 
-:func:`~mpmath.iv.sqrt` supports interval arguments::
+:func:`mpmath.iv.sqrt` supports interval arguments::
 
     >>> iv.dps = 15; iv.pretty = True
     >>> iv.sqrt([16,100])
@@ -2818,6 +2818,16 @@ but functions of higher degree are also supported via :func:`~mpmath.hyper`::
     >>> hyper([1,2,3,4,5,6], [7,8,9,10,11], 1j)   # 6F5
     (0.9996565821853579063502466 + 0.0129721075905630604445669j)
 
+Near `z = 1` with noninteger parameters::
+
+    >>> hyper(['1/3',1,'3/2',2], ['1/5','11/6','41/8'], 1)
+    2.219433352235586121250027
+    >>> hyper(['1/3',1,'3/2',2], ['1/5','11/6','5/4'], 1)
+    +inf
+    >>> eps1 = extradps(6)(lambda: 1 - mpf('1e-6'))()
+    >>> hyper(['1/3',1,'3/2',2], ['1/5','11/6','5/4'], eps1)
+    2923978034.412973409330956
+
 Please note that, as currently implemented, evaluation of `\,_pF_{p-1}`
 with `p \ge 3` may be slow or inaccurate when `|z-1|` is small,
 for some parameter values.
@@ -4310,156 +4320,535 @@ Comparing with the definition::
 """
 
 airyai = r"""
-Computes the Airy function `\mathrm{Ai}(x)`, which is
-a solution of the Airy differential equation `y''-xy=0`.
-The Ai-function behaves roughly like a slowly decaying
-sine wave for `x < 0` and like a decreasing exponential for
-`x > 0`.
+Computes the Airy function `\operatorname{Ai}(z)`, which is
+the solution of the Airy differential equation `f''(z) - z f(z) = 0`
+with initial conditions
+
+.. math ::
+
+    \operatorname{Ai}(0) =
+        \frac{1}{3^{2/3}\Gamma\left(\frac{2}{3}\right)}
+
+    \operatorname{Ai}'(0) =
+        -\frac{1}{3^{1/3}\Gamma\left(\frac{1}{3}\right)}.
+
+Other common ways of defining the Ai-function include
+integrals such as
+
+.. math ::
+
+    \operatorname{Ai}(x) = \frac{1}{\pi}
+        \int_0^{\infty} \cos\left(\frac{1}{3}t^3+xt\right) dt
+        \qquad x \in \mathbb{R}
+
+    \operatorname{Ai}(z) = \frac{\sqrt{3}}{2\pi}
+        \int_0^{\infty}
+        \exp\left(-\frac{t^3}{3}-\frac{z^3}{3t^3}\right) dt.
+
+The Ai-function is an entire function with a turning point,
+behaving roughly like a slowly decaying sine wave for `z < 0` and
+like a rapidly decreasing exponential for `z > 0`.
+A second solution of the Airy differential equation
+is given by `\operatorname{Bi}(z)` (see :func:`~mpmath.airybi`).
+
+Optionally, with *derivative=alpha*, :func:`airyai` can compute the
+`\alpha`-th order fractional derivative with respect to `z`.
+For `\alpha = n = 1,2,3,\ldots` this gives the derivative
+`\operatorname{Ai}^{(n)}(z)`, and for `\alpha = -n = -1,-2,-3,\ldots`
+this gives the `n`-fold iterated integral
+
+.. math ::
+
+    f_0(z) = \operatorname{Ai}(z)
+
+    f_n(z) = \int_0^z f_{n-1}(t) dt.
+
+The Ai-function has infinitely many zeros, all located along the
+negative half of the real axis. They can be computed with
+:func:`~mpmath.airyaizero`.
+
+**Plots**
+
+.. literalinclude :: /modules/mpmath/plots/ai.py
+.. image :: /modules/mpmath/plots/ai.png
+.. literalinclude :: /modules/mpmath/plots/ai_c.py
+.. image :: /modules/mpmath/plots/ai_c.png
+
+**Basic examples**
 
 Limits and values include::
 
     >>> from mpmath import *
-    >>> mp.dps = 15; mp.pretty = True
-    >>> airyai(0), 1/(3**(2/3.)*gamma(2/3.))
-    (0.355028053887817, 0.355028053887817)
+    >>> mp.dps = 25; mp.pretty = True
+    >>> airyai(0); 1/(power(3,'2/3')*gamma('2/3'))
+    0.3550280538878172392600632
+    0.3550280538878172392600632
     >>> airyai(1)
-    0.135292416312881
+    0.1352924163128814155241474
     >>> airyai(-1)
-    0.535560883292352
-    >>> airyai(inf)
+    0.5355608832923521187995166
+    >>> airyai(inf); airyai(-inf)
     0.0
-    >>> airyai(-inf)
     0.0
 
-Evaluation is supported for large arguments::
+Evaluation is supported for large magnitudes of the argument::
 
     >>> airyai(-100)
-    0.176753393239553
+    0.1767533932395528780908311
     >>> airyai(100)
-    2.63448215208818e-291
+    2.634482152088184489550553e-291
     >>> airyai(50+50j)
-    (-5.31790195707456e-68 - 1.16358800377071e-67j)
+    (-5.31790195707456404099817e-68 - 1.163588003770709748720107e-67j)
     >>> airyai(-50+50j)
-    (1.04124253736317e+158 + 3.3475255449236e+157j)
+    (1.041242537363167632587245e+158 + 3.347525544923600321838281e+157j)
 
 Huge arguments are also fine::
 
     >>> airyai(10**10)
-    1.16223597829874e-289529654602171
+    1.162235978298741779953693e-289529654602171
     >>> airyai(-10**10)
-    0.000173620644815282
-    >>> airyai(10**10*(1+j))
-    (5.71150868372136e-186339621747698 + 1.86724550696231e-186339621747697j)
+    0.0001736206448152818510510181
+    >>> w = airyai(10**10*(1+j))
+    >>> w.real
+    5.711508683721355528322567e-186339621747698
+    >>> w.imag
+    1.867245506962312577848166e-186339621747697
 
-The first negative root of the Ai function is::
+The first root of the Ai-function is::
 
     >>> findroot(airyai, -2)
-    -2.33810741045977
+    -2.338107410459767038489197
+    >>> airyaizero(1)
+    -2.338107410459767038489197
 
-We can verify the differential equation::
+**Properties and relations**
 
-    >>> for x in [-3.4, 0, 2.5, 1+2j]:
-    ...     print abs(diff(airyai, x, 2) - x*airyai(x)) < eps
+Verifying the Airy differential equation::
+
+    >>> for z in [-3.4, 0, 2.5, 1+2j]:
+    ...     chop(airyai(z,2) - z*airyai(z))
     ...
-    True
-    True
-    True
-    True
+    0.0
+    0.0
+    0.0
+    0.0
 
-The Taylor series expansion around `x = 0` starts with
-the following coefficients (note that every third term
-is zero)::
+The first few terms of the Taylor series expansion around `z = 0`
+(every third term is zero)::
 
-    >>> nprint(chop(taylor(airyai, 0, 5)))
+    >>> nprint(taylor(airyai, 0, 5))
     [0.355028, -0.258819, 0.0, 0.0591713, -0.0215683, 0.0]
 
-The Airy functions are a special case of Bessel functions.
-For `x < 0`, we have::
+The Airy functions satisfy the Wronskian relation
+`\operatorname{Ai}(z) \operatorname{Bi}'(z) -
+\operatorname{Ai}'(z) \operatorname{Bi}(z) = 1/\pi`::
 
-    >>> x = 3
-    >>> airyai(-x)
-    -0.378814293677658
-    >>> p = 2*(x**1.5)/3
-    >>> sqrt(x)*(besselj(1/3.,p) + besselj(-1/3.,p))/3
-    -0.378814293677658
+    >>> z = -0.5
+    >>> airyai(z)*airybi(z,1) - airyai(z,1)*airybi(z)
+    0.3183098861837906715377675
+    >>> 1/pi
+    0.3183098861837906715377675
+
+The Airy functions can be expressed in terms of Bessel
+functions of order `\pm 1/3`. For `\Re[z] \le 0`, we have::
+
+    >>> z = -3
+    >>> airyai(z)
+    -0.3788142936776580743472439
+    >>> y = 2*power(-z,'3/2')/3
+    >>> (sqrt(-z) * (besselj('1/3',y) + besselj('-1/3',y)))/3
+    -0.3788142936776580743472439
+
+**Derivatives and integrals**
+
+Derivatives of the Ai-function (directly and using :func:`~mpmath.diff`)::
+
+    >>> airyai(-3,1); diff(airyai,-3)
+    0.3145837692165988136507873
+    0.3145837692165988136507873
+    >>> airyai(-3,2); diff(airyai,-3,2)
+    1.136442881032974223041732
+    1.136442881032974223041732
+    >>> airyai(1000,1); diff(airyai,1000)
+    -2.943133917910336090459748e-9156
+    -2.943133917910336090459748e-9156
+
+Several derivatives at `z = 0`::
+
+    >>> airyai(0,0); airyai(0,1); airyai(0,2)
+    0.3550280538878172392600632
+    -0.2588194037928067984051836
+    0.0
+    >>> airyai(0,3); airyai(0,4); airyai(0,5)
+    0.3550280538878172392600632
+    -0.5176388075856135968103671
+    0.0
+    >>> airyai(0,15); airyai(0,16); airyai(0,17)
+    1292.30211615165475090663
+    -3188.655054727379756351861
+    0.0
+
+The integral of the Ai-function::
+
+    >>> airyai(3,-1); quad(airyai, [0,3])
+    0.3299203760070217725002701
+    0.3299203760070217725002701
+    >>> airyai(-10,-1); quad(airyai, [0,-10])
+    -0.765698403134212917425148
+    -0.765698403134212917425148
+
+Integrals of high or fractional order::
+
+    >>> airyai(-2,0.5); differint(airyai,-2,0.5,0)
+    (0.0 + 0.2453596101351438273844725j)
+    (0.0 + 0.2453596101351438273844725j)
+    >>> airyai(-2,-4); differint(airyai,-2,-4,0)
+    0.2939176441636809580339365
+    0.2939176441636809580339365
+    >>> airyai(0,-1); airyai(0,-2); airyai(0,-3)
+    0.0
+    0.0
+    0.0
+
+Integrals of the Ai-function can be evaluated at limit points::
+
+    >>> airyai(-1000000,-1); airyai(-inf,-1)
+    -0.6666843728311539978751512
+    -0.6666666666666666666666667
+    >>> airyai(10,-1); airyai(+inf,-1)
+    0.3333333332991690159427932
+    0.3333333333333333333333333
+    >>> airyai(+inf,-2); airyai(+inf,-3)
+    +inf
+    +inf
+    >>> airyai(-1000000,-2); airyai(-inf,-2)
+    666666.4078472650651209742
+    +inf
+    >>> airyai(-1000000,-3); airyai(-inf,-3)
+    -333333074513.7520264995733
+    -inf
+
+**References**
+
+1. [DLMF]_ Chapter 9: Airy and Related Functions
+2. [WolframFunctions]_ section: Bessel-Type Functions
 
 """
 
 airybi = r"""
-Computes the Airy function `\mathrm{Bi}(x)`, which is
-a solution of the Airy differential equation `y''-xy=0`.
-The Bi-function behaves roughly like a slowly decaying
-sine wave for `x < 0` and like an increasing exponential
-for `x > 0`.
+Computes the Airy function `\operatorname{Bi}(z)`, which is
+the solution of the Airy differential equation `f''(z) - z f(z) = 0`
+with initial conditions
+
+.. math ::
+
+    \operatorname{Bi}(0) =
+        \frac{1}{3^{1/6}\Gamma\left(\frac{2}{3}\right)}
+
+    \operatorname{Bi}'(0) =
+        \frac{3^{1/6}}{\Gamma\left(\frac{1}{3}\right)}.
+
+Like the Ai-function (see :func:`~mpmath.airyai`), the Bi-function
+is oscillatory for `z < 0`, but it grows rather than decreases
+for `z > 0`.
+
+Optionally, as for :func:`~mpmath.airyai`, derivatives, integrals
+and fractional derivatives can be computed with the *derivative*
+parameter.
+
+The Bi-function has infinitely many zeros along the negative
+half-axis, as well as complex zeros, which can all be computed
+with :func:`~mpmath.airybizero`.
+
+**Plots**
+
+.. literalinclude :: /modules/mpmath/plots/bi.py
+.. image :: /modules/mpmath/plots/bi.png
+.. literalinclude :: /modules/mpmath/plots/bi_c.py
+.. image :: /modules/mpmath/plots/bi_c.png
+
+**Basic examples**
 
 Limits and values include::
 
     >>> from mpmath import *
-    >>> mp.dps = 15; mp.pretty = True
-    >>> airybi(0), 1/(3**(1/6.)*gamma(2/3.))
-    (0.614926627446001, 0.614926627446001)
+    >>> mp.dps = 25; mp.pretty = True
+    >>> airybi(0); 1/(power(3,'1/6')*gamma('2/3'))
+    0.6149266274460007351509224
+    0.6149266274460007351509224
     >>> airybi(1)
-    1.20742359495287
+    1.207423594952871259436379
     >>> airybi(-1)
-    0.103997389496945
-    >>> airybi(inf)
+    0.10399738949694461188869
+    >>> airybi(inf); airybi(-inf)
     +inf
-    >>> airybi(-inf)
     0.0
 
-Evaluation is supported for large arguments::
+Evaluation is supported for large magnitudes of the argument::
 
     >>> airybi(-100)
-    0.0242738876801601
+    0.02427388768016013160566747
     >>> airybi(100)
-    6.0412239966702e+288
+    6.041223996670201399005265e+288
     >>> airybi(50+50j)
-    (-5.32207626732144e+63 + 1.47845029116524e+65j)
+    (-5.322076267321435669290334e+63 + 1.478450291165243789749427e+65j)
     >>> airybi(-50+50j)
-    (-3.3475255449236e+157 + 1.04124253736317e+158j)
+    (-3.347525544923600321838281e+157 + 1.041242537363167632587245e+158j)
 
-Huge arguments are also fine::
+Huge arguments::
 
-    >>> mp.dps = 15
     >>> airybi(10**10)
-    1.36938578794354e+289529654602165
+    1.369385787943539818688433e+289529654602165
     >>> airybi(-10**10)
-    0.00177565614169293
-    >>> airybi(10**10*(1+j))
-    (-6.5599559310962e+186339621747689 - 6.82246272698136e+186339621747690j)
+    0.001775656141692932747610973
+    >>> w = airybi(10**10*(1+j))
+    >>> w.real
+    -6.559955931096196875845858e+186339621747689
+    >>> w.imag
+    -6.822462726981357180929024e+186339621747690
 
-The first negative root of the Bi function is::
+The first real root of the Bi-function is::
 
-    >>> findroot(airybi, -1)
-    -1.17371322270913
+    >>> findroot(airybi, -1); airybizero(1)
+    -1.17371322270912792491998
+    -1.17371322270912792491998
 
-We can verify the differential equation::
+**Properties and relations**
 
-    >>> for x in [-3.4, 0, 2.5, 1+2j]:
-    ...     print abs(diff(airybi, x, 2) - x*airybi(x)) < eps
+Verifying the Airy differential equation::
+
+    >>> for z in [-3.4, 0, 2.5, 1+2j]:
+    ...     chop(airybi(z,2) - z*airybi(z))
     ...
-    True
-    True
-    True
-    True
+    0.0
+    0.0
+    0.0
+    0.0
 
-The Taylor series expansion around `x = 0` starts with
-the following coefficients (note that every third term
-is zero)::
+The first few terms of the Taylor series expansion around `z = 0`
+(every third term is zero)::
 
-    >>> nprint(chop(taylor(airybi, 0, 5)))
+    >>> nprint(taylor(airybi, 0, 5))
     [0.614927, 0.448288, 0.0, 0.102488, 0.0373574, 0.0]
 
-The Airy functions are a special case of Bessel functions.
-For `x < 0`, we have::
+The Airy functions can be expressed in terms of Bessel
+functions of order `\pm 1/3`. For `\Re[z] \le 0`, we have::
 
-    >>> x = 3
-    >>> airybi(-x)
-    -0.198289626374927
-    >>> p = 2*(x**1.5)/3
-    >>> sqrt(x/3)*(besselj(-1/3.,p) - besselj(1/3.,p))
-    -0.198289626374926
+    >>> z = -3
+    >>> airybi(z)
+    -0.1982896263749265432206449
+    >>> p = 2*power(-z,'3/2')/3
+    >>> sqrt(-mpf(z)/3)*(besselj('-1/3',p) - besselj('1/3',p))
+    -0.1982896263749265432206449
+
+**Derivatives and integrals**
+
+Derivatives of the Bi-function (directly and using :func:`~mpmath.diff`)::
+
+    >>> airybi(-3,1); diff(airybi,-3)
+    -0.675611222685258537668032
+    -0.675611222685258537668032
+    >>> airybi(-3,2); diff(airybi,-3,2)
+    0.5948688791247796296619346
+    0.5948688791247796296619346
+    >>> airybi(1000,1); diff(airybi,1000)
+    1.710055114624614989262335e+9156
+    1.710055114624614989262335e+9156
+
+Several derivatives at `z = 0`::
+
+    >>> airybi(0,0); airybi(0,1); airybi(0,2)
+    0.6149266274460007351509224
+    0.4482883573538263579148237
+    0.0
+    >>> airybi(0,3); airybi(0,4); airybi(0,5)
+    0.6149266274460007351509224
+    0.8965767147076527158296474
+    0.0
+    >>> airybi(0,15); airybi(0,16); airybi(0,17)
+    2238.332923903442675949357
+    5522.912562599140729510628
+    0.0
+
+The integral of the Bi-function::
+
+    >>> airybi(3,-1); quad(airybi, [0,3])
+    10.06200303130620056316655
+    10.06200303130620056316655
+    >>> airybi(-10,-1); quad(airybi, [0,-10])
+    -0.01504042480614002045135483
+    -0.01504042480614002045135483
+
+Integrals of high or fractional order::
+
+    >>> airybi(-2,0.5); differint(airybi, -2, 0.5, 0)
+    (0.0 + 0.5019859055341699223453257j)
+    (0.0 + 0.5019859055341699223453257j)
+    >>> airybi(-2,-4); differint(airybi,-2,-4,0)
+    0.2809314599922447252139092
+    0.2809314599922447252139092
+    >>> airybi(0,-1); airybi(0,-2); airybi(0,-3)
+    0.0
+    0.0
+    0.0
+
+Integrals of the Bi-function can be evaluated at limit points::
+
+    >>> airybi(-1000000,-1); airybi(-inf,-1)
+    0.000002191261128063434047966873
+    0.0
+    >>> airybi(10,-1); airybi(+inf,-1)
+    147809803.1074067161675853
+    +inf
+    >>> airybi(+inf,-2); airybi(+inf,-3)
+    +inf
+    +inf
+    >>> airybi(-1000000,-2); airybi(-inf,-2)
+    0.4482883750599908479851085
+    0.4482883573538263579148237
+    >>> gamma('2/3')*power(3,'2/3')/(2*pi)
+    0.4482883573538263579148237
+    >>> airybi(-100000,-3); airybi(-inf,-3)
+    -44828.52827206932872493133
+    -inf
+    >>> airybi(-100000,-4); airybi(-inf,-4)
+    2241411040.437759489540248
+    +inf
+
 """
+
+airyaizero = r"""
+Gives the `k`-th zero of the Airy Ai-function,
+i.e. the `k`-th number `a_k` ordered by magnitude for which
+`\operatorname{Ai}(a_k) = 0`.
+
+Optionally, with *derivative=1*, the corresponding
+zero `a'_k` of the derivative function, i.e.
+`\operatorname{Ai}'(a'_k) = 0`, is computed.
+
+**Examples**
+
+Some values of `a_k`::
+
+    >>> from mpmath import *
+    >>> mp.dps = 25; mp.pretty = True
+    >>> airyaizero(1)
+    -2.338107410459767038489197
+    >>> airyaizero(2)
+    -4.087949444130970616636989
+    >>> airyaizero(3)
+    -5.520559828095551059129856
+    >>> airyaizero(1000)
+    -281.0315196125215528353364
+
+Some values of `a'_k`::
+
+    >>> airyaizero(1,1)
+    -1.018792971647471089017325
+    >>> airyaizero(2,1)
+    -3.248197582179836537875424
+    >>> airyaizero(3,1)
+    -4.820099211178735639400616
+    >>> airyaizero(1000,1)
+    -280.9378080358935070607097
+
+Verification::
+
+    >>> chop(airyai(airyaizero(1)))
+    0.0
+    >>> chop(airyai(airyaizero(1,1),1))
+    0.0
+
+"""
+
+airybizero = r"""
+With *complex=False*, gives the `k`-th real zero of the Airy Bi-function,
+i.e. the `k`-th number `b_k` ordered by magnitude for which
+`\operatorname{Bi}(b_k) = 0`.
+
+With *complex=True*, gives the `k`-th complex zero in the upper
+half plane `\beta_k`. Also the conjugate `\overline{\beta_k}`
+is a zero.
+
+Optionally, with *derivative=1*, the corresponding
+zero `b'_k` or `\beta'_k` of the derivative function, i.e.
+`\operatorname{Bi}'(b'_k) = 0` or `\operatorname{Bi}'(\beta'_k) = 0`,
+is computed.
+
+**Examples**
+
+Some values of `b_k`::
+
+    >>> from mpmath import *
+    >>> mp.dps = 25; mp.pretty = True
+    >>> airybizero(1)
+    -1.17371322270912792491998
+    >>> airybizero(2)
+    -3.271093302836352715680228
+    >>> airybizero(3)
+    -4.830737841662015932667709
+    >>> airybizero(1000)
+    -280.9378112034152401578834
+
+Some values of `b_k`::
+
+    >>> airybizero(1,1)
+    -2.294439682614123246622459
+    >>> airybizero(2,1)
+    -4.073155089071828215552369
+    >>> airybizero(3,1)
+    -5.512395729663599496259593
+    >>> airybizero(1000,1)
+    -281.0315164471118527161362
+
+Some values of `\beta_k`::
+
+    >>> airybizero(1,complex=True)
+    (0.9775448867316206859469927 + 2.141290706038744575749139j)
+    >>> airybizero(2,complex=True)
+    (1.896775013895336346627217 + 3.627291764358919410440499j)
+    >>> airybizero(3,complex=True)
+    (2.633157739354946595708019 + 4.855468179979844983174628j)
+    >>> airybizero(1000,complex=True)
+    (140.4978560578493018899793 + 243.3907724215792121244867j)
+
+Some values of `\beta'_k`::
+
+    >>> airybizero(1,1,complex=True)
+    (0.2149470745374305676088329 + 1.100600143302797880647194j)
+    >>> airybizero(2,1,complex=True)
+    (1.458168309223507392028211 + 2.912249367458445419235083j)
+    >>> airybizero(3,1,complex=True)
+    (2.273760763013482299792362 + 4.254528549217097862167015j)
+    >>> airybizero(1000,1,complex=True)
+    (140.4509972835270559730423 + 243.3096175398562811896208j)
+
+Verification::
+
+    >>> chop(airybi(airybizero(1)))
+    0.0
+    >>> chop(airybi(airybizero(1,1),1))
+    0.0
+    >>> u = airybizero(1,complex=True)
+    >>> chop(airybi(u))
+    0.0
+    >>> chop(airybi(conj(u)))
+    0.0
+
+The complex zeros (in the upper and lower half-planes respectively)
+asymptotically approach the rays `z = R \exp(\pm i \pi /3)`::
+
+    >>> arg(airybizero(1,complex=True))
+    1.142532510286334022305364
+    >>> arg(airybizero(1000,complex=True))
+    1.047271114786212061583917
+    >>> arg(airybizero(1000000,complex=True))
+    1.047197624741816183341355
+    >>> pi/3
+    1.047197551196597746154214
+
+"""
+
 
 ellipk = r"""
 Evaluates the complete elliptic integral of the first kind,
@@ -4467,17 +4856,16 @@ Evaluates the complete elliptic integral of the first kind,
 
 .. math ::
 
-    K(m) = \int_0^{\pi/2} \frac{1}{\sqrt{1-m \sin^2 t}} dt.
+    K(m) = \int_0^{\pi/2} \frac{dt}{\sqrt{1-m \sin^2 t}} \, = \,
+    \frac{\pi}{2} \,_2F_1\left(\frac{1}{2}, \frac{1}{2}, 1, m\right).
 
 Note that the argument is the parameter `m = k^2`,
 not the modulus `k` which is sometimes used.
 
-Alternatively, in terms of a hypergeometric function,
-we have:
+**Plots**
 
-.. math ::
-
-    K(m) = \frac{\pi}{2} \,_2F_1(1/2, 1/2, 1, m)
+.. literalinclude :: /modules/mpmath/plots/ellipk.py
+.. image :: /modules/mpmath/plots/ellipk.png
 
 **Examples**
 
@@ -4517,67 +4905,6 @@ A definite integral::
 
     >>> quad(ellipk, [0, 1])
     2.0
-"""
-
-ellipe = r"""
-Evaluates the complete elliptic integral of the second kind,
-`E(m)`, defined by
-
-.. math ::
-
-    E(m) = \int_0^{\pi/2} \sqrt{1-m \sin^2 t} dt.
-
-Note that the argument is the parameter `m = k^2`,
-not the modulus `k` which is sometimes used.
-
-Alternatively, in terms of a hypergeometric function,
-we have:
-
-.. math ::
-
-    E(m) = \frac{\pi}{2} \,_2F_1(1/2, -1/2, 1, m)
-
-**Examples**
-
-Basic values and limits::
-
-    >>> from mpmath import *
-    >>> mp.dps = 25; mp.pretty = True
-    >>> ellipe(0)
-    1.570796326794896619231322
-    >>> ellipe(1)
-    1.0
-    >>> ellipe(-1)
-    1.910098894513856008952381
-    >>> ellipe(2)
-    (0.5990701173677961037199612 + 0.5990701173677961037199612j)
-    >>> ellipe(inf)
-    (0.0 + +infj)
-    >>> ellipe(-inf)
-    +inf
-
-Verifying the defining integral and hypergeometric
-representation::
-
-    >>> ellipe(0.5)
-    1.350643881047675502520175
-    >>> quad(lambda t: sqrt(1-0.5*sin(t)**2), [0, pi/2])
-    1.350643881047675502520175
-    >>> pi/2*hyp2f1(0.5,-0.5,1,0.5)
-    1.350643881047675502520175
-
-Evaluation is supported for arbitrary complex `m`::
-
-    >>> ellipe(0.5+0.25j)
-    (1.360868682163129682716687 - 0.1238733442561786843557315j)
-    >>> ellipe(3+4j)
-    (1.499553520933346954333612 - 1.577879007912758274533309j)
-
-A definite integral::
-
-    >>> quad(ellipe, [0,1])
-    1.333333333333333333333333
-
 """
 
 agm = r"""
@@ -4775,6 +5102,11 @@ Laguerre polynomial, the sequence of which begins
 The Laguerre polynomials are orthogonal with respect to the weight
 `z^a e^{-z}` on `[0, \infty)`.
 
+**Plots**
+
+.. literalinclude :: /modules/mpmath/plots/laguerre.py
+.. image :: /modules/mpmath/plots/laguerre.png
+
 **Examples**
 
 Evaluation for arbitrary arguments::
@@ -4847,6 +5179,11 @@ for `\Re{z} > 0`, or generally
         \,_1F_1\left(\frac{1-n}{2}, \frac{3}{2}, z^2\right)
     \right).
 
+**Plots**
+
+.. literalinclude :: /modules/mpmath/plots/hermite.py
+.. image :: /modules/mpmath/plots/hermite.png
+
 **Examples**
 
 Evaluation for arbitrary arguments::
@@ -4865,7 +5202,7 @@ Evaluation for arbitrary arguments::
     >>> hermite(-3, -10**8)
     1.675159751729877682920301e+4342944819032534
     >>> hermite(2+3j, -1+2j)
-    (-0.076521306029935133894219 - 0.1084662449961914580276007j)
+    (-0.07652130602993513389421901 - 0.1084662449961914580276007j)
 
 Coefficients of the first few Hermite polynomials are::
 
@@ -5041,6 +5378,11 @@ A third definition is in terms of the hypergeometric function
 .. math ::
 
     P_n(x) = \,_2F_1\left(-n, n+1, 1, \frac{1-x}{2}\right)
+
+**Plots**
+
+.. literalinclude :: /modules/mpmath/plots/legendre.py
+.. image :: /modules/mpmath/plots/legendre.png
 
 **Basic evaluation**
 
@@ -5263,6 +5605,11 @@ case of the Jacobi polynomials, and by extension of the
 hypergeometric function `\,_2F_1`. They can thus also be
 evaluated for nonintegral `n`.
 
+**Plots**
+
+.. literalinclude :: /modules/mpmath/plots/chebyt.py
+.. image :: /modules/mpmath/plots/chebyt.png
+
 **Basic evaluation**
 
 The coefficients of the `n`-th polynomial can be recovered
@@ -5307,6 +5654,11 @@ The Chebyshev polynomials of the second kind are a special
 case of the Jacobi polynomials, and by extension of the
 hypergeometric function `\,_2F_1`. They can thus also be
 evaluated for nonintegral `n`.
+
+**Plots**
+
+.. literalinclude :: /modules/mpmath/plots/chebyu.py
+.. image :: /modules/mpmath/plots/chebyu.png
 
 **Basic evaluation**
 
@@ -5371,6 +5723,13 @@ With *derivative* = `m \ne 0`, the `m`-th derivative
     \frac{d^m}{dx^m} J_n(x)
 
 is computed.
+
+**Plots**
+
+.. literalinclude :: /modules/mpmath/plots/besselj.py
+.. image :: /modules/mpmath/plots/besselj.png
+.. literalinclude :: /modules/mpmath/plots/besselj_c.py
+.. image :: /modules/mpmath/plots/besselj_c.png
 
 **Examples**
 
@@ -5485,6 +5844,13 @@ With *derivative* = `m \ne 0`, the `m`-th derivative
 
 is computed.
 
+**Plots**
+
+.. literalinclude :: /modules/mpmath/plots/besseli.py
+.. image :: /modules/mpmath/plots/besseli.png
+.. literalinclude :: /modules/mpmath/plots/besseli_c.py
+.. image :: /modules/mpmath/plots/besseli_c.png
+
 **Examples**
 
 Some values of `I_n(x)`::
@@ -5553,6 +5919,13 @@ limit. With *derivative* = `m \ne 0`, the `m`-th derivative
 
 is computed.
 
+**Plots**
+
+.. literalinclude :: /modules/mpmath/plots/bessely.py
+.. image :: /modules/mpmath/plots/bessely.png
+.. literalinclude :: /modules/mpmath/plots/bessely_c.py
+.. image :: /modules/mpmath/plots/bessely_c.png
+
 **Examples**
 
 Some values of `Y_n(x)`::
@@ -5609,6 +5982,13 @@ second kind,
 For `n` an integer, this formula should be understood as a
 limit.
 
+**Plots**
+
+.. literalinclude :: /modules/mpmath/plots/besselk.py
+.. image :: /modules/mpmath/plots/besselk.png
+.. literalinclude :: /modules/mpmath/plots/besselk_c.py
+.. image :: /modules/mpmath/plots/besselk_c.png
+
 **Examples**
 
 Evaluation is supported for arbitrary complex arguments::
@@ -5664,6 +6044,13 @@ which is the complex combination of Bessel functions given by
 
     H_n^{(1)}(x) = J_n(x) + i Y_n(x).
 
+**Plots**
+
+.. literalinclude :: /modules/mpmath/plots/hankel1.py
+.. image :: /modules/mpmath/plots/hankel1.png
+.. literalinclude :: /modules/mpmath/plots/hankel1_c.py
+.. image :: /modules/mpmath/plots/hankel1_c.png
+
 **Examples**
 
 The Hankel function is generally complex-valued::
@@ -5684,6 +6071,13 @@ which is the complex combination of Bessel functions given by
 
     H_n^{(2)}(x) = J_n(x) - i Y_n(x).
 
+**Plots**
+
+.. literalinclude :: /modules/mpmath/plots/hankel2.py
+.. image :: /modules/mpmath/plots/hankel2.png
+.. literalinclude :: /modules/mpmath/plots/hankel2_c.py
+.. image :: /modules/mpmath/plots/hankel2_c.png
+
 **Examples**
 
 The Hankel function is generally complex-valued::
@@ -5702,9 +6096,9 @@ of `w \exp(w)`. In other words, the value of `W(z)` is such that
 `z = W(z) \exp(W(z))` for any complex number `z`.
 
 The Lambert W function is a multivalued function with infinitely
-many branches. Each branch gives a separate solution `w` of the
-equation `z = w \exp(w)`. All branches are supported by
-:func:`~mpmath.lambertw`:
+many branches `W_k(z)`, indexed by `k \in \mathbb{Z}`. Each branch
+gives a different solution `w` of the equation `z = w \exp(w)`.
+All branches are supported by :func:`~mpmath.lambertw`:
 
 * ``lambertw(z)`` gives the principal solution (branch 0)
 
@@ -5718,26 +6112,35 @@ principal branch (`k = 0`) is real for real `z > -1/e`, and the
 The definition, implementation and choice of branches
 is based on [Corless]_.
 
+**Plots**
+
+.. literalinclude :: /modules/mpmath/plots/lambertw.py
+.. image :: /modules/mpmath/plots/lambertw.png
+.. literalinclude :: /modules/mpmath/plots/lambertw_c.py
+.. image :: /modules/mpmath/plots/lambertw_c.png
+
 **Basic examples**
 
 The Lambert W function is the inverse of `w \exp(w)`::
 
     >>> from mpmath import *
-    >>> mp.dps = 35; mp.pretty = True
+    >>> mp.dps = 25; mp.pretty = True
     >>> w = lambertw(1)
     >>> w
-    0.56714329040978387299996866221035555
+    0.5671432904097838729999687
     >>> w*exp(w)
     1.0
 
 Any branch gives a valid inverse::
 
     >>> w = lambertw(1, k=3)
-    >>> w    # doctest: +NORMALIZE_WHITESPACE
-    (-2.8535817554090378072068187234910812 +
-      17.113535539412145912607826671159289j)
-    >>> w*exp(w)
-    (1.0 + 3.5075477124212226194278700785075126e-36j)
+    >>> w
+    (-2.853581755409037807206819 + 17.11353553941214591260783j)
+    >>> w = lambertw(1, k=25)
+    >>> w
+    (-5.047020464221569709378686 + 155.4763860949415867162066j)
+    >>> chop(w*exp(w))
+    1.0
 
 **Applications to equation-solving**
 
@@ -5750,26 +6153,22 @@ tower `z^{z^{z^{\ldots}}}`::
     ...         return z
     ...     return z ** tower(z, n-1)
     ...
-    >>> tower(0.5, 100)
-    0.641185744504986
-    >>> mp.dps = 50
+    >>> tower(mpf(0.5), 100)
+    0.6411857445049859844862005
     >>> -lambertw(-log(0.5))/log(0.5)
-    0.6411857445049859844862004821148236665628209571911
+    0.6411857445049859844862005
 
 **Properties**
 
 The Lambert W function grows roughly like the natural logarithm
 for large arguments::
 
-    >>> mp.dps = 15
-    >>> lambertw(1000)
-    5.2496028524016
-    >>> log(1000)
-    6.90775527898214
-    >>> lambertw(10**100)
-    224.843106445119
-    >>> log(10**100)
-    230.258509299405
+    >>> lambertw(1000); log(1000)
+    5.249602852401596227126056
+    6.907755278982137052053974
+    >>> lambertw(10**100); log(10**100)
+    224.8431064451185015393731
+    230.2585092994045684017991
 
 The principal branch of the Lambert W function has a rational
 Taylor series expansion around `z = 0`::
@@ -5779,11 +6178,10 @@ Taylor series expansion around `z = 0`::
 
 Some special values and limits are::
 
-    >>> mp.dps = 15
     >>> lambertw(0)
     0.0
     >>> lambertw(1)
-    0.567143290409784
+    0.5671432904097838729999687
     >>> lambertw(e)
     1.0
     >>> lambertw(inf)
@@ -5792,40 +6190,31 @@ Some special values and limits are::
     -inf
     >>> lambertw(0, k=3)
     -inf
+    >>> lambertw(inf, k=2)
+    (+inf + 12.56637061435917295385057j)
     >>> lambertw(inf, k=3)
-    (+inf + 18.8495559215388j)
+    (+inf + 18.84955592153875943077586j)
+    >>> lambertw(-inf, k=3)
+    (+inf + 21.9911485751285526692385j)
 
 The `k = 0` and `k = -1` branches join at `z = -1/e` where
 `W(z) = -1` for both branches. Since `-1/e` can only be represented
-approximately with mpmath numbers, evaluating the Lambert W function
-at this point only gives `-1` approximately::
+approximately with binary floating-point numbers, evaluating the
+Lambert W function at this point only gives `-1` approximately::
 
-    >>> mp.dps = 25
     >>> lambertw(-1/e, 0)
-    -0.999999999999837133022867
+    -0.9999999999998371330228251
     >>> lambertw(-1/e, -1)
-    -1.00000000000016286697718
+    -1.000000000000162866977175
 
 If `-1/e` happens to round in the negative direction, there might be
 a small imaginary part::
 
     >>> mp.dps = 15
     >>> lambertw(-1/e)
-    (-1.0 + 8.22007971511612e-9j)
-
-**Possible issues**
-
-.. warning ::
-
-    The evaluation can become inaccurate very close to the branch point
-    at `-1/e`. In some corner cases, :func:`~mpmath.lambertw` might currently
-    fail to converge, or can end up on the wrong branch.
-
-**Algorithm**
-
-Halley's iteration is used to invert `w \exp(w)`, using a first-order
-asymptotic approximation (`O(\log(w))` or `O(w)`) as the initial
-estimate.
+    (-1.0 + 8.22007971483662e-9j)
+    >>> lambertw(-1/e+eps)
+    -0.999999966242188
 
 **References**
 
@@ -7632,6 +8021,11 @@ of the Bessel J function of a rotated argument
 
 The imaginary part is given by :func:`~mpmath.bei`.
 
+**Plots**
+
+.. literalinclude :: /modules/mpmath/plots/ber.py
+.. image :: /modules/mpmath/plots/ber.png
+
 **Examples**
 
 Verifying the defining relation::
@@ -7671,6 +8065,11 @@ of the (rescaled) Bessel K function of a rotated argument
     e^{-\pi i/2} K_n\left(x e^{3\pi i/4}\right) = \mathrm{ker}_n(x) + i \mathrm{kei}_n(x).
 
 The imaginary part is given by :func:`~mpmath.kei`.
+
+**Plots**
+
+.. literalinclude :: /modules/mpmath/plots/ker.py
+.. image :: /modules/mpmath/plots/ker.png
 
 **Examples**
 
@@ -7928,6 +8327,241 @@ Also incomplete elliptic integrals fall into this category [1]::
 
 """
 
+angerj = r"""
+Gives the Anger function
+
+.. math ::
+
+    \mathbf{J}_{\nu}(z) = \frac{1}{\pi}
+        \int_0^{\pi} \cos(\nu t - z \sin t) dt
+
+which is an entire function of both the parameter `\nu` and
+the argument `z`. It solves the inhomogeneous Bessel differential
+equation
+
+.. math ::
+
+    f''(z) + \frac{1}{z}f'(z) + \left(1-\frac{\nu^2}{z^2}\right) f(z)
+        = \frac{(z-\nu)}{\pi z^2} \sin(\pi \nu).
+
+**Examples**
+
+Evaluation for real and complex parameter and argument::
+
+    >>> from mpmath import *
+    >>> mp.dps = 25; mp.pretty = True
+    >>> angerj(2,3)
+    0.4860912605858910769078311
+    >>> angerj(-3+4j, 2+5j)
+    (-5033.358320403384472395612 + 585.8011892476145118551756j)
+    >>> angerj(3.25, 1e6j)
+    (4.630743639715893346570743e+434290 - 1.117960409887505906848456e+434291j)
+    >>> angerj(-1.5, 1e6)
+    0.0002795719747073879393087011
+
+The Anger function coincides with the Bessel J-function when `\nu`
+is an integer::
+
+    >>> angerj(1,3); besselj(1,3)
+    0.3390589585259364589255146
+    0.3390589585259364589255146
+    >>> angerj(1.5,3); besselj(1.5,3)
+    0.4088969848691080859328847
+    0.4777182150870917715515015
+
+Verifying the differential equation::
+
+    >>> v,z = mpf(2.25), 0.75
+    >>> f = lambda z: angerj(v,z)
+    >>> diff(f,z,2) + diff(f,z)/z + (1-(v/z)**2)*f(z)
+    -0.6002108774380707130367995
+    >>> (z-v)/(pi*z**2) * sinpi(v)
+    -0.6002108774380707130367995
+
+Verifying the integral representation::
+
+    >>> angerj(v,z)
+    0.1145380759919333180900501
+    >>> quad(lambda t: cos(v*t-z*sin(t))/pi, [0,pi])
+    0.1145380759919333180900501
+
+**References**
+
+1. [DLMF]_ section 11.10: Anger-Weber Functions
+"""
+
+webere = r"""
+Gives the Weber function
+
+.. math ::
+
+    \mathbf{E}_{\nu}(z) = \frac{1}{\pi}
+        \int_0^{\pi} \sin(\nu t - z \sin t) dt
+
+which is an entire function of both the parameter `\nu` and
+the argument `z`. It solves the inhomogeneous Bessel differential
+equation
+
+.. math ::
+
+    f''(z) + \frac{1}{z}f'(z) + \left(1-\frac{\nu^2}{z^2}\right) f(z)
+        = -\frac{1}{\pi z^2} (z+\nu+(z-\nu)\cos(\pi \nu)).
+
+**Examples**
+
+Evaluation for real and complex parameter and argument::
+
+    >>> from mpmath import *
+    >>> mp.dps = 25; mp.pretty = True
+    >>> webere(2,3)
+    -0.1057668973099018425662646
+    >>> webere(-3+4j, 2+5j)
+    (-585.8081418209852019290498 - 5033.314488899926921597203j)
+    >>> webere(3.25, 1e6j)
+    (-1.117960409887505906848456e+434291 - 4.630743639715893346570743e+434290j)
+    >>> webere(3.25, 1e6)
+    -0.00002812518265894315604914453
+
+Up to addition of a rational function of `z`, the Weber function coincides
+with the Struve H-function when `\nu` is an integer::
+
+    >>> webere(1,3); 2/pi-struveh(1,3)
+    -0.3834897968188690177372881
+    -0.3834897968188690177372881
+    >>> webere(5,3); 26/(35*pi)-struveh(5,3)
+    0.2009680659308154011878075
+    0.2009680659308154011878075
+
+Verifying the differential equation::
+
+    >>> v,z = mpf(2.25), 0.75
+    >>> f = lambda z: webere(v,z)
+    >>> diff(f,z,2) + diff(f,z)/z + (1-(v/z)**2)*f(z)
+    -1.097441848875479535164627
+    >>> -(z+v+(z-v)*cospi(v))/(pi*z**2)
+    -1.097441848875479535164627
+
+Verifying the integral representation::
+
+    >>> webere(v,z)
+    0.1486507351534283744485421
+    >>> quad(lambda t: sin(v*t-z*sin(t))/pi, [0,pi])
+    0.1486507351534283744485421
+
+**References**
+
+1. [DLMF]_ section 11.10: Anger-Weber Functions
+"""
+
+lommels1 = r"""
+Gives the Lommel function `s_{\mu,\nu}` or `s^{(1)}_{\mu,\nu}`
+
+.. math ::
+
+    s_{\mu,\nu}(z) = \frac{z^{\mu+1}}{(\mu-\nu+1)(\mu+\nu+1)}
+        \,_1F_2\left(1; \frac{\mu-\nu+3}{2}, \frac{\mu+\nu+3}{2};
+        -\frac{z^2}{4} \right)
+
+which solves the inhomogeneous Bessel equation
+
+.. math ::
+
+    z^2 f''(z) + z f'(z) + (z^2-\nu^2) f(z) = z^{\mu+1}.
+
+A second solution is given by :func:`~mpmath.lommels2`.
+
+**Plots**
+
+.. literalinclude :: /modules/mpmath/plots/lommels1.py
+.. image :: /modules/mpmath/plots/lommels1.png
+
+**Examples**
+
+An integral representation::
+
+    >>> from mpmath import *
+    >>> mp.dps = 25; mp.pretty = True
+    >>> u,v,z = 0.25, 0.125, mpf(0.75)
+    >>> lommels1(u,v,z)
+    0.4276243877565150372999126
+    >>> (bessely(v,z)*quad(lambda t: t**u*besselj(v,t), [0,z]) - \
+    ...  besselj(v,z)*quad(lambda t: t**u*bessely(v,t), [0,z]))*(pi/2)
+    0.4276243877565150372999126
+
+A special value::
+
+    >>> lommels1(v,v,z)
+    0.5461221367746048054932553
+    >>> gamma(v+0.5)*sqrt(pi)*power(2,v-1)*struveh(v,z)
+    0.5461221367746048054932553
+
+Verifying the differential equation::
+
+    >>> f = lambda z: lommels1(u,v,z)
+    >>> z**2*diff(f,z,2) + z*diff(f,z) + (z**2-v**2)*f(z)
+    0.6979536443265746992059141
+    >>> z**(u+1)
+    0.6979536443265746992059141
+
+**References**
+
+1. [GradshteynRyzhik]_
+2. [Weisstein]_ http://mathworld.wolfram.com/LommelFunction.html
+"""
+
+lommels2 = r"""
+Gives the second Lommel function `S_{\mu,\nu}` or `s^{(2)}_{\mu,\nu}`
+
+.. math ::
+
+    S_{\mu,\nu}(z) = s_{\mu,\nu}(z) + 2^{\mu-1}
+        \Gamma\left(\tfrac{1}{2}(\mu-\nu+1)\right)
+        \Gamma\left(\tfrac{1}{2}(\mu+\nu+1)\right) \times
+
+        \left[\sin(\tfrac{1}{2}(\mu-\nu)\pi) J_{\nu}(z) -
+              \cos(\tfrac{1}{2}(\mu-\nu)\pi) Y_{\nu}(z)
+        \right]
+
+which solves the same differential equation as
+:func:`~mpmath.lommels1`.
+
+**Plots**
+
+.. literalinclude :: /modules/mpmath/plots/lommels2.py
+.. image :: /modules/mpmath/plots/lommels2.png
+
+**Examples**
+
+For large `|z|`, `S_{\mu,\nu} \sim z^{\mu-1}`::
+
+    >>> from mpmath import *
+    >>> mp.dps = 25; mp.pretty = True
+    >>> lommels2(10,2,30000)
+    1.968299831601008419949804e+40
+    >>> power(30000,9)
+    1.9683e+40
+
+A special value::
+
+    >>> u,v,z = 0.5, 0.125, mpf(0.75)
+    >>> lommels2(v,v,z)
+    0.9589683199624672099969765
+    >>> (struveh(v,z)-bessely(v,z))*power(2,v-1)*sqrt(pi)*gamma(v+0.5)
+    0.9589683199624672099969765
+
+Verifying the differential equation::
+
+    >>> f = lambda z: lommels2(u,v,z)
+    >>> z**2*diff(f,z,2) + z*diff(f,z) + (z**2-v**2)*f(z)
+    0.6495190528383289850727924
+    >>> z**(u+1)
+    0.6495190528383289850727924
+
+**References**
+
+1. [GradshteynRyzhik]_
+2. [Weisstein]_ http://mathworld.wolfram.com/LommelFunction.html
+"""
 
 appellf2 = r"""
 Gives the Appell F2 hypergeometric function of two variables
@@ -8413,6 +9047,13 @@ The Coulomb wave functions with real parameters are defined
 in Abramowitz & Stegun, section 14. However, all parameters are permitted
 to be complex in this implementation (see references).
 
+**Plots**
+
+.. literalinclude :: /modules/mpmath/plots/coulombf.py
+.. image :: /modules/mpmath/plots/coulombf.png
+.. literalinclude :: /modules/mpmath/plots/coulombf_c.py
+.. image :: /modules/mpmath/plots/coulombf_c.png
+
 **Examples**
 
 Evaluation is supported for arbitrary magnitudes of `z`::
@@ -8519,6 +9160,13 @@ where `\chi = \sigma_l - \sigma_{-l-1} - (l+1/2) \pi`
 and `\sigma_l(\eta) = (\ln \Gamma(1+l+i\eta)-\ln \Gamma(1+l-i\eta))/(2i)`.
 
 See :func:`~mpmath.coulombf` for additional information.
+
+**Plots**
+
+.. literalinclude :: /modules/mpmath/plots/coulombg.py
+.. image :: /modules/mpmath/plots/coulombg.png
+.. literalinclude :: /modules/mpmath/plots/coulombg_c.py
+.. image :: /modules/mpmath/plots/coulombg_c.png
 
 **Examples**
 
@@ -8965,6 +9613,30 @@ are permitted to be complex numbers.
     :func:`~mpmath.spherharm` returns a complex number, even the value is
     purely real.
 
+**Plots**
+
+.. literalinclude :: /modules/mpmath/plots/spherharm40.py
+
+`Y_{4,0}`:
+
+.. image :: /modules/mpmath/plots/spherharm40.png
+
+`Y_{4,1}`:
+
+.. image :: /modules/mpmath/plots/spherharm41.png
+
+`Y_{4,2}`:
+
+.. image :: /modules/mpmath/plots/spherharm42.png
+
+`Y_{4,3}`:
+
+.. image :: /modules/mpmath/plots/spherharm43.png
+
+`Y_{4,4}`:
+
+.. image :: /modules/mpmath/plots/spherharm44.png
+
 **Examples**
 
 Some low-order spherical harmonics with reference values::
@@ -9009,4 +9681,180 @@ Evaluation works with complex parameter values::
 
     >>> spherharm(1+j, 2j, 2+3j, -0.5j)
     (64.44922331113759992154992 + 1981.693919841408089681743j)
+"""
+
+scorergi = r"""
+Evaluates the Scorer function
+
+.. math ::
+
+    \operatorname{Gi}(z) =
+    \operatorname{Ai}(z) \int_0^z \operatorname{Bi}(t) dt +
+    \operatorname{Bi}(z) \int_z^{\infty} \operatorname{Ai}(t) dt
+
+which gives a particular solution to the inhomogeneous Airy
+differential equation `f''(z) - z f(z) = 1/\pi`. Another
+particular solution is given by the Scorer Hi-function
+(:func:`~mpmath.scorerhi`). The two functions are related as
+`\operatorname{Gi}(z) + \operatorname{Hi}(z) = \operatorname{Bi}(z)`.
+
+**Plots**
+
+.. literalinclude :: /modules/mpmath/plots/gi.py
+.. image :: /modules/mpmath/plots/gi.png
+.. literalinclude :: /modules/mpmath/plots/gi_c.py
+.. image :: /modules/mpmath/plots/gi_c.png
+
+**Examples**
+
+Some values and limits::
+
+    >>> from mpmath import *
+    >>> mp.dps = 25; mp.pretty = True
+    >>> scorergi(0); 1/(power(3,'7/6')*gamma('2/3'))
+    0.2049755424820002450503075
+    0.2049755424820002450503075
+    >>> diff(scorergi, 0); 1/(power(3,'5/6')*gamma('1/3'))
+    0.1494294524512754526382746
+    0.1494294524512754526382746
+    >>> scorergi(+inf); scorergi(-inf)
+    0.0
+    0.0
+    >>> scorergi(1)
+    0.2352184398104379375986902
+    >>> scorergi(-1)
+    -0.1166722172960152826494198
+
+Evaluation for large arguments::
+
+    >>> scorergi(10)
+    0.03189600510067958798062034
+    >>> scorergi(100)
+    0.003183105228162961476590531
+    >>> scorergi(1000000)
+    0.0000003183098861837906721743873
+    >>> 1/(pi*1000000)
+    0.0000003183098861837906715377675
+    >>> scorergi(-1000)
+    -0.08358288400262780392338014
+    >>> scorergi(-100000)
+    0.02886866118619660226809581
+    >>> scorergi(50+10j)
+    (0.0061214102799778578790984 - 0.001224335676457532180747917j)
+    >>> scorergi(-50-10j)
+    (5.236047850352252236372551e+29 - 3.08254224233701381482228e+29j)
+    >>> scorergi(100000j)
+    (-8.806659285336231052679025e+6474077 + 8.684731303500835514850962e+6474077j)
+
+Verifying the connection between Gi and Hi::
+
+    >>> z = 0.25
+    >>> scorergi(z) + scorerhi(z)
+    0.7287469039362150078694543
+    >>> airybi(z)
+    0.7287469039362150078694543
+
+Verifying the differential equation::
+
+    >>> for z in [-3.4, 0, 2.5, 1+2j]:
+    ...     chop(diff(scorergi,z,2) - z*scorergi(z))
+    ...
+    -0.3183098861837906715377675
+    -0.3183098861837906715377675
+    -0.3183098861837906715377675
+    -0.3183098861837906715377675
+
+Verifying the integral representation::
+
+    >>> z = 0.5
+    >>> scorergi(z)
+    0.2447210432765581976910539
+    >>> Ai,Bi = airyai,airybi
+    >>> Bi(z)*(Ai(inf,-1)-Ai(z,-1)) + Ai(z)*(Bi(z,-1)-Bi(0,-1))
+    0.2447210432765581976910539
+
+**References**
+
+1. [DLMF]_ section 9.12: Scorer Functions
+
+"""
+
+scorerhi = r"""
+Evaluates the second Scorer function
+
+.. math ::
+
+    \operatorname{Hi}(z) =
+    \operatorname{Bi}(z) \int_{-\infty}^z \operatorname{Ai}(t) dt -
+    \operatorname{Ai}(z) \int_{-\infty}^z \operatorname{Bi}(t) dt
+
+which gives a particular solution to the inhomogeneous Airy
+differential equation `f''(z) - z f(z) = 1/\pi`. See also
+:func:`~mpmath.scorergi`.
+
+**Plots**
+
+.. literalinclude :: /modules/mpmath/plots/hi.py
+.. image :: /modules/mpmath/plots/hi.png
+.. literalinclude :: /modules/mpmath/plots/hi_c.py
+.. image :: /modules/mpmath/plots/hi_c.png
+
+**Examples**
+
+Some values and limits::
+
+    >>> from mpmath import *
+    >>> mp.dps = 25; mp.pretty = True
+    >>> scorerhi(0); 2/(power(3,'7/6')*gamma('2/3'))
+    0.4099510849640004901006149
+    0.4099510849640004901006149
+    >>> diff(scorerhi,0); 2/(power(3,'5/6')*gamma('1/3'))
+    0.2988589049025509052765491
+    0.2988589049025509052765491
+    >>> scorerhi(+inf); scorerhi(-inf)
+    +inf
+    0.0
+    >>> scorerhi(1)
+    0.9722051551424333218376886
+    >>> scorerhi(-1)
+    0.2206696067929598945381098
+
+Evaluation for large arguments::
+
+    >>> scorerhi(10)
+    455641153.5163291358991077
+    >>> scorerhi(100)
+    6.041223996670201399005265e+288
+    >>> scorerhi(1000000)
+    7.138269638197858094311122e+289529652
+    >>> scorerhi(-10)
+    0.0317685352825022727415011
+    >>> scorerhi(-100)
+    0.003183092495767499864680483
+    >>> scorerhi(100j)
+    (-6.366197716545672122983857e-9 + 0.003183098861710582761688475j)
+    >>> scorerhi(50+50j)
+    (-5.322076267321435669290334e+63 + 1.478450291165243789749427e+65j)
+    >>> scorerhi(-1000-1000j)
+    (0.0001591549432510502796565538 - 0.000159154943091895334973109j)
+
+Verifying the differential equation::
+
+    >>> for z in [-3.4, 0, 2, 1+2j]:
+    ...     chop(diff(scorerhi,z,2) - z*scorerhi(z))
+    ...
+    0.3183098861837906715377675
+    0.3183098861837906715377675
+    0.3183098861837906715377675
+    0.3183098861837906715377675
+
+Verifying the integral representation::
+
+    >>> z = 0.5
+    >>> scorerhi(z)
+    0.6095559998265972956089949
+    >>> Ai,Bi = airyai,airybi
+    >>> Bi(z)*(Ai(z,-1)-Ai(-inf,-1)) - Ai(z)*(Bi(z,-1)-Bi(-inf,-1))
+    0.6095559998265972956089949
+
 """

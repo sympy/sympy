@@ -6,20 +6,36 @@ sums, products, and other sequence limits.
 Use :func:`mpmath.fsum` and :func:`mpmath.fprod`
 for summation and multiplication of finite sequences.
 
-Summation (``nsum``, ``sumem``)
-.........................................
+Summation
+..........................................
+
+:func:`nsum`
+^^^^^^^^^^^^^^^^^
 .. autofunction:: mpmath.nsum
+
+:func:`sumem`
+^^^^^^^^^^^^^^^^^
 .. autofunction:: mpmath.sumem
 
-Products (``nprod``)
+:func:`sumap`
+^^^^^^^^^^^^^^^^^
+.. autofunction:: mpmath.sumap
+
+Products
 ...............................
+
+:func:`nprod`
+^^^^^^^^^^^^^^^^^
 .. autofunction:: mpmath.nprod
 
 Limits (``limit``)
 ..................
+
+:func:`limit`
+^^^^^^^^^^^^^^^^^
 .. autofunction:: mpmath.limit
 
-Extrapolation (``richardson``, ``shanks``)
+Extrapolation
 ..........................................
 
 The following functions provide a direct interface to
@@ -32,5 +48,11 @@ precise number of terms needed to achieve a desired accuracy is
 known in advance, or if one wishes to study the convergence
 properties of the algorithms.
 
+
+:func:`richardson`
+^^^^^^^^^^^^^^^^^^
 .. autofunction:: mpmath.richardson
+
+:func:`shanks`
+^^^^^^^^^^^^^^^^^
 .. autofunction:: mpmath.shanks

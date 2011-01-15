@@ -583,7 +583,7 @@ def evalf_log(expr, prec, options):
 
     if xim:
         # XXX: use get_abs etc instead
-        re = evalf_log(C.log(C.abs(arg, evaluate=False), evaluate=False), prec, options)
+        re = evalf_log(C.log(C.Abs(arg, evaluate=False), evaluate=False), prec, options)
         im = mpf_atan2(xim, xre or fzero, prec)
         return re[0], im, re[2], prec
 
@@ -952,7 +952,7 @@ def _create_evalf_table():
 
     C.log : evalf_log,
     C.atan : evalf_atan,
-    C.abs : evalf_abs,
+    C.Abs : evalf_abs,
 
     C.re : evalf_re,
     C.im : evalf_im,

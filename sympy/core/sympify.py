@@ -208,8 +208,8 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False):
     except TokenError:
         raise SympifyError('%r had a tokenizing problem' % a)
 
-    import ast_parser
-    return ast_parser.parse_expr(a, locals or {})
+    from sympy.parsing.ast_parser import parse_expr
+    return parse_expr(a, locals or {})
 
 def _sympify(a):
     """Short version of sympify for internal usage for __add__ and __eq__

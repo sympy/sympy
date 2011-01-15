@@ -74,6 +74,8 @@ def plot(ctx, f, xlim=[-5,5], ylim=None, points=200, file=None, dpi=None,
                         in_complex = False
                         segments.append(segment)
                         segment = []
+                    if hasattr(v, "real"):
+                        v = v.real
                     segment.append((float(x[i]), v))
             except ctx.plot_ignore:
                 if segment:
@@ -172,6 +174,7 @@ def cplot(ctx, f, re=[-5,5], im=[-5,5], points=2000, color=None,
             w[n,m] = v
         if verbose:
             print n, "of", N
+    rea, reb, ima, imb = map(float, [rea, reb, ima, imb])
     axes.imshow(w, extent=(rea, reb, ima, imb), origin='lower')
     axes.set_xlabel('Re(z)')
     axes.set_ylabel('Im(z)')
@@ -268,4 +271,3 @@ VisualizationMethods.plot = plot
 VisualizationMethods.default_color_function = default_color_function
 VisualizationMethods.cplot = cplot
 VisualizationMethods.splot = splot
-

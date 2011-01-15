@@ -89,7 +89,7 @@ class Assume(Boolean):
             >>> from sympy.abc import x
             >>> a = Assume(x, Q.integer)
             >>> a.key
-            'integer'
+            Q.integer
 
         """
         return self._args[1]

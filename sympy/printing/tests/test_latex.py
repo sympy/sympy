@@ -1,5 +1,5 @@
 from sympy import symbols, Rational, Symbol, Integral, log, diff, sin, exp, \
-        Function, factorial, floor, ceiling, abs, re, im, conjugate, gamma, \
+        Function, factorial, floor, ceiling, Abs, re, im, conjugate, gamma, \
         Order, Piecewise, Matrix, asin, Interval, EmptySet, Union, S, Sum, \
         Limit, oo, Poly, raises
 from sympy.abc import mu, tau
@@ -11,11 +11,11 @@ x,y = symbols('xy')
 k,n = symbols('kn', integer=True)
 
 def test_printmethod():
-    class R(abs):
+    class R(Abs):
         def _latex(self, printer):
             return "foo(%s)" % printer._print(self.args[0])
     assert latex(R(x)) == "foo(x)"
-    class R(abs):
+    class R(Abs):
         def _latex(self, printer):
             return "foo"
     assert latex(R(x)) == "foo"
@@ -87,7 +87,7 @@ def test_latex_functions():
 
     assert latex(floor(x)) == r"\lfloor{x}\rfloor"
     assert latex(ceiling(x)) == r"\lceil{x}\rceil"
-    assert latex(abs(x)) == r"\lvert{x}\rvert"
+    assert latex(Abs(x)) == r"\lvert{x}\rvert"
     assert latex(re(x)) == r"\Re{x}"
     assert latex(im(x)) == r"\Im{x}"
     assert latex(conjugate(x)) == r"\overline{x}"

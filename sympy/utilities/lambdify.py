@@ -14,7 +14,7 @@ SYMPY = {}
 
 # Mappings between sympy and other modules function names.
 MATH_TRANSLATIONS = {
-    "abs":"fabs",
+    "Abs":"fabs",
     "ceiling":"ceil",
     "E":"e",
     "ln":"log",

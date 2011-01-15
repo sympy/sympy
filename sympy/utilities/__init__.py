@@ -22,3 +22,4 @@ from pytest import raises
 
 from cythonutils import cythonized
 
+del sys

@@ -8,7 +8,7 @@ cases are also provided.
 import operator
 import math
 
-from backend import MPZ_ZERO, MPZ_ONE
+from backend import MPZ_ZERO, MPZ_ONE, BACKEND
 
 from libintmath import gcd
 
@@ -283,7 +283,7 @@ def make_hyp_summator(key):
         add("elif SIM:")
         add("    magn = b[2]+b[3]")
         add("else:")
-        add("    magn = -prec")
+        add("    magn = -wp+1")
 
         add("return (a, b), True, magn")
     else:
@@ -292,7 +292,7 @@ def make_hyp_summator(key):
         add("if SRE:")
         add("    magn = a[2]+a[3]")
         add("else:")
-        add("    magn = -prec")
+        add("    magn = -wp+1")
 
         add("return a, False, magn")
 
@@ -306,6 +306,21 @@ def make_hyp_summator(key):
 
     return source, namespace[fname]
 
+
+if BACKEND == 'sage':
+
+    def make_hyp_summator(key):
+        """
+        Returns a function that sums a generalized hypergeometric series,
+        for given parameter types (integer, rational, real, complex).
+        """
+        from sage.libs.mpmath.ext_main import hypsum_internal
+        p, q, param_types, ztype = key
+        def _hypsum(coeffs, z, prec, wp, epsshift, magnitude_check, **kwargs):
+            return hypsum_internal(p, q, param_types, ztype, coeffs, z,
+                prec, wp, epsshift, magnitude_check, kwargs)
+
+        return "(none)", _hypsum
 
 
 #-----------------------------------------------------------------------#

@@ -644,8 +644,16 @@ class SymPyDocTestFinder(DocTestFinder):
         lineno = self._find_lineno(obj, source_lines)
 
         if lineno is None:
-            # if None, then it wasn't really in this source
-            return None
+            # if None, then _find_lineno couldn't find the docstring.
+            # But IT IS STILL THERE.  Likely it was decorated or something
+            # (i.e., @property docstrings have lineno == None)
+            # TODO: Write our own _find_lineno that is smarter in this regard
+            # Until then, just give it a dummy lineno.  This is just used for
+            # sorting the tests, so the only bad effect is that they will appear
+            # last instead of the order that they really are in the file.
+            # lineno is also used to report the offending line of a failing
+            # doctest, which is another reason to fix this.  See issue 1947.
+            lineno = 0
 
         # Don't bother if the docstring is empty.
         if self._exclude_empty and not docstring:

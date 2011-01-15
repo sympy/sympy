@@ -29,4 +29,3 @@ Output of ``fp.cplot(fp.gamma, points=100000)``
 Output of ``splot`` for the donut example.
 
 .. autofunction:: mpmath.splot
-

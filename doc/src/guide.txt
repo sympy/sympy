@@ -292,7 +292,7 @@ should return either some simplified instance of some other class or if the
 class should be unmodified, return ``None`` (see ``core/function.py`` in
 ``Function.__new__`` for implementation details). See also tests in
 `sympy/functions/elementary/tests/test_interface.py
-<http://git.sympy.org/?p=sympy.git;a=blob;f=sympy/functions/elementary/tests/test_interface.py>`_,
+<https://github.com/sympy/sympy/blob/master/sympy/functions/elementary/tests/test_interface.py>`_,
 that test this interface and you can use them to create your own new functions.
 
 The applied function ``sign(x)`` is constructed using
