@@ -766,3 +766,10 @@ def test_action_verbs():
 def test_as_powers_dict():
     assert (x**y*z).as_powers_dict() == {x: y, z: 1}
     assert Mul(2, 2, **dict(evaluate=False)).as_powers_dict() == {S(2): S(2)}
+
+def test_new_rawargs():
+    x = Symbol('x')
+    assert 2*x == Mul._new_rawargs(3*x, *[S(2), x])
+    assert 2 + x == Add._new_rawargs(3 + x, *[S(2), x])
+    assert x == Mul._new_rawargs(3*x, *[x])
+    assert x == Add._new_rawargs(3 + x, *[x])

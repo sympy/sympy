@@ -207,11 +207,11 @@ class Pow(Expr):
         if old.func is self.func and self.base == old.base:
             coeff1, terms1 = self.exp.as_coeff_terms()
             coeff2, terms2 = old.exp.as_coeff_terms()
-            if terms1==terms2: return new ** (coeff1/coeff2) # (x**(2*y)).subs(x**(3*y),z) -> z**(2/3*y)
+            if terms1==terms2: return new ** (coeff1/coeff2) # (x**(2*y)).subs(x**(3*y),z) -> z**(2/3)
         if old.func is C.exp:
-            coeff1,terms1 = old.args[0].as_coeff_terms()
-            coeff2,terms2 = (self.exp * C.log(self.base)).as_coeff_terms()
-            if terms1==terms2: return new ** (coeff1/coeff2) # (x**(2*y)).subs(exp(3*y*log(x)),z) -> z**(2/3*y)
+            coeff1, terms1 = old.args[0].as_coeff_terms()
+            coeff2, terms2 = (self.exp*C.log(self.base)).as_coeff_terms()
+            if terms1==terms2: return new**(coeff2/coeff1) # (x**(2*y)).subs(exp(3*y*log(x)),z) -> z**(2/3)
         return self.base._eval_subs(old, new) ** self.exp._eval_subs(old, new)
 
     def as_powers_dict(self):

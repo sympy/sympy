@@ -9,6 +9,13 @@ from sympy.functions.elementary.miscellaneous import sqrt
 ###############################################################################
 
 class gamma(Function):
+    """The gamma function returns a function which passes through the integral
+    values of the factorial function, i.e. though defined in the complex plane,
+    when n is an integer, gamma(n) = (n - 1)!
+
+    Reference:
+        http://en.wikipedia.org/wiki/Gamma_function
+    """
 
     nargs = 1
 
@@ -138,6 +145,11 @@ class uppergamma(Function):
 ###############################################################################
 
 class polygamma(Function):
+    """The function polygamma(n, z) returns log(gamma(z)).diff(n + 1)
+
+    Reference:
+        http://en.wikipedia.org/wiki/Polygamma_function
+    """
 
     nargs = 2
 
@@ -186,18 +198,21 @@ class polygamma(Function):
         if n.is_Integer and n.is_nonnegative:
             if z.is_Add:
                 coeff, factors = z.as_coeff_factors()
+                if coeff and coeff.is_Integer:
+                    e = -(n + 1)
+                    if coeff > 0:
+                        tail = Add(*[C.Pow(z - i, e)  for i in xrange(1, int(coeff) + 1)])
+                    else:
+                        tail = -Add(*[C.Pow(z + i, e)  for i in xrange(0, int(-coeff))])
+                    return polygamma(n, z - coeff) + (-1)**n*C.Factorial(n)*tail
 
-                if coeff.is_Integer:
-                    tail = Add(*[ z + i for i in xrange(0, int(coeff)) ])
-                    return polygamma(n, z-coeff) + (-1)**n*C.Factorial(n)*tail
             elif z.is_Mul:
                 coeff, terms = z.as_coeff_terms()
-
-                if coeff.is_Integer and coeff.is_positive:
-                    tail = [ polygamma(n, z + i//coeff) for i in xrange(0, int(coeff)) ]
-
-                    if n is S.Zero:
-                        return log(coeff) + Add(*tail)/coeff**(n+1)
+                if coeff != 1 and coeff.is_Integer and coeff.is_positive:
+                    z = z._new_rawargs(*terms)
+                    tail = [ polygamma(n, z + C.Rational(i, coeff)) for i in xrange(0, int(coeff)) ]
+                    if n == 0:
+                        return Add(*tail)/coeff + log(coeff)
                     else:
                         return Add(*tail)/coeff**(n+1)
 

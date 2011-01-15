@@ -266,7 +266,6 @@ def test_powsimp():
     assert powsimp((z**x*z**y)**x, deep=True) == (z**(x + y))**x
     assert powsimp(x*(z**x*z**y)**x, deep=True) == x*(z**(x + y))**x
 
-
 def test_collect_1():
     """Collect with respect to a Symbol"""
     x, y, z, n = symbols('xyzn')

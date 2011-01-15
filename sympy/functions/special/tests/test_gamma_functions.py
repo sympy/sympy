@@ -74,25 +74,47 @@ def test_polygamma():
 
 def test_polygamma_expand_func():
     assert polygamma(0, x).expand(func=True) == polygamma(0, x)
-    assert polygamma(0, 2*x).expand(func=True) == log(2) + polygamma(0, 2*x)
-    assert polygamma(2, x).expand(func=True, basic=False) == polygamma(2, x)
-    #assert polygamma(2, 3*x).expand(func=True) == polygamma(2, 3*x)/9
-    #assert polygamma(3, 4*x).expand(func=True,basic=False) == polygamma(3, 4*x)/64
-    assert polygamma(0, 1 + x).expand(func=True, basic=False) == 1 + x + polygamma(0, x )
-    assert polygamma(0, 2 + x).expand(func=True, basic=False) == 5 + 2*x + polygamma(0, x)
-    assert polygamma(0, 3 + x).expand(func=True, basic=False) == 12 + 3*x + polygamma(0, x)
-    assert polygamma(0, 4 + x).expand(func=True, basic=False) == 22 + 4*x + polygamma(0, x)
-    assert polygamma(1, 1 + x).expand(func=True,basic=False) == -1 - x + polygamma(1, x)
-    assert polygamma(1, 2 + x).expand(func=True,basic=False) == -5 - 2*x + polygamma(1, x)
-    assert polygamma(1, 3 + x).expand(func=True,basic=False) == -12 - 3*x + polygamma(1, x)
-    assert polygamma(1, 4 + x).expand(func=True,basic=False) == -22 - 4*x + polygamma(1, x)
-    assert polygamma(0, x + y).expand(func= True, basic = False) == polygamma(0, x + y)
-    assert polygamma(1, x + y).expand(func = True, basic = False) == polygamma(1, x + y)
-    assert polygamma(1, 3 + 4*x + y).expand(func = True,basic = False) == -12 - 12*x - 3*y + polygamma(1, y + 4*x)
-    assert polygamma(3, 3 + 4*x + y).expand(func = True,basic = False) == -72 - 72*x -  18*y + polygamma(3, y + 4*x)
-    assert polygamma(3, 4*x + y + 1).expand(func = True, basic = False) == -6 - 24*x - 6*y + polygamma(3, y + 4*x)
-    assert polygamma(3, 4*x + y + S(3)/2).expand(func = True, basic = False) == polygamma(3, S(3)/2 + y + 4*x)
-    assert polygamma(3, x + y + S(3)/4).expand(func = True, basic = False) == polygamma(3, S(3)/4 + x + y)
+    assert polygamma(0, 2*x).expand(func=True) == \
+           polygamma(0, x)/2 + polygamma(0, Rational(1, 2) + x)/2 + log(2)
+    assert polygamma(1, 2*x).expand(func=True) == \
+           polygamma(1, x)/4 + polygamma(1, Rational(1, 2) + x)/4
+    assert polygamma(2, x).expand(func=True) == \
+           polygamma(2, x)
+    assert polygamma(0, -1 + x).expand(func=True) == \
+           polygamma(0, x) + 1/(1 - x)
+    assert polygamma(0, 1 + x).expand(func=True) == \
+           1/x + polygamma(0, x )
+    assert polygamma(0, 2 + x).expand(func=True) == \
+           1/x + 1/(1 + x) + polygamma(0, x)
+    assert polygamma(0, 3 + x).expand(func=True) == \
+           polygamma(0, x) + 1/x + 1/(1 + x) + 1/(2 + x)
+    assert polygamma(0, 4 + x).expand(func=True) == \
+           polygamma(0, x) + 1/x + 1/(1 + x) + 1/(2 + x) + 1/(3 + x)
+    assert polygamma(1, 1 + x).expand(func=True) == \
+           polygamma(1, x) - 1/x**2
+    assert polygamma(1, 2 + x).expand(func=True, multinomial=False) == \
+           polygamma(1, x) - 1/x**2 - 1/(1 + x)**2
+    assert polygamma(1, 3 + x).expand(func=True, multinomial=False) == \
+           polygamma(1, x) - 1/x**2 - 1/(1 + x)**2 - 1/(2 + x)**2
+    assert polygamma(1, 4 + x).expand(func=True, multinomial=False) == \
+           polygamma(1, x) - 1/x**2 - 1/(1 + x)**2 - \
+           1/(2 + x)**2 - 1/(3 + x)**2
+    assert polygamma(0, x + y).expand(func=True) == \
+           polygamma(0, x + y)
+    assert polygamma(1, x + y).expand(func=True) == \
+           polygamma(1, x + y)
+    assert polygamma(1, 3 + 4*x + y).expand(func=True, multinomial=False) == \
+           polygamma(1, y + 4*x) - 1/(y + 4*x)**2 - \
+           1/(1 + y + 4*x)**2 - 1/(2 + y + 4*x)**2
+    assert polygamma(3, 3 + 4*x + y).expand(func=True, multinomial=False) == \
+           polygamma(3, y + 4*x) - 6/(y + 4*x)**4 - \
+           6/(1 + y + 4*x)**4 - 6/(2 + y + 4*x)**4
+    assert polygamma(3, 4*x + y + 1).expand(func=True, multinomial=False) == \
+           polygamma(3, y + 4*x) - 6/(y + 4*x)**4
+    e = polygamma(3, 4*x + y + S(3)/2)
+    assert e.expand(func=True) == e
+    e = polygamma(3, x + y + S(3)/4)
+    assert e.expand(func = True, basic = False) == e
 
 def test_loggamma():
     pass
