@@ -837,6 +837,15 @@ def test_Poly_inject():
     assert f.inject() == Poly(x**2*y + x*y**3 + x*y + 1, x, y)
     assert f.inject(front=True) == Poly(y**3*x + y*x**2 + y*x + 1, y, x)
 
+def test_Poly_eject():
+    f = Poly(x**2*y + x*y**3 + x*y + 1, x, y)
+
+    assert f.eject(x) == Poly(x*y**3 + (x**2 + x)*y + 1, y, domain='ZZ[x]')
+    assert f.eject(y) == Poly(y*x**2 + (y**3 + y)*x + 1, x, domain='ZZ[y]')
+
+    raises(DomainError, "Poly(x*y, x, y, domain=ZZ[z]).eject(y)")
+    raises(NotImplementedError, "Poly(x*y, x, y, z).eject(y)")
+
 def test_Poly__gen_to_level():
     assert Poly(1, x, y)._gen_to_level(-2) == 0
     assert Poly(1, x, y)._gen_to_level(-1) == 1
