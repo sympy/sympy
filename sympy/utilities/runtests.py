@@ -575,6 +575,8 @@ class SymPyDocTestFinder(DocTestFinder):
                         try:
                             valname = '%s.%s' % (name, rawname)
                             self._find(tests, val, valname, module, source_lines, globs, seen)
+                        except ValueError, msg:
+                            raise
                         except:
                             pass
 
