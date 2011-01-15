@@ -1728,13 +1728,18 @@ def test_factor():
     assert factor_list(F, polys=False) == (1, [(u, 1), (v, 2), (w, 1)])
 
     assert F.factor_list_include() == [(U, 1), (V, 2), (W, 1)]
-    assert factor_list(f, include=True) == [(u, 1), (v, 2), (w, 1)]
 
-    raises(ComputationFailed, "factor_list(4)")
+    assert factor_list(1) == (1, [])
+    assert factor_list(6) == (6, [])
 
     assert factor(1) == 1
     assert factor(6) == 6
-    assert factor(x) == x
+
+    assert factor_list(3*x) == (3, [(x, 1)])
+    assert factor_list(3*x**2) == (3, [(x, 2)])
+
+    assert factor(3*x) == 3*x
+    assert factor(3*x**2) == 3*x**2
 
     assert factor(f) == u*v**2*w
     assert factor(f, x) == u*v**2*w
@@ -1781,12 +1786,6 @@ def test_factor():
     assert factor(f) == x*(sin(x) + 1)/pi
     assert factor(g) == y*(sin(x) + 1)/(pi + 1)**2
 
-    f = (x**2 + 4*x + 4)**10000000*(x**2 + 1)/(x**2 + 2*x + 1)**1234567
-    g = ((x**2 + 2*x + 1)**3000*y**2 + (x**2 + 2*x + 1)**3000*2*y + (x**2 + 2*x + 1)**3000)
-
-    assert factor(f) == (x + 2)**20000000*(x**2 + 1)/(x + 1)**2469134
-    assert factor(g) == (x + 1)**6000*(y + 1)**2
-
     assert factor(Eq(x**2 + 2*x + 1, x**3 + 1)) == Eq((x + 1)**2, (x + 1)*(x**2 - x + 1))
 
     f = (x**2 - 1)/(x**2 + 4*x + 4)
@@ -1808,6 +1807,29 @@ def test_factor():
 
     assert factor([x, Eq(x**2 - y**2, Tuple(x**2 - z**2, 1/x + 1/y))]) == \
         [x, Eq((x - y)*(x + y), Tuple((x - z)*(x + z), (x + y)/x/y))]
+
+def test_factor_large():
+    f = (x**2 + 4*x + 4)**10000000*(x**2 + 1)*(x**2 + 2*x + 1)**1234567
+    g = ((x**2 + 2*x + 1)**3000*y**2 + (x**2 + 2*x + 1)**3000*2*y + (x**2 + 2*x + 1)**3000)
+
+    assert factor(f) == (x + 2)**20000000*(x**2 + 1)*(x + 1)**2469134
+    assert factor(g) == (x + 1)**6000*(y + 1)**2
+
+    assert factor_list(f) == (1, [(x + 1, 2469134), (x + 2, 20000000), (x**2 + 1, 1)])
+    assert factor_list(g) == (1, [(y + 1, 2), (x + 1, 6000)])
+
+    f = (x**2 - y**2)**200000*(x**7 + 1)
+    g = (x**2 + y**2)**200000*(x**7 + 1)
+
+    assert factor(f) == \
+        (x + 1)*(x - y)**200000*(x + y)**200000*(x**6 - x**5 + x**4 - x**3 + x**2 - x + 1)
+    assert factor(g, gaussian=True) == \
+        (x + 1)*(x - I*y)**200000*(x + I*y)**200000*(x**6 - x**5 + x**4 - x**3 + x**2 - x + 1)
+
+    assert factor_list(f) == \
+        (1, [(x + 1, 1), (x - y, 200000), (x + y, 200000), (x**6 - x**5 + x**4 - x**3 + x**2 - x + 1, 1)])
+    assert factor_list(g, gaussian=True) == \
+        (1, [(x + 1, 1), (x - I*y, 200000), (x + I*y, 200000), (x**6 - x**5 + x**4 - x**3 + x**2 - x + 1, 1)])
 
 @XFAIL
 def test_factor_noeval():

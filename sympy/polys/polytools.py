@@ -4518,40 +4518,14 @@ def sqf(f, *gens, **args):
 
     return _keep_coeff(coeff, factors)
 
-def factor_list(f, *gens, **args):
-    """
-    Compute a list of irreducible factors of ``f``.
+def _sorted_factors(factors):
+    """Sort a list of ``(expr, exp)`` pairs. """
+    def key(obj):
+        poly, exp = obj
+        rep = poly.rep.rep
+        return (len(rep), exp, rep)
 
-    **Examples**
-
-    >>> from sympy import factor_list
-    >>> from sympy.abc import x, y
-
-    >>> factor_list(2*x**5 + 2*x**4*y + 4*x**3 + 4*x**2*y + 2*x + 2*y)
-    (2, [(x + y, 1), (1 + x**2, 2)])
-
-    """
-    options.allowed_flags(args, ['include', 'polys'])
-
-    try:
-        F, opt = poly_from_expr(f, *gens, **args)
-    except PolificationFailed, exc:
-        raise ComputationFailed('factor_list', 1, exc)
-
-    if not opt.include:
-        coeff, factors = F.factor_list()
-
-        if not opt.polys:
-            return coeff, [ (g.as_basic(), k) for g, k in factors ]
-        else:
-            return coeff, factors
-    else:
-        factors = F.factor_list_include()
-
-        if not opt.polys:
-            return [ (g.as_basic(), k) for g, k in factors ]
-        else:
-            return factors
+    return sorted(factors, key=key)
 
 def _factors_product(factors):
     """Multiply a list of ``(expr, exp)`` pairs. """
@@ -4607,6 +4581,49 @@ def _symbolic_factor(expr, opt):
         return expr.__class__([ _symbolic_factor(arg, opt) for arg in expr ])
     else:
         return expr
+
+def factor_list(expr, *gens, **args):
+    """
+    Compute a list of irreducible factors of ``f``.
+
+    **Examples**
+
+    >>> from sympy import factor_list
+    >>> from sympy.abc import x, y
+
+    >>> factor_list(2*x**5 + 2*x**4*y + 4*x**3 + 4*x**2*y + 2*x + 2*y)
+    (2, [(x + y, 1), (1 + x**2, 2)])
+
+    """
+    options.allowed_flags(args, ['frac', 'polys'])
+    opt = options.build_options(gens, args)
+
+    expr = sympify(expr)
+
+    if isinstance(expr, Expr) and not expr.is_Relational:
+        numer, denom = together(expr).as_numer_denom()
+
+        cp, fp = _symbolic_factor_list(numer, opt)
+        cq, fq = _symbolic_factor_list(denom, opt)
+
+        if fq and not opt.frac:
+            raise PolynomialError("a polynomial expected, got %s" % expr)
+
+        fp = _sorted_factors(fp)
+        fq = _sorted_factors(fq)
+
+        if not opt.polys:
+            fp = [ (f.as_expr(), k) for f, k in fp ]
+            fq = [ (f.as_expr(), k) for f, k in fq ]
+
+        coeff = cp/cq
+
+        if not opt.frac:
+            return coeff, fp
+        else:
+            return coeff, fp, fq
+    else:
+        raise PolynomialError("a polynomial expected, got %s" % expr)
 
 def factor(f, *gens, **args):
     """
