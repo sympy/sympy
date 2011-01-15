@@ -1,9 +1,10 @@
 from math import log as _log
 
-from expr import Expr
 from sympify import _sympify
 from cache import cacheit
-from basic import S, C
+from core import C
+from singleton import S
+from expr import Expr
 
 from sympy import mpmath
 

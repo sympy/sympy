@@ -1,5 +1,5 @@
 from pyglet.gl import *
-from sympy.core.basic import S
+from sympy.core import S
 
 def get_model_matrix(array_type=c_float, glGetMethod=glGetFloatv):
     """

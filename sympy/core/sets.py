@@ -1,5 +1,5 @@
 from basic import Basic
-from singleton import SingletonMeta, S
+from singleton import Singleton, S
 from evalf import EvalfMixin
 from sympify import _sympify
 from sympy.mpmath import mpi, mpf
@@ -563,7 +563,7 @@ class EmptySet(Set):
 
     """
 
-    __metaclass__ = SingletonMeta
+    __metaclass__ = Singleton
 
     def _intersect(self, other):
         return S.EmptySet

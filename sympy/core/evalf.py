@@ -21,9 +21,10 @@ from sympy.mpmath.libmp.gammazeta import mpf_bernoulli
 
 import math
 
-from basic import C, S
-from containers import Tuple
 from sympify import sympify
+from core import C
+from singleton import S
+from containers import Tuple
 
 LG10 = math.log(10,2)
 

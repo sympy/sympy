@@ -904,11 +904,12 @@ def trigsimp(expr, deep=False, recursive=False):
         log(2)
 
     """
-    from sympy.core.basic import S
+    from sympy.core import S
     sin, cos, tan, cot = C.sin, C.cos, C.tan, C.cot
     if recursive:
         w, g = cse(expr)
         g = trigsimp_nonrecursive(g[0])
+
         for sub in reversed(w):
             g = g.subs(sub[0], sub[1])
             g = trigsimp_nonrecursive(g)
@@ -967,7 +968,7 @@ def trigsimp_nonrecursive(expr, deep=False):
         log(2)
 
     """
-    from sympy.core.basic import S
+    from sympy.core import S
     sin, cos, tan, cot = C.sin, C.cos, C.tan, C.cot
 
     if expr.is_Function:

@@ -1,8 +1,8 @@
 from core import C
 from sympify import converter, sympify, _sympify, SympifyError
-from basic import Atom, Basic
-from singleton import S, SingletonMeta
-from expr import Expr
+from basic import Basic
+from singleton import S, Singleton
+from expr import Expr, AtomicExpr
 from decorators import _sympifyit
 from cache import cacheit, clear_cache
 import sympy.mpmath as mpmath
@@ -103,7 +103,7 @@ def igcdex(a, b):
     return (x*x_sign, y*y_sign, a)
 
 
-class Number(Atom, Expr):
+class Number(AtomicExpr):
     """
     Represents any kind of number in sympy.
 
@@ -584,7 +584,8 @@ class Rational(Number):
     def _eval_is_zero(self):
         return self.p == 0
 
-    def __neg__(self): return Rational(-self.p, self.q)
+    def __neg__(self):
+        return Rational(-self.p, self.q)
 
     @_sympifyit('other', NotImplemented)
     def __mul__(self, other):
@@ -689,7 +690,8 @@ class Rational(Number):
             return other.__eq__(self)
         if isinstance(other, FunctionClass): #cos as opposed to cos(x)
             return False
-        if other.is_comparable and not isinstance(other, Rational): other = other.evalf()
+        if other.is_comparable and not isinstance(other, Rational):
+            other = other.evalf()
         if isinstance(other, Number):
             if isinstance(other, Real):
                 return bool(mlib.mpf_eq(self._as_mpf_val(other._prec), other._mpf_))
@@ -707,7 +709,8 @@ class Rational(Number):
             return other.__ne__(self)
         if isinstance(other, FunctionClass): #cos as opposed to cos(x)
             return True
-        if other.is_comparable and not isinstance(other, Rational): other = other.evalf()
+        if other.is_comparable and not isinstance(other, Rational):
+            other = other.evalf()
         if isinstance(other, Number):
             if isinstance(other, Real):
                 return bool(not mlib.mpf_eq(self._as_mpf_val(other._prec), other._mpf_))
@@ -722,7 +725,8 @@ class Rational(Number):
             return False    # sympy > other  --> not <
         if isinstance(other, NumberSymbol):
             return other.__ge__(self)
-        if other.is_comparable and not isinstance(other, Rational): other = other.evalf()
+        if other.is_comparable and not isinstance(other, Rational):
+            other = other.evalf()
         if isinstance(other, Number):
             if isinstance(other, Real):
                 return bool(mlib.mpf_lt(self._as_mpf_val(other._prec), other._mpf_))
@@ -736,7 +740,8 @@ class Rational(Number):
             return False    # sympy > other  -->  not <=
         if isinstance(other, NumberSymbol):
             return other.__gt__(self)
-        if other.is_comparable and not isinstance(other, Rational): other = other.evalf()
+        if other.is_comparable and not isinstance(other, Rational):
+            other = other.evalf()
         if isinstance(other, Number):
             if isinstance(other, Real):
                 return bool(mlib.mpf_le(self._as_mpf_val(other._prec), other._mpf_))
@@ -851,10 +856,9 @@ class Integer(Rational):
             # We only work with well-behaved integer types. This converts, for
             # example, numpy.int32 instances.
             ival = int(i)
-            if ival == 0: obj = S.Zero
-            elif ival == 1: obj = S.One
-            elif ival == -1: obj = S.NegativeOne
-            else:
+            try:
+                obj = _intcache[ival]
+            except KeyError:
                 obj = Expr.__new__(cls)
                 obj.p = ival
 
@@ -925,11 +929,6 @@ class Integer(Rational):
         elif isinstance(b, Integer):
             return Integer(b.p * a.p)
         return Rational.__mul__(a, b)
-
-    # XXX __pow__ ?
-
-    # XXX do we need to define __cmp__ ?
-#   def __cmp__(a, b):
 
     def __eq__(a, b):
         if isinstance(b, (int, long)):
@@ -1042,7 +1041,7 @@ class Integer(Rational):
         x, xexact = integer_nthroot(b_pos, e.q)
         if xexact:
             # if it's a perfect root we've finished
-            result = Integer(x**abs(e.p))
+            result = Integer(x ** abs(e.p))
             if b < 0:
                 result *= (-1)**e
             return result
@@ -1174,9 +1173,27 @@ class Integer(Rational):
 # Add sympify converters
 converter[int] = converter[long] = Integer
 
+class RationalConstant(Rational):
+    """
+    Abstract base class for rationals with specific behaviors
 
-class Zero(Integer):
-    __metaclass__ = SingletonMeta
+    Derived classes must define class attributes p and q and should probably all
+    be singletons.
+    """
+    __slots__ = []
+
+    def __new__(cls):
+        return AtomicExpr.__new__(cls)
+
+
+class IntegerConstant(Integer):
+    __slots__ = []
+
+    def __new__(cls):
+        return AtomicExpr.__new__(cls)
+
+class Zero(IntegerConstant):
+    __metaclass__ = Singleton
 
     p = 0
     q = 1
@@ -1220,8 +1237,8 @@ class Zero(Integer):
     def __nonzero__(self):
         return False
 
-class One(Integer):
-    __metaclass__ = SingletonMeta
+class One(IntegerConstant):
+    __metaclass__ = Singleton
 
     p = 1
     q = 1
@@ -1248,8 +1265,8 @@ class One(Integer):
     def factors():
         return {1: 1}
 
-class NegativeOne(Integer):
-    __metaclass__ = SingletonMeta
+class NegativeOne(IntegerConstant):
+    __metaclass__ = Singleton
 
     p = -1
     q = 1
@@ -1288,8 +1305,8 @@ class NegativeOne(Integer):
                     return b ** q * b ** (e - q)
         return
 
-class Half(Rational):
-    __metaclass__ = SingletonMeta
+class Half(RationalConstant):
+    __metaclass__ = Singleton
 
     p = 1
     q = 2
@@ -1301,8 +1318,8 @@ class Half(Rational):
         return S.Half
 
 
-class Infinity(Rational):
-    __metaclass__ = SingletonMeta
+class Infinity(RationalConstant):
+    __metaclass__ = Singleton
 
     p = 1
     q = 0
@@ -1372,10 +1389,10 @@ class Infinity(Rational):
         return S.NaN
 
     __rmod__ = __mod__
+oo = S.Infinity
 
-
-class NegativeInfinity(Rational):
-    __metaclass__ = SingletonMeta
+class NegativeInfinity(RationalConstant):
+    __metaclass__ = Singleton
 
     p = -1
     q = 0
@@ -1441,8 +1458,8 @@ class NegativeInfinity(Rational):
         return True
 
 
-class NaN(Rational):
-    __metaclass__ = SingletonMeta
+class NaN(RationalConstant):
+    __metaclass__ = Singleton
 
     p = 0
     q = 0
@@ -1472,16 +1489,19 @@ class NaN(Rational):
     def _sage_(self):
         import sage.all as sage
         return sage.NaN
+nan = S.NaN
 
-class ComplexInfinity(Atom, Expr):
-    __metaclass__ = SingletonMeta
-
+class ComplexInfinity(AtomicExpr):
+    __metaclass__ = Singleton
     is_commutative = True
     is_comparable = None
     is_bounded = False
     is_real = None
 
     __slots__ = []
+
+    def __new__(cls):
+        return AtomicExpr.__new__(cls)
 
     @staticmethod
     def __abs__():
@@ -1503,9 +1523,10 @@ class ComplexInfinity(Atom, Expr):
                     return S.ComplexInfinity
                 else:
                     return S.Zero
+zoo = S.ComplexInfinity
 
-class NumberSymbol(Atom, Expr):
-    __metaclass__ = SingletonMeta
+class NumberSymbol(AtomicExpr):
+    __metaclass__ = Singleton
 
     is_commutative = True
     is_comparable = True
@@ -1515,6 +1536,9 @@ class NumberSymbol(Atom, Expr):
     __slots__ = []
 
     is_NumberSymbol = True
+
+    def __new__(cls):
+        return AtomicExpr.__new__(cls)
 
     def approximation(self, number_cls):
         """ Return an interval with number_cls endpoints
@@ -1533,8 +1557,10 @@ class NumberSymbol(Atom, Expr):
             other = _sympify(other)
         except SympifyError:
             return False    # sympy != other  -->  not ==
-        if self is other: return True
-        if isinstance(other, Number) and self.is_irrational: return False
+        if self is other:
+            return True
+        if isinstance(other, Number) and self.is_irrational:
+            return False
 
         return False    # NumberSymbol != non-(Number|self)
 
@@ -1543,8 +1569,10 @@ class NumberSymbol(Atom, Expr):
             other = _sympify(other)
         except SympifyError:
             return True     # sympy != other
-        if self is other: return False
-        if isinstance(other, Number) and self.is_irrational: return True
+        if self is other:
+            return False
+        if isinstance(other, Number) and self.is_irrational:
+            return True
 
         return True     # NumberSymbol != non(Number|self)
 
@@ -1553,30 +1581,38 @@ class NumberSymbol(Atom, Expr):
             other = _sympify(other)
         except SympifyError:
             return False    # sympy > other  --> not <
-        if self is other: return False
+        if self is other:
+            return False
         if isinstance(other, Number):
             approx = self.approximation_interval(other.__class__)
             if approx is not None:
                 l,u = approx
-                if other < l: return False
-                if other > u: return True
+                if other < l:
+                    return False
+                if other > u:
+                    return True
             return self.evalf()<other
         if other.is_comparable:
             other = other.evalf()
             return self.evalf()<other
         return Expr.__lt__(self, other)
+
     def __le__(self, other):
         try:
             other = _sympify(other)
         except SympifyError:
             return False    # sympy > other  --> not <=
-        if self is other: return True
-        if other.is_comparable: other = other.evalf()
+        if self is other:
+            return True
+        if other.is_comparable:
+            other = other.evalf()
         if isinstance(other, Number):
             return self.evalf()<=other
         return Expr.__le__(self, other)
+
     def __gt__(self, other):
         return (-self) < (-other)
+
     def __ge__(self, other):
         return (-self) <= (-other)
 
@@ -1585,6 +1621,7 @@ class NumberSymbol(Atom, Expr):
 
 
 class Exp1(NumberSymbol):
+    __metaclass__ = Singleton
 
     is_real = True
     is_positive = True
@@ -1612,8 +1649,11 @@ class Exp1(NumberSymbol):
     def _sage_(self):
         import sage.all as sage
         return sage.e
+E = S.Exp1
 
 class Pi(NumberSymbol):
+    __metaclass__ = Singleton
+
 
     is_real = True
     is_positive = True
@@ -1638,8 +1678,10 @@ class Pi(NumberSymbol):
     def _sage_(self):
         import sage.all as sage
         return sage.pi
+pi = S.Pi
 
 class GoldenRatio(NumberSymbol):
+    __metaclass__ = Singleton
 
     is_real = True
     is_positive = True
@@ -1665,6 +1707,7 @@ class GoldenRatio(NumberSymbol):
         return sage.golden_ratio
 
 class EulerGamma(NumberSymbol):
+    __metaclass__ = Singleton
 
     is_real = True
     is_positive = True
@@ -1688,6 +1731,7 @@ class EulerGamma(NumberSymbol):
         return sage.euler_gamma
 
 class Catalan(NumberSymbol):
+    __metaclass__ = Singleton
 
     is_real = True
     is_positive = True
@@ -1709,8 +1753,8 @@ class Catalan(NumberSymbol):
         import sage.all as sage
         return sage.catalan
 
-class ImaginaryUnit(Atom, Expr):
-    __metaclass__ = SingletonMeta
+class ImaginaryUnit(AtomicExpr):
+    __metaclass__ = Singleton
 
     is_commutative = True
     is_imaginary = True
@@ -1746,14 +1790,14 @@ class ImaginaryUnit(Atom, Expr):
 
 
         if isinstance(e, Number):
-            #if isinstance(e, Decimal):
-            #    a = decimal_math.pi() * exponent.num / 2
-            #    return Decimal(decimal_math.sin(a) + decimal_math.cos(a) * ImaginaryUnit())
             if isinstance(e, Integer):
                 e = e.p % 4
-                if e==0: return S.One
-                if e==1: return S.ImaginaryUnit
-                if e==2: return -S.One
+                if e==0:
+                    return S.One
+                if e==1:
+                    return S.ImaginaryUnit
+                if e==2:
+                    return -S.One
                 return -S.ImaginaryUnit
             return (-S.One) ** (e * S.Half)
         return
@@ -1764,7 +1808,7 @@ class ImaginaryUnit(Atom, Expr):
     def _sage_(self):
         import sage.all as sage
         return sage.I
-
+I = S.ImaginaryUnit
 
 def sympify_complex(a):
     real, imag = map(sympify, (a.real, a.imag))
@@ -1774,18 +1818,6 @@ converter[complex] = sympify_complex
 _intcache[0] = S.Zero
 _intcache[1] = S.One
 _intcache[-1]= S.NegativeOne
-
-Basic.singleton['E'] = Exp1
-Basic.singleton['pi'] = Pi
-Basic.singleton['I'] = ImaginaryUnit
-Basic.singleton['oo'] = Infinity
-Basic.singleton['nan'] = NaN
-
-Basic.singleton['zoo'] = ComplexInfinity
-
-Basic.singleton['GoldenRatio'] = GoldenRatio
-Basic.singleton['EulerGamma'] = EulerGamma
-Basic.singleton['Catalan'] = Catalan
 
 from function import FunctionClass
 from power import Pow, integer_nthroot

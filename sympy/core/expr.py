@@ -1,5 +1,6 @@
-
-from basic import Basic, S, C
+from core import C
+from basic import Basic, Atom
+from singleton import S
 from evalf import EvalfMixin
 from decorators import _sympifyit, call_highest_priority
 from cache import cacheit
@@ -974,6 +975,39 @@ class Expr(Basic, EvalfMixin):
         """See the invert function in sympy.polys"""
         from sympy.polys import invert
         return invert(self, g)
+
+
+class AtomicExpr(Atom, Expr):
+    """
+    A parent class for object which are both atoms and Exprs.
+
+    Examples: Symbol, Number, Rational, Integer, ...
+    But not: Add, Mul, Pow, ...
+    """
+
+    is_Atom = True
+
+    __slots__ = []
+
+    def _eval_derivative(self, s):
+        if self==s: return S.One
+        return S.Zero
+
+    def as_numer_denom(self):
+        return self, S.One
+
+    def count_ops(self, symbolic=True):
+        return S.Zero
+
+    def _eval_is_polynomial(self, syms):
+        return True
+
+    @property
+    def is_number(self):
+        return True
+
+    def _eval_nseries(self, x, x0, n):
+        return self
 
 from mul import Mul
 from power import Pow

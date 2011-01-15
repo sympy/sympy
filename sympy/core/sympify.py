@@ -3,7 +3,7 @@
 from types import NoneType
 from inspect import getmro
 
-from core import BasicMeta
+from core import all_classes as sympy_classes
 
 class SympifyError(ValueError):
     def __init__(self, expr, base_exc=None):
@@ -15,7 +15,6 @@ class SympifyError(ValueError):
 
         return "Sympify of expression '%s' failed, because of exception being raised:\n%s: %s" % (self.expr, self.base_exc.__class__.__name__, str(self.base_exc))
 
-sympy_classes = BasicMeta.all_classes
 
 converter = {}
 

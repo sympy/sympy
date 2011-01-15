@@ -37,6 +37,3 @@ from special.bsplines import bspline_basis, bspline_basis_set
 from special.bessel import jn, yn, jn_zeros
 
 ln = log
-
-for _n, _cls in Basic.singleton.items():
-    exec '%s = _cls()' % (_n)

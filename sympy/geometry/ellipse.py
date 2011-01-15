@@ -1,4 +1,4 @@
-from sympy.core.basic import S, C, sympify
+from sympy.core import S, C, sympify
 from sympy.simplify import simplify, trigsimp
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.geometry.exceptions import GeometryError

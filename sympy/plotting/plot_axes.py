@@ -5,7 +5,7 @@ from plot_object import PlotObject
 from util import strided_range, billboard_matrix
 from util import get_direction_vectors
 from util import dot_product, vec_sub, vec_mag
-from sympy.core.basic import S
+from sympy.core import S
 
 class PlotAxes(PlotObject):
 

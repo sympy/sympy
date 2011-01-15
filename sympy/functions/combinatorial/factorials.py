@@ -1,5 +1,4 @@
-from sympy.core.basic import S, C, sympify
-from sympy.core.function import Function
+from sympy.core import S, C, sympify, Function
 from sympy.ntheory import sieve
 from math import sqrt
 

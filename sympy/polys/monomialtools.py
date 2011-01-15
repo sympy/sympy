@@ -1,7 +1,7 @@
 """Tools and arithmetics for monomials of distributed polynomials. """
 
 from sympy.core.mul import Mul
-from sympy.core.basic import S
+from sympy.core.singleton import S
 
 from sympy.functions import factorial
 from sympy.utilities import all, any

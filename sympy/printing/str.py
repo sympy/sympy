@@ -2,12 +2,9 @@
 A Printer for generating readable representation of most sympy classes.
 """
 
+from sympy.core import S, Rational, Pow, Basic
 from printer import Printer
 from sympy.printing.precedence import precedence, PRECEDENCE
-from sympy.core.basic import S
-from sympy.core.numbers import Rational
-from sympy.core.power import Pow
-from sympy.core.basic import Basic
 
 import sympy.mpmath.libmp as mlib
 from sympy.mpmath.libmp import prec_to_dps
