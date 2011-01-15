@@ -48,7 +48,7 @@ from sympy.polys.densebasic import (
     dup_from_dict, dmp_from_dict,
     dup_to_raw_dict, dmp_to_dict,
     dup_deflate, dmp_deflate,
-    dmp_inject,
+    dmp_inject, dmp_eject,
     dup_terms_gcd, dmp_terms_gcd,
     dmp_list_terms,
     dmp_slice_in)
@@ -328,6 +328,11 @@ class DMP(object):
         """Inject ground domain generators into ``f``. """
         F, lev = dmp_inject(f.rep, f.lev, f.dom, front=front)
         return f.__class__(F, f.dom.dom, lev)
+
+    def eject(f, dom, front=False):
+        """Eject selected generators into the ground domain. """
+        F = dmp_eject(f.rep, f.lev, dom, front=front)
+        return f.__class__(F, dom, f.lev - len(dom.gens))
 
     def terms_gcd(f):
         """Remove GCD of terms from the polynomial `f`. """

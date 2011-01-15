@@ -921,6 +921,46 @@ class Poly(Basic):
 
         return f.new(result, *gens)
 
+    def eject(f, *gens):
+        """
+        Eject selected generators into the ground domain.
+
+        **Examples**
+
+        >>> from sympy import Poly
+        >>> from sympy.abc import x, y
+
+        >>> f = Poly(x**2*y + x*y**3 + x*y + 1, x, y)
+
+        >>> f.eject(x)
+        Poly(x*y**3 + (x + x**2)*y + 1, y, domain='ZZ[x]')
+        >>> f.eject(y)
+        Poly(y*x**2 + (y + y**3)*x + 1, x, domain='ZZ[y]')
+
+        """
+        dom = f.rep.dom
+
+        if not dom.is_Numerical:
+            raise DomainError("can't eject generators over %s" % dom)
+
+        n, k = len(f.gens), len(gens)
+
+        if f.gens[:k] == gens:
+            _gens, front = f.gens[n-k:], True
+        elif f.gens[-k:] == gens:
+            _gens, front = f.gens[:n-k], False
+        else:
+            raise NotImplementedError("can only eject front or back generators")
+
+        dom = dom.inject(*gens)
+
+        if hasattr(f.rep, 'eject'):
+            result = f.rep.eject(dom, front=front)
+        else: # pragma: no cover
+            raise OperationNotSupported(f, 'eject')
+
+        return f.new(result, *_gens)
+
     def terms_gcd(f):
         """
         Remove GCD of terms from the polynomial ``f``.
