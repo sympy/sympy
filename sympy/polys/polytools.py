@@ -3194,21 +3194,7 @@ def _poly_from_expr(expr, opt):
         if opt.polys is None:
             opt['polys'] = True
 
-        if opt.frac:
-            return (poly, poly.one), opt
-        else:
-            return poly, opt
-    elif opt.frac:
-        numer, denom = expr.as_numer_denom()
-
-        if opt.expand:
-            numer = numer.expand()
-            denom = denom.expand()
-
-        try:
-            return _parallel_poly_from_expr((numer, denom), opt)
-        except PolificationFailed:
-            raise PolificationFailed(opt, orig, numer/denom)
+        return poly, opt
     elif opt.expand:
         expr = expr.expand()
 
@@ -4440,90 +4426,18 @@ def sqf_part(f, *gens, **args):
     else:
         return result
 
-def sqf_list(f, *gens, **args):
-    """
-    Compute a list of square-free factors of ``f``.
-
-    **Examples**
-
-    >>> from sympy import sqf_list
-    >>> from sympy.abc import x
-
-    >>> sqf_list(2*x**5 + 16*x**4 + 50*x**3 + 76*x**2 + 56*x + 16)
-    (2, [(1 + x, 2), (2 + x, 3)])
-    >>> sqf_list(2*x**5 + 16*x**4 + 50*x**3 + 76*x**2 + 56*x + 16, all=True)
-    (2, [(1, 1), (1 + x, 2), (2 + x, 3)])
-
-    """
-    options.allowed_flags(args, ['all', 'include', 'polys'])
-
-    try:
-        F, opt = poly_from_expr(f, *gens, **args)
-    except PolificationFailed, exc:
-        raise ComputationFailed('sqf_list', 1, exc)
-
-    if not opt.include:
-        coeff, factors = F.sqf_list(all=opt.all)
-
-        if not opt.polys:
-            return coeff, [ (g.as_basic(), k) for g, k in factors ]
-        else:
-            return coeff, factors
-    else:
-        factors = F.sqf_list_include(all=opt.all)
-
-        if not opt.polys:
-            return [ (g.as_basic(), k) for g, k in factors ]
-        else:
-            return factors
-
-def _inner_sqf(f):
-    """Helper function for :func:`sqf`. """
-    (coeff, factors), result = f.sqf_list(), S.One
-
-    for g, k in factors:
-        result *= g.as_basic()**k
-
-    return coeff, result
-
-def sqf(f, *gens, **args):
-    """
-    Compute square-free decomposition of ``f``.
-
-    **Examples**
-
-    >>> from sympy import sqf
-    >>> from sympy.abc import x
-
-    >>> sqf(2*x**5 + 16*x**4 + 50*x**3 + 76*x**2 + 56*x + 16)
-    2*(1 + x)**2*(2 + x)**3
-
-    """
-    options.allowed_flags(args, ['frac', 'polys'])
-
-    try:
-        F, opt = poly_from_expr(f, *gens, **args)
-    except PolificationFailed, exc:
-        return exc.expr
-
-    if not opt.frac:
-        coeff, factors = _inner_sqf(F)
-    else:
-        p, q = F
-
-        cp, fp = _inner_sqf(p)
-        cq, fq = _inner_sqf(q)
-
-        coeff, factors = cp/cq, fp/fq
-
-    return _keep_coeff(coeff, factors)
-
-def _sorted_factors(factors):
+def _sorted_factors(factors, method):
     """Sort a list of ``(expr, exp)`` pairs. """
-    def key(obj):
-        poly, exp = obj
-        rep = poly.rep.rep
-        return (len(rep), exp, rep)
+    if method == 'sqf':
+        def key(obj):
+            poly, exp = obj
+            rep = poly.rep.rep
+            return (exp, len(rep), rep)
+    else:
+        def key(obj):
+            poly, exp = obj
+            rep = poly.rep.rep
+            return (len(rep), exp, rep)
 
     return sorted(factors, key=key)
 
@@ -4531,7 +4445,7 @@ def _factors_product(factors):
     """Multiply a list of ``(expr, exp)`` pairs. """
     return Mul(*[ f.as_expr()**k for f, k in factors ])
 
-def _symbolic_factor_list(expr, opt):
+def _symbolic_factor_list(expr, opt, method):
     """Helper function for :func:`_symbolic_factor`. """
     coeff, factors = S.One, []
 
@@ -4549,8 +4463,9 @@ def _symbolic_factor_list(expr, opt):
             except PolificationFailed, exc:
                 coeff *= exc.expr**exp
             else:
-                _coeff, _factors = poly.factor_list()
+                func = getattr(poly, method + '_list')
 
+                _coeff, _factors = func()
                 coeff *= _coeff
 
                 if exp is S.One:
@@ -4561,13 +4476,13 @@ def _symbolic_factor_list(expr, opt):
 
     return coeff, factors
 
-def _symbolic_factor(expr, opt):
+def _symbolic_factor(expr, opt, method):
     """Helper function for :func:`_factor`. """
     if isinstance(expr, Expr) and not expr.is_Relational:
         numer, denom = together(expr).as_numer_denom()
 
-        cp, fp = _symbolic_factor_list(numer, opt)
-        cq, fq = _symbolic_factor_list(denom, opt)
+        cp, fp = _symbolic_factor_list(numer, opt, method)
+        cq, fq = _symbolic_factor_list(denom, opt, method)
 
         fp = _factors_product(fp)
         fq = _factors_product(fq)
@@ -4576,25 +4491,14 @@ def _symbolic_factor(expr, opt):
 
         return _keep_coeff(coeff, expr)
     elif hasattr(expr, 'args'):
-        return expr.new(*[ _symbolic_factor(arg, opt) for arg in expr.args ])
+        return expr.new(*[ _symbolic_factor(arg, opt, method) for arg in expr.args ])
     elif hasattr(expr, '__iter__'):
-        return expr.__class__([ _symbolic_factor(arg, opt) for arg in expr ])
+        return expr.__class__([ _symbolic_factor(arg, opt, method) for arg in expr ])
     else:
         return expr
 
-def factor_list(expr, *gens, **args):
-    """
-    Compute a list of irreducible factors of ``f``.
-
-    **Examples**
-
-    >>> from sympy import factor_list
-    >>> from sympy.abc import x, y
-
-    >>> factor_list(2*x**5 + 2*x**4*y + 4*x**3 + 4*x**2*y + 2*x + 2*y)
-    (2, [(x + y, 1), (1 + x**2, 2)])
-
-    """
+def _generic_factor_list(expr, gens, args, method):
+    """Helper function for :func:`sqf_list` and :func:`factor_list`. """
     options.allowed_flags(args, ['frac', 'polys'])
     opt = options.build_options(gens, args)
 
@@ -4603,14 +4507,14 @@ def factor_list(expr, *gens, **args):
     if isinstance(expr, Expr) and not expr.is_Relational:
         numer, denom = together(expr).as_numer_denom()
 
-        cp, fp = _symbolic_factor_list(numer, opt)
-        cq, fq = _symbolic_factor_list(denom, opt)
+        cp, fp = _symbolic_factor_list(numer, opt, method)
+        cq, fq = _symbolic_factor_list(denom, opt, method)
 
         if fq and not opt.frac:
             raise PolynomialError("a polynomial expected, got %s" % expr)
 
-        fp = _sorted_factors(fp)
-        fq = _sorted_factors(fq)
+        fp = _sorted_factors(fp, method)
+        fq = _sorted_factors(fq, method)
 
         if not opt.polys:
             fp = [ (f.as_expr(), k) for f, k in fp ]
@@ -4624,6 +4528,57 @@ def factor_list(expr, *gens, **args):
             return coeff, fp, fq
     else:
         raise PolynomialError("a polynomial expected, got %s" % expr)
+
+def _generic_factor(expr, gens, args, method):
+    """Helper function for :func:`sqf` and :func:`factor`. """
+    options.allowed_flags(args, [])
+    opt = options.build_options(gens, args)
+    return _symbolic_factor(sympify(expr), opt, method)
+
+def sqf_list(f, *gens, **args):
+    """
+    Compute a list of square-free factors of ``f``.
+
+    **Examples**
+
+    >>> from sympy import sqf_list
+    >>> from sympy.abc import x
+
+    >>> sqf_list(2*x**5 + 16*x**4 + 50*x**3 + 76*x**2 + 56*x + 16)
+    (2, [(1 + x, 2), (2 + x, 3)])
+
+    """
+    return _generic_factor_list(f, gens, args, method='sqf')
+
+def sqf(f, *gens, **args):
+    """
+    Compute square-free factorization of ``f``.
+
+    **Examples**
+
+    >>> from sympy import sqf
+    >>> from sympy.abc import x
+
+    >>> sqf(2*x**5 + 16*x**4 + 50*x**3 + 76*x**2 + 56*x + 16)
+    2*(1 + x)**2*(2 + x)**3
+
+    """
+    return _generic_factor(f, gens, args, method='sqf')
+
+def factor_list(f, *gens, **args):
+    """
+    Compute a list of irreducible factors of ``f``.
+
+    **Examples**
+
+    >>> from sympy import factor_list
+    >>> from sympy.abc import x, y
+
+    >>> factor_list(2*x**5 + 2*x**4*y + 4*x**3 + 4*x**2*y + 2*x + 2*y)
+    (2, [(x + y, 1), (1 + x**2, 2)])
+
+    """
+    return _generic_factor_list(f, gens, args, method='factor')
 
 def factor(f, *gens, **args):
     """
@@ -4666,9 +4621,7 @@ def factor(f, *gens, **args):
     (2 + x)**20000000*(1 + x**2)
 
     """
-    options.allowed_flags(args, [])
-    opt = options.build_options(gens, args)
-    return _symbolic_factor(sympify(f), opt)
+    return _generic_factor(f, gens, args, method='factor')
 
 def intervals(F, all=False, eps=None, inf=None, sup=None, strict=False, fast=False, sqf=False):
     """

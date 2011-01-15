@@ -1678,13 +1678,11 @@ def test_sqf():
     assert sqf_list(F, polys=False) == (1, [(g, 1), (h, 2)])
 
     assert F.sqf_list_include() == [(G, 1), (H, 2)]
-    assert sqf_list(f, include=True) == [(g, 1), (h, 2)]
 
     raises(ComputationFailed, "sqf_part(4)")
-    raises(ComputationFailed, "sqf_list(4)")
 
     assert sqf(1) == 1
-    assert sqf(1, frac=True) == 1
+    assert sqf_list(1) == (1, [])
 
     assert sqf(f) == g*h**2
     assert sqf(f, x) == g*h**2
@@ -1692,9 +1690,9 @@ def test_sqf():
 
     d = x**2 + y**2
 
-    assert sqf(f/d, frac=True) == (g*h**2)/d
-    assert sqf(f/d, x, frac=True) == (g*h**2)/d
-    assert sqf(f/d, (x,), frac=True) == (g*h**2)/d
+    assert sqf(f/d) == (g*h**2)/d
+    assert sqf(f/d, x) == (g*h**2)/d
+    assert sqf(f/d, (x,)) == (g*h**2)/d
 
     assert sqf(x - 1) == x - 1
     assert sqf(-x - 1) == -x - 1
@@ -1702,13 +1700,17 @@ def test_sqf():
     assert sqf(x - 1) != Mul(1, x - 1, evaluate=False)
     assert sqf(6*x - 10) == Mul(2, 3*x - 5, evaluate=False)
 
-    assert sqf((6*x - 10)/(3*x - 6), frac=True) == S(2)/3*((3*x - 5)/(x - 2))
-    assert sqf(Poly(x**2 - 2*x + 1), frac=True) == (x - 1)**2
+    assert sqf((6*x - 10)/(3*x - 6)) == S(2)/3*((3*x - 5)/(x - 2))
+    assert sqf(Poly(x**2 - 2*x + 1)) == (x - 1)**2
 
     f = 3 + x - x*(1 + x) + x**2
 
     assert sqf(f) == 3
-    assert sqf(f, frac=True) == 3
+
+    f = (x**2 + 2*x + 1)**20000000000
+
+    assert sqf(f) == (x + 1)**40000000000
+    assert sqf_list(f) == (1, [(x + 1, 40000000000)])
 
 def test_factor():
     f = x**5 - x**3 - x**2 + 1
