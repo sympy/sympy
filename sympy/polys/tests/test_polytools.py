@@ -401,6 +401,8 @@ def test_Poly_set_domain():
     raises(CoercionFailed, "Poly(x/2 + 1).set_domain(ZZ)")
     raises(CoercionFailed, "Poly(x + 1, modulus=2).set_domain(QQ)")
 
+    raises(GeneratorsError, "Poly(x*y, x, y).set_domain(ZZ[y])")
+
 def test_Poly_get_modulus():
     Poly(x**2 + 1, modulus=2).get_modulus() == 2
     raises(PolynomialError, "Poly(x**2 + 1).get_modulus()")

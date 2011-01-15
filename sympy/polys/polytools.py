@@ -372,8 +372,8 @@ class Poly(Basic):
 
     def set_domain(f, domain):
         """Set the ground domain of ``f``. """
-        domain = options.Domain.preprocess(domain)
-        return f.per(f.rep.convert(domain))
+        opt = options.build_options(f.gens, {'domain': domain})
+        return f.per(f.rep.convert(opt.domain))
 
     def get_domain(f):
         """Get the ground domain of ``f``. """
