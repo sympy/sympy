@@ -9,6 +9,7 @@ Todo:
 * Add commutation relationships to all operators and use this in gate_sort.
 * Get represent working and test.
 * Test apply_operators.
+* Fix Toffoli Gate to be a controlled gate.
 """
 
 from itertools import chain
@@ -26,6 +27,7 @@ from sympy.physics.quantum.qexpr import QuantumError
 from sympy.physics.quantum.hilbert import ComplexSpace, HilbertSpaceError
 from sympy.physics.quantum.operator import UnitaryOperator
 from sympy.physics.quantum.tensorproduct import matrix_tensor_product
+from sympy.physics.quantum.matrixcache import matrix_cache
 
 __all__ = [
     'Gate',
@@ -507,9 +509,7 @@ class HadamardGate(OneQubitGate):
     gate_name_latex = u'H'
         
     def get_target_matrix(self, format='sympy'):
-        if format == 'sympy':
-            return sqrt2_inv*Matrix([[1, 1], [1, -1]])
-        raise NotImplementedError('Invalid format: %r' % format)
+        return matrix_cache.get_matrix('H', format)
 
 
 class XGate(OneQubitGate):
@@ -528,9 +528,7 @@ class XGate(OneQubitGate):
     gate_name_latex = u'X'
 
     def get_target_matrix(self, format='sympy'):
-        if format == 'sympy':
-            return Matrix([[0, 1], [1, 0]])
-        raise NotImplementedError('Invalid format: %r' % format)
+        return matrix_cache.get_matrix('X', format)
 
 
 class YGate(OneQubitGate):
@@ -549,9 +547,7 @@ class YGate(OneQubitGate):
     gate_name_latex = u'Y'
         
     def get_target_matrix(self, format='sympy'):
-        if format == 'sympy':
-            return Matrix([[0, complex(0,-1)], [complex(0,1), 0]])
-        raise NotImplementedError('Invalid format: %r' % format)
+        return matrix_cache.get_matrix('Y', format)
 
 
 class ZGate(OneQubitGate):
@@ -570,9 +566,7 @@ class ZGate(OneQubitGate):
     gate_name_latex = u'Z'
 
     def get_target_matrix(self, format='sympy'):
-        if format == 'sympy':
-            return Matrix([[1, 0], [0, -1]])
-        raise NotImplementedError('Invalid format: %r' % format)
+        return matrix_cache.get_matrix('Z', format)
 
 
 class PhaseGate(OneQubitGate):
@@ -594,9 +588,7 @@ class PhaseGate(OneQubitGate):
     gate_name_latex = u'S'
 
     def get_target_matrix(self, format='sympy'):
-        if format == 'sympy':
-            return Matrix([[1, 0], [0, complex(0,1)]])
-        raise NotImplementedError('Invalid format: %r' % format)
+        return matrix_cache.get_matrix('S', format)
 
 
 class TGate(OneQubitGate):
@@ -618,9 +610,7 @@ class TGate(OneQubitGate):
     gate_name_latex = u'T'
 
     def get_target_matrix(self, format='sympy'):
-        if format == 'sympy':
-            return Matrix([[1, 0], [0, exp(I*pi/4)]])
-        raise NotImplementedError('Invalid format: %r' % format)
+        return matrix_cache.get_matrix('T', format)
 
 # Aliases for gate names.
 H = HadamardGate
@@ -727,9 +717,7 @@ class SwapGate(TwoQubitGate):
     gate_name_latex = u'SWAP'
 
     def get_target_matrix(self, format='sympy'):
-        if format == 'sympy':
-            return Matrix([[1,0,0,0],[0,0,1,0],[0,1,0,0],[0,0,0,1]])
-        raise NotImplementedError('Invalid format: %r' % format)
+        return matrix_cache.get_matrix('SWAP', format)
 
 
 class ToffoliGate(Gate):
@@ -793,6 +781,10 @@ class ToffoliGate(Gate):
         """The non-controlled gate that will be applied to the targets."""
         return XGate(self.label[2])
 
+    def get_target_matrix(self, format='sympy'):
+        return matrix_cache.get_matrix('X', format)
+
+
 # Aliases for gate names.
 CNOT = CNotGate
 SWAP = SwapGate
@@ -803,30 +795,8 @@ TOFFOLI = ToffoliGate
 #-----------------------------------------------------------------------------
 
 
-
-def _operator(first, second, format='sympy'):
-    """Returns the Outer product of a one or zero ket and bra"""
-    if (first != 1 and first != 0) or (second != 1 and second != 0):
-        raise QuantumError("can only make matricies |0><0|, |1><1|, |0><1|,\
-        or |1><0|")
-    if first:
-        if second:
-            ret = Matrix([[0,0],[0,1]])
-        else:
-            ret = Matrix([[0,0],[1,0]])
-    else:
-        if second:
-            ret = Matrix([[0,1],[0,0]])
-        else:
-            ret = Matrix([[1,0],[0,0]])
-    if format == 'sympy':
-        return ret
-    else:
-        import numpy as np
-        return np.matrix(ret.tolist())
-
-
 def _np_tensor_product(*product):
+    """numpy version of tensor product of multiple arguments."""
     import numpy as np
     answer = product[0]
     for item in product[1:]:
@@ -835,31 +805,79 @@ def _np_tensor_product(*product):
 
 
 def _np_eye(n):
+    """numpy version of complex eye."""
     import numpy as np
-    return np.matrix(np.eye(n, dtype=np.complex))
+    return np.matrix(np.eye(n, dtype='complex'))
+
+
+def _sp_tensor_product(*product):
+    """scipy.sparse version of tensor product of multiple arguments."""
+    from scipy import sparse
+    answer = product[0]
+    for item in product[1:]:
+        answer = sparse.kron(answer, item)
+    # The final matrices will just be multiplied, so csr is a good final
+    # sparse format.
+    return sparse.csr_matrix(answer)
+
+
+def _sp_eye(n):
+    """scipy.sparse version of complex eye."""
+    from scipy import sparse
+    return sparse.eye(n, n, dtype='complex')
 
 
 def _get_represent_utils(format='sympy'):
+    """Get the version of eye and tensor_product for a given format."""
     if format == 'sympy':
         e = matrices.eye
         tp = matrix_tensor_product
     elif format == 'numpy':
         e = _np_eye
         tp = _np_tensor_product
+    elif format == 'scipy.sparse':
+        e = _sp_eye
+        tp = _sp_tensor_product
     else:
         raise NotImplementedError('Invalid format: %r' % format) 
     return e, tp
 
 
-# def represent_hilbert_space(gateMatrix, hilbert_size, targets, format='sympy'):
 def represent_zbasis(controls, targets, target_matrix, nqubits, format='sympy'):
-    """Docstring.
+    """Represent a gate with controls, targets and target_matrix.
 
-    This uses the formula:
+    This function does the low-level work of representing gates as matrices
+    in the standard computational basis (ZGate). Currently, we support two
+    main cases:
 
-    1_{2**n} + (|1><1|)^{x*(n-1)} x (target-matrix - 1_{2})
+    1. One target qubit and no control qubits.
+    2. One target qubits and multiple control qubits.
 
-    See http://www.johnlapeyre.com/qinf/qinf_html/node6.html.
+    For the base of multiple controls, we use the following expression [1]:
+
+    1_{2**n} + (|1><1|)^{(n-1)} x (target-matrix - 1_{2})
+
+    Parameters
+    ----------
+    controls : list, tuple
+        A sequence of control qubits.
+    targets : list, tuple
+        A sequence of target qubits.
+    target_matrix : sympy.Matrix, numpy.matrix, scipy.sparse
+        The matrix form of the transformation to be performed on the target
+        qubits.  The format of this matrix must match that passed into
+        the `format` argument.
+    nqubits : int
+        The total number of qubits used for the representation.
+    format : str
+        The format of the final matrix ('sympy', 'numpy', 'scipy.sparse').
+
+    Examples
+    --------
+
+    References
+    ----------
+    [1] http://www.johnlapeyre.com/qinf/qinf_html/node6.html.
     """
     controls = [int(x) for x in controls]
     targets = [int(x) for x in targets]
@@ -867,6 +885,8 @@ def represent_zbasis(controls, targets, target_matrix, nqubits, format='sympy'):
 
     # This checks for the format as well.
     eye, tensor_product = _get_represent_utils(format)
+    up = matrix_cache.get_matrix('up', format)
+    eye2 = matrix_cache.get_matrix('eye2', format)
 
     # Plain single qubit case
     if len(controls) == 0 and len(targets) == 1:
@@ -885,13 +905,13 @@ def represent_zbasis(controls, targets, target_matrix, nqubits, format='sympy'):
     elif len(targets) == 1 and len(controls) >= 1:
         target =  targets[0]
 
-        # Now build the op part
+        # Build the non-trivial part.
         product2 = []
         for i in range(nqubits):
             product2.append(eye(2))
         for control in controls:
-            product2[nqubits-1-control] = _operator(1, 1, format)
-        product2[nqubits-1-target] = target_matrix-eye(2)
+            product2[nqubits-1-control] = up
+        product2[nqubits-1-target] = target_matrix - eye2
 
         return eye(2**nqubits) + tensor_product(*product2)
 
@@ -901,6 +921,12 @@ def represent_zbasis(controls, targets, target_matrix, nqubits, format='sympy'):
             'The representation of multi-target, multi-control gates '
             'is not implemented.'
         )
+
+
+#-----------------------------------------------------------------------------
+# Gate manipulation functions.
+#-----------------------------------------------------------------------------
+
 
 def gate_simp(circuit):
     """Simplifies gates symbolically
@@ -1027,13 +1053,10 @@ def gate_sort(circuit):
 
 def zx_basis_transform(self, format='sympy'):
     """Transformation matrix from Z to X basis."""
-    if format == 'sympy':
-        return sqrt2_inv*Matrix([[1,1],[1,-1]])
-    raise NotImplementedError('Invalid format: %r' % format)
+    return matrix_cache.get_matrix('ZX', format)
 
 
 def zy_basis_transform(self, format='sympy'):
     """Transformation matrix from Z to Y basis."""
-    if format == 'sympy':
-        return Matrix([[I,0],[0,-I]])
-    raise NotImplementedError('Invalid format: %r' % format)
+    return matrix_cache.get_matrix('ZY', format)
+
