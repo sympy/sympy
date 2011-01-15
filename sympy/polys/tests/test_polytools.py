@@ -51,7 +51,7 @@ from sympy.polys.domains import FF, ZZ, QQ, RR, EX
 
 from sympy import (
     S, Integer, Rational, Mul, symbols, sqrt, exp, sin,
-    expand, oo, I, pi, re, im, RootOf, all, Eq
+    expand, oo, I, pi, re, im, RootOf, all, Eq, Tuple
 )
 
 from sympy.utilities.pytest import raises, XFAIL
@@ -1733,7 +1733,8 @@ def test_factor():
     raises(ComputationFailed, "factor_list(4)")
 
     assert factor(1) == 1
-    assert factor(1, frac=True) == 1
+    assert factor(6) == 6
+    assert factor(x) == x
 
     assert factor(f) == u*v**2*w
     assert factor(f, x) == u*v**2*w
@@ -1741,9 +1742,9 @@ def test_factor():
 
     g, p, q = x**2 - y**2, x - y, x + y
 
-    assert factor(f/g, frac=True) == (u*v**2*w)/(p*q)
-    assert factor(f/g, x, frac=True) == (u*v**2*w)/(p*q)
-    assert factor(f/g, (x,), frac=True) == (u*v**2*w)/(p*q)
+    assert factor(f/g) == (u*v**2*w)/(p*q)
+    assert factor(f/g, x) == (u*v**2*w)/(p*q)
+    assert factor(f/g, (x,)) == (u*v**2*w)/(p*q)
 
     f = Poly(sin(1)*x + 1, x, domain=EX)
 
@@ -1790,12 +1791,8 @@ def test_factor():
 
     f = (x**2 - 1)/(x**2 + 4*x + 4)
 
-    raises(PolynomialError, "factor(f, x)")
-
     assert factor(f) == (x + 1)*(x - 1)/(x + 2)**2
-    assert factor(f, x, frac=True) == (x + 1)*(x - 1)/(x + 2)**2
-
-    assert factor(Poly(x**2 - 2*x + 1), frac=True) == (x - 1)**2
+    assert factor(f, x) == (x + 1)*(x - 1)/(x + 2)**2
 
     f = 3 + x - x*(1 + x) + x**2
 
@@ -1808,6 +1805,9 @@ def test_factor():
     raises(PolynomialError, "factor(f, x, expand=False)")
 
     raises(FlagError, "factor(x**2 - 1, polys=True)")
+
+    assert factor([x, Eq(x**2 - y**2, Tuple(x**2 - z**2, 1/x + 1/y))]) == \
+        [x, Eq((x - y)*(x + y), Tuple((x - z)*(x + z), (x + y)/x/y))]
 
 @XFAIL
 def test_factor_noeval():

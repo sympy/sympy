@@ -1,11 +1,11 @@
 """User-friendly public interface to polynomial functions. """
 
-from sympy import (
-    S, Basic, I, Integer, Add, Mul, sympify, ask,
+from sympy.core import (
+    S, Basic, Expr, I, Integer, Add, Mul,
 )
 
 from sympy.core.sympify import (
-    SympifyError,
+    sympify, SympifyError,
 )
 
 from sympy.core.decorators import (
@@ -73,7 +73,7 @@ from sympy.polys.constructor import construct_domain
 
 from sympy.polys import polyoptions as options
 
-class Poly(Basic):
+class Poly(Expr):
     """Generic class for representing polynomials in SymPy. """
 
     __slots__ = ['rep', 'gens']
@@ -4553,62 +4553,60 @@ def factor_list(f, *gens, **args):
         else:
             return factors
 
-def _prepare_arguments(exprs, gens, args, allow):
-    """Sympify expressions, build options, etc. """
-    options.allowed_flags(args, allow)
-    opt = options.build_options(gens, args)
-    return tuple(map(sympify, exprs)), opt
+def _factors_product(factors):
+    """Multiply a list of ``(expr, exp)`` pairs. """
+    return Mul(*[ f.as_expr()**k for f, k in factors ])
 
-def _inner_factor(f):
-    """Helper function for :func:`_formal_factor`. """
-    (coeff, factors), result = f.factor_list(), S.One
-
-    for g, k in factors:
-        result *= g.as_basic()**k
-
-    return coeff, result
-
-def _formal_factor(f, opt):
-    """Helper function for :func:`_factor`. """
-    try:
-        F, opt = _poly_from_expr(f, opt)
-    except PolificationFailed, exc:
-        return exc.expr
-
-    if not opt.frac:
-        coeff, factors = _inner_factor(F)
-    else:
-        p, q = F
-
-        cp, fp = _inner_factor(p)
-        cq, fq = _inner_factor(q)
-
-        coeff, factors = cp/cq, fp/fq
-
-    return _keep_coeff(coeff, factors)
-
-def _expr_factor(f, opt):
+def _symbolic_factor_list(expr, opt):
     """Helper function for :func:`_symbolic_factor`. """
-    if f.is_Atom:
-        return f
-    elif f.is_Add:
-        return _formal_factor(f, opt)
-    else:
-        return f.__class__(*[ _expr_factor(g, opt) for g in f.args ])
+    coeff, factors = S.One, []
 
-def _symbolic_factor(f, opt):
-    """Helper function for :func:`_factor`. """
-    if isinstance(f, Basic):
-        if f.is_Atom:
-            return f
-        elif f.is_Poly:
-            return _formal_factor(f, opt)
+    for arg in Mul.make_args(expr):
+        if arg.is_Pow:
+            base, exp = arg.args
         else:
-            return _expr_factor(together(f), opt)
-    elif hasattr(f, '__iter__'):
-        return f.__class__([ _symbolic_factor(g, opt) for g in f ])
+            base, exp = arg, S.One
 
-    return f
+        if base.is_Number:
+            coeff *= arg
+        else:
+            try:
+                poly, _ = _poly_from_expr(base, opt)
+            except PolificationFailed, exc:
+                coeff *= exc.expr**exp
+            else:
+                _coeff, _factors = poly.factor_list()
+
+                coeff *= _coeff
+
+                if exp is S.One:
+                    factors.extend(_factors)
+                else:
+                    for factor, k in _factors:
+                        factors.append((factor, k*exp))
+
+    return coeff, factors
+
+def _symbolic_factor(expr, opt):
+    """Helper function for :func:`_factor`. """
+    if isinstance(expr, Expr) and not expr.is_Relational:
+        numer, denom = together(expr).as_numer_denom()
+
+        cp, fp = _symbolic_factor_list(numer, opt)
+        cq, fq = _symbolic_factor_list(denom, opt)
+
+        fp = _factors_product(fp)
+        fq = _factors_product(fq)
+
+        coeff, expr = cp/cq, fp/fq
+
+        return _keep_coeff(coeff, expr)
+    elif hasattr(expr, 'args'):
+        return expr.new(*[ _symbolic_factor(arg, opt) for arg in expr.args ])
+    elif hasattr(expr, '__iter__'):
+        return expr.__class__([ _symbolic_factor(arg, opt) for arg in expr ])
+    else:
+        return expr
 
 def factor(f, *gens, **args):
     """
@@ -4622,11 +4620,6 @@ def factor(f, *gens, **args):
     factor its components without any prior expansion, unless an instance
     of :class:`Add` is encountered (in this case formal factorization is
     used). This way :func:`factor` can handle large or symbolic exponents.
-
-    In formal mode, the input expression is expanded first and then factored
-    over the specified domain. Expansion can be avoided by setting ``expand``
-    option to ``False``. To treat ``f`` as a rational function and obtain
-    factorization of numerator and denominator set ``frac`` flag to ``True``.
 
     By default, the factorization is computed over the rationals. To factor
     over other domain, e.g. an algebraic or finite field, use appropriate
@@ -4652,19 +4645,13 @@ def factor(f, *gens, **args):
 
     >>> factor((x**2 - 1)/(x**2 + 4*x + 4))
     -(1 + x)*(1 - x)/(2 + x)**2
-    >>> factor((x**2 - 1)/(x**2 + 4*x + 4), x, frac=True)
-    -(1 + x)*(1 - x)/(2 + x)**2
-
     >>> factor((x**2 + 4*x + 4)**10000000*(x**2 + 1))
     (2 + x)**20000000*(1 + x**2)
 
     """
-    (f,), opt = _prepare_arguments((f,), gens, args, ['frac'])
-
-    if opt.gens:
-        return _formal_factor(f, opt)
-    else:
-        return _symbolic_factor(f, opt)
+    options.allowed_flags(args, [])
+    opt = options.build_options(gens, args)
+    return _symbolic_factor(sympify(f), opt)
 
 def intervals(F, all=False, eps=None, inf=None, sup=None, strict=False, fast=False, sqf=False):
     """
