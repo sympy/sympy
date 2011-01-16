@@ -1806,8 +1806,8 @@ def _logcombine(expr, force=False):
             return notlogs + alllogs
 
     if expr.is_Mul:
-        a = Wild('a', dummy=True)
-        x = Wild('x', dummy=True)
+        a = Wild('a')
+        x = Wild('x')
         coef = expr.match(a*log(x))
         if coef\
             and (coef[a].is_real\
