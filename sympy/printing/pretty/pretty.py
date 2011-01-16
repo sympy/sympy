@@ -149,9 +149,10 @@ class PrettyPrinter(Printer):
     def _print_Integral(self, integral):
         f   = integral.function
 
-        # Add parentheses if a sum and create pretty form for argument
+        # Add parentheses if arg involves addition of terms and
+        # create a pretty form for the argument
         prettyF = self._print(f)
-        # XXX generalize parents
+        # XXX generalize parens
         if f.is_Add:
             prettyF = prettyForm(*prettyF.parens())
 
@@ -227,6 +228,82 @@ class PrettyPrinter(Printer):
         pform = prettyForm(*arg.left(s))
         return pform
 
+    def _print_Sum(self, sum):
+        """
+
+        # make pict of f
+        # find height of f
+        # get sum sign
+        # init new picture
+        # put sign in
+        # put f to the right
+        # return pict
+
+        """
+        from sympy import Eq
+        def asum(hrequired, lower, upper):
+            def adjust(s, wid=None, how='<^>'):
+                if not wid or len(s)>wid:
+                    return s
+                need = wid - len(s)
+                if how == '<^>' or how == "<" or how not in list('<^>'):
+                    return s + ' '*need
+                half = need//2
+                lead = ' '*half
+                if how == ">":
+                    return " "*need + s
+                return lead + s + ' '*(need - len(lead))
+
+            h = max(hrequired, 2)
+            d = h//2
+            wrequired = max(lower, upper)
+            w = max(wrequired, d + 1)
+            more = hrequired % 2
+            rpad = 1
+
+            lines = []
+            lines.append("_"*(w) + ' '*(1 + rpad))
+            lines.append("\%s`%s" % (' '*(w - 1), ' '*rpad))
+            for i in range(1,d):
+              lines.append('%s\\%s' % (' '*i, ' '*(w - i + rpad)))
+            if more:
+                lines.append('%s)%s' % (' '*(d), ' '*(w - d + rpad)))
+            for i in reversed(range(1, d)):
+              lines.append('%s/%s' % (' '*i, ' '*(w - i + rpad)))
+            lines.append("/" + "_"*(w - 1) + ',' + ' '*rpad)
+            return lines
+
+        f = sum.function
+
+        prettyF = self._print(f)
+        if f.is_Add: # add parens
+            prettyF = prettyForm(*prettyF.parens())
+
+        H = prettyF.height() + 2
+        prettyF.baseline = prettyF.baseline - H//2
+
+        # \sum \sum \sum ...
+        for lim in sum.limits:
+            if len(lim) == 3:
+                prettyUpper = self._print(lim[2])
+                prettyLower = self._print(Eq(lim[0],lim[1]))
+            elif len(lim) == 2:
+                prettyUpper = self._print("")
+                prettyLower = self._print(Eq(lim[0],lim[1]))
+            elif len(lim) == 1:
+                prettyUpper = self._print("")
+                prettyLower = self._print(lim[0])
+
+            # Create sum sign based on the height of the argument
+            slines = asum(H, prettyLower.width(), prettyUpper.width())
+            prettySign = stringPict('')
+            prettySign = prettyForm(*prettySign.stack(*slines))
+            prettySign = prettyForm(*prettySign.above(prettyUpper))
+            prettySign = prettyForm(*prettySign.below(prettyLower))
+
+            # put the present prettF to the right
+            prettyF = prettyForm(*prettySign.right(prettyF))
+        return prettyF
 
     def _print_Limit(self, l):
         # XXX we do not print dir ...
