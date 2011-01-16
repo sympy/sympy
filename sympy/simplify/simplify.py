@@ -76,7 +76,7 @@ def fraction(expr, exact=False):
                 else:
                     denom.append(Pow(term.base, -term.exp))
             elif not exact and term.exp.is_Mul:
-                coeff, tail = term.exp.args[0], term.exp._new_rawargs(*term.exp.args[1:])#term.exp.getab()
+                coeff, tail = term.exp.as_two_terms()
 
                 if coeff.is_Rational and coeff.is_negative:
                     denom.append(Pow(term.base, -term.exp))
@@ -88,7 +88,7 @@ def fraction(expr, exact=False):
             if term.args[0].is_negative:
                 denom.append(C.exp(-term.args[0]))
             elif not exact and term.args[0].is_Mul:
-                coeff, tail = term.args[0], term.args[0]._new_rawargs(*term.args[1:])#term.args.getab()
+                coeff, tail = term.args[0].as_two_terms()
 
                 if coeff.is_Rational and coeff.is_negative:
                     denom.append(C.exp(-term.args[0]))

@@ -560,33 +560,36 @@ class Mul(AssocOp):
         return self._matches(expr, repl_dict, evaluate)
 
     def _matches(self, expr, repl_dict={}, evaluate=False):
+        if evaluate:
+            return self.subs(repl_dict).matches(expr, repl_dict)
+
         # weed out negative one prefixes
         sign = 1
-        if self.args[0] == -1:
-            self = -self; sign = -sign
+        a, b = self.as_two_terms()
+        if a == -1:
+            if b.is_Mul:
+                sign = -sign
+            else:
+                # the remainder, b, is not a Mul anymore
+                return b.matches(-expr, repl_dict, evaluate)
+        expr = sympify(expr)
         if expr.is_Mul and expr.args[0] == -1:
             expr = -expr; sign = -sign
 
-        if evaluate:
-            return self.subs(repl_dict).matches(expr, repl_dict)
-        expr = sympify(expr)
-        if not isinstance(expr, self.__class__):
-            # if we can omit the first factor, we can match it to sign * one
-            if self._new_rawargs(*self.args[1:]) == expr:
-                return self.args[0].matches(Rational(sign), repl_dict, evaluate)
-            # two-factor product: if the 2nd factor matches, the first part must be sign * one
-            if len(self.args[:]) == 2:
-                dd = self.args[1].matches(expr, repl_dict, evaluate)
+        if not expr.is_Mul:
+            # expr can only match if it matches b and a matches +/- 1
+            if len(self.args) == 2:
+                # quickly test for equality
+                if b == expr:
+                    return a.matches(Rational(sign), repl_dict, evaluate)
+                # do more expensive match
+                dd = b.matches(expr, repl_dict, evaluate)
                 if dd == None:
                     return None
-                dd = self.args[0].matches(Rational(sign), dd, evaluate)
+                dd = a.matches(Rational(sign), dd, evaluate)
                 return dd
             return None
 
-        if len(self.args[:])==0:
-            if self == expr:
-                return repl_dict
-            return None
         d = repl_dict.copy()
 
         # weed out identical terms

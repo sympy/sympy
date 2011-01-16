@@ -252,8 +252,7 @@ class Add(AssocOp):
         return False
 
     def _eval_is_positive(self):
-        c = self.args[0]
-        r = self._new_rawargs(*self.args[1:])
+        c, r = self.as_two_terms()
         if c.is_positive and r.is_positive:
             return True
         if c.is_unbounded:
@@ -272,8 +271,7 @@ class Add(AssocOp):
             return False
 
     def _eval_is_negative(self):
-        c = self.args[0]
-        r = self._new_rawargs(*self.args[1:])
+        c, r = self.as_two_terms()
         if c.is_negative and r.is_negative:
             return True
         if c.is_unbounded:
