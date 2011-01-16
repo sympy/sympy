@@ -230,15 +230,6 @@ class PrettyPrinter(Printer):
 
     def _print_Sum(self, sum):
         """
-
-        # make pict of f
-        # find height of f
-        # get sum sign
-        # init new picture
-        # put sign in
-        # put f to the right
-        # return pict
-
         """
         from sympy import Eq
         def asum(hrequired, lower, upper):
@@ -254,9 +245,9 @@ class PrettyPrinter(Printer):
                     return " "*need + s
                 return lead + s + ' '*(need - len(lead))
 
-            h = max(hrequired, 2)
-            d = h//2
             wrequired = max(lower, upper)
+            h = max(hrequired, wrequired, 2)
+            d = h//2
             w = max(wrequired, d + 1)
             more = hrequired % 2
             rpad = 1
@@ -264,14 +255,14 @@ class PrettyPrinter(Printer):
             lines = []
             lines.append("_"*(w) + ' '*(1 + rpad))
             lines.append("\%s`%s" % (' '*(w - 1), ' '*rpad))
-            for i in range(1,d):
+            for i in range(1, d):
               lines.append('%s\\%s' % (' '*i, ' '*(w - i + rpad)))
             if more:
                 lines.append('%s)%s' % (' '*(d), ' '*(w - d + rpad)))
             for i in reversed(range(1, d)):
               lines.append('%s/%s' % (' '*i, ' '*(w - i + rpad)))
             lines.append("/" + "_"*(w - 1) + ',' + ' '*rpad)
-            return lines
+            return d, lines
 
         f = sum.function
 
@@ -280,9 +271,9 @@ class PrettyPrinter(Printer):
             prettyF = prettyForm(*prettyF.parens())
 
         H = prettyF.height() + 2
-        prettyF.baseline = prettyF.baseline - H//2
 
         # \sum \sum \sum ...
+        first = True
         for lim in sum.limits:
             if len(lim) == 3:
                 prettyUpper = self._print(lim[2])
@@ -295,7 +286,10 @@ class PrettyPrinter(Printer):
                 prettyLower = self._print(lim[0])
 
             # Create sum sign based on the height of the argument
-            slines = asum(H, prettyLower.width(), prettyUpper.width())
+            d, slines = asum(H, prettyLower.width(), prettyUpper.width())
+            if first:
+                prettyF.baseline = prettyF.baseline - d
+                first = False
             prettySign = stringPict('')
             prettySign = prettyForm(*prettySign.stack(*slines))
             prettySign = prettyForm(*prettySign.above(prettyUpper))
