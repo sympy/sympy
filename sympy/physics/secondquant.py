@@ -175,17 +175,6 @@ class AntiSymmetricTensor(TensorSymbol):
         try:
             upper, signu = _sort_anticommuting_fermions(upper, key=cls._sortkey)
             lower, signl = _sort_anticommuting_fermions(lower, key=cls._sortkey)
-            sign = 1
-            if signu:
-                upper = Tuple(*upper)
-                if signu %2:
-                    sign = -sign
-            if signl:
-                lower = Tuple(*lower)
-                if signl %2:
-                    sign = -sign
-            if signl or signu:
-                return sign*cls(symbol, upper, lower)
 
         except ViolationOfPauliPrinciple:
             return S.Zero
