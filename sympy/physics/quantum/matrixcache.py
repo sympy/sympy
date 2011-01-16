@@ -96,5 +96,21 @@ matrix_cache.cache_matrix('SWAP',Matrix([[1,0,0,0],[0,0,1,0],[0,1,0,0],[0,0,0,1]
 matrix_cache.cache_matrix('ZX', sqrt2_inv*Matrix([[1,1],[1,-1]]))
 matrix_cache.cache_matrix('ZY', Matrix([[I,0],[0,-I]]))
 
+# Conditionally define the base classes for numpy and scipy.sparse arrays
+# for use in isinstance tests.
 
-    
+try:
+    import numpy as np
+except ImportError:
+    class numpy_ndarray(object):
+        pass
+else:
+    numpy_ndarray = np.ndarray
+
+try:
+    from scipy import sparse
+except ImportError:
+    class scipy_sparse_matrix(object):
+        pass
+else:
+    scipy_sparse_matrix = sparse.base.spmatrix

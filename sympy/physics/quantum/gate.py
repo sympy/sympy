@@ -14,17 +14,15 @@ Todo:
 
 from itertools import chain
 
-from sympy import Mul, Pow, Integer, I, pi, Matrix, Rational
+from sympy import Mul, Pow, Integer, Matrix, Rational
 from sympy.core.numbers import Number
 from sympy.core.containers import Tuple
-from sympy.functions.elementary.exponential import exp
-from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.matrices import matrices
 from sympy.printing.pretty.stringpict import prettyForm, stringPict
 from sympy.utilities.iterables import all
 
 from sympy.physics.quantum.qexpr import QuantumError
-from sympy.physics.quantum.hilbert import ComplexSpace, HilbertSpaceError
+from sympy.physics.quantum.hilbert import ComplexSpace
 from sympy.physics.quantum.operator import UnitaryOperator
 from sympy.physics.quantum.tensorproduct import matrix_tensor_product
 from sympy.physics.quantum.matrixcache import matrix_cache
@@ -202,8 +200,8 @@ class Gate(UnitaryOperator):
     #-------------------------------------------------------------------------
 
     def _represent_ZGate(self, basis, **options):
-        format = options.pop('format','sympy')
-        nqubits = options.pop('nqubits',0)
+        format = options.get('format','sympy')
+        nqubits = options.get('nqubits',0)
         if nqubits == 0:
             raise QuantumError('The number of qubits must be given as nqubits.')
 

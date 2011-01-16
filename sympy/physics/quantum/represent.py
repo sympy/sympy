@@ -1,9 +1,12 @@
 """Logic for representing operators in state in various bases."""
 
-from sympy import S, Add, Mul, Matrix, Pow
+from sympy import S, Add, Mul, Matrix, Pow, Expr, I
 
 from sympy.physics.quantum.qexpr import QExpr
 from sympy.physics.quantum.tensorproduct import TensorProduct
+from sympy.physics.quantum.matrixcache import (
+    numpy_ndarray, scipy_sparse_matrix
+)
 
 __all__ = [
     'represent'
@@ -77,6 +80,7 @@ def represent(expr, basis, **options):
         [1]
         [0]
     """
+    format = options.get('format', 'sympy')
     if isinstance(expr, QExpr):
         return expr._represent(basis, **options)
     elif isinstance(expr, Add):
@@ -93,15 +97,31 @@ def represent(expr, basis, **options):
         new_args = [represent(arg, basis, **options) for arg in expr.args]
         return TensorProduct(*new_args)
     elif not isinstance(expr, Mul):
+        # For numpy and scipy.sparse, we can only handle numerical prefactors.
+        if format == 'numpy' or format == 'scipy.sparse':
+            if isinstance(expr, Expr):
+                # I think this is everything that can be converted to a 
+                # Python complex number.
+                if expr.is_Number or expr.is_NumberSymbol or expr == I:
+                    return complex(expr)
+                raise TypeError(
+                    'Cannot use non numerical entities in the numpy or '
+                    'scipy formats: %r' % expr
+                )
         return expr
 
     if not isinstance(expr, Mul):
         raise TypeError('Mul expected, got: %r' % expr)
 
-    result = S.One
-    for arg in reversed(expr.args):
+    result = represent(expr.args[-1], basis, **options)
+    for arg in reversed(expr.args[:-1]):
         result = represent(arg, basis, **options)*result
+    # All three matrix formats create 1 by 1 matrices when inner products of
+    # vectors are taken. In these cases, we simply return a scalar.
     if isinstance(result, Matrix):
         if result.shape == (1,1):
             result = result[0]
+    if isinstance(result, (numpy_ndarray, scipy_sparse_matrix)):
+        if result.shape == (1,1):
+            result = complex(result[0,0])
     return result

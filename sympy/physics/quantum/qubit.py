@@ -6,10 +6,9 @@ Todo:
 * Update docstrings.
 """
 
-from sympy import Integer, I, log, Mul, Add, Pow
+from sympy import Integer, log, Mul, Add, Pow
 from sympy.core.basic import sympify
 from sympy.core.containers import Tuple
-from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.matrices.matrices import Matrix
 
 from sympy.physics.quantum.hilbert import ComplexSpace
@@ -17,6 +16,9 @@ from sympy.physics.quantum.state import Ket, Bra, State
 
 from sympy.physics.quantum.qexpr import QuantumError
 from sympy.physics.quantum.represent import represent
+from sympy.physics.quantum.matrixcache import (
+    numpy_ndarray, scipy_sparse_matrix
+)
 
 __all__ = [
     'Qubit',
@@ -147,21 +149,24 @@ class Qubit(QubitState, Ket):
             return Integer(0)
 
     def _represent_ZGate(self, basis, **options):
+        """Represent this qubits in the computational basis (ZGate).
         """
-        if basis.hilbert_space != l2(2)**self.dimension:
-            raise HilbertSpaceException("Basis and Qubit\
-            dimensions do not match!")
-        TODO Figure out validation here
-        """
+        format = options.get('format', 'sympy')
         n = 1
-        definiteState = 0
+        definite_state = 0
         for it in reversed(self.qubit_values):
-            definiteState += n*it
+            definite_state += n*it
             n = n*2
         result = [0]*(2**self.dimension)
-        result[int(definiteState)] = 1
-        return Matrix(result)
-
+        result[int(definite_state)] = 1
+        if format == 'sympy':
+            return Matrix(result)
+        elif format == 'numpy':
+            import numpy as np
+            return np.matrix(result, dtype='complex').transpose()
+        elif format == 'scipy.sparse':
+            from scipy import sparse
+            return sparse.csr_matrix(result, dtype='complex').transpose()
 
 class QubitBra(QubitState, Bra):
 
@@ -169,64 +174,83 @@ class QubitBra(QubitState, Bra):
     def dual_class(self):
         return Qubit
 
+    def _represent_ZGate(self, basis, **options):
+        format = options.get('format', 'sympy')
+        result = self.dual._represent_ZGate(basis, **options)
+        if format == 'sympy':
+            return result.H
+        elif format == 'numpy' or format == 'scipy.sparse':
+            return result.transpose().conjugate()
+        raise QuantumError('Invalide format: %r' % format)
+
 
 def matrix_to_qubit(matrix):
-    """Converts a matrix representation of the state of a system into a Sum
-    of Qubit objects
+    """Convert from the matrix repr. to a sum of Qubit objects.
 
-    Takes a matrix representation of a Qubit and puts in into a sum of Qubit
-    eigenstates of the ZBasisSet. Can be used in conjunction with represent
-    to turn the matrix representation returned into dirac notation.
+    Parameters
+    ----------
+    matrix : Matrix
+        The matrix to build the Qubit representation of.
 
-    matrix argument is the matrix that shall be converted to the Add/Mul
-    of Qubit eigenkets
-
-    >>> from sympy.physics.Qubit import matrix_to_qubit, Qubit, QubitZBasisSet
-    >>> from sympy.physics.quantum import represent
-    >>> represent(Qubit(0,1), QubitZBasisSet(2))
-    [0]
-    [1]
-    [0]
-    [0]
-    >>> matrix_to_qubit(represent(Qubit(0,1), QubitZBasisSet(2)))
-    |'01'>
+    Examples
+    --------
     """
-    #make sure it is of correct dimensions for a Qubit-matrix representation
-    qubit_number = log(matrix.rows,2)
-    if matrix.cols != 1 or not isinstance(qubit_number, Integer):
-        raise QuantumError()
+    # Determine the format based on the type of the input matrix
+    format = 'sympy'
+    if isinstance(matrix, numpy_ndarray):
+        format = 'numpy'
+    if isinstance(matrix, scipy_sparse_matrix):
+        format = 'scipy.sparse'
 
-    #go through each item in matrix, if element is not zero, make it into a
-    #Qubit item times coefficient
+    # Make sure it is of correct dimensions for a Qubit-matrix representation.
+    # This logic should work with sympy, numpy or scipy.sparse matrices.
+    if matrix.shape[0] == 1:
+        mlistlen = matrix.shape[1]
+        nqubits = log(mlistlen, 2)
+        ket = False
+        cls = QubitBra
+    elif matrix.shape[1] == 1:
+        mlistlen = matrix.shape[0]
+        nqubits = log(mlistlen, 2)
+        ket = True
+        cls = Qubit
+    else:
+        raise QuantumError(
+            'Matrix must be a row/column vector, got %r' % matrix
+        )
+    if not isinstance(nqubits, Integer):
+        raise QuantumError('Matrix must be a row/column vector of size '
+                           '2**nqubits, got: %r' % matrix)
+    # Go through each item in matrix, if element is non-zero, make it into a
+    # Qubit item times the element.
     result = 0
-    mlistlen = len(matrix.tolist())
     for i in range(mlistlen):
-        if matrix[i] != 0:
-            #form Qubit array; 0 in bit-locations where i is 0, 1 in
-            #bit-locations where i is 1
-            qubit_array = [1 if i&(1<<x) else 0 for x in range(qubit_number)]
+        if ket:
+            element = matrix[i,0]
+        else:
+            element = matrix[0,i]
+        if format == 'numpy' or format == 'scipy.sparse':
+            element = complex(element)
+        if element != 0.0:
+            # Form Qubit array; 0 in bit-locations where i is 0, 1 in
+            # bit-locations where i is 1
+            qubit_array = [1 if i&(1<<x) else 0 for x in range(nqubits)]
             qubit_array.reverse()
-            result = result + matrix[i]*Qubit(qubit_array)
+            result = result + element*cls(qubit_array)
 
-    #if sympy simplified by pulling out a constant coefficient, undo that
+    # If sympy simplified by pulling out a constant coefficient, undo that.
     if isinstance(result, (Mul,Add,Pow)):
         result = result.expand()
+
     return result
 
 
-def qubit_to_matrix(qubit):
-    """Coverts a Add/Mul of Qubit objects into it's matrix representation
+def qubit_to_matrix(qubit, format='sympy'):
+    """Coverts an Add/Mul of Qubit objects into it's matrix representation
 
-    This function takes in a dirac notation-like expression and express it
-    as a Sympy matrix.
-
-    >>> from sympy.physics.Qubit import qubit_to_matrix, Qubit
-    >>> from sympy.functions.elementary.miscellaneous import sqrt
-    >>> qubit_to_matrix(Qubit(0,0)/sqrt(2) + Qubit(0,1)/sqrt(2))
-    [2**(1/2)/2]
-    [2**(1/2)/2]
-    [         0]
-    [         0]
+    This function is the inverse of ``matrix_to_qubit`` and is a shorthand
+    for ``represent(qubit, ZGate(0))``.
     """
     from sympy.physics.quantum.gate import ZGate
-    return represent(qubit, ZGate(0))
+    return represent(qubit, ZGate(0), format=format)
+
