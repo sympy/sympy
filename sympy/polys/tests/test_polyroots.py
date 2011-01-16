@@ -8,6 +8,8 @@ from sympy.polys.polyroots import root_factors, roots_linear,  \
     roots_quadratic, roots_cubic, roots_quartic, roots_binomial, \
     roots_rational, roots, number_of_real_roots, RootOf, RootsOf, RootSum
 
+from sympy.utilities import all
+
 a, b, c, d, t, x, y, z = symbols('a,b,c,d,t,x,y,z')
 
 def test_number_of_real_roots():
