@@ -1684,6 +1684,8 @@ def test_sqf():
     assert sqf(1) == 1
     assert sqf_list(1) == (1, [])
 
+    assert sqf((2*x**2 + 2)**7) == 128*(x**2 + 1)**7
+
     assert sqf(f) == g*h**2
     assert sqf(f, x) == g*h**2
     assert sqf(f, (x,)) == g*h**2
@@ -1742,6 +1744,8 @@ def test_factor():
 
     assert factor(3*x) == 3*x
     assert factor(3*x**2) == 3*x**2
+
+    assert factor((2*x**2 + 2)**7) == 128*(x**2 + 1)**7
 
     assert factor(f) == u*v**2*w
     assert factor(f, x) == u*v**2*w

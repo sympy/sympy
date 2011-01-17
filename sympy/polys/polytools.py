@@ -4464,7 +4464,7 @@ def _symbolic_factor_list(expr, opt, method):
                 func = getattr(poly, method + '_list')
 
                 _coeff, _factors = func()
-                coeff *= _coeff
+                coeff *= _coeff**exp
 
                 if exp is S.One:
                     factors.extend(_factors)
