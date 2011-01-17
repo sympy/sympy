@@ -301,7 +301,7 @@ class Monomial(object):
     def __repr__(self):
         return "Monomial(%s)" % ", ".join(map(str, self.data))
 
-    def as_basic(self, *gens):
+    def as_expr(self, *gens):
         """Convert a monomial instance to a SymPy expression. """
         return Mul(*[ gen**exp for gen, exp in zip(gens, self.data) ])
 

@@ -226,7 +226,7 @@ def heurisch(f, x, **kwargs):
 
             if derivation(p) is not S.Zero:
                 c, q = p.as_poly(y).primitive()
-                return deflation(c)*gcd(q, q.diff(y)).as_basic()
+                return deflation(c)*gcd(q, q.diff(y)).as_expr()
         else:
             return p
 
@@ -238,7 +238,7 @@ def heurisch(f, x, **kwargs):
             if derivation(y) is not S.Zero:
                 c, q = p.as_poly(y).primitive()
 
-                q = q.as_basic()
+                q = q.as_expr()
 
                 h = gcd(q, derivation(q), y)
                 s = quo(h, gcd(q, q.diff(y), y), y)
@@ -278,7 +278,7 @@ def heurisch(f, x, **kwargs):
     s = u_split[0] * Mul(*[ k for k, v in special.iteritems() if v ])
     a, b, c = [ p.as_poly(*V).total_degree() for p in [s, P, Q] ]
 
-    poly_denom = (s * v_split[0] * deflation(v_split[1])).as_basic()
+    poly_denom = (s * v_split[0] * deflation(v_split[1])).as_expr()
 
     def exponent(g):
         if g.is_Pow:

@@ -43,8 +43,8 @@ def normal(f, g, n=None):
     a, p = p.LC(), p.monic()
     b, q = q.LC(), q.monic()
 
-    A = p.as_basic()
-    B = q.as_basic()
+    A = p.as_expr()
+    B = q.as_expr()
 
     C, Z = S.One, a / b
 

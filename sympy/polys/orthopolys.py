@@ -38,7 +38,7 @@ def chebyshevt_poly(n, x=None, **args):
     poly = Poly.new(DMP(dup_chebyshevt(int(n), ZZ), ZZ), x)
 
     if not args.get('polys', False):
-        return poly.as_basic()
+        return poly.as_expr()
     else:
         return poly
 
@@ -66,7 +66,7 @@ def chebyshevu_poly(n, x=None, **args):
     poly = Poly.new(DMP(dup_chebyshevu(int(n), ZZ), ZZ), x)
 
     if not args.get('polys', False):
-        return poly.as_basic()
+        return poly.as_expr()
     else:
         return poly
 
@@ -98,7 +98,7 @@ def hermite_poly(n, x=None, **args):
     poly = Poly.new(DMP(dup_hermite(int(n), ZZ), ZZ), x)
 
     if not args.get('polys', False):
-        return poly.as_basic()
+        return poly.as_expr()
     else:
         return poly
 
@@ -128,7 +128,7 @@ def legendre_poly(n, x=None, **args):
     poly = Poly.new(DMP(dup_legendre(int(n), QQ), QQ), x)
 
     if not args.get('polys', False):
-        return poly.as_basic()
+        return poly.as_expr()
     else:
         return poly
 
@@ -158,7 +158,7 @@ def laguerre_poly(n, x=None, **args):
     poly = Poly.new(DMP(dup_laguerre(int(n), QQ), QQ), x)
 
     if not args.get('polys', False):
-        return poly.as_basic()
+        return poly.as_expr()
     else:
         return poly
 

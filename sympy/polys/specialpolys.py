@@ -76,7 +76,7 @@ def cyclotomic_poly(n, x=None, **args):
     poly = Poly.new(DMP(dup_zz_cyclotomic_poly(int(n), ZZ), ZZ), x)
 
     if not args.get('polys', False):
-        return poly.as_basic()
+        return poly.as_expr()
     else:
         return poly
 
@@ -101,7 +101,7 @@ def random_poly(x, n, inf, sup, domain=ZZ, polys=False):
     poly = Poly(dup_random(n, inf, sup, domain), x, domain=domain)
 
     if not polys:
-        return poly.as_basic()
+        return poly.as_expr()
     else:
         return poly
 

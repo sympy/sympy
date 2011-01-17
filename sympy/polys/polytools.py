@@ -230,7 +230,7 @@ class Poly(Expr):
         [1 + x**2]
 
         """
-        return [self.as_basic()]
+        return [self.as_expr()]
 
     @property
     def gen(self):
@@ -426,7 +426,7 @@ class Poly(Expr):
                 except PolynomialError:
                     pass
 
-        return f.as_basic().subs(old, new)
+        return f.as_expr().subs(old, new)
 
     def replace(f, x, y=None):
         """
@@ -3028,7 +3028,7 @@ class Poly(Expr):
             try:
                 g = Poly(g, *f.gens)
             except PolynomialError:
-                return f.as_basic() + g
+                return f.as_expr() + g
 
         return f.add(g)
 
@@ -3038,7 +3038,7 @@ class Poly(Expr):
             try:
                 g = Poly(g, *f.gens)
             except PolynomialError:
-                return g + f.as_basic()
+                return g + f.as_expr()
 
         return g.add(f)
 
@@ -3048,7 +3048,7 @@ class Poly(Expr):
             try:
                 g = Poly(g, *f.gens)
             except PolynomialError:
-                return f.as_basic() - g
+                return f.as_expr() - g
 
         return f.sub(g)
 
@@ -3058,7 +3058,7 @@ class Poly(Expr):
             try:
                 g = Poly(g, *f.gens)
             except PolynomialError:
-                return g - f.as_basic()
+                return g - f.as_expr()
 
         return g.sub(f)
 
@@ -3068,7 +3068,7 @@ class Poly(Expr):
             try:
                 g = Poly(g, *f.gens)
             except PolynomialError:
-                return f.as_basic()*g
+                return f.as_expr()*g
 
         return f.mul(g)
 
@@ -3078,7 +3078,7 @@ class Poly(Expr):
             try:
                 g = Poly(g, *f.gens)
             except PolynomialError:
-                return g*f.as_basic()
+                return g*f.as_expr()
 
         return g.mul(f)
 
@@ -3087,7 +3087,7 @@ class Poly(Expr):
         if n.is_Integer and n >= 0:
             return f.pow(n)
         else:
-            return f.as_basic()**n
+            return f.as_expr()**n
 
     @_sympifyit('g', NotImplemented)
     def __divmod__(f, g):
@@ -3133,11 +3133,11 @@ class Poly(Expr):
 
     @_sympifyit('g', NotImplemented)
     def __div__(f, g):
-        return f.as_basic()/g.as_basic()
+        return f.as_expr()/g.as_expr()
 
     @_sympifyit('g', NotImplemented)
     def __rdiv__(f, g):
-        return g.as_basic()/f.as_basic()
+        return g.as_expr()/f.as_expr()
 
     __truediv__ = __div__
     __rtruediv__ = __rdiv__
@@ -3273,7 +3273,7 @@ def _parallel_poly_from_expr(exprs, opt):
     if _polys:
         # XXX: this is a temporary solution
         for i in _polys:
-            exprs[i] = exprs[i].as_basic()
+            exprs[i] = exprs[i].as_expr()
 
     try:
         reps, opt = _parallel_dict_from_expr(exprs, opt)
@@ -3429,7 +3429,7 @@ def LM(f, *gens, **args):
 
     monom = Monomial(*F.LM(order=opt.order))
 
-    return monom.as_basic(*opt.gens)
+    return monom.as_expr(*opt.gens)
 
 def LT(f, *gens, **args):
     """
@@ -3453,7 +3453,7 @@ def LT(f, *gens, **args):
 
     monom, coeff = F.LT(order=opt.order)
 
-    return coeff*Monomial(*monom).as_basic(*opt.gens)
+    return coeff*Monomial(*monom).as_expr(*opt.gens)
 
 def pdiv(f, g, *gens, **args):
     """
@@ -3478,7 +3478,7 @@ def pdiv(f, g, *gens, **args):
     q, r = F.pdiv(G)
 
     if not opt.polys:
-        return q.as_basic(), r.as_basic()
+        return q.as_expr(), r.as_expr()
     else:
         return q, r
 
@@ -3505,7 +3505,7 @@ def prem(f, g, *gens, **args):
     r = F.prem(G)
 
     if not opt.polys:
-        return r.as_basic()
+        return r.as_expr()
     else:
         return r
 
@@ -3537,7 +3537,7 @@ def pquo(f, g, *gens, **args):
     q = F.pquo(G)
 
     if not opt.polys:
-        return q.as_basic()
+        return q.as_expr()
     else:
         return q
 
@@ -3566,7 +3566,7 @@ def pexquo(f, g, *gens, **args):
     q = F.pexquo(G)
 
     if not opt.polys:
-        return q.as_basic()
+        return q.as_expr()
     else:
         return q
 
@@ -3595,7 +3595,7 @@ def div(f, g, *gens, **args):
     q, r = F.div(G)
 
     if not opt.polys:
-        return q.as_basic(), r.as_basic()
+        return q.as_expr(), r.as_expr()
     else:
         return q, r
 
@@ -3624,7 +3624,7 @@ def rem(f, g, *gens, **args):
     r = F.rem(G)
 
     if not opt.polys:
-        return r.as_basic()
+        return r.as_expr()
     else:
         return r
 
@@ -3656,7 +3656,7 @@ def quo(f, g, *gens, **args):
     q = F.quo(G)
 
     if not opt.polys:
-        return q.as_basic()
+        return q.as_expr()
     else:
         return q
 
@@ -3685,7 +3685,7 @@ def exquo(f, g, *gens, **args):
     q = F.exquo(G)
 
     if not opt.polys:
-        return q.as_basic()
+        return q.as_expr()
     else:
         return q
 
@@ -3722,7 +3722,7 @@ def half_gcdex(f, g, *gens, **args):
     s, h = F.half_gcdex(G, auto=opt.auto)
 
     if not opt.polys:
-        return s.as_basic(), h.as_basic()
+        return s.as_expr(), h.as_expr()
     else:
         return s, h
 
@@ -3759,7 +3759,7 @@ def gcdex(f, g, *gens, **args):
     s, t, h = F.gcdex(G, auto=opt.auto)
 
     if not opt.polys:
-        return s.as_basic(), t.as_basic(), h.as_basic()
+        return s.as_expr(), t.as_expr(), h.as_expr()
     else:
         return s, t, h
 
@@ -3799,7 +3799,7 @@ def invert(f, g, *gens, **args):
     h = F.invert(G, auto=opt.auto)
 
     if not opt.polys:
-        return h.as_basic()
+        return h.as_expr()
     else:
         return h
 
@@ -3826,7 +3826,7 @@ def subresultants(f, g, *gens, **args):
     result = F.subresultants(G)
 
     if not opt.polys:
-        return [ r.as_basic() for r in result ]
+        return [ r.as_expr() for r in result ]
     else:
         return result
 
@@ -3853,7 +3853,7 @@ def resultant(f, g, *gens, **args):
     result = F.resultant(G)
 
     if not opt.polys:
-        return result.as_basic()
+        return result.as_expr()
     else:
         return result
 
@@ -3880,7 +3880,7 @@ def discriminant(f, *gens, **args):
     result = F.discriminant()
 
     if not opt.polys:
-        return result.as_basic()
+        return result.as_expr()
     else:
         return result
 
@@ -3919,7 +3919,7 @@ def cofactors(f, g, *gens, **args):
     h, cff, cfg = F.cofactors(G)
 
     if not opt.polys:
-        return h.as_basic(), cff.as_basic(), cfg.as_basic()
+        return h.as_expr(), cff.as_expr(), cfg.as_expr()
     else:
         return h, cff, cfg
 
@@ -3975,7 +3975,7 @@ def gcd_list(seq, *gens, **args):
             break
 
     if not opt.polys:
-        return result.as_basic()
+        return result.as_expr()
     else:
         return result
 
@@ -4016,7 +4016,7 @@ def gcd(f, g=None, *gens, **args):
     result = F.gcd(G)
 
     if not opt.polys:
-        return result.as_basic()
+        return result.as_expr()
     else:
         return result
 
@@ -4066,7 +4066,7 @@ def lcm_list(seq, *gens, **args):
         result = result.lcm(poly)
 
     if not opt.polys:
-        return result.as_basic()
+        return result.as_expr()
     else:
         return result
 
@@ -4107,7 +4107,7 @@ def lcm(f, g=None, *gens, **args):
     result = F.lcm(G)
 
     if not opt.polys:
-        return result.as_basic()
+        return result.as_expr()
     else:
         return result
 
@@ -4146,7 +4146,7 @@ def terms_gcd(f, *gens, **args):
 
     term = Mul(*[ x**j for x, j in zip(f.gens, J) ])
 
-    return _keep_coeff(coeff, term*f.as_basic())
+    return _keep_coeff(coeff, term*f.as_expr())
 
 def trunc(f, p, *gens, **args):
     """
@@ -4171,7 +4171,7 @@ def trunc(f, p, *gens, **args):
     result = F.trunc(sympify(p))
 
     if not opt.polys:
-        return result.as_basic()
+        return result.as_expr()
     else:
         return result
 
@@ -4198,7 +4198,7 @@ def monic(f, *gens, **args):
     result = F.monic(auto=opt.auto)
 
     if not opt.polys:
-        return result.as_basic()
+        return result.as_expr()
     else:
         return result
 
@@ -4247,7 +4247,7 @@ def primitive(f, *gens, **args):
     cont, result = F.primitive()
 
     if not opt.polys:
-        return cont, result.as_basic()
+        return cont, result.as_expr()
     else:
         return cont, result
 
@@ -4274,7 +4274,7 @@ def compose(f, g, *gens, **args):
     result = F.compose(G)
 
     if not opt.polys:
-        return result.as_basic()
+        return result.as_expr()
     else:
         return result
 
@@ -4301,7 +4301,7 @@ def decompose(f, *gens, **args):
     result = F.decompose()
 
     if not opt.polys:
-        return [ r.as_basic() for r in result ]
+        return [ r.as_expr() for r in result ]
     else:
         return result
 
@@ -4328,7 +4328,7 @@ def sturm(f, *gens, **args):
     result = F.sturm(auto=opt.auto)
 
     if not opt.polys:
-        return [ r.as_basic() for r in result ]
+        return [ r.as_expr() for r in result ]
     else:
         return result
 
@@ -4360,7 +4360,7 @@ def gff_list(f, *gens, **args):
     factors = F.gff_list()
 
     if not opt.polys:
-        return [ (g.as_basic(), k) for g, k in factors ]
+        return [ (g.as_expr(), k) for g, k in factors ]
     else:
         return factors
 
@@ -4395,7 +4395,7 @@ def sqf_norm(f, *gens, **args):
     s, g, r = F.sqf_norm()
 
     if not opt.polys:
-        return Integer(s), g.as_basic(), r.as_basic()
+        return Integer(s), g.as_expr(), r.as_expr()
     else:
         return Integer(s), g, r
 
@@ -4422,7 +4422,7 @@ def sqf_part(f, *gens, **args):
     result = F.sqf_part()
 
     if not opt.polys:
-        return result.as_basic()
+        return result.as_expr()
     else:
         return result
 
@@ -4815,10 +4815,10 @@ def cancel(f, *gens, **args):
     c, P, Q = F.cancel(G)
 
     if type(f) is not tuple:
-        return c*(P.as_basic()/Q.as_basic())
+        return c*(P.as_expr()/Q.as_expr())
     else:
         if not opt.polys:
-            return c, P.as_basic(), Q.as_basic()
+            return c, P.as_expr(), Q.as_expr()
         else:
             return c, P, Q
 
@@ -4858,7 +4858,7 @@ def reduced(f, G, *gens, **args):
     r =   Poly.new(DMP(dict(r), opt.domain, level), *opt.gens)
 
     if not opt.polys:
-        return [ q.as_basic() for q in Q ], r.as_basic()
+        return [ q.as_expr() for q in Q ], r.as_expr()
     else:
         return Q, r
 
@@ -4905,7 +4905,7 @@ def groebner(F, *gens, **args):
     G = [ Poly.new(DMP(dict(g), opt.domain, level), *opt.gens) for g in G ]
 
     if not opt.polys:
-        return [ g.as_basic() for g in G ]
+        return [ g.as_expr() for g in G ]
     else:
         return G
 
