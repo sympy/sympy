@@ -917,34 +917,6 @@ class Basic(AssumeMeths):
         except PolynomialError:
             return None
 
-    def as_expr(self):
-        """Converts a polynomial to a SymPy expression.
-
-           >>> from sympy import sin
-           >>> from sympy.abc import x, y
-
-           >>> p = (x**2 + x*y).as_poly(x, y)
-
-           >>> p.as_expr()
-           x*y + x**2
-
-           >>> f = sin(x)
-
-           >>> f.as_expr()
-           sin(x)
-
-        Example:
-        >>> from sympy import Poly
-        >>> from sympy.abc import x
-        >>> Poly(x)
-        Poly(x, x, domain='ZZ')
-        >>> _.as_basic()
-        x
-        """
-        return self
-
-    as_basic = as_expr
-
     def subs(self, *args):
         """
         Substitutes an expression.

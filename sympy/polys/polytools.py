@@ -843,8 +843,6 @@ class Poly(Expr):
 
         return basic_from_dict(f.rep.to_sympy_dict(), *gens)
 
-    as_basic = as_expr
-
     def lift(f):
         """
         Convert algebraic coefficients to rationals.
