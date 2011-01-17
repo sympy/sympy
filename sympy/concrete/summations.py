@@ -8,17 +8,9 @@ class Sum(Expr):
     def __new__(cls, f, *symbols, **assumptions):
         f = sympify(f)
 
-        if f.is_Number:
-            if f is S.NaN:
-                return S.NaN
-            elif f is S.Zero:
-                return S.Zero
-
         if not symbols:
-            limits = f.atoms(Symbol)
+            raise ValueError("No symbols given.")
 
-            if not limits:
-                return f
         else:
             limits = []
 
@@ -166,14 +158,41 @@ class Sum(Expr):
         return Sum(self.args[0].subs(old, new), *newlimits)
 
 
-def sum(*args, **kwargs):
-    summation = Sum(*args, **kwargs)
+def summation(f, *symbols, **kwargs):
+    """
+    Compute the summation of f with respect to symbols.
 
-    if isinstance(summation, Sum):
-        return summation.doit(deep=False)
-    else:
-        return summation
+    The notation for symbols is similar to the notation used in Integral.
+    summation(f, (i, a, b)) computes the sum of f with respect to i from a to b,
+    i.e.,
 
+                                b
+                              -----
+                              \
+    summation(f, (i, a, b)) =  \    f
+                               /
+                              /
+                              -----
+                              i = a
+
+
+    If it cannot compute the sum, it returns an unevaluated Sum object.
+    Repeated sums can be computed by introducing additional symbols tuples::
+
+    >>> from sympy import summation, oo, symbols, log
+    >>> i, n, m = symbols('i n m', integer=True)
+
+    >>> summation(2*i - 1, (i, 1, n))
+    n**2
+    >>> summation(1/2**i, (i, 0, oo))
+    2
+    >>> summation(1/log(n)**n, (n, 2, oo))
+    Sum(log(n)**(-n), (n, 2, oo))
+    >>> summation(i, (i, 0, n), (n, 0, m))
+    m/3 + m**2/2 + m**3/6
+
+    """
+    return Sum(f, *symbols, **kwargs).doit(deep=False)
 
 def getab(expr):
     cls = expr.func
@@ -230,6 +249,12 @@ def telescopic(L, R, (i, a, b)):
     return None
 
 def eval_sum(f, (i, a, b)):
+    if f.is_Number:
+        if f is S.NaN:
+            return S.NaN
+        elif f is S.Zero:
+            return S.Zero
+
     if not f.has(i):
         return f*(b-a+1)
     definite = a.is_Integer and b.is_Integer

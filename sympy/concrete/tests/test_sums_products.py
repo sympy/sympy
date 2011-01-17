@@ -1,45 +1,46 @@
-from sympy import (Symbol, Sum, oo, Real, Rational, sum, pi, cos, zeta,
-Catalan, exp, log, factorial, sqrt, E, sympify, binomial, EulerGamma, Function, Integral, Product, product, Tuple, Eq, Interval)
+from sympy import (Symbol, Sum, oo, Real, Rational, summation, pi, cos, zeta,
+    Catalan, exp, log, factorial, sqrt, E, sympify, binomial, EulerGamma,
+    Function, Integral, Product, product, Tuple, Eq, Interval, nan)
 from sympy.concrete.summations import getab
 from sympy.concrete.sums_products import Sum2
-from sympy.utilities.pytest import XFAIL
+from sympy.utilities.pytest import XFAIL, raises
 
 a, b, c, d, m, k = map(Symbol, 'abcdmk')
 n = Symbol('n', integer=True)
 
 def test_arithmetic_sums():
-    assert sum(1, (n, a, b)) == b-a+1
-    assert sum(1, (n, 1, 10)) == 10
-    assert sum(2*n, (n, 0, 10**10)) == 100000000010000000000
-    assert sum(4*n*m, (n, a, 1), (m, 1, d)).expand() == \
+    assert summation(1, (n, a, b)) == b-a+1
+    assert summation(1, (n, 1, 10)) == 10
+    assert summation(2*n, (n, 0, 10**10)) == 100000000010000000000
+    assert summation(4*n*m, (n, a, 1), (m, 1, d)).expand() == \
         2*d + 2*d**2 + a*d + a*d**2 - d*a**2 - a**2*d**2
-    assert sum(cos(n), (n, -2, 1)) == cos(-2)+cos(-1)+cos(0)+cos(1)
+    assert summation(cos(n), (n, -2, 1)) == cos(-2)+cos(-1)+cos(0)+cos(1)
 
 def test_polynomial_sums():
-    assert sum(n**2, (n, 3, 8)) == 199
-    assert sum(n, (n, a, b)) == \
+    assert summation(n**2, (n, 3, 8)) == 199
+    assert summation(n, (n, a, b)) == \
         ((a+b)*(b-a+1)/2).expand()
-    assert sum(n**2, (n, 1, b)) == \
+    assert summation(n**2, (n, 1, b)) == \
         ((2*b**3+3*b**2+b)/6).expand()
-    assert sum(n**3, (n, 1, b)) == \
+    assert summation(n**3, (n, 1, b)) == \
         ((b**4+2*b**3+b**2)/4).expand()
-    assert sum(n**6, (n, 1, b)) == \
+    assert summation(n**6, (n, 1, b)) == \
         ((6*b**7+21*b**6+21*b**5-7*b**3+b)/42).expand()
 
 def test_geometric_sums():
-    assert sum(pi**n, (n, 0, b)) == (1-pi**(b+1)) / (1-pi)
-    assert sum(2 * 3**n, (n, 0, b)) == 3**(b+1) - 1
-    assert sum(Rational(1,2)**n, (n, 1, oo)) == 1
-    assert sum(2**n, (n, 0, b)) == 2**(b+1) - 1
-    assert sum(2**n, (n, 1, oo)) == oo
-    assert sum(2**(-n), (n, 1, oo)) == 1
-    assert sum(3**(-n), (n, 4, oo)) == Rational(1,54)
-    assert sum(2**(-4*n+3), (n, 1, oo)) == Rational(8,15)
-    assert sum(2**(n+1), (n, 1, b)).expand() == 4*(2**b-1)
+    assert summation(pi**n, (n, 0, b)) == (1-pi**(b+1)) / (1-pi)
+    assert summation(2 * 3**n, (n, 0, b)) == 3**(b+1) - 1
+    assert summation(Rational(1,2)**n, (n, 1, oo)) == 1
+    assert summation(2**n, (n, 0, b)) == 2**(b+1) - 1
+    assert summation(2**n, (n, 1, oo)) == oo
+    assert summation(2**(-n), (n, 1, oo)) == 1
+    assert summation(3**(-n), (n, 4, oo)) == Rational(1,54)
+    assert summation(2**(-4*n+3), (n, 1, oo)) == Rational(8,15)
+    assert summation(2**(n+1), (n, 1, b)).expand() == 4*(2**b-1)
 
 def test_composite_sums():
     f = Rational(1,2)*(7 - 6*n + Rational(1,7)*n**3)
-    s = sum(f, (n, a, b))
+    s = summation(f, (n, a, b))
     assert not isinstance(s, Sum)
     A = 0
     for i in range(-3, 5):
@@ -193,15 +194,26 @@ def test_sum_constructor():
     s6 = Sum(n,Eq(n,Interval(1,2)))
     assert s6.limits == (Tuple(n,1,2),)
 
-
 def test_Sum_doit():
     assert Sum(n*Integral(a**2), (n, 0, 2)).doit() == a**3
     assert Sum(n*Integral(a**2), (n, 0, 2)).doit(deep = False) == \
         3*Integral(a**2)
-    assert sum(n*Integral(a**2), (n, 0, 2)) == 3*Integral(a**2)
+    assert summation(n*Integral(a**2), (n, 0, 2)) == 3*Integral(a**2)
 
 def test_Product_doit():
     assert Product(n*Integral(a**2), (n, 1, 3)).doit() == 2 * a**9 / 9
     assert Product(n*Integral(a**2), (n, 1, 3)).doit(deep = False) == \
         6*Integral(a**2)**3
     assert product(n*Integral(a**2), (n, 1, 3)) == 6*Integral(a**2)**3
+
+def test_Sum_interface():
+    assert isinstance(Sum(0, (n, 0, 2)), Sum)
+    assert isinstance(Sum(nan, (n, 0, 2)), Sum)
+    assert Sum(0, (n, 0, 2)).doit() == 0
+    assert Sum(nan, (n, 0, 2)).doit() == nan
+    assert isinstance(Sum(0, (n, 0, oo)), Sum)
+    assert isinstance(Sum(nan, (n, 0, oo)), Sum)
+    assert Sum(0, (n, 0, oo)).doit() == 0
+    assert Sum(nan, (n, 0, oo)).doit() == nan
+    raises(ValueError, "Sum(1)")
+    raises(ValueError, "summation(1)")

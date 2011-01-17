@@ -79,7 +79,7 @@ class Product(Expr):
             return self
 
     def _eval_product(self, a, n, term):
-        from sympy import sum, Sum
+        from sympy import summation, Sum
         k = self.index
 
         if not term.has(k):
@@ -125,7 +125,7 @@ class Product(Expr):
                 return A * Product(B, (k, a, n))
         elif term.is_Pow:
             if not term.base.has(k):
-                s = sum(term.exp, (k, a, n))
+                s = summation(term.exp, (k, a, n))
 
                 if not isinstance(s, Sum):
                     return term.base**s

@@ -1,8 +1,7 @@
-from sympy import Abs, Catalan, cos, Derivative, E, EulerGamma, exp, factorial,\
-                  Function, GoldenRatio, I, Integer, Integral, Interval, Lambda,\
-                  Limit, log, Matrix, nan, O, oo, pi, Rational, Real, Rel, S,\
-                  sin, SMatrix, sqrt, sum, Sum, Sum2, Symbol, symbols, Wild,\
-                  WildFunction, zeta, zoo
+from sympy import (Abs, Catalan, cos, Derivative, E, EulerGamma, exp, factorial,
+    Function, GoldenRatio, I, Integer, Integral, Interval, Lambda, Limit, log,
+    Matrix, nan, O, oo, pi, Rational, Real, Rel, S, sin, SMatrix, sqrt,
+    summation, Sum, Sum2, Symbol, symbols, Wild, WildFunction, zeta, zoo)
 from sympy.core import Expr
 from sympy.physics.units import second
 from sympy.polys import Poly, RootsOf, RootOf, RootSum
@@ -310,7 +309,7 @@ def test_SMatrix():
     assert str(M) == sstr(M) == "[x,     1]\n[y, x + y]"
 
 def test_Sum():
-    assert str(sum(cos(3*z), (z, x, y))) == "Sum(cos(3*z), (z, x, y))"
+    assert str(summation(cos(3*z), (z, x, y))) == "Sum(cos(3*z), (z, x, y))"
     assert str(Sum(x*y**2, (x, -2, 2), (y, -5, 5))) == \
         "Sum(x*y**2, (x, -2, 2), (y, -5, 5))"
 
