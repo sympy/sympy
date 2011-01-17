@@ -438,7 +438,7 @@ def roots(f, *gens, **flags):
             for r in roots_binomial(f):
                 _update_dict(result, r, 1)
         else:
-            _, factors = Poly(f.as_basic()).factor_list()
+            _, factors = Poly(f.as_expr()).factor_list()
 
             if len(factors) == 1 and factors[0][1] == 1:
                 for root in _try_decompose(f):
@@ -523,7 +523,7 @@ def root_factors(f, *gens, **args):
             factors.append(F.exquo(G))
 
     if not isinstance(f, Poly):
-        return [ f.as_basic() for f in factors ]
+        return [ f.as_expr() for f in factors ]
     else:
         return factors
 

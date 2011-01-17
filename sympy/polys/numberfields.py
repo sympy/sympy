@@ -49,7 +49,7 @@ def minimal_polynomial(ex, x=None, **args):
         if base is not None:
             mapping[ex] = a**exp + base
         else:
-            mapping[ex] = exp.as_basic(a)
+            mapping[ex] = exp.as_expr(a)
 
         return a
 
@@ -75,7 +75,7 @@ def minimal_polynomial(ex, x=None, **args):
                     alg = ex.base - coeff
 
                     # XXX: turn this into eval()
-                    inverse = invert(elt.gen + coeff, elt).as_basic()
+                    inverse = invert(elt.gen + coeff, elt).as_expr()
                     base = inverse.subs(elt.gen, alg).expand()
 
                     if ex.exp == -1:
@@ -107,7 +107,7 @@ def minimal_polynomial(ex, x=None, **args):
 
     if ex.is_AlgebraicNumber:
         if not polys:
-            return ex.minpoly.as_basic(x)
+            return ex.minpoly.as_expr(x)
         else:
             return ex.minpoly.replace(x)
     elif ex.is_Rational and ex.q != 0:
@@ -159,7 +159,7 @@ def primitive_element(extension, x=None, **args):
             coeffs = [ s*c for c in coeffs ] + [1]
 
         if not args.get('polys', False):
-            return g.as_basic(), coeffs
+            return g.as_expr(), coeffs
         else:
             return g, coeffs
 
@@ -172,7 +172,7 @@ def primitive_element(extension, x=None, **args):
 
         if ext.is_Poly:
             if ext.is_univariate:
-                f = ext.as_basic(y)
+                f = ext.as_expr(y)
             else:
                 raise ValueError("expected minimal polynomial, got %s" % ext)
         else:
@@ -202,7 +202,7 @@ def primitive_element(extension, x=None, **args):
     _, g = g.clear_denoms()
 
     if not args.get('polys', False):
-        return g.as_basic(), coeffs, H
+        return g.as_expr(), coeffs, H
     else:
         return g, coeffs, H
 
@@ -452,7 +452,7 @@ class AlgebraicNumber(Expr):
         return super(AlgebraicNumber, self).__hash__()
 
     def _eval_evalf(self, prec):
-        return self.as_basic()._evalf(prec)
+        return self.as_expr()._evalf(prec)
 
     @property
     def is_aliased(self):
@@ -469,9 +469,9 @@ class AlgebraicNumber(Expr):
             else:
                 return Poly.new(self.rep, Dummy('x'))
 
-    def as_basic(self, x=None):
+    def as_expr(self, x=None):
         """Create a Basic expression from `self`. """
-        return self.as_poly(x or self.root).as_basic().expand()
+        return self.as_poly(x or self.root).as_expr().expand()
 
     def coeffs(self):
         """Returns all SymPy coefficients of an algebraic number. """

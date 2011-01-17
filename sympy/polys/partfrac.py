@@ -90,8 +90,8 @@ def apart_undetermined_coeffs(P, Q):
     solution = solve(system, symbols)
 
     for h, f, k in partial:
-        h = h.as_basic().subs(solution)
-        result += h/f.as_basic()**k
+        h = h.as_expr().subs(solution)
+        result += h/f.as_expr()**k
 
     return result
 
@@ -121,7 +121,7 @@ def apart_full_decomposition(P, Q):
     partial = S(0)
 
     for d, n in Q.sqf_list_include(all=True):
-        b = d.as_basic()
+        b = d.as_expr()
         U += [ u.diff(x, n-1) ]
 
         h = cancel(f*b**n) / u**n
@@ -151,7 +151,7 @@ def apart_full_decomposition(P, Q):
             B, g = Q.half_gcdex(D)
             b = (P * B.exquo(g)).rem(D)
 
-            numer = b.as_basic()
+            numer = b.as_expr()
             denom = (x-a)**(n-j)
 
             expr = numer.subs(x, a) / denom

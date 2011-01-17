@@ -395,7 +395,7 @@ class Pow(Expr):
                 #b = {}
                 #for k in expansion_dict:
                 #    b[k] = Integer(expansion_dict[k])
-                #return Poly(b, *p).as_basic()
+                #return Poly(b, *p).as_expr()
 
                 from sympy.polys.polyutils import basic_from_dict
                 result = basic_from_dict(expansion_dict, *p)

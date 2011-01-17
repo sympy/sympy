@@ -118,9 +118,9 @@ def symmetrize(F, *gens, **args):
 
             f -= product
 
-        result.append((Add(*symmetric), f.as_basic()))
+        result.append((Add(*symmetric), f.as_expr()))
 
-    polys = [ (s, p.as_basic()) for s, p in polys ]
+    polys = [ (s, p.as_expr()) for s, p in polys ]
 
     if not opt.formal:
         for i, (sym, non_sym) in enumerate(result):

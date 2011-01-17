@@ -181,7 +181,7 @@ def rsolve_poly(coeffs, f, n, **hints):
             y += C[i] * n**i
 
         for i in xrange(0, r+1):
-            E += coeffs[i].as_basic()*y.subs(n, n+i)
+            E += coeffs[i].as_expr()*y.subs(n, n+i)
 
         solutions = solve_undetermined_coeffs(E-f, C, n)
 
@@ -231,7 +231,7 @@ def rsolve_poly(coeffs, f, n, **hints):
             for j in xrange(0, A+1):
                 for k in xrange(0, d+1):
                     B = Binomial(k, i+j)
-                    D = delta(polys[j].as_basic(), k)
+                    D = delta(polys[j].as_expr(), k)
 
                     alpha[i] += I[k]*B*D
 

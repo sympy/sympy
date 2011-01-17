@@ -294,7 +294,6 @@ def test_is_polynomial():
     assert ((x**2)*(y**2) + x*(y**2) + y*x + exp(x)).is_polynomial(x, y) == False
 
 def test_is_rational_function():
-    x,y = symbols('x,y')
 
     assert Integer(1).is_rational_function() == True
     assert Integer(1).is_rational_function(x) == True
@@ -350,7 +349,6 @@ def test_SAGE3():
     assert e == ('mys', x, o)
 
 def test_len():
-    x, y, z = symbols("x,y,z")
     e = x*y
     assert len(e.args) == 2
     e = x+y+z
@@ -520,7 +518,6 @@ def test_count():
     assert expr.count(lambda u: type(u) is sin) == 1
 
 def test_has_any():
-    x,y,z,t,u = symbols('x,y,z,t,u')
     f = Function("f")
     g = Function("g")
     p = Wild('p')
@@ -555,7 +552,7 @@ def test_has_any():
 
     expr = x**2*y + sin(2**t + log(z))
 
-    assert expr.has(u) is False
+    assert expr.has(n) is False
 
     assert expr.has(x)
     assert expr.has(y)
@@ -563,7 +560,7 @@ def test_has_any():
     assert expr.has(t)
 
     assert expr.has(x, y, z, t)
-    assert expr.has(x, y, z, t, u)
+    assert expr.has(x, y, z, t, n)
 
     from sympy.physics.units import m, s
 
@@ -578,12 +575,12 @@ def test_has_any():
 
     assert FockState((x, y)).has(x)
 
-def test_as_poly_basic():
+def test_as_poly_as_expr():
 
     f = x**2 + 2*x*y
 
-    assert f.as_poly().as_basic() == f
-    assert f.as_poly(x, y).as_basic() == f
+    assert f.as_poly().as_expr() == f
+    assert f.as_poly(x, y).as_expr() == f
 
     assert (f + sin(x)).as_poly(x, y) is None
 
@@ -822,7 +819,6 @@ def test_as_powers_dict():
     assert Mul(2, 2, **dict(evaluate=False)).as_powers_dict() == {S(2): S(2)}
 
 def test_new_rawargs():
-    x, y = symbols('x,y')
     n = Symbol('n', commutative=False)
     a = object.__new__(Add)
     assert 2 + x == a._new_rawargs(*[S(2), x])

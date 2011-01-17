@@ -66,7 +66,7 @@ class AlgebraicField(Field, CharacteristicZero, SimpleDomain):
     def to_sympy(self, a):
         """Convert `a` to a SymPy object. """
         from sympy.polys.numberfields import AlgebraicNumber
-        return AlgebraicNumber(self.ext, a).as_basic()
+        return AlgebraicNumber(self.ext, a).as_expr()
 
     def from_sympy(self, a):
         """Convert SymPy's expression to `dtype`. """

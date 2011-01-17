@@ -475,7 +475,7 @@ class RootOf(Expr):
 
     @property
     def expr(self):
-        return self.poly.as_basic()
+        return self.poly.as_expr()
 
     @property
     def args(self):
@@ -713,7 +713,7 @@ class RootSum(Expr):
 
     @property
     def expr(self):
-        return self.poly.as_basic()
+        return self.poly.as_expr()
 
     @property
     def args(self):

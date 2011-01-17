@@ -205,7 +205,7 @@ class assoc_legendre(Function):
     @classmethod
     def calc(cls, n, m):
         P = legendre_poly(n, _x, polys=True).diff((_x, m))
-        return (-1)**m * (1 - _x**2)**Rational(m, 2) * P.as_basic()
+        return (-1)**m * (1 - _x**2)**Rational(m, 2) * P.as_expr()
 
     @classmethod
     def eval(cls, n, m, x):

@@ -118,8 +118,8 @@ def test_integrate_poly():
     assert qx.gens == (x, y)
     assert qy.gens == (x, y)
 
-    assert qx.as_basic() == x**2/2 + x**3*y/3 + x*y**3
-    assert qy.as_basic() == x*y + x**2*y**2/2 + y**4/4
+    assert qx.as_expr() == x**2/2 + x**3*y/3 + x*y**3
+    assert qy.as_expr() == x*y + x**2*y**2/2 + y**4/4
 
 def test_integrate_poly_defined():
     p = Poly(x + x**2*y + y**3, x, y)
@@ -133,8 +133,8 @@ def test_integrate_poly_defined():
     assert Qx.gens == (y,)
     assert Qy.gens == (x,)
 
-    assert Qx.as_basic() == Rational(1,2) + y/3 + y**3
-    assert Qy.as_basic() == pi**4/4 + pi*x + pi**2*x**2/2
+    assert Qx.as_expr() == Rational(1,2) + y/3 + y**3
+    assert Qy.as_expr() == pi**4/4 + pi*x + pi**2*x**2/2
 
 def test_integrate_omit_var():
     y = Symbol('y')

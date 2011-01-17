@@ -291,9 +291,9 @@ class StrPrinter(Printer):
 
     def _print_AlgebraicNumber(self, expr):
         if expr.is_aliased:
-            return self._print(expr.as_poly().as_basic())
+            return self._print(expr.as_poly().as_expr())
         else:
-            return self._print(expr.as_basic())
+            return self._print(expr.as_expr())
 
     def _print_Pow(self, expr):
         PREC = precedence(expr)

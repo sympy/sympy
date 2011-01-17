@@ -32,7 +32,7 @@ class ExpressionDomain(Field, CharacteristicZero, SimpleDomain):
         def __hash__(self):
             return hash((self.__class__.__name__, self.ex))
 
-        def as_basic(f):
+        def as_expr(f):
             return f.ex
 
         def numer(f):
@@ -113,7 +113,7 @@ class ExpressionDomain(Field, CharacteristicZero, SimpleDomain):
 
     def to_sympy(self, a):
         """Convert `a` to a SymPy object. """
-        return a.as_basic()
+        return a.as_expr()
 
     def from_sympy(self, a):
         """Convert SymPy's expression to `dtype`. """

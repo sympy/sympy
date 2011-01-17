@@ -340,7 +340,7 @@ class Integral(Expr):
                         gens = list(antideriv.gens)
                         gens.remove(x)
 
-                        antideriv = antideriv.as_basic()
+                        antideriv = antideriv.as_expr()
 
                         function = antideriv._eval_interval(x, a, b)
                         function = Poly(function, *gens)
@@ -491,7 +491,7 @@ class Integral(Expr):
         poly = f.as_poly(x)
 
         if poly is not None:
-            return poly.integrate().as_basic()
+            return poly.integrate().as_expr()
 
         # since Integral(f=g1+g2+...) == Integral(g1) + Integral(g2) + ...
         # we are going to handle Add terms separately,

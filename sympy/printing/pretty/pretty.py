@@ -768,9 +768,9 @@ class PrettyPrinter(Printer):
 
     def _print_AlgebraicNumber(self, expr):
         if expr.is_aliased:
-            return self._print(expr.as_poly().as_basic())
+            return self._print(expr.as_poly().as_expr())
         else:
-            return self._print(expr.as_basic())
+            return self._print(expr.as_expr())
 
     def _print_RootOf(self, expr):
         args = [self._print_Add(expr.expr, order='lex'), expr.index]
