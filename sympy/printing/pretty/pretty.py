@@ -245,24 +245,23 @@ class PrettyPrinter(Printer):
                     return " "*need + s
                 return lead + s + ' '*(need - len(lead))
 
-            wrequired = max(lower, upper)
-            h = max(hrequired, wrequired, 2)
+            h = max(hrequired, 2)
             d = h//2
-            w = max(wrequired, d + 1)
+            wrequired = max(lower, upper)
+            w = d + 1
             more = hrequired % 2
-            rpad = 1
 
             lines = []
-            lines.append("_"*(w) + ' '*(1 + rpad))
-            lines.append("\%s`%s" % (' '*(w - 1), ' '*rpad))
+            lines.append("_"*(w) + ' ')
+            lines.append("\%s`" % (' '*(w - 1)))
             for i in range(1, d):
-              lines.append('%s\\%s' % (' '*i, ' '*(w - i + rpad)))
+              lines.append('%s\\%s' % (' '*i, ' '*(w - i)))
             if more:
-                lines.append('%s)%s' % (' '*(d), ' '*(w - d + rpad)))
+                lines.append('%s)%s' % (' '*(d), ' '*(w - d)))
             for i in reversed(range(1, d)):
-              lines.append('%s/%s' % (' '*i, ' '*(w - i + rpad)))
-            lines.append("/" + "_"*(w - 1) + ',' + ' '*rpad)
-            return d, lines
+              lines.append('%s/%s' % (' '*i, ' '*(w - i)))
+            lines.append("/" + "_"*(w - 1) + ',')
+            return d, h + more, lines
 
         f = sum.function
 
@@ -286,7 +285,7 @@ class PrettyPrinter(Printer):
                 prettyLower = self._print(lim[0])
 
             # Create sum sign based on the height of the argument
-            d, slines = asum(H, prettyLower.width(), prettyUpper.width())
+            d, h, slines = asum(H, prettyLower.width(), prettyUpper.width())
             if first:
                 prettyF.baseline = prettyF.baseline - d
                 first = False
@@ -295,6 +294,10 @@ class PrettyPrinter(Printer):
             prettySign = prettyForm(*prettySign.above(prettyUpper))
             prettySign = prettyForm(*prettySign.below(prettyLower))
 
+            # put padding to the right
+            pad = stringPict('')
+            pad = prettyForm(*pad.stack(*[' ']*h))
+            prettySign = prettyForm(*prettySign.right(pad))
             # put the present prettF to the right
             prettyF = prettyForm(*prettySign.right(prettyF))
         return prettyF
