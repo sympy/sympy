@@ -2110,7 +2110,9 @@ class NO(Expr):
         NO(AnnihilateFermion(p)*AnnihilateFermion(r))
 
         """
-        mul = Mul(*(self.args[0].args[0:i] + self.args[0].args[i+1:]))
+        arg0 = self.args[0] # it's a Mul by definition of how it's created
+        mul = Mul._new_rawargs(arg0, Mul._new_rawargs(arg0, arg0.args[:i]),
+                                     Mul._new_rawargs(arg0, arg0.args[i + 1:]))
         return NO(mul)
 
     def _latex(self,printer):
