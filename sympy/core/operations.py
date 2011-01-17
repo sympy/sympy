@@ -59,7 +59,7 @@ class AssocOp(Expr):
 
            This is handy when we want to optimize things, e.g.
 
-           >>> from sympy import Mul, symbols
+           >>> from sympy import Mul, symbols, S
            >>> from sympy.abc import x, y
            >>> e = Mul(3,x,y)
            >>> e.args
@@ -68,6 +68,29 @@ class AssocOp(Expr):
            x*y
            >>> e._new_rawargs(*e.args[1:])  # the same as above, but faster
            x*y
+
+           The commutivity of the result will match that of e:
+
+           >>> _.is_commutative
+           True
+           >>> n = symbols('n', commutative=False)
+           >>> (x*n)._new_rawargs(*e.args[1:])
+           x*y
+           >>> _.is_commutative
+           False
+
+           Note: use this with caution. There is no checking of arguments at
+           all. This is best used when you are rebuilding an Add or Mul after
+           simply removing a term. If, for example, you include values of 1
+           in the list of args they will not show up in the result but a Mul
+           will be returned nonetheless:
+
+           >>> m = (x*y)._new_rawargs(S.One, x); m
+           x
+           >>> m == x
+           False
+           >>> m.is_Mul
+           True
 
         """
         if len(args) == 1:
