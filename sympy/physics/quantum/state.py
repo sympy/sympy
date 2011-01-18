@@ -70,20 +70,20 @@ class StateBase(QExpr):
     # Printing
     #-------------------------------------------------------------------------
 
-    def _sympystr(self, printer, *args):
-        return '%s%s%s' % (self.lbracket, self._print_contents(printer, *args),
-                           self.rbracket)
+    def _print_contents(self, printer, *args):
+        label = self._print_label(printer, *args)
+        return '%s%s%s' % (self.lbracket, label, self.rbracket)
 
-    def _pretty(self, printer, *args):
+    def _print_contents_pretty(self, printer, *args):
         from sympy.printing.pretty.stringpict import prettyForm
-        pform = self._print_contents_pretty(printer, *args)
+        pform = self._print_label_pretty(printer, *args)
         pform = prettyForm(*pform.left((self.lbracket_pretty)))
         pform = prettyForm(*pform.right((self.rbracket_pretty)))
         return pform
 
-    def _latex(self, printer, *args):
-        contents = self._print_contents(printer, *args)
-        return '%s%s%s' % (self.lbracket_latex, contents, self.rbracket_latex)
+    def _print_contents_latex(self, printer, *args):
+        label = self._print_label_latex(printer, *args)
+        return '%s%s%s' % (self.lbracket_latex, label, self.rbracket_latex)
 
 
 class KetBase(StateBase):
@@ -325,29 +325,33 @@ class TimeDepState(StateBase):
         The time of the state.
     """
 
-    def __new__(cls, label, time, **old_assumptions):
-        # First compute args and call Expr.__new__ to create the instance
-        label = cls._eval_label(label)
-        time = cls._eval_time(time)
-        inst = Expr.__new__(cls, label, time, **{'commutative':False})
-        # Now set the slots on the instance
-        inst.hilbert_space = cls._eval_hilbert_space(label)
-        return inst
+    #-------------------------------------------------------------------------
+    # Initialization
+    #-------------------------------------------------------------------------
+
+    #-------------------------------------------------------------------------
+    # Properties
+    #-------------------------------------------------------------------------
+
+    @property
+    def label(self):
+        """The label of the state."""
+        return self.args[:-1]
 
     @property
     def time(self):
         """The time of the state."""
-        return self.args[1]
+        return self.args[-1]
 
-    @classmethod
-    def _eval_time(cls, time):
-        return sympify(time)
+    #-------------------------------------------------------------------------
+    # Printing
+    #-------------------------------------------------------------------------
 
     def _print_time(self, printer, *args):
         return printer._print(self.time, *args)
 
-    def _print_time_repr(self, printer, *args):
-        return printer._print(self.time, *args)
+    _print_time_repr = _print_time
+    _print_time_latex = _print_time
 
     def _print_time_pretty(self, printer, *args):
         pform = printer._print(self.time, *args)
@@ -356,7 +360,7 @@ class TimeDepState(StateBase):
     def _print_contents(self, printer, *args):
         label = self._print_label(printer, *args)
         time = self._print_time(printer, *args)
-        return '%s;%s' % (label, time)
+        return '%s%s;%s%s' % (self.lbracket, label, time, self.rbracket)
 
     def _print_contents_repr(self, printer, *args):
         label = self._print_label_repr(printer, *args)
@@ -365,10 +369,18 @@ class TimeDepState(StateBase):
 
     def _print_contents_pretty(self, printer, *args):
         pform = self._print_label_pretty(printer, *args)
+        pform = prettyForm(*pform.left((self.lbracket_pretty)))
         pform = prettyForm(*pform.right((';')))
         nextpform = self._print_time_pretty(printer, *args)
         pform = prettyForm(*pform.right((nextpform)))
+        pform = prettyForm(*pform.right((self.rbracket_pretty)))
         return pform
+
+    def _print_contents_latex(self, printer, *args):
+        label = self._print_label_latex(printer, *args)
+        time = self._print_time_latex(printer, *args)
+        return '%s%s;%s%s' %\
+            (self.lbracket_latex, label, time, self.rbracket_latex)
 
 
 class TimeDepKet(TimeDepState, KetBase):

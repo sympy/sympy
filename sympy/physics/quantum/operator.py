@@ -104,6 +104,8 @@ class Operator(QExpr):
     def _print_operator_name(self, printer, *args):
         return printer._print(self.__class__.__name__, *args)
 
+    _print_operator_name_latex = _print_operator_name
+
     def _print_operator_name_pretty(self, printer, *args):
         return prettyForm(self.__class__.__name__)
 
@@ -127,6 +129,15 @@ class Operator(QExpr):
             )
             pform = prettyForm(*pform.right((label_pform)))
             return pform
+
+    def _print_contents_latex(self, printer, *args):
+        if len(self.label) == 1:
+            return self._print_label_latex(printer, *args)
+        else:
+            return '%s(%s)' % (
+                self._print_operator_name_latex(printer, *args),
+                self._print_label_latex(printer, *args)
+            )
 
     #-------------------------------------------------------------------------
     # _eval_* methods
@@ -272,8 +283,10 @@ class OuterProduct(Operator):
     [1] http://en.wikipedia.org/wiki/Outer_product
     """
 
-    def __new__(cls, ket, bra, **old_assumptions):
+    def __new__(cls, *args, **old_assumptions):
         from sympy.physics.quantum.state import KetBase, BraBase
+        ket = args[0]
+        bra = args[1]
         if not isinstance(ket, KetBase):
             raise TypeError('KetBase subclass expected, got: %r' % ket)
         if not isinstance(bra, BraBase):
@@ -284,7 +297,7 @@ class OuterProduct(Operator):
                 (ket.__class__, bra.__class__)
             )
         # TODO: make sure the hilbert spaces of the bra and ket are compatible
-        obj = Expr.__new__(cls, *(ket, bra), **{'commutative': False})
+        obj = Expr.__new__(cls, *args, **{'commutative': False})
         obj.hilbert_space = ket.hilbert_space
         return obj
 
@@ -301,12 +314,12 @@ class OuterProduct(Operator):
     def _eval_dagger(self):
         return OuterProduct(Dagger(self.bra), Dagger(self.ket))
 
+    def _sympystr(self, printer, *args):
+        return str(self.ket)+str(self.bra)
+
     def _sympyrepr(self, printer, *args):
         return '%s(%s,%s)' % (self.__class__.__name__, 
             printer._print(self.ket, *args), printer._print(self.bra, *args))
-
-    def _sympystr(self, printer, *args):
-        return str(self.ket)+str(self.bra)
 
     def _pretty(self, printer, *args):
         pform = self.ket._pretty(printer, *args)

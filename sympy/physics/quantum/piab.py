@@ -24,7 +24,7 @@ class PIABHamiltonian(HermitianOperator):
 class PIABKet(Ket):
 
     @classmethod
-    def _eval_hilbert_space(cls, label):
+    def _eval_hilbert_space(cls, args):
         return L2(Interval(S.NegativeInfinity,S.Infinity))
 
     @property

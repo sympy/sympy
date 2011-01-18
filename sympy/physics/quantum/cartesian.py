@@ -11,7 +11,7 @@ from sympy.physics.quantum.hilbert import L2
 class XOp(HermitianOperator):
 
     @classmethod
-    def _eval_hilbert_space(self, label):
+    def _eval_hilbert_space(self, args):
         return L2(Interval(S.NegativeInfinity, S.Infinity))
 
     def _eval_commutator_PxOp(self, other):
@@ -24,7 +24,7 @@ class XOp(HermitianOperator):
 class PxOp(HermitianOperator):
 
     @classmethod
-    def _eval_hilbert_space(self, label):
+    def _eval_hilbert_space(self, args):
         return L2(Interval(S.NegativeInfinity, S.Infinity))
 
     def _apply_operator_PxKet(self, ket):

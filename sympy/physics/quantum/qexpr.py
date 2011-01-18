@@ -1,4 +1,4 @@
-from sympy import Expr, sympify, Symbol
+from sympy import Expr, sympify, Symbol, Matrix
 from sympy.printing.pretty.stringpict import prettyForm
 from sympy.core.containers import Tuple
 
@@ -14,6 +14,37 @@ __all__ = [
 
 class QuantumError(Exception):
     pass
+
+
+def _qsympify_sequence(*seq):
+    """Convert elements of a sequence to standard form.
+
+    This is like sympify, but it performs special logic for arguments passed
+    to QExpr. The following conversions are done:
+
+    * (list, tuple, Tuple) => _qsympify_sequence each element and convert 
+      sequence to a Tuple.
+    * basestring => Symbol
+    * Matrix => Matrix
+    * other => sympify
+
+    Strings are passed to Symbol, not sympify to make sure that variables like
+    'pi' are kept as Symbols, not the Sympy built-in number subclasses.
+    """
+    result = []
+    for item in seq:
+        if isinstance(item, (list, tuple, Tuple)):
+            newitem = Tuple(*[_qsympify_sequence(it) for it in item])
+        elif isinstance(item, Matrix):
+            newitem = item
+        elif isinstance(item, basestring):
+            newitem = Symbol(item)
+        else:
+            newitem = sympify(item)
+        result.append(newitem)
+    return result
+
+
 
 #-----------------------------------------------------------------------------
 # Basic Quantum Expression from which all objects descend
@@ -31,9 +62,9 @@ class QExpr(Expr):
     __slots__ = ['hilbert_space']
 
     # The separator used in printing the label
-    _label_separator = ''
+    _label_separator = u''
 
-    def __new__(cls, label, **old_assumptions):
+    def __new__(cls, *args, **old_assumptions):
         """Construct a new quantum object.
 
         Parameters
@@ -60,10 +91,10 @@ class QExpr(Expr):
         """
 
         # First compute args and call Expr.__new__ to create the instance
-        label = cls._eval_label(label)
-        inst = Expr.__new__(cls, label, **{'commutative':False})
+        args = cls._eval_args(args)
+        inst = Expr.__new__(cls, *args, **{'commutative':False})
         # Now set the slots on the instance
-        inst.hilbert_space = cls._eval_hilbert_space(label)
+        inst.hilbert_space = cls._eval_hilbert_space(args)
         return inst
 
     @classmethod
@@ -94,7 +125,7 @@ class QExpr(Expr):
         quantum numbers. For an abstract state, it would just be a single
         element Tuple of the symbol of the state.
         """
-        return self.args[0]
+        return self.args
 
     @property
     def is_symbolic(self):
@@ -105,32 +136,20 @@ class QExpr(Expr):
     #-------------------------------------------------------------------------
 
     @classmethod
-    def _eval_label(cls, label):
-        """Make sure that label is a sympy.core.containers.Tuple.
+    def _eval_args(cls, args):
+        """Make sure that args is processed.
+
+        * Each element of args is passed to sympify or if it is a basestring
+          it is passed to Symbol.
+        * To sympify lists or tuples, they are converted to Tuples whose
+          elements are sympified or Symbol'ized.
 
         The elements of the Tuple must be run through sympify.
         """
-        if not isinstance(label, Tuple):
-            if isinstance(label, (list, tuple)):
-                # Convert a raw tuple or list to a Tuple
-                newlabel = Tuple(*label)
-            else:
-                # Single element label gets wrapped into a tuple.
-                newlabel = Tuple(label)
-        else:
-            newlabel = label
-        l = []
-        for item in newlabel:
-            if isinstance(item, basestring):
-                i = Symbol(item)
-            else:
-                i = sympify(item)
-            l.append(i)
-        newlabel = Tuple(*l)
-        return newlabel
+        return _qsympify_sequence(*args)
 
     @classmethod
-    def _eval_hilbert_space(cls, label):
+    def _eval_hilbert_space(cls, args):
         """Compute the Hilbert space instance from the label."""
         from sympy.physics.quantum.hilbert import HilbertSpace
         return HilbertSpace()
@@ -143,22 +162,57 @@ class QExpr(Expr):
     # Printing
     #-------------------------------------------------------------------------
 
-    def _print_label(self, printer, *args):
+    # Utilities for printing: these operate on raw sympy objects
+
+    def _print_sequence(self, seq, sep, printer, *args):
         result = []
-        for item in self.label:
+        for item in seq:
             result.append(printer._print(item, *args))
-        return self._label_separator.join(result)
+        return sep.join(result)
+
+    def _print_sequence_pretty(self, seq, sep, printer, *args):
+        pform = printer._print(seq[0], *args)
+        for item in seq[1:]:
+            pform = prettyForm(*pform.right((sep)))
+            pform = prettyForm(*pform.right((printer._print(item, *args))))
+        return pform
+
+    # Utilities for printing: these operate prettyForm objects
+
+    def _print_subscript_pretty(self, a, b):
+        top = prettyForm(*b.left(' '*a.width()))
+        bot = prettyForm(*a.right(' '*b.width()))
+        return prettyForm(binding=prettyForm.POW, *bot.below(top))
+
+    def _print_superscript_pretty(self, a, b):
+        return a**b
+
+    def _print_parens_pretty(self, pform, left='(', right=')'):
+        return prettyForm(*pform.parens(left=right, right=right))
+
+    # Printing of labels
+
+    def _print_label(self, printer, *args):
+        return self._print_sequence(
+            self.label, self._label_separator, printer, *args
+        )
 
     def _print_label_repr(self, printer, *args):
-        return printer._print(self.label, *args)
+        return self._print_sequence(
+            self.label, ',', printer, *args
+        )
 
     def _print_label_pretty(self, printer, *args):
-        pform = printer._print(self.label[0], *args)
-        for item in self.label[1:]:
-            pform = prettyForm(*pform.right((self._label_separator)))
-            nextpform = printer._print(item, *args)
-            pform = prettyForm(*pform.right((nextpform)))
-        return pform
+        return self._print_sequence_pretty(
+            self.label, self._label_separator, printer, *args
+        )
+
+    def _print_label_latex(self, printer, *args):
+        return self._print_sequence(
+            self.label, self._label_separator, printer, *args
+        )
+
+    # Printing of contents
 
     def _print_contents(self, printer, *args):
         return self._print_label(printer, *args)
@@ -169,20 +223,25 @@ class QExpr(Expr):
     def _print_contents_pretty(self, printer, *args):
         return self._print_label_pretty(printer, *args)
 
+    def _print_contents_latex(self, printer, *args):
+        return self._print_label_latex(printer, *args)
+
+    # Main methods
+
     def _sympystr(self, printer, *args):
         return self._print_contents(printer, *args)
 
     def _sympyrepr(self, printer, *args):
-        return '%s(%s)' % (
-            self.__class__.__name__, self._print_contents_repr(printer, *args)
-        )
+        classname = self.__class__.__name__
+        contents = self._print_contents_repr(printer, *args)
+        return '%s(%s)' % (classname, contents)
 
     def _pretty(self, printer, *args):
         pform = self._print_contents_pretty(printer, *args)
         return pform
 
     def _latex(self, printer, *args):
-        return self._print_contents(printer, *args)
+        return self._print_contents_latex(printer, *args)
 
     #-------------------------------------------------------------------------
     # Methods from Basic and Expr

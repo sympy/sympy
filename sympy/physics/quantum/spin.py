@@ -57,35 +57,30 @@ def m_values(j):
 
 class SpinOpBase(object):
 
-    def _sympyrepr(self, printer, *args):
-        return '%s(%s)' % (
-            self.__class__.__name__, printer._print(self.label,*args)
-        )
-
-    def _print_operator_name(self, printer, *args):
-        return self.__class__.__name__
-
-    def _print_operator_name_pretty(self, printer, *args):
-        a = stringPict(unicode(self.label[0]))
-        b = stringPict(self._coord)
-        top = stringPict(*b.left(' '*a.width()))
-        bot = stringPict(*a.right(' '*b.width()))
-        return prettyForm(binding=prettyForm.POW, *bot.below(top))
-
-    def _print_contents(self, printer, *args):
-        return '%s%s' % (str(self.label[0]), self._coord)
-
-    def _print_contents_pretty(self, printer, *args):
-        pform = self._print_operator_name_pretty(printer, *args)
-        return pform
-
-    def _latex(self, printer, *args):
-        return r'%s_%s' % ((str(self.label[0]), self._coord))
-
     @classmethod
     def _eval_hilbert_space(cls, label):
         # We consider all j values so our space is infinite.
         return ComplexSpace(S.Infinity)
+
+    @property
+    def name(self):
+        return self.args[0]
+
+    def _print_contents(self, printer, *args):
+        return '%s%s' % (unicode(self.name), self._coord)
+
+    # def _sympyrepr(self, printer, *args):
+    #     return '%s(%s)' % (
+    #         self.__class__.__name__, printer._print(self.label,*args)
+    #
+
+    def _print_contents_pretty(self, printer, *args):
+        a = stringPict(unicode(self.name))
+        b = stringPict(self._coord)
+        return self._print_subscript_pretty(a, b)
+
+    def _print_contents_latex(self, printer, *args):
+        return r'%s_%s' % ((unicode(self.name), self._coord))
 
     def _represent_base(self, basis, **options):
         j = options.get('j', Rational(1,2))
@@ -103,15 +98,15 @@ class JplusOp(SpinOpBase, Operator):
     _coord = '+'
 
     def _eval_commutator_JminusOp(self, other):
-        return 2*hbar*JzOp(self.label[0])
+        return 2*hbar*JzOp(self.name)
 
     def _apply_operator_JzKet(self, ket, **options):
         j = ket.j
         m = ket.m
         if m.is_Number and j.is_Number:
-            if m >=j:
+            if m >= j:
                 return S.Zero
-        return hbar*sqrt(j*(j+S.One)-m*(m+S.One))*JzKet((j, m+S.One))
+        return hbar*sqrt(j*(j+S.One)-m*(m+S.One))*JzKet(j, m+S.One)
 
     def matrix_element(self, j, m, jp, mp):
         result = hbar*sqrt(j*(j+S.One)-mp*(mp+S.One))
@@ -134,9 +129,9 @@ class JminusOp(SpinOpBase, Operator):
         j = ket.j
         m = ket.m
         if m.is_Number and j.is_Number:
-            if m <= j:
+            if m <= -j:
                 return S.Zero
-        return hbar*sqrt(j*(j+S.One)-m*(m-S.One))*JzKet((j, m-S.One))
+        return hbar*sqrt(j*(j+S.One)-m*(m-S.One))*JzKet(j, m-S.One)
 
     def matrix_element(self, j, m, jp, mp):
         result = hbar*sqrt(j*(j+S.One)-mp*(mp-S.One))
@@ -156,19 +151,19 @@ class JxOp(SpinOpBase, HermitianOperator):
     _coord = 'x'
 
     def _eval_commutator_JyOp(self, other):
-        return I*hbar*JzOp(self.label[0])
+        return I*hbar*JzOp(self.name)
 
     def _eval_commutator_JzOp(self, other):
-        return -I*hbar*JyOp(self.label[0])
+        return -I*hbar*JyOp(self.name)
 
     def _apply_operator_JzKet(self, ket, **options):
-        jp = JplusOp(self.label[0])._apply_operator_JzKet(ket)
-        jm = JminusOp(self.label[0])._apply_operator_JzKet(ket)
+        jp = JplusOp(self.name)._apply_operator_JzKet(ket)
+        jm = JminusOp(self.name)._apply_operator_JzKet(ket)
         return (jp + jm)/Integer(2)
 
     def _represent_JzOp(self, basis, **options):
-        jp = JplusOp(self.label[0])._represent_JzOp(basis, **options)
-        jm = JminusOp(self.label[0])._represent_JzOp(basis, **options)
+        jp = JplusOp(self.name)._represent_JzOp(basis, **options)
+        jm = JminusOp(self.name)._represent_JzOp(basis, **options)
         return (jp + jm)/Integer(2)
 
     def _eval_rewrite_as_plusminus(self, *args):
@@ -180,19 +175,19 @@ class JyOp(SpinOpBase, HermitianOperator):
     _coord = 'y'
 
     def _eval_commutator_JzOp(self, other):
-        return I*hbar*JxOp(self.label[0])
+        return I*hbar*JxOp(self.name)
 
     def _eval_commutator_JxOp(self, other):
-        return -I*hbar*J2Op(self.label[0])
+        return -I*hbar*J2Op(self.name)
 
     def _apply_operator_JzKet(self, ket, **options):
-        jp = JplusOp(self.label[0])._apply_operator_JzKet(ket)
-        jm = JminusOp(self.label[0])._apply_operator_JzKet(ket)
+        jp = JplusOp(self.name)._apply_operator_JzKet(ket)
+        jm = JminusOp(self.name)._apply_operator_JzKet(ket)
         return (jp - jm)/(Integer(2)*I)
 
     def _represent_JzOp(self, basis, **options):
-        jp = JplusOp(self.label[0])._represent_JzOp(basis, **options)
-        jm = JminusOp(self.label[0])._represent_JzOp(basis, **options)
+        jp = JplusOp(self.name)._represent_JzOp(basis, **options)
+        jm = JminusOp(self.name)._represent_JzOp(basis, **options)
         return (jp - jm)/(Integer(2)*I)
 
     def _eval_rewrite_as_plusminus(self, *args):
@@ -204,16 +199,16 @@ class JzOp(SpinOpBase, HermitianOperator):
     _coord = 'z'
 
     def _eval_commutator_JxOp(self, other):
-        return I*hbar*JyOp(self.label[0])
+        return I*hbar*JyOp(self.name)
 
     def _eval_commutator_JyOp(self, other):
-        return -I*hbar*JxOp(self.label[0])
+        return -I*hbar*JxOp(self.name)
 
     def _eval_commutator_JplusOp(self, other):
-        return hbar*JplusOp(self.label[0])
+        return hbar*JplusOp(self.name)
 
     def _eval_commutator_JminusOp(self, other):
-        return -hbar*JminusOp(self.label[0])
+        return -hbar*JminusOp(self.name)
 
     def _apply_operator_JzKet(self, ket):
         return (hbar*ket.m)*ket
@@ -268,7 +263,7 @@ class J2Op(SpinOpBase, HermitianOperator):
         return prettyForm(binding=prettyForm.POW, *bot.above(top))
 
     def _latex(self, printer, *args):
-        return r'%s^2' % str(self.label[0])
+        return r'%s^2' % str(self.name)
 
     def _eval_rewrite_as_xyz(self, *args):
         return JxOp(args[0])**2 + JyOp(args[0])**2 + JzOp(args[0])**2
@@ -282,11 +277,16 @@ class J2Op(SpinOpBase, HermitianOperator):
 class Rotation(UnitaryOperator):
 
     @classmethod
-    def _eval_label(cls, label):
-        label = QExpr._eval_label(label)
-        if len(label) != 3:
-            raise ValueError('3 Euler angles required, got: %r' % label)
-        return label
+    def _eval_args(cls, args):
+        args = QExpr._eval_args(args)
+        if len(args) != 3:
+            raise ValueError('3 Euler angles required, got: %r' % args)
+        return args
+
+    @classmethod
+    def _eval_hilbert_space(cls, label):
+        # We consider all j values so our space is infinite.
+        return ComplexSpace(S.Infinity)
 
     @property
     def alpha(self):
@@ -350,11 +350,6 @@ class Rotation(UnitaryOperator):
         )
         result *= KroneckerDelta(j,jp)
         return result
-
-    @classmethod
-    def _eval_hilbert_space(cls, label):
-        # We consider all j values so our space is infinite.
-        return ComplexSpace(S.Infinity)
 
     def _represent_base(self, basis, **options):
         j = sympify(options.get('j', Rational(1,2)))
