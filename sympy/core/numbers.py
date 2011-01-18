@@ -465,13 +465,6 @@ class Rational(Number):
         if q is None:
             if isinstance(p, Rational):
                return p
-            try:
-                # fractions only available for python 2.6+
-                import fractions
-                if isinstance(p, fractions.Fraction):
-                    return Rational(p.numerator, p.denominator)
-            except ImportError:
-                pass
             if isinstance(p, basestring):
                 try:
                     # we might have a Real
