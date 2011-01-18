@@ -4477,17 +4477,8 @@ def _symbolic_factor_list(expr, opt, method):
 def _symbolic_factor(expr, opt, method):
     """Helper function for :func:`_factor`. """
     if isinstance(expr, Expr) and not expr.is_Relational:
-        numer, denom = together(expr).as_numer_denom()
-
-        cp, fp = _symbolic_factor_list(numer, opt, method)
-        cq, fq = _symbolic_factor_list(denom, opt, method)
-
-        fp = _factors_product(fp)
-        fq = _factors_product(fq)
-
-        coeff, expr = cp/cq, fp/fq
-
-        return _keep_coeff(coeff, expr)
+        coeff, factors = _symbolic_factor_list(together(expr), opt, method)
+        return _keep_coeff(coeff, _factors_product(factors))
     elif hasattr(expr, 'args'):
         return expr.new(*[ _symbolic_factor(arg, opt, method) for arg in expr.args ])
     elif hasattr(expr, '__iter__'):
