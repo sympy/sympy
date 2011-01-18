@@ -404,12 +404,13 @@ class Matrix(object):
             if n < 0:
                 return self.inv() ** -n   # A**-2 = (A**-1)**2
             a = eye(self.cols)
+            s = self
             while n:
-                if n % 2:
-                    a = a * self
+                if n%2:
+                    a *= s
                     n -= 1
-                self = self * self
-                n = n // 2
+                s *= s
+                n //= 2
             return a
         raise NotImplementedError('Can only raise to the power of an integer for now')
 
