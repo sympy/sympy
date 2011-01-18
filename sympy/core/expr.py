@@ -232,9 +232,10 @@ class Expr(Basic, EvalfMixin):
         if x.is_Integer:
             return
 
+        result = self
         if expand:
-            self = self.expand() # collect expects its arguments in expanded form
-        result = collect(self, x, evaluate=False, exact=True)
+            result = result.expand() # collect expects its arguments in expanded form
+        result = collect(result, x, evaluate=False, exact=True)
         if x in result:
             return result[x]
         else:
@@ -788,11 +789,11 @@ class Expr(Basic, EvalfMixin):
         we = Wild('we')
         p  = wc*x**we
         from sympy import collect
-        self = collect(self, x)
-        d = self.match(p)
+        s = collect(self, x)
+        d = s.match(p)
         if d is not None and we in d:
             return d[wc], d[we]
-        return self, S.Zero
+        return s, S.Zero
 
     def leadterm(self, x):
         """
