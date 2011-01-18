@@ -293,14 +293,14 @@ class Function(Application, Expr):
     def as_base_exp(self):
         return self, S.One
 
-    def _eval_nseries(self, x, x0, n):
+    def _eval_nseries(self, x, n):
         assert len(self.args) == 1
         arg = self.args[0]
         arg0 = arg.limit(x, 0)
         from sympy import oo
         if arg0 in [-oo, oo]:
-            raise PoleError("Cannot expand around %s" % (arg))
-        if arg0 is not S.Zero:
+            raise PoleError("Cannot expand %s around 0" % (arg))
+        if arg0:
             e = self
             e1 = e.expand()
             if e == e1:
@@ -317,12 +317,12 @@ class Function(Application, Expr):
                     term = term.expand()
                     series += term
                 return series + C.Order(x**n, x)
-            return e1.nseries(x, x0, n)
+            return e1.nseries(x, n=n)
         l = []
         g = None
         for i in xrange(n+2):
             g = self.taylor_term(i, arg, g)
-            g = g.nseries(x, x0, n)
+            g = g.nseries(x, n=n)
             l.append(g)
         return Add(*l) + C.Order(x**n, x)
 
@@ -632,44 +632,30 @@ class Derivative(Expr):
         return Derivative(*map(lambda x: x._eval_subs(old, new), self.args))
 
     def matches(self, expr, repl_dict={}, evaluate=False):
-        # this method needs a cleanup.
-
         if self in repl_dict:
             if repl_dict[self] == expr:
                 return repl_dict
-            else:
-                return None
-        if isinstance(expr, Derivative):
+        elif isinstance(expr, Derivative):
             if len(expr.variables) == len(self.variables):
                     #print "MAYBE:",self, expr, repl_dict, evaluate
                 return Expr.matches(self, expr, repl_dict, evaluate)
-        #print "NONE:",self, expr, repl_dict, evaluate
-        return None
-        #print self, expr, repl_dict, evaluate
-        stop
-        if self.nargs is not None:
-            if self.nargs != expr.nargs:
-                return None
-        repl_dict = repl_dict.copy()
-        repl_dict[self] = expr
-        return repl_dict
 
-    def _eval_lseries(self, x, x0):
-        stop
-        arg = self.args[0]
-        dx = self.args[1]
-        for term in arg.lseries(x, x0):
-            yield term.diff(dx)
+    def _eval_lseries(self, x):
+        dx = self.args[1:]
+        for term in self.args[0].lseries(x):
+            yield Derivative(term, *dx)
 
-    def _eval_nseries(self, x, x0, n):
-        arg = self.args[0]
-        arg = arg.nseries(x, x0, n)
+    def _eval_nseries(self, x, n):
+        arg = self.args[0].nseries(x, n=n)
         o = arg.getO()
-        dx = self.args[1]
+        dx = self.args[1:]
+        rv = [Derivative(a, *dx) for a in Add.make_args(arg.removeO())]
         if o:
-            return arg.removeO().diff(dx) + arg.getO()/dx
-        else:
-            return arg.removeO().diff(dx)
+            rv.append(o/x)
+        return Add(*rv)
+
+    def _eval_as_leading_term(self, x):
+        return self.args[0].as_leading_term(x)
 
 class Lambda(Function):
     """

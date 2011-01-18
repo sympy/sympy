@@ -185,28 +185,27 @@ class exp(Function):
         """exp(b[0])**e -> exp(b[0]*e)"""
         return exp(b.args[0] * e)
 
-    def _eval_lseries(self, x, x0):
+    def _eval_lseries(self, x):
         s = self.args[0]
-        yield exp(s.subs(x, x0))
-        from sympy import Integral, Derivative
+        yield exp(s.subs(x, 0))
+        from sympy import integrate
         t = Symbol("t", dummy=True)
         f = s.subs(x, t)
-        g = Integral(exp(f) * Derivative(f, t), (t, x0, x)).lseries(x, x0)
-        for term in g:
-            yield term
+        for term in (exp(f)*f.diff(t)).lseries(t):
+            yield integrate(term, (t, 0, x))
 
-    def _eval_nseries(self, x, x0, n):
+    def _eval_nseries(self, x, n):
         from sympy import limit, oo, powsimp
         arg = self.args[0]
-        arg_series = arg.nseries(x, x0, n)
+        arg_series = arg.nseries(x, n=n)
         if arg_series.is_Order:
-            return 1+arg_series
-        arg0 = limit(arg_series, x, x0)
+            return 1 + arg_series
+        arg0 = limit(arg_series, x, 0)
         if arg0 in [-oo, oo]:
             return self
-        s = Symbol("s", dummy=True)
-        exp_series = exp(s)._taylor(s, x0, n)
-        r = exp(arg0)*exp_series.subs(s, arg_series-arg0)
+        t = Symbol("t", dummy=True)
+        exp_series = exp(t)._taylor(t, 0, n)
+        r = exp(arg0)*exp_series.subs(t, arg_series - arg0)
         r = r.expand()
         return powsimp(r, deep=True, combine='exp')
 
@@ -420,7 +419,7 @@ class log(Function):
             return self.func(n), d
         return (self.func(n) - self.func(d)).as_numer_denom()
 
-    def _eval_nseries(self, x, x0, n):
+    def _eval_nseries(self, x, n):
         from sympy import powsimp
         arg = self.args[0]
         k, l = Wild("k"), Wild("l")
@@ -432,9 +431,7 @@ class log(Function):
                 return r
         order = C.Order(x**n, x)
         arg = self.args[0]
-        x = order.variables[0]
-        ln = C.log
-        use_lt = not C.Order(1,x).contains(arg)
+        use_lt = not C.Order(1, x).contains(arg)
         if not use_lt:
             arg0 = arg.limit(x, 0)
             use_lt = (arg0 is S.Zero)
@@ -442,11 +439,11 @@ class log(Function):
             # arg = (arg / lt) * lt
             lt = arg.as_leading_term(x) # arg = sin(x); lt = x
             a = powsimp((arg/lt).expand(), deep=True, combine='exp') # a = sin(x)/x
-            # the idea is to recursively call ln(a).series(), but one needs to
-            # make sure that ln(sin(x)/x) doesn't get "simplified" to
-            # -log(x)+ln(sin(x)) and an infinite recursion occurs, see also the
+            # the idea is to recursively call log(a).series(), but one needs to
+            # make sure that log(sin(x)/x) doesn't get "simplified" to
+            # -log(x)+log(sin(x)) and an infinite recursion occurs, see also the
             # issue 252.
-            obj = ln(lt) + ln(a)._eval_nseries(x, x0, n)
+            obj = log(lt) + log(a)._eval_nseries(x, n)
         else:
             # arg -> arg0 + (arg - arg0) -> arg0 * (1 + (arg/arg0 - 1))
             z = (arg/arg0 - 1)
@@ -454,32 +451,33 @@ class log(Function):
             ln = C.log
             o = C.Order(z, x)
             if o is S.Zero:
-                return ln(1+z)+ ln(arg0)
+                return log(1 + z) + log(arg0)
             if o.expr.is_number:
-                e = ln(order.expr*x)/ln(x)
+                e = log(order.expr*x)/log(x)
             else:
-                e = ln(order.expr)/ln(o.expr)
-            n = e.limit(x,0) + 1
+                e = log(order.expr)/log(o.expr)
+            n = e.limit(x, 0) + 1
             if n.is_unbounded:
                 # requested accuracy gives infinite series,
                 # order is probably nonpolynomial e.g. O(exp(-1/x), x).
-                return ln(1+z)+ ln(arg0)
+                return log(1 + z) + log(arg0)
+            # XXX was int or floor intended? int used to behave like floor
             try:
                 n = int(n)
             except TypeError:
                 #well, the n is something more complicated (like 1+log(2))
-                n = int(n.evalf()) + 1
-            assert n>=0,`n`
+                n = int(n.evalf()) + 1 # XXX why is 1 being added?
+            assert n>=0, `n`
             l = []
             g = None
-            for i in xrange(n+2):
-                g = ln.taylor_term(i, z, g)
-                g = g.nseries(x, x0, n)
+            for i in xrange(n + 2):
+                g = log.taylor_term(i, z, g)
+                g = g.nseries(x, n=n)
                 l.append(g)
-            obj = Add(*l) + ln(arg0)
+            obj = Add(*l) + log(arg0)
         obj2 = expand_log(powsimp(obj, deep=True, combine='exp'))
         if obj2 != obj:
-            r = obj2.nseries(x, x0, n)
+            r = obj2.nseries(x, n=n)
         else:
             r = obj
         if r == self:

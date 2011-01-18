@@ -1,7 +1,7 @@
 from sympy import (S, symbols, integrate, Integral, Derivative, exp, oo, Symbol,
         Function, Rational, log, sin, cos, pi, E, I, Poly, LambertW, diff,
         Matrix, sympify, sqrt, atan, asin, acos, atan, DiracDelta, Heaviside,
-        Lambda, sstr)
+        Lambda, sstr, Add)
 from sympy.utilities.pytest import XFAIL, skip, raises
 from sympy.physics.units import m, s
 
@@ -518,3 +518,9 @@ def test_is_zero():
     assert Integral(1, (x, 1, 1)).is_zero
     assert Integral(1, (x, 1, 2)).is_zero is False
     assert Integral(sin(m*x)*cos(n*x), (x, 0, 2*pi)).is_zero is None
+
+def test_series():
+    from sympy.abc import x
+    i = Integral(cos(x))
+    e = i.lseries(x)
+    assert i.nseries(x, n=8).removeO() == Add(*[e.next() for j in range(4)])

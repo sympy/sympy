@@ -217,7 +217,4 @@ def test_issue2085():
     assert limit(atan(x), x, oo) == pi/2
     assert limit(gamma(x), x, oo) == oo
     assert limit(cos(x)/x, x, oo) == 0
-
-@XFAIL
-def test_issue2085_unresolved():
-    assert limit(gamma(x), x, 1/2) == sqrt(pi) # Raises AssertionError
+    assert limit(gamma(x), x, Rational(1, 2)) == sqrt(pi)
