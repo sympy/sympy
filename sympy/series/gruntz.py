@@ -417,10 +417,8 @@ def gruntz(e, z, z0, dir="+"):
     (oo or -oo), the dir argument doesn't matter.
 
     This algorithm is fully described in the module docstring in the gruntz.py
-    file. It relies heavily on the series expansion. You probably want to use
-    the limit() function, that first try some heuristics and only when that
-    fails, calls the gruntz() function, so limit() is much faster than gruntz()
-    for the most frequent cases.
+    file. It relies heavily on the series expansion. Most frequentl, gruntz()
+    is only used if the faster limit() function (which uses heuristics) fails.
     """
     if not isinstance(z, Symbol):
         raise NotImplementedError("Second argument must be a Symbol")
