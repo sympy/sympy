@@ -1872,4 +1872,3 @@ def _logcombine(expr, force=False):
         _logcombine(expr.args[1], force)
 
     return expr
-

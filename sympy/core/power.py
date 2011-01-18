@@ -607,81 +607,37 @@ class Pow(Expr):
             return Expr.matches(self, expr, repl_dict, evaluate)
         return d
 
-    def _eval_nseries(self, x, x0, n):
-        from sympy import powsimp, collect
-
-        def geto(e):
-            "Returns the O(..) symbol, or None if there is none."
-            if e.is_Order:
-                return e
-            if e.is_Add:
-                for x in e.args:
-                    if x.is_Order:
-                        return x
-
-        def getn(e):
-            """
-            Returns the order of the expression "e".
-
-            The order is determined either from the O(...) term. If there
-            is no O(...) term, it returns None.
-
-            Example:
-            >>> getn(1+x+O(x**2))
-            2
-            >>> getn(1+x)
-            >>>
-
-            """
-            o = geto(e)
-            if o is None:
-                return None
-            else:
-                o = o.expr
-                if o.is_Symbol:
-                    return Integer(1)
-                if o.is_Pow:
-                    return o.args[1]
-                n, d = o.as_numer_denom()
-                if d.func is log:
-                    # i.e. o = x**2/log(x)
-                    if n.is_Symbol:
-                        return Integer(1)
-                    if n.is_Pow:
-                        return n.args[1]
-
-            raise NotImplementedError()
+    def _eval_nseries(self, x, n):
+        from sympy import powsimp, collect, O, log
 
         base, exp = self.args
         if exp.is_Integer:
             if exp > 0:
                 # positive integer powers are easy to expand, e.g.:
                 # sin(x)**4 = (x-x**3/3+...)**4 = ...
-                return (base.nseries(x, x0, n) ** exp)._eval_expand_multinomial(deep = False)
+                return Pow(base.nseries(x, n=n), exp
+                           )._eval_expand_multinomial(deep = False)
             elif exp == -1:
                 # this is also easy to expand using the formula:
                 # 1/(1 + x) = 1 + x + x**2 + x**3 ...
                 # so we need to rewrite base to the form "1+x"
-                from sympy import log
                 if base.has(log(x)):
                     # we need to handle the log(x) singularity:
-                    assert x0 == 0
                     y = Symbol("y", dummy=True)
                     p = self.subs(log(x), -1/y)
                     if not p.has(x):
-                        p = p.nseries(y, x0, n)
+                        p = p.nseries(y, n=n)
                         p = p.subs(y, -1/log(x))
                         return p
 
-                base = base.nseries(x, x0, n)
+                base = base.nseries(x, n=n)
                 if base.has(log(x)):
                     # we need to handle the log(x) singularity:
-                    assert x0 == 0
                     y = Symbol("y", dummy=True)
                     self0 = 1/base
                     p = self0.subs(log(x), -1/y)
                     if not p.has(x):
-                        p = p.nseries(y, x0, n)
+                        p = p.nseries(y, n=n)
                         p = p.subs(y, -1/log(x))
                         return p
                 prefactor = base.as_leading_term(x)
@@ -693,7 +649,7 @@ class Pow(Expr):
                     return 1/collect(prefactor, x)
                 if rest.is_Order:
                     return (1+rest)/prefactor
-                n2 = getn(rest)
+                n2 = rest.getn()
                 if n2 is not None:
                     n = n2
 
@@ -720,83 +676,116 @@ class Pow(Expr):
                 r = Add(*terms)
                 if n2 is None:
                     # Append O(...) because it is not included in "r"
-                    from sympy import O
                     r += O(x**n)
                 return powsimp(r, deep=True, combine='exp')
             else:
                 # negative powers are rewritten to the cases above, for example:
                 # sin(x)**(-4) = 1/( sin(x)**4) = ...
                 # and expand the denominator:
-                denominator = (base**(-exp)).nseries(x, x0, n)
+                denominator = (base**(-exp)).nseries(x, n=n)
                 if 1/denominator == self:
                     return self
                 # now we have a type 1/f(x), that we know how to expand
-                return (1/denominator).nseries(x, x0, n)
+                return (1/denominator).nseries(x, n=n)
 
         if exp.has(x):
-            import sympy
-            return sympy.exp(exp*sympy.log(base)).nseries(x, x0, n)
+            return C.exp(exp*log(base)).nseries(x, n=n)
 
         if base == x:
             return powsimp(self, deep=True, combine='exp')
 
-        order = C.Order(x**n, x)
-        x = order.symbols[0]
-        e = self.exp
-        b = self.base
-        ln = C.log
-        exp = C.exp
-        if e.has(x):
-            return exp(e * ln(b)).nseries(x, x0, n)
-        if b==x:
-            return self
-        b0 = b.limit(x,0)
-        if b0 is S.Zero or b0.is_unbounded:
-            lt = b.as_leading_term(x)
-            o = order * lt**(1-e)
-            bs = b.nseries(x, x0, n-e)
-            if bs.is_Add:
-                bs = bs.removeO()
-            if bs.is_Add:
-                # bs -> lt + rest -> lt * (1 + (bs/lt - 1))
-                return (lt**e * ((bs/lt).expand()**e).nseries(x,
-                        x0, n-e)).expand() + order
+        # work for b(x)**e where e is not an Integer and does not contain x
+        # and hopefully has no other symbols
 
-            return bs**e+order
-        o2 = order * (b0**-e)
-        # b -> b0 + (b-b0) -> b0 * (1 + (b/b0-1))
-        z = (b/b0-1)
-        #r = self._compute_oseries3(z, o2, self.taylor_term)
-        x = o2.symbols[0]
-        ln = C.log
-        o = C.Order(z, x)
-        if o is S.Zero:
-            r = (1+z)
-        else:
-            if o.expr.is_number:
-                e2 = ln(o2.expr*x)/ln(x)
-            else:
-                e2 = ln(o2.expr)/ln(o.expr)
-            n = e2.limit(x,0) + 1
-            if n.is_unbounded:
-                # requested accuracy gives infinite series,
-                # order is probably nonpolynomial e.g. O(exp(-1/x), x).
-                r = (1+z)
-            else:
+        def e2int(e):
+            """return the integer value (if possible) of e and a
+            flag indicating whether it is bounded or not."""
+            n = e.limit(x, 0)
+            unbounded = n.is_unbounded
+            if not unbounded:
+                # XXX was int or floor intended? int used to behave like floor
+                # so int(-Rational(1, 2)) returned -1 rather than int's 0
                 try:
                     n = int(n)
                 except TypeError:
                     #well, the n is something more complicated (like 1+log(2))
-                    n = int(n.evalf()) + 1
-                assert n>=0,`n`
-                l = []
-                g = None
-                for i in xrange(n+2):
-                    g = self.taylor_term(i, z, g)
-                    g = g.nseries(x, x0, n)
-                    l.append(g)
-                r = Add(*l)
-        return r * b0**e + order
+                    try:
+                        n = int(n.evalf()) + 1 # XXX why is 1 being added?
+                    except TypeError:
+                        pass # hope that base allows this to be resolved
+                n = _sympify(n)
+                if n.is_Integer:
+                    assert n.is_nonnegative
+            return n, unbounded
+
+        order = O(x**n, x)
+        b, e = base, exp
+        ei, unbounded = e2int(e)
+        b0 = b.limit(x, 0)
+
+        if unbounded and (b0 is S.One or b0.has(Symbol)):
+            # XXX what order
+            if b0 is S.One:
+                resid = (b - 1)
+                if resid.is_positive:
+                    return S.Infinity
+                elif resid.is_negative:
+                    return S.Zero
+                raise ValueError('cannot determine sign of %s' % resid)
+
+            return b0**ei
+
+
+        if (b0 is S.Zero or b0.is_unbounded):
+            if unbounded is not False:
+                return b0**e # XXX what order
+
+            if not ei.is_number: # if not, how will we proceed?
+                raise ValueError('expecting numerical exponent but got %s' % ei)
+
+            nuse = n - ei
+            lt = b.as_leading_term(x)
+            #  XXX o is not used -- was this to be used as o and o2 below to compute a new e?
+            o = order*lt**(1 - e)
+            bs = b.nseries(x, n=nuse)
+            if bs.is_Add:
+                bs = bs.removeO()
+            if bs.is_Add:
+                # bs -> lt + rest -> lt*(1 + (bs/lt - 1))
+                return ((Pow(lt, e)*
+                         Pow((bs/lt).expand(), e).
+                         nseries(x, n=n-e)).expand() +
+                         order)
+
+            return bs**e + order
+
+        # either b0 is bounded but neither 1 nor 0 or e is unbounded
+        # b -> b0 + (b-b0) -> b0 * (1 + (b/b0-1))
+        o2 = order*(b0**-e)
+        z = (b/b0 - 1)
+        o = O(z, x)
+        #r = self._compute_oseries3(z, o2, self.taylor_term)
+        if o is S.Zero or o2 is S.Zero:
+            unbounded = True
+        else:
+            if o.expr.is_number:
+                e2 = log(o2.expr*x)/log(x)
+            else:
+                e2 = log(o2.expr)/log(o.expr)
+            n, unbounded = e2int(e2)
+        if unbounded:
+            # requested accuracy gives infinite series,
+            # order is probably nonpolynomial e.g. O(exp(-1/x), x).
+            r = 1 + z
+        else:
+            l = []
+            g = None
+            for i in xrange(n + 2):
+                g = self.taylor_term(i, z, g)
+                g = g.nseries(x, n=n)
+                l.append(g)
+            r = Add(*l)
+        return r*b0**e + order
 
     def _eval_as_leading_term(self, x):
         if not self.exp.has(x):

@@ -1,4 +1,4 @@
-from sympy import Add, Basic, S, Symbol, Wild,  Real, Integer, Rational,  \
+from sympy import Add, Basic, S, Symbol, Wild,  Real, Integer, Rational, O, \
     sin, cos, exp, log, oo, sqrt, symbols, Integral, sympify, \
     WildFunction, Poly, Function, Derivative, Number, pi, var, \
     NumberSymbol, zoo, Piecewise, Mul, Pow, nsimplify, ratsimp, trigsimp, \

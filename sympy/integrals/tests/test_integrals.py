@@ -1,7 +1,7 @@
 from sympy import (S, symbols, integrate, Integral, Derivative, exp, oo, Symbol,
         Function, Rational, log, sin, cos, pi, E, I, Poly, LambertW, diff,
         Matrix, sympify, sqrt, atan, asin, acos, atan, DiracDelta, Heaviside,
-        Lambda, sstr)
+        Lambda, sstr, Add)
 from sympy.utilities.pytest import XFAIL, skip, raises
 from sympy.physics.units import m, s
 
@@ -436,3 +436,9 @@ def test_symbols():
     assert Integral(2, (y, 1, 2), (y, 1, x), (x, 1, 2)).symbols == set()
     assert Integral(2, (y, x, 2), (y, 1, x), (x, 1, 2)).symbols == set()
     assert Integral(2, (x, 1, 2), (y, x, 2), (y, 1, 2)).symbols == set([x])
+
+def test_series():
+    from sympy.abc import x
+    i = Integral(cos(x))
+    e = i.lseries(x)
+    assert i.nseries(x, n=8).removeO() == Add(*[e.next() for j in range(4)])

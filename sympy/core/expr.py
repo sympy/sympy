@@ -194,6 +194,41 @@ class Expr(Basic, EvalfMixin):
                 if x.is_Order:
                     return x
 
+    def getn(self):
+        """
+        Returns the order of the expression.
+
+        The order is determined either from the O(...) term. If there
+        is no O(...) term, it returns None.
+
+        Example:
+        >>> from sympy import O
+        >>> from sympy.abc import x
+        >>> (1 + x + O(x**2)).getn()
+        2
+        >>> (1 + x).getn()
+        >>>
+
+        """
+        o = self.getO()
+        if o is None:
+            return None
+        else:
+            o = o.expr
+            if o.is_Symbol:
+                return S.One
+            if o.is_Pow:
+                return o.args[1]
+            n, d = o.as_numer_denom()
+            if d.func is C.log:
+                # i.e. o = x**2/log(x)
+                if n.is_Symbol:
+                    return S.One
+                if n.is_Pow:
+                    return n.args[1]
+
+        raise NotImplementedError()
+
     def coeff(self, x, expand=True):
         """
         Returns the coefficient of the term "x" or None if there is no "x".
@@ -628,43 +663,134 @@ class Expr(Basic, EvalfMixin):
     ##################### SERIES, LEADING TERM, LIMIT, ORDER METHODS ##################
     ###################################################################################
 
-    def series(self, x, point=0, n=6, dir="+"):
+    def series(self, x=None, x0=0, n=6, dir="+"):
         """
-        Series expansion of "self" around "point".
+        Series expansion of "self" around `x = x0` yielding either terms of
+        the series one by one (the lazy series given when n=None), else
+        all the terms at once when n != None.
 
         Usage:
-            Returns the Taylor (Laurent or generalized) series of "self" around
-            the point "point" (default 0) with respect to "x" until the n-th
-            term (default n is 6).
+            Returns the series expansion of "self" around the point `x = x0`
+            with respect to `x` until the n-th term (default n is 6).
 
-            For dir="+" (default) it calculates the series from the right
-            and for dir="-" the series from the left.
-            For smooth functions this argument doesn't matter.
+            If `x=None` and `self` is univariate, the univariate symbol will
+            be supplied, otherwise an error will be raised.
+
+            >>> from sympy import cos, exp
+            >>> from sympy.abc import x, y
+            >>> cos(x).series()
+            1 - x**2/2 + x**4/24 + O(x**6)
+            >>> cos(x).series(n=4)
+            1 - x**2/2 + O(x**4)
+            >>> e = cos(x + exp(y))
+            >>> e.series(y, n=2)
+            -y*sin(1 + x) + cos(1 + x) + O(y**2)
+            >>> e.series(x, n=2)
+            -x*sin(exp(y)) + cos(exp(y)) + O(x**2)
+
+            If `n=None` then an iterator of the series terms will be returned.
+
+            >>> term=cos(x).series(n=None)
+            >>> [term.next() for i in range(2)]
+            [1, -x**2/2]
+
+            For `dir=+` (default) the series is calculated from the right and
+            for `dir=-` the series from the left. For smooth functions this
+            flag will not alter the results.
+
+            >>> abs(x).series(dir="+")
+            x
+            >>> abs(x).series(dir="-")
+            -x
 
         Notes:
-            This method is the most high level method and it returns the
-            series including the O(x**n) term.
+            This method is the most high level method for series and it returns
+            the series including the O(x**n) term when x0 = 0. Since sympy O()
+            cannot represent the order at x != 0, when x0 != 0 the order
+            term is not included.
 
-            Internally, it executes a method nseries(), see nseries() docstring
-            for more information.
+            >>> cos(x).series(x0=1, n=2)
+            (1 - x)*sin(1) + cos(1)
+
+               \
+              .|.         . .
+             . | \      .     .
+            ---+----------------------
+               |   . .          . .
+               |    \
+              x=0
+
+            Here is the same functions shifted to move the point x=1 to
+            the origin with the series calculated at x=0. Note that now
+            the O() term appears because it it valid in this situation:
+
+            >>> cos(x+1).series(n=2)
+            -x*sin(1) + cos(1) + O(x**2)
+
+               \ |
+              . .|        . .
+             .   \      .     .
+            -----+\------------------.
+                 | . .          . .
+                 |  \
+                x=0
+
+
         """
-        x = sympify(x)
-        point = sympify(point)
-        if dir == "+":
-            return self.nseries(x, point, n)
-        elif dir == "-":
-            return self.subs(x, -x).nseries(x, -point, n).subs(x, -x)
+        if x is None:
+            syms = self.atoms(C.Symbol)
+            if len(syms) > 1:
+                raise ValueError('x must be given for multivariate functions.')
+            x = syms.pop()
         else:
-            raise ValueError("Dir has to be '+' or '-'")
+            x = sympify(x)
+        if not self.has(x):
+            return self
+        if len(dir) != 1 or dir not in '+-':
+            raise ValueError("Dir must be '+' or '-'")
+        s = self
+        dosub = False
+        # transpose func to 0 and change sign if dir is negative
+        # with rep and undo the process with rep2
+        if x0 or dir == '-':
+            dosub = True
+            if dir == '-':
+                rep = rep2 = -x + x0
+            else:
+                rep = x + x0
+                rep2 = x - x0
+            s = self.subs(x, rep)
 
+        if n != None:
+            # nseries handling
+            s = s.nseries(x, n=n)
+            if not dosub:
+                return s
+            o = (s.getO() or S.Zero)
+            s = s.removeO().subs(x, rep2)
+            if not o or x0:
+                return s
+            if dir == '-':
+                 o = o.subs(x, -x)
+            return s + o
 
-    def lseries(self, x, x0):
+        else:
+            # lseries handling
+            def yield_terms(s):
+                for si in s:
+                    if dosub:
+                        yield si.subs(x, rep2)
+                    else:
+                        yield si
+            return yield_terms(s.lseries(x))
+
+    def lseries(self, x=None, x0=0, dir='+'):
         """
         lseries is a generator yielding terms in the series.
 
         Example: if you do:
 
-        for term in sin(x).lseries(x, 0):
+        for term in sin(x).lseries(x):
             print term
 
         It will print all terms of the sin(x) series (i.e. it never
@@ -677,32 +803,44 @@ class Expr(Basic, EvalfMixin):
 
         See also nseries().
         """
-        return self._eval_lseries(x, x0)
+        if x is None or x0 != 0 or dir != "+":
+            return self.series(x, x0, n=None, dir=dir)
 
-    def _eval_lseries(self, x, x0):
+        if not self.has(x):
+            return (x for x in [self]) # need to return an iterator
+        x = sympify(x)
+        return self._eval_lseries(x)
+
+    def _eval_lseries(self, x):
         # default implementation of lseries is using nseries(), and adaptively
         # increasing the "n". As you can see, it is not very efficient, because
         # we are calculating the series over and over again. Subclasses should
         # override this method and implement much more efficient yielding of
         # terms.
         n = 0
-        e = self.nseries(x, x0, n)
-        while e.is_Order:
-            n += 1
-            e = self.nseries(x, x0, n)
-        series = e.removeO()
-        yield series
-        while 1:
-            n += 1
-            e = self.nseries(x, x0, n).removeO()
-            while series == e:
-                n += 1
-                e = self.nseries(x, x0, n).removeO()
-            term = e - series
-            series = e
-            yield term
+        series = self.nseries(x, n=n)
+        if not series.is_Order:
+            if series.is_Add:
+                yield series.removeO()
+            else:
+                yield series
+            raise StopIteration
 
-    def nseries(self, x, x0, n):
+        while series.is_Order:
+            n += 1
+            series = self.nseries(x, n=n)
+        e = series.removeO()
+        yield e
+        while 1:
+            while 1:
+                n += 1
+                series = self.nseries(x, n=n).removeO()
+                if e != series:
+                    break
+            yield series - e
+            e = series
+
+    def nseries(self, x=None, x0=0, n=6, dir='+'):
         """
         Calculates a generalized series expansion.
 
@@ -718,9 +856,15 @@ class Expr(Basic, EvalfMixin):
 
         See also lseries().
         """
-        return self._eval_nseries(x, x0, n)
+        if x is None or x0 != 0 or dir != "+":
+            return self.series(x, x0, dir=dir)
 
-    def _eval_nseries(self, x, x0, n):
+        if not self.has(x):
+            return self
+        x = sympify(x)
+        return self._eval_nseries(x, n)
+
+    def _eval_nseries(self, x, n):
         """
         This is a method that should be overridden in subclasses. Users should
         never call this method directly (use .nseries() instead), so you don't
@@ -989,7 +1133,7 @@ class AtomicExpr(Atom, Expr):
     def is_number(self):
         return True
 
-    def _eval_nseries(self, x, x0, n):
+    def _eval_nseries(self, x, n):
         return self
 
 from mul import Mul

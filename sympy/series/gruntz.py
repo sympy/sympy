@@ -224,6 +224,8 @@ def mrv(e, x):
             return mrv(e.args[0], x)
         #only functions of 1 argument currently implemented
         raise NotImplementedError("Functions with more arguments: '%s'" % e)
+    elif e.is_Derivative:
+        return mrv(e.args[0], x)
     raise NotImplementedError("Don't know how to calculate the mrv of '%s'" % e)
 
 def mrv_max(f, g, x):
@@ -368,17 +370,18 @@ def calculate_series(e, x):
     """
 
     f = e
-    series=f.nseries(x, 0, 2).removeO()
+    series=f.nseries(x, n=2).removeO()
     if series == 0:
         #we need to calculate more terms, let's try 4:
-        series=f.nseries(x, 0, 4).removeO()
+        series=f.nseries(x, n=4).removeO()
     if series == 0:
         #we need to calculate more terms, let's try 6:
-        series=f.nseries(x, 0, 6).removeO()
+        series=f.nseries(x, n=6).removeO()
     if series == 0:
         #we need to calculate more terms, let's try 8:
-        series=f.nseries(x, 0, 8).removeO()
-    assert not isinstance(series, O), f
+        series=f.nseries(x, n=8).removeO()
+    if not series:
+        assert ValueError('(%s).series(%s, n=8) gave no terms.' % (f, x))
     return series
 
 @debug
@@ -417,10 +420,8 @@ def gruntz(e, z, z0, dir="+"):
     (oo or -oo), the dir argument doesn't matter.
 
     This algorithm is fully described in the module docstring in the gruntz.py
-    file. It relies heavily on the series expansion. You probably want to use
-    the limit() function, that first try some heuristics and only when that
-    fails, calls the gruntz() function, so limit() is much faster than gruntz()
-    for the most frequent cases.
+    file. It relies heavily on the series expansion. Most frequently, gruntz()
+    is only used if the faster limit() function (which uses heuristics) fails.
     """
     if not isinstance(z, Symbol):
         raise NotImplementedError("Second argument must be a Symbol")
