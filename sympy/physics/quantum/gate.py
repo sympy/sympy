@@ -9,11 +9,15 @@ Medium Term Todo:
 * Get UGate to work with either sympy/numpy matrices and output either
   format. This should also use the matrix slots.
 * Add commutation relationships to all operators and use this in gate_sort.
+* Implement represent for SWAP using:
+
+    SWAP = |1><0|x|1><0| + |0><1|x|0><1| + |1><0|x|0><1| + |1><0|x|1><0|
+
 """
 
 from itertools import chain
 
-from sympy import Mul, Pow, Integer, Matrix, Rational
+from sympy import Mul, Pow, Integer, Matrix, Rational, Tuple
 from sympy.core.numbers import Number
 from sympy.matrices import matrices
 from sympy.printing.pretty.stringpict import prettyForm, stringPict
@@ -287,8 +291,11 @@ class CGate(Gate):
     @classmethod
     def _eval_args(cls, args):
         # _eval_args has the right logic for the controls argument.
-        controls = UnitaryOperator._eval_args(args[0])
+        controls = args[0]
         gate = args[1]
+        if not isinstance(controls, (list, tuple, Tuple)):
+            controls = (controls,)
+        controls = UnitaryOperator._eval_args(controls)
         _validate_targets_controls(chain(controls,gate.targets))
         return (controls, gate)
 
@@ -389,15 +396,16 @@ class UGate(Gate):
 
     @classmethod
     def _eval_args(cls, args):
-        # Gate._eval_args has the right logic.
-        targets = Gate._eval_args(args[0])
+        targets = args[0]
+        if not isinstance(targets, (list, tuple, Tuple)):
+            targets = (targets,)
+        targets = Gate._eval_args(targets)
         _validate_targets_controls(targets)
         mat = args[1]
         if not isinstance(mat, Matrix):
             raise TypeError('Matrix expected, got: %r' % mat)
         dim = 2**len(targets)
         if not all([dim == shape for shape in mat.shape]):
-        # if (dim != mat.shape[0]) or (dim != mat.shape[1]):
             raise IndexError(
                 'Number of targets must match the matrix size: %r %r' %\
                 (targets, mat)

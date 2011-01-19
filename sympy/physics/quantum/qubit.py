@@ -1,16 +1,21 @@
 """Qubits for quantum computing.
 
 Todo:
-* Implement measure in a new file, measure.py.
-* Get IntQubit subclass working and integrate with Qubit.
+* Finish implementing measurement logic. This should include partial
+  measurements as well as POVM.
 * Update docstrings.
 * Update tests.
+* apply_operators is not working with IntQubit/IntQubitBra.
 """
 
-from sympy import Integer, log, Mul, Add, Pow
+import math
+
+from sympy import Integer, log, Mul, Add, Pow, conjugate
 from sympy.core.basic import sympify
 from sympy.core.containers import Tuple
 from sympy.matrices.matrices import Matrix
+from sympy.printing.pretty.stringpict import prettyForm
+
 
 from sympy.physics.quantum.hilbert import ComplexSpace
 from sympy.physics.quantum.state import Ket, Bra, State
@@ -23,10 +28,12 @@ from sympy.physics.quantum.matrixcache import (
 
 __all__ = [
     'Qubit',
-    'Qubit',
     'QubitBra',
+    'IntQubit',
+    'IntQubitBra',
     'qubit_to_matrix',
-    'matrix_to_qubit'
+    'matrix_to_qubit',
+    'measure_all'
 ]
 
 #-----------------------------------------------------------------------------
@@ -76,6 +83,11 @@ class QubitState(State):
     
     @classmethod
     def _eval_args(cls, args):
+        # If we are passed a QubitState or subclass, we just take its qubit
+        # values directly.
+        if len(args) == 1 and isinstance(args[0], QubitState):
+            return args[0].qubit_values
+
         # Turn strings into tuple of strings
         if len(args) == 1 and isinstance(args[0], basestring):
             args = tuple(args[0])
@@ -185,6 +197,68 @@ class QubitBra(QubitState, Bra):
         raise QuantumError('Invalide format: %r' % format)
 
 
+class IntQubitState(QubitState):
+    """A base class for qubits that work with binary representations of ints."""
+
+    @classmethod
+    def _eval_args(cls, args):
+        # The case of a QubitState instance
+        if len(args) == 1 and isinstance(args[0], QubitState):
+            return QubitState._eval_args(args)
+        # For a single argument, we construct the binary representation of
+        # that integer with the minimal number of bits.
+        if len(args) == 1 and args[0] > 1:
+            rvalues = reversed(
+                range(int(math.ceil(math.log(args[0], 2)+.01)+.001))
+            )
+            qubit_values = [(args[0]>>i)&1 for i in rvalues]
+            return QubitState._eval_args(qubit_values)
+        # For two numbers, the second number is the number of bits
+        # on which it is expressed, so IntQubit(0,5) == |00000>.
+        elif len(args) == 2 and args[1] > 1:
+            qubit_values = [(args[0]>>i)&1 for i in reversed(range(args[1]))]
+            return QubitState._eval_args(qubit_values)
+        else:
+            return QubitState._eval_args(args)
+
+    def as_int(self):
+        number = 0
+        n = 1
+        for i in reversed(self.qubit_values):
+            number += n*i
+            n = n<<1
+        return number
+
+    def _print_label(self, printer, *args):
+        return str(self.as_int())
+
+    def _print_label_pretty(self, printer, *args):
+        label = self._print_label(printer, *args)
+        return prettyForm(label)
+
+    _print_label_repr = _print_label
+    _print_label_latex = _print_label
+
+
+class IntQubit(IntQubitState, Qubit):
+
+    @property
+    def dual_class(self):
+        return IntQubitBra
+
+
+class IntQubitBra(IntQubitState, QubitBra):
+
+    @property
+    def dual_class(self):
+        return IntQubit
+
+
+#-----------------------------------------------------------------------------
+# Qubit <---> Matrix conversion functions
+#-----------------------------------------------------------------------------
+
+
 def matrix_to_qubit(matrix):
     """Convert from the matrix repr. to a sum of Qubit objects.
 
@@ -255,3 +329,24 @@ def qubit_to_matrix(qubit, format='sympy'):
     from sympy.physics.quantum.gate import ZGate
     return represent(qubit, ZGate(0), format=format)
 
+
+#-----------------------------------------------------------------------------
+# Measurement
+#-----------------------------------------------------------------------------
+
+
+def measure_all(qubit, format='sympy'):
+    """Given a qubit, return the primitive states and their probabilities."""
+    m = qubit_to_matrix(qubit, format)
+    
+    if format == 'sympy':
+        results = []
+        m = m.normalized()
+        size = max(m.shape)
+        nqubits = int(math.log(size)/math.log(2))
+        for i in range(size):
+            if m[i] != 0.0:
+                results.append(
+                    (Qubit(IntQubit(i, nqubits)), m[i]*conjugate(m[i]))
+                )
+        return results
