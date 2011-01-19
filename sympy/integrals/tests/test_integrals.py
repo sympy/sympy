@@ -236,6 +236,11 @@ def test_transform():
     assert Integral(x, x).transform(x, a*x) == Integral(x*a**2, x)
     raises(ValueError, "a.transform(x, 1/x)")
     raises(ValueError, "a.transform(x, 1/x)")
+    _3 = S(3)
+    assert Integral(x, (x, 0, -_3)).transform(x, 1/x) == \
+    Integral(-1/x**3, (x, -oo, -1/_3))
+    assert Integral(x, (x, 0, _3)).transform(x, 1/x) == \
+    Integral(x**(-3), (x, 1/_3, oo))
 
 def test_issue953():
     f = S(1)/2*asin(x) + x*(1 - x**2)**(S(1)/2)/2

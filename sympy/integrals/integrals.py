@@ -8,9 +8,10 @@ from sympy.integrals.risch import heurisch
 from sympy.utilities import threaded, flatten, any
 from sympy.polys import Poly
 from sympy.solvers import solve
-from sympy.functions import Piecewise
+from sympy.functions import Piecewise, sign
 from sympy.geometry import Curve
 from sympy.functions.elementary.piecewise import piecewise_fold
+from sympy.series import limit
 
 class Integral(Expr):
     """Represents unevaluated integral."""
@@ -265,13 +266,20 @@ class Integral(Expr):
         if inverse:
             mapping, inverse_mapping = inverse_mapping, mapping
         function = function.subs(x, mapping) * mapping.diff(x)
+
+        def calc_limit(a, b):
+            """replace x with a, using subs if possible, otherwise limit
+            where sign of b is considered"""
+            wok = inverse_mapping.subs(x, a)
+            if not wok is S.NaN:
+                return wok
+            return limit(sign(b)*inverse_mapping, x, a)
         newlimits = []
         for xab in limits:
             sym = xab[0]
             if sym == x and len(xab) == 3:
                 a, b = xab[1:]
-                a = inverse_mapping.subs(x, a)
-                b = inverse_mapping.subs(x, b)
+                a, b = calc_limit(a, b), calc_limit(b, a)
                 if a == b:
                     raise ValueError("The mapping must transform the "
                         "endpoints into separate points")

@@ -180,52 +180,6 @@ class Order(Expr):
     def _eval_nseries(self, x, n):
         return self
 
-    @classmethod
-    def find_limit(cls, f, x):
-        """Basically identical to:
-
-        return limit(f, x, 0, dir="+")
-
-        but first trying some easy cases (like x**2) using heuristics, to avoid
-        infinite recursion. This is only needed in the Order class and series
-        expansion (that shouldn't rely on the Gruntz algorithm too much),
-        that's why find_limit() is defined here.
-        """
-
-        from sympy import limit, Wild, log
-
-        if f.is_Pow:
-            if f.args[0] == x:
-                if f.args[1].is_Rational:
-                    if f.args[1] > 0:
-                        return S.Zero
-                    else:
-                        return oo
-                if f.args[1].is_number:
-                    if f.args[1].evalf() > 0:
-                        return S.Zero
-                    else:
-                        return oo
-        if f == x:
-            return S.Zero
-        p, q = Wild("p"), Wild("q")
-        r = f.match(x**p * log(x)**q)
-        if r:
-            p, q = r[p], r[q]
-            if q.is_number and p.is_number:
-                if q > 0:
-                    if p > 0:
-                        return S.Zero
-                    else:
-                        return -oo
-                elif q < 0:
-                    if p >= 0:
-                        return S.Zero
-                    else:
-                        return -oo
-
-        return limit(f, x, 0, dir="+")
-
     @property
     def expr(self):
         return self._args[0]
@@ -257,10 +211,10 @@ class Order(Expr):
         """
         Return True if expr belongs to Order(self.expr, *self.variables).
         Return False if self belongs to expr.
-        Return None if the inclusion relation cannot be determined (e.g. when self and
-        expr have different symbols).
+        Return None if the inclusion relation cannot be determined
+        (e.g. when self and expr have different symbols).
         """
-        from sympy import powsimp
+        from sympy import powsimp, limit
         if expr is S.Zero:
             return True
         if expr is S.NaN:
@@ -278,8 +232,8 @@ class Order(Expr):
                 return None
             r = None
             for s in common_symbols:
-                l = Order.find_limit(powsimp(self.expr/expr.expr, deep=True,\
-                combine='exp'), s) != 0
+                l = limit(powsimp(self.expr/expr.expr, deep=True,\
+                combine='exp'), s, 0) != 0
                 if r is None:
                     r = l
                 else:
