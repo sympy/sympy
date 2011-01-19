@@ -240,10 +240,10 @@ class AntiSymmetricTensor(TensorSymbol):
         >>> from sympy.physics.secondquant import AntiSymmetricTensor
         >>> i, j = symbols('i j', below_fermi=True)
         >>> a, b = symbols('a b', above_fermi=True)
-        >>> AntiSymmetricTensor('t', (a, b), (i, j))
-        AntiSymmetricTensor(t, Tuple(a, b), Tuple(i, j))
-        >>> AntiSymmetricTensor('t', (a, b), (i, j)).symbol
-        t
+        >>> AntiSymmetricTensor('v', (a, i), (b, j))
+        AntiSymmetricTensor(v, Tuple(a, i), Tuple(b, j))
+        >>> AntiSymmetricTensor('v', (a, i), (b, j)).symbol
+        v
 
         """
         return self.args[0]
@@ -259,10 +259,10 @@ class AntiSymmetricTensor(TensorSymbol):
         >>> from sympy.physics.secondquant import AntiSymmetricTensor
         >>> i, j = symbols('i j', below_fermi=True)
         >>> a, b = symbols('a b', above_fermi=True)
-        >>> AntiSymmetricTensor('t', (a, b), (i, j))
-        AntiSymmetricTensor(t, Tuple(a, b), Tuple(i, j))
-        >>> AntiSymmetricTensor('t', (a, b), (i, j)).upper
-        Tuple(a, b)
+        >>> AntiSymmetricTensor('v', (a, i), (b, j))
+        AntiSymmetricTensor(v, Tuple(a, i), Tuple(b, j))
+        >>> AntiSymmetricTensor('v', (a, i), (b, j)).upper
+        Tuple(a, i)
 
 
         """
@@ -279,10 +279,10 @@ class AntiSymmetricTensor(TensorSymbol):
         >>> from sympy.physics.secondquant import AntiSymmetricTensor
         >>> i, j = symbols('i j', below_fermi=True)
         >>> a, b = symbols('a b', above_fermi=True)
-        >>> AntiSymmetricTensor('t', (a, b), (i, j))
-        AntiSymmetricTensor(t, Tuple(a, b), Tuple(i, j))
-        >>> AntiSymmetricTensor('t', (a, b), (i, j)).lower
-        Tuple(i, j)
+        >>> AntiSymmetricTensor('v', (a, i), (b, j))
+        AntiSymmetricTensor(v, Tuple(a, i), Tuple(b, j))
+        >>> AntiSymmetricTensor('v', (a, i), (b, j)).lower
+        Tuple(b, j)
 
         """
         return self.args[2]
@@ -1918,22 +1918,18 @@ class NO(Expr):
         Returns yes or no, fast
 
         Also, in case of yes, we indicate whether leftmost operator is a
-        creator above or below fermi.
+        quasi creator above or below fermi.
 
         >>> from sympy import symbols
         >>> from sympy.physics.secondquant import NO, F, Fd
 
-        >>> p,q = symbols('pq')
-        >>> no_pq = NO(Fd(p)*Fd(q))
-        >>> no_pq.has_q_creators
+        >>> a = symbols('a',above_fermi=True)
+        >>> i = symbols('i',below_fermi=True)
+        >>> NO(Fd(a)*Fd(i)).has_q_creators
         1
-        >>> no_pq = NO(F(p)*F(q))
-        >>> no_pq.has_q_creators
+        >>> NO(F(i)*F(a)).has_q_creators
         -1
-
-        >>> i,j = symbols('ij',below_fermi=True)
-        >>> no_pq = NO(Fd(i)*Fd(j))
-        >>> no_pq.has_q_creators
+        >>> NO(Fd(i)*F(a)).has_q_creators           #doctest: +SKIP
         0
 
         """
@@ -1950,17 +1946,13 @@ class NO(Expr):
         >>> from sympy import symbols
         >>> from sympy.physics.secondquant import NO, F, Fd
 
-        >>> p,q = symbols('pq')
-        >>> no_pq = NO(Fd(p)*Fd(q))
-        >>> no_pq.has_q_annihilators
+        >>> a = symbols('a',above_fermi=True)
+        >>> i = symbols('i',below_fermi=True)
+        >>> NO(Fd(a)*Fd(i)).has_q_annihilators
         -1
-        >>> no_pq = NO(F(p)*F(q))
-        >>> no_pq.has_q_annihilators
+        >>> NO(F(i)*F(a)).has_q_annihilators
         1
-
-        >>> a,b = symbols('ab',above_fermi=True)
-        >>> no_pq = NO(Fd(a)*Fd(b))
-        >>> no_pq.has_q_annihilators
+        >>> NO(Fd(a)*F(i)).has_q_annihilators        #doctest: +SKIP
         0
 
         """
