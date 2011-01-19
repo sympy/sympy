@@ -182,4 +182,8 @@ def test_issue2085():
 
 @XFAIL
 def test_issue2085_unresolved():
-    assert limit(gamma(x), x, 1/2) == sqrt(pi) # Raises AssertionError
+    assert limit(gamma(x), x, Rational(1, 2)) == sqrt(pi) # Raises AssertionError
+
+def test_issue2130():
+    assert limit((1+y)**(1/y) - S.Exp1, y, 0) == 0
+    assert limit(cos(x)/x, x, oo) == 0

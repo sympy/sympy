@@ -1,4 +1,4 @@
-from sympy.core import S, Add, sympify, Expr, PoleError, Mul, oo
+from sympy.core import S, Add, sympify, Expr, PoleError, Mul, oo, C
 from gruntz import gruntz
 
 def limit(e, z, z0, dir="+"):
@@ -59,6 +59,9 @@ def limit(e, z, z0, dir="+"):
         finite = []
         for term in e.args:
             result = term.subs(z, z0)
+            if not result.is_unbounded:
+                # check with more robust limit
+                result = limit(term, z, z0, dir)
             if result.is_unbounded or result is S.NaN:
                 unbounded.append(term)
                 unbounded_result.append(result)
@@ -72,6 +75,10 @@ def limit(e, z, z0, dir="+"):
                 return Add(*finite) + limit(Add(*unbounded), z, z0, dir)
         else:
             return Add(*finite)
+
+    if e.is_Order:
+        args = e.args
+        return C.Order(limit(args[0], z, z0), *args[1:])
 
     try:
         r = gruntz(e, z, z0, dir)
