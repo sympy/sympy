@@ -74,6 +74,7 @@ def _validate_targets_controls(tandc):
             'Target/control qubits in a gate cannot be duplicated'
         )
 
+
 class Gate(UnitaryOperator):
     """Non-controlled unitary gate operator that acts on qubits.
 
@@ -101,15 +102,15 @@ class Gate(UnitaryOperator):
     #-------------------------------------------------------------------------
 
     @classmethod
-    def _eval_label(cls, label):
-        label = UnitaryOperator._eval_label(label) # Make label a Tuple and sympify.
-        _validate_targets_controls(label)
-        return label
+    def _eval_args(cls, args):
+        args = UnitaryOperator._eval_args(args)
+        _validate_targets_controls(args)
+        return args
 
     @classmethod
-    def _eval_hilbert_space(cls, label):
+    def _eval_hilbert_space(cls, args):
         """This returns the smallest possible Hilbert space."""
-        return ComplexSpace(2)**(max(label)+1)
+        return ComplexSpace(2)**(max(args)+1)
 
     #-------------------------------------------------------------------------
     # Properties
@@ -233,11 +234,9 @@ class Gate(UnitaryOperator):
     def _print_contents_pretty(self, printer, *args):
         a = stringPict(unicode(self.gate_name))
         b = self._print_label_pretty(printer, *args)
-        top = stringPict(*b.left(' '*a.width()))
-        bot = stringPict(*a.right(' '*b.width()))
-        return prettyForm(binding=prettyForm.POW, *bot.below(top))
+        return self._print_subscript_pretty(a, b)
 
-    def _latex(self, printer, *args):
+    def _print_contents_latex(self, printer, *args):
         label = self._print_label(printer, *args)
         return '%s_{%s}' % (self.gate_name_latex, label)
 
@@ -271,20 +270,18 @@ class CGate(Gate):
     # Initialization
     #-------------------------------------------------------------------------
 
-    # CGate(((0,1),Gate(0)))
-
     @classmethod
-    def _eval_label(cls, label):
-        # _eval_label has the right logic for the controls argument.
-        controls = UnitaryOperator._eval_label(label[0])
-        gate = label[1]
+    def _eval_args(cls, args):
+        # _eval_args has the right logic for the controls argument.
+        controls = UnitaryOperator._eval_args(args[0])
+        gate = args[1]
         _validate_targets_controls(chain(controls,gate.targets))
-        return Tuple(controls, gate)
+        return (controls, gate)
 
     @classmethod
-    def _eval_hilbert_space(cls, label):
+    def _eval_hilbert_space(cls, args):
         """This returns the smallest possible Hilbert space."""
-        return ComplexSpace(2)**max(max(label[0])+1,label[1].min_qubits)
+        return ComplexSpace(2)**max(max(args[0])+1,args[1].min_qubits)
 
     #-------------------------------------------------------------------------
     # Properties
@@ -312,7 +309,7 @@ class CGate(Gate):
     @property
     def controls(self):
         """A tuple of control qubits."""
-        return self.label[0]
+        return tuple(self.label[0])
 
     @property
     def gate(self):
@@ -337,39 +334,23 @@ class CGate(Gate):
     # Print methods
     #-------------------------------------------------------------------------
 
-    def _print_controls(self, printer, *args):
-        result = []
-        for item in self.controls:
-            result.append(printer._print(item, *args))
-        return self._label_separator.join(result)
-
-    def _print_controls_pretty(self, printer, *args):
-        pform = printer._print(self.controls[0], *args)
-        for item in self.controls[1:]:
-            pform = prettyForm(*pform.right((self._label_separator)))
-            nextpform = printer._print(item, *args)
-            pform = prettyForm(*pform.right((nextpform)))
-        return pform
-
     def _print_contents(self, printer, *args):
-        controls = self._print_controls(printer, *args)
+        controls = self._print_sequence(self.controls, ',', printer, *args)
         gate = printer._print(self.gate, *args)
-        return '%s(((%s),%s))' %\
+        return '%s((%s),%s)' %\
             (self.gate_name, controls, gate)
 
     def _print_contents_pretty(self, printer, *args):
-        controls = self._print_controls_pretty(printer, *args)
+        controls = self._print_sequence_pretty(self.controls, ',', printer, *args)
         gate = printer._print(self.gate)
         gate_name = stringPict(unicode(self.gate_name))
-        top = stringPict(*controls.left(' '*gate_name.width()))
-        bot = stringPict(*gate_name.right(' '*controls.width()))
-        first = prettyForm(binding=prettyForm.POW, *bot.below(top))
-        gate = prettyForm(*gate.parens(left='(', right=')'))
+        first = self._print_subscript_pretty(gate_name, controls)
+        gate = self._print_parens_pretty(gate)
         final = prettyForm(*first.right((gate)))
         return final
 
-    def _latex(self, printer, *args):
-        controls = self._print_controls(printer, *args)
+    def _print_contents_latex(self, printer, *args):
+        controls = self._print_sequence(self.controls, ',', printer, *args)
         gate = printer._print(self.gate, *args)
         return r'%s_{%s}{\left(%s\right)}' %\
             (self.gate_name_latex, controls, gate)
@@ -393,10 +374,11 @@ class UGate(Gate):
     #-------------------------------------------------------------------------
 
     @classmethod
-    def _eval_label(cls, label):
-        # Gate._eval_label has the right logic.
-        targets = Gate._eval_label(label[0])
-        mat = label[1]
+    def _eval_args(cls, args):
+        # Gate._eval_args has the right logic.
+        targets = Gate._eval_args(args[0])
+        _validate_targets_controls(targets)
+        mat = args[1]
         if not isinstance(mat, Matrix):
             raise TypeError('Matrix expected, got: %r' % mat)
         dim = 2**len(targets)
@@ -406,12 +388,12 @@ class UGate(Gate):
                 'Number of targets must match the matrix size: %r %r' %\
                 (targets, mat)
             )
-        return Tuple(targets, mat)
+        return (targets, mat)
 
     @classmethod
-    def _eval_hilbert_space(cls, label):
+    def _eval_hilbert_space(cls, args):
         """This returns the smallest possible Hilbert space."""
-        return ComplexSpace(2)**(max(label[0])+1)
+        return ComplexSpace(2)**(max(args[0])+1)
 
     #-------------------------------------------------------------------------
     # Properties
@@ -420,7 +402,7 @@ class UGate(Gate):
     @property
     def targets(self):
         """A tuple of target qubits."""
-        return self.label[0]
+        return tuple(self.label[0])
 
     #-------------------------------------------------------------------------
     # Gate methods
@@ -440,34 +422,17 @@ class UGate(Gate):
     # Print methods
     #-------------------------------------------------------------------------
 
-    def _print_targets(self, printer, *args):
-        result = []
-        for item in self.targets:
-            result.append(printer._print(item, *args))
-        return self._label_separator.join(result)
-
-    def _print_targets_pretty(self, printer, *args):
-        pform = printer._print(self.targets[0], *args)
-        for item in self.targets[1:]:
-            pform = prettyForm(*pform.right((self._label_separator)))
-            nextpform = printer._print(item, *args)
-            pform = prettyForm(*pform.right((nextpform)))
-        return pform
-
     def _print_contents(self, printer, *args):
         targets = self._print_targets(printer, *args)
         return '%s(%s)' % (self.gate_name, targets)
 
     def _print_contents_pretty(self, printer, *args):
-        targets = self._print_targets_pretty(printer, *args)
+        targets = self._print_sequence_pretty(self.targets, ',', printer, *args)
         gate_name = stringPict(unicode(self.gate_name))
-        top = stringPict(*targets.left(' '*gate_name.width()))
-        bot = stringPict(*gate_name.right(' '*targets.width()))
-        result = prettyForm(binding=prettyForm.POW, *bot.below(top))
-        return result
+        return self._print_subscript_pretty(gate_name, targets)
 
-    def _latex(self, printer, *args):
-        targets = self._print_targets(printer, *args)
+    def _print_contents_latex(self, printer, *args):
+        targets = self._print_sequence(self.targets, ',', printer, *args)
         return r'%s_{%s}' % (self.gate_name_latex, targets)
 
 
@@ -482,9 +447,6 @@ class TwoQubitGate(Gate):
 
     nqubits = Integer(2)
 
-
-# Aliases for gate names.
-U = UGate
 
 #-----------------------------------------------------------------------------
 # Single Qubit Gates
@@ -647,14 +609,14 @@ class CNotGate(CGate, TwoQubitGate):
     #-------------------------------------------------------------------------
 
     @classmethod
-    def _eval_label(cls, label):
-        label = Gate._eval_label(label)
-        return label
+    def _eval_args(cls, args):
+        args = Gate._eval_args(args)
+        return args
 
     @classmethod
-    def _eval_hilbert_space(cls, label):
+    def _eval_hilbert_space(cls, args):
         """This returns the smallest possible Hilbert space."""
-        return ComplexSpace(2)**(max(label)+1)
+        return ComplexSpace(2)**(max(args)+1)
 
     #-------------------------------------------------------------------------
     # Properties
@@ -668,12 +630,12 @@ class CNotGate(CGate, TwoQubitGate):
     @property
     def targets(self):
         """A tuple of target qubits."""
-        return Tuple(self.label[1])
+        return tuple(self.label[1])
 
     @property
     def controls(self):
         """A tuple of control qubits."""
-        return Tuple(self.label[0])
+        return tuple(self.label[0])
 
     @property
     def gate(self):
@@ -743,17 +705,15 @@ class ToffoliGate(Gate):
     # Initialization
     #-------------------------------------------------------------------------
 
-    # Toffoli((0,1,2))
+    @classmethod
+    def _eval_args(cls, args):
+        args = Gate._eval_args(args)
+        return args
 
     @classmethod
-    def _eval_label(cls, label):
-        label = Gate._eval_label(label)
-        return label
-
-    @classmethod
-    def _eval_hilbert_space(cls, label):
+    def _eval_hilbert_space(cls, args):
         """This returns the smallest possible Hilbert space."""
-        return ComplexSpace(2)**(max(label)+1)
+        return ComplexSpace(2)**(max(max(args[0]),args[1])+1)
 
     #-------------------------------------------------------------------------
     # Properties
@@ -767,17 +727,17 @@ class ToffoliGate(Gate):
     @property
     def targets(self):
         """A tuple of target qubits."""
-        return Tuple(self.label[2])
+        return tuple(self.label[1])
 
     @property
     def controls(self):
         """A tuple of control qubits."""
-        return self.label[:2]
+        return tuple(self.label[0])
 
     @property
     def gate(self):
         """The non-controlled gate that will be applied to the targets."""
-        return XGate(self.label[2])
+        return XGate(self.targets[0])
 
     def get_target_matrix(self, format='sympy'):
         return matrix_cache.get_matrix('X', format)

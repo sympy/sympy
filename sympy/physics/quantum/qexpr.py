@@ -42,7 +42,7 @@ def _qsympify_sequence(*seq):
         else:
             newitem = sympify(item)
         result.append(newitem)
-    return result
+    return tuple(result)
 
 
 
@@ -188,7 +188,7 @@ class QExpr(Expr):
         return a**b
 
     def _print_parens_pretty(self, pform, left='(', right=')'):
-        return prettyForm(*pform.parens(left=right, right=right))
+        return prettyForm(*pform.parens(left=left, right=right))
 
     # Printing of labels
 

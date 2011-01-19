@@ -74,23 +74,22 @@ class QubitState(State):
     #-------------------------------------------------------------------------
     
     @classmethod
-    def _eval_label(cls, label):
-        # Turn string into tuple of ints, sympify. This must be a tuple to
-        # make qubits hashable.
-        label = sympify(tuple(label))
-        
+    def _eval_args(cls, args):
+        # Turn strings into tuple of strings
+        if len(args) == 1 and isinstance(args[0], basestring):
+            args = tuple(args[0])
+
+        args = sympify(args)
+
         # Validate input (must have 0 or 1 input)
-        if isinstance(label, (str, list, tuple)):
-            for element in label:
-                if not (element == 1 or element == 0):
-                    raise ValueError("Qubit values must be 0 or 1, got: %r" % element)
-        else:
-            raise TypeError('str, list, tuple expected, got: %r' % label)
-        return Tuple(*label)
+        for element in args:
+            if not (element == 1 or element == 0):
+                raise ValueError("Qubit values must be 0 or 1, got: %r" % element)
+        return args
 
     @classmethod
-    def _eval_hilbert_space(cls, label):
-        return ComplexSpace(2)**len(label)
+    def _eval_hilbert_space(cls, args):
+        return ComplexSpace(2)**len(args)
 
     #-------------------------------------------------------------------------
     # Properties
@@ -126,14 +125,14 @@ class QubitState(State):
 
     def flip(self, *bits):
         """Flip the bit(s) given."""
-        newargs = list(self.label)
+        newargs = list(self.qubit_values)
         for i in bits:
             bit = int(self.dimension-i-1)
             if newargs[bit] == 1:
                 newargs[bit] = 0
             else:
                 newargs[bit] = 1
-        return self.__class__(newargs)
+        return self.__class__(*tuple(newargs))
 
 
 class Qubit(QubitState, Ket):
@@ -167,6 +166,7 @@ class Qubit(QubitState, Ket):
         elif format == 'scipy.sparse':
             from scipy import sparse
             return sparse.csr_matrix(result, dtype='complex').transpose()
+
 
 class QubitBra(QubitState, Bra):
 
@@ -236,7 +236,7 @@ def matrix_to_qubit(matrix):
             # bit-locations where i is 1
             qubit_array = [1 if i&(1<<x) else 0 for x in range(nqubits)]
             qubit_array.reverse()
-            result = result + element*cls(qubit_array)
+            result = result + element*cls(*qubit_array)
 
     # If sympy simplified by pulling out a constant coefficient, undo that.
     if isinstance(result, (Mul,Add,Pow)):
