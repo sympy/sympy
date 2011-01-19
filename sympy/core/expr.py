@@ -741,11 +741,11 @@ class Expr(Basic, EvalfMixin):
         """
         raise NotImplementedError("(%s).nseries(%s, %s, %s)" % (self, x, x0, n))
 
-    def limit(self, x, xlim, direction='+'):
+    def limit(self, x, xlim, dir='+'):
         """ Compute limit x->xlim.
         """
         from sympy.series.limits import limit
-        return limit(self, x, xlim, direction)
+        return limit(self, x, xlim, dir)
 
     @cacheit
     def as_leading_term(self, *symbols):
