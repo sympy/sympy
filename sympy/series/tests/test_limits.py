@@ -1,5 +1,5 @@
 from sympy import limit, exp, oo, log, sqrt, Limit, sin, floor, cos, ceiling, \
-        atan, gamma, Symbol, S, pi, Integral, cot, Rational, I, zoo
+        atan, gamma, Symbol, S, pi, Integral, cot, Rational, I, zoo, tan, cot
 from sympy.abc import x, y, z
 from sympy.utilities.pytest import XFAIL
 from sympy.utilities.iterables import cartes
@@ -218,3 +218,27 @@ def test_issue2085():
     assert limit(gamma(x), x, oo) == oo
     assert limit(cos(x)/x, x, oo) == 0
     assert limit(gamma(x), x, Rational(1, 2)) == sqrt(pi)
+
+def test_issue2130():
+    assert limit((1+y)**(1/y) - S.Exp1, y, 0) == 0
+
+def test_issue1447():
+    # using list(...) so py.test can recalculate values
+    from sympy import sign
+    tests = list(cartes([cot, tan],
+                        [-pi/2, 0, pi/2, pi, 3*pi/2],
+                        ['-', '+']))
+    results = (0, 0, -oo, oo, 0, 0, -oo, oo, 0, 0,
+               oo, -oo, 0, 0, oo, -oo, 0, 0, oo, -oo)
+    assert len(tests) == len(results)
+    for i, (args, res) in enumerate(zip(tests, results)):
+        f, l, d= args
+        eq=f(x)
+        try:
+            assert limit(eq, x, l, dir=d) == res
+        except AssertionError:
+            if 0: # change to 1 if you want to see the failing tests
+                print
+                print i, res, eq, l, d, limit(eq, x, l, dir=d)
+            else:
+                assert None
