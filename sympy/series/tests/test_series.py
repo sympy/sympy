@@ -1,5 +1,6 @@
 from sympy import sin, cos, exp, E, series
-from sympy.abc import x
+from sympy.abc import x, y
+from sympy.utilities.pytest import raises
 
 def test_sin():
     e1 = sin(x).series(x, 0)
@@ -24,3 +25,5 @@ def test_exp2():
 def test_series_coverage():
     e = cos(x).series(x, 1, n = None, taylor=True)
     assert [e.next() for i in range(2)] == [cos(1), (1 - x)*sin(1)]
+    assert cos(x).series() == cos(x).series(x)
+    raises(ValueError, 'cos(x+y).series()')

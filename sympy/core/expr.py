@@ -677,19 +677,23 @@ class Expr(Basic, EvalfMixin):
     ##################### SERIES, LEADING TERM, LIMIT, ORDER METHODS ##################
     ###################################################################################
 
-    def series(self, x, x0=0, n=6, dir="+", taylor=False):
+    def series(self, x=None, x0=0, n=6, dir="+", taylor=False):
         """
         Series expansion of "self" around `x = x0`.
 
         Usage:
-            Returns the Taylor (Laurent or generalized) series of "self" around
-            the point "point" (default 0) with respect to "x" until the n-th
-            term (default n is 6). If n=None then an iterator of the series
-            terms will be returned.
+            Returns the series expansion of "self" around the point `x = x0`
+            with respect to `x` until the n-th term (default n is 6). If
+            `n=None` then an iterator of the series terms will be returned.
 
-            For dir="+" (default) it calculates the series from the right
-            and for dir="-" the series from the left. For smooth functions this
-            argument doesn't matter.
+            If the flag `taylor` is True then the terms of the Taylor's series
+            expansion of the expression will be returned. (If there are no
+            functions with non-zero arguments as x -> 0 then this flag will not
+            alter the resulting series expansion.)
+
+            For `dir=+` (default) the series is calculated from the right and
+            for `dir=-` the series from the left. For smooth functions this
+            flag will not alter the results.
 
         Notes:
             This method is the most high level method and it returns the
@@ -699,7 +703,13 @@ class Expr(Basic, EvalfMixin):
             it executes lseries(); see nseries() and lseries() docstrings for
             more information.
         """
-        x = sympify(x)
+        if x is None:
+            syms = self.atoms(C.Symbol)
+            if len(syms) > 1:
+                raise ValueError('x must be given for multivariate functions.')
+            x = syms.pop()
+        else:
+            x = sympify(x)
         if len(dir) != 1 or dir not in '+-':
             raise ValueError("Dir must be '+' or '-'")
         s = self
@@ -741,7 +751,7 @@ class Expr(Basic, EvalfMixin):
                         yield si
             return yield_terms(s.lseries(x, taylor=taylor))
 
-    def lseries(self, x, x0=0, dir='+', taylor=True):
+    def lseries(self, x=None, x0=0, dir='+', taylor=True):
         """
         lseries is a generator yielding terms in the series.
 
@@ -760,7 +770,7 @@ class Expr(Basic, EvalfMixin):
 
         See also nseries().
         """
-        if x0 != 0 or dir != "+":
+        if x is None or x0 != 0 or dir != "+":
             return self.series(x, x0, n=None, dir=dir, taylor=taylor)
 
         x = sympify(x)
@@ -792,7 +802,7 @@ class Expr(Basic, EvalfMixin):
             yield series - e
             e = series
 
-    def nseries(self, x, x0=0, n=6, dir='+', taylor=True):
+    def nseries(self, x=None, x0=0, n=6, dir='+', taylor=True):
         """
         Calculates a generalized series expansion.
 
@@ -808,7 +818,7 @@ class Expr(Basic, EvalfMixin):
 
         See also lseries().
         """
-        if x0 != 0 or dir != "+":
+        if x is None or x0 != 0 or dir != "+":
             return self.series(x, x0, dir=dir, taylor=taylor)
 
         x = sympify(x)
