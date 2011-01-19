@@ -1,6 +1,6 @@
 from sympy.core import S, Add, sympify, Expr, PoleError, Mul, oo, C
 from gruntz import gruntz
-from sympy.functions import sign
+from sympy.functions import sign, tan, cot
 
 def limit(e, z, z0, dir="+"):
     """
@@ -42,6 +42,37 @@ def limit(e, z, z0, dir="+"):
 
     if e.is_Rational:
         return e
+
+    if e.func is tan:
+        # discontinuity at odd multiples of pi/2; 0 at even
+        disc = S.Pi/2
+        sign = 1
+        if dir == '-':
+            sign *= -1
+        i = limit(sign*e.args[0], z, z0)/disc
+        if i.is_integer:
+            if i.is_even:
+                return S.Zero
+            elif i.is_odd:
+                if dir == '+':
+                    return S.NegativeInfinity
+                else:
+                    return S.Infinity
+
+    if e.func is cot:
+        # discontinuity at multiples of pi; 0 at odd pi/2 multiples
+        disc = S.Pi
+        sign = 1
+        if dir == '-':
+            sign *= -1
+        i = limit(sign*e.args[0], z, z0)/disc
+        if i.is_integer:
+            if dir == '-':
+                return S.NegativeInfinity
+            else:
+                return S.Infinity
+        elif (2*i).is_integer:
+            return S.Zero
 
     if e.is_Pow:
         b, ex = e.args
