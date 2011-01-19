@@ -1,22 +1,20 @@
 """An implementation of qubits and gates acting on them.
 
 Todo:
+* Fix gate_sort and gate_simp.
+
+Medium Term Todo:
 * Optimize Gate._apply_operators_Qubit to remove the creation of many 
   intermediate Qubit objects.
-* Optimize the get_target_matrix by using slots to precompute the matrices.
 * Get UGate to work with either sympy/numpy matrices and output either
   format. This should also use the matrix slots.
 * Add commutation relationships to all operators and use this in gate_sort.
-* Get represent working and test.
-* Test apply_operators.
-* Fix Toffoli Gate to be a controlled gate.
 """
 
 from itertools import chain
 
 from sympy import Mul, Pow, Integer, Matrix, Rational
 from sympy.core.numbers import Number
-from sympy.core.containers import Tuple
 from sympy.matrices import matrices
 from sympy.printing.pretty.stringpict import prettyForm, stringPict
 from sympy.utilities.iterables import all
@@ -41,12 +39,9 @@ __all__ = [
     'PhaseGate',
     'SwapGate',
     'CNotGate',
-    'ToffoliGate',
     # Aliased gate names
-    'U',
     'CNOT',
     'SWAP',
-    'TOFFOLI',
     'H',
     'X',
     'Y',
@@ -61,6 +56,25 @@ sqrt2_inv = Pow(2, Rational(-1,2), evaluate=False)
 #-----------------------------------------------------------------------------
 # Gate Super-Classes
 #-----------------------------------------------------------------------------
+
+_normalized = True
+
+def normalized(normalize):
+    """Should Hadamard gates be normalized by a 1/sqrt(2).
+
+    This is a global setting that can be used to simplify the look of various
+    expressions, by leaving of the leading 1/sqrt(2) of the Hadamard gate.
+
+    Parameters
+    ----------
+    normalize : bool
+        Should the Hadamard gate include the 1/sqrt(2) normalization factor?
+        When True, the Hadamard gate will have the 1/sqrt(2). When False, the
+        Hadamard gate will not have this factor.
+    """
+    global _normalized
+    _normalized = b
+
 
 def _validate_targets_controls(tandc):
     tandc = list(tandc)
@@ -469,8 +483,11 @@ class HadamardGate(OneQubitGate):
     gate_name_latex = u'H'
         
     def get_target_matrix(self, format='sympy'):
-        return matrix_cache.get_matrix('H', format)
-
+        if _normalized:
+            return matrix_cache.get_matrix('H', format)
+        else:
+            return matrix_cache.get_matrix('Hsqrt2', format)
+            
 
 class XGate(OneQubitGate):
     """The single qubit X, or NOT, gate.
@@ -680,73 +697,9 @@ class SwapGate(TwoQubitGate):
         return matrix_cache.get_matrix('SWAP', format)
 
 
-class ToffoliGate(Gate):
-    """The ToffoliGate, also known as the double-controlled-NOT gate.
-
-    Flips the third Qubit (the target) contingent on the first and
-    second qubits (the controls) being 1.
-
-    Parameters
-    ----------
-    label : tuple
-        A tuple of the form (control1, control2, target).
-
-    Examples
-    --------
-
-    """
-
-    nqubits = Integer(3)
-
-    gate_name = u'TOFFOLI'
-    gate_name_latex = u'TOFFOLI'
-
-    #-------------------------------------------------------------------------
-    # Initialization
-    #-------------------------------------------------------------------------
-
-    @classmethod
-    def _eval_args(cls, args):
-        args = Gate._eval_args(args)
-        return args
-
-    @classmethod
-    def _eval_hilbert_space(cls, args):
-        """This returns the smallest possible Hilbert space."""
-        return ComplexSpace(2)**(max(max(args[0]),args[1])+1)
-
-    #-------------------------------------------------------------------------
-    # Properties
-    #-------------------------------------------------------------------------
-
-    @property
-    def min_qubits(self):
-        """The minimum number of qubits this gate needs to act on."""
-        return max(self.label)+1
-
-    @property
-    def targets(self):
-        """A tuple of target qubits."""
-        return tuple(self.label[1])
-
-    @property
-    def controls(self):
-        """A tuple of control qubits."""
-        return tuple(self.label[0])
-
-    @property
-    def gate(self):
-        """The non-controlled gate that will be applied to the targets."""
-        return XGate(self.targets[0])
-
-    def get_target_matrix(self, format='sympy'):
-        return matrix_cache.get_matrix('X', format)
-
-
 # Aliases for gate names.
 CNOT = CNotGate
 SWAP = SwapGate
-TOFFOLI = ToffoliGate
 
 #-----------------------------------------------------------------------------
 # Represent

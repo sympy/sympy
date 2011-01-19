@@ -1,9 +1,10 @@
 """Qubits for quantum computing.
 
 Todo:
-* Get things here to use a new MultiZGate as a basis for represent.
-* Fix represent, matrix_to_qubit, qubit_to_matrix.
+* Implement measure in a new file, measure.py.
+* Get IntQubit subclass working and integrate with Qubit.
 * Update docstrings.
+* Update tests.
 """
 
 from sympy import Integer, log, Mul, Add, Pow

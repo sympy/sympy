@@ -1,4 +1,12 @@
-"""An implementation of qubits and gates acting on them."""
+"""An implementation of qubits and gates acting on them.
+
+Todo:
+* Implement the Rk gates using CGate.
+* Fix Fourier, QFT, IQFT.
+* Update docstrings.
+* Update tests.
+* Implement apply using decompose.
+"""
 
 from sympy import Expr, Matrix, exp, I, pi
 from sympy.matrices.matrices import eye

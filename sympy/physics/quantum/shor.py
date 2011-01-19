@@ -1,3 +1,12 @@
+"""Shor's algorithm and helper functions.
+
+Todo:
+* Using standard naming scheme for function names, variables and class names.
+* Fix everything.
+* Update docstrings and reformat.
+* Remove print statements.
+"""
+
 import math
 import random
 
