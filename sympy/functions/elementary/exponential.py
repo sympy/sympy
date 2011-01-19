@@ -159,6 +159,11 @@ class exp(Function):
                     new_l.append(self.func(Add(*old_al)))
                     r = Mul(*new_l)
                     return r
+        if old is S.Exp1:
+            # treat this however Pow is being treated
+            u = C.Dummy('u')
+            return (u**self.args[0]).subs(u, new)
+
         old = o
         return Function._eval_subs(self, old, new)
 

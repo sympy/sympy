@@ -298,7 +298,7 @@ class Function(Application, Expr):
         arg = self.args[0]
         arg0 = arg.limit(x, 0)
         from sympy import oo
-        if arg0 in [-oo, oo]:
+        if arg0 in [-oo, oo, S.NaN]:
             raise PoleError("Cannot expand %s around 0" % (arg))
         if arg0:
             e = self
@@ -307,6 +307,8 @@ class Function(Application, Expr):
                 #for example when e = sin(x+1) or e = sin(cos(x))
                 #let's try the general algorithm
                 term = e.subs(x, S.Zero)
+                if term in [-oo, oo, S.NaN]:
+                    raise PoleError("Cannot expand %s around 0" % (self))
                 series = term
                 fact = S.One
                 for i in range(n-1):

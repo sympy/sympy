@@ -1,4 +1,4 @@
-from sympy.core import S, Add, sympify, Expr, PoleError, Mul, oo
+from sympy.core import S, Add, sympify, Expr, PoleError, Mul, oo, C
 from gruntz import gruntz
 from sympy.functions import sign
 
@@ -31,6 +31,8 @@ def limit(e, z, z0, dir="+"):
     "x**2" and similar, so that it's fast. For all other cases, we use the
     Gruntz algorithm (see the gruntz() function).
     """
+    from sympy import Wild, log
+
     e = sympify(e)
     z = sympify(z)
     z0 = sympify(z0)
@@ -66,6 +68,32 @@ def limit(e, z, z0, dir="+"):
                 return S.Infinity
             return z0**ex
 
+    if e.is_Mul or not z0 and e.is_Pow and b.func is log:
+        if e.is_Mul:
+            # weed out the z-independent terms
+            i, d = e.as_independent(z)
+            if i is not S.One:
+                return i*limit(d, z, z0, dir)
+        else:
+            i, d = S.One, e
+        if not z0:
+            # look for log(z)**q or z**p*log(z)**q
+            p, q = Wild("p"), Wild("q")
+            r = d.match(z**p * log(z)**q)
+            if r:
+                p, q = [r.get(w, w) for w in [p, q]]
+                if q and q.is_number and p.is_number:
+                    if q > 0:
+                        if p > 0:
+                            return S.Zero
+                        else:
+                            return -oo*i
+                    else:
+                        if p >= 0:
+                            return S.Zero
+                        else:
+                            return -oo*i
+
     if e.is_Add:
         if e.is_polynomial() and z0.is_finite:
             return Add(*[limit(term, z, z0, dir) for term in e.args])
@@ -93,6 +121,10 @@ def limit(e, z, z0, dir="+"):
                 return Add(*finite) + limit(Add(*unbounded), z, z0, dir)
         else:
             return Add(*finite)
+
+    if e.is_Order:
+        args = e.args
+        return C.Order(limit(args[0], z, z0), *args[1:])
 
     try:
         r = gruntz(e, z, z0, dir)
