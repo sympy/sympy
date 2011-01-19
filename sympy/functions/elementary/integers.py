@@ -104,7 +104,7 @@ class floor(RoundFunction):
         if arg.is_NumberSymbol:
             return arg.approximation_interval(C.Integer)[0]
 
-    def _eval_nseries(self, x, n):
+    def _eval_nseries(self, x, n, taylor=True):
         r = self.subs(x, 0)
         args = self.args[0]
         args0 = args.subs(x, 0)
@@ -153,7 +153,7 @@ class ceiling(RoundFunction):
         if arg.is_NumberSymbol:
             return arg.approximation_interval(C.Integer)[1]
 
-    def _eval_nseries(self, x, n):
+    def _eval_nseries(self, x, n, taylor=True):
         r = self.subs(x, 0)
         args = self.args[0]
         args0 = args.subs(x, 0)

@@ -22,5 +22,5 @@ def test_exp2():
     assert e1 == e2
 
 def test_series_coverage():
-    e = cos(x).series(x, 1, n = None)
+    e = cos(x).series(x, 1, n = None, taylor=True)
     assert [e.next() for i in range(2)] == [cos(1), (1 - x)*sin(1)]

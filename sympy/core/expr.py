@@ -677,7 +677,7 @@ class Expr(Basic, EvalfMixin):
     ##################### SERIES, LEADING TERM, LIMIT, ORDER METHODS ##################
     ###################################################################################
 
-    def series(self, x, x0=0, n=6, dir="+"):
+    def series(self, x, x0=0, n=6, dir="+", taylor=False):
         """
         Series expansion of "self" around `x = x0`.
 
@@ -717,7 +717,7 @@ class Expr(Basic, EvalfMixin):
 
         if n != None:
             # nseries handling
-            s = s.nseries(x, 0, n)
+            s = s.nseries(x, n=n, taylor=taylor)
             if not dosub:
                 return s
             o = (s.getO() or S.Zero)
@@ -739,9 +739,9 @@ class Expr(Basic, EvalfMixin):
                         yield si.subs(x, rep2)
                     else:
                         yield si
-            return yield_terms(self.lseries(x, 0, "+"))
+            return yield_terms(s.lseries(x, taylor=taylor))
 
-    def lseries(self, x, x0=0, dir='+'):
+    def lseries(self, x, x0=0, dir='+', taylor=True):
         """
         lseries is a generator yielding terms in the series.
 
@@ -761,38 +761,38 @@ class Expr(Basic, EvalfMixin):
         See also nseries().
         """
         if x0 != 0 or dir != "+":
-            return self.series(x, x0, dir=dir)
+            return self.series(x, x0, n=None, dir=dir, taylor=taylor)
 
         x = sympify(x)
-        return self._eval_lseries(x)
+        return self._eval_lseries(x, taylor)
 
-    def _eval_lseries(self, x):
+    def _eval_lseries(self, x, taylor=True):
         # default implementation of lseries is using nseries(), and adaptively
         # increasing the "n". As you can see, it is not very efficient, because
         # we are calculating the series over and over again. Subclasses should
         # override this method and implement much more efficient yielding of
         # terms.
         n = 0
-        series = self.nseries(x, 0, n)
+        series = self.nseries(x, n=n, taylor=taylor)
         if not series.is_Order:
             yield series
             raise StopIteration
 
         while series.is_Order:
             n += 1
-            series = self.nseries(x, 0, n)
+            series = self.nseries(x, n=n, taylor=taylor)
         e = series.removeO()
         yield e
         while 1:
             while 1:
                 n += 1
-                series = self.nseries(x, 0, n).removeO()
+                series = self.nseries(x, n=n, taylor=taylor).removeO()
                 if e != series:
                     break
             yield series - e
             e = series
 
-    def nseries(self, x, x0, n, dir='+'):
+    def nseries(self, x, x0=0, n=6, dir='+', taylor=True):
         """
         Calculates a generalized series expansion.
 
@@ -809,12 +809,12 @@ class Expr(Basic, EvalfMixin):
         See also lseries().
         """
         if x0 != 0 or dir != "+":
-            return self.series(x, x0, dir=dir)
+            return self.series(x, x0, dir=dir, taylor=taylor)
 
         x = sympify(x)
-        return self._eval_nseries(x, n)
+        return self._eval_nseries(x, n, taylor)
 
-    def _eval_nseries(self, x, n):
+    def _eval_nseries(self, x, n, taylor=True):
         """
         This is a method that should be overridden in subclasses. Users should
         never call this method directly (use .nseries() instead), so you don't
@@ -1083,7 +1083,7 @@ class AtomicExpr(Atom, Expr):
     def is_number(self):
         return True
 
-    def _eval_nseries(self, x, n):
+    def _eval_nseries(self, x, n, taylor=True):
         return self
 
 from mul import Mul

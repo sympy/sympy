@@ -941,9 +941,9 @@ class Mul(AssocOp):
         # else the subexpression isn't in the totaly expression
         return self.__class__(*[s._eval_subs(old, new) for s in self.args])
 
-    def _eval_nseries(self, x, n):
+    def _eval_nseries(self, x, n, taylor=True):
         from sympy import powsimp
-        terms = [t.nseries(x, 0, n) for t in self.args]
+        terms = [t.nseries(x, n=n, taylor=taylor) for t in self.args]
         return powsimp(Mul(*terms).expand(), combine='exp', deep=True)
 
 

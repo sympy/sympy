@@ -388,12 +388,12 @@ class Integral(Expr):
 
         return C.Add(*parts)
 
-    def _eval_lseries(self, x):
-        for term in self.function.lseries(x):
+    def _eval_lseries(self, x, taylor=True):
+        for term in self.function.lseries(x, taylor=taylor):
             yield integrate(term, *self.limits)
 
-    def _eval_nseries(self, x, n):
-        terms, order = self.function.nseries(x, 0, n).as_coeff_factors(C.Order)
+    def _eval_nseries(self, x, n, taylor=True):
+        terms, order = self.function.nseries(x, n=n).as_coeff_factors(C.Order)
         return integrate(terms, *self.limits) + Add(*order)*x
 
     def _eval_subs(self, old, new):

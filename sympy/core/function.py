@@ -293,14 +293,14 @@ class Function(Application, Expr):
     def as_base_exp(self):
         return self, S.One
 
-    def _eval_nseries(self, x, n):
+    def _eval_nseries(self, x, n, taylor=True):
         assert len(self.args) == 1
         arg = self.args[0]
         arg0 = arg.limit(x, 0)
         from sympy import oo
         if arg0 in [-oo, oo]:
             raise PoleError("Cannot expand %s around 0" % (arg))
-        if not arg0 is S.Zero:
+        if arg0 and taylor:
             e = self
             e1 = e.expand()
             if e == e1:
@@ -317,12 +317,12 @@ class Function(Application, Expr):
                     term = term.expand()
                     series += term
                 return series + C.Order(x**n, x)
-            return e1.nseries(x, 0, n)
+            return e1.nseries(x, n=n)
         l = []
         g = None
         for i in xrange(n+2):
             g = self.taylor_term(i, arg, g)
-            g = g.nseries(x, 0, n)
+            g = g.nseries(x, n=n, taylor=taylor)
             l.append(g)
         return Add(*l) + C.Order(x**n, x)
 
@@ -650,13 +650,13 @@ class Derivative(Expr):
         repl_dict[self] = expr
         return repl_dict
 
-    def _eval_lseries(self, x):
+    def _eval_lseries(self, x, taylor=True):
         dx = self.args[1:]
-        for term in self.args[0].lseries(x):
+        for term in self.args[0].lseries(x, taylor=taylor):
             yield term.diff(*dx)
 
-    def _eval_nseries(self, x, n):
-        arg = self.args[0].nseries(x, 0, n)
+    def _eval_nseries(self, x, n, taylor=True):
+        arg = self.args[0].nseries(x, n=n, taylor=True)
         o = arg.getO()
         dx = self.args[1:]
         rv = arg.removeO().diff(*dx)

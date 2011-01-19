@@ -275,9 +275,9 @@ class Abs(Function):
                 return self.args[0]**other
         return
 
-    def _eval_nseries(self, x, n):
+    def _eval_nseries(self, x, n, taylor=True):
         direction = self.args[0].leadterm(x)[0]
-        return sign(direction)*self.args[0].nseries(x, 0, n)
+        return sign(direction)*self.args[0].nseries(x, n=n)
 
     def _sage_(self):
         import sage.all as sage

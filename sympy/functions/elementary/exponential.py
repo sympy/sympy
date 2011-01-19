@@ -184,19 +184,19 @@ class exp(Function):
         """exp(b[0])**e -> exp(b[0]*e)"""
         return exp(b.args[0] * e)
 
-    def _eval_lseries(self, x):
+    def _eval_lseries(self, x, taylor=True):
         s = self.args[0]
         yield exp(s.subs(x, 0))
         from sympy import Integral, Derivative, integrate
         t = Symbol("t", dummy=True)
         f = s.subs(x, t)
-        for term in (exp(f)*Derivative(f, t)).lseries(t):
+        for term in (exp(f)*Derivative(f, t)).lseries(t, taylor=taylor):
             yield integrate(term, (t, 0, x))
 
-    def _eval_nseries(self, x, n):
+    def _eval_nseries(self, x, n, taylor=True):
         from sympy import limit, oo, powsimp
         arg = self.args[0]
-        arg_series = arg.nseries(x, 0, n)
+        arg_series = arg.nseries(x, n=n)
         if arg_series.is_Order:
             return 1 + arg_series
         arg0 = limit(arg_series, x, 0)
@@ -418,7 +418,7 @@ class log(Function):
             return self.func(n), d
         return (self.func(n) - self.func(d)).as_numer_denom()
 
-    def _eval_nseries(self, x, n):
+    def _eval_nseries(self, x, n, taylor=True):
         from sympy import powsimp
         arg = self.args[0]
         k, l = Wild("k"), Wild("l")
@@ -472,12 +472,12 @@ class log(Function):
             g = None
             for i in xrange(n+2):
                 g = ln.taylor_term(i, z, g)
-                g = g.nseries(x, 0, n)
+                g = g.nseries(x, n=n)
                 l.append(g)
             obj = C.Add(*l) + ln(arg0)
         obj2 = expand_log(powsimp(obj, deep=True, combine='exp'))
         if obj2 != obj:
-            r = obj2.nseries(x, 0, n)
+            r = obj2.nseries(x, n=n)
         else:
             r = obj
         if r == self:

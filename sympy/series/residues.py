@@ -41,11 +41,11 @@ def residue(expr, x, x0):
     expr = sympify(expr)
     if x0 != 0:
         expr = expr.subs(x, x+x0)
-    s = expr.series(x, 0, 0).removeO()
+    s = expr.series(x, 0, 0, taylor=True).removeO()
     # TODO: this sometimes helps, but the series expansion should rather be
     # fixed, see #1627:
     if s == 0:
-        s = expr.series(x, 0, 6).removeO()
+        s = expr.series(x, 0, 6, taylor=True).removeO()
     if x0 != 0:
         s = s.subs(x, x-x0)
     a = Wild("r", exclude=[x])

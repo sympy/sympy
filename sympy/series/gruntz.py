@@ -368,16 +368,16 @@ def calculate_series(e, x):
     """
 
     f = e
-    series=f.nseries(x, 0, 2).removeO()
+    series=f.nseries(x, n=2, taylor=True).removeO()
     if series == 0:
         #we need to calculate more terms, let's try 4:
-        series=f.nseries(x, 0, 4).removeO()
+        series=f.nseries(x, n=4, taylor=True).removeO()
     if series == 0:
         #we need to calculate more terms, let's try 6:
-        series=f.nseries(x, 0, 6).removeO()
+        series=f.nseries(x, n=6, taylor=True).removeO()
     if series == 0:
         #we need to calculate more terms, let's try 8:
-        series=f.nseries(x, 0, 8).removeO()
+        series=f.nseries(x, n=8, taylor=True).removeO()
     assert not isinstance(series, O), f
     return series
 

@@ -177,7 +177,7 @@ class Order(Expr):
     def oseries(self, order):
         return self
 
-    def _eval_nseries(self, x, n):
+    def _eval_nseries(self, x, n, taylor=True):
         return self
 
     @classmethod

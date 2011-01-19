@@ -598,7 +598,7 @@ class Pow(Expr):
             return Expr.matches(self, expr, repl_dict, evaluate)
         return d
 
-    def _eval_nseries(self, x, n):
+    def _eval_nseries(self, x, n, taylor=True):
         from sympy import powsimp, collect
 
         base, exp = self.args
@@ -606,7 +606,7 @@ class Pow(Expr):
             if exp > 0:
                 # positive integer powers are easy to expand, e.g.:
                 # sin(x)**4 = (x-x**3/3+...)**4 = ...
-                return Pow(base.nseries(x, 0, n), exp
+                return Pow(base.nseries(x, n=n), exp
                            )._eval_expand_multinomial(deep = False)
             elif exp == -1:
                 # this is also easy to expand using the formula:
@@ -618,18 +618,18 @@ class Pow(Expr):
                     y = Symbol("y", dummy=True)
                     p = self.subs(log(x), -1/y)
                     if not p.has(x):
-                        p = p.nseries(y, 0, n)
+                        p = p.nseries(y, n=n)
                         p = p.subs(y, -1/log(x))
                         return p
 
-                base = base.nseries(x, 0, n)
+                base = base.nseries(x, n=n)
                 if base.has(log(x)):
                     # we need to handle the log(x) singularity:
                     y = Symbol("y", dummy=True)
                     self0 = 1/base
                     p = self0.subs(log(x), -1/y)
                     if not p.has(x):
-                        p = p.nseries(y, 0, n)
+                        p = p.nseries(y, n=n)
                         p = p.subs(y, -1/log(x))
                         return p
                 prefactor = base.as_leading_term(x)
@@ -675,15 +675,15 @@ class Pow(Expr):
                 # negative powers are rewritten to the cases above, for example:
                 # sin(x)**(-4) = 1/( sin(x)**4) = ...
                 # and expand the denominator:
-                denominator = (base**(-exp)).nseries(x, 0, n)
+                denominator = (base**(-exp)).nseries(x, n=n)
                 if 1/denominator == self:
                     return self
                 # now we have a type 1/f(x), that we know how to expand
-                return (1/denominator).nseries(x, 0, n)
+                return (1/denominator).nseries(x, n=n)
 
         if exp.has(x):
             import sympy
-            return sympy.exp(exp*sympy.log(base)).nseries(x, 0, n)
+            return sympy.exp(exp*sympy.log(base)).nseries(x, n=n)
 
         if base == x:
             return powsimp(self, deep=True, combine='exp')
@@ -695,14 +695,14 @@ class Pow(Expr):
         ln = C.log
         exp = C.exp
         if e.has(x):
-            return exp(e*ln(b)).nseries(x, 0, n)
+            return exp(e*ln(b)).nseries(x, n=n)
         if b==x:
             return self
         b0 = b.limit(x,0)
         if b0 is S.Zero or b0.is_unbounded:
             lt = b.as_leading_term(x)
             o = order*lt**(1-e)
-            bs = b.nseries(x, 0, n-e)
+            bs = b.nseries(x, n=n-e)
             if bs.is_Add:
                 bs = bs.removeO()
             if bs.is_Add:
@@ -741,7 +741,7 @@ class Pow(Expr):
                 g = None
                 for i in xrange(n+2):
                     g = self.taylor_term(i, z, g)
-                    g = g.nseries(x, 0, n)
+                    g = g.nseries(x, n=n)
                     l.append(g)
                 r = Add(*l)
         return r * b0**e + order

@@ -422,4 +422,4 @@ def test_series():
     from sympy.abc import x
     i = Integral(cos(x))
     e = i.lseries(x)
-    assert i.nseries(x, 0, 8).removeO() == Add(*[e.next() for j in range(4)])
+    assert i.nseries(x, n=8).removeO() == Add(*[e.next() for j in range(4)])
