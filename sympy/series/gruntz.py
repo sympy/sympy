@@ -301,6 +301,7 @@ def sign(e, x):
         e == 0 ...  0
         e <  0 ... -1
     """
+    ## from sympy import sign as _sign
     assert isinstance(e, Basic)
     if e.is_Rational or e.is_Real:
         if e == 0:
@@ -312,8 +313,14 @@ def sign(e, x):
     elif not e.has(x):
         if e.is_positive:
             return 1
-        else:
+        elif e.is_negative:
             return -1
+        else:
+            # if we can't resolve the sign just return
+            # the value; another option would be an
+            # unevaluated sign
+            ## return _sign(e)
+            return e
     elif e == x:
         return 1
     elif e.is_Mul:

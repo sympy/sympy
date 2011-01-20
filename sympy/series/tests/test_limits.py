@@ -16,9 +16,15 @@ def test_basic1():
     assert limit(-exp(x), x, oo) == -oo
     assert limit(exp(x)/x, x, oo) == oo
     assert limit(1/x - exp(-x), x, oo) == 0
-    assert limit(x+1/x, x, oo) == oo
-    assert limit(x-x**2, x, oo) == -oo
-
+    assert limit(x + 1/x, x, oo) == oo
+    assert limit(x - x**2, x, oo) == -oo
+    assert limit((1 + x)**(1 + sqrt(2)),x,0) == 1
+    assert limit((1 + cos(x))**oo, x, 0) == oo
+    assert limit((1 + x)**oo, x, 0) == oo
+    assert limit((1 + x)**oo, x, 0, dir='-') == 0
+    assert limit((1 + x + y)**oo, x, 0, dir='-') == (1 + y)**(oo)
+    assert limit(y/x/log(x), x, 0) == -y*oo
+    assert limit(cos(x + y)/x, x, 0) == cos(y)*oo
 
     # approaching 0
     # from dir="+"
