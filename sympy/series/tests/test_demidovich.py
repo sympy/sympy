@@ -7,7 +7,7 @@ problemas resueltos, Ed. URSS"
 
 """
 
-x = Symbol("x", real=True, unbounded=True)
+x = Symbol("x")
 
 def test_leadterm():
     assert (3+2*x**(log(3)/log(2)-1)).leadterm(x)==(3,0)
@@ -39,7 +39,7 @@ def test_Limits_simple_2():
     assert limit(sqrt(x)/sqrt(x+sqrt(x+sqrt(x))),x,oo)==1  #190
 
 def test_Limits_simple_3a():
-    a = Symbol('a', real=True)
+    a = Symbol('a')
     #issue 414
     assert together(limit((x**2-(a+1)*x+a)/(x**3-a**3),x,a)) == \
             (a-1)/(3*a**2)  #196
@@ -55,7 +55,7 @@ def test_Limits_simple_3b():
     assert limit((sqrt3(x**2)-2*sqrt3(x)+1)/(x-1)**2,x,1)==Rational(1)/9  #202
 
 def test_Limits_simple_4a():
-    a = Symbol('a', real=True)
+    a = Symbol('a')
     assert limit((sqrt(x)-sqrt(a))/(x-a),x,a)==1/(2*sqrt(a))  #Primer 5
     assert limit((sqrt(x)-1)/(sqrt3(x)-1),x,1)==Rational(3)/2  #205
     assert limit((sqrt(1+x)-sqrt(1-x))/x,x,0)==1  #207
@@ -115,6 +115,6 @@ def test_f2():
     assert limit((sqrt(cos(x))-sqrt3(cos(x)))/(sin(x)**2),x,0) == -Rational(1,12) #*184
 
 def test_f3():
-    a = Symbol('a', real=True)
+    a = Symbol('a')
     #issue 405
     assert limit(asin(a*x)/x, x, 0) == a
