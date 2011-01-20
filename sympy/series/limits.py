@@ -43,6 +43,9 @@ def limit(e, z, z0, dir="+"):
     if e.is_Rational:
         return e
 
+    if not e.has(z):
+        return e
+
     if e.func is tan:
         # discontinuity at odd multiples of pi/2; 0 at even
         disc = S.Pi/2
@@ -135,6 +138,9 @@ def limit(e, z, z0, dir="+"):
         unbounded = []; unbounded_result=[]
         finite = []
         for term in e.args:
+            if not term.has(z):
+                finite.append(term)
+                continue
             result = term.subs(z, z0)
             if result.is_unbounded or result is S.NaN:
                 unbounded.append(term)
