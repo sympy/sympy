@@ -13,6 +13,7 @@ Medium Term Todo:
 
     SWAP = |1><0|x|1><0| + |0><1|x|0><1| + |1><0|x|0><1| + |1><0|x|1><0|
 
+* Get multi-target UGates plotting properly.
 """
 
 from itertools import chain
@@ -77,7 +78,7 @@ def normalized(normalize):
         Hadamard gate will not have this factor.
     """
     global _normalized
-    _normalized = b
+    _normalized = normalize
 
 
 def _validate_targets_controls(tandc):
@@ -152,6 +153,10 @@ class Gate(UnitaryOperator):
     def targets(self):
         """A tuple of target qubits."""
         return self.label
+
+    @property
+    def gate_name_plot(self):
+        return r'$%s$' % self.gate_name_latex
 
     #-------------------------------------------------------------------------
     # Gate methods
@@ -257,6 +262,10 @@ class Gate(UnitaryOperator):
     def _print_contents_latex(self, printer, *args):
         label = self._print_label(printer, *args)
         return '%s_{%s}' % (self.gate_name_latex, label)
+
+    def plot_gate(self, axes, gate_idx, gate_grid, wire_grid):
+        raise NotImplementedError('plot_gate is not implemented.')
+
 
 
 class CGate(Gate):
@@ -376,6 +385,14 @@ class CGate(Gate):
         return r'%s_{%s}{\left(%s\right)}' %\
             (self.gate_name_latex, controls, gate)
 
+    def plot_gate(self, circ_plot, gate_idx):
+        min_wire = int(min(chain(self.controls, self.targets)))
+        max_wire = int(max(chain(self.controls, self.targets)))
+        circ_plot.control_line(gate_idx, min_wire, max_wire)
+        for c in self.controls:
+            circ_plot.control_point(gate_idx, int(c))
+        self.gate.plot_gate(circ_plot, gate_idx)
+
 
 class UGate(Gate):
     """General gate specified by a set of targets and a target matrix.
@@ -457,11 +474,23 @@ class UGate(Gate):
         targets = self._print_sequence(self.targets, ',', printer, *args)
         return r'%s_{%s}' % (self.gate_name_latex, targets)
 
+    def plot_gate(self, circ_plot, gate_idx):
+        circ_plot.one_qubit_box(
+            self.gate_name_plot,
+            gate_idx, int(self.targets[0])
+        )
+
 
 class OneQubitGate(Gate):
     """A single qubit unitary gate base class."""
 
     nqubits = Integer(1)
+
+    def plot_gate(self, circ_plot, gate_idx):
+        circ_plot.one_qubit_box(
+            self.gate_name_plot,
+            gate_idx, int(self.targets[0])
+        )
 
 
 class TwoQubitGate(Gate):
@@ -514,6 +543,11 @@ class XGate(OneQubitGate):
 
     def get_target_matrix(self, format='sympy'):
         return matrix_cache.get_matrix('X', format)
+
+    def plot_gate(self, circ_plot, gate_idx):
+        circ_plot.not_point(
+            gate_idx, int(self.label[0])
+        )
 
 
 class YGate(OneQubitGate):
@@ -655,12 +689,12 @@ class CNotGate(CGate, TwoQubitGate):
     @property
     def targets(self):
         """A tuple of target qubits."""
-        return tuple(self.label[1])
+        return (self.label[1],)
 
     @property
     def controls(self):
         """A tuple of control qubits."""
-        return tuple(self.label[0])
+        return (self.label[0],)
 
     @property
     def gate(self):
@@ -703,6 +737,13 @@ class SwapGate(TwoQubitGate):
 
     def get_target_matrix(self, format='sympy'):
         return matrix_cache.get_matrix('SWAP', format)
+
+    def plot_gate(self, circ_plot, gate_idx):
+        min_wire = int(min(self.targets))
+        max_wire = int(max(self.targets))
+        circ_plot.control_line(gate_idx, min_wire, max_wire)
+        circ_plot.swap_point(gate_idx, min_wire)
+        circ_plot.swap_point(gate_idx, max_wire)
 
 
 # Aliases for gate names.

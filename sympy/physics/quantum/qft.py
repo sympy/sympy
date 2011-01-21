@@ -6,16 +6,14 @@ Todo:
 * Implement apply using decompose.
 * Implement represent using decompose or something smarter. For this to work
   we first have to implement represent for SWAP.
+* Decide if we want upper index to be inclusive in the constructor.
+* Fix the printing of Rk gates in plotting.
 """
 
 from sympy import Expr, Matrix, exp, I, pi, Integer
-from sympy.matrices.matrices import eye
-from sympy.printing.pretty.stringpict import prettyForm
 
-from sympy.physics.quantum.qexpr import QuantumError
-from sympy.physics.quantum.hilbert import HilbertSpaceError
-from sympy.physics.quantum.tensorproduct import matrix_tensor_product
 from sympy.physics.quantum.applyops import apply_operators
+from sympy.physics.quantum.qexpr import QuantumError, QExpr
 
 from sympy.physics.quantum.gate import (
     Gate, HadamardGate, SwapGate, OneQubitGate, CGate, PhaseGate, TGate, ZGate
@@ -57,9 +55,14 @@ class RkGate(OneQubitGate):
             return TGate(target)
         args = cls._eval_args(args)
         inst = Expr.__new__(cls, *args, **{'commutative':False})
-        # Now set the slots on the instance
         inst.hilbert_space = cls._eval_hilbert_space(args)
         return inst
+
+    @classmethod
+    def _eval_args(cls, args):
+        # Fall back to this, because Gate._eval_args assumes that args is
+        # all targets and can't contain duplicates.
+        return QExpr._eval_args(args)
 
     @property
     def k(self):
@@ -68,6 +71,10 @@ class RkGate(OneQubitGate):
     @property
     def targets(self):
         return self.label[:1]
+
+    @property
+    def gate_name_plot(self):
+        return r'$%s_%s$' % (self.gate_name_latex, str(self.k))
 
     def get_target_matrix(self, format='sympy'):
         if format == 'sympy':
