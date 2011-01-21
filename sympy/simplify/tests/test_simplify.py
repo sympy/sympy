@@ -445,6 +445,7 @@ def test_nsimplify():
     assert nsimplify(2.0**(1/3.), tolerance=0.001, full=True) == 2**Rational(1, 3)
     assert nsimplify(x + .5, rational=True) == Rational(1, 2) + x
     assert nsimplify(1/.3 + x, rational=True) == Rational(10, 3) + x
+    assert nsimplify(log(3).n(),rational=True) == sympify('109861228866811/100000000000000')
 
 def test_extract_minus_sign():
     x = Symbol("x")
