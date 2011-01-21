@@ -1366,7 +1366,7 @@ def _real_to_rational(expr):
             else:
                 s = 1
             d = Pow(10, int((mpmath.log(newr)/mpmath.log(10))))
-            newr = s*Rational(str(nsimplify(newr/d)))*d
+            newr = s*Rational(str(newr/d))*d
         p = p.subs(r, newr)
     return p
 
