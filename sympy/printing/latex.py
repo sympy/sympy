@@ -18,10 +18,8 @@ class LatexPrinter(Printer):
 
     _default_settings = {
         "order": None,
-        "descending": False,
         "mode": "plain",
         "itex": False,
-        "mainvar": None,
         "fold_frac_powers": False,
         "fold_func_brackets": False,
         "mul_symbol": None,
@@ -124,49 +122,17 @@ class LatexPrinter(Printer):
         else:
             return expr
 
-    def _print_Add(self, expr):
-        args = list(expr.args)
+    def _print_Add(self, expr, order=None):
+        terms = self._as_ordered_terms(expr, order=order)
+        tex = self._print(terms[0])
 
-        if self._settings['mainvar'] is not None:
-            mainvar = self._settings['mainvar']
-            if type(mainvar) == str:
-                mainvar = var(mainvar)
-
-            def compare_exponents(a, b):
-                p1, p2 = Wild("p1"), Wild("p2")
-                r_a = a.match(p1 * mainvar**p2)
-                r_b = b.match(p1 * mainvar**p2)
-                if r_a is None and r_b is None:
-                    c = Basic._compare_pretty(a,b)
-                    return c
-                elif r_a is not None:
-                    if r_b is None:
-                        return 1
-                    else:
-                        c = Basic.compare(r_a[p2], r_b[p2])
-                        if c!=0:
-                            return c
-                        else:
-                            c = Basic._compare_pretty(a,b)
-                            return c
-                elif r_b is not None and r_a is None:
-                    return -1
-
-            args.sort(compare_exponents)
-        else:
-            args.sort(Basic._compare_pretty)
-        if self._settings['descending']:
-            args.reverse()
-
-        tex = str(self._print(args[0]))
-
-        for term in args[1:]:
+        for term in terms[1:]:
             coeff = term.as_coeff_mul()[0]
 
-            if coeff.is_negative:
-                tex += r" %s" % self._print(term)
-            else:
-                tex += r" + %s" % self._print(term)
+            if coeff >= 0:
+                tex += " +"
+
+            tex += " " + self._print(term)
 
         return tex
 
@@ -196,7 +162,7 @@ class LatexPrinter(Printer):
             return str_real
 
     def _print_Mul(self, expr):
-        coeff, terms = expr.as_coeff_mul()
+        coeff, tail = expr.as_coeff_Mul()
 
         if not coeff.is_negative:
             tex = ""
@@ -204,15 +170,21 @@ class LatexPrinter(Printer):
             coeff = -coeff
             tex = "- "
 
-        numer, denom = fraction(Mul(*terms))
+        numer, denom = fraction(tail)
         seperator = self._settings['mul_symbol_latex']
 
-        def convert(terms):
-            if not terms.is_Mul:
-                return str(self._print(terms))
+        def convert(expr):
+            if not expr.is_Mul:
+                return str(self._print(expr))
             else:
                 _tex = last_term_tex = ""
-                for term in terms.args:
+
+                if self.order:
+                    args = sorted(expr.args, key=Basic.sorted_key)
+                else:
+                    args = expr.args
+
+                for term in args:
                     pretty = self._print(term)
 
                     if term.is_Add:
