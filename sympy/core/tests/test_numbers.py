@@ -391,6 +391,9 @@ def test_dont_accept_str():
 def test_int():
     a = Rational(5)
     assert int(a)==5
+    a = Rational(9, 10)
+    assert int(a) == int(-a) == 0
+    assert 1/(-1)**Rational(2, 3) == -(-1)**Rational(1, 3)
 
 def test_real_bug():
     x = Symbol("x")
