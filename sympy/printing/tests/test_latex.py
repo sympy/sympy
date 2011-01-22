@@ -252,16 +252,11 @@ def test_latex_issue1477():
     assert latex(Symbol("alpha^aleph")) == r"\alpha^{\aleph}"
     assert latex(Symbol("alpha__aleph")) == r"\alpha^{\aleph}"
 
-def test_mainvar():
-    expr = 3*x*y**3+x**2*y+x**3+y**4
-    settings_y = {'mainvar' : y}
-    assert latex(expr, **settings_y) == 'x^{3} + y x^{2} + 3 x y^{3} + y^{4}'
-    settings_x = {'mainvar' : x}
-    assert latex(expr, **settings_x) == 'y^{4} + 3 x y^{3} + y x^{2} + x^{3}'
-    settings_y['descending'] = True
-    assert latex(expr, **settings_y) == 'y^{4} + 3 x y^{3} + y x^{2} + x^{3}'
-    settings_x['descending'] = True
-    assert latex(expr, **settings_x) == 'x^{3} + y x^{2} + 3 x y^{3} + y^{4}'
+def test_latex_order():
+    expr = x**3 + x**2*y + 3*x*y**3 + y**4
+
+    assert latex(expr, order='lex') == "x^{3} + x^{2} y + 3 x y^{3} + y^{4}"
+    assert latex(expr, order='rev-lex') == "y^{4} + 3 x y^{3} + x^{2} y + x^{3}"
 
 def test_settings():
     raises(TypeError, 'latex(x*y, method="garbage")')
