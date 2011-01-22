@@ -678,7 +678,9 @@ class Rational(Number):
         return Rational(abs(self.p), self.q)
 
     def __int__(self):
-        return int(self.p//self.q)
+        if self >= 0:
+            return int(self.p//self.q)
+        return -int(-self.p//self.q)
 
     def __eq__(self, other):
         try:
@@ -1299,7 +1301,7 @@ class NegativeOne(IntegerConstant):
             if isinstance(e, Rational):
                 if e.q == 2:
                     return S.ImaginaryUnit ** Integer(e.p)
-                q = int(e)
+                q = Real(e).floor()
                 if q:
                     q = Integer(q)
                     return b ** q * b ** (e - q)
