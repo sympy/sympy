@@ -87,6 +87,9 @@ class MathMLPrinter(Printer):
             x.appendChild(self._print(denom))
             return x
 
+        if self.order:
+            terms = sorted(terms, key=Basic.sorted_key)
+
         if coeff == 1 and len(terms) == 1:
             return self._print(terms[0])
         x = self.dom.createElement('apply')
@@ -97,17 +100,12 @@ class MathMLPrinter(Printer):
             x.appendChild(self._print(term))
         return x
 
-    # This is complicated because we attempt to order then results in order of Basic._compare_pretty
-    # and use minus instead of negative
-    def _print_Add(self, e):
-        args = list(e.args)
-        args.sort(Basic._compare_pretty)
+    def _print_Add(self, expr, order=None):
+        args = self._as_ordered_terms(expr, order=order)
         lastProcessed = self._print(args[0])
-        args.pop(0)
-        plusNodes = list()
-        for i in range(0,len(args)):
-            arg = args[i]
-            coeff, terms = arg.as_coeff_mul()
+        plusNodes = []
+        for arg in args[1:]:
+            coeff, _ = arg.as_coeff_mul()
             if(coeff.is_negative):
                 #use minus
                 x = self.dom.createElement('apply')
@@ -383,3 +381,4 @@ def print_mathml(expr, **settings):
     """
     s = MathMLPrinter(settings)
     print s._print(sympify(expr)).toprettyxml(encoding="utf-8")
+
