@@ -1,5 +1,7 @@
-from sympy import limit, exp, oo, log, sqrt, Limit, sin, floor, cos, ceiling, \
-        atan, gamma, Symbol, S, pi, Integral, cot, Rational, I, zoo, tan, cot
+from sympy import (limit, exp, oo, log, sqrt, Limit, sin, floor, cos, ceiling,
+                   atan, gamma, Symbol, S, pi, Integral, cot, Rational, I, zoo,
+                   tan, cot, integrate)
+
 from sympy.abc import x, y, z
 from sympy.utilities.pytest import XFAIL
 from sympy.utilities.iterables import cartes
@@ -59,6 +61,7 @@ def test_basic4():
     assert limit(2*x + y*x, x, 1) == 2+y
     assert limit(2*x**8 + y*x**(-3), x, -2) == 512 - y/8
     assert limit(sqrt(x + 1) - sqrt(x), x, oo)==0
+    assert integrate(1/(x**3+1),(x,0,oo)) == 2*pi*sqrt(3)/9
 
 def test_issue786():
     assert limit(x*y + x*z, z, 2) == x*y+2*x
