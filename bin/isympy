@@ -121,7 +121,17 @@ def main():
         default=False,
         help='use the doctest format for output (you can just copy and paste it)')
 
+    parser.add_option(
+        '-C', '--no-cache',
+        dest='cache',
+        action='store_false',
+        default=True,
+        help='disable caching mechanism')
+
     (options, ipy_args) = parser.parse_args()
+
+    if options.cache is False:
+        os.environ['SYMPY_USE_CACHE'] = 'no'
 
     if options.types is not None:
         os.environ['SYMPY_GROUND_TYPES'] = options.types
