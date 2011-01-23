@@ -265,6 +265,9 @@ def test_powsimp():
     assert powsimp(x*y**(z**x*z**y), deep=True) == x*y**(z**(x + y))
     assert powsimp((z**x*z**y)**x, deep=True) == (z**(x + y))**x
     assert powsimp(x*(z**x*z**y)**x, deep=True) == x*(z**(x + y))**x
+    p = symbols('p', positive=True)
+    assert powsimp((1/x)**log(2)/x) == (1/x)**(1 + log(2))
+    assert powsimp((1/p)**log(2)/p) == p**(-1 - log(2))
 
 def test_powsimp_nc():
     x, y, z = symbols('xyz')
