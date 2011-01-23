@@ -1163,6 +1163,31 @@ def powsimp(expr, deep=False, combine='all'):
                         c_powers[b] = c_powers.get(b, 0) + e
                     else:
                         nc_part.append(term)
+
+            # check for base and inverted base pairs
+            be = c_powers.items()
+            skip = set() # skip if we already saw them
+            for b, e in be:
+                if b in skip:
+                    continue
+                bpos = b.is_positive
+                eint = e.is_integer
+                if bpos or eint:
+                    binv = 1/b
+                    if b != binv and binv in c_powers:
+                        if bpos:
+                            if b.as_numer_denom()[0] is S.One:
+                                c_powers.pop(b)
+                                c_powers[binv] -= e
+                            else:
+                                skip.add(binv)
+                                e = c_powers.pop(binv)
+                                c_powers[b] -= e
+                        else: #eint is int
+                            skip.add(binv)
+                            e = c_powers.pop(binv)
+                            c_powers[b] -= e
+
             newexpr = Mul(newexpr, Mul(*[Pow(b,e) for b, e in c_powers.items()]))
             if combine is 'exp':
                 return Mul(newexpr, Mul(*nc_part))
