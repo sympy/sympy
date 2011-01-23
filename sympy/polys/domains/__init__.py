@@ -66,34 +66,28 @@ def _getenv(key, default=None):
     from os import getenv
     return getenv(key, default)
 
-GROUND_TYPES = _getenv('SYMPY_GROUND_TYPES', None)
+GROUND_TYPES = _getenv('SYMPY_GROUND_TYPES', 'auto').lower()
 
-if GROUND_TYPES is None:
+if GROUND_TYPES == 'auto':
     if HAS_GMPY:
         GROUND_TYPES = 'gmpy'
     else:
         GROUND_TYPES = 'python'
-else:
-    GROUND_TYPES = GROUND_TYPES.lower()
 
-    if GROUND_TYPES == 'gmpy' and not HAS_GMPY:
-        from warnings import warn
-        warn("gmpy library is not installed, switching to 'python' ground types")
-        GROUND_TYPES = 'python'
+if GROUND_TYPES == 'gmpy' and not HAS_GMPY:
+    from warnings import warn
+    warn("gmpy library is not installed, switching to 'python' ground types")
+    GROUND_TYPES = 'python'
 
-if GROUND_TYPES == 'gmpy':
-    FF = FF_gmpy
-    ZZ = ZZ_gmpy()
-    QQ = QQ_gmpy()
-elif GROUND_TYPES == 'python':
-    FF = FF_python
-    ZZ = ZZ_python()
-    QQ = QQ_python()
-elif GROUND_TYPES == 'sympy':
-    FF = FF_sympy
-    ZZ = ZZ_sympy()
-    QQ = QQ_sympy()
-else:
+_GROUND_TYPES_MAP = {
+    'gmpy': (FF_gmpy, ZZ_gmpy(), QQ_gmpy()),
+    'sympy': (FF_sympy, ZZ_sympy(), QQ_sympy()),
+    'python': (FF_python, ZZ_python(), QQ_python()),
+}
+
+try:
+    FF, ZZ, QQ = _GROUND_TYPES_MAP[GROUND_TYPES]
+except KeyError:
     raise ValueError("invalid ground types: %s" % GROUND_TYPES)
 
 GF = FF

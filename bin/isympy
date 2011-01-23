@@ -67,13 +67,10 @@ just install the 'ipython' package and start isympy again.
 from sympy.interactive import init_session
 
 def main():
-    from sympy import __version__ as sympy_version
-    py_version = "%d.%d.%d" % sys.version_info[:3]
-
     from optparse import OptionParser
 
     usage = 'usage: isympy [options] -- [ipython options]'
-    parser = OptionParser(usage, version=sympy_version)
+    parser = OptionParser(usage)
 
     parser.add_option(
         '-c', '--console',
@@ -88,6 +85,13 @@ def main():
         action='store',
         default="any",
         help='setup pretty printing: Unicode | ASCII | any | no')
+
+    parser.add_option(
+        '-t', '--types',
+        dest='types',
+        action='store',
+        default=None,
+        help='setup ground types: auto | gmpy | sympy | python')
 
     parser.add_option(
         '-o', '--order',
@@ -118,6 +122,9 @@ def main():
         help='use the doctest format for output (you can just copy and paste it)')
 
     (options, ipy_args) = parser.parse_args()
+
+    if options.types is not None:
+        os.environ['SYMPY_GROUND_TYPES'] = options.types
 
     if options.doctest:
         options.pretty = 'no'
