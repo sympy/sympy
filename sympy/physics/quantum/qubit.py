@@ -5,7 +5,6 @@ Todo:
   measurements as well as POVM.
 * Update docstrings.
 * Update tests.
-* apply_operators is not working with IntQubit/IntQubitBra.
 """
 
 import math
@@ -208,6 +207,7 @@ class IntQubitState(QubitState):
         # For a single argument, we construct the binary representation of
         # that integer with the minimal number of bits.
         if len(args) == 1 and args[0] > 1:
+            #rvalues is the minimum number of bits needed to express the number
             rvalues = reversed(
                 range(int(math.ceil(math.log(args[0], 2)+.01)+.001))
             )
@@ -216,6 +216,7 @@ class IntQubitState(QubitState):
         # For two numbers, the second number is the number of bits
         # on which it is expressed, so IntQubit(0,5) == |00000>.
         elif len(args) == 2 and args[1] > 1:
+            #TODO Raise error if there are not enough bits
             qubit_values = [(args[0]>>i)&1 for i in reversed(range(args[1]))]
             return QubitState._eval_args(qubit_values)
         else:
