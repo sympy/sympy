@@ -290,7 +290,7 @@ class Order(Expr):
         return self.contains(obj)
 
     def _eval_subs(self, old, new):
-        if self==old:
+        if self == old:
             return new
         if isinstance(old, C.Symbol) and old in self.variables:
             i = list(self.variables).index(old)

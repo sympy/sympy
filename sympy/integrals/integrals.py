@@ -636,6 +636,8 @@ class Integral(Expr):
         >>> i.subs(x, y - c)
         Integral(a + y - c, (a, a, 3), (b, y - c, c))
         """
+        if self == old:
+            return new
         integrand, limits = self.function, self.limits
         old_atoms = old.free_symbols
         limits = list(limits)

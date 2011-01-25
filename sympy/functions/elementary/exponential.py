@@ -127,7 +127,8 @@ class exp(Function):
         return S.One,(self,)
 
     def _eval_subs(self, old, new):
-        if self==old: return new
+        if self == old:
+            return new
         arg = self.args[0]
         o = old
         if old.is_Pow: # handle (exp(3*log(x))).subs(x**2, z) -> z**(3/2)
