@@ -12,8 +12,9 @@ import math
 from sympy import Integer, log, Mul, Add, Pow, conjugate
 from sympy.core.basic import sympify
 from sympy.core.containers import Tuple
-from sympy.matrices.matrices import Matrix
+from sympy.matrices.matrices import Matrix, zeros
 from sympy.printing.pretty.stringpict import prettyForm
+from sympy.functions.elementary.miscellaneous import sqrt
 
 
 from sympy.physics.quantum.hilbert import ComplexSpace
@@ -32,7 +33,10 @@ __all__ = [
     'IntQubitBra',
     'qubit_to_matrix',
     'matrix_to_qubit',
-    'measure_all'
+    'measure_all',
+    'measure_partial',
+    'measure_partial_oneshot',
+    'measure_all_oneshot'
 ]
 
 #-----------------------------------------------------------------------------
@@ -343,7 +347,7 @@ def measure_all(qubit, format='sympy'):
     if format == 'sympy':
         results = []
         m = m.normalized()
-        size = max(m.shape)
+        size = max(m.shape) #max of shape to account for bra or ket
         nqubits = int(math.log(size)/math.log(2))
         for i in range(size):
             if m[i] != 0.0:
@@ -351,3 +355,83 @@ def measure_all(qubit, format='sympy'):
                     (Qubit(IntQubit(i, nqubits)), m[i]*conjugate(m[i]))
                 )
         return results
+
+def measure_partial(qubit, bit, format='sympy'):
+    """Does a partial ensemble measure on the specifed qubit 
+       TODO Make work for multiple input bits
+    """
+    m = qubit_to_matrix(qubit, format)
+
+    if format == 'sympy':
+        result = []
+        m = m.normalized()
+        size = max(m.shape) #max of shape to account for bra or ket
+        nqubits = int(math.log(size,2)+.1)
+        bit_mask = 2**bit #when bit_mask is '&' with an array index,
+        #It will determine if the bit is true in that state
+        
+        #break the matrix into halves one where specified bit is true, other not
+        true_matrix  = zeros((2**nqubits, 1))
+        false_matrix = zeros((2**nqubits, 1)) 
+        for i in range(2**nqubits):
+            if bit_mask&i:
+                true_matrix[i] = m[i]
+            else:
+                false_matrix[i] = m[i]
+
+        #calculate probability of finding the specified bit as true
+        prob_true = 0
+        for item in true_matrix*true_matrix.H:
+            prob_true += item
+        prob_false = 1 - item
+
+        true_matrix = true_matrix.normalized()
+        true_out = matrix_to_qubit(true_matrix)
+
+        false_matrix = false_matrix.normalized()
+        false_out = matrix_to_qubit(false_matrix)
+        return [(true_out, prob_true), (false_out, prob_false)]
+
+def measure_partial_oneshot(qubit, bit, format='sympy'):
+    pass
+    """import random
+    qubit = qubit.expand()
+    prob1 = 0
+    #Go through each item in the add and grab its probability
+    #This will be used to determine probability of getting a 1
+    if isinstance(qubit, (Mul, Qubit)):
+        return state
+    for item in qubit.args:
+        if isinstance(item, Mul) and item.args[-1][bit] == 1 \
+        or item.args[bit] == 1:
+            prob1 += Mul(*item.args[0:-1])*Mul(*item.args[0:-1]).conjugate()
+    if prob1 < random.random():
+        choice = 0
+    else:
+        choice = 1
+    result = 0
+    for item in qubit.args:
+        if isinstance(item, Mul) and item.args[-1][bit] == choice \
+        or item.args[bit] == choice:
+            result = result + item
+    #renormalize
+    if choice:
+        result = result/sqrt(prob1)
+    else:
+        result = result/sqrt(1-prob1)
+    return result.expand()
+    """
+def measure_all_oneshot(qubit, format='sympy'):
+    import random
+    m = qubit_to_matrix(qubit)
+    m = m.normalized()
+    random_number = random.random()
+    total = 0
+    result = 0
+    for i in m:
+        total += i*i.conjugate()
+        if total > random_number:
+            break
+        result += 1
+    return Qubit(IntQubit(result, int(math.log(max(m.shape),2)+.1)))
+            
