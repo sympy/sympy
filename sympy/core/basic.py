@@ -900,6 +900,7 @@ class Basic(AssumeMeths):
 
         if self == expr:
             return repl_dict
+
         if len(self.args) != len(expr.args):
             return None
 
@@ -943,7 +944,7 @@ class Basic(AssumeMeths):
 
         """
         pattern = sympify(pattern)
-        return pattern.matches(self, {})
+        return pattern.matches(self)
 
     @cacheit
     def count_ops(self, symbolic=True):
@@ -1046,10 +1047,9 @@ class Atom(Basic):
 
     __slots__ = []
 
-    def matches(self, expr, repl_dict, evaluate=False):
+    def matches(self, expr, repl_dict={}, evaluate=False):
         if self == expr:
             return repl_dict
-        return None
 
     def _eval_subs(self, old, new):
         if self == old:
