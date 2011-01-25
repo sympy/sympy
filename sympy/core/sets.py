@@ -184,7 +184,8 @@ class Set(Basic):
         return result
 
     def _eval_subs(self, old, new):
-        if self == old: return new
+        if self == old:
+            return new
         new_args = []
         for arg in self.args:
             if arg == old:

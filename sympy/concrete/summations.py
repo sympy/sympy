@@ -149,6 +149,8 @@ class Sum(Expr):
         return s + iterm, abs(term)
 
     def _eval_subs(self, old, new):
+        if self == old:
+            return new
         newlimits = []
         for lim in self.limits:
             if lim[0] == old:

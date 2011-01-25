@@ -134,6 +134,8 @@ class Dagger(Expr):
             return d
 
     def _eval_subs(self, old, new):
+        if self == old:
+            return new
         r = Dagger(self.args[0].subs(old, new))
         return r
 
@@ -349,6 +351,8 @@ class KroneckerDelta(Function):
             return S.Zero
 
     def _eval_subs(self, old, new):
+        if self == old:
+            return new
         r = KroneckerDelta(self.args[0].subs(old, new), self.args[1].subs(old, new))
         return r
 
@@ -589,6 +593,8 @@ class SqOperator(Expr):
         return obj
 
     def _eval_subs(self, old, new):
+        if self == old:
+            return new
         r = self.__class__(self.args[0].subs(old, new))
         return r
 
@@ -1117,6 +1123,8 @@ class FockState(Expr):
         return obj
 
     def _eval_subs(self, old, new):
+        if self == old:
+            return new
         r = self.__class__([o.subs(old, new) for o in self.args[0]])
         return r
 
@@ -1514,6 +1522,8 @@ class InnerProduct(Basic):
         return self.args[1]
 
     def _eval_subs(self, old, new):
+        if self == old:
+            return new
         r = self.__class__(self.bra.subs(old,new), self.ket.subs(old,new))
         return r
 

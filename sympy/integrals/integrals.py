@@ -449,6 +449,8 @@ class Integral(Expr):
             return integrate(arg.removeO(), x) + arg.getO()*x
 
     def _eval_subs(self, old, new):
+        if self == old:
+            return new
         arg0 = self.args[0].subs(old, new)
         arg1 = []
         for lim in self.args[1:]:

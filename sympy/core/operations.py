@@ -151,6 +151,9 @@ class AssocOp(Expr):
             return self.subs(repl_dict.items()).matches(expr, repl_dict)
 
         # handle simple patterns
+        if self == expr:
+            return repl_dict
+
         d = self._matches_simple(expr, repl_dict)
         if d is not None:
             return d

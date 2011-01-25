@@ -33,7 +33,7 @@ class Sub(AssocOp):
     is_Sub = True
 
     def _eval_subs(self, old, new):
-        if self==old:
+        if self == old:
             return new
         else:
             return self.__class__(*[s._eval_subs(old, new) for s in self.args ])
