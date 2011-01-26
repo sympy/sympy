@@ -22,8 +22,8 @@
     properties are implemented in these Base objects, but implicit contraction
     of repeated indices is supported.
 
-    Note that the support for complex (i.e. non-atomic) integer expressions as
-    indices is limited.  (This should be improved in future releases.)
+    Note that the support for complicated (i.e. non-atomic) integer expressions
+    as indices is limited.  (This should be improved in future releases.)
 
     Examples
     ========
@@ -278,7 +278,7 @@ class Indexed(Expr):
     def ranges(self):
         """returns a list of tuples with lower and upper range of each index
 
-        If an index does not define data menbers upper and lower, the
+        If an index does not define the data members upper and lower, the
         corresponding slot in the list contains ``None'' instead of a tuple.
         """
         ranges = []
