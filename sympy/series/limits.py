@@ -136,28 +136,47 @@ def limit(e, z, z0, dir="+"):
         # but we need to make sure, that the general gruntz() algorithm is
         # executed for a case like "limit(sqrt(x+1)-sqrt(x),x,oo)==0"
         unbounded = []; unbounded_result=[]
-        finite = []
+        finite = []; unknown = []
+        ok = True
         for term in e.args:
             if not term.has(z):
                 finite.append(term)
                 continue
             result = term.subs(z, z0)
-            if result.is_unbounded or result is S.NaN:
+            bounded = result.is_bounded
+            if bounded is False or result is S.NaN:
+                if unknown:
+                    ok = False
+                    break
                 unbounded.append(term)
                 if result != S.NaN:
                     # take result from direction given
                     result = limit(term, z, z0, dir)
                 unbounded_result.append(result)
-            else:
+            elif bounded:
                 finite.append(result)
+            else:
+                if unbounded:
+                    ok = False
+                    break
+                unknown.append(result)
+        if not ok:
+            # we won't be able to resolve this with unbounded
+            # terms, e.g. Sum(1/k, (k, 1, n)) - log(n) as n -> oo:
+            # since the Sum is unevaluated it's boundedness is
+            # unknown and the log(n) is oo so you get Sum - oo
+            # which is unsatisfactory.
+            raise NotImplementedError('unknown boundedness for %s' %
+                                      (unknown or result))
+        u = Add(*unknown)
         if unbounded:
             inf_limit = Add(*unbounded_result)
             if inf_limit is not S.NaN:
-                return inf_limit
+                return inf_limit + u
             if finite:
-                return Add(*finite) + limit(Add(*unbounded), z, z0, dir)
+                return Add(*finite) + limit(Add(*unbounded), z, z0, dir) + u
         else:
-            return Add(*finite)
+            return Add(*finite) + u
 
     if e.is_Order:
         args = e.args
