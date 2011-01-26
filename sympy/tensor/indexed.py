@@ -65,14 +65,14 @@
     >>> M[i, j].shape
     Tuple(m, n)
     >>> M[i, j].ranges
-    [(0, -1 + m), (0, -1 + n)]
+    [Tuple(0, -1 + m), Tuple(0, -1 + n)]
 
     The above can be compared with the following:
 
     >>> A[i, 2, j].shape
     Tuple(dim1, 2*dim1, dim2)
     >>> A[i, 2, j].ranges
-    [(0, -1 + m), None, (0, -1 + n)]
+    [Tuple(0, -1 + m), None, Tuple(0, -1 + n)]
 
     To analyze the structure of indexed expressions, you can use the methods
     get_indices() and get_contraction_structure():
@@ -284,7 +284,7 @@ class Indexed(Expr):
         ranges = []
         for i in self.indices:
             try:
-                ranges.append((i.lower, i.upper))
+                ranges.append(Tuple(i.lower, i.upper))
             except AttributeError:
                 ranges.append(None)
         return ranges
