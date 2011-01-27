@@ -359,83 +359,107 @@ def measure_all(qubit, format='sympy'):
         raise NotImplementedError("This function can't handle non-sympy" +\
                                   "matrix formats yet")   
                                   
-def measure_partial(qubit, bit, format='sympy'):
+def measure_partial(qubit, bits, format='sympy'):
     """Does a partial ensemble measure on the specifed qubit 
-       TODO Make work for multiple input bits
+       Qubit is the state of the system
+       bits is an array or tuple of bits to measure
+       
+       Examples
+       ==========
+       state = Qubit(0,1)+Qubit(1,0)
+       measure_partial(state,(0,))
+       
     """
     m = qubit_to_matrix(qubit, format)
 
     if format == 'sympy':
         result = []
         m = m.normalized()
-        size = max(m.shape) #max of shape to account for bra or ket
-        nqubits = int(math.log(size,2)+.1)
-        bit_mask = 1<<bit #when bit_mask is '&' with an array index,
-        #It will determine if the bit is true in that state
-        
-        #break the matrix into halves one where specified bit is true, other not
-        true_matrix  = zeros((2**nqubits, 1))
-        false_matrix = zeros((2**nqubits, 1)) 
-        for i in range(2**nqubits):
-            if bit_mask&i:
-                true_matrix[i] = m[i]
-            else:
-                false_matrix[i] = m[i]
+        possible_outcomes = __get_possible_outcomes(m, bits)
 
-        #calculate probability of finding the specified bit as true
-        prob_true = 0
-        for item in true_matrix*true_matrix.H:
-            prob_true += item
-        prob_false = 1 - prob_true
-        
-        #If the qubit observed is already in a definite state, return input
-        if prob_true == 0 or prob_false == 0:
-            return [(qubit,1),]
+        #form output from function
+        output = []
+        for outcome in possible_outcomes:
+            #calculate probability of finding the specified bits with given values
+            prob_of_outcome = 0
+            prob_of_outcome += (outcome.H*outcome)[0]
             
-        true_matrix = true_matrix.normalized()
-        true_out = matrix_to_qubit(true_matrix)
-
-        false_matrix = false_matrix.normalized()
-        false_out = matrix_to_qubit(false_matrix)
+            #If the output has a chance, append it to output with found probability    
+            if prob_of_outcome != 0:    
+                output.append((matrix_to_qubit(outcome.normalized()),\
+                prob_of_outcome))
             
-        return [(true_out, prob_true), (false_out, prob_false)]
+        return output
     else:
         raise NotImplementedError("This function can't handle non-sympy" +\
                                   "matrix formats yet")
                                      
-def measure_partial_oneshot(qubit, bit, format='sympy'):
+def measure_partial_oneshot(qubit, bits, format='sympy'):
     import random
     m = qubit_to_matrix(qubit, format)
     
     if format == 'sympy':
+        result = []
         m = m.normalized()
-        size = max(m.shape) #max of shape to account for bra or ket
-        nqubits = int(math.log(size,2)+.1)
-        bit_mask = 1<<bit #when bit_mask is '&' with an array index,
-        #It will determine if the bit is true in that state
-        
-        #break the matrix into halves one where specified bit is true, other not
-        true_matrix  = zeros((2**nqubits, 1))
-        false_matrix = zeros((2**nqubits, 1)) 
-        for i in range(2**nqubits):
-            if bit_mask&i:
-                true_matrix[i] = m[i]
-            else:
-                false_matrix[i] = m[i]
+        possible_outcomes = __get_possible_outcomes(m, bits) 
 
-        #calculate probability of finding the specified bit as true
-        prob_true = 0
-        for item in true_matrix*true_matrix.H:
-            prob_true += item
+        #form output from function
+        output = []
+        random_number = random.random()
+        total_prob = 0
+        for outcome in possible_outcomes:
+            #calculate probability of finding the specified bits with given values
+            total_prob += (outcome.H*outcome)[0]
+            if total_prob >= random_number:
+                return matrix_to_qubit(outcome.normalized())
+    else:
+        raise NotImplementedError("This function can't handle non-sympy" +\
+                                  "matrix formats yet")
+def __get_possible_outcomes(m, bits):
+    """
+        Function inputs:
+            m: the matrix representing the state of the system
+            bits: a tuple or list with the bits that will be measured
         
-        if random.random() < prob_true:
-            return_matrix = true_matrix.normalized()
-        else:
-            return_matrix = false_matrix.normalized()
-        
-        return_matrix = matrix_to_qubit(return_matrix)
+        Function outputs:
+            The list of possible states which can occur given this measurement.
+            These are un-normalized so we can derive the probability of finding
+            this state by taking the inner product with itself
+             
+        This is filled with loads of dirty binary tricks...You have been warned
+    
+    """
+    size = max(m.shape) #max of shape to account for bra or ket
+    nqubits = int(math.log(size,2)+.1) #number of qubits possible
 
-        return return_matrix        
+    #Make the output states and put in output_matrices, nothing in them now.
+    #Each state will represent a possible outcome of the measurement
+    #Thus, output_matrices[0] is the matrix which we get when all measured bits
+    #return 0. and output_matrices[1] is the matrix for only the 0th bit being true 
+    output_matrices = []
+    for i in range(1<<len(bits)):
+        output_matrices.append(zeros((2**nqubits, 1)))    
+
+    
+    #Bitmasks will help sort how to determine possible outcomes.
+    #When the bit mask is and-ed with a matrix-index, It will determine
+    #it will determine which state that index belongs to
+    bit_masks = [] 
+    for bit in bits:
+        bit_masks.append(1<<bit)
+     
+
+
+    #make possible outcome states
+    for i in range(2**nqubits):
+        trueness = 0 #This tells us to which output_matrix this value belongs
+        #Find trueness
+        for j in range(len(bit_masks)):
+            if i&bit_masks[j]:
+                trueness += j+1
+        #put the value in the correct output matrix        
+        output_matrices[trueness][i] = m[i]    
+    return output_matrices
     
 def measure_all_oneshot(qubit, format='sympy'):
     import random
