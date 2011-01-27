@@ -205,8 +205,13 @@ def mrv(e, x):
     elif e == x:
         return set([x])
     elif e.is_Mul or e.is_Add:
-        i, d = e.as_independent(x) # throw away x-independent terms
-        if not d.func is e.func:
+        while 1:
+            i, d = e.as_independent(x) # throw away x-independent terms
+            if d.func != e.func and (d.is_Add or d.is_Mul):
+                e = d
+                continue
+            break
+        if d.func != e.func:
             return mrv(d, x)
         a, b = d.as_two_terms()
         return mrv_max(mrv(a, x), mrv(b, x), x)
@@ -343,6 +348,7 @@ def subexp(e, sub):
     #is yes.
     return e.subs(sub, C.Dummy('u')) != e
 
+@debug
 def calculate_series(e, x):
     """ Calculates at least one term of the series of "e" in "x".
 
