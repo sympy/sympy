@@ -166,7 +166,7 @@ class Application(Basic):
                 # Written down as an elif to avoid a super-long line
                 elif isinstance(new.nargs, tuple) and self.nargs in new.nargs:
                     return new(*self.args)
-        return Basic._seq_subs(self, old, new)
+        return self.func(*[s.subs(old, new) for s in self.args])
 
 
 class Function(Application, Expr):

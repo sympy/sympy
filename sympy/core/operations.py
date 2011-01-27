@@ -160,8 +160,6 @@ class AssocOp(Expr):
         # c_part, nc_part, order_symbols
         return [], new_seq, None
 
-    _eval_subs = Expr._seq_subs
-
     def _matches_commutative(self, expr, repl_dict={}, evaluate=False):
         """
         Matches Add/Mul "pattern" to an expression "expr".

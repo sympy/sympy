@@ -797,17 +797,6 @@ class Basic(AssumeMeths):
 
         return self._subs_list(subst)
 
-    def _seq_subs(self, old, new):
-        if self==old:
-            return new
-        #new functions are initialized differently, than old functions
-        from function import FunctionClass
-        if isinstance(self.func, FunctionClass):
-            args = self.args
-        else:
-            args = (self.func,)+self
-        return self.func(*[s.subs(old, new) for s in args])
-
     def __contains__(self, what):
         if self == what or self.is_Function and self.func is what: return True
         for x in self._args:
