@@ -36,7 +36,8 @@ def intersection(*entities):
     from entity import GeometryEntity
 
     entities = GeometryEntity.extract_entities(entities, False)
-    if len(entities) <= 1: return []
+    if len(entities) <= 1:
+        return []
 
     res = GeometryEntity.do_intersection(entities[0], entities[1])
     for entity in entities[2:]:
@@ -71,51 +72,39 @@ def convex_hull(*args):
     from polygon import Polygon
 
     def uniquify(a):
-        ret = {}
         # not order preserving
-        map(ret.__setitem__, a, [])
-        return ret.keys()
+        return list(set(a))
 
     p = args[0]
     if isinstance(p, Point):
         p = uniquify(args)
 
-    if len(p) is 1:
+    if len(p) == 1:
         return p[0]
-    else:
-        if len(p) is 2:
-            return Segment(p[0],p[1])
+    elif len(p) == 2:
+        return Segment(p[0], p[1])
 
-
-
-    def orientation(p,q,r):
+    def orientation(p, q, r):
         '''Return positive if p-q-r are clockwise, neg if ccw, zero if colinear.'''
         return (q[1]-p[1])*(r[0]-p[0]) - (q[0]-p[0])*(r[1]-p[1])
-
 
     '''scan to find upper and lower convex hulls of a set of 2d points.'''
     U = []
     L = []
-    #print "[graham] points:",Points
     p.sort()
     for p_i in p:
-        while len(U) > 1 and orientation(U[-2],U[-1],p_i) <= 0: U.pop()
-        while len(L) > 1 and orientation(L[-2],L[-1],p_i) >= 0: L.pop()
+        while len(U) > 1 and orientation(U[-2], U[-1], p_i) <= 0:
+            U.pop()
+        while len(L) > 1 and orientation(L[-2], L[-1], p_i) >= 0:
+            L.pop()
         U.append(p_i)
-        L.append(p_i)        #print "[graham] result:", U,L
+        L.append(p_i)
     U.reverse()
-    convexHull = tuple(L+U[1:-1])
+    convexHull = tuple(L + U[1:-1])
 
-    #convexHull = uniquify(convexHull)
-    #print "U:",U.reverse()
-    #print "L:",L
-    #print "ch(",len(convexHull),"):",convexHull
-    if len(convexHull) is 2:
-        return Segment(convexHull[0],convexHull[1])
+    if len(convexHull) == 2:
+        return Segment(convexHull[0], convexHull[1])
     return Polygon(convexHull)
-
-
-
 
 
 def are_similar(e1, e2):
@@ -127,7 +116,8 @@ def are_similar(e1, e2):
     ======
         - If the two objects are equal then they are always similar.
     """
-    if e1 == e2: return True
+    if e1 == e2:
+        return True
     try:
         return e1.is_similar(e2)
     except AttributeError:
