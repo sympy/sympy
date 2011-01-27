@@ -204,11 +204,11 @@ def mrv(e, x):
         return set([])
     elif e == x:
         return set([x])
-    elif e.is_Mul:
-        a, b = e.as_two_terms()
-        return mrv_max(mrv(a, x), mrv(b, x), x)
-    elif e.is_Add:
-        a, b = e.as_two_terms()
+    elif e.is_Mul or e.is_Add:
+        i, d = e.as_independent(x) # throw away x-independent terms
+        if not d.func is e.func:
+            return mrv(d, x)
+        a, b = d.as_two_terms()
         return mrv_max(mrv(a, x), mrv(b, x), x)
     elif e.is_Pow:
         b, e = e.as_base_exp()
