@@ -129,10 +129,14 @@ class Implies(BooleanFunction):
     """
     @classmethod
     def eval(cls, *args):
-        if len(args) != 2:
-            raise ValueError, "%d operand(s) used for an Implies (pairs are required): %s" % (len(args), str(args))
+        try:
+            A, B = args
+        except ValueError:
+            raise ValueError("%d operand(s) used for an Implies (pairs are required): %s" % (len(args), str(args)))
+        if A is True or A is False or B is True or B is False:
+            return Or(Not(A), B)
         else:
-            return Or(Not(args[0]), args[1])
+            return Basic.__new__(cls, *args)
 
 class Equivalent(BooleanFunction):
     """Equivalence relation.
