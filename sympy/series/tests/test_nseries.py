@@ -1,6 +1,6 @@
 from sympy import (Symbol, Rational, ln, exp, log, sqrt, E, O, pi, I, sinh,
-    sin, cosh, cos, tanh, coth, asinh, acosh, atanh, acoth, tan, Integer,
-    PoleError, floor, ceiling, asin, symbols)
+    sin, cosh, cos, tanh, coth, asinh, acosh, atanh, acoth, tan, cot, Integer,
+    PoleError, floor, ceiling, asin, symbols, limit)
 from sympy.abc import x, y, z
 
 from sympy.utilities.pytest import raises
@@ -425,3 +425,8 @@ def test_issue1342():
     f = 1/(1+(a+b)*x)
     assert f.series(x, 0, 3) == 1 - a*x - b*x + a**2*x**2 + b**2*x**2 + \
             2*a*b*x**2 + O(x**3)
+
+def test_issue1230():
+    assert tan(x).series(x, pi/2, n=3) == -1/(x - pi/2)
+    assert cot(x).series(x, pi, n=3) == 1/(x - pi)
+    assert limit(tan(x)**tan(2*x), x, pi/4) == exp(-1)
