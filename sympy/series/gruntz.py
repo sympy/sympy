@@ -297,7 +297,10 @@ def sign(e, x):
         return 1
     elif e.is_Mul:
         a, b = e.as_two_terms()
-        return sign(a, x) * sign(b, x)
+        sa = sign(a, x)
+        if not sa:
+            return 0
+        return sa * sign(b, x)
     elif e.func is exp:
         return 1
     elif e.is_Pow:
