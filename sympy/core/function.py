@@ -58,28 +58,24 @@ class FunctionClass(BasicMeta):
 
     _new = type.__new__
 
-    def __new__(cls, arg1, arg2, arg3=None, **options):
-        assert not options,`options`
+    def __new__(mcl, arg1, arg2, arg3=None):
         if isinstance(arg1, type):
             # the following code gets executed when one types
             # FunctionClass(Function, "f")
-            # i.e. cls = FunctionClass, arg1 = Function, arg2 = "f"
+            # i.e. mcl = FunctionClass, arg1 = Function, arg2 = "f"
             # and we simply do an equivalent of:
             # class f(Function):
             #     ...
             # return f
             ftype, name, signature = arg1, arg2, arg3
-            #XXX this probably needs some fixing:
-            assert ftype.__name__.endswith('Function'),`ftype`
-            attrdict = ftype.__dict__.copy()
-            attrdict['undefined_Function'] = True
+            attrdict = {'undefined_Function': True}
             if signature is not None:
                 attrdict['signature'] = signature
             bases = (ftype,)
-            return BasicMeta.__new__(cls, name, bases, attrdict)
+            return BasicMeta.__new__(mcl, name, bases, attrdict)
         else:
             name, bases, attrdict = arg1, arg2, arg3
-            return BasicMeta.__new__(cls, name, bases, attrdict)
+            return BasicMeta.__new__(mcl, name, bases, attrdict)
 
     def __repr__(cls):
         return cls.__name__
