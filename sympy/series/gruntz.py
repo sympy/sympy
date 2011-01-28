@@ -229,10 +229,7 @@ def mrv(e, x):
         else:
             return mrv(e.args[0], x)
     elif e.is_Function:
-        if len(e.args) == 1:
-            return mrv(e.args[0], x)
-        #only functions of 1 argument currently implemented
-        raise NotImplementedError("Functions with more arguments: '%s'" % e)
+        return reduce(lambda a, b: mrv_max(a, b, x), [mrv(a, x) for a in e.args])
     elif e.is_Derivative:
         return mrv(e.args[0], x)
     raise NotImplementedError("Don't know how to calculate the mrv of '%s'" % e)
@@ -310,7 +307,9 @@ def sign(e, x):
         return sign(e.args[0] -1, x)
     elif e.is_Add:
         return sign(limitinf(e, x), x)
-    raise ValueError("Cannot determine the sign of %s" % e)
+    elif e.is_Function and hasattr(e, 'nargs'): # XXX is this how to detect cos(x) vs f(x)?
+        return sign(e.func(*[limitinf(a, x) for a in e.args]), x)
+    raise ValueError("Don't know how to determine the sign of %s" % e)
 
 @debug
 def limitinf(e, x):
