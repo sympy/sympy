@@ -162,16 +162,16 @@ class Add(AssocOp):
 
 
     @cacheit
-    def as_coeff_add(self, x=None):
-        if x is not None:
+    def as_coeff_add(self, *deps):
+        if deps:
             l1 = []
             l2 = []
             for f in self.args:
-                if f.has(x):
+                if f.has(*deps):
                     l2.append(f)
                 else:
                     l1.append(f)
-            return Add(*l1), tuple(l2)
+            return self._new_rawargs(*l1), tuple(l2)
         coeff = self.args[0]
         if coeff.is_Number:
             return coeff, self.args[1:]
@@ -206,6 +206,22 @@ class Add(AssocOp):
 
     @cacheit
     def as_two_terms(self):
+        """Return head and tail of self.
+
+        This is the most efficient way to get the head and tail of an
+        expression.
+
+        - if you want only the head, use self.args[0];
+        - if you want to process the arguments of the tail then use
+          self.as_coef_add() which gives the head and a tuple containing
+          the arguments of the tail when treated as an Add.
+        - if you want the coefficient when self is treated as a Mul
+          then use self.as_coeff_mul()[0]
+
+        >>> from sympy.abc import x, y
+        >>> (3*x*y).as_two_terms()
+        (3, x*y)
+        """
         if len(self.args) == 1:
             return S.Zero, self
         return self.args[0], self._new_rawargs(*self.args[1:])
@@ -254,8 +270,7 @@ class Add(AssocOp):
         return False
 
     def _eval_is_positive(self):
-        c = self.args[0]
-        r = self._new_rawargs(*self.args[1:])
+        c, r = self.as_two_terms()
         if c.is_positive and r.is_positive:
             return True
         if c.is_unbounded:
@@ -274,8 +289,7 @@ class Add(AssocOp):
             return False
 
     def _eval_is_negative(self):
-        c = self.args[0]
-        r = self._new_rawargs(*self.args[1:])
+        c, r = self.as_two_terms()
         if c.is_negative and r.is_negative:
             return True
         if c.is_unbounded:
@@ -293,7 +307,7 @@ class Add(AssocOp):
         if c.is_nonnegative and r.is_nonnegative:
             return False
 
-    def as_coeff_mul(self, x=None):
+    def as_coeff_mul(self, *deps):
         # -2 + 2 * a -> -1, 2-2*a
         if self.args[0].is_Number and self.args[0].is_negative:
             return S.NegativeOne, (-self,)

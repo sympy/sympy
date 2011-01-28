@@ -169,12 +169,10 @@ def summation(f, *symbols, **kwargs):
     i.e.,
 
                                 b
-                              -----
-                              \
-    summation(f, (i, a, b)) =  \    f
-                               /
-                              /
-                              -----
+                              ____
+                              \   `
+    summation(f, (i, a, b)) =  )    f
+                              /___,
                               i = a
 
 
@@ -195,10 +193,6 @@ def summation(f, *symbols, **kwargs):
 
     """
     return Sum(f, *symbols, **kwargs).doit(deep=False)
-
-def getab(expr):
-    cls = expr.func
-    return cls(expr.args[0]), cls(*expr.args[1:])
 
 def telescopic_direct(L, R, n, (i, a, b)):
     """Returns the direct summation of the terms of a telescopic sum
@@ -278,7 +272,7 @@ def eval_sum_symbolic(f, (i, a, b)):
         return f*(b-a+1)
     # Linearity
     if f.is_Mul:
-        L, R = getab(f)
+        L, R = f.as_two_terms()
         if not L.has(i):
             sR = eval_sum_symbolic(R, (i, a, b))
             if sR: return L*sR
@@ -286,7 +280,7 @@ def eval_sum_symbolic(f, (i, a, b)):
             sL = eval_sum_symbolic(L, (i, a, b))
             if sL: return R*sL
     if f.is_Add:
-        L, R = getab(f)
+        L, R = f.as_two_terms()
         lrsum = telescopic(L, R, (i, a, b))
         if lrsum: return lrsum
         lsum = eval_sum_symbolic(L, (i, a, b))

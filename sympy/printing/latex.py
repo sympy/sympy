@@ -196,7 +196,7 @@ class LatexPrinter(Printer):
             return str_real
 
     def _print_Mul(self, expr):
-        coeff, terms = expr.as_coeff_mul()
+        coeff, terms = expr.as_two_terms()
 
         if not coeff.is_negative:
             tex = ""
@@ -204,7 +204,7 @@ class LatexPrinter(Printer):
             coeff = -coeff
             tex = "- "
 
-        numer, denom = fraction(Mul(*terms))
+        numer, denom = fraction(terms)
         seperator = self._settings['mul_symbol_latex']
 
         def convert(terms):

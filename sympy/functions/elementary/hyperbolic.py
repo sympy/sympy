@@ -44,9 +44,7 @@ class sinh(Function):
             if i_coeff is not None:
                 return S.ImaginaryUnit * C.sin(i_coeff)
             else:
-                coeff, terms = arg.as_coeff_mul()
-
-                if coeff.is_negative:
+                if arg.as_coeff_mul()[0].is_negative:
                     return -cls(-arg)
 
             if arg.func == asinh:
@@ -166,9 +164,7 @@ class cosh(Function):
             if i_coeff is not None:
                 return C.cos(i_coeff)
             else:
-                coeff, terms = arg.as_coeff_mul()
-
-                if coeff.is_negative:
+                if arg.as_coeff_mul()[0].is_negative:
                     return cls(-arg)
 
             if arg.func == asinh:
@@ -287,9 +283,7 @@ class tanh(Function):
             if i_coeff is not None:
                 return S.ImaginaryUnit * C.tan(i_coeff)
             else:
-                coeff, terms = arg.as_coeff_mul()
-
-                if coeff.is_negative:
+                if arg.as_coeff_mul()[0].is_negative:
                     return -cls(-arg)
 
             if arg.func == asinh:
@@ -410,9 +404,7 @@ class coth(Function):
             if i_coeff is not None:
                 return -S.ImaginaryUnit * C.cot(i_coeff)
             else:
-                coeff, terms = arg.as_coeff_mul()
-
-                if coeff.is_negative:
+                if arg.as_coeff_mul()[0].is_negative:
                     return -cls(-arg)
 
     @staticmethod
@@ -519,9 +511,7 @@ class asinh(Function):
             if i_coeff is not None:
                 return S.ImaginaryUnit * C.asin(i_coeff)
             else:
-                coeff, terms = arg.as_coeff_mul()
-
-                if coeff.is_negative:
+                if arg.as_coeff_mul()[0].is_negative:
                     return -cls(-arg)
 
     @staticmethod
@@ -663,9 +653,7 @@ class atanh(Function):
             if i_coeff is not None:
                 return S.ImaginaryUnit * C.atan(i_coeff)
             else:
-                coeff, terms = arg.as_coeff_mul()
-
-                if coeff.is_negative:
+                if arg.as_coeff_mul()[0].is_negative:
                     return -cls(-arg)
 
     @staticmethod
@@ -728,9 +716,7 @@ class acoth(Function):
             if i_coeff is not None:
                 return -S.ImaginaryUnit * C.acot(i_coeff)
             else:
-                coeff, terms = arg.as_coeff_mul()
-
-                if coeff.is_negative:
+                if arg.as_coeff_mul()[0].is_negative:
                     return -cls(-arg)
 
     @staticmethod

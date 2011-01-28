@@ -121,7 +121,7 @@ class Product(Expr):
             if not exclude:
                 return None
             else:
-                A, B = Mul(*exclude), Mul(*include)
+                A, B = Mul(*exclude), term._new_rawargs(*include)
                 return A * Product(B, (k, a, n))
         elif term.is_Pow:
             if not term.base.has(k):

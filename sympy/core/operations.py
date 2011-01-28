@@ -56,12 +56,13 @@ class AssocOp(Expr):
 
     def _new_rawargs(self, *args):
         """create new instance of own class with args exactly as provided by caller
+           but returning the self class identity if args is empty.
 
            This is handy when we want to optimize things, e.g.
 
-           >>> from sympy import Mul, symbols
+           >>> from sympy import Mul, symbols, S
            >>> from sympy.abc import x, y
-           >>> e = Mul(3,x,y)
+           >>> e = Mul(3, x, y)
            >>> e.args
            (3, x, y)
            >>> Mul(*e.args[1:])
@@ -69,12 +70,29 @@ class AssocOp(Expr):
            >>> e._new_rawargs(*e.args[1:])  # the same as above, but faster
            x*y
 
+           Note: use this with caution. There is no checking of arguments at
+           all. This is best used when you are rebuilding an Add or Mul after
+           simply removing one or more terms. If modification which result,
+           for example, in extra 1s being inserted (as when collecting an
+           expression's numerators and denominators) they will not show up in
+           the result but a Mul will be returned nonetheless:
+
+           >>> m = (x*y)._new_rawargs(S.One, x); m
+           x
+           >>> m == x
+           False
+           >>> m.is_Mul
+           True
+
         """
-        if len(args) == 1:
-            obj = args[0]
+        if len(args) <= 1:
+            if args:
+                obj = args[0]
+            else:
+                obj = self.identity
         else:
             obj = Expr.__new__(type(self), *args)  # NB no assumptions for Add/Mul
-            obj.is_commutative = self.is_commutative
+            obj.is_commutative = all(arg.is_commutative for arg in args)
 
         return obj
 

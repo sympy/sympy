@@ -182,8 +182,12 @@ class Number(AtomicExpr):
     def __hash__(self):
         return super(Number, self).__hash__()
 
-    def as_coeff_mul(self, x=None):
+    def as_coeff_mul(self, *deps):
         # a -> c * t
+        return self, tuple()
+
+    def as_coeff_add(self, *deps):
+        # a -> c + t
         return self, tuple()
 
 class Real(Number):
@@ -662,7 +666,7 @@ class Rational(Number):
                 else:
                     return (-1)**e * (-b)**e
 
-        c,t = b.as_coeff_mul()
+        c, t = b.as_coeff_mul()
         if e.is_even and isinstance(c, Number) and c < 0:
             return (-c * Mul(*t)) ** e
 
@@ -1012,7 +1016,7 @@ class Integer(Rational):
         if e is S.Infinity:
             if b > S.One:
                 return S.Infinity
-            if b == -1:
+            if b is S.NegativeOne:
                 return S.NaN
             # cases for 0 and 1 are done in their respective classes
             return S.Infinity + S.ImaginaryUnit * S.Infinity
