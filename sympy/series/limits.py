@@ -129,7 +129,7 @@ def limit(e, z, z0, dir="+"):
                             return -oo*i
 
     if e.is_Add:
-        if e.is_polynomial() and z0.is_finite:
+        if e.is_polynomial() and not z0.is_unbounded:
             return Add(*[limit(term, z, z0, dir) for term in e.args])
 
         # this is a case like limit(x*y+x*z, z, 2) == x*y+2*x
