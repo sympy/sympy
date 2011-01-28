@@ -29,6 +29,7 @@ def test_basic1():
     assert limit(cos(x + y)/x, x, 0) == cos(y)*oo
     raises(NotImplementedError, 'limit(Sum(1/x, (x, 1, y)) - log(y), y, oo)')
     assert limit(Sum(1/x, (x, 1, y)) - 1/y, y, oo) == Sum(1/x, (x, 1, oo))
+    assert limit(gamma(1/x + 3), x, oo) == 2
 
     # approaching 0
     # from dir="+"
