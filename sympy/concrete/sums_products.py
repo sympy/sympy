@@ -7,10 +7,6 @@ from sympy.core import Basic, C, Rational, Pow, Symbol, Wild, oo, sympify
 def ispoly(expr, var):
     return False
 
-def getab(expr):
-    cls = expr.__class__
-    return cls(expr.args[0]), cls(*expr.args[1:])
-
 def indexsymbol(a):
     if isinstance(a, Symbol):
         return Symbol(a.name, integer=True)
@@ -55,11 +51,11 @@ class Sum2(_BigOperator):
         if not f.has(i):
             return f*(b-a+1)
         if f.is_Mul:
-            L, R = getab(f)
+            L, R = f.as_two_terms()
             if not L.has(i): return L*Sum2(R, (i, a, b))
             if not R.has(i): return R*Sum2(L, (i, a, b))
         if f.is_Add:
-            L, R = getab(f)
+            L, R = f.as_two_terms()
             lsum = Sum2(L, (i,a,b))
             rsum = Sum2(R, (i,a,b))
             if not isinstance(lsum, Sum2) and not isinstance(rsum, Sum2):
@@ -131,7 +127,7 @@ class Product(_BigOperator):
             return f**(b-a+1)
 
         if f.is_Mul:
-            L, R = getab(f)
+            L, R = f.as_two_terms()
             lp = Product(L, (i, a, b))
             rp = Product(R, (i, a, b))
             if not (isinstance(lp, Product) and isinstance(rp, Product)):

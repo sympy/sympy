@@ -33,8 +33,7 @@ PRECEDENCE_VALUES = {
 
 # Precedence functions
 def precedence_Mul(item):
-    coeff, rest = item.as_coeff_mul()
-    if coeff.is_negative:
+    if item.as_coeff_mul()[0].is_negative:
         return PRECEDENCE["Add"]
     return PRECEDENCE["Mul"]
 

@@ -70,28 +70,26 @@ def fraction(expr, exact=False):
 
     for term in Mul.make_args(expr):
         if term.is_Pow:
-            if term.exp.is_negative:
-                if term.exp is S.NegativeOne:
-                    denom.append(term.base)
+            b, e = term.as_base_exp()
+            if e.is_negative:
+                if e is S.NegativeOne:
+                    denom.append(b)
                 else:
-                    denom.append(Pow(term.base, -term.exp))
-            elif not exact and term.exp.is_Mul:
-                coeff, tail = term.exp.args[0], term.exp._new_rawargs(*term.exp.args[1:])#term.exp.getab()
-
-                if coeff.is_Rational and coeff.is_negative:
-                    denom.append(Pow(term.base, -term.exp))
+                    denom.append(Pow(b, -e))
+            elif not exact and e.is_Mul:
+                if e.as_coeff_mul()[0].is_negative:
+                    denom.append(Pow(b, -e))
                 else:
                     numer.append(term)
             else:
                 numer.append(term)
         elif term.func is C.exp:
-            if term.args[0].is_negative:
-                denom.append(C.exp(-term.args[0]))
-            elif not exact and term.args[0].is_Mul:
-                coeff, tail = term.args[0], term.args[0]._new_rawargs(*term.args[1:])#term.args.getab()
-
-                if coeff.is_Rational and coeff.is_negative:
-                    denom.append(C.exp(-term.args[0]))
+            e = term.args[0]
+            if e.is_negative:
+                denom.append(C.exp(-e))
+            elif not exact and e.is_Mul:
+                if e.as_coeff_mul()[0].is_negative:
+                    denom.append(C.exp(-e))
                 else:
                     numer.append(term)
             else:
@@ -249,22 +247,22 @@ def together(expr, deep=False):
                     coeff = S.One
 
                     if term.is_Pow:
-                        if term.exp.is_Rational:
-                            term, expo = term.base, term.exp
-                        elif term.exp.is_Mul:
-                            coeff, tail = term.exp.as_coeff_mul()
+                        b, e = term.as_base_exp()
+                        if e.is_Rational:
+                            term, expo = b, e
+                        elif e.is_Mul:
+                            coeff, t = e.as_coeff_mul()
                             if coeff.is_Rational:
-                                tail = Mul(*tail)
-                                term, expo = Pow(term.base, tail), coeff
+                                term, expo = Pow(b, e._new_rawargs(*t)), coeff
                         coeff = S.One
                     elif term.func is C.exp:
-                        if term.args[0].is_Rational:
-                            term, expo = S.Exp1, term.args[0]
-                        elif term.args[0].is_Mul:
-                            coeff, tail = term.args[0].as_coeff_mul()
+                        arg = term.args[0]
+                        if arg.is_Rational:
+                            term, expo = S.Exp1, arg
+                        elif arg.is_Mul:
+                            coeff, t = arg.as_coeff_mul()
                             if coeff.is_Rational:
-                                tail = Mul(*tail)
-                                term, expo = C.exp(tail), coeff
+                                term, expo = C.exp(arg._new_rawargs(*t)), coeff
                         coeff = S.One
                     elif term.is_Rational:
                         coeff = Integer(term.q)
@@ -542,19 +540,20 @@ def collect(expr, syms, evaluate=True, exact=False):
                 coeff, tail = expr.exp.as_coeff_mul()
 
                 if coeff.is_Rational:
-                    rat_expo, sym_expo = coeff, Mul(*tail)
+                    rat_expo, sym_expo = coeff, expr.exp._new_rawargs(*tail)
                 else:
                     sym_expo = expr.exp
             else:
                 sym_expo = expr.exp
         elif expr.func is C.exp:
-            if expr.args[0].is_Rational:
-                sexpr, rat_expo = S.Exp1, expr.args[0]
-            elif expr.args[0].is_Mul:
-                coeff, tail = expr.args[0].as_coeff_mul()
+            arg = expr.args[0]
+            if arg.is_Rational:
+                sexpr, rat_expo = S.Exp1, arg
+            elif arg.is_Mul:
+                coeff, tail = arg.as_coeff_mul()
 
                 if coeff.is_Rational:
-                    sexpr, rat_expo = C.exp(Mul(*tail)), coeff
+                    sexpr, rat_expo = C.exp(arg._new_rawargs(*tail)), coeff
         elif isinstance(expr, Derivative):
             sexpr, deriv = parse_derivative(expr)
 
@@ -1477,7 +1476,7 @@ def powsimp(expr, deep=False, combine='all'):
                 b, e = c_powers[i]
                 exp_c, exp_t = e.as_coeff_mul()
                 if not (exp_c is S.One) and exp_t:
-                    c_powers[i] = [C.Pow(b, exp_c), Mul(*exp_t)]
+                    c_powers[i] = [C.Pow(b, exp_c), e._new_rawargs(*exp_t)]
 
 
             # Combine bases whenever they have the same exponent

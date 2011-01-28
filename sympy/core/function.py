@@ -142,7 +142,7 @@ class Application(Basic):
             if isinstance(arg, C.Mul):
                 coeff, terms = arg.as_coeff_mul()
                 if coeff is not S.One:
-                    return cls(coeff) * cls(C.Mul(*terms))
+                    return cls(coeff) * cls(arg._new_rawargs(*terms))
 
         """
         return

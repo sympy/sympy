@@ -410,7 +410,7 @@ class LatexPrinter(Printer):
         return tex
 
     def _print_Mul(self, expr):
-        coeff, terms = expr.as_coeff_mul()
+        coeff, tail = expr.as_two_terms()
 
         if not coeff.is_negative:
             tex = ""
@@ -418,7 +418,7 @@ class LatexPrinter(Printer):
             coeff = -coeff
             tex = "- "
 
-        numer, denom = fraction(Mul(*terms))
+        numer, denom = fraction(tail)
 
         def convert(terms):
             product = []

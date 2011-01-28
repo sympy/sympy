@@ -593,14 +593,34 @@ def test_is_number():
     assert a.is_number == False
 
 
-# TODO write more tests for as_coeff_add
 def test_as_coeff_add():
     x = Symbol('x')
+    y = Symbol('y')
 
+    assert S(2).as_coeff_add() == (2, ())
     assert     x .as_coeff_add() == ( 0, (x,))
     assert (-1+x).as_coeff_add() == (-1, (x,))
     assert ( 2+x).as_coeff_add() == ( 2, (x,))
     assert ( 1+x).as_coeff_add() == ( 1, (x,))
+    assert (x + y).as_coeff_add(y) == (x, (y,))
+    # don't do expansion
+    e = (x + y)**2
+    assert e.as_coeff_add(y) == (0, (e,))
+
+def test_as_coeff_mul():
+    x = Symbol('x')
+    y = Symbol('y')
+
+    assert S(2).as_coeff_mul() == (2, ())
+    assert     x .as_coeff_mul() == ( 1, (x,))
+    assert (-x).as_coeff_mul() == (-1, (x,))
+    assert (2*x).as_coeff_mul() == (2, (x,))
+    assert (x*y).as_coeff_mul(y) == (x, (y,))
+    # don't do expansion
+    e = exp(x + y)
+    assert e.as_coeff_mul(y) == (1, (e,))
+    e = 2**(x + y)
+    assert e.as_coeff_mul(y) == (1, (e,))
 
 def test_as_coeff_exponent():
     x, y = symbols("xy")
@@ -770,14 +790,21 @@ def test_as_powers_dict():
 
 def test_new_rawargs():
     x = Symbol('x')
-    m = 3*x
+    n = Symbol('n', commutative=False)
     a = 3 + x
-    assert 2*x == m._new_rawargs(*[S(2), x])
     assert 2 + x == a._new_rawargs(*[S(2), x])
-    assert x == m._new_rawargs(*[x])
     assert x == a._new_rawargs(*[x])
-    assert 1 == m._new_rawargs(*[])
+    assert 0 == a._new_rawargs()
     assert 0 == a._new_rawargs(*[])
+    assert (x + n).is_commutative is False
+    assert (x + n)._new_rawargs(x).is_commutative
+    m = 3*x
+    assert 2*x == m._new_rawargs(*[S(2), x])
+    assert x == m._new_rawargs(*[x])
+    assert 1 == m._new_rawargs()
+    assert 1 == m._new_rawargs(*[])
+    assert (x*n).is_commutative is False
+    assert (x*n)._new_rawargs(x).is_commutative
 
 def test_2127():
     assert Add(evaluate=False) == 0

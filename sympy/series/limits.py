@@ -196,7 +196,7 @@ def heuristics(e, z, z0, dir):
         for a in e.args:
             if not a.is_bounded:
                 r.append(a.limit(z, z0, dir))
-        if not (r is []):
+        if r:
             return Mul(*r)
     elif e.is_Add:
         r = []

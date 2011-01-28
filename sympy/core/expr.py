@@ -338,6 +338,16 @@ class Expr(Basic, EvalfMixin):
            >>> (sin(x)).as_independent(y)
            (sin(x), 1)
 
+        See also:
+         - .as_two_terms() to split expr into a head and tail
+         - .as_coeff_add(*deps) to split expr like as_independent(),
+                                but return the dependent pieces as
+                                a tuple of arguments when treating
+                                expr as an Add
+         - .as_coeff_add(*deps) to split expr like as_independent(),
+                                but return the dependent pieces as
+                                a tuple of arguments when treating
+                                expr as a Mul
         """
         indeps, depend = [], []
 
@@ -348,8 +358,8 @@ class Expr(Basic, EvalfMixin):
                 else:
                     indeps.append(term)
 
-            return (self.__class__(*indeps),
-                    self.__class__(*depend))
+            return (self._new_rawargs(*indeps),
+                    self._new_rawargs(*depend))
         else:
             if self.has(*deps):
                 return (S.One, self)
@@ -388,27 +398,83 @@ class Expr(Basic, EvalfMixin):
         # a -> b ** e
         return self, S.One
 
-    def as_coeff_terms(self, x=None):
+    def as_coeff_terms(self, *deps):
         import warnings
         warnings.warn("\nuse as_coeff_mul() instead of as_coeff_terms().",
                       DeprecationWarning)
 
-    def as_coeff_factors(self, x=None):
+    def as_coeff_factors(self, *deps):
         import warnings
         warnings.warn("\nuse as_coeff_add() instead of as_coeff_factors().",
                       DeprecationWarning)
 
-    def as_coeff_mul(self, x=None):
-        # a -> c * t
-        if x is not None:
-            if not self.has(x):
+    def as_coeff_mul(self, *deps):
+        """Return the tuple (c, args) where self is written as a Mul, `m`.
+
+        c should contain Numbers and any terms of the Mul that are
+        independent of deps.
+
+        args should be a tuple of all other terms of m; args is empty
+        if self is a Number or if self is independent of deps (when given).
+
+        This should be used when you don't know if self is a Mul or not but
+        you want to treat self as a Mul or if you want to process the
+        individual arguments of the tail of self as a Mul.
+
+        - if you know self is a Mul and want only the head, use self.args[0];
+        - if you don't want to process the arguments of the tail but need the
+          tail then use self.as_two_terms() which gives the head and tail;
+        - if you want to split self into an independent and dependent parts
+          use self.as_independent(*deps)
+
+        >>> from sympy import S
+        >>> from sympy.abc import x, y
+        >>> (S(3)).as_coeff_mul()
+        (3, ())
+        >>> (3*x*y).as_coeff_mul()
+        (3, (x, y))
+        >>> (3*x*y).as_coeff_mul(x)
+        (3*y, (x,))
+        >>> (3*y).as_coeff_mul(x)
+        (3*y, ())
+        """
+        if deps:
+            if not self.has(*deps):
                 return self, tuple()
         return S.One, (self,)
 
-    def as_coeff_add(self, x=None):
-        # a -> c + t
-        if x is not None:
-            if not self.has(x):
+    def as_coeff_add(self, *deps):
+        """Return the tuple (c, args) where self is written as an Add, `a`.
+
+        c should contain Numbers and any terms of the Mul that are
+        independent of deps.
+
+        args should be a tuple of all other terms of `a`; args is empty
+        if self is a Number or if self is independent of deps (when given).
+
+        This should be used when you don't know if self is an Add or not but
+        you want to treat self as an Add or if you want to process the
+        individual arguments of the tail of self as an Add.
+
+        - if you know self is an Add and want only the head, use self.args[0];
+        - if you don't want to process the arguments of the tail but need the
+          tail then use self.as_two_terms() which gives the head and tail.
+        - if you want to split self into an independent and dependent parts
+          use self.as_independent(*deps)
+
+        >>> from sympy import S
+        >>> from sympy.abc import x, y
+        >>> (S(3)).as_coeff_add()
+        (3, ())
+        >>> (3 + x + y).as_coeff_add()
+        (3, (y, x))
+        >>> (3 + x +y).as_coeff_add(x)
+        (3 + y, (x,))
+        >>> (3 + y).as_coeff_add(x)
+        (3 + y, ())
+        """
+        if deps:
+            if not self.has(*deps):
                 return self, tuple()
         return S.Zero, (self,)
 
@@ -431,8 +497,7 @@ class Expr(Basic, EvalfMixin):
         #               n.subs({l: 0, r: -1})), d.subs({l: 1, r: 1})
 
         base, exp = self.as_base_exp()
-        coeff, terms = exp.as_coeff_mul()
-        if coeff.is_negative:
+        if exp.as_coeff_mul()[0].is_negative:
             # b**-e -> 1, b**e
             return S.One, base ** (-exp)
         return self, S.One
@@ -530,7 +595,7 @@ class Expr(Basic, EvalfMixin):
             for i in xrange(len(self.args)):
                 newargs = list(self.args)
                 del(newargs[i])
-                tmp = Mul(*newargs).extract_multiplicatively(c)
+                tmp = self._new_rawargs(*newargs).extract_multiplicatively(c)
                 if tmp != None:
                     return tmp * self.args[i]
         elif self.is_Pow:
@@ -622,11 +687,11 @@ class Expr(Basic, EvalfMixin):
                 if c_terms == self_terms:
                     new_coeff = self_coeff.extract_additively(c_coeff)
                     if new_coeff != None:
-                        return new_coeff * Mul(*self_terms)
+                        return new_coeff * c._new_rawargs(*c_terms)
             elif c == self_terms:
                 new_coeff = self_coeff.extract_additively(1)
                 if new_coeff != None:
-                    return new_coeff * Mul(*self_terms)
+                    return new_coeff * c
 
     def could_extract_minus_sign(self):
         """Canonical way to choose an element in the set {e, -e} where

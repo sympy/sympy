@@ -1,7 +1,6 @@
 from sympy import (Symbol, Sum, oo, Real, Rational, summation, pi, cos, zeta,
     Catalan, exp, log, factorial, sqrt, E, sympify, binomial, EulerGamma,
     Function, Integral, Product, product, Tuple, Eq, Interval, nan)
-from sympy.concrete.summations import getab
 from sympy.concrete.sums_products import Sum2
 from sympy.utilities.pytest import XFAIL, raises
 

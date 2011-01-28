@@ -254,13 +254,13 @@ class Pow(Expr):
             b = self.base
             e = self.exp
         if e.is_Add and e.is_commutative:
-            expr = 1
+            expr = []
             for x in e.args:
                 if deep:
                     x = x.expand(deep=deep, **hints)
-                expr *= (self.base**x)
-            return expr
-        return b**e
+                expr.append(Pow(self.base, x))
+            return Mul(*expr)
+        return Pow(b, e)
 
     def _eval_expand_power_base(self, deep=True, **hints):
         """(a*b)**n -> a**n * b**n"""
@@ -276,7 +276,7 @@ class Pow(Expr):
             else:
                 return Mul(*[Pow(t, e) for t in b.args])
         else:
-            return b**e
+            return Pow(b, e)
 
     def _eval_expand_mul(self, deep=True, **hints):
         sargs, terms = self.args, []
@@ -617,7 +617,7 @@ class Pow(Expr):
                 # sin(x)**4 = (x-x**3/3+...)**4 = ...
                 return Pow(b.nseries(x, n=n), e
                            )._eval_expand_multinomial(deep = False)
-            elif e == -1:
+            elif e is S.NegativeOne:
                 # this is also easy to expand using the formula:
                 # 1/(1 + x) = 1 + x + x**2 + x**3 ...
                 # so we need to rewrite base to the form "1+x"

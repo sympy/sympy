@@ -179,13 +179,13 @@ class sign(Function):
             unk = []
             is_neg = c.is_negative
             for ai in args:
-                if ai.is_negative == None:
+                if ai.is_negative is None:
                     unk.append(ai)
                 elif ai.is_negative:
                     is_neg = not is_neg
             if c is S.One and len(unk) == len(args):
                 return None
-            return iff(is_neg, S.NegativeOne, S.One) * cls(Mul(*unk))
+            return iff(is_neg, S.NegativeOne, S.One) * cls(arg._new_rawargs(*unk))
 
     is_bounded = True
 

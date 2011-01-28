@@ -194,7 +194,7 @@ class sin(Function):
         else:
             coeff, terms = arg.as_coeff_mul()
             if not (coeff is S.One) and coeff.is_Integer and terms:
-                x = Mul(*terms)
+                x = arg._new_rawargs(*terms)
                 y = (coeff-1)*x
         if x is not None:
             return (sin(x)*cos(y) + sin(y)*cos(x)).expand(trig=True)
@@ -406,7 +406,7 @@ class cos(Function):
         else:
             coeff, terms = arg.as_coeff_mul()
             if not (coeff is S.One) and coeff.is_Integer and terms:
-                x = Mul(*terms)
+                x = arg._new_rawargs(*terms)
                 return C.chebyshevt(coeff, cos(x))
         return cos(arg)
 
