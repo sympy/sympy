@@ -24,10 +24,6 @@ class Integral(Expr):
         if function.is_Number:
             if function is S.NaN:
                 return S.NaN
-            elif function is S.Infinity:
-                return S.Infinity
-            elif function is S.NegativeInfinity:
-                return S.NegativeInfinity
 
         if symbols:
             limits = []
