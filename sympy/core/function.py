@@ -58,27 +58,19 @@ class FunctionClass(BasicMeta):
 
     _new = type.__new__
 
-    def __new__(mcl, arg1, arg2, arg3=None):
-        if isinstance(arg1, type):
-            # the following code gets executed when one types
-            # FunctionClass(Function, "f")
-            # i.e. mcl = FunctionClass, arg1 = Function, arg2 = "f"
-            # and we simply do an equivalent of:
-            # class f(Function):
-            #     ...
-            # return f
-            ftype, name, signature = arg1, arg2, arg3
-            attrdict = {'undefined_Function': True}
-            if signature is not None:
-                attrdict['signature'] = signature
-            bases = (ftype,)
-            return BasicMeta.__new__(mcl, name, bases, attrdict)
-        else:
-            name, bases, attrdict = arg1, arg2, arg3
-            return BasicMeta.__new__(mcl, name, bases, attrdict)
-
     def __repr__(cls):
         return cls.__name__
+
+class UndefinedFunction(FunctionClass):
+    """
+    The (meta)class of undefined functions.
+    """
+    def __new__(mcl, name, signature=None):
+        attrdict = {'undefined_Function': True}
+        if signature is not None:
+            attrdict['signature'] = signature
+        bases = (Function,)
+        return BasicMeta.__new__(mcl, name, bases, attrdict)
 
 class Application(Basic):
     """
@@ -168,7 +160,7 @@ class Application(Basic):
 class Function(Application, Expr):
     """
     Base class for applied numeric functions.
-    Constructor of undefined classes.
+    Constructor of undefined function classes.
 
     """
 
@@ -182,27 +174,11 @@ class Function(Application, Expr):
         #
         # 2 -- on the other hand, we instantiate -- that is we create an
         #      *instance* of a class created earlier in 1.
-        #
-        # So please keep, both (1) and (2) in mind.
 
         # (1) create new function class
         #     UC: Function('f')
         if cls is Function:
-            #when user writes Function("f"), do an equivalent of:
-            #taking the whole class Function(...):
-            #and rename the Function to "f" and return f, thus:
-            #In [13]: isinstance(f, Function)
-            #Out[13]: False
-            #In [14]: isinstance(f, FunctionClass)
-            #Out[14]: True
-
-            if len(args) == 1 and isinstance(args[0], str):
-                #always create Function
-                return FunctionClass(Function, *args)
-            else:
-                print args
-                print type(args[0])
-                raise TypeError("You need to specify exactly one string")
+            return UndefinedFunction(*args)
 
         # (2) create new instance of a class created in (1)
         #     UC: Function('f')(x)
