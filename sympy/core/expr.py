@@ -1294,6 +1294,6 @@ from mul import Mul
 from add import Add
 from power import Pow
 from relational import Inequality, StrictInequality
-from function import FunctionClass, Derivative
+from function import Derivative
 from sympify import _sympify, sympify, SympifyError
 from symbol import Wild
