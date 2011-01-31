@@ -7,8 +7,6 @@ TODO:
 * Get cse working with classes in this file.
 * Doctests and documentation of special methods for InnerProduct, Commutator,
   AntiCommutator, represent, apply_operators.
-* Decide how to handle the label of Operators. Currently, if there is only
-  1 element in label, we treat it differently.
 """
 
 from sympy import Expr 
@@ -38,9 +36,9 @@ class Operator(QExpr):
 
     Parameters
     ==========
-    label : tuple, sympy.core.containers.Tuple
+    args : tuple
         The list of numbers or parameters that uniquely specify the
-        operator.
+        operator. For time-dependent operators, this will include the time.
 
     Examples
     ========
@@ -55,7 +53,7 @@ class Operator(QExpr):
         >>> A.hilbert_space
         H
         >>> A.label
-        Tuple(A)
+        (A,)
         >>> A.is_commutative
         False
 
@@ -183,9 +181,9 @@ class HermitianOperator(Operator):
 
     Parameters
     ==========
-    label : tuple, sympy.core.containers.Tuple
+    args : tuple
         The list of numbers or parameters that uniquely specify the
-        operator.
+        operator. For time-dependent operators, this will include the time.
 
     Examples
     ========
@@ -205,9 +203,9 @@ class UnitaryOperator(Operator):
 
     Parameters
     ==========
-    label : tuple, sympy.core.containers.Tuple
+    args : tuple
         The list of numbers or parameters that uniquely specify the
-        operator.
+        operator. For time-dependent operators, this will include the time.
 
     Examples
     ========
@@ -231,9 +229,9 @@ class OuterProduct(Operator):
 
     Parameters
     ==========
-    ket : KetBase or subclass
+    ket : KetBase
         The ket on the left side of the outer product.
-    bar : BraBase or subclass
+    bar : BraBase
         The bra on the right side of the outer product.
 
     Examples

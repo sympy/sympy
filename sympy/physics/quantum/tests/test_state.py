@@ -1,8 +1,11 @@
 from sympy import I, symbols, sqrt, Add, Mul, Rational, Pow, Symbol, sympify
 from sympy import Integer
 
-from sympy.physics.quantum.state import Ket, Bra, TimeDepKet, TimeDepBra
-from sympy.physics.quantum.dagger import Dagger
+from sympy.physics.quantum.qexpr import QExpr
+from sympy.physics.quantum.state import (
+    Ket, Bra, TimeDepKet, TimeDepBra,
+    KetBase, BraBase, StateBase
+)
 from sympy.physics.quantum.hilbert import HilbertSpace
 
 
@@ -10,6 +13,12 @@ x,y,t = symbols('xyt')
 
 def test_ket():
     k = Ket('0')
+
+    assert isinstance(k, Ket)
+    assert isinstance(k, KetBase)
+    assert isinstance(k, StateBase)
+    assert isinstance(k, QExpr)
+    
     assert k.label == (Symbol('0'),)
     assert k.hilbert_space == HilbertSpace()
     assert k.is_commutative == False
@@ -29,6 +38,12 @@ def test_ket():
 
 def test_bra():
     b = Bra('0')
+
+    assert isinstance(b, Bra)
+    assert isinstance(b, BraBase)
+    assert isinstance(b, StateBase)
+    assert isinstance(b, QExpr)
+
     assert b.label == (Symbol('0'),)
     assert b.hilbert_space == HilbertSpace()
     assert b.is_commutative == False
@@ -46,6 +61,7 @@ def test_bra():
     assert b.dual == Ket(x,y)
     assert b.subs(x,y) == Bra(y,y)
 
+
 def test_ops():
     k0 = Ket(0)
     k1 = Ket(1)
@@ -56,6 +72,12 @@ def test_ops():
 
 def test_time_dep_ket():
     k = TimeDepKet(0,t)
+
+    assert isinstance(k, TimeDepKet)
+    assert isinstance(k, KetBase)
+    assert isinstance(k, StateBase)
+    assert isinstance(k, QExpr)
+
     assert k.label == (Integer(0),)
     assert k.args == (Integer(0),t)
     assert k.time == t
@@ -72,6 +94,12 @@ def test_time_dep_ket():
 
 def test_time_dep_bra():
     b = TimeDepBra(0,t)
+
+    assert isinstance(b, TimeDepBra)
+    assert isinstance(b, BraBase)
+    assert isinstance(b, StateBase)
+    assert isinstance(b, QExpr)
+
     assert b.label == (Integer(0),)
     assert b.args == (Integer(0),t)
     assert b.time == t

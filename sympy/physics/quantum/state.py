@@ -194,7 +194,7 @@ class Ket(State, KetBase):
     args : tuple
         The list of numbers or parameters that uniquely specify the
         ket. This will usually be its symbol or its quantum numbers. For
-        time dependent state, this will include the time.
+        time-dependent state, this will include the time.
 
     Examples
     ========
@@ -257,7 +257,7 @@ class Bra(State, BraBase):
     args : tuple
         The list of numbers or parameters that uniquely specify the
         ket. This will usually be its symbol or its quantum numbers. For
-        time dependent state, this will include the time.
+        time-dependent state, this will include the time.
 
     Examples
     ========
@@ -317,11 +317,11 @@ class TimeDepState(StateBase):
 
     Parameters
     ==========
-    label : tuple, sympy.core.containers.Tuple
+    args : tuple
         The list of numbers or parameters that uniquely specify the
-        ket. This will usually be its symbol or its quantum numbers.
-    time : float
-        The time of the state.
+        ket. This will usually be its symbol or its quantum numbers. For
+        time-dependent state, this will include the time as the final
+        argument.
     """
 
     #-------------------------------------------------------------------------
@@ -390,11 +390,11 @@ class TimeDepKet(TimeDepState, KetBase):
 
     Parameters
     ==========
-    label : tuple, sympy.core.containers.Tuple
+    args : tuple
         The list of numbers or parameters that uniquely specify the
-        ket. This will usually be its symbol or its quantum numbers.
-    time : float
-        The time of the state.
+        ket. This will usually be its symbol or its quantum numbers. For
+        time-dependent state, this will include the time as the final
+        argument.
 
     Examples
     ========
@@ -433,11 +433,11 @@ class TimeDepBra(TimeDepState, BraBase):
 
     Parameters
     ==========
-    label : tuple, sympy.core.containers.Tuple
+    args : tuple
         The list of numbers or parameters that uniquely specify the
-        ket. This will usually be its symbol or its quantum numbers.
-    time : float
-        The time of the state.
+        ket. This will usually be its symbol or its quantum numbers. For
+        time-dependent state, this will include the time as the final
+        argument.
 
     Examples
     ========
