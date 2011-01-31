@@ -588,7 +588,7 @@ class tan(Function):
         arg = self.args[0].as_leading_term(x)
 
         if C.Order(1,x).contains(arg):
-            return S.One
+            return arg
         else:
             return self.func(arg)
 
@@ -741,7 +741,7 @@ class cot(Function):
         arg = self.args[0].as_leading_term(x)
 
         if C.Order(1,x).contains(arg):
-            return S.One
+            return 1/arg
         else:
             return self.func(arg)
 
