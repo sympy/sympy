@@ -1808,7 +1808,17 @@ class ImaginaryUnit(AtomicExpr):
     def _sage_(self):
         import sage.all as sage
         return sage.I
+
 I = S.ImaginaryUnit
+
+try:
+    # fractions is only available for python 2.6+
+    import fractions
+    def sympify_fractions(f):
+        return Rational(f.numerator, f.denominator)
+    converter[fractions.Fraction] = sympify_fractions
+except ImportError:
+    pass
 
 def sympify_complex(a):
     real, imag = map(sympify, (a.real, a.imag))

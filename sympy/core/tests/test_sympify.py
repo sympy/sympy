@@ -47,6 +47,13 @@ def test_sympify1():
     # ... or from high precision reals
     assert sympify('.1234567890123456', rational=1) == Rational(19290123283179,  156250000000000)
 
+    # sympify fractions.Fraction instances
+    try:
+        import fractions
+        assert sympify(fractions.Fraction(1, 2)) == Rational(1, 2)
+    except ImportError:
+        pass
+
 def test_sympify2():
     class A:
         def _sympy_(self):
