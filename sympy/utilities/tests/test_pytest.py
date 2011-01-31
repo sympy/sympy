@@ -19,4 +19,4 @@ def test_raises():
     except My2, e:
         assert str(e) == "my text123"
 
-    raises(ValueError, 'raises("oops", ValueError)')
+    raises(TypeError, 'raises("oops", ValueError)')

@@ -39,7 +39,7 @@ def raises(ExpectedException, code):
 
     """
     if not isinstance(code, str):
-        raise ValueError('raises() expects a code string for the 2nd argument.')
+        raise TypeError('raises() expects a code string for the 2nd argument.')
     frame = sys._getframe(1)
     loc = frame.f_locals.copy()
     try:
