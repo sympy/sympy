@@ -176,6 +176,10 @@ class Gate(UnitaryOperator):
     # Apply
     #-------------------------------------------------------------------------
 
+    def _apply_operator_IntQubit(self, qubits, **options):
+        """Redirect an apply from IntQubit to Qubit"""
+        return self._apply_operator_Qubit(qubits, **options)
+
     def _apply_operator_Qubit(self, qubits, **options):
         """Apply this gate to a Qubit."""
 
@@ -446,7 +450,7 @@ class UGate(Gate):
     #-------------------------------------------------------------------------
     # Gate methods
     #-------------------------------------------------------------------------
-
+      
     def get_target_matrix(self, format='sympy'):
         """The matrix rep. of the target part of the gate.
 

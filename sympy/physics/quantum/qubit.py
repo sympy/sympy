@@ -5,7 +5,6 @@ Todo:
   measurements as well as POVM.
 * Update docstrings.
 * Update tests.
-* apply_operators is not working with IntQubit/IntQubitBra.
 """
 
 import math
@@ -13,8 +12,9 @@ import math
 from sympy import Integer, log, Mul, Add, Pow, conjugate
 from sympy.core.basic import sympify
 from sympy.core.containers import Tuple
-from sympy.matrices.matrices import Matrix
+from sympy.matrices.matrices import Matrix, zeros
 from sympy.printing.pretty.stringpict import prettyForm
+from sympy.functions.elementary.miscellaneous import sqrt
 
 
 from sympy.physics.quantum.hilbert import ComplexSpace
@@ -33,7 +33,10 @@ __all__ = [
     'IntQubitBra',
     'qubit_to_matrix',
     'matrix_to_qubit',
-    'measure_all'
+    'measure_all',
+    'measure_partial',
+    'measure_partial_oneshot',
+    'measure_all_oneshot'
 ]
 
 #-----------------------------------------------------------------------------
@@ -208,6 +211,7 @@ class IntQubitState(QubitState):
         # For a single argument, we construct the binary representation of
         # that integer with the minimal number of bits.
         if len(args) == 1 and args[0] > 1:
+            #rvalues is the minimum number of bits needed to express the number
             rvalues = reversed(
                 range(int(math.ceil(math.log(args[0], 2)+.01)+.001))
             )
@@ -216,6 +220,7 @@ class IntQubitState(QubitState):
         # For two numbers, the second number is the number of bits
         # on which it is expressed, so IntQubit(0,5) == |00000>.
         elif len(args) == 2 and args[1] > 1:
+            #TODO Raise error if there are not enough bits
             qubit_values = [(args[0]>>i)&1 for i in reversed(range(args[1]))]
             return QubitState._eval_args(qubit_values)
         else:
@@ -342,7 +347,7 @@ def measure_all(qubit, format='sympy'):
     if format == 'sympy':
         results = []
         m = m.normalized()
-        size = max(m.shape)
+        size = max(m.shape) #max of shape to account for bra or ket
         nqubits = int(math.log(size)/math.log(2))
         for i in range(size):
             if m[i] != 0.0:
@@ -350,3 +355,127 @@ def measure_all(qubit, format='sympy'):
                     (Qubit(IntQubit(i, nqubits)), m[i]*conjugate(m[i]))
                 )
         return results
+    else:
+        raise NotImplementedError("This function can't handle non-sympy" +\
+                                  "matrix formats yet")   
+                                  
+def measure_partial(qubit, bits, format='sympy'):
+    """Does a partial ensemble measure on the specifed qubit 
+       Qubit is the state of the system
+       bits is an array or tuple of bits to measure
+       
+       Examples
+       ==========
+       state = Qubit(0,1)+Qubit(1,0)
+       measure_partial(state,(0,))
+       
+    """
+    m = qubit_to_matrix(qubit, format)
+
+    if format == 'sympy':
+        result = []
+        m = m.normalized()
+        possible_outcomes = __get_possible_outcomes(m, bits)
+
+        #form output from function
+        output = []
+        for outcome in possible_outcomes:
+            #calculate probability of finding the specified bits with given values
+            prob_of_outcome = 0
+            prob_of_outcome += (outcome.H*outcome)[0]
+            
+            #If the output has a chance, append it to output with found probability    
+            if prob_of_outcome != 0:    
+                output.append((matrix_to_qubit(outcome.normalized()),\
+                prob_of_outcome))
+            
+        return output
+    else:
+        raise NotImplementedError("This function can't handle non-sympy" +\
+                                  "matrix formats yet")
+                                     
+def measure_partial_oneshot(qubit, bits, format='sympy'):
+    import random
+    m = qubit_to_matrix(qubit, format)
+    
+    if format == 'sympy':
+        result = []
+        m = m.normalized()
+        possible_outcomes = __get_possible_outcomes(m, bits) 
+
+        #form output from function
+        output = []
+        random_number = random.random()
+        total_prob = 0
+        for outcome in possible_outcomes:
+            #calculate probability of finding the specified bits with given values
+            total_prob += (outcome.H*outcome)[0]
+            if total_prob >= random_number:
+                return matrix_to_qubit(outcome.normalized())
+    else:
+        raise NotImplementedError("This function can't handle non-sympy" +\
+                                  "matrix formats yet")
+def __get_possible_outcomes(m, bits):
+    """
+        Function inputs:
+            m: the matrix representing the state of the system
+            bits: a tuple or list with the bits that will be measured
+        
+        Function outputs:
+            The list of possible states which can occur given this measurement.
+            These are un-normalized so we can derive the probability of finding
+            this state by taking the inner product with itself
+             
+        This is filled with loads of dirty binary tricks...You have been warned
+    
+    """
+    size = max(m.shape) #max of shape to account for bra or ket
+    nqubits = int(math.log(size,2)+.1) #number of qubits possible
+
+    #Make the output states and put in output_matrices, nothing in them now.
+    #Each state will represent a possible outcome of the measurement
+    #Thus, output_matrices[0] is the matrix which we get when all measured bits
+    #return 0. and output_matrices[1] is the matrix for only the 0th bit being true 
+    output_matrices = []
+    for i in range(1<<len(bits)):
+        output_matrices.append(zeros((2**nqubits, 1)))    
+
+    
+    #Bitmasks will help sort how to determine possible outcomes.
+    #When the bit mask is and-ed with a matrix-index, It will determine
+    #it will determine which state that index belongs to
+    bit_masks = [] 
+    for bit in bits:
+        bit_masks.append(1<<bit)
+     
+
+
+    #make possible outcome states
+    for i in range(2**nqubits):
+        trueness = 0 #This tells us to which output_matrix this value belongs
+        #Find trueness
+        for j in range(len(bit_masks)):
+            if i&bit_masks[j]:
+                trueness += j+1
+        #put the value in the correct output matrix        
+        output_matrices[trueness][i] = m[i]    
+    return output_matrices
+    
+def measure_all_oneshot(qubit, format='sympy'):
+    import random
+    m = qubit_to_matrix(qubit)
+    
+    if format == 'sympy':
+        m = m.normalized()
+        random_number = random.random()
+        total = 0
+        result = 0
+        for i in m:
+            total += i*i.conjugate()
+            if total > random_number:
+                break
+            result += 1
+        return Qubit(IntQubit(result, int(math.log(max(m.shape),2)+.1)))
+    else:
+        raise NotImplementedError("This function can't handle non-sympy" +\
+                                  "matrix formats yet")            
