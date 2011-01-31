@@ -1,4 +1,4 @@
-from sympy.physics.hilbert import (
+from sympy.physics.quantum.hilbert import (
     HilbertSpace, ComplexSpace, L2, FockSpace, TensorProductHilbertSpace,
     DirectSumHilbertSpace, TensorPowerHilbertSpace
 )

@@ -22,7 +22,7 @@ def _qsympify_sequence(*seq):
     This is like sympify, but it performs special logic for arguments passed
     to QExpr. The following conversions are done:
 
-    * (list, tuple, Tuple) => _qsympify_sequence each element and convert 
+    * (list, tuple, Tuple) => _qsympify_sequence each element and convert
       sequence to a Tuple.
     * basestring => Symbol
     * Matrix => Matrix
@@ -45,7 +45,6 @@ def _qsympify_sequence(*seq):
     return tuple(result)
 
 
-
 #-----------------------------------------------------------------------------
 # Basic Quantum Expression from which all objects descend
 #-----------------------------------------------------------------------------
@@ -57,11 +56,10 @@ class QExpr(Expr):
     # dynamically by the __new__ method. They are not part of args, but they
     # derive from args.
 
-    # * The Hilbert space a quantum Object belongs to. It is an instance of
-    # a HilbertSpace subclass.
+    # The Hilbert space a quantum Object belongs to.
     __slots__ = ['hilbert_space']
 
-    # The separator used in printing the label
+    # The separator used in printing the label.
     _label_separator = u''
 
     def __new__(cls, *args, **old_assumptions):
@@ -69,11 +67,10 @@ class QExpr(Expr):
 
         Parameters
         ==========
-        label : tuple, sympy.core.containers.Tuple
+        args : tuple
             The list of numbers or parameters that uniquely specify the
             quantum object. For a state, this will be its symbol or its
-            set of quantum numbers. The label does not include time for
-            time dependent operators or states.
+            set of quantum numbers.
 
         Examples
         ========
@@ -83,9 +80,11 @@ class QExpr(Expr):
         >>> q
         0
         >>> q.label
-        Tuple(0)
+        (0,)
         >>> q.hilbert_space
         H
+        >>> q.args
+        (0,)
         >>> q.is_commutative
         False
         """
@@ -118,12 +117,12 @@ class QExpr(Expr):
 
     @property
     def label(self):
-        """The label is the unique set of identifiers for the state.
+        """The label is the unique set of identifiers for the object.
 
-        The label of a state is what distinguishes it from other states. For
-        eigenstates, the label is usually a sympy.core.containers.Tuple of the
-        quantum numbers. For an abstract state, it would just be a single
-        element Tuple of the symbol of the state.
+        Usually, this will include all of the information about the state
+        *except* the time (in the case of time-dependent objects).
+
+        This must be a tuple, rather than a Tuple.
         """
         return self.args
 
@@ -137,20 +136,16 @@ class QExpr(Expr):
 
     @classmethod
     def _eval_args(cls, args):
-        """Make sure that args is processed.
+        """Process the args passed to the __new__ method.
 
-        * Each element of args is passed to sympify or if it is a basestring
-          it is passed to Symbol.
-        * To sympify lists or tuples, they are converted to Tuples whose
-          elements are sympified or Symbol'ized.
-
-        The elements of the Tuple must be run through sympify.
+        This simply runs args through _qsympify_sequence.
         """
         return _qsympify_sequence(*args)
 
     @classmethod
     def _eval_hilbert_space(cls, args):
-        """Compute the Hilbert space instance from the label."""
+        """Compute the Hilbert space instance from the args.
+        """
         from sympy.physics.quantum.hilbert import HilbertSpace
         return HilbertSpace()
 
@@ -282,12 +277,12 @@ class QExpr(Expr):
         
             def _represent_BasisName(self, basis, **options):
 
-        This to define how a quantum object is represented in the basis of
+        Thus to define how a quantum object is represented in the basis of
         the operator Position, you would define::
 
             def _represent_Position(self, basis, **options):
 
-        Usually, Basis object will be instances of Operator subclasses, but
+        Usually, basis object will be instances of Operator subclasses, but
         there is a chance we will relax this in the future to accomodate other
         types of basis sets that are not associated with an operator.
 
@@ -336,3 +331,4 @@ def dispatch_method(self, basename, arg, **options):
         "%s.%s can't handle: %r" % \
             (self.__class__.__name__, basename, arg)
     )
+

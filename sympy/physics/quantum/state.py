@@ -36,9 +36,6 @@ class StateBase(QExpr):
     instead use State.
     """
 
-    is_continuous = False
-    is_discrete = False
-
     #-------------------------------------------------------------------------
     # _eval_* methods
     #-------------------------------------------------------------------------
@@ -194,9 +191,10 @@ class Ket(State, KetBase):
 
     Parameters
     ==========
-    label : tuple, sympy.core.containers.Tuple
+    args : tuple
         The list of numbers or parameters that uniquely specify the
-        ket. This will usually be its symbol or its quantum numbers.
+        ket. This will usually be its symbol or its quantum numbers. For
+        time dependent state, this will include the time.
 
     Examples
     ========
@@ -213,7 +211,7 @@ class Ket(State, KetBase):
         >>> k.is_commutative
         False
         >>> k.label
-        Tuple(psi)
+        (psi,)
 
     Ket's know about their associated bra::
 
@@ -232,7 +230,7 @@ class Ket(State, KetBase):
     Compound labels are passed as tuples::
 
         >>> n, m = symbols('nm')
-        >>> k = Ket((n,m))
+        >>> k = Ket(n,m)
         >>> k
         |nm>
 
@@ -256,9 +254,10 @@ class Bra(State, BraBase):
 
     Parameters
     ==========
-    label : tuple, sympy.core.containers.Tuple
+    args : tuple
         The list of numbers or parameters that uniquely specify the
-        ket. This will usually be its symbol or its quantum numbers.
+        ket. This will usually be its symbol or its quantum numbers. For
+        time dependent state, this will include the time.
 
     Examples
     ========
@@ -285,7 +284,7 @@ class Bra(State, BraBase):
     Like Ket's Bras can have compound labels and be manipulated::
 
         >>> n, m = symbols('nm')
-        >>> b = Bra((n,m)) - I*Bra((m,n))
+        >>> b = Bra(n,m) - I*Bra(m,n)
         >>> b
         -I*<mn| + <nm|
 
@@ -409,7 +408,7 @@ class TimeDepKet(TimeDepState, KetBase):
         >>> k.time
         t
         >>> k.label
-        Tuple(psi)
+        (psi,)
         >>> k.hilbert_space
         H
 
@@ -451,7 +450,7 @@ class TimeDepBra(TimeDepState, BraBase):
         >>> b.time
         t
         >>> b.label
-        Tuple(psi)
+        (psi,)
         >>> b.hilbert_space
         H
         >>> b.dual
