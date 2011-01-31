@@ -362,14 +362,19 @@ class CGate(Gate):
         return all([qubit[bit]==self.control_value for bit in self.controls])
 
     def decompose(self, **options):
+        """Decompose the controlled gate into CNOT and single qubits gates."""
         if len(self.controls) == 1:
             if isinstance(self.gate, YGate):
-                return PhaseGate(self.gate.targets[0])*CNotGate(self.controls[0],
-                        self.gate.targets[0])*PhaseGate(self.gate.targets[0])*\
-                        ZGate(self.gate.targets[0])
+                g1 = PhaseGate(self.gate.targets[0])
+                g2 = CNotGate(self.controls[0],self.gate.targets[0])
+                g3 = PhaseGate(self.gate.targets[0])
+                g4 = ZGate(self.gate.targets[0])
+                return g1*g2*g3*g4
             if isinstance(self.gate, ZGate):
-                return HadamardGate(self.gate.targets[0])*CNotGate(self.controls[0], 
-                        self.gate.targets[0])*HadamardGate(self.gate.targets[0])
+                g1 = HadamardGate(self.gate.targets[0])
+                g2 = CNotGate(self.controls[0], self.gate.targets[0])
+                g3 = HadamardGate(self.gate.targets[0])
+                return g1*g2*g3
         else:
             return self
 
