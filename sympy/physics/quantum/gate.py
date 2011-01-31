@@ -360,12 +360,12 @@ class CGate(Gate):
     def decompose(self, **options):
         if len(self.controls) == 1:
             if isinstance(self.gate, YGate):
-                return PhaseGate(self.gate.targets[0])*CGate(self.controls[0],
-                        XGate(self.gate.targets[0]))*PhaseGate(
-                        self.gate.targets[0])*ZGate(self.gate.targets[0])
+                return PhaseGate(self.gate.targets[0])*CNotGate(self.controls[0],
+                        self.gate.targets[0])*PhaseGate(self.gate.targets[0])*\
+                        ZGate(self.gate.targets[0])
             if isinstance(self.gate, ZGate):
-                return HadamardGate(self.gate.targets[0])*CGate(self.controls[0],
-                        XGate(self.gate.targets[0]))*HadamardGate(self.gate.targets[0])
+                return HadamardGate(self.gate.targets[0])*CNotGate(self.controls[0], 
+                        self.gate.targets[0])*HadamardGate(self.gate.targets[0])
         else:
             return self
 
