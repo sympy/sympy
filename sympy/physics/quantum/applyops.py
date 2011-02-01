@@ -63,7 +63,7 @@ def apply_operators(e, **options):
     if isinstance(e, KetBase):
         return e
 
-    # We have an Add(a, b, c, ...) and compute 
+    # We have an Add(a, b, c, ...) and compute
     # Add(apply_operators(a), apply_operators(b), ...)
     elif isinstance(e, Add):
         result = 0

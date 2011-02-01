@@ -11,10 +11,8 @@ import math
 
 from sympy import Integer, log, Mul, Add, Pow, conjugate
 from sympy.core.basic import sympify
-from sympy.core.containers import Tuple
 from sympy.matrices.matrices import Matrix, zeros
 from sympy.printing.pretty.stringpict import prettyForm
-from sympy.functions.elementary.miscellaneous import sqrt
 
 
 from sympy.physics.quantum.hilbert import ComplexSpace
@@ -341,13 +339,28 @@ def qubit_to_matrix(qubit, format='sympy'):
 
 
 def measure_all(qubit, format='sympy'):
-    """Given a qubit, return the primitive states and their probabilities."""
+    """Perform an ensemble measurement of all qubits.
+
+    Parameters
+    ----------
+    qubit : Qubit, Add
+        The qubit to measure. This can be any Qubit or a linear combination
+        of them.
+    format : str
+        The format of the intermediate matrices to use. Possible values are
+        ('sympy','numpy','scipy.sparse').
+
+    Returns
+    -------
+    result : list
+        A list that consists of primitive states and their probabilities.
+    """
     m = qubit_to_matrix(qubit, format)
     
     if format == 'sympy':
         results = []
         m = m.normalized()
-        size = max(m.shape) #max of shape to account for bra or ket
+        size = max(m.shape) # Max of shape to account for bra or ket
         nqubits = int(math.log(size)/math.log(2))
         for i in range(size):
             if m[i] != 0.0:
@@ -356,112 +369,180 @@ def measure_all(qubit, format='sympy'):
                 )
         return results
     else:
-        raise NotImplementedError("This function can't handle non-sympy" +\
-                                  "matrix formats yet")   
-                                  
+        raise NotImplementedError(
+            "This function can't handle non-sympy matrix formats yet"
+        )
+
+
 def measure_partial(qubit, bits, format='sympy'):
-    """Does a partial ensemble measure on the specifed qubit 
-       Qubit is the state of the system
-       bits is an array or tuple of bits to measure
-       
-       Examples
-       ==========
-       state = Qubit(0,1)+Qubit(1,0)
-       measure_partial(state,(0,))
-       
+    """Perform a partial ensemble measure on the specifed qubits.
+
+    Parameters
+    ----------
+    qubits : Qubit
+        The qubit to measure.  This can be any Qubit or a linear combination
+        of them.
+    bits : tuple
+        The qubits to measure.
+    format : str
+        The format of the intermediate matrices to use. Possible values are
+        ('sympy','numpy','scipy.sparse').
+
+    Returns
+    -------
+    result : list
+        A list that consists of primitive states and their probabilities.
     """
     m = qubit_to_matrix(qubit, format)
 
     if format == 'sympy':
-        result = []
         m = m.normalized()
-        possible_outcomes = __get_possible_outcomes(m, bits)
+        possible_outcomes = _get_possible_outcomes(m, bits)
 
-        #form output from function
+        # Form output from function.
         output = []
         for outcome in possible_outcomes:
-            #calculate probability of finding the specified bits with given values
+            # Calculate probability of finding the specified bits with
+            # given values.
             prob_of_outcome = 0
             prob_of_outcome += (outcome.H*outcome)[0]
             
-            #If the output has a chance, append it to output with found probability    
-            if prob_of_outcome != 0:    
-                output.append((matrix_to_qubit(outcome.normalized()),\
-                prob_of_outcome))
-            
+            # If the output has a chance, append it to output with found
+            # probability.
+            if prob_of_outcome != 0:
+                output.append((
+                    matrix_to_qubit(outcome.normalized()),
+                    prob_of_outcome
+                ))
+
         return output
     else:
-        raise NotImplementedError("This function can't handle non-sympy" +\
-                                  "matrix formats yet")
-                                     
+        raise NotImplementedError(
+            "This function can't handle non-sympy matrix formats yet"
+        )
+
+
 def measure_partial_oneshot(qubit, bits, format='sympy'):
+    """Perform a partial oneshot measurement on the specified qubits.
+
+    A oneshot measurement is equivalent to performing a measurement on a
+    quantum system. This type of measurement does not return the probabilities
+    like an ensemble measurement does, but rather returns *one* of the
+    possible resulting states. The exact state that is returned is determined
+    by picking a state randomly according to the ensemble probabilities.
+
+    Parameters
+    ----------
+    qubits : Qubit
+        The qubit to measure.  This can be any Qubit or a linear combination
+        of them.
+    bits : tuple
+        The qubits to measure.
+    format : str
+        The format of the intermediate matrices to use. Possible values are
+        ('sympy','numpy','scipy.sparse').
+
+    Returns
+    -------
+    result : Qubit
+        The qubit that the system collapsed to upon measurement.
+    """
     import random
     m = qubit_to_matrix(qubit, format)
     
     if format == 'sympy':
-        result = []
         m = m.normalized()
-        possible_outcomes = __get_possible_outcomes(m, bits) 
+        possible_outcomes = _get_possible_outcomes(m, bits)
 
-        #form output from function
-        output = []
+        # Form output from function
         random_number = random.random()
         total_prob = 0
         for outcome in possible_outcomes:
-            #calculate probability of finding the specified bits with given values
+            # Calculate probability of finding the specified bits
+            # with given values
             total_prob += (outcome.H*outcome)[0]
             if total_prob >= random_number:
                 return matrix_to_qubit(outcome.normalized())
     else:
-        raise NotImplementedError("This function can't handle non-sympy" +\
-                                  "matrix formats yet")
-def __get_possible_outcomes(m, bits):
-    """
-        Function inputs:
-            m: the matrix representing the state of the system
-            bits: a tuple or list with the bits that will be measured
-        
-        Function outputs:
-            The list of possible states which can occur given this measurement.
-            These are un-normalized so we can derive the probability of finding
-            this state by taking the inner product with itself
-             
-        This is filled with loads of dirty binary tricks...You have been warned
-    
-    """
-    size = max(m.shape) #max of shape to account for bra or ket
-    nqubits = int(math.log(size,2)+.1) #number of qubits possible
+        raise NotImplementedError(
+            "This function can't handle non-sympy matrix formats yet"
+        )
 
-    #Make the output states and put in output_matrices, nothing in them now.
-    #Each state will represent a possible outcome of the measurement
-    #Thus, output_matrices[0] is the matrix which we get when all measured bits
-    #return 0. and output_matrices[1] is the matrix for only the 0th bit being true 
+
+def _get_possible_outcomes(m, bits):
+    """Get the possible states that can be produced in a measurement.
+
+    Parameters
+    ----------
+    m : Matrix
+        The matrix representing the state of the system.
+    bits : tuple, list
+        Which bits will be measured.
+
+    Returns
+    -------
+    result : list
+        The list of possible states which can occur given this measurement.
+        These are un-normalized so we can derive the probability of finding
+        this state by taking the inner product with itself
+    """
+
+    # This is filled with loads of dirty binary tricks...You have been warned
+
+    size = max(m.shape) # Max of shape to account for bra or ket
+    nqubits = int(math.log(size,2)+.1) # Number of qubits possible
+
+    # Make the output states and put in output_matrices, nothing in them now.
+    # Each state will represent a possible outcome of the measurement
+    # Thus, output_matrices[0] is the matrix which we get when all measured
+    # bits return 0. and output_matrices[1] is the matrix for only the 0th 
+    # bit being true 
     output_matrices = []
     for i in range(1<<len(bits)):
-        output_matrices.append(zeros((2**nqubits, 1)))    
+        output_matrices.append(zeros((2**nqubits, 1)))
 
-    
-    #Bitmasks will help sort how to determine possible outcomes.
-    #When the bit mask is and-ed with a matrix-index, It will determine
-    #it will determine which state that index belongs to
+    # Bitmasks will help sort how to determine possible outcomes.
+    # When the bit mask is and-ed with a matrix-index,
+    # it will determine which state that index belongs to
     bit_masks = [] 
     for bit in bits:
         bit_masks.append(1<<bit)
-     
 
-
-    #make possible outcome states
+    # Make possible outcome states
     for i in range(2**nqubits):
-        trueness = 0 #This tells us to which output_matrix this value belongs
-        #Find trueness
+        trueness = 0 # This tells us to which output_matrix this value belongs
+        # Find trueness
         for j in range(len(bit_masks)):
             if i&bit_masks[j]:
                 trueness += j+1
-        #put the value in the correct output matrix        
+        # Put the value in the correct output matrix
         output_matrices[trueness][i] = m[i]    
     return output_matrices
-    
+
+
 def measure_all_oneshot(qubit, format='sympy'):
+    """Perform a oneshot enemble measurement on all qubits.
+
+    A oneshot measurement is equivalent to performing a measurement on a
+    quantum system. This type of measurement does not return the probabilities
+    like an ensemble measurement does, but rather returns *one* of the
+    possible resulting states. The exact state that is returned is determined
+    by picking a state randomly according to the ensemble probabilities.
+
+    Parameters
+    ----------
+    qubits : Qubit
+        The qubit to measure.  This can be any Qubit or a linear combination
+        of them.
+    format : str
+        The format of the intermediate matrices to use. Possible values are
+        ('sympy','numpy','scipy.sparse').
+
+    Returns
+    -------
+    result : Qubit
+        The qubit that the system collapsed to upon measurement.
+    """
     import random
     m = qubit_to_matrix(qubit)
     
@@ -477,8 +558,9 @@ def measure_all_oneshot(qubit, format='sympy'):
             result += 1
         return Qubit(IntQubit(result, int(math.log(max(m.shape),2)+.1)))
     else:
-        raise NotImplementedError("This function can't handle non-sympy" +\
-                                  "matrix formats yet")
+        raise NotImplementedError(
+            "This function can't handle non-sympy matrix formats yet"
+        )  
                                   
 def measure_partial_oneshot_sparse(state, qubit, format='sympy')
     import random
