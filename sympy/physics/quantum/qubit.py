@@ -562,7 +562,7 @@ def measure_all_oneshot(qubit, format='sympy'):
             "This function can't handle non-sympy matrix formats yet"
         )  
                                   
-def measure_partial_oneshot_sparse(state, qubit, format='sympy')
+def measure_partial_oneshot_sparse(state, qubit, format='sympy'):
     import random
     state = state.expand()
     prob1 = 0
