@@ -3,6 +3,7 @@ from basic import Basic
 from singleton import S
 from operations import AssocOp
 from cache import cacheit
+from expr import Expr
 
 class Add(AssocOp):
 
@@ -311,7 +312,7 @@ class Add(AssocOp):
         # -2 + 2 * a -> -1, 2-2*a
         if self.args[0].is_Number and self.args[0].is_negative:
             return S.NegativeOne, (-self,)
-        return S.One, (self,)
+        return Expr.as_coeff_mul(self, *deps)
 
     def _eval_subs(self, old, new):
         if self == old:

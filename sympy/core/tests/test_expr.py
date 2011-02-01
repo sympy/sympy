@@ -603,6 +603,7 @@ def test_as_coeff_add():
     assert ( 2+x).as_coeff_add() == ( 2, (x,))
     assert ( 1+x).as_coeff_add() == ( 1, (x,))
     assert (x + y).as_coeff_add(y) == (x, (y,))
+    assert (3*x).as_coeff_add(y) == (3*x, ())
     # don't do expansion
     e = (x + y)**2
     assert e.as_coeff_add(y) == (0, (e,))
@@ -616,6 +617,7 @@ def test_as_coeff_mul():
     assert (-x).as_coeff_mul() == (-1, (x,))
     assert (2*x).as_coeff_mul() == (2, (x,))
     assert (x*y).as_coeff_mul(y) == (x, (y,))
+    assert (3 + x).as_coeff_mul(y) == (3 + x, ())
     # don't do expansion
     e = exp(x + y)
     assert e.as_coeff_mul(y) == (1, (e,))
