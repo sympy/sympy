@@ -25,7 +25,9 @@ class Dagger(Expr):
 
     Daggering various quantum objects:
 
-        >>> from sympy.physics.quantum import Dagger, Ket, Bra, Operator
+        >>> from sympy.physics.quantum.dagger import Dagger
+        >>> from sympy.physics.quantum.state import Ket, Bra
+        >>> from sympy.physics.quantum.operator import Operator
         >>> Dagger(Ket('psi'))
         <psi|
         >>> Dagger(Bra('phi'))
