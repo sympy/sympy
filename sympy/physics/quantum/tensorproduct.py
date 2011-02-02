@@ -141,7 +141,7 @@ class TensorProduct(Expr):
 
         >>> from sympy.physics.quantum import Dagger
         >>> Dagger(tp)
-        conjugate(A)xconjugate(B)
+        Dagger(A)xDagger(B)
 
     Expand can be used to distribute a tensor product across addition::
 

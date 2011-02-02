@@ -108,7 +108,13 @@ class Dagger(Expr):
                 if arg.is_Pow:
                     return Pow(Dagger(arg.args[0]),arg.args[1])
                 else:
-                    return arg.conjugate()
+                    if arg.is_Number or arg.is_Function or arg.is_Derivative\
+                                     or arg.is_Integer or arg.is_NumberSymbol\
+                                     or arg.is_complex or arg.is_integer\
+                                     or arg.is_real or arg.is_number:
+                        return arg.conjugate()
+                    else:
+                        return None
             else:
                 return None
         else:

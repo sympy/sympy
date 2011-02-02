@@ -1,14 +1,21 @@
-from sympy import I, Matrix, symbols, conjugate, Expr
+from sympy import I, Matrix, symbols, conjugate, Expr, Integer
 
 from sympy.physics.quantum.dagger import Dagger
 
 
 def test_scalars():
-    x,y,z = symbols('xyz')
-    i,j,k = symbols('ijk',real=True)
+    x = symbols('x',complex=True)
     assert Dagger(x) == conjugate(x)
-    assert Dagger(i) == i
     assert Dagger(I*x) == -I*conjugate(x)
+
+    i = symbols('i',real=True)
+    assert Dagger(i) == i
+
+    p = symbols('p')
+    assert isinstance(Dagger(p), Dagger)
+
+    i = Integer(3)
+    assert Dagger(i) == i
 
 
 def test_matrix():

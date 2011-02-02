@@ -118,7 +118,7 @@ class AntiCommutator(Expr):
                 comm = A._eval_anticommutator(B, **hints)
             except NotImplementedError:
                 try:
-                    comm = -1*B._eval_anticommutator(A, **hints)
+                    comm = B._eval_anticommutator(A, **hints)
                 except NotImplementedError:
                     comm = None
             if comm is not None:

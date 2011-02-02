@@ -114,7 +114,7 @@ def test_time_dep_bra():
 
 
 def test_bra_ket_dagger():
-    x = symbols('x')
+    x = symbols('x',complex=True)
     k = Ket('k')
     b = Bra('b')
     assert Dagger(k) == Bra('k')
