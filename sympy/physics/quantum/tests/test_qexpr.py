@@ -26,10 +26,14 @@ def test_qexpr_commutative():
     assert q2.is_commutative == False
     assert q1*q2 != q2*q1
 
+    q = QExpr._new_rawargs(0,1,HilbertSpace())
+    assert q.is_commutative == False
+
 
 def test_qexpr_subs():
     q1 = QExpr(x,y)
     assert q1.subs(x, y) == QExpr(y,y)
     assert q1.subs({x:1,y:2}) == QExpr(1,2)
+
 
     

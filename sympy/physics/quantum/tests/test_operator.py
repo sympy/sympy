@@ -42,6 +42,7 @@ def test_hermitian():
     assert Dagger(H) == H
     assert H.inv() != H
     assert H.is_commutative == False
+    assert Dagger(H).is_commutative == False
 
 
 def test_unitary():
@@ -54,6 +55,7 @@ def test_unitary():
     assert U*Dagger(U) == 1
     assert Dagger(U)*U == 1
     assert U.is_commutative == False
+    assert Dagger(U).is_commutative == False
 
 
 def test_outer_product():
@@ -88,3 +90,12 @@ def test_outer_product():
     assert op == Mul(Integer(2), OuterProduct(k, b))
 
     assert Dagger(k*b) == OuterProduct(Dagger(b),Dagger(k))
+    assert Dagger(k*b).is_commutative == False
+
+
+def test_operator_dagger():
+    A = Operator('A')
+    B = Operator('B')
+    assert Dagger(A*B) == Dagger(B)*Dagger(A)
+    assert Dagger(A+B) == Dagger(A) + Dagger(B)
+    assert Dagger(A**2) == Dagger(A)**2

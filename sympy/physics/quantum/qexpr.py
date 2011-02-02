@@ -107,7 +107,7 @@ class QExpr(Expr):
         the creation of the object.
         """
 
-        obj = Expr.__new__(cls, *args)
+        obj = Expr.__new__(cls, *args, **{'commutative':False})
         obj.hilbert_space = hilbert_space
         return obj
 

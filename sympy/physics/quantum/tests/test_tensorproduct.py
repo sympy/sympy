@@ -1,4 +1,11 @@
-from sympy.physics.quantum.tensorproduct import *
+from sympy import I
+
+from sympy.physics.quantum.tensorproduct import TensorProduct
+from sympy.physics.quantum.tensorproduct import matrix_tensor_product
+from sympy.physics.quantum.operator import Operator
+from sympy.physics.quantum.dagger import Dagger
+
+
 from sympy.matrices.matrices import *
 
 epsilon = .000001
@@ -72,4 +79,10 @@ def test_matrix_tensor_product():
     numpy_product = np.kron(l1,np.kron(vec,l2))
     assert numpy_product.tolist() == sympy_product.tolist()
 
+
+def test_tensor_product_dagger():
+    A = Operator('A')
+    B = Operator('B')
+    assert Dagger(TensorProduct(I*A, B)) ==\
+           -I*TensorProduct(Dagger(A),Dagger(B))
 
