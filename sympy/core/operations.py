@@ -27,16 +27,18 @@ class AssocOp(Expr):
 
     @cacheit
     def __new__(cls, *args, **assumptions):
+        if len(args) == 0:
+            return cls.identity
+
+        args = map(_sympify, args)
+        if len(args) == 1:
+            return args[0]
+
         if assumptions.get('evaluate') is False:
-            args = map(_sympify, args)
             obj = Expr.__new__(cls, *args, **assumptions)
             obj.is_commutative = all(arg.is_commutative for arg in args)
             return obj
-        if len(args)==0:
-            return cls.identity
-        if len(args)==1:
-            return _sympify(args[0])
-        c_part, nc_part, order_symbols = cls.flatten(map(_sympify, args))
+        c_part, nc_part, order_symbols = cls.flatten(args)
         if len(c_part) + len(nc_part) <= 1:
             if c_part:
                 obj = c_part[0]
