@@ -161,10 +161,10 @@ class Application(Basic):
             return new
         elif old.is_Function and new.is_Function:
             if old == self.func:
-                if self.nargs is new.nargs or not new.nargs:
+                if self.nargs == new.nargs or not new.nargs:
                     return new(*self.args)
                 # Written down as an elif to avoid a super-long line
-                elif isinstance(new.nargs,tuple) and self.nargs in new.nargs:
+                elif isinstance(new.nargs, tuple) and self.nargs in new.nargs:
                     return new(*self.args)
         return Basic._seq_subs(self, old, new)
 

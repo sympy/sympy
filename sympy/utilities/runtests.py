@@ -499,7 +499,7 @@ class SymPyTests(object):
             # Sorting of XFAILed functions isn't fixed yet :-(
             funcs.sort(key=lambda x: inspect.getsourcelines(x)[1])
             i = 0
-            while i is not len(funcs):
+            while i < len(funcs):
                 if isgeneratorfunction(funcs[i]):
                 # some tests can be generators, that return the actual
                 # test functions. We unpack it below:

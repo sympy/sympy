@@ -396,7 +396,7 @@ def test_convex_hull():
 
     #more than 3 collinear points
     another_p = [Point(-45, -85), Point(-45, 85), Point(-45,26),Point(-45,-24)]
-    ch2 = Segment(another_p[0],another_p[1]);
+    ch2 = Segment(another_p[0],another_p[1])
 
     assert convex_hull(another_p) == ch2
     assert convex_hull(p) == ch
