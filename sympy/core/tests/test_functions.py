@@ -158,18 +158,9 @@ def test_diff_symbols():
     assert diff(f(x, y, z), x, y, z) == Derivative(f(x, y, z), x, y, z)
     assert diff(f(x, y, z), x, x, x) == Derivative(f(x, y, z), x, x, x)
     assert diff(f(x, y, z), x, 3) == Derivative(f(x, y, z), x, 3)
-    assert diff([f(x, y, z), g(x, y, z)], [x, y, z, (x, x), (y, 2), (z, 3),
-    (x, y, z, 2), (x, x, x)]) == \
-        [[Derivative(f(x, y, z), x), Derivative(f(x, y, z), y),
-          Derivative(f(x, y, z), z), Derivative(f(x, y, z), x, x),
-          Derivative(f(x, y, z), y, y), Derivative(f(x, y, z), z, z, z),
-          Derivative(f(x, y, z), x, y, z, z), Derivative(f(x, y, z), x, x, x)],
-        [Derivative(g(x, y, z), x), Derivative(g(x, y, z), y),
-          Derivative(g(x, y, z), z), Derivative(g(x, y, z), x, x),
-          Derivative(g(x, y, z), y, y), Derivative(g(x, y, z), z, z, z),
-          Derivative(g(x, y, z), x, y, z, z), Derivative(g(x, y, z), x, x, x)]]
+
     # issue 1929
-    assert diff(-z + x/y, (z, x, y)) == [-1, 1/y, -x/y**2]
+    assert [diff(-z + x/y, sym) for sym in (z, x, y)] == [-1, 1/y, -x/y**2]
     assert diff(f(x, y, z), x, y, z, 2) == Derivative(f(x, y, z), x, y, z, z)
     assert diff(f(x, y, z), x, y, z, 2, evaluate=False) == \
         Derivative(f(x, y, z), x, y, z, z)
