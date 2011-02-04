@@ -132,4 +132,7 @@ def test_CNOTGate():
     assert matrix_to_qubit(represent(circuit, ZGate(0), nqubits=3)) == \
     apply_operators(circuit)
 
-
+def test_SwapGate():
+    SWAP_gate_matrix = Matrix(((1,0,0,0),(0,0,1,0),(0,1,0,0),(0,0,0,1)))
+    #test SWAP gate decompose method
+    assert represent(SwapGate(1,0).decompose(), ZGate(0), nqubits=2) == SWAP_gate_matrix

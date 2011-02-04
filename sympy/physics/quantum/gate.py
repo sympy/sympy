@@ -758,6 +758,12 @@ class SwapGate(TwoQubitGate):
     def get_target_matrix(self, format='sympy'):
         return matrix_cache.get_matrix('SWAP', format)
 
+    def decompose(self, **options):
+        """Decompose the SWAP gate into CNOT gates."""
+        g1 = CNotGate(self.targets[0], self.targets[1])
+        g2 = CNotGate(self.targets[1], self.targets[0])
+        return g1*g2*g1
+
     def plot_gate(self, circ_plot, gate_idx):
         min_wire = int(min(self.targets))
         max_wire = int(max(self.targets))
