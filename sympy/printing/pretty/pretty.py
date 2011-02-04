@@ -286,13 +286,15 @@ class PrettyPrinter(Printer):
 
             # Create sum sign based on the height of the argument
             d, h, slines = asum(H, prettyLower.width(), prettyUpper.width())
-            if first:
-                prettyF.baseline = prettyF.baseline - d
-                first = False
             prettySign = stringPict('')
             prettySign = prettyForm(*prettySign.stack(*slines))
             prettySign = prettyForm(*prettySign.above(prettyUpper))
             prettySign = prettyForm(*prettySign.below(prettyLower))
+            if first:
+                # change F baseline so it centers on the sign
+                prettyF.baseline -= d - (prettyF.height()//2 -
+                                         prettyF.baseline)
+                first = False
 
             # put padding to the right
             pad = stringPict('')

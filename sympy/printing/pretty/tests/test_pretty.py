@@ -2,7 +2,7 @@
 from sympy import (Matrix, Piecewise, Ne, symbols, sqrt, Function,
     Rational, conjugate, Derivative, tan, Function, log, floor, Symbol,
     pprint, sqrt, factorial, pi, sin, ceiling, pprint_use_unicode, I, S,
-    Limit, oo, cos, Pow, Integral, exp, Eq, Lt, Gt, Ge, Le, gamma, Abs)
+    Limit, oo, cos, Pow, Integral, exp, Eq, Lt, Gt, Ge, Le, gamma, Abs, Sum)
 
 from sympy.printing.pretty import pretty as xpretty
 from sympy.printing.pretty import pprint
@@ -1932,3 +1932,96 @@ def test_pretty_no_wrap_line():
 def test_settings():
     raises(TypeError, 'pretty(S(4), method="garbage")')
 
+def test_pretty_sum():
+    from sympy.abc import x, a, b
+    ans = [
+'  oo   \n\
+ __    \n\
+ \\ `   \n\
+  )   x\n\
+ /_,   \n\
+x = 0  ',
+    '  oo    \n\
+ ___    \n\
+ \\  `   \n\
+  \\    2\n\
+  /   x \n\
+ /__,   \n\
+x = 0   ',
+    '  oo   \n\
+ ___   \n\
+ \\  `  \n\
+  \\   x\n\
+   )  -\n\
+  /   2\n\
+ /__,  \n\
+x = 0  ',
+    '  oo    \n\
+____    \n\
+\\   `   \n\
+ \\     3\n\
+  \\   x \n\
+  /   --\n\
+ /    2 \n\
+/___,   \n\
+x = 0   ',
+    '  oo          \n\
+____          \n\
+\\   `         \n\
+ \\           2\n\
+  \\      / x\\ \n\
+   )     | -| \n\
+  /    6 | 2| \n\
+ /    x *\\y / \n\
+/___,         \n\
+x = 0         ',
+    '  oo    \n\
+____    \n\
+\\   `   \n\
+ \\    1 \n\
+  \\   --\n\
+  /    2\n\
+ /    x \n\
+/___,   \n\
+x = 0   ',
+    '  oo     \n\
+____     \n\
+\\   `    \n\
+ \\     -a\n\
+  \\    --\n\
+  /    b \n\
+ /    y  \n\
+/___,    \n\
+x = 0    ',
+    '  2     oo     \n\
+____  ____     \n\
+\\   ` \\   `    \n\
+ \\     \\     -a\n\
+  \\     \\    --\n\
+  /     /    b \n\
+ /     /    y  \n\
+/___, /___,    \n\
+y = 1 x = 0    '
+    ]
+    test = [xpretty(e) for e in
+    Sum(x, (x, 0, oo)),
+    Sum(x**2, (x, 0, oo)),
+    Sum(x/2, (x, 0, oo)),
+    Sum(x**3/2, (x, 0, oo)),
+    Sum((x**3*y**(x/2))**2, (x, 0, oo)),
+    Sum(1/x**2, (x, 0, oo)),
+    Sum(1/y**(a/b), (x, 0, oo)),
+    Sum(1/y**(a/b), (x, 0, oo),(y,1,2))]
+    for i in range(len(test)):
+        try:
+            assert test[i] == ans[i]
+        except AssertionError:
+            print 'Error in test',i
+            for j in range(len(test[i])):
+                if not test[i][j] == ans[i][j]:
+                    print '\tat char',j
+                    print '\tgot',repr(test[i][j-3:j+3])
+                    print '\tans',repr(ans[i][j-3:j+3])
+                    break
+            print repr(test[i])
+            print repr(ans[i])
