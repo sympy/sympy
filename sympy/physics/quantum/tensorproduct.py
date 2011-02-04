@@ -60,7 +60,9 @@ def matrix_tensor_product(*matrices):
     # Make sure we have a sequence of Matrices
     testmat = [isinstance(m, Matrix) for m in matrices]
     if not all(testmat):
-        raise TypeError('Sequence of Matrices expected, got: %r' % matrices)
+        raise TypeError(
+            'Sequence of Matrices expected, got: %s' % repr(matrices)
+        )
 
     # Pull out the first element in the product.
     matrix_expansion  = matrices[-1]

@@ -327,3 +327,8 @@ class OuterProduct(Operator):
         k = printer._print(self.ket, *args)
         b = printer._print(self.bra, *args)
         return k+b
+
+    def _represent(self, basis, **options):
+        k = self.ket._represent(basis, **options)
+        b = self.bra._represent(basis, **options)
+        return k*b

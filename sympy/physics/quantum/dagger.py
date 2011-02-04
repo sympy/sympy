@@ -128,10 +128,12 @@ class Dagger(Expr):
         return self.args[0]
 
     def _sympyrepr(self, printer, *args):
-        return '%s(%s)' % (self.__class__.__name__, self.args[0])
+        arg0 = printer._print(self.args[0], *args)
+        return '%s(%s)' % (self.__class__.__name__, arg0)
 
     def _sympystr(self, printer, *args):
-        return '%s(%s)' % (self.__class__.__name__, self.args[0])
+        arg0 = printer._print(self.args[0], *args)
+        return '%s(%s)' % (self.__class__.__name__, arg0)
 
     def _pretty(self, printer, *args):
         from sympy.printing.pretty.stringpict import prettyForm

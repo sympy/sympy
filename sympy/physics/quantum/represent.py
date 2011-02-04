@@ -1,7 +1,16 @@
-"""Logic for representing operators in state in various bases."""
+"""Logic for representing operators in state in various bases.
 
-from sympy import S, Add, Mul, Matrix, Pow, Expr, I
+TODO:
+* Get represent tested for numpy and scipy.sparse formats.
+* Get represent working with continuous hilbert spaces.
+"""
 
+from sympy import S, Add, Mul, Matrix, Pow, Expr, I, srepr
+
+from sympy.physics.quantum.dagger import Dagger
+from sympy.physics.quantum.commutator import Commutator
+from sympy.physics.quantum.anticommutator import AntiCommutator
+from sympy.physics.quantum.innerproduct import InnerProduct
 from sympy.physics.quantum.qexpr import QExpr
 from sympy.physics.quantum.tensorproduct import TensorProduct
 from sympy.physics.quantum.matrixcache import (
@@ -21,9 +30,13 @@ def represent(expr, basis, **options):
     """Represent the quantum expression in the given basis.
 
     In quantum mechanics abstract states and operators can be represented in
-    various basis sets. Under this operator, states become vectors or
-    functions and operators become matrices or differential operators. This
-    function is the top-level interface for this action.
+    various basis sets. Under this operation the follow transforms happen:
+    
+    * Ket -> column vector or function
+    * Bra -> row vector of function
+    * Operator -> matrix or differential operator
+
+    This function is the top-level interface for this action.
 
     This function walks the sympy expression tree looking for ``QExpr``
     instances that have a ``_represent`` method. This method is then called
@@ -96,6 +109,19 @@ def represent(expr, basis, **options):
     elif isinstance(expr, TensorProduct):
         new_args = [represent(arg, basis, **options) for arg in expr.args]
         return TensorProduct(*new_args)
+    elif isinstance(expr, Dagger):
+        # TODO: get Dagger working with numpy and scipy.sparse matrices
+        return Dagger(represent(expr.args[0], basis, **options))
+    elif isinstance(expr, Commutator):
+        A = represent(expr.args[0], basis, **options)
+        B = represent(expr.args[1], basis, **options)
+        return A*B - B*A
+    elif isinstance(expr, AntiCommutator):
+        A = represent(expr.args[0], basis, **options)
+        B = represent(expr.args[1], basis, **options)
+        return A*B + B*A
+    elif isinstance(expr, InnerProduct):
+        return represent(Mul(expr.bra,expr.ket), basis, **options)
     elif not isinstance(expr, Mul):
         # For numpy and scipy.sparse, we can only handle numerical prefactors.
         if format == 'numpy' or format == 'scipy.sparse':
