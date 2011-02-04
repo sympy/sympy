@@ -1,8 +1,4 @@
-import warnings
-from sympy.core.basic import Basic
-from sympy.core.symbol import Symbol, Dummy
-from sympy.core.numbers import Integer
-from sympy.core.singleton import S
+from sympy import Basic, Symbol, Integer, S, Dummy
 from sympy.core.sympify import sympify, converter, SympifyError
 
 from sympy.polys import Poly, roots, cancel
