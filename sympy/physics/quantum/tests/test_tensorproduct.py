@@ -1,14 +1,18 @@
-from sympy import I
-
-from sympy.physics.quantum.tensorproduct import TensorProduct
-from sympy.physics.quantum.tensorproduct import matrix_tensor_product
-from sympy.physics.quantum.operator import Operator
-from sympy.physics.quantum.dagger import Dagger
-
-
+from sympy import Matrix, I, symbols
 from sympy.matrices.matrices import *
 
+from sympy.physics.quantum.commutator import Commutator as Comm
+from sympy.physics.quantum.tensorproduct import TensorProduct
+from sympy.physics.quantum.tensorproduct import TensorProduct as TP
+from sympy.physics.quantum.tensorproduct import matrix_tensor_product
+from sympy.physics.quantum.tensorproduct import tensor_product_simp
+
+from sympy.physics.quantum.dagger import Dagger
+
 epsilon = .000001
+
+A,B,C = symbols('ABC', commutative=False)
+x,y,z = symbols('xyz')
 
 def test_matrix_tensor_product():
     try:
@@ -72,17 +76,36 @@ def test_matrix_tensor_product():
 
     #test for three matrix kronecker
     sympy_product = matrix_tensor_product(l1,vec,l2)
-    npl1 = np.matrix(l1.tolist())
-    npl2 = np.matrix(l2.tolist())
-    npvec = np.matrix(vec.tolist())
 
     numpy_product = np.kron(l1,np.kron(vec,l2))
     assert numpy_product.tolist() == sympy_product.tolist()
 
 
 def test_tensor_product_dagger():
-    A = Operator('A')
-    B = Operator('B')
     assert Dagger(TensorProduct(I*A, B)) ==\
            -I*TensorProduct(Dagger(A),Dagger(B))
 
+
+def test_tensor_product_abstract():
+
+    assert TP(x*A,2*B) == x*2*TP(A,B)
+    assert TP(A,B) != TP(B,A)
+    assert TP(A,B).is_commutative == False
+    assert isinstance(TP(A,B), TP)
+    assert TP(A,B).subs(A,C) == TP(C,B)
+
+
+def test_tensor_product_expand():
+    assert TP(A+B,B+C).expand(tensorproduct=True) ==\
+        TP(A,B) + TP(A,C) + TP(B,B) + TP(B,C)
+
+
+def test_tensor_product_commutator():
+    assert TP(Comm(A,B),C).doit().expand(tensorproduct=True) ==\
+        TP(A*B,C) - TP(B*A,C)
+    assert Comm(TP(A,B),TP(B,C)).doit() ==\
+        TP(A,B)*TP(B,C) - TP(B,C)*TP(A,B)
+
+
+def test_tensor_product_simp():
+    assert tensor_product_simp(TP(A,B)*TP(B,C)) == TP(A*B,B*C)

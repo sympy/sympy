@@ -18,7 +18,6 @@ __all__ = [
 # Tensor product
 #-----------------------------------------------------------------------------
 
-# TODO: move this to the main sympy.matrices module.
 def matrix_tensor_product(*matrices):
     """Compute the tensor product of a sequence of sympy Matrices.
 
@@ -97,7 +96,7 @@ class TensorProduct(Expr):
     non-commutative multiplication that is used primarily with operators
     and states in quantum mechanics.
 
-    Current, the tensor product distinguishes between commutative and non-
+    Currently, the tensor product distinguishes between commutative and non-
     commutative arguments.  Commutative arguments are assumed to be scalars
     and are pulled out in front of the ``TensorProduct``. Non-commutative
     arguments remain in the resulting ``TensorProduct``.
@@ -105,7 +104,7 @@ class TensorProduct(Expr):
     Parameters
     ==========
     args : tuple
-        The objects to take the tensor product of.
+        A sequence of the objects to take the tensor product of.
 
     Examples
     ========
@@ -239,7 +238,11 @@ class TensorProduct(Expr):
         for i in range(len(args)):
             if isinstance(args[i], Add):
                 for aa in args[i].args:
-                    add_args.append(TensorProduct(*args[:i]+(aa,)+args[i+1:]))
+                    add_args.append(
+                        TensorProduct(
+                            *args[:i]+(aa,)+args[i+1:]
+                        ).expand(**hints)
+                    )
                 stop = True
             if stop: break
         if add_args:
@@ -264,7 +267,7 @@ def tensor_product_simp_Mul(e):
     Parameters
     ==========
     e : Expr
-        A ``Mul`` containing ``TensorProduct``s to be simplified.
+        A ``Mul`` of ``TensorProduct``s to be simplified.
 
     Returns
     =======
@@ -329,7 +332,10 @@ def tensor_product_simp(e, **hints):
     """Try to simplify and combine TensorProducts.
 
     In general this will try to pull expressions inside of ``TensorProducts``.
-    It is best to see what it does by showing examples.
+    It currently only works for relatively simple cases where the products
+    have only scalars, raw ``TensorProduct``s, not ``Add``, ``Pow``,
+    ``Commutator``s of ``TensorProduct``s. It is best to see what it does by
+    showing examples.
 
     Examples
     ========
@@ -368,3 +374,4 @@ def tensor_product_simp(e, **hints):
         return AntiCommutator(*[tensor_product_simp(arg) for arg in e.args])
     else:
         return e
+
