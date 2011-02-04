@@ -20,7 +20,7 @@ from sympy.physics.quantum.state import Ket, Bra, State
 
 from sympy.physics.quantum.qexpr import QuantumError
 from sympy.physics.quantum.represent import represent
-from sympy.physics.quantum.matrixcache import (
+from sympy.physics.quantum.matrixutils import (
     numpy_ndarray, scipy_sparse_matrix
 )
 

@@ -13,6 +13,7 @@ Medium Term Todo:
 
     SWAP = |1><0|x|1><0| + |0><1|x|0><1| + |1><0|x|0><1| + |1><0|x|1><0|
 
+* Figure out why represent does work for 2 qubits right now.
 * Get multi-target UGates plotting properly.
 """
 
@@ -20,14 +21,15 @@ from itertools import chain
 
 from sympy import Mul, Pow, Integer, Matrix, Rational, Tuple
 from sympy.core.numbers import Number
-from sympy.matrices import matrices
 from sympy.printing.pretty.stringpict import prettyForm, stringPict
 from sympy.utilities.iterables import all
 
 from sympy.physics.quantum.qexpr import QuantumError
 from sympy.physics.quantum.hilbert import ComplexSpace
 from sympy.physics.quantum.operator import UnitaryOperator
-from sympy.physics.quantum.tensorproduct import matrix_tensor_product
+from sympy.physics.quantum.matrixutils import (
+    matrix_tensor_product, matrix_eye
+)
 from sympy.physics.quantum.matrixcache import matrix_cache
 
 __all__ = [
@@ -773,54 +775,6 @@ SWAP = SwapGate
 #-----------------------------------------------------------------------------
 
 
-def _np_tensor_product(*product):
-    """numpy version of tensor product of multiple arguments."""
-    import numpy as np
-    answer = product[0]
-    for item in product[1:]:
-        answer = np.kron(answer, item)
-    return answer
-
-
-def _np_eye(n):
-    """numpy version of complex eye."""
-    import numpy as np
-    return np.matrix(np.eye(n, dtype='complex'))
-
-
-def _sp_tensor_product(*product):
-    """scipy.sparse version of tensor product of multiple arguments."""
-    from scipy import sparse
-    answer = product[0]
-    for item in product[1:]:
-        answer = sparse.kron(answer, item)
-    # The final matrices will just be multiplied, so csr is a good final
-    # sparse format.
-    return sparse.csr_matrix(answer)
-
-
-def _sp_eye(n):
-    """scipy.sparse version of complex eye."""
-    from scipy import sparse
-    return sparse.eye(n, n, dtype='complex')
-
-
-def _get_represent_utils(format='sympy'):
-    """Get the version of eye and tensor_product for a given format."""
-    if format == 'sympy':
-        e = matrices.eye
-        tp = matrix_tensor_product
-    elif format == 'numpy':
-        e = _np_eye
-        tp = _np_tensor_product
-    elif format == 'scipy.sparse':
-        e = _sp_eye
-        tp = _sp_tensor_product
-    else:
-        raise NotImplementedError('Invalid format: %r' % format) 
-    return e, tp
-
-
 def represent_zbasis(controls, targets, target_matrix, nqubits, format='sympy'):
     """Represent a gate with controls, targets and target_matrix.
 
@@ -862,7 +816,6 @@ def represent_zbasis(controls, targets, target_matrix, nqubits, format='sympy'):
     nqubits = int(nqubits)
 
     # This checks for the format as well.
-    eye, tensor_product = _get_represent_utils(format)
     up = matrix_cache.get_matrix('up', format)
     eye2 = matrix_cache.get_matrix('eye2', format)
 
@@ -873,11 +826,11 @@ def represent_zbasis(controls, targets, target_matrix, nqubits, format='sympy'):
         # Fill product with [I1,Gate,I2] such that the unitaries,
         # I, cause the gate to be applied to the correct Qubit
         if bit != nqubits-1:
-            product.append(eye(2**(nqubits-bit-1)))
+            product.append(matrix_eye(2**(nqubits-bit-1)))
         product.append(target_matrix)
         if bit != 0:
-            product.append(eye(2**bit))
-        return tensor_product(*product)
+            product.append(matrix_eye(2**bit))
+        return matrix_tensor_product(*product)
 
     # Single target, multiple controls.
     elif len(targets) == 1 and len(controls) >= 1:
@@ -886,12 +839,12 @@ def represent_zbasis(controls, targets, target_matrix, nqubits, format='sympy'):
         # Build the non-trivial part.
         product2 = []
         for i in range(nqubits):
-            product2.append(eye(2))
+            product2.append(matrix_eye(2))
         for control in controls:
             product2[nqubits-1-control] = up
         product2[nqubits-1-target] = target_matrix - eye2
 
-        return eye(2**nqubits) + tensor_product(*product2)
+        return matrix_eye(2**nqubits) + matrix_tensor_product(*product2)
 
     # Multi-target, multi-control is not yet implemented.
     else:

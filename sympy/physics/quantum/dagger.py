@@ -3,6 +3,9 @@
 from sympy import Expr, sympify, Add, Mul, Matrix, Pow
 
 from sympy.physics.quantum.qexpr import QExpr
+from sympy.physics.quantum.matrixutils import (
+    numpy_ndarray, scipy_sparse_matrix, matrix_dagger
+)
 
 __all__ = [
     'Dagger'
@@ -72,9 +75,9 @@ class Dagger(Expr):
     """
 
     def __new__(cls, arg, **old_assumptions):
-        # Matrices are not sympify friendly
-        if isinstance(arg, Matrix):
-            return arg.H
+        # Return the dagger of a sympy Matrix immediately.
+        if isinstance(arg, (Matrix, numpy_ndarray, scipy_sparse_matrix)):
+            return matrix_dagger(arg)
         arg = sympify(arg)
         r = cls.eval(arg)
         if isinstance(r, Expr):
@@ -90,9 +93,7 @@ class Dagger(Expr):
 
     @classmethod
     def eval(cls, arg):
-        """
-        Evaluates the Dagger instance.
-        """
+        """Evaluates the Dagger instance."""
         from sympy.physics.quantum.operator import Operator
         try:
             d = arg._eval_dagger()

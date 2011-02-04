@@ -1,4 +1,4 @@
-from sympy import Matrix, symbols, I
+from sympy import Matrix, I
 
 from sympy.physics.quantum.dagger import Dagger
 from sympy.physics.quantum.represent import represent
@@ -9,6 +9,9 @@ from sympy.physics.quantum.tensorproduct import matrix_tensor_product
 from sympy.physics.quantum.commutator import Commutator
 from sympy.physics.quantum.anticommutator import AntiCommutator
 from sympy.physics.quantum.innerproduct import InnerProduct
+from sympy.physics.quantum.matrixutils import (
+    to_sympy, to_numpy, to_scipy_sparse, numpy_ndarray, scipy_sparse_matrix
+)
 
 Amat = Matrix([[1,I],[-I,1]])
 Bmat = Matrix([[1,2],[3,4]])
@@ -48,46 +51,66 @@ b = ABra('a')
 A = AOp('A')
 B = BOp('B')
 
-
-def test_bra():
-    assert represent(b, A) == Dagger(Avec)
-    assert represent(Dagger(b), A) == Avec
-
-
-def test_ket():
-    assert represent(k, A) == Avec
-    assert represent(Dagger(k), A) == Dagger(Avec)
-
-
-def test_op():
-    assert represent(A, A) == Amat
-    assert represent(Dagger(A), A) == Dagger(Amat)
-
-
-def test_outerproduct():
-    op = k*b
-    assert represent(op, A) == Avec*Avec.H
-
-
-def test_tensor_product():
-    assert represent(TensorProduct(A,B),A) == matrix_tensor_product(Amat,Bmat)
-
-
-def test_pow():
-    assert represent(A**2,A) == Amat**2
+_tests = [
+    # Bra
+    (b, Dagger(Avec)),
+    (Dagger(b), Avec),
+    # Ket
+    (k, Avec),
+    (Dagger(k), Dagger(Avec)),
+    # Operator
+    (A, Amat),
+    (Dagger(A), Dagger(Amat)),
+    # OuterProduct
+    (OuterProduct(k,b), Avec*Avec.H),
+    # TensorProduct
+    (TensorProduct(A,B), matrix_tensor_product(Amat,Bmat)),
+    # Pow
+    (A**2, Amat**2),
+    # Add/Mul
+    (A*B + 2*A, Amat*Bmat + 2*Amat),
+    # Commutator
+    (Commutator(A,B), Amat*Bmat - Bmat*Amat),
+    # AntiCommutator
+    (AntiCommutator(A,B), Amat*Bmat + Bmat*Amat),
+    # InnerProduct
+    (InnerProduct(b,k), (Avec.H*Avec)[0])
+]
 
 
-def test_add_mul():
-    assert represent(A*B + 2*A, A) == Amat*Bmat + 2*Amat
+def test_format_sympy():
+    for test in _tests:
+        lhs = represent(test[0], A, format='sympy')
+        rhs = to_sympy(test[1])
+        assert lhs == rhs
 
 
-def test_commutator():
-    assert represent(Commutator(A,B), A) == Amat*Bmat - Bmat*Amat
+try:
+    import numpy as np
+except ImportError:
+    pass
+else:
+    def test_format_numpy():
+        for test in _tests:
+            lhs = represent(test[0], A, format='numpy')
+            rhs = to_numpy(test[1])
+            if isinstance(lhs, numpy_ndarray):
+                assert (lhs == rhs).all()
+            else:
+                assert lhs == rhs
 
 
-def test_anticommutator():
-    assert represent(AntiCommutator(A,B), A) == Amat*Bmat + Bmat*Amat
-
-
-def test_innerproduct():
-    assert represent(InnerProduct(b,k), A) == (Avec.H*Avec)[0]
+try:
+    import numpy as np
+    from scipy import sparse
+except ImportError:
+    pass
+else:
+    def test_format_scipy_sparse():
+        for test in _tests:
+            lhs = represent(test[0], A, format='scipy.sparse')
+            rhs = to_scipy_sparse(test[1])
+            if isinstance(lhs, scipy_sparse_matrix):
+                assert np.linalg.norm((lhs-rhs).todense()) == 0.0
+            else:
+                assert lhs == rhs

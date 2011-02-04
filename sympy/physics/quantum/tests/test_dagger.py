@@ -35,3 +35,24 @@ def test_eval_dagger():
     d = Dagger(f)
     assert d == I
 
+try:
+    import numpy as np
+except ImportError:
+    pass
+else:
+    def test_numpy_dagger():
+        a = np.matrix([[1.0,2.0j],[-1.0j,2.0]])
+        adag = a.copy().transpose().conjugate()
+        assert (Dagger(a) == adag).all()
+
+
+try:
+    from scipy import sparse
+    import numpy as np
+except ImportError:
+    pass
+else:
+    def test_scipy_sparse_dagger():
+        a = sparse.csr_matrix([[1.0+0.0j,2.0j],[-1.0j,2.0+0.0j]])
+        adag = a.copy().transpose().conjugate()
+        assert np.linalg.norm((Dagger(a) - adag).todense()) == 0.0

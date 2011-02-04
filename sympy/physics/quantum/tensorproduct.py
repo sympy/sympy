@@ -7,9 +7,13 @@ from sympy.physics.quantum.qexpr import QuantumError, split_commutative_parts
 from sympy.physics.quantum.dagger import Dagger
 from sympy.physics.quantum.commutator import Commutator
 from sympy.physics.quantum.anticommutator import AntiCommutator
+from sympy.physics.quantum.matrixutils import (
+    numpy_ndarray,
+    scipy_sparse_matrix,
+    matrix_tensor_product
+)
 
 __all__ = [
-    'matrix_tensor_product',
     'TensorProduct',
     'tensor_product_simp'
 ]
@@ -17,76 +21,6 @@ __all__ = [
 #-----------------------------------------------------------------------------
 # Tensor product
 #-----------------------------------------------------------------------------
-
-def matrix_tensor_product(*matrices):
-    """Compute the tensor product of a sequence of sympy Matrices.
-
-    This is the standard Kronecker product of matrices [1].
-
-    Parameters
-    ==========
-    matrices : tuple of Matrix instances
-        The matrices to take the tensor product of.
-
-    Returns
-    =======
-    matrix : Matrix
-        The tensor product matrix.
-
-    Examples
-    ========
-
-        >>> from sympy import I, Matrix, symbols
-        >>> from sympy.physics.quantum.tensorproduct import matrix_tensor_product
-
-        >>> m1 = Matrix([[1,2],[3,4]])
-        >>> m2 = Matrix([[1,0],[0,1]])
-        >>> matrix_tensor_product(m1, m2)
-        [1, 0, 2, 0]
-        [0, 1, 0, 2]
-        [3, 0, 4, 0]
-        [0, 3, 0, 4]
-        >>> matrix_tensor_product(m2, m1)
-        [1, 2, 0, 0]
-        [3, 4, 0, 0]
-        [0, 0, 1, 2]
-        [0, 0, 3, 4]
-
-    References
-    ==========
-
-    [1] http://en.wikipedia.org/wiki/Kronecker_product
-    """
-    # Make sure we have a sequence of Matrices
-    testmat = [isinstance(m, Matrix) for m in matrices]
-    if not all(testmat):
-        raise TypeError(
-            'Sequence of Matrices expected, got: %s' % repr(matrices)
-        )
-
-    # Pull out the first element in the product.
-    matrix_expansion  = matrices[-1]
-    # Do the tensor product working from right to left.
-    for mat in reversed(matrices[:-1]):
-        rows = mat.rows
-        cols = mat.cols
-        # Go through each row appending tensor product to.
-        # running matrix_expansion.
-        for i in range(rows):
-            start = matrix_expansion*mat[i*cols]
-            # Go through each column joining each item
-            for j in range(cols-1):
-                start = start.row_join(
-                    matrix_expansion*mat[i*cols+j+1]
-                )
-            # If this is the first element, make it the start of the
-            # new row.
-            if i == 0:
-                next = start
-            else:
-                next = next.col_join(start)
-        matrix_expansion = next
-    return matrix_expansion
 
 
 class TensorProduct(Expr):
@@ -155,7 +89,7 @@ class TensorProduct(Expr):
     """
 
     def __new__(cls, *args, **assumptions):
-        if isinstance(args[0], Matrix):
+        if isinstance(args[0], (Matrix, numpy_ndarray, scipy_sparse_matrix)):
             return matrix_tensor_product(*args)
         c_part, new_args = cls.flatten(args)
         c_part = Mul(*c_part)
