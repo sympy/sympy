@@ -1,7 +1,7 @@
 """Symbolic inner product."""
 
 
-from sympy import Expr
+from sympy import Expr, conjugate, srepr
 from sympy.printing.pretty.stringpict import prettyForm
 from sympy.physics.quantum.dagger import Dagger
 from sympy.physics.quantum.state import KetBase, BraBase
@@ -117,7 +117,9 @@ class InnerProduct(Expr):
             r = self.ket._eval_innerproduct(self.bra, **hints)
         except NotImplementedError:
             try:
-                r = self.bra._eval_innerproduct(self.ket, **hints)
+                r = conjugate(
+                    self.bra.dual._eval_innerproduct(self.ket.dual, **hints)
+                )
             except NotImplementedError:
                 r = None
         if r is not None:
