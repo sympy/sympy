@@ -94,6 +94,9 @@ class Domain(object):
                 if type(a) is long:
                     return K1(a)
 
+                if K1.is_Numerical and getattr(a, 'is_ground', False):
+                    return K1.convert(a.LC())
+
                 a = sympify(a)
 
                 if isinstance(a, Basic):
