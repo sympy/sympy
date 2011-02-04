@@ -741,14 +741,6 @@ class Lambda(Function):
         >>> f2(1, 2, 3, 4)
         73
 
-    Multivariate functions can be curries for partial applications:
-        >>> sum2numbers = Lambda(x, y, x+y)
-        >>> sum2numbers(1,2)
-        3
-        >>> plus1 = sum2numbers(1)
-        >>> plus1(3)
-        4
-
     A handy shortcut for lots of arguments:
         >>> p = x, y, z
         >>> f = Lambda(p, x + y*z)
@@ -810,26 +802,19 @@ class Lambda(Function):
             >>> sum2numbers = Lambda(x,y,x+y)
             >>> sum2numbers(1,2)
             3
-            >>> plus1 = sum2numbers(1)
-            >>> plus1(3)
-            4
 
         """
 
         nparams = self.nargs
-        assert nparams >= len(args),"Cannot call function with more parameters than function variables: %s (%d variables) called with %d arguments" % (str(self),nparams,len(args))
+        assert nparams == len(args), "%s (%d variables) called "\
+            "with %d arguments" % (str(self),nparams,len(args))
 
 
         #replace arguments
-        expression = self.args[self.nargs]
-        for arg,funarg in zip(args,self.args[:nparams]):
+        expression = self.args[-1]
+        for arg,funarg in zip(args, self.args[:-1]):
             expression = expression.subs(funarg,arg)
 
-        #curry the rest
-        if nparams != len(args):
-            unused_args = list(self.args[len(args):nparams])
-            unused_args.append(expression)
-            return Lambda(*tuple(unused_args))
         return expression
 
     def __call__(self, *args):
@@ -842,12 +827,10 @@ class Lambda(Function):
 
             selfexpr = self.args[self.nargs]
             otherexpr = other.args[other.nargs]
-            for selfarg,otherarg in zip(self.args[:self.nargs],other.args[:other.nargs]):
+            for selfarg, otherarg in zip(self.args[:self.nargs],other.args[:other.nargs]):
                 otherexpr = otherexpr.subs(otherarg,selfarg)
             if selfexpr == otherexpr:
                 return True
-           # if self.args[1] == other.args[1].subs(other.args[0], self.args[0]):
-           #     return True
         return False
 
     def __hash__(self):
