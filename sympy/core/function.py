@@ -723,7 +723,7 @@ class Derivative(Expr):
     def _eval_as_leading_term(self, x):
         return self.args[0].as_leading_term(x)
 
-class Lambda(Function):
+class Lambda(Expr):
     """
     Lambda(x, expr) represents a lambda function similar to Python's
     'lambda x: expr'. A function of several variables is written as
@@ -749,38 +749,40 @@ class Lambda(Function):
         x + y*z
 
     """
-    nargs = 2
+    is_Function = True
+    __slots__ = []
+
     def __new__(cls, variables, expr):
         try:
             variables = Tuple(*variables)
         except TypeError:
             variables = Tuple(variables)
 
-        obj = Function.__new__(cls, variables, expr)
-        obj.nargs = len(variables)
-        return obj
-
-    @classmethod
-    def eval(cls, variables, expr):
         #use dummy variables internally, just to be sure
         new_variables = [C.Dummy(arg.name) for arg in variables]
-        expr = expr.subs(tuple(zip(variables, new_variables)))
+        expr = sympify(expr).subs(tuple(zip(variables, new_variables)))
+
         obj = Expr.__new__(cls, Tuple(*new_variables), expr)
         return obj
 
     @property
     def variables(self):
         """The variables used in the internal representation of the function"""
-        return self._args[:-1]
+        return self._args[0]
 
     @property
     def expr(self):
         """The return value of the function"""
-        return self.args[-1]
+        return self._args[1]
 
     @property
     def free_symbols(self):
         return self.expr.free_symbols - set(self.variables)
+
+    @property
+    def nargs(self):
+        """The number of arguments that this function takes"""
+        return len(self._args[0])
 
     def apply(self, *args):
         """Applies the Lambda function "self" to the arguments given.
