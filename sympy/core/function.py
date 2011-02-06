@@ -784,26 +784,14 @@ class Lambda(Expr):
         """The number of arguments that this function takes"""
         return len(self._args[0])
 
+    @deprecated
     def apply(self, *args):
-        """Applies the Lambda function "self" to the arguments given.
-
-        Example:
-            >>> from sympy import Lambda
-            >>> from sympy.abc import x, y
-            >>> f = Lambda(x, x**2)
-            >>> f.apply(4)
-            16
-        """
-
-        nparams = self.nargs
-        assert nparams == len(args), "%s (%d variables) called "\
-            "with %d arguments" % (str(self),nparams,len(args))
-
-        expression = self.args[1]
-        return expression.subs(tuple(zip(self.args[0], args)))
+        return self(*args)
 
     def __call__(self, *args):
-        return self.apply(*args)
+        if len(args) != self.nargs:
+            raise TypeError("%s takes %d arguments (%d given)" % (self, self.nargs, len(args)))
+        return self.expr.subs(tuple(zip(self.variables, args)))
 
     def __eq__(self, other):
         if not isinstance(other, Lambda):
