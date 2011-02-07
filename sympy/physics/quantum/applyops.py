@@ -4,14 +4,17 @@ Todo:
 * Sometimes the final result needs to be expanded, we should do this by hand.
 """
 
-import copy
 
-from sympy import S, Add, Mul, Pow
+from sympy import Add, Mul, Pow
 
-from sympy.physics.quantum.qexpr import split_commutative_parts
+from sympy.physics.quantum.anticommutator import AntiCommutator
+from sympy.physics.quantum.commutator import Commutator
 from sympy.physics.quantum.dagger import Dagger
-from sympy.physics.quantum.operator import Operator
-from sympy.physics.quantum.state import KetBase, BraBase
+from sympy.physics.quantum.innerproduct import InnerProduct
+from sympy.physics.quantum.operator import OuterProduct
+from sympy.physics.quantum.state import KetBase, BraBase 
+from sympy.physics.quantum.tensorproduct import TensorProduct
+
 
 __all__ = [
     'apply_operators'
@@ -25,14 +28,6 @@ __all__ = [
 def apply_operators(e, **options):
     """Apply operators to states in a quantum expression.
 
-    By default, operators acting on states (O|psi>) are left in symbolic,
-    unevaluated form. This function uses various special methods to attempt
-    and apply operators to states. When this happens there are two possible
-    outcomes: i) it is not known how the operator acts on the state, which
-    will result in the expression being unchanged and ii) it is known how the
-    operator acts on the sate, which will result in the action being carried
-    out.
-
     Parameters
     ==========
     e : Expr
@@ -42,13 +37,22 @@ def apply_operators(e, **options):
         A dict of key/value pairs that determine how the operator actions
         are carried out.
 
+    The following options are valid:
+
+    * ``dagger``: try to apply Dagger operators to the left (default: False).
+    * ``ip_doit``: call ``.doit()`` in inner products when they are
+      encountered (default: True).
+
     Returns
     =======
     e : Expr
         The original expression, but with the operators applied to states.
     """
 
-    # TODO: Fix early 0 in apply_operators.
+    dagger = options.get('dagger', False)
+
+    if e == 0:
+        return 0
 
     # This may be a bit aggressive but ensures that everything gets expanded
     # to its simplest form before trying to apply operators. This includes
@@ -56,10 +60,9 @@ def apply_operators(e, **options):
     # TensorProducts. The only problem with this is that if we can't apply
     # all the Operators, we have just expanded everything.
     # TODO: don't expand the scalars in front of each Mul.
-    e = e.expand(commutator=True, tensorproduct=True).doit()
+    e = e.expand(commutator=True, tensorproduct=True)
 
     # If we just have a raw ket, return it.
-    # TODO: make this acts_like_KetBase
     if isinstance(e, KetBase):
         return e
 
@@ -71,9 +74,21 @@ def apply_operators(e, **options):
             result += apply_operators(arg, **options)
         return result
 
+    # For a raw TensorProduct, call apply_operators on its args.
+    elif isinstance(e, TensorProduct):
+        return TensorProduct(*[apply_operators(t, **options) for t in e.args])
+
+    # For a Pow, call apply_operators on its base.
+    elif isinstance(e, Pow):
+        return apply_operators(e.base, **options)**e.exp
+
     # We have a Mul where there might be actual operators to apply to kets.
     elif isinstance(e, Mul):
-        return apply_operators_Mul(e, **options)
+        result = apply_operators_Mul(e, **options)
+        if result == e and dagger:
+            return Dagger(apply_operators_Mul(Dagger(e), **options))
+        else:
+            return result
 
     # In all other cases (State, Operator, Pow, Commutator, InnerProduct,
     # OuterProduct) we won't ever have operators to apply to kets.
@@ -83,149 +98,64 @@ def apply_operators(e, **options):
 
 def apply_operators_Mul(e, **options):
 
-    # The general form of e at this point is:
-    #
-    # ZeroOrMore(scalars)*ZeroOrMore(Bra)*ZeroOrMore(Operators)*Ket*
-    # ZeroOrMore(Bra*ZeroMore(Operators)*Ket)
-    # 
-    # We want to pick out pieces that look like:
-    #
-    # Bra*ZeroOrMore(Operators)*Ket
+    ip_doit = options.get('ip_doit', True)
 
-    if not isinstance(e, Mul):
+    args = list(e.args)
+
+    # If we only have 0 or 1 args, we have nothing to do and return.
+    if len(args) <= 1:
+        return e
+    rhs = args.pop()
+    lhs = args.pop()
+
+    # Make sure we have two non-commutative objects before proceeding.
+    if rhs.is_commutative or lhs.is_commutative:
         return e
 
-    # Split the Mul into a Mul of scalars and a list of non-commutative parts.
-    c_part, nc_part = split_commutative_parts(e)
-    c_part = Mul(*c_part)
-    n_nc = len(nc_part)
-    if n_nc == 0 or n_nc == 1:
-        return c_part
+    # For a Pow with an integer exponent, apply one of them and reduce the
+    # exponent by one.
+    if isinstance(lhs, Pow) and lhs.exp.is_Integer:
+        args.append(lhs.base**(lhs.exp-1))
+        lhs = lhs.base
 
-    terms = []
-    last_ket = 0
-    for i in range(n_nc):
-        # Make this acts_like_KetBase
-        if isinstance(nc_part[i], KetBase):
-            terms.append(nc_part[last_ket:i+1])
-            last_ket = i+1
-    last_part = nc_part[last_ket:]
-    if last_part:
-        terms.append(last_part)
+    # Pull OuterProduct apart
+    if isinstance(lhs, OuterProduct):
+        args.append(lhs.ket)
+        lhs = lhs.bra
 
-    result = 1
-    for term in terms:
-        # print 'term', term
-
-        bra = 1
-        # TODO: make this acts_like_BraBase
-        if isinstance(term[0], BraBase):
-            bra = term.pop(0)
-
-        ket = 1
-        # TODO: make this acts_like(term[-1], KetBase)
-        if isinstance(term[-1], KetBase):
-            ket = term.pop(-1)
-
-        # print 'bra', bra
-        # print 'ket', ket
-
-        if bra == 1 and ket == 1:
-            tresult = Mul(*term)
-
-        elif len(term) == 0:
-            # This cover the cases where either bra or ket is 1 and will also
-            # automatically create an InnerProduct if neither are 1.
-            tresult = bra*ket
-
-        # The <bra|*A*B case
-        elif ket == 1:
-            try:
-                new_term = [Dagger(i) for i in reversed(term)]
-            except NotImplementedError:
-                tresult = bra*Mul(*term)
-            else:
-                # TODO: what is the best way of handling copy.copy in all this
-                tresult = Dagger(
-                    apply_list_of_ops(1, copy.copy(new_term), Dagger(bra))
-                )
-
-        # The full <bra|*A*B*|ket> case
-        # TODO: Get scalar<bra|*|ket> into an InnerProduct.
+    # Call .doit() on Commutator/AntiCommutator.
+    if isinstance(lhs, (Commutator, AntiCommutator)):
+        comm = lhs.doit()
+        if isinstance(comm, Add):
+            return apply_operators(
+                e._new_rawargs(*(args + [comm.args[0], rhs])) +\
+                e._new_rawargs(*(args + [comm.args[1], rhs])),
+                **options
+            )
         else:
-            try:
-                tresult = bra*apply_list_of_ops(1, copy.copy(term), ket)
-            except NotImplementedError:
-                tresult = bra*Mul(*term)*ket
+            return apply_operators(e._new_rawargs(*args)*comm*rhs, **options)
 
-        # print 'tresult', tresult
-        # print
-        result *= tresult
-
-    return c_part*result
-
-
-def apply_list_of_ops(scalar, ops, ket):
-    # scalar is a number
-    # ops is a list of Operators or Powers of Operators.
-    # ket can be a*|alpha> + b*|beta> + ... but cannot include any Operators.
-
-    if scalar == 0 or ket == 0:
-        return S.Zero
-
-    # print scalar, ops, ket
-
-    if not ops:
-        return scalar*ket
-
-    if isinstance(ket, Add):
-        result = 0
-        for arg in ket.args:
-            if isinstance(arg, KetBase):
-                result += apply_list_of_ops(scalar, ops, arg)
-            elif isinstance(arg, Mul):
-                k = arg.args[-1]
-                s = Mul(scalar, *arg.args[:-1])
-                result += apply_list_of_ops(s, copy.copy(ops), k)
-            else:
-                raise TypeError('Ket or Mul expected, got: %r' % arg)
-        return result
-
-    if isinstance(ket, Mul):
-        scalar = Mul(scalar, *ket.args[:-1])
-        ket = ket.args[-1]
-
-    next_op = ops.pop(-1)
-    if isinstance(next_op, Pow):
-        ops.append(next_op.base**(next_op.exp-1))
-        next_op = next_op.base
-
-    # If unsuccessful, this will raise NotImplementedError which we let
-    # propagate.
-    new_ket = apply_single_op(next_op, ket)
-
-    if new_ket == 0:
-        return 0
-
-    # TODO: Try is without this expand, I don't think we will need it.
-    # We definitely need it!!!
-    new_ket = new_ket.expand()
-
-    return apply_list_of_ops(scalar, ops, new_ket)
-
-
-def apply_single_op(op, ket):
-    # Apply a single Operator to a Ket, at this point, we must have only an
-    # Operator and a Ket and nothing else!
-    if not isinstance(ket, KetBase):
-        raise TypeError('Ket expected, got: %r' % ket)
-    if not isinstance(op, Operator):
-        raise TypeError('Operator expected, got: %r' % op)
+    # Now try to actually apply the operator and build an inner product.
     try:
-        result = op._apply_operator(ket)
-    except NotImplementedError:
+        result = lhs._apply_operator(rhs, **options)
+    except (NotImplementedError, AttributeError):
         try:
-            result = ket._apply_operator(op)
-        except NotImplementedError:
-            raise
-    return result
+            result = rhs._apply_operator(lhs, **options)
+        except (NotImplementedError, AttributeError):
+            if isinstance(lhs, BraBase) and isinstance(rhs, KetBase):
+                result = InnerProduct(lhs, rhs)
+                if ip_doit:
+                    result = result.doit()
+            else:
+                result = None
+
+    # TODO: I may need to expand before returning the final result.
+    if result == 0:
+        return 0
+    elif result is None:
+        return apply_operators_Mul(e._new_rawargs(*(args+[lhs])), **options)*rhs
+    elif isinstance(result, InnerProduct):
+        return result*apply_operators_Mul(e._new_rawargs(*args), **options)
+    else:  # result is a scalar times a Mul, Add or TensorProduct
+        return apply_operators(e._new_rawargs(*args)*result, **options)
+

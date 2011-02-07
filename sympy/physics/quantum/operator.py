@@ -154,9 +154,6 @@ class Operator(QExpr):
     #-------------------------------------------------------------------------
 
     def _apply_operator(self, ket, **options):
-        from sympy.physics.quantum.state import KetBase
-        if not isinstance(ket, KetBase):
-            raise TypeError('KetBase expected, got: %r' % ket)
         return dispatch_method(self, '_apply_operator', ket, **options)
 
     def matrix_element(self, *args):

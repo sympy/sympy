@@ -157,8 +157,8 @@ class JxOp(SpinOpBase, HermitianOperator):
         return -I*hbar*JyOp(self.name)
 
     def _apply_operator_JzKet(self, ket, **options):
-        jp = JplusOp(self.name)._apply_operator_JzKet(ket)
-        jm = JminusOp(self.name)._apply_operator_JzKet(ket)
+        jp = JplusOp(self.name)._apply_operator_JzKet(ket, **options)
+        jm = JminusOp(self.name)._apply_operator_JzKet(ket, **options)
         return (jp + jm)/Integer(2)
 
     def _represent_JzOp(self, basis, **options):
@@ -181,8 +181,8 @@ class JyOp(SpinOpBase, HermitianOperator):
         return -I*hbar*J2Op(self.name)
 
     def _apply_operator_JzKet(self, ket, **options):
-        jp = JplusOp(self.name)._apply_operator_JzKet(ket)
-        jm = JminusOp(self.name)._apply_operator_JzKet(ket)
+        jp = JplusOp(self.name)._apply_operator_JzKet(ket, **options)
+        jm = JminusOp(self.name)._apply_operator_JzKet(ket, **options)
         return (jp - jm)/(Integer(2)*I)
 
     def _represent_JzOp(self, basis, **options):
@@ -210,7 +210,7 @@ class JzOp(SpinOpBase, HermitianOperator):
     def _eval_commutator_JminusOp(self, other):
         return -hbar*JminusOp(self.name)
 
-    def _apply_operator_JzKet(self, ket):
+    def _apply_operator_JzKet(self, ket, **options):
         return (hbar*ket.m)*ket
 
     def matrix_element(self, j, m, jp, mp):
@@ -242,7 +242,7 @@ class J2Op(SpinOpBase, HermitianOperator):
     def _eval_commutator_JminusOp(self, other):
         return S.Zero
 
-    def _apply_operator_JzKet(self, ket):
+    def _apply_operator_JzKet(self, ket, **options):
         j = ket.j
         return hbar**2**j(j+1)*ket
 
