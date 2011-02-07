@@ -57,24 +57,23 @@ class QubitState(State):
         - A decimal value and the number of bits you wish to express it in
           (The size of the Hilbert Space)
 
-    >>> from sympy.physics.Qubit import Qubit
-    >>> Qubit(0,0,0)
-    |'000'>
-    >>> Qubit(5)
-    |'101'>
-    >>> a = Qubit(5,4)
-    >>> a
-    |'0101'>
-    >>> a.flip(0)
-    |'0100'>
-    >>> len(a)
-    4
-    >>> a.dimension
-    4
-    >>> a[0]
-    1
-    >>> a.name
-    '5'
+    Examples
+    ========
+
+        >>> from sympy.physics.quantum.qubit import Qubit
+        >>> Qubit(0,0,0)
+        |000>
+        >>> a = Qubit('0101')
+        >>> a
+        |0101>
+        >>> a.flip(0)
+        |0100>
+        >>> len(a)
+        4
+        >>> a.dimension
+        4
+        >>> a[0]
+        1
     """
 
     #-------------------------------------------------------------------------

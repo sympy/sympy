@@ -1,5 +1,4 @@
 from sympy import I, symbols, Symbol, sqrt, expand, Integer, srepr
-from sympy.utilities.pytest import XFAIL
 
 from sympy.physics.quantum.anticommutator import AntiCommutator
 from sympy.physics.quantum.commutator import Commutator

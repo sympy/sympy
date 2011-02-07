@@ -870,10 +870,6 @@ def gate_simp(circuit):
 
     It first sorts gates using gate_sort. It then applies basic
     simplification rules to the circuit, e.g., XGate**2 = Identity
-
-    >>> from sympy.physics.Qubit import gate_simp, HadamardGate
-    >>> gate_simp(HadamardGate(1)**3*HadamardGate(0))
-    HadamardGate(0)*HadamardGate(1)
     """
 
     #bubble sort out gates that commute
@@ -938,11 +934,6 @@ def gate_sort(circuit):
     each other)
 
     circuit is the Mul of gates that are to be sorted.
-
-    >>> from sympy.physics.Qubit import HadamardGate, XGate, YGate, CNotGate,\
-    gate_sort
-    >>> gate_sort(YGate(2)**2*HadamardGate(0)*CNotGate(0,1)*XGate(1)*YGate(0))
-    HadamardGate(0)*CNotGate(0,1)*YGate(0)*XGate(1)*(YGate(2))**2
     """
     #bubble sort of gates checking for commutivity of neighbor
     changes = True
