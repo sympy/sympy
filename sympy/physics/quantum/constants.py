@@ -15,6 +15,13 @@ __all__ = [
 class HBar(NumberSymbol):
     """Reduced Plank's constant in numerical and symbolic form [1].
 
+    Examples
+    ========
+
+        >>> from sympy.physics.quantum.constants import hbar
+        >>> hbar.evalf()
+        1.05457162000000e-34
+
     References
     ==========
 

@@ -1,11 +1,21 @@
-"""Logic for representing operators in state in various bases."""
+"""Logic for representing operators in state in various bases.
 
-from sympy import S, Add, Mul, Matrix, Pow, Expr, I
+TODO:
+* Get represent tested for numpy and scipy.sparse formats.
+* Get represent working with continuous hilbert spaces.
+"""
 
+from sympy import S, Add, Mul, Pow
+
+from sympy.physics.quantum.dagger import Dagger
+from sympy.physics.quantum.commutator import Commutator
+from sympy.physics.quantum.anticommutator import AntiCommutator
+from sympy.physics.quantum.innerproduct import InnerProduct
 from sympy.physics.quantum.qexpr import QExpr
 from sympy.physics.quantum.tensorproduct import TensorProduct
-from sympy.physics.quantum.matrixcache import (
-    numpy_ndarray, scipy_sparse_matrix
+from sympy.physics.quantum.matrixutils import (
+    sympy_to_numpy, sympy_to_scipy_sparse,
+    flatten_scalar
 )
 
 __all__ = [
@@ -21,9 +31,13 @@ def represent(expr, basis, **options):
     """Represent the quantum expression in the given basis.
 
     In quantum mechanics abstract states and operators can be represented in
-    various basis sets. Under this operator, states become vectors or
-    functions and operators become matrices or differential operators. This
-    function is the top-level interface for this action.
+    various basis sets. Under this operation the follow transforms happen:
+    
+    * Ket -> column vector or function
+    * Bra -> row vector of function
+    * Operator -> matrix or differential operator
+
+    This function is the top-level interface for this action.
 
     This function walks the sympy expression tree looking for ``QExpr``
     instances that have a ``_represent`` method. This method is then called
@@ -84,30 +98,40 @@ def represent(expr, basis, **options):
     if isinstance(expr, QExpr):
         return expr._represent(basis, **options)
     elif isinstance(expr, Add):
-        result = S.Zero
-        for args in expr.args:
-            if not result:
-                result = represent(args, basis, **options)
-            else:
-                result += represent(args, basis, **options)
+        result = represent(expr.args[0], basis, **options)
+        for args in expr.args[1:]:
+            # scipy.sparse doesn't support += so we use plain = here.
+            result = result + represent(args, basis, **options)
         return result
     elif isinstance(expr, Pow):
-        return represent(expr.base, basis, **options)**expr.exp
+        exp = expr.exp
+        if format == 'numpy':
+            exp = int(sympy_to_numpy(exp).real)
+        elif format == 'scipy.sparse':
+            exp = int(sympy_to_scipy_sparse(exp).real)
+        return represent(expr.base, basis, **options)**exp
     elif isinstance(expr, TensorProduct):
         new_args = [represent(arg, basis, **options) for arg in expr.args]
         return TensorProduct(*new_args)
+    elif isinstance(expr, Dagger):
+        # TODO: get Dagger working with numpy and scipy.sparse matrices
+        return Dagger(represent(expr.args[0], basis, **options))
+    elif isinstance(expr, Commutator):
+        A = represent(expr.args[0], basis, **options)
+        B = represent(expr.args[1], basis, **options)
+        return A*B - B*A
+    elif isinstance(expr, AntiCommutator):
+        A = represent(expr.args[0], basis, **options)
+        B = represent(expr.args[1], basis, **options)
+        return A*B + B*A
+    elif isinstance(expr, InnerProduct):
+        return represent(Mul(expr.bra,expr.ket), basis, **options)
     elif not isinstance(expr, Mul):
         # For numpy and scipy.sparse, we can only handle numerical prefactors.
-        if format == 'numpy' or format == 'scipy.sparse':
-            if isinstance(expr, Expr):
-                # I think this is everything that can be converted to a 
-                # Python complex number.
-                if expr.is_Number or expr.is_NumberSymbol or expr == I:
-                    return complex(expr)
-                raise TypeError(
-                    'Cannot use non numerical entities in the numpy or '
-                    'scipy formats: %r' % expr
-                )
+        if format == 'numpy':
+            return sympy_to_numpy(expr)
+        elif format == 'scipy.sparse':
+            return sympy_to_scipy_sparse(expr)
         return expr
 
     if not isinstance(expr, Mul):
@@ -118,10 +142,5 @@ def represent(expr, basis, **options):
         result = represent(arg, basis, **options)*result
     # All three matrix formats create 1 by 1 matrices when inner products of
     # vectors are taken. In these cases, we simply return a scalar.
-    if isinstance(result, Matrix):
-        if result.shape == (1,1):
-            result = result[0]
-    if isinstance(result, (numpy_ndarray, scipy_sparse_matrix)):
-        if result.shape == (1,1):
-            result = complex(result[0,0])
+    result = flatten_scalar(result)
     return result

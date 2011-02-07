@@ -3,13 +3,16 @@
 
 from sympy import Matrix, I, Pow, Rational, exp, pi
 
+from sympy.physics.quantum.matrixutils import (
+    to_sympy, to_numpy, to_scipy_sparse
+)
 
 class MatrixCache(object):
     """A cache for small matrices in different formats.
 
     This class takes small matrices in the standard ``sympy.Matrix`` format,
     and then converts these to both ``numpy.matrix`` and
-    ``scipy.sparse.coo_matrix`` matrices. These matrices are then stored for
+    ``scipy.sparse.csr_matrix`` matrices. These matrices are then stored for
     future recovery.
     """
 
@@ -62,21 +65,16 @@ class MatrixCache(object):
         self._cache[(name, format)] = m
 
     def _sympy_matrix(self, name, m):
-        if not isinstance(m, Matrix):
-            raise TypeError('Matrix expected, got: %r' % m)
-        self._store_matrix(name, 'sympy', m)
+        self._store_matrix(name, 'sympy', to_sympy(m))
 
     def _numpy_matrix(self, name, m):
-        import numpy as np
-        m = np.matrix(m.tolist(), dtype=self.dtype)
+        m = to_numpy(m, dtype=self.dtype)
         self._store_matrix(name, 'numpy', m)
 
     def _scipy_sparse_matrix(self, name, m):
-        import numpy as np
-        from scipy import sparse
         # TODO: explore different sparse formats. But sparse.kron will use
         # coo in most cases, so we use that here.
-        m = sparse.coo_matrix(np.matrix(m.tolist(), dtype='complex'))
+        m = to_scipy_sparse(m, dtype=self.dtype)
         self._store_matrix(name, 'scipy.sparse', m)
 
 
@@ -97,21 +95,4 @@ matrix_cache.cache_matrix('SWAP',Matrix([[1,0,0,0],[0,0,1,0],[0,1,0,0],[0,0,0,1]
 matrix_cache.cache_matrix('ZX', sqrt2_inv*Matrix([[1,1],[1,-1]]))
 matrix_cache.cache_matrix('ZY', Matrix([[I,0],[0,-I]]))
 
-# Conditionally define the base classes for numpy and scipy.sparse arrays
-# for use in isinstance tests.
 
-try:
-    import numpy as np
-except ImportError:
-    class numpy_ndarray(object):
-        pass
-else:
-    numpy_ndarray = np.ndarray
-
-try:
-    from scipy import sparse
-except ImportError:
-    class scipy_sparse_matrix(object):
-        pass
-else:
-    scipy_sparse_matrix = sparse.base.spmatrix

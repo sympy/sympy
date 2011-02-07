@@ -1,6 +1,12 @@
+
 from sympy import Expr, sympify, Symbol, Matrix
 from sympy.printing.pretty.stringpict import prettyForm
 from sympy.core.containers import Tuple
+
+from sympy.physics.quantum.matrixutils import (
+    numpy_ndarray, scipy_sparse_matrix,
+    to_sympy, to_numpy, to_scipy_sparse
+)
 
 __all__ = [
     'QuantumError',
@@ -107,7 +113,7 @@ class QExpr(Expr):
         the creation of the object.
         """
 
-        obj = Expr.__new__(cls, *args)
+        obj = Expr.__new__(cls, *args, **{'commutative':False})
         obj.hilbert_space = hilbert_space
         return obj
 
@@ -286,6 +292,10 @@ class QExpr(Expr):
         there is a chance we will relax this in the future to accomodate other
         types of basis sets that are not associated with an operator.
 
+        If the ``format`` option is given it can be ("sympy", "numpy",
+        "scipy.sparse"). This will ensure that any matrices that result from
+        representing the object are returned in the appropriate matrix format.
+
         Parameters
         ==========
         basis : Operator
@@ -296,7 +306,18 @@ class QExpr(Expr):
             the representation, such as the number of basis functions to
             be used.
         """
-        return dispatch_method(self, '_represent', basis, **options)
+        result = dispatch_method(self, '_represent', basis, **options)
+
+        # If we get a matrix representation, convert it to the right format.
+        format = options.get('format', 'sympy')
+        if format == 'sympy' and not isinstance(result, Matrix):
+            result = to_sympy(result)
+        elif format == 'numpy' and not isinstance(result, numpy_ndarray):
+            result = to_numpy(result)
+        elif format == 'scipy.sparse' and\
+            not isinstance(result, scipy_sparse_matrix):
+            result = to_scipy_sparse(result)
+        return result
 
 
 def split_commutative_parts(e):

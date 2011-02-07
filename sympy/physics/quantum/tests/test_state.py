@@ -1,6 +1,7 @@
 from sympy import I, symbols, sqrt, Add, Mul, Rational, Pow, Symbol, sympify
-from sympy import Integer
+from sympy import Integer, conjugate
 
+from sympy.physics.quantum.dagger import Dagger
 from sympy.physics.quantum.qexpr import QExpr
 from sympy.physics.quantum.state import (
     Ket, Bra, TimeDepKet, TimeDepBra,
@@ -111,3 +112,15 @@ def test_time_dep_bra():
     assert k.label == (x,)
     assert k.args == (x,sympify(0.5))
 
+
+def test_bra_ket_dagger():
+    x = symbols('x',complex=True)
+    k = Ket('k')
+    b = Bra('b')
+    assert Dagger(k) == Bra('k')
+    assert Dagger(b) == Ket('b')
+    assert Dagger(k).is_commutative == False
+
+    k2 = Ket('k2')
+    e = 2*I*k + x*k2
+    assert Dagger(e) == conjugate(x)*Dagger(k2) - 2*I*Dagger(k)

@@ -3,6 +3,9 @@
 from sympy import Expr, sympify, Add, Mul, Matrix, Pow
 
 from sympy.physics.quantum.qexpr import QExpr
+from sympy.physics.quantum.matrixutils import (
+    numpy_ndarray, scipy_sparse_matrix, matrix_dagger
+)
 
 __all__ = [
     'Dagger'
@@ -25,7 +28,9 @@ class Dagger(Expr):
 
     Daggering various quantum objects:
 
-        >>> from sympy.physics.quantum import Dagger, Ket, Bra, Operator
+        >>> from sympy.physics.quantum.dagger import Dagger
+        >>> from sympy.physics.quantum.state import Ket, Bra
+        >>> from sympy.physics.quantum.operator import Operator
         >>> Dagger(Ket('psi'))
         <psi|
         >>> Dagger(Bra('phi'))
@@ -70,9 +75,9 @@ class Dagger(Expr):
     """
 
     def __new__(cls, arg, **old_assumptions):
-        # Matrices are not sympify friendly
-        if isinstance(arg, Matrix):
-            return arg.H
+        # Return the dagger of a sympy Matrix immediately.
+        if isinstance(arg, (Matrix, numpy_ndarray, scipy_sparse_matrix)):
+            return matrix_dagger(arg)
         arg = sympify(arg)
         r = cls.eval(arg)
         if isinstance(r, Expr):
@@ -88,9 +93,7 @@ class Dagger(Expr):
 
     @classmethod
     def eval(cls, arg):
-        """
-        Evaluates the Dagger instance.
-        """
+        """Evaluates the Dagger instance."""
         from sympy.physics.quantum.operator import Operator
         try:
             d = arg._eval_dagger()
@@ -106,7 +109,13 @@ class Dagger(Expr):
                 if arg.is_Pow:
                     return Pow(Dagger(arg.args[0]),arg.args[1])
                 else:
-                    return arg.conjugate()
+                    if arg.is_Number or arg.is_Function or arg.is_Derivative\
+                                     or arg.is_Integer or arg.is_NumberSymbol\
+                                     or arg.is_complex or arg.is_integer\
+                                     or arg.is_real or arg.is_number:
+                        return arg.conjugate()
+                    else:
+                        return None
             else:
                 return None
         else:
@@ -120,10 +129,12 @@ class Dagger(Expr):
         return self.args[0]
 
     def _sympyrepr(self, printer, *args):
-        return '%s(%s)' % (self.__class__.__name__, self.args[0])
+        arg0 = printer._print(self.args[0], *args)
+        return '%s(%s)' % (self.__class__.__name__, arg0)
 
     def _sympystr(self, printer, *args):
-        return '%s(%s)' % (self.__class__.__name__, self.args[0])
+        arg0 = printer._print(self.args[0], *args)
+        return '%s(%s)' % (self.__class__.__name__, arg0)
 
     def _pretty(self, printer, *args):
         from sympy.printing.pretty.stringpict import prettyForm

@@ -1,7 +1,7 @@
 """Dirac notation for states."""
 
 
-from sympy import Expr, sympify
+from sympy import Expr
 from sympy.printing.pretty.stringpict import prettyForm
 
 from sympy.physics.quantum.qexpr import (
@@ -35,13 +35,6 @@ class StateBase(QExpr):
     This is an abstract base class and you should not instantiate it directly,
     instead use State.
     """
-
-    #-------------------------------------------------------------------------
-    # _eval_* methods
-    #-------------------------------------------------------------------------
-
-    def _eval_innerproduct(self, other, **hints):
-        return dispatch_method(self, '_eval_innerproduct', other, **hints)
 
     #-------------------------------------------------------------------------
     # Dagger/dual
@@ -118,6 +111,24 @@ class KetBase(StateBase):
         else:
             return Expr.__rmul__(self, other)
 
+    #-------------------------------------------------------------------------
+    # _eval_* methods
+    #-------------------------------------------------------------------------
+
+    def _eval_innerproduct(self, bra, **hints):
+        """Evaluate the inner product betweeen this ket and a bra.
+
+        This is called to compute <bra|ket>, where the ket is ``self``.
+
+        This method will dispatch to sub-methods having the format::
+
+            def _eval_innerproduct_BraClass(self, **hints):
+
+        Subclasses should define these methods (one for each BraClass) to
+        teach the ket how to take inner products with bras.
+        """
+        return dispatch_method(self, '_eval_innerproduct', bra, **hints)
+
     def _apply_operator(self, op, **options):
         """Apply an Operator to this Ket.
 
@@ -173,6 +184,11 @@ class BraBase(StateBase):
             return OuterProduct(other, self)
         else:
             return Expr.__rmul__(self, other)
+
+    def _represent(self, basis, **options):
+        """A default represent that uses the Ket's version."""
+        from sympy.physics.quantum.dagger import Dagger
+        return Dagger(self.dual._represent(basis, **options))
 
 
 class State(StateBase):

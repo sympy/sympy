@@ -39,11 +39,9 @@ class Commutator(Expr):
     ========
 
         >>> from sympy import symbols
-        >>> from sympy.physics.quantum import Commutator, Operator, Dagger
+        >>> from sympy.physics.quantum import Commutator, Dagger
         >>> x, y = symbols('xy')
-        >>> A = Operator('A')
-        >>> B = Operator('B')
-        >>> C = Operator('C')
+        >>> A, B, C = symbols('ABC', commutative=False)
 
     Create some commutators and use ``doit`` to multiply them out.
 
@@ -70,9 +68,9 @@ class Commutator(Expr):
         >>> Commutator(A,B+C).expand(commutator=True)
         [A,B] + [A,C]
         >>> Commutator(A*B,C).expand(commutator=True)
-        [A,C]*B + A*[B,C]
+        A*[B,C] + [A,C]*B
         >>> Commutator(A,B*C).expand(commutator=True)
-        [A,B]*C + B*[A,C]
+        B*[A,C] + [A,B]*C
 
     Commutator works with Dagger::
 
