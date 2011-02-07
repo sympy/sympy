@@ -366,16 +366,18 @@ class CGate(Gate):
     def decompose(self, **options):
         """Decompose the controlled gate into CNOT and single qubits gates."""
         if len(self.controls) == 1:
+            c = self.controls[0]
+            t = self.gate.targets[0]
             if isinstance(self.gate, YGate):
-                g1 = PhaseGate(self.gate.targets[0])
-                g2 = CNotGate(self.controls[0],self.gate.targets[0])
-                g3 = PhaseGate(self.gate.targets[0])
-                g4 = ZGate(self.gate.targets[0])
+                g1 = PhaseGate(t)
+                g2 = CNotGate(c, t)
+                g3 = PhaseGate(t)
+                g4 = ZGate(t)
                 return g1*g2*g3*g4
             if isinstance(self.gate, ZGate):
-                g1 = HadamardGate(self.gate.targets[0])
-                g2 = CNotGate(self.controls[0], self.gate.targets[0])
-                g3 = HadamardGate(self.gate.targets[0])
+                g1 = HadamardGate(t)
+                g2 = CNotGate(c, t)
+                g3 = HadamardGate(t)
                 return g1*g2*g3
         else:
             return self
@@ -760,8 +762,9 @@ class SwapGate(TwoQubitGate):
 
     def decompose(self, **options):
         """Decompose the SWAP gate into CNOT gates."""
-        g1 = CNotGate(self.targets[0], self.targets[1])
-        g2 = CNotGate(self.targets[1], self.targets[0])
+        i,j = self.targets[0], self.targets[1]
+        g1 = CNotGate(i, j)
+        g2 = CNotGate(j, i)
         return g1*g2*g1
 
     def plot_gate(self, circ_plot, gate_idx):
