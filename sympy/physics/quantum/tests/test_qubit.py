@@ -8,6 +8,7 @@ from sympy.core.numbers import *
 from sympy.functions.elementary import *
 from sympy.physics.quantum.shor import *
 from sympy.core.containers import Tuple
+from sympy.matrices.matrices import Matrix
 import random
 x, y = symbols('xy')
 
@@ -25,78 +26,31 @@ def test_Qubit():
     assert len(qb) == 5
     qb = Qubit('110')
 
-def test_Fourier():
-    assert QFT(0,3).decompose() == SwapGate(0,2)*HadamardGate(0)\
-    *RkGate(1,0,2)*HadamardGate(1)*RkGate(2,0,3)*RkGate(2,1,2)*HadamardGate(2)
-    assert QFT(0,3).input_number == 2
-    assert IQFT(0,3).decompose() == HadamardGate(2)*IRkGate(2,1,2)\
-    *IRkGate(2,0,3)*HadamardGate(1)*IRkGate(1,0,2)*HadamardGate(0)*SwapGate(0,2)
+def test_QubitBra():
+    assert Qubit(0).dual_class == QubitBra
+    assert QubitBra(0).dual_class == Qubit
+    assert represent(Qubit(1,1,0), ZGate(0), nqubits=3).H ==\
+           represent(QubitBra(1,1,0), ZGate(0), nqubits=3)
+    assert Qubit(0,1)._eval_innerproduct_QubitBra(QubitBra(1,0)) == Integer(0)
+    assert Qubit(0,1)._eval_innerproduct_QubitBra(QubitBra(0,1)) == Integer(1) 
 
-def test_represent_HilbertSpace():
-    import numpy as np
-    a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p = symbols('abcdefghijklmnop')
-    gateMat = Matrix([[a,b,c,d],[e,f,g,h],[i,j,k,l],[m,n,o,p]])
-    assert represent_hilbert_space(gateMat, 3, (0,1)) == \
-    Matrix([[a,c,b,d,0,0,0,0],[i,k,j,l,0,0,0,0],[e,g,f,h,0,0,0,0],\
-    [m,o,n,p,0,0,0,0],[0,0,0,0,a,c,b,d],[0,0,0,0,i,k,j,l],\
-    [0,0,0,0,e,g,f,h],[0,0,0,0,m,o,n,p]])
-    assert type(represent_hilbert_space(gateMat, 2, \
-    (0,1), format = 'numpy')) == type(np.matrix(1))
-
-def test_gateSort():
-    assert gate_sort(XGate(1)*HadamardGate(0)**2*CNOTGate(0,1)*XGate(1)*XGate(0))\
-     == HadamardGate(0)**2*XGate(1)*CNOTGate(0,1)*XGate(0)*XGate(1)
-
-def test_gate_simp():
-     assert gate_simp(HadamardGate(0)*XGate(1)*HadamardGate(0)**2*CNOTGate(0,1)\
-     *XGate(1)**3*XGate(0)*ZGate(3)**2*PhaseGate(4)**3) == HadamardGate(0)*\
-     XGate(1)*CNOTGate(0,1)*XGate(0)*XGate(1)*ZGate(4)*PhaseGate(4)
-
-def test_ArbMat4_Equality():
-
-    class Arb(Gate):
-        @property
-        def matrix(self):
-            a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p = symbols('abcdefghijklmnop')
-            return Matrix([[a,b,c,d],[e,f,g,h],[i,j,k,l],[m,n,o,p]])
-
-    for i in range(4):
-        for j in range(4):
-            if j != i:
-                assert apply_operators(Arb(i,j)*(Qubit('10110'))) ==\
-                matrix_to_qubits(represent(Arb(i,j)*Qubit('10110'),\
-                ZGate(0)**5))
-
-def test_Arb8_Matrix_Equality():
-    class Arb(Gate):
-        @property
-        def matrix(self):
-            a,b,c,d,e,f,g,h = symbols('abcdefgh')
-            symlist = [a,b,c,d,e,f,g,h]
-            lout = []
-            for i in range(8):
-                lin = []
-                for j in range(8):
-                    lin.append(symlist[i]**j)
-                lout.append(lin)
-            return Matrix(lout)
-
-    for i in range(1):
-        for j in range(4):
-            for k in range(4):
-                if j != i and k != i and k != j:
-                    assert apply_operators(Arb(i,j,k)*(Qubit((0,1,1,1,0)))) ==\
-                     matrix_to_qubits(represent(Arb(i,j,k)*Qubit((0,1,1,1,0)),\
-                     ZGate(0)**5))
+def test_IntQubit():
+    assert IntQubit(8).as_int() == 8
+    assert IntQubit(8).qubit_values == (1,0,0,0)
+    assert IntQubit(7, 4).qubit_values == (0,1,1,1)
+    assert IntQubit(3) == IntQubit(3,2)
+    
+    #test Dual Classes
+    assert IntQubit(3).dual_class == IntQubitBra
+    assert IntQubitBra(3).dual_class == IntQubit
 
 def test_superposition_of_states():
-    assert apply_operators(CNOTGate(0,1)*HadamardGate(0)*(1/sqrt(2)*Qubit((0,1))\
-     + 1/sqrt(2)*Qubit((1,0)))).expand() == (Qubit((0,1))/2 + Qubit((0,0))/2 - Qubit((1,1))/2 +\
-     Qubit((1,0))/2)
+    assert apply_operators(CNOT(0,1)*HadamardGate(0)*(1/sqrt(2)*Qubit('01') + 1/sqrt(2)*Qubit('10'))).expand() == (Qubit('01')/2 + Qubit('00')/2 - Qubit('11')/2 +\
+     Qubit('10')/2)
 
-    assert matrix_to_qubits(represent(CNOTGate(0,1)*HadamardGate(0)\
-    *(1/sqrt(2)*Qubit((0,1)) + 1/sqrt(2)*Qubit((1,0))), ZGate(0)**(2)))\
-     == (Qubit((0,1))/2 + Qubit((0,0))/2 - Qubit((1,1))/2 + Qubit((1,0))/2)
+    assert matrix_to_qubit(represent(CNOT(0,1)*HadamardGate(0)\
+    *(1/sqrt(2)*Qubit('01') + 1/sqrt(2)*Qubit('10')), ZGate(0), nqubits=2))\
+     == (Qubit('01')/2 + Qubit('00')/2 - Qubit('11')/2 + Qubit('10')/2)
 
 
 #test apply methods
@@ -106,52 +60,64 @@ def test_apply_represent_equality():
       YGate(int(3*random.random())), ZGate(int(3*random.random())),\
        PhaseGate(int(3*random.random()))]
 
-    circuit = Qubit((int(random.random()*2),int(random.random()*2),\
+    circuit = Qubit(int(random.random()*2),int(random.random()*2),\
     int(random.random()*2),int(random.random()*2),int(random.random()*2),\
-    int(random.random()*2)))
+    int(random.random()*2))
     for i in range(int(random.random()*6)):
         circuit = gates[int(random.random()*6)]*circuit
 
 
-    mat = represent(circuit, ZGate(0)**(6))
+    mat = represent(circuit, ZGate(0), nqubits=6)
     states = apply_operators(circuit)
-    state_rep = matrix_to_qubits(mat)
+    state_rep = matrix_to_qubit(mat)
     states = states.expand()
     state_rep = state_rep.expand()
     assert state_rep == states
+     
 
 def test_matrix_to_qubits():
     assert matrix_to_qubit(Matrix([1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]))\
-    == Qubit((0,0,0,0))
-    assert qubit_to_matrix(Qubit((0,0,0,0))) ==\
+    == Qubit(0,0,0,0)
+    assert qubit_to_matrix(Qubit(0,0,0,0)) ==\
     Matrix([1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0])
     assert matrix_to_qubit(sqrt(2)*2*Matrix([1,1,1,1,1,1,1,1])) ==\
-    (2*sqrt(2)*(Qubit((0,0,0)) + Qubit((0,0,1)) + Qubit((0,1,0)) + Qubit((0,1,1))\
-    + Qubit((1,0,0)) + Qubit((1,0,1)) + Qubit((1,1,0)) + Qubit((1,1,1)))).expand()
-    assert qubit_to_matrix(2*sqrt(2)*(Qubit((0,0,0)) + Qubit((0,0,1)) + Qubit((0,1,0))\
-    + Qubit((0,1,1)) + Qubit((1,0,0)) + Qubit((1,0,1)) + Qubit((1,1,0)) + Qubit((1,1,1))))\
+    (2*sqrt(2)*(Qubit(0,0,0) + Qubit(0,0,1) + Qubit(0,1,0) + Qubit(0,1,1)\
+    + Qubit(1,0,0) + Qubit(1,0,1) + Qubit(1,1,0) + Qubit(1,1,1))).expand()
+    assert qubit_to_matrix(2*sqrt(2)*(Qubit(0,0,0) + Qubit(0,0,1) + Qubit(0,1,0)\
+    + Qubit(0,1,1) + Qubit(1,0,0) + Qubit(1,0,1) + Qubit(1,1,0) + Qubit(1,1,1)))\
     == sqrt(2)*2*Matrix([1,1,1,1,1,1,1,1])
 
-def test_RkGate_and_inverse():
-    assert RkGate(1,2,x).k == x
-    assert RkGate(1,2,x).args[0] == Tuple(1,2)
-    assert IRkGate(1,2,x).k == x
-    assert IRkGate(1,2,x).args[0] == Tuple(1,2)
+def test_measure_partial():
+    #Basic test of collapse of entangled two qubits (Bell States)
+    state = Qubit('01') + Qubit('10')
+    assert sorted(measure_partial(state, (0,))) ==\
+           [(Qubit('01'), Rational(1,2)), (Qubit('10'), Rational(1,2))] 
+    assert sorted(measure_partial(state, (0,))) ==\
+           sorted(measure_partial(state, (1,)))
+           
+    #Test of more complex collapse and probability calculation       
+    state1 = sqrt(2)/sqrt(3)*Qubit('00001') + 1/sqrt(3)*Qubit('11111')
+    assert measure_partial(state1, (0,)) ==\
+           [(sqrt(2)/sqrt(3)*Qubit('00001') + 1/sqrt(3)*Qubit('11111'), 1)]
+    assert measure_partial(state1, (1,2)) == measure_partial(state1, (3,4))
+    assert measure_partial(state1, (1,2,3)) ==\
+           [(Qubit('00001'), Rational(2,3)), (Qubit('11111'), Rational(1,3))] 
 
-    assert represent(RkGate(0,1,2), ZGate(0)**2) ==\
-    Matrix([[1,0,0,0], [0,1,0,0], [0,0,1,0], [0,0,0,\
-    exp(2*ImaginaryUnit()*Pi()/2**2)]])
+    #test of measuring multiple bits at once
+    state2 = Qubit('1111') + Qubit('1101') + Qubit('1011') + Qubit('1000')
+    assert sorted(measure_partial(state2, (0,1,3))) ==\
+           sorted([(Qubit('1011')/sqrt(2) + Qubit('1111')/sqrt(2), Rational(1,2)), \
+           (Qubit('1101'), Rational(1,4)), (Qubit('1000'), Rational(1,4))])
+    assert sorted(measure_partial(state2, (0,))) ==\
+           sorted([(Qubit('1111')/sqrt(3) + Qubit('1101')/sqrt(3) + Qubit('1011')/sqrt(3), Rational(3,4)),\
+           (Qubit('1000'), Rational(1,4))])
 
-    assert represent(IRkGate(0,1,3), ZGate(0)**(2)) ==\
-    Matrix([[1,0,0,0], [0,1,0,0], [0,0,1,0], [0,0,0,\
-    exp(-2*ImaginaryUnit()*Pi()/2**3)]])
 
-def test_quantum_fourier():
-    assert QFT(0,3).decompose() == SwapGate(0,2)*HadamardGate(0)*RkGate(1,0,2)\
-    *HadamardGate(1)*RkGate(2,0,3)*RkGate(2,1,2)*HadamardGate(2)
-    assert IQFT(0,3).decompose() == HadamardGate(2)*IRkGate(2,1,2)*IRkGate(2,0,3)\
-    * HadamardGate(1)*IRkGate(1,0,2)*HadamardGate(0)*SwapGate(0,2)
-    assert represent(QFT(0,3).decompose()*IQFT(0,3).decompose(), ZGate(0)**(3))\
-     == eye(8)
-    assert apply_operators(QFT(0,3).decompose()*Qubit((0,0,0))) ==\
-     apply_operators(HadamardGate(0)*HadamardGate(1)*HadamardGate(2)*Qubit((0,0,0))).expand()
+def test_measure_all():
+    assert measure_all(Qubit('11')) == [(Qubit('11'), 1)]
+    state = Qubit('11') + Qubit('10')
+    assert sorted(measure_all(state)) == sorted([(Qubit('11'), Rational(1,2)),\
+           (Qubit('10'), Rational(1,2))])
+    state2 = Qubit('11')/sqrt(5) + 2*Qubit('00')/sqrt(5)
+    assert sorted(measure_all(state2)) == sorted([(Qubit('11'), Rational(1,5)), \
+           (Qubit('00'), Rational(4,5))])   

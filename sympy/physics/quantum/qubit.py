@@ -1,8 +1,7 @@
 """Qubits for quantum computing.
 
 Todo:
-* Finish implementing measurement logic. This should include partial
-  measurements as well as POVM.
+* Finish implementing measurement logic. This should POVM.
 * Update docstrings.
 * Update tests.
 """
@@ -183,7 +182,7 @@ class Qubit(QubitState, Ket):
 
 
 class QubitBra(QubitState, Bra):
-
+    """Dual class to Qubit class """
     @property
     def dual_class(self):
         return Qubit
@@ -225,6 +224,7 @@ class IntQubitState(QubitState):
             return QubitState._eval_args(args)
 
     def as_int(self):
+        """ Return the numerical value of the qubit (Should this be @property?)"""
         number = 0
         n = 1
         for i in reversed(self.qubit_values):
@@ -560,4 +560,29 @@ def measure_all_oneshot(qubit, format='sympy'):
     else:
         raise NotImplementedError(
             "This function can't handle non-sympy matrix formats yet"
-        )         
+        )  
+                                  
+def measure_partial_oneshot_sparse(state, qubit, format='sympy'):
+    import random
+    state = state.expand()
+    prob1 = 0
+    #Go through each item in the add and grab its probability
+    #This will be used to determine probability of getting a 1
+    if isinstance(state, (Mul, Qbit)):
+        return state
+    for item in state.args:
+        if item.args[-1][qbit] == 1:
+            prob1 += Mul(*item.args[0:-1])*Mul(*item.args[0:-1]).conjugate()
+    if prob1 < random.random():
+        choice = 0
+    else:
+        choice = 1
+    result = 0
+    for item in state.args:
+        if item.args[-1][qbit] == choice:
+            result = result + item
+    if choice:
+        result = result/sqrt(prob1)
+    else:
+        result = result/sqrt(1-prob1)
+    return result.expand()
