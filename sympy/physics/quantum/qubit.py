@@ -1,7 +1,7 @@
 """Qubits for quantum computing.
 
 Todo:
-* Finish implementing measurement logic. This should POVM.
+* Finish implementing measurement logic. This should include POVM.
 * Update docstrings.
 * Update tests.
 """
@@ -41,40 +41,7 @@ __all__ = [
 #-----------------------------------------------------------------------------
 
 class QubitState(State):
-    """Represents a single definite eigenstate of the ZBasisSet
-
-    Qubit object contains a tuple of values which represent the quantum
-    numbers of each Qubit. It can have individual bits flipped such that a
-    one becomes a zero and vice versa. This Object is also callable allowing
-    user to pick out the value of a particular bit. The Qubit class can also
-    have outDecimal class variable set to True which causes the state to
-    present itself in decimal form.
-
-    Object can be instantiated by different args:
-        - *args with each representing the value of a single Qubit
-        - A single decimal value. Code will convert to binary using least
-          number of bits possible
-        - A decimal value and the number of bits you wish to express it in
-          (The size of the Hilbert Space)
-
-    Examples
-    ========
-
-        >>> from sympy.physics.quantum.qubit import Qubit
-        >>> Qubit(0,0,0)
-        |000>
-        >>> a = Qubit('0101')
-        >>> a
-        |0101>
-        >>> a.flip(0)
-        |0100>
-        >>> len(a)
-        4
-        >>> a.dimension
-        4
-        >>> a[0]
-        1
-    """
+    """Base class for Qubit and QubitBra."""
 
     #-------------------------------------------------------------------------
     # Initialization/creation
@@ -148,6 +115,59 @@ class QubitState(State):
 
 
 class Qubit(QubitState, Ket):
+    """A multi-qubit ket in the computational (z) basis.
+
+    We use the normal convention that ehe least significant qubit is on the
+    right, so |00001> has a 1 in the least significant qubit.
+
+    Parameters
+    ==========
+    values : list, str
+        The qubit values as a list of ints ([0,0,0,1,1,]) or a string ('011').
+
+    Examples
+    ========
+
+    Create a qubit in a couple of different ways and look at their attributes:
+
+        >>> from sympy.physics.quantum.qubit import Qubit
+        >>> Qubit(0,0,0)
+        |000>
+        >>> q = Qubit('0101')
+        >>> q
+        |0101>
+
+        >>> q.nqubits
+        4
+        >>> len(q)
+        4
+        >>> q.dimension
+        4
+        >>> q.qubit_values
+        (0, 1, 0, 1)
+
+    We can flip the value of an individual qubit:
+
+        >>> q.flip(1)
+        |0111>
+
+    We can take the dagger of a Qubit to get a bra:
+
+        >>> from sympy.physics.quantum.dagger import Dagger
+        >>> Dagger(q)
+        <0101|
+        >>> type(Dagger(q))
+        <class 'sympy.physics.quantum.qubit.QubitBra'>
+
+    Inner products work as expected:
+
+        >>> ip = Dagger(q)*q
+        >>> ip
+        <0101|0101>
+        >>> ip.doit()
+        1
+    """
+
 
     @property
     def dual_class(self):
@@ -181,7 +201,21 @@ class Qubit(QubitState, Ket):
 
 
 class QubitBra(QubitState, Bra):
-    """Dual class to Qubit class """
+    """A multi-qubit bra in the computational (z) basis.
+
+    We use the normal convention that ehe least significant qubit is on the
+    right, so |00001> has a 1 in the least significant qubit.
+
+    Parameters
+    ==========
+    values : list, str
+        The qubit values as a list of ints ([0,0,0,1,1,]) or a string ('011').
+
+    Examples
+    ========
+    See ``Qubit`` for examples.
+
+    """
     @property
     def dual_class(self):
         return Qubit
@@ -197,7 +231,7 @@ class QubitBra(QubitState, Bra):
 
 
 class IntQubitState(QubitState):
-    """A base class for qubits that work with binary representations of ints."""
+    """A base class for qubits that work with binary representations."""
 
     @classmethod
     def _eval_args(cls, args):
@@ -223,7 +257,7 @@ class IntQubitState(QubitState):
             return QubitState._eval_args(args)
 
     def as_int(self):
-        """ Return the numerical value of the qubit (Should this be @property?)"""
+        """Return the numerical value of the qubit."""
         number = 0
         n = 1
         for i in reversed(self.qubit_values):
@@ -243,13 +277,59 @@ class IntQubitState(QubitState):
 
 
 class IntQubit(IntQubitState, Qubit):
+    """A qubit ket that store integers as binary numbers in qubit values.
 
+    The differences between this class and ``Qubit`` are:
+
+    * The form of the constructor.
+    * The qubit values are printed as their corresponding integer, rather
+      than the raw qubit values. The internal storage format of the qubit
+      values in the same as ``Qubit``.
+
+    Parameters
+    ==========
+    values : int, tuple
+        If a single argument, the integer we want to represent in the qubit
+        values. This integer will be represented using the fewest possible
+        number of qubits. If a pair of integers, the first integer gives the
+        integer to represent in binary form and the second integer gives
+        the number of qubits to use.
+
+    Examples
+    ========
+
+    Create a qubit for the integer 5:
+
+        >>> from sympy.physics.quantum.qubit import IntQubit
+        >>> from sympy.physics.quantum.qubit import Qubit
+        >>> q = IntQubit(5)
+        >>> q
+        |5>
+
+    We can also create an ``IntQubit`` by passing a ``Qubit`` instance.
+
+        >>> q = IntQubit(Qubit('101'))
+        >>> q
+        |5>
+        >>> q.as_int()
+        5
+        >>> q.nqubits
+        3
+        >>> q.qubit_values
+        (1, 0, 1)
+
+    We can go back to the regular qubit form.
+
+        >>> Qubit(q)
+        |101>
+    """
     @property
     def dual_class(self):
         return IntQubitBra
 
 
 class IntQubitBra(IntQubitState, QubitBra):
+    """A qubit bra that store integers as binary numbers in qubit values."""
 
     @property
     def dual_class(self):
@@ -266,11 +346,21 @@ def matrix_to_qubit(matrix):
 
     Parameters
     ----------
-    matrix : Matrix
-        The matrix to build the Qubit representation of.
+    matrix : Matrix, numpy.matrix, scipy.sparse
+        The matrix to build the Qubit representation of. This works with
+        sympy matrices, numpy matrices and scipy.sparse sparse matrices.
 
     Examples
     --------
+
+    Represent a state and then go back to its qubit form:
+
+        >>> from sympy.physics.quantum.qubit import matrix_to_qubit, Qubit
+        >>> from sympy.physics.quantum.gate import Z
+        >>> from sympy.physics.quantum.represent import represent
+        >>> q = Qubit('01')
+        >>> matrix_to_qubit(represent(q, Z(0)))
+        |01>
     """
     # Determine the format based on the type of the input matrix
     format = 'sympy'
@@ -326,10 +416,10 @@ def qubit_to_matrix(qubit, format='sympy'):
     """Coverts an Add/Mul of Qubit objects into it's matrix representation
 
     This function is the inverse of ``matrix_to_qubit`` and is a shorthand
-    for ``represent(qubit, ZGate(0))``.
+    for ``represent(qubit, Z(0))``.
     """
-    from sympy.physics.quantum.gate import ZGate
-    return represent(qubit, ZGate(0), format=format)
+    from sympy.physics.quantum.gate import Z
+    return represent(qubit, Z(0), format=format)
 
 
 #-----------------------------------------------------------------------------
@@ -341,18 +431,33 @@ def measure_all(qubit, format='sympy'):
     """Perform an ensemble measurement of all qubits.
 
     Parameters
-    ----------
+    ==========
     qubit : Qubit, Add
         The qubit to measure. This can be any Qubit or a linear combination
         of them.
     format : str
         The format of the intermediate matrices to use. Possible values are
-        ('sympy','numpy','scipy.sparse').
+        ('sympy','numpy','scipy.sparse'). Currently only 'sympy' is
+        implemented.
 
     Returns
-    -------
+    =======
     result : list
         A list that consists of primitive states and their probabilities.
+
+    Examples
+    ========
+
+        >>> from sympy.physics.quantum.qubit import Qubit, measure_all
+        >>> from sympy.physics.quantum.gate import H, X, Y, Z
+        >>> from sympy.physics.quantum.applyops import apply_operators
+
+        >>> c = H(0)*H(1)*Qubit('00')
+        >>> c
+        H(0)*H(1)*|00>
+        >>> q = apply_operators(c)
+        >>> measure_all(q)
+        [(|00>, 1/4), (|01>, 1/4), (|10>, 1/4), (|11>, 1/4)]
     """
     m = qubit_to_matrix(qubit, format)
 
@@ -377,7 +482,7 @@ def measure_partial(qubit, bits, format='sympy'):
     """Perform a partial ensemble measure on the specifed qubits.
 
     Parameters
-    ----------
+    ==========
     qubits : Qubit
         The qubit to measure.  This can be any Qubit or a linear combination
         of them.
@@ -385,14 +490,32 @@ def measure_partial(qubit, bits, format='sympy'):
         The qubits to measure.
     format : str
         The format of the intermediate matrices to use. Possible values are
-        ('sympy','numpy','scipy.sparse').
+        ('sympy','numpy','scipy.sparse'). Currently only 'sympy' is
+        implemented.
 
     Returns
-    -------
+    =======
     result : list
         A list that consists of primitive states and their probabilities.
+
+    Examples
+    ========
+
+        >>> from sympy.physics.quantum.qubit import Qubit, measure_partial
+        >>> from sympy.physics.quantum.gate import H, X, Y, Z
+        >>> from sympy.physics.quantum.applyops import apply_operators
+
+        >>> c = H(0)*H(1)*Qubit('00')
+        >>> c
+        H(0)*H(1)*|00>
+        >>> q = apply_operators(c)
+        >>> measure_partial(q, (0,))
+        [(2**(1/2)*|00>/2 + 2**(1/2)*|10>/2, 1/2), (2**(1/2)*|01>/2 + 2**(1/2)*|11>/2, 1/2)]
     """
     m = qubit_to_matrix(qubit, format)
+
+    if isinstance(bits, (int, Integer)):
+        bits = (int(bits),)
 
     if format == 'sympy':
         m = m.normalized()
@@ -439,7 +562,8 @@ def measure_partial_oneshot(qubit, bits, format='sympy'):
         The qubits to measure.
     format : str
         The format of the intermediate matrices to use. Possible values are
-        ('sympy','numpy','scipy.sparse').
+        ('sympy','numpy','scipy.sparse'). Currently only 'sympy' is
+        implemented.
 
     Returns
     -------
@@ -535,7 +659,8 @@ def measure_all_oneshot(qubit, format='sympy'):
         of them.
     format : str
         The format of the intermediate matrices to use. Possible values are
-        ('sympy','numpy','scipy.sparse').
+        ('sympy','numpy','scipy.sparse'). Currently only 'sympy' is
+        implemented.
 
     Returns
     -------
@@ -563,6 +688,7 @@ def measure_all_oneshot(qubit, format='sympy'):
 
 
 def measure_partial_oneshot_sparse(state, qubit, format='sympy'):
+    """A sparse form of partial, oneshot measurement."""
     import random
     state = state.expand()
     prob1 = 0

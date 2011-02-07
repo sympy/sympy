@@ -1,8 +1,8 @@
 """Logic for representing operators in state in various bases.
 
 TODO:
-* Get represent tested for numpy and scipy.sparse formats.
 * Get represent working with continuous hilbert spaces.
+* Implement default basis functionality.
 """
 
 from sympy import S, Add, Mul, Pow
