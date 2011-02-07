@@ -4,17 +4,18 @@ Todo:
 * Fix gate_sort and gate_simp.
 
 Medium Term Todo:
-* Optimize Gate._apply_operators_Qubit to remove the creation of many 
+* Optimize Gate._apply_operators_Qubit to remove the creation of many
   intermediate Qubit objects.
-* Get UGate to work with either sympy/numpy matrices and output either
-  format. This should also use the matrix slots.
 * Add commutation relationships to all operators and use this in gate_sort.
+* Fix gate_sort and gate_simp.
 * Implement represent for SWAP using:
 
     SWAP = |1><0|x|1><0| + |0><1|x|0><1| + |1><0|x|0><1| + |1><0|x|1><0|
 
-* Figure out why represent does work for 2 qubits right now.
+* Figure out why represent of SWAP does work for 2 qubits right now.
 * Get multi-target UGates plotting properly.
+* Get UGate to work with either sympy/numpy matrices and output either
+  format. This should also use the matrix slots.
 """
 
 from itertools import chain
@@ -207,7 +208,7 @@ class Gate(UnitaryOperator):
             column_index += n*qubits[target]
             n = n<<1
         column = target_matrix[:,int(column_index)]
-    
+
         # Now apply each column element to the qubit.
         result = 0
         for index in range(column.rows):
@@ -466,7 +467,7 @@ class UGate(Gate):
     #-------------------------------------------------------------------------
     # Gate methods
     #-------------------------------------------------------------------------
-      
+
     def get_target_matrix(self, format='sympy'):
         """The matrix rep. of the target part of the gate.
 
@@ -538,13 +539,13 @@ class HadamardGate(OneQubitGate):
     """
     gate_name = u'H'
     gate_name_latex = u'H'
-        
+
     def get_target_matrix(self, format='sympy'):
         if _normalized:
             return matrix_cache.get_matrix('H', format)
         else:
             return matrix_cache.get_matrix('Hsqrt2', format)
-            
+
 
 class XGate(OneQubitGate):
     """The single qubit X, or NOT, gate.
@@ -584,7 +585,7 @@ class YGate(OneQubitGate):
     """
     gate_name = u'Y'
     gate_name_latex = u'Y'
-        
+
     def get_target_matrix(self, format='sympy'):
         return matrix_cache.get_matrix('Y', format)
 
@@ -887,7 +888,7 @@ def gate_simp(circuit):
                 if isinstance(circuit.args[i].base, \
                     (HadamardGate, XGate, YGate, ZGate))\
                     and isinstance(circuit.args[i].exp, Number):
-                    #Build a new circuit taking replacing the 
+                    # Build a new circuit taking replacing the
                     #H, X,Y,Z squared with one
                     newargs = (circuit.args[:i] + (circuit.args[i].base**\
                     (circuit.args[i].exp % 2),) + circuit.args[i+1:])
@@ -895,7 +896,7 @@ def gate_simp(circuit):
                     circuit = gate_simp(Mul(*newargs))
                     break
                 elif isinstance(circuit.args[i].base, PhaseGate):
-                    #Build a new circuit taking old circuit but splicing 
+                    #Build a new circuit taking old circuit but splicing
                     #in simplification
                     newargs = circuit.args[:i]
                     #replace PhaseGate**2 with ZGate
@@ -910,12 +911,12 @@ def gate_simp(circuit):
                 elif isinstance(circuit.args[i].base, TGate):
                     #Build a new circuit taking all the old elements
                     newargs = circuit.args[:i]
-                    
+
                     #put an Phasegate in place of any TGate**2
                     newargs = newargs + (PhaseGate(circuit.args[i].base.args[0][0])**\
                     Integer(circuit.args[i].exp/2), circuit.args[i].base**\
                     (circuit.args[i].exp % 2))
-                    
+
                     #append the last elements
                     newargs = newargs + circuit.args[i+1:]
                     #Recursively simplify the new circuit

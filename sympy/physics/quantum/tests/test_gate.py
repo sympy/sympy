@@ -22,7 +22,7 @@ def test_UGate():
     a,b,c,d = symbols('abcd')
     uMat = Matrix([[a,b],[c,d]])
 
-    #test basic case where gate exists in 1-qubit space  
+    #test basic case where gate exists in 1-qubit space
     u1 = UGate((0,), uMat)
     assert represent(u1, ZGate(0), nqubits = 1) == uMat
     assert apply_operators(u1*Qubit('0')) == a*Qubit('0') + c*Qubit('1')
@@ -62,13 +62,13 @@ def test_CGate():
     assert apply_operators(CPhaseGate*Qubit('11')) == ImaginaryUnit()*Qubit('11')
     assert matrix_to_qubit(represent(CPhaseGate*Qubit('11'),\
      ZGate(0), nqubits=2)) == ImaginaryUnit()*Qubit('11')
-     
+
 def test_UGate_CGate_combo():
     a,b,c,d = symbols('abcd')
     uMat = Matrix([[a,b],[c,d]])
     cMat = Matrix([[1,0,0,0],[0,1,0,0],[0,0,a,b],[0,0,c,d]])
 
-    #test basic case where gate exists in 1-qubit space  
+    #test basic case where gate exists in 1-qubit space
     u1 = UGate((0,), uMat)
     cu1 = CGate(1, u1)
     assert represent(cu1, ZGate(0), nqubits = 2) == cMat
@@ -85,8 +85,6 @@ def test_UGate_CGate_combo():
         assert u2Rep*qubit_to_matrix(IntQubit(i,2)) ==\
             qubit_to_matrix(apply_operators(u2*IntQubit(i,2)))
 
-
-   
 def test_represent_Hadamard_():
     circuit = HadamardGate(0)*Qubit('00')
     answer = represent(circuit, ZGate(0), nqubits=2)
@@ -140,8 +138,8 @@ def test_gate_simp():
      assert gate_simp(HadamardGate(0)*XGate(1)*HadamardGate(0)**2*CNOTGate(0,1)\
      *XGate(1)**3*XGate(0)*ZGate(3)**2*PhaseGate(4)**3) == HadamardGate(0)*\
      XGate(1)*CNOTGate(0,1)*XGate(0)*XGate(1)*ZGate(4)*PhaseGate(4)
-""" 
-    
+"""
+
 def test_SwapGate():
     SWAP_gate_matrix = Matrix(((1,0,0,0),(0,0,1,0),(0,1,0,0),(0,0,0,1)))
     #test SWAP gate decompose method

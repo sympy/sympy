@@ -12,7 +12,7 @@ from sympy.physics.quantum.commutator import Commutator
 from sympy.physics.quantum.dagger import Dagger
 from sympy.physics.quantum.innerproduct import InnerProduct
 from sympy.physics.quantum.operator import OuterProduct
-from sympy.physics.quantum.state import KetBase, BraBase 
+from sympy.physics.quantum.state import KetBase, BraBase
 from sympy.physics.quantum.tensorproduct import TensorProduct
 
 

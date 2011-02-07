@@ -26,7 +26,7 @@ __all__ = [
 class TensorProduct(Expr):
     """The tensor product of two or more arguments.
 
-    For matrices, this uses ``matrix_tensor_product`` to compute the 
+    For matrices, this uses ``matrix_tensor_product`` to compute the
     Kronecker or tensor product matrix. For other objects a symbolic
     ``TensorProduct`` instance is returned. The tensor product is a
     non-commutative multiplication that is used primarily with operators
@@ -229,7 +229,7 @@ def tensor_product_simp_Mul(e):
         (A*C)x(B*D)
 
     """
-    # TODO: This won't work with Muls that have other composites of 
+    # TODO: This won't work with Muls that have other composites of
     # TensorProducts, like an Add, Pow, Commutator, etc.
     # TODO: This only works for the equivalent of single Qbit gates.
     if not isinstance(e, Mul):
@@ -296,7 +296,7 @@ def tensor_product_simp(e, **hints):
     sums, commutators and anticommutators as well::
 
         >>> tensor_product_simp(e**2)
-        (A*C)x(B*D)**2    
+        (A*C)x(B*D)**2
     """
     if isinstance(e, Add):
         return Add(*[tensor_product_simp(arg) for arg in e.args])

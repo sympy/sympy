@@ -254,5 +254,5 @@ def matrix_eye(n, **options):
         return _numpy_eye(n)
     elif format == 'scipy.sparse':
         return _scipy_sparse_eye(n)
-    raise NotImplementedError('Invalid format: %r' % format) 
+    raise NotImplementedError('Invalid format: %r' % format)
 

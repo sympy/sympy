@@ -15,7 +15,7 @@ __all__ = [
 # number. We have gone back and forth about this, but we gain a lot by having
 # it subclass Expr. The main challenges were getting Dagger to work
 # (we use _eval_conjugate) and represent (we can use atoms and subs). Having
-# it be an Expr, mean that there are no commutative QExpr subclasses, 
+# it be an Expr, mean that there are no commutative QExpr subclasses,
 # which simplifies the design of everything.
 
 class InnerProduct(Expr):
@@ -94,7 +94,7 @@ class InnerProduct(Expr):
         return self._eval_dagger()
 
     def _sympyrepr(self, printer, *args):
-        return '%s(%s,%s)' % (self.__class__.__name__, 
+        return '%s(%s,%s)' % (self.__class__.__name__,
             printer._print(self.bra, *args), printer._print(self.ket, *args))
 
     def _sympystr(self, printer, *args):

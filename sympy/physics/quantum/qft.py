@@ -45,7 +45,7 @@ class RkGate(OneQubitGate):
             raise QuantumError(
                 'Rk gates only take two arguments, got: %r' % args
             )
-        # For small k, Rk gates simplify to other gates, using these 
+        # For small k, Rk gates simplify to other gates, using these
         # substitutions give us familiar results for the QFT for small numbers
         # of qubits.
         target = args[0]
@@ -114,35 +114,36 @@ class Fourier(Gate):
             )
         size = self.size
         omega = self.omega
-        
+
         #Make a matrix that has the basic Fourier Transform Matrix
         arrayFT = [[omega**(i*j%size)/sqrt(size) for i in range(size)] for j in range(size)]
-        matrixFT = Matrix(arrayFT)        
-         
-        #Embed the FT Matrix in a higher space, if necessary   
+        matrixFT = Matrix(arrayFT)
+
+        #Embed the FT Matrix in a higher space, if necessary
         if self.label[0] != 0:
             matrixFT = matrix_tensor_product(eye(2**self.label[0]), matrixFT)
         if self.min_qubits < nqubits:
             matrixFT = matrix_tensor_product(matrixFT, eye(2**(nqubits-self.min_qubits)))
-             
+
         return matrixFT
 
     @property
     def targets(self):
         return range(self.label[0],self.label[1])
-        
+
     @property
     def min_qubits(self):
-        return self.label[1]    
+        return self.label[1]
 
     @property
     def size(self):
         """Size is the size of the QFT matrix"""
         return 2**(self.label[1]-self.label[0])
-        
+
     @property
     def omega(self):
         return Symbol('omega')
+
 
 class QFT(Fourier):
     """The forward quantum Fourier transform."""
@@ -173,6 +174,7 @@ class QFT(Fourier):
     def omega(self):
         return exp(2*pi*I/self.size)
 
+
 class IQFT(Fourier):
     """The inverse quantum Fourier transform."""
 
@@ -194,7 +196,8 @@ class IQFT(Fourier):
 
     def _eval_inverse(self):
         return QFT(*self.args)
-        
+
     @property
     def omega(self):
-        return exp(-2*pi*I/self.size)        
+        return exp(-2*pi*I/self.size)
+

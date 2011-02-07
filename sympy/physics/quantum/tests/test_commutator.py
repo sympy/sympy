@@ -62,5 +62,3 @@ def test_eval_commutator():
     assert Comm(F,T).doit() == -1
     assert Comm(T,F).doit() == 1
     assert Comm(B,T).doit() == B*T - T*B
-
-    

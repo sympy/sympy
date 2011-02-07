@@ -247,7 +247,7 @@ class QExpr(Expr):
     #-------------------------------------------------------------------------
     # Methods from Basic and Expr
     #-------------------------------------------------------------------------
-    
+
     def doit(self, **kw_args):
         return self
 
@@ -280,7 +280,7 @@ class QExpr(Expr):
         representation. Subclases of QExpr should define various methods to
         determine how the object will be represented in various bases. The
         format of these methods is::
-        
+
             def _represent_BasisName(self, basis, **options):
 
         Thus to define how a quantum object is represented in the basis of

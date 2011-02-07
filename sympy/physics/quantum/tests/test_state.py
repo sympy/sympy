@@ -19,7 +19,7 @@ def test_ket():
     assert isinstance(k, KetBase)
     assert isinstance(k, StateBase)
     assert isinstance(k, QExpr)
-    
+
     assert k.label == (Symbol('0'),)
     assert k.hilbert_space == HilbertSpace()
     assert k.is_commutative == False
@@ -36,6 +36,7 @@ def test_ket():
     assert k.dual_class == Bra
     assert k.dual == Bra(x,y)
     assert k.subs(x,y) == Ket(y,y)
+
 
 def test_bra():
     b = Bra('0')

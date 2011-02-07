@@ -105,7 +105,7 @@ class Dagger(Expr):
                 if arg.is_Add:
                     return Add(*[Dagger(i) for i in arg.args])
                 if arg.is_Mul:
-                    return Mul(*[Dagger(i) for i in reversed(arg.args)])                    
+                    return Mul(*[Dagger(i) for i in reversed(arg.args)])
                 if arg.is_Pow:
                     return Pow(Dagger(arg.args[0]),arg.args[1])
                 else:

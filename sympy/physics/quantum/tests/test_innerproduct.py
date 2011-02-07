@@ -68,5 +68,3 @@ def test_doit():
     assert InnerProduct(b,f).doit() == I
     assert InnerProduct(Dagger(f),Dagger(b)).doit() == -I
     assert InnerProduct(Dagger(f),f).doit() == Integer(1)
-
-    

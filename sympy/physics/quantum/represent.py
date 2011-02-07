@@ -32,7 +32,7 @@ def represent(expr, basis, **options):
 
     In quantum mechanics abstract states and operators can be represented in
     various basis sets. Under this operation the follow transforms happen:
-    
+
     * Ket -> column vector or function
     * Bra -> row vector of function
     * Operator -> matrix or differential operator
@@ -84,10 +84,10 @@ def represent(expr, basis, **options):
         >>> class SzUpKet(Ket):
         ...     def _represent_SzOp(self, basis, **options):
         ...         return Matrix([1,0])
-        ...     
+        ...
         >>> class SzOp(Operator):
         ...     pass
-        ... 
+        ...
         >>> sz = SzOp('Sz')
         >>> up = SzUpKet('up')
         >>> represent(up, sz)

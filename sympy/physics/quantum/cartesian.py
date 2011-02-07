@@ -99,5 +99,3 @@ class PxBra(Bra):
     @property
     def momentum(self):
         return self.label[0]
-
-    

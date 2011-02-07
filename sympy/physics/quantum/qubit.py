@@ -79,7 +79,7 @@ class QubitState(State):
     #-------------------------------------------------------------------------
     # Initialization/creation
     #-------------------------------------------------------------------------
-    
+
     @classmethod
     def _eval_args(cls, args):
         # If we are passed a QubitState or subclass, we just take its qubit
@@ -355,7 +355,7 @@ def measure_all(qubit, format='sympy'):
         A list that consists of primitive states and their probabilities.
     """
     m = qubit_to_matrix(qubit, format)
-    
+
     if format == 'sympy':
         results = []
         m = m.normalized()
@@ -405,7 +405,7 @@ def measure_partial(qubit, bits, format='sympy'):
             # given values.
             prob_of_outcome = 0
             prob_of_outcome += (outcome.H*outcome)[0]
-            
+
             # If the output has a chance, append it to output with found
             # probability.
             if prob_of_outcome != 0:
@@ -448,7 +448,7 @@ def measure_partial_oneshot(qubit, bits, format='sympy'):
     """
     import random
     m = qubit_to_matrix(qubit, format)
-    
+
     if format == 'sympy':
         m = m.normalized()
         possible_outcomes = _get_possible_outcomes(m, bits)
@@ -494,8 +494,8 @@ def _get_possible_outcomes(m, bits):
     # Make the output states and put in output_matrices, nothing in them now.
     # Each state will represent a possible outcome of the measurement
     # Thus, output_matrices[0] is the matrix which we get when all measured
-    # bits return 0. and output_matrices[1] is the matrix for only the 0th 
-    # bit being true 
+    # bits return 0. and output_matrices[1] is the matrix for only the 0th
+    # bit being true
     output_matrices = []
     for i in range(1<<len(bits)):
         output_matrices.append(zeros((2**nqubits, 1)))
@@ -503,7 +503,7 @@ def _get_possible_outcomes(m, bits):
     # Bitmasks will help sort how to determine possible outcomes.
     # When the bit mask is and-ed with a matrix-index,
     # it will determine which state that index belongs to
-    bit_masks = [] 
+    bit_masks = []
     for bit in bits:
         bit_masks.append(1<<bit)
 
@@ -515,7 +515,7 @@ def _get_possible_outcomes(m, bits):
             if i&bit_masks[j]:
                 trueness += j+1
         # Put the value in the correct output matrix
-        output_matrices[trueness][i] = m[i]    
+        output_matrices[trueness][i] = m[i]
     return output_matrices
 
 
@@ -544,7 +544,7 @@ def measure_all_oneshot(qubit, format='sympy'):
     """
     import random
     m = qubit_to_matrix(qubit)
-    
+
     if format == 'sympy':
         m = m.normalized()
         random_number = random.random()
@@ -559,8 +559,9 @@ def measure_all_oneshot(qubit, format='sympy'):
     else:
         raise NotImplementedError(
             "This function can't handle non-sympy matrix formats yet"
-        )  
-                                  
+        )
+
+
 def measure_partial_oneshot_sparse(state, qubit, format='sympy'):
     import random
     state = state.expand()

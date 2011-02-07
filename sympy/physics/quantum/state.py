@@ -202,7 +202,7 @@ class Ket(State, KetBase):
 
     Inherits from State and KetBase. This class should be used as the base
     class for all physical, time-independent Kets in a system. This class
-    and its subclasses will be the main classes that users will use for 
+    and its subclasses will be the main classes that users will use for
     expressing Kets in Dirac notation.
 
     Parameters
@@ -265,7 +265,7 @@ class Bra(State, BraBase):
     """A general time-independent Bra in quantum mechanics.
 
     Inherits from State and BraBase. A Bra is the dual of a Ket [1]. This
-    class and its subclasses will be the main classes that users will use for 
+    class and its subclasses will be the main classes that users will use for
     expressing Bras in Dirac notation.
 
     Parameters

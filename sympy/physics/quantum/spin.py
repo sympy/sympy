@@ -19,7 +19,7 @@ from sympy.physics.quantum.operator import (
 )
 from sympy.physics.quantum.state import State, Ket, Bra
 from sympy.physics.quantum.kronecker import KroneckerDelta
-from sympy.physics.quantum.constants import hbar 
+from sympy.physics.quantum.constants import hbar
 from sympy.physics.quantum.hilbert import ComplexSpace
 
 

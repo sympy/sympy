@@ -9,7 +9,7 @@ TODO:
   AntiCommutator, represent, apply_operators.
 """
 
-from sympy import Expr 
+from sympy import Expr
 from sympy.printing.pretty.stringpict import prettyForm
 from sympy.physics.quantum.dagger import Dagger
 
@@ -313,7 +313,7 @@ class OuterProduct(Operator):
         return str(self.ket)+str(self.bra)
 
     def _sympyrepr(self, printer, *args):
-        return '%s(%s,%s)' % (self.__class__.__name__, 
+        return '%s(%s,%s)' % (self.__class__.__name__,
             printer._print(self.ket, *args), printer._print(self.bra, *args))
 
     def _pretty(self, printer, *args):
