@@ -1,8 +1,7 @@
 """Qubits for quantum computing.
 
 Todo:
-* Finish implementing measurement logic. This should include partial
-  measurements as well as POVM.
+* Finish implementing measurement logic. This should POVM.
 * Update docstrings.
 * Update tests.
 """
@@ -183,7 +182,7 @@ class Qubit(QubitState, Ket):
 
 
 class QubitBra(QubitState, Bra):
-
+    """Dual class to Qubit class """
     @property
     def dual_class(self):
         return Qubit
@@ -225,6 +224,7 @@ class IntQubitState(QubitState):
             return QubitState._eval_args(args)
 
     def as_int(self):
+        """ Return the numerical value of the qubit (Should this be @property?)"""
         number = 0
         n = 1
         for i in reversed(self.qubit_values):

@@ -34,5 +34,5 @@ def test_quantum_fourier():
      
     assert QFT(0,4).decompose() #non-trivial decomposition
     assert apply_operators(QFT(0,3).decompose()*Qubit(0,0,0)).expand() ==\
-     apply_operators(HadamardGate(0)*HadamardGate(1)*HadamardGate(2)*Qubit(0,0,0)).expand()
+    apply_operators(HadamardGate(0)*HadamardGate(1)*HadamardGate(2)*Qubit(0,0,0)).expand()
      
