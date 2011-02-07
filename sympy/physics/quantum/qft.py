@@ -10,10 +10,13 @@ Todo:
 * Fix the printing of Rk gates in plotting.
 """
 
-from sympy import Expr, Matrix, exp, I, pi, Integer
+from sympy import Expr, Matrix, exp, I, pi, Integer, Symbol
+from sympy.functions import sqrt
 
 from sympy.physics.quantum.applyops import apply_operators
 from sympy.physics.quantum.qexpr import QuantumError, QExpr
+from sympy.matrices.matrices import zeros, eye
+from sympy.physics.quantum.tensorproduct import matrix_tensor_product
 
 from sympy.physics.quantum.gate import (
     Gate, HadamardGate, SwapGate, OneQubitGate, CGate, PhaseGate, TGate, ZGate
@@ -98,10 +101,48 @@ class Fourier(Gate):
             raise QuantumError("Start must be smaller than finish")
         return Gate._eval_args(args)
 
+    def _represent_ZGate(self, basis, **options):
+        """
+            Represents the (I)QFT In the Z Basis
+        """
+        nqubits = options.get('nqubits',0)
+        if nqubits == 0:
+            raise QuantumError('The number of qubits must be given as nqubits.')
+        if nqubits < self.min_qubits:
+            raise QuantumError(
+                'The number of qubits %r is too small for the gate.' % nqubits
+            )
+        size = self.size
+        omega = self.omega
+        
+        #Make a matrix that has the basic Fourier Transform Matrix
+        arrayFT = [[omega**(i*j%size)/sqrt(size) for i in range(size)] for j in range(size)]
+        matrixFT = Matrix(arrayFT)        
+         
+        #Embed the FT Matrix in a higher space, if necessary   
+        if self.label[0] != 0:
+            matrixFT = matrix_tensor_product(eye(2**self.label[0]), matrixFT)
+        if self.min_qubits < nqubits:
+            matrixFT = matrix_tensor_product(matrixFT, eye(2**(nqubits-self.min_qubits)))
+             
+        return matrixFT
+
     @property
     def targets(self):
         return range(self.label[0],self.label[1])
+        
+    @property
+    def min_qubits(self):
+        return self.label[1]    
 
+    @property
+    def size(self):
+        """Size is the size of the QFT matrix"""
+        return 2**(self.label[1]-self.label[0])
+        
+    @property
+    def omega(self):
+        return Symbol('omega')
 
 class QFT(Fourier):
     """The forward quantum Fourier transform."""
@@ -122,9 +163,15 @@ class QFT(Fourier):
             circuit = SwapGate(i+start, finish-i-1)*circuit
         return circuit
 
+    def _apply_operator_Qubit(self, qubits, **options):
+        return apply_operators(self.decompose()*qubits)
+
     def _eval_inverse(self):
         return IQFT(*self.args)
 
+    @property
+    def omega(self):
+        return exp(2*pi*I/self.size)
 
 class IQFT(Fourier):
     """The inverse quantum Fourier transform."""
@@ -147,3 +194,7 @@ class IQFT(Fourier):
 
     def _eval_inverse(self):
         return QFT(*self.args)
+        
+    @property
+    def omega(self):
+        return exp(-2*pi*I/self.size)        
