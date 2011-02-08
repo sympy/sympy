@@ -1,18 +1,19 @@
-"""An implementation of qubits and gates acting on them.
+"""An implementation of gates that act of qubits.
+
+Gates are unitary operators that act on the space of qubits.
 
 Todo:
-* Fix gate_sort and gate_simp.
+* Implement represent for SWAP using:
+
+    SWAP = |1><0|x|1><0| + |0><1|x|0><1| + |1><0|x|0><1| + |1><0|x|1><0|
+
+* Figure out why represent of SWAP does work for 2 qubits right now.
 
 Medium Term Todo:
 * Optimize Gate._apply_operators_Qubit to remove the creation of many
   intermediate Qubit objects.
 * Add commutation relationships to all operators and use this in gate_sort.
 * Fix gate_sort and gate_simp.
-* Implement represent for SWAP using:
-
-    SWAP = |1><0|x|1><0| + |0><1|x|0><1| + |1><0|x|0><1| + |1><0|x|1><0|
-
-* Figure out why represent of SWAP does work for 2 qubits right now.
 * Get multi-target UGates plotting properly.
 * Get UGate to work with either sympy/numpy matrices and output either
   format. This should also use the matrix slots.
@@ -56,7 +57,8 @@ __all__ = [
     'Z',
     'T',
     'S',
-    'Phase'
+    'Phase',
+    'normalized'
 ]
 
 sqrt2_inv = Pow(2, Rational(-1,2), evaluate=False)
