@@ -1,4 +1,4 @@
-"""An implementation of gates that act of qubits.
+"""An implementation of gates that act on qubits.
 
 Gates are unitary operators that act on the space of qubits.
 

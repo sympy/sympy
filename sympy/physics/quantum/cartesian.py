@@ -1,3 +1,5 @@
+"""Operators and states for 1D cartesian position and momentum."""
+
 from sympy import I, S, sqrt, pi
 from sympy import exp, conjugate
 from sympy import Interval, DiracDelta
@@ -9,6 +11,7 @@ from sympy.physics.quantum.hilbert import L2
 
 
 class XOp(HermitianOperator):
+    """1D cartesian position operator."""
 
     @classmethod
     def _eval_hilbert_space(self, args):
@@ -22,6 +25,7 @@ class XOp(HermitianOperator):
 
 
 class PxOp(HermitianOperator):
+    """1D cartesian momentum operator."""
 
     @classmethod
     def _eval_hilbert_space(self, args):
@@ -36,6 +40,7 @@ Px = PxOp('Px')
 
 
 class XKet(Ket):
+    """1D cartesian position eigenket."""
 
     @property
     def dual_class(self):
@@ -43,6 +48,7 @@ class XKet(Ket):
 
     @property
     def position(self):
+        """The position of the state."""
         return self.label[0]
 
     def _eval_innerproduct_XBra(self, bra, **hints):
@@ -59,6 +65,7 @@ class XKet(Ket):
 
 
 class XBra(Bra):
+    """1D cartesian position eigenbra."""
 
     @property
     def dual_class(self):
@@ -66,10 +73,12 @@ class XBra(Bra):
 
     @property
     def position(self):
+        """The position of the state."""
         return self.label[0]
 
 
 class PxKet(Ket):
+    """1D cartesian momentum eigenket."""
 
     @property
     def dual_class(self):
@@ -77,6 +86,7 @@ class PxKet(Ket):
 
     @property
     def momentum(self):
+        """The momentum of the state."""
         return self.label[0]
 
     def _eval_innerproduct_XBra(self, bra, **hints):
@@ -93,6 +103,7 @@ class PxKet(Ket):
 
 
 class PxBra(Bra):
+    """1D cartesian momentum eigenbra."""
 
     @property
     def dual_class(self):
@@ -100,4 +111,5 @@ class PxBra(Bra):
 
     @property
     def momentum(self):
+        """The momentum of the state."""
         return self.label[0]

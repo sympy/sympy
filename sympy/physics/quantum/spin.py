@@ -56,6 +56,7 @@ def m_values(j):
 
 
 class SpinOpBase(object):
+    """Base class for spin operators."""
 
     @classmethod
     def _eval_hilbert_space(cls, label):
@@ -94,6 +95,7 @@ class SpinOpBase(object):
 
 
 class JplusOp(SpinOpBase, Operator):
+    """The J+ operator."""
 
     _coord = '+'
 
@@ -125,6 +127,7 @@ class JplusOp(SpinOpBase, Operator):
 
 
 class JminusOp(SpinOpBase, Operator):
+    """The J- operator."""
 
     _coord = '-'
 
@@ -153,6 +156,7 @@ class JminusOp(SpinOpBase, Operator):
 
 
 class JxOp(SpinOpBase, HermitianOperator):
+    """The Jx operator."""
 
     _coord = 'x'
 
@@ -180,6 +184,7 @@ class JxOp(SpinOpBase, HermitianOperator):
 
 
 class JyOp(SpinOpBase, HermitianOperator):
+    """The Jy operator."""
 
     _coord = 'y'
 
@@ -207,6 +212,7 @@ class JyOp(SpinOpBase, HermitianOperator):
 
 
 class JzOp(SpinOpBase, HermitianOperator):
+    """The Jz operator."""
 
     _coord = 'z'
 
@@ -239,6 +245,7 @@ class JzOp(SpinOpBase, HermitianOperator):
 
 
 class J2Op(SpinOpBase, HermitianOperator):
+    """The J^2 operator."""
 
     _coord = '2'
 
@@ -293,6 +300,7 @@ class J2Op(SpinOpBase, HermitianOperator):
 
 
 class Rotation(UnitaryOperator):
+    """Wigner D operator in terms of Euler angles."""
 
     @classmethod
     def _eval_args(cls, args):
@@ -400,6 +408,7 @@ Jminus = JminusOp('J')
 
 
 class SpinState(State):
+    """Base class for angular momentum states."""
 
     _label_separator = ','
 
@@ -417,6 +426,7 @@ class SpinState(State):
 
 
 class JzKet(SpinState, Ket):
+    """Eigenket of Jz."""
 
     def _eval_innerproduct_JzBra(self, bra, **hints):
         d1 = KroneckerDelta(self.j, bra.j)
@@ -439,6 +449,7 @@ class JzKet(SpinState, Ket):
 
 
 class JzBra(SpinState, Bra):
+    """Eigenbra of Jz."""
 
     @property
     def dual_class(self):
@@ -446,6 +457,7 @@ class JzBra(SpinState, Bra):
 
 
 class JxKet(SpinState, Ket):
+    """Eigenket of Jx."""
 
     @property
     def dual_class(self):
@@ -468,6 +480,7 @@ class JxKet(SpinState, Ket):
 
 
 class JxBra(SpinState, Bra):
+    """Eigenbra of Jx."""
 
     @property
     def dual_class(self):
@@ -475,6 +488,7 @@ class JxBra(SpinState, Bra):
 
 
 class JyKet(SpinState, Ket):
+    """Eigenket of Jy."""
 
     @property
     def dual_class(self):
@@ -497,6 +511,7 @@ class JyKet(SpinState, Ket):
 
 
 class JyBra(SpinState, Bra):
+    """Eigenbra of Jy."""
 
     @property
     def dual_class(self):

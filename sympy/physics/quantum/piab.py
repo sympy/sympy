@@ -1,3 +1,5 @@
+"""1D quantum particle in a box."""
+
 from sympy import Symbol, pi, sqrt, sin, conjugate, Interval, S
 
 from sympy.physics.quantum.operator import HermitianOperator
@@ -11,6 +13,7 @@ L = Symbol('L')
 
 
 class PIABHamiltonian(HermitianOperator):
+    """Particle in a box Hamiltonian operator."""
 
     @classmethod
     def _eval_hilbert_space(cls, label):
@@ -22,6 +25,7 @@ class PIABHamiltonian(HermitianOperator):
 
 
 class PIABKet(Ket):
+    """Particle in a box eigenket."""
 
     @classmethod
     def _eval_hilbert_space(cls, args):
@@ -45,6 +49,7 @@ class PIABKet(Ket):
 
 
 class PIABBra(Bra):
+    """Particle in a box eigenbra."""
 
     @classmethod
     def _eval_hilbert_space(cls, label):
