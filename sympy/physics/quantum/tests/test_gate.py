@@ -53,10 +53,18 @@ def test_CGate():
     assert apply_operators(ToffoliGate*Qubit('0000')) == \
     matrix_to_qubit(represent(ToffoliGate*Qubit('0000'), nqubits=4))
 
+    CYGate = CGate(1, YGate(0))
+    CYGate_matrix = Matrix(((1,0,0,0),(0,1,0,0),(0,0,0,-I),(0,0,I,0)))
+    #test 2 qubit controlled-Y gate decompose method
+    assert represent(CYGate.decompose(), nqubits=2) == CYGate_matrix
+
     CZGate = CGate(0, ZGate(1))
+    CZGate_matrix = Matrix(((1,0,0,0),(0,1,0,0),(0,0,1,0),(0,0,0,-1)))
     assert apply_operators(CZGate*Qubit('11')) == -Qubit('11')
-    assert matrix_to_qubit(represent(CZGate*Qubit('11'), nqubits=2)) ==\
+    assert matrix_to_qubit(represent(CZGate*Qubit('11'),nqubits=2)) ==\
         -Qubit('11')
+    # Test 2 qubit controlled-Z gate decompose method
+    assert represent(CZGate.decompose(), nqubits=2) == CZGate_matrix
 
     CPhaseGate = CGate(0, PhaseGate(1))
     assert apply_operators(CPhaseGate*Qubit('11')) ==\
