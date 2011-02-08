@@ -741,7 +741,7 @@ class Pow(Expr):
             return powsimp(self, deep=True, combine='exp')
 
         order = C.Order(x**n, x)
-        x = order.symbols[0]
+        x = order.variables[0]
         e = self.exp
         b = self.base
         ln = C.log
@@ -767,7 +767,7 @@ class Pow(Expr):
         # b -> b0 + (b-b0) -> b0 * (1 + (b/b0-1))
         z = (b/b0-1)
         #r = self._compute_oseries3(z, o2, self.taylor_term)
-        x = o2.symbols[0]
+        x = o2.variables[0]
         ln = C.log
         o = C.Order(z, x)
         if o is S.Zero:

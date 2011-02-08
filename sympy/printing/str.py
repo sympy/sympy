@@ -216,7 +216,7 @@ class StrPrinter(Printer):
         return "1"
 
     def _print_Order(self, expr):
-        if len(expr.symbols) <= 1:
+        if len(expr.variables) <= 1:
             return 'O(%s)'%self._print(expr.expr)
         else:
             return 'O(%s)'%self.stringify(expr.args, ', ', 0)

@@ -431,7 +431,7 @@ class log(Function):
                 return r
         order = C.Order(x**n, x)
         arg = self.args[0]
-        x = order.symbols[0]
+        x = order.variables[0]
         ln = C.log
         use_lt = not C.Order(1,x).contains(arg)
         if not use_lt:
@@ -449,7 +449,7 @@ class log(Function):
         else:
             # arg -> arg0 + (arg - arg0) -> arg0 * (1 + (arg/arg0 - 1))
             z = (arg/arg0 - 1)
-            x = order.symbols[0]
+            x = order.variables[0]
             ln = C.log
             o = C.Order(z, x)
             if o is S.Zero:

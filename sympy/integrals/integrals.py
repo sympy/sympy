@@ -98,15 +98,17 @@ class Integral(Expr):
 
     @property
     def variables(self):
-        variables = []
+        """Return a list of the integration variables.
 
-        for xab in self.limits:
-            variables.append(xab[0])
-
-        return variables
+        >>> from sympy import Integral
+        >>> from sympy.abc import x, i
+        >>> Integral(x**i, (i, 1, 3)).variables
+        [i]
+        """
+        return [l[0] for l in self.limits]
 
     @property
-    def symbols(self):
+    def free_symbols(self):
         """
         This method returns the symbols that will exist when the
         integral is evaluated. This is useful if one is trying to
@@ -115,7 +117,7 @@ class Integral(Expr):
 
         >>> from sympy import Integral
         >>> from sympy.abc import x, y
-        >>> Integral(x, (x, y, 1)).symbols
+        >>> Integral(x, (x, y, 1)).free_symbols
         set([y])
         """
         # analyze the integral
@@ -128,7 +130,7 @@ class Integral(Expr):
         integrand, limits = args[0], args[1:]
         if integrand.is_zero:
             return set()
-        isyms = integrand.atoms(Symbol)
+        isyms = integrand.free_symbols
         for ilim in limits:
             if len(ilim) == 1:
                 isyms.add(ilim[0])
@@ -142,7 +144,7 @@ class Integral(Expr):
                 return set()
             # add in the new symbols
             for i in ilim[1:]:
-                isyms.update(i.atoms(Symbol))
+                isyms.update(i.free_symbols)
         return isyms
 
     def transform(self, x, mapping, inverse=False):

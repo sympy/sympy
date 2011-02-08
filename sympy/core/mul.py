@@ -59,7 +59,7 @@ class Mul(AssocOp):
         for o in seq:
             # O(x)
             if o.is_Order:
-                o, order_symbols = o.as_expr_symbols(order_symbols)
+                o, order_symbols = o.as_expr_variables(order_symbols)
 
             # Mul([...])
             if o.is_Mul:

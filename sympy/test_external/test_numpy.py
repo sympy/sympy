@@ -210,7 +210,7 @@ def test_lambdify_matrix():
     assert (f(1) == matrix([[1,2],[1,2]])).all()
 
 def test_lambdify_matrix_multi_input():
-    x,y,z=sympy.symbols('x,y,z')
+    x,y,z = symbols('x,y,z')
     M=sympy.Matrix([[x**2, x*y, x*z],
                     [y*x, y**2, y*z],
                     [z*x, z*y, z**2]])
