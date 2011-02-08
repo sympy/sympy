@@ -1,7 +1,7 @@
 """Operators and states for 1D cartesian position and momentum."""
 
 from sympy import I, S, sqrt, pi
-from sympy import exp, conjugate
+from sympy import exp
 from sympy import Interval, DiracDelta
 
 from sympy.physics.quantum.operator import HermitianOperator
@@ -9,6 +9,17 @@ from sympy.physics.quantum.state import Ket, Bra
 from sympy.physics.quantum.constants import hbar
 from sympy.physics.quantum.hilbert import L2
 
+
+__all__ = [
+    'XOp',
+    'PxOp',
+    'X',
+    'Px',
+    'XKet',
+    'XBra',
+    'PxKet',
+    'PxBra'
+]
 
 class XOp(HermitianOperator):
     """1D cartesian position operator."""
@@ -90,7 +101,7 @@ class PxKet(Ket):
         return self.label[0]
 
     def _eval_innerproduct_XBra(self, bra, **hints):
-        return exp(I*self.position*bra.momentum/hbar)/sqrt(2*pi*hbar)
+        return exp(I*self.momentum*bra.position/hbar)/sqrt(2*pi*hbar)
 
     def _eval_innerproduct_PxBra(self, bra, **hints):
         return DiracDelta(self.momentum-bra.momentum)

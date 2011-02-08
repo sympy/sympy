@@ -1,4 +1,4 @@
-from sympy import I, symbols
+from sympy import I, symbols, Matrix
 
 from sympy.physics.quantum.commutator import Commutator as Comm
 from sympy.physics.quantum.tensorproduct import TensorProduct
@@ -10,10 +10,14 @@ from sympy.physics.quantum.dagger import Dagger
 A,B,C = symbols('ABC', commutative=False)
 x = symbols('x')
 
+mat1 = Matrix([[1,2*I],[1+I,3]])
+mat2 = Matrix([[2*I,3],[4*I,2]])
+
 def test_tensor_product_dagger():
     assert Dagger(TensorProduct(I*A, B)) ==\
            -I*TensorProduct(Dagger(A),Dagger(B))
-
+    assert Dagger(TensorProduct(mat1,mat2)) ==\
+        TensorProduct(Dagger(mat1),Dagger(mat2))
 
 def test_tensor_product_abstract():
 

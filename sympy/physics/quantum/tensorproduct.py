@@ -72,7 +72,8 @@ class TensorProduct(Expr):
         >>> tp
         AxB
 
-    We can take the dagger of a tensor product::
+    We can take the dagger of a tensor product (note the order does NOT
+    reverse like the dagger of a normal product)::
 
         >>> from sympy.physics.quantum import Dagger
         >>> Dagger(tp)

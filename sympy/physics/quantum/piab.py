@@ -12,6 +12,13 @@ m = Symbol('m')
 L = Symbol('L')
 
 
+__all__ = [
+    'PIABHamiltonian',
+    'PIABKet',
+    'PIABBra'
+]
+
+
 class PIABHamiltonian(HermitianOperator):
     """Particle in a box Hamiltonian operator."""
 
@@ -57,5 +64,5 @@ class PIABBra(Bra):
 
     @property
     def dual_class(self):
-        return PIABBra
+        return PIABKet
 
