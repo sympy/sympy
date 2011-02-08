@@ -674,14 +674,14 @@ def test_coeff():
     assert (2*f(x) + 3*f(x).diff(x)).coeff(f(x)) == 2
 
 def test_coeff2():
-    var('r, kappa')
+    r, kappa = symbols('r, kappa')
     psi = Function("psi")
     g = 1/r**2 * (2*r*psi(r).diff(r, 1) + r**2 * psi(r).diff(r, 2))
     g = g.expand()
     assert g.coeff((psi(r).diff(r))) == 2/r
 
 def test_coeff2_0():
-    var('r, kappa')
+    r, kappa = symbols('r, kappa')
     psi = Function("psi")
     g = 1/r**2 * (2*r*psi(r).diff(r, 1) + r**2 * psi(r).diff(r, 2))
     g = g.expand()
@@ -780,7 +780,6 @@ def test_2127():
     assert Mul(x+y, evaluate=False).is_Add
 
 def test_symbols():
-    # this is the generic sense of symbols
+    # symbols should return the free symbols of an object
     assert (x).symbols == set([x])
-    # it is overridden when necessary
-    assert Integral(x, (x, 1, 2)).symbols == set()
+    assert Integral(x, (x, 1, y)).symbols == set([y])

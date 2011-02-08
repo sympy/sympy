@@ -310,7 +310,7 @@ class MathMLPrinter(Printer):
         x.appendChild(self.dom.createElement(self.mathml_tag(e)))
 
         x_1 = self.dom.createElement('bvar')
-        for sym in e.symbols:
+        for sym in e.variables:
             x_1.appendChild(self._print(sym))
 
         x.appendChild(x_1)

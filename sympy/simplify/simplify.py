@@ -494,23 +494,23 @@ def collect(expr, syms, evaluate=True, exact=False):
     def parse_derivative(deriv):
         # scan derivatives tower in the input expression and return
         # underlying function and maximal differentiation order
-        expr, sym, order = deriv.expr, deriv.symbols[0], 1
+        expr, sym, order = deriv.expr, deriv.variables[0], 1
 
-        for s in deriv.symbols[1:]:
+        for s in deriv.variables[1:]:
             if s == sym:
                 order += 1
             else:
                 raise NotImplementedError('Improve MV Derivative support in collect')
 
         while isinstance(expr, Derivative):
-            s0 = expr.symbols[0]
+            s0 = expr.variables[0]
 
-            for s in expr.symbols:
+            for s in expr.variables:
                 if s != s0:
                     raise NotImplementedError('Improve MV Derivative support in collect')
 
             if s0 == sym:
-                expr, order = expr.expr, order+len(expr.symbols)
+                expr, order = expr.expr, order+len(expr.variables)
             else:
                 break
 

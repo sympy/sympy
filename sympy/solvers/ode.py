@@ -1498,11 +1498,11 @@ def ode_order(expr, func):
 
     order = 0
     if isinstance(expr, Derivative) and expr.args[0] == func:
-        order = len(expr.symbols)
+        order = len(expr.variables)
     else:
         for arg in expr.args:
             if isinstance(arg, Derivative) and arg.args[0] == func:
-                order = max(order, len(arg.symbols))
+                order = max(order, len(arg.variables))
             elif expr.match(a):
                 order = 0
             else :
@@ -2175,7 +2175,7 @@ def _nth_linear_match(eq, func, order):
             terms[-1] += i
         else:
             c, f = i.as_independent(func)
-            if not ((isinstance(f, Derivative) and set(f.symbols) == one_x) or\
+            if not ((isinstance(f, Derivative) and set(f.variables) == one_x) or\
                     f == func):
                 return None
             else:

@@ -600,27 +600,31 @@ class Derivative(Expr):
         return Expr.__new__(cls, expr, *unevaluated_symbols, **assumptions)
 
     def _eval_derivative(self, s):
-        if s not in self.symbols:
+        if s not in self.variables:
             obj = self.expr.diff(s)
             if isinstance(obj, Derivative):
-                return Derivative(obj.expr, *(self.symbols+obj.symbols))
-            return Derivative(obj, *self.symbols)
-        return Derivative(self.expr, *(self.symbols+(s,)), **{'evaluate': False})
+                return Derivative(obj.expr, *(self.variables + obj.variables))
+            return Derivative(obj, *self.variables)
+        return Derivative(self.expr, *(self.variables + (s, )), **{'evaluate': False})
 
     def doit(self, **hints):
         expr = self.expr
         if hints.get('deep', True):
             expr = expr.doit(**hints)
         hints['evaluate'] = True
-        return Derivative(expr, *self.symbols, **hints)
+        return Derivative(expr, *self.variables, **hints)
 
     @property
     def expr(self):
         return self._args[0]
 
     @property
-    def symbols(self):
+    def variables(self):
         return self._args[1:]
+
+    @property
+    def symbols(self):
+        return self.expr.symbols
 
     def _eval_subs(self, old, new):
         if self==old:
@@ -636,7 +640,7 @@ class Derivative(Expr):
             else:
                 return None
         if isinstance(expr, Derivative):
-            if len(expr.symbols) == len(self.symbols):
+            if len(expr.variables) == len(self.variables):
                     #print "MAYBE:",self, expr, repl_dict, evaluate
                 return Expr.matches(self, expr, repl_dict, evaluate)
         #print "NONE:",self, expr, repl_dict, evaluate

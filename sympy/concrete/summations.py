@@ -54,6 +54,57 @@ class Sum(Expr):
     def limits(self):
         return self._args[1:]
 
+    @property
+    def variables(self):
+        """Return a list of the summation variables
+
+        >>> from sympy import Sum
+        >>> from sympy.abc import x, i
+        >>> Sum(x**i, (i, 1, 3)).variables
+        [i]
+        """
+        return [l[0] for l in self.limits]
+
+    @property
+    def symbols(self):
+        """
+        This method returns the symbols that will exist when the
+        summation is evaluated. This is useful if one is trying to
+        determine whether a sum is dependent on a certain
+        symbol or not.
+
+        >>> from sympy import Sum
+        >>> from sympy.abc import x, y
+        >>> Sum(x, (x, y, 1)).symbols
+        set([y])
+        """
+        # analyze the summation
+        # >>> Sum(x*y,(x,1,2),(y,1,3)).args
+        # (x*y, Tuple(x, 1, 2), Tuple(y, 1, 3))
+        # >>> Sum(x, x, y).args
+        # (x, Tuple(x), Tuple(y))
+        intgrl = self
+        args = intgrl.args
+        integrand, limits = args[0], args[1:]
+        if integrand.is_zero:
+            return set()
+        isyms = integrand.symbols
+        for ilim in limits:
+            if len(ilim) == 1:
+                isyms.add(ilim[0])
+                continue
+            # take out the target symbol
+            if ilim[0] in isyms:
+                isyms.remove(ilim[0])
+            if len(ilim) == 3 and ilim[1] == ilim[2]:
+                # if two limits are the same the sum is 0
+                # and there are no symbols
+                return set()
+            # add in the new symbols
+            for i in ilim[1:]:
+                isyms.update(i.symbols)
+        return isyms
+
     def doit(self, **hints):
         #if not hints.get('sums', True):
         #    return self

@@ -489,7 +489,17 @@ class Basic(AssumeMeths):
 
     @property
     def symbols(self):
-        # subclass if the following is not true
+        """Return from the atoms of self those which are free symbols.
+
+        For most expressions, all symbols are free symbols. For some classes
+        this is not true. e.g. Integrals use Symbols for the dummy variables
+        which are bound variables, so Integral has a method to return all symbols
+        except those. Derivative keeps track of symbols with respect to which it
+        will perform a derivative; those are bound variables, too, so it has
+        its own symbols method.
+
+        Any other method that uses bound variables should implement a symbols
+        method."""
         return self.atoms(C.Symbol)
 
     def is_hypergeometric(self, k):

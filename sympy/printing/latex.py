@@ -340,16 +340,16 @@ class LatexPrinter(Printer):
         return tex
 
     def _print_Derivative(self, expr):
-        dim = len(expr.symbols)
+        dim = len(expr.variables)
 
         if dim == 1:
             tex = r"\frac{\partial}{\partial %s}" % \
-                self._print(expr.symbols[0])
+                self._print(expr.variables[0])
         else:
             multiplicity, i, tex = [], 1, ""
-            current = expr.symbols[0]
+            current = expr.variables[0]
 
-            for symbol in expr.symbols[1:]:
+            for symbol in expr.variables[1:]:
                 if symbol == current:
                     i = i + 1
                 else:
