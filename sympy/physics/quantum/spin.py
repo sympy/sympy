@@ -114,6 +114,9 @@ class JplusOp(SpinOpBase, Operator):
         result *= KroneckerDelta(j, jp)
         return result
 
+    def _represent_default_basis(self, **options):
+        return self._represent_JzOp(None, **options)
+
     def _represent_JzOp(self, basis, **options):
         return self._represent_base(basis, **options)
 
@@ -139,6 +142,9 @@ class JminusOp(SpinOpBase, Operator):
         result *= KroneckerDelta(j, jp)
         return result
 
+    def _represent_default_basis(self, **options):
+        return self._represent_JzOp(None, **options)
+
     def _represent_JzOp(self, basis, **options):
         return self._represent_base(basis, **options)
 
@@ -160,6 +166,9 @@ class JxOp(SpinOpBase, HermitianOperator):
         jp = JplusOp(self.name)._apply_operator_JzKet(ket, **options)
         jm = JminusOp(self.name)._apply_operator_JzKet(ket, **options)
         return (jp + jm)/Integer(2)
+
+    def _represent_default_basis(self, **options):
+        return self._represent_JzOp(None, **options)
 
     def _represent_JzOp(self, basis, **options):
         jp = JplusOp(self.name)._represent_JzOp(basis, **options)
@@ -184,6 +193,9 @@ class JyOp(SpinOpBase, HermitianOperator):
         jp = JplusOp(self.name)._apply_operator_JzKet(ket, **options)
         jm = JminusOp(self.name)._apply_operator_JzKet(ket, **options)
         return (jp - jm)/(Integer(2)*I)
+
+    def _represent_default_basis(self, **options):
+        return self._represent_JzOp(None, **options)
 
     def _represent_JzOp(self, basis, **options):
         jp = JplusOp(self.name)._represent_JzOp(basis, **options)
@@ -219,6 +231,9 @@ class JzOp(SpinOpBase, HermitianOperator):
         result *= KroneckerDelta(j, jp)
         return result
 
+    def _represent_default_basis(self, **options):
+        return self._represent_JzOp(None, **options)
+
     def _represent_JzOp(self, basis, **options):
         return self._represent_base(basis, **options)
 
@@ -251,6 +266,9 @@ class J2Op(SpinOpBase, HermitianOperator):
         result *= KroneckerDelta(m, mp)
         result *= KroneckerDelta(j, jp)
         return result
+
+    def _represent_default_basis(self, **options):
+        return self._represent_JzOp(None, **options)
 
     def _represent_JzOp(self, basis, **options):
         return self._represent_base(basis, **options)
@@ -361,6 +379,9 @@ class Rotation(UnitaryOperator):
                 result[p, q] = me
         return result
 
+    def _represent_default_basis(self, **options):
+        return self._represent_JzOp(None, **options)
+
     def _represent_JzOp(self, basis, **options):
         return self._represent_base(basis, **options)
 
@@ -406,6 +427,9 @@ class JzKet(SpinState, Ket):
     def dual_class(self):
         return JzBra
 
+    def _represent_default_basis(self, **options):
+        return self._represent_JzOp(None, **options)
+
     def _represent_JzOp(self, basis, **options):
         if self.j == Rational(1,2):
             if self.m == Rational(1,2):
@@ -420,9 +444,6 @@ class JzBra(SpinState, Bra):
     def dual_class(self):
         return JzKet
 
-    def _represent_JzOp(self, basis, **options):
-        return self.dual._represent_JzOp(basis, **options).H
-
 
 class JxKet(SpinState, Ket):
 
@@ -434,6 +455,9 @@ class JxKet(SpinState, Ket):
         d1 = KroneckerDelta(self.j, bra.j)
         d2 = KroneckerDelta(self.m, bra.m)
         return d1*d2
+
+    def _represent_default_basis(self, **options):
+        return self._represent_JzOp(None, **options)
 
     def _represent_JzOp(self, basis, **options):
         if self.j == Rational(1,2):
@@ -449,9 +473,6 @@ class JxBra(SpinState, Bra):
     def dual_class(self):
         return JxKet
 
-    def _represent_JzOp(self, basis, **options):
-        return self.dual._represent_JzOp(basis, **options).H
-
 
 class JyKet(SpinState, Ket):
 
@@ -463,6 +484,9 @@ class JyKet(SpinState, Ket):
         d1 = KroneckerDelta(self.s, bra.s)
         d2 = KroneckerDelta(self.ms, bra.ms)
         return d1*d2
+
+    def _represent_default_basis(self, **options):
+        return self._represent_JzOp(None, **options)
 
     def _represent_JzOp(self, basis, **options):
         if self.j == Rational(1,2):
@@ -477,6 +501,3 @@ class JyBra(SpinState, Bra):
     @property
     def dual_class(self):
         return JyKet
-
-    def _represent_JzOp(self, basis, **options):
-        return self.dual._represent_JzOp(basis, **options).H

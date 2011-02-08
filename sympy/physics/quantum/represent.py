@@ -2,7 +2,7 @@
 
 TODO:
 * Get represent working with continuous hilbert spaces.
-* Implement default basis functionality.
+* Document default basis functionality.
 """
 
 from sympy import S, Add, Mul, Pow
@@ -27,7 +27,7 @@ __all__ = [
 #-----------------------------------------------------------------------------
 
 
-def represent(expr, basis, **options):
+def represent(expr, **options):
     """Represent the quantum expression in the given basis.
 
     In quantum mechanics abstract states and operators can be represented in
@@ -90,18 +90,18 @@ def represent(expr, basis, **options):
         ...
         >>> sz = SzOp('Sz')
         >>> up = SzUpKet('up')
-        >>> represent(up, sz)
+        >>> represent(up, basis=sz)
         [1]
         [0]
     """
     format = options.get('format', 'sympy')
     if isinstance(expr, QExpr):
-        return expr._represent(basis, **options)
+        return expr._represent(**options)
     elif isinstance(expr, Add):
-        result = represent(expr.args[0], basis, **options)
+        result = represent(expr.args[0], **options)
         for args in expr.args[1:]:
             # scipy.sparse doesn't support += so we use plain = here.
-            result = result + represent(args, basis, **options)
+            result = result + represent(args, **options)
         return result
     elif isinstance(expr, Pow):
         exp = expr.exp
@@ -109,23 +109,22 @@ def represent(expr, basis, **options):
             exp = int(sympy_to_numpy(exp).real)
         elif format == 'scipy.sparse':
             exp = int(sympy_to_scipy_sparse(exp).real)
-        return represent(expr.base, basis, **options)**exp
+        return represent(expr.base, **options)**exp
     elif isinstance(expr, TensorProduct):
-        new_args = [represent(arg, basis, **options) for arg in expr.args]
+        new_args = [represent(arg, **options) for arg in expr.args]
         return TensorProduct(*new_args)
     elif isinstance(expr, Dagger):
-        # TODO: get Dagger working with numpy and scipy.sparse matrices
-        return Dagger(represent(expr.args[0], basis, **options))
+        return Dagger(represent(expr.args[0], **options))
     elif isinstance(expr, Commutator):
-        A = represent(expr.args[0], basis, **options)
-        B = represent(expr.args[1], basis, **options)
+        A = represent(expr.args[0], **options)
+        B = represent(expr.args[1], **options)
         return A*B - B*A
     elif isinstance(expr, AntiCommutator):
-        A = represent(expr.args[0], basis, **options)
-        B = represent(expr.args[1], basis, **options)
+        A = represent(expr.args[0], **options)
+        B = represent(expr.args[1], **options)
         return A*B + B*A
     elif isinstance(expr, InnerProduct):
-        return represent(Mul(expr.bra,expr.ket), basis, **options)
+        return represent(Mul(expr.bra,expr.ket), **options)
     elif not isinstance(expr, Mul):
         # For numpy and scipy.sparse, we can only handle numerical prefactors.
         if format == 'numpy':
@@ -137,9 +136,9 @@ def represent(expr, basis, **options):
     if not isinstance(expr, Mul):
         raise TypeError('Mul expected, got: %r' % expr)
 
-    result = represent(expr.args[-1], basis, **options)
+    result = represent(expr.args[-1], **options)
     for arg in reversed(expr.args[:-1]):
-        result = represent(arg, basis, **options)*result
+        result = represent(arg, **options)*result
     # All three matrix formats create 1 by 1 matrices when inner products of
     # vectors are taken. In these cases, we simply return a scalar.
     result = flatten_scalar(result)

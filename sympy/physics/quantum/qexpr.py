@@ -273,7 +273,10 @@ class QExpr(Expr):
     # Represent
     #-------------------------------------------------------------------------
 
-    def _represent(self, basis, **options):
+    def _represent_default_basis(self, **options):
+        raise NotImplementedError('This object does not have a default basis')
+
+    def _represent(self, **options):
         """Represent this object in a given basis.
 
         This method dispatches to the actual methods that perform the
@@ -306,7 +309,11 @@ class QExpr(Expr):
             the representation, such as the number of basis functions to
             be used.
         """
-        result = dispatch_method(self, '_represent', basis, **options)
+        basis = options.pop('basis',None)
+        if basis is None:
+            result = self._represent_default_basis(**options)
+        else:
+            result = dispatch_method(self, '_represent', basis, **options)
 
         # If we get a matrix representation, convert it to the right format.
         format = options.get('format', 'sympy')

@@ -232,6 +232,9 @@ class Gate(UnitaryOperator):
     # Represent
     #-------------------------------------------------------------------------
 
+    def _represent_default_basis(self, **options):
+        return self._represent_ZGate(None, **options)
+
     def _represent_ZGate(self, basis, **options):
         format = options.get('format','sympy')
         nqubits = options.get('nqubits',0)

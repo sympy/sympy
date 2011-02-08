@@ -29,8 +29,8 @@ def test_Qubit():
 def test_QubitBra():
     assert Qubit(0).dual_class == QubitBra
     assert QubitBra(0).dual_class == Qubit
-    assert represent(Qubit(1,1,0), ZGate(0), nqubits=3).H ==\
-           represent(QubitBra(1,1,0), ZGate(0), nqubits=3)
+    assert represent(Qubit(1,1,0), nqubits=3).H ==\
+           represent(QubitBra(1,1,0), nqubits=3)
     assert Qubit(0,1)._eval_innerproduct_QubitBra(QubitBra(1,0)) == Integer(0)
     assert Qubit(0,1)._eval_innerproduct_QubitBra(QubitBra(0,1)) == Integer(1)
 
@@ -49,7 +49,7 @@ def test_superposition_of_states():
      Qubit('10')/2)
 
     assert matrix_to_qubit(represent(CNOT(0,1)*HadamardGate(0)\
-    *(1/sqrt(2)*Qubit('01') + 1/sqrt(2)*Qubit('10')), ZGate(0), nqubits=2))\
+    *(1/sqrt(2)*Qubit('01') + 1/sqrt(2)*Qubit('10')), nqubits=2))\
      == (Qubit('01')/2 + Qubit('00')/2 - Qubit('11')/2 + Qubit('10')/2)
 
 
@@ -67,7 +67,7 @@ def test_apply_represent_equality():
         circuit = gates[int(random.random()*6)]*circuit
 
 
-    mat = represent(circuit, ZGate(0), nqubits=6)
+    mat = represent(circuit, nqubits=6)
     states = apply_operators(circuit)
     state_rep = matrix_to_qubit(mat)
     states = states.expand()

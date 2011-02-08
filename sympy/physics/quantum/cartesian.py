@@ -51,6 +51,9 @@ class XKet(Ket):
     def _eval_innerproduct_PxBra(self, bra, **hints):
         return exp(-I*self.position*bra.momentum/hbar)/sqrt(2*pi*hbar)
 
+    def _represent_default_basis(self, **options):
+        return self._represent_XOp(None, **options)
+
     def _represent_XOp(self, basis, **options):
         return self.position
 
@@ -64,10 +67,6 @@ class XBra(Bra):
     @property
     def position(self):
         return self.label[0]
-
-    def _represent_XOp(self, basis, **options):
-        # TODO: really conjugate here?
-        return conjugate(self.position)
 
 
 class PxKet(Ket):
@@ -85,6 +84,9 @@ class PxKet(Ket):
 
     def _eval_innerproduct_PxBra(self, bra, **hints):
         return DiracDelta(self.momentum-bra.momentum)
+
+    def _represent_default_basis(self, **options):
+        return self._represent_PxOp(None, **options)
 
     def _represent_PxOp(self, basis, **options):
         return self.momentum

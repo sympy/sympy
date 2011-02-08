@@ -23,6 +23,9 @@ class AKet(Ket):
     def dual_class(self):
         return ABra
 
+    def _represent_default_basis(self, **options):
+        return self._represent_AOp(None, **options)
+
     def _represent_AOp(self, basis, **options):
         return Avec
 
@@ -36,11 +39,17 @@ class ABra(Bra):
 
 class AOp(Operator):
 
+    def _represent_default_basis(self, **options):
+        return self._represent_AOp(None, **options)
+
     def _represent_AOp(self, basis, **options):
         return Amat
 
 
 class BOp(Operator):
+
+    def _represent_default_basis(self, **options):
+        return self._represent_AOp(None, **options)
 
     def _represent_AOp(self, basis, **options):
         return Bmat
@@ -80,7 +89,7 @@ _tests = [
 
 def test_format_sympy():
     for test in _tests:
-        lhs = represent(test[0], A, format='sympy')
+        lhs = represent(test[0], basis=A, format='sympy')
         rhs = to_sympy(test[1])
         assert lhs == rhs
 
@@ -92,7 +101,7 @@ except ImportError:
 else:
     def test_format_numpy():
         for test in _tests:
-            lhs = represent(test[0], A, format='numpy')
+            lhs = represent(test[0], basis=A, format='numpy')
             rhs = to_numpy(test[1])
             if isinstance(lhs, numpy_ndarray):
                 assert (lhs == rhs).all()
@@ -108,7 +117,7 @@ except ImportError:
 else:
     def test_format_scipy_sparse():
         for test in _tests:
-            lhs = represent(test[0], A, format='scipy.sparse')
+            lhs = represent(test[0], basis=A, format='scipy.sparse')
             rhs = to_scipy_sparse(test[1])
             if isinstance(lhs, scipy_sparse_matrix):
                 assert np.linalg.norm((lhs-rhs).todense()) == 0.0

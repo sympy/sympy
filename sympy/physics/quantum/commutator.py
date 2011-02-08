@@ -177,18 +177,6 @@ class Commutator(Expr):
                 return comm.doit(**hints)
         return (A*B - B*A).doit(**hints)
 
-    def represent(self, basis, **options):
-        # TODO: should Commutator know how to represent?
-        rep_method = '_represent_%s' % basis.__class__.__name__
-        if hasattr(self, rep_method):
-            f = getattr(self, rep_method)
-            rep = f(basis, **options)
-            if rep is not None:
-                return rep
-        raise NotImplementedError("Can't represent %r in basis: %r" % (
-            self, basis
-        ))
-
     def _eval_dagger(self):
         return Commutator(Dagger(self.args[1]), Dagger(self.args[0]))
 

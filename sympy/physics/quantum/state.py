@@ -185,10 +185,10 @@ class BraBase(StateBase):
         else:
             return Expr.__rmul__(self, other)
 
-    def _represent(self, basis, **options):
+    def _represent(self, **options):
         """A default represent that uses the Ket's version."""
         from sympy.physics.quantum.dagger import Dagger
-        return Dagger(self.dual._represent(basis, **options))
+        return Dagger(self.dual._represent(**options))
 
 
 class State(StateBase):

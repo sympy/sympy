@@ -31,6 +31,9 @@ class PIABKet(Ket):
     def dual_class(self):
         return PIABBra
 
+    def _represent_default_basis(self, **options):
+        return self._represent_XOp(None, **options)
+
     def _represent_XOp(self, basis, **options):
         x = Symbol('x')
         n = Symbol('n')
@@ -51,5 +54,3 @@ class PIABBra(Bra):
     def dual_class(self):
         return PIABBra
 
-    def _represent_XOp(self, basis, **options):
-        return conjugate(self.dual._represent_XOp(basis, **options))

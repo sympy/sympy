@@ -179,6 +179,9 @@ class Qubit(QubitState, Ket):
         else:
             return Integer(0)
 
+    def _represent_default_basis(self, **options):
+        return self._represent_ZGate(None, **options)
+
     def _represent_ZGate(self, basis, **options):
         """Represent this qubits in the computational basis (ZGate).
         """
@@ -219,15 +222,6 @@ class QubitBra(QubitState, Bra):
     @property
     def dual_class(self):
         return Qubit
-
-    def _represent_ZGate(self, basis, **options):
-        format = options.get('format', 'sympy')
-        result = self.dual._represent_ZGate(basis, **options)
-        if format == 'sympy':
-            return result.H
-        elif format == 'numpy' or format == 'scipy.sparse':
-            return result.transpose().conjugate()
-        raise QuantumError('Invalide format: %r' % format)
 
 
 class IntQubitState(QubitState):
@@ -359,7 +353,7 @@ def matrix_to_qubit(matrix):
         >>> from sympy.physics.quantum.gate import Z
         >>> from sympy.physics.quantum.represent import represent
         >>> q = Qubit('01')
-        >>> matrix_to_qubit(represent(q, Z(0)))
+        >>> matrix_to_qubit(represent(q))
         |01>
     """
     # Determine the format based on the type of the input matrix
@@ -416,10 +410,10 @@ def qubit_to_matrix(qubit, format='sympy'):
     """Coverts an Add/Mul of Qubit objects into it's matrix representation
 
     This function is the inverse of ``matrix_to_qubit`` and is a shorthand
-    for ``represent(qubit, Z(0))``.
+    for ``represent(qubit)``.
     """
     from sympy.physics.quantum.gate import Z
-    return represent(qubit, Z(0), format=format)
+    return represent(qubit, format=format)
 
 
 #-----------------------------------------------------------------------------

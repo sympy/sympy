@@ -101,6 +101,9 @@ class Fourier(Gate):
             raise QuantumError("Start must be smaller than finish")
         return Gate._eval_args(args)
 
+    def _represent_default_basis(self, **options):
+        return self._represent_ZGate(None, **options)
+
     def _represent_ZGate(self, basis, **options):
         """
             Represents the (I)QFT In the Z Basis
