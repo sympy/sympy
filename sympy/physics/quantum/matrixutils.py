@@ -151,16 +151,16 @@ def _sympy_tensor_product(*matrices):
     ========
 
         >>> from sympy import I, Matrix, symbols
-        >>> from sympy.physics.quantum.tensorproduct import matrix_tensor_product
+        >>> from sympy.physics.quantum.matrixutils import _sympy_tensor_product
 
         >>> m1 = Matrix([[1,2],[3,4]])
         >>> m2 = Matrix([[1,0],[0,1]])
-        >>> matrix_tensor_product(m1, m2)
+        >>> _sympy_tensor_product(m1, m2)
         [1, 0, 2, 0]
         [0, 1, 0, 2]
         [3, 0, 4, 0]
         [0, 3, 0, 4]
-        >>> matrix_tensor_product(m2, m1)
+        >>> _sympy_tensor_product(m2, m1)
         [1, 2, 0, 0]
         [3, 4, 0, 0]
         [0, 0, 1, 2]
