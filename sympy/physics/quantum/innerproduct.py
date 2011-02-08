@@ -11,7 +11,7 @@ __all__ = [
 ]
 
 
-# InnerProduct is not an QExpr because it is really just a regular comutative
+# InnerProduct is not an QExpr because it is really just a regular commutative
 # number. We have gone back and forth about this, but we gain a lot by having
 # it subclass Expr. The main challenges were getting Dagger to work
 # (we use _eval_conjugate) and represent (we can use atoms and subs). Having

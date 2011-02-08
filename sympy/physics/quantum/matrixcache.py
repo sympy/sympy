@@ -1,4 +1,4 @@
-"""A cach for storing small matrices in multiple formats."""
+"""A cache for storing small matrices in multiple formats."""
 
 
 from sympy import Matrix, I, Pow, Rational, exp, pi

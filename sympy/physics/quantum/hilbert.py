@@ -42,16 +42,12 @@ class HilbertSpace(Basic):
     >>> hs = HilbertSpace()
     >>> hs
     H
-    >>> hs.description
-    'General abstract Hilbert space.'
 
     References
     ==========
 
     [1] http://en.wikipedia.org/wiki/Hilbert_space
     """
-
-    description = 'General abstract Hilbert space.'
 
     def __new__(cls):
         obj = Basic.__new__(cls, **{'commutative': False})
@@ -163,11 +159,6 @@ class ComplexSpace(HilbertSpace):
     def dimension(self):
         return self.args[0]
 
-    @property
-    def description(self):
-        return 'Hilbert space of length %s complex valued vectors.' % \
-            str(self.dimension)
-
     def _sympyrepr(self, printer, *args):
         return "%s(%s)" % (self.__class__.__name__,
                            printer._print(self.dimension, *args))
@@ -222,11 +213,6 @@ class L2(HilbertSpace):
     def interval(self):
         return self.args[0]
 
-    @property
-    def description(self):
-        return 'Hilbert space of square integrable functions on the interval\
-        %s.' % str(self.interval)
-
     def _sympyrepr(self, printer, *args):
         return "L2(%s)" % printer._print(self.interval, *args)
 
@@ -273,10 +259,6 @@ class FockSpace(HilbertSpace):
     @property
     def dimension(self):
         return oo
-
-    @property
-    def description(self):
-        return 'Fock space.'
 
     def _sympyrepr(self, printer, *args):
         return "FockSpace()"
@@ -396,10 +378,6 @@ class TensorProductHilbertSpace(HilbertSpace):
             return reduce(lambda x,y: x*y, arg_list)
 
     @property
-    def description(self):
-        return "A direct product Hilbert spaces."
-
-    @property
     def spaces(self):
         """A tuple of the Hilbert spaces in this tensor product."""
         return set(self.args)
@@ -515,10 +493,6 @@ class DirectSumHilbertSpace(HilbertSpace):
             return oo
         else:
             return reduce(lambda x,y: x+y, arg_list)
-
-    @property
-    def description(self):
-        return "A direct sum Hilbert space."
 
     @property
     def spaces(self):
@@ -642,10 +616,6 @@ class TensorPowerHilbertSpace(HilbertSpace):
             return oo
         else:
             return self.base.dimension**self.exp
-
-    @property
-    def description(self):
-        return "A Hilbert space to some power."
 
     def _sympyrepr(self, printer, *args):
         return "TensorPowerHilbertSpace(%s,%s)" % (printer._print(self.base,\
