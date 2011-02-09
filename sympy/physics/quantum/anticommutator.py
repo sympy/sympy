@@ -17,10 +17,10 @@ __all__ = [
 
 
 class AntiCommutator(Expr):
-    """The standard anicommutator, in an unevaluated state.
+    """The standard anticommutator, in an unevaluated state.
 
     The commutator is defined [1] as: {A, B} = A*B + B*A, but in this class
-    the anticommutator is initially unevaluated. To muliple the anticommutator
+    the anticommutator is initially unevaluated. To expand the anticommutator
     out, use the ``doit`` method.
 
     The arguments of the anticommutator are put into canonical order using

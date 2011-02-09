@@ -117,7 +117,7 @@ class QubitState(State):
 class Qubit(QubitState, Ket):
     """A multi-qubit ket in the computational (z) basis.
 
-    We use the normal convention that ehe least significant qubit is on the
+    We use the normal convention that the least significant qubit is on the
     right, so |00001> has a 1 in the least significant qubit.
 
     Parameters
@@ -206,7 +206,7 @@ class Qubit(QubitState, Ket):
 class QubitBra(QubitState, Bra):
     """A multi-qubit bra in the computational (z) basis.
 
-    We use the normal convention that ehe least significant qubit is on the
+    We use the normal convention that the least significant qubit is on the
     right, so |00001> has a 1 in the least significant qubit.
 
     Parameters
@@ -638,7 +638,7 @@ def _get_possible_outcomes(m, bits):
 
 
 def measure_all_oneshot(qubit, format='sympy'):
-    """Perform a oneshot enemble measurement on all qubits.
+    """Perform a oneshot ensemble measurement on all qubits.
 
     A oneshot measurement is equivalent to performing a measurement on a
     quantum system. This type of measurement does not return the probabilities

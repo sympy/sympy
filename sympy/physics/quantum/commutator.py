@@ -22,7 +22,7 @@ class Commutator(Expr):
     """The standard commutator, in an unevaluated state.
 
     The commutator is defined [1] as: [A, B] = A*B - B*A, but in this class
-    the commutator is initially unevaluated. To muliply the commutator out,
+    the commutator is initially unevaluated. To expand the commutator out,
     use the ``doit`` method.
 
     The arguments of the commutator are put into canonical order using

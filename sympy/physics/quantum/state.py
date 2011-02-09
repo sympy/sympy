@@ -278,7 +278,7 @@ class Bra(State, BraBase):
     Examples
     ========
 
-    Create a simple Bra and looking at its properties::
+    Create a simple Bra and look at its properties::
 
         >>> from sympy.physics.quantum import Ket, Bra
         >>> from sympy import symbols, I
@@ -297,14 +297,15 @@ class Bra(State, BraBase):
         >>> b.dual_class
         <class 'sympy.physics.quantum.state.Ket'>
 
-    Like Ket's Bras can have compound labels and be manipulated::
+    Like Kets, Bras can have compound labels and be manipulated in a similar
+    manner::
 
         >>> n, m = symbols('nm')
         >>> b = Bra(n,m) - I*Bra(m,n)
         >>> b
         -I*<mn| + <nm|
 
-    Symbols ina Bra can be substituted using ``.subs``::
+    Symbols in a Bra can be substituted using ``.subs``::
 
         >>> b.subs(n,m)
         -I*<mm| + <mm|
