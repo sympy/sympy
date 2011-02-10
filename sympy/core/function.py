@@ -785,7 +785,7 @@ class Lambda(Expr):
         return len(self._args[0])
 
     @deprecated
-    def apply(self, *args):
+    def apply(self, *args): # pragma: no cover
         return self(*args)
 
     def __call__(self, *args):
@@ -803,6 +803,9 @@ class Lambda(Expr):
         otherexpr = other.args[1]
         otherexpr = otherexpr.subs(tuple(zip(other.args[0], self.args[0])))
         return selfexpr == otherexpr
+
+    def __ne__(self, other):
+        return not(self == other)
 
     def __hash__(self):
         return super(Lambda, self).__hash__()

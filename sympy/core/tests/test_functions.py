@@ -142,6 +142,18 @@ def test_Lambda_symbols():
     assert Lambda(x, 2*x).free_symbols == set()
     assert Lambda(x, x*y).free_symbols == set([y])
 
+def test_Lambda_arguments():
+    raises(TypeError, 'Lambda(x, 2*x)(x, y)')
+    raises(TypeError, 'Lambda((x, y), x+y)(x)')
+
+def test_Lambda_equality():
+    assert Lambda(x, 2*x) != Lambda((x,y), 2*x)
+    assert (Lambda(x, 2*x) == Lambda((x,y), 2*x)) is False
+    assert Lambda((x, y), 2*x) == Lambda((x, y), 2*x)
+    assert (Lambda((x, y), 2*x) != Lambda((x, y), 2*x)) is False
+    assert Lambda(x, 2*x) != 2*x
+    assert (Lambda(x, 2*x) == 2*x) is False
+
 def test_expand_function():
     assert expand(x+y) == x + y
     assert expand(x+y, complex=True) == I*im(x) + I*im(y) + re(x) + re(y)
