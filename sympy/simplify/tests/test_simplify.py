@@ -266,6 +266,34 @@ def test_powsimp():
     assert powsimp((z**x*z**y)**x, deep=True) == (z**(x + y))**x
     assert powsimp(x*(z**x*z**y)**x, deep=True) == x*(z**(x + y))**x
 
+def test_powsimp_nc():
+    x, y, z = symbols('xyz')
+    A, B, C = symbols('A B C', commutative=False)
+
+    assert powsimp(A**x*A**y, combine='all') == A**(x+y)
+    assert powsimp(A**x*A**y, combine='base') == A**x*A**y
+    assert powsimp(A**x*A**y, combine='exp') == A**(x+y)
+
+    assert powsimp(A**x*B**x, combine='all') == (A*B)**x
+    assert powsimp(A**x*B**x, combine='base') == (A*B)**x
+    assert powsimp(A**x*B**x, combine='exp') == A**x*B**x
+
+    assert powsimp(B**x*A**x, combine='all') == (B*A)**x
+    assert powsimp(B**x*A**x, combine='base') == (B*A)**x
+    assert powsimp(B**x*A**x, combine='exp') == B**x*A**x
+
+    assert powsimp(A**x*A**y*A**z, combine='all') == A**(x+y+z)
+    assert powsimp(A**x*A**y*A**z, combine='base') == A**x*A**y*A**z
+    assert powsimp(A**x*A**y*A**z, combine='exp') == A**(x+y+z)
+
+    assert powsimp(A**x*B**x*C**x, combine='all') == (A*B*C)**x
+    assert powsimp(A**x*B**x*C**x, combine='base') == (A*B*C)**x
+    assert powsimp(A**x*B**x*C**x, combine='exp') == A**x*B**x*C**x
+
+    assert powsimp(B**x*A**x*C**x, combine='all') == (B*A*C)**x
+    assert powsimp(B**x*A**x*C**x, combine='base') == (B*A*C)**x
+    assert powsimp(B**x*A**x*C**x, combine='exp') == B**x*A**x*C**x
+
 def test_collect_1():
     """Collect with respect to a Symbol"""
     x, y, z, n = symbols('xyzn')

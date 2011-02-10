@@ -232,7 +232,7 @@ class exp(Function):
             arg = self.args[0].expand(deep=deep, **hints)
         else:
             arg = self.args[0]
-        if arg.is_Add:
+        if arg.is_Add and arg.is_commutative:
             expr = 1
             for x in arg.args:
                 if deep:
