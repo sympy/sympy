@@ -249,7 +249,7 @@ class Pow(Expr):
         else:
             b = self.base
             e = self.exp
-        if e.is_Add:
+        if e.is_Add and e.is_commutative:
             expr = 1
             for x in e.args:
                 if deep:

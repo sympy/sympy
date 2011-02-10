@@ -212,6 +212,14 @@ def test_power_expand():
     p = (1+2*(1+a))**2
     assert p.expand() == 9 + 4*(a**2) + 12*a
 
+    p = 2**(a+b)
+    assert p.expand() == 2**a*2**b
+
+    A = Symbol('A', commutative=False)
+    B = Symbol('B', commutative=False)
+    p = 2**(A+B)
+    assert p.expand() == 2**(A+B)
+
 def test_real_mul():
     Real(0) * pi * x == Real(0)
     Real(1) * pi * x == pi * x
@@ -251,6 +259,9 @@ def test_ncpow():
 
     assert (x**2)*(y**2) != (y**2)*(x**2)
     assert (x**-2)*y != y*(x**2)
+    assert 2**x*2**y != 2**(x+y)
+    assert exp(x)*exp(y) != exp(y)*exp(x)
+    assert exp(x)*exp(y) != exp(x+y)
 
 def test_powerbug():
     x=Symbol("x")

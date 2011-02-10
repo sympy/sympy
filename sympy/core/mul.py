@@ -132,7 +132,7 @@ class Mul(AssocOp):
                     o1 = nc_part.pop()
                     b1,e1 = o1.as_base_exp()
                     b2,e2 = o.as_base_exp()
-                    if b1==b2:
+                    if b1==b2 and e1.is_commutative and e2.is_commutative:
                         o12 = b1 ** (e1 + e2)
 
                         # now o12 could be a commutative object

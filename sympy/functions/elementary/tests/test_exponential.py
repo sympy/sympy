@@ -171,3 +171,9 @@ def test_infinity():
     assert exp(I*oo) == nan
     assert exp(y*I*oo) == nan
 
+def test_exp_expand():
+    A,B = symbols('AB', commutative=False)
+    x,y = symbols('xy')
+
+    assert exp(A+B).expand() == exp(A+B)
+    assert exp(x+y).expand() == exp(x)*exp(y)
