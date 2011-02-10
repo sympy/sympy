@@ -260,6 +260,7 @@ def test_ncpow():
     assert (x**2)*(y**2) != (y**2)*(x**2)
     assert (x**-2)*y != y*(x**2)
     assert 2**x*2**y != 2**(x+y)
+    assert 2**x*2**(2*x) == 2**(3*x)
     assert exp(x)*exp(y) != exp(y)*exp(x)
     assert exp(x)*exp(y) != exp(x+y)
 
