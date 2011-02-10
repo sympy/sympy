@@ -249,6 +249,9 @@ class Order(Expr):
             return Order(self.expr._eval_subs(old, new), *(self.symbols[:i]+self.symbols[i+1:]))
         return Order(self.expr._eval_subs(old, new), *self.symbols)
 
+    def _eval_derivative(self, x):
+        return self.func(self.expr.diff(x), *self.symbols)
+
     def _sage_(self):
         #XXX: SAGE doesn't have Order yet. Let's return 0 instead.
         return Rational(0)._sage_()
