@@ -553,6 +553,12 @@ class SymPyDocTestFinder(DocTestFinder):
             return
         seen[id(obj)] = 1
 
+        # Make sure we don't run doctests for classes outside of sympy, such
+        # as in numpy or scipy.
+        if inspect.isclass(obj):
+            if obj.__module__.split('.')[0] != 'sympy':
+                return
+
         # Find a test for this object, and add it to the list of tests.
         test = self._get_test(obj, name, module, globs, source_lines)
         if test is not None:
