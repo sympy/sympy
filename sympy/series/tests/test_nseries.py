@@ -1,6 +1,6 @@
 from sympy import (Symbol, Rational, ln, exp, log, sqrt, E, O, pi, I, sinh,
     sin, cosh, cos, tanh, coth, asinh, acosh, atanh, acoth, tan, cot, Integer,
-    PoleError, floor, ceiling, asin, symbols, limit)
+    PoleError, floor, ceiling, asin, symbols, limit, Piecewise, Eq, sign)
 from sympy.abc import x, y, z
 
 from sympy.utilities.pytest import raises
@@ -393,11 +393,14 @@ def test_ceiling():
 
 def test_abs():
     x = Symbol('x')
+    a = Symbol('a')
     assert abs(x).nseries(x, n=4) == x
     assert abs(-x).nseries(x, n=4) == x
     assert abs(x+1).nseries(x, n=4) == x+1
     assert abs(sin(x)).nseries(x, n=4) == x - Rational(1, 6)*x**3 + O(x**4)
     assert abs(sin(-x)).nseries(x, n=4) == x - Rational(1, 6)*x**3 + O(x**4)
+    assert abs(x - a).series(x, 1) == Piecewise((x - 1, Eq(1 - a, 0)),
+                                                ((x - a)*sign(1 - a), True))
 
 def test_dir():
     x = Symbol('x')
