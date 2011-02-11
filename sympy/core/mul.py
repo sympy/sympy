@@ -134,17 +134,16 @@ class Mul(AssocOp):
                     b2,e2 = o.as_base_exp()
                     new_exp = e1 + e2
                     # Only allow powers to combine if the new exponent is
-                    # not an Add or if e1 and e2 are commutative.
-                    if b1==b2 and\
-                        ((e1.is_commutative and e2.is_commutative) or\
-                         (not new_exp.is_Add)):
+                    # not an Add. This allow things like a**2*b**3 == a**5
+                    # if a.is_commutative == False, but prohibits
+                    # a**x*a**y and x**a*x**b from combining (x,y commute).
+                    if b1==b2 and (not new_exp.is_Add):
                         o12 = b1 ** new_exp
 
                         # now o12 could be a commutative object
                         if o12.is_commutative:
                             seq.append(o12)
                             continue
-
                         else:
                             nc_seq.insert(0, o12)
 
