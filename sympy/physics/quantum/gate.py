@@ -2,13 +2,6 @@
 
 Gates are unitary operators that act on the space of qubits.
 
-Todo:
-* Implement represent for SWAP using:
-
-    SWAP = |1><0|x|1><0| + |0><1|x|0><1| + |1><0|x|0><1| + |1><0|x|1><0|
-
-* Figure out why represent of SWAP does work for 2 qubits right now.
-
 Medium Term Todo:
 * Optimize Gate._apply_operators_Qubit to remove the creation of many
   intermediate Qubit objects.
@@ -780,6 +773,38 @@ class SwapGate(TwoQubitGate):
         circ_plot.swap_point(gate_idx, min_wire)
         circ_plot.swap_point(gate_idx, max_wire)
 
+    def _represent_ZGate(self, basis, **options):
+        """Represent the SWAP gate in the computational basis.
+
+        The following representation is used to compute this:
+
+        SWAP = |1><1|x|1><1| + |0><0|x|0><0| + |1><0|x|0><1| + |0><1|x|1><0|
+        """
+        format = options.get('format', 'sympy')
+        targets = [int(t) for t in self.targets]
+        min_target = min(targets)
+        max_target = max(targets)
+        nqubits = options.get('nqubits',self.min_qubits)
+
+        op01 = matrix_cache.get_matrix('op01', format)
+        op10 = matrix_cache.get_matrix('op10', format)
+        op11 = matrix_cache.get_matrix('op11', format)
+        op00 = matrix_cache.get_matrix('op00', format)
+        eye2 = matrix_cache.get_matrix('eye2', format)
+
+        result = None
+        for i, j in ((op01,op10),(op10,op01),(op00,op00),(op11,op11)):
+            product = nqubits*[eye2]
+            product[nqubits-min_target-1] = i
+            product[nqubits-max_target-1] = j
+            new_result = matrix_tensor_product(*product)
+            if result is None:
+                result = new_result
+            else:
+                result = result + new_result
+
+        return result
+
 
 # Aliases for gate names.
 CNOT = CNotGate
@@ -831,7 +856,7 @@ def represent_zbasis(controls, targets, target_matrix, nqubits, format='sympy'):
     nqubits = int(nqubits)
 
     # This checks for the format as well.
-    up = matrix_cache.get_matrix('up', format)
+    op11 = matrix_cache.get_matrix('op11', format)
     eye2 = matrix_cache.get_matrix('eye2', format)
 
     # Plain single qubit case
@@ -841,10 +866,10 @@ def represent_zbasis(controls, targets, target_matrix, nqubits, format='sympy'):
         # Fill product with [I1,Gate,I2] such that the unitaries,
         # I, cause the gate to be applied to the correct Qubit
         if bit != nqubits-1:
-            product.append(matrix_eye(2**(nqubits-bit-1)))
+            product.append(matrix_eye(2**(nqubits-bit-1), format=format))
         product.append(target_matrix)
         if bit != 0:
-            product.append(matrix_eye(2**bit))
+            product.append(matrix_eye(2**bit, format=format))
         return matrix_tensor_product(*product)
 
     # Single target, multiple controls.
@@ -854,12 +879,13 @@ def represent_zbasis(controls, targets, target_matrix, nqubits, format='sympy'):
         # Build the non-trivial part.
         product2 = []
         for i in range(nqubits):
-            product2.append(matrix_eye(2))
+            product2.append(matrix_eye(2, format=format))
         for control in controls:
-            product2[nqubits-1-control] = up
+            product2[nqubits-1-control] = op11
         product2[nqubits-1-target] = target_matrix - eye2
 
-        return matrix_eye(2**nqubits) + matrix_tensor_product(*product2)
+        return matrix_eye(2**nqubits, format=format) +\
+               matrix_tensor_product(*product2)
 
     # Multi-target, multi-control is not yet implemented.
     else:

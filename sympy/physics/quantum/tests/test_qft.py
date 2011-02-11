@@ -36,3 +36,8 @@ def test_quantum_fourier():
     assert apply_operators(QFT(0,3).decompose()*Qubit(0,0,0)).expand() ==\
     apply_operators(HadamardGate(0)*HadamardGate(1)*HadamardGate(2)*Qubit(0,0,0)).expand()
 
+def test_qft_represent():
+    c = QFT(0,3)
+    a = represent(c,nqubits=3)
+    b = represent(c.decompose(),nqubits=3)
+    assert a.evalf(prec=10) == b.evalf(prec=10)

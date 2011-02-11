@@ -83,7 +83,10 @@ sqrt2_inv = Pow(2, Rational(-1,2), evaluate=False)
 # Save the common matrices that we will need
 matrix_cache = MatrixCache()
 matrix_cache.cache_matrix('eye2', Matrix([[1,0],[0,1]]))
-matrix_cache.cache_matrix('up', Matrix([[0,0],[0,1]]))
+matrix_cache.cache_matrix('op11', Matrix([[0,0],[0,1]])) # |1><1|
+matrix_cache.cache_matrix('op00', Matrix([[1,0],[0,0]])) # |0><0|
+matrix_cache.cache_matrix('op10', Matrix([[0,0],[1,0]])) # |1><0|
+matrix_cache.cache_matrix('op01', Matrix([[0,1],[0,0]])) # |0><1|
 matrix_cache.cache_matrix('X', Matrix([[0, 1], [1, 0]]))
 matrix_cache.cache_matrix('Y', Matrix([[0, -I], [I, 0]]))
 matrix_cache.cache_matrix('Z', Matrix([[1, 0], [0, -1]]))
