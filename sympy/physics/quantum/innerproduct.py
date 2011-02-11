@@ -1,10 +1,10 @@
 """Symbolic inner product."""
 
 
-from sympy import Expr, conjugate, srepr
+from sympy import Expr, conjugate
 from sympy.printing.pretty.stringpict import prettyForm
 from sympy.physics.quantum.dagger import Dagger
-from sympy.physics.quantum.state import KetBase, BraBase
+from sympy.physics.quantum.state import KetBase, BraBase, _lbracket
 
 __all__ = [
     'InnerProduct'
@@ -103,12 +103,12 @@ class InnerProduct(Expr):
         return '%s|%s' % (sbra[:-1], sket[1:])
 
     def _pretty(self, printer, *args):
-        pform = prettyForm(u'\u276C')
-        pform = prettyForm(*pform.right(self.bra._print_contents_pretty(printer, *args)))
+        pform = prettyForm(_lbracket)
+        pform = prettyForm(*pform.right(self.bra._print_label_pretty(printer, *args)))
         return prettyForm(*pform.right(self.ket._pretty(printer, *args)))
 
     def _latex(self, printer, *args):
-        bra_label = self.bra._print_contents(printer, *args)
+        bra_label = self.bra._print_label_latex(printer, *args)
         ket = printer._print(self.ket, *args)
         return r'\left\langle %s \right. %s' % (bra_label, ket)
 

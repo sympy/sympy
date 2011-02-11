@@ -1,4 +1,4 @@
-from sympy import I, Integer, srepr
+from sympy import I, Integer, srepr, latex, pretty
 
 from sympy.physics.quantum.innerproduct import InnerProduct
 from sympy.physics.quantum.dagger import Dagger
@@ -68,3 +68,10 @@ def test_doit():
     assert InnerProduct(b,f).doit() == I
     assert InnerProduct(Dagger(f),Dagger(b)).doit() == -I
     assert InnerProduct(Dagger(f),f).doit() == Integer(1)
+
+
+def test_printing():
+    psi = Ket('psi')
+    ip = Dagger(psi)*psi
+    assert pretty(ip) == u'\u27e8\u03c8\u2758\u03c8\u27e9'
+    assert latex(ip) == r"\left\langle \psi \right. \left|\psi\right\rangle "

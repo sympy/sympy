@@ -25,6 +25,27 @@ __all__ = [
 # States, bras and kets.
 #-----------------------------------------------------------------------------
 
+# LIGHT VERTICAL BAR
+_straight_bracket = u"\u2758"
+
+# MATHEMATICAL LEFT ANGLE BRACKET
+_lbracket = u"\u27E8"
+_rbracket = u"\u27E9"
+
+# Other options for unicode printing of <, > and | for Dirac notation.
+
+# VERTICAL LINE
+# _straight_bracket = u"\u007C"
+
+# LEFT-POINTING ANGLE BRACKET
+# _lbracket = u"\u2329"
+# _rbracket = u"\u232A"
+
+# LEFT ANGLE BRACKET
+# _lbracket = u"\u3008"
+# _rbracket = u"\u3009"
+
+
 class StateBase(QExpr):
     """Abstract base class for general abstract states in quantum mechanics.
 
@@ -86,8 +107,8 @@ class KetBase(StateBase):
 
     lbracket = '|'
     rbracket = '>'
-    lbracket_pretty = prettyForm(u'\u2758')
-    rbracket_pretty = prettyForm(u'\u27E9')
+    lbracket_pretty = prettyForm(_straight_bracket)
+    rbracket_pretty = prettyForm(_rbracket)
     lbracket_latex = r'\left|'
     rbracket_latex = r'\right\rangle '
 
@@ -160,8 +181,8 @@ class BraBase(StateBase):
 
     lbracket = '<'
     rbracket = '|'
-    lbracket_pretty = prettyForm(u'\u27E8')
-    rbracket_pretty = prettyForm(u'\u2758')
+    lbracket_pretty = prettyForm(_lbracket)
+    rbracket_pretty = prettyForm(_straight_bracket)
     lbracket_latex = r'\left\langle '
     rbracket_latex = r'\right|'
 

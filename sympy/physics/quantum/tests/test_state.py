@@ -1,5 +1,5 @@
 from sympy import I, symbols, sqrt, Add, Mul, Rational, Pow, Symbol, sympify
-from sympy import Integer, conjugate
+from sympy import Integer, conjugate, pretty, latex
 
 from sympy.physics.quantum.dagger import Dagger
 from sympy.physics.quantum.qexpr import QExpr
@@ -125,3 +125,11 @@ def test_bra_ket_dagger():
     k2 = Ket('k2')
     e = 2*I*k + x*k2
     assert Dagger(e) == conjugate(x)*Dagger(k2) - 2*I*Dagger(k)
+
+
+def test_printing():
+    psi = Ket('psi')
+    assert pretty(psi) == u'\u2758\u03c8\u27e9'
+    assert pretty(Dagger(psi)) == u'\u27e8\u03c8\u2758'
+    assert latex(psi) == r"\left|\psi\right\rangle "
+    assert latex(Dagger(psi)) == r"\left\langle \psi\right|"
