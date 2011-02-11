@@ -1391,7 +1391,8 @@ def powsimp(expr, deep=False, combine='all'):
                 if term.is_Add and deep:
                     newexpr *= powsimp(term, deep, combine)
                 else:
-                    if term.is_commutative:
+                    if (term.is_commutative or
+                        term.is_Pow and term.exp.is_commutative):
                         b, e = term.as_base_exp()
                         if deep:
                             b, e = powsimp(b, deep, combine), powsimp(e, deep, combine)
@@ -1425,7 +1426,8 @@ def powsimp(expr, deep=False, combine='all'):
                 c_powers = []
                 nc_part = []
                 for term in expr.args:
-                    if term.is_commutative:
+                    if (term.is_commutative or
+                        term.is_Pow and term.exp.is_commutative):
                         c_powers.append(list(term.as_base_exp()))
                     else:
                         nc_part.append(term)
