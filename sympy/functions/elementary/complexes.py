@@ -1,6 +1,8 @@
 from sympy.core import S, C, Function, Derivative
 from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.piecewise import Piecewise
 from sympy.core import Add, Mul
+from sympy.core.relational import Eq, Ne
 from sympy.utilities.iterables import iff
 
 ###############################################################################
@@ -277,7 +279,12 @@ class Abs(Function):
 
     def _eval_nseries(self, x, n):
         direction = self.args[0].leadterm(x)[0]
-        return sign(direction)*self.args[0].nseries(x, n=n)
+        s = self.args[0].nseries(x, n=n)
+        when = Eq(direction, 0)
+        return Piecewise(
+                         ((s.subs(direction, 0)), when),
+                         (sign(direction)*s, True),
+                         )
 
     def _sage_(self):
         import sage.all as sage
