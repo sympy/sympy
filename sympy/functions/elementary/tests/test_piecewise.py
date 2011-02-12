@@ -96,6 +96,9 @@ def test_piecewise_integrate():
     assert integrate(g, (x, -2, 2)) == 2 * Rational(14, 3)
     assert integrate(g, (x, -2, 5)) == -Rational(673, 6)
 
+    g = Piecewise((1, x > 0), (0, Eq(x, 0)), (-1, x < 0))
+    assert integrate(g, (x, -1, 1)) == 0
+
 def test_piecewise_solve():
     abs2 = Piecewise((-x, x <= 0), (x, x > 0))
     f = abs2.subs(x, x - 2)
