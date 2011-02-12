@@ -131,5 +131,5 @@ def test_printing():
     psi = Ket('psi')
     assert pretty(psi) == u'\u2758\u03c8\u27e9'
     assert pretty(Dagger(psi)) == u'\u27e8\u03c8\u2758'
-    assert latex(psi) == r"\left|\psi\right\rangle "
-    assert latex(Dagger(psi)) == r"\left\langle \psi\right|"
+    assert latex(psi) == r"{\left|\psi\right\rangle }"
+    assert latex(Dagger(psi)) == r"{\left\langle \psi\right|}"

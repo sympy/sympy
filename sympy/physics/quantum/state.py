@@ -94,7 +94,9 @@ class StateBase(QExpr):
 
     def _print_contents_latex(self, printer, *args):
         label = self._print_label_latex(printer, *args)
-        return '%s%s%s' % (self.lbracket_latex, label, self.rbracket_latex)
+        # The extra {} brackets are needed to get matplotlib's latex
+        # rendered to render this properly.
+        return '{%s%s%s}' % (self.lbracket_latex, label, self.rbracket_latex)
 
 
 class KetBase(StateBase):
@@ -416,7 +418,9 @@ class TimeDepState(StateBase):
     def _print_contents_latex(self, printer, *args):
         label = self._print_label_latex(printer, *args)
         time = self._print_time_latex(printer, *args)
-        return '%s%s;%s%s' %\
+        # The extra {} brackets are needed to get matplotlib's latex
+        # rendered to render this properly.
+        return '{%s%s;%s%s}' %\
             (self.lbracket_latex, label, time, self.rbracket_latex)
 
 
