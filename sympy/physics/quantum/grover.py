@@ -28,6 +28,7 @@ numzeroes - int
 
 Return: string
     Returns a string of numzeroes zeroes
+
 """
 def _create_zeroes(numzeroes):
     zeroes = ['0' for i in range(numzeroes)]
@@ -41,6 +42,7 @@ nqubits - int
 
 Return: qexpr
     An equal superposition of nqubit basis states
+
 """
 def create_basis_states(nqubits):
     basis = [i for i in range(2**nqubits)]
@@ -69,6 +71,7 @@ class OracleGate(Gate):
 
     Examples
     --------
+
     """
 
     gate_name = u'V'
@@ -124,7 +127,6 @@ class OracleGate(Gate):
     # qubits : a set of qubits (Qubit)
     # Return: quantum object (quantum expression - QExpr)
     def _apply_operator_Qubit(self, qubits, **options):
-        #print 'Oracle _apply_operator_Qubit'
         if qubits.nqubits != self.nqubits:
             raise QuantumError(
                 'OracleGate operates on %r qubits, got: %r' 
@@ -153,6 +155,7 @@ class WGate(Gate):
     ----------
     nqubits : int
         The number of qubits to operate on
+
     """
 
     gate_name = u'W'
@@ -177,7 +180,6 @@ class WGate(Gate):
     # qubits : a set of qubits (Qubit)
     # Return: quantum object (quantum expression - QExpr)
     def _apply_operator_Qubit(self, qubits, **options):
-        #print 'WGate _apply_operator_Qubit'
         if qubits.nqubits != self.nqubits:
             raise QuantumError(
                 'WGate operates on %r qubits, got: %r' 
@@ -201,6 +203,7 @@ oracle : OracleGate
 
 Returns:
 QExpr : The quantum state after applying the oracle and W gate.
+
 """
 def grover_iteration(qstate, oracle):
     wgate = WGate(oracle.nqubits)
@@ -214,6 +217,7 @@ bbox : callable
 
 Returns:
 Qubit : The sought after qubits for the unknown callable function
+
 """
 def grover(bbox):
     # Ask about the number of iterations and measurement
