@@ -1,5 +1,5 @@
 from sympy.core import Basic, S, Function, diff, Number, sympify
-from sympy.core.relational import Relational
+from sympy.core.relational import Equality, Relational
 from sympy.core.sets import Interval, Set
 
 class ExprCondPair(Function):
@@ -172,6 +172,8 @@ class Piecewise(Function):
                     break
                 else:
                     continue
+            elif isinstance(cond, Equality):
+                continue
             curr = list(cond.args)
             if cond.args[0] == sym:
                 curr[0] = S.NegativeInfinity
