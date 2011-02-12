@@ -27,8 +27,7 @@ Or, if all else fails, feel free to write to the sympy list at
 sympy@googlegroups.com and ask for help.
 """
 
-from distutils.core import setup
-from distutils.core import Command
+from setuptools import Command, setup
 import sys
 
 import sympy
@@ -256,6 +255,11 @@ setup(
       url = 'http://code.google.com/p/sympy',
       packages = ['sympy'] + modules + tests + pyglet_packages,
       scripts = ['bin/isympy'],
+      install_requires=[
+        # TODO: figure out all the *required* dependencies
+        'setuptools',
+        'pycmd'             # py.cleanup for setup.py clean (development only)
+      ],
       ext_modules = [],
       package_data = { 'sympy.utilities.mathml' : ['data/*.xsl'] },
       data_files = [('share/man/man1', ['doc/man/isympy.1'])],
