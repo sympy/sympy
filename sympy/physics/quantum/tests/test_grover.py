@@ -14,13 +14,12 @@ def return_one_on_one(qubits):
     qubitOne = gpath._create_zeroes(qubits.nqubits - 2) + '01'
     return 1 if qubits == Qubit(qubitOne) else 0
 
-def test_create_basis_states_1():
+def test_create_basis_states():
     first_half_state = Qubit('00')/2 + Qubit('01')/2
     second_half_state = Qubit('10')/2 + Qubit('11')/2
     super_state = first_half_state + second_half_state
     assert super_state == gpath.create_basis_states(2)
 
-def test_create_basis_states_2():
     first_q = (1/sqrt(8))*Qubit('000') + (1/sqrt(8))*Qubit('001')
     second_q = (1/sqrt(8))*Qubit('010') + (1/sqrt(8))*Qubit('011')  
     third_q = (1/sqrt(8))*Qubit('100') + (1/sqrt(8))*Qubit('101')  
@@ -28,12 +27,11 @@ def test_create_basis_states_2():
     super_state = first_q + second_q + third_q + fourth_q
     assert super_state == gpath.create_basis_states(3)
 
-def test_OracleGate_1():
+def test_OracleGate():
     v = OracleGate(1, lambda qubits: 1 if qubits == Qubit('0') else 0)
     assert apply_operators(v*Qubit('0')) == -Qubit('0')
     assert apply_operators(v*Qubit('1')) == Qubit('1')
 
-def test_OracleGate_2():
     v = OracleGate(2, return_one_on_two)
     assert apply_operators(v*Qubit('00')) == Qubit('00')
     assert apply_operators(v*Qubit('01')) == Qubit('01')  
