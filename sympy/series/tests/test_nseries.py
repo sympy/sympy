@@ -1,6 +1,7 @@
 from sympy import (Symbol, Rational, ln, exp, log, sqrt, E, O, pi, I, sinh,
     sin, cosh, cos, tanh, coth, asinh, acosh, atanh, acoth, tan, cot, Integer,
-    PoleError, floor, ceiling, asin, symbols, limit, Piecewise, Eq, sign)
+    PoleError, floor, ceiling, asin, symbols, limit, Piecewise, Eq, sign,
+    Derivative)
 from sympy.abc import x, y, z
 
 from sympy.utilities.pytest import raises
@@ -112,7 +113,7 @@ def test_series2x():
     assert ((x+1)**0).nseries(x,0,3) == 1
     assert ((x+1)**1).nseries(x,0,3) == 1+x
     assert ((x+1)**2).nseries(x,0,3) == 1+2*x+x**2
-    assert ((x+1)**3).nseries(x,0,3) == 1+3*x+3*x**2+x**3
+    assert ((x+1)**3).nseries(x,0,3) == 1+3*x+3*x**2+O(x**3)
 
     assert (1/(1+x)).nseries(x,0,4) == 1-x+x**2-x**3+O(x**4, x)
     assert (x+3/(1+2*x)).nseries(x,0,4) == 3-5*x+12*x**2-24*x**3+O(x**4, x)
@@ -136,8 +137,8 @@ def test_exp():
 def test_exp2():
     x = Symbol("x")
     w = Symbol("w")
-    e = w**(1-log(x)/(log(2) + log(x)))
-    assert e.nseries(w,0,1) == e
+    e = w**(1-log(x)/(log(2) + log(x))) # exp < 1 so whole expression eaten by O(w)
+    assert e.nseries(w,0,1) == O(w)
 
 def test_bug3():
     x = Symbol("x")
@@ -433,3 +434,11 @@ def test_issue1230():
     assert tan(x).series(x, pi/2, n=3) == -1/(x - pi/2)
     assert cot(x).series(x, pi, n=3) == 1/(x - pi)
     assert limit(tan(x)**tan(2*x), x, pi/4) == exp(-1)
+
+def test_issue2084():
+    assert abs(x + x**2).series(n=1) == O(x)
+    assert abs(x + x**2).series(n=2) == x + O(x**2)
+    assert ((1+x)**2).series(x, n=6) == 1 + 2*x + x**2
+    assert (1 + 1/x).series() == 1 + 1/x
+    assert Derivative(exp(x).series(), x).doit() == \
+           1 + x + x**2/2 + x**3/6 + x**4/24 + O(x**5)

@@ -279,7 +279,7 @@ class Abs(Function):
 
     def _eval_nseries(self, x, n):
         direction = self.args[0].leadterm(x)[0]
-        s = self.args[0].nseries(x, n=n)
+        s = self.args[0]._eval_nseries(x, n=n)
         when = Eq(direction, 0)
         return Piecewise(
                          ((s.subs(direction, 0)), when),

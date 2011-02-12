@@ -358,17 +358,11 @@ def calculate_series(e, x):
     """
 
     f = e
-    series = f.nseries(x, n=2).removeO()
-    if series == 0:
-        #we need to calculate more terms, let's try 4:
-        series = f.nseries(x, n=4).removeO()
-    if series == 0:
-        #we need to calculate more terms, let's try 6:
-        series = f.nseries(x, n=6).removeO()
-    if series == 0:
-        #we need to calculate more terms, let's try 8:
-        series = f.nseries(x, n=8).removeO()
-    if not series:
+    for n in [2, 4, 6, 8]:
+        series = f.nseries(x, n=2, trim=False).removeO()
+        if series:
+            break
+    else:
         assert ValueError('(%s).series(%s, n=8) gave no terms.' % (f, x))
     return series
 

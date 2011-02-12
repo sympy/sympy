@@ -195,7 +195,7 @@ class exp(Function):
     def _eval_nseries(self, x, n):
         from sympy import limit, oo, powsimp
         arg = self.args[0]
-        arg_series = arg.nseries(x, n=n)
+        arg_series = arg._eval_nseries(x, n=n)
         if arg_series.is_Order:
             return 1 + arg_series
         arg0 = limit(arg_series, x, 0)
@@ -212,7 +212,7 @@ class exp(Function):
         g = None
         for i in xrange(n):
             g = self.taylor_term(i, self.args[0], g)
-            g = g.nseries(x, x0, n)
+            g = g.nseries(x, x0, n, trim=False)
             l.append(g)
         return Add(*l) + C.Order(x**n, x)
 
@@ -423,6 +423,8 @@ class log(Function):
         k, l = Wild("k"), Wild("l")
         r = arg.match(k*x**l)
         if r is not None:
+            #k = r.get(r, S.One)
+            #l = r.get(l, S.Zero)
             k, l = r[k], r[l]
             if l != 0 and not l.has(x) and not k.has(x):
                 r = log(k) + l*log(x) # XXX true regardless of assumptions?
@@ -468,12 +470,12 @@ class log(Function):
             g = None
             for i in xrange(n + 2):
                 g = log.taylor_term(i, z, g)
-                g = g.nseries(x, n=n)
+                g = g._eval_nseries(x, n=n)
                 l.append(g)
             obj = Add(*l) + log(arg0)
         obj2 = expand_log(powsimp(obj, deep=True, combine='exp'))
         if obj2 != obj:
-            r = obj2.nseries(x, n=n)
+            r = obj2._eval_nseries(x, n=n)
         else:
             r = obj
         if r == self:

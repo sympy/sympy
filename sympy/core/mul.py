@@ -1078,7 +1078,7 @@ class Mul(AssocOp):
 
     def _eval_nseries(self, x, n):
         from sympy import powsimp
-        terms = [t.nseries(x, n=n) for t in self.args]
+        terms = [t._eval_nseries(x, n=n) for t in self.args]
         return powsimp(Mul(*terms).expand(), combine='exp', deep=True)
 
 
