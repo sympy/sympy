@@ -2,12 +2,9 @@
 opportunities.
 """
 
-from sympy.core.basic import Basic
+from sympy import Add, Mul
 from sympy.core.operations import AssocOp
 from sympy.utilities.iterables import preorder_traversal
-
-from sympy import Add, Mul
-
 
 def assumed(e, name):
     """ Return True if the given assumption is true about the sympy expression.

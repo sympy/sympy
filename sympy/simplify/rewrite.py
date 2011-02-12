@@ -1,6 +1,6 @@
 """Partial fraction decomposition algorithms. """
 
-from sympy.core import sympify, Symbol, Function, Lambda
+from sympy.core import Symbol, Function, Lambda
 from sympy.polys import Poly, RootSum, div, cancel
 from sympy.utilities import threaded
 
