@@ -11,6 +11,8 @@ Todo:
 * Get scale and figsize to be handled in a better way.
 """
 
+from sympy.physics.quantum.gate import Gate
+
 __all__ = [
     'CircuitPlot',
     'circuit_plot'
@@ -96,10 +98,13 @@ else:
                 self._axes.add_line(line)
 
         def _plot_gates(self):
-            """Interate through the gates and plot each of them."""
-            gates = reversed(self.circuit.args)
-            for i, gate in enumerate(gates):
-                gate.plot_gate(self, i)
+            if isinstance(self.circuit.args[0], Gate):
+                """Iterate through the gates and plot each of them."""
+                gates = reversed(self.circuit.args)
+                for i, gate in enumerate(gates):
+                    gate.plot_gate(self, i)
+            else:
+                self.circuit.plot_gate(self, 0)
 
         def _finish(self):
             # Disable clipping to make panning work well for large circuits.
