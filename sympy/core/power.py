@@ -615,7 +615,7 @@ class Pow(Expr):
             if e > 0:
                 # positive integer powers are easy to expand, e.g.:
                 # sin(x)**4 = (x-x**3/3+...)**4 = ...
-                return Pow(b.nseries(x, n=n), e
+                return Pow(b._eval_nseries(x, n=n), e
                            )._eval_expand_multinomial(deep = False)
             elif e is S.NegativeOne:
                 # this is also easy to expand using the formula:
@@ -626,18 +626,18 @@ class Pow(Expr):
                     y = Symbol("y", dummy=True)
                     p = self.subs(log(x), -1/y)
                     if not p.has(x):
-                        p = p.nseries(y, n=n)
+                        p = p._eval_nseries(y, n=n)
                         p = p.subs(y, -1/log(x))
                         return p
 
-                b = b.nseries(x, n=n)
+                b = b._eval_nseries(x, n=n)
                 if b.has(log(x)):
                     # we need to handle the log(x) singularity:
                     y = Symbol("y", dummy=True)
                     self0 = 1/b
                     p = self0.subs(log(x), -1/y)
                     if not p.has(x):
-                        p = p.nseries(y, n=n)
+                        p = p._eval_nseries(y, n=n)
                         p = p.subs(y, -1/log(x))
                         return p
                 prefactor = b.as_leading_term(x)
@@ -680,14 +680,14 @@ class Pow(Expr):
                 # negative powers are rewritten to the cases above, for example:
                 # sin(x)**(-4) = 1/( sin(x)**4) = ...
                 # and expand the denominator:
-                denominator = (b**(-e)).nseries(x, n=n)
+                denominator = (b**(-e))._eval_nseries(x, n=n)
                 if 1/denominator == self:
                     return self
                 # now we have a type 1/f(x), that we know how to expand
-                return (1/denominator).nseries(x, n=n)
+                return (1/denominator)._eval_nseries(x, n=n)
 
         if e.has(x):
-            return exp(e*log(b)).nseries(x, n=n)
+            return exp(e*log(b))._eval_nseries(x, n=n)
 
         if b == x:
             return powsimp(self, deep=True, combine='exp')
@@ -744,7 +744,7 @@ class Pow(Expr):
             lt = b.as_leading_term(x)
             #  XXX o is not used -- was this to be used as o and o2 below to compute a new e?
             o = order*lt**(1 - e)
-            bs = b.nseries(x, n=nuse)
+            bs = b._eval_nseries(x, n=nuse)
             if bs.is_Add:
                 bs = bs.removeO()
             if bs.is_Add:
@@ -779,7 +779,7 @@ class Pow(Expr):
             g = None
             for i in xrange(n + 2):
                 g = self.taylor_term(i, z, g)
-                g = g.nseries(x, n=n)
+                g = g.nseries(x, n=n, trim=False)
                 l.append(g)
             r = Add(*l)
         return r*b0**e + order
