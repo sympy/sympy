@@ -1,5 +1,6 @@
-from sympy import (diff, expand, Integral, integrate, Interval, lambdify, log,
-                   oo, Piecewise, piecewise_fold, symbols, pi, solve, Rational)
+from sympy import (diff, expand, Eq, Integral, integrate, Interval, lambdify,
+                   log, oo, Piecewise, piecewise_fold, symbols, pi, solve,
+                   Rational)
 from sympy.utilities.pytest import XFAIL, raises
 
 x,y = symbols('xy')
@@ -97,6 +98,9 @@ def test_piecewise_integrate():
 
     g = Piecewise((1, x > 0), (0, Eq(x, 0)), (-1, x < 0))
     assert integrate(g, (x, -1, 1)) == 0
+    
+    g = Piecewise((1, x - y < 0), (0, True))
+    assert integrate(g, (y, -oo, oo)) == oo
 
 def test_piecewise_solve():
     abs2 = Piecewise((-x, x <= 0), (x, x > 0))
