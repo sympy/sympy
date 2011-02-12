@@ -207,6 +207,7 @@ tests = [
     'sympy.mpmath.tests',
     'sympy.ntheory.tests',
     'sympy.parsing.tests',
+    'sympy.physics.quantum.tests',
     'sympy.physics.tests',
     'sympy.plotting.tests',
     'sympy.polys.tests',
@@ -217,6 +218,7 @@ tests = [
     'sympy.slow_tests',
     'sympy.solvers.tests',
     'sympy.statistics.tests',
+    'sympy.tensor.tests',
     'sympy.test_external',
     'sympy.utilities.tests',
     ]
