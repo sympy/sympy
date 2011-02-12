@@ -1,10 +1,10 @@
 from sympy import sqrt, power
 from sympy.physics.quantum.applyops import apply_operators
 from sympy.physics.quantum.qubit import Qubit
-from sympy.physics.grover import *
-import sympy.physics.grover
+from sympy.physics.quantum.grover import *
+import sympy.physics.quantum.grover
 
-gpath = sympy.physics.grover
+gpath = sympy.physics.quantum.grover
 
 def return_one_on_two(qubits):
     qubitTwo = gpath._create_zeroes(qubits.nqubits - 2) + '10'
