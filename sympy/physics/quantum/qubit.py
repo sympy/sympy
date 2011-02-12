@@ -412,7 +412,6 @@ def qubit_to_matrix(qubit, format='sympy'):
     This function is the inverse of ``matrix_to_qubit`` and is a shorthand
     for ``represent(qubit)``.
     """
-    from sympy.physics.quantum.gate import Z
     return represent(qubit, format=format)
 
 

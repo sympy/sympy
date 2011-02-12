@@ -5,7 +5,7 @@ TODO:
 * Document default basis functionality.
 """
 
-from sympy import S, Add, Mul, Pow
+from sympy import Add, Mul, Pow
 
 from sympy.physics.quantum.dagger import Dagger
 from sympy.physics.quantum.commutator import Commutator

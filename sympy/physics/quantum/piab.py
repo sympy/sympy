@@ -1,6 +1,6 @@
 """1D quantum particle in a box."""
 
-from sympy import Symbol, pi, sqrt, sin, conjugate, Interval, S
+from sympy import Symbol, pi, sqrt, sin, Interval, S
 
 from sympy.physics.quantum.operator import HermitianOperator
 from sympy.physics.quantum.state import Ket, Bra

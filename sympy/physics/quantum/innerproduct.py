@@ -1,7 +1,7 @@
 """Symbolic inner product."""
 
 
-from sympy import Expr, conjugate, srepr
+from sympy import Expr, conjugate
 from sympy.printing.pretty.stringpict import prettyForm
 from sympy.physics.quantum.dagger import Dagger
 from sympy.physics.quantum.state import KetBase, BraBase
