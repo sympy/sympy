@@ -175,14 +175,14 @@ class Piecewise(Function):
             elif isinstance(cond, Equality):
                 continue
             curr = list(cond.args)
-            if cond.args[0] == sym:
+            if cond.args[0].has(sym):
                 curr[0] = S.NegativeInfinity
-            elif cond.args[1] == sym:
+            elif cond.args[1].has(sym):
                 curr[1] = S.Infinity
             else:
                 raise NotImplementedError, \
-                    "Currently only supporting evaluation with only " \
-                    "sym on one side of the relation."
+                    "Unable handle interval evaluation of expression. "\
+                    "Patches welcome. =D"
             curr = [max(a, curr[0]), min(b, curr[1])]
             for n in xrange(len(int_expr)):
                 if self.__eval_cond(curr[0] < int_expr[n][1]) and \
