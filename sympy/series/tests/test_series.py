@@ -1,5 +1,5 @@
 from sympy import sin, cos, exp, E, series, oo, S, Derivative, O, Integral, \
-                  Function, log
+                  Function, log, sqrt
 from sympy.abc import x, y
 from sympy.utilities.pytest import raises
 
@@ -63,3 +63,6 @@ def test_2124():
 
     assert exp(x*log(x)).series(n=3) == \
            1 + x*log(x) + x**2*log(x)**2/2 + O(x**3*log(x)**3)
+    # XXX is this right? If not, fix "ngot > n" handling in expr.
+    assert exp(sqrt(x)**3*log(x)).series(n=3) == \
+        1 + x**S('3/2')*log(x) + O(x**3*log(x)**3)

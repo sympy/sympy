@@ -675,7 +675,6 @@ def collect(expr, syms, evaluate=True, exact=False):
 
                 terms = separate(make_expression(terms))
                 index = separate(index)
-
                 if index in collected.keys():
                     collected[index] += terms
                 else:
