@@ -294,7 +294,9 @@ class Function(Application, Expr):
         return self, S.One
 
     def _eval_nseries(self, x, n):
-        assert len(self.args) == 1
+        if self.func.nargs != 1:
+            raise NotImplementedError('series for user-defined and \
+multi-arg functions are not supported.')
         arg = self.args[0]
         arg0 = arg.limit(x, 0)
         from sympy import oo
