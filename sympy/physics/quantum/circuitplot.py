@@ -98,13 +98,16 @@ else:
                 self._axes.add_line(line)
 
         def _plot_gates(self):
-            if isinstance(self.circuit.args[0], Gate):
-                """Iterate through the gates and plot each of them."""
-                gates = reversed(self.circuit.args)
-                for i, gate in enumerate(gates):
-                    gate.plot_gate(self, i)
-            else:
-                self.circuit.plot_gate(self, 0)
+            """Iterate through the gates and plot each of them."""
+            gates = []
+            if isinstance(self.circuit, Mul):
+                for g in reversed(self.circuit.args):
+                    if isinstance(g, Gate):
+                        gates.append(g)
+            elif isinstance(self.circuit, Gate):
+                gates.append(self.circuit)
+            for i, gate in enumerate(gates):
+                gate.plot_gate(self, i)
 
         def _finish(self):
             # Disable clipping to make panning work well for large circuits.
