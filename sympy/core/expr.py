@@ -225,8 +225,13 @@ class Expr(Basic, EvalfMixin):
                 for oi in o.args:
                     if oi.is_Symbol:
                         return S.One
-                    if oi.is_Pow and oi.base.is_Symbol and oi.exp.is_Rational:
-                        return abs(oi.exp)
+                    if oi.is_Pow:
+                        syms = oi.atoms(C.Symbol)
+                        if len(syms) == 1:
+                            x = syms.pop()
+                            oi = oi.subs(x, C.Dummy('x', positive=True))
+                            if oi.base.is_Symbol and oi.exp.is_Rational:
+                                return abs(oi.exp)
 
         raise NotImplementedError('not sure of order of %s' % o)
 
@@ -825,6 +830,17 @@ class Expr(Basic, EvalfMixin):
             else:
                 return self
 
+        # it seems like the following should be doable, but several failures
+        # then occur. Is this related to issue 1747 et al?
+        if 0 and x.is_positive is x.is_negative is None:
+            # replace x with an x that has a positive assumption
+            xpos = C.Dummy('x', positive=True)
+            rv = self.subs(x, xpos).series(xpos, x0, n, dir)
+            if n is None:
+                return (s.subs(xpos, x) for s in rv)
+            else:
+                return rv.subs(xpos, x)
+
         if len(dir) != 1 or dir not in '+-':
             raise ValueError("Dir must be '+' or '-'")
 
@@ -836,8 +852,6 @@ class Expr(Basic, EvalfMixin):
             # don't include order term since it will eat the larger terms
             return s.removeO().subs(x, 1/x)
 
-        s = self
-        rep2 = None
         # transpose func to 0 and change sign if dir is negative
         # with rep and undo the process with rep2
         if x0 or dir == '-':
@@ -846,35 +860,54 @@ class Expr(Basic, EvalfMixin):
             else:
                 rep = x + x0
                 rep2 = x - x0
-            s = self.subs(x, rep)
+            s = self.subs(x, rep).series(x, x0=0, n=n, dir='+')
+            if n is None: # lseries
+                return (si.subs(x, rep2) for si in s)
+            if x0: # order can't handle x != 0 terms
+                s = s.removeO()
+            return s.subs(x, rep2) # nseries
 
-        if n != None:
-            # nseries handling
-            s1 = s._eval_nseries(x, n=n)
+        # from here on it's x0=0 and dir='+' handling
+
+        if n != None: # nseries handling
+            s1 = self._eval_nseries(x, n=n)
             o = s1.getO() or S.Zero
             if o:
                 # make sure the requested order is returned
-                ngot = int(o.getn())
-                if ngot < n:
-                    s1 = s._eval_nseries(x, n=2*n - ngot)
-                    o = s1.getO()
-                elif ngot > n:
-                    # if the following assertion fails, what should we be
-                    # replacing o with?
-                    assert o.expr.is_Pow and o.expr.base == x
-                    o = C.Order(x**n)
+                ngot = o.getn()
+                if ngot > n:
+                    # reduce the order of the o term so it will eat excess terms
+                    o = o.subs(x, x**C.Rational(n, ngot))
+                elif ngot < n:
+                    # increase the requested number of terms to get the desired
+                    # number keep increasing (up to 9) until the received order
+                    # is different than the original order and then predict how
+                    # many additional terms are needed
+                    for more in range(1, 9):
+                        s1 = self._eval_nseries(x, n=n + more)
+                        newn = s1.getn()
+                        if newn != ngot:
+                            ndo = n + (n - ngot)*more/(newn - ngot)
+                            s1 = self._eval_nseries(x, n=ndo)
+                            # if this assertion fails then our ndo calculation
+                            # needs modification
+                            assert s1.getn() == n
+                            # Sometimes orders like O(x**3*log(x)**3) are returned.
+                            # Should these be O(x**3)?
+                            o = s1.getO()
+                            break
+                    else:
+                        raise ValueError('Could not calculate %s terms for %s'
+                                         % (str(n), self))
                 s1 = s1.removeO()
             else:
                 o = C.Order(x**n)
                 if (s1 + o).removeO() == s1:
                     o = S.Zero
-            if rep2:
-                s1 = s1.subs(x, rep2)
-            if x0 or not o:
-                return s1
+
             return s1 + o
 
-        else:
+        else: # lseries handling
             def yield_lseries(s):
                 """Return terms of lseries one at a time."""
                 for si in s:
@@ -893,19 +926,16 @@ class Expr(Basic, EvalfMixin):
                         o *= x
                         if not do or do.is_Order:
                             continue
-                        yield do
                         if do.is_Add:
                             ndid += len(do.args)
                         else:
                             ndid += 1
+                        yield do
                         if ndid == ndo:
                             raise StopIteration
                         yielded += do
 
-            s1 = yield_lseries(s.removeO()._eval_lseries(x))
-            if rep2:
-                return (si.subs(x, rep2) for si in s1)
-            return s1
+            return yield_lseries(self.removeO()._eval_lseries(x))
 
     def lseries(self, x=None, x0=0, dir='+'):
         """
