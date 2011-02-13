@@ -656,7 +656,9 @@ class Pow(Expr):
                 term2 = collect(rest.as_leading_term(x), x)
                 k, l = C.Wild("k"), C.Wild("l")
                 r = term2.match(k*x**l)
-                k, l = r[k], r[l]
+                # if term2 is NaN then r will not contain l
+                k = r.get(k, S.One)
+                l = r.get(l, S.Zero)
                 if l.is_Rational and l > 0:
                     pass
                 elif l.is_number and l > 0:

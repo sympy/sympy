@@ -827,6 +827,15 @@ class Expr(Basic, EvalfMixin):
 
         if len(dir) != 1 or dir not in '+-':
             raise ValueError("Dir must be '+' or '-'")
+
+        if x0 in [S.Infinity, S.NegativeInfinity]:
+            dir = {S.Infinity: '+', S.NegativeInfinity: '-'}[x0]
+            s = self.subs(x, 1/x).series(x, n=n, dir=dir)
+            if n is None:
+                return (si.subs(x, 1/x) for si in s)
+            # don't include order term since it will eat the larger terms
+            return s.removeO().subs(x, 1/x)
+
         s = self
         rep2 = None
         # transpose func to 0 and change sign if dir is negative
