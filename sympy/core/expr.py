@@ -215,19 +215,20 @@ class Expr(Basic, EvalfMixin):
             return None
         else:
             o = o.expr
+            if o is S.One:
+                return S.Zero
             if o.is_Symbol:
                 return S.One
             if o.is_Pow:
                 return o.args[1]
-            n, d = o.as_numer_denom()
-            if d.func is C.log:
-                # i.e. o = x**2/log(x)
-                if n.is_Symbol:
-                    return S.One
-                if n.is_Pow:
-                    return n.args[1]
+            if o.is_Mul: # x**n*log(x)**n or x**n/log(x)**n
+                for oi in o.args:
+                    if oi.is_Symbol:
+                        return S.One
+                    if oi.is_Pow and oi.base.is_Symbol and oi.exp.is_Rational:
+                        return abs(oi.exp)
 
-        raise NotImplementedError()
+        raise NotImplementedError('not sure of order of %s' % o)
 
     def coeff(self, x, expand=True):
         """
@@ -817,8 +818,13 @@ class Expr(Basic, EvalfMixin):
             if len(syms) > 1:
                 raise ValueError('x must be given for multivariate functions.')
             x = syms.pop()
+
         if not self.has(x):
-            return self
+            if n is None:
+                return (s for s in [self])
+            else:
+                return self
+
         if len(dir) != 1 or dir not in '+-':
             raise ValueError("Dir must be '+' or '-'")
         s = self
@@ -835,34 +841,73 @@ class Expr(Basic, EvalfMixin):
 
         if n != None:
             # nseries handling
-            s = s.nseries(x, n=n)
-            if not rep2:
-                return s
-            o = (s.getO() or S.Zero)
-            s = s.removeO().subs(x, rep2)
-            if not o or x0:
-                return s
-            if dir == '-':
-                 o = o.subs(x, -x)
-            return s + o
+            s1 = s._eval_nseries(x, n=n)
+            o = s1.getO() or S.Zero
+            if o:
+                # make sure the requested order is returned
+                ngot = int(o.getn())
+                if ngot < n:
+                    s1 = s._eval_nseries(x, n=2*n - ngot)
+                    o = s1.getO()
+                elif ngot > n:
+                    # if the following assertion fails, what should we be
+                    # replacing o with?
+                    assert o.expr.is_Pow and o.expr.base == x
+                    o = C.Order(x**n)
+                s1 = s1.removeO()
+            else:
+                o = C.Order(x**n)
+                if (s1 + o).removeO() == s1:
+                    o = S.Zero
+            if rep2:
+                s1 = s1.subs(x, rep2)
+            if x0 or not o:
+                return s1
+            return s1 + o
 
         else:
-            # lseries handling
+            def yield_lseries(s):
+                """Return terms of lseries one at a time."""
+                for si in s:
+                    if not si.is_Add:
+                        yield si
+                        continue
+                    # yield terms 1 at a time if possible
+                    # by increasing order until all the
+                    # terms have been returned
+                    yielded = 0
+                    o = C.Order(si)*x
+                    ndid = 0
+                    ndo = len(si.args)
+                    while 1:
+                        do = (si - yielded + o).removeO()
+                        o *= x
+                        if not do or do.is_Order:
+                            continue
+                        yield do
+                        if do.is_Add:
+                            ndid += len(do.args)
+                        else:
+                            ndid += 1
+                        if ndid == ndo:
+                            raise StopIteration
+                        yielded += do
+
+            s1 = yield_lseries(s.removeO()._eval_lseries(x))
             if rep2:
-                return (si.subs(x, rep2) for si in s.lseries(x))
-            return s.lseries(x)
+                return (si.subs(x, rep2) for si in s1)
+            return s1
 
     def lseries(self, x=None, x0=0, dir='+'):
         """
-        lseries is a generator yielding terms in the series.
+        Wrapper for series yielding an iterator of the terms of the series.
 
-        Example: if you do:
+        Note: an infinite series will yield an infinite iterator. The following,
+        for exaxmple, will never terminate. It will just keep printing terms
+        of the sin(x) series:
 
-        for term in sin(x).lseries(x):
-            print term
-
-        It will print all terms of the sin(x) series (i.e. it never
-        terminates).
+            for term in sin(x).lseries(x):
+                print term
 
         The advantage of lseries() over nseries() is that many times you are
         just interested in the next term in the series (i.e. the first term for
@@ -871,40 +916,7 @@ class Expr(Basic, EvalfMixin):
 
         See also nseries().
         """
-        if x is None or x0 != 0 or dir != "+":
-            return self.series(x, x0, n=None, dir=dir)
-
-        def yield_lseries(s):
-            """Return terms of lseries one at a time."""
-            for si in s:
-                if not si.is_Add:
-                    yield si
-                    continue
-                # yield terms 1 at a time if possible
-                # by increasing order until all the
-                # terms have been returned
-                yielded = 0
-                o = C.Order(si)*x
-                ndid = 0
-                ndo = len(si.args)
-                while 1:
-                    do = (si - yielded + o).removeO()
-                    o *= x
-                    if not do or do.is_Order:
-                        continue
-                    yield do
-                    if do.is_Add:
-                        ndid += len(do.args)
-                    else:
-                        ndid += 1
-                    if ndid == ndo:
-                        raise StopIteration
-                    yielded += do
-
-        self = self.removeO()
-        if not self.has(x):
-            return yield_lseries([self])
-        return yield_lseries(self._eval_lseries(x))
+        return self.series(x, x0, n=None, dir=dir)
 
     def _eval_lseries(self, x):
         # default implementation of lseries is using nseries(), and adaptively
@@ -913,7 +925,7 @@ class Expr(Basic, EvalfMixin):
         # override this method and implement much more efficient yielding of
         # terms.
         n = 0
-        series = self.nseries(x, n=n, trim=False)
+        series = self._eval_nseries(x, n=n)
         if not series.is_Order:
             if series.is_Add:
                 yield series.removeO()
@@ -923,24 +935,26 @@ class Expr(Basic, EvalfMixin):
 
         while series.is_Order:
             n += 1
-            series = self.nseries(x, n=n, trim=False)
+            series = self._eval_nseries(x, n=n)
         e = series.removeO()
         yield e
         while 1:
             while 1:
                 n += 1
-                series = self.nseries(x, n=n, trim=False).removeO()
+                series = self._eval_nseries(x, n=n).removeO()
                 if e != series:
                     break
             yield series - e
             e = series
 
-    def nseries(self, x=None, x0=0, n=6, dir='+', trim=True):
+    def nseries(self, x=None, x0=0, n=6, dir='+'):
         """
-        Calculates a generalized series expansion.
+        Wrapper to _eval_nseries if assumptions allow, else to series.
 
-        nseries calculates "n" terms in the innermost expressions and then
-        builds up the final series just by "cross-multiplying" everything out.
+        If x is given, x0 is 0, dir='+', and self has x, then _eval_nseries is
+        called. This calculates "n" terms in the innermost expressions and
+        then builds up the final series just by "cross-multiplying" everything
+        out.
 
         Advantage -- it's fast, because we don't have to determine how many
         terms we need to calculate in advance.
@@ -949,29 +963,18 @@ class Expr(Basic, EvalfMixin):
         expected, but the O(x**n) term appended will always be correct and
         so the result, though perhaps shorter, will also be correct.
 
-        When 'trim' is True, a check will be made that no terms greater than
-        the desired order are returned. Internal use of nseries may desire to
-        use trim=False, but general use should leave it as True.
+        If any of those assumptions is not met, this is treated like a
+        wrapper to series which will try harder to return the correct
+        number of terms.
 
         See also lseries().
         """
-        if x is None or x0 != 0 or dir != "+":
-            return self.series(x, x0, n, dir)
-
-        if not self.has(x):
+        if x and not self.has(x):
             return self
-
-        rv = self._eval_nseries(x, n)
-        if not trim:
-            return rv
-
-        if rv.has(C.Order):
-            return rv
-        o = C.Order(x**n)
-        rvo = rv + o
-        if rvo.removeO() == rv: # all terms less than O(x**n)
-            return rv
-        return rvo
+        if x is None or x0 or dir != '+':# or (x.is_positive == x.is_negative == None):
+            return self.series(x, x0, n, dir)
+        else:
+            return self._eval_nseries(x, n=n)
 
     def _eval_nseries(self, x, n):
         """

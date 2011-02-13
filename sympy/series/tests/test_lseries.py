@@ -38,7 +38,8 @@ def test_issue_2084():
     assert (x + x**2).lseries().next() == x
     assert ((1+x)**7).lseries(x).next() == 1
     assert (sin(x + y)).series(x, n=3).lseries(y).next() == x
-    # it would be nice if all terms were grouped, but then the
-    # series would have to be expanded...maybe it should be?
+    # it would be nice if all terms were grouped, but in the
+    # following case that would mean that all the terms would have
+    # to be known since, for example, every term has a constant in it.
     s = ((1+x)**7).series(x, 1, n=None)
     assert [s.next() for i in range(2)] == [128, -448 + 448*x]

@@ -543,8 +543,8 @@ class tan(Function):
     def _eval_nseries(self, x, n):
         i = self.args[0].limit(x, 0)*2/S.Pi
         if i and i.is_Integer:
-            return self.rewrite(cos)._eval_nseries(x, n)
-        return Function._eval_nseries(self, x, n)
+            return self.rewrite(cos)._eval_nseries(x, n=n)
+        return Function._eval_nseries(self, x, n=n)
 
     def _eval_conjugate(self):
         return self.func(self.args[0].conjugate())
@@ -698,8 +698,8 @@ class cot(Function):
     def _eval_nseries(self, x, n):
         i = self.args[0].limit(x, 0)/S.Pi
         if i and i.is_Integer:
-            return self.rewrite(cos)._eval_nseries(x, n)
-        return Function._eval_nseries(self, x, n)
+            return self.rewrite(cos)._eval_nseries(x, n=n)
+        return Function._eval_nseries(self, x, n=n)
 
     def _eval_conjugate(self):
         assert len(self.args) == 1

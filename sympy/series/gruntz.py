@@ -359,7 +359,7 @@ def calculate_series(e, x):
 
     f = e
     for n in [2, 4, 6, 8]:
-        series = f.nseries(x, n=2, trim=False).removeO()
+        series = f.nseries(x, n=n).removeO()
         if series:
             break
     else:

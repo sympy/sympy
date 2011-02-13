@@ -202,17 +202,17 @@ class exp(Function):
         if arg0 in [-oo, oo]:
             return self
         t = Symbol("t", dummy=True)
-        exp_series = exp(t)._taylor(t, 0, n)
+        exp_series = exp(t)._taylor(t, n)
         r = exp(arg0)*exp_series.subs(t, arg_series - arg0)
         r = r.expand()
         return powsimp(r, deep=True, combine='exp')
 
-    def _taylor(self, x, x0, n):
+    def _taylor(self, x, n):
         l = []
         g = None
         for i in xrange(n):
             g = self.taylor_term(i, self.args[0], g)
-            g = g.nseries(x, x0, n, trim=False)
+            g = g.nseries(x, n=n)
             l.append(g)
         return Add(*l) + C.Order(x**n, x)
 
@@ -443,7 +443,7 @@ class log(Function):
             # make sure that log(sin(x)/x) doesn't get "simplified" to
             # -log(x)+log(sin(x)) and an infinite recursion occurs, see also the
             # issue 252.
-            obj = log(lt) + log(a)._eval_nseries(x, n)
+            obj = log(lt) + log(a).nseries(x, n=n)
         else:
             # arg -> arg0 + (arg - arg0) -> arg0 * (1 + (arg/arg0 - 1))
             z = (arg/arg0 - 1)
@@ -470,12 +470,12 @@ class log(Function):
             g = None
             for i in xrange(n + 2):
                 g = log.taylor_term(i, z, g)
-                g = g._eval_nseries(x, n=n)
+                g = g.nseries(x, n=n)
                 l.append(g)
             obj = Add(*l) + log(arg0)
         obj2 = expand_log(powsimp(obj, deep=True, combine='exp'))
         if obj2 != obj:
-            r = obj2._eval_nseries(x, n=n)
+            r = obj2.nseries(x, n=n)
         else:
             r = obj
         if r == self:

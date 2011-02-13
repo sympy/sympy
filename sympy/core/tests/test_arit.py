@@ -184,7 +184,7 @@ def test_expand():
     assert e.expand() == 5*a+5*b+5*c+2*a*c+b*c+a*b+a**2+c**2
     x=Symbol("x")
     s=exp(x*x)-1
-    e=s.series(x,0,3)/x**2
+    e=s.nseries(x,0,3)/x**2
     assert e.expand() ==  1+x**2/2+O(x**4)
 
     e = (x*(y+z))**(x*(y+z))*(x+y)
