@@ -17,9 +17,8 @@ def test_mul_0():
     assert (x*ln(x)).nseries(x, n=5) == x*ln(x)
 
 def test_mul_1():
-    assert (x*ln(2+x)).nseries(x, n=4) == x*log(2)+x**2/2-x**3/8+x**4/24+ \
-            O(x**5)
-    assert (x*ln(1+x)).nseries(x, n=4) == x**2- x**3/2 + x**4/3 + O(x**5)
+    assert (x*ln(2+x)).nseries(x, n=4) == x*log(2) + x**2/2 - x**3/8 + x**4/24 + O(x**5) # x*log(2)+x**2/2-x**3/8+O(x**4)
+    assert (x*ln(1+x)).nseries(x, n=4) == x**2 - x**3/2 + x**4/3 + O(x**5) # x**2- x**3/2 + O(x**4)
 
 def test_pow_0():
     assert (x**2).nseries(x, n=5) == x**2
@@ -33,8 +32,8 @@ def test_pow_1():
 
 def test_geometric_1():
     assert (1/(1-x)).nseries(x, n=5) == 1+x+x**2+x**3+x**4+O(x**5)
-    assert (x/(1-x)).nseries(x, n=5) == x+x**2+x**3+x**4+x**5+O(x**6)
-    assert (x**3/(1-x)).nseries(x, n=5) == x**3+x**4+x**5+x**6+x**7+O(x**8)
+    assert (x/(1-x)).nseries(x, n=5) == x + x**2 + x**3 + x**4 + x**5 + O(x**6) # x+x**2+x**3+x**4+O(x**5)
+    assert (x**3/(1-x)).nseries(x, n=5) == x**3 + x**4 + x**5 + x**6 + x**7 + O(x**8) # x**3+x**4+O(x**5)
 
 def test_sqrt_1():
     assert sqrt(1+x).nseries(x, n=5) == 1+x/2-x**2/8+x**3/16-5*x**4/128+O(x**5)
@@ -113,7 +112,7 @@ def test_series2x():
     assert ((x+1)**0).nseries(x,0,3) == 1
     assert ((x+1)**1).nseries(x,0,3) == 1+x
     assert ((x+1)**2).nseries(x,0,3) == 1+2*x+x**2
-    assert ((x+1)**3).nseries(x,0,3) == 1+3*x+3*x**2+O(x**3)
+    assert ((x+1)**3).nseries(x,0,3) == 1 + 3*x + 3*x**2 + x**3 # 1+3*x+3*x**2+O(x**3)
 
     assert (1/(1+x)).nseries(x,0,4) == 1-x+x**2-x**3+O(x**4, x)
     assert (x+3/(1+2*x)).nseries(x,0,4) == 3-5*x+12*x**2-24*x**3+O(x**4, x)
@@ -138,7 +137,7 @@ def test_exp2():
     x = Symbol("x")
     w = Symbol("w")
     e = w**(1-log(x)/(log(2) + log(x))) # exp < 1 so whole expression eaten by O(w)
-    assert e.nseries(w,0,1) == O(w)
+    assert e.nseries(w,0,1) == e # O(w)
 
 def test_bug3():
     x = Symbol("x")
@@ -400,7 +399,7 @@ def test_abs():
     assert abs(x+1).nseries(x, n=4) == x+1
     assert abs(sin(x)).nseries(x, n=4) == x - Rational(1, 6)*x**3 + O(x**4)
     assert abs(sin(-x)).nseries(x, n=4) == x - Rational(1, 6)*x**3 + O(x**4)
-    assert abs(x - a).series(x, 1) == Piecewise((x - 1, Eq(1 - a, 0)),
+    assert abs(x - a).nseries(x, 1) == Piecewise((x - 1, Eq(1 - a, 0)),
                                                 ((x - a)*sign(1 - a), True))
 
 def test_dir():
@@ -431,8 +430,8 @@ def test_issue1342():
             2*a*b*x**2 + O(x**3)
 
 def test_issue1230():
-    assert tan(x).series(x, pi/2, n=3) == -1/(x - pi/2)
-    assert cot(x).series(x, pi, n=3) == 1/(x - pi)
+    assert tan(x).series(x, pi/2, n=3) == -pi/6 + x/3 - 1/(x - pi/2)
+    assert cot(x).series(x, pi, n=3) == -x/3 + pi/3 + 1/(x - pi)
     assert limit(tan(x)**tan(2*x), x, pi/4) == exp(-1)
 
 def test_issue2084():

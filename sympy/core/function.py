@@ -319,12 +319,12 @@ class Function(Application, Expr):
                     term = term.expand()
                     series += term
                 return series + C.Order(x**n, x)
-            return e1._eval_nseries(x, n=n)
+            return e1.nseries(x, n=n)
         l = []
         g = None
         for i in xrange(n+2):
             g = self.taylor_term(i, arg, g)
-            g = g._eval_nseries(x, n=n)
+            g = g.nseries(x, n=n)
             l.append(g)
         return Add(*l) + C.Order(x**n, x)
 
@@ -648,7 +648,7 @@ class Derivative(Expr):
             yield Derivative(term, *dx)
 
     def _eval_nseries(self, x, n):
-        arg = self.args[0]._eval_nseries(x, n=n)
+        arg = self.args[0].nseries(x, n=n)
         o = arg.getO()
         dx = self.args[1:]
         rv = [Derivative(a, *dx) for a in Add.make_args(arg.removeO())]

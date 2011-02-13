@@ -1,4 +1,5 @@
-from sympy import sin, cos, exp, E, series, oo, S, Derivative, O, Integral
+from sympy import sin, cos, exp, E, series, oo, S, Derivative, O, Integral, \
+                  Function, log
 from sympy.abc import x, y
 from sympy.utilities.pytest import raises
 
@@ -42,7 +43,7 @@ def test_2124():
     D = Derivative
     assert D(x**2 + x**3*y**2, x, 2, y, 1).series(x).doit() == 12*x*y
     assert D(cos(x), x).lseries().next() == D(1, x)
-    assert D(exp(x), x).series(n=3) == D(1, x) + D(x, x) + O(x**2)
+    assert D(exp(x), x).series(n=3) == D(1, x) + D(x, x) + D(x**2/2, x) + O(x**3)
 
     assert Integral(x, (x, 1, 3),(y, 1, x)).series(x) == -4 + 4*x
 
@@ -51,3 +52,14 @@ def test_2124():
 
     assert ((1/sin(x))**oo).series() == oo
     assert ((sin(x))**y).series(x) == 0**y
+
+    raises(NotImplementedError, 'series(Function("f")(x))')
+
+    assert sin(1/x).series(x, oo, n=5) == 1/x - 1/(6*x**3)
+    assert abs(x).series(x, oo, n=5, dir='+') == x
+    assert abs(x).series(x, -oo, n=5, dir='-') == -x
+    assert abs(-x).series(x, oo, n=5, dir='+') == x
+    assert abs(-x).series(x, -oo, n=5, dir='-') == -x
+
+    assert exp(x*log(x)).series(n=3) == \
+           1 + x*log(x) + x**2*log(x)**2/2 + O(x**3*log(x)**3)

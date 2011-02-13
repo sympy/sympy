@@ -779,7 +779,7 @@ class Pow(Expr):
             g = None
             for i in xrange(n + 2):
                 g = self.taylor_term(i, z, g)
-                g = g.nseries(x, n=n, trim=False)
+                g = g.nseries(x, n=n)
                 l.append(g)
             r = Add(*l)
         return r*b0**e + order
