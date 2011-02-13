@@ -18,14 +18,14 @@ def test_create_basis_states():
     first_half_state = Qubit('00')/2 + Qubit('01')/2
     second_half_state = Qubit('10')/2 + Qubit('11')/2
     super_state = first_half_state + second_half_state
-    assert super_state == gpath.create_basis_states(2)
+    assert super_state == gpath._create_basis_states(2)
 
     first_q = (1/sqrt(8))*Qubit('000') + (1/sqrt(8))*Qubit('001')
     second_q = (1/sqrt(8))*Qubit('010') + (1/sqrt(8))*Qubit('011')  
     third_q = (1/sqrt(8))*Qubit('100') + (1/sqrt(8))*Qubit('101')  
     fourth_q = (1/sqrt(8))*Qubit('110') + (1/sqrt(8))*Qubit('111')  
     super_state = first_q + second_q + third_q + fourth_q
-    assert super_state == gpath.create_basis_states(3)
+    assert super_state == gpath._create_basis_states(3)
 
 def test_OracleGate():
     v = OracleGate(1, lambda qubits: 1 if qubits == Qubit('0') else 0)
@@ -40,7 +40,7 @@ def test_OracleGate():
 
 def test_WGate():
     numqubits = 2
-    basis_states = gpath.create_basis_states(numqubits)
+    basis_states = gpath._create_basis_states(numqubits)
     w = WGate(numqubits)
     assert apply_operators(w*basis_states) == basis_states
 
@@ -50,7 +50,7 @@ def test_WGate():
 
 def test_grover_iteration_1():
     numqubits = 2
-    basis_states = gpath.create_basis_states(numqubits)
+    basis_states = gpath._create_basis_states(numqubits)
     v = OracleGate(numqubits, return_one_on_one)
     iterated = gpath.grover_iteration(basis_states, v)
     expected = Qubit('01')
@@ -58,7 +58,7 @@ def test_grover_iteration_1():
 
 def test_grover_iteration_2():
     numqubits = 4
-    basis_states = gpath.create_basis_states(numqubits)
+    basis_states = gpath._create_basis_states(numqubits)
     v = OracleGate(numqubits, return_one_on_two)
     # Should return Qubit('0010') after (pi/4)sqrt(pow(2, n))
     # In this case, after around pi times (3 or 4)

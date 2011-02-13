@@ -44,7 +44,7 @@ Return: qexpr
     An equal superposition of nqubit basis states
 
 """
-def create_basis_states(nqubits):
+def _create_basis_states(nqubits):
     basis = [i for i in range(2**nqubits)]
     # Return the string starting from index 2 to remove the substring
     # '0b' from the binary string.  ex. ('0b1111')[2:] -> '1111'
@@ -190,7 +190,7 @@ class WGate(Gate):
         # Return (2/(sqrt(2^n)))|phi> - |a> where |a> is the current basis
         # state and phi is the superposition of basis states (see function
         # create_basis_states above)
-        basis_states = create_basis_states(self.nqubits)
+        basis_states = _create_basis_states(self.nqubits)
         change_to_basis = (2/sqrt(2**self.nqubits))*basis_states
         return change_to_basis - qubits
 
