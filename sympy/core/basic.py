@@ -856,40 +856,38 @@ class Basic(AssumeMeths):
         """
         from sympy.core.symbol import Wild
 
-        def search(expr, target, hit):
+        def search(expr, test):
             if hasattr(expr, '__iter__') and hasattr(expr, '__len__'):
                 # this 'if' clause is needed until all objects use
                 # sympy containers
                 for i in expr:
-                    if search(i, target, hit):
+                    if search(i, test):
                         return True
             elif not isinstance(expr, Basic):
                 pass
-            elif target(expr) and hit(expr):
+            elif test(expr):
                 return True
             else:
                 for term in expr.iter_basic_args():
-                    if search(term, target, hit):
+                    if search(term, test):
                         return True
             return False
 
-        def _has(p):
-            p = sympify(p)
+        def _match(p):
             if isinstance(p, BasicType):
-                return search(self, lambda w: isinstance(w, p), lambda w: True)
-            if p.is_Atom and not isinstance(p, Wild):
-                return search(self, lambda w: isinstance(w, p.func), lambda w: w in [p])
-            return search(self, lambda w: p.matches(w) is not None, lambda w: True)
+                return lambda w: isinstance(w, p)
+            else:
+                return lambda w: p.matches(w) is not None
 
         if not patterns:
             return False # something doesn't have nothing
 
-        patterns = set(patterns)
+        patterns = map(sympify, patterns)
 
         if flags.get('all', False):
-            return all(_has(p) for p in patterns)
+            return all(search(self, _match(p)) for p in patterns)
         else:
-            return any(_has(p) for p in patterns)
+            return any(search(self, _match(p)) for p in patterns)
 
     def matches(self, expr, repl_dict={}, evaluate=False):
         """
