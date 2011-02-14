@@ -1,6 +1,6 @@
 """Utilities to deal with sympy.Matrix, numpy and scipy.sparse."""
 
-from sympy import Matrix, I, Expr
+from sympy import Matrix, I, Expr, Integer
 from sympy.matrices import matrices
 
 
@@ -256,3 +256,35 @@ def matrix_eye(n, **options):
         return _scipy_sparse_eye(n)
     raise NotImplementedError('Invalid format: %r' % format)
 
+
+def _numpy_matrix_to_zero(e):
+    """Convert a numpy zero matrix to the zero scalar."""
+    import numpy as np
+    test = np.zeros_like(e)
+    if np.allclose(e, test):
+        return 0.0
+    else:
+        return e
+
+
+def _scipy_sparse_matrix_to_zero(e):
+    """Convert a scipy.sparse zero matrix to the zero scalar."""
+    import numpy as np
+    edense = e.todense()
+    test = np.zeros_like(edense)
+    if np.allclose(edense, test):
+        return 0.0
+    else:
+        return e
+
+
+def matrix_to_zero(e):
+    """Convert a zero matrix to the scalar zero."""
+    if isinstance(e, Matrix):
+        if matrices.zeros(e.shape) == e:
+            e = Integer(0)
+    elif isinstance(e, numpy_ndarray):
+        e = _numpy_matrix_to_zero(e)
+    elif isinstance(e, scipy_sparse_matrix):
+        e = _scipy_sparse_matrix_to_zero(e)
+    return e

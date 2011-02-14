@@ -13,15 +13,18 @@ Medium Term Todo:
 """
 
 from itertools import chain
+import random
 
-from sympy import Mul, Pow, Integer, Matrix, Rational, Tuple
+from sympy import Mul, Pow, Integer, Matrix, Rational, Tuple, I, sqrt, Add
 from sympy.core.numbers import Number
 from sympy.printing.pretty.stringpict import prettyForm, stringPict
 from sympy.utilities.iterables import all
 
+from sympy.physics.quantum.anticommutator import AntiCommutator
+from sympy.physics.quantum.commutator import Commutator
 from sympy.physics.quantum.qexpr import QuantumError
 from sympy.physics.quantum.hilbert import ComplexSpace
-from sympy.physics.quantum.operator import UnitaryOperator
+from sympy.physics.quantum.operator import UnitaryOperator, Operator
 from sympy.physics.quantum.matrixutils import (
     matrix_tensor_product, matrix_eye
 )
@@ -33,6 +36,7 @@ __all__ = [
     'UGate',
     'OneQubitGate',
     'TwoQubitGate',
+    'IdentityGate',
     'HadamardGate',
     'XGate',
     'YGate',
@@ -51,7 +55,10 @@ __all__ = [
     'T',
     'S',
     'Phase',
-    'normalized'
+    'normalized',
+    'gate_sort',
+    'gate_simp',
+    'random_circuit'
 ]
 
 sqrt2_inv = Pow(2, Rational(-1,2), evaluate=False)
@@ -513,6 +520,17 @@ class OneQubitGate(Gate):
             gate_idx, int(self.targets[0])
         )
 
+    def _eval_commutator(self, other, **hints):
+        if isinstance(other, OneQubitGate):
+            if self.targets != other.targets or self.__class__ == other.__class__:
+                return Integer(0)
+        return Operator._eval_commutator(self, other, **hints)
+
+    def _eval_anticommutator(self, other, **hints):
+        if isinstance(other, OneQubitGate):
+            if self.targets != other.targets or self.__class__ == other.__class__:
+                return Integer(2)*self*other
+        return Operator._eval_anticommutator(self, other, **hints)
 
 class TwoQubitGate(Gate):
     """A two qubit unitary gate base class."""
@@ -523,6 +541,31 @@ class TwoQubitGate(Gate):
 #-----------------------------------------------------------------------------
 # Single Qubit Gates
 #-----------------------------------------------------------------------------
+
+
+class IdentityGate(OneQubitGate):
+    """The single qubit identity gate.
+
+    Parameters
+    ----------
+    target : int
+        The target qubit this gate will apply to.
+
+    Examples
+    --------
+
+    """
+    gate_name = u'1'
+    gate_name_latex = u'1'
+
+    def get_target_matrix(self, format='sympy'):
+        return matrix_cache.get_matrix('eye2', format)
+
+    def _eval_commutator(self, other, **hints):
+        return Integer(0)
+
+    def _eval_anticommutator(self, other, **hints):
+        return Integer(2)*other
 
 
 class HadamardGate(OneQubitGate):
@@ -545,6 +588,24 @@ class HadamardGate(OneQubitGate):
             return matrix_cache.get_matrix('H', format)
         else:
             return matrix_cache.get_matrix('Hsqrt2', format)
+
+    def _eval_commutator_XGate(self, other, **hints):
+        return I*sqrt(2)*YGate(self.targets[0])
+
+    def _eval_commutator_YGate(self, other, **hints):
+        return I*sqrt(2)*(ZGate(self.targets[0])-XGate(self.targets[0]))
+
+    def _eval_commutator_ZGate(self, other, **hints):
+        return -I*sqrt(2)*YGate(self.targets[0])
+
+    def _eval_anticommutator_XGate(self, other, **hints):
+        return sqrt(2)*IdentityGate(self.targets[0])
+
+    def _eval_anticommutator_YGate(self, other, **hints):
+        return Integer(0)
+
+    def _eval_anticommutator_ZGate(self, other, **hints):
+        return sqrt(2)*IdentityGate(self.targets[0])
 
 
 class XGate(OneQubitGate):
@@ -570,6 +631,19 @@ class XGate(OneQubitGate):
             gate_idx, int(self.label[0])
         )
 
+    def _eval_commutator_YGate(self, other, **hints):
+        return Integer(2)*I*ZGate(self.targets[0])
+
+    def _eval_anticommutator_XGate(self, other, **hints):
+        return Integer(2)*IdentityGate(self.targets[0])
+
+    def _eval_anticommutator_YGate(self, other, **hints):
+        return Integer(0)
+
+    def _eval_anticommutator_ZGate(self, other, **hints):
+        return Integer(0)
+
+
 
 class YGate(OneQubitGate):
     """The single qubit Y gate.
@@ -588,6 +662,15 @@ class YGate(OneQubitGate):
 
     def get_target_matrix(self, format='sympy'):
         return matrix_cache.get_matrix('Y', format)
+
+    def _eval_commutator_ZGate(self, other, **hints):
+        return Integer(2)*I*XGate(self.targets[0])
+
+    def _eval_anticommutator_YGate(self, other, **hints):
+        return Integer(2)*IdentityGate(self.targets[0])
+
+    def _eval_anticommutator_ZGate(self, other, **hints):
+        return Integer(0)
 
 
 class ZGate(OneQubitGate):
@@ -608,9 +691,15 @@ class ZGate(OneQubitGate):
     def get_target_matrix(self, format='sympy'):
         return matrix_cache.get_matrix('Z', format)
 
+    def _eval_commutator_XGate(self, other, **hints):
+        return Integer(2)*I*YGate(self.targets[0])
+
+    def _eval_anticommutator_YGate(self, other, **hints):
+        return Integer(0)
+
 
 class PhaseGate(OneQubitGate):
-    """The single qubit phase gate.
+    """The single qubit phase, or S, gate.
 
     This gate rotates the phase of the state by pi/2 if the state is |1> and
     does nothing if the state is |0>.
@@ -629,6 +718,12 @@ class PhaseGate(OneQubitGate):
 
     def get_target_matrix(self, format='sympy'):
         return matrix_cache.get_matrix('S', format)
+
+    def _eval_commutator_ZGate(self, other, **hints):
+        return Integer(0)
+
+    def _eval_commutator_TGate(self, other, **hints):
+        return Integer(0)
 
 
 class TGate(OneQubitGate):
@@ -651,6 +746,13 @@ class TGate(OneQubitGate):
 
     def get_target_matrix(self, format='sympy'):
         return matrix_cache.get_matrix('T', format)
+
+    def _eval_commutator_ZGate(self, other, **hints):
+        return Integer(0)
+
+    def _eval_commutator_PhaseGate(self, other, **hints):
+        return Integer(0)
+
 
 # Aliases for gate names.
 H = HadamardGate
@@ -737,6 +839,39 @@ class CNotGate(CGate, TwoQubitGate):
 
     def _latex(self, printer, *args):
         return Gate._latex(self, printer, *args)
+
+    #-------------------------------------------------------------------------
+    # Commutator/AntiCommutator
+    #-------------------------------------------------------------------------
+
+    def _eval_commutator_ZGate(self, other, **hints):
+        """[CNOT(i, j), Z(i)] == 0."""
+        if self.controls[0] == other.targets[0]:
+            return Integer(0)
+        else:
+            raise NotImplementedError('Commutator not implemented: %r' % other)
+
+    def _eval_commutator_TGate(self, other, **hints):
+        """[CNOT(i, j), T(i)] == 0."""
+        return self._eval_commutator_ZGate(other, **hints)
+
+    def _eval_commutator_PhaseGate(self, other, **hints):
+        """[CNOT(i, j), S(i)] == 0."""
+        return self._eval_commutator_ZGate(other, **hints)
+
+    def _eval_commutator_XGate(self, other, **hints):
+        """[CNOT(i, j), X(j)] == 0."""
+        if self.targets[0] == other.targets[0]:
+            return Integer(0)
+        else:
+            raise NotImplementedError('Commutator not implemented: %r' % other)
+
+    def _eval_commutator_CNotGate(self, other, **hints):
+        """[CNOT(i, j), CNOT(i,k)] == 0."""
+        if self.controls[0] == other.controls[0]:
+            return Integer(0)
+        else:
+            raise NotImplementedError('Commutator not implemented: %r' % other)
 
 
 class SwapGate(TwoQubitGate):
@@ -907,56 +1042,64 @@ def gate_simp(circuit):
     simplification rules to the circuit, e.g., XGate**2 = Identity
     """
 
-    #bubble sort out gates that commute
+    # Bubble sort out gates that commute.
     circuit = gate_sort(circuit)
 
-    #do simplifications by subing a simplification into the first element
-    #which can be simplified
-    #We recursively call gate_simp with new circuit as input
-    #more simplifications exist
-    if isinstance(circuit, Mul):
-        #Iterate through each element in circuit; simplify if possible
-        for i in range(len(circuit.args)):
-            #H,X,Y or Z squared is 1. T**2 = S, S**2 = Z
-            if isinstance(circuit.args[i], Pow):
-                if isinstance(circuit.args[i].base, \
-                    (HadamardGate, XGate, YGate, ZGate))\
-                    and isinstance(circuit.args[i].exp, Number):
-                    # Build a new circuit taking replacing the
-                    #H, X,Y,Z squared with one
-                    newargs = (circuit.args[:i] + (circuit.args[i].base**\
-                    (circuit.args[i].exp % 2),) + circuit.args[i+1:])
-                    #Recursively simplify the new circuit
-                    circuit = gate_simp(Mul(*newargs))
-                    break
-                elif isinstance(circuit.args[i].base, PhaseGate):
-                    #Build a new circuit taking old circuit but splicing
-                    #in simplification
-                    newargs = circuit.args[:i]
-                    #replace PhaseGate**2 with ZGate
-                    newargs = newargs + (ZGate(circuit.args[i].base.args[0][0])**\
-                    (Integer(circuit.args[i].exp/2)), circuit.args[i].base**\
-                    (circuit.args[i].exp % 2))
-                    #append the last elements
-                    newargs = newargs + circuit.args[i+1:]
-                    #Recursively simplify the new circuit
-                    circuit =  gate_simp(Mul(*newargs))
-                    break
-                elif isinstance(circuit.args[i].base, TGate):
-                    #Build a new circuit taking all the old elements
-                    newargs = circuit.args[:i]
+    # Do simplifications by subing a simplification into the first element
+    # which can be simplified. We recursively call gate_simp with new circuit
+    # as input more simplifications exist.
+    if isinstance(circuit, Add):
+        return sum([gate_simp(t) for t in circuit.args])
+    elif isinstance(circuit, Mul):
+        circuit_args = circuit.args
+    elif isinstance(circuit, Pow):
+        b, e = circuit.as_base_exp()
+        circuit_args = (gate_simp(b)**e,)
+    else:
+        return circuit
 
-                    #put an Phasegate in place of any TGate**2
-                    newargs = newargs + (PhaseGate(circuit.args[i].base.args[0][0])**\
-                    Integer(circuit.args[i].exp/2), circuit.args[i].base**\
-                    (circuit.args[i].exp % 2))
+    # Iterate through each element in circuit, simplify if possible.
+    for i in range(len(circuit_args)):
+        # H,X,Y or Z squared is 1.
+        # T**2 = S, S**2 = Z
+        if isinstance(circuit_args[i], Pow):
+            if isinstance(circuit_args[i].base, \
+                (HadamardGate, XGate, YGate, ZGate))\
+                and isinstance(circuit_args[i].exp, Number):
+                # Build a new circuit taking replacing the
+                # H,X,Y,Z squared with one.
+                newargs = (circuit_args[:i] + (circuit_args[i].base**\
+                (circuit_args[i].exp % 2),) + circuit_args[i+1:])
+                # Recursively simplify the new circuit.
+                circuit = gate_simp(Mul(*newargs))
+                break
+            elif isinstance(circuit_args[i].base, PhaseGate):
+                # Build a new circuit taking old circuit but splicing
+                # in simplification.
+                newargs = circuit_args[:i]
+                # Replace PhaseGate**2 with ZGate.
+                newargs = newargs + (ZGate(circuit_args[i].base.args[0])**\
+                (Integer(circuit_args[i].exp/2)), circuit_args[i].base**\
+                (circuit_args[i].exp % 2))
+                # Append the last elements.
+                newargs = newargs + circuit_args[i+1:]
+                # Recursively simplify the new circuit.
+                circuit =  gate_simp(Mul(*newargs))
+                break
+            elif isinstance(circuit_args[i].base, TGate):
+                # Build a new circuit taking all the old elements.
+                newargs = circuit_args[:i]
 
-                    #append the last elements
-                    newargs = newargs + circuit.args[i+1:]
-                    #Recursively simplify the new circuit
-                    circuit =  gate_simp(Mul(*newargs))
-                    break
+                # Put an Phasegate in place of any TGate**2.
+                newargs = newargs + (PhaseGate(circuit_args[i].base.args[0])**\
+                Integer(circuit_args[i].exp/2), circuit_args[i].base**\
+                (circuit_args[i].exp % 2))
 
+                # Append the last elements.
+                newargs = newargs + circuit_args[i+1:]
+                # Recursively simplify the new circuit.
+                circuit =  gate_simp(Mul(*newargs))
+                break
     return circuit
 
 
@@ -970,40 +1113,45 @@ def gate_sort(circuit):
 
     circuit is the Mul of gates that are to be sorted.
     """
-    #bubble sort of gates checking for commutivity of neighbor
+    # Make sure we have an Add or Mul.
+    if isinstance(circuit, Add):
+        return sum([gate_sort(t) for t in circuit.args])
+    if isinstance(circuit, Pow):
+        return gate_sort(circuit.base)**circuit.exp
+    elif isinstance(circuit, Gate):
+        return circuit
+    if not isinstance(circuit, Mul):
+        return circuit
+
     changes = True
     while changes:
         changes = False
-        cirArray = circuit.args
-        for i in range(len(cirArray)-1):
-            #Go through each element and switch ones that are in wrong order
-            if isinstance(cirArray[i], (Gate, Pow)) and\
-            isinstance(cirArray[i+1], (Gate, Pow)):
-                #If we have a Pow object, look at only the base
-                if isinstance(cirArray[i], Pow):
-                    first = cirArray[i].base
-                else:
-                    first = cirArray[i]
+        circ_array = circuit.args
+        for i in range(len(circ_array)-1):
+            # Go through each element and switch ones that are in wrong order
+            if isinstance(circ_array[i], (Gate, Pow)) and\
+               isinstance(circ_array[i+1], (Gate, Pow)):
+                # If we have a Pow object, look at only the base
+                first_base, first_exp = circ_array[i].as_base_exp()
+                second_base, second_exp = circ_array[i+1].as_base_exp()
 
-                if isinstance(cirArray[i+1], Pow):
-                    second = cirArray[i+1].base
-                else:
-                    second = cirArray[i+1]
-
-                #If the elements should sort
-                if first.args[0][0] > second.args[0][0]:
-                    #make sure elements commute
-                    #meaning they do not affect ANY of the same targets
-                    commute = True
-                    for arg1 in first.args[0]:
-                       for arg2 in second.args[0]:
-                            if arg1 == arg2:
-                                commute = False
-                    # if they do commute, switch them
-                    if commute:
-                        circuit = Mul(*(circuit.args[:i] + (circuit.args[i+1],)\
-                         + (circuit.args[i],) + circuit.args[i+2:]))
-                        cirArray = circuit.args
+                # Use sympy's hash based sorting. This is not mathematical
+                # sorting, but is rather based on comparing hashes of objects.
+                # See Basic.compare for details.
+                if first_base.compare(second_base) > 0:
+                    if Commutator(first_base, second_base).doit() == 0:
+                        new_args = (circuit.args[:i] + (circuit.args[i+1],) +\
+                                   (circuit.args[i],) + circuit.args[i+2:])
+                        circuit = Mul(*new_args)
+                        circ_array = circuit.args
+                        changes = True
+                        break
+                    if AntiCommutator(first_base, second_base).doit() == 0:
+                        new_args = (circuit.args[:i] + (circuit.args[i+1],) +\
+                                   (circuit.args[i],) + circuit.args[i+2:])
+                        sign = Integer(-1)**(first_exp*second_exp)
+                        circuit = sign*Mul(*new_args)
+                        circ_array = circuit.args
                         changes = True
                         break
     return circuit
@@ -1012,6 +1160,37 @@ def gate_sort(circuit):
 #-----------------------------------------------------------------------------
 # Utility functions
 #-----------------------------------------------------------------------------
+
+
+def random_circuit(ngates, nqubits, gate_space=(X, Y, Z, S, T, H, CNOT, SWAP)):
+    """Return a random circuit of ngates and nqubits.
+
+    This uses an equally weighted sample of (X, Y, Z, S, T, H, CNOT, SWAP)
+    gates.
+
+    Parameters
+    ----------
+    ngates : int
+        The number of gates in the circuit.
+    nqubits : int
+        The number of qubits in the circuit.
+    gate_space : tuple
+        A tuple of the gate classes that will be used in the circuit.
+        Repeating gate classes multiple times in this tuple will increase
+        the frequency they appear in the random circuit.
+    """
+    qubit_space = range(nqubits)
+    result = []
+    for i in range(ngates):
+        g = random.choice(gate_space)
+        if g == CNotGate or g == SwapGate:
+            qubits = random.sample(qubit_space,2)
+            g = g(*qubits)
+        else:
+            qubit = random.choice(qubit_space)
+            g = g(qubit)
+        result.append(g)
+    return Mul(*result)
 
 
 def zx_basis_transform(self, format='sympy'):

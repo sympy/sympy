@@ -1,7 +1,8 @@
-from sympy import Matrix, I, zeros, ones
+from sympy import Matrix, zeros, ones, Integer
 
 from sympy.physics.quantum.matrixutils import (
-    to_sympy, to_numpy, to_scipy_sparse, matrix_tensor_product
+    to_sympy, to_numpy, to_scipy_sparse, matrix_tensor_product,
+    matrix_to_zero
 )
 
 m = Matrix([[1,2],[3,4]])
@@ -9,6 +10,11 @@ m = Matrix([[1,2],[3,4]])
 
 def test_sympy_to_sympy():
     assert to_sympy(m) == m
+
+
+def test_matrix_to_zero():
+    assert matrix_to_zero(m) == m
+    assert matrix_to_zero(Matrix([[0,0],[0,0]])) == Integer(0)
 
 
 try:
