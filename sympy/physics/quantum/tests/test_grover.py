@@ -1,10 +1,8 @@
-from sympy import sqrt, power
+from sympy import sqrt
 from sympy.physics.quantum.applyops import apply_operators
 from sympy.physics.quantum.qubit import Qubit, IntQubit
 from sympy.physics.quantum.grover import *
-import sympy.physics.quantum.grover
-
-gpath = sympy.physics.quantum.grover
+from sympy.physics.quantum import grover
 
 def return_one_on_two(qubits):
     return True if qubits == IntQubit(2, qubits.nqubits) else False
@@ -17,7 +15,7 @@ def test_create_computational_basis():
     first_half_state = IntQubit(0, nbits)/2 + IntQubit(1, nbits)/2
     second_half_state = IntQubit(2, nbits)/2 + IntQubit(3, nbits)/2
     super_state = first_half_state + second_half_state
-    assert super_state == gpath._create_computational_basis(nbits)
+    assert super_state == grover._create_computational_basis(nbits)
 
     nbits = 3
     first_q = (1/sqrt(8))*IntQubit(0, nbits) + (1/sqrt(8))*IntQubit(1, nbits)
@@ -25,7 +23,7 @@ def test_create_computational_basis():
     third_q = (1/sqrt(8))*IntQubit(4, nbits) + (1/sqrt(8))*IntQubit(5, nbits)  
     fourth_q = (1/sqrt(8))*IntQubit(6, nbits) + (1/sqrt(8))*IntQubit(7, nbits)  
     super_state = first_q + second_q + third_q + fourth_q
-    assert super_state == gpath._create_computational_basis(nbits)
+    assert super_state == grover._create_computational_basis(nbits)
 
 def test_OracleGate():
     v = OracleGate(1, lambda qubits: True if qubits == IntQubit(0) else False)
@@ -41,7 +39,7 @@ def test_OracleGate():
 
 def test_WGate():
     numqubits = 2
-    basis_states = gpath._create_computational_basis(numqubits)
+    basis_states = grover._create_computational_basis(numqubits)
     w = WGate(numqubits)
     assert apply_operators(w*basis_states) == basis_states
 
@@ -51,26 +49,26 @@ def test_WGate():
 
 def test_grover_iteration_1():
     numqubits = 2
-    basis_states = gpath._create_computational_basis(numqubits)
+    basis_states = grover._create_computational_basis(numqubits)
     v = OracleGate(numqubits, return_one_on_one)
-    iterated = gpath.grover_iteration(basis_states, v)
+    iterated = grover.grover_iteration(basis_states, v)
     expected = IntQubit(1, numqubits)
     assert apply_operators(iterated) == expected
 
 def test_grover_iteration_2():
     numqubits = 4
-    basis_states = gpath._create_computational_basis(numqubits)
+    basis_states = grover._create_computational_basis(numqubits)
     v = OracleGate(numqubits, return_one_on_two)
-    # Should return Qubit('0010') after (pi/4)sqrt(pow(2, n))
+    # After (pi/4)sqrt(pow(2, n)), IntQubit(2) should have highest prob
     # In this case, after around pi times (3 or 4)
     #print ''
-    iterated = gpath.grover_iteration(basis_states, v) 
+    iterated = grover.grover_iteration(basis_states, v) 
     iterated = apply_operators(iterated)
     #print iterated
-    iterated = gpath.grover_iteration(iterated, v) 
+    iterated = grover.grover_iteration(iterated, v) 
     iterated = apply_operators(iterated)
     #print iterated
-    iterated = gpath.grover_iteration(iterated, v) 
+    iterated = grover.grover_iteration(iterated, v) 
     iterated = apply_operators(iterated)
     #print iterated
     # In this case, probability was highest after 3 iterations
@@ -79,6 +77,4 @@ def test_grover_iteration_2():
     assert True
 
 def test_grover():
-    # Needs implementation
-    # Ask about measurement
-    assert True
+    assert grover.apply_grover(return_one_on_one, 2) == IntQubit(1, 2)

@@ -9,7 +9,8 @@ Todo:
   multiple qubit states, not just one.  
 """
 
-from sympy import sqrt  
+from sympy import sqrt, pi, floor
+from sympy.physics.quantum import apply_operators
 from sympy.physics.quantum.qexpr import QuantumError
 from sympy.physics.quantum.hilbert import ComplexSpace
 from sympy.physics.quantum.operator import UnitaryOperator
@@ -34,23 +35,23 @@ def _create_computational_basis(nqubits):
     Qubit : An equal superposition of the computational basis with nqubits
     """
     amp = 1/sqrt(2**nqubits)
-    return sum(amp*IntQubit(n, nqubits) for n in range(2**nqubits))
+    return sum([amp*IntQubit(n, nqubits) for n in range(2**nqubits)])
 
 class OracleGate(Gate):
-    """A black box gate
+    """A black box gate.
 
     The gate marks the desired qubits of an unknown function by flipping
     the sign of the qubits.  The unknown function returns true when it
     finds its desired qubits and false otherwise.  
 
     Parameters
-    ----------
+    ==========
     label : tuple (int, callable)
-        Number of qubits
-        A callable function that returns a boolean on a computational basis
+        Number of qubits.
+        A callable function that returns a boolean on a computational basis.
 
     Examples
-    --------
+    ========
 
     """
 
@@ -90,7 +91,7 @@ class OracleGate(Gate):
 
     @property
     def search_function(self):
-        """The unknown function that helps find the sought after qubits"""
+        """The unknown function that helps find the sought after qubits."""
         return self.label[1]
 
     @property
@@ -132,7 +133,7 @@ class WGate(Gate):
     |phi> = (tensor product of n Hadamards)*(|0> with n qubits)
 
     Parameters
-    ----------
+    ==========
     nqubits : int
         The number of qubits to operate on
 
@@ -175,36 +176,50 @@ class WGate(Gate):
         return change_to_basis - qubits
 
 def grover_iteration(qstate, oracle):
-    """Applies one application of the Oracle and W Gate, WV
+    """Applies one application of the Oracle and W Gate, WV.
 
     Parameters
-    ----------
+    ==========
     qstate : Qubit
-        A superposition of qubits
+        A superposition of qubits.
     oracle : OracleGate
-        The black box operator that flips the sign of the desired basis qubits
+        The black box operator that flips the sign of the desired basis qubits.
 
     Returns
-    -------
+    =======
     Qubit : The qubits after applying the Oracle and W gate.
 
     """
     wgate = WGate(oracle.nqubits)
     return wgate*oracle*qstate
 
-def grover(bbox):
-    """Applies grover's algorithm
+def apply_grover(bbox, nqubits, iterations=None):
+    """Applies grover's algorithm.
 
     Parameters
-    ----------
+    ==========
     bbox : callable 
         The unknown callable function that returns true when applied to the 
         desired qubits and false otherwise.  
 
     Returns
-    -------
-    Qubit : The sought after qubits for the unknown callable function
+    =======
+    Qubit : The qubits and their probabilities after some number of
+            iterations.  
 
     """
-    # Ask about the number of iterations and measurement
-    return 0
+    if nqubits <= 0:
+        raise QuantumError(
+            'Grover\'s algorithm needs nqubits > 0, received %r qubits' 
+                % nqubits
+        )
+    if iterations is None:
+        iterations = floor(sqrt(2**nqubits)*(pi/4))
+
+    v = OracleGate(nqubits, bbox)
+    iterated = _create_computational_basis(nqubits)
+    for iter in range(iterations):
+        iterated = grover_iteration(iterated, v)  
+        iterated = apply_operators(iterated)
+    
+    return iterated
