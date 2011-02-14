@@ -516,45 +516,6 @@ def test_has_any():
 
     assert FockState((x, y)).has(x)
 
-def test_has_all():
-    x,y,z,t,u = symbols('xyztu')
-    u = symbols('u')
-
-    i = Integer(4400)
-
-    assert i.has(x, all=True) is False
-
-    assert (i*x**i).has(x, all=True)
-    assert (i*y**i).has(x, all=True) is False
-
-    expr = x**2*y + sin(2**t + log(z))
-
-    assert expr.has(y, z, t, all=True)
-    assert expr.has(x, z, t, all=True)
-    assert expr.has(x, y, t, all=True)
-    assert expr.has(x, y, z, all=True)
-
-    assert expr.has(y, u, t, all=True) is False
-    assert expr.has(x, z, u, all=True) is False
-    assert expr.has(u, y, z, all=True) is False
-
-    assert expr.has(x, y, z, t, all=True)
-    assert expr.has(x, y, z, t, u, all=True) is False
-
-    from sympy.physics.units import m, s
-
-    assert (x*m/s).has(x, all=True)
-    assert (x*m/s).has(x, y, all=True) is False
-
-    poly = Poly(x**2 + x*y*sin(z), x, y, t)
-
-    assert poly.has(x, y, z, all=True)
-    assert poly.has(x, y, z, t, all=True) is False
-
-    f = FockState((x, y))
-    assert f.has(x, y, all=True)
-    assert f.has(x, y, z, all=True) is False
-
 def test_as_poly_basic():
     f = x**2 + 2*x*y
 

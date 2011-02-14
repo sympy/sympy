@@ -815,71 +815,46 @@ class Basic(AssumeMeths):
         return False
 
     @cacheit
-    def has(self, *patterns, **flags):
-        """Return True if self has any of the patterns. If the `all` flag
-        is True then return True if all of the patterns are present.
+    def has(self, *patterns):
+        """
+        Test whether any subexpression matches any of the patterns.
 
-           >>> from sympy import sin, S
-           >>> from sympy.abc import x, y, z
+        Examples:
+        >>> from sympy import sin, S
+        >>> from sympy.abc import x, y, z
+        >>> (x**2 + sin(x*y)).has(z)
+        False
+        >>> (x**2 + sin(x*y)).has(x, y, z)
+        True
+        >>> x.has(x)
+        True
 
-           >>> (x**2 + sin(x*y)).has(z)
-           False
-
-           >>> (x**2 + sin(x*y)).has(x, y, z)
-           True
-
-           When `all` is True then True is returned only if all of the
-           patterns are present:
-
-           >>> (x**2 + sin(x*y)).has(x, y, z, all=True)
-           False
-
-           If there are no patterns, False is always returned:
-           "something doesn't have nothing"
-
-           >>> (x).has()
-           False
-           >>> (S.One).has()
-           False
-
+        Note that ``expr.has(*patterns)`` is exactly equivalent to
+        ``any(expr.has(p) for p in patterns)``. In particular, ``False`` is
+        returned when the list of patterns is empty.
+        >>> x.has()
+        False
 
         """
-        from sympy.core.symbol import Wild
-
-        def search(expr, target, hit):
-            if hasattr(expr, '__iter__') and hasattr(expr, '__len__'):
-                # this 'if' clause is needed until all objects use
-                # sympy containers
-                for i in expr:
-                    if search(i, target, hit):
-                        return True
-            elif not isinstance(expr, Basic):
-                pass
-            elif target(expr) and hit(expr):
+        def search(expr, test):
+            if not isinstance(expr, Basic):
+                try:
+                    return any(search(i, test) for i in expr)
+                except TypeError:
+                    return False
+            elif test(expr):
                 return True
             else:
-                for term in expr.iter_basic_args():
-                    if search(term, target, hit):
-                        return True
-            return False
+                return any(search(i, test) for i in expr.iter_basic_args())
 
-        def _has(p):
-            p = sympify(p)
+        def _match(p):
             if isinstance(p, BasicType):
-                return search(self, lambda w: isinstance(w, p), lambda w: True)
-            if p.is_Atom and not isinstance(p, Wild):
-                return search(self, lambda w: isinstance(w, p.func), lambda w: w in [p])
-            return search(self, lambda w: p.matches(w) is not None, lambda w: True)
+                return lambda w: isinstance(w, p)
+            else:
+                return lambda w: p.matches(w) is not None
 
-        if not patterns:
-            return False # something doesn't have nothing
-
-        patterns = set(patterns)
-
-        if flags.get('all', False):
-            return all(_has(p) for p in patterns)
-        else:
-            return any(_has(p) for p in patterns)
+        patterns = map(sympify, patterns)
+        return any(search(self, _match(p)) for p in patterns)
 
     def matches(self, expr, repl_dict={}, evaluate=False):
         """
