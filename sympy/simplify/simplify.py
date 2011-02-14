@@ -1391,14 +1391,24 @@ def powsimp(expr, deep=False, combine='all'):
                 if term.is_Add and deep:
                     newexpr *= powsimp(term, deep, combine)
                 else:
-                    if (term.is_commutative or
-                        term.is_Pow and term.exp.is_commutative):
+                    if term.is_commutative:
                         b, e = term.as_base_exp()
                         if deep:
                             b, e = powsimp(b, deep, combine), powsimp(e, deep, combine)
                         c_powers[b] = c_powers.get(b, 0) + e
                     else:
-                        nc_part.append(term)
+                        # This is the logic that combines exponents for equal,
+                        # but non-commutative bases: A**x*A**y == A**(x+y).
+                        if len(nc_part) > 0:
+                            last = nc_part.pop()
+                            b1, e1 = last.as_base_exp()
+                            b2, e2 = term.as_base_exp()
+                            if b1 == b2 and e1.is_commutative and e2.is_commutative:
+                                nc_part.append(b1**(e1+e2))
+                            else:
+                                nc_part.extend([last, term])
+                        else:
+                            nc_part.append(term)
             newexpr = Mul(newexpr, Mul(*[Pow(b,e) for b, e in c_powers.items()]))
             if combine is 'exp':
                 return Mul(newexpr, Mul(*nc_part))
@@ -1426,12 +1436,23 @@ def powsimp(expr, deep=False, combine='all'):
                 c_powers = []
                 nc_part = []
                 for term in expr.args:
-                    if (term.is_commutative or
-                        term.is_Pow and term.exp.is_commutative):
+                    if term.is_commutative:
                         c_powers.append(list(term.as_base_exp()))
                     else:
-                        nc_part.append(term)
-
+                        # This is the logic that combines bases that are
+                        # different and non-commutative, but with equal and
+                        # commutative exponents: A**x*B**x == (A*B)**x.
+                        if len(nc_part) > 0:
+                            last = nc_part.pop()
+                            b1, e1 = last.as_base_exp()
+                            b2, e2 = term.as_base_exp()
+                            if e1 == e1 and b1 != b2 and\
+                                e1.is_commutative and e2.is_commutative:
+                                nc_part.append((b1*b2)**e1)
+                            else:
+                                nc_part.extend([last, term])
+                        else:
+                            nc_part.append(term)
 
             # Pull out numerical coefficients from exponent
             # e.g., 2**(2*x) => 4**x
