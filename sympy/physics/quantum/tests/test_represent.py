@@ -1,4 +1,4 @@
-from sympy import Matrix, I
+from sympy import Matrix, I, Real, Integer
 
 from sympy.physics.quantum.dagger import Dagger
 from sympy.physics.quantum.represent import represent
@@ -93,6 +93,11 @@ def test_format_sympy():
         rhs = to_sympy(test[1])
         assert lhs == rhs
 
+def test_scalar_sympy():
+    assert represent(Integer(1)) == Integer(1)
+    assert represent(Real(1.0)) == Real(1.0)
+    assert represent(1.0+I) == 1.0+I
+
 
 try:
     import numpy as np
@@ -107,6 +112,11 @@ else:
                 assert (lhs == rhs).all()
             else:
                 assert lhs == rhs
+
+    def test_scalar_numpy():
+        assert represent(Integer(1), format='numpy') == 1
+        assert represent(Real(1.0), format='numpy') == 1.0
+        assert represent(1.0+I, format='numpy') == 1.0+1.0j
 
 
 try:
@@ -123,3 +133,8 @@ else:
                 assert np.linalg.norm((lhs-rhs).todense()) == 0.0
             else:
                 assert lhs == rhs
+
+    def test_scalar_scipy_sparse():
+        assert represent(Integer(1), format='scipy.sparse') == 1
+        assert represent(Real(1.0), format='scipy.sparse') == 1.0
+        assert represent(1.0+I, format='scipy.sparse') == 1.0+1.0j
