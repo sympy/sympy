@@ -61,20 +61,33 @@ def test_grover_iteration_2():
     v = OracleGate(numqubits, return_one_on_two)
     # After (pi/4)sqrt(pow(2, n)), IntQubit(2) should have highest prob
     # In this case, after around pi times (3 or 4)
-    #print ''
+    # print ''
+    # print basis_states
     iterated = grover.grover_iteration(basis_states, v) 
     iterated = apply_operators(iterated)
-    #print iterated
+    # print iterated
     iterated = grover.grover_iteration(iterated, v) 
     iterated = apply_operators(iterated)
-    #print iterated
+    # print iterated
     iterated = grover.grover_iteration(iterated, v) 
     iterated = apply_operators(iterated)
-    #print iterated
+    # print iterated
     # In this case, probability was highest after 3 iterations
     # Probability of Qubit('0010') was 251/256 (3) vs 781/1024 (4)
     # Ask about measurement
-    assert True
+    expected = (-13*basis_states)/64
+    expected = expected + 264*IntQubit(2, numqubits)/256
+    assert apply_operators(expected) == iterated
 
 def test_grover():
-    assert grover.apply_grover(return_one_on_one, 2) == IntQubit(1, 2)
+    nqubits = 2
+    actual = grover.apply_grover(return_one_on_one, nqubits)
+    assert actual == IntQubit(1, nqubits)
+
+    nqubits = 4
+    basis_states = grover._create_computational_basis(nqubits)
+    expected = (-13*basis_states)/64
+    expected = expected + 264*IntQubit(2, nqubits)/256
+    actual = grover.apply_grover(return_one_on_two, 4)
+    assert actual == apply_operators(expected)
+
