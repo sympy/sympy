@@ -876,9 +876,10 @@ class Expr(Basic, EvalfMixin):
                 # make sure the requested order is returned
                 ngot = o.getn()
                 if ngot > n:
-                    # reduce the order of the o term so it will eat excess terms
-                    o = o.subs(x, x**C.Rational(n, ngot))
-                elif ngot < n:
+                    # leave o in its current form (e.g. with x*log(x)) so
+                    # it eats terms properly, then replace it below
+                    s1 += o.subs(x, x**C.Rational(n, ngot))
+                if ngot < n:
                     # increase the requested number of terms to get the desired
                     # number keep increasing (up to 9) until the received order
                     # is different than the original order and then predict how
@@ -892,13 +893,12 @@ class Expr(Basic, EvalfMixin):
                             # if this assertion fails then our ndo calculation
                             # needs modification
                             assert s1.getn() == n
-                            # Sometimes orders like O(x**3*log(x)**3) are returned.
-                            # Should these be O(x**3)?
-                            o = s1.getO()
                             break
                     else:
                         raise ValueError('Could not calculate %s terms for %s'
                                          % (str(n), self))
+                # now use the standard O
+                o = C.Order(x**n)
                 s1 = s1.removeO()
             else:
                 o = C.Order(x**n)
