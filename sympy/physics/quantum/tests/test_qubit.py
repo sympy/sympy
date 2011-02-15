@@ -87,6 +87,14 @@ def test_matrix_to_qubits():
     + Qubit(0,1,1) + Qubit(1,0,0) + Qubit(1,0,1) + Qubit(1,1,0) + Qubit(1,1,1)))\
     == sqrt(2)*2*Matrix([1,1,1,1,1,1,1,1])
 
+def test_measure_normalize():
+    a,b = symbols('ab')
+    state = a*Qubit('110') + b*Qubit('111')
+    assert measure_partial(state, (0,), normalize=False) ==\
+     [(a*Qubit('110'), a*a.conjugate()), (b*Qubit('111'),b*b.conjugate())]
+    assert measure_all(state, normalize=False) ==\
+    [(Qubit('110'), a*a.conjugate()),(Qubit('111'), b*b.conjugate())]
+
 def test_measure_partial():
     #Basic test of collapse of entangled two qubits (Bell States)
     state = Qubit('01') + Qubit('10')
