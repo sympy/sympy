@@ -44,6 +44,6 @@ circuit_plot(circ_quantum, nqubits=4)
 
 # With a 6 qubit example
 circ_classic = CNOT(3,1)*CNOT(2,0)
-circuit_plot(circ_classic, nqubits=6)
+#circuit_plot(circ_classic, nqubits=6)
 circ_quantum = H(1)*CNOT(1,0)*CGate(3,Z(1))*CNOT(2,1)*CNOT(1,0)*H(1)
-circuit_plot(circ_quantum, nqubits=6)
+#circuit_plot(circ_quantum, nqubits=6)
