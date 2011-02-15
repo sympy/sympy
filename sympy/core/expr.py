@@ -879,7 +879,7 @@ class Expr(Basic, EvalfMixin):
                     # leave o in its current form (e.g. with x*log(x)) so
                     # it eats terms properly, then replace it below
                     s1 += o.subs(x, x**C.Rational(n, ngot))
-                if ngot < n:
+                elif ngot < n:
                     # increase the requested number of terms to get the desired
                     # number keep increasing (up to 9) until the received order
                     # is different than the original order and then predict how
@@ -897,8 +897,7 @@ class Expr(Basic, EvalfMixin):
                     else:
                         raise ValueError('Could not calculate %s terms for %s'
                                          % (str(n), self))
-                # now use the standard O
-                o = C.Order(x**n)
+                o = s1.getO()
                 s1 = s1.removeO()
             else:
                 o = C.Order(x**n)
