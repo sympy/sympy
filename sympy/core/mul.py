@@ -933,6 +933,8 @@ class Mul(AssocOp):
                 c_e = c[b]
                 rat.append(ndiv(c_e, old_e))
             cdid = min(rat)
+            if not cdid:
+                return fallback()
 
         if not old_nc:
             ncdid = None
@@ -941,7 +943,7 @@ class Mul(AssocOp):
         else:
             ncdid = 0  # number of nc replacements we did
             take = len(old_nc)  # how much to look at each time
-            limit = cdid or S.Infinity  # max number to take
+            limit = cdid or S.Infinity # max number that we can take
             failed = []  # failed terms will need subs if other terms pass
             i = 0
             while limit and i + take <= len(nc):

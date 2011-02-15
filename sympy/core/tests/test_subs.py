@@ -268,8 +268,6 @@ def test_subs_basic_funcs():
     assert (a*exp(x*y-w*z)+b*exp(x*y+w*z)).subs(z,0) == a*exp(x*y)+b*exp(x*y)
     assert ((a-b)/(c*d-a*b)).subs(c*d-a*b,K) == (a-b)/K
     assert (w*exp(a*b-c)*x*y/4).subs(x*y,L) == w*exp(a*b-c)*L/4
-    assert (x**(2*y)).subs(exp(3*y*log(x)), z) == \
-           (x**(2*y)).subs(x**(3*y), z) == z**Rational(2, 3)
     #assert (a/(b*c)).subs(b*c,K) == a/K,'Failed'; print '.' #FAILS DIVISION
 
 def test_subs_wild():
@@ -350,3 +348,10 @@ def test_derivative_subs():
     # issues 1986, 1938
     assert cse(Derivative(f(x), x) + f(x))[1][0].has(Derivative)
     assert cse(Derivative(f(x, y), x) + Derivative(f(x, y), y))[1][0].has(Derivative)
+
+def test_issue2185():
+    x = Symbol('x')
+    A, B = symbols('A B', commutative=False)
+    assert (x*A).subs(x**2*A, B) == x*A
+    assert (A**2).subs(A**3, B) == A**2
+    assert (A**6).subs(A**3, B) == B**2
