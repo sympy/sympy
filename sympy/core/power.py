@@ -208,12 +208,16 @@ class Pow(Expr):
             coeff1, terms1 = self.exp.as_coeff_terms()
             coeff2, terms2 = old.exp.as_coeff_terms()
             if terms1 == terms2:
-                return Pow(new, coeff1/coeff2) # (x**(2*y)).subs(x**(3*y),z) -> z**(2/3)
+                pow = coeff1/coeff2
+                if pow.is_Integer or self.base.is_commutative:
+                    return Pow(new, pow) # (x**(2*y)).subs(x**(3*y),z) -> z**(2/3)
         if old.func is C.exp:
             coeff1, terms1 = old.args[0].as_coeff_terms()
             coeff2, terms2 = (self.exp*C.log(self.base)).as_coeff_terms()
             if terms1 == terms2:
-                return Pow(new, coeff2/coeff1) # (x**(2*y)).subs(exp(3*y*log(x)),z) -> z**(2/3)
+                pow = coeff1/coeff2
+                if pow.is_Integer or self.base.is_commutative:
+                    return Pow(new, pow) # (x**(2*y)).subs(x**(3*y),z) -> z**(2/3)
         b, e = self.base._eval_subs(old, new), self.exp._eval_subs(old, new)
         #if not b and e.is_negative: # don't let subs create an infinity
         #    return S.NaN
