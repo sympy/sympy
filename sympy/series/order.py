@@ -254,7 +254,7 @@ class Order(Expr):
         return Order(self.expr._eval_subs(old, new), *self.variables)
 
     def _eval_derivative(self, x):
-        return self.func(self.expr.diff(x), *self.variables)
+        return self.func(self.expr.diff(x), *self.variables) or self
 
     def _sage_(self):
         #XXX: SAGE doesn't have Order yet. Let's return 0 instead.
