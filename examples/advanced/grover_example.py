@@ -65,7 +65,7 @@ def main():
 
 """
 Allows application of Grover's algorithm to arbitrary number of qubits
-Allows specification of number of iterations
+Provides user control on the number of iterations to run on a state
 Includes W gate and V (Oracle) gate
 V gate accepts a "black box" function that returns true or false on a 
  set of qubits
