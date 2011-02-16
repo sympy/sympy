@@ -679,30 +679,3 @@ def measure_all_oneshot(qubit, format='sympy'):
         raise NotImplementedError(
             "This function can't handle non-sympy matrix formats yet"
         )
-
-
-def measure_partial_oneshot_sparse(state, qubit, format='sympy'):
-    """A sparse form of partial, oneshot measurement."""
-    import random
-    state = state.expand()
-    prob1 = 0
-    #Go through each item in the add and grab its probability
-    #This will be used to determine probability of getting a 1
-    if isinstance(state, (Mul, Qbit)):
-        return state
-    for item in state.args:
-        if item.args[-1][qbit] == 1:
-            prob1 += Mul(*item.args[0:-1])*Mul(*item.args[0:-1]).conjugate()
-    if prob1 < random.random():
-        choice = 0
-    else:
-        choice = 1
-    result = 0
-    for item in state.args:
-        if item.args[-1][qbit] == choice:
-            result = result + item
-    if choice:
-        result = result/sqrt(prob1)
-    else:
-        result = result/sqrt(1-prob1)
-    return result.expand()
