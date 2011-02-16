@@ -19,10 +19,13 @@ from sympy.physics.quantum.qubit import IntQubit
 
 __all__ = [
     'OracleGate',
-    'WGate'
+    'WGate',
+    'superposition_basis',
+    'grover_iteration',
+    'apply_grover'
 ]
 
-def _create_computational_basis(nqubits):
+def superposition_basis(nqubits):
     """Creates an equal superposition of the computational basis.
 
     Parameters:
@@ -171,7 +174,7 @@ class WGate(Gate):
         # Return (2/(sqrt(2^n)))|phi> - |a> where |a> is the current basis
         # state and phi is the superposition of basis states (see function
         # create_computational_basis above)
-        basis_states = _create_computational_basis(self.nqubits)
+        basis_states = superposition_basis(self.nqubits)
         change_to_basis = (2/sqrt(2**self.nqubits))*basis_states
         return change_to_basis - qubits
 
@@ -217,7 +220,7 @@ def apply_grover(bbox, nqubits, iterations=None):
         iterations = floor(sqrt(2**nqubits)*(pi/4))
 
     v = OracleGate(nqubits, bbox)
-    iterated = _create_computational_basis(nqubits)
+    iterated = superposition_basis(nqubits)
     for iter in range(iterations):
         iterated = grover_iteration(iterated, v)  
         iterated = apply_operators(iterated)
