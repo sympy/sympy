@@ -589,8 +589,6 @@ class Derivative(Expr):
             s = sympify(s)
             if not isinstance(s, C.Symbol):
                 raise ValueError('Invalid literal: %s is not a valid variable' % s)
-            if not expr.has(s):
-                return S.Zero
             obj = expr._eval_derivative(s)
             if obj is None:
                 unevaluated_symbols.append(s)
@@ -606,6 +604,8 @@ class Derivative(Expr):
     def _eval_derivative(self, s):
         if s not in self.symbols:
             obj = self.expr.diff(s)
+            if not obj:
+                return obj
             if isinstance(obj, Derivative):
                 return Derivative(obj.expr, *(self.symbols+obj.symbols))
             return Derivative(obj, *self.symbols)
