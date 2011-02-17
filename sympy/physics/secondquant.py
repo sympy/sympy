@@ -1977,7 +1977,6 @@ class NO(Expr):
         for i in self.iter_q_creators():
             if self[i].is_q_annihilator:
                 assume = self[i].state.assumptions0
-                assume["dummy"]=True
 
                 # only operators with a dummy index can be split in two terms
                 if isinstance(self[i].state, Dummy):
@@ -1985,10 +1984,10 @@ class NO(Expr):
                     # create indices with fermi restriction
                     assume.pop("above_fermi", None)
                     assume["below_fermi"]=True
-                    below = Symbol('i',**assume)
+                    below = Dummy('i',**assume)
                     assume.pop("below_fermi", None)
                     assume["above_fermi"]=True
-                    above = Symbol('a',**assume)
+                    above = Dummy('a',**assume)
 
                     cls = type(self[i])
                     split = (
@@ -2047,9 +2046,9 @@ class NO(Expr):
         """
         Iterates over the annihilation operators.
 
-        >>> from sympy import symbols
+        >>> from sympy import symbols, Dummy
         >>> i,j,k,l = symbols('ijkl',below_fermi=True)
-        >>> p,q,r,s = symbols('pqrs', dummy=True)
+        >>> p,q,r,s = symbols('p q r s', cls=Dummy)
         >>> a,b,c,d = symbols('abcd',above_fermi=True)
         >>> from sympy.physics.secondquant import NO, F, Fd
         >>> no = NO(Fd(a)*F(i)*Fd(j)*F(b))
@@ -2074,9 +2073,9 @@ class NO(Expr):
         """
         Iterates over the creation operators.
 
-        >>> from sympy import symbols
+        >>> from sympy import symbols, Dummy
         >>> i,j,k,l = symbols('ijkl',below_fermi=True)
-        >>> p,q,r,s = symbols('pqrs', dummy=True)
+        >>> p,q,r,s = symbols('p q r s', cls=Dummy)
         >>> a,b,c,d = symbols('abcd',above_fermi=True)
         >>> from sympy.physics.secondquant import NO, F, Fd
         >>> no = NO(Fd(a)*F(i)*Fd(j)*F(b))
@@ -2267,11 +2266,11 @@ def evaluate_deltas(e):
 
     We assume that
 
-    >>> from sympy import symbols, Function
+    >>> from sympy import symbols, Function, Dummy
     >>> from sympy.physics.secondquant import evaluate_deltas, KroneckerDelta
-    >>> i,j = symbols('ij',below_fermi=True, dummy=True)
-    >>> a,b = symbols('ab',above_fermi=True, dummy=True)
-    >>> p,q = symbols('pq', dummy=True)
+    >>> i,j = symbols('i j',below_fermi=True, cls=Dummy)
+    >>> a,b = symbols('a b',above_fermi=True, cls=Dummy)
+    >>> p,q = symbols('p q', cls=Dummy)
     >>> f = Function('f')
     >>> t = Function('t')
 
@@ -2368,10 +2367,10 @@ def substitute_dummies(expr, new_indices=False, pretty_indices={}):
     Examples
     --------
 
-    >>> from sympy import symbols, Function
+    >>> from sympy import symbols, Function, Dummy
     >>> from sympy.physics.secondquant import substitute_dummies
-    >>> a,b,c,d = symbols('abcd',dummy=True, above_fermi=True)
-    >>> i,j = symbols('ij',dummy=True, below_fermi=True)
+    >>> a,b,c,d = symbols('a b c d',cls=Dummy, above_fermi=True)
+    >>> i,j = symbols('i j',cls=Dummy, below_fermi=True)
     >>> f = Function('f')
 
     >>> expr = f(a,b) + f(c,d); expr
@@ -2408,7 +2407,7 @@ def substitute_dummies(expr, new_indices=False, pretty_indices={}):
     If we run out of letters, or if there is no keyword for some index_group
     the default dummy generator will be used as a fallback:
 
-    >>> p,q = symbols('pq',dummy=True)  # general indices
+    >>> p,q = symbols('p q', cls=Dummy)  # general indices
     >>> expr = f(p,q)
     >>> substitute_dummies(expr, new_indices=True, pretty_indices=my_dummies)
     f(_p_0, _p_1)
@@ -2454,7 +2453,6 @@ def substitute_dummies(expr, new_indices=False, pretty_indices={}):
     a = i = p = 0
     for d in dummies:
         assum = d.assumptions0
-        assum["dummy"]=True
 
         if assum.get("above_fermi"):
             if new_indices: sym = _a(a); a +=1
@@ -2467,7 +2465,7 @@ def substitute_dummies(expr, new_indices=False, pretty_indices={}):
             l1 = generals
 
         if new_indices:
-            l1.append(Symbol(sym, **assum))
+            l1.append(Dummy(sym, **assum))
         else:
             l1.append(d)
 
@@ -2499,7 +2497,7 @@ def substitute_dummies(expr, new_indices=False, pretty_indices={}):
                 # correct substitution order.
                 if subsdict[v] in subsdict:
                     # (x, y) -> (y, x),  we need a temporary variable
-                    x = Symbol('x', dummy=True)
+                    x = Dummy('x')
                     subslist.append((k, x))
                     final_subs.append((x, v))
                 else:
@@ -2811,7 +2809,7 @@ def wicks(e, **kw_args):
     Returns the normal ordered equivalent of an expression using Wicks Theorem.
 
 
-    >>> from sympy import symbols, Function
+    >>> from sympy import symbols, Function, Dummy
     >>> from sympy.physics.secondquant import wicks, F, Fd, NO
     >>> p,q,r = symbols('pqr')
     >>> wicks(Fd(p)*F(q))  # doctest: +SKIP
@@ -2829,7 +2827,7 @@ def wicks(e, **kw_args):
      -- KroneckerDelta functions are evaluated
      -- Dummy variables are substituted consistently across terms
 
-    >>> p,q,r = symbols('pqr', dummy=True)
+    >>> p,q,r = symbols('p q r', cls=Dummy)
     >>> wicks(Fd(p)*(F(q)+F(r)), keep_only_fully_contracted=True) # doctest: +SKIP
     KroneckerDelta(_i, _q)*KroneckerDelta(_p, _q) + KroneckerDelta(_i, _r)*KroneckerDelta(_p, _r)
 

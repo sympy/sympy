@@ -376,10 +376,10 @@ class Expr(Basic, EvalfMixin):
         # however, and it causes many failures.
         #
         # from sympy.core.relational import Equality
-        # from sympy import Eq
+        # from sympy import Eq, Dummy
         # if isinstance(self, Equality):
-        #     l = Symbol('l', dummy=True)
-        #     r = Symbol('r', dummy=True)
+        #     l = Dummy('l')
+        #     r = Dummy('r')
         #     n, d = (l*self.lhs - r*self.rhs).as_numer_denom()
         #     return Eq(n.subs({l: 1, r: 0}),
         #               n.subs({l: 0, r: -1})), d.subs({l: 1, r: 1})

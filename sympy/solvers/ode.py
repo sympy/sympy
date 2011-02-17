@@ -1852,7 +1852,7 @@ def _homogeneous_order(eq, *symbols):
             if not all([j in symbols for j in i.args]):
                 return None
             else:
-                dummyvar = numbered_symbols(prefix='d', dummy=True).next()
+                dummyvar = numbered_symbols(prefix='d', cls=Dummy).next()
                 eq = eq.subs(i, dummyvar)
                 symbols = list(symbols)
                 symbols.remove(i)
@@ -2403,7 +2403,7 @@ def _solve_undetermined_coefficients(eq, func, order, match):
     x = func.args[0]
     f = func.func
     r = match
-    coeffs = numbered_symbols('a', dummy=True)
+    coeffs = numbered_symbols('a', cls=Dummy)
     coefflist = []
     gensols = r['list']
     gsol = r['sol']

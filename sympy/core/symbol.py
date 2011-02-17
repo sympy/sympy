@@ -207,6 +207,16 @@ def symbols(*names, **kwargs):
     True
 
     """
+    # when polys12 is in place remove from here...
+    if 'cls' in kwargs:
+        if isinstance(names[0], str) and len(names) == 1:
+         names = names[0]
+        kwargs.pop('cls')
+        rv = []
+        for c in names.replace(',', ' ').split():
+            rv.append(Dummy(c, **kwargs))
+        return rv
+    # ... to here when polys12 is in place
     # use new behavior if space or comma in string
     if not 'each_char' in kwargs and len(names) == 1 and \
     isinstance(names[0], str) and (' ' in names[0] or ',' in names[0]):

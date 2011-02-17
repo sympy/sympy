@@ -1,5 +1,5 @@
 from sympy import sin, cos, atan2, gamma, conjugate, sqrt, Factorial, \
-    Integral, Piecewise, Add, diff, symbols, S, Real
+    Integral, Piecewise, Add, diff, symbols, S, Real, Dummy
 from sympy import Catalan, EulerGamma, E, GoldenRatio, I, pi
 from sympy import Function, Rational, Integer, Lambda
 
@@ -328,7 +328,7 @@ def test_dummy_loops():
     # the following line could also be
     # [Dummy(s, integer=True) for s in 'im']
     # or [Dummy(integer=True) for s in 'im']
-    i, m = symbols('i m', integer=True, dummy=True)
+    i, m = symbols('i m', integer=True, cls=Dummy)
     x = IndexedBase('x')
     y = IndexedBase('y')
     i = Idx(i, m)

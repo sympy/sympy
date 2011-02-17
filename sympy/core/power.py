@@ -449,7 +449,7 @@ class Pow(Expr):
         if self.exp.is_Integer:
             exp = self.exp
             re, im = self.base.as_real_imag(deep=deep)
-            a, b = symbols('a, b', dummy=True)
+            a, b = symbols('a b', cls=Dummy)
             if exp >= 0:
                 if re.is_Number and im.is_Number:
                     # We can be more efficient in this case
