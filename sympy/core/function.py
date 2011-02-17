@@ -107,7 +107,7 @@ class Application(Basic):
             if opt in options:
                 del options[opt]
         # up to here.
-        if options.get('evaluate') is False:
+        if not options.get('evaluate', True):
             return super(Application, cls).__new__(cls, *args, **options)
         evaluated = cls.eval(*args)
         if evaluated is not None:
