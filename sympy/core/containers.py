@@ -197,3 +197,134 @@ class Dict(Basic):
     def __contains__(self, key):
         '''D.__contains__(k) -> True if D has a key k, else False'''
         return sympify(key) in self._dict
+
+class TableForm(Basic):
+    """
+    Allows to create nice table representation of data.
+
+    Example::
+
+        >>> from sympy import TableForm
+        >>> t = TableForm([[5, 7], [4, 2], [10, 3]])
+
+    Then use "print t" to print the table. You can use the SymPy's printing
+    system to produce tables in any format (ascii, latex, html, ...).
+
+    """
+
+    def __new__(cls, data, headings=None, alignment="left"):
+        """
+        Creates a TableForm.
+
+        Parameters:
+
+            data ... 2D data to be put into the table
+            headings ... gives the labels for entries in each dimension:
+                         None ... no labels in any dimension
+                         "automatic" ... gives successive integer labels
+                         [[l1, l2, ...], ...] gives labels for each entry in
+                             each dimension (can be None for some dimension)
+            alignment ... "left", "center", "right" (alignment of the columns)
+
+        Example:
+
+        >>> from sympy import TableForm
+        >>> t = TableForm([[5, 7], [4, 2], [10, 3]])
+
+        """
+        # We only support 2D data. Check the consistency:
+        from sympy.core.numbers import Integer
+        _w = Integer(len(data[0]))
+        _h = Integer(len(data))
+        for line in data:
+            assert len(line) == _w
+        _lines = Tuple(data)
+
+        if headings is None:
+            _headings = [None, None]
+        elif headings == "automatic":
+            _headings = [range(1, _h + 1), range(1, _w + 1)]
+        else:
+            h1, h2 = headings
+            if h1 == "automatic":
+                h1 = range(1, _h + 1)
+            if h2 == "automatic":
+                h2 = range(1, _w + 1)
+            _headings = [h1, h2]
+
+        _alignment = alignment
+
+        obj = Basic.__new__(cls, _w, _h, _lines)
+        obj._w = _w
+        obj._h = _h
+        obj._lines = _lines
+        obj._headings = _headings
+        obj._alignment = _alignment
+        return obj
+
+    def as_str(self):
+        """
+        Returns the string representation of 'self'.
+
+        Example:
+
+        >>> from sympy import TableForm
+        >>> t = TableForm([[5, 7], [4, 2], [10, 3]])
+        >>> s = t.as_str()
+
+        """
+        column_widths = [0] * self._w
+        lines = []
+        for line in self._lines:
+            new_line = []
+            for i in range(self._w):
+                # Format the item somehow if needed:
+                s = str(line[i])
+                w = len(s)
+                if w > column_widths[i]:
+                    column_widths[i] = w
+                new_line.append(s)
+            lines.append(new_line)
+
+        # Check heading:
+        if self._headings[1]:
+            new_line = []
+            for i in range(self._w):
+                # Format the item somehow if needed:
+                s = str(self._headings[1][i])
+                w = len(s)
+                if w > column_widths[i]:
+                    column_widths[i] = w
+                new_line.append(s)
+            self._headings[1] = new_line
+
+        format_str = ""
+        for w in column_widths:
+            if self._alignment == "left":
+                align = "-"
+            elif self._alignment == "right":
+                align = ""
+            else:
+                raise NotImplementedError()
+            format_str += "%" + align + str(w) + "s "
+        format_str += "\n"
+
+        if self._headings[0]:
+            self._headings[0] = [str(x) for x in self._headings[0]]
+            heading_width = max([len(x) for x in self._headings[0]])
+            format_str = "%" + str(heading_width) + "s | " + format_str
+
+        s = ""
+        if self._headings[1]:
+            d = self._headings[1]
+            if self._headings[0]:
+                d = [""] + d
+            first_line = format_str % tuple(d)
+            s += first_line
+            s += "-" * (len(first_line) - 2) + "\n"
+        for i, line in enumerate(lines):
+            d = line
+            if self._headings[0]:
+                d = [self._headings[0][i]] + d
+            s += format_str % tuple(d)
+        return s

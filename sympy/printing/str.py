@@ -497,6 +497,9 @@ class StrPrinter(Printer):
     def _print_str(self, expr):
         return expr
 
+    def _print_TableForm(self, expr):
+        return expr.as_str()
+
     def _print_tuple(self, expr):
         if len(expr)==1:
             return "(%s,)"%self._print(expr[0])
