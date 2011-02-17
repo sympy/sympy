@@ -13,7 +13,7 @@ from sympy.mpmath import pslq, mp
 
 def minimal_polynomial(ex, x=None, **args):
     """Computes the minimal polynomial of an algebraic number. """
-    generator = numbered_symbols('a', dummy=True)
+    generator = numbered_symbols('a', cls=Dummy)
     mapping, symbols, replace = {}, {}, []
 
     ex = sympify(ex)
@@ -143,7 +143,7 @@ def primitive_element(extension, x=None, **args):
         else:
             return g, coeffs
 
-    generator = numbered_symbols('y', dummy=True)
+    generator = numbered_symbols('y', cls=Dummy)
 
     F, Y = [], []
 

@@ -383,12 +383,15 @@ def numbered_symbols(prefix='x', function=None, start=0, *args, **assumptions):
     """
 
     if function is None:
-        if 'dummy' in assumptions:
-            assumptions.pop('dummy')
+        if 'dummy' in assumptions and assumptions.pop('dummy'):
             function = C.Dummy
         else:
             function = C.Symbol
 
+    #remove from here...when polys12 is in place
+    if 'cls' in assumptions and assumptions['cls'] == C.Dummy:
+        assumptions.pop('cls')
+    #to here...when polys12 is in place
     while True:
         name = '%s%s' % (prefix, start)
         yield function(name, *args, **assumptions)

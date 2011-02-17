@@ -1,6 +1,6 @@
 from StringIO import StringIO
 
-from sympy.core import symbols, Eq, pi, Catalan, Lambda
+from sympy.core import symbols, Eq, pi, Catalan, Lambda, Dummy
 from sympy.utilities.codegen import CCodeGen, Routine, InputArgument, Result, \
     CodeGenError, FCodeGen, codegen, CodeGenArgumentListError, OutputArgument, \
     InOutArgument
@@ -349,7 +349,7 @@ def test_dummy_loops_c():
     # the following line could also be
     # [Dummy(s, integer=True) for s in 'im']
     # or [Dummy(integer=True) for s in 'im']
-    i, m = symbols('i m', integer=True, dummy=True)
+    i, m = symbols('i m', integer=True, cls=Dummy)
     x = IndexedBase('x')
     y = IndexedBase('y')
     i = Idx(i, m)
@@ -892,7 +892,7 @@ def test_dummy_loops_f95():
     # the following line could also be
     # [Dummy(s, integer=True) for s in 'im']
     # or [Dummy(integer=True) for s in 'im']
-    i, m = symbols('i m', integer=True, dummy=True)
+    i, m = symbols('i m', integer=True, cls=Dummy)
     x = IndexedBase('x')
     y = IndexedBase('y')
     i = Idx(i, m)
