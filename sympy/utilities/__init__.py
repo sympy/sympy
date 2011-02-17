@@ -16,4 +16,6 @@ from runtests import test, doctest
 from cythonutils import cythonized
 from timeutils import timed
 
+from python_numpy import array
+
 from misc import default_sort_key
