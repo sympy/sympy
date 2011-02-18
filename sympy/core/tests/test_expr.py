@@ -782,3 +782,9 @@ def test_2127():
     assert Add(evaluate=False) == 0
     assert Mul(evaluate=False) == 1
     assert Mul(x+y, evaluate=False).is_Add
+
+def test_keep_coeff():
+    m = Mul(2, 1 + x, keep_coeff=True)
+    assert m == Mul(2, 1 + x, evaluate=False)
+    assert 1 + m == 3 + 2*x
+    assert 2*m == 4 + 4*x

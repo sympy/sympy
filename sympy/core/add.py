@@ -14,7 +14,7 @@ class Add(AssocOp):
     # cyclic import, so defined in numbers.py
 
     @classmethod
-    def flatten(cls, seq):
+    def flatten(cls, seq, **kwargs):
         """
         Takes the sequence "seq" of nested Adds and returns a flatten list.
 
@@ -62,6 +62,11 @@ class Add(AssocOp):
                 if c.is_Number:
                     if c is S.One:
                         s = o
+                    elif (len(o.args) == 2 and
+                          o.args[1].is_Add and
+                          o.args[1].is_commutative):
+                        seq.extend([c*si for si in o.args[1].args])
+                        continue
                     else:
                         s = o.as_two_terms()[1]
 
@@ -110,7 +115,8 @@ class Add(AssocOp):
 
                 else:
                     # alternatively we have to call all Mul's machinery (slow)
-                    newseq.append(Mul(c,s))
+                    term = Mul(c, s)
+                    newseq.append(term)
 
             noncommutative = noncommutative or not s.is_commutative
 

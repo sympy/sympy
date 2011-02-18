@@ -38,7 +38,7 @@ class AssocOp(Expr):
             obj = Expr.__new__(cls, *args, **assumptions)
             obj.is_commutative = all(arg.is_commutative for arg in args)
             return obj
-        c_part, nc_part, order_symbols = cls.flatten(args)
+        c_part, nc_part, order_symbols = cls.flatten(args, **assumptions)
         if len(c_part) + len(nc_part) <= 1:
             if c_part:
                 obj = c_part[0]

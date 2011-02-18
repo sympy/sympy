@@ -25,7 +25,11 @@ class Mul(AssocOp):
     # cyclic import, so defined in numbers.py
 
     @classmethod
-    def flatten(cls, seq):
+    def flatten(cls, seq, **kwargs):
+        """Return the sequence of items to be multiplied in canonical form.
+        If kwargs['keep_coeff']=False (default) then a numerical constant will not be
+        distributed into a single Add, e.g. 2*(1 + x) won't become 2 + 2*x.
+        """
 
         # apply associativity, separate commutative part of seq
         c_part = []         # out: commutative factors
@@ -132,7 +136,7 @@ class Mul(AssocOp):
                     o1 = nc_part.pop()
                     b1,e1 = o1.as_base_exp()
                     b2,e2 = o.as_base_exp()
-                    if b1==b2:
+                    if b1 == b2:
                         o12 = b1 ** (e1 + e2)
 
                         # now o12 could be a commutative object
@@ -295,16 +299,25 @@ class Mul(AssocOp):
         # current code expects coeff to be always in slot-0
         if coeff is not S.One:
             c_part.insert(0, coeff)
+            assert coeff.is_Number # if not, the following should be deleted
 
-
-        # we are done
-        if len(c_part)==2 and c_part[0].is_Number and c_part[1].is_Add:
-            # 2*(1+a) -> 2 + 2 * a
-            coeff = c_part[0]
-            c_part = [Add(*[coeff*f for f in c_part[1].args])]
+            #   Last time I checked, there were lots of things that depend on
+            # this special behavior of a two-term mul in non-trivial ways, e.g.
+            # there are failures in recurr.py if this is not here; the biggest
+            # one is rsolve_hyper([n**2-2, -2*n-1, 1], 0, n) giving 0 rather
+            # than something like C0*rf(sqrt(2), n) + C1*rf(-sqrt(2), n).
+            #   To allow the 2-arg behavior to be overidden the keyword
+            # keep_coeff=False can be used, e.g. Mul(2, 1+x, keep_coeff=False) -> 2*(1 + x)
+            if (not kwargs.get('keep_coeff', False) and
+                len(c_part)==2 and
+                c_part[0].is_Number and
+                c_part[1].is_Add):
+                # 2*(1+a) -> 2 + 2 * a
+                coeff = c_part[0]
+                c_part = [Add(*[coeff*f for f in c_part[1].args])]
 
         if reeval:
-            return Mul.flatten(c_part)
+            return Mul.flatten(c_part, **kwargs)
         return c_part, nc_part, order_symbols
 
 
@@ -556,7 +569,8 @@ class Mul(AssocOp):
         expr = sympify(expr)
         if self.is_commutative and expr.is_commutative:
             return AssocOp._matches_commutative(self, expr, repl_dict, evaluate)
-        # todo for commutative parts, until then use the default matches method for non-commutative products
+        # todo handle noncommutative parts. Until then use the
+        # default matches method for non-commutative products
         return self._matches(expr, repl_dict, evaluate)
 
     def _matches(self, expr, repl_dict={}, evaluate=False):
