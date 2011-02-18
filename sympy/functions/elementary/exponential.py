@@ -198,7 +198,7 @@ class exp(Function):
         arg_series = arg._eval_nseries(x, n=n)
         if arg_series.is_Order:
             return 1 + arg_series
-        arg0 = limit(arg_series, x, 0)
+        arg0 = limit(arg_series.removeO(), x, 0)
         if arg0 in [-oo, oo]:
             return self
         t = Symbol("t", dummy=True)
