@@ -11,6 +11,7 @@ Todo:
 * Get scale and figsize to be handled in a better way.
 """
 
+from sympy import Mul
 from sympy.physics.quantum.gate import Gate
 
 __all__ = [
