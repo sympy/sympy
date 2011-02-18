@@ -67,3 +67,5 @@ def test_2124():
     p = Symbol('p', positive=True)
     assert exp(sqrt(p)**3*log(p)).series(n=3) == \
         1 + p**S('3/2')*log(p) + O(p**3)
+
+    assert exp(sin(x)*log(x)).series(n=2) == 1 + x*log(x) + O(x**2)
