@@ -36,7 +36,13 @@ except ImportError:
     class scipy_sparse_matrix(object):
         pass
 else:
-    scipy_sparse_matrix = sparse.base.spmatrix
+    # Try to find spmatrix.
+    if hasattr(sparse, 'base'):
+        # Newer versions have it under scipy.sparse.base.
+        scipy_sparse_matrix = sparse.base.spmatrix
+    elif hasattr(sparse, 'sparse'):
+        # Older versions have it under scipy.sparse.sparse.
+        scipy_sparse_matrix = sparse.sparse.spmatrix
 
 
 def sympy_to_numpy(m, **options):
