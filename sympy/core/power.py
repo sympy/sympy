@@ -721,7 +721,6 @@ class Pow(Expr):
         order = O(x**n, x)
         ei, unbounded = e2int(e)
         b0 = b.limit(x, 0)
-
         if unbounded and (b0 is S.One or b0.has(Symbol)):
             # XXX what order
             if b0 is S.One:

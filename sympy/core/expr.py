@@ -177,22 +177,31 @@ class Expr(Basic, EvalfMixin):
         return c(self)
 
     def removeO(self):
-        "Removes the O(..) symbol if there is one"
+        """Removes the additive O(..) symbol if there is one"""
         if self.is_Order:
             return S.Zero
-        for i,x in enumerate(self.args):
-            if x.is_Order:
-                return Add(*(self.args[:i]+self.args[i+1:]))
-        return self
+        if not self.is_Add:
+            return self
+        args = []
+        for a in self.args:
+            if a.is_Order:
+                continue
+            args.append(a)
+        return self._new_rawargs(*args)
 
-    def getO(e):
-        "Returns the O(..) symbol, or None if there is none."
-        if e.is_Order:
-            return e
-        if e.is_Add:
-            for x in e.args:
-                if x.is_Order:
-                    return x
+    def getO(self):
+        """Returns the additive O(..) symbol if there is one, else None."""
+        if self.is_Order:
+            return self
+        if not self.is_Add:
+            return None
+        args = []
+        for a in self.args:
+            if not a.is_Order:
+                continue
+            args.append(a)
+        if args:
+            return self._new_rawargs(*args)
 
     def getn(self):
         """
@@ -213,7 +222,7 @@ class Expr(Basic, EvalfMixin):
         o = self.getO()
         if o is None:
             return None
-        else:
+        elif o.is_Order:
             o = o.expr
             if o is S.One:
                 return S.Zero
