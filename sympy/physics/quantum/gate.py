@@ -58,7 +58,7 @@ __all__ = [
     'normalized',
     'gate_sort',
     'gate_simp',
-    'random_circuit'
+    'random_circuit',
 ]
 
 sqrt2_inv = Pow(2, Rational(-1,2), evaluate=False)
@@ -1049,7 +1049,7 @@ def gate_simp(circuit):
     # which can be simplified. We recursively call gate_simp with new circuit
     # as input more simplifications exist.
     if isinstance(circuit, Add):
-        return sum([gate_simp(t) for t in circuit.args])
+        return sum(gate_simp(t) for t in circuit.args)
     elif isinstance(circuit, Mul):
         circuit_args = circuit.args
     elif isinstance(circuit, Pow):
@@ -1059,17 +1059,18 @@ def gate_simp(circuit):
         return circuit
 
     # Iterate through each element in circuit, simplify if possible.
-    for i in range(len(circuit_args)):
+    for i in xrange(len(circuit_args)):
         # H,X,Y or Z squared is 1.
         # T**2 = S, S**2 = Z
         if isinstance(circuit_args[i], Pow):
-            if isinstance(circuit_args[i].base, \
+            if isinstance(circuit_args[i].base,
                 (HadamardGate, XGate, YGate, ZGate))\
                 and isinstance(circuit_args[i].exp, Number):
                 # Build a new circuit taking replacing the
                 # H,X,Y,Z squared with one.
-                newargs = (circuit_args[:i] + (circuit_args[i].base**\
-                (circuit_args[i].exp % 2),) + circuit_args[i+1:])
+                newargs = (circuit_args[:i] +\
+                          (circuit_args[i].base**(circuit_args[i].exp % 2),) +\
+                           circuit_args[i+1:])
                 # Recursively simplify the new circuit.
                 circuit = gate_simp(Mul(*newargs))
                 break
@@ -1115,7 +1116,7 @@ def gate_sort(circuit):
     """
     # Make sure we have an Add or Mul.
     if isinstance(circuit, Add):
-        return sum([gate_sort(t) for t in circuit.args])
+        return sum(gate_sort(t) for t in circuit.args)
     if isinstance(circuit, Pow):
         return gate_sort(circuit.base)**circuit.exp
     elif isinstance(circuit, Gate):
@@ -1127,7 +1128,7 @@ def gate_sort(circuit):
     while changes:
         changes = False
         circ_array = circuit.args
-        for i in range(len(circ_array)-1):
+        for i in xrange(len(circ_array)-1):
             # Go through each element and switch ones that are in wrong order
             if isinstance(circ_array[i], (Gate, Pow)) and\
                isinstance(circ_array[i+1], (Gate, Pow)):
@@ -1181,7 +1182,7 @@ def random_circuit(ngates, nqubits, gate_space=(X, Y, Z, S, T, H, CNOT, SWAP)):
     """
     qubit_space = range(nqubits)
     result = []
-    for i in range(ngates):
+    for i in xrange(ngates):
         g = random.choice(gate_space)
         if g == CNotGate or g == SwapGate:
             qubits = random.sample(qubit_space,2)
