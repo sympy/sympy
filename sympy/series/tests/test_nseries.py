@@ -415,9 +415,10 @@ def test_dir():
 def test_issue405():
     a = Symbol("a")
     e = asin(a*x)/x
-    assert e.series(x, 4, n=2) == (asin(4*a)/4 +
-                                   (4 - x)*asin(4*a)/16 -
-                                   a*(4 - x)/(4*sqrt(1 - 16*a**2)))
+    assert e.series(x, 4, n=2).removeO().subs(x, x - 4) == (
+           asin(4*a)/4 +
+           (4 - x)*asin(4*a)/16 -
+           a*(4 - x)/(4*sqrt(1 - 16*a**2)))
 
 def test_issue1342():
     x, a, b = symbols('x a b')
@@ -429,8 +430,10 @@ def test_issue1342():
             2*a*b*x**2 + O(x**3)
 
 def test_issue1230():
-    assert tan(x).series(x, pi/2, n=3) == -pi/6 + x/3 - 1/(x - pi/2)
-    assert cot(x).series(x, pi, n=3) == -x/3 + pi/3 + 1/(x - pi)
+    assert tan(x).series(x, pi/2, n=3).removeO().subs(x, x - pi/2) == \
+           -pi/6 + x/3 - 1/(x - pi/2)
+    assert cot(x).series(x, pi, n=3).removeO().subs(x, x - pi) == \
+           -x/3 + pi/3 + 1/(x - pi)
     assert limit(tan(x)**tan(2*x), x, pi/4) == exp(-1)
 
 def test_issue2084():

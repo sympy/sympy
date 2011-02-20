@@ -759,9 +759,44 @@ class Expr(Basic, EvalfMixin):
         the series one by one (the lazy series given when n=None), else
         all the terms at once when n != None.
 
+        Note: when n != None, if an O() term is returned then the x in the
+        in it and the entire expression reprsents x - x0, the displacement
+        from x0. (If there is no O() term then the series was exact and x has
+        it's normal meaning.) This is currently necessary since sympy's O()
+        can only represent terms at x0=0. So instead of
+
+            >> cos(x).series(x0=1, n=2)
+            (1 - x)*sin(1) + cos(1) + O((x - 1)**2)
+
+        which graphically looks like this:
+
+               \
+              .|.         . .
+             . | \      .     .
+            ---+----------------------
+               |   . .          . .
+               |    \
+              x=0
+
+        the following is returned instead
+
+            -x*sin(1) + cos(1) + O(x**2)
+
+        whose graph is this
+
+               \ |
+              . .|        . .
+             .   \      .     .
+            -----+\------------------.
+                 | . .          . .
+                 |  \
+                x=0
+
+        which is identical to cos(x + 1).series(n=2).
+
         Usage:
             Returns the series expansion of "self" around the point `x = x0`
-            with respect to `x` until the n-th term (default n is 6).
+            with respect to `x` up to O(x**n) (default n is 6).
 
             If `x=None` and `self` is univariate, the univariate symbol will
             be supplied, otherwise an error will be raised.
@@ -793,39 +828,6 @@ class Expr(Basic, EvalfMixin):
             >>> abs(x).series(dir="-")
             -x
 
-        Notes:
-            This method is the most high level method for series and it returns
-            the series including the O(x**n) term when x0 = 0. Since sympy O()
-            cannot represent the order at x != 0, when x0 != 0 the order
-            term is not included.
-
-            >>> cos(x).series(x0=1, n=2)
-            (1 - x)*sin(1) + cos(1)
-
-               \
-              .|.         . .
-             . | \      .     .
-            ---+----------------------
-               |   . .          . .
-               |    \
-              x=0
-
-            Here is the same functions shifted to move the point x=1 to
-            the origin with the series calculated at x=0. Note that now
-            the O() term appears because it it valid in this situation:
-
-            >>> cos(x+1).series(n=2)
-            -x*sin(1) + cos(1) + O(x**2)
-
-               \ |
-              . .|        . .
-             .   \      .     .
-            -----+\------------------.
-                 | . .          . .
-                 |  \
-                x=0
-
-
         """
         if x is None:
             syms = self.atoms(C.Symbol)
@@ -839,16 +841,16 @@ class Expr(Basic, EvalfMixin):
             else:
                 return self
 
-        # it seems like the following should be doable, but several failures
-        # then occur. Is this related to issue 1747 et al?
-        if 0 and x.is_positive is x.is_negative is None:
-            # replace x with an x that has a positive assumption
-            xpos = C.Dummy('x', positive=True)
-            rv = self.subs(x, xpos).series(xpos, x0, n, dir)
-            if n is None:
-                return (s.subs(xpos, x) for s in rv)
-            else:
-                return rv.subs(xpos, x)
+        ## it seems like the following should be doable, but several failures
+        ## then occur. Is this related to issue 1747 et al?
+        #if x.is_positive is x.is_negative is None:
+        #    # replace x with an x that has a positive assumption
+        #    xpos = C.Dummy('x', positive=True)
+        #    rv = self.subs(x, xpos).series(xpos, x0, n, dir)
+        #    if n is None:
+        #        return (s.subs(xpos, x) for s in rv)
+        #    else:
+        #        return rv.subs(xpos, x)
 
         if len(dir) != 1 or dir not in '+-':
             raise ValueError("Dir must be '+' or '-'")
@@ -858,23 +860,29 @@ class Expr(Basic, EvalfMixin):
             s = self.subs(x, 1/x).series(x, n=n, dir=dir)
             if n is None:
                 return (si.subs(x, 1/x) for si in s)
-            # don't include order term since it will eat the larger terms
+            # don't include the order term since it will eat the larger terms
             return s.removeO().subs(x, 1/x)
 
-        # transpose func to 0 and change sign if dir is negative
-        # with rep and undo the process with rep2
+        # use rep to shift origin to x0 and change sign (if dir is negative)
+        # and undo the process with rep2
         if x0 or dir == '-':
             if dir == '-':
-                rep = rep2 = -x + x0
+                rep = -x + x0
+                rep2 = -x
+                rep2b = x0
             else:
                 rep = x + x0
-                rep2 = x - x0
+                rep2 = x
+                rep2b = -x0
             s = self.subs(x, rep).series(x, x0=0, n=n, dir='+')
-            if n is None: # lseries
-                return (si.subs(x, rep2) for si in s)
-            if x0: # order can't handle x != 0 terms
-                s = s.removeO()
-            return s.subs(x, rep2) # nseries
+            if n is None: # lseries...
+                return (si.subs(x, rep2 + rep2b) for si in s)
+            # nseries...
+            o = s.getO() or S.Zero
+            s = s.removeO()
+            if o and x0:
+                rep2b = 0 # when O() can handle x0 != 0 this can be removed
+            return s.subs(x, rep2 + rep2b) + o
 
         # from here on it's x0=0 and dir='+' handling
 
