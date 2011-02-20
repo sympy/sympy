@@ -753,11 +753,50 @@ class Expr(Basic, EvalfMixin):
     ##################### SERIES, LEADING TERM, LIMIT, ORDER METHODS ##################
     ###################################################################################
 
-    def series(self, x=None, x0=0, n=6, dir="+"):
+    def series(self, x=None, x0=0, n=6, dir="+", sudo=False):
         """
         Series expansion of "self" around `x = x0` yielding either terms of
         the series one by one (the lazy series given when n=None), else
         all the terms at once when n != None.
+
+        Note: when n != None, if an O() term is returned then the x in the
+        in it and the entire expression reprsents x - x0, the displacement
+        from x0. (If there is no O() term then the series was exact and x has
+        it's normal meaning.) This is currently necessary since sympy's O()
+        can only represent terms at x0=0. So instead of
+
+            >> cos(x).series(x0=1, n=2)
+            (1 - x)*sin(1) + cos(1) + O((x - 1)**2)
+
+        which graphically looks like this:
+
+               \
+              .|.         . .
+             . | \      .     .
+            ---+----------------------
+               |   . .          . .
+               |    \
+              x=0
+
+        the following is returned instead
+
+            -x*sin(1) + cos(1) + O(x**2)
+
+        whose graph is this
+
+               \ |
+              . .|        . .
+             .   \      .     .
+            -----+\------------------.
+                 | . .          . .
+                 |  \
+                x=0
+
+        which is identical to cos(x + 1).series(n=2). For display purposes only
+        one may use the keyword sudo=True to obtain an expression that looks
+        right but will not behave properly when doing arithmetical operations
+        with the series. (The x in the series will be replaced with x - x0 and
+        the x in the O() will be replaced with a symbol whose *name* is x - x0.
 
         Usage:
             Returns the series expansion of "self" around the point `x = x0`
@@ -792,39 +831,6 @@ class Expr(Basic, EvalfMixin):
             x
             >>> abs(x).series(dir="-")
             -x
-
-        Notes:
-            This method is the most high level method for series and it returns
-            the series including the O(x**n) term when x0 = 0. Since sympy O()
-            cannot represent the order at x != 0, when x0 != 0 the order
-            term is not included.
-
-            >>> cos(x).series(x0=1, n=2)
-            (1 - x)*sin(1) + cos(1)
-
-               \
-              .|.         . .
-             . | \      .     .
-            ---+----------------------
-               |   . .          . .
-               |    \
-              x=0
-
-            Here is the same functions shifted to move the point x=1 to
-            the origin with the series calculated at x=0. Note that now
-            the O() term appears because it it valid in this situation:
-
-            >>> cos(x+1).series(n=2)
-            -x*sin(1) + cos(1) + O(x**2)
-
-               \ |
-              . .|        . .
-             .   \      .     .
-            -----+\------------------.
-                 | . .          . .
-                 |  \
-                x=0
-
 
         """
         if x is None:
@@ -865,16 +871,32 @@ class Expr(Basic, EvalfMixin):
         # with rep and undo the process with rep2
         if x0 or dir == '-':
             if dir == '-':
-                rep = rep2 = -x + x0
+                rep = -x + x0
+                rep2 = -x
+                rep2b = x0
             else:
                 rep = x + x0
-                rep2 = x - x0
+                rep2 = x
+                rep2b = -x0
             s = self.subs(x, rep).series(x, x0=0, n=n, dir='+')
-            if n is None: # lseries
-                return (si.subs(x, rep2) for si in s)
-            if x0: # order can't handle x != 0 terms
-                s = s.removeO()
-            return s.subs(x, rep2) # nseries
+            if n is None: # lseries...
+                return (si.subs(x, rep2 + rep2b) for si in s)
+            # nseries...
+            o = s.getO() or S.Zero
+            s = s.removeO()
+            if o and x0:
+                if sudo:
+                    x0 = sympify(x0)
+                    if x0.is_negative:
+                        oname = '%s + %s' % (x, -x0)
+                    else:
+                        oname = '%s - %s' % (x, x0)
+                    if o.expr != x:
+                        oname = '(%s)' % oname
+                    o = o.subs(x, C.Symbol(oname))
+                else:
+                    rep2b = 0
+            return s.subs(x, rep2 + rep2b) + o
 
         # from here on it's x0=0 and dir='+' handling
 
