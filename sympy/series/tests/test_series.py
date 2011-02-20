@@ -31,14 +31,15 @@ def test_2124():
     raises(ValueError, 'cos(x+y).series()')
     raises(ValueError, 'x.series(dir="")')
 
-    assert (cos(x).series(x, 1).removeO() -
+    assert (cos(x).series(x, 1, sudo=True).removeO() -
             cos(x + 1).series(x).removeO().subs(x, x - 1)).expand() == 0
-    e = cos(x).series(x, 1, n=None)
+    e = cos(x).series(x, 1, n=None, sudo=True)
     assert [e.next() for i in range(2)] == [cos(1), (1 - x)*sin(1)]
-    e = cos(x).series(x, 1, n=None, dir='-')
+    e = cos(x).series(x, 1, n=None, dir='-', sudo=True)
     assert [e.next() for i in range(2)] == [cos(1), (1 - x)*sin(1)]
-    assert abs(x).series(x, 1, dir='-') == x
-    assert exp(x).series(x, 1, dir="-", n=3) == E - E*(1 - x) + E*(1 - x)**2/2
+    assert abs(x).series(x, 1, dir='-', sudo=True) == x
+    assert exp(x).series(x, 1, dir='-', n=3, sudo=True).removeO() == \
+           E - E*(1 - x) + E*(1 - x)**2/2
 
     D = Derivative
     assert D(x**2 + x**3*y**2, x, 2, y, 1).series(x).doit() == 12*x*y
