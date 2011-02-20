@@ -1399,16 +1399,15 @@ def powsimp(expr, deep=False, combine='all'):
                     else:
                         # This is the logic that combines exponents for equal,
                         # but non-commutative bases: A**x*A**y == A**(x+y).
-                        if len(nc_part) > 0:
-                            last = nc_part.pop()
-                            b1, e1 = last.as_base_exp()
+                        if nc_part:
+                            b1, e1 = nc_part[-1].as_base_exp()
                             b2, e2 = term.as_base_exp()
-                            if b1 == b2 and e1.is_commutative and e2.is_commutative:
-                                nc_part.append(b1**(e1+e2))
-                            else:
-                                nc_part.extend([last, term])
-                        else:
-                            nc_part.append(term)
+                            if (b1 == b2 and
+                                e1.is_commutative and e2.is_commutative):
+                                nc_part[-1] = Pow(b1, Add(e1,e2))
+                                continue
+                        nc_part.append(term)
+
             newexpr = Mul(newexpr, Mul(*[Pow(b,e) for b, e in c_powers.items()]))
             if combine is 'exp':
                 return Mul(newexpr, Mul(*nc_part))
@@ -1442,17 +1441,13 @@ def powsimp(expr, deep=False, combine='all'):
                         # This is the logic that combines bases that are
                         # different and non-commutative, but with equal and
                         # commutative exponents: A**x*B**x == (A*B)**x.
-                        if len(nc_part) > 0:
-                            last = nc_part.pop()
-                            b1, e1 = last.as_base_exp()
+                        if nc_part:
+                            b1, e1 = nc_part[-1].as_base_exp()
                             b2, e2 = term.as_base_exp()
-                            if e1 == e1 and b1 != b2 and\
-                                e1.is_commutative and e2.is_commutative:
-                                nc_part.append((b1*b2)**e1)
-                            else:
-                                nc_part.extend([last, term])
-                        else:
-                            nc_part.append(term)
+                            if (e1 == e2 and e2.is_commutative):
+                                nc_part[-1] = Pow(Mul(b1, b2), e1)
+                                continue
+                        nc_part.append(term)
 
             # Pull out numerical coefficients from exponent
             # e.g., 2**(2*x) => 4**x
