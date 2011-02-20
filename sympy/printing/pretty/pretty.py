@@ -771,6 +771,12 @@ class PrettyPrinter(Printer):
 
         return pform
 
+    def _print_Order(self, e):
+        pform = self._print(e.expr)
+        pform = prettyForm(*pform.parens())
+        pform = prettyForm(*pform.left('O'))
+        return pform
+
     def _print_gamma(self, e):
         if self._use_unicode:
             pform = self._print(e.args[0])
