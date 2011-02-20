@@ -430,8 +430,10 @@ def test_issue1342():
             2*a*b*x**2 + O(x**3)
 
 def test_issue1230():
-    assert tan(x).series(x, pi/2, n=3) == -pi/6 + x/3 - 1/(x - pi/2)
-    assert cot(x).series(x, pi, n=3) == -x/3 + pi/3 + 1/(x - pi)
+    assert tan(x).series(x, pi/2, n=3, sudo=True).removeO() == \
+           -pi/6 + x/3 - 1/(x - pi/2)
+    assert cot(x).series(x, pi, n=3, sudo=True).removeO() == \
+           -x/3 + pi/3 + 1/(x - pi)
     assert limit(tan(x)**tan(2*x), x, pi/4) == exp(-1)
 
 def test_issue2084():
