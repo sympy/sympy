@@ -800,7 +800,7 @@ class Expr(Basic, EvalfMixin):
 
         Usage:
             Returns the series expansion of "self" around the point `x = x0`
-            with respect to `x` until the n-th term (default n is 6).
+            with respect to `x` up to O(x**n) (default n is 6).
 
             If `x=None` and `self` is univariate, the univariate symbol will
             be supplied, otherwise an error will be raised.
