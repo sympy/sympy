@@ -769,10 +769,14 @@ def test_as_powers_dict():
 
 def test_new_rawargs():
     x = Symbol('x')
-    assert 2*x == Mul._new_rawargs(3*x, *[S(2), x])
-    assert 2 + x == Add._new_rawargs(3 + x, *[S(2), x])
-    assert x == Mul._new_rawargs(3*x, *[x])
-    assert x == Add._new_rawargs(3 + x, *[x])
+    m = 3*x
+    a = 3 + x
+    assert 2*x == m._new_rawargs(*[S(2), x])
+    assert 2 + x == a._new_rawargs(*[S(2), x])
+    assert x == m._new_rawargs(*[x])
+    assert x == a._new_rawargs(*[x])
+    assert 1 == m._new_rawargs(*[])
+    assert 0 == a._new_rawargs(*[])
 
 def test_2127():
     assert Add(evaluate=False) == 0
