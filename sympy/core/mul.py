@@ -27,7 +27,7 @@ class Mul(AssocOp):
     @classmethod
     def flatten(cls, seq, **kwargs):
         """Return the sequence of items to be multiplied in canonical form.
-        If kwargs['keep_coeff']=False (default) then a numerical constant will not be
+        If Basic.keep_coeff=False (default) then a numerical constant will be
         distributed into a single Add, e.g. 2*(1 + x) won't become 2 + 2*x.
         """
 
@@ -306,9 +306,9 @@ class Mul(AssocOp):
             # there are failures in recurr.py if this is not here; the biggest
             # one is rsolve_hyper([n**2-2, -2*n-1, 1], 0, n) giving 0 rather
             # than something like C0*rf(sqrt(2), n) + C1*rf(-sqrt(2), n).
-            #   To allow the 2-arg behavior to be overidden the keyword
-            # keep_coeff=False can be used, e.g. Mul(2, 1+x, keep_coeff=False) -> 2*(1 + x)
-            if (not kwargs.get('keep_coeff', False) and
+            #   To allow the 2-arg behavior to be overidden, Basic.keep_coeff=False can be set.
+            # e.g. Basic.keep_coeff = True; Mul(2, 1+x) -> 2*(1 + x)
+            if (not Basic.keep_coeff and
                 len(c_part)==2 and
                 c_part[0].is_Number and
                 c_part[1].is_Add):

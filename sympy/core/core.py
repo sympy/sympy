@@ -119,6 +119,7 @@ C = ClassRegistry()
 class BasicMeta(BasicType):
 
     keep_sign = False
+    keep_coeff = False
 
     def __init__(cls, *args, **kws):
         setattr(C, cls.__name__, cls)
