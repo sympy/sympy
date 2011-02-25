@@ -9,14 +9,14 @@ from sympy.matrices.matrices import (ShapeError, MatrixError,
 from sympy.utilities.pytest import raises
 
 def test_division():
-    x, y, z = symbols('x','y','z')
+    x, y, z = symbols('x y z')
     v = Matrix(1,2,[x, y])
     assert v.__div__(z) == Matrix(1,2,[x/z, y/z])
     assert v.__truediv__(z) == Matrix(1,2,[x/z, y/z])
     assert v/z == Matrix(1,2,[x/z, y/z])
 
 def test_sum():
-    x, y, z = symbols('xyz')
+    x, y, z = symbols('x y z')
     m = Matrix([[1,2,3],[x,y,x],[2*y,-50,z*x]])
     assert m+m == Matrix([[2,4,6],[2*x,2*y,2*x],[4*y,-100,2*z*x]])
 
@@ -81,7 +81,7 @@ def test_power():
     assert Matrix([[1, 2], [3, 4]])**Integer(2) == Matrix([[7, 10], [15, 22]])
 
 def test_creation():
-    raises(ValueError, 'Matrix(5,5,range(20))')
+    raises(ValueError, 'Matrix(5, 5, range(20))')
 
     x = Symbol("x")
     a = Matrix([[x, 0], [0, 0]])
@@ -111,7 +111,7 @@ def test_creation():
     assert c[:] == [1,2,3,4,5,6,7,8,9]
 
 def test_tolist():
-    x, y, z = symbols('xyz')
+    x, y, z = symbols('x y z')
     lst = [[S.One,S.Half,x*y,S.Zero],[x,y,z,x**2],[y,-S.One,z*x,3]]
     m = Matrix(lst)
     assert m.tolist() == lst
@@ -263,7 +263,7 @@ def test_applyfunc():
     assert m0.applyfunc(lambda x: 0 ) == zeros(3)
 
 def test_expand():
-    x,y = symbols('xy')
+    x,y = symbols('x y')
     m0 = Matrix([[x*(x+y),2],[((x+y)*y)*x,x*(y+x*(x+y))]])
     # Test if expand() returns a matrix
     m1 = m0.expand()
@@ -487,7 +487,7 @@ def canonicalize(v):
     return tuple(set([c(x) for x in v]))
 
 def test_eigen():
-    x,y = symbols('xy')
+    x,y = symbols('x y')
 
     R = Rational
 
@@ -870,7 +870,7 @@ def test_subs():
     assert Matrix([[x,2],[x+y,4]]).subs({x:-1,y:-2}) == Matrix([[-1,2],[-3,4]])
 
 def test_simplify():
-    x,y,f,n = symbols('xyfn')
+    x,y,f,n = symbols('x y f n')
     M = Matrix([ [    1/x + 1/y,               (x + x*y)/ x             ],
                  [(f(x) + y*f(x))/f(x), 2 * (1/n - cos(n * pi)/n)/ pi ]
                  ])
@@ -933,13 +933,13 @@ def test_trace():
     assert M.trace() == 14
 
 def test_shape():
-    x, y = symbols("xy")
+    x, y = symbols("x y")
     M = Matrix([[x,0,0],
                 [0,y,0]])
     assert M.shape == (2, 3)
 
 def test_col_row():
-    x, y = symbols("xy")
+    x, y = symbols("x y")
     M = Matrix([[x,0,0],
                 [0,y,0]])
     M.row(1,lambda r, j: r+j+1)
@@ -1060,8 +1060,18 @@ def test_zeros_ones_fill():
     assert a.cols == b.cols == 5
     assert a.shape == b.shape == (3, 5)
 
+def test_empty_zeros():
+    a = zeros(0)
+    assert a == Matrix()
+    a = zeros([0, 2])
+    assert a.rows == 0
+    assert a.cols == 2
+    a = zeros([2, 0])
+    assert a.rows == 2
+    assert a.cols == 0
+
 def test_issue650():
-    x, y = symbols('x','y')
+    x, y = symbols('x y')
     a = Matrix([[x**2, x*y],[x*sin(y), x*cos(y)]])
     assert a.diff(x) == Matrix([[2*x, y],[sin(y), cos(y)]])
     assert Matrix([[x, -x, x**2],[exp(x),1/x-exp(-x), x+1/x]]).limit(x, oo) == Matrix([[oo, -oo, oo],[oo, 0, oo]])
@@ -1099,7 +1109,7 @@ def test_jacobian2():
     assert X.jacobian(Y) == J
 
 def test_issue1465():
-    x, y, z = symbols('x', 'y', 'z')
+    x, y, z = symbols('x y z')
     X = Matrix([exp(x + y + z), exp(x + y + z), exp(x + y + z)])
     Y = Matrix([x, y, z])
     for i in range(1, 3):
@@ -1113,7 +1123,7 @@ def test_issue1465():
                 assert J[:,k] == X_slice
 
 def test_nonvectorJacobian():
-    x, y, z = symbols('x', 'y', 'z')
+    x, y, z = symbols('x y z')
     X = Matrix([ [exp(x + y + z), exp(x + y + z)],
                  [exp(x + y + z), exp(x + y + z)] ])
     Y = Matrix([x, y, z])
@@ -1238,8 +1248,8 @@ def test_creation_args():
     Check that matrix dimensions can be specified using any reasonable type
     (see issue 1515).
     """
-    raises(ValueError, 'zeros((3, 0))')
-    raises(ValueError, 'zeros((1,2,3,4))')
+    raises(ValueError, 'zeros((3, -1))')
+    raises(ValueError, 'zeros((1, 2, 3, 4))')
     assert zeros(3L) == zeros(3)
     assert zeros(Integer(3)) == zeros(3)
     assert zeros(3.) == zeros(3)
