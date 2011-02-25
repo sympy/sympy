@@ -70,11 +70,13 @@ class AssocOp(Expr):
            x*y
 
         """
-        if len(args) == 1:
-            obj = args[0]
-        else:
+        if len(args) > 1:
             obj = Expr.__new__(type(self), *args)  # NB no assumptions for Add/Mul
             obj.is_commutative = self.is_commutative
+        elif len(args) == 1:
+            obj = args[0]
+        else:
+            obj = self.identity
 
         return obj
 
