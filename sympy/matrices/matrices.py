@@ -507,7 +507,7 @@ class Matrix(object):
             r = []
             for block in blocks:
                 r.append(block.inv(method=method, iszerofunc=iszerofunc))
-            return block_diag(r)
+            return diag(*r)
         if method == "GE":
             return self.inverse_GE(iszerofunc=iszerofunc)
         elif method == "LU":
@@ -1212,6 +1212,87 @@ class Matrix(object):
                     return True
         return False
 
+    def is_symmetrical(self):
+        """
+        Check if matrix is symmetric matrix,
+        that is square matrix and is equal to its transpose.
+
+        Example:
+
+        >>> from sympy import Matrix
+        >>> m = Matrix(2,2,[0, 1, 1, 2])
+        >>> m
+        [0, 1]
+        [1, 2]
+        >>> m.is_symmetrical()
+        True
+
+        >>> m = Matrix(2,2,[0, 1, 2, 0])
+        >>> m
+        [0, 1]
+        [2, 0]
+        >>> m.is_symmetrical()
+        False
+
+        >>> m = Matrix(2,3,[0, 0, 0, 0, 0, 0])
+        >>> m
+        [0, 0, 0]
+        [0, 0, 0]
+        >>> m.is_symmetrical()
+        False
+
+        >>> from sympy.abc import x, y
+        >>> m = Matrix(3,3,[1, x**2 + 2*x + 1, y, (x + 1)**2 , 2, 0, y, 0, 3])
+        >>> m
+        [         1, 1 + 2*x + x**2, y]
+        [(1 + x)**2,              2, 0]
+        [         y,              0, 3]
+        >>> m.is_symmetrical()
+        True
+
+        """
+        m = self.clone()
+        m.simplify()
+        return (m == m.transpose())
+
+    def is_diagonal(self):
+        """
+        Check if matrix is diagonal,
+        that is matrix in which the entries outside the main diagonal are all zero.
+
+        Example:
+
+        >>> from sympy import Matrix, diag
+        >>> m = Matrix(2,2,[1, 0, 0, 2])
+        >>> m
+        [1, 0]
+        [0, 2]
+        >>> m.is_diagonal()
+        True
+
+        >>> m = Matrix(2,2,[1, 1, 0, 2])
+        >>> m
+        [1, 1]
+        [0, 2]
+        >>> m.is_diagonal()
+        False
+
+        >>> m = diag(1, 2, 3)
+        >>> m
+        [1, 0, 0]
+        [0, 2, 0]
+        [0, 0, 3]
+        >>> m.is_diagonal()
+        True
+
+        See also: .is_lower(), is_upper() .is_diagonalizable()
+        """
+        for i in range(self.cols):
+            for j in range(self.rows):
+                if i <> j and self[i, j] != 0:
+                    return False
+        return True
+
     def clone(self):
         return Matrix(self.rows, self.cols, lambda i, j: self[i, j])
 
@@ -1512,6 +1593,8 @@ class Matrix(object):
             if not basis:
                 # The nullspace routine failed, try it again with simplification
                 basis = tmp.nullspace(simplified=True)
+                if not basis:
+                    raise NotImplementedError("Can't evaluate eigenvector for eigenvalue %s" % r)
             out.append((r, k, basis))
         return out
 
@@ -1638,6 +1721,215 @@ class Matrix(object):
         recurse_sub_blocks(self)
         return sub_blocks
 
+    def diagonalize(self, reals_only = False):
+        """
+        Return diagonalized matrix D and transformation P such as
+
+            D = P^-1 * M * P
+
+        where M is current matrix.
+
+        Example:
+
+        >>> from sympy import Matrix
+        >>> m = Matrix(3,3,[1, 2, 0, 0, 3, 0, 2, -4, 2])
+        >>> m
+        [1,  2, 0]
+        [0,  3, 0]
+        [2, -4, 2]
+        >>> (P, D) = m.diagonalize()
+        >>> D
+        [1, 0, 0]
+        [0, 2, 0]
+        [0, 0, 3]
+        >>> P
+        [-1/2, 0, -1/2]
+        [   0, 0, -1/2]
+        [   1, 1,    1]
+        >>> P.inv() * m * P
+        [1, 0, 0]
+        [0, 2, 0]
+        [0, 0, 3]
+
+        See also: .is_diagonalizable(), .is_diagonal()
+        """
+        if not self.is_diagonalizable(reals_only, False):
+            self._diagonalize_clear_subproducts()
+            raise MatrixError("Matrix is not diagonalizable")
+        else:
+            if self._eigenvects == None:
+                self._eigenvects = self.eigenvects()
+            diagvals = []
+            P = Matrix(self.rows, 0, [])
+            for eigenval, multiplicity, vects in self._eigenvects:
+                for k in range(multiplicity):
+                    diagvals.append(eigenval)
+                    vec = vects[k]
+                    P = P.col_insert(P.cols, vec)
+            D = diag(*diagvals)
+            self._diagonalize_clear_subproducts()
+            return (P, D)
+
+    def is_diagonalizable(self, reals_only = False, clear_subproducts=True):
+        """
+        Check if matrix is diagonalizable.
+
+        If reals_only==True then check that diagonalized matrix consists of the only not complex values.
+
+        Some subproducts could be used further in other methods to avoid double calculations,
+        By default (if clear_subproducts==True) they will be deleted.
+
+        Example:
+
+        >>> from sympy import Matrix
+        >>> m = Matrix(3,3,[1, 2, 0, 0, 3, 0, 2, -4, 2])
+        >>> m
+        [1,  2, 0]
+        [0,  3, 0]
+        [2, -4, 2]
+        >>> m.is_diagonalizable()
+        True
+        >>> m = Matrix(2,2,[0, 1, 0, 0])
+        >>> m
+        [0, 1]
+        [0, 0]
+        >>> m.is_diagonalizable()
+        False
+        >>> m = Matrix(2,2,[0, 1, -1, 0])
+        >>> m
+        [ 0, 1]
+        [-1, 0]
+        >>> m.is_diagonalizable()
+        True
+        >>> m.is_diagonalizable(True)
+        False
+
+        """
+        if not self.is_square:
+            raise NonSquareMatrixException()
+        res = False
+        self._is_symbolic = self.is_symbolic()
+        self._is_symmetrical = self.is_symmetrical()
+        self._eigenvects = None
+        #if self._is_symbolic:
+        #    self._diagonalize_clear_subproducts()
+        #    raise NotImplementedError("Symbolic matrices are not implemented for diagonalization yet")
+        self._eigenvects = self.eigenvects()
+        all_iscorrect = True
+        for eigenval, multiplicity, vects in self._eigenvects:
+            if len(vects) <> multiplicity:
+                all_iscorrect = False
+                break
+            elif reals_only and not eigenval.is_real:
+                all_iscorrect = False
+                break
+        res = all_iscorrect
+        if clear_subproducts:
+            self._diagonalize_clear_subproducts()
+        return res
+
+    def _diagonalize_clear_subproducts(self):
+        del self._is_symbolic
+        del self._is_symmetrical
+        del self._eigenvects
+
+    def jordan_form(self, calc_transformation = True):
+        """
+        Return Jordan form J of current matrix.
+
+        If calc_transformation is specified as False, then transformation P such that
+
+              J = P^-1 * M * P
+
+        will not be calculated.
+
+        Note:
+
+        Calculation of transformation P is not implemented yet
+
+        Example:
+
+        >>> from sympy import Matrix
+        >>> m = Matrix(4, 4, [6, 5, -2, -3, -3, -1, 3, 3, 2, 1, -2, -3, -1, 1, 5, 5])
+        >>> m
+        [ 6,  5, -2, -3]
+        [-3, -1,  3,  3]
+        [ 2,  1, -2, -3]
+        [-1,  1,  5,  5]
+
+        >>> (P, J) = m.jordan_form()
+        >>> J
+        [2, 1, 0, 0]
+        [0, 2, 0, 0]
+        [0, 0, 2, 1]
+        [0, 0, 0, 2]
+
+        See also: jordan_cells()
+        """
+        (P, Jcells) = self.jordan_cells(calc_transformation)
+        J = diag(*Jcells)
+        return (P, J)
+
+    def jordan_cells(self, calc_transformation = True):
+        """
+        Return a list of Jordan cells of current matrix.
+        This list shape Jordan matrix J.
+
+        If calc_transformation is specified as False, then transformation P such that
+
+              J = P^-1 * M * P
+
+        will not be calculated.
+
+        Note:
+
+        Calculation of transformation P is not implemented yet
+
+        Example:
+
+        >>> from sympy import Matrix
+        >>> m = Matrix(4, 4, [6, 5, -2, -3, -3, -1, 3, 3, 2, 1, -2, -3, -1, 1, 5, 5])
+        >>> m
+        [ 6,  5, -2, -3]
+        [-3, -1,  3,  3]
+        [ 2,  1, -2, -3]
+        [-1,  1,  5,  5]
+
+        >>> (P, Jcells) = m.jordan_cells()
+        >>> Jcells[0]
+        [2, 1]
+        [0, 2]
+        >>> Jcells[1]
+        [2, 1]
+        [0, 2]
+
+        See also: jordan_form()
+        """
+        _eigenvects = self.eigenvects()
+        Jcells = []
+        for eigenval, multiplicity, vects in _eigenvects:
+            geometrical = len(vects)
+            if geometrical == multiplicity:
+                Jcell = diag( *([eigenval] * multiplicity))
+                Jcells.append(Jcell)
+            elif geometrical==0:
+                raise MatrixError("Matrix has the eigen vector with geometrical multiplicity equal zero.")
+            else:
+                sizes = self._jordan_split(multiplicity, geometrical)
+                cells = []
+                for size in sizes:
+                    cell = jordan_cell(eigenval, size)
+                    cells.append(cell)
+                Jcells += cells
+        return (None, Jcells)
+
+    def _jordan_split(self, algebraical, geometrical):
+            "return a list which sum is equal to 'algebraical' and length is equal to 'geometrical'"
+            n1 = algebraical / geometrical
+            res = [n1] * geometrical
+            res[len(res)-1] += algebraical % geometrical
+            assert sum(res) == algebraical
+            return res
 
 def matrix_multiply(A, B):
     """
@@ -1740,11 +2032,98 @@ def ones(dims):
     return Matrix(n, m, [S.One]*m*n)
 
 def eye(n):
-    """Create square identity matrix n x n"""
+    """Create square identity matrix n x n
+
+    See also: diag()
+    """
     n = int(n)
     out = zeros(n)
     for i in range(n):
         out[i, i] = S.One
+    return out
+
+def diag(*values):
+    """Create diagonal matrix from a list as a diagonal values.
+
+    Arguments might be matrices too, in case of it they are fitted in result matrix
+
+    Example:
+
+    >>> from sympy.matrices import diag, Matrix
+    >>> diag(1, 2, 3)
+    [1, 0, 0]
+    [0, 2, 0]
+    [0, 0, 3]
+
+    >>> from sympy.abc import x, y, z
+    >>> a = Matrix([x, y, z])
+    >>> b = Matrix([[1, 2], [3, 4]])
+    >>> c = Matrix([[5, 6]])
+    >>> diag(a, 7, b, c)
+    [x, 0, 0, 0, 0, 0]
+    [y, 0, 0, 0, 0, 0]
+    [z, 0, 0, 0, 0, 0]
+    [0, 7, 0, 0, 0, 0]
+    [0, 0, 1, 2, 0, 0]
+    [0, 0, 3, 4, 0, 0]
+    [0, 0, 0, 0, 5, 6]
+
+    See also: eye()
+    """
+    rows = 0
+    cols = 0
+    for m in values:
+        if isinstance(m, Matrix):
+            rows += m.rows
+            cols += m.cols
+        else:
+            rows += 1
+            cols += 1
+    res = zeros((rows, cols))
+    i_row = 0
+    i_col = 0
+    for m in values:
+        if isinstance(m, Matrix):
+            res[i_row:i_row + m.rows, i_col:i_col + m.cols] = m
+            i_row += m.rows
+            i_col += m.cols
+        else:
+            res[i_row, i_col] = m
+            i_row += 1
+            i_col += 1
+    return res
+
+def block_diag(matrices):
+    """
+    Warning: this function is deprecated. See .diag()
+
+    Constructs a block diagonal matrix from a list of square matrices.
+
+    See also: diag(), eye()
+    """
+    warnings.warn("block_diag() is deprecated", DeprecationWarning)
+    return diag(*matrices)
+
+def jordan_cell(eigenval, n):
+    """
+    Create matrix of Jordan cell kind:
+
+    Example:
+
+    >>> from sympy.matrices.matrices import jordan_cell
+    >>> from sympy.abc import x
+    >>> jordan_cell(x, 4)
+    [x, 1, 0, 0]
+    [0, x, 1, 0]
+    [0, 0, x, 1]
+    [0, 0, 0, x]
+    """
+    n = int(n)
+    out = zeros(n)
+    for i in range(n-1):
+        out[i, i] = eigenval
+        out[i, i+1] = S.One
+    out[n-1, n-1] = eigenval
     return out
 
 def randMatrix(r,c,min=0,max=99,seed=[]):
@@ -1859,35 +2238,6 @@ def casoratian(seqs, n, zero=True):
     k = len(seqs)
 
     return Matrix(k, k, f).det()
-
-def block_diag(matrices):
-    """
-    Constructs a block diagonal matrix from a list of square matrices.
-
-    Example:
-    >>> from sympy import block_diag, symbols, Matrix
-    >>> from sympy.abc import a, b, c, x, y, z
-    >>> a = Matrix([[1, 2], [2, 3]])
-    >>> b = Matrix([[3, x], [y, 3]])
-    >>> block_diag([a, b, b])
-    [1, 2, 0, 0, 0, 0]
-    [2, 3, 0, 0, 0, 0]
-    [0, 0, 3, x, 0, 0]
-    [0, 0, y, 3, 0, 0]
-    [0, 0, 0, 0, 3, x]
-    [0, 0, 0, 0, y, 3]
-
-    """
-    rows = 0
-    for m in matrices:
-        assert m.rows == m.cols, "All matrices must be square."
-        rows += m.rows
-    A = zeros((rows, rows))
-    i = 0
-    for m in matrices:
-        A[i+0:i+m.rows, i+0:i+m.cols] = m
-        i += m.rows
-    return A
 
 # Add sympify converters
 def _matrix_sympify(matrix):

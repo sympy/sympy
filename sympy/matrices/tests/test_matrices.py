@@ -2,7 +2,7 @@ from sympy import (symbols, Matrix, eye, I, Symbol, Rational, wronskian, cos,
     sin, exp, hessian, sqrt, zeros, ones, randMatrix, Poly, S, pi,
     oo, trigsimp, Integer, block_diag, N)
 from sympy.matrices.matrices import (ShapeError, MatrixError,
-    matrix_multiply_elementwise)
+    NonSquareMatrixException, matrix_multiply_elementwise, diag)
 from sympy.utilities.pytest import raises
 
 def test_division():
@@ -1118,12 +1118,12 @@ def test_vech_errors():
     m = Matrix([ [1,3], [2,4] ])
     raises(ValueError, 'm.vech()')
 
-def test_block_diag1():
+def test_diag():
     x, y, z = symbols("x y z")
     a = Matrix([[1, 2], [2, 3]])
     b = Matrix([[3, x], [y, 3]])
     c = Matrix([[3, x, 3], [y, 3, z], [x, y, z]])
-    assert block_diag([a, b, b]) == Matrix([
+    assert diag(a, b, b) == Matrix([
             [1, 2, 0, 0, 0, 0],
             [2, 3, 0, 0, 0, 0],
             [0, 0, 3, x, 0, 0],
@@ -1131,7 +1131,7 @@ def test_block_diag1():
             [0, 0, 0, 0, 3, x],
             [0, 0, 0, 0, y, 3],
             ])
-    assert block_diag([a, b, c]) == Matrix([
+    assert diag(a, b, c) == Matrix([
             [1, 2, 0, 0, 0, 0, 0],
             [2, 3, 0, 0, 0, 0, 0],
             [0, 0, 3, x, 0, 0, 0],
@@ -1140,7 +1140,7 @@ def test_block_diag1():
             [0, 0, 0, 0, y, 3, z],
             [0, 0, 0, 0, x, y, z],
             ])
-    assert block_diag([a, c, b]) == Matrix([
+    assert diag(a, c, b) == Matrix([
             [1, 2, 0, 0, 0, 0, 0],
             [2, 3, 0, 0, 0, 0, 0],
             [0, 0, 3, x, 3, 0, 0],
@@ -1148,6 +1148,18 @@ def test_block_diag1():
             [0, 0, x, y, z, 0, 0],
             [0, 0, 0, 0, 0, 3, x],
             [0, 0, 0, 0, 0, y, 3],
+            ])
+    a = Matrix([x, y, z])
+    b = Matrix([[1, 2], [3, 4]])
+    c = Matrix([[5, 6]])
+    assert diag(a, 7, b, c) == Matrix([
+            [x, 0, 0, 0, 0, 0],
+            [y, 0, 0, 0, 0, 0],
+            [z, 0, 0, 0, 0, 0],
+            [0, 7, 0, 0, 0, 0],
+            [0, 0, 1, 2, 0, 0],
+            [0, 0, 3, 4, 0, 0],
+            [0, 0, 0, 0, 5, 6],
             ])
 
 def test_get_diag_blocks1():
@@ -1164,28 +1176,28 @@ def test_get_diag_blocks2():
     a = Matrix([[1, 2], [2, 3]])
     b = Matrix([[3, x], [y, 3]])
     c = Matrix([[3, x, 3], [y, 3, z], [x, y, z]])
-    assert block_diag([a, b, b]).get_diag_blocks() == [a, b, b]
-    assert block_diag([a, b, c]).get_diag_blocks() == [a, b, c]
-    assert block_diag([a, c, b]).get_diag_blocks() == [a, c, b]
-    assert block_diag([c, c, b]).get_diag_blocks() == [c, c, b]
+    assert diag(a, b, b).get_diag_blocks() == [a, b, b]
+    assert diag(a, b, c).get_diag_blocks() == [a, b, c]
+    assert diag(a, c, b).get_diag_blocks() == [a, c, b]
+    assert diag(c, c, b).get_diag_blocks() == [c, c, b]
 
 def test_inv_block():
     x, y, z = symbols("x y z")
     a = Matrix([[1, 2], [2, 3]])
     b = Matrix([[3, x], [y, 3]])
     c = Matrix([[3, x, 3], [y, 3, z], [x, y, z]])
-    A = block_diag([a, b, b])
-    assert A.inv(try_block_diag=True) == block_diag([a.inv(), b.inv(), b.inv()])
-    A = block_diag([a, b, c])
-    assert A.inv(try_block_diag=True) == block_diag([a.inv(), b.inv(), c.inv()])
-    A = block_diag([a, c, b])
-    assert A.inv(try_block_diag=True) == block_diag([a.inv(), c.inv(), b.inv()])
-    A = block_diag([a, a, b, a, c, a])
-    assert A.inv(try_block_diag=True) == block_diag([
-        a.inv(), a.inv(), b.inv(), a.inv(), c.inv(), a.inv()])
-    assert A.inv(try_block_diag=True, method="ADJ") == block_diag([
+    A = diag(a, b, b)
+    assert A.inv(try_block_diag=True) == diag(a.inv(), b.inv(), b.inv())
+    A = diag(a, b, c)
+    assert A.inv(try_block_diag=True) == diag(a.inv(), b.inv(), c.inv())
+    A = diag(a, c, b)
+    assert A.inv(try_block_diag=True) == diag(a.inv(), c.inv(), b.inv())
+    A = diag(a, a, b, a, c, a)
+    assert A.inv(try_block_diag=True) == diag(
+        a.inv(), a.inv(), b.inv(), a.inv(), c.inv(), a.inv())
+    assert A.inv(try_block_diag=True, method="ADJ") == diag(
         a.inv(method="ADJ"), a.inv(method="ADJ"), b.inv(method="ADJ"),
-        a.inv(method="ADJ"), c.inv(method="ADJ"), a.inv(method="ADJ")])
+        a.inv(method="ADJ"), c.inv(method="ADJ"), a.inv(method="ADJ"))
 
 def test_creation_args():
     """
@@ -1202,3 +1214,151 @@ def test_creation_args():
     assert eye(3.) == eye(3)
     assert ones((3L, Integer(4))) == ones((3, 4))
     raises(TypeError, 'Matrix(1, 2)')
+
+def test_diagonal_symmetrical():
+    m = Matrix(2,2,[0, 1, 1, 0])
+    assert not m.is_diagonal()
+    assert m.is_symmetrical()
+
+    m = Matrix(2,2,[1, 0, 0, 1])
+    assert m.is_diagonal()
+
+    m = diag(1, 2, 3)
+    assert m.is_diagonal()
+    assert m.is_symmetrical()
+
+    m = Matrix(3,3,[1, 0, 0, 0, 2, 0, 0, 0, 3])
+    assert m == diag(1, 2, 3)
+
+    m = Matrix(2,3,[0, 0, 0, 0, 0, 0])
+    assert not m.is_symmetrical()
+
+    x, y = symbols('x','y')
+    m = Matrix(3,3,[1, x**2 + 2*x + 1, y, (x + 1)**2 , 2, 0, y, 0, 3])
+    assert m.is_symmetrical()
+
+
+def test_diagonalization():
+    x, y, z = symbols('x','y','z')
+    m = Matrix(3,2,[-3, 1, -3, 20, 3, 10])
+    raises(NonSquareMatrixException, 'm.is_diagonalizable()')
+    raises(NonSquareMatrixException, 'm.diagonalize()')
+
+    # diagonalizable
+    m = diag(1, 2, 3)
+    (P, D) = m.diagonalize()
+    assert P == eye(3)
+    assert D == m
+
+    m = Matrix(2,2,[0, 1, 1, 0])
+    assert m.is_symmetrical()
+    assert m.is_diagonalizable()
+    (P, D) = m.diagonalize()
+    assert P.inv() * m * P == D
+
+    m = Matrix(2,2,[1, 0, 0, 3])
+    assert m.is_symmetrical()
+    assert m.is_diagonalizable()
+    (P, D) = m.diagonalize()
+    assert P.inv() * m * P == D
+    assert P == eye(2)
+    assert D == m
+
+    m = Matrix(2,2,[1, 1, 0, 0])
+    assert m.is_diagonalizable()
+    (P, D) = m.diagonalize()
+    assert P.inv() * m * P == D
+
+    m = Matrix(3,3,[1, 2, 0, 0, 3, 0, 2, -4, 2])
+    assert m.is_diagonalizable()
+    (P, D) = m.diagonalize()
+    assert P.inv() * m * P == D
+
+    m = Matrix(2,2,[1, 0, 0, 0])
+    assert m.is_diagonal()
+    assert m.is_diagonalizable()
+    (P, D) = m.diagonalize()
+    assert P.inv() * m * P == D
+    assert P == eye(2)
+
+    # diagonalizable, complex only
+    m = Matrix(2,2,[0, 1, -1, 0])
+    assert not m.is_diagonalizable(True)
+    raises(MatrixError, '(D, P) = m.diagonalize(True)')
+    assert m.is_diagonalizable()
+    (P, D) = m.diagonalize()
+    assert P.inv() * m * P == D
+
+    m = Matrix(2,2,[1, 0, 0, I])
+    raises(NotImplementedError, 'm.is_diagonalizable(True)')
+    # !!! bug because of eigenvects() or roots(x**2 + (-1 - I)*x + I, x)
+    # see issue 2193
+    # assert not m.is_diagonalizable(True)
+    # raises(MatrixError, '(P, D) = m.diagonalize(True)')
+    # (P, D) = m.diagonalize(True)
+
+    # not diagonalizable
+    m = Matrix(2,2,[0, 1, 0, 0])
+    assert not m.is_diagonalizable()
+    raises(MatrixError, '(D, P) = m.diagonalize()')
+
+    m = Matrix(3,3,[-3, 1, -3, 20, 3, 10, 2, -2, 4])
+    assert not m.is_diagonalizable()
+    raises(MatrixError, '(D, P) = m.diagonalize()')
+
+    # symbolic
+    a, b, c, d = symbols('a','b','c', 'd')
+    m = Matrix(2,2,[a, c, c, b])
+    assert m.is_symmetrical()
+    assert m.is_diagonalizable()
+
+def test_jordan_form():
+    # diagonalizable
+    m = Matrix(3, 3, [7, -12, 6, 10, -19, 10, 12, -24, 13])
+    Jmust = Matrix(3, 3, [1, 0, 0, 0, 1, 0, 0, 0, -1])
+    (P, J) = m.jordan_form()
+    assert Jmust == J
+    assert Jmust == m.diagonalize()[1]
+
+    #m = Matrix(3, 3, [0, 6, 3, 1, 3, 1, -2, 2, 1])
+    #m.jordan_form() # very long
+    # m.jordan_form() #
+
+    # diagonalizable, complex only
+
+    # Jordan cells
+    # complexity: one of eigenvalues is zero
+    m = Matrix(3, 3, [0, 1, 0, -4, 4, 0, -2, 1, 2])
+    Jmust = Matrix(3, 3, [2, 0, 0, 0, 2, 1, 0, 0, 2])
+    assert Jmust == m.jordan_form()[1]
+    (P, Jcells) = m.jordan_cells()
+    assert Jcells[0] == Matrix(1, 1, [2])
+    assert Jcells[1] == Matrix(2, 2, [2, 1, 0, 2])
+
+    #complexity: all of eigenvalues are equal
+    m = Matrix(3, 3, [2, 6, -15, 1, 1, -5, 1, 2, -6])
+    Jmust = Matrix(3, 3, [-1, 0, 0, 0, -1, 1, 0, 0, -1])
+    (P, J) = m.jordan_form()
+    assert Jmust == J
+
+    #complexity: two of eigenvalues are zero
+    m = Matrix(3, 3, [4, -5, 2, 5, -7, 3, 6, -9, 4])
+    Jmust = Matrix(3, 3, [1, 0, 0, 0, 0, 1, 0, 0, 0])
+    (P, J) = m.jordan_form()
+    assert Jmust == J
+
+    m = Matrix(4, 4, [6, 5, -2, -3, -3, -1, 3, 3, 2, 1, -2, -3, -1, 1, 5, 5])
+    Jmust = Matrix(4, 4, [2, 1, 0, 0, 0, 2, 0, 0, 0, 0, 2, 1, 0, 0, 0, 2])
+    (P, J) = m.jordan_form()
+    assert Jmust == J
+
+    m = Matrix(4, 4, [6, 2, -8, -6, -3, 2, 9, 6, 2, -2, -8, -6, -1, 0, 3, 4])
+    Jmust = Matrix(4, 4, [2, 0, 0, 0, 0, 2, 1, 0, 0, 0, 2, 0, 0, 0, 0, -2])
+    (P, J) = m.jordan_form()
+    assert Jmust == J
+
+    m = Matrix(4, 4, [5, 4, 2, 1, 0, 1, -1, -1, -1, -1, 3, 0, 1, 1, -1, 2])
+    assert not m.is_diagonalizable()
+    Jmust = Matrix(4, 4, [1, 0, 0, 0, 0, 2, 0, 0, 0, 0, 4, 1, 0, 0, 0, 4])
+    (P, J) = m.jordan_form()
+    assert Jmust == J
