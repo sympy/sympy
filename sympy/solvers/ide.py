@@ -134,10 +134,11 @@ def classify_ide(eq, func, dicr=False):
     classifier.remove('')
     return classifier
 
-def check_idesol(eq, func, fn):
+def checkidesol(ide, func, fn):
     """
     This method verifies if the given function satisfies the given Integral equation
     """
+    eq = ide
     if len(func.args) != 1:
         raise ValueError("check_idesol() will only work with functions " + \
             "of one variable")
@@ -166,6 +167,7 @@ def iesolve(eq, func, method = ""):
     the given integral equation. It then selects the method most appropriate for
     solving the integral equation.
     """
+    ide_classification = classify_ide(eq, func)
     raise NotImplementedError()
 
 def iesolve_nonlinear(eq, func, method = ""):
@@ -329,17 +331,22 @@ def solve_approximate(eq, func, level, startsoln = 1, picard = False):
                     neweq = Eq(neweq.lhs + term.subs(func, startsoln), neweq.rhs)        
     return solve_approximate(eq, func, level - 1, neweq.lhs, False)        
 
-def solve_asode(eq, func, depth=1, initialvalues=[]):
+def solve_asode(eq, func, maxdepth, depth = 1, initialvalues=[]):
     """
     Differentiate the equation to get a differential equation and use dsolve
-    It is impractical and other times impossible to solve certain IDEs by reducing
+    It is impractical and at other times impossible to solve certain IDEs by reducing
     them to ODEs. To counter this situation we enforce a depth constraint which restricts
     the number of times an integral equation can be differentiated to get a pure
     differential equation. This method is only valid for volterra integral equations
+    
+    *Warning*
+    The variable maxdepth should be set to a reasonably low value like 5-6 else
+    the routine can take an inordinately large amount of time to finish.
+    
     """
     #FIXME: This gives incorrect answers because we dont take into account initial value
     #Also the initial values are at the lower limit of the integral term and not always at 0
-    if depth > 6:
+    if depth > maxdepth:
         raise ValueError ("Solving this integral equation as an ODE is not feasible")
     
     neweq = Eq(0,eq.rhs)
@@ -375,8 +382,35 @@ def solve_neumann(eq,func,n):
     Solves integral equations using Neumann Series method also 
     known as the method of successive substitutions. 
     """
-    raise NotImplementedError() 
-
+    #Create terms of Neumann series
+    terms = []
+    for i in range(0, n):
+        terms.insert(i, Eq(Function("U" + str(i))(func.args[0]),0))
+    non_integral_terms = Eq(0,0)
+    
+    #Extract kernel and non-integral terms
+    for term in eq.lhs.args:
+        if type(term) != Integral:
+            non_integral_terms = Eq(non_integral_terms.lhs + term, 0)
+        if type(term) == Integral:
+            limits = term.limits
+            termsymbol = term.variables[0]
+            subsfunc = func.subs(func.args[0], termsymbol)
+            kernel = term.function.subs(subsfunc, 1)
+    
+    #For each term find out the required integral and print the last term
+    terms[0] = Eq(terms[0].lhs,\
+                   integrate(kernel * non_integral_terms.lhs, limits))
+    
+    for i in range(1, n):
+        terms[i] = Eq(terms[i].lhs, \
+                      integrate(kernel * terms[i-1].rhs.subs(func.args[0], termsymbol), limits))
+                        
+    ans = Eq(0,0)
+    for i in range(n):
+        ans = Eq(ans.lhs + terms[i].rhs)    
+    return ans.lhs 
+    
 def solve_eigenfunction():
     """
     Solves integral equations using the Eigenfunction technique
