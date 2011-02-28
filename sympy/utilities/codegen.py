@@ -816,9 +816,10 @@ class FCodeGen(CodeGen):
         # check that symbols are unique with ignorecase
         for r in routines:
             lowercase = set(map(lambda x: str(x).lower(), r.variables))
-            if len(lowercase) < len(r.variables):
-                raise CodeGenError("Fortran ignores case. Got symbols: %s"
-                        ", ".join([str(var) for var in r.variables]))
+            orig_case = set(map(lambda x: str(x), r.variables))
+            if len(lowercase) < len(orig_case):
+                raise CodeGenError("Fortran ignores case. Got symbols: %s"%
+                        (", ".join([str(var) for var in r.variables])))
         self.dump_code(routines, f, prefix, header, empty)
     dump_f95.extension = code_extension
     dump_f95.__doc__ = CodeGen.dump_code.__doc__
