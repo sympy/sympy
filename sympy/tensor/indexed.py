@@ -185,7 +185,8 @@ class IndexedBase(Expr):
         return Expr._hashable_content(self) + (self._shape,)
 
     def __getitem__(self, indices, **kw_args):
-        if isinstance(indices, tuple):
+        if isinstance(indices, (tuple, list, Tuple)):
+            # Special case needed because M[*my_tuple] is a syntax error.
             if self.shape and len(self.shape) != len(indices):
                 raise IndexException("Rank mismatch")
             return Indexed(self, *indices, **kw_args)
