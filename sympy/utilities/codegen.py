@@ -234,12 +234,12 @@ class Routine(object):
         For routines with unnamed return values, the dummies that may or may
         not be used will be included in the set.
         """
-        vars = set(self.local_vars)
+        v = set(self.local_vars)
         for arg in self.arguments:
-            vars.add(arg.name)
+            v.add(arg.name)
         for res in self.results:
-            vars.add(res.result_var)
-        return vars
+            v.add(res.result_var)
+        return v
 
     @property
     def result_variables(self):
