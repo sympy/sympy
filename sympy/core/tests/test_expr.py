@@ -817,3 +817,7 @@ def test_symbols():
     # symbols should return the free symbols of an object
     assert (x).free_symbols == set([x])
     assert Integral(x, (x, 1, y)).free_symbols == set([y])
+
+def test_issue2201():
+    x = Symbol('x', commutative=False)
+    assert x*sqrt(2)/sqrt(6) == x*sqrt(3)/3

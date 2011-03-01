@@ -308,7 +308,7 @@ class Mul(AssocOp):
             c_part = [Add(*[coeff*f for f in c_part[1].args])]
 
         if reeval:
-            return Mul.flatten(c_part)
+            c_part, _, _ = Mul.flatten(c_part)
         return c_part, nc_part, order_symbols
 
 
