@@ -493,7 +493,7 @@ class CodeGen(object):
             code_lines = ''.join(self._get_header() + [code_lines])
 
         if code_lines:
-            print >> f, code_lines
+            print >> f, code_lines,
 
 class CodeGenError(Exception):
     pass
