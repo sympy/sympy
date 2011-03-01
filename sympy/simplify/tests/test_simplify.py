@@ -572,7 +572,7 @@ def test_powdenest():
     assert powdenest(((x**(2*i))**(3*y))**x) == ((x**(2*i))**(3*y))**x
     assert powdenest(((x**(2*i))**(3*y))**x, force=True) == x**(6*i*x*y)
     assert powdenest(((x**(2*a/3))**(3*y/i))**x) == ((x**(a/3))**(y/i))**(6*x)
-    assert powdenest((x**(2*i)*y**(4*i))**z,1) == (x*y**2)**(2*i*z)
+    assert powdenest((x**(2*i)*y**(4*i))**z, force=True) == (x*y**2)**(2*i*z)
     e = ((x**2*y**4)**a)**(x*y)
     assert powdenest(e) == e
     e = (((x**2*y**4)**a)**(x*y))**3

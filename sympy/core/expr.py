@@ -1234,7 +1234,7 @@ class Expr(Basic, EvalfMixin):
         return nsimplify(self, constants, tolerance, full)
 
     def separate(self, deep=False):
-        """See the seperate function in sympy.simplify"""
+        """See the separate function in sympy.simplify"""
         from sympy.simplify import separate
         return separate(self, deep)
 

@@ -649,7 +649,7 @@ class Pow(Expr):
                     n = n2
 
                 term2 = collect(rest.as_leading_term(x), x)
-                k, l = C.Wild("k"), C.Wild("l")
+                k, l = Wild("k"), Wild("l")
                 r = term2.match(k*x**l)
                 # if term2 is NaN then r will not contain l
                 k = r.get(k, S.One)
@@ -795,4 +795,4 @@ class Pow(Expr):
 from add import Add
 from numbers import Integer
 from mul import Mul
-from symbol import Symbol, Dummy
+from symbol import Symbol, Dummy, Wild

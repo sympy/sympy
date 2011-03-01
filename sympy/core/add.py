@@ -395,7 +395,10 @@ class Add(AssocOp):
         #         n          n          n
         # (-3 + y)   ->  (-1)  * (3 - y)
         #
-        # At present, as_coeff_mul return +/-1 but the
+        # If terms=True then return the arguments that should be
+        # multiplied together rather than multiplying them.
+        #
+        # At present, as_coeff_terms return +/-1 but the
         # following should work even if that changes.
         if Basic.keep_sign:
             return None

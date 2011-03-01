@@ -149,7 +149,7 @@ class AssocOp(Expr):
 
     @classmethod
     def flatten(cls, seq):
-        # apply associativity, no commutativity property is used
+        # apply associativity, no commutivity property is used
         new_seq = []
         while seq:
             o = seq.pop(0)

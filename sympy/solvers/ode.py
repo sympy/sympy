@@ -2471,9 +2471,6 @@ def _solve_undetermined_coefficients(eq, func, order, match):
 
     coeffsdict = dict(zip(trialset, [0]*(len(trialset) + 1)))
 
-    # XXX: Replace this with as_Add when Mateusz's Polys branch gets merged in
-    # The else clause actually should never be run unless the ode is only one
-    # term, in which case it must be a derivative term and so will be inhomogeneous
     eqs = expand_mul(eqs)
 
     for i in Add.make_args(eqs):
@@ -2759,7 +2756,7 @@ def ode_separable(eq, func, order, match):
     rearranging terms and integrating:
     Integral(P(y), y) = Integral(Q(x), x). This hint uses separatevars()
     as its back end, so if a separable equation is not caught by this
-    solver, it is most likely the fault of that function. seperatevars()
+    solver, it is most likely the fault of that function. separatevars()
     is smart enough to do most expansion and factoring necessary to
     convert a separable equation F(x, y) into the proper form P(x)*Q(y).
     The general solution is::

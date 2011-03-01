@@ -157,7 +157,7 @@ see http://en.wikipedia.org/wiki/Boolean_algebra_(structure)
 """
 
 def test_commutative():
-    """Test for commutativity of And and Or"""
+    """Test for commutivity of And and Or"""
     A, B = map(Boolean, symbols('A,B'))
 
     assert A & B == B & A
