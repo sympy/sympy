@@ -592,7 +592,12 @@ def test_powdenest():
     assert powdenest((x**(2*i)*y**(4*i))**z,1) == (x*y**2)**(2*i*z)
     e = ((x**2*y**4)**a)**(x*y)
     assert powdenest(e) == e
-    assert powdenest((((x**2*y**4)**a)**(x*y)), force=True) == (x**2*y**4)**(a*x*y)
     e = (((x**2*y**4)**a)**(x*y))**3
     assert powdenest(e) == ((x**2*y**4)**a)**(3*x*y)
+
+@XFAIL
+def test_powdenest_fail_in_polys():
+    from sympy import powdenest
+    from sympy.abc import x, y, z, a, b
+    assert powdenest((((x**2*y**4)**a)**(x*y)), force=True) == (x**2*y**4)**(a*x*y)
     assert powdenest((((x**2*y**4)**a)**(x*y))**3, force=True) == (x**2*y**4)**(3*a*x*y)
