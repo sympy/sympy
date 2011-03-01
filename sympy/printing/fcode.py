@@ -337,7 +337,7 @@ class FCodePrinter(CodePrinter):
         code = [ line.lstrip(' \t') for line in code ]
 
         inc_keyword = ('do ', 'if(', 'if ', 'do\n', 'else')
-        dec_keyword = ('end ', 'enddo', 'end\n', 'else')
+        dec_keyword = ('end do', 'enddo', 'end if', 'endif', 'else')
 
         from sympy.utilities.iterables import any  # 2.4 support
         increase = [ int(any(map(line.startswith, inc_keyword))) for line in code ]
