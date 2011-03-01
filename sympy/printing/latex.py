@@ -142,10 +142,10 @@ class LatexPrinter(Printer):
         str_real = mlib.to_str(expr._mpf_, dps, strip_zeros=True)
 
         # Must always have a mul symbol (as 2.5 10^{20} just looks odd)
-        seperator = r" \times "
+        separator = r" \times "
 
         if self._settings['mul_symbol'] is not None:
-            seperator = self._settings['mul_symbol_latex']
+            separator = self._settings['mul_symbol_latex']
 
         if 'e' in str_real:
             (mant, exp) = str_real.split('e')
@@ -153,7 +153,7 @@ class LatexPrinter(Printer):
             if exp[0] == '+':
                 exp = exp[1:]
 
-            return r"%s%s10^{%s}" % (mant, seperator, exp)
+            return r"%s%s10^{%s}" % (mant, separator, exp)
         elif str_real == "+inf":
             return r"\infty"
         elif str_real == "-inf":
@@ -171,7 +171,7 @@ class LatexPrinter(Printer):
             tex = "- "
 
         numer, denom = fraction(tail)
-        seperator = self._settings['mul_symbol_latex']
+        separator = self._settings['mul_symbol_latex']
 
         def convert(expr):
             if not expr.is_Mul:
@@ -194,12 +194,12 @@ class LatexPrinter(Printer):
 
                     # between two digits, \times must always be used,
                     # to avoid confusion
-                    if seperator == " " and \
+                    if separator == " " and \
                             re.search("[0-9][} ]*$", last_term_tex) and \
                             re.match("[{ ]*[-+0-9]", term_tex):
                         _tex += r" \times "
                     elif _tex:
-                        _tex += seperator
+                        _tex += separator
 
                     _tex += term_tex
                     last_term_tex = term_tex
@@ -216,11 +216,11 @@ class LatexPrinter(Printer):
 
                 # between two digits, \times must always be used, to avoid
                 # confusion
-                if seperator == " " and re.search("[0-9][} ]*$", tex) and \
+                if separator == " " and re.search("[0-9][} ]*$", tex) and \
                         re.match("[{ ]*[-+0-9]", _tex):
                     tex +=  r" \times " + _tex
                 else:
-                    tex += seperator + _tex
+                    tex += separator + _tex
             else:
                 tex += _tex
 

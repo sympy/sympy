@@ -108,7 +108,7 @@ class Mul(AssocOp):
                 # Give powers a chance to become a Mul if that's the
                 # behavior obtained from Add._eval_power()
                 if not Basic.keep_sign and b.is_Add and e.is_Number:
-                    cb = b._eval_power(e, terms=1)
+                    cb = b._eval_power(e, terms=True)
                     if cb:
                         c, b = cb
                         coeff *= c
