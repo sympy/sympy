@@ -44,8 +44,13 @@ class Symbol(AtomicExpr, Boolean):
 
         if 'dummy' in assumptions:
             import warnings
-            warnings.warn("\nuse Dummy() or symbols() to create dummy symbols.",
-                          DeprecationWarning)
+            warnings.warn(
+                    "\nThe syntax Symbol('x', dummy=True) is deprecated and will"
+                    "\nbe dropped in a future version of Sympy. Please use Dummy()"
+                    "\nor symbols(..., cls=Dummy) to create dummy symbols.",
+                    DeprecationWarning)
+            if assumptions.pop('dummy'):
+                return Dummy(name, commutative, **assumptions)
         return Symbol.__xnew_cached_(cls, name, commutative, **assumptions)
 
     def __new_stage2__(cls, name, commutative=True, **assumptions):
