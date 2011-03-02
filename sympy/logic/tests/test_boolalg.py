@@ -227,11 +227,6 @@ def test_to_int_repr():
     assert sorted_recursive(to_int_repr([x | y, z | ~x], [x, y, z])) == \
                                             sorted_recursive([[1, 2], [3, -1]])
 
-def test_fuzzy_not():
-    assert fuzzy_not(False) == True
-    assert fuzzy_not(True) == False
-    assert fuzzy_not(None) == None
-
 def test_is_cnf():
     x, y, z = symbols('xyz')
     assert is_cnf(x | y | z) == True
