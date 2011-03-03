@@ -1,6 +1,7 @@
-from sympy import symbols, Integral, Tuple
+from sympy import symbols, Integral, Tuple, Dummy
 from sympy.utilities.iterables import postorder_traversal, \
-    preorder_traversal, flatten, subsets, variations, cartes
+    preorder_traversal, flatten, subsets, variations, cartes, \
+    numbered_symbols
 from sympy.functions.elementary.piecewise import Piecewise, ExprCondPair
 from sympy.utilities.pytest import raises
 
@@ -124,3 +125,6 @@ def test_cartes():
            [[1, 3], [1, 4], [1, 5], [2, 3], [2, 4], [2, 5]]
     assert list(cartes()) == [[]]
 
+def test_numbered_symbols():
+    s = numbered_symbols(cls=Dummy)
+    assert isinstance(s.next(), Dummy)

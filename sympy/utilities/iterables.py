@@ -358,7 +358,7 @@ def subsets(seq, k=None, repetition=False):
                         break # we didn't for-break so we are done
                 yield [seq[li] for li in indices]
 
-def numbered_symbols(prefix='x', function=None, start=0, *args, **assumptions):
+def numbered_symbols(prefix='x', cls=None, start=0, *args, **assumptions):
     """
     Generate an infinite stream of Symbols consisting of a prefix and
     increasing subscripts.
@@ -369,9 +369,8 @@ def numbered_symbols(prefix='x', function=None, start=0, *args, **assumptions):
         The prefix to use. By default, this function will generate symbols of
         the form "x0", "x1", etc.
 
-    function : function, optional
-        The function to use. By default, it uses Symbol, but you can also use
-        Wild.
+    cls : class, optional
+        The class to use. By default, it uses Symbol, but you can also use Wild.
 
     start : int, optional
         The start number.  By default, it is 0.
@@ -381,20 +380,18 @@ def numbered_symbols(prefix='x', function=None, start=0, *args, **assumptions):
     sym : Symbol
         The subscripted symbols.
     """
-
-    if function is None:
+    if cls is None:
         if 'dummy' in assumptions and assumptions.pop('dummy'):
-            function = C.Dummy
+            import warnings
+            warnings.warn("\nuse cls=Dummy to create dummy symbols",
+                          DeprecationWarning)
+            cls = C.Dummy
         else:
-            function = C.Symbol
+            cls = C.Symbol
 
-    #remove from here...when polys12 is in place
-    if 'cls' in assumptions and assumptions['cls'] == C.Dummy:
-        assumptions.pop('cls')
-    #to here...when polys12 is in place
     while True:
         name = '%s%s' % (prefix, start)
-        yield function(name, *args, **assumptions)
+        yield cls(name, *args, **assumptions)
         start += 1
 
 def capture(func):

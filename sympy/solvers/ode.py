@@ -2258,7 +2258,7 @@ def ode_nth_linear_constant_coeff_homogeneous(eq, func, order, match, returns='s
     f = func.func
     r = match
     # A generator of constants
-    constants = numbered_symbols(prefix='C', function=Symbol, start=1)
+    constants = numbered_symbols(prefix='C', cls=Symbol, start=1)
     # First, set up characteristic equation.
     m = Dummy('m')
     chareq = S.Zero
