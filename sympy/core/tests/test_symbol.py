@@ -18,6 +18,11 @@ def test_Symbol():
 
     assert Symbol("x") == Symbol("x")
     assert Dummy("x") != Dummy("x")
+    d = symbols('d', cls=Dummy)
+    assert isinstance(d, Dummy)
+    c,d = symbols('c,d', cls=Dummy)
+    assert isinstance(c, Dummy)
+    assert isinstance(d, Dummy)
     raises(TypeError, 'Symbol()')
 
 def test_Dummy():
