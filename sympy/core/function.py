@@ -603,7 +603,6 @@ class Derivative(Expr):
                 return repl_dict
         elif isinstance(expr, Derivative):
             if len(expr.variables) == len(self.variables):
-                    #print "MAYBE:",self, expr, repl_dict, evaluate
                 return Expr.matches(self, expr, repl_dict, evaluate)
 
     def _eval_lseries(self, x):

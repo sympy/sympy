@@ -364,10 +364,7 @@ class log(Function):
                     nonpos *= x
             return expr + log(nonpos)
         elif arg.is_Pow:
-            if arg.exp.is_real:# and arg.base.is_positive:
-                # This should only run when base.is_positive, but it breaks
-                # nseries, so it will have to wait for the new assumptions system.
-                # See the variable obj2 in log._eval_nseries.
+            if arg.exp.is_real and arg.base.is_positive:
                 if deep:
                     b = arg.base.expand(deep=deep, **hints)
                     e = arg.exp.expand(deep=deep, **hints)
