@@ -383,14 +383,22 @@ def numbered_symbols(prefix='x', function=None, start=0, *args, **assumptions):
     """
 
     if function is None:
-        if 'dummy' in assumptions and assumptions.pop('dummy'):
+        # XXX should this backdoor creation of dummies with this assumption be allowed?
+        # XXX no other class has this privilege
+        dummy_a = 'dummy' in assumptions
+        if assumptions.pop('dummy', False):
+            dummy_a = True
             function = C.Dummy
         else:
             function = C.Symbol
 
     #remove from here...when polys12 is in place
-    if 'cls' in assumptions and assumptions['cls'] == C.Dummy:
-        assumptions.pop('cls')
+    # cls=Dummy is the only pre-polys12 function being honored
+    if assumptions.pop('cls', None) is C.Dummy:
+        if dummy_a:
+            import warnings
+            warnings.warn('Use either cls=Dummy or dummy=True', SyntaxWarning)
+        function = C.Dummy
     #to here...when polys12 is in place
     while True:
         name = '%s%s' % (prefix, start)

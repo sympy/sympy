@@ -124,3 +124,8 @@ def test_cartes():
            [[1, 3], [1, 4], [1, 5], [2, 3], [2, 4], [2, 5]]
     assert list(cartes()) == [[]]
 
+def test_numbered_symbols():
+    s = numbered_symbols(dummy=True)
+    assert isinstance(s.next(), Dummy)
+    s = numbered_symbols(cls=Dummy)
+    assert isinstance(s.next(), Dummy)
