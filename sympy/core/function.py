@@ -107,7 +107,7 @@ class Application(Basic):
             if opt in options:
                 del options[opt]
         # up to here.
-        if not options.get('evaluate', True):
+        if not options.pop('evaluate', True):
             return super(Application, cls).__new__(cls, *args, **options)
         evaluated = cls.eval(*args)
         if evaluated is not None:
@@ -567,12 +567,8 @@ class Derivative(Expr):
             return expr
         symbols = Derivative._symbolgen(*symbols)
         if expr.is_commutative:
-            assumptions["commutative"] = True
-        if "evaluate" in assumptions:
-            evaluate = assumptions["evaluate"]
-            del assumptions["evaluate"]
-        else:
-            evaluate = False
+            assumptions['commutative'] = True
+        evaluate = assumptions.pop('evaluate', False)
         if not evaluate and not isinstance(expr, Derivative):
             symbols = list(symbols)
             if len(symbols) == 0:

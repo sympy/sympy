@@ -73,25 +73,24 @@ def __cacheit(func):
     CACHE.append((func, func_cache_it_cache))
 
     def wrapper(*args, **kw_args):
+        """
+        Assemble the args and kw_args to compute the hash.
+        It is important that kw_args be standardized since if they
+        have the same meaning but in different forms (e.g. one
+        kw_arg having a value of 1 for an object and another object
+        with identical args but a kw_arg of True) then two different
+        hashes will be computed and the two objects will not be identical.
+        """
         if kw_args:
-            # don't store redundant keywords; ideally the kw_args would be
-            # purged of all default values so identical hashes would be
-            # computed.
-            if kw_args.get('evaluate', False):
-                kw_args.pop('evaluate')
+            keys = kw_args.keys()
 
-            if kw_args:
-                keys = kw_args.keys()
+            # make keywords all the same
+            for k in keys:
+                kw_args[k] = fuzzy_bool(kw_args[k])
 
-                # make keywords all the same
-                for k in keys:
-                    kw_args[k] = fuzzy_bool(kw_args[k])
-
-                keys.sort()
-                items = [(k+'=', kw_args[k]) for k in keys]
-                k = args + tuple(items)
-            else:
-                k = args
+            keys.sort()
+            items = [(k+'=', kw_args[k]) for k in keys]
+            k = args + tuple(items)
         else:
             k = args
         try:
@@ -130,51 +129,6 @@ def __cacheit_debug(func):
         assert r1 == r2
 
         return r1
-
-    wrapper.__doc__ = func.__doc__
-    wrapper.__name__ = func.__name__
-
-    return wrapper
-
-def __cacheit_nondummy(func):
-    func._cache_it_cache = func_cache_it_cache = {}
-    CACHE.append((func, func_cache_it_cache))
-
-    def wrapper(*args, **kw_args):
-        if kw_args:
-            # don't store redundant keywords; ideally the kw_args would be
-            # purged of all default values so identical hashes would be
-            # computed.
-            if kw_args.get('evaluate', False):
-                keys.pop('evaluate')
-
-            try:
-                dummy = kw_args['dummy']
-            except KeyError:
-                dummy = None
-            if dummy:
-                return func(*args, **kw_args)
-
-            if kw_args:
-                keys = kw_args.keys()
-
-                # make keywords all the same
-                for k in keys:
-                    kw_args[k] = fuzzy_bool(kw_args[k])
-
-                keys.sort()
-                items = [(k+'=', kw_args[k]) for k in keys]
-                k = args + tuple(items)
-            else:
-                k = args
-        else:
-            k = args
-        try:
-            return func_cache_it_cache[k]
-        except KeyError:
-            pass
-        func_cache_it_cache[k] = r = func(*args, **kw_args)
-        return r
 
     wrapper.__doc__ = func.__doc__
     wrapper.__name__ = func.__name__

@@ -30,7 +30,7 @@ class Symbol(AtomicExpr, Boolean):
     is_Symbol = True
 
     def __new__(cls, name, commutative=True, **assumptions):
-        """Symbols are identified by name and commutivity::
+        """Symbols are identified by name and commutativity::
 
         >>> from sympy import Symbol
         >>> bool(Symbol("x") == Symbol("x")) == True

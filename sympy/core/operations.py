@@ -34,7 +34,7 @@ class AssocOp(Expr):
         if len(args) == 1:
             return args[0]
 
-        if not assumptions.get('evaluate', True):
+        if not assumptions.pop('evaluate', True):
             obj = Expr.__new__(cls, *args, **assumptions)
             obj.is_commutative = all(a.is_commutative for a in args)
             return obj

@@ -74,7 +74,7 @@ class Pow(Expr):
     def __new__(cls, b, e, **assumptions):
         b = _sympify(b)
         e = _sympify(e)
-        if assumptions.get('evaluate', True):
+        if assumptions.pop('evaluate', True):
             if e is S.Zero:
                 return S.One
             elif e is S.One:
