@@ -826,7 +826,7 @@ class Expr(Basic, EvalfMixin):
                 return self
 
         ## it seems like the following should be doable, but several failures
-        ## then occur. Is this related to issue 1747 et al?
+        ## then occur. Is this related to issue 1747 et al? See also XPOS below.
         #if x.is_positive is x.is_negative is None:
         #    # replace x with an x that has a positive assumption
         #    xpos = C.Dummy('x', positive=True)
@@ -1010,7 +1010,7 @@ class Expr(Basic, EvalfMixin):
         """
         if x and not self.has(x):
             return self
-        if x is None or x0 or dir != '+':# or (x.is_positive == x.is_negative == None):
+        if x is None or x0 or dir != '+':#{see XPOS above} or (x.is_positive == x.is_negative == None):
             return self.series(x, x0, n, dir)
         else:
             return self._eval_nseries(x, n=n)
