@@ -212,15 +212,10 @@ def symbols(*names, **kwargs):
     True
 
     """
+    func = Symbol
     # when polys12 is in place remove from here...
-    if 'cls' in kwargs:
-        if isinstance(names[0], str) and len(names) == 1:
-         names = names[0]
-        kwargs.pop('cls')
-        rv = []
-        for c in names.replace(',', ' ').split():
-            rv.append(Dummy(c, **kwargs))
-        return rv
+    if 'cls' in kwargs and kwargs.pop('cls') is Dummy:
+        func = Dummy
     # ... to here when polys12 is in place
     # use new behavior if space or comma in string
     if not 'each_char' in kwargs and len(names) == 1 and \
@@ -236,7 +231,7 @@ def symbols(*names, **kwargs):
             # skip empty strings
             if not t:
                 continue
-            sym = Symbol(t, **kwargs)
+            sym = func(t, **kwargs)
             res.append(sym)
         res = tuple(res)
         if len(res) == 0:   # var('')
@@ -248,9 +243,9 @@ def symbols(*names, **kwargs):
     else:
         # this is the old, deprecated behavior:
         if len(names) == 1:
-            result = [ Symbol(name, **kwargs) for name in names[0] ]
+            result = [ func(name, **kwargs) for name in names[0] ]
         else:
-            result = [ Symbol(name, **kwargs) for name in names ]
+            result = [ func(name, **kwargs) for name in names ]
         if len(result) == 1:
             return result[0]
         else:
