@@ -69,10 +69,8 @@ class UndefinedFunction(FunctionClass):
     """
     The (meta)class of undefined functions.
     """
-    def __new__(mcl, name, signature=None):
+    def __new__(mcl, name):
         attrdict = {'undefined_Function': True}
-        if signature is not None:
-            attrdict['signature'] = signature
         bases = (Function,)
         return BasicMeta.__new__(mcl, name, bases, attrdict)
 
