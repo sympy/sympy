@@ -73,5 +73,5 @@ def test_doit():
 def test_printing():
     psi = Ket('psi')
     ip = Dagger(psi)*psi
-    assert pretty(ip) == u'\u27e8\u03c8\u2758\u03c8\u27e9'
+    assert pretty(ip, use_unicode=True) == u'\u27e8\u03c8\u2758\u03c8\u27e9'
     assert latex(ip) == r"\left\langle \psi \right. {\left|\psi\right\rangle }"
