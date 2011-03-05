@@ -1098,6 +1098,10 @@ class Basic(AssumeMeths):
         """
         Replace matching subexpressions of ``self`` with ``value``.
 
+        If map=True then also return the mapping {old: new} where `old``
+        was a sub-expression found with query and ``new`` is the replacement
+        value for it.
+
         Traverses an expression tree and performs replacement of matching
         subexpressions from the bottom to the top of the tree. The list of
         possible combinations of queries and replacement values is listed
@@ -1127,6 +1131,9 @@ class Basic(AssumeMeths):
         log(cos(x)) + tan(cos(x**2))
         >>> f.replace(sin, lambda arg: sin(2*arg))
         log(sin(2*x)) + tan(sin(2*x**2))
+
+        >>> sin(x).replace(sin, cos, map=True)
+        (cos(x), {sin(x): cos(x)})
 
         >>> a = Wild('a')
 
@@ -1193,10 +1200,7 @@ class Basic(AssumeMeths):
                 value = _value(expr, result)
 
                 if map:
-                    if expr not in mapping:
-                        mapping[expr] = set([value])
-                    else:
-                        mapping[expr].add(value)
+                    mapping[expr] = value
 
                 return value
             elif construct:

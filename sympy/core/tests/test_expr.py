@@ -474,6 +474,9 @@ def test_replace():
 
     assert g.replace(lambda expr: expr.is_Number, lambda expr: expr**2) == 4*sin(x**9)
 
+    assert cos(x).replace(cos, sin, map=True) == (sin(x), {cos(x): sin(x)})
+    assert sin(x).replace(cos, sin) == sin(x)
+
 def test_find():
     expr = (x + y + 2 + sin(3*x))
 
