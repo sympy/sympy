@@ -6,7 +6,7 @@ from sympy.integrals.trigonometry import trigintegrate
 from sympy.integrals.deltafunctions import deltaintegrate
 from sympy.integrals.rationaltools import ratint
 from sympy.integrals.risch import heurisch
-from sympy.utilities import threaded, flatten, any
+from sympy.utilities import threaded, flatten, any, all
 from sympy.polys import Poly
 from sympy.solvers import solve
 from sympy.functions import Piecewise, sign
@@ -16,6 +16,8 @@ from sympy.series import limit
 
 class Integral(Expr):
     """Represents unevaluated integral."""
+
+    __slots__ = ['is_commutative']
 
     def __new__(cls, function, *symbols, **assumptions):
         # Any embedded piecewise functions need to be brought out to the
@@ -69,6 +71,7 @@ class Integral(Expr):
         arglist = [function]
         arglist.extend(limits)
         obj._args = tuple(arglist)
+        obj.is_commutative = all(s.is_commutative for s in obj.free_symbols)
 
         return obj
 

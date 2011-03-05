@@ -60,6 +60,11 @@ def test_basics():
     # sum integral of terms
     assert integrate(y + x + exp(x), x) == x*y + x**2/2 + exp(x)
 
+    assert Integral(x).is_commutative
+    n = Symbol('n', commutative=False)
+    assert Integral(x, (x, n)).is_commutative is False
+    assert Integral(n + x, x).is_commutative is False
+
 def test_basics_multiple():
 
     assert diff_test(Integral(x, (x, 3*x, 5*y), (y, x, 2*x))) == set([x])
