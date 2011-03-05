@@ -53,10 +53,6 @@ ordering_of_classes = [
     'Function','WildFunction',
     # anonymous functions
     'Lambda',
-    # operators
-    'FDerivative','FApply',
-    # composition of functions
-    'FPow', 'Composition',
     # Landau O symbol
     'Order',
     # relational operations
