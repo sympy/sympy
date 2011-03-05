@@ -932,3 +932,5 @@ def test_as_ordered_terms():
 
     assert expr.as_ordered_terms() == \
         [f(1), f(2), f(3), f(1, 2, 3), g(1), g(2), g(3), g(1, 2, 3)]
+
+    assert (1 + 4*sqrt(3)*pi*x).as_ordered_terms() == [4*pi*x*sqrt(3), 1]
