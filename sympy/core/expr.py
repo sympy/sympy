@@ -1140,10 +1140,6 @@ class Expr(Basic, EvalfMixin):
         assumptions.setdefault("evaluate", True)
         return Derivative(self, *new_symbols, **assumptions)
 
-    def fdiff(self, *indices):
-        # FIXME FApply -> ?
-        return C.FApply(C.FDerivative(*indices), self)
-
     ###########################################################################
     ###################### EXPRESSION EXPANSION METHODS #######################
     ###########################################################################
