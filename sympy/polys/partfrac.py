@@ -59,7 +59,7 @@ def apart(f, x=None, full=False):
 
 def apart_undetermined_coeffs(P, Q):
     """Partial fractions via method of undetermined coefficients. """
-    X = numbered_symbols(dummy=True)
+    X = numbered_symbols(cls=Dummy)
     partial, symbols = [], []
 
     _, factors = Q.factor_list()
