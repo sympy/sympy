@@ -791,6 +791,48 @@ class Basic(object):
 
         return self._subs_list(subst)
 
+    def xreplace(self, rule):
+        """
+        Replace occurrences of objects within the expression.
+
+        Parameters
+        ----------
+        rule : dict-like
+            Expresses a replacement rule
+
+        Returns
+        -------
+        xreplace : the result of the replacement
+
+        Examples
+        --------
+        >>> from sympy import symbols, pi
+        >>> x,y, z = symbols('x y z')
+        >>> (1+x*y).xreplace({x: pi})
+        pi*y + 1
+        >>> (1+x*y).xreplace({x:pi, y:2})
+        1 + 2*pi
+
+        Notes
+        -----
+        This function is primarily meant for substituting atoms. Trying to
+        substitute composite expressions is well-defined but sensitive to
+        implementation details.
+
+        >>> (x*y+z).xreplace({x*y: pi})
+        z + pi
+        >>> (x*y*z).xreplace({x*y: pi})
+        x*y*z
+        >>> (2*x).xreplace({2*x: y, x: z})
+        y
+        >>> (2*2*x).xreplace({2*x: y, x: z})
+        4*z
+        """
+        if self in rule:
+            return rule[self]
+        else:
+            return self.func(*[arg.xreplace(rule) for arg in self.args])
+
     @deprecated
     def __contains__(self, obj):
         if self == obj:
@@ -1225,6 +1267,9 @@ class Atom(Basic):
             return new
         else:
             return self
+
+    def xreplace(self, rule):
+        return rule.get(self, self)
 
     def doit(self, **hints):
         return self
