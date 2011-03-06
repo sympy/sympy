@@ -155,9 +155,6 @@ class Number(AtomicExpr):
     def __float__(self):
         return mlib.to_float(self._as_mpf_val(53))
 
-    def _eval_derivative(self, s):
-        return S.Zero
-
     def _eval_conjugate(self):
         return self
 
@@ -1555,9 +1552,6 @@ class NumberSymbol(AtomicExpr):
     def _eval_evalf(self, prec):
         return Real._new(self._as_mpf_val(prec), prec)
 
-    def _eval_derivative(self, s):
-        return S.Zero
-
     def __eq__(self, other):
         try:
             other = _sympify(other)
@@ -1778,9 +1772,6 @@ class ImaginaryUnit(AtomicExpr):
 
     def _eval_conjugate(self):
         return -S.ImaginaryUnit
-
-    def _eval_derivative(self, s):
-        return S.Zero
 
     def _eval_power(b, e):
         """
