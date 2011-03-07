@@ -55,7 +55,6 @@ class Basic(AssumeMeths):
     is_Symbol = False
     is_Dummy = False
     is_Wild = False
-    is_Pure = False
     is_Function = False
     is_Add = False
     is_Mul = False

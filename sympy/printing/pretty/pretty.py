@@ -789,6 +789,14 @@ class PrettyPrinter(Printer):
 
         return pform
 
+    def _print_Pure(self, e):
+        if self._use_unicode:
+            symb = pretty_symbol(u"\u2118")
+        else:
+            symb = pretty_symbol('pure')
+
+        return prettyForm(symb)
+
     def _print_FiniteField(self, expr):
         if self._use_unicode:
             form = u'\u2124_%d'

@@ -6,7 +6,7 @@ from cache import cacheit
 from basic import Basic, Atom, C
 from singleton import S
 from expr import Expr, AtomicExpr
-from symbol import Symbol, Wild, Dummy, symbols, var
+from symbol import Symbol, Wild, Dummy, symbols, var, Pure
 from numbers import Number, Real, Rational, Integer, NumberSymbol,\
         RealNumber, igcd, ilcm, seterr, E, I, nan, oo, pi, zoo
 from power import Pow, integer_nthroot
@@ -28,5 +28,6 @@ from exprtools import gcd_terms
 Catalan = S.Catalan
 EulerGamma = S.EulerGamma
 GoldenRatio = S.GoldenRatio
-pure = S.Pure
+pure = Pure()
+S.Pure = pure
 
