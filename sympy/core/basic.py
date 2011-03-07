@@ -1095,7 +1095,7 @@ class Basic(object):
         """Count the number of matching subexpressions. """
         return sum(self.find(query, group=True).values())
 
-    def matches(self, expr, repl_dict={}, evaluate=False):
+    def matches(self, expr, repl_dict={}):
         """
         Helper method for match() - switches the pattern and expr.
 
@@ -1108,9 +1108,6 @@ class Basic(object):
         {x_: -a/b}
 
         """
-        if evaluate:
-            return self.xreplace(repl_dict).matches(expr, repl_dict)
-
         expr = sympify(expr)
         if not isinstance(expr, self.__class__):
             return None
@@ -1258,7 +1255,7 @@ class Atom(Basic):
 
     __slots__ = []
 
-    def matches(self, expr, repl_dict={}, evaluate=False):
+    def matches(self, expr, repl_dict={}):
         if self == expr:
             return repl_dict
 

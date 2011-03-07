@@ -183,7 +183,7 @@ def test_derivative_bug1():
     pattern = a * Derivative(f(x), x, x) + b
     expr = Derivative(f(x), x)+x**2
     d1 = {b: x**2}
-    d2 = pattern.matches(expr, d1, evaluate=True)
+    d2 = pattern.xreplace(d1).matches(expr, d1)
     assert d2 == None
 
 def test_derivative2():

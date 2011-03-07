@@ -608,12 +608,7 @@ class WildFunction(Function, AtomicExpr):
         obj.name = name
         return obj
 
-    def matches(self, expr, repl_dict={}, evaluate=False):
-        if self in repl_dict:
-            if repl_dict[self] == expr:
-                return repl_dict
-            else:
-                return None
+    def matches(self, expr, repl_dict={}):
         if self.nargs is not None:
             if not hasattr(expr,'nargs') or self.nargs != expr.nargs:
                 return None
@@ -1078,14 +1073,6 @@ class Derivative(Expr):
             # Issue 1620
             return Subs(self, old, new)
         return Derivative(*map(lambda x: x._eval_subs(old, new), self.args))
-
-    def matches(self, expr, repl_dict={}, evaluate=False):
-        if self in repl_dict:
-            if repl_dict[self] == expr:
-                return repl_dict
-        elif isinstance(expr, Derivative):
-            if len(expr.variables) == len(self.variables):
-                return Expr.matches(self, expr, repl_dict, evaluate)
 
     def _eval_lseries(self, x):
         dx = self.args[1:]

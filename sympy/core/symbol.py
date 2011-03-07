@@ -190,12 +190,7 @@ class Wild(Symbol):
         return (self.name, self.exclude, self.properties )
 
     # TODO add check against another Wild
-    def matches(self, expr, repl_dict={}, evaluate=False):
-        if self in repl_dict:
-            if repl_dict[self] == expr:
-                return repl_dict
-            else:
-                return None
+    def matches(self, expr, repl_dict={}):
         if self.exclude:
             for x in self.exclude:
                 if expr.has(x):
