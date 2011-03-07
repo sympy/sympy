@@ -194,14 +194,15 @@ class Wild(Symbol):
         from sympy.core.function import WildFunction
         return WildFunction(self.name, nargs=len(args))(*args, **assumptions)
 
-class Pure(Expr):
-    """A commutative singleton symbol different from all other symbols. """
-    __metaclass__ = Singleton
+class Pure(Dummy):
 
-    __slots__ = ['is_commutative', 'name']
-    is_commutative, name = True, 'pure'
+    def __new__(cls):
+        obj = Symbol.__xnew__(cls, 'pure')
+        obj.dummy_index = 0
+        return obj
 
-    is_Pure   = True
+    def _hashable_content(self):
+        return Symbol._hashable_content(self) + (self.dummy_index,)
 
 _re_var_range = re.compile(r"^(.*?)(\d*):(\d+)$")
 _re_var_scope = re.compile(r"^(.):(.)$")
