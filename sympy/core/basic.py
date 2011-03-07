@@ -826,22 +826,24 @@ class Basic(AssumeMeths):
 
     @cacheit
     def has(self, *patterns):
-        """Return True if self has any of the patterns.
+        """
+        Test whether any subexpression matches any of the patterns.
 
-           >>> from sympy import sin, S
-           >>> from sympy.abc import x, y, z
+        Examples:
+        >>> from sympy import sin, S
+        >>> from sympy.abc import x, y, z
+        >>> (x**2 + sin(x*y)).has(z)
+        False
+        >>> (x**2 + sin(x*y)).has(x, y, z)
+        True
+        >>> x.has(x)
+        True
 
-           >>> (x**2 + sin(x*y)).has(z)
-           False
-
-           >>> (x**2 + sin(x*y)).has(x, y, z)
-           True
-
-           If there are no patterns, False is always returned:
-           "something doesn't have nothing"
-
-           >>> x.has()
-           False
+        Note that ``expr.has(*patterns)`` is exactly equivalent to
+        ``any(expr.has(p) for p in patterns)``. In particular, ``False`` is
+        returned when the list of patterns is empty.
+        >>> x.has()
+        False
 
         """
         def search(expr, test):
