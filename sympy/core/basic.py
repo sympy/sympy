@@ -825,9 +825,8 @@ class Basic(AssumeMeths):
         return False
 
     @cacheit
-    def has(self, *patterns, **flags):
-        """Return True if self has any of the patterns. If the `all` flag
-        is True then return True if all of the patterns are present.
+    def has(self, *patterns):
+        """Return True if self has any of the patterns.
 
            >>> from sympy import sin, S
            >>> from sympy.abc import x, y, z
@@ -838,20 +837,11 @@ class Basic(AssumeMeths):
            >>> (x**2 + sin(x*y)).has(x, y, z)
            True
 
-           When `all` is True then True is returned only if all of the
-           patterns are present:
-
-           >>> (x**2 + sin(x*y)).has(x, y, z, all=True)
-           False
-
            If there are no patterns, False is always returned:
            "something doesn't have nothing"
 
-           >>> (x).has()
+           >>> x.has()
            False
-           >>> (S.One).has()
-           False
-
 
         """
         def search(expr, test):
@@ -871,15 +861,8 @@ class Basic(AssumeMeths):
             else:
                 return lambda w: p.matches(w) is not None
 
-        if not patterns:
-            return False # something doesn't have nothing
-
         patterns = map(sympify, patterns)
-
-        if flags.get('all', False):
-            return all(search(self, _match(p)) for p in patterns)
-        else:
-            return any(search(self, _match(p)) for p in patterns)
+        return any(search(self, _match(p)) for p in patterns)
 
     def matches(self, expr, repl_dict={}, evaluate=False):
         """
