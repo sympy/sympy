@@ -854,24 +854,16 @@ class Basic(AssumeMeths):
 
 
         """
-        from sympy.core.symbol import Wild
-
         def search(expr, test):
-            if hasattr(expr, '__iter__') and hasattr(expr, '__len__'):
-                # this 'if' clause is needed until all objects use
-                # sympy containers
-                for i in expr:
-                    if search(i, test):
-                        return True
-            elif not isinstance(expr, Basic):
-                pass
+            if not isinstance(expr, Basic):
+                try:
+                    return any(search(i, test) for i in expr)
+                except TypeError:
+                    return False
             elif test(expr):
                 return True
             else:
-                for term in expr.iter_basic_args():
-                    if search(term, test):
-                        return True
-            return False
+                return any(search(i, test) for i in expr.iter_basic_args())
 
         def _match(p):
             if isinstance(p, BasicType):
