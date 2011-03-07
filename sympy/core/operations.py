@@ -272,7 +272,8 @@ class AssocOp(Expr):
             if r and not a: r = False
         return r
 
-    _eval_evalf = Expr._seq_eval_evalf
+    def _eval_evalf(self, prec):
+        return self.func(*[s._evalf(prec) for s in self.args])
 
     @classmethod
     def make_args(cls, expr):
