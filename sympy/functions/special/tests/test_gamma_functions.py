@@ -39,6 +39,9 @@ def test_gamma():
     assert expand_func(gamma(x + Rational(3, 2))) ==\
     (x + Rational(1, 2))*gamma(x + Rational(1, 2))
 
+    assert expand_func(gamma(x - Rational(1, 2))) ==\
+    -gamma(Rational(1, 2) + x)/(Rational(1, 2) - x)
+
 def test_lowergamma():
     pass
 
