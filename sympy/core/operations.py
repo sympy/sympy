@@ -230,31 +230,23 @@ class AssocOp(Expr):
         from function import WildFunction
         from symbol import Wild
         for p in self.args:
-            if p.has(Wild, WildFunction):
+            if p.has(Wild, WildFunction) and (not p in expr):
                 # not all Wild should stay Wilds, for example:
                 # (w2+w3).matches(w1) -> (w1+w3).matches(w1) -> w3.matches(0)
-                if (not p in repl_dict) and (not p in expr):
-                    wild_part.append(p)
-                    continue
-
-            exact_part.append(p)
+                wild_part.append(p)
+            else:
+                exact_part.append(p)
 
         if exact_part:
-            newpattern = self.__class__(*wild_part)
-            newexpr = self.__class__._combine_inverse(expr, self.__class__(*exact_part))
+            newpattern = self.func(*wild_part)
+            newexpr = self._combine_inverse(expr, self.func(*exact_part))
             return newpattern.matches(newexpr, repl_dict)
 
         # now to real work ;)
-        if isinstance(expr, self.__class__):
-            expr_list = list(expr.args)
-        else:
-            expr_list = [expr]
+        expr_list = self.make_args(expr)
 
-        while expr_list:
-            last_op = expr_list.pop()
-            tmp = wild_part[:]
-            while tmp:
-                w = tmp.pop()
+        for last_op in reversed(expr_list):
+            for w in reversed(wild_part):
                 d1 = w.matches(last_op, repl_dict)
                 if d1 is not None:
                     d2 = self.subs(d1.items()).matches(expr, d1)
