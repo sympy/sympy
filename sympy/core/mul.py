@@ -3,6 +3,7 @@ from singleton import S
 from operations import AssocOp
 from cache import cacheit
 from logic import fuzzy_not
+from compatibility import any
 
 # internal marker to indicate:
 #   "there are still non-commutative objects -- don't forget to process them"
@@ -837,7 +838,6 @@ class Mul(AssocOp):
 
         from sympy import sign
         from sympy.simplify.simplify import powdenest
-        from sympy.utilities.iterables import any
 
         if self == old:
             return new

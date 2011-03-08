@@ -3,7 +3,7 @@ from singleton import S
 from expr import Expr
 from sympify import _sympify, sympify
 from cache import cacheit
-from sympy.utilities.iterables import all
+from compatibility import all
 
 # from add import Add   /cyclic/
 # from mul import Mul   /cyclic/
