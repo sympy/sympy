@@ -500,7 +500,8 @@ class Basic(AssumeMeths):
 
         Any other method that uses bound variables should implement a symbols
         method."""
-        return self.atoms(C.Symbol)
+        union = set.union
+        return reduce(union, [arg.free_symbols for arg in self.args], set())
 
     def is_hypergeometric(self, k):
         from sympy.simplify import hypersimp

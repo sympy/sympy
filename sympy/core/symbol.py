@@ -91,6 +91,10 @@ class Symbol(AtomicExpr, Boolean):
     def is_number(self):
         return False
 
+    @property
+    def free_symbols(self):
+        return set([self])
+
 class Dummy(Symbol):
     """Dummy symbols are each unique, identified by an internal count index ::
 

@@ -823,8 +823,10 @@ def test_2127():
 
 def test_symbols():
     # symbols should return the free symbols of an object
+    assert S(1).free_symbols == set()
     assert (x).free_symbols == set([x])
     assert Integral(x, (x, 1, y)).free_symbols == set([y])
+    assert (-Integral(x, (x, 1, y))).free_symbols == set([y])
 
 def test_issue2201():
     x = Symbol('x', commutative=False)
