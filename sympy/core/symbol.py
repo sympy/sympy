@@ -3,6 +3,7 @@ from sympify import sympify
 from singleton import S
 from expr import Expr, AtomicExpr
 from cache import cacheit
+from compatibility import any, all
 from sympy.logic.boolalg import Boolean
 
 import re

@@ -5,6 +5,7 @@ from assumptions import AssumeMeths, make__get_assumption
 from cache import cacheit
 from core import BasicMeta, BasicType, C
 from sympify import _sympify, sympify, SympifyError
+from compatibility import any, all
 
 class Basic(AssumeMeths):
     """
@@ -525,8 +526,6 @@ class Basic(AssumeMeths):
            True
 
         """
-        from sympy.utilities import all
-
         if not self.args:
             return False
         return all(obj.is_number for obj in self.iter_basic_args())
@@ -855,7 +854,6 @@ class Basic(AssumeMeths):
 
 
         """
-        from sympy.utilities.iterables import all, any
         from sympy.core.symbol import Wild
 
         def search(expr, target, hit):
