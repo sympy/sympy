@@ -2,6 +2,7 @@ from sympy.core import Add, S, C, sympify
 from sympy.core.function import Function
 from zeta_functions import zeta
 from sympy.functions.elementary.exponential import log
+from sympy.functions.elementary.integers import floor
 from sympy.functions.elementary.miscellaneous import sqrt
 
 ###############################################################################
@@ -67,18 +68,12 @@ class gamma(Function):
             arg = self.args[0]
 
         if arg.is_Add:
-            for i, coeff in enumerate(arg.args):
-                if arg.args[i].is_Number:
-                    terms = Add(*(arg.args[:i] + arg.args[i+1:]))
-
-                    if coeff.is_Rational:
-                        if coeff.q != 1:
-                            terms += C.Rational(1, coeff.q)
-                            coeff = C.Integer(int(coeff))
-                    else:
-                        continue
-
-                    return gamma(terms)*C.RisingFactorial(terms, coeff)
+            coeff, tail = arg.as_coeff_add()
+            if coeff and coeff.q != 1:
+                tail = (C.Rational(1, coeff.q),) + tail
+                coeff = floor(coeff)
+            tail = arg._new_rawargs(*tail, reeval=False)
+            return gamma(tail)*C.RisingFactorial(tail, coeff)
 
         return self.func(*self.args)
 
