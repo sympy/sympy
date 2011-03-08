@@ -62,6 +62,9 @@ def test_subs():
 def test_atoms():
     assert b21.atoms() == set()
 
+def test_free_symbols_empty():
+    assert b21.free_symbols == set()
+
 def test_doit():
     assert b21.doit() == b21
     assert b21.doit(deep=False) == b21

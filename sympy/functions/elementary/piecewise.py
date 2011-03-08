@@ -24,6 +24,14 @@ class ExprCondPair(Function):
     def cond(self):
         return self.args[1]
 
+    @property
+    def free_symbols(self):
+        # Overload Basic.free_symbols because self.args[1] may contain non-Basic
+        result = self.expr.free_symbols
+        if hasattr(self.cond, 'free_symbols'):
+            result |= self.cond.free_symbols
+        return result
+
     def __iter__(self):
         yield self.expr
         yield self.cond
