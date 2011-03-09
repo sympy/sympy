@@ -3,7 +3,7 @@ from sympy import Function, dsolve, Symbol, sin, cos, sinh, acos, tan, cosh, \
         fraction, radsimp, Eq, sqrt, pi, erf,  diff, Rational, asinh, trigsimp, \
         S, RootOf, Poly, Integral, atan, Equality, solve, O, LambertW
 from sympy.abc import x, y, z
-from sympy.solvers.ide import classify_ide , solve_series, check_idesol, \
+from sympy.solvers.ide import classify_ide , solve_series, checkidesol, \
         solve_adomian, solve_approximate 
 from sympy.utilities.pytest import XFAIL, skip, raises
 
@@ -16,7 +16,7 @@ C2 = Symbol('C2')
 
 f = Function('f')
 g = Function('g')
-K = function('K')
+K = Function('K')
 
 vfnh = ['Volterra', 'First Kind', 'Non-homogenous']
 vfh = ['Volterra', 'First Kind', 'Homogenous']
@@ -119,9 +119,8 @@ def test_solveseries():
     eq3 =  Eq(1 + Integral(f(y),(y,0,x)),f(x))
     assert solve_series(eq3,f(x),10) == 1 + x + x**2/2 + \
                                         x**3/6 + x**4/24 + x**5/120
-def test_checkodesol():
+def test_checkidesol():
     eq1 =  Eq(1 + Integral(f(y),(y,0,x)),f(x))
-    assert check_idesol(eq1,f(x),exp(x))     
+    assert checkidesol(eq1,f(x),exp(x))     
     eq2 = Eq(1 + Integral(x*f(y),(y,0.0,1.0)),f(x))
-    assert check_idesol(eq1, f(x),solve_approximate(eq1,f(x),49))
-       
+    assert checkidesol(eq1, f(x),solve_approximate(eq1,f(x),49))
