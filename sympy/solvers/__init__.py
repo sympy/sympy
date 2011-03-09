@@ -14,3 +14,6 @@ from ode import checkodesol, classify_ode, ode_order, dsolve, \
 from polysys import solve_poly_system
 
 from pde import pde_separate, pde_separate_add, pde_separate_mul
+
+from ide import checkidesol, classify_ide, solve_adomian, solve_series, \
+     solve_approximate
