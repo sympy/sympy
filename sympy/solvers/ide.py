@@ -23,15 +23,14 @@ iesolve() solves linear integral equations. It replicates the functionality of i
 from sympy.core import Add, Basic, C, S, Mul, Pow, oo
 from sympy.core.function import Derivative, diff, expand_mul, FunctionClass
 from sympy.core.relational import Equality, Eq
-
-from sympy import Function, simplify, collect
+from sympy import Function, simplify
 from sympy.functions import cos, exp, im, log, re, sin, sign
 
 from sympy.solvers import solve, dsolve
-from sympy import (S, symbols, integrate, Integral, Derivative, exp, oo, Symbol,
+from sympy import (S, symbols, Integral, Derivative, integrate, exp, oo, Symbol,
         Function, Rational, log, sin, cos, pi, E, I, Poly, LambertW, diff,
-        Matrix, sympify, sqrt, atan, asin, acos, atan, DiracDelta, Heaviside,
-        raises, Lambda, sstr)
+        sympify, sqrt, atan, asin, acos, atan, DiracDelta, Heaviside,
+        Lambda)
 
 from sympy.abc import x, y, z
 
@@ -140,11 +139,11 @@ def checkidesol(ide, func, fn):
     """
     eq = ide
     if len(func.args) != 1:
-        raise ValueError("check_idesol() will only work with functions " + \
+        raise ValueError("checkidesol() will only work with functions " + \
             "of one variable")
     if isinstance(eq, Equality):
         if eq.rhs != 0:
-            return check_idesol(eq.lhs-eq.rhs, func, fn)
+            return checkidesol(eq.lhs-eq.rhs, func, fn)
         eq = eq.lhs
         
     neweq = Eq(0,0)
