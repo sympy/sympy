@@ -373,7 +373,7 @@ def dsolve(eq, func, hint="default", simplify=True, **kwargs):
         >>> from sympy.abc import x
         >>> f = Function('f')
         >>> dsolve(Derivative(f(x),x,x)+9*f(x), f(x))
-        f(x) == C1*sin(3*x) + C2*cos(3*x)
+        f(x) == C1*cos(3*x) + C2*sin(3*x)
         >>> dsolve(sin(x)*cos(f(x)) + cos(x)*sin(f(x))*f(x).diff(x), f(x),
         ...     hint='separable')
         -log(1 - sin(f(x))**2)/2 == C1 + log(1 - sin(x)**2)/2
@@ -1425,7 +1425,11 @@ def constant_renumber(expr, symbolname, startnumber, endnumber):
                 endnumber) for x in expr.args])
             else:
                 sortedargs = list(expr.args)
-                sortedargs.sort(Basic._compare_pretty)
+                # make a mapping to send all constantsymbols to S.One and use
+                # that to make sure that term ordering is not dependent on
+                # the indexed value of C
+                C_1 = [(ci, S.One) for ci in constantsymbols]
+                sortedargs.sort(Basic._compare_pretty, key=lambda x: x.subs(C_1))
                 return expr.new(*[_constant_renumber(x, symbolname, startnumber,
                 endnumber) for x in sortedargs])
 
@@ -2242,7 +2246,7 @@ def ode_nth_linear_constant_coeff_homogeneous(eq, func, order, match, returns='s
         ... 2*f(x).diff(x, 2) - 6*f(x).diff(x) + 5*f(x), f(x),
         ... hint='nth_linear_constant_coeff_homogeneous'))
                             x                            -2*x
-        f(x) = (C1 + C2*x)*e  + (C3*sin(x) + C4*cos(x))*e
+        f(x) = (C1 + C2*x)*e  + (C3*cos(x) + C4*sin(x))*e
 
 
     **References**
