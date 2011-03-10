@@ -180,12 +180,12 @@ def test_old_ode_tests():
     sol1 = Eq(f(x),C1)
     sol2 = Eq(f(x),C1+5*x/3)
     sol3 = Eq(f(x),C1+5*x/3)
-    sol4 = Eq(f(x),C1*sin(x/3) + C2*cos(x/3))
+    sol4 = Eq(f(x),C1*cos(x/3) + C2*sin(x/3))
     sol5 = Eq(f(x),C1*exp(-x/3) + C2*exp(x/3))
     sol6 = Eq(f(x),(C1-cos(x))/x**3)
-    sol7list = [Eq(f(x),C1*exp(2*x) + C2*exp(x)), Eq(f(x),C1*exp(x) + C2*exp(2*x)),]
-    sol8 = Eq(f(x),(C1 + C2*x)*exp(2*x))
-    sol9 = Eq(f(x), (C1*sin(x*sqrt(2)) + C2*cos(x*sqrt(2)))*exp(-x))
+    sol7 = Eq(f(x), C1*exp(x) + C2*exp(2*x))
+    sol8 = Eq(f(x), (C1 + C2*x)*exp(2*x))
+    sol9 = Eq(f(x), (C1*cos(x*sqrt(2)) + C2*sin(x*sqrt(2)))*exp(-x))
     sol10 = Eq(f(x), C1 + x/3)
     sol11 = Eq(f(x), C1 + log(x))
     assert dsolve(eq1, f(x)) == sol1
@@ -195,7 +195,7 @@ def test_old_ode_tests():
     assert dsolve(eq4, f(x)) == sol4
     assert dsolve(eq5, f(x)) == sol5
     assert dsolve(eq6, f(x)) == sol6
-    assert dsolve(eq7, f(x)) in sol7list
+    assert dsolve(eq7, f(x)) == sol7
     assert dsolve(eq8, f(x)) == sol8
     assert dsolve(eq9, f(x)) == sol9
     assert dsolve(eq10, f(x)) == sol10
@@ -206,8 +206,7 @@ def test_old_ode_tests():
     assert checkodesol(eq4, f(x), sol4, order=2, solve_for_func=False)[0]
     assert checkodesol(eq5, f(x), sol5, order=2, solve_for_func=False)[0]
     assert checkodesol(eq6, f(x), sol6, order=1, solve_for_func=False)[0]
-    assert checkodesol(eq7, f(x), sol7list, order=2, solve_for_func=False) == \
-        [(True, 0), (True, 0)]
+    assert checkodesol(eq7, f(x), sol7, order=2, solve_for_func=False)[0]
     assert checkodesol(eq8, f(x), sol8, order=2, solve_for_func=False)[0]
     assert checkodesol(eq9, f(x), sol9, order=2, solve_for_func=False)[0]
     assert checkodesol(eq10, f(x), sol10, order=1, solve_for_func=False)[0]
@@ -1141,3 +1140,12 @@ def test_1726():
     raises(ValueError, "dsolve(f(x).diff(x), f(y))")
     assert classify_ode(f(x).diff(x), f(y), dict=True) == {'default': None, 'order': 0}
 
+def test_2209():
+    from sympy.utilities.iterables import variations
+
+    assert constant_renumber(C1*x + C2*y, "C", 1, 2) == \
+           constant_renumber(C1*y + C2*x, "C", 1, 2) == \
+           C1*x + C2*y
+    e = C1*(C2 + x)*(C3 + y)
+    for a, b, c in variations([C1, C2, C3], 3):
+        assert constant_renumber(a*(b + x)*(c + y), "C", 1, 3) == e
