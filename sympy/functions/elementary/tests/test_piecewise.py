@@ -71,6 +71,11 @@ def test_piecewise():
     p = Piecewise((x, x < -10),(x**2, x <= -1),(x, 1 < x))
     raises(ValueError, "integrate(p,(x,-2,2))")
 
+def test_piecewise_free_symbols():
+    a = symbols('a')
+    f = Piecewise((x , a<0), (y, True))
+    assert f.free_symbols == set([x,y,a])
+
 def test_piecewise_integrate():
     # XXX Use '<=' here! '>=' is not yet implemented ..
     f = Piecewise(((x - 2)**2, 0 <= x), (1, True))
