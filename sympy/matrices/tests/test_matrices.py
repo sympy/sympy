@@ -1474,3 +1474,11 @@ def test_errors():
     raises(TypeError, "SMatrix([[1, 2], [3, 4]]).copyin_list([0, 1], set([]))")
     raises(TypeError, "SMatrix([[1, 2], [3, 4]]).submatrix((1, 2))")
     raises(TypeError, "SMatrix([1, 2, 3]).cross(1)")
+
+def test_len():
+    assert len(Matrix()) == 0
+    assert len(Matrix([[1, 2]])) == len(Matrix([[1], [2]])) == 2
+    assert len(Matrix(0, 2, lambda i, j: 0)) == len(Matrix(2, 0, lambda i, j: 0)) == 0
+    assert len(Matrix([[0, 1, 2], [3, 4, 5]])) == 6
+    assert Matrix([1])
+    assert not Matrix()
