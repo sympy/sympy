@@ -1,8 +1,11 @@
 from sympy import (symbols, Matrix, SMatrix, eye, I, Symbol, Rational, wronskian, cos,
     sin, exp, hessian, sqrt, zeros, ones, randMatrix, Poly, S, pi,
-    oo, trigsimp, Integer, block_diag, N)
+    oo, trigsimp, Integer, block_diag, N, zeros)
 from sympy.matrices.matrices import (ShapeError, MatrixError,
-    NonSquareMatrixException, matrix_multiply_elementwise, diag)
+    matrix_multiply_elementwise, diag,
+
+    SMatrix, SMatrix, NonSquareMatrixError, _dims_to_nm,
+    matrix_multiply_elementwise)
 from sympy.utilities.pytest import raises
 
 def test_division():
@@ -78,7 +81,7 @@ def test_power():
     assert Matrix([[1, 2], [3, 4]])**Integer(2) == Matrix([[7, 10], [15, 22]])
 
 def test_creation():
-    raises(MatrixError, 'Matrix(5,5,range(20))')
+    raises(ValueError, 'Matrix(5,5,range(20))')
 
     x = Symbol("x")
     a = Matrix([[x, 0], [0, 0]])
@@ -1145,7 +1148,7 @@ def test_vech():
 
 def test_vech_errors():
     m = Matrix([ [1,3] ])
-    raises(TypeError, 'm.vech()')
+    raises(ShapeError, 'm.vech()')
     m = Matrix([ [1,3], [2,4] ])
     raises(ValueError, 'm.vech()')
 
@@ -1274,7 +1277,7 @@ def test_diagonalization():
     m = Matrix(3,2,[-3, 1, -3, 20, 3, 10])
     assert not m.is_diagonalizable()
     assert not m.is_symmetric()
-    raises(NonSquareMatrixException, 'm.diagonalize()')
+    raises(NonSquareMatrixError, 'm.diagonalize()')
 
     # diagonalizable
     m = diag(1, 2, 3)
@@ -1347,7 +1350,7 @@ def test_diagonalization():
 def test_jordan_form():
 
     m = Matrix(3,2,[-3, 1, -3, 20, 3, 10])
-    raises(NonSquareMatrixException, 'm.jordan_form()')
+    raises(NonSquareMatrixError, 'm.jordan_form()')
 
     # diagonalizable
     m = Matrix(3, 3, [7, -12, 6, 10, -19, 10, 12, -24, 13])
@@ -1422,3 +1425,42 @@ def test_has():
     A = A.subs(x,2)
     assert not A.has(x)
 
+def test_errors():
+    # Note, some errors not tested.  See 'XXX' in code.
+    raises(ValueError, "_dims_to_nm([1, 0, 2])")
+    raises(ValueError, "Matrix([[1, 2], [1]])")
+    raises(ShapeError, "Matrix([[1, 2], [3, 4]]).copyin_matrix([1, 0], Matrix([1, 2]))")
+    raises(TypeError, "Matrix([[1, 2], [3, 4]]).copyin_list([0, 1], set([]))")
+    raises(NonSquareMatrixError, "Matrix([[1, 2, 3], [2, 3, 0]]).inv()")
+    raises(ShapeError, "Matrix(1, 2, [1, 2]).row_join(Matrix([[1, 2], [3, 4]]))")
+    raises(ShapeError, "Matrix([1, 2]).col_join(Matrix([[1, 2], [3, 4]]))")
+    raises(ShapeError, "Matrix([1]).row_insert(1, Matrix([[1, 2], [3, 4]]))")
+    raises(ShapeError, "Matrix([1]).col_insert(1, Matrix([[1, 2], [3, 4]]))")
+    raises(NonSquareMatrixError, "Matrix([1, 2]).trace()")
+    raises(TypeError, "SMatrix([[1, 2], [3, 4]]).submatrix([1, 1])")
+    raises(TypeError, "Matrix([1]).applyfunc(1)")
+    raises(ShapeError, "Matrix([1]).LUsolve(Matrix([[1, 2], [3, 4]]))")
+    raises(NonSquareMatrixError, "Matrix([1, 2]).LUdecomposition_Simple()")
+    raises(ValueError, "Matrix([[1, 2], [3, 4]]).minorEntry(4, 5)")
+    raises(ValueError, "Matrix([[1, 2], [3, 4]]).minorMatrix(4, 5)")
+    raises(NonSquareMatrixError, "Matrix([1, 2]).QRdecomposition()")
+    raises(TypeError, "Matrix([1, 2, 3]).cross(1)")
+    raises(TypeError, "Matrix([1, 2, 3]).dot(1)")
+    raises(ShapeError, "Matrix([1, 2, 3]).dot(Matrix([1, 2]))")
+    raises(ShapeError, "Matrix([[1, 2], [3, 4]]).norm()")
+    raises(ShapeError, "Matrix([[1, 2], [3, 4]]).normalized()")
+    raises(NonSquareMatrixError, "Matrix([1, 2]).inverse_GE()")
+    raises(ValueError, "Matrix([[1, 2], [1, 2]]).inverse_GE()")
+    raises(NonSquareMatrixError, "Matrix([1, 2]).inverse_ADJ()")
+    raises(ValueError, "Matrix([[1, 2], [1, 2]]).inverse_ADJ()")
+    raises(ValueError, "hessian(Matrix([[1, 2], [3, 4]]), Matrix([[1, 2], [2, 1]]))")
+    raises(ValueError, "hessian(Matrix([[1, 2], [3, 4]]), [])")
+    raises(NonSquareMatrixError, "block_diag([Matrix([[1, 2], [3, 4]]), Matrix([1, 2])])")
+    raises(TypeError, "SMatrix(1.4, 2, lambda i, j: 0)")
+    raises(ValueError, "SMatrix([1, 2, 3], [1, 2])")
+    raises(ValueError, "SMatrix([[1, 2], [3, 4]])[(1, 2, 3)]")
+    raises(ValueError, "SMatrix([[1, 2], [3, 4]]).rowdecomp(5)")
+    raises(ValueError, "SMatrix([[1, 2], [3, 4]])[1, 2, 3] = 4")
+    raises(TypeError, "SMatrix([[1, 2], [3, 4]]).copyin_list([0, 1], set([]))")
+    raises(TypeError, "SMatrix([[1, 2], [3, 4]]).submatrix((1, 2))")
+    raises(TypeError, "SMatrix([1, 2, 3]).cross(1)")
