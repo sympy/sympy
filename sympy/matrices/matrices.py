@@ -1010,13 +1010,13 @@ class Matrix(object):
     def minorEntry(self, i, j, method="berkowitz"):
         if not 0 <= i < self.rows or not 0 <= j < self.cols:
             raise ValueError("`i` and `j` must satisfy 0 <= i < `self.rows` " +
-                "and 0 <= j < `self.cols`.")
+                "(%d)" % self.rows + "and 0 <= j < `self.cols` (%d)." % self.cols)
         return self.minorMatrix(i,j).det(method)
 
     def minorMatrix(self, i, j):
         if not 0 <= i < self.rows or not 0 <= j < self.cols:
             raise ValueError("`i` and `j` must satisfy 0 <= i < `self.rows` " +
-                "and 0 <= j < `self.cols`.")
+                "(%d)" % self.rows + "and 0 <= j < `self.cols` (%d)." % self.cols)
         return self.delRowCol(i,j)
 
     def cofactor(self, i, j, method="berkowitz"):
@@ -1057,9 +1057,6 @@ class Matrix(object):
             X = Matrix(X)
         # Both X and self can be a row or a column matrix, so we need to make
         # sure all valid combinations work, but everything else fails:
-        if len(self.shape) != 2 or len(X.shape) != 2:
-            # XXX: not tested, because I can't figure out when this would ever happen.
-            raise ValueError("`self` and `X` must be 2-dimensional matrices.")
         if self.shape[0] == 1:
             m = self.shape[1]
         elif self.shape[1] == 1:
@@ -2217,10 +2214,13 @@ def hessian(f, varlist):
     else:
         raise ValueError("Improper variable list in hessian function")
     if m <= 0:
-        raise ShapeError("`len(varlist)` must be positive.")
+        if isinstance(varlist, (list, tuple)):
+            raise ShapeError("`len(varlist)` must be positive, not %d." % m)
+        elif isinstance(varlist, Matrix):
+            raise ShapeError("`varlist.cols` must be positive, not %d." % m)
     if not getattr(f, 'diff'):
         # check differentiability
-        raise ValueError("Function %d is not differentiable" % i)
+        raise ValueError("Function `f` (%s) is not differentiable" % f)
     out = zeros(m)
     for i in range(m):
         for j in range(i,m):
@@ -2427,11 +2427,10 @@ class SMatrix(Matrix):
             raise IndexError("Index out of range: a[%s]"%repr(key))
 
     def rowdecomp(self, num):
-        if not (0 <= num < self.rows*self.cols) and \
-            not (0 <= -num < self.rows*self.cols):
-                raise ValueError("`num` must satisfy 0 <= `num` < `self.rows*" +
-                    "*self.cols` and 0 <= -num < `self.rows*self.cols` to " +
-                    "apply redecomp().")
+        if not (0 <= num < self.rows*self.cols) or not (0 <= -num < self.rows*self.cols):
+            raise ValueError("`num` must satisfy 0 <= `num` < `self.rows*" +
+                "*self.cols` (%d) and 0 <= -num < " % self.rows*self.cols +
+                "`self.rows*self.cols` (%d) to apply redecomp()." % self.rows*self.cols)
         i, j = 0, num
         while j >= self.cols:
             j -= self.cols
