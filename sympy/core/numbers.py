@@ -1622,6 +1622,9 @@ class NumberSymbol(AtomicExpr):
     def __ge__(self, other):
         return (-self) <= (-other)
 
+    def __int__(self):
+        return int(self.evalf(0))
+
     def __hash__(self):
         return super(NumberSymbol, self).__hash__()
 
