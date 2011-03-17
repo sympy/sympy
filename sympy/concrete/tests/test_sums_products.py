@@ -1,6 +1,6 @@
 from sympy import (Symbol, Sum, oo, Real, Rational, summation, pi, cos, zeta,
     Catalan, exp, log, factorial, sqrt, E, sympify, binomial, EulerGamma,
-    Function, Integral, Product, product, Tuple, Eq, Interval, nan)
+    Function, Integral, Product, product, Tuple, Eq, Interval, nan, diff)
 from sympy.concrete.sums_products import Sum2
 from sympy.utilities.pytest import XFAIL, raises
 
@@ -222,3 +222,6 @@ def test_Sum_interface():
     assert Sum(nan, (n, 0, oo)).doit() == nan
     raises(ValueError, "Sum(1)")
     raises(ValueError, "summation(1)")
+
+def test_eval_diff():
+    assert diff(Sum(n*a**2, (n, 0, 2)), a) == Sum(2*n*a, (n, 0, 2))

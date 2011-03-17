@@ -1,5 +1,5 @@
 from sympy.core import (Expr, S, C, Symbol, Equality, Interval, sympify, Wild,
-                        Tuple, Dummy)
+                        Tuple, Dummy, Derivative)
 from sympy.solvers import solve
 from sympy.utilities import flatten
 
@@ -122,6 +122,13 @@ class Sum(Expr):
 
     def _eval_summation(self, f, x):
         return
+
+    def _eval_derivative(self, x):
+        if not self.has(x):
+            return S.Zero
+
+        if not self.args[1].has(x):
+            return Sum(Derivative(self.args[0], x, **{'evaluate': True}), self.args[1])
 
     def euler_maclaurin(self, m=0, n=0, eps=0, eval_integral=True):
         """
