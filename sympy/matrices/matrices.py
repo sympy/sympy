@@ -9,6 +9,7 @@ from sympy.polys import Poly, roots, cancel
 from sympy.simplify import simplify
 from sympy.utilities import any, all
 from sympy.printing import sstr
+from sympy.functions.elementary.trigonometric import cos, sin
 
 
 import random
@@ -2202,4 +2203,32 @@ def symarray(prefix, shape):
     for index in np.ndindex(shape):
         arr[index] = Symbol('%s_%s' % (prefix, '_'.join(map(str, index))))
     return arr
+
+def rot_axis3(theta):
+    """Returns a rotation matrix for a rotation of theta about the 3-axis."""
+    ct = cos(theta)
+    st = sin(theta)
+    mat = ((ct,st,0),
+           (-st,ct,0),
+           (0,0,1))
+    return Matrix(mat)
+
+def rot_axis2(theta):
+    """Returns a rotation matrix for a rotation of theta about the 2-axis."""
+    ct = cos(theta)
+    st = sin(theta)
+    mat = ((ct,0,-st),
+           (0,1,0),
+           (st,0,ct))
+    return Matrix(mat)
+
+def rot_axis1(theta):
+    """Returns a rotation matrix for a rotation of theta about the 1-axis."""
+    ct = cos(theta)
+    st = sin(theta)
+    mat = ((1,0,0),
+           (0,ct,st),
+           (0,-st,ct))
+    return Matrix(mat)
+
 
