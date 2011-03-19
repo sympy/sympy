@@ -9,6 +9,7 @@ from sympy.utilities.iterables import flatten
 from sympy.functions.elementary.miscellaneous import sqrt, Max, Min
 from sympy.functions.elementary.complexes import re, Abs
 from sympy.printing import sstr
+from sympy.functions.elementary.trigonometric import cos, sin
 
 from sympy.core.compatibility import callable, reduce
 
@@ -3412,3 +3413,94 @@ def _separate_eig_results(res):
     eigvals = flatten([[val]*mult for val, mult in zip(eigVals, multiplicities)])
     eigvects = flatten([item[2] for item in res])
     return eigvals, eigvects
+
+def rot_axis3(theta):
+    """Returns a rotation matrix for a rotation of theta (in radians) about
+    the 3-axis.
+
+    Examples
+    --------
+
+    >>> from sympy import pi
+    >>> from sympy.matrices import rot_axis3
+
+    A rotation of pi/3 (60 degrees):
+    >>> theta = pi/3
+    >>> rot_axis3(theta)
+    [        1/2, 3**(1/2)/2, 0]
+    [-3**(1/2)/2,        1/2, 0]
+    [          0,          0, 1]
+
+    If we rotate by pi/2 (90 degrees):
+    >> rot_axis3(pi/2)
+    [ 0, 1, 0]
+    [-1, 0, 0]
+    [ 0, 0, 1]
+    """
+    ct = cos(theta)
+    st = sin(theta)
+    mat = ((ct,st,0),
+           (-st,ct,0),
+           (0,0,1))
+    return Matrix(mat)
+
+def rot_axis2(theta):
+    """Returns a rotation matrix for a rotation of theta (in radians) about
+    the 2-axis.
+
+    Examples
+    --------
+
+    >>> from sympy import pi
+    >>> from sympy.matrices import rot_axis2
+
+    A rotation of pi/3 (60 degrees):
+    >>> theta = pi/3
+    >>> rot_axis2(theta)
+    [       1/2, 0, -3**(1/2)/2]
+    [         0, 1,           0]
+    [3**(1/2)/2, 0,         1/2]
+
+    If we rotate by pi/2 (90 degrees):
+    >>> rot_axis2(pi/2)
+    [0, 0, -1]
+    [0, 1,  0]
+    [1, 0,  0]
+    """
+    ct = cos(theta)
+    st = sin(theta)
+    mat = ((ct,0,-st),
+           (0,1,0),
+           (st,0,ct))
+    return Matrix(mat)
+
+def rot_axis1(theta):
+    """Returns a rotation matrix for a rotation of theta (in radians) about
+    the 1-axis.
+
+    Examples
+    --------
+
+    >>> from sympy import pi
+    >>> from sympy.matrices import rot_axis1
+
+    A rotation of pi/3 (60 degrees):
+    >>> theta = pi/3
+    >>> rot_axis1(theta)
+    [1,           0,          0]
+    [0,         1/2, 3**(1/2)/2]
+    [0, -3**(1/2)/2,        1/2]
+
+    If we rotate by pi/2 (90 degrees):
+    >>> rot_axis1(pi/2)
+    [1,  0, 0]
+    [0,  0, 1]
+    [0, -1, 0]
+    """
+    ct = cos(theta)
+    st = sin(theta)
+    mat = ((1,0,0),
+           (0,ct,st),
+           (0,-st,ct))
+    return Matrix(mat)
+
