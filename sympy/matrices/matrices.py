@@ -2038,6 +2038,72 @@ class SMatrix(Matrix):
                     c.append(0)
         return Matrix(l)
 
+    def row_list(self):
+        """
+        Returns a Row-sorted list of non-zero elements of the matrix.
+
+        >>> from sympy.matrices import SMatrix
+        >>> a=SMatrix((1,2),(3,4))
+        >>> a
+        [1, 2]
+        [3, 4]
+        >>> a.RL
+        [(0, 0, 1), (0, 1, 2), (1, 0, 3), (1, 1, 4)]
+        """
+
+        new=[]
+        for i in range(self.rows):
+            for j in range(self.cols):
+                value = self[(i, j)]
+                if value!=0:
+                    new.append((i, j, value))
+        return new
+
+    RL = property(row_list, None, None, "Row-sorted list of non-zero elements of the matrix")
+
+    def col_list(self):
+        """
+        Returns a Column-sorted list of non-zero elements of the matrix.
+        >>> from sympy.matrices import SMatrix
+        >>> a=SMatrix((1,2),(3,4))
+        >>> a
+        [1, 2]
+        [3, 4]
+        >>> a.CL
+        [(0, 0, 1), (1, 0, 3), (0, 1, 2), (1, 1, 4)]
+        """
+        new=[]
+        for j in range(self.cols):
+            for i in range(self.rows):
+                value = self[(i, j)]
+                if value!=0:
+                    new.append((i, j, value))
+        return new
+
+    CL = property(col_list, None, None, "Column-sorted list of non-zero elements of the matrix")
+
+    def transpose(self):
+        """
+        Returns the transposed SMatrix of this SMatrix
+        >>> from sympy.matrices import SMatrix
+        >>> a = SMatrix((1,2),(3,4))
+        >>> a
+        [1, 2]
+        [3, 4]
+        >>> a.T
+        [1, 3]
+        [2, 4]
+        """
+        tran = SMatrix(self.cols, self.rows, {})
+        for key, value in self.mat.iteritems():
+            tran.mat[key[1], key[0]] = value
+        return tran
+
+    T = property(transpose, None, None, "SMatrix transposition.")
+
+
+
+
     # from here to end all functions are same as in matrices.py
     # with Matrix replaced with SMatrix
     def copyin_list(self, key, value):
