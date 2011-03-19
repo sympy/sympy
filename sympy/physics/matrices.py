@@ -1,6 +1,6 @@
 """Known matrices related to physics"""
 
-from sympy import Matrix, I
+from sympy import Matrix, I, cos, sin
 
 def msigma(i):
     """Returns a Pauli matrix sigma_i. i=1,2,3
@@ -24,6 +24,47 @@ def msigma(i):
             ) )
     else:
         raise IndexError("Invalid Pauli index")
+    return Matrix(mat)
+
+def patMatrix(m, dx, dy, dz):
+    """Returns the Parallel Axis Theorem matrix to translate the inertia
+    matrix a distance of (dx, dy, dz) for a body of mass m."""
+    dxdy = -dx*dy
+    dydz = -dy*dz
+    dxdz = -dx*dz
+    dx2 = dx**2
+    dy2 = dy**2
+    dz2 = dz**2
+    mat = ((dy2 + dz2,dxdy,dxdz),
+           (dxdy,dx2+dz2,dydz),
+           (dxdz, dydz, dy2+dx2))
+    return m*Matrix(mat)
+
+def rotAxis3(theta):
+    """Returns a rotation matrix for a rotation of theta about the 3-axis."""
+    ct = cos(theta)
+    st = sin(theta)
+    mat = ((ct,st,0),
+           (-st,ct,0),
+           (0,0,1))
+    return Matrix(mat)
+
+def rotAxis2(theta):
+    """Returns a rotation matrix for a rotation of theta about the 2-axis."""
+    ct = cos(theta)
+    st = sin(theta)
+    mat = ((ct,0,st),
+           (0,1,0),
+           (st,0,-ct))
+    return Matrix(mat)
+
+def rotAxis1(theta):
+    """Returns a rotation matrix for a rotation of theta about the 1-axis."""
+    ct = cos(theta)
+    st = sin(theta)
+    mat = ((1,0,0),
+           (0,ct,st),
+           (-st,ct,0))
     return Matrix(mat)
 
 def mgamma(mu,lower=False):
