@@ -64,7 +64,7 @@ def rotAxis1(theta):
     st = sin(theta)
     mat = ((1,0,0),
            (0,ct,st),
-           (-st,ct,0))
+           (0,-st,ct))
     return Matrix(mat)
 
 def mgamma(mu,lower=False):

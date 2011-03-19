@@ -10,9 +10,9 @@ def test_rotation_matrices():
     r2_minus = roAxis2(-pi/3)
     r1_plus = rotAxis1(pi/3)
     r2_minus = rotAxis1(-pi/3)
-    assert r3_minus*r3_plus*eye(3)*r3_plus.transpose()*r3_minus.transpose() == eye(3)
-    assert r2_minus*r2_plus*eye(3)*r2_plus.transpose()*r2_minus.transpose() == eye(3)
-    assert r1_minus*r1_plus*eye(3)*r1_plus.transpose()*r1_minus.transpose() == eye(3)
+    assert r3_minus*r3_plus*eye(3)== eye(3)
+    assert r2_minus*r2_plus*eye(3)== eye(3)
+    assert r1_minus*r1_plus*eye(3)== eye(3)
 
 def test_parallel_axis_theorem():
     # This tests the parallel axis theorem matrix by comparing to test
