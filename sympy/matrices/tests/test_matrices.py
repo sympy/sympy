@@ -8,8 +8,7 @@ from sympy.matrices.matrices import (ShapeError, MatrixError,
     SparseMatrix, SparseMatrix, NonSquareMatrixError, _dims_to_nm,
     matrix_multiply_elementwise)
 from sympy.utilities.pytest import raises
-#from sympy.functions.elementary.miscellaneous import Max, Min
-#from sympy.functions.elementary.miscellaneous import Max, Min
+from sympy.matrices import rot_axis1, rot_axis2, rot_axis3
 
 def test_division():
     x, y, z = symbols('x y z')
@@ -1778,3 +1777,25 @@ def test_equality():
     assert C == D
     assert not C != D
 
+def test_rotation_matrices():
+    # This tests the rotation matrices by rotating about an axis and back.
+    theta = pi/3
+    r3_plus = rot_axis3(theta)
+    r3_minus = rot_axis3(-theta)
+    r2_plus = rot_axis2(theta)
+    r2_minus = rot_axis2(-theta)
+    r1_plus = rot_axis1(theta)
+    r1_minus = rot_axis1(-theta)
+    assert r3_minus*r3_plus*eye(3) == eye(3)
+    assert r2_minus*r2_plus*eye(3) == eye(3)
+    assert r1_minus*r1_plus*eye(3) == eye(3)
+
+    # Check that the trace of the rotation matrix trace is correct
+    assert r1_plus.trace() == 1 + 2*cos(theta)
+    assert r2_plus.trace() == 1 + 2*cos(theta)
+    assert r3_plus.trace() == 1 + 2*cos(theta)
+
+    # Check that a rotation with zero angle doesn't change anything.
+    assert rot_axis1(0) == eye(3)
+    assert rot_axis2(0) == eye(3)
+    assert rot_axis3(0) == eye(3)
