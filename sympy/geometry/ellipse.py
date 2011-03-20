@@ -1,7 +1,8 @@
-from sympy.core import S, C, sympify
+from sympy.core import S, C, sympify, symbol, numbers
 from sympy.simplify import simplify, trigsimp
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.geometry.exceptions import GeometryError
+from sympy.solvers import solve_poly_system
 from entity import GeometryEntity
 from point import Point
 from line import LinearEntity, Line
@@ -283,25 +284,52 @@ class Ellipse(GeometryEntity):
                 result.append( lp[0] + (lp[1] - lp[0]) * t_b )
         return result
 
+    def _do_ellipse_intersection(self, o):
+        """
+        Find the intersection of two ellipses. This method executes only
+        if hradius != vradius, otherwise look to Circle.intersection.
+        """
+        x, y = symbol.symbols('x y')
+        result = solve_poly_system(
+                [
+                    self.equation(x=x, y=y),
+                    o.equation(x=x, y=y)
+                ], x, y)
+        return [Point(*r) for r in result if not(numbers.I in r[0].atoms() or
+                                                 numbers.I in r[1].atoms())]
+
+
     def intersection(self, o):
         """
         Find points than both lie on current ellipse and object 'o'.
-        Currently supported intersections between Ellipse and: Point, Line and derived.
+        Currently supported intersections between Ellipse and:
+        Point, Line and derived, Ellipse and Circle.
 
         Example:
         ========
         >>> from sympy import Ellipse, Point, Line, sqrt
         >>> e = Ellipse(Point(0, 0), 5, 7)
-        >>> e.intersection(Point(0, 0))
+        >>> print e.intersection(Point(0, 0))
         []
-        >>> e.intersection(Point(5, 0))
-        [Point(5, 0)]
-        >>> e.intersection(Line(Point(0,0), Point(0, 1)))
-        [Point(0, -7), Point(0, 7)]
-        >>> e.intersection(Line(Point(5,0), Point(5, 1)))
-        [Point(5, 0)]
-        >>> e.intersection(Line(Point(6,0), Point(6, 1)))
+        >>> print map(tuple, e.intersection(Point(5, 0)))
+        [(5, 0)]
+        >>> print map(tuple, e.intersection(Line(Point(0,0), Point(0, 1))))
+        [(0, -7), (0, 7)]
+        >>> print map(tuple, e.intersection(Line(Point(5,0), Point(5, 1))))
+        [(5, 0)]
+        >>> print e.intersection(Line(Point(6,0), Point(6, 1)))
         []
+        >>> e = Ellipse(Point(-1, 0), 4, 3)
+        >>> print map(tuple, e.intersection(Ellipse(Point(1, 0), 4, 3)))
+        [(0, -3*15**(1/2)/4), (0, 3*15**(1/2)/4)]
+        >>> print map(tuple, e.intersection(Ellipse(Point(5, 0), 4, 3)))
+        [(2, -3*7**(1/2)/4), (2, 3*7**(1/2)/4)]
+        >>> print map(tuple, e.intersection(Ellipse(Point(100500, 0), 4, 3)))
+        []
+        >>> print map(tuple, e.intersection(Ellipse(Point(0, 0), 3, 4)))
+        [(-363/175, -48*111**(1/2)/175), (-363/175, 48*111**(1/2)/175), (3, 0)]
+        >>> print map(tuple, e.intersection(Ellipse(Point(-1, 0), 3, 4)))
+        [(-17/5, -12/5), (-17/5, 12/5), (7/5, -12/5), (7/5, 12/5)]
         """
         if isinstance(o, Point):
             if o in self:
@@ -321,8 +349,7 @@ class Ellipse(GeometryEntity):
             if o == self:
                 return self
             else:
-                # TODO This is a bit more complicated
-                pass
+                return self._do_ellipse_intersection(o)
 
         raise NotImplementedError()
 
@@ -346,8 +373,13 @@ class Ellipse(GeometryEntity):
             y = C.Dummy('y', real=True)
 
             res = self.equation(x, y).subs({x: o[0], y: o[1]})
-            res = trigsimp(simplify(res))
-            return res == 0
+            # Sometimes 'simplify' can't fully simplify result
+            # and this method fails.
+            # Evaluating expression as real number fix this,
+            # but theoretically gives a chance of recognizing a point
+            # that really doesn't lie on ellipse.
+#            res = trigsimp(simplify(res))
+            return res.evalf() == 0.0
         elif isinstance(o, Ellipse):
             return (self == o)
         return False
