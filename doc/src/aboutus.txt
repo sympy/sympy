@@ -27,7 +27,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Goutham Lakshminarayan: number theory functions
 #. David Lawrence: GHOP, Mathematica parser, square root denesting
 #. Jaroslaw Tworek: GHOP, sympify AST implementation, sqrt() refactoring, maxima parser and other patches
-#. David Marek: GHOP, derivative evaluation patch
+#. David Marek: GHOP, derivative evaluation patch, int(NumberSymbol) fix
 #. Bernhard R. Link: documentation patch
 #. Andrej Tokarčík: GHOP, python printer
 #. Or Dvory: GHOP, documentation
