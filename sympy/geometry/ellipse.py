@@ -1,8 +1,9 @@
-from sympy.core import S, C, sympify
+from sympy.core import S, C, sympify, symbol
 from sympy.simplify import simplify, trigsimp
 from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.complexes import im
 from sympy.geometry.exceptions import GeometryError
-from sympy.solvers import solve
+from sympy.solvers import solve_poly_system
 from entity import GeometryEntity
 from point import Point
 from line import LinearEntity, Line
@@ -284,7 +285,51 @@ class Ellipse(GeometryEntity):
                 result.append( lp[0] + (lp[1] - lp[0]) * t_b )
         return result
 
+    def _do_ellipse_intersection(self, o):
+        """
+        Find the intersection of two ellipses.
+        """
+        x, y = symbol.symbols('x y')
+        result = solve_poly_system(
+                [
+                    self.equation(x=x, y=y),
+                    o.equation(x=x, y=y)
+                ], x, y)
+        return [Point(*r) for r in result if im(r[0]).is_zero and im(r[1]).is_zero]
+
+
     def intersection(self, o):
+        """
+        Find points than both lie on current ellipse and object 'o'.
+        Currently supported intersections between Ellipse and:
+        Point, Line (including Segment and Ray), Ellipse and Circle.
+
+        Example:
+        ========
+        >>> from sympy import Ellipse, Point, Line, sqrt
+        >>> e = Ellipse(Point(0, 0), 5, 7)
+        >>> print e.intersection(Point(0, 0))
+        []
+        >>> print map(tuple, e.intersection(Point(5, 0)))
+        [(5, 0)]
+        >>> print map(tuple, e.intersection(Line(Point(0,0), Point(0, 1))))
+        [(0, -7), (0, 7)]
+        >>> print map(tuple, e.intersection(Line(Point(5,0), Point(5, 1))))
+        [(5, 0)]
+        >>> print e.intersection(Line(Point(6,0), Point(6, 1)))
+        []
+        >>> e = Ellipse(Point(-1, 0), 4, 3)
+        >>> print map(tuple, e.intersection(Ellipse(Point(1, 0), 4, 3)))
+        [(0, -3*15**(1/2)/4), (0, 3*15**(1/2)/4)]
+        >>> print map(tuple, e.intersection(Ellipse(Point(5, 0), 4, 3)))
+        [(2, -3*7**(1/2)/4), (2, 3*7**(1/2)/4)]
+        >>> print map(tuple, e.intersection(Ellipse(Point(100500, 0), 4, 3)))
+        []
+        >>> print map(tuple, e.intersection(Ellipse(Point(0, 0), 3, 4)))
+        [(-363/175, -48*111**(1/2)/175), (-363/175, 48*111**(1/2)/175), (3, 0)]
+        >>> print map(tuple, e.intersection(Ellipse(Point(-1, 0), 3, 4)))
+        [(-17/5, -12/5), (-17/5, 12/5), (7/5, -12/5), (7/5, 12/5)]
+        """
         if isinstance(o, Point):
             if o in self:
                 return [o]
@@ -299,34 +344,13 @@ class Ellipse(GeometryEntity):
                     if result[ind] not in o:
                         del result[ind]
             return result
-
         elif isinstance(o, Circle):
-            variables = self.equation().atoms(C.Symbol)
-            if len(variables) > 2:
-                return None
-            if self.center == o.center:
-                a, b, r = o.hradius, o.vradius, self.radius
-                x = a*sqrt(simplify((r**2 - b**2)/(a**2 - b**2)))
-                y = b*sqrt(simplify((a**2 - r**2)/(a**2 - b**2)))
-                return list(set([Point(x,y), Point(x,-y), Point(-x,y), Point(-x,-y)]))
-            else:
-                xo, yo = self.center
-                xe, ye = o.center
-                x, y = variables
-                xx = solve(self.equation(), x)
-                intersect = []
-                for xi in xx:
-                    yy = solve(o.equation().subs(x, xi), y)
-                    for yi in yy:
-                        intersect.append(Point(xi, yi))
-                return list(set(intersect))
-
+            return o.intersection(self)
         elif isinstance(o, Ellipse):
             if o == self:
                 return self
             else:
-                # TODO This is a bit more complicated
-                pass
+                return self._do_ellipse_intersection(o)
 
         raise NotImplementedError()
 
@@ -350,8 +374,7 @@ class Ellipse(GeometryEntity):
             y = C.Dummy('y', real=True)
 
             res = self.equation(x, y).subs({x: o[0], y: o[1]})
-            res = trigsimp(simplify(res))
-            return res == 0
+            return trigsimp(simplify(res)) is S.Zero
         elif isinstance(o, Ellipse):
             return (self == o)
         return False
