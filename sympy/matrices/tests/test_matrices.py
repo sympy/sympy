@@ -96,6 +96,17 @@ def test_creation():
 
     assert Matrix(b) == b
 
+    c = Matrix((
+          Matrix((
+            (1, 2, 3),
+            (4, 5, 6)
+          )),
+          (7, 8, 9)
+    ))
+    assert c.cols == 3
+    assert c.rows == 3
+    assert c[:] == [1,2,3,4,5,6,7,8,9]
+
 def test_tolist():
     x, y, z = symbols('xyz')
     lst = [[S.One,S.Half,x*y,S.Zero],[x,y,z,x**2],[y,-S.One,z*x,3]]

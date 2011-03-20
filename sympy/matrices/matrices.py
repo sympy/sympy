@@ -126,8 +126,14 @@ class Matrix(object):
                     return
                 else:
                     raise NotImplementedError("Sympy supports just 1D and 2D matrices")
-            elif not isinstance(mat, (list, tuple)):
+            elif not isinstance(mat, (list, tuple, Matrix)):
                 raise TypeError("Matrix constructor doesn't accept %s as input" % str(type(mat)))
+            mat = []
+            for row in args[0]:
+                if isinstance(row, Matrix):
+                    mat.extend(row.tolist())
+                else:
+                    mat.append(row)
             self.rows = len(mat)
             if len(mat) != 0:
                 if not isinstance(mat[0], (list, tuple)):
