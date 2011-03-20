@@ -1,4 +1,4 @@
-from sympy.stereometry.Point3d import *
+from sympy.stereometry.point3d import Point3d
 
-point = Point3d(1,2,3)
-print(point)
+def test_point()
+    point1 = Point3d(1,2,3)

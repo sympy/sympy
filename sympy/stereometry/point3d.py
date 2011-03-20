@@ -1,4 +1,3 @@
-from sympy import *
 from volumetricEntity import Geometry3dEntity
 
 class Point3d(Geometry3dEntity):
@@ -9,10 +8,10 @@ class Point3d(Geometry3dEntity):
     Examples:
     ======
         >>> from sympy.sterometry import Point3d
-        >>> Point(10,10,20)
-        Point(10, 10, 20)
+        >>> Point3d(10,10,20)
+        Point3d(10, 10, 20)
  """
- def __new__(cls, *args, **kwargs):
+    def __new__(cls, *args, **kwargs):
         if isinstance(args[0], (tuple, list, set)):
             coords = tuple([sympify(x) for x in args[0]])
         else:
