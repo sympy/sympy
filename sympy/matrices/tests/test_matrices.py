@@ -1206,9 +1206,11 @@ def test_creation_args():
 
 def test_SMatrix_transpose():
     assert SMatrix((1,2),(3,4)).transpose() == SMatrix((1,3),(2,4))
+
 def test_SMatrix_CL_RL():
     assert SMatrix((1,2),(3,4)).row_list() == [(0, 0, 1), (0, 1, 2), (1, 0, 3), (1, 1, 4)]
     assert SMatrix((1,2),(3,4)).col_list() ==[(0, 0, 1), (1, 0, 3), (0, 1, 2), (1, 1, 4)]
 
-
-
+def test_SMatrix_add():
+    assert SMatrix((1,2),(3,4)) + SMatrix((5,6),(7,8)) == SMatrix((6,8),(10,12))
+    assert SMatrix((1,2),(3,4)).add(SMatrix((5,6),(7,8))) == SMatrix((6,8),(10,12))
