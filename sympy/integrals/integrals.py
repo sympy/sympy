@@ -791,11 +791,11 @@ def integrate(*args, **kwargs):
 
     """
     integral = Integral(*args, **kwargs)
-
+    c = Symbol('c')
     if isinstance(integral, Integral):
-        return integral.doit(deep = False)
-    else:
-        return integral
+        return integral.doit(deep = False)+c
+    else: 
+        return integral+c
 
 
 @threaded(use_add=False)
