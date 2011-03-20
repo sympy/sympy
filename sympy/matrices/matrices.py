@@ -1,5 +1,3 @@
-import warnings
-from sympy.OrderedDict import OrderedDict as OD
 from sympy.core.basic import Basic
 from sympy.core.symbol import Symbol, Dummy
 from sympy.core.numbers import Integer
@@ -1910,7 +1908,7 @@ class SMatrix(Matrix):
             assert isinstance(args[0], int) and isinstance(args[1], int)
             self.rows = args[0]
             self.cols = args[1]
-            self.mat = OD()
+            self.mat = {}
             for i in range(self.rows):
                 for j in range(self.cols):
                     value = sympify(op(i,j))
@@ -1921,7 +1919,7 @@ class SMatrix(Matrix):
             self.rows = args[0]
             self.cols = args[1]
             mat = args[2]
-            self.mat = OD()
+            self.mat = {}
             for i in range(self.rows):
                 for j in range(self.cols):
                     value = sympify(mat[i*self.cols+j])
@@ -1931,7 +1929,7 @@ class SMatrix(Matrix):
                 isinstance(args[1],int) and isinstance(args[2], dict):
             self.rows = args[0]
             self.cols = args[1]
-            self.mat = OD()
+            self.mat = {}
             # manual copy, copy.deepcopy() doesn't work
             for key in args[2].keys():
                 self.mat[key] = args[2][key]
@@ -1944,7 +1942,7 @@ class SMatrix(Matrix):
                 mat = [ [element] for element in mat ]
             self.rows = len(mat)
             self.cols = len(mat[0])
-            self.mat = OD()
+            self.mat = {}
             for i in range(self.rows):
                 assert len(mat[i]) == self.cols
                 for j in range(self.cols):
@@ -2102,33 +2100,52 @@ class SMatrix(Matrix):
 
     T = property(transpose,None,None,"Matrix transposition.")
 
+    def __add__(self,other):
+        return self.add(other)
+
+    def __radd__(self,other):
+        return self.add(self)
+
     def add(self,other):
         """
-        Will add two Sparse Matrices with dictionary representation
+        Constructs and returns addition of two Sparse Matrices with dictionary representation.
+        >>> from sympy.matrices.matrices import SMatrix
+        >>> a=SMatrix(5,5,lambda i,j:i*j+i)
+        >>> a
+        [0, 0,  0,  0,  0]
+        [1, 2,  3,  4,  5]
+        [2, 4,  6,  8, 10]
+        [3, 6,  9, 12, 15]
+        [4, 8, 12, 16, 20]
+        >>> a+a
+        [0,  0,  0,  0,  0]
+        [2,  4,  6,  8, 10]
+        [4,  8, 12, 16, 20]
+        [6, 12, 18, 24, 30]
+        [8, 16, 24, 32, 40]
+
         """
+        if self.shape != other.shape:
+            raise ShapeError()
         a, b = self.mat.keys(), other.mat.keys()
         a.sort()
         b.sort()
         i=j=0
         c={}
-        while true:
-            if a[i]<b[j]:
-                c[a[i]]=self.mat[a[i]]
-                i=i+1
+        while i < len(a) and j < len(b):
+            if a[i] < b[j]:
+                c[ a[i] ] = self.mat[ a[i] ]
+                i = i + 1
                 continue
-            elif a[i]>b[j]:
-                c[b[j]]=other.mat[b[j]]
-                j=j+1
+            elif a[i] > b[j]:
+                c[ b[j] ] = other.mat[ b[j] ]
+                j = j + 1
                 continue
             else:
-                c[a[i]]=self.mat[a[i]]
-                i=i+1
-                j=j+1
-        return SMatrix(self.rows,self.cols,c)
-                    
-                
-             
-
+                c[ a[i] ] = self.mat[ a[i] ] + other.mat[ b[j] ]
+                i = i + 1
+                j = j + 1
+        return SMatrix(self.rows, self.cols, c)
 
     # from here to end all functions are same as in matrices.py
     # with Matrix replaced with SMatrix
