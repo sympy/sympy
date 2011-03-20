@@ -42,6 +42,7 @@ from geometry import *
 from utilities import *
 from integrals import *
 from tensor import *
+from OrderedDict import OrderedDict as OD
 # This module is slow to import:
 #from physics import units
 from plotting import Plot, textplot

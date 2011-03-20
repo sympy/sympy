@@ -1,4 +1,5 @@
 import warnings
+from sympy.OrderedDict import OrderedDict as OD
 from sympy.core.basic import Basic
 from sympy.core.symbol import Symbol, Dummy
 from sympy.core.numbers import Integer
@@ -1909,7 +1910,7 @@ class SMatrix(Matrix):
             assert isinstance(args[0], int) and isinstance(args[1], int)
             self.rows = args[0]
             self.cols = args[1]
-            self.mat = {}
+            self.mat = OD()
             for i in range(self.rows):
                 for j in range(self.cols):
                     value = sympify(op(i,j))
@@ -1920,7 +1921,7 @@ class SMatrix(Matrix):
             self.rows = args[0]
             self.cols = args[1]
             mat = args[2]
-            self.mat = {}
+            self.mat = OD()
             for i in range(self.rows):
                 for j in range(self.cols):
                     value = sympify(mat[i*self.cols+j])
@@ -1930,7 +1931,7 @@ class SMatrix(Matrix):
                 isinstance(args[1],int) and isinstance(args[2], dict):
             self.rows = args[0]
             self.cols = args[1]
-            self.mat = {}
+            self.mat = OD()
             # manual copy, copy.deepcopy() doesn't work
             for key in args[2].keys():
                 self.mat[key] = args[2][key]
@@ -1943,7 +1944,7 @@ class SMatrix(Matrix):
                 mat = [ [element] for element in mat ]
             self.rows = len(mat)
             self.cols = len(mat[0])
-            self.mat = {}
+            self.mat = OD()
             for i in range(self.rows):
                 assert len(mat[i]) == self.cols
                 for j in range(self.cols):
@@ -2101,7 +2102,32 @@ class SMatrix(Matrix):
 
     T = property(transpose,None,None,"Matrix transposition.")
 
-
+    def add(self,other):
+        """
+        Will add two Sparse Matrices with dictionary representation
+        """
+        a, b = self.mat.keys(), other.mat.keys()
+        a.sort()
+        b.sort()
+        i=j=0
+        c={}
+        while true:
+            if a[i]<b[j]:
+                c[a[i]]=self.mat[a[i]]
+                i=i+1
+                continue
+            elif a[i]>b[j]:
+                c[b[j]]=other.mat[b[j]]
+                j=j+1
+                continue
+            else:
+                c[a[i]]=self.mat[a[i]]
+                i=i+1
+                j=j+1
+        return SMatrix(self.rows,self.cols,c)
+                    
+                
+             
 
 
     # from here to end all functions are same as in matrices.py
