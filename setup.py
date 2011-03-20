@@ -78,6 +78,7 @@ modules = [
     'sympy.simplify',
     'sympy.solvers',
     'sympy.statistics',
+    'sympy.stereometry',
     'sympy.utilities',
     'sympy.utilities.mathml',
     ]
@@ -217,6 +218,7 @@ tests = [
     'sympy.slow_tests',
     'sympy.solvers.tests',
     'sympy.statistics.tests',
+    'sympy.stereometry.tests',
     'sympy.test_external',
     'sympy.utilities.tests',
     ]
