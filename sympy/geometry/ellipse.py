@@ -284,6 +284,25 @@ class Ellipse(GeometryEntity):
         return result
 
     def intersection(self, o):
+        """
+        Find points than both lie on current ellipse and object 'o'.
+        Currently supported intersections between Ellipse and: Point, Line and derived.
+
+        Example:
+        ========
+        >>> from sympy import Ellipse, Point, Line, sqrt
+        >>> e = Ellipse(Point(0, 0), 5, 7)
+        >>> e.intersection(Point(0, 0))
+        []
+        >>> e.intersection(Point(5, 0))
+        [Point(5, 0)]
+        >>> e.intersection(Line(Point(0,0), Point(0, 1)))
+        [Point(0, -7), Point(0, 7)]
+        >>> e.intersection(Line(Point(5,0), Point(5, 1)))
+        [Point(5, 0)]
+        >>> e.intersection(Line(Point(6,0), Point(6, 1)))
+        []
+        """
         if isinstance(o, Point):
             if o in self:
                 return [o]
