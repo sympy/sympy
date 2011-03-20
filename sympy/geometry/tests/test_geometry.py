@@ -2,7 +2,7 @@ from sympy import Symbol, Rational, sqrt, pi, cos, oo, simplify, Real
 from sympy.geometry import (Point, Polygon, convex_hull, Segment,
     RegularPolygon, Circle, Ellipse, GeometryError, Line, intersection, Ray,
     Triangle, are_similar, Curve)
-from sympy.utilities.pytest import raises
+from sympy.utilities.pytest import raises, XFAIL
 
 x = Symbol('x', real=True)
 y = Symbol('y', real=True)
@@ -263,6 +263,8 @@ def test_ellipse():
     assert intersection(e1, e2) in \
         [[Point(5, 0), Point(-5, 0)], [Point(-5, 0), Point(5, 0)]]
 
+    # FAILING ELLIPSE INTERSECTION GOES HERE
+
     # Combinations of above
     assert e3.is_tangent(e3.tangent_line(p1 + Point(y1, 0)))
 
@@ -275,6 +277,13 @@ def test_ellipse():
     assert e4.periapsis == major*(1 - ecc)
     assert e4.apoapsis == major*(1 + ecc)
 
+@XFAIL
+def test_ellipse_intersection_fail():
+    # these need the upgrade to the solver; when this works, move
+    # these lines to the FAILING ELLIPSE INTERSECTION GOES HERE line in test_ellipse above.
+    e1 = Ellipse(Point(0, 0), 5, 10)
+    e2 = Ellipse(Point(2, 1), 4, 8)
+    assert e1.intersection(e2) # when this no longer fails, supply the answer
 
 def test_polygon():
     p1 = Polygon(
