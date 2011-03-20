@@ -10,7 +10,7 @@ class Point3d(Geometry3dEntity):
     ======
         >>> from sympy.sterometry import Point3d
         >>> Point(10,10,20)
-        Point(1, 2,20)
+        Point(10, 10, 20)
  """
  def __new__(cls, *args, **kwargs):
         if isinstance(args[0], (tuple, list, set)):
