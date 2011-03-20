@@ -4,4 +4,3 @@ entities and functions needed to construct stereometry data and to
 perform simple informational queries.
 
 """
-
