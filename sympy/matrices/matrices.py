@@ -2094,17 +2094,11 @@ class SMatrix(Matrix):
         [1, 3]
         [2, 4]
         """
-        #out = [0]*self.cols*self.rows
-        #inp=self.col_list()
-        #mat={}
-        #for i in inp:
-        #    mat[(i[1],i[0])]=i[2]
-        #return SMatrix(self.cols,self.rows,mat)
         tran = SMatrix(self.cols,self.rows,{})
         for key,value in self.mat.iteritems():
             tran.mat[key[1],key[0]]=value
         return tran
-        
+
     T = property(transpose,None,None,"Matrix transposition.")
 
 
