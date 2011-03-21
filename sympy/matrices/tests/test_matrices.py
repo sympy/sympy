@@ -1218,24 +1218,24 @@ def test_creation_args():
 def test_diagonal_symmetrical():
     m = Matrix(2,2,[0, 1, 1, 0])
     assert not m.is_diagonal()
-    assert m.is_symmetrical()
+    assert m.is_symmetric()
 
     m = Matrix(2,2,[1, 0, 0, 1])
     assert m.is_diagonal()
 
     m = diag(1, 2, 3)
     assert m.is_diagonal()
-    assert m.is_symmetrical()
+    assert m.is_symmetric()
 
     m = Matrix(3,3,[1, 0, 0, 0, 2, 0, 0, 0, 3])
     assert m == diag(1, 2, 3)
 
     m = Matrix(2,3,[0, 0, 0, 0, 0, 0])
-    assert not m.is_symmetrical()
+    assert not m.is_symmetric()
 
     x, y = symbols('x','y')
     m = Matrix(3,3,[1, x**2 + 2*x + 1, y, (x + 1)**2 , 2, 0, y, 0, 3])
-    assert m.is_symmetrical()
+    assert m.is_symmetric()
 
 
 def test_diagonalization():
@@ -1251,13 +1251,13 @@ def test_diagonalization():
     assert D == m
 
     m = Matrix(2,2,[0, 1, 1, 0])
-    assert m.is_symmetrical()
+    assert m.is_symmetric()
     assert m.is_diagonalizable()
     (P, D) = m.diagonalize()
     assert P.inv() * m * P == D
 
     m = Matrix(2,2,[1, 0, 0, 3])
-    assert m.is_symmetrical()
+    assert m.is_symmetric()
     assert m.is_diagonalizable()
     (P, D) = m.diagonalize()
     assert P.inv() * m * P == D
@@ -1309,7 +1309,7 @@ def test_diagonalization():
     # symbolic
     a, b, c, d = symbols('a','b','c', 'd')
     m = Matrix(2,2,[a, c, c, b])
-    assert m.is_symmetrical()
+    assert m.is_symmetric()
     assert m.is_diagonalizable()
 
 def test_jordan_form():

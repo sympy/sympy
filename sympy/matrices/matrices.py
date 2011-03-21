@@ -1212,7 +1212,7 @@ class Matrix(object):
                     return True
         return False
 
-    def is_symmetrical(self):
+    def is_symmetric(self):
         """
         Check if matrix is symmetric matrix,
         that is square matrix and is equal to its transpose.
@@ -1224,21 +1224,21 @@ class Matrix(object):
         >>> m
         [0, 1]
         [1, 2]
-        >>> m.is_symmetrical()
+        >>> m.is_symmetric()
         True
 
         >>> m = Matrix(2,2,[0, 1, 2, 0])
         >>> m
         [0, 1]
         [2, 0]
-        >>> m.is_symmetrical()
+        >>> m.is_symmetric()
         False
 
         >>> m = Matrix(2,3,[0, 0, 0, 0, 0, 0])
         >>> m
         [0, 0, 0]
         [0, 0, 0]
-        >>> m.is_symmetrical()
+        >>> m.is_symmetric()
         False
 
         >>> from sympy.abc import x, y
@@ -1247,7 +1247,7 @@ class Matrix(object):
         [         1, 1 + 2*x + x**2, y]
         [(1 + x)**2,              2, 0]
         [         y,              0, 3]
-        >>> m.is_symmetrical()
+        >>> m.is_symmetric()
         True
 
         """
@@ -1809,7 +1809,7 @@ class Matrix(object):
             raise NonSquareMatrixException()
         res = False
         self._is_symbolic = self.is_symbolic()
-        self._is_symmetrical = self.is_symmetrical()
+        self._is_symmetric = self.is_symmetric()
         self._eigenvects = None
         #if self._is_symbolic:
         #    self._diagonalize_clear_subproducts()
@@ -1830,7 +1830,7 @@ class Matrix(object):
 
     def _diagonalize_clear_subproducts(self):
         del self._is_symbolic
-        del self._is_symmetrical
+        del self._is_symmetric
         del self._eigenvects
 
     def jordan_form(self, calc_transformation = True):
