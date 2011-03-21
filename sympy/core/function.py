@@ -427,7 +427,13 @@ multi-arg functions are not supported.')
                 nargs = self.nargs
             if not (1<=argindex<=nargs):
                 raise TypeError("argument index %r is out of range [1,%s]" % (argindex,nargs))
-        return Derivative(self,self.args[argindex-1],evaluate=False)
+        u = self.args[argindex - 1]
+        if u.is_Symbol:
+            uself = self
+        else:
+            u = C.Dummy('u')
+            uself = self.func(u)
+        return Derivative(uself, u, evaluate=False)
 
     def _eval_as_leading_term(self, x):
         """General method for the leading term"""
@@ -483,7 +489,10 @@ class Derivative(Expr):
     Carries out differentiation of the given expression with respect to symbols.
 
     expr must define ._eval_derivative(symbol) method that returns
-    the differentiation result or None.
+    the differentiation result. This function need only consider the
+    non-trivial case where expr contains symbol and it should call the diff()
+    method interally (not _eval_derivative); Derivative should be the only
+    one to call _eval_derivative.
 
     Examples:
 

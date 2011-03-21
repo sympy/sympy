@@ -181,21 +181,22 @@ def test_deriv1():
     f=Function('f')
     g=Function('g')
     x = Symbol('x')
-    assert f(g(x)).diff(x) == Derivative(f(g(x)), g(x)) * Derivative(g(x), x)
+    # this is a place where the polys12 Pure() symbol could be used rather than unique dummies
+    assert str(f(g(x)).diff(x)) == 'D(f(_u), _u)*D(g(x), x)'
 
 def test_deriv2():
     f = Function('f')
     x = Symbol('x')
 
     assert f(x).diff(x) == Derivative(f(x), x)
-    assert f(2*x).diff(x) == 2*Derivative(f(2*x), 2*x)
+    assert str(f(2*x).diff(x)) == '2*D(f(_u), _u)'
     assert (f(x)**3).diff(x) == 3*f(x)**2*f(x).diff(x)
-    assert (f(2*x)**3).diff(x) == 6*f(2*x)**2*Derivative(f(2*x), 2*x)
+    assert str((f(2*x)**3).diff(x)) == '6*f(2*x)**2*D(f(_u), _u)'
 
-    assert f(2+x).diff(x) == Derivative(f(2+x), 2+x)
-    assert f(2+3*x).diff(x) == 3*Derivative(f(2+3*x), 2+3*x)
-    assert f(sin(x)).diff(x) == Derivative(f(sin(x)), sin(x)) * cos(x)
-    assert f(3*sin(x)).diff(x) == 3*Derivative(f(3*sin(x)), 3*sin(x)) * cos(x)
+    assert str(f(2+x).diff(x)) == 'D(f(_u), _u)'
+    assert str(f(2+3*x).diff(x)) == '3*D(f(_u), _u)'
+    assert str(f(sin(x)).diff(x)) == 'D(f(_u), _u)*cos(x)'
+    assert str(f(3*sin(x)).diff(x)) == '3*D(f(_u), _u)*cos(x)'
 
 def test_deriv3():
     x = Symbol('x')
