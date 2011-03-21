@@ -107,6 +107,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Alexey U. Goodchenko: Implemented Matrix.extract()
 #. Gary Kerr: Fix examples
 #. Sherjil Ozair: Fixes to SMatrix
+#. Oleksandr Gituliar: Fixes to Matrix
 
 
 Up-to-date list in the order of the first contribution is given in the `AUTHORS
