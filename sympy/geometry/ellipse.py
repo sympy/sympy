@@ -299,6 +299,28 @@ class Ellipse(GeometryEntity):
                     if result[ind] not in o:
                         del result[ind]
             return result
+
+        elif isinstance(o, Circle):
+            variables = self.equation().atoms(C.Symbol)
+            if len(variables) > 2:
+                return None
+            if self.center == o.center:
+                a, b, r = o.hradius, o.vradius, self.radius
+                x = a*sqrt(simplify((r**2 - b**2)/(a**2 - b**2)))
+                y = b*sqrt(simplify((a**2 - r**2)/(a**2 - b**2)))
+                return list(set([Point(x,y), Point(x,-y), Point(-x,y), Point(-x,-y)]))
+            else:
+                xo, yo = self.center
+                xe, ye = o.center
+                x, y = variables
+                xx = solve(self.equation(), x)
+                intersect = []
+                for xi in xx:
+                    yy = solve(o.equation().subs(x, xi), y)
+                    for yi in yy:
+                        intersect.append(Point(xi, yi))
+                return list(set(intersect))
+
         elif isinstance(o, Ellipse):
             if o == self:
                 return self
@@ -425,26 +447,5 @@ class Circle(Ellipse):
             if xi_1 != xi_2 or yi_1 != yi_2:
                 ret.append(Point(xi_2, yi_2))
             return ret
-        elif isinstance(o, Ellipse):
-            variables = self.equation().atoms(C.Symbol)
-            if len(variables) > 2:
-                return None
-            if self.center == o.center:
-                a, b, r = o.hradius, o.vradius, self.radius
-                x = a*sqrt(simplify((r**2 - b**2)/(a**2 - b**2)))
-                y = b*sqrt(simplify((a**2 - r**2)/(a**2 - b**2)))
-                return list(set([Point(x,y), Point(x,-y), Point(-x,y), Point(-x,-y)]))
-            else:
-                xo, yo = self.center
-                xe, ye = o.center
-                x, y = variables
-                xx = solve(self.equation(), x)
-                intersect = []
-                for xi in xx:
-                    yy = solve(o.equation().subs(x, xi), y)
-                    for yi in yy:
-                        intersect.append(Point(xi, yi))
-                return list(set(intersect))
-
 
         return Ellipse.intersection(self, o)
