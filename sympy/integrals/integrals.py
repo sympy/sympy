@@ -1,5 +1,5 @@
 from sympy.core import (Basic, Expr, S, C, Symbol, Wild, Add, sympify, diff,
-                        oo, Tuple, Dummy)
+                        oo, Tuple, Dummy, Function)
 
 from sympy.core.symbol import Dummy
 from sympy.integrals.trigonometry import trigintegrate
@@ -791,11 +791,22 @@ def integrate(*args, **kwargs):
 
     """
     integral = Integral(*args, **kwargs)
-    c = Symbol('c')
+
     if isinstance(integral, Integral):
-        return integral.doit(deep = False)+c
+        if len(kwargs)!=0:
+            if kwargs['arbitrary_function']==True:
+                s = integral.free_symbols-set([args[1]])
+                if len(s)==0:
+                    c = Symbol('c')
+                else:
+                    c = Function('f')(*s)
+                return integral.doit(deep = False) + c
+            else:
+                return integral.doit(deep = False)
+        else:
+            return integral.doit(deep = False)
     else: 
-        return integral+c
+        return integral
 
 
 @threaded(use_add=False)
