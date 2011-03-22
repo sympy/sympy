@@ -100,7 +100,6 @@ and then you can study how it works. I am going to stop here, this should be
 enough to get you going -- with the above technique, I am able to understand
 almost any Python code.
 
-.. note:: The above debugging was done on the revision `75544c92be1d <http://hg.sympy.org/sympy/rev/75544c92be1d>`_.
 
 SymPy's Architecture
 ====================

@@ -6,13 +6,12 @@ SymPy Development Team
 
 SymPy is a team project and it was developed by a lot of people.
 
-Here is a list of contributors together with what they do, plus links to their
-wiki pages (if they have one on the page `People
-<http://wiki.sympy.org/wiki/People>`_), where they describe in
+Here is a list of contributors together with what they do, (and in some cases links to their
+wiki pages), where they describe in
 more details what they do and what they are interested in (some people didn't
 want to be mentioned here, so see our repository history for a full list).
 
-#. `Ondřej Čertík <http://wiki.sympy.org/wiki/Ond%C5%99ej_%C4%8Cert%C3%ADk>`_: started the project in 2006, on Jan 4, 2011 passed the project leadership to Aaron Meurer
+#. Ondřej Čertík: started the project in 2006, on Jan 4, 2011 passed the project leadership to Aaron Meurer
 #. Fabian Pedregosa: everything, reviewing patches, releases, general advice (issues and mailinglist), GSoC 2009
 #. Jurjen N.E. Bos: pretty printing and other patches
 #. Mateusz Paprocki: GSoC 2007, concrete math module, integration module, new core integration, a lot of patches, general advice, new polynomial module, improvements to solvers, simplifications, patch review
@@ -20,8 +19,8 @@ want to be mentioned here, so see our repository history for a full list).
 #. Brian Jorgensen: GSoC 2007, plotting module and related things, patches
 #. Jason Gedge: GSoC 2007, geometry module, a lot of patches and fixes, new core integration
 #. Robert Schwarz: GSoC 2007, polynomials module, patches
-#. `Pearu Peterson <http://wiki.sympy.org/wiki/Pearu_Peterson>`_: new core, sympycore project, general advice (issues and mailinglist)
-#. `Fredrik Johansson <http://wiki.sympy.org/wiki/Fredrik_Johansson>`_: mpmath project and its integration in SymPy, number theory, combinatorial functions, products & summation, statistics, units, patches, documentation, general advice (issues and mailinglist)
+#. `Pearu Peterson <https://github.com/sympy/sympy/wiki/Pearu-Peterson>`_: new core, sympycore project, general advice (issues and mailinglist)
+#. `Fredrik Johansson <https://github.com/sympy/sympy/wiki/Fredrik-Johansson>`_: mpmath project and its integration in SymPy, number theory, combinatorial functions, products & summation, statistics, units, patches, documentation, general advice (issues and mailinglist)
 #. Chris Wu: GSoC 2007, linear algebra module
 #. Ulrich Hecht: pattern matching and other patches
 #. Goutham Lakshminarayan: number theory functions
@@ -31,7 +30,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Bernhard R. Link: documentation patch
 #. Andrej Tokarčík: GHOP, python printer
 #. Or Dvory: GHOP, documentation
-#. `Saroj Adhikari <http://wiki.sympy.org/wiki/User:Saroj>`_: bug fixes
+#. Saroj Adhikari: bug fixes
 #. Pauli Virtanen: bug fix
 #. Robert Kern: bug fix, common subexpression elimination
 #. James Aspnes: bug fixes
@@ -124,7 +123,7 @@ Financial and Infrastructure Support
 
 * `Python Software Foundation <http://www.python.org/psf/>`_: PSF hosted 3 GSoC 2007 students (Brian, Robert and Jason), and 1 GSoC 2008 student (Fredrik)
 
-* `the Space Telescope Science Institute <http://www.stsci.edu/>`_: STScI hosted 1 GSoC 2007 student (Mateusz)
+* `the Space Telescope Science Institute <http://www.stsci.edu/portal/>`_: STScI hosted 1 GSoC 2007 student (Mateusz)
 
 * `Portland State University <http://www.pdx.edu/>`_: PSU hosted 1 GSoC 2007 student (Chris)
 

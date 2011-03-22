@@ -13,13 +13,13 @@ SymPy runs under the `Python Programming Language
 differently than they do in other, independent computer algebra systems
 like Maple or Mathematica.  These are some of the gotchas and pitfalls
 that you may encounter when using SymPy.  See also the `FAQ
-<http://wiki.sympy.org/wiki/FAQ>`_, the :ref:`Tutorial<tutorial>`, the
+<https://github.com/sympy/sympy/wiki/Faq>`_, the :ref:`Tutorial<tutorial>`, the
 remainder of the SymPy Docs, and the `official Python Tutorial
 <http://docs.python.org/tutorial/>`_.
 
 If you are already familiar with C or Java, you might also want to look
 this `4 minute Python tutorial
-<http://www.nerdparadise.com/tech/coding/python/4minutes/>`_.
+<http://www.nerdparadise.com/tech/python/4minutecrashcourse/>`_.
 
 Ignore ``#doctest: +SKIP`` in the examples.  That has to do with
 internal testing of the examples.
@@ -69,7 +69,7 @@ equation reduces to 0.
 
 .. note::
 
-    See also `Why does SymPy say that two equal expressions are unequal? <http://wiki.sympy.org/wiki/FAQ#Why_does_SymPy_say_that_two_equal_expressions_are_unequal.3F>`_ in the FAQ.
+    See also `Why does SymPy say that two equal expressions are unequal? <https://github.com/sympy/sympy/wiki/Faq>`_ in the FAQ.
 
 
 Variables
@@ -165,7 +165,7 @@ If you define a circular relationship, you will get a
 
 
 .. note::
-    See also `Why doesn't changing one variable change another that depends on it? <http://wiki.sympy.org/wiki/FAQ#Why_doesn.27t_changing_one_variable_change_another_that_depends_it.3F>`_ in the FAQ.
+    See also `Why doesn't changing one variable change another that depends on it? <https://github.com/sympy/sympy/wiki/Faq>`_ in the FAQ.
 
 .. _symbols:
 
@@ -257,7 +257,7 @@ all built-in names and to autocomplete.  Also, see `this page
 trick for getting tab completion in the regular Python console.
 
 .. note::
-    See also `What is the best way to create symbols? <http://wiki.sympy.org/wiki/FAQ#What_is_the_best_way_to_create_symbols.3F.7C>`_ in the FAQ.
+    See also `What is the best way to create symbols? <https://github.com/sympy/sympy/wiki/Faq>`_ in the FAQ.
 
 .. _symbolic-expressions:
 

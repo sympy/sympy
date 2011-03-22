@@ -2124,7 +2124,7 @@ def ode_Liouville(eq, func, order, match):
     **References**
         - Goldstein and Braun, "Advanced Methods for the Solution of
           Differential Equations", pp. 98
-        - http://www.maplesoft.com/support/help/view.aspx?path=odeadvisor/Liouville
+        - http://www.maplesoft.com/support/help/Maple/view.aspx?path=odeadvisor/Liouville
 
         # indirect doctest
 
