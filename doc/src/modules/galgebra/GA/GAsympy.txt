@@ -1748,11 +1748,11 @@ Div and Curl of Vector Function :math:`A`
 
 .. seealso::
 
-   `Hestenes <modelingnts.la.asu.edu/>`_
+   `Hestenes <http://geocalc.clas.asu.edu/html/CA_to_GC.html>`_
       ``Clifford Algebra to Geometric Calculus`` by  D.Hestenes and G. Sobczyk, Kluwer
       Academic Publishers, 1984.
 
-   `Lasenby <www.mrao.cam.ac.uk/ clifford/>`_
+   `Lasenby <http://www.mrao.cam.ac.uk/~cjld1/pages/book.htm>`_
       ``Geometric Algebra for Physicists`` by  C. Doran and A. Lasenby, Cambridge
       University Press, 2003.
 
