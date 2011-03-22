@@ -791,20 +791,16 @@ def integrate(*args, **kwargs):
 
     """
     integral = Integral(*args, **kwargs)
-
     if isinstance(integral, Integral):
-        if len(kwargs)!=0:
-            if kwargs['arbitrary_function']==True:
-                s = integral.free_symbols-set([args[1]])
-                if len(s)==0:
-                    c = Symbol('c')
-                else:
-                    c = Function('f')(*s)
-                return integral.doit(deep = False) + c
+        if kwargs.get('arbitrary_function', false):
+            s = integral.free_symbols - set([args[1]])
+            if len(s)==0:
+                c = Symbol('constant') 
             else:
-                return integral.doit(deep = False)
+                c = Function('f')(*s)
+            return integral.doit(deep=False) + c
         else:
-            return integral.doit(deep = False)
+            return integral.doit(deep=False)
     else: 
         return integral
 
