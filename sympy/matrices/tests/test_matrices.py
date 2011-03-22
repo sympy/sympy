@@ -1474,6 +1474,7 @@ def test_errors():
     raises(TypeError, "SMatrix([[1, 2], [3, 4]]).copyin_list([0, 1], set([]))")
     raises(TypeError, "SMatrix([[1, 2], [3, 4]]).submatrix((1, 2))")
     raises(TypeError, "SMatrix([1, 2, 3]).cross(1)")
+    raises(ValueError, "Matrix([[5, 10, 7],[0, -1, 2],[8,  3, 4]]).LUdecomposition_Simple(iszerofunc=lambda x:abs(x)<=4)")
 
 def test_len():
     assert len(Matrix()) == 0

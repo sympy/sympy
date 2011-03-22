@@ -710,7 +710,7 @@ class Basic(AssumeMeths):
             sequence = args[0]
             if isinstance(sequence, dict):
                 return self._subs_dict(sequence)
-            elif isinstance(sequence, (list, tuple)) or hasattr(sequence, '__iter__'):
+            elif hasattr(sequence, '__iter__') or hasattr(sequence, '__getitem__'):
                 return self._subs_list(sequence)
             else:
                 raise TypeError("Not an iterable container")

@@ -322,7 +322,7 @@ def test_solve_undetermined_coeffs():
     # Test that rational functions work
     assert solve_undetermined_coeffs(a/x  + b/(x + 1) - (2*x + 1)/(x**2 + x), [a, b], x) == \
         {a: 1, b: 1}
-    # Test cancelation in rational functions
+    # Test cancellation in rational functions
     assert solve_undetermined_coeffs(((c + 1)*a*x**2 + (c + 1)*b*x**2 +
     (c + 1)*b*x  + (c + 1)*2*c*x + (c + 1)**2)/(c + 1), [a, b, c], x) == \
         {a: -2, b: 2, c: -1}

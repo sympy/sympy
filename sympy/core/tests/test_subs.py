@@ -1,6 +1,6 @@
 from sympy import (Symbol, Wild, sin, cos, exp, sqrt, pi, Function, Derivative,
         abc, Integer, Eq, symbols, Add, I, Real, log, Rational, Lambda, atan2,
-        cse, S, tan, cot)
+        cse, S, tan, cot, Tuple)
 
 def test_subs():
     n3=Rational(3)
@@ -371,3 +371,4 @@ def test_subs_iter():
     assert x.subs(reversed([[x, y]])) == y
     it = iter([[x, y]])
     assert x.subs(it) == y
+    assert x.subs(Tuple((x, y))) == y

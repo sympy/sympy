@@ -94,7 +94,7 @@ class Matrix(object):
             self.rows=args[0]
             self.cols=args[1]
             mat = args[2]
-            if len(mat) != self.rows*self.cols:
+            if len(mat) != len(self):
                 raise ValueError('List length should be equal to rows*columns')
             self.mat = map(lambda i: sympify(i), mat)
         elif len(args) == 1:
@@ -179,7 +179,7 @@ class Matrix(object):
         True
 
         """
-        a = [0]*self.cols*self.rows
+        a = [0]*len(self)
         for i in xrange(self.cols):
             a[i*self.rows:(i+1)*self.rows] = self.mat[i::self.cols]
         return Matrix(self.cols,self.rows,a)
@@ -341,7 +341,7 @@ class Matrix(object):
 
         Implemented mainly so bool(Matrix()) == False.
         """
-        return self.rows * self.cols
+        return self.rows*self.cols
 
     def tolist(self):
         """
@@ -430,7 +430,7 @@ class Matrix(object):
                 s *= s
                 n //= 2
             return a
-        raise NotImplementedError("Can only raise to the power of an integer for now.")
+        raise NotImplementedError("Non-integer powers not supported.")
 
     def __add__(self,a):
         return matrix_add(self,a)
@@ -524,7 +524,7 @@ class Matrix(object):
 
         """
         if not self.is_square:
-            raise NonSquareMatrixError("A Matrix must be square to invert.")
+            raise NonSquareMatrixError()
         if try_block_diag:
             blocks = self.get_diag_blocks()
             r = []
@@ -715,7 +715,7 @@ class Matrix(object):
 
     def trace(self):
         if not self.is_square:
-            raise NonSquareMatrixError("A Matrix must be square to compute the trace.")
+            raise NonSquareMatrixError()
 
         trace = 0
         for i in range(self.cols):
@@ -848,7 +848,7 @@ class Matrix(object):
         [1, 1]
 
         """
-        if self.rows*self.cols != _rows*_cols:
+        if len(self) != _rows*_cols:
             print "Invalid reshape parameters %d %d" % (_rows, _cols)
         return Matrix(_rows, _cols, lambda i,j: self.mat[i*_cols + j])
 
@@ -892,7 +892,7 @@ class Matrix(object):
         sympy.mpmath.lu_solve or sympy.mpmath.qr_solve.
         """
         if rhs.rows != self.rows:
-            raise ShapeError("`self` and `rhs` must have the same number or rows.")
+            raise ShapeError("`self` and `rhs` must have the same number of rows.")
 
         A, perm = self.LUdecomposition_Simple(iszerofunc=_iszero)
         n = self.rows
@@ -931,7 +931,7 @@ class Matrix(object):
         p which is the list of the row swaps (in order).
         """
         if not self.is_square:
-            raise NonSquareMatrixError("A Matrix must be square to apply LUdecomposition_Simple().")
+            raise NonSquareMatrixError()
         n = self.rows
         A = self[:,:]
         p = []
@@ -948,15 +948,12 @@ class Matrix(object):
                 if pivot == -1 and not iszerofunc(A[i,j]):
                     pivot = i
             if pivot < 0:
-                raise ValueError("Error: non-invertible matrix passed to LUdecomposition_Simple()")
+                # this result is based on iszerofunc's analysis of the possible pivots, so even though
+                # the element may not be strictly zero, the supplied iszerofunc's evaluation gave True
+                raise ValueError("No nonzero pivot found; inversion failed.")
             if pivot != j: # row must be swapped
                 A.row_swap(pivot,j)
                 p.append([pivot,j])
-            if iszerofunc(A[j,j]):
-                # XXX: I don't know what is going on here.
-                # What is a descriptive error message?
-                # Also, I don't know how to test (see test_errors() in test_matrices.py)
-                raise ValueError
             scale = 1 / A[j,j]
             for i in range(j+1,n):
                 A[i,j] = A[i,j] * scale
@@ -1081,7 +1078,7 @@ class Matrix(object):
         Assumes full-rank square (for now).
         """
         if not self.is_square:
-            raise NonSquareMatrixError("A Matrix must be square to apply QRdecomposition().")
+            raise NonSquareMatrixError()
         n = self.rows
         Q, R = self.zeros(n), self.zeros(n)
         for j in range(n):      # for each column vector
@@ -1161,11 +1158,8 @@ class Matrix(object):
         if not isinstance(b, (list, tuple, Matrix)):
             raise TypeError("`b` must be of type list, tuple, or Matrix, not %s." %
                 type(b))
-        if isinstance(b, (list, tuple)):
-            m = len(b)
-        else:
-            m = b.rows * b.cols
-        if self.cols*self.rows != m:
+        m = len(b)
+        if len(self) != m:
             raise ShapeError("Dimensions incorrect for dot product.")
         prod = 0
         for i in range(m):
@@ -1189,7 +1183,7 @@ class Matrix(object):
             raise ShapeError("A Matrix must be a vector to compute the norm.")
 
         out = sympify(0)
-        for i in range(self.rows * self.cols):
+        for i in range(len(self)):
             out += self[i]*self[i]
         return out**S.Half
 
@@ -1441,7 +1435,7 @@ class Matrix(object):
         Calculates the inverse using Gaussian elimination.
         """
         if not self.is_square:
-            raise NonSquareMatrixError("A Matrix must be square to invert.")
+            raise NonSquareMatrixError()
 
         if self.det() == 0:
             raise ValueError("A Matrix must have non-zero determinant to invert.")
@@ -1455,7 +1449,7 @@ class Matrix(object):
         Calculates the inverse using the adjugate matrix and a determinant.
         """
         if not self.is_square:
-            raise NonSquareMatrixError("A Matrix must be square to invert.")
+            raise NonSquareMatrixError()
 
         d = self.berkowitz_det()
         if d == 0:
@@ -1663,7 +1657,7 @@ class Matrix(object):
 
     def fill(self, value):
         """Fill the matrix with the scalar value."""
-        self.mat = [value] * self.rows * self.cols
+        self.mat = [value]*len(self)
 
     def __getattr__(self, attr):
         if attr in ('diff','integrate','limit'):
@@ -1690,7 +1684,7 @@ class Matrix(object):
         [4]
 
         """
-        return Matrix(self.cols*self.rows, 1, self.transpose().mat)
+        return Matrix(len(self), 1, self.transpose().mat)
 
     def vech(self, diagonal=True, check_symmetry=True):
         """
@@ -2207,17 +2201,16 @@ def hessian(f, varlist):
     # f is the expression representing a function f, return regular matrix
     if isinstance(varlist, (list, tuple)):
         m = len(varlist)
+        if not m:
+            raise ShapeError("`len(varlist)` must not be zero.")
     elif isinstance(varlist, Matrix):
         m = varlist.cols
+        if not m:
+            raise ShapeError("`varlist.cols` must not be zero.")
         if varlist.rows != 1:
             raise ShapeError("`varlist` must be a row vector.")
     else:
         raise ValueError("Improper variable list in hessian function")
-    if m <= 0:
-        if isinstance(varlist, (list, tuple)):
-            raise ShapeError("`len(varlist)` must be positive, not %d." % m)
-        elif isinstance(varlist, Matrix):
-            raise ShapeError("`varlist.cols` must be positive, not %d." % m)
     if not getattr(f, 'diff'):
         # check differentiability
         raise ValueError("Function `f` (%s) is not differentiable" % f)
@@ -2329,7 +2322,7 @@ def block_diag(matrices):
     rows = 0
     for m in matrices:
         if not m.is_square:
-            raise NonSquareMatrixError("All matrices must be square.")
+            raise NonSquareMatrixError()
         rows += m.rows
     A = zeros((rows, rows))
     i = 0
@@ -2400,7 +2393,7 @@ class SMatrix(Matrix):
 
     def __getitem__(self, key):
         if isinstance(key, slice) or isinstance(key, int):
-            lo, hi = self.slice2bounds(key, self.rows*self.cols)
+            lo, hi = self.slice2bounds(key, len(self))
             L = []
             for i in range(lo, hi):
                 m,n = self.rowdecomp(i)
@@ -2427,10 +2420,11 @@ class SMatrix(Matrix):
             raise IndexError("Index out of range: a[%s]"%repr(key))
 
     def rowdecomp(self, num):
-        if not (0 <= num < self.rows*self.cols) or not (0 <= -num < self.rows*self.cols):
+        nmax = len(self)
+        if not (0 <= num < nmax) or not (0 <= -num < nmax):
             raise ValueError("`num` must satisfy 0 <= `num` < `self.rows*" +
-                "*self.cols` (%d) and 0 <= -num < " % self.rows*self.cols +
-                "`self.rows*self.cols` (%d) to apply redecomp()." % self.rows*self.cols)
+                "*self.cols` (%d) and 0 <= -num < " % nmax +
+                "`self.rows*self.cols` (%d) to apply redecomp()." % nmax)
         i, j = 0, num
         while j >= self.cols:
             j -= self.cols
@@ -2650,7 +2644,7 @@ class SMatrix(Matrix):
         return SMatrix(rhi-rlo, chi-clo, lambda i,j: self[i+rlo, j+clo])
 
     def reshape(self, _rows, _cols):
-        if self.rows*self.cols != _rows*_cols:
+        if len(self) != _rows*_cols:
             print "Invalid reshape parameters %d %d" % (_rows, _cols)
         newD = {}
         for i in range(_rows):
