@@ -1251,6 +1251,8 @@ class Matrix(object):
         True
 
         """
+        if not self.is_square:
+            return False
         m = self.clone()
         m.simplify()
         return (m == m.transpose())
@@ -1287,6 +1289,8 @@ class Matrix(object):
 
         See also: .is_lower(), is_upper() .is_diagonalizable()
         """
+        if not self.is_square:
+            return False
         for i in range(self.cols):
             for j in range(self.rows):
                 if i <> j and self[i, j] != 0:
@@ -1753,6 +1757,8 @@ class Matrix(object):
 
         See also: .is_diagonalizable(), .is_diagonal()
         """
+        if not self.is_square:
+            raise NonSquareMatrixException()
         if not self.is_diagonalizable(reals_only, False):
             self._diagonalize_clear_subproducts()
             raise MatrixError("Matrix is not diagonalizable")
@@ -1806,7 +1812,7 @@ class Matrix(object):
 
         """
         if not self.is_square:
-            raise NonSquareMatrixException()
+            return False
         res = False
         self._is_symbolic = self.is_symbolic()
         self._is_symmetric = self.is_symmetric()
@@ -1905,6 +1911,8 @@ class Matrix(object):
 
         See also: jordan_form()
         """
+        if not self.is_square:
+            raise NonSquareMatrixException()
         _eigenvects = self.eigenvects()
         Jcells = []
         for eigenval, multiplicity, vects in _eigenvects:

@@ -1241,7 +1241,8 @@ def test_diagonal_symmetrical():
 def test_diagonalization():
     x, y, z = symbols('x','y','z')
     m = Matrix(3,2,[-3, 1, -3, 20, 3, 10])
-    raises(NonSquareMatrixException, 'm.is_diagonalizable()')
+    assert not m.is_diagonalizable()
+    assert not m.is_symmetric()
     raises(NonSquareMatrixException, 'm.diagonalize()')
 
     # diagonalizable
@@ -1313,6 +1314,10 @@ def test_diagonalization():
     assert m.is_diagonalizable()
 
 def test_jordan_form():
+
+    m = Matrix(3,2,[-3, 1, -3, 20, 3, 10])
+    raises(NonSquareMatrixException, 'm.jordan_form()')
+
     # diagonalizable
     m = Matrix(3, 3, [7, -12, 6, 10, -19, 10, 12, -24, 13])
     Jmust = Matrix(3, 3, [1, 0, 0, 0, 1, 0, 0, 0, -1])
