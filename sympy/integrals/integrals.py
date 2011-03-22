@@ -792,7 +792,7 @@ def integrate(*args, **kwargs):
     """
     integral = Integral(*args, **kwargs)
     if isinstance(integral, Integral):
-        if kwargs.get('arbitrary_function', false):
+        if kwargs.get('arbitrary_function', False):
             s = integral.free_symbols - set([args[1]])
             if len(s)==0:
                 c = Symbol('constant') 
