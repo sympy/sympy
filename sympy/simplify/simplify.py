@@ -15,6 +15,8 @@ from sympy.simplify.cse_main import cse
 from sympy.polys import Poly, cancel, factor
 
 import sympy.mpmath as mpmath
+import collections
+import operator
 
 def fraction(expr, exact=False):
     """Returns a pair with expression's numerator and denominator.
@@ -806,6 +808,142 @@ def _separatevars_dict(expr, *symbols):
 
     return ret
 
+
+def _fraction_parts(expr1, expr2):
+    """
+    Takes two arguments as a denominators of two fractions:
+      a / expr1  and  b / expr2.
+    This function returns tuple of three elements:
+    First element is an optimal common denominator for summ of
+    this fractions. This is something like least common multiplier
+    for two numbers, but for symbolic expressions.
+    Second and third elements of resulting tuple are multipliers,
+    that must be multiplied on nominators of fractions (a and b).
+
+    Example:
+    =======
+    >>> from sympy.abc import x, y, z
+    >>> from sympy import simplify
+    >>> from sympy.simplify.simplify import _fraction_parts
+    >>> args = (  (x + y)**2 * x * z**2,   (x + y)**3 * z * y  )
+    >>> a = _fraction_parts(*args)
+    >>> print a
+    (x*y*z**2*(x + y)**3, x*z, y*(x + y))
+    >>> simplify(1/args[0] + 1/args[1]) == simplify((a[1] + a[2]) / a[0])
+    True
+    >>> print _fraction_parts(x, y)
+    (x*y, x, y)
+    """
+    expr1 = sympify(expr1)
+    expr2 = sympify(expr2)
+
+    def extract(a):
+        if a.is_Mul:
+            return reduce(list.__add__, map(extract, a.args), [])
+        elif a.is_Pow:
+            return extract(a.args[0]) * int(a.args[1])
+        else:
+            return [a]
+
+    expr1_list = extract(expr1)
+    expr2_list = extract(expr2)
+
+    common_counter = collections.Counter(expr1_list)
+    for key, value in collections.Counter(expr2_list).iteritems():
+        if common_counter[key] < value:
+            common_counter[key] = value
+    common = reduce(
+            list.__add__,
+            ([k] * v for k, v in common_counter.iteritems()),
+            [])
+
+    res1, res2 = [], []
+    for test_expr in common:
+        if test_expr not in expr1_list:
+            res1.append(test_expr)
+        else:
+            expr1_list.remove(test_expr)
+        if test_expr not in expr2_list:
+            res2.append(test_expr)
+        else:
+            expr2_list.remove(test_expr)
+
+    res2 += expr1_list
+    res1 += expr2_list
+
+    return tuple(reduce(operator.mul, x, S.One)
+                 for x in (common, res2, res1))
+
+def _is_divisible(dividend, divisor):
+    """
+    Checks if dividend divides by divisor without rest.
+    Like (x % y == 0) for symbolic expressions.
+    Returns divided / divisor if rest is empty, otherwise None.
+
+    Example:
+    ========
+    >>> from sympy.abc import x, y, z
+    >>> from sympy.simplify.simplify import _is_divisible
+    >>> print _is_divisible(x + y, x)
+    None
+    >>> print _is_divisible(x * y, x)
+    y
+    >>> print _is_divisible((x + y)**2 * x * y, x + y)
+    x*y*(x + y)
+    >>> print _is_divisible((x + y)**2 * x * y + 1, x + y)
+    None
+    >>> print _is_divisible((x + y) * (x + z) * y * z, (x + z) * z)
+    y*(x + y)
+    >>> print _is_divisible((x + y) * (x + z)**3 * y * z, (x + z) * z)
+    y*(x + z)**2*(x + y)
+    >>> print _is_divisible((x + y) * (x + z)**3 * y, (x + z) * z)
+    None
+    """
+    if divisor == C.One:
+        return dividend
+    elif divisor.is_Mul:
+        while divisor.is_Mul:
+            current, divisor = divisor.as_two_terms()
+            dividend = _is_divisible(dividend, current)
+            if dividend is None:
+                return None
+        return _is_divisible(dividend, divisor)
+    elif divisor.is_Pow:
+        divisor, power = divisor.args
+        for i in xrange(power):
+            dividend = _is_divisible(dividend, divisor)
+            if dividend is None:
+                return None
+        return dividend
+
+    if dividend.is_Mul:
+        args, found_any = [], False
+        for a in dividend.args:
+            if not found_any:
+                if a == divisor:
+                    res = S.One
+                else:
+                    res = _is_divisible(a, divisor)
+                if res is not None:
+                    found_any = True
+                    args.append(res)
+                else:
+                    args.append(a)
+            else:
+                args.append(a)
+        if found_any:
+            return reduce(operator.mul, args, S.One)
+    elif dividend.is_Pow:
+        if dividend.args[0] == divisor:
+            power = dividend.args[1] - 1
+            if power == 0:
+                return 1
+            elif power > 0:
+                return dividend.args[0]**power
+
+    return None
+
+
 def ratsimp(expr):
     """
     == Usage ==
@@ -851,8 +989,9 @@ def ratsimp(expr):
     a,b = get_num_denum(ratsimp(x))
     c,d = get_num_denum(ratsimp(y))
 
-    num = a*d+b*c
-    denum = b*d
+    denum, b, d = _fraction_parts(b, d)
+
+    num = a*d + b*c
 
     # Check to see if the numerator actually expands to 0
     if num.expand() == 0:
