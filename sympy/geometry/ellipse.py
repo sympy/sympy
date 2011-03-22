@@ -1,6 +1,7 @@
 from sympy.core import S, C, sympify, symbol, numbers
 from sympy.simplify import simplify, trigsimp
 from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.complexes import im
 from sympy.geometry.exceptions import GeometryError
 from sympy.solvers import solve_poly_system
 from entity import GeometryEntity
@@ -286,8 +287,7 @@ class Ellipse(GeometryEntity):
 
     def _do_ellipse_intersection(self, o):
         """
-        Find the intersection of two ellipses. This method executes only
-        if hradius != vradius, otherwise look to Circle.intersection.
+        Find the intersection of two ellipses.
         """
         x, y = symbol.symbols('x y')
         result = solve_poly_system(
@@ -295,15 +295,14 @@ class Ellipse(GeometryEntity):
                     self.equation(x=x, y=y),
                     o.equation(x=x, y=y)
                 ], x, y)
-        return [Point(*r) for r in result if not(numbers.I in r[0].atoms() or
-                                                 numbers.I in r[1].atoms())]
+        return [Point(*r) for r in result if im(r[0]).is_zero and im(r[1]).is_zero]
 
 
     def intersection(self, o):
         """
         Find points than both lie on current ellipse and object 'o'.
         Currently supported intersections between Ellipse and:
-        Point, Line and derived, Ellipse and Circle.
+        Point, Line (including Segment and Ray), Ellipse and Circle.
 
         Example:
         ========
@@ -345,6 +344,8 @@ class Ellipse(GeometryEntity):
                     if result[ind] not in o:
                         del result[ind]
             return result
+        elif isinstance(o, Circle):
+            return o.intersection(self)
         elif isinstance(o, Ellipse):
             if o == self:
                 return self
