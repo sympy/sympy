@@ -695,13 +695,17 @@ class Basic(AssumeMeths):
 
         >>> from sympy import pi
         >>> from sympy.abc import x, y
-        >>> (1+x*y).subs(x, pi)
+        >>> (1 + x*y).subs(x, pi)
         1 + pi*y
-        >>> (1+x*y).subs({x:pi, y:2})
+        >>> (1 + x*y).subs({x:pi, y:2})
         1 + 2*pi
-        >>> (1+x*y).subs([(x,pi), (y,2)])
+        >>> (1 + x*y).subs([(x,pi), (y,2)])
         1 + 2*pi
 
+        >>> (x + y).subs([(y,x**2), (x,2)])
+        6
+        >>> (x + y).subs([(x,2), (y,x**2)])
+        2 + x**2
         """
         if len(args) == 1:
             sequence = args[0]
