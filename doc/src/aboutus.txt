@@ -108,6 +108,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Gary Kerr: Fix examples
 #. Sherjil Ozair: Fixes to SMatrix
 #. Oleksandr Gituliar: Fixes to Matrix
+#. Sean Vig: Quantum improvement
 
 
 Up-to-date list in the order of the first contribution is given in the `AUTHORS
