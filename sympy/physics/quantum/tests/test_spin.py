@@ -14,3 +14,8 @@ def test_jplus():
     assert qapply(Jplus*JzKet(1,1)) == 0
     assert Jplus.matrix_element(1,1,1,1) == 0
     assert Jplus.rewrite('xyz') == Jx + I*Jy
+
+def test_j2():
+    assert Commutator(J2, Jz).doit() == 0
+    assert qapply(J2*JzKet(1,1)) == 2*hbar**2*JzKet(1,1)
+    assert J2.matrix_element(1,1,1,1) == 2*hbar**2
