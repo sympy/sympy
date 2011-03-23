@@ -6,9 +6,6 @@
    hypergeometric terms, or combinations of hypergeometric term which
    are pairwise dissimilar.
 
-   Main function on this module is rsolve(), which is not implemented
-   yet, see issue #1271 for more info on this.
-
    rsolve_X functions were meant as a low level interface for rsolve()
    which would use Mathematica's syntax.
 
