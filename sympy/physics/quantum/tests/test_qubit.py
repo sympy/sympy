@@ -2,7 +2,7 @@ from sympy.physics.quantum.qubit import *
 from sympy.physics.quantum.gate import *
 from sympy.physics.quantum.qft import *
 from sympy.physics.quantum.represent import *
-from sympy.physics.quantum.applyops import *
+from sympy.physics.quantum.qapply import *
 from sympy import symbols, Rational
 from sympy.core.numbers import *
 from sympy.functions.elementary import *
@@ -45,7 +45,7 @@ def test_IntQubit():
     assert IntQubitBra(3).dual_class == IntQubit
 
 def test_superposition_of_states():
-    assert apply_operators(CNOT(0,1)*HadamardGate(0)*(1/sqrt(2)*Qubit('01') + 1/sqrt(2)*Qubit('10'))).expand() == (Qubit('01')/2 + Qubit('00')/2 - Qubit('11')/2 +\
+    assert qapply(CNOT(0,1)*HadamardGate(0)*(1/sqrt(2)*Qubit('01') + 1/sqrt(2)*Qubit('10'))).expand() == (Qubit('01')/2 + Qubit('00')/2 - Qubit('11')/2 +\
      Qubit('10')/2)
 
     assert matrix_to_qubit(represent(CNOT(0,1)*HadamardGate(0)\
@@ -68,7 +68,7 @@ def test_apply_represent_equality():
 
 
     mat = represent(circuit, nqubits=6)
-    states = apply_operators(circuit)
+    states = qapply(circuit)
     state_rep = matrix_to_qubit(mat)
     states = states.expand()
     state_rep = state_rep.expand()

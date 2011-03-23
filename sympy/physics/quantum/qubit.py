@@ -444,12 +444,12 @@ def measure_all(qubit, format='sympy'):
 
         >>> from sympy.physics.quantum.qubit import Qubit, measure_all
         >>> from sympy.physics.quantum.gate import H, X, Y, Z
-        >>> from sympy.physics.quantum.applyops import apply_operators
+        >>> from sympy.physics.quantum.qapply import qapply
 
         >>> c = H(0)*H(1)*Qubit('00')
         >>> c
         H(0)*H(1)*|00>
-        >>> q = apply_operators(c)
+        >>> q = qapply(c)
         >>> measure_all(q)
         [(|00>, 1/4), (|01>, 1/4), (|10>, 1/4), (|11>, 1/4)]
     """
@@ -497,12 +497,12 @@ def measure_partial(qubit, bits, format='sympy'):
 
         >>> from sympy.physics.quantum.qubit import Qubit, measure_partial
         >>> from sympy.physics.quantum.gate import H, X, Y, Z
-        >>> from sympy.physics.quantum.applyops import apply_operators
+        >>> from sympy.physics.quantum.qapply import qapply
 
         >>> c = H(0)*H(1)*Qubit('00')
         >>> c
         H(0)*H(1)*|00>
-        >>> q = apply_operators(c)
+        >>> q = qapply(c)
         >>> measure_partial(q, (0,))
         [(2**(1/2)*|00>/2 + 2**(1/2)*|10>/2, 1/2), (2**(1/2)*|01>/2 + 2**(1/2)*|11>/2, 1/2)]
     """

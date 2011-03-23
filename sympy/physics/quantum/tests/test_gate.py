@@ -5,7 +5,7 @@ from sympy.physics.quantum.gate import *
 from sympy.physics.quantum.commutator import Commutator
 from sympy.physics.quantum.anticommutator import AntiCommutator
 from sympy.physics.quantum.represent import represent
-from sympy.physics.quantum.applyops import apply_operators
+from sympy.physics.quantum.qapply import qapply
 from sympy.physics.quantum.qubit import Qubit, IntQubit, qubit_to_matrix,\
      matrix_to_qubit
 from sympy.physics.quantum.matrixutils import matrix_to_zero
@@ -26,15 +26,15 @@ def test_ugate():
     # Test basic case where gate exists in 1-qubit space
     u1 = UGate((0,), uMat)
     assert represent(u1, nqubits = 1) == uMat
-    assert apply_operators(u1*Qubit('0')) == a*Qubit('0') + c*Qubit('1')
-    assert apply_operators(u1*Qubit('1')) == b*Qubit('0') + d*Qubit('1')
+    assert qapply(u1*Qubit('0')) == a*Qubit('0') + c*Qubit('1')
+    assert qapply(u1*Qubit('1')) == b*Qubit('0') + d*Qubit('1')
 
     # Test case where gate exists in a larger space
     u2 = UGate((1,), uMat)
     u2Rep = represent(u2, nqubits=2)
     for i in range(4):
         assert u2Rep*qubit_to_matrix(IntQubit(i,2)) ==\
-            qubit_to_matrix(apply_operators(u2*IntQubit(i,2)))
+            qubit_to_matrix(qapply(u2*IntQubit(i,2)))
 
 
 def test_cgate():
@@ -51,9 +51,9 @@ def test_cgate():
     [0,0,0,0,0,0,1,0]])
 
     ToffoliGate = CGate((3,0), XGate(1))
-    assert apply_operators(ToffoliGate*Qubit('1001')) == \
+    assert qapply(ToffoliGate*Qubit('1001')) == \
     matrix_to_qubit(represent(ToffoliGate*Qubit('1001'), nqubits=4))
-    assert apply_operators(ToffoliGate*Qubit('0000')) == \
+    assert qapply(ToffoliGate*Qubit('0000')) == \
     matrix_to_qubit(represent(ToffoliGate*Qubit('0000'), nqubits=4))
 
     CYGate = CGate(1, YGate(0))
@@ -63,14 +63,14 @@ def test_cgate():
 
     CZGate = CGate(0, ZGate(1))
     CZGate_matrix = Matrix(((1,0,0,0),(0,1,0,0),(0,0,1,0),(0,0,0,-1)))
-    assert apply_operators(CZGate*Qubit('11')) == -Qubit('11')
+    assert qapply(CZGate*Qubit('11')) == -Qubit('11')
     assert matrix_to_qubit(represent(CZGate*Qubit('11'),nqubits=2)) ==\
         -Qubit('11')
     # Test 2 qubit controlled-Z gate decompose method.
     assert represent(CZGate.decompose(), nqubits=2) == CZGate_matrix
 
     CPhaseGate = CGate(0, PhaseGate(1))
-    assert apply_operators(CPhaseGate*Qubit('11')) ==\
+    assert qapply(CPhaseGate*Qubit('11')) ==\
         I*Qubit('11')
     assert matrix_to_qubit(represent(CPhaseGate*Qubit('11'), nqubits=2)) == \
         I*Qubit('11')
@@ -86,17 +86,17 @@ def test_ugate_cgate_combo():
     u1 = UGate((0,), uMat)
     cu1 = CGate(1, u1)
     assert represent(cu1, nqubits = 2) == cMat
-    assert apply_operators(cu1*Qubit('10')) == a*Qubit('10') + c*Qubit('11')
-    assert apply_operators(cu1*Qubit('11')) == b*Qubit('10') + d*Qubit('11')
-    assert apply_operators(cu1*Qubit('01')) == Qubit('01')
-    assert apply_operators(cu1*Qubit('00')) == Qubit('00')
+    assert qapply(cu1*Qubit('10')) == a*Qubit('10') + c*Qubit('11')
+    assert qapply(cu1*Qubit('11')) == b*Qubit('10') + d*Qubit('11')
+    assert qapply(cu1*Qubit('01')) == Qubit('01')
+    assert qapply(cu1*Qubit('00')) == Qubit('00')
 
     # Test case where gate exists in a larger space.
     u2 = UGate((1,), uMat)
     u2Rep = represent(u2, nqubits=2)
     for i in range(4):
         assert u2Rep*qubit_to_matrix(IntQubit(i,2)) ==\
-            qubit_to_matrix(apply_operators(u2*IntQubit(i,2)))
+            qubit_to_matrix(qapply(u2*IntQubit(i,2)))
 
 
 def test_represent_hadamard():
@@ -156,7 +156,7 @@ def test_cnot_gate():
         Matrix([[1,0,0,0],[0,1,0,0],[0,0,0,1],[0,0,1,0]])
     circuit = circuit*Qubit('111')
     assert matrix_to_qubit(represent(circuit, nqubits=3)) ==\
-        apply_operators(circuit)
+        qapply(circuit)
 
 
 def test_gate_sort():
@@ -205,7 +205,7 @@ def test_swap_gate():
     """Test the SWAP gate."""
     swap_gate_matrix = Matrix(((1,0,0,0),(0,0,1,0),(0,1,0,0),(0,0,0,1)))
     assert represent(SwapGate(1,0).decompose(), nqubits=2) == swap_gate_matrix
-    assert apply_operators(SwapGate(1,3)*Qubit('0010')) == Qubit('1000')
+    assert qapply(SwapGate(1,3)*Qubit('0010')) == Qubit('1000')
     nqubits = 4
     for i in range(nqubits):
         for j in range(i):
