@@ -24,7 +24,7 @@ def test_curve():
 
     assert C.parameter == z
     assert C.functions == [2*t, t**2]
-
+    assert C.arbitrary_point() == Point(2*t, t**2)
 
 def test_point():
     p1 = Point(x1, x2)
@@ -165,6 +165,7 @@ def test_line():
     assert s1.midpoint == Point(Rational(1,2), Rational(1,2))
     assert s2.length == sqrt( 2*(x1**2) )
     assert s1.perpendicular_bisector() == Line(Point(0, 1), Point(1, 0))
+    assert Segment((1, 1), (2, 3)).arbitrary_point() == Point(1 + t, 1 + 2*t)
 
     # Testing distance from a Segment to an object
     s1 = Segment(Point(0, 0), Point(1, 1))

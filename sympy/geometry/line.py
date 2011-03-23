@@ -759,7 +759,7 @@ class Line(LinearEntity):
         return LinearEntity.__new__(cls, p1, p2, **kwargs)
 
     def arbitrary_point(self, parameter_name='t'):
-        """A parametrised point on the Line.
+        """A parameterized point on the Line.
 
         Parameters
         ----------
@@ -989,6 +989,95 @@ class Ray(LinearEntity):
         else:
             return S.NegativeInfinity
 
+    def arbitrary_point(self, parameter_name='t'):
+        """A parameterized point on the Ray.
+
+        >>> from sympy import Ray, Point, Segment, S, simplify, solve
+        >>> from sympy.abc import t
+        >>> r = Ray(Point(0, 0), Point(2, 3))
+
+        >>> p = r.arbitrary_point(t)
+
+        The parameter `t` used in the arbitrary point maps 0 to the
+        origin of the ray and 1 to the end of the ray at infinity
+        (which will show up as NaN).
+
+        >>> p.subs(t, 0), p.subs(t, 1)
+        (Point(0, 0), Point(oo, oo))
+
+        The unit that `t` moves you is based on the spacing of the
+        points used to define the ray.
+
+        >>> p.subs(t, 1/(S(1) + 1)) # one unit
+        Point(2, 3)
+        >>> p.subs(t, 2/(S(1) + 2)) # two units out
+        Point(4, 6)
+        >>> p.subs(t, S.Half/(S(1) + S.Half)) # half a unit out
+        Point(1, 3/2)
+
+        If you want to be located a distance of 1 from the origin of the
+        ray, what value of `t` is needed?
+
+        a) find the unit length and pick t accordingly
+        >>> u = Segment(r[0], p.subs(t, S.Half)).length # S.Half = 1/(1 + 1)
+        >>> want = 1
+        >>> t_need = want/u
+        >>> p_want = p.subs(t, t_need/(1 + t_need))
+        >>> simplify(Segment(r[0], p_want).length)
+        1
+
+        b) find the t that makes the length from origin to p equal to 1
+        >>> l = Segment(r[0], p).length
+        >>> t_need = solve(l**2 - want**2, t) # use the square to remove abs() if it is there
+        >>> t_need = [w for w in t_need if w.n() > 0][0] # take positive t
+        >>> p_want = p.subs(t, t_need)
+        >>> simplify(Segment(r[0], p_want).length)
+        1
+
+        """
+        if isinstance(parameter_name, C.Symbol):
+            t = parameter_name
+        else:
+            # note: since assumptions identify symbols, the
+            # t below is not the same as Symbol(parameter_name)
+            # so replacements of t by the user will only happen
+            # if the t they define has the real=True assumption, too.
+            # XXX other methods should use this, too.
+            t = C.Symbol(parameter_name, real=True)
+        m = self.slope
+        x = simplify(self.p1[0] + t/(1 - t)*(self.p2[0] - self.p1[0]))
+        y = simplify(self.p1[1] + t/(1 - t)*(self.p2[1] - self.p1[1]))
+        return Point(x, y)
+
+    def plot_interval(self, parameter_name='t'):
+        """The plot interval for the default geometric plot of the Ray.
+
+        Parameters
+        ----------
+        parameter_name : str, optional
+            Default value is 't'.
+
+        Returns
+        -------
+        plot_interval : list
+            [parameter, lower_bound, upper_bound]
+
+        Examples
+        --------
+        >>> from sympy import Point, Ray, pi
+        >>> r = Ray((0, 0), pi/4)
+        >>> r.plot_interval()
+        [t, 0, 5*2**(1/2)/(1 + 5*2**(1/2))]
+
+        """
+        t = C.Symbol(parameter_name, real=True)
+        p = self.arbitrary_point(t)
+        # get a t corresponding to length of 10
+        want = 10
+        u = Segment(self[0], p.subs(t, S.Half)).length # gives unit length
+        t_need = want/u
+        return [t, 0, t_need/(1 + t_need)]
+
     def __eq__(self, other):
         """Is the other GeometryEntity equal to this Ray?"""
         if not isinstance(other, Ray):
@@ -1088,7 +1177,7 @@ class Segment(LinearEntity):
         return LinearEntity.__new__(cls, p1, p2, **kwargs)
 
     def arbitrary_point(self, parameter_name='t'):
-        """A parametrised point on the Segment.
+        """A parameterized point on the Segment.
 
         Parameters
         ----------
