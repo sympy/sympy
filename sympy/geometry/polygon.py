@@ -1,4 +1,6 @@
-from sympy.core import Basic, S, C, sympify, oo, pi
+from sympy.core import Basic, S, C, sympify, oo, pi, Symbol
+from sympy.functions.elementary.piecewise import Piecewise
+from sympy.functions.elementary.trigonometric import cos, sin
 from sympy.simplify import simplify
 from sympy.geometry.exceptions import GeometryError
 from sympy.solvers import solve
@@ -433,6 +435,76 @@ class Polygon(GeometryEntity):
                             hit_odd = not hit_odd
             p1x, p1y = p2x, p2y
         return hit_odd
+
+    def arbitrary_point(self, parameter_name='t'):
+        """A parametric point on the polygon.
+
+        The parameter, varying from 0 to 1, assigns points to the position on
+        the perimeter that is that fraction of the total perimeter. So the
+        point evaluated at t=1/2 would return the point from the first vertex
+        that is 1/2 way around the polygon.
+
+        Parameters
+        ----------
+        parameter_name : str, optional
+            Default value is 't'.
+
+        Returns
+        -------
+        arbitrary_point : Point
+
+        See Also
+        --------
+        Point
+
+        Examples
+        --------
+        >>> from sympy import Polygon, S
+        >>> from sympy.abc import t
+        >>> tri = Polygon((0, 0), (1, 0), (1, 1))
+        >>> p = tri.arbitrary_point('t')
+        >>> perimeter = tri.perimeter
+        >>> s1, s2 = [s.length for s in tri.sides[:2]]
+        >>> p.subs(t, (s1 + s2/2)/perimeter)
+        Point(1, 1/2)
+
+        """
+        sides = []
+        t = Symbol(parameter_name, real=True)
+        perimeter = self.perimeter
+        perim_fraction_start = 0
+        for s in self.sides:
+            side_perim_fraction = s.length/perimeter
+            perim_fraction_end = perim_fraction_start + side_perim_fraction
+            pt  = s.arbitrary_point(parameter_name).subs(
+                  t, (t - perim_fraction_start)/side_perim_fraction)
+            sides.append((pt, (perim_fraction_start <= t < perim_fraction_end)))
+            perim_fraction_start = perim_fraction_end
+        return Piecewise(*sides)
+
+    def plot_interval(self, parameter_name='t'):
+        """The plot interval for the default geometric plot of the polygon.
+
+        Parameters
+        ----------
+        parameter_name : str, optional
+            Default value is 't'.
+
+        Returns
+        -------
+        plot_interval : list (plot interval)
+            [parameter, lower_bound, upper_bound]
+
+        Examples
+        --------
+        >>> from sympy import Polygon
+        >>> p = Polygon((0, 0), (1, 0), (1, 1))
+        >>> p.plot_interval()
+        [t, 0, 1]
+
+        """
+        t = Symbol(parameter_name, real=True)
+        return [t, 0, 1]
 
     def intersection(self, o):
         """The intersection of two polygons.
@@ -894,7 +966,7 @@ class RegularPolygon(Polygon):
         r*2**(1/2)/2
 
         """
-        return self.radius * C.cos(S.Pi/self._n)
+        return self.radius * cos(S.Pi/self._n)
 
     @property
     def interior_angle(self):
@@ -1060,7 +1132,7 @@ class RegularPolygon(Polygon):
         r = self._radius
         rot = self._rot
         v = 2*S.Pi/self._n
-        return Point(c[0] + r*C.cos(k*v + rot), c[1] + r*C.sin(k*v + rot))
+        return Point(c[0] + r*cos(k*v + rot), c[1] + r*sin(k*v + rot))
 
     def __iter__(self):
         for i in [self._center, self._radius, self._n, self._rot]:

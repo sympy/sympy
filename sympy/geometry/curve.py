@@ -6,8 +6,9 @@ Curve
 
 """
 
-from sympy.core import sympify
+from sympy.core import sympify, C
 from sympy.geometry.exceptions import GeometryError
+from sympy.geometry.point import Point
 from entity import GeometryEntity
 
 class Curve(GeometryEntity):
@@ -77,6 +78,69 @@ class Curve(GeometryEntity):
 
         """
         return self.__getitem__(0)
+
+    def arbitrary_point(self, parameter_name='t'):
+        """
+        A parameterized point on the curve.
+
+        Parameters
+        ----------
+        parameter_name : str, optional
+            Default value is 't'.
+
+        Returns
+        -------
+        arbitrary_point : Point
+
+        See Also
+        --------
+        Point
+
+        Examples
+        --------
+        >>> from sympy.abc import s
+        >>> from sympy.geometry import Curve
+        >>> C = Curve([s, s**2], (s, 0, 2))
+        >>> C.arbitrary_point()
+        Point(2*t, 4*t**2)
+        >>> C.arbitrary_point('s')
+        Point(2*s, 4*s**2)
+
+        """
+        if isinstance(parameter_name, C.Symbol):
+            tnew = parameter_name
+        elif parameter_name != self.parameter.name:
+            tnew = C.Symbol(parameter_name, real=True)
+        else:
+            tnew = self.parameter
+        t = self.parameter
+        start, finish = self.limits[1:]
+        tnew *= finish - start
+        return Point(*[w.subs(t, tnew) for w in  self.functions])
+
+    def plot_interval(self, parameter_name='t'):
+        """The plot interval for the default geometric plot of the curve.
+
+        Parameters
+        ----------
+        parameter_name : str, optional
+            Default value is 't'.
+
+        Returns
+        -------
+        plot_interval : list (plot interval)
+            [parameter, lower_bound, upper_bound]
+
+        Examples
+        --------
+        >>> from sympy import Curve, sin
+        >>> from sympy.abc import x
+        >>> Curve((x, sin(x)), (x, 1, 2)).plot_interval()
+        [t, 1, 2]
+
+        """
+        t = C.Symbol(parameter_name, real=True)
+        return [t] + list(self.limits[1:])
 
     @property
     def parameter(self):
