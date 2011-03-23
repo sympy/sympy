@@ -1,5 +1,5 @@
 from sympy import (symbols, Matrix, SparseMatrix, eye, I, Symbol, Rational, wronskian, cos,
-    sin, exp, hessian, sqrt, zeros, ones, randMatrix, Poly, S, pi, E,
+    sin, exp, hessian, sqrt, zeros, ones, randMatrix, Poly, S, pi, E, I,
     oo, trigsimp, Integer, block_diag, N, zeros)
 from sympy.matrices.matrices import (ShapeError, MatrixError,
     matrix_multiply_elementwise, diag,
@@ -1524,7 +1524,6 @@ def test_errors():
     raises(ShapeError, "Matrix([1, 2, 3]).dot(Matrix([1, 2]))")
     raises(NotImplementedError, "Matrix([[0,1,2],[0,0,-1], [0,0,0]]).exp()")
     raises(NonSquareMatrixError, "Matrix([1, 2, 3]).exp()")
-    raises(ShapeError, "Matrix([[1, 2], [3, 4]]).norm()")
     raises(ShapeError, "Matrix([[1, 2], [3, 4]]).normalized()")
     raises(NonSquareMatrixError, "Matrix([1, 2]).inverse_GE()")
     raises(ValueError, "Matrix([[1, 2], [1, 2]]).inverse_GE()")
@@ -1630,3 +1629,28 @@ def test_LDLsolve():
     soln = A.LDLsolve(b)
     assert soln == x
 
+def test_matrix_norm():
+    #test columns and symbols
+    x = Symbol('x', real=True)
+    v = Matrix([cos(x), sin(x)])
+    assert trigsimp(v.norm(2)) == 1
+
+    #matrix tests
+    A = Matrix([[1,1], [1,1]])
+    assert A.norm(2)==2
+    assert A.norm(-2)==0
+    assert A.norm('frobenius')==2
+    assert eye(10).norm(2)==eye(10).norm(-2)==1
+
+    y = Matrix([['5', '3/2']]) #checking it works for rows
+    assert (y.norm() - (25 + 9./4.)**.5) < 1e-9
+
+def test_singular_values():
+    A = Matrix([[0,1*I],[2,0]])
+    assert A.singular_values() == [2,1]
+    A = eye(3);
+    x = Symbol('x', real=True)
+    A[1,1] = x
+    A[2,2] = 5
+    vals = A.singular_values();
+    assert 1 in vals and 5 in vals and abs(x) in vals
