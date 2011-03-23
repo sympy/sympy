@@ -14,3 +14,6 @@ def test_jplus():
     assert apply_operators(Jplus*JzKet(1,1)) == 0
     assert Jplus.matrix_element(1,1,1,1) == 0
     assert Jplus.rewrite('xyz') == Jx + I*Jy
+
+def test_rotation():
+    assert Rotation.d(1,1,1,0) == 1
