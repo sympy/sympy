@@ -1,5 +1,5 @@
 from sympy.core import (Basic, Expr, S, C, Symbol, Wild, Add, sympify, diff,
-                        oo, Tuple, Dummy, Function)
+                        oo, Tuple, Dummy, Function, Mul, Pow)
 
 from sympy.core.symbol import Dummy
 from sympy.integrals.trigonometry import trigintegrate
@@ -29,12 +29,20 @@ class Integral(Expr):
             if function is S.NaN:
                 return S.NaN
 
-        if symbols:
+        if symbols:                    
             limits = []
+            k=-1 # variable used to update *symbols if itegrator is function and not a Symbol
             for V in symbols:
+                k += 1
                 if isinstance(V, Symbol):
                     limits.append(Tuple(V))
                     continue
+                elif isinstance(V, Function) | isinstance(V, Mul) | isinstance(V, Pow):
+                # Only integrator is given and not the limit
+                        x = tuple(V.free_symbols)
+                        if len(x) == 1:
+                            symbols = (x,)
+                            return integrate(function * V.diff(*x), *symbols, **assumptions)
                 elif isinstance(V, (tuple, list, Tuple)):
                     V = sympify(flatten(V))
                     if V[0].is_Symbol:
@@ -57,6 +65,16 @@ class Integral(Expr):
                         elif len(V) == 2:
                             limits.append(Tuple(newsymbol, V[1]))
                             continue
+                    else:
+                        if isinstance(V[0], Function) | isinstance(V[0], Mul) | isinstance(V[0], Pow):
+                            temp_function = V[0]
+                            x = temp_function.free_symbols
+                            if len(x) == 1:
+                                temp_V = list(V)
+                                temp_V = list(x) + temp_V[1:]
+                                V = tuple(temp_V)
+                                symbols = symbols[:k] + (V,) + symbols[k+1:]
+                                return integrate(function * temp_function.diff(*x), *symbols, **assumptions)
 
 
                 raise ValueError("Invalid integration variable or limits: %s" % str(symbols))
