@@ -134,8 +134,14 @@ class Number(AtomicExpr):
             return Integer(obj)
         if isinstance(obj, tuple) and len(obj) == 2:
             return Rational(*obj)
-        if isinstance(obj, (str, float, mpmath.mpf, decimal.Decimal)):
+        if isinstance(obj, (float, mpmath.mpf, decimal.Decimal)):
             return Real(obj)
+        if isinstance(obj, str):
+            val = sympify(obj)
+            if isinstance(val, Number):
+                return val
+            else:
+                raise ValueError('String "%s" does not denote a Number'%obj)
         if isinstance(obj, Number):
             return obj
         raise TypeError("expected str|int|long|float|Decimal|Number object but got %r" % (obj))
