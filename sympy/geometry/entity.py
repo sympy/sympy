@@ -142,6 +142,14 @@ class GeometryEntity(tuple):
                     del ret[ind]
         return tuple(ret)
 
+    def subs(self, old, new):
+        if hasattr(self, '_eval_subs_'):
+            return self.subs(old, new)
+        elif isinstance(self, GeometryEntity):
+            return type(self)(*[a.subs(old, new) for a in self])
+        else:
+            return self
+
     def __ne__(self, o):
         """Test inequality of two geometrical entities."""
         return not self.__eq__(o)

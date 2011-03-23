@@ -713,7 +713,7 @@ class RegularPolygon(Polygon):
     """
 
     def __new__(self, c, r, n, **kwargs):
-        r = sympify(r)
+        r, n = [sympify(w) for w in [r, n]]
         if not isinstance(c, Point):
             raise GeometryError("RegularPolygon.__new__ requires c to be a Point instance")
         if not isinstance(r, Basic):

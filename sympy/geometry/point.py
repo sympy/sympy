@@ -69,6 +69,9 @@ class Point(GeometryEntity):
     def y(self):
         return self[1]
 
+    def _eval_subs(self, old, new):
+        return type(self)(self.x.subs(old, new), self.y.subs(old, new))
+
     def is_collinear(*points):
         """Is a sequence of points collinear?
 

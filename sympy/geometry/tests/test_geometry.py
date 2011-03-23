@@ -511,3 +511,18 @@ def test_concyclic_doctest_bug():
     p3,p4 = Point(0, 1), Point(-1, 2)
     assert Point.is_concyclic(p1, p2, p3)
     assert not Point.is_concyclic(p1, p2, p3, p4)
+
+def test_subs():
+    p = Point(x, 2)
+    q = Point(1, 1)
+    r = Point(3, 4)
+    for o in [p,
+              Segment(p, q),
+              Ray(p, q),
+              Line(p, q),
+              Triangle(p, q, r),
+              RegularPolygon(p, 3, 6),
+              Polygon(p, q, r, Point(5,4)),
+              Circle(p, 3),
+              Ellipse(p, 3, 4)]:
+        assert 'y' in str(o.subs(x, y))
