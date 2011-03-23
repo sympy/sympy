@@ -17,3 +17,9 @@ def test_jplus():
 
 def test_rotation():
     assert Rotation.d(1,1,1,0) == 1
+
+def test_j2():
+    assert Commutator(J2, Jz).doit() == 0
+    assert qapply(J2*JzKet(1,1)) == 2*hbar**2*JzKet(1,1)
+    assert J2.matrix_element(1,1,1,1) == 2*hbar**2
+
