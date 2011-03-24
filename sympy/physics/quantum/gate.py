@@ -24,7 +24,7 @@ from sympy.physics.quantum.anticommutator import AntiCommutator
 from sympy.physics.quantum.commutator import Commutator
 from sympy.physics.quantum.qexpr import QuantumError
 from sympy.physics.quantum.hilbert import ComplexSpace
-from sympy.physics.quantum.operator import UnitaryOperator, Operator
+from sympy.physics.quantum.operator import UnitaryOperator, Operator, HermitianOperator
 from sympy.physics.quantum.matrixutils import (
     matrix_tensor_product, matrix_eye
 )
@@ -608,7 +608,7 @@ class HadamardGate(OneQubitGate):
         return sqrt(2)*IdentityGate(self.targets[0])
 
 
-class XGate(OneQubitGate):
+class XGate(OneQubitGate, HermitianOperator):
     """The single qubit X, or NOT, gate.
 
     Parameters
@@ -645,7 +645,7 @@ class XGate(OneQubitGate):
 
 
 
-class YGate(OneQubitGate):
+class YGate(OneQubitGate, HermitianOperator):
     """The single qubit Y gate.
 
     Parameters
@@ -673,7 +673,7 @@ class YGate(OneQubitGate):
         return Integer(0)
 
 
-class ZGate(OneQubitGate):
+class ZGate(OneQubitGate, HermitianOperator):
     """The single qubit Z gate.
 
     Parameters
