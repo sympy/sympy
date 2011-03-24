@@ -254,3 +254,12 @@ def test_doit():
     d = Derivative(f, x)
     assert d.doit() == 12
     assert d.doit(deep = False) == d
+
+def test_evalf_default():
+    from sympy.functions.special.gamma_functions import polygamma
+    assert type(sin(4.0)) == Real
+    assert type(re(sin(I + 1.0))) == Real
+    assert type(im(sin(I + 1.0))) == Real
+    assert type(sin(4)) == sin
+    assert type(polygamma(2,4.0)) == Real
+    assert type(sin(Rational(1,4))) == sin
