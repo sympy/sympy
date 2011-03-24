@@ -334,7 +334,7 @@ class Matrix(object):
 
         Implemented mainly so bool(Matrix()) == False.
         """
-        return self.rows*self.cols
+        return self.rows * self.cols
 
     def tolist(self):
         """
@@ -1273,7 +1273,7 @@ class Matrix(object):
             if ord == 2 or ord == None: #common case sqrt(<x,x>)
                 return (self.vec().H * self.vec())[0]**S.Half
             elif ord == 1: #sum(abs(x))
-                return ones(1, self.numel) * self.applyfunc(abs).vec()
+                return ones(1, len(self)) * self.applyfunc(abs).vec()
             elif ord == S.Infinity: #max(abs(x))
                 return numerical_max(self.applyfunc(abs))
             elif ord == S.NegativeInfinity: #min(abs(x))
@@ -1307,12 +1307,6 @@ class Matrix(object):
         norm = self.norm()
         out = self.applyfunc(lambda i: i / norm)
         return out
-
-    @property
-    def numel(self):
-        """Number of Elements.
-        Calls self.rows*self.cols"""
-        return self.rows*self.cols
 
     def project(self, v):
         """Project onto v."""
