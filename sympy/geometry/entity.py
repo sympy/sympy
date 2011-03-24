@@ -150,6 +150,10 @@ class GeometryEntity(tuple):
         else:
             return self
 
+    @property
+    def args(self):
+        return tuple(self)
+
     def __ne__(self, o):
         """Test inequality of two geometrical entities."""
         return not self.__eq__(o)
