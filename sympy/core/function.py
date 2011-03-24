@@ -1010,18 +1010,16 @@ def expand_complex(expr, deep=True):
     return sympify(expr).expand(deep=deep, complex=True, basic=False,\
     log=False, mul=False, power_exp=False, power_base=False, multinomial=False)
 
-def count_ops(expr, visual=None):
+def count_ops(expr, visual=False):
     """
-    Return an integer metric (default) related to the number of operations
-    in expr. The intent of this function is to translate the sympy expression
-    into standard operators (like add, subtract, etc...).
+    Return a representation (integer or expression) of the operations in expr.
+
+    If `visual` is False (default) then the sum of the coefficients of the
+    visual expression will be returned.
 
     If `visual` is True then the number of each type of operation is shown
     with the core class types (or their virtual equivalent) multiplied by the
     number of times they occur.
-
-    If `visual` is False (default) then the sum of the coefficients of the
-    visual expression will be returned.
 
     If expr is an iterable, the sum of the op counts of the
     items will be returned.
@@ -1074,10 +1072,6 @@ def count_ops(expr, visual=None):
     from sympy.simplify.simplify import fraction
 
     expr = sympify(expr)
-    if visual is None:
-        how = None
-    else:
-        how = True
     if isinstance(expr, Expr):
 
         ops = []
@@ -1157,15 +1151,15 @@ def count_ops(expr, visual=None):
             args.extend(a.args)
 
     elif type(expr) is dict:
-        ops = [count_ops(k, how) +
-               count_ops(v, how) for k, v in expr.iteritems()]
+        ops = [count_ops(k, visual=visual) +
+               count_ops(v, visual=visual) for k, v in expr.iteritems()]
     elif hasattr(expr, '__iter__'):
-        ops = [count_ops(i, how) for i in expr]
+        ops = [count_ops(i, visual=visual) for i in expr]
     elif not isinstance(expr, Basic):
         ops = []
     else: # it's Basic not isinstance(expr, Expr):
         assert isinstance(expr, Basic)
-        ops = [count_ops(a, how) for a in expr.args]
+        ops = [count_ops(a, visual=visual) for a in expr.args]
 
     if not ops:
         if visual:
