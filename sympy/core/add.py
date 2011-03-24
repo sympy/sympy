@@ -173,10 +173,17 @@ class Add(AssocOp):
                 else:
                     l1.append(f)
             return self._new_rawargs(*l1), tuple(l2)
-        coeff = self.args[0]
-        if coeff.is_Number:
-            return coeff, self.args[1:]
+        coeff, notrat = self.args[0].as_coeff_add()
+        if not coeff is S.Zero:
+            return coeff, notrat + self.args[1:]
         return S.Zero, self.args
+
+    @cacheit
+    def as_coeff_mul(self, *deps):
+        # -2 + 2 * a -> -1, 2-2*a
+        if self.args[0].is_Rational and self.args[0].is_negative:
+            return S.NegativeOne, (-self,)
+        return Expr.as_coeff_mul(self, *deps)
 
     def _eval_derivative(self, s):
         return Add(*[f.diff(s) for f in self.args])
@@ -300,12 +307,6 @@ class Add(AssocOp):
             return True
         if c.is_nonnegative and r.is_nonnegative:
             return False
-
-    def as_coeff_mul(self, *deps):
-        # -2 + 2 * a -> -1, 2-2*a
-        if self.args[0].is_Number and self.args[0].is_negative:
-            return S.NegativeOne, (-self,)
-        return Expr.as_coeff_mul(self, *deps)
 
     def _eval_subs(self, old, new):
         if self == old:

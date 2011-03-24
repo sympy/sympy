@@ -422,9 +422,9 @@ class Mul(AssocOp):
                 else:
                     l1.append(f)
             return self._new_rawargs(*l1), tuple(l2)
-        coeff = self.args[0]
-        if coeff.is_Number:
-            return coeff, self.args[1:]
+        coeff, notrat = self.args[0].as_coeff_mul()
+        if not coeff is S.One:
+            return coeff, notrat + self.args[1:]
         return S.One, self.args
 
     @staticmethod
