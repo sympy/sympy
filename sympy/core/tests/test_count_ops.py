@@ -15,38 +15,41 @@ def test_count_ops_non_visual():
     assert count({x + y: S(2) + x}) is not S.One
 
 def test_count_ops_visual():
-    ADD, MUL, POW, SIN, COS, EXP, AND, D, G = symbols('Add Mul Pow sin cos exp And Derivative Integral')
+    ADD, MUL, POW, SIN, COS, EXP, AND, D, G = symbols('Add Mul Pow sin cos exp And Derivative Integral'.upper())
+    DIV, SUB, NEG = symbols('DIV SUB NEG')
     def count(val):
         return count_ops(val, visual=True)
 
     assert count(7) is S.Zero
     assert count(S(7)) is S.Zero
-    assert count(-1) == MUL
-    assert count(-2) == MUL
-    assert count(S(2)/3) == MUL
-    assert count(pi/3) == MUL
-    assert count(I - 1) == ADD + MUL
-    assert count(1 - I) == ADD + MUL
-    assert count(1 - 2*I) == ADD + 2*MUL
+    assert count(-1) == NEG
+    assert count(-2) == NEG
+    assert count(S(2)/3) == DIV
+    assert count(pi/3) == DIV
+    assert count(-pi/3) == DIV + NEG
+    assert count(I - 1) == SUB
+    assert count(1 - I) == SUB
+    assert count(1 - 2*I) == SUB + MUL
 
     assert count(x) is S.Zero
-    assert count(-x) == MUL
-    assert count(-2*x/3) == 3*MUL
-    assert count(1/x) == MUL
-    assert count(1/x/y) == 2*MUL
-    assert count(-1/x) == 2*MUL
-    assert count(-2/x) == 2*MUL
-    assert count(x/y) == MUL
-    assert count(-x/y) == 2*MUL
+    assert count(-x) == NEG
+    assert count(-2*x/3) == NEG + DIV + MUL
+    assert count(1/x) == DIV
+    assert count(1/(x*y)) == DIV + MUL
+    assert count(-1/x) == NEG + DIV
+    assert count(-2/x) == NEG + DIV
+    assert count(x/y) == DIV
+    assert count(-x/y) == NEG + DIV
 
     assert count(x**2) == POW
-    assert count(-x**2) == POW + MUL
-    assert count(-2*x**2) == POW + 2*MUL
+    assert count(-x**2) == POW + NEG
+    assert count(-2*x**2) == POW + MUL + NEG
 
-    assert count(x + pi/3) == ADD + MUL
-    assert count(x + S(1)/3) == ADD + MUL
+    assert count(x + pi/3) == ADD + DIV
+    assert count(x + S(1)/3) == ADD + DIV
     assert count(x + y) == ADD
-    assert count(x - y) == ADD + MUL
+    assert count(x - y) == SUB
+    assert count(y - x) == SUB
     assert count(1 + x**y) == ADD + POW
     assert count(1 + x + y) == 2*ADD
     assert count(1 + x + y + z) == 3*ADD
@@ -58,7 +61,7 @@ def test_count_ops_visual():
     assert count(2*z + y**17 + x + sin(x**2) + exp(cos(x))) == 4*ADD + MUL + 2*POW + EXP + COS + SIN
 
     assert count(Derivative(x, x)) == D
-    assert count(Integral(x, x) + 2*x/(1 + x)) == G + 2*MUL + 2*ADD
+    assert count(Integral(x, x) + 2*x/(1 + x)) == G + DIV + MUL + 2*ADD
     assert count(Basic()) is S.Zero
 
     assert count({x + 1: sin(x)}) == ADD + SIN

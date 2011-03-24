@@ -1035,11 +1035,11 @@ def count_ops(expr, visual=None):
 
     There are two Adds and a Pow:
         >>> (1 + a + b**2).count_ops(visual=True)
-        Pow + 2*Add
+        POW + 2*ADD
 
     In the following, an Add, Mul, Pow and two functions:
         >>> (sin(x)*x + sin(x)**2).count_ops(visual=True)
-        Add + Mul + Pow + 2*sin
+        ADD + MUL + POW + 2*SIN
 
     for a total of 5:
         >>> (sin(x)*x + sin(x)**2).count_ops(visual=False)
@@ -1050,15 +1050,15 @@ def count_ops(expr, visual=None):
     representation is compared with the expanded form of a polynomial:
         >>> eq=x*(1 + x*(2 + x*(3 + x)))
         >>> count_ops(eq.expand(), visual=True) - count_ops(eq, visual=True)
-        -Mul + 3*Pow
+        -MUL + 3*POW
 
     The count_ops function can handle iterables:
         >>> count_ops([x, sin(x), None, True, x + 2], visual=False)
         2
         >>> count_ops([x, sin(x), None, True, x + 2], visual=True)
-        Add + sin
+        ADD + SIN
         >>> count_ops({x: sin(x), x + 2: y + 1}, visual=True)
-        sin + 2*Add
+        SIN + 2*ADD
 
     """
     from sympy.simplify.simplify import fraction
@@ -1072,45 +1072,70 @@ def count_ops(expr, visual=None):
 
         ops = []
         args = [expr]
-        MUL = C.Symbol('Mul')
+        NEG = C.Symbol('NEG')
+        DIV = C.Symbol('DIV')
+        SUB = C.Symbol('SUB')
+        ADD = C.Symbol('ADD')
+        def isneg(a):
+            c = a.as_coeff_mul()[0]
+            return c.is_Number and c.is_negative
         while args:
             a = args.pop()
             if a.is_Rational:
-                #-1/3 = -1*3**-1 -> Mul + Pow + Mul
+                #-1/3 = NEG + DIV
                 if a is not S.One:
                     if a.p < 0:
-                        ops.append(MUL)
+                        ops.append(NEG)
                     if a.q != 1:
-                        ops.append(MUL)
+                        ops.append(DIV)
                     continue
             elif a.is_Mul:
-                if a.args[0] is S.NegativeOne:
-                    ops.append(MUL)
-                    a = a.as_two_terms()[1]
+                if isneg(a):
+                    ops.append(NEG)
+                    if a.args[0] is S.NegativeOne:
+                        a = a.as_two_terms()[1]
+                    else:
+                        a = -a
                 n, d = fraction(a)
                 if n.is_Integer:
-                    ops.append(MUL)
+                    ops.append(DIV)
                     if n < 0:
-                        ops.append(MUL)
+                        ops.append(NEG)
                     a = d # won't be -Mul
                 elif d is not S.One:
                     if not d.is_Integer:
                         args.append(d)
-                    ops.append(MUL)
+                    ops.append(DIV)
                     args.append(n)
                     continue # could be -Mul
+            elif a.is_Add:
+                aargs = list(a.args)
+                negs = 0
+                for i, ai in enumerate(aargs):
+                    if isneg(ai):
+                        negs += 1
+                        args.append(-ai)
+                        if i > 0:
+                            ops.append(SUB)
+                    else:
+                        args.append(ai)
+                        if i > 0:
+                            ops.append(ADD)
+                if negs == len(aargs): # -x - y = NEG + SUB
+                    ops.append(NEG)
+                elif isneg(aargs[0]): # -x + y = SUB, but we already recorded an ADD
+                    ops.append(SUB - ADD)
+                continue
             if a.is_Pow and a.exp is S.NegativeOne:
-                ops.append(MUL)
+                ops.append(DIV)
                 a = a.base # won't be -Mul
-            if (
-            a.is_Add or
-            a.is_Mul or
-            a.is_Pow or
-            a.is_Function or
-            isinstance(a, Derivative) or
-            isinstance(a, C.Integral)):
+            if (a.is_Mul or
+                a.is_Pow or
+                a.is_Function or
+                isinstance(a, Derivative) or
+                isinstance(a, C.Integral)):
 
-                o = C.Symbol(a.func.__name__)
+                o = C.Symbol(a.func.__name__.upper())
                 # count the args
                 if (a.is_Add or
                     a.is_Mul or
