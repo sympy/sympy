@@ -1,4 +1,4 @@
-from sympy import I, Matrix
+from sympy import I, Matrix, symbols
 
 from sympy.physics.quantum import hbar, represent, Commutator
 from sympy.physics.quantum import qapply
@@ -16,6 +16,8 @@ def test_jplus():
     assert Jplus.rewrite('xyz') == Jx + I*Jy
 
 def test_j2():
+    j, m = symbols('j m')
     assert Commutator(J2, Jz).doit() == 0
     assert qapply(J2*JzKet(1,1)) == 2*hbar**2*JzKet(1,1)
+    assert qapply(J2*JzKet(j,m)) == j**2*hbar**2*JzKet(j,m)+j*hbar**2*JzKet(j,m)
     assert J2.matrix_element(1,1,1,1) == 2*hbar**2

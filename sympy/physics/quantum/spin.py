@@ -266,7 +266,7 @@ class J2Op(SpinOpBase, HermitianOperator):
 
     def _apply_operator_JzKet(self, ket, **options):
         j = ket.j
-        return hbar**2**j*(j+1)*ket
+        return hbar**2*j*(j+1)*ket
 
     def matrix_element(self, j, m, jp, mp):
         result = (hbar**2)*j*(j+1)
