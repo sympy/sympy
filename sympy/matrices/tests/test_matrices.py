@@ -1,5 +1,5 @@
 from sympy import (symbols, Matrix, SparseMatrix, eye, I, Symbol, Rational, wronskian, cos,
-    sin, exp, hessian, sqrt, zeros, ones, randMatrix, Poly, S, pi, E,
+    sin, exp, hessian, sqrt, zeros, ones, randMatrix, Poly, S, pi, E, I,
     oo, trigsimp, Integer, block_diag, N, zeros)
 from sympy.matrices.matrices import (ShapeError, MatrixError,
     matrix_multiply_elementwise, diag,
@@ -1584,7 +1584,7 @@ def test_matrix_norm():
     assert (y.norm() - (25 + 9./4.)**.5) < 1e-9
 
 def test_singular_values():
-    A = Matrix([[0,1j],[2,0]])
+    A = Matrix([[0,1*I],[2,0]])
     assert A.singular_values() == [2,1]
     A = eye(3);
     x = Symbol('x', real=True)
