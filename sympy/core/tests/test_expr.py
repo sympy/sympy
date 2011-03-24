@@ -569,6 +569,8 @@ def test_as_coeff_add():
     y = Symbol('y')
 
     assert S(2).as_coeff_add() == (2, ())
+    assert S(3.0).as_coeff_add() == (0, (S(3.0),))
+    assert S(-3.0).as_coeff_add() == (0, (S(-3.0),))
     assert     x .as_coeff_add() == ( 0, (x,))
     assert (-1+x).as_coeff_add() == (-1, (x,))
     assert ( 2+x).as_coeff_add() == ( 2, (x,))
@@ -584,6 +586,8 @@ def test_as_coeff_mul():
     y = Symbol('y')
 
     assert S(2).as_coeff_mul() == (2, ())
+    assert S(3.0).as_coeff_mul() == (1, (S(3.0),))
+    assert S(-3.0).as_coeff_mul() == (-1, (S(3.0),))
     assert     x .as_coeff_mul() == ( 1, (x,))
     assert (-x).as_coeff_mul() == (-1, (x,))
     assert (2*x).as_coeff_mul() == (2, (x,))
@@ -812,3 +816,6 @@ def test_symbols():
 def test_issue2201():
     x = Symbol('x', commutative=False)
     assert x*sqrt(2)/sqrt(6) == x*sqrt(3)/3
+
+def test_issue_2061():
+    assert sqrt(-1.0*x) == I*sqrt(x)

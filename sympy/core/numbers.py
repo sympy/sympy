@@ -184,11 +184,17 @@ class Number(AtomicExpr):
 
     def as_coeff_mul(self, *deps):
         # a -> c * t
-        return self, tuple()
+        if self.is_Rational:
+            return self, tuple()
+        elif self.is_negative:
+            return S.NegativeOne, (-self,)
+        return S.One, (self,)
 
     def as_coeff_add(self, *deps):
         # a -> c + t
-        return self, tuple()
+        if self.is_Rational:
+            return self, tuple()
+        return S.Zero, (self,)
 
 class Real(Number):
     """

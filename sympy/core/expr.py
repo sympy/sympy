@@ -426,7 +426,7 @@ class Expr(Basic, EvalfMixin):
     def as_coeff_mul(self, *deps):
         """Return the tuple (c, args) where self is written as a Mul, `m`.
 
-        c should contain Numbers and any terms of the Mul that are
+        c should be a Rational multiplied by any terms of the Mul that are
         independent of deps.
 
         args should be a tuple of all other terms of m; args is empty
@@ -461,7 +461,7 @@ class Expr(Basic, EvalfMixin):
     def as_coeff_add(self, *deps):
         """Return the tuple (c, args) where self is written as an Add, `a`.
 
-        c should contain Numbers and any terms of the Mul that are
+        c should be a Rational added to any terms of the Add that are
         independent of deps.
 
         args should be a tuple of all other terms of `a`; args is empty
