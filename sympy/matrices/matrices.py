@@ -731,8 +731,8 @@ class Matrix(object):
         """
         Extract a submatrix by specifying a list of rows and columns
 
-        Examples
-        -------
+        Examples:
+
         >>> from sympy import Matrix
         >>> m = Matrix(4, 3, lambda i, j: i*3 + j)
         >>> m   #doctest: +NORMALIZE_WHITESPACE
@@ -825,32 +825,33 @@ class Matrix(object):
 
     def print_nonzero (self, symb="X"):
         """
-        Shows location of non-zero entries for fast shape lookup
-        >>> from sympy import Matrix, matrices
-        >>> m = Matrix(2,3,lambda i,j: i*3+j)
-        >>> m           #doctest: +NORMALIZE_WHITESPACE
-        [0, 1, 2]
-        [3, 4, 5]
-        >>> m.print_nonzero()   #doctest: +NORMALIZE_WHITESPACE
-        [ XX]
-        [XXX]
-        >>> m = matrices.eye(4)
-        >>> m.print_nonzero("x")    #doctest: +NORMALIZE_WHITESPACE
-        [x   ]
-        [ x  ]
-        [  x ]
-        [   x]
+        Shows location of non-zero entries for fast shape lookup ::
+
+            >>> from sympy import Matrix, matrices
+            >>> m = Matrix(2,3,lambda i,j: i*3+j)
+            >>> m           #doctest: +NORMALIZE_WHITESPACE
+            [0, 1, 2]
+            [3, 4, 5]
+            >>> m.print_nonzero()   #doctest: +NORMALIZE_WHITESPACE
+            [ XX]
+            [XXX]
+            >>> m = matrices.eye(4)
+            >>> m.print_nonzero("x")    #doctest: +NORMALIZE_WHITESPACE
+            [x   ]
+            [ x  ]
+            [  x ]
+            [   x]
 
         """
-        s="";
+        s = ""
         for i in range(self.rows):
-            s+="["
+            s += "["
             for j in range(self.cols):
                 if self[i,j] == 0:
-                    s+=" "
+                    s += " "
                 else:
-                    s+= symb+""
-            s+="]\n"
+                    s += symb + ""
+            s += "]\n"
         print s
 
     def LUsolve(self, rhs, iszerofunc=_iszero):
@@ -998,18 +999,18 @@ class Matrix(object):
 
         Examples::
 
-        >>> from sympy import sin, cos, Matrix
-        >>> from sympy.abc import rho, phi
-        >>> X = Matrix([rho*cos(phi), rho*sin(phi), rho**2])
-        >>> Y = Matrix([rho, phi])
-        >>> X.jacobian(Y)
-        [cos(phi), -rho*sin(phi)]
-        [sin(phi),  rho*cos(phi)]
-        [   2*rho,             0]
-        >>> X = Matrix([rho*cos(phi), rho*sin(phi)])
-        >>> X.jacobian(Y)
-        [cos(phi), -rho*sin(phi)]
-        [sin(phi),  rho*cos(phi)]
+            >>> from sympy import sin, cos, Matrix
+            >>> from sympy.abc import rho, phi
+            >>> X = Matrix([rho*cos(phi), rho*sin(phi), rho**2])
+            >>> Y = Matrix([rho, phi])
+            >>> X.jacobian(Y)
+            [cos(phi), -rho*sin(phi)]
+            [sin(phi),  rho*cos(phi)]
+            [   2*rho,             0]
+            >>> X = Matrix([rho*cos(phi), rho*sin(phi)])
+            >>> X.jacobian(Y)
+            [cos(phi), -rho*sin(phi)]
+            [sin(phi),  rho*cos(phi)]
 
         """
         if not isinstance(X, Matrix):
@@ -1559,9 +1560,7 @@ class Matrix(object):
     def vech(self, diagonal=True, check_symmetry=True):
         """
         Return the unique elements of a symmetric Matrix as a one column matrix
-
-         by stacking
-        the elements in the lower triangle
+        by stacking the elements in the lower triangle.
 
         Arguments:
         diagonal -- include the diagonal cells of self or not
