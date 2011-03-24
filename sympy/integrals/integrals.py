@@ -29,7 +29,7 @@ class Integral(Expr):
             if function is S.NaN:
                 return S.NaN
 
-        if symbols:                    
+        if symbols:
             limits = []
             k=-1 # variable used to update *symbols if itegrator is function and not a Symbol
             for V in symbols:
