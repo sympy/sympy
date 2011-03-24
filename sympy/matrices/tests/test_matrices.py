@@ -1023,6 +1023,26 @@ def test_is_symbolic():
     assert a.is_symbolic() == False
     a = Matrix([[1,x],[3,4]])
     assert a.is_symbolic() == True
+    a = Matrix([[1,x,3]])
+    assert a.is_symbolic() == True
+    a = Matrix([[1,2,3]])
+    assert a.is_symbolic() == False
+    a = Matrix([[1],[x],[3]])
+    assert a.is_symbolic() == True
+    a = Matrix([[1],[2],[3]])
+    assert a.is_symbolic() == False
+
+def test_is_upper():
+    a = Matrix([[1,2,3]])
+    assert a.is_upper() == True
+    a = Matrix([[1],[2],[3]])
+    assert a.is_upper() == False
+
+def test_is_lower():
+    a = Matrix([[1,2,3]])
+    assert a.is_lower() == False
+    a = Matrix([[1],[2],[3]])
+    assert a.is_lower() == True
 
 def test_zeros_ones_fill():
     n, m = 3, 5
@@ -1220,6 +1240,3 @@ def test_SMatrix_transpose():
 def test_SMatrix_CL_RL():
     assert SMatrix((1,2),(3,4)).row_list() == [(0, 0, 1), (0, 1, 2), (1, 0, 3), (1, 1, 4)]
     assert SMatrix((1,2),(3,4)).col_list() ==[(0, 0, 1), (1, 0, 3), (0, 1, 2), (1, 1, 4)]
-
-
-

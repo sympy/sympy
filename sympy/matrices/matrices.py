@@ -1202,22 +1202,22 @@ class Matrix(object):
         return self.rows == self.cols
 
     def is_upper(self):
-        for i in range(self.cols):
-            for j in range(self.rows):
+        for i in range(self.rows):
+            for j in range(self.cols):
                 if i > j and self[i,j] != 0:
                     return False
         return True
 
     def is_lower(self):
-        for i in range(self.cols):
-            for j in range(self.rows):
+        for i in range(self.rows):
+            for j in range(self.cols):
                 if i < j and self[i, j] != 0:
                     return False
         return True
 
     def is_symbolic(self):
-        for i in range(self.cols):
-            for j in range(self.rows):
+        for i in range(self.rows):
+            for j in range(self.cols):
                 if self[i,j].has(Symbol):
                     return True
         return False
