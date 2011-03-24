@@ -1580,8 +1580,8 @@ def test_matrix_norm():
     assert A.norm('frobenius')==2
     assert eye(10).norm(2)==eye(10).norm(-2)==1
 
-    y = Matrix([['5', '3/2']]) #checking it works for rows
-    assert (y.norm() - (25 + 9./4.)**.5) < 1e-9
+    y = Matrix([[5, Rational(3,2)]]) #checking it works for rows
+    assert y.norm() - (25 + Rational(9,4)**.5) < 1e-9
 
 def test_singular_values():
     A = Matrix([[0,1*I],[2,0]])
@@ -1592,3 +1592,11 @@ def test_singular_values():
     A[2,2] = 5
     vals = A.singular_values();
     assert 1 in vals and 5 in vals and abs(x) in vals
+
+def test_len():
+    assert len(Matrix()) == 0
+    assert len(Matrix([[1, 2]])) == len(Matrix([[1], [2]])) == 2
+    assert len(Matrix(0, 2, lambda i, j: 0)) == len(Matrix(2, 0, lambda i, j: 0)) == 0
+    assert len(Matrix([[0, 1, 2], [3, 4, 5]])) == 6
+    assert Matrix([1])
+    assert not Matrix()

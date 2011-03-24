@@ -1942,9 +1942,10 @@ class Matrix(object):
         return vals
     def condition_number(self):
         """Returns the condition number of a matrix
-        >>> from sympy import Matrix, Symbol, eye
-        >>> A = Matrix([[0, 1, 0], [0, 1e-5, 0], [-2e3, 0, 0]])
+        >>> from sympy import Matrix, Symbol, eye, Rational
+        >>> A = Matrix([[0, 1, -1], [0, 1000, 0], [Rational(1,2), 0, 0]])
         >>> print A.condition_number()
+        2*(500001 + 250000000001**(1/2))**(1/2)
 
         Only works on Numerical Matrices (no symbols)
         """
