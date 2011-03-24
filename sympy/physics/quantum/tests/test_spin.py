@@ -1,4 +1,4 @@
-from sympy import I, Matrix
+from sympy import I, Matrix, symbols
 
 from sympy.physics.quantum import hbar, represent, Commutator
 from sympy.physics.quantum import qapply
@@ -19,7 +19,9 @@ def test_rotation():
     assert Rotation.d(1,1,1,0) == 1
 
 def test_j2():
+    j, m = symbols('j m')
     assert Commutator(J2, Jz).doit() == 0
     assert qapply(J2*JzKet(1,1)) == 2*hbar**2*JzKet(1,1)
+    assert qapply(J2*JzKet(j,m)) == j**2*hbar**2*JzKet(j,m)+j*hbar**2*JzKet(j,m)
     assert J2.matrix_element(1,1,1,1) == 2*hbar**2
 
