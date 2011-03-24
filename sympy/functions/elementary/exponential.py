@@ -382,7 +382,7 @@ class log(Function):
         else:
             abs = C.Abs(self.args[0])
             arg = C.arg(self.args[0])
-        if hints['log']: # Expand the log
+        if hints.get('log', False): # Expand the log
             hints['complex'] = False
             return (log(abs).expand(deep, **hints), arg)
         else:
