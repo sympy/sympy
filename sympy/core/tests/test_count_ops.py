@@ -50,6 +50,8 @@ def test_count_ops_visual():
     assert count(x + y) == ADD
     assert count(x - y) == SUB
     assert count(y - x) == SUB
+    assert count(-1/(x - y)) == DIV + NEG + SUB
+    assert count(-1/(y - x)) == DIV + NEG + SUB
     assert count(1 + x**y) == ADD + POW
     assert count(1 + x + y) == 2*ADD
     assert count(1 + x + y + z) == 3*ADD

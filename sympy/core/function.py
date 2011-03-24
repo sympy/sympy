@@ -1013,18 +1013,15 @@ def expand_complex(expr, deep=True):
 def count_ops(expr, visual=None):
     """
     Return an integer metric (default) related to the number of operations
-    in expr.
+    in expr. The intent of this function is to translate the sympy expression
+    into standard operators (like add, subtract, etc...).
 
-    By default, the length of the expression tree is returned. Though
-    strictly not the same as the mathematical op count, the tree length
-    will give something that scales with the complexity of the expression.
+    If `visual` is True then the number of each type of operation is shown
+    with the core class types (or their virtual equivalent) multiplied by the
+    number of times they occur.
 
-    If `visual` is True then the number of each type of operation
-    is shown with the core class types multiplied by the number of
-    times they occur.
-
-    If `visual` is False then the sum of the coefficients of the visual
-    expression will be returned.
+    If `visual` is False (default) then the sum of the coefficients of the
+    visual expression will be returned.
 
     If expr is an iterable, the sum of the op counts of the
     items will be returned.
@@ -1033,7 +1030,14 @@ def count_ops(expr, visual=None):
         >>> from sympy.abc import a, b, x, y
         >>> from sympy import sin, count_ops
 
-    There are two Adds and a Pow:
+    Although there isn't a SUB object, minus signs are interpreted as
+    either negations or subtractions:
+        >>> (x - y).count_ops(visual=True)
+        SUB
+        >>> (-x).count_ops(visual=True)
+        NEG
+
+    Here, there are two Adds and a Pow:
         >>> (1 + a + b**2).count_ops(visual=True)
         POW + 2*ADD
 
@@ -1045,6 +1049,12 @@ def count_ops(expr, visual=None):
         >>> (sin(x)*x + sin(x)**2).count_ops(visual=False)
         5
 
+    Note that "what you type" is not always what you get. The expression
+    1/x/y is translated by sympy into 1/(x*y) so it gives a DIV and MUL rather
+    than two DIVs:
+        >>> (1/x/y).count_ops(visual=True)
+        DIV + MUL
+
     The visual option can be used to demonstrate the difference in
     operations for expressions in different forms. Here, the Horner
     representation is compared with the expanded form of a polynomial:
@@ -1052,7 +1062,7 @@ def count_ops(expr, visual=None):
         >>> count_ops(eq.expand(), visual=True) - count_ops(eq, visual=True)
         -MUL + 3*POW
 
-    The count_ops function can handle iterables:
+    The count_ops function also handles iterables:
         >>> count_ops([x, sin(x), None, True, x + 2], visual=False)
         2
         >>> count_ops([x, sin(x), None, True, x + 2], visual=True)
@@ -1101,7 +1111,8 @@ def count_ops(expr, visual=None):
                     ops.append(DIV)
                     if n < 0:
                         ops.append(NEG)
-                    a = d # won't be -Mul
+                    args.append(d)
+                    continue # won't be -Mul but could be Add
                 elif d is not S.One:
                     if not d.is_Integer:
                         args.append(d)
@@ -1128,7 +1139,8 @@ def count_ops(expr, visual=None):
                 continue
             if a.is_Pow and a.exp is S.NegativeOne:
                 ops.append(DIV)
-                a = a.base # won't be -Mul
+                args.append(a.base) # won't be -Mul but could be Add
+                continue
             if (a.is_Mul or
                 a.is_Pow or
                 a.is_Function or
@@ -1137,8 +1149,7 @@ def count_ops(expr, visual=None):
 
                 o = C.Symbol(a.func.__name__.upper())
                 # count the args
-                if (a.is_Add or
-                    a.is_Mul or
+                if (a.is_Mul or
                     isinstance(a, C.LatticeOp)):
                    ops.append(o*(len(a.args) - 1))
                 else:
