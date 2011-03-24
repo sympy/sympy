@@ -7,7 +7,7 @@ from sympy.utilities import any, all
 from sympy.utilities.iterables import flatten
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.printing import sstr
-
+from sympy.functions.elementary.complexes import re
 
 import random
 
@@ -1928,7 +1928,13 @@ class Matrix(object):
         return out
 
     def singular_values(self):
-        """Compute the singular values of a Matrix"""
+        """Compute the singular values of a Matrix
+        >>> from sympy import Matrix, Symbol, eye
+        >>> x = Symbol('x', real=True)
+        >>> A = Matrix([[0, 1, 0], [0, x, 0], [-1, 0, 0]])
+        >>> print A.singular_values()
+        [1, (1 + x**2)**(1/2), 0]
+        """
         if self.rows>=self.cols:
             valMultPairs = (self.H*self).eigenvals()
         else:
@@ -1938,9 +1944,16 @@ class Matrix(object):
             vals += [sqrt(k)]*v #dangerous! same k in several spots!
         if all([val.is_number for val in vals]): #if sorting makes sense
             vals.sort(reverse=True) #sort them in descending order
+        vals = map(re, vals) #some small imaginary parts are sometime left over
         return vals
     def condition_number(self):
-        """Returns the condition number of a matrix"""
+        """Returns the condition number of a matrix
+        >>> from sympy import Matrix, Symbol, eye
+        >>> A = Matrix([[0, 1, 0], [0, 1e-5, 0], [-2e3, 0, 0]])
+        >>> print A.condition_number()
+
+        Only works on Numerical Matrices (no symbols)
+        """
         singularValues = self.singular_values()
         return numerical_max(singularValues) / numerical_min(singularValues)
 
