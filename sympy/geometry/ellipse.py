@@ -374,13 +374,8 @@ class Ellipse(GeometryEntity):
             y = C.Dummy('y', real=True)
 
             res = self.equation(x, y).subs({x: o[0], y: o[1]})
-            # Sometimes 'simplify' can't fully simplify result
-            # and this method fails.
-            # Evaluating expression as real number fix this,
-            # but theoretically gives a chance of recognizing a point
-            # that really doesn't lie on ellipse.
-#            res = trigsimp(simplify(res))
-            return res.evalf() == 0.0
+            res = trigsimp(simplify(res))
+            return res == 0
         elif isinstance(o, Ellipse):
             return (self == o)
         return False
