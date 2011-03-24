@@ -813,13 +813,13 @@ def integrate(*args, **kwargs):
         if kwargs.get('arbitrary_function', False):
             s = integral.free_symbols - set([args[1]])
             if len(s)==0:
-                c = Symbol('constant') 
+                c = Symbol('constant')
             else:
                 c = Function('f')(*s)
             return integral.doit(deep=False) + c
         else:
             return integral.doit(deep=False)
-    else: 
+    else:
         return integral
 
 
