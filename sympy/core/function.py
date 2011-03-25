@@ -269,7 +269,7 @@ multi-arg functions are not supported.')
         arg = self.args[0]
         arg0 = arg.limit(x, 0)
         from sympy import oo
-        if arg0 in [-oo, oo, S.NaN]:
+        if arg0 == S.NaN or arg0.is_bounded == False:
             raise PoleError("Cannot expand %s around 0" % (arg))
         if arg0:
             e = self
@@ -278,7 +278,7 @@ multi-arg functions are not supported.')
                 #for example when e = sin(x+1) or e = sin(cos(x))
                 #let's try the general algorithm
                 term = e.subs(x, S.Zero)
-                if term in [-oo, oo, S.NaN]:
+                if arg0 == S.NaN or term.is_bounded == False:
                     raise PoleError("Cannot expand %s around 0" % (self))
                 series = term
                 fact = S.One
@@ -286,7 +286,13 @@ multi-arg functions are not supported.')
                     i += 1
                     fact *= Rational(i)
                     e = e.diff(x)
-                    term = e.subs(x, S.Zero)*(x**i)/fact
+                    subs = e.subs(x, S.Zero)
+                    if subs == S.NaN:
+                        # try to evaluate a limit if we have to
+                        subs = e.limit(x, S.Zero)
+                        if subs.is_bounded == False:
+                            raise PoleError("Cannot expand %s around 0" % (self))
+                    term = subs*(x**i)/fact
                     term = term.expand()
                     series += term
                 return series + C.Order(x**n, x)

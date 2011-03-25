@@ -715,8 +715,6 @@ class Pow(Expr):
                     except TypeError:
                         pass # hope that base allows this to be resolved
                 n = _sympify(n)
-                if n.is_Integer:
-                    assert n.is_nonnegative
             return n, unbounded
 
         order = O(x**n, x)
