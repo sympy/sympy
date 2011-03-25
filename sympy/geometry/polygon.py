@@ -8,15 +8,47 @@ from line import Line, Segment
 
 
 class Polygon(GeometryEntity):
-    """
+    """A two-dimensional polygon.
+
     A simple polygon in space. Can be constructed from a sequence or list
     of points.
 
-    Notes:
-    ======
-        - Polygons are treated as closed paths rather than 2D areas so
-          some calculations can be be negative or positive (e.g., area)
-          based on the orientation of the points.
+    Parameters
+    ----------
+    vertices : sequence of Points
+
+    Attributes
+    ----------
+    area
+    angles
+    perimeter
+    vertices
+    centroid
+    sides
+
+    Raises
+    ------
+    GeometryError
+        If all parameters are not Points, or there are less than three
+        parameters.
+
+    See Also
+    --------
+    Point
+
+    Notes
+    -----
+    Polygons are treated as closed paths rather than 2D areas so
+    some calculations can be be negative or positive (e.g., area)
+    based on the orientation of the points.
+
+    Examples
+    --------
+    >>> from sympy import Point, Polygon
+    >>> p1, p2, p3, p4 = map(Point, [(0, 0), (1, 0), (5, 1), (0, 1)])
+    >>> Polygon(p1, p2, p3, p4)
+    Polygon(Point(0, 0), Point(1, 0), Point(5, 1), Point(0, 1))
+
     """
 
     def __new__(cls, *args, **kwargs):
@@ -35,36 +67,53 @@ class Polygon(GeometryEntity):
     @property
     def area(self):
         """
-        Returns the area of the polygon.
+        The area of the polygon.
 
-        Notes:
-        ======
-            - The area calculation can be positive or negative based on
-              the orientation of the points.
+        Notes
+        -----
+        The area calculation can be positive or negative based on the
+        orientation of the points.
+
+        Examples
+        --------
+        >>> from sympy import Point, Polygon
+        >>> p1, p2, p3, p4 = map(Point, [(0, 0), (1, 0), (5, 1), (0, 1)])
+        >>> poly = Polygon(p1, p2, p3, p4)
+        >>> poly.area
+        3
+
         """
         area = 0
-        for ind in xrange(-1, len(self.vertices)-1):
+        for ind in xrange(-1, len(self.vertices) - 1):
             pi = self.vertices[ind]
-            pii = self.vertices[ind+1]
-            area += pi[0]*pii[1]-pii[0]*pi[1]
+            pii = self.vertices[ind + 1]
+            area += pi[0]*pii[1] - pii[0]*pi[1]
         return simplify(area) / 2
 
     @property
     def angles(self):
-        """
-        Returns a dictionary of {point: angle} entries containing the
-        measure of all the internal angles of this polygon formed at
-        each vertex.
+        """The internal angle at each vertex.
 
-        Examples:
-        ======
-            >>> from sympy import Point, Polygon
-            >>> p1,p2,p3,p4 = map(Point, [(0,0), (1,0), (5,1), (0,1)])
-            >>> poly = Polygon(p1, p2, p3, p4)
-            >>> poly.angles[p1]
-            pi/2
-            >>> poly.angles[p2]
-            acos(-4*17**(1/2)/17)
+        Returns
+        -------
+        angles : dict
+            A dictionary where each key is a vertex and each value is the
+            internal angle at that vertex. The vertices are represented as
+            Points.
+
+        See Also
+        --------
+        Point
+
+        Examples
+        --------
+        >>> from sympy import Point, Polygon
+        >>> p1, p2, p3, p4 = map(Point, [(0, 0), (1, 0), (5, 1), (0, 1)])
+        >>> poly = Polygon(p1, p2, p3, p4)
+        >>> poly.angles[p1]
+        pi/2
+        >>> poly.angles[p2]
+        acos(-4*17**(1/2)/17)
 
         """
         def tarea(a, b, c):
@@ -75,7 +124,6 @@ class Polygon(GeometryEntity):
 
         # Determine orientation of points
         cw = isright(self.vertices[-1], self.vertices[0], self.vertices[1])
-
 
         ret = {}
         for i in xrange(0, len(self.vertices)):
@@ -89,20 +137,69 @@ class Polygon(GeometryEntity):
 
     @property
     def perimeter(self):
-        """Returns the perimeter of the polygon."""
+        """The perimeter of the polygon.
+
+        Returns
+        -------
+        perimeter : number or Basic instance
+
+        Examples
+        --------
+        >>> from sympy import Point, Polygon
+        >>> p1, p2, p3, p4 = map(Point, [(0, 0), (1, 0), (5, 1), (0, 1)])
+        >>> poly = Polygon(p1, p2, p3, p4)
+        >>> poly.perimeter
+        7 + 17**(1/2)
+        """
         p = 0
-        for ind in xrange(-1, len(self.vertices)-1):
-            p += Point.distance(self.vertices[ind], self.vertices[ind+1])
+        for ind in xrange(-1, len(self.vertices) - 1):
+            p += Point.distance(self.vertices[ind], self.vertices[ind + 1])
         return simplify(p)
 
     @property
     def vertices(self):
-        """The vertices that define the polygon."""
+        """The vertices of the polygon.
+
+        Returns
+        -------
+        vertices : tuple of Points
+
+        See Also
+        --------
+        Point
+
+        Examples
+        --------
+        >>> from sympy import Point, Polygon
+        >>> p1, p2, p3, p4 = map(Point, [(0, 0), (1, 0), (5, 1), (0, 1)])
+        >>> poly = Polygon(p1, p2, p3, p4)
+        >>> poly.vertices
+        (Point(0, 0), Point(1, 0), Point(5, 1), Point(0, 1))
+
+        """
         return self[:]
 
     @property
     def centroid(self):
-        """The centroid of the polygon."""
+        """The centroid of the polygon.
+
+        Returns
+        -------
+        centroid : Point
+
+        See Also
+        --------
+        Point
+
+        Examples
+        --------
+        >>> from sympy import Point, Polygon
+        >>> p1, p2, p3, p4 = map(Point, [(0, 0), (1, 0), (5, 1), (0, 1)])
+        >>> poly = Polygon(p1, p2, p3, p4)
+        >>> poly.centroid
+        Point(31/18, 11/18)
+
+        """
         A = 1 / (6*self.area)
         cx,cy = 0,0
         for ind in xrange(-1, len(self.vertices)-1):
@@ -115,15 +212,55 @@ class Polygon(GeometryEntity):
 
     @property
     def sides(self):
-        """A list of the segments that form the sides of the polygon."""
+        """The line segments that form the sides of the polygon.
+
+        Returns
+        -------
+        sides : list of sides
+            Each side is a Segment.
+
+        See Also
+        --------
+        Point
+        Segment
+
+        Examples
+        --------
+        >>> from sympy import Point, Polygon
+        >>> p1, p2, p3, p4 = map(Point, [(0, 0), (1, 0), (5, 1), (0, 1)])
+        >>> poly = Polygon(p1, p2, p3, p4)
+        >>> poly.sides
+        [Segment(Point(0, 0), Point(1, 0)),
+        Segment(Point(1, 0), Point(5, 1)),
+        Segment(Point(0, 1), Point(5, 1)), Segment(Point(0, 0), Point(0, 1))]
+
+        """
         res = []
-        for ind in xrange(0, len(self.vertices)-1):
-            res.append( Segment(self.vertices[ind], self.vertices[ind+1]) )
-        res.append( Segment(self.vertices[-1], self.vertices[0]) )
+        for ind in xrange(0, len(self.vertices) - 1):
+            res.append(Segment(self.vertices[ind], self.vertices[ind+1]))
+        res.append(Segment(self.vertices[-1], self.vertices[0]))
         return res
 
     def is_convex(self):
-        """Returns True if this polygon is convex, False otherwise."""
+        """Is the polygon convex.
+
+        A polygon is convex if all its interior angles are less than 180
+        degrees.
+
+        Returns
+        -------
+        is_convex : boolean
+            True if this polygon is convex, False otherwise.
+
+        Examples
+        --------
+        >>> from sympy import Point, Polygon
+        >>> p1, p2, p3, p4 = map(Point, [(0, 0), (1, 0), (5, 1), (0, 1)])
+        >>> poly = Polygon(p1, p2, p3, p4)
+        >>> poly.is_convex()
+        True
+
+        """
         def tarea(a, b, c):
             return (b[0] - a[0])*(c[1] - a[1]) - (c[0] - a[0])*(b[1] - a[1])
 
@@ -133,15 +270,38 @@ class Polygon(GeometryEntity):
         # Determine orientation of points
         cw = isright(self.vertices[-2], self.vertices[-1], self.vertices[0])
 
-
-
         for i in xrange(0, len(self.vertices)):
-            if cw ^ isright(self.vertices[i-2], self.vertices[i-1], self.vertices[i]):
+            if cw ^ isright(self.vertices[i - 2], self.vertices[i - 1], self.vertices[i]):
                 return False
 
         return True
 
     def intersection(self, o):
+        """The intersection of two polygons.
+
+        The intersection may be empty and can contain individual Points and
+        complete Line Segments.
+
+        Parameters
+        ----------
+        other: Polygon
+
+        Returns
+        -------
+        intersection : list
+            The list of Segments and Points
+
+        Examples
+        --------
+        >>> from sympy import Point, Polygon
+        >>> p1, p2, p3, p4 = map(Point, [(0, 0), (1, 0), (5, 1), (0, 1)])
+        >>> poly1 = Polygon(p1, p2, p3, p4)
+        >>> p5, p6, p7, p8 = map(Point, [(3, 2), (1, -1), (0, 2), (-2, 1)])
+        >>> poly2 = Polygon(p5, p6, p7, p8)
+        >>> poly1.intersection(poly2)
+        [Point(2/3, 0), Point(9/5, 1/5), Point(7/3, 1), Point(1/3, 1)]
+
+        """
         res = []
         for side in self.sides:
             inter = GeometryEntity.do_intersection(side, o)
@@ -209,20 +369,45 @@ class Polygon(GeometryEntity):
 
 class RegularPolygon(Polygon):
     """
-    A polygon which is regular. Such a polygon has all internal angles
-    equal and all sides the same length.
+    A regular polygon.
 
-    Usage:
-    ======
-        The polygon is constructed from a center point, a radius value,
-        and the number of sides. The radius value is the distance from
-        the center to a vertex.
+    Such a polygon has all internal angles equal and all sides the same length.
 
-    Example:
-    ========
-        >>> from sympy.geometry import RegularPolygon, Point
-        >>> RegularPolygon(Point(0, 0), 5, 5)
-        RegularPolygon(Point(0, 0), 5, 5)
+    Parameters
+    ----------
+    center : Point
+    radius : number or Basic instance
+        The distance from the center to a vertex
+    n : int
+        The number of sides
+
+    Attributes
+    ----------
+    vertices
+    center
+    radius
+    apothem
+    interior_angle
+    exterior_angle
+    circumcircle
+    incircle
+    angles
+
+    Raises
+    ------
+    GeometryError
+        If the `center` is not a Point, or the `radius` is not a number or Basic
+        instance, or the number of sides, `n`, is less than three.
+
+    See Also
+    --------
+    Point
+
+    Examples
+    --------
+    >>> from sympy.geometry import RegularPolygon, Point
+    >>> RegularPolygon(Point(0, 0), 5, 5)
+    RegularPolygon(Point(0, 0), 5, 5)
 
     """
 
@@ -240,58 +425,181 @@ class RegularPolygon(Polygon):
 
     @property
     def vertices(self):
+        """The vertices of the regular polygon.
+
+        Returns
+        -------
+        vertices : list
+            Each vertex is a Point.
+
+        See Also
+        --------
+        Point
+
+        Examples
+        --------
+        >>> from sympy.geometry import RegularPolygon, Point
+        >>> rp = RegularPolygon(Point(0, 0), 5, 4)
+        >>> rp.vertices
+        [Point(5, 0), Point(0, 5), Point(-5, 0), Point(0, -5)]
+
+        """
         points = []
         c, r, n = self
         v = 2*S.Pi/n
         for k in xrange(0, n):
-            points.append( Point(c[0] + r*C.cos(k*v), c[1] + r*C.sin(k*v)) )
+            points.append(Point(c[0] + r*C.cos(k*v), c[1] + r*C.sin(k*v)))
         return points
 
     @property
     def center(self):
-        """
-        Returns the center of the regular polygon (i.e., the center of the
-        circumscribing circle).
+        """The center of the regular polygon
+
+        This is also the centre of the circumscribing circle.
+
+        Returns
+        -------
+        center : Point
+
+        See Also
+        --------
+        Point
+
+        Examples
+        --------
+        >>> from sympy.geometry import RegularPolygon, Point
+        >>> rp = RegularPolygon(Point(0, 0), 5, 4)
+        >>> rp.center
+        Point(0, 0)
+
         """
         return self.__getitem__(0)
 
     @property
     def radius(self):
-        """
-        Returns the radius of the regular polygon (i.e., the radius of the
-        circumscribing circle).
+        """Radius of the regular polygon
+
+        This is also the radius of the circumscribing circle.
+
+        Returns
+        -------
+        radius : number or instance of Basic
+
+        Examples
+        --------
+        >>> from sympy import Symbol
+        >>> from sympy.geometry import RegularPolygon, Point
+        >>> radius = Symbol('r')
+        >>> rp = RegularPolygon(Point(0, 0), radius, 4)
+        >>> rp.radius
+        r
+
         """
         return self.__getitem__(1)
 
     @property
     def apothem(self):
-        """
-        Returns the apothem/inradius of the regular polygon (i.e., the
-        radius of the inscribed circle).
+        """The inradius of the regular polygon.
+
+        The apothem/inradius is the radius of the inscribed circle.
+
+        Returns
+        -------
+        apothem : number or instance of Basic
+
+        Examples
+        --------
+        >>> from sympy import Symbol
+        >>> from sympy.geometry import RegularPolygon, Point
+        >>> radius = Symbol('r')
+        >>> rp = RegularPolygon(Point(0, 0), radius, 4)
+        >>> rp.apothem
+        r*2**(1/2)/2
+
         """
         n = self.__getitem__(2)
         return self.radius * C.cos(S.Pi/n)
 
     @property
     def interior_angle(self):
-        """Returns the measure of the interior angles."""
+        """Measure of the interior angles.
+
+        Returns
+        -------
+        interior_angle : number
+
+        Examples
+        --------
+        >>> from sympy.geometry import RegularPolygon, Point
+        >>> rp = RegularPolygon(Point(0, 0), 4, 8)
+        >>> rp.interior_angle
+        3*pi/4
+
+        """
         n = self.__getitem__(2)
-        return (n-2)*S.Pi/n
+        return (n - 2)*S.Pi/n
 
     @property
     def exterior_angle(self):
-        """Returns the measure of the exterior angles."""
+        """Measure of the exterior angles.
+
+        Returns
+        -------
+        exterior_angle : number
+
+        Examples
+        --------
+        >>> from sympy.geometry import RegularPolygon, Point
+        >>> rp = RegularPolygon(Point(0, 0), 4, 8)
+        >>> rp.exterior_angle
+        pi/4
+
+        """
         n = self.__getitem__(2)
         return 2*S.Pi/n
 
     @property
     def circumcircle(self):
-        """Returns a Circle instance describing the circumcircle."""
+        """The circumcircle of the regular polygon.
+
+        Returns
+        -------
+        circumcircle : Circle
+
+        See Also
+        --------
+        Circle
+
+        Examples
+        --------
+        >>> from sympy.geometry import RegularPolygon, Point
+        >>> rp = RegularPolygon(Point(0, 0), 4, 8)
+        >>> rp.circumcircle
+        Circle(Point(0, 0), 4)
+
+        """
         return Circle(self.center, self.radius)
 
     @property
     def incircle(self):
-        """Returns a Circle instance describing the inscribed circle."""
+        """The incircle of the regular polygon.
+
+        Returns
+        -------
+        incircle : Circle
+
+        See Also
+        --------
+        Circle
+
+        Examples
+        --------
+        >>> from sympy.geometry import RegularPolygon, Point
+        >>> rp = RegularPolygon(Point(0, 0), 4, 8)
+        >>> rp.incircle
+        Circle(Point(0, 0), 4*cos(pi/8))
+
+        """
         return Circle(self.center, self.apothem)
 
     @property
@@ -303,7 +611,45 @@ class RegularPolygon(Polygon):
         return ret
 
 class Triangle(Polygon):
-    """Any 3-sided polygon."""
+    """
+    A polygon with three vertices and three sides.
+
+    Parameters
+    ----------
+    points : sequence of Points
+
+    Attributes
+    ----------
+    vertices
+    altitudes
+    orthocenter
+    circumcenter
+    circumradius
+    circumcircle
+    bisectors
+    inradius
+    incircle
+    medians
+    medial
+
+    Raises
+    ------
+    GeometryError
+        If the number of vertices is not equal to three, or one of the vertices
+        is not a Point.
+
+    See Also
+    --------
+    Point
+
+    Examples
+    --------
+    >>> from sympy.geometry import Triangle, Point
+    >>> Triangle(Point(0, 0), Point(4, 0), Point(4, 3))
+    Triangle(Point(0, 0), Point(4, 0), Point(4, 3))
+
+    """
+    
     def __new__(cls, *args, **kwargs):
         vertices = GeometryEntity.extract_entities(args, remove_duplicates=False)
         if len(vertices) != 3:
@@ -317,9 +663,53 @@ class Triangle(Polygon):
 
     @property
     def vertices(self):
+        """The triangle's vertices
+
+        Returns
+        -------
+        vertices : tuple
+            Each element in the tuple is a Point
+
+        See Also
+        --------
+        Point
+
+        Examples
+        --------
+        >>> from sympy.geometry import Triangle, Point
+        >>> t = Triangle(Point(0, 0), Point(4, 0), Point(4, 3))
+        >>> t.vertices
+        (Point(0, 0), Point(4, 0), Point(4, 3))
+
+        """
         return self[:]
 
     def is_similar(t1, t2):
+        """Is another triangle similar to this one.
+
+        Two triangles are similar if one can be uniformly scaled to the other.
+
+        Parameters
+        ----------
+        other: Triangle
+
+        Returns
+        -------
+        is_similar : boolean
+
+        Examples
+        --------
+        >>> from sympy.geometry import Triangle, Point
+        >>> t1 = Triangle(Point(0, 0), Point(4, 0), Point(4, 3))
+        >>> t2 = Triangle(Point(0, 0), Point(-4, 0), Point(-4, -3))
+        >>> t1.is_similar(t2)
+        True
+
+        >>> t2 = Triangle(Point(0, 0), Point(-4, 0), Point(-4, -4))
+        >>> t1.is_similar(t2)
+        False
+
+        """
         if not isinstance(t2, Polygon) or len(t2) != 3:
             return False
 
@@ -340,12 +730,43 @@ class Triangle(Polygon):
                _are_similar(s1_3, s1_2, s1_1, *s2)
 
     def is_equilateral(self):
-        """Returns True if the triangle is equilateral, False otherwise."""
+        """Is the triangle equilateral
+
+        Returns
+        -------
+        is_equilateral : boolean
+
+        Examples
+        --------
+        >>> from sympy.geometry import Triangle, Point
+        >>> t1 = Triangle(Point(0, 0), Point(4, 0), Point(4, 3))
+        >>> t1.is_equilateral()
+        False
+
+        >>> from sympy import sqrt
+        >>> t2 = Triangle(Point(0, 0), Point(10, 0), Point(5, 5*sqrt(3)))
+        >>> t2.is_equilateral()
+        True
+
+        """
         s = self.sides
         return bool(s[0].length == s[1].length) and bool(s[1].length == s[2].length)
 
     def is_right(self):
-        """Returns True if the triangle is right-angled, False otherwise."""
+        """Is the triangle right-angled.
+
+        Returns
+        -------
+        is_right : boolean
+
+        Examples
+        --------
+        >>> from sympy.geometry import Triangle, Point
+        >>> t1 = Triangle(Point(0, 0), Point(4, 0), Point(4, 3))
+        >>> t1.is_right()
+        True
+
+        """
         s = self.sides
         return Segment.is_perpendicular(s[0], s[1]) or \
                Segment.is_perpendicular(s[1], s[2]) or \
@@ -353,18 +774,29 @@ class Triangle(Polygon):
 
     @property
     def altitudes(self):
-        """
-        The altitudes of the triangle in a dictionary where the key
-        is the vertex and the value is the altitude at that point.
+        """The altitudes of the triangle.
 
-        Example:
-        ========
-            >>> from sympy.geometry import Point, Triangle
+        An altitude of a triangle is a straight line through a vertex and
+        perpendicular to the opposite side.
 
-            >>> p1,p2,p3 = Point(0,0), Point(1,0), Point(0,1)
-            >>> t = Triangle(p1, p2, p3)
-            >>> t.altitudes[p1]
-            Segment(Point(0, 0), Point(1/2, 1/2))
+        Returns
+        -------
+        altitudes : dict
+            The dictionary consists of keys which are vertices and values
+            which are Segments.
+
+        See Also
+        --------
+        Point
+        Segment
+
+        Examples
+        --------
+        >>> from sympy.geometry import Point, Triangle
+        >>> p1, p2, p3 = Point(0, 0), Point(1, 0), Point(0, 1)
+        >>> t = Triangle(p1, p2, p3)
+        >>> t.altitudes[p1]
+        Segment(Point(0, 0), Point(1/2, 1/2))
 
         """
         s = self.sides
@@ -375,42 +807,124 @@ class Triangle(Polygon):
 
     @property
     def orthocenter(self):
-        """The orthocenter of the triangle."""
+        """The orthocenter of the triangle.
+
+        The orthocenter is the intersection of the altitudes of a triangle.
+
+        Returns
+        -------
+        orthocenter : Point
+
+        See Also
+        --------
+        Point
+
+        Examples
+        --------
+        >>> from sympy.geometry import Point, Triangle
+        >>> p1, p2, p3 = Point(0, 0), Point(1, 0), Point(0, 1)
+        >>> t = Triangle(p1, p2, p3)
+
+        """
         a = self.altitudes
         return GeometryEntity.intersect(a[1], a[2])[0]
 
     @property
     def circumcenter(self):
-        """The circumcenter of the triangle."""
+        """The circumcenter of the triangle
+
+        The circumcenter is the center of the circumcircle.
+
+        Returns
+        -------
+        circumcenter : Point
+
+        See Also
+        --------
+        Point
+
+        Examples
+        --------
+        >>> from sympy.geometry import Point, Triangle
+        >>> p1, p2, p3 = Point(0, 0), Point(1, 0), Point(0, 1)
+        >>> t = Triangle(p1, p2, p3)
+        >>> t.circumcenter
+        Point(1/2, 1/2)
+
+        """
         a,b,c = [x.perpendicular_bisector() for x in self.sides]
         return GeometryEntity.do_intersection(a, b)[0]
 
     @property
     def circumradius(self):
-        """The radius of the circumcircle of the triangle."""
+        """The radius of the circumcircle of the triangle.
+
+        Returns
+        -------
+        circumradius : number of Basic instance
+
+        Examples
+        --------
+        >>> from sympy import Symbol
+        >>> from sympy.geometry import Point, Triangle
+        >>> a = Symbol('a')
+        >>> p1, p2, p3 = Point(0, 0), Point(1, 0), Point(0, a)
+        >>> t = Triangle(p1, p2, p3)
+        >>> t.circumradius
+        (1/4 + a**2/4)**(1/2)
+
+        """
         return Point.distance(self.circumcenter, self.vertices[0])
 
     @property
     def circumcircle(self):
-        """The circumcircle of the triangle."""
+        """The circle which passes through the three vertices of the triangle.
+
+        Returns
+        -------
+        circumcircle : Circle
+
+        See Also
+        --------
+        Circle
+
+        Examples
+        --------
+        >>> from sympy.geometry import Point, Triangle
+        >>> p1, p2, p3 = Point(0, 0), Point(1, 0), Point(0, 1)
+        >>> t = Triangle(p1, p2, p3)
+        >>> t.circumcircle
+        Circle(Point(1/2, 1/2), 2**(1/2)/2)
+
+        """
         return Circle(self.circumcenter, self.circumradius)
 
     @property
     def bisectors(self):
-        """
-        The angle bisectors of the triangle in a dictionary where the
-        key is the vertex and the value is the bisector at that point.
+        """The angle bisectors of the triangle.
 
-        Example:
-        ========
-            >>> from sympy.geometry import Point, Triangle, Segment
+        An angle bisector of a triangle is a straight line through a vertex
+        which cuts the corresponding angle in half.
 
-            >>> p1,p2,p3 = Point(0,0), Point(1,0), Point(0,1)
-            >>> t = Triangle(p1, p2, p3)
+        Returns
+        -------
+        bisectors : dict
+            Each key is a vertex (Point) and each value is the corresponding
+            bisector (Segment).
 
-            >>> from sympy import sqrt
-            >>> t.bisectors[p2] == Segment(Point(0, sqrt(2)-1), Point(1, 0))
-            True
+        See Also
+        --------
+        Point
+        Segment
+
+        Examples
+        --------
+        >>> from sympy.geometry import Point, Triangle, Segment
+        >>> p1, p2, p3 = Point(0, 0), Point(1, 0), Point(0, 1)
+        >>> t = Triangle(p1, p2, p3)
+        >>> from sympy import sqrt
+        >>> t.bisectors[p2] == Segment(Point(0, sqrt(2) - 1), Point(1, 0))
+        True
 
         """
         s = self.sides
@@ -423,39 +937,114 @@ class Triangle(Polygon):
 
     @property
     def incenter(self):
-        """The incenter of the triangle."""
+        """The center of the incircle.
+
+        The incircle is the circle which lies inside the triangle and touches
+        all three sides.
+
+        Returns
+        -------
+        incenter : Point
+
+        See Also
+        --------
+        incircle
+        Point
+
+        Examples
+        --------
+        >>> from sympy.geometry import Point, Triangle
+        >>> p1, p2, p3 = Point(0, 0), Point(1, 0), Point(0, 1)
+        >>> t = Triangle(p1, p2, p3)
+        >>> t.incenter
+        Point(1 - 2**(1/2)/2, 1 - 2**(1/2)/2)
+
+        """
         s = self.sides
         v = self.vertices
         A,B,C = v[0],v[1],v[2]
         a,b,c = s[1].length,s[2].length,s[0].length
-        x = simplify( (a*A[0] + b*B[0] + c*C[0]) / (a+b+c) )
-        y = simplify( (a*A[1] + b*B[1] + c*C[1]) / (a+b+c) )
+        x = simplify((a*A[0] + b*B[0] + c*C[0]) / (a+b+c))
+        y = simplify((a*A[1] + b*B[1] + c*C[1]) / (a+b+c))
         return Point(x, y)
 
     @property
     def inradius(self):
-        """The inradius of the triangle."""
+        """The radius of the incircle.
+
+        Returns
+        -------
+        inradius : number of Basic instance
+
+        See Also
+        --------
+        incircle
+
+        Examples
+        --------
+        >>> from sympy import Symbol
+        >>> from sympy.geometry import Point, Triangle
+        >>> a = Symbol('a')
+        >>> p1, p2, p3 = Point(0, 0), Point(a, 0), Point(0, a)
+        >>> t = Triangle(p1, p2, p3)
+        >>> t.inradius
+        -(-4*a**2*(a**2)**(1/2) + 2*2**(1/2)*a**2*(a**2)**(1/2))/(8*a**2)
+
+        """
         return simplify(self.area / self.perimeter)
 
     @property
     def incircle(self):
-        """The incircle of the triangle."""
+        """The incircle of the triangle.
+
+        The incircle is the circle which lies inside the triangle and touches
+        all three sides.
+
+        Returns
+        -------
+        incircle : Circle
+
+        See Also
+        --------
+        Circle
+
+        Examples
+        --------
+        >>> from sympy.geometry import Point, Triangle
+        >>> p1, p2, p3 = Point(0, 0), Point(2, 0), Point(0, 2)
+        >>> t = Triangle(p1, p2, p3)
+        >>> t.incircle
+        Circle(Point(2 - 2**(1/2), 2 - 2**(1/2)), 1 - 2**(1/2)/2)
+
+        """
         return Circle(self.incenter, self.inradius)
 
     @property
     def medians(self):
-        """
-        The medians of the triangle in a dictionary where the key
-        is the vertex and the value is the median at that point.
+        """The medians of the triangle.
 
-        Example:
-        ========
-            >>> from sympy.geometry import Point, Triangle
+        A median of a triangle is a straight line through a vertex and the
+        midpoint of the opposite side, and divides the triangle into two
+        equal areas.
 
-            >>> p1,p2,p3 = Point(0,0), Point(1,0), Point(0,1)
-            >>> t = Triangle(p1, p2, p3)
-            >>> t.medians[p1]
-            Segment(Point(0, 0), Point(1/2, 1/2))
+        Returns
+        -------
+        medians : dict
+            Each key is a vertex (Point) and each value is the median (Segment)
+            at that point.
+
+        See Also
+        --------
+        Point
+        Segment
+
+        Examples
+        --------
+        >>> from sympy.geometry import Point, Triangle
+        >>> p1, p2, p3 = Point(0, 0), Point(1, 0), Point(0, 1)
+        >>> t = Triangle(p1, p2, p3)
+        >>> t.medians[p1]
+        Segment(Point(0, 0), Point(1/2, 1/2))
 
         """
         s = self.sides
@@ -466,9 +1055,22 @@ class Triangle(Polygon):
 
     @property
     def medial(self):
-        """
-        The medial triangle of the triangle, the triangle which is formed
-        from the midpoints of the three sides.
+        """The medial triangle of the triangle.
+        
+        The triangle which is formed from the midpoints of the three sides.
+        
+        Returns
+        -------
+        medial : Triangle
+        
+        Examples
+        --------
+        >>> from sympy.geometry import Point, Triangle
+        >>> p1, p2, p3 = Point(0, 0), Point(1, 0), Point(0, 1)
+        >>> t = Triangle(p1, p2, p3)
+        >>> t.medial
+        Triangle(Point(1/2, 0), Point(1/2, 1/2), Point(0, 1/2))
+        
         """
         s = self.sides
         return Triangle(s[0].midpoint, s[1].midpoint, s[2].midpoint)
