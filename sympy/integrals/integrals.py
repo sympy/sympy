@@ -1,5 +1,5 @@
 from sympy.core import (Basic, Expr, S, C, Symbol, Wild, Add, sympify, diff,
-                        oo, Tuple, Dummy)
+                        oo, Tuple, Dummy, Equality, Interval)
 
 from sympy.core.symbol import Dummy
 from sympy.integrals.trigonometry import trigintegrate
@@ -14,61 +14,75 @@ from sympy.geometry import Curve
 from sympy.functions.elementary.piecewise import piecewise_fold
 from sympy.series import limit
 
+def _process_limits(*symbols):
+    """Convert the symbols-related limits into propert limits,
+    storing them as Tuple(symbol, lower, upper). The sign of
+    the function is also returned when the upper limit is missing
+    so (x, 1, None) becomes (x, None, 1) and the sign is changed.
+    """
+    limits = []
+    sign = 1
+    for V in symbols:
+        if isinstance(V, Symbol):
+            limits.append(Tuple(V))
+            continue
+        elif isinstance(V, (tuple, list, Tuple)):
+            V = sympify(flatten(V))
+            if V[0].is_Symbol:
+                newsymbol = V[0]
+                if len(V) == 2 and isinstance(V[1], Interval):
+                    V[1:] = [V[1].start, V[1].end]
+
+                if len(V) == 3:
+                    if V[1] is None and V[2] is not None:
+                        nlim = [V[2]]
+                    elif V[1] is not None and V[2] is None:
+                        sign *= -1
+                        nlim = [V[1]]
+                    elif V[1] is None and V[2] is None:
+                        nlim = []
+                    else:
+                        nlim = V[1:]
+                    limits.append(Tuple(newsymbol, *nlim ))
+                    continue
+                elif len(V) == 1 or (len(V) == 2 and V[1] is None):
+                    limits.append(Tuple(newsymbol))
+                    continue
+                elif len(V) == 2:
+                    limits.append(Tuple(newsymbol, V[1]))
+                    continue
+
+        raise ValueError('Invalid limits given: %s' % str(symbols))
+
+    return limits, sign
+
 class Integral(Expr):
     """Represents unevaluated integral."""
 
     __slots__ = ['is_commutative']
 
     def __new__(cls, function, *symbols, **assumptions):
+
         # Any embedded piecewise functions need to be brought out to the
         # top level so that integration can go into piecewise mode at the
         # earliest possible moment.
         function = piecewise_fold(sympify(function))
 
-        if function.is_Number:
-            if function is S.NaN:
-                return S.NaN
+        if function is S.NaN:
+            return S.NaN
 
+        sign = 1
         if symbols:
-            limits = []
-            for V in symbols:
-                if isinstance(V, Symbol):
-                    limits.append(Tuple(V))
-                    continue
-                elif isinstance(V, (tuple, list, Tuple)):
-                    V = sympify(flatten(V))
-                    if V[0].is_Symbol:
-                        newsymbol = V[0]
-                        if len(V) == 3:
-                            if V[1] is None and V[2] is not None:
-                                nlim = [V[2]]
-                            elif V[1] is not None and V[2] is None:
-                                function = -function
-                                nlim = [V[1]]
-                            elif V[1] is None and V[2] is None:
-                                nlim = []
-                            else:
-                                nlim = V[1:]
-                            limits.append(Tuple(newsymbol, *nlim ))
-                            continue
-                        elif len(V) == 1 or (len(V) == 2 and V[1] is None):
-                            limits.append(Tuple(newsymbol))
-                            continue
-                        elif len(V) == 2:
-                            limits.append(Tuple(newsymbol, V[1]))
-                            continue
-
-
-                raise ValueError("Invalid integration variable or limits: %s" % str(symbols))
+            limits, sign = _process_limits(*symbols)
         else:
             # no symbols provided -- let's compute full anti-derivative
-            syms = function.atoms(Symbol)
+            syms = function.free_symbols
             if not syms:
                 raise ValueError('An integration variable is required.')
             limits = [Tuple(symb) for symb in syms]
 
         obj = Expr.__new__(cls, **assumptions)
-        arglist = [function]
+        arglist = [sign*function]
         arglist.extend(limits)
         obj._args = tuple(arglist)
         obj.is_commutative = all(s.is_commutative for s in obj.free_symbols)

@@ -252,4 +252,4 @@ def test_doit():
     f = Sum(2 * n * x, (n, 1, 3))
     d = Derivative(f, x)
     assert d.doit() == 12
-    assert d.doit(deep = False) == d
+    assert d.doit(deep = False) == Sum(2*n, (n, 1, 3))

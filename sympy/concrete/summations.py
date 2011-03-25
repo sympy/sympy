@@ -1,47 +1,35 @@
 from sympy.core import (Expr, S, C, Symbol, Equality, Interval, sympify, Wild,
                         Tuple, Dummy, Derivative)
+from sympy.functions.elementary.piecewise import piecewise_fold
 from sympy.solvers import solve
 from sympy.utilities import flatten
 
 class Sum(Expr):
     """Represents unevaluated summation."""
 
-    def __new__(cls, f, *symbols, **assumptions):
-        f = sympify(f)
+    def __new__(cls, function, *symbols, **assumptions):
+        from sympy.integrals.integrals import _process_limits
+
+        # Any embedded piecewise functions need to be brought out to the
+        # top level so that integration can go into piecewise mode at the
+        # earliest possible moment.
+        function = piecewise_fold(sympify(function))
+
+        if function is S.NaN:
+            return S.NaN
 
         if not symbols:
-            raise ValueError("No symbols given.")
+            raise ValueError("Summation variables must be given")
 
-        else:
-            limits = []
+        limits, sign = _process_limits(*symbols)
 
-            for V in symbols:
-                if isinstance(V, Symbol):
-                    limits.append(Tuple(V))
-                    continue
-                elif isinstance(V, Equality):
-                    if isinstance(V.lhs, Symbol):
-                        if isinstance(V.rhs, Interval):
-                            limits.append(Tuple(V.lhs, V.rhs.start, V.rhs.end))
-                        else:
-                            limits.append(Tuple(V.lhs, V.rhs))
-
-                        continue
-                elif isinstance(V, (tuple, list, Tuple)):
-                    V = flatten(V)
-                    if len(V) == 1:
-                        if isinstance(V[0], Symbol):
-                            limits.append(Tuple(V[0]))
-                            continue
-                    elif len(V) in (2, 3):
-                        if isinstance(V[0], Symbol):
-                            limits.append(Tuple(*map(sympify, V)))
-                            continue
-
-                raise ValueError("Invalid summation variable or limits")
+        # Only limits with lower and upper bounds are supported; the indefinite Sum
+        # is not supported
+        if any(len(l) != 3 or None in l for l in limits):
+            raise ValueError('Sum requires values for lower and upper bounds.')
 
         obj = Expr.__new__(cls, **assumptions)
-        arglist = [f]
+        arglist = [sign*function]
         arglist.extend(limits)
         obj._args = tuple(arglist)
 
@@ -79,39 +67,18 @@ class Sum(Expr):
         >>> Sum(x, (x, y, 1)).free_symbols
         set([y])
         """
-        # analyze the summation
-        # >>> Sum(x*y,(x,1,2),(y,1,3)).args
-        # (x*y, Tuple(x, 1, 2), Tuple(y, 1, 3))
-        # >>> Sum(x, x, y).args
-        # (x, Tuple(x), Tuple(y))
-        intgrl = self
-        args = intgrl.args
-        integrand, limits = args[0], args[1:]
-        if integrand.is_zero:
-            return set()
-        isyms = integrand.free_symbols
-        for ilim in limits:
-            if len(ilim) == 1:
-                isyms.add(ilim[0])
-                continue
-            # take out the target symbol
-            if ilim[0] in isyms:
-                isyms.remove(ilim[0])
-            if len(ilim) == 3 and ilim[1] == ilim[2]:
-                # if two limits are the same the sum is 0
-                # and there are no symbols
-                return set()
-            # add in the new symbols
-            for i in ilim[1:]:
-                isyms.update(i.free_symbols)
-        return isyms
+        from sympy.integrals.integrals import Integral
+
+        # use Integral's free symbols method until there is
+        # a common limit object to use
+        return Expr.__new__(Integral, self.function, *self.limits).free_symbols
 
     def doit(self, **hints):
         #if not hints.get('sums', True):
         #    return self
         f = self.function
-        for i, a, b in self.limits:
-            f = eval_sum(f, (i, a, b))
+        for limit in self.limits:
+            f = eval_sum(f, limit)
             if f is None:
                 return self
 
@@ -124,11 +91,42 @@ class Sum(Expr):
         return
 
     def _eval_derivative(self, x):
-        if not self.has(x):
+        """
+        Differentiate wrt x as long as x is not in the free symbols of any of
+        the upper or lower limits.
+
+        Sum(a*b*x, (x, 1, a)) can be differentiated wrt x or b but not `a`
+        since the value of the sum is discontinuous in `a`. In a case
+        involving a limit variable, the unevaluated derivative is returned.
+
+        """
+
+        # diff already confirmed that x is in the free symbols of self, but we
+        # don't want to differentiate wrt any free symbol in the upper or lower
+        # limits
+        # XXX remove this test for free_symbols when the default _eval_derivative is in
+        if x not in self.free_symbols:
             return S.Zero
 
-        if not self.args[1].has(x):
-            return Sum(Derivative(self.args[0], x, **{'evaluate': True}), self.args[1])
+        # get limits and the function
+        f, limits = self.function, list(self.limits)
+
+        limit = limits.pop(-1)
+
+        if limits: # f is the argument to a Sum
+            f = Sum(f, *limits)
+
+        if len(limit) == 3:
+            _, a, b = limit
+            if x in a.free_symbols or x in b.free_symbols:
+                return None
+            df = Derivative(f, x, **{'evaluate': True})
+            rv = Sum(df, limit)
+            if limit[0] not in df.free_symbols:
+                rv = rv.doit()
+            return rv
+        else:
+            return NotImplementedError('Lower and upper bound expected.')
 
     def euler_maclaurin(self, m=0, n=0, eps=0, eval_integral=True):
         """
@@ -304,14 +302,12 @@ def telescopic(L, R, (i, a, b)):
     return None
 
 def eval_sum(f, (i, a, b)):
-    if f.is_Number:
-        if f is S.NaN:
-            return S.NaN
-        elif f is S.Zero:
-            return S.Zero
+    if f is S.Zero:
+        return S.Zero
 
-    if not f.has(i):
-        return f*(b-a+1)
+    if i not in f.free_symbols:
+        return f*(b - a + 1)
+
     definite = a.is_Integer and b.is_Integer
     # Doing it directly may be faster if there are very few terms.
     if definite and (b-a < 100):
@@ -370,7 +366,7 @@ def eval_sum_symbolic(f, (i, a, b)):
 
 def eval_sum_direct(expr, (i, a, b)):
     s = S.Zero
-    if expr.has(i):
+    if i in expr.free_symbols:
         for j in xrange(a, b+1):
             s += expr.subs(i, j)
     else:
