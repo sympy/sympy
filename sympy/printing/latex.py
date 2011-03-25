@@ -31,13 +31,13 @@ class LatexPrinter(Printer):
     }
 
     def __init__(self, settings=None):
-        if settings is not None and settings.has_key('inline') and not settings['inline']:
+        if settings is not None and 'inline' in settings and not settings['inline']:
             # Change to "good" defaults for inline=False
             settings['mat_str'] = 'bmatrix'
             settings['mat_delim'] = None
         Printer.__init__(self, settings)
 
-        if self._settings.has_key('inline'):
+        if ('inline') in self._settings:
             warnings.warn("'inline' is deprecated, please use 'mode'. "
                 "'mode' can be one of 'inline', 'plain', 'equation', or "
                 "'equation*'.")
@@ -45,7 +45,7 @@ class LatexPrinter(Printer):
                 self._settings['mode'] = 'inline'
             else:
                 self._settings['mode'] = 'equation*'
-        if self._settings.has_key('mode'):
+        if 'mode' in self._settings:
             valid_modes = ['inline', 'plain', 'equation', \
                             'equation*']
             if self._settings['mode'] not in valid_modes:

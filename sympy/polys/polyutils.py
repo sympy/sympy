@@ -169,7 +169,7 @@ def _dict_from_basic_if_gens(ex, gens, **args):
 
         monom = tuple(monom)
 
-        if result.has_key(monom):
+        if monom in result:
             result[monom] += Mul(*coeff)
         else:
             result[monom] = Mul(*coeff)
@@ -235,7 +235,7 @@ def _dict_from_basic_no_gens(ex, **args):
 
         monom = tuple(monom)
 
-        if result.has_key(monom):
+        if monom in result:
             result[monom] += Mul(*coeff)
         else:
             result[monom] = Mul(*coeff)

@@ -1963,7 +1963,7 @@ class SMatrix(Matrix):
             L = []
             for i in range(lo, hi):
                 m,n = self.rowdecomp(i)
-                if self.mat.has_key((m,n)):
+                if (m,n) in self.mat:
                     L.append(self.mat[(m,n)])
                 else:
                     L.append(0)
@@ -2005,7 +2005,7 @@ class SMatrix(Matrix):
             testval = sympify(value)
             if testval != 0:
                 self.mat[(i,j)] = testval
-            elif self.mat.has_key((i,j)):
+            if (i,j) in self.mat:
                 del self.mat[(i,j)]
 
     def row_del(self, k):
@@ -2146,7 +2146,7 @@ class SMatrix(Matrix):
         for i in range(_rows):
             for j in range(_cols):
                 m,n = self.rowdecomp(i*_cols + j)
-                if self.mat.has_key((m,n)):
+                if (m,n) in self.mat:
                     newD[(i,j)] = self.mat[(m,n)]
         return SMatrix(_rows, _cols, newD)
 

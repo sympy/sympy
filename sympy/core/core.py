@@ -216,7 +216,7 @@ class BasicMeta(BasicType):
                 continue    # no ._derived_premises is ok
 
             for k,v in base_derived_premises.iteritems():
-                if not cls.__dict__.has_key('is_'+k):
+                if ('is_'+k) not in cls.__dict__:
                     is_k = make__get_assumption(cls.__name__, k)
                     setattr(cls, 'is_'+k, property(is_k))
 

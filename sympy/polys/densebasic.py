@@ -422,7 +422,7 @@ def dmp_from_dict(f, u, K):
     for monom, coeff in f.iteritems():
         head, tail = monom[0], monom[1:]
 
-        if coeffs.has_key(head):
+        if head in coeffs:
             coeffs[head][tail] = coeff
         else:
             coeffs[head] = { tail : coeff }
@@ -788,7 +788,7 @@ def dmp_eject(f, u, K, **args):
         else:
             g_monom, f_monom = monom[:v], monom[v:]
 
-        if h.has_key(f_monom):
+        if f_monom in h:
             h[f_monom][g_monom] = c
         else:
             h[f_monom] = {g_monom: c}
