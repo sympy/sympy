@@ -608,7 +608,7 @@ class HadamardGate(OneQubitGate):
         return sqrt(2)*IdentityGate(self.targets[0])
 
 
-class XGate(OneQubitGate, HermitianOperator):
+class XGate(HermitianOperator, OneQubitGate):
     """The single qubit X, or NOT, gate.
 
     Parameters
@@ -645,7 +645,7 @@ class XGate(OneQubitGate, HermitianOperator):
 
 
 
-class YGate(OneQubitGate, HermitianOperator):
+class YGate(HermitianOperator, OneQubitGate):
     """The single qubit Y gate.
 
     Parameters
@@ -673,7 +673,7 @@ class YGate(OneQubitGate, HermitianOperator):
         return Integer(0)
 
 
-class ZGate(OneQubitGate, HermitianOperator):
+class ZGate(HermitianOperator, OneQubitGate):
     """The single qubit Z gate.
 
     Parameters

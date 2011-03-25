@@ -9,7 +9,7 @@ from sympy.physics.quantum.qapply import qapply
 from sympy.physics.quantum.qubit import Qubit, IntQubit, qubit_to_matrix,\
      matrix_to_qubit
 from sympy.physics.quantum.matrixutils import matrix_to_zero
-
+from sympy.physics.quantum import Dagger
 
 def test_gate():
     """Test a basic gate."""
@@ -258,3 +258,20 @@ def test_random_circuit():
     assert m.shape == (8,8)
     assert isinstance(m, Matrix)
 
+def test_hermitian_XGate():
+    x = XGate(1, 2)
+    x_dagger = Dagger(x)
+
+    assert (x == x_dagger)
+
+def test_hermitian_YGate():
+    y = YGate(1, 2)
+    y_dagger = Dagger(y)
+
+    assert (y == y_dagger)
+
+def test_hermitian_ZGate():
+    z = ZGate(1, 2)
+    z_dagger = Dagger(z)
+
+    assert (z == z_dagger)
