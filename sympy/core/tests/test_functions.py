@@ -1,5 +1,5 @@
 from sympy import Lambda, Symbol, Function, Derivative, sqrt, \
-        log, exp, Rational, Real, sin, cos, diff, I, re, im, \
+        log, exp, Rational, Real, sin, cos, acos, diff, I, re, im, \
         oo, zoo, nan, E, expand, pi, O, Sum, S
 from sympy.utilities.pytest import XFAIL, raises
 from sympy.abc import x, y
@@ -246,7 +246,10 @@ def test_function__eval_nseries():
     assert sin(x)._eval_nseries(x,2) == x + O(x**2)
     assert sin(x+1)._eval_nseries(x,2) == x*cos(1) + sin(1) + O(x**2)
     assert sin(pi*(1-x))._eval_nseries(x,2) == pi*x + O(x**2)
+    assert acos(1-x**2)._eval_nseries(x,2) == sqrt(2)*x + O(x**2)
     raises(PoleError, 'sin(1/x)._eval_nseries(x,2)')
+    raises(PoleError, 'acos(1-x)._eval_nseries(x,2)')
+    raises(PoleError, 'acos(1+x)._eval_nseries(x,2)')
 
 def test_doit():
     n = Symbol('n', integer = True)
