@@ -1,4 +1,5 @@
 from sympy import Basic, Symbol, Integer, C, S, Dummy, Rational
+from sympy.core.numbers import Zero
 from sympy.core.sympify import sympify, converter, SympifyError
 from sympy.core.compatibility import ordered_iter
 
@@ -1442,15 +1443,15 @@ class Matrix(object):
         =====  ============================  ==========================
         ord    norm for matrices             norm for vectors
         =====  ============================  ==========================
-        None   Spectral / 2-norm             2-norm
-        'fro'  Frobenius norm                --
+        None   Frobenius norm                2-norm
+        'fro'  Frobenius norm                - does not exist
         inf    --                            max(abs(x))
         -inf   --                            min(abs(x))
         1      --                            as below
         -1     --                            as below
         2      2-norm (largest sing. value)  as below
         -2     smallest singular value       as below
-        other  --                            sum(abs(x)**ord)**(1./ord)
+        other  - does not exist              sum(abs(x)**ord)**(1./ord)
         =====  ============================  ==========================
 
         >>> from sympy import Matrix, var, trigsimp, cos, sin
@@ -1459,12 +1460,14 @@ class Matrix(object):
         >>> print trigsimp( v.norm() )
         1
         >>> print v.norm(10)
-        (cos(x)**10 + sin(x)**10)**0.1
+        (cos(x)**10 + sin(x)**10)**(1/10)
         >>> A = Matrix([[1,1], [1,1]])
-        >>> print A.norm() #spectral norm (maximal |Ax|/|x| under 2-vector-norm)
+        >>> print A.norm(2)#spectral norm (maximal |Ax|/|x| under 2-vector-norm)
         2
         >>> print A.norm(-2) #inverse spectral norm (smallest singular value)
         0
+        >>> print A.norm() #Frobenius Norm
+        2
         """
         #Row or Column Vector Norms
         if self.rows == 1 or self.cols == 1:
@@ -1478,20 +1481,20 @@ class Matrix(object):
                 return numerical_min(self.applyfunc(abs))
             #Otherwise generalize the 2-norm, Sum(x_i**ord)**(1/ord)
             try:
-                raiseToOrder = lambda b : pow(b,ord)
-                return sum(self.applyfunc(abs).applyfunc(raiseToOrder))\
-                        **(1.0/ord)
+                raise_to_order = lambda b : pow(b,ord)
+                return sum(self.applyfunc(abs).applyfunc(raise_to_order))\
+                        **Rational(1,ord)
             except:
                 raise ValueError, "Expected order to be Number, Symbol, oo"
         #Matrix Norms
         else:
-            if ord == 2 or ord == None: #Spectral Norm
+            if ord == 2: #Spectral Norm
                 #Maximum singular value
                 return numerical_max(self.singular_values())
             elif ord == -2:
                 #Minimum singular value
                 return numerical_min(self.singular_values())
-            elif isinstance(ord,str) and ord.lower() in\
+            elif ord == None or isinstance(ord,str) and ord.lower() in\
                     ['f', 'fro', 'frobenius', 'vector']:
                 #reshape as vector and send back to norm function
                 return self.vec().norm(ord=2)
@@ -2127,16 +2130,27 @@ class Matrix(object):
         >>> print A.singular_values()
         [1, (1 + x**2)**(1/2), 0]
         """
+        #Compute eigenvalues of AA.H
         if self.rows>=self.cols:
             valMultPairs = (self.H*self).eigenvals()
         else:
             valMultPairs = (self*self.H).eigenvals()
+
+        #.eigenvals returns an odd result. Expand into a simple list
         vals = []
         for k,v in valMultPairs.items():
             vals += [sqrt(k)]*v #dangerous! same k in several spots!
-        if all([val.is_number for val in vals]): #if sorting makes sense
+
+        #if sorting makes sense then sort
+        if all([val.is_number for val in vals]):
             vals.sort(reverse=True) #sort them in descending order
-        vals = map(re, vals) #some small imaginary parts are sometime left over
+
+        #some small imaginary parts are sometime left over
+        vals = map(re, vals)
+
+        #Finally pad with zeros in case dim(range) < dim(domain)
+        vals += [Zero]*(self.cols-len(vals))
+
         return vals
     def condition_number(self):
         """Returns the condition number of a matrix
@@ -3252,13 +3266,13 @@ def symarray(prefix, shape):
 def numerical_max(L):
     """a max function that fails on Non-Numbers"""
     if not all([elem.is_number for elem in L]):
-        raise ValueError, "Not implemented on Non-Numbers"
+        raise NotImplementedError, "Not implemented on Non-Numbers"
     return max(L)
 
 def numerical_min(L):
     '''a min function that fails on Non-Numbers'''
     if not all([elem.is_number for elem in L]):
-        raise ValueError, "Not implemented on Non-Numbers"
+        raise NotImplementedError, "Not implemented on Non-Numbers"
     return min(L)
 
 def _separate_eig_results(res):
