@@ -110,7 +110,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Oleksandr Gituliar: Fixes to Matrix
 #. Sean Vig: Quantum improvement
 #. Prafullkumar P. Tale: Fixed plotting documentation
-
+#. Vladimir Perić: Fix some Python 3 issues
 
 Up-to-date list in the order of the first contribution is given in the `AUTHORS
 <https://github.com/sympy/sympy/blob/master/AUTHORS>`_ file.
