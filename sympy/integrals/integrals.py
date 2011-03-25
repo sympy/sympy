@@ -572,7 +572,22 @@ class Integral(Expr):
             if h is not None:
                 parts.append(coeff * h)
             else:
-                return None
+                # integral(f1*f2,x) = f1 * integrate(f2, x) - integrate(f1.diff(x) * integrate(f2,x), x)
+                # We will use the above technique to solve integration.
+                # Since we are putting the following condition
+                #         len (args_m) >= len(Mul.make_args(f1.diff(x) * f2_inte))
+                # the process is terminating even though its recursive.
+                args_m = Mul.make_args(f)
+                if len(args_m)>1:
+                    f1 = args_m[0]
+                    f2 = Mul(*args_m[1:])
+                    f2_inte = integrate(f2,x)
+                    if len (args_m) >= len(Mul.make_args(f1.diff(x) * f2_inte)):
+                        return f1 * f2_inte - integrate(f1.diff(x) * f2_inte ,x)
+                    else :
+                        return None
+                else:
+                    return None
 
         return Add(*parts)
 
