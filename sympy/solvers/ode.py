@@ -716,8 +716,8 @@ def classify_ode(eq, func, dict=False):
                 if simplify((r[e]+u2*r[d]).subs({x:u2, y:1})) != 0:
                     matching_hints["1st_homogeneous_coeff_subs_indep_div_dep"] = r
                     matching_hints["1st_homogeneous_coeff_subs_indep_div_dep_Integral"] = r
-                if matching_hints.has_key("1st_homogeneous_coeff_subs_dep_div_indep") \
-                and matching_hints.has_key("1st_homogeneous_coeff_subs_indep_div_dep"):
+                if "1st_homogeneous_coeff_subs_dep_div_indep" in matching_hints \
+                and "1st_homogeneous_coeff_subs_indep_div_dep" in matching_hints:
                     matching_hints["1st_homogeneous_coeff_best"] = r
 
     if order == 2:
@@ -1068,7 +1068,7 @@ def checkodesol(ode, func, sol, order='auto', solve_for_func=True):
                 # Substitute it into ode to check for self consistency.
                 lhs, rhs = ode.lhs, ode.rhs
                 for i in range(order, -1, -1):
-                    if i == 0 and not diffsols.has_key(0):
+                    if i == 0 and 0 not in diffsols:
                         # We can only substitute f(x) if the solution was
                         # solved for f(x).
                         break

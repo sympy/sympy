@@ -143,7 +143,7 @@ class Order(Expr):
                 expr = r.expr.subs(symbol_map)
                 symbols = []
                 for s in r.variables:
-                    if symbol_map.has_key(s):
+                    if s in symbol_map:
                         symbols.append(symbol_map[s])
                     else:
                         symbols.append(s)

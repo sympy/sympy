@@ -178,7 +178,7 @@ def sdp_add(f, g, u, O, K):
     h = dict(f)
 
     for monom, c in g:
-        if h.has_key(monom):
+        if monom in h:
             coeff = h[monom] + c
 
             if not coeff:
@@ -195,7 +195,7 @@ def sdp_sub(f, g, u, O, K):
     h = dict(f)
 
     for monom, c in g:
-        if h.has_key(monom):
+        if monom in h:
             coeff = h[monom] - c
 
             if not coeff:
@@ -228,7 +228,7 @@ def sdp_mul(f, g, u, O, K):
             monom = monomial_mul(fm, gm)
             coeff = fc*gc
 
-            if h.has_key(monom):
+            if monom in h:
                 coeff += h[monom]
 
                 if not coeff:
@@ -248,7 +248,7 @@ def sdp_sqr(f, u, O, K):
             monom = monomial_mul(fm, Fm)
             coeff = fc*Fc
 
-            if h.has_key(monom):
+            if monom in h:
                 coeff += h[monom]
 
                 if not coeff:
