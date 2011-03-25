@@ -109,6 +109,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Sherjil Ozair: Fixes to SMatrix
 #. Oleksandr Gituliar: Fixes to Matrix
 #. Sean Vig: Quantum improvement
+#. Prafullkumar P. Tale: Fixed plotting documentation
 
 
 Up-to-date list in the order of the first contribution is given in the `AUTHORS
