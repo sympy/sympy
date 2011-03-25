@@ -1,6 +1,6 @@
 from sympy import (symbols, Matrix, SparseMatrix, eye, I, Symbol, Rational, wronskian, cos,
     sin, exp, hessian, sqrt, zeros, ones, randMatrix, Poly, S, pi, E, I,
-    oo, trigsimp, Integer, block_diag, N, zeros, sympify)
+    oo, trigsimp, Integer, block_diag, N, zeros, sympify, Pow)
 from sympy.matrices.matrices import (ShapeError, MatrixError,
     matrix_multiply_elementwise, diag,
 
@@ -1574,11 +1574,11 @@ def test_matrix_norm():
     x = Symbol('x', real=True)
     v = Matrix([cos(x), sin(x)])
     assert trigsimp(v.norm(2)) == 1
-    assert v.norm(10) == (cos(x)**10 + sin(x)**10)**0.1
+    assert v.norm(10) == Pow(cos(x)**10 + sin(x)**10, S(1)/10)
 
     #Test Rows
     y = Matrix([[5, Rational(3,2)]])
-    assert y.norm() - (25 + Rational(9,4)**.5) < 1e-9
+    assert y.norm() == Pow(25 + Rational(9,4),S(1)/2)
     assert y.norm(oo) == max(y.mat)
     assert y.norm(-oo) == min(y.mat)
 

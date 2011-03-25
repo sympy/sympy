@@ -1246,14 +1246,14 @@ class Matrix(object):
         ord    norm for matrices             norm for vectors
         =====  ============================  ==========================
         None   Frobenius norm                2-norm
-        'fro'  Frobenius norm                --
+        'fro'  Frobenius norm                - does not exist
         inf    --                            max(abs(x))
         -inf   --                            min(abs(x))
         1      --                            as below
         -1     --                            as below
         2      2-norm (largest sing. value)  as below
         -2     smallest singular value       as below
-        other  --                            sum(abs(x)**ord)**(1./ord)
+        other  - does not exist              sum(abs(x)**ord)**(1./ord)
         =====  ============================  ==========================
 
         >>> from sympy import Matrix, var, trigsimp, cos, sin
@@ -1262,7 +1262,7 @@ class Matrix(object):
         >>> print trigsimp( v.norm() )
         1
         >>> print v.norm(10)
-        (cos(x)**10 + sin(x)**10)**0.1
+        (cos(x)**10 + sin(x)**10)**(1/10)
         >>> A = Matrix([[1,1], [1,1]])
         >>> print A.norm(2)#spectral norm (maximal |Ax|/|x| under 2-vector-norm)
         2
@@ -1283,9 +1283,9 @@ class Matrix(object):
                 return numerical_min(self.applyfunc(abs))
             #Otherwise generalize the 2-norm, Sum(x_i**ord)**(1/ord)
             try:
-                raiseToOrder = lambda b : pow(b,ord)
-                return sum(self.applyfunc(abs).applyfunc(raiseToOrder))\
-                        **(1.0/ord)
+                raise_to_order = lambda b : pow(b,ord)
+                return sum(self.applyfunc(abs).applyfunc(raise_to_order))\
+                        **Rational(1,ord)
             except:
                 raise ValueError, "Expected order to be Number, Symbol, oo"
         #Matrix Norms
