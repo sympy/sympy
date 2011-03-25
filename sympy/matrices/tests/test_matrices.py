@@ -1,12 +1,13 @@
 from sympy import (symbols, Matrix, SparseMatrix, eye, I, Symbol, Rational, wronskian, cos,
     sin, exp, hessian, sqrt, zeros, ones, randMatrix, Poly, S, pi, E, I,
-    oo, trigsimp, Integer, block_diag, N, zeros)
+    oo, trigsimp, Integer, block_diag, N, zeros, sympify)
 from sympy.matrices.matrices import (ShapeError, MatrixError,
     matrix_multiply_elementwise, diag,
 
     SparseMatrix, SparseMatrix, NonSquareMatrixError, _dims_to_nm,
     matrix_multiply_elementwise)
 from sympy.utilities.pytest import raises
+from sympy.core.numbers import Zero
 
 def test_division():
     x, y, z = symbols('x y z')
@@ -1568,20 +1569,38 @@ def test_SparseMatrix_CL_RL():
     assert SparseMatrix((1,2),(3,4)).col_list() ==[(0, 0, 1), (1, 0, 3), (0, 1, 2), (1, 1, 4)]
 
 def test_matrix_norm():
-    #test columns and symbols
+    #Vector Tests
+    #Test columns and symbols
     x = Symbol('x', real=True)
     v = Matrix([cos(x), sin(x)])
     assert trigsimp(v.norm(2)) == 1
+    assert v.norm(10) == (cos(x)**10 + sin(x)**10)**0.1
 
-    #matrix tests
+    #Test Rows
+    y = Matrix([[5, Rational(3,2)]])
+    assert y.norm() - (25 + Rational(9,4)**.5) < 1e-9
+    assert y.norm(oo) == max(y.mat)
+    assert y.norm(-oo) == min(y.mat)
+
+    #Matrix Tests
+    #Intuitive test
     A = Matrix([[1,1], [1,1]])
     assert A.norm(2)==2
     assert A.norm(-2)==0
     assert A.norm('frobenius')==2
     assert eye(10).norm(2)==eye(10).norm(-2)==1
 
-    y = Matrix([[5, Rational(3,2)]]) #checking it works for rows
-    assert y.norm() - (25 + Rational(9,4)**.5) < 1e-9
+    #Test with Symbols and more complex entries
+    y = Symbol('y')
+    A = Matrix([[3,y,y],[x,Rational(252,2811), -pi]])
+    assert A.norm('fro'), \
+            (7908777/877969 + 2*y*conjugate(y) + pi**2 + x**2)**(1/2)
+
+    #Check non-square
+    A = Matrix([[1,2,-3],[4,5,Rational(13,2)]])
+    assert A.norm(2) == sympify('(389/8 + 78665**(1/2)/8)**(1/2)')
+    assert A.norm(-2) == Zero
+    assert A.norm('frobenius') == 389**Rational(1,2)/2
 
 def test_singular_values():
     A = Matrix([[0,1*I],[2,0]])
@@ -1592,6 +1611,12 @@ def test_singular_values():
     A[2,2] = 5
     vals = A.singular_values();
     assert 1 in vals and 5 in vals and abs(x) in vals
+
+    A = Matrix([[1,2,-3],[4,5,Rational(13,2)]])
+    assert A.singular_values() == \
+            [(Rational(389,8) + 78665**Rational(1,2)/8)**Rational(1,2),\
+            (Rational(389,8) - 78665**Rational(1,2)/8)**Rational(1,2), \
+            Zero]
 
 def test_len():
     assert len(Matrix()) == 0
