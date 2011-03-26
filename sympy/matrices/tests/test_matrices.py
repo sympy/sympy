@@ -884,12 +884,17 @@ def test_subs():
 
 def test_simplify():
     x,y,f,n = symbols('x y f n')
-    M = Matrix([ [    1/x + 1/y,               (x + x*y)/ x             ],
+    M = Matrix([ [    1/x + 1/y,               (x + x*y)/ x           ],
                  [(f(x) + y*f(x))/f(x), 2 * (1/n - cos(n * pi)/n)/ pi ]
                  ])
     M.simplify()
-    assert M ==  Matrix([[(x + y)/(x * y),              1 + y           ],
-                         [   1 + y,        2*((1 - 1*cos(pi*n))/(pi*n)) ]])
+    assert M ==  Matrix([[(x + y)/(x * y),                 1 + y       ],
+                         [   1 + y,       2*((1 - 1*cos(pi*n))/(pi*n)) ]])
+    M = Matrix([[(1 + x)**2]])
+    M.simplify()
+    assert M == Matrix([[(1 + x)**2]])
+    M.simplify(ratio=oo)
+    assert M == Matrix([[1 + 2*x + x**2]])
 
 def test_transpose():
     M = Matrix([[1,2,3,4,5,6,7,8,9,0],
@@ -1276,6 +1281,7 @@ def test_diagonal_symmetrical():
     m = Matrix(2,2,[0, 1, 1, 0])
     assert not m.is_diagonal()
     assert m.is_symmetric()
+    assert m.is_symmetric(simplify=False)
 
     m = Matrix(2,2,[1, 0, 0, 1])
     assert m.is_diagonal()
@@ -1293,6 +1299,8 @@ def test_diagonal_symmetrical():
     x, y = symbols('x y')
     m = Matrix(3,3,[1, x**2 + 2*x + 1, y, (x + 1)**2 , 2, 0, y, 0, 3])
     assert m.is_symmetric()
+    assert not m.is_symmetric(simplify=False)
+    assert m.expand().is_symmetric(simplify=False)
 
 
 def test_diagonalization():
@@ -1526,4 +1534,3 @@ def test_getattr():
     x, y = symbols('x,y')
     A = Matrix(((1,4,x),(y,2,4),(10,5,x**2+1)))
     raises (AttributeError, 'A.nonexistantattribute')
-

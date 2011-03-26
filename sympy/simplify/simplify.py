@@ -2,7 +2,7 @@ from sympy import SYMPY_DEBUG
 
 from sympy.core import Basic, S, C, Add, Mul, Pow, Rational, Integer, \
         Derivative, Wild, Symbol, sympify, expand, expand_mul, expand_func, \
-        Function, Equality, Dummy
+        Function, Equality, Dummy, Atom, count_ops
 
 from sympy.core.numbers import igcd
 
@@ -1387,7 +1387,7 @@ def hypersimilar(f, g, k):
 def combsimp(expr):
     return expr
 
-def simplify(expr):
+def simplify(expr, ratio=1.7):
     """Naively simplifies the given expression.
 
        Simplification is not a well defined term and the exact strategies
@@ -1398,11 +1398,48 @@ def simplify(expr):
        function directly, because those are well defined and thus your algorithm
        will be robust.
 
+       In some cases, applying :func:`simplify` may actually result in some more
+       complicated expression.
+       By default ``ratio=1.7`` prevents more extreme cases:
+       if (result length)/(input length) > ratio, then input is returned
+       unmodified (:func:`count_ops` is used to measure length).
+
+       For example, if ``ratio=1``, `simplify` output can't be longer
+       than input.
+
+       ::
+
+           >>> from sympy import S, simplify, count_ops, oo
+           >>> root = S("(5/2 + 21**(1/2)/2)**(1/3)*(1/2 - I*3**(1/2)/2) \
+                        + 1/((1/2 - I*3**(1/2)/2)*(5/2 + 21**(1/2)/2)**(1/3))")
+
+       Since ``simplify(root)`` would result in a slightly longer expression,
+       root is returned inchanged instead::
+
+           >>> simplify(root, ratio=1) is root
+           True
+
+       If ``ratio=oo``, simplify will be applied anyway::
+
+           >>> count_ops(simplify(root, ratio=oo)) > count_ops(root)
+           True
+
+       Note that the shortest expression is not necessary the simplest, so
+       setting ``ratio`` to 1 may not be a good idea.
+       Heuristically, default value ``ratio=1.7`` seems like a reasonable choice.
     """
     expr = sympify(expr)
 
     if not isinstance(expr, Basic): # XXX: temporary hack
         return expr
+
+    if isinstance(expr, Atom):
+        return expr
+    # TODO: Apply different strategies, considering expression pattern:
+    # is it a purely rational function? Is there any trigonometric function?...
+    # See also https://github.com/sympy/sympy/pull/185.
+
+    original_expr = expr
 
     if expr.is_commutative is False:
         return together(powsimp(expr))
@@ -1434,7 +1471,8 @@ def simplify(expr):
         n, d = expr.as_numer_denom()
         if d != 0:
             expr = -n/(-d)
-
+    if count_ops(expr) > ratio*count_ops(original_expr):
+        return original_expr
     return expr
 
 def _real_to_rational(expr):

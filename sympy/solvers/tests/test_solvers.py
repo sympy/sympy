@@ -196,7 +196,7 @@ def test_linear_systemLU():
 # Note: multiple solutions exist for some of these equations, so the tests
 # should be expected to break if the implementation of the solver changes
 # in such a way that a different branch is chosen
-def test_tsolve_1():
+def test_tsolve():
     a, b = symbols('a,b')
     x, y, z = symbols('x,y,z')
     assert solve(exp(x)-3, x) == [log(3)]
@@ -234,14 +234,14 @@ def test_tsolve_1():
     assert solve(x**2 - 2**x, x) == [2]
     assert solve(x**3 - 3**x, x) == [-3/log(3)*LambertW(-log(3)/3)]
 
-    A = -7*2**Rational(4,5)*6**Rational(1,5)*log(7)/10
-    B = -7*3**Rational(1,5)*log(7)/5
+    A = -7*2**Rational(4, 5)*6**Rational(1, 5)*log(7)/10
+    B = -7*3**Rational(1, 5)*log(7)/5
 
     result = solve(2*(3*x+4)**5 - 6*7**(3*x+9), x)
 
     assert len(result) == 1 and expand(result[0]) in [
-        Rational(-4,3) - 5/log(7)/3*LambertW(A),
-        Rational(-4,3) - 5/log(7)/3*LambertW(B),
+        Rational(-4, 3) - 5/log(7)/3*LambertW(A),
+        Rational(-4, 3) - 5/log(7)/3*LambertW(B),
     ]
 
     assert solve(z*cos(x)-y, x)      == [acos(y/z)]
@@ -256,15 +256,11 @@ def test_tsolve_1():
     # issue #1408
     assert solve(y-b/(1+a*x), x) in [[(b - y)/(a*y)], [-((y - b)/(a*y))]]
     # issue #1407
-    assert solve(y-a*x**b , x) == [y**(1/b)*(1/a)**(1/b)]
+    assert solve(y-a*x**b , x) == [(y/a)**(1/b)]
     # issue #1406
     assert solve(z**x - y, x) == [log(y)/log(z)]
     # issue #1405
     assert solve(2**x - 10, x) == [log(10)/log(2)]
-
-def test_tsolve_2():
-    x, y, a, b = symbols('x,y,a,b')
-    assert solve(y-a*x**b, x) == [y**(1/b)*(1/a)**(1/b)]
 
 def test_solve_for_functions_derivatives():
     t = Symbol('t')

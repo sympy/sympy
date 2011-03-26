@@ -358,21 +358,28 @@ def test_separable5():
     sol16 = Eq(-exp(-f(x)**2)/2, C1 - x - x**2/2)
     sol17 = Eq(f(x), exp(C1 - x))
     sol18 = Eq(-log(1 - sin(2*f(x))**2)/4, C1 + log(1 - sin(x)**2)/2)
-    sol19 = Eq(f(x), -1/(1 - x) + x/(1 - x) + exp(C1 - x)/(1 - x))
+    sol19a = Eq(f(x), -(1 - x - exp(C1 - x))/(1 - x))
+    sol19b = Eq(f(x), -1 + exp(C1 - x)/(1 - x))
+    sol19c = Eq(f(x), -1/(1 - x) + x/(1 - x) + exp(C1 - x)/(1 - x))
+    sol19d = Eq(f(x), (C1*(1 - x) + x*(-x*exp(x) + exp(x))- exp(x) + x*exp(x))/
+                        ((1 - x)*(-x*exp(x) + exp(x))))
+    sol19e = Eq(f(x), (C1*(1 - x) - x*(-x*exp(x) + exp(x)) -
+                            x*exp(x) + exp(x))/((1 - x)*(-exp(x) + x*exp(x))))
     sol20 = Eq(-log(1 - 3*f(x)**2)/6, C1 - x**2/2)
     sol21 = Eq(-exp(-f(x)), C1 + exp(x))
     assert dsolve(eq15, f(x), hint='separable') == sol15
     assert dsolve(eq16, f(x), hint='separable') == sol16
     assert dsolve(eq17, f(x), hint='separable') == sol17
     assert dsolve(eq18, f(x), hint='separable') == sol18
-    assert dsolve(eq19, f(x), hint='separable') == sol19
+    assert dsolve(eq19, f(x), hint='separable') in [sol19a, sol19b, sol19c,
+                                                    sol19d, sol19e]
     assert dsolve(eq20, f(x), hint='separable') == sol20
     assert dsolve(eq21, f(x), hint='separable') == sol21
     assert checkodesol(eq15, f(x), sol15, order=1, solve_for_func=False)[0]
     assert checkodesol(eq16, f(x), sol16, order=1, solve_for_func=False)[0]
     assert checkodesol(eq17, f(x), sol17, order=1, solve_for_func=False)[0]
     assert checkodesol(eq18, f(x), sol18, order=1, solve_for_func=False)[0]
-    assert checkodesol(eq19, f(x), sol19, order=1, solve_for_func=False)[0]
+    assert checkodesol(eq19, f(x), sol19a, order=1, solve_for_func=False)[0]
     assert checkodesol(eq20, f(x), sol20, order=1, solve_for_func=False)[0]
     assert checkodesol(eq21, f(x), sol21, order=1, solve_for_func=False)[0]
 

@@ -3,7 +3,7 @@ from sympy import Symbol, symbols, hypersimp, factorial, binomial, \
         simplify, trigsimp, cos, tan, cot, log, ratsimp, Matrix, pi, integrate, \
         solve, nsimplify, GoldenRatio, sqrt, E, I, sympify, atan, Derivative, \
         S, diff, oo, Eq, Integer, gamma, acos, Integral, logcombine, Wild, \
-        separatevars, erf, rcollect
+        separatevars, erf, rcollect, count_ops
 from sympy.utilities import all
 from sympy.utilities.pytest import XFAIL
 
@@ -162,6 +162,20 @@ def test_simplify():
     A, B = symbols('A,B', commutative=False)
 
     assert simplify(A*B - B*A) == A*B - B*A
+
+def test_simplify_ratio():
+    # roots of x**3-3*x+5
+    roots = ['(5/2 + 21**(1/2)/2)**(1/3)*(1/2 - I*3**(1/2)/2)'
+             ' + 1/((1/2 - I*3**(1/2)/2)*(5/2 + 21**(1/2)/2)**(1/3))',
+             '(5/2 + 21**(1/2)/2)**(1/3)*(1/2 + I*3**(1/2)/2)'
+             ' + 1/((1/2 + I*3**(1/2)/2)*(5/2 + 21**(1/2)/2)**(1/3))',
+             '-1/(5/2 + 21**(1/2)/2)**(1/3) - (5/2 + 21**(1/2)/2)**(1/3)']
+    for r in roots:
+        r = S(r)
+        assert count_ops(simplify(r, ratio=1)) <= count_ops(r)
+        # If ratio=oo, simplify() is always applied:
+        assert simplify(r, ratio=oo) is not r
+
 
 def test_simplify_issue_1308():
     assert simplify(exp(-Rational(1, 2)) + exp(-Rational(3, 2))) == \
