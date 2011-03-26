@@ -353,12 +353,13 @@ def test_separable5():
     eq19 = (1 - x)*f(x).diff(x) - x*(f(x) + 1)
     eq20 = f(x)*diff(f(x), x) + x - 3*x*f(x)**2
     eq21 = f(x).diff(x) - exp(x + f(x))
-    sol15 = Eq(f(x), (C1 - exp(x**2/2))*exp(-x**2/2))
-    #sol15 = Eq(f(x), -1 + exp(C1 - x**2/2))
+    #sol15 = Eq(f(x), (C1 - exp(x**2/2))*exp(-x**2/2))
+    sol15 = Eq(f(x), -1 + exp(C1 - x**2/2))
     sol16 = Eq(-exp(-f(x)**2)/2, C1 - x - x**2/2)
     sol17 = Eq(f(x), exp(C1 - x))
     sol18 = Eq(-log(1 - sin(2*f(x))**2)/4, C1 + log(1 - sin(x)**2)/2)
     sol19 = Eq(f(x), -(1 - x - exp(C1 - x))/(1 - x))
+    sol19_bis = Eq(f(x), -1 + exp(C1 - x)/(1 - x))
     sol19_64bit = Eq(f(x), (C1*(1 - x) + x*(-x*exp(x) + exp(x))- exp(x) + x*exp(x))/
                         ((1 - x)*(-x*exp(x) + exp(x))))
     sol19_32bit = Eq(f(x), (C1*(1 - x) - x*(-x*exp(x) + exp(x)) -
@@ -370,6 +371,7 @@ def test_separable5():
     assert dsolve(eq17, f(x), hint='separable') == sol17
     assert dsolve(eq18, f(x), hint='separable') == sol18
     assert dsolve(eq19, f(x), hint='separable') in [sol19,
+                                                    sol19_bis,
                                                     sol19_32bit,
                                                     sol19_64bit]
     assert dsolve(eq20, f(x), hint='separable') == sol20
