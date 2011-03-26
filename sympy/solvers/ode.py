@@ -242,6 +242,15 @@ allhints = ("separable", "1st_exact", "1st_linear", "Bernoulli",
 "nth_linear_constant_coeff_variation_of_parameters_Integral",
 "Liouville_Integral")
 
+def de_dv_detect(eq):
+    """It is usually obvious which functionin in the differential equation has
+    the role of dependent variable. This procedure return this function.
+    """
+    dvset=reduce(lambda x, y: x|set([y.expr]), eq.atoms(Derivative), set())
+    if len(dvset)!=1:
+        raise ValueError("Can't detect dependent variable")
+    return dvset.pop()
+
 def sub_func_doit(eq, func, new):
     """When replacing the func with something else, we usually
     want the derivative evaluated, so this function helps in
@@ -260,7 +269,7 @@ def sub_func_doit(eq, func, new):
 
     return eq.subs(reps).subs(func, new).subs(repu)
 
-def dsolve(eq, func, hint="default", simplify=True, **kwargs):
+def dsolve(eq, func=None, hint="default", simplify=True, **kwargs):
     """
     Solves any (supported) kind of ordinary differential equation.
 
@@ -394,6 +403,9 @@ def dsolve(eq, func, hint="default", simplify=True, **kwargs):
             return dsolve(eq.lhs-eq.rhs, func, hint=hint, simplify=simplify, **kwargs)
         eq = eq.lhs
 
+    if func==None:
+        func=de_dv_detect(eq)
+
     # Magic that should only be used internally.  Prevents classify_ode from
     # being called more than it needs to be by passing its results through
     # recursive calls.
@@ -482,7 +494,7 @@ def dsolve(eq, func, hint="default", simplify=True, **kwargs):
 
 
 
-def classify_ode(eq, func, dict=False):
+def classify_ode(eq, func=None, dict=False):
     """
     Returns a tuple of possible dsolve() classifications for an ODE.
 
@@ -590,6 +602,9 @@ def classify_ode(eq, func, dict=False):
 
     """
     from sympy import expand
+
+    if func==None:
+        func=de_dv_detect(eq)
 
     if len(func.args) != 1:
         raise ValueError("dsolve() and classify_ode() only work with functions " + \
@@ -912,8 +927,8 @@ def odesimp(eq, func, order, hint):
 
     return eq
 
-@vectorize(2)
-def checkodesol(ode, func, sol, order='auto', solve_for_func=True):
+@vectorize(1)
+def checkodesol(ode, sol, order='auto', solve_for_func=True, func=None):
     """
     Substitutes sol for func in ode and checks that the result is 0.
 
@@ -956,14 +971,18 @@ def checkodesol(ode, func, sol, order='auto', solve_for_func=True):
         >>> from sympy import Eq, Function, checkodesol, symbols
         >>> x, C1 = symbols('x C1')
         >>> f = Function('f')
-        >>> checkodesol(f(x).diff(x), f(x), Eq(f(x), C1))
+        >>> checkodesol(f(x).diff(x), Eq(f(x), C1))
         (True, 0)
-        >>> assert checkodesol(f(x).diff(x), f(x), Eq(f(x), C1))[0]
-        >>> assert not checkodesol(f(x).diff(x), f(x), Eq(f(x), x))[0]
-        >>> checkodesol(f(x).diff(x, 2), f(x), Eq(f(x), x**2))
+        >>> assert checkodesol(f(x).diff(x), Eq(f(x), C1))[0]
+        >>> assert not checkodesol(f(x).diff(x), Eq(f(x), x))[0]
+        >>> checkodesol(f(x).diff(x, 2), Eq(f(x), x**2))
         (False, 2)
 
     """
+
+    if func==None:
+        func=de_dv_detect(ode)
+
     if not func.is_Function or len(func.args) != 1:
         raise ValueError("func must be a function of one variable, not " + str(func))
     x = func.args[0]
@@ -985,11 +1004,11 @@ def checkodesol(ode, func, sol, order='auto', solve_for_func=True):
             pass
         else:
             if len(solved) == 1:
-                result = checkodesol(ode, func, Eq(func, solved[0]), \
-                    order=order, solve_for_func=False)
+                result = checkodesol(ode, Eq(func, solved[0]), \
+                    order=order, solve_for_func=False, func=func)
             else:
-                result = checkodesol(ode, func, [Eq(func, t) for t in solved],
-                order=order, solve_for_func=False)
+                result = checkodesol(ode, [Eq(func, t) for t in solved],
+                order=order, solve_for_func=False, func=func)
 
             return result
 
@@ -1097,7 +1116,7 @@ def checkodesol(ode, func, sol, order='auto', solve_for_func=True):
         return (False, s)
 
 
-def ode_sol_simplicity(sol, func, trysolving=True):
+def ode_sol_simplicity(sol, func=None, trysolving=True):
     """
     Returns an extended integer representing how simple a solution to an
     ODE is.
@@ -1172,6 +1191,9 @@ def ode_sol_simplicity(sol, func, trysolving=True):
 
     # See the docstring for the coercion rules.  We check easier (faster)
     # things here first, to save time.
+
+    if func==None:
+        func=de_dv_detect(eq)
 
     if type(sol) in (list, tuple):
         # See if there are Integrals
@@ -1479,7 +1501,7 @@ def _handle_Integral(expr, func, order, hint):
         sol = expr
     return sol
 
-def ode_order(expr, func):
+def ode_order(expr, func=None):
     """
     Returns the order of a given ODE with respect to func.
 
@@ -1498,6 +1520,10 @@ def ode_order(expr, func):
         3
 
     """
+
+    if func==None:
+        func=de_dv_detect(eq)
+
     a = Wild('a', exclude=[func])
 
     order = 0

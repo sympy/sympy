@@ -4,7 +4,8 @@ from sympy import Function, dsolve, Symbol, sin, cos, sinh, acos, tan, cosh, \
         S, RootOf, Poly, Integral, atan, Equality, solve, O, LambertW, Dummy
 from sympy.abc import x, y, z
 from sympy.solvers.ode import ode_order, homogeneous_order, \
-        _undetermined_coefficients_match, classify_ode, checkodesol, constant_renumber
+        _undetermined_coefficients_match, classify_ode, checkodesol, constant_renumber, \
+        de_dv_detect
 from sympy.utilities.pytest import XFAIL, skip, raises
 
 C1 = Symbol('C1')
@@ -31,40 +32,40 @@ g = Function('g')
 def test_checkodesol():
     # For the most part, checkodesol is well tested in the tests below.
     # These tests only handle cases not checked below.
-    raises(ValueError, "checkodesol(f(x).diff(x), f(x), x)")
-    raises(ValueError, "checkodesol(f(x).diff(x), f(x, y), Eq(f(x), x))")
-    assert checkodesol(f(x).diff(x), f(x), Eq(f(x), x)) is not True
-    assert checkodesol(f(x).diff(x), f(x), Eq(f(x), x)) == (False, 1)
+    raises(ValueError, "checkodesol(f(x).diff(x), x)")
+    raises(ValueError, "checkodesol(f(x).diff(x), Eq(f(x), x), func=f(x, y))")
+    assert checkodesol(f(x).diff(x), Eq(f(x), x)) is not True
+    assert checkodesol(f(x).diff(x), Eq(f(x), x)) == (False, 1)
     sol1 = Eq(f(x)**5 + 11*f(x) - 2*f(x) + x, 0)
-    assert checkodesol(diff(sol1.lhs, x), f(x), sol1) == (True, 0)
-    assert checkodesol(diff(sol1.lhs, x)*exp(f(x)), f(x), sol1) == (True, 0)
-    assert checkodesol(diff(sol1.lhs, x, 2), f(x), sol1) == (True, 0)
-    assert checkodesol(diff(sol1.lhs, x, 2)*exp(f(x)), f(x), sol1) == (True, 0)
-    assert checkodesol(diff(sol1.lhs, x, 3), f(x), sol1) == (True, 0)
-    assert checkodesol(diff(sol1.lhs, x, 3)*exp(f(x)), f(x), sol1) == (True, 0)
-    assert checkodesol(diff(sol1.lhs, x, 3), f(x), Eq(f(x), x*log(x))) == \
+    assert checkodesol(diff(sol1.lhs, x), sol1) == (True, 0)
+    assert checkodesol(diff(sol1.lhs, x)*exp(f(x)), sol1) == (True, 0)
+    assert checkodesol(diff(sol1.lhs, x, 2), sol1) == (True, 0)
+    assert checkodesol(diff(sol1.lhs, x, 2)*exp(f(x)), sol1) == (True, 0)
+    assert checkodesol(diff(sol1.lhs, x, 3), sol1) == (True, 0)
+    assert checkodesol(diff(sol1.lhs, x, 3)*exp(f(x)), sol1) == (True, 0)
+    assert checkodesol(diff(sol1.lhs, x, 3), Eq(f(x), x*log(x))) == \
         (False, -9 + 60*x**4*log(x)**2 + 240*x**4*log(x)**3 +
         235*x**4*log(x)**4 + 60*x**4*log(x)**5)
-    assert checkodesol(diff(exp(f(x)) + x, x)*x, f(x), Eq(exp(f(x)) + x)) == (True, 0)
-    assert checkodesol(diff(exp(f(x)) + x, x)*x, f(x), Eq(exp(f(x)) + x), \
+    assert checkodesol(diff(exp(f(x)) + x, x)*x, Eq(exp(f(x)) + x)) == (True, 0)
+    assert checkodesol(diff(exp(f(x)) + x, x)*x, Eq(exp(f(x)) + x), \
         solve_for_func=False) == (True, 0)
-    assert checkodesol(f(x).diff(x, 2), f(x), [Eq(f(x), C1 + C2*x), \
+    assert checkodesol(f(x).diff(x, 2), [Eq(f(x), C1 + C2*x), \
         Eq(f(x), C2 + C1*x), Eq(f(x), C1*x + C2*x**2)]) == \
             [(True, 0), (True, 0), (False, 2*C2)]
-    assert checkodesol(f(x).diff(x) - 1/f(x)/2, f(x), Eq(f(x)**2, x)) == \
+    assert checkodesol(f(x).diff(x) - 1/f(x)/2, Eq(f(x)**2, x)) == \
         [(True, 0), (True, 0)]
-    assert checkodesol(f(x).diff(x) - f(x), f(x), Eq(C1*exp(x), f(x))) == (True, 0)
+    assert checkodesol(f(x).diff(x) - f(x), Eq(C1*exp(x), f(x))) == (True, 0)
     # Based on test_1st_homogeneous_coeff_ode2_eq3sol.  Make sure that
     # checkodesol tries back substituting f(x) when it can.
     eq3 = x*exp(f(x)/x) + f(x) - x*f(x).diff(x)
     sol3 = Eq(f(x), log(log(C1/x)**(-x)))
-    assert not checkodesol(eq3, f(x), sol3)[1].has(f(x))
+    assert not checkodesol(eq3, sol3)[1].has(f(x))
 
 def test_dsolve_options():
     eq = x*f(x).diff(x) + f(x)
-    a = dsolve(eq, f(x), hint='all')
-    b = dsolve(eq, f(x), hint='all', simplify=False)
-    c = dsolve(eq, f(x), hint='all_Integral')
+    a = dsolve(eq, hint='all')
+    b = dsolve(eq, hint='all', simplify=False)
+    c = dsolve(eq, hint='all_Integral')
     keys = ['1st_exact', '1st_exact_Integral', '1st_homogeneous_coeff_best', \
         '1st_homogeneous_coeff_subs_dep_div_indep', \
         '1st_homogeneous_coeff_subs_dep_div_indep_Integral', \
@@ -200,17 +201,17 @@ def test_old_ode_tests():
     assert dsolve(eq9, f(x)) == sol9
     assert dsolve(eq10, f(x)) == sol10
     assert dsolve(eq11, f(x)) == sol11
-    assert checkodesol(eq1, f(x), sol1, order=1, solve_for_func=False)[0]
-    assert checkodesol(eq2, f(x), sol2, order=1, solve_for_func=False)[0]
-    assert checkodesol(eq3, f(x), sol3, order=1, solve_for_func=False)[0]
-    assert checkodesol(eq4, f(x), sol4, order=2, solve_for_func=False)[0]
-    assert checkodesol(eq5, f(x), sol5, order=2, solve_for_func=False)[0]
-    assert checkodesol(eq6, f(x), sol6, order=1, solve_for_func=False)[0]
-    assert checkodesol(eq7, f(x), sol7, order=2, solve_for_func=False)[0]
-    assert checkodesol(eq8, f(x), sol8, order=2, solve_for_func=False)[0]
-    assert checkodesol(eq9, f(x), sol9, order=2, solve_for_func=False)[0]
-    assert checkodesol(eq10, f(x), sol10, order=1, solve_for_func=False)[0]
-    assert checkodesol(eq11, f(x), sol11, order=1, solve_for_func=False)[0]
+    assert checkodesol(eq1, sol1, order=1, solve_for_func=False)[0]
+    assert checkodesol(eq2, sol2, order=1, solve_for_func=False)[0]
+    assert checkodesol(eq3, sol3, order=1, solve_for_func=False)[0]
+    assert checkodesol(eq4, sol4, order=2, solve_for_func=False)[0]
+    assert checkodesol(eq5, sol5, order=2, solve_for_func=False)[0]
+    assert checkodesol(eq6, sol6, order=1, solve_for_func=False)[0]
+    assert checkodesol(eq7, sol7, order=2, solve_for_func=False)[0]
+    assert checkodesol(eq8, sol8, order=2, solve_for_func=False)[0]
+    assert checkodesol(eq9, sol9, order=2, solve_for_func=False)[0]
+    assert checkodesol(eq10, sol10, order=1, solve_for_func=False)[0]
+    assert checkodesol(eq11, sol11, order=1, solve_for_func=False)[0]
 
 def test_1st_linear():
     # Type: first order linear form f'(x)+p(x)f(x)=q(x)
@@ -218,7 +219,7 @@ def test_1st_linear():
     sol = Eq(f(x),exp(-x**2/2)*(sqrt(2)*sqrt(pi)*I*erf(I*x/sqrt(2))/2 \
     + x*exp(x**2/2) + C1))
     assert dsolve(eq, f(x), hint='1st_linear') == sol
-    assert checkodesol(eq, f(x), sol, order=1, solve_for_func=False)[0]
+    assert checkodesol(eq, sol, order=1, solve_for_func=False)[0]
 
 
 def test_Bernoulli():
@@ -226,7 +227,7 @@ def test_Bernoulli():
     eq = Eq(x*f(x).diff(x) + f(x) - f(x)**2,0)
     sol = dsolve(eq,f(x), hint='Bernoulli')
     assert sol == Eq(f(x),1/(x*(C1 + 1/x)))
-    assert checkodesol(eq, f(x), sol, order=1, solve_for_func=False)[0]
+    assert checkodesol(eq, sol, order=1, solve_for_func=False)[0]
 
 def test_1st_exact1():
     # Type: Exact differential equation, p(x,f) + q(x,f)*f' == 0,
@@ -246,11 +247,11 @@ def test_1st_exact1():
     assert dsolve(eq3,f(x), hint='1st_exact') == sol3
     assert dsolve(eq4, f(x), hint='1st_exact') == sol4
     assert dsolve(eq5, f(x), hint='1st_exact', simplify=False) == sol5
-    assert checkodesol(eq1, f(x), sol1, order=1, solve_for_func=False)[0]
-    assert checkodesol(eq2, f(x), sol2, order=1, solve_for_func=False)[0]
-    assert checkodesol(eq3, f(x), sol3, order=1, solve_for_func=False)[0]
-    assert checkodesol(eq4, f(x), sol4, order=1, solve_for_func=False)[0]
-    assert checkodesol(eq5, f(x), sol5, order=1, solve_for_func=False)[0]
+    assert checkodesol(eq1, sol1, order=1, solve_for_func=False)[0]
+    assert checkodesol(eq2, sol2, order=1, solve_for_func=False)[0]
+    assert checkodesol(eq3, sol3, order=1, solve_for_func=False)[0]
+    assert checkodesol(eq4, sol4, order=1, solve_for_func=False)[0]
+    assert checkodesol(eq5, sol5, order=1, solve_for_func=False)[0]
 
 @XFAIL
 def test_1st_exact2():
@@ -272,7 +273,7 @@ def test_1st_exact2():
     + 9*asinh(f(x)/x)*f(x)/(x*(-27*f(x)/x + 27*sqrt(1 + f(x)**2/x**2))) \
     + 9*f(x)*log(1 - sqrt(1 + f(x)**2/x**2)*f(x)/x + 2*f(x)**2/x**2)/\
     (x*(-27*f(x)/x + 27*sqrt(1 + f(x)**2/x**2))))
-    assert checkodesol(eq, f(x), sol, order=1, solve_for_func=False)[0]
+    assert checkodesol(eq, sol, order=1, solve_for_func=False)[0]
 
 def test_separable1():
     # test_separable1-5 are from Ordinary Differential Equations, Tenenbaum and
@@ -294,11 +295,11 @@ def test_separable1():
     assert dsolve(eq3, f(x), hint='separable') == sol3
     assert dsolve(eq4, f(x), hint='separable') == sol4
     assert dsolve(eq5, f(x), hint='separable', simplify=False) == sol5
-    assert checkodesol(eq1, f(x), sol1, order=1, solve_for_func=False)[0]
-    assert checkodesol(eq2, f(x), sol2, order=1, solve_for_func=False)[0]
-    assert checkodesol(eq3, f(x), sol3, order=1, solve_for_func=False)[0]
-    assert checkodesol(eq4, f(x), sol4, order=1, solve_for_func=False)[0]
-    assert checkodesol(eq5, f(x), sol5, order=1, solve_for_func=False)[0]
+    assert checkodesol(eq1, sol1, order=1, solve_for_func=False)[0]
+    assert checkodesol(eq2, sol2, order=1, solve_for_func=False)[0]
+    assert checkodesol(eq3, sol3, order=1, solve_for_func=False)[0]
+    assert checkodesol(eq4, sol4, order=1, solve_for_func=False)[0]
+    assert checkodesol(eq5, sol5, order=1, solve_for_func=False)[0]
 
 def test_separable2():
     a = Symbol('a')
@@ -320,9 +321,9 @@ def test_separable2():
     assert dsolve(eq8, f(x), hint='separable') == sol8
     assert str(dsolve(eq9, f(x), hint='separable_Integral')) == sol9str
     assert dsolve(eq10, f(x), hint='separable') == sol10
-    assert checkodesol(eq7, f(x), sol7, order=1, solve_for_func=False)[0]
-    assert checkodesol(eq8, f(x), sol8, order=1, solve_for_func=False)[0]
-    assert checkodesol(eq10, f(x), sol10, order=1, solve_for_func=False)[0]
+    assert checkodesol(eq7, sol7, order=1, solve_for_func=False)[0]
+    assert checkodesol(eq8, sol8, order=1, solve_for_func=False)[0]
+    assert checkodesol(eq10, sol10, order=1, solve_for_func=False)[0]
 
 
 def test_separable3():
@@ -335,15 +336,15 @@ def test_separable3():
     assert dsolve(eq11, f(x), hint='separable') == sol11
     assert dsolve(eq12, f(x), hint='separable') == sol12
     assert dsolve(eq13, f(x), hint='separable') == sol13
-    assert checkodesol(eq11, f(x), sol11, order=1, solve_for_func=False)[0]
-    assert checkodesol(eq13, f(x), sol13, order=1, solve_for_func=False)[0]
+    assert checkodesol(eq11, sol11, order=1, solve_for_func=False)[0]
+    assert checkodesol(eq13, sol13, order=1, solve_for_func=False)[0]
 
 def test_separable4():
     # This has a slow integral (1/((1 + y**2)*atan(y))), so we isolate it.
     eq14 = x*f(x).diff(x) + (1 + f(x)**2)*atan(f(x))
     sol14 = Eq(log(atan(f(x))), C1 - log(x))
     assert dsolve(eq14, f(x), hint='separable') == sol14
-    assert checkodesol(eq14, f(x), sol14, order=1, solve_for_func=False)[0]
+    assert checkodesol(eq14, sol14, order=1, solve_for_func=False)[0]
 
 def test_separable5():
     eq15 = f(x).diff(x) + x*(f(x) + 1)
@@ -374,20 +375,20 @@ def test_separable5():
                                                     sol19_64bit]
     assert dsolve(eq20, f(x), hint='separable') == sol20
     assert dsolve(eq21, f(x), hint='separable') == sol21
-    assert checkodesol(eq15, f(x), sol15, order=1, solve_for_func=False)[0]
-    assert checkodesol(eq16, f(x), sol16, order=1, solve_for_func=False)[0]
-    assert checkodesol(eq17, f(x), sol17, order=1, solve_for_func=False)[0]
-    assert checkodesol(eq18, f(x), sol18, order=1, solve_for_func=False)[0]
-    assert checkodesol(eq19, f(x), sol19, order=1, solve_for_func=False)[0]
-    assert checkodesol(eq20, f(x), sol20, order=1, solve_for_func=False)[0]
-    assert checkodesol(eq21, f(x), sol21, order=1, solve_for_func=False)[0]
+    assert checkodesol(eq15, sol15, order=1, solve_for_func=False)[0]
+    assert checkodesol(eq16, sol16, order=1, solve_for_func=False)[0]
+    assert checkodesol(eq17, sol17, order=1, solve_for_func=False)[0]
+    assert checkodesol(eq18, sol18, order=1, solve_for_func=False)[0]
+    assert checkodesol(eq19, sol19, order=1, solve_for_func=False)[0]
+    assert checkodesol(eq20, sol20, order=1, solve_for_func=False)[0]
+    assert checkodesol(eq21, sol21, order=1, solve_for_func=False)[0]
 
 @XFAIL
 def test_separable_1_5_checkodesol():
     # This fails because trigsimp() cannot reduce the expression to 0 in checkodesol()
     eq12 = (x - 1)*cos(f(x))*f(x).diff(x) - 2*x*sin(f(x))
     sol12 = Eq(-log(1 - cos(f(x))**2)/2, C1 - 2*x - 2*log(1 - x))
-    assert checkodesol(eq12, f(x), sol12, order=1, solve_for_func=False)[0]
+    assert checkodesol(eq12, sol12, order=1, solve_for_func=False)[0]
 
 def test_homogeneous_order():
     assert homogeneous_order(exp(y/x) + tan(y/x), x, y) == 0
@@ -466,12 +467,12 @@ def test_1st_homogeneous_coeff_ode1_sol():
     sol5 = Eq(log(C1*x*sqrt(1/x)*sqrt(f(x))) + x**2/(2*f(x)**2), 0)
     sol6 = Eq(-exp(-f(x)/x)*sin(f(x)/x)/2 + log(C1*x) - cos(f(x)/x)*exp(-f(x)/x)/2, 0)
     sol8 = Eq(-atan(f(x)/x) + log(C1*x*sqrt(1 + f(x)**2/x**2)), 0)
-    assert checkodesol(eq1, f(x), sol1, order=1, solve_for_func=False)[0]
-    assert checkodesol(eq3, f(x), sol3, order=1, solve_for_func=False)[0]
-    assert checkodesol(eq4, f(x), sol4, order=1, solve_for_func=False)[0]
-    assert checkodesol(eq5, f(x), sol5, order=1, solve_for_func=False)[0]
-    assert checkodesol(eq6, f(x), sol6, order=1, solve_for_func=False)[0]
-    assert checkodesol(eq8, f(x), sol8, order=1, solve_for_func=False)[0]
+    assert checkodesol(eq1, sol1, order=1, solve_for_func=False)[0]
+    assert checkodesol(eq3, sol3, order=1, solve_for_func=False)[0]
+    assert checkodesol(eq4, sol4, order=1, solve_for_func=False)[0]
+    assert checkodesol(eq5, sol5, order=1, solve_for_func=False)[0]
+    assert checkodesol(eq6, sol6, order=1, solve_for_func=False)[0]
+    assert checkodesol(eq8, sol8, order=1, solve_for_func=False)[0]
 
 @XFAIL
 def test_1st_homogeneous_coeff_ode1_sol_fail():
@@ -486,9 +487,9 @@ def test_1st_homogeneous_coeff_ode1_sol_fail():
     sol7 = Eq(log(C1*f(x)) + 2*sqrt(1 - x/f(x)), 0)
     sol9 = Eq(-Integral(-1/(-(1 - (1 - _u2**2)**(1/2))*_u2 + _u2), (_u2, __a, \
     x/f(x))) + log(C1*f(x)), 0)
-    assert checkodesol(eq2, f(x), sol2, order=1, solve_for_func=False)[0]
-    assert checkodesol(eq7, f(x), sol7, order=1, solve_for_func=False)[0]
-    assert checkodesol(eq9, f(x), sol9, order=1, solve_for_func=False)[0]
+    assert checkodesol(eq2, sol2, order=1, solve_for_func=False)[0]
+    assert checkodesol(eq7, sol7, order=1, solve_for_func=False)[0]
+    assert checkodesol(eq9, sol9, order=1, solve_for_func=False)[0]
 
 
 def test_1st_homogeneous_coeff_ode2():
@@ -502,16 +503,16 @@ def test_1st_homogeneous_coeff_ode2():
     assert dsolve(eq1, f(x), hint='1st_homogeneous_coeff_subs_dep_div_indep') == sol1
     assert dsolve(eq2, f(x), hint='1st_homogeneous_coeff_best') == sol2
     assert dsolve(eq3, f(x), hint='1st_homogeneous_coeff_subs_dep_div_indep') == sol3
-    assert checkodesol(eq1, f(x), sol1, order=1, solve_for_func=False)[0]
-    assert checkodesol(eq2, f(x), sol2[0], order=1, solve_for_func=False)[0]
-    assert checkodesol(eq2, f(x), sol2[1], order=1, solve_for_func=False)[0]
+    assert checkodesol(eq1, sol1, order=1, solve_for_func=False)[0]
+    assert checkodesol(eq2, sol2[0], order=1, solve_for_func=False)[0]
+    assert checkodesol(eq2, sol2[1], order=1, solve_for_func=False)[0]
 
 @XFAIL
 def test_1st_homogeneous_coeff_ode2_eq3sol():
     # simplify() will need to get way better before it can do this one
     eq3 = x*exp(f(x)/x) + f(x) - x*f(x).diff(x)
     sol3 = Eq(f(x), log(log(C1/x)**(-x)))
-    assert checkodesol(eq3, f(x), sol3, order=1, solve_for_func=False)[0]
+    assert checkodesol(eq3, sol3, order=1, solve_for_func=False)[0]
 
 def test_1st_homogeneous_coeff_ode3():
     # This can be solved explicitly, but the the integration engine cannot handle
@@ -531,7 +532,7 @@ def test_1st_homogeneous_coeff_ode4_explicit():
     # uncomment the real tests below.
     assert not dsolve(eq, f(x)).has(Integral)
 #    assert dsolve(eq, f(x)) == sol
-#    assert checkodesol(eq, f(x), order=1, solve_for_func=False)[0]
+#    assert checkodesol(eq, order=1, solve_for_func=False)[0]
 
 def test_1st_homogeneous_coeff_corner_case():
     eq1 = f(x).diff(x) - f(x)/x
@@ -672,36 +673,36 @@ def test_nth_linear_constant_coeff_homogeneous():
     assert dsolve(eq28, f(x)) in (sol28, sol28s)
     assert dsolve(eq29, f(x)) in (sol29, sol29s)
     assert dsolve(eq30, f(x)) in (sol30, sol30s)
-    assert checkodesol(eq1, f(x), sol1, order=2, solve_for_func=False)[0]
-    assert checkodesol(eq2, f(x), sol2, order=2, solve_for_func=False)[0]
-    assert checkodesol(eq3, f(x), sol3, order=2, solve_for_func=False)[0]
-    assert checkodesol(eq4, f(x), sol4, order=3, solve_for_func=False)[0]
-    assert checkodesol(eq5, f(x), sol5, order=2, solve_for_func=False)[0]
-    assert checkodesol(eq6, f(x), sol6, order=2, solve_for_func=False)[0]
-    assert checkodesol(eq7, f(x), sol7, order=3, solve_for_func=False)[0]
-    assert checkodesol(eq8, f(x), sol8, order=4, solve_for_func=False)[0]
-    assert checkodesol(eq9, f(x), sol9, order=4, solve_for_func=False)[0]
-    assert checkodesol(eq10, f(x), sol10, order=4, solve_for_func=False)[0]
-    assert checkodesol(eq11, f(x), sol11, order=2, solve_for_func=False)[0]
-    assert checkodesol(eq12, f(x), sol12, order=2, solve_for_func=False)[0]
-    assert checkodesol(eq13, f(x), sol13, order=4, solve_for_func=False)[0]
-    assert checkodesol(eq14, f(x), sol14, order=2, solve_for_func=False)[0]
-    assert checkodesol(eq15, f(x), sol15, order=3, solve_for_func=False)[0]
-    assert checkodesol(eq16, f(x), sol16, order=3, solve_for_func=False)[0]
-    assert checkodesol(eq17, f(x), sol17, order=2, solve_for_func=False)[0]
-    assert checkodesol(eq18, f(x), sol18, order=4, solve_for_func=False)[0]
-    assert checkodesol(eq19, f(x), sol19, order=4, solve_for_func=False)[0]
-    assert checkodesol(eq20, f(x), sol20, order=4, solve_for_func=False)[0]
-    assert checkodesol(eq21, f(x), sol21, order=4, solve_for_func=False)[0]
-    assert checkodesol(eq22, f(x), sol22, order=4, solve_for_func=False)[0]
-    assert checkodesol(eq23, f(x), sol23, order=2, solve_for_func=False)[0]
-    assert checkodesol(eq24, f(x), sol24, order=2, solve_for_func=False)[0]
-    assert checkodesol(eq25, f(x), sol25, order=4, solve_for_func=False)[0]
-    assert checkodesol(eq26, f(x), sol26, order=2, solve_for_func=False)[0]
-    assert checkodesol(eq27, f(x), sol27, order=4, solve_for_func=False)[0]
-    assert checkodesol(eq28, f(x), sol28, order=3, solve_for_func=False)[0]
-    assert checkodesol(eq29, f(x), sol29, order=4, solve_for_func=False)[0]
-    assert checkodesol(eq30, f(x), sol30, order=5, solve_for_func=False)[0]
+    assert checkodesol(eq1, sol1, order=2, solve_for_func=False)[0]
+    assert checkodesol(eq2, sol2, order=2, solve_for_func=False)[0]
+    assert checkodesol(eq3, sol3, order=2, solve_for_func=False)[0]
+    assert checkodesol(eq4, sol4, order=3, solve_for_func=False)[0]
+    assert checkodesol(eq5, sol5, order=2, solve_for_func=False)[0]
+    assert checkodesol(eq6, sol6, order=2, solve_for_func=False)[0]
+    assert checkodesol(eq7, sol7, order=3, solve_for_func=False)[0]
+    assert checkodesol(eq8, sol8, order=4, solve_for_func=False)[0]
+    assert checkodesol(eq9, sol9, order=4, solve_for_func=False)[0]
+    assert checkodesol(eq10, sol10, order=4, solve_for_func=False)[0]
+    assert checkodesol(eq11, sol11, order=2, solve_for_func=False)[0]
+    assert checkodesol(eq12, sol12, order=2, solve_for_func=False)[0]
+    assert checkodesol(eq13, sol13, order=4, solve_for_func=False)[0]
+    assert checkodesol(eq14, sol14, order=2, solve_for_func=False)[0]
+    assert checkodesol(eq15, sol15, order=3, solve_for_func=False)[0]
+    assert checkodesol(eq16, sol16, order=3, solve_for_func=False)[0]
+    assert checkodesol(eq17, sol17, order=2, solve_for_func=False)[0]
+    assert checkodesol(eq18, sol18, order=4, solve_for_func=False)[0]
+    assert checkodesol(eq19, sol19, order=4, solve_for_func=False)[0]
+    assert checkodesol(eq20, sol20, order=4, solve_for_func=False)[0]
+    assert checkodesol(eq21, sol21, order=4, solve_for_func=False)[0]
+    assert checkodesol(eq22, sol22, order=4, solve_for_func=False)[0]
+    assert checkodesol(eq23, sol23, order=2, solve_for_func=False)[0]
+    assert checkodesol(eq24, sol24, order=2, solve_for_func=False)[0]
+    assert checkodesol(eq25, sol25, order=4, solve_for_func=False)[0]
+    assert checkodesol(eq26, sol26, order=2, solve_for_func=False)[0]
+    assert checkodesol(eq27, sol27, order=4, solve_for_func=False)[0]
+    assert checkodesol(eq28, sol28, order=3, solve_for_func=False)[0]
+    assert checkodesol(eq29, sol29, order=4, solve_for_func=False)[0]
+    assert checkodesol(eq30, sol30, order=5, solve_for_func=False)[0]
 
 def test_nth_linear_constant_coeff_homogeneous_RootOf():
     # We have to test strings because _m is a dummy variable
@@ -728,7 +729,7 @@ def test_nth_linear_constant_coeff_homogeneous_RootOf_sol():
         "m**5 + 11*_m - 2, _m, index=2)) + C4*exp(x*RootOf(_m**5 + 11*_m - " + \
         "2, _m, index=3)) + C5*exp(x*RootOf(_m**5 + 11*_m - 2, _m, index=4))"
     assert str(sol) == solstr # str(sol) fails
-    assert checkodesol(eq, f(x), sol, order=5, solve_for_func=False)[0]
+    assert checkodesol(eq, sol, order=5, solve_for_func=False)[0]
 
 def test_undetermined_coefficients_match():
     assert _undetermined_coefficients_match(g(x), x) == {'test': False}
@@ -946,34 +947,34 @@ def test_nth_linear_constant_coeff_undetermined_coefficients():
     assert dsolve(eq26, f(x), hint=hint) in (sol26, sol26s)
     assert dsolve(eq27, f(x), hint=hint) in (sol27, sol27s)
     assert dsolve(eq28, f(x), hint=hint) == sol28
-    assert checkodesol(eq1, f(x), sol1, order=3, solve_for_func=False)[0]
-    assert checkodesol(eq2, f(x), sol2, order=3, solve_for_func=False)[0]
-    assert checkodesol(eq3, f(x), sol3, order=2, solve_for_func=False)[0]
-    assert checkodesol(eq4, f(x), sol4, order=2, solve_for_func=False)[0]
-    assert checkodesol(eq5, f(x), sol5, order=2, solve_for_func=False)[0]
-    assert checkodesol(eq6, f(x), sol6, order=2, solve_for_func=False)[0]
-    assert checkodesol(eq7, f(x), sol7, order=2, solve_for_func=False)[0]
-    assert checkodesol(eq8, f(x), sol8, order=2, solve_for_func=False)[0]
-    assert checkodesol(eq9, f(x), sol9, order=2, solve_for_func=False)[0]
-    assert checkodesol(eq10, f(x), sol10, order=2, solve_for_func=False)[0]
-    assert checkodesol(eq11, f(x), sol11, order=2, solve_for_func=False)[0]
-    assert checkodesol(eq12, f(x), sol12, order=4, solve_for_func=False)[0]
-    assert checkodesol(eq13, f(x), sol13, order=2, solve_for_func=False)[0]
-    assert checkodesol(eq14, f(x), sol14, order=2, solve_for_func=False)[0]
-    assert checkodesol(eq15, f(x), sol15, order=2, solve_for_func=False)[0]
-    assert checkodesol(eq16, f(x), sol16, order=2, solve_for_func=False)[0]
-    assert checkodesol(eq17, f(x), sol17, order=2, solve_for_func=False)[0]
-    assert checkodesol(eq18, f(x), sol18, order=3, solve_for_func=False)[0]
-    assert checkodesol(eq19, f(x), sol19, order=2, solve_for_func=False)[0]
-    assert checkodesol(eq20, f(x), sol20, order=2, solve_for_func=False)[0]
-    assert checkodesol(eq21, f(x), sol21, order=2, solve_for_func=False)[0]
-    assert checkodesol(eq22, f(x), sol22, order=2, solve_for_func=False)[0]
-    assert checkodesol(eq23, f(x), sol23, order=3, solve_for_func=False)[0]
-    assert checkodesol(eq24, f(x), sol24, order=2, solve_for_func=False)[0]
-    assert checkodesol(eq25, f(x), sol25, order=3, solve_for_func=False)[0]
-    assert checkodesol(eq26, f(x), sol26, order=5, solve_for_func=False)[0]
-    assert checkodesol(eq27, f(x), sol27, order=2, solve_for_func=False)[0]
-    assert checkodesol(eq28, f(x), sol28, order=1, solve_for_func=False)[0]
+    assert checkodesol(eq1, sol1, order=3, solve_for_func=False)[0]
+    assert checkodesol(eq2, sol2, order=3, solve_for_func=False)[0]
+    assert checkodesol(eq3, sol3, order=2, solve_for_func=False)[0]
+    assert checkodesol(eq4, sol4, order=2, solve_for_func=False)[0]
+    assert checkodesol(eq5, sol5, order=2, solve_for_func=False)[0]
+    assert checkodesol(eq6, sol6, order=2, solve_for_func=False)[0]
+    assert checkodesol(eq7, sol7, order=2, solve_for_func=False)[0]
+    assert checkodesol(eq8, sol8, order=2, solve_for_func=False)[0]
+    assert checkodesol(eq9, sol9, order=2, solve_for_func=False)[0]
+    assert checkodesol(eq10, sol10, order=2, solve_for_func=False)[0]
+    assert checkodesol(eq11, sol11, order=2, solve_for_func=False)[0]
+    assert checkodesol(eq12, sol12, order=4, solve_for_func=False)[0]
+    assert checkodesol(eq13, sol13, order=2, solve_for_func=False)[0]
+    assert checkodesol(eq14, sol14, order=2, solve_for_func=False)[0]
+    assert checkodesol(eq15, sol15, order=2, solve_for_func=False)[0]
+    assert checkodesol(eq16, sol16, order=2, solve_for_func=False)[0]
+    assert checkodesol(eq17, sol17, order=2, solve_for_func=False)[0]
+    assert checkodesol(eq18, sol18, order=3, solve_for_func=False)[0]
+    assert checkodesol(eq19, sol19, order=2, solve_for_func=False)[0]
+    assert checkodesol(eq20, sol20, order=2, solve_for_func=False)[0]
+    assert checkodesol(eq21, sol21, order=2, solve_for_func=False)[0]
+    assert checkodesol(eq22, sol22, order=2, solve_for_func=False)[0]
+    assert checkodesol(eq23, sol23, order=3, solve_for_func=False)[0]
+    assert checkodesol(eq24, sol24, order=2, solve_for_func=False)[0]
+    assert checkodesol(eq25, sol25, order=3, solve_for_func=False)[0]
+    assert checkodesol(eq26, sol26, order=5, solve_for_func=False)[0]
+    assert checkodesol(eq27, sol27, order=2, solve_for_func=False)[0]
+    assert checkodesol(eq28, sol28, order=1, solve_for_func=False)[0]
 
 @XFAIL
 def test_nth_linear_constant_coeff_undetermined_coefficients_imaginary_exp():
@@ -984,7 +985,7 @@ def test_nth_linear_constant_coeff_undetermined_coefficients_imaginary_exp():
     eq26a = f(x).diff(x, 5) + 2*f(x).diff(x, 3) + f(x).diff(x) - 2*x - exp(I*x)
     sol26 = Eq(f(x), C1 + (C2 + C3*x - x**2/8)*sin(x) + (C4 + C5*x + x**2/8)*cos(x) + x**2)
     assert dsolve(eq26a, f(x), hint=hint) == sol26
-    assert checkodesol(eq26a, f(x), sol26, order=5, solve_for_func=False)[0]
+    assert checkodesol(eq26a, sol26, order=5, solve_for_func=False)[0]
 
 def test_nth_linear_constant_coeff_variation_of_parameters():
     hint = 'nth_linear_constant_coeff_variation_of_parameters'
@@ -1037,17 +1038,17 @@ def test_nth_linear_constant_coeff_variation_of_parameters():
     assert dsolve(eq10, f(x), hint=hint) in (sol10, sol10s)
     assert dsolve(eq11, f(x), hint=hint+'_Integral') in (sol11, sol11s)
     assert dsolve(eq12, f(x), hint=hint) in (sol12, sol12s)
-    assert checkodesol(eq1, f(x), sol1, order=3, solve_for_func=False)[0]
-    assert checkodesol(eq2, f(x), sol2, order=3, solve_for_func=False)[0]
-    assert checkodesol(eq3, f(x), sol3, order=1, solve_for_func=False)[0]
-    assert checkodesol(eq4, f(x), sol4, order=2, solve_for_func=False)[0]
-    assert checkodesol(eq5, f(x), sol5, order=2, solve_for_func=False)[0]
-    assert checkodesol(eq6, f(x), sol6, order=2, solve_for_func=False)[0]
-    assert checkodesol(eq7, f(x), sol7, order=2, solve_for_func=False)[0]
-    assert checkodesol(eq8, f(x), sol8, order=2, solve_for_func=False)[0]
-    assert checkodesol(eq9, f(x), sol9, order=3, solve_for_func=False)[0]
-    assert checkodesol(eq10, f(x), sol10, order=2, solve_for_func=False)[0]
-    assert checkodesol(eq12, f(x), sol12, order=4, solve_for_func=False)[0]
+    assert checkodesol(eq1, sol1, order=3, solve_for_func=False)[0]
+    assert checkodesol(eq2, sol2, order=3, solve_for_func=False)[0]
+    assert checkodesol(eq3, sol3, order=1, solve_for_func=False)[0]
+    assert checkodesol(eq4, sol4, order=2, solve_for_func=False)[0]
+    assert checkodesol(eq5, sol5, order=2, solve_for_func=False)[0]
+    assert checkodesol(eq6, sol6, order=2, solve_for_func=False)[0]
+    assert checkodesol(eq7, sol7, order=2, solve_for_func=False)[0]
+    assert checkodesol(eq8, sol8, order=2, solve_for_func=False)[0]
+    assert checkodesol(eq9, sol9, order=3, solve_for_func=False)[0]
+    assert checkodesol(eq10, sol10, order=2, solve_for_func=False)[0]
+    assert checkodesol(eq12, sol12, order=4, solve_for_func=False)[0]
 
 def test_nth_linear_constant_coeff_variation_of_parameters_simplify_False():
     # solve_variation_of_parameters shouldn't attempt to simplify the
@@ -1086,17 +1087,17 @@ def test_Liouville_ODE():
     assert dsolve(eq3, f(x), hint) in (sol3, sol3s)
     assert dsolve(eq4, f(x), hint) in (sol4, sol4s)
     assert dsolve(eq5, f(x), hint) in (sol5, sol5s)
-    assert checkodesol(sol1, f(x), sol1a, order=2, solve_for_func=False)[0]
-    assert checkodesol(eq1, f(x), sol1a, order=2, solve_for_func=False)[0]
-    assert checkodesol(eq1a, f(x), sol1a, order=2, solve_for_func=False)[0]
-    assert checkodesol(sol2, f(x), sol1a, order=2, solve_for_func=False)[0]
-    assert checkodesol(eq2, f(x), sol1a, order=2, solve_for_func=False)[0]
-    assert checkodesol(eq3, f(x), sol3[0], order=2, solve_for_func=False)[0]
-    assert checkodesol(eq3, f(x), sol3[1], order=2, solve_for_func=False)[0]
-    sol4c = checkodesol(eq4, f(x), sol4, order=2, solve_for_func=False)
+    assert checkodesol(sol1, sol1a, order=2, solve_for_func=False, func=f(x))[0]
+    assert checkodesol(eq1, sol1a, order=2, solve_for_func=False)[0]
+    assert checkodesol(eq1a, sol1a, order=2, solve_for_func=False)[0]
+    assert checkodesol(sol2, sol1a, order=2, solve_for_func=False, func=f(x))[0]
+    assert checkodesol(eq2, sol1a, order=2, solve_for_func=False)[0]
+    assert checkodesol(eq3, sol3[0], order=2, solve_for_func=False)[0]
+    assert checkodesol(eq3, sol3[1], order=2, solve_for_func=False)[0]
+    sol4c = checkodesol(eq4, sol4, order=2, solve_for_func=False, func=f(x))
     assert sol4c[0][0]
     assert sol4c[1][0]
-    assert checkodesol(eq5, f(x), sol5, order=2, solve_for_func=False)[0]
+    assert checkodesol(eq5, sol5, order=2, solve_for_func=False)[0]
     not_Liouville1 = classify_ode(diff(f(x),x)/x + f(x)*diff(f(x),x,x)/2 -
         diff(f(x),x)**2/2, f(x))
     not_Liouville2 = classify_ode(diff(f(x),x)/x + diff(f(x),x,x)/2 -
@@ -1114,7 +1115,7 @@ def test_unexpanded_Liouville_ODE():
     sol2 = Eq(C1 + C2/x - exp(-f(x)), 0)
     sol2s = constant_renumber(sol2, 'C', 1, 2)
     assert dsolve(eq2, f(x)) in (sol2, sol2s)
-    assert checkodesol(eq2, f(x), sol2, order=2, solve_for_func=False)[0]
+    assert checkodesol(eq2, sol2, order=2, solve_for_func=False)[0]
 
 def test_1686():
     from sympy.abc import A
@@ -1149,3 +1150,10 @@ def test_constant_renumber_order_issue2209():
     e = C1*(C2 + x)*(C3 + y)
     for a, b, c in variations([C1, C2, C3], 3):
         assert constant_renumber(a*(b + x)*(c + y), "C", 1, 3) == e
+
+def test_de_dv_detect():
+    assert de_dv_detect(f(x, y).diff(x,y) - y*f(x, y))==f(x,y)
+    assert de_dv_detect(f(x).diff(x) - sin(x)*f(x)+g(y))==f(x)
+    raises(ValueError, "de_dv_detect(f(x).diff(x)+g(x).diff(x))")
+    raises(ValueError, "de_dv_detect(f(x).diff(x)+g(y).diff(y))")
+    raises(ValueError, "de_dv_detect(f(x)**2+x*f(x)+1)")
