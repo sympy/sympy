@@ -5,6 +5,7 @@ Demonstrates how to create symbols and print some algebra operations.
 """
 
 import sympy
+from sympy import pprint
 
 def main():
     a = sympy.Symbol('a')
@@ -12,7 +13,7 @@ def main():
     c = sympy.Symbol('c')
     e = ( a*b*b + 2*b*a*b )**c
 
-    print e
+    pprint(e)
 
 if __name__ == "__main__":
     main()
