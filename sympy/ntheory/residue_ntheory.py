@@ -55,9 +55,14 @@ def is_quad_residue(a,p):
     assert igcd(a,p)==1,"The two numbers should be relatively prime"
     if a>p:
         a=a%p
-    rem=(a**((p-1)//2))%p    # a^(p-1 / 2) % p
-    if rem==1: return True
-    else : return False
+    def square_and_multiply(a,n,p):
+        if n==0: return 1
+        if n==1: return a
+        if n%2==1:
+            return (square_and_multiply(a,n//2,p)**2 * a)%p
+        else:
+            return (square_and_multiply(a,n//2,p)**2)%p
+    return (square_and_multiply(a,(p-1)//2,p)%p)==1
 
 def legendre_symbol(a,p):
     """
