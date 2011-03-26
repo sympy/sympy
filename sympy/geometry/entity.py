@@ -125,8 +125,7 @@ class GeometryEntity(tuple):
         return type(self).__name__ + sstr (tuple(self))
 
     def __repr__(self):
-        from sympy.printing import srepr
-        return type(self).__name__ + srepr(tuple(self))
+        return type(self).__name__ + repr(tuple(self))
 
     def __cmp__(self, other):
         n1 = self.__class__.__name__
