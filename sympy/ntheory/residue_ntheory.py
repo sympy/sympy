@@ -1,5 +1,6 @@
 from sympy.core.numbers import igcd
 from primetest import isprime
+from factor_ import factorint
 
 def totient_(n):
     """returns the number of integers less than n
@@ -17,11 +18,20 @@ def n_order(a,n):
     Order of a modulo n is the smallest integer
     k such that a^k leaves a remainder of 1 with n.
     """
-    assert igcd(a,n)==1
-    if a>n : a=a%n
-    for x in xrange(1,totient_(n)+1):
-        if (a**x)%n==1:
-            return x
+    assert igcd(a,n)==1,"The two numbers should be relatively prime"
+    group_order=totient_(n)
+    factors=factorint(group_order)
+    order=1
+    if a>n:
+        a=a%n
+    for p, e in factors.iteritems():
+        exponent=group_order
+        for f in xrange(0,e+1):
+            if (a**(exponent))%n!=1:
+                order*=p**(e-f+1)
+                break
+            exponent=exponent//p
+    return order
 
 def is_primitive_root(a,p):
     """
