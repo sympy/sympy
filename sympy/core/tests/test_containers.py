@@ -1,5 +1,6 @@
 from sympy import Tuple, symbols
 from sympy.core.containers import tuple_wrapper
+from sympy.utilities.pytest import raises
 
 def test_Tuple():
     t = (1, 2, 3, 4)
@@ -15,6 +16,36 @@ def test_Tuple():
     st2 = Tuple(*t2)
     assert st2.atoms() == set(t2)
     assert st == st2.subs({p:1, q:2, r:3, s:4})
+
+def test_Tuple_contains():
+    t1, t2 = Tuple(1), Tuple(2)
+    assert t1 in Tuple(1, 2, 3, t1, Tuple(t2))
+    assert t2 not in Tuple(1, 2, 3, t1, Tuple(t2))
+
+def test_Tuple_concatenation():
+    assert Tuple(1, 2) + Tuple(3, 4) == Tuple(1, 2, 3, 4)
+    assert (1, 2) + Tuple(3, 4) == Tuple(1, 2, 3, 4)
+    assert Tuple(1, 2) + (3, 4) == Tuple(1, 2, 3, 4)
+    raises(TypeError, 'Tuple(1, 2) + 3')
+    raises(TypeError, '1 + Tuple(2, 3)')
+
+    #the Tuple case in __radd__ is only reached when a subclass is involved
+    class Tuple2(Tuple):
+        def __radd__(self, other):
+            return Tuple.__radd__(self, other + other)
+    assert Tuple(1, 2) + Tuple2(3, 4) == Tuple(1, 2, 1, 2, 3, 4)
+    assert Tuple2(1, 2) + Tuple(3, 4) == Tuple(1, 2, 3, 4)
+
+def test_Tuple_equality():
+    assert Tuple(1, 2) is not (1, 2)
+    assert (Tuple(1, 2) == (1, 2)) is True
+    assert (Tuple(1, 2) != (1, 2)) is False
+    assert (Tuple(1, 2) == (1, 3)) is False
+    assert (Tuple(1, 2) != (1, 3)) is True
+    assert (Tuple(1, 2) == Tuple(1, 2)) is True
+    assert (Tuple(1, 2) != Tuple(1, 2)) is False
+    assert (Tuple(1, 2) == Tuple(1, 3)) is False
+    assert (Tuple(1, 2) != Tuple(1, 3)) is True
 
 def test_tuple_wrapper():
 

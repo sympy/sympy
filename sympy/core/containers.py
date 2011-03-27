@@ -35,11 +35,40 @@ class Tuple(Basic):
     def __len__(self):
         return len(self.args)
 
-    def __contains__(self,item):
+    def __contains__(self, item):
         return item in self.args
 
     def __iter__(self):
         return iter(self.args)
+
+    def __add__(self, other):
+        if isinstance(other, Tuple):
+            return Tuple(*(self.args + other.args))
+        elif isinstance(other, tuple):
+            return Tuple(*(self.args + other))
+        else:
+            return NotImplemented
+
+    def __radd__(self, other):
+        if isinstance(other, Tuple):
+            return Tuple(*(other.args + self.args))
+        elif isinstance(other, tuple):
+            return Tuple(*(other + self.args))
+        else:
+            return NotImplemented
+
+    def __eq__(self, other):
+        if isinstance(other, Basic):
+            return super(Tuple, self).__eq__(other)
+        return self.args == other
+
+    def __ne__(self, other):
+        if isinstance(other, Basic):
+            return super(Tuple, self).__ne__(other)
+        return self.args != other
+
+    def __hash__(self):
+        return hash(self.args)
 
 
 def tuple_wrapper(method):
