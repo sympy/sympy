@@ -243,10 +243,10 @@ allhints = ("separable", "1st_exact", "1st_linear", "Bernoulli",
 "Liouville_Integral")
 
 def de_dv_detect(eq):
-    """It is usually obvious which functionin in the differential equation has
+    """Usually it is obvious which function in the differential equation has
     the role of dependent variable. This procedure return this function.
     """
-    dvset=reduce(lambda x, y: x|set([y.expr]), eq.atoms(Derivative), set())
+    dvset=reduce(lambda x, y: x|set([y.expr]), eq.doit().atoms(Derivative), set())
     if len(dvset)!=1:
         raise ValueError("Can't detect dependent variable")
     return dvset.pop()
@@ -398,6 +398,7 @@ def dsolve(eq, func=None, hint="default", simplify=True, **kwargs):
     """
     # TODO: Implement initial conditions
     # See issue 1621.  We first need a way to represent things like f'(0).
+    eq=eq.doit()
     if isinstance(eq, Equality):
         if eq.rhs != 0:
             return dsolve(eq.lhs-eq.rhs, func, hint=hint, simplify=simplify, **kwargs)
@@ -602,6 +603,8 @@ def classify_ode(eq, func=None, dict=False):
 
     """
     from sympy import expand
+
+    eq=eq.doit()
 
     if func==None:
         func=de_dv_detect(eq)
@@ -979,6 +982,8 @@ def checkodesol(ode, sol, order='auto', solve_for_func=True, func=None):
         (False, 2)
 
     """
+
+    ode=ode.doit()
 
     if func==None:
         func=de_dv_detect(ode)
@@ -1521,8 +1526,10 @@ def ode_order(expr, func=None):
 
     """
 
+    expr=expr.doit()
+
     if func==None:
-        func=de_dv_detect(eq)
+        func=de_dv_detect(expr)
 
     a = Wild('a', exclude=[func])
 

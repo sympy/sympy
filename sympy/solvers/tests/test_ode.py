@@ -1,7 +1,7 @@
 from sympy import Function, dsolve, Symbol, sin, cos, sinh, acos, tan, cosh, \
         I, exp, log, simplify, normal, together, ratsimp, powsimp, \
-        fraction, radsimp, Eq, sqrt, pi, erf,  diff, Rational, asinh, trigsimp, \
-        S, RootOf, Poly, Integral, atan, Equality, solve, O, LambertW, Dummy
+        fraction, radsimp, Eq, sqrt, pi, erf,  diff, Derivative, Rational, asinh, \
+        trigsimp, S, RootOf, Poly, Integral, atan, Equality, solve, O, LambertW, Dummy
 from sympy.abc import x, y, z
 from sympy.solvers.ode import ode_order, homogeneous_order, \
         _undetermined_coefficients_match, classify_ode, checkodesol, constant_renumber, \
@@ -55,6 +55,7 @@ def test_checkodesol():
     assert checkodesol(f(x).diff(x) - 1/f(x)/2, Eq(f(x)**2, x)) == \
         [(True, 0), (True, 0)]
     assert checkodesol(f(x).diff(x) - f(x), Eq(C1*exp(x), f(x))) == (True, 0)
+    assert checkodesol(Derivative(f(x)+x,x),Eq(f(x),C1-x)) == (True, 0)
     # Based on test_1st_homogeneous_coeff_ode2_eq3sol.  Make sure that
     # checkodesol tries back substituting f(x) when it can.
     eq3 = x*exp(f(x)/x) + f(x) - x*f(x).diff(x)
@@ -134,6 +135,7 @@ def test_classify_ode():
         '1st_linear_Integral', '1st_homogeneous_coeff_subs_indep_div_dep_Integral', \
         '1st_homogeneous_coeff_subs_dep_div_indep_Integral')
     assert classify_ode(f(x).diff(x)**2, f(x)) == ()
+    classify_ode(Derivative(f(x)+x,x))==classify_ode(diff(f(x),x)+1)
     # 1650: f(x) should be cleared from highest derivative before classifying
     a = classify_ode(Eq(f(x).diff(x) + f(x), x), f(x))
     b = classify_ode(f(x).diff(x)*f(x) + f(x)*f(x) - x*f(x), f(x))
@@ -156,6 +158,7 @@ def test_ode_order():
     assert ode_order(diff(f(x), x, x)*diff(g(x), x), f(x)) == 2
     assert ode_order(diff(f(x), x, x)*diff(g(x), x), g(x)) == 1
     assert ode_order(diff(x*diff(x*exp(f(x)), x,x), x), g(x)) == 0
+    assert ode_order(x*Derivative(f(x)+x,x)+3*x*f(x)-sin(x)/x) == 1
 
 # In all tests below, checkodesol has the order option set to prevent superfluous
 # calls to ode_order(), and the solve_for_func flag set to False because
@@ -178,6 +181,7 @@ def test_old_ode_tests():
     # Type: 2nd order, constant coefficients (two complex roots)
     eq10 = Eq(3*f(x).diff(x) -1,0)
     eq11 = Eq(x*f(x).diff(x) -1,0)
+    eq12 = Eq(Derivative(x+f(x),x),0)
     sol1 = Eq(f(x),C1)
     sol2 = Eq(f(x),C1+5*x/3)
     sol3 = Eq(f(x),C1+5*x/3)
@@ -189,6 +193,7 @@ def test_old_ode_tests():
     sol9 = Eq(f(x), (C1*cos(x*sqrt(2)) + C2*sin(x*sqrt(2)))*exp(-x))
     sol10 = Eq(f(x), C1 + x/3)
     sol11 = Eq(f(x), C1 + log(x))
+    sol12 = Eq(f(x), C1 - x)
     assert dsolve(eq1, f(x)) == sol1
     assert dsolve(eq1.lhs, f(x)) == sol1
     assert dsolve(eq2, f(x)) == sol2
@@ -201,6 +206,7 @@ def test_old_ode_tests():
     assert dsolve(eq9, f(x)) == sol9
     assert dsolve(eq10, f(x)) == sol10
     assert dsolve(eq11, f(x)) == sol11
+    assert dsolve(eq12) == sol12
     assert checkodesol(eq1, sol1, order=1, solve_for_func=False)[0]
     assert checkodesol(eq2, sol2, order=1, solve_for_func=False)[0]
     assert checkodesol(eq3, sol3, order=1, solve_for_func=False)[0]
@@ -212,6 +218,7 @@ def test_old_ode_tests():
     assert checkodesol(eq9, sol9, order=2, solve_for_func=False)[0]
     assert checkodesol(eq10, sol10, order=1, solve_for_func=False)[0]
     assert checkodesol(eq11, sol11, order=1, solve_for_func=False)[0]
+    assert checkodesol(eq12, sol12, order=1, solve_for_func=False)[0]
 
 def test_1st_linear():
     # Type: first order linear form f'(x)+p(x)f(x)=q(x)
@@ -1154,6 +1161,8 @@ def test_constant_renumber_order_issue2209():
 def test_de_dv_detect():
     assert de_dv_detect(f(x, y).diff(x,y) - y*f(x, y))==f(x,y)
     assert de_dv_detect(f(x).diff(x) - sin(x)*f(x)+g(y))==f(x)
+    assert de_dv_detect(Derivative(f(x)+x,x) - sin(x)*f(x)+g(y))==f(x)
     raises(ValueError, "de_dv_detect(f(x).diff(x)+g(x).diff(x))")
     raises(ValueError, "de_dv_detect(f(x).diff(x)+g(y).diff(y))")
     raises(ValueError, "de_dv_detect(f(x)**2+x*f(x)+1)")
+    raises(ValueError, "de_dv_detect(Derivative(f(x)+g(x),x))")
