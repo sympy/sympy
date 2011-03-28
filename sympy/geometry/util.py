@@ -136,8 +136,8 @@ def poly_poly_distance(e1, e2):
 
     Notes:
     ======
-        - Prints a warning if the two polygons possibly intersect as the return 
-          value will not be valid in such a case. For a more through test of 
+        - Prints a warning if the two polygons possibly intersect as the return
+          value will not be valid in such a case. For a more through test of
           intersection use intersection().
 
     Example:
@@ -208,7 +208,7 @@ def poly_poly_distance(e1, e2):
     min_dist = Point.distance(e1_ymax, e2_ymin)
 
     '''
-    Produce a dictionary with vertices of e1 as the keys and, for each vertex, the points 
+    Produce a dictionary with vertices of e1 as the keys and, for each vertex, the points
     to which the vertex is connected as its value. The same is then done for e2.
     '''
     e1_connections = {}
