@@ -393,12 +393,12 @@ def solve_neumann(eq,func,n):
     terms = []
     for i in range(0, n):
         terms.insert(i, Eq(Function("U" + str(i))(func.args[0]),0))
-    non_integral_terms = Eq(0,0)
+    non_integral_terms = Eq(0,func)
 
     #Extract kernel and non-integral terms
     for term in eq.lhs.args:
         if type(term) != C.Integral:
-            non_integral_terms = Eq(non_integral_terms.lhs + term, 0)
+            non_integral_terms = Eq(non_integral_terms.lhs + term, func)
         if type(term) == C.Integral:
             limits = term.limits
             termsymbol = term.variables[0]
@@ -406,16 +406,16 @@ def solve_neumann(eq,func,n):
             kernel = term.function.subs(subsfunc, 1)
 
     #For each term find out the required integral and print the last term
-    terms[0] = Eq(terms[0].lhs,\
-                   integrate(kernel * non_integral_terms.lhs, limits))
+    integralterm = C.Integral(kernel * non_integral_terms.lhs, limits)
+    terms[0] = Eq(terms[0].lhs, integralterm.doit())
 
     for i in range(1, n):
-        terms[i] = Eq(terms[i].lhs, \
-                      integrate(kernel * terms[i-1].rhs.subs(func.args[0], termsymbol), limits))
+        innerintegralterm = C.Integral(kernel * terms[i-1].rhs.subs(func.args[0], termsymbol), limits)
+        terms[i] = Eq(terms[i].lhs, innerintegralterm.doit())
 
-    ans = Eq(0,0)
+    ans = Eq(0,func)
     for i in range(n):
-        ans = Eq(ans.lhs + terms[i].rhs)
+        ans = Eq(ans.lhs + terms[i].rhs, ans.rhs)
     return ans.lhs
 
 def solve_eigenfunction():
