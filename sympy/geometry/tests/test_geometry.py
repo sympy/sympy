@@ -1,7 +1,7 @@
 from sympy import Symbol, Rational, sqrt, pi, cos, oo, simplify, Real
 from sympy.geometry import (Point, Polygon, convex_hull, Segment,
     RegularPolygon, Circle, Ellipse, GeometryError, Line, intersection, Ray,
-    Triangle, are_similar, Curve)
+    Triangle, are_similar, Curve, poly_poly_distance)
 from sympy.utilities.pytest import raises
 
 x = Symbol('x', real=True)
@@ -408,3 +408,28 @@ def test_concyclic_doctest_bug():
     p3,p4 = Point(0, 1), Point(-1, 2)
     assert Point.is_concyclic(p1, p2, p3)
     assert not Point.is_concyclic(p1, p2, p3, p4)
+
+def test_poly_poly_distance():
+    p1 = Polygon(
+        Point(0,0), Point(1,0),
+        Point(1,1), Point(0,1))
+    p2 = Polygon(
+        Point(0,1.25), Point(1,1.25),
+        Point(1,2.25), Point(0,2.25))
+    p3 = Polygon(
+        Point(1,2), Point(2,2),
+        Point(2,1))
+    p4 = Polygon(
+        Point(1,1), Point(1.2,1),
+        Point(1,1.2))
+    p5 = Polygon(
+        Point(0.5, 3.0**(.5)/2), Point(-0.5, 3.0**(.5)/2),
+        Point(-1.0, 0), Point(-0.5, -(3.0)**(.5)/2),
+        Point(0.5, -(3.0)**(.5)/2), Point(1, 0))
+    p6 = Polygon(Point(2, 0.3), Point(1.7, 0),
+                 Point(2, -0.3), Point(2.3, 0))
+
+    assert poly_poly_distance(p1,p2).evalf() == .25
+    assert poly_poly_distance(p1,p3).evalf() == sqrt(2)/2
+    assert poly_poly_distance(p3,p4).evalf() - (sqrt(2)/2-sqrt(.08)/2) < 10**(-10)
+    assert poly_poly_distance(p5,p6).evalf() == .7
