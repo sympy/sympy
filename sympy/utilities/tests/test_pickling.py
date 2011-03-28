@@ -149,8 +149,8 @@ from sympy.functions import (Piecewise, lowergamma, acosh,
         arg, asin, DiracDelta, re, rf, Abs, uppergamma, binomial, sinh, Ylm,
         cos, cot, acos, acot, gamma, bell, hermite, harmonic,
         LambertW, zeta, log, Factorial, asinh, acoth, Zlm,
-        cosh, dirichlet_eta, Eijk, loggamma, erf, Max, ceiling, im, fibonacci,
-        conjugate, tan, chebyshevu_root, floor, atanh, sqrt, Min,
+        cosh, dirichlet_eta, Eijk, loggamma, erf, ceiling, im, fibonacci,
+        conjugate, tan, chebyshevu_root, floor, atanh, sqrt,
         RisingFactorial, sin, atan, ff, FallingFactorial, lucas, atan2,
         polygamma, exp)
 from sympy.core import pi, oo, nan, zoo, E, I
@@ -162,8 +162,8 @@ def test_functions():
             gamma, bell, harmonic, LambertW, zeta, log, Factorial, asinh,
             acoth, cosh, dirichlet_eta, loggamma, erf, ceiling, im, fibonacci,
             conjugate, tan, floor, atanh, sin, atan, lucas, exp)
-    two_var = (rf, ff, lowergamma, chebyshevu, chebyshevt, binomial, Max,
-            Min, atan2, polygamma, hermite, legendre, uppergamma)
+    two_var = (rf, ff, lowergamma, chebyshevu, chebyshevt, binomial,
+            atan2, polygamma, hermite, legendre, uppergamma)
     x, y, z = symbols("x,y,z")
     others = (chebyshevt_root, chebyshevu_root, Eijk(x, y, z),
             Piecewise( (0, x<-1), (x**2, x<=1), (x**3, True)),
