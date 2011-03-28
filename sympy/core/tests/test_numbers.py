@@ -152,6 +152,10 @@ def test_Number_new():
     assert Number('-622').__class__ is Integer
     assert Number('5/3').__class__ is Rational
     assert Number('5.3').__class__ is Real
+    raises(ValueError, "Number('cos')")
+    raises(TypeError, "Number(cos)")
+    a = Rational(3,5)
+    assert Number(a) is a # Check idempotence on Numbers
 
 def test_Rational_cmp():
     n1 = Rational(1,4)
