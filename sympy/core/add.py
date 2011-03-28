@@ -124,6 +124,10 @@ class Add(AssocOp):
         elif (coeff is S.Infinity) or (coeff is S.NegativeInfinity):
             newseq = [f for f in newseq if not f.is_real]
 
+        # zoo
+        elif coeff == S.ComplexInfinity:
+            newseq = [f for f in newseq if not (f.is_real or f.is_imaginary)]
+
 
         # process O(x)
         if order_factors:

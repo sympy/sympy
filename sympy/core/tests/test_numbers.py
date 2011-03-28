@@ -1,5 +1,5 @@
 from sympy import Rational, Symbol, Real, I, sqrt, oo, nan, pi, E, Integer, \
-        S, factorial, Catalan, EulerGamma, GoldenRatio, cos, exp, Number
+        S, factorial, Catalan, EulerGamma, GoldenRatio, cos, exp, Number, zoo
 from sympy.core.power import integer_nthroot
 
 from sympy.core.numbers import igcd, ilcm, igcdex, ifactorial, seterr, _intcache
@@ -297,6 +297,48 @@ def test_Infinity_inequations():
     assert oo > pi
     assert not (oo < pi)
     assert exp(-3) < oo
+
+def test_ComplexInfinity():
+    assert zoo == zoo
+    assert zoo != oo
+    assert 1*zoo == zoo
+    assert 2*zoo == zoo
+    assert 1 != zoo
+    assert zoo != 1
+    assert zoo != Symbol("x")**3
+    assert zoo + 1 == zoo + 1
+    assert zoo + 1 == zoo
+    assert 2 + zoo == zoo
+    assert 3*zoo + 2 == zoo
+    assert 1/zoo == 0
+
+    x = Symbol('x')
+
+    assert zoo + zoo == nan
+    assert zoo - zoo == nan
+    assert zoo + oo == nan
+    assert zoo - oo == nan
+
+    assert zoo + I == zoo
+    assert zoo * I == zoo
+    assert zoo + x + 2 + 3*I == zoo + x
+    assert zoo * x * 2 * 3*I * -oo == zoo * x
+
+    assert zoo * (1+I) == zoo
+    assert zoo * (4+I+x) != zoo
+
+    assert zoo * 0 == nan
+    assert zoo * nan == nan
+    assert 0 * zoo == nan
+    assert nan * zoo == nan
+    assert zoo + nan == nan
+
+    assert zoo**zoo == nan
+    assert zoo**0   == 1
+    assert zoo**2   == zoo
+    assert zoo**(-1) == 0
+
+    assert abs(zoo) == oo
 
 def test_NaN():
     assert nan == nan

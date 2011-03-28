@@ -281,6 +281,16 @@ class Mul(AssocOp):
             nc_part = new_nc_part
             coeff *= coeff_sign
 
+        # zoo
+        if coeff is S.ComplexInfinity:
+            new_c_part = [f for f in c_part if not (f.is_Number \
+                                                    or f == S.ImaginaryUnit)]
+            new_nc_part = [f for f in nc_part if not (f.is_Number \
+                                                      or f == S.ImaginaryUnit)]
+            c_part = new_c_part
+            nc_part = new_nc_part
+
+
         # 0, nan
         elif (coeff is S.Zero) or (coeff is S.NaN):
             # we know for sure the result will be the same as coeff (0 or nan)
@@ -306,7 +316,12 @@ class Mul(AssocOp):
         if len(c_part)==2 and c_part[0].is_Number and c_part[1].is_Add:
             # 2*(1+a) -> 2 + 2 * a
             coeff = c_part[0]
-            c_part = [Add(*[coeff*f for f in c_part[1].args])]
+            if coeff is S.ComplexInfinity:
+                re, im = c_part[1].as_real_imag()
+                if re.is_Number and im.is_Number and c_part[1] != 0:
+                    c_part = [S.ComplexInfinity]
+            else:
+                c_part = [Add(*[coeff*f for f in c_part[1].args])]
 
         if reeval:
             c_part, _, _ = Mul.flatten(c_part)
