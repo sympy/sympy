@@ -981,6 +981,9 @@ class Integer(Rational):
     def __hash__(self):
         return super(Integer, self).__hash__()
 
+    def __index__(self):
+        return self.p
+
     ########################################
 
     def _eval_is_odd(self):

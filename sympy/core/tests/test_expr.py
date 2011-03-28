@@ -170,7 +170,11 @@ def test_relational_noncommutative():
 def test_basic_nostr():
     for obj in basic_objs:
         for op in ['+','-','*','/','**']:
-            raises(TypeError, "obj %s '1'" % op)
+            if obj == 2 and op == '*':
+                if hasattr(int, '__index__'): # Python 2.5+ (PEP 357)
+                    assert obj * '1' == '11'
+            else:
+                raises(TypeError, "obj %s '1'" % op)
 
 def test_leadterm():
     assert (3+2*x**(log(3)/log(2)-1)).leadterm(x) == (3,0)
