@@ -1,5 +1,5 @@
 from sympy import Rational, Symbol, Real, I, sqrt, oo, nan, pi, E, Integer, \
-        S, factorial, Catalan, EulerGamma, GoldenRatio, cos, exp
+        S, factorial, Catalan, EulerGamma, GoldenRatio, cos, exp, Number
 from sympy.core.power import integer_nthroot
 
 from sympy.core.numbers import igcd, ilcm, igcdex, seterr
@@ -136,6 +136,22 @@ def test_Rational_new():
         assert Rational(fractions.Fraction(1, 2)) == Rational(1, 2)
     except ImportError:
         pass
+
+def test_Number_new():
+    """"
+    Test for Number constructor
+    """
+    # Expected behavior on numbers and strings
+    assert Number(1) is S.One
+    assert Number(2).__class__ is Integer
+    assert Number(-622).__class__ is Integer
+    assert Number(5,3).__class__ is Rational
+    assert Number(5.3).__class__ is Real
+    assert Number('1') is S.One
+    assert Number('2').__class__ is Integer
+    assert Number('-622').__class__ is Integer
+    assert Number('5/3').__class__ is Rational
+    assert Number('5.3').__class__ is Real
 
 def test_Rational_cmp():
     n1 = Rational(1,4)
