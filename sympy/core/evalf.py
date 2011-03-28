@@ -798,7 +798,7 @@ def check_convergence(numer, denom, n):
         return rate, constant, 0
     pc = npol.all_coeffs()[1]
     qc = dpol.all_coeffs()[1]
-    return rate, constant, qc-pc
+    return rate, constant, (qc-pc)/dpol.LC()
 
 def hypsum(expr, n, start, prec):
     """
