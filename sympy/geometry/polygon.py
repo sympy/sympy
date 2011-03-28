@@ -50,7 +50,7 @@ class Polygon(GeometryEntity):
     and any points collinear and between two points will be removed.
 
     A Triangle, Segment or Point will be returned when there are 3 or
-    less points provided.
+    fewer points provided.
 
     Examples
     --------
@@ -81,6 +81,25 @@ class Polygon(GeometryEntity):
             if len(nodup) > 2:
                 if Point.is_collinear(*nodup[-3:]):
                     nodup[-3:] = sorted(nodup[-3:])[0::2]
+        if len(nodup) > 1 and nodup[-1] == nodup[0]:
+            nodup.pop() # last point was same as first
+        # check for collinearity of the first and last points. The
+        # last two and the first or the last one and the first two
+        # could be collinear. Rotate the first point to the end twice
+        # and check as before. This changes the ordering but the
+        # Polygon is the same.
+        if len(nodup) > 3:
+            changed = False
+            for i in range(2):
+                nodup.append(nodup.pop(0))
+                if Point.is_collinear(*nodup[-3:]):
+                    changed = True
+                    nodup[-3:] = sorted(nodup[-3:])[0::2]
+            # restore original order in case there
+            if not changed:
+                for i in range(2):
+                    nodup = nodup[-1:] + nodup[:-1]
+
         vertices = nodup
 
         if len(vertices) > 3:
@@ -105,7 +124,7 @@ class Polygon(GeometryEntity):
                 hit = si.intersection(sj)
                 if hit and concrete(hit[0]) and\
                    len(set([si[0], si[1], sj[0], sj[1]])) == 4:
-                    raise GeometryError("Polgon has intersecting sides.")
+                    raise GeometryError("Polygon has intersecting sides.")
 
         return rv
 
@@ -321,66 +340,65 @@ class Polygon(GeometryEntity):
 
         return True
 
-    def inside(self, p):
-        """return True if p is inside self
+    def encloses_point(self, p):
+        """Return True if self encloses Point p.
 
-        adapted from:
-        [1] http://www.ariel.com.au/a/python-point-int-poly.html
-        [2] http://local.wasp.uwa.edu.au/~pbourke/geometry/insidepoly/
+        Adapted from:
+            [1] http://www.ariel.com.au/a/python-point-int-poly.html
+            [2] http://local.wasp.uwa.edu.au/~pbourke/geometry/insidepoly/
         """
-        from sympy import Symbol, flatten
+        from sympy import Symbol
 
         if p in self:
             return False
 
-        if isinstance(p, Point):
+        def concrete(p):
+            x, y = p
+            return x.is_number and y.is_number
+        # move to p, checking that the result is numeric
+        lit = []
+        for v in self.vertices:
+            lit.append(v - p)
+            if not concrete(lit[-1]):
+                return None
+        self = Polygon(*lit)
 
-            def concrete(p):
-                x, y = p
-                return x.is_number and y.is_number
-            # move to p, checking that the result is numeric
-            lit = []
-            for v in self.vertices:
-                lit.append(v - p)
-                if not concrete(lit[-1]):
-                    return None
-            self = Polygon(*lit)
+        if self.is_convex():
+            side = None
+            for i, s in enumerate(self.sides):
+                p0, p1 = s
+                # the last segment doesn't have the points in the same order as the rest
+                if i != len(self.sides):
+                    x0, y0 = p0
+                    x1, y1 = p1
+                else:
+                    x0, y0 = p1
+                    x1, y1 = p0
+                test = ((-y0)*(x1 - x0) - (-x0)*(y1 - y0)).is_negative
+                if side is None:
+                    side = test
+                elif test is not side:
+                    return False
+            return True
 
-            if self.is_convex():
-                side = None
-                for i, s in enumerate(self.sides):
-                    p0, p1 = s
-                    # the last segment doesn't have the points in the same order as the rest
-                    if i != len(self.sides):
-                        x0, y0 = p0
-                        x1, y1 = p1
-                    else:
-                        x0, y0 = p1
-                        x1, y1 = p0
-                    test = ((-y0)*(x1 - x0) - (-x0)*(y1 - y0)).is_negative
-                    if side is None:
-                        side = test
-                    elif test is not side:
-                        return False
-                return True
-
-            n = len(self)
-            hit_odd = False
-            p1x,p1y = self[0]
-            indices = range(1, n)
-            if p[-1] != p[0]:
-                indices.append(0)
-            for i in range(1, n):
-                p2x, p2y = self[i]
-                if 0 > min(p1y, p2y):
-                    if 0 <= max(p1y, p2y):
-                        if 0 <= max(p1x, p2x):
-                            if p1y != p2y:
-                                xinters = (-p1y)*(p2x - p1x)/(p2y - p1y) + p1x
-                            if p1x == p2x or 0 <= xinters:
-                                hit_odd = not hit_odd
-                p1x, p1y = p2x, p2y
-            return hit_odd
+        n = len(self)
+        hit_odd = False
+        p1x,p1y = self[0]
+        indices = range(1, n)
+        # polygon closure is assumed in the following test
+        if p[-1] != p[0]:
+            indices.append(0)
+        for i in indices:
+            p2x, p2y = self[i]
+            if 0 > min(p1y, p2y):
+                if 0 <= max(p1y, p2y):
+                    if 0 <= max(p1x, p2x):
+                        if p1y != p2y:
+                            xinters = (-p1y)*(p2x - p1x)/(p2y - p1y) + p1x
+                        if p1x == p2x or 0 <= xinters:
+                            hit_odd = not hit_odd
+            p1x, p1y = p2x, p2y
+        return hit_odd
 
     def intersection(self, o):
         """The intersection of two polygons.
@@ -410,7 +428,7 @@ class Polygon(GeometryEntity):
         """
         res = []
         for side in self.sides:
-            inter = GeometryEntity.do_intersection(side, o)
+            inter = side.intersection(o)
             if inter is not None:
                 res.extend(inter)
         return res
@@ -911,6 +929,24 @@ class RegularPolygon(Polygon):
             ret[v] = ang
         return ret
 
+    def encloses_point(self, p):
+        """
+        Return True if p is enclosed (is inside of) self.
+
+        Being on the border of self is considered False.
+
+        Before treating the RegularPolygon like a Polygon, check
+        to see if p is within the incircle or beyond the circumcircle.
+        """
+        c = self.center
+        d = Segment(c, p).length
+        if d >= self.radius:
+            return False
+        elif d < self.incircle.radius:
+            return True
+        else:
+            return Polygon.encloses_point(self, p)
+
 class Triangle(Polygon):
     """
     A polygon with three vertices and three sides.
@@ -1132,7 +1168,7 @@ class Triangle(Polygon):
         """
         a = self.altitudes
         v = self.vertices
-        return GeometryEntity.do_intersection(a[v[0]], a[v[1]])[0]
+        return a[v[0]].intersection(a[v[1]])[0]
 
     @property
     def circumcenter(self):
@@ -1158,7 +1194,7 @@ class Triangle(Polygon):
 
         """
         a,b,c = [x.perpendicular_bisector() for x in self.sides]
-        return GeometryEntity.do_intersection(a, b)[0]
+        return a.intersection(b)[0]
 
     @property
     def circumradius(self):
@@ -1235,9 +1271,9 @@ class Triangle(Polygon):
         s = self.sides
         v = self.vertices
         c = self.incenter
-        l1 = Segment(v[0], GeometryEntity.do_intersection(Line(v[0], c), s[1])[0])
-        l2 = Segment(v[1], GeometryEntity.do_intersection(Line(v[1], c), s[2])[0])
-        l3 = Segment(v[2], GeometryEntity.do_intersection(Line(v[2], c), s[0])[0])
+        l1 = Segment(v[0], Line(v[0], c).intersection(s[1])[0])
+        l2 = Segment(v[1], Line(v[1], c).intersection(s[2])[0])
+        l3 = Segment(v[2], Line(v[2], c).intersection(s[0])[0])
         return {v[0]: l1, v[1]: l2, v[2]: l3}
 
     @property

@@ -98,25 +98,20 @@ class Ellipse(GeometryEntity):
         vradius = sympify(vradius)
         eccentricity = sympify(eccentricity)
 
+        if center is None:
+            center = Point(0, 0)
+        elif not isinstance(center, Point):
+            raise TypeError("center must be a Point")
+
         if len(filter(None, (hradius, vradius, eccentricity))) != 2:
-            raise ValueError, 'Exactly two arguments between "hradius", '\
-                '"vradius", and "eccentricity" must be not None."'
+            raise ValueError, 'Exactly two arguments of "hradius", '\
+                '"vradius", and "eccentricity" must not be None."'
 
         if eccentricity is not None:
             if hradius is None:
                 hradius = vradius / sqrt(1 - eccentricity**2)
             elif vradius is None:
                 vradius = hradius * sqrt(1 - eccentricity**2)
-        else:
-            if hradius is None and vradius is None:
-                raise ValueError("At least two arguments between hradius, "
-                    "vradius and eccentricity must not be none.")
-
-        if center is None:
-            center = Point(0, 0)
-
-        if not isinstance(center, Point):
-            raise TypeError("center must be a Point")
 
         if hradius == vradius:
             return Circle(center, hradius, **kwargs)
@@ -338,6 +333,21 @@ class Ellipse(GeometryEntity):
             return (c + Point(0, -h), c + Point(0, h))
         else:
             return (c + Point(-h, 0), c + Point(h, 0))
+
+    def encloses_point(self, p):
+        """
+        Return True if p is contained within the boundaries of self.
+        """
+        if len(self.foci) == 2:
+            f1, f2 = self.foci
+            maj = self.hradius
+            test = (2*maj -
+                    Point.distance(f1, p) -
+                    Point.distance(f2, p))
+        else:
+            test = self.radius - Point.distance(self.center, p)
+        if test.is_number and test.is_positive:
+            return True
 
     def tangent_lines(self, p):
         """Tangent lines between `p` and the ellipse.
@@ -591,16 +601,11 @@ class Ellipse(GeometryEntity):
         return t1 + t2 - 1
 
     def _do_line_intersection(self, o):
-        """The intersection of a LinearEntity and the ellipse.
+        """
+        Find the intersection of a LinearEntity and the ellipse.
 
-        Private helper method for `intersection`.
-
-        Notes
-        -----
-        Makes no regards to what the LinearEntity is because it assumes a
-        Line. To ensure correct intersection results one must invoke
-        `intersection` to remove bad results.
-
+        All LinearEntities are treated as a line and filtered at
+        the end to see that they lie in o.
         """
         def dot(p1, p2):
             sum = 0
@@ -637,9 +642,10 @@ class Ellipse(GeometryEntity):
                 root = sqrt(det)
                 t_a = (-b - root) / a
                 t_b = (-b + root) / a
-                result.append(lp[0] + (lp[1] - lp[0]) * t_a)
-                result.append(lp[0] + (lp[1] - lp[0]) * t_b)
-        return result
+                result.append( lp[0] + (lp[1] - lp[0]) * t_a )
+                result.append( lp[0] + (lp[1] - lp[0]) * t_b )
+
+        return [r for r in result if r in o]
 
     def _do_circle_intersection(self, o):
         """The intersection of an Ellipse and a Circle.
@@ -738,24 +744,22 @@ class Ellipse(GeometryEntity):
                 return [o]
             else:
                 return []
+
         elif isinstance(o, LinearEntity):
             # LinearEntity may be a ray/segment, so check the points
             # of intersection for coincidence first
-            result = self._do_line_intersection(o)
-            if result is not None:
-                for ind in xrange(len(result) - 1, -1, -1):
-                    if result[ind] not in o:
-                        del result[ind]
-            return result
+            return self._do_line_intersection(o)
+
         elif isinstance(o, Circle):
             return self._do_circle_intersection(o)
+
         elif isinstance(o, Ellipse):
             if o == self:
                 return self
             else:
                 return self._do_ellipse_intersection(o)
 
-        raise NotImplementedError()
+        return o.intersection(self)
 
     def distance_to_center(self, t):
         """The distance from an point on the ellipse to the center.

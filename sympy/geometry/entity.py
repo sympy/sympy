@@ -35,38 +35,49 @@ class GeometryEntity(tuple):
     def __getnewargs__(self):
         return tuple(self)
 
-    @staticmethod
-    def do_intersection(e1, e2):
-        """The intersection of two geometrical entities.
+    def intersection(self, o):
+        """
+        Returns a list of all of the intersections of self with o.
 
-        Parameters
-        ----------
-        e1 : GeometryEntity
-        e2 : GeometryEntity
-
-        Returns
-        -------
-        entities : list
-            A list of GeometryEntity instances.
-
-        Notes
-        -----
-        This method delegates to the `intersection` methods of `e1` and `e2`.
-        First, the `intersection` method of `e1` is called. If this fails to
-        find the intersection, then the `intersection` method of `e2` is called.
+        Notes:
+        ======
+            - This method is not intended to be used directly but rather
+              through the intersection() method or the function found in
+              util.py.
+            - An entity is not required to implement this method.
+            - If two different types of entities can intersect, the item with
+              higher index in ordering_of_classes should implement
+              intersections with anything having a lower index.
 
         """
-        try:
-            return e1.intersection(e2)
-        except Exception:
-            pass
+        raise NotImplementedError()
 
-        try:
-            return e2.intersection(e1)
-        except NotImplementedError:
-            n1, n2 = type(e1).__name__, type(e2).__name__
-            msg = "Unable to determine intersection between '%s' and '%s'"
-            raise NotImplementedError(msg % (n1, n2))
+    def encloses(self, o):
+        """
+        Return True if o is inside (not on or outside) the boundaries of self.
+
+        The object will be decomposed into Points and individual Entities need
+        only define an encloses_point method for their class.
+        """
+        from sympy.geometry.point import Point
+        from sympy.geometry.line import Segment, Ray, Line
+        from sympy.geometry.ellipse import Circle, Ellipse
+        from sympy.geometry.polygon import Polygon, RegularPolygon
+
+        if isinstance(o, Point):
+            return self.encloses_point(o)
+        elif isinstance(o, Segment):
+            return all(self.encloses_point(x) for x in o.points)
+        elif isinstance(o, Ray) or isinstance(o, Line):
+            return False
+        elif isinstance(o, Ellipse):
+            return self.encloses_point(o.center) and not self.intersection(o)
+        elif isinstance(o, Polygon):
+            if isinstance(o, RegularPolygon):
+                if not self.encloses_point(o.center):
+                    return False
+            return all(self.encloses_point(v) for v in o.vertices)
+        raise NotImplementedError()
 
     def is_similar(self, other):
         """Is this geometrical entity similar to another geometrical entity?
@@ -84,21 +95,6 @@ class GeometryEntity(tuple):
 
         """
         raise NotImplementedError()
-
-    def intersection(self, o):
-        """The intersection of two GeometryEntity instances.
-
-        Notes
-        -----
-        This method is not intended to be used directly but rather
-        through the `intersection` function found in util.py.
-        An entity is not required to implement this method.
-        If two different types of entities can intersect, it is only
-        required that one of them be able to determine this.
-
-        """
-        raise NotImplementedError()
-
 
     @staticmethod
     def extract_entities(args, remove_duplicates=True):

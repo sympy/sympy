@@ -340,6 +340,11 @@ def test_ellipse_random_point():
         assert e3.random_point() in e3
 
 def test_polygon():
+    t = Triangle(Point(0,0), Point(2, 0), Point(3,3))
+    assert Polygon(Point(0, 0), Point(1, 0), Point(2, 0), Point(3, 3)) == t
+    assert Polygon(Point(1, 0), Point(2, 0), Point(3, 3), Point(0, 0)) == t
+    assert Polygon(Point(2, 0), Point(3, 3), Point(0, 0), Point(1, 0)) == t
+
     p1 = Polygon(
         Point(0, 0), Point(3,-1),
         Point(6, 0), Point(4, 5),
@@ -359,7 +364,7 @@ def test_polygon():
     # General polygon
     #
     assert p1 == p2
-    assert len(p1) == Rational(6)
+    assert len(p1) == 6
     assert len(p1.sides) == 6
     assert p1.perimeter == 5+2*sqrt(10)+sqrt(29)+sqrt(8)
     assert p1.area == 22

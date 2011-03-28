@@ -37,13 +37,7 @@ class LinearEntity(GeometryEntity):
 
     def __new__(cls, p1, p2, **kwargs):
         if not isinstance(p1, Point) and not isinstance(p2, Point):
-            raise TypeError("%s.__new__ requires two Points or a Point and a slope." % cls.__name__)
-        if not isinstance(p1, Point):
-            p1, p2 = p2, p1
-        if not isinstance(p2, Point): # point slope form
-            p2 = p1 + Point(S.One, p2)
-        if p1 == p2:
-            raise RuntimeError("%s.__new__ requires two distinct points" % cls.__name__)
+            raise TypeError("%s.__new__ requires two Points." % cls.__name__)
 
         return GeometryEntity.__new__(cls, p1, p2, **kwargs)
 
@@ -156,7 +150,7 @@ class LinearEntity(GeometryEntity):
 
         try:
             # Get the intersection (if parallel)
-            p = GeometryEntity.do_intersection(lines[0], lines[1])
+            p = lines[0].intersection(lines[1])
             if len(p) == 0: return False
 
             # Make sure the intersection is on every linear entity
@@ -360,7 +354,7 @@ class LinearEntity(GeometryEntity):
         if p in self:
             return p
         pl = self.perpendicular_line(p)
-        p2 = GeometryEntity.do_intersection(self, pl)[0]
+        p2 = self.intersection(pl)[0]
         return Segment(p, p2)
 
     @property
@@ -485,7 +479,7 @@ class LinearEntity(GeometryEntity):
             n2 = o.__class__.__name__
             raise GeometryError("Do not know how to project %s onto %s" % (n2, n1))
 
-        return GeometryEntity.do_intersection(self, projected)[0]
+        return self.intersection(projected)[0]
 
     def intersection(self, o):
         """The intersection with another geometrical entity.
@@ -600,9 +594,8 @@ class LinearEntity(GeometryEntity):
             if inter in self and inter in o:
                 return [inter]
             return []
-        else:
-            return o.intersection(self)
-        raise NotImplementedError()
+
+        return o.intersection(self)
 
     def random_point(self):
         """A random point on a LinearEntity.
@@ -966,7 +959,7 @@ class Ray(LinearEntity):
 
 
 class Segment(LinearEntity):
-    """A undirected line segment in space.
+    """An undirected line segment in space.
 
     Parameters
     ----------

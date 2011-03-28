@@ -60,11 +60,11 @@ def intersection(*entities):
     if len(entities) <= 1:
         return []
 
-    res = GeometryEntity.do_intersection(entities[0], entities[1])
+    res = entities[0].intersection(entities[1])
     for entity in entities[2:]:
         newres = []
         for x in res:
-            newres.extend(GeometryEntity.do_intersection(x, entity))
+            newres.extend(x.intersection(entity))
         res = newres
     return res
 

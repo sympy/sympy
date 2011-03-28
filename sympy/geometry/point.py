@@ -313,7 +313,8 @@ class Point(GeometryEntity):
             if self == o:
                 return [self]
             return []
-        raise NotImplementedError()
+
+        return o.intersection(self)
 
     def __add__(self, other):
         """Add two points, or add a factor to this point's coordinates."""
