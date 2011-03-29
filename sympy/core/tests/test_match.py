@@ -9,6 +9,7 @@ def test_symbol():
 
     e = x
     assert e.match(x) == {}
+    assert e.matches(x) == {}
     assert e.match(a) == {a: x}
 
     e = Rational(5)

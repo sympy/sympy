@@ -1,6 +1,6 @@
-from sympy import (diff, Integral, integrate, log, oo, Piecewise,
-    piecewise_fold, symbols, pi, solve, Rational, Interval,
-    lambdify, expand)
+from sympy import (diff, expand, Eq, Integral, integrate, Interval, lambdify,
+                   log, oo, Piecewise, piecewise_fold, symbols, pi, solve,
+                   Rational)
 from sympy.utilities.pytest import XFAIL, raises
 
 x,y = symbols('xy')
@@ -71,6 +71,11 @@ def test_piecewise():
     p = Piecewise((x, x < -10),(x**2, x <= -1),(x, 1 < x))
     raises(ValueError, "integrate(p,(x,-2,2))")
 
+def test_piecewise_free_symbols():
+    a = symbols('a')
+    f = Piecewise((x , a<0), (y, True))
+    assert f.free_symbols == set([x, y, a])
+
 def test_piecewise_integrate():
     # XXX Use '<=' here! '>=' is not yet implemented ..
     f = Piecewise(((x - 2)**2, 0 <= x), (1, True))
@@ -95,6 +100,12 @@ def test_piecewise_integrate():
     g = Piecewise(((x - 5)**5, 2 <= x), (2 * f, True))
     assert integrate(g, (x, -2, 2)) == 2 * Rational(14, 3)
     assert integrate(g, (x, -2, 5)) == -Rational(673, 6)
+
+    g = Piecewise((1, x > 0), (0, Eq(x, 0)), (-1, x < 0))
+    assert integrate(g, (x, -1, 1)) == 0
+
+    g = Piecewise((1, x - y < 0), (0, True))
+    assert integrate(g, (y, -oo, oo)) == oo
 
 def test_piecewise_solve():
     abs2 = Piecewise((-x, x <= 0), (x, x > 0))

@@ -182,8 +182,12 @@ class Number(AtomicExpr):
     def __hash__(self):
         return super(Number, self).__hash__()
 
-    def as_coeff_terms(self, x=None):
+    def as_coeff_mul(self, *deps):
         # a -> c * t
+        return self, tuple()
+
+    def as_coeff_add(self, *deps):
+        # a -> c + t
         return self, tuple()
 
 class Real(Number):
@@ -662,7 +666,7 @@ class Rational(Number):
                 else:
                     return (-1)**e * (-b)**e
 
-        c,t = b.as_coeff_terms()
+        c, t = b.as_coeff_mul()
         if e.is_even and isinstance(c, Number) and c < 0:
             return (-c * Mul(*t)) ** e
 
@@ -1012,14 +1016,14 @@ class Integer(Rational):
         if e is S.Infinity:
             if b > S.One:
                 return S.Infinity
-            if b == -1:
+            if b is S.NegativeOne:
                 return S.NaN
             # cases for 0 and 1 are done in their respective classes
             return S.Infinity + S.ImaginaryUnit * S.Infinity
         if not isinstance(e, Number):
             # simplify when exp is even
             # (-2) ** k --> 2 ** k
-            c, t = b.as_coeff_terms()
+            c, t = b.as_coeff_mul()
             if e.is_even and isinstance(c, Number) and c < 0:
                 return (-c*Mul(*t))**e
         if not isinstance(e, Rational):
@@ -1187,12 +1191,12 @@ class RationalConstant(Rational):
     def __new__(cls):
         return AtomicExpr.__new__(cls)
 
-
 class IntegerConstant(Integer):
     __slots__ = []
 
     def __new__(cls):
         return AtomicExpr.__new__(cls)
+
 
 class Zero(IntegerConstant):
     __metaclass__ = Singleton
@@ -1226,7 +1230,7 @@ class Zero(IntegerConstant):
             if d.is_negative:
                 return S.Infinity
             return b
-        coeff, terms = e.as_coeff_terms()
+        coeff, terms = e.as_coeff_mul()
         if coeff.is_negative:
             return S.Infinity ** Mul(*terms)
         if coeff is not S.One:
@@ -1617,6 +1621,9 @@ class NumberSymbol(AtomicExpr):
 
     def __ge__(self, other):
         return (-self) <= (-other)
+
+    def __int__(self):
+        return int(self.evalf(0))
 
     def __hash__(self):
         return super(NumberSymbol, self).__hash__()

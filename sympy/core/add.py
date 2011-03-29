@@ -3,6 +3,7 @@ from basic import Basic
 from singleton import S
 from operations import AssocOp
 from cache import cacheit
+from expr import Expr
 
 class Add(AssocOp):
 
@@ -162,16 +163,16 @@ class Add(AssocOp):
 
 
     @cacheit
-    def as_coeff_factors(self, x=None):
-        if x is not None:
+    def as_coeff_add(self, *deps):
+        if deps:
             l1 = []
             l2 = []
             for f in self.args:
-                if f.has(x):
+                if f.has(*deps):
                     l2.append(f)
                 else:
                     l1.append(f)
-            return Add(*l1), tuple(l2)
+            return self._new_rawargs(*l1), tuple(l2)
         coeff = self.args[0]
         if coeff.is_Number:
             return coeff, self.args[1:]
@@ -180,15 +181,15 @@ class Add(AssocOp):
     def _eval_derivative(self, s):
         return Add(*[f.diff(s) for f in self.args])
 
-    def _eval_nseries(self, x, x0, n):
-        terms = [t.nseries(x, x0, n) for t in self.args]
+    def _eval_nseries(self, x, n):
+        terms = [t.nseries(x, n=n) for t in self.args]
         return Add(*terms)
 
     def _matches_simple(self, expr, repl_dict):
         # handle (w+3).matches('x+5') -> {w: x+2}
-        coeff, factors = self.as_coeff_factors()
-        if len(factors)==1:
-            return factors[0].matches(expr - coeff, repl_dict)
+        coeff, terms = self.as_coeff_add()
+        if len(terms)==1:
+            return terms[0].matches(expr - coeff, repl_dict)
         return
 
     matches = AssocOp._matches_commutative
@@ -206,6 +207,22 @@ class Add(AssocOp):
 
     @cacheit
     def as_two_terms(self):
+        """Return head and tail of self.
+
+        This is the most efficient way to get the head and tail of an
+        expression.
+
+        - if you want only the head, use self.args[0];
+        - if you want to process the arguments of the tail then use
+          self.as_coef_add() which gives the head and a tuple containing
+          the arguments of the tail when treated as an Add.
+        - if you want the coefficient when self is treated as a Mul
+          then use self.as_coeff_mul()[0]
+
+        >>> from sympy.abc import x, y
+        >>> (3*x*y).as_two_terms()
+        (3, x*y)
+        """
         if len(self.args) == 1:
             return S.Zero, self
         return self.args[0], self._new_rawargs(*self.args[1:])
@@ -218,13 +235,6 @@ class Add(AssocOp):
         r = xrange(len(numers))
         return Add(*[Mul(*(denoms[:i]+[numers[i]]+denoms[i+1:]))
                      for i in r]), Mul(*denoms)
-
-    def count_ops(self, symbolic=True):
-        if symbolic:
-            return Add(*[t.count_ops(symbolic) for t in self.args]) + \
-                Symbol('ADD') * (len(self.args) - 1)
-        return Add(*[t.count_ops(symbolic) for t in self.args]) + \
-            (len(self.args) - 1)
 
     def _eval_is_polynomial(self, syms):
         for term in self.args:
@@ -254,8 +264,7 @@ class Add(AssocOp):
         return False
 
     def _eval_is_positive(self):
-        c = self.args[0]
-        r = self._new_rawargs(*self.args[1:])
+        c, r = self.as_two_terms()
         if c.is_positive and r.is_positive:
             return True
         if c.is_unbounded:
@@ -274,8 +283,7 @@ class Add(AssocOp):
             return False
 
     def _eval_is_negative(self):
-        c = self.args[0]
-        r = self._new_rawargs(*self.args[1:])
+        c, r = self.as_two_terms()
         if c.is_negative and r.is_negative:
             return True
         if c.is_unbounded:
@@ -293,25 +301,25 @@ class Add(AssocOp):
         if c.is_nonnegative and r.is_nonnegative:
             return False
 
-    def as_coeff_terms(self, x=None):
+    def as_coeff_mul(self, *deps):
         # -2 + 2 * a -> -1, 2-2*a
         if self.args[0].is_Number and self.args[0].is_negative:
             return S.NegativeOne, (-self,)
-        return S.One, (self,)
+        return Expr.as_coeff_mul(self, *deps)
 
     def _eval_subs(self, old, new):
         if self == old:
             return new
         if isinstance(old, FunctionClass):
             return self.__class__(*[s._eval_subs(old, new) for s in self.args ])
-        coeff_self, factors_self = self.as_coeff_factors()
-        coeff_old, factors_old = old.as_coeff_factors()
-        if factors_self == factors_old: # (2+a).subs(3+a,y) -> 2-3+y
+        coeff_self, terms_self = self.as_coeff_add()
+        coeff_old, terms_old = old.as_coeff_add()
+        if terms_self == terms_old: # (2+a).subs(3+a,y) -> 2-3+y
             return Add(new, coeff_self, -coeff_old)
         if old.is_Add:
-            if len(factors_old) < len(factors_self): # (a+b+c+d).subs(b+c,x) -> a+x+d
-                self_set = set(factors_self)
-                old_set = set(factors_old)
+            if len(terms_old) < len(terms_self): # (a+b+c+d).subs(b+c,x) -> a+x+d
+                self_set = set(terms_self)
+                old_set = set(terms_old)
                 if old_set < self_set:
                     ret_set = self_set - old_set
                     return Add(new, coeff_self, -coeff_old, *[s._eval_subs(old, new) for s in ret_set])
@@ -360,21 +368,21 @@ class Add(AssocOp):
         return (self.new(*re_part), self.new(*im_part))
 
     def _eval_as_leading_term(self, x):
-        coeff, factors = self.as_coeff_factors(x)
+        coeff, terms = self.as_coeff_add(x)
         has_unbounded = bool([f for f in self.args if f.is_unbounded])
         if has_unbounded:
-            if isinstance(factors, Basic):
-                factors = factors.args
-            factors = [f for f in factors if not f.is_bounded]
+            if isinstance(terms, Basic):
+                terms = terms.args
+            terms = [f for f in terms if not f.is_bounded]
         if coeff is not S.Zero:
             o = C.Order(x)
         else:
-            o = C.Order(factors[0]*x,x)
+            o = C.Order(terms[0]*x,x)
         n = 1
-        s = self.nseries(x, 0, n)
+        s = self.nseries(x, n=n)
         while s.is_Order:
             n +=1
-            s = self.nseries(x, 0, n)
+            s = self.nseries(x, n=n)
         if s.is_Add:
             s = s.removeO()
         if s.is_Add:
@@ -386,13 +394,13 @@ class Add(AssocOp):
         #         n          n          n
         # (-3 + y)   ->  (-1)  * (3 - y)
         #
-        # At present, as_coeff_terms return +/-1 but the
+        # At present, as_coeff_mul return +/-1 but the
         # following should work even if that changes.
         if Basic.keep_sign:
             return None
 
         rv = None
-        c, t = self.as_coeff_terms()
+        c, t = self.as_coeff_mul()
         if c.is_negative and not other.is_integer:
             if c is not S.NegativeOne and self.is_positive:
                 coeff = C.Pow(-c, other)

@@ -1,6 +1,6 @@
 from StringIO import StringIO
 
-from sympy.core import symbols, Eq, pi, Catalan, Lambda
+from sympy.core import symbols, Eq, pi, Catalan, Lambda, Dummy
 from sympy.utilities.codegen import CCodeGen, Routine, InputArgument, Result, \
     CodeGenError, FCodeGen, codegen, CodeGenArgumentListError, OutputArgument, \
     InOutArgument
@@ -346,7 +346,10 @@ def test_loops_c():
 
 def test_dummy_loops_c():
     from sympy.tensor import IndexedBase, Idx
-    i, m = symbols('i m', integer=True, dummy=True)
+    # the following line could also be
+    # [Dummy(s, integer=True) for s in 'im']
+    # or [Dummy(integer=True) for s in 'im']
+    i, m = symbols('i m', integer=True, cls=Dummy)
     x = IndexedBase('x')
     y = IndexedBase('y')
     i = Idx(i, m)
@@ -441,7 +444,7 @@ def test_empty_f_code_with_header():
             "!*              See http://www.sympy.org/ for more information.               *\n"
             "!*                                                                            *\n"
             "!*                       This file is part of 'project'                       *\n"
-            "!******************************************************************************\n\n"
+            "!******************************************************************************\n"
             )
 
 def test_empty_f_header():
@@ -886,7 +889,10 @@ def test_loops():
 
 def test_dummy_loops_f95():
     from sympy.tensor import IndexedBase, Idx
-    i, m = symbols('i m', integer=True, dummy=True)
+    # the following line could also be
+    # [Dummy(s, integer=True) for s in 'im']
+    # or [Dummy(integer=True) for s in 'im']
+    i, m = symbols('i m', integer=True, cls=Dummy)
     x = IndexedBase('x')
     y = IndexedBase('y')
     i = Idx(i, m)
@@ -1044,5 +1050,18 @@ def test_inline_function():
 def test_check_case():
     x, X = symbols('xX')
     raises(CodeGenError, "codegen(('test', x*X), 'f95', 'prefix')")
+
+def test_check_case_false_positive():
+    # The upper case/lower case exception should not be triggered by Sympy
+    # objects that differ only because of assumptions.  (It may be useful to
+    # have a check for that as well, but here we only want to test against
+    # false positives with respect to case checking.)
+    x1 = symbols('x')
+    x2 = symbols('x', my_assumption=True)
+    try:
+        codegen(('test', x1*x2), 'f95', 'prefix')
+    except CodeGenError as e:
+        if e.args[0][0:21] == "Fortran ignores case.":
+            raise AssertionError("This exception should not be raised!")
 
 

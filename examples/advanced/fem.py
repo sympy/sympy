@@ -13,7 +13,7 @@ $ python fem.py
 """
 
 from sympy import symbols, Symbol, factorial, Rational, zeros, div, eye, \
-        integrate, diff, pprint
+        integrate, diff, pprint, reduced
 
 x, y, z = symbols('x y z')
 
@@ -129,8 +129,8 @@ def create_matrix(equations, coeffs):
        c = coeffs[j]
        for i in range(0, len(equations)):
            e = equations[i]
-           d, r = div(e, c, *coeffs)
-           A[i,j] = d
+           d, _ = reduced(e, [c])
+           A[i,j] = d[0]
    return A
 
 

@@ -2,7 +2,7 @@
 
 from sympy import S, Interval, symbols, I, DiracDelta, exp, sqrt, pi
 
-from sympy.physics.quantum import apply_operators, represent, L2, Dagger
+from sympy.physics.quantum import qapply, represent, L2, Dagger
 from sympy.physics.quantum import Commutator, hbar
 from sympy.physics.quantum.cartesian import (
     XOp, PxOp, X, Px, XKet, XBra, PxKet, PxBra
@@ -15,7 +15,7 @@ px, py = symbols('px py')
 def test_x():
     assert X.hilbert_space == L2(Interval(S.NegativeInfinity, S.Infinity))
     assert Commutator(X, Px).doit() == I*hbar
-    assert apply_operators(X*XKet(x)) == x*XKet(x)
+    assert qapply(X*XKet(x)) == x*XKet(x)
     assert XKet(x).dual_class == XBra
     assert XBra(x).dual_class == XKet
     assert (Dagger(XKet(y))*XKet(x)).doit() == DiracDelta(x-y)
@@ -27,7 +27,7 @@ def test_x():
 
 def test_p():
     assert Px.hilbert_space == L2(Interval(S.NegativeInfinity, S.Infinity))
-    assert apply_operators(Px*PxKet(px)) == px*PxKet(px)
+    assert qapply(Px*PxKet(px)) == px*PxKet(px)
     assert PxKet(px).dual_class == PxBra
     assert PxBra(x).dual_class == PxKet
     assert (Dagger(PxKet(py))*PxKet(px)).doit() == DiracDelta(px-py)

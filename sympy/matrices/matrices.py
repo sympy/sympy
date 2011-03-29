@@ -1,5 +1,8 @@
 import warnings
-from sympy.core import S, Basic, Symbol, Integer
+from sympy.core.basic import Basic
+from sympy.core.symbol import Symbol, Dummy
+from sympy.core.numbers import Integer
+from sympy.core.singleton import S
 from sympy.core.sympify import sympify, converter, SympifyError
 
 from sympy.polys import Poly, roots, cancel
@@ -123,8 +126,14 @@ class Matrix(object):
                     return
                 else:
                     raise NotImplementedError("Sympy supports just 1D and 2D matrices")
-            elif not isinstance(mat, (list, tuple)):
+            elif not isinstance(mat, (list, tuple, Matrix)):
                 raise TypeError("Matrix constructor doesn't accept %s as input" % str(type(mat)))
+            mat = []
+            for row in args[0]:
+                if isinstance(row, Matrix):
+                    mat.extend(row.tolist())
+                else:
+                    mat.append(row)
             self.rows = len(mat)
             if len(mat) != 0:
                 if not isinstance(mat[0], (list, tuple)):
@@ -404,12 +413,13 @@ class Matrix(object):
             if n < 0:
                 return self.inv() ** -n   # A**-2 = (A**-1)**2
             a = eye(self.cols)
+            s = self
             while n:
-                if n % 2:
-                    a = a * self
+                if n%2:
+                    a *= s
                     n -= 1
-                self = self * self
-                n = n // 2
+                s *= s
+                n //= 2
             return a
         raise NotImplementedError('Can only raise to the power of an integer for now')
 
@@ -721,8 +731,8 @@ class Matrix(object):
         """
         Extract a submatrix by specifying a list of rows and columns
 
-        Examples
-        -------
+        Examples:
+
         >>> from sympy import Matrix
         >>> m = Matrix(4, 3, lambda i, j: i*3 + j)
         >>> m   #doctest: +NORMALIZE_WHITESPACE
@@ -815,32 +825,33 @@ class Matrix(object):
 
     def print_nonzero (self, symb="X"):
         """
-        Shows location of non-zero entries for fast shape lookup
-        >>> from sympy import Matrix, matrices
-        >>> m = Matrix(2,3,lambda i,j: i*3+j)
-        >>> m           #doctest: +NORMALIZE_WHITESPACE
-        [0, 1, 2]
-        [3, 4, 5]
-        >>> m.print_nonzero()   #doctest: +NORMALIZE_WHITESPACE
-        [ XX]
-        [XXX]
-        >>> m = matrices.eye(4)
-        >>> m.print_nonzero("x")    #doctest: +NORMALIZE_WHITESPACE
-        [x   ]
-        [ x  ]
-        [  x ]
-        [   x]
+        Shows location of non-zero entries for fast shape lookup ::
+
+            >>> from sympy import Matrix, matrices
+            >>> m = Matrix(2,3,lambda i,j: i*3+j)
+            >>> m           #doctest: +NORMALIZE_WHITESPACE
+            [0, 1, 2]
+            [3, 4, 5]
+            >>> m.print_nonzero()   #doctest: +NORMALIZE_WHITESPACE
+            [ XX]
+            [XXX]
+            >>> m = matrices.eye(4)
+            >>> m.print_nonzero("x")    #doctest: +NORMALIZE_WHITESPACE
+            [x   ]
+            [ x  ]
+            [  x ]
+            [   x]
 
         """
-        s="";
+        s = ""
         for i in range(self.rows):
-            s+="["
+            s += "["
             for j in range(self.cols):
                 if self[i,j] == 0:
-                    s+=" "
+                    s += " "
                 else:
-                    s+= symb+""
-            s+="]\n"
+                    s += symb + ""
+            s += "]\n"
         print s
 
     def LUsolve(self, rhs, iszerofunc=_iszero):
@@ -988,18 +999,18 @@ class Matrix(object):
 
         Examples::
 
-        >>> from sympy import sin, cos, Matrix
-        >>> from sympy.abc import rho, phi
-        >>> X = Matrix([rho*cos(phi), rho*sin(phi), rho**2])
-        >>> Y = Matrix([rho, phi])
-        >>> X.jacobian(Y)
-        [cos(phi), -rho*sin(phi)]
-        [sin(phi),  rho*cos(phi)]
-        [   2*rho,             0]
-        >>> X = Matrix([rho*cos(phi), rho*sin(phi)])
-        >>> X.jacobian(Y)
-        [cos(phi), -rho*sin(phi)]
-        [sin(phi),  rho*cos(phi)]
+            >>> from sympy import sin, cos, Matrix
+            >>> from sympy.abc import rho, phi
+            >>> X = Matrix([rho*cos(phi), rho*sin(phi), rho**2])
+            >>> Y = Matrix([rho, phi])
+            >>> X.jacobian(Y)
+            [cos(phi), -rho*sin(phi)]
+            [sin(phi),  rho*cos(phi)]
+            [   2*rho,             0]
+            >>> X = Matrix([rho*cos(phi), rho*sin(phi)])
+            >>> X.jacobian(Y)
+            [cos(phi), -rho*sin(phi)]
+            [sin(phi),  rho*cos(phi)]
 
         """
         if not isinstance(X, Matrix):
@@ -1491,7 +1502,7 @@ class Matrix(object):
 
     def berkowitz_eigenvals(self, **flags):
         """Computes eigenvalues of a Matrix using Berkowitz method. """
-        return roots(self.berkowitz_charpoly(Symbol('x', dummy=True)), **flags)
+        return roots(self.berkowitz_charpoly(Dummy('x')), **flags)
 
     eigenvals = berkowitz_eigenvals
 
@@ -1549,9 +1560,7 @@ class Matrix(object):
     def vech(self, diagonal=True, check_symmetry=True):
         """
         Return the unique elements of a symmetric Matrix as a one column matrix
-
-         by stacking
-        the elements in the lower triangle
+        by stacking the elements in the lower triangle.
 
         Arguments:
         diagonal -- include the diagonal cells of self or not
@@ -1953,7 +1962,7 @@ class SMatrix(Matrix):
             L = []
             for i in range(lo, hi):
                 m,n = self.rowdecomp(i)
-                if self.mat.has_key((m,n)):
+                if (m,n) in self.mat:
                     L.append(self.mat[(m,n)])
                 else:
                     L.append(0)
@@ -1995,7 +2004,7 @@ class SMatrix(Matrix):
             testval = sympify(value)
             if testval != 0:
                 self.mat[(i,j)] = testval
-            elif self.mat.has_key((i,j)):
+            if (i,j) in self.mat:
                 del self.mat[(i,j)]
 
     def row_del(self, k):
@@ -2034,6 +2043,72 @@ class SMatrix(Matrix):
                     c.append(0)
         return Matrix(l)
 
+    def row_list(self):
+        """
+        Returns a Row-sorted list of non-zero elements of the matrix.
+
+        >>> from sympy.matrices import SMatrix
+        >>> a=SMatrix((1,2),(3,4))
+        >>> a
+        [1, 2]
+        [3, 4]
+        >>> a.RL
+        [(0, 0, 1), (0, 1, 2), (1, 0, 3), (1, 1, 4)]
+        """
+
+        new=[]
+        for i in range(self.rows):
+            for j in range(self.cols):
+                value = self[(i,j)]
+                if value!=0:
+                    new.append((i,j,value))
+        return new
+
+    RL = property(row_list,None,None,"Alternate faster representation")
+
+    def col_list(self):
+        """
+        Returns a Column-sorted list of non-zero elements of the matrix.
+        >>> from sympy.matrices import SMatrix
+        >>> a=SMatrix((1,2),(3,4))
+        >>> a
+        [1, 2]
+        [3, 4]
+        >>> a.CL
+        [(0, 0, 1), (1, 0, 3), (0, 1, 2), (1, 1, 4)]
+        """
+        new=[]
+        for j in range(self.cols):
+            for i in range(self.rows):
+                value = self[(i,j)]
+                if value!=0:
+                    new.append((i,j,value))
+        return new
+
+    CL = property(col_list,None,None,"Alternate faster representation")
+
+    def transpose(self):
+        """
+        Returns the transposed SMatrix of this SMatrix
+        >>> from sympy.matrices import SMatrix
+        >>> a = SMatrix((1,2),(3,4))
+        >>> a
+        [1, 2]
+        [3, 4]
+        >>> a.T
+        [1, 3]
+        [2, 4]
+        """
+        tran = SMatrix(self.cols,self.rows,{})
+        for key,value in self.mat.iteritems():
+            tran.mat[key[1],key[0]]=value
+        return tran
+
+    T = property(transpose,None,None,"Matrix transposition.")
+
+
+
+
     # from here to end all functions are same as in matrices.py
     # with Matrix replaced with SMatrix
     def copyin_list(self, key, value):
@@ -2070,7 +2145,7 @@ class SMatrix(Matrix):
         for i in range(_rows):
             for j in range(_cols):
                 m,n = self.rowdecomp(i*_cols + j)
-                if self.mat.has_key((m,n)):
+                if (m,n) in self.mat:
                     newD[(i,j)] = self.mat[(m,n)]
         return SMatrix(_rows, _cols, newD)
 

@@ -43,7 +43,13 @@
     [3] a hypergeometric function  -> rsolve_hyper
 """
 
-from sympy.core import S,  Rational, Symbol, Wild, Equality, Add, Mul, sympify
+from sympy.core.singleton import S
+from sympy.core.numbers import Rational
+from sympy.core.symbol import Symbol, Wild, Dummy
+from sympy.core.relational import Equality
+from sympy.core.add import Add
+from sympy.core.mul import Mul
+from sympy.core import sympify
 
 from sympy.simplify import simplify, hypersimp, hypersimilar
 from sympy.solvers import solve, solve_undetermined_coeffs
@@ -134,7 +140,7 @@ def rsolve_poly(coeffs, f, n, **hints):
 
     d, b = int(d), int(b)
 
-    x = Symbol('x', dummy=True)
+    x = Dummy('x')
 
     degree_poly = S.Zero
 
@@ -375,7 +381,7 @@ def rsolve_ratio(coeffs, f, n, **hints):
     A, B = coeffs[r], coeffs[0]
     A = A.subs(n, n-r).expand()
 
-    h = Symbol('h', dummy=True)
+    h = Dummy('h')
 
     res = resultant(A, B.subs(n, n+h), n)
 
@@ -519,7 +525,7 @@ def rsolve_hyper(coeffs, f, n, **hints):
     else:
         result = S.Zero
 
-    Z = Symbol('Z', dummy=True)
+    Z = Dummy('Z')
 
     p, q = coeffs[0], coeffs[r].subs(n, n-r+1)
 

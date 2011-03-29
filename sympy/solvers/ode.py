@@ -205,7 +205,7 @@ from sympy.core import Add, Basic, C, S, Mul, Pow, oo
 from sympy.core.function import Derivative, diff, expand_mul
 from sympy.core.multidimensional import vectorize
 from sympy.core.relational import Equality, Eq
-from sympy.core.symbol import Symbol, Wild
+from sympy.core.symbol import Symbol, Wild, Dummy
 from sympy.core.sympify import sympify
 
 from sympy.functions import cos, exp, im, log, re, sin, sign
@@ -373,7 +373,7 @@ def dsolve(eq, func, hint="default", simplify=True, **kwargs):
         >>> from sympy.abc import x
         >>> f = Function('f')
         >>> dsolve(Derivative(f(x),x,x)+9*f(x), f(x))
-        f(x) == C1*sin(3*x) + C2*cos(3*x)
+        f(x) == C1*cos(3*x) + C2*sin(3*x)
         >>> dsolve(sin(x)*cos(f(x)) + cos(x)*sin(f(x))*f(x).diff(x), f(x),
         ...     hint='separable')
         -log(1 - sin(f(x))**2)/2 == C1 + log(1 - sin(x)**2)/2
@@ -597,7 +597,7 @@ def classify_ode(eq, func, dict=False):
 
     x = func.args[0]
     f = func.func
-    y = Symbol('y', dummy=True)
+    y = Dummy('y')
     if isinstance(eq, Equality):
         if eq.rhs != 0:
             return classify_ode(eq.lhs-eq.rhs, func)
@@ -644,7 +644,7 @@ def classify_ode(eq, func, dict=False):
         if eq.is_Add:
             ind, dep = reduced_eq.as_independent(f)
         else:
-            u = Symbol('u', dummy=True)
+            u = Dummy('u')
             ind, dep = (reduced_eq + u).as_independent(f)
             ind, dep = [tmp.subs(u, 0) for tmp in [ind, dep]]
         r = {a: dep.coeff(df, expand=False) or S.Zero, # if we get None for coeff, take 0
@@ -708,16 +708,16 @@ def classify_ode(eq, func, dict=False):
             orderb = homogeneous_order(r[e], x, y)
             if ordera == orderb and ordera is not None:
                 # u1=y/x and u2=x/y
-                u1 = Symbol('u1', dummy=True)
-                u2 = Symbol('u2', dummy=True)
+                u1 = Dummy('u1')
+                u2 = Dummy('u2')
                 if simplify((r[d]+u1*r[e]).subs({x:1, y:u1})) != 0:
                     matching_hints["1st_homogeneous_coeff_subs_dep_div_indep"] = r
                     matching_hints["1st_homogeneous_coeff_subs_dep_div_indep_Integral"] = r
                 if simplify((r[e]+u2*r[d]).subs({x:u2, y:1})) != 0:
                     matching_hints["1st_homogeneous_coeff_subs_indep_div_dep"] = r
                     matching_hints["1st_homogeneous_coeff_subs_indep_div_dep_Integral"] = r
-                if matching_hints.has_key("1st_homogeneous_coeff_subs_dep_div_indep") \
-                and matching_hints.has_key("1st_homogeneous_coeff_subs_indep_div_dep"):
+                if "1st_homogeneous_coeff_subs_dep_div_indep" in matching_hints \
+                and "1st_homogeneous_coeff_subs_indep_div_dep" in matching_hints:
                     matching_hints["1st_homogeneous_coeff_best"] = r
 
     if order == 2:
@@ -728,7 +728,7 @@ def classify_ode(eq, func, dict=False):
         s = d*f(x).diff(x, 2) + e*df**2 + k*df
         r = reduced_eq.match(s)
         if r and r[d] != 0:
-            y = Symbol('y', dummy=True)
+            y = Dummy('y')
             g = simplify(r[e]/r[d]).subs(f(x), y)
             h = simplify(r[k]/r[d])
             if h.has(f(x)) or g.has(x):
@@ -1068,7 +1068,7 @@ def checkodesol(ode, func, sol, order='auto', solve_for_func=True):
                 # Substitute it into ode to check for self consistency.
                 lhs, rhs = ode.lhs, ode.rhs
                 for i in range(order, -1, -1):
-                    if i == 0 and not diffsols.has_key(0):
+                    if i == 0 and 0 not in diffsols:
                         # We can only substitute f(x) if the solution was
                         # solved for f(x).
                         break
@@ -1425,7 +1425,11 @@ def constant_renumber(expr, symbolname, startnumber, endnumber):
                 endnumber) for x in expr.args])
             else:
                 sortedargs = list(expr.args)
-                sortedargs.sort(Basic._compare_pretty)
+                # make a mapping to send all constantsymbols to S.One and use
+                # that to make sure that term ordering is not dependent on
+                # the indexed value of C
+                C_1 = [(ci, S.One) for ci in constantsymbols]
+                sortedargs.sort(Basic._compare_pretty, key=lambda x: x.subs(C_1))
                 return expr.new(*[_constant_renumber(x, symbolname, startnumber,
                 endnumber) for x in sortedargs])
 
@@ -1498,11 +1502,11 @@ def ode_order(expr, func):
 
     order = 0
     if isinstance(expr, Derivative) and expr.args[0] == func:
-        order = len(expr.symbols)
+        order = len(expr.variables)
     else:
         for arg in expr.args:
             if isinstance(arg, Derivative) and arg.args[0] == func:
-                order = max(order, len(arg.symbols))
+                order = max(order, len(arg.variables))
             elif expr.match(a):
                 order = 0
             else :
@@ -1567,8 +1571,8 @@ def ode_1st_exact(eq, func, order, match):
     f = func.func
     r = match # d+e*diff(f(x),x)
     C1 = Symbol('C1')
-    x0 = Symbol('x0', dummy=True)
-    y0 = Symbol('y0', dummy=True)
+    x0 = Dummy('x0')
+    y0 = Dummy('y0')
     global exactvars # This is the only way to pass these dummy variables to
     # _handle_Integral
     exactvars = {'y0':y0, 'x0':x0, 'y':r['y']}
@@ -1699,7 +1703,7 @@ def ode_1st_homogeneous_coeff_subs_dep_div_indep(eq, func, order, match):
     """
     x = func.args[0]
     f = func.func
-    u1 = Symbol('u1', dummy=True) # u1 == f(x)/x
+    u1 = Dummy('u1') # u1 == f(x)/x
     r = match # d+e*diff(f(x),x)
     C1 = Symbol('C1')
     int = C.Integral((-r[r['e']]/(r[r['d']]+u1*r[r['e']])).subs({x:1, r['y']:u1}),
@@ -1780,7 +1784,7 @@ def ode_1st_homogeneous_coeff_subs_indep_div_dep(eq, func, order, match):
     """
     x = func.args[0]
     f = func.func
-    u2 = Symbol('u2', dummy=True) # u2 == x/f(x)
+    u2 = Dummy('u2') # u2 == x/f(x)
     r = match # d+e*diff(f(x),x)
     C1 = Symbol('C1')
     int = C.Integral((-r[r['d']]/(r[r['e']]+u2*r[r['d']])).subs({x:u2, r['y']:1}),
@@ -1852,7 +1856,7 @@ def _homogeneous_order(eq, *symbols):
             if not all([j in symbols for j in i.args]):
                 return None
             else:
-                dummyvar = numbered_symbols(prefix='d', dummy=True).next()
+                dummyvar = numbered_symbols(prefix='d', cls=Dummy).next()
                 eq = eq.subs(i, dummyvar)
                 symbols = list(symbols)
                 symbols.remove(i)
@@ -1887,7 +1891,7 @@ def _homogeneous_order(eq, *symbols):
         else:
             n.add(sympify(o*eq.exp))
 
-    t = Symbol('t', dummy=True, positive=True) # It is sufficient that t > 0
+    t = Dummy('t', positive=True) # It is sufficient that t > 0
     r = Wild('r', exclude=[t])
     a = Wild('a', exclude=[t])
     eqs = eq.subs(dict(zip(symbols,(t*i for i in symbols))))
@@ -2120,7 +2124,7 @@ def ode_Liouville(eq, func, order, match):
     **References**
         - Goldstein and Braun, "Advanced Methods for the Solution of
           Differential Equations", pp. 98
-        - http://www.maplesoft.com/support/help/view.aspx?path=odeadvisor/Liouville
+        - http://www.maplesoft.com/support/help/Maple/view.aspx?path=odeadvisor/Liouville
 
         # indirect doctest
 
@@ -2175,7 +2179,7 @@ def _nth_linear_match(eq, func, order):
             terms[-1] += i
         else:
             c, f = i.as_independent(func)
-            if not ((isinstance(f, Derivative) and set(f.symbols) == one_x) or\
+            if not ((isinstance(f, Derivative) and set(f.variables) == one_x) or\
                     f == func):
                 return None
             else:
@@ -2242,7 +2246,7 @@ def ode_nth_linear_constant_coeff_homogeneous(eq, func, order, match, returns='s
         ... 2*f(x).diff(x, 2) - 6*f(x).diff(x) + 5*f(x), f(x),
         ... hint='nth_linear_constant_coeff_homogeneous'))
                             x                            -2*x
-        f(x) = (C1 + C2*x)*e  + (C3*sin(x) + C4*cos(x))*e
+        f(x) = (C1 + C2*x)*e  + (C3*cos(x) + C4*sin(x))*e
 
 
     **References**
@@ -2258,9 +2262,9 @@ def ode_nth_linear_constant_coeff_homogeneous(eq, func, order, match, returns='s
     f = func.func
     r = match
     # A generator of constants
-    constants = numbered_symbols(prefix='C', function=Symbol, start=1)
+    constants = numbered_symbols(prefix='C', cls=Symbol, start=1)
     # First, set up characteristic equation.
-    m = Symbol('m', dummy=True)
+    m = Dummy('m')
     chareq = S.Zero
     for i in r.keys():
         if type(i) == str or i < 0:
@@ -2403,7 +2407,7 @@ def _solve_undetermined_coefficients(eq, func, order, match):
     x = func.args[0]
     f = func.func
     r = match
-    coeffs = numbered_symbols('a', dummy=True)
+    coeffs = numbered_symbols('a', cls=Dummy)
     coefflist = []
     gensols = r['list']
     gsol = r['sol']

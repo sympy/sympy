@@ -192,9 +192,9 @@ class sin(Function):
         if arg.is_Add: # TODO, implement more if deep stuff here
             x, y = arg.as_two_terms()
         else:
-            coeff, terms = arg.as_coeff_terms()
+            coeff, terms = arg.as_coeff_mul()
             if not (coeff is S.One) and coeff.is_Integer and terms:
-                x = Mul(*terms)
+                x = arg._new_rawargs(*terms)
                 y = (coeff-1)*x
         if x is not None:
             return (sin(x)*cos(y) + sin(y)*cos(x)).expand(trig=True)
@@ -404,9 +404,9 @@ class cos(Function):
             x, y = arg.as_two_terms()
             return (cos(x)*cos(y) - sin(y)*sin(x)).expand(trig=True)
         else:
-            coeff, terms = arg.as_coeff_terms()
+            coeff, terms = arg.as_coeff_mul()
             if not (coeff is S.One) and coeff.is_Integer and terms:
-                x = Mul(*terms)
+                x = arg._new_rawargs(*terms)
                 return C.chebyshevt(coeff, cos(x))
         return cos(arg)
 
@@ -540,6 +540,12 @@ class tan(Function):
 
             return (-1)**a * b*(b-1) * B/F * x**n
 
+    def _eval_nseries(self, x, n):
+        i = self.args[0].limit(x, 0)*2/S.Pi
+        if i and i.is_Integer:
+            return self.rewrite(cos)._eval_nseries(x, n=n)
+        return Function._eval_nseries(self, x, n=n)
+
     def _eval_conjugate(self):
         return self.func(self.args[0].conjugate())
 
@@ -582,7 +588,7 @@ class tan(Function):
         arg = self.args[0].as_leading_term(x)
 
         if C.Order(1,x).contains(arg):
-            return S.One
+            return arg
         else:
             return self.func(arg)
 
@@ -594,6 +600,15 @@ class tan(Function):
 
         if arg.is_imaginary:
             return True
+
+    def _eval_subs(self, old, new):
+        if self == old:
+            return new
+        arg = self.args[0]
+        argnew = arg.subs(old, new)
+        if arg != argnew and (argnew/(S.Pi/2)).is_odd:
+            return S.NaN
+        return tan(argnew)
 
     def _sage_(self):
         import sage.all as sage
@@ -680,6 +695,12 @@ class cot(Function):
 
             return (-1)**((n+1)//2) * 2**(n+1) * B/F * x**n
 
+    def _eval_nseries(self, x, n):
+        i = self.args[0].limit(x, 0)/S.Pi
+        if i and i.is_Integer:
+            return self.rewrite(cos)._eval_nseries(x, n=n)
+        return Function._eval_nseries(self, x, n=n)
+
     def _eval_conjugate(self):
         assert len(self.args) == 1
         return self.func(self.args[0].conjugate())
@@ -720,12 +741,21 @@ class cot(Function):
         arg = self.args[0].as_leading_term(x)
 
         if C.Order(1,x).contains(arg):
-            return S.One
+            return 1/arg
         else:
             return self.func(arg)
 
     def _eval_is_real(self):
         return self.args[0].is_real
+
+    def _eval_subs(self, old, new):
+        if self == old:
+            return new
+        arg = self.args[0]
+        argnew = arg.subs(old, new)
+        if arg != argnew and (argnew/S.Pi).is_integer:
+            return S.NaN
+        return cot(argnew)
 
     def _sage_(self):
         import sage.all as sage

@@ -1,4 +1,7 @@
-from sympy.core import S, Symbol, Mul, sympify
+from sympy.core.singleton import S
+from sympy.core.symbol import Dummy
+from sympy.core.mul import Mul
+from sympy.core import sympify
 
 from sympy.polys import gcd, quo, roots, resultant
 
@@ -45,7 +48,7 @@ def normal(f, g, n=None):
 
     C, Z = S.One, a / b
 
-    h = Symbol('h', dummy=True)
+    h = Dummy('h')
 
     res = resultant(A, B.subs(n, n+h), n)
 

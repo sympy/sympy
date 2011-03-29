@@ -400,7 +400,7 @@ class LatexPrinter(Printer):
         tex = str(self._print(expr.args[0]))
 
         for term in expr.args[1:]:
-            coeff = term.as_coeff_terms()[0]
+            coeff = term.as_coeff_mul()[0]
 
             if coeff.is_negative:
                 tex += r" %s" % self._print(term)
@@ -410,7 +410,7 @@ class LatexPrinter(Printer):
         return tex
 
     def _print_Mul(self, expr):
-        coeff, terms = expr.as_coeff_terms()
+        coeff, tail = expr.as_two_terms()
 
         if not coeff.is_negative:
             tex = ""
@@ -418,7 +418,7 @@ class LatexPrinter(Printer):
             coeff = -coeff
             tex = "- "
 
-        numer, denom = fraction(Mul(*terms))
+        numer, denom = fraction(tail)
 
         def convert(terms):
             product = []
@@ -502,17 +502,17 @@ class LatexPrinter(Printer):
                               self._print(expr.exp))
 
     def _print_Derivative(self, expr):
-        dim = len(expr.symbols)
+        dim = len(expr.variables)
 
         if dim == 1:
             if LatexPrinter.fmt_dict['pdiff'] == 1:
-                tex = r'\partial_{%s}' % self._print(expr.symbols[0])
+                tex = r'\partial_{%s}' % self._print(expr.variables[0])
             else:
-                tex = r"\frac{\partial}{\partial %s}" % self._print(expr.symbols[0])
+                tex = r"\frac{\partial}{\partial %s}" % self._print(expr.variables[0])
         else:
             multiplicity, i, tex = [], 1, ""
-            current = expr.symbols[0]
-            for symbol in expr.symbols[1:]:
+            current = expr.variables[0]
+            for symbol in expr.variables[1:]:
                 if symbol == current:
                     i = i + 1
                 else:

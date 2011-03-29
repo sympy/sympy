@@ -17,7 +17,7 @@ from sympy.core.numbers import igcd
 
 from sympy.physics.quantum.gate import Gate
 from sympy.physics.quantum.qubit import Qubit, measure_partial_oneshot
-from sympy.physics.quantum.applyops import apply_operators
+from sympy.physics.quantum.qapply import qapply
 from sympy.physics.quantum.qft import QFT
 from sympy.physics.quantum.qexpr import QuantumError
 
@@ -181,20 +181,20 @@ def period_find(a, N):
     # |1>x|a**1 %N> + |2>x|a**2 %N> + ... + |k>x|a**k %N >+ ... + |2**n-1=k>x|a**k % n>
     circuit = CMod(t,a,N)*circuit
     #will measure first half of register giving one of the a**k%N's
-    circuit = apply_operators(circuit)
+    circuit = qapply(circuit)
     print "controlled Mod'd"
     for i in range(t):
         circuit = measure_partial_oneshot(circuit, i)
         # circuit = measure(i)*circuit
-    # circuit = apply_operators(circuit)
+    # circuit = qapply(circuit)
     print "measured 1"
     #Now apply Inverse Quantum Fourier Transform on the second half of the register
-    circuit = apply_operators(QFT(t, t*2).decompose()*circuit, floatingPoint = True)
+    circuit = qapply(QFT(t, t*2).decompose()*circuit, floatingPoint = True)
     print "QFT'd"
     for i in range(t):
         circuit = measure_partial_oneshot(circuit, i+t)
         # circuit = measure(i+t)*circuit
-    # circuit = apply_operators(circuit)
+    # circuit = qapply(circuit)
     print circuit
     if isinstance(circuit, Qubit):
         register = circuit

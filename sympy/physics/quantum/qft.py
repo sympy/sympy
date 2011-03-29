@@ -13,7 +13,7 @@ Todo:
 from sympy import Expr, Matrix, exp, I, pi, Integer, Symbol
 from sympy.functions import sqrt
 
-from sympy.physics.quantum.applyops import apply_operators
+from sympy.physics.quantum.qapply import qapply
 from sympy.physics.quantum.qexpr import QuantumError, QExpr
 from sympy.matrices.matrices import zeros, eye
 from sympy.physics.quantum.tensorproduct import matrix_tensor_product
@@ -168,7 +168,7 @@ class QFT(Fourier):
         return circuit
 
     def _apply_operator_Qubit(self, qubits, **options):
-        return apply_operators(self.decompose()*qubits)
+        return qapply(self.decompose()*qubits)
 
     def _eval_inverse(self):
         return IQFT(*self.args)

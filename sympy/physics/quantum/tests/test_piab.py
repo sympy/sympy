@@ -2,7 +2,7 @@
 
 from sympy import S, Interval, symbols, I, DiracDelta, exp, sqrt, pi, sin
 
-from sympy.physics.quantum import L2, apply_operators, hbar, represent
+from sympy.physics.quantum import L2, qapply, hbar, represent
 from sympy.physics.quantum import KroneckerDelta
 from sympy.physics.quantum.piab import PIABHamiltonian, PIABKet, PIABBra, m, L
 
@@ -14,7 +14,7 @@ i, j = symbols('ij')
 def test_H():
     assert PIABHamiltonian('H').hilbert_space ==\
         L2(Interval(S.NegativeInfinity,S.Infinity))
-    assert apply_operators(PIABHamiltonian('H')*PIABKet(n)) ==\
+    assert qapply(PIABHamiltonian('H')*PIABKet(n)) ==\
         (n**2*pi**2*hbar**2)/(2*m*L**2)*PIABKet(n)
 
 

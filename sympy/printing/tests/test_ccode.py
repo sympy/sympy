@@ -1,4 +1,4 @@
-from sympy.core import pi, oo, symbols, Function, Rational, Integer, GoldenRatio, EulerGamma, Catalan, Lambda
+from sympy.core import pi, oo, symbols, Function, Rational, Integer, GoldenRatio, EulerGamma, Catalan, Lambda, Dummy
 from sympy.functions import Piecewise, sin, cos, Abs, exp, ceiling, sqrt
 from sympy.utilities.pytest import XFAIL, raises
 from sympy.printing.ccode import CCodePrinter
@@ -149,7 +149,10 @@ def test_ccode_loops_matrix_vector():
     assert c == s
 
 def test_dummy_loops():
-    i, m = symbols('i m', integer=True, dummy=True)
+    # the following line could also be
+    # [Dummy(s, integer=True) for s in 'im']
+    # or [Dummy(integer=True) for s in 'im']
+    i, m = symbols('i m', integer=True, cls=Dummy)
     x = IndexedBase('x')
     y = IndexedBase('y')
     i = Idx(i, m)

@@ -12,7 +12,7 @@ from sympy.physics.secondquant import (
 from sympy import (
     symbols, Symbol, sympify,
     sqrt, Rational, Sum, I, simplify,
-    expand, Function
+    expand, Function, Dummy
 )
 
 
@@ -33,7 +33,7 @@ def test_PermutationOperator():
 
 def test_index_permutations_with_dummies():
     a,b,c,d = symbols('abcd')
-    p,q,r,s = symbols('pqrs', dummy=True)
+    p,q,r,s = symbols('p q r s', cls=Dummy)
     f,g = map(Function, 'fg')
     P = PermutationOperator
 
@@ -135,8 +135,8 @@ def test_kronecker_delta():
     assert D(i, j).subs(dict(i=3, j=3)) == 1
 
 
-    i,j,k,l = symbols('ijkl',below_fermi=True,dummy=True)
-    a,b,c,d = symbols('abcd',above_fermi=True, dummy=True)
+    i,j,k,l = symbols('i j k l',below_fermi=True,cls=Dummy)
+    a,b,c,d = symbols('a b c d',above_fermi=True, cls=Dummy)
     p,q,r,s = symbols('pqrs',dumy=True)
 
     assert D(i,a) == 0
@@ -386,9 +386,9 @@ def test_wicks():
 
 
     # Testing CC equations particles and holes
-    i,j,k,l = symbols('ijkl',below_fermi=True,dummy=True)
-    a,b,c,d = symbols('abcd',above_fermi=True,dummy=True)
-    p,q,r,s = symbols('pqrs',dummy=True)
+    i,j,k,l = symbols('i j k l',below_fermi=True,cls=Dummy)
+    a,b,c,d = symbols('a b c d',above_fermi=True,cls=Dummy)
+    p,q,r,s = symbols('p q r s',cls=Dummy)
 
     assert (wicks(F(a)*NO(F(i)*F(j))*Fd(b)) ==
             NO(F(a)*F(i)*F(j)*Fd(b)) +
@@ -417,7 +417,7 @@ def test_wicks():
 def test_NO():
     i,j,k,l = symbols('ijkl',below_fermi=True)
     a,b,c,d = symbols('abcd',above_fermi=True)
-    p,q,r,s = symbols('pqrs', dummy=True)
+    p,q,r,s = symbols('p q r s', cls=Dummy)
 
     assert (NO(Fd(p)*F(q) + Fd(a)*F(b))==
        NO(Fd(p)*F(q)) + NO(Fd(a)*F(b)))
@@ -505,8 +505,8 @@ def test_contraction():
 
 
 def test_Tensors():
-    i,j,k,l = symbols('ijkl',below_fermi=True,dummy=True)
-    a,b,c,d = symbols('abcd',above_fermi=True,dummy=True)
+    i,j,k,l = symbols('i j k l',below_fermi=True,cls=Dummy)
+    a,b,c,d = symbols('a b c d',above_fermi=True,cls=Dummy)
     p,q,r,s = symbols('pqrs')
 
     AT= AntiSymmetricTensor
@@ -533,7 +533,7 @@ def test_Tensors():
 def test_fully_contracted():
     i,j,k,l = symbols('ijkl',below_fermi=True)
     a,b,c,d = symbols('abcd',above_fermi=True)
-    p,q,r,s = symbols('pqrs', dummy=True)
+    p,q,r,s = symbols('p q r s', cls=Dummy)
 
     Fock = (AntiSymmetricTensor('f',(p,),(q,))*
             NO(Fd(p)*F(q)))
@@ -555,34 +555,34 @@ def test_substitute_dummies_without_dummies():
     assert substitute_dummies(att(i, j) + 1) == att(i, j) + 1
 
 def test_substitute_dummies_NO_operator():
-    i,j = symbols('ij', dummy=True)
+    i,j = symbols('i j', cls=Dummy)
     assert substitute_dummies(att(i, j)*NO(Fd(i)*F(j))
                 - att(j, i)*NO(Fd(j)*F(i))) == 0
 
 def test_substitute_dummies_SQ_operator():
-    i,j = symbols('ij', dummy=True)
+    i,j = symbols('i j', cls=Dummy)
     assert substitute_dummies(att(i, j)*Fd(i)*F(j)
                 - att(j, i)*Fd(j)*F(i)) == 0
 
 def test_substitute_dummies_new_indices():
-    i,j = symbols('ij',below_fermi=True, dummy=True)
-    a,b = symbols('ab',above_fermi=True, dummy=True)
-    p,q = symbols('pq', dummy=True)
+    i,j = symbols('i j',below_fermi=True, cls=Dummy)
+    a,b = symbols('a b',above_fermi=True, cls=Dummy)
+    p,q = symbols('p q', cls=Dummy)
     f = Function('f')
     assert substitute_dummies(f(i,a,p) - f(j,b,q), new_indices=True) == 0
 
 def test_substitute_dummies_substitution_order():
-    i,j,k,l = symbols('ijkl',below_fermi=True, dummy=True)
+    i,j,k,l = symbols('i j k l',below_fermi=True, cls=Dummy)
     f = Function('f')
     from sympy.utilities.iterables import variations
     for permut in variations([i,j,k,l], 4):
         assert substitute_dummies(f(*permut) - f(i,j,k,l)) == 0
 
 def test_dummy_order_inner_outer_lines_VT1T1T1():
-    ii = symbols('i',below_fermi=True, dummy=False)
-    aa = symbols('a',above_fermi=True, dummy=False)
-    k, l = symbols('kl',below_fermi=True, dummy=True)
-    c, d = symbols('cd',above_fermi=True, dummy=True)
+    ii = symbols('i',below_fermi=True)
+    aa = symbols('a',above_fermi=True)
+    k, l = symbols('k l',below_fermi=True, cls=Dummy)
+    c, d = symbols('c d',above_fermi=True, cls=Dummy)
 
     v = Function('v')
     t = Function('t')
@@ -603,10 +603,10 @@ def test_dummy_order_inner_outer_lines_VT1T1T1():
         assert substitute_dummies(exprs[0]) == substitute_dummies(permut)
 
 def test_dummy_order_inner_outer_lines_VT1T1T1T1():
-    ii,jj = symbols('ij',below_fermi=True, dummy=False)
-    aa,bb = symbols('ab',above_fermi=True, dummy=False)
-    k, l = symbols('kl',below_fermi=True, dummy=True)
-    c, d = symbols('cd',above_fermi=True, dummy=True)
+    ii,jj = symbols('ij',below_fermi=True)
+    aa,bb = symbols('ab',above_fermi=True)
+    k, l = symbols('k l',below_fermi=True, cls=Dummy)
+    c, d = symbols('c d',above_fermi=True, cls=Dummy)
 
     v = Function('v')
     t = Function('t')
@@ -655,8 +655,8 @@ def test_dummy_order_inner_outer_lines_VT1T1T1T1():
         assert substitute_dummies(exprs[0]) == substitute_dummies(permut)
 
 def test_equivalent_internal_lines_VT1T1():
-    i,j,k,l = symbols('ijkl',below_fermi=True, dummy=True)
-    a,b,c,d = symbols('abcd',above_fermi=True, dummy=True)
+    i,j,k,l = symbols('i j k l',below_fermi=True, cls=Dummy)
+    a,b,c,d = symbols('a b c d',above_fermi=True, cls=Dummy)
 
     f = Function('f')
     v = Function('v')
@@ -700,10 +700,10 @@ def test_equivalent_internal_lines_VT1T1():
 
 def test_equivalent_internal_lines_VT2conjT2():
     # this diagram requires special handling in TCE
-    i,j,k,l,m,n = symbols('ijklmn',below_fermi=True, dummy=True)
-    a,b,c,d,e,f = symbols('abcdef',above_fermi=True, dummy=True)
-    p1,p2,p3,p4 = symbols('p1 p2 p3 p4',above_fermi=True, dummy=True)
-    h1,h2,h3,h4 = symbols('h1 h2 h3 h4',below_fermi=True, dummy=True)
+    i,j,k,l,m,n = symbols('i j k l m n',below_fermi=True, cls=Dummy)
+    a,b,c,d,e,f = symbols('a b c d e f',above_fermi=True, cls=Dummy)
+    p1,p2,p3,p4 = symbols('p1 p2 p3 p4',above_fermi=True, cls=Dummy)
+    h1,h2,h3,h4 = symbols('h1 h2 h3 h4',below_fermi=True, cls=Dummy)
 
     from sympy.utilities.iterables import variations
 
@@ -750,10 +750,10 @@ def test_equivalent_internal_lines_VT2conjT2():
 def test_equivalent_internal_lines_VT2conjT2_ambiguous_order():
     # These diagrams invokes _determine_ambiguous() because the
     # dummies can not be ordered unambiguously by the key alone
-    i,j,k,l,m,n = symbols('ijklmn',below_fermi=True, dummy=True)
-    a,b,c,d,e,f = symbols('abcdef',above_fermi=True, dummy=True)
-    p1,p2,p3,p4 = symbols('p1 p2 p3 p4',above_fermi=True, dummy=True)
-    h1,h2,h3,h4 = symbols('h1 h2 h3 h4',below_fermi=True, dummy=True)
+    i,j,k,l,m,n = symbols('i j k l m n',below_fermi=True, cls=Dummy)
+    a,b,c,d,e,f = symbols('a b c d e f',above_fermi=True, cls=Dummy)
+    p1,p2,p3,p4 = symbols('p1 p2 p3 p4',above_fermi=True, cls=Dummy)
+    h1,h2,h3,h4 = symbols('h1 h2 h3 h4',below_fermi=True, cls=Dummy)
 
     from sympy.utilities.iterables import variations
 
@@ -780,8 +780,8 @@ def test_equivalent_internal_lines_VT2conjT2_ambiguous_order():
         assert substitute_dummies(expr) == substitute_dummies(base)
 
 def test_equivalent_internal_lines_VT2():
-    i,j,k,l = symbols('ijkl',below_fermi=True, dummy=True)
-    a,b,c,d = symbols('abcd',above_fermi=True, dummy=True)
+    i,j,k,l = symbols('i j k l',below_fermi=True, cls=Dummy)
+    a,b,c,d = symbols('a b c d',above_fermi=True, cls=Dummy)
 
     f = Function('f')
     v = Function('v')
@@ -829,10 +829,10 @@ def test_equivalent_internal_lines_VT2():
         assert substitute_dummies(exprs[0]) == substitute_dummies(permut)
 
 def test_internal_external_VT2T2():
-    ii, jj = symbols('ij',below_fermi=True, dummy=False)
-    aa, bb = symbols('ab',above_fermi=True, dummy=False)
-    k, l = symbols('kl'  ,below_fermi=True, dummy=True)
-    c, d = symbols('cd'  ,above_fermi=True, dummy=True)
+    ii, jj = symbols('ij',below_fermi=True)
+    aa, bb = symbols('ab',above_fermi=True)
+    k, l = symbols('k l'  ,below_fermi=True, cls=Dummy)
+    c, d = symbols('c d'  ,above_fermi=True, cls=Dummy)
 
     v = Function('v')
     t = Function('t')
@@ -867,10 +867,10 @@ def test_internal_external_VT2T2():
         assert substitute_dummies(exprs[0]) == substitute_dummies(permut)
 
 def test_internal_external_pqrs():
-    ii, jj = symbols('ij', dummy=False)
-    aa, bb = symbols('ab', dummy=False)
-    k, l = symbols('kl'  , dummy=True)
-    c, d = symbols('cd'  , dummy=True)
+    ii, jj = symbols('ij')
+    aa, bb = symbols('ab')
+    k, l = symbols('k l'  , cls=Dummy)
+    c, d = symbols('c d'  , cls=Dummy)
 
     v = Function('v')
     t = Function('t')
@@ -887,10 +887,10 @@ def test_internal_external_pqrs():
         assert substitute_dummies(exprs[0]) == substitute_dummies(permut)
 
 def test_dummy_order_well_defined():
-    aa, bb = symbols('ab', above_fermi=True, dummy=False)
-    k, l, m = symbols('klm', below_fermi=True, dummy=True)
-    c, d = symbols('cd', above_fermi=True, dummy=True)
-    p, q = symbols('pq', dummy=True)
+    aa, bb = symbols('ab', above_fermi=True)
+    k, l, m = symbols('k l m', below_fermi=True, cls=Dummy)
+    c, d = symbols('c d', above_fermi=True, cls=Dummy)
+    p, q = symbols('p q', cls=Dummy)
 
     A = Function('A')
     B = Function('B')
@@ -942,14 +942,14 @@ def test_dummy_order_well_defined():
     assert dums(B(k, p, c)*A(p, c, k)) == [k, c, p]
 
 def test_dummy_order_ambiguous():
-    aa, bb = symbols('ab', above_fermi=True, dummy=False)
-    i, j, k, l, m = symbols('ijklm', below_fermi=True, dummy=True)
-    a, b, c, d, e = symbols('abcde', above_fermi=True, dummy=True)
-    p, q = symbols('pq', dummy=True)
-    p1,p2,p3,p4 = symbols('p1 p2 p3 p4',above_fermi=True, dummy=True)
-    p5,p6,p7,p8 = symbols('p5 p6 p7 p8',above_fermi=True, dummy=True)
-    h1,h2,h3,h4 = symbols('h1 h2 h3 h4',below_fermi=True, dummy=True)
-    h5,h6,h7,h8 = symbols('h5 h6 h7 h8',below_fermi=True, dummy=True)
+    aa, bb = symbols('ab', above_fermi=True)
+    i, j, k, l, m = symbols('i j k l m', below_fermi=True, cls=Dummy)
+    a, b, c, d, e = symbols('a b c d e', above_fermi=True, cls=Dummy)
+    p, q = symbols('p q', cls=Dummy)
+    p1,p2,p3,p4 = symbols('p1 p2 p3 p4',above_fermi=True, cls=Dummy)
+    p5,p6,p7,p8 = symbols('p5 p6 p7 p8',above_fermi=True, cls=Dummy)
+    h1,h2,h3,h4 = symbols('h1 h2 h3 h4',below_fermi=True, cls=Dummy)
+    h5,h6,h7,h8 = symbols('h5 h6 h7 h8',below_fermi=True, cls=Dummy)
 
     A = Function('A')
     B = Function('B')
@@ -993,10 +993,10 @@ def att(*args):
         return AntiSymmetricTensor('t', (args[0],), (args[1],))
 
 def test_dummy_order_inner_outer_lines_VT1T1T1_AT():
-    ii = symbols('i',below_fermi=True, dummy=False)
-    aa = symbols('a',above_fermi=True, dummy=False)
-    k, l = symbols('kl',below_fermi=True, dummy=True)
-    c, d = symbols('cd',above_fermi=True, dummy=True)
+    ii = symbols('i',below_fermi=True)
+    aa = symbols('a',above_fermi=True)
+    k, l = symbols('k l',below_fermi=True, cls=Dummy)
+    c, d = symbols('c d',above_fermi=True, cls=Dummy)
 
 
     # Coupled-Cluster T1 terms with V*T1*T1*T1
@@ -1013,10 +1013,10 @@ def test_dummy_order_inner_outer_lines_VT1T1T1_AT():
         assert substitute_dummies(exprs[0]) == substitute_dummies(permut)
 
 def test_dummy_order_inner_outer_lines_VT1T1T1T1_AT():
-    ii,jj = symbols('ij',below_fermi=True, dummy=False)
-    aa,bb = symbols('ab',above_fermi=True, dummy=False)
-    k, l = symbols('kl',below_fermi=True, dummy=True)
-    c, d = symbols('cd',above_fermi=True, dummy=True)
+    ii,jj = symbols('ij',below_fermi=True)
+    aa,bb = symbols('ab',above_fermi=True)
+    k, l = symbols('k l',below_fermi=True, cls=Dummy)
+    c, d = symbols('c d',above_fermi=True, cls=Dummy)
 
 
     # Coupled-Cluster T2 terms with V*T1*T1*T1*T1
@@ -1040,8 +1040,8 @@ def test_dummy_order_inner_outer_lines_VT1T1T1T1_AT():
         assert substitute_dummies(exprs[0]) == substitute_dummies(permut)
 
 def test_equivalent_internal_lines_VT1T1_AT():
-    i,j,k,l = symbols('ijkl',below_fermi=True, dummy=True)
-    a,b,c,d = symbols('abcd',above_fermi=True, dummy=True)
+    i,j,k,l = symbols('i j k l',below_fermi=True, cls=Dummy)
+    a,b,c,d = symbols('a b c d',above_fermi=True, cls=Dummy)
 
 
     exprs = [ # permute v.  Different dummy order. Not equivalent.
@@ -1077,10 +1077,10 @@ def test_equivalent_internal_lines_VT1T1_AT():
 
 def test_equivalent_internal_lines_VT2conjT2_AT():
     # this diagram requires special handling in TCE
-    i,j,k,l,m,n = symbols('ijklmn',below_fermi=True, dummy=True)
-    a,b,c,d,e,f = symbols('abcdef',above_fermi=True, dummy=True)
-    p1,p2,p3,p4 = symbols('p1 p2 p3 p4',above_fermi=True, dummy=True)
-    h1,h2,h3,h4 = symbols('h1 h2 h3 h4',below_fermi=True, dummy=True)
+    i,j,k,l,m,n = symbols('i j k l m n',below_fermi=True, cls=Dummy)
+    a,b,c,d,e,f = symbols('a b c d e f',above_fermi=True, cls=Dummy)
+    p1,p2,p3,p4 = symbols('p1 p2 p3 p4',above_fermi=True, cls=Dummy)
+    h1,h2,h3,h4 = symbols('h1 h2 h3 h4',below_fermi=True, cls=Dummy)
 
     from sympy.utilities.iterables import variations
 
@@ -1120,10 +1120,10 @@ def test_equivalent_internal_lines_VT2conjT2_AT():
 def test_equivalent_internal_lines_VT2conjT2_ambiguous_order_AT():
     # These diagrams invokes _determine_ambiguous() because the
     # dummies can not be ordered unambiguously by the key alone
-    i,j,k,l,m,n = symbols('ijklmn',below_fermi=True, dummy=True)
-    a,b,c,d,e,f = symbols('abcdef',above_fermi=True, dummy=True)
-    p1,p2,p3,p4 = symbols('p1 p2 p3 p4',above_fermi=True, dummy=True)
-    h1,h2,h3,h4 = symbols('h1 h2 h3 h4',below_fermi=True, dummy=True)
+    i,j,k,l,m,n = symbols('i j k l m n',below_fermi=True, cls=Dummy)
+    a,b,c,d,e,f = symbols('a b c d e f',above_fermi=True, cls=Dummy)
+    p1,p2,p3,p4 = symbols('p1 p2 p3 p4',above_fermi=True, cls=Dummy)
+    h1,h2,h3,h4 = symbols('h1 h2 h3 h4',below_fermi=True, cls=Dummy)
 
     from sympy.utilities.iterables import variations
 
@@ -1145,8 +1145,8 @@ def test_equivalent_internal_lines_VT2conjT2_ambiguous_order_AT():
         assert substitute_dummies(expr) == substitute_dummies(base)
 
 def test_equivalent_internal_lines_VT2_AT():
-    i,j,k,l = symbols('ijkl',below_fermi=True, dummy=True)
-    a,b,c,d = symbols('abcd',above_fermi=True, dummy=True)
+    i,j,k,l = symbols('i j k l',below_fermi=True, cls=Dummy)
+    a,b,c,d = symbols('a b c d',above_fermi=True, cls=Dummy)
 
     exprs = [
             # permute v. Same dummy order, not equivalent.
@@ -1176,10 +1176,10 @@ def test_equivalent_internal_lines_VT2_AT():
         assert substitute_dummies(exprs[0]) == substitute_dummies(permut)
 
 def test_internal_external_VT2T2_AT():
-    ii, jj = symbols('ij',below_fermi=True, dummy=False)
-    aa, bb = symbols('ab',above_fermi=True, dummy=False)
-    k, l = symbols('kl'  ,below_fermi=True, dummy=True)
-    c, d = symbols('cd'  ,above_fermi=True, dummy=True)
+    ii, jj = symbols('ij',below_fermi=True)
+    aa, bb = symbols('ab',above_fermi=True)
+    k, l = symbols('k l'  ,below_fermi=True, cls=Dummy)
+    c, d = symbols('c d'  ,above_fermi=True, cls=Dummy)
 
     dums = _get_ordered_dummies
 
@@ -1209,10 +1209,10 @@ def test_internal_external_VT2T2_AT():
         assert substitute_dummies(exprs[0]) == substitute_dummies(permut)
 
 def test_internal_external_pqrs_AT():
-    ii, jj = symbols('ij', dummy=False)
-    aa, bb = symbols('ab', dummy=False)
-    k, l = symbols('kl'  , dummy=True)
-    c, d = symbols('cd'  , dummy=True)
+    ii, jj = symbols('ij')
+    aa, bb = symbols('ab')
+    k, l = symbols('k l'  , cls=Dummy)
+    c, d = symbols('c d'  , cls=Dummy)
 
 
     exprs = [

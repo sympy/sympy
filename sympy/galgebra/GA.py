@@ -719,7 +719,7 @@ class MV(object):
         else:
             value = (mv.mv[0][0]).__str__()
             value = value.replace(' ','')
-        dummy = sympy.Symbol('dummy')
+        dummy = sympy.Dummy('dummy')
         for igrade in MV.n1rg[1:]:
             if isinstance(mv.mv[igrade],numpy.ndarray):
                 j = 0
@@ -729,10 +729,10 @@ class MV(object):
                         xstr = xstr.replace(' ','')
                         if xstr[0] != '-' and len(value) > 0:
                             xstr = '+'+xstr
-                        if xstr.find('dummy') < 2 and xstr[-5:] != 'dummy':
-                            xstr = xstr.replace('dummy*','')+'*'+labels[igrade][j]
+                        if xstr.find('_dummy') < 2 and xstr[-5:] != '_dummy':
+                            xstr = xstr.replace('_dummy*','')+'*'+labels[igrade][j]
                         else:
-                            xstr = xstr.replace('dummy',labels[igrade][j])
+                            xstr = xstr.replace('_dummy',labels[igrade][j])
                         if MV.str_mode == 2:
                             xstr += '\n'
                         value += xstr

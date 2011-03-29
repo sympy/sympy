@@ -54,7 +54,7 @@ def _get_indices_Mul(expr, return_dummies=False):
 
     """
 
-    junk, factors = expr.as_coeff_terms()
+    junk, factors = expr.as_coeff_mul()
     inds = map(get_indices, factors)
     inds, syms = zip(*inds)
 

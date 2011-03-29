@@ -2122,19 +2122,19 @@ class ExpressionDomain(Field):
 
     def is_positive(self, a):
         """Returns True if `a` is positive. """
-        return a.ex.as_coeff_terms()[0].is_positive
+        return a.ex.as_coeff_mul()[0].is_positive
 
     def is_negative(self, a):
         """Returns True if `a` is negative. """
-        return a.ex.as_coeff_terms()[0].is_negative
+        return a.ex.as_coeff_mul()[0].is_negative
 
     def is_nonpositive(self, a):
         """Returns True if `a` is non-positive. """
-        return a.ex.as_coeff_terms()[0].is_nonpositive
+        return a.ex.as_coeff_mul()[0].is_nonpositive
 
     def is_nonnegative(self, a):
         """Returns True if `a` is non-negative. """
-        return a.ex.as_coeff_terms()[0].is_nonnegative
+        return a.ex.as_coeff_mul()[0].is_nonnegative
 
     def numer(self, a):
         """Returns numerator of `a`. """

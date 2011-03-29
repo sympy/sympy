@@ -82,6 +82,9 @@ def test_IndexedBase_sugar():
     A1 = Indexed(a, i, j)
     A2 = IndexedBase(a)
     assert A1 == A2[i, j]
+    assert A1 == A2[(i, j)]
+    assert A1 == A2[[i, j]]
+    assert A1 == A2[Tuple(i, j)]
 
 def test_IndexedBase_subs():
     i, j, k = symbols('i j k', integer=True)

@@ -148,7 +148,7 @@ So, let's clone main repo, and go hacking
 
     We now recommend to use git. This tutorial was written when we still used
     mercurial. See our `Quick Start`_ for an introduction to git and use our
-    `Git hg rosetta stone <http://wiki.sympy.org/wiki/Git_hg_rosetta_stone>`_
+    `Git hg rosetta stone <https://github.com/sympy/sympy/wiki/Git-hg-rosetta-stone>`_
     wiki page to learn how to translate commands between mercurial and git. The
     ideas in this tutorial stay correct, the exact commands can be a little
     different with git though.
@@ -832,7 +832,7 @@ Now we have our patches applied on top of the latest tip.
     page.
 
 
-.. _chapter 3:  http://hgbook.red-bean.com/hgbookch3.html
+.. _chapter 3:  http://hgbook.red-bean.com/read/a-tour-of-mercurial-merging-work.html
 
 
 Ok, it time to send patches for review!
@@ -991,7 +991,7 @@ And of course
 .. admonition:: *Patches Welcome!*
 
     We've reached the end of this tutorial, now it's time to practice on the
-    SymPy_ project: http://www.sympy.org/
+    SymPy_ project: http://sympy.org/
 
     We encourage you to join us. Feel free to improve SymPy_ and this tutorial
     as well.
@@ -1175,7 +1175,7 @@ line, do:
     Result: OK
 
 That's it -- to learn more about git, read our `Git hg rosetta stone
-<http://wiki.sympy.org/wiki/Git_hg_rosetta_stone>`_ wiki page and
+<https://github.com/sympy/sympy/wiki/Git-hg-rosetta-stone>`_ wiki page and
 follow links from there.
 
 **Quick Start with Mercurial**
@@ -1353,15 +1353,15 @@ And send it for a review again.
 
 .. _Mercurial Book:     hgbook_
 .. _hgbook:             http://hgbook.red-bean.com/
-.. _hgbook on MQ part1: http://hgbook.red-bean.com/hgbookch12.html
-.. _hgbook on MQ part2: http://hgbook.red-bean.com/hgbookch13.html
+.. _hgbook on MQ part1: http://hgbook.red-bean.com/read/managing-change-with-mercurial-queues.html
+.. _hgbook on MQ part2: http://hgbook.red-bean.com/read/advanced-uses-of-mercurial-queues.html
 
-.. _Tutorial:           http://www.selenic.com/mercurial/wiki/index.cgi/Tutorial
-.. _Mercurial Queues:   http://www.selenic.com/mercurial/wiki/index.cgi/MqExtension
-.. _Mq Tutorial:        http://www.selenic.com/mercurial/wiki/index.cgi/MqTutorial
+.. _Tutorial:           http://mercurial.selenic.com/wiki/Tutorial
+.. _Mercurial Queues:   http://mercurial.selenic.com/wiki/MqExtension
+.. _Mq Tutorial:        http://mercurial.selenic.com/wiki/MqTutorial
 .. _Merging Patches:    http://www.selenic.com/mercurial/wiki/index.cgi/MqMerge
 
-.. _Record:             http://www.selenic.com/mercurial/wiki/index.cgi/RecordExtension
+.. _Record:             http://mercurial.selenic.com/wiki/RecordExtension
 
-.. _conflict:           http://www.selenic.com/mercurial/wiki/index.cgi/Conflict
-.. _TutorialConflict:   http://www.selenic.com/mercurial/wiki/index.cgi/TutorialConflict
+.. _conflict:           http://mercurial.selenic.com/wiki/Conflict
+.. _TutorialConflict:   http://mercurial.selenic.com/wiki/TutorialConflict

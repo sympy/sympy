@@ -2,7 +2,7 @@ from sympy.physics.quantum.qft import *
 from sympy.physics.quantum.gate import *
 from sympy.physics.quantum.qubit import *
 from sympy.physics.quantum.represent import represent
-from sympy.physics.quantum.applyops import apply_operators
+from sympy.physics.quantum.qapply import qapply
 from sympy.matrices.matrices import Matrix, eye
 from sympy.core.symbol import Symbol
 from sympy import exp, I, pi, sqrt
@@ -33,8 +33,8 @@ def test_quantum_fourier():
      == Matrix([[exp(2*pi*I/8)**(i*j%8)/sqrt(8) for i in range(8)] for j in range(8)])
 
     assert QFT(0,4).decompose() #non-trivial decomposition
-    assert apply_operators(QFT(0,3).decompose()*Qubit(0,0,0)).expand() ==\
-    apply_operators(HadamardGate(0)*HadamardGate(1)*HadamardGate(2)*Qubit(0,0,0)).expand()
+    assert qapply(QFT(0,3).decompose()*Qubit(0,0,0)).expand() ==\
+    qapply(HadamardGate(0)*HadamardGate(1)*HadamardGate(2)*Qubit(0,0,0)).expand()
 
 def test_qft_represent():
     c = QFT(0,3)

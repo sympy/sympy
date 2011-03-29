@@ -100,7 +100,6 @@ and then you can study how it works. I am going to stop here, this should be
 enough to get you going -- with the above technique, I am able to understand
 almost any Python code.
 
-.. note:: The above debugging was done on the revision `75544c92be1d <http://hg.sympy.org/sympy/rev/75544c92be1d>`_.
 
 SymPy's Architecture
 ====================
@@ -187,13 +186,13 @@ so we chose to have ``exp(x)==exp(x)`` even for different instances of ``x``.
 
 Sometimes, you need to have a unique symbol, for example as a temporary one in
 some calculation, which is going to be substituted for something else at the
-end anyway. This is achieved using ``Symbol("x", dummy=True)``. So, to sum it
+end anyway. This is achieved using ``Dummy("x")``. So, to sum it
 up::
 
     In [1]: Symbol("x") == Symbol("x")
     Out[1]: True
 
-    In [2]: Symbol("x", dummy=True) == Symbol("x", dummy=True)
+    In [2]: Dummy("x") == Dummy("x")
     Out[2]: False
 
 

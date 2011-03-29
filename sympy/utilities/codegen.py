@@ -234,12 +234,12 @@ class Routine(object):
         For routines with unnamed return values, the dummies that may or may
         not be used will be included in the set.
         """
-        vars = set(self.local_vars)
+        v = set(self.local_vars)
         for arg in self.arguments:
-            vars.add(arg.name)
+            v.add(arg.name)
         for res in self.results:
-            vars.add(res.result_var)
-        return vars
+            v.add(res.result_var)
+        return v
 
     @property
     def result_variables(self):
@@ -493,7 +493,7 @@ class CodeGen(object):
             code_lines = ''.join(self._get_header() + [code_lines])
 
         if code_lines:
-            print >> f, code_lines
+            print >> f, code_lines,
 
 class CodeGenError(Exception):
     pass
@@ -816,9 +816,10 @@ class FCodeGen(CodeGen):
         # check that symbols are unique with ignorecase
         for r in routines:
             lowercase = set(map(lambda x: str(x).lower(), r.variables))
-            if len(lowercase) < len(r.variables):
-                raise CodeGenError("Fortran ignores case. Got symbols: %s"
-                        ", ".join([str(var) for var in r.variables]))
+            orig_case = set(map(lambda x: str(x), r.variables))
+            if len(lowercase) < len(orig_case):
+                raise CodeGenError("Fortran ignores case. Got symbols: %s"%
+                        (", ".join([str(var) for var in r.variables])))
         self.dump_code(routines, f, prefix, header, empty)
     dump_f95.extension = code_extension
     dump_f95.__doc__ = CodeGen.dump_code.__doc__

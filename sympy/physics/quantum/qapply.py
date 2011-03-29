@@ -17,7 +17,7 @@ from sympy.physics.quantum.tensorproduct import TensorProduct
 
 
 __all__ = [
-    'apply_operators'
+    'qapply'
 ]
 
 
@@ -25,7 +25,7 @@ __all__ = [
 # Main code
 #-----------------------------------------------------------------------------
 
-def apply_operators(e, **options):
+def qapply(e, **options):
     """Apply operators to states in a quantum expression.
 
     Parameters
@@ -67,26 +67,26 @@ def apply_operators(e, **options):
         return e
 
     # We have an Add(a, b, c, ...) and compute
-    # Add(apply_operators(a), apply_operators(b), ...)
+    # Add(qapply(a), qapply(b), ...)
     elif isinstance(e, Add):
         result = 0
         for arg in e.args:
-            result += apply_operators(arg, **options)
+            result += qapply(arg, **options)
         return result
 
-    # For a raw TensorProduct, call apply_operators on its args.
+    # For a raw TensorProduct, call qapply on its args.
     elif isinstance(e, TensorProduct):
-        return TensorProduct(*[apply_operators(t, **options) for t in e.args])
+        return TensorProduct(*[qapply(t, **options) for t in e.args])
 
-    # For a Pow, call apply_operators on its base.
+    # For a Pow, call qapply on its base.
     elif isinstance(e, Pow):
-        return apply_operators(e.base, **options)**e.exp
+        return qapply(e.base, **options)**e.exp
 
     # We have a Mul where there might be actual operators to apply to kets.
     elif isinstance(e, Mul):
-        result = apply_operators_Mul(e, **options)
+        result = qapply_Mul(e, **options)
         if result == e and dagger:
-            return Dagger(apply_operators_Mul(Dagger(e), **options))
+            return Dagger(qapply_Mul(Dagger(e), **options))
         else:
             return result
 
@@ -96,7 +96,7 @@ def apply_operators(e, **options):
         return e
 
 
-def apply_operators_Mul(e, **options):
+def qapply_Mul(e, **options):
 
     ip_doit = options.get('ip_doit', True)
 
@@ -127,13 +127,13 @@ def apply_operators_Mul(e, **options):
     if isinstance(lhs, (Commutator, AntiCommutator)):
         comm = lhs.doit()
         if isinstance(comm, Add):
-            return apply_operators(
+            return qapply(
                 e._new_rawargs(*(args + [comm.args[0], rhs])) +\
                 e._new_rawargs(*(args + [comm.args[1], rhs])),
                 **options
             )
         else:
-            return apply_operators(e._new_rawargs(*args)*comm*rhs, **options)
+            return qapply(e._new_rawargs(*args)*comm*rhs, **options)
 
     # Now try to actually apply the operator and build an inner product.
     try:
@@ -153,9 +153,9 @@ def apply_operators_Mul(e, **options):
     if result == 0:
         return 0
     elif result is None:
-        return apply_operators_Mul(e._new_rawargs(*(args+[lhs])), **options)*rhs
+        return qapply_Mul(e._new_rawargs(*(args+[lhs])), **options)*rhs
     elif isinstance(result, InnerProduct):
-        return result*apply_operators_Mul(e._new_rawargs(*args), **options)
+        return result*qapply_Mul(e._new_rawargs(*args), **options)
     else:  # result is a scalar times a Mul, Add or TensorProduct
-        return apply_operators(e._new_rawargs(*args)*result, **options)
+        return qapply(e._new_rawargs(*args)*result, **options)
 

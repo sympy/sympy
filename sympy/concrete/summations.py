@@ -1,4 +1,5 @@
-from sympy.core import Expr, S, C, Symbol, Equality, Interval, sympify, Wild, Tuple
+from sympy.core import (Expr, S, C, Symbol, Equality, Interval, sympify, Wild,
+                        Tuple, Dummy)
 from sympy.solvers import solve
 from sympy.utilities import flatten
 
@@ -53,6 +54,57 @@ class Sum(Expr):
     @property
     def limits(self):
         return self._args[1:]
+
+    @property
+    def variables(self):
+        """Return a list of the summation variables
+
+        >>> from sympy import Sum
+        >>> from sympy.abc import x, i
+        >>> Sum(x**i, (i, 1, 3)).variables
+        [i]
+        """
+        return [l[0] for l in self.limits]
+
+    @property
+    def free_symbols(self):
+        """
+        This method returns the symbols that will exist when the
+        summation is evaluated. This is useful if one is trying to
+        determine whether a sum is dependent on a certain
+        symbol or not.
+
+        >>> from sympy import Sum
+        >>> from sympy.abc import x, y
+        >>> Sum(x, (x, y, 1)).free_symbols
+        set([y])
+        """
+        # analyze the summation
+        # >>> Sum(x*y,(x,1,2),(y,1,3)).args
+        # (x*y, Tuple(x, 1, 2), Tuple(y, 1, 3))
+        # >>> Sum(x, x, y).args
+        # (x, Tuple(x), Tuple(y))
+        intgrl = self
+        args = intgrl.args
+        integrand, limits = args[0], args[1:]
+        if integrand.is_zero:
+            return set()
+        isyms = integrand.free_symbols
+        for ilim in limits:
+            if len(ilim) == 1:
+                isyms.add(ilim[0])
+                continue
+            # take out the target symbol
+            if ilim[0] in isyms:
+                isyms.remove(ilim[0])
+            if len(ilim) == 3 and ilim[1] == ilim[2]:
+                # if two limits are the same the sum is 0
+                # and there are no symbols
+                return set()
+            # add in the new symbols
+            for i in ilim[1:]:
+                isyms.update(i.free_symbols)
+        return isyms
 
     def doit(self, **hints):
         #if not hints.get('sums', True):
@@ -127,7 +179,7 @@ class Sum(Expr):
                     return s, abs(term)
                 s += term
             a += m
-        x = Symbol('x', dummy=True)
+        x = Dummy('x')
         I = C.Integral(f.subs(i, x), (x, a, b))
         if eval_integral:
             I = I.doit()
@@ -149,6 +201,8 @@ class Sum(Expr):
         return s + iterm, abs(term)
 
     def _eval_subs(self, old, new):
+        if self == old:
+            return new
         newlimits = []
         for lim in self.limits:
             if lim[0] == old:
@@ -167,12 +221,10 @@ def summation(f, *symbols, **kwargs):
     i.e.,
 
                                 b
-                              -----
-                              \
-    summation(f, (i, a, b)) =  \    f
-                               /
-                              /
-                              -----
+                              ____
+                              \   `
+    summation(f, (i, a, b)) =  )    f
+                              /___,
                               i = a
 
 
@@ -193,10 +245,6 @@ def summation(f, *symbols, **kwargs):
 
     """
     return Sum(f, *symbols, **kwargs).doit(deep=False)
-
-def getab(expr):
-    cls = expr.func
-    return cls(expr.args[0]), cls(*expr.args[1:])
 
 def telescopic_direct(L, R, n, (i, a, b)):
     """Returns the direct summation of the terms of a telescopic sum
@@ -276,7 +324,7 @@ def eval_sum_symbolic(f, (i, a, b)):
         return f*(b-a+1)
     # Linearity
     if f.is_Mul:
-        L, R = getab(f)
+        L, R = f.as_two_terms()
         if not L.has(i):
             sR = eval_sum_symbolic(R, (i, a, b))
             if sR: return L*sR
@@ -284,7 +332,7 @@ def eval_sum_symbolic(f, (i, a, b)):
             sL = eval_sum_symbolic(L, (i, a, b))
             if sL: return R*sL
     if f.is_Add:
-        L, R = getab(f)
+        L, R = f.as_two_terms()
         lrsum = telescopic(L, R, (i, a, b))
         if lrsum: return lrsum
         lsum = eval_sum_symbolic(L, (i, a, b))

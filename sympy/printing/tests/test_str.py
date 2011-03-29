@@ -1,7 +1,8 @@
 from sympy import (Abs, Catalan, cos, Derivative, E, EulerGamma, exp, factorial,
     Function, GoldenRatio, I, Integer, Integral, Interval, Lambda, Limit, log,
     Matrix, nan, O, oo, pi, Rational, Real, Rel, S, sin, SMatrix, sqrt,
-    summation, Sum, Sum2, Symbol, symbols, Wild, WildFunction, zeta, zoo)
+    summation, Sum, Sum2, Symbol, symbols, Wild, WildFunction, zeta, zoo,
+    Dummy)
 from sympy.core import Expr
 from sympy.physics.units import second
 from sympy.polys import Poly, RootsOf, RootOf, RootSum
@@ -12,7 +13,7 @@ from sympy.utilities.pytest import XFAIL, raises
 from sympy.printing import sstr, sstrrepr, StrPrinter
 
 x, y, z, w = symbols('xyzw')
-d = Symbol('d', dummy=True)
+d = Dummy('d')
 
 def test_printmethod():
     class R(Abs):

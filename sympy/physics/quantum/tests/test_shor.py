@@ -1,6 +1,6 @@
 from sympy.utilities.pytest import XFAIL
 
-from sympy.physics.quantum.applyops import apply_operators
+from sympy.physics.quantum.qapply import qapply
 from sympy.physics.quantum.qubit import Qubit
 from sympy.physics.quantum.shor import (
     CMod, continued_fraction, getr, arr
@@ -9,11 +9,11 @@ from sympy.physics.quantum.shor import (
 
 @XFAIL
 def test_CMod():
-    assert apply_operators(CMod(4, 2, 2)*Qubit(0,0,1,0,0,0,0,0)) ==\
+    assert qapply(CMod(4, 2, 2)*Qubit(0,0,1,0,0,0,0,0)) ==\
     Qubit(0,0,1,0,0,0,0,0)
-    assert apply_operators(CMod(5, 5, 7)*Qubit(0,0,1,0,0,0,0,0,0,0)) ==\
+    assert qapply(CMod(5, 5, 7)*Qubit(0,0,1,0,0,0,0,0,0,0)) ==\
     Qubit(0,0,1,0,0,0,0,0,1,0)
-    assert apply_operators(CMod(3, 2, 3)*Qubit(0,1,0,0,0,0)) ==\
+    assert qapply(CMod(3, 2, 3)*Qubit(0,1,0,0,0,0)) ==\
     Qubit(0,1,0,0,0,1)
 
 def test_continued_frac():
