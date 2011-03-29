@@ -148,9 +148,9 @@ class Polygon(GeometryEntity):
 
         """
         area = 0
-        for ind in xrange(-1, len(self.vertices) - 1):
-            pi = self.vertices[ind]
-            pii = self.vertices[ind + 1]
+        for i in xrange(len(self)):
+            pi = self[i - 1]
+            pii = self[i]
             area += pi[0]*pii[1] - pii[0]*pi[1]
         return simplify(area) / 2
 
@@ -187,11 +187,11 @@ class Polygon(GeometryEntity):
             return bool(tarea(a, b, c) <= 0)
 
         # Determine orientation of points
-        cw = isright(self.vertices[-1], self.vertices[0], self.vertices[1])
+        cw = isright(self[-1], self[0], self[1])
 
         ret = {}
-        for i in xrange(0, len(self.vertices)):
-            a,b,c = self.vertices[i-2], self.vertices[i-1], self.vertices[i]
+        for i in xrange(len(self)):
+            a, b, c = self[i-2], self[i-1], self[i]
             ang = Line.angle_between(Line(b, a), Line(b, c))
             if cw ^ isright(a, b, c):
                 ret[b] = 2*S.Pi - ang
@@ -216,8 +216,8 @@ class Polygon(GeometryEntity):
         7 + 17**(1/2)
         """
         p = 0
-        for ind in xrange(-1, len(self.vertices) - 1):
-            p += Point.distance(self.vertices[ind], self.vertices[ind + 1])
+        for i in xrange(len(self)):
+            p += Point.distance(self[i - 1], self[i])
         return simplify(p)
 
     @property
@@ -232,6 +232,13 @@ class Polygon(GeometryEntity):
         --------
         Point
 
+        Notes
+        -----
+        When iterating over the vertices, it is more efficient to index self
+        rather than to request the vertices and index them. Only use the
+        vertices when you want to process all of them at once. This is even
+        more important with RegularPolygons that calculate each vertex.
+
         Examples
         --------
         >>> from sympy import Point, Polygon
@@ -239,6 +246,8 @@ class Polygon(GeometryEntity):
         >>> poly = Polygon(p1, p2, p3, p4)
         >>> poly.vertices
         (Point(0, 0), Point(1, 0), Point(5, 1), Point(0, 1))
+        >>> print poly[0]
+        Point(0, 0)
 
         """
         return self[:]
@@ -264,12 +273,12 @@ class Polygon(GeometryEntity):
         Point(31/18, 11/18)
 
         """
-        A = 1 / (6*self.area)
-        cx,cy = 0,0
-        for ind in xrange(-1, len(self.vertices)-1):
-            pi = self.vertices[ind]
-            pii = self.vertices[ind+1]
-            v = pi[0]*pii[1]-pii[0]*pi[1]
+        A = 1/(6*self.area)
+        cx, cy = 0, 0
+        for i in xrange(len(self)):
+            pi = self[i - 1]
+            pii = self[i]
+            v = pi[0]*pii[1] - pii[0]*pi[1]
             cx += v*(pi[0] + pii[0])
             cy += v*(pi[1] + pii[1])
         return Point(simplify(A*cx), simplify(A*cy))
@@ -300,13 +309,12 @@ class Polygon(GeometryEntity):
 
         """
         res = []
-        for ind in xrange(0, len(self.vertices) - 1):
-            res.append(Segment(self.vertices[ind], self.vertices[ind+1]))
-        res.append(Segment(self.vertices[-1], self.vertices[0]))
+        for i in xrange(-len(self), 0):
+            res.append(Segment(self[i], self[i + 1]))
         return res
 
     def is_convex(self):
-        """Is the polygon convex.
+        """Is the polygon convex?
 
         A polygon is convex if all its interior angles are less than 180
         degrees.
@@ -332,10 +340,9 @@ class Polygon(GeometryEntity):
             return bool(tarea(a, b, c) <= 0)
 
         # Determine orientation of points
-        cw = isright(self.vertices[-2], self.vertices[-1], self.vertices[0])
-
-        for i in xrange(0, len(self.vertices)):
-            if cw ^ isright(self.vertices[i - 2], self.vertices[i - 1], self.vertices[i]):
+        cw = isright(self[-2], self[-1], self[0])
+        for i in xrange(1, len(self)):
+            if cw ^ isright(self[i - 2], self[i - 1], self[i]):
                 return False
 
         return True
@@ -370,14 +377,13 @@ class Polygon(GeometryEntity):
         # polygon closure is assumed in the following test but Polygon removes duplicate pts so
         # the last point has to be added so all sides are computed. Using Polygon.sides is
         # not good since Segments are unordered.
-        indices = range(len(self)) + [0]
+        indices = range(-len(self), 1)
 
         if self.is_convex():
             orientation = None
-            vertices = self.vertices
-            for i in len(self):
-                x0, y0 = vertices[i]
-                x1, y1 = vertices[i + 1]
+            for i in indices:
+                x0, y0 = self[i]
+                x1, y1 = self[i + 1]
                 test = ((-y0)*(x1 - x0) - (-x0)*(y1 - y0)).is_negative
                 if orientation is None:
                     orientation = test
@@ -628,48 +634,59 @@ class Polygon(GeometryEntity):
         return min_dist
 
     def __eq__(self, o):
-        if not isinstance(o, Polygon):
+        if not isinstance(o, Polygon) or len(self) != len(o):
             return False
 
-        # Find indices of points that are the same as the first point
-        # in the other polygon
-        n1,n2 = len(self.vertices), len(o.vertices)
-        start_indices = []
-        for ind in xrange(0, n1):
-            if self.vertices[ind] == o.vertices[0]:
-                start_indices.append(ind)
-
-        if len(start_indices) == 0:
-            return False
-
-        # Check vertices clockwise and counterclockwise for equality
-        imax = max(n1, n2)
-        for start_ind in start_indices:
-            i = start_ind
-
-            # Check to see what orientation we should check
-            dir = 0
-            if self.vertices[(i + 1) % n1] == o.vertices[1]:
-                dir = 1
-            elif self.vertices[(i - 1) % n1] == o.vertices[1]:
-                dir = -1
-
-            # If either point to the left or right if the first point
-            # is value (i.e., dir is nonzero) then check in that direction
-            if dir != 0:
-                areEqual = True
-                for ind in xrange(2, imax):
-                    if self.vertices[(i + dir*ind) % n1] != o.vertices[ind % n2]:
-                        areEqual = False
-                        break
-                if areEqual: return True
-
+        # See if self can ever be traversed (cw or ccw) from any of its
+        # vertices to match all points of o
+        n = len(self)
+        o0 = o[0]
+        for i0 in xrange(n):
+            if self[i0] == o0:
+                if all(self[(i0 + i) % n] == o[i] for i in xrange(1, n)):
+                    return True
+                if all(self[(i0 - i) % n] == o[i] for i in xrange(1, n)):
+                    return True
         return False
 
     def __hash__(self):
         return super(Polygon, self).__hash__()
 
     def __contains__(self, o):
+        """
+        Return True if o is contained within the boundary lines of self.altitudes
+
+        Parameters
+        ----------
+        other : GeometryEntity
+
+        Returns
+        -------
+        contained in : bool
+            The points (and sides, if applicable) are contained in self.
+
+        See Also
+        --------
+        encloses
+
+        Examples
+        --------
+        >>> from sympy import Line, Segment, Point
+        >>> p = Point(0, 0)
+        >>> q = Point(1, 1)
+        >>> s = Segment(p, q*2)
+        >>> l = Line(p, q)
+        >>> p in q
+        False
+        >>> p in s
+        True
+        >>> q*3 in s
+        False
+        >>> s in l
+        True
+
+        """
+
         if isinstance(o, Polygon):
             return self == o
         elif isinstance(o, Segment):
@@ -680,9 +697,8 @@ class Polygon(GeometryEntity):
             for side in self.sides:
                 if o in side:
                     return True
-            return False
-        else:
-            return False
+
+        return False
 
 
 class RegularPolygon(Polygon):
@@ -739,6 +755,9 @@ class RegularPolygon(Polygon):
             raise GeometryError("RegularPolygon.__new__ requires n >= 3")
 
         obj = GeometryEntity.__new__(self, c, r, n, **kwargs)
+        obj._n = n
+        obj._center = c
+        obj._radius = r
         return obj
 
     @property
@@ -791,7 +810,7 @@ class RegularPolygon(Polygon):
         Point(0, 0)
 
         """
-        return self.__getitem__(0)
+        return self._center
 
     @property
     def radius(self):
@@ -813,7 +832,7 @@ class RegularPolygon(Polygon):
         r
 
         """
-        return self.__getitem__(1)
+        return self._radius
 
     @property
     def apothem(self):
@@ -835,8 +854,7 @@ class RegularPolygon(Polygon):
         r*2**(1/2)/2
 
         """
-        n = self.__getitem__(2)
-        return self.radius * C.cos(S.Pi/n)
+        return self.radius * C.cos(S.Pi/self._n)
 
     @property
     def interior_angle(self):
@@ -854,8 +872,7 @@ class RegularPolygon(Polygon):
         3*pi/4
 
         """
-        n = self.__getitem__(2)
-        return (n - 2)*S.Pi/n
+        return (self._n - 2)*S.Pi/self._n
 
     @property
     def exterior_angle(self):
@@ -873,8 +890,7 @@ class RegularPolygon(Polygon):
         pi/4
 
         """
-        n = self.__getitem__(2)
-        return 2*S.Pi/n
+        return 2*S.Pi/self._n
 
     @property
     def circumcircle(self):
@@ -946,6 +962,23 @@ class RegularPolygon(Polygon):
         else:
             # now enumerate the regular polygon like a general polygon.
             return Polygon.encloses_point(self, p)
+
+    def __len__(self):
+        return self._n
+
+    def __getitem__(self, k):
+        if k < -self._n or k >= self._n:
+            raise IndexError('virtual tuple index out of range')
+        c, r, n = self
+        v = 2*S.Pi/n
+        return Point(c[0] + r*C.cos(k*v), c[1] + r*C.sin(k*v))
+
+    def __eq__(self, o):
+        if not isinstance(o, Polygon) or len(self) != len(o):
+            return False
+        elif not isinstance(o, RegularPolygon):
+            return Polygon.__eq__(o, self)
+        return self.args == o.args
 
 class Triangle(Polygon):
     """
