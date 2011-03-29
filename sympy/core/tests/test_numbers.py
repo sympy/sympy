@@ -188,6 +188,12 @@ def test_Real():
     assert Real(1.2)._mpf_ == (0, 5404319552844595L, -52, 53)
     assert x2_str._mpf_ == (0, 10808639105689190L, -53, 53)
 
+    # do not automatically evalf
+    assert not (pi.evalf() == pi)
+    assert not ((2*pi).evalf() == 2*pi)
+    assert not (cos(0.1, evaluate=False) == cos(0.1).evalf())
+    assert not (cos(0.1).evalf() == cos(0.1, evaluate=False))
+
 def test_Real_eval():
     a = Real(3.2)
     assert (a**2).is_Real
