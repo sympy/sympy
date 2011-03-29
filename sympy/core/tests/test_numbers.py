@@ -189,7 +189,9 @@ def test_Real():
 
     # do not automatically evalf
     assert not (pi.evalf() == pi)
+    assert not (pi == pi.evalf ())
     assert not ((2*pi).evalf() == 2*pi)
+    assert not (2*pi == (2*pi).evalf())
     assert not (cos(0.1, evaluate=False) == cos(0.1).evalf())
     assert not (cos(0.1).evalf() == cos(0.1, evaluate=False))
 
