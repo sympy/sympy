@@ -341,7 +341,10 @@ class Polygon(GeometryEntity):
         return True
 
     def encloses_point(self, p):
-        """Return True if self encloses Point p.
+        """
+        Return True if p is enclosed by (is inside of) self.
+
+        Being on the border of self is considered False.
 
         Adapted from:
             [1] http://www.ariel.com.au/a/python-point-int-poly.html
@@ -355,6 +358,7 @@ class Polygon(GeometryEntity):
         def concrete(p):
             x, y = p
             return x.is_number and y.is_number
+
         # move to p, checking that the result is numeric
         lit = []
         for v in self.vertices:
@@ -363,32 +367,27 @@ class Polygon(GeometryEntity):
                 return None
         self = Polygon(*lit)
 
+        # polygon closure is assumed in the following test but Polygon removes duplicate pts so
+        # the last point has to be added so all sides are computed. Using Polygon.sides is
+        # not good since Segments are unordered.
+        indices = range(len(self)) + [0]
+
         if self.is_convex():
-            side = None
-            for i, s in enumerate(self.sides):
-                p0, p1 = s
-                # the last segment doesn't have the points in the same order as the rest
-                if i != len(self.sides):
-                    x0, y0 = p0
-                    x1, y1 = p1
-                else:
-                    x0, y0 = p1
-                    x1, y1 = p0
+            orientation = None
+            vertices = self.vertices
+            for i in len(self):
+                x0, y0 = vertices[i]
+                x1, y1 = vertices[i + 1]
                 test = ((-y0)*(x1 - x0) - (-x0)*(y1 - y0)).is_negative
-                if side is None:
-                    side = test
-                elif test is not side:
+                if orientation is None:
+                    orientation = test
+                elif test is not orientation:
                     return False
             return True
 
-        n = len(self)
         hit_odd = False
-        p1x,p1y = self[0]
-        indices = range(1, n)
-        # polygon closure is assumed in the following test
-        if p[-1] != p[0]:
-            indices.append(0)
-        for i in indices:
+        p1x, p1y = self[0]
+        for i in indices[1:]:
             p2x, p2y = self[i]
             if 0 > min(p1y, p2y):
                 if 0 <= max(p1y, p2y):
@@ -931,13 +930,13 @@ class RegularPolygon(Polygon):
 
     def encloses_point(self, p):
         """
-        Return True if p is enclosed (is inside of) self.
+        Return True if p is enclosed by (is inside of) self.
 
         Being on the border of self is considered False.
 
-        Before treating the RegularPolygon like a Polygon, check
-        to see if p is within the incircle or beyond the circumcircle.
         """
+        # Before treating the RegularPolygon like a Polygon, check
+        # to see if p is within the incircle or beyond the circumcircle.
         c = self.center
         d = Segment(c, p).length
         if d >= self.radius:
@@ -945,6 +944,7 @@ class RegularPolygon(Polygon):
         elif d < self.incircle.radius:
             return True
         else:
+            # now enumerate the regular polygon like a general polygon.
             return Polygon.encloses_point(self, p)
 
 class Triangle(Polygon):
