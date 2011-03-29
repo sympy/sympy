@@ -249,6 +249,17 @@ def test_ellipse():
     assert intersection(c1, c2) in [[(1,0), (0,1)],[(0,1),(1,0)]]
     assert intersection(c1, c3) == [(sqrt(2)/2, sqrt(2)/2)]
 
+    # some special case intersections
+    csmall = Circle(p1, 3)
+    cbig = Circle(p1, 5)
+    cout = Circle(Point(5, 5), 1)
+    # one circle inside of another
+    assert csmall.intersection(cbig) == []
+    # separate circles
+    assert csmall.intersection(cout) == []
+    # coincident circles
+    assert csmall.intersection(csmall) == csmall
+
     v = sqrt(2)
     t1 = Triangle(Point(0, v), Point(0, -v), Point(v, 0))
     points = intersection(t1, c1)
