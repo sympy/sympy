@@ -9,4 +9,4 @@ interesting/useful to other users.
 FAQ
 ---
 
-`FAQ <http://wiki.sympy.org/wiki/FAQ>`_ is one of the very useful wiki pages.
+`FAQ <https://github.com/sympy/sympy/wiki/Faq>`_ is one of the very useful wiki pages.

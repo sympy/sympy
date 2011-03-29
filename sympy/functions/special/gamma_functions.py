@@ -2,6 +2,7 @@ from sympy.core import Add, S, C, sympify
 from sympy.core.function import Function
 from zeta_functions import zeta
 from sympy.functions.elementary.exponential import log
+from sympy.functions.elementary.integers import floor
 from sympy.functions.elementary.miscellaneous import sqrt
 
 ###############################################################################
@@ -67,18 +68,12 @@ class gamma(Function):
             arg = self.args[0]
 
         if arg.is_Add:
-            for i, coeff in enumerate(arg.args):
-                if arg.args[i].is_Number:
-                    terms = Add(*(arg.args[:i] + arg.args[i+1:]))
-
-                    if coeff.is_Rational:
-                        if coeff.q != 1:
-                            terms += C.Rational(1, coeff.q)
-                            coeff = C.Integer(int(coeff))
-                    else:
-                        continue
-
-                    return gamma(terms)*C.RisingFactorial(terms, coeff)
+            coeff, tail = arg.as_coeff_add()
+            if coeff and coeff.q != 1:
+                tail = (C.Rational(1, coeff.q),) + tail
+                coeff = floor(coeff)
+            tail = arg._new_rawargs(*tail, **dict(reeval=False))
+            return gamma(tail)*C.RisingFactorial(tail, coeff)
 
         return self.func(*self.args)
 
@@ -197,8 +192,8 @@ class polygamma(Function):
 
         if n.is_Integer and n.is_nonnegative:
             if z.is_Add:
-                coeff, factors = z.as_coeff_factors()
-                if coeff and coeff.is_Integer:
+                coeff = z.args[0]
+                if coeff.is_Integer:
                     e = -(n + 1)
                     if coeff > 0:
                         tail = Add(*[C.Pow(z - i, e)  for i in xrange(1, int(coeff) + 1)])
@@ -207,9 +202,8 @@ class polygamma(Function):
                     return polygamma(n, z - coeff) + (-1)**n*C.Factorial(n)*tail
 
             elif z.is_Mul:
-                coeff, terms = z.as_coeff_terms()
-                if coeff != 1 and coeff.is_Integer and coeff.is_positive:
-                    z = z._new_rawargs(*terms)
+                coeff, z = z.as_two_terms()
+                if coeff.is_Integer and coeff.is_positive:
                     tail = [ polygamma(n, z + C.Rational(i, coeff)) for i in xrange(0, int(coeff)) ]
                     if n == 0:
                         return Add(*tail)/coeff + log(coeff)

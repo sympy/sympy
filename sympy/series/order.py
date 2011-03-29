@@ -1,4 +1,4 @@
-from sympy.core import Basic, S, C, sympify, Expr, oo, Rational, Symbol
+from sympy.core import Basic, S, C, sympify, Expr, oo, Rational, Symbol, Dummy
 from sympy.core import Add, Mul
 from sympy.core.cache import cacheit
 
@@ -110,17 +110,17 @@ class Order(Expr):
         if symbols:
             symbols = map(sympify, symbols)
         else:
-            symbols = list(expr.atoms(C.Symbol))
+            symbols = list(expr.free_symbols)
 
         symbols.sort(Basic.compare)
 
         if expr.is_Order:
 
-            new_symbols = list(expr.symbols)
+            new_symbols = list(expr.variables)
             for s in symbols:
                 if s not in new_symbols:
                     new_symbols.append(s)
-            if len(new_symbols)==len(expr.symbols):
+            if len(new_symbols)==len(expr.variables):
                 return expr
             symbols = new_symbols
 
@@ -129,10 +129,10 @@ class Order(Expr):
             symbol_map = {}
             new_symbols = []
             for s in symbols:
-                if isinstance(s, C.Symbol):
+                if isinstance(s, Symbol):
                     new_symbols.append(s)
                     continue
-                z = C.Symbol('z',dummy=True)
+                z = Dummy('z')
                 x1,s1 = solve4linearsymbol(s, z)
                 expr = expr.subs(x1,s1)
                 symbol_map[z] = s
@@ -142,8 +142,8 @@ class Order(Expr):
                 r = Order(expr, *new_symbols, **assumptions)
                 expr = r.expr.subs(symbol_map)
                 symbols = []
-                for s in r.symbols:
-                    if symbol_map.has_key(s):
+                for s in r.variables:
+                    if s in symbol_map:
                         symbols.append(symbol_map[s])
                     else:
                         symbols.append(s)
@@ -153,7 +153,7 @@ class Order(Expr):
                     expr = Add(*[f.expr for (e,f) in lst])
                 else:
                     expr = expr.as_leading_term(*symbols)
-                    coeff, terms = expr.as_coeff_terms()
+                    coeff, terms = expr.as_coeff_mul()
                     if coeff is S.Zero:
                         return coeff
                     expr = Mul(*[t for t in terms if t.has(*symbols)])
@@ -177,73 +177,31 @@ class Order(Expr):
     def oseries(self, order):
         return self
 
-    def _eval_nseries(self, x, x0, n):
+    def _eval_nseries(self, x, n):
         return self
-
-    @classmethod
-    def find_limit(cls, f, x):
-        """Basically identical to:
-
-        return limit(f, x, 0, dir="+")
-
-        but first trying some easy cases (like x**2) using heuristics, to avoid
-        infinite recursion. This is only needed in the Order class and series
-        expansion (that shouldn't rely on the Gruntz algorithm too much),
-        that's why find_limit() is defined here.
-        """
-
-        from sympy import limit, Wild, log
-
-        if f.is_Pow:
-            if f.args[0] == x:
-                if f.args[1].is_Rational:
-                    if f.args[1] > 0:
-                        return S.Zero
-                    else:
-                        return oo
-                if f.args[1].is_number:
-                    if f.args[1].evalf() > 0:
-                        return S.Zero
-                    else:
-                        return oo
-        if f == x:
-            return S.Zero
-        p, q = Wild("p"), Wild("q")
-        r = f.match(x**p * log(x)**q)
-        if r:
-            p, q = r[p], r[q]
-            if q.is_number and p.is_number:
-                if q > 0:
-                    if p > 0:
-                        return S.Zero
-                    else:
-                        return -oo
-                elif q < 0:
-                    if p >= 0:
-                        return S.Zero
-                    else:
-                        return -oo
-
-        return limit(f, x, 0, dir="+")
 
     @property
     def expr(self):
         return self._args[0]
 
     @property
-    def symbols(self):
+    def variables(self):
         return self._args[1:]
+
+    @property
+    def free_symbols(self):
+        return self.expr.free_symbols
 
     def _eval_power(b, e):
         if e.is_Number:
-            return Order(b.expr ** e, *b.symbols)
+            return Order(b.expr ** e, *b.variables)
         return
 
-    def as_expr_symbols(self, order_symbols):
+    def as_expr_variables(self, order_symbols):
         if order_symbols is None:
-            order_symbols = self.symbols
+            order_symbols = self.variables
         else:
-            for s in self.symbols:
+            for s in self.variables:
                 if s not in order_symbols:
                     order_symbols = order_symbols + (s,)
         return self.expr, order_symbols
@@ -251,49 +209,52 @@ class Order(Expr):
     @cacheit
     def contains(self, expr):
         """
-        Return True if expr belongs to Order(self.expr, *self.symbols).
+        Return True if expr belongs to Order(self.expr, *self.variables).
         Return False if self belongs to expr.
-        Return None if the inclusion relation cannot be determined (e.g. when self and
-        expr have different symbols).
+        Return None if the inclusion relation cannot be determined
+        (e.g. when self and expr have different symbols).
         """
-        from sympy import powsimp
+        from sympy import powsimp, limit
         if expr is S.Zero:
             return True
         if expr is S.NaN:
             return False
         if expr.is_Order:
-            if self.symbols and expr.symbols:
-                common_symbols = tuple([s for s in self.symbols if s in expr.symbols])
-            elif self.symbols:
-                common_symbols = self.symbols
+            if self.variables and expr.variables:
+                common_symbols = tuple([s for s in self.variables if s in expr.variables])
+            elif self.variables:
+                common_symbols = self.variables
             else:
-                common_symbols = expr.symbols
+                common_symbols = expr.variables
             if not common_symbols:
-                if not (self.symbols or expr.symbols): # O(1),O(1)
+                if not (self.variables or expr.variables): # O(1),O(1)
                     return True
                 return None
             r = None
             for s in common_symbols:
-                l = Order.find_limit(powsimp(self.expr/expr.expr, deep=True,\
-                combine='exp'), s) != 0
+                l = limit(powsimp(self.expr/expr.expr, deep=True,\
+                combine='exp'), s, 0) != 0
                 if r is None:
                     r = l
                 else:
                     if r != l:
                         return
             return r
-        obj = Order(expr, *self.symbols)
+        obj = Order(expr, *self.variables)
         return self.contains(obj)
 
     def _eval_subs(self, old, new):
-        if self==old:
+        if self == old:
             return new
-        if isinstance(old, C.Symbol) and old in self.symbols:
-            i = list(self.symbols).index(old)
-            if isinstance(new, C.Symbol):
-                return Order(self.expr._eval_subs(old, new), *(self.symbols[:i]+(new,)+self.symbols[i+1:]))
-            return Order(self.expr._eval_subs(old, new), *(self.symbols[:i]+self.symbols[i+1:]))
-        return Order(self.expr._eval_subs(old, new), *self.symbols)
+        if isinstance(old, Symbol) and old in self.variables:
+            i = list(self.variables).index(old)
+            if isinstance(new, Symbol):
+                return Order(self.expr._eval_subs(old, new), *(self.variables[:i]+(new,)+self.variables[i+1:]))
+            return Order(self.expr._eval_subs(old, new), *(self.variables[:i]+self.variables[i+1:]))
+        return Order(self.expr._eval_subs(old, new), *self.variables)
+
+    def _eval_derivative(self, x):
+        return self.func(self.expr.diff(x), *self.variables) or self
 
     def _sage_(self):
         #XXX: SAGE doesn't have Order yet. Let's return 0 instead.

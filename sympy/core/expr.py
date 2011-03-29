@@ -177,22 +177,77 @@ class Expr(Basic, EvalfMixin):
         return c(self)
 
     def removeO(self):
-        "Removes the O(..) symbol if there is one"
+        """Removes the additive O(..) symbol if there is one"""
         if self.is_Order:
             return S.Zero
-        for i,x in enumerate(self.args):
-            if x.is_Order:
-                return Add(*(self.args[:i]+self.args[i+1:]))
-        return self
+        if not self.is_Add:
+            return self
+        args = []
+        for a in self.args:
+            if a.is_Order:
+                continue
+            args.append(a)
+        return self._new_rawargs(*args)
 
-    def getO(e):
-        "Returns the O(..) symbol, or None if there is none."
-        if e.is_Order:
-            return e
-        if e.is_Add:
-            for x in e.args:
-                if x.is_Order:
-                    return x
+    def getO(self):
+        """Returns the additive O(..) symbol if there is one, else None."""
+        if self.is_Order:
+            return self
+        if not self.is_Add:
+            return None
+        args = []
+        for a in self.args:
+            if not a.is_Order:
+                continue
+            args.append(a)
+        if args:
+            return self._new_rawargs(*args)
+
+    def getn(self):
+        """
+        Returns the order of the expression.
+
+        The order is determined either from the O(...) term. If there
+        is no O(...) term, it returns None.
+
+        Example:
+        >>> from sympy import O
+        >>> from sympy.abc import x
+        >>> (1 + x + O(x**2)).getn()
+        2
+        >>> (1 + x).getn()
+        >>>
+
+        """
+        o = self.getO()
+        if o is None:
+            return None
+        elif o.is_Order:
+            o = o.expr
+            if o is S.One:
+                return S.Zero
+            if o.is_Symbol:
+                return S.One
+            if o.is_Pow:
+                return o.args[1]
+            if o.is_Mul: # x**n*log(x)**n or x**n/log(x)**n
+                for oi in o.args:
+                    if oi.is_Symbol:
+                        return S.One
+                    if oi.is_Pow:
+                        syms = oi.atoms(C.Symbol)
+                        if len(syms) == 1:
+                            x = syms.pop()
+                            oi = oi.subs(x, C.Dummy('x', positive=True))
+                            if oi.base.is_Symbol and oi.exp.is_Rational:
+                                return abs(oi.exp)
+
+        raise NotImplementedError('not sure of order of %s' % o)
+
+    def count_ops(self, visual=None):
+        """wrapper for count_ops that returns the operation count."""
+        from sympy import count_ops
+        return count_ops(self, visual)
 
     def coeff(self, x, expand=True):
         """
@@ -222,7 +277,7 @@ class Expr(Basic, EvalfMixin):
         """
         from sympy import collect
         x = sympify(x)
-        const = x.as_coeff_terms()[0] # constant multiplying x
+        const = x.as_coeff_mul()[0] # constant multiplying x
         if const != S.One: # get rid of constants
             result = self.coeff(x/const)
             if result is not None:
@@ -232,9 +287,10 @@ class Expr(Basic, EvalfMixin):
         if x.is_Integer:
             return
 
+        result = self
         if expand:
-            self = self.expand() # collect expects its arguments in expanded form
-        result = collect(self, x, evaluate=False, exact=True)
+            result = result.expand() # collect expects its arguments in expanded form
+        result = collect(result, x, evaluate=False, exact=True)
         if x in result:
             return result[x]
         else:
@@ -302,6 +358,16 @@ class Expr(Basic, EvalfMixin):
            >>> (sin(x)).as_independent(y)
            (sin(x), 1)
 
+        See also:
+         - .as_two_terms() to split expr into a head and tail
+         - .as_coeff_add(*deps) to split expr like as_independent(),
+                                but return the dependent pieces as
+                                a tuple of arguments when treating
+                                expr as an Add
+         - .as_coeff_add(*deps) to split expr like as_independent(),
+                                but return the dependent pieces as
+                                a tuple of arguments when treating
+                                expr as a Mul
         """
         indeps, depend = [], []
 
@@ -312,8 +378,8 @@ class Expr(Basic, EvalfMixin):
                 else:
                     indeps.append(term)
 
-            return (self.__class__(*indeps),
-                    self.__class__(*depend))
+            return (self._new_rawargs(*indeps),
+                    self._new_rawargs(*depend))
         else:
             if self.has(*deps):
                 return (S.One, self)
@@ -346,49 +412,98 @@ class Expr(Basic, EvalfMixin):
         return (C.re(self), C.im(self))
 
     def as_powers_dict(self):
-        return { self : S.One }
+        return dict([self.as_base_exp()])
 
     def as_base_exp(self):
         # a -> b ** e
         return self, S.One
 
-    def as_coeff_terms(self, x=None):
-        # a -> c * t
-        if x is not None:
-            if not self.has(x):
+    def as_coeff_terms(self, *deps):
+        import warnings
+        warnings.warn("\nuse as_coeff_mul() instead of as_coeff_terms().",
+                      DeprecationWarning)
+
+    def as_coeff_factors(self, *deps):
+        import warnings
+        warnings.warn("\nuse as_coeff_add() instead of as_coeff_factors().",
+                      DeprecationWarning)
+
+    def as_coeff_mul(self, *deps):
+        """Return the tuple (c, args) where self is written as a Mul, `m`.
+
+        c should contain Numbers and any terms of the Mul that are
+        independent of deps.
+
+        args should be a tuple of all other terms of m; args is empty
+        if self is a Number or if self is independent of deps (when given).
+
+        This should be used when you don't know if self is a Mul or not but
+        you want to treat self as a Mul or if you want to process the
+        individual arguments of the tail of self as a Mul.
+
+        - if you know self is a Mul and want only the head, use self.args[0];
+        - if you don't want to process the arguments of the tail but need the
+          tail then use self.as_two_terms() which gives the head and tail;
+        - if you want to split self into an independent and dependent parts
+          use self.as_independent(*deps)
+
+        >>> from sympy import S
+        >>> from sympy.abc import x, y
+        >>> (S(3)).as_coeff_mul()
+        (3, ())
+        >>> (3*x*y).as_coeff_mul()
+        (3, (x, y))
+        >>> (3*x*y).as_coeff_mul(x)
+        (3*y, (x,))
+        >>> (3*y).as_coeff_mul(x)
+        (3*y, ())
+        """
+        if deps:
+            if not self.has(*deps):
                 return self, tuple()
         return S.One, (self,)
 
-    def as_coeff_factors(self, x=None):
-        # a -> c + f
-        if x is not None:
-            if not self.has(x):
+    def as_coeff_add(self, *deps):
+        """Return the tuple (c, args) where self is written as an Add, `a`.
+
+        c should contain Numbers and any terms of the Mul that are
+        independent of deps.
+
+        args should be a tuple of all other terms of `a`; args is empty
+        if self is a Number or if self is independent of deps (when given).
+
+        This should be used when you don't know if self is an Add or not but
+        you want to treat self as an Add or if you want to process the
+        individual arguments of the tail of self as an Add.
+
+        - if you know self is an Add and want only the head, use self.args[0];
+        - if you don't want to process the arguments of the tail but need the
+          tail then use self.as_two_terms() which gives the head and tail.
+        - if you want to split self into an independent and dependent parts
+          use self.as_independent(*deps)
+
+        >>> from sympy import S
+        >>> from sympy.abc import x, y
+        >>> (S(3)).as_coeff_add()
+        (3, ())
+        >>> (3 + x + y).as_coeff_add()
+        (3, (y, x))
+        >>> (3 + x +y).as_coeff_add(x)
+        (3 + y, (x,))
+        >>> (3 + y).as_coeff_add(x)
+        (3 + y, ())
+        """
+        if deps:
+            if not self.has(*deps):
                 return self, tuple()
         return S.Zero, (self,)
 
     def as_numer_denom(self):
-        """
-        a/b -> a,b
-        """
+        """ a/b -> a,b
 
-        # The following is a possible way to modify Eq which are now
-        # just returned as (Eq(), 1). It is not a trivial change,
-        # however, and it causes many failures.
-        #
-        # from sympy.core.relational import Equality
-        # from sympy import Eq
-        # if isinstance(self, Equality):
-        #     l = Symbol('l', dummy=True)
-        #     r = Symbol('r', dummy=True)
-        #     n, d = (l*self.lhs - r*self.rhs).as_numer_denom()
-        #     return Eq(n.subs({l: 1, r: 0}),
-        #               n.subs({l: 0, r: -1})), d.subs({l: 1, r: 1})
+        This is just a stub that should be defined by
+        an object's class methods to get anything else."""
 
-        base, exp = self.as_base_exp()
-        coeff, terms = exp.as_coeff_terms()
-        if coeff.is_negative:
-            # b**-e -> 1, b**e
-            return S.One, base ** (-exp)
         return self, S.One
 
     def normal(self):
@@ -484,7 +599,7 @@ class Expr(Basic, EvalfMixin):
             for i in xrange(len(self.args)):
                 newargs = list(self.args)
                 del(newargs[i])
-                tmp = Mul(*newargs).extract_multiplicatively(c)
+                tmp = self._new_rawargs(*newargs).extract_multiplicatively(c)
                 if tmp != None:
                     return tmp * self.args[i]
         elif self.is_Pow:
@@ -570,17 +685,17 @@ class Expr(Basic, EvalfMixin):
                 if subs1 != None:
                     return subs1 + terms[0]
         elif self.is_Mul:
-            self_coeff, self_terms = self.as_coeff_terms()
+            self_coeff, self_terms = self.as_coeff_mul()
             if c.is_Mul:
-                c_coeff, c_terms = c.as_coeff_terms()
+                c_coeff, c_terms = c.as_coeff_mul()
                 if c_terms == self_terms:
                     new_coeff = self_coeff.extract_additively(c_coeff)
                     if new_coeff != None:
-                        return new_coeff * Mul(*self_terms)
+                        return new_coeff * c._new_rawargs(*c_terms)
             elif c == self_terms:
                 new_coeff = self_coeff.extract_additively(1)
                 if new_coeff != None:
-                    return new_coeff * Mul(*self_terms)
+                    return new_coeff * c
 
     def could_extract_minus_sign(self):
         """Canonical way to choose an element in the set {e, -e} where
@@ -627,47 +742,216 @@ class Expr(Basic, EvalfMixin):
     ##################### SERIES, LEADING TERM, LIMIT, ORDER METHODS ##################
     ###################################################################################
 
-    def series(self, x, point=0, n=6, dir="+"):
+    def series(self, x=None, x0=0, n=6, dir="+"):
         """
-        Series expansion of "self" around "point".
+        Series expansion of "self" around `x = x0` yielding either terms of
+        the series one by one (the lazy series given when n=None), else
+        all the terms at once when n != None.
+
+        Note: when n != None, if an O() term is returned then the x in the
+        in it and the entire expression reprsents x - x0, the displacement
+        from x0. (If there is no O() term then the series was exact and x has
+        it's normal meaning.) This is currently necessary since sympy's O()
+        can only represent terms at x0=0. So instead of
+
+            >> cos(x).series(x0=1, n=2)
+            (1 - x)*sin(1) + cos(1) + O((x - 1)**2)
+
+        which graphically looks like this:
+
+               \
+              .|.         . .
+             . | \      .     .
+            ---+----------------------
+               |   . .          . .
+               |    \
+              x=0
+
+        the following is returned instead
+
+            -x*sin(1) + cos(1) + O(x**2)
+
+        whose graph is this
+
+               \ |
+              . .|        . .
+             .   \      .     .
+            -----+\------------------.
+                 | . .          . .
+                 |  \
+                x=0
+
+        which is identical to cos(x + 1).series(n=2).
 
         Usage:
-            Returns the Taylor (Laurent or generalized) series of "self" around
-            the point "point" (default 0) with respect to "x" until the n-th
-            term (default n is 6).
+            Returns the series expansion of "self" around the point `x = x0`
+            with respect to `x` up to O(x**n) (default n is 6).
 
-            For dir="+" (default) it calculates the series from the right
-            and for dir="-" the series from the left.
-            For smooth functions this argument doesn't matter.
+            If `x=None` and `self` is univariate, the univariate symbol will
+            be supplied, otherwise an error will be raised.
 
-        Notes:
-            This method is the most high level method and it returns the
-            series including the O(x**n) term.
+            >>> from sympy import cos, exp
+            >>> from sympy.abc import x, y
+            >>> cos(x).series()
+            1 - x**2/2 + x**4/24 + O(x**6)
+            >>> cos(x).series(n=4)
+            1 - x**2/2 + O(x**4)
+            >>> e = cos(x + exp(y))
+            >>> e.series(y, n=2)
+            -y*sin(1 + x) + cos(1 + x) + O(y**2)
+            >>> e.series(x, n=2)
+            -x*sin(exp(y)) + cos(exp(y)) + O(x**2)
 
-            Internally, it executes a method nseries(), see nseries() docstring
-            for more information.
+            If `n=None` then an iterator of the series terms will be returned.
+
+            >>> term=cos(x).series(n=None)
+            >>> [term.next() for i in range(2)]
+            [1, -x**2/2]
+
+            For `dir=+` (default) the series is calculated from the right and
+            for `dir=-` the series from the left. For smooth functions this
+            flag will not alter the results.
+
+            >>> abs(x).series(dir="+")
+            x
+            >>> abs(x).series(dir="-")
+            -x
+
         """
-        x = sympify(x)
-        point = sympify(point)
-        if dir == "+":
-            return self.nseries(x, point, n)
-        elif dir == "-":
-            return self.subs(x, -x).nseries(x, -point, n).subs(x, -x)
-        else:
-            raise ValueError("Dir has to be '+' or '-'")
+        if x is None:
+            syms = self.atoms(C.Symbol)
+            if len(syms) > 1:
+                raise ValueError('x must be given for multivariate functions.')
+            x = syms.pop()
 
+        if not self.has(x):
+            if n is None:
+                return (s for s in [self])
+            else:
+                return self
 
-    def lseries(self, x, x0):
+        ## it seems like the following should be doable, but several failures
+        ## then occur. Is this related to issue 1747 et al? See also XPOS below.
+        #if x.is_positive is x.is_negative is None:
+        #    # replace x with an x that has a positive assumption
+        #    xpos = C.Dummy('x', positive=True)
+        #    rv = self.subs(x, xpos).series(xpos, x0, n, dir)
+        #    if n is None:
+        #        return (s.subs(xpos, x) for s in rv)
+        #    else:
+        #        return rv.subs(xpos, x)
+
+        if len(dir) != 1 or dir not in '+-':
+            raise ValueError("Dir must be '+' or '-'")
+
+        if x0 in [S.Infinity, S.NegativeInfinity]:
+            dir = {S.Infinity: '+', S.NegativeInfinity: '-'}[x0]
+            s = self.subs(x, 1/x).series(x, n=n, dir=dir)
+            if n is None:
+                return (si.subs(x, 1/x) for si in s)
+            # don't include the order term since it will eat the larger terms
+            return s.removeO().subs(x, 1/x)
+
+        # use rep to shift origin to x0 and change sign (if dir is negative)
+        # and undo the process with rep2
+        if x0 or dir == '-':
+            if dir == '-':
+                rep = -x + x0
+                rep2 = -x
+                rep2b = x0
+            else:
+                rep = x + x0
+                rep2 = x
+                rep2b = -x0
+            s = self.subs(x, rep).series(x, x0=0, n=n, dir='+')
+            if n is None: # lseries...
+                return (si.subs(x, rep2 + rep2b) for si in s)
+            # nseries...
+            o = s.getO() or S.Zero
+            s = s.removeO()
+            if o and x0:
+                rep2b = 0 # when O() can handle x0 != 0 this can be removed
+            return s.subs(x, rep2 + rep2b) + o
+
+        # from here on it's x0=0 and dir='+' handling
+
+        if n != None: # nseries handling
+            s1 = self._eval_nseries(x, n=n)
+            o = s1.getO() or S.Zero
+            if o:
+                # make sure the requested order is returned
+                ngot = o.getn()
+                if ngot > n:
+                    # leave o in its current form (e.g. with x*log(x)) so
+                    # it eats terms properly, then replace it below
+                    s1 += o.subs(x, x**C.Rational(n, ngot))
+                elif ngot < n:
+                    # increase the requested number of terms to get the desired
+                    # number keep increasing (up to 9) until the received order
+                    # is different than the original order and then predict how
+                    # many additional terms are needed
+                    for more in range(1, 9):
+                        s1 = self._eval_nseries(x, n=n + more)
+                        newn = s1.getn()
+                        if newn != ngot:
+                            ndo = n + (n - ngot)*more/(newn - ngot)
+                            s1 = self._eval_nseries(x, n=ndo)
+                            # if this assertion fails then our ndo calculation
+                            # needs modification
+                            assert s1.getn() == n
+                            break
+                    else:
+                        raise ValueError('Could not calculate %s terms for %s'
+                                         % (str(n), self))
+                o = s1.getO()
+                s1 = s1.removeO()
+            else:
+                o = C.Order(x**n)
+                if (s1 + o).removeO() == s1:
+                    o = S.Zero
+
+            return s1 + o
+
+        else: # lseries handling
+            def yield_lseries(s):
+                """Return terms of lseries one at a time."""
+                for si in s:
+                    if not si.is_Add:
+                        yield si
+                        continue
+                    # yield terms 1 at a time if possible
+                    # by increasing order until all the
+                    # terms have been returned
+                    yielded = 0
+                    o = C.Order(si)*x
+                    ndid = 0
+                    ndo = len(si.args)
+                    while 1:
+                        do = (si - yielded + o).removeO()
+                        o *= x
+                        if not do or do.is_Order:
+                            continue
+                        if do.is_Add:
+                            ndid += len(do.args)
+                        else:
+                            ndid += 1
+                        yield do
+                        if ndid == ndo:
+                            raise StopIteration
+                        yielded += do
+
+            return yield_lseries(self.removeO()._eval_lseries(x))
+
+    def lseries(self, x=None, x0=0, dir='+'):
         """
-        lseries is a generator yielding terms in the series.
+        Wrapper for series yielding an iterator of the terms of the series.
 
-        Example: if you do:
+        Note: an infinite series will yield an infinite iterator. The following,
+        for exaxmple, will never terminate. It will just keep printing terms
+        of the sin(x) series:
 
-        for term in sin(x).lseries(x, 0):
-            print term
-
-        It will print all terms of the sin(x) series (i.e. it never
-        terminates).
+            for term in sin(x).lseries(x):
+                print term
 
         The advantage of lseries() over nseries() is that many times you are
         just interested in the next term in the series (i.e. the first term for
@@ -676,37 +960,45 @@ class Expr(Basic, EvalfMixin):
 
         See also nseries().
         """
-        return self._eval_lseries(x, x0)
+        return self.series(x, x0, n=None, dir=dir)
 
-    def _eval_lseries(self, x, x0):
+    def _eval_lseries(self, x):
         # default implementation of lseries is using nseries(), and adaptively
         # increasing the "n". As you can see, it is not very efficient, because
         # we are calculating the series over and over again. Subclasses should
         # override this method and implement much more efficient yielding of
         # terms.
         n = 0
-        e = self.nseries(x, x0, n)
-        while e.is_Order:
+        series = self._eval_nseries(x, n=n)
+        if not series.is_Order:
+            if series.is_Add:
+                yield series.removeO()
+            else:
+                yield series
+            raise StopIteration
+
+        while series.is_Order:
             n += 1
-            e = self.nseries(x, x0, n)
-        series = e.removeO()
-        yield series
+            series = self._eval_nseries(x, n=n)
+        e = series.removeO()
+        yield e
         while 1:
-            n += 1
-            e = self.nseries(x, x0, n).removeO()
-            while series == e:
+            while 1:
                 n += 1
-                e = self.nseries(x, x0, n).removeO()
-            term = e - series
-            series = e
-            yield term
+                series = self._eval_nseries(x, n=n).removeO()
+                if e != series:
+                    break
+            yield series - e
+            e = series
 
-    def nseries(self, x, x0, n):
+    def nseries(self, x=None, x0=0, n=6, dir='+'):
         """
-        Calculates a generalized series expansion.
+        Wrapper to _eval_nseries if assumptions allow, else to series.
 
-        nseries calculates "n" terms in the innermost expressions and then
-        builds up the final series just by "cross-multiplying" everything out.
+        If x is given, x0 is 0, dir='+', and self has x, then _eval_nseries is
+        called. This calculates "n" terms in the innermost expressions and
+        then builds up the final series just by "cross-multiplying" everything
+        out.
 
         Advantage -- it's fast, because we don't have to determine how many
         terms we need to calculate in advance.
@@ -715,23 +1007,35 @@ class Expr(Basic, EvalfMixin):
         expected, but the O(x**n) term appended will always be correct and
         so the result, though perhaps shorter, will also be correct.
 
+        If any of those assumptions is not met, this is treated like a
+        wrapper to series which will try harder to return the correct
+        number of terms.
+
         See also lseries().
         """
-        return self._eval_nseries(x, x0, n)
+        if x and not self.has(x):
+            return self
+        if x is None or x0 or dir != '+':#{see XPOS above} or (x.is_positive == x.is_negative == None):
+            return self.series(x, x0, n, dir)
+        else:
+            return self._eval_nseries(x, n=n)
 
-    def _eval_nseries(self, x, x0, n):
+    def _eval_nseries(self, x, n):
         """
+        Return terms of series for self up to O(x**n) at x=0
+        from the positive direction.
+
         This is a method that should be overridden in subclasses. Users should
         never call this method directly (use .nseries() instead), so you don't
         have to write docstrings for _eval_nseries().
         """
         raise NotImplementedError("(%s).nseries(%s, %s, %s)" % (self, x, x0, n))
 
-    def limit(self, x, xlim, direction='+'):
+    def limit(self, x, xlim, dir='+'):
         """ Compute limit x->xlim.
         """
         from sympy.series.limits import limit
-        return limit(self, x, xlim, direction)
+        return limit(self, x, xlim, dir)
 
     @cacheit
     def as_leading_term(self, *symbols):
@@ -778,11 +1082,11 @@ class Expr(Basic, EvalfMixin):
         we = Wild('we')
         p  = wc*x**we
         from sympy import collect
-        self = collect(self, x)
-        d = self.match(p)
+        s = collect(self, x)
+        d = s.match(p)
         if d is not None and we in d:
             return d[wc], d[we]
-        return self, S.Zero
+        return s, S.Zero
 
     def leadterm(self, x):
         """
@@ -978,9 +1282,6 @@ class AtomicExpr(Atom, Expr):
     def as_numer_denom(self):
         return self, S.One
 
-    def count_ops(self, symbolic=True):
-        return S.Zero
-
     def _eval_is_polynomial(self, syms):
         return True
 
@@ -988,13 +1289,13 @@ class AtomicExpr(Atom, Expr):
     def is_number(self):
         return True
 
-    def _eval_nseries(self, x, x0, n):
+    def _eval_nseries(self, x, n):
         return self
 
 from mul import Mul
 from add import Add
 from power import Pow
 from relational import Inequality, StrictInequality
-from function import FunctionClass, Derivative
+from function import Derivative
 from sympify import _sympify, sympify, SympifyError
 from symbol import Wild

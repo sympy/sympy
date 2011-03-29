@@ -1,5 +1,5 @@
-from sympy import Symbol, Rational, Order, C, exp, ln, log, O, var, nan, pi, S
-from sympy.utilities.pytest import XFAIL
+from sympy import Symbol, Rational, Order, C, exp, ln, log, O, var, nan, pi, S, symbols
+from sympy.utilities.pytest import XFAIL, raises
 from sympy.abc import w, x, y, z
 
 def test_caching_bug():
@@ -184,3 +184,23 @@ def test_O1():
     assert O(1) == O(1, y)
     assert hash(O(1)) == hash(O(1, x))
     assert hash(O(1)) == hash(O(1, y))
+
+def test_getn():
+    # other lines are tested incidentally by the suite
+    assert O(x).getn() == 1
+    assert O(x/log(x)).getn() == 1
+    assert O(x**2/log(x)**2).getn() == 2
+    assert O(x*log(x)).getn() == 1
+    raises(NotImplementedError, '(O(x) + O(y)).getn()')
+
+def test_diff():
+    assert O(x**2).diff(x) == O(x)
+
+def test_getO():
+    assert (x).getO() is None
+    assert (x).removeO() == x
+    assert (O(x)).getO() == O(x)
+    assert (O(x)).removeO() == 0
+    assert (z + O(x) + O(y)).getO() == O(x) + O(y)
+    assert (z + O(x) + O(y)).removeO() == z
+    raises(NotImplementedError, '(O(x)+O(y)).getn()')

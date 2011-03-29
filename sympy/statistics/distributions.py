@@ -1,4 +1,4 @@
-from sympy.core import sympify, Lambda, Symbol, Integer, Rational, oo, Real, pi
+from sympy.core import sympify, Lambda, Dummy, Integer, Rational, oo, Real, pi
 from sympy.functions import sqrt, exp, erf
 from sympy.printing import sstr
 import random
@@ -282,7 +282,7 @@ class PDF(ContinuousProbability):
 
         norm = self.probability(*self.domain)
         if norm != 1:
-            w = Symbol('w', real=True, dummy=True)
+            w = Dummy('w', real=True)
             return self.__class__(self.pdf(w)/norm, (w, self.domain[0], self.domain[1]))
             #self._cdf = Lambda(w, (self.cdf(w) - self.cdf(self.domain[0]))/norm)
             #if self._mean is not None:
@@ -301,7 +301,7 @@ class PDF(ContinuousProbability):
             return self._cdf(x)
         else:
             from sympy import integrate
-            w = Symbol('w', real=True, dummy=True)
+            w = Dummy('w', real=True)
             self._cdf = integrate(self.pdf(w), w)
             self._cdf = Lambda(w, self._cdf - self._cdf.subs(w, self.domain[0]))
             return self._cdf(x)
@@ -311,7 +311,7 @@ class PDF(ContinuousProbability):
             return self._mean
         else:
             from sympy import integrate
-            w = Symbol('w', real=True, dummy=True)
+            w = Dummy('w', real=True)
             self._mean = integrate(self.pdf(w)*w,(w,self.domain[0],self.domain[1]))
             return self._mean
 
@@ -320,7 +320,7 @@ class PDF(ContinuousProbability):
             return self._variance
         else:
             from sympy import integrate, simplify, together
-            w = Symbol('w', real=True, dummy=True)
+            w = Dummy('w', real=True)
             self._variance = integrate(self.pdf(w)*w**2,(w,self.domain[0],self.domain[1])) - self.mean**2
             self._variance = simplify(self._variance)
             return self._variance
@@ -344,7 +344,7 @@ class PDF(ContinuousProbability):
         """Return a probability distribution of random variable func(x)
         currently only some simple injective functions are supported"""
 
-        w = Symbol('w', real=True, dummy=True)
+        w = Dummy('w', real=True)
 
         from sympy import solve
         inverse = solve(func-w, var)

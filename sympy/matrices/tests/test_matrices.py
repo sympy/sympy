@@ -1,4 +1,4 @@
-from sympy import (symbols, Matrix, eye, I, Symbol, Rational, wronskian, cos,
+from sympy import (symbols, Matrix, SMatrix, eye, I, Symbol, Rational, wronskian, cos,
     sin, exp, hessian, sqrt, zeros, ones, randMatrix, Poly, S, pi,
     oo, trigsimp, Integer, block_diag, N)
 from sympy.matrices.matrices import (ShapeError, MatrixError,
@@ -95,6 +95,17 @@ def test_creation():
     assert a == b
 
     assert Matrix(b) == b
+
+    c = Matrix((
+          Matrix((
+            (1, 2, 3),
+            (4, 5, 6)
+          )),
+          (7, 8, 9)
+    ))
+    assert c.cols == 3
+    assert c.rows == 3
+    assert c[:] == [1,2,3,4,5,6,7,8,9]
 
 def test_tolist():
     x, y, z = symbols('xyz')
@@ -1367,3 +1378,10 @@ def test_jordan_form():
     Jmust = Matrix(4, 4, [1, 0, 0, 0, 0, 2, 0, 0, 0, 0, 4, 1, 0, 0, 0, 4])
     (P, J) = m.jordan_form()
     assert Jmust == J
+
+def test_SMatrix_transpose():
+    assert SMatrix((1,2),(3,4)).transpose() == SMatrix((1,3),(2,4))
+def test_SMatrix_CL_RL():
+    assert SMatrix((1,2),(3,4)).row_list() == [(0, 0, 1), (0, 1, 2), (1, 0, 3), (1, 1, 4)]
+    assert SMatrix((1,2),(3,4)).col_list() ==[(0, 0, 1), (1, 0, 3), (0, 1, 2), (1, 1, 4)]
+

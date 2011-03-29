@@ -74,6 +74,7 @@ def test_sign1():
     assert sign(-exp(x), x) == -1
     assert sign(3-1/x, x) == 1
     assert sign(-3-1/x, x) == -1
+    assert sign(sin(1/x), x) == 0
 
 def test_sign2():
     assert sign(x, x) == 1

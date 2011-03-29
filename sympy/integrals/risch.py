@@ -1,4 +1,9 @@
-from sympy.core import Add, Mul, Symbol, Wild, S, C, sympify, Rational
+from sympy.core.add import Add
+from sympy.core.mul import Mul
+from sympy.core.symbol import Symbol, Wild, Dummy
+from sympy.core.basic import C, sympify
+from sympy.core.numbers import Rational
+from sympy.core.singleton import S
 
 from sympy.functions import exp, sin , cos , tan , cot , asin
 from sympy.functions import log, sinh, cosh, tanh, coth, asinh
@@ -61,7 +66,7 @@ def _symbols(name, n):
         _symbols_cache[name] = lsyms
 
     while len(lsyms) < n:
-        lsyms.append( Symbol('%s%i' % (name, len(lsyms)), dummy=True) )
+        lsyms.append( Dummy('%s%i' % (name, len(lsyms))) )
 
     return lsyms[:n]
 

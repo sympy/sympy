@@ -14,7 +14,7 @@
 """
 
 from sympy.core.sympify import sympify
-from sympy.core import S, Mul, Add, Pow, Symbol, Wild, Equality
+from sympy.core import S, Mul, Add, Pow, Symbol, Wild, Equality, Dummy
 from sympy.core.numbers import ilcm
 
 from sympy.functions import log, exp, LambertW
@@ -157,7 +157,7 @@ def solve(f, *symbols, **flags):
         #solve(3,x) returns []...though it seems that it should raise some sort of error TODO
         symbols = set([])
         for fi in f:
-            symbols |= fi.atoms(Symbol) or set([Symbol('x',dummy=True)])
+            symbols |= fi.atoms(Symbol) or set([Dummy('x')])
         symbols = list(symbols)
 
     if bare_f:
@@ -185,10 +185,10 @@ def solve(f, *symbols, **flags):
             s_new = s
         elif s.is_Function:
             symbol_swapped = True
-            s_new = Symbol('F%d' % i, dummy=True)
+            s_new = Dummy('F%d' % i)
         elif s.is_Derivative:
             symbol_swapped = True
-            s_new = Symbol('D%d' % i, dummy=True)
+            s_new = Dummy('D%d' % i)
         else:
             raise TypeError('not a Symbol or a Function')
         symbols_new.append(s_new)
@@ -260,7 +260,7 @@ def solve(f, *symbols, **flags):
                     m = reduce(ilcm, exponents_denom)
                 # x -> y**m.
                 # we assume positive for simplification purposes
-                t = Symbol('t', positive=True, dummy=True)
+                t = Dummy('t', positive=True)
                 f_ = f.subs(symbol, t**m)
                 if guess_solve_strategy(f_, t) != GS_POLY:
                     raise NotImplementedError("Could not convert to a polynomial equation: %s" % f_)
@@ -576,7 +576,7 @@ def solve_linear_system_LU(matrix, syms):
         solutions[syms[i]] = soln[i,0]
     return solutions
 
-x = Symbol('x', dummy=True)
+x = Dummy('x')
 a,b,c,d,e,f,g,h = [Wild(t, exclude=[x]) for t in 'abcdefgh']
 patterns = None
 
@@ -681,7 +681,7 @@ def tsolve(eq, sym):
         # and if it removes all functions - let's call solve.
         #      x    -x                   -1
         # UC: e  + e   = y      ->  t + t   = y
-        t = Symbol('t', dummy=True)
+        t = Dummy('t')
         terms = lhs.args
 
         # find first term which is Function

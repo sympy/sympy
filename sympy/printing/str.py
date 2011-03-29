@@ -159,7 +159,7 @@ class StrPrinter(Printer):
         return expr.name
 
     def _print_Mul(self, expr):
-        coeff, terms = expr.as_coeff_terms()
+        coeff, terms = expr.as_coeff_mul()
         if coeff.is_negative:
             coeff = -coeff
             if coeff is not S.One:
@@ -216,7 +216,7 @@ class StrPrinter(Printer):
         return "1"
 
     def _print_Order(self, expr):
-        if len(expr.symbols) <= 1:
+        if len(expr.variables) <= 1:
             return 'O(%s)'%self._print(expr.expr)
         else:
             return 'O(%s)'%self.stringify(expr.args, ', ', 0)

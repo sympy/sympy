@@ -17,10 +17,23 @@ import and declare our first Matrix object:
     [1  0]
     [    ]
     [0  1]
+    >>> Matrix((
+    ...   Matrix((
+    ...     (1, 0, 0),
+    ...     (0, 0, 0)
+    ...   )),
+    ...   (0, 0, -1)
+    ... ))
+    [1  0  0 ]
+    [        ]
+    [0  0  0 ]
+    [        ]
+    [0  0  -1]
 
 This is the standard manner one creates a matrix, i.e. with a list of
-appropriately-sizes lists. SymPy also supports more advanced methods of matrix
-creation including a single list of values and dimension inputs:
+appropriately-sizes lists and/or matrices. SymPy also supports more advanced
+methods of matrix creation including a single list of values and dimension
+inputs:
 
     >>> Matrix(2, 3, [1, 2, 3, 4, 5, 6])
     [1  2  3]

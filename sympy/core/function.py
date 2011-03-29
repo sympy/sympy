@@ -34,15 +34,16 @@ from core import BasicMeta, C
 from basic import Basic
 from singleton import S
 from expr import Expr, AtomicExpr
+
 from cache import cacheit
-from itertools import repeat
 #from numbers import Rational, Integer
-#from symbol import Symbol
-from multidimensional import vectorize
+#from symbol import Symbol, Dummy
 from sympy.utilities.decorator import deprecated
 from sympy.utilities import all
 
 from sympy import mpmath
+
+from itertools import repeat
 
 class PoleError(Exception):
     pass
@@ -58,31 +59,19 @@ class FunctionClass(BasicMeta):
 
     _new = type.__new__
 
-    def __new__(cls, arg1, arg2, arg3=None, **options):
-        assert not options,`options`
-        if isinstance(arg1, type):
-            # the following code gets executed when one types
-            # FunctionClass(Function, "f")
-            # i.e. cls = FunctionClass, arg1 = Function, arg2 = "f"
-            # and we simply do an equivalent of:
-            # class f(Function):
-            #     ...
-            # return f
-            ftype, name, signature = arg1, arg2, arg3
-            #XXX this probably needs some fixing:
-            assert ftype.__name__.endswith('Function'),`ftype`
-            attrdict = ftype.__dict__.copy()
-            attrdict['undefined_Function'] = True
-            if signature is not None:
-                attrdict['signature'] = signature
-            bases = (ftype,)
-            return BasicMeta.__new__(cls, name, bases, attrdict)
-        else:
-            name, bases, attrdict = arg1, arg2, arg3
-            return BasicMeta.__new__(cls, name, bases, attrdict)
-
     def __repr__(cls):
         return cls.__name__
+
+class UndefinedFunction(FunctionClass):
+    """
+    The (meta)class of undefined functions.
+    """
+    def __new__(mcl, name, signature=None):
+        attrdict = {'undefined_Function': True}
+        if signature is not None:
+            attrdict['signature'] = signature
+        bases = (Function,)
+        return BasicMeta.__new__(mcl, name, bases, attrdict)
 
 class Application(Basic):
     """
@@ -98,7 +87,6 @@ class Application(Basic):
 
     nargs = None
 
-    @vectorize(1)
     @cacheit
     def __new__(cls, *args, **options):
         args = map(sympify, args)
@@ -107,7 +95,7 @@ class Application(Basic):
             if opt in options:
                 del options[opt]
         # up to here.
-        if options.get('evaluate') is False:
+        if not options.pop('evaluate', True):
             return super(Application, cls).__new__(cls, *args, **options)
         evaluated = cls.eval(*args)
         if evaluated is not None:
@@ -140,17 +128,12 @@ class Application(Basic):
             if arg.is_positive: return S.One
             if arg.is_negative: return S.NegativeOne
             if isinstance(arg, C.Mul):
-                coeff, terms = arg.as_coeff_terms()
+                coeff, terms = arg.as_coeff_mul()
                 if coeff is not S.One:
-                    return cls(coeff) * cls(C.Mul(*terms))
+                    return cls(coeff) * cls(arg._new_rawargs(*terms))
 
         """
         return
-
-
-    def count_ops(self, symbolic=True):
-        #      f()             args
-        return 1 + Add(*[ t.count_ops(symbolic) for t in self.args ])
 
     @property
     def func(self):
@@ -166,17 +149,16 @@ class Application(Basic):
                 # Written down as an elif to avoid a super-long line
                 elif isinstance(new.nargs, tuple) and self.nargs in new.nargs:
                     return new(*self.args)
-        return Basic._seq_subs(self, old, new)
+        return self.func(*[s.subs(old, new) for s in self.args])
 
 
 class Function(Application, Expr):
     """
     Base class for applied numeric functions.
-    Constructor of undefined classes.
+    Constructor of undefined function classes.
 
     """
 
-    @vectorize(1)
     @cacheit
     def __new__(cls, *args, **options):
         # NOTE: this __new__ is twofold:
@@ -186,27 +168,11 @@ class Function(Application, Expr):
         #
         # 2 -- on the other hand, we instantiate -- that is we create an
         #      *instance* of a class created earlier in 1.
-        #
-        # So please keep, both (1) and (2) in mind.
 
         # (1) create new function class
         #     UC: Function('f')
         if cls is Function:
-            #when user writes Function("f"), do an equivalent of:
-            #taking the whole class Function(...):
-            #and rename the Function to "f" and return f, thus:
-            #In [13]: isinstance(f, Function)
-            #Out[13]: False
-            #In [14]: isinstance(f, FunctionClass)
-            #Out[14]: True
-
-            if len(args) == 1 and isinstance(args[0], str):
-                #always create Function
-                return FunctionClass(Function, *args)
-            else:
-                print args
-                print type(args[0])
-                raise TypeError("You need to specify exactly one string")
+            return UndefinedFunction(*args)
 
         # (2) create new instance of a class created in (1)
         #     UC: Function('f')(x)
@@ -293,20 +259,24 @@ class Function(Application, Expr):
     def as_base_exp(self):
         return self, S.One
 
-    def _eval_nseries(self, x, x0, n):
-        assert len(self.args) == 1
+    def _eval_nseries(self, x, n):
+        if self.func.nargs != 1:
+            raise NotImplementedError('series for user-defined and \
+multi-arg functions are not supported.')
         arg = self.args[0]
         arg0 = arg.limit(x, 0)
         from sympy import oo
-        if arg0 in [-oo, oo]:
-            raise PoleError("Cannot expand around %s" % (arg))
-        if arg0 is not S.Zero:
+        if arg0 in [-oo, oo, S.NaN]:
+            raise PoleError("Cannot expand %s around 0" % (arg))
+        if arg0:
             e = self
             e1 = e.expand()
             if e == e1:
                 #for example when e = sin(x+1) or e = sin(cos(x))
                 #let's try the general algorithm
                 term = e.subs(x, S.Zero)
+                if term in [-oo, oo, S.NaN]:
+                    raise PoleError("Cannot expand %s around 0" % (self))
                 series = term
                 fact = S.One
                 for i in range(n-1):
@@ -317,12 +287,12 @@ class Function(Application, Expr):
                     term = term.expand()
                     series += term
                 return series + C.Order(x**n, x)
-            return e1.nseries(x, x0, n)
+            return e1.nseries(x, n=n)
         l = []
         g = None
         for i in xrange(n+2):
             g = self.taylor_term(i, arg, g)
-            g = g.nseries(x, x0, n)
+            g = g.nseries(x, n=n)
             l.append(g)
         return Add(*l) + C.Order(x**n, x)
 
@@ -483,10 +453,7 @@ class WildFunction(Function, AtomicExpr):
 
     nargs = 1
 
-    def __new__(cls, name=None, **assumptions):
-        if name is None:
-            name = 'Wf%s' % (C.Symbol.dummycount + 1) # XXX refactor dummy counting
-            C.Symbol.dummycount += 1
+    def __new__(cls, name, **assumptions):
         obj = Function.__new__(cls, name, **assumptions)
         obj.name = name
         return obj
@@ -566,12 +533,8 @@ class Derivative(Expr):
             return expr
         symbols = Derivative._symbolgen(*symbols)
         if expr.is_commutative:
-            assumptions["commutative"] = True
-        if "evaluate" in assumptions:
-            evaluate = assumptions["evaluate"]
-            del assumptions["evaluate"]
-        else:
-            evaluate = False
+            assumptions['commutative'] = True
+        evaluate = assumptions.pop('evaluate', False)
         if not evaluate and not isinstance(expr, Derivative):
             symbols = list(symbols)
             if len(symbols) == 0:
@@ -585,8 +548,6 @@ class Derivative(Expr):
             s = sympify(s)
             if not isinstance(s, C.Symbol):
                 raise ValueError('Invalid literal: %s is not a valid variable' % s)
-            if not expr.has(s):
-                return S.Zero
             obj = expr._eval_derivative(s)
             if obj is None:
                 unevaluated_symbols.append(s)
@@ -600,27 +561,33 @@ class Derivative(Expr):
         return Expr.__new__(cls, expr, *unevaluated_symbols, **assumptions)
 
     def _eval_derivative(self, s):
-        if s not in self.symbols:
+        if s not in self.variables:
             obj = self.expr.diff(s)
+            if not obj:
+                return obj
             if isinstance(obj, Derivative):
-                return Derivative(obj.expr, *(self.symbols+obj.symbols))
-            return Derivative(obj, *self.symbols)
-        return Derivative(self.expr, *(self.symbols+(s,)), **{'evaluate': False})
+                return Derivative(obj.expr, *(self.variables + obj.variables))
+            return Derivative(obj, *self.variables)
+        return Derivative(self.expr, *(self.variables + (s, )), **{'evaluate': False})
 
     def doit(self, **hints):
         expr = self.expr
         if hints.get('deep', True):
             expr = expr.doit(**hints)
         hints['evaluate'] = True
-        return Derivative(expr, *self.symbols, **hints)
+        return Derivative(expr, *self.variables, **hints)
 
     @property
     def expr(self):
         return self._args[0]
 
     @property
-    def symbols(self):
+    def variables(self):
         return self._args[1:]
+
+    @property
+    def free_symbols(self):
+        return self.expr.free_symbols
 
     def _eval_subs(self, old, new):
         if self==old:
@@ -628,44 +595,29 @@ class Derivative(Expr):
         return Derivative(*map(lambda x: x._eval_subs(old, new), self.args))
 
     def matches(self, expr, repl_dict={}, evaluate=False):
-        # this method needs a cleanup.
-
         if self in repl_dict:
             if repl_dict[self] == expr:
                 return repl_dict
-            else:
-                return None
-        if isinstance(expr, Derivative):
-            if len(expr.symbols) == len(self.symbols):
-                    #print "MAYBE:",self, expr, repl_dict, evaluate
+        elif isinstance(expr, Derivative):
+            if len(expr.variables) == len(self.variables):
                 return Expr.matches(self, expr, repl_dict, evaluate)
-        #print "NONE:",self, expr, repl_dict, evaluate
-        return None
-        #print self, expr, repl_dict, evaluate
-        stop
-        if self.nargs is not None:
-            if self.nargs != expr.nargs:
-                return None
-        repl_dict = repl_dict.copy()
-        repl_dict[self] = expr
-        return repl_dict
 
-    def _eval_lseries(self, x, x0):
-        stop
-        arg = self.args[0]
-        dx = self.args[1]
-        for term in arg.lseries(x, x0):
-            yield term.diff(dx)
+    def _eval_lseries(self, x):
+        dx = self.args[1:]
+        for term in self.args[0].lseries(x):
+            yield Derivative(term, *dx)
 
-    def _eval_nseries(self, x, x0, n):
-        arg = self.args[0]
-        arg = arg.nseries(x, x0, n)
+    def _eval_nseries(self, x, n):
+        arg = self.args[0].nseries(x, n=n)
         o = arg.getO()
-        dx = self.args[1]
+        dx = self.args[1:]
+        rv = [Derivative(a, *dx) for a in Add.make_args(arg.removeO())]
         if o:
-            return arg.removeO().diff(dx) + arg.getO()/dx
-        else:
-            return arg.removeO().diff(dx)
+            rv.append(o/x)
+        return Add(*rv)
+
+    def _eval_as_leading_term(self, x):
+        return self.args[0].as_leading_term(x)
 
 class Lambda(Function):
     """
@@ -719,7 +671,7 @@ class Lambda(Function):
         nargs = len(args)-1
 
         expression = args[nargs]
-        funargs = [C.Symbol(arg.name, dummy=True) for arg in args[:nargs]]
+        funargs = [C.Dummy(arg.name) for arg in args[:nargs]]
         #probably could use something like foldl here
         for arg,funarg in zip(args[:nargs],funargs):
             expression = expression.subs(arg,funarg)
@@ -784,7 +736,6 @@ class Lambda(Function):
     def __hash__(self):
         return super(Lambda, self).__hash__()
 
-@vectorize(0)
 def diff(f, *symbols, **kwargs):
     """
     Differentiate f with respect to symbols.
@@ -798,15 +749,6 @@ def diff(f, *symbols, **kwargs):
     You can pass evaluate=False to get an unevaluated Derivative class.  Note
     that if there are 0 symbols (such as diff(f(x), x, 0), then the result will
     be the function (the zeroth derivative), even if evaluate=False.
-
-    This function is vectorized, so you can pass a list for the arguments and
-    each argument will be mapped to each element of the list.  For a single
-    symbol, you can just pass the symbol normally.  For multiple symbols,
-    pass each group in a tuple.  For example, do diff(f(x, y), [x, y]) to get
-    the derivatives of f(x, y) with respect to x and with respect to y, and
-    diff(f(x, y), [(x, x), (y, y)]) to get the derivatives of f(x, y) with
-    respect to x twice and with respect to y twice.  You can also mix tuples
-    and single symbols.
 
     Examples:
     >>> from sympy import sin, cos, Function, diff
@@ -822,13 +764,6 @@ def diff(f, *symbols, **kwargs):
     >>> diff(sin(x)*cos(y), x, 2, y, 2)
     cos(y)*sin(x)
 
-    >>> diff(f(x, y), [x, y])
-    [D(f(x, y), x), D(f(x, y), y)]
-    >>> diff(f(x, y), [(x, x), (y, y)])
-    [D(f(x, y), x, x), D(f(x, y), y, y)]
-    >>> diff(f(x, y), [(x, 2), y])
-    [D(f(x, y), x, x), D(f(x, y), y)]
-
     >>> type(diff(sin(x), x))
     cos
     >>> type(diff(sin(x), x, evaluate=False))
@@ -842,23 +777,9 @@ def diff(f, *symbols, **kwargs):
     http://documents.wolfram.com/v5/Built-inFunctions/AlgebraicComputation/Calculus/D.html
 
     """
-
-    # @vectorize(1) won't handle symbols in the way that we want, so we have to
-    # write the for loop manually.
     kwargs.setdefault('evaluate', True)
+    return Derivative(f, *symbols, **kwargs)
 
-    if hasattr(symbols[0], '__iter__'):
-        retlist = []
-        for i in symbols[0]:
-            if hasattr(i, '__iter__'):
-                retlist.append(Derivative(f, *i, **kwargs))
-            else:
-                retlist.append(Derivative(f, i, **kwargs))
-        return retlist
-
-    return Derivative(f,*symbols, **kwargs)
-
-@vectorize(0)
 def expand(e, deep=True, power_base=True, power_exp=True, mul=True, \
            log=True, multinomial=True, basic=True, **hints):
     """
@@ -1087,6 +1008,172 @@ def expand_complex(expr, deep=True):
     """
     return sympify(expr).expand(deep=deep, complex=True, basic=False,\
     log=False, mul=False, power_exp=False, power_base=False, multinomial=False)
+
+def count_ops(expr, visual=False):
+    """
+    Return a representation (integer or expression) of the operations in expr.
+
+    If `visual` is False (default) then the sum of the coefficients of the
+    visual expression will be returned.
+
+    If `visual` is True then the number of each type of operation is shown
+    with the core class types (or their virtual equivalent) multiplied by the
+    number of times they occur.
+
+    If expr is an iterable, the sum of the op counts of the
+    items will be returned.
+
+    Examples:
+        >>> from sympy.abc import a, b, x, y
+        >>> from sympy import sin, count_ops
+
+    Although there isn't a SUB object, minus signs are interpreted as
+    either negations or subtractions:
+        >>> (x - y).count_ops(visual=True)
+        SUB
+        >>> (-x).count_ops(visual=True)
+        NEG
+
+    Here, there are two Adds and a Pow:
+        >>> (1 + a + b**2).count_ops(visual=True)
+        POW + 2*ADD
+
+    In the following, an Add, Mul, Pow and two functions:
+        >>> (sin(x)*x + sin(x)**2).count_ops(visual=True)
+        ADD + MUL + POW + 2*SIN
+
+    for a total of 5:
+        >>> (sin(x)*x + sin(x)**2).count_ops(visual=False)
+        5
+
+    Note that "what you type" is not always what you get. The expression
+    1/x/y is translated by sympy into 1/(x*y) so it gives a DIV and MUL rather
+    than two DIVs:
+        >>> (1/x/y).count_ops(visual=True)
+        DIV + MUL
+
+    The visual option can be used to demonstrate the difference in
+    operations for expressions in different forms. Here, the Horner
+    representation is compared with the expanded form of a polynomial:
+        >>> eq=x*(1 + x*(2 + x*(3 + x)))
+        >>> count_ops(eq.expand(), visual=True) - count_ops(eq, visual=True)
+        -MUL + 3*POW
+
+    The count_ops function also handles iterables:
+        >>> count_ops([x, sin(x), None, True, x + 2], visual=False)
+        2
+        >>> count_ops([x, sin(x), None, True, x + 2], visual=True)
+        ADD + SIN
+        >>> count_ops({x: sin(x), x + 2: y + 1}, visual=True)
+        SIN + 2*ADD
+
+    """
+    from sympy.simplify.simplify import fraction
+
+    expr = sympify(expr)
+    if isinstance(expr, Expr):
+
+        ops = []
+        args = [expr]
+        NEG = C.Symbol('NEG')
+        DIV = C.Symbol('DIV')
+        SUB = C.Symbol('SUB')
+        ADD = C.Symbol('ADD')
+        def isneg(a):
+            c = a.as_coeff_mul()[0]
+            return c.is_Number and c.is_negative
+        while args:
+            a = args.pop()
+            if a.is_Rational:
+                #-1/3 = NEG + DIV
+                if a is not S.One:
+                    if a.p < 0:
+                        ops.append(NEG)
+                    if a.q != 1:
+                        ops.append(DIV)
+                    continue
+            elif a.is_Mul:
+                if isneg(a):
+                    ops.append(NEG)
+                    if a.args[0] is S.NegativeOne:
+                        a = a.as_two_terms()[1]
+                    else:
+                        a = -a
+                n, d = fraction(a)
+                if n.is_Integer:
+                    ops.append(DIV)
+                    if n < 0:
+                        ops.append(NEG)
+                    args.append(d)
+                    continue # won't be -Mul but could be Add
+                elif d is not S.One:
+                    if not d.is_Integer:
+                        args.append(d)
+                    ops.append(DIV)
+                    args.append(n)
+                    continue # could be -Mul
+            elif a.is_Add:
+                aargs = list(a.args)
+                negs = 0
+                for i, ai in enumerate(aargs):
+                    if isneg(ai):
+                        negs += 1
+                        args.append(-ai)
+                        if i > 0:
+                            ops.append(SUB)
+                    else:
+                        args.append(ai)
+                        if i > 0:
+                            ops.append(ADD)
+                if negs == len(aargs): # -x - y = NEG + SUB
+                    ops.append(NEG)
+                elif isneg(aargs[0]): # -x + y = SUB, but we already recorded an ADD
+                    ops.append(SUB - ADD)
+                continue
+            if a.is_Pow and a.exp is S.NegativeOne:
+                ops.append(DIV)
+                args.append(a.base) # won't be -Mul but could be Add
+                continue
+            if (a.is_Mul or
+                a.is_Pow or
+                a.is_Function or
+                isinstance(a, Derivative) or
+                isinstance(a, C.Integral)):
+
+                o = C.Symbol(a.func.__name__.upper())
+                # count the args
+                if (a.is_Mul or
+                    isinstance(a, C.LatticeOp)):
+                   ops.append(o*(len(a.args) - 1))
+                else:
+                    ops.append(o)
+            args.extend(a.args)
+
+    elif type(expr) is dict:
+        ops = [count_ops(k, visual=visual) +
+               count_ops(v, visual=visual) for k, v in expr.iteritems()]
+    elif hasattr(expr, '__iter__'):
+        ops = [count_ops(i, visual=visual) for i in expr]
+    elif not isinstance(expr, Basic):
+        ops = []
+    else: # it's Basic not isinstance(expr, Expr):
+        assert isinstance(expr, Basic)
+        ops = [count_ops(a, visual=visual) for a in expr.args]
+
+    if not ops:
+        if visual:
+            return S.Zero
+        return 0
+
+    ops = Add(*ops)
+
+    if visual:
+        return ops
+
+    if ops.is_Number:
+        return int(ops)
+
+    return sum(int((a.args or [1])[0]) for a in Add.make_args(ops))
 
 from numbers import Rational, Integer
 from sympify import sympify

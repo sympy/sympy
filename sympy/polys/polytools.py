@@ -95,10 +95,10 @@ def _construct_domain(rep, **args):
                 if coeff.is_Rational:
                     coeff = (None, 0, QQ.from_sympy(coeff))
                 else:
-                    a, _ = coeff.as_coeff_factors()
+                    a, _ = coeff.as_coeff_add()
                     coeff -= a
 
-                    b, _ = coeff.as_coeff_terms()
+                    b, _ = coeff.as_coeff_mul()
                     coeff /= b
 
                     exts.add(coeff)
@@ -1682,7 +1682,7 @@ def _update_args(args, key, value):
     """Add a new `(key, value)` pair to arguments dict. """
     args = dict(args)
 
-    if not args.has_key(key):
+    if key not in args:
         args[key] = value
 
     return args

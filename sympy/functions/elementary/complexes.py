@@ -1,6 +1,8 @@
 from sympy.core import S, C, Function, Derivative
 from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.piecewise import Piecewise
 from sympy.core import Add, Mul
+from sympy.core.relational import Eq, Ne
 from sympy.utilities.iterables import iff
 
 ###############################################################################
@@ -175,17 +177,17 @@ class sign(Function):
         if arg.is_Function:
             if arg.func is sign: return arg
         if arg.is_Mul:
-            c, args = arg.as_coeff_terms()
+            c, args = arg.as_coeff_mul()
             unk = []
             is_neg = c.is_negative
             for ai in args:
-                if ai.is_negative == None:
+                if ai.is_negative is None:
                     unk.append(ai)
                 elif ai.is_negative:
                     is_neg = not is_neg
             if c is S.One and len(unk) == len(args):
                 return None
-            return iff(is_neg, S.NegativeOne, S.One) * cls(Mul(*unk))
+            return iff(is_neg, S.NegativeOne, S.One) * cls(arg._new_rawargs(*unk))
 
     is_bounded = True
 
@@ -249,7 +251,7 @@ class Abs(Function):
         if arg.is_zero:     return arg
         if arg.is_positive: return arg
         if arg.is_negative: return -arg
-        coeff, terms = arg.as_coeff_terms()
+        coeff, terms = arg.as_coeff_mul()
         if coeff is not S.One:
             return cls(coeff) * cls(Mul(*terms))
         if arg.is_real is False:
@@ -275,9 +277,14 @@ class Abs(Function):
                 return self.args[0]**other
         return
 
-    def nseries(self, x, x0, n):
+    def _eval_nseries(self, x, n):
         direction = self.args[0].leadterm(x)[0]
-        return sign(direction)*self.args[0].nseries(x, x0, n)
+        s = self.args[0]._eval_nseries(x, n=n)
+        when = Eq(direction, 0)
+        return Piecewise(
+                         ((s.subs(direction, 0)), when),
+                         (sign(direction)*s, True),
+                         )
 
     def _sage_(self):
         import sage.all as sage

@@ -70,7 +70,7 @@ class MathMLPrinter(Printer):
         return n.lower()
 
     def _print_Mul(self, expr):
-        coeff, terms  = expr.as_coeff_terms()
+        coeff, terms  = expr.as_coeff_mul()
 
         if coeff.is_negative:
             x = self.dom.createElement('apply')
@@ -107,7 +107,7 @@ class MathMLPrinter(Printer):
         plusNodes = list()
         for i in range(0,len(args)):
             arg = args[i]
-            coeff, terms = arg.as_coeff_terms()
+            coeff, terms = arg.as_coeff_mul()
             if(coeff.is_negative):
                 #use minus
                 x = self.dom.createElement('apply')
@@ -310,7 +310,7 @@ class MathMLPrinter(Printer):
         x.appendChild(self.dom.createElement(self.mathml_tag(e)))
 
         x_1 = self.dom.createElement('bvar')
-        for sym in e.symbols:
+        for sym in e.variables:
             x_1.appendChild(self._print(sym))
 
         x.appendChild(x_1)

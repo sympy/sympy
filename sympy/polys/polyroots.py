@@ -1,4 +1,4 @@
-from sympy.core.symbol import Symbol
+from sympy.core.symbol import Dummy
 from sympy.core.add import Add
 from sympy.core.mul import Mul
 from sympy.core import Expr, S
@@ -271,7 +271,7 @@ def roots(f, *gens, **flags):
         if gens:
             raise ValueError('redundant generators given')
 
-        x = Symbol('x', dummy=True)
+        x = Dummy('x')
 
         poly, i = {}, len(f)-1
 

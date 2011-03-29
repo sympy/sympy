@@ -31,13 +31,13 @@ class LatexPrinter(Printer):
     }
 
     def __init__(self, settings=None):
-        if settings is not None and settings.has_key('inline') and not settings['inline']:
+        if settings is not None and 'inline' in settings and not settings['inline']:
             # Change to "good" defaults for inline=False
             settings['mat_str'] = 'bmatrix'
             settings['mat_delim'] = None
         Printer.__init__(self, settings)
 
-        if self._settings.has_key('inline'):
+        if ('inline') in self._settings:
             warnings.warn("'inline' is deprecated, please use 'mode'. "
                 "'mode' can be one of 'inline', 'plain', 'equation', or "
                 "'equation*'.")
@@ -45,7 +45,7 @@ class LatexPrinter(Printer):
                 self._settings['mode'] = 'inline'
             else:
                 self._settings['mode'] = 'equation*'
-        if self._settings.has_key('mode'):
+        if 'mode' in self._settings:
             valid_modes = ['inline', 'plain', 'equation', \
                             'equation*']
             if self._settings['mode'] not in valid_modes:
@@ -161,7 +161,7 @@ class LatexPrinter(Printer):
         tex = str(self._print(args[0]))
 
         for term in args[1:]:
-            coeff = term.as_coeff_terms()[0]
+            coeff = term.as_coeff_mul()[0]
 
             if coeff.is_negative:
                 tex += r" %s" % self._print(term)
@@ -196,7 +196,7 @@ class LatexPrinter(Printer):
             return str_real
 
     def _print_Mul(self, expr):
-        coeff, terms = expr.as_coeff_terms()
+        coeff, terms = expr.as_coeff_mul()
 
         if not coeff.is_negative:
             tex = ""
@@ -340,16 +340,16 @@ class LatexPrinter(Printer):
         return tex
 
     def _print_Derivative(self, expr):
-        dim = len(expr.symbols)
+        dim = len(expr.variables)
 
         if dim == 1:
             tex = r"\frac{\partial}{\partial %s}" % \
-                self._print(expr.symbols[0])
+                self._print(expr.variables[0])
         else:
             multiplicity, i, tex = [], 1, ""
-            current = expr.symbols[0]
+            current = expr.variables[0]
 
-            for symbol in expr.symbols[1:]:
+            for symbol in expr.variables[1:]:
                 if symbol == current:
                     i = i + 1
                 else:

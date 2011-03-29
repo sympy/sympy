@@ -5,7 +5,7 @@ TODO:
 * Document default basis functionality.
 """
 
-from sympy import S, Add, Mul, Pow
+from sympy import Add, Mul, Pow, I, Expr
 
 from sympy.physics.quantum.dagger import Dagger
 from sympy.physics.quantum.commutator import Commutator
@@ -13,10 +13,7 @@ from sympy.physics.quantum.anticommutator import AntiCommutator
 from sympy.physics.quantum.innerproduct import InnerProduct
 from sympy.physics.quantum.qexpr import QExpr
 from sympy.physics.quantum.tensorproduct import TensorProduct
-from sympy.physics.quantum.matrixutils import (
-    sympy_to_numpy, sympy_to_scipy_sparse,
-    flatten_scalar
-)
+from sympy.physics.quantum.matrixutils import flatten_scalar
 
 __all__ = [
     'represent'
@@ -25,6 +22,19 @@ __all__ = [
 #-----------------------------------------------------------------------------
 # Represent
 #-----------------------------------------------------------------------------
+
+def _sympy_to_scalar(e):
+    """Convert from a sympy scalar to a Python scalar."""
+    if isinstance(e, Expr):
+        if e.is_Integer:
+            return int(e)
+        elif e.is_Real:
+            return float(e)
+        elif e.is_Rational:
+            return float(e)
+        elif e.is_Number or e.is_NumberSymbol or e == I:
+            return complex(e)
+    raise TypeError('Expected number, got: %r' % e)
 
 
 def represent(expr, **options):
@@ -105,10 +115,8 @@ def represent(expr, **options):
         return result
     elif isinstance(expr, Pow):
         exp = expr.exp
-        if format == 'numpy':
-            exp = int(sympy_to_numpy(exp).real)
-        elif format == 'scipy.sparse':
-            exp = int(sympy_to_scipy_sparse(exp).real)
+        if format == 'numpy' or format == 'scipy.sparse':
+            exp = _sympy_to_scalar(exp)
         return represent(expr.base, **options)**exp
     elif isinstance(expr, TensorProduct):
         new_args = [represent(arg, **options) for arg in expr.args]
@@ -127,10 +135,8 @@ def represent(expr, **options):
         return represent(Mul(expr.bra,expr.ket), **options)
     elif not isinstance(expr, Mul):
         # For numpy and scipy.sparse, we can only handle numerical prefactors.
-        if format == 'numpy':
-            return sympy_to_numpy(expr)
-        elif format == 'scipy.sparse':
-            return sympy_to_scipy_sparse(expr)
+        if format == 'numpy' or format == 'scipy.sparse':
+            return _sympy_to_scalar(expr)
         return expr
 
     if not isinstance(expr, Mul):

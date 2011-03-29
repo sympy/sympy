@@ -105,7 +105,7 @@ class PrettyPrinter(Printer):
 
     def _print_Derivative(self, deriv):
         # XXX use U('PARTIAL DIFFERENTIAL') here ?
-        syms = list(deriv.symbols)
+        syms = list(deriv.variables)
         syms.reverse()
         x = None
         for sym in syms:
@@ -122,7 +122,7 @@ class PrettyPrinter(Printer):
 
         pform = prettyForm('d')
         if len(syms) > 1:
-            pform = pform ** prettyForm(str(len(deriv.symbols)))
+            pform = pform ** prettyForm(str(len(deriv.variables)))
 
         pform = prettyForm(*pform.below(stringPict.LINE, x))
         pform.baseline = pform.baseline + 1
@@ -414,7 +414,7 @@ class PrettyPrinter(Printer):
         pforms = []
 
         for term in terms:
-            if term.is_Mul and term.as_coeff_terms()[0] < 0:
+            if term.is_Mul and term.args[0] < 0:
                 pform1 = self._print(-term)
 
                 if len(pforms) == 0:

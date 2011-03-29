@@ -1,7 +1,7 @@
 """This module implements tools for integrating rational functions. """
 
 from sympy import S, Symbol, symbols, I, log, atan, \
-    resultant, roots, collect, solve, RootSum, Lambda, cancel
+    resultant, roots, collect, solve, RootSum, Lambda, cancel, Dummy
 
 from sympy.polys import Poly, subresultants, resultant, ZZ
 from sympy.polys.polyroots import number_of_real_roots
@@ -57,7 +57,7 @@ def ratint(f, x, **flags):
         symbol = flags.get('symbol', 't')
 
         if not isinstance(symbol, Symbol):
-            t = Symbol(symbol, dummy=True)
+            t = Dummy(symbol)
         else:
             t = symbol
 
@@ -116,8 +116,8 @@ def ratint_ratpart(f, g, x):
     m = v.degree()
     d = g.degree()
 
-    A_coeffs = [ Symbol('a' + str(n-i), dummy=True) for i in xrange(0, n) ]
-    B_coeffs = [ Symbol('b' + str(m-i), dummy=True) for i in xrange(0, m) ]
+    A_coeffs = [ Dummy('a' + str(n-i)) for i in xrange(0, n) ]
+    B_coeffs = [ Dummy('b' + str(m-i)) for i in xrange(0, m) ]
 
     C_coeffs = A_coeffs + B_coeffs
 
@@ -152,7 +152,7 @@ def ratint_logpart(f, g, x, t=None):
     """
     f, g = Poly(f, x), Poly(g, x)
 
-    t = t or Symbol('t', dummy=True)
+    t = t or Dummy('t')
     a, b = g, f - g.diff()*Poly(t, x)
 
     R = subresultants(a, b)

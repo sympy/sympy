@@ -1,5 +1,5 @@
 from sympy import sin, cos, atan2, gamma, conjugate, sqrt, Factorial, \
-    Integral, Piecewise, Add, diff, symbols, S, Real
+    Integral, Piecewise, Add, diff, symbols, S, Real, Dummy
 from sympy import Catalan, EulerGamma, E, GoldenRatio, I, pi
 from sympy import Function, Rational, Integer, Lambda
 
@@ -325,7 +325,10 @@ def test_loops():
             code == expected % {'rhs': 'x(j)*A(i, j) + y(i)'})
 
 def test_dummy_loops():
-    i, m = symbols('i m', integer=True, dummy=True)
+    # the following line could also be
+    # [Dummy(s, integer=True) for s in 'im']
+    # or [Dummy(integer=True) for s in 'im']
+    i, m = symbols('i m', integer=True, cls=Dummy)
     x = IndexedBase('x')
     y = IndexedBase('y')
     i = Idx(i, m)
@@ -346,3 +349,66 @@ def test_derived_classes():
     printer = MyFancyFCodePrinter()
     x = symbols('x')
     assert printer.doprint(sin(x)) == "      bork = sin(x)"
+
+def test_indent():
+    codelines = (
+            'subroutine test(a)\n'
+            'integer :: a, i, j\n'
+            '\n'
+            'do\n'
+            'do \n'
+            'do j = 1, 5\n'
+            'if (a>b) then\n'
+            'if(b>0) then\n'
+            'a = 3\n'
+            'donot_indent_me = 2\n'
+            'do_not_indent_me_either = 2\n'
+            'ifIam_indented_something_went_wrong = 2\n'
+            'if_I_am_indented_something_went_wrong = 2\n'
+            'end should not be unindented here\n'
+            'end if\n'
+            'endif\n'
+            'end do\n'
+            'end do\n'
+            'enddo\n'
+            'end subroutine\n'
+            '\n'
+            'subroutine test2(a)\n'
+            'integer :: a\n'
+            'do\n'
+            'a = a + 1\n'
+            'end do \n'
+            'end subroutine\n'
+            )
+    expected = (
+            'subroutine test(a)\n'
+            'integer :: a, i, j\n'
+            '\n'
+            'do\n'
+            '   do \n'
+            '      do j = 1, 5\n'
+            '         if (a>b) then\n'
+            '            if(b>0) then\n'
+            '               a = 3\n'
+            '               donot_indent_me = 2\n'
+            '               do_not_indent_me_either = 2\n'
+            '               ifIam_indented_something_went_wrong = 2\n'
+            '               if_I_am_indented_something_went_wrong = 2\n'
+            '               end should not be unindented here\n'
+            '            end if\n'
+            '         endif\n'
+            '      end do\n'
+            '   end do\n'
+            'enddo\n'
+            'end subroutine\n'
+            '\n'
+            'subroutine test2(a)\n'
+            'integer :: a\n'
+            'do\n'
+            '   a = a + 1\n'
+            'end do \n'
+            'end subroutine\n'
+            )
+    p = FCodePrinter({'source_format':'free'})
+    result = p.indent_code(codelines)
+    assert result == expected

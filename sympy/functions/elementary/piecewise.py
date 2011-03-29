@@ -1,6 +1,6 @@
 from sympy.core import Basic, S, Function, diff, Number, sympify
-from sympy.core.relational import Relational
-from sympy.core.sets import Interval, Set
+from sympy.core.relational import Equality, Relational
+from sympy.core.sets import Set
 
 class ExprCondPair(Function):
     """Represents an expression, condition pair."""
@@ -23,6 +23,14 @@ class ExprCondPair(Function):
     @property
     def cond(self):
         return self.args[1]
+
+    @property
+    def free_symbols(self):
+        # Overload Basic.free_symbols because self.args[1] may contain non-Basic
+        result = self.expr.free_symbols
+        if hasattr(self.cond, 'free_symbols'):
+            result |= self.cond.free_symbols
+        return result
 
     def __iter__(self):
         yield self.expr
@@ -151,7 +159,11 @@ class Piecewise(Function):
 
     def _eval_interval(self, sym, a, b):
         """Evaluates the function along the sym in a given interval ab"""
-        # FIXME: Currently only supports conds of type sym < Num, or Num < sym
+        # FIXME: Currently complex intervals are not supported.  A possible
+        # replacement algorithm, discussed in issue 2128, can be found in the
+        # following papers;
+        #     http://portal.acm.org/citation.cfm?id=281649
+        #     http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.70.4127&rep=rep1&type=pdf
         int_expr = []
         mul = 1
         if a > b:
@@ -172,15 +184,16 @@ class Piecewise(Function):
                     break
                 else:
                     continue
+            elif isinstance(cond, Equality):
+                continue
             curr = list(cond.args)
-            if cond.args[0] == sym:
+            if cond.args[0].has(sym):
                 curr[0] = S.NegativeInfinity
-            elif cond.args[1] == sym:
+            elif cond.args[1].has(sym):
                 curr[1] = S.Infinity
             else:
-                raise NotImplementedError, \
-                    "Currently only supporting evaluation with only " \
-                    "sym on one side of the relation."
+                raise NotImplementedError(\
+                        "Unable handle interval evaluation of expression.")
             curr = [max(a, curr[0]), min(b, curr[1])]
             for n in xrange(len(int_expr)):
                 if self.__eval_cond(curr[0] < int_expr[n][1]) and \
@@ -209,9 +222,9 @@ class Piecewise(Function):
         if holes and default is not None:
             int_expr.extend(holes)
         elif holes and default == None:
-            raise ValueError, "Called interval evaluation over piecewise " \
-                              "function on undefined intervals %s" % \
-                              ", ".join([str((h[0], h[1])) for h in holes])
+            raise ValueError("Called interval evaluation over piecewise " \
+                             "function on undefined intervals %s" % \
+                             ", ".join([str((h[0], h[1])) for h in holes]))
 
         # Finally run through the intervals and sum the evaluation.
         ret_fun = 0

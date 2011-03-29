@@ -21,7 +21,7 @@ def test_swap_back():
     # solve and tested here.
     # This appears to be fixed - the equation is not solved.
     x = Symbol('x')
-    f = Function('f', dummy = True)
+    f = Function('f')
     raises(NotImplementedError, "solve(Eq(log(f(x)), Integral(x, (x, 1, f(x)))), f(x))")
 
 def test_guess_poly():
@@ -200,8 +200,10 @@ def test_tsolve_1():
     raises(NotImplementedError, "solve(Eq(cos(x), sin(x)), x)")
 
     # XXX in the following test, log(2*y + 2*...) should -> log(2) + log(y +...)
-    assert solve(exp(x)+exp(-x)-y,x)    == [-log(4) + log(2*y + 2*(-4 + y**2)**Rational(1,2)),
-                                            -log(4) + log(2*y - 2*(-4 + y**2)**Rational(1,2))]
+    assert solve(exp(x) + exp(-x) - y, x)    == [
+        -log(4) + log(2*y + 2*(-4 + y**2)**Rational(1,2)),
+        -log(4) + log(2*y - 2*(-4 + y**2)**Rational(1,2))
+                                                ]
     assert solve(exp(x)-3, x) == [log(3)]
     assert solve(Eq(exp(x), 3), x) == [log(3)]
     assert solve(log(x)-3, x) == [exp(3)]
@@ -236,8 +238,6 @@ def test_tsolve_1():
 
     assert solve(z*cos(x), x)        == [acos(0)]
 
-    assert solve(exp(x)+exp(-x)-y, x)== [-log(4) + log(2*y + 2*(-4 + y**2)**(Rational(1, 2))),
-                                          -log(4) + log(2*y - 2*(-4 + y**2)**(Rational(1, 2)))]
     # issue #1409
     assert solve(y - b*x/(a+x), x) in [[-a*y/(y - b)], [a*y/(b - y)]]
     assert solve(y - b*exp(a/x), x) == [a/(-log(b) + log(y))]
@@ -297,4 +297,3 @@ def test_issue626():
     F = x**2 + f(x)**2 - 4*x - 1
     e = F.diff(x)
     assert solve(e, f(x).diff(x)) == [(2-x)/f(x)]
-

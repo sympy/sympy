@@ -3,7 +3,10 @@ from sympy import Symbol, symbols, together, hypersimp, factorial, binomial, \
         simplify, trigsimp, cos, tan, cot, log, ratsimp, Matrix, pi, integrate, \
         solve, nsimplify, GoldenRatio, sqrt, E, I, sympify, atan, Derivative, \
         S, diff, oo, Eq, Integer, gamma, acos, Integral, logcombine, \
-        separatevars, Wild
+        separatevars, \
+        numer, \
+        denom, \
+        Wild
 from sympy.utilities import all
 from sympy.utilities.pytest import XFAIL
 
@@ -265,6 +268,9 @@ def test_powsimp():
     assert powsimp(x*y**(z**x*z**y), deep=True) == x*y**(z**(x + y))
     assert powsimp((z**x*z**y)**x, deep=True) == (z**(x + y))**x
     assert powsimp(x*(z**x*z**y)**x, deep=True) == x*(z**(x + y))**x
+    p = symbols('p', positive=True)
+    assert powsimp((1/x)**log(2)/x) == (1/x)**(1 + log(2))
+    assert powsimp((1/p)**log(2)/p) == p**(-1 - log(2))
 
 def test_powsimp_nc():
     x, y, z = symbols('xyz')
@@ -567,23 +573,26 @@ def test_posify():
 def test_powdenest():
     from sympy import powdenest
     from sympy.abc import x, y, z, a, b
+    p = symbols('p', positive=True)
+    i, j = symbols('i,j', integer=1)
+
     assert powdenest(x) == x
     assert powdenest(x + 2*(x**(2*a/3))**(3*x)) == x + 2*(x**(a/3))**(6*x)
     assert powdenest((exp(2*a/3))**(3*x)) == (exp(a/3))**(6*x)
     assert powdenest((x**(2*a/3))**(3*x)) == (x**(a/3))**(6*x)
     assert powdenest(exp(3*x*log(2))) == 2**(3*x)
-    p = symbols('p', positive=True)
     assert powdenest(sqrt(p**2)) == p
-    i, j = symbols('ij', integer=1)
     assert powdenest((x**x)**(i + j)) # -X-> (x**x)**i*(x**x)**j == x**(x*(i + j))
     assert powdenest(exp(3*y*log(x))) == x**(3*y)
     assert powdenest(exp(y*(log(a) + log(b)))) == (a*b)**y
     assert powdenest(exp(3*(log(a) + log(b)))) == a**3*b**3
-    i = Symbol('i', integer=True)
-    p = Symbol('p', positive=True)
     assert powdenest(((x**(2*i))**(3*y))**x) == ((x**(2*i))**(3*y))**x
-    assert powdenest(((x**(2*i))**(3*y))**x, force=1) == x**(6*i*x*y)
+    assert powdenest(((x**(2*i))**(3*y))**x, force=True) == x**(6*i*x*y)
     assert powdenest(((x**(2*a/3))**(3*y/i))**x) == ((x**(a/3))**(y/i))**(6*x)
     assert powdenest((x**(2*i)*y**(4*i))**z,1) == (x*y**2)**(2*i*z)
-    assert powdenest((((x**2*y**4)**a)**(x*y))**3) == (x**2*y**4)**(3*a*x*y)
-    assert powdenest((((x**2*y**4)**a)**(x*y)), force=1) == (x**2*y**4)**(a*x*y)
+    e = ((x**2*y**4)**a)**(x*y)
+    assert powdenest(e) == e
+    assert powdenest((((x**2*y**4)**a)**(x*y)), force=True) == (x**2*y**4)**(a*x*y)
+    e = (((x**2*y**4)**a)**(x*y))**3
+    assert powdenest(e) == ((x**2*y**4)**a)**(3*x*y)
+    assert powdenest((((x**2*y**4)**a)**(x*y))**3, force=True) == (x**2*y**4)**(3*a*x*y)

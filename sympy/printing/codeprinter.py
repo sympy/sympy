@@ -87,7 +87,8 @@ class CodePrinter(StrPrinter):
         if linds and not rinds:
             rinds = linds
         if rinds != linds:
-            raise ValueError("lhs indices must match non-dummy rhs indices")
+            raise ValueError("lhs indices must match non-dummy"
+                    " rhs indices in %s" % expr)
 
         return self._sort_optimized(rinds, assign_to)
 

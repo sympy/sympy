@@ -747,7 +747,7 @@ This is a nice ascii-art printing produced by a ``pprint`` function:
 
 
 See also the wiki `Pretty Printing
-<http://wiki.sympy.org/wiki/Pretty_Printing>`_ for more examples of a nice
+<https://github.com/sympy/sympy/wiki/Pretty-Printing>`_ for more examples of a nice
 unicode printing.
 
 Tip: To make the pretty printing default in the python interpreter, use::

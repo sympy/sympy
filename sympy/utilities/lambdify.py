@@ -356,10 +356,10 @@ def implemented_function(symfunc, implementation):
     5
     """
     # Delayed import to avoid circular imports
-    from sympy.core.function import FunctionClass, Function
+    from sympy.core.function import UndefinedFunction
     # if name, create anonymous function to hold implementation
     if isinstance(symfunc, basestring):
-        symfunc = FunctionClass(Function, symfunc)
+        symfunc = UndefinedFunction(symfunc)
     # We need to attach as a method because symfunc will be a class
     symfunc._imp_ = staticmethod(implementation)
     return symfunc

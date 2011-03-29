@@ -415,3 +415,13 @@ def test_issue1448():
     assert tan(x).rewrite(cot) == 1/cot(x)
     assert cot(x).fdiff() == -1 - cot(x)**2
 
+def test_as_leading_term_issue2173():
+    x = Symbol('x')
+    assert sin(x).as_leading_term(x) == x
+    assert cos(x).as_leading_term(x) == 1
+    assert tan(x).as_leading_term(x) == x
+    assert cot(x).as_leading_term(x) == 1/x
+    assert asin(x).as_leading_term(x) == x
+    assert acos(x).as_leading_term(x) == x
+    assert atan(x).as_leading_term(x) == x
+    assert acot(x).as_leading_term(x) == x

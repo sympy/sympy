@@ -3,7 +3,7 @@ from singleton import S
 from expr import Expr
 from sympify import _sympify, sympify
 from cache import cacheit
-from sympy.utilities.iterables import all
+from compatibility import all
 
 # from add import Add   /cyclic/
 # from mul import Mul   /cyclic/
@@ -34,10 +34,11 @@ class AssocOp(Expr):
         if len(args) == 1:
             return args[0]
 
-        if assumptions.get('evaluate') is False:
+        if not assumptions.pop('evaluate', True):
             obj = Expr.__new__(cls, *args, **assumptions)
-            obj.is_commutative = all(arg.is_commutative for arg in args)
+            obj.is_commutative = all(a.is_commutative for a in args)
             return obj
+
         c_part, nc_part, order_symbols = cls.flatten(args)
         if len(c_part) + len(nc_part) <= 1:
             if c_part:
@@ -54,27 +55,94 @@ class AssocOp(Expr):
             obj = C.Order(obj, *order_symbols)
         return obj
 
-    def _new_rawargs(self, *args):
+    def _new_rawargs(self, *args, **kwargs):
         """create new instance of own class with args exactly as provided by caller
+           but returning the self class identity if args is empty.
 
            This is handy when we want to optimize things, e.g.
 
-           >>> from sympy import Mul, symbols
-           >>> from sympy.abc import x, y
-           >>> e = Mul(3,x,y)
-           >>> e.args
-           (3, x, y)
-           >>> Mul(*e.args[1:])
-           x*y
-           >>> e._new_rawargs(*e.args[1:])  # the same as above, but faster
-           x*y
+               >>> from sympy import Mul, symbols, S
+               >>> from sympy.abc import x, y
+               >>> e = Mul(3, x, y)
+               >>> e.args
+               (3, x, y)
+               >>> Mul(*e.args[1:])
+               x*y
+               >>> e._new_rawargs(*e.args[1:])  # the same as above, but faster
+               x*y
+
+           Note: use this with caution. There is no checking of arguments at
+           all. This is best used when you are rebuilding an Add or Mul after
+           simply removing one or more terms. If modification which result,
+           for example, in extra 1s being inserted (as when collecting an
+           expression's numerators and denominators) they will not show up in
+           the result but a Mul will be returned nonetheless:
+
+               >>> m = (x*y)._new_rawargs(S.One, x); m
+               x
+               >>> m == x
+               False
+               >>> m.is_Mul
+               True
+
+           Another issue to be aware of is that the commutativity of the result
+           is based on the commutativity of self. If you are rebuilding the
+           terms that came from a commutative object then there will be no
+           problem, but if self was non-commutative then what you are
+           rebuilding may now be commutative.
+
+           Although this routine tries to do as little as possible with the
+           input, getting the commutativity right is important, so this level
+           of safety is enforced: commutativity will always be recomputed if
+           either a) self has no is_commutate attribute or b) self is
+           non-commutative and kwarg `reeval=False` has not been passed.
+
+           If you don't have an existing Add or Mul and need one quickly, try
+           the following.
+
+               >>> m = object.__new__(Mul)
+               >>> m._new_rawargs(x, y)
+               x*y
+
+           Note that the commutativity is always computed in this case since
+           m doesn't have an is_commutative attribute; reeval is ignored:
+
+               >>> _.is_commutative
+               True
+               >>> hasattr(m, 'is_commutative')
+               False
+               >>> m._new_rawargs(x, y, reeval=False).is_commutative
+               True
+
+           It is possible to define the commutativity of m. If it's False then
+           the new Mul's commutivity will be re-evaluated:
+
+               >>> m.is_commutative = False
+               >>> m._new_rawargs(x, y).is_commutative
+               True
+
+           But if reeval=False then a non-commutative self can pass along
+           its non-commutativity to the result (but at least you have to *work*
+           to get this wrong):
+
+               >>> m._new_rawargs(x, y, reeval=False).is_commutative
+               False
 
         """
-        if len(args) == 1:
+        if len(args) > 1:
+            obj = Expr.__new__(type(self), *args)  # NB no assumptions for Add/Mul
+
+            if (hasattr(self, 'is_commutative') and
+                (self.is_commutative or
+                not kwargs.pop('reeval', True))):
+                obj.is_commutative = self.is_commutative
+            else:
+                obj.is_commutative = all(a.is_commutative for a in args)
+
+        elif len(args) == 1:
             obj = args[0]
         else:
-            obj = Expr.__new__(type(self), *args)  # NB no assumptions for Add/Mul
-            obj.is_commutative = self.is_commutative
+            obj = self.identity
 
         return obj
 
@@ -91,8 +159,6 @@ class AssocOp(Expr):
             new_seq.append(o)
         # c_part, nc_part, order_symbols
         return [], new_seq, None
-
-    _eval_subs = Expr._seq_subs
 
     def _matches_commutative(self, expr, repl_dict={}, evaluate=False):
         """
@@ -151,6 +217,9 @@ class AssocOp(Expr):
             return self.subs(repl_dict.items()).matches(expr, repl_dict)
 
         # handle simple patterns
+        if self == expr:
+            return repl_dict
+
         d = self._matches_simple(expr, repl_dict)
         if d is not None:
             return d

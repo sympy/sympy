@@ -5,6 +5,8 @@ from assumptions import AssumeMeths, make__get_assumption
 from cache import cacheit
 from core import BasicMeta, BasicType, C
 from sympify import _sympify, sympify, SympifyError
+from compatibility import any, all
+
 
 class Basic(AssumeMeths):
     """
@@ -467,7 +469,7 @@ class Basic(AssumeMeths):
                     except TypeError:
                         #one or more types is in implicit form
                         for t in typ:
-                            if type(type(t)) is type:
+                            if isinstance(t, type):
                                 if isinstance(expr, t):
                                     result.add(expr)
                             else:
@@ -487,6 +489,22 @@ class Basic(AssumeMeths):
 
         return _atoms(self, typ=types)
 
+    @property
+    def free_symbols(self):
+        """Return from the atoms of self those which are free symbols.
+
+        For most expressions, all symbols are free symbols. For some classes
+        this is not true. e.g. Integrals use Symbols for the dummy variables
+        which are bound variables, so Integral has a method to return all symbols
+        except those. Derivative keeps track of symbols with respect to which it
+        will perform a derivative; those are bound variables, too, so it has
+        its own symbols method.
+
+        Any other method that uses bound variables should implement a symbols
+        method."""
+        union = set.union
+        return reduce(union, [arg.free_symbols for arg in self.args], set())
+
     def is_hypergeometric(self, k):
         from sympy.simplify import hypersimp
         return hypersimp(self, k) is not None
@@ -495,7 +513,7 @@ class Basic(AssumeMeths):
     def is_number(self):
         """Returns True if 'self' is a number.
 
-           >>> from sympy import log
+           >>> from sympy import log, Integral
            >>> from sympy.abc import x, y
 
            >>> x.is_number
@@ -504,10 +522,12 @@ class Basic(AssumeMeths):
            False
            >>> (2 + log(2)).is_number
            True
+           >>> (2 + Integral(2, x)).is_number
+           False
+           >>> (2 + Integral(2, (x, 1, 2))).is_number
+           True
 
         """
-        from sympy.utilities import all
-
         if not self.args:
             return False
         return all(obj.is_number for obj in self.iter_basic_args())
@@ -583,8 +603,8 @@ class Basic(AssumeMeths):
 
     def is_rational_function(self, *syms):
         """
-        Test whether function is rational function - ratio of two polynomials.
-        When no arguments are present, Basic.atoms(Symbol) is used instead.
+        Test whether function is a ratio of two polynomials in the given
+        symbols, syms. When syms is not given, all symbols will be used.
 
         Example:
 
@@ -602,7 +622,7 @@ class Basic(AssumeMeths):
 
         """
         p, q = self.as_numer_denom()
-
+        # sending no syms to is_polynomial will cause it to use all symbols
         if p.is_polynomial(*syms):
             if q.is_polynomial(*syms):
                 return True
@@ -779,17 +799,6 @@ class Basic(AssumeMeths):
 
         return self._subs_list(subst)
 
-    def _seq_subs(self, old, new):
-        if self==old:
-            return new
-        #new functions are initialized differently, than old functions
-        from function import FunctionClass
-        if isinstance(self.func, FunctionClass):
-            args = self.args
-        else:
-            args = (self.func,)+self
-        return self.func(*[s.subs(old, new) for s in args])
-
     def __contains__(self, what):
         if self == what or self.is_Function and self.func is what: return True
         for x in self._args:
@@ -807,72 +816,46 @@ class Basic(AssumeMeths):
         return False
 
     @cacheit
-    def has(self, *patterns, **flags):
-        """Return True if self has any of the patterns. If the `all` flag
-        is True then return True if all of the patterns are present.
+    def has(self, *patterns):
+        """
+        Test whether any subexpression matches any of the patterns.
 
-           >>> from sympy import sin, S
-           >>> from sympy.abc import x, y, z
+        Examples:
+        >>> from sympy import sin, S
+        >>> from sympy.abc import x, y, z
+        >>> (x**2 + sin(x*y)).has(z)
+        False
+        >>> (x**2 + sin(x*y)).has(x, y, z)
+        True
+        >>> x.has(x)
+        True
 
-           >>> (x**2 + sin(x*y)).has(z)
-           False
-
-           >>> (x**2 + sin(x*y)).has(x, y, z)
-           True
-
-           When `all` is True then True is returned only if all of the
-           patterns are present:
-
-           >>> (x**2 + sin(x*y)).has(x, y, z, all=True)
-           False
-
-           If there are no patterns, False is always returned:
-           "something doesn't have nothing"
-
-           >>> (x).has()
-           False
-           >>> (S.One).has()
-           False
-
+        Note that ``expr.has(*patterns)`` is exactly equivalent to
+        ``any(expr.has(p) for p in patterns)``. In particular, ``False`` is
+        returned when the list of patterns is empty.
+        >>> x.has()
+        False
 
         """
-        from sympy.utilities.iterables import all, any
-        from sympy.core.symbol import Wild
-
-        def search(expr, target, hit):
-            if hasattr(expr, '__iter__') and hasattr(expr, '__len__'):
-                # this 'if' clause is needed until all objects use
-                # sympy containers
-                for i in expr:
-                    if search(i, target, hit):
-                        return True
-            elif not isinstance(expr, Basic):
-                pass
-            elif target(expr) and hit(expr):
+        def search(expr, test):
+            if not isinstance(expr, Basic):
+                try:
+                    return any(search(i, test) for i in expr)
+                except TypeError:
+                    return False
+            elif test(expr):
                 return True
             else:
-                for term in expr.iter_basic_args():
-                    if search(term, target, hit):
-                        return True
-            return False
+                return any(search(i, test) for i in expr.iter_basic_args())
 
-        def _has(p):
-            p = sympify(p)
+        def _match(p):
             if isinstance(p, BasicType):
-                return search(self, lambda w: isinstance(w, p), lambda w: True)
-            if p.is_Atom and not isinstance(p, Wild):
-                return search(self, lambda w: isinstance(w, p.func), lambda w: w in [p])
-            return search(self, lambda w: p.matches(w) is not None, lambda w: True)
+                return lambda w: isinstance(w, p)
+            else:
+                return lambda w: p.matches(w) is not None
 
-        if not patterns:
-            return False # something doesn't have nothing
-
-        patterns = set(patterns)
-
-        if flags.get('all', False):
-            return all(_has(p) for p in patterns)
-        else:
-            return any(_has(p) for p in patterns)
+        patterns = map(sympify, patterns)
+        return any(search(self, _match(p)) for p in patterns)
 
     def matches(self, expr, repl_dict={}, evaluate=False):
         """
@@ -895,6 +878,7 @@ class Basic(AssumeMeths):
 
         if self == expr:
             return repl_dict
+
         if len(self.args) != len(expr.args):
             return None
 
@@ -938,22 +922,13 @@ class Basic(AssumeMeths):
 
         """
         pattern = sympify(pattern)
-        return pattern.matches(self, {})
+        return pattern.matches(self)
 
-    @cacheit
-    def count_ops(self, symbolic=True):
-        """ Return the number of operations in expressions.
-
-        Examples:
-        >>> from sympy.abc import a, b, x
-        >>> from sympy import sin
-        >>> (1+a+b**2).count_ops()
-        POW + 2*ADD
-        >>> (sin(x)*x+sin(x)**2).count_ops()
-        2 + ADD + MUL + POW
-
-        """
-        return Integer(len(self)-1) + sum([t.count_ops(symbolic=symbolic) for t in self])
+    def count_ops(self, visual=None):
+        """wrapper for count_ops that returns the operation count."""
+        from sympy import count_ops
+        return count_ops(self, visual)
+        return sum(a.count_ops(visual) for a in self.args)
 
     def doit(self, **hints):
         """Evaluate objects that are not evaluated by default like limits,
@@ -1041,10 +1016,9 @@ class Atom(Basic):
 
     __slots__ = []
 
-    def matches(self, expr, repl_dict, evaluate=False):
+    def matches(self, expr, repl_dict={}, evaluate=False):
         if self == expr:
             return repl_dict
-        return None
 
     def _eval_subs(self, old, new):
         if self == old:
@@ -1052,12 +1026,10 @@ class Atom(Basic):
         else:
             return self
 
-    def count_ops(self, symbolic=True):
-        from singleton import S
-        return S.Zero
+    def as_numer_denom(self):
+        return self, S.One
 
     def doit(self, **hints):
         return self
 
-
-
+from sympy.core.singleton import S

@@ -8,6 +8,6 @@ def setup_test_printer(*args, **kwargs):
     return p
 
 def test_print_Dummy():
-    d = C.Symbol('d', dummy=True)
+    d = C.Dummy('d')
     p = setup_test_printer()
     assert p._print_Dummy(d) == "d_%i" % d.dummy_index

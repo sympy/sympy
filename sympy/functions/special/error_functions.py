@@ -29,9 +29,7 @@ class erf(Function):
             elif arg.is_negative:
                 return -cls(-arg)
         elif arg.is_Mul:
-            coeff, terms = arg.as_coeff_terms()
-
-            if coeff.is_negative:
+            if arg.as_coeff_mul()[0].is_negative:
                 return -cls(-arg)
 
     @staticmethod

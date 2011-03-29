@@ -1,67 +1,9 @@
-from sympy import Lambda, Symbol, Function, WildFunction, Derivative, sqrt, \
-        log, exp, Rational, Real, sign, Basic, sin, cos, diff, I, re, im, \
-        oo, zoo, nan, E, expand, pi, O, Sum
+from sympy import Lambda, Symbol, Function, Derivative, sqrt, \
+        log, exp, Rational, Real, sin, cos, diff, I, re, im, \
+        oo, zoo, nan, E, expand, pi, O, Sum, S
 from sympy.utilities.pytest import XFAIL, raises
 from sympy.abc import x, y
 from sympy.core.function import PoleError
-
-
-def test_log():
-    assert log(2) > 0
-    assert log(1).is_zero
-    assert log(0.5).is_negative == True
-
-def test_exp_log():
-    x = Symbol("x", real=True)
-    assert log(exp(x)) == x
-    assert exp(log(x)) == x
-
-def test_log_expansion():
-    x = Symbol("x", positive=True)
-    y = Symbol("y", positive=True)
-
-    # ok in interactive, fails in py.test
-    #assert log(x*y) != log(x)+log(y)
-    #assert log(x**2) != 2*log(x)
-
-    assert log(x*y).expand() == log(x)+log(y)
-    assert log(x**2).expand() == 2*log(x)
-    assert (log(x**-5)**-1).expand() == -1/log(x)/5
-
-def test_log_hashing_bug():
-    x = Symbol("y")
-    assert x != log(log(x))
-    assert hash(x) != hash(log(log(x)))
-    assert log(x) != log(log(log(x)))
-
-    e = 1/log(log(x)+log(log(x)))
-    assert e.base.func is log
-    e = 1/log(log(x)+log(log(log(x))))
-    assert e.base.func is log
-
-    x = Symbol("x")
-    e = log(log(x))
-    assert e.func is log
-    assert not x.func is log
-    assert hash(log(log(x))) != hash(x)
-    assert e != x
-
-def test_sign():
-    assert sign(log(2)) == 1
-
-def test_exp_bug():
-    x = Symbol("x")
-    assert exp(1*log(x)) == x
-
-def test_exp_expand():
-    x = Symbol("x")
-    y = Symbol("y")
-
-    e = exp(log(Rational(2))*(1+x)-log(Rational(2))*x)
-    assert e.expand() == 2
-    assert exp(x+y) != exp(x)*exp(y)
-    assert exp(x+y).expand() == exp(x)*exp(y)
-
 
 def test_f_expand_complex():
     f = Function('f')
@@ -153,23 +95,13 @@ def test_diff_symbols():
     y = Symbol('y')
     z = Symbol('z')
     f = Function('f')
-    g = Function('g')
 
     assert diff(f(x, y, z), x, y, z) == Derivative(f(x, y, z), x, y, z)
     assert diff(f(x, y, z), x, x, x) == Derivative(f(x, y, z), x, x, x)
     assert diff(f(x, y, z), x, 3) == Derivative(f(x, y, z), x, 3)
-    assert diff([f(x, y, z), g(x, y, z)], [x, y, z, (x, x), (y, 2), (z, 3),
-    (x, y, z, 2), (x, x, x)]) == \
-        [[Derivative(f(x, y, z), x), Derivative(f(x, y, z), y),
-          Derivative(f(x, y, z), z), Derivative(f(x, y, z), x, x),
-          Derivative(f(x, y, z), y, y), Derivative(f(x, y, z), z, z, z),
-          Derivative(f(x, y, z), x, y, z, z), Derivative(f(x, y, z), x, x, x)],
-        [Derivative(g(x, y, z), x), Derivative(g(x, y, z), y),
-          Derivative(g(x, y, z), z), Derivative(g(x, y, z), x, x),
-          Derivative(g(x, y, z), y, y), Derivative(g(x, y, z), z, z, z),
-          Derivative(g(x, y, z), x, y, z, z), Derivative(g(x, y, z), x, x, x)]]
+
     # issue 1929
-    assert diff(-z + x/y, (z, x, y)) == [-1, 1/y, -x/y**2]
+    assert [diff(-z + x/y, sym) for sym in (z, x, y)] == [-1, 1/y, -x/y**2]
     assert diff(f(x, y, z), x, y, z, 2) == Derivative(f(x, y, z), x, y, z, z)
     assert diff(f(x, y, z), x, y, z, 2, evaluate=False) == \
         Derivative(f(x, y, z), x, y, z, z)
@@ -177,30 +109,6 @@ def test_diff_symbols():
         Derivative(f(x, y, z), x, y, z, z)
     assert Derivative(Derivative(f(x, y, z), x), y)._eval_derivative(z) == \
         Derivative(f(x, y, z), x, y, z)
-
-@XFAIL
-def test_combine():
-    # XXX combine no longer exists
-    x = Symbol("x")
-    y = Symbol("y")
-    assert exp(x)*exp(-x) != 1
-    assert (exp(x)*exp(-x)).combine() == 1
-
-    assert exp(x)**2 != exp(2*x)
-    assert (exp(x)**2).combine() == exp(2*x)
-
-    assert exp(x)*exp(-x/2)*exp(-x/2) != 1
-    assert (exp(x)*exp(-x/2)*exp(-x/2)).combine() == 1
-
-    assert (2*log(x)).combine() == log(x**2)
-    assert exp(2*log(x)) != x**2
-    assert exp(2*log(x)).combine() == x**2
-
-    assert exp(x)*exp(-x)-1 !=0
-    assert (exp(x)*exp(-x)-1).combine() == 0
-
-    assert (2*exp(x)*exp(-x)).combine() == 2
-    assert (x/exp(x)*exp(-x)).combine() == x*exp(-2*x)
 
 def test_Lambda():
     e = Lambda(x, x**2)
@@ -263,9 +171,7 @@ def test_function_comparable():
     assert cos(Rational(1,3)).is_comparable == True
 
 @XFAIL
-def test_function_comparable_fail():
-    x = Symbol('x')
-
+def test_function_comparable():
     assert sin(oo).is_comparable    == False
     assert sin(-oo).is_comparable   == False
     assert sin(zoo).is_comparable   == False
@@ -278,8 +184,7 @@ def test_deriv1():
     assert f(g(x)).diff(x) == Derivative(f(g(x)), g(x)) * Derivative(g(x), x)
 
 def test_deriv2():
-    f=Function('f')
-    g=Function('g')
+    f = Function('f')
     x = Symbol('x')
 
     assert f(x).diff(x) == Derivative(f(x), x)
@@ -293,8 +198,6 @@ def test_deriv2():
     assert f(3*sin(x)).diff(x) == 3*Derivative(f(3*sin(x)), 3*sin(x)) * cos(x)
 
 def test_deriv3():
-    f=Function('f')
-    g=Function('g')
     x = Symbol('x')
 
     assert (x**3).diff(x) == 3*x**2
@@ -339,10 +242,10 @@ def test_function_non_commutative():
 
 def test_function__eval_nseries():
     x = Symbol('x')
-    assert sin(x)._eval_nseries(x,0,2) == x + O(x**2)
-    assert sin(x+1)._eval_nseries(x,0,2) == x*cos(1) + sin(1) + O(x**2)
-    assert sin(pi*(1-x))._eval_nseries(x,0,2) == pi*x + O(x**2)
-    raises(PoleError, 'sin(1/x)._eval_nseries(x,0,2)')
+    assert sin(x)._eval_nseries(x,2) == x + O(x**2)
+    assert sin(x+1)._eval_nseries(x,2) == x*cos(1) + sin(1) + O(x**2)
+    assert sin(pi*(1-x))._eval_nseries(x,2) == pi*x + O(x**2)
+    raises(PoleError, 'sin(1/x)._eval_nseries(x,2)')
 
 def test_doit():
     n = Symbol('n', integer = True)

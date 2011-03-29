@@ -1,6 +1,6 @@
 """Efficient functions for generating orthogonal polynomials. """
 
-from sympy import sympify, Symbol
+from sympy import sympify, Dummy
 
 from sympy.utilities import cythonized
 
@@ -33,7 +33,7 @@ def chebyshevt_poly(n, x=None, **args):
     if x is not None:
         x = sympify(x)
     else:
-        x = Symbol('x', dummy=True)
+        x = Dummy('x')
 
     poly = Poly(DMP(dup_chebyshevt(int(n), ZZ), ZZ), x)
 
@@ -61,7 +61,7 @@ def chebyshevu_poly(n, x=None, **args):
     if x is not None:
         x = sympify(x)
     else:
-        x = Symbol('x', dummy=True)
+        x = Dummy('x')
 
     poly = Poly(DMP(dup_chebyshevu(int(n), ZZ), ZZ), x)
 
@@ -93,7 +93,7 @@ def hermite_poly(n, x=None, **args):
     if x is not None:
         x = sympify(x)
     else:
-        x = Symbol('x', dummy=True)
+        x = Dummy('x')
 
     poly = Poly(DMP(dup_hermite(int(n), ZZ), ZZ), x)
 
@@ -123,7 +123,7 @@ def legendre_poly(n, x=None, **args):
     if x is not None:
         x = sympify(x)
     else:
-        x = Symbol('x', dummy=True)
+        x = Dummy('x')
 
     poly = Poly(DMP(dup_legendre(int(n), QQ), QQ), x)
 
@@ -153,7 +153,7 @@ def laguerre_poly(n, x=None, **args):
     if x is not None:
         x = sympify(x)
     else:
-        x = Symbol('x', dummy=True)
+        x = Dummy('x')
 
     poly = Poly(DMP(dup_laguerre(int(n), QQ), QQ), x)
 

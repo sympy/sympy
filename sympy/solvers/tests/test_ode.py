@@ -1,7 +1,7 @@
 from sympy import Function, dsolve, Symbol, sin, cos, sinh, acos, tan, cosh, \
         I, exp, log, simplify, normal, together, ratsimp, powsimp, \
         fraction, radsimp, Eq, sqrt, pi, erf,  diff, Rational, asinh, trigsimp, \
-        S, RootOf, Poly, Integral, atan, Equality, solve, O, LambertW
+        S, RootOf, Poly, Integral, atan, Equality, solve, O, LambertW, Dummy
 from sympy.abc import x, y, z
 from sympy.solvers.ode import ode_order, homogeneous_order, \
         _undetermined_coefficients_match, classify_ode, checkodesol, constant_renumber
@@ -180,12 +180,12 @@ def test_old_ode_tests():
     sol1 = Eq(f(x),C1)
     sol2 = Eq(f(x),C1+5*x/3)
     sol3 = Eq(f(x),C1+5*x/3)
-    sol4 = Eq(f(x),C1*sin(x/3) + C2*cos(x/3))
+    sol4 = Eq(f(x),C1*cos(x/3) + C2*sin(x/3))
     sol5 = Eq(f(x),C1*exp(-x/3) + C2*exp(x/3))
     sol6 = Eq(f(x),(C1-cos(x))/x**3)
-    sol7list = [Eq(f(x),C1*exp(2*x) + C2*exp(x)), Eq(f(x),C1*exp(x) + C2*exp(2*x)),]
-    sol8 = Eq(f(x),(C1 + C2*x)*exp(2*x))
-    sol9 = Eq(f(x), (C1*sin(x*sqrt(2)) + C2*cos(x*sqrt(2)))*exp(-x))
+    sol7 = Eq(f(x), C1*exp(x) + C2*exp(2*x))
+    sol8 = Eq(f(x), (C1 + C2*x)*exp(2*x))
+    sol9 = Eq(f(x), (C1*cos(x*sqrt(2)) + C2*sin(x*sqrt(2)))*exp(-x))
     sol10 = Eq(f(x), C1 + x/3)
     sol11 = Eq(f(x), C1 + log(x))
     assert dsolve(eq1, f(x)) == sol1
@@ -195,7 +195,7 @@ def test_old_ode_tests():
     assert dsolve(eq4, f(x)) == sol4
     assert dsolve(eq5, f(x)) == sol5
     assert dsolve(eq6, f(x)) == sol6
-    assert dsolve(eq7, f(x)) in sol7list
+    assert dsolve(eq7, f(x)) == sol7
     assert dsolve(eq8, f(x)) == sol8
     assert dsolve(eq9, f(x)) == sol9
     assert dsolve(eq10, f(x)) == sol10
@@ -206,8 +206,7 @@ def test_old_ode_tests():
     assert checkodesol(eq4, f(x), sol4, order=2, solve_for_func=False)[0]
     assert checkodesol(eq5, f(x), sol5, order=2, solve_for_func=False)[0]
     assert checkodesol(eq6, f(x), sol6, order=1, solve_for_func=False)[0]
-    assert checkodesol(eq7, f(x), sol7list, order=2, solve_for_func=False) == \
-        [(True, 0), (True, 0)]
+    assert checkodesol(eq7, f(x), sol7, order=2, solve_for_func=False)[0]
     assert checkodesol(eq8, f(x), sol8, order=2, solve_for_func=False)[0]
     assert checkodesol(eq9, f(x), sol9, order=2, solve_for_func=False)[0]
     assert checkodesol(eq10, f(x), sol10, order=1, solve_for_func=False)[0]
@@ -287,12 +286,14 @@ def test_separable1():
     sol2 = Eq(f(x), C1*x)
     sol3 = Eq(f(x), C1 + cos(x))
     sol4 = Eq(atan(f(x)), C1 + atan(x))
-    sol5 = Eq(f(x), -2 + C1*sqrt(1 + tan(x)**2))
+    #sol5 = Eq(f(x), -2 + C1*sqrt(1 + tan(x)**2))
+    #sol5 = Eq(f(x), C1*(C2 + sqrt(1 + tan(x)**2)))
+    sol5 = Eq(-log(2 + f(x)), C1 - log(1 + tan(x)**2)/2)
     assert dsolve(eq1, f(x), hint='separable') == sol1
     assert dsolve(eq2, f(x), hint='separable') == sol2
     assert dsolve(eq3, f(x), hint='separable') == sol3
     assert dsolve(eq4, f(x), hint='separable') == sol4
-    assert dsolve(eq5, f(x), hint='separable') == sol5
+    assert dsolve(eq5, f(x), hint='separable', simplify=False) == sol5
     assert checkodesol(eq1, f(x), sol1, order=1, solve_for_func=False)[0]
     assert checkodesol(eq2, f(x), sol2, order=1, solve_for_func=False)[0]
     assert checkodesol(eq3, f(x), sol3, order=1, solve_for_func=False)[0]
@@ -352,18 +353,25 @@ def test_separable5():
     eq19 = (1 - x)*f(x).diff(x) - x*(f(x) + 1)
     eq20 = f(x)*diff(f(x), x) + x - 3*x*f(x)**2
     eq21 = f(x).diff(x) - exp(x + f(x))
-    sol15 = Eq(f(x), -1 + exp(C1 - x**2/2))
+    sol15 = Eq(f(x), (C1 - exp(x**2/2))*exp(-x**2/2))
+    #sol15 = Eq(f(x), -1 + exp(C1 - x**2/2))
     sol16 = Eq(-exp(-f(x)**2)/2, C1 - x - x**2/2)
     sol17 = Eq(f(x), exp(C1 - x))
     sol18 = Eq(-log(1 - sin(2*f(x))**2)/4, C1 + log(1 - sin(x)**2)/2)
     sol19 = Eq(f(x), -(1 - x - exp(C1 - x))/(1 - x))
+    sol19_64bit = Eq(f(x), (C1*(1 - x) + x*(-x*exp(x) + exp(x))- exp(x) + x*exp(x))/
+                        ((1 - x)*(-x*exp(x) + exp(x))))
+    sol19_32bit = Eq(f(x), (C1*(1 - x) - x*(-x*exp(x) + exp(x)) -
+                            x*exp(x) + exp(x))/((1 - x)*(-exp(x) + x*exp(x))))
     sol20 = Eq(-log(1 - 3*f(x)**2)/6, C1 - x**2/2)
     sol21 = Eq(-exp(-f(x)), C1 + exp(x))
     assert dsolve(eq15, f(x), hint='separable') == sol15
     assert dsolve(eq16, f(x), hint='separable') == sol16
     assert dsolve(eq17, f(x), hint='separable') == sol17
     assert dsolve(eq18, f(x), hint='separable') == sol18
-    assert dsolve(eq19, f(x), hint='separable') == sol19
+    assert dsolve(eq19, f(x), hint='separable') in [sol19,
+                                                    sol19_32bit,
+                                                    sol19_64bit]
     assert dsolve(eq20, f(x), hint='separable') == sol20
     assert dsolve(eq21, f(x), hint='separable') == sol21
     assert checkodesol(eq15, f(x), sol15, order=1, solve_for_func=False)[0]
@@ -468,8 +476,8 @@ def test_1st_homogeneous_coeff_ode1_sol():
 @XFAIL
 def test_1st_homogeneous_coeff_ode1_sol_fail():
     #skip("Takes too long.")
-    _u2 = Symbol('u2', dummy=True)
-    __a = Symbol('a', dummy=True)
+    _u2 = Dummy('u2')
+    __a = Dummy('a')
     eq2 = x*f(x).diff(x) - f(x) - x*sin(f(x)/x)
     eq7 = (x + sqrt(f(x)**2 - x*f(x)))*f(x).diff(x) - f(x)
     # test_1st_homogeneous_coeff_ode3
@@ -1002,7 +1010,7 @@ def test_nth_linear_constant_coeff_variation_of_parameters():
     sol8 = Eq(f(x), C1*exp(x) + (S(5)/36 + x/6)*exp(-x) + C2*exp(2*x))
     sol9 = Eq(f(x), (C1 + C2*x + C3*x**2 + x**3/6)*exp(x))
     sol10 = Eq(f(x), (C1 - x*(C2 - log(x)))*exp(-x))
-    sol11 = Eq(f(x), cos(x)*(C1 - Integral(1/cos(x), x)) + sin(x)*(C2 + \
+    sol11 = Eq(f(x), cos(x)*(C2 - Integral(1/cos(x), x)) + sin(x)*(C1 + \
         Integral(1/sin(x), x)))
     sol12 = Eq(f(x), C1 + C2*x - x**3*(C3 - log(x)/6) + C4*x**2)
     sol1s = constant_renumber(sol1, 'C', 1, 3)
@@ -1132,3 +1140,12 @@ def test_1726():
     raises(ValueError, "dsolve(f(x).diff(x), f(y))")
     assert classify_ode(f(x).diff(x), f(y), dict=True) == {'default': None, 'order': 0}
 
+def test_constant_renumber_order_issue2209():
+    from sympy.utilities.iterables import variations
+
+    assert constant_renumber(C1*x + C2*y, "C", 1, 2) == \
+           constant_renumber(C1*y + C2*x, "C", 1, 2) == \
+           C1*x + C2*y
+    e = C1*(C2 + x)*(C3 + y)
+    for a, b, c in variations([C1, C2, C3], 3):
+        assert constant_renumber(a*(b + x)*(c + y), "C", 1, 3) == e

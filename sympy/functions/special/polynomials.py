@@ -10,7 +10,7 @@ from sympy.core import S, C, Rational, Function
 from sympy.utilities.memoization import recurrence_memo, assoc_recurrence_memo
 from sympy.functions.combinatorial.factorials import factorial
 
-_x = C.Symbol('x', dummy=True)
+_x = C.Dummy('x')
 
 class PolynomialSequence(Function):
     """Polynomial sequence with 1 index

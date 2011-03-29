@@ -1,7 +1,6 @@
 from sympy import (Symbol, Sum, oo, Real, Rational, summation, pi, cos, zeta,
     Catalan, exp, log, factorial, sqrt, E, sympify, binomial, EulerGamma,
     Function, Integral, Product, product, Tuple, Eq, Interval, nan)
-from sympy.concrete.summations import getab
 from sympy.concrete.sums_products import Sum2
 from sympy.utilities.pytest import XFAIL, raises
 
@@ -172,7 +171,13 @@ def test_sum_reconstruct():
     assert s == Sum(*s.args)
 
 def test_Sum_limit_subs():
-    assert Sum(a*exp(a), (a, -2, 2)) == Sum(a*exp(a), (a, -b, b)).subs(b,2)
+    assert Sum(a*exp(a), (a, -2, 2)) == Sum(a*exp(a), (a, -b, b)).subs(b, 2)
+    assert Sum(a, (a, Sum(b, (b, 1, 2)), 4)).subs(Sum(b, (b, 1, 2)), c) == \
+           Sum(a, (a, c, 4))
+
+@XFAIL
+def test_issue2166():
+    assert Sum(x, (x, 1, x)).subs(x, a) == Sum(x, (x, 1, a))
 
 def test_Sum2():
     x = Symbol('x')

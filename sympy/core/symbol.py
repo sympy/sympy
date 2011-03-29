@@ -3,6 +3,7 @@ from sympify import sympify
 from singleton import S
 from expr import Expr, AtomicExpr
 from cache import cacheit
+from compatibility import any, all
 from sympy.logic.boolalg import Boolean
 
 import re
@@ -28,26 +29,30 @@ class Symbol(AtomicExpr, Boolean):
 
     is_Symbol = True
 
-    def __new__(cls, name, commutative=True, dummy=False,
-                **assumptions):
-        """if dummy == True, then this Symbol is totally unique, i.e.::
+    def __new__(cls, name, commutative=True, **assumptions):
+        """Symbols are identified by name and commutativity::
 
         >>> from sympy import Symbol
         >>> bool(Symbol("x") == Symbol("x")) == True
         True
-
-        but with the dummy variable ::
-
-        >>> bool(Symbol("x", dummy = True) == Symbol("x", dummy = True)) == True
+        >>> bool(Symbol("x", real=True) == Symbol("x", real=False)) == True
+        True
+        >>> bool(Symbol("x", commutative=True) ==
+        ...      Symbol("x", commutative=False)) == True
         False
 
         """
 
-        # XXX compatibility stuff
-        if dummy==True:
-            return Dummy(name, commutative=commutative, **assumptions)
-        else:
-            return Symbol.__xnew_cached_(cls, name, commutative, **assumptions)
+        if 'dummy' in assumptions:
+            import warnings
+            warnings.warn(
+                    "\nThe syntax Symbol('x', dummy=True) is deprecated and will"
+                    "\nbe dropped in a future version of Sympy. Please use Dummy()"
+                    "\nor symbols(..., cls=Dummy) to create dummy symbols.",
+                    DeprecationWarning)
+            if assumptions.pop('dummy'):
+                return Dummy(name, commutative, **assumptions)
+        return Symbol.__xnew_cached_(cls, name, commutative, **assumptions)
 
     def __new_stage2__(cls, name, commutative=True, **assumptions):
         assert isinstance(name, str),`type(name)`
@@ -87,48 +92,41 @@ class Symbol(AtomicExpr, Boolean):
     def is_number(self):
         return False
 
+    @property
+    def free_symbols(self):
+        return set([self])
+
 class Dummy(Symbol):
-    """Dummy Symbol
+    """Dummy symbols are each unique, identified by an internal count index ::
 
-       use this through Symbol:
+    >>> from sympy import Dummy
+    >>> bool(Dummy("x") == Dummy("x")) == True
+    False
 
-       >>> from sympy import Symbol
-       >>> x1 = Symbol('x', dummy=True)
-       >>> x2 = Symbol('x', dummy=True)
-       >>> bool(x1 == x2)
-       False
+    If a name is not supplied then a string value of the count index will be
+    used. This is useful when a temporary variable is needed and the name
+    of the variable used in the expression is not important. ::
+    >>> Dummy._count = 0 # /!\ this should generally not be changed; it is being
+    >>> Dummy()          # used here to make sure that the doctest passes.
+    _0
 
     """
 
-    dummycount = 0
+    _count = 0
 
     __slots__ = ['dummy_index']
 
-    def __new__(cls, name, commutative=True, **assumptions):
+    def __new__(cls, name=None, commutative=True, **assumptions):
+        if name is None:
+            name = str(Dummy._count)
         obj = Symbol.__xnew__(cls, name, commutative=commutative, **assumptions)
 
-        Dummy.dummycount += 1
-        obj.dummy_index = Dummy.dummycount
+        Dummy._count += 1
+        obj.dummy_index = Dummy._count
         return obj
 
     def _hashable_content(self):
         return Symbol._hashable_content(self) + (self.dummy_index,)
-
-
-class Temporary(Dummy):
-    """
-    Indexed dummy symbol.
-    """
-
-    __slots__ = []
-
-    def __new__(cls, **assumptions):
-        obj = Dummy.__new__(cls, 'T%i' % Dummy.dummycount, **assumptions)
-        return obj
-
-    def __getnewargs__(self):
-        return ()
-
 
 class Wild(Symbol):
     """
@@ -219,6 +217,11 @@ def symbols(*names, **kwargs):
     True
 
     """
+    func = Symbol
+    # when polys12 is in place remove from here...
+    if 'cls' in kwargs and kwargs.pop('cls') is Dummy:
+        func = Dummy
+    # ... to here when polys12 is in place
     # use new behavior if space or comma in string
     if not 'each_char' in kwargs and len(names) == 1 and \
     isinstance(names[0], str) and (' ' in names[0] or ',' in names[0]):
@@ -233,7 +236,7 @@ def symbols(*names, **kwargs):
             # skip empty strings
             if not t:
                 continue
-            sym = Symbol(t, **kwargs)
+            sym = func(t, **kwargs)
             res.append(sym)
         res = tuple(res)
         if len(res) == 0:   # var('')
@@ -245,9 +248,9 @@ def symbols(*names, **kwargs):
     else:
         # this is the old, deprecated behavior:
         if len(names) == 1:
-            result = [ Symbol(name, **kwargs) for name in names[0] ]
+            result = [ func(name, **kwargs) for name in names[0] ]
         else:
-            result = [ Symbol(name, **kwargs) for name in names ]
+            result = [ func(name, **kwargs) for name in names ]
         if len(result) == 1:
             return result[0]
         else:

@@ -33,7 +33,7 @@ class Sub(AssocOp):
     is_Sub = True
 
     def _eval_subs(self, old, new):
-        if self==old:
+        if self == old:
             return new
         else:
             return self.__class__(*[s._eval_subs(old, new) for s in self.args ])
@@ -47,12 +47,13 @@ def sub_pre(e):
             positives = []
             negatives = []
             for arg in node.args:
-                if (assumed(arg, 'is_Mul') and
-                    assumed(arg.args[0], 'is_number') and
-                    assumed(arg.args[0], 'is_negative')):
-                    negatives.append(Mul(-arg.args[0], *arg.args[1:]))
-                else:
-                    positives.append(arg)
+                if assumed(arg, 'is_Mul'):
+                    a, b = arg.as_two_terms()
+                    if (assumed(a, 'is_number') and
+                        assumed(a, 'is_negative')):
+                        negatives.append(Mul(-a, b))
+                        continue
+                positives.append(arg)
             if len(negatives) > 0:
                 replacement = Sub(Add(*positives), Add(*negatives))
                 replacements.append((node, replacement))

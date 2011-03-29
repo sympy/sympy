@@ -3,7 +3,7 @@ from sympy.core.evalf import PrecisionExhausted, complex_accuracy
 from sympy import pi, I, Symbol, Add, Rational, exp, sqrt, sin, cos, \
     fibonacci, Integral, oo, E, atan, log, integrate, floor, ceiling, \
     factorial, binomial, Sum, zeta, Catalan, Pow, GoldenRatio, sympify, \
-    sstr, Function
+    sstr, Function, Mul, Pow, Derivative
 
 from sympy.mpmath.libmp.libmpf import from_float
 
@@ -217,3 +217,10 @@ def test_implemented_function_evalf():
     assert str(f(2)) == "f(2)"
     assert f(2).evalf() == 3
     assert f(x).evalf() == f(x)
+
+def test_evaluate_false():
+    for no in [[], 0, False, None]:
+        assert Add(3, 2, evaluate=no).is_Add
+        assert Mul(3, 2, evaluate=no).is_Mul
+        assert Pow(3, 2, evaluate=no).is_Pow
+    assert Pow(y, 2, evaluate=True) - Pow(y, 2, evaluate=True) == 0

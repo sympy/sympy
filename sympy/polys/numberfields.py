@@ -1,7 +1,7 @@
 """Computational algebraic number field theory. """
 
 from sympy import (S, Expr, I, Integer, Rational, Real, Symbol, Add, Mul,
-    sympify, Q, ask)
+    sympify, Q, ask, Dummy)
 from sympy.polys.polytools import Poly, sqf_norm, invert, factor_list, groebner
 from sympy.polys.polyutils import basic_from_dict
 from sympy.polys.polyclasses import ANP, DMP
@@ -13,7 +13,7 @@ from sympy.mpmath import pslq, mp
 
 def minimal_polynomial(ex, x=None, **args):
     """Computes the minimal polynomial of an algebraic number. """
-    generator = numbered_symbols('a', dummy=True)
+    generator = numbered_symbols('a', cls=Dummy)
     mapping, symbols, replace = {}, {}, []
 
     ex = sympify(ex)
@@ -21,7 +21,7 @@ def minimal_polynomial(ex, x=None, **args):
     if x is not None:
         x = sympify(x)
     else:
-        x = Symbol('x', dummy=True)
+        x = Dummy('x')
 
     def update_mapping(ex, exp, base=None):
         a = generator.next()
@@ -50,7 +50,7 @@ def minimal_polynomial(ex, x=None, **args):
         elif ex.is_Pow:
             if ex.exp.is_Rational:
                 if ex.exp < 0 and ex.base.is_Add:
-                    coeff, terms = ex.base.as_coeff_factors()
+                    coeff, terms = ex.base.as_coeff_add()
                     elt, _ = primitive_element(terms, polys=True)
 
                     alg = ex.base - coeff
@@ -127,7 +127,7 @@ def primitive_element(extension, x=None, **args):
     if x is not None:
         x = sympify(x)
     else:
-        x = Symbol('x', dummy=True)
+        x = Dummy('x')
 
     if not args.get('ex', False):
         extension = [ AlgebraicNumber(ext, gen=x) for ext in extension ]
@@ -143,7 +143,7 @@ def primitive_element(extension, x=None, **args):
         else:
             return g, coeffs
 
-    generator = numbered_symbols('y', dummy=True)
+    generator = numbered_symbols('y', cls=Dummy)
 
     F, Y = [], []
 
@@ -447,7 +447,7 @@ class AlgebraicNumber(Expr):
             if self.alias is not None:
                 return Poly(self.rep, self.alias)
             else:
-                return Poly(self.rep, Symbol('x', dummy=True))
+                return Poly(self.rep, Dummy('x'))
 
     def as_basic(self, x=None):
         """Create a Basic expression from `self`. """

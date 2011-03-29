@@ -37,10 +37,10 @@ class SymPyTransformer(Transformer):
     def atom_name(self, nodelist):
         name, lineno = nodelist[0][1:]
 
-        if self.local_dict.has_key(name):
+        if name in self.local_dict:
             name_obj = self.local_dict[name]
             return Const(name_obj, lineno=lineno)
-        elif self.global_dict.has_key(name):
+        elif name in self.global_dict:
             name_obj = self.global_dict[name]
 
             if isinstance(name_obj, (Basic, type)) or callable(name_obj):
