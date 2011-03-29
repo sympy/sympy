@@ -25,6 +25,8 @@ def test_sympify1():
     assert sympify('.[3]') == Rational(1, 3)
     assert sympify('+.[3]') == Rational(1, 3)
     assert sympify('+0.[3]*10**-2') == Rational(1, 300)
+    assert sympify('.[052631578947368421]') == Rational(1, 19)
+    assert sympify('.0[526315789473684210]') == Rational(1, 19)
     # options to make reals into rationals
     assert sympify('1.22[345]', rational=1) == \
            1 + Rational(22, 100) + Rational(345, 99900)
