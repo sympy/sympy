@@ -479,12 +479,11 @@ class Rational(Number):
                     return Rational(p, Pow(10, -expt))
                 except decimal.InvalidOperation:
                     import re
-                    f = re.match(' *([-+]? *[0-9]+)( */ *)([0-9]+)', p)
+                    f = re.match('^([-+]?[0-9]+)/([0-9]+)$', ''.join(p.split()))
                     if f:
-                        p, _, q = f.groups()
-                        return Rational(int(p), int(q))
-                    else:
-                        raise ValueError('invalid literal: %s' % p)
+                        n, d = f.groups()
+                        return Rational(int(n), int(d))
+                    raise ValueError('invalid literal: %s' % p)
             elif not isinstance(p, Basic):
                 return Rational(S(p))
             q = S.One

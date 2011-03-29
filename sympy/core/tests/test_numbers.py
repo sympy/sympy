@@ -129,6 +129,7 @@ def test_Rational_new():
     assert Rational('.76').limit_denominator(4) == n3_4
     assert Rational(19, 25).limit_denominator(4) == n3_4
     assert Rational('19/25').limit_denominator(4) == n3_4
+    raises(ValueError, "Rational('1/2 + 2/3')")
 
     # handle fractions.Fraction instances
     try:
