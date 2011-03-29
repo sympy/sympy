@@ -3,7 +3,7 @@ from sympy.simplify import simplify, trigsimp
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.complexes import im
 from sympy.geometry.exceptions import GeometryError
-from sympy.solvers import solve_poly_system
+from sympy.solvers import solve_poly_system, solve
 from entity import GeometryEntity
 from point import Point
 from line import LinearEntity, Line
@@ -285,18 +285,47 @@ class Ellipse(GeometryEntity):
                 result.append( lp[0] + (lp[1] - lp[0]) * t_b )
         return result
 
+    def _do_circle_intersection(self, o):
+        """
+        Find intersection of an Ellipse and a Circle.
+        """
+        variables = self.equation().atoms(C.Symbol)
+        if len(variables) > 2:
+            return None
+        if self.center == o.center:
+            a, b, r = o.hradius, o.vradius, self.radius
+            x = a*sqrt(simplify((r**2 - b**2)/(a**2 - b**2)))
+            y = b*sqrt(simplify((a**2 - r**2)/(a**2 - b**2)))
+            return list(set([Point(x,y), Point(x,-y), Point(-x,y), Point(-x,-y)]))
+        else:
+            x, y = variables
+            xx = solve(self.equation(), x)
+            intersect = []
+            for xi in xx:
+                yy = solve(o.equation().subs(x, xi), y)
+                for yi in yy:
+                    intersect.append(Point(xi, yi))
+            return list(set(intersect))
+
     def _do_ellipse_intersection(self, o):
         """
         Find the intersection of two ellipses.
         """
-        x, y = symbol.symbols('x y')
-        result = solve_poly_system(
-                [
-                    self.equation(x=x, y=y),
-                    o.equation(x=x, y=y)
-                ], x, y)
-        return [Point(*r) for r in result if im(r[0]).is_zero and im(r[1]).is_zero]
+        seq = self.equation()
+        variables = self.equation().atoms(C.Symbol)
+        if len(variables) > 2:
+            return None
+        x, y = variables
+        oeq = o.equation(x=x, y=y)
+        # until the following line works...
+        # result = solve([seq, oeq], [x, y])
+        # return [Point(*r) for r in result if im(r[0]).is_zero and im(r[1]).is_zero]
+        # we do this:
+        if self.center[0] == o.center[0] or self.center[1] == o.center[1]:
+            result = solve_poly_system([seq, oeq], x, y)
+            return [Point(*r) for r in result if im(r[0]).is_zero and im(r[1]).is_zero]
 
+        raise NotImplementedError("Off-axis Ellipse intersection not supported.")
 
     def intersection(self, o):
         """
@@ -345,7 +374,7 @@ class Ellipse(GeometryEntity):
                         del result[ind]
             return result
         elif isinstance(o, Circle):
-            return o.intersection(self)
+            return self._do_circle_intersection(o)
         elif isinstance(o, Ellipse):
             if o == self:
                 return self
@@ -450,8 +479,16 @@ class Circle(Ellipse):
 
     def intersection(self, o):
         if isinstance(o, Circle):
+            if o.center == self.center:
+                if o.radius == self.radius:
+                    return o
+                return []
             dx,dy = o.center - self.center
             d = sqrt( simplify(dy**2 + dx**2) )
+            R = o.radius + self.radius
+            if d > R or d < abs(self.radius - o.radius):
+                return []
+
             a = simplify((self.radius**2 - o.radius**2 + d**2) / (2*d))
 
             x2 = self.center[0] + (dx * a/d)
