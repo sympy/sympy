@@ -52,6 +52,99 @@ class GeometryEntity(tuple):
         """
         raise NotImplementedError()
 
+    def rotate(self, angle, pt=None):
+        """Rotate the object about pt by the given angle (in radians).
+
+        The default pt is the origin, Point(0, 0)
+
+        XXX geometry needs a modify_points method which operates
+        on only the points of the object
+
+        RegularPolygon needs an orientation property and should iterate
+        over vertices not args in [w for w in RegularPolygon(...)]
+
+        >>> from sympy import Point, RegularPolygon, Polygon, pi
+        >>> t = Polygon(*RegularPolygon(Point(0, 0), 1, 3).vertices)
+        >>> t # vertex on x axis
+        Triangle(Point(1, 0), Point(-1/2, 3**(1/2)/2), Point(-1/2, -3**(1/2)/2))
+        >>> t.rotate(pi/2) # vertex on y axis now
+        Triangle(Point(0, 1), Point(-3**(1/2)/2, -1/2), Point(3**(1/2)/2, -1/2))
+
+        """
+        from sympy import cos, sin, Point
+
+        c = cos(angle)
+        s = sin(angle)
+
+        if isinstance(self, Point):
+            rv = self
+            if pt is not None:
+                rv -= pt
+            x, y = rv
+            rv = Point(c*x-s*y, s*x+c*y)
+            if pt is not None:
+                rv += pt
+            return rv
+
+        newargs = []
+        for a in self.args:
+            if isinstance(a, GeometryEntity):
+                newargs.append(a.rotate(angle, pt))
+            else:
+                newargs.append(a)
+        return type(self)(*newargs)
+
+    def scale(self, x=1, y=1):
+        """Scale the object by multiplying the x,y-coordinates by x and y.
+
+        >>> from sympy import RegularPolygon, Point, Polygon
+        >>> t = Polygon(*RegularPolygon(Point(0, 0), 1, 3).vertices)
+        >>> t
+        Triangle(Point(1, 0), Point(-1/2, 3**(1/2)/2), Point(-1/2, -3**(1/2)/2))
+        >>> t.scale(2)
+        Triangle(Point(2, 0), Point(-1, 3**(1/2)/2), Point(-1, -3**(1/2)/2))
+        >>> t.scale(2,2)
+        Triangle(Point(2, 0), Point(-1, 3**(1/2)), Point(-1, -3**(1/2)))
+
+        """
+        from sympy import Point
+        if isinstance(self, Point):
+            return Point(self[0]*x, self[1]*y)
+        newargs = []
+        for a in self.args:
+            if isinstance(a, GeometryEntity):
+                newargs.append(a.scale(x, y))
+            else:
+                newargs.append(a)
+        return type(self)(*newargs)
+
+    def translate(self, x=0, y=0):
+        """Shift the object by adding to the x,y-coordinates the values x and y.
+
+        >>> from sympy import RegularPolygon, Point, Polygon
+        >>> t = Polygon(*RegularPolygon(Point(0, 0), 1, 3).vertices)
+        >>> t
+        Triangle(Point(1, 0), Point(-1/2, 3**(1/2)/2), Point(-1/2, -3**(1/2)/2))
+        >>> t.translate(2)
+        Triangle(Point(3, 0), Point(3/2, 3**(1/2)/2), Point(3/2, -3**(1/2)/2))
+        >>> t.translate(2,2)
+        Triangle(Point(3, 2), Point(3/2, 2 + 3**(1/2)/2), Point(3/2, 2 - 3**(1/2)/2))
+        """
+        from sympy import Point
+        if not isinstance(x, Point):
+            pt = Point(x, y)
+        else:
+            pt = x
+        if isinstance(self, Point):
+            return self + pt
+        newargs = []
+        for a in self.args:
+            if isinstance(a, GeometryEntity):
+                newargs.append(a.translate(pt))
+            else:
+                newargs.append(a)
+        return type(self)(*newargs)
+
     def encloses(self, o):
         """
         Return True if o is inside (not on or outside) the boundaries of self.
