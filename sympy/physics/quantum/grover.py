@@ -6,11 +6,11 @@ Todo:
   in order to achieve the desired outcome with a high probability.
   Look back at the description to understand what is meant by this.
 * Generalize the algorithm for an unknown function that returns 1 on
-  multiple qubit states, not just one.  
+  multiple qubit states, not just one.
 """
 
 from sympy import sqrt, pi, floor
-from sympy.physics.quantum import apply_operators
+from sympy.physics.quantum.applyops import apply_operators
 from sympy.physics.quantum.qexpr import QuantumError
 from sympy.physics.quantum.hilbert import ComplexSpace
 from sympy.physics.quantum.operator import UnitaryOperator
@@ -45,7 +45,7 @@ class OracleGate(Gate):
 
     The gate marks the desired qubits of an unknown function by flipping
     the sign of the qubits.  The unknown function returns true when it
-    finds its desired qubits and false otherwise.  
+    finds its desired qubits and false otherwise.
 
     Parameters
     ==========
@@ -60,7 +60,7 @@ class OracleGate(Gate):
 
     gate_name = u'V'
     gate_name_latex = u'V'
-    
+
     #-------------------------------------------------------------------------
     # Initialization/creation
     #-------------------------------------------------------------------------
@@ -74,7 +74,7 @@ class OracleGate(Gate):
                 'Insufficient/excessive arguments to Oracle.  Please ' +
                     'supply the number of qubits and an unknown function.'
             )
-        sub_args = args[0], 
+        sub_args = args[0],
         sub_args = UnitaryOperator._eval_args(sub_args)
         if not sub_args[0].is_Integer:
            raise TypeError('Integer expected, got: %r' % sub_args[0])
@@ -111,7 +111,7 @@ class OracleGate(Gate):
     def _apply_operator_Qubit(self, qubits, **options):
         if qubits.nqubits != self.nqubits:
             raise QuantumError(
-                'OracleGate operates on %r qubits, got: %r' 
+                'OracleGate operates on %r qubits, got: %r'
                     (self.nqubits, qubits.nqubits)
             )
         # If function returns 1 on qubits
@@ -127,7 +127,6 @@ class OracleGate(Gate):
         raise NotImplementedError(
             "Represent for the Oracle has not been implemented yet"
         )
- 
 
 class WGate(Gate):
     """General n qubit W Gate in Grover's algorithm.
@@ -166,7 +165,7 @@ class WGate(Gate):
     def _apply_operator_Qubit(self, qubits, **options):
         if qubits.nqubits != self.nqubits:
             raise QuantumError(
-                'WGate operates on %r qubits, got: %r' 
+                'WGate operates on %r qubits, got: %r'
                     (self.nqubits, qubits.nqubits)
             )
 
@@ -201,19 +200,19 @@ def apply_grover(bbox, nqubits, iterations=None):
 
     Parameters
     ==========
-    bbox : callable 
-        The unknown callable function that returns true when applied to the 
-        desired qubits and false otherwise.  
+    bbox : callable
+        The unknown callable function that returns true when applied to the
+        desired qubits and false otherwise.
 
     Returns
     =======
     Qubit : The qubits and their probabilities after some number of
-            iterations.  
+            iterations.
 
     """
     if nqubits <= 0:
         raise QuantumError(
-            'Grover\'s algorithm needs nqubits > 0, received %r qubits' 
+            'Grover\'s algorithm needs nqubits > 0, received %r qubits'
                 % nqubits
         )
     if iterations is None:
@@ -222,7 +221,7 @@ def apply_grover(bbox, nqubits, iterations=None):
     v = OracleGate(nqubits, bbox)
     iterated = superposition_basis(nqubits)
     for iter in range(iterations):
-        iterated = grover_iteration(iterated, v)  
+        iterated = grover_iteration(iterated, v)
         iterated = apply_operators(iterated)
-    
+
     return iterated
