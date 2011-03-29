@@ -18,9 +18,9 @@ def test_superposition_basis():
 
     nbits = 3
     first_q = (1/sqrt(8))*IntQubit(0, nbits) + (1/sqrt(8))*IntQubit(1, nbits)
-    second_q = (1/sqrt(8))*IntQubit(2, nbits) + (1/sqrt(8))*IntQubit(3, nbits)  
-    third_q = (1/sqrt(8))*IntQubit(4, nbits) + (1/sqrt(8))*IntQubit(5, nbits)  
-    fourth_q = (1/sqrt(8))*IntQubit(6, nbits) + (1/sqrt(8))*IntQubit(7, nbits)  
+    second_q = (1/sqrt(8))*IntQubit(2, nbits) + (1/sqrt(8))*IntQubit(3, nbits)
+    third_q = (1/sqrt(8))*IntQubit(4, nbits) + (1/sqrt(8))*IntQubit(5, nbits)
+    fourth_q = (1/sqrt(8))*IntQubit(6, nbits) + (1/sqrt(8))*IntQubit(7, nbits)
     super_state = first_q + second_q + third_q + fourth_q
     assert super_state == superposition_basis(nbits)
 
@@ -32,7 +32,7 @@ def test_OracleGate():
     nbits = 2
     v = OracleGate(2, return_one_on_two)
     assert apply_operators(v*IntQubit(0, nbits)) == IntQubit(0, nbits)
-    assert apply_operators(v*IntQubit(1, nbits)) == IntQubit(1, nbits)  
+    assert apply_operators(v*IntQubit(1, nbits)) == IntQubit(1, nbits)
     assert apply_operators(v*IntQubit(2, nbits)) == -IntQubit(2, nbits)
     assert apply_operators(v*IntQubit(3, nbits)) == IntQubit(3, nbits)
 
@@ -62,13 +62,13 @@ def test_grover_iteration_2():
     # In this case, after around pi times (3 or 4)
     # print ''
     # print basis_states
-    iterated = grover_iteration(basis_states, v) 
+    iterated = grover_iteration(basis_states, v)
     iterated = apply_operators(iterated)
     # print iterated
-    iterated = grover_iteration(iterated, v) 
+    iterated = grover_iteration(iterated, v)
     iterated = apply_operators(iterated)
     # print iterated
-    iterated = grover_iteration(iterated, v) 
+    iterated = grover_iteration(iterated, v)
     iterated = apply_operators(iterated)
     # print iterated
     # In this case, probability was highest after 3 iterations
