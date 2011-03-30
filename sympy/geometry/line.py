@@ -38,6 +38,9 @@ class LinearEntity(GeometryEntity):
     def __new__(cls, p1, p2, **kwargs):
         if not isinstance(p1, Point) and not isinstance(p2, Point):
             raise TypeError("%s.__new__ requires two Points." % cls.__name__)
+        if p1 == p2:
+            # Rolygon returns lower priority classes...should LinearEntity, too?
+            return p1 # raise ValueError("%s.__new__ requires two unique Points." % cls.__name__)
 
         return GeometryEntity.__new__(cls, p1, p2, **kwargs)
 
