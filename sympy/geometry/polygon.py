@@ -47,7 +47,8 @@ class Polygon(GeometryEntity):
     based on the orientation of the points.
 
     Any consecutive identical points are reduced to a single point
-    and any points collinear and between two points will be removed.
+    and any points collinear and between two points will be removed
+    unless they are needed to define an explicit intersection (see examples).
 
     A Triangle, Segment or Point will be returned when there are 3 or
     fewer points provided.
@@ -63,6 +64,14 @@ class Polygon(GeometryEntity):
     >>> Polygon(p1, p2, p5)
     Segment(Point(0, 0), Point(3, 0))
 
+    While not sides of a polygon are allowed to cross implicitly, they
+    can do so explicitly. So a polygon shaped like a Z must have the
+    point in the middle of the Z explicitly given:
+
+    >>> mid = Point(1, 1)
+    >>> Polygon(Point(0,2),Point(2,2), mid, Point(0,0),Point(2,0), mid).area
+    0
+
     """
 
     def __new__(cls, *args, **kwargs):
@@ -72,35 +81,33 @@ class Polygon(GeometryEntity):
             if not isinstance(p, Point):
                 raise GeometryError("Polygon.__new__ requires points")
 
-        # remove consecutive duplicates and collinear points
+        # remove consecutive duplicates
         nodup = []
         for p in vertices:
             if nodup and p == nodup[-1]:
                 continue
             nodup.append(p)
-            if len(nodup) > 2:
-                if Point.is_collinear(*nodup[-3:]):
-                    nodup[-3:] = sorted(nodup[-3:])[0::2]
         if len(nodup) > 1 and nodup[-1] == nodup[0]:
             nodup.pop() # last point was same as first
-        # check for collinearity of the first and last points. The
-        # last two and the first or the last one and the first two
-        # could be collinear. Rotate the first point to the end twice
-        # and check as before. This changes the ordering but the
-        # Polygon is the same.
-        if len(nodup) > 3:
-            changed = False
-            for i in range(2):
-                nodup.append(nodup.pop(0))
-                if Point.is_collinear(*nodup[-3:]):
-                    changed = True
-                    nodup[-3:] = sorted(nodup[-3:])[0::2]
-            # restore original order in case there
-            if not changed:
-                for i in range(2):
-                    nodup = nodup[-1:] + nodup[:-1]
 
-        vertices = nodup
+        # remove collinear points unless they are shared points
+        got = set()
+        shared = set()
+        for p in nodup:
+            if p in got:
+                shared.add(p)
+            else:
+                got.add(p)
+        i = -3
+        while i < len(nodup) - 3 and len(nodup) > 2:
+            a, b, c = sorted([nodup[i], nodup[i + 1], nodup[i + 2]])
+            if b not in shared and Point.is_collinear(a, b, c):
+                nodup[i] = a
+                nodup[i + 1] = None
+                nodup.pop(i + 1)
+            i += 1
+
+        vertices = filter(lambda x: x is not None, nodup)
 
         if len(vertices) > 3:
             rv = GeometryEntity.__new__(cls, *vertices, **kwargs)
@@ -119,12 +126,13 @@ class Polygon(GeometryEntity):
 
         sides = rv.sides
         for i, si in enumerate(sides):
+            pts = si[0], si[1]
             for j in range(i+1, len(sides)):
                 sj = sides[j]
-                hit = si.intersection(sj)
-                if hit and concrete(hit[0]) and\
-                   len(set([si[0], si[1], sj[0], sj[1]])) == 4:
-                    raise GeometryError("Polygon has intersecting sides.")
+                if sj[0] not in pts and sj[1] not in pts:
+                    hit = si.intersection(sj)
+                    if hit and concrete(hit[0]):
+                        raise GeometryError("Polygon has intersecting sides.")
 
         return rv
 
