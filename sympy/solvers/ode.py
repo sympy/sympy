@@ -231,13 +231,14 @@ from sympy.utilities.iterables import minkey
 # anyway).
 # "default", "all", "best", and "all_Integral" meta-hints should not be
 # included in this list, but "_best" and "_Integral" hints should be included.
-allhints = ("separable", "1st_exact", "1st_linear", "Bernoulli",
+allhints = ("separable", "1st_exact", "1st_linear", "Bernoulli", "Riccati_special_minus2",
 "1st_homogeneous_coeff_best", "1st_homogeneous_coeff_subs_indep_div_dep",
 "1st_homogeneous_coeff_subs_dep_div_indep", "nth_linear_constant_coeff_homogeneous",
 "nth_linear_constant_coeff_undetermined_coefficients",
 "nth_linear_constant_coeff_variation_of_parameters",
 "Liouville", "separable_Integral", "1st_exact_Integral", "1st_linear_Integral",
-"Bernoulli_Integral", "1st_homogeneous_coeff_subs_indep_div_dep_Integral",
+"Bernoulli_Integral", "Riccati_special_minus2_Integral",
+"1st_homogeneous_coeff_subs_indep_div_dep_Integral",
 "1st_homogeneous_coeff_subs_dep_div_indep_Integral",
 "nth_linear_constant_coeff_variation_of_parameters_Integral",
 "Liouville_Integral")
@@ -623,6 +624,10 @@ def classify_ode(eq, func, dict=False):
     k = Wild('k', exclude=[df])
     n = Wild('n', exclude=[f(x)])
     c1 = Wild('c1', exclude=[x])
+    a2 = Wild('a2', exclude=[x, f(x), df])
+    b2 = Wild('b2', exclude=[x, f(x), df])
+    c2 = Wild('c2', exclude=[x, f(x), df])
+    d2 = Wild('d2', exclude=[x, f(x), df])
 
     eq = expand(eq)
 
@@ -667,6 +672,16 @@ def classify_ode(eq, func, dict=False):
             r['n'] = n
             matching_hints["Bernoulli"] = r
             matching_hints["Bernoulli_Integral"] = r
+
+        # Riccati special n == -2 case: a2*y'+b2*y**2+c2*y/x+d2/x**2 == 0
+        r = collect(reduced_eq, f(x), exact = True).match(a2*df + b2*f(x)**2 + c2*f(x)/x+d2/x**2)
+        if r and r[b2] != 0 and (r[c2] != 0 or r[d2] != 0):
+            r['a2'] = a2
+            r['b2'] = b2
+            r['c2'] = c2
+            r['d2'] = d2
+            matching_hints["Riccati_special_minus2"] = r
+            matching_hints["Riccati_special_minus2_Integral"] = r
 
         # Exact Differential Equation: P(x,y)+Q(x,y)*y'=0 where dP/dy == dQ/dx
         # WITH NON-REDUCED FORM OF EQUATION
@@ -2080,6 +2095,41 @@ def ode_Bernoulli(eq, func, order, match):
     t = exp((1-r[r['n']])*C.Integral(r[r['b']]/r[r['a']],x))
     tt = (r[r['n']]-1)*C.Integral(t*r[r['c']]/r[r['a']],x)
     return Eq(f(x),((tt + C1)/t)**(1/(1-r[r['n']])))
+
+def ode_Riccati_special_minus2(eq, func, order, match):
+    r"""
+    Solves Riccati special case alpha = -2 differential equations.
+
+    These are equations of the form a*dy/dx + b*y**2 + c*y/x +d/x**2,
+    where a, b, c, d - are constants, a != 0, b != 0, c or d != 0.
+    First we shoud devide the whole equation on a, because it's not zero.
+    Then substitution u = y+b/(2*c) will transform an equation of this
+    form into special riccati equation du/dx+a1*u**2+b1/x**2, which can be
+    transformed into homogenious equation with inverse transformation z=1/y
+    The general solution is:
+        1
+  _____________
+            c
+  x*f(x) + ___
+           2*b
+        /                                                  /
+       |                      1                           | 1
+   a*  |       ________________________________ dy = C1 + | _ dx
+       |                  2                  2            | x
+       |                 y *(-4*d - 2*a*c + c )          /
+       |       b - a*y - ______________________
+       |                          4*b
+      /
+    """
+    x = func.args[0]
+    f = func.func
+    y = Dummy('y')
+    r = match # a2*diff(f(x),x) + b2*f(x) + c2*f(x)/x + d2/x**2
+    C1 = Symbol('C1')
+    mu = (r[r['c2']]**2-4*r[r['d2']]-2*r[r['a2']]*r[r['c2']])/(4*r[r['b2']])
+    t = 1/(x*f(x)+r[r['c2']]/(2*r[r['b2']]))
+    tt = r[r['a2']]*C.Integral(1/(r[r['b2']]-r[r['a2']]*y-mu*y**2),(y, None, t))
+    return Eq((tt).subs(y,t),C.Integral(1/x,x)+C1)
 
 def ode_Liouville(eq, func, order, match):
     r"""
