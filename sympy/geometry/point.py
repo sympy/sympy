@@ -117,7 +117,8 @@ class Point(GeometryEntity):
 
         """
         points = GeometryEntity.extract_entities(points)
-        if len(points) == 0: return False
+        if len(points) == 0:
+            return False
         if len(points) <= 2: return True # two points always form a line
 
         # XXX Cross product is used now, but that only extends to three

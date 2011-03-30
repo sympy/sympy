@@ -292,6 +292,12 @@ class Polygon(GeometryEntity):
         sides : list of sides
             Each side is a Segment.
 
+        Note
+        ----
+        The Segments that represent the sides are an undirected
+        line segment so cannot be used to tell the orientation of
+        the polygon.
+
         See Also
         --------
         Point
@@ -459,28 +465,28 @@ class Polygon(GeometryEntity):
         of the polygons as it is assumed only called by Polygon.distance
         which does such checks.
 
-        Notes:
-        ======
+        Notes
+        -----
             - Prints a warning if the two polygons possibly intersect as the return
               value will not be valid in such a case. For a more through test of
               intersection use intersection().
 
-        Example:
-        ========
+        Example
+        -------
             >>> from sympy.geometry import Point, Polygon
             >>> square = Polygon(Point(0, 0), Point(0, 1), Point(1, 1), Point(1, 0))
             >>> triangle = Polygon(Point(1, 2), Point(2, 2), Point(2, 1))
             >>> square._do_poly_distance(triangle)
             2**(1/2)/2
 
-        Description of method used:
-        ===========================
+        Description of method used
+        --------------------------
         Method:
-            http://cgm.cs.mcgill.ca/~orm/mind2p.html
+        [1] http://cgm.cs.mcgill.ca/~orm/mind2p.html
         Uses rotating calipers:
-            http://en.wikipedia.org/wiki/Rotating_calipers
+        [2] http://en.wikipedia.org/wiki/Rotating_calipers
         and antipodal points:
-            http://en.wikipedia.org/wiki/Antipodal_point
+        [3] http://en.wikipedia.org/wiki/Antipodal_point
         """
         e1 = self
 
@@ -792,7 +798,7 @@ class RegularPolygon(Polygon):
     def center(self):
         """The center of the regular polygon
 
-        This is also the centre of the circumscribing circle.
+        This is also the center of the circumscribing circle.
 
         Returns
         -------

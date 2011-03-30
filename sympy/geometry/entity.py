@@ -150,7 +150,8 @@ class GeometryEntity(tuple):
     def args(self):
         """Return whatever is contained in the object's tuple.
 
-        The contents will not necessarily be Points.
+        The contents will not necessarily be Points. This is also
+        what will be returned when one does "for x in self".
         """
 
         return tuple(self)
