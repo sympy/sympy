@@ -2105,19 +2105,21 @@ def ode_Riccati_special_minus2(eq, func, order, match):
     form into special Riccati equation du/dx+a1*u**2+b1/x**2, which can be
     transformed into homogeneous equation with inverse transformation z=1/y
     The general solution is:
-        1
-  _____________
-            c
-  x*f(x) + ___
-           2*b
-        /                                                  /
-       |                      1                           | 1
-   a*  |       ________________________________ dy = C1 + | _ dx
-       |                  2                  2            | x
-       |                 y *(-4*d - 2*a*c + c )          /
-       |       b - a*y - ______________________
-       |                          4*b
-      /
+
+           1
+     _____________
+               c
+     x*f(x) + ___
+              2*b
+           /                                                  /
+          |                      1                           | 1
+      a*  |       ________________________________ dy = C1 + | _ dx
+          |                  2                  2            | x
+          |                 y *(-4*d - 2*a*c + c )          /
+          |       b - a*y - ______________________
+          |                          4*b
+         /
+
     or after integration:
                                                     _________________
                       ________________             /                2
@@ -2129,7 +2131,6 @@ def ode_Riccati_special_minus2(eq, func, order, match):
     """
     x = func.args[0]
     f = func.func
-    y = Dummy('y')
     r = match # a2*diff(f(x),x) + b2*f(x) + c2*f(x)/x + d2/x**2
     C1 = Symbol('C1')
     mu = sqrt(4*r[r['d2']]*r[r['b2']]-(r[r['a2']]-r[r['c2']])**2)
