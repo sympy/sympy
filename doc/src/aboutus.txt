@@ -104,7 +104,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Cristóvão Sousa: Implements _sage_ method for sign function.
 #. Andre de Fortier Smit: Doctests in matrices improved
 #. Alexey U. Goodchenko: Implemented Matrix.extract()
-#. Gary Kerr: Fix examples
+#. Gary Kerr: Fix examples, docs
 #. Sherjil Ozair: Fixes to SMatrix
 #. Oleksandr Gituliar: Fixes to Matrix
 #. Sean Vig: Quantum improvement
