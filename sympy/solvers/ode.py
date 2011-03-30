@@ -208,7 +208,7 @@ from sympy.core.relational import Equality, Eq
 from sympy.core.symbol import Symbol, Wild, Dummy
 from sympy.core.sympify import sympify
 
-from sympy.functions import cos, exp, im, log, re, sin, sign
+from sympy.functions import cos, exp, im, log, re, sin, tan, sign, sqrt
 from sympy.matrices import wronskian
 from sympy.polys import RootsOf, discriminant, RootOf
 from sympy.series import Order
@@ -237,8 +237,7 @@ allhints = ("separable", "1st_exact", "1st_linear", "Bernoulli", "Riccati_specia
 "nth_linear_constant_coeff_undetermined_coefficients",
 "nth_linear_constant_coeff_variation_of_parameters",
 "Liouville", "separable_Integral", "1st_exact_Integral", "1st_linear_Integral",
-"Bernoulli_Integral", "Riccati_special_minus2_Integral",
-"1st_homogeneous_coeff_subs_indep_div_dep_Integral",
+"Bernoulli_Integral", "1st_homogeneous_coeff_subs_indep_div_dep_Integral",
 "1st_homogeneous_coeff_subs_dep_div_indep_Integral",
 "nth_linear_constant_coeff_variation_of_parameters_Integral",
 "Liouville_Integral")
@@ -681,7 +680,6 @@ def classify_ode(eq, func, dict=False):
             r['c2'] = c2
             r['d2'] = d2
             matching_hints["Riccati_special_minus2"] = r
-            matching_hints["Riccati_special_minus2_Integral"] = r
 
         # Exact Differential Equation: P(x,y)+Q(x,y)*y'=0 where dP/dy == dQ/dx
         # WITH NON-REDUCED FORM OF EQUATION
@@ -2120,16 +2118,22 @@ def ode_Riccati_special_minus2(eq, func, order, match):
        |       b - a*y - ______________________
        |                          4*b
       /
+    or after integration:
+                                                    _________________
+                      ________________             /                2
+                     /               2     /      V  4?b?d - (a - c)  *log(x) \
+            a - c - V 4*b*d - (a - c)  *tan|C1 + ___________________________  |
+                                           \                  2*a             /
+    f(x) =  __________________________________________________________________
+                                      2*b*x
     """
     x = func.args[0]
     f = func.func
     y = Dummy('y')
     r = match # a2*diff(f(x),x) + b2*f(x) + c2*f(x)/x + d2/x**2
     C1 = Symbol('C1')
-    mu = (r[r['c2']]**2-4*r[r['d2']]-2*r[r['a2']]*r[r['c2']])/(4*r[r['b2']])
-    t = 1/(x*f(x)+r[r['c2']]/(2*r[r['b2']]))
-    tt = r[r['a2']]*C.Integral(1/(r[r['b2']]-r[r['a2']]*y-mu*y**2),(y, None, t))
-    return Eq((tt).subs(y,t),C.Integral(1/x,x)+C1)
+    mu = sqrt(4*r[r['d2']]*r[r['b2']]-(r[r['a2']]-r[r['c2']])**2)
+    return Eq(f(x),(r[r['a2']]-r[r['c2']]-mu*tan(mu/(2*r[r['a2']])*log(x)+C1))/(2*r[r['b2']]*x))
 
 def ode_Liouville(eq, func, order, match):
     r"""

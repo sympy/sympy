@@ -140,8 +140,8 @@ def test_classify_ode():
     assert a == b == c != ()
     assert classify_ode(2*x*f(x)*f(x).diff(x) + (1 + x)*f(x)**2 - exp(x), f(x)) ==\
         ('Bernoulli', 'Bernoulli_Integral')
-    assert classify_ode(2*f(x).diff(x) + f(x)**2 - f(x)/x+3*x**(-2), f(x)) ==\
-        ('Riccati_special_minus2', 'Riccati_special_minus2_Integral')
+    assert 'Riccati_special_minus2' in\
+        classify_ode(2*f(x).diff(x) + f(x)**2 - f(x)/x+3*x**(-2), f(x))
     raises(ValueError, "classify_ode(x + f(x, y).diff(x).diff(y), f(x, y))")
 
 def test_ode_order():
