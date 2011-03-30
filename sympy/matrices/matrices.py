@@ -2118,7 +2118,7 @@ def block_diag(matrices):
 
     See also: diag(), eye()
     """
-    warnings.warn("block_diag() is deprecated", DeprecationWarning)
+    warnings.warn("block_diag() is deprecated, use diag() instead", DeprecationWarning)
     return diag(*matrices)
 
 def jordan_cell(eigenval, n):
