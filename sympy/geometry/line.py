@@ -367,6 +367,10 @@ class LinearEntity(GeometryEntity):
         return Segment(p, p2)
 
     @property
+    def length(self):
+        return S.Infinity
+
+    @property
     def slope(self):
         """The slope of this linear entity, or infinity if vertical.
 
