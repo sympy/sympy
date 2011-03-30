@@ -148,6 +148,11 @@ class GeometryEntity(tuple):
 
     @property
     def args(self):
+        """Return whatever is contained in the object's tuple.
+
+        The contents will not necessarily be Points.
+        """
+
         return tuple(self)
 
     def __ne__(self, o):

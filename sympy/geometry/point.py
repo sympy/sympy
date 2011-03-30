@@ -316,14 +316,22 @@ class Point(GeometryEntity):
 
         return o.intersection(self)
 
+    @property
+    def length(self):
+        return S.Zero
+
+    def __len__(self):
+        return 1
+
     def __add__(self, other):
         """Add two points, or add a factor to this point's coordinates."""
         if isinstance(other, Point):
-            if len(other) == len(self):
-                return Point([simplify(a + b) for a, b in zip(self, other)])
+            if len(other.args) == len(self.args):
+                return Point( [simplify(a + b) for a, b in zip(self, other)] )
             else:
                 raise TypeError("Points must have the same number of dimensions")
         else:
+            raise ValueError('Cannot add non-Point, %s, to a Point' % other)
             other = sympify(other)
             return Point([simplify(a + other) for a in self])
 
@@ -347,6 +355,6 @@ class Point(GeometryEntity):
         return Point([-x for x in self])
 
     def __abs__(self):
-        """The distance from the origin."""
-        origin = Point([0] * len(self))
+        """Returns the distance between this point and the origin."""
+        origin = Point([0]*len(self.args))
         return Point.distance(origin, self)

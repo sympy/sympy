@@ -609,7 +609,7 @@ class Ellipse(GeometryEntity):
         """
         def dot(p1, p2):
             sum = 0
-            for ind in xrange(0, len(p1)):
+            for ind in xrange(len(p1.args)):
                 sum += p1[ind] * p2[ind]
             return simplify(sum)
 
