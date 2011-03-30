@@ -6,6 +6,7 @@ from sympy.integrals.rationaltools import ratint
 from sympy.integrals.risch import heurisch
 from sympy.utilities import threaded, flatten
 from sympy.polys import Poly
+from sympy.polys.polyerrors import CoercionFailed
 from sympy.solvers import solve
 from sympy.functions import Piecewise
 from sympy.geometry import Curve
@@ -307,7 +308,10 @@ class Integral(Expr):
             return f*x
 
         # try to convert to poly(x) and then integrate if successful (fast)
-        poly = f.as_poly(x)
+        try:
+            poly = f.as_poly(x)
+        except CoercionFailed:
+            poly = None
 
         if poly is not None:
             return poly.integrate().as_basic()
