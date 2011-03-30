@@ -78,6 +78,7 @@ def test_line():
     l3 = Line(p3, p5)
 
     # Basic stuff
+    assert Line(p1, 2) == Line(p1, p1 + Point(1, 2))
     assert Line(p1, p2) == Line(p2, p1)
     assert l1 == l2
     assert l1 != l3
@@ -85,6 +86,10 @@ def test_line():
     assert l3.slope == oo
     assert p1 in l1 # is p1 on the line l1?
     assert p1 not in l3
+
+    assert Line(Point(1, 1), 2) == \
+           Line(2, Point(1, 1)) == \
+           Line(Point(1, 1), Point(2, 3))
 
     assert simplify(l1.equation()) in (x-y, y-x)
     assert simplify(l3.equation()) in (x-x1, x1-x)

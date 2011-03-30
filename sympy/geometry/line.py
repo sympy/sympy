@@ -8,7 +8,7 @@ Ray
 Segment
 
 """
-from sympy.core import S, C
+from sympy.core import S, C, sympify
 from sympy.simplify import simplify
 from sympy.geometry.exceptions import GeometryError
 from entity import GeometryEntity
@@ -670,6 +670,13 @@ class LinearEntity(GeometryEntity):
 class Line(LinearEntity):
     """An infinite line in space.
 
+    A line is declared with two distinct points or a point and slope.
+
+    Note
+    ----
+    At the moment only lines in a 2D space can be declared, because
+    Points can be defined only for 2D spaces.
+
     Parameters
     ----------
     p1 : Point
@@ -681,18 +688,53 @@ class Line(LinearEntity):
 
     Examples
     --------
-    >>> from sympy import Point, Line
-    >>> l = Line(Point(2,3), Point(3,5))
-    >>> l
+    >>> import sympy
+    >>> from sympy import Point
+    >>> from sympy.abc import L
+    >>> from sympy.geometry import Line
+    >>> L = Line(Point(2,3), Point(3,5))
+    >>> L
     Line(Point(2, 3), Point(3, 5))
-    >>> l.points
+    >>> L.points
     (Point(2, 3), Point(3, 5))
-    >>> l.equation()
+    >>> L.equation()
     1 + y - 2*x
-    >>> l.coefficients
+    >>> L.coefficients
     (-2, 1, 1)
 
+    Instantiate from point/slope or slope/point:
+
+    >>> Line(Point(0, 0), 2)
+    Line(Point(0, 0), Point(1, 2))
+    >>> Line(2, Point(0, 0))
+    Line(Point(0, 0), Point(1, 2))
+
     """
+
+    def __new__(cls, p1, p2, **kwargs):
+        if not isinstance(p1, Point):
+            try:
+                p1 = Point(p1)
+            except NotImplementedError:
+                p1 = sympify(p1)
+        if not isinstance(p2, Point):
+            try:
+                p2 = Point(p2)
+            except NotImplementedError:
+                p2 = sympify(p2)
+        if not isinstance(p1, Point):
+            p1, p2 = p2, p1
+        if not isinstance(p1, Point):
+            raise TypeError("Line requires two Points or a Point and slope.")
+        if not isinstance(p2, Point):
+            if sympify(p2).is_bounded is False:
+                # when unbounded slope, don't change x
+                p2 = p1 + Point(0, 1)
+            else:
+                # go over 1 up p2
+                p2 = p1 + Point(1, p2)
+
+        return LinearEntity.__new__(cls, p1, p2, **kwargs)
 
     def arbitrary_point(self, parameter_name='t'):
         """A parametrised point on the Line.
@@ -829,7 +871,7 @@ class Ray(LinearEntity):
     Examples
     --------
     >>> import sympy
-    >>> from sympy import Point
+    >>> from sympy import Point, pi
     >>> from sympy.abc import r
     >>> from sympy.geometry import Ray
     >>> r = Ray(Point(2, 3), Point(3, 5))
