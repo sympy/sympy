@@ -2102,8 +2102,8 @@ def ode_Riccati_special_minus2(eq, func, order, match):
     where a, b, c, d - are constants, a != 0, b != 0, c or d != 0.
     First we shoud devide the whole equation on a, because it's not zero.
     Then substitution u = y+b/(2*c) will transform an equation of this
-    form into special riccati equation du/dx+a1*u**2+b1/x**2, which can be
-    transformed into homogenious equation with inverse transformation z=1/y
+    form into special Riccati equation du/dx+a1*u**2+b1/x**2, which can be
+    transformed into homogeneous equation with inverse transformation z=1/y
     The general solution is:
         1
   _____________
@@ -2121,7 +2121,7 @@ def ode_Riccati_special_minus2(eq, func, order, match):
     or after integration:
                                                     _________________
                       ________________             /                2
-                     /               2     /      V  4?b?d - (a - c)  *log(x) \
+                     /               2     /      V  4*b*d - (a - c)  *log(x) \
             a - c - V 4*b*d - (a - c)  *tan|C1 + ___________________________  |
                                            \                  2*a             /
     f(x) =  __________________________________________________________________
