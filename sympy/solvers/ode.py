@@ -2110,15 +2110,15 @@ def ode_Bernoulli(eq, func, order, match):
 
 def ode_Riccati_special_minus2(eq, func, order, match):
     r"""
-    Solves special case (alpha = -2) of Riccati differential equations.
+    Solves the special case (alpha = -2) of Riccati differential equations.
 
-    These are equations of the form a*dy/dx + b*y**2 + c*y/x +d/x**2,
-    where a, b, c, d - are constants, a != 0, b != 0, c or d != 0.
-    First we should divide the whole equation by a, because it's not zero.
+    These are equations of the form a*dy/dx + b*y**2 + c*y/x + d/x**2,
+    where a, b, c, d are constants: a != 0, b != 0, and c or d != 0.
+    First, we should divide the whole equation by a, because it's not zero.
     The substitution u = y + b/(2*c) will transform an equation of this
-    form into special Riccati equation du/dx+a1*u**2+b1/x**2, which can be
-    transformed into homogeneous equation with inverse transformation z=1/y
-    The general solution is:
+    form into the special Riccati equation du/dx + a1*u**2 + b1/x**2, which can
+    be transformed into a homogeneous equation with inverse transformation
+    z = 1/y. The general solution is then:
 
            1
      _____________
