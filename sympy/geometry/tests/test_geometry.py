@@ -72,10 +72,18 @@ def test_line():
     p3 = Point(x1, x1)
     p4 = Point(y1, y1)
     p5 = Point(x1, 1 + x1)
+    p6 = Point(1, 0)
+    p7 = Point(0, 1)
+    p8 = Point(2, 0)
+    p9 = Point(2, 1)
 
     l1 = Line(p1, p2)
     l2 = Line(p3, p4)
     l3 = Line(p3, p5)
+    l4 = Line(p1, p6)
+    l5 = Line(p1, p7)
+    l6 = Line(p8, p9)
+    l7 = Line(p2, p9)
 
     # Basic stuff
     assert Line(p1, 2) == Line(p1, p1 + Point(1, 2))
@@ -84,6 +92,14 @@ def test_line():
     assert l1 != l3
     assert l1.slope == 1
     assert l3.slope == oo
+    assert l4.slope == 0
+    assert l4.coefficients == (0, 1, 0)
+    assert l4.equation(x=x, y=y) == y
+    assert l5.slope == oo
+    assert l5.coefficients == (1, 0, 0)
+    assert l5.equation() == x
+    assert l6.equation() == x - 2
+    assert l7.equation() == y - 1
     assert p1 in l1 # is p1 on the line l1?
     assert p1 not in l3
 

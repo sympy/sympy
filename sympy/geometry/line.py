@@ -102,7 +102,13 @@ class LinearEntity(GeometryEntity):
         (-y, x, 0)
 
         """
-        return (self.p1[1] - self.p2[1], self.p2[0] - self.p1[0],
+        p1, p2 = self.points
+        if p1[0] == p2[0]:
+            return (S.One, S.Zero, -p1[0])
+        elif p1[1] == p2[1]:
+            return (S.Zero, S.One, -p1[1])
+        return (self.p1[1]-self.p2[1],
+                self.p2[0]-self.p1[0],
                 self.p1[0]*self.p2[1] - self.p1[1]*self.p2[0])
 
     def is_concurrent(*lines):
@@ -658,6 +664,17 @@ class LinearEntity(GeometryEntity):
             y = simplify((-c - a*x) / b)
         return Point(x, y)
 
+    def is_similar(self, other):
+        """Return True if self and other are contained in the same line."""
+        def norm(a, b, c):
+            if a != 0:
+                return 1, b/a, c/a
+            elif b != 0:
+                return a/b, 1, c/b
+            else:
+                return c
+        return norm(*self.coefficients) == norm(*other.coefficients)
+
     def __eq__(self, other):
         """Subclasses should implement this method."""
         raise NotImplementedError()
@@ -795,14 +812,14 @@ class Line(LinearEntity):
         t = C.Symbol(parameter_name, real=True)
         return [t, -5, 5]
 
-    def equation(self, xaxis_name='x', yaxis_name='y'):
+    def equation(self, x='x', y='y'):
         """The equation of the line: ax + by + c.
 
         Parameters
         ----------
-        xaxis_name : str, optional
+        x : str, optional
             The name to use for the x-axis, default value is 'x'.
-        yaxis_name : str, optional
+        y : str, optional
             The name to use for the y-axis, default value is 'y'.
 
         Returns
@@ -818,26 +835,35 @@ class Line(LinearEntity):
         3 - 3*x + 4*y
 
         """
-        x = C.Symbol(xaxis_name, real=True)
-        y = C.Symbol(yaxis_name, real=True)
-        a,b,c = self.coefficients
+        if type(x) is str:
+            x = C.Symbol(x, real=True)
+        if type(y) is str:
+            y = C.Symbol(y, real=True)
+
+        p1, p2 = self.points
+        if p1[0] == p2[0]:
+            return x - p1[0]
+        elif p1[1] == p2[1]:
+            return y - p1[1]
+
+        a, b, c = self.coefficients
         return simplify(a*x + b*y + c)
 
     def __contains__(self, o):
-        """Is `o` on the Line."""
-        if isinstance(o, Line):
-            return self.__eq__(o)
-        elif isinstance(o, Point):
-            x = C.Symbol('x', real=True)
-            y = C.Symbol('y', real=True)
-            r = self.equation().subs({x: o[0], y: o[1]})
-            x = simplify(r)
-            return simplify(x) == 0
-        else:
+        """Return True if o is on this Line, or False otherwise."""
+        if isinstance(o, Point):
+            return Point.is_collinear(self.p1, self.p2, o)
+        elif not isinstance(o, LinearEntity):
             return False
+        elif isinstance(o, Line):
+            return self.__eq__(o)
+        elif not self.is_similar(o):
+            return False
+        else:
+            return o[0] in self and o[1] in self
 
     def __eq__(self, other):
-        """Is the other Line equal to this Line."""
+        """Return True if other is equal to this Line, or False otherwise."""
         if not isinstance(other, Line):
             return False
         return Point.is_collinear(self.p1, self.p2, other.p1, other.p2)
