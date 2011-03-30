@@ -366,7 +366,6 @@ class Real(Number):
             return other.__ne__(self)
         if isinstance(other, FunctionClass): #cos as opposed to cos(x)
             return True
-        if other.is_comparable: other = other.evalf()
         if isinstance(other, Number):
             return bool(not mlib.mpf_eq(self._mpf_, other._as_mpf_val(self._prec)))
         return True     # Real != non-Number
