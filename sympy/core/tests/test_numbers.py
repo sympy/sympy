@@ -188,12 +188,16 @@ def test_Real():
     assert x2_str._mpf_ == (0, 10808639105689190L, -53, 53)
 
     # do not automatically evalf
-    assert not (pi.evalf() == pi)
-    assert not (pi == pi.evalf ())
-    assert not ((2*pi).evalf() == 2*pi)
-    assert not (2*pi == (2*pi).evalf())
-    assert not (cos(0.1, evaluate=False) == cos(0.1).evalf())
-    assert not (cos(0.1).evalf() == cos(0.1, evaluate=False))
+    def teq(a):
+        assert (a.evalf () == a) is False
+        assert (a.evalf () != a) is True
+        assert (a == a.evalf()) is False
+        assert (a != a.evalf()) is True
+
+    teq(pi)
+    teq(2*pi)
+    teq(cos(0.1, evaluate=False))
+
 
 def test_Real_eval():
     a = Real(3.2)
