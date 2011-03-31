@@ -158,6 +158,7 @@ def checkidesol(ide, func, fn):
         >>> checkidesol(eq, f(x), 1)
         True
     """
+    fn = S(fn)
     eq = ide
     if len(func.args) != 1:
         raise ValueError("checkidesol() will only work with functions " + \
@@ -176,10 +177,7 @@ def checkidesol(ide, func, fn):
             funcsymbol = func.args[0]
             integralsymbol = term.variables[0]
             subsfunc = func.subs(funcsymbol, integralsymbol)
-            try:
-                solnfunc = fn.subs(funcsymbol, integralsymbol)
-            except AttributeError:
-                solnfunc = fn
+            solnfunc = fn.subs(funcsymbol, integralsymbol)
             integralterm = C.Integral(term.function.subs(subsfunc, solnfunc), term.limits)
             neweq = Eq(neweq.lhs + integralterm.doit(), func)
         else:
