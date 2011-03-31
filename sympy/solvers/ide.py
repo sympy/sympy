@@ -193,6 +193,24 @@ def idesolve(eq, func, method = "", param = 5):
     solving the integral equation. The method parameter can be any of the following:
     Approximate, Neumann, Adomian, Laplace, Series, AsOde, Eigen. The function map is
     defined at the end.
+
+    ***Examples***
+        >>> from sympy import Function, idesolve, checkidesol, Eq, \
+               Integral, Symbol, exp, S
+        >>> from sympy.abc import x, y
+        >>> f = Function('f')
+        >>> g = Function('g')
+        >>> n = Symbol('n')
+
+        Suppose we have the following integral equation
+        >>> eq = Eq((5.0/6.0)*x+Integral(S(1)/2*x*y*f(y),(y,0,1)),f(x))
+        >>> idesolve(eq, f(x), \"Approximate\", 21)
+        x
+
+        Consider another example
+        >>> eq = Eq(1 + x + Integral(-f(y), (y,0,x)), f(x))
+        >>> idesolve(eq, f(x), \"Approximate\", 1)
+        1
     """
     if not method == "":
         return methodmap[method](eq, func, param)
