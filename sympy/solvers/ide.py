@@ -82,7 +82,7 @@ def process_terms(term, func, classifier):
 
     return classifier
 
-def classify_ide(eq, func, dicr=False):
+def classify_ide(eq, func):
     """
     Returns a list indicating the classification of the given integral equation
 
@@ -182,7 +182,7 @@ def idesolve(eq, func, method = "", param = 5):
     raise NotImplementedError("Fredholm first kind equations are currently not supported")
 
 def idesolve_nonlinear(eq, func, method = ""):
-    raise NotImplementedError()
+    raise NotImplementedError("Nonlinear integral equations are currently not supported")
 
 def subs_func_in_integral(func, term, neweq, startsoln):
     # Helper function to substitute the starting solution in the integral term
@@ -316,7 +316,6 @@ def solve_series(eq, func, n):
         raise ValueError ("No power series solution exists")
     for k, v in series_soln.iteritems():
         series = series.subs(k, v)
-    print series
     return series
 
 def solve_approximate(eq, func, level, startsoln = 1, picard = False):
