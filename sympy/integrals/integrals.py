@@ -358,13 +358,9 @@ class Integral(Expr):
             flatten(*self.limits))
 
     def _eval_derivative(self, sym):
-        """Evaluate the derivative of the current Integral object.
-        We follow these steps:
-
-        (1) If sym will not be present in the evaluated integral return 0.
-
-        (2) Differentiate under the integral sign [1], using the
-            Fundamental Theorem of Calculus [2] when possible.
+        """Evaluate the derivative of the current Integral object by
+        differentiating under the integral sign [1], using the Fundamental
+        Theorem of Calculus [2] when possible.
 
         Whenever an Integral is encountered that is equivalent to zero or
         has an integrand that is independent of the variable of integration
@@ -392,9 +388,6 @@ class Integral(Expr):
         -1/6 - x/2 + 2*x**3/3
 
         """
-
-        if sym not in self.free_symbols:
-            return S.Zero
 
         # differentiate under the integral sign; we do not
         # check for regularity conditions (TODO), see issue 1116
