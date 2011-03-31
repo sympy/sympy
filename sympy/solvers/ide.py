@@ -1,18 +1,18 @@
 """
-This module contains iesolve() and different helper functions that it
+This module contains idesolve() and different helper functions that it
 uses.
 
-iesolve() solves linear integral equations. It replicates the functionality of intsolve in Maple.
+idesolve() solves linear integral equations. It replicates the functionality of intsolve in Maple.
 
 **Functions in this module**
 
     These are the user functions in this module:
 
-    - iesolve() - Solves IDEs. It takes the integral equation and the unknown function as its parameters
+    - idesolve() - Solves IDEs. It takes the integral equation and the unknown function as its parameters
                   as well as the method to be used to solve the integral equation. This method only solves
                   linear integral equations.
-    - iesolve_nonlinear() - Solves certain kinds of non linear integral equations.
-    - classify_ide() - Classifies IDEs into possible hints for iesolve().
+    - idesolve_nonlinear() - Solves certain kinds of non linear integral equations.
+    - classify_ide() - Classifies IDEs into possible hints for idesolve().
     - checkidesol() - Checks if the given function is the solution of an IDE.
 
     References
@@ -107,7 +107,7 @@ def classify_ide(eq, func, dicr=False):
         ['Volterra', 'Second Kind', 'Non-homogenous']
     """
     if len(func.args) != 1:
-        raise ValueError("iesolve() and classify_ide() only work with functions " + \
+        raise ValueError("idesolve() and classify_ide() only work with functions " + \
             "of one variable")
     if isinstance(eq, Equality):
         if eq.rhs != 0:
@@ -181,7 +181,7 @@ def idesolve(eq, func, method = "", param = 5):
             return methodmap["Neumann"](eq, func, param)
     raise NotImplementedError("Fredholm first kind equations are currently not supported")
 
-def iesolve_nonlinear(eq, func, method = ""):
+def idesolve_nonlinear(eq, func, method = ""):
     raise NotImplementedError()
 
 def subs_func_in_integral(func, term, neweq, startsoln):
