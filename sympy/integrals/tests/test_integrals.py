@@ -418,3 +418,5 @@ def issue_1785():
 def issue_1785_fail():
     assert integrate(x**x*(1+log(x)).expand(mul=True)) is None
 
+def test_ide_issue():
+    assert integrate(0.5*x*y, (y,0,1)) == 0.25*x
