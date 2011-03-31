@@ -88,8 +88,11 @@ def classify_ide(eq, func):
 
     **Examples**
 
-        >>> from sympy import Function, classify_ode, Eq
-        >>> from sympy.abc import x
+        >>> from sympy import Function, classify_ide, Eq, Integral, Symbol, exp
+        >>> from sympy.abc import x, y
+        >>> f = Function('f')
+        >>> g = Function('g')
+        >>> n = Symbol('n')
 
         Consider the following integral equation
         >>> eq = Eq(Integral(f(y)*exp(x-y),(y,0,x)),x)
@@ -138,8 +141,12 @@ def checkidesol(ide, func, fn):
     This method verifies if the given function satisfies the given Integral equation
 
     **Examples**
-        >>> from sympy import Function, checkidesol, Eq
-        >>> from sympy.abc import x
+        >>> from sympy import Function, idesolve, checkidesol, Eq, \
+               Integral, Symbol, exp, S
+        >>> from sympy.abc import x, y
+        >>> f = Function('f')
+        >>> g = Function('g')
+        >>> n = Symbol('n')
 
         Suppose we have the following integral equation
         >>> eq = Eq((5.0/6.0)*x+Integral(S(1)/2*x*y*f(y),(y,0,1)),f(x))
@@ -169,7 +176,10 @@ def checkidesol(ide, func, fn):
             funcsymbol = func.args[0]
             integralsymbol = term.variables[0]
             subsfunc = func.subs(funcsymbol, integralsymbol)
-            solnfunc = fn.subs(funcsymbol, integralsymbol)
+            try:
+                solnfunc = fn.subs(funcsymbol, integralsymbol)
+            except AttributeError:
+                solnfunc = fn
             integralterm = C.Integral(term.function.subs(subsfunc, solnfunc), term.limits)
             neweq = Eq(neweq.lhs + integralterm.doit(), func)
         else:
