@@ -11,8 +11,8 @@ import warnings
 class Polygon(GeometryEntity):
     """A two-dimensional polygon.
 
-    A simple polygon in space. Can be constructed from a sequence or list
-    of points.
+    A simple polygon in space. Can be constructed from a sequence of points
+    or from a center, radius, number of sides and rotation angle.
 
     Parameters
     ----------
@@ -75,6 +75,16 @@ class Polygon(GeometryEntity):
     """
 
     def __new__(cls, *args, **kwargs):
+        if kwargs.get('n', 0):
+            n = kwargs.pop('n')
+            args = list(args)
+            # return a virtual polygon with n sides
+            if len(args) == 2: # center, radius
+                args.append(n)
+            elif len(args) == 3: # center, radius, rotation
+                args.insert(2, n)
+            return RegularPolygon(*args, **kwargs)
+
         vertices = GeometryEntity.extract_entities(args, remove_duplicates=False)
 
         for p in vertices:
@@ -751,16 +761,27 @@ class RegularPolygon(Polygon):
     --------
     Point
 
+    Note
+    ----
+    A RegularPolygon can be instantiated with Polygon with the kwarg n.
+
+    Regular polygons are instantiated with a center, radius, number of sides
+    and a rotation angle. They return a vertex when indexed rather than the
+    argument at that index.
+
     Examples
     --------
     >>> from sympy.geometry import RegularPolygon, Point
-    >>> RegularPolygon(Point(0, 0), 5, 5)
-    RegularPolygon(Point(0, 0), 5, 5)
+    >>> r = RegularPolygon(Point(0, 0), 5, 3)
+    >>> r
+    RegularPolygon(Point(0, 0), 5, 3, 0)
+    >>> r[0]
+    Point(5, 0)
 
     """
 
-    def __new__(self, c, r, n, **kwargs):
-        r, n = [sympify(w) for w in [r, n]]
+    def __new__(self, c, r, n, rot=0, **kwargs):
+        r, n, rot = [sympify(w) for w in [r, n, rot]]
         if not isinstance(c, Point):
             raise GeometryError("RegularPolygon.__new__ requires c to be a Point instance")
         if not isinstance(r, Basic):
@@ -772,35 +793,18 @@ class RegularPolygon(Polygon):
         obj._n = n
         obj._center = c
         obj._radius = r
+        obj._rot = rot
         return obj
 
     @property
-    def vertices(self):
-        """The vertices of the regular polygon.
+    def args(self):
+        return self._center, self._radius, self._n, self._rot
 
-        Returns
-        -------
-        vertices : list
-            Each vertex is a Point.
+    def __str__(self):
+        return 'RegularPolygon(%s, %s, %s, %s)' % tuple(self.args)
 
-        See Also
-        --------
-        Point
-
-        Examples
-        --------
-        >>> from sympy.geometry import RegularPolygon, Point
-        >>> rp = RegularPolygon(Point(0, 0), 5, 4)
-        >>> rp.vertices
-        [Point(5, 0), Point(0, 5), Point(-5, 0), Point(0, -5)]
-
-        """
-        points = []
-        c, r, n = self
-        v = 2*S.Pi/n
-        for k in xrange(0, n):
-            points.append(Point(c[0] + r*C.cos(k*v), c[1] + r*C.sin(k*v)))
-        return points
+    def __repr__(self):
+        return 'RegularPolygon(%s, %s, %s, %s)' % tuple(self.args)
 
     @property
     def center(self):
@@ -847,6 +851,24 @@ class RegularPolygon(Polygon):
 
         """
         return self._radius
+
+    @property
+    def rotation(self):
+        """CCW angle by which regular polygon is rotated
+
+        Returns
+        -------
+        rotation : number or instance of Basic
+
+        Examples
+        --------
+        >>> from sympy import pi
+        >>> from sympy.geometry import RegularPolygon, Point
+        >>> RegularPolygon(Point(0, 0), 3, 4, pi).rotation
+        pi
+
+        """
+        return self._rot
 
     @property
     def apothem(self):
@@ -977,15 +999,68 @@ class RegularPolygon(Polygon):
             # now enumerate the regular polygon like a general polygon.
             return Polygon.encloses_point(self, p)
 
-    def __len__(self):
-        return self._n
+    def rotate(self, angle):
+        """Rotate the virtual Polygon
+        >>> from sympy import Polygon, Point, pi
+        >>> r = Polygon(Point(0,0), 1, n=3)
+        >>> r[0]
+        Point(1, 0)
+        >>> r.rotate(pi/6)
+        >>> r[0]
+        Point(3**(1/2)/2, 1/2)
+
+        """
+        self._rot += angle
+
+    @property
+    def vertices(self):
+        """The vertices of the regular polygon.
+
+        Returns
+        -------
+        vertices : list
+            Each vertex is a Point.
+
+        See Also
+        --------
+        Point
+
+        Examples
+        --------
+        >>> from sympy.geometry import RegularPolygon, Point
+        >>> rp = RegularPolygon(Point(0, 0), 5, 4)
+        >>> rp.vertices
+        [Point(5, 0), Point(0, 5), Point(-5, 0), Point(0, -5)]
+
+        """
+        return [self[i] for i in range(len(self))]
 
     def __getitem__(self, k):
+        """
+        >>> from sympy import Polygon, Point
+        >>> r = Polygon(Point(0, 0), 1, n=3)
+        >>> r[0]
+        Point(1, 0)
+
+        Note that iteration and indexing do not give the same results.
+        >>> for ri in r:
+        ...     print ri
+        Point(0, 0)
+        1
+        3
+        0
+        """
         if k < -self._n or k >= self._n:
             raise IndexError('virtual tuple index out of range')
-        c, r, n = self
-        v = 2*S.Pi/n
-        return Point(c[0] + r*C.cos(k*v), c[1] + r*C.sin(k*v))
+        c = self._center
+        r = self._radius
+        rot = self._rot
+        v = 2*S.Pi/self._n
+        return Point(c[0] + r*C.cos(k*v + rot), c[1] + r*C.sin(k*v + rot))
+
+    def __iter__(self):
+        for i in [self._center, self._radius, self._n, self._rot]:
+            yield i
 
     def __eq__(self, o):
         if not isinstance(o, Polygon) or len(self) != len(o):
@@ -993,6 +1068,9 @@ class RegularPolygon(Polygon):
         elif not isinstance(o, RegularPolygon):
             return Polygon.__eq__(o, self)
         return self.args == o.args
+
+    def __len__(self):
+        return self._n
 
 class Triangle(Polygon):
     """

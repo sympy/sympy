@@ -60,9 +60,6 @@ class GeometryEntity(tuple):
         XXX geometry needs a modify_points method which operates
         on only the points of the object
 
-        RegularPolygon needs an orientation property and should iterate
-        over vertices not args in [w for w in RegularPolygon(...)]
-
         >>> from sympy import Point, RegularPolygon, Polygon, pi
         >>> t = Polygon(*RegularPolygon(Point(0, 0), 1, 3).vertices)
         >>> t # vertex on x axis
@@ -235,7 +232,7 @@ class GeometryEntity(tuple):
         if hasattr(self, '_eval_subs_'):
             return self.subs(old, new)
         elif isinstance(self, GeometryEntity):
-            return type(self)(*[a.subs(old, new) for a in self])
+            return type(self)(*[a.subs(old, new) for a in self.args])
         else:
             return self
 
