@@ -136,6 +136,20 @@ def classify_ide(eq, func):
 def checkidesol(ide, func, fn):
     """
     This method verifies if the given function satisfies the given Integral equation
+
+    **Examples**
+        >>> from sympy import Function, checkidesol, Eq
+        >>> from sympy.abc import x
+
+        Suppose we have the following integral equation
+        >>> eq = Eq((5.0/6.0)*x+Integral(S(1)/2*x*y*f(y),(y,0,1)),f(x))
+        >>> checkidesol(eq, f(x), idesolve(eq, f(x), \"Approximate\", 21))
+        True
+
+        Consider another example
+        >>> eq = Eq(1 + x + Integral(-f(y), (y,0,x)), f(x))
+        >>> checkidesol(eq, f(x), 1)
+        True
     """
     eq = ide
     if len(func.args) != 1:
@@ -169,7 +183,8 @@ def idesolve(eq, func, method = "", param = 5):
     equations. This routine first attempts to classify
     the given integral equation. It then selects the method most appropriate for
     solving the integral equation. The method parameter can be any of the following:
-    Approximate, Neumann, Adomian, Laplace, Series, AsOde, Eigen
+    Approximate, Neumann, Adomian, Laplace, Series, AsOde, Eigen. The function map is
+    defined at the end.
     """
     if not method == "":
         return methodmap[method](eq, func, param)

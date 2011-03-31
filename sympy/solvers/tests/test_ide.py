@@ -27,12 +27,6 @@ ffh = ['Fredholm', 'First Kind', 'Homogenous']
 fsnh = ['Fredholm', 'Second Kind', 'Non-homogenous']
 fsh = ['Fredholm', 'Second Kind', 'Homogenous']
 
-def test_checkidesol():
-    # For the most part, checkodesol is well tested in the tests below.
-    # These tests only handle cases not checked below.
-    raises(ValueError, "checkidesol(f(x).diff(x), f(x), x)")
-    raises(ValueError, "checkidesol(f(x).diff(x), f(x, y), Eq(f(x), x))")
-
 def test_classify_ode():
     """
     Tests for volterra integral equation of the first kind
@@ -88,6 +82,8 @@ def test_classify_ode():
     assert classify_ide(eq5,f(x)) == fsnh
 
 def test_idesolve():
+    eq1 = Eq(1 + x + Integral(-f(y),(y,0,x)),f(x))
+    assert idesolve(eq1, f(x),"Approximate",2) == 1
     eq2 = Eq(1 + Integral(f(y),(y,0,x)),f(x))
     assert idesolve(eq2,f(x),"Approximate",5) == 1 + x + x**2/2\
      + x**3/6 + x**4/24 + x**5/120 # Series expansion for exp(x)
@@ -124,7 +120,9 @@ def test_checkidesol():
     eq1 =  Eq(1 + Integral(f(y),(y,0,x)),f(x))
     assert checkidesol(eq1,f(x),exp(x))
     eq2 = Eq(1 + Integral(x*f(y),(y,0.0,1.0)),f(x))
-    assert checkidesol(eq1, f(x),solve_approximate(eq1,f(x),49))
+    assert checkidesol(eq2, f(x),solve_approximate(eq1,f(x),2))
+    eq3 = Eq(1 + x + Integral(-f(y),(y,0,x)),f(x))
+    assert checkidesol(eq3, f(x), 1)
 
 def test_checkneumann():
     eq1 = Eq(1 + Integral(f(y),(y,0,x)), f(x))
