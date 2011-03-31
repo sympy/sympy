@@ -104,7 +104,7 @@ def classify_ide(eq, func, dicr=False):
 
         >>> eq =  Eq(f(x) + n*Integral(f(y)*((x-y)**(0.5)),(y,0,x)),g(x))
         >>> classify_ide (eq, f(x))
-        ['Non-homogenous', 'Second Kind', 'Volterra']
+        ['Volterra', 'Second Kind', 'Non-homogenous']
     """
     if len(func.args) != 1:
         raise ValueError("iesolve() and classify_ide() only work with functions " + \
@@ -163,15 +163,23 @@ def checkidesol(ide, func, fn):
     neweq = Eq(neweq.lhs, 0)
     return neweq == Eq(0,0)
 
-def iesolve(eq, func, method = ""):
+def idesolve(eq, func, method = "", param = 5):
     """
     This is the main routine exposed to the user for solving linear integral
     equations. This routine first attempts to classify
     the given integral equation. It then selects the method most appropriate for
-    solving the integral equation.
+    solving the integral equation. The method parameter can be any of the following:
+    Approximate, Neumann, Adomian, Laplace, Series, AsOde, Eigen
     """
+    if not method == "":
+        return methodmap[method](eq, func, param)
     ide_classification = classify_ide(eq, func)
-    raise NotImplementedError()
+    if ide_classification.contains("Volterra"):
+        return methodmap["Approximate"](eq, func, param, 1)
+    if ide_classification.contains("Fredholm"):
+        if ide_classification.contains("Second Kind"):
+            return methodmap["Neumann"](eq, func, param)
+    raise NotImplementedError("Fredholm first kind equations are currently not supported")
 
 def iesolve_nonlinear(eq, func, method = ""):
     raise NotImplementedError()
@@ -256,6 +264,7 @@ def solve_series(eq, func, n):
     to give the values of the coefficients in the power series.
     Use for Volterra integral equations of the second kind where K(x,x) = 0.
     """
+    #This is buggy and needs to be fixed
     from sympy import collect
     dummysymbol = Symbol("D")
     components = []
@@ -274,7 +283,7 @@ def solve_series(eq, func, n):
     series = series.lhs
 
     neweq = Eq(0,eq.rhs.subs(func, series))
-    nonintegral = Eq(0,func)
+    nonintegral = Eq(0, func)
     for term in eq.lhs.args:
         if type(term) == C.Integral:
             termsymbol = term.variables[0]
@@ -282,24 +291,24 @@ def solve_series(eq, func, n):
             subsfunc = func.subs(func.args[0], termsymbol)
             integralterm = C.Integral(term.function.subs(subsfunc, seriesfunc),\
                                   term.limits)
-            neweq = Eq(neweq.lhs + integralterm.doit().expand(),0)
+            neweq = Eq(neweq.lhs + integralterm.doit().expand(), 0)
         else:
             nonintegral = Eq(nonintegral.lhs + term.expand(), func)
     neweq = Eq(collect(neweq.lhs + nonintegral.lhs - neweq.rhs,\
-                       [func.args[0]**i for i in range(1,n,1)]),0)
-
+                       [func.args[0]**i for i in range(1,n,1)]), 0)
     series_system = []
-    series_system.insert(0, Eq(0))
+    series_system.insert(0, Add(0))
     for i, term in zip(range(len(neweq.lhs.args)), neweq.lhs.args):
         if type(term) == Mul and func.args[0] in term.args[0]:
-            series_system.append(Eq(term.args[1]))
+            series_system.append(Add(term.args[1]))
         else:
             if func.args[0] in term:
                 if term.args[1] == symbols[len(symbols)-1]:
                     continue
-                series_system.append(Eq(term.subs(func.args[0],1)))
+                series_system.append(Add(term.subs(func.args[0],1)))
                 continue
-            series_system[0] = Eq(series_system[0].lhs + term)
+            series_system[0] += term
+    series_system = [Eq(eqn, 0) for eqn in series_system]
     if len(series_system) > len(symbols):
         del series_system[len(symbols):len(series_system)]
     series_soln = solve(series_system, symbols)
@@ -307,6 +316,7 @@ def solve_series(eq, func, n):
         raise ValueError ("No power series solution exists")
     for k, v in series_soln.iteritems():
         series = series.subs(k, v)
+    print series
     return series
 
 def solve_approximate(eq, func, level, startsoln = 1, picard = False):
@@ -429,3 +439,11 @@ def solve_laplace():
     Solves integral equations using Laplace Transform technique
     """
     raise NotImplementedError()
+
+methodmap = {"Approximate" : solve_approximate,
+             "Neumann" : solve_neumann,
+             "Adomian" : solve_adomian,
+             "Laplace" : solve_laplace,
+             "Series" : solve_series,
+             "AsOde" : solve_asode,
+             "Eigen" : solve_eigenfunction}

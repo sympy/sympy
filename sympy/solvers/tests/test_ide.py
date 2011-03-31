@@ -3,8 +3,8 @@ from sympy import Function, dsolve, Symbol, sin, cos, sinh, acos, tan, cosh, \
         fraction, radsimp, Eq, sqrt, pi, erf, oo, diff, Rational, asinh, trigsimp, \
         S, RootOf, Poly, Integral, atan, Equality, solve, O, LambertW
 from sympy.abc import x, y, z
-from sympy.solvers.ide import classify_ide , solve_series, checkidesol, \
-        solve_adomian, solve_approximate
+from sympy.solvers.ide import classify_ide , idesolve, checkidesol, \
+        solve_adomian, solve_approximate, solve_neumann, solve_series
 from sympy.utilities.pytest import XFAIL, skip, raises
 
 n= Symbol('n')
@@ -87,11 +87,15 @@ def test_classify_ode():
     eq5 = Eq(f(x) - n*Integral(f(y)*exp(-abs(x-y)),(y,-oo,oo)),g(x)) # Lalesco-Picard equation
     assert classify_ide(eq5,f(x)) == fsnh
 
+def test_idesolve():
+    eq2 = Eq(1 + Integral(f(y),(y,0,x)),f(x))
+    assert idesolve(eq2,f(x),"Approximate",5) == 1 + x + x**2/2\
+     + x**3/6 + x**4/24 + x**5/120 # Series expansion for exp(x)
+
+@XFAIL
 def test_solveapproximate():
-    #FIXME: Tests for eq1 and eq6 fail because of some problem in the integration routine. This works fine if we use
-    #integrate directly instead of through C
-    eq1 = Eq((5.0/6.0)*x+Integral(0.5*x*y*f(y),(y,0,1)),f(x)) # Example in maple's intsolve
-    #assert solve_approximate(eq1,f(x),21) == x
+    eq1 = Eq((5.0/6.0)*x+Integral(S(1)/2*x*y*f(y),(y,0,1)),f(x)) # Example in maple's intsolve
+    assert solve_approximate(eq1,f(x),21) == x
     eq2 = Eq(1 + Integral(f(y),(y,0,x)),f(x))
     assert solve_approximate(eq2,f(x),5) == 1 + x + x**2/2\
      + x**3/6 + x**4/24 + x**5/120 # Series expansion for exp(x)
@@ -101,8 +105,9 @@ def test_solveapproximate():
     assert solve_approximate(eq4,f(x),1,x) == 1 + x**2/3
     eq5 =  Eq(1 + x + Integral(-f(y),(y,0,x)),f(x)) # Converges to 1
     assert solve_approximate(eq5,f(x),7,x) == 1 + x**7/5040 - x**8/40320
-    eq6 = Eq(1 + Integral(x*f(y),(y,0.0,1.0)),f(x))
-    #assert solve_approximate(eq6,f(x),49) == 1 + 2.0*x
+    skip("Fails because if a bug in polys")
+    eq6 = Eq(1 + Integral(x*f(y),(y,0,1)),f(x))
+    assert solve_approximate(eq6,f(x),49) == 1 + 2.0*x
 
 def test_solveadomian():
     eq1 = Eq(1 + Integral(f(y),(y,0,x)),f(x))
@@ -113,18 +118,15 @@ def test_solveadomian():
     eq3 = Eq(1 + x + Integral(-f(y),(y,0,x)),f(x))
     assert solve_adomian(eq3, f(x), 9) == 1 + x**9/362880 # Converges to 1
 
-def test_solveseries():
-    #FIXME: This fails because Eq(0) or Eq(0,0) is automatically evaluated as a boolean instead of the
-    #form we need it in (0==0)
-    eq1 =  Eq(1 + Integral(f(y),(y,0,1)),f(x))
-    #assert solve_series(eq1,f(x),3) == C0 - 3*x**2
-    eq2 =  Eq(1 + Integral((x**2-y**2)*f(y),(y,0,1)),f(x))
-    #assert solve_series(eq1,f(x),10) == 30/49 + 45*x**2/49
-    eq3 =  Eq(1 + Integral(f(y),(y,0,x)),f(x))
-    #assert solve_series(eq3,f(x),10) == 1 + x + x**2/2 + \
-                                        #x**3/6 + x**4/24 + x**5/120
+@XFAIL
 def test_checkidesol():
     eq1 =  Eq(1 + Integral(f(y),(y,0,x)),f(x))
     assert checkidesol(eq1,f(x),exp(x))
+    skip("Fails because of some error in integration when specifying floating point numbers")
     eq2 = Eq(1 + Integral(x*f(y),(y,0.0,1.0)),f(x))
-    #assert checkidesol(eq1, f(x),solve_approximate(eq1,f(x),49)) Takes too much time
+    assert checkidesol(eq1, f(x),solve_approximate(eq1,f(x),49))
+
+def test_checkneumann():
+    eq1 = Eq(1 + Integral(f(y),(y,0,x)), f(x))
+    assert solve_approximate(eq1,f(x),5) == 1 + x + x**2/2\
+     + x**3/6 + x**4/24 + x**5/120 # Series expansion for exp(x)
