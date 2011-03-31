@@ -92,6 +92,7 @@ def test_idesolve():
     assert idesolve(eq2,f(x),"Approximate",5) == 1 + x + x**2/2\
      + x**3/6 + x**4/24 + x**5/120 # Series expansion for exp(x)
 
+# Test case 6 fails because of a bug in polys when specifying FP integration limits
 @XFAIL
 def test_solveapproximate():
     eq1 = Eq((5.0/6.0)*x+Integral(S(1)/2*x*y*f(y),(y,0,1)),f(x)) # Example in maple's intsolve
@@ -105,7 +106,6 @@ def test_solveapproximate():
     assert solve_approximate(eq4,f(x),1,x) == 1 + x**2/3
     eq5 =  Eq(1 + x + Integral(-f(y),(y,0,x)),f(x)) # Converges to 1
     assert solve_approximate(eq5,f(x),7,x) == 1 + x**7/5040 - x**8/40320
-    skip("Fails because if a bug in polys")
     eq6 = Eq(1 + Integral(x*f(y),(y,0,1)),f(x))
     assert solve_approximate(eq6,f(x),49) == 1 + 2.0*x
 
@@ -118,7 +118,7 @@ def test_solveadomian():
     eq3 = Eq(1 + x + Integral(-f(y),(y,0,x)),f(x))
     assert solve_adomian(eq3, f(x), 9) == 1 + x**9/362880 # Converges to 1
 
-# The second test case fails because of a bug in polys that occurs when specifying FP integration limits
+# The second test case fails because of the same bug that fails case 6 of test_solveapproximate
 @XFAIL
 def test_checkidesol():
     eq1 =  Eq(1 + Integral(f(y),(y,0,x)),f(x))
