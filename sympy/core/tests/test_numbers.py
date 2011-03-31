@@ -410,7 +410,7 @@ def test_dont_accept_str():
 
 def test_int():
     a = Rational(5)
-    assert int(a)==5
+    assert int(a) == 5
     a = Rational(9, 10)
     assert int(a) == int(-a) == 0
     assert 1/(-1)**Rational(2, 3) == -(-1)**Rational(1, 3)
@@ -608,3 +608,7 @@ def test_relational():
     x = pi
     assert (x != cos) is True
     assert (x == cos) is False
+
+def test_Integer_as_index():
+    if hasattr(int, '__index__'): # Python 2.5+ (PEP 357)
+        assert 'hello'[Integer(2):] == 'llo'
