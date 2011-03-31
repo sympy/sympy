@@ -1,6 +1,16 @@
-from sympy import Symbol, Rational, cos, sin, tan, cot, exp, log, Function
+from sympy import Symbol, Rational, cos, sin, tan, cot, exp, log, Function, \
+                  Derivative, Expr, symbols, pi, I, S
+from sympy.utilities.pytest import raises
 
 def test_diff():
+    x = Symbol('x')
+    assert Rational(1, 3).diff(x) is S.Zero
+    assert I.diff(x) is S.Zero
+    assert pi.diff(x) is S.Zero
+    assert x.diff(x, 0) == x
+    assert (x**2).diff(x, 2, x) == 0
+    raises(ValueError, 'x.diff(1, x)')
+
     a = Symbol("a")
     b = Symbol("b")
     c = Symbol("c")
@@ -57,6 +67,17 @@ def test_diff3():
     e = (Rational(2)**a/log(Rational(2)))
     assert e == 2**a*log(Rational(2))**(-1)
     assert e.diff(a) == 2**a
+
+def test_diff_no_eval_derivative():
+    class My(Expr):
+        def __new__(cls, x):
+            return Expr.__new__(cls, x)
+
+    x, y = symbols('x y')
+    # My doesn't have its own _eval_derivative method
+    assert My(x).diff(x).func is Derivative
+    # it doesn't have y so it shouldn't need a method for this case
+    assert My(x).diff(y) == 0
 
 def test_speed():
     # this should return in 0.0s. If it takes forever, it's wrong.

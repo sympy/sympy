@@ -165,9 +165,6 @@ class Expr(Basic, EvalfMixin):
     def _eval_power(self, other):
         return None
 
-    def _eval_derivative(self, s):
-        return
-
     def _eval_conjugate(self):
         if self.is_real:
             return self
@@ -749,7 +746,7 @@ class Expr(Basic, EvalfMixin):
         all the terms at once when n != None.
 
         Note: when n != None, if an O() term is returned then the x in the
-        in it and the entire expression reprsents x - x0, the displacement
+        in it and the entire expression represents x - x0, the displacement
         from x0. (If there is no O() term then the series was exact and x has
         it's normal meaning.) This is currently necessary since sympy's O()
         can only represent terms at x0=0. So instead of
@@ -1117,11 +1114,9 @@ class Expr(Basic, EvalfMixin):
     ###################################################################################
 
     def diff(self, *symbols, **assumptions):
-        new_symbols = map(sympify, symbols)
-        if not "evaluate" in assumptions:
-            assumptions["evaluate"] = True
-        ret = Derivative(self, *new_symbols, **assumptions)
-        return ret
+        new_symbols = map(sympify, symbols) # e.g. x, 2, y, z
+        assumptions.setdefault("evaluate", True)
+        return Derivative(self, *new_symbols, **assumptions)
 
     def fdiff(self, *indices):
         # FIXME FApply -> ?
@@ -1276,7 +1271,8 @@ class AtomicExpr(Atom, Expr):
     __slots__ = []
 
     def _eval_derivative(self, s):
-        if self==s: return S.One
+        if self == s:
+            return S.One
         return S.Zero
 
     def as_numer_denom(self):
