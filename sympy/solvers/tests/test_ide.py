@@ -118,11 +118,11 @@ def test_solveadomian():
     eq3 = Eq(1 + x + Integral(-f(y),(y,0,x)),f(x))
     assert solve_adomian(eq3, f(x), 9) == 1 + x**9/362880 # Converges to 1
 
+# The second test case fails because of a bug in polys that occurs when specifying FP integration limits
 @XFAIL
 def test_checkidesol():
     eq1 =  Eq(1 + Integral(f(y),(y,0,x)),f(x))
     assert checkidesol(eq1,f(x),exp(x))
-    skip("Fails because of some error in integration when specifying floating point numbers")
     eq2 = Eq(1 + Integral(x*f(y),(y,0.0,1.0)),f(x))
     assert checkidesol(eq1, f(x),solve_approximate(eq1,f(x),49))
 
