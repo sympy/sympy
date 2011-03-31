@@ -103,7 +103,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Thomas Dixon: Fix a limit bug
 #. Cristóvão Sousa: Implements _sage_ method for sign function.
 #. Andre de Fortier Smit: Doctests in matrices improved
-#. Alexey U. Goodchenko: Implemented Matrix.extract()
+#. Alexey U. Goodchenko: Various work in matrices
 #. Gary Kerr: Fix examples, docs
 #. Sherjil Ozair: Fixes to SMatrix
 #. Oleksandr Gituliar: Fixes to Matrix
