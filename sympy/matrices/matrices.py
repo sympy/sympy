@@ -1264,9 +1264,9 @@ class Matrix(object):
         """
         if not self.is_square:
             return False
-        m = self.clone()
-        m.simplify()
-        return (m == m.transpose())
+        delta = self - self.transpose()
+        delta.simplify()
+        return delta == self.zeros((self.rows, self.cols))
 
     def is_diagonal(self):
         """
@@ -2631,4 +2631,3 @@ def symarray(prefix, shape):
     for index in np.ndindex(shape):
         arr[index] = Symbol('%s_%s' % (prefix, '_'.join(map(str, index))))
     return arr
-
