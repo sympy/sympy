@@ -199,7 +199,6 @@ def test_geometry():
               Polygon, Polygon(p1,p2,p3,p4), RegularPolygon, RegularPolygon(p1,4,5),
               Triangle, Triangle(p1,p2,p3)):
         check(c, check_attr = False)
-        pass
 
 #================== integrals ====================
 from sympy.integrals.integrals import Integral
