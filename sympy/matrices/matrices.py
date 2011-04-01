@@ -188,7 +188,7 @@ class Matrix(object):
         return Matrix(self.cols,self.rows,a)
 
     T = property(transpose,None,None,"Matrix transposition.")
-
+        
     def conjugate(self):
         """By-element conjugation."""
         out = Matrix(self.rows,self.cols,
@@ -2464,6 +2464,66 @@ class SMatrix(Matrix):
 
     T = property(transpose,None,None,"Matrix transposition.")
 
+
+    def __add__(self, other):
+        if isinstance(other, SMatrix):
+            return self.add(other)
+        else:
+            raise NotImplementedError("Only SMatrix + SMatrix supported")
+
+    def __radd__(self, other):
+        if isinstance(other, SMatrix):
+            return self.add(other)
+        else:
+            raise NotImplementedError("Only SMatrix + SMatrix supported")
+
+    def add(self, other):
+        """
+        Add two sparse matrices with dictionary representation.
+
+        >>> from sympy.matrices.matrices import SMatrix
+        >>> A = SMatrix(5, 5, lambda i, j : i * j + i)
+        >>> A
+        [0, 0,  0,  0,  0]
+        [1, 2,  3,  4,  5]
+        [2, 4,  6,  8, 10]
+        [3, 6,  9, 12, 15]
+        [4, 8, 12, 16, 20]
+        >>> B = SMatrix(5, 5, lambda i, j : i + 2 * j)
+        >>> B
+        [0, 2, 4,  6,  8]
+        [1, 3, 5,  7,  9]
+        [2, 4, 6,  8, 10]
+        [3, 5, 7,  9, 11]
+        [4, 6, 8, 10, 12]
+        >>> A + B
+        [0,  2,  4,  6,  8]
+        [2,  5,  8, 11, 14]
+        [4,  8, 12, 16, 20]
+        [6, 11, 16, 21, 26]
+        [8, 14, 20, 26, 32]
+        """
+        if self.shape != other.shape:
+            raise ShapeError()
+        a, b = self.mat.keys(), other.mat.keys()
+        a.sort()
+        b.sort()
+        i = j = 0
+        c = {}
+        while i < len(a) or j < len(b):
+            if j >= len(b) or (i < len(a) and a[i] < b[j]):
+                c[a[i]] = self.mat[a[i]]
+                i = i + 1
+                continue
+            elif i >= len(a) or (j < len(b) and a[i] > b[j]):
+                c[b[j]] = other.mat[b[j]]
+                j = j + 1
+                continue
+            else:
+                c[a[i]] = self.mat[a[i]] + other.mat[b[j]]
+                i = i + 1
+                j = j + 1
+        return SMatrix(self.rows, self.cols, c)
 
 
 
