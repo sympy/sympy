@@ -90,7 +90,11 @@ def convex_hull(*args):
 
     References
     ----------
-    http://en.wikipedia.org/wiki/Graham_scan
+    [1] http://en.wikipedia.org/wiki/Graham_scan
+
+    [2] Andrew's Monotone Chain Algorithm
+    ( A.M. Andrew, "Another Efficient Algorithm for Convex Hulls in Two Dimensions", 1979)
+    http://softsurfer.com/Archive/algorithm_0109/algorithm_0109.htm
 
     Examples
     --------
@@ -100,18 +104,24 @@ def convex_hull(*args):
     Polygon(Point(-5, 2), Point(1, 1), Point(3, 1), Point(15, 4))
 
     """
+    from entity import GeometryEntity
     from point import Point
     from line import Segment
     from polygon import Polygon
 
-    def uniquify(a):
-        # not order preserving
-        return list(set(a))
+    entities = GeometryEntity.extract_entities(args, False)
+    p = set()
+    for e in entities:
+        if isinstance(e, Point):
+            p.add(e)
+        elif isinstance(e, Segment):
+            p.update(e.points)
+        elif isinstance(e, Polygon):
+            p.update(e.vertices)
+        else:
+            raise NotImplementedError('Convex hull for %s not implemented.' % type(e))
 
-    p = args[0]
-    if isinstance(p, Point):
-        p = uniquify(args)
-
+    p = list(p)
     if len(p) == 1:
         return p[0]
     elif len(p) == 2:

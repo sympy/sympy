@@ -526,6 +526,15 @@ def test_convex_hull():
     assert convex_hull(p[0]) == p[0]
     assert convex_hull(p[0], p[1]) == Segment(p[0], p[1])
 
+    # no unique points
+    assert convex_hull([p[-1]]*3) == p[-1]
+
+    # collection of items
+    assert convex_hull([Point(0,0),
+                        Segment(Point(1, 0), Point(1, 1)),
+                        RegularPolygon(Point(2, 0), 2, 4)]) == \
+            Polygon(Point(0, 0), Point(2, -2), Point(4, 0), Point(2, 2))
+
 def test_concyclic_doctest_bug():
     p1,p2 = Point(-1, 0), Point(1, 0)
     p3,p4 = Point(0, 1), Point(-1, 2)
