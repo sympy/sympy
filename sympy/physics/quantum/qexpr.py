@@ -209,6 +209,7 @@ class QExpr(Expr):
         return prettyForm(*pform.parens(left=left, right=right))
 
     # Printing of labels
+    # This should print only the quantum numbers
 
     def _print_label(self, printer, *args):
         return self._print_sequence(
@@ -231,6 +232,8 @@ class QExpr(Expr):
         )
 
     # Printing of contents
+    # This prints the quantum numbers and the rest of the information
+    # Example: time for TimeDepState, direction for SpinState
 
     def _print_contents(self, printer, *args):
         return self._print_label(printer, *args)
@@ -245,6 +248,7 @@ class QExpr(Expr):
         return self._print_label_latex(printer, *args)
 
     # Main methods
+    # They would add brackets if needed in the subclasses
 
     def _sympystr(self, printer, *args):
         return self._print_contents(printer, *args)
