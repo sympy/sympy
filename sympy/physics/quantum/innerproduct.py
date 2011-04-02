@@ -110,10 +110,9 @@ class InnerProduct(Expr):
         return prettyForm(*pform.right(_rbracket))
 
     def _latex(self, printer, *args):
-        #TODO symetrical brackets without \right. \left|
         bra = self.bra._print_contents_latex(printer, *args)
         ket = self.ket._print_contents_latex(printer, *args)
-        return r'\left\langle %s \right. \left| %s \right\rangle' % (bra, ket)
+        return r'\left\langle %s \middle| %s \right\rangle' % (bra, ket)
 
     def doit(self, **hints):
         try:

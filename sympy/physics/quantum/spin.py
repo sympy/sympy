@@ -431,25 +431,13 @@ class SpinState(State):
 
     _direction_string = None
 
-    def _print_direction(self, printer, *args):
-        return printer._print(self._direction_string, *args)
-
-    _print_direction_repr = _print_direction
-    _print_direction_latex = _print_direction
-
     def _print_direction_pretty(self, printer, *args):
         pform = printer._print(self._direction_string, *args)
         return pform
 
     def _print_contents(self, printer, *args):
         label = self._print_label(printer, *args)
-        direction = self._print_direction(printer, *args)
-        return '%s;%s' % (direction, label)
-
-    def _print_contents_repr(self, printer, *args):
-        label = self._print_label_repr(printer, *args)
-        time = self._print_direction_repr(printer, *args)
-        return '%s,%s' % (direction, label)
+        return '%s:%s' % (self._direction_string, label)
 
     def _print_contents_pretty(self, printer, *args):
         pform = self._print_direction_pretty(printer, *args)
@@ -460,13 +448,12 @@ class SpinState(State):
 
     def _print_contents_latex(self, printer, *args):
         label = self._print_label_latex(printer, *args)
-        direction = self._print_direction_latex(printer, *args)
-        return '%s:%s' % (direction, label)
+        return '%s:%s' % (self._direction_string, label)
 
 
 class JzKet(SpinState, Ket):
     """Eigenket of Jz.
-    
+
     Examples
     ========
 

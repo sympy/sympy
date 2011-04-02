@@ -1,3 +1,5 @@
+# -*- encoding: utf-8 -*-
+
 from sympy import exp, symbols, sqrt, I, pi, Mul, Integer
 from sympy.matrices.matrices import Matrix
 
@@ -290,3 +292,15 @@ def test_unitary_ZGate():
     z_dagger = Dagger(z)
 
     assert (z*z_dagger == 1)
+
+def test_printing():
+    from sympy import pretty, latex, srepr
+    q = Qubit('10101')
+    g1 = IdentityGate(2)
+    assert pretty(g1) == u"1 \n 2"
+    assert pretty(g1*q) == u"1 ⋅❘10101⟩\n 2        "
+    assert latex(g1) == r'1_{2}'
+    assert latex(g1*q) == r'1_{2} {\left| 10101 \right\rangle }'
+    assert eval(srepr(g1)) == g1
+    assert eval(srepr(q)) == q
+    assert eval(srepr(g1*q)) == g1*q

@@ -129,3 +129,11 @@ def test_measure_all():
     state2 = Qubit('11')/sqrt(5) + 2*Qubit('00')/sqrt(5)
     assert sorted(measure_all(state2)) == sorted([(Qubit('11'), Rational(1,5)), \
            (Qubit('00'), Rational(4,5))])
+
+
+def test_printing():
+    from sympy import pretty, latex, srepr
+    q = Qubit('0101')
+    assert pretty(q) == u'\u27580101\u27e9'
+    assert latex(q) == r"{\left| 0101 \right\rangle }"
+    assert eval(srepr(q)) == q
