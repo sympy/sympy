@@ -141,7 +141,7 @@ def test_classify_ode():
     assert classify_ode(2*x*f(x)*f(x).diff(x) + (1 + x)*f(x)**2 - exp(x), f(x)) ==\
         ('Bernoulli', 'Bernoulli_Integral')
     assert 'Riccati_special_minus2' in\
-        classify_ode(2*f(x).diff(x) + f(x)**2 - f(x)/x+3*x**(-2), f(x))
+        classify_ode(2*f(x).diff(x) + f(x)**2 - f(x)/x + 3*x**(-2), f(x))
     raises(ValueError, "classify_ode(x + f(x, y).diff(x).diff(y), f(x, y))")
 
 def test_ode_order():
@@ -231,8 +231,8 @@ def test_Bernoulli():
     assert checkodesol(eq, f(x), sol, order=1, solve_for_func=False)[0]
 
 def test_Riccati_special_minus2():
-    # Type: Riccati spetial alpha = -2, a*dy/dx + b*y**2 + c*y/x +d/x**2
-    eq = 2*f(x).diff(x) + f(x)**2 - f(x)/x+3*x**(-2)
+    # Type: Riccati special alpha = -2, a*dy/dx + b*y**2 + c*y/x +d/x**2
+    eq = 2*f(x).diff(x) + f(x)**2 - f(x)/x + 3*x**(-2)
     sol = dsolve(eq,f(x), hint='Riccati_special_minus2')
     assert checkodesol(eq, f(x), sol, order=1, solve_for_func=False)[0]
 

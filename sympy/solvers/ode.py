@@ -673,7 +673,7 @@ def classify_ode(eq, func, dict=False):
             matching_hints["Bernoulli_Integral"] = r
 
         # Riccati special n == -2 case: a2*y'+b2*y**2+c2*y/x+d2/x**2 == 0
-        r = collect(reduced_eq, f(x), exact = True).match(a2*df + b2*f(x)**2 + c2*f(x)/x+d2/x**2)
+        r = collect(reduced_eq, f(x), exact = True).match(a2*df + b2*f(x)**2 + c2*f(x)/x + d2/x**2)
         if r and r[b2] != 0 and (r[c2] != 0 or r[d2] != 0):
             r['a2'] = a2
             r['b2'] = b2
@@ -2096,12 +2096,12 @@ def ode_Bernoulli(eq, func, order, match):
 
 def ode_Riccati_special_minus2(eq, func, order, match):
     r"""
-    Solves Riccati special case alpha = -2 differential equations.
+    Solves special case (alpha = -2) of Riccati differential equations.
 
     These are equations of the form a*dy/dx + b*y**2 + c*y/x +d/x**2,
     where a, b, c, d - are constants, a != 0, b != 0, c or d != 0.
-    First we shoud devide the whole equation on a, because it's not zero.
-    Then substitution u = y+b/(2*c) will transform an equation of this
+    First we should divide the whole equation by a, because it's not zero.
+    The substitution u = y + b/(2*c) will transform an equation of this
     form into special Riccati equation du/dx+a1*u**2+b1/x**2, which can be
     transformed into homogeneous equation with inverse transformation z=1/y
     The general solution is:
@@ -2132,9 +2132,10 @@ def ode_Riccati_special_minus2(eq, func, order, match):
     x = func.args[0]
     f = func.func
     r = match # a2*diff(f(x),x) + b2*f(x) + c2*f(x)/x + d2/x**2
+    a2, b2, c2, d2 = [r[r[s]] for s in 'a2 b2 c2 d2'.split()]
     C1 = Symbol('C1')
-    mu = sqrt(4*r[r['d2']]*r[r['b2']]-(r[r['a2']]-r[r['c2']])**2)
-    return Eq(f(x),(r[r['a2']]-r[r['c2']]-mu*tan(mu/(2*r[r['a2']])*log(x)+C1))/(2*r[r['b2']]*x))
+    mu = sqrt(4*d2*b2 - (a2 - c2)**2)
+    return Eq(f(x), (a2 - c2 - mu*tan(mu/(2*a2)*log(x)+C1))/(2*b2*x))
 
 def ode_Liouville(eq, func, order, match):
     r"""
