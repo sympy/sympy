@@ -202,7 +202,7 @@ anything is broken, one of those tests will surely fail.
 
 """
 from sympy.core import Add, Basic, C, S, Mul, Pow, oo
-from sympy.core.function import Derivative, diff, expand_mul
+from sympy.core.function import Derivative, Function, diff, expand_mul
 from sympy.core.multidimensional import vectorize
 from sympy.core.relational import Equality, Eq
 from sympy.core.symbol import Symbol, Wild, Dummy
@@ -246,8 +246,8 @@ def de_dv_detect(eq):
     """Usually it is obvious which function in the differential equation has
     the role of dependent variable. This procedure return this function.
     """
-    dvset=reduce(lambda x, y: x|set([y.expr]), eq.doit().atoms(Derivative), set())
-    if len(dvset)!=1:
+    dvset = reduce(lambda x, y: x | y.atoms(Function), eq.atoms(Derivative), set())
+    if len(dvset) != 1:
         raise ValueError("Can't detect dependent variable")
     return dvset.pop()
 
@@ -398,14 +398,13 @@ def dsolve(eq, func=None, hint="default", simplify=True, **kwargs):
     """
     # TODO: Implement initial conditions
     # See issue 1621.  We first need a way to represent things like f'(0).
-    eq=eq.doit()
     if isinstance(eq, Equality):
         if eq.rhs != 0:
             return dsolve(eq.lhs-eq.rhs, func, hint=hint, simplify=simplify, **kwargs)
         eq = eq.lhs
 
-    if func==None:
-        func=de_dv_detect(eq)
+    if func == None:
+        func = de_dv_detect(eq)
 
     # Magic that should only be used internally.  Prevents classify_ode from
     # being called more than it needs to be by passing its results through
@@ -604,10 +603,8 @@ def classify_ode(eq, func=None, dict=False):
     """
     from sympy import expand
 
-    eq=eq.doit()
-
-    if func==None:
-        func=de_dv_detect(eq)
+    if func == None:
+        func = de_dv_detect(eq)
 
     if len(func.args) != 1:
         raise ValueError("dsolve() and classify_ode() only work with functions " + \
@@ -983,10 +980,8 @@ def checkodesol(ode, sol, order='auto', solve_for_func=True, func=None):
 
     """
 
-    ode=ode.doit()
-
-    if func==None:
-        func=de_dv_detect(ode)
+    if func == None:
+        func = de_dv_detect(ode)
 
     if not func.is_Function or len(func.args) != 1:
         raise ValueError("func must be a function of one variable, not " + str(func))
@@ -1197,8 +1192,8 @@ def ode_sol_simplicity(sol, func=None, trysolving=True):
     # See the docstring for the coercion rules.  We check easier (faster)
     # things here first, to save time.
 
-    if func==None:
-        func=de_dv_detect(eq)
+    if func == None:
+        func = de_dv_detect(eq)
 
     if type(sol) in (list, tuple):
         # See if there are Integrals
@@ -1526,10 +1521,8 @@ def ode_order(expr, func=None):
 
     """
 
-    expr=expr.doit()
-
-    if func==None:
-        func=de_dv_detect(expr)
+    if func == None:
+        func = de_dv_detect(expr)
 
     a = Wild('a', exclude=[func])
 
