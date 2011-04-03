@@ -223,17 +223,19 @@ def idesolve(eq, func, method = "", param = 5):
     raise NotImplementedError("Fredholm first kind equations are currently not supported")
 
 def idesolve_nonlinear(eq, func, method = ""):
+    """
+    This method solves non linear equations. These are relatively complicated
+    and require special techniques for each variant.
+    """
     raise NotImplementedError("Nonlinear integral equations are currently not supported")
 
 def subs_func_in_integral(func, term, neweq, startsoln):
     # Helper function to substitute the starting solution in the integral term
+    startsoln = sympify(startsoln)
     funcsymbol = func.args[0] #x
     integralsymbol = term.variables[0] #y
     subsfunc = func.subs(funcsymbol, integralsymbol) #f(y)
-    try:
-        startsolnsubs = startsoln.subs(funcsymbol, integralsymbol)
-    except AttributeError:
-        startsolnsubs = startsoln
+    startsolnsubs = startsoln.subs(funcsymbol, integralsymbol)
 
     integralterm = C.Integral(term.function.subs(subsfunc, startsolnsubs),\
                                term.limits)
