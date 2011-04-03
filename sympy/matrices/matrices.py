@@ -1093,10 +1093,16 @@ class Matrix(object):
         return Matrix([row.mat for row in reversed(x)])
 
     # Utility functions
-    def simplify(self):
-        """Simplify the elements of a matrix in place."""
+    def simplify(self, ratio=1.7):
+        """Simplify the elements of a matrix in place.
+
+        If (result length)/(input length) > ratio, then input is returned
+        unmodified. If 'ratio=oo', then simplify() is applied anyway.
+
+        See also simplify().
+        """
         for i in xrange(len(self.mat)):
-            self.mat[i] = simplify(self.mat[i])
+            self.mat[i] = simplify(self.mat[i], ratio=ratio)
 
     #def evaluate(self):    # no more eval() so should be removed
     #    for i in range(self.rows):
@@ -1223,10 +1229,14 @@ class Matrix(object):
                     return True
         return False
 
-    def is_symmetric(self):
+    def is_symmetric(self, simplify=True):
         """
         Check if matrix is symmetric matrix,
         that is square matrix and is equal to its transpose.
+
+        By default, simplifications occur before testing symmetry.
+        They can be skipped using 'simplify=False'; while speeding things a bit,
+        this may however induce false negatives.
 
         Example:
 
@@ -1261,12 +1271,23 @@ class Matrix(object):
         >>> m.is_symmetric()
         True
 
+        If the matrix is already simplified, you may speed-up is_symmetric()
+        test by using 'simplify=False'.
+
+        >>> m.is_symmetric(simplify=False)
+        False
+        >>> m1 = m.expand()
+        >>> m1.is_symmetric(simplify=False)
+        True
         """
         if not self.is_square:
             return False
-        delta = self - self.transpose()
-        delta.simplify()
-        return delta == self.zeros((self.rows, self.cols))
+        if simplify:
+            delta = self - self.transpose()
+            delta.simplify()
+            return delta == self.zeros((self.rows, self.cols))
+        else:
+            return self == self.transpose()
 
     def is_diagonal(self):
         """
