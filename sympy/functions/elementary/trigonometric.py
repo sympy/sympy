@@ -801,14 +801,22 @@ class asin(Function):
 
         if arg.is_number:
             cst_table = {
-                S.Half     : 6,
-                -S.Half    : -6,
+                sqrt(3)/2  : 3,
+                -sqrt(3)/2 : -3,
                 sqrt(2)/2  : 4,
                 -sqrt(2)/2 : -4,
                 1/sqrt(2)  : 4,
                 -1/sqrt(2) : -4,
-                sqrt(3)/2  : 3,
-                -sqrt(3)/2 : -3,
+                sqrt((5-sqrt(5))/8) : 5,
+                -sqrt((5-sqrt(5))/8) : -5,
+                S.Half     : 6,
+                -S.Half    : -6,
+                sqrt(2-sqrt(2))/2 : 8,
+                -sqrt(2-sqrt(2))/2 : -8,
+                (sqrt(5)-1)/4 : 10,
+                (1-sqrt(5))/4 : -10,
+                (sqrt(3)-1)/sqrt(2**3) : 12,
+                (1-sqrt(3))/sqrt(2**3) : -12,
                 }
 
             if arg in cst_table:

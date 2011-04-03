@@ -266,9 +266,15 @@ def test_asin():
     assert asin(-oo) == I*oo
 
     assert asin(0)  == 0
-    assert asin(Rational(1,2)) == pi/6
     assert asin(1)  == pi/2
     assert asin(sqrt(3)/2) == pi/3
+    assert asin(sqrt(2)/2) == pi/4
+    assert asin(sqrt((5-sqrt(5))/8)) == pi/5
+    assert asin(Rational(1,2)) == pi/6
+    assert asin((sqrt(2-sqrt(2)))/2) == pi/8
+    assert asin((sqrt(5)-1)/4) == pi/10
+    assert asin((sqrt(3)-1)/sqrt(2**3)) == pi/12
+
 
     assert asin(x).diff(x) ==  1/sqrt(1-x**2)
 
