@@ -196,6 +196,8 @@ def solve(f, *symbols, **flags):
         if symbol_swapped:
             swap_back_dict = dict(zip(symbols_new, symbols))
     # End code for handling of Function and Derivative instances
+    if isinstance(f,(tuple,list,set)) and len(f) == 1:
+        f = f[0]
 
     if not isinstance(f, (tuple, list, set)):
 
