@@ -2,7 +2,7 @@ from sympy import SYMPY_DEBUG
 
 from sympy.core import Basic, S, C, Add, Mul, Pow, Rational, Integer, \
         Derivative, Wild, Symbol, sympify, expand, expand_mul, expand_func, \
-        Function, Equality, Dummy, count_ops
+        Function, Equality, Dummy, Atom, count_ops
 
 from sympy.core.numbers import igcd
 from sympy.core.relational import Equality
@@ -1598,6 +1598,9 @@ def simplify(expr, ratio=1.7):
            True
 
     """
+    if isinstance(expr, Atom):
+        return expr
+
     original_expr = expr
     expr = together(cancel(powsimp(expr)).expand())
     expr = powsimp(expr, combine='exp', deep=True)
