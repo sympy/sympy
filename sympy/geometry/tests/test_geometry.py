@@ -1,7 +1,7 @@
 from sympy import Symbol, Rational, sqrt, pi, cos, oo, simplify, Real
 from sympy.geometry import (Point, Polygon, convex_hull, Segment,
     RegularPolygon, Circle, Ellipse, GeometryError, Line, intersection, Ray,
-    Triangle, are_similar, Curve, poly_poly_distance)
+    Triangle, are_similar, Curve)
 from sympy.utilities.pytest import raises
 
 x = Symbol('x', real=True)
@@ -144,6 +144,15 @@ def test_line():
     assert s1.midpoint == Point(Rational(1,2), Rational(1,2))
     assert s2.length == sqrt( 2*(x1**2) )
     assert s1.perpendicular_bisector() == Line(Point(0, 1), Point(1, 0))
+
+    # Testing distance from a Segment to an object
+    s1 = Segment(Point(0,0), Point(1,1))
+    s2 = Segment(Point(.5,.5), Point(1,0))
+    pt1 = Point(0,0)
+    pt2 = Point(1.5,1.5)
+    assert s1.distance(pt1) == 0
+    assert s2.distance(pt1) == 2**(.5)/2
+    assert s2.distance(pt2) == 2**(.5)
 
     # Special cases of projection and intersection
     r1 = Ray(Point(1, 1), Point(2, 2))
@@ -387,6 +396,40 @@ def test_polygon():
     assert len(intersection(*altitudes.values())) == 1
     assert len(intersection(*m.values())) == 1
 
+    # Distance
+    p1 = Polygon(
+        Point(0,0), Point(1,0),
+        Point(1,1), Point(0,1))
+    p2 = Polygon(
+        Point(0,1.25), Point(1,1.25),
+        Point(1,2.25), Point(0,2.25))
+    p3 = Polygon(
+        Point(1,2), Point(2,2),
+        Point(2,1))
+    p4 = Polygon(
+        Point(1,1), Point(1.2,1),
+        Point(1,1.2))
+    p5 = Polygon(
+        Point(0.5, 3.0**(.5)/2), Point(-0.5, 3.0**(.5)/2),
+        Point(-1.0, 0), Point(-0.5, -(3.0)**(.5)/2),
+        Point(0.5, -(3.0)**(.5)/2), Point(1, 0))
+    p6 = Polygon(Point(2, 0.3), Point(1.7, 0),
+                 Point(2, -0.3), Point(2.3, 0))
+    pt1 = Point(.5,.5)
+    pt2 = Point(1,1)
+
+    '''Polygon to Point'''
+    assert p1.distance(pt1) == .5
+    assert p1.distance(pt2) == 0
+    assert p2.distance(pt1) == .75
+    assert p3.distance(pt2) == sqrt(2)/2
+
+    '''Polygon to Polygon'''
+    assert p1.distance(p2).evalf() == .25
+    assert p1.distance(p3).evalf() == sqrt(2)/2
+    assert p3.distance(p4).evalf() - (sqrt(2)/2-sqrt(.08)/2).evalf() < 10**-10
+    assert p5.distance(p6).evalf() == .7
+
 def test_convex_hull():
     p = [Point(-5,-1), Point(-2,1), Point(-2,-1), Point(-1,-3), Point(0,0),
          Point(1,1), Point(2,2), Point(2,-1), Point(3,1), Point(4,-1), Point(6,2)]
@@ -408,28 +451,3 @@ def test_concyclic_doctest_bug():
     p3,p4 = Point(0, 1), Point(-1, 2)
     assert Point.is_concyclic(p1, p2, p3)
     assert not Point.is_concyclic(p1, p2, p3, p4)
-
-def test_poly_poly_distance():
-    p1 = Polygon(
-        Point(0,0), Point(1,0),
-        Point(1,1), Point(0,1))
-    p2 = Polygon(
-        Point(0,1.25), Point(1,1.25),
-        Point(1,2.25), Point(0,2.25))
-    p3 = Polygon(
-        Point(1,2), Point(2,2),
-        Point(2,1))
-    p4 = Polygon(
-        Point(1,1), Point(1.2,1),
-        Point(1,1.2))
-    p5 = Polygon(
-        Point(0.5, 3.0**(.5)/2), Point(-0.5, 3.0**(.5)/2),
-        Point(-1.0, 0), Point(-0.5, -(3.0)**(.5)/2),
-        Point(0.5, -(3.0)**(.5)/2), Point(1, 0))
-    p6 = Polygon(Point(2, 0.3), Point(1.7, 0),
-                 Point(2, -0.3), Point(2.3, 0))
-
-    assert poly_poly_distance(p1,p2).evalf() == .25
-    assert poly_poly_distance(p1,p3).evalf() == sqrt(2)/2
-    assert poly_poly_distance(p3,p4).evalf() - (sqrt(2)/2-sqrt(.08)/2) < 10**(-10)
-    assert poly_poly_distance(p5,p6).evalf() == .7
