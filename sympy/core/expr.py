@@ -470,7 +470,7 @@ class Expr(Basic, EvalfMixin):
                     continue
                 resid = margs.difference(xargs)
                 if len(resid) + len(xargs) == len(margs):
-                    co.append(Mul(Mul(*resid),Mul(*nc)))
+                    co.append(Mul(*(list(resid) + nc)))
             if co == []:
                 return None
             elif co:
@@ -505,16 +505,16 @@ class Expr(Basic, EvalfMixin):
                             gcdc = gcdc.intersection(co[i][0])
                             if not gcdc:
                                 break
-                        return Mul(Mul(*gcdc), Mul(*beg[:ii]))
+                        return Mul(*(list(gcdc) + beg[:ii]))
                     else:
                         m = ii + len(nx)
-                        return Add(*[Mul(Mul(*r), Mul(*n[m:])) for r, n in co])
+                        return Add(*[Mul(*(list(r) + n[m:])) for r, n in co])
             end = list(reversed(reduce(incommon, (list(reversed(n[1])) for n in co))))
             if end:
                 ii = find(end, nx, right)
                 if not ii is None:
                     if not right:
-                        return Add(*[Mul(Mul(*r), Mul(*n[:-len(end)+ii])) for r, n in co])
+                        return Add(*[Mul(*(list(r) + n[:-len(end)+ii])) for r, n in co])
                     else:
                         return Mul(*end[ii+len(nx):])
             # look for single match
@@ -530,7 +530,7 @@ class Expr(Basic, EvalfMixin):
                 if hit:
                     ii, r, n = hit
                     if not right:
-                        return Mul(Mul(*r), Mul(*n[:ii]))
+                        return Mul(*(list(r) + n[:ii]))
                     else:
                         return Mul(*n[ii+len(nx):])
 
