@@ -402,9 +402,9 @@ def solve_asode(eq, func, maxdepth, depth = 1, initialvalues=[]):
     The variable maxdepth should be set to a reasonably low value like 5-6 else
     the routine can take an inordinately large amount of time to finish.
 
+    This has been blocked on issue 1620
+
     """
-    #FIXME: This gives incorrect answers because we dont take into account initial value
-    #Also the initial values are at the lower limit of the integral term and not always at 0
     if depth > maxdepth:
         raise ValueError ("Solving this integral equation as an ODE is not feasible")
 
