@@ -141,8 +141,8 @@ def checkidesol(ide, func, fn):
     This method verifies if the given function satisfies the given Integral equation
 
     **Examples**
-        >>> from sympy import Function, idesolve, checkidesol, Eq, \
-               Integral, Symbol, exp, S
+        >>> from sympy import (Function, idesolve, checkidesol, Eq,
+               Integral, Symbol, exp, S)
         >>> from sympy.abc import x, y
         >>> f = Function('f')
         >>> g = Function('g')
@@ -150,7 +150,7 @@ def checkidesol(ide, func, fn):
 
         Suppose we have the following integral equation
         >>> eq = Eq((5.0/6.0)*x+Integral(S(1)/2*x*y*f(y),(y,0,1)),f(x))
-        >>> checkidesol(eq, f(x), idesolve(eq, f(x), \"Approximate\", 21))
+        >>> checkidesol(eq, f(x), idesolve(eq, f(x), 'Approximate', 21))
         True
 
         Consider another example
@@ -195,8 +195,8 @@ def idesolve(eq, func, method = "", param = 5):
     defined at the end.
 
     ***Examples***
-        >>> from sympy import Function, idesolve, checkidesol, Eq, \
-               Integral, Symbol, exp, S
+        >>> from sympy import (Function, idesolve, checkidesol, Eq,
+               Integral, Symbol, exp, S)
         >>> from sympy.abc import x, y
         >>> f = Function('f')
         >>> g = Function('g')
@@ -204,12 +204,12 @@ def idesolve(eq, func, method = "", param = 5):
 
         Suppose we have the following integral equation
         >>> eq = Eq((5.0/6.0)*x+Integral(S(1)/2*x*y*f(y),(y,0,1)),f(x))
-        >>> idesolve(eq, f(x), \"Approximate\", 21)
+        >>> idesolve(eq, f(x), 'Approximate', 21)
         x
 
         Consider another example
         >>> eq = Eq(1 + x + Integral(-f(y), (y,0,x)), f(x))
-        >>> idesolve(eq, f(x), \"Approximate\", 1)
+        >>> idesolve(eq, f(x), 'Approximate', 1)
         1
     """
     if not method == "":
@@ -275,11 +275,12 @@ def solve_adomian(eq, func, n):
         for term in eq.lhs.args:
             if type(term) == C.Integral:
                 termsymbol = term.variables[0]
+                termlimits = term.limits
                 seriesfunc = series.subs(func.args[0], termsymbol)
                 subsfunc = func.subs(func.args[0], termsymbol)
                 kernel = term.function.subs(subsfunc, 1)
                 neweq = Equality(neweq.lhs + C.Integral(term.function.subs(subsfunc, seriesfunc),\
-                                      term.limits),neweq.rhs)
+                                      termlimits),neweq.rhs)
             else:
                 neweq = Eq(neweq.lhs + term.subs(func, series), neweq.rhs)
                 nonintegral = Eq(nonintegral.lhs + term, nonintegral.rhs)
@@ -289,9 +290,10 @@ def solve_adomian(eq, func, n):
     # Calculate the rest of the functions
     for i in range(1,n):
         if type(components[i-1]) != int:
-            components[i] = integrate(kernel*components[i-1].subs(func.args[0],termsymbol),(termsymbol,0,func.args[0]))
+            components[i] = integrate(kernel*components[i-1].subs(func.args[0],termsymbol),\
+                                      termlimits)
         else:
-            components[i] = integrate(kernel*components[i-1],(t,0,func.args[0]))
+            components[i] = integrate(kernel*components[i-1],termlimits)
     ans = Eq(0,func)
     for i in range(n):
         ans = Eq(ans.lhs + components[i], ans.rhs)
