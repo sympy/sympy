@@ -157,6 +157,9 @@ def test_pow2():
 def test_pow_issue417():
     assert 4**Rational(1, 4) == 2**Rational(1, 2)
 
+def test_pow_issue2260():
+    assert (a**a).subs(a, 0) is S.NaN
+
 def test_pow3():
     assert 2**(Rational(3)/2) == 2 * 2**Rational(1, 2)
     assert 2**(Rational(3)/2) == sqrt(8)

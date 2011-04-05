@@ -217,7 +217,7 @@ class Pow(Expr):
                 if pow.is_Integer or self.base.is_commutative:
                     return Pow(new, pow) # (x**(2*y)).subs(x**(3*y),z) -> z**(2/3)
         b, e = self.base._eval_subs(old, new), self.exp._eval_subs(old, new)
-        if not b and e.is_negative: # don't let subs create an infinity
+        if not b and not e.is_positive: # don't let subs create an infinity
             return S.NaN
         return Pow(b, e)
 

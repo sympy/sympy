@@ -262,17 +262,20 @@ class Basic(AssumeMeths):
         if not isinstance(a, Order) and isinstance(b, Order):
             return -1
 
-        # FIXME this produces wrong ordering for 1 and 0
-        # e.g. the ordering will be 1 0 2 3 4 ...
-        # because 1 = x^0, but 0 2 3 4 ... = x^1
-        from sympy.core.symbol import Wild
-        p1, p2, p3 = Wild("p1"), Wild("p2"), Wild("p3")
-        r_a = a.match(p1 * p2**p3)
-        r_b = b.match(p1 * p2**p3)
-        if r_a is not None and r_b is not None:
-            c = Basic.compare(r_a[p3], r_b[p3])
-            if c!=0:
-                return c
+        if a.is_Rational and b.is_Rational:
+            return cmp(a.p*b.q, b.p*a.q)
+        else:
+            from sympy.core.symbol import Wild
+            p1, p2, p3 = Wild("p1"), Wild("p2"), Wild("p3")
+            r_a = a.match(p1 * p2**p3)
+            if r_a and p3 in r_a:
+                a3 = r_a[p3]
+                r_b = b.match(p1 * p2**p3)
+                if r_b and p3 in r_b:
+                    b3 = r_b[p3]
+                    c = Basic.compare(a3, b3)
+                    if c != 0:
+                        return c
 
         return Basic.compare(a,b)
 

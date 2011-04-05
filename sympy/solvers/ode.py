@@ -2164,7 +2164,7 @@ def _nth_linear_match(eq, func, order):
         >>> _nth_linear_match(f(x).diff(x, 3) + 2*f(x).diff(x) +
         ... x*f(x).diff(x, 2) + cos(x)*f(x).diff(x) + x - f(x) -
         ... sin(x), f(x), 3)
-        {1: 2 + cos(x), 0: -1, -1: x - sin(x), 2: x, 3: 1}
+        {-1: x - sin(x), 0: -1, 1: 2 + cos(x), 2: x, 3: 1}
         >>> _nth_linear_match(f(x).diff(x, 3) + 2*f(x).diff(x) +
         ... x*f(x).diff(x, 2) + cos(x)*f(x).diff(x) + x - f(x) -
         ... sin(f(x)), f(x), 3) == None

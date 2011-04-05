@@ -324,7 +324,7 @@ def sift(expr, keyfunc):
     >>> from sympy import sqrt, exp
 
     >>> sift(range(5), lambda x: x%2)
-    {1: [1, 3], 0: [0, 2, 4]}
+    {0: [0, 2, 4], 1: [1, 3]}
 
     It is possible that some keys are not present, in which case you should
     used dict's .get() method:
