@@ -297,11 +297,11 @@ def roots(f, *gens, **flags):
     >>> from sympy.abc import x, y
 
     >>> roots(x**2 - 1, x)
-    {1: 1, -1: 1}
+    {-1: 1, 1: 1}
 
     >>> p = Poly(x**2-1, x)
     >>> roots(p)
-    {1: 1, -1: 1}
+    {-1: 1, 1: 1}
 
     >>> p = Poly(x**2-y, x, y)
 
@@ -312,7 +312,7 @@ def roots(f, *gens, **flags):
     {y**(1/2): 1, -y**(1/2): 1}
 
     >>> roots([1, 0, -1])
-    {1: 1, -1: 1}
+    {-1: 1, 1: 1}
 
     """
     flags = dict(flags)
