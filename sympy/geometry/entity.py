@@ -1,5 +1,5 @@
 """The definition of the base geometrical entity with attributes common to all
-geometrical entities from which all.
+derived geometrical entities.
 
 Contains
 --------
@@ -71,8 +71,8 @@ class GeometryEntity(tuple):
     def is_similar(self, other):
         """Is this geometrical entity similar to another geometrical entity?
 
-        Two entities are similar if a uniform scaling (enlarging or shrinking)
-        of one of the entities will allow one to obtain the other.
+        Two entities are similar if a uniform scaling (enlarging or
+        shrinking) of one of the entities will allow one to obtain the other.
 
         Notes
         -----
@@ -143,6 +143,7 @@ class GeometryEntity(tuple):
         return tuple(ret)
 
     def __ne__(self, o):
+        """Test inequality of two geometrical entities."""
         return not self.__eq__(o)
 
     def __radd__(self, a):
@@ -158,13 +159,17 @@ class GeometryEntity(tuple):
         return a.__div__(self)
 
     def __str__(self):
+        """String representation of a GeometryEntity."""
         from sympy.printing import sstr
         return type(self).__name__ + sstr(tuple(self))
 
     def __repr__(self):
+        """String representation of a GeometryEntity that can be evaluated
+        by sympy."""
         return type(self).__name__ + repr(tuple(self))
 
     def __cmp__(self, other):
+        """Comparison of two GeometryEntities."""
         n1 = self.__class__.__name__
         n2 = other.__class__.__name__
         c = cmp(n1, n2)
