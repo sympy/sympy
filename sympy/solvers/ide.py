@@ -4,13 +4,17 @@ uses.
 
 idesolve() solves linear integral equations. It replicates the functionality of intsolve in Maple.
 
+An integral equation is one in which an unknown function appears within the integral
+sign. Solving the integral equation implies finding out the unknown function.
+
 **Functions in this module**
 
     These are the user functions in this module:
 
-    - idesolve() - Solves IDEs. It takes the integral equation and the unknown function as its parameters
-                  as well as the method to be used to solve the integral equation. This method only solves
-                  linear integral equations.
+    - idesolve() - Solves IDEs. It takes the integral equation and the unknown function
+                   as its parameters as well as the method to be used to solve the
+                   integral equation. This method only solves linear integral equations.
+                   
     - idesolve_nonlinear() - Solves certain kinds of non linear integral equations.
     - classify_ide() - Classifies IDEs into possible hints for idesolve().
     - checkidesol() - Checks if the given function is the solution of an IDE.
@@ -187,6 +191,8 @@ def checkidesol(ide, func, fn):
 
 def idesolve(eq, func, method = "", param = 5):
     """
+    Solves linear integral equations
+    
     This is the main routine exposed to the user for solving linear integral
     equations. This routine first attempts to classify
     the given integral equation. It then selects the method most appropriate for
@@ -224,6 +230,8 @@ def idesolve(eq, func, method = "", param = 5):
 
 def idesolve_nonlinear(eq, func, method = ""):
     """
+    Solves non linear integral equations
+    
     This method solves non linear equations. These are relatively complicated
     and require special techniques for each variant.
     """
@@ -245,6 +253,8 @@ def subs_func_in_integral(func, term, neweq, startsoln):
 
 def solve_adomian(eq, func, n):
     """
+    Applies the adomian decomposition technique for solving integral equations
+    
     Solves integral equations using the Adomian Decomposition technique
     The user needs to specify the number of terms upto which the series
     needs to be calculated. The non integral terms are isolated and these are then
@@ -301,6 +311,8 @@ def solve_adomian(eq, func, n):
 
 def solve_series(eq, func, n):
     """
+    The series technique for solving differential equations
+    
     This method assumes that the solution we are going to get
     is analytic and hence can be expressed as a power series. This is then
     substituted in the equation for the unknown function and evaluated
@@ -365,6 +377,8 @@ def solve_series(eq, func, n):
 
 def solve_approximate(eq, func, level, startsoln = 1, picard = False):
     """
+    Approximation technique for solving integral equations
+    
     Gives an approximate solution to an integral equation. We plugin the starting
     solution into the integral term and solve. This solution is then used for the
     next iteration. Level controls the number of iterations.
@@ -394,6 +408,9 @@ def solve_approximate(eq, func, level, startsoln = 1, picard = False):
 
 def solve_asode(eq, func, maxdepth, depth = 1, initialvalues=[]):
     """
+    Expresses an integral equation as an ordinary differential equation and
+    then solves is using the ode solver.
+    
     Differentiate the equation to get a differential equation and use dsolve
     It is impractical and at other times impossible to solve certain IDEs by reducing
     them to ODEs. To counter this situation we enforce a depth constraint which restricts
@@ -476,13 +493,13 @@ def solve_eigenfunction():
     """
     Solves integral equations using the Eigenfunction technique
     """
-    raise NotImplementedError()
+    raise NotImplementedError("This method has not been implemented yet")
 
 def solve_laplace():
     """
     Solves integral equations using Laplace Transform technique
     """
-    raise NotImplementedError()
+    raise NotImplementedError("This method has not been implemented yet")
 
 methodmap = {"Approximate" : solve_approximate,
              "Neumann" : solve_neumann,
