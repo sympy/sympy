@@ -2,8 +2,7 @@
 """
 Applying perturbation theory to calculate the ground state energy
 of the infinite 1D box of width $a$ with a perturbation
-which is linear in $x$, up to second order in perturbation by
-K. Anatolii.
+which is linear in $x$, up to second order in perturbation
 """
 
 from sympy.core import pi
@@ -12,8 +11,7 @@ from sympy.functions import sin, sqrt
 
 def X_n(n, a, x):
     """
-    Returns the wavefunction X_{n} for a 1d potential hole with infinity
-    borders
+    Returns the wavefunction X_{n} for an infinite 1D box
 
     ``n``
         the "principal" quantum number. Corresponds to the number of nodes in
@@ -77,7 +75,6 @@ def main():
     print "Applying perturbation theory to calculate the ground state energy"
     print "of the infinite 1D box of width $a$ with a perturbation"
     print "which is linear in $x$, up to second order in perturbation."
-    print "by K. Anatolii"
     print
 
     x, _a = var("x _a")
