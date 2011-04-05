@@ -2733,7 +2733,7 @@ class Poly(Expr):
         >>> from sympy.abc import x
 
         >>> Poly(x**6 - 4*x**4 + 4*x**3 - x**2).ground_roots()
-        {1: 2, 0: 2}
+        {0: 2, 1: 2}
 
         """
         if f.is_multivariate:
@@ -4766,7 +4766,7 @@ def ground_roots(f, *gens, **args):
     >>> from sympy.abc import x
 
     >>> ground_roots(x**6 - 4*x**4 + 4*x**3 - x**2)
-    {1: 2, 0: 2}
+    {0: 2, 1: 2}
 
     """
     options.allowed_flags(args, [])
