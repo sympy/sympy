@@ -189,7 +189,7 @@ def checkidesol(ide, func, fn):
     neweq = Eq(neweq.lhs, 0)
     return neweq == Eq(0,0)
 
-def idesolve(eq, func, method = "", param = 5):
+def idesolve(eq, func, method = "", param = 1):
     """
     Solves linear integral equations
     
@@ -220,11 +220,13 @@ def idesolve(eq, func, method = "", param = 5):
     """
     if not method == "":
         return methodmap[method](eq, func, param)
+    if not type(eq) == Eq:
+        eq = Eq(eq, func)
     ide_classification = classify_ide(eq, func)
-    if ide_classification.contains("Volterra"):
+    if "Volterra" in ide_classification:
         return methodmap["Approximate"](eq, func, param, 1)
-    if ide_classification.contains("Fredholm"):
-        if ide_classification.contains("Second Kind"):
+    if "Fredholm" in ide_classification:
+        if "Second Kind" in ide_classification:
             return methodmap["Neumann"](eq, func, param)
     raise NotImplementedError("Fredholm first kind equations are currently not supported")
 

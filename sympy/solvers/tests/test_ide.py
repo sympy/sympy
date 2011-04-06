@@ -1,7 +1,7 @@
 from sympy import Function, dsolve, Symbol, sin, cos, sinh, acos, tan, cosh, \
         I, exp, log, simplify, normal, together, ratsimp, powsimp, \
         fraction, radsimp, Eq, sqrt, pi, erf, oo, diff, Rational, asinh, trigsimp, \
-        S, RootOf, Poly, Integral, atan, Equality, solve, O, LambertW
+        S, RootOf, Poly, Integral, integrate, atan, Equality, solve, O, LambertW
 from sympy.abc import x, y, z
 from sympy.solvers.ide import classify_ide , idesolve, checkidesol, \
         solve_adomian, solve_approximate, solve_neumann, solve_series
@@ -87,10 +87,11 @@ def test_idesolve():
     eq2 = Eq(1 + Integral(f(y),(y,0,x)),f(x))
     assert idesolve(eq2,f(x),"Approximate",5) == 1 + x + x**2/2\
      + x**3/6 + x**4/24 + x**5/120 # Series expansion for exp(x)
+    eq3_term = integrate(sin(x)*cos(x), (x, 1, exp(x)))
+    assert idesolve(Integral(f(x)*cos(x), (x,1,exp(x))) - eq3_term, f(x)) == -sin(1) + \
+           sin(exp(x)) + sin(1)**2/2 - sin(exp(x))**2/2
 
 def test_solveapproximate():
-    eq1 = Eq((5.0/6.0)*x+Integral(S(1)/2*x*y*f(y),(y,0,1)),f(x)) # Example in maple's intsolve
-    assert solve_approximate(eq1,f(x),21) == x
     eq2 = Eq(1 + Integral(f(y),(y,0,x)),f(x))
     assert solve_approximate(eq2,f(x),5) == 1 + x + x**2/2\
      + x**3/6 + x**4/24 + x**5/120 # Series expansion for exp(x)
@@ -103,6 +104,8 @@ def test_solveapproximate():
 
 @XFAIL
 def issue_polybug():
+    eq1 = Eq((5.0/6.0)*x+Integral(S(1)/2*x*y*f(y),(y,0,1)),f(x)) # Example in maple's intsolve
+    assert solve_approximate(eq1,f(x),21) == x
     eq6 = Eq(1 + Integral(x*f(y),(y,0,1)),f(x))
     assert solve_approximate(eq6,f(x),49) == 1 + 2.0*x
     eq2 = Eq(1 + Integral(x*f(y),(y,0.0,1.0)),f(x))
