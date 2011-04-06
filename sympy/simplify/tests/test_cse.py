@@ -63,15 +63,15 @@ def test_nested_substitution():
     # Substitution within a substitution.
     e = Add(Pow(w*x+y,2), sqrt(w*x+y))
     substs, reduced = cse([e], optimizations=[])
-    assert substs == [(x0, w*x), (x1, x0+y)]
-    assert reduced == [sqrt(x1) + x1**2]
+    assert substs == [(x0, w*x+y)]
+    assert reduced == [sqrt(x0) + x0**2]
 
 def test_subtraction_opt():
     # Make sure subtraction is optimized.
     e = (x-y)*(z-y) + exp((x-y)*(z-y))
     substs, reduced = cse([e], optimizations=[(cse_opts.sub_pre,cse_opts.sub_post)])
-    assert substs == [(x0, z-y), (x1, x-y), (x2, x0*x1)]
-    assert reduced == [x2 + exp(x2)]
+    assert substs == [(x0, (x-y)*(z-y))]
+    assert reduced == [x0 + exp(x0)]
 
 def test_multiple_expressions():
     e1 = (x+y)*z
