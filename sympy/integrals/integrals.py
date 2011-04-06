@@ -743,7 +743,7 @@ class Integral(Expr):
                 raise NotImplementedError("Unknown method %s" % method)
             result += self.function.subs(sym, xi)
         return result*dx
-    
+
 
     def arbitrary_function(self, *args,**kwargs):
         for T in self.limits:

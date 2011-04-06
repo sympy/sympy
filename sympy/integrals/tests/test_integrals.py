@@ -534,3 +534,11 @@ def test_series():
     i = Integral(cos(x))
     e = i.lseries(x)
     assert i.nseries(x, n=8).removeO() == Add(*[e.next() for j in range(4)])
+
+
+def test_arbitrary_function():
+    from sympy.abc import x,y,z
+    assert integrate(2*x*y,x,arbitrary_function = True) == f(y) + y*x**2
+    assert integrate(sin(x*z+y),x,arbitrary_function = True) == -cos(y + x*z)/z + f(y,z)
+    assert integrate(x*z+y,(x,0,1),arbitrary_function = True) == y + z/2
+    assert integrate(x,y,z,arbitrary_function = True) == x*y*z + f(x)
