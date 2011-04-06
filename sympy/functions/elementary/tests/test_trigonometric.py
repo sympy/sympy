@@ -1,6 +1,6 @@
 from sympy import symbols, Symbol, nan, oo, I, sinh, sin, acot, pi, atan, \
         acos, Rational, sqrt, asin, acot, cot, coth, E, S, tan, tanh, cos, \
-        cosh, atan2, exp, asinh, acoth, atanh, O
+        cosh, atan2, exp, asinh, acoth, atanh, O, cancel, Matrix
 
 def test_sin():
     x, y = symbols('x,y')
@@ -483,3 +483,15 @@ def test_as_leading_term_issue2173():
     assert acos(x).as_leading_term(x) == x
     assert atan(x).as_leading_term(x) == x
     assert acot(x).as_leading_term(x) == x
+
+def test_atan2_expansion():
+    x, y = symbols("x,y")
+    assert cancel(atan2(x+1,x**2).diff(x) - atan((x+1)/x**2).diff(x)) == 0
+    assert cancel(atan(x/y).series(x, 0, 5) - atan2(x, y).series(x, 0, 5) \
+                  + atan2(0, y) - atan(0)) == O(x**5)
+    assert cancel(atan(x/y).series(y, 1, 4) - atan2(x, y).series(y, 1, 4)  \
+                  + atan2(x, 1) - atan(x)) == O(y**4)
+    assert cancel(atan((x+y)/y).series(y, 1, 3) - atan2(x+y, y).series(y, 1, 3) \
+                  + atan2(1+x, 1) - atan(1+x)) == O(y**3)
+    assert Matrix([atan2(x, y)]).jacobian([x, y]) \
+                  == Matrix([[y/(x**2+y**2), -x/(x**2+y**2)]])

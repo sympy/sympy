@@ -1173,6 +1173,15 @@ class atan2(Function):
     def _eval_is_real(self):
         return self.args[0].is_real and self.args[1].is_real
 
+    def fdiff(self, argindex):
+        x, y = self.args
+        if argindex == 1:
+            return y/(x**2 + y**2)
+        elif argindex == 2:
+            return -x/(x**2 + y**2)
+        else:
+            raise ArgumentIndexError(self, argindex)
+
     def _sage_(self):
         import sage.all as sage
         return sage.atan2(self.args[0]._sage_(), self.args[1]._sage_())

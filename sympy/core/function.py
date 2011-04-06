@@ -287,6 +287,14 @@ class Function(Application, Expr):
         """
         This function does compute series for multivariate functions,
         but the expansion is always in terms of *one* variable.
+        Examples:
+
+        >>> from sympy import atan2, O
+        >>> from sympy.abc import x, y
+        >>> atan2(x, y).series(x, n=2)
+        atan2(0, y) + x/y + O(x**2)
+        >>> atan2(x, y).series(y, n=2)
+        atan2(x, 0) - y/x + O(y**2)
         """
         if self.func.nargs is None:
             raise NotImplementedError('series for user-defined \
