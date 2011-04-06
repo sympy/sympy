@@ -114,6 +114,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Yuri Karadzhov: improvements to hyperbolic identities
 #. Vladimir Lagunov: improvements to the geometry module
 #. Matthew Rocklin: improvements to Number instantiation
+#. Saptarshi Mandal: Test for an integral
 
 Up-to-date list in the order of the first contribution is given in the `AUTHORS
 <https://github.com/sympy/sympy/blob/master/AUTHORS>`_ file.
