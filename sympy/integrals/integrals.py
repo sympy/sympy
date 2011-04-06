@@ -1,5 +1,5 @@
 from sympy.core import (Basic, Expr, S, C, Symbol, Wild, Add, sympify, diff,
-                        oo, Tuple, Dummy)
+                        oo, Tuple, Dummy, Function)
 
 from sympy.core.symbol import Dummy
 from sympy.integrals.trigonometry import trigintegrate
@@ -743,7 +743,19 @@ class Integral(Expr):
                 raise NotImplementedError("Unknown method %s" % method)
             result += self.function.subs(sym, xi)
         return result*dx
+    
 
+    def arbitrary_function(self, *args,**kwargs):
+        for T in self.limits:
+            if len(T)>1:
+                return self.doit(deep = False)
+
+        s = self.free_symbols - set(self.variables)
+        if len(s)==0:
+            c = Symbol('constant')
+        else:
+            c = Function('f')(*s)
+        return self.doit(deep=False) + c
 
 @threaded(use_add=False)
 def integrate(*args, **kwargs):
@@ -793,13 +805,8 @@ def integrate(*args, **kwargs):
     integral = Integral(*args, **kwargs)
 
     if isinstance(integral, Integral):
-        if isinstance(args[1],Symbol) &  kwargs.get('arbitrary_function', False):
-            s = integral.free_symbols - set([args[1]])
-            if len(s)==0:
-                c = Symbol('constant')
-            else:
-                c = Function('f')(*s)
-            return integral.doit(deep=False) + c
+        if kwargs.get('arbitrary_function', False):
+            return integral.arbitrary_function()
         else:
             return integral.doit(deep=False)
     else:
