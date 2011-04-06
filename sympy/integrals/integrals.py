@@ -29,8 +29,13 @@ class Integral(Expr):
             if function is S.NaN:
                 return S.NaN
 
+        limits = []
+
+        if isinstance(function, Integral):
+            limits.extend(function.limits)
+            function = function.function
+
         if symbols:
-            limits = []
             for V in symbols:
                 if isinstance(V, Symbol):
                     limits.append(Tuple(V))
@@ -65,7 +70,7 @@ class Integral(Expr):
             syms = function.atoms(Symbol)
             if not syms:
                 raise ValueError('An integration variable is required.')
-            limits = [Tuple(symb) for symb in syms]
+            limits.extend([Tuple(symp) for symp in syms])
 
         obj = Expr.__new__(cls, **assumptions)
         arglist = [function]
@@ -310,15 +315,16 @@ class Integral(Expr):
         function = self.function
         if deep:
             function = function.doit(**hints)
+
         if function.is_zero:
             return S.Zero
 
         # There is no trivial answer, so continue
-        for xab in self.limits:
+        for i, xab in enumerate(self.limits):
             antideriv = self._eval_integral(function, xab[0])
 
             if antideriv is None:
-                newargs = (function, self.__getnewargs__()[1])
+                newargs = ([function] + list(self.limits[i:]))
                 return self.new(*newargs)
             else:
                 if len(xab) == 1:

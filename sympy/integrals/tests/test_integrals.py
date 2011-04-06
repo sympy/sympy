@@ -534,3 +534,15 @@ def test_series():
     i = Integral(cos(x))
     e = i.lseries(x)
     assert i.nseries(x, n=8).removeO() == Add(*[e.next() for j in range(4)])
+
+def test_issue2068():
+    from sympy.abc import x, y, z
+    f = Function('f')
+    assert Integral(Integral(f(x), x), x) == Integral(f(x), x, x)
+    assert Integral(Integral(Integral(f(x), x), y), z) == Integral(f(x), x, y, z)
+    assert integrate(Integral(f(x), x), x) == Integral(f(x), x, x)
+    assert integrate(Integral(f(x), y), x) == Integral(y*f(x), x)
+    assert integrate(Integral(f(x), x), y) == Integral(f(x), x, y)
+    assert integrate(Integral(2, x), x) == x**2
+    assert integrate(Integral(2, x), y) == 2*x*y
+
