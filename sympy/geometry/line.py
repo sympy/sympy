@@ -598,13 +598,13 @@ class Segment(LinearEntity):
         """Calculates the distance between a point and a line segment"""
         seg_vector = Point(self.p2[0] - self.p1[0], self.p2[1] - self.p1[1])
         pt_vector = Point(pt[0] - self.p1[0], pt[1] - self.p1[1])
-        t = (seg_vector[0]*pt_vector[0] + seg_vector[1]*pt_vector[1])/self.length**2
-        if t>=1:
+        t = (seg_vector[0] * pt_vector[0] + seg_vector[1] * pt_vector[1]) / self.length**2
+        if t >= 1:
             distance = Point.distance(self.p2, pt)
-        elif t<=0:
+        elif t <= 0:
             distance = Point.distance(self.p1, pt)
         else:
-            distance = Point.distance((self.p1+Point(t*seg_vector[0], t*seg_vector[1])), pt)
+            distance = Point.distance(self.p1 + Point(t * seg_vector[0], t * seg_vector[1]), pt)
         return distance
 
     def __eq__(self, other):

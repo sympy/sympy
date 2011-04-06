@@ -155,8 +155,8 @@ class Polygon(GeometryEntity):
             for side in self.sides:
                 current = side.distance(o)
                 if current == 0:
-                    return 0
-                elif current<dist:
+                    return S(0)
+                elif current < dist:
                     dist = current
             return dist
         elif isinstance(o, Polygon) and self.is_convex() and o.is_convex():
@@ -179,8 +179,8 @@ class Polygon(GeometryEntity):
         Example:
         ========
             >>> from sympy.geometry import Point, Polygon
-            >>> square = Polygon(Point(0,0), Point(0,1), Point(1,1), Point(1,0))
-            >>> triangle = Polygon(Point(1,2), Point(2,2), Point(2,1))
+            >>> square = Polygon(Point(0, 0), Point(0, 1), Point(1, 1), Point(1, 0))
+            >>> triangle = Polygon(Point(1, 2), Point(2, 2), Point(2, 1))
             >>> square._do_poly_distance(triangle)
             2**(1/2)/2
 
@@ -209,20 +209,20 @@ class Polygon(GeometryEntity):
             if e2_max_radius < r:
                 e2_max_radius = r
         center_dist = Point.distance(e1_center, e2_center)
-        if center_dist<=e1_max_radius+e2_max_radius:
+        if center_dist <= e1_max_radius + e2_max_radius:
             print("Warning: Polygons may intersect producing erroneous output")
 
         '''
         Find the upper rightmost vertex of e1 and the lowest leftmost vertex of e2
         '''
-        e1_ymax = (0,-oo)
-        e2_ymin = (0,oo)
+        e1_ymax = (0, -oo)
+        e2_ymin = (0, oo)
 
         for vertex in e1.vertices:
-            if vertex[1] > e1_ymax[1] or (vertex[1]==e1_ymax[1] and vertex[0]>e1_ymax[0]):
+            if vertex[1] > e1_ymax[1] or (vertex[1] == e1_ymax[1] and vertex[0] > e1_ymax[0]):
                 e1_ymax = vertex
         for vertex in e2.vertices:
-            if vertex[1] < e2_ymin[1] or (vertex[1]==e2_ymin[1] and vertex[0]<e2_ymin[0]):
+            if vertex[1] < e2_ymin[1] or (vertex[1] == e2_ymin[1] and vertex[0] < e2_ymin[0]):
                 e2_ymin = vertex
         min_dist = Point.distance(e1_ymax, e2_ymin)
 
@@ -257,7 +257,7 @@ class Polygon(GeometryEntity):
 
         e1_current = e1_ymax
         e2_current = e2_ymin
-        support_line = Line(Point(0,0),Point(1,0))
+        support_line = Line(Point(0, 0), Point(1, 0))
 
         '''
         Determine which point in e1 and e2 will be selected after e2_ymin and e1_ymax,
@@ -268,8 +268,8 @@ class Polygon(GeometryEntity):
         point2 = e1_connections[e1_ymax][1]
         angle1 = support_line.angle_between(Line(e1_ymax, point1))
         angle2 = support_line.angle_between(Line(e1_ymax, point2))
-        if angle1<angle2: e1_next = point1
-        elif angle2<angle1: e1_next = point2
+        if angle1 < angle2: e1_next = point1
+        elif angle2 < angle1: e1_next = point2
         elif Point.distance(e1_ymax, point1) > Point.distance(e1_ymax, point2):
             e1_next = point2
         else: e1_next = point1
@@ -278,8 +278,8 @@ class Polygon(GeometryEntity):
         point2 = e2_connections[e2_ymin][1]
         angle1 = support_line.angle_between(Line(e2_ymin, point1))
         angle2 = support_line.angle_between(Line(e2_ymin, point2))
-        if angle1>angle2: e2_next = point1
-        elif angle2>angle1: e2_next = point2
+        if angle1 > angle2: e2_next = point1
+        elif angle2 > angle1: e2_next = point2
         elif Point.distance(e2_ymin, point1) > Point.distance(e2_ymin, point2):
             e2_next = point2
         else: e2_next = point1
@@ -325,7 +325,7 @@ class Polygon(GeometryEntity):
                 min1 = e1_segment.distance(e2_next)
                 min2 = e2_segment.distance(e1_next)
 
-                min_dist_current = min(min1,min2)
+                min_dist_current = min(min1, min2)
                 if min_dist_current.evalf() < min_dist.evalf(): min_dist = min_dist_current
 
                 if e1_connections[e1_next][0] != e1_current:
