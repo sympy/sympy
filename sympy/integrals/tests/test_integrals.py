@@ -540,3 +540,14 @@ def test_issue_1304():
     assert integrate(sqrt(x**2 + z**2),x) == z**2*asinh(x/z)/2 + x*(x**2 + z**2)**(S(1)/2)/2
     assert integrate(sqrt(x**2 - z**2),x) == -z**2*acosh(x/z)/2 + x*(x**2 - z**2)**(S(1)/2)/2
     assert integrate(sqrt(-x**2 - 4), x) == -2*atan(x/(-4 - x**2)**(S(1)/2)) + x*(-4 - x**2)**(S(1)/2)/2
+
+def test_issue2068():
+    from sympy.abc import x, y, z
+    f = Function('f')
+    assert Integral(Integral(f(x), x), x) == Integral(f(x), x, x)
+    assert Integral(Integral(Integral(f(x), x), y), z) == Integral(f(x), x, y, z)
+    assert integrate(Integral(f(x), x), x) == Integral(f(x), x, x)
+    assert integrate(Integral(f(x), y), x) == Integral(y*f(x), x)
+    assert integrate(Integral(f(x), x), y) == Integral(f(x), x, y)
+    assert integrate(Integral(2, x), x) == x**2
+    assert integrate(Integral(2, x), y) == 2*x*y
