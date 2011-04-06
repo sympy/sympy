@@ -2205,7 +2205,28 @@ def symarray(prefix, shape):
     return arr
 
 def rot_axis3(theta):
-    """Returns a rotation matrix for a rotation of theta about the 3-axis."""
+    """Returns a rotation matrix for a rotation of theta (in radians) about
+    the 3-axis.
+
+    Examples
+    --------
+
+    >>> from sympy import pi
+    >>> from sympy.matrices import rot_axis3
+
+    A rotation of pi/3 (60 degrees):
+    >>> theta = pi/3
+    >>> rot_axis3(theta)
+    [        1/2, 3**(1/2)/2, 0]
+    [-3**(1/2)/2,        1/2, 0]
+    [          0,          0, 1]
+
+    If we rotate by pi/2 (90 degrees):
+    >> rot_axis3(pi/2)
+    [ 0, 1, 0]
+    [-1, 0, 0]
+    [ 0, 0, 1]
+    """
     ct = cos(theta)
     st = sin(theta)
     mat = ((ct,st,0),
@@ -2214,7 +2235,28 @@ def rot_axis3(theta):
     return Matrix(mat)
 
 def rot_axis2(theta):
-    """Returns a rotation matrix for a rotation of theta about the 2-axis."""
+    """Returns a rotation matrix for a rotation of theta (in radians) about
+    the 2-axis.
+
+    Examples
+    --------
+
+    >>> from sympy import pi
+    >>> from sympy.matrices import rot_axis2
+
+    A rotation of pi/3 (60 degrees):
+    >>> theta = pi/3
+    >>> rot_axis2(theta)
+    [       1/2, 0, -3**(1/2)/2]
+    [         0, 1,           0]
+    [3**(1/2)/2, 0,         1/2]
+
+    If we rotate by pi/2 (90 degrees):
+    >>> rot_axis2(pi/2)
+    [0, 0, -1]
+    [0, 1,  0]
+    [1, 0,  0]
+    """
     ct = cos(theta)
     st = sin(theta)
     mat = ((ct,0,-st),
@@ -2223,7 +2265,28 @@ def rot_axis2(theta):
     return Matrix(mat)
 
 def rot_axis1(theta):
-    """Returns a rotation matrix for a rotation of theta about the 1-axis."""
+    """Returns a rotation matrix for a rotation of theta (in radians) about
+    the 1-axis.
+
+    Examples
+    --------
+
+    >>> from sympy import pi
+    >>> from sympy.matrices import rot_axis1
+
+    A rotation of pi/3 (60 degrees):
+    >>> theta = pi/3
+    >>> rot_axis1(theta)
+    [1,           0,          0]
+    [0,         1/2, 3**(1/2)/2]
+    [0, -3**(1/2)/2,        1/2]
+
+    If we rotate by pi/2 (90 degrees):
+    >>> rot_axis1(pi/2)
+    [1,  0, 0]
+    [0,  0, 1]
+    [0, -1, 0]
+    """
     ct = cos(theta)
     st = sin(theta)
     mat = ((1,0,0),
