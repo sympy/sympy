@@ -1,7 +1,9 @@
 """ Tools for doing common subexpression elimination.
 """
+import bisect
+
 from sympy import Basic
-from sympy.utilities.iterables import postorder_traversal, numbered_symbols
+from sympy.utilities.iterables import preorder_traversal, numbered_symbols
 
 import cse_opts
 
@@ -97,6 +99,7 @@ def cse(exprs, symbols=None, optimizations=None):
         symbols = iter(symbols)
     seen_subexp = set()
     to_eliminate = []
+    to_eliminate_ops_count = []
 
     if optimizations is None:
         # Pull out the default here just in case there are some weird
@@ -111,15 +114,21 @@ def cse(exprs, symbols=None, optimizations=None):
 
     # Find all of the repeated subexpressions.
     for expr in exprs:
-        for subtree in postorder_traversal(expr):
-            if subtree.args == ():
+        pt = preorder_traversal(expr)
+        for subtree in pt:
+            if subtree.is_Atom:
                 # Exclude atoms, since there is no point in renaming them.
                 continue
-            if (subtree.args != () and
-                subtree in seen_subexp and
-                subtree not in to_eliminate):
-                to_eliminate.append(subtree)
-            seen_subexp.add(subtree)
+            elif subtree in seen_subexp:
+                if subtree not in to_eliminate:
+                    ops_count = subtree.count_ops()
+                    index_to_insert = bisect.bisect(to_eliminate_ops_count, ops_count)
+
+                    to_eliminate_ops_count.insert(index_to_insert, ops_count)
+                    to_eliminate.insert(index_to_insert, subtree)
+                pt.skip()
+            else:
+                seen_subexp.add(subtree)
 
     # Substitute symbols for all of the repeated subexpressions.
     replacements = []
@@ -143,3 +152,4 @@ def cse(exprs, symbols=None, optimizations=None):
     reduced_exprs = [postprocess_for_cse(e, optimizations) for e in reduced_exprs]
 
     return replacements, reduced_exprs
+
