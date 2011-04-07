@@ -198,8 +198,8 @@ class Polygon(GeometryEntity):
         '''Tests for a possible intersection between the polygons and outputs a warning'''
         e1_center = e1.centroid
         e2_center = e2.centroid
-        e1_max_radius = 0
-        e2_max_radius = 0
+        e1_max_radius = S(0)
+        e2_max_radius = S(0)
         for vertex in e1.vertices:
             r = Point.distance(e1_center, vertex)
             if e1_max_radius < r:
@@ -215,8 +215,8 @@ class Polygon(GeometryEntity):
         '''
         Find the upper rightmost vertex of e1 and the lowest leftmost vertex of e2
         '''
-        e1_ymax = (0, -oo)
-        e2_ymin = (0, oo)
+        e1_ymax = (S(0), -oo)
+        e2_ymin = (S(0), oo)
 
         for vertex in e1.vertices:
             if vertex[1] > e1_ymax[1] or (vertex[1] == e1_ymax[1] and vertex[0] > e1_ymax[0]):
@@ -257,7 +257,7 @@ class Polygon(GeometryEntity):
 
         e1_current = e1_ymax
         e2_current = e2_ymin
-        support_line = Line(Point(0, 0), Point(1, 0))
+        support_line = Line(Point(S(0), S(0)), Point(S(1), S(0)))
 
         '''
         Determine which point in e1 and e2 will be selected after e2_ymin and e1_ymax,
