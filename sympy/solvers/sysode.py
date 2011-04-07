@@ -12,10 +12,13 @@ from sympy.matrices import zeros, Matrix
 from sympy.simplify import collect, simplify
 
 from sympy.abc import x,y,z
+from sympy.utilities.iterables import numbered_symbols
 
 def ode_1st_linear_system(eqs, wrt, *symbols):
     """
     Solves a system of first order homogenous linear differential equations
+    The general form of this equation in matrix form is
+    dx/dt = Ax(t) + p(t) where A is a scalar matrix and x and p are vectors.
 
     An example of such a system is a set equations such as
     dx/dt = a1*x + b1*y + c1(t), dy/dt = a2*x + b2*y + c2(t) where a1, b1, a2 and b2
