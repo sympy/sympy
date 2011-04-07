@@ -193,7 +193,7 @@ def heurisch(f, x, **kwargs):
                                 terms.add(asin(sqrt(-M[a]/M[b])*x))
 
                         M = g.base.match(a*x**2 - b)
-                        
+
                         if M is not None and M[b].is_positive:
                             if M[a].is_positive:
                                 terms.add(acosh(sqrt(M[a]/M[b])*x))
