@@ -521,16 +521,16 @@ def test_convex_hull():
     another_p = [Point(-45, -85), Point(-45, 85), Point(-45,26),Point(-45,-24)]
     ch2 = Segment(another_p[0],another_p[1])
 
-    assert convex_hull(another_p) == ch2
-    assert convex_hull(p) == ch
+    assert convex_hull(*another_p) == ch2
+    assert convex_hull(*p) == ch
     assert convex_hull(p[0]) == p[0]
     assert convex_hull(p[0], p[1]) == Segment(p[0], p[1])
 
     # no unique points
-    assert convex_hull([p[-1]]*3) == p[-1]
+    assert convex_hull(*[p[-1]]*3) == p[-1]
 
     # collection of items
-    assert convex_hull([Point(0,0),
+    assert convex_hull(*[Point(0,0),
                         Segment(Point(1, 0), Point(1, 1)),
                         RegularPolygon(Point(2, 0), 2, 4)]) == \
             Polygon(Point(0, 0), Point(2, -2), Point(4, 0), Point(2, 2))

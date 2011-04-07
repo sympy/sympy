@@ -85,11 +85,7 @@ class Polygon(GeometryEntity):
                 args.insert(2, n)
             return RegularPolygon(*args, **kwargs)
 
-        vertices = GeometryEntity.extract_entities(args, remove_duplicates=False)
-
-        for p in vertices:
-            if not isinstance(p, Point):
-                raise GeometryError("Polygon.__new__ requires points")
+        vertices = [Point(a) for a in args]
 
         # remove consecutive duplicates
         nodup = []
@@ -782,8 +778,7 @@ class RegularPolygon(Polygon):
 
     def __new__(self, c, r, n, rot=0, **kwargs):
         r, n, rot = [sympify(w) for w in [r, n, rot]]
-        if not isinstance(c, Point):
-            raise GeometryError("RegularPolygon.__new__ requires c to be a Point instance")
+        c = Point(c)
         if not isinstance(r, Basic):
             raise GeometryError("RegularPolygon.__new__ requires r to be a number or Basic instance")
         if n < 3:
@@ -1113,14 +1108,10 @@ class Triangle(Polygon):
     """
 
     def __new__(cls, *args, **kwargs):
-        vertices = GeometryEntity.extract_entities(args, remove_duplicates=False)
-        if len(vertices) != 3:
+        if len(args) != 3:
             raise GeometryError("Triangle.__new__ requires three points")
 
-        for p in vertices:
-            if not isinstance(p, Point):
-                raise GeometryError("Triangle.__new__ requires three points")
-
+        vertices = [Point(a) for a in args]
         return GeometryEntity.__new__(cls, *vertices, **kwargs)
 
     @property

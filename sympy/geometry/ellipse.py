@@ -100,8 +100,8 @@ class Ellipse(GeometryEntity):
 
         if center is None:
             center = Point(0, 0)
-        elif not isinstance(center, Point):
-            raise TypeError("center must be a Point")
+        else:
+            center = Point(center)
 
         if len(filter(None, (hradius, vradius, eccentricity))) != 2:
             raise ValueError, 'Exactly two arguments of "hradius", '\
@@ -851,16 +851,17 @@ class Circle(Ellipse):
     """
     def __new__(cls, *args, **kwargs):
         c, r = None, None
-        if len(args) == 3 and isinstance(args[0], Point):
-            from polygon import Triangle
-            t = Triangle(args[0], args[1], args[2])
-            if t.area == 0:
+        if len(args) == 3:
+            args = [Point(a) for a in args]
+            if Point.is_collinear(*args):
                 raise GeometryError("Cannot construct a circle from three collinear points")
+            from polygon import Triangle
+            t = Triangle(*args)
             c = t.circumcenter
             r = t.circumradius
         elif len(args) == 2:
             # Assume (center, radius) pair
-            c = args[0]
+            c = Point(args[0])
             r = sympify(args[1])
 
         if not (c is None or r is None):

@@ -186,48 +186,6 @@ class GeometryEntity(tuple):
         """
         raise NotImplementedError()
 
-    @staticmethod
-    def extract_entities(args, remove_duplicates=True):
-        """Extract all GeometryEntity instances from a sequence of objects.
-
-        Parameters
-        ----------
-        args : a (possibly nested) sequence of objects
-        remove_duplicates : boolean, optional
-            Duplicate entities are removed from the result (default is True).
-
-        Returns
-        -------
-        entities : tuple of GeometryEntity.
-
-        Notes
-        -----
-        The extraction is performed recursively - a GeometryEntity in a
-        sub-sequences will be added to the result.
-        Anything that is not a GeometryEntity instance is excluded from the
-        return value.
-        Ordering of arguments is always maintained. If duplicates
-        are removed then the entry with the lowest index is kept.
-
-        """
-        ret = list()
-        for arg in args:
-            if isinstance(arg, GeometryEntity):
-                ret.append(arg)
-            elif isinstance(arg, (list, tuple, set)):
-                ret.extend(GeometryEntity.extract_entities(arg))
-        if remove_duplicates:
-            temp = set(ret)
-            ind, n = 0, len(ret)
-            for counter in xrange(n):
-                x = ret[ind]
-                if x in temp:
-                    temp.remove(x)
-                    ind += 1
-                else:
-                    del ret[ind]
-        return tuple(ret)
-
     def subs(self, old, new):
         if hasattr(self, '_eval_subs_'):
             return self.subs(old, new)

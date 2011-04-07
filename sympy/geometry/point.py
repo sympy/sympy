@@ -116,10 +116,11 @@ class Point(GeometryEntity):
         False
 
         """
-        points = GeometryEntity.extract_entities(points)
         if len(points) == 0:
             return False
-        if len(points) <= 2: return True # two points always form a line
+        if len(points) <= 2:
+            return True # two points always form a line
+        points = [Point(a) for a in points]
 
         # XXX Cross product is used now, but that only extends to three
         #     dimensions. If the concept needs to extend to greater
@@ -172,10 +173,13 @@ class Point(GeometryEntity):
         False
 
         """
-        points = GeometryEntity.extract_entities(points)
-        if len(points) == 0: return False
-        if len(points) <= 2: return True
-        if len(points) == 3: return not Point.is_collinear(*points)
+        if len(points) == 0:
+            return False
+        if len(points) <= 2:
+            return True
+        points = [Point(p) for p in points]
+        if len(points) == 3:
+            return (not Point.is_collinear(*points))
 
         try:
             from ellipse import Circle

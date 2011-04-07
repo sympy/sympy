@@ -56,9 +56,15 @@ def intersection(*entities):
     """
     from entity import GeometryEntity
 
-    entities = GeometryEntity.extract_entities(entities, False)
     if len(entities) <= 1:
         return []
+
+    for i, e in enumerate(entities):
+        if not isinstance(e, GeometryEntity):
+            try:
+                entities[i] = Point(e)
+            except NotImplementedError:
+                raise ValueError('%s is not a GeometryEntity and cannot be made into Point' % str(e))
 
     res = entities[0].intersection(entities[1])
     for entity in entities[2:]:
@@ -99,8 +105,8 @@ def convex_hull(*args):
     Examples
     --------
     >>> from sympy.geometry import Point, convex_hull
-    >>> points = [Point(x) for x in [(1, 1), (1, 2), (3, 1), (-5, 2), (15, 4)]]
-    >>> convex_hull(points)
+    >>> points = [(1,1), (1,2), (3,1), (-5,2), (15,4)]
+    >>> convex_hull(*points)
     Polygon(Point(-5, 2), Point(1, 1), Point(3, 1), Point(15, 4))
 
     """
@@ -109,9 +115,13 @@ def convex_hull(*args):
     from line import Segment
     from polygon import Polygon
 
-    entities = GeometryEntity.extract_entities(args, False)
     p = set()
-    for e in entities:
+    for e in args:
+        if not isinstance(e, GeometryEntity):
+            try:
+                e = Point(e)
+            except NotImplementedError:
+                raise ValueError('%s is not a GeometryEntity and cannot be made into Point' % str(e))
         if isinstance(e, Point):
             p.add(e)
         elif isinstance(e, Segment):
@@ -148,7 +158,7 @@ def convex_hull(*args):
 
     if len(convexHull) == 2:
         return Segment(convexHull[0], convexHull[1])
-    return Polygon(convexHull)
+    return Polygon(*convexHull)
 
 
 def are_similar(e1, e2):

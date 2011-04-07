@@ -36,8 +36,8 @@ class LinearEntity(GeometryEntity):
     """
 
     def __new__(cls, p1, p2, **kwargs):
-        if not isinstance(p1, Point) and not isinstance(p2, Point):
-            raise TypeError("%s.__new__ requires two Points." % cls.__name__)
+        p1 = Point(p1)
+        p2 = Point(p2)
         if p1 == p2:
             # Rolygon returns lower priority classes...should LinearEntity, too?
             return p1 # raise ValueError("%s.__new__ requires two unique Points." % cls.__name__)
@@ -149,8 +149,6 @@ class LinearEntity(GeometryEntity):
         False
 
         """
-        _lines = lines
-        lines = GeometryEntity.extract_entities(lines)
 
         # Concurrency requires intersection at a single point; One linear
         # entity cannot be concurrent.
@@ -1061,6 +1059,8 @@ class Segment(LinearEntity):
     >>> from sympy import Point
     >>> from sympy.abc import s
     >>> from sympy.geometry import Segment
+    >>> Segment((1, 0), (1, 1)) # tuples are interpreted as pts
+    Segment(Point(1, 0), Point(1, 1))
     >>> s = Segment(Point(4, 3), Point(1, 1))
     >>> s
     Segment(Point(1, 1), Point(4, 3))
@@ -1079,6 +1079,8 @@ class Segment(LinearEntity):
         # Reorder the two points under the following ordering:
         #   if p1[0] != p2[0] then p1[0] < p2[0]
         #   if p1[0] == p2[0] then p1[1] < p2[1]
+        p1 = Point(p1)
+        p2 = Point(p2)
         if p1[0] > p2[0]:
             p1, p2 = p2, p1
         elif p1[0] == p2[0] and p1[1] > p2[0]:
