@@ -11,6 +11,8 @@ from sympy.functions import exp
 from sympy.matrices import zeros, Matrix
 from sympy.simplify import collect, simplify
 
+from sympy.abc import x,y,z
+
 def ode_1st_linear_system(eqs, wrt, *symbols):
     """
     Solves a system of first order homogenous linear differential equations
@@ -47,46 +49,29 @@ def ode_1st_linear_system(eqs, wrt, *symbols):
     for i in range(len(symbols)):
         symbol_map[symbols[i]] = i
 
-    for i in range(len(eqs)):
+    for i, eq in enumerate(eqs):
         # Iterate over all the equations
-        eqs[i] = collect(eqs[i], *symbols)
-        if type(eqs[i]) == Symbol:
-            if eqs[i] in symbols:
-                scalar_mat[i, symbol_map[eqs[i]]] = 1
+        eq = collect(eq, *symbols)
+        if not eq.is_Add:
+            term_tup = eq.as_independent(*symbols)
+            base_term = term_tup[1]
+            if base_term in symbols:
+                scalar_mat[i, symbol_map[base_term]] = term_tup[0]
             else:
-                arbitrary_funcs[i] += eqs[i]
-        elif type(eqs[i]) == Mul:
-            coeff = 1
-            symbol = None
-            for j in eqs[i].args:
-                if not j in symbols:
-                    coeff = coeff*j
-                else:
-                    symbol = j
-
-            if symbol == None or symbol == wrt:
-                arbitrary_funcs[i] += eqs[i]
-            else:
-                scalar_mat[i, symbol_map[symbol]] = coeff
+                arbitrary_funcs[i] += eq
         else:
-            for j in eqs[i].args:
+            eq = collect(eq, *symbols)
+            for j in eq.args:
                 # Iterate over all the terms
-                symbol = None
-                coeff = 1
-                if type(j) == Symbol:
-                    symbol = j
-                else:
-                    for k in j.args:
-                        if not k in symbols:
-                            coeff = coeff*k
-                        else:
-                            symbol = k
-
-                if symbol == None or symbol == wrt:
+                term_tup = j.as_independent(*symbols)
+                base_term = term_tup[1]
+                if term_tup[0] == j:
                     arbitrary_funcs[i] += j
-                else:
-                    scalar_mat[i, symbol_map[symbol]] = coeff
+                    continue
 
+                if base_term in symbols:
+                    scalar_mat[i, symbol_map[base_term]] = term_tup[0]
+                    
     # We need the eigenvalues and eigenvectors
     eigenvals = scalar_mat.berkowitz_eigenvals()
     eigenval_list = []
