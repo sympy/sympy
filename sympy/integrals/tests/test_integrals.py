@@ -540,9 +540,8 @@ def test_issue2068():
     f = Function('f')
     assert Integral(Integral(f(x), x), x) == Integral(f(x), x, x)
     assert Integral(Integral(Integral(f(x), x), y), z) == Integral(f(x), x, y, z)
-    assert integrate(Integral(f(x), x), x) == Integral(f(x), x, x)
     assert integrate(Integral(f(x), y), x) == Integral(y*f(x), x)
-    assert integrate(Integral(f(x), x), y) == Integral(f(x), x, y)
+    assert integrate(Integral(f(x), x), y) == Integral(y*f(x), x)
     assert integrate(Integral(2, x), x) == x**2
     assert integrate(Integral(2, x), y) == 2*x*y
 

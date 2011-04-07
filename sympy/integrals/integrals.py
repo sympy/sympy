@@ -57,7 +57,7 @@ class Integral(Expr):
                             limits.append(Tuple(newsymbol, *nlim ))
                             continue
                         elif len(V) == 1 or (len(V) == 2 and V[1] is None):
-                            limits.append(Tuple(newsymbol))
+                            limits.append((newsymbol,))
                             continue
                         elif len(V) == 2:
                             limits.append(Tuple(newsymbol, V[1]))
@@ -67,10 +67,10 @@ class Integral(Expr):
                 raise ValueError("Invalid integration variable or limits: %s" % str(symbols))
         else:
             # no symbols provided -- let's compute full anti-derivative
-            syms = function.atoms(Symbol)
+            syms = sorted(function.free_symbols, Basic.compare)
             if not syms:
                 raise ValueError('An integration variable is required.')
-            limits.extend([Tuple(symp) for symp in syms])
+            limits.extend([(symp,) for symp in syms])
 
         obj = Expr.__new__(cls, **assumptions)
         arglist = [function]
@@ -320,12 +320,13 @@ class Integral(Expr):
             return S.Zero
 
         # There is no trivial answer, so continue
-        for i, xab in enumerate(self.limits):
+        newargs = []
+        for xab in self.limits:
             antideriv = self._eval_integral(function, xab[0])
 
             if antideriv is None:
-                newargs = ([function] + list(self.limits[i:]))
-                return self.new(*newargs)
+                newargs.append(xab)
+                continue
             else:
                 if len(xab) == 1:
                     function = antideriv
@@ -353,6 +354,9 @@ class Integral(Expr):
                     else:
                         function = antideriv._eval_interval(x, a, b)
 
+        if len(newargs) > 0:
+            newargs = [function] + newargs
+            return self.new(*newargs)
         return function
 
     def _eval_expand_basic(self, deep=True, **hints):
