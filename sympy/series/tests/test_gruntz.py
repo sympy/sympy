@@ -1,4 +1,4 @@
-from sympy import Symbol, exp, log, oo, Rational, I, sin
+from sympy import Symbol, exp, log, oo, Rational, I, sin, E
 from sympy.series.gruntz import compare, mrv, rewrite, mrv_leadterm, gruntz, \
     sign
 from sympy.utilities.pytest import XFAIL, skip
@@ -217,3 +217,6 @@ def test_I():
     assert gruntz(y*I*x, x, oo) == y*I*oo
     assert gruntz(y*3*I*x, x, oo) == y*I*oo
     assert gruntz(y*3*sin(I)*x, x, oo) == y*I*oo
+
+def test_issue1715():
+    assert gruntz((x + 1)**(1/log(x + 1)), x, oo) == E
