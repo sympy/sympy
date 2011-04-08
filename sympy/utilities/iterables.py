@@ -99,41 +99,6 @@ def group(container, multiple=True):
 
     return groups
 
-def split(seq, key, keys=False, reverse=False):
-    """
-    Splits a container into a list of lists with elements equivalent wrt ``key``.
-
-    >>> from sympy.utilities.iterables import split
-
-    >>> seq = [16, 8, 3, 1, 2, 5, 7]
-    >>> key = lambda elt: elt % 3
-
-    >>> split(seq, key)
-    [[3], [16, 1, 7], [8, 2, 5]]
-    >>> split(seq, key, keys=True)
-    [(0, [3]), (1, [16, 1, 7]), (2, [8, 2, 5])]
-
-    """
-    splitter, result = {}, []
-
-    for elem in seq:
-        _key = key(elem)
-
-        if _key in splitter:
-            splitter[_key].append(elem)
-        else:
-            splitter[_key] = [elem]
-
-    _keys = sorted(splitter.keys(), reverse=reverse)
-
-    for _key in _keys:
-        if keys:
-            result.append((_key, splitter[_key]))
-        else:
-            result.append(splitter[_key])
-
-    return result
-
 def postorder_traversal(node):
     """
     Do a postorder traversal of a tree.
