@@ -91,7 +91,7 @@ def ode_1st_linear_system(eqs, wrt, *symbols):
 
     eigen_mat.col_del(0)
     arbitrary_funcs = eigen_mat.inv().multiply(arbitrary_funcs)
-    consts = [Symbol("C"+str(i)) for i in range(len(eqs))]
+    consts = [numbered_symbols('C', start = i).next() for i in range(len(eqs))]
 
     # Construct the function
     funcs = Matrix([S((consts[i] + C.Integral(exp(-eigenval_list[i]*wrt)*arbitrary_funcs[i],wrt).doit())\
