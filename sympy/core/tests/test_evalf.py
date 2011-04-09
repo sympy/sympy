@@ -226,9 +226,6 @@ def test_evaluate_false():
     assert Pow(y, 2, evaluate=True) - Pow(y, 2, evaluate=True) == 0
 
 def test_roots_evalf():
-    """Just test that substitution of roots to initial polynomial returns 0
-    (or tiny value according to precision)
-    """
     from sympy.polys import roots
     p = x**3 + 2*x**2 + 8
     r = roots(p, x)
