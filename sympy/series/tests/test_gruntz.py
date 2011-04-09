@@ -1,4 +1,5 @@
-from sympy import Symbol, exp, log, oo, Rational, I, sin, gamma, loggamma, E, S
+from sympy import Symbol, exp, log, oo, Rational, I, sin, gamma, loggamma, S, \
+    atan, acot, pi, cancel, E
 from sympy.series.gruntz import compare, mrv, rewrite, mrv_leadterm, gruntz, \
     sign
 from sympy.utilities.pytest import XFAIL, skip
@@ -230,6 +231,11 @@ def test_intractable():
     assert gruntz(gamma(S(1)/7+1/x), x, oo) == gamma(S(1)/7)
     assert gruntz(log(x**x)/log(gamma(x)), x, oo) == 1
     assert gruntz(log(gamma(gamma(x)))/exp(x), x, oo) == oo
+
+def test_aseries_trig():
+    assert cancel(gruntz(1/log(atan(x)), x, oo) \
+           - 1/(log(pi) + log(S(1)/2))) == 0
+    assert gruntz(1/acot(x), x, -oo) == -oo
 
 def test_exp_log_series():
     assert gruntz(x/log(log(x*exp(x))), x, oo) == oo

@@ -536,3 +536,12 @@ def test_atan2_expansion():
                   + atan2(1+x, 1) - atan(1+x)) == O(y**3)
     assert Matrix([atan2(x, y)]).jacobian([x, y]) \
                   == Matrix([[y/(x**2+y**2), -x/(x**2+y**2)]])
+
+def test_aseries():
+    x = Symbol('x')
+    def t(n, v, d, e):
+        assert abs(n(1/v).evalf() - n(1/x).series(x, dir=d).removeO().subs(x, v)) < e
+    t(atan, 0.1, '+', 1e-5)
+    t(atan, -0.1, '-', 1e-5)
+    t(acot, 0.1, '+', 1e-5)
+    t(acot, -0.1, '-', 1e-5)
