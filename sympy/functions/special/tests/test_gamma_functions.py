@@ -1,5 +1,6 @@
 from sympy import Symbol, gamma, oo, nan, zoo, factorial, sqrt, Rational, log,\
-        polygamma, EulerGamma, pi, uppergamma, S, expand_func
+        polygamma, EulerGamma, pi, uppergamma, S, expand_func, loggamma, sin, cos, \
+        O, cancel
 
 x = Symbol('x')
 y = Symbol('y')
@@ -120,4 +121,19 @@ def test_polygamma_expand_func():
     assert e.expand(func = True, basic = False) == e
 
 def test_loggamma():
-    pass
+    s1 = loggamma(1/(x+sin(x))+cos(x)).nseries(x,n=4)
+    s2 = (-log(2*x)-1)/(2*x) - log(x/pi)/2 + (4-log(2*x))*x/24 + O(x**2)
+    assert cancel(s1 - s2).removeO() == 0
+    s1 = loggamma(1/x).series(x)
+    s2 = (1/x-S(1)/2)*log(1/x) - 1/x  + log(2*pi)/2 + \
+         x/12 - x**3/360 + x**5/1260 +  O(x**7)
+    assert cancel(s1 - s2).removeO() == 0
+
+    def tN(N, M):
+        assert loggamma(1/x)._eval_nseries(x,n=N).getn() == M
+    tN(0, 0)
+    tN(1, 1)
+    tN(2, 3)
+    tN(3, 3)
+    tN(4, 5)
+    tN(5, 5)
