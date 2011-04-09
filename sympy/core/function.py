@@ -288,6 +288,16 @@ class Function(Application, Expr):
     def as_base_exp(self):
         return self, S.One
 
+    def _eval_aseries(self, n, args0, x):
+        """
+        Compute an asymptotic expansion around args0, in terms of self.args.
+        This function is only used internally by _eval_nseries and should not
+        be called directly; derived classes can overwrite this to implement
+        asymptotic expansions.
+        """
+        raise PoleError('Asymptotic expansion of %s around %s '
+                        'not implemented.' % (type(self), args0))
+
     def _eval_nseries(self, x, n):
         """
         This function does compute series for multivariate functions,
@@ -300,14 +310,21 @@ class Function(Application, Expr):
         atan2(0, y) + x/y + O(x**2)
         >>> atan2(x, y).series(y, n=2)
         atan2(x, 0) - y/x + O(y**2)
+
+        This function also computes asymptotic expansions, if necessary
+        and possible:
+
+        >>> from sympy import loggamma
+        >>> loggamma(1/x)._eval_nseries(x,0)
+        log(x)/2 - log(x)/x - 1/x + O(1)
         """
         if self.func.nargs is None:
             raise NotImplementedError('series for user-defined \
 functions are not supported.')
         args = self.args
         args0 = [t.limit(x, 0) for t in args]
-        if any([t is S.NaN or t.is_bounded is False for t in args0]):
-            raise PoleError("Cannot expand %s around 0" % (args))
+        if any([t.is_bounded == False for t in args0]):
+            return self._eval_aseries(n, args0, x)._eval_nseries(x, n)
         if (self.func.nargs == 1 and args0[0]) or self.func.nargs > 1:
             e = self
             e1 = e.expand()
@@ -450,7 +467,7 @@ functions are not supported.')
 
     def _eval_rewrite(self, pattern, rule, **hints):
         if hints.get('deep', False):
-            args = [ a._eval_rewrite(pattern, rule, **hints) for a in self ]
+            args = [ a._eval_rewrite(pattern, rule, **hints) for a in self.args ]
         else:
             args = self.args
 
