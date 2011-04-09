@@ -353,20 +353,24 @@ def subexp(e, sub):
     return e.subs(sub, C.Dummy('u')) != e
 
 @debug
-def calculate_series(e, x):
+def calculate_series(e, x, skip_abs=False, skip_log=False):
     """ Calculates at least one term of the series of "e" in "x".
 
     This is a place that fails most often, so it is in its own function.
     """
 
+    logx = Dummy('l')
     f = e
     for n in [2, 4, 6, 8]:
         series = f.nseries(x, n=n).removeO()
         if series:
-            break
+            if skip_log:
+                series = series.subs(log(x), logx)
+            if (not skip_abs) or series.has(x):
+                break
     else:
-        assert ValueError('(%s).series(%s, n=8) gave no terms.' % (f, x))
-    return series
+        raise ValueError('(%s).series(%s, n=8) gave no terms.' % (f, x))
+    return series.subs(logx, log(x))
 
 @debug
 def mrv_leadterm(e, x, Omega=[]):

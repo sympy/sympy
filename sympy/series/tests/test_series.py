@@ -53,7 +53,7 @@ def test_2124():
     assert (1 + x).getn() == None
 
     assert ((1/sin(x))**oo).series() == oo
-    assert ((sin(x))**y).series(x) == 0**y
+    assert ((sin(x))**y).series(x, n=1) == exp(y*log(x)) + O(x*exp(y*log(x)), x)
 
     raises(NotImplementedError, 'series(Function("f")(x))')
 
