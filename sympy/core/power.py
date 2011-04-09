@@ -657,7 +657,7 @@ class Pow(Expr):
                     # factor the w**4 out using collect:
                     return 1/collect(prefactor, x)
                 if rest.is_Order:
-                    return (1 + rest)/prefactor
+                    return 1/prefactor + rest/prefactor
                 n2 = rest.getn()
                 if n2 is not None:
                     n = n2
