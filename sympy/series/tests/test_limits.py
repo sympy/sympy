@@ -260,3 +260,6 @@ def test_issue1447():
 def test_issue835():
     assert limit((1 + x**log(3))**(1/x), x, 0) == 1
     assert limit((5**(1/x) + 3**(1/x))**x, x, 0) == 5
+
+def test_newissue():
+    assert limit(exp(1/sin(x))/exp(cot(x)), x, 0) == 1
