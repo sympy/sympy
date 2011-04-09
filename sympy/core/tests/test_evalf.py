@@ -224,3 +224,18 @@ def test_evaluate_false():
         assert Mul(3, 2, evaluate=no).is_Mul
         assert Pow(3, 2, evaluate=no).is_Pow
     assert Pow(y, 2, evaluate=True) - Pow(y, 2, evaluate=True) == 0
+
+def test_roots_evalf():
+    """Just test that substitution of roots to initial polynomial returns 0
+    (or tiny value according to precision)
+    """
+    from sympy.polys import roots
+    p = x**3 + 2*x**2 + 8
+    r = roots(p, x)
+    for i in r.keys():
+        # test direct substitution
+        assert abs(p.subs(x, i.evalf(20)).evalf(20)) < 1E-20
+        # test Mul._eval_evalf() and Pow._eval_evalf()
+        x1 = Pow(i, 3)._eval_evalf(80)
+        x2 = Mul(2, Pow(i, 2)._eval_evalf(80))._eval_evalf(80)
+        assert abs((x1 + x2 + 8).evalf(20)) < 1E-20
