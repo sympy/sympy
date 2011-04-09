@@ -925,16 +925,16 @@ class asin(Function):
 
     Notes
     ====
-    	asin(x) will evaluate automatically in the cases
-	oo, -oo, 0, 1, -1
+        asin(x) will evaluate automatically in the cases
+        oo, -oo, 0, 1, -1
 
     Examples
     ========
-    	>>> from sympy import asin, oo, pi
-	>>> asin(.5)
-	asin(0.5)
-	>>> asin(-1)
-	-pi/2
+        >>> from sympy import asin, oo, pi
+        >>> asin(.5)
+        asin(0.5)
+        >>> asin(-1)
+        -pi/2
 
     """
 
@@ -1042,18 +1042,18 @@ class acos(Function):
 
     Notes
     =====
-    	acos(x) will evaluate automatically in the cases 
-	oo, -oo, 0, 1, -1
+        acos(x) will evaluate automatically in the cases 
+        oo, -oo, 0, 1, -1
 
     Examples
     ========
-	>>> from sympy import acos, oo, pi
-	>>> acos(.5)
-	acos(0.5)
-	>>> acos(0)
-	pi/2
-	>>> acos(oo)
-	(oo)*I
+        >>> from sympy import acos, oo, pi
+        >>> acos(.5)
+        acos(0.5)
+        >>> acos(0)
+        pi/2
+        >>> acos(oo)
+        (oo)*I
     """
 
     nargs = 1
@@ -1150,17 +1150,17 @@ class atan(Function):
     Notes
     =====
         atan(x) will evaluate automatically in the cases
-	oo, -oo, 0, 1, -1
+        oo, -oo, 0, 1, -1
 
     Examples
     ========
-    	>>> from sympy import atan, oo, pi
-	>>> atan(0)
-	0
-	>>> atan(.5)
-	atan(0.5)
-	>>> atan(oo)
-	pi/2
+        >>> from sympy import atan, oo, pi
+        >>> atan(0)
+        0
+        >>> atan(.5)
+        atan(0.5)
+        >>> atan(oo)
+        pi/2
 
     """
 
