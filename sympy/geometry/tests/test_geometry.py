@@ -385,7 +385,7 @@ def test_polygon():
 
     # Bisectors
     bisectors = t1.bisectors
-    assert bisectors[p1] == Segment(p1, Point(Rational(5,2), Rational(5,2)))
+    assert bisectors()[p1] == Segment(p1, Point(Rational(5,2), Rational(5,2)))
     ic = (250 - 125*sqrt(2)) / 50
     assert t1.incenter == Point(ic, ic)
 
