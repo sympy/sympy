@@ -2674,10 +2674,10 @@ def symarray(prefix, shape):
     array([a_0, a_1, a_2], dtype=object)
 
     For more than one dimension, the shape must be given as a tuple:
-    >>> symarray('a', (2,3)) #doctest: +SKIP
+    >>> symarray('a', (2, 3)) #doctest: +SKIP
     array([[a_0_0, a_0_1, a_0_2],
            [a_1_0, a_1_1, a_1_2]], dtype=object)
-    >>> symarray('a', (2,3,2)) #doctest: +SKIP
+    >>> symarray('a', (2, 3, 2)) #doctest: +SKIP
     array([[[a_0_0_0, a_0_0_1],
             [a_0_1_0, a_0_1_1],
             [a_0_2_0, a_0_2_1]],
