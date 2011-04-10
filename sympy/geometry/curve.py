@@ -18,7 +18,7 @@ class Curve(GeometryEntity):
 
     Parameters
     ----------
-    functions : list of
+    function : list of functions
     limits : 3-tuple
         Function parameter and lower and upper bounds.
 
