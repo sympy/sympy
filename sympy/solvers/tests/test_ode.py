@@ -7,6 +7,8 @@ from sympy.solvers.ode import ode_order, homogeneous_order, \
         _undetermined_coefficients_match, classify_ode, checkodesol, constant_renumber
 from sympy.utilities.pytest import XFAIL, skip, raises
 
+t = Symbol('t')
+C0 = Symbol('C0')
 C1 = Symbol('C1')
 C2 = Symbol('C2')
 C3 = Symbol('C3')
@@ -1149,3 +1151,10 @@ def test_constant_renumber_order_issue2209():
     e = C1*(C2 + x)*(C3 + y)
     for a, b, c in variations([C1, C2, C3], 3):
         assert constant_renumber(a*(b + x)*(c + y), "C", 1, 3) == e
+
+def test_ode_1st_linear_system():
+    sys_soln1 = dsolve([x,2*y,3*z], [t, x, y, z])
+    assert sys_soln1 == [Eq(x,C0*exp(t)), Eq(y,C1*exp(2*t)), Eq(z,C2*exp(3*t))]
+    sys_soln2 = dsolve([x + sin(t),y + cos(t)], [t, x, y])
+    assert sys_soln2 == [Eq(x,(C0 - exp(-t)*sin(t)/2 - cos(t)*exp(-t)/2)*exp(t)),\
+                         Eq(y,(C1 + exp(-t)*sin(t)/2 - cos(t)*exp(-t)/2)*exp(t))]

@@ -15,4 +15,3 @@ from polysys import solve_poly_system
 
 from pde import pde_separate, pde_separate_add, pde_separate_mul
 
-from sysode import ode_1st_linear_system

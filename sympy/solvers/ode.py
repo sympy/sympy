@@ -209,7 +209,7 @@ from sympy.core.symbol import Symbol, Wild, Dummy
 from sympy.core.sympify import sympify
 
 from sympy.functions import cos, exp, im, log, re, sin, sign
-from sympy.matrices import wronskian
+from sympy.matrices import wronskian, zeros, Matrix
 from sympy.polys import RootsOf, discriminant, RootOf
 from sympy.series import Order
 from sympy.simplify import collect, logcombine, powsimp, separatevars, \
@@ -231,7 +231,7 @@ from sympy.utilities.iterables import minkey
 # anyway).
 # "default", "all", "best", and "all_Integral" meta-hints should not be
 # included in this list, but "_best" and "_Integral" hints should be included.
-allhints = ("separable", "1st_exact", "1st_linear", "Bernoulli",
+allhints = ("separable", "1st_exact", "1st_linear", "Bernoulli", "1st_linear_system",
 "1st_homogeneous_coeff_best", "1st_homogeneous_coeff_subs_indep_div_dep",
 "1st_homogeneous_coeff_subs_dep_div_indep", "nth_linear_constant_coeff_homogeneous",
 "nth_linear_constant_coeff_undetermined_coefficients",
@@ -467,6 +467,10 @@ def dsolve(eq, func, hint="default", simplify=True, **kwargs):
         solvefunc = globals()['ode_' + hint[:-len('_Integral')]]
     else:
         solvefunc = globals()['ode_' + hint] # convert the string into a function
+
+    if hint == "1st_linear_system":
+        rv = solvefunc(eq, func, 1, None)
+        return rv
     # odesimp() will attempt to integrate, if necessary, apply constantsimp(),
     # attempt to solve for func, and apply any other hint specific simplifications
     if simplify:
@@ -590,6 +594,13 @@ def classify_ode(eq, func, dict=False):
 
     """
     from sympy import expand
+
+    if isinstance(eq, list):
+        if dict == True:
+            return {"order" : 1, "default" : "1st_linear_system",\
+                    "1st_linear_system" : None}
+        else:
+            return ("1st_linear_system")
 
     if len(func.args) != 1:
         raise ValueError("dsolve() and classify_ode() only work with functions " + \
@@ -2800,3 +2811,88 @@ def ode_separable(eq, func, order, match):
     return Eq(C.Integral(r['m2']['coeff']*r['m2'][r['y']]/r['m1'][r['y']],
         (r['y'], None, f(x))), C.Integral(-r['m1']['coeff']*r['m1'][x]/
         r['m2'][x], x)+C1)
+
+def ode_1st_linear_system(eqs, symbols, order, match):
+    """
+    Solves a system of first order homogenous linear differential equations
+    The general form of this equation in matrix form is
+    dx/dt = Ax(t) + p(t) where A is a scalar matrix and x and p are vectors.
+
+    An example of such a system is a set equations such as
+    dx/dt = a1*x + b1*y + c1(t), dy/dt = a2*x + b2*y + c2(t) where a1, b1, a2 and b2
+    are typically arbitrary scalars and c1 and c2 are functions of t.
+    To solve such equations we generally need to find the eigenvalues and
+    eigenvectors of the matrix of scalars and construct the functions
+    we need from there.
+
+    ***Examples***
+        This is the example given in wikipedia
+        >>> from sympy.abc import x,y,z
+        >>> from sympy.solvers import dsolve
+        >>> dsolve([3*y -4*z, 4*y - 7*z], [x, y, z])
+        [y == 2*C0*exp(x) + C1*exp(-5*x)/2, z == C0*exp(x) + C1*exp(-5*x)]
+
+        We can put in arbitrary functions as well
+        >>> dsolve([y - z + x, -y + z + 1 ], [x, y, z])
+        [y == C1 + x/2 + x**2/4 - (C0 - exp(-2*x)/8 + x*exp(-2*x)/4)*exp(2*x),\
+        z == C1 + x/2 + x**2/4 + (C0 - exp(-2*x)/8 + x*exp(-2*x)/4)*exp(2*x)]
+
+        
+    """
+    wrt = symbols[0]
+    symbols.remove(wrt)
+    if not len(symbols) == len(eqs):
+        raise ValueError("The number of symbols must equal the number of equations")
+
+    scalar_mat = zeros(len(eqs))
+    arbitrary_funcs = zeros((len(eqs), 1))
+
+    symbol_map = {}
+    for i in range(len(symbols)):
+        symbol_map[symbols[i]] = i
+
+    for i, eq in enumerate(eqs):
+        # Iterate over all the equations
+        eq = collect(eq, *symbols)
+        if not eq.is_Add:
+            term_tup = eq.as_independent(*symbols)
+            base_term = term_tup[1]
+            if base_term in symbols:
+                scalar_mat[i, symbol_map[base_term]] = term_tup[0]
+            else:
+                arbitrary_funcs[i] += eq
+        else:
+            eq = collect(eq, *symbols)
+            for j in eq.args:
+                # Iterate over all the terms
+                term_tup = j.as_independent(*symbols)
+                base_term = term_tup[1]
+                if term_tup[0] == j:
+                    arbitrary_funcs[i] += j
+                    continue
+
+                if base_term in symbols:
+                    scalar_mat[i, symbol_map[base_term]] = term_tup[0]
+                    
+    # We need the eigenvalues and eigenvectors
+    eigenvals = scalar_mat.berkowitz_eigenvals()
+    eigenval_list = []
+    for k, v in eigenvals.iteritems():
+        for i in range(v):
+            eigenval_list.append(k)
+
+    eigenvects = scalar_mat.eigenvects()
+    eigen_mat = zeros((len(eqs), 1))
+    for entry in eigenvects:
+        entry_eigenvals = entry[2]
+        for vect in entry_eigenvals:
+            eigen_mat = eigen_mat.row_join(vect)
+
+    eigen_mat.col_del(0)
+    arbitrary_funcs = eigen_mat.inv().multiply(arbitrary_funcs)
+    consts = [numbered_symbols('C', start = i).next() for i in range(len(eqs))]
+
+    # Construct the function
+    funcs = Matrix([S((consts[i] + C.Integral(exp(-eigenval_list[i]*wrt)*arbitrary_funcs[i],wrt).doit())\
+                      *exp(eigenval_list[i]*wrt)) for i in range(len(eqs))])
+    return [Eq(symbols[i], eigen_mat.multiply(funcs).tolist()[i][0]) for i in range(len(eqs))]
