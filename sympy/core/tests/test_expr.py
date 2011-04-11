@@ -3,7 +3,7 @@ from sympy import Add, Basic, S, Symbol, Wild,  Real, Integer, Rational, I, \
     WildFunction, Poly, Function, Derivative, Number, pi, var, \
     NumberSymbol, zoo, Piecewise, Mul, Pow, nsimplify, ratsimp, trigsimp, \
     radsimp, powsimp, simplify, together, separate, collect, \
-    apart, combsimp, factor, refine, cancel, invert
+    apart, combsimp, factor, refine, cancel, invert, Tuple
 from sympy.physics.secondquant import FockState
 
 from sympy.core.cache import clear_cache
@@ -555,8 +555,6 @@ def test_nonzero():
     assert bool(x*0)    == False
 
 def test_is_number():
-    g = WildFunction('g')
-
     assert Real(3.14).is_number == True
     assert Integer(737).is_number == True
     assert Rational(3, 2).is_number == True
@@ -570,8 +568,16 @@ def test_is_number():
     assert (8+log(2)).is_number == True
     assert (2 + log(x)).is_number == False
     assert (8+log(2)+x).is_number == False
-    assert (2*g).is_number == False
     assert (1+x**2/x-x).is_number == True
+    assert Tuple(Integer(1)).is_number == False
+    assert Add(2, x).is_number == False
+    assert Mul(3, 4).is_number == True
+    assert Pow(log(2), 2).is_number == True
+    assert oo.is_number == True
+    g = WildFunction('g')
+    assert g.is_number == False
+    assert (2*g).is_number == False
+    assert (x**2).subs(x, 3).is_number == True
 
     # test extensibility of .is_number
     # on subinstances of Basic
