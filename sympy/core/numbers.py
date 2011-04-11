@@ -185,6 +185,10 @@ class Number(AtomicExpr):
     def __hash__(self):
         return super(Number, self).__hash__()
 
+    @property
+    def is_number(self):
+        return True
+
     def as_coeff_mul(self, *deps):
         # a -> c * t
         if self.is_Rational:
