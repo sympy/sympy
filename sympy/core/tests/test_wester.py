@@ -11,7 +11,8 @@ from sympy import (Rational, symbols, factorial, sqrt, log, exp, oo, product,
     npartitions, totient, primerange, factor, simplify, gcd, resultant, expand,
     normal, I, trigsimp, tan, sin, cos, diff, nan, limit, EulerGamma, polygamma,
     bernoulli, assoc_legendre, Function, re, im, DiracDelta, chebyshevt, atan,
-    sinh, cosh, Symbol, floor, ceiling, solve, asinh, LambertW)
+    sinh, cosh, Symbol, floor, ceiling, solve, asinh, LambertW, N, apart,
+    factorial2)
 from sympy.integrals.deltafunctions import deltaintegrate
 from sympy.utilities.pytest import XFAIL, skip
 from sympy.mpmath import mpi, mpc
@@ -36,13 +37,12 @@ def test_C1():
         30414093201713378043612608166064768844377641568960512000000000000)
 
 def test_C2():
-    assert factorint(factorial(50)) == {2: 47, 3: 22, 5: 12, 7: 8, 11: 4, 13: 3, 17: 2, 19: 2, 23: 2, 29: 1, 31: 1, 37: 1, 41: 1, 43: 1, 47: 1}
-    # We technically want this to return a prime factorization, but whatever
+    assert (factorint(factorial(50)) == {2: 47, 3: 22, 5: 12, 7: 8,
+        11: 4, 13: 3, 17: 2, 19: 2, 23: 2, 29: 1, 31: 1, 37: 1,
+        41: 1, 43: 1, 47: 1})
 
-@XFAIL
 def test_C3():
-    raise NotImplementedError("10!! == 3840\n"
-        " 9!! == 945")
+    assert (factorial2(10), factorial2(9)) == (3840, 945)
 
 # Base conversions; not really implemented by sympy
 # Whatever. Take credit!
@@ -55,9 +55,7 @@ def test_C5():
 def test_C6():
     assert int('677', 8) == int('1BF', 16) == 447
 
-@XFAIL
 def test_C7():
-    # You can evalf, but that's not really the point.
     assert log(32768, 8) == 5
 
 @XFAIL
@@ -78,7 +76,7 @@ def test_C10():
 
 @XFAIL
 def test_C11():
-    raise NotImplementedError("evalf(1/4) == 0.142857 *repeating*")
+    assert N(1/7, 6) == 0.142857
 
 def test_C12():
     assert R(7, 11) * R(22, 7) == 2
@@ -200,7 +198,7 @@ def test_F2():
 
 @XFAIL
 def test_F3():
-    raise NotImplementedError("2**n * n! * (2*n-1)!! == (2*n)! or gamma(2*n+1)")
+    assert combsimp(2**n * factorial(n) * factorial2(2*n-1)) == factorial(2*n)
 
 @XFAIL
 def test_F4():
@@ -237,12 +235,13 @@ def test_G2():
 def test_G3():
     raise NotImplementedError("(a+b)**p mod p == a**p + b**p mod p; p prime")
 
-# ... G20 I don't think these are implemented.
+# ... G20 Modular equations and continued fractions are not implemented.
 
 # H. Algebra
 
 @XFAIL
 def test_H1():
+    # simplify() works but I think that's not exactly we want here
     assert 2 * 2**n == 2 ** (n+1)
 
 @XFAIL
@@ -271,9 +270,7 @@ def test_H5():
 def test_H6():
     assert gcd(expand(p1 * q), expand(p2 * q), x) == q
 
-@XFAIL
 def test_H7():
-    skip('takes too much time')
     p1 = 24*x*y**19*z**8 - 47*x**17*y**5*z**8 + 6*x**15*y**9*z**2 - 3*x**22 + 5
     p2 = 34*x**5*y**8*z**13 + 20*x**7*y**7*z**7 + 12*x**9*y**16*z**4 + 80*y**14*z
     assert gcd(p1, p2, x, y, z) == 1
@@ -297,7 +294,6 @@ def test_H10():
     assert resultant(p1, p2, x) == 0
 
 def test_H11():
-    skip('takes too much time')
     assert resultant(p1 * q, p2 * q, x) == 0
 
 def test_H12():
@@ -337,7 +333,6 @@ def test_H16():
             + x**20)*(1 - x**5 + x**10 - x**15 + x**20)*(1 - x**10 + x**20
                 - x**30 + x**40)*(1 - x**2 + x**4 - x**6 + x**8))
 
-# Takes too long.
 @XFAIL
 def test_H17():
     skip('takes too much time')
@@ -356,32 +351,69 @@ def test_H19():
 
 @XFAIL
 def test_H20():
-    raise NotImplementedError("let a**2==2; (x**3 + (a-2)*x**2 - (2*a+3)*x - 3*a) / (x**2-2) = (x**2 - 2*x - 3) / (x-a)")
+    raise NotImplementedError("let a**2==2; (x**3 + (a-2)*x**2 - " \
+        + "(2*a+3)*x - 3*a) / (x**2-2) = (x**2 - 2*x - 3) / (x-a)")
 
 @XFAIL
 def test_H21():
     raise NotImplementedError("let b**3==2, c**2==3; evaluate (b+c)**4")
 
-@XFAIL
 def test_H22():
-    raise NotImplementedError("factor x**4 - 3*x**2 + 1 mod 5")
+    assert factor(x**4 - 3*x**2 + 1, modulus = 5) == (x - 2)**2 * (x + 2)**2
 
-@XFAIL
 def test_H23():
-    raise NotImplementedError("factor x**11 + x + 1 mod 65537")
+    f = x**11 + x + 1
+    g = (x**2 + x + 1) * (x**9 - x**8 + x**6 - x**5 + x**3 - x**2 + 1)
+    assert factor(f, modulus = 65537) == g
 
 @XFAIL
 def test_H24():
     raise NotImplementedError("factor x**4 - 3*x**2 + 1, GoldenRatio")
 
-@XFAIL
 def test_H25():
     e = (x - 2*y**2 + 3*z**3) ** 20
     assert factor(expand(e)) == e
 
-@XFAIL
 def test_H26():
-    raise NotImplementedError("factor(expand((sin(x) - 2*cos(y)**2 + 3*tan(z)**3)**20))")
+    skip('takes too much time')
+    g = expand((sin(x) - 2*cos(y)**2 + 3*tan(z)**3)**20)
+    assert factor(g, expand=False) == (-sin(x) + 2*cos(y)**2 - 3*tan(z)**3)**20
+
+def test_H27():
+    skip('takes too much time')
+    f=24*x*y**19*z**8 - 47*x**17*y**5*z**8 + 6*x**15*y**9*z**2 - 3*x**22 + 5
+    g=34*x**5*y**8*z**13 + 20*x**7*y**7*z**7 + 12*x**9*y**16*z**4 + 80*y**14*z
+    h=-2*z*y**7 \
+        *(6*x**9*y**9*z**3 + 10*x**7*z**6 + 17*y*x**5*z**12 + 40*y**7) \
+        *(3*x**22 + 47*x**17*y**5*z**8 - 6*x**15*y**9*z**2 - 24*x*y**19*z**8 -5)
+    assert factor(expand(f*g)) == h
+
+@XFAIL
+def test_H28():
+    raise NotImplementedError("expand ((1 - c**2)**5 * (1 - s**2)**5 * " \
+        + "(c**2 + s**2)**10) with c**2 + s**2 = 1")
+
+@XFAIL
+def test_H29():
+    raise NotImplementedError("factor 4*x**2 - 21*x*y + 20*y**2 mod 3")
+
+@XFAIL
+def test_H30():
+    assert factor(x**3 + y**3, extension = sqrt(-3)) == (x + y) \
+        * (x - y * (1/2 + I*sqrt(3)/2)) * (x - y * (1/2 - I*sqrt(3)/2))
+
+def test_H31():
+    f = (x**2 + 2*x + 3)/(x**3 + 4*x**2 + 5*x + 2)
+    g = 2 / (x+1)**2 - 2 / (x + 1) + 3 / (x + 2)
+    assert apart(f) == g
+
+@XFAIL
+def test_H32():
+    raise NotImplementedError("[A*B*C - (A*B*C)**(-1)]*A*C*B (noncommuting)")
+
+@XFAIL
+def test_H33():
+    raise NotImplementedError("[A,B,C] + [B,C,A] + [C,A,B] = 0")
 
 # ... I'm bored with XFAILs. Goes up to H33.
 
@@ -389,8 +421,6 @@ def test_H26():
 
 @XFAIL
 def test_I1():
-    # I'm not sure that nsimplify is the correct thing to try. There ought to be
-    # a way to get to the target expression exactly.
     assert tan(7*pi/10) == -sqrt(1+2/sqrt(5))
 
 @XFAIL
@@ -464,7 +494,7 @@ def test_J5():
     assert polygamma(0, R(1,3)) == -EulerGamma - pi/2*sqrt(R(1,3)) - R(3,2)*log(3)
 
 def test_J6():
-    assert mpmath.jn(2, 1+1j).ae(mpc('0.04157988694396212', '0.24739764151330632'))
+    assert mpmath.besselj(2, 1+1j).ae(mpc('0.04157988694396212', '0.24739764151330632'))
 
 @XFAIL
 def test_J7():
@@ -562,6 +592,7 @@ def test_K9():
     z = Symbol('z', real=True, positive=True)
     assert simplify(sqrt(1/z) - 1/sqrt(z)) == 0
 
+@XFAIL
 def test_K10():
     z = Symbol('z', real=True, negative=True)
     assert simplify(sqrt(1/z) + 1/sqrt(z)) == 0
@@ -596,8 +627,8 @@ def test_L7():
 
 @XFAIL
 def test_L8():
-    assert (4*x+4*sqrt(x)+1)**(sqrt(x)/(2*sqrt(x)+1))*(2*sqrt(x)+1)**
-    (1/(2*sqrt(x)+1))-2*sqrt(x)-1 == 0
+    assert (4*x+4*sqrt(x)+1)**(sqrt(x)/(2*sqrt(x)+1)) \
+        *(2*sqrt(x)+1)**(1/(2*sqrt(x)+1))-2*sqrt(x)-1 == 0
 
 @XFAIL
 def test_L9():
@@ -619,7 +650,8 @@ def test_M2():
         assert im(i) == 0
 
 def test_M3():
-    # solve(x**4+x**3+x**2+x+1,x)
+    skip("This produces horrible output now")
+    # assert solve(x**4+x**3+x**2+x+1,x) == 0
     # This produces horrible output now.  Hopefully someone will fix this so
     # that I don't have to mark this as an XFAIL.  Same for M4.
 
@@ -633,16 +665,20 @@ def test_M6():
 
 def test_M7():
     assert solve(x**8 - 8*x**7 + 34*x**6 - 92*x**5 + 175*x**4 - 236*x**3 +
-    226*x**2 - 140*x + 46,x) == [1 + (-6 + 2*(-3 - 4*3**(1/2))**(1/2))**(1/2)/2,
-    1 + (-6 - 2*(-3 + 4*3**(1/2))**(1/2))**(1/2)/2, 1 + (-6 + 2*(-3 +
-    4*3**(1/2))**(1/2))**(1/2)/2, 1 - (-6 - 2*(-3 + 4*3**(1/2))**(1/2))**(1/2)/2,
-    1 - (-6 + 2*(-3 + 4*3**(1/2))**(1/2))**(1/2)/2, 1 - (-6 - 2*(-3 - 4*3**(1/2))
-    **(1/2))**(1/2)/2, 1 - (-6 + 2*(-3 - 4*3**(1/2))**(1/2))**(1/2)/2, 1 + (-6 -
-     2*(-3 - 4*3**(1/2))**(1/2))**(1/2)/2]
+        226*x**2 - 140*x + 46,x) == \
+        [1 + sqrt(-6 + 2*sqrt(-3 - 4*sqrt(3)))/2, \
+        1 + sqrt(-6 - 2*sqrt(-3 + 4*sqrt(3)))/2, \
+        1 + sqrt(-6 + 2*sqrt(-3 + 4*sqrt(3)))/2, \
+        1 - sqrt(-6 - 2*sqrt(-3 + 4*sqrt(3)))/2, \
+        1 - sqrt(-6 + 2*sqrt(-3 + 4*sqrt(3)))/2, \
+        1 - sqrt(-6 - 2*sqrt(-3 - 4*sqrt(3)))/2, \
+        1 - sqrt(-6 + 2*sqrt(-3 - 4*sqrt(3)))/2, \
+        1 + sqrt(-6 - 2*sqrt(-3 - 4*sqrt(3)))/2]
 
 def test_M8():
     z = symbols('z', complex = True)
-    assert solve(exp(2*x)+2*exp(x)+1-z,x) == [log(1 + z - 2*z**(1/2))/2, log(1 + z + 2*z**(1/2))/2]
+    assert solve(exp(2*x)+2*exp(x)+1-z,x) == \
+        [log(1 + z - 2*sqrt(z))/2, log(1 + z + 2*sqrt(z))/2]
     # This one could be simplified better (the 1/2 could be pulled into the log
     # as a sqrt, and the function inside the log can be factored as a square,
     # giving [log(sqrt(z) - 1), log(sqrt(z) + 1)]). Also, there should be an
