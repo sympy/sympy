@@ -116,6 +116,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Matthew Rocklin: improvements to Number instantiation
 #. Saptarshi Mandal: Test for an integral
 #. Anatolii Koval: Infinite 1D box example
+#. Tomo Lazovich: fixes to quantum operators
 
 Up-to-date list in the order of the first contribution is given in the `AUTHORS
 <https://github.com/sympy/sympy/blob/master/AUTHORS>`_ file.
