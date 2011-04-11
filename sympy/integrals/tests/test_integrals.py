@@ -1,6 +1,6 @@
 from sympy import (S, symbols, integrate, Integral, Derivative, exp, oo, Symbol,
         Function, Rational, log, sin, cos, pi, E, I, Poly, LambertW, diff,
-        Matrix, sympify, sqrt, atan, asin, asinh, acos, atan, DiracDelta, Heaviside,
+        Matrix, sympify, sqrt, atan, asin, asinh, acos, acosh, atan, DiracDelta, Heaviside,
         Lambda, sstr, Add)
 from sympy.utilities.pytest import XFAIL, skip, raises
 from sympy.physics.units import m, s
@@ -538,3 +538,5 @@ def test_series():
 def test_issue_1304():
     z = Symbol('z', positive=True)
     assert integrate(sqrt(x**2 + z**2),x) == z**2*asinh(x/z)/2 + x*(x**2 + z**2)**(S(1)/2)/2
+    assert integrate(sqrt(x**2 - z**2),x) == -z**2*acosh(x/z)/2 + x*(x**2 - z**2)**(S(1)/2)/2
+    assert integrate(sqrt(-x**2 - 4), x) == -2*atan(x/(-4 - x**2)**(S(1)/2)) + x*(-4 - x**2)**(S(1)/2)/2
