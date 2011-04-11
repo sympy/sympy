@@ -626,7 +626,6 @@ class Triangle(Polygon):
     circumcenter
     circumradius
     circumcircle
-    bisectors
     inradius
     incircle
     medians
