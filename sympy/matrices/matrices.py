@@ -1948,6 +1948,23 @@ class Matrix(object):
             assert sum(res) == algebraical
             return res
 
+    def has(self, *patterns):
+        """
+        Test whether any subexpression matches any of the patterns.
+
+        Examples:
+        >>> from sympy import Matrix
+        >>> from sympy.abc import x, y, z
+        >>> A = Matrix(((x,y),(2/3,3)))
+        >>> A.has(x)
+        True
+        >>> A.has(z)
+        False
+        >>> A.has(Rational)
+        True
+        """
+        return any(a.has(*patterns) for a in self.mat)
+
 def matrix_multiply(A, B):
     """
     Matrix product A*B.
