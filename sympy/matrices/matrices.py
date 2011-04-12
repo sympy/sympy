@@ -239,20 +239,15 @@ class Matrix(object):
 
             else:
                 # a2idx inlined
-                try:
-                    i = i.__int__()
-                except AttributeError:
+                if not type(i) is int:
                     try:
                         i = i.__index__()
                     except AttributeError:
                         raise IndexError("Invalid index a[%r]" % (key,))
-
                 # a2idx inlined
-                try:
-                    j = j.__int__()
-                except AttributeError:
+                if not type(j) is int:
                     try:
-                        j = j.__index__()
+                       j = j.__index__()
                     except AttributeError:
                         raise IndexError("Invalid index a[%r]" % (key,))
 
@@ -297,18 +292,14 @@ class Matrix(object):
                     return
             else:
                 # a2idx inlined
-                try:
-                    i = i.__int__()
-                except AttributeError:
+                if not type(i) is int:
                     try:
                         i = i.__index__()
                     except AttributeError:
                         raise IndexError("Invalid index a[%r]" % (key,))
 
                 # a2idx inlined
-                try:
-                    j = j.__int__()
-                except AttributeError:
+                if not type(j) is int:
                     try:
                         j = j.__index__()
                     except AttributeError:
