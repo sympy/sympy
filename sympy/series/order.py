@@ -113,18 +113,15 @@ class Order(Expr):
             if expr.is_Add:
                 lst = expr.extract_leading_order(*symbols)
                 expr = Add(*[f.expr for (e,f) in lst])
-            else:
+            elif expr:
                 expr = expr.as_leading_term(*symbols)
                 coeff, terms = expr.as_coeff_mul()
-                if coeff is S.Zero:
-                    return coeff
                 expr = Mul(*[t for t in terms if t.has(*symbols)])
-
-        elif expr is not S.Zero:
-            expr = S.One
 
         if expr is S.Zero:
             return expr
+        elif not expr.has(*symbols):
+            expr = S.One
 
         # create Order instance:
         symbols.sort(Basic.compare)

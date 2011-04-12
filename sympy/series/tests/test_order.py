@@ -20,6 +20,8 @@ def test_simple_1():
     assert Order(x*exp(1/x)).expr == x*exp(1/x)
     assert Order(x**(o/3)).expr == x**(o/3)
     assert Order(x**(5*o/3)).expr == x**(5*o/3)
+    assert Order(x**2 + x + y, x) == \
+           Order(x**2 + x + y, y) == O(1)
     raises(NotImplementedError, 'Order(x, 2 - x)')
 
 def test_simple_2():
