@@ -2,11 +2,9 @@
 
 Todo:
 * W gate construction (or perhaps -W gate based on Mermin's book)
-* Perform the Grover iteration (application of WV on a state) many times
-  in order to achieve the desired outcome with a high probability.
-  Look back at the description to understand what is meant by this.
 * Generalize the algorithm for an unknown function that returns 1 on
   multiple qubit states, not just one.
+* Implement _represent_ZGate in OracleGate
 """
 
 from sympy import sqrt, pi, floor
@@ -28,15 +26,26 @@ __all__ = [
 def superposition_basis(nqubits):
     """Creates an equal superposition of the computational basis.
 
-    Parameters:
-    -----------
+    Parameters
+    ==========
     nqubits : int
         The number of qubits
 
     Return
-    ------
+    ======
     Qubit : An equal superposition of the computational basis with nqubits
+
+    Examples
+    ========
+
+    Create an equal superposition of 2 qubits:
+
+        >>> from sympy.physics.quantum.grover import superposition_basis
+        >>> superposition_basis(2)
+        |0>/2 + |1>/2 + |2>/2 + |3>/2
+
     """
+
     amp = 1/sqrt(2**nqubits)
     return sum([amp*IntQubit(n, nqubits) for n in range(2**nqubits)])
 
@@ -49,12 +58,26 @@ class OracleGate(Gate):
 
     Parameters
     ==========
-    label : tuple (int, callable)
+    qubits : int
         Number of qubits.
+
+    oracle : callable
         A callable function that returns a boolean on a computational basis.
 
     Examples
     ========
+
+    Apply an Oracle gate that flips the sign of |2> on different qubits:
+
+        >>> from sympy.physics.quantum.qubit import IntQubit
+        >>> from sympy.physics.quantum.applyops import apply_operators 
+        >>> from sympy.physics.quantum.grover import OracleGate 
+        >>> f = lambda qubits: True if qubits == IntQubit(2) else False
+        >>> v = OracleGate(2, f)
+        >>> apply_operators(v*IntQubit(2))
+        -|2>
+        >>> apply_operators(v*IntQubit(3))
+        |3>
 
     """
 
@@ -65,10 +88,12 @@ class OracleGate(Gate):
     # Initialization/creation
     #-------------------------------------------------------------------------
 
-    # args : tuple
-    # Returns: tuple, (int tuple - target qubits, callable)
     @classmethod
     def _eval_args(cls, args):
+        """
+        args: tuple
+        Returns: tuple, (int tuple - target qubits, callable)
+        """
         if len(args) != 2:
             raise QuantumError(
                 'Insufficient/excessive arguments to Oracle.  Please ' +
@@ -106,9 +131,11 @@ class OracleGate(Gate):
     # Apply
     #-------------------------------------------------------------------------
 
-    # qubits : a set of qubits (Qubit)
-    # Return: Qubit
     def _apply_operator_Qubit(self, qubits, **options):
+        """
+        qubits: a set of qubits (Qubit)
+        Returns: Qubit
+        """
         if qubits.nqubits != self.nqubits:
             raise QuantumError(
                 'OracleGate operates on %r qubits, got: %r'
@@ -122,7 +149,6 @@ class OracleGate(Gate):
     # Represent
     #-------------------------------------------------------------------------
 
-    # Still To Do
     def _represent_ZGate(self, basis, **options):
         raise NotImplementedError(
             "Represent for the Oracle has not been implemented yet"
@@ -160,9 +186,11 @@ class WGate(Gate):
     # Apply
     #-------------------------------------------------------------------------
 
-    # qubits : a set of qubits (Qubit)
-    # Return: quantum object (quantum expression - QExpr)
     def _apply_operator_Qubit(self, qubits, **options):
+        """
+        qubits: a set of qubits (Qubit)
+        Returns: quantum object (quantum expression - QExpr)
+        """
         if qubits.nqubits != self.nqubits:
             raise QuantumError(
                 'WGate operates on %r qubits, got: %r'
@@ -191,16 +219,31 @@ def grover_iteration(qstate, oracle):
     =======
     Qubit : The qubits after applying the Oracle and W gate.
 
+    Examples
+    ========
+
+    Perform one iteration of grover's algorithm to see a phase change:
+
+        >>> from sympy.physics.quantum.applyops import apply_operators
+        >>> from sympy.physics.quantum.qubit import IntQubit
+        >>> from sympy.physics.quantum.grover import *
+        >>> numqubits = 2
+        >>> basis_states = superposition_basis(numqubits)
+        >>> f = lambda qubits: True if qubits == IntQubit(2) else False
+        >>> v = OracleGate(numqubits, f)
+        >>> apply_operators(grover_iteration(basis_states, v))
+        |2>
+
     """
     wgate = WGate(oracle.nqubits)
     return wgate*oracle*qstate
 
-def apply_grover(bbox, nqubits, iterations=None):
+def apply_grover(oracle, nqubits, iterations=None):
     """Applies grover's algorithm.
 
     Parameters
     ==========
-    bbox : callable
+    oracle : callable
         The unknown callable function that returns true when applied to the
         desired qubits and false otherwise.
 
@@ -208,6 +251,18 @@ def apply_grover(bbox, nqubits, iterations=None):
     =======
     Qubit : The qubits and their probabilities after some number of
             iterations.
+
+    Examples 
+    ========
+
+    Apply grover's algorithm to an even superposition of 2 qubits:
+
+        >>> from sympy.physics.quantum.applyops import apply_operators
+        >>> from sympy.physics.quantum.qubit import IntQubit
+        >>> from sympy.physics.quantum.grover import *
+        >>> f = lambda qubits: True if qubits == IntQubit(2) else False
+        >>> apply_operators(apply_grover(f, 2))
+        |2>
 
     """
     if nqubits <= 0:
@@ -218,7 +273,7 @@ def apply_grover(bbox, nqubits, iterations=None):
     if iterations is None:
         iterations = floor(sqrt(2**nqubits)*(pi/4))
 
-    v = OracleGate(nqubits, bbox)
+    v = OracleGate(nqubits, oracle)
     iterated = superposition_basis(nqubits)
     for iter in range(iterations):
         iterated = grover_iteration(iterated, v)
