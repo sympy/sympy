@@ -39,7 +39,7 @@ def limit(e, z, z0, dir="r"):
             return limit_right
         else:
             return 'Limit does not exist.'
-            
+
     from sympy import Wild, log
 
     e = sympify(e)
