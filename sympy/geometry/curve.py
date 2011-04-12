@@ -14,7 +14,7 @@ class Curve(GeometryEntity):
     """A curve in space.
 
     A curve is defined by parametric functions for the coordinates, a
-    parameter and the lower and upper bounds for the parametr value.
+    parameter and the lower and upper bounds for the parameter value.
 
     Parameters
     ----------
@@ -65,7 +65,7 @@ class Curve(GeometryEntity):
 
         Returns
         -------
-        functions : list of parametrised coordinate functions.
+        functions : list of parameterized coordinate functions.
 
         Examples
         --------
