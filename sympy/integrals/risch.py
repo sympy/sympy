@@ -76,7 +76,7 @@ def heurisch(f, x, **kwargs):
 
        This is a heuristic approach to indefinite integration in finite
        terms using the extended heuristic (parallel) Risch algorithm, based
-       on Manuel Bronstein's "Poor Man's Integrator".
+       on Manuel Bronstein's 'Poor Man's Integrator'.
 
        The algorithm supports various classes of functions including
        transcendental elementary or special functions like Airy,
@@ -118,7 +118,7 @@ def heurisch(f, x, **kwargs):
        >>> heurisch(y*tan(x), x)
        y*log(1 + tan(x)**2)/2
 
-       See Manuel Bronstein's "Poor Man's Integrator":
+       See Manuel Bronstein's 'Poor Man's Integrator':
 
        [1] http://www-sop.inria.fr/cafe/Manuel.Bronstein/pmint/index.html
 
