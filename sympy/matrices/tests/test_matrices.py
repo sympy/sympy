@@ -1221,5 +1221,8 @@ def test_SMatrix_CL_RL():
     assert SMatrix((1,2),(3,4)).row_list() == [(0, 0, 1), (0, 1, 2), (1, 0, 3), (1, 1, 4)]
     assert SMatrix((1,2),(3,4)).col_list() ==[(0, 0, 1), (1, 0, 3), (0, 1, 2), (1, 1, 4)]
 
-
+def test_hash():
+    
+  a = Matrix ([[1, 2], [3, 0]])
+  assert hash(a) == a.hash()
 
