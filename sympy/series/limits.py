@@ -39,7 +39,7 @@ def limit(e, z, z0, dir="r"):
         else:
             msg = "Limit (%s, %s, %s, dir=%s) does not exist"
             raise PoleError(msg % (e, z, z0, dir))
-    
+
 
     from sympy import Wild, log
 
