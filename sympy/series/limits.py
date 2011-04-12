@@ -31,14 +31,15 @@ def limit(e, z, z0, dir="r"):
     "x**2" and similar, so that it's fast. For all other cases, we use the
     Gruntz algorithm (see the gruntz() function).
     """
-
     if dir == 'r':
         limit_right = limit(e, z, z0, dir="+")
         limit_left = limit(e, z, z0, dir="-")
         if  limit_right == limit_left:
             return limit_right
         else:
-            return 'Limit does not exist.'
+            msg = "Limit (%s, %s, %s, dir=%s) does not exist"
+            raise PoleError(msg % (e, z, z0, dir))
+    
 
     from sympy import Wild, log
 
