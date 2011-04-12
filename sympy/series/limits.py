@@ -2,7 +2,7 @@ from sympy.core import S, Add, sympify, Expr, PoleError, Mul, oo, C
 from gruntz import gruntz
 from sympy.functions import sign, tan, cot
 
-def limit(e, z, z0, dir="+"):
+def limit(e, z, z0, dir="r"):
     """
     Compute the limit of e(z) at the point z0.
 
@@ -31,6 +31,15 @@ def limit(e, z, z0, dir="+"):
     "x**2" and similar, so that it's fast. For all other cases, we use the
     Gruntz algorithm (see the gruntz() function).
     """
+
+    if dir == 'r':
+        limit_right = limit(e, z, z0, dir="+")
+        limit_left = limit(e, z, z0, dir="-")
+        if  limit_right == limit_left:
+            return limit_right
+        else:
+            return 'Limit does not exist.'
+            
     from sympy import Wild, log
 
     e = sympify(e)
