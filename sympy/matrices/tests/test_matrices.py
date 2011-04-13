@@ -585,6 +585,12 @@ def test_eigen():
         [( 2*abs(eps), 1, [ Matrix([[I*eps/abs(eps)],[1]]) ] ),
          ( 0, 1, [Matrix([[-I*eps/abs(eps)],[1]])]) ])
 
+    M = Matrix(3,3,[1, 2, 0, 0, 3, 0, 2, -4, 2])
+    M._eigenvects = M.eigenvects(simplify_to_integers=False)
+    assert max(i.as_numer_denom()[1] for i in M._eigenvects[0][2][0])>1
+    M._eigenvects = M.eigenvects(simplify_to_integers=True)
+    assert max(i.as_numer_denom()[1] for i in M._eigenvects[0][2][0])==1
+
 def test_sparse_matrix():
     return
     def eye(n):
@@ -1396,6 +1402,8 @@ def test_diagonalization():
     assert m.is_diagonalizable()
     (P, D) = m.diagonalize()
     assert P.inv() * m * P == D
+    for i in P:
+        assert i.as_numer_denom()[1] == 1
 
     m = Matrix(2,2,[1, 0, 0, 0])
     assert m.is_diagonal()
@@ -1434,6 +1442,7 @@ def test_diagonalization():
     m = Matrix(2,2,[a, c, c, b])
     assert m.is_symmetric()
     assert m.is_diagonalizable()
+    assert not m.contains_rationals()
 
 def test_jordan_form():
 

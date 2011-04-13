@@ -2291,7 +2291,7 @@ class Matrix(object):
                 basis = tmp.nullspace(simplified=True)
                 if not basis:
                     raise NotImplementedError("Can't evaluate eigenvector for eigenvalue %s" % r)
-            if 'simplify_to_integers' in flags:
+            if 'simplify_to_integers' in flags and flags['simplify_to_integers']:
                 if basis[0].contains_rationals():
                     a = reduce(ilcm, [i.as_numer_denom()[1] for i in basis[0]],1)
                     basis[0] = basis[0]*a
@@ -2489,9 +2489,9 @@ class Matrix(object):
         [0, 2, 0]
         [0, 0, 3]
         >>> P
-        [-1/2, 0, -1/2]
-        [   0, 0, -1/2]
-        [   1, 1,    1]
+        [-1, 0, -1]
+        [ 0, 0, -1]
+        [ 2, 1,  2]
         >>> P.inv() * m * P
         [1, 0, 0]
         [0, 2, 0]
