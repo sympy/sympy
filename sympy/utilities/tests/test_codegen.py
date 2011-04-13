@@ -1060,7 +1060,7 @@ def test_check_case_false_positive():
     x2 = symbols('x', my_assumption=True)
     try:
         codegen(('test', x1*x2), 'f95', 'prefix')
-    except CodeGenError as e:
+    except CodeGenError, e:
         if e.args[0][0:21] == "Fortran ignores case.":
             raise AssertionError("This exception should not be raised!")
 
