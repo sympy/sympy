@@ -119,6 +119,7 @@ class Number(AtomicExpr):
     is_comparable = True
     is_bounded = True
     is_finite = True
+    is_algebraic = True
 
     __slots__ = []
 
@@ -1541,6 +1542,7 @@ class NumberSymbol(AtomicExpr):
     is_comparable = True
     is_bounded = True
     is_finite = True
+    is_algebraic = True
 
     __slots__ = []
 
@@ -1636,6 +1638,7 @@ class Exp1(NumberSymbol):
     is_positive = True
     is_negative = False # XXX Forces is_negative/is_nonnegative
     is_irrational = True
+    is_algebraic = False
 
     __slots__ = []
 
@@ -1668,6 +1671,7 @@ class Pi(NumberSymbol):
     is_positive = True
     is_negative = False
     is_irrational = True
+    is_algebraic = False
 
     __slots__ = []
 
@@ -1722,6 +1726,7 @@ class EulerGamma(NumberSymbol):
     is_positive = True
     is_negative = False
     is_irrational = None
+    is_algebraic = False
 
     __slots__ = []
 
