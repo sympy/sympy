@@ -2,7 +2,7 @@
 
 from sympy import Matrix, I, Expr, Integer
 from sympy.matrices import matrices
-
+from sympy.core.compatibility import all
 
 __all__ = [
     'numpy_ndarray',
