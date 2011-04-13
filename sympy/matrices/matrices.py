@@ -424,10 +424,16 @@ class Matrix(object):
         raise NotImplementedError('Can only raise to the power of an integer for now')
 
     def __add__(self,a):
-        return matrix_add(self,a)
+        if isinstance(a, Matrix):
+            return matrix_add(self, a)
+        else:
+            return scalar_add(self, a)
 
     def __radd__(self,a):
-        return matrix_add(a,self)
+        if isinstance(a, Matrix):
+            return matrix_add(a, self)
+        else:
+            return scalar_add(self, a)
 
     def __div__(self,a):
         return self * (S.One/a)
@@ -436,12 +442,13 @@ class Matrix(object):
         return self.__div__(a)
 
     def multiply(self,b):
-        """Returns self*b """
-        return matrix_multiply(self,b)
+        return self.__mul__(b)
 
-    def add(self,b):
-        """Return self+b """
-        return matrix_add(self,b)
+    def add(self,a):
+        if isinstance(a, Matrix):
+            return matrix_add(self,a)
+        else:
+            return scalar_add(self, a)
 
     def __neg__(self):
         return -1*self
@@ -2009,6 +2016,12 @@ def matrix_multiply_elementwise(A, B):
     shape = A.shape
     return Matrix(shape[0], shape[1],
         lambda i, j: A[i,j] * B[i, j])
+
+def scalar_add(A, b):
+    "For Square A and scalar b, this returns A + b*eye(A.cols)"
+    if not A.is_square:
+        raise NonSquareMatrixException()
+    return Matrix(A.rows, A.cols, lambda i, j: A[i,j] + b if i==j else A[i,j])
 
 def matrix_add(A,B):
     """Return A+B"""

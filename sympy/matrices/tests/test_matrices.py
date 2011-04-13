@@ -1412,3 +1412,15 @@ def test_SMatrix_add():
     b = SMatrix(100, 100, lambda i, j : 1 if i != 0 and j % i == 0 else 0)
     assert (len(a.mat) + len(b.mat) - len((a+b).mat) > 0)
 
+def test_scalar_add():
+    A = Matrix(((1,2),(3,4)))
+    assert A + 1 == Matrix(((2,2),(3,5)))
+    B = Matrix((1,2,3))
+    raises(NonSquareMatrixException, 'B + 2')
+    assert 5 + A ==  Matrix(((6,2),(3,9)))
+    C = Matrix(((5,3),(8,3)))
+    assert (4*A + 5) * C == 4*A*C + 5*C
+    assert 4*(5*(A + 2) + 9) * C == 20*A*C + 76*C
+    
+
+
