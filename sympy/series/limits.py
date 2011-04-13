@@ -167,13 +167,13 @@ def heuristics(e, z, z0, dir):
         r = []
         for a in e.args:
             if not a.is_bounded:
-                r.append(a.limit_eval(z, z0, dir))
+                r.append(a.limit(z, z0, dir))
         if r:
             return Mul(*r)
     elif e.is_Add:
         r = []
         for a in e.args:
-            r.append(a.limit_eval(z, z0, dir))
+            r.append(a.limit(z, z0, dir))
         return Add(*r)
     elif e.is_Function:
         return e.subs(e.args[0], limit_eval(e.args[0], z, z0, dir))
