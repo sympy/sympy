@@ -215,6 +215,7 @@ class Order(Expr):
         (e.g. when self and expr have different symbols).
         """
         from sympy import powsimp, limit
+        from sympy.series.limits import limit_eval
         if expr is S.Zero:
             return True
         if expr is S.NaN:
@@ -232,7 +233,7 @@ class Order(Expr):
                 return None
             r = None
             for s in common_symbols:
-                l = limit(powsimp(self.expr/expr.expr, deep=True,\
+                l = limit_eval(powsimp(self.expr/expr.expr, deep=True,\
                 combine='exp'), s, 0) != 0
                 if r is None:
                     r = l

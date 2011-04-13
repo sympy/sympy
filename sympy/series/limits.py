@@ -2,45 +2,7 @@ from sympy.core import S, Add, sympify, Expr, PoleError, Mul, oo, C
 from gruntz import gruntz
 from sympy.functions import sign, tan, cot
 
-def limit(e, z, z0, dir="r"):
-    """
-    Compute the limit of e(z) at the point z0.
-
-    z0 can be any expression, including oo and -oo.
-
-    For dir="+" (default) it calculates the limit from the right
-    (z->z0+) and for dir="-" the limit from the left (z->z0-). For infinite z0
-    (oo or -oo), the dir argument doesn't matter.
-
-    Examples:
-
-    >>> from sympy import limit, sin, Symbol, oo
-    >>> from sympy.abc import x
-    >>> limit(sin(x)/x, x, 0)
-    1
-    >>> limit(1/x, x, 0, dir="+")
-    oo
-    >>> limit(1/x, x, 0, dir="-")
-    -oo
-    >>> limit(1/x, x, oo)
-    0
-
-    Strategy:
-
-    First we try some heuristics for easy and frequent cases like "x", "1/x",
-    "x**2" and similar, so that it's fast. For all other cases, we use the
-    Gruntz algorithm (see the gruntz() function).
-    """
-    if dir == 'r':
-        limit_right = limit(e, z, z0, dir="+")
-        limit_left = limit(e, z, z0, dir="-")
-        if  limit_right == limit_left:
-            return limit_right
-        else:
-            msg = "Limit (%s, %s, %s, dir=%s) does not exist"
-            raise PoleError(msg % (e, z, z0, dir))
-
-
+def limit_eval(e, z, z0, dir = '+'):
     from sympy import Wild, log
 
     e = sympify(e)
@@ -62,7 +24,7 @@ def limit(e, z, z0, dir="r"):
         sign = 1
         if dir == '-':
             sign *= -1
-        i = limit(sign*e.args[0], z, z0)/disc
+        i = limit_eval(sign*e.args[0], z, z0)/disc
         if i.is_integer:
             if i.is_even:
                 return S.Zero
@@ -78,7 +40,7 @@ def limit(e, z, z0, dir="r"):
         sign = 1
         if dir == '-':
             sign *= -1
-        i = limit(sign*e.args[0], z, z0)/disc
+        i = limit_eval(sign*e.args[0], z, z0)/disc
         if i.is_integer:
             if dir == '-':
                 return S.NegativeInfinity
@@ -117,7 +79,7 @@ def limit(e, z, z0, dir="r"):
             # weed out the z-independent terms
             i, d = e.as_independent(z)
             if i is not S.One:
-                return i*limit(d, z, z0, dir)
+                return i*limit_eval(d, z, z0, dir)
         else:
             i, d = S.One, e
         if not z0:
@@ -140,7 +102,7 @@ def limit(e, z, z0, dir="r"):
 
     if e.is_Add:
         if e.is_polynomial() and not z0.is_unbounded:
-            return Add(*[limit(term, z, z0, dir) for term in e.args])
+            return Add(*[limit_eval(term, z, z0, dir) for term in e.args])
 
         # this is a case like limit(x*y+x*z, z, 2) == x*y+2*x
         # but we need to make sure, that the general gruntz() algorithm is
@@ -161,7 +123,7 @@ def limit(e, z, z0, dir="r"):
                 unbounded.append(term)
                 if result != S.NaN:
                     # take result from direction given
-                    result = limit(term, z, z0, dir)
+                    result = limit_eval(term, z, z0, dir)
                 unbounded_result.append(result)
             elif bounded:
                 finite.append(result)
@@ -184,13 +146,13 @@ def limit(e, z, z0, dir="r"):
             if inf_limit is not S.NaN:
                 return inf_limit + u
             if finite:
-                return Add(*finite) + limit(Add(*unbounded), z, z0, dir) + u
+                return Add(*finite) + limit_eval(Add(*unbounded), z, z0, dir) + u
         else:
             return Add(*finite) + u
 
     if e.is_Order:
         args = e.args
-        return C.Order(limit(args[0], z, z0), *args[1:])
+        return C.Order(limit_eval(args[0], z, z0), *args[1:])
 
     try:
         r = gruntz(e, z, z0, dir)
@@ -200,24 +162,64 @@ def limit(e, z, z0, dir="r"):
 
 def heuristics(e, z, z0, dir):
     if z0 == oo:
-        return limit(e.subs(z, 1/z), z, sympify(0), "+")
+        return limit_eval(e.subs(z, 1/z), z, sympify(0), "+")
     elif e.is_Mul:
         r = []
         for a in e.args:
             if not a.is_bounded:
-                r.append(a.limit(z, z0, dir))
+                r.append(a.limit_eval(z, z0, dir))
         if r:
             return Mul(*r)
     elif e.is_Add:
         r = []
         for a in e.args:
-            r.append(a.limit(z, z0, dir))
+            r.append(a.limit_eval(z, z0, dir))
         return Add(*r)
     elif e.is_Function:
-        return e.subs(e.args[0], limit(e.args[0], z, z0, dir))
+        return e.subs(e.args[0], limit_eval(e.args[0], z, z0, dir))
     msg = "Don't know how to calculate the limit(%s, %s, %s, dir=%s), sorry."
     raise PoleError(msg % (e, z, z0, dir))
 
+
+def limit(e, z, z0, dir = 'r'):
+    """
+    Compute the limit of e(z) at the point z0.
+
+    z0 can be any expression, including oo and -oo.
+
+    For dir="+" (default) it calculates the limit from the right
+    (z->z0+) and for dir="-" the limit from the left (z->z0-). For infinite z0
+    (oo or -oo), the dir argument doesn't matter.
+
+    Examples:
+
+    >>> from sympy import limit, sin, Symbol, oo
+    >>> from sympy.abc import x
+    >>> limit(sin(x)/x, x, 0)
+    1
+    >>> limit(1/x, x, 0, dir="+")
+    oo
+    >>> limit(1/x, x, 0, dir="-")
+    -oo
+    >>> limit(1/x, x, oo)
+    0
+
+    Strategy:
+
+    First we try some heuristics for easy and frequent cases like "x", "1/x",
+    "x**2" and similar, so that it's fast. For all other cases, we use the
+    Gruntz algorithm (see the gruntz() function).
+    """
+    if dir == 'r':
+        limit_right = limit_eval(e, z, z0, dir="+")
+        limit_left = limit_eval(e, z, z0, dir="-")
+        if  limit_right == limit_left:
+            return limit_right
+        else:
+            msg = "Limit (%s, %s, %s, dir=%s) does not exist"
+            raise PoleError(msg % (e, z, z0, dir))
+    else:
+        return limit_eval(e, z, z0, dir)
 
 class Limit(Expr):
     """Represents an unevaluated limit.
