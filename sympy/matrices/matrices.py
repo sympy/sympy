@@ -1,7 +1,7 @@
 import warnings
 from sympy.core.basic import Basic
 from sympy.core.symbol import Symbol, Dummy
-from sympy.core.numbers import Integer
+from sympy.core.numbers import Integer, ilcm
 from sympy.core.singleton import S
 from sympy.core.sympify import sympify, converter, SympifyError
 
@@ -689,6 +689,13 @@ class Matrix(object):
         newmat[:,pos:pos+mti.cols] = mti[:,:]
         newmat[:,pos+mti.cols:] = self[:,pos:]
         return newmat
+
+    def contains_rationals(self):
+        if not self.is_symbolic():
+            for i in self:
+                if i.is_rational:
+                        return True
+        return False
 
     def trace(self):
         assert self.cols == self.rows
@@ -1610,6 +1617,10 @@ class Matrix(object):
                 basis = tmp.nullspace(simplified=True)
                 if not basis:
                     raise NotImplementedError("Can't evaluate eigenvector for eigenvalue %s" % r)
+            if 'simplify_to_integers' in flags:
+                if basis[0].contains_rationals():
+                    a = reduce(ilcm, [i.as_numer_denom()[1] for i in basis[0]],1)
+                    basis[0] = basis[0]*a
             out.append((r, k, basis))
         return out
 
@@ -1773,7 +1784,7 @@ class Matrix(object):
             raise MatrixError("Matrix is not diagonalizable")
         else:
             if self._eigenvects == None:
-                self._eigenvects = self.eigenvects()
+                self._eigenvects = self.eigenvects(simplify_to_integers=True)
             diagvals = []
             P = Matrix(self.rows, 0, [])
             for eigenval, multiplicity, vects in self._eigenvects:
@@ -1829,7 +1840,7 @@ class Matrix(object):
         #if self._is_symbolic:
         #    self._diagonalize_clear_subproducts()
         #    raise NotImplementedError("Symbolic matrices are not implemented for diagonalization yet")
-        self._eigenvects = self.eigenvects()
+        self._eigenvects = self.eigenvects(simplify_to_integers=True)
         all_iscorrect = True
         for eigenval, multiplicity, vects in self._eigenvects:
             if len(vects) <> multiplicity:
