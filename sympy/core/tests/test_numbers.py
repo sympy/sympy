@@ -612,3 +612,12 @@ def test_relational():
 def test_Integer_as_index():
     if hasattr(int, '__index__'): # Python 2.5+ (PEP 357)
         assert 'hello'[Integer(2):] == 'llo'
+
+def test_is_algebraic():
+    assert not pi.is_algebraic
+    assert Integer(1).is_algebraic
+    assert sqrt(2).is_algebraic
+    assert not EulerGamma.is_algebraic
+    assert not Exp1.is_algebraic
+    assert (1+I).is_algebraic
+
