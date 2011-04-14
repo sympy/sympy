@@ -120,6 +120,9 @@ And check manually which line is wrong. Then go to the source code and debug
 this function to figure out the exact problem.
 
 """
+class LimitError(Exception):
+    pass
+
 O = Order
 
 def debug(func):
@@ -449,7 +452,7 @@ def rewrite(e, Omega, x, wsym):
 
     return f, logw
 
-def gruntz(e, z, z0, dir="+"):
+def gruntz(e, z, z0, dir="real"):
     """
     Compute the limit of e(z) at the point z0 using the Gruntz algorithm.
 
@@ -472,10 +475,20 @@ def gruntz(e, z, z0, dir="+"):
     elif z0 == -oo:
         return limitinf(e.subs(z, -z), z)
     else:
+        l_left = e.subs(z, z0 - 1/z)
+        l_right = e.subs(z, z0 + 1/z) 
         if dir == "-":
-            e0 = e.subs(z, z0 - 1/z)
+            e0 = l_left
         elif dir == "+":
-            e0 = e.subs(z, z0 + 1/z)
+            e0 = l_right
+        elif dir == "real":
+            limit_left = limitinf(l_left, z)
+            limit_right = limitinf(l_right, z)
+            if limit_left == limit_right:
+                return limit_left
+            else:
+                msg = "Limit(%s, %s, %s, dir=%s) does not exist. \n Right and left hand side limits are different"
+                raise LimitError(msg % (e, z, z0, dir))
         else:
             raise NotImplementedError("dir must be '+' or '-'")
         return limitinf(e0, z)

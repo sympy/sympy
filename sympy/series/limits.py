@@ -2,7 +2,7 @@ from sympy.core import S, Add, sympify, Expr, PoleError, Mul, oo, C
 from gruntz import gruntz
 from sympy.functions import sign, tan, cot
 
-def limit(e, z, z0, dir="+"):
+def limit(e, z, z0, dir="real"):
     """
     Compute the limit of e(z) at the point z0.
 
