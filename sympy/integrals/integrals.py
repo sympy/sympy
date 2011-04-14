@@ -25,57 +25,52 @@ class Integral(Expr):
         # earliest possible moment.
         function = piecewise_fold(sympify(function))
 
-        if function.is_Number:
-            if function is S.NaN:
-                return S.NaN
+        if function is S.NaN:
+            return S.NaN
 
-        limits = []
+        symbols = list(symbols)
+        if not symbols:
+            # no symbols provided -- let's compute full anti-derivative
+            symbols = sorted(function.free_symbols, Basic.compare)
+            if not symbols:
+                raise ValueError('An integration variable is required.')
 
-        if isinstance(function, Integral):
-            limits.extend(function.limits)
+        while isinstance(function, Integral):
+            # denest the integrand
+            symbols = list(function.limits) + symbols
             function = function.function
 
-        if symbols:
-            for V in symbols:
-                if isinstance(V, Symbol):
-                    limits.append(Tuple(V))
-                    continue
-                elif isinstance(V, (tuple, list, Tuple)):
-                    V = sympify(flatten(V))
-                    if V[0].is_Symbol:
-                        newsymbol = V[0]
-                        if len(V) == 3:
-                            if V[1] is None and V[2] is not None:
-                                nlim = [V[2]]
-                            elif V[1] is not None and V[2] is None:
-                                function = -function
-                                nlim = [V[1]]
-                            elif V[1] is None and V[2] is None:
-                                nlim = []
-                            else:
-                                nlim = V[1:]
-                            limits.append(Tuple(newsymbol, *nlim ))
-                            continue
-                        elif len(V) == 1 or (len(V) == 2 and V[1] is None):
-                            limits.append(Tuple(newsymbol))
-                            continue
-                        elif len(V) == 2:
-                            limits.append(Tuple(newsymbol, V[1]))
-                            continue
-
-
-                raise ValueError("Invalid integration variable or limits: %s" % str(symbols))
-        else:
-            # no symbols provided -- let's compute full anti-derivative
-            syms = function.atoms(Symbol)
-            if not syms:
-                raise ValueError('An integration variable is required.')
-            limits.extend([Tuple(symp) for symp in syms])
+        limits = []
+        for V in symbols:
+            if isinstance(V, Symbol):
+                limits.append(Tuple(V))
+                continue
+            elif isinstance(V, (tuple, list, Tuple)):
+                V = sympify(flatten(V))
+                if V[0].is_Symbol:
+                    newsymbol = V[0]
+                    if len(V) == 3:
+                        if V[1] is None and V[2] is not None:
+                            nlim = [V[2]]
+                        elif V[1] is not None and V[2] is None:
+                            function = -function
+                            nlim = [V[1]]
+                        elif V[1] is None and V[2] is None:
+                            nlim = []
+                        else:
+                            nlim = V[1:]
+                        limits.append(Tuple(newsymbol, *nlim ))
+                        continue
+                    elif len(V) == 1 or (len(V) == 2 and V[1] is None):
+                        limits.append(Tuple(newsymbol))
+                        continue
+                    elif len(V) == 2:
+                        limits.append(Tuple(newsymbol, V[1]))
+                        continue
+            raise ValueError("Invalid integration variable or limits: %s" % str(symbols))
 
         obj = Expr.__new__(cls, **assumptions)
-        arglist = [function]
-        arglist.extend(limits)
-        obj._args = tuple(arglist)
+        obj._args = tuple([function] + limits)
         obj.is_commutative = all(s.is_commutative for s in obj.free_symbols)
 
         return obj
@@ -320,12 +315,31 @@ class Integral(Expr):
             return S.Zero
 
         # There is no trivial answer, so continue
-        for i, xab in enumerate(self.limits):
+
+        undone_limits = []
+        ulj = set() # free symbols of any undone limits' upper and lower limits
+        for xab in self.limits:
+            # compute uli, the free symbols in the
+            # Upper and Lower limits of limit I
+            if len(xab) == 1:
+                uli = set(xab[:1])
+            elif len(xab) == 2:
+                uli = xab[1].free_symbols
+            elif len(xab) == 3:
+                uli = xab[1].free_symbols.union(xab[2].free_symbols)
+            # this integral can be done as long as there is no blocking
+            # limit that has been undone. An undone limit is blocking if
+            # it contains an integration variable that is in this limit's
+            # upper or lower free symbols or vice versa
+            if xab[0] in ulj or any(v[0] in uli for v in undone_limits):
+                undone_limits.append(xab)
+                ulj.update(uli)
+                continue
+
             antideriv = self._eval_integral(function, xab[0])
 
             if antideriv is None:
-                newargs = ([function] + list(self.limits[i:]))
-                return self.new(*newargs)
+                undone_limits.append(xab)
             else:
                 if len(xab) == 1:
                     function = antideriv
@@ -353,6 +367,8 @@ class Integral(Expr):
                     else:
                         function = antideriv._eval_interval(x, a, b)
 
+        if undone_limits:
+            return self.new(*([function] + undone_limits))
         return function
 
     def _eval_expand_basic(self, deep=True, **hints):
@@ -381,7 +397,7 @@ class Integral(Expr):
         >>> from sympy.abc import x, y
         >>> i = Integral(x + y, y, (y, 1, x))
         >>> i.diff(x)
-        Integral(x + y, (y, x)) + Integral(Integral(1, (y, y)), (y, 1, x))
+        Integral(x + y, (y, x)) + Integral(1, (y, y), (y, 1, x))
         >>> i.doit().diff(x) == i.diff(x).doit()
         True
         >>> i.diff(y)
