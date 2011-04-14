@@ -476,7 +476,7 @@ def gruntz(e, z, z0, dir="real"):
         return limitinf(e.subs(z, -z), z)
     else:
         l_left = e.subs(z, z0 - 1/z)
-        l_right = e.subs(z, z0 + 1/z) 
+        l_right = e.subs(z, z0 + 1/z)
         if dir == "-":
             e0 = l_left
         elif dir == "+":
