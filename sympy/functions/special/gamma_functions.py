@@ -170,10 +170,10 @@ class polygamma(Function):
     def _eval_is_real(self):
         return self.args[0].is_real
 
-    def _eval_aseries(self, n, args0, x):
+    def _eval_aseries(self, n, args0, x, logx):
         if args0[1] != oo or not \
            (self.args[0].is_Integer and self.args[0].is_nonnegative):
-            return super(polygamma, self)._eval_aseries(n, args0, x)
+            return super(polygamma, self)._eval_aseries(n, args0, x, logx)
         z = self.args[1]
         N = self.args[0]
 
@@ -189,7 +189,7 @@ class polygamma(Function):
                 l = [bernoulli(2*k) / (2*k*z**(2*k)) for k in range(1, m)]
                 r -= Add(*l)
                 o = C.Order(1/z**(2*m), x)
-            return r._eval_nseries(x, n) + o
+            return r._eval_nseries(x, n, logx) + o
         else:
             # proper polygamma function
             # Abramowitz & Stegun, p. 260, 6.4.10
@@ -207,7 +207,7 @@ class polygamma(Function):
                 o = C.Order(1/z, x)
             elif n == 1:
                 o = C.Order(1/z**2, x)
-            r = e0._eval_nseries(z, n=n) + o
+            r = e0._eval_nseries(z, n, logx) + o
             return -1 * (-1/z)**N * r
 
     @classmethod
@@ -274,9 +274,9 @@ class loggamma(Function):
 
     nargs = 1
 
-    def _eval_aseries(self, n, args0, x):
+    def _eval_aseries(self, n, args0, x, logx):
         if args0[0] != oo:
-            return super(loggamma, self)._eval_aseries(n, args0, x)
+            return super(loggamma, self)._eval_aseries(n, args0, x, logx)
         z = self.args[0]
         m = min(n, C.ceiling((n+S(1))/2))
         r = log(z)*(z-S(1)/2) - z + log(2*pi)/2
@@ -287,7 +287,7 @@ class loggamma(Function):
         else:
             o = C.Order(1/z**(2*m-1), x)
         # It is very inefficient to first add the order and then do the nseries
-        return (r + Add(*l))._eval_nseries(x, n) + o
+        return (r + Add(*l))._eval_nseries(x, n, logx) + o
 
     def _eval_rewrite_as_intractable(self, z):
         return log(gamma(z))

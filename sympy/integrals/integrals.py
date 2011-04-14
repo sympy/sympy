@@ -626,8 +626,8 @@ class Integral(Expr):
         for term in self.function.lseries(x):
             yield integrate(term, *self.limits)
 
-    def _eval_nseries(self, x, n):
-        terms, order = self.function.nseries(x, n=n).as_coeff_add(C.Order)
+    def _eval_nseries(self, x, n, logx):
+        terms, order = self.function.nseries(x, n=n, logx=logx).as_coeff_add(C.Order)
         return integrate(terms, *self.limits) + Add(*order)*x
 
     def _eval_subs(self, old, new):

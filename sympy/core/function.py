@@ -288,7 +288,7 @@ class Function(Application, Expr):
     def as_base_exp(self):
         return self, S.One
 
-    def _eval_aseries(self, n, args0, x):
+    def _eval_aseries(self, n, args0, x, logx):
         """
         Compute an asymptotic expansion around args0, in terms of self.args.
         This function is only used internally by _eval_nseries and should not
@@ -298,7 +298,7 @@ class Function(Application, Expr):
         raise PoleError('Asymptotic expansion of %s around %s '
                         'not implemented.' % (type(self), args0))
 
-    def _eval_nseries(self, x, n):
+    def _eval_nseries(self, x, n, logx):
         """
         This function does compute series for multivariate functions,
         but the expansion is always in terms of *one* variable.
@@ -315,7 +315,7 @@ class Function(Application, Expr):
         and possible:
 
         >>> from sympy import loggamma
-        >>> loggamma(1/x)._eval_nseries(x,0)
+        >>> loggamma(1/x)._eval_nseries(x,0,None)
         log(x)/2 - log(x)/x - 1/x + O(1)
         """
         if self.func.nargs is None:
@@ -324,7 +324,7 @@ functions are not supported.')
         args = self.args
         args0 = [t.limit(x, 0) for t in args]
         if any([t.is_bounded == False for t in args0]):
-            return self._eval_aseries(n, args0, x)._eval_nseries(x, n)
+            return self._eval_aseries(n, args0, x, logx)._eval_nseries(x, n, logx)
         if (self.func.nargs == 1 and args0[0]) or self.func.nargs > 1:
             e = self
             e1 = e.expand()
@@ -350,13 +350,13 @@ functions are not supported.')
                     term = term.expand()
                     series += term
                 return series + C.Order(x**n, x)
-            return e1.nseries(x, n=n)
+            return e1.nseries(x, n=n, logx=logx)
         arg = self.args[0]
         l = []
         g = None
         for i in xrange(n+2):
             g = self.taylor_term(i, arg, g)
-            g = g.nseries(x, n=n)
+            g = g.nseries(x, n=n, logx=logx)
             l.append(g)
         return Add(*l) + C.Order(x**n, x)
 
@@ -685,8 +685,8 @@ class Derivative(Expr):
         for term in self.args[0].lseries(x):
             yield Derivative(term, *dx)
 
-    def _eval_nseries(self, x, n):
-        arg = self.args[0].nseries(x, n=n)
+    def _eval_nseries(self, x, n, logx):
+        arg = self.args[0].nseries(x, n=n, logx=logx)
         o = arg.getO()
         dx = self.args[1:]
         rv = [Derivative(a, *dx) for a in Add.make_args(arg.removeO())]

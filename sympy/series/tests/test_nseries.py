@@ -62,7 +62,7 @@ def test_power_x_x2():
             1+x*log(x)+x**2*log(x)**2/2+x**3*log(x)**3/6 + O(x**4*log(x)**4)
 
 def test_log_singular1():
-    assert log(1+1/x).nseries(x, n=5) == x + log(1/x) - x**2/2 + x**3/3 - \
+    assert log(1+1/x).nseries(x, n=5) == x - log(x) - x**2/2 + x**3/3 - \
             x**4/4 + O(x**5)
 
 def test_log_power1():
@@ -136,7 +136,8 @@ def test_exp2():
     x = Symbol("x")
     w = Symbol("w")
     e = w**(1-log(x)/(log(2) + log(x)))
-    assert e.nseries(w,0,1) == w*exp(-log(w)*log(x)/(log(2) + log(x)))
+    logw = Symbol("logw")
+    assert e.nseries(w,0,1,logx=logw) == exp(logw - logw*log(x)/(log(2) + log(x)))
 
 def test_bug3():
     x = Symbol("x")
@@ -235,8 +236,8 @@ def test_issue364():
     x = Symbol("x")
     e = 1/x*(-log(w**(1 + 1/log(3)*log(5))) + log(w + w**(1/log(3)*log(5))))
     e_ser = -log(5)*log(w)/(x*log(3)) + w**(log(5)/log(3) - 1)/x - \
-            w**(2*log(5)/log(3) - 2)/(2*x) + O(w)
-    assert e.nseries(w, n=1) == e_ser
+            w**(2*log(5)/log(3) - 2)/(2*x) + O(w**(-3+3*log(5)/log(3)))
+    assert e.nseries(w, n=3) == e_ser
 
 def test_sin():
     x = Symbol("x")

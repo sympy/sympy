@@ -247,16 +247,17 @@ def test_function_non_commutative():
 
 def test_function__eval_nseries():
     x = Symbol('x')
-    assert sin(x)._eval_nseries(x,2) == x + O(x**2)
-    assert sin(x+1)._eval_nseries(x,2) == x*cos(1) + sin(1) + O(x**2)
-    assert sin(pi*(1-x))._eval_nseries(x,2) == pi*x + O(x**2)
-    assert acos(1-x**2)._eval_nseries(x,2) == sqrt(2)*x + O(x**2)
-    assert polygamma(n,x+1)._eval_nseries(x,2) == \
+    assert sin(x)._eval_nseries(x,2,None) == x + O(x**2)
+    assert sin(x+1)._eval_nseries(x,2,None) == x*cos(1) + sin(1) + O(x**2)
+    assert sin(pi*(1-x))._eval_nseries(x,2,None) == pi*x + O(x**2)
+    assert acos(1-x**2)._eval_nseries(x,2,None) == sqrt(2)*x + O(x**2)
+    assert polygamma(n,x+1)._eval_nseries(x,2,None) == \
                    polygamma(n,1) + polygamma(n+1,1)*x + O(x**2)
-    raises(PoleError, 'sin(1/x)._eval_nseries(x,2)')
-    raises(PoleError, 'acos(1-x)._eval_nseries(x,2)')
-    raises(PoleError, 'acos(1+x)._eval_nseries(x,2)')
-    assert loggamma(1/x)._eval_nseries(x,0) == log(x)/2 - log(x)/x - 1/x + O(1, x)
+    raises(PoleError, 'sin(1/x)._eval_nseries(x,2,None)')
+    raises(PoleError, 'acos(1-x)._eval_nseries(x,2,None)')
+    raises(PoleError, 'acos(1+x)._eval_nseries(x,2,None)')
+    assert loggamma(1/x)._eval_nseries(x,0,None) \
+           == log(x)/2 - log(x)/x - 1/x + O(1, x)
 
 def test_doit():
     n = Symbol('n', integer = True)

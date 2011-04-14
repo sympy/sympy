@@ -579,11 +579,11 @@ class tan(Function):
 
             return (-1)**a * b*(b-1) * B/F * x**n
 
-    def _eval_nseries(self, x, n):
+    def _eval_nseries(self, x, n, logx):
         i = self.args[0].limit(x, 0)*2/S.Pi
         if i and i.is_Integer:
-            return self.rewrite(cos)._eval_nseries(x, n=n)
-        return Function._eval_nseries(self, x, n=n)
+            return self.rewrite(cos)._eval_nseries(x, n=n, logx=logx)
+        return Function._eval_nseries(self, x, n=n, logx=logx)
 
     def _eval_conjugate(self):
         return self.func(self.args[0].conjugate())
@@ -747,11 +747,11 @@ class cot(Function):
 
             return (-1)**((n+1)//2) * 2**(n+1) * B/F * x**n
 
-    def _eval_nseries(self, x, n):
+    def _eval_nseries(self, x, n, logx):
         i = self.args[0].limit(x, 0)/S.Pi
         if i and i.is_Integer:
-            return self.rewrite(cos)._eval_nseries(x, n=n)
-        return Function._eval_nseries(self, x, n=n)
+            return self.rewrite(cos)._eval_nseries(x, n=n, logx=logx)
+        return Function._eval_nseries(self, x, n=n, logx=logx)
 
     def _eval_conjugate(self):
         assert len(self.args) == 1
@@ -1096,13 +1096,13 @@ class atan(Function):
         return S.ImaginaryUnit/2 * \
                (C.log((S(1) - S.ImaginaryUnit * x)/(S(1) + S.ImaginaryUnit * x)))
 
-    def _eval_aseries(self, n, args0, x):
+    def _eval_aseries(self, n, args0, x, logx):
         if args0[0] == S.Infinity:
             return S.Pi/2 - atan(1/self.args[0])
         elif args0[0] == S.NegativeInfinity:
             return -S.Pi/2 - atan(1/self.args[0])
         else:
-            return super(atan, self)._eval_aseries(n, args0, x)
+            return super(atan, self)._eval_aseries(n, args0, x, logx)
 
     def _sage_(self):
         import sage.all as sage
@@ -1191,13 +1191,13 @@ class acot(Function):
     def _eval_is_real(self):
         return self.args[0].is_real
 
-    def _eval_aseries(self, n, args0, x):
+    def _eval_aseries(self, n, args0, x, logx):
         if args0[0] == S.Infinity:
             return S.Pi/2 - acot(1/self.args[0])
         elif args0[0] == S.NegativeInfinity:
             return 3*S.Pi/2 - acot(1/self.args[0])
         else:
-            return super(atan, self)._eval_aseries(n, args0, x)
+            return super(atan, self)._eval_aseries(n, args0, x, logx)
 
     def _sage_(self):
         import sage.all as sage

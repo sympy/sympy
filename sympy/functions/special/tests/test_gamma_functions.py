@@ -130,7 +130,7 @@ def test_loggamma():
     assert cancel(s1 - s2).removeO() == 0
 
     def tN(N, M):
-        assert loggamma(1/x)._eval_nseries(x,n=N).getn() == M
+        assert loggamma(1/x)._eval_nseries(x,n=N,logx=None).getn() == M
     tN(0, 0)
     tN(1, 1)
     tN(2, 3)

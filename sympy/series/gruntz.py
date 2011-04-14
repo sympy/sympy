@@ -483,29 +483,26 @@ def moveup(l, x):
 
 
 @debug
-def calculate_series(e, x, skip_abs=False, skip_log=False):
+def calculate_series(e, x, skip_abs=False, logx=None):
     """ Calculates at least one term of the series of "e" in "x".
 
     This is a place that fails most often, so it is in its own function.
     """
 
-    logx = Dummy('l')
     f = e
     for n in [2, 4, 6, 8]:
-        series = f.nseries(x, n=n)
+        series = f.nseries(x, n=n, logx=logx)
         if not series.has(O):
             # The series expansion is locally exact.
             return series
 
         series = series.removeO()
         if series:
-            if skip_log:
-                series = series.subs(log(x), logx)
             if (not skip_abs) or series.has(x):
                 break
     else:
         raise ValueError('(%s).series(%s, n=8) gave no terms.' % (f, x))
-    return series.subs(logx, log(x))
+    return series
 
 @debug
 def mrv_leadterm(e, x, Omega=SubsSet(), exps=None):
