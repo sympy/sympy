@@ -22,7 +22,7 @@ def test_function_series1():
 
     #Test that the taylor series is correct
     assert my_function(x).series(x, 0, 10) == sin(x).series(x, 0, 10)
-    assert limit(my_function(x)/x, x, 0) == 1
+    assert limit(my_function(x)/x, x, 0, dir = "+") == 1
 
 def test_function_series2():
     """Create our new "cos" function."""
