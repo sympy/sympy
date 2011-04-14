@@ -119,6 +119,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Anatolii Koval: Infinite 1D box example
 #. Tomo Lazovich: fixes to quantum operators
 #. Pavel Fedotov: fix to is_number
+#. Kibeom Kim: fixes to cse function and preorder_traversal
 
 Up-to-date list in the order of the first contribution is given in the `AUTHORS
 <https://github.com/sympy/sympy/blob/master/AUTHORS>`_ file.
