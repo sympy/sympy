@@ -277,7 +277,7 @@ class Integral(Expr):
             wok = inverse_mapping.subs(x, a)
             if not wok is S.NaN:
                 return wok
-            return limit(sign(b)*inverse_mapping, x, a)
+            return limit(sign(b)*inverse_mapping, x, a, dir = "+")
         newlimits = []
         for xab in limits:
             sym = xab[0]
