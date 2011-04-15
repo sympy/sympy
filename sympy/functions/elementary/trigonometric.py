@@ -3,11 +3,42 @@ from sympy.core.mul import Mul
 from sympy.core.basic import C, sympify, cacheit
 from sympy.core.singleton import S
 from sympy.core.function import Function
+from sympy.core.symbol import Wild
 from miscellaneous import sqrt
 
 ###############################################################################
 ########################## TRIGONOMETRIC FUNCTIONS ############################
 ###############################################################################
+
+def _peeloff_pi(arg):
+    """
+    Split ARG into two parts, a "rest" and a multiple of pi/2.
+    This assumes ARG to be an Add.
+    The multiple of pi returned in the second position is always a Rational.
+
+    Examples:
+    >>> from sympy.functions.elementary.trigonometric import _peeloff_pi as peel
+    >>> from sympy import pi
+    >>> from sympy.abc import x, y
+    >>> peel(x + pi/2)
+    (x, pi/2)
+    >>> peel(x + 2*pi/3 + pi*y)
+    (x + pi/6 + pi*y, pi/2)
+    """
+    for a in Add.make_args(arg):
+        if a is S.Pi:
+            K = S.One
+            break
+        elif a.is_Mul:
+            K, p = a.as_two_terms()
+            if p is S.Pi and K.is_Rational:
+                break
+    else:
+        return arg, 0
+
+    m1 = (K % S.Half) * S.Pi
+    m2 = K*S.Pi - m1
+    return arg - m2, m2
 
 class sin(Function):
     """
@@ -115,8 +146,8 @@ class sin(Function):
                     return result
 
         if arg.is_Add:
-            x, m = arg.as_independent(S.Pi)
-            if m in [-S.Pi, -S.Pi/2, S.Pi/2, S.Pi]:
+            x, m = _peeloff_pi(arg)
+            if m:
                 return sin(m)*cos(x)+cos(m)*sin(x)
 
         if arg.func is asin:
@@ -325,8 +356,8 @@ class cos(Function):
                     return result
 
         if arg.is_Add:
-            x, m = arg.as_independent(S.Pi)
-            if m in [-S.Pi, -S.Pi/2, S.Pi/2, S.Pi]:
+            x, m = _peeloff_pi(arg)
+            if m:
                 return cos(m)*cos(x)-sin(m)*sin(x)
 
         if arg.func is acos:
@@ -509,6 +540,14 @@ class tan(Function):
                 except KeyError:
                     pass
 
+        if arg.is_Add:
+            x, m = _peeloff_pi(arg)
+            if m:
+                if (m*2/S.Pi) % 2 == 0:
+                    return tan(x)
+                else:
+                    return -cot(x)
+
         if arg.func is atan:
             return arg.args[0]
 
@@ -663,6 +702,14 @@ class cot(Function):
                         return result
                 except KeyError:
                     pass
+
+        if arg.is_Add:
+            x, m = _peeloff_pi(arg)
+            if m:
+                if (m*2/S.Pi) % 2 == 0:
+                    return cot(x)
+                else:
+                    return -tan(x)
 
         if arg.func is acot:
             return arg.args[0]
