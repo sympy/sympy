@@ -75,6 +75,46 @@ def test_sin():
 
     assert sin(r).is_real == True
 
+def test_trig_symmetry():
+    x = Symbol('x')
+    y = Symbol('y')
+    k = Symbol('k', integer=True)
+
+    assert sin(-x) == -sin(x)
+    assert cos(-x) == cos(x)
+    assert tan(-x) == -tan(x)
+    assert cot(-x) == -cot(x)
+    assert sin(x+pi) == -sin(x)
+    assert sin(x+2*pi) == sin(x)
+    assert sin(x+3*pi) == -sin(x)
+    assert sin(x+4*pi) == sin(x)
+    assert sin(x-5*pi) == -sin(x)
+    assert cos(x+pi) == -cos(x)
+    assert cos(x+2*pi) == cos(x)
+    assert cos(x+3*pi) == -cos(x)
+    assert cos(x+4*pi) == cos(x)
+    assert cos(x-5*pi) == -cos(x)
+    assert tan(x+pi) == tan(x)
+    assert tan(x-3*pi) == tan(x)
+    assert cot(x+pi) == cot(x)
+    assert cot(x-3*pi) == cot(x)
+    assert sin(pi/2-x) == cos(x)
+    assert sin(3*pi/2-x) == -cos(x)
+    assert sin(5*pi/2-x) == cos(x)
+    assert cos(pi/2-x) == sin(x)
+    assert cos(3*pi/2-x) == -sin(x)
+    assert cos(5*pi/2-x) == sin(x)
+    assert tan(pi/2-x) == cot(x)
+    assert tan(3*pi/2-x) == cot(x)
+    assert tan(5*pi/2-x) == cot(x)
+    assert cot(pi/2-x) == tan(x)
+    assert cot(3*pi/2-x) == tan(x)
+    assert cot(5*pi/2-x) == tan(x)
+    assert sin(pi/2+x) == cos(x)
+    assert cos(pi/2+x) == -sin(x)
+    assert tan(pi/2+x) == -cot(x)
+    assert cot(pi/2+x) == -tan(x)
+
 
 def test_cos():
     x, y = symbols('xy')
