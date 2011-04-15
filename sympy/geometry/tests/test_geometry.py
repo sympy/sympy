@@ -844,6 +844,7 @@ def test_subs():
         assert 'y' in str(o.subs(x, y))
     assert p.subs({x: 1}) == Point(1, 2)
     assert Point(1, 2).subs(Point(1, 2), Point(3, 4)) == Point(3, 4)
+    assert Point(1, 2).subs((1,2), Point(3,4)) == Point(3, 4)
 
 def test_encloses():
     # square with a dimpled left side
