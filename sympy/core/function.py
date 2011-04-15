@@ -324,7 +324,39 @@ functions are not supported.')
         args = self.args
         args0 = [t.limit(x, 0) for t in args]
         if any([t.is_bounded == False for t in args0]):
-            return self._eval_aseries(n, args0, x, logx)._eval_nseries(x, n, logx)
+            from sympy import Dummy, oo, zoo, nan
+            a = [t.compute_leading_term(x, logx=logx) for t in args]
+            a0 = [t.limit(x, 0) for t in a]
+            if any ([t.has(oo, -oo, zoo, nan) for t in a0]):
+               return self._eval_aseries(n, args0, x, logx)._eval_nseries(x, n, logx)
+            # Careful: the argument goes to oo, but only logarithmically so. We
+            # are supposed to do a power series expansion "around the
+            # logarithmic term". e.g.
+            #      f(1+x+log(x))
+            #     -> f(1+logx) + x*f'(1+logx) + O(x**2)
+            # where 'logx' is given in the argument
+            a = [t._eval_nseries(x, n, logx) for t in args]
+            z = [r - r0 for (r, r0) in zip(a, a0)]
+            p = [Dummy() for t in z]
+            q = []
+            v = None
+            w = None
+            for ai, zi, pi in zip(a0, z, p):
+                if zi.has(x):
+                    if v is not None: raise NotImplementedError
+                    q.append(ai + pi)
+                    v = pi
+                    w = zi
+                else:
+                    q.append(ai)
+            e1 = self.func(*q)
+            if v is None:
+                return e1
+            s = e1._eval_nseries(v, n, logx)
+            o = s.getO()
+            s = s.removeO()
+            s = s.subs(v, zi).expand() + C.Order(o.expr.subs(v, zi), x)
+            return s
         if (self.func.nargs == 1 and args0[0]) or self.func.nargs > 1:
             e = self
             e1 = e.expand()

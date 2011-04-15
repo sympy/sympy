@@ -258,6 +258,8 @@ def test_function__eval_nseries():
     raises(PoleError, 'acos(1+x)._eval_nseries(x,2,None)')
     assert loggamma(1/x)._eval_nseries(x,0,None) \
            == log(x)/2 - log(x)/x - 1/x + O(1, x)
+    l = Symbol('l')
+    assert loggamma(log(1/x)).nseries(x,n=1,logx=y) == loggamma(-y)
 
 def test_doit():
     n = Symbol('n', integer = True)
