@@ -121,6 +121,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Pavel Fedotov: fix to is_number
 #. Kibeom Kim: fixes to cse function and preorder_traversal
 #. Gregory Ksionda: fixes to Integral instantiation
+#. Tomáš Bambas: prettier printing of examples
 
 Up-to-date list in the order of the first contribution is given in the `AUTHORS
 <https://github.com/sympy/sympy/blob/master/AUTHORS>`_ file.
