@@ -524,7 +524,7 @@ class tan(Function):
                 return S.Zero
             elif pi_coeff.is_Rational:
                 cst_table = {
-                   #2 : S.ComplexInfinity,
+                    2 : S.ComplexInfinity,
                     3 : sqrt(3),
                     4 : S.One,
                     6 : 1 / sqrt(3),
@@ -538,8 +538,7 @@ class tan(Function):
                     else:
                         return result
                 except KeyError:
-                    if pi_coeff.q == 2 and pi_coeff.p != 1:
-                        return tan(S.Pi/2)
+                    pass
 
         if arg.is_Add:
             x, m = _peeloff_pi(arg)
@@ -677,6 +676,9 @@ class cot(Function):
         if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
+            if arg is S.Zero:
+                return S.ComplexInfinity
+
         if arg.could_extract_minus_sign():
             return -cls(-arg)
 
@@ -686,8 +688,8 @@ class cot(Function):
 
         pi_coeff = arg.as_coefficient(S.Pi)
         if pi_coeff is not None:
-            if pi_coeff.is_Integer and pi_coeff is not S.One:
-                return cot(S.Pi)
+            if pi_coeff.is_Integer:
+                return S.ComplexInfinity
             if pi_coeff.is_Rational:
                 cst_table = {
                     2 : S.Zero,

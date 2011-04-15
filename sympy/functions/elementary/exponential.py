@@ -300,7 +300,7 @@ class log(Function):
 
         if arg.is_Number:
             if arg is S.Zero:
-                return S.NegativeInfinity
+                return S.ComplexInfinity
             elif arg is S.One:
                 return S.Zero
             elif arg is S.Infinity:
