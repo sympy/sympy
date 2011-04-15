@@ -66,11 +66,6 @@ class KroneckerDelta(Function):
         elif diff.is_number:
             return S.Zero
 
-    def _eval_subs(self, old, new):
-        r = KroneckerDelta(self.args[0].subs(old, new), self.args[1].subs(old,\
-        new))
-        return r
-
     def _eval_dagger(self):
         return self
 

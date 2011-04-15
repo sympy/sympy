@@ -703,8 +703,6 @@ class Integral(Expr):
         >>> i.subs(x, y - c)
         Integral(a - c + y, (a, a, 3), (b, -c + y, c))
         """
-        if self == old:
-            return new
         integrand, limits = self.function, self.limits
         old_atoms = old.free_symbols
         limits = list(limits)
@@ -721,7 +719,7 @@ class Integral(Expr):
             xab = limits[i]
             if not dummies.intersection(old_atoms):
                 limits[i] = Tuple(xab[0],
-                                  *[l.subs(old, new) for l in xab[1:]])
+                                  *[l._subs(old, new) for l in xab[1:]])
             dummies.add(xab[0])
         if not dummies.intersection(old_atoms):
             integrand = integrand.subs(old, new)

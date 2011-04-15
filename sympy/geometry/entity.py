@@ -199,11 +199,19 @@ class GeometryEntity(tuple):
         """
         raise NotImplementedError()
 
-    def subs(self, *args):
-        return type(self)(*[a.subs(*args) for a in self.args])
+    def subs(self, old, new):
+        """Replace old -> new in self.
 
-    def _eval_subs(self, old, new):
+        Note: since GeometryEntity doesn't derive from Basic, it needs its own subs method.
+        """
+        if self == old:
+            return new
         return type(self)(*[a.subs(old, new) for a in self.args])
+
+    def _subs(self, old, new):
+        """Call to GeometryEntity's subs method in case a Basic object
+        contains a GeometryEntity and tries to call _subs on it."""
+        return self.subs(old, new)
 
     @property
     def args(self):

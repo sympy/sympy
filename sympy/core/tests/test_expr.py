@@ -472,28 +472,6 @@ def test_as_independent():
     assert (x + Integral(x, (x, 1, 2))).as_independent(x, strict=True) == \
            (Integral(x, (x, 1, 2)), x)
 
-def test_subs_dict():
-    a,b,c,d,e = symbols('a,b,c,d,e')
-
-    assert (sin(x))._subs_dict({ x : 1, sin(x) : 2}) == 2
-    assert (sin(x))._subs_dict([(x, 1), (sin(x), 2)]) == 2
-
-    expr = sqrt(sin(2*x))*sin(exp(x)*x)*cos(2*x) + sin(2*x)
-
-    seq = [ (sqrt(sin(2*x)),a), (cos(2*x),b), (sin(2*x),c), (x,d), (exp(x),e) ]
-    assert expr._subs_dict(seq) == c + a*b*sin(d*e)
-
-    seq = [ (sqrt(sin(2*x)),a), (sin(2*x),c), (cos(2*x),b), (x,d), (exp(x),e) ]
-    assert expr._subs_dict(seq) == c + a*b*sin(d*e)
-
-def test_subs_list():
-
-    assert (sin(x))._subs_list([(sin(x), 2), (x, 1)]) == 2
-    assert (sin(x))._subs_list([(x, 1), (sin(x), 2)]) == sin(1)
-
-    assert (x+y)._subs_list([(x, 3), (y, x**2)]) == 3 + x**2
-    assert (x+y)._subs_list([(y, x**2), (x, 3)]) == 12
-
 def test_call():
     # Unlike what used to be the case, the following should NOT work.
     # See issue 1927.

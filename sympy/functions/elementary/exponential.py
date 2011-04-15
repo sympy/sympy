@@ -145,16 +145,14 @@ class exp(Function):
         return S.Exp1, Mul(*self.args)
 
     def _eval_subs(self, old, new):
-        if self == old:
-            return new
         arg = self.args[0]
         o = old
         if old.is_Pow: # handle (exp(3*log(x))).subs(x**2, z) -> z**(3/2)
-            old = exp(old.exp*log(old.base))
-        if old.func is exp:
+            o = exp(o.exp*log(o.base))
+        if o.func is exp:
             # exp(a*expr) .subs( exp(b*expr), y )  ->  y ** (a/b)
             a, expr_terms = self.args[0].as_coeff_mul()
-            b, expr_terms_= old.args[0].as_coeff_mul()
+            b, expr_terms_= o.args[0].as_coeff_mul()
 
             if expr_terms == expr_terms_:
                 return new**(a/b)
@@ -162,28 +160,27 @@ class exp(Function):
 
             if arg.is_Add: # exp(2*x+a).subs(exp(3*x),y) -> y**(2/3) * exp(a)
                 # exp(exp(x) + exp(x**2)).subs(exp(exp(x)), w) -> w * exp(exp(x**2))
-                oarg = old.args[0]
+                oarg = o.args[0]
                 new_l = []
-                old_al = []
+                o_al = []
                 coeff2, terms2 = oarg.as_coeff_mul()
                 for a in arg.args:
-                    a = a._eval_subs(old, new)
+                    a = a._subs(o, new)
                     coeff1, terms1 = a.as_coeff_mul()
                     if terms1 == terms2:
                         new_l.append(new**(coeff1/coeff2))
                     else:
-                        old_al.append(a._eval_subs(old, new))
+                        o_al.append(a._subs(o, new))
                 if new_l:
-                    new_l.append(self.func(Add(*old_al)))
+                    new_l.append(self.func(Add(*o_al)))
                     r = Mul(*new_l)
                     return r
-        if old is S.Exp1:
+        if o is S.Exp1:
             # treat this however Pow is being treated
             u = C.Dummy('u')
             return (u**self.args[0]).subs(u, new)
 
-        old = o
-        return Function._eval_subs(self, old, new)
+        return Function._eval_subs(self, o, new)
 
     def _eval_is_real(self):
         return self.args[0].is_real

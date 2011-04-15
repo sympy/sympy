@@ -206,16 +206,21 @@ class Set(Basic):
         return result
 
     def _eval_subs(self, old, new):
-        if self == old:
-            return new
         new_args = []
+        hit = False
         for arg in self.args:
             if arg == old:
                 new_args.append(new)
+                hit = True
             elif isinstance(arg, Basic):
-                new_args.append(arg._eval_subs(old, new))
+                newa = arg._subs(old, new)
+                if not hit and newa != arg:
+                    hit = True
+                new_args.append(newa)
             else:
                 new_args.append(arg)
+        if not hit:
+            return self
         return self.__class__(*new_args)
 
     @property

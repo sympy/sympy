@@ -725,8 +725,6 @@ class tan(TrigonometricFunction):
             return True
 
     def _eval_subs(self, old, new):
-        if self == old:
-            return new
         arg = self.args[0]
         argnew = arg.subs(old, new)
         if arg != argnew and (argnew/(S.Pi/2)).is_odd:
@@ -895,8 +893,6 @@ class cot(TrigonometricFunction):
         return self.args[0].is_real
 
     def _eval_subs(self, old, new):
-        if self == old:
-            return new
         arg = self.args[0]
         argnew = arg.subs(old, new)
         if arg != argnew and (argnew/S.Pi).is_integer:

@@ -230,8 +230,6 @@ class Pow(Expr):
                 return True
 
     def _eval_subs(self, old, new):
-        if self == old:
-            return new
         if old.func is self.func and self.base == old.base:
             coeff1, terms1 = self.exp.as_coeff_mul()
             coeff2, terms2 = old.exp.as_coeff_mul()
@@ -246,7 +244,6 @@ class Pow(Expr):
                 pow = coeff1/coeff2
                 if pow.is_Integer or self.base.is_commutative:
                     return Pow(new, pow) # (x**(2*y)).subs(x**(3*y),z) -> z**(2/3)
-        return Pow(self.base._eval_subs(old, new), self.exp._eval_subs(old, new))
 
     def as_base_exp(self):
         """Return base and exp of self unless base is 1/Integer, then return Integer, -exp.

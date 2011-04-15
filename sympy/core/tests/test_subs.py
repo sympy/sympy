@@ -84,8 +84,8 @@ def test_dict():
     r = f.match(a*cos(b*x))
     assert r == {a: 3, b: 4}
     e =  a/b * sin(b*x)
-    assert e._subs_dict(r) == r[a]/r[b] * sin(r[b]*x)
-    assert e._subs_dict(r) == 3 * sin(4*x) / 4
+    assert e.subs(r) == r[a]/r[b] * sin(r[b]*x)
+    assert e.subs(r) == 3 * sin(4*x) / 4
 
 def test_dict_ambigous():   # see #467
     x = Symbol('x')
@@ -98,8 +98,8 @@ def test_dict_ambigous():   # see #467
     df= {x:y, exp(x): y}
     dg= {z:y, exp(z): y}
 
-    assert f._subs_dict(df) == y**2
-    assert g._subs_dict(dg) == y**2
+    assert f.subs(df) == y**2
+    assert g.subs(dg) == y**2
 
     # and this is how order can affect the result
     assert f .subs(x,y) .subs(exp(x),y)  == y*exp(y)
@@ -341,6 +341,10 @@ def test_add():
     assert e.subs(Add(*e.args[:2]), d) == d + e.args[2]
     assert e.subs(a**2 - c, d) == d - b
 
+    # the fallback should recognize when a change has
+    # been made; while .1 == Rational(1, 10) they are not the same and the change should be made
+    assert (0.1 + a).subs(0.1, Rational(1, 10)) == Rational(1, 10) + a
+
 def test_subs_issue910():
     assert (I*Symbol("a")).subs(1, 2) == I*Symbol("a")
 
@@ -380,8 +384,37 @@ def test_subs_iter():
     assert x.subs(Tuple((x, y))) == y
 
 def test_subs_dict():
-    x, y, z = symbols('x,y,z')
-    (2*x + y + z).subs(dict(x=1, y=2)) == 4 + z
+    a, b, c, d, e = symbols('a b c d e')
+    x, y, z = symbols('x y z')
+
+    assert (2*x + y + z).subs(dict(x=1, y=2)) == 4 + z
+
+    l = [(sin(x), 2), (x, 1)]
+    assert (sin(x)).subs(l) == \
+           (sin(x)).subs(dict(l)) == 2
+    assert sin(x).subs(reversed(l)) == sin(1)
+
+    expr = sin(2*x) + sqrt(sin(2*x))*cos(2*x)*sin(exp(x)*x)
+    reps = dict([
+               (sin(2*x), c),
+               (sqrt(sin(2*x)), a),
+               (cos(2*x), b),
+               (exp(x),e),
+               (x, d),
+               ])
+    assert expr.subs(reps) == c + a*b*sin(d*e)
+
+    l = [(x, 3), (y, x**2)]
+    assert (x+y).subs(l) == 3 + x**2
+    assert (x+y).subs(reversed(l)) == 12
+
+    # If changes are made to convert lists into dictionaries and do
+    # a dictionary-lookup replacement, these tests will help to catch
+    # some logical errors that might occur
+    l = [(y, z + 2), (1 + z, 5), (z, 2)]
+    assert (y - 1 + 3*x).subs(l) == 5 + 3*x
+    l = [(y, z + 2), (z, 3)]
+    assert (y - 2).subs(l) == 3
 
 def test_no_arith_subs_on_floats():
     a, x, y = symbols('a,x,y')

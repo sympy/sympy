@@ -203,17 +203,9 @@ class Sum(Expr):
             g = g.diff(i, 2)
         return s + iterm, abs(term)
 
-    def _eval_subs(self, old, new):
-        if self == old:
-            return new
-        newlimits = []
-        for lim in self.limits:
-            if lim[0] == old:
-                return self
-            newlimits.append( (lim[0],lim[1].subs(old,new),lim[2].subs(old,new)) )
-
-        return Sum(self.args[0].subs(old, new), *newlimits)
-
+    def _eval_subs(self, old, new): # XXX this should be the same as Integral's
+        if any(old == v for v in self.variables):
+            return self
 
 def summation(f, *symbols, **kwargs):
     """
