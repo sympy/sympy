@@ -8,7 +8,8 @@ def limit(e, z, z0, dir="real"):
 
     z0 can be any expression, including oo and -oo.
 
-    For dir="+" (default) it calculates the limit from the right
+    For dir = 'real' (default) it calculates the limit from both sides and returns the value of limit if and only if both are equal.
+    For dir="+" it calculates the limit from the right
     (z->z0+) and for dir="-" the limit from the left (z->z0-). For infinite z0
     (oo or -oo), the dir argument doesn't matter.
 
@@ -24,6 +25,13 @@ def limit(e, z, z0, dir="real"):
     -oo
     >>> limit(1/x, x, oo)
     0
+    >>> limit(abs(x)/x, x, 0)
+    LimitError: Limit(Abs(x)/x, x, 0, dir=real) does not exist. 
+    Right and left hand side limits are different
+    >>> limit(abs(x)/x, x, 0, dir = '+')
+    1
+    >>> limit(abs(x)/x, x, 0, dir = '-')
+    -1
 
     Strategy:
 
