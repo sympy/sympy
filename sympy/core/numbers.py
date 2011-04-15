@@ -898,7 +898,9 @@ class Integer(Rational):
             return Integer(-self.p)
 
     def __mod__(self, other):
-        return Integer(self.p % other)
+        if isinstance(other, Integer) or not isinstance(other, Rational):
+            return Integer(self.p % other)
+        return Rational.__mod__(self, other)
 
     def __rmod__(self, other):
         return Integer(other % self.p)
