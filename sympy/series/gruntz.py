@@ -209,76 +209,177 @@ def compare(a, b, x):
     else:
         return "="
 
+class SubsSet(dict):
+    """
+    Stores (expr, dummy) pairs, and how to rewrite expr-s.
+
+    The gruntz algorithm needs to rewrite certain expressions in term of a new
+    variable w. We cannot use subs, because it is just too smart for us. For
+    example:
+        > Omega=[exp(exp(_p - exp(-_p))/(1 - 1/_p)), exp(exp(_p))]
+        > O2=[exp(-exp(_p) + exp(-exp(-_p))*exp(_p)/(1 - 1/_p))/_w, 1/_w]
+        > e = exp(exp(_p - exp(-_p))/(1 - 1/_p)) - exp(exp(_p))
+        > e.subs(Omega[0],O2[0]).subs(Omega[1],O2[1])
+        -1/w + exp(exp(p)*exp(-exp(-p))/(1 - 1/p))
+    is really not what we want!
+
+    So we do it the hard way and keep track of all the things we potentially
+    want to substitute by dummy variables. Consider the expression
+        exp(x - exp(-x)) + exp(x) + x.
+    The mrv set is {exp(x), exp(-x), exp(x - exp(-x))}.
+    We introduce corresponding dummy variables d1, d2, d3 and rewrite:
+        d3 + d1 + x.
+    This class first of all keeps track of the mapping expr->variable, i.e.
+    will at this stage be a dictionary
+        {exp(x): d1, exp(-x): d2, exp(x - exp(-x)): d3}.
+    [It turns out to be more convenient this way round.]
+    But sometimes expressions in the mrv set have other expressions from the
+    mrv set as subexpressions, and we need to keep track of that as well. In
+    this case, d3 is really exp(x - d2), so rewrites at this stage is
+        {d3: exp(x-d2)}.
+
+    The function rewrite uses all this information to correctly rewrite our
+    expression in terms of w. In this case w can be choosen to be exp(-x),
+    i.e. d2. The correct rewriting then is
+        exp(-w)/w + 1/w + x.
+    """
+    def __init__(self):
+        self.rewrites = {}
+
+    def __repr__(self):
+        return super(SubsSet, self).__repr__() + ', ' + self.rewrites.__repr__()
+
+    def __getitem__(self, key):
+        if not key in self:
+            self[key] = Dummy()
+        return dict.__getitem__(self, key)
+
+    def do_subs(self, e):
+        for expr, var in self.iteritems():
+            e = e.subs(var, expr)
+        return e
+
+    def meets(self, s2):
+        """ Tell whether or not self and s2 have non-empty intersection """
+        return set(self.keys()).intersection(s2.keys()) != set()
+
+    def union(self, s2, exps=None):
+        """ Compute the union of self and s2, adjusting exps """
+        res = self.copy()
+        tr = {}
+        for expr, var in s2.iteritems():
+            if expr in self:
+                if exps: exps = exps.subs(var, res[expr])
+                tr[var] = res[expr]
+            else:
+                res[expr] = var
+        for var, rewr in s2.rewrites.iteritems():
+            res.rewrites[var] = rewr.subs(tr)
+        return res, exps
+
+    def copy(self):
+        r = SubsSet()
+        r.rewrites = self.rewrites.copy()
+        for expr, var in self.iteritems():
+            r[expr] = var
+        return r
+
 @debug
 def mrv(e, x):
-    "Returns a python set of  most rapidly varying (mrv) subexpressions of 'e'"
+    """Returns a SubsSet of  most rapidly varying (mrv) subexpressions of 'e',
+       and e rewritten in terms of these"""
     e = powsimp(e, deep=True, combine='exp')
     assert isinstance(e, Basic)
     if not e.has(x):
-        return set([])
+        return SubsSet(), e
     elif e == x:
-        return set([x])
+        s = SubsSet()
+        return s, s[x]
     elif e.is_Mul or e.is_Add:
-        while 1:
-            i, d = e.as_independent(x) # throw away x-independent terms
-            if d.func != e.func and (d.is_Add or d.is_Mul):
-                e = d
-                continue
-            break
+        i, d = e.as_independent(x) # throw away x-independent terms
         if d.func != e.func:
-            return mrv(d, x)
+            s, expr = mrv(d, x)
+            return s, e.func(i, expr)
         a, b = d.as_two_terms()
-        return mrv_max(mrv(a, x), mrv(b, x), x)
+        s1, e1 = mrv(a, x)
+        s2, e2 = mrv(b, x)
+        return mrv_max1(s1, s2, e.func(i, e1, e2), x)
     elif e.is_Pow:
         b, e = e.as_base_exp()
         if e.has(x):
             return mrv(exp(e * log(b)), x)
         else:
-            return mrv(b, x)
+            s, expr = mrv(b, x)
+            return s, expr**e
     elif e.func is log:
-        return mrv(e.args[0], x)
+        s, expr = mrv(e.args[0], x)
+        return s, log(expr)
     elif e.func is exp:
         # We know from the theory of this algorithm that exp(log(...)) may always
         # be simplified here, and doing so is vital for termination.
         if e.args[0].func is log:
             return mrv(e.args[0].args[0], x)
         if limitinf(e.args[0], x).is_unbounded:
-            return mrv_max(set([e]), mrv(e.args[0], x), x)
+            s1 = SubsSet()
+            e1 = s1[e]
+            s2, e2 = mrv(e.args[0], x)
+            su = s1.union(s2)[0]
+            su.rewrites[e1] = exp(e2)
+            return mrv_max3(s1, e1, s2, exp(e2), su, e1, x)
         else:
-            return mrv(e.args[0], x)
+            s, expr = mrv(e.args[0], x)
+            return s, exp(expr)
     elif e.is_Function:
-        return reduce(lambda a, b: mrv_max(a, b, x), [mrv(a, x) for a in e.args])
+        l = [mrv(a, x) for a in e.args]
+        l2 = [s for (s, _) in l if s != SubsSet()]
+        if len(l2) != 1:
+            # e.g. something like BesselJ(x, x)
+            raise NotImplementedError("MRV set computation for functions in"
+                                      " several variables not implemented.")
+        s, ss = l2[0], SubsSet()
+        args = map(lambda x: ss.do_subs(x[1]), l)
+        return s, e.func(*args)
     elif e.is_Derivative:
+        raise NotImplementedError("MRV set computation for derviatives"
+                                  " not implemented yet.")
         return mrv(e.args[0], x)
     raise NotImplementedError("Don't know how to calculate the mrv of '%s'" % e)
 
-def mrv_max(f, g, x):
+def mrv_max3(f, expsf, g, expsg, union, expsboth, x):
     """Computes the maximum of two sets of expressions f and g, which
     are in the same comparability class, i.e. max() compares (two elements of)
-    f and g and returns the set, which is in the higher comparability class
-    of the union of both, if they have the same order of variation.
+    f and g and returns either (f, expsf) [if f is larger], (g, expsg)
+    [if g is larger] or (union, expsboth) [if f, g are of the same class].
     """
-    assert isinstance(f, set)
-    assert isinstance(g, set)
-    if f == set([]):
-        return g
-    elif g == set([]):
-        return f
-    elif f.intersection(g) != set([]):
-        return f.union(g)
-    elif x in f:
-        return g
-    elif x in g:
-        return f
+    assert isinstance(f, SubsSet)
+    assert isinstance(g, SubsSet)
 
-    c = compare(list(f)[0], list(g)[0], x)
+    if f == SubsSet():
+        return g, expsg
+    elif g == SubsSet():
+        return f, expsf
+    elif f.meets(g):
+        return union, expsboth
+
+    c = compare(f.keys()[0], g.keys()[0], x)
     if c == ">":
-        return f
+        return f, expsf
     elif c == "<":
-        return g
+        return g, expsg
     else:
         assert c == "="
-        return f.union(g)
+        return union, expsboth
+
+def mrv_max1(f, g, exps, x):
+    """Computes the maximum of two sets of expressions f and g, which
+    are in the same comparability class, i.e. mrv_max1() compares (two elements of)
+    f and g and returns the set, which is in the higher comparability class
+    of the union of both, if they have the same order of variation.
+    Also returns exps, with the appropriate substitutions made.
+    """
+    u, b = f.union(g, exps)
+    return mrv_max3(f, g.do_subs(exps), g, f.do_subs(exps),
+                    u, b, x)
 
 @debug
 def sign(e, x):
@@ -369,18 +470,17 @@ def limitinf(e, x):
     elif sig == 0:
         return limitinf(c0, x) #e0=0: lim f = lim c0
 
+def moveup2(s, x):
+    r = SubsSet()
+    for expr, var in s.iteritems():
+        r[expr.subs(x, exp(x))] = var
+    for var, expr in s.rewrites.iteritems():
+        r.rewrites[var] = s.rewrites[var].subs(x, exp(x))
+    return r
+
 def moveup(l, x):
     return [e.subs(x, exp(x)) for e in l]
 
-def movedown(l, x):
-    return [e.subs(x, log(x)) for e in l]
-
-def subexp(e, sub):
-    """Is "sub" a subexpression of "e"? """
-    #we substitute some symbol for the "sub", and if the
-    #expression changes, the substitution was successful, thus the answer
-    #is yes.
-    return e.subs(sub, C.Dummy('u')) != e
 
 @debug
 def calculate_series(e, x, skip_abs=False, skip_log=False):
@@ -408,27 +508,26 @@ def calculate_series(e, x, skip_abs=False, skip_log=False):
     return series.subs(logx, log(x))
 
 @debug
-def mrv_leadterm(e, x, Omega=[]):
+def mrv_leadterm(e, x, Omega=SubsSet(), exps=None):
     """Returns (c0, e0) for e."""
     if not e.has(x):
         return (e, S.Zero)
-    Omega = [t for t in Omega if subexp(e, t)]
-    if Omega == []:
-        Omega = mrv(e, x)
+    if Omega == SubsSet():
+        assert exps is None
+        Omega, exps = mrv(e, x)
     if not Omega:
         # e really does not depend on x after simplification
         series = calculate_series(e, x)
         c0, e0 = series.leadterm(x)
         assert e0 == 0
         return c0, e0
-    if x in set(Omega):
+    if x in Omega:
         #move the whole omega up (exponentiate each term):
-        Omega_up = set(moveup(Omega, x))
+        Omega_up = moveup2(Omega, x)
         e_up = moveup([e], x)[0]
-        #calculate the lead term
-        mrv_leadterm_up = mrv_leadterm(e_up, x, Omega_up)
-        #move the result (c0, e0) down
-        return tuple(movedown(mrv_leadterm_up, x))
+        exps_up = moveup([exps], x)[0]
+        # NOTE: there is no need to move this down!
+        return mrv_leadterm(e_up, x, Omega_up, exps_up)
     #
     # The positive dummy, w, is used here so log(w*2) etc. will expand;
     # a unique dummy is needed in this algorithm
@@ -437,9 +536,9 @@ def mrv_leadterm(e, x, Omega=[]):
     # improved, or just find limits of Re and Im components separately.
     #
     w = Dummy("w", real=True, positive=True)
-    f, logw = rewrite(e, set(Omega), x, w)
-    series = calculate_series(f, w)
-    series = series.subs(log(w), logw)
+    f, logw = rewrite(exps, Omega, x, w)
+    series = calculate_series(f, w, logx=logw)
+    series = series.subs(log(w), logw) # this should not be necessary
     return series.leadterm(w)
 
 @debug
@@ -451,35 +550,59 @@ def rewrite(e, Omega, x, wsym):
     Returns the rewritten e in terms of w and log(w). See test_rewrite1()
     for examples and correct results.
     """
-    assert isinstance(Omega, set)
+    assert isinstance(Omega, SubsSet)
     assert len(Omega) != 0
     #all items in Omega must be exponentials
-    for t in Omega:
+    for t in Omega.keys():
         assert t.func is exp
+    # XXX We *really* want to just ensure that the rewritings will work.
+    #     Hence should sort as a tree!
     def cmpfunc(a, b):
-        return -cmp(len(mrv(a, x)), len(mrv(b, x)))
+        r = -cmp(len(mrv2(a[0], x)[0]), len(mrv2(b[0], x)[0]))
+        if r != 0:
+            return r
+        if a[1] in rewrites and rewrites[a[1]].has(b[1]):
+            return -1
+        if b[1] in rewrites and rewrites[b[1]].has(a[1]):
+            return 1
+        return 0
     #sort Omega (mrv set) from the most complicated to the simplest ones
     #the complexity of "a" from Omega: the length of the mrv set of "a"
-    Omega = list(Omega)
+    #Moreover if two expressions are equally complex, but one has to be
+    #rewritten in terms of the other, treat the former as smaller.
+    #An alternative would be to ignore rewrites in terms of supposedly more
+    #complex expressions, we know of the theory of the algorithm that this
+    #is permissible if we do everything else correctly.
+    rewrites = Omega.rewrites
+    Omega = Omega.items()
     Omega.sort(cmp=cmpfunc)
-    g = Omega[-1] #g is going to be the "w" - the simplest one in the mrv set
+    #print Omega, rewrites
+    g, _ = Omega[-1] #g is going to be the "w" - the simplest one in the mrv set
     sig = (sign(g.args[0], x) == 1)
     if sig:
         wsym = 1/wsym #if g goes to oo, substitute 1/w
     #O2 is a list, which results by rewriting each item in Omega using "w"
     O2 = []
-    for f in Omega:
+    for f, var in Omega:
         c = limitinf(f.args[0]/g.args[0], x)
-        O2.append(exp((f.args[0] - c*g.args[0]).expand())*wsym**c)
+        arg = f.args[0]
+        if var in rewrites:
+            assert rewrites[var].func is exp
+            arg = rewrites[var].args[0]
+        O2.append((var, exp((arg - c*g.args[0]).expand())*wsym**c))
 
     #Remember that Omega contains subexpressions of "e". So now we find
     #them in "e" and substitute them for our rewriting, stored in O2
 
     # the following powsimp is necessary to automatically combine exponentials,
     # so that the .subs() below succeeds:
+    # TODO this should not be necessary
     f = powsimp(e, deep=True, combine='exp')
-    for a, b in zip(Omega, O2):
+    for a, b in O2:
         f = f.subs(a, b)
+
+    for _, var in Omega:
+        assert (var is g) or not f.has(var)
 
     #finally compute the logarithm of w (logw).
     logw = g.args[0]

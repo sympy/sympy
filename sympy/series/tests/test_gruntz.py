@@ -86,68 +86,71 @@ def test_sign2():
     assert sign(y*x, x) == 1
     assert sign(-y*x, x) == -1
 
+def mmrv(a, b): return set(mrv(a, b)[0].keys())
+
 def test_mrv1():
-    assert mrv(x, x) == set([x])
-    assert mrv(x+1/x, x) == set([x])
-    assert mrv(x**2, x) == set([x])
-    assert mrv(log(x), x) == set([x])
-    assert mrv(exp(x), x) == set([exp(x)])
-    assert mrv(exp(-x), x) == set([exp(-x)])
-    assert mrv(exp(x**2), x) == set([exp(x**2)])
-    assert mrv(-exp(1/x), x) == set([x])
-    assert mrv(exp(x+1/x), x) == set([exp(x+1/x)])
+    assert mmrv(x, x) == set([x])
+    assert mmrv(x+1/x, x) == set([x])
+    assert mmrv(x**2, x) == set([x])
+    assert mmrv(log(x), x) == set([x])
+    assert mmrv(exp(x), x) == set([exp(x)])
+    assert mmrv(exp(-x), x) == set([exp(-x)])
+    assert mmrv(exp(x**2), x) == set([exp(x**2)])
+    assert mmrv(-exp(1/x), x) == set([x])
+    assert mmrv(exp(x+1/x), x) == set([exp(x+1/x)])
 
 def test_mrv2a():
-    assert mrv(exp(x+exp(-exp(x))), x) == set([exp(-exp(x))])
-    assert mrv(exp(x+exp(-x)), x) == set([exp(x+exp(-x)), exp(-x)])
-    assert mrv(exp(1/x+exp(-x)), x) == set([exp(-x)])
+    assert mmrv(exp(x+exp(-exp(x))), x) == set([exp(-exp(x))])
+    assert mmrv(exp(x+exp(-x)), x) == set([exp(x+exp(-x)), exp(-x)])
+    assert mmrv(exp(1/x+exp(-x)), x) == set([exp(-x)])
 
 #sometimes infinite recursion due to log(exp(x**2)) not simplifying
 def test_mrv2b():
-    assert mrv(exp(x+exp(-x**2)), x) == set([exp(-x**2)])
+    assert mmrv(exp(x+exp(-x**2)), x) == set([exp(-x**2)])
 
 #sometimes infinite recursion due to log(exp(x**2)) not simplifying
 def test_mrv2c():
-    assert mrv(exp(-x+1/x**2)-exp(x+1/x), x) == set([exp(x+1/x), exp(1/x**2-x)])
+    assert mmrv(exp(-x+1/x**2)-exp(x+1/x), x) == set([exp(x+1/x), exp(1/x**2-x)])
 
 #sometimes infinite recursion due to log(exp(x**2)) not simplifying
 def test_mrv3():
-    assert mrv(exp(x**2)+x*exp(x)+log(x)**x/x, x) == set([exp(x**2)])
-    assert mrv(exp(x)*(exp(1/x+exp(-x))-exp(1/x)), x) == set([exp(x), exp(-x)])
-    assert mrv(log(x**2+2*exp(exp(3*x**3*log(x)))), x) == set([exp(exp(3*x**3*log(x)))])
-    assert mrv(log(x-log(x))/log(x), x) == set([x])
-    assert mrv((exp(1/x-exp(-x))-exp(1/x))*exp(x), x) == set([exp(x), exp(-x)])
-    assert mrv(1/exp(-x+exp(-x))-exp(x), x) == set([exp(x), exp(-x), exp(x-exp(-x))])
-    assert mrv(log(log(x*exp(x*exp(x))+1)), x) == set([exp(x*exp(x))])
-    assert mrv(exp(exp(log(log(x)+1/x))), x) == set([x])
+    assert mmrv(exp(x**2)+x*exp(x)+log(x)**x/x, x) == set([exp(x**2)])
+    assert mmrv(exp(x)*(exp(1/x+exp(-x))-exp(1/x)), x) == set([exp(x), exp(-x)])
+    assert mmrv(log(x**2+2*exp(exp(3*x**3*log(x)))), x) == set([exp(exp(3*x**3*log(x)))])
+    assert mmrv(log(x-log(x))/log(x), x) == set([x])
+    assert mmrv((exp(1/x-exp(-x))-exp(1/x))*exp(x), x) == set([exp(x), exp(-x)])
+    assert mmrv(1/exp(-x+exp(-x))-exp(x), x) == set([exp(x), exp(-x), exp(x-exp(-x))])
+    assert mmrv(log(log(x*exp(x*exp(x))+1)), x) == set([exp(x*exp(x))])
+    assert mmrv(exp(exp(log(log(x)+1/x))), x) == set([x])
 
 def test_mrv4():
     ln = log
-    assert mrv((ln(ln(x)+ln(ln(x)))-ln(ln(x)))/ln(ln(x)+ln(ln(ln(x))))*ln(x),
+    assert mmrv((ln(ln(x)+ln(ln(x)))-ln(ln(x)))/ln(ln(x)+ln(ln(ln(x))))*ln(x),
             x) == set([x])
-    assert mrv(log(log(x*exp(x*exp(x))+1)) - exp(exp(log(log(x)+1/x))), x) == \
+    assert mmrv(log(log(x*exp(x*exp(x))+1)) - exp(exp(log(log(x)+1/x))), x) == \
         set([exp(x*exp(x))])
 
+def mrewrite(a, b, c): return rewrite(a[1], a[0], b, c)
 def test_rewrite1():
     e = exp(x)
-    assert rewrite(e, mrv(e, x), x, m) == (1/m, -x)
+    assert mrewrite(mrv(e, x), x, m) == (1/m, -x)
     e = exp(x**2)
-    assert rewrite(e, mrv(e, x), x, m) == (1/m, -x**2)
+    assert mrewrite(mrv(e, x), x, m) == (1/m, -x**2)
     e = exp(x+1/x)
-    assert rewrite(e, mrv(e, x), x, m) == (1/m, -x-1/x)
+    assert mrewrite(mrv(e, x), x, m) == (1/m, -x-1/x)
     e = 1/exp(-x+exp(-x))-exp(x)
-    assert rewrite(e, mrv(e, x), x, m) == (1/(m*exp(m))-1/m, -x)
+    assert mrewrite(mrv(e, x), x, m) == (1/(m*exp(m))-1/m, -x)
 
 def test_rewrite2():
     e = exp(x)*log(log(exp(x)))
-    assert mrv(e, x) == set([exp(x)])
-    assert rewrite(e, mrv(e, x), x, m) == (1/m*log(x), -x)
+    assert mmrv(e, x) == set([exp(x)])
+    assert mrewrite(mrv(e, x), x, m) == (1/m*log(x), -x)
 
 #sometimes infinite recursion due to log(exp(x**2)) not simplifying
 def test_rewrite3():
     e = exp(-x+1/x**2)-exp(x+1/x)
     #both of these are correct and should be equivalent:
-    assert rewrite(e, mrv(e, x), x, m) in [(-1/m + m*exp(1/x+1/x**2), -x-1/x), (m - 1/m*exp(1/x + x**(-2)), x**(-2) - x)]
+    assert mrewrite(mrv(e, x), x, m) in [(-1/m + m*exp(1/x+1/x**2), -x-1/x), (m - 1/m*exp(1/x + x**(-2)), x**(-2) - x)]
 
 def test_mrv_leadterm1():
     assert mrv_leadterm(-exp(1/x), x) == (-1, 0)
@@ -161,7 +164,7 @@ def test_mrv_leadterm2():
 
 def test_mrv_leadterm3():
     #Gruntz: p56, 3.27
-    assert mrv(exp(-x+exp(-x)*exp(-x*log(x))), x) == set([exp(-x-x*log(x))])
+    assert mmrv(exp(-x+exp(-x)*exp(-x*log(x))), x) == set([exp(-x-x*log(x))])
     assert mrv_leadterm(exp(-x+exp(-x)*exp(-x*log(x))), x) == (exp(-x), 0)
 
 def test_limit1():
