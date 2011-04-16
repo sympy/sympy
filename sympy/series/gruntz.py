@@ -417,7 +417,7 @@ def sign(e, x):
        for x sufficiently large. [If e is constant, of course, this is just
        the same thing as the sign of e.]
     """
-    ## from sympy import sign as _sign
+    from sympy import sign as _sign
     assert isinstance(e, Basic)
 
     if e.is_positive:
@@ -434,11 +434,7 @@ def sign(e, x):
         else:
             return -1
     elif not e.has(x):
-        # if we can't resolve the sign just return
-        # the value; another option would be an
-        # unevaluated sign
-        ## return _sign(e)
-        return e
+        return _sign(e)
     elif e == x:
         return 1
     elif e.is_Mul:
