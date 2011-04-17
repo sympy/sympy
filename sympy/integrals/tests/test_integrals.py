@@ -1,4 +1,4 @@
-from sympy import (S, symbols, integrate, Integral, Derivative, exp, oo, Symbol,
+from sympy import (S, symbols, integrate, Integral, Derivative, exp, erf, oo, Symbol,
         Function, Rational, log, sin, cos, pi, E, I, Poly, LambertW, diff,
         Matrix, sympify, sqrt, asin, asinh, acos, acosh, atan,
         DiracDelta, Heaviside, Lambda, sstr, Add, Tuple)
@@ -562,3 +562,10 @@ def test_issue2068():
     assert Integral(f(x), y, x, y, x).doit() == Integral(y**2*f(x)/2, x, x)
     assert Integral(f(x), (x, 1, 2), (w, 1, x), (z, 1, y)).doit() == \
            Integral(-f(x) + y*f(x), (x, 1, 2), (w, 1, x))
+
+def test_issue_1791():
+    z = Symbol('z', positive=True)
+    assert integrate(exp(-log(x)**2),x) == pi**(S(1)/2)*erf(-S(1)/2 + log(x))*exp(S(1)/4)/2
+    assert integrate(exp(log(x)**2),x) == -I*pi**(S(1)/2)*erf(I*log(x) + I/2)*exp(-S(1)/4)/2
+    assert integrate(exp(-z*log(x)**2),x) == \
+           pi**(S(1)/2)*erf(z**(S(1)/2)*log(x) - 1/(2*z**(S(1)/2)))*exp(S(1)/(4*z))/(2*z**(S(1)/2))
