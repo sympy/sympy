@@ -40,9 +40,9 @@ if sys.version_info[:2] < (2,4):
           sys.version_info[:2]
     sys.exit(-1)
 
-# Check that this list is uptodate against the result of the command (you can
-# omit the thirdparty/ dir):
-# $ find * -name __init__.py |sort
+# Check that this list is uptodate against the result of the command:
+# $ for i in `find * -name __init__.py |rev |cut -f 2- -d '/' |rev \
+#   |egrep -v "^sympy$|thirdparty" `;do echo "'${i//\//.}',"; done |sort
 modules = [
     'sympy.assumptions',
     'sympy.assumptions.handlers',
@@ -56,21 +56,21 @@ modules = [
     'sympy.geometry',
     'sympy.integrals',
     'sympy.interactive',
-    'sympy.matrices',
-    'sympy.ntheory',
-    'sympy.parsing',
-    'sympy.physics',
-    'sympy.plotting',
-    'sympy.tensor',
-    'sympy.thirdparty',
     'sympy.logic',
     'sympy.logic.algorithms',
     'sympy.logic.utilities',
+    'sympy.matrices',
     'sympy.mpmath',
-    'sympy.mpmath.libmp',
-    'sympy.mpmath.functions',
-    'sympy.mpmath.matrices',
     'sympy.mpmath.calculus',
+    'sympy.mpmath.functions',
+    'sympy.mpmath.libmp',
+    'sympy.mpmath.matrices',
+    'sympy.mpmath.tests',
+    'sympy.ntheory',
+    'sympy.parsing',
+    'sympy.physics',
+    'sympy.physics.quantum',
+    'sympy.plotting',
     'sympy.polys',
     'sympy.printing',
     'sympy.printing.pretty',
@@ -78,6 +78,7 @@ modules = [
     'sympy.simplify',
     'sympy.solvers',
     'sympy.statistics',
+    'sympy.tensor',
     'sympy.utilities',
     'sympy.utilities.mathml',
     ]
@@ -207,6 +208,7 @@ tests = [
     'sympy.mpmath.tests',
     'sympy.ntheory.tests',
     'sympy.parsing.tests',
+    'sympy.physics.quantum.tests',
     'sympy.physics.tests',
     'sympy.plotting.tests',
     'sympy.polys.tests',
@@ -217,6 +219,7 @@ tests = [
     'sympy.slow_tests',
     'sympy.solvers.tests',
     'sympy.statistics.tests',
+    'sympy.tensor.tests',
     'sympy.test_external',
     'sympy.utilities.tests',
     ]

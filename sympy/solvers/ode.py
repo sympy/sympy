@@ -647,8 +647,8 @@ def classify_ode(eq, func, dict=False):
             u = Dummy('u')
             ind, dep = (reduced_eq + u).as_independent(f)
             ind, dep = [tmp.subs(u, 0) for tmp in [ind, dep]]
-        r = {a: dep.coeff(df, expand=False) or S.Zero, # if we get None for coeff, take 0
-             b: dep.coeff(f(x), expand=False) or S.Zero, # ditto
+        r = {a: dep.coeff(df) or S.Zero, # if we get None for coeff, take 0
+             b: dep.coeff(f(x)) or S.Zero, # ditto
              c: ind}
         # double check f[a] since the preconditioning may have failed
         if not r[a].has(f) and (r[a]*df + r[b]*f(x) + r[c]).expand() - reduced_eq == 0:
@@ -2696,7 +2696,7 @@ def _solve_variation_of_parameters(eq, func, order, match):
     """
     Helper function for the method of variation of parameters.
 
-    See the ode_nth_linear_constant_coeff_undetermined_coefficients()
+    See the ode_nth_linear_constant_coeff_variation_of_parameters()
     docstring for more information on this method.
 
     match should be a dictionary that has the following keys:

@@ -1,10 +1,14 @@
-from sympy.core import S, C, sympify
+from sympy.core import S, C, sympify, symbol
 from sympy.simplify import simplify, trigsimp
 from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.complexes import im
 from sympy.geometry.exceptions import GeometryError
+from sympy.solvers import solve_poly_system, solve
 from entity import GeometryEntity
 from point import Point
 from line import LinearEntity, Line
+
+from sympy.abc import x
 
 class Ellipse(GeometryEntity):
     """
@@ -99,9 +103,12 @@ class Ellipse(GeometryEntity):
     @property
     def circumference(self):
         """The circumference of the ellipse."""
-        # TODO It's fairly complicated, but we could use Ramanujan's
-        #      approximation.
-        raise NotImplementedError
+        if self.eccentricity == 1:
+            return 2*pi*self.hradius
+        else:
+            return 4 * self.hradius * \
+                   C.Integral(sqrt((1 - (self.eccentricity*x)**2)/(1 - x**2)), \
+                              (x, 0, 1))
 
     @property
     def eccentricity(self):
@@ -141,8 +148,6 @@ class Ellipse(GeometryEntity):
             return (c, c)
 
         hr, vr = self.hradius, self.vradius
-        if hr.has(C.Symbol) or vr.has(C.Symbol):
-            raise ValueError("foci can only be determined on non-symbolic radii")
 
         # calculate focus distance (manually, since focus_distance calls this routine)
         h = sqrt(abs(vr**2 - hr**2))
@@ -283,7 +288,80 @@ class Ellipse(GeometryEntity):
                 result.append( lp[0] + (lp[1] - lp[0]) * t_b )
         return result
 
+    def _do_circle_intersection(self, o):
+        """
+        Find intersection of an Ellipse and a Circle.
+        """
+        variables = self.equation().atoms(C.Symbol)
+        if len(variables) > 2:
+            return None
+        if self.center == o.center:
+            a, b, r = o.hradius, o.vradius, self.radius
+            x = a*sqrt(simplify((r**2 - b**2)/(a**2 - b**2)))
+            y = b*sqrt(simplify((a**2 - r**2)/(a**2 - b**2)))
+            return list(set([Point(x,y), Point(x,-y), Point(-x,y), Point(-x,-y)]))
+        else:
+            x, y = variables
+            xx = solve(self.equation(), x)
+            intersect = []
+            for xi in xx:
+                yy = solve(o.equation().subs(x, xi), y)
+                for yi in yy:
+                    intersect.append(Point(xi, yi))
+            return list(set(intersect))
+
+    def _do_ellipse_intersection(self, o):
+        """
+        Find the intersection of two ellipses.
+        """
+        seq = self.equation()
+        variables = self.equation().atoms(C.Symbol)
+        if len(variables) > 2:
+            return None
+        x, y = variables
+        oeq = o.equation(x=x, y=y)
+        # until the following line works...
+        # result = solve([seq, oeq], [x, y])
+        # return [Point(*r) for r in result if im(r[0]).is_zero and im(r[1]).is_zero]
+        # we do this:
+        if self.center[0] == o.center[0] or self.center[1] == o.center[1]:
+            result = solve_poly_system([seq, oeq], x, y)
+            return [Point(*r) for r in result if im(r[0]).is_zero and im(r[1]).is_zero]
+
+        raise NotImplementedError("Off-axis Ellipse intersection not supported.")
+
     def intersection(self, o):
+        """
+        Find points than both lie on current ellipse and object 'o'.
+        Currently supported intersections between Ellipse and:
+        Point, Line (including Segment and Ray), Ellipse and Circle.
+
+        Example:
+        ========
+        >>> from sympy import Ellipse, Point, Line, sqrt
+        >>> e = Ellipse(Point(0, 0), 5, 7)
+        >>> print e.intersection(Point(0, 0))
+        []
+        >>> print map(tuple, e.intersection(Point(5, 0)))
+        [(5, 0)]
+        >>> print map(tuple, e.intersection(Line(Point(0,0), Point(0, 1))))
+        [(0, -7), (0, 7)]
+        >>> print map(tuple, e.intersection(Line(Point(5,0), Point(5, 1))))
+        [(5, 0)]
+        >>> print e.intersection(Line(Point(6,0), Point(6, 1)))
+        []
+        >>> e = Ellipse(Point(-1, 0), 4, 3)
+        >>> print map(tuple, e.intersection(Ellipse(Point(1, 0), 4, 3)))
+        [(0, -3*15**(1/2)/4), (0, 3*15**(1/2)/4)]
+        >>> print map(tuple, e.intersection(Ellipse(Point(5, 0), 4, 3)))
+        [(2, -3*7**(1/2)/4), (2, 3*7**(1/2)/4)]
+        >>> print map(tuple, e.intersection(Ellipse(Point(100500, 0), 4, 3)))
+        []
+        >>> print map(tuple, e.intersection(Ellipse(Point(0, 0), 3, 4)))
+        [(-363/175, -48*111**(1/2)/175), (-363/175, 48*111**(1/2)/175), (3, 0)]
+        >>> print map(tuple, e.intersection(Ellipse(Point(-1, 0), 3, 4)))
+        [(-17/5, -12/5), (-17/5, 12/5), (7/5, -12/5), (7/5, 12/5)]
+        """
         if isinstance(o, Point):
             if o in self:
                 return [o]
@@ -298,12 +376,13 @@ class Ellipse(GeometryEntity):
                     if result[ind] not in o:
                         del result[ind]
             return result
+        elif isinstance(o, Circle):
+            return self._do_circle_intersection(o)
         elif isinstance(o, Ellipse):
             if o == self:
                 return self
             else:
-                # TODO This is a bit more complicated
-                pass
+                return self._do_ellipse_intersection(o)
 
         raise NotImplementedError()
 
@@ -327,8 +406,7 @@ class Ellipse(GeometryEntity):
             y = C.Dummy('y', real=True)
 
             res = self.equation(x, y).subs({x: o[0], y: o[1]})
-            res = trigsimp(simplify(res))
-            return res == 0
+            return trigsimp(simplify(res)) is S.Zero
         elif isinstance(o, Ellipse):
             return (self == o)
         return False
@@ -404,8 +482,16 @@ class Circle(Ellipse):
 
     def intersection(self, o):
         if isinstance(o, Circle):
+            if o.center == self.center:
+                if o.radius == self.radius:
+                    return o
+                return []
             dx,dy = o.center - self.center
             d = sqrt( simplify(dy**2 + dx**2) )
+            R = o.radius + self.radius
+            if d > R or d < abs(self.radius - o.radius):
+                return []
+
             a = simplify((self.radius**2 - o.radius**2 + d**2) / (2*d))
 
             x2 = self.center[0] + (dx * a/d)
@@ -424,10 +510,5 @@ class Circle(Ellipse):
             if xi_1 != xi_2 or yi_1 != yi_2:
                 ret.append(Point(xi_2, yi_2))
             return ret
-        elif isinstance(o, Ellipse):
-            a, b, r = o.hradius, o.vradius, self.radius
-            x = a*sqrt(simplify((r**2 - b**2)/(a**2 - b**2)))
-            y = b*sqrt(simplify((a**2 - r**2)/(a**2 - b**2)))
-            return list(set([Point(x,y), Point(x,-y), Point(-x,y), Point(-x,-y)]))
 
         return Ellipse.intersection(self, o)

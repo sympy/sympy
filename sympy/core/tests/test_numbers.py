@@ -1,5 +1,5 @@
 from sympy import Rational, Symbol, Real, I, sqrt, oo, nan, pi, E, Integer, \
-        S, factorial, Catalan, EulerGamma, GoldenRatio, cos, exp
+        S, factorial, Catalan, EulerGamma, GoldenRatio, cos, exp, Number
 from sympy.core.power import integer_nthroot
 
 from sympy.core.numbers import igcd, ilcm, igcdex, seterr
@@ -38,6 +38,13 @@ def test_mod():
     b = Integer(4)
 
     assert type(a % b) == Integer
+
+def test_divmod():
+    assert divmod(S(12), S(8)) == (1, 4)
+    assert divmod(-S(12), S(8)) == (-2, 4)
+    assert divmod(S(0), S(1)) == (0, 0)
+    raises(ZeroDivisionError, "divmod(S(0), S(0))")
+    raises(ZeroDivisionError, "divmod(S(1), S(0))")
 
 def test_igcd():
     assert igcd(0, 0) == 0
@@ -129,6 +136,7 @@ def test_Rational_new():
     assert Rational('.76').limit_denominator(4) == n3_4
     assert Rational(19, 25).limit_denominator(4) == n3_4
     assert Rational('19/25').limit_denominator(4) == n3_4
+    raises(ValueError, "Rational('1/2 + 2/3')")
 
     # handle fractions.Fraction instances
     try:
@@ -136,6 +144,26 @@ def test_Rational_new():
         assert Rational(fractions.Fraction(1, 2)) == Rational(1, 2)
     except ImportError:
         pass
+
+def test_Number_new():
+    """"
+    Test for Number constructor
+    """
+    # Expected behavior on numbers and strings
+    assert Number(1) is S.One
+    assert Number(2).__class__ is Integer
+    assert Number(-622).__class__ is Integer
+    assert Number(5,3).__class__ is Rational
+    assert Number(5.3).__class__ is Real
+    assert Number('1') is S.One
+    assert Number('2').__class__ is Integer
+    assert Number('-622').__class__ is Integer
+    assert Number('5/3').__class__ is Rational
+    assert Number('5.3').__class__ is Real
+    raises(ValueError, "Number('cos')")
+    raises(TypeError, "Number(cos)")
+    a = Rational(3,5)
+    assert Number(a) is a # Check idempotence on Numbers
 
 def test_Rational_cmp():
     n1 = Rational(1,4)
@@ -186,6 +214,18 @@ def test_Real():
     # but are different at the mpf level
     assert Real(1.2)._mpf_ == (0, 5404319552844595L, -52, 53)
     assert x2_str._mpf_ == (0, 10808639105689190L, -53, 53)
+
+    # do not automatically evalf
+    def teq(a):
+        assert (a.evalf () == a) is False
+        assert (a.evalf () != a) is True
+        assert (a == a.evalf()) is False
+        assert (a != a.evalf()) is True
+
+    teq(pi)
+    teq(2*pi)
+    teq(cos(0.1, evaluate=False))
+
 
 def test_Real_eval():
     a = Real(3.2)
@@ -397,7 +437,7 @@ def test_dont_accept_str():
 
 def test_int():
     a = Rational(5)
-    assert int(a)==5
+    assert int(a) == 5
     a = Rational(9, 10)
     assert int(a) == int(-a) == 0
     assert 1/(-1)**Rational(2, 3) == -(-1)**Rational(1, 3)
@@ -595,3 +635,7 @@ def test_relational():
     x = pi
     assert (x != cos) is True
     assert (x == cos) is False
+
+def test_Integer_as_index():
+    if hasattr(int, '__index__'): # Python 2.5+ (PEP 357)
+        assert 'hello'[Integer(2):] == 'llo'

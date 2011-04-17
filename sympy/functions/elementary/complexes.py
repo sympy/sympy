@@ -78,8 +78,6 @@ class re(Function):
         return self.args[0].as_real_imag()[0]
 
     def _eval_derivative(self, x):
-        if not self.has(x):
-            return S.Zero
         return re(Derivative(self.args[0], x, **{'evaluate': True}))
 
 class im(Function):
@@ -150,8 +148,6 @@ class im(Function):
         return self.args[0].as_real_imag()[1]
 
     def _eval_derivative(self, x):
-        if not self.has(x):
-            return S.Zero
         return im(Derivative(self.args[0], x, **{'evaluate': True}))
 
 ###############################################################################
@@ -190,6 +186,9 @@ class sign(Function):
             return iff(is_neg, S.NegativeOne, S.One) * cls(arg._new_rawargs(*unk))
 
     is_bounded = True
+
+    def _eval_derivative(self, x):
+        return S.Zero
 
     def _eval_conjugate(self):
         return self
@@ -291,8 +290,6 @@ class Abs(Function):
         return sage.abs_symbolic(self.args[0]._sage_())
 
     def _eval_derivative(self, x):
-        if not self.has(x):
-            return S.Zero
         if self.args[0].is_real:
             return Derivative(self.args[0], x, **{'evaluate': True}) * sign(self.args[0])
         return (re(self.args[0]) * re(Derivative(self.args[0], x,
@@ -319,8 +316,6 @@ class arg(Function):
 
     def _eval_derivative(self, t):
         x, y = re(self.args[0]), im(self.args[0])
-        if not self.has(t):
-            return S.Zero
         return (x * Derivative(y, t, **{'evaluate': True}) - y *
                 Derivative(x, t, **{'evaluate': True})) / (x**2 + y**2)
 
@@ -346,8 +341,6 @@ class conjugate(Function):
         return self.args[0]
 
     def _eval_derivative(self, x):
-        if not self.has(x):
-            return S.Zero
         return conjugate(Derivative(self.args[0], x, **{'evaluate': True}))
 
 # /cyclic/

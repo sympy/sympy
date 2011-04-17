@@ -164,7 +164,8 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False):
         for r in repeated:
             sym, pre, pre_d, post_d, repetend = r
             zeros = '0'*len(post_d)
-            rep = '%s(%s+%s*1/1%s+%s*1/%s%s)' % (pre, pre_d or '0', post_d or '0', zeros, repetend, '9'*len(repetend), zeros)
+            repetends = repetend.lstrip('0')
+            rep = '%s(%s+%s*1/1%s+%s*1/%s%s)' % (pre, pre_d or '0', post_d or '0', zeros, repetends, '9'*len(repetend), zeros)
             a = a.replace(sym, M, 1)
             reps.append(rep)
 

@@ -47,7 +47,7 @@ class ReprPrinter(Printer):
 
     def _print_GeometryEntity(self, expr):
         # GeometryEntity is special -- its base is tuple
-        return repr(expr)
+        return type(expr).__name__ + srepr(tuple(expr))
 
     def _print_Infinity(self, expr):
         return 'Infinity'

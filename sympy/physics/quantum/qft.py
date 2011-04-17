@@ -15,7 +15,7 @@ from sympy.functions import sqrt
 
 from sympy.physics.quantum.qapply import qapply
 from sympy.physics.quantum.qexpr import QuantumError, QExpr
-from sympy.matrices.matrices import zeros, eye
+from sympy.matrices.matrices import eye
 from sympy.physics.quantum.tensorproduct import matrix_tensor_product
 
 from sympy.physics.quantum.gate import (

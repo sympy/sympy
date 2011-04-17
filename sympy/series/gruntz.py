@@ -374,6 +374,12 @@ def mrv_leadterm(e, x, Omega=[]):
     Omega = [t for t in Omega if subexp(e, t)]
     if Omega == []:
         Omega = mrv(e, x)
+    if not Omega:
+        # e really does not depend on x after simplification
+        series = calculate_series(e, x)
+        c0, e0 = series.leadterm(x)
+        assert e0 == 0
+        return c0, e0
     if x in set(Omega):
         #move the whole omega up (exponentiate each term):
         Omega_up = set(moveup(Omega, x))

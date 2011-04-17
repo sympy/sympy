@@ -1,18 +1,17 @@
-from sympy import SYMPY_DEBUG
+from sympy import SYMPY_DEBUG, terms_gcd
 
 from sympy.core import Basic, S, C, Add, Mul, Pow, Rational, Integer, \
         Derivative, Wild, Symbol, sympify, expand, expand_mul, expand_func, \
         Function, Equality, Dummy
 
 from sympy.core.numbers import igcd
-from sympy.core.relational import Equality
 
 from sympy.utilities import all, any, flatten
 from sympy.functions import gamma, exp, sqrt, log
 
 from sympy.simplify.cse_main import cse
 
-from sympy.polys import Poly, cancel, factor
+from sympy.polys import cancel, factor
 
 import sympy.mpmath as mpmath
 
@@ -217,8 +216,6 @@ def together(expr, deep=False):
     """
 
     def _together(expr):
-
-        from sympy.core.function import Function
 
         if expr.is_Add:
             items, coeffs, basis = [], [], {}
@@ -744,8 +741,6 @@ def _separatevars(expr):
     if not _expr.is_Add:
         expr = _expr
 
-    _coeff = Dummy('_coeff')
-
     if expr.is_Add:
 
         nonsepar = sympify(0)
@@ -888,7 +883,6 @@ def trigsimp(expr, deep=False, recursive=False):
         log(2)
 
     """
-    from sympy.core import S
     sin, cos, tan, cot = C.sin, C.cos, C.tan, C.cot
     if not expr.has(sin, cos, tan, cot):
         return expr
@@ -955,7 +949,6 @@ def trigsimp_nonrecursive(expr, deep=False):
         log(2)
 
     """
-    from sympy.core import S
     sin, cos, tan, cot = C.sin, C.cos, C.tan, C.cot
 
     if expr.is_Function:
@@ -1184,8 +1177,6 @@ def powdenest(eq, force=False):
     (n**i)**x
 
     """
-
-    from sympy import terms_gcd
 
     if force:
         eq, rep = posify(eq)

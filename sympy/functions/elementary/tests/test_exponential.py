@@ -1,5 +1,5 @@
-from sympy import symbols, log, Real, nan, oo, I, pi, E, exp, Symbol, \
-        LambertW, sqrt, Rational, sin, expand_log, sign
+from sympy import (symbols, log, Real, nan, oo, I, pi, E, exp, Symbol,
+        LambertW, sqrt, Rational, sin, expand_log, S, sign)
 from sympy.utilities.pytest import XFAIL
 
 def test_exp_values():
@@ -35,9 +35,6 @@ def test_exp_values():
     assert exp(x*log(x)) != x**x
     assert exp(sin(x)*log(x)) != x
 
-    assert exp(x).as_base_exp() == (E, x)
-    assert exp(-x).as_base_exp() == (E, -x)
-
 def test_exp_log():
     x = Symbol("x", real=True)
     assert log(exp(x)) == x
@@ -55,14 +52,18 @@ def test_exp_expand():
 def test_exp__as_base_exp():
     x,y = symbols('x,y')
 
-    assert exp(x)   .as_base_exp()  == (E, x)
-    assert exp(2*x) .as_base_exp()  == (E, 2*x)
-    assert exp(x*y) .as_base_exp()  == (E, x*y)
+    assert exp(x).as_base_exp() == (E, x)
+    assert exp(2*x).as_base_exp() == (E, 2*x)
+    assert exp(x*y).as_base_exp() == (E, x*y)
+    assert exp(-x).as_base_exp() == (E, -x)
 
     # Pow( *expr.as_base_exp() ) == expr    invariant should hold
     assert E**x     == exp(x)
     assert E**(2*x) == exp(2*x)
     assert E**(x*y) == exp(x*y)
+
+    assert exp(x).base is S.Exp1
+    assert exp(x).exp == x
 
 def test_exp_infinity():
     y = Symbol('y')

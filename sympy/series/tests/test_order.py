@@ -1,4 +1,4 @@
-from sympy import Symbol, Rational, Order, C, exp, ln, log, O, var, nan, pi, S, symbols
+from sympy import Symbol, Rational, Order, C, exp, ln, log, O, var, nan, pi, S
 from sympy.utilities.pytest import XFAIL, raises
 from sympy.abc import w, x, y, z
 
@@ -8,7 +8,6 @@ def test_caching_bug():
     e = O(w)
     #and test that this won't raise an exception
     f = O(w**(-1/x/log(3)*log(5)), w)
-
 
 def test_simple_1():
     o = Rational(0)
@@ -21,6 +20,9 @@ def test_simple_1():
     assert Order(x*exp(1/x)).expr == x*exp(1/x)
     assert Order(x**(o/3)).expr == x**(o/3)
     assert Order(x**(5*o/3)).expr == x**(5*o/3)
+    assert Order(x**2 + x + y, x) == \
+           Order(x**2 + x + y, y) == O(1)
+    raises(NotImplementedError, 'Order(x, 2 - x)')
 
 def test_simple_2():
     assert Order(2*x)*x == Order(x**2)

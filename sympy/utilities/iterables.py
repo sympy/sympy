@@ -78,11 +78,11 @@ def postorder_traversal(node):
                 yield subtree
     yield node
 
-def preorder_traversal(node):
+class preorder_traversal(object):
     """
     Do a pre-order traversal of a tree.
 
-    This generator recursively yields nodes that it has visited in a pre-order
+    This iterator recursively yields nodes that it has visited in a pre-order
     fashion. That is, it yields the current node then descends through the tree
     breadth-first to yield all of a node's children's pre-order traversal.
 
@@ -105,15 +105,49 @@ def preorder_traversal(node):
     True
 
     """
-    yield node
-    if isinstance(node, Basic):
-        for arg in node.args:
-            for subtree in preorder_traversal(arg):
-                yield subtree
-    elif hasattr(node, "__iter__"):
-        for item in node:
-            for subtree in preorder_traversal(item):
-                yield subtree
+    def __init__(self, node):
+        self._skip_flag = False
+        self._pt = self._preorder_traversal(node)
+
+    def _preorder_traversal(self, node):
+        yield node
+        if self._skip_flag:
+            self._skip_flag = False
+            return
+        if isinstance(node, Basic):
+            for arg in node.args:
+                for subtree in self._preorder_traversal(arg):
+                    yield subtree
+        elif hasattr(node, "__iter__"):
+            for item in node:
+                for subtree in self._preorder_traversal(item):
+                    yield subtree
+
+    def skip(self):
+        """
+        Skip yielding current node's (last yielded node's) subtrees.
+
+        Examples
+        --------
+        >>> from sympy import symbols
+        >>> from sympy.utilities.iterables import preorder_traversal
+        >>> from sympy.abc import x, y, z
+        >>> pt = preorder_traversal((x+y*z)*z)
+        >>> for i in pt:
+        ...     print i
+        ...     if i == x+y*z:
+        ...             pt.skip()
+        z*(x + y*z)
+        z
+        x + y*z
+        """
+        self._skip_flag = True
+
+    def next(self):
+        return self._pt.next()
+
+    def __iter__(self):
+        return self
 
 def cartes(*seqs):
     """Return Cartesian product (combinations) of items from iterable
@@ -307,3 +341,44 @@ def capture(func):
     func()
     sys.stdout = stdout
     return file.getvalue()
+
+def sift(expr, keyfunc):
+    """Sift the arguments of expr into a dictionary according to keyfunc.
+
+    INPUT: expr may be an expression or iterable; if it is an expr then
+    it is converted to a list of expr's args or [expr] if there are no args.
+
+    OUTPUT: each element in expr is stored in a list keyed to the value
+    of keyfunc for the element.
+
+    EXAMPLES:
+
+    >>> from sympy.utilities import sift
+    >>> from sympy.abc import x, y
+    >>> from sympy import sqrt, exp
+
+    >>> sift(range(5), lambda x: x%2)
+    {1: [1, 3], 0: [0, 2, 4]}
+
+    It is possible that some keys are not present, in which case you should
+    used dict's .get() method:
+
+    >>> sift(x+y, lambda x: x.is_commutative)
+    {True: [y, x]}
+    >>> _.get(False, [])
+    []
+
+    Sometimes you won't know how many keys you will get:
+    >>> sift(sqrt(x) + x**2 + exp(x) + (y**x)**2,
+    ... lambda x: x.as_base_exp()[0])
+    {E: [exp(x)], x: [x**(1/2), x**2], y: [y**(2*x)]}
+    >>> _.keys()
+    [E, x, y]
+
+    """
+    d = {}
+    if hasattr(expr, 'args'):
+        expr = expr.args or [expr]
+    for e in expr:
+        d.setdefault(keyfunc(e), []).append(e)
+    return d

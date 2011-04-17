@@ -1107,8 +1107,8 @@ class FockState(Expr):
           Element 0 is the state that was occupied first, element i
           is the i'th occupied state.
         """
-        o = map(sympify, occupations)
-        obj = Basic.__new__(cls, tuple(o), commutative=False)
+        occupations = map(sympify, occupations)
+        obj = Basic.__new__(cls, Tuple(*occupations), commutative=False)
         return obj
 
     def _eval_subs(self, old, new):
@@ -1212,7 +1212,7 @@ class FermionState(FockState):
         >>> p = Symbol('p')
 
         >>> FKet([]).up(a)
-        FockStateFermionKet((a,))
+        FockStateFermionKet(Tuple(a))
 
         A creator acting on vacuum below fermi vanishes
         >>> FKet([]).up(i)
@@ -1264,7 +1264,7 @@ class FermionState(FockState):
         >>> FKet([]).down(i)
         0
         >>> FKet([],4).down(i)
-        FockStateFermionKet((i,))
+        FockStateFermionKet(Tuple(i))
 
         """
         present = i in self.args[0]

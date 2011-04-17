@@ -58,6 +58,10 @@ class sinh(Function):
                 x = arg.args[0]
                 return x/sqrt(1-x**2)
 
+            if arg.func == acoth:
+                x = arg.args[0]
+                return 1/(sqrt(x-1) * sqrt(x+1))
+
     @staticmethod
     @cacheit
     def taylor_term(n, x, *previous_terms):
@@ -175,6 +179,10 @@ class cosh(Function):
 
             if arg.func == atanh:
                 return 1/sqrt(1-arg.args[0]**2)
+
+            if arg.func == acoth:
+                x = arg.args[0]
+                return x/(sqrt(x-1) * sqrt(x+1))
 
     @staticmethod
     @cacheit
@@ -297,6 +305,9 @@ class tanh(Function):
             if arg.func == atanh:
                 return arg.args[0]
 
+            if arg.func == acoth:
+                return 1/arg.args[0]
+
     @staticmethod
     @cacheit
     def taylor_term(n, x, *previous_terms):
@@ -406,6 +417,20 @@ class coth(Function):
             else:
                 if arg.as_coeff_mul()[0].is_negative:
                     return -cls(-arg)
+
+            if arg.func == asinh:
+                x = arg.args[0]
+                return sqrt(1+x**2)/x
+
+            if arg.func == acosh:
+                x = arg.args[0]
+                return x/(sqrt(x-1) * sqrt(x+1))
+
+            if arg.func == atanh:
+                return 1/arg.args[0]
+
+            if arg.func == acoth:
+                return arg.args[0]
 
     @staticmethod
     @cacheit

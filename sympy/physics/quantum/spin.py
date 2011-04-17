@@ -266,7 +266,7 @@ class J2Op(SpinOpBase, HermitianOperator):
 
     def _apply_operator_JzKet(self, ket, **options):
         j = ket.j
-        return hbar**2**j(j+1)*ket
+        return hbar**2*j*(j+1)*ket
 
     def matrix_element(self, j, m, jp, mp):
         result = (hbar**2)*j*(j+1)
@@ -349,6 +349,7 @@ class Rotation(UnitaryOperator):
         # The Jacobi Polynomial expansion is probably best as it is a simple
         # sum. But, this version does give correct answers and uses
         # Eq. 7 in Section 4.3.2 of Varshalovich.
+        j = sympify(j)
         cosbeta = Symbol('cosbeta')
         x = 1-cosbeta
         y = 1+cosbeta

@@ -11,6 +11,9 @@ Todo:
 * Get scale and figsize to be handled in a better way.
 """
 
+from sympy import Mul
+from sympy.physics.quantum.gate import Gate
+
 __all__ = [
     'CircuitPlot',
     'circuit_plot'
@@ -96,8 +99,14 @@ else:
                 self._axes.add_line(line)
 
         def _plot_gates(self):
-            """Interate through the gates and plot each of them."""
-            gates = reversed(self.circuit.args)
+            """Iterate through the gates and plot each of them."""
+            gates = []
+            if isinstance(self.circuit, Mul):
+                for g in reversed(self.circuit.args):
+                    if isinstance(g, Gate):
+                        gates.append(g)
+            elif isinstance(self.circuit, Gate):
+                gates.append(self.circuit)
             for i, gate in enumerate(gates):
                 gate.plot_gate(self, i)
 

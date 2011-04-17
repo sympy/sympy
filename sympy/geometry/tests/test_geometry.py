@@ -1,8 +1,8 @@
-from sympy import Symbol, Rational, sqrt, pi, cos, oo, simplify, Real
+from sympy import C, S, Symbol, Rational, sqrt, pi, cos, oo, simplify, Real, Abs
 from sympy.geometry import (Point, Polygon, convex_hull, Segment,
     RegularPolygon, Circle, Ellipse, GeometryError, Line, intersection, Ray,
     Triangle, are_similar, Curve)
-from sympy.utilities.pytest import raises
+from sympy.utilities.pytest import raises, XFAIL
 
 x = Symbol('x', real=True)
 y = Symbol('y', real=True)
@@ -209,7 +209,14 @@ def test_ellipse():
     assert e2.area == pi/2
     assert e3.area == pi*(y1**2)
     assert c1.area == e1.area
-    assert c1.circumference == 2*pi
+    assert c1.circumference == e1.circumference
+    assert e3.circumference == 2*pi*y1
+
+    a = Symbol('a')
+    b = Symbol('b')
+    e5 = Ellipse(p1, a, b)
+    assert e5.circumference == 4*a*C.Integral(((1 - x**2*Abs(b**2 - a**2)/a**2)/(1 - x**2))**(S(1)/2),\
+                                            (x, 0, 1))
 
     assert e2.arbitrary_point() in e2
     for ind in xrange(0, 5):
@@ -249,6 +256,17 @@ def test_ellipse():
     assert intersection(c1, c2) in [[(1,0), (0,1)],[(0,1),(1,0)]]
     assert intersection(c1, c3) == [(sqrt(2)/2, sqrt(2)/2)]
 
+    # some special case intersections
+    csmall = Circle(p1, 3)
+    cbig = Circle(p1, 5)
+    cout = Circle(Point(5, 5), 1)
+    # one circle inside of another
+    assert csmall.intersection(cbig) == []
+    # separate circles
+    assert csmall.intersection(cout) == []
+    # coincident circles
+    assert csmall.intersection(csmall) == csmall
+
     v = sqrt(2)
     t1 = Triangle(Point(0, v), Point(0, -v), Point(v, 0))
     points = intersection(t1, c1)
@@ -263,6 +281,8 @@ def test_ellipse():
     assert intersection(e1, e2) in \
         [[Point(5, 0), Point(-5, 0)], [Point(-5, 0), Point(5, 0)]]
 
+    # FAILING ELLIPSE INTERSECTION GOES HERE
+
     # Combinations of above
     assert e3.is_tangent(e3.tangent_line(p1 + Point(y1, 0)))
 
@@ -275,6 +295,13 @@ def test_ellipse():
     assert e4.periapsis == major*(1 - ecc)
     assert e4.apoapsis == major*(1 + ecc)
 
+@XFAIL
+def test_ellipse_intersection_fail():
+    # these need the upgrade to the solver; when this works, move
+    # these lines to the FAILING ELLIPSE INTERSECTION GOES HERE line in test_ellipse above.
+    e1 = Ellipse(Point(0, 0), 5, 10)
+    e2 = Ellipse(Point(2, 1), 4, 8)
+    assert e1.intersection(e2) # when this no longer fails, supply the answer
 
 def test_polygon():
     p1 = Polygon(

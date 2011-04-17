@@ -39,7 +39,7 @@ from cache import cacheit
 #from numbers import Rational, Integer
 #from symbol import Symbol, Dummy
 from sympy.utilities.decorator import deprecated
-from sympy.utilities import all
+from sympy.utilities import all, any
 
 from sympy import mpmath
 
@@ -87,6 +87,21 @@ class Application(Basic):
 
     nargs = None
 
+    @classmethod
+    def _should_evalf(cls, arg):
+        """
+        Decide if the function should automatically evalf().
+        By default (in this implementation), this happens if (and only if) the
+        ARG is a floating point number.
+        This function is used by __new__.
+        """
+        if arg.is_Real:
+            return True
+        if not arg.is_Add:
+            return False
+        re, im = arg.as_real_imag()
+        return re.is_Real or im.is_Real
+
     @cacheit
     def __new__(cls, *args, **options):
         args = map(sympify, args)
@@ -105,7 +120,10 @@ class Application(Basic):
             r = super(Application, cls).__new__(cls, *args, **options)
             r.nargs = len(args)
             return r
-        return super(Application, cls).__new__(cls, *args, **options)
+        r = super(Application, cls).__new__(cls, *args, **options)
+        if any([cls._should_evalf(a) for a in args]):
+            return r.evalf()
+        return r
 
     @classmethod
     def eval(cls, *args):
@@ -266,7 +284,7 @@ multi-arg functions are not supported.')
         arg = self.args[0]
         arg0 = arg.limit(x, 0)
         from sympy import oo
-        if arg0 in [-oo, oo, S.NaN]:
+        if arg0 == S.NaN or arg0.is_bounded == False:
             raise PoleError("Cannot expand %s around 0" % (arg))
         if arg0:
             e = self
@@ -275,7 +293,7 @@ multi-arg functions are not supported.')
                 #for example when e = sin(x+1) or e = sin(cos(x))
                 #let's try the general algorithm
                 term = e.subs(x, S.Zero)
-                if term in [-oo, oo, S.NaN]:
+                if arg0 == S.NaN or term.is_bounded == False:
                     raise PoleError("Cannot expand %s around 0" % (self))
                 series = term
                 fact = S.One
@@ -283,7 +301,13 @@ multi-arg functions are not supported.')
                     i += 1
                     fact *= Rational(i)
                     e = e.diff(x)
-                    term = e.subs(x, S.Zero)*(x**i)/fact
+                    subs = e.subs(x, S.Zero)
+                    if subs == S.NaN:
+                        # try to evaluate a limit if we have to
+                        subs = e.limit(x, S.Zero)
+                        if subs.is_bounded == False:
+                            raise PoleError("Cannot expand %s around 0" % (self))
+                    term = subs*(x**i)/fact
                     term = term.expand()
                     series += term
                 return series + C.Order(x**n, x)
@@ -424,7 +448,13 @@ multi-arg functions are not supported.')
                 nargs = self.nargs
             if not (1<=argindex<=nargs):
                 raise TypeError("argument index %r is out of range [1,%s]" % (argindex,nargs))
-        return Derivative(self,self.args[argindex-1],evaluate=False)
+        u = self.args[argindex - 1]
+        if u.is_Symbol:
+            uself = self
+        else:
+            u = C.Dummy('u')
+            uself = self.func(u)
+        return Derivative(uself, u, evaluate=False)
 
     def _eval_as_leading_term(self, x):
         """General method for the leading term"""
@@ -480,7 +510,10 @@ class Derivative(Expr):
     Carries out differentiation of the given expression with respect to symbols.
 
     expr must define ._eval_derivative(symbol) method that returns
-    the differentiation result or None.
+    the differentiation result. This function only needs to consider the
+    non-trivial case where expr contains symbol and it should call the diff()
+    method interally (not _eval_derivative); Derivative should be the only
+    one to call _eval_derivative.
 
     Examples:
 
@@ -491,63 +524,67 @@ class Derivative(Expr):
 
     is_Derivative   = True
 
-    @staticmethod
-    def _symbolgen(*symbols):
-        """
-        Generator of all symbols in the argument of the Derivative.
-
-        Example:
-        >> ._symbolgen(x, 3, y)
-        (x, x, x, y)
-        >> ._symbolgen(x, 10**6)
-        (x, x, x, x, x, x, x, ...)
-
-        The second example shows why we don't return a list, but a generator,
-        so that the code that calls _symbolgen can return earlier for special
-        cases, like x.diff(x, 10**6).
-
-        """
-        last_s = sympify(symbols[len(symbols)-1])
-        for i in xrange(len(symbols)):
-            s = sympify(symbols[i])
-            next_s = None
-            if s != last_s:
-                next_s = sympify(symbols[i+1])
-
-            if isinstance(s, Integer):
-                continue
-            elif isinstance(s, C.Symbol):
-                # handle cases like (x, 3)
-                if isinstance(next_s, Integer):
-                    # yield (x, x, x)
-                    for copy_s in repeat(s,int(next_s)):
-                        yield copy_s
-                else:
-                    yield s
-            else:
-                yield s
-
     def __new__(cls, expr, *symbols, **assumptions):
         expr = sympify(expr)
         if not symbols:
             return expr
-        symbols = Derivative._symbolgen(*symbols)
+
+        # standardize symbols
+        symbols = list(sympify(symbols))
+        if not symbols[-1].is_Integer:
+            symbols.append(S.One)
+        symbol_count = []
+        all_zero = True
+        i = 0
+        while i < len(symbols) - 1: # process up to final Integer
+            s, count = symbols[i: i+2]
+            iwas = i
+            if s.is_Symbol:
+                if count.is_Symbol:
+                    count = 1
+                    i += 1
+                elif count.is_Integer:
+                    count = int(count)
+                    i += 2
+
+            if i == iwas: # didn't get an update because of bad input
+                raise ValueError('Derivative expects Symbol [, Integer] args but got %s, %s' % (s, count))
+
+            symbol_count.append((s, count))
+            if all_zero and not count == 0:
+                all_zero = False
+
+        # We make a special case for 0th derivative, because there
+        # is no good way to unambiguously print this.
+        if all_zero:
+            return expr
+
+        evaluate = assumptions.pop('evaluate', False)
+
+        # look for a quick exit if there are symbols that are not in the free symbols
+        if evaluate:
+            if set(sc[0] for sc in symbol_count
+                  ).difference(expr.free_symbols):
+                return S.Zero
+
+        # We make a generator so as to only generate a symbol when necessary.
+        # If a high order of derivative is requested and the expr becomes 0
+        # after a few differentiations, then we won't need the other symbols
+        symbolgen = (s for s, count in symbol_count for i in xrange(count))
+
         if expr.is_commutative:
             assumptions['commutative'] = True
-        evaluate = assumptions.pop('evaluate', False)
-        if not evaluate and not isinstance(expr, Derivative):
-            symbols = list(symbols)
-            if len(symbols) == 0:
-                # We make a special case for 0th derivative, because there
-                # is no good way to unambiguously print this.
-                return expr
+
+        if (not (hasattr(expr, '_eval_derivative') and
+                 evaluate) and
+            not isinstance(expr, Derivative)):
+            symbols = list(symbolgen)
             obj = Expr.__new__(cls, expr, *symbols, **assumptions)
             return obj
+
+        # compute the derivative now
         unevaluated_symbols = []
-        for s in symbols:
-            s = sympify(s)
-            if not isinstance(s, C.Symbol):
-                raise ValueError('Invalid literal: %s is not a valid variable' % s)
+        for s in symbolgen:
             obj = expr._eval_derivative(s)
             if obj is None:
                 unevaluated_symbols.append(s)
@@ -558,6 +595,7 @@ class Derivative(Expr):
 
         if not unevaluated_symbols:
             return expr
+
         return Expr.__new__(cls, expr, *unevaluated_symbols, **assumptions)
 
     def _eval_derivative(self, s):

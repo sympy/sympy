@@ -134,8 +134,14 @@ class Number(AtomicExpr):
             return Integer(obj)
         if isinstance(obj, tuple) and len(obj) == 2:
             return Rational(*obj)
-        if isinstance(obj, (str, float, mpmath.mpf, decimal.Decimal)):
+        if isinstance(obj, (float, mpmath.mpf, decimal.Decimal)):
             return Real(obj)
+        if isinstance(obj, str):
+            val = sympify(obj)
+            if isinstance(val, Number):
+                return val
+            else:
+                raise ValueError('String "%s" does not denote a Number'%obj)
         if isinstance(obj, Number):
             return obj
         raise TypeError("expected str|int|long|float|Decimal|Number object but got %r" % (obj))
@@ -154,9 +160,6 @@ class Number(AtomicExpr):
 
     def __float__(self):
         return mlib.to_float(self._as_mpf_val(53))
-
-    def _eval_derivative(self, s):
-        return S.Zero
 
     def _eval_conjugate(self):
         return self
@@ -182,13 +185,23 @@ class Number(AtomicExpr):
     def __hash__(self):
         return super(Number, self).__hash__()
 
+    @property
+    def is_number(self):
+        return True
+
     def as_coeff_mul(self, *deps):
         # a -> c * t
-        return self, tuple()
+        if self.is_Rational:
+            return self, tuple()
+        elif self.is_negative:
+            return S.NegativeOne, (-self,)
+        return S.One, (self,)
 
     def as_coeff_add(self, *deps):
         # a -> c + t
-        return self, tuple()
+        if self.is_Rational:
+            return self, tuple()
+        return S.Zero, (self,)
 
 class Real(Number):
     """
@@ -352,7 +365,6 @@ class Real(Number):
             return other.__eq__(self)
         if isinstance(other, FunctionClass): #cos as opposed to cos(x)
             return False
-        if other.is_comparable: other = other.evalf()
         if isinstance(other, Number):
             return bool(mlib.mpf_eq(self._mpf_, other._as_mpf_val(self._prec)))
         return False    # Real != non-Number
@@ -367,7 +379,6 @@ class Real(Number):
             return other.__ne__(self)
         if isinstance(other, FunctionClass): #cos as opposed to cos(x)
             return True
-        if other.is_comparable: other = other.evalf()
         if isinstance(other, Number):
             return bool(not mlib.mpf_eq(self._mpf_, other._as_mpf_val(self._prec)))
         return True     # Real != non-Number
@@ -479,12 +490,11 @@ class Rational(Number):
                     return Rational(p, Pow(10, -expt))
                 except decimal.InvalidOperation:
                     import re
-                    f = re.match(' *([-+]? *[0-9]+)( */ *)([0-9]+)', p)
+                    f = re.match('^([-+]?[0-9]+)/([0-9]+)$', p.replace(' ',''))
                     if f:
-                        p, _, q = f.groups()
-                        return Rational(int(p), int(q))
-                    else:
-                        raise ValueError('invalid literal: %s' % p)
+                        n, d = f.groups()
+                        return Rational(int(n), int(d))
+                    raise ValueError('invalid literal: %s' % p)
             elif not isinstance(p, Basic):
                 return Rational(S(p))
             q = S.One
@@ -893,6 +903,9 @@ class Integer(Rational):
     def __rmod__(self, other):
         return Integer(other % self.p)
 
+    def __divmod__(self, other):
+        return divmod(self.p, other.p)
+
     # TODO make it decorator + bytecodehacks?
     def __add__(a, b):
         if isinstance(b, (int, long)):
@@ -980,6 +993,9 @@ class Integer(Rational):
 
     def __hash__(self):
         return super(Integer, self).__hash__()
+
+    def __index__(self):
+        return self.p
 
     ########################################
 
@@ -1555,9 +1571,6 @@ class NumberSymbol(AtomicExpr):
     def _eval_evalf(self, prec):
         return Real._new(self._as_mpf_val(prec), prec)
 
-    def _eval_derivative(self, s):
-        return S.Zero
-
     def __eq__(self, other):
         try:
             other = _sympify(other)
@@ -1781,9 +1794,6 @@ class ImaginaryUnit(AtomicExpr):
 
     def _eval_conjugate(self):
         return -S.ImaginaryUnit
-
-    def _eval_derivative(self, s):
-        return S.Zero
 
     def _eval_power(b, e):
         """

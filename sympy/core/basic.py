@@ -528,9 +528,8 @@ class Basic(AssumeMeths):
            True
 
         """
-        if not self.args:
-            return False
-        return all(obj.is_number for obj in self.iter_basic_args())
+        # should be overriden by subclasses
+        return False
 
     @property
     def func(self):
@@ -695,19 +694,23 @@ class Basic(AssumeMeths):
 
         >>> from sympy import pi
         >>> from sympy.abc import x, y
-        >>> (1+x*y).subs(x, pi)
+        >>> (1 + x*y).subs(x, pi)
         1 + pi*y
-        >>> (1+x*y).subs({x:pi, y:2})
+        >>> (1 + x*y).subs({x:pi, y:2})
         1 + 2*pi
-        >>> (1+x*y).subs([(x,pi), (y,2)])
+        >>> (1 + x*y).subs([(x,pi), (y,2)])
         1 + 2*pi
 
+        >>> (x + y).subs([(y,x**2), (x,2)])
+        6
+        >>> (x + y).subs([(x,2), (y,x**2)])
+        2 + x**2
         """
         if len(args) == 1:
             sequence = args[0]
             if isinstance(sequence, dict):
                 return self._subs_dict(sequence)
-            elif isinstance(sequence, (list, tuple)):
+            elif hasattr(sequence, '__iter__') or hasattr(sequence, '__getitem__'):
                 return self._subs_list(sequence)
             else:
                 raise TypeError("Not an iterable container")
@@ -744,8 +747,6 @@ class Basic(AssumeMeths):
         12
 
         """
-        if not isinstance(sequence, (list, tuple)):
-            raise TypeError("Not an iterable container")
         result = self
         for old, new in sequence:
             if hasattr(result, 'subs'):
@@ -783,8 +784,6 @@ class Basic(AssumeMeths):
         """
         if isinstance(sequence, dict):
             sequence = sequence.items()
-        elif not isinstance(sequence, (list, tuple)):
-            raise TypeError("Not an iterable container")
 
         subst = []
 
