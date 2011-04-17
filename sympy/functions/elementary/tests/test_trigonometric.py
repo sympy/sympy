@@ -225,6 +225,9 @@ def test_tan():
     assert tan(-2*pi) == 0
     assert tan(-3*10**73*pi) == 0
 
+    assert tan(pi/2) == tan(3*pi/2)
+    assert tan(-pi/2) == tan(-3*pi/2)
+
     assert tan(pi/3) == sqrt(3)
     assert tan(-2*pi/3) == sqrt(3)
 
@@ -276,6 +279,9 @@ def test_cot():
     assert cot(pi*I) == -coth(pi)*I
     assert cot(-pi*I) == coth(pi)*I
     assert cot(-2*I) == coth(2)*I
+
+    assert cot(pi) == cot(2*pi) == cot(3*pi)
+    assert cot(-pi) == cot(-2*pi) == cot(-3*pi)
 
     assert cot(pi/2) == 0
     assert cot(-pi/2) == 0

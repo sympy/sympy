@@ -306,8 +306,7 @@ class Function(Application, Expr):
 functions are not supported.')
         args = self.args
         args0 = [t.limit(x, 0) for t in args]
-        from sympy import oo
-        if any([(t == S.NaN) or (t.is_bounded == False) for t in args0]):
+        if any([t is S.NaN or t.is_bounded is False for t in args0]):
             raise PoleError("Cannot expand %s around 0" % (args))
         if (self.func.nargs == 1 and args0[0]) or self.func.nargs > 1:
             e = self
@@ -316,7 +315,7 @@ functions are not supported.')
                 #for example when e = sin(x+1) or e = sin(cos(x))
                 #let's try the general algorithm
                 term = e.subs(x, S.Zero)
-                if term.is_bounded == False:
+                if term.is_bounded is False or term is S.NaN:
                     raise PoleError("Cannot expand %s around 0" % (self))
                 series = term
                 fact = S.One
@@ -325,11 +324,11 @@ functions are not supported.')
                     fact *= Rational(i)
                     e = e.diff(x)
                     subs = e.subs(x, S.Zero)
-                    if subs == S.NaN:
+                    if subs is S.NaN:
                         # try to evaluate a limit if we have to
                         subs = e.limit(x, S.Zero)
-                        if subs.is_bounded == False:
-                            raise PoleError("Cannot expand %s around 0" % (self))
+                    if subs.is_bounded is False:
+                        raise PoleError("Cannot expand %s around 0" % (self))
                     term = subs*(x**i)/fact
                     term = term.expand()
                     series += term
