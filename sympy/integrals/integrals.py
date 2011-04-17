@@ -299,9 +299,10 @@ class Integral(Expr):
             """replace x with a, using subs if possible, otherwise limit
             where sign of b is considered"""
             wok = inverse_mapping.subs(x, a)
-            if not wok is S.NaN:
-                return wok
-            return limit(sign(b)*inverse_mapping, x, a)
+            if wok is S.NaN or wok.is_bounded is False and a.is_bounded:
+                return limit(sign(b)*inverse_mapping, x, a)
+            return wok
+
         newlimits = []
         for xab in limits:
             sym = xab[0]

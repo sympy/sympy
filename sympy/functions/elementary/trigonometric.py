@@ -538,7 +538,8 @@ class tan(Function):
                     else:
                         return result
                 except KeyError:
-                    pass
+                    if pi_coeff.q == 2 and pi_coeff.p != 1:
+                        return tan(S.Pi/2)
 
         if arg.is_Add:
             x, m = _peeloff_pi(arg)
@@ -685,6 +686,8 @@ class cot(Function):
 
         pi_coeff = arg.as_coefficient(S.Pi)
         if pi_coeff is not None:
+            if pi_coeff.is_Integer and pi_coeff is not S.One:
+                return cot(S.Pi)
             if pi_coeff.is_Rational:
                 cst_table = {
                     2 : S.Zero,

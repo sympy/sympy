@@ -1,6 +1,6 @@
 from sympy import (Symbol, Wild, sin, cos, exp, sqrt, pi, Function, Derivative,
         abc, Integer, Eq, symbols, Add, I, Real, log, Rational, Lambda, atan2,
-        cse, S, tan, cot, Tuple)
+        cse, cot, tan, S, Tuple)
 
 def test_subs():
     n3=Rational(3)
@@ -50,8 +50,8 @@ def test_powers():
     assert (x ** Rational(1,3)).subs(x, -27) == 3 * (-1) ** Rational(1,3)
     assert ((-x) ** Rational(1,3)).subs(x, 27) == 3 * (-1) ** Rational(1,3)
     n = Symbol('n', negative=True)
-    assert (x**n).subs(x, 0) is S.NaN
-    assert exp(-1).subs(S.Exp1, 0) is S.NaN
+    assert (x**n).subs(x, 0) is S.Infinity
+    assert exp(-1).subs(S.Exp1, 0) is S.Infinity
 
 def test_logexppow():   # no eval()
     x = Symbol("x")

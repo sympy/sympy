@@ -216,10 +216,7 @@ class Pow(Expr):
                 pow = coeff1/coeff2
                 if pow.is_Integer or self.base.is_commutative:
                     return Pow(new, pow) # (x**(2*y)).subs(x**(3*y),z) -> z**(2/3)
-        b, e = self.base._eval_subs(old, new), self.exp._eval_subs(old, new)
-        if not b and e.is_negative: # don't let subs create an infinity
-            return S.NaN
-        return Pow(b, e)
+        return Pow(self.base._eval_subs(old, new), self.exp._eval_subs(old, new))
 
     def as_base_exp(self):
         if self.base.is_Rational and self.base.p==1:
