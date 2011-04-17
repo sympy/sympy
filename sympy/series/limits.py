@@ -110,6 +110,18 @@ def limit(e, z, z0, dir="+"):
                 return i*limit(d, z, z0, dir)
         else:
             i, d = S.One, e
+
+        if z0.is_integer and z0.is_nonpositive:
+            # Look for the gamma function
+            p, q = Wild("p"), Wild("q")
+            r = d.match(z**p*gamma(z)*q)
+            if r:
+                p, q = [r.get(w, w) for w in [p, q]]
+                if p >= q:
+                    return limit(z**(p-q), z, z0, dir)
+                else:
+                    return S.ComplexInfinity
+
         if not z0:
             # look for log(z)**q or z**p*log(z)**q
             p, q = Wild("p"), Wild("q")
