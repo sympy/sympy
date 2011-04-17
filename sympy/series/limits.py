@@ -1,6 +1,6 @@
 from sympy.core import S, Add, sympify, Expr, PoleError, Mul, oo, C
 from gruntz import gruntz
-from sympy.functions import sign, tan, cot
+from sympy.functions import sign, tan, cot, gamma
 
 def limit(e, z, z0, dir="+"):
     """
@@ -111,7 +111,7 @@ def limit(e, z, z0, dir="+"):
         else:
             i, d = S.One, e
 
-        if z0.is_integer and z0.is_nonpositive:
+        if gamma(z) in e and z0.is_integer and z0.is_nonpositive:
             # Look for the gamma function
             p, q = Wild("p"), Wild("q")
             r = d.match(z**p*gamma(z)*q)
