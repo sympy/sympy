@@ -5,6 +5,7 @@ from sympy import (limit, exp, oo, log, sqrt, Limit, sin, floor, cos, ceiling,
 from sympy.abc import x, y, z
 from sympy.utilities.pytest import XFAIL, raises
 from sympy.utilities.iterables import cartes
+from sympy.series.gruntz import LimitError
 
 def test_basic1():
     assert limit(x, x, oo) == oo
@@ -12,6 +13,8 @@ def test_basic1():
     assert limit(-x, x, oo) == -oo
     assert limit(x**2, x, -oo) == oo
     assert limit(-x**2, x, oo) == -oo
+    assert limit(abs(x)/x, x, 0, dir = "+") == 1
+    raises(LimitError,'limit(abs(x)/x,x,0)')
     assert limit(x*log(x), x, 0, dir="+") == 0
     assert limit(1/x, x, oo) == 0
     assert limit(exp(x), x, oo) == oo
@@ -22,6 +25,7 @@ def test_basic1():
     assert limit(x - x**2, x, oo) == -oo
     assert limit((1 + x)**(1 + sqrt(2)),x,0) == 1
     assert limit((1 + cos(x))**oo, x, 0) == oo
+    raises(LimitError,'limit((1 + x)**oo, x, 0)')
     assert limit((1 + x)**oo, x, 0, dir = '+') == oo
     assert limit((1 + x)**oo, x, 0, dir='-') == 0
     assert limit((1 + x + y)**oo, x, 0, dir='-') == (1 + y)**(oo)
@@ -29,6 +33,7 @@ def test_basic1():
     raises(NotImplementedError, 'limit(Sum(1/x, (x, 1, y)) - log(y), y, oo)')
     assert limit(Sum(1/x, (x, 1, y)) - 1/y, y, oo) == Sum(1/x, (x, 1, oo))
     assert limit(gamma(1/x + 3), x, oo) == 2
+    raises(LimitError,'limit(cos(x + y)/x, x, 0)')
 
     # approaching 0
     # from dir="+"
@@ -43,6 +48,8 @@ def test_basic1():
     assert limit(x**2, x, 0, dir='-') == 0
     assert limit(x**(Rational(1, 2)), x, 0, dir='-') == 0
     assert limit(x**-pi, x, 0, dir='-') == zoo
+    assert limit(1 + 1/x, x, 0, dir='+') == oo
+
 
 def test_basic2():
     assert limit(x**x, x, 0, dir="+") == 1
@@ -65,13 +72,7 @@ def test_basic4():
     assert limit(sqrt(x + 1) - sqrt(x), x, oo)==0
     assert integrate(1/(x**3+1),(x,0,oo)) == 2*pi*sqrt(3)/9
 
-@XFAIL
-def test_changed_definition():
-    assert limit(abs(x)/x,x,0) == 1
-    assert limit((1 + x)**oo, x, 0) == oo
-    assert limit(cos(x + y)/x, x, 0) == 1
-    assert limit(1 + 1/x, x, 0) == oo
-
+    
 def test_issue786():
     assert limit(x*y + x*z, z, 2) == x*y+2*x
 
