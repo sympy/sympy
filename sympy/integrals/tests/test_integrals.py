@@ -569,3 +569,8 @@ def test_issue_1791():
     assert integrate(exp(log(x)**2),x) == -I*pi**(S(1)/2)*erf(I*log(x) + I/2)*exp(-S(1)/4)/2
     assert integrate(exp(-z*log(x)**2),x) == \
            pi**(S(1)/2)*erf(z**(S(1)/2)*log(x) - 1/(2*z**(S(1)/2)))*exp(S(1)/(4*z))/(2*z**(S(1)/2))
+
+def test_issue_1277():
+    from sympy import simplify
+    assert simplify(integrate(n*(x**(1/n)-1), (x, 0, S.Half))) == \
+           (n**2 - 2**(S(1)/n)*n**2 - n*2**(S(1)/n))/(2**(1 + S(1)/n) + n*2**(1 + S(1)/n))
