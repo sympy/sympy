@@ -204,3 +204,7 @@ def test_getO():
     assert (z + O(x) + O(y)).getO() == O(x) + O(y)
     assert (z + O(x) + O(y)).removeO() == z
     raises(NotImplementedError, '(O(x)+O(y)).getn()')
+
+def test_leading_term():
+    from sympy import digamma
+    assert O(1/digamma(1/x)) == O(1/log(x))

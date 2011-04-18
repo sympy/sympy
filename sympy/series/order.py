@@ -116,7 +116,13 @@ class Order(Expr):
                 lst = expr.extract_leading_order(*symbols)
                 expr = Add(*[f.expr for (e,f) in lst])
             elif expr:
-                expr = expr.as_leading_term(*symbols)
+                if len(symbols) > 1:
+                    # TODO
+                    # We cannot use compute_leading_term because that only
+                    # works in one symbol.
+                    expr = expr.as_leading_term(*symbols)
+                else:
+                    expr = expr.compute_leading_term(symbols[0])
                 coeff, terms = expr.as_coeff_mul()
                 expr = Mul(*[t for t in terms if t.has(*symbols)])
 
