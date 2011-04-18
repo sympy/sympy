@@ -259,3 +259,10 @@ def test_issue1447():
 def test_issue835():
     assert limit((1 + x**log(3))**(1/x), x, 0) == 1
     assert limit((5**(1/x) + 3**(1/x))**x, x, 0) == 5
+
+
+def test_issue1010():
+    # Limit of gamma(x)*f(x) at x = {0, -1, -2, ... }
+    assert limit(x*gamma(x), x, 0) == 1
+    assert limit(sin(x)*gamma(x), x, 0) == 1
+    assert limit(cos(x)*gamma(x), x, 0) == oo
