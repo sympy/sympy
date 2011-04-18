@@ -530,6 +530,7 @@ functions are not supported.')
 
     def _eval_as_leading_term(self, x):
         """General method for the leading term"""
+        # XXX This seems broken to me!
         arg = self.args[0].as_leading_term(x)
 
         if C.Order(1,x).contains(arg):
