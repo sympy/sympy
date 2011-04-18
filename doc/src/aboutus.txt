@@ -122,7 +122,8 @@ want to be mentioned here, so see our repository history for a full list).
 #. Kibeom Kim: fixes to cse function and preorder_traversal
 #. Gregory Ksionda: fixes to Integral instantiation
 #. Tomáš Bambas: prettier printing of examples
-#. Jeremias Yehdegho: Fixes to the nthoery module
+#. Jeremias Yehdegho: fixes to the nthoery module
+#. Jack McCaffery: fixes to asin and acos
 
 Up-to-date list in the order of the first contribution is given in the `AUTHORS
 <https://github.com/sympy/sympy/blob/master/AUTHORS>`_ file.
