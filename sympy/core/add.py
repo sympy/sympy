@@ -397,7 +397,7 @@ class Add(AssocOp):
 
     def _eval_as_leading_term(self, x):
         # TODO this does not need to call nseries!
-        coeff, terms = self.as_coeff_add(x)
+        coeff, terms = self.collect(x).as_coeff_add(x)
         has_unbounded = bool([f for f in self.args if f.is_unbounded])
         if has_unbounded:
             if isinstance(terms, Basic):
@@ -408,7 +408,7 @@ class Add(AssocOp):
         else:
             o = C.Order(terms[0]*x,x)
         n = 1
-        s = self.nseries(x, n=n)
+        s = self.nseries(x, n=n).collect(x) # could be 1/x + 1/(y*x)
         while s.is_Order:
             n +=1
             s = self.nseries(x, n=n)
