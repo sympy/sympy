@@ -113,17 +113,13 @@ def limit(e, z, z0, dir="+"):
 
         if z0.is_integer and z0.is_nonpositive:
             # Look for the gamma function at {0, -1, -2, ... }
-            p, q = Wild("p"), Wild("q")
-            r = d.match(p**q*gamma(p)**q)
-            print r
+            p, q, m = Wild("p"), Wild("q"), Wild("m")
+            r = d.match(gamma(p)**q*m)
             if r:
                 p, q = [r.get(w, w) for w in [p, q]]
-                print p,q
-                #print r.values()[0]
-                #if p >= q:
-                #    return limit(z**(p-q)*r.values()[0], z, z0, dir)
-                #else:
-                #    return S.ComplexInfinity
+                m = [r.get(w) for w in [m]][0]
+                if p == z and q.is_Number:
+                    return limit(m/z**q, z, z0, dir)
 
         if not z0:
             # look for log(z)**q or z**p*log(z)**q

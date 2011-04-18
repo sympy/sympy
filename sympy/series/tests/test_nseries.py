@@ -209,7 +209,7 @@ def test_logbug4():
 def test_expbug5():
     x = Symbol("x")
     #assert exp(O(x)).nseries(x,0,2) == 1 + O(x**2, x)
-    assert exp(log(1+x)/x).nseries(x, n=3) == exp(1) + -exp(1)*x/2 + O(x**2)
+    assert exp(log(1+x)/x).nseries(x, n=3) == exp(1) - exp(1)*x/2 + O(x**2)
 
 def test_sinsinbug():
     x = Symbol("x")
