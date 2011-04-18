@@ -3068,13 +3068,13 @@ def symarray(prefix, shape):
 def numerical_max(L):
     """a max function that fails on Non-Numbers"""
     if not all([elem.is_number for elem in L]):
-        raise ValueError, "Not implemented on Non-Numbers"
+        raise NotImplementedError, "Not implemented on Non-Numbers"
     return max(L)
 
 def numerical_min(L):
     '''a min function that fails on Non-Numbers'''
     if not all([elem.is_number for elem in L]):
-        raise ValueError, "Not implemented on Non-Numbers"
+        raise NotImplementedError, "Not implemented on Non-Numbers"
     return min(L)
 
 def _separate_eig_results(res):
