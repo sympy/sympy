@@ -1179,11 +1179,12 @@ class Triangle(Polygon):
         --------
         >>> from sympy import Symbol
         >>> from sympy.geometry import Point, Triangle
-        >>> a = Symbol('a')
+        >>> a = Symbol('a', real=True)
         >>> p1, p2, p3 = Point(0, 0), Point(a, 0), Point(0, a)
         >>> t = Triangle(p1, p2, p3)
-        >>> t.inradius
-        (4*a**2*(a**2)**(1/2) - 2*2**(1/2)*a**2*(a**2)**(1/2))/(8*a**2)
+        >>> # Use expand to simplify the result
+        >>> t.inradius.expand()
+        Abs(a)/2 - 2**(1/2)*Abs(a)/4
 
         """
         return simplify(self.area / self.perimeter)
