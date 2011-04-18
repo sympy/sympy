@@ -121,6 +121,7 @@ from sympy.core.function import Function, UndefinedFunction
 from sympy.functions import log, exp
 from sympy.series.order import Order
 from sympy.simplify import powsimp
+from sympy import cacheit
 
 O = Order
 
@@ -142,6 +143,24 @@ def debug(func):
         return r
 
     return decorated
+
+from time import time
+it = 0
+do_timings = False
+def timeit(func):
+    global do_timings
+    if not do_timings:
+        return func
+    def dec(*args, **kwargs):
+        global it
+        it += 1
+        t0 = time()
+        r = func(*args, **kwargs)
+        t1 = time()
+        print "%s %.3f %s%s" % ('-' * (2+it), t1-t0, func.func_name, args)
+        it -= 1
+        return r
+    return dec
 
 def tree(subtrees):
     "Only debugging purposes: prints a tree"
@@ -382,6 +401,8 @@ def mrv_max1(f, g, exps, x):
                     u, b, x)
 
 @debug
+@cacheit
+@timeit
 def sign(e, x):
     """Returns a sign of an expression e(x) for x->oo.
 
@@ -442,6 +463,8 @@ def sign(e, x):
     return sign(c0, x)
 
 @debug
+@timeit
+@cacheit
 def limitinf(e, x):
     """Limit e(x) for x-> oo"""
     #rewrite e in terms of tractable functions only
@@ -483,6 +506,7 @@ def moveup(l, x):
 
 
 @debug
+@timeit
 def calculate_series(e, x, skip_abs=False, logx=None):
     """ Calculates at least one term of the series of "e" in "x".
 
@@ -490,7 +514,7 @@ def calculate_series(e, x, skip_abs=False, logx=None):
     """
 
     f = e
-    for n in [2, 4, 6, 8]:
+    for n in [1, 2, 4, 6, 8]:
         series = f.nseries(x, n=n, logx=logx)
         if not series.has(O):
             # The series expansion is locally exact.
@@ -505,12 +529,14 @@ def calculate_series(e, x, skip_abs=False, logx=None):
     return series
 
 @debug
-def mrv_leadterm(e, x, Omega=SubsSet(), exps=None):
+@timeit
+@cacheit
+def mrv_leadterm(e, x):
     """Returns (c0, e0) for e."""
+    Omega = SubsSet()
     if not e.has(x):
         return (e, S.Zero)
     if Omega == SubsSet():
-        assert exps is None
         Omega, exps = mrv(e, x)
     if not Omega:
         # e really does not depend on x after simplification
@@ -524,7 +550,9 @@ def mrv_leadterm(e, x, Omega=SubsSet(), exps=None):
         e_up = moveup([e], x)[0]
         exps_up = moveup([exps], x)[0]
         # NOTE: there is no need to move this down!
-        return mrv_leadterm(e_up, x, Omega_up, exps_up)
+        e = e_up
+        Omega = Omega_up
+        exps = exps_up
     #
     # The positive dummy, w, is used here so log(w*2) etc. will expand;
     # a unique dummy is needed in this algorithm
@@ -538,7 +566,42 @@ def mrv_leadterm(e, x, Omega=SubsSet(), exps=None):
     series = series.subs(log(w), logw) # this should not be necessary
     return series.leadterm(w)
 
+def build_expression_tree(Omega, rewrites):
+    """ Helper function for rewrite.
+
+    We need to sort Omega (mrv set) so that we replace an expression before
+    we replace any expression in terms of which it has to be rewritten:
+    e1 ---> e2 ---> e3
+             \
+              -> e4
+    Here we can do e1, e2, e3, e4 or e1, e2, e4, e3.
+    To do this we assemble the nodes into a tree, and sort them by height.
+
+    This function builds the tree, rewrites then sorts the nodes.
+    """
+    class Node:
+        def ht(self):
+            return reduce(lambda x, y: x + y,
+                          map(lambda x: x.ht(), self.before), 1)
+    nodes = {}
+    for expr, v in Omega:
+        n = Node()
+        n.before = []
+        n.var = v
+        n.expr = expr
+        nodes[v] = n
+    for _, v in Omega:
+        if v in rewrites:
+            n = nodes[v]
+            r = rewrites[v]
+            for _, v2 in Omega:
+                if r.has(v2):
+                    n.before.append(nodes[v2])
+
+    return nodes
+
 @debug
+@timeit
 def rewrite(e, Omega, x, wsym):
     """e(x) ... the function
     Omega ... the mrv set
@@ -552,28 +615,12 @@ def rewrite(e, Omega, x, wsym):
     #all items in Omega must be exponentials
     for t in Omega.keys():
         assert t.func is exp
-    # XXX We *really* want to just ensure that the rewritings will work.
-    #     Hence should sort as a tree!
-    def cmpfunc(a, b):
-        r = -cmp(len(mrv2(a[0], x)[0]), len(mrv2(b[0], x)[0]))
-        if r != 0:
-            return r
-        if a[1] in rewrites and rewrites[a[1]].has(b[1]):
-            return -1
-        if b[1] in rewrites and rewrites[b[1]].has(a[1]):
-            return 1
-        return 0
-    #sort Omega (mrv set) from the most complicated to the simplest ones
-    #the complexity of "a" from Omega: the length of the mrv set of "a"
-    #Moreover if two expressions are equally complex, but one has to be
-    #rewritten in terms of the other, treat the former as smaller.
-    #An alternative would be to ignore rewrites in terms of supposedly more
-    #complex expressions, we know of the theory of the algorithm that this
-    #is permissible if we do everything else correctly.
     rewrites = Omega.rewrites
     Omega = Omega.items()
-    Omega.sort(cmp=cmpfunc)
-    #print Omega, rewrites
+
+    nodes = build_expression_tree(Omega, rewrites)
+    Omega.sort(key=lambda x: nodes[x[1]].ht(), reverse=True)
+
     g, _ = Omega[-1] #g is going to be the "w" - the simplest one in the mrv set
     sig = (sign(g.args[0], x) == 1)
     if sig:
@@ -599,7 +646,7 @@ def rewrite(e, Omega, x, wsym):
         f = f.subs(a, b)
 
     for _, var in Omega:
-        assert (var is g) or not f.has(var)
+        assert not f.has(var)
 
     #finally compute the logarithm of w (logw).
     logw = g.args[0]
