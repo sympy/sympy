@@ -1,13 +1,11 @@
 """Module for querying SymPy objects about assumptions."""
 import inspect
-import copy
 from sympy.core import sympify
 from sympy.utilities.source import get_class
 from sympy.assumptions import global_assumptions, Assume, Predicate
 from sympy.assumptions.assume import eliminate_assume
-from sympy.logic.boolalg import to_cnf, conjuncts, disjuncts, \
-    And, Not, Or, Implies, Equivalent, to_int_repr
-from sympy.logic.inference import literal_symbol, satisfiable
+from sympy.logic.boolalg import to_cnf, And, Not, Or, Implies, Equivalent
+from sympy.logic.inference import satisfiable
 
 class Q:
     """Supported ask keys."""

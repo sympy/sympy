@@ -127,13 +127,14 @@ def coverage(filename, file, verbose=False):
 
 
 
-def go(file, verbose=False):
+def go(file, verbose=False, exact=True):
     if os.path.isdir(file):
         for F in os.listdir(file):
-            go('%s/%s'%(file,F), verbose)
+            go('%s/%s'%(file,F), verbose, exact=False)
         return
-    if not (file.endswith('.py') or file.endswith('.pyx')):
-        return
+    if not (file.endswith('.py') or file.endswith('.pyx')) or \
+        not exact and ('test_' in file or 'bench_' in file):
+            return
     if not os.path.exists(file):
         print "File %s does not exist."%file
         sys.exit(1)

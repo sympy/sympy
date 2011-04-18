@@ -1,5 +1,5 @@
 from sympy import Rational, Symbol, Real, I, sqrt, oo, nan, pi, E, Integer, \
-        S, factorial, Catalan, EulerGamma, GoldenRatio, cos, exp
+        S, factorial, Catalan, EulerGamma, GoldenRatio, cos, exp, Number
 from sympy.core.power import integer_nthroot
 
 from sympy.core.numbers import igcd, ilcm, igcdex, seterr
@@ -38,6 +38,13 @@ def test_mod():
     b = Integer(4)
 
     assert type(a % b) == Integer
+
+def test_divmod():
+    assert divmod(S(12), S(8)) == (1, 4)
+    assert divmod(-S(12), S(8)) == (-2, 4)
+    assert divmod(S(0), S(1)) == (0, 0)
+    raises(ZeroDivisionError, "divmod(S(0), S(0))")
+    raises(ZeroDivisionError, "divmod(S(1), S(0))")
 
 def test_igcd():
     assert igcd(0, 0) == 0
@@ -137,6 +144,26 @@ def test_Rational_new():
         assert Rational(fractions.Fraction(1, 2)) == Rational(1, 2)
     except ImportError:
         pass
+
+def test_Number_new():
+    """"
+    Test for Number constructor
+    """
+    # Expected behavior on numbers and strings
+    assert Number(1) is S.One
+    assert Number(2).__class__ is Integer
+    assert Number(-622).__class__ is Integer
+    assert Number(5,3).__class__ is Rational
+    assert Number(5.3).__class__ is Real
+    assert Number('1') is S.One
+    assert Number('2').__class__ is Integer
+    assert Number('-622').__class__ is Integer
+    assert Number('5/3').__class__ is Rational
+    assert Number('5.3').__class__ is Real
+    raises(ValueError, "Number('cos')")
+    raises(TypeError, "Number(cos)")
+    a = Rational(3,5)
+    assert Number(a) is a # Check idempotence on Numbers
 
 def test_Rational_cmp():
     n1 = Rational(1,4)

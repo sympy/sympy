@@ -1,7 +1,8 @@
 from sympy import symbols, Integral, Tuple, Dummy
 from sympy.utilities.iterables import postorder_traversal, \
-    preorder_traversal, flatten, subsets, variations, cartes, \
+    preorder_traversal, flatten, subsets, variations, cartes, sift, \
     numbered_symbols
+from sympy.core.singleton import S
 from sympy.functions.elementary.piecewise import Piecewise, ExprCondPair
 from sympy.utilities.pytest import raises
 
@@ -46,6 +47,15 @@ def test_preorder_traversal():
     assert list(postorder_traversal(('abc', ('d', 'ef')))) == [
         'abc', 'd', 'ef', ('d', 'ef'), ('abc', ('d', 'ef'))]
 
+    expr = (x**(y**z)) ** (x**(y**z))
+    expected = [(x**(y**z))**(x**(y**z)), x**(y**z), x**(y**z)]
+    result = []
+    pt = preorder_traversal(expr)
+    for i in pt:
+        result.append(i)
+        if i == x**(y**z):
+            pt.skip()
+    assert result == expected
 
 def test_flatten():
     assert flatten( (1,(1,)) ) == [1,1]
@@ -128,3 +138,9 @@ def test_cartes():
 def test_numbered_symbols():
     s = numbered_symbols(cls=Dummy)
     assert isinstance(s.next(), Dummy)
+
+def test_sift():
+    assert sift(range(5), lambda _: _%2) == {1: [1, 3], 0: [0, 2, 4]}
+    assert sift(x + y, lambda _: _.has(x)) == {False: [y], True: [x]}
+    assert sift(x*y, lambda _: _.has(x)) == {False: [y], True: [x]}
+    assert sift(S.One, lambda _: _.has(x)) == {False: [1]}
