@@ -5,8 +5,8 @@ from sympy.core.basic import C, sympify
 from sympy.core.numbers import Rational
 from sympy.core.singleton import S
 
-from sympy.functions import exp, sin , cos , tan , cot , asin
-from sympy.functions import log, sinh, cosh, tanh, coth, asinh
+from sympy.functions import exp, sin , cos , tan , cot , asin, acos, atan
+from sympy.functions import log, sinh, cosh, tanh, coth, asinh, acosh
 from sympy.functions import sqrt, erf
 
 from sympy.solvers import solve
@@ -191,6 +191,16 @@ def heurisch(f, x, **kwargs):
                                 terms.add(asinh(sqrt(M[a]/M[b])*x))
                             elif M[a].is_negative:
                                 terms.add(asin(sqrt(-M[a]/M[b])*x))
+
+                        M = g.base.match(a*x**2 - b)
+
+                        if M is not None and M[b].is_positive:
+                            if M[a].is_positive:
+                                terms.add(acosh(sqrt(M[a]/M[b])*x))
+                            elif M[a].is_negative:
+                                terms.add((-M[b]/2*sqrt(-M[a])*\
+                                           atan(sqrt(-M[a])*x/sqrt(M[a]*x**2-M[b]))))
+
         else:
             terms |= set(hints)
 

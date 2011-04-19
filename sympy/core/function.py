@@ -87,6 +87,21 @@ class Application(Basic):
 
     nargs = None
 
+    @classmethod
+    def _should_evalf(cls, arg):
+        """
+        Decide if the function should automatically evalf().
+        By default (in this implementation), this happens if (and only if) the
+        ARG is a floating point number.
+        This function is used by __new__.
+        """
+        if arg.is_Real:
+            return True
+        if not arg.is_Add:
+            return False
+        re, im = arg.as_real_imag()
+        return re.is_Real or im.is_Real
+
     @cacheit
     def __new__(cls, *args, **options):
         args = map(sympify, args)
@@ -105,7 +120,10 @@ class Application(Basic):
             r = super(Application, cls).__new__(cls, *args, **options)
             r.nargs = len(args)
             return r
-        return super(Application, cls).__new__(cls, *args, **options)
+        r = super(Application, cls).__new__(cls, *args, **options)
+        if any([cls._should_evalf(a) for a in args]):
+            return r.evalf()
+        return r
 
     @classmethod
     def eval(cls, *args):

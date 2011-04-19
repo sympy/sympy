@@ -194,6 +194,22 @@ class HermitianOperator(Operator):
     def _eval_dagger(self):
         return self
 
+    def _eval_inverse(self):
+        if isinstance(self, UnitaryOperator):
+            return self
+        else:
+            return Operator._eval_inverse(self)
+
+    def _eval_power(self, exp):
+        if isinstance(self, UnitaryOperator):
+            if exp == -1:
+                return Operator._eval_power(self, exp)
+            elif abs(exp) % 2 == 0:
+                return self*(Operator._eval_inverse(self))
+            else:
+                return self
+        else:
+            return Operator._eval_power(self, exp)
 
 class UnitaryOperator(Operator):
     """A unitary operator that satisfies U*Dagger(U) == 1.

@@ -68,7 +68,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Andrew Straw: lambdify() improvements
 #. Kaifeng Zhu: factorint() fix
 #. Ted Horst: Basic.__call__() fix, pretty printing fix
-#. Akshay Srinivasan: Printing fix, improvements to integration
+#. Akshay Srinivasan: printing fix, improvements to integration
 #. Aaron Meurer: ODE solvers (GSoC 2009), The Risch Algorithm for integration (GSoC 2010), other fixes, project leader as of Jan 4, 2011
 #. Barry Wardell: implement series as function, several tests added
 #. Tomasz Buchert: ccode printing fixes, code quality concerning exceptions, documentation
@@ -95,24 +95,30 @@ want to be mentioned here, so see our repository history for a full list).
 #. Łukasz Pankowski: fix matrix multiplication with numpy scalars
 #. Chu-Ching Huang: fix 3d plotting example
 #. Fernando Perez: symarray() implemented
-#. Raffaele De Feo: Fix non-commutative expansion
+#. Raffaele De Feo: fix non-commutative expansion
 #. Christian Muise: fixes to logic module
-#. Kazuo Thow: Cleanup pretty printing tests
-#. Jezreel Ng: Fix hyperbolic functions rewrite
+#. Kazuo Thow: cleanup pretty printing tests
+#. Jezreel Ng: fix hyperbolic functions rewrite
 #. Nicholas J.S. Kinar: improved documentation about "Immutability of Expressions"
-#. Thomas Dixon: Fix a limit bug
-#. Cristóvão Sousa: Implements _sage_ method for sign function.
-#. Andre de Fortier Smit: Doctests in matrices improved
-#. Alexey U. Goodchenko: Various work in matrices
-#. Gary Kerr: Fix examples, docs
-#. Sherjil Ozair: Fixes to SMatrix
-#. Oleksandr Gituliar: Fixes to Matrix
+#. Thomas Dixon: fix a limit bug
+#. Cristóvão Sousa: implements _sage_ method for sign function.
+#. Andre de Fortier Smit: doctests in matrices improved
+#. Alexey U. Goodchenko: various work in matrices
+#. Gary Kerr: fix examples, docs
+#. Sherjil Ozair: fixes to SMatrix
+#. Oleksandr Gituliar: fixes to Matrix
 #. Sean Vig: Quantum improvement
-#. Prafullkumar P. Tale: Fixed plotting documentation
-#. Vladimir Perić: Fix some Python 3 issues
-#. Tom Bachmann: Fixes to Real
+#. Prafullkumar P. Tale: fixed plotting documentation
+#. Vladimir Perić: fix some Python 3 issues
+#. Tom Bachmann: fixes to Real
 #. Yuri Karadzhov: improvements to hyperbolic identities
-#. Vladimir Lagunov: Improvements to the geometry module
+#. Vladimir Lagunov: improvements to the geometry module
+#. Matthew Rocklin: improvements to Number instantiation
+#. Saptarshi Mandal: Test for an integral
+#. Gilbert Gede: Tests for solvers
+#. Anatolii Koval: Infinite 1D box example
+#. Tomo Lazovich: fixes to quantum operators
+#. Pavel Fedotov: fix to is_number
 
 Up-to-date list in the order of the first contribution is given in the `AUTHORS
 <https://github.com/sympy/sympy/blob/master/AUTHORS>`_ file.

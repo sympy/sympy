@@ -1,9 +1,9 @@
-from sympy import (Add, Basic, S, I, O, Symbol, Wild,  Real, Integer, Rational,
-    sin, cos, tan, exp, log, oo, sqrt, symbols, Integral, sympify,
-    WildFunction, Poly, Function, Derivative, Number, Tuple, pi, var,
-    NumberSymbol, zoo, Piecewise, Mul, Pow, nsimplify, ratsimp, trigsimp,
-    radsimp, powsimp, simplify, together, separate, collect,
-    apart, combsimp, factor, refine, cancel, invert)
+from sympy import Add, Basic, S, Symbol, Wild,  Real, Integer, Rational, I, \
+    sin, cos, tan, exp, log, oo, sqrt, symbols, Integral, sympify, \
+    WildFunction, Poly, Function, Derivative, Number, pi, var, \
+    NumberSymbol, zoo, Piecewise, Mul, Pow, nsimplify, ratsimp, trigsimp, \
+    radsimp, powsimp, simplify, together, separate, collect, \
+    apart, combsimp, factor, refine, cancel, invert, Tuple
 from sympy.physics.secondquant import FockState
 
 from sympy.core.cache import clear_cache
@@ -160,7 +160,7 @@ def test_relational():
 
 def test_relational_noncommutative():
     from sympy import Lt, Gt, Le, Ge
-    a, b = symbols('a,b', commutative=False)
+    a, b = symbols('a b', commutative=False)
     assert (a < b)  == Lt(a, b)
     assert (a <= b) == Le(a, b)
     assert (a > b)  == Gt(a, b)
@@ -294,6 +294,7 @@ def test_is_polynomial():
     assert ((x**2)*(y**2) + x*(y**2) + y*x + exp(x)).is_polynomial(x, y) == False
 
 def test_is_rational_function():
+    x,y = symbols('x y')
 
     assert Integer(1).is_rational_function() == True
     assert Integer(1).is_rational_function(x) == True
@@ -349,6 +350,7 @@ def test_SAGE3():
     assert e == ('mys', x, o)
 
 def test_len():
+    x, y, z = symbols("x y z")
     e = x*y
     assert len(e.args) == 2
     e = x+y+z
@@ -429,6 +431,18 @@ def test_as_independent():
 
     assert (2*sin(x)).as_independent(x) == (2, sin(x))
     assert (2*sin(x)).as_independent(y) == (2*sin(x), 1)
+
+    # issue 1804 = 1766b
+    n1, n2 = symbols('n1 n2', commutative=False)
+    assert (n1 + n1*n2).as_independent(n2) == (n1, n1*n2)
+    assert (n2*n1 + n1*n2).as_independent(n2) == (0, n1*n2 + n2*n1)
+    assert (n1*n2*n1).as_independent(n2) == (n1, n2*n1)
+    assert (n1*n2*n1).as_independent(n1) == (1, n1*n2*n1)
+
+    assert (3*x).as_independent(x, as_Add=1) == (0, 3*x)
+    assert (3*x).as_independent(x, as_Add=0) == (3, x)
+    assert (3+x).as_independent(x, as_Add=1) == (3, x)
+    assert (3+x).as_independent(x, as_Add=0) == (1, 3 + x)
 
 def test_subs_dict():
     a,b,c,d,e = symbols('a,b,c,d,e')
@@ -521,6 +535,7 @@ def test_count():
     assert expr.count(lambda u: type(u) is sin) == 1
 
 def test_has_any():
+    x,y,z,t,u = symbols('x y z t u')
     f = Function("f")
     g = Function("g")
     p = Wild('p')
@@ -555,7 +570,7 @@ def test_has_any():
 
     expr = x**2*y + sin(2**t + log(z))
 
-    assert expr.has(n) is False
+    assert expr.has(u) is False
 
     assert expr.has(x)
     assert expr.has(y)
@@ -563,7 +578,7 @@ def test_has_any():
     assert expr.has(t)
 
     assert expr.has(x, y, z, t)
-    assert expr.has(x, y, z, t, n)
+    assert expr.has(x, y, z, t, u)
 
     from sympy.physics.units import m, s
 
@@ -602,8 +617,6 @@ def test_nonzero():
     assert bool(x*0)    == False
 
 def test_is_number():
-    g = WildFunction('g')
-
     assert Real(3.14).is_number == True
     assert Integer(737).is_number == True
     assert Rational(3, 2).is_number == True
@@ -617,8 +630,16 @@ def test_is_number():
     assert (8+log(2)).is_number == True
     assert (2 + log(x)).is_number == False
     assert (8+log(2)+x).is_number == False
-    assert (2*g).is_number == False
     assert (1+x**2/x-x).is_number == True
+    assert Tuple(Integer(1)).is_number == False
+    assert Add(2, x).is_number == False
+    assert Mul(3, 4).is_number == True
+    assert Pow(log(2), 2).is_number == True
+    assert oo.is_number == True
+    g = WildFunction('g')
+    assert g.is_number == False
+    assert (2*g).is_number == False
+    assert (x**2).subs(x, 3).is_number == True
 
     # test extensibility of .is_number
     # on subinstances of Basic
@@ -717,6 +738,14 @@ def test_extractions():
            ((-x-y)/(y-x)).could_extract_minus_sign() == False # is_Mul even case
 
 def test_coeff():
+    from sympy.abc import x, y, z
+    from sympy import sqrt
+
+    assert (x+1).coeff(x+1) == 1
+    assert (3*x).coeff(0) == None
+    assert (z*(1+x)*x**2).coeff(1+x) == z*x**2
+    assert (1+2*x*x**(1+x)).coeff(x*x**(1+x)) == 2
+    assert (1+2*x**(y+z)).coeff(x**(y+z)) == 2
     assert (3+2*x+4*x**2).coeff(1) == None
     assert (3+2*x+4*x**2).coeff(-1) == None
     assert (3+2*x+4*x**2).coeff(x) == 2
@@ -724,13 +753,57 @@ def test_coeff():
     assert (3+2*x+4*x**2).coeff(x**3) == None
 
     assert (-x/8 + x*y).coeff(x) == -S(1)/8 + y
-    assert (-x/8 + x*y).coeff(-x) == S(1)/8 - y
-    assert (-x/8 + x*y).coeff(2*x) == -S(1)/16 + y/2
-    assert (x/8 + x*y).coeff(2*y*x) == S(1)/2
-    assert (x/8 + x*y).coeff(y*x/2) == 2
+    assert (-x/8 + x*y).coeff(-x) == S(1)/8
+    assert (4*x).coeff(2*x) == None
+    assert (2*x).coeff(2*x) == 1
+
+    n1, n2 = symbols('n1 n2', commutative=False)
+    assert (n1*n2).coeff(n1) == 1
+    assert (n1*n2).coeff(n2) == n1
+    assert (n1*n2 + x*n1).coeff(n1) == 1 # 1*n1*(n2+x)
+    assert (n2*n1 + x*n1).coeff(n1) == n2 + x
+    assert (n2*n1 + x*n1**2).coeff(n1) == n2
+    assert (n1**x).coeff(n1) == None
+    assert (n1*n2 + n2*n1).coeff(n1) == None
+    assert (2*(n1+n2)*n2).coeff(n1+n2, right=1) == n2
+    assert (2*(n1+n2)*n2).coeff(n1+n2, right=0) == 2
 
     f = Function('f')
     assert (2*f(x) + 3*f(x).diff(x)).coeff(f(x)) == 2
+
+    expr = z*(x+y)**2
+    expr2 = z*(x+y)**2 + z*(2*x + 2*y)**2
+    assert expr.coeff(z) == (x+y)**2
+    assert expr.coeff(x+y) == None
+    assert expr2.coeff(z) == (x+y)**2 + (2*x + 2*y)**2
+
+    assert (x + y + 3*z).coeff(1) == x + y
+    assert (-x + 2*y).coeff(-1) == x
+    assert (x - 2*y).coeff(-1) == 2*y
+    assert (3 + 2*x + 4*x**2).coeff(1) == None
+    assert (-x - 2*y).coeff(2) == -y
+    assert (x + sqrt(2)*x).coeff(sqrt(2)) == x
+    assert (3 + 2*x + 4*x**2).coeff(x) ==  2
+    assert (3 + 2*x + 4*x**2).coeff(x**2) == 4
+    assert (3 + 2*x + 4*x**2).coeff(x**3) == None
+    assert (z*(x + y)**2).coeff((x+y)**2) == z
+    assert (z*(x + y)**2).coeff(x+y) == None
+    assert (2 + 2*x + (x+1)*y).coeff(x+1) == y
+
+    n, m, o, l = symbols('n m o l', commutative=False)
+    assert n.coeff(n) ==  1
+    assert y.coeff(n) == None
+    assert (3*n).coeff(n) == 3
+    assert (2 + n).coeff(x*m) == None
+    assert (2*x*n*m).coeff(x) == 2*n*m
+    assert (2 + n).coeff(x*m*n + y) == None
+    assert (2*x*n*m).coeff(3*n) == None
+    assert (n*m + m*n*m).coeff(n) == 1 + m
+    assert (n*m + m*n*m).coeff(n, right=True) == m # = (1 + m)*n*m
+    assert (n*m + m*n).coeff(n) == None
+    assert (n*m + o*m*n).coeff(m*n) == o
+    assert (n*m + o*m*n).coeff(m*n, right=1) == 1
+    assert (n*m + n*m*n).coeff(n*m, right=1) == 1 + n # = n*m*(n + 1)
 
 def test_coeff2():
     r, kappa = symbols('r, kappa')
@@ -750,10 +823,8 @@ def test_coeff2_0():
 def test_coeff_expand():
     expr = z*(x+y)**2
     expr2 = z*(x+y)**2 + z*(2*x + 2*y)**2
-    assert expr.coeff(z) == 2*x*y + x**2 + y**2
-    assert expr.coeff(z, expand=False) == (x+y)**2
-    assert expr2.coeff(z) == 10*x*y + 5*x**2 + 5*y**2
-    assert expr2.coeff(z, expand=False) == (x+y)**2 + (2*x + 2*y)**2
+    assert expr.coeff(z) == (x+y)**2
+    assert expr2.coeff(z) == (x+y)**2 + (2*x + 2*y)**2
 
 def test_integrate():
     assert x.integrate(x) == x**2/2
@@ -822,6 +893,7 @@ def test_as_powers_dict():
     assert Mul(2, 2, **dict(evaluate=False)).as_powers_dict() == {S(2): S(2)}
 
 def test_new_rawargs():
+    x, y = symbols('x,y')
     n = Symbol('n', commutative=False)
     a = object.__new__(Add)
     assert 2 + x == a._new_rawargs(*[S(2), x])

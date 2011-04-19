@@ -1,7 +1,7 @@
 from sympy import (Matrix, Symbol, solve, exp, log, cos, acos, Rational, Eq,
     sqrt, oo, LambertW, pi, I, sin, asin, Function, diff, Derivative, symbols,
-    S, sympify, var, simplify, Integral, sstr, Interval, And, Or, Lt, Gt,
-    Assume, Q, re, im)
+    S, sympify, var, simplify, Integral, sstr, Wild, solve_linear, Interval,
+    And, Or, Lt, Gt, Assume, Q, re, im)
 
 from sympy.solvers import solve_linear_system, solve_linear_system_LU,dsolve,\
      tsolve
@@ -146,7 +146,7 @@ def test_solve_polynomial_cv_1a():
         set(['0.010', '-9.5 + 2.8*I', '0', '-9.5 - 2.8*I'])
 
 def test_solve_polynomial_cv_1b():
-    x, a = symbols('x,a')
+    x, a = symbols('x a')
 
     assert set(solve(4*x*(1 - a*x**(S(1)/2)), x)) == set([S(0), 1/a**2])
     assert set(solve(x * (x**(S(1)/3) - 3), x)) == set([S(0), S(27)])
@@ -304,6 +304,22 @@ def test_issue626():
     F = x**2 + f(x)**2 - 4*x - 1
     e = F.diff(x)
     assert solve(e, f(x).diff(x)) == [(2-x)/f(x)]
+
+def test_solve_linear():
+    x, y = symbols('x y')
+    w = Wild('w')
+    assert solve_linear(x, x) == (0, 1)
+    assert solve_linear(x, y - 2*x) in [(x, y/3), (y, 3*x)]
+    assert solve_linear(x, y - 2*x, exclude=[x]) ==(y, 3*x)
+    assert solve_linear(3*x - y, 0) in [(x, y/3), (y, 3*x)]
+    assert solve_linear(3*x - y, 0, [x]) == (x, y/3)
+    assert solve_linear(3*x - y, 0, [y]) == (y, 3*x)
+    assert solve_linear(x**2/y, 1) == (y, x**2)
+    assert solve_linear(w, x) in [(w, x), (x, w)]
+    assert solve_linear(cos(x)**2 + sin(x)**2 + 2 + y) == \
+           (y, -2 - cos(x)**2 - sin(x)**2)
+    assert solve_linear(cos(x)**2 + sin(x)**2 + 2 + y, x=[x]) == \
+           (2 + y + cos(x)**2 + sin(x)**2, 1)
 
 def test_solve_inequalities():
     system = [Lt(x**2 - 2, 0), Gt(x**2 - 1, 0)]

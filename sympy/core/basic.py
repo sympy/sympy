@@ -773,9 +773,8 @@ class Basic(AssumeMeths):
            True
 
         """
-        if not self.args:
-            return False
-        return all(obj.is_number for obj in self.iter_basic_args())
+        # should be overriden by subclasses
+        return False
 
     @property
     def func(self):
