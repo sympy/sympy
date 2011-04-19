@@ -102,11 +102,12 @@ class Application(Basic):
     @cacheit
     def __new__(cls, *args, **options):
         args = map(sympify, args)
+
         # these lines should be refactored
         for opt in ["nargs", "dummy", "comparable", "noncommutative", "commutative"]:
             if opt in options:
                 del options[opt]
-        # up to here.
+
         if not options.pop('evaluate', True):
             return super(Application, cls).__new__(cls, *args, **options)
         evaluated = cls.eval(*args)
@@ -155,10 +156,9 @@ class Application(Basic):
             return new
         elif old.is_Function and new.is_Function:
             if old == self.func:
-                if self.nargs == new.nargs or not new.nargs:
-                    return new(*self.args)
-                # Written down as an elif to avoid a super-long line
-                elif isinstance(new.nargs, tuple) and self.nargs in new.nargs:
+                nargs = len(self.args)
+                if (nargs == new.nargs or new.nargs is None or
+                        (isinstance(new.nargs, tuple) and nargs in new.nargs)):
                     return new(*self.args)
         return self.func(*[s.subs(old, new) for s in self.args])
 
