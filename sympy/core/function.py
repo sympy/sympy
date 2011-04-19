@@ -84,21 +84,6 @@ class Application(Basic):
 
     nargs = None
 
-    @classmethod
-    def _should_evalf(cls, arg):
-        """
-        Decide if the function should automatically evalf().
-        By default (in this implementation), this happens if (and only if) the
-        ARG is a floating point number.
-        This function is used by __new__.
-        """
-        if arg.is_Real:
-            return True
-        if not arg.is_Add:
-            return False
-        re, im = arg.as_real_imag()
-        return re.is_Real or im.is_Real
-
     @cacheit
     def __new__(cls, *args, **options):
         args = map(sympify, args)
@@ -108,16 +93,11 @@ class Application(Basic):
             if opt in options:
                 del options[opt]
 
-        if not options.pop('evaluate', True):
-            return super(Application, cls).__new__(cls, *args, **options)
-        evaluated = cls.eval(*args)
-        if evaluated is not None:
-            return evaluated
-
-        r = super(Application, cls).__new__(cls, *args, **options)
-        if any([cls._should_evalf(a) for a in args]):
-            return r.evalf()
-        return r
+        if options.pop('evaluate', True):
+            evaluated = cls.eval(*args)
+            if evaluated is not None:
+                return evaluated
+        return super(Application, cls).__new__(cls, *args, **options)
 
     @classmethod
     def eval(cls, *args):
@@ -177,24 +157,36 @@ class Function(Application, Expr):
 
     @cacheit
     def __new__(cls, *args, **options):
-        # NOTE: this __new__ is twofold:
-        #
-        # 1 -- it can create another *class*, which can then be instantiated by
-        #      itself e.g. Function('f') creates a new class f(Function)
-        #
-        # 2 -- on the other hand, we instantiate -- that is we create an
-        #      *instance* of a class created earlier in 1.
-
-        # (1) create new function class
-        #     UC: Function('f')
+        # Handle calls like Function('f')
         if cls is Function:
             return UndefinedFunction(*args)
 
-        # (2) create new instance of a class created in (1)
-        #     UC: Function('f')(x)
-        #     UC: sin(x)
-        return Application.__new__(cls, *args, **options)
+        args = map(sympify, args)
+        evaluate = options.pop('evaluate', True)
+        if evaluate:
+            evaluated = cls.eval(*args)
+            if evaluated is not None:
+                return evaluated
+        result = super(Application, cls).__new__(cls, *args, **options)
+        if evaluate and any([cls._should_evalf(a) for a in args]):
+            return result.evalf()
+        return result
 
+    @classmethod
+    def _should_evalf(cls, arg):
+        """
+        Decide if the function should automatically evalf().
+
+        By default (in this implementation), this happens if (and only if) the
+        ARG is a floating point number.
+        This function is used by __new__.
+        """
+        if arg.is_Real:
+            return True
+        if not arg.is_Add:
+            return False
+        re, im = arg.as_real_imag()
+        return re.is_Real or im.is_Real
 
     @property
     def is_commutative(self):
