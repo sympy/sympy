@@ -75,6 +75,12 @@ def test_sin():
 
     assert sin(r).is_real == True
 
+def test_sin_rewrite():
+    x = Symbol('x')
+    assert sin(x).rewrite(exp) == -I*(exp(I*x) - exp(-I*x))/2
+    assert sin(x).rewrite(tan) == 2*tan(x/2)/(1 + tan(x/2)**2)
+    assert sin(x).rewrite(cot) == 2*cot(x/2)/(1 + cot(x/2)**2)
+
 def test_trig_symmetry():
     x = Symbol('x')
     y = Symbol('y')
@@ -114,7 +120,6 @@ def test_trig_symmetry():
     assert cos(pi/2+x) == -sin(x)
     assert tan(pi/2+x) == -cot(x)
     assert cot(pi/2+x) == -tan(x)
-
 
 def test_cos():
     x, y = symbols('x,y')
@@ -184,6 +189,12 @@ def test_cos():
     assert cos(k*pi*I) == cosh(k*pi)
 
     assert cos(r).is_real == True
+
+def test_cos_rewrite():
+    x = Symbol('x')
+    assert cos(x).rewrite(exp) == exp(I*x)/2 + exp(-I*x)/2
+    assert cos(x).rewrite(tan) == (1 - tan(x/2)**2)/(1 + tan(x/2)**2)
+    assert cos(x).rewrite(cot) == -(1 - cot(x/2)**2)/(1 + cot(x/2)**2)
 
 def test_tan():
     x, y = symbols('x,y')
