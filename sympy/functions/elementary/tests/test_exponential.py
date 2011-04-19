@@ -78,6 +78,9 @@ def test_log_values():
     assert log(oo) == oo
     assert log(-oo) == oo
 
+    assert log(zoo) == zoo
+    assert log(-zoo) == zoo
+
     assert log(0) == zoo
 
     assert log(1) == 0
