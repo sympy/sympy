@@ -766,3 +766,7 @@ def test_zoo():
     assert zoo/zoo is S.NaN
 
     assert Mul.flatten([S(-1), oo, S(0)]) == ([S.NaN], [], None)
+
+def issue_1023():
+    b = Symbol('b', bounded=True)
+    assert oo + b == oo
