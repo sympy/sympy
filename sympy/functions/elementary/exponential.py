@@ -311,6 +311,8 @@ class log(Function):
                 return S.NaN
             elif arg.is_negative:
                 return S.Pi * S.ImaginaryUnit + cls(-arg)
+        elif arg is S.ComplexInfinity:
+            return S.ComplexInfinity
         elif arg is S.Exp1:
             return S.One
         #this doesn't work due to caching: :(
