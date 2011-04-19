@@ -3,7 +3,7 @@ from sympy.physics.quantum.tensorproduct import TensorProduct
 from sympy.core.mul import Mul
 from sympy.core.add import Add
 from sympy.core.power import Pow
-from sympy.core.numbers import One
+from sympy.core.expr import Expr
 from sympy.printing.str import sstr
 from sympy.physics.quantum.hilbert import HilbertSpace
 from sympy.physics.quantum.dagger import Dagger
@@ -27,7 +27,9 @@ class Density(QExpr):
             This will check to make sure that all of the pure state hilbert
             spaces contained within it are contained in the same hilbert space?
         """
-
+        for i in xrange(2):
+            if isinstance(args[-1], list):
+                args = args + (1,)
         return args
     
     @classmethod
