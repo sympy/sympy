@@ -29,21 +29,21 @@ def superposition_basis(nqubits):
     Parameters
     ==========
     nqubits : int
-        The number of qubits
+        The number of qubits.
 
     Return
     ======
-    Qubit : An equal superposition of the computational basis with nqubits
+    state : Qubit
+        An equal superposition of the computational basis with nqubits.
 
     Examples
     ========
 
-    Create an equal superposition of 2 qubits:
+    Create an equal superposition of 2 qubits::
 
         >>> from sympy.physics.quantum.grover import superposition_basis
         >>> superposition_basis(2)
         |0>/2 + |1>/2 + |2>/2 + |3>/2
-
     """
 
     amp = 1/sqrt(2**nqubits)
@@ -67,7 +67,7 @@ class OracleGate(Gate):
     Examples
     ========
 
-    Apply an Oracle gate that flips the sign of |2> on different qubits:
+    Apply an Oracle gate that flips the sign of |2> on different qubits::
 
         >>> from sympy.physics.quantum.qubit import IntQubit
         >>> from sympy.physics.quantum.applyops import apply_operators 
@@ -78,7 +78,6 @@ class OracleGate(Gate):
         -|2>
         >>> apply_operators(v*IntQubit(3))
         |3>
-
     """
 
     gate_name = u'V'
@@ -90,10 +89,6 @@ class OracleGate(Gate):
 
     @classmethod
     def _eval_args(cls, args):
-        """
-        args: tuple
-        Returns: tuple, (int tuple - target qubits, callable)
-        """
         if len(args) != 2:
             raise QuantumError(
                 'Insufficient/excessive arguments to Oracle.  Please ' +
@@ -132,9 +127,17 @@ class OracleGate(Gate):
     #-------------------------------------------------------------------------
 
     def _apply_operator_Qubit(self, qubits, **options):
-        """
-        qubits: a set of qubits (Qubit)
-        Returns: Qubit
+        """Apply this operator to a Qubit subclass.
+
+        Parameters
+        ==========
+        qubits : Qubit
+            The qubit subclass to apply this operator to.
+
+        Returns
+        =======
+        state : Expr
+            The resulting quantum state.
         """
         if qubits.nqubits != self.nqubits:
             raise QuantumError(
@@ -222,7 +225,7 @@ def grover_iteration(qstate, oracle):
     Examples
     ========
 
-    Perform one iteration of grover's algorithm to see a phase change:
+    Perform one iteration of grover's algorithm to see a phase change::
 
         >>> from sympy.physics.quantum.applyops import apply_operators
         >>> from sympy.physics.quantum.qubit import IntQubit
@@ -249,13 +252,13 @@ def apply_grover(oracle, nqubits, iterations=None):
 
     Returns
     =======
-    Qubit : The qubits and their probabilities after some number of
-            iterations.
+    state : Expr
+        The resulting state after Grover's algorithm has been iterated.
 
     Examples 
     ========
 
-    Apply grover's algorithm to an even superposition of 2 qubits:
+    Apply grover's algorithm to an even superposition of 2 qubits::
 
         >>> from sympy.physics.quantum.applyops import apply_operators
         >>> from sympy.physics.quantum.qubit import IntQubit

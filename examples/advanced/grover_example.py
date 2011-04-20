@@ -1,3 +1,5 @@
+"""Grover's quantum search algorithm example."""
+
 from sympy import pprint
 from sympy.physics.quantum import apply_operators
 from sympy.physics.quantum.qubit import IntQubit
@@ -63,4 +65,5 @@ def main():
     pprint(iter2)
     print '' 
 
-main()
+if __name__ == "__main__":
+    main()
