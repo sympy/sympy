@@ -173,39 +173,34 @@ class AssocOp(Expr):
 
         For instance:
 
-        >> from sympy import symbols, Wild, sin
-        >> a = Wild("a")
-        >> b = Wild("b")
-        >> c = Wild("c")
-        >> x, y, z = symbols("x y z")
-        >> (a+b*c)._matches_commutative(x+y*z)
+        >>> from sympy import symbols, Wild, sin
+        >>> a = Wild("a")
+        >>> b = Wild("b")
+        >>> c = Wild("c")
+        >>> x, y, z = symbols("x y z")
+        >>> (a+sin(b)*c)._matches_commutative(x+sin(y)*z)
         {a_: x, b_: y, c_: z}
 
-        In the example above, "a+b*c" is the pattern, and "x+y*z" is the
-        expression. Some more examples:
+        In the example above, "a+sin(b)*c" is the pattern, and "x+sin(y)*z" is the
+        expression.
 
-        >> (a+b*c)._matches_commutative(sin(x)+y*z)
-        {a_: sin(x), b_: y, c_: z}
-        >> (a+sin(b)*c)._matches_commutative(x+sin(y)*z)
-        {a_: x, b_: y, c_: z}
-
-        The repl_dict contains parts, that were already matched, and the
+        The repl_dict contains parts that were already matched, and the
         "evaluate=True" kwarg tells _matches_commutative to substitute this
         repl_dict into pattern. For example here:
 
-        >> (a+b*c)._matches_commutative(x+y*z, repl_dict={a: x}, evaluate=True)
+        >>> (a+sin(b)*c)._matches_commutative(x+sin(y)*z, repl_dict={a: x}, evaluate=True)
         {a_: x, b_: y, c_: z}
 
         _matches_commutative substitutes "x" for "a" in the pattern and calls
         itself again with the new pattern "x+b*c" and evaluate=False (default):
 
-        >> (x+b*c)._matches_commutative(x+y*z, repl_dict={a: x})
+        >>> (x+sin(b)*c)._matches_commutative(x+sin(y)*z, repl_dict={a: x})
         {a_: x, b_: y, c_: z}
 
         the only function of the repl_dict now is just to return it in the
         result, e.g. if you omit it:
 
-        >> (x+b*c)._matches_commutative(x+y*z)
+        >>> (x+sin(b)*c)._matches_commutative(x+sin(y)*z)
         {b_: y, c_: z}
 
         the "a: x" is not returned in the result, but otherwise it is
@@ -230,31 +225,23 @@ class AssocOp(Expr):
         from function import WildFunction
         from symbol import Wild
         for p in self.args:
-            if p.has(Wild, WildFunction):
+            if p.has(Wild, WildFunction) and (not p in expr):
                 # not all Wild should stay Wilds, for example:
                 # (w2+w3).matches(w1) -> (w1+w3).matches(w1) -> w3.matches(0)
-                if (not p in repl_dict) and (not p in expr):
-                    wild_part.append(p)
-                    continue
-
-            exact_part.append(p)
+                wild_part.append(p)
+            else:
+                exact_part.append(p)
 
         if exact_part:
-            newpattern = self.__class__(*wild_part)
-            newexpr = self.__class__._combine_inverse(expr, self.__class__(*exact_part))
+            newpattern = self.func(*wild_part)
+            newexpr = self._combine_inverse(expr, self.func(*exact_part))
             return newpattern.matches(newexpr, repl_dict)
 
         # now to real work ;)
-        if isinstance(expr, self.__class__):
-            expr_list = list(expr.args)
-        else:
-            expr_list = [expr]
+        expr_list = self.make_args(expr)
 
-        while expr_list:
-            last_op = expr_list.pop()
-            tmp = wild_part[:]
-            while tmp:
-                w = tmp.pop()
+        for last_op in reversed(expr_list):
+            for w in reversed(wild_part):
                 d1 = w.matches(last_op, repl_dict)
                 if d1 is not None:
                     d2 = self.subs(d1.items()).matches(expr, d1)
@@ -272,7 +259,8 @@ class AssocOp(Expr):
             if r and not a: r = False
         return r
 
-    _eval_evalf = Expr._seq_eval_evalf
+    def _eval_evalf(self, prec):
+        return self.func(*[s._evalf(prec) for s in self.args])
 
     @classmethod
     def make_args(cls, expr):

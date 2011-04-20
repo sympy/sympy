@@ -1,4 +1,4 @@
-from sympy import Symbol, Rational, sqrt, pi, cos, oo, simplify, Real
+from sympy import C, S, Symbol, Rational, sqrt, pi, cos, oo, simplify, Real, Abs
 from sympy.geometry import (Point, Polygon, convex_hull, Segment,
     RegularPolygon, Circle, Ellipse, GeometryError, Line, intersection, Ray,
     Triangle, are_similar, Curve)
@@ -209,7 +209,14 @@ def test_ellipse():
     assert e2.area == pi/2
     assert e3.area == pi*(y1**2)
     assert c1.area == e1.area
-    assert c1.circumference == 2*pi
+    assert c1.circumference == e1.circumference
+    assert e3.circumference == 2*pi*y1
+
+    a = Symbol('a')
+    b = Symbol('b')
+    e5 = Ellipse(p1, a, b)
+    assert e5.circumference == 4*a*C.Integral(((1 - x**2*Abs(b**2 - a**2)/a**2)/(1 - x**2))**(S(1)/2),\
+                                            (x, 0, 1))
 
     assert e2.arbitrary_point() in e2
 

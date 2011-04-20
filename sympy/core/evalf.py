@@ -1077,9 +1077,6 @@ class EvalfMixin(object):
     def _eval_evalf(self, prec):
         return
 
-    def _seq_eval_evalf(self, prec):
-        return self.func(*[s._evalf(prec) for s in self.args])
-
     def _to_mpmath(self, prec, allow_ints=True):
         # mpmath functions accept ints as input
         errmsg = "cannot convert to mpmath number"
@@ -1112,6 +1109,7 @@ def N(x, n=15, **options):
     Calls x.evalf(n, **options).
 
     Both .evalf() and N() are equivalent, use the one that you like better.
+    See also the docstring of .evalf() for information on the options.
 
     Example:
     >>> from sympy import Sum, Symbol, oo, N
