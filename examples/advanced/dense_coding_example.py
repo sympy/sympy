@@ -1,7 +1,7 @@
 """Demonstration of quantum dense coding."""
 
 from sympy import sqrt, pprint
-from sympy.physics.quantum import apply_operators
+from sympy.physics.quantum import qapply
 from sympy.physics.quantum.gate import *
 from sympy.physics.quantum.qubit import Qubit
 from sympy.physics.quantum.circuitplot import circuit_plot
@@ -24,25 +24,25 @@ def main():
     # To Send Bob the message |0>|0>
     print "To Send Bob the message |00>."
     circuit = H(1)*CNOT(1,0)
-    result = apply_operators(circuit*psi); result
+    result = qapply(circuit*psi); result
     pprint(result)
 
     # To send Bob the message |0>|1>
     print "To Send Bob the message |01>."
     circuit = H(1)*CNOT(1,0)*X(1)
-    result = apply_operators(circuit*psi); result
+    result = qapply(circuit*psi); result
     pprint(result)
 
     # To send Bob the message |1>|0>
     print "To Send Bob the message |10>."
     circuit = H(1)*CNOT(1,0)*Z(1)
-    result = apply_operators(circuit*psi); result
+    result = qapply(circuit*psi); result
     pprint(result)
 
     # To send Bob the message |1>|1>
     print "To Send Bob the message |11>."
     circuit = H(1)*CNOT(1,0)*Z(1)*X(1)
-    result = apply_operators(circuit*psi); result
+    result = qapply(circuit*psi); result
     pprint(result)
 
 if __name__ == "__main__":

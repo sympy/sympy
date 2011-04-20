@@ -8,7 +8,7 @@ Todo:
 """
 
 from sympy import sqrt, pi, floor
-from sympy.physics.quantum.applyops import apply_operators
+from sympy.physics.quantum.qapply import qapply
 from sympy.physics.quantum.qexpr import QuantumError
 from sympy.physics.quantum.hilbert import ComplexSpace
 from sympy.physics.quantum.operator import UnitaryOperator
@@ -70,13 +70,13 @@ class OracleGate(Gate):
     Apply an Oracle gate that flips the sign of |2> on different qubits::
 
         >>> from sympy.physics.quantum.qubit import IntQubit
-        >>> from sympy.physics.quantum.applyops import apply_operators 
+        >>> from sympy.physics.quantum.qapply import qapply 
         >>> from sympy.physics.quantum.grover import OracleGate 
         >>> f = lambda qubits: True if qubits == IntQubit(2) else False
         >>> v = OracleGate(2, f)
-        >>> apply_operators(v*IntQubit(2))
+        >>> qapply(v*IntQubit(2))
         -|2>
-        >>> apply_operators(v*IntQubit(3))
+        >>> qapply(v*IntQubit(3))
         |3>
     """
 
@@ -227,14 +227,14 @@ def grover_iteration(qstate, oracle):
 
     Perform one iteration of grover's algorithm to see a phase change::
 
-        >>> from sympy.physics.quantum.applyops import apply_operators
+        >>> from sympy.physics.quantum.qapply import qapply
         >>> from sympy.physics.quantum.qubit import IntQubit
         >>> from sympy.physics.quantum.grover import *
         >>> numqubits = 2
         >>> basis_states = superposition_basis(numqubits)
         >>> f = lambda qubits: True if qubits == IntQubit(2) else False
         >>> v = OracleGate(numqubits, f)
-        >>> apply_operators(grover_iteration(basis_states, v))
+        >>> qapply(grover_iteration(basis_states, v))
         |2>
 
     """
@@ -260,11 +260,11 @@ def apply_grover(oracle, nqubits, iterations=None):
 
     Apply grover's algorithm to an even superposition of 2 qubits::
 
-        >>> from sympy.physics.quantum.applyops import apply_operators
+        >>> from sympy.physics.quantum.qapply import qapply
         >>> from sympy.physics.quantum.qubit import IntQubit
         >>> from sympy.physics.quantum.grover import *
         >>> f = lambda qubits: True if qubits == IntQubit(2) else False
-        >>> apply_operators(apply_grover(f, 2))
+        >>> qapply(apply_grover(f, 2))
         |2>
 
     """
@@ -280,6 +280,6 @@ def apply_grover(oracle, nqubits, iterations=None):
     iterated = superposition_basis(nqubits)
     for iter in range(iterations):
         iterated = grover_iteration(iterated, v)
-        iterated = apply_operators(iterated)
+        iterated = qapply(iterated)
 
     return iterated
