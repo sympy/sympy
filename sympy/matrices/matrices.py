@@ -1330,8 +1330,6 @@ class Matrix(object):
 
         See also: .is_lower(), is_upper() .is_diagonalizable()
         """
-        if not self.is_square:
-            return False
         for i in range(self.cols):
             for j in range(self.rows):
                 if i != j and self[i, j] != 0:
