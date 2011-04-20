@@ -1420,3 +1420,13 @@ def test_SMatrix_add():
     a = SMatrix(100, 100, lambda i, j : int(j != 0 and i % j == 0))
     b = SMatrix(100, 100, lambda i, j : int(i != 0 and j % i == 0))
     assert (len(a.mat) + len(b.mat) - len((a+b).mat) > 0)
+
+def test_has():
+    x, y, z = symbols('x,y,z')
+    A = Matrix(((x,y),(2,3)))
+    assert A.has(x)
+    assert not A.has(z)
+    assert A.has(Symbol)
+
+    A = A.subs(x,2)
+    assert not A.has(x)

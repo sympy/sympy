@@ -1947,11 +1947,28 @@ class Matrix(object):
             assert sum(res) == algebraical
             return res
 
+    def has(self, *patterns):
+        """
+        Test whether any subexpression matches any of the patterns.
+
+        Examples:
+        >>> from sympy import Matrix, Real
+        >>> from sympy.abc import x, y
+        >>> A = Matrix(((1, x), (0.2, 3)))
+        >>> A.has(x)
+        True
+        >>> A.has(y)
+        False
+        >>> A.has(Real)
+        True
+        """
+        return any(a.has(*patterns) for a in self.mat)
+
 def matrix_multiply(A, B):
     """
     Matrix product A*B.
 
-    A and B must be of appropriate dimensions.  If A is a m x k matrix, and B
+    A and B must be of appropriate dimensions.  If A is an m x k matrix, and B
     is a k x n matrix, the product will be an m x n matrix.
 
     Example:

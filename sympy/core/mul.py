@@ -570,7 +570,8 @@ class Mul(AssocOp):
         # handle (w*3).matches('x*5') -> {w: x*5/3}
         coeff, terms = self.as_coeff_mul()
         if len(terms) == 1:
-            return terms[0].matches(expr/coeff, repl_dict)
+            newexpr = self.__class__._combine_inverse(expr, coeff)
+            return terms[0].matches(newexpr, repl_dict)
         return
 
     def matches(self, expr, repl_dict={}, evaluate=False):
@@ -654,6 +655,12 @@ class Mul(AssocOp):
         """
         if lhs == rhs:
             return S.One
+        def check(l, r):
+            if l.is_Real and r.is_comparable:
+                return Add(l, 0) == Add(r.evalf(), 0)
+            return False
+        if check(lhs, rhs) or check(rhs, lhs):
+           return S.One
         if lhs.is_Mul and rhs.is_Mul:
             a = list(lhs.args)
             b = [1]

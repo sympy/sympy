@@ -93,7 +93,7 @@ class exp(Function):
                     included.append(arg)
 
         if excluded:
-            return Mul(*(excluded+[cls(Add(*included))]))
+            return Mul(*(excluded + [cls(Add(*included))]))
 
     @staticmethod
     @cacheit
@@ -382,7 +382,7 @@ class log(Function):
         else:
             abs = C.Abs(self.args[0])
             arg = C.arg(self.args[0])
-        if hints['log']: # Expand the log
+        if hints.get('log', False): # Expand the log
             hints['complex'] = False
             return (log(abs).expand(deep, **hints), arg)
         else:
