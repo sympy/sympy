@@ -1498,5 +1498,13 @@ def test_SVD():
     assert U * S * V.T == M
     assert U*U.T == U.T*U == eye(U.cols)
     assert V*V.T == V.T*V == eye(V.cols)
-    assert S.is_diagonal()                                 
+    #assert S.is_diagonal()
+    
+    N = Matrix(((0,1),(1,0),(1,1)))
+    U, S, V = M.SVD()
+    assert U * S * V.T == M
+    assert U*U.T == U.T*U == eye(U.cols)
+    assert V*V.T == V.T*V == eye(V.cols)
+    #assert S.is_diagonal()
+                                  
 

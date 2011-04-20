@@ -2021,7 +2021,6 @@ class Matrix(object):
         if A.rows<A.cols:
             return VEM, sigma, UEM
         return UEM, sigma, VEM
-        
 
 def matrix_multiply(A, B):
     """
