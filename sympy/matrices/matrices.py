@@ -2011,6 +2011,15 @@ class Matrix(object):
         """
         return any(a.has(*patterns) for a in self.mat)
 
+    def _diagonal_power(self, n):
+        return Matrix(self.rows, self.cols, lambda i, j: self[i,j]**n if i==j else 0)
+
+    def SVD(A):
+        UEM, UEV = (A.T * A).diagonalize(normalvects=True, sortedvals=True)
+        VEM, VEV = (A * A.T).diagonalize(normalvects=True, sortedvals=True)
+        sigma = UEV._diagonal_power(S(1)/2)[0:A.rows,0:A.cols]
+        return UEM, sigma, VEM
+
 def matrix_multiply(A, B):
     """
     Matrix product A*B.
