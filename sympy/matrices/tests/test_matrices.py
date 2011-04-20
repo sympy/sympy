@@ -1399,13 +1399,6 @@ def test_jordan_form():
     (P, J) = m.jordan_form()
     assert Jmust == J
 
-def test_SMatrix_transpose():
-    assert SMatrix((1,2),(3,4)).transpose() == SMatrix((1,3),(2,4))
-
-def test_SMatrix_CL_RL():
-    assert SMatrix((1,2),(3,4)).row_list() == [(0, 0, 1), (0, 1, 2), (1, 0, 3), (1, 1, 4)]
-    assert SMatrix((1,2),(3,4)).col_list() == [(0, 0, 1), (1, 0, 3), (0, 1, 2), (1, 1, 4)]
-
 def test_Matrix_berkowitz_charpoly():
     x, UA, K_i, K_w = symbols('x UA K_i K_w')
 
@@ -1414,3 +1407,16 @@ def test_Matrix_berkowitz_charpoly():
 
     assert A.berkowitz_charpoly(x) == \
         Poly(x**2 + (K_i*UA + K_w*UA + 2*K_i*K_w)/(K_i + K_w)*x + K_i*K_w*UA/(K_i + K_w), x, domain='ZZ(K_i,K_w,UA)')
+
+def test_SMatrix_transpose():
+    assert SMatrix((1,2),(3,4)).transpose() == SMatrix((1,3),(2,4))
+
+def test_SMatrix_CL_RL():
+    assert SMatrix((1,2),(3,4)).row_list() == [(0, 0, 1), (0, 1, 2), (1, 0, 3), (1, 1, 4)]
+    assert SMatrix((1,2),(3,4)).col_list() == [(0, 0, 1), (1, 0, 3), (0, 1, 2), (1, 1, 4)]
+
+def test_SMatrix_add():
+    assert SMatrix(((1,0), (0,1))) + SMatrix(((0,1), (1,0))) == SMatrix(((1,1), (1,1)))
+    a = SMatrix(100, 100, lambda i, j : int(j != 0 and i % j == 0))
+    b = SMatrix(100, 100, lambda i, j : int(i != 0 and j % i == 0))
+    assert (len(a.mat) + len(b.mat) - len((a+b).mat) > 0)

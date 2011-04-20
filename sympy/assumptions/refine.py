@@ -1,5 +1,4 @@
 from sympy.core import S, Add
-from sympy.utilities.source import get_class
 from sympy.assumptions import Q, ask
 from sympy.logic.boolalg import fuzzy_not
 
