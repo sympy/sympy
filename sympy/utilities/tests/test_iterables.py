@@ -166,6 +166,12 @@ def test_numbered_symbols():
     s = numbered_symbols(cls=Dummy)
     assert isinstance(s.next(), Dummy)
 
+def test_sift():
+    assert sift(range(5), lambda _: _%2) == {1: [1, 3], 0: [0, 2, 4]}
+    assert sift(x + y, lambda _: _.has(x)) == {False: [y], True: [x]}
+    assert sift(x*y, lambda _: _.has(x)) == {False: [y], True: [x]}
+    assert sift(S.One, lambda _: _.has(x)) == {False: [1]}
+
 def test_take():
     X = numbered_symbols()
 

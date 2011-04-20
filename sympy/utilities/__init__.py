@@ -3,7 +3,7 @@
 from iterables import (iff, flatten, group, split, take, subsets,
     variations, numbered_symbols, cartes, capture, any, all, dict_merge,
     postorder_traversal, preorder_traversal, interactive_traversal,
-    prefixes, postfixes)
+    prefixes, postfixes, sift)
 
 from lambdify import lambdify
 from source import source
