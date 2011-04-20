@@ -1942,6 +1942,10 @@ def test_intervals():
     assert real_part == []
     assert all([ re(a) < re(r) < re(b) and im(a) < im(r) < im(b) for (a, b), r in zip(complex_part, roots) ])
 
+    raises(ValueError, "intervals(x**2 - 2, eps=10**-100000)")
+    raises(ValueError, "Poly(x**2 - 2).intervals(eps=10**-100000)")
+    raises(ValueError, "intervals([x**2 - 2, x**2 - 3], eps=10**-100000)")
+
 def test_refine_root():
     f = Poly(x**2 - 2)
 
@@ -1977,6 +1981,9 @@ def test_refine_root():
     assert refine_root(f, 1, 2, eps=1e-2) == (S(24)/17, S(17)/12)
 
     raises(PolynomialError, "refine_root(1, 7, 8, eps=S(1)/100)")
+
+    raises(ValueError, "Poly(f).refine_root(1, 2, eps=10**-100000)")
+    raises(ValueError, "refine_root(f, 1, 2, eps=10**-100000)")
 
 def test_count_roots():
     assert count_roots(x**2 - 2) == 2

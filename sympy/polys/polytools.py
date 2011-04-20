@@ -2533,6 +2533,9 @@ class Poly(Expr):
         if eps is not None:
             eps = QQ.convert(eps)
 
+            if eps <= 0:
+                raise ValueError("'eps' must be a positive rational")
+
         if inf is not None:
             inf = QQ.convert(inf)
         if sup is not None:
@@ -2596,6 +2599,9 @@ class Poly(Expr):
 
         if eps is not None:
             eps = QQ.convert(eps)
+
+            if eps <= 0:
+                raise ValueError("'eps' must be a positive rational")
 
         if steps is not None:
             steps = int(steps)
@@ -4645,6 +4651,10 @@ def intervals(F, all=False, eps=None, inf=None, sup=None, strict=False, fast=Fal
 
         if eps is not None:
             eps = opt.domain.convert(eps)
+
+            if eps <= 0:
+                raise ValueError("'eps' must be a positive rational")
+
         if inf is not None:
             inf = opt.domain.convert(inf)
         if sup is not None:
