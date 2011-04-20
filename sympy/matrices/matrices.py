@@ -1,4 +1,4 @@
-from sympy import Basic, Symbol, Integer, S, Dummy
+from sympy import Basic, Symbol, Integer, S, Dummy, Add
 from sympy.core.sympify import sympify, converter, SympifyError
 
 from sympy.polys import Poly, roots, cancel
@@ -1816,7 +1816,7 @@ class Matrix(object):
             if self._eigenvects == None:
                 self._eigenvects = self.eigenvects()
             if sortedvals:
-                self._eigenvects.sort(lambda i, j : int(j[0]-i[0]))
+                self._eigenvects.sort(reverse=True)
             diagvals = []
             P = Matrix(self.rows, 0, [])
             for eigenval, multiplicity, vects in self._eigenvects:
@@ -2779,4 +2779,4 @@ def symarray(prefix, shape):
     return arr
 
 def _normalized(vec):
-    return vec/sqrt(sum(i**2 for i in vec.mat))
+    return vec/sqrt(Add(*(i**2 for i in vec.mat)))
