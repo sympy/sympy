@@ -22,7 +22,7 @@ class QuantumError(Exception):
     pass
 
 
-def _qsympify_sequence(*seq):
+def _qsympify_sequence(seq):
     """Convert elements of a sequence to standard form.
 
     This is like sympify, but it performs special logic for arguments passed
@@ -45,6 +45,9 @@ def _qsympify_sequence(*seq):
     Tuple(1, 2, Tuple(3, 4, Tuple(1)))
 
     """
+    if not isinstance(seq, (list, tuple, Tuple)):
+        return seq
+        
     result = []
     for item in seq:
         if isinstance(item, (list, tuple, Tuple)):
@@ -57,10 +60,7 @@ def _qsympify_sequence(*seq):
             newitem = sympify(item)
         result.append(newitem)
         
-    if len(result) == 1:
-       return result[0]
-    else:
-       return Tuple(result)
+    return Tuple(*result)
 
 
 #-----------------------------------------------------------------------------
@@ -158,7 +158,7 @@ class QExpr(Expr):
 
         This simply runs args through _qsympify_sequence.
         """
-        return _qsympify_sequence(*args)
+        return _qsympify_sequence(args)
 
     @classmethod
     def _eval_hilbert_space(cls, args):
