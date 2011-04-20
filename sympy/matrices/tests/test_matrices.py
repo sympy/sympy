@@ -1491,3 +1491,12 @@ def test_normalvects_sorted_diogonalization():
     P, Q = A.diagonalize(normalvects=True, sortedvals=True)
     assert P*P.T == P.T*P == eye(P.cols)
     assert P * Q * P.inv() == A
+
+def test_SVD():
+    M = Matrix(((1,0,0,0,2),(0,0,3,0,0),(0,0,0,0,0),(0,4,0,0,0)))
+    U, S, V = M.SVD()
+    assert U * S * V.T == M
+    assert U*U.T == U.T*U == eye(U.cols)
+    assert V*V.T == V.T*V == eye(V.cols)
+    assert S.is_diagonal()                                 
+

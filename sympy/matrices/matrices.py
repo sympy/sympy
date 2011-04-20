@@ -2018,7 +2018,10 @@ class Matrix(object):
         UEM, UEV = (A.T * A).diagonalize(normalvects=True, sortedvals=True)
         VEM, VEV = (A * A.T).diagonalize(normalvects=True, sortedvals=True)
         sigma = UEV._diagonal_power(S(1)/2)[0:A.rows,0:A.cols]
+        if A.rows<A.cols:
+            return VEM, sigma, UEM
         return UEM, sigma, VEM
+        
 
 def matrix_multiply(A, B):
     """
