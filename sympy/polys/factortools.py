@@ -408,9 +408,12 @@ def dup_zz_factor_sqf(f, K):
 
     if n <= 0:
         return cont, []
-
-    if n == 1 or dup_zz_irreducible_p(g, K):
+    elif n == 1:
         return cont, [(g, 1)]
+
+    if query('USE_IRREDUCIBLE_IN_FACTOR'):
+        if dup_zz_irreducible_p(g, K):
+            return cont, [(g, 1)]
 
     factors = None
 
@@ -474,9 +477,12 @@ def dup_zz_factor(f, K):
 
     if n <= 0:
         return cont, []
-
-    if n == 1 or dup_zz_irreducible_p(g, K):
+    elif n == 1:
         return cont, [(g, 1)]
+
+    if query('USE_IRREDUCIBLE_IN_FACTOR'):
+        if dup_zz_irreducible_p(g, K):
+            return cont, [(g, 1)]
 
     g = dup_sqf_part(g, K)
     H, factors = None, []
