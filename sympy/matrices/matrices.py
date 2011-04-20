@@ -1775,7 +1775,7 @@ class Matrix(object):
         recurse_sub_blocks(self)
         return sub_blocks
 
-    def diagonalize(self, reals_only=False, normalvects=False, sorted=False):
+    def diagonalize(self, reals_only=False, normalvects=False, sortedvals=False):
         """
         Return diagonalized matrix D and transformation P such as
 
@@ -1815,7 +1815,7 @@ class Matrix(object):
         else:
             if self._eigenvects == None:
                 self._eigenvects = self.eigenvects()
-            if sorted:
+            if sortedvals:
                 self._eigenvects.sort(lambda i, j : int(j[0]-i[0]))
             diagvals = []
             P = Matrix(self.rows, 0, [])
