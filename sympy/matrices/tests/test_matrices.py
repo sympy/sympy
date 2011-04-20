@@ -1483,3 +1483,11 @@ def test_len():
     assert len(Matrix([[0, 1, 2], [3, 4, 5]])) == 6
     assert Matrix([1])
     assert not Matrix()
+
+def test_normalvects_sorted_diogonalization():
+    A = Matrix(((1,2),(2,1)))
+    P, Q = A.diagonalize(normalvects=True)
+    assert P*P.T == P.T*P == eye(P.cols)
+    P, Q = A.diagonalize(normalvects=True, sortedvals=True)
+    assert P*P.T == P.T*P == eye(P.cols)
+    assert P * Q * P.inv() == A
