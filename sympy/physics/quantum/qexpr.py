@@ -36,10 +36,10 @@ def _qsympify_sequence(seq):
 
     Strings are passed to Symbol, not sympify to make sure that variables like
     'pi' are kept as Symbols, not the Sympy built-in number subclasses.
-    
+
     Examples
     ========
-    
+
     >>> from sympy.physics.quantum.qexpr import _qsympify_sequence
     >>> _qsympify_sequence((1,2,[3,4,[1,]]))
     Tuple(1, 2, Tuple(3, 4, Tuple(1)))
@@ -47,7 +47,7 @@ def _qsympify_sequence(seq):
     """
     if not isinstance(seq, (list, tuple, Tuple)):
         return seq
-        
+
     result = []
     for item in seq:
         if isinstance(item, (list, tuple, Tuple)):
@@ -59,7 +59,7 @@ def _qsympify_sequence(seq):
         else:
             newitem = sympify(item)
         result.append(newitem)
-        
+
     return Tuple(*result)
 
 
