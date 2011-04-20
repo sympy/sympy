@@ -70,8 +70,8 @@ class OracleGate(Gate):
     Apply an Oracle gate that flips the sign of |2> on different qubits::
 
         >>> from sympy.physics.quantum.qubit import IntQubit
-        >>> from sympy.physics.quantum.qapply import qapply 
-        >>> from sympy.physics.quantum.grover import OracleGate 
+        >>> from sympy.physics.quantum.qapply import qapply
+        >>> from sympy.physics.quantum.grover import OracleGate
         >>> f = lambda qubits: True if qubits == IntQubit(2) else False
         >>> v = OracleGate(2, f)
         >>> qapply(v*IntQubit(2))
@@ -229,7 +229,9 @@ def grover_iteration(qstate, oracle):
 
         >>> from sympy.physics.quantum.qapply import qapply
         >>> from sympy.physics.quantum.qubit import IntQubit
-        >>> from sympy.physics.quantum.grover import *
+        >>> from sympy.physics.quantum.grover import OracleGate
+        >>> from sympy.physics.quantum.grover import superposition_basis
+        >>> from sympy.physics.quantum.grover import grover_iteration
         >>> numqubits = 2
         >>> basis_states = superposition_basis(numqubits)
         >>> f = lambda qubits: True if qubits == IntQubit(2) else False
@@ -255,14 +257,14 @@ def apply_grover(oracle, nqubits, iterations=None):
     state : Expr
         The resulting state after Grover's algorithm has been iterated.
 
-    Examples 
+    Examples
     ========
 
     Apply grover's algorithm to an even superposition of 2 qubits::
 
         >>> from sympy.physics.quantum.qapply import qapply
         >>> from sympy.physics.quantum.qubit import IntQubit
-        >>> from sympy.physics.quantum.grover import *
+        >>> from sympy.physics.quantum.grover import apply_grover
         >>> f = lambda qubits: True if qubits == IntQubit(2) else False
         >>> qapply(apply_grover(f, 2))
         |2>
