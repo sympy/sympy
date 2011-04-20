@@ -182,14 +182,9 @@ class AssocOp(Expr):
         {a_: x, b_: y, c_: z}
 
         In the example above, "a+sin(b)*c" is the pattern, and "x+sin(y)*z" is the
-        expression. Some more examples:
+        expression.
 
-        >>> (a+b*c)._matches_commutative(sin(x)+y*z)
-        {a_: sin(x), b_: y, c_: z}
-        >>> (a+sin(b)*c)._matches_commutative(x+sin(y)*z)
-        {a_: x, b_: y, c_: z}
-
-        The repl_dict contains parts, that were already matched, and the
+        The repl_dict contains parts that were already matched, and the
         "evaluate=True" kwarg tells _matches_commutative to substitute this
         repl_dict into pattern. For example here:
 
