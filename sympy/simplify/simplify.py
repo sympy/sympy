@@ -11,8 +11,9 @@ from sympy.functions import gamma, exp, sqrt, log
 
 from sympy.simplify.cse_main import cse
 
-from sympy.polys import (Poly, reduced, cancel, factor,
-    GeneratorsNeeded, terms_gcd)
+from sympy.polys import (Poly, together, reduced, cancel, factor,
+    ComputationFailed, terms_gcd)
+
 import sympy.mpmath as mpmath
 
 def fraction(expr, exact=False):

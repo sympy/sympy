@@ -60,7 +60,9 @@ def test_list():
     sT([x, Integer(4)], "[Symbol('x'), Integer(4)]")
 
 def test_Matrix():
-    sT(Matrix([[x**+1, 1], [y, x+y]]), "Matrix([[Symbol('x'), Integer(1)], [Symbol('y'), Add(Symbol('x'), Symbol('y'))]])")
+    sT(Matrix([[x**+1, 1], [y, x+y]]),
+       "Matrix([[Symbol('x'), Integer(1)], [Symbol('y'), Add(Symbol('x'), Symbol('y'))]])")
+    sT(Matrix(), "Matrix([])")
 
 def test_NaN():
     sT(nan, "S.NaN")

@@ -2,7 +2,7 @@ from sympy.core.add import Add
 from sympy.core.mul import Mul
 from sympy.core.symbol import Symbol, Wild, Dummy
 from sympy.core.basic import C, sympify
-from sympy.core.numbers import Rational
+from sympy.core.numbers import Rational, I
 from sympy.core.singleton import S
 
 from sympy.functions import exp, sin , cos , tan , cot , asin, acos, atan
@@ -182,6 +182,15 @@ def heurisch(f, x, **kwargs):
 
                         if M is not None:
                             terms.add(erf(sqrt(-M[a])*x))
+
+                        M = g.args[0].match(a*log(x)**2)
+
+                        if M is not None:
+                            if M[a].is_positive:
+                                terms.add(-I*erf(I*(sqrt(M[a])*log(x)+1/(2*sqrt(M[a])))))
+                            if M[a].is_negative:
+                                terms.add(erf(sqrt(-M[a])*log(x)-1/(2*sqrt(-M[a]))))
+
                 elif g.is_Pow:
                     if g.exp.is_Rational and g.exp.q == 2:
                         M = g.base.match(a*x**2 + b)
@@ -222,7 +231,11 @@ def heurisch(f, x, **kwargs):
     diffs = [ substitute(cancel(g.diff(x))) for g in terms ]
 
     denoms = [ g.as_numer_denom()[1] for g in diffs ]
-    denom = reduce(lambda p, q: lcm(p, q, *V), denoms)
+    try:
+        denom = reduce(lambda p, q: lcm(p, q, *V), denoms)
+    except PolynomialError:
+        # lcm can fail with this. See issue 1418.
+        return None
 
     numers = [ cancel(denom * g) for g in diffs ]
 

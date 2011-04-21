@@ -413,7 +413,7 @@ class Basic(AssumeMeths):
 
     def as_terms(self):
         """Transform an expression to a list of terms. """
-        from sympy.core import Add, Mul
+        from sympy.core import Add, Mul, S
         from sympy.core.exprtools import decompose_power
 
         gens, terms = set([]), []
@@ -468,7 +468,7 @@ class Basic(AssumeMeths):
 
     def as_tuple_tree(self, order=None):
         """Construct a tuple-tree version of ``self``. """
-
+        from sympy.core import S
         funcs = {
             'exp': 0, 'log': 1,
             'sin': 2, 'cos': 3, 'tan': 4, 'cot': 5,
@@ -942,7 +942,7 @@ class Basic(AssumeMeths):
             sequence = args[0]
             if isinstance(sequence, dict):
                 return self._subs_dict(sequence)
-            elif isinstance(sequence, (list, tuple)):
+            elif hasattr(sequence, '__iter__') or hasattr(sequence, '__getitem__'):
                 return self._subs_list(sequence)
             else:
                 raise TypeError("Not an iterable container")
@@ -979,8 +979,6 @@ class Basic(AssumeMeths):
         12
 
         """
-        if not isinstance(sequence, (list, tuple)):
-            raise TypeError("Not an iterable container")
         result = self
         for old, new in sequence:
             if hasattr(result, 'subs'):
@@ -1018,8 +1016,6 @@ class Basic(AssumeMeths):
         """
         if isinstance(sequence, dict):
             sequence = sequence.items()
-        elif not isinstance(sequence, (list, tuple)):
-            raise TypeError("Not an iterable container")
 
         subst = []
 
@@ -1034,20 +1030,17 @@ class Basic(AssumeMeths):
 
         return self._subs_list(subst)
 
-    def __contains__(self, what):
-        if self == what or self.is_Function and self.func is what: return True
-        for x in self._args:
-            # x is not necessarily of type Basic and so 'x in x == True'
-            # may not hold.
-            if x == what:
-                return True
 
-            # Not all arguments implement __contains__.
+    def __contains__(self, obj):
+        if self == obj:
+            return True
+        for arg in self.args:
             try:
-                if what in x:
+                if obj in arg:
                     return True
             except TypeError:
-                continue
+                if obj == arg:
+                    return True
         return False
 
     @cacheit
@@ -1428,4 +1421,5 @@ class Atom(Basic):
     def doit(self, **hints):
         return self
 
-from singleton import S
+    def __contains__(self, obj):
+        return (self == obj)

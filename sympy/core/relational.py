@@ -143,7 +143,8 @@ class Relational(Expr, EvalfMixin):
             return new
         return self.__class__(self.lhs._eval_subs(old, new), self.rhs._eval_subs(old, new))
 
-    _eval_evalf = Expr._seq_eval_evalf
+    def _eval_evalf(self, prec):
+        return self.func(*[s._evalf(prec) for s in self.args])
 
 class Equality(Relational):
 

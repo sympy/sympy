@@ -2,6 +2,7 @@ from sympy import symbols, Integral, Tuple, Dummy, Basic
 from sympy.utilities.iterables import (postorder_traversal, preorder_traversal,
     flatten, group, take, subsets, variations, cartes, numbered_symbols,
     dict_merge, prefixes, postfixes, sift)
+from sympy.core.singleton import S
 from sympy.functions.elementary.piecewise import Piecewise, ExprCondPair
 from sympy.utilities.pytest import raises
 
@@ -45,6 +46,16 @@ def test_preorder_traversal():
     ]
     assert list(postorder_traversal(('abc', ('d', 'ef')))) == [
         'abc', 'd', 'ef', ('d', 'ef'), ('abc', ('d', 'ef'))]
+
+    expr = (x**(y**z)) ** (x**(y**z))
+    expected = [(x**(y**z))**(x**(y**z)), x**(y**z), x**(y**z)]
+    result = []
+    pt = preorder_traversal(expr)
+    for i in pt:
+        result.append(i)
+        if i == x**(y**z):
+            pt.skip()
+    assert result == expected
 
 def test_flatten():
     assert flatten((1, (1,))) == [1, 1]

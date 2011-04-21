@@ -62,14 +62,15 @@ class FunctionClass(BasicMeta):
     def __repr__(cls):
         return cls.__name__
 
+    def __contains__(self, obj):
+        return (self == obj)
+
 class UndefinedFunction(FunctionClass):
     """
     The (meta)class of undefined functions.
     """
-    def __new__(mcl, name, signature=None):
+    def __new__(mcl, name):
         attrdict = {'undefined_Function': True}
-        if signature is not None:
-            attrdict['signature'] = signature
         bases = (Function,)
         return BasicMeta.__new__(mcl, name, bases, attrdict)
 
@@ -168,6 +169,11 @@ class Application(Basic):
                 elif isinstance(new.nargs, tuple) and self.nargs in new.nargs:
                     return new(*self.args)
         return self.func(*[s.subs(old, new) for s in self.args])
+
+    def __contains__(self, obj):
+        if self.func == obj:
+            return True
+        return super(Application, self).__contains__(obj)
 
 
 class Function(Application, Expr):
