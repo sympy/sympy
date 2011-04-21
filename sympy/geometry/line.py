@@ -588,6 +588,25 @@ class Segment(LinearEntity):
         """The midpoint of the segment."""
         return Point.midpoint(self.p1, self.p2)
 
+    def distance(self, o):
+        """Attempts to find the distance of the line segment to an object"""
+        if isinstance(o, Point):
+            return self._do_point_distance(o)
+        raise NotImplementedError()
+
+    def _do_point_distance(self, pt):
+        """Calculates the distance between a point and a line segment"""
+        seg_vector = Point(self.p2[0] - self.p1[0], self.p2[1] - self.p1[1])
+        pt_vector = Point(pt[0] - self.p1[0], pt[1] - self.p1[1])
+        t = (seg_vector[0]*pt_vector[0] + seg_vector[1]*pt_vector[1])/self.length**2
+        if t >= 1:
+            distance = Point.distance(self.p2, pt)
+        elif t <= 0:
+            distance = Point.distance(self.p1, pt)
+        else:
+            distance = Point.distance(self.p1 + Point(t*seg_vector[0], t*seg_vector[1]), pt)
+        return distance
+
     def __eq__(self, other):
         """Return True if other is equal to this Line, or False otherwise."""
         if not isinstance(other, Segment):

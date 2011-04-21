@@ -62,14 +62,15 @@ class FunctionClass(BasicMeta):
     def __repr__(cls):
         return cls.__name__
 
+    def __contains__(self, obj):
+        return (self == obj)
+
 class UndefinedFunction(FunctionClass):
     """
     The (meta)class of undefined functions.
     """
-    def __new__(mcl, name, signature=None):
+    def __new__(mcl, name):
         attrdict = {'undefined_Function': True}
-        if signature is not None:
-            attrdict['signature'] = signature
         bases = (Function,)
         return BasicMeta.__new__(mcl, name, bases, attrdict)
 
@@ -86,6 +87,21 @@ class Application(Basic):
     is_Function = True
 
     nargs = None
+
+    @classmethod
+    def _should_evalf(cls, arg):
+        """
+        Decide if the function should automatically evalf().
+        By default (in this implementation), this happens if (and only if) the
+        ARG is a floating point number.
+        This function is used by __new__.
+        """
+        if arg.is_Real:
+            return True
+        if not arg.is_Add:
+            return False
+        re, im = arg.as_real_imag()
+        return re.is_Real or im.is_Real
 
     @cacheit
     def __new__(cls, *args, **options):
@@ -105,7 +121,10 @@ class Application(Basic):
             r = super(Application, cls).__new__(cls, *args, **options)
             r.nargs = len(args)
             return r
-        return super(Application, cls).__new__(cls, *args, **options)
+        r = super(Application, cls).__new__(cls, *args, **options)
+        if any([cls._should_evalf(a) for a in args]):
+            return r.evalf()
+        return r
 
     @classmethod
     def eval(cls, *args):
@@ -150,6 +169,11 @@ class Application(Basic):
                 elif isinstance(new.nargs, tuple) and self.nargs in new.nargs:
                     return new(*self.args)
         return self.func(*[s.subs(old, new) for s in self.args])
+
+    def __contains__(self, obj):
+        if self.func == obj:
+            return True
+        return super(Application, self).__contains__(obj)
 
 
 class Function(Application, Expr):

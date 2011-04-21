@@ -1,4 +1,4 @@
-from sympy import Symbol, Rational, sqrt, pi, cos, oo, simplify, Real
+from sympy import C, S, Symbol, Rational, sqrt, pi, cos, oo, simplify, Real, Abs
 from sympy.geometry import (Point, Polygon, convex_hull, Segment,
     RegularPolygon, Circle, Ellipse, GeometryError, Line, intersection, Ray,
     Triangle, are_similar, Curve)
@@ -145,6 +145,15 @@ def test_line():
     assert s2.length == sqrt( 2*(x1**2) )
     assert s1.perpendicular_bisector() == Line(Point(0, 1), Point(1, 0))
 
+    # Testing distance from a Segment to an object
+    s1 = Segment(Point(0, 0), Point(1, 1))
+    s2 = Segment(Point(half, half), Point(1, 0))
+    pt1 = Point(0, 0)
+    pt2 = Point(Rational(3)/2, Rational(3)/2)
+    assert s1.distance(pt1) == 0
+    assert s2.distance(pt1) == 2**(half)/2
+    assert s2.distance(pt2) == 2**(half)
+
     # Special cases of projection and intersection
     r1 = Ray(Point(1, 1), Point(2, 2))
     r2 = Ray(Point(2, 2), Point(0, 0))
@@ -209,7 +218,14 @@ def test_ellipse():
     assert e2.area == pi/2
     assert e3.area == pi*(y1**2)
     assert c1.area == e1.area
-    assert c1.circumference == 2*pi
+    assert c1.circumference == e1.circumference
+    assert e3.circumference == 2*pi*y1
+
+    a = Symbol('a')
+    b = Symbol('b')
+    e5 = Ellipse(p1, a, b)
+    assert e5.circumference == 4*a*C.Integral(((1 - x**2*Abs(b**2 - a**2)/a**2)/(1 - x**2))**(S(1)/2),\
+                                            (x, 0, 1))
 
     assert e2.arbitrary_point() in e2
     for ind in xrange(0, 5):
@@ -406,6 +422,40 @@ def test_polygon():
     assert len(intersection(*bisectors.values())) == 1
     assert len(intersection(*altitudes.values())) == 1
     assert len(intersection(*m.values())) == 1
+
+    # Distance
+    p1 = Polygon(
+        Point(0, 0), Point(1, 0),
+        Point(1, 1), Point(0, 1))
+    p2 = Polygon(
+        Point(0, Rational(5)/4), Point(1, Rational(5)/4),
+        Point(1, Rational(9)/4), Point(0,  Rational(9)/4))
+    p3 = Polygon(
+        Point(1, 2), Point(2, 2),
+        Point(2, 1))
+    p4 = Polygon(
+        Point(1, 1), Point(Rational(6)/5, 1),
+        Point(1, Rational(6)/5))
+    p5 = Polygon(
+        Point(half, 3**(half)/2), Point(-half, 3**(half)/2),
+        Point(-1, 0), Point(-half, -(3)**(half)/2),
+        Point(half, -(3)**(half)/2), Point(1, 0))
+    p6 = Polygon(Point(2, Rational(3)/10), Point(Rational(17)/10, 0),
+                 Point(2, -Rational(3)/10), Point(Rational(23)/10, 0))
+    pt1 = Point(half, half)
+    pt2 = Point(1, 1)
+
+    '''Polygon to Point'''
+    assert p1.distance(pt1) == half
+    assert p1.distance(pt2) == 0
+    assert p2.distance(pt1) == Rational(3)/4
+    assert p3.distance(pt2) == sqrt(2)/2
+
+    '''Polygon to Polygon'''
+    assert p1.distance(p2) == half/2
+    assert p1.distance(p3) == sqrt(2)/2
+    assert p3.distance(p4) == (sqrt(2)/2 - sqrt(Rational(2)/25)/2)
+    assert p5.distance(p6) == Rational(7)/10
 
 def test_convex_hull():
     p = [Point(-5,-1), Point(-2,1), Point(-2,-1), Point(-1,-3), Point(0,0),

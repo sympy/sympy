@@ -47,6 +47,15 @@ def test_preorder_traversal():
     assert list(postorder_traversal(('abc', ('d', 'ef')))) == [
         'abc', 'd', 'ef', ('d', 'ef'), ('abc', ('d', 'ef'))]
 
+    expr = (x**(y**z)) ** (x**(y**z))
+    expected = [(x**(y**z))**(x**(y**z)), x**(y**z), x**(y**z)]
+    result = []
+    pt = preorder_traversal(expr)
+    for i in pt:
+        result.append(i)
+        if i == x**(y**z):
+            pt.skip()
+    assert result == expected
 
 def test_flatten():
     assert flatten( (1,(1,)) ) == [1,1]

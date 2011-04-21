@@ -528,9 +528,8 @@ class Basic(AssumeMeths):
            True
 
         """
-        if not self.args:
-            return False
-        return all(obj.is_number for obj in self.iter_basic_args())
+        # should be overriden by subclasses
+        return False
 
     @property
     def func(self):
@@ -711,7 +710,7 @@ class Basic(AssumeMeths):
             sequence = args[0]
             if isinstance(sequence, dict):
                 return self._subs_dict(sequence)
-            elif isinstance(sequence, (list, tuple)):
+            elif hasattr(sequence, '__iter__') or hasattr(sequence, '__getitem__'):
                 return self._subs_list(sequence)
             else:
                 raise TypeError("Not an iterable container")
@@ -748,8 +747,6 @@ class Basic(AssumeMeths):
         12
 
         """
-        if not isinstance(sequence, (list, tuple)):
-            raise TypeError("Not an iterable container")
         result = self
         for old, new in sequence:
             if hasattr(result, 'subs'):
@@ -787,8 +784,6 @@ class Basic(AssumeMeths):
         """
         if isinstance(sequence, dict):
             sequence = sequence.items()
-        elif not isinstance(sequence, (list, tuple)):
-            raise TypeError("Not an iterable container")
 
         subst = []
 
@@ -803,20 +798,17 @@ class Basic(AssumeMeths):
 
         return self._subs_list(subst)
 
-    def __contains__(self, what):
-        if self == what or self.is_Function and self.func is what: return True
-        for x in self._args:
-            # x is not necessarily of type Basic and so 'x in x == True'
-            # may not hold.
-            if x == what:
-                return True
 
-            # Not all arguments implement __contains__.
+    def __contains__(self, obj):
+        if self == obj:
+            return True
+        for arg in self.args:
             try:
-                if what in x:
+                if obj in arg:
                     return True
             except TypeError:
-                continue
+                if obj == arg:
+                    return True
         return False
 
     @cacheit
@@ -1036,4 +1028,5 @@ class Atom(Basic):
     def doit(self, **hints):
         return self
 
-from sympy.core.singleton import S
+    def __contains__(self, obj):
+        return (self == obj)

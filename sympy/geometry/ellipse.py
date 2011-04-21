@@ -8,6 +8,8 @@ from entity import GeometryEntity
 from point import Point
 from line import LinearEntity, Line
 
+from sympy.abc import x
+
 class Ellipse(GeometryEntity):
     """
     An ellipse in space. Constructed from a center and two radii, the
@@ -101,9 +103,12 @@ class Ellipse(GeometryEntity):
     @property
     def circumference(self):
         """The circumference of the ellipse."""
-        # TODO It's fairly complicated, but we could use Ramanujan's
-        #      approximation.
-        raise NotImplementedError
+        if self.eccentricity == 1:
+            return 2*pi*self.hradius
+        else:
+            return 4 * self.hradius * \
+                   C.Integral(sqrt((1 - (self.eccentricity*x)**2)/(1 - x**2)), \
+                              (x, 0, 1))
 
     @property
     def eccentricity(self):
@@ -143,8 +148,6 @@ class Ellipse(GeometryEntity):
             return (c, c)
 
         hr, vr = self.hradius, self.vradius
-        if hr.has(C.Symbol) or vr.has(C.Symbol):
-            raise ValueError("foci can only be determined on non-symbolic radii")
 
         # calculate focus distance (manually, since focus_distance calls this routine)
         h = sqrt(abs(vr**2 - hr**2))

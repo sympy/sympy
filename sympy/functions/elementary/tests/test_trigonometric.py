@@ -75,6 +75,46 @@ def test_sin():
 
     assert sin(r).is_real == True
 
+def test_trig_symmetry():
+    x = Symbol('x')
+    y = Symbol('y')
+    k = Symbol('k', integer=True)
+
+    assert sin(-x) == -sin(x)
+    assert cos(-x) == cos(x)
+    assert tan(-x) == -tan(x)
+    assert cot(-x) == -cot(x)
+    assert sin(x+pi) == -sin(x)
+    assert sin(x+2*pi) == sin(x)
+    assert sin(x+3*pi) == -sin(x)
+    assert sin(x+4*pi) == sin(x)
+    assert sin(x-5*pi) == -sin(x)
+    assert cos(x+pi) == -cos(x)
+    assert cos(x+2*pi) == cos(x)
+    assert cos(x+3*pi) == -cos(x)
+    assert cos(x+4*pi) == cos(x)
+    assert cos(x-5*pi) == -cos(x)
+    assert tan(x+pi) == tan(x)
+    assert tan(x-3*pi) == tan(x)
+    assert cot(x+pi) == cot(x)
+    assert cot(x-3*pi) == cot(x)
+    assert sin(pi/2-x) == cos(x)
+    assert sin(3*pi/2-x) == -cos(x)
+    assert sin(5*pi/2-x) == cos(x)
+    assert cos(pi/2-x) == sin(x)
+    assert cos(3*pi/2-x) == -sin(x)
+    assert cos(5*pi/2-x) == sin(x)
+    assert tan(pi/2-x) == cot(x)
+    assert tan(3*pi/2-x) == cot(x)
+    assert tan(5*pi/2-x) == cot(x)
+    assert cot(pi/2-x) == tan(x)
+    assert cot(3*pi/2-x) == tan(x)
+    assert cot(5*pi/2-x) == tan(x)
+    assert sin(pi/2+x) == cos(x)
+    assert cos(pi/2+x) == -sin(x)
+    assert tan(pi/2+x) == -cot(x)
+    assert cot(pi/2+x) == -tan(x)
+
 
 def test_cos():
     x, y = symbols('xy')
@@ -265,10 +305,24 @@ def test_asin():
     assert asin(oo) == -I*oo
     assert asin(-oo) == I*oo
 
+    # Note: asin(-x) = - asin(x)
     assert asin(0)  == 0
-    assert asin(Rational(1,2)) == pi/6
     assert asin(1)  == pi/2
+    assert asin(-1)  == -pi/2
     assert asin(sqrt(3)/2) == pi/3
+    assert asin(-sqrt(3)/2) == -pi/3
+    assert asin(sqrt(2)/2) == pi/4
+    assert asin(-sqrt(2)/2) == -pi/4
+    assert asin(sqrt((5-sqrt(5))/8)) == pi/5
+    assert asin(-sqrt((5-sqrt(5))/8)) == -pi/5
+    assert asin(Rational(1,2)) == pi/6
+    assert asin(-Rational(1,2)) == -pi/6
+    assert asin((sqrt(2-sqrt(2)))/2) == pi/8
+    assert asin(-(sqrt(2-sqrt(2)))/2) == -pi/8
+    assert asin((sqrt(5)-1)/4) == pi/10
+    assert asin(-(sqrt(5)-1)/4) == -pi/10
+    assert asin((sqrt(3)-1)/sqrt(2**3)) == pi/12
+    assert asin(-(sqrt(3)-1)/sqrt(2**3)) == -pi/12
 
     assert asin(x).diff(x) ==  1/sqrt(1-x**2)
 
@@ -293,11 +347,15 @@ def test_acos():
     assert acos(oo) == I*oo
     assert acos(-oo) == -I*oo
 
+    # Note: acos(-x) = pi - acos(x)
     assert acos(0)  == pi/2
     assert acos(Rational(1,2)) == pi/3
+    assert acos(-Rational(1,2)) ==  (2*pi)/3
     assert acos(1)  == 0
     assert acos(-1) == pi
     assert acos(sqrt(2)/2) == pi/4
+    assert acos(-sqrt(2)/2) == (3*pi)/4
+
     assert acos(x).diff(x) == -1/sqrt(1-x**2)
 
     assert acos(0.2).is_real == True

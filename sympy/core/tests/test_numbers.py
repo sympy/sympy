@@ -38,6 +38,14 @@ def test_mod():
     b = Integer(4)
 
     assert type(a % b) == Integer
+    assert Integer(1) % Rational(2, 3) == Rational(1, 3)
+
+def test_divmod():
+    assert divmod(S(12), S(8)) == (1, 4)
+    assert divmod(-S(12), S(8)) == (-2, 4)
+    assert divmod(S(0), S(1)) == (0, 0)
+    raises(ZeroDivisionError, "divmod(S(0), S(0))")
+    raises(ZeroDivisionError, "divmod(S(1), S(0))")
 
 def test_igcd():
     assert igcd(0, 0) == 0

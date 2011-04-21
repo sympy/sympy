@@ -115,8 +115,16 @@ want to be mentioned here, so see our repository history for a full list).
 #. Vladimir Lagunov: improvements to the geometry module
 #. Matthew Rocklin: improvements to Number instantiation
 #. Saptarshi Mandal: Test for an integral
+#. Gilbert Gede: Tests for solvers
 #. Anatolii Koval: Infinite 1D box example
 #. Tomo Lazovich: fixes to quantum operators
+#. Pavel Fedotov: fix to is_number
+#. Kibeom Kim: fixes to cse function and preorder_traversal
+#. Gregory Ksionda: fixes to Integral instantiation
+#. Tomáš Bambas: prettier printing of examples
+#. Jeremias Yehdegho: fixes to the nthoery module
+#. Jack McCaffery: fixes to asin and acos
+#. Luca Weihs: improvements to the geometry module
 
 Up-to-date list in the order of the first contribution is given in the `AUTHORS
 <https://github.com/sympy/sympy/blob/master/AUTHORS>`_ file.

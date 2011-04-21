@@ -1,7 +1,7 @@
-from sympy import (S, symbols, integrate, Integral, Derivative, exp, oo, Symbol,
+from sympy import (S, symbols, integrate, Integral, Derivative, exp, erf, oo, Symbol,
         Function, Rational, log, sin, cos, pi, E, I, Poly, LambertW, diff,
-        Matrix, sympify, sqrt, atan, asin, asinh, acos, atan, DiracDelta, Heaviside,
-        Lambda, sstr, Add)
+        Matrix, sympify, sqrt, asin, asinh, acos, acosh, atan,
+        DiracDelta, Heaviside, Lambda, sstr, Add, Tuple)
 from sympy.utilities.pytest import XFAIL, skip, raises
 from sympy.physics.units import m, s
 
@@ -538,3 +538,39 @@ def test_series():
 def test_issue_1304():
     z = Symbol('z', positive=True)
     assert integrate(sqrt(x**2 + z**2),x) == z**2*asinh(x/z)/2 + x*(x**2 + z**2)**(S(1)/2)/2
+    assert integrate(sqrt(x**2 - z**2),x) == -z**2*acosh(x/z)/2 + x*(x**2 - z**2)**(S(1)/2)/2
+    assert integrate(sqrt(-x**2 - 4), x) == -2*atan(x/(-4 - x**2)**(S(1)/2)) + x*(-4 - x**2)**(S(1)/2)/2
+
+def test_issue2068():
+    from sympy.abc import w, x, y, z
+    f = Function('f')
+    assert Integral(Integral(f(x), x), x) == Integral(f(x), x, x)
+    assert Integral(f(x)).args == (f(x), Tuple(x))
+    assert Integral(Integral(f(x))).args == (f(x), Tuple(x), Tuple(x))
+    assert Integral(Integral(f(x)), y).args == (f(x), Tuple(x), Tuple(y))
+    assert Integral(Integral(f(x), z), y).args == (f(x), Tuple(z), Tuple(y))
+    assert Integral(Integral(Integral(f(x), x), y), z).args == \
+           (f(x), Tuple(x), Tuple(y), Tuple(z))
+    assert integrate(Integral(f(x), x), x) == Integral(f(x), x, x)
+    assert integrate(Integral(f(x), y), x) == Integral(y*f(x), x)
+    assert integrate(Integral(f(x), x), y) == Integral(y*f(x), x)
+    assert integrate(Integral(2, x), x) == x**2
+    assert integrate(Integral(2, x), y) == 2*x*y
+    # don't re-order given limits
+    assert Integral(1, x, y).args != Integral(1, y, x).args
+    # do as many as possibble
+    assert Integral(f(x), y, x, y, x).doit() == Integral(y**2*f(x)/2, x, x)
+    assert Integral(f(x), (x, 1, 2), (w, 1, x), (z, 1, y)).doit() == \
+           Integral(-f(x) + y*f(x), (x, 1, 2), (w, 1, x))
+
+def test_issue_1791():
+    z = Symbol('z', positive=True)
+    assert integrate(exp(-log(x)**2),x) == pi**(S(1)/2)*erf(-S(1)/2 + log(x))*exp(S(1)/4)/2
+    assert integrate(exp(log(x)**2),x) == -I*pi**(S(1)/2)*erf(I*log(x) + I/2)*exp(-S(1)/4)/2
+    assert integrate(exp(-z*log(x)**2),x) == \
+           pi**(S(1)/2)*erf(z**(S(1)/2)*log(x) - 1/(2*z**(S(1)/2)))*exp(S(1)/(4*z))/(2*z**(S(1)/2))
+
+def test_issue_1277():
+    from sympy import simplify
+    assert simplify(integrate(n*(x**(1/n)-1), (x, 0, S.Half))) == \
+           (n**2 - 2**(S(1)/n)*n**2 - n*2**(S(1)/n))/(2**(1 + S(1)/n) + n*2**(1 + S(1)/n))

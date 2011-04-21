@@ -1,8 +1,3 @@
-from sympy import SYMPY_DEBUG
-from sympy.core import Basic, S, oo, Symbol, C, I, Dummy, Wild
-from sympy.functions import log, exp
-from sympy.series.order import Order
-from sympy.simplify import powsimp
 """
 Limits
 ======
@@ -120,6 +115,13 @@ And check manually which line is wrong. Then go to the source code and debug
 this function to figure out the exact problem.
 
 """
+from sympy import SYMPY_DEBUG
+from sympy.core import Basic, S, oo, Symbol, C, I, Dummy, Wild
+from sympy.core.function import Function, UndefinedFunction
+from sympy.functions import log, exp
+from sympy.series.order import Order
+from sympy.simplify import powsimp
+
 O = Order
 
 def debug(func):
@@ -374,6 +376,12 @@ def mrv_leadterm(e, x, Omega=[]):
     Omega = [t for t in Omega if subexp(e, t)]
     if Omega == []:
         Omega = mrv(e, x)
+    if not Omega:
+        # e really does not depend on x after simplification
+        series = calculate_series(e, x)
+        c0, e0 = series.leadterm(x)
+        assert e0 == 0
+        return c0, e0
     if x in set(Omega):
         #move the whole omega up (exponentiate each term):
         Omega_up = set(moveup(Omega, x))

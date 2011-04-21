@@ -4,6 +4,7 @@ from singleton import S
 from evalf import EvalfMixin
 from decorators import _sympifyit, call_highest_priority
 from cache import cacheit
+from sympy.core.compatibility import all
 
 class Expr(Basic, EvalfMixin):
     __slots__ = []
@@ -127,6 +128,29 @@ class Expr(Basic, EvalfMixin):
             return re+im
         else:
             raise TypeError("expected mpmath number (mpf or mpc)")
+
+    @property
+    def is_number(self):
+        """Returns True if 'self' is a number.
+
+           >>> from sympy import log, Integral
+           >>> from sympy.abc import x, y
+
+           >>> x.is_number
+           False
+           >>> (2*x).is_number
+           False
+           >>> (2 + log(2)).is_number
+           True
+           >>> (2 + Integral(2, x)).is_number
+           False
+           >>> (2 + Integral(2, (x, 1, 2))).is_number
+           True
+
+        """
+        if not self.args:
+            return False
+        return all(obj.is_number for obj in self.iter_basic_args())
 
 
     def _eval_interval(self, x, a, b):
