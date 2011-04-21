@@ -45,19 +45,19 @@ def _qsympify_sequence(seq):
     Tuple(1, 2, Tuple(3, 4, Tuple(1)))
 
     """
+    #base case. If not a list, do Sympification
     if not isinstance(seq, (list, tuple, Tuple)):
-        return seq
+        if isinstance(seq, Matrix):
+            return seq
+        elif isinstance(seq, basestring):
+            return Symbol(seq)
+        else:
+            return sympify(seq)
 
+    #if list, recurse on each item in the list
     result = []
     for item in seq:
-        if isinstance(item, (list, tuple, Tuple)):
-            newitem = Tuple(*[_qsympify_sequence(it) for it in item])
-        elif isinstance(item, Matrix):
-            newitem = item
-        elif isinstance(item, basestring):
-            newitem = Symbol(item)
-        else:
-            newitem = sympify(item)
+        newitem = _qsympify_sequence(item)
         result.append(newitem)
 
     return Tuple(*result)
