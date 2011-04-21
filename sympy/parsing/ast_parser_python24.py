@@ -65,17 +65,12 @@ class SymPyTransformer(Transformer):
 
         assert not defaults,`defaults` # sympy.Lambda does not support optional arguments
 
-        if len(names) == 0:
-            argument = ['x']
-        else:
-            argument = names
-
         def convert(x):
             return CallFunc(Name('sympify'), [Const(x)])
 
-        argument = [ convert(arg) for arg in argument ]
+        argument = [convert(arg) for arg in names]
 
-        return CallFunc(Name('Lambda'), argument + [code])
+        return CallFunc(Name('Lambda'), [CallFunc(Name('Tuple'), argument), code])
 
 
 class SymPyParser:

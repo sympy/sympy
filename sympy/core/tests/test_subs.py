@@ -341,7 +341,7 @@ def test_subs_issue910():
 def test_functions_subs():
     x, y = map(Symbol, 'xy')
     f, g = map(Function, 'fg')
-    l = Lambda(x, y, sin(x) + y)
+    l = Lambda((x, y), sin(x) + y)
     assert (g(y, x)+cos(x)).subs(g, l) == sin(y) + x + cos(x)
     assert (f(x)**2).subs(f, sin) == sin(x)**2
     assert (f(x,y)).subs(f,log) == log(x,y)

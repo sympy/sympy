@@ -37,6 +37,7 @@ from expr import Expr, AtomicExpr
 
 from cache import cacheit
 from numbers import Rational
+from sympy.core.containers import Tuple
 from sympy.utilities.decorator import deprecated
 from sympy.utilities import all, any
 
@@ -737,7 +738,7 @@ class Lambda(Function):
 
     For multivariate functions, use:
         >>> from sympy.abc import y, z, t
-        >>> f2 = Lambda(x, y, z, t, x + y**z + t**z)
+        >>> f2 = Lambda((x, y, z, t), x + y**z + t**z)
         >>> f2(1, 2, 3, 4)
         73
 
@@ -748,31 +749,23 @@ class Lambda(Function):
         x + y*z
 
     """
-
-    # a minimum of 2 arguments (parameter, expression) are needed
     nargs = 2
-    def __new__(cls,*args):
-        assert len(args) >= 2,"Must have at least one parameter and an expression"
-        if len(args) == 2 and isinstance(args[0], (list, tuple)):
-            args = tuple(args[0])+(args[1],)
-        obj = Function.__new__(cls,*args)
-        obj.nargs = len(args)-1
+    def __new__(cls, variables, expr):
+        try:
+            variables = Tuple(*variables)
+        except TypeError:
+            variables = Tuple(variables)
+
+        obj = Function.__new__(cls, variables, expr)
+        obj.nargs = len(variables)
         return obj
 
     @classmethod
-    def eval(cls,*args):
-        obj = Expr.__new__(cls, *args)
+    def eval(cls, variables, expr):
         #use dummy variables internally, just to be sure
-        nargs = len(args)-1
-
-        expression = args[nargs]
-        funargs = [C.Dummy(arg.name) for arg in args[:nargs]]
-        #probably could use something like foldl here
-        for arg,funarg in zip(args[:nargs],funargs):
-            expression = expression.subs(arg,funarg)
-        funargs.append(expression)
-        obj._args = tuple(funargs)
-
+        new_variables = [C.Dummy(arg.name) for arg in variables]
+        expr = expr.subs(tuple(zip(variables, new_variables)))
+        obj = Expr.__new__(cls, Tuple(*new_variables), expr)
         return obj
 
     @property
@@ -791,7 +784,6 @@ class Lambda(Function):
 
     def apply(self, *args):
         """Applies the Lambda function "self" to the arguments given.
-        This supports partial application.
 
         Example:
             >>> from sympy import Lambda
@@ -799,39 +791,28 @@ class Lambda(Function):
             >>> f = Lambda(x, x**2)
             >>> f.apply(4)
             16
-            >>> sum2numbers = Lambda(x,y,x+y)
-            >>> sum2numbers(1,2)
-            3
-
         """
 
         nparams = self.nargs
         assert nparams == len(args), "%s (%d variables) called "\
             "with %d arguments" % (str(self),nparams,len(args))
 
-
-        #replace arguments
-        expression = self.args[-1]
-        for arg,funarg in zip(args, self.args[:-1]):
-            expression = expression.subs(funarg,arg)
-
-        return expression
+        expression = self.args[1]
+        return expression.subs(tuple(zip(self.args[0], args)))
 
     def __call__(self, *args):
         return self.apply(*args)
 
     def __eq__(self, other):
-        if isinstance(other, Lambda):
-            if not len(self.args) == len(other.args):
-                return False
+        if not isinstance(other, Lambda):
+            return False
+        if self.nargs != other.nargs:
+            return False
 
-            selfexpr = self.args[self.nargs]
-            otherexpr = other.args[other.nargs]
-            for selfarg, otherarg in zip(self.args[:self.nargs],other.args[:other.nargs]):
-                otherexpr = otherexpr.subs(otherarg,selfarg)
-            if selfexpr == otherexpr:
-                return True
-        return False
+        selfexpr = self.args[1]
+        otherexpr = other.args[1]
+        otherexpr = otherexpr.subs(tuple(zip(other.args[0], self.args[0])))
+        return selfexpr == otherexpr
 
     def __hash__(self):
         return super(Lambda, self).__hash__()

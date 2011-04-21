@@ -140,6 +140,14 @@ class StrPrinter(Printer):
         return "%s%s, %s%s" % \
                (left, self._print(i.start), self._print(i.end), right)
 
+    def _print_Lambda(self, obj):
+        args, expr = obj.args
+        if len(args) == 1:
+            return "Lambda(%s, %s)" % (args.args[0], expr)
+        else:
+            arg_string = ", ".join(self._print(arg) for arg in args)
+            return "Lambda((%s), %s" % (arg_string, expr)
+
     def _print_LatticeOp(self, expr):
         args = sorted(expr.args, cmp=expr._compare_pretty)
         return expr.func.__name__ + "(%s)"%", ".join(self._print(arg) for arg in args)
