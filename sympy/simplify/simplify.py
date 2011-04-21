@@ -1578,28 +1578,34 @@ def simplify(expr, ratio=1.7):
        function directly, because those are well defined and thus your algorithm
        will be robust.
 
-       In some cases, applying simplify() may actually result in some more
+       In some cases, applying :func:`simplify` may actually result in some more
        complicated expression.
-       By default 'ratio=1.7' prevents more extreme cases:
+       By default ``ratio=1.7`` prevents more extreme cases:
        if (result length)/(input length) > ratio, then input is returned
-       unmodified (count_ops() is used to measure length).
+       unmodified (:func:`count_ops` is used to measure length).
+
+       ::
 
            >>> from sympy import S, simplify, count_ops, oo
            >>> root = S("(5/2 + 21**(1/2)/2)**(1/3)*(1/2 - I*3**(1/2)/2) \
                         + 1/((1/2 - I*3**(1/2)/2)*(5/2 + 21**(1/2)/2)**(1/3))")
 
-       Since simplify(root) result in a much longer expression, root is returned
-       inchanged instead.
+       Since ``simplify(root)`` results in a much longer expression, root is
+       returned inchanged instead::
+
            >>> simplify(root) is root
            True
 
-       If 'ratio=oo', simplify will be applied anyway.
+       If ``ratio=oo``, simplify will be applied anyway::
+
            >>> count_ops(simplify(root, ratio=oo)) > 1.5*count_ops(root)
            True
-
     """
     if isinstance(expr, Atom):
         return expr
+    # TODO: Apply different strategies, considering expression pattern:
+    # is it a purely rational function? Is there any trigonometric function?...
+    # See also https://github.com/sympy/sympy/pull/185.
 
     original_expr = expr
     expr = together(cancel(powsimp(expr)).expand())
