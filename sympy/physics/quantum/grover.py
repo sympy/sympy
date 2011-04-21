@@ -72,7 +72,7 @@ class OracleGate(Gate):
         >>> from sympy.physics.quantum.qubit import IntQubit
         >>> from sympy.physics.quantum.qapply import qapply
         >>> from sympy.physics.quantum.grover import OracleGate
-        >>> f = lambda qubits: True if qubits == IntQubit(2) else False
+        >>> f = lambda qubits: qubits == IntQubit(2)
         >>> v = OracleGate(2, f)
         >>> qapply(v*IntQubit(2))
         -|2>
@@ -146,7 +146,10 @@ class OracleGate(Gate):
             )
         # If function returns 1 on qubits
             # return the negative of the qubits (flip the sign)
-        return -qubits if (self.search_function)(qubits) else qubits
+        if self.search_function(qubits):
+            return -qubits
+        else:
+            return qubits
 
     #-------------------------------------------------------------------------
     # Represent
@@ -234,7 +237,7 @@ def grover_iteration(qstate, oracle):
         >>> from sympy.physics.quantum.grover import grover_iteration
         >>> numqubits = 2
         >>> basis_states = superposition_basis(numqubits)
-        >>> f = lambda qubits: True if qubits == IntQubit(2) else False
+        >>> f = lambda qubits: qubits == IntQubit(2)
         >>> v = OracleGate(numqubits, f)
         >>> qapply(grover_iteration(basis_states, v))
         |2>
@@ -265,7 +268,7 @@ def apply_grover(oracle, nqubits, iterations=None):
         >>> from sympy.physics.quantum.qapply import qapply
         >>> from sympy.physics.quantum.qubit import IntQubit
         >>> from sympy.physics.quantum.grover import apply_grover
-        >>> f = lambda qubits: True if qubits == IntQubit(2) else False
+        >>> f = lambda qubits: qubits == IntQubit(2)
         >>> qapply(apply_grover(f, 2))
         |2>
 

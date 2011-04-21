@@ -4,10 +4,10 @@ from sympy.physics.quantum.qubit import Qubit, IntQubit
 from sympy.physics.quantum.grover import *
 
 def return_one_on_two(qubits):
-    return True if qubits == IntQubit(2, qubits.nqubits) else False
+    return qubits == IntQubit(2, qubits.nqubits)
 
 def return_one_on_one(qubits):
-    return True if qubits == IntQubit(1, qubits.nqubits) else False
+    return qubits == IntQubit(1, qubits.nqubits)
 
 def test_superposition_basis():
     nbits = 2
@@ -23,7 +23,7 @@ def test_superposition_basis():
     assert firstq + secondq + thirdq + fourthq == superposition_basis(nbits)
 
 def test_OracleGate():
-    v = OracleGate(1, lambda qubits: True if qubits == IntQubit(0) else False)
+    v = OracleGate(1, lambda qubits: qubits == IntQubit(0))
     assert qapply(v*IntQubit(0)) == -IntQubit(0)
     assert qapply(v*IntQubit(1)) == IntQubit(1)
 
