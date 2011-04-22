@@ -505,12 +505,12 @@ class Ellipse(GeometryEntity):
         See Also
         --------
         Point
-        
+
         Note
         ----
         A random point may not appear to be on the ellipse, ie, `p in e` may
         return False. This is because the coordinates of the point will be
-        floating point values, and when these values are substituted into the 
+        floating point values, and when these values are substituted into the
         equation for the ellipse the result may not be zero because of floating
         point rounding error.
 
