@@ -378,7 +378,7 @@ class Ellipse(GeometryEntity):
         >>> # This will plot an ellipse together with a tangent line.
         >>> from sympy import Point, Ellipse, Plot
         >>> e = Ellipse(Point(0,0), 3, 2)
-        >>> t = e.tangent_line(e.random_point())
+        >>> t = e.tangent_line(e.random_point()) # doctest: +SKIP
         >>> p = Plot() # doctest: +SKIP
         >>> p[0] = e # doctest: +SKIP
         >>> p[1] = t # doctest: +SKIP
@@ -505,13 +505,23 @@ class Ellipse(GeometryEntity):
         See Also
         --------
         Point
+        
+        Note
+        ----
+        A random point may not appear to be on the ellipse, ie, `p in e` may
+        return False. This is because the coordinates of the point will be
+        floating point values, and when these values are substituted into the 
+        equation for the ellipse the result may not be zero because of floating
+        point rounding error.
 
         Examples
         --------
         >>> from sympy import Point, Ellipse
         >>> e1 = Ellipse(Point(0, 0), 3, 2)
         >>> p1 = e1.random_point()
-        >>> p1 in e1
+        >>> # a random point may not appear to be on the ellipse because of
+        >>> # floating point rounding error
+        >>> p1 in e1 # doctest: +SKIP
         True
         >>> p1 # doctest +ELLIPSIS
         Point(...)
