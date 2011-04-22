@@ -1,6 +1,6 @@
 """ The core's core. """
 
-from assumptions import AssumeMeths, make__get_assumption
+from assumptions import make__get_assumption, _assume_rules, _assume_defined
 
 from sympy.core.compatibility import cmp
 
@@ -111,7 +111,7 @@ class BasicMeta(BasicType):
                 continue
 
             # this is not an assumption (e.g. is_Integer)
-            if k[3:] not in AssumeMeths._assume_defined:
+            if k[3:] not in _assume_defined:
                 continue
 
             k = k[3:]
@@ -139,10 +139,8 @@ class BasicMeta(BasicType):
 
                 default_assumptions[k] = v
 
-
-
         # deduce all consequences from default assumptions -- make it complete
-        xass = AssumeMeths._assume_rules.deduce_all_facts(default_assumptions)
+        xass = _assume_rules.deduce_all_facts(default_assumptions)
 
         # and store completed set into cls -- this way we'll avoid rededucing
         # extensions of class default assumptions each time on instance

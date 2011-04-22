@@ -1,6 +1,7 @@
 """Base class for all the objects in SymPy"""
 
-from assumptions import AssumeMeths, make__get_assumption
+from decorators import _sympifyit
+from assumptions import AssumeMeths, make__get_assumption, _assume_defined
 from cache import cacheit
 from core import BasicMeta, BasicType, C
 from sympify import _sympify, sympify, SympifyError
@@ -165,7 +166,7 @@ class Basic(AssumeMeths):
     #     raise Warning('no way, *all* attribute access will be 2.5x slower')
 
     # here is what we do instead:
-    for k in AssumeMeths._assume_defined:
+    for k in _assume_defined:
         exec "is_%s  = property(make__get_assumption('Basic', '%s'))" % (k,k)
     del k
 
