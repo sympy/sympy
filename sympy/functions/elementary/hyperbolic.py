@@ -40,6 +40,9 @@ class sinh(Function):
             elif arg.is_negative:
                 return -cls(-arg)
         else:
+            if arg is S.ComplexInfinity:
+                return S.NaN
+
             i_coeff = arg.as_coefficient(S.ImaginaryUnit)
 
             if i_coeff is not None:
@@ -164,6 +167,9 @@ class cosh(Function):
             elif arg.is_negative:
                 return cls(-arg)
         else:
+            if arg is S.ComplexInfinity:
+                return S.NaN
+
             i_coeff = arg.as_coefficient(S.ImaginaryUnit)
 
             if i_coeff is not None:
@@ -287,9 +293,14 @@ class tanh(Function):
             elif arg.is_negative:
                 return -cls(-arg)
         else:
+            if arg is S.ComplexInfinity:
+                return S.NaN
+
             i_coeff = arg.as_coefficient(S.ImaginaryUnit)
 
             if i_coeff is not None:
+                if i_coeff.as_coeff_mul()[0].is_negative:
+                    return -S.ImaginaryUnit * C.tan(-i_coeff)
                 return S.ImaginaryUnit * C.tan(i_coeff)
             else:
                 if arg.as_coeff_mul()[0].is_negative:
@@ -411,9 +422,14 @@ class coth(Function):
             elif arg.is_negative:
                 return -cls(-arg)
         else:
+            if arg is S.ComplexInfinity:
+                return S.NaN
+
             i_coeff = arg.as_coefficient(S.ImaginaryUnit)
 
             if i_coeff is not None:
+                if i_coeff.as_coeff_mul()[0].is_negative:
+                    return S.ImaginaryUnit * C.cot(-i_coeff)
                 return -S.ImaginaryUnit * C.cot(i_coeff)
             else:
                 if arg.as_coeff_mul()[0].is_negative:
@@ -532,6 +548,9 @@ class asinh(Function):
             elif arg.is_negative:
                 return -cls(-arg)
         else:
+            if arg is S.ComplexInfinity:
+                return S.ComplexInfinity
+
             i_coeff = arg.as_coefficient(S.ImaginaryUnit)
 
             if i_coeff is not None:
@@ -613,6 +632,9 @@ class acosh(Function):
 
                 if arg in cst_table:
                     return cst_table[arg]*S.ImaginaryUnit
+        else:
+            if arg is S.ComplexInfinity:
+                return S.Infinity
 
     @staticmethod
     @cacheit
@@ -674,6 +696,9 @@ class atanh(Function):
             elif arg.is_negative:
                 return -cls(-arg)
         else:
+            if arg is S.ComplexInfinity:
+                return S.NaN
+
             i_coeff = arg.as_coefficient(S.ImaginaryUnit)
 
             if i_coeff is not None:
@@ -737,6 +762,9 @@ class acoth(Function):
             elif arg.is_negative:
                 return -cls(-arg)
         else:
+            if arg is S.ComplexInfinity:
+                return 0
+
             i_coeff = arg.as_coefficient(S.ImaginaryUnit)
 
             if i_coeff is not None:
