@@ -1,4 +1,4 @@
-from sympy import symbols, Symbol, sinh, nan, oo, pi, asinh, acosh, log, sqrt, \
+from sympy import symbols, Symbol, sinh, nan, oo, zoo, pi, asinh, acosh, log, sqrt, \
         coth, I, cot, E, tanh, tan, cosh, cos, S, sin, Rational, atanh, acoth, \
         Integer, O, exp
 
@@ -10,6 +10,7 @@ def test_sinh():
     k = Symbol('k', integer=True)
 
     assert sinh(nan) == nan
+    assert sinh(zoo) == nan
 
     assert sinh(oo) == oo
     assert sinh(-oo) == -oo
@@ -71,6 +72,7 @@ def test_cosh():
     k = Symbol('k', integer=True)
 
     assert cosh(nan) == nan
+    assert cosh(zoo) == nan
 
     assert cosh(oo) == oo
     assert cosh(-oo) == oo
@@ -132,6 +134,7 @@ def test_tanh():
     k = Symbol('k', integer=True)
 
     assert tanh(nan) == nan
+    assert tanh(zoo) == nan
 
     assert tanh(oo) == 1
     assert tanh(-oo) == -1
@@ -193,6 +196,7 @@ def test_coth():
     k = Symbol('k', integer=True)
 
     assert coth(nan) == nan
+    assert coth(zoo) == nan
 
     assert coth(oo) == 1
     assert coth(-oo) == -1
@@ -205,18 +209,18 @@ def test_coth():
     assert coth(x) == coth(x)
     assert coth(-x) == -coth(x)
 
-    assert coth(pi*I) == -cot(pi)*I
+    assert coth(pi*I) == -I*cot(pi)
     assert coth(-pi*I) == cot(pi)*I
 
     assert coth(2**1024 * E) == coth(2**1024 * E)
     assert coth(-2**1024 * E) == -coth(2**1024 * E)
 
-    assert coth(pi*I) == -cot(pi)*I
-    assert coth(-pi*I) == cot(pi)*I
-    assert coth(2*pi*I) == -cot(2*pi)*I
-    assert coth(-2*pi*I) == cot(2*pi)*I
-    assert coth(-3*10**73*pi*I) == cot(3*10**73*pi)*I
-    assert coth(7*10**103*pi*I) == -cot(7*10**103*pi)*I
+    assert coth(pi*I) == -I*cot(pi)
+    assert coth(-pi*I) == I*cot(pi)
+    assert coth(2*pi*I) == -I*cot(2*pi)
+    assert coth(-2*pi*I) == I*cot(2*pi)
+    assert coth(-3*10**73*pi*I) == I*cot(3*10**73*pi)
+    assert coth(7*10**103*pi*I) == -I*cot(7*10**103*pi)
 
     assert coth(pi*I/2) == 0
     assert coth(-pi*I/2) == 0
@@ -268,6 +272,8 @@ def test_asinh():
     assert asinh(I*oo) == oo
     assert asinh(-I *oo) == -oo
 
+    assert asinh(zoo) == zoo
+
 def test_asinh_series():
     x = Symbol('x')
     assert asinh(x).series(x, 0, 8) == \
@@ -298,6 +304,8 @@ def test_acosh():
     assert acosh(0) == I*pi/2
     assert acosh(Rational(1,2))  == I*pi/3
     assert acosh(Rational(-1,2)) == 2*pi*I/3
+
+    assert acosh(zoo) == oo
 
 
 @XFAIL
@@ -358,6 +366,8 @@ def test_atanh():
     assert atanh(I*oo) == I*pi/2
     assert atanh(-I*oo) == -I*pi/2
 
+    assert atanh(zoo) == nan
+
     #properties
     assert atanh(-x) == -atanh(x)
 
@@ -405,6 +415,7 @@ def test_acoth():
     assert acoth(-oo) == 0
     assert acoth(I*oo) == 0
     assert acoth(-I*oo) == 0
+    assert acoth(zoo) == 0
 
     #properties
     assert acoth(-x) == -acoth(x)
