@@ -202,10 +202,6 @@ class Ellipse(GeometryEntity):
     def circumference(self):
         """The circumference of the ellipse.
 
-        Notes
-        -----
-        This property hasn't been implemented.
-
         Examples
         --------
         >>> from sympy import Point, Ellipse
