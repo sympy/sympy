@@ -798,20 +798,17 @@ class Basic(AssumeMeths):
 
         return self._subs_list(subst)
 
-    def __contains__(self, what):
-        if self == what or self.is_Function and self.func is what: return True
-        for x in self._args:
-            # x is not necessarily of type Basic and so 'x in x == True'
-            # may not hold.
-            if x == what:
-                return True
 
-            # Not all arguments implement __contains__.
+    def __contains__(self, obj):
+        if self == obj:
+            return True
+        for arg in self.args:
             try:
-                if what in x:
+                if obj in arg:
                     return True
             except TypeError:
-                continue
+                if obj == arg:
+                    return True
         return False
 
     @cacheit
@@ -1031,4 +1028,5 @@ class Atom(Basic):
     def doit(self, **hints):
         return self
 
-from sympy.core.singleton import S
+    def __contains__(self, obj):
+        return (self == obj)

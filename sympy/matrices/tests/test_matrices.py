@@ -300,6 +300,19 @@ def test_LUdecomp():
     assert U.is_upper()
     assert (L*U).permuteBkwd(p)-M == zeros(3)
 
+    mL = Matrix((
+      (1,0,0),
+      (2,3,0),
+    ))
+    assert mL.is_lower() == True
+    assert mL.is_upper() == False
+    mU = Matrix((
+      (1,2,3),
+      (0,4,5),
+    ))
+    assert mU.is_lower() == False
+    assert mU.is_upper() == True
+
     # test FF LUdecomp
     M = Matrix([[1, 3, 3],
                 [3, 2, 6],
@@ -1022,9 +1035,9 @@ def test_is_symbolic():
     x = Symbol('x')
     a = Matrix([[x,x],[x,x]])
     assert a.is_symbolic() == True
-    a = Matrix([[1,2],[3,4]])
+    a = Matrix([[1,2,3,4],[5,6,7,8]])
     assert a.is_symbolic() == False
-    a = Matrix([[1,x],[3,4]])
+    a = Matrix([[1,2,3,4],[5,6,x,8]])
     assert a.is_symbolic() == True
     a = Matrix([[1,x,3]])
     assert a.is_symbolic() == True
@@ -1421,8 +1434,8 @@ def test_SMatrix_CL_RL():
 
 def test_SMatrix_add():
     assert SMatrix(((1,0), (0,1))) + SMatrix(((0,1), (1,0))) == SMatrix(((1,1), (1,1)))
-    a = SMatrix(100, 100, lambda i, j : 1 if j != 0 and i % j == 0 else 0)
-    b = SMatrix(100, 100, lambda i, j : 1 if i != 0 and j % i == 0 else 0)
+    a = SMatrix(100, 100, lambda i, j : int(j != 0 and i % j == 0))
+    b = SMatrix(100, 100, lambda i, j : int(i != 0 and j % i == 0))
     assert (len(a.mat) + len(b.mat) - len((a+b).mat) > 0)
 
 def test_has():

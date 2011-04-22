@@ -33,12 +33,11 @@ class Symbol(AtomicExpr, Boolean):
         """Symbols are identified by name and commutativity::
 
         >>> from sympy import Symbol
-        >>> bool(Symbol("x") == Symbol("x")) == True
+        >>> Symbol("x") == Symbol("x")
         True
-        >>> bool(Symbol("x", real=True) == Symbol("x", real=False)) == True
+        >>> Symbol("x", real=True) == Symbol("x", real=False)
         True
-        >>> bool(Symbol("x", commutative=True) ==
-        ...      Symbol("x", commutative=False)) == True
+        >>> Symbol("x", commutative=True) == Symbol("x", commutative=False)
         False
 
         """

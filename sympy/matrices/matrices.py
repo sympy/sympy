@@ -1234,24 +1234,23 @@ class Matrix(object):
         return self.rows == self.cols
 
     def is_upper(self):
-        for i in range(self.rows):
-            for j in range(self.cols):
-                if i > j and self[i,j] != 0:
+        for i in xrange(1, self.rows):
+            for j in xrange(0, i):
+                if self[i,j] != 0:
                     return False
         return True
 
     def is_lower(self):
-        for i in range(self.rows):
-            for j in range(self.cols):
-                if i < j and self[i, j] != 0:
+        for i in xrange(0, self.rows):
+            for j in xrange(i+1, self.cols):
+                if self[i, j] != 0:
                     return False
         return True
 
     def is_symbolic(self):
-        for i in range(self.rows):
-            for j in range(self.cols):
-                if self[i,j].has(Symbol):
-                    return True
+        for element in self.mat:
+            if element.has(Symbol):
+                return True
         return False
 
     def is_symmetric(self):
@@ -1335,7 +1334,7 @@ class Matrix(object):
             return False
         for i in range(self.cols):
             for j in range(self.rows):
-                if i <> j and self[i, j] != 0:
+                if i != j and self[i, j] != 0:
                     return False
         return True
 

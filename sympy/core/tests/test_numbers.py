@@ -38,6 +38,7 @@ def test_mod():
     b = Integer(4)
 
     assert type(a % b) == Integer
+    assert Integer(1) % Rational(2, 3) == Rational(1, 3)
 
 def test_divmod():
     assert divmod(S(12), S(8)) == (1, 4)
