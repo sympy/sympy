@@ -1287,7 +1287,7 @@ class Matrix(object):
                 return sum(self.applyfunc(abs).applyfunc(raise_to_order))\
                         **Rational(1,ord)
             except:
-                raise ValueError, "Expected order to be Number, Symbol, oo"
+                raise ValueError("Expected order to be Number, Symbol, oo")
         #Matrix Norms
         else:
             if ord == 2: #Spectral Norm
@@ -1301,8 +1301,7 @@ class Matrix(object):
                 #reshape as vector and send back to norm function
                 return self.vec().norm(ord=2)
             else:
-                raise NotImplementedError,\
-                        "Matrix Norms under development"
+                raise NotImplementedError("Matrix Norms under development")
 
     def normalized(self):
         if self.rows != 1 and self.cols != 1:
@@ -3066,20 +3065,20 @@ def symarray(prefix, shape):
 #traditional min/max have odd behavior on Symbols. These raise explicit errors
 #instead
 def numerical_max(L):
-    """a max function that fails on Non-Numbers"""
-    if not all([elem.is_number for elem in L]):
-        raise NotImplementedError, "Not implemented on Non-Numbers"
+    """A max function for numeric arguments only."""
+    if not all(elem.is_number for elem in L):
+        raise NotImplementedError("Not implemented on Non-Numbers")
     return max(L)
 
 def numerical_min(L):
-    '''a min function that fails on Non-Numbers'''
-    if not all([elem.is_number for elem in L]):
-        raise NotImplementedError, "Not implemented on Non-Numbers"
+    """A max function for numeric arguments only."""
+    if not all(elem.is_number for elem in L):
+        raise NotImplementedError("Not implemented on Non-Numbers")
     return min(L)
 
 def _separate_eig_results(res):
-    eigVals = [item[0] for item in res]
+    eigvals = [item[0] for item in res]
     multiplicities = [item[1] for item in res]
-    eigVals = flatten([[val]*mult for val, mult in zip(eigVals, multiplicities)])
-    eigVects = flatten([item[2] for item in res])
-    return eigVals, eigVects
+    eigvals = flatten([[val]*mult for val, mult in zip(eigVals, multiplicities)])
+    eigvects = flatten([item[2] for item in res])
+    return eigvals, eigvects
