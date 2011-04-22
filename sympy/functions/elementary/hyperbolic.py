@@ -608,9 +608,9 @@ class acosh(Function):
             if arg is S.NaN:
                 return S.NaN
             elif arg is S.Infinity:
-                return S.Infinity * S.ImaginaryUnit
+                return S.Infinity
             elif arg is S.NegativeInfinity:
-                return S.NegativeInfinity * S.ImaginaryUnit
+                return S.Infinity
             elif arg is S.Zero:
                 return S.Pi*S.ImaginaryUnit / 2
             elif arg is S.One:
@@ -634,6 +634,16 @@ class acosh(Function):
         else:
             if arg is S.ComplexInfinity:
                 return S.Infinity
+
+            i_coeff = arg.as_coefficient(S.ImaginaryUnit)
+
+            if i_coeff is not None:
+                if i_coeff.as_coeff_mul()[0].is_negative:
+                    return S.ImaginaryUnit * C.acos(i_coeff)
+                return S.ImaginaryUnit * C.acos(-i_coeff)
+            else:
+                if arg.as_coeff_mul()[0].is_negative:
+                    return -cls(-arg)
 
     @staticmethod
     @cacheit

@@ -307,15 +307,11 @@ def test_acosh():
 
     assert acosh(zoo) == oo
 
-
-@XFAIL
 def test_acosh_infinities():
     assert acosh(oo) == oo
-    assert acosh(-oo) == oo + I*pi
-    assert acosh(I*oo) == oo + I*pi/2
-    assert acosh(-I*oo) == oo - I*pi/2
-
-
+    assert acosh(-oo) == oo
+    assert acosh(I*oo) == oo
+    assert acosh(-I*oo) == oo
 
 def test_acosh_series():
     x = Symbol('x')
