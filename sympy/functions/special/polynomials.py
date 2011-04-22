@@ -310,25 +310,25 @@ def laguerre_l(n, alpha, x):
     >>> laguerre_l(1, alpha, x)
     1 + alpha - x
     >>> laguerre_l(2, alpha, x)
-    (1 + alpha)*(2 + alpha)/2 - x*(2 + alpha) + x**2/2
+    -1/2 - alpha/2 + (1 + alpha - x)*(3 + alpha - x)/2
 
     If you set alpha=0, you get regular Laguerre polynomials::
 
     >>> laguerre_l(1, 0, x)
     1 - x
     >>> laguerre_l(2, 0, x)
-    1 - 2*x + x**2/2
+    -1/2 + (1 - x)*(3 - x)/2
     >>> laguerre_l(3, 0, x)
-    1 - 3*x + 3*x**2/2 - x**3/6
+    -2/3 + 2*x/3 - (1/2 - (1 - x)*(3 - x)/2)*(5 - x)/3
     >>> laguerre_l(4, 0, x)
-    1 - 4*x + 3*x**2 - 2*x**3/3 + x**4/24
+    3/8 - 3*(1 - x)*(3 - x)/8 - (7 - x)*(2/3 - 2*x/3 + (1/2 - (1 - x)*(3 - x)/2)*(5 - x)/3)/4
 
     """
     n, alpha, x = S(n), S(alpha), S(x)
-    r = 0
-    for m in range(n+1):
-        c = 1
-        for i in range(m+1, n+1):
-            c *= alpha+i
-        r += (-1)**m * c * x**m/(factorial(m)*factorial(n-m))
+    
+    c = 0
+    r = S(1)
+    for m in range(1, n+1):
+        l, c = c, r
+        r = ((2*m-1+alpha-x)*c-(m-1+alpha)*l)/m
     return r
