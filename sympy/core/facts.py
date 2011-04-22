@@ -301,10 +301,6 @@ def split_rules_tt_tf_ft_ff(rules):
 # RULES PROVER #
 ################
 
-# XXX only for debugging -- kill me ?
-dbg_level = 0
-
-
 class TautologyDetected(Exception):
     """(internal) Prover uses it for reporting detected tautology"""
     pass
@@ -339,32 +335,9 @@ class Prover(object):
        *several* facts are true at the same time.
     """
 
-    __slots__ = ['proved_rules',    # [] of a,b     (a -> b  rule)
-                 '_rules_seen',     # setof all seen rules
-                ]
-
     def __init__(self):
         self.proved_rules = []
         self._rules_seen  = set()
-
-    def print_proved(self, title='proved rules'):
-        print '\n--- %s ---' % title
-        for a,b in self.proved_rules:
-            print '%s\t->  %s' % (a,b)
-
-        print '   - - - - -   '
-        print
-
-
-    def print_beta(self, title='proved rules (beta)'):
-        print '\n --- %s ---' % title
-
-        for n, (a,b) in enumerate(self.rules_beta):
-            print '[#%i]  %s\t->  %s' % (n,a,b)
-
-        print '   - - - - -   '
-        print
-
 
     def split_alpha_beta(self):
         """split proved rules into alpha and beta chains"""
@@ -457,18 +430,9 @@ class Prover(object):
             self.proved_rules.append((a,b))     # a  -> b
             self.proved_rules.append((nb,na))   # !b -> !a
 
-    def dbg_process_rule_2(a, b):
-        global dbg_level
-        print '%s%s\t->  %s' % (' '*(2*dbg_level), a, b)
-        dbg_level += 1
-        try:
-            old_process_rule_2(a, b)
-        finally:
-            dbg_level -= 1
-
 ########################################
 
-class FactRules:
+class FactRules(object):
     """Rules that describe how to deduce facts in logic space
 
        When defined, these rules allow implications to quickly be determined for a
