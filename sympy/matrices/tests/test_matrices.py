@@ -1592,9 +1592,9 @@ def test_matrix_norm():
 
     #Test with Symbols and more complex entries
     y = Symbol('y')
-    A = Matrix([[3,y,y],[x,Rational(252,2811), -pi]])
-    assert A.norm('fro'), \
-            (7908777/877969 + 2*y*conjugate(y) + pi**2 + x**2)**(S(1)/2)
+    A = Matrix([[3,y,y],[x,S(1)/2, -pi]])
+    assert (A.norm('fro')
+           == (S(37)/4 + 2*y*y.conjugate() + pi**2 + x**2)**(S(1)/2))
 
     #Check non-square
     A = Matrix([[1,2,-3],[4,5,Rational(13,2)]])
@@ -1613,10 +1613,10 @@ def test_singular_values():
     assert 1 in vals and 5 in vals and abs(x) in vals
 
     A = Matrix([[1,2,-3],[4,5,Rational(13,2)]])
-    assert A.singular_values() == \
-            [(Rational(389,8) + 78665**Rational(1,2)/8)**Rational(1,2),\
-            (Rational(389,8) - 78665**Rational(1,2)/8)**Rational(1,2), \
-            Zero]
+    assert (A.singular_values() ==
+            [(Rational(389,8) + 78665**Rational(1,2)/8)**Rational(1,2),
+            (Rational(389,8) - 78665**Rational(1,2)/8)**Rational(1,2),
+            Zero])
 
 def test_len():
     assert len(Matrix()) == 0

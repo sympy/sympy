@@ -1284,8 +1284,8 @@ class Matrix(object):
             #Otherwise generalize the 2-norm, Sum(x_i**ord)**(1/ord)
             try:
                 raise_to_order = lambda b : pow(b,ord)
-                return sum(self.applyfunc(abs).applyfunc(raise_to_order))\
-                        **Rational(1,ord)
+                return (sum(self.applyfunc(abs).applyfunc(raise_to_order))
+                        **Rational(1,ord))
             except:
                 raise ValueError("Expected order to be Number, Symbol, oo")
         #Matrix Norms
@@ -1296,8 +1296,8 @@ class Matrix(object):
             elif ord == -2:
                 #Minimum singular value
                 return numerical_min(self.singular_values())
-            elif ord == None or isinstance(ord,str) and ord.lower() in\
-                    ['f', 'fro', 'frobenius', 'vector']:
+            elif (ord == None or isinstance(ord,str) and ord.lower() in
+                    ['f', 'fro', 'frobenius', 'vector']):
                 #reshape as vector and send back to norm function
                 return self.vec().norm(ord=2)
             else:
