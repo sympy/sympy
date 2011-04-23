@@ -603,7 +603,7 @@ class acosh(Function):
     @classmethod
     def eval(cls, arg):
         arg = sympify(arg)
-        
+
         if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
