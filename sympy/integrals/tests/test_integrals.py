@@ -589,3 +589,7 @@ def test_issue_1277():
     from sympy import simplify
     assert simplify(integrate(n*(x**(1/n)-1), (x, 0, S.Half))) == \
            (n**2 - 2**(S(1)/n)*n**2 - n*2**(S(1)/n))/(2**(1 + S(1)/n) + n*2**(1 + S(1)/n))
+
+def test_issue_1418():
+    assert integrate((x**Rational(1,2) - x**3)/x**Rational(1,3), x) == \
+        6*x**(Rational(7,6))/7 - 3*x**(Rational(11,3))/11
