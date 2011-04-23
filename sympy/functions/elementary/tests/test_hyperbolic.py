@@ -367,7 +367,6 @@ def test_atanh():
     #properties
     assert atanh(-x) == -atanh(x)
 
-@XFAIL
 def test_atanh_infinities():
     assert atanh(oo) == -I*pi/2
     assert atanh(-oo) == I*pi/2
