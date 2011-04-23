@@ -703,6 +703,10 @@ class atanh(Function):
                 return S.Infinity
             elif arg is S.NegativeOne:
                 return S.NegativeInfinity
+            elif arg is S.Infinity:
+                return -S.ImaginaryUnit * C.atan(arg)
+            elif arg is S.NegativeInfinity:
+                return S.ImaginaryUnit * C.atan(-arg)
             elif arg.is_negative:
                 return -cls(-arg)
         else:
