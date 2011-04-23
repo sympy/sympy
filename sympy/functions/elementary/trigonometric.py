@@ -1142,6 +1142,16 @@ class acot(Function):
                 -1/sqrt(3) : -3,
                 sqrt(3)    : 6,
                 -sqrt(3)   : -6,
+                (1+sqrt(2)) : 8,
+                -(1+sqrt(2)) : -8,
+                (1-sqrt(2)) : -S(8)/3,
+                (sqrt(2)-1) : S(8)/3,
+                sqrt(5+2*sqrt(5)) : 10,
+                -sqrt(5+2*sqrt(5)) : -10,
+                (2+sqrt(3)) : 12,
+                -(2+sqrt(3)) : -12,
+                (2-sqrt(3)) : S(12)/5,
+                -(2-sqrt(3)) : -S(12)/5,
                 }
 
             if arg in cst_table:
