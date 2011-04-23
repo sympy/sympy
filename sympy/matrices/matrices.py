@@ -1,4 +1,4 @@
-from sympy import Basic, Symbol, Integer, C, S, Dummy, Rational
+from sympy import Basic, Symbol, Integer, C, S, Dummy, Rational, Add, Pow
 from sympy.core.numbers import Zero
 from sympy.core.sympify import sympify, converter, SympifyError
 
@@ -1274,9 +1274,9 @@ class Matrix(object):
         # Row or Column Vector Norms
         if self.rows == 1 or self.cols == 1:
             if ord == 2 or ord == None: # Common case sqrt(<x,x>)
-                return Add(*(abs(i)**2 for i in A.mat))**S.Half
+                return Add(*(abs(i)**2 for i in self.mat))**S.Half
             elif ord == 1: # sum(abs(x))
-                return Add(*(abs(i) for i in A.mat))
+                return Add(*(abs(i) for i in self.mat))
             elif ord == S.Infinity: # max(abs(x))
                 return numerical_max(self.applyfunc(abs))
             elif ord == S.NegativeInfinity: # min(abs(x))
@@ -1949,8 +1949,8 @@ class Matrix(object):
 
     def condition_number(self):
         """Returns the condition number of a matrix
-        >>> from sympy import Matrix, Rational
-        >>> A = Matrix([[1, 0, 0], [0, 10, 0], [0,0,S(1)/10]])
+        >>> from sympy import Matrix, S
+        >>> A = Matrix([[1, 0, 0], [0, 10, 0], [0,0,S.One/10]])
         >>> print A.condition_number()
         100
 
