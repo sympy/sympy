@@ -8,7 +8,7 @@ from sympy.utilities import any, all
 from sympy.utilities.iterables import flatten
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.printing import sstr
-from sympy.functions.elementary.complexes import re
+from sympy.functions.elementary.complexes import re, Abs
 
 import random
 
