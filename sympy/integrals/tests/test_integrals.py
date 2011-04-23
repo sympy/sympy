@@ -477,25 +477,16 @@ def test_integral_reconstruct():
 def test_doit():
     e = Integral(Integral(2*x), (x, 0, 1))
     assert e.doit() == Rational(1, 3)
+    assert e.doit(deep=False) == Rational(1, 3)
     f = Function('f')
     # doesn't matter if the integral can't be performed
     assert Integral(f(x), (x, 1, 1)).doit() == 0
     # doesn't matter if the limits can't be evaluated
     assert Integral(0, (x, 1, Integral(f(x), x))).doit() == 0
 
-@XFAIL
-def test_doit2():
-    e = Integral(Integral(2*x), (x, 0, 1))
-    # risch currently chokes on the contained integral.
-    assert e.doit(deep = False) == e
-
 def issue_1785():
     assert integrate(sqrt(x)*(1+x)) == 2*x**Rational(3, 2)/3 + 2*x**Rational(5, 2)/5
-    assert integrate(x**x*(1+log(x))) is not None
-
-@XFAIL
-def issue_1785_fail():
-    assert integrate(x**x*(1+log(x)).expand(mul=True)) is None
+    assert integrate(x**x*(1+log(x))) == x**x
 
 def test_is_number():
     from sympy.abc import x, y, z
