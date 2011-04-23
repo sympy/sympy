@@ -307,25 +307,6 @@ def test_acosh():
 
     assert acosh(zoo) == oo
 
-def test_acosh_infinities():
-    assert acosh(oo) == oo
-    assert acosh(-oo) == oo
-    assert acosh(I*oo) == oo
-    assert acosh(-I*oo) == oo
-
-def test_acosh_series():
-    x = Symbol('x')
-    assert acosh(x).series(x, 0, 8) == \
-            -I*x + pi*I/2 - I*x**3/6 - 3*I*x**5/40 - 5*I*x**7/112 + O(x**8)
-    t5 = acosh(x).taylor_term(5, x)
-    assert t5 == - 3*I*x**5/40
-    assert acosh(x).taylor_term(7, x, t5, 0) == - 5*I*x**7/112
-
-
-
-@XFAIL
-# not yet implemented cases which should live in test_acosh
-def test_acosh_noimpl():
     assert acosh(I) == log(I*(1+sqrt(2)))
     assert acosh(-I) == log(-I*(1+sqrt(2)))
     assert acosh((sqrt(3)-1)/(2*sqrt(2))) == 5*pi*I/12
@@ -342,6 +323,21 @@ def test_acosh_noimpl():
     assert acosh(-(1+sqrt(3))/(2*sqrt(2))) == 11*I*pi/12
     assert acosh((sqrt(5)+1)/4) == I*pi/5
     assert acosh(-(sqrt(5)+1)/4) == 4*I*pi/5
+
+
+def test_acosh_infinities():
+    assert acosh(oo) == oo
+    assert acosh(-oo) == oo
+    assert acosh(I*oo) == oo
+    assert acosh(-I*oo) == oo
+
+def test_acosh_series():
+    x = Symbol('x')
+    assert acosh(x).series(x, 0, 8) == \
+            -I*x + pi*I/2 - I*x**3/6 - 3*I*x**5/40 - 5*I*x**7/112 + O(x**8)
+    t5 = acosh(x).taylor_term(5, x)
+    assert t5 == - 3*I*x**5/40
+    assert acosh(x).taylor_term(7, x, t5, 0) == - 5*I*x**7/112
 
 
 # TODO please write more tests -- see #652
