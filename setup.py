@@ -106,11 +106,13 @@ class audit(Command):
         except:
             print """In order to run the audit, you need to have PyFlakes installed."""
             sys.exit(-1)
-        dirs = [os.path.join(*i.split('.')) for i in modules]
+        # We don't want to audit external dependencies
+        ext = ('mpmath',)
+        dirs = (os.path.join(*d) for d in \
+                        (m.split('.') for m in modules) if d[1] not in ext)
         warns = 0
         for dir in dirs:
-            filenames = os.listdir(dir)
-            for filename in filenames:
+            for filename in os.listdir(dir):
                 if filename.endswith('.py') and filename != '__init__.py':
                     warns += flakes.checkPath(os.path.join(dir, filename))
         if warns > 0:
