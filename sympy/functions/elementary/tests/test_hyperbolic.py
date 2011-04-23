@@ -274,19 +274,8 @@ def test_asinh():
 
     assert asinh(zoo) == zoo
 
-def test_asinh_series():
-    x = Symbol('x')
-    assert asinh(x).series(x, 0, 8) == \
-                x - x**3/6 + 3*x**5/40 - 5*x**7/112 + O(x**8)
-    t5 = asinh(x).taylor_term(5, x)
-    assert t5 == 3*x**5/40
-    assert asinh(x).taylor_term(7, x, t5, 0) == -5*x**7/112
-
-@XFAIL
-# not yet implemented cases which should live in test_asinh
-def test_asinh_noimpl():
-    assert asinh(I *(sqrt(3) - 1)/(2**(3/2))) == pi*I/12
-    assert asinh(-I *(sqrt(3) - 1)/(2**(3/2))) == -pi*I/12
+    assert asinh(I *(sqrt(3) - 1)/(2**(S(3)/2))) == pi*I/12
+    assert asinh(-I *(sqrt(3) - 1)/(2**(S(3)/2))) == -pi*I/12
 
     assert asinh(I*(sqrt(5)-1)/4) == pi*I/10
     assert asinh(-I*(sqrt(5)-1)/4) == -pi*I/10
@@ -294,6 +283,13 @@ def test_asinh_noimpl():
     assert asinh(I*(sqrt(5)+1)/4) == 3*pi*I/10
     assert asinh(-I*(sqrt(5)+1)/4) == -3*pi*I/10
 
+def test_asinh_series():
+    x = Symbol('x')
+    assert asinh(x).series(x, 0, 8) == \
+                x - x**3/6 + 3*x**5/40 - 5*x**7/112 + O(x**8)
+    t5 = asinh(x).taylor_term(5, x)
+    assert t5 == 3*x**5/40
+    assert asinh(x).taylor_term(7, x, t5, 0) == -5*x**7/112
 
 def test_acosh():
     # TODO please write more tests  -- see #652

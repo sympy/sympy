@@ -869,6 +869,8 @@ class asin(Function):
                 (1-sqrt(5))/4 : -10,
                 (sqrt(3)-1)/sqrt(2**3) : 12,
                 (1-sqrt(3))/sqrt(2**3) : -12,
+                (sqrt(5)+1)/4 : S(10)/3,
+                -(sqrt(5)+1)/4 : -S(10)/3
                 }
 
             if arg in cst_table:
@@ -877,7 +879,6 @@ class asin(Function):
         i_coeff = arg.as_coefficient(S.ImaginaryUnit)
         if i_coeff is not None:
             return S.ImaginaryUnit * C.asinh(i_coeff)
-
 
     @staticmethod
     @cacheit
