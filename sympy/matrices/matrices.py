@@ -1957,8 +1957,8 @@ class Matrix(object):
 
         Only works on Numerical Matrices (no symbols)
         """
-        singularValues = self.singular_values()
-        return numerical_max(singularValues) / numerical_min(singularValues)
+        singularvalues = self.singular_values()
+        return numerical_max(singularvalues) / numerical_min(singularvalues)
 
     def fill(self, value):
         """Fill the matrix with the scalar value."""

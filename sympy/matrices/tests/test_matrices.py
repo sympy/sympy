@@ -1653,6 +1653,12 @@ def test_singular_values():
     vals = [sv.trigsimp() for sv in A.singular_values()]
     assert vals == [S(1), S(1)]
 
+def test_condition_number():
+    A = eye(3);
+    A[0,0] = 10;
+    A[2,2] = S(1)/10;
+    assert A.condition_number() == 100
+
 def test_len():
     assert len(Matrix()) == 0
     assert len(Matrix([[1, 2]])) == len(Matrix([[1], [2]])) == 2
