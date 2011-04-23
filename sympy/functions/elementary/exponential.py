@@ -504,18 +504,6 @@ class log(Function):
         import sage.all as sage
         return sage.log(self.args[0]._sage_())
 
-# MrvLog is used by limit.py
-class MrvLog(log):
-
-    def _eval_subs(self, old, new):
-        old = sympify(old)
-        if old==self.func:
-            arg = self.args[0]
-            new = sympify(new)
-            return new(arg._eval_subs(old, new))
-        return self
-
-
 class LambertW(Function):
     """Lambert W function, defined as the inverse function of
     x*exp(x). This function represents the principal branch
