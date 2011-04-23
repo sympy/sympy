@@ -1668,37 +1668,53 @@ def test_matrix_norm():
     # Two matrices
     A = Matrix([[1,2],[3,4]])
     B = Matrix([[5,5],[-2,2]])
+    C = Matrix([[0,-I],[I,0]])
+    D = Matrix([[1,0],[0,-1]])
+    L = [A,B,C,D]
     alpha = Symbol('alpha', real=True)
+
     for order in ['fro', 2, -2]:
         # Zero Check
         assert zeros(3).norm(order) == S(0)
-        # Triangle inequality
-        assert A.norm(order)+B.norm(order) >= (A+B).norm(order)
-        # Linear to scalar multiplication
-        try:
-            assert ((alpha*A).norm(order) ==
-                    sqrt(alpha*alpha.conjugate()) * A.norm(order))
-        except NotImplementedError:
-            pass; # Some Norms fail on symbolic matrices due to Max issue
+        # Check Triangle Inequality for all Pairs of Matrices
+        for X in L:
+            for Y in L:
+                assert X.norm(order)+Y.norm(order) >= (X+Y).norm(order)
+        # Scalar multiplication linearity
+        for M in [A,B,C,D]:
+            try:
+                assert ((alpha*M).norm(order) ==
+                        abs(alpha) * M.norm(order))
+            except NotImplementedError:
+                pass; # Some Norms fail on symbolic matrices due to Max issue
 
     # Test Properties of Vector Norms
     # http://en.wikipedia.org/wiki/Vector_norm
     # Two column vectors
-    v = Matrix([1,1-1*I,-3])
-    w = Matrix([S(1)/2, 1*I, 1])
+    a = Matrix([1,1-1*I,-3])
+    b = Matrix([S(1)/2, 1*I, 1])
+    c = Matrix([-1,-1,-1])
+    d = Matrix([3, 2, I])
+    e = Matrix([Integer(1e2),Rational(1,1e2),1])
+    L = [a,b,c,d,e]
     alpha = Symbol('alpha', real=True)
 
-    for order in [1,2,-1,-2, S.Infinity, S.NegativeInfinity]:
+    for order in [1,2,-1, -2, S.Infinity, S.NegativeInfinity, pi]:
         # Zero Check
         assert Matrix([0,0,0]).norm(order) == S(0)
-        # Triangle inequality
-        assert v.norm(order)+w.norm(order) >= (v+w).norm(order)
+        # Triangle inequality on all pairs
+        if order >= 1: # Triangle InEq holds only for these norms
+            for v in L:
+                for w in L:
+                    assert v.norm(order)+w.norm(order) >= (v+w).norm(order)
         # Linear to scalar multiplication
-        try:
-            assert simplify(  (alpha*v).norm(order) -
-                    (abs(alpha) * v.norm(order))  ) == 0
-        except NotImplementedError:
-            pass; # Some Norms fail on symbolic matrices due to Max issue
+        if order in [1,2, -1, -2, S.Infinity, S.NegativeInfinity]:
+            for vec in L:
+                try:
+                    assert simplify(  (alpha*v).norm(order) -
+                            (abs(alpha) * v.norm(order))  ) == 0
+                except NotImplementedError:
+                    pass; # Some Norms fail on symbolics due to Max issue
 
 
 def test_singular_values():
