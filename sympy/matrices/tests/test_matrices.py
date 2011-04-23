@@ -1655,7 +1655,7 @@ def test_matrix_norm():
     y = Symbol('y')
     A = Matrix([[3,y,y],[x,S(1)/2, -pi]])
     assert (A.norm('fro')
-           == (S(37)/4 + 2*y*y.conjugate() + pi**2 + x**2)**(S(1)/2))
+           == (S(37)/4 + 2*abs(y)**2 + pi**2 + x**2)**(S(1)/2))
 
     # Check non-square
     A = Matrix([[1,2,-3],[4,5,Rational(13,2)]])

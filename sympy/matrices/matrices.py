@@ -1,4 +1,4 @@
-from sympy import Basic, Symbol, Integer, C, S, Dummy, Rational
+from sympy import Basic, Symbol, Integer, C, S, Dummy, Rational, Add, Pow
 from sympy.core.numbers import Zero
 from sympy.core.sympify import sympify, converter, SympifyError
 from sympy.core.compatibility import ordered_iter
@@ -1470,9 +1470,9 @@ class Matrix(object):
         # Row or Column Vector Norms
         if self.rows == 1 or self.cols == 1:
             if ord == 2 or ord == None: # Common case sqrt(<x,x>)
-                return (self.vec().H * self.vec())[0]**S.Half
+                return Add(*(abs(i)**2 for i in self.mat))**S.Half
             elif ord == 1: # sum(abs(x))
-                return (ones((1, len(self))) * self.applyfunc(abs).vec())[0,0]
+                return Add(*(abs(i) for i in self.mat))
             elif ord == S.Infinity: # max(abs(x))
                 return numerical_max(self.applyfunc(abs))
             elif ord == S.NegativeInfinity: # min(abs(x))
@@ -1480,9 +1480,7 @@ class Matrix(object):
             # Otherwise generalize the 2-norm, Sum(x_i**ord)**(1/ord)
             # Note that while useful this is not mathematically a norm
             try:
-                raise_to_order = lambda b : pow(b,ord)
-                return (sum(self.applyfunc(abs).applyfunc(raise_to_order))
-                        **Rational(1,ord))
+                return Pow( Add(*(abs(i)**ord for i in self.mat)), S(1)/ord )
             except:
                 raise ValueError("Expected order to be Number, Symbol, oo")
         # Matrix Norms
@@ -2129,11 +2127,11 @@ class Matrix(object):
         [1, (1 + x**2)**(1/2), 0]
         """
         # Compute eigenvalues of A.H A
-        valMultPairs = (self.H*self).eigenvals()
+        valmultpairs = (self.H*self).eigenvals()
 
         #.eigenvals returns an odd result. Expand into a simple list
         vals = []
-        for k,v in valMultPairs.items():
+        for k,v in valmultpairs.items():
             vals += [sqrt(k)]*v # dangerous! same k in several spots!
 
         # if sorting makes sense then sort
@@ -2144,12 +2142,13 @@ class Matrix(object):
         # vals = map(re, vals)
 
         return vals
+
     def condition_number(self):
         """Returns the condition number of a matrix
-        >>> from sympy import Matrix, Symbol, eye, Rational
-        >>> A = Matrix([[0, 1, -1], [0, 1000, 0], [Rational(1,2), 0, 0]])
+        >>> from sympy import Matrix, S
+        >>> A = Matrix([[1, 0, 0], [0, 10, 0], [0,0,S.One/10]])
         >>> print A.condition_number()
-        2*(500001 + 250000000001**(1/2))**(1/2)
+        100
 
         Only works on Numerical Matrices (no symbols)
         """
