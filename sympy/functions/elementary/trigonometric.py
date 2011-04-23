@@ -1032,6 +1032,14 @@ class atan(Function):
                 -1/sqrt(3) : -6,
                 sqrt(3)    : 3,
                 -sqrt(3)   : -3,
+                (1+sqrt(2)) : S(8)/3,
+                -(1+sqrt(2)) : S(8)/3,
+                (sqrt(2)-1) : 8,
+                (1-sqrt(2)) : -8,
+                sqrt((5+2*sqrt(5))) : S(5)/2,
+                -sqrt((5+2*sqrt(5))) : -S(5)/2,
+                (2-sqrt(3)) : 12,
+                -(2-sqrt(3)) : -12
                 }
 
             if arg in cst_table:

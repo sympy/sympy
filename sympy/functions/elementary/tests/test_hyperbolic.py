@@ -359,13 +359,6 @@ def test_atanh():
     #properties
     assert atanh(-x) == -atanh(x)
 
-def test_atanh_infinities():
-    assert atanh(oo) == -I*pi/2
-    assert atanh(-oo) == I*pi/2
-
-@XFAIL
-# not yet implemented cases which should live in test_atanh
-def test_atanh_noimpl():
     assert atanh(I/sqrt(3)) == I*pi/6
     assert atanh(-I/sqrt(3)) == -I*pi/6
     assert atanh(I*sqrt(3)) == I*pi/3
@@ -376,12 +369,13 @@ def test_atanh_noimpl():
     assert atanh(-I*(1+sqrt(2))) == -3*pi*I/8
     assert atanh(I*sqrt(5+2*sqrt(5))) == 2*I*pi/5
     assert atanh(-I*sqrt(5+2*sqrt(5))) == -2*I*pi/5
-    assert atanh(I*(2+sqrt(3))) == 5*pi*I/5
-    assert atanh(-I*(2+sqrt(3))) == -5*pi*I/5
     assert atanh(I*(2-sqrt(3))) == pi*I/12
     assert atanh(I*(sqrt(3)-2)) == -pi*I/12
     assert atanh(oo) == -I*pi/2
 
+def test_atanh_infinities():
+    assert atanh(oo) == -I*pi/2
+    assert atanh(-oo) == I*pi/2
 
 # TODO please write more tests -- see #652
 def test_acoth():
