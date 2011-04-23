@@ -603,7 +603,7 @@ class acosh(Function):
     @classmethod
     def eval(cls, arg):
         arg = sympify(arg)
-
+        
         if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
@@ -617,33 +617,48 @@ class acosh(Function):
                 return S.Zero
             elif arg is S.NegativeOne:
                 return S.Pi*S.ImaginaryUnit
-            else:
-                cst_table = {
-                    S.Half       : S.Pi/3,
-                    -S.Half      : 2*S.Pi/3,
-                    sqrt(2)/2    : S.Pi/4,
-                    -sqrt(2)/2   : 3*S.Pi/4,
-                    1/sqrt(2)    : S.Pi/4,
-                    -1/sqrt(2)   : 3*S.Pi/4,
-                    sqrt(3)/2    : S.Pi/6,
-                    -sqrt(3)/2   : 5*S.Pi/6,
-                }
 
-                if arg in cst_table:
+        if arg.is_number:
+            cst_table = {
+                S.ImaginaryUnit : C.log(S.ImaginaryUnit*(1+sqrt(2))),
+                -S.ImaginaryUnit : C.log(-S.ImaginaryUnit*(1+sqrt(2))),
+                S.Half       : S.Pi/3,
+                -S.Half      : 2*S.Pi/3,
+                sqrt(2)/2    : S.Pi/4,
+                -sqrt(2)/2   : 3*S.Pi/4,
+                1/sqrt(2)    : S.Pi/4,
+                -1/sqrt(2)   : 3*S.Pi/4,
+                sqrt(3)/2    : S.Pi/6,
+                -sqrt(3)/2   : 5*S.Pi/6,
+                (sqrt(3)-1)/sqrt(2**3) : 5*S.Pi/12,
+                -(sqrt(3)-1)/sqrt(2**3) : 7*S.Pi/12,
+                sqrt(2+sqrt(2))/2 : S.Pi/8,
+                -sqrt(2+sqrt(2))/2 : 7*S.Pi/8,
+                sqrt(2-sqrt(2))/2 : 3*S.Pi/8,
+                -sqrt(2-sqrt(2))/2 : 5*S.Pi/8,
+                (1+sqrt(3))/(2*sqrt(2)) : S.Pi/12,
+                -(1+sqrt(3))/(2*sqrt(2)) : 11*S.Pi/12,
+                (sqrt(5)+1)/4 : S.Pi/5,
+                -(sqrt(5)+1)/4 : 4*S.Pi/5
+            }
+
+            if arg in cst_table:
+                if arg.is_real:
                     return cst_table[arg]*S.ImaginaryUnit
+                return cst_table[arg]
+
+        if arg is S.ComplexInfinity:
+            return S.Infinity
+
+        i_coeff = arg.as_coefficient(S.ImaginaryUnit)
+
+        if i_coeff is not None:
+            if i_coeff.as_coeff_mul()[0].is_negative:
+                return S.ImaginaryUnit * C.acos(i_coeff)
+            return S.ImaginaryUnit * C.acos(-i_coeff)
         else:
-            if arg is S.ComplexInfinity:
-                return S.Infinity
-
-            i_coeff = arg.as_coefficient(S.ImaginaryUnit)
-
-            if i_coeff is not None:
-                if i_coeff.as_coeff_mul()[0].is_negative:
-                    return S.ImaginaryUnit * C.acos(i_coeff)
-                return S.ImaginaryUnit * C.acos(-i_coeff)
-            else:
-                if arg.as_coeff_mul()[0].is_negative:
-                    return -cls(-arg)
+            if arg.as_coeff_mul()[0].is_negative:
+                return -cls(-arg)
 
     @staticmethod
     @cacheit
