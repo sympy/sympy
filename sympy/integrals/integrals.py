@@ -1,5 +1,5 @@
 from sympy.core import (Basic, Expr, S, C, Symbol, Wild, Add, sympify, diff,
-                        oo, Tuple, Dummy)
+                        oo, Tuple, Dummy, Equality, Interval)
 
 from sympy.core.symbol import Dummy
 from sympy.integrals.trigonometry import trigintegrate
@@ -14,12 +14,83 @@ from sympy.geometry import Curve
 from sympy.functions.elementary.piecewise import piecewise_fold
 from sympy.series import limit
 
+def _free_symbols(function, limits):
+    """
+    Return the symbols that will exist when the function is evaluated as
+    an Integral or a Sum. This is useful if one is trying to determine
+    whether the result is dependent on a certain symbol or not.
+
+    This is written as a private function so it can be used from Sum as well
+    as from Integral.
+    """
+    if function.is_zero:
+        return set()
+    isyms = function.free_symbols
+    for xab in limits:
+        if len(xab) == 1:
+            isyms.add(xab[0])
+            continue
+        # take out the target symbol
+        if xab[0] in isyms:
+            isyms.remove(xab[0])
+        if len(xab) == 3 and xab[1] == xab[2]:
+            # if two limits are the same the integral is 0
+            # and there are no symbols
+            return set()
+        # add in the new symbols
+        for i in xab[1:]:
+            isyms.update(i.free_symbols)
+    return isyms
+
+def _process_limits(*symbols):
+    """Convert the symbols-related limits into propert limits,
+    storing them as Tuple(symbol, lower, upper). The sign of
+    the function is also returned when the upper limit is missing
+    so (x, 1, None) becomes (x, None, 1) and the sign is changed.
+    """
+    limits = []
+    sign = 1
+    for V in symbols:
+        if isinstance(V, Symbol):
+            limits.append(Tuple(V))
+            continue
+        elif isinstance(V, (tuple, list, Tuple)):
+            V = sympify(flatten(V))
+            if V[0].is_Symbol:
+                newsymbol = V[0]
+                if len(V) == 2 and isinstance(V[1], Interval):
+                    V[1:] = [V[1].start, V[1].end]
+
+                if len(V) == 3:
+                    if V[1] is None and V[2] is not None:
+                        nlim = [V[2]]
+                    elif V[1] is not None and V[2] is None:
+                        sign *= -1
+                        nlim = [V[1]]
+                    elif V[1] is None and V[2] is None:
+                        nlim = []
+                    else:
+                        nlim = V[1:]
+                    limits.append(Tuple(newsymbol, *nlim ))
+                    continue
+                elif len(V) == 1 or (len(V) == 2 and V[1] is None):
+                    limits.append(Tuple(newsymbol))
+                    continue
+                elif len(V) == 2:
+                    limits.append(Tuple(newsymbol, V[1]))
+                    continue
+
+        raise ValueError('Invalid limits given: %s' % str(symbols))
+
+    return limits, sign
+
 class Integral(Expr):
     """Represents unevaluated integral."""
 
     __slots__ = ['is_commutative']
 
     def __new__(cls, function, *symbols, **assumptions):
+
         # Any embedded piecewise functions need to be brought out to the
         # top level so that integration can go into piecewise mode at the
         # earliest possible moment.
@@ -28,49 +99,25 @@ class Integral(Expr):
         if function is S.NaN:
             return S.NaN
 
-        symbols = list(symbols)
-        if not symbols:
+        if symbols:
+            limits, sign = _process_limits(*symbols)
+        else:
             # no symbols provided -- let's compute full anti-derivative
-            symbols = sorted(function.free_symbols, Basic.compare)
-            if not symbols:
+            limits, sign = [Tuple(s) for s in function.free_symbols], 1
+            if not limits:
                 raise ValueError('An integration variable is required.')
+
 
         while isinstance(function, Integral):
             # denest the integrand
-            symbols = list(function.limits) + symbols
+            limits = list(function.limits) + limits
             function = function.function
 
-        limits = []
-        for V in symbols:
-            if isinstance(V, Symbol):
-                limits.append(Tuple(V))
-                continue
-            elif isinstance(V, (tuple, list, Tuple)):
-                V = sympify(flatten(V))
-                if V[0].is_Symbol:
-                    newsymbol = V[0]
-                    if len(V) == 3:
-                        if V[1] is None and V[2] is not None:
-                            nlim = [V[2]]
-                        elif V[1] is not None and V[2] is None:
-                            function = -function
-                            nlim = [V[1]]
-                        elif V[1] is None and V[2] is None:
-                            nlim = []
-                        else:
-                            nlim = V[1:]
-                        limits.append(Tuple(newsymbol, *nlim ))
-                        continue
-                    elif len(V) == 1 or (len(V) == 2 and V[1] is None):
-                        limits.append(Tuple(newsymbol))
-                        continue
-                    elif len(V) == 2:
-                        limits.append(Tuple(newsymbol, V[1]))
-                        continue
-            raise ValueError("Invalid integration variable or limits: %s" % str(symbols))
 
         obj = Expr.__new__(cls, **assumptions)
-        obj._args = tuple([function] + limits)
+        arglist = [sign*function]
+        arglist.extend(limits)
+        obj._args = tuple(arglist)
         obj.is_commutative = all(s.is_commutative for s in obj.free_symbols)
 
         return obj
@@ -110,30 +157,7 @@ class Integral(Expr):
         >>> Integral(x, (x, y, 1)).free_symbols
         set([y])
         """
-        # analyze the integral
-        # >>> Integral(x*y,(x,1,2),(y,1,3)).args
-        # (x*y, Tuple(x, 1, 2), Tuple(y, 1, 3))
-        # >>> Integral(x, x, y).args
-        # (x, Tuple(x), Tuple(y))
-        integrand, limits = self.function, self.limits
-        if integrand.is_zero:
-            return set()
-        isyms = integrand.free_symbols
-        for xab in limits:
-            if len(xab) == 1:
-                isyms.add(xab[0])
-                continue
-            # take out the target symbol
-            if xab[0] in isyms:
-                isyms.remove(xab[0])
-            if len(xab) == 3 and xab[1] == xab[2]:
-                # if two limits are the same the integral is 0
-                # and there are no symbols
-                return set()
-            # add in the new symbols
-            for i in xab[1:]:
-                isyms.update(i.free_symbols)
-        return isyms
+        return _free_symbols(self.function, self.limits)
 
     @property
     def is_zero(self):

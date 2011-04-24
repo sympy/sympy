@@ -124,6 +124,8 @@ want to be mentioned here, so see our repository history for a full list).
 #. Tomáš Bambas: prettier printing of examples
 #. Jeremias Yehdegho: fixes to the nthoery module
 #. Jack McCaffery: fixes to asin and acos
+#. Luca Weihs: improvements to the geometry module
+#. Shai 'Deshe' Wyborski: fix to numeric evaluation of hypergeometric sums
 
 Up-to-date list in the order of the first contribution is given in the `AUTHORS
 <https://github.com/sympy/sympy/blob/master/AUTHORS>`_ file.

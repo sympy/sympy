@@ -1,3 +1,12 @@
+"""The definition of the base geometrical entity with attributes common to all
+derived geometrical entities.
+
+Contains
+--------
+GeometryEntity
+
+"""
+
 # How entities are ordered; used by __cmp__ in GeometryEntity
 ordering_of_classes = [
     "Point",
@@ -13,7 +22,12 @@ ordering_of_classes = [
 ]
 
 class GeometryEntity(tuple):
-    """The base class for any geometrical entity."""
+    """The base class for all geometrical entities.
+
+    This class doesn't represent any particular geometric entity, it only
+    provides the implementation of some methods common to all subclasses.
+
+    """
 
     def __new__(cls, *args, **kwargs):
         return tuple.__new__(cls, args)
@@ -23,9 +37,24 @@ class GeometryEntity(tuple):
 
     @staticmethod
     def do_intersection(e1, e2):
-        """
-        Determines the intersection between two geometrical entities. Returns
-        a list of all of the intersections.
+        """The intersection of two geometrical entities.
+
+        Parameters
+        ----------
+        e1 : GeometryEntity
+        e2 : GeometryEntity
+
+        Returns
+        -------
+        entities : list
+            A list of GeometryEntity instances.
+
+        Notes
+        -----
+        This method delegates to the `intersection` methods of `e1` and `e2`.
+        First, the `intersection` method of `e1` is called. If this fails to
+        find the intersection, then the `intersection` method of `e2` is called.
+
         """
         try:
             return e1.intersection(e2)
@@ -35,57 +64,65 @@ class GeometryEntity(tuple):
         try:
             return e2.intersection(e1)
         except NotImplementedError:
-            n1,n2 = type(e1).__name__, type(e2).__name__
-            raise NotImplementedError("Unable to determine intersection between '%s' and '%s'" % (n1, n2))
+            n1, n2 = type(e1).__name__, type(e2).__name__
+            msg = "Unable to determine intersection between '%s' and '%s'"
+            raise NotImplementedError(msg % (n1, n2))
 
     def is_similar(self, other):
-        """
-        Return True if self and other are similar. Two entities are similar
-        if a uniform scaling (enlarging or shrinking) of one of the entities
-        will allow one to obtain the other.
+        """Is this geometrical entity similar to another geometrical entity?
 
-        Notes:
-        ======
-            - This method is not intended to be used directly but rather
-              through the are_similar() method found in util.py.
-            - An entity is not required to implement this method.
-            - If two different types of entities can be similar, it is only
-              required that one of them be able to determine this.
+        Two entities are similar if a uniform scaling (enlarging or
+        shrinking) of one of the entities will allow one to obtain the other.
+
+        Notes
+        -----
+        This method is not intended to be used directly but rather
+        through the `are_similar` function found in util.py.
+        An entity is not required to implement this method.
+        If two different types of entities can be similar, it is only
+        required that one of them be able to determine this.
+
         """
         raise NotImplementedError()
 
     def intersection(self, o):
-        """
-        Returns a list of all of the intersections of this entity and another
-        entity.
+        """The intersection of two GeometryEntity instances.
 
-        Notes:
-        ======
-            - This method is not intended to be used directly but rather
-              through the intersection() method found in util.py.
-            - An entity is not required to implement this method.
-            - If two different types of entities can intersect, it is only
-              required that one of them be able to determine this.
+        Notes
+        -----
+        This method is not intended to be used directly but rather
+        through the `intersection` function found in util.py.
+        An entity is not required to implement this method.
+        If two different types of entities can intersect, it is only
+        required that one of them be able to determine this.
+
         """
         raise NotImplementedError()
 
 
     @staticmethod
     def extract_entities(args, remove_duplicates=True):
-        """
-        Takes a set of arguments and extracts all of the GeometryEntity
-        instances (recursively). Returns a tuple of all of the instances
-        found.
+        """Extract all GeometryEntity instances from a sequence of objects.
 
-        Notes:
-        ======
-            - Duplicates of entities are removed if the remove_duplicates
-              argument is set to True, otherwise duplicates remain.
-              The default is True.
-            - Anything that is not a GeometryEntity instance is simply
-              ignored.
-            - Ordering of arguments is always maintained. If duplicates
-              are removed then the entry with the lowest index is kept.
+        Parameters
+        ----------
+        args : a (possibly nested) sequence of objects
+        remove_duplicates : boolean, optional
+            Duplicate entities are removed from the result (default is True).
+
+        Returns
+        -------
+        entities : tuple of GeometryEntity.
+
+        Notes
+        -----
+        The extraction is performed recursively - a GeometryEntity in a
+        sub-sequences will be added to the result.
+        Anything that is not a GeometryEntity instance is excluded from the
+        return value.
+        Ordering of arguments is always maintained. If duplicates
+        are removed then the entry with the lowest index is kept.
+
         """
         ret = list()
         for arg in args:
@@ -96,7 +133,7 @@ class GeometryEntity(tuple):
         if remove_duplicates:
             temp = set(ret)
             ind, n = 0, len(ret)
-            for counter in xrange(0, n):
+            for counter in xrange(n):
                 x = ret[ind]
                 if x in temp:
                     temp.remove(x)
@@ -106,6 +143,7 @@ class GeometryEntity(tuple):
         return tuple(ret)
 
     def __ne__(self, o):
+        """Test inequality of two geometrical entities."""
         return not self.__eq__(o)
 
     def __radd__(self, a):
@@ -121,17 +159,22 @@ class GeometryEntity(tuple):
         return a.__div__(self)
 
     def __str__(self):
+        """String representation of a GeometryEntity."""
         from sympy.printing import sstr
-        return type(self).__name__ + sstr (tuple(self))
+        return type(self).__name__ + sstr(tuple(self))
 
     def __repr__(self):
+        """String representation of a GeometryEntity that can be evaluated
+        by sympy."""
         return type(self).__name__ + repr(tuple(self))
 
     def __cmp__(self, other):
+        """Comparison of two GeometryEntities."""
         n1 = self.__class__.__name__
         n2 = other.__class__.__name__
         c = cmp(n1, n2)
-        if not c: return 0
+        if not c:
+            return 0
 
         i1 = -1
         for cls in self.__class__.__mro__:
@@ -140,7 +183,8 @@ class GeometryEntity(tuple):
                 break
             except ValueError:
                 i1 = -1
-        if i1 == -1: return c
+        if i1 == -1:
+            return c
 
         i2 = -1
         for cls in other.__class__.__mro__:
@@ -149,6 +193,7 @@ class GeometryEntity(tuple):
                 break
             except ValueError:
                 i2 = -1
-        if i2 == -1: return c
+        if i2 == -1:
+            return c
 
         return cmp(i1, i2)

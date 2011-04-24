@@ -187,6 +187,8 @@ def test_evalf_divergent_series():
     raises(ValueError, 'Sum(n**2, (n, 1, oo)).evalf()')
     raises(ValueError, 'Sum(2**n, (n, 1, oo)).evalf()')
     raises(ValueError, 'Sum((-2)**n, (n, 1, oo)).evalf()')
+    raises(ValueError, 'Sum((2*n+3)/(3*n**2+4), (n,0, oo)).evalf()')
+    raises(ValueError, 'Sum((0.5*n**3)/(n**4+1),(n,0,oo)).evalf()')
 
 def test_evalf_py_methods():
     assert abs(float(pi+1) - 4.1415926535897932) < 1e-10

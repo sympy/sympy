@@ -1,7 +1,7 @@
 from sympy import (S, symbols, integrate, Integral, Derivative, exp, erf, oo, Symbol,
         Function, Rational, log, sin, cos, pi, E, I, Poly, LambertW, diff,
-        Matrix, sympify, sqrt, asin, asinh, acos, acosh, atan,
-        DiracDelta, Heaviside, Lambda, sstr, Add, Tuple)
+        Matrix, sympify, sqrt, atan, asin, acos, asinh, acosh, DiracDelta, Heaviside,
+        Lambda, sstr, Add, Tuple, Eq, Interval, Sum)
 from sympy.utilities.pytest import XFAIL, skip, raises
 from sympy.physics.units import m, s
 
@@ -21,6 +21,21 @@ def diff_test(i):
 def test_improper_integral():
     assert integrate(log(x), (x, 0, 1)) == -1
     assert integrate(x**(-2), (x, 1, oo)) == 1
+
+def test_constructor():
+    # this is shared by Sum, so testing Integral's constructor
+    # is equivalent to testing Sum's
+    s1 = Integral(n, n)
+    assert s1.limits == (Tuple(n),)
+    s2 = Integral(n, (n,))
+    assert s2.limits == (Tuple(n),)
+    s3 = Integral(Sum(x, (x, 1, y)))
+    assert s3.limits == (Tuple(y),)
+    s4 = Integral(n, Tuple(n,))
+    assert s4.limits == (Tuple(n),)
+
+    s5 = Integral(n, (n, Interval(1, 2)))
+    assert s5.limits == (Tuple(n, 1, 2),)
 
 def test_basics():
 

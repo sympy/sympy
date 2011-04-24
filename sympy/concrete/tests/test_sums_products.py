@@ -1,10 +1,10 @@
 from sympy import (Symbol, Sum, oo, Real, Rational, summation, pi, cos, zeta,
     Catalan, exp, log, factorial, sqrt, E, sympify, binomial, EulerGamma,
-    Function, Integral, Product, product, Tuple, Eq, Interval, nan)
+    Function, Integral, Product, product, nan, diff, Derivative, S, cos)
 from sympy.concrete.sums_products import Sum2
 from sympy.utilities.pytest import XFAIL, raises
 
-a, b, c, d, m, k = map(Symbol, 'abcdmk')
+a, b, c, d, m, k, x, y = map(Symbol, 'abcdmkxy')
 n = Symbol('n', integer=True)
 
 def test_arithmetic_sums():
@@ -169,6 +169,8 @@ def test_telescopic_sums():
 def test_sum_reconstruct():
     s = Sum(n**2, (n, -1, 1))
     assert s == Sum(*s.args)
+    raises(ValueError, 'Sum(x, x)')
+    raises(ValueError, 'Sum(x, (x, 1))')
 
 def test_Sum_limit_subs():
     assert Sum(a*exp(a), (a, -2, 2)) == Sum(a*exp(a), (a, -b, b)).subs(b, 2)
@@ -184,21 +186,6 @@ def test_Sum2():
     y = Symbol('y')
     assert Sum2(x**y, (x, 1, 3)) == 1 + 2**y + 3**y
 
-def test_sum_constructor():
-    s1 = Sum(n,n)
-    assert s1.limits == (Tuple(n),)
-    s2 = Sum(n,(n,))
-    assert s2.limits == (Tuple(n),)
-    s3 = Sum(n,((n,)))
-    assert s3.limits == (Tuple(n),)
-    s4 = Sum(n,(Tuple(n,)))
-    assert s4.limits == (Tuple(n),)
-
-    s5 = Sum(n,Eq(n,1))
-    assert s5.limits == (Tuple(n,1),)
-    s6 = Sum(n,Eq(n,Interval(1,2)))
-    assert s6.limits == (Tuple(n,1,2),)
-
 def test_Sum_doit():
     assert Sum(n*Integral(a**2), (n, 0, 2)).doit() == a**3
     assert Sum(n*Integral(a**2), (n, 0, 2)).doit(deep = False) == \
@@ -213,12 +200,20 @@ def test_Product_doit():
 
 def test_Sum_interface():
     assert isinstance(Sum(0, (n, 0, 2)), Sum)
-    assert isinstance(Sum(nan, (n, 0, 2)), Sum)
+    assert Sum(nan, (n, 0, 2)) is nan
+    assert Sum(nan, (n, 0, oo)) is nan
     assert Sum(0, (n, 0, 2)).doit() == 0
-    assert Sum(nan, (n, 0, 2)).doit() == nan
     assert isinstance(Sum(0, (n, 0, oo)), Sum)
-    assert isinstance(Sum(nan, (n, 0, oo)), Sum)
     assert Sum(0, (n, 0, oo)).doit() == 0
-    assert Sum(nan, (n, 0, oo)).doit() == nan
     raises(ValueError, "Sum(1)")
     raises(ValueError, "summation(1)")
+
+def test_eval_diff():
+    assert Sum(x, (x, 1, 2)).diff(x) == 0
+    assert Sum(x*y, (x, 1, 2)).diff(x) == 0
+    assert Sum(x*y, (y, 1, 2)).diff(x) == Sum(y, (y, 1, 2))
+    e = Sum(x*y, (x, 1, a))
+    assert e.diff(a) == Derivative(e, a)
+    assert Sum(x*y, (x, 1, 3), (a, 2, 5)).diff(y) == \
+           Sum(x*y, (x, 1, 3), (a, 2, 5)).doit().diff(y) == \
+           24
