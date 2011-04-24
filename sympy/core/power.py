@@ -213,7 +213,7 @@ class Pow(Expr):
         c2 = self.exp.is_bounded
         if c2 is None: return
         if c1 and c2:
-            if self.exp.is_nonnegative:
+            if self.exp.is_nonnegative or self.base.is_nonzero:
                 return True
 
     def _eval_subs(self, old, new):

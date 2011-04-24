@@ -875,18 +875,20 @@ def test_real_Pow():
     k = Symbol('k', integer=True, nonzero=True)
     assert (k**(I*pi/log(k))).is_real
 
-@XFAIL
 def test_Pow_is_bounded():
     x = Symbol('x', real=True)
+    p = Symbol('p', positive=True)
+    n = Symbol('n', negative=True)
 
-    assert (x**2).is_bounded == None
-
+    assert (x**2).is_bounded == None # x could be oo
+    assert (x**x).is_bounded == None # ditto
+    assert (p**x).is_bounded == None # ditto
+    assert (n**x).is_bounded == None # ditto
+    assert (1/S.Pi).is_bounded
     assert (sin(x)**2).is_bounded == True
     assert (sin(x)**x).is_bounded == None
     assert (sin(x)**exp(x)).is_bounded == None
-
-    # XXX This first one fails
-    assert (1/sin(x)).is_bounded == False
+    assert (1/sin(x)).is_bounded == None # if zero, no, otherwise yes
     assert (1/exp(x)).is_bounded == False
 
 def test_Pow_is_even_odd():
