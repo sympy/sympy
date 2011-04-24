@@ -152,31 +152,14 @@ def ask_direct(expr, key=Q.is_true, assumptions=True, context=global_assumptions
     Method for inferring properties about objects.
 
     """
-    expr = sympify(expr)
-    if isinstance(key, basestring):
-        key = getattr(Q, str(key))
     assumptions = And(assumptions, And(*context))
 
-    if assumptions is True:
-        return
-
-    if not expr.is_Atom:
-        return
-
     assumptions = eliminate_assume(assumptions, expr)
-    if assumptions is None or assumptions is True:
-        return
 
-    # Failing all else, we do a full logical inference
-    # If it's not consistent with the assumptions, then it can't be true
     if not satisfiable(And(known_facts_cnf, assumptions, key)):
         return False
-
-    # If the negation is unsatisfiable, it is entailed
     if not satisfiable(And(known_facts_cnf, assumptions, Not(key))):
         return True
-
-    # Otherwise, we don't have enough information to conclude one way or the other
     return None
 
 
