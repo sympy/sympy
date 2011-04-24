@@ -147,13 +147,11 @@ def ask(expr, key=Q.is_true, assumptions=True, context=global_assumptions):
     return None
 
 
-def ask_direct(expr, key=Q.is_true, assumptions=True, context=global_assumptions):
+def ask_direct(expr, key=Q.is_true, assumptions=True):
     """
     Method for inferring properties about objects.
 
     """
-    assumptions = And(assumptions, And(*context))
-
     assumptions = eliminate_assume(assumptions, expr)
 
     if not satisfiable(And(known_facts_cnf, assumptions, key)):
