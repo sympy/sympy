@@ -135,16 +135,7 @@ def ask(expr, key=Q.is_true, assumptions=True, context=global_assumptions):
             return False
 
     # Failing all else, we do a full logical inference
-    # If it's not consistent with the assumptions, then it can't be true
-    if not satisfiable(And(known_facts_cnf, assumptions, key)):
-        return False
-
-    # If the negation is unsatisfiable, it is entailed
-    if not satisfiable(And(known_facts_cnf, assumptions, Not(key))):
-        return True
-
-    # Otherwise, we don't have enough information to conclude one way or the other
-    return None
+    return ask_direct(key, assumptions)
 
 
 def ask_direct(proposition, hypothesis):
