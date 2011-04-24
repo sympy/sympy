@@ -167,11 +167,11 @@ class Pow(Expr):
                 return False
 
     def _eval_is_real(self):
-        c1 = self.base.is_real
-        if c1 is None: return
-        c2 = self.exp.is_real
-        if c2 is None: return
-        if c1 and c2:
+        real_b = self.base.is_real
+        if real_b is None: return
+        real_e = self.exp.is_real
+        if real_e is None: return
+        if real_b and real_e:
             if self.base.is_positive:
                 return True
             else:   # negative or zero (or positive)
@@ -180,6 +180,23 @@ class Pow(Expr):
                 elif self.base.is_negative:
                     if self.exp.is_Rational:
                         return False
+        im_b = self.base.is_imaginary
+        im_e = self.exp.is_imaginary
+        if im_b:
+            if self.exp.is_integer:
+                if self.exp.is_even:
+                    return True
+                elif self.exp.is_odd:
+                    return False
+            elif (self.exp in [S.ImaginaryUnit, -S.ImaginaryUnit] and
+                  self.base in [S.ImaginaryUnit, -S.ImaginaryUnit]):
+                return True
+        if real_b and im_e:
+            c = self.exp.coeff(S.ImaginaryUnit)
+            if c:
+                ok = (c*C.log(self.base)/S.Pi).is_Integer
+                if ok is not None:
+                    return ok
 
     def _eval_is_odd(self):
         if not (self.base.is_integer and self.exp.is_nonnegative): return
