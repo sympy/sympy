@@ -147,16 +147,14 @@ def ask(expr, key=Q.is_true, assumptions=True, context=global_assumptions):
     return None
 
 
-def ask_full_inference(expr, key=Q.is_true, assumptions=True):
+def ask_full_inference(proposition, assumptions):
     """
     Method for inferring properties about objects.
 
     """
-    assumptions = eliminate_assume(assumptions, expr)
-
-    if not satisfiable(And(known_facts_cnf, assumptions, key)):
+    if not satisfiable(And(known_facts_cnf, assumptions, proposition)):
         return False
-    if not satisfiable(And(known_facts_cnf, assumptions, Not(key))):
+    if not satisfiable(And(known_facts_cnf, assumptions, Not(proposition))):
         return True
     return None
 
@@ -204,13 +202,12 @@ def compute_known_facts():
     fact_string += "\n)\n"
 
     # Compute the quick lookup for single facts
-    from sympy.abc import x
     mapping = {}
     for key in known_facts_keys:
         mapping[key] = set([key])
         for other_key in known_facts_keys:
             if other_key != key:
-                if ask_full_inference(x, other_key, key(x)):
+                if ask_full_inference(other_key, key):
                     mapping[key].add(other_key)
     fact_string += "\n# -{ Known facts in compressed sets }-\n"
     fact_string += "known_facts_dict = {\n    "
