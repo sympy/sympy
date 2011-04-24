@@ -886,3 +886,9 @@ def test_issue2201():
 
 def test_issue_2061():
     assert sqrt(-1.0*x) == I*sqrt(x)
+
+def test_issue_1100():
+    a = x - y
+    assert a._eval_interval(x, 1, oo)._eval_interval(y, oo, 1) == S.NaN
+    a = x/y
+    assert a._eval_interval(x, 0, oo)._eval_interval(y, oo, 0) == S.NaN

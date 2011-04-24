@@ -173,8 +173,6 @@ class Expr(Basic, EvalfMixin):
 
         if A is S.NaN:
             A = limit(self, x, a)
-            if A is S.NaN:
-                return self
         if b is None:
             B = 0
         else:
@@ -182,8 +180,6 @@ class Expr(Basic, EvalfMixin):
 
         if B is S.NaN:
             B = limit(self, x, b)
-        if B is S.NaN:
-            return self
         return B - A
 
     def _eval_power(self, other):

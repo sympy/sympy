@@ -589,3 +589,6 @@ def test_issue_1277():
     from sympy import simplify
     assert simplify(integrate(n*(x**(1/n)-1), (x, 0, S.Half))) == \
            (n**2 - 2**(S(1)/n)*n**2 - n*2**(S(1)/n))/(2**(1 + S(1)/n) + n*2**(1 + S(1)/n))
+
+def test_issue_1100():
+    assert integrate(exp(-I*2*pi*y*x)*x, (x, -oo, oo)) == S.NaN
