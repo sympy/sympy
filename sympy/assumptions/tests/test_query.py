@@ -1,9 +1,12 @@
+from sympy.utilities.pytest import raises, XFAIL
+
 from sympy.core import Symbol, symbols, S, Rational, Integer, I, pi, oo
 from sympy.functions import exp, log, sin, cos, sign, re, im, sqrt, Abs
 from sympy.assumptions import (Assume, global_assumptions, Q, ask,
     register_handler, remove_handler, AssumptionsContext)
 from sympy.assumptions.handlers import AskHandler
-from sympy.utilities.pytest import raises, XFAIL
+from sympy.assumptions.ask import (compute_known_facts,
+                                   known_facts_cnf, known_facts_dict)
 
 def test_int_1():
     z = 1
@@ -1031,3 +1034,9 @@ def test_type_extensibility():
     register_handler(Q.prime, MyAskHandler)
     assert ask(a, Q.prime) == True
 
+def test_compute_known_facts():
+    ns = {}
+    exec 'from sympy.logic.boolalg import And, Or, Not' in globals(), ns
+    exec compute_known_facts() in globals(), ns
+    assert ns['known_facts_cnf'] == known_facts_cnf
+    assert ns['known_facts_dict'] == known_facts_dict
