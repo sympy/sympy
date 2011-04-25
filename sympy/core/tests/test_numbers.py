@@ -1,5 +1,6 @@
-from sympy import Rational, Symbol, Real, I, sqrt, oo, nan, pi, E, Integer, \
-        S, factorial, Catalan, EulerGamma, GoldenRatio, cos, exp, Number
+from sympy import (Rational, Symbol, Real, I, sqrt, oo, nan, pi, E, Integer,
+                   S, factorial, Catalan, EulerGamma, GoldenRatio, cos, exp,
+                   Number, zoo, log, Mul)
 from sympy.core.power import integer_nthroot
 
 from sympy.core.numbers import igcd, ilcm, igcdex, ifactorial, seterr, _intcache
@@ -712,3 +713,56 @@ def test_Rational_int():
     assert int( Rational(1, 2)) ==  0
     assert int(-Rational(1, 2)) ==  0
     assert int(-Rational(7, 5)) == -1
+
+def test_zoo():
+    b = Symbol('b', bounded=True)
+    nz = Symbol('nz', nonzero=True)
+    p = Symbol('p', positive=True)
+    n = Symbol('n', negative=True)
+    im = Symbol('i', imaginary=True)
+    c = Symbol('c', complex=True)
+    pb = Symbol('pb', positive=True, bounded=True)
+    nb = Symbol('nb', negative=True, bounded=True)
+    imb = Symbol('ib', imaginary=True, bounded=True)
+    for i in [I, S.Infinity, S.NegativeInfinity, S.Zero, S.One, S.Pi, S.Half, S(3), log(3),
+              b, nz, p, n, im, pb, nb, imb, c]:
+        if i.is_bounded and (i.is_real or i.is_imaginary):
+            assert i + zoo is zoo
+            assert i - zoo is zoo
+            assert zoo + i is zoo
+            assert zoo - i is zoo
+        elif i.is_bounded is not False:
+            assert (i + zoo).is_Add
+            assert (i - zoo).is_Add
+            assert (zoo + i).is_Add
+            assert (zoo - i).is_Add
+        else:
+            assert (i + zoo) is S.NaN
+            assert (i - zoo) is S.NaN
+            assert (zoo + i) is S.NaN
+            assert (zoo - i) is S.NaN
+
+        if i.is_nonzero and (i.is_real or i.is_imaginary):
+            assert i*zoo is zoo
+            assert zoo*i is zoo
+        elif i.is_zero:
+            assert i*zoo is S.NaN
+            assert zoo*i is S.NaN
+        else:
+            assert (i*zoo).is_Mul
+            assert (zoo*i).is_Mul
+
+        if (1/i).is_nonzero and (i.is_real or i.is_imaginary):
+            assert zoo/i is zoo
+        elif (1/i).is_zero:
+            assert zoo/i is S.NaN
+        else:
+            assert (zoo/i).is_Mul
+
+    assert (I*oo).is_Mul # allow directed infinity
+    assert zoo + zoo is S.NaN
+    assert zoo * zoo is S.NaN
+    assert zoo - zoo is S.NaN
+    assert zoo/zoo is S.NaN
+
+    assert Mul.flatten([S(-1), oo, S(0)]) == ([S.NaN], [], None)

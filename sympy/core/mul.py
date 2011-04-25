@@ -83,9 +83,22 @@ class Mul(AssocOp):
 
             # 3
             elif o.is_Number:
-                coeff *= o
+                if o is S.NaN or coeff is S.ComplexInfinity and o is S.Zero:
+                    # we know for sure the result will be nan
+                    return [S.NaN], [], None
+                elif coeff.is_Number: # it could be zoo
+                    coeff *= o
+                    if coeff is S.NaN:
+                        # we know for sure the result will be nan
+                        return [S.NaN], [], None
                 continue
 
+            elif o is S.ComplexInfinity:
+                if not coeff or coeff is S.ComplexInfinity:
+                    # we know for sure the result will be nan
+                    return [S.NaN], [], None
+                coeff = S.ComplexInfinity
+                continue
 
             elif o.is_commutative:
                 #      e
@@ -281,9 +294,21 @@ class Mul(AssocOp):
             nc_part = new_nc_part
             coeff *= coeff_sign
 
-        # 0, nan
-        elif (coeff is S.Zero) or (coeff is S.NaN):
-            # we know for sure the result will be the same as coeff (0 or nan)
+        # zoo
+        if coeff is S.ComplexInfinity:
+            # zoo might be
+            #   unbounded_real + bounded_im
+            #   bounded_real + unbounded_im
+            #   unbounded_real + unbounded_im
+            # and non-zero real or imaginary will not change that status.
+            c_part = [c for c in c_part if not (c.is_nonzero and
+                                                c.is_real is not None)]
+            nc_part = [c for c in nc_part if not (c.is_nonzero and
+                                                  c.is_real is not None)]
+
+        # 0
+        elif coeff is S.Zero:
+            # we know for sure the result will be 0
             return [coeff], [], order_symbols
 
         elif coeff.is_Real:
