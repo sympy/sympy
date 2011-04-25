@@ -86,4 +86,4 @@ def test_laguerre():
     # Test the lowest 10 polynomials with laguerre_poly, to make sure that it
     # works:
     for i in range(10):
-        assert laguerre_l(i, 0, x).expand() == laguerre_poly(i, x)
+      assert laguerre_l(i, 0, x).expand() == laguerre_poly(i, x)
