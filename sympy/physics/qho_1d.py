@@ -14,16 +14,16 @@ def psi_n(n, x, m, omega):
     ``m``
         mass of the particle
     ``omega``
-	angular frequency of the oscillator
+        angular frequency of the oscillator
         
     :Example:
 
     >>> from sympy.physics.qho_1d import X_n
     >>> from sympy import var
     >>> var("x m omega")
-    (x, m, omega)
+     (x, m, omega)
     >>> psi_n(0, x, m, omega)
-    (m*omega)**(1/4)*exp(-m*omega*x**2/(2*hbar))/(pi**(1/4)*hbar**(1/4))    
+     (m*omega)**(1/4)*exp(-m*omega*x**2/(2*hbar))/(pi**(1/4)*hbar**(1/4))    
     """
     
     # sympify arguments
@@ -51,4 +51,3 @@ def E_n(n,omega):
     """
   
     return hbar * omega*(n + Rational(1,2))
-    
