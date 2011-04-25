@@ -1,6 +1,6 @@
 from sympy.core import (Expr, S, C, Symbol, Equality, Interval, sympify, Wild,
                         Tuple, Dummy, Derivative)
-from sympy.core.compatibililty import any
+from sympy.core.compatibility import any
 from sympy.functions.elementary.piecewise import piecewise_fold
 from sympy.solvers import solve
 from sympy.utilities import flatten
