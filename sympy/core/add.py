@@ -44,9 +44,23 @@ class Add(AssocOp):
                 order_factors = [o]+[o1 for o1 in order_factors if not o.contains(o1)]
                 continue
 
-            # 3
+            # 3 or NaN
             elif o.is_Number:
-                coeff += o
+                if o is S.NaN or coeff is S.ComplexInfinity and o.is_bounded is False:
+                    # we know for sure the result will be nan
+                    return [S.NaN], [], None
+                if coeff.is_Number:
+                    coeff += o
+                    if coeff is S.NaN:
+                        # we know for sure the result will be nan
+                        return [S.NaN], [], None
+                continue
+
+            elif o is S.ComplexInfinity:
+                if coeff.is_bounded is False:
+                    # we know for sure the result will be nan
+                    return [S.NaN], [], None
+                coeff = S.ComplexInfinity
                 continue
 
             # Add([...])
@@ -115,15 +129,29 @@ class Add(AssocOp):
 
             noncommutative = noncommutative or not s.is_commutative
 
-        # nan
-        if coeff is S.NaN:
-            # we know for sure the result will be nan
-            return [S.NaN], [], None
-
         # oo, -oo
-        elif (coeff is S.Infinity) or (coeff is S.NegativeInfinity):
-            newseq = [f for f in newseq if not f.is_real]
+        if (coeff is S.Infinity) or (coeff is S.NegativeInfinity):
+            newerseq = []
+            for f in newseq:
+                if f.is_imaginary:
+                    coeff = S.ComplexInfinity
+                    break
+                elif not (f.is_real or f.is_bounded):
+                    newerseq.append(f)
+            else:
+                newseq = newerseq
 
+        if coeff is S.ComplexInfinity:
+            # zoo might be
+            #   unbounded_real + bounded_im
+            #   bounded_real + unbounded_im
+            #   unbounded_real + unbounded_im
+            # addition of a bounded real or imaginary number won't be able to
+            # change the zoo nature; if unbounded a NaN condition could result if
+            # the unbounded symbol had sign opposite of the unbounded portion of zoo,
+            # e.g. unbounded_real - unbounded_real
+            newseq = [c for c in newseq if not (c.is_bounded and
+                                                c.is_real is not None)]
 
         # process O(x)
         if order_factors:
