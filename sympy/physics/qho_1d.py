@@ -15,7 +15,7 @@ def psi_n(n, x, m, omega):
         mass of the particle
     ``omega``
         angular frequency of the oscillator
-        
+
     :Example:
 
     >>> from sympy.physics.qho_1d import X_n
@@ -23,9 +23,9 @@ def psi_n(n, x, m, omega):
     >>> var("x m omega")
      (x, m, omega)
     >>> psi_n(0, x, m, omega)
-     (m*omega)**(1/4)*exp(-m*omega*x**2/(2*hbar))/(pi**(1/4)*hbar**(1/4))    
+     (m*omega)**(1/4)*exp(-m*omega*x**2/(2*hbar))/(pi**(1/4)*hbar**(1/4))
     """
-    
+
     # sympify arguments
     n, x, m, omega = map(S, [n, x, m, omega])
     nu = m * omega / hbar
@@ -33,8 +33,8 @@ def psi_n(n, x, m, omega):
     C =  (nu/pi)**(S(1)/4) * sqrt(1/(2**n*factorial(n)))
 
     return  C * exp(-nu* x**2 /2) * hermite(n, sqrt(nu)*x)
-    
-    
+
+
 def E_n(n,omega):
     """
     Returns the Energy of the One-dimensional harmonic oscillator
@@ -49,5 +49,5 @@ def E_n(n,omega):
 
         E_n = hbar * omega*(n + 1/2)
     """
-  
+
     return hbar * omega*(n + Rational(1,2))
