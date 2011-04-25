@@ -1,8 +1,8 @@
 from sympy import Lambda, Symbol, Function, Derivative, sqrt, \
         log, exp, Rational, Real, sin, cos, acos, diff, I, re, im, \
-        oo, zoo, nan, E, expand, pi, O, Sum, S
+        oo, zoo, nan, E, expand, pi, O, Sum, S, polygamma
 from sympy.utilities.pytest import XFAIL, raises
-from sympy.abc import x, y
+from sympy.abc import x, y, n
 from sympy.core.function import PoleError
 
 def test_f_expand_complex():
@@ -251,6 +251,8 @@ def test_function__eval_nseries():
     assert sin(x+1)._eval_nseries(x,2) == x*cos(1) + sin(1) + O(x**2)
     assert sin(pi*(1-x))._eval_nseries(x,2) == pi*x + O(x**2)
     assert acos(1-x**2)._eval_nseries(x,2) == sqrt(2)*x + O(x**2)
+    assert polygamma(n,x+1)._eval_nseries(x,2) == \
+                   polygamma(n,1) + polygamma(n+1,1)*x + O(x**2)
     raises(PoleError, 'sin(1/x)._eval_nseries(x,2)')
     raises(PoleError, 'acos(1-x)._eval_nseries(x,2)')
     raises(PoleError, 'acos(1+x)._eval_nseries(x,2)')

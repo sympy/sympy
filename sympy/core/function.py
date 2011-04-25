@@ -284,22 +284,34 @@ class Function(Application, Expr):
         return self, S.One
 
     def _eval_nseries(self, x, n):
-        if self.func.nargs != 1:
-            raise NotImplementedError('series for user-defined and \
-multi-arg functions are not supported.')
-        arg = self.args[0]
-        arg0 = arg.limit(x, 0)
+        """
+        This function does compute series for multivariate functions,
+        but the expansion is always in terms of *one* variable.
+        Examples:
+
+        >>> from sympy import atan2, O
+        >>> from sympy.abc import x, y
+        >>> atan2(x, y).series(x, n=2)
+        atan2(0, y) + x/y + O(x**2)
+        >>> atan2(x, y).series(y, n=2)
+        atan2(x, 0) - y/x + O(y**2)
+        """
+        if self.func.nargs is None:
+            raise NotImplementedError('series for user-defined \
+functions are not supported.')
+        args = self.args
+        args0 = [t.limit(x, 0) for t in args]
         from sympy import oo
-        if arg0 == S.NaN or arg0.is_bounded == False:
-            raise PoleError("Cannot expand %s around 0" % (arg))
-        if arg0:
+        if any([(t == S.NaN) or (t.is_bounded == False) for t in args0]):
+            raise PoleError("Cannot expand %s around 0" % (args))
+        if (self.func.nargs == 1 and args0[0]) or self.func.nargs > 1:
             e = self
             e1 = e.expand()
             if e == e1:
                 #for example when e = sin(x+1) or e = sin(cos(x))
                 #let's try the general algorithm
                 term = e.subs(x, S.Zero)
-                if arg0 == S.NaN or term.is_bounded == False:
+                if term.is_bounded == False:
                     raise PoleError("Cannot expand %s around 0" % (self))
                 series = term
                 fact = S.One
@@ -318,6 +330,7 @@ multi-arg functions are not supported.')
                     series += term
                 return series + C.Order(x**n, x)
             return e1.nseries(x, n=n)
+        arg = self.args[0]
         l = []
         g = None
         for i in xrange(n+2):
