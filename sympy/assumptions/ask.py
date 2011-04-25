@@ -182,8 +182,8 @@ def compute_known_facts():
     # Compute the known facts in CNF form for logical inference
     fact_string = " -{ Known facts in CNF }-\n"
     cnf = to_cnf(known_facts)
-    fact_string += "known_facts_cnf = And( \\\n   ",
-    fact_string += ", \\\n    ".join(map(str, cnf.args))
+    fact_string += "known_facts_cnf = And(\n    "
+    fact_string += ",\n    ".join(map(str, cnf.args))
     fact_string += "\n)\n"
 
     # Compute the quick lookup for single facts
@@ -193,11 +193,11 @@ def compute_known_facts():
         mapping[key] = set([key])
         for other_key in known_facts_keys:
             if other_key != key:
-                if ask(x, other_key, Assume(x, key, False), disable_preprocessing=True):
-                    mapping[key].add(Not(other_key))
+                if ask(x, other_key, Assume(x, key, True), disable_preprocessing=True):
+                    mapping[key].add(other_key)
     fact_string += "\n\n -{ Known facts in compressed sets }-\n"
-    fact_string += "known_facts_dict = { \\\n   ",
-    fact_string += ", \\\n    ".join(["%s: %s" % item for item in mapping.items()])
+    fact_string += "known_facts_dict = {\n    "
+    fact_string += ",\n    ".join(["%s: %s" % item for item in mapping.items()])
     fact_string += "\n}\n"
     return fact_string
 
