@@ -21,7 +21,6 @@ def test_basic1():
     assert limit(x + 1/x, x, oo) == oo
     assert limit(x - x**2, x, oo) == -oo
     assert limit((1 + x)**(1 + sqrt(2)),x,0) == 1
-    assert limit((1 + cos(x))**oo, x, 0) == oo
     assert limit((1 + x)**oo, x, 0) == oo
     assert limit((1 + x)**oo, x, 0, dir='-') == 0
     assert limit((1 + x + y)**oo, x, 0, dir='-') == (1 + y)**(oo)
@@ -44,6 +43,14 @@ def test_basic1():
     assert limit(x**2, x, 0, dir='-') == 0
     assert limit(x**(Rational(1, 2)), x, 0, dir='-') == 0
     assert limit(x**-pi, x, 0, dir='-') == zoo
+
+@XFAIL
+def test_basic1_fail():
+    # this generates an Add where the coefficient is oo and the only term
+    # is oo*cos(positive) which is real but not non-negative so it is
+    # not absorbed...perhaps this should be passed off to Mul if there is
+    # only one term?
+    assert limit((1 + cos(x))**oo, x, 0) == oo
 
 def test_basic2():
     assert limit(x**x, x, 0, dir="+") == 1

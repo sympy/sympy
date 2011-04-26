@@ -265,13 +265,11 @@ def test_Real_eval():
     assert (a**2).is_Real
 
 def test_Infinity():
-    assert oo == oo
     assert oo != 1
     assert 1*oo == oo
     assert 1 != oo
     assert oo != -oo
     assert oo != Symbol("x")**3
-    assert oo + 1 == oo + 1
     assert oo + 1 == oo
     assert 2 + oo == oo
     assert 3*oo + 2 == oo
@@ -764,9 +762,45 @@ def test_zoo():
     assert zoo * zoo is S.NaN
     assert zoo - zoo is S.NaN
     assert zoo/zoo is S.NaN
+    assert zoo**zoo is S.NaN
+    assert zoo**0 is S.One
+    assert zoo**2 is zoo
+    assert 1/zoo is S.Zero
 
     assert Mul.flatten([S(-1), oo, S(0)]) == ([S.NaN], [], None)
 
-def issue_1023():
-    b = Symbol('b', bounded=True)
-    assert oo + b == oo
+def test_issue_1023():
+    x = Symbol('x', nonpositive=True)
+    assert (oo + x).is_Add
+    x = Symbol('x', bounded=True)
+    assert (oo + x).is_Add # x could be imaginary
+    x = Symbol('x', finite=True)
+    assert (oo + x).is_Add # x could be imaginary
+    x = Symbol('x', infinitesimal=True)
+    assert (oo + x).is_Add # x could be imaginary
+    x = Symbol('x', nonnegative=True)
+    assert oo + x == oo
+    x = Symbol('x', bounded=True, real=True)
+    assert oo + x == oo
+    x = Symbol('x', finite=True, real=True)
+    assert oo + x == oo
+    x = Symbol('x', infinitesimal=True, real=True)
+    assert oo + x == oo
+
+    # similarily for negative infinity
+    x = Symbol('x', nonnegative=True)
+    assert (-oo + x).is_Add
+    x = Symbol('x', bounded=True)
+    assert (-oo + x).is_Add
+    x = Symbol('x', finite=True)
+    assert (-oo + x).is_Add
+    x = Symbol('x', infinitesimal=True)
+    assert (-oo + x).is_Add
+    x = Symbol('x', nonpositive=True)
+    assert -oo + x == -oo
+    x = Symbol('x', bounded=True, real=True)
+    assert -oo + x == -oo
+    x = Symbol('x', finite=True, real=True)
+    assert -oo + x == -oo
+    x = Symbol('x', infinitesimal=True, real=True)
+    assert -oo + x == -oo
