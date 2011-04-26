@@ -93,7 +93,12 @@ def test_multiple_expressions():
     l = [(x - z)*(y - z), x - z, y - z]
     substs, reduced = cse(l)
     rsubsts, _ = cse(reversed(l))
-    assert substs == rsubsts
+    substitutions = [
+        [(x0, x - z), (x1, y - z)],
+        [(x0, y - z), (x1, x - z)],
+    ]
+    assert substs in substitutions
+    assert rsubsts in substitutions
     assert reduced == [x0*x1, x0, x1]
     l = [w*y + w + x + y + z, w*x*y]
     assert cse(l) == ([(x0, w*y)], [w + x + x0 + y + z, x*x0])
@@ -110,3 +115,4 @@ def test_multiple_expressions():
 @XFAIL
 def test_powers():
     assert cse(x*y**2 + x*y) == ([(x0, x*y)], [x0*y + x0])
+
