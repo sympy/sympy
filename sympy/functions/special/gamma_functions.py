@@ -81,6 +81,9 @@ class gamma(Function):
     def _eval_is_real(self):
         return self.args[0].is_real
 
+    def _eval_rewrite_as_tractable(self, z):
+        return C.exp(loggamma(z))
+
 
 ###############################################################################
 ################## LOWER and UPPER INCOMPLETE GAMMA FUNCTIONS #################
@@ -234,5 +237,11 @@ class loggamma(Function):
             o = C.Order(1/z**(2*n-1), x)
         # It is very inefficient to first add the order and then do the nseries
         return (r + Add(*l))._eval_nseries(x, n) + o
+
+    def _eval_rewrite_as_intractable(self, z):
+        return log(gamma(z))
+
+    def _eval_is_real(self):
+        return self.args[0].is_real
 
 from sympy import expand

@@ -343,6 +343,9 @@ def sign(e, x):
 @debug
 def limitinf(e, x):
     """Limit e(x) for x-> oo"""
+    #rewrite e in terms of tractable functions only
+    e = e.rewrite('tractable', deep=True)
+
     if not e.has(x):
         return e #e is a constant
     if not x.is_positive:
@@ -503,10 +506,11 @@ def gruntz(e, z, z0, dir="+"):
         raise NotImplementedError("Second argument must be a Symbol")
 
     #convert all limits to the limit z->oo; sign of z is handled in limitinf
+    r = None
     if z0 == oo:
-        return limitinf(e, z)
+        r = limitinf(e, z)
     elif z0 == -oo:
-        return limitinf(e.subs(z, -z), z)
+        r = limitinf(e.subs(z, -z), z)
     else:
         if dir == "-":
             e0 = e.subs(z, z0 - 1/z)
@@ -514,4 +518,10 @@ def gruntz(e, z, z0, dir="+"):
             e0 = e.subs(z, z0 + 1/z)
         else:
             raise NotImplementedError("dir must be '+' or '-'")
-        return limitinf(e0, z)
+        r = limitinf(e0, z)
+
+    # This is a bit of a heuristic for nice results... we always rewrite
+    # tractable functions in terms of familiar intractable ones.
+    # It might be nicer to rewrite the exactly to what they were initially,
+    # but that would take some work to implement.
+    return r.rewrite('intractable', deep=True)
