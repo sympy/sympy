@@ -75,7 +75,7 @@ class Pow(Expr):
         b = _sympify(b)
         e = _sympify(e)
         if assumptions.pop('evaluate', True):
-            if e is S.Zero:
+            if e is S.Zero and b.is_bounded:
                 return S.One
             elif e is S.One:
                 return b

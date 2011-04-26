@@ -394,6 +394,8 @@ class Real(Number):
         if isinstance(other, NumberSymbol):
             if other.is_irrational: return False
             return other.__eq__(self)
+        if isinstance(other, ComplexInfinity):
+            return other == self
         if isinstance(other, FunctionClass): #cos as opposed to cos(x)
             return False
         if isinstance(other, Number):
@@ -740,6 +742,8 @@ class Rational(Number):
         if isinstance(other, Number):
             if isinstance(other, Real):
                 return bool(mlib.mpf_eq(self._as_mpf_val(other._prec), other._mpf_))
+            if isinstance(other, ComplexInfinity):
+                return other == self
             return bool(self.p==other.p and self.q==other.q)
 
         return False    # Rational != non-Number
@@ -1575,17 +1579,71 @@ class NaN(RationalConstant):
         return sage.NaN
 nan = S.NaN
 
-class ComplexInfinity(AtomicExpr):
+class ComplexInfinity(Number):
     __metaclass__ = Singleton
+    __slots__ = []
+
     is_commutative = True
     is_comparable = None
     is_bounded = False
     is_real = None
+    is_bounded = False
+    is_finite   = False
 
-    __slots__ = []
+    _op_priority = 11.0
 
     def __new__(cls):
         return AtomicExpr.__new__(cls)
+
+    @_sympifyit('other', NotImplemented)
+    def __add__(self, other):
+        if other is S.NaN:
+            return S.NaN
+        if isinstance(other, Number):
+            if other.is_unbounded:
+                return S.NaN
+            return self
+        return Add(self, other)
+    @_sympifyit('other', NotImplemented)
+
+    def __radd__(self, other):
+        return self+other
+
+    @_sympifyit('other', NotImplemented)
+    def __mul__(self, other):
+        if other is S.NaN:
+            return S.NaN
+        if isinstance(other, Number):
+            if other == 0:
+                return S.NaN
+            return self # even if other is unbounded
+        return Mul(self, other)
+
+    @_sympifyit('other', NotImplemented)
+    def __rmul__(self, other):
+        return self*other
+
+    def __eq__(self, other):
+        return isinstance(other, ComplexInfinity)
+
+    def __ne__(self, other):
+        return not (self == other)
+
+    @_sympifyit('other', False) # sympy >  other
+    def __lt__(self, other):
+        return C.StrictInequality(self, other)
+
+    @_sympifyit('other', True)  # sympy >  other
+    def __gt__(self, other):
+        return C.StrictInequality(other, self)
+
+    @_sympifyit('other', False) # sympy >  other
+    def __le__(self, other):
+        return C.Inequality(self, other)
+
+    @_sympifyit('other', True)  # sympy >  other
+    def __ge__(self, other):
+        return C.Inequality(other, self)
 
     @staticmethod
     def __abs__():
@@ -1595,13 +1653,14 @@ class ComplexInfinity(AtomicExpr):
     def __neg__():
         return S.ComplexInfinity
 
+    @_sympifyit('e', NotImplemented)
     def _eval_power(b, e):
         if e is S.ComplexInfinity:
             return S.NaN
 
         if isinstance(e, Number):
             if e is S.Zero:
-                return S.NaN
+                return S.One
             else:
                 if e.is_positive:
                     return S.ComplexInfinity
