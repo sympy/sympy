@@ -851,17 +851,6 @@ def test_as_base_exp():
     assert (x+y+z).as_base_exp() == (x+y+z, S.One)
     assert ((x+y)**z).as_base_exp() == (x+y, z)
 
-def test_Basic_keep_sign():
-    Basic.keep_sign = True
-    assert Mul(x - 1, x + 1) == (x - 1)*(x + 1)
-    assert (1/(x - 1)).as_coeff_mul()[0] == +1
-
-    clear_cache()
-
-    Basic.keep_sign = False
-    assert Mul(x - 1, x + 1) == -(1 - x)*(1 + x)
-    assert (1/(x - 1)).as_coeff_mul()[0] == -1
-
 def test_issue1864():
     assert hasattr(Mul(x, y), "is_commutative")
     assert hasattr(Mul(x, y, evaluate=False), "is_commutative")

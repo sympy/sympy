@@ -135,18 +135,6 @@ class Mul(AssocOp):
                     elif b.is_positive or e.is_integer:
                         num_exp.append((b, e))
                         continue
-
-                #         n          n          n
-                # (-3 + y)   ->  (-1)  * (3 - y)
-                #
-                # Give powers a chance to become a Mul if that's the
-                # behavior obtained from Add._eval_power()
-                if not Basic.keep_sign and b.is_Add and e.is_Number:
-                    cb = b._eval_power(e, terms=True)
-                    if cb:
-                        c, b = cb
-                        coeff *= c
-
                 c_powers.append((b,e))
 
             # NON-COMMUTATIVE
@@ -1204,3 +1192,4 @@ from numbers import Real, Integer, Rational, igcd
 from function import FunctionClass
 from sympify import sympify
 from add import Add
+
