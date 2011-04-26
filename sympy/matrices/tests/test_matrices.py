@@ -1487,7 +1487,6 @@ def test_errors():
     raises(ValueError, "Matrix([[1, 2], [1, 2]]).inverse_ADJ()")
     raises(ValueError, "hessian(Matrix([[1, 2], [3, 4]]), Matrix([[1, 2], [2, 1]]))")
     raises(ValueError, "hessian(Matrix([[1, 2], [3, 4]]), [])")
-    raises(NonSquareMatrixError, "block_diag([Matrix([[1, 2], [3, 4]]), Matrix([1, 2])])")
     raises(TypeError, "SMatrix(1.4, 2, lambda i, j: 0)")
     raises(ValueError, "SMatrix([1, 2, 3], [1, 2])")
     raises(ValueError, "SMatrix([[1, 2], [3, 4]])[(1, 2, 3)]")
