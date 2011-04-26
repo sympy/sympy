@@ -4706,7 +4706,7 @@ def factor(f, *gens, **args):
     (x + 2**(1/2))*(x - 2**(1/2))
 
     >>> factor((x**2 - 1)/(x**2 + 4*x + 4))
-    -(1 + x)*(1 - x)/(2 + x)**2
+    (1 + x)*(-1 + x)/(2 + x)**2
     >>> factor((x**2 + 4*x + 4)**10000000*(x**2 + 1))
     (2 + x)**20000000*(1 + x**2)
 
@@ -4919,7 +4919,7 @@ def cancel(f, *gens, **args):
     >>> from sympy.abc import x
 
     >>> cancel((2*x**2 - 2)/(x**2 - 2*x + 1))
-    -(2 + 2*x)/(1 - x)
+    (2 + 2*x)/(-1 + x)
 
     """
     options.allowed_flags(args, ['polys'])

@@ -653,7 +653,7 @@ class Ellipse(GeometryEntity):
         >>> from sympy import Point, Ellipse
         >>> e1 = Ellipse(Point(1, 0), 3, 2)
         >>> e1.equation()
-        -1 + (1/3 - x/3)**2 + y**2/4
+        -1 + (-1/3 + x/3)**2 + y**2/4
 
         """
         if isinstance(x, basestring):   x = C.Symbol(x, real=True)

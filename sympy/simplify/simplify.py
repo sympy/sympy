@@ -574,7 +574,7 @@ def separatevars(expr, symbols=[], dict=False):
     separable, separatevars will do the best it can to separate it.
 
     >>> separatevars(x+x*y-3*(x**2))
-    x*(1 + y - 3*x)
+    -x*(-1 - y + 3*x)
 
     If the expression is not separable then expr is returned unchanged
     or (if dict=True) then None is returned.

@@ -269,7 +269,7 @@ def laguerre_l(n, alpha, x):
     >>> laguerre_l(1, alpha, x)
     1 + alpha - x
     >>> laguerre_l(2, alpha, x)
-    -1/2 - alpha/2 + (1 + alpha - x)*(3 + alpha - x)/2
+    x*(-2 - alpha) + (1 + alpha)*(2 + alpha)/2 + x**2/2
 
     If you set alpha=0, you get regular Laguerre polynomials::
 
@@ -291,3 +291,4 @@ def laguerre_l(n, alpha, x):
       l, c = c, r
       r = ((2*m-1+alpha-x)*c-(m-1+alpha)*l)/m
     return r
+
