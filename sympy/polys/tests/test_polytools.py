@@ -2189,9 +2189,6 @@ def test_groebner():
     assert groebner([1], x) == [1]
     raises(ComputationFailed, "groebner([1])")
 
-    assert groebner([2*x], monic=True) == [x]
-    assert groebner([2*x], monic=False) == [2*x]
-
 def test_poly():
     assert poly(x) == Poly(x, x)
     assert poly(y) == Poly(y, y)

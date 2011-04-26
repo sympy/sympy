@@ -4887,7 +4887,7 @@ def groebner(F, *gens, **args):
     2. [Cox97]_
 
     """
-    options.allowed_flags(args, ['monic', 'polys'])
+    options.allowed_flags(args, ['polys'])
     args = _update_args(args, 'field', True)
 
     try:
@@ -4900,7 +4900,7 @@ def groebner(F, *gens, **args):
 
     level = len(opt.gens)-1
 
-    G = sdp_groebner(polys, level, opt.order, opt.domain, monic=opt.monic)
+    G = sdp_groebner(polys, level, opt.order, opt.domain)
     G = [ Poly.new(DMP(dict(g), opt.domain, level), *opt.gens) for g in G ]
 
     if not opt.polys:

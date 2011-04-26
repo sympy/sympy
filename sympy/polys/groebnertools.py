@@ -484,7 +484,7 @@ def sdp_gcd(f, g, u, O, K):
     else:
         return sdp_monic(h, K)
 
-def sdp_groebner(f, u, O, K, monic=True, gens='', verbose=False):
+def sdp_groebner(f, u, O, K, gens='', verbose=False):
     """
     Computes Groebner basis for a set of polynomials in `K[X]`.
 
@@ -667,11 +667,7 @@ def sdp_groebner(f, u, O, K, monic=True, gens='', verbose=False):
         if ht:
             Gr.add(ht[1])
 
-    Gr = [list(f[ig]) for ig in Gr]
-
-    # useless
-    if monic:
-        Gr = [ sdp_monic(g, K) for g in Gr ]
+    Gr = [sdp_monic(list(f[ig]), K) for ig in Gr]
 
     # order according to the monomial ordering
     Gr = sorted(Gr, key=lambda f: O(sdp_LM(f, u)), reverse=True)

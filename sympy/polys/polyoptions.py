@@ -106,7 +106,6 @@ class Options(dict):
     * Formal --- boolean flag
     * Polys --- boolean flag
     * Include --- boolean flag
-    * Monic --- boolean flag
     * All --- boolean flag
     * Gen --- flag
 
@@ -583,17 +582,6 @@ class Include(BooleanOption, Flag):
     def default(cls):
         return False
 
-class Monic(BooleanOption, Flag):
-    """``monic`` flag to polynomial manipulation functions. """
-
-    __metaclass__ = OptionType
-
-    option = 'monic'
-
-    @classmethod
-    def default(cls):
-        return True
-
 class All(BooleanOption, Flag):
     """``all`` flag to polynomial manipulation functions. """
 
@@ -678,3 +666,4 @@ def allowed_flags(args, flags):
                 raise FlagError("'%s' flag is not allowed in this context" % arg)
         except KeyError:
             raise OptionError("'%s' is not a valid option" % arg)
+
