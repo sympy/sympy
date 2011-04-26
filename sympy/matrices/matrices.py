@@ -1667,6 +1667,15 @@ class Matrix(object):
         else:
             raise AttributeError("Matrix has no attribute %s." % attr)
 
+    def integrate(self, *args):
+        return Matrix(self.rows, self.cols, lambda i, j: self[i, j].integrate(*args))
+
+    def limit(self, *args):
+        return Matrix(self.rows, self.cols, lambda i, j: self[i, j].limit(*args))
+
+    def diff(self, *args):
+        return Matrix(self.rows, self.cols, lambda i, j: self[i, j].diff(*args))
+
     def vec(self):
         """
         Return the Matrix converted into a one column matrix by stacking columns

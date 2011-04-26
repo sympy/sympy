@@ -1496,3 +1496,26 @@ def test_len():
     assert len(Matrix([[0, 1, 2], [3, 4, 5]])) == 6
     assert Matrix([1])
     assert not Matrix()
+
+def test_integrate():
+    x, y = symbols('x,y')
+    A = Matrix(((1,4,x),(y,2,4),(10,5,x**2)))
+    assert A.integrate(x) == Matrix(((x, 4*x, x**2/2), (x*y, 2*x, 4*x), (10*x, 5*x, x**3/3)))
+    assert A.integrate(y) == Matrix(((y, 4*y, x*y),(y**2/2, 2*y, 4*y), (10*y, 5*y, y*x**2)))
+
+def test_limit():
+    x, y = symbols('x,y')
+    A = Matrix(((1,4,sin(x)/x),(y,2,4),(10,5,x**2+1)))
+    assert A.limit(x,0) == Matrix(((1,4,1),(y,2,4),(10,5,1)))
+
+def test_diff():
+    x, y = symbols('x,y')
+    A = Matrix(((1,4,x),(y,2,4),(10,5,x**2+1)))
+    assert A.diff(x) == Matrix(((0,0,1),(0,0,0),(0,0,2*x)))
+    assert A.diff(y) == Matrix(((0,0,0),(1,0,0),(0,0,0)))
+
+def test_getattr():
+    x, y = symbols('x,y')
+    A = Matrix(((1,4,x),(y,2,4),(10,5,x**2+1)))
+    raises (AttributeError, 'A.nonexistantattribute')
+
