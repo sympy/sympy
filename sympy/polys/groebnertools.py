@@ -588,9 +588,9 @@ def sdp_groebner(f, u, O, K, gens='', verbose=False):
         # filter old pairs
         B_new = set()
 
-        while CP:
-            # select g1, g2 from CP
-            ig1, ig2 = CP.pop()
+        while B:
+            # select g1, g2 from B (-> CP)
+            ig1, ig2 = B.pop()
             mg1 = sdp_LM(f[ig1], u)
             mg2 = sdp_LM(f[ig2], u)
             LCM12 = monomial_lcm(mg1, mg2)
