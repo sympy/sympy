@@ -2156,8 +2156,14 @@ def block_diag(matrices):
 
     Constructs a block diagonal matrix from a list of square matrices.
 
+    >>> from sympy.matrices.matrices import block_diag
+    >>> block_diag([1, 2])
+    [1, 0]
+    [0, 2]
+
     See also: diag(), eye()
     """
+    import warnings
     warnings.warn("block_diag() is deprecated, use diag() instead", DeprecationWarning)
     return diag(*matrices)
 
@@ -2298,36 +2304,6 @@ def casoratian(seqs, n, zero=True):
     k = len(seqs)
 
     return Matrix(k, k, f).det()
-
-def block_diag(matrices):
-    """
-    Constructs a block diagonal matrix from a list of square matrices.
-
-    Example:
-    >>> from sympy import block_diag, symbols, Matrix
-    >>> from sympy.abc import a, b, c, x, y, z
-    >>> a = Matrix([[1, 2], [2, 3]])
-    >>> b = Matrix([[3, x], [y, 3]])
-    >>> block_diag([a, b, b])
-    [1, 2, 0, 0, 0, 0]
-    [2, 3, 0, 0, 0, 0]
-    [0, 0, 3, x, 0, 0]
-    [0, 0, y, 3, 0, 0]
-    [0, 0, 0, 0, 3, x]
-    [0, 0, 0, 0, y, 3]
-
-    """
-    rows = 0
-    for m in matrices:
-        if not m.is_square:
-            raise NonSquareMatrixError()
-        rows += m.rows
-    A = zeros((rows, rows))
-    i = 0
-    for m in matrices:
-        A[i+0:i+m.rows, i+0:i+m.cols] = m
-        i += m.rows
-    return A
 
 # Add sympify converters
 def _matrix_sympify(matrix):
