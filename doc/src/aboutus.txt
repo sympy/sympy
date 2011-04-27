@@ -97,6 +97,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Fernando Perez: symarray() implemented
 #. Raffaele De Feo: fix non-commutative expansion
 #. Christian Muise: fixes to logic module
+#. Matt Curry: GSoC 2010 project (symbolic quantum mechanics)
 #. Kazuo Thow: cleanup pretty printing tests
 #. Jezreel Ng: fix hyperbolic functions rewrite
 #. Matthew Brett: fixes to lambdify
