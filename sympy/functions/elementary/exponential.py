@@ -63,7 +63,7 @@ class exp(Function):
 
         for arg in args:
             # Warning: code in risch.py will be very sensitive to changes
-            # in this (see build_extension()).
+            # in this (see DifferentialExtension).
             coeff, terms = arg.as_coeff_terms()
 
             if coeff is S.Infinity:
