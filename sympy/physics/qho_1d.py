@@ -18,7 +18,7 @@ def psi_n(n, x, m, omega):
 
     :Example:
 
-    >>> from sympy.physics.qho_1d import X_n
+    >>> from sympy.physics.qho_1d import psi_n
     >>> from sympy import var
     >>> var("x m omega")
      (x, m, omega)
