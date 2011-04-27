@@ -6,6 +6,7 @@ from point import Point
 from ellipse import Circle
 from line import Line, Segment, Ray
 
+import warnings
 
 class Polygon(GeometryEntity):
     """A two-dimensional polygon.
@@ -370,7 +371,7 @@ class Polygon(GeometryEntity):
                 e2_max_radius = r
         center_dist = Point.distance(e1_center, e2_center)
         if center_dist <= e1_max_radius + e2_max_radius:
-            print("Warning: Polygons may intersect producing erroneous output")
+            warnings.warn("Polygons may intersect producing erroneous output")
 
         '''
         Find the upper rightmost vertex of e1 and the lowest leftmost vertex of e2
