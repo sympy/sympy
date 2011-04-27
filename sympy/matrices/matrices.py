@@ -1,10 +1,11 @@
-from sympy import Basic, Symbol, Integer, S, Dummy
+from sympy import Basic, Symbol, Integer, S, Dummy, Add
 from sympy.core.sympify import sympify, converter, SympifyError
 
 from sympy.polys import Poly, roots, cancel
 from sympy.simplify import simplify as sympy_simplify
 from sympy.utilities import any, all
 from sympy.printing import sstr
+from sympy.functions.elementary.miscellaneous import sqrt
 
 
 import random
@@ -1330,8 +1331,6 @@ class Matrix(object):
 
         See also: .is_lower(), is_upper() .is_diagonalizable()
         """
-        if not self.is_square:
-            return False
         for i in range(self.cols):
             for j in range(self.rows):
                 if i != j and self[i, j] != 0:
@@ -1774,7 +1773,7 @@ class Matrix(object):
         recurse_sub_blocks(self)
         return sub_blocks
 
-    def diagonalize(self, reals_only = False):
+    def diagonalize(self, reals_only=False, normalvects=False, sortedvals=False):
         """
         Return diagonalized matrix D and transformation P such as
 
@@ -1814,12 +1813,17 @@ class Matrix(object):
         else:
             if self._eigenvects == None:
                 self._eigenvects = self.eigenvects()
+            if sortedvals:
+                self._eigenvects.sort(reverse=True)
             diagvals = []
             P = Matrix(self.rows, 0, [])
             for eigenval, multiplicity, vects in self._eigenvects:
                 for k in range(multiplicity):
                     diagvals.append(eigenval)
-                    vec = vects[k]
+                    if normalvects:
+                        vec = _normalized(vects[k])
+                    else:
+                        vec = vects[k]
                     P = P.col_insert(P.cols, vec)
             D = diag(*diagvals)
             self._diagonalize_clear_subproducts()
@@ -2748,3 +2752,5 @@ def symarray(prefix, shape):
         arr[index] = Symbol('%s_%s' % (prefix, '_'.join(map(str, index))))
     return arr
 
+def _normalized(vec):
+    return vec/sqrt(Add(*(i**2 for i in vec.mat)))
