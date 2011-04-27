@@ -17,18 +17,18 @@ def test_wavefunction():
   for n in Psi:
     assert simplify(psi_n(n, x, m, omega) - Psi[n]) == 0
 
-def test_norm(n=3):
+def test_norm(n=1):
   # Maximum "n" which is tested:
   for i in range(n+1):
     assert integrate(psi_n(i, x, 1, 1)**2, (x,-oo,oo)) == 1
 
-def test_orthogonality(n=3):
+def test_orthogonality(n=1):
   # Maximum "n" which is tested:
   for i in range(n+1):
     for j in range(i+1,n+1):
       assert integrate(psi_n(i, x, 1, 1)*psi_n(j, x, 1, 1), (x,-oo,oo)) == 0
 
-def test_energies(n=3):
+def test_energies(n=1):
   # Maximum "n" which is tested:
   for i in range(n+1):
     assert E_n(i,omega) == hbar * omega * (i + Rational(1,2))
