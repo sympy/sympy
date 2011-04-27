@@ -1177,17 +1177,14 @@ class Triangle(Polygon):
 
         Examples
         --------
-        >>> from sympy import Symbol
         >>> from sympy.geometry import Point, Triangle
-        >>> a = Symbol('a', real=True)
         >>> p1, p2, p3 = Point(0, 0), Point(4, 0), Point(0, 3)
         >>> t = Triangle(p1, p2, p3)
-        >>> # Use expand to simplify the result
         >>> t.inradius
-        1/2
+        1
 
         """
-        return simplify(self.area / self.perimeter)
+        return simplify(2 * self.area / self.perimeter)
 
     @property
     def incircle(self):
@@ -1210,7 +1207,7 @@ class Triangle(Polygon):
         >>> p1, p2, p3 = Point(0, 0), Point(2, 0), Point(0, 2)
         >>> t = Triangle(p1, p2, p3)
         >>> t.incircle
-        Circle(Point(2 - 2**(1/2), 2 - 2**(1/2)), 1 - 2**(1/2)/2)
+        Circle(Point(2 - 2**(1/2), 2 - 2**(1/2)), 2 - 2**(1/2))
 
         """
         return Circle(self.incenter, self.inradius)
