@@ -2186,11 +2186,15 @@ def test_groebner():
 
     assert sum([ q*g for q, g in zip(Q, G)]) + r == Poly(f, modulus=7)
 
+    F = [x*y - 2*y, 2*y**2 - x**2]
+
+    assert groebner(F, order='grevlex') == \
+        [-2*x**2 + x**3, -x**2 + 2*y**2, -2*y + x*y]
+    assert groebner(F, order='grevlex', field=True) == \
+        [-2*x**2 + x**3, -x**2/2 + y**2, -2*y + x*y]
+
     assert groebner([1], x) == [1]
     raises(ComputationFailed, "groebner([1])")
-
-    assert groebner([2*x], monic=True) == [x]
-    assert groebner([2*x], monic=False) == [2*x]
 
 def test_poly():
     assert poly(x) == Poly(x, x)

@@ -3,7 +3,7 @@
 from sympy.polys.polyoptions import (
     Options, Expand, Gens, Wrt, Sort, Order, Field, Greedy, Domain,
     Split, Gaussian, Extension, Modulus, Symmetric, Strict, Auto,
-    Frac, Formal, Polys, Include, Monic, All, Gen, Symbols)
+    Frac, Formal, Polys, Include, All, Gen, Symbols)
 
 from sympy.polys.monomialtools import monomial_lex_key
 
@@ -379,21 +379,6 @@ def test_Include_postprocess():
 
     assert opt == {'include': True}
 
-def test_Monic_preprocess():
-    assert Monic.preprocess(False) is False
-    assert Monic.preprocess(True) is True
-
-    assert Monic.preprocess(0) is False
-    assert Monic.preprocess(1) is True
-
-    raises(OptionError, "Monic.preprocess(x)")
-
-def test_Monic_postprocess():
-    opt = {'monic': True}
-    Monic.postprocess(opt)
-
-    assert opt == {'monic': True}
-
 def test_All_preprocess():
     assert All.preprocess(False) is False
     assert All.preprocess(True) is True
@@ -403,7 +388,7 @@ def test_All_preprocess():
 
     raises(OptionError, "All.preprocess(x)")
 
-def test_Monic_postprocess():
+def test_All_postprocess():
     opt = {'all': True}
     All.postprocess(opt)
 
@@ -426,3 +411,4 @@ def test_Symbols_postprocess():
     Symbols.postprocess(opt)
 
     assert opt == {'symbols': [x, y, z]}
+
