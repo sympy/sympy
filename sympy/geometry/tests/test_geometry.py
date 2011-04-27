@@ -405,6 +405,11 @@ def test_polygon():
     ic = (250 - 125*sqrt(2)) / 50
     assert t1.incenter == Point(ic, ic)
 
+    # Inradius
+    assert t1.inradius == 5 - 5*2**(S(1)/2)/2
+    assert t2.inradius == 5*3**(S(1)/2)/6
+    assert t3.inradius == (2*x1**2*Abs(x1) - 2**(S(1)/2)*x1**2*Abs(x1))/(2*x1**2)
+
     # Medians + Centroid
     m = t1.medians
     assert t1.centroid == Point(Rational(5,3), Rational(5,3))
