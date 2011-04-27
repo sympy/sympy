@@ -1,4 +1,5 @@
-from sympy.core import S, C, sympify, Function, cacheit
+from sympy.core import S, C, sympify, cacheit
+from sympy.core.function import Function, ArgumentIndexError
 from sympy.functions.elementary.miscellaneous import sqrt
 
 ###############################################################################

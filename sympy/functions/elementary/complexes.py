@@ -1,4 +1,5 @@
-from sympy.core import S, C, Function, Derivative
+from sympy.core import Basic, S, C
+from sympy.core.function import Function, Derivative, ArgumentIndexError
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.core import Add, Mul
