@@ -783,6 +783,20 @@ class Lambda(Function):
 
         return obj
 
+    @property
+    def variables(self):
+        """The variables used in the internal representation of the function"""
+        return self._args[:-1]
+
+    @property
+    def expr(self):
+        """The return value of the function"""
+        return self.args[-1]
+
+    @property
+    def free_symbols(self):
+        return self.expr.free_symbols - set(self.variables)
+
     def apply(self, *args):
         """Applies the Lambda function "self" to the arguments given.
         This supports partial application.
@@ -847,13 +861,6 @@ class Lambda(Function):
         else:
             return None
 
-    @property
-    def vars(self):
-        return self.args[:-1]
-
-    @property
-    def expr(self):
-        return self.args[-1]
 
 def diff(f, *symbols, **kwargs):
     """
