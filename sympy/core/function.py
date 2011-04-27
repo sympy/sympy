@@ -48,6 +48,11 @@ from itertools import repeat
 class PoleError(Exception):
     pass
 
+class ArgumentIndexError(ValueError):
+    def __str__(self):
+        return ("Invalid operation with argument number %s for Function %s" %
+                        (self.args[1], self.args[0]))
+
 class FunctionClass(BasicMeta):
     """
     Base class for function classes. FunctionClass is a subclass of type.
@@ -466,7 +471,7 @@ functions are not supported.')
             else:
                 nargs = self.nargs
             if not (1<=argindex<=nargs):
-                raise TypeError("argument index %r is out of range [1,%s]" % (argindex,nargs))
+                raise ArgumentIndexError(self, argindex)
         u = self.args[argindex - 1]
         if u.is_Symbol:
             uself = self
