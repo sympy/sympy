@@ -2,7 +2,7 @@ from sympy.core.add import Add
 from sympy.core.mul import Mul
 from sympy.core.basic import C, sympify, cacheit
 from sympy.core.singleton import S
-from sympy.core.function import Function
+from sympy.core.function import Function, ArgumentIndexError
 from sympy.core.symbol import Wild
 from miscellaneous import sqrt
 

@@ -1,4 +1,5 @@
-from sympy.core import S, sympify, Function, diff
+from sympy.core import S, sympify, diff
+from sympy.core.function import Function, ArgumentIndexError
 import sympy.polys
 
 ###############################################################################
