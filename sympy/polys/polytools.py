@@ -4879,7 +4879,7 @@ def groebner(F, *gens, **args):
     >>> groebner([x*y - 2*y, 2*y**2 - x**2], order='grlex')
     [-2*y + y**3, x**2 - 2*y**2, -2*y + x*y]
     >>> groebner([x*y - 2*y, 2*y**2 - x**2], order='grevlex')
-    [-2*x**2 + x**3, y**2 - x**2/2, -2*y + x*y]
+    [-2*x**2 + x**3, -x**2 + 2*y**2, -2*y + x*y]
 
     **References**
 
@@ -4888,20 +4888,30 @@ def groebner(F, *gens, **args):
 
     """
     options.allowed_flags(args, ['polys'])
-    args = _update_args(args, 'field', True)
 
     try:
         polys, opt = parallel_poly_from_expr(F, *gens, **args)
     except PolificationFailed, exc:
         raise ComputationFailed('groebner', len(F), exc)
 
-    for i, poly in enumerate(polys):
-        polys[i] = sdp_from_dict(poly.rep.to_dict(), opt.order)
+    domain = opt.domain
 
-    level = len(opt.gens)-1
+    if domain.has_assoc_Field:
+        opt.domain = domain.get_field()
+    else:
+        raise DomainError("can't compute a Groebner basis over %s" % K)
+
+    for i, poly in enumerate(polys):
+        poly = poly.set_domain(opt.domain).rep.to_dict()
+        polys[i] = sdp_from_dict(poly, opt.order)
+
+    level = len(gens)-1
 
     G = sdp_groebner(polys, level, opt.order, opt.domain)
-    G = [ Poly.new(DMP(dict(g), opt.domain, level), *opt.gens) for g in G ]
+    G = [ Poly._from_dict(dict(g), opt) for g in G ]
+
+    if not domain.has_Field:
+        G = [ g.clear_denoms(convert=True)[1] for g in G ]
 
     if not opt.polys:
         return [ g.as_expr() for g in G ]

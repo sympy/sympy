@@ -162,6 +162,12 @@ class Options(dict):
 
         return obj
 
+    def __setattr__(self, attr, value):
+        if attr in self.__options__:
+            self[attr] = value
+        else:
+            super(Option, self).__setattr__(attr, value)
+
     @property
     def args(self):
         args = {}
