@@ -99,6 +99,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Christian Muise: fixes to logic module
 #. Kazuo Thow: cleanup pretty printing tests
 #. Jezreel Ng: fix hyperbolic functions rewrite
+#. Matthew Brett: fixes to lambdify
 #. Nicholas J.S. Kinar: improved documentation about "Immutability of Expressions"
 #. Thomas Dixon: fix a limit bug
 #. Cristóvão Sousa: implements _sage_ method for sign function.
