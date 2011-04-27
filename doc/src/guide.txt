@@ -156,13 +156,14 @@ write by hand - so for example ``b*a + -4 + b + a*b + 4 + (a+b)**2`` becomes
 Whenever you construct an expression, for example ``Add(x, x)``, the
 ``Add.__new__()`` is called and it determines what to return. In this case::
 
-    In [1]: e = Add(x, x)
+    >>> from sympy import Add
+    >>> from sympy.abc import x
+    >>> e = Add(x, x)
+    >>> e
+    2*x
 
-    In [2]: e
-    Out[2]: 2*x
-
-    In [3]: type(e)
-    Out[3]: <class 'sympy.core.mul.Mul'>
+    >>> type(e)
+    <class 'sympy.core.mul.Mul'>
 
 ``e`` is actually an instance of ``Mul(2, x)``, because ``Add.__new__()``
 retuned ``Mul``.
@@ -172,11 +173,12 @@ Comparisons
 
 Expressions can be compared using a regular python syntax::
 
-    In [1]: x+y == y+x
-    Out[1]: True
+    >>> from sympy.abc import x, y
+    >>> x+y == y+x
+    True
 
-    In [2]: x+y == y-x
-    Out[2]: False
+    >>> x+y == y-x
+    False
 
 We made the following decision in SymPy: ``a=Symbol("x")`` and another
 ``b=Symbol("x")`` (with the same string "x") is the same thing, i.e ``a==b`` is
@@ -189,11 +191,12 @@ some calculation, which is going to be substituted for something else at the
 end anyway. This is achieved using ``Dummy("x")``. So, to sum it
 up::
 
-    In [1]: Symbol("x") == Symbol("x")
-    Out[1]: True
+    >>> from  sympy import Symbol, Dummy
+    >>> Symbol("x") == Symbol("x")
+    True
 
-    In [2]: Dummy("x") == Dummy("x")
-    Out[2]: False
+    >>> Dummy("x") == Dummy("x")
+    False
 
 
 Debugging
@@ -416,32 +419,30 @@ Please use the same way as is shown below all across SymPy.
 
 **accessing parameters**::
 
+    >>> from sympy import sign, sin
+    >>> from sympy.abc import x, y, z
+    
     In [1]: e = sign(x**2)
-
     In [2]: e.args
-    Out[2]:
-    ⎛ 2⎞
-    ⎝x ⎠
+    Out[2]: x**2
 
     In [3]: e.args[0]
-    Out[3]:
-     2
+    Out[3]: x**2
+
+    >>> (x+y*z).args
+    (y*z, x)
+
+    >>> (x+y*z).args[0]
+    y*z
+
+    >>> (x+y*z).args[1]
     x
 
-    In [4]: (x+y*z).args
-    Out[4]: (y*z, x)
+    >>> (y*z).args
+    (y, z)
 
-    In [5]: (x+y*z).args[0]
-    Out[5]: y*z
-
-    In [6]: (x+y*z).args[1]
-    Out[6]: x
-
-    In [7]: (y*z).args
-    Out[7]: (y, z)
-
-    In [8]: sin(y*z).args
-    Out[8]: (y*z)
+    >>> sin(y*z).args
+    (y*z,)
 
 Never use internal methods or variables, prefixed with "``_``" (example: don't
 use ``_args``, use ``.args`` instead).
@@ -450,38 +451,40 @@ use ``_args``, use ``.args`` instead).
 
 Applied functions::
 
-    In [1]: e = sign(x**2)
+    >>> from sympy import sign, exp, Function
+    >>> e = sign(x**2)
 
-    In [4]: isinstance(e, sign)
-    Out[4]: True
+    >>> isinstance(e, sign)
+    True
 
-    In [5]: isinstance(e, exp)
-    Out[5]: False
+    >>> isinstance(e, exp)
+    False
 
-    In [2]: isinstance(e, Function)
-    Out[2]: True
+    >>> isinstance(e, Function)
+    True
 
 So ``e`` is a ``sign(z)`` function, but not ``exp(z)`` function.
 
 Unapplied functions::
 
-    In [1]: e = sign
+    >>> from sympy import sign, exp, FunctionClass
+    >>> e = sign
 
-    In [2]: f = exp
+    >>> f = exp
 
-    In [3]: g = Add
+    >>> g = Add
 
-    In [4]: isinstance(e, FunctionClass)
-    Out[4]: True
+    >>> isinstance(e, FunctionClass)
+    True
 
-    In [5]: isinstance(f, FunctionClass)
-    Out[5]: True
+    >>> isinstance(f, FunctionClass)
+    True
 
-    In [6]: isinstance(g, FunctionClass)
-    Out[6]: False
+    >>> isinstance(g, FunctionClass)
+    False
 
-    In [10]: g is Add
-    Out[10]: True
+    >>> g is Add
+    True
 
 So ``e`` and ``f`` are functions, ``g`` is not a function.
 

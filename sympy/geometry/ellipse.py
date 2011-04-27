@@ -77,15 +77,15 @@ class Ellipse(GeometryEntity):
 
     Plotting example
     ----------------
-    In [1]: c1 = Circle(Point(0,0), 1)
-    In [2]: Plot(c1)
-    Out[2]: [0]: cos(t), sin(t), 'mode=parametric'
-    In [3]: p = Plot()
-    In [4]: p[0] = c1
-    In [5]: radius = Segment(c1.center, c1.random_point())
-    In [6]: p[1] = radius
-    In [7]: p
-    Out[7]:
+    >>> from sympy import Circle, Plot, Segment
+    >>> c1 = Circle(Point(0,0), 1)
+    >>> Plot(c1)                                # doctest: +SKIP
+    [0]: cos(t), sin(t), 'mode=parametric'
+    >>> p = Plot()                              # doctest: +SKIP
+    >>> p[0] = c1                               # doctest: +SKIP
+    >>> radius = Segment(c1.center, c1.random_point())  # doctest: +SKIP
+    >>> p[1] = radius                           # doctest: +SKIP
+    >>> p                                       # doctest: +SKIP
     [0]: cos(t), sin(t), 'mode=parametric'
     [1]: t*cos(1.546086215036205357975518382),
     t*sin(1.546086215036205357975518382), 'mode=parametric'

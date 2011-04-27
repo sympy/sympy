@@ -1,7 +1,11 @@
 """A module for solving all kinds of equations.
 
-In [3]: solve(x**5+5*x**4+10*x**3+10*x**2+5*x+1,x)
-Out[3]: [-1]
+    Examples
+    --------
+    >>> from sympy.solvers import solve
+    >>> from sympy.abc import x
+    >>> solve(x**5+5*x**4+10*x**3+10*x**2+5*x+1,x)
+    [-1]
 """
 from solvers import solve, solve_linear_system, solve_linear_system_LU, \
     solve_undetermined_coeffs, tsolve, msolve, nsolve, solve_linear
