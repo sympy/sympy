@@ -474,7 +474,7 @@ def sdp_gcd(f, g, u, O, K):
         gcd = K.gcd(fc, gc)
 
     h = sdp_quo(sdp_mul(f, g, u, O, K),
-               sdp_lcm(f, g, u, O, K), u, O, K)
+                sdp_lcm(f, g, u, O, K), u, O, K)
 
     if not K.has_Field:
         if K.is_one(gcd):
@@ -484,7 +484,7 @@ def sdp_gcd(f, g, u, O, K):
     else:
         return sdp_monic(h, K)
 
-def sdp_groebner(F, u, O, K, monic=True):
+def sdp_groebner(f, u, O, K, gens='', verbose=False):
     """
     Computes Groebner basis for a set of polynomials in `K[X]`.
 
@@ -515,132 +515,225 @@ def sdp_groebner(F, u, O, K, monic=True):
     3. [Ajwa95]_
     4. [Cox97]_
 
+    Algorithm used: an improved version of Buchberger's algorithm
+    as presented in T. Becker, V. Weispfenning, Groebner Bases: A
+    Computational Approach to Commutative Algebra, Springer, 1993,
+    page 232.
+
+    Added optional ``gens`` argument to apply :func:`sdp_str` for
+    the purpose of debugging the algorithm.
+
     """
     if not K.has_Field:
         raise DomainError("can't compute a Groebner basis over %s" % K)
 
-    F = [ f for f in F if f ]
-
-    if not F:
-        return []
-
-    R, P, G, B, I = set(), set(), set(), {}, {}
-
-    for i, f in enumerate(F):
-        I[tuple(f)] = i
-        R.add(i)
+    def select(P):
+        # select the pair with minimum LCM(LM(f), LM(g))
+        pr = min(P, key = lambda (i, j): O(monomial_lcm(sdp_LM(f[i], u), sdp_LM(f[j], u))))
+        return pr
 
     def normal(g, J):
-        h = sdp_rem(g, [ F[j] for j in J ], u, O, K)
+        h = sdp_rem(g, [ f[j] for j in J ], u, O, K)
 
         if not h:
             return None
         else:
-            H = tuple(h)
+            h = tuple(h)
 
-            if not H in I:
-                I[H] = len(F)
-                F.append(h)
+            if not h in I:
+                I[h] = len(f)
+                f.append(h)
 
-            return I[H], sdp_LM(h, u)
+            return sdp_LM(h, u), I[h]
 
-    def generate(R, P, G, B):
-        while R:
-            h = normal(F[R.pop()], G | P)
+    def update(G, B, ih):
+        # update G using the set of critical pairs B and h
+        # [BW] page 230
+        h = f[ih]
+        mh = sdp_LM(h, u)
 
-            if h is not None:
-                k, LM = h
+        # filter new pairs (h, g), g in G
+        C = G.copy()
+        D = set()
 
-                G0 = set(g for g in G if monomial_div(sdp_LM(F[g], u), LM))
-                P0 = set(p for p in P if monomial_div(sdp_LM(F[p], u), LM))
+        while C:
+            # select a pair (h, g) by popping an element from C
+            ig = C.pop()
+            g = f[ig]
+            mg = sdp_LM(g, u)
+            LCMhg = monomial_lcm(mh, mg)
 
-                G, P, R = G - G0, P - P0 | set([k]), R | G0 | P0
+            def lcm_divides(ip):
+                # LCM(LM(h), LM(p)) divides LCM(LM(h), LM(g))
+                m = monomial_lcm(mh, sdp_LM(f[ip], u))
+                return monomial_div(LCMhg, m)
 
-                for i, j in set(B):
-                    if i in G0 or j in G0:
-                        del B[(i, j)]
+            # HT(h) and HT(g) disjoint: mh*mg == LCMhg
+            if monomial_mul(mh, mg) == LCMhg or (
+                not any(lcm_divides(ipx) for ipx in C) and
+                not any(lcm_divides(pr[1]) for pr in D)):
+                  D.add((ih, ig))
 
-        G |= P
+        E = set()
 
-        for i in G:
-            for j in P:
-                if i == j:
-                    continue
+        while D:
+            # select h, g from D (h the same as above)
+            ih, ig = D.pop()
+            mg = sdp_LM(f[ig], u)
+            LCMhg = monomial_lcm(mh, mg)
 
-                if i < j:
-                   k = (i, j)
-                else:
-                   k = (j, i)
+            if not monomial_mul(mh, mg) == LCMhg:
+                E.add((ih, ig))
 
-                if k not in B:
-                    B[k] = monomial_lcm(sdp_LM(F[i], u), sdp_LM(F[j], u))
+        # filter old pairs
+        B_new = set()
 
-        G = set([ normal(F[g], G - set([g]))[0] for g in G ])
+        while B:
+            # select g1, g2 from B (-> CP)
+            ig1, ig2 = B.pop()
+            mg1 = sdp_LM(f[ig1], u)
+            mg2 = sdp_LM(f[ig2], u)
+            LCM12 = monomial_lcm(mg1, mg2)
 
-        return R, P, G, B
+            # if HT(h) does not divide lcm(HT(g1), HT(g2))
+            if not monomial_div(LCM12, mh) or \
+                monomial_lcm(mg1, mh) == LCM12 or \
+                monomial_lcm(mg2, mh) == LCM12:
+              B_new.add((ig1, ig2))
 
-    R, P, G, B = generate(R, P, G, B)
+        B_new |= E
 
-    while B:
-        k, M = B.items()[0]
+        # filter polynomials
+        G_new = set()
 
-        for l, N in B.iteritems():
-            if cmp(O(M), O(N)) == 1:
-                k, M = l, N
+        while G:
+            ig = G.pop()
+            mg = sdp_LM(f[ig], u)
 
-        del B[k]
+            if not monomial_div(mg, mh):
+                G_new.add(ig)
 
-        i, j = k[0], k[1]
-        p, q = F[i], F[j]
+        G_new.add(ih)
 
-        p_LM, q_LM = sdp_LM(p, u), sdp_LM(q, u)
+        return G_new, B_new
+      # end of update ################################
 
-        if M == monomial_mul(p_LM, q_LM):
-            continue
+    if not f:
+        return []
 
-        criterion = False
+    # replace f with a reduced list of initial polynomials; see [BW] page 203
+    f1 = f[:]
 
-        for g in G:
-            if g == i or g == j:
-                continue
+    while True:
+        f = f1[:]
+        f1 = []
 
-            if (min(i, g), max(i, g)) not in B:
-                continue
+        for i in range(len(f)):
+            p = f[i]
+            r = sdp_rem(p, f[:i], u, O, K)
 
-            if (min(j, g), max(j, g)) not in B:
-                continue
+            if r:
+               f1.append(r)
 
-            if not monomial_div(M, sdp_LM(F[g], u)):
-                continue
-
-            criterion = True
+        if f == f1:
             break
 
-        if criterion:
-            continue
+    f = [tuple(p) for p in f]
+    I = {}            # ip = I[p]; p = f[ip]
+    F = set()         # set of indices of polynomials
+    G = set()         # set of indices of intermediate would-be Groebner basis
+    CP = set()        # set of pairs of indices of critical pairs
 
-        p = sdp_mul_term(p, (monomial_div(M, p_LM), K.quo(K.one, sdp_LC(p, K))), u, O, K)
-        q = sdp_mul_term(q, (monomial_div(M, q_LM), K.quo(K.one, sdp_LC(q, K))), u, O, K)
+    for i, h in enumerate(f):
+        I[h] = i
+        F.add(i)
 
-        h = normal(sdp_sub(p, q, u, O, K), G)
+    #####################################
+    # algorithm GROEBNERNEWS2 in [BW] page 232
+    while F:
+        # select p with minimum monomial according to the monomial ordering O
+        h = min([f[x] for x in F], key=lambda f: O(sdp_LM(f, u)))
+        ih = I[h]
+        F.remove(ih)
+        G, CP = update(G, CP, ih)
 
-        if h is not None:
-            k, LM = h
+    # count the number of critical pairs which reduce to zero
+    reductions_to_zero = 0
 
-            G0 = set(g for g in G if monomial_div(sdp_LM(F[g], u), LM))
+    while CP:
+        ig1, ig2 = select(CP)
+        CP.remove((ig1, ig2))
 
-            R, P, G = G0, set([k]), G - G0
+        h = sdp_spoly(f[ig1], f[ig2], u, O, K)
+        ht = normal(h, G)
 
-            for i, j in set(B):
-                if i in G0 or j in G0:
-                    del B[(i, j)]
+        if ht:
+            G, CP = update(G, CP, ht[1])
+        else:
+            reductions_to_zero += 1
 
-            R, P, G, B = generate(R, P, G, B)
+    ######################################
+    # now G is a Groebner basis; reduce it
+    Gr = set()
 
-    if not monic:
-        basis = [ F[g] for g in G ]
-    else:
-        basis = [ sdp_monic(F[g], K) for g in G ]
+    for ig in G:
+        ht = normal(f[ig], G - set([ig]))
 
-    return sorted(basis, key=lambda f: O(sdp_LM(f, u)), reverse=True)
+        if ht:
+            Gr.add(ht[1])
+
+    Gr = [sdp_monic(list(f[ig]), K) for ig in Gr]
+
+    # order according to the monomial ordering
+    Gr = sorted(Gr, key=lambda f: O(sdp_LM(f, u)), reverse=True)
+
+    if verbose:
+        print 'reductions_to_zero = %d' % reductions_to_zero
+
+    return Gr
+
+def sdp_str(f, gens):
+    if isinstance(gens, basestring):
+        gens = gens.split(',')
+    ngens = len(gens)
+    z = (0,)*ngens
+    s = ''
+    for expv, c in f:
+        if c > 0:
+            s += ' +'
+        else:
+            s += ' -'
+        if c < 0:
+            c = -c
+        if c != 1: # and expv != z:
+            cnt1 = str(c)
+        else:
+            cnt1 = ''
+        sa = []
+        for i in range(ngens):
+            exp = expv[i]
+            if exp > 1:
+                sa.append('%s^%d' % (gens[i], exp))
+            if exp == 1:
+                sa.append('%s' % gens[i])
+        if cnt1:
+            sa = [cnt1] + sa
+        s += '*'.join(sa)
+        if expv == z:
+          s += str(c)
+    return s
+
+def sdp_spoly(p1, p2, u, O, K):
+    """
+    Compute LCM(LM(p1), LM(p2))/LM(p1)*p1 - LCM(LM(p1), LM(p2))/LM(p2)*p2
+    """
+    LM1 = sdp_LM(p1, u)
+    LM2 = sdp_LM(p2, u)
+    LCM12 = monomial_lcm(LM1, LM2)
+    m1 = monomial_div(LCM12, LM1)
+    m2 = monomial_div(LCM12, LM2)
+    s1 = sdp_mul_term(p1, (m1, K.one), u, O, K)
+    s2 = sdp_mul_term(p2, (m2, K.one), u, O, K)
+    s = sdp_sub(s1, s2, u, O, K)
+    return s
 

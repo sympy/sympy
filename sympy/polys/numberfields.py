@@ -185,13 +185,13 @@ def primitive_element(extension, x=None, **args):
 
     for coeffs in coeffs_generator(len(Y)):
         f = x - sum([ c*y for c, y in zip(coeffs, Y)])
-        G = groebner(F + [f], Y + [x], order='lex')
+        G = groebner(F + [f], Y + [x], order='lex', field=True)
 
         H, g = G[:-1], Poly(G[-1], x, domain='QQ')
 
         for i, (h, y) in enumerate(zip(H, Y)):
             try:
-                H[i] = Poly(y - h, x, domain='QQ').all_coeffs()
+                H[i] = Poly(y - h, x, domain='QQ').all_coeffs() # XXX: composite=False
             except CoercionFailed: # pragma: no cover
                 break # G is not a triangular set
         else:
@@ -540,3 +540,4 @@ def isolate(alg, eps=None, fast=False):
         a, b = poly.refine_root(a, b, eps=eps, fast=fast)
 
     return (a, b)
+
