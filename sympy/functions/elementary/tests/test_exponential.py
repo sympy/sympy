@@ -1,4 +1,4 @@
-from sympy import (symbols, log, Real, nan, oo, I, pi, E, exp, Symbol,
+from sympy import (symbols, log, Real, nan, oo, zoo, I, pi, E, exp, Symbol,
         LambertW, sqrt, Rational, sin, expand_log, S, sign)
 from sympy.utilities.pytest import XFAIL
 
@@ -78,7 +78,10 @@ def test_log_values():
     assert log(oo) == oo
     assert log(-oo) == oo
 
-    assert log(0) == -oo
+    assert log(zoo) == zoo
+    assert log(-zoo) == zoo
+
+    assert log(0) == zoo
 
     assert log(1) == 0
     assert log(-1) == I*pi
