@@ -277,28 +277,39 @@ def telescopic(L, R, (i, a, b)):
     '''
     if L.is_Add or R.is_Add:
         return None
-    s = None
-    #First we try to solve using match
-    #Maybe this should go inside solve
+
+    # We want to solve(L.subs(i, i + m) + R, m)
+    # First we try a simple match since this does things that
+    # solve doesn't do, e.g. solve(f(k+m)-f(k), m) fails
+
     k = Wild("k")
     sol = (-R).match(L.subs(i, i + k))
+    s = None
     if sol and k in sol:
-        if L.subs(i,i + sol[k]) == -R:
+        s = sol[k]
+        if not (s.is_Integer and L.subs(i,i + s) == -R):
             #sometimes match fail(f(x+2).match(-f(x+k))->{k: -2 - 2x}))
-            s = sol[k]
-    #Then we try to solve using solve
-    if not s or not s.is_Integer:
-        m = Symbol("m")
+            s = None
+
+    # But there are things that match doesn't do that solve
+    # can do, e.g. determine that 1/(x + m) = 1/(1 - x) when m = 1
+
+    if s is None:
+        m = Dummy('m')
         try:
-            s = solve(L.subs(i, i + m) + R, m)[0]
-        except IndexError:#(ValueError, IndexError):
-            pass
-    if s and s.is_Integer:
-        if s < 0:
-            return telescopic_direct(R, L, abs(s), (i, a, b))
-        elif s > 0:
-            return telescopic_direct(L, R, s, (i, a, b))
-    return None
+            sol = solve(L.subs(i, i + m) + R, m)
+        except NotImplementedError:
+            return None
+        sol = [si for si in sol if si.is_Integer and
+                                   (L.subs(i,i + si) + R).expand().is_zero]
+        if len(sol) != 1:
+            return None
+        s = sol[0]
+
+    if s < 0:
+        return telescopic_direct(R, L, abs(s), (i, a, b))
+    elif s > 0:
+        return telescopic_direct(L, R, s, (i, a, b))
 
 def eval_sum(f, (i, a, b)):
     if f is S.Zero:

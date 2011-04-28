@@ -2,6 +2,7 @@ from sympy import (Symbol, Sum, oo, Real, Rational, summation, pi, cos, zeta,
     Catalan, exp, log, factorial, sqrt, E, sympify, binomial, EulerGamma,
     Function, Integral, Product, product, nan, diff, Derivative, S, cos)
 from sympy.concrete.sums_products import Sum2
+from sympy.concrete.summations import telescopic
 from sympy.utilities.pytest import XFAIL, raises
 
 a, b, c, d, m, k, x, y = map(Symbol, 'abcdmkxy')
@@ -165,6 +166,11 @@ def test_telescopic_sums():
     assert Sum(f(k)-f(k+2),(k,m,n)).doit() == -f(1+n) - f(2+n) + f(m) + f(1+m)
     assert Sum(cos(k)-cos(k+3),(k,1,n)).doit() == -cos(1 + n) - cos(2 + n) - \
                                            cos(3 + n) + cos(1) + cos(2) + cos(3)
+
+    # dummy variable shouldn't matter
+    assert telescopic(1/m, -m/(1+m),(m, n-1, n)) == \
+           telescopic(1/k, -k/(1+k),(k, n-1, n))
+
 
 def test_sum_reconstruct():
     s = Sum(n**2, (n, -1, 1))
