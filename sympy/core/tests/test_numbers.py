@@ -421,6 +421,14 @@ def test_powers_Integer():
     assert (2**4*3)**Rational(1, 6) == 2**Rational(2, 3)*3**Rational(1, 6)
     assert (2**4*3)**Rational(5, 6) == 8*2**Rational(1, 3)*3**Rational(5, 6)
 
+    # check that bases sharing a gcd are exptracted
+    assert 2**Rational(1, 3)*3**Rational(1, 4)*6**Rational(1, 5) == \
+           2**Rational(8, 15)*3**Rational(9, 20)
+    assert 8**Rational(1, 2)*24**Rational(1, 3)*6**Rational(1, 5) == \
+           4*2**Rational(7, 10)*3**Rational(8, 15)
+    assert 8**Rational(1, 2)*(-24)**Rational(1, 3)*(-6)**Rational(1, 5) == \
+           4*(-3)**Rational(8, 15)*2**Rational(7, 10)
+
 def test_powers_Rational():
     """Test Rational._eval_power"""
     # check infinity

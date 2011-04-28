@@ -42,6 +42,8 @@ class Mul(AssocOp):
 
         num_exp = []        # (num-base, exp)           y
                             # e.g.  (3, y)  for  ... * 3  * ...
+        num_rat = {}        # (num-base, Rational exp)    1/2
+                            # e.g.  (3, 1/2)  for  ... * 3  * ...
 
         order_symbols = None
 
@@ -54,6 +56,7 @@ class Mul(AssocOp):
         # o coeff
         # o c_powers
         # o num_exp
+        # o num_rat
         #
         # NOTE: this is optimized for all-objects-are-commutative case
 
@@ -108,6 +111,11 @@ class Mul(AssocOp):
                 #  y
                 # 3
                 if o.is_Pow and b.is_Number:
+                    if b.is_Integer and e.is_Rational and not e.is_Integer:
+                        num_rat.setdefault(b, 0)
+                        num_rat[b] += e
+                        continue
+
                     # get all the factors with numeric base so they can be
                     # combined below, but don't combine negatives unless
                     # the exponent is an integer
@@ -192,6 +200,28 @@ class Mul(AssocOp):
             for t, c in e.items():
                 new_c_powers.append((b,c*Mul(*t)))
         c_powers = new_c_powers
+
+        # extract gcd of bases in num_rat
+        num_rat = num_rat.items()
+        i = 0 # steps through num_rat which may grow
+        while i < len(num_rat):
+            bi = num_rat[i][0]
+            grow = []
+            for j in range(i + 1, len(num_rat)):
+                bj = num_rat[j][0]
+                g = igcd(bi, bj)
+                if g != 1:
+                    # 4**r1*6**r2 -> 2**(r1+r2)  *  2**r1 *  3**r2
+                    # this might have a gcd with something else
+                    grow.append((g, num_rat[i][1] + num_rat[j][1]))
+                    # update bi that we are checking with
+                    bi = bi//g
+                    # update the jth item
+                    num_rat[j] = (bj//g, num_rat[j][1])
+            else:
+                num_rat.extend(grow)
+                num_exp.append((bi, num_rat[i][1]))
+            i += 1
 
         # and in num_exp
         new_num_exp = []
@@ -1130,7 +1160,7 @@ class Mul(AssocOp):
         return s
 
 from power import Pow
-from numbers import Real, Integer, Rational
+from numbers import Real, Integer, Rational, igcd
 from function import FunctionClass
 from sympify import sympify
 from add import Add
