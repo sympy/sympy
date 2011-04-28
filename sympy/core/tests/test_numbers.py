@@ -394,7 +394,7 @@ def test_powers_Integer():
     assert sqrt(6) + sqrt(24) == 3*sqrt(6)
     assert sqrt(2) * sqrt(3)  == sqrt(6)
 
-    # separate sybols & constansts
+    # separate symbols & constansts
     x = Symbol("x")
     assert sqrt(49 * x) == 7 * sqrt(x)
     assert sqrt((3 - sqrt(pi)) ** 2) == 3 - sqrt(pi)
@@ -409,6 +409,7 @@ def test_powers_Integer():
 
     assert S(1234).factors() == {617: 1, 2: 1}
     assert Rational(2*3, 3*5*7).factors() == {2: 1, 5: -1, 7: -1}
+
     # test that eval_power factors numbers bigger than limit (2**15)
     from sympy import nextprime
     n = nextprime(2**15) # bigger than the current limit in factor_trial_division
@@ -416,6 +417,9 @@ def test_powers_Integer():
     assert sqrt(n**3) == n*sqrt(n)
     assert sqrt(4*n) == 2*sqrt(n)
 
+    # check that factors of base with powers sharing gcd with power are removed
+    assert (2**4*3)**Rational(1, 6) == 2**Rational(2, 3)*3**Rational(1, 6)
+    assert (2**4*3)**Rational(5, 6) == 8*2**Rational(1, 3)*3**Rational(5, 6)
 
 def test_powers_Rational():
     """Test Rational._eval_power"""
