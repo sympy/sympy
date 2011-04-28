@@ -262,7 +262,7 @@ def test_cot():
 
     assert cot(0) == zoo
     assert cot(2*pi) == zoo
-    
+
     assert cot(acot(x)) == x
     assert cot(atan(x)) == 1 / x
     assert cot(asin(x)) == sqrt(1 - x**2) / x

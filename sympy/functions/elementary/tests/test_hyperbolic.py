@@ -401,9 +401,6 @@ def test_acoth():
     #properties
     assert acoth(-x) == -acoth(x)
 
-@XFAIL
-# not yet implemented cases which should live in test_acoth
-def test_acoth_noimpl():
     assert acoth(I/sqrt(3)) == -I*pi/3
     assert acoth(-I/sqrt(3)) == I*pi/3
     assert acoth(I*sqrt(3)) == -I*pi/6
@@ -418,7 +415,6 @@ def test_acoth_noimpl():
     assert acoth(-I*(2+sqrt(3))) == pi*I/12
     assert acoth(I*(2-sqrt(3))) == -5*pi*I/12
     assert acoth(I*(sqrt(3)-2)) == 5*pi*I/12
-
 
 def test_simplifications():
     x = Symbol('x')
