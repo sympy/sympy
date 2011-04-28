@@ -1,5 +1,5 @@
 from sympy import (symbols, Matrix, SMatrix, eye, I, Symbol, Rational, wronskian, cos,
-    sin, exp, hessian, sqrt, zeros, ones, randMatrix, Poly, S, pi,
+    sin, exp, hessian, sqrt, zeros, ones, randMatrix, Poly, S, pi, E,
     oo, trigsimp, Integer, block_diag, N, zeros)
 from sympy.matrices.matrices import (ShapeError, MatrixError,
     matrix_multiply_elementwise, diag,
@@ -1435,6 +1435,13 @@ def test_Matrix_berkowitz_charpoly():
     assert A.berkowitz_charpoly(x) == \
         Poly(x**2 + (K_i*UA + K_w*UA + 2*K_i*K_w)/(K_i + K_w)*x + K_i*K_w*UA/(K_i + K_w), x, domain='ZZ(K_i,K_w,UA)')
 
+def test_exp():
+    m = Matrix([[3,4],[0,-2]])
+    assert m.exp() == Matrix([[exp(3),-4*exp(-2)/5 + 4*exp(3)/5],[0,exp(-2)]])
+
+    m = Matrix([[1,0],[0,1]])
+    assert m.exp() == Matrix([[E,0],[0,E]])
+
 def test_SMatrix_transpose():
     assert SMatrix((1,2),(3,4)).transpose() == SMatrix((1,3),(2,4))
 
@@ -1480,6 +1487,8 @@ def test_errors():
     raises(TypeError, "Matrix([1, 2, 3]).cross(1)")
     raises(TypeError, "Matrix([1, 2, 3]).dot(1)")
     raises(ShapeError, "Matrix([1, 2, 3]).dot(Matrix([1, 2]))")
+    raises(NotImplementedError, "Matrix([[0,1,2],[0,0,-1], [0,0,0]]).exp()")
+    raises(NonSquareMatrixError, "Matrix([1, 2, 3]).exp()")
     raises(ShapeError, "Matrix([[1, 2], [3, 4]]).norm()")
     raises(ShapeError, "Matrix([[1, 2], [3, 4]]).normalized()")
     raises(NonSquareMatrixError, "Matrix([1, 2]).inverse_GE()")

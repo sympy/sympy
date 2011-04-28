@@ -1,4 +1,4 @@
-from sympy import Basic, Symbol, Integer, S, Dummy, Rational
+from sympy import Basic, Symbol, Integer, C, S, Dummy, Rational
 from sympy.core.sympify import sympify, converter, SympifyError
 
 from sympy.polys import Poly, roots, cancel
@@ -1271,6 +1271,18 @@ class Matrix(object):
         M.row_del(i)
         M.col_del(j)
         return M
+
+    def exp(self):
+        """ Returns the exponent of a matrix """
+        if not self.is_square:
+            raise NonSquareMatrixError("Exponentiation is valid only for square matrices")
+        try:
+            U, D = self.diagonalize()
+        except MatrixError:
+            raise NotImplementedError("Exponentiation is implemented only for diagonalizable matrices")
+        for i in xrange(0, D.rows):
+            D[i, i] = C.exp(D[i, i])
+        return U * D * U.inv()
 
     def zeros(self, dims):
         """Returns a dims = (d1,d2) matrix of zeros."""
