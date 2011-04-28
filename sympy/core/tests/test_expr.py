@@ -1009,3 +1009,14 @@ def test_as_ordered_terms():
         [f(1), f(2), f(3), f(1, 2, 3), g(1), g(2), g(3), g(1, 2, 3)]
 
     assert (1 + 4*sqrt(3)*pi*x).as_ordered_terms() == [4*pi*x*sqrt(3), 1]
+
+def test_issue_1100():
+    # first subs and limit gives NaN
+    a = x/y
+    assert a._eval_interval(x, 0, oo)._eval_interval(y, oo, 0) is S.NaN
+    # second subs and limit gives NaN
+    assert a._eval_interval(x, 0, oo)._eval_interval(y, 0, oo) is S.NaN
+    # difference gives S.NaN
+    a = x - y
+    assert a._eval_interval(x, 1, oo)._eval_interval(y, oo, 1) is S.NaN
+    raises(ValueError, 'x._eval_interval(x, None, None)')

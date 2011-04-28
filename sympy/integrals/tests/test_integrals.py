@@ -585,3 +585,6 @@ def test_issue_1277():
 def test_issue_1418():
     assert integrate((x**Rational(1,2) - x**3)/x**Rational(1,3), x) == \
         6*x**(Rational(7,6))/7 - 3*x**(Rational(11,3))/11
+
+def test_issue_1100():
+    assert integrate(exp(-I*2*pi*y*x)*x, (x, -oo, oo)) is S.NaN
