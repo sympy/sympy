@@ -1173,28 +1173,39 @@ class Integer(Rational):
         # now process the dict of factors
         if b.is_negative:
             dict[-1] = 1
-        out_int = 1
+        out_int = 1 # integer part
+        out_rad = 1 # extracted radicals
         sqr_int = 1
         sqr_gcd = 0
         sqr_dict = {}
-        for prime, exponent in dict.iteritems():
+        for prime, exponent in dict.items():
             exponent *= e.p
+            # remove multiples of e.q, e.g. (2**12)**(1/10) -> 2*(2**2)**(1/10)
             div_e, div_m = divmod(exponent, e.q)
             if div_e > 0:
                 out_int *= prime**div_e
             if div_m > 0:
-                sqr_dict[prime] = div_m
+                # see if the reduced exponent shares a gcd with e.q
+                # (2**2)**(1/10) -> 2**(1/5)
+                g = igcd(div_m, e.q)
+                if g != 1:
+                    out_rad *= Pow(prime, Rational(div_m//g, e.q//g))
+                else:
+                    sqr_dict[prime] = div_m
+        # identify gcd of remaining powers
         for p, ex in sqr_dict.iteritems():
             if sqr_gcd == 0:
                 sqr_gcd = ex
             else:
                 sqr_gcd = igcd(sqr_gcd, ex)
+                if sqr_gcd == 1:
+                    break
         for k, v in sqr_dict.iteritems():
             sqr_int *= k**(v//sqr_gcd)
-        if sqr_int == b and out_int == 1:
+        if sqr_int == b and out_int == 1 and out_rad == 1:
             result = None
         else:
-            result = out_int*Pow(sqr_int , Rational(sqr_gcd, e.q))
+            result = out_int*out_rad*Pow(sqr_int, Rational(sqr_gcd, e.q))
         return result
 
     def _eval_is_prime(self):
