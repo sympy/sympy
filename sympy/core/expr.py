@@ -165,24 +165,25 @@ class Expr(Basic, EvalfMixin):
 
         """
         from sympy.series import limit
+        if (a is None and b is None):
+            raise ValueError('Both interval ends cannot be None.')
+
         if a is None:
             A = 0
         else:
             A = self.subs(x, a)
-
-        if A is S.NaN:
-            A = limit(self, x, a)
             if A is S.NaN:
-                return self
+                A = limit(self, x, a)
+                if A is S.NaN:
+                    return A
+
         if b is None:
             B = 0
         else:
             B = self.subs(x, b)
+            if B is S.NaN:
+                B = limit(self, x, b)
 
-        if B is S.NaN:
-            B = limit(self, x, b)
-        if B is S.NaN:
-            return self
         return B - A
 
     def _eval_power(self, other):
