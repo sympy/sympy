@@ -209,6 +209,9 @@ def log_to_atan(f, g):
     if f.degree() < g.degree():
         f, g = -g, f
 
+    f = f.to_field()
+    g = g.to_field()
+
     p, q = f.div(g)
 
     if q.is_zero:

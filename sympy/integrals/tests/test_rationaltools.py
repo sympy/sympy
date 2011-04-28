@@ -96,3 +96,5 @@ def test_ratint_logpart():
     assert ratint_logpart(x**2, x**3-5, x, t) == \
         [(Poly(x**3 - 5, x), Poly(-3*t + 1, t))]
 
+def test_issue_2315():
+    assert ratint(1/(x**2 + 16), x) == atan(x/4)/4
