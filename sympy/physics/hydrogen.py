@@ -73,7 +73,7 @@ def R_nl(n, l, r, Z=1):
     # This is an equivalent normalization coefficient, that can be found in
     # some books. Both coefficients seem to be the same fast:
     # C =  S(2)/n**2 * sqrt(1/a**3 * factorial(n_r) / (factorial(n+l)))
-    return  C * r0**l * laguerre_l(n_r, 2*l+1, r0) * exp(-r0/2)
+    return  C * r0**l * laguerre_l(n_r, 2*l+1, r0).expand() * exp(-r0/2)
 
 def E_nl(n, Z=1):
     """
