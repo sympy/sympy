@@ -1165,7 +1165,7 @@ class Integer(Rational):
 
         # if it's not an nth root, it still might be a perfect power
         p = perfect_power(b_pos)
-        if p:
+        if p is not False:
             dict = {p[0]: p[1]}
         else:
             dict = Integer(b_pos).factors(limit=2**15)
