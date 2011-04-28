@@ -1,6 +1,6 @@
 from sympy import symbols, Symbol, nan, oo, I, sinh, sin, acot, pi, atan, \
         acos, Rational, sqrt, asin, acot, cot, coth, E, S, tan, tanh, cos, \
-        cosh, atan2, exp, asinh, acoth, atanh, O, cancel, Matrix
+        cosh, atan2, exp, log, asinh, acoth, atanh, O, cancel, Matrix
 
 def test_sin():
     x, y = symbols('x,y')
@@ -350,6 +350,12 @@ def test_asin_series():
     assert t5 == 3*x**5/40
     assert asin(x).taylor_term(7, x, t5, 0) == 5*x**7/112
 
+def test_asin_rewrite():
+    x = Symbol('x')
+    assert asin(x).rewrite(log) == -I*log(I*x + (1 - x**2)**(S(1)/2))
+    assert asin(x).rewrite(atan) == 2*atan(x/(1 + (1 - x**2)**(S(1)/2)))
+    assert asin(x).rewrite(acos) == S.Pi/2 - acos(x)
+
 def test_acos():
     x = Symbol('x')
     r = Symbol('r', real=True)
@@ -381,6 +387,13 @@ def test_acos_series():
     assert t5 == -3*x**5/40
     assert acos(x).taylor_term(7, x, t5, 0) == -5*x**7/112
 
+def test_acos_rewrite():
+    x = Symbol('x')
+    assert acos(x).rewrite(log) == pi/2 + I*log(I*x + (1 - x**2)**(S(1)/2))
+    assert acos(0).rewrite(atan) == S.Pi/2
+    assert acos(0.5).rewrite(atan) == acos(0.5).rewrite(log)
+    assert acos(x).rewrite(asin) == S.Pi/2 - asin(x)
+
 def test_atan():
     x = Symbol('x')
 
@@ -400,6 +413,10 @@ def test_atan():
     assert atan(r).is_real == True
 
     assert atan(-2*I) == -I*atanh(2)
+
+def test_atan_rewrite():
+    x = Symbol('x')
+    assert atan(x).rewrite(log) == I*log((1 - I*x)/(1 + I*x))/2
 
 def test_atan2():
     assert atan2(0, 0) == S.NaN
@@ -429,6 +446,10 @@ def test_acot():
 
     assert acot(I*pi) == -I*acoth(pi)
     assert acot(-2*I) == I*acoth(2)
+
+def test_acot_rewrite():
+    x = Symbol('x')
+    assert acot(x).rewrite(log) == I*log((x - I)/(x + I))/2
 
 def test_attributes():
     x = Symbol('x')
