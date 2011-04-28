@@ -898,6 +898,15 @@ class asin(Function):
         else:
             return self.func(arg)
 
+    def _eval_rewrite_as_acos(self, x):
+        return S.Pi/2 - acos(x)
+
+    def _eval_rewrite_as_atan(self, x):
+        return 2*atan(x/(1 + sqrt(1 - x**2)))
+
+    def _eval_rewrite_as_log(self, x):
+        return -S.ImaginaryUnit*C.log(S.ImaginaryUnit*x + sqrt(1-x**2))
+
     def _eval_is_real(self):
         return self.args[0].is_real and (self.args[0]>=-1 and self.args[0]<=1)
 
@@ -981,6 +990,18 @@ class acos(Function):
     def _eval_is_real(self):
         return self.args[0].is_real and (self.args[0]>=-1 and self.args[0]<=1)
 
+    def _eval_rewrite_as_log(self, x):
+        return S.Pi/2 + S.ImaginaryUnit * C.log(S.ImaginaryUnit * x + sqrt(1 - x**2))
+
+    def _eval_rewrite_as_asin(self, x):
+        return S.Pi/2 - asin(x)
+
+    def _eval_rewrite_as_atan(self, x):
+        if x > -1 and x <= 1:
+            return 2 * atan(sqrt(1 - x**2)/(1 + x))
+        else:
+            raise ValueError("The argument must be bounded in the interval (-1,1]")
+
     def _sage_(self):
         import sage.all as sage
         return sage.acos(self.args[0]._sage_())
@@ -1056,6 +1077,10 @@ class atan(Function):
 
     def _eval_is_real(self):
         return self.args[0].is_real
+
+    def _eval_rewrite_as_log(self, x):
+        return S.ImaginaryUnit/2 * \
+               (C.log((S(1) - S.ImaginaryUnit * x)/(S(1) + S.ImaginaryUnit * x)))
 
     def _sage_(self):
         import sage.all as sage
@@ -1137,6 +1162,10 @@ class acot(Function):
     def _sage_(self):
         import sage.all as sage
         return sage.acot(self.args[0]._sage_())
+
+    def _eval_rewrite_as_log(self, x):
+        return S.ImaginaryUnit/2 * \
+               (C.log((x - S.ImaginaryUnit)/(x + S.ImaginaryUnit)))
 
 class atan2(Function):
     """
