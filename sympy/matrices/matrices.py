@@ -1253,6 +1253,34 @@ class Matrix(object):
         return self.rows == self.cols
 
     def is_upper(self):
+        """
+        Check if matrix is an upper triangular matrix.
+
+        Example:
+        >>> from sympy import Matrix
+        >>> m = Matrix(2,2,[1, 0, 0, 1])
+        >>> m
+        [1, 0]
+        [0, 1]
+        >>> m.is_upper()
+        True
+
+        >>> m = Matrix(3,3,[5, 1, 9, 0, 4 , 6, 0, 0, 5])
+        >>> m
+        [5, 1, 9]
+        [0, 4, 6]
+        [0, 0, 5]
+        >>> m.is_upper()
+        True
+
+        >>> m = Matrix(2,3,[4, 2, 5, 6, 1, 1])
+        >>> m
+        [4, 2, 5]
+        [6, 1, 1]
+        >>> m.is_upper()
+        False
+
+        """
         for i in xrange(1, self.rows):
             for j in xrange(0, i):
                 if self[i,j] != 0:
@@ -1260,6 +1288,35 @@ class Matrix(object):
         return True
 
     def is_lower(self):
+        """
+        Check if matrix is a lower triangular matrix.
+
+        Example:
+        >>> from sympy import Matrix
+        >>> m = Matrix(2,2,[1, 0, 0, 1])
+        >>> m
+        [1, 0]
+        [0, 1]
+        >>> m.is_lower()
+        True
+
+        >>> m = Matrix(3,3,[2, 0, 0, 1, 4 , 0, 6, 6, 5])
+        >>> m
+        [2, 0, 0]
+        [1, 4, 0]
+        [6, 6, 5]
+        >>> m.is_lower()
+        True
+
+        >>> from sympy.abc import x, y
+        >>> m = Matrix(2,2,[x**2 + y, y**2 + x, 0, x + y])
+        >>> m
+        [y + x**2, x + y**2]
+        [       0,    x + y]
+        >>> m.is_lower()
+        False
+
+        """
         for i in xrange(0, self.rows):
             for j in xrange(i+1, self.cols):
                 if self[i, j] != 0:
