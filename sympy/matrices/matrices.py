@@ -890,6 +890,7 @@ class Matrix(object):
 
         This is for symbolic matrices, for real or complex ones use
         sympy.mpmath.lu_solve or sympy.mpmath.qr_solve.
+
         """
         if rhs.rows != self.rows:
             raise ShapeError("`self` and `rhs` must have the same number of rows.")
@@ -911,6 +912,18 @@ class Matrix(object):
     def LUdecomposition(self, iszerofunc=_iszero):
         """
         Returns the decomposition LU and the row swaps p.
+
+        Example:
+        >>> from sympy import Matrix
+        >>> a = Matrix([[4, 3], [6, 3]])
+        >>> L, U, _ = a.LUdecomposition()
+        >>> L
+        [  1, 0]
+        [3/2, 1]
+        >>> U
+        [4,    3]
+        [0, -3/2]
+
         """
         combined, p = self.LUdecomposition_Simple(iszerofunc=_iszero)
         L = self.zeros(self.rows)
