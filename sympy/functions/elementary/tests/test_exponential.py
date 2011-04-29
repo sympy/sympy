@@ -1,4 +1,4 @@
-from sympy import (symbols, log, Real, nan, oo, I, pi, E, exp, Symbol,
+from sympy import (symbols, log, Real, nan, oo, zoo, I, pi, E, exp, Symbol,
         LambertW, sqrt, Rational, sin, expand_log, S, sign)
 from sympy.utilities.pytest import XFAIL
 
@@ -78,7 +78,10 @@ def test_log_values():
     assert log(oo) == oo
     assert log(-oo) == oo
 
-    assert log(0) == -oo
+    assert log(zoo) == zoo
+    assert log(-zoo) == zoo
+
+    assert log(0) == zoo
 
     assert log(1) == 0
     assert log(-1) == I*pi
@@ -150,8 +153,13 @@ def test_log_symbolic():
     assert log(-p).func is log and log(-p).args[0] == -p
 
 def test_log_assumptions():
+    p = symbols('p', positive=True)
+    n = symbols('n', negative=True)
     assert log(2) > 0
     assert log(1).is_zero
+    assert log(2-pi-pi*(1/pi-1)).is_zero
+    assert log(p).is_zero is None
+    assert log(n).is_zero is False
     assert log(0.5).is_negative == True
 
 def test_log_hashing():

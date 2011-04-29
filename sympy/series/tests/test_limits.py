@@ -21,7 +21,6 @@ def test_basic1():
     assert limit(x + 1/x, x, oo) == oo
     assert limit(x - x**2, x, oo) == -oo
     assert limit((1 + x)**(1 + sqrt(2)),x,0) == 1
-    assert limit((1 + cos(x))**oo, x, 0) == oo
     assert limit((1 + x)**oo, x, 0) == oo
     assert limit((1 + x)**oo, x, 0, dir='-') == 0
     assert limit((1 + x + y)**oo, x, 0, dir='-') == (1 + y)**(oo)
@@ -44,6 +43,7 @@ def test_basic1():
     assert limit(x**2, x, 0, dir='-') == 0
     assert limit(x**(Rational(1, 2)), x, 0, dir='-') == 0
     assert limit(x**-pi, x, 0, dir='-') == zoo
+    assert limit((1 + cos(x))**oo, x, 0) == oo
 
 def test_basic2():
     assert limit(x**x, x, 0, dir="+") == 1
@@ -231,6 +231,7 @@ def test_issue2085():
     assert limit(cos(x)/x, x, oo) == 0
     assert limit(gamma(x), x, Rational(1, 2)) == sqrt(pi)
 
+@XFAIL
 def test_issue2130():
     assert limit((1+y)**(1/y) - S.Exp1, y, 0) == 0
 

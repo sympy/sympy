@@ -1,4 +1,4 @@
-from sympy import symbols, Symbol, nan, oo, I, sinh, sin, acot, pi, atan, \
+from sympy import symbols, Symbol, nan, oo, zoo, I, sinh, sin, acot, pi, atan, \
         acos, Rational, sqrt, asin, acot, cot, coth, E, S, tan, tanh, cos, \
         cosh, atan2, exp, log, asinh, acoth, atanh, O, cancel, Matrix
 
@@ -225,6 +225,9 @@ def test_tan():
     assert tan(-2*pi) == 0
     assert tan(-3*10**73*pi) == 0
 
+    assert tan(pi/2) == zoo
+    assert tan(3*pi/2) == zoo
+
     assert tan(pi/3) == sqrt(3)
     assert tan(-2*pi/3) == sqrt(3)
 
@@ -268,6 +271,9 @@ def test_cot():
     assert cot(oo*I) == -I
     assert cot(-oo*I) == I
 
+    assert cot(0) == zoo
+    assert cot(2*pi) == zoo
+
     assert cot(acot(x)) == x
     assert cot(atan(x)) == 1 / x
     assert cot(asin(x)) == sqrt(1 - x**2) / x
@@ -276,6 +282,9 @@ def test_cot():
     assert cot(pi*I) == -coth(pi)*I
     assert cot(-pi*I) == coth(pi)*I
     assert cot(-2*I) == coth(2)*I
+
+    assert cot(pi) == cot(2*pi) == cot(3*pi)
+    assert cot(-pi) == cot(-2*pi) == cot(-3*pi)
 
     assert cot(pi/2) == 0
     assert cot(-pi/2) == 0

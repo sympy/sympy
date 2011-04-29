@@ -167,11 +167,11 @@ class Pow(Expr):
                 return False
 
     def _eval_is_real(self):
-        c1 = self.base.is_real
-        if c1 is None: return
-        c2 = self.exp.is_real
-        if c2 is None: return
-        if c1 and c2:
+        real_b = self.base.is_real
+        if real_b is None: return
+        real_e = self.exp.is_real
+        if real_e is None: return
+        if real_b and real_e:
             if self.base.is_positive:
                 return True
             else:   # negative or zero (or positive)
@@ -180,6 +180,23 @@ class Pow(Expr):
                 elif self.base.is_negative:
                     if self.exp.is_Rational:
                         return False
+        im_b = self.base.is_imaginary
+        im_e = self.exp.is_imaginary
+        if im_b:
+            if self.exp.is_integer:
+                if self.exp.is_even:
+                    return True
+                elif self.exp.is_odd:
+                    return False
+            elif (self.exp in [S.ImaginaryUnit, -S.ImaginaryUnit] and
+                  self.base in [S.ImaginaryUnit, -S.ImaginaryUnit]):
+                return True
+        if real_b and im_e:
+            c = self.exp.coeff(S.ImaginaryUnit)
+            if c:
+                ok = (c*C.log(self.base)/S.Pi).is_Integer
+                if ok is not None:
+                    return ok
 
     def _eval_is_odd(self):
         if not (self.base.is_integer and self.exp.is_nonnegative): return
@@ -196,7 +213,7 @@ class Pow(Expr):
         c2 = self.exp.is_bounded
         if c2 is None: return
         if c1 and c2:
-            if self.exp.is_nonnegative:
+            if self.exp.is_nonnegative or self.base.is_nonzero:
                 return True
 
     def _eval_subs(self, old, new):
@@ -216,10 +233,7 @@ class Pow(Expr):
                 pow = coeff1/coeff2
                 if pow.is_Integer or self.base.is_commutative:
                     return Pow(new, pow) # (x**(2*y)).subs(x**(3*y),z) -> z**(2/3)
-        b, e = self.base._eval_subs(old, new), self.exp._eval_subs(old, new)
-        if not b and e.is_negative: # don't let subs create an infinity
-            return S.NaN
-        return Pow(b, e)
+        return Pow(self.base._eval_subs(old, new), self.exp._eval_subs(old, new))
 
     def as_base_exp(self):
         if self.base.is_Rational and self.base.p==1:

@@ -300,7 +300,7 @@ class log(Function):
 
         if arg.is_Number:
             if arg is S.Zero:
-                return S.NegativeInfinity
+                return S.ComplexInfinity
             elif arg is S.One:
                 return S.Zero
             elif arg is S.Infinity:
@@ -311,6 +311,8 @@ class log(Function):
                 return S.NaN
             elif arg.is_negative:
                 return S.Pi * S.ImaginaryUnit + cls(-arg)
+        elif arg is S.ComplexInfinity:
+            return S.ComplexInfinity
         elif arg is S.Exp1:
             return S.One
         #this doesn't work due to caching: :(
@@ -420,7 +422,12 @@ class log(Function):
     def _eval_is_zero(self):
         # XXX This is not quite useless. Try evaluating log(0.5).is_negative
         #     without it. There's probably a nicer way though.
-        return (self.args[0] is S.One)
+        if self.args[0] is S.One:
+            return True
+        elif self.args[0].is_number:
+            return self.args[0].expand() is S.One
+        elif self.args[0].is_negative:
+            return False
 
     def as_numer_denom(self):
         n, d = self.args[0].as_numer_denom()

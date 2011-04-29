@@ -849,18 +849,46 @@ def test_Pow_is_real():
 
     assert sqrt(-1 - sqrt(2)).is_real == False
 
+    i = Symbol('i', imaginary=True)
+    assert (i**i).is_real is None
+    assert (I**i).is_real is None
+    assert ((-I)**i).is_real is None
+    assert (2**i).is_real is None # (2**(pi/log(2) * I)) is real, 2**I is not
+    assert (2**I).is_real is False
+    assert (2**-I).is_real is False
+    assert (i**2).is_real
+    assert (i**3).is_real is False
+    assert (i**x).is_real is None # could be (-I)**(2/3)
+    e = Symbol('e', even=True)
+    o = Symbol('o', odd=True)
+    k = Symbol('k', integer=True)
+    assert (i**e).is_real
+    assert (i**o).is_real is False
+    assert (i**k).is_real is None
+
 @XFAIL
+def test_real_Pow():
+    """
+    This test fails perhaps because (pi/log(x)).is_real is True even with
+    no assumptions on x. See issue 2322.
+    """
+    k = Symbol('k', integer=True, nonzero=True)
+    assert (k**(I*pi/log(k))).is_real
+
 def test_Pow_is_bounded():
     x = Symbol('x', real=True)
+    p = Symbol('p', positive=True)
+    n = Symbol('n', negative=True)
 
-    assert (x**2).is_bounded == None
-
+    assert (x**2).is_bounded == None # x could be oo
+    assert (x**x).is_bounded == None # ditto
+    assert (p**x).is_bounded == None # ditto
+    assert (n**x).is_bounded == None # ditto
+    assert (1/S.Pi).is_bounded
     assert (sin(x)**2).is_bounded == True
     assert (sin(x)**x).is_bounded == None
     assert (sin(x)**exp(x)).is_bounded == None
-
-    # XXX This first one fails
-    assert (1/sin(x)).is_bounded == False
+    assert (1/sin(x)).is_bounded == None # if zero, no, otherwise yes
     assert (1/exp(x)).is_bounded == False
 
 def test_Pow_is_even_odd():

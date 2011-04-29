@@ -1,6 +1,6 @@
 from sympy import (Symbol, Wild, sin, cos, exp, sqrt, pi, Function, Derivative,
         abc, Integer, Eq, symbols, Add, I, Real, log, Rational, Lambda, atan2,
-        cse, S, tan, cot, Tuple)
+        cse, cot, tan, S, Tuple)
 
 def test_subs():
     n3=Rational(3)
@@ -33,15 +33,6 @@ def test_trigonometric():
     assert exp(pi).subs(exp, sin) == 0
     assert cos(exp(pi)).subs(exp, sin) == 1
 
-    i = Symbol('i', integer=True)
-    assert tan(x).subs(x, pi/2) is S.NaN
-    assert cot(x).subs(x, pi) is S.NaN
-    assert cot(i*x).subs(x, pi) is S.NaN
-    assert tan(i*x).subs(x, pi/2) == tan(i*pi/2)
-    assert tan(i*x).subs(x, pi/2).subs(i, 1) is S.NaN
-    o = Symbol('o', odd=True)
-    assert tan(o*x).subs(x, pi/2) is S.NaN
-
 def test_powers():
     x = Symbol('x')
     assert sqrt(1 - sqrt(x)).subs(x, 4) == I
@@ -49,9 +40,14 @@ def test_powers():
     assert (x ** Rational(1,3)).subs(x, 27) == 3
     assert (x ** Rational(1,3)).subs(x, -27) == 3 * (-1) ** Rational(1,3)
     assert ((-x) ** Rational(1,3)).subs(x, 27) == 3 * (-1) ** Rational(1,3)
+
+def test_issue2261_2130():
     n = Symbol('n', negative=True)
-    assert (x**n).subs(x, 0) is S.NaN
-    assert exp(-1).subs(S.Exp1, 0) is S.NaN
+    x = Symbol('x')
+    assert (x**n).subs(x, 0) is not S.NaN
+    assert exp(-1).subs(S.Exp1, 0) is not S.NaN
+    assert tan(x).subs(x, 3*S.Pi/2) == tan(S.Pi/2)
+    assert cot(x).subs(x, 2*S.Pi) == cot(S.Pi)
 
 def test_logexppow():   # no eval()
     x = Symbol("x")
