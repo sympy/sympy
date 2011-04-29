@@ -547,6 +547,10 @@ def test_issue_1304():
     assert integrate(sqrt(x**2 - z**2),x) == -z**2*acosh(x/z)/2 + x*(x**2 - z**2)**(S(1)/2)/2
     assert integrate(sqrt(-x**2 - 4), x) == -2*atan(x/(-4 - x**2)**(S(1)/2)) + x*(-4 - x**2)**(S(1)/2)/2
 
+def tets_issue_1001():
+    R = Symbol('R', positive=True)
+    assert integrate(sqrt(R**2 - x**2), (x, 0, R)) == pi*R**2/4
+
 def test_issue2068():
     from sympy.abc import w, x, y, z
     f = Function('f')
@@ -588,3 +592,4 @@ def test_issue_1418():
 
 def test_issue_1100():
     assert integrate(exp(-I*2*pi*y*x)*x, (x, -oo, oo)) is S.NaN
+
