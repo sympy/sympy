@@ -197,6 +197,140 @@ class Expr(Basic, EvalfMixin):
         from sympy.functions.elementary.complexes import conjugate as c
         return c(self)
 
+
+    @classmethod
+    def _parse_order(cls, order):
+        """Parse and configure the ordering of terms. """
+        from sympy.polys.monomialtools import monomial_key
+
+        try:
+            reverse = order.startswith('rev-')
+        except AttributeError:
+            reverse = False
+        else:
+            if reverse:
+                order = order[4:]
+
+        monom_key = monomial_key(order)
+
+        def key(term):
+            _, ((re, im), monom, ncpart) = term
+            ncpart = [ e.as_tuple_tree() for e in ncpart ]
+            return monom_key(monom), tuple(ncpart), (-re, -im)
+
+        return key, reverse
+
+    def as_ordered_factors(self, order=None):
+        """
+        Transform an expression to an ordered list of factors.
+
+        **Examples**
+
+        >>> from sympy import sin, cos
+        >>> from sympy.abc import x, y
+
+        >>> (2*x*y*sin(x)*cos(x)).as_ordered_factors()
+        [2, x, y, sin(x), cos(x)]
+
+        """
+        if not self.is_Mul:
+            return [self]
+        else:
+            return sorted(self.args, key=lambda expr: Basic.sorted_key(expr, order=order))
+
+    def as_ordered_terms(self, order=None, data=False):
+        """
+        Transform an expression to an ordered list of terms.
+
+        **Examples**
+
+        >>> from sympy import sin, cos
+        >>> from sympy.abc import x, y
+
+        >>> (sin(x)**2*cos(x) + sin(x)**2 + 1).as_ordered_terms()
+        [sin(x)**2*cos(x), sin(x)**2, 1]
+
+        """
+        from sympy.utilities import any
+
+        key, reverse = self._parse_order(order)
+        terms, gens = self.as_terms()
+
+        if not any(term.is_Order for term, _ in terms):
+            ordered = sorted(terms, key=key, reverse=not reverse)
+        else:
+            _terms, _order = [], []
+
+            for term, repr in terms:
+                if not term.is_Order:
+                    _terms.append((term, repr))
+                else:
+                    _order.append((term, repr))
+
+            ordered = sorted(_terms, key=key) \
+                    + sorted(_order, key=key)
+
+        if data:
+            return ordered, gens
+        else:
+            return [ term for term, _ in ordered ]
+
+    def as_terms(self):
+        """Transform an expression to a list of terms. """
+        from sympy.core import Add, Mul, S
+        from sympy.core.exprtools import decompose_power
+
+        gens, terms = set([]), []
+
+        for term in Add.make_args(self):
+            coeff, _term = term.as_coeff_Mul()
+
+            coeff = complex(coeff)
+            cpart, ncpart = {}, []
+
+            if _term is not S.One:
+                for factor in Mul.make_args(_term):
+                    if factor.is_number:
+                        try:
+                            coeff *= complex(factor)
+                        except ValueError:
+                            pass
+                        else:
+                            continue
+
+                    if factor.is_commutative:
+                        base, exp = decompose_power(factor)
+
+                        cpart[base] = exp
+                        gens.add(base)
+                    else:
+                        ncpart.append(factor)
+
+            coeff = coeff.real, coeff.imag
+            ncpart = tuple(ncpart)
+
+            terms.append((term, (coeff, cpart, ncpart)))
+
+        gens = sorted(gens, key=Basic.sorted_key)
+
+        k, indices = len(gens), {}
+
+        for i, g in enumerate(gens):
+            indices[g] = i
+
+        result = []
+
+        for term, (coeff, cpart, ncpart) in terms:
+            monom = [0]*k
+
+            for base, exp in cpart.iteritems():
+                monom[indices[base]] = exp
+
+            result.append((term, (coeff, tuple(monom), ncpart)))
+
+        return result, gens
+
+
     def removeO(self):
         """Removes the additive O(..) symbol if there is one"""
         if self.is_Order:
