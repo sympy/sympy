@@ -1251,6 +1251,64 @@ def test_div():
     raises(ComputationFailed, "quo(4, 2)")
     raises(ComputationFailed, "rem(4, 2)")
 
+    f, g = x**2 + 1, 2*x - 4
+
+    qz, rz = 0, x**2 + 1
+    qq, rq = x/2 + 1, 5
+
+    assert div(f, g) == (qq, rq)
+    assert div(f, g, auto=True) == (qq, rq)
+    assert div(f, g, auto=False) == (qz, rz)
+    assert div(f, g, domain=ZZ) == (qz, rz)
+    assert div(f, g, domain=QQ) == (qq, rq)
+    assert div(f, g, domain=ZZ, auto=True) == (qq, rq)
+    assert div(f, g, domain=ZZ, auto=False) == (qz, rz)
+    assert div(f, g, domain=QQ, auto=True) == (qq, rq)
+    assert div(f, g, domain=QQ, auto=False) == (qq, rq)
+
+    assert rem(f, g) == rq
+    assert rem(f, g, auto=True) == rq
+    assert rem(f, g, auto=False) == rz
+    assert rem(f, g, domain=ZZ) == rz
+    assert rem(f, g, domain=QQ) == rq
+    assert rem(f, g, domain=ZZ, auto=True) == rq
+    assert rem(f, g, domain=ZZ, auto=False) == rz
+    assert rem(f, g, domain=QQ, auto=True) == rq
+    assert rem(f, g, domain=QQ, auto=False) == rq
+
+    assert exquo(f, g) == qq
+    assert exquo(f, g, auto=True) == qq
+    assert exquo(f, g, auto=False) == qz
+    assert exquo(f, g, domain=ZZ) == qz
+    assert exquo(f, g, domain=QQ) == qq
+    assert exquo(f, g, domain=ZZ, auto=True) == qq
+    assert exquo(f, g, domain=ZZ, auto=False) == qz
+    assert exquo(f, g, domain=QQ, auto=True) == qq
+    assert exquo(f, g, domain=QQ, auto=False) == qq
+
+    f, g, q = x**2, 2*x, x/2
+
+    assert quo(f, g) == q
+    assert quo(f, g, auto=True) == q
+    raises(ExactQuotientFailed, "quo(f, g, auto=False)")
+    raises(ExactQuotientFailed, "quo(f, g, domain=ZZ)")
+    assert quo(f, g, domain=QQ) == q
+    assert quo(f, g, domain=ZZ, auto=True) == q
+    raises(ExactQuotientFailed, "quo(f, g, domain=ZZ, auto=False)")
+    assert quo(f, g, domain=QQ, auto=True) == q
+    assert quo(f, g, domain=QQ, auto=False) == q
+
+    f, g = Poly(x**2), Poly(x)
+
+    q, r = f.div(g)
+    assert q.get_domain().is_ZZ and r.get_domain().is_ZZ
+    r = f.rem(g)
+    assert r.get_domain().is_ZZ
+    q = f.quo(g)
+    assert q.get_domain().is_ZZ
+    q = f.exquo(g)
+    assert q.get_domain().is_ZZ
+
 def test_gcdex():
     f, g = 2*x, x**2 - 16
     s, t, h = x/32, -Rational(1,16), 1
