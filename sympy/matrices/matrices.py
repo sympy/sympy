@@ -430,7 +430,16 @@ class Matrix(object):
                 s *= s
                 n //= 2
             return a
-        raise NotImplementedError("Non-integer powers not supported.")
+        elif isinstance(num, Rational):
+            try:
+                P, D = self.diagonalize()
+            except MatrixError:
+                raise NotImplementedError("Implemented only for diagonalizable matrices")
+            for i in range(D.rows):
+                D[i, i] = D[i, i]**num
+            return P * D * P.inv()
+        else:
+            raise NotImplementedError("Only integer and rational values are supported")
 
     def __add__(self,a):
         return matrix_add(self,a)

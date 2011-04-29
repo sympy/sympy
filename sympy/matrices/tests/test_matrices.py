@@ -80,6 +80,11 @@ def test_power():
     assert eye(2)**10000000 == eye(2)
     assert Matrix([[1, 2], [3, 4]])**Integer(2) == Matrix([[7, 10], [15, 22]])
 
+    A = Matrix([[33, 24], [48, 57]])
+    assert (A**(S(1)/2))[:] == [5, 2, 4, 7]
+    A = Matrix([[0, 4], [-1, 5]])
+    assert (A**(S(1)/2))**2 == A
+
 def test_creation():
     raises(ValueError, 'Matrix(5, 5, range(20))')
 
@@ -1504,6 +1509,8 @@ def test_errors():
     raises(TypeError, "SMatrix([[1, 2], [3, 4]]).submatrix((1, 2))")
     raises(TypeError, "SMatrix([1, 2, 3]).cross(1)")
     raises(ValueError, "Matrix([[5, 10, 7],[0, -1, 2],[8,  3, 4]]).LUdecomposition_Simple(iszerofunc=lambda x:abs(x)<=4)")
+    raises(NotImplementedError, "Matrix([[1, 0],[1, 1]])**(S(1)/2)")
+    raises(NotImplementedError, "Matrix([[1, 2, 3],[4, 5, 6],[7,  8, 9]])**(0.5)")
 
 def test_len():
     assert len(Matrix()) == 0
