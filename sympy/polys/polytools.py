@@ -87,11 +87,11 @@ class Poly(Expr):
         if 'order' in opt:
             raise NotImplementedError("'order' keyword is not implemented yet")
 
-        if isinstance(rep, (dict, list)):
+        if hasattr(rep, '__iter__'):
             if isinstance(rep, dict):
                 return cls._from_dict(rep, opt)
             else:
-                return cls._from_list(rep, opt)
+                return cls._from_list(list(rep), opt)
         else:
             rep = sympify(rep)
 

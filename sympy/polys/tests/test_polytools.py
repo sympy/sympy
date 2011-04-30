@@ -232,8 +232,16 @@ def test_Poly__new__():
 
     raises(GeneratorsNeeded, "Poly({1: 2, 0: 1})")
     raises(GeneratorsNeeded, "Poly([2, 1])")
+    raises(GeneratorsNeeded, "Poly((2, 1))")
 
     raises(GeneratorsNeeded, "Poly(1)")
+
+    f = a*x**2 + b*x + c
+
+    assert Poly({2: a, 1: b, 0: c}, x) == f
+    assert Poly(iter([a, b, c]), x) == f
+    assert Poly([a, b, c], x) == f
+    assert Poly((a, b, c), x) == f
 
     assert Poly(Poly(a*x + b*y, x, y), x) == Poly(a*x + b*y, x)
 
