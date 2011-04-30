@@ -112,7 +112,7 @@ def limit(e, z, z0, dir="+"):
         if e.is_Mul:
             # weed out the z-independent terms
             i, d = e.as_independent(z)
-            if i is not S.One:
+            if i is not S.One and i.is_bounded:
                 return i*limit(d, z, z0, dir)
         else:
             i, d = S.One, e
@@ -145,7 +145,7 @@ def limit(e, z, z0, dir="+"):
         finite = []; unknown = []
         ok = True
         for term in e.args:
-            if not term.has(z):
+            if not term.has(z) and not term.is_unbounded:
                 finite.append(term)
                 continue
             result = term.subs(z, z0)
