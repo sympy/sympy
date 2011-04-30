@@ -416,10 +416,9 @@ def test_polygon():
     assert t1.incenter == Point(ic, ic)
 
     # Inradius
-    assert t1.inradius == 5 - 5*2**(S(1)/2)/2
-    assert t2.inradius == 5*3**(S(1)/2)/6
-    t3_inradius = (2*x1**2*Abs(x1) - 2**(S(1)/2)*x1**2*Abs(x1))/(2*x1**2)
-    assert simplify((t3.inradius - t3_inradius)) == 0
+    assert t1.inradius == 5 - 5*sqrt(2)/2
+    assert t2.inradius == 5*sqrt(3)/6
+    assert t3.inradius == x1**2/((2 + sqrt(2))*Abs(x1))
 
     # Medians + Centroid
     m = t1.medians
