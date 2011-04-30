@@ -1163,7 +1163,7 @@ def powsimp(expr, deep=False, combine='all'):
 
     """
     if combine not in ['all', 'exp', 'base']:
-        raise ValueError, "combine must be one of ('all', 'exp', 'base')."
+        raise ValueError("combine must be one of ('all', 'exp', 'base').")
     y = Dummy('y')
     if expr.is_Pow:
         if deep:
@@ -1726,3 +1726,4 @@ def _logcombine(expr, force=False):
         _logcombine(expr.args[1], force)
 
     return expr
+

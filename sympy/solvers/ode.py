@@ -307,7 +307,7 @@ def dsolve(eq, func, hint="default", simplify=True, **kwargs):
                 To make dsolve apply all relevant classification hints,
                 use dsolve(ODE, func, hint="all").  This will return a
                 dictionary of hint:solution terms.  If a hint causes
-                dsolve to raise NotImplementedError, value of that
+                dsolve to raise the NotImplementedError, value of that
                 hint's key will be the exception object raised.  The
                 dictionary will also include some special keys:
 
@@ -1862,7 +1862,7 @@ def _homogeneous_order(eq, *symbols):
     apart.
     """
     if not symbols:
-        raise ValueError, "homogeneous_order: no symbols were given."
+        raise ValueError("homogeneous_order: no symbols were given.")
 
     n = set()
 
@@ -2805,3 +2805,4 @@ def ode_separable(eq, func, order, match):
     return Eq(C.Integral(r['m2']['coeff']*r['m2'][r['y']]/r['m1'][r['y']],
         (r['y'], None, f(x))), C.Integral(-r['m1']['coeff']*r['m1'][x]/
         r['m2'][x], x)+C1)
+
