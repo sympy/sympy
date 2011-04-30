@@ -128,11 +128,6 @@ def test_roots():
     assert roots(x**6-4*x**4+4*x**3-x**2, x) == \
         {S.One: 2, -1 - sqrt(2): 1, S.Zero: 2, -1 + sqrt(2): 1}
 
-    R1 = sorted([ r.evalf() for r in roots(x**2 + x + 1,   x) ])
-    R2 = sorted([ r         for r in roots(x**2 + x + 1.0, x) ])
-
-    assert R1 == R2
-
     assert roots(x**8-1, x) == {
          2**S.Half/2 + I*2**S.Half/2: 1,
          2**S.Half/2 - I*2**S.Half/2: 1,
@@ -141,9 +136,9 @@ def test_roots():
         S.One: 1, -S.One: 1, I: 1, -I: 1
     }
 
-    assert roots(-2016*x**2 - 5616*x**3 - 2056*x**4 + 3324*x**5 + 2176*x**6 \
-        - 224*x**7 - 384*x**8 - 64*x**9, x) == {S(0): 2, -S(2): 2, S(2): 1, -S(7)/2: 1,\
-                                            -S(3)/2: 1, -S(1)/2: 1, S(3)/2: 1}
+    f = -2016*x**2 - 5616*x**3 - 2056*x**4 + 3324*x**5 + 2176*x**6 - 224*x**7 - 384*x**8 - 64*x**9
+
+    assert roots(f) == {S(0): 2, -S(2): 2, S(2): 1, -S(7)/2: 1, -S(3)/2: 1, -S(1)/2: 1, S(3)/2: 1}
 
     assert roots((a+b+c)*x - (a+b+c+d), x) == {(a+b+c+d)/(a+b+c): 1}
 
@@ -234,6 +229,19 @@ def test_roots2():
     e2 = (zz-k)*yx*yx + zx*(yy-k)*zx + zy*zy*(xx-k)
 
     assert roots(e1 - e2, k).values() == [1, 1, 1]
+
+def test_roots_inexact():
+    R1 = sorted([ r.evalf() for r in roots(x**2 + x + 1,   x) ])
+    R2 = sorted([ r         for r in roots(x**2 + x + 1.0, x) ])
+
+    for r1, r2 in zip(R1, R2):
+        assert abs(r1 - r2) < 1e-12
+
+    f = x**4 + 3.0*sqrt(2.0)*x**3 - (78.0 + 24.0*sqrt(3.0))*x**2 + 144.0*(2*sqrt(3.0) + 9.0)
+    R = [-12.7530479110482, -3.85012393732929, 4.89897948556636, 7.46155167569183]
+
+    for r1, r2 in zip(roots(f, multiple=True), R):
+        assert abs(r1 - r2) < 1e-12
 
 def test_root_factors():
     assert root_factors(Poly(1, x)) == [Poly(1, x)]
