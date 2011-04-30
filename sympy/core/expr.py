@@ -4,7 +4,7 @@ from singleton import S
 from evalf import EvalfMixin
 from decorators import _sympifyit
 from cache import cacheit
-from sympy.core.compatibility import all
+from sympy.core.compatibility import any, all
 
 class Expr(Basic, EvalfMixin):
     __slots__ = []
@@ -250,8 +250,6 @@ class Expr(Basic, EvalfMixin):
         [sin(x)**2*cos(x), sin(x)**2, 1]
 
         """
-        from sympy.utilities import any
-
         key, reverse = self._parse_order(order)
         terms, gens = self.as_terms()
 
@@ -494,8 +492,6 @@ class Expr(Basic, EvalfMixin):
         >>> (n*m + o*m*n).coeff(m*n, right=1)
         1
         """
-        from sympy.utilities.iterables import any
-
         x = sympify(x)
         if not x: # 0 or None
             return None
