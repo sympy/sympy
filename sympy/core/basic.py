@@ -326,8 +326,24 @@ class Basic(AssumeMeths):
         # now both objects are from SymPy, so we can proceed to usual comparison
         return Basic._compare_pretty(a, b)
 
-    def as_tuple_tree(self, order=None):
-        """Construct a tuple-tree version of ``self``. """
+    def sort_key(self, order=None):
+        """
+        A key-function for sorting expressions.
+
+        **Examples**
+
+        >>> from sympy.core import Basic, S, I
+        >>> from sympy.abc import x
+
+        >>> sorted([S(1)/2, I, -I], key=Basic.sort_key)
+        [1/2, -I, I]
+
+        >>> S("[x, 1/x, 1/x**2, x**2, x**(1/2), x**(1/4), x**(3/2)]")
+        [x, 1/x, x**(-2), x**2, x**(1/2), x**(1/4), x**(3/2)]
+        >>> sorted(_, key=Basic.sort_key)
+        [x**(-2), 1/x, x**(1/4), x**(1/2), x, x**(3/2), x**2]
+
+        """
         from sympy.core import S
 
         funcs = {
@@ -371,7 +387,7 @@ class Basic(AssumeMeths):
 
             for arg in args:
                 if isinstance(arg, Basic):
-                    arg = arg.as_tuple_tree(order=order)
+                    arg = arg.sort_key(order=order)
                 elif hasattr(arg, '__iter__'):
                     arg = rmap(arg)
 
@@ -421,30 +437,11 @@ class Basic(AssumeMeths):
                         args = sorted(args)
 
                 args = (len(args), args)
-                exp = exp.as_tuple_tree(order=order)
+                exp = exp.sort_key(order=order)
 
                 return head(expr), args, exp, coeff
 
-    @classmethod
-    def sorted_key(cls, expr, order=None):
-        """
-        A key-function for sorting expressions.
-
-        **Examples**
-
-        >>> from sympy.core import Basic, S, I
-        >>> from sympy.abc import x
-
-        >>> sorted([S(1)/2, I, -I], key=Basic.sorted_key)
-        [1/2, -I, I]
-
-        >>> S("[x, 1/x, 1/x**2, x**2, x**(1/2), x**(1/4), x**(3/2)]")
-        [x, 1/x, x**(-2), x**2, x**(1/2), x**(1/4), x**(3/2)]
-        >>> sorted(_, key=Basic.sorted_key)
-        [x**(-2), 1/x, x**(1/4), x**(1/2), x, x**(3/2), x**2]
-
-        """
-        return expr.as_tuple_tree(order=order)
+        return expr.sort_key(order=order)
 
     def __eq__(self, other):
         """a == b  -> Compare two symbolic trees and see whether they are equal

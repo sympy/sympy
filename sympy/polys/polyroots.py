@@ -659,7 +659,7 @@ def roots(f, *gens, **flags):
         for zero, k in result.iteritems():
             zeros.extend([zero]*k)
 
-        return sorted(zeros, key=Basic.sorted_key)
+        return sorted(zeros, key=lambda expr: expr.sort_key())
 
 def root_factors(f, *gens, **args):
     """

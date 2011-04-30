@@ -203,7 +203,7 @@ class Expr(Basic, EvalfMixin):
             _, ((re, im), monom, ncpart) = term
 
             monom = [ -m for m in monom_key(monom) ]
-            ncpart = tuple([ e.as_tuple_tree() for e in ncpart ])
+            ncpart = tuple([ e.sort_key() for e in ncpart ])
             coeff = ((bool(im), im), (re, im))
 
             return monom, ncpart, coeff
@@ -235,7 +235,7 @@ class Expr(Basic, EvalfMixin):
             else:
                 ncpart.append(arg)
 
-        return sorted(cpart, key=lambda expr: Basic.sorted_key(expr, order=order)) + ncpart
+        return sorted(cpart, key=lambda expr: expr.sort_key(order=order)) + ncpart
 
     def as_ordered_terms(self, order=None, data=False):
         """
@@ -308,7 +308,7 @@ class Expr(Basic, EvalfMixin):
 
             terms.append((term, (coeff, cpart, ncpart)))
 
-        gens = sorted(gens, key=Basic.sorted_key)
+        gens = sorted(gens, key=lambda expr: expr.sort_key())
 
         k, indices = len(gens), {}
 
