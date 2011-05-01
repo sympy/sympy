@@ -1096,6 +1096,14 @@ class atan(Function):
         return S.ImaginaryUnit/2 * \
                (C.log((S(1) - S.ImaginaryUnit * x)/(S(1) + S.ImaginaryUnit * x)))
 
+    def _eval_aseries(self, n, args0, x):
+        if args0[0] == S.Infinity:
+            return S.Pi/2 - atan(1/self.args[0])
+        elif args0[0] == S.NegativeInfinity:
+            return -S.Pi/2 - atan(1/self.args[0])
+        else:
+            return super(atan, self)._eval_aseries(n, args0, x)
+
     def _sage_(self):
         import sage.all as sage
         return sage.atan(self.args[0]._sage_())
@@ -1182,6 +1190,14 @@ class acot(Function):
 
     def _eval_is_real(self):
         return self.args[0].is_real
+
+    def _eval_aseries(self, n, args0, x):
+        if args0[0] == S.Infinity:
+            return S.Pi/2 - acot(1/self.args[0])
+        elif args0[0] == S.NegativeInfinity:
+            return 3*S.Pi/2 - acot(1/self.args[0])
+        else:
+            return super(atan, self)._eval_aseries(n, args0, x)
 
     def _sage_(self):
         import sage.all as sage

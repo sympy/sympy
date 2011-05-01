@@ -1,6 +1,6 @@
 from sympy import Lambda, Symbol, Function, Derivative, sqrt, \
         log, exp, Rational, Real, sin, cos, acos, diff, I, re, im, \
-        oo, zoo, nan, E, expand, pi, O, Sum, S, polygamma
+        oo, zoo, nan, E, expand, pi, O, Sum, S, polygamma, loggamma
 from sympy.utilities.pytest import XFAIL, raises
 from sympy.abc import x, y, n
 from sympy.core.function import PoleError
@@ -256,6 +256,7 @@ def test_function__eval_nseries():
     raises(PoleError, 'sin(1/x)._eval_nseries(x,2)')
     raises(PoleError, 'acos(1-x)._eval_nseries(x,2)')
     raises(PoleError, 'acos(1+x)._eval_nseries(x,2)')
+    assert loggamma(1/x)._eval_nseries(x,0) == log(x)/2 - log(x)/x - 1/x + O(1, x)
 
 def test_doit():
     n = Symbol('n', integer = True)

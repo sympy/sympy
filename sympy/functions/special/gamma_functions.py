@@ -1,9 +1,10 @@
-from sympy.core import Add, S, C, sympify
+from sympy.core import Add, S, C, sympify, oo, pi
 from sympy.core.function import Function, ArgumentIndexError
 from zeta_functions import zeta
 from sympy.functions.elementary.exponential import log
 from sympy.functions.elementary.integers import floor
 from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.combinatorial.numbers import bernoulli
 
 ###############################################################################
 ############################ COMPLETE GAMMA FUNCTION ##########################
@@ -79,6 +80,9 @@ class gamma(Function):
 
     def _eval_is_real(self):
         return self.args[0].is_real
+
+    def _eval_rewrite_as_tractable(self, z):
+        return C.exp(loggamma(z))
 
 
 ###############################################################################
@@ -218,3 +222,26 @@ class polygamma(Function):
 class loggamma(Function):
 
     nargs = 1
+
+    def _eval_aseries(self, n, args0, x):
+        if args0[0] != oo:
+            return super(loggamma, self)._eval_aseries(n, args0, x)
+        z = self.args[0]
+        n = min(n, C.ceiling((n+S(1))/2))
+        r = log(z)*(z-S(1)/2) - z + log(2*pi)/2
+        l = map(lambda k: bernoulli(2*k)/(2*k*(2*k-1)*z**(2*k-1)), range(1, n))
+        o = None
+        if n == 0:
+            o = C.Order(1, x)
+        else:
+            o = C.Order(1/z**(2*n-1), x)
+        # It is very inefficient to first add the order and then do the nseries
+        return (r + Add(*l))._eval_nseries(x, n) + o
+
+    def _eval_rewrite_as_intractable(self, z):
+        return log(gamma(z))
+
+    def _eval_is_real(self):
+        return self.args[0].is_real
+
+from sympy import expand

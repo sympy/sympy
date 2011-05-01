@@ -174,6 +174,11 @@ def maketree(f, *args, **kw):
     tmp = []
     iter += 1
 
+    # If there is a bug and the algorithm enters an infinite loop, enable the
+    # following line. It will print the names and parameters of all major functions
+    # that are called, *before* they are called
+    #print "%s%s %s%s" % (iter, reduce(lambda x, y: x + y,map(lambda x: '-',range(1,2+iter))), f.func_name, args)
+
     r = f(*args, **kw)
 
     iter -= 1
@@ -189,7 +194,14 @@ def maketree(f, *args, **kw):
 
 def compare(a, b, x):
     """Returns "<" if a<b, "=" for a == b, ">" for a>b"""
-    c = limitinf(log(a)/log(b), x)
+    # log(exp(...)) must always be simplified here for termination
+    la, lb = log(a), log(b)
+    if isinstance(a, Basic) and a.func is exp:
+        la = a.args[0]
+    if isinstance(b, Basic) and b.func is exp:
+        lb = b.args[0]
+
+    c = limitinf(la/lb, x)
     if c == 0:
         return "<"
     elif c in [oo, -oo]:
@@ -226,6 +238,10 @@ def mrv(e, x):
     elif e.func is log:
         return mrv(e.args[0], x)
     elif e.func is exp:
+        # We know from the theory of this algorithm that exp(log(...)) may always
+        # be simplified here, and doing so is vital for termination.
+        if e.args[0].func is log:
+            return mrv(e.args[0].args[0], x)
         if limitinf(e.args[0], x).is_unbounded:
             return mrv_max(set([e]), mrv(e.args[0], x), x)
         else:
@@ -268,13 +284,27 @@ def mrv_max(f, g, x):
 def sign(e, x):
     """Returns a sign of an expression e(x) for x->oo.
 
-        e >  0 ...  1
-        e == 0 ...  0
-        e <  0 ... -1
+        e >  0 for x sufficiently large ...  1
+        e == 0 for x sufficiently large ...  0
+        e <  0 for x sufficiently large ... -1
+
+        The result of this function is currently undefined if e changes sign
+        arbitarily often for arbitrarily large x (e.g. sin(x)).
+
+       Note that this returns zero only if e is *constantly* zero
+       for x sufficiently large. [If e is constant, of course, this is just
+       the same thing as the sign of e.]
     """
     ## from sympy import sign as _sign
     assert isinstance(e, Basic)
+
+    if e.is_positive:
+        return 1
+    elif e.is_negative:
+        return -1
+
     if e.is_Rational or e.is_Real:
+        assert not e is S.NaN
         if e == 0:
             return 0
         elif e.evalf() > 0:
@@ -282,16 +312,11 @@ def sign(e, x):
         else:
             return -1
     elif not e.has(x):
-        if e.is_positive:
-            return 1
-        elif e.is_negative:
-            return -1
-        else:
-            # if we can't resolve the sign just return
-            # the value; another option would be an
-            # unevaluated sign
-            ## return _sign(e)
-            return e
+        # if we can't resolve the sign just return
+        # the value; another option would be an
+        # unevaluated sign
+        ## return _sign(e)
+        return e
     elif e == x:
         return 1
     elif e.is_Mul:
@@ -303,19 +328,24 @@ def sign(e, x):
     elif e.func is exp:
         return 1
     elif e.is_Pow:
-        if sign(e.base, x) == 1:
+        s = sign(e.base, x)
+        if s == 1:
             return 1
+        if e.exp.is_Integer:
+            return s**e.exp
     elif e.func is log:
         return sign(e.args[0] -1, x)
-    elif e.is_Add:
-        return sign(limitinf(e, x), x)
-    elif e.is_Function and hasattr(e, 'nargs'): # XXX is this how to detect cos(x) vs f(x)?
-        return sign(e.func(*[limitinf(a, x) for a in e.args]), x)
-    raise ValueError("Don't know how to determine the sign of %s" % e)
+
+    # if all else fails, do it the hard way
+    c0, e0 = mrv_leadterm(e, x)
+    return sign(c0, x)
 
 @debug
 def limitinf(e, x):
     """Limit e(x) for x-> oo"""
+    #rewrite e in terms of tractable functions only
+    e = e.rewrite('tractable', deep=True)
+
     if not e.has(x):
         return e #e is a constant
     if not x.is_positive:
@@ -353,20 +383,29 @@ def subexp(e, sub):
     return e.subs(sub, C.Dummy('u')) != e
 
 @debug
-def calculate_series(e, x):
+def calculate_series(e, x, skip_abs=False, skip_log=False):
     """ Calculates at least one term of the series of "e" in "x".
 
     This is a place that fails most often, so it is in its own function.
     """
 
+    logx = Dummy('l')
     f = e
     for n in [2, 4, 6, 8]:
-        series = f.nseries(x, n=n).removeO()
+        series = f.nseries(x, n=n)
+        if not series.has(O):
+            # The series expansion is locally exact.
+            return series
+
+        series = series.removeO()
         if series:
-            break
+            if skip_log:
+                series = series.subs(log(x), logx)
+            if (not skip_abs) or series.has(x):
+                break
     else:
-        assert ValueError('(%s).series(%s, n=8) gave no terms.' % (f, x))
-    return series
+        raise ValueError('(%s).series(%s, n=8) gave no terms.' % (f, x))
+    return series.subs(logx, log(x))
 
 @debug
 def mrv_leadterm(e, x, Omega=[]):
@@ -430,10 +469,8 @@ def rewrite(e, Omega, x, wsym):
     #O2 is a list, which results by rewriting each item in Omega using "w"
     O2 = []
     for f in Omega:
-        c = mrv_leadterm(f.args[0]/g.args[0], x)
-        #the c is a constant, because both f and g are from Omega:
-        assert c[1] == 0
-        O2.append(exp((f.args[0] - c[0]*g.args[0]).expand())*wsym**c[0])
+        c = limitinf(f.args[0]/g.args[0], x)
+        O2.append(exp((f.args[0] - c*g.args[0]).expand())*wsym**c)
 
     #Remember that Omega contains subexpressions of "e". So now we find
     #them in "e" and substitute them for our rewriting, stored in O2
@@ -469,10 +506,11 @@ def gruntz(e, z, z0, dir="+"):
         raise NotImplementedError("Second argument must be a Symbol")
 
     #convert all limits to the limit z->oo; sign of z is handled in limitinf
+    r = None
     if z0 == oo:
-        return limitinf(e, z)
+        r = limitinf(e, z)
     elif z0 == -oo:
-        return limitinf(e.subs(z, -z), z)
+        r = limitinf(e.subs(z, -z), z)
     else:
         if dir == "-":
             e0 = e.subs(z, z0 - 1/z)
@@ -480,4 +518,10 @@ def gruntz(e, z, z0, dir="+"):
             e0 = e.subs(z, z0 + 1/z)
         else:
             raise NotImplementedError("dir must be '+' or '-'")
-        return limitinf(e0, z)
+        r = limitinf(e0, z)
+
+    # This is a bit of a heuristic for nice results... we always rewrite
+    # tractable functions in terms of familiar intractable ones.
+    # It might be nicer to rewrite the exactly to what they were initially,
+    # but that would take some work to implement.
+    return r.rewrite('intractable', deep=True)

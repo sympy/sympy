@@ -1411,6 +1411,29 @@ class Expr(Basic, EvalfMixin):
         return limit(self, x, xlim, dir)
 
     @cacheit
+    def compute_leading_term(self, x, skip_abs=False, skip_log=False):
+        """ as_leading_term is only allowed for results of .series()
+            This is a wrapper to compute a series first.
+            If skip_abs is true, the absolute term is assumed to be zero.
+            (This is necessary because sometimes it cannot be simplified
+             to zero without a lot of work, but is still known to be zero.
+             See log._eval_nseries for an example.)
+            If skip_log is true, log(x) is treated as an independent symbol.
+            (This is needed for the gruntz algorithm.)
+        """
+        from sympy.series.gruntz import calculate_series
+        from sympy import cancel, expand_mul
+        if self.removeO() == 0:
+            return self
+        s = cancel(calculate_series(self, x, skip_abs, skip_log))
+        logx = Dummy('l')
+        if skip_log:
+            s = s.subs(C.log(x), logx)
+        if skip_abs:
+            s = expand_mul(s).as_independent(x)[1]
+        return s.as_leading_term(x).subs(logx, C.log(x))
+
+    @cacheit
     def as_leading_term(self, *symbols):
         """
         Returns the leading term.
@@ -1689,4 +1712,4 @@ from power import Pow
 from relational import Inequality, StrictInequality
 from function import Derivative
 from sympify import _sympify, sympify, SympifyError
-from symbol import Wild
+from symbol import Wild, Dummy

@@ -617,6 +617,13 @@ class Pow(Expr):
         return d
 
     def _eval_nseries(self, x, n):
+        # NOTE! This function is an important part of the gruntz algorithm
+        #       for computing limits. It has to return a generalised power series
+        #       with coefficients in C(log, log(x)). In more detail:
+        # It has to return an expression
+        #     c_0*x**e_0 + c_1*x**e_1 + ... (finitely many terms)
+        # where e_i are numbers (not necessarily integers) and c_i are expression
+        # involving only numbers, the log function, and log(x).
         from sympy import powsimp, collect, exp, log, O, ceiling
 
         b, e = self.args
@@ -649,6 +656,10 @@ class Pow(Expr):
                         p = p._eval_nseries(y, n=n)
                         p = p.subs(y, -1/log(x))
                         return p
+                if b.has(log(x)):
+                    y = Dummy("y")
+                    p = 1/b.subs(log(x),y)
+                    return p._eval_nseries(x, n=n).subs(y, log(x))
                 prefactor = b.as_leading_term(x)
                 # express "rest" as: rest = 1 + k*x**l + ... + O(x**n)
                 rest = ((b - prefactor)/prefactor)._eval_expand_mul()
@@ -657,7 +668,7 @@ class Pow(Expr):
                     # factor the w**4 out using collect:
                     return 1/collect(prefactor, x)
                 if rest.is_Order:
-                    return (1 + rest)/prefactor
+                    return 1/prefactor + rest/prefactor
                 n2 = rest.getn()
                 if n2 is not None:
                     n = n2
@@ -697,7 +708,7 @@ class Pow(Expr):
                 # now we have a type 1/f(x), that we know how to expand
                 return (1/denominator)._eval_nseries(x, n=n)
 
-        if e.has(x):
+        if e.has(Symbol):
             return exp(e*log(b))._eval_nseries(x, n=n)
 
         if b == x:
@@ -749,7 +760,7 @@ class Pow(Expr):
                 raise ValueError('expecting numerical exponent but got %s' % ei)
 
             nuse = n - ei
-            lt = b.as_leading_term(x)
+            lt = b.compute_leading_term(x) # arg = sin(x); lt = x
             #  XXX o is not used -- was this to be used as o and o2 below to compute a new e?
             o = order*lt**(1 - e)
             bs = b._eval_nseries(x, n=nuse)
