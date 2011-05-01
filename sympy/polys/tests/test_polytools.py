@@ -22,6 +22,7 @@ from sympy.polys.polytools import (
     factor_list, factor,
     intervals, refine_root, count_roots,
     real_roots, nroots, ground_roots,
+    nth_power_roots_poly,
     cancel,
     reduced, groebner)
 
@@ -2083,6 +2084,26 @@ def test_ground_roots():
 
     assert Poly(f).ground_roots() == {S(1): 2, S(0): 2}
     assert ground_roots(f) == {S(1): 2, S(0): 2}
+
+def test_nth_power_roots_poly():
+    f = x**4 - x**2 + 1
+
+    f_2 = (x**2 - x + 1)**2
+    f_3 = (x**2 + 1)**2
+    f_4 = (x**2 + x + 1)**2
+    f_12 = (x - 1)**4
+
+    nth_power_roots_poly(f, 1) == f
+
+    raises(ValueError, "nth_power_roots_poly(f, 0)")
+    raises(ValueError, "nth_power_roots_poly(f, x)")
+
+    factor(nth_power_roots_poly(f, 2)) == f_2
+    factor(nth_power_roots_poly(f, 3)) == f_3
+    factor(nth_power_roots_poly(f, 4)) == f_4
+    factor(nth_power_roots_poly(f, 12)) == f_12
+
+    raises(MultivariatePolynomialError, "nth_power_roots_poly(x + y, 2, x, y)")
 
 def test_cancel():
     assert cancel(0) == 0
