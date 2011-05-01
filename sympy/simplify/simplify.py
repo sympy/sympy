@@ -1284,14 +1284,19 @@ def powsimp(expr, deep=False, combine='all'):
                     c_powers[i] = [C.Pow(b, exp_c), e._new_rawargs(*exp_t)]
 
 
-            # Combine bases whenever they have the same exponent
+            # Combine bases whenever they have the same exponent and
+            # assumptions allow
+
+            # first gather the potential bases under the commone exponent
             c_exp = {}
             for b, e in c_powers:
                 if e in c_exp:
                     c_exp[e].append(b)
                 else:
                     c_exp[e] = [b]
+
             # Merge back in the results of the above to form a new product
+            unjoined = []
             for e in c_exp:
                 bases = c_exp[e]
                 if deep:
@@ -1310,7 +1315,30 @@ def powsimp(expr, deep=False, combine='all'):
                 if len(bases) > 1:
                     for b in bases:
                         c_powers.remove([b,e])
-                    new_base = Mul(*bases)
+                    if e.is_integer:
+                        new_base = Mul(*bases)
+                    else:
+                        unk=[]
+                        nonneg=[]
+                        neg=[]
+                        for bi in bases:
+                            if not bi.is_negative is None: #then we know the sign
+                                if bi.is_negative:
+                                    neg.append(bi)
+                                else:
+                                    nonneg.append(bi)
+                            else:
+                                unk.append(bi)
+                        # a single neg or a single unk can join the rest
+                        if len(unk) == 1 and not neg or len(neg) == 1 and not unk:
+                            nonneg.append(unk + neg)
+                            unk = neg = []
+                        elif neg:
+                            neg = [-w for w in neg]
+                            if len(neg) % 2:
+                                unk.append(S.NegativeOne)
+                        new_base = Mul(*(nonneg + neg))
+                        unjoined.extend([(b, e) for b in unk])
                     in_c_powers = False
                     for i in xrange(len(c_powers)):
                         if c_powers[i][0] == new_base:
@@ -1321,7 +1349,7 @@ def powsimp(expr, deep=False, combine='all'):
                             in_c_powers = True
                     if not in_c_powers:
                         c_powers.append([new_base, simpe])
-            c_part = [C.Pow(b,e) for b,e in c_powers]
+            c_part = [C.Pow(b,e) for b,e in c_powers + unjoined]
             return Mul(*(c_part + nc_part))
 
     else:
