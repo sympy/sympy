@@ -391,14 +391,6 @@ class Mul(AssocOp):
             # we know for sure the result will be 0
             return [coeff], [], order_symbols
 
-        elif coeff.is_Real:
-            if coeff == Real(0):
-                c_part, nc_part = [coeff], []
-            elif coeff == Real(1):
-                # change it to One, so it doesn't get inserted to slot0
-                coeff = S.One
-
-
         # order commutative part canonically
         c_part.sort(Basic.compare)
 
