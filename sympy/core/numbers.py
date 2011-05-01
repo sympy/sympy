@@ -33,7 +33,7 @@ _gcdcache = {}
 
 # TODO caching with decorator, but not to degrade performance
 def igcd(a, b):
-    """Computes integer greatest common divisor of two numbers.
+    """Computes positive, integer greatest common divisor of two numbers.
 
        The algorithm is based on the well known Euclid's algorithm. To
        improve speed, igcd() has its own caching mechanism implemented.

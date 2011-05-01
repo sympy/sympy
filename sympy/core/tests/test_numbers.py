@@ -1,6 +1,6 @@
 from sympy import (Rational, Symbol, Real, I, sqrt, oo, nan, pi, E, Integer,
                    S, factorial, Catalan, EulerGamma, GoldenRatio, cos, exp,
-                   Number, zoo, log, Mul)
+                   Number, zoo, log, Mul, Pow)
 from sympy.core.power import integer_nthroot
 
 from sympy.core.numbers import igcd, ilcm, igcdex, ifactorial, seterr, _intcache
@@ -259,6 +259,8 @@ def test_Real():
     teq(2*pi)
     teq(cos(0.1, evaluate=False))
 
+    assert Real(1) is S.One
+    assert Real(0) is S.Zero
 
 def test_Real_eval():
     a = Real(3.2)
@@ -428,6 +430,14 @@ def test_powers_Integer():
            4*2**Rational(7, 10)*3**Rational(8, 15)
     assert 8**Rational(1, 2)*(-24)**Rational(1, 3)*(-6)**Rational(1, 5) == \
            4*(-3)**Rational(8, 15)*2**Rational(7, 10)
+    assert 2**Rational(1, 3)*2**Rational(8, 9) == 2*2**Rational(2, 9)
+    assert 2**Rational(2, 3)*6**Rational(1, 3) == 2*3**Rational(1, 3)
+    assert 2**Rational(2, 3)*6**Rational(8, 9) == 2*2**Rational(5, 9)*3**Rational(8, 9)
+    assert (-2)**Rational(2, S(3))*(-4)**Rational(1, S(3)) == -2*2**Rational(1, 3)
+    assert 3*Pow(3, 2, evaluate=False) == 3**3
+    assert 3*Pow(3, -1/S(3), evaluate=False) == 3**(2/S(3))
+    assert (-2)**(1/S(3))*(-3)**(1/S(4))*(-5)**(5/S(6)) == \
+           -(-1)**Rational(5, 12)*2**Rational(1, 3)*3**Rational(1, 4)*5**Rational(5, 6)
 
 def test_powers_Rational():
     """Test Rational._eval_power"""
