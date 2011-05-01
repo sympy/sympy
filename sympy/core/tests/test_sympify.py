@@ -155,7 +155,7 @@ def test__sympify():
     assert _sympify(f)      is f
     assert _sympify(1)      == Integer(1)
     assert _sympify(0.5)    == Real("0.5")
-    assert _sympify(1+1j)   == 1 + I
+    assert _sympify(1+1j)   == 1.0 + I*1.0
 
     class A:
         def _sympy_(self):
