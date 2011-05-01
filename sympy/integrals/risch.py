@@ -2,7 +2,7 @@ from sympy.core.add import Add
 from sympy.core.mul import Mul
 from sympy.core.symbol import Symbol, Wild, Dummy
 from sympy.core.basic import C, sympify
-from sympy.core.numbers import Rational, I
+from sympy.core.numbers import Rational, I, pi
 from sympy.core.singleton import S
 
 from sympy.functions import exp, sin , cos , tan , cot , asin, acos, atan
@@ -174,6 +174,7 @@ def heurisch(f, x, **kwargs):
         if not hints:
             a = Wild('a', exclude=[x])
             b = Wild('b', exclude=[x])
+            c = Wild('c', exclude=[x])
 
             for g in set(terms):
                 if g.is_Function:
@@ -182,6 +183,16 @@ def heurisch(f, x, **kwargs):
 
                         if M is not None:
                             terms.add(erf(sqrt(-M[a])*x))
+
+                        M = g.args[0].match(a*x**2 + b*x + c)
+
+                        if M is not None:
+                            if M[a].is_positive:
+                                terms.add(sqrt(pi/4*(-M[a]))*exp(M[c]-M[b]**2/(4*M[a]))* \
+                                          erf(-sqrt(-M[a])*x + M[b]/(2*sqrt(-M[a]))))
+                            elif M[a].is_negative:
+                                terms.add(sqrt(pi/4*(-M[a]))*exp(M[c]-M[b]**2/(4*M[a]))* \
+                                          erf(sqrt(-M[a])*x - M[b]/(2*sqrt(-M[a]))))
 
                         M = g.args[0].match(a*log(x)**2)
 
