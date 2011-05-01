@@ -1296,73 +1296,68 @@ def powsimp(expr, deep=False, combine='all', force=False):
             # Combine bases whenever they have the same exponent and
             # assumptions allow
 
-            # first gather the potential bases under the commone exponent
+            # first gather the potential bases under the common exponent
             c_exp = {}
             for b, e in c_powers:
-                if e in c_exp:
-                    c_exp[e].append(b)
-                else:
-                    c_exp[e] = [b]
+                if deep:
+                    e = powsimp(e, deep, combine, force)
+                c_exp.setdefault(e, []).append(b)
+            del c_powers
 
             # Merge back in the results of the above to form a new product
-            unjoined = []
+            c_powers = {}
             for e in c_exp:
                 bases = c_exp[e]
-                if deep:
-                    simpe = powsimp(e, deep, combine, force)
-                    c_exp = {}
-                    for b, ex in c_powers:
-                        if ex in c_exp:
-                            c_exp[ex].append(b)
-                        else:
-                            c_exp[ex] = [b]
-                    del c_exp[e]
-                    c_exp[simpe] = bases
 
+                # calculate the new base for e
+                if len(bases) == 1:
+                    new_base = bases[0]
+                elif e.is_integer or force:
+                    new_base = Mul(*bases)
                 else:
-                    simpe = e
-                if len(bases) > 1:
-                    for b in bases:
-                        c_powers.remove([b,e])
-
-                    # calculate the new base for simpe
-                    if simpe.is_integer or force:
-                        new_base = Mul(*bases)
-                    else:
-                        unk=[]
-                        nonneg=[]
-                        neg=[]
-                        for bi in bases:
-                            if not bi.is_negative is None: #then we know the sign
-                                if bi.is_negative:
-                                    neg.append(bi)
-                                else:
-                                    nonneg.append(bi)
+                    # see which ones can be joined
+                    unk=[]
+                    nonneg=[]
+                    neg=[]
+                    for bi in bases:
+                        if not bi.is_negative is None: #then we know the sign
+                            if bi.is_negative:
+                                neg.append(bi)
                             else:
-                                unk.append(bi)
+                                nonneg.append(bi)
+                        else:
+                            unk.append(bi)
+                    if len(unk) == 1 and not neg or len(neg) == 1 and not unk:
                         # a single neg or a single unk can join the rest
-                        if len(unk) == 1 and not neg or len(neg) == 1 and not unk:
-                            nonneg.append(unk + neg)
-                            unk = neg = []
-                        elif neg:
-                            neg = [-w for w in neg]
-                            if len(neg) % 2:
-                                unk.append(S.NegativeOne)
-                        new_base = Mul(*(nonneg + neg))
-                        unjoined.extend([(b, simpe) for b in unk])
+                        nonneg.extend(unk + neg)
+                        unk = neg = []
+                    elif neg:
+                        # their negative signs cancel in pairs
+                        neg = [-w for w in neg]
+                        if len(neg) % 2:
+                            unk.append(S.NegativeOne)
 
-                    in_c_powers = False
-                    for i in xrange(len(c_powers)):
-                        if c_powers[i][0] == new_base:
-                            if combine == 'all':
-                                c_powers[i][1] += simpe
-                            else:
-                                c_powers.append([new_base, simpe])
-                            in_c_powers = True
-                    if not in_c_powers:
-                        c_powers.append([new_base, simpe])
+                    # these shouldn't be joined
+                    for b in unk:
+                        c_powers.setdefault(b, []).append(e)
+                    # here is a new joined base
+                    new_base = Mul(*(nonneg + neg))
 
-            c_part = [Pow(b, e) for b, e in c_powers + unjoined]
+                c_powers.setdefault(new_base, []).append(e)
+
+            # break out the powers from c_powers now
+            c_part = []
+            if combine == 'all':
+                #...joining the exponents
+                for b, e in c_powers.iteritems():
+                    c_part.append(Pow(b, Add(*e)))
+            else:
+                #...joining nothing
+                for b, e in c_powers.iteritems():
+                    for ei in e:
+                        c_part.append(Pow(b, ei))
+
+            # we're done
             return Mul(*(c_part + nc_part))
 
     else:
