@@ -29,7 +29,7 @@ from sympy.polys.factortools import (
     dmp_zz_wang_lead_coeffs,
     dmp_zz_wang_hensel_lifting,
     dup_zz_diophantine, dmp_zz_diophantine,
-    dup_zz_cyclotomic_poly, dup_zz_cyclotomic_factor,
+    dup_zz_cyclotomic_p, dup_zz_cyclotomic_poly, dup_zz_cyclotomic_factor,
     dup_zz_factor, dup_zz_factor_sqf, dmp_zz_factor,
     dup_ext_factor, dmp_ext_factor,
     dup_factor_list, dmp_factor_list,
@@ -97,6 +97,30 @@ def test_dup_zz_irreducible_p():
 
     assert dup_zz_irreducible_p([3, 2, 6, 8, 10], ZZ) == True
     assert dup_zz_irreducible_p([3, 2, 6, 8, 14], ZZ) == True
+
+def test_dup_zz_cyclotomic_p():
+    assert dup_zz_cyclotomic_p([1,-1], ZZ) == True
+    assert dup_zz_cyclotomic_p([1,1], ZZ) == True
+    assert dup_zz_cyclotomic_p([1,1,1], ZZ) == True
+    assert dup_zz_cyclotomic_p([1,0,1], ZZ) == True
+    assert dup_zz_cyclotomic_p([1,1,1,1,1], ZZ) == True
+    assert dup_zz_cyclotomic_p([1,-1,1], ZZ) == True
+    assert dup_zz_cyclotomic_p([1,1,1,1,1,1,1], ZZ) == True
+    assert dup_zz_cyclotomic_p([1,0,0,0,1], ZZ) == True
+    assert dup_zz_cyclotomic_p([1,0,0,1,0,0,1], ZZ) == True
+
+    assert dup_zz_cyclotomic_p([], ZZ) == False
+    assert dup_zz_cyclotomic_p([1], ZZ) == False
+    assert dup_zz_cyclotomic_p([1, 0], ZZ) == False
+    assert dup_zz_cyclotomic_p([1, 2], ZZ) == False
+    assert dup_zz_cyclotomic_p([3, 1], ZZ) == False
+    assert dup_zz_cyclotomic_p([1, 0, -1], ZZ) == False
+
+    f = [1, 0, 1, 0, 0, 0,-1, 0, 1, 0,-1, 0, 0, 0, 1, 0, 1]
+    assert dup_zz_cyclotomic_p(f, ZZ) == False
+
+    g = [1, 0, 1, 0, 0, 0,-1, 0,-1, 0,-1, 0, 0, 0, 1, 0, 1]
+    assert dup_zz_cyclotomic_p(g, ZZ) == True
 
 def test_dup_zz_cyclotomic_poly():
     assert dup_zz_cyclotomic_poly(1, ZZ) == [1,-1]

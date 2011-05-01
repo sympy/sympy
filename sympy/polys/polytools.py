@@ -3058,6 +3058,29 @@ class Poly(Expr):
         """
         return len(f.gens) != 1
 
+    @property
+    def is_cyclotomic(f):
+        """
+        Returns ``True`` if ``f`` is a cyclotomic polnomial.
+
+        **Examples**
+
+        >>> from sympy import Poly
+        >>> from sympy.abc import x
+
+        >>> f = x**16 + x**14 - x**10 + x**8 - x**6 + x**2 + 1
+
+        >>> Poly(f).is_cyclotomic
+        False
+
+        >>> g = x**16 + x**14 - x**10 - x**8 - x**6 + x**2 + 1
+
+        >>> Poly(g).is_cyclotomic
+        True
+
+        """
+        return f.rep.is_cyclotomic
+
     def __abs__(f):
         return f.abs()
 
