@@ -1249,7 +1249,7 @@ class Expr(Basic, EvalfMixin):
         # from here on it's x0=0 and dir='+' handling
 
         if n != None: # nseries handling
-            s1 = self._eval_nseries(x, n=n)
+            s1 = self._eval_nseries(x, n=n, logx=None)
             o = s1.getO() or S.Zero
             if o:
                 # make sure the requested order is returned
@@ -1264,11 +1264,11 @@ class Expr(Basic, EvalfMixin):
                     # is different than the original order and then predict how
                     # many additional terms are needed
                     for more in range(1, 9):
-                        s1 = self._eval_nseries(x, n=n + more)
+                        s1 = self._eval_nseries(x, n=n + more, logx=None)
                         newn = s1.getn()
                         if newn != ngot:
                             ndo = n + (n - ngot)*more/(newn - ngot)
-                            s1 = self._eval_nseries(x, n=ndo)
+                            s1 = self._eval_nseries(x, n=ndo, logx=None)
                             # if this assertion fails then our ndo calculation
                             # needs modification
                             assert s1.getn() == n
@@ -1342,7 +1342,7 @@ class Expr(Basic, EvalfMixin):
         # override this method and implement much more efficient yielding of
         # terms.
         n = 0
-        series = self._eval_nseries(x, n=n)
+        series = self._eval_nseries(x, n=n, logx=None)
         if not series.is_Order:
             if series.is_Add:
                 yield series.removeO()
@@ -1352,19 +1352,19 @@ class Expr(Basic, EvalfMixin):
 
         while series.is_Order:
             n += 1
-            series = self._eval_nseries(x, n=n)
+            series = self._eval_nseries(x, n=n, logx=None)
         e = series.removeO()
         yield e
         while 1:
             while 1:
                 n += 1
-                series = self._eval_nseries(x, n=n).removeO()
+                series = self._eval_nseries(x, n=n, logx=None).removeO()
                 if e != series:
                     break
             yield series - e
             e = series
 
-    def nseries(self, x=None, x0=0, n=6, dir='+'):
+    def nseries(self, x=None, x0=0, n=6, dir='+',logx=None):
         """
         Wrapper to _eval_nseries if assumptions allow, else to series.
 
@@ -1389,11 +1389,12 @@ class Expr(Basic, EvalfMixin):
         if x and not self.has(x):
             return self
         if x is None or x0 or dir != '+':#{see XPOS above} or (x.is_positive == x.is_negative == None):
+            assert logx == None
             return self.series(x, x0, n, dir)
         else:
-            return self._eval_nseries(x, n=n)
+            return self._eval_nseries(x, n=n, logx=logx)
 
-    def _eval_nseries(self, x, n):
+    def _eval_nseries(self, x, n, logx):
         """
         Return terms of series for self up to O(x**n) at x=0
         from the positive direction.
@@ -1409,6 +1410,30 @@ class Expr(Basic, EvalfMixin):
         """
         from sympy.series.limits import limit
         return limit(self, x, xlim, dir)
+
+    def compute_leading_term(self, x, skip_abs=False, logx=None):
+        """ as_leading_term is only allowed for results of .series()
+            This is a wrapper to compute a series first.
+            If skip_abs is true, the absolute term is assumed to be zero.
+            (This is necessary because sometimes it cannot be simplified
+             to zero without a lot of work, but is still known to be zero.
+             See log._eval_nseries for an example.)
+            If skip_log is true, log(x) is treated as an independent symbol.
+            (This is needed for the gruntz algorithm.)
+        """
+        from sympy.series.gruntz import calculate_series
+        from sympy import cancel, expand_mul
+        if self.removeO() == 0:
+            return self
+        if logx is None:
+            d = C.Dummy('logx')
+            s = calculate_series(self, x, skip_abs, d).subs(d, C.log(x))
+        else:
+            s = calculate_series(self, x, skip_abs, logx)
+        s = cancel(s)
+        if skip_abs:
+            s = expand_mul(s).as_independent(x)[1]
+        return s.as_leading_term(x)
 
     @cacheit
     def as_leading_term(self, *symbols):
@@ -1680,7 +1705,7 @@ class AtomicExpr(Atom, Expr):
     def is_number(self):
         return True
 
-    def _eval_nseries(self, x, n):
+    def _eval_nseries(self, x, n, logx):
         return self
 
 from mul import Mul
@@ -1689,4 +1714,4 @@ from power import Pow
 from relational import Inequality, StrictInequality
 from function import Derivative
 from sympify import _sympify, sympify, SympifyError
-from symbol import Wild
+from symbol import Wild, Dummy

@@ -616,39 +616,28 @@ class Pow(Expr):
             return Expr.matches(self, expr, repl_dict, evaluate)
         return d
 
-    def _eval_nseries(self, x, n):
+    def _eval_nseries(self, x, n, logx):
+        # NOTE! This function is an important part of the gruntz algorithm
+        #       for computing limits. It has to return a generalised power series
+        #       with coefficients in C(log, log(x)). In more detail:
+        # It has to return an expression
+        #     c_0*x**e_0 + c_1*x**e_1 + ... (finitely many terms)
+        # where e_i are numbers (not necessarily integers) and c_i are expression
+        # involving only numbers, the log function, and log(x).
         from sympy import powsimp, collect, exp, log, O, ceiling
-
         b, e = self.args
         if e.is_Integer:
             if e > 0:
                 # positive integer powers are easy to expand, e.g.:
                 # sin(x)**4 = (x-x**3/3+...)**4 = ...
-                return Pow(b._eval_nseries(x, n=n), e
+                return Pow(b._eval_nseries(x, n=n, logx=logx), e
                            )._eval_expand_multinomial(deep = False)
             elif e is S.NegativeOne:
                 # this is also easy to expand using the formula:
-                # 1/(1 + x) = 1 + x + x**2 + x**3 ...
+                # 1/(1 + x) = 1 - x + x**2 - x**3 ...
                 # so we need to rewrite base to the form "1+x"
-                if b.has(log(x)):
-                    # we need to handle the log(x) singularity:
-                    y = Dummy("y")
-                    p = self.subs(log(x), -1/y)
-                    if not p.has(x):
-                        p = p._eval_nseries(y, n=n)
-                        p = p.subs(y, -1/log(x))
-                        return p
 
-                b = b._eval_nseries(x, n=n)
-                if b.has(log(x)):
-                    # we need to handle the log(x) singularity:
-                    y = Dummy("y")
-                    self0 = 1/b
-                    p = self0.subs(log(x), -1/y)
-                    if not p.has(x):
-                        p = p._eval_nseries(y, n=n)
-                        p = p.subs(y, -1/log(x))
-                        return p
+                b = b._eval_nseries(x, n=n, logx=logx)
                 prefactor = b.as_leading_term(x)
                 # express "rest" as: rest = 1 + k*x**l + ... + O(x**n)
                 rest = ((b - prefactor)/prefactor)._eval_expand_mul()
@@ -657,17 +646,15 @@ class Pow(Expr):
                     # factor the w**4 out using collect:
                     return 1/collect(prefactor, x)
                 if rest.is_Order:
-                    return (1 + rest)/prefactor
+                    return 1/prefactor + rest/prefactor
                 n2 = rest.getn()
                 if n2 is not None:
                     n = n2
+                    # remove the O - powering this is slow
+                    if logx is not None:
+                        rest = rest.removeO()
 
-                term2 = collect(rest.as_leading_term(x), x)
-                k, l = Wild("k"), Wild("l")
-                r = term2.match(k*x**l)
-                # if term2 is NaN then r will not contain l
-                k = r.get(k, S.One)
-                l = r.get(l, S.Zero)
+                k, l = rest.leadterm(x)
                 if l.is_Rational and l > 0:
                     pass
                 elif l.is_number and l > 0:
@@ -683,22 +670,23 @@ class Pow(Expr):
                     else:
                         new_term = new_term._eval_expand_mul(deep = False)
                     terms.append(new_term)
-                if n2 is None:
-                    # Append O(...) because it is not included in "r"
+
+                # Append O(...), we know the order.
+                if n2 is None or logx is not None:
                     terms.append(O(x**n))
                 return powsimp(Add(*terms), deep=True, combine='exp')
             else:
                 # negative powers are rewritten to the cases above, for example:
                 # sin(x)**(-4) = 1/( sin(x)**4) = ...
                 # and expand the denominator:
-                denominator = (b**(-e))._eval_nseries(x, n=n)
+                denominator = (b**(-e))._eval_nseries(x, n=n, logx=logx)
                 if 1/denominator == self:
                     return self
                 # now we have a type 1/f(x), that we know how to expand
-                return (1/denominator)._eval_nseries(x, n=n)
+                return (1/denominator)._eval_nseries(x, n=n, logx=logx)
 
-        if e.has(x):
-            return exp(e*log(b))._eval_nseries(x, n=n)
+        if e.has(Symbol):
+            return exp(e*log(b))._eval_nseries(x, n=n, logx=logx)
 
         if b == x:
             return powsimp(self, deep=True, combine='exp')
@@ -749,17 +737,17 @@ class Pow(Expr):
                 raise ValueError('expecting numerical exponent but got %s' % ei)
 
             nuse = n - ei
-            lt = b.as_leading_term(x)
+            lt = b.compute_leading_term(x, logx=logx) # arg = sin(x); lt = x
             #  XXX o is not used -- was this to be used as o and o2 below to compute a new e?
             o = order*lt**(1 - e)
-            bs = b._eval_nseries(x, n=nuse)
+            bs = b._eval_nseries(x, n=nuse, logx=logx)
             if bs.is_Add:
                 bs = bs.removeO()
             if bs.is_Add:
                 # bs -> lt + rest -> lt*(1 + (bs/lt - 1))
                 return ((Pow(lt, e)*
                          Pow((bs/lt).expand(), e).
-                         nseries(x, n=nuse)).expand() +
+                         nseries(x, n=nuse, logx=logx)).expand() +
                          order)
 
             return bs**e + order
@@ -787,7 +775,7 @@ class Pow(Expr):
             g = None
             for i in xrange(n + 2):
                 g = self.taylor_term(i, z, g)
-                g = g.nseries(x, n=n)
+                g = g.nseries(x, n=n, logx=logx)
                 l.append(g)
             r = Add(*l)
         return r*b0**e + order

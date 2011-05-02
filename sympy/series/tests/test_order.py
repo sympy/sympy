@@ -20,8 +20,8 @@ def test_simple_1():
     assert Order(x*exp(1/x)).expr == x*exp(1/x)
     assert Order(x**(o/3)).expr == x**(o/3)
     assert Order(x**(5*o/3)).expr == x**(5*o/3)
-    assert Order(x**2 + x + y, x) == \
-           Order(x**2 + x + y, y) == O(1)
+    assert Order(x**2 + x + y, x) == O(1, x)
+    assert Order(x**2 + x + y, y) == O(1, y)
     raises(NotImplementedError, 'Order(x, 2 - x)')
 
 def test_simple_2():
@@ -182,10 +182,8 @@ def test_nan():
     assert not O(x).contains(nan)
 
 def test_O1():
-    assert O(1) == O(1, x)
-    assert O(1) == O(1, y)
-    assert hash(O(1)) == hash(O(1, x))
-    assert hash(O(1)) == hash(O(1, y))
+    assert O(1, x) * x == O(x)
+    assert O(1, y) * x == O(1, y)
 
 def test_getn():
     # other lines are tested incidentally by the suite
@@ -206,3 +204,7 @@ def test_getO():
     assert (z + O(x) + O(y)).getO() == O(x) + O(y)
     assert (z + O(x) + O(y)).removeO() == z
     raises(NotImplementedError, '(O(x)+O(y)).getn()')
+
+def test_leading_term():
+    from sympy import digamma
+    assert O(1/digamma(1/x)) == O(1/log(x))

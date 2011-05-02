@@ -1111,9 +1111,9 @@ class Mul(AssocOp):
             margs = [Pow(new, cdid)] + margs
         return Mul(*margs)*Mul(*nc)
 
-    def _eval_nseries(self, x, n):
+    def _eval_nseries(self, x, n, logx):
         from sympy import powsimp
-        terms = [t.nseries(x, n=n) for t in self.args]
+        terms = [t.nseries(x, n=n, logx=logx) for t in self.args]
         return powsimp(Mul(*terms).expand(), combine='exp', deep=True)
 
 

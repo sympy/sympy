@@ -209,7 +209,7 @@ def test_as_leading_term2():
 
 def test_as_leading_term3():
     assert (2+pi+x).as_leading_term(x) == 2 + pi
-    assert (2*x+pi*x+x**2).as_leading_term(x) == 2*x + pi*x
+    assert (2*x+pi*x+x**2).as_leading_term(x) == (2+pi)*x
 
 def test_atoms():
     assert sorted(list(x.atoms())) == [x]

@@ -1,9 +1,10 @@
-from sympy.core import Add, S, C, sympify
+from sympy.core import Add, S, C, sympify, oo, pi
 from sympy.core.function import Function, ArgumentIndexError
 from zeta_functions import zeta
 from sympy.functions.elementary.exponential import log
 from sympy.functions.elementary.integers import floor
 from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.combinatorial.numbers import bernoulli
 
 ###############################################################################
 ############################ COMPLETE GAMMA FUNCTION ##########################
@@ -80,6 +81,9 @@ class gamma(Function):
     def _eval_is_real(self):
         return self.args[0].is_real
 
+    def _eval_rewrite_as_tractable(self, z):
+        return C.exp(loggamma(z))
+
 
 ###############################################################################
 ################## LOWER and UPPER INCOMPLETE GAMMA FUNCTIONS #################
@@ -155,6 +159,57 @@ class polygamma(Function):
         else:
             raise ArgumentIndexError(self, argindex)
 
+    def _eval_is_positive(self):
+        if self.args[1].is_positive and self.args[0] > 0:
+            return self.args[0].is_odd
+
+    def _eval_is_negative(self):
+        if self.args[1].is_positive and self.args[0] > 0:
+            return self.args[0].is_even
+
+    def _eval_is_real(self):
+        return self.args[0].is_real
+
+    def _eval_aseries(self, n, args0, x, logx):
+        if args0[1] != oo or not \
+           (self.args[0].is_Integer and self.args[0].is_nonnegative):
+            return super(polygamma, self)._eval_aseries(n, args0, x, logx)
+        z = self.args[1]
+        N = self.args[0]
+
+        if N == 0:
+            # digamma function series
+            # Abramowitz & Stegun, p. 259, 6.3.18
+            r = log(z) - 1/(2*z)
+            o = None
+            if n < 2:
+                o = C.Order(1/z, x)
+            else:
+                m = C.ceiling((n+1)/2)
+                l = [bernoulli(2*k) / (2*k*z**(2*k)) for k in range(1, m)]
+                r -= Add(*l)
+                o = C.Order(1/z**(2*m), x)
+            return r._eval_nseries(x, n, logx) + o
+        else:
+            # proper polygamma function
+            # Abramowitz & Stegun, p. 260, 6.4.10
+            # We return terms to order higher than O(x**n) on purpose
+            # -- otherwise we would not be able to return any terms for
+            #    quite a long time!
+            fac = gamma(N)
+            e0 = fac + N*fac/(2*z)
+            m = C.ceiling((n+1)/2)
+            for k in range(1, m):
+                fac = fac*(2*k+N-1)*(2*k+N-2) / ((2*k)*(2*k-1))
+                e0 += bernoulli(2*k)*fac/z**(2*k)
+            o = C.Order(1/z**(2*m), x)
+            if n == 0:
+                o = C.Order(1/z, x)
+            elif n == 1:
+                o = C.Order(1/z**2, x)
+            r = e0._eval_nseries(z, n, logx) + o
+            return -1 * (-1/z)**N * r
+
     @classmethod
     def eval(cls, n, z):
         n, z = map(sympify, (n, z))
@@ -218,3 +273,38 @@ class polygamma(Function):
 class loggamma(Function):
 
     nargs = 1
+
+    def _eval_aseries(self, n, args0, x, logx):
+        if args0[0] != oo:
+            return super(loggamma, self)._eval_aseries(n, args0, x, logx)
+        z = self.args[0]
+        m = min(n, C.ceiling((n+S(1))/2))
+        r = log(z)*(z-S(1)/2) - z + log(2*pi)/2
+        l = [bernoulli(2*k) / (2*k*(2*k-1)*z**(2*k-1)) for k in range(1, m)]
+        o = None
+        if m == 0:
+            o = C.Order(1, x)
+        else:
+            o = C.Order(1/z**(2*m-1), x)
+        # It is very inefficient to first add the order and then do the nseries
+        return (r + Add(*l))._eval_nseries(x, n, logx) + o
+
+    def _eval_rewrite_as_intractable(self, z):
+        return log(gamma(z))
+
+    def _eval_is_real(self):
+        return self.args[0].is_real
+
+    def fdiff(self, argindex=1):
+        if argindex == 1:
+            return polygamma(0, self.args[0])
+        else:
+            raise ArgumentIndexError(self, argindex)
+
+def digamma(x):
+    return polygamma(0, x)
+
+def trigamma(x):
+    return polygamma(1, x)
+
+from sympy import expand
