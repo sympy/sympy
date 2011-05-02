@@ -34,7 +34,6 @@ def test_equal():
     assert Q.positive(x)  != ~Q.positive(x)
     assert ~Q.positive(x) == ~Q.positive(x)
 
-@XFAIL #TODO: handle printing
 def test_pretty():
     x = symbols('x')
     assert pretty(Q.positive(x)) == "Q.positive(x)"

@@ -15,7 +15,7 @@ class AssumptionsContext(set):
         >>> from sympy.abc import x
         >>> global_assumptions.add(Q.real(x))
         >>> global_assumptions
-        AssumptionsContext([Assume(x, Q.real)])
+        AssumptionsContext([Q.real(x)])
         >>> global_assumptions.remove(Q.real(x))
         >>> global_assumptions
         AssumptionsContext()
@@ -37,11 +37,11 @@ class Assume(Boolean):
     >>> from sympy import Q
     >>> from sympy.abc import x
     >>> Q.integer(x)
-    Assume(x, Q.integer)
+    Q.integer(x)
     >>> ~Q.integer(x)
-    Not(Assume(x, Q.integer))
+    Not(Q.integer(x))
     >>> Q.is_true(x > 1)
-    Assume(1 < x, Q.is_true)
+    Q.is_true(1 < x)
 
     """
     def __new__(cls, expr, predicate=None, value=True):
