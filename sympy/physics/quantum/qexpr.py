@@ -42,8 +42,16 @@ def _qsympify_sequence(seq):
 
     >>> from sympy.physics.quantum.qexpr import _qsympify_sequence
     >>> _qsympify_sequence((1,2,[3,4,[1,]]))
-    Tuple(1, 2, Tuple(3, 4, Tuple(1)))
+    (1, 2, Tuple(3, 4, Tuple(1)))
 
+    """
+
+    return tuple(__qsympify_sequence_helper(seq))
+
+def __qsympify_sequence_helper(seq):
+    """
+       Helper function for _qsympify_sequence
+       This function does the actual work.
     """
     #base case. If not a list, do Sympification
     if not isinstance(seq, (list, tuple, Tuple)):
@@ -55,10 +63,7 @@ def _qsympify_sequence(seq):
             return sympify(seq)
 
     #if list, recurse on each item in the list
-    result = []
-    for item in seq:
-        newitem = _qsympify_sequence(item)
-        result.append(newitem)
+    result = [__qsympify_sequence_helper(item) for item in seq]
 
     return Tuple(*result)
 
