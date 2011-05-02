@@ -1,4 +1,4 @@
-from lpoly import LPoly, Poly, LPolyOverflowError
+from lpoly import LPoly, Poly
 from sympy.polys.monomialtools import (
     monomial_mul,
     monomial_div,
@@ -14,7 +14,6 @@ def S_poly(tp1,tp2):
     """expv1,p1 = tp1 with expv1 = p1.leading_expv(), p1 monic; 
     similarly for tp2.
     Compute LCM(LM(p1),LM(p2))/LM(p1)*p1 - LCM(LM(p1),LM(p2))/LM(p2)*p2
-    Throw LPolyOverflowError if bits_exp is too small for the result.
     """
     expv1,p1 = tp1
     expv2,p2 = tp2
@@ -22,7 +21,6 @@ def S_poly(tp1,tp2):
     lcm12 = monomial_lcm(expv1,expv2)
     m1 = monomial_div(lcm12,expv1)
     m2 = monomial_div(lcm12,expv2)
-    # TODO oprimize
     res = Poly(lp)
     res.iadd_m_mul_q(p1,(m1,1))
     res.iadd_m_mul_q(p2,(m2,-1))

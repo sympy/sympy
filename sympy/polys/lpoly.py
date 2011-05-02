@@ -75,8 +75,6 @@ def monomial_pow(a,n):
     b = [x*n for x in a]
     return tuple(b)
 
-class LPolyOverflowError(OverflowError):
-    pass
 
 class BaseLPoly:
     """
