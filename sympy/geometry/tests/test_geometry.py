@@ -159,6 +159,9 @@ def test_line():
     assert l1.projection(r1) == Ray(p1, p2)
     assert l1.projection(r2) == p1
     assert r3 != r1
+    assert Ray((1, 1), pi/4) == Ray(pi/4, (1, 1)) == Ray((1, 1), (2, 2))
+    t = Symbol('t')
+    assert Ray((1, 1), pi/4).arbitrary_point() == Point(1/(1 - t), 1/(1 - t))
 
     s1 = Segment(p1, p2)
     s2 = Segment(p1, p1_1)

@@ -881,8 +881,10 @@ class Ray(LinearEntity):
     ----------
     p1 : Point
         The source of the Ray
-    p2 : Point
+    p2 : Point or radian value
         This point determines the direction in which the Ray propagates.
+        If given as an angle it is interpreted in radians with the positive
+        direction being ccw.
 
     Attributes
     ----------
@@ -919,8 +921,39 @@ class Ray(LinearEntity):
     oo
     >>> r.slope
     2
+    >>> Ray(Point(0, 0), pi/4).slope
+    1
 
     """
+
+    def __new__(cls, p1, p2, **kwargs):
+        if not isinstance(p1, Point):
+            try:
+                p1 = Point(p1)
+            except NotImplementedError:
+                p1 = sympify(p1)
+        if not isinstance(p2, Point):
+            try:
+                p2 = Point(p2)
+            except NotImplementedError:
+                p2 = sympify(p2)
+        if not isinstance(p1, Point):
+            p1, p2 = p2, p1
+        if not isinstance(p1, Point):
+            raise TypeError("Ray requires two Points or a Point and ccw angle wrt x-axis.")
+        if not isinstance(p2, Point):
+            p2 = sympify(p2)
+            if p2 == S.Pi/2:
+                # when unbounded slope, don't change x
+                p2 = p1 + Point(0, 1)
+            elif p2 == -S.Pi/2:
+                # when unbounded slope, don't change x
+                p2 = p1 + Point(0, -1)
+            else:
+                # go over 1 up tan(p2)
+                p2 = p1 + Point(1, C.tan(p2))
+
+        return LinearEntity.__new__(cls, p1, p2, **kwargs)
 
     @property
     def source(self):
