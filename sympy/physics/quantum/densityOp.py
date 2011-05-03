@@ -12,6 +12,7 @@ from sympy.physics.quantum.represent import represent
 from sympy.functions.elementary.exponential import log
 from sympy.physics.quantum.qexpr import _qsympify_sequence
 from sympy.core import sympify
+from sympy.core.numbers import Number
 
 class Density(QExpr):
     """
@@ -31,7 +32,12 @@ class Density(QExpr):
         for i in xrange(2):
             if isinstance(args[-i-1], list):
                 args = args + (1,)
-        return sympify(args)
+        args = sympify(args)        
+        #do check to make sure first comes prob, then state
+        for item in args[:-2]:
+            assert isinstance(item[1], Number)
+                    
+        return args
     
     @classmethod
     def _eval_hilbert_space(cls, args):
@@ -132,4 +138,12 @@ class Density(QExpr):
         """
         rho = represent(self, nqubits=nqubits)
         from scipy.linalg import eigvals
-        return -sum([(eigen*log(eigen)).evalf() for eigen in eigvals(rho).tolist() if eigen != 0])        
+        return -sum([(eigen*log(eigen)).evalf() for eigen in eigvals(rho).tolist() if eigen != 0])
+        
+def matrix_to_density(mat):
+    """
+       Works by finding the eigenvectors and eigenvalues of the matrix.
+       We know we can decompose rho by doing:
+           sum(EigenVal*|Eigenvect><Eigenvect|)
+    """
+    pass      
