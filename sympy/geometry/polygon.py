@@ -382,11 +382,34 @@ class Polygon(GeometryEntity):
         """
         Return True if p is enclosed by (is inside of) self.
 
+        Notes
+        -----
         Being on the border of self is considered False.
 
-        Adapted from:
-            [1] http://www.ariel.com.au/a/python-point-int-poly.html
-            [2] http://local.wasp.uwa.edu.au/~pbourke/geometry/insidepoly/
+        Parameters
+        ----------
+        p : Point
+
+        Returns
+        -------
+        encloses_point : True, False or None
+
+        Examples
+        --------
+        >>> from sympy import Polygon, Point
+        >>> from sympy.abc import t
+        >>> p = Polygon((0, 0),(4, 0), (4, 4))
+        >>> p.encloses_point(Point(2, 1))
+        True
+        >>> p.encloses_point(Point(2, 2))
+        False
+        >>> p.encloses_point(Point(5, 5))
+        False
+
+        Adapted from
+        ------------
+        [1] http://www.ariel.com.au/a/python-point-int-poly.html
+        [2] http://local.wasp.uwa.edu.au/~pbourke/geometry/insidepoly/
         """
         from sympy import Symbol
 
@@ -1060,16 +1083,46 @@ class RegularPolygon(Polygon):
         """
         Return True if p is enclosed by (is inside of) self.
 
+        Notes
+        -----
         Being on the border of self is considered False.
 
+        The general Polygon.encloses_point method is called only if
+        a point is not within or beyond the incircle or circumcircle,
+        respectively.
+
+        Parameters
+        ----------
+        p : Point
+
+        Returns
+        -------
+        encloses_point : True, False or None
+
+        Examples
+        --------
+        >>> from sympy import RegularPolygon, S, Point
+        >>> from sympy.abc import t
+        >>> p = RegularPolygon((0, 0), 3, 4)
+        >>> p.encloses_point(Point(0, 0))
+        True
+        >>> r, R = p.inradius, p.circumradius
+        >>> p.encloses_point(Point((r + R)/2, 0))
+        True
+        >>> p.encloses_point(Point(R/2, R/2 + (R - r)/10))
+        False
+        >>> p.encloses_point(p.arbitrary_point().subs(t, S.Half))
+        False
+        >>> p.encloses_point(Point(5, 5))
+        False
+
         """
-        # Before treating the RegularPolygon like a Polygon, check
-        # to see if p is within the incircle or beyond the circumcircle.
+
         c = self.center
         d = Segment(c, p).length
         if d >= self.radius:
             return False
-        elif d < self.incircle.radius:
+        elif d < self.inradius:
             return True
         else:
             # now enumerate the regular polygon like a general polygon.

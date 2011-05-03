@@ -375,8 +375,36 @@ class Ellipse(GeometryEntity):
 
     def encloses_point(self, p):
         """
-        Return True if p is contained within the boundaries of self.
+        Return True if p is enclosed by (is inside of) self.
+
+        Notes
+        -----
+        Being on the border of self is considered False.
+
+        Parameters
+        ----------
+        p : Point
+
+        Returns
+        -------
+        encloses_point : True, False or None
+
+        Examples
+        --------
+        >>> from sympy import Ellipse, S
+        >>> from sympy.abc import t
+        >>> e = Ellipse((0, 0), 3, 2)
+        >>> e.encloses_point((0, 0))
+        True
+        >>> e.encloses_point(e.arbitrary_point().subs(t, S.Half))
+        False
+        >>> e.encloses_point((4, 0))
+        False
+
         """
+        if p in self:
+            return False
+
         if len(self.foci) == 2:
             f1, f2 = self.foci
             test = (2*self.major -
@@ -457,9 +485,13 @@ class Ellipse(GeometryEntity):
             l = Line(p, Point(p[0] + 1, p[1] + m))
             i1, i2 = self.intersection(l)
             slopes = [s for s in solve(i1[0] - i2[0], m) if not s.has(S.ImaginaryUnit)]
-            if len(slopes) == 1: # tangent lines are horizontal and vertical
+
+            # handle horizontal and vertical tangent lines
+            if len(slopes) == 1:
                 assert slopes[0] == 0
                 return [Line(p, Point(p[0]+1, p[1])), Line(p, Point(p[0], p[1]+1))]
+
+            # others
             tangent_points = [Point(i1[0].subs(m, mi), i1[1].subs(m, mi)) for mi in slopes]
             return [Line(p, tangent_points[0]), Line(p, tangent_points[1])]
 
