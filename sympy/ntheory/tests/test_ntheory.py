@@ -367,11 +367,16 @@ def test_hex_pi_nth_digits():
     assert pi_hex_digits(10000) == '68ac8fcfb8016c'
 
 def test_crt():
-    assert crt([2, 3, 5], [0, 0, 0]) == 0
-    assert crt([2, 3, 5], [1, 1, 1]) == 1
+    def mcrt(m, v, r, symmetric=False):
+        assert crt(m, v, symmetric) == r
+        mm, e, s = crt1(m)
+        assert crt2(m, v, mm, e, s, symmetric) == r
 
-    assert crt([2, 3, 5], [-1, -1, -1], True) == -1
-    assert crt([2, 3, 5], [-1, -1, -1], False) == 2*3*5 - 1
+    mcrt([2, 3, 5], [0, 0, 0], 0)
+    mcrt([2, 3, 5], [1, 1, 1], 1)
+
+    mcrt([2, 3, 5], [-1, -1, -1], -1, True)
+    mcrt([2, 3, 5], [-1, -1, -1], 2*3*5 - 1, False)
 
 
 def test_binomial_coefficients_list():
