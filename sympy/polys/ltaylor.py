@@ -138,5 +138,5 @@ class TaylorEval:
         if head == atan:
             q = ev_args(self,f.args)
             return q.atan(self.lvname,self.prec)
-        raise TypeError('case in __call__ not considered f=%s' % f)
+        raise NotImplementedError('case in __call__ not considered f=%s' % f)
  
