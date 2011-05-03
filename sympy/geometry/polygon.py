@@ -1193,7 +1193,34 @@ class Triangle(Polygon):
             raise GeometryError("Triangle.__new__ requires three points")
 
         vertices = [Point(a) for a in args]
-        return GeometryEntity.__new__(cls, *vertices, **kwargs)
+
+        # remove consecutive duplicates
+        nodup = []
+        for p in vertices:
+            if nodup and p == nodup[-1]:
+                continue
+            nodup.append(p)
+        if len(nodup) > 1 and nodup[-1] == nodup[0]:
+            nodup.pop() # last point was same as first
+
+        # remove collinear points
+        i = -3
+        while i < len(nodup) - 3 and len(nodup) > 2:
+            a, b, c = sorted([nodup[i], nodup[i + 1], nodup[i + 2]])
+            if Point.is_collinear(a, b, c):
+                nodup[i] = a
+                nodup[i + 1] = None
+                nodup.pop(i + 1)
+            i += 1
+
+        vertices = filter(lambda x: x is not None, nodup)
+
+        if len(vertices) == 3:
+            return GeometryEntity.__new__(cls, *vertices, **kwargs)
+        elif len(vertices) == 2:
+            return Segment(*vertices, **kwargs)
+        else:
+            return Point(*vertices, **kwargs)
 
     @property
     def vertices(self):
