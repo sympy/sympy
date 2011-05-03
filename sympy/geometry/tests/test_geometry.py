@@ -440,6 +440,8 @@ def test_polygon():
     s3 = t3.sides
 
     # Basic stuff
+    assert Triangle(p1, p1, p1) == p1
+    assert Triangle(p2, p2*2, p2*3) == Segment(p2, p2*3)
     assert t1.area == Rational(25,2)
     assert t1.is_right()
     assert t2.is_right() == False
