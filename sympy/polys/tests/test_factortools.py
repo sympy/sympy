@@ -122,6 +122,9 @@ def test_dup_zz_cyclotomic_p():
     g = [1, 0, 1, 0, 0, 0,-1, 0,-1, 0,-1, 0, 0, 0, 1, 0, 1]
     assert dup_zz_cyclotomic_p(g, ZZ) == True
 
+    assert dup_zz_cyclotomic_p([QQ(1),QQ(1),QQ(1)], QQ) == True
+    assert dup_zz_cyclotomic_p([QQ(1,2),QQ(1),QQ(1)], QQ) == False
+
 def test_dup_zz_cyclotomic_poly():
     assert dup_zz_cyclotomic_poly(1, ZZ) == [1,-1]
     assert dup_zz_cyclotomic_poly(2, ZZ) == [1,1]

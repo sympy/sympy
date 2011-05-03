@@ -70,7 +70,7 @@ from sympy.polys.polyutils import _sort_factors
 from sympy.polys.polyconfig import query
 
 from sympy.polys.polyerrors import (
-    ExtraneousFactors, DomainError, EvaluationFailed)
+    ExtraneousFactors, DomainError, CoercionFailed, EvaluationFailed)
 
 from sympy.ntheory import nextprime, isprime, factorint
 from sympy.utilities import any, all, subsets, cythonized
@@ -349,7 +349,13 @@ def dup_zz_cyclotomic_p(f, K, irreducible=False):
     True
 
     """
-    if not K.is_ZZ:
+    if K.is_QQ:
+        try:
+            K0, K = K, K.get_ring()
+            f = dup_convert(f, K0, K)
+        except CoercionFailed:
+            return False
+    elif not K.is_ZZ:
         return False
 
     lc = dup_LC(f, K)
