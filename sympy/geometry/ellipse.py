@@ -463,18 +463,6 @@ class Ellipse(GeometryEntity):
             tangent_points = [Point(i1[0].subs(m, mi), i1[1].subs(m, mi)) for mi in slopes]
             return [Line(p, tangent_points[0]), Line(p, tangent_points[1])]
 
-    def inside(self, p):
-        if len(self.foci) == 2:
-            f1, f2 = self.foci
-            maj = self.hradius
-            test = (2*maj -
-                    Point.distance(f1, p) -
-                    Point.distance(f2, p))
-        else:
-            test = self.radius - Point.distance(self.center, p)
-        if test.is_number and test.is_positive:
-            return True
-
     def is_tangent(self, o):
         """Is `o` tangent to the ellipse?
 
