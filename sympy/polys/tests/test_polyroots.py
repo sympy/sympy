@@ -1,12 +1,14 @@
-from sympy import S, symbols, Symbol, Integer, Rational, \
-    sqrt, I, powsimp, Lambda
+"""Tests for algorithms for computing symbolic roots of polynomials. """
+
+from sympy import (S, symbols, Symbol, Integer, Rational, sqrt, I, powsimp,
+    Lambda, sin, cos, pi, I)
 from sympy.utilities.pytest import raises
 
-from sympy.polys import Poly
+from sympy.polys import Poly, cyclotomic_poly
 
-from sympy.polys.polyroots import root_factors, roots_linear,  \
-    roots_quadratic, roots_cubic, roots_quartic, roots_binomial, \
-    roots_rational, roots
+from sympy.polys.polyroots import (root_factors, roots_linear,
+    roots_quadratic, roots_cubic, roots_quartic, roots_cyclotomic,
+    roots_binomial, roots_rational, roots)
 
 from sympy.utilities import all
 
@@ -68,6 +70,48 @@ def test_roots_quartic():
         eq = x**4 + a*x**3 + b*x**2 + c*x + d
         ans = roots_quartic(Poly(eq, x))
         assert all([eq.subs(x, ai).n(chop=True) == 0 for ai in ans])
+
+def test_roots_cyclotomic():
+    assert roots_cyclotomic(cyclotomic_poly(1, x, polys=True)) == [1]
+    assert roots_cyclotomic(cyclotomic_poly(2, x, polys=True)) == [-1]
+    assert roots_cyclotomic(cyclotomic_poly(3, x, polys=True)) == [-S(1)/2 + I*3**(S(1)/2)/2, -S(1)/2 - I*3**(S(1)/2)/2]
+    assert roots_cyclotomic(cyclotomic_poly(4, x, polys=True)) == [I, -I]
+    assert roots_cyclotomic(cyclotomic_poly(6, x, polys=True)) == [S(1)/2 + I*3**(S(1)/2)/2, S(1)/2 - I*3**(S(1)/2)/2]
+
+    assert roots_cyclotomic(cyclotomic_poly(7, x, polys=True)) == [
+         I*sin(2*pi/7) + cos(2*pi/7),
+         I*sin(3*pi/7) - cos(3*pi/7),
+         I*sin(pi/7)   - cos(pi/7),
+        -I*sin(pi/7)   - cos(pi/7),
+        -I*sin(3*pi/7) - cos(3*pi/7),
+        -I*sin(2*pi/7) + cos(2*pi/7),
+    ]
+
+    assert roots_cyclotomic(cyclotomic_poly(8, x, polys=True)) == [
+         2**(S(1)/2)/2 + I*2**(S(1)/2)/2,
+        -2**(S(1)/2)/2 + I*2**(S(1)/2)/2,
+        -2**(S(1)/2)/2 - I*2**(S(1)/2)/2,
+         2**(S(1)/2)/2 - I*2**(S(1)/2)/2,
+    ]
+
+    assert roots_cyclotomic(cyclotomic_poly(12, x, polys=True)) == [
+         I/2 + 3**(S(1)/2)/2,
+         I/2 - 3**(S(1)/2)/2,
+        -I/2 - 3**(S(1)/2)/2,
+        -I/2 + 3**(S(1)/2)/2,
+    ]
+
+    assert roots_cyclotomic(cyclotomic_poly(1, x, polys=True), factor=True) == [1]
+    assert roots_cyclotomic(cyclotomic_poly(2, x, polys=True), factor=True) == [-1]
+
+    assert roots_cyclotomic(cyclotomic_poly(3, x, polys=True), factor=True) == \
+        [-1 + (-1)**(S(1)/3), -(-1)**(S(1)/3)]
+    assert roots_cyclotomic(cyclotomic_poly(4, x, polys=True), factor=True) == \
+        [I, -I]
+    assert roots_cyclotomic(cyclotomic_poly(5, x, polys=True), factor=True) == \
+        [-(-1)**(S(1)/5), (-1)**(S(2)/5), -1 + (-1)**(S(1)/5) - (-1)**(S(2)/5) + (-1)**(S(3)/5), -(-1)**(S(3)/5)]
+    assert roots_cyclotomic(cyclotomic_poly(6, x, polys=True), factor=True) == \
+        [(-1)**(S(1)/3), 1 - (-1)**(S(1)/3)]
 
 def test_roots_binomial():
     assert roots_binomial(Poly(5*x, x)) == [0]
@@ -179,13 +223,13 @@ def test_roots():
 
     f = x**4 + x**3 + x**2 + x + 1
 
-    r1_2, r1_4, r5_2 = [ Rational(*r) for r in ((1,2), (1,4), (5,2)) ]
+    r1_4, r1_8, r5_8 = [ Rational(*r) for r in ((1,4), (1,8), (5,8)) ]
 
     assert roots(f, x) == {
-        -r1_4 + r1_4*5**r1_2 + r1_2*(-r5_2 - r1_2*5**r1_2)**r1_2: 1,
-        -r1_4 + r1_4*5**r1_2 - r1_2*(-r5_2 - r1_2*5**r1_2)**r1_2: 1,
-        -r1_4 - r1_4*5**r1_2 + r1_2*(-r5_2 + r1_2*5**r1_2)**r1_2: 1,
-        -r1_4 - r1_4*5**r1_2 - r1_2*(-r5_2 + r1_2*5**r1_2)**r1_2: 1,
+        -r1_4 + r1_4*5**r1_2 + I*(r5_8 + r1_8*5**r1_2)**r1_2: 1,
+        -r1_4 + r1_4*5**r1_2 - I*(r5_8 + r1_8*5**r1_2)**r1_2: 1,
+        -r1_4 - r1_4*5**r1_2 + I*(r5_8 - r1_8*5**r1_2)**r1_2: 1,
+        -r1_4 - r1_4*5**r1_2 - I*(r5_8 - r1_8*5**r1_2)**r1_2: 1,
     }
 
     f = z**3 + (-2 - y)*z**2 + (1 + 2*y - 2*x**2)*z - y + 2*x**2
@@ -210,6 +254,29 @@ def test_roots():
 
     assert roots(x**3, x, multiple=True) == [S.Zero, S.Zero, S.Zero]
     assert roots(1234, x, multiple=True) == []
+
+    f = x**6 - x**5 + x**4 - x**3 + x**2 - x + 1
+
+    assert roots(f) == {
+        -I*sin(pi/7)   + cos(pi/7):   1,
+        -I*sin(2*pi/7) - cos(2*pi/7): 1,
+        -I*sin(3*pi/7) + cos(3*pi/7): 1,
+         I*sin(pi/7)   + cos(pi/7):   1,
+         I*sin(2*pi/7) - cos(2*pi/7): 1,
+         I*sin(3*pi/7) + cos(3*pi/7): 1,
+    }
+
+    g = ((x**2 + 1)*f**2).expand()
+
+    assert roots(g) == {
+        -I*sin(pi/7)   + cos(pi/7):   2,
+        -I*sin(2*pi/7) - cos(2*pi/7): 2,
+        -I*sin(3*pi/7) + cos(3*pi/7): 2,
+         I*sin(pi/7)   + cos(pi/7):   2,
+         I*sin(2*pi/7) - cos(2*pi/7): 2,
+         I*sin(3*pi/7) + cos(3*pi/7): 2,
+        -I: 1, I: 1,
+    }
 
 def test_roots2():
     """Just test that calculating these roots does not hang
