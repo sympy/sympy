@@ -1224,7 +1224,7 @@ class Poly(dict):
         lp = p.lp
         zm = lp.zero_mon
         if zm not in p:
-          raise ValueError('no constant term in series')
+          raise NotImplementedError('no constant term in series')
         if (p-p[zm]).has_constant_term(iv):
             raise NotImplementedError, 'p-p[0] must not have a constant term in the series variables'
         if not lp.commuting:
