@@ -1,11 +1,13 @@
-from sympy import C, S, Symbol, Rational, sqrt, pi, cos, oo, simplify, Real, Abs
-from sympy.geometry import (Point, Polygon, convex_hull, Segment,
-    RegularPolygon, Circle, Ellipse, GeometryError, Line, intersection, Ray,
-    Triangle, are_similar, Curve)
+from sympy import (Abs, C, Max, Min, Rational, Real, S, Symbol, cos, oo, pi,
+                   simplify, sqrt)
+from sympy.geometry import (Circle, Curve, Ellipse, GeometryError, Line, Point,
+                            Polygon, Ray, RegularPolygon, Segment, Triangle,
+                            are_similar, convex_hull, intersection)
 from sympy.utilities.pytest import raises, XFAIL
 
 x = Symbol('x', real=True)
 y = Symbol('y', real=True)
+t = Symbol('t', real=True)
 x1 = Symbol('x1', real=True)
 x2 = Symbol('x2', real=True)
 y1 = Symbol('y1', real=True)
@@ -249,8 +251,10 @@ def test_ellipse():
     a = Symbol('a')
     b = Symbol('b')
     e5 = Ellipse(p1, a, b)
-    assert e5.circumference == 4*a*C.Integral(((1 - x**2*Abs(b**2 - a**2)/a**2)/(1 - x**2))**(S(1)/2),\
-                                            (x, 0, 1))
+    assert e5.circumference == \
+           4*C.Integral(sqrt((1 - x**2*(Max(a, b)**2 -
+                                    Min(a, b)**2)/
+                          Max(a, b)**2)/(1 - x**2)), (x, 0, 1))*Max(a, b)
 
     assert e2.arbitrary_point() in e2
 
@@ -265,9 +269,9 @@ def test_ellipse():
     p1_2 = p2 + Point(half, 0)
     p1_3 = p2 + Point(0, 1)
     assert e1.tangent_lines(p4) == c1.tangent_lines(p4)
-    assert e2.tangent_lines(p1_2) == (Line(p1_2, p2 + Point(half, 1)),)
-    assert e2.tangent_lines(p1_3) == (Line(p1_3, p2 + Point(half, 1)),)
-    assert c1.tangent_lines(p1_1) == (Line(p1_1, Point(0, sqrt(2))),)
+    assert e2.tangent_lines(p1_2) == [Line(p1_2, p2 + Point(half, 1))]
+    assert e2.tangent_lines(p1_3) == [Line(p1_3, p2 + Point(half, 1))]
+    assert c1.tangent_lines(p1_1) == [Line(p1_1, Point(0, sqrt(2)))]
     assert e2.is_tangent(Line(p1_2, p2 + Point(half, 1)))
     assert e2.is_tangent(Line(p1_3, p2 + Point(half, 1)))
     assert c1.is_tangent(Line(p1_1, Point(0, sqrt(2))))
@@ -310,11 +314,13 @@ def test_ellipse():
     assert Point(v/2, v/2) in points
     assert Point(v/2, -v/2) in points
 
-    e1 = Circle(Point(0, 0), 5)
-    e2 = Ellipse(Point(0, 0), 5, 20)
-    assert intersection(e1, e2) in \
+    circ = Circle(Point(0, 0), 5)
+    elip = Ellipse(Point(0, 0), 5, 20)
+    assert intersection(circ, elip) in \
         [[Point(5, 0), Point(-5, 0)], [Point(-5, 0), Point(5, 0)]]
-
+    assert elip.tangent_lines(Point(0, 0)) == []
+    elip = Ellipse(Point(0, 0), 3, 2)
+    assert elip.tangent_lines(Point(3, 0)) == [Line(Point(3, 0), Point(3, -12))]
     # FAILING ELLIPSE INTERSECTION GOES HERE
 
     # Combinations of above
@@ -324,16 +330,16 @@ def test_ellipse():
 def test_ellipse_fail():
     # these need the upgrade to the solver; when this works, move
     # these lines to the # FAILING GOES HERE line in test_ellipse above.
-    assert Ellipse(Point(5,5),2,1).tangent_lines(Point(0,0)) == \
-    (Line(Point(0, 0), Point(S(77)/25, S(132)/25)),
-     Line(Point(0, 0), Point(S(33)/5, S(22)/5)))
-    assert Ellipse(Point(5,5),2,1).tangent_lines(Point(3,4)) == \
-    (Line(Point(3, 4), Point(4, 4)), Line(Point(3, 4), Point(3, 5)))
-    assert Circle(Point(5,5),2).tangent_lines(Point(3,3)) == \
-    (Line(Point(3, 3), Point(4, 3)), Line(Point(3, 3), Point(3, 4)))
-    assert Circle(Point(5,5),2).tangent_lines(Point(5 - 2*sqrt(2), 5)) == \
-    (Line(Point(5 - 2*sqrt(2), 5), Point(5 - sqrt(2), 5 + sqrt(2))),
-     Line(Point(5 - 2*sqrt(2), 5), Point(5 - sqrt(2), 5 - sqrt(2))))
+    assert Ellipse(Point(5, 5), 2, 1).tangent_lines(Point(0, 0)) == \
+    [Line(Point(0, 0), Point(S(77)/25, S(132)/25)),
+     Line(Point(0, 0), Point(S(33)/5, S(22)/5))]
+    assert Ellipse(Point(5, 5), 2, 1).tangent_lines(Point(3, 4)) == \
+    [Line(Point(3, 4), Point(4, 4)), Line(Point(3, 4), Point(3, 5))]
+    assert Circle(Point(5, 5), 2).tangent_lines(Point(3, 3)) == \
+    [Line(Point(3, 3), Point(4, 3)), Line(Point(3, 3), Point(3, 4))]
+    assert Circle(Point(5, 5), 2).tangent_lines(Point(5 - 2*sqrt(2), 5)) == \
+    [Line(Point(5 - 2*sqrt(2), 5), Point(5 - sqrt(2), 5 + sqrt(2))),
+     Line(Point(5 - 2*sqrt(2), 5), Point(5 - sqrt(2), 5 - sqrt(2)))]
 
     major = 3
     minor = 1

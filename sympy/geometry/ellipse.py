@@ -8,8 +8,9 @@ Circle
 """
 
 from sympy.core import S, C, sympify, symbol
+from sympy.core.logic import fuzzy_bool
 from sympy.simplify import simplify, trigsimp
-from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.miscellaneous import sqrt, Max, Min
 from sympy.functions.elementary.complexes import im
 from sympy.geometry.exceptions import GeometryError
 from sympy.solvers import solve_poly_system, solve
@@ -175,6 +176,44 @@ class Ellipse(GeometryEntity):
         return self.__getitem__(2)
 
     @property
+    def minor(self):
+        """The shorter axis of the ellipse.
+
+        Returns
+        -------
+        minor : number
+
+        Examples
+        --------
+        >>> from sympy import Point, Ellipse
+        >>> p1 = Point(0, 0)
+        >>> e1 = Ellipse(p1, 3, 1)
+        >>> e1.minor
+        1
+
+        """
+        return Min(*self[1:3])
+
+    @property
+    def major(self):
+        """The longer axis of the ellipse.
+
+        Returns
+        -------
+        major : number
+
+        Examples
+        --------
+        >>> from sympy import Point, Ellipse
+        >>> p1 = Point(0, 0)
+        >>> e1 = Ellipse(p1, 3, 1)
+        >>> e1.major
+        3
+
+        """
+        return Max(*self[1:3])
+
+    @property
     def area(self):
         """The area of the ellipse.
 
@@ -209,7 +248,7 @@ class Ellipse(GeometryEntity):
         if self.eccentricity == 1:
             return 2*pi*self.hradius
         else:
-            return 4 * self.hradius * \
+            return 4*self.major*\
                    C.Integral(sqrt((1 - (self.eccentricity*x)**2)/(1 - x**2)),
                               (x, 0, 1))
 
@@ -230,7 +269,7 @@ class Ellipse(GeometryEntity):
         7**(1/2)/3
 
         """
-        return self.focus_distance / self.hradius
+        return self.focus_distance / self.major
 
     @property
     def periapsis(self):
@@ -251,7 +290,7 @@ class Ellipse(GeometryEntity):
         3 - 2*2**(1/2)
 
         """
-        return self.hradius * (1 - self.eccentricity)
+        return self.major * (1 - self.eccentricity)
 
     @property
     def apoapsis(self):
@@ -272,7 +311,7 @@ class Ellipse(GeometryEntity):
         3 + 2*2**(1/2)
 
         """
-        return self.hradius * (1 + self.eccentricity)
+        return self.major * (1 + self.eccentricity)
 
     @property
     def focus_distance(self):
@@ -325,11 +364,11 @@ class Ellipse(GeometryEntity):
         if self.hradius == self.vradius:
             return (c, c)
 
-        hr, vr = self.hradius, self.vradius
+        hr, vr = self.minor, self.major
 
         # calculate focus distance manually, since focus_distance calls this routine
-        h = sqrt(abs(vr**2 - hr**2))
-        if hr < vr:
+        h = sqrt(vr**2 - hr**2)
+        if hr > vr:
             return (c + Point(0, -h), c + Point(0, h))
         else:
             return (c + Point(-h, 0), c + Point(h, 0))
@@ -340,14 +379,13 @@ class Ellipse(GeometryEntity):
         """
         if len(self.foci) == 2:
             f1, f2 = self.foci
-            maj = self.hradius
-            test = (2*maj -
+            test = (2*self.major -
                     Point.distance(f1, p) -
                     Point.distance(f2, p))
         else:
             test = self.radius - Point.distance(self.center, p)
-        if test.is_number and test.is_positive:
-            return True
+
+        return fuzzy_bool(test.is_positive)
 
     def tangent_lines(self, p):
         """Tangent lines between `p` and the ellipse.
@@ -362,7 +400,7 @@ class Ellipse(GeometryEntity):
 
         Returns
         -------
-        tangent_lines : Line
+        tangent_lines : list with 1 or 2 Lines
 
         Raises
         ------
@@ -379,7 +417,7 @@ class Ellipse(GeometryEntity):
         >>> from sympy import Point, Ellipse
         >>> e1 = Ellipse(Point(0, 0), 3, 2)
         >>> e1.tangent_lines(Point(3, 0))
-        (Line(Point(3, 0), Point(3, -12)),)
+        [Line(Point(3, 0), Point(3, -12))]
 
         >>> # This will plot an ellipse together with a tangent line.
         >>> from sympy import Point, Ellipse, Plot
@@ -391,12 +429,16 @@ class Ellipse(GeometryEntity):
 
         """
         from sympy import solve
+
+        if self.encloses_point(p):
+            return []
+
         if p in self:
             rise = (self.vradius ** 2)*(self.center[0] - p[0])
             run = (self.hradius ** 2)*(p[1] - self.center[1])
             p2 = Point(simplify(p[0] + run),
                        simplify(p[1] + rise))
-            return (Line(p, p2),)
+            return [Line(p, p2)]
         else:
             if len(self.foci) == 2:
                 f1, f2 = self.foci
@@ -410,16 +452,16 @@ class Ellipse(GeometryEntity):
                 return []
             # else p is outside the ellipse or we can't tell. In case of the
             # latter, the solutions returned will only be valid if
-            # the pointis  not inside the ellipse; if it is, nan will result.
+            # the point is not inside the ellipse; if it is, nan will result.
             m = C.Dummy('m')
             l = Line(p, Point(p[0] + 1, p[1] + m))
             i1, i2 = self.intersection(l)
             slopes = [s for s in solve(i1[0] - i2[0], m) if not s.has(S.ImaginaryUnit)]
             if len(slopes) == 1: # tangent lines are horizontal and vertical
                 assert slopes[0] == 0
-                return (Line(p, Point(p[0]+1, p[1])), Line(p, Point(p[0], p[1]+1)))
+                return [Line(p, Point(p[0]+1, p[1])), Line(p, Point(p[0], p[1]+1))]
             tangent_points = [Point(i1[0].subs(m, mi), i1[1].subs(m, mi)) for mi in slopes]
-            return (Line(p, tangent_points[0]), Line(p, tangent_points[1]))
+            return [Line(p, tangent_points[0]), Line(p, tangent_points[1])]
 
     def inside(self, p):
         if len(self.foci) == 2:
@@ -657,7 +699,7 @@ class Ellipse(GeometryEntity):
         if len(variables) > 2:
             return None
         if self.center == o.center:
-            a, b, r = o.hradius, o.vradius, self.radius
+            a, b, r = o.major, o.minor, self.radius
             x = a*sqrt(simplify((r**2 - b**2)/(a**2 - b**2)))
             y = b*sqrt(simplify((a**2 - r**2)/(a**2 - b**2)))
             return list(set([Point(x, y), Point(x, -y), Point(-x, y),
@@ -819,9 +861,7 @@ class Circle(Ellipse):
 
     Attributes
     ----------
-    hradius
-    vradius
-    radius
+    radius (synonymous with hradius, vradius, major and minor)
     circumference
     equation
 
@@ -870,42 +910,6 @@ class Circle(Ellipse):
         raise GeometryError("Circle.__new__ received unknown arguments")
 
     @property
-    def hradius(self):
-        """The horizontal radius of the circle.
-
-        Returns
-        -------
-        hradius : number or sympy expression
-
-        Examples
-        --------
-        >>> from sympy import Point, Circle
-        >>> c1 = Circle(Point(3, 4), 6)
-        >>> c1.hradius
-        6
-
-        """
-        return self.__getitem__(1)
-
-    @property
-    def vradius(self):
-        """The vertical radius of the circle.
-
-        Returns
-        -------
-        vradius : number or sympy expression
-
-        Examples
-        --------
-        >>> from sympy import Point, Circle
-        >>> c1 = Circle(Point(3, 4), 6)
-        >>> c1.vradius
-        6
-
-        """
-        return self.__getitem__(1)
-
-    @property
     def radius(self):
         """The radius of the circle.
 
@@ -922,6 +926,22 @@ class Circle(Ellipse):
 
         """
         return self.__getitem__(1)
+
+    @property
+    def major(self):
+        return self.radius
+
+    @property
+    def minor(self):
+        return self.radius
+
+    @property
+    def hradius(self):
+        return self.radius
+
+    @property
+    def vradius(self):
+        return self.radius
 
     @property
     def circumference(self):
@@ -969,7 +989,7 @@ class Circle(Ellipse):
             y = C.Symbol(y, real=True)
         t1 = (x - self.center[0])**2
         t2 = (y - self.center[1])**2
-        return t1 + t2 - self.hradius**2
+        return t1 + t2 - self.major**2
 
     def intersection(self, o):
         """The intersection of this circle with another geometrical entity.
