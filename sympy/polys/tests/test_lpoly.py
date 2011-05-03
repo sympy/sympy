@@ -4,6 +4,9 @@ from sympy.polys.lpoly import *
 # TODO import just what is needed
 from sympy import *
 
+#from sympy.functions.elementary.trigonometric import (cos,sin)
+from sympy import Symbol
+
 def test_str():
     lp = LPoly(list('xyz'),QQ,O_lex)
     p = lp('  +z^4 +1/2*z^2 -1/4')

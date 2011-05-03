@@ -22,8 +22,9 @@ from sympy.polys.polyerrors import (
 from sympy.utilities import any, all
 from operator import itemgetter
 from sympy.core.sympify import sympify
-from sympy.core.numbers import Rational
+from sympy.core.numbers import Rational, Number
 from sympy.core import S, Add, Mul, Pow
+from sympy.polys.domains import QQ
 import sympy
 
 
@@ -74,7 +75,8 @@ def monomial_pow(a,n):
     """
     b = [x*n for x in a]
     return tuple(b)
-
+class LPolyOverflowError(OverflowError):
+    pass
 
 class BaseLPoly:
     """
@@ -1125,8 +1127,10 @@ class Poly(dict):
     def pow_trunc(self,n,i,h):
         """truncation of self**n using mul_trunc
         """
+        #print 'DB50 self=%s n=%d i=%s h=%d' %(self,n,i,h)
         lp = self.lp
-        if not hasattr(n,'__hex__'):
+        if n != int(n):
+        #if not hasattr(n,'__hex__'):
             raise NotImplementedError
         n = int(n)
         if n == 0:
@@ -1397,9 +1401,9 @@ class Poly(dict):
         lp = p.lp
         zm = lp.zero_mon
         if zm not in p:
-            raise ValueError('no constant term in series')
+            raise NotImplementedError('no constant term in series')
         if n != int(n):
-            raise ValueError('n must be an integer')
+            raise NotImplementedError('n must be an integer')
         else:
            n = int(n)
         if p[zm] != 1:
@@ -1460,7 +1464,15 @@ class Poly(dict):
         lp = p.lp
         # TODO p-1 must not have constant term
         if (p-1).has_constant_term(iv):
-            raise NotImplementedError('p-1 must not have a constant term in the series variables')
+            if not lp.SR:
+                raise NotImplementedError('p-1 must not have a constant term in the series variables')
+            else:
+                if lp.zero_mon in p:
+                    c = p[lp.zero_mon]
+                    if c.is_positive:
+                        return (p/c).nth_root(n,iv, nv)*c**Rational(1,n)
+                    else:
+                        raise NotImplementedError
         if hasattr(nv,'__hex__') and lp.commuting:
             return p._nth_root1(n,iv, nv)
         return p.fun('_nth_root1',n,iv,nv)
@@ -1749,6 +1761,16 @@ class Poly(dict):
     def sin(p,iv,nv):
         """ sin of a series
         """
+        lp = p.lp
+        if p.has_constant_term(iv):
+            zm = lp.zero_mon
+            if not lp.SR:
+                raise NotImplementedError
+            c = p[zm]
+            if not c.is_real:
+                raise NotImplementedError
+            p1 = p - c
+            return sympy.cos(c)*p1.sin(iv,nv) + sympy.sin(c)*p1.cos(iv,nv)
         t = (p/2).tan(iv,nv)
         t2 = t.square_trunc(iv,nv)
         p1 = (1+t2).series_inversion(iv,nv)
@@ -1757,6 +1779,16 @@ class Poly(dict):
     def cos(p,iv,nv):
         """ cos of a series
         """
+        lp = p.lp
+        if p.has_constant_term(iv):
+            zm = lp.zero_mon
+            if not lp.SR:
+                raise NotImplementedError
+            c = p[zm]
+            if not c.is_real:
+                raise NotImplementedError
+            p1 = p - c
+            return sympy.cos(c)*p1.cos(iv,nv) - sympy.sin(c)*p1.sin(iv,nv)
         t = (p/2).tan(iv,nv)
         t2 = t.square_trunc(iv,nv)
         p1 = (1+t2).series_inversion(iv,nv)
@@ -1799,11 +1831,11 @@ class Poly(dict):
         result = []
         for monom, coeff in p.iteritems():
             term = [convert(coeff)]
-    
             for g, m in zip(gens, monom):
                 term.append(Pow(g, m))
     
             result.append(Mul(*term))
     
         return Add(*result)
-    
+   
+
