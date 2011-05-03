@@ -39,15 +39,18 @@ class GeometryEntity(tuple):
         """
         Returns a list of all of the intersections of self with o.
 
-        Notes:
-        ======
-            - This method is not intended to be used directly but rather
-              through the intersection() method or the function found in
-              util.py.
-            - An entity is not required to implement this method.
-            - If two different types of entities can intersect, the item with
-              higher index in ordering_of_classes should implement
-              intersections with anything having a lower index.
+        Notes
+        -----
+        An entity is not required to implement this method.
+
+        If two different types of entities can intersect, the item with
+        higher index in ordering_of_classes should implement
+        intersections with anything having a lower index.
+
+        See Also
+        --------
+        intersection function in geometry/util.py which computes the
+        intersection between more than 2 objects.
 
         """
         raise NotImplementedError()
