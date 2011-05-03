@@ -11,6 +11,7 @@ from sympy.physics.quantum.operator import Operator, OuterProduct
 from sympy.physics.quantum.represent import represent
 from sympy.functions.elementary.exponential import log
 from sympy.physics.quantum.qexpr import _qsympify_sequence
+from sympy.core import sympify
 
 class Density(QExpr):
     """
@@ -28,9 +29,9 @@ class Density(QExpr):
             spaces contained within it are contained in the same hilbert space?
         """
         for i in xrange(2):
-            if isinstance(args[-1], list):
+            if isinstance(args[-i-1], list):
                 args = args + (1,)
-        return args
+        return sympify(args)
     
     @classmethod
     def _eval_hilbert_space(cls, args):
@@ -124,13 +125,11 @@ class Density(QExpr):
         return Density(*result)
             
 
-    def entropy(self):
-        """This is noise
-        None of the obvious matrix functionality exists natively
-        matrix = represent(self)
-        entropy = 0
-        for i in xrange(matrix.rows):
-            entropy += matrix[i,i]*log(matrix[i,i])
-        return entropy
-        """ 
-        pass
+    def entropy(self,nqubits):
+        """
+            Von Neumann entropy is defined to be sum(lambda*ln(lambda)) 
+            where lambda is the eigenvalue of a matrix
+        """
+        rho = represent(self, nqubits=nqubits)
+        from scipy.linalg import eigvals
+        return -sum([(eigen*log(eigen)).evalf() for eigen in eigvals(rho).tolist() if eigen != 0])        
