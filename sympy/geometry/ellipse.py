@@ -375,8 +375,36 @@ class Ellipse(GeometryEntity):
 
     def encloses_point(self, p):
         """
-        Return True if p is contained within the boundaries of self.
+        Return True if p is enclosed by (is inside of) self.
+
+        Notes
+        -----
+        Being on the border of self is considered False.
+
+        Parameters
+        ----------
+        p : Point
+
+        Returns
+        -------
+        encloses_point : True, False or None
+
+        Examples
+        --------
+        >>> from sympy import Ellipse, S
+        >>> from sympy.abc import t
+        >>> e = Ellipse((0, 0), 3, 2)
+        >>> e.encloses_point((0, 0))
+        True
+        >>> e.encloses_point(e.arbitrary_point().subs(t, S.Half))
+        False
+        >>> e.encloses_point((4, 0))
+        False
+
         """
+        if p in self:
+            return False
+
         if len(self.foci) == 2:
             f1, f2 = self.foci
             test = (2*self.major -
