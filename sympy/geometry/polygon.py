@@ -930,6 +930,11 @@ class RegularPolygon(Polygon):
         return self._center
 
     @property
+    def circumcenter(self):
+        """alias for center"""
+        return self.center
+
+    @property
     def radius(self):
         """Radius of the regular polygon
 
@@ -950,6 +955,11 @@ class RegularPolygon(Polygon):
 
         """
         return self._radius
+
+    @property
+    def circumradius(self):
+        """alias for radius"""
+        return self.radius
 
     @property
     def rotation(self):
@@ -990,6 +1000,11 @@ class RegularPolygon(Polygon):
 
         """
         return self.radius * cos(S.Pi/self._n)
+
+    @property
+    def inradius(self):
+        """alias for apothem"""
+        return self.apothem
 
     @property
     def interior_angle(self):
