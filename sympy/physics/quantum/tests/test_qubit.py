@@ -88,7 +88,7 @@ def test_matrix_to_qubits():
     == sqrt(2)*2*Matrix([1,1,1,1,1,1,1,1])
 
 def test_measure_normalize():
-    a,b = symbols('ab')
+    a,b = symbols('a b')
     state = a*Qubit('110') + b*Qubit('111')
     assert measure_partial(state, (0,), normalize=False) ==\
      [(a*Qubit('110'), a*a.conjugate()), (b*Qubit('111'),b*b.conjugate())]
