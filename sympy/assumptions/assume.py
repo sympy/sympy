@@ -9,7 +9,7 @@ class AssumptionsContext(set):
     wrapper to Python's set, so see its documentation for advanced usage.
 
     Examples:
-        >>> from sympy import global_assumptions, Assume, Q
+        >>> from sympy import global_assumptions, AppliedPredicate, Q
         >>> global_assumptions
         AssumptionsContext()
         >>> from sympy.abc import x
@@ -26,31 +26,29 @@ class AssumptionsContext(set):
     def add(self, *assumptions):
         """Add an assumption."""
         for a in assumptions:
-            assert isinstance(a, Assume), 'can only store instances of Assume'
+            assert isinstance(a, AppliedPredicate), 'can only store instances of AppliedPredicate'
             super(AssumptionsContext, self).add(a)
 
 global_assumptions = AssumptionsContext()
 
-class Assume(Boolean):
+class AppliedPredicate(Boolean):
     """New-style assumptions.
 
     >>> from sympy import Q
     >>> from sympy.abc import x
     >>> Q.integer(x)
     Q.integer(x)
-    >>> ~Q.integer(x)
-    Not(Q.integer(x))
-    >>> Q.is_true(x > 1)
-    Q.is_true(1 < x)
 
     """
-    def __new__(cls, expr, predicate):
-        return Boolean.__new__(cls, expr, predicate)
+    __slots__ = []
+
+    def __new__(cls, predicate, arg):
+        return Boolean.__new__(cls, predicate, arg)
 
     is_Atom = True # do not attempt to decompose this
 
     @property
-    def expr(self):
+    def arg(self):
         """
         Return the expression used by this assumption.
 
@@ -58,35 +56,27 @@ class Assume(Boolean):
             >>> from sympy import Q
             >>> from sympy.abc import x
             >>> a = Q.integer(x + 1)
-            >>> a.expr
+            >>> a.arg
             1 + x
-
-        """
-        return self._args[0]
-
-    @property
-    def key(self):
-        """
-        Return the key used by this assumption.
-        It is a string, e.g. 'integer', 'rational', etc.
-
-        Examples:
-            >>> from sympy import Q
-            >>> from sympy.abc import x
-            >>> a = Q.integer(x)
-            >>> a.key
-            Q.integer
 
         """
         return self._args[1]
 
+    @property
+    def args(self):
+        return self._args[1:]
+
+    @property
+    def func(self):
+        return self._args[0]
+
     def __eq__(self, other):
-        if type(other) == Assume:
+        if type(other) is AppliedPredicate:
             return self._args == other._args
         return False
 
     def __hash__(self):
-        return super(Assume, self).__hash__()
+        return super(AppliedPredicate, self).__hash__()
 
 def eliminate_assume(expr, symbol=None):
     """
@@ -106,18 +96,13 @@ def eliminate_assume(expr, symbol=None):
         Not(Q.positive)
 
     """
-    if expr.func is Assume:
+    if expr.__class__ is AppliedPredicate:
         if symbol is not None:
-            if not expr.expr.has(symbol):
+            if not expr.arg.has(symbol):
                 return
-        return expr.key
-
-    if expr.func is Predicate:
-        return expr
-
-    # To be used when Python 2.4 compatability is no longer required
-    #return expr.func(*[x for x in (eliminate_assume(arg, symbol) for arg in expr.args) if x is not None])
-    return expr.func(*filter(lambda x: x is not None, [eliminate_assume(arg, symbol) for arg in expr.args]))
+        return expr.func
+    return expr.func(*filter(lambda x: x is not None,
+                [eliminate_assume(arg, symbol) for arg in expr.args]))
 
 class Predicate(Boolean):
     """A predicate is a function that returns a boolean value.
@@ -151,7 +136,7 @@ class Predicate(Boolean):
         return (self.name,)
 
     def __call__(self, expr):
-        return Assume(expr, self)
+        return AppliedPredicate(self, expr)
 
     def add_handler(self, handler):
         self.handlers.append(handler)

@@ -1,19 +1,10 @@
 """rename this to test_assumptions.py when the old assumptions system is deleted"""
 from sympy.core import symbols
-from sympy.assumptions import Assume, global_assumptions, Predicate
+from sympy.assumptions import AppliedPredicate, global_assumptions, Predicate
 from sympy.assumptions.assume import eliminate_assume
 from sympy.printing import pretty
 from sympy.assumptions.ask import Q
 from sympy.utilities.pytest import XFAIL
-
-def test_Predicate_wraps_Assume():
-    x = symbols('x')
-    integer = Predicate('integer')
-    assump = integer(x)
-    assert (assump.expr, assump.key) == (x, integer)
-    assump = Assume(x, integer)
-    assert (assump.expr, assump.key) == (x, integer)
-
 
 def test_equal():
     """Test for equality"""
