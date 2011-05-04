@@ -171,6 +171,7 @@ def test_telescopic_sums():
     assert telescopic(1/m, -m/(1+m),(m, n-1, n)) == \
            telescopic(1/k, -k/(1+k),(k, n-1, n))
 
+    assert Sum(1/x/(x - 1), (x, a, b)).doit() == 1/(-1 + a) - 1/b
 
 def test_sum_reconstruct():
     s = Sum(n**2, (n, -1, 1))

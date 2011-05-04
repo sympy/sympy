@@ -2,6 +2,7 @@ from sympy.core import (Expr, S, C, Symbol, Equality, Interval, sympify, Wild,
                         Tuple, Dummy, Derivative)
 from sympy.core.compatibility import any
 from sympy.functions.elementary.piecewise import piecewise_fold
+from sympy.polys import apart
 from sympy.solvers import solve
 from sympy.utilities import flatten
 
@@ -344,6 +345,7 @@ def eval_sum_symbolic(f, (i, a, b)):
         if not R.has(i):
             sL = eval_sum_symbolic(L, (i, a, b))
             if sL: return R*sL
+        f = apart(f, i) # see if it becomes an Add
     if f.is_Add:
         L, R = f.as_two_terms()
         lrsum = telescopic(L, R, (i, a, b))
