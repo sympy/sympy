@@ -32,16 +32,17 @@ class MatrixCache(object):
         """
         try:
             self._sympy_matrix(name, m)
-        except:
-            raise
+        except ImportError:
+            pass
         try:
             self._numpy_matrix(name, m)
-        except:
-            raise
+        except ImportError:
+            pass
         try:
             self._scipy_sparse_matrix(name, m)
-        except:
-            raise
+        except ImportError:
+            pass
+
 
     def get_matrix(self, name, format):
         """Get a cached matrix by name and format.
