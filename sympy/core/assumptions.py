@@ -265,32 +265,6 @@ class AssumeMixin(object):
     __slots__ = []
 
 
-    def __getstate__(self, cls=None):
-        if cls is None:
-            # This is the case for the instance that gets pickled
-            cls = self.__class__
-
-        d = {}
-        # Get all data that should be stored from super classes
-        for c in cls.__bases__:
-            if hasattr(c, "__getstate__"):
-                d.update(c.__getstate__(self, c))
-
-        # Get all information that should be stored from cls and return the dic
-        for name in cls.__slots__:
-            if hasattr(self, name):
-                d[name] = getattr(self, name)
-        return d
-
-    def __setstate__(self, d):
-        # All values that were pickled are now assigned to a fresh instance
-        for name, value in d.iteritems():
-            try:
-                setattr(self, name, value)
-            except:
-                pass
-
-
     def _what_known_about(self, k):
         """tries hard to give an answer to: what is known about fact `k`
 
