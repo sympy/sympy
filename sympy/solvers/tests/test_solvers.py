@@ -1,7 +1,7 @@
 from sympy import (Matrix, Symbol, solve, exp, log, cos, acos, Rational, Eq,
     sqrt, oo, LambertW, pi, I, sin, asin, Function, diff, Derivative, symbols,
     S, sympify, var, simplify, Integral, sstr, Wild, solve_linear, Interval,
-    And, Or, Lt, Gt, Assume, Q, re, im, expand, zoo)
+    And, Or, Lt, Gt, Q, re, im, expand, zoo)
 
 from sympy.solvers import solve_linear_system, solve_linear_system_LU,dsolve,\
      tsolve, solve_undetermined_coeffs
@@ -341,6 +341,6 @@ def test_solve_inequalities():
     assert solve(system) == \
         And(Or(And(Lt(-sqrt(2), re(x)), Lt(re(x), -1)),
                And(Lt(1, re(x)), Lt(re(x), sqrt(2)))), Eq(im(x), 0))
-    assert solve(system, assume=Assume(x, Q.real)) == \
+    assert solve(system, assume=Q.real(x)) == \
         Or(And(Lt(-sqrt(2), x), Lt(x, -1)), And(Lt(1, x), Lt(x, sqrt(2))))
 

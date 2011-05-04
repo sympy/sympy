@@ -13,10 +13,10 @@ class AssumptionsContext(set):
         >>> global_assumptions
         AssumptionsContext()
         >>> from sympy.abc import x
-        >>> global_assumptions.add(Assume(x, Q.real))
+        >>> global_assumptions.add(Q.real(x))
         >>> global_assumptions
         AssumptionsContext([Assume(x, Q.real)])
-        >>> global_assumptions.remove(Assume(x, Q.real))
+        >>> global_assumptions.remove(Q.real(x))
         >>> global_assumptions
         AssumptionsContext()
         >>> global_assumptions.clear()
@@ -34,13 +34,13 @@ global_assumptions = AssumptionsContext()
 class Assume(Boolean):
     """New-style assumptions.
 
-    >>> from sympy import Assume, Q
+    >>> from sympy import Q
     >>> from sympy.abc import x
-    >>> Assume(x, Q.integer)
+    >>> Q.integer(x)
     Assume(x, Q.integer)
-    >>> Assume(x, Q.integer, False)
+    >>> ~Q.integer(x)
     Not(Assume(x, Q.integer))
-    >>> Assume( x > 1 )
+    >>> Q.is_true(x > 1)
     Assume(1 < x, Q.is_true)
 
     """
@@ -67,9 +67,9 @@ class Assume(Boolean):
         Return the expression used by this assumption.
 
         Examples:
-            >>> from sympy import Assume, Q
+            >>> from sympy import Q
             >>> from sympy.abc import x
-            >>> a = Assume(x+1, Q.integer)
+            >>> a = Q.integer(x + 1)
             >>> a.expr
             1 + x
 
@@ -83,9 +83,9 @@ class Assume(Boolean):
         It is a string, e.g. 'integer', 'rational', etc.
 
         Examples:
-            >>> from sympy import Assume, Q
+            >>> from sympy import Q
             >>> from sympy.abc import x
-            >>> a = Assume(x, Q.integer)
+            >>> a = Q.integer(x)
             >>> a.key
             Q.integer
 
@@ -105,16 +105,16 @@ def eliminate_assume(expr, symbol=None):
     Convert an expression with assumptions to an equivalent with all assumptions
     replaced by symbols.
 
-    Assume(x, integer=True) --> integer
-    Assume(x, integer=False) --> ~integer
+    Q.integer(x) --> Q.integer
+    ~Q.integer(x) --> ~Q.integer
 
     Examples:
         >>> from sympy.assumptions.assume import eliminate_assume
-        >>> from sympy import Assume, Q
+        >>> from sympy import Q
         >>> from sympy.abc import x
-        >>> eliminate_assume(Assume(x, Q.positive))
+        >>> eliminate_assume(Q.positive(x))
         Q.positive
-        >>> eliminate_assume(Assume(x, Q.positive, False))
+        >>> eliminate_assume(~Q.positive(x))
         Not(Q.positive)
 
     """
