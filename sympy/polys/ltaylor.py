@@ -150,5 +150,20 @@ class TaylorEval:
         if head == atan:
             q = ev_args(self,f.args)
             return q.atan(self.lvname,self.prec)
+        if head == tan:
+            q = ev_args(self,f.args)
+            return q.tan(self.lvname,self.prec)
+        if head == cosh:
+            q = ev_args(self,f.args)
+            return q.cosh(self.lvname,self.prec)
+        if head == sinh:
+            q = ev_args(self,f.args)
+            return q.sinh(self.lvname,self.prec)
+        if head == tanh:
+            q = ev_args(self,f.args)
+            return q.tanh(self.lvname,self.prec)
+        if head == atanh:
+            q = ev_args(self,f.args)
+            return q.atanh(self.lvname,self.prec)
         raise NotImplementedError('case in __call__ not considered f=%s' % f)
  

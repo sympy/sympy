@@ -44,6 +44,14 @@ def test_taylor_QQ2():
     p1 = taylor(p,x,0,11)
     assert p1 == -283*one/1814400*x**10 + 73*one/80640*x**8 - 13*one/5760*x**6 - one/24*x**4 + one/8*x**2 + one/2
 
+    p = tan(x)
+    p1 = taylor(p,x,0,6)
+    assert p1 == x + x**3/3 + 2*x**5/15
+
+    p = tan(sin(x))
+    p1 = taylor(p,x,0,8)
+    assert p1 == -107*one/5040*x**7 - one/40*x**5 + one/6*x**3 + x
+
 def test_taylor_QQ3():
     x = Symbol('x')
     p = (1 + x)**Rational(1,4)
@@ -71,6 +79,23 @@ def test_taylor_QQ4():
     p = sqrt((1 + log(1+x))**Rational(-3,4))
     p1 = taylor(p,x,0,7)
     assert p1 == 103245539*one/62914560*x**6 - 1497009*one/1310720*x**5 + 26491*one/32768*x**4 - 601*one/1024*x**3 + 57*one/128*x**2 - 3*one/8*x + 1
+
+    p = tanh(x + x**2 + x**3)
+    p1 = taylor(p,x,0,8)
+    assert p1 == -17*one/315*x**7 - 5*one/3*x**6 - 28*one/15*x**5 - x**4 + 2*one/3*x**3 + x**2 + x
+
+    p = cosh(x + x**2)
+    p1 = taylor(p,x,0,9)
+    assert p1 == 2521*one/40320*x**8 + 7*one/40*x**7 + 181*one/720*x**6 + one/6*x**5 + 13*one/24*x**4 + x**3 + one/2*x**2 + 1
+
+    p = sinh(x + x**2)
+    p1 = taylor(p,x,0,9)
+    assert 61*one/720*x**8 + 421*one/5040*x**7 + 5*one/24*x**6 + 61*one/120*x**5 + one/2*x**4 + one/6*x**3 + x**2 + x
+
+    p = atanh(x + tanh(x))
+    p1 = taylor(p,x,0,8)
+    assert p1 == 4301*one/315*x**7 + 26*one/5*x**5 + 7*one/3*x**3 + 2*x
+
 
 def test_taylor_QQ_par1():
     x,y = symbols('x,y')
