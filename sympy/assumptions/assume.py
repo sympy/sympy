@@ -44,20 +44,8 @@ class Assume(Boolean):
     Q.is_true(1 < x)
 
     """
-    def __new__(cls, expr, predicate=None, value=True):
-        from sympy import Q
-        if predicate is None:
-            predicate = Q.is_true
-        elif not isinstance(predicate, Predicate):
-            key = str(predicate)
-            try:
-                predicate = getattr(Q, key)
-            except AttributeError:
-                predicate = Predicate(key)
-        if value:
-            return Boolean.__new__(cls, expr, predicate)
-        else:
-            return Not(Boolean.__new__(cls, expr, predicate))
+    def __new__(cls, expr, predicate):
+        return Boolean.__new__(cls, expr, predicate)
 
     is_Atom = True # do not attempt to decompose this
 
@@ -148,7 +136,7 @@ class Predicate(Boolean):
         return (self.name,)
 
     def __call__(self, expr):
-        return Assume(expr, self.name)
+        return Assume(expr, self)
 
     def add_handler(self, handler):
         self.handlers.append(handler)
