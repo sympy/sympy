@@ -75,14 +75,13 @@ def test_taylor_QQ4():
 def test_taylor_QQ_par1():
     x,y = symbols('x,y')
     p = (x+y)**4
-    p1 = taylor(p,x,0,3)
+    p1 = taylor(p,x,0,3,pol_pars=[y])
     assert p1 == 6*x**2*y**2 + 4*x*y**3 + y**4
     p = (1+x+y)**4
-    p1 = taylor(p,x,0,3)
+    p1 = taylor(p,x,0,3,pol_pars=[y])
     assert p1 == 6*x**2*y**2 + 4*x*y**3 + y**4 + 12*x**2*y + 12*x*y**2 + 6*x**2 + 4*y**3 + 12*x*y + 6*y**2 + 4*x + 4*y + 1
 
-    x,y = symbols('x,y')
-    p = atan(x*y + x**2)
+    p = atan(x*y + x**2,pol_pars=[y])
     p1 = taylor(p,x,0,6)
     assert expand(p1) == one/5*x**5*y**5 - x**5*y - x**4*y**2 - one/3*x**3*y**3 + x**2 + x*y
 

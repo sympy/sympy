@@ -16,14 +16,26 @@ def ev_args(te,a):
     else:
         raise NotImplementedError
 
-def taylor(p,var,start,prec):
+def taylor(p,var,start,prec,pol_pars=[]):
+    """
+    taylor series expansion of p
+    var series variable
+    start  var=start point of expansion
+    prec precision of the series
+    pol_pars polynomial parameters
+
+    ALGORITHM try first to compute the series in the
+    QQ ring; if this fails compute it
+    in the symbolic ring SR consisting
+    of the sympy expressions which do not depend on
+    var and pol_pars; if also this fais compute it
+    using the series function
+    """
     if start:
         raise NotImplementedError
         p0 = p
         p = p.subs(var,var-start)
-    atoms = p.atoms()
-    gens = [_x for _x in atoms if not _x.is_Number and not isinstance(_x, tuple) and _x != var]
-    gens = [var] + gens
+    gens = [var] + pol_pars
     for ring in [QQ, sympify]:
         te = TaylorEval(gens, ring, prec)
         try:
