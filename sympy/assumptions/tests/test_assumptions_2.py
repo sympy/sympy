@@ -4,6 +4,7 @@ from sympy.assumptions import AppliedPredicate, global_assumptions, Predicate
 from sympy.assumptions.assume import eliminate_assume
 from sympy.printing import pretty
 from sympy.assumptions.ask import Q
+from sympy.logic.boolalg import Or
 from sympy.utilities.pytest import XFAIL
 
 def test_equal():
@@ -42,3 +43,9 @@ def test_global():
     global_assumptions.clear()
     assert not Q.is_true(x > 0) in global_assumptions
     assert not Q.is_true(y > 0) in global_assumptions
+
+def test_composite_predicates():
+    x = symbols('x')
+    pred = Q.integer | ~Q.positive
+    assert type(pred(x)) is Or
+    assert pred(x) == Q.integer(x) | ~Q.positive(x)
