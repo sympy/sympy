@@ -58,7 +58,7 @@ class Polygon(GeometryEntity):
 
     Examples
     --------
-    >>> from sympy import Point, Polygon
+    >>> from sympy import Point, Polygon, pi
     >>> p1, p2, p3, p4, p5 = map(Point, [(0, 0), (1, 0), (5, 1), (0, 1), (3, 0)])
     >>> Polygon(p1, p2, p3, p4)
     Polygon(Point(0, 0), Point(1, 0), Point(5, 1), Point(0, 1))
@@ -67,13 +67,35 @@ class Polygon(GeometryEntity):
     >>> Polygon(p1, p2, p5)
     Segment(Point(0, 0), Point(3, 0))
 
-    While not sides of a polygon are allowed to cross implicitly, they
-    can do so explicitly. So a polygon shaped like a Z must have the
-    point in the middle of the Z explicitly given:
+    While the sides of a polygon are not allowed to cross implicitly, they
+    can do so explicitly. For example, a polygon shaped like a Z with the top
+    left connecting to the bottom right of the Z must have the point in the
+    middle of the Z explicitly given:
 
     >>> mid = Point(1, 1)
-    >>> Polygon(Point(0,2),Point(2,2), mid, Point(0,0),Point(2,0), mid).area
+    >>> Polygon((0, 2), (2, 2), mid, (0, 0), (2, 0), mid).area
     0
+    >>> Polygon((0, 2), (2, 2), mid, (2, 0), (0, 0), mid).area
+    -2
+
+    When the the keyword `n` is used to define the number of sides of the
+    Polygon then a RegularPolygon is created and the other arguments are
+    interpreted as center, radius and rotation. The unrotated RegularPolygon
+    will always have a vertex at Point(r, 0) where `r` is the radius of the
+    circle that circumscribes the RegularPolygon.
+
+    >>> p = Polygon((0,0), 1, n=3)
+    >>> p
+    RegularPolygon(Point(0, 0), 1, 3, 0)
+    >>> p[0]
+    Point(1, 0)
+    >>> p.vertices[0]
+    Point(1, 0)
+    >>> p.args[0]
+    Point(0, 0)
+    >>> p.rotate(pi/2)
+    >>> p[0]
+    Point(0, 1)
 
     """
 
