@@ -223,7 +223,7 @@ def compare(a, b, x):
     c = limitinf(la/lb, x)
     if c == 0:
         return "<"
-    elif c in [oo, -oo]:
+    elif c.is_unbounded:
         return ">"
     else:
         return "="
@@ -618,9 +618,11 @@ def rewrite(e, Omega, x, wsym):
     Omega.sort(key=lambda x: nodes[x[1]].ht(), reverse=True)
 
     g, _ = Omega[-1] #g is going to be the "w" - the simplest one in the mrv set
-    sig = (sign(g.args[0], x) == 1)
-    if sig:
+    sig = sign(g.args[0], x)
+    if sig == 1:
         wsym = 1/wsym #if g goes to oo, substitute 1/w
+    elif sig != -1:
+        raise NotImplementedError('Result depends on the sign of %s' % sig)
     #O2 is a list, which results by rewriting each item in Omega using "w"
     O2 = []
     for f, var in Omega:
@@ -646,7 +648,7 @@ def rewrite(e, Omega, x, wsym):
 
     #finally compute the logarithm of w (logw).
     logw = g.args[0]
-    if sig:
+    if sig == 1:
         logw = -logw     #log(w)->log(1/w)=-log(w)
 
     return f, logw

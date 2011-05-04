@@ -278,3 +278,7 @@ def test_order_oo():
     x = Symbol('x', positive=True, bounded=True)
     assert C.Order(x)*oo != C.Order(1, x)
     assert limit(oo/(x**2 - 4), x, oo) == oo
+
+def test_issue2337():
+    raises(NotImplementedError, 'limit(exp(x*y), x, oo)')
+    raises(NotImplementedError, 'limit(exp(-x*y), x, oo)')
