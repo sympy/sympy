@@ -1,6 +1,7 @@
 from sympy.core import Basic, S, C, sympify, oo, pi
 from sympy.simplify import simplify
 from sympy.geometry.exceptions import GeometryError
+from sympy.solvers import solve
 from entity import GeometryEntity
 from point import Point
 from ellipse import Circle
@@ -126,19 +127,27 @@ class Polygon(GeometryEntity):
 
         # reject polygons that have intersecting sides unless the
         # intersection is a shared point or a generalized intersection.
-        def concrete(p):
-            x, y = p
-            return x.is_number and y.is_number
-
-        sides = rv.sides
-        for i, si in enumerate(sides):
-            pts = si[0], si[1]
-            for j in range(i+1, len(sides)):
-                sj = sides[j]
-                if sj[0] not in pts and sj[1] not in pts:
-                    hit = si.intersection(sj)
-                    if hit and concrete(hit[0]):
-                        raise GeometryError("Polygon has intersecting sides.")
+        # A self-intersecting polygon is easier to detect than a
+        # random set of segments since only those sides that are not
+        # part of the convex hull can possibly intersect with other
+        # sides of the polygon...but for now we use the n**2 algorithm
+        # and check all sides with intersection with any preceding sides
+        if not rv.is_convex:
+            sides = rv.sides
+            for i, si in enumerate(sides):
+                pts = si[0], si[1]
+                ai = si.arbitrary_point('hit') # arbitrary point should take Symbol arg
+                hit = [s for s in ai[0].free_symbols.union(ai[1].free_symbols) if s.name == 'hit']
+                for j in xrange(i):
+                    sj = sides[j]
+                    if sj[0] not in pts and sj[1] not in pts:
+                        aj = si.arbitrary_point('hit')
+                        tx = (solve(ai[0] - aj[0]) or [S.Zero])[0]
+                        if tx.is_number and 0 <= tx <= 1:
+                            ty = (solve(ai[1] - aj[1]) or [S.Zero])[0]
+                            if (tx or ty) and ty.is_number and 0 <= ty <= 1:
+                                print ai, aj
+                                raise GeometryError("Polygon has intersecting sides.")
 
         return rv
 
@@ -1028,7 +1037,7 @@ class RegularPolygon(Polygon):
         [Point(5, 0), Point(0, 5), Point(-5, 0), Point(0, -5)]
 
         """
-        return [self[i] for i in range(len(self))]
+        return [self[i] for i in xrange(len(self))]
 
     def __getitem__(self, k):
         """
