@@ -3,7 +3,7 @@
 from iterables import (iff, flatten, group, take, subsets,
     variations, numbered_symbols, cartes, capture, any, all, dict_merge,
     postorder_traversal, preorder_traversal, interactive_traversal,
-    prefixes, postfixes, sift)
+    prefixes, postfixes, sift, topological_sort)
 
 from lambdify import lambdify
 from source import source
@@ -12,3 +12,4 @@ from decorator import threaded, xthreaded, deprecated, wraps
 
 from cythonutils import cythonized
 from timeutils import timed
+
