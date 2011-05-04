@@ -26,7 +26,6 @@ class AssumptionsContext(set):
     def add(self, *assumptions):
         """Add an assumption."""
         for a in assumptions:
-            assert isinstance(a, AppliedPredicate), 'can only store instances of AppliedPredicate'
             super(AssumptionsContext, self).add(a)
 
 global_assumptions = AssumptionsContext()

@@ -36,6 +36,8 @@ def eval_predicate(predicate, expr, assumptions=True):
 
     This uses only direct resolution methods, not logical inference.
     """
+    if not isinstance(predicate, Predicate):
+        return eval_predicate(Q.is_true, predicate(expr), assumptions)
     res, _res = None, None
     mro = inspect.getmro(type(expr))
     for handler in predicate.handlers:
@@ -90,7 +92,7 @@ def ask(expr, key=Q.is_true, assumptions=True, context=global_assumptions, disab
 
     """
     expr = sympify(expr)
-    if type(key) is not Predicate:
+    if isinstance(key, basestring):
         key = getattr(Q, str(key))
     assumptions = And(assumptions, And(*context))
 
@@ -129,7 +131,8 @@ def ask(expr, key=Q.is_true, assumptions=True, context=global_assumptions, disab
                         return False
                     if Not(key) in known_facts_dict[assum]:
                         return True
-        elif assumptions.func is Not and assumptions.args[0].is_Atom:
+        elif (isinstance(key, Predicate) and
+                assumptions.func is Not and assumptions.args[0].is_Atom):
             if assumptions.args[0] in known_facts_dict[key]:
                 return False
 

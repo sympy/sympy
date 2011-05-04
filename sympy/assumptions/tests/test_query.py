@@ -929,6 +929,10 @@ def test_functions_in_assumptions():
     assert ask(x, Q.negative, Equivalent(Q.real(x), Q.positive(x))) is False
     assert ask(x, Q.negative, Xor(Q.real(x), Q.negative(x))) is False
 
+def test_composite_ask_key():
+    x = symbols('x')
+    assert ask(x, Q.negative & Q.integer, Q.real(x) >> Q.positive(x)) is False
+
 def test_is_true():
     from sympy.logic.boolalg import Equivalent, Implies
     x = symbols('x')
