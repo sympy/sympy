@@ -80,6 +80,11 @@ def test_power():
     assert eye(2)**10000000 == eye(2)
     assert Matrix([[1, 2], [3, 4]])**Integer(2) == Matrix([[7, 10], [15, 22]])
 
+    A = Matrix([[33, 24], [48, 57]])
+    assert (A**(S(1)/2))[:] == [5, 2, 4, 7]
+    A = Matrix([[0, 4], [-1, 5]])
+    assert (A**(S(1)/2))**2 == A
+
 def test_creation():
     raises(ValueError, 'Matrix(5, 5, range(20))')
 
@@ -428,7 +433,20 @@ def test_QR():
 
     A = Matrix([[1,1,1],[1,1,3],[2,3,4]])
     Q, R = A.QRdecomposition()
-    assert Q*Q.T == eye(Q.rows)
+    assert Q.T * Q == eye(Q.cols)
+    assert R.is_upper()
+    assert A == Q*R
+
+def test_QR_non_square():
+    A = Matrix([[9,0,26],[12,0,-7],[0,4,4],[0,-3,-3]])
+    Q, R = A.QRdecomposition()
+    assert Q.T * Q == eye(Q.cols)
+    assert R.is_upper()
+    assert A == Q*R
+
+    A = Matrix([[1,-1,4],[1,4,-2],[1,4,2],[1,-1,0]])
+    Q, R = A.QRdecomposition()
+    assert Q.T * Q == eye(Q.cols)
     assert R.is_upper()
     assert A == Q*R
 
@@ -1455,10 +1473,10 @@ def test_errors():
     raises(TypeError, "SMatrix([[1, 2], [3, 4]]).submatrix([1, 1])")
     raises(TypeError, "Matrix([1]).applyfunc(1)")
     raises(ShapeError, "Matrix([1]).LUsolve(Matrix([[1, 2], [3, 4]]))")
+    raises(MatrixError, "Matrix([[1,2,3],[4,5,6],[7,8,9]]).QRdecomposition()")
     raises(NonSquareMatrixError, "Matrix([1, 2]).LUdecomposition_Simple()")
     raises(ValueError, "Matrix([[1, 2], [3, 4]]).minorEntry(4, 5)")
     raises(ValueError, "Matrix([[1, 2], [3, 4]]).minorMatrix(4, 5)")
-    raises(NonSquareMatrixError, "Matrix([1, 2]).QRdecomposition()")
     raises(TypeError, "Matrix([1, 2, 3]).cross(1)")
     raises(TypeError, "Matrix([1, 2, 3]).dot(1)")
     raises(ShapeError, "Matrix([1, 2, 3]).dot(Matrix([1, 2]))")
@@ -1479,6 +1497,8 @@ def test_errors():
     raises(TypeError, "SMatrix([[1, 2], [3, 4]]).submatrix((1, 2))")
     raises(TypeError, "SMatrix([1, 2, 3]).cross(1)")
     raises(ValueError, "Matrix([[5, 10, 7],[0, -1, 2],[8,  3, 4]]).LUdecomposition_Simple(iszerofunc=lambda x:abs(x)<=4)")
+    raises(NotImplementedError, "Matrix([[1, 0],[1, 1]])**(S(1)/2)")
+    raises(NotImplementedError, "Matrix([[1, 2, 3],[4, 5, 6],[7,  8, 9]])**(0.5)")
 
 def test_len():
     assert len(Matrix()) == 0

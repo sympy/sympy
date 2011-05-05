@@ -1,4 +1,4 @@
-from sympy import Basic, Symbol, Integer, S, Dummy
+from sympy import Basic, Symbol, Integer, S, Dummy, Rational
 from sympy.core.sympify import sympify, converter, SympifyError
 
 from sympy.polys import Poly, roots, cancel
@@ -421,7 +421,16 @@ class Matrix(object):
                 s *= s
                 n //= 2
             return a
-        raise NotImplementedError("Non-integer powers not supported.")
+        elif isinstance(num, Rational):
+            try:
+                P, D = self.diagonalize()
+            except MatrixError:
+                raise NotImplementedError("Implemented only for diagonalizable matrices")
+            for i in range(D.rows):
+                D[i, i] = D[i, i]**num
+            return P * D * P.inv()
+        else:
+            raise NotImplementedError("Only integer and rational values are supported")
 
     def __add__(self,a):
         return matrix_add(self,a)
@@ -881,6 +890,7 @@ class Matrix(object):
 
         This is for symbolic matrices, for real or complex ones use
         sympy.mpmath.lu_solve or sympy.mpmath.qr_solve.
+
         """
         if rhs.rows != self.rows:
             raise ShapeError("`self` and `rhs` must have the same number of rows.")
@@ -902,6 +912,18 @@ class Matrix(object):
     def LUdecomposition(self, iszerofunc=_iszero):
         """
         Returns the decomposition LU and the row swaps p.
+
+        Example:
+        >>> from sympy import Matrix
+        >>> a = Matrix([[4, 3], [6, 3]])
+        >>> L, U, _ = a.LUdecomposition()
+        >>> L
+        [  1, 0]
+        [3/2, 1]
+        >>> U
+        [4,    3]
+        [0, -3/2]
+
         """
         combined, p = self.LUdecomposition_Simple(iszerofunc=_iszero)
         L = self.zeros(self.rows)
@@ -1066,13 +1088,49 @@ class Matrix(object):
         """
         Return Q,R where A = Q*R, Q is orthogonal and R is upper triangular.
 
-        Assumes full-rank square (for now).
+        Examples::
+        This is the example from wikipedia
+        >>> from sympy import Matrix, eye
+        >>> A = Matrix([[12,-51,4],[6,167,-68],[-4,24,-41]])
+        >>> Q, R = A.QRdecomposition()
+        >>> Q
+        [ 6/7, -69/175, -58/175]
+        [ 3/7, 158/175,   6/175]
+        [-2/7,    6/35,  -33/35]
+        >>> R
+        [14,  21, -14]
+        [ 0, 175, -70]
+        [ 0,   0,  35]
+        >>> A == Q*R
+        True
+
+        QR factorization of an identity matrix
+        >>> A = Matrix([[1,0,0],[0,1,0],[0,0,1]])
+        >>> Q, R = A.QRdecomposition()
+        >>> Q
+        [1, 0, 0]
+        [0, 1, 0]
+        [0, 0, 1]
+        >>> R
+        [1, 0, 0]
+        [0, 1, 0]
+        [0, 0, 1]
+
         """
-        if not self.is_square:
-            raise NonSquareMatrixError()
+
+        if not self.rows >= self.cols:
+            raise MatrixError("The number of rows must be greater than columns")
         n = self.rows
-        Q, R = self.zeros(n), self.zeros(n)
-        for j in range(n):      # for each column vector
+        m = self.cols
+        rank = n
+        row_reduced = self.rref()[0]
+        for i in range(row_reduced.rows):
+            if Matrix(row_reduced[i*m:(i+1)*m]).norm() == 0:
+                rank -= 1
+        if not rank == self.cols:
+            raise MatrixError("The rank of the matrix must match the columns")
+        Q, R = self.zeros((n, m)), self.zeros(m)
+        for j in range(m):      # for each column vector
             tmp = self[:,j]     # take original v
             for i in range(j):
                 # subtract the project of self on new vector
@@ -1231,6 +1289,34 @@ class Matrix(object):
         return self.rows == self.cols
 
     def is_upper(self):
+        """
+        Check if matrix is an upper triangular matrix.
+
+        Example:
+        >>> from sympy import Matrix
+        >>> m = Matrix(2,2,[1, 0, 0, 1])
+        >>> m
+        [1, 0]
+        [0, 1]
+        >>> m.is_upper()
+        True
+
+        >>> m = Matrix(3,3,[5, 1, 9, 0, 4 , 6, 0, 0, 5])
+        >>> m
+        [5, 1, 9]
+        [0, 4, 6]
+        [0, 0, 5]
+        >>> m.is_upper()
+        True
+
+        >>> m = Matrix(2,3,[4, 2, 5, 6, 1, 1])
+        >>> m
+        [4, 2, 5]
+        [6, 1, 1]
+        >>> m.is_upper()
+        False
+
+        """
         for i in xrange(1, self.rows):
             for j in xrange(0, i):
                 if self[i,j] != 0:
@@ -1238,6 +1324,35 @@ class Matrix(object):
         return True
 
     def is_lower(self):
+        """
+        Check if matrix is a lower triangular matrix.
+
+        Example:
+        >>> from sympy import Matrix
+        >>> m = Matrix(2,2,[1, 0, 0, 1])
+        >>> m
+        [1, 0]
+        [0, 1]
+        >>> m.is_lower()
+        True
+
+        >>> m = Matrix(3,3,[2, 0, 0, 1, 4 , 0, 6, 6, 5])
+        >>> m
+        [2, 0, 0]
+        [1, 4, 0]
+        [6, 6, 5]
+        >>> m.is_lower()
+        True
+
+        >>> from sympy.abc import x, y
+        >>> m = Matrix(2,2,[x**2 + y, y**2 + x, 0, x + y])
+        >>> m
+        [y + x**2, x + y**2]
+        [       0,    x + y]
+        >>> m.is_lower()
+        False
+
+        """
         for i in xrange(0, self.rows):
             for j in xrange(i+1, self.cols):
                 if self[i, j] != 0:
