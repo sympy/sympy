@@ -9,6 +9,8 @@ Segment
 
 """
 from sympy.core import S, C, sympify
+from sympy.functions.elementary.trigonometric import _pi_coeff as pi_coeff
+from sympy.core.numbers import Real, Rational
 from sympy.simplify import simplify
 from sympy.geometry.exceptions import GeometryError
 from entity import GeometryEntity
@@ -692,7 +694,8 @@ class LinearEntity(GeometryEntity):
 class Line(LinearEntity):
     """An infinite line in space.
 
-    A line is declared with two distinct points or a point and slope.
+    A line is declared with two distinct points or a point and slope
+    as defined using keyword `slope`.
 
     Note
     ----
@@ -702,7 +705,8 @@ class Line(LinearEntity):
     Parameters
     ----------
     p1 : Point
-    p2 : Point
+    pt : Point
+    slope: sympy expression
 
     See Also
     --------
@@ -724,37 +728,32 @@ class Line(LinearEntity):
     >>> L.coefficients
     (-2, 1, 1)
 
-    Instantiate from point/slope or slope/point:
+    Instantiate with keyword `slope`:
 
-    >>> Line(Point(0, 0), 2)
-    Line(Point(0, 0), Point(1, 2))
-    >>> Line(2, Point(0, 0))
+    >>> Line(Point(0, 0), slope=2)
     Line(Point(0, 0), Point(1, 2))
 
     """
 
-    def __new__(cls, p1, p2, **kwargs):
-        if not isinstance(p1, Point):
+    def __new__(cls, p1, pt=None, slope=None, **kwargs):
+        p1 = Point(p1)
+        if pt and slope is None:
             try:
-                p1 = Point(p1)
+                p2 = Point(pt)
             except NotImplementedError:
-                p1 = sympify(p1)
-        if not isinstance(p2, Point):
-            try:
-                p2 = Point(p2)
-            except NotImplementedError:
-                p2 = sympify(p2)
-        if not isinstance(p1, Point):
-            p1, p2 = p2, p1
-        if not isinstance(p1, Point):
-            raise TypeError("Line requires two Points or a Point and slope.")
-        if not isinstance(p2, Point):
-            if sympify(p2).is_bounded is False:
+                raise ValueError('The 2nd argument was not a valid Point; if it was meant to be a slope it should be given with keyword "slope".')
+            if p1 == p2:
+                raise ValueError('A line requires two distinct points.')
+        elif slope and pt is None:
+            slope = sympify(slope)
+            if slope.is_bounded is False:
                 # when unbounded slope, don't change x
                 p2 = p1 + Point(0, 1)
             else:
-                # go over 1 up p2
-                p2 = p1 + Point(1, p2)
+                # go over 1 up slope
+                p2 = p1 + Point(1, slope)
+        else:
+            raise ValueError('A 2nd Point or keyword "slope" must be used.')
 
         return LinearEntity.__new__(cls, p1, p2, **kwargs)
 
@@ -921,37 +920,44 @@ class Ray(LinearEntity):
     oo
     >>> r.slope
     2
-    >>> Ray(Point(0, 0), pi/4).slope
+    >>> Ray(Point(0, 0), angle=pi/4).slope
     1
 
     """
 
-    def __new__(cls, p1, p2, **kwargs):
-        if not isinstance(p1, Point):
+    def __new__(cls, p1, pt=None, angle=None, **kwargs):
+        p1 = Point(p1)
+        if pt and angle is None:
             try:
-                p1 = Point(p1)
+                p2 = Point(pt)
             except NotImplementedError:
-                p1 = sympify(p1)
-        if not isinstance(p2, Point):
-            try:
-                p2 = Point(p2)
-            except NotImplementedError:
-                p2 = sympify(p2)
-        if not isinstance(p1, Point):
-            p1, p2 = p2, p1
-        if not isinstance(p1, Point):
-            raise TypeError("Ray requires two Points or a Point and ccw angle wrt x-axis.")
-        if not isinstance(p2, Point):
-            p2 = sympify(p2)
-            if p2 == S.Pi/2:
-                # when unbounded slope, don't change x
-                p2 = p1 + Point(0, 1)
-            elif p2 == -S.Pi/2:
-                # when unbounded slope, don't change x
-                p2 = p1 + Point(0, -1)
+                raise ValueError('The 2nd argument was not a valid Point;\nif it was meant to be an angle it should be given with keyword "angle".')
+            if p1 == p2:
+                raise ValueError('A Ray requires two distinct points.')
+        elif angle is not None and pt is None:
+            # we need to know if the angle is an odd multiple of pi/2
+            c = pi_coeff(sympify(angle))
+            p2 = None
+            if c is not None:
+                if c.is_Rational:
+                    if c.q == 2:
+                        if c.p == 1:
+                            p2 = p1 + Point(0, 1)
+                        elif c.p == 3:
+                            p2 = p1 + Point(0, -1)
+                    elif c.q == 1:
+                        if c.p == 0:
+                            p2 = p1 + Point(1, 0)
+                        elif c.p == 1:
+                            p2 = p1 + Point(-1, 0)
+                if p2 is None:
+                    c *= S.Pi
             else:
-                # go over 1 up tan(p2)
-                p2 = p1 + Point(1, C.tan(p2))
+                c = angle
+            if not p2:
+                p2 = p1 + Point(1, C.tan(c))
+        else:
+            raise ValueError('A 2nd point or keyword "angle" must be used.')
 
         return LinearEntity.__new__(cls, p1, p2, **kwargs)
 
@@ -1098,7 +1104,7 @@ class Ray(LinearEntity):
         Examples
         --------
         >>> from sympy import Point, Ray, pi
-        >>> r = Ray((0, 0), pi/4)
+        >>> r = Ray((0, 0), angle=pi/4)
         >>> r.plot_interval()
         [t, 0, 5*2**(1/2)/(1 + 5*2**(1/2))]
 
@@ -1203,6 +1209,8 @@ class Segment(LinearEntity):
         #   if p1[0] == p2[0] then p1[1] < p2[1]
         p1 = Point(p1)
         p2 = Point(p2)
+        if p1 == p2:
+            return Point(p1)
         if p1[0] > p2[0]:
             p1, p2 = p2, p1
         elif p1[0] == p2[0] and p1[1] > p2[0]:
