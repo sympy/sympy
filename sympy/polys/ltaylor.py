@@ -1,5 +1,6 @@
 from sympy.polys.lpoly import *
 from sympy import *
+from sympy.core import C
 
 class TaylorEvalError(TypeError):
     pass
@@ -16,33 +17,104 @@ def ev_args(te,a):
     else:
         raise NotImplementedError
 
-def taylor(p,var,start,prec,pol_pars=[]):
+def taylor(p,var=None,start=0,prec=6,dir="+",pol_pars=[],ov=True):
     """
     taylor series expansion of p
+    kept the same arguments as series, with the addition
+    of pol_pars
     var series variable
     start  var=start point of expansion
     prec precision of the series
+    dir ... 
     pol_pars polynomial parameters
+    ov = True return always the series in expanded form
+    ov = return a series which must be expanded to be put in canonical
+         form; this is faster
 
     ALGORITHM try first to compute the series in the
     QQ ring; if this fails compute it
     in the symbolic ring SR consisting
     of the sympy expressions which do not depend on
-    var and pol_pars; if also this fais compute it
+    var and pol_pars; if also this fails compute it
     using the series function
+
+    EXAMPLES
+
+    >>> from sympy import *
+    >>> from sympy.polys.ltaylor import taylor
+    >>> x,y = symbols('x,y')
+    >>> taylor(sin(x*tan(x)),x,0,10)
+    x**2 + x**4/3 - x**6/30 - 71*x**8/630 + O(x**10)
+
+    >>> taylor(sqrt(1 + x*sin(pi*x)),x,0,6)
+    1 + x**4*(-pi**2/8 - pi**3/12) + pi*x**2/2 + O(x**6)
+
+    >>> taylor(exp(x*log(x)),x,0,3)
+    1 + x*log(x) + x**2*log(x)**2/2 + O(x**3*log(x)**3)
+
+    In these examples y is first treated internally
+    as a Sympy symbol, then as a polynomial parameter;
+    the latter version is faster
+
+    >>> taylor(atan(x*y + x**2),x,0,5)
+    x*y + x**2 - x**4*y**2 - x**3*y**3/3 + O(x**5)
+    >>> taylor(atan(x*y + x**2),x,0,5,pol_pars=[y])
+    x*y + x**2 - x**4*y**2 - x**3*y**3/3 + O(x**5)
     """
+
+    if var == None or prec == None or dir != "+" or \
+        prec in [S.Infinity, S.NegativeInfinity]:
+        return series(p,var,start,prec)
+    # case with ov=True; for ov=False taylor is faster than for ov=True
+    # in sin(x), etc. series() is faster at high precision
+    #              prec
+    # sin(x)       100   series 2x faster
+    #              200   series 2x faster
+    #              1000  series 30x faster
+    # similarly for cos
+    # tan(x)       100   taylor 50% faster 
+    #              200   taylor 20% faster
+    #              1000  series 3x faster (chosen series for this)
+    # log(1+x)           taylor 50% faster  
+    # atan(x)            taylor 20% faster
+    # for longer arguments taylor is faster
+    # sin(x+x**2)  100   taylor 10x faster
+    #              200   taylor 7x faster
+    #              500   taylor 6x faster
+    if prec > 70 and ov:
+        head = p.__class__
+        if head in [cos,sin,tan,acos,asin]:
+            q = p.args[0]
+            if q == var:
+                return series(p,var,start,prec)
+            if q.__class__ == Mul:
+                if var in q.args:
+                    b = 1
+                    ni = q.args.index(var)
+                    for i in range(len(q.args)):
+                        if i != ni and isinstance(q.args[i],Number):
+                            b = 0
+                            break
+                    if b:
+                          return series(p,var,start,prec)
     if start:
-        raise NotImplementedError
         p0 = p
-        p = p.subs(var,var-start)
+        p = p.subs(var,var+start)
     gens = [var] + pol_pars
     for ring in [QQ, sympify]:
         te = TaylorEval(gens, ring, prec)
         try:
             p1 = te(p)
-            # TODO add subs to Poly
-            #p1.subs(X=lp.lvar+te(start))
+            lp = p1.lp
+            sb = Subs(lp,lp,{te.lvname:te.lvar-start})
+            lvar = sb.subs(p1)
             p1 = p1.tobasic(*gens)
+            #args = list(p1._args + (O(var**prec),))
+            #p1._args = tuple(args)
+            if ov:
+                p1 = p1 + O(var**prec)
+                if lp.SR:
+                    p1 = p1.expand()
             return p1
         except TaylorEvalError:
             continue
