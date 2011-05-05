@@ -96,7 +96,7 @@ class SymPyIntegerRing(IntegerRing):
 
     def sqrt(self, a):
         """Compute square root of `a`. """
-        return a.sqrt()
+        return a.isqrt()
 
     def factorial(self, a):
         """Compute factorial of `a`. """
