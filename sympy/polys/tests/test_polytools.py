@@ -22,6 +22,7 @@ from sympy.polys.polytools import (
     factor_list, factor,
     intervals, refine_root, count_roots,
     real_roots, nroots, ground_roots,
+    nth_power_roots_poly,
     cancel,
     reduced, groebner)
 
@@ -232,8 +233,16 @@ def test_Poly__new__():
 
     raises(GeneratorsNeeded, "Poly({1: 2, 0: 1})")
     raises(GeneratorsNeeded, "Poly([2, 1])")
+    raises(GeneratorsNeeded, "Poly((2, 1))")
 
     raises(GeneratorsNeeded, "Poly(1)")
+
+    f = a*x**2 + b*x + c
+
+    assert Poly({2: a, 1: b, 0: c}, x) == f
+    assert Poly(iter([a, b, c]), x) == f
+    assert Poly([a, b, c], x) == f
+    assert Poly((a, b, c), x) == f
 
     assert Poly(Poly(a*x + b*y, x, y), x) == Poly(a*x + b*y, x)
 
@@ -587,6 +596,9 @@ def test_Poly_properties():
 
     assert Poly(x*y).is_multivariate == True
     assert Poly(x).is_multivariate == False
+
+    assert Poly(x**16 + x**14 - x**10 + x**8 - x**6 + x**2 + 1).is_cyclotomic == False
+    assert Poly(x**16 + x**14 - x**10 - x**8 - x**6 + x**2 + 1).is_cyclotomic == True
 
 @XFAIL
 def test_Poly_is_irreducible():
@@ -2075,6 +2087,26 @@ def test_ground_roots():
 
     assert Poly(f).ground_roots() == {S(1): 2, S(0): 2}
     assert ground_roots(f) == {S(1): 2, S(0): 2}
+
+def test_nth_power_roots_poly():
+    f = x**4 - x**2 + 1
+
+    f_2 = (x**2 - x + 1)**2
+    f_3 = (x**2 + 1)**2
+    f_4 = (x**2 + x + 1)**2
+    f_12 = (x - 1)**4
+
+    nth_power_roots_poly(f, 1) == f
+
+    raises(ValueError, "nth_power_roots_poly(f, 0)")
+    raises(ValueError, "nth_power_roots_poly(f, x)")
+
+    factor(nth_power_roots_poly(f, 2)) == f_2
+    factor(nth_power_roots_poly(f, 3)) == f_3
+    factor(nth_power_roots_poly(f, 4)) == f_4
+    factor(nth_power_roots_poly(f, 12)) == f_12
+
+    raises(MultivariatePolynomialError, "nth_power_roots_poly(x + y, 2, x, y)")
 
 def test_cancel():
     assert cancel(0) == 0

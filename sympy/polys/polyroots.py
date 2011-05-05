@@ -1,18 +1,23 @@
+"""Algorithms for computing symbolic roots of polynomials. """
+
 from sympy.core.symbol import Dummy
 from sympy.core.add import Add
 from sympy.core.mul import Mul
-from sympy.core import S
+from sympy.core import S, I
 from sympy.core.sympify import sympify
-from sympy.core.numbers import Rational
+from sympy.core.numbers import Rational, igcd
 
-from sympy.ntheory import divisors
+from sympy.ntheory import divisors, isprime, nextprime
 from sympy.functions import exp, sqrt, re, im
 
 from sympy.polys.polytools import Poly, cancel, factor
+from sympy.polys.specialpolys import cyclotomic_poly
 from sympy.polys.polyerrors import PolynomialError, GeneratorsNeeded
 
 from sympy.simplify import simplify
 from sympy.utilities import all
+
+import math
 
 def roots_linear(f):
     """Returns a list of roots of a linear polynomial."""
@@ -238,6 +243,75 @@ def roots_binomial(f):
 
     return roots
 
+def _inv_totient_estimate(m):
+    """
+    Find ``(L, U)`` such that ``L <= phi^-1(m) <= U``.
+
+    **Examples**
+
+    >>> from sympy.polys.polyroots import _inv_totient_estimate
+
+    >>> _inv_totient_estimate(192)
+    (192, 840)
+    >>> _inv_totient_estimate(400)
+    (400, 1750)
+
+    """
+    primes = [ d + 1 for d in divisors(m) if isprime(d + 1) ]
+
+    a, b = 1, 1
+
+    for p in primes:
+        a *= p
+        b *= p - 1
+
+    L = m
+    U = int(math.ceil(m*(float(a)/b)))
+
+    P = p = 2
+    primes = []
+
+    while P <= U:
+        p = nextprime(p)
+        primes.append(p)
+        P *= p
+
+    P //= p
+    b = 1
+
+    for p in primes[:-1]:
+        b *= p - 1
+
+    U = int(math.ceil(m*(float(P)/b)))
+
+    return L, U
+
+def roots_cyclotomic(f, factor=False):
+    """Compute roots of cyclotomic polynomials. """
+    L, U = _inv_totient_estimate(f.degree())
+
+    for n in xrange(L, U+1):
+        g = cyclotomic_poly(n, f.gen, polys=True)
+
+        if f == g:
+            break
+    else: # pragma: no cover
+        raise RuntimeError("failed to find index of a cyclotomic polynomial")
+
+    roots = []
+
+    if not factor:
+        for k in xrange(1, n+1):
+            if igcd(k, n) == 1:
+                roots.append(exp(2*k*S.Pi*I/n).expand(complex=True))
+    else:
+        g = Poly(f, extension=(-1)**Rational(1, n))
+
+        for h, _ in g.factor_list()[1]:
+            roots.append(-h.TC())
+
+    return roots
+
 def roots_rational(f):
     """Returns a list of rational roots of a polynomial."""
     domain = f.get_domain()
@@ -404,6 +478,8 @@ def roots(f, *gens, **flags):
             result += map(cancel, roots_linear(f))
         elif n == 2:
             result += map(cancel, roots_quadratic(f))
+        elif f.is_cyclotomic:
+            result += roots_cyclotomic(f)
         elif n == 3 and cubics:
             result += roots_cubic(f)
         elif n == 4 and quartics:
@@ -429,7 +505,10 @@ def roots(f, *gens, **flags):
 
         result = {}
 
-        if f.degree() == 1:
+        if not f.get_domain().is_Exact:
+            for r in f.nroots():
+                _update_dict(result, r, 1)
+        elif f.degree() == 1:
             result[roots_linear(f)[0]] = 1
         elif f.degree() == 2:
             for r in roots_quadratic(f):
