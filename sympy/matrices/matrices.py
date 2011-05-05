@@ -1457,8 +1457,8 @@ class Matrix(object):
 
         See also: .is_lower(), is_upper() .is_diagonalizable()
         """
-        for i in range(self.cols):
-            for j in range(self.rows):
+        for i in xrange(self.rows):
+            for j in xrange(self.cols):
                 if i != j and self[i, j] != 0:
                     return False
         return True
