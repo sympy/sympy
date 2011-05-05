@@ -1,7 +1,7 @@
 """User-friendly public interface to polynomial functions. """
 
 from sympy.core import (
-    S, Basic, Expr, I, Integer, Add, Mul,
+    S, Basic, Expr, I, Integer, Add, Mul, Dummy,
 )
 
 from sympy.core.sympify import (
@@ -87,11 +87,11 @@ class Poly(Expr):
         if 'order' in opt:
             raise NotImplementedError("'order' keyword is not implemented yet")
 
-        if isinstance(rep, (dict, list)):
+        if hasattr(rep, '__iter__'):
             if isinstance(rep, dict):
                 return cls._from_dict(rep, opt)
             else:
-                return cls._from_list(rep, opt)
+                return cls._from_list(list(rep), opt)
         else:
             rep = sympify(rep)
 
@@ -2748,6 +2748,44 @@ class Poly(Expr):
 
         return roots
 
+    def nth_power_roots_poly(f, n):
+        """
+        Construct a polynomial with n-th powers of roots of ``f``.
+
+        **Examples**
+
+        >>> from sympy import Poly
+        >>> from sympy.abc import x
+
+        >>> f = Poly(x**4 - x**2 + 1)
+
+        >>> f.nth_power_roots_poly(2)
+        Poly(x**4 - 2*x**3 + 3*x**2 - 2*x + 1, x, domain='ZZ')
+        >>> f.nth_power_roots_poly(3)
+        Poly(x**4 + 2*x**2 + 1, x, domain='ZZ')
+        >>> f.nth_power_roots_poly(4)
+        Poly(x**4 + 2*x**3 + 3*x**2 + 2*x + 1, x, domain='ZZ')
+        >>> f.nth_power_roots_poly(12)
+        Poly(x**4 - 4*x**3 + 6*x**2 - 4*x + 1, x, domain='ZZ')
+
+        """
+        if f.is_multivariate:
+            raise MultivariatePolynomialError("must be a univariate polynomial")
+
+        N = sympify(n)
+
+        if N.is_Integer and N >= 1:
+            n = int(N)
+        else:
+            raise ValueError("'n' must an integer and n >= 1, got %s" % n)
+
+        x = f.gen
+        t = Dummy('t')
+
+        r = f.resultant(f.__class__.from_expr(x**n - t, x, t))
+
+        return r.replace(t, x)
+
     def cancel(f, g):
         """
         Cancel common factors in a rational function ``f/g``.
@@ -3019,6 +3057,29 @@ class Poly(Expr):
 
         """
         return len(f.gens) != 1
+
+    @property
+    def is_cyclotomic(f):
+        """
+        Returns ``True`` if ``f`` is a cyclotomic polnomial.
+
+        **Examples**
+
+        >>> from sympy import Poly
+        >>> from sympy.abc import x
+
+        >>> f = x**16 + x**14 - x**10 + x**8 - x**6 + x**2 + 1
+
+        >>> Poly(f).is_cyclotomic
+        False
+
+        >>> g = x**16 + x**14 - x**10 - x**8 - x**6 + x**2 + 1
+
+        >>> Poly(g).is_cyclotomic
+        True
+
+        """
+        return f.rep.is_cyclotomic
 
     def __abs__(f):
         return f.abs()
@@ -4777,6 +4838,42 @@ def ground_roots(f, *gens, **args):
         raise ComputationFailed('ground_roots', 1, exc)
 
     return F.ground_roots()
+
+def nth_power_roots_poly(f, n, *gens, **args):
+    """
+    Construct a polynomial with n-th powers of roots of ``f``.
+
+    **Examples**
+
+    >>> from sympy import nth_power_roots_poly, factor, roots
+    >>> from sympy.abc import x
+
+    >>> f = x**4 - x**2 + 1
+    >>> g = factor(nth_power_roots_poly(f, 2))
+
+    >>> g
+    (1 - x + x**2)**2
+
+    >>> R_f = [ (r**2).expand() for r in roots(f) ]
+    >>> R_g = roots(g).keys()
+
+    >>> set(R_f) == set(R_g)
+    True
+
+    """
+    options.allowed_flags(args, [])
+
+    try:
+        F, opt = poly_from_expr(f, *gens, **args)
+    except PolificationFailed, exc:
+        raise ComputationFailed('nth_power_roots_poly', 1, exc)
+
+    result = F.nth_power_roots_poly(n)
+
+    if not opt.polys:
+        return result.as_expr()
+    else:
+        return result
 
 def cancel(f, *gens, **args):
     """
