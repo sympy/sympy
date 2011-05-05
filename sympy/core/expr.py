@@ -713,7 +713,7 @@ class Expr(Basic, EvalfMixin):
         """
         return self
 
-    def as_coefficient(self, expr, right=False):
+    def as_coefficient(self, expr):
         """Extracts symbolic coefficient at the given expression. In
            other words, this functions separates 'self' into product
            of 'expr' and 'expr'-free coefficient. If such separation
@@ -721,7 +721,6 @@ class Expr(Basic, EvalfMixin):
 
            >>> from sympy import E, pi, sin, I, symbols
            >>> from sympy.abc import x, y
-           >>> n1, n2 = symbols('n1 n2', commutative=False)
 
            >>> E.as_coefficient(E)
            1
@@ -731,23 +730,19 @@ class Expr(Basic, EvalfMixin):
 
            >>> (2*E + x*E).as_coefficient(E)
            2 + x
-           >>> (2*E + x).as_coefficient(E)
+           >>> (2*E*x + x).as_coefficient(E)
+
+           >>> (E*(x + 1) + x).as_coefficient(E)
 
            >>> (2*pi*I).as_coefficient(pi*I)
            2
            >>> (2*I).as_coefficient(pi*I)
 
         """
-        co = self.coeff(expr, right)
-        if not co or co.has(*Mul.make_args(expr)):
-            return None
 
-        if self.is_Add:
-            if len(co.args) == len(self.args):
-                return co
-            return None
-        else:
-            return co
+        r = self.extract_multiplicatively(expr)
+        if r and not r.has(expr):
+            return r
 
     def as_independent(self, *deps, **hint):
         """
@@ -1849,3 +1844,4 @@ from relational import Inequality, StrictInequality
 from function import Derivative
 from sympify import _sympify, sympify, SympifyError
 from symbol import Wild, Dummy
+from sympy.core.exprtools import gcd_terms
