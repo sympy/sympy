@@ -1214,7 +1214,7 @@ class Integer(Rational):
         """Compute factorial of `a`. """
         return Integer(ifactorial(int(a)))
 
-    def sqrt(a):
+    def isqrt(a):
         """Compute integer square root of `a`. """
         return Integer(mlib.isqrt(int(a)))
 
