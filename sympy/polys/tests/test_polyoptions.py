@@ -200,7 +200,7 @@ def test_Split_preprocess():
     raises(OptionError, "Split.preprocess(x)")
 
 def test_Split_postprocess():
-    raises(NotImplementedError, "Split.postprocess({})")
+    raises(NotImplementedError, "Split.postprocess({'split': True})")
 
 def test_Gaussian_preprocess():
     assert Gaussian.preprocess(False) is False

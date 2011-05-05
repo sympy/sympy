@@ -1367,35 +1367,45 @@ class Poly(Expr):
 
         return per(result)
 
-    def div(f, g, auto=False):
+    def div(f, g, auto=True):
         """
         Polynomial division with remainder of ``f`` by ``g``.
 
         **Examples**
 
-        >>> from sympy import Poly, QQ, ZZ
+        >>> from sympy import Poly
         >>> from sympy.abc import x
 
-        >>> Poly(x**2 + 1, x, domain=ZZ).div(Poly(2*x - 4, x, domain=ZZ))
-        (Poly(0, x, domain='ZZ'), Poly(x**2 + 1, x, domain='ZZ'))
-
-        >>> Poly(x**2 + 1, x, domain=QQ).div(Poly(2*x - 4, x, domain=QQ))
+        >>> Poly(x**2 + 1, x).div(Poly(2*x - 4, x))
         (Poly(1/2*x + 1, x, domain='QQ'), Poly(5, x, domain='QQ'))
+
+        >>> Poly(x**2 + 1, x).div(Poly(2*x - 4, x), auto=False)
+        (Poly(0, x, domain='ZZ'), Poly(x**2 + 1, x, domain='ZZ'))
 
         """
         dom, per, F, G = f._unify(g)
+        retract = False
 
-        if auto and dom.has_Ring:
+        if auto and dom.has_Ring and not dom.has_Field:
             F, G = F.to_field(), G.to_field()
+            retract = True
 
         if hasattr(f.rep, 'div'):
             q, r = F.div(G)
         else: # pragma: no cover
             raise OperationNotSupported(f, 'div')
 
+        if retract:
+            try:
+                Q, R = q.to_ring(), r.to_ring()
+            except CoercionFailed:
+                pass
+            else:
+                q, r = Q, R
+
         return per(q), per(r)
 
-    def rem(f, g, auto=False):
+    def rem(f, g, auto=True):
         """
         Computes the polynomial remainder of ``f`` by ``g``.
 
@@ -1404,26 +1414,34 @@ class Poly(Expr):
         >>> from sympy import Poly, ZZ, QQ
         >>> from sympy.abc import x
 
-        >>> Poly(x**2 + 1, x, domain=ZZ).rem(Poly(2*x - 4, x, domain=ZZ))
-        Poly(x**2 + 1, x, domain='ZZ')
+        >>> Poly(x**2 + 1, x).rem(Poly(2*x - 4, x))
+        Poly(5, x, domain='ZZ')
 
-        >>> Poly(x**2 + 1, x, domain=QQ).rem(Poly(2*x - 4, x, domain=QQ))
-        Poly(5, x, domain='QQ')
+        >>> Poly(x**2 + 1, x).rem(Poly(2*x - 4, x), auto=False)
+        Poly(x**2 + 1, x, domain='ZZ')
 
         """
         dom, per, F, G = f._unify(g)
+        retract = False
 
-        if auto and dom.has_Ring:
+        if auto and dom.has_Ring and not dom.has_Field:
             F, G = F.to_field(), G.to_field()
+            retract = True
 
         if hasattr(f.rep, 'rem'):
-            result = F.rem(G)
+            r = F.rem(G)
         else: # pragma: no cover
             raise OperationNotSupported(f, 'rem')
 
-        return per(result)
+        if retract:
+            try:
+                r = r.to_ring()
+            except CoercionFailed:
+                pass
 
-    def quo(f, g, auto=False):
+        return per(r)
+
+    def quo(f, g, auto=True):
         """
         Computes polynomial quotient of ``f`` by ``g``.
 
@@ -1442,21 +1460,29 @@ class Poly(Expr):
 
         """
         dom, per, F, G = f._unify(g)
+        retract = False
 
-        if auto and dom.has_Ring:
+        if auto and dom.has_Ring and not dom.has_Field:
             F, G = F.to_field(), G.to_field()
+            retract = True
 
         if hasattr(f.rep, 'quo'):
             try:
-                result = F.quo(G)
+                q = F.quo(G)
             except ExactQuotientFailed, exc:
                 raise exc.new(f.as_expr(), g.as_expr())
         else: # pragma: no cover
             raise OperationNotSupported(f, 'quo')
 
-        return per(result)
+        if retract:
+            try:
+                q = q.to_ring()
+            except CoercionFailed:
+                pass
 
-    def exquo(f, g, auto=False):
+        return per(q)
+
+    def exquo(f, g, auto=True):
         """
         Computes polynomial exact quotient of ``f`` by ``g``.
 
@@ -1466,23 +1492,31 @@ class Poly(Expr):
         >>> from sympy.abc import x
 
         >>> Poly(x**2 + 1, x).exquo(Poly(2*x - 4, x))
-        Poly(0, x, domain='ZZ')
+        Poly(1/2*x + 1, x, domain='QQ')
 
         >>> Poly(x**2 - 1, x).exquo(Poly(x - 1, x))
         Poly(x + 1, x, domain='ZZ')
 
         """
         dom, per, F, G = f._unify(g)
+        retract = False
 
-        if auto and dom.has_Ring:
+        if auto and dom.has_Ring and not dom.has_Field:
             F, G = F.to_field(), G.to_field()
+            retract = True
 
         if hasattr(f.rep, 'exquo'):
-            result = F.exquo(G)
+            q = F.exquo(G)
         else: # pragma: no cover
             raise OperationNotSupported(f, 'exquo')
 
-        return per(result)
+        if retract:
+            try:
+                q = q.to_ring()
+            except CoercionFailed:
+                pass
+
+        return per(q)
 
     def _gen_to_level(f, gen):
         """Returns level associated with the given generator. """
@@ -3650,14 +3684,14 @@ def div(f, g, *gens, **args):
     (1 + x/2, 5)
 
     """
-    options.allowed_flags(args, ['polys'])
+    options.allowed_flags(args, ['auto', 'polys'])
 
     try:
         (F, G), opt = parallel_poly_from_expr((f, g), *gens, **args)
     except PolificationFailed, exc:
         raise ComputationFailed('div', 2, exc)
 
-    q, r = F.div(G)
+    q, r = F.div(G, auto=opt.auto)
 
     if not opt.polys:
         return q.as_expr(), r.as_expr()
@@ -3679,14 +3713,14 @@ def rem(f, g, *gens, **args):
     5
 
     """
-    options.allowed_flags(args, ['polys'])
+    options.allowed_flags(args, ['auto', 'polys'])
 
     try:
         (F, G), opt = parallel_poly_from_expr((f, g), *gens, **args)
     except PolificationFailed, exc:
         raise ComputationFailed('rem', 2, exc)
 
-    r = F.rem(G)
+    r = F.rem(G, auto=opt.auto)
 
     if not opt.polys:
         return r.as_expr()
@@ -3711,14 +3745,14 @@ def quo(f, g, *gens, **args):
     ExactQuotientFailed: -4 + 2*x does not divide 1 + x**2
 
     """
-    options.allowed_flags(args, ['polys'])
+    options.allowed_flags(args, ['auto', 'polys'])
 
     try:
         (F, G), opt = parallel_poly_from_expr((f, g), *gens, **args)
     except PolificationFailed, exc:
         raise ComputationFailed('quo', 2, exc)
 
-    q = F.quo(G)
+    q = F.quo(G, auto=opt.auto)
 
     if not opt.polys:
         return q.as_expr()
@@ -3735,19 +3769,19 @@ def exquo(f, g, *gens, **args):
     >>> from sympy.abc import x
 
     >>> exquo(x**2 + 1, 2*x - 4)
-    0
+    1 + x/2
     >>> exquo(x**2 - 1, x - 1)
     1 + x
 
     """
-    options.allowed_flags(args, ['polys'])
+    options.allowed_flags(args, ['auto', 'polys'])
 
     try:
         (F, G), opt = parallel_poly_from_expr((f, g), *gens, **args)
     except PolificationFailed, exc:
         raise ComputationFailed('exquo', 2, exc)
 
-    q = F.exquo(G)
+    q = F.exquo(G, auto=opt.auto)
 
     if not opt.polys:
         return q.as_expr()

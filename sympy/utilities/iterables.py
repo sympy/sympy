@@ -579,3 +579,112 @@ def postfixes(seq):
 
     for i in xrange(n):
         yield seq[n-i-1:]
+
+def topological_sort(graph, key=None):
+    r"""
+    Topological sort of graph's vertices.
+
+    **Parameters**
+
+    ``graph`` : ``tuple[list, list[tuple[T, T]]``
+        A tuple consisting of a list of vertices and a list of edges of
+        a graph to be sorted topologically.
+
+    ``key`` : ``callable[T]`` (optional)
+        Ordering key for vertices on the same level. By default the natural
+        (e.g. lexicographic) ordering is used (in this case the base type
+        must implement ordering relations).
+
+    **Examples**
+
+    Consider a graph::
+
+        +---+     +---+     +---+
+        | 7 |\    | 5 |     | 3 |
+        +---+ \   +---+     +---+
+          |   _\___/ ____   _/ |
+          |  /  \___/    \ /   |
+          V  V           V V   |
+         +----+         +---+  |
+         | 11 |         | 8 |  |
+         +----+         +---+  |
+          | | \____   ___/ _   |
+          | \      \ /    / \  |
+          V  \     V V   /  V  V
+        +---+ \   +---+ |  +----+
+        | 2 |  |  | 9 | |  | 10 |
+        +---+  |  +---+ |  +----+
+               \________/
+
+    where vertices are integers. This graph can be encoded using
+    elementary Python's data structures as follows::
+
+        >>> V = [2, 3, 5, 7, 8, 9, 10, 11]
+        >>> E = [(7, 11), (7, 8), (5, 11), (3, 8), (3, 10),
+        ...      (11, 2), (11, 9), (11, 10), (8, 9)]
+
+    To compute a topological sort for graph ``(V, E)`` issue::
+
+        >>> from sympy.utilities.iterables import topological_sort
+
+        >>> topological_sort((V, E))
+        [3, 5, 7, 8, 11, 2, 9, 10]
+
+    If specific tie breaking approach is needed, use ``key`` parameter::
+
+        >>> topological_sort((V, E), key=lambda v: -v)
+        [7, 5, 11, 3, 10, 8, 9, 2]
+
+    Only acyclic graphs can be sorted. If the input graph has a cycle,
+    then :py:exc:`ValueError` will be raised::
+
+        >>> topological_sort((V, E + [(10, 7)]))
+        Traceback (most recent call last):
+        ...
+        ValueError: cycle detected
+
+    .. seealso:: http://en.wikipedia.org/wiki/Topological_sorting
+
+    """
+    V, E = graph
+
+    L = []
+    S = set(V)
+    E = list(E)
+
+    for v, u in E:
+        S.discard(u)
+
+    if key is None:
+        key = lambda value: value
+
+    S = sorted(S, key=key, reverse=True)
+
+    while S:
+        node = S.pop()
+        L.append(node)
+
+        for u, v in list(E):
+            if u == node:
+                E.remove((u, v))
+
+                for _u, _v in E:
+                    if v == _v:
+                        break
+                else:
+                    kv = key(v)
+
+                    for i, s in enumerate(S):
+                        ks = key(s)
+
+                        if kv > ks:
+                            S.insert(i, v)
+                            break
+                    else:
+                        S.append(v)
+
+    if E:
+        raise ValueError("cycle detected")
+    else:
+        return L
+
