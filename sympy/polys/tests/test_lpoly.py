@@ -1,5 +1,11 @@
 """Tests for distributed polynomials and series using lpoly"""
 
+#from sympy.polys.lpoly import *
+# TODO import just what is needed
+from sympy.polys.ltaylor import *
+
+from sympy import Symbol, Rational
+
 from sympy.polys.lpoly import *
 # TODO import just what is needed
 from sympy import *
@@ -57,16 +63,32 @@ def test_eq():
     p1a = lp('1 + x')
     p2a = lp('x + 1')
     assert p1a == p2a
-    """
     p1 = 1 + x
     p2 = 1 + 2*x
     assert p1 == p1a
     p2 = p2 -x
     assert p1 == p2
     p2 -= x
-    assert p2 == rp('1')
+    assert p2 == lp(1)
     assert p2 == 1
-    """
+
+def test_coefficient():
+    gens=['x%d' % i for i in range(11)]
+    lp = LPoly(gens,QQ,O_lex)
+    x0,x1,x2,x3,x4,x5,x6,x7,x8,x9,x10 = lp.gens()
+    p1 = x0**6 + 6*x0**5*x1 + 15*x0**4*x1**2 + 20*x0**3*x1**3 + 15*x0**2*x1**4 + 6*x0*x1**5 + x1**6 + x0**4*x1**2*x2
+    m = x0**2
+    p2 = p1.coefficient(m)
+    assert p2 == 15*x1**4
+    m = x0**2*x1**2
+    p2 = p1.coefficient(m)
+    assert p2 == lp(0)
+    m = x0**2*x1**4
+    p2 = p1.coefficient(m)
+    assert p2 == lp(15)
+    m = x0**4*x1**2
+    p2 = p1.coefficient(m)
+    assert p2 == x2+15
 
 def test_add():
     lp,x,y = lgens('x,y',QQ,O_lex)
@@ -440,4 +462,66 @@ def test_SR2():
     p = (_x + 1).exp('_x',h)
     p1 = p.tobasic(x)
     assert series(exp(x+1),x,0,5) == p1 + O(x**5)
+
+def test_subs():
+    lp,x,y,z = lgens('x,y,z',QQ,O_lex)
+    p1 = x**2 + 2*y**2 + 3*z**2
+    p2 = p1.subs(z=x+y)
+    p3 = x**2 + 2*y**2 + 3*(x+y)**2
+    assert p2 == p3
+
+    lp,x,y = lgens('x,y',QQ,O_lex)
+    p = (1+x)**4
+    p1 = p.subs(x=(1+y)**5)
+    assert p1.coefficient(y**20) == lp('1')
+
+    p = 1 + x**2 + 2*y**2
+    p1 = p.subs(x=1+y**2,y=1+x)
+    assert p1 == 1 + (1+y**2)**2 + 2*(1+x)**2
+
+def test_subs_trunc():
+    lp,x,y = lgens('x,y',QQ,O_lex)
+    p1 = (1+x)**4 + 2*x**3 * y**4
+    p2 = p1.subs_trunc('x',5, y=x+y)
+    p3 = ((1+x)**4 + 2*x**3 * (x+y)**4).trunc('x',5)
+    assert p2 == p3
+    p2 = p1.subs_trunc('x',7, x=x**2,y=x+y)
+    p3 = ((1+x**2)**4 + 2*x**6 * (x+y)**4).trunc('x',7)
+    assert p2 == p3
+
+def test_Subs():
+    lp = LPoly(['x%d' % i for i in range(11)],QQ,O_lex)
+    x0,x1,x2,x3,x4,x5,x6,x7,x8,x9,x10 = lp.gens()
+    lp1,c = lgens('c',QQ,O_lex)
+    rules = {'x0':c,'x1':c+1,'x2':c**2+1,'x3':c+2,'x4':c**4,'x5':c+1,
+        'x6':c*(c-3),'x7':c*(c-7),'x8':c+7,'x9':c+9,'x10':c+10}
+    sb = Subs(lp, lp1,rules)
+    p1 = x0**2*x1 + 2*x0**2 + 3*x1+ 7*x3*x4*x5 + x6*x7*x8
+    p = sb.subs(p1)
+    assert p == 7*c**6 + 22*c**5 + 11*c**4 - 48*c**3 + 150*c**2 + 3*c + 3
+
+    p = sb.subs_trunc(p1,'c',3)
+    assert p == 150*c**2 +3*c +3
+
+    lp,x,y,z = lgens('x,y,z',QQ,O_lex)
+    p1 = x**2 + 2*y**2 + 3*z**2
+    rules = {'z': x+y}
+    sb = Subs(lp, lp, rules)
+    p2 = sb.subs(p1)
+    p3 = x**2 + 2*y**2 + 3*(x+y)**2
+    assert p2 == p3
+
+    lp,x,y = lgens('x,y',QQ,O_lex)
+    rules = {'x':(1+y)**5}
+    sb = Subs(lp,lp,rules)
+    p = (1+x)**4
+    p1 = sb.subs(p)
+    assert p1.coefficient(y**20) == lp(1)
+    assert p1.coefficient(y**18) == lp(190)
+
+    sb = Subs(lp,lp,{'x':1+y**2,'y':1+x})
+    p = 1 + x**2 + 2*y**2
+    p1 = sb.subs(p)
+    assert p1 == 1 + (1+y**2)**2 + 2*(1+x)**2
+
 

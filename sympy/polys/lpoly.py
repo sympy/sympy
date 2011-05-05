@@ -75,8 +75,6 @@ def monomial_pow(a,n):
     """
     b = [x*n for x in a]
     return tuple(b)
-class LPolyOverflowError(OverflowError):
-    pass
 
 class BaseLPoly:
     """
@@ -593,6 +591,48 @@ class Poly(dict):
     def copy(self):
         return copy(self)
 
+    def coefficient(self, p1):
+        """the coefficient of a monomial p1 is the sum ot the terms in 
+        self which have the same degrees in the variables present in p1,
+        divided by p1
+        """
+        lp = self.lp
+        order = lp.order
+        k = p1.keys()
+        if len(k) != 1:
+            raise TypeError('the argument of coeff must be a monomial')
+        expv1 = k[0]
+        # mask1 used to select the exponents of the variables present in p1
+        v1 = p1.variables()
+        p = Poly(lp)
+        zm = lp.zero_mon
+        for expv in self:
+            b = 1
+            for i in v1:
+                if expv[i] != expv1[i]:
+                    b = 0
+                    break
+            if b:
+                p[monomial_div(expv,expv1)] = self[expv]
+        return p
+
+    def subs(p, **rules):
+        """
+        substitution
+        """
+        lp = p.lp
+        sb = Subs(lp,lp,rules)
+        return sb.subs(p)
+
+    def subs_trunc(p, iv,nv, **rules):
+        """
+        substitution with truncation
+        """
+        lp = p.lp
+        sb = Subs(lp,lp,rules)
+        return sb.subs_trunc(p,iv,nv)
+
+
     def __radd__(p1,n):
         # assume n is in p1.lp.ring
         p = p1.copy()
@@ -987,7 +1027,6 @@ class Poly(dict):
                     i += 1
             if not divoccurred:
                 expv =  p.leading_expv()
-                #print 'DB3a p=',p,expv, p.leading_expv()
                 r.iadd_mon((expv,p[expv]))
                 del p[expv]
         if expv == lp.zero_mon:
@@ -1127,10 +1166,8 @@ class Poly(dict):
     def pow_trunc(self,n,i,h):
         """truncation of self**n using mul_trunc
         """
-        #print 'DB50 self=%s n=%d i=%s h=%d' %(self,n,i,h)
         lp = self.lp
         if n != int(n):
-        #if not hasattr(n,'__hex__'):
             raise NotImplementedError
         n = int(n)
         if n == 0:
@@ -1200,12 +1237,9 @@ class Poly(dict):
             p1 = lp(1)/p[zm]
         else:
             p1 = lp(1)
-        #print 'DB', p, iv, nv
         for prec in newton_method_sizes(nv):
-            #print 'DB2', prec
             tmp = p1.square()
             tmp = tmp.mul_trunc(p, iv, prec)
-            #print 'DB3', prec, p1-tmp 
             p1 = 2*p1 - tmp
         return p1
 
@@ -1285,7 +1319,6 @@ class Poly(dict):
         """
         lp = p.lp
         zm = lp.zero_mon
-        #print 'DB10', dict(p)
         assert zm not in p
         n = len(c)
         if not concur:
@@ -1837,5 +1870,74 @@ class Poly(dict):
             result.append(Mul(*term))
     
         return Add(*result)
+
    
+class Subs:
+    """class for substitutions of variables with polynomials,
+    possibly truncated.
+    """
+    def __init__(self,lp1,lp2,rules):
+        self.lp1 = lp1
+        gens_dict = lp1.gens_dict
+        self.lp2 = lp2
+        if lp1.ring != lp2.ring:
+            raise NotImplementedError
+        d = {} # replace monomials with (i,pw)
+        gens = lp1.gens()
+        for i in range(lp1.ngens):
+            d[(i,1)] = gens[i]
+        for var in rules:
+            d[(gens_dict[var],1)] = rules[var]
+        self.d = d
+
+    def subs(self,p):
+        lp1 = self.lp1
+        lp2 = self.lp2
+        ngens = lp1.ngens
+        assert p.lp == lp1
+        d = self.d.copy()
+        p1 = Poly(lp2)
+        for expv in p:
+            p2 = lp2(1)
+            for i in range(ngens):
+                pw = expv[i]
+                if pw == 0:
+                    continue
+                if (i,pw) not in d:
+                   if pw%2 == 0 and (i,pw/2) in d:
+                       d[(i,pw)] = d[(i,pw/2)]**2
+                   elif (i,pw-1) in d:
+                       d[(i,pw)] = d[(i,pw-1)]*d[(i,1)]
+                   else:
+                       d[(i,pw)] = d[(i,1)]**pw
+                p2 *= d[(i,pw)]
+            p1 += p2*p[expv]
+        return p1
+
+    def subs_trunc(self,p,ii,h):
+        """substitution with truncation of variable(s) corresponding
+        to ii and truncation order(s) h
+        """
+        lp1 = self.lp1
+        lp2 = self.lp2
+        ngens = lp1.ngens
+        assert p.lp == self.lp1
+        d = self.d.copy()
+        p1 = lp2(0)
+        for expv in p:
+            p2 = lp2(1)
+            for i in range(ngens):
+                pw = expv[i]
+                if pw == 0:
+                    continue
+                if (i,pw) not in d:
+                    if pw%2 == 0 and (i,pw/2) in d:
+                        d[(i,pw)] = d[(i,pw/2)].square_trunc(ii,h)
+                    elif (i,pw-1) in d:
+                        d[(i,pw)] = d[(i,pw-1)].mul_trunc(d[(i,1)],ii,h)
+                    else:
+                        d[(i,pw)] = d[(i,1)].pow_trunc(pw,ii,h)
+                p2 = p2.mul_trunc(d[(i,pw)],ii,h)
+            p1 += p2*p[expv]
+        return p1
 
