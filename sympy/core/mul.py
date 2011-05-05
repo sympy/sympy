@@ -276,8 +276,9 @@ class Mul(AssocOp):
                 coeff *= Pow(b, e)
                 continue
             if e.p > e.q:
-                ei, e.p = divmod(e.p, e.q) # change e in place
-                coeff *= Pow(b, ei)
+                e_i, ep = divmod(e.p, e.q)
+                coeff *= Pow(b, e_i)
+                e = Rational(ep, e.q)
             num_rat.append((b, e))
         del comb_e
 
@@ -299,8 +300,9 @@ class Mul(AssocOp):
                         coeff *= Pow(g, e)
                     else:
                         if e.p > e.q:
-                            e_i, e.p = divmod(e.p, e.q) # change e in place
+                            e_i, ep = divmod(e.p, e.q) # change e in place
                             coeff *= Pow(g, e_i)
+                            e = Rational(ep, e.q)
                         grow.append((g, e))
                     # update the jth item
                     num_rat[j] = (bj//g, ej)
