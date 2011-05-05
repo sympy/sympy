@@ -1,4 +1,4 @@
-from sympy import Ylm, Zlm, Symbol, sympify, sqrt, pi, sin, cos, exp, I
+from sympy import Ylm, Zlm, Symbol, sympify, sqrt, pi, sin, cos, exp, I, S
 from sympy.functions.special.spherical_harmonics import Pl, Plm, Plmcos
 
 def test_Pl():
@@ -43,7 +43,7 @@ def test_Plmcos():
     assert Plmcos(2, 1, th) == -3*cos(th)*sin(th)
     assert Plmcos(2, 2, th) in [3*sin(th)**2, 3*(1-cos(th)**2)]
     assert Plmcos(3, 0, th) == (5*cos(th)**3-3*cos(th))/2
-    assert Plmcos(3, 1, th) == -3*(5*cos(th)**2-1)/2 *sin(th)
+    assert Plmcos(3, 1, th) == -sin(th)*(15*cos(th)**2/2-S(3)/2)
     assert Plmcos(3, 2, th) == 15*cos(th)*sin(th)**2
     assert Plmcos(3, 3, th) == -15*sin(th)**3
 
@@ -79,3 +79,4 @@ def test_Zlm():
     assert Zlm(2, 0, th, ph).expand() == (sympify(1)/4 * sqrt(5/pi) * \
             (3*cos(th)**2-1)).expand()
     assert Zlm(2, 1, th, ph) == sqrt(15/(4*pi))*sin(th)*cos(th)*cos(ph)
+

@@ -219,6 +219,7 @@ def test_implemented_function_evalf():
     assert str(f(2)) == "f(2)"
     assert f(2).evalf() == 3
     assert f(x).evalf() == f(x)
+    del f._imp_     # XXX: due to caching _imp_ would influence all other tests
 
 def test_evaluate_false():
     for no in [[], 0, False, None]:
