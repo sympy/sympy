@@ -88,7 +88,10 @@ def test_line():
     l7 = Line(p2, p9)
 
     # Basic stuff
-    assert Line(p1, 2) == Line(p1, p1 + Point(1, 2))
+    assert Line((1, 1), slope=1) == Line((1, 1), (2, 2))
+    assert Line((1, 1), slope=oo) == Line((1, 1), (1, 2))
+    assert Line((1, 1), slope=-oo) == Line((1, 1), (1, 2))
+    raises(ValueError, 'Line((1, 1), 1)')
     assert Line(p1, p2) == Line(p2, p1)
     assert l1 == l2
     assert l1 != l3
@@ -104,10 +107,6 @@ def test_line():
     assert l7.equation() == y - 1
     assert p1 in l1 # is p1 on the line l1?
     assert p1 not in l3
-
-    assert Line(Point(1, 1), 2) == \
-           Line(2, Point(1, 1)) == \
-           Line(Point(1, 1), Point(2, 3))
 
     assert simplify(l1.equation()) in (x-y, y-x)
     assert simplify(l3.equation()) in (x-x1, x1-x)
@@ -155,15 +154,29 @@ def test_line():
     assert feq(Line.angle_between(l1, l1_1).evalf(), pi.evalf()/4)
 
     # Testing Rays and Segments (very similar to Lines)
+    assert Ray((1, 1), angle=pi/4) == Ray((1, 1), (2, 2))
+    assert Ray((1, 1), angle=pi/2) == Ray((1, 1), (1, 2))
+    assert Ray((1, 1), angle=-pi/2) == Ray((1, 1), (1, 0))
+    assert Ray((1, 1), angle=-3*pi/2) == Ray((1, 1), (1, 2))
+    assert Ray((1, 1), angle=5*pi/2) == Ray((1, 1), (1, 2))
+    assert Ray((1, 1), angle=5.0*pi/2) == Ray((1, 1), (1, 2))
+    assert Ray((1, 1), angle=pi) == Ray((1, 1), (0, 1))
+    assert Ray((1, 1), angle=3.0*pi) == Ray((1, 1), (0, 1))
+    assert Ray((1, 1), angle=4.0*pi) == Ray((1, 1), (2, 1))
+    assert Ray((1, 1), angle=0) == Ray((1, 1), (2, 1))
+    # don't know why this fails
+    # assert Ray((1, 1), angle=4.2*pi) == Ray(Point(1, 1), Point(2, 1 + C.tan(0.2*pi)))
+    assert Ray((1, 1), angle=5) == Ray((1, 1), (2, 1 + C.tan(5)))
+    raises(ValueError, 'Ray((1, 1), 1)')
+
     r1 = Ray(p1, Point(-1, 5))
     r2 = Ray(p1, Point(-1, 1))
     r3 = Ray(p3, p5)
     assert l1.projection(r1) == Ray(p1, p2)
     assert l1.projection(r2) == p1
     assert r3 != r1
-    assert Ray((1, 1), pi/4) == Ray(pi/4, (1, 1)) == Ray((1, 1), (2, 2))
     t = Symbol('t')
-    assert Ray((1, 1), pi/4).arbitrary_point() == Point(1/(1 - t), 1/(1 - t))
+    assert Ray((1, 1), angle=pi/4).arbitrary_point() == Point(1/(1 - t), 1/(1 - t))
 
     s1 = Segment(p1, p2)
     s2 = Segment(p1, p1_1)
