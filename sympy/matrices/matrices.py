@@ -1,4 +1,4 @@
-from sympy import Basic, Symbol, Integer, S, Dummy
+from sympy import Basic, Symbol, Integer, S, Dummy, Rational
 from sympy.core.sympify import sympify, converter, SympifyError
 
 from sympy.polys import Poly, roots, cancel
@@ -1097,13 +1097,49 @@ class Matrix(object):
         """
         Return Q,R where A = Q*R, Q is orthogonal and R is upper triangular.
 
-        Assumes full-rank square (for now).
+        Examples::
+        This is the example from wikipedia
+        >>> from sympy import Matrix, eye
+        >>> A = Matrix([[12,-51,4],[6,167,-68],[-4,24,-41]])
+        >>> Q, R = A.QRdecomposition()
+        >>> Q
+        [ 6/7, -69/175, -58/175]
+        [ 3/7, 158/175,   6/175]
+        [-2/7,    6/35,  -33/35]
+        >>> R
+        [14,  21, -14]
+        [ 0, 175, -70]
+        [ 0,   0,  35]
+        >>> A == Q*R
+        True
+
+        QR factorization of an identity matrix
+        >>> A = Matrix([[1,0,0],[0,1,0],[0,0,1]])
+        >>> Q, R = A.QRdecomposition()
+        >>> Q
+        [1, 0, 0]
+        [0, 1, 0]
+        [0, 0, 1]
+        >>> R
+        [1, 0, 0]
+        [0, 1, 0]
+        [0, 0, 1]
+
         """
-        if not self.is_square:
-            raise NonSquareMatrixError()
+
+        if not self.rows >= self.cols:
+            raise MatrixError("The number of rows must be greater than columns")
         n = self.rows
-        Q, R = self.zeros(n), self.zeros(n)
-        for j in range(n):      # for each column vector
+        m = self.cols
+        rank = n
+        row_reduced = self.rref()[0]
+        for i in range(row_reduced.rows):
+            if Matrix(row_reduced[i*m:(i+1)*m]).norm() == 0:
+                rank -= 1
+        if not rank == self.cols:
+            raise MatrixError("The rank of the matrix must match the columns")
+        Q, R = self.zeros((n, m)), self.zeros(m)
+        for j in range(m):      # for each column vector
             tmp = self[:,j]     # take original v
             for i in range(j):
                 # subtract the project of self on new vector

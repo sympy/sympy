@@ -433,7 +433,20 @@ def test_QR():
 
     A = Matrix([[1,1,1],[1,1,3],[2,3,4]])
     Q, R = A.QRdecomposition()
-    assert Q*Q.T == eye(Q.rows)
+    assert Q.T * Q == eye(Q.cols)
+    assert R.is_upper()
+    assert A == Q*R
+
+def test_QR_non_square():
+    A = Matrix([[9,0,26],[12,0,-7],[0,4,4],[0,-3,-3]])
+    Q, R = A.QRdecomposition()
+    assert Q.T * Q == eye(Q.cols)
+    assert R.is_upper()
+    assert A == Q*R
+
+    A = Matrix([[1,-1,4],[1,4,-2],[1,4,2],[1,-1,0]])
+    Q, R = A.QRdecomposition()
+    assert Q.T * Q == eye(Q.cols)
     assert R.is_upper()
     assert A == Q*R
 
@@ -1485,10 +1498,10 @@ def test_errors():
     raises(TypeError, "SMatrix([[1, 2], [3, 4]]).submatrix([1, 1])")
     raises(TypeError, "Matrix([1]).applyfunc(1)")
     raises(ShapeError, "Matrix([1]).LUsolve(Matrix([[1, 2], [3, 4]]))")
+    raises(MatrixError, "Matrix([[1,2,3],[4,5,6],[7,8,9]]).QRdecomposition()")
     raises(NonSquareMatrixError, "Matrix([1, 2]).LUdecomposition_Simple()")
     raises(ValueError, "Matrix([[1, 2], [3, 4]]).minorEntry(4, 5)")
     raises(ValueError, "Matrix([[1, 2], [3, 4]]).minorMatrix(4, 5)")
-    raises(NonSquareMatrixError, "Matrix([1, 2]).QRdecomposition()")
     raises(TypeError, "Matrix([1, 2, 3]).cross(1)")
     raises(TypeError, "Matrix([1, 2, 3]).dot(1)")
     raises(ShapeError, "Matrix([1, 2, 3]).dot(Matrix([1, 2]))")
