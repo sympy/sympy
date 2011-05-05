@@ -662,3 +662,14 @@ def test_issueXXX():
     assert sin(4.5*x*pi) == sin(4.5*pi*x)
     assert tan(4.5*x*pi) == tan(4.5*pi*x)
     assert cot(4.5*x*pi) == cot(4.5*pi*x)
+
+def test_peel_pi():
+    from sympy.functions.elementary.trigonometric import _peeloff_pi as peel
+    x, y = symbols('x,y')
+    i, k = symbols('i,k', integer=True)
+    assert peel(x + pi/2) == (x, pi/2)
+    assert peel(x + pi) == (x, pi)
+    assert peel(x + 2*pi/3 + pi*y) == (x + pi/6 + pi*y, pi/2)
+    assert peel(x - 5*pi/2 + pi*y) == (x + pi*y, -5*pi/2)
+    assert peel(x + 5*pi/2*i + pi*y) == (x + pi*y, 5*pi*i/2)
+    assert peel(x + 5*pi/2*i + k*pi + pi*y) == (x + pi*y, pi*(k + 5*i/2))

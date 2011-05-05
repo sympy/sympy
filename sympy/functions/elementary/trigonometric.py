@@ -19,27 +19,53 @@ def _peeloff_pi(arg):
 
     Examples:
     >>> from sympy.functions.elementary.trigonometric import _peeloff_pi as peel
-    >>> from sympy import pi
+    >>> from sympy import pi, Symbol
     >>> from sympy.abc import x, y
+    >>> i = Symbol('i',integer=True)
+    >>> k = Symbol('k',integer=True)
     >>> peel(x + pi/2)
     (x, pi/2)
+    >>> peel(x + pi)
+    (x, pi)
     >>> peel(x + 2*pi/3 + pi*y)
     (x + pi/6 + pi*y, pi/2)
-    """
-    for a in Add.make_args(arg):
-        if a is S.Pi:
-            K = S.One
-            break
-        elif a.is_Mul:
-            K, p = a.as_two_terms()
-            if p is S.Pi and K.is_Rational:
-                break
-    else:
-        return arg, 0
+    >>> peel(x - 5*pi/2 + pi*y)
+    (x + pi*y, -5*pi/2)
+    >>> peel(x + 5*pi/2*i + pi*y)
+    (x + pi*y, 5*pi*i/2)
+    >>> peel(x + 5*pi/2*i + k*pi + pi*y)
+    (x + pi*y, pi*(k + 5*i/2))
 
-    m1 = (K % S.Half) * S.Pi
-    m2 = K*S.Pi - m1
-    return arg - m2, m2
+    """
+    mul_pi = []
+    resids = []
+    args = list(Add.make_args(arg))
+    for i, a in enumerate(args):
+        resid = None
+        if a is S.Pi:
+            mul_pi.append(S.One)
+            resid = S.Zero
+        elif a.is_Mul:
+            K = a.coeff(S.Pi)
+            if K:
+                cx = a.coeff(S.Pi)
+                if cx is not None:
+                    c, x = cx.as_coeff_Mul()
+                    if x.is_integer and c.is_Rational:
+                        resid = c % S.Half
+                        if c != resid:
+                            take = (c - resid)*x
+                            resid *= x
+                            mul_pi.append(take)
+
+        if resid is not None:
+            args[i] = S.Zero
+            resids.append(resid)
+
+    if not mul_pi:
+        return arg, None
+    return Add(*(args + [Add(*resids)*S.Pi])), S.Pi*Add(*mul_pi)
+
 
 def _pi_coeff(arg, cycles=1):
     """
@@ -213,7 +239,7 @@ class sin(Function):
 
         if arg.is_Add:
             x, m = _peeloff_pi(arg)
-            if m:
+            if m is not None:
                 return sin(m)*cos(x)+cos(m)*sin(x)
 
         if arg.func is asin:
@@ -434,7 +460,7 @@ class cos(Function):
 
         if arg.is_Add:
             x, m = _peeloff_pi(arg)
-            if m:
+            if m is not None:
                 return cos(m)*cos(x)-sin(m)*sin(x)
 
         if arg.func is acos:
@@ -629,7 +655,7 @@ class tan(Function):
 
         if arg.is_Add:
             x, m = _peeloff_pi(arg)
-            if m:
+            if m is not None:
                 if (m*2/S.Pi) % 2 == 0:
                     return tan(x)
                 else:
@@ -807,7 +833,7 @@ class cot(Function):
 
         if arg.is_Add:
             x, m = _peeloff_pi(arg)
-            if m:
+            if m is not None:
                 if (m*2/S.Pi) % 2 == 0:
                     return cot(x)
                 else:
