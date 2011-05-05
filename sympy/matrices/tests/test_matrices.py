@@ -1286,8 +1286,15 @@ def test_diagonal_symmetrical():
     m = Matrix(3,3,[1, 0, 0, 0, 2, 0, 0, 0, 3])
     assert m == diag(1, 2, 3)
 
-    m = Matrix(2,3,[0, 0, 0, 0, 0, 0])
+    m = Matrix(2, 3, [0, 0, 0, 0, 0, 0])
     assert not m.is_symmetric()
+    assert m.is_diagonal()
+
+    m = Matrix(((5, 0), (0, 6), (0, 0)))
+    assert m.is_diagonal()
+
+    m = Matrix(((5, 0, 0), (0, 6, 0)))
+    assert m.is_diagonal()
 
     x, y = symbols('x y')
     m = Matrix(3,3,[1, x**2 + 2*x + 1, y, (x + 1)**2 , 2, 0, y, 0, 3])
@@ -1529,3 +1536,4 @@ def test_getattr():
     x, y = symbols('x,y')
     A = Matrix(((1,4,x),(y,2,4),(10,5,x**2+1)))
     raises (AttributeError, 'A.nonexistantattribute')
+
