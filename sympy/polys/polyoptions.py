@@ -1,7 +1,7 @@
 """Options manager for :class:`Poly` and public API functions. """
 
 from sympy.core import S, Basic, sympify
-from sympy.utilities import any, all, numbered_symbols
+from sympy.utilities import any, all, numbered_symbols, topological_sort
 
 from sympy.polys.polyerrors import (
     GeneratorsError,
@@ -22,6 +22,9 @@ class Option(object):
 
     requires = []
     excludes = []
+
+    after = []
+    before = []
 
     @classmethod
     def default(cls):
@@ -76,10 +79,10 @@ class Options(dict):
     >>> from sympy.abc import x, y, z
 
     >>> Options((x, y, z), {'domain': 'ZZ'})
-    {'domain': ZZ, 'gens': (x, y, z)}
+    {'auto': False, 'domain': ZZ, 'gens': (x, y, z)}
 
     >>> build_options((x, y, z), {'domain': 'ZZ'})
-    {'domain': ZZ, 'gens': (x, y, z)}
+    {'auto': False, 'domain': ZZ, 'gens': (x, y, z)}
 
     **Options**
 
@@ -111,6 +114,7 @@ class Options(dict):
 
     """
 
+    __order__ = None
     __options__ = {}
 
     def __init__(self, gens, args, flags=None, strict=False):
@@ -147,8 +151,28 @@ class Options(dict):
                 if self.get(exclude_option) is not None:
                     raise OptionError("'%s' option is not allowed together with '%s'" % (option, exclude_option))
 
-        for option in self.keys():
+        for option in self.__order__:
             self.__options__[option].postprocess(self)
+
+    @classmethod
+    def _init_dependencies_order(cls):
+        """Resolve the order of options' processing. """
+        if cls.__order__ is None:
+            vertices, edges = [], set([])
+
+            for name, option in cls.__options__.iteritems():
+                vertices.append(name)
+
+                for _name in option.after:
+                    edges.add((_name, name))
+
+                for _name in option.before:
+                    edges.add((name, _name))
+
+            try:
+                cls.__order__ = topological_sort((vertices, list(edges)))
+            except ValueError:
+                raise RuntimeError("cycle detected in sympy.polys options framework")
 
     def clone(self, updates={}):
         """Clone ``self`` and update specified options. """
@@ -166,7 +190,7 @@ class Options(dict):
         if attr in self.__options__:
             self[attr] = value
         else:
-            super(Option, self).__setattr__(attr, value)
+            super(Options, self).__setattr__(attr, value)
 
     @property
     def args(self):
@@ -400,9 +424,9 @@ class Domain(Option):
 
     @classmethod
     def postprocess(cls, options):
-        if 'gens' in options and options['domain'].is_Composite:
-            if set(options['domain'].gens) & set(options['gens']):
-                raise GeneratorsError("ground domain and generators interferes together")
+        if 'gens' in options and 'domain' in options and options['domain'].is_Composite and \
+                (set(options['domain'].gens) & set(options['gens'])):
+            raise GeneratorsError("ground domain and generators interferes together")
 
 class Split(BooleanOption):
     """``split`` option to polynomial manipulation functions. """
@@ -416,7 +440,8 @@ class Split(BooleanOption):
 
     @classmethod
     def postprocess(cls, options):
-        raise NotImplementedError("'split' option is not implemented yet")
+        if 'split' in options:
+            raise NotImplementedError("'split' option is not implemented yet")
 
 class Gaussian(BooleanOption):
     """``gaussian`` option to polynomial manipulation functions. """
@@ -430,7 +455,7 @@ class Gaussian(BooleanOption):
 
     @classmethod
     def postprocess(cls, options):
-        if options['gaussian'] is True:
+        if 'gaussian' in options and options['gaussian'] is True:
             options['extension'] = set([S.ImaginaryUnit])
             Extension.postprocess(options)
 
@@ -463,7 +488,7 @@ class Extension(Option):
 
     @classmethod
     def postprocess(cls, options):
-        if options['extension'] is not True:
+        if 'extension' in options and options['extension'] is not True:
             options['domain'] = sympy.polys.domains.QQ.algebraic_field(*options['extension'])
 
 class Modulus(Option):
@@ -487,9 +512,10 @@ class Modulus(Option):
 
     @classmethod
     def postprocess(cls, options):
-        modulus = options['modulus']
-        symmetric = options.get('symmetric', True)
-        options['domain'] = sympy.polys.domains.FF(modulus, symmetric)
+        if 'modulus' in options:
+            modulus = options['modulus']
+            symmetric = options.get('symmetric', True)
+            options['domain'] = sympy.polys.domains.FF(modulus, symmetric)
 
 class Symmetric(BooleanOption):
     """``symmetric`` option to polynomial manipulation functions. """
@@ -544,9 +570,16 @@ class Auto(BooleanOption, Flag):
 
     option = 'auto'
 
+    after = ['field', 'domain', 'extension', 'gaussian']
+
     @classmethod
     def default(cls):
         return True
+
+    @classmethod
+    def postprocess(cls, options):
+        if ('domain' in options or 'field' in options) and 'auto' not in options:
+            options['auto'] = False
 
 class Frac(BooleanOption, Flag):
     """``auto`` option to polynomial manipulation functions. """
@@ -672,4 +705,6 @@ def allowed_flags(args, flags):
                 raise FlagError("'%s' flag is not allowed in this context" % arg)
         except KeyError:
             raise OptionError("'%s' is not a valid option" % arg)
+
+Options._init_dependencies_order()
 
