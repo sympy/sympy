@@ -604,7 +604,7 @@ class Derivative(Expr):
 
         # standardize symbols
         symbols = list(sympify(symbols))
-        if not symbols[-1].is_Integer:
+        if not symbols[-1].is_Integer or len(symbols) == 1:
             symbols.append(S.One)
         symbol_count = []
         all_zero = True
