@@ -1058,6 +1058,12 @@ def test_is_lower():
     a = Matrix([[1],[2],[3]])
     assert a.is_lower() == True
 
+def test_is_nilpotent():
+    a = Matrix(4, 4, [0,2,1,6,0,0,1,2,0,0,0,3,0,0,0,0])
+    assert a.is_nilpotent()
+    a = Matrix([[1,0],[0,1]])
+    assert not a.is_nilpotent()
+
 def test_zeros_ones_fill():
     n, m = 3, 5
 
@@ -1495,6 +1501,7 @@ def test_errors():
     raises(ValueError, "Matrix([[1, 2], [1, 2]]).inverse_GE()")
     raises(NonSquareMatrixError, "Matrix([1, 2]).inverse_ADJ()")
     raises(ValueError, "Matrix([[1, 2], [1, 2]]).inverse_ADJ()")
+    raises(NonSquareMatrixError, "Matrix([1,2]).is_nilpotent()")
     raises(ValueError, "hessian(Matrix([[1, 2], [3, 4]]), Matrix([[1, 2], [2, 1]]))")
     raises(ValueError, "hessian(Matrix([[1, 2], [3, 4]]), [])")
     raises(TypeError, "SMatrix(1.4, 2, lambda i, j: 0)")

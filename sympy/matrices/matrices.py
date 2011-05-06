@@ -1300,6 +1300,30 @@ class Matrix(object):
     def is_square(self):
         return self.rows == self.cols
 
+    def is_nilpotent(self):
+        """
+        Checks if a matrix is nilpotent.
+
+        A matrix B is nilpotent if for some integer k, B**k is
+        a zero matrix.
+
+        Example:
+            >>> from sympy import Matrix
+            >>> a = Matrix([[0,0,0],[1,0,0],[1,1,0]])
+            >>> a.is_nilpotent()
+            True
+
+            >>> a = Matrix([[1,0,1],[1,0,0],[1,1,0]])
+            >>> a.is_nilpotent()
+            False
+        """
+        if not self.is_square:
+            raise NonSquareMatrixError("Nilpotency is valid only for square matrices")
+        x = Dummy('x')
+        if self.charpoly(x).args[0] == x**self.rows:
+            return True
+        return False
+
     def is_upper(self):
         """
         Check if matrix is an upper triangular matrix.
