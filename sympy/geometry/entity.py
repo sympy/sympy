@@ -35,38 +35,142 @@ class GeometryEntity(tuple):
     def __getnewargs__(self):
         return tuple(self)
 
-    @staticmethod
-    def do_intersection(e1, e2):
-        """The intersection of two geometrical entities.
-
-        Parameters
-        ----------
-        e1 : GeometryEntity
-        e2 : GeometryEntity
-
-        Returns
-        -------
-        entities : list
-            A list of GeometryEntity instances.
+    def intersection(self, o):
+        """
+        Returns a list of all of the intersections of self with o.
 
         Notes
         -----
-        This method delegates to the `intersection` methods of `e1` and `e2`.
-        First, the `intersection` method of `e1` is called. If this fails to
-        find the intersection, then the `intersection` method of `e2` is called.
+        An entity is not required to implement this method.
+
+        If two different types of entities can intersect, the item with
+        higher index in ordering_of_classes should implement
+        intersections with anything having a lower index.
+
+        See Also
+        --------
+        intersection function in geometry/util.py which computes the
+        intersection between more than 2 objects.
 
         """
-        try:
-            return e1.intersection(e2)
-        except Exception:
-            pass
+        raise NotImplementedError()
 
-        try:
-            return e2.intersection(e1)
-        except NotImplementedError:
-            n1, n2 = type(e1).__name__, type(e2).__name__
-            msg = "Unable to determine intersection between '%s' and '%s'"
-            raise NotImplementedError(msg % (n1, n2))
+    def rotate(self, angle, pt=None):
+        """Rotate the object about pt by the given angle (in radians).
+
+        The default pt is the origin, Point(0, 0)
+
+        XXX geometry needs a modify_points method which operates
+        on only the points of the object
+
+        >>> from sympy import Point, RegularPolygon, Polygon, pi
+        >>> t = Polygon(*RegularPolygon(Point(0, 0), 1, 3).vertices)
+        >>> t # vertex on x axis
+        Triangle(Point(1, 0), Point(-1/2, 3**(1/2)/2), Point(-1/2, -3**(1/2)/2))
+        >>> t.rotate(pi/2) # vertex on y axis now
+        Triangle(Point(0, 1), Point(-3**(1/2)/2, -1/2), Point(3**(1/2)/2, -1/2))
+
+        """
+        from sympy import cos, sin, Point
+
+        c = cos(angle)
+        s = sin(angle)
+
+        if isinstance(self, Point):
+            rv = self
+            if pt is not None:
+                rv -= pt
+            x, y = rv
+            rv = Point(c*x-s*y, s*x+c*y)
+            if pt is not None:
+                rv += pt
+            return rv
+
+        newargs = []
+        for a in self.args:
+            if isinstance(a, GeometryEntity):
+                newargs.append(a.rotate(angle, pt))
+            else:
+                newargs.append(a)
+        return type(self)(*newargs)
+
+    def scale(self, x=1, y=1):
+        """Scale the object by multiplying the x,y-coordinates by x and y.
+
+        >>> from sympy import RegularPolygon, Point, Polygon
+        >>> t = Polygon(*RegularPolygon(Point(0, 0), 1, 3).vertices)
+        >>> t
+        Triangle(Point(1, 0), Point(-1/2, 3**(1/2)/2), Point(-1/2, -3**(1/2)/2))
+        >>> t.scale(2)
+        Triangle(Point(2, 0), Point(-1, 3**(1/2)/2), Point(-1, -3**(1/2)/2))
+        >>> t.scale(2,2)
+        Triangle(Point(2, 0), Point(-1, 3**(1/2)), Point(-1, -3**(1/2)))
+
+        """
+        from sympy import Point
+        if isinstance(self, Point):
+            return Point(self[0]*x, self[1]*y)
+        newargs = []
+        for a in self.args:
+            if isinstance(a, GeometryEntity):
+                newargs.append(a.scale(x, y))
+            else:
+                newargs.append(a)
+        return type(self)(*newargs)
+
+    def translate(self, x=0, y=0):
+        """Shift the object by adding to the x,y-coordinates the values x and y.
+
+        >>> from sympy import RegularPolygon, Point, Polygon
+        >>> t = Polygon(*RegularPolygon(Point(0, 0), 1, 3).vertices)
+        >>> t
+        Triangle(Point(1, 0), Point(-1/2, 3**(1/2)/2), Point(-1/2, -3**(1/2)/2))
+        >>> t.translate(2)
+        Triangle(Point(3, 0), Point(3/2, 3**(1/2)/2), Point(3/2, -3**(1/2)/2))
+        >>> t.translate(2,2)
+        Triangle(Point(3, 2), Point(3/2, 2 + 3**(1/2)/2), Point(3/2, 2 - 3**(1/2)/2))
+        """
+        from sympy import Point
+        if not isinstance(x, Point):
+            pt = Point(x, y)
+        else:
+            pt = x
+        if isinstance(self, Point):
+            return self + pt
+        newargs = []
+        for a in self.args:
+            if isinstance(a, GeometryEntity):
+                newargs.append(a.translate(pt))
+            else:
+                newargs.append(a)
+        return type(self)(*newargs)
+
+    def encloses(self, o):
+        """
+        Return True if o is inside (not on or outside) the boundaries of self.
+
+        The object will be decomposed into Points and individual Entities need
+        only define an encloses_point method for their class.
+        """
+        from sympy.geometry.point import Point
+        from sympy.geometry.line import Segment, Ray, Line
+        from sympy.geometry.ellipse import Circle, Ellipse
+        from sympy.geometry.polygon import Polygon, RegularPolygon
+
+        if isinstance(o, Point):
+            return self.encloses_point(o)
+        elif isinstance(o, Segment):
+            return all(self.encloses_point(x) for x in o.points)
+        elif isinstance(o, Ray) or isinstance(o, Line):
+            return False
+        elif isinstance(o, Ellipse):
+            return self.encloses_point(o.center) and not self.intersection(o)
+        elif isinstance(o, Polygon):
+            if isinstance(o, RegularPolygon):
+                if not self.encloses_point(o.center):
+                    return False
+            return all(self.encloses_point(v) for v in o.vertices)
+        raise NotImplementedError()
 
     def is_similar(self, other):
         """Is this geometrical entity similar to another geometrical entity?
@@ -85,62 +189,23 @@ class GeometryEntity(tuple):
         """
         raise NotImplementedError()
 
-    def intersection(self, o):
-        """The intersection of two GeometryEntity instances.
+    def subs(self, old, new):
+        if hasattr(self, '_eval_subs_'):
+            return self.subs(old, new)
+        elif isinstance(self, GeometryEntity):
+            return type(self)(*[a.subs(old, new) for a in self.args])
+        else:
+            return self
 
-        Notes
-        -----
-        This method is not intended to be used directly but rather
-        through the `intersection` function found in util.py.
-        An entity is not required to implement this method.
-        If two different types of entities can intersect, it is only
-        required that one of them be able to determine this.
+    @property
+    def args(self):
+        """Return whatever is contained in the object's tuple.
 
+        The contents will not necessarily be Points. This is also
+        what will be returned when one does "for x in self".
         """
-        raise NotImplementedError()
 
-
-    @staticmethod
-    def extract_entities(args, remove_duplicates=True):
-        """Extract all GeometryEntity instances from a sequence of objects.
-
-        Parameters
-        ----------
-        args : a (possibly nested) sequence of objects
-        remove_duplicates : boolean, optional
-            Duplicate entities are removed from the result (default is True).
-
-        Returns
-        -------
-        entities : tuple of GeometryEntity.
-
-        Notes
-        -----
-        The extraction is performed recursively - a GeometryEntity in a
-        sub-sequences will be added to the result.
-        Anything that is not a GeometryEntity instance is excluded from the
-        return value.
-        Ordering of arguments is always maintained. If duplicates
-        are removed then the entry with the lowest index is kept.
-
-        """
-        ret = list()
-        for arg in args:
-            if isinstance(arg, GeometryEntity):
-                ret.append(arg)
-            elif isinstance(arg, (list, tuple, set)):
-                ret.extend(GeometryEntity.extract_entities(arg))
-        if remove_duplicates:
-            temp = set(ret)
-            ind, n = 0, len(ret)
-            for counter in xrange(n):
-                x = ret[ind]
-                if x in temp:
-                    temp.remove(x)
-                    ind += 1
-                else:
-                    del ret[ind]
-        return tuple(ret)
+        return tuple(self)
 
     def __ne__(self, o):
         """Test inequality of two geometrical entities."""

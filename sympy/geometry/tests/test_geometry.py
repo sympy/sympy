@@ -1,11 +1,13 @@
-from sympy import C, S, Symbol, Rational, sqrt, pi, cos, oo, simplify, Real, Abs
-from sympy.geometry import (Point, Polygon, convex_hull, Segment,
-    RegularPolygon, Circle, Ellipse, GeometryError, Line, intersection, Ray,
-    Triangle, are_similar, Curve)
+from sympy import (Abs, C, Max, Min, Rational, Real, S, Symbol, cos, oo, pi,
+                   simplify, sqrt)
+from sympy.geometry import (Circle, Curve, Ellipse, GeometryError, Line, Point,
+                            Polygon, Ray, RegularPolygon, Segment, Triangle,
+                            are_similar, convex_hull, intersection)
 from sympy.utilities.pytest import raises, XFAIL
 
 x = Symbol('x', real=True)
 y = Symbol('y', real=True)
+t = Symbol('t', real=True)
 x1 = Symbol('x1', real=True)
 x2 = Symbol('x2', real=True)
 y1 = Symbol('y1', real=True)
@@ -24,7 +26,7 @@ def test_curve():
 
     assert C.parameter == z
     assert C.functions == [2*t, t**2]
-
+    assert C.arbitrary_point() == Point(2*t, t**2)
 
 def test_point():
     p1 = Point(x1, x2)
@@ -32,13 +34,7 @@ def test_point():
     p3 = Point(0, 0)
     p4 = Point(1, 1)
 
-    assert p3.x == 0
-    assert p3.y == 0
-
-    assert p4.x == 1
-    assert p4.y == 1
-
-    assert len(p1) == 2
+    assert len(p1) == 1
     assert p2[1] == y2
     assert (p3+p4) == p4
     assert (p2-p1) == Point(y1-x1, y2-x2)
@@ -78,17 +74,37 @@ def test_line():
     p3 = Point(x1, x1)
     p4 = Point(y1, y1)
     p5 = Point(x1, 1 + x1)
+    p6 = Point(1, 0)
+    p7 = Point(0, 1)
+    p8 = Point(2, 0)
+    p9 = Point(2, 1)
 
     l1 = Line(p1, p2)
     l2 = Line(p3, p4)
     l3 = Line(p3, p5)
+    l4 = Line(p1, p6)
+    l5 = Line(p1, p7)
+    l6 = Line(p8, p9)
+    l7 = Line(p2, p9)
 
     # Basic stuff
+    assert Line((1, 1), slope=1) == Line((1, 1), (2, 2))
+    assert Line((1, 1), slope=oo) == Line((1, 1), (1, 2))
+    assert Line((1, 1), slope=-oo) == Line((1, 1), (1, 2))
+    raises(ValueError, 'Line((1, 1), 1)')
     assert Line(p1, p2) == Line(p2, p1)
     assert l1 == l2
     assert l1 != l3
     assert l1.slope == 1
     assert l3.slope == oo
+    assert l4.slope == 0
+    assert l4.coefficients == (0, 1, 0)
+    assert l4.equation(x=x, y=y) == y
+    assert l5.slope == oo
+    assert l5.coefficients == (1, 0, 0)
+    assert l5.equation() == x
+    assert l6.equation() == x - 2
+    assert l7.equation() == y - 1
     assert p1 in l1 # is p1 on the line l1?
     assert p1 not in l3
 
@@ -138,18 +154,36 @@ def test_line():
     assert feq(Line.angle_between(l1, l1_1).evalf(), pi.evalf()/4)
 
     # Testing Rays and Segments (very similar to Lines)
+    assert Ray((1, 1), angle=pi/4) == Ray((1, 1), (2, 2))
+    assert Ray((1, 1), angle=pi/2) == Ray((1, 1), (1, 2))
+    assert Ray((1, 1), angle=-pi/2) == Ray((1, 1), (1, 0))
+    assert Ray((1, 1), angle=-3*pi/2) == Ray((1, 1), (1, 2))
+    assert Ray((1, 1), angle=5*pi/2) == Ray((1, 1), (1, 2))
+    assert Ray((1, 1), angle=5.0*pi/2) == Ray((1, 1), (1, 2))
+    assert Ray((1, 1), angle=pi) == Ray((1, 1), (0, 1))
+    assert Ray((1, 1), angle=3.0*pi) == Ray((1, 1), (0, 1))
+    assert Ray((1, 1), angle=4.0*pi) == Ray((1, 1), (2, 1))
+    assert Ray((1, 1), angle=0) == Ray((1, 1), (2, 1))
+    # don't know why this fails
+    # assert Ray((1, 1), angle=4.2*pi) == Ray(Point(1, 1), Point(2, 1 + C.tan(0.2*pi)))
+    assert Ray((1, 1), angle=5) == Ray((1, 1), (2, 1 + C.tan(5)))
+    raises(ValueError, 'Ray((1, 1), 1)')
+
     r1 = Ray(p1, Point(-1, 5))
     r2 = Ray(p1, Point(-1, 1))
     r3 = Ray(p3, p5)
     assert l1.projection(r1) == Ray(p1, p2)
     assert l1.projection(r2) == p1
     assert r3 != r1
+    t = Symbol('t')
+    assert Ray((1, 1), angle=pi/4).arbitrary_point() == Point(1/(1 - t), 1/(1 - t))
 
     s1 = Segment(p1, p2)
     s2 = Segment(p1, p1_1)
     assert s1.midpoint == Point(Rational(1,2), Rational(1,2))
     assert s2.length == sqrt( 2*(x1**2) )
     assert s1.perpendicular_bisector() == Line(Point(0, 1), Point(1, 0))
+    assert Segment((1, 1), (2, 3)).arbitrary_point() == Point(1 + t, 1 + 2*t)
 
     # Testing distance from a Segment to an object
     s1 = Segment(Point(0, 0), Point(1, 1))
@@ -211,7 +245,7 @@ def test_ellipse():
     c3 = Circle(Point(sqrt(2),sqrt(2)),1)
 
     # Test creation with three points
-    cen,rad = Point(3*half, 2), 5*half
+    cen, rad = Point(3*half, 2), 5*half
     assert Circle(Point(0,0), Point(3,0), Point(0,4)) == Circle(cen, rad)
     raises(GeometryError, "Circle(Point(0,0), Point(1,1), Point(2,2))")
 
@@ -230,13 +264,15 @@ def test_ellipse():
     a = Symbol('a')
     b = Symbol('b')
     e5 = Ellipse(p1, a, b)
-    assert e5.circumference == 4*a*C.Integral(((1 - x**2*Abs(b**2 - a**2)/a**2)/(1 - x**2))**(S(1)/2),\
-                                            (x, 0, 1))
+    assert e5.circumference == \
+           4*C.Integral(sqrt((1 - x**2*(Max(a, b)**2 -
+                                    Min(a, b)**2)/
+                          Max(a, b)**2)/(1 - x**2)), (x, 0, 1))*Max(a, b)
 
     assert e2.arbitrary_point() in e2
 
     # Foci
-    f1,f2 = Point(sqrt(12), 0), Point(-sqrt(12), 0)
+    f1, f2 = Point(sqrt(12), 0), Point(-sqrt(12), 0)
     ef = Ellipse(Point(0, 0), 4, 2)
     assert ef.foci in [(f1, f2), (f2, f1)]
 
@@ -245,14 +281,16 @@ def test_ellipse():
     p1_1 = Point(v, v)
     p1_2 = p2 + Point(half, 0)
     p1_3 = p2 + Point(0, 1)
-    assert e1.tangent_line(p4) == c1.tangent_line(p4)
-    assert e2.tangent_line(p1_2) == Line(p1_2, p2 + Point(half, 1))
-    assert e2.tangent_line(p1_3) == Line(p1_3, p2 + Point(half, 1))
-    assert c1.tangent_line(p1_1) == Line(p1_1, Point(0, sqrt(2)))
+    assert e1.tangent_lines(p4) == c1.tangent_lines(p4)
+    assert e2.tangent_lines(p1_2) == [Line(p1_2, p2 + Point(half, 1))]
+    assert e2.tangent_lines(p1_3) == [Line(p1_3, p2 + Point(half, 1))]
+    assert c1.tangent_lines(p1_1) == [Line(p1_1, Point(0, sqrt(2)))]
     assert e2.is_tangent(Line(p1_2, p2 + Point(half, 1)))
     assert e2.is_tangent(Line(p1_3, p2 + Point(half, 1)))
     assert c1.is_tangent(Line(p1_1, Point(0, sqrt(2))))
     assert e1.is_tangent(Line(Point(0, 0), Point(1, 1))) == False
+
+    # FAILING GOES HERE (from test_ellipse_fail when they work)
 
     # Intersection
     l1 = Line(Point(1, -5), Point(1, 5))
@@ -289,15 +327,32 @@ def test_ellipse():
     assert Point(v/2, v/2) in points
     assert Point(v/2, -v/2) in points
 
-    e1 = Circle(Point(0, 0), 5)
-    e2 = Ellipse(Point(0, 0), 5, 20)
-    assert intersection(e1, e2) in \
+    circ = Circle(Point(0, 0), 5)
+    elip = Ellipse(Point(0, 0), 5, 20)
+    assert intersection(circ, elip) in \
         [[Point(5, 0), Point(-5, 0)], [Point(-5, 0), Point(5, 0)]]
-
+    assert elip.tangent_lines(Point(0, 0)) == []
+    elip = Ellipse(Point(0, 0), 3, 2)
+    assert elip.tangent_lines(Point(3, 0)) == [Line(Point(3, 0), Point(3, -12))]
     # FAILING ELLIPSE INTERSECTION GOES HERE
 
     # Combinations of above
-    assert e3.is_tangent(e3.tangent_line(p1 + Point(y1, 0)))
+    assert e3.is_tangent(e3.tangent_lines(p1 + Point(y1, 0))[0])
+
+@XFAIL
+def test_ellipse_fail():
+    # these need the upgrade to the solver; when this works, move
+    # these lines to the # FAILING GOES HERE line in test_ellipse above.
+    assert Ellipse(Point(5, 5), 2, 1).tangent_lines(Point(0, 0)) == \
+    [Line(Point(0, 0), Point(S(77)/25, S(132)/25)),
+     Line(Point(0, 0), Point(S(33)/5, S(22)/5))]
+    assert Ellipse(Point(5, 5), 2, 1).tangent_lines(Point(3, 4)) == \
+    [Line(Point(3, 4), Point(4, 4)), Line(Point(3, 4), Point(3, 5))]
+    assert Circle(Point(5, 5), 2).tangent_lines(Point(3, 3)) == \
+    [Line(Point(3, 3), Point(4, 3)), Line(Point(3, 3), Point(3, 4))]
+    assert Circle(Point(5, 5), 2).tangent_lines(Point(5 - 2*sqrt(2), 5)) == \
+    [Line(Point(5 - 2*sqrt(2), 5), Point(5 - sqrt(2), 5 + sqrt(2))),
+     Line(Point(5 - 2*sqrt(2), 5), Point(5 - sqrt(2), 5 - sqrt(2)))]
 
     major = 3
     minor = 1
@@ -323,6 +378,11 @@ def test_ellipse_random_point():
         assert e3.random_point() in e3
 
 def test_polygon():
+    t = Triangle(Point(0, 0), Point(2, 0), Point(3, 3))
+    assert Polygon(Point(0, 0), Point(1, 0), Point(2, 0), Point(3, 3)) == t
+    assert Polygon(Point(1, 0), Point(2, 0), Point(3, 3), Point(0, 0)) == t
+    assert Polygon(Point(2, 0), Point(3, 3), Point(0, 0), Point(1, 0)) == t
+
     p1 = Polygon(
         Point(0, 0), Point(3,-1),
         Point(6, 0), Point(4, 5),
@@ -342,7 +402,7 @@ def test_polygon():
     # General polygon
     #
     assert p1 == p2
-    assert len(p1) == Rational(6)
+    assert len(p1) == 6
     assert len(p1.sides) == 6
     assert p1.perimeter == 5+2*sqrt(10)+sqrt(29)+sqrt(8)
     assert p1.area == 22
@@ -393,6 +453,8 @@ def test_polygon():
     s3 = t3.sides
 
     # Basic stuff
+    assert Triangle(p1, p1, p1) == p1
+    assert Triangle(p2, p2*2, p2*3) == Segment(p2, p2*3)
     assert t1.area == Rational(25,2)
     assert t1.is_right()
     assert t2.is_right() == False
@@ -484,13 +546,45 @@ def test_convex_hull():
     another_p = [Point(-45, -85), Point(-45, 85), Point(-45,26),Point(-45,-24)]
     ch2 = Segment(another_p[0],another_p[1])
 
-    assert convex_hull(another_p) == ch2
-    assert convex_hull(p) == ch
+    assert convex_hull(*another_p) == ch2
+    assert convex_hull(*p) == ch
     assert convex_hull(p[0]) == p[0]
     assert convex_hull(p[0], p[1]) == Segment(p[0], p[1])
+
+    # no unique points
+    assert convex_hull(*[p[-1]]*3) == p[-1]
+
+    # collection of items
+    assert convex_hull(*[Point(0,0),
+                        Segment(Point(1, 0), Point(1, 1)),
+                        RegularPolygon(Point(2, 0), 2, 4)]) == \
+            Polygon(Point(0, 0), Point(2, -2), Point(4, 0), Point(2, 2))
 
 def test_concyclic_doctest_bug():
     p1,p2 = Point(-1, 0), Point(1, 0)
     p3,p4 = Point(0, 1), Point(-1, 2)
     assert Point.is_concyclic(p1, p2, p3)
     assert not Point.is_concyclic(p1, p2, p3, p4)
+
+def test_subs():
+    p = Point(x, 2)
+    q = Point(1, 1)
+    r = Point(3, 4)
+    for o in [p,
+              Segment(p, q),
+              Ray(p, q),
+              Line(p, q),
+              Triangle(p, q, r),
+              RegularPolygon(p, 3, 6),
+              Polygon(p, q, r, Point(5,4)),
+              Circle(p, 3),
+              Ellipse(p, 3, 4)]:
+        assert 'y' in str(o.subs(x, y))
+
+def test_encloses():
+    # square with a dimpled left side
+    s = Polygon(Point(0, 0), Point(1, 0), Point(1, 1), Point(0, 1), Point(S.Half, S.Half))
+    # the following will be True if the polygon isn't treated as closing on itself
+    assert s.encloses(Point(0, S.Half)) is False
+    assert s.encloses(Point(S.Half, S.Half)) is False # it's a vertex
+    assert s.encloses(Point(Rational(3, 4), S.Half)) is True
