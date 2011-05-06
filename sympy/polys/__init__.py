@@ -23,6 +23,7 @@ from polytools import (
     factor_list, factor,
     intervals, refine_root, count_roots,
     real_roots, nroots, ground_roots,
+    nth_power_roots_poly,
     cancel,
     reduced, groebner,
 )
@@ -101,3 +102,4 @@ from partfrac import (
 
 from polyoptions import Options
 import polycontext as ctx
+

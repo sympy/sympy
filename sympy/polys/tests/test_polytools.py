@@ -22,6 +22,7 @@ from sympy.polys.polytools import (
     factor_list, factor,
     intervals, refine_root, count_roots,
     real_roots, nroots, ground_roots,
+    nth_power_roots_poly,
     cancel,
     reduced, groebner)
 
@@ -232,8 +233,16 @@ def test_Poly__new__():
 
     raises(GeneratorsNeeded, "Poly({1: 2, 0: 1})")
     raises(GeneratorsNeeded, "Poly([2, 1])")
+    raises(GeneratorsNeeded, "Poly((2, 1))")
 
     raises(GeneratorsNeeded, "Poly(1)")
+
+    f = a*x**2 + b*x + c
+
+    assert Poly({2: a, 1: b, 0: c}, x) == f
+    assert Poly(iter([a, b, c]), x) == f
+    assert Poly([a, b, c], x) == f
+    assert Poly((a, b, c), x) == f
 
     assert Poly(Poly(a*x + b*y, x, y), x) == Poly(a*x + b*y, x)
 
@@ -587,6 +596,9 @@ def test_Poly_properties():
 
     assert Poly(x*y).is_multivariate == True
     assert Poly(x).is_multivariate == False
+
+    assert Poly(x**16 + x**14 - x**10 + x**8 - x**6 + x**2 + 1).is_cyclotomic == False
+    assert Poly(x**16 + x**14 - x**10 - x**8 - x**6 + x**2 + 1).is_cyclotomic == True
 
 @XFAIL
 def test_Poly_is_irreducible():
@@ -1251,6 +1263,64 @@ def test_div():
     raises(ComputationFailed, "quo(4, 2)")
     raises(ComputationFailed, "rem(4, 2)")
 
+    f, g = x**2 + 1, 2*x - 4
+
+    qz, rz = 0, x**2 + 1
+    qq, rq = x/2 + 1, 5
+
+    assert div(f, g) == (qq, rq)
+    assert div(f, g, auto=True) == (qq, rq)
+    assert div(f, g, auto=False) == (qz, rz)
+    assert div(f, g, domain=ZZ) == (qz, rz)
+    assert div(f, g, domain=QQ) == (qq, rq)
+    assert div(f, g, domain=ZZ, auto=True) == (qq, rq)
+    assert div(f, g, domain=ZZ, auto=False) == (qz, rz)
+    assert div(f, g, domain=QQ, auto=True) == (qq, rq)
+    assert div(f, g, domain=QQ, auto=False) == (qq, rq)
+
+    assert rem(f, g) == rq
+    assert rem(f, g, auto=True) == rq
+    assert rem(f, g, auto=False) == rz
+    assert rem(f, g, domain=ZZ) == rz
+    assert rem(f, g, domain=QQ) == rq
+    assert rem(f, g, domain=ZZ, auto=True) == rq
+    assert rem(f, g, domain=ZZ, auto=False) == rz
+    assert rem(f, g, domain=QQ, auto=True) == rq
+    assert rem(f, g, domain=QQ, auto=False) == rq
+
+    assert exquo(f, g) == qq
+    assert exquo(f, g, auto=True) == qq
+    assert exquo(f, g, auto=False) == qz
+    assert exquo(f, g, domain=ZZ) == qz
+    assert exquo(f, g, domain=QQ) == qq
+    assert exquo(f, g, domain=ZZ, auto=True) == qq
+    assert exquo(f, g, domain=ZZ, auto=False) == qz
+    assert exquo(f, g, domain=QQ, auto=True) == qq
+    assert exquo(f, g, domain=QQ, auto=False) == qq
+
+    f, g, q = x**2, 2*x, x/2
+
+    assert quo(f, g) == q
+    assert quo(f, g, auto=True) == q
+    raises(ExactQuotientFailed, "quo(f, g, auto=False)")
+    raises(ExactQuotientFailed, "quo(f, g, domain=ZZ)")
+    assert quo(f, g, domain=QQ) == q
+    assert quo(f, g, domain=ZZ, auto=True) == q
+    raises(ExactQuotientFailed, "quo(f, g, domain=ZZ, auto=False)")
+    assert quo(f, g, domain=QQ, auto=True) == q
+    assert quo(f, g, domain=QQ, auto=False) == q
+
+    f, g = Poly(x**2), Poly(x)
+
+    q, r = f.div(g)
+    assert q.get_domain().is_ZZ and r.get_domain().is_ZZ
+    r = f.rem(g)
+    assert r.get_domain().is_ZZ
+    q = f.quo(g)
+    assert q.get_domain().is_ZZ
+    q = f.exquo(g)
+    assert q.get_domain().is_ZZ
+
 def test_gcdex():
     f, g = 2*x, x**2 - 16
     s, t, h = x/32, -Rational(1,16), 1
@@ -1434,15 +1504,15 @@ def test_gcd():
     assert gcd(F, G, polys=False) == h
     assert lcm(F, G, polys=False) == r
 
-    f, g = x**2 - 1, x - 1.0
-    h, s, t = g, x + 1.0, 1.0
+    f, g = 1.0*x**2 - 1.0, 1.0*x - 1.0
+    h, s, t = g, 1.0*x + 1.0, 1.0
 
     assert cofactors(f, g) == (h, s, t)
     assert gcd(f, g) == h
     assert lcm(f, g) == f
 
-    f, g = x**2 - 1.0, x - 1
-    h, s, t = g, x + 1.0, 1.0
+    f, g = 1.0*x**2 - 1.0, 1.0*x - 1.0
+    h, s, t = g, 1.0*x + 1.0, 1.0
 
     assert cofactors(f, g) == (h, s, t)
     assert gcd(f, g) == h
@@ -1532,7 +1602,7 @@ def test_monic():
     assert monic(2*x**2 + 6*x + 4, auto=False) == x**2 + 3*x + 2
     raises(ExactQuotientFailed, "monic(2*x + 6*x + 1, auto=False)")
 
-    assert monic(2.0*x**2 + 6.0*x + 4.0) == x**2 + 3.0*x + 2.0
+    assert monic(2.0*x**2 + 6.0*x + 4.0) == 1.0*x**2 + 3.0*x + 2.0
     assert monic(2*x**2 + 3*x + 4, modulus=5) == x**2 - x + 2
 
 def test_content():
@@ -2038,22 +2108,22 @@ def test_nroots():
     assert Poly(1, x).nroots() == []
 
     assert Poly(x**2 - 1, x).nroots() == [-1.0, 1.0]
-    assert Poly(x**2 + 1, x).nroots() == [-I, I]
+    assert Poly(x**2 + 1, x).nroots() == [-1.0*I, 1.0*I]
 
     roots, error = Poly(x**2 - 1, x).nroots(error=True)
     assert roots == [-1.0, 1.0] and error < 1e25;
 
     roots, error = Poly(x**2 + 1, x).nroots(error=True)
-    assert roots == [-I, I] and error < 1e25;
+    assert roots == [-1.0*I, 1.0*I] and error < 1e25;
 
     roots, error = Poly(x**2/3 - S(1)/3, x).nroots(error=True)
     assert roots == [-1.0, 1.0] and error < 1e25;
 
     roots, error = Poly(x**2/3 + S(1)/3, x).nroots(error=True)
-    assert roots == [-I, I] and error < 1e25;
+    assert roots == [-1.0*I, 1.0*I] and error < 1e25;
 
-    assert Poly(x**2 + 2*I, x).nroots() == [-1.0 + I, 1.0 - I]
-    assert Poly(x**2 + 2*I, x, extension=I).nroots() == [-1.0 + I, 1.0 - I]
+    assert Poly(x**2 + 2*I, x).nroots() == [-1.0 + 1.0*I, 1.0 - 1.0*I]
+    assert Poly(x**2 + 2*I, x, extension=I).nroots() == [-1.0 + 1.0*I, 1.0 - 1.0*I]
 
     assert Poly(0.2*x + 0.1).nroots() == [-0.5]
 
@@ -2065,8 +2135,8 @@ def test_nroots():
     roots, error = nroots(x**2 - 1, error=True)
     assert roots == [-1.0, 1.0] and error < 1e25;
 
-    assert nroots(x + I) == [-I]
-    assert nroots(x + 2*I) == [-2*I]
+    assert nroots(x + I) == [-1.0*I]
+    assert nroots(x + 2*I) == [-2.0*I]
 
     raises(PolynomialError, "nroots(0)")
 
@@ -2075,6 +2145,26 @@ def test_ground_roots():
 
     assert Poly(f).ground_roots() == {S(1): 2, S(0): 2}
     assert ground_roots(f) == {S(1): 2, S(0): 2}
+
+def test_nth_power_roots_poly():
+    f = x**4 - x**2 + 1
+
+    f_2 = (x**2 - x + 1)**2
+    f_3 = (x**2 + 1)**2
+    f_4 = (x**2 + x + 1)**2
+    f_12 = (x - 1)**4
+
+    nth_power_roots_poly(f, 1) == f
+
+    raises(ValueError, "nth_power_roots_poly(f, 0)")
+    raises(ValueError, "nth_power_roots_poly(f, x)")
+
+    factor(nth_power_roots_poly(f, 2)) == f_2
+    factor(nth_power_roots_poly(f, 3)) == f_3
+    factor(nth_power_roots_poly(f, 4)) == f_4
+    factor(nth_power_roots_poly(f, 12)) == f_12
+
+    raises(MultivariatePolynomialError, "nth_power_roots_poly(x + y, 2, x, y)")
 
 def test_cancel():
     assert cancel(0) == 0

@@ -215,8 +215,8 @@ class Add(AssocOp):
     def _eval_derivative(self, s):
         return Add(*[f.diff(s) for f in self.args])
 
-    def _eval_nseries(self, x, n):
-        terms = [t.nseries(x, n=n) for t in self.args]
+    def _eval_nseries(self, x, n, logx):
+        terms = [t.nseries(x, n=n, logx=logx) for t in self.args]
         return Add(*terms)
 
     def _matches_simple(self, expr, repl_dict):
@@ -396,7 +396,8 @@ class Add(AssocOp):
         return (self.new(*re_part), self.new(*im_part))
 
     def _eval_as_leading_term(self, x):
-        coeff, terms = self.as_coeff_add(x)
+        # TODO this does not need to call nseries!
+        coeff, terms = self.collect(x).as_coeff_add(x)
         has_unbounded = bool([f for f in self.args if f.is_unbounded])
         if has_unbounded:
             if isinstance(terms, Basic):
@@ -407,7 +408,7 @@ class Add(AssocOp):
         else:
             o = C.Order(terms[0]*x,x)
         n = 1
-        s = self.nseries(x, n=n)
+        s = self.nseries(x, n=n).collect(x) # could be 1/x + 1/(y*x)
         while s.is_Order:
             n +=1
             s = self.nseries(x, n=n)

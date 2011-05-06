@@ -326,12 +326,12 @@ def test_Add_Mul_is_bounded():
     assert sin(x).is_bounded == True
     assert (x*sin(x)).is_bounded == False
     assert (1024*sin(x)).is_bounded == True
-    assert (sin(x)*exp(x)).is_bounded == False
+    assert (sin(x)*exp(x)).is_bounded is not True
     assert (sin(x)*cos(x)).is_bounded == True
-    assert (x*sin(x)*exp(x)).is_bounded == False
+    assert (x*sin(x)*exp(x)).is_bounded is not True
 
     assert (sin(x)-67).is_bounded == True
-    assert (sin(x)+exp(x)).is_bounded == False
+    assert (sin(x)+exp(x)).is_bounded is not True
 
 def test_Mul_is_even_odd():
     x = Symbol('x', integer=True)
@@ -889,7 +889,7 @@ def test_Pow_is_bounded():
     assert (sin(x)**x).is_bounded == None
     assert (sin(x)**exp(x)).is_bounded == None
     assert (1/sin(x)).is_bounded == None # if zero, no, otherwise yes
-    assert (1/exp(x)).is_bounded == False
+    assert (1/exp(x)).is_bounded == None # x could be -oo
 
 def test_Pow_is_even_odd():
     x = Symbol('x')

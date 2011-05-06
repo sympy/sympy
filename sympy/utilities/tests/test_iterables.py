@@ -1,7 +1,7 @@
 from sympy import symbols, Integral, Tuple, Dummy, Basic
 from sympy.utilities.iterables import (postorder_traversal, preorder_traversal,
     flatten, group, take, subsets, variations, cartes, numbered_symbols,
-    dict_merge, prefixes, postfixes, sift)
+    dict_merge, prefixes, postfixes, sift, topological_sort)
 from sympy.core.singleton import S
 from sympy.functions.elementary.piecewise import Piecewise, ExprCondPair
 from sympy.utilities.pytest import raises
@@ -205,3 +205,13 @@ def test_postfixes():
 
     assert list(postfixes([1,2,3,4,5])) == \
         [[5], [4, 5], [3, 4, 5], [2, 3, 4, 5], [1, 2, 3, 4, 5]]
+
+def test_topological_sort():
+    V = [2, 3, 5, 7, 8, 9, 10, 11]
+    E = [(7, 11), (7, 8), (5, 11), (3, 8), (3, 10), (11, 2), (11, 9), (11, 10), (8, 9)]
+
+    assert topological_sort((V, E)) == [3, 5, 7, 8, 11, 2, 9, 10]
+    assert topological_sort((V, E), key=lambda v: -v) == [7, 5, 11, 3, 10, 8, 9, 2]
+
+    raises(ValueError, "topological_sort((V, E + [(10, 7)]))")
+

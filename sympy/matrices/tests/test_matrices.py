@@ -1,5 +1,5 @@
 from sympy import (symbols, Matrix, SMatrix, eye, I, Symbol, Rational, wronskian, cos,
-    sin, exp, hessian, sqrt, zeros, ones, randMatrix, Poly, S, pi,
+    sin, exp, hessian, sqrt, zeros, ones, randMatrix, Poly, S, pi, E,
     oo, trigsimp, Integer, block_diag, N, zeros)
 from sympy.matrices.matrices import (ShapeError, MatrixError,
     matrix_multiply_elementwise, diag,
@@ -79,6 +79,11 @@ def test_power():
     assert (Matrix([[2]]) ** 100)[0,0] == 2**100
     assert eye(2)**10000000 == eye(2)
     assert Matrix([[1, 2], [3, 4]])**Integer(2) == Matrix([[7, 10], [15, 22]])
+
+    A = Matrix([[33, 24], [48, 57]])
+    assert (A**(S(1)/2))[:] == [5, 2, 4, 7]
+    A = Matrix([[0, 4], [-1, 5]])
+    assert (A**(S(1)/2))**2 == A
 
 def test_creation():
     raises(ValueError, 'Matrix(5, 5, range(20))')
@@ -428,7 +433,20 @@ def test_QR():
 
     A = Matrix([[1,1,1],[1,1,3],[2,3,4]])
     Q, R = A.QRdecomposition()
-    assert Q*Q.T == eye(Q.rows)
+    assert Q.T * Q == eye(Q.cols)
+    assert R.is_upper()
+    assert A == Q*R
+
+def test_QR_non_square():
+    A = Matrix([[9,0,26],[12,0,-7],[0,4,4],[0,-3,-3]])
+    Q, R = A.QRdecomposition()
+    assert Q.T * Q == eye(Q.cols)
+    assert R.is_upper()
+    assert A == Q*R
+
+    A = Matrix([[1,-1,4],[1,4,-2],[1,4,2],[1,-1,0]])
+    Q, R = A.QRdecomposition()
+    assert Q.T * Q == eye(Q.cols)
     assert R.is_upper()
     assert A == Q*R
 
@@ -978,56 +996,31 @@ def test_issue851():
     assert m != b
 
 def test_issue882():
-    class Int1(object):
-        def __int__(self):
-            return 1
-    class Int2(object):
-        def __int__(self):
-            return 2
     class Index1(object):
         def __index__(self):
             return 1
     class Index2(object):
         def __index__(self):
             return 2
-    int1 = Int1()
-    int2 = Int2()
     index1 = Index1()
     index2 = Index2()
 
     m = Matrix([1, 2, 3])
-    assert m[int2] == 3
+
     assert m[index2] == 3
 
-    m[int2] = 4
-    assert m[2] == 4
     m[index2] = 5
     assert m[2] == 5
 
     m = Matrix([[1, 2, 3], [4, 5, 6]])
-    assert m[int1,int2] == 6
-    assert m[index1,int2] == 6
-    assert m[int1,index2] == 6
     assert m[index1,index2] == 6
-    assert m[1,int2] == 6
     assert m[1,index2] == 6
-    assert m[int1,2] == 6
     assert m[index1,2] == 6
 
-    m[int1,int2] = 1
-    assert m[1, 2] == 1
-    m[index1,int2] = 2
-    assert m[1, 2] == 2
-    m[int1,index2] = 3
-    assert m[1, 2] == 3
     m[index1,index2] = 4
     assert m[1, 2] == 4
-    m[1,int2] = 5
-    assert m[1, 2] == 5
     m[1,index2] = 6
     assert m[1, 2] == 6
-    m[int1,2] = 7
-    assert m[1, 2] == 7
     m[index1,2] = 8
     assert m[1, 2] == 8
 
@@ -1064,6 +1057,12 @@ def test_is_lower():
     assert a.is_lower() == False
     a = Matrix([[1],[2],[3]])
     assert a.is_lower() == True
+
+def test_is_nilpotent():
+    a = Matrix(4, 4, [0,2,1,6,0,0,1,2,0,0,0,3,0,0,0,0])
+    assert a.is_nilpotent()
+    a = Matrix([[1,0],[0,1]])
+    assert not a.is_nilpotent()
 
 def test_zeros_ones_fill():
     n, m = 3, 5
@@ -1293,8 +1292,15 @@ def test_diagonal_symmetrical():
     m = Matrix(3,3,[1, 0, 0, 0, 2, 0, 0, 0, 3])
     assert m == diag(1, 2, 3)
 
-    m = Matrix(2,3,[0, 0, 0, 0, 0, 0])
+    m = Matrix(2, 3, [0, 0, 0, 0, 0, 0])
     assert not m.is_symmetric()
+    assert m.is_diagonal()
+
+    m = Matrix(((5, 0), (0, 6), (0, 0)))
+    assert m.is_diagonal()
+
+    m = Matrix(((5, 0, 0), (0, 6, 0)))
+    assert m.is_diagonal()
 
     x, y = symbols('x y')
     m = Matrix(3,3,[1, x**2 + 2*x + 1, y, (x + 1)**2 , 2, 0, y, 0, 3])
@@ -1442,6 +1448,13 @@ def test_Matrix_berkowitz_charpoly():
     assert A.berkowitz_charpoly(x) == \
         Poly(x**2 + (K_i*UA + K_w*UA + 2*K_i*K_w)/(K_i + K_w)*x + K_i*K_w*UA/(K_i + K_w), x, domain='ZZ(K_i,K_w,UA)')
 
+def test_exp():
+    m = Matrix([[3,4],[0,-2]])
+    assert m.exp() == Matrix([[exp(3),-4*exp(-2)/5 + 4*exp(3)/5],[0,exp(-2)]])
+
+    m = Matrix([[1,0],[0,1]])
+    assert m.exp() == Matrix([[E,0],[0,E]])
+
 def test_SMatrix_transpose():
     assert SMatrix((1,2),(3,4)).transpose() == SMatrix((1,3),(2,4))
 
@@ -1480,19 +1493,22 @@ def test_errors():
     raises(TypeError, "SMatrix([[1, 2], [3, 4]]).submatrix([1, 1])")
     raises(TypeError, "Matrix([1]).applyfunc(1)")
     raises(ShapeError, "Matrix([1]).LUsolve(Matrix([[1, 2], [3, 4]]))")
+    raises(MatrixError, "Matrix([[1,2,3],[4,5,6],[7,8,9]]).QRdecomposition()")
     raises(NonSquareMatrixError, "Matrix([1, 2]).LUdecomposition_Simple()")
     raises(ValueError, "Matrix([[1, 2], [3, 4]]).minorEntry(4, 5)")
     raises(ValueError, "Matrix([[1, 2], [3, 4]]).minorMatrix(4, 5)")
-    raises(NonSquareMatrixError, "Matrix([1, 2]).QRdecomposition()")
     raises(TypeError, "Matrix([1, 2, 3]).cross(1)")
     raises(TypeError, "Matrix([1, 2, 3]).dot(1)")
     raises(ShapeError, "Matrix([1, 2, 3]).dot(Matrix([1, 2]))")
+    raises(NotImplementedError, "Matrix([[0,1,2],[0,0,-1], [0,0,0]]).exp()")
+    raises(NonSquareMatrixError, "Matrix([1, 2, 3]).exp()")
     raises(ShapeError, "Matrix([[1, 2], [3, 4]]).norm()")
     raises(ShapeError, "Matrix([[1, 2], [3, 4]]).normalized()")
     raises(NonSquareMatrixError, "Matrix([1, 2]).inverse_GE()")
     raises(ValueError, "Matrix([[1, 2], [1, 2]]).inverse_GE()")
     raises(NonSquareMatrixError, "Matrix([1, 2]).inverse_ADJ()")
     raises(ValueError, "Matrix([[1, 2], [1, 2]]).inverse_ADJ()")
+    raises(NonSquareMatrixError, "Matrix([1,2]).is_nilpotent()")
     raises(ValueError, "hessian(Matrix([[1, 2], [3, 4]]), Matrix([[1, 2], [2, 1]]))")
     raises(ValueError, "hessian(Matrix([[1, 2], [3, 4]]), [])")
     raises(TypeError, "SMatrix(1.4, 2, lambda i, j: 0)")
@@ -1504,6 +1520,8 @@ def test_errors():
     raises(TypeError, "SMatrix([[1, 2], [3, 4]]).submatrix((1, 2))")
     raises(TypeError, "SMatrix([1, 2, 3]).cross(1)")
     raises(ValueError, "Matrix([[5, 10, 7],[0, -1, 2],[8,  3, 4]]).LUdecomposition_Simple(iszerofunc=lambda x:abs(x)<=4)")
+    raises(NotImplementedError, "Matrix([[1, 0],[1, 1]])**(S(1)/2)")
+    raises(NotImplementedError, "Matrix([[1, 2, 3],[4, 5, 6],[7,  8, 9]])**(0.5)")
 
 def test_len():
     assert len(Matrix()) == 0
@@ -1534,3 +1552,4 @@ def test_getattr():
     x, y = symbols('x,y')
     A = Matrix(((1,4,x),(y,2,4),(10,5,x**2+1)))
     raises (AttributeError, 'A.nonexistantattribute')
+

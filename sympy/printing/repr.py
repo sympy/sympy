@@ -49,6 +49,21 @@ class ReprPrinter(Printer):
         # GeometryEntity is special -- its base is tuple
         return type(expr).__name__ + srepr(tuple(expr))
 
+    def _print_Half(self, expr):
+        return 'Rational(1, 2)'
+
+    def _print_RationalConstant(self, expr):
+        return str(expr)
+
+    def _print_AtomicExpr(self, expr):
+        return str(expr)
+
+    def _print_NumberSymbol(self, expr):
+        return str(expr)
+
+    def _print_Integer(self, expr):
+        return 'Integer(%i)' % expr.p
+
     def _print_list(self, expr):
         return "[%s]"%self.reprify(expr, ", ")
 
@@ -61,16 +76,7 @@ class ReprPrinter(Printer):
         return '%s(%s)' % (expr.__class__.__name__, self._print(l))
 
     def _print_NaN(self, expr):
-        return "S.NaN"
-
-    def _print_Infinity(self, expr):
-        return 'S.Infinity'
-
-    def _print_NegativeInfinity(self, expr):
-        return "S.NegativeInfinity"
-
-    def _print_Integer(self, expr):
-        return 'Integer(%s)' % self._print(expr.p)
+        return "nan"
 
     def _print_Rational(self, expr):
         return 'Rational(%s, %s)' % (self._print(expr.p), self._print(expr.q))

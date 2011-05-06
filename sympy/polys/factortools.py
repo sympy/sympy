@@ -31,6 +31,7 @@ from sympy.polys.densearith import (
     dup_add, dmp_add,
     dup_sub, dmp_sub,
     dup_mul, dmp_mul,
+    dup_sqr, dmp_sqr,
     dup_pow, dmp_pow,
     dup_div, dmp_div,
     dup_rem, dmp_rem,
@@ -38,6 +39,7 @@ from sympy.polys.densearith import (
     dup_expand, dmp_expand,
     dup_add_mul, dmp_add_mul,
     dup_sub_mul, dmp_sub_mul,
+    dup_lshift, dup_rshift,
     dup_max_norm, dmp_max_norm,
     dup_l1_norm, dmp_l1_norm,
     dup_mul_ground, dmp_mul_ground,
@@ -52,7 +54,7 @@ from sympy.polys.densetools import (
     dup_eval, dmp_eval_tail,
     dmp_eval_in, dmp_diff_eval_in,
     dup_compose, dmp_compose,
-    dup_shift)
+    dup_shift, dup_mirror)
 
 from sympy.polys.euclidtools import (
     dmp_primitive,
@@ -68,7 +70,7 @@ from sympy.polys.polyutils import _sort_factors
 from sympy.polys.polyconfig import query
 
 from sympy.polys.polyerrors import (
-    ExtraneousFactors, DomainError, EvaluationFailed)
+    ExtraneousFactors, DomainError, CoercionFailed, EvaluationFailed)
 
 from sympy.ntheory import nextprime, isprime, factorint
 from sympy.utilities import any, all, subsets, cythonized
@@ -327,6 +329,81 @@ def dup_zz_irreducible_p(f, K):
         for p in e_ff.iterkeys():
             if (lc % p) and (tc % p**2):
                 return True
+
+@cythonized("n,i")
+def dup_zz_cyclotomic_p(f, K, irreducible=False):
+    """
+    Efficiently test if ``f`` is a cyclotomic polnomial.
+
+    **Examples**
+
+    >>> from sympy.polys.factortools import dup_zz_cyclotomic_p
+    >>> from sympy.polys.domains import ZZ
+
+    >>> f = [1, 0, 1, 0, 0, 0,-1, 0, 1, 0,-1, 0, 0, 0, 1, 0, 1]
+    >>> dup_zz_cyclotomic_p(f, ZZ)
+    False
+
+    >>> g = [1, 0, 1, 0, 0, 0,-1, 0,-1, 0,-1, 0, 0, 0, 1, 0, 1]
+    >>> dup_zz_cyclotomic_p(g, ZZ)
+    True
+
+    """
+    if K.is_QQ:
+        try:
+            K0, K = K, K.get_ring()
+            f = dup_convert(f, K0, K)
+        except CoercionFailed:
+            return False
+    elif not K.is_ZZ:
+        return False
+
+    lc = dup_LC(f, K)
+    tc = dup_TC(f, K)
+
+    if lc != 1 or (tc != -1 and tc != 1):
+        return False
+
+    if not irreducible:
+        coeff, factors = dup_factor_list(f, K)
+
+        if coeff != K.one or factors != [(f, 1)]:
+            return False
+
+    n = dup_degree(f)
+    g, h = [], []
+
+    for i in xrange(n, -1, -2):
+        g.insert(0, f[i])
+
+    for i in xrange(n-1, -1, -2):
+        h.insert(0, f[i])
+
+    g = dup_sqr(dup_strip(g), K)
+    h = dup_sqr(dup_strip(h), K)
+
+    F = dup_sub(g, dup_lshift(h, 1, K), K)
+
+    if K.is_negative(dup_LC(F, K)):
+        F = dup_neg(F, K)
+
+    if F == f:
+        return True
+
+    g = dup_mirror(f, K)
+
+    if K.is_negative(dup_LC(g, K)):
+        g = dup_neg(g, K)
+
+    if F == g and dup_zz_cyclotomic_p(g, K):
+        return True
+
+    G = dup_sqf_part(F, K)
+
+    if dup_sqr(G, K) == F and dup_zz_cyclotomic_p(G, K):
+        return True
+
+    return False
 
 @cythonized("n,p,k")
 def dup_zz_cyclotomic_poly(n, K):

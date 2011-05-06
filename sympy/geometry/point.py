@@ -69,6 +69,9 @@ class Point(GeometryEntity):
     def y(self):
         return self[1]
 
+    def _eval_subs(self, old, new):
+        return type(self)(self.x.subs(old, new), self.y.subs(old, new))
+
     def is_collinear(*points):
         """Is a sequence of points collinear?
 
@@ -113,9 +116,11 @@ class Point(GeometryEntity):
         False
 
         """
-        points = GeometryEntity.extract_entities(points)
-        if len(points) == 0: return False
-        if len(points) <= 2: return True # two points always form a line
+        if len(points) == 0:
+            return False
+        if len(points) <= 2:
+            return True # two points always form a line
+        points = [Point(a) for a in points]
 
         # XXX Cross product is used now, but that only extends to three
         #     dimensions. If the concept needs to extend to greater
@@ -168,10 +173,13 @@ class Point(GeometryEntity):
         False
 
         """
-        points = GeometryEntity.extract_entities(points)
-        if len(points) == 0: return False
-        if len(points) <= 2: return True
-        if len(points) == 3: return not Point.is_collinear(*points)
+        if len(points) == 0:
+            return False
+        if len(points) <= 2:
+            return True
+        points = [Point(p) for p in points]
+        if len(points) == 3:
+            return (not Point.is_collinear(*points))
 
         try:
             from ellipse import Circle
@@ -310,16 +318,25 @@ class Point(GeometryEntity):
             if self == o:
                 return [self]
             return []
-        raise NotImplementedError()
+
+        return o.intersection(self)
+
+    @property
+    def length(self):
+        return S.Zero
+
+    def __len__(self):
+        return 1
 
     def __add__(self, other):
         """Add two points, or add a factor to this point's coordinates."""
         if isinstance(other, Point):
-            if len(other) == len(self):
-                return Point([simplify(a + b) for a, b in zip(self, other)])
+            if len(other.args) == len(self.args):
+                return Point( [simplify(a + b) for a, b in zip(self, other)] )
             else:
                 raise TypeError("Points must have the same number of dimensions")
         else:
+            raise ValueError('Cannot add non-Point, %s, to a Point' % other)
             other = sympify(other)
             return Point([simplify(a + other) for a in self])
 
@@ -343,6 +360,6 @@ class Point(GeometryEntity):
         return Point([-x for x in self])
 
     def __abs__(self):
-        """The distance from the origin."""
-        origin = Point([0] * len(self))
+        """Returns the distance between this point and the origin."""
+        origin = Point([0]*len(self.args))
         return Point.distance(origin, self)

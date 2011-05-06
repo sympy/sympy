@@ -1,9 +1,10 @@
 from sympy import Lambda, Symbol, Function, Derivative, sqrt, \
         log, exp, Rational, Real, sin, cos, acos, diff, I, re, im, \
-        oo, zoo, nan, E, expand, pi, O, Sum, S, polygamma
+        oo, zoo, nan, E, expand, pi, O, Sum, S, polygamma, loggamma
 from sympy.utilities.pytest import XFAIL, raises
 from sympy.abc import x, y, n
 from sympy.core.function import PoleError
+from sympy.utilities.iterables import subsets, variations
 
 def test_f_expand_complex():
     f = Function('f')
@@ -247,15 +248,19 @@ def test_function_non_commutative():
 
 def test_function__eval_nseries():
     x = Symbol('x')
-    assert sin(x)._eval_nseries(x,2) == x + O(x**2)
-    assert sin(x+1)._eval_nseries(x,2) == x*cos(1) + sin(1) + O(x**2)
-    assert sin(pi*(1-x))._eval_nseries(x,2) == pi*x + O(x**2)
-    assert acos(1-x**2)._eval_nseries(x,2) == sqrt(2)*x + O(x**2)
-    assert polygamma(n,x+1)._eval_nseries(x,2) == \
+    assert sin(x)._eval_nseries(x,2,None) == x + O(x**2)
+    assert sin(x+1)._eval_nseries(x,2,None) == x*cos(1) + sin(1) + O(x**2)
+    assert sin(pi*(1-x))._eval_nseries(x,2,None) == pi*x + O(x**2)
+    assert acos(1-x**2)._eval_nseries(x,2,None) == sqrt(2)*x + O(x**2)
+    assert polygamma(n,x+1)._eval_nseries(x,2,None) == \
                    polygamma(n,1) + polygamma(n+1,1)*x + O(x**2)
-    raises(PoleError, 'sin(1/x)._eval_nseries(x,2)')
-    raises(PoleError, 'acos(1-x)._eval_nseries(x,2)')
-    raises(PoleError, 'acos(1+x)._eval_nseries(x,2)')
+    raises(PoleError, 'sin(1/x)._eval_nseries(x,2,None)')
+    raises(PoleError, 'acos(1-x)._eval_nseries(x,2,None)')
+    raises(PoleError, 'acos(1+x)._eval_nseries(x,2,None)')
+    assert loggamma(1/x)._eval_nseries(x,0,None) \
+           == log(x)/2 - log(x)/x - 1/x + O(1, x)
+    l = Symbol('l')
+    assert loggamma(log(1/x)).nseries(x,n=1,logx=y) == loggamma(-y)
 
 def test_doit():
     n = Symbol('n', integer = True)
@@ -272,3 +277,25 @@ def test_evalf_default():
     assert type(sin(4)) == sin
     assert type(polygamma(2,4.0)) == Real
     assert type(sin(Rational(1,4))) == sin
+
+def test_issue2300():
+    args = [x, y, S(2), S.Half]
+    def ok(a):
+        """Return True if the input args for diff are ok"""
+        if not a:return True
+        if a[0].is_Symbol is False:return False
+        s_at = [i for i in range(len(a)) if a[i].is_Symbol]
+        n_at = [i for i in range(len(a)) if not a[i].is_Symbol]
+        # every symbol is followed by symbol or int
+        # every number is followed by a symbol
+        return (all([a[i+1].is_Symbol or a[i+1].is_Integer
+            for i in s_at if i+1<len(a)]) and
+            all([a[i+1].is_Symbol
+            for i in n_at if i+1<len(a)]))
+    eq = x**10*y**8
+    for a in subsets(args):
+        for v in variations(a, len(a)):
+            if ok(v):
+                noraise = eq.diff(*v)
+            else:
+                raises(ValueError, 'eq.diff(*v)')

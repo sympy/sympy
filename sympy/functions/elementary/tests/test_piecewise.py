@@ -71,6 +71,9 @@ def test_piecewise():
     p = Piecewise((x, x < -10),(x**2, x <= -1),(x, 1 < x))
     raises(ValueError, "integrate(p,(x,-2,2))")
 
+    # Test commutativity
+    assert p.is_commutative is True
+
 def test_piecewise_free_symbols():
     a = symbols('a')
     f = Piecewise((x , a<0), (y, True))
@@ -193,3 +196,9 @@ def test_piecewise_lambdify():
     assert f(0.5) == 0.5
     assert f(2.0) == 0.0
 
+
+def test_piecewise_series():
+    from sympy import sin, cos, O
+    p1 = Piecewise((sin(x), x<0),(cos(x),x>0))
+    p2 = Piecewise((x+O(x**2), x<0),(1+O(x**2),x>0))
+    assert p1.nseries(x,n=2) == p2

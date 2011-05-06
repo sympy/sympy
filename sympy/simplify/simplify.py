@@ -147,7 +147,7 @@ def separate(expr, deep=False):
         terms, expo = [], separate(expr.exp, deep)
 
         if expr.base.is_Mul:
-            t = [separate(C.Pow(t,expo), deep) for t in expr.base.args]
+            t = [separate(Pow(t,expo), deep) for t in expr.base.args]
             return Mul(*t)
         elif expr.base.func is C.exp:
             if deep == True:
@@ -155,7 +155,7 @@ def separate(expr, deep=False):
             else:
                 return C.exp(expr.base[0]*expo)
         else:
-            return C.Pow(separate(expr.base, deep), expo)
+            return Pow(separate(expr.base, deep), expo)
     elif expr.is_Add or expr.is_Mul:
         return type(expr)(*[separate(t, deep) for t in expr.args])
     elif expr.is_Function and deep:
@@ -456,7 +456,7 @@ def collect(expr, syms, evaluate=True, exact=False):
             return ret
         elif expr.is_Pow:
             b = collect(expr.base, syms, True, exact)
-            return C.Pow(b, expr.exp)
+            return Pow(b, expr.exp)
 
     summa = [separate(i) for i in Add.make_args(sympify(expr))]
 
@@ -1059,7 +1059,7 @@ def powdenest(eq, force=False):
             else:
                 other.append(ei)
         logs = logcombine(efunc(*logs), force=force)
-        return C.Pow(C.exp(logs), efunc(*other))
+        return Pow(C.exp(logs), efunc(*other))
 
     bb, be = b.as_base_exp()
     if be is S.One and not (b.is_Mul or b.is_Rational):
@@ -1093,9 +1093,9 @@ def powdenest(eq, force=False):
                     n, d = gcd.exp.as_numer_denom()
                     ok = d is not S.One and any(di.is_integer for di in Mul.make_args(d))
             if ok:
-                return C.Pow(C.Pow(gcd.base, gcd.exp/c.p), c.p*e)
+                return Pow(Pow(gcd.base, gcd.exp/c.p), c.p*e)
         elif e.is_Mul:
-            return C.Pow(b, e).subs([(new, old) for old, new in rep])
+            return Pow(b, e).subs([(new, old) for old, new in rep])
         return eq
     else:
         add= []
@@ -1105,9 +1105,9 @@ def powdenest(eq, force=False):
                 add.append(g)
             else:
                 other.append(g)
-        return powdenest(C.Pow(exp(logcombine(Mul(*add))), e*Mul(*other))).subs([(new, old) for old, new in rep])
+        return powdenest(Pow(exp(logcombine(Mul(*add))), e*Mul(*other))).subs([(new, old) for old, new in rep])
 
-def powsimp(expr, deep=False, combine='all'):
+def powsimp(expr, deep=False, combine='all', force=False):
     """
     == Usage ==
         powsimp(expr, deep) -> reduces expression by combining powers with
@@ -1116,6 +1116,11 @@ def powsimp(expr, deep=False, combine='all'):
     == Notes ==
         If deep is True then powsimp() will also simplify arguments of
         functions. By default deep is set to False.
+
+        If force is True then bases will be combined without checking for
+        assumptions, e.g. sqrt(x)*sqrt(y) -> sqrt(x*y) which is not true
+        if x and y are both negative.
+
         You can make powsimp() only combine bases or only combine exponents by
         changing combine='base' or combine='exp'.  By default, combine='all',
         which does both.  combine='base' will only combine::
@@ -1145,14 +1150,14 @@ def powsimp(expr, deep=False, combine='all'):
         x**(y + z)*y**z
         >>> powsimp(x**y*x**z*y**z, combine='exp')
         x**(y + z)*y**z
-        >>> powsimp(x**y*x**z*y**z, combine='base')
+        >>> powsimp(x**y*x**z*y**z, combine='base', force=True)
         x**y*(x*y)**z
 
-        >>> powsimp(x**z*x**y*n**z*n**y, combine='all')
+        >>> powsimp(x**z*x**y*n**z*n**y, combine='all', force=True)
         (n*x)**(y + z)
         >>> powsimp(x**z*x**y*n**z*n**y, combine='exp')
         n**(y + z)*x**(y + z)
-        >>> powsimp(x**z*x**y*n**z*n**y, combine='base')
+        >>> powsimp(x**z*x**y*n**z*n**y, combine='base', force=True)
         (n*x)**y*(n*x)**z
 
         >>> x, y = symbols('x y', positive=True)
@@ -1167,22 +1172,22 @@ def powsimp(expr, deep=False, combine='all'):
     y = Dummy('y')
     if expr.is_Pow:
         if deep:
-            return powsimp(y*powsimp(expr.base, deep, combine)**powsimp(\
-            expr.exp, deep, combine), deep, combine)/y
+            return powsimp(y*powsimp(expr.base, deep, combine, force)**powsimp(\
+            expr.exp, deep, combine, force), deep, combine, force)/y
         else:
-            return powsimp(y*expr, deep, combine)/y # Trick it into being a Mul
+            return powsimp(y*expr, deep, combine, force)/y # Trick it into being a Mul
     elif expr.is_Function:
         if expr.func is exp and deep:
             # Exp should really be like Pow
-            return powsimp(y*exp(powsimp(expr.args[0], deep, combine)), deep, combine)/y
+            return powsimp(y*exp(powsimp(expr.args[0], deep, combine, force)), deep, combine, force)/y
         elif expr.func is exp and not deep:
-            return powsimp(y*expr, deep, combine)/y
+            return powsimp(y*expr, deep, combine, force)/y
         elif deep:
-            return expr.func(*[powsimp(t, deep, combine) for t in expr.args])
+            return expr.func(*[powsimp(t, deep, combine, force) for t in expr.args])
         else:
             return expr
     elif expr.is_Add:
-        return Add(*[powsimp(t, deep, combine) for t in expr.args])
+        return Add(*[powsimp(t, deep, combine, force) for t in expr.args])
 
     elif expr.is_Mul:
         if combine in ('exp', 'all'):
@@ -1191,19 +1196,19 @@ def powsimp(expr, deep=False, combine='all'):
             if combine is 'all' and deep and any((t.is_Add for t in expr.args)):
                 # Once we get to 'base', there is no more 'exp', so we need to
                 # distribute here.
-                return powsimp(expand_mul(expr, deep=False), deep, combine)
+                return powsimp(expand_mul(expr, deep=False), deep, combine, force)
             c_powers = {}
             nc_part = []
             newexpr = sympify(1)
             for term in expr.args:
                 if term.is_Add and deep:
-                    newexpr *= powsimp(term, deep, combine)
+                    newexpr *= powsimp(term, deep, combine, force)
                 else:
                     if term.is_commutative:
                         b, e = term.as_base_exp()
                         if deep:
-                            b, e = powsimp(b, deep, combine), powsimp(e, deep, combine)
-                        c_powers[b] = c_powers.get(b, 0) + e
+                            b, e = [powsimp(i, deep, combine, force) for i in  [b, e]]
+                        c_powers.setdefault(b, []).append(e)
                     else:
                         # This is the logic that combines exponents for equal,
                         # but non-commutative bases: A**x*A**y == A**(x+y).
@@ -1212,9 +1217,13 @@ def powsimp(expr, deep=False, combine='all'):
                             b2, e2 = term.as_base_exp()
                             if (b1 == b2 and
                                 e1.is_commutative and e2.is_commutative):
-                                nc_part[-1] = Pow(b1, Add(e1,e2))
+                                nc_part[-1] = Pow(b1, Add(e1, e2))
                                 continue
                         nc_part.append(term)
+
+            # add up exponents of common bases
+            for b, e in c_powers.iteritems():
+                c_powers[b] = Add(*e)
 
             # check for base and inverted base pairs
             be = c_powers.items()
@@ -1234,7 +1243,7 @@ def powsimp(expr, deep=False, combine='all'):
                             e = c_powers.pop(binv)
                             c_powers[b] -= e
 
-            newexpr = Mul(newexpr, Mul(*[Pow(b,e) for b, e in c_powers.items()]))
+            newexpr = Mul(*([newexpr] + [Pow(b, e) for b, e in c_powers.iteritems()]))
             if combine is 'exp':
                 return Mul(newexpr, Mul(*nc_part))
             else:
@@ -1242,19 +1251,19 @@ def powsimp(expr, deep=False, combine='all'):
                 if deep:
                     newexpr = expand_mul(newexpr, deep=False)
                 if newexpr.is_Add:
-                    return powsimp(Mul(*nc_part), deep, combine='base') * \
-                           Add(*[powsimp(i, deep, combine='base')
+                    return powsimp(Mul(*nc_part), deep, combine='base', force=force) * \
+                           Add(*[powsimp(i, deep, combine='base', force=force)
                                  for i in newexpr.args])
                 else:
-                    return powsimp(Mul(*nc_part), deep, combine='base')*\
-                    powsimp(newexpr, deep, combine='base')
+                    return powsimp(Mul(*nc_part), deep, combine='base', force=force)*\
+                    powsimp(newexpr, deep, combine='base', force=force)
 
         else:
             # combine is 'base'
             if deep:
                 expr = expand_mul(expr, deep=False)
             if expr.is_Add:
-                return Add(*[powsimp(i, deep, combine) for i in expr.args])
+                return Add(*[powsimp(i, deep, combine, force) for i in expr.args])
             else:
                 # Build c_powers and nc_part.  These must both be lists not
                 # dicts because exp's are not combined.
@@ -1281,47 +1290,74 @@ def powsimp(expr, deep=False, combine='all'):
                 b, e = c_powers[i]
                 exp_c, exp_t = e.as_coeff_mul()
                 if not (exp_c is S.One) and exp_t:
-                    c_powers[i] = [C.Pow(b, exp_c), e._new_rawargs(*exp_t)]
+                    c_powers[i] = [Pow(b, exp_c), e._new_rawargs(*exp_t)]
 
 
-            # Combine bases whenever they have the same exponent
+            # Combine bases whenever they have the same exponent and
+            # assumptions allow
+
+            # first gather the potential bases under the common exponent
             c_exp = {}
             for b, e in c_powers:
-                if e in c_exp:
-                    c_exp[e].append(b)
-                else:
-                    c_exp[e] = [b]
+                if deep:
+                    e = powsimp(e, deep, combine, force)
+                c_exp.setdefault(e, []).append(b)
+            del c_powers
+
             # Merge back in the results of the above to form a new product
+            c_powers = {}
             for e in c_exp:
                 bases = c_exp[e]
-                if deep:
-                    simpe = powsimp(e, deep, combine)
-                    c_exp = {}
-                    for b, ex in c_powers:
-                        if ex in c_exp:
-                            c_exp[ex].append(b)
-                        else:
-                            c_exp[ex] = [b]
-                    del c_exp[e]
-                    c_exp[simpe] = bases
 
-                else:
-                    simpe = e
-                if len(bases) > 1:
-                    for b in bases:
-                        c_powers.remove([b,e])
+                # calculate the new base for e
+                if len(bases) == 1:
+                    new_base = bases[0]
+                elif e.is_integer or force:
                     new_base = Mul(*bases)
-                    in_c_powers = False
-                    for i in xrange(len(c_powers)):
-                        if c_powers[i][0] == new_base:
-                            if combine == 'all':
-                                c_powers[i][1] += simpe
+                else:
+                    # see which ones can be joined
+                    unk=[]
+                    nonneg=[]
+                    neg=[]
+                    for bi in bases:
+                        if not bi.is_negative is None: #then we know the sign
+                            if bi.is_negative:
+                                neg.append(bi)
                             else:
-                                c_powers.append([new_base, simpe])
-                            in_c_powers = True
-                    if not in_c_powers:
-                        c_powers.append([new_base, simpe])
-            c_part = [C.Pow(b,e) for b,e in c_powers]
+                                nonneg.append(bi)
+                        else:
+                            unk.append(bi)
+                    if len(unk) == 1 and not neg or len(neg) == 1 and not unk:
+                        # a single neg or a single unk can join the rest
+                        nonneg.extend(unk + neg)
+                        unk = neg = []
+                    elif neg:
+                        # their negative signs cancel in pairs
+                        neg = [-w for w in neg]
+                        if len(neg) % 2:
+                            unk.append(S.NegativeOne)
+
+                    # these shouldn't be joined
+                    for b in unk:
+                        c_powers.setdefault(b, []).append(e)
+                    # here is a new joined base
+                    new_base = Mul(*(nonneg + neg))
+
+                c_powers.setdefault(new_base, []).append(e)
+
+            # break out the powers from c_powers now
+            c_part = []
+            if combine == 'all':
+                #...joining the exponents
+                for b, e in c_powers.iteritems():
+                    c_part.append(Pow(b, Add(*e)))
+            else:
+                #...joining nothing
+                for b, e in c_powers.iteritems():
+                    for ei in e:
+                        c_part.append(Pow(b, ei))
+
+            # we're done
             return Mul(*(c_part + nc_part))
 
     else:

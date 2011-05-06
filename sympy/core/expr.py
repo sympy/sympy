@@ -197,6 +197,140 @@ class Expr(Basic, EvalfMixin):
         from sympy.functions.elementary.complexes import conjugate as c
         return c(self)
 
+
+    @classmethod
+    def _parse_order(cls, order):
+        """Parse and configure the ordering of terms. """
+        from sympy.polys.monomialtools import monomial_key
+
+        try:
+            reverse = order.startswith('rev-')
+        except AttributeError:
+            reverse = False
+        else:
+            if reverse:
+                order = order[4:]
+
+        monom_key = monomial_key(order)
+
+        def key(term):
+            _, ((re, im), monom, ncpart) = term
+            ncpart = [ e.as_tuple_tree() for e in ncpart ]
+            return monom_key(monom), tuple(ncpart), (-re, -im)
+
+        return key, reverse
+
+    def as_ordered_factors(self, order=None):
+        """
+        Transform an expression to an ordered list of factors.
+
+        **Examples**
+
+        >>> from sympy import sin, cos
+        >>> from sympy.abc import x, y
+
+        >>> (2*x*y*sin(x)*cos(x)).as_ordered_factors()
+        [2, x, y, sin(x), cos(x)]
+
+        """
+        if not self.is_Mul:
+            return [self]
+        else:
+            return sorted(self.args, key=lambda expr: Basic.sorted_key(expr, order=order))
+
+    def as_ordered_terms(self, order=None, data=False):
+        """
+        Transform an expression to an ordered list of terms.
+
+        **Examples**
+
+        >>> from sympy import sin, cos
+        >>> from sympy.abc import x, y
+
+        >>> (sin(x)**2*cos(x) + sin(x)**2 + 1).as_ordered_terms()
+        [sin(x)**2*cos(x), sin(x)**2, 1]
+
+        """
+        from sympy.utilities import any
+
+        key, reverse = self._parse_order(order)
+        terms, gens = self.as_terms()
+
+        if not any(term.is_Order for term, _ in terms):
+            ordered = sorted(terms, key=key, reverse=not reverse)
+        else:
+            _terms, _order = [], []
+
+            for term, repr in terms:
+                if not term.is_Order:
+                    _terms.append((term, repr))
+                else:
+                    _order.append((term, repr))
+
+            ordered = sorted(_terms, key=key) \
+                    + sorted(_order, key=key)
+
+        if data:
+            return ordered, gens
+        else:
+            return [ term for term, _ in ordered ]
+
+    def as_terms(self):
+        """Transform an expression to a list of terms. """
+        from sympy.core import Add, Mul, S
+        from sympy.core.exprtools import decompose_power
+
+        gens, terms = set([]), []
+
+        for term in Add.make_args(self):
+            coeff, _term = term.as_coeff_Mul()
+
+            coeff = complex(coeff)
+            cpart, ncpart = {}, []
+
+            if _term is not S.One:
+                for factor in Mul.make_args(_term):
+                    if factor.is_number:
+                        try:
+                            coeff *= complex(factor)
+                        except ValueError:
+                            pass
+                        else:
+                            continue
+
+                    if factor.is_commutative:
+                        base, exp = decompose_power(factor)
+
+                        cpart[base] = exp
+                        gens.add(base)
+                    else:
+                        ncpart.append(factor)
+
+            coeff = coeff.real, coeff.imag
+            ncpart = tuple(ncpart)
+
+            terms.append((term, (coeff, cpart, ncpart)))
+
+        gens = sorted(gens, key=Basic.sorted_key)
+
+        k, indices = len(gens), {}
+
+        for i, g in enumerate(gens):
+            indices[g] = i
+
+        result = []
+
+        for term, (coeff, cpart, ncpart) in terms:
+            monom = [0]*k
+
+            for base, exp in cpart.iteritems():
+                monom[indices[base]] = exp
+
+            result.append((term, (coeff, tuple(monom), ncpart)))
+
+        return result, gens
+
+
     def removeO(self):
         """Removes the additive O(..) symbol if there is one"""
         if self.is_Order:
@@ -579,7 +713,7 @@ class Expr(Basic, EvalfMixin):
         """
         return self
 
-    def as_coefficient(self, expr, right=False):
+    def as_coefficient(self, expr):
         """Extracts symbolic coefficient at the given expression. In
            other words, this functions separates 'self' into product
            of 'expr' and 'expr'-free coefficient. If such separation
@@ -587,7 +721,6 @@ class Expr(Basic, EvalfMixin):
 
            >>> from sympy import E, pi, sin, I, symbols
            >>> from sympy.abc import x, y
-           >>> n1, n2 = symbols('n1 n2', commutative=False)
 
            >>> E.as_coefficient(E)
            1
@@ -597,23 +730,19 @@ class Expr(Basic, EvalfMixin):
 
            >>> (2*E + x*E).as_coefficient(E)
            2 + x
-           >>> (2*E + x).as_coefficient(E)
+           >>> (2*E*x + x).as_coefficient(E)
+
+           >>> (E*(x + 1) + x).as_coefficient(E)
 
            >>> (2*pi*I).as_coefficient(pi*I)
            2
            >>> (2*I).as_coefficient(pi*I)
 
         """
-        co = self.coeff(expr, right)
-        if not co or co.has(*Mul.make_args(expr)):
-            return None
 
-        if self.is_Add:
-            if len(co.args) == len(self.args):
-                return co
-            return None
-        else:
-            return co
+        r = self.extract_multiplicatively(expr)
+        if r and not r.has(expr):
+            return r
 
     def as_independent(self, *deps, **hint):
         """
@@ -1249,7 +1378,7 @@ class Expr(Basic, EvalfMixin):
         # from here on it's x0=0 and dir='+' handling
 
         if n != None: # nseries handling
-            s1 = self._eval_nseries(x, n=n)
+            s1 = self._eval_nseries(x, n=n, logx=None)
             o = s1.getO() or S.Zero
             if o:
                 # make sure the requested order is returned
@@ -1264,11 +1393,11 @@ class Expr(Basic, EvalfMixin):
                     # is different than the original order and then predict how
                     # many additional terms are needed
                     for more in range(1, 9):
-                        s1 = self._eval_nseries(x, n=n + more)
+                        s1 = self._eval_nseries(x, n=n + more, logx=None)
                         newn = s1.getn()
                         if newn != ngot:
                             ndo = n + (n - ngot)*more/(newn - ngot)
-                            s1 = self._eval_nseries(x, n=ndo)
+                            s1 = self._eval_nseries(x, n=ndo, logx=None)
                             # if this assertion fails then our ndo calculation
                             # needs modification
                             assert s1.getn() == n
@@ -1342,7 +1471,7 @@ class Expr(Basic, EvalfMixin):
         # override this method and implement much more efficient yielding of
         # terms.
         n = 0
-        series = self._eval_nseries(x, n=n)
+        series = self._eval_nseries(x, n=n, logx=None)
         if not series.is_Order:
             if series.is_Add:
                 yield series.removeO()
@@ -1352,19 +1481,19 @@ class Expr(Basic, EvalfMixin):
 
         while series.is_Order:
             n += 1
-            series = self._eval_nseries(x, n=n)
+            series = self._eval_nseries(x, n=n, logx=None)
         e = series.removeO()
         yield e
         while 1:
             while 1:
                 n += 1
-                series = self._eval_nseries(x, n=n).removeO()
+                series = self._eval_nseries(x, n=n, logx=None).removeO()
                 if e != series:
                     break
             yield series - e
             e = series
 
-    def nseries(self, x=None, x0=0, n=6, dir='+'):
+    def nseries(self, x=None, x0=0, n=6, dir='+',logx=None):
         """
         Wrapper to _eval_nseries if assumptions allow, else to series.
 
@@ -1389,11 +1518,12 @@ class Expr(Basic, EvalfMixin):
         if x and not self.has(x):
             return self
         if x is None or x0 or dir != '+':#{see XPOS above} or (x.is_positive == x.is_negative == None):
+            assert logx == None
             return self.series(x, x0, n, dir)
         else:
-            return self._eval_nseries(x, n=n)
+            return self._eval_nseries(x, n=n, logx=logx)
 
-    def _eval_nseries(self, x, n):
+    def _eval_nseries(self, x, n, logx):
         """
         Return terms of series for self up to O(x**n) at x=0
         from the positive direction.
@@ -1409,6 +1539,30 @@ class Expr(Basic, EvalfMixin):
         """
         from sympy.series.limits import limit
         return limit(self, x, xlim, dir)
+
+    def compute_leading_term(self, x, skip_abs=False, logx=None):
+        """ as_leading_term is only allowed for results of .series()
+            This is a wrapper to compute a series first.
+            If skip_abs is true, the absolute term is assumed to be zero.
+            (This is necessary because sometimes it cannot be simplified
+             to zero without a lot of work, but is still known to be zero.
+             See log._eval_nseries for an example.)
+            If skip_log is true, log(x) is treated as an independent symbol.
+            (This is needed for the gruntz algorithm.)
+        """
+        from sympy.series.gruntz import calculate_series
+        from sympy import cancel, expand_mul
+        if self.removeO() == 0:
+            return self
+        if logx is None:
+            d = C.Dummy('logx')
+            s = calculate_series(self, x, skip_abs, d).subs(d, C.log(x))
+        else:
+            s = calculate_series(self, x, skip_abs, logx)
+        s = cancel(s)
+        if skip_abs:
+            s = expand_mul(s).as_independent(x)[1]
+        return s.as_leading_term(x)
 
     @cacheit
     def as_leading_term(self, *symbols):
@@ -1680,7 +1834,7 @@ class AtomicExpr(Atom, Expr):
     def is_number(self):
         return True
 
-    def _eval_nseries(self, x, n):
+    def _eval_nseries(self, x, n, logx):
         return self
 
 from mul import Mul
@@ -1689,4 +1843,5 @@ from power import Pow
 from relational import Inequality, StrictInequality
 from function import Derivative
 from sympify import _sympify, sympify, SympifyError
-from symbol import Wild
+from symbol import Wild, Dummy
+from sympy.core.exprtools import gcd_terms

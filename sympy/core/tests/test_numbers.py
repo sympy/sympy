@@ -1,6 +1,6 @@
 from sympy import (Rational, Symbol, Real, I, sqrt, oo, nan, pi, E, Integer,
                    S, factorial, Catalan, EulerGamma, GoldenRatio, cos, exp,
-                   Number, zoo, log, Mul)
+                   Number, zoo, log, Mul, Pow)
 from sympy.core.power import integer_nthroot
 
 from sympy.core.numbers import igcd, ilcm, igcdex, ifactorial, seterr, _intcache
@@ -259,6 +259,8 @@ def test_Real():
     teq(2*pi)
     teq(cos(0.1, evaluate=False))
 
+    assert Real(1) is S.One
+    assert Real(0) is S.Zero
 
 def test_Real_eval():
     a = Real(3.2)
@@ -394,7 +396,7 @@ def test_powers_Integer():
     assert sqrt(6) + sqrt(24) == 3*sqrt(6)
     assert sqrt(2) * sqrt(3)  == sqrt(6)
 
-    # separate sybols & constansts
+    # separate symbols & constansts
     x = Symbol("x")
     assert sqrt(49 * x) == 7 * sqrt(x)
     assert sqrt((3 - sqrt(pi)) ** 2) == 3 - sqrt(pi)
@@ -409,6 +411,7 @@ def test_powers_Integer():
 
     assert S(1234).factors() == {617: 1, 2: 1}
     assert Rational(2*3, 3*5*7).factors() == {2: 1, 5: -1, 7: -1}
+
     # test that eval_power factors numbers bigger than limit (2**15)
     from sympy import nextprime
     n = nextprime(2**15) # bigger than the current limit in factor_trial_division
@@ -416,6 +419,25 @@ def test_powers_Integer():
     assert sqrt(n**3) == n*sqrt(n)
     assert sqrt(4*n) == 2*sqrt(n)
 
+    # check that factors of base with powers sharing gcd with power are removed
+    assert (2**4*3)**Rational(1, 6) == 2**Rational(2, 3)*3**Rational(1, 6)
+    assert (2**4*3)**Rational(5, 6) == 8*2**Rational(1, 3)*3**Rational(5, 6)
+
+    # check that bases sharing a gcd are exptracted
+    assert 2**Rational(1, 3)*3**Rational(1, 4)*6**Rational(1, 5) == \
+           2**Rational(8, 15)*3**Rational(9, 20)
+    assert 8**Rational(1, 2)*24**Rational(1, 3)*6**Rational(1, 5) == \
+           4*2**Rational(7, 10)*3**Rational(8, 15)
+    assert 8**Rational(1, 2)*(-24)**Rational(1, 3)*(-6)**Rational(1, 5) == \
+           4*(-3)**Rational(8, 15)*2**Rational(7, 10)
+    assert 2**Rational(1, 3)*2**Rational(8, 9) == 2*2**Rational(2, 9)
+    assert 2**Rational(2, 3)*6**Rational(1, 3) == 2*3**Rational(1, 3)
+    assert 2**Rational(2, 3)*6**Rational(8, 9) == 2*2**Rational(5, 9)*3**Rational(8, 9)
+    assert (-2)**Rational(2, S(3))*(-4)**Rational(1, S(3)) == -2*2**Rational(1, 3)
+    assert 3*Pow(3, 2, evaluate=False) == 3**3
+    assert 3*Pow(3, -1/S(3), evaluate=False) == 3**(2/S(3))
+    assert (-2)**(1/S(3))*(-3)**(1/S(4))*(-5)**(5/S(6)) == \
+           -(-1)**Rational(5, 12)*2**Rational(1, 3)*3**Rational(1, 4)*5**Rational(5, 6)
 
 def test_powers_Rational():
     """Test Rational._eval_power"""
@@ -603,9 +625,9 @@ def test_Integer_methods():
     assert Integer(1).factorial() == Integer(1)
     assert Integer(10).factorial() == Integer(3628800)
 
-    assert Integer(100).sqrt() == Integer(10)
-    assert Integer(110).sqrt() == Integer(10)
-    assert Integer(121).sqrt() == Integer(11)
+    assert Integer(100).isqrt() == Integer(10)
+    assert Integer(110).isqrt() == Integer(10)
+    assert Integer(121).isqrt() == Integer(11)
 
     assert Integer(100).half_gcdex(2004) == \
         (Integer(-20), Integer(4))

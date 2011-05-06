@@ -1,17 +1,21 @@
-from sympy.core import Basic, S, C, sympify, oo, pi
+from sympy.core import Basic, S, C, sympify, oo, pi, Symbol
+from sympy.functions.elementary.piecewise import Piecewise
+from sympy.functions.elementary.trigonometric import cos, sin
 from sympy.simplify import simplify
 from sympy.geometry.exceptions import GeometryError
+from sympy.solvers import solve
 from entity import GeometryEntity
 from point import Point
 from ellipse import Circle
 from line import Line, Segment, Ray
 
+import warnings
 
 class Polygon(GeometryEntity):
     """A two-dimensional polygon.
 
-    A simple polygon in space. Can be constructed from a sequence or list
-    of points.
+    A simple polygon in space. Can be constructed from a sequence of points
+    or from a center, radius, number of sides and rotation angle.
 
     Parameters
     ----------
@@ -29,12 +33,15 @@ class Polygon(GeometryEntity):
     Raises
     ------
     GeometryError
-        If all parameters are not Points, or there are less than three
-        parameters.
+        If all parameters are not Points.
+
+        If the Polygon has intersecting sides.
 
     See Also
     --------
     Point
+    Segment
+    Triangle
 
     Notes
     -----
@@ -42,27 +49,131 @@ class Polygon(GeometryEntity):
     some calculations can be be negative or positive (e.g., area)
     based on the orientation of the points.
 
+    Any consecutive identical points are reduced to a single point
+    and any points collinear and between two points will be removed
+    unless they are needed to define an explicit intersection (see examples).
+
+    A Triangle, Segment or Point will be returned when there are 3 or
+    fewer points provided.
+
     Examples
     --------
-    >>> from sympy import Point, Polygon
-    >>> p1, p2, p3, p4 = map(Point, [(0, 0), (1, 0), (5, 1), (0, 1)])
+    >>> from sympy import Point, Polygon, pi
+    >>> p1, p2, p3, p4, p5 = map(Point, [(0, 0), (1, 0), (5, 1), (0, 1), (3, 0)])
     >>> Polygon(p1, p2, p3, p4)
     Polygon(Point(0, 0), Point(1, 0), Point(5, 1), Point(0, 1))
+    >>> Polygon(p1, p2)
+    Segment(Point(0, 0), Point(1, 0))
+    >>> Polygon(p1, p2, p5)
+    Segment(Point(0, 0), Point(3, 0))
+
+    While the sides of a polygon are not allowed to cross implicitly, they
+    can do so explicitly. For example, a polygon shaped like a Z with the top
+    left connecting to the bottom right of the Z must have the point in the
+    middle of the Z explicitly given:
+
+    >>> mid = Point(1, 1)
+    >>> Polygon((0, 2), (2, 2), mid, (0, 0), (2, 0), mid).area
+    0
+    >>> Polygon((0, 2), (2, 2), mid, (2, 0), (0, 0), mid).area
+    -2
+
+    When the the keyword `n` is used to define the number of sides of the
+    Polygon then a RegularPolygon is created and the other arguments are
+    interpreted as center, radius and rotation. The unrotated RegularPolygon
+    will always have a vertex at Point(r, 0) where `r` is the radius of the
+    circle that circumscribes the RegularPolygon.
+
+    >>> p = Polygon((0,0), 1, n=3)
+    >>> p
+    RegularPolygon(Point(0, 0), 1, 3, 0)
+    >>> p[0]
+    Point(1, 0)
+    >>> p.vertices[0]
+    Point(1, 0)
+    >>> p.args[0]
+    Point(0, 0)
+    >>> p.rotate(pi/2)
+    >>> p[0]
+    Point(0, 1)
 
     """
 
     def __new__(cls, *args, **kwargs):
-        vertices = GeometryEntity.extract_entities(args, remove_duplicates=False)
-        if len(vertices) < 3:
-            raise GeometryError("Polygon.__new__ requires at least three points")
+        if kwargs.get('n', 0):
+            n = kwargs.pop('n')
+            args = list(args)
+            # return a virtual polygon with n sides
+            if len(args) == 2: # center, radius
+                args.append(n)
+            elif len(args) == 3: # center, radius, rotation
+                args.insert(2, n)
+            return RegularPolygon(*args, **kwargs)
 
+        vertices = [Point(a) for a in args]
+
+        # remove consecutive duplicates
+        nodup = []
         for p in vertices:
-            if not isinstance(p, Point):
-                raise GeometryError("Polygon.__new__ requires points")
+            if nodup and p == nodup[-1]:
+                continue
+            nodup.append(p)
+        if len(nodup) > 1 and nodup[-1] == nodup[0]:
+            nodup.pop() # last point was same as first
 
-        if len(vertices) == 3:
+        # remove collinear points unless they are shared points
+        got = set()
+        shared = set()
+        for p in nodup:
+            if p in got:
+                shared.add(p)
+            else:
+                got.add(p)
+        i = -3
+        while i < len(nodup) - 3 and len(nodup) > 2:
+            a, b, c = sorted([nodup[i], nodup[i + 1], nodup[i + 2]])
+            if b not in shared and Point.is_collinear(a, b, c):
+                nodup[i] = a
+                nodup[i + 1] = None
+                nodup.pop(i + 1)
+            i += 1
+
+        vertices = filter(lambda x: x is not None, nodup)
+
+        if len(vertices) > 3:
+            rv = GeometryEntity.__new__(cls, *vertices, **kwargs)
+        elif len(vertices) == 3:
             return Triangle(*vertices, **kwargs)
-        return GeometryEntity.__new__(cls, *vertices, **kwargs)
+        elif len(vertices) == 2:
+            return Segment(*vertices, **kwargs)
+        else:
+            return Point(*vertices, **kwargs)
+
+        # reject polygons that have intersecting sides unless the
+        # intersection is a shared point or a generalized intersection.
+        # A self-intersecting polygon is easier to detect than a
+        # random set of segments since only those sides that are not
+        # part of the convex hull can possibly intersect with other
+        # sides of the polygon...but for now we use the n**2 algorithm
+        # and check all sides with intersection with any preceding sides
+        if not rv.is_convex:
+            sides = rv.sides
+            for i, si in enumerate(sides):
+                pts = si[0], si[1]
+                ai = si.arbitrary_point('hit') # arbitrary point should take Symbol arg
+                hit = [s for s in ai[0].free_symbols.union(ai[1].free_symbols) if s.name == 'hit']
+                for j in xrange(i):
+                    sj = sides[j]
+                    if sj[0] not in pts and sj[1] not in pts:
+                        aj = si.arbitrary_point('hit')
+                        tx = (solve(ai[0] - aj[0]) or [S.Zero])[0]
+                        if tx.is_number and 0 <= tx <= 1:
+                            ty = (solve(ai[1] - aj[1]) or [S.Zero])[0]
+                            if (tx or ty) and ty.is_number and 0 <= ty <= 1:
+                                print ai, aj
+                                raise GeometryError("Polygon has intersecting sides.")
+
+        return rv
 
     @property
     def area(self):
@@ -84,9 +195,9 @@ class Polygon(GeometryEntity):
 
         """
         area = 0
-        for ind in xrange(-1, len(self.vertices) - 1):
-            pi = self.vertices[ind]
-            pii = self.vertices[ind + 1]
+        for i in xrange(len(self)):
+            pi = self[i - 1]
+            pii = self[i]
             area += pi[0]*pii[1] - pii[0]*pi[1]
         return simplify(area) / 2
 
@@ -123,11 +234,11 @@ class Polygon(GeometryEntity):
             return bool(tarea(a, b, c) <= 0)
 
         # Determine orientation of points
-        cw = isright(self.vertices[-1], self.vertices[0], self.vertices[1])
+        cw = isright(self[-1], self[0], self[1])
 
         ret = {}
-        for i in xrange(0, len(self.vertices)):
-            a,b,c = self.vertices[i-2], self.vertices[i-1], self.vertices[i]
+        for i in xrange(len(self)):
+            a, b, c = self[i-2], self[i-1], self[i]
             ang = Line.angle_between(Line(b, a), Line(b, c))
             if cw ^ isright(a, b, c):
                 ret[b] = 2*S.Pi - ang
@@ -152,8 +263,8 @@ class Polygon(GeometryEntity):
         7 + 17**(1/2)
         """
         p = 0
-        for ind in xrange(-1, len(self.vertices) - 1):
-            p += Point.distance(self.vertices[ind], self.vertices[ind + 1])
+        for i in xrange(len(self)):
+            p += Point.distance(self[i - 1], self[i])
         return simplify(p)
 
     @property
@@ -168,6 +279,13 @@ class Polygon(GeometryEntity):
         --------
         Point
 
+        Notes
+        -----
+        When iterating over the vertices, it is more efficient to index self
+        rather than to request the vertices and index them. Only use the
+        vertices when you want to process all of them at once. This is even
+        more important with RegularPolygons that calculate each vertex.
+
         Examples
         --------
         >>> from sympy import Point, Polygon
@@ -175,6 +293,8 @@ class Polygon(GeometryEntity):
         >>> poly = Polygon(p1, p2, p3, p4)
         >>> poly.vertices
         (Point(0, 0), Point(1, 0), Point(5, 1), Point(0, 1))
+        >>> print poly[0]
+        Point(0, 0)
 
         """
         return self[:]
@@ -200,12 +320,12 @@ class Polygon(GeometryEntity):
         Point(31/18, 11/18)
 
         """
-        A = 1 / (6*self.area)
-        cx,cy = 0,0
-        for ind in xrange(-1, len(self.vertices)-1):
-            pi = self.vertices[ind]
-            pii = self.vertices[ind+1]
-            v = pi[0]*pii[1]-pii[0]*pi[1]
+        A = 1/(6*self.area)
+        cx, cy = 0, 0
+        for i in xrange(len(self)):
+            pi = self[i - 1]
+            pii = self[i]
+            v = pi[0]*pii[1] - pii[0]*pi[1]
             cx += v*(pi[0] + pii[0])
             cy += v*(pi[1] + pii[1])
         return Point(simplify(A*cx), simplify(A*cy))
@@ -218,6 +338,12 @@ class Polygon(GeometryEntity):
         -------
         sides : list of sides
             Each side is a Segment.
+
+        Note
+        ----
+        The Segments that represent the sides are an undirected
+        line segment so cannot be used to tell the orientation of
+        the polygon.
 
         See Also
         --------
@@ -236,13 +362,12 @@ class Polygon(GeometryEntity):
 
         """
         res = []
-        for ind in xrange(0, len(self.vertices) - 1):
-            res.append(Segment(self.vertices[ind], self.vertices[ind+1]))
-        res.append(Segment(self.vertices[-1], self.vertices[0]))
+        for i in xrange(-len(self), 0):
+            res.append(Segment(self[i], self[i + 1]))
         return res
 
     def is_convex(self):
-        """Is the polygon convex.
+        """Is the polygon convex?
 
         A polygon is convex if all its interior angles are less than 180
         degrees.
@@ -268,13 +393,163 @@ class Polygon(GeometryEntity):
             return bool(tarea(a, b, c) <= 0)
 
         # Determine orientation of points
-        cw = isright(self.vertices[-2], self.vertices[-1], self.vertices[0])
-
-        for i in xrange(0, len(self.vertices)):
-            if cw ^ isright(self.vertices[i - 2], self.vertices[i - 1], self.vertices[i]):
+        cw = isright(self[-2], self[-1], self[0])
+        for i in xrange(1, len(self)):
+            if cw ^ isright(self[i - 2], self[i - 1], self[i]):
                 return False
 
         return True
+
+    def encloses_point(self, p):
+        """
+        Return True if p is enclosed by (is inside of) self.
+
+        Notes
+        -----
+        Being on the border of self is considered False.
+
+        Parameters
+        ----------
+        p : Point
+
+        Returns
+        -------
+        encloses_point : True, False or None
+
+        Examples
+        --------
+        >>> from sympy import Polygon, Point
+        >>> from sympy.abc import t
+        >>> p = Polygon((0, 0),(4, 0), (4, 4))
+        >>> p.encloses_point(Point(2, 1))
+        True
+        >>> p.encloses_point(Point(2, 2))
+        False
+        >>> p.encloses_point(Point(5, 5))
+        False
+
+        Adapted from
+        ------------
+        [1] http://www.ariel.com.au/a/python-point-int-poly.html
+        [2] http://local.wasp.uwa.edu.au/~pbourke/geometry/insidepoly/
+        """
+        from sympy import Symbol
+
+        if p in self:
+            return False
+
+        def concrete(p):
+            x, y = p
+            return x.is_number and y.is_number
+
+        # move to p, checking that the result is numeric
+        lit = []
+        for v in self.vertices:
+            lit.append(v - p)
+            if not concrete(lit[-1]):
+                return None
+        self = Polygon(*lit)
+
+        # polygon closure is assumed in the following test but Polygon removes duplicate pts so
+        # the last point has to be added so all sides are computed. Using Polygon.sides is
+        # not good since Segments are unordered.
+        indices = range(-len(self), 1)
+
+        if self.is_convex():
+            orientation = None
+            for i in indices:
+                x0, y0 = self[i]
+                x1, y1 = self[i + 1]
+                test = ((-y0)*(x1 - x0) - (-x0)*(y1 - y0)).is_negative
+                if orientation is None:
+                    orientation = test
+                elif test is not orientation:
+                    return False
+            return True
+
+        hit_odd = False
+        p1x, p1y = self[0]
+        for i in indices[1:]:
+            p2x, p2y = self[i]
+            if 0 > min(p1y, p2y):
+                if 0 <= max(p1y, p2y):
+                    if 0 <= max(p1x, p2x):
+                        if p1y != p2y:
+                            xinters = (-p1y)*(p2x - p1x)/(p2y - p1y) + p1x
+                        if p1x == p2x or 0 <= xinters:
+                            hit_odd = not hit_odd
+            p1x, p1y = p2x, p2y
+        return hit_odd
+
+    def arbitrary_point(self, parameter_name='t'):
+        """A parametric point on the polygon.
+
+        The parameter, varying from 0 to 1, assigns points to the position on
+        the perimeter that is that fraction of the total perimeter. So the
+        point evaluated at t=1/2 would return the point from the first vertex
+        that is 1/2 way around the polygon.
+
+        Parameters
+        ----------
+        parameter_name : str, optional
+            Default value is 't'.
+
+        Returns
+        -------
+        arbitrary_point : Point
+
+        See Also
+        --------
+        Point
+
+        Examples
+        --------
+        >>> from sympy import Polygon, S
+        >>> from sympy.abc import t
+        >>> tri = Polygon((0, 0), (1, 0), (1, 1))
+        >>> p = tri.arbitrary_point('t')
+        >>> perimeter = tri.perimeter
+        >>> s1, s2 = [s.length for s in tri.sides[:2]]
+        >>> p.subs(t, (s1 + s2/2)/perimeter)
+        Point(1, 1/2)
+
+        """
+        sides = []
+        t = Symbol(parameter_name, real=True)
+        perimeter = self.perimeter
+        perim_fraction_start = 0
+        for s in self.sides:
+            side_perim_fraction = s.length/perimeter
+            perim_fraction_end = perim_fraction_start + side_perim_fraction
+            pt  = s.arbitrary_point(parameter_name).subs(
+                  t, (t - perim_fraction_start)/side_perim_fraction)
+            sides.append((pt, (perim_fraction_start <= t < perim_fraction_end)))
+            perim_fraction_start = perim_fraction_end
+        return Piecewise(*sides)
+
+    def plot_interval(self, parameter_name='t'):
+        """The plot interval for the default geometric plot of the polygon.
+
+        Parameters
+        ----------
+        parameter_name : str, optional
+            Default value is 't'.
+
+        Returns
+        -------
+        plot_interval : list (plot interval)
+            [parameter, lower_bound, upper_bound]
+
+        Examples
+        --------
+        >>> from sympy import Polygon
+        >>> p = Polygon((0, 0), (1, 0), (1, 1))
+        >>> p.plot_interval()
+        [t, 0, 1]
+
+        """
+        t = Symbol(parameter_name, real=True)
+        return [t, 0, 1]
 
     def intersection(self, o):
         """The intersection of two polygons.
@@ -296,15 +571,15 @@ class Polygon(GeometryEntity):
         >>> from sympy import Point, Polygon
         >>> p1, p2, p3, p4 = map(Point, [(0, 0), (1, 0), (5, 1), (0, 1)])
         >>> poly1 = Polygon(p1, p2, p3, p4)
-        >>> p5, p6, p7, p8 = map(Point, [(3, 2), (1, -1), (0, 2), (-2, 1)])
-        >>> poly2 = Polygon(p5, p6, p7, p8)
+        >>> p5, p6, p7 = map(Point, [(3, 2), (1, -1), (0, 2)])
+        >>> poly2 = Polygon(p5, p6, p7)
         >>> poly1.intersection(poly2)
         [Point(2/3, 0), Point(9/5, 1/5), Point(7/3, 1), Point(1/3, 1)]
 
         """
         res = []
         for side in self.sides:
-            inter = GeometryEntity.do_intersection(side, o)
+            inter = side.intersection(o)
             if inter is not None:
                 res.extend(inter)
         return res
@@ -330,28 +605,28 @@ class Polygon(GeometryEntity):
         of the polygons as it is assumed only called by Polygon.distance
         which does such checks.
 
-        Notes:
-        ======
+        Notes
+        -----
             - Prints a warning if the two polygons possibly intersect as the return
               value will not be valid in such a case. For a more through test of
               intersection use intersection().
 
-        Example:
-        ========
+        Example
+        -------
             >>> from sympy.geometry import Point, Polygon
             >>> square = Polygon(Point(0, 0), Point(0, 1), Point(1, 1), Point(1, 0))
             >>> triangle = Polygon(Point(1, 2), Point(2, 2), Point(2, 1))
             >>> square._do_poly_distance(triangle)
             2**(1/2)/2
 
-        Description of method used:
-        ===========================
+        Description of method used
+        --------------------------
         Method:
-            http://cgm.cs.mcgill.ca/~orm/mind2p.html
+        [1] http://cgm.cs.mcgill.ca/~orm/mind2p.html
         Uses rotating calipers:
-            http://en.wikipedia.org/wiki/Rotating_calipers
+        [2] http://en.wikipedia.org/wiki/Rotating_calipers
         and antipodal points:
-            http://en.wikipedia.org/wiki/Antipodal_point
+        [3] http://en.wikipedia.org/wiki/Antipodal_point
         """
         e1 = self
 
@@ -370,7 +645,7 @@ class Polygon(GeometryEntity):
                 e2_max_radius = r
         center_dist = Point.distance(e1_center, e2_center)
         if center_dist <= e1_max_radius + e2_max_radius:
-            print("Warning: Polygons may intersect producing erroneous output")
+            warnings.warn("Polygons may intersect producing erroneous output")
 
         '''
         Find the upper rightmost vertex of e1 and the lowest leftmost vertex of e2
@@ -505,48 +780,59 @@ class Polygon(GeometryEntity):
         return min_dist
 
     def __eq__(self, o):
-        if not isinstance(o, Polygon):
+        if not isinstance(o, Polygon) or len(self) != len(o):
             return False
 
-        # Find indices of points that are the same as the first point
-        # in the other polygon
-        n1,n2 = len(self.vertices), len(o.vertices)
-        start_indices = []
-        for ind in xrange(0, n1):
-            if self.vertices[ind] == o.vertices[0]:
-                start_indices.append(ind)
-
-        if len(start_indices) == 0:
-            return False
-
-        # Check vertices clockwise and counterclockwise for equality
-        imax = max(n1, n2)
-        for start_ind in start_indices:
-            i = start_ind
-
-            # Check to see what orientation we should check
-            dir = 0
-            if self.vertices[(i + 1) % n1] == o.vertices[1]:
-                dir = 1
-            elif self.vertices[(i - 1) % n1] == o.vertices[1]:
-                dir = -1
-
-            # If either point to the left or right if the first point
-            # is value (i.e., dir is nonzero) then check in that direction
-            if dir != 0:
-                areEqual = True
-                for ind in xrange(2, imax):
-                    if self.vertices[(i + dir*ind) % n1] != o.vertices[ind % n2]:
-                        areEqual = False
-                        break
-                if areEqual: return True
-
+        # See if self can ever be traversed (cw or ccw) from any of its
+        # vertices to match all points of o
+        n = len(self)
+        o0 = o[0]
+        for i0 in xrange(n):
+            if self[i0] == o0:
+                if all(self[(i0 + i) % n] == o[i] for i in xrange(1, n)):
+                    return True
+                if all(self[(i0 - i) % n] == o[i] for i in xrange(1, n)):
+                    return True
         return False
 
     def __hash__(self):
         return super(Polygon, self).__hash__()
 
     def __contains__(self, o):
+        """
+        Return True if o is contained within the boundary lines of self.altitudes
+
+        Parameters
+        ----------
+        other : GeometryEntity
+
+        Returns
+        -------
+        contained in : bool
+            The points (and sides, if applicable) are contained in self.
+
+        See Also
+        --------
+        encloses
+
+        Examples
+        --------
+        >>> from sympy import Line, Segment, Point
+        >>> p = Point(0, 0)
+        >>> q = Point(1, 1)
+        >>> s = Segment(p, q*2)
+        >>> l = Line(p, q)
+        >>> p in q
+        False
+        >>> p in s
+        True
+        >>> q*3 in s
+        False
+        >>> s in l
+        True
+
+        """
+
         if isinstance(o, Polygon):
             return self == o
         elif isinstance(o, Segment):
@@ -557,9 +843,8 @@ class Polygon(GeometryEntity):
             for side in self.sides:
                 if o in side:
                     return True
-            return False
-        else:
-            return False
+
+        return False
 
 
 class RegularPolygon(Polygon):
@@ -598,59 +883,55 @@ class RegularPolygon(Polygon):
     --------
     Point
 
+    Note
+    ----
+    A RegularPolygon can be instantiated with Polygon with the kwarg n.
+
+    Regular polygons are instantiated with a center, radius, number of sides
+    and a rotation angle. They return a vertex when indexed rather than the
+    argument at that index.
+
     Examples
     --------
     >>> from sympy.geometry import RegularPolygon, Point
-    >>> RegularPolygon(Point(0, 0), 5, 5)
-    RegularPolygon(Point(0, 0), 5, 5)
+    >>> r = RegularPolygon(Point(0, 0), 5, 3)
+    >>> r
+    RegularPolygon(Point(0, 0), 5, 3, 0)
+    >>> r[0]
+    Point(5, 0)
 
     """
 
-    def __new__(self, c, r, n, **kwargs):
-        r = sympify(r)
-        if not isinstance(c, Point):
-            raise GeometryError("RegularPolygon.__new__ requires c to be a Point instance")
+    def __new__(self, c, r, n, rot=0, **kwargs):
+        r, n, rot = [sympify(w) for w in [r, n, rot]]
+        c = Point(c)
         if not isinstance(r, Basic):
             raise GeometryError("RegularPolygon.__new__ requires r to be a number or Basic instance")
         if n < 3:
             raise GeometryError("RegularPolygon.__new__ requires n >= 3")
 
         obj = GeometryEntity.__new__(self, c, r, n, **kwargs)
+        obj._n = n
+        obj._center = c
+        obj._radius = r
+        obj._rot = rot
         return obj
 
     @property
-    def vertices(self):
-        """The vertices of the regular polygon.
+    def args(self):
+        return self._center, self._radius, self._n, self._rot
 
-        Returns
-        -------
-        vertices : list
-            Each vertex is a Point.
+    def __str__(self):
+        return 'RegularPolygon(%s, %s, %s, %s)' % tuple(self.args)
 
-        See Also
-        --------
-        Point
-
-        Examples
-        --------
-        >>> from sympy.geometry import RegularPolygon, Point
-        >>> rp = RegularPolygon(Point(0, 0), 5, 4)
-        >>> rp.vertices
-        [Point(5, 0), Point(0, 5), Point(-5, 0), Point(0, -5)]
-
-        """
-        points = []
-        c, r, n = self
-        v = 2*S.Pi/n
-        for k in xrange(0, n):
-            points.append(Point(c[0] + r*C.cos(k*v), c[1] + r*C.sin(k*v)))
-        return points
+    def __repr__(self):
+        return 'RegularPolygon(%s, %s, %s, %s)' % tuple(self.args)
 
     @property
     def center(self):
         """The center of the regular polygon
 
-        This is also the centre of the circumscribing circle.
+        This is also the center of the circumscribing circle.
 
         Returns
         -------
@@ -668,7 +949,12 @@ class RegularPolygon(Polygon):
         Point(0, 0)
 
         """
-        return self.__getitem__(0)
+        return self._center
+
+    @property
+    def circumcenter(self):
+        """alias for center"""
+        return self.center
 
     @property
     def radius(self):
@@ -690,7 +976,30 @@ class RegularPolygon(Polygon):
         r
 
         """
-        return self.__getitem__(1)
+        return self._radius
+
+    @property
+    def circumradius(self):
+        """alias for radius"""
+        return self.radius
+
+    @property
+    def rotation(self):
+        """CCW angle by which regular polygon is rotated
+
+        Returns
+        -------
+        rotation : number or instance of Basic
+
+        Examples
+        --------
+        >>> from sympy import pi
+        >>> from sympy.geometry import RegularPolygon, Point
+        >>> RegularPolygon(Point(0, 0), 3, 4, pi).rotation
+        pi
+
+        """
+        return self._rot
 
     @property
     def apothem(self):
@@ -712,8 +1021,12 @@ class RegularPolygon(Polygon):
         r*2**(1/2)/2
 
         """
-        n = self.__getitem__(2)
-        return self.radius * C.cos(S.Pi/n)
+        return self.radius * cos(S.Pi/self._n)
+
+    @property
+    def inradius(self):
+        """alias for apothem"""
+        return self.apothem
 
     @property
     def interior_angle(self):
@@ -731,8 +1044,7 @@ class RegularPolygon(Polygon):
         3*pi/4
 
         """
-        n = self.__getitem__(2)
-        return (n - 2)*S.Pi/n
+        return (self._n - 2)*S.Pi/self._n
 
     @property
     def exterior_angle(self):
@@ -750,8 +1062,7 @@ class RegularPolygon(Polygon):
         pi/4
 
         """
-        n = self.__getitem__(2)
-        return 2*S.Pi/n
+        return 2*S.Pi/self._n
 
     @property
     def circumcircle(self):
@@ -805,6 +1116,128 @@ class RegularPolygon(Polygon):
             ret[v] = ang
         return ret
 
+    def encloses_point(self, p):
+        """
+        Return True if p is enclosed by (is inside of) self.
+
+        Notes
+        -----
+        Being on the border of self is considered False.
+
+        The general Polygon.encloses_point method is called only if
+        a point is not within or beyond the incircle or circumcircle,
+        respectively.
+
+        Parameters
+        ----------
+        p : Point
+
+        Returns
+        -------
+        encloses_point : True, False or None
+
+        Examples
+        --------
+        >>> from sympy import RegularPolygon, S, Point
+        >>> from sympy.abc import t
+        >>> p = RegularPolygon((0, 0), 3, 4)
+        >>> p.encloses_point(Point(0, 0))
+        True
+        >>> r, R = p.inradius, p.circumradius
+        >>> p.encloses_point(Point((r + R)/2, 0))
+        True
+        >>> p.encloses_point(Point(R/2, R/2 + (R - r)/10))
+        False
+        >>> p.encloses_point(p.arbitrary_point().subs(t, S.Half))
+        False
+        >>> p.encloses_point(Point(5, 5))
+        False
+
+        """
+
+        c = self.center
+        d = Segment(c, p).length
+        if d >= self.radius:
+            return False
+        elif d < self.inradius:
+            return True
+        else:
+            # now enumerate the regular polygon like a general polygon.
+            return Polygon.encloses_point(self, p)
+
+    def rotate(self, angle):
+        """Rotate the virtual Polygon
+        >>> from sympy import Polygon, Point, pi
+        >>> r = Polygon(Point(0,0), 1, n=3)
+        >>> r[0]
+        Point(1, 0)
+        >>> r.rotate(pi/6)
+        >>> r[0]
+        Point(3**(1/2)/2, 1/2)
+
+        """
+        self._rot += angle
+
+    @property
+    def vertices(self):
+        """The vertices of the regular polygon.
+
+        Returns
+        -------
+        vertices : list
+            Each vertex is a Point.
+
+        See Also
+        --------
+        Point
+
+        Examples
+        --------
+        >>> from sympy.geometry import RegularPolygon, Point
+        >>> rp = RegularPolygon(Point(0, 0), 5, 4)
+        >>> rp.vertices
+        [Point(5, 0), Point(0, 5), Point(-5, 0), Point(0, -5)]
+
+        """
+        return [self[i] for i in xrange(len(self))]
+
+    def __getitem__(self, k):
+        """
+        >>> from sympy import Polygon, Point
+        >>> r = Polygon(Point(0, 0), 1, n=3)
+        >>> r[0]
+        Point(1, 0)
+
+        Note that iteration and indexing do not give the same results.
+        >>> for ri in r:
+        ...     print ri
+        Point(0, 0)
+        1
+        3
+        0
+        """
+        if k < -self._n or k >= self._n:
+            raise IndexError('virtual tuple index out of range')
+        c = self._center
+        r = self._radius
+        rot = self._rot
+        v = 2*S.Pi/self._n
+        return Point(c[0] + r*cos(k*v + rot), c[1] + r*sin(k*v + rot))
+
+    def __iter__(self):
+        for i in [self._center, self._radius, self._n, self._rot]:
+            yield i
+
+    def __eq__(self, o):
+        if not isinstance(o, Polygon) or len(self) != len(o):
+            return False
+        elif not isinstance(o, RegularPolygon):
+            return Polygon.__eq__(o, self)
+        return self.args == o.args
+
+    def __len__(self):
+        return self._n
+
 class Triangle(Polygon):
     """
     A polygon with three vertices and three sides.
@@ -846,15 +1279,38 @@ class Triangle(Polygon):
     """
 
     def __new__(cls, *args, **kwargs):
-        vertices = GeometryEntity.extract_entities(args, remove_duplicates=False)
-        if len(vertices) != 3:
+        if len(args) != 3:
             raise GeometryError("Triangle.__new__ requires three points")
 
-        for p in vertices:
-            if not isinstance(p, Point):
-                raise GeometryError("Triangle.__new__ requires three points")
+        vertices = [Point(a) for a in args]
 
-        return GeometryEntity.__new__(cls, *vertices, **kwargs)
+        # remove consecutive duplicates
+        nodup = []
+        for p in vertices:
+            if nodup and p == nodup[-1]:
+                continue
+            nodup.append(p)
+        if len(nodup) > 1 and nodup[-1] == nodup[0]:
+            nodup.pop() # last point was same as first
+
+        # remove collinear points
+        i = -3
+        while i < len(nodup) - 3 and len(nodup) > 2:
+            a, b, c = sorted([nodup[i], nodup[i + 1], nodup[i + 2]])
+            if Point.is_collinear(a, b, c):
+                nodup[i] = a
+                nodup[i + 1] = None
+                nodup.pop(i + 1)
+            i += 1
+
+        vertices = filter(lambda x: x is not None, nodup)
+
+        if len(vertices) == 3:
+            return GeometryEntity.__new__(cls, *vertices, **kwargs)
+        elif len(vertices) == 2:
+            return Segment(*vertices, **kwargs)
+        else:
+            return Point(*vertices, **kwargs)
 
     @property
     def vertices(self):
@@ -1005,6 +1461,7 @@ class Triangle(Polygon):
         """The orthocenter of the triangle.
 
         The orthocenter is the intersection of the altitudes of a triangle.
+        It may lie inside, outside or on the triangle.
 
         Returns
         -------
@@ -1019,10 +1476,13 @@ class Triangle(Polygon):
         >>> from sympy.geometry import Point, Triangle
         >>> p1, p2, p3 = Point(0, 0), Point(1, 0), Point(0, 1)
         >>> t = Triangle(p1, p2, p3)
+        >>> t.orthocenter
+        Point(0, 0)
 
         """
         a = self.altitudes
-        return GeometryEntity.intersect(a[1], a[2])[0]
+        v = self.vertices
+        return a[v[0]].intersection(a[v[1]])[0]
 
     @property
     def circumcenter(self):
@@ -1048,7 +1508,7 @@ class Triangle(Polygon):
 
         """
         a,b,c = [x.perpendicular_bisector() for x in self.sides]
-        return GeometryEntity.do_intersection(a, b)[0]
+        return a.intersection(b)[0]
 
     @property
     def circumradius(self):
@@ -1125,9 +1585,9 @@ class Triangle(Polygon):
         s = self.sides
         v = self.vertices
         c = self.incenter
-        l1 = Segment(v[0], GeometryEntity.do_intersection(Line(v[0], c), s[1])[0])
-        l2 = Segment(v[1], GeometryEntity.do_intersection(Line(v[1], c), s[2])[0])
-        l3 = Segment(v[2], GeometryEntity.do_intersection(Line(v[2], c), s[0])[0])
+        l1 = Segment(v[0], Line(v[0], c).intersection(s[1])[0])
+        l2 = Segment(v[1], Line(v[1], c).intersection(s[2])[0])
+        l3 = Segment(v[2], Line(v[2], c).intersection(s[0])[0])
         return {v[0]: l1, v[1]: l2, v[2]: l3}
 
     @property

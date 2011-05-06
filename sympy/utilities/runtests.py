@@ -274,7 +274,9 @@ def doctest(*paths, **kwargs):
                 continue
             old_displayhook = sys.displayhook
             try:
-                out = pdoctest.testfile(txt_file, module_relative=False, encoding='utf-8',
+                # out = pdoctest.testfile(txt_file, module_relative=False, encoding='utf-8',
+                #    optionflags=pdoctest.ELLIPSIS | pdoctest.NORMALIZE_WHITESPACE)
+                out = sympytestfile(txt_file, module_relative=False, encoding='utf-8',
                     optionflags=pdoctest.ELLIPSIS | pdoctest.NORMALIZE_WHITESPACE)
             finally:
                 # make sure we return to the original displayhook in case some

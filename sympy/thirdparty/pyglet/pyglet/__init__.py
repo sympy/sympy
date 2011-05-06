@@ -147,7 +147,7 @@ options = {
     'debug_win32': False,
     'debug_x11': False,
     'graphics_vbo': True,
-    'shadow_window': True,
+    'shadow_window': False,
     'vsync': None,
     'xsync': True,
 }

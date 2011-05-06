@@ -8,6 +8,17 @@ from sympy.core.mul import Mul
 
 from sympy.ntheory import multiplicity
 
+# NOTE IMPORTANT
+# The series expansion code in this file is an important part of the gruntz
+# algorithm for determining limits. _eval_nseries has to return a generalised
+# power series with coefficients in C(log(x), log).
+# In more detail, the result of _eval_nseries(self, x, n) must be
+#   c_0*x**e_0 + ... (finitely many terms)
+# where e_i are numbers (not necessarily integers) and c_i involve only
+# numbers, the function log, and log(x). [This also means it must not contain
+# log(x(1+p)), this *has* to be expanded to log(x)+log(1+p) if x.is_positive and
+# p.is_positive.]
+
 class exp(Function):
 
     nargs = 1
@@ -188,8 +199,6 @@ class exp(Function):
             if arg.is_positive: return False
         if arg.is_bounded:
             return True
-        if arg.is_real:
-            return False
     def _eval_is_zero(self):
         return (self.args[0] is S.NegativeInfinity)
 
@@ -206,10 +215,12 @@ class exp(Function):
         for term in (exp(f)*f.diff(t)).lseries(t):
             yield integrate(term, (t, 0, x))
 
-    def _eval_nseries(self, x, n):
-        from sympy import limit, oo, powsimp
+    def _eval_nseries(self, x, n, logx):
+        # NOTE Please see the comment at the beginning of this file, labelled
+        #      IMPORTANT.
+        from sympy import limit, oo, powsimp, expand_mul
         arg = self.args[0]
-        arg_series = arg._eval_nseries(x, n=n)
+        arg_series = arg._eval_nseries(x, n=n, logx=logx)
         if arg_series.is_Order:
             return 1 + arg_series
         arg0 = limit(arg_series.removeO(), x, 0)
@@ -217,7 +228,10 @@ class exp(Function):
             return self
         t = Dummy("t")
         exp_series = exp(t)._taylor(t, n)
+        o = exp_series.getO()
+        exp_series = exp_series.removeO()
         r = exp(arg0)*exp_series.subs(t, arg_series - arg0)
+        r += C.Order(o.expr.subs(t, (arg_series - arg0)), x)
         r = r.expand()
         return powsimp(r, deep=True, combine='exp')
 
@@ -435,8 +449,14 @@ class log(Function):
             return self.func(n), d
         return (self.func(n) - self.func(d)).as_numer_denom()
 
-    def _eval_nseries(self, x, n):
-        from sympy import powsimp
+    def _eval_nseries(self, x, n, logx):
+        # NOTE Please see the comment at the beginning of this file, labelled
+        #      IMPORTANT.
+        from sympy import powsimp, ceiling, cancel
+        if not logx:
+            logx = log(x)
+        if self.args[0] == x:
+            return logx
         arg = self.args[0]
         k, l = Wild("k"), Wild("l")
         r = arg.match(k*x**l)
@@ -445,60 +465,23 @@ class log(Function):
             #l = r.get(l, S.Zero)
             k, l = r[k], r[l]
             if l != 0 and not l.has(x) and not k.has(x):
-                r = log(k) + l*log(x) # XXX true regardless of assumptions?
+                r = log(k) + l*logx # XXX true regardless of assumptions?
                 return r
-        order = C.Order(x**n, x)
-        arg = self.args[0]
-        use_lt = not C.Order(1, x).contains(arg)
-        if not use_lt:
-            arg0 = arg.limit(x, 0)
-            use_lt = (arg0 is S.Zero)
-        if use_lt: # singularity, #example: self = log(sin(x))
-            # arg = (arg / lt) * lt
-            lt = arg.as_leading_term(x) # arg = sin(x); lt = x
-            a = powsimp((arg/lt).expand(), deep=True, combine='exp') # a = sin(x)/x
-            # the idea is to recursively call log(a).series(), but one needs to
-            # make sure that log(sin(x)/x) doesn't get "simplified" to
-            # -log(x)+log(sin(x)) and an infinite recursion occurs, see also the
-            # issue 252.
-            obj = log(lt) + log(a).nseries(x, n=n)
-        else:
-            # arg -> arg0 + (arg - arg0) -> arg0 * (1 + (arg/arg0 - 1))
-            z = (arg/arg0 - 1)
-            o = C.Order(z, x)
-            if o is S.Zero:
-                return log(1 + z) + log(arg0)
-            if o.expr.is_number:
-                e = log(order.expr*x)/log(x)
-            else:
-                e = log(order.expr)/log(o.expr)
-            n = e.limit(x, 0) + 1
-            if n.is_unbounded:
-                # requested accuracy gives infinite series,
-                # order is probably nonpolynomial e.g. O(exp(-1/x), x).
-                return log(1 + z) + log(arg0)
-            # XXX was int or floor intended? int used to behave like floor
-            try:
-                n = int(n)
-            except TypeError:
-                #well, the n is something more complicated (like 1+log(2))
-                n = int(n.evalf()) + 1 # XXX why is 1 being added?
-            assert n>=0, `n`
-            l = []
-            g = None
-            for i in xrange(n + 2):
-                g = log.taylor_term(i, z, g)
-                g = g.nseries(x, n=n)
-                l.append(g)
-            obj = Add(*l) + log(arg0)
-        obj2 = expand_log(powsimp(obj, deep=True, combine='exp'))
-        if obj2 != obj:
-            r = obj2.nseries(x, n=n)
-        else:
-            r = obj
-        if r == self:
-            return self
-        return r + order
+
+        # TODO new and probably slow
+        s = self.args[0].nseries(x, n=n, logx=logx)
+        while s.is_Order:
+            n += 1
+            s = self.args[0].nseries(x, n=n, logx=logx)
+        a, b = s.leadterm(x)
+        p = cancel(s/(a*x**b) - 1)
+        g = None
+        l = []
+        for i in xrange(n + 2):
+            g = log.taylor_term(i, p, g)
+            g = g.nseries(x, n=n, logx=logx)
+            l.append(g)
+        return log(a) + b*logx + Add(*l) + C.Order(p**n, x)
 
 
     def _eval_as_leading_term(self, x):

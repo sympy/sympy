@@ -116,7 +116,13 @@ class Order(Expr):
                 lst = expr.extract_leading_order(*symbols)
                 expr = Add(*[f.expr for (e,f) in lst])
             elif expr:
-                expr = expr.as_leading_term(*symbols)
+                if len(symbols) > 1:
+                    # TODO
+                    # We cannot use compute_leading_term because that only
+                    # works in one symbol.
+                    expr = expr.as_leading_term(*symbols)
+                else:
+                    expr = expr.compute_leading_term(symbols[0])
                 coeff, terms = expr.as_coeff_mul()
                 expr = Mul(*[t for t in terms if t.has(*symbols)])
 
@@ -132,14 +138,12 @@ class Order(Expr):
         return obj
 
     def _hashable_content(self):
-        if self.args[0].is_number:
-            return (self.args[0],)
         return self.args
 
     def oseries(self, order):
         return self
 
-    def _eval_nseries(self, x, n):
+    def _eval_nseries(self, x, n, logx):
         return self
 
     @property
@@ -176,6 +180,19 @@ class Order(Expr):
         Return None if the inclusion relation cannot be determined
         (e.g. when self and expr have different symbols).
         """
+        # NOTE: when multiplying out series a lot of queries like
+        #       O(...).contains(a*x**b) with many a and few b are made.
+        #       Separating out the independent part allows for better caching.
+        c, m = expr.as_coeff_mul(*self.variables)
+        if m != ():
+            return self._contains(Mul(*m))
+        else:
+            # Mul(*m) == 1, and O(1) treatment is somewhat peculiar ...
+            # some day this else should not be necessary
+            return self._contains(expr)
+
+    @cacheit
+    def _contains(self, expr):
         from sympy import powsimp, limit
         if expr is S.Zero:
             return True

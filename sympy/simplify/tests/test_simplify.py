@@ -598,3 +598,9 @@ def test_powdenest_fail_in_polys():
     from sympy.abc import x, y, z, a, b
     assert powdenest((((x**2*y**4)**a)**(x*y)), force=True) == (x**2*y**4)**(a*x*y)
     assert powdenest((((x**2*y**4)**a)**(x*y))**3, force=True) == (x**2*y**4)**(3*a*x*y)
+
+def test_issue_1095():
+    # simplify should call cancel
+    from sympy.abc import x, y
+    f = Function('f')
+    assert simplify((4*x+6*f(y))/(2*x+3*f(y))) == 2

@@ -202,7 +202,7 @@ def multiplicity(p, n):
 def perfect_power(n, candidates=None, big=True, factor=True):
     """
     Return ``(a, b)`` such that ``n`` == ``a**b`` if ``n`` is a
-    perfect power; otherwise return ``None``.
+    perfect power; otherwise return ``False``.
 
     By default, the base is recursively decomposed and the exponents
     collected so the largest possible ``b`` is sought. If ``big=False``
@@ -218,7 +218,7 @@ def perfect_power(n, candidates=None, big=True, factor=True):
 
     n = int(n)
     if n < 3:
-        return None
+        return False
     logn = math.log(n, 2)
     max_possible = int(logn) + 2 # only check values less than this
     not_square = n % 10 in [2, 3, 7, 8] # squares cannot end in 2, 3, 7, 8
@@ -231,7 +231,7 @@ def perfect_power(n, candidates=None, big=True, factor=True):
             if b == 1 or b == 2 and not_square:
                 continue
         if b > max_possible:
-            return
+            return False
 
         # see if there is a factor present
         if factor:
@@ -243,7 +243,7 @@ def perfect_power(n, candidates=None, big=True, factor=True):
                     b = multiplicity(afactor, n)
                 # if it's a trivial power we are done
                 if b == 1:
-                    return
+                    return False
 
                 # maybe the bth root of n is exact
                 r, exact = integer_nthroot(n, b)
@@ -253,13 +253,15 @@ def perfect_power(n, candidates=None, big=True, factor=True):
                     # not then it's not a perfect power
                     n //= afactor**b
                     m = perfect_power(n, candidates=primefactors(b), big=big)
-                    if not m:
-                        return
+                    if m is False:
+                        return False
                     else:
                         r, m = m
                         # adjust the two exponents so the bases can
                         # be combined
                         g = igcd(m, b)
+                        if g == 1:
+                            return False
                         m //= g
                         b //= g
                         r, b = r**m*afactor**b, g
@@ -284,9 +286,11 @@ def perfect_power(n, candidates=None, big=True, factor=True):
         if exact:
             if big:
                 m = perfect_power(r, big=big, factor=factor)
-                if m:
+                if m is not False:
                     r, b = m[0], b*m[1]
             return int(r), b
+    else:
+        return False
 
 def pollard_rho(n, s=2, a=1, retries=5, seed=1234, max_steps=None, F=None):
     """Use Pollard's rho method to try to extract a nontrivial factor
@@ -585,7 +589,7 @@ def _check_termination(factors, n,
     # since we've already been factoring there is no need to do
     # simultaneous factoring with the power check
     p = perfect_power(n, factor=False)
-    if p:
+    if p is not False:
         base, exp = p
         if limitp1:
             limit = limitp1 - 1

@@ -25,6 +25,10 @@ class ExprCondPair(Function):
         return self.args[1]
 
     @property
+    def is_commutative(self):
+        return self.expr.is_commutative
+
+    @property
     def free_symbols(self):
         # Overload Basic.free_symbols because self.args[1] may contain non-Basic
         result = self.expr.free_symbols
@@ -249,6 +253,11 @@ class Piecewise(Function):
             else:
                 new_args.append((e._eval_subs(old, new), c._eval_subs(old, new)))
         return Piecewise( *new_args )
+
+    def _eval_nseries(self, x, n, logx):
+        args = map(lambda ec: (ec.expr._eval_nseries(x, n, logx), ec.cond), \
+                   self.args)
+        return self.func(*args)
 
     @classmethod
     def __eval_cond(cls, cond):
