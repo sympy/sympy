@@ -7,7 +7,7 @@ Circle
 
 """
 
-from sympy.core import S, C, sympify, symbol
+from sympy.core import S, C, sympify, symbol, Dummy
 from sympy.core.logic import fuzzy_bool
 from sympy.simplify import simplify, trigsimp
 from sympy.functions.elementary.miscellaneous import sqrt, Max, Min
@@ -17,7 +17,7 @@ from sympy.solvers import solve_poly_system, solve
 from entity import GeometryEntity
 from point import Point
 from line import LinearEntity, Line
-from util import _symbol
+from util import _symbol, idiff
 
 class Ellipse(GeometryEntity):
     """An elliptical GeometryEntity.
@@ -522,18 +522,18 @@ class Ellipse(GeometryEntity):
             # else p is outside the ellipse or we can't tell. In case of the
             # latter, the solutions returned will only be valid if
             # the point is not inside the ellipse; if it is, nan will result.
-            m = C.Dummy('m')
-            l = Line(p, Point(p[0] + 1, p[1] + m))
-            i1, i2 = self.intersection(l)
-            slopes = [s for s in solve(i1[0] - i2[0], m) if not s.has(S.ImaginaryUnit)]
+            x, y = Dummy('x'), Dummy('y')
+            eq = self.equation(x, y)
+            dydx = idiff(eq, y, x)
+            slope = Line(p, Point(x, y)).slope
+            tangent_points = solve([w.as_numer_denom()[0] for w in [slope - dydx, eq]], [x, y])
 
             # handle horizontal and vertical tangent lines
-            if len(slopes) == 1:
-                assert slopes[0] == 0
+            if len(tangent_points) == 1:
+                assert tangent_points[0][0] == p[0] or tangent_points[0][1] == p[1]
                 return [Line(p, Point(p[0]+1, p[1])), Line(p, Point(p[0], p[1]+1))]
 
             # others
-            tangent_points = [Point(i1[0].subs(m, mi), i1[1].subs(m, mi)) for mi in slopes]
             return [Line(p, tangent_points[0]), Line(p, tangent_points[1])]
 
     def is_tangent(self, o):
@@ -781,21 +781,12 @@ class Ellipse(GeometryEntity):
         Private helper method for `intersection`.
 
         """
-        seq = self.equation()
-        variables = self.equation().atoms(C.Symbol)
-        if len(variables) > 2:
-            return None
-        x, y = variables
-        oeq = o.equation(x=x, y=y)
-        # until the following line works...
-        # result = solve([seq, oeq], [x, y])
-        # return [Point(*r) for r in result if im(r[0]).is_zero and im(r[1]).is_zero]
-        # we do this:
-        if self.center[0] == o.center[0] or self.center[1] == o.center[1]:
-            result = solve_poly_system([seq, oeq], x, y)
-            return [Point(*r) for r in result if im(r[0]).is_zero and im(r[1]).is_zero]
-
-        raise NotImplementedError("Off-axis Ellipse intersection not supported.")
+        x = Dummy('x')
+        y = Dummy('y')
+        seq = self.equation(x, y)
+        oeq = o.equation(x, y)
+        result = solve([seq, oeq], [x, y])
+        return [Point(*r) for r in result if im(r[0]).is_zero and im(r[1]).is_zero]
 
     def intersection(self, o):
         """The intersection of this ellipse and another geometrical entity

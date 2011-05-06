@@ -7,7 +7,32 @@ convex_hull
 are_similar
 
 """
-from sympy import Symbol
+from sympy import Symbol, Function, solve
+
+def idiff(eq, y, x, dep=None):
+    """Return dy/dx assuming that y and any other variables given in dep
+    depend on x.
+
+    >>> from sympy.abc import x, y, a
+    >>> from sympy.geometry.util import idiff
+
+    >>> idiff(x**2 + y**2 - 4, y, x)
+    -x/y
+    >>> idiff(x + a + y, y, x)
+    -1
+    >>> idiff(x + a + y, y, x, [a])
+    -1 - D(a, x)
+
+    """
+    if not dep:
+        dep = []
+    dep = set(dep)
+    dep.add(y)
+
+    f = dict([(s, Function(s.name)(x)) for s in eq.atoms(Symbol) if s != x and s in dep])
+    dydx = Function(y.name)(x).diff(x)
+    return solve(eq.subs(f).diff(x), dydx)[0].subs(
+        [(b, a) for a, b in f.iteritems()])
 
 def _symbol(s, matching_symbol=None):
     """Return s if s is a Symbol, else return either a new Symbol (real=True)

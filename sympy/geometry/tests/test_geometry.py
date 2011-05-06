@@ -294,7 +294,33 @@ def test_ellipse():
     assert c1.is_tangent(Line(p1_1, Point(0, sqrt(2))))
     assert e1.is_tangent(Line(Point(0, 0), Point(1, 1))) == False
 
-    # FAILING GOES HERE (from test_ellipse_fail when they work)
+    assert Ellipse(Point(5, 5), 2, 1).tangent_lines(Point(0, 0)) == \
+    [Line(Point(0, 0), Point(S(77)/25, S(132)/25)),
+     Line(Point(0, 0), Point(S(33)/5, S(22)/5))]
+    assert Ellipse(Point(5, 5), 2, 1).tangent_lines(Point(3, 4)) == \
+    [Line(Point(3, 4), Point(3, 5)), Line(Point(3, 4), Point(5, 4))]
+    assert Circle(Point(5, 5), 2).tangent_lines(Point(3, 3)) == \
+    [Line(Point(3, 3), Point(3, 5)), Line(Point(3, 3), Point(5, 3))]
+    assert Circle(Point(5, 5), 2).tangent_lines(Point(5 - 2*sqrt(2), 5)) == \
+    [Line(Point(5 - 2*sqrt(2), 5), Point(5 - sqrt(2), 5 - sqrt(2))),
+     Line(Point(5 - 2*sqrt(2), 5), Point(5 - sqrt(2), 5 + sqrt(2))),]
+
+    # Properties
+    major = 3
+    minor = 1
+    e4 = Ellipse(p2, minor, major)
+    assert e4.focus_distance == sqrt(major**2 - minor**2)
+    ecc = e4.focus_distance / major
+    assert e4.eccentricity == ecc
+    assert e4.periapsis == major*(1 - ecc)
+    assert e4.apoapsis == major*(1 + ecc)
+    # independent of orientation
+    e4 = Ellipse(p2, major, minor)
+    assert e4.focus_distance == sqrt(major**2 - minor**2)
+    ecc = e4.focus_distance / major
+    assert e4.eccentricity == ecc
+    assert e4.periapsis == major*(1 - ecc)
+    assert e4.apoapsis == major*(1 + ecc)
 
     # Intersection
     l1 = Line(Point(1, -5), Point(1, 5))
@@ -338,51 +364,20 @@ def test_ellipse():
     assert elip.tangent_lines(Point(0, 0)) == []
     elip = Ellipse(Point(0, 0), 3, 2)
     assert elip.tangent_lines(Point(3, 0)) == [Line(Point(3, 0), Point(3, -12))]
-    # FAILING ELLIPSE INTERSECTION GOES HERE
+
+    e1 = Ellipse(Point(0, 0), 5, 10)
+    e2 = Ellipse(Point(2, 1), 4, 8)
+    a = S(53)/17
+    c = 2*sqrt(3991)/17
+    assert e1.intersection(e2) == [Point(a - c/8, a/2 + c), Point(a + c/8, a/2 - c)]
 
     # Combinations of above
     assert e3.is_tangent(e3.tangent_lines(p1 + Point(y1, 0))[0])
 
-@XFAIL
-def test_ellipse_circumference():
-    a = Symbol('a', real=True)
-    b = Symbol('b', real=True)
-    e5 = Ellipse(p1, a, b)
-    assert e5.circumference == \
-           4*C.Integral(sqrt((1 - t**2*(Max(a, b)**2 - Min(a, b)**2)/
-                          Max(a, b)**2)/(1 - t**2)), (t, 0, 1)) * Max(a, b)
-
-@XFAIL
-def test_ellipse_fail():
-    # these need the upgrade to the solver; when this works, move
-    # these lines to the # FAILING GOES HERE line in test_ellipse above.
-    assert Ellipse(Point(5, 5), 2, 1).tangent_lines(Point(0, 0)) == \
-    [Line(Point(0, 0), Point(S(77)/25, S(132)/25)),
-     Line(Point(0, 0), Point(S(33)/5, S(22)/5))]
-    assert Ellipse(Point(5, 5), 2, 1).tangent_lines(Point(3, 4)) == \
-    [Line(Point(3, 4), Point(4, 4)), Line(Point(3, 4), Point(3, 5))]
-    assert Circle(Point(5, 5), 2).tangent_lines(Point(3, 3)) == \
-    [Line(Point(3, 3), Point(4, 3)), Line(Point(3, 3), Point(3, 4))]
-    assert Circle(Point(5, 5), 2).tangent_lines(Point(5 - 2*sqrt(2), 5)) == \
-    [Line(Point(5 - 2*sqrt(2), 5), Point(5 - sqrt(2), 5 + sqrt(2))),
-     Line(Point(5 - 2*sqrt(2), 5), Point(5 - sqrt(2), 5 - sqrt(2)))]
-
-    major = 3
-    minor = 1
-    e4 = Ellipse(p2, major, minor)
-    assert e4.focus_distance == sqrt(abs(major**2 - minor**2))
-    ecc = e4.focus_distance / major
-    assert e4.eccentricity == ecc
-    assert e4.periapsis == major*(1 - ecc)
-    assert e4.apoapsis == major*(1 + ecc)
-
-@XFAIL
-def test_ellipse_intersection_fail():
-    # these need the upgrade to the solver; when this works, move
-    # these lines to the FAILING ELLIPSE INTERSECTION GOES HERE line in test_ellipse above.
-    e1 = Ellipse(Point(0, 0), 5, 10)
-    e2 = Ellipse(Point(2, 1), 4, 8)
-    assert e1.intersection(e2) # when this no longer fails, supply the answer
+    e = Ellipse((1, 2), 3, 2)
+    assert e.tangent_lines(Point(10, 0)) == \
+       [Line(Point(10, 0), Point(1, 0)),
+        Line(Point(10, 0), Point(S(14)/5, S(18)/5))]
 
     # encloses_point
     e = Ellipse((0, 0), 1, 2)
@@ -398,11 +393,14 @@ def test_ellipse_intersection_fail():
     assert e.encloses_point(e.center + Point(e.hradius, 0)) is False
     assert e.encloses_point(e.center + Point(e.hradius + Rational(1, 10), 0)) is False
 
-
 def test_ellipse_random_point():
     e3 = Ellipse(Point(0, 0), y1, y1)
+    rx, ry = Symbol('rx'), Symbol('ry')
     for ind in xrange(0, 5):
-        assert e3.random_point() in e3
+        r = e3.random_point()
+        # substitution should give zero*y1**2
+        assert e3.equation(rx, ry).subs(zip((rx, ry), r.args)
+                                        ).n(3).as_coeff_Mul()[0] < 1e-10
 
 def test_polygon():
     t = Triangle(Point(0, 0), Point(2, 0), Point(3, 3))
