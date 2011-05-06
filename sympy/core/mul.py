@@ -43,6 +43,11 @@ class Mul(AssocOp):
         num_exp = []        # (num-base, exp)           y
                             # e.g.  (3, y)  for  ... * 3  * ...
 
+        neg1e = 0           # exponent on -1 extracted from Number-based Pow
+
+        pnum_rat = {}       # (num-base, Rat-exp)          1/2
+                            # e.g.  (3, 1/2)  for  ... * 3     * ...
+
         order_symbols = None
 
 
@@ -54,6 +59,8 @@ class Mul(AssocOp):
         # o coeff
         # o c_powers
         # o num_exp
+        # o neg1e
+        # o pnum_rat
         #
         # NOTE: this is optimized for all-objects-are-commutative case
 
@@ -108,10 +115,24 @@ class Mul(AssocOp):
                 #  y
                 # 3
                 if o.is_Pow and b.is_Number:
+
                     # get all the factors with numeric base so they can be
                     # combined below, but don't combine negatives unless
                     # the exponent is an integer
-                    if b.is_positive or e.is_integer:
+                    if e.is_Rational:
+                        if e.is_Integer:
+                            coeff *= Pow(b, e) # it is an unevaluated power
+                            continue
+                        elif e.is_negative:    # also a sign of an unevaluated power
+                            seq.append(Pow(b, e))
+                            continue
+                        elif b.is_negative:
+                            neg1e += e
+                            b = -b
+                        if b is not S.One:
+                            pnum_rat.setdefault(b, []).append(e)
+                        continue
+                    elif b.is_positive or e.is_integer:
                         num_exp.append((b, e))
                         continue
 
@@ -180,14 +201,12 @@ class Mul(AssocOp):
         # in c_powers
         new_c_powers = []
         common_b = {} # b:e
-
         for b, e in c_powers:
             co = e.as_coeff_mul()
             common_b.setdefault(b, {}).setdefault(co[1], []).append(co[0])
         for b, d in common_b.items():
             for di, li in d.items():
                 d[di] = Add(*li)
-
         for b, e in common_b.items():
             for t, c in e.items():
                 new_c_powers.append((b,c*Mul(*t)))
@@ -196,14 +215,12 @@ class Mul(AssocOp):
         # and in num_exp
         new_num_exp = []
         common_b = {} # b:e
-
         for b, e in num_exp:
             co = e.as_coeff_mul()
             common_b.setdefault(b, {}).setdefault(co[1], []).append(co[0])
         for b, d in common_b.items():
             for di, li in d.items():
                 d[di] = Add(*li)
-
         for b, e in common_b.items():
             for t, c in e.items():
                 new_num_exp.append((b,c*Mul(*t)))
@@ -220,21 +237,17 @@ class Mul(AssocOp):
         # - coeff:
         # - c_powers:    (b, e)
         # - num_exp:     (2, e)
+        # - pnum_rat:    {(1/3, [1/3, 2/3, 1/4])}
 
         #  0             1
         # x  -> 1       x  -> x
         for b, e in c_powers:
-            if e is S.Zero:
-                continue
-
             if e is S.One:
                 if b.is_Number:
                     coeff *= b
                 else:
                     c_part.append(b)
-            elif e.is_Integer and b.is_Number:
-                coeff *= Pow(b, e)
-            else:
+            elif not e is S.Zero:
                 c_part.append(Pow(b, e))
 
         #  x    x     x
@@ -245,31 +258,98 @@ class Mul(AssocOp):
             inv_exp_dict.setdefault(e, []).append(b)
         for e, b in inv_exp_dict.items():
             inv_exp_dict[e] = Mul(*b)
+        c_part.extend([Pow(b, e) for e, b in inv_exp_dict.iteritems() if e])
 
-        reeval = False
-
-        for e,b in inv_exp_dict.items():
-            if e is S.Zero:
-                continue
-
-            if e is S.One:
-                if b.is_Number:
-                    coeff *= b
-                else:
-                    c_part.append(b)
-            elif e.is_Integer and b.is_Number:
+        # b, e -> e, b
+        # {(1/5, [1/3]), (1/2, [1/12, 1/4]} -> {(1/3, [1/5, 1/2])}
+        comb_e = {}
+        for b, e in pnum_rat.iteritems():
+            comb_e.setdefault(Add(*e), []).append(b)
+        del pnum_rat
+        # process them, reducing exponents to values less than 1
+        # and updating coeff if necessary else adding them to
+        # num_rat for further processing
+        num_rat = []
+        for e, b in comb_e.iteritems():
+            b = Mul(*b)
+            if e.q == 1:
                 coeff *= Pow(b, e)
-            else:
-                obj = b**e
-                if obj.is_Mul:
-                    # We may have split out a number that needs to go in coeff
-                    # e.g., sqrt(6)*sqrt(2) == 2*sqrt(3).  See issue 415.
-                    reeval = True
+                continue
+            if e.p > e.q:
+                e_i, ep = divmod(e.p, e.q)
+                coeff *= Pow(b, e_i)
+                e = Rational(ep, e.q)
+            num_rat.append((b, e))
+        del comb_e
+
+        # extract gcd of bases in num_rat
+        # 2**(1/3)*6**(1/4) -> 2**(1/3+1/4)*3**(1/4)
+        pnew = {}
+        i = 0 # steps through num_rat which may grow
+        while i < len(num_rat):
+            bi, ei = num_rat[i]
+            grow = []
+            for j in range(i + 1, len(num_rat)):
+                bj, ej = num_rat[j]
+                g = igcd(bi, bj)
+                if g != 1:
+                    # 4**r1*6**r2 -> 2**(r1+r2)  *  2**r1 *  3**r2
+                    # this might have a gcd with something else
+                    e = ei + ej
+                    if e.q == 1:
+                        coeff *= Pow(g, e)
+                    else:
+                        if e.p > e.q:
+                            e_i, ep = divmod(e.p, e.q) # change e in place
+                            coeff *= Pow(g, e_i)
+                            e = Rational(ep, e.q)
+                        grow.append((g, e))
+                    # update the jth item
+                    num_rat[j] = (bj//g, ej)
+                    # update bi that we are checking with
+                    bi = bi//g
+                    if bi is S.One:
+                        break
+            if bi is not S.One:
+                obj = Pow(bi, ei)
                 if obj.is_Number:
                     coeff *= obj
                 else:
-                    c_part.append(obj)
+                    if obj.is_Mul: # 12**(1/2) -> 2*sqrt(3)
+                        c, obj = obj.args # expecting only 2 args
+                        coeff *= c
+                        assert obj.is_Pow
+                        bi, ei = obj.args
+                    pnew.setdefault(ei, []).append(bi)
 
+            num_rat.extend(grow)
+            i += 1
+
+        # combine bases of the new powers
+        for e, b in pnew.iteritems():
+            pnew[e] = Mul(*b)
+
+        # see if there is a base with matching coefficient
+        # that the -1 can be joined with
+        if neg1e:
+            p = Pow(S.NegativeOne, neg1e)
+            if p.is_Number:
+                coeff *= p
+            else:
+                if p.is_Mul:
+                    c, p = p.args
+                    coeff *= c
+                    assert p.is_Pow and p.base is S.NegativeOne
+                    neg1e = p.args[1]
+                for e, b in pnew.iteritems():
+                    if e == neg1e and b.is_positive:
+                        pnew[e] = -b
+                        break
+                else:
+                    c_part.append(p)
+
+        # add all the pnew powers
+        c_part.extend([Pow(b, e) for e, b in pnew.iteritems()])
 
         # oo, -oo
         if (coeff is S.Infinity) or (coeff is S.NegativeInfinity):
@@ -311,14 +391,6 @@ class Mul(AssocOp):
             # we know for sure the result will be 0
             return [coeff], [], order_symbols
 
-        elif coeff.is_Real:
-            if coeff == Real(0):
-                c_part, nc_part = [coeff], []
-            elif coeff == Real(1):
-                # change it to One, so it doesn't get inserted to slot0
-                coeff = S.One
-
-
         # order commutative part canonically
         c_part.sort(Basic.compare)
 
@@ -333,8 +405,6 @@ class Mul(AssocOp):
             coeff = c_part[0]
             c_part = [Add(*[coeff*f for f in c_part[1].args])]
 
-        if reeval:
-            c_part, _, _ = Mul.flatten(c_part)
         return c_part, nc_part, order_symbols
 
 
@@ -1130,7 +1200,7 @@ class Mul(AssocOp):
         return s
 
 from power import Pow
-from numbers import Real, Integer, Rational
+from numbers import Real, Integer, Rational, igcd
 from function import FunctionClass
 from sympify import sympify
 from add import Add

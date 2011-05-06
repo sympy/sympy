@@ -2288,14 +2288,6 @@ def block_diag(matrices):
     """
     Warning: this function is deprecated. See .diag()
 
-    Constructs a block diagonal matrix from a list of square matrices.
-
-    >>> from sympy.matrices.matrices import block_diag
-    >>> block_diag([1, 2])
-    [1, 0]
-    [0, 2]
-
-    See also: diag(), eye()
     """
     import warnings
     warnings.warn("block_diag() is deprecated, use diag() instead", DeprecationWarning)

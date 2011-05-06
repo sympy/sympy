@@ -1504,15 +1504,15 @@ def test_gcd():
     assert gcd(F, G, polys=False) == h
     assert lcm(F, G, polys=False) == r
 
-    f, g = x**2 - 1, x - 1.0
-    h, s, t = g, x + 1.0, 1.0
+    f, g = 1.0*x**2 - 1.0, 1.0*x - 1.0
+    h, s, t = g, 1.0*x + 1.0, 1.0
 
     assert cofactors(f, g) == (h, s, t)
     assert gcd(f, g) == h
     assert lcm(f, g) == f
 
-    f, g = x**2 - 1.0, x - 1
-    h, s, t = g, x + 1.0, 1.0
+    f, g = 1.0*x**2 - 1.0, 1.0*x - 1.0
+    h, s, t = g, 1.0*x + 1.0, 1.0
 
     assert cofactors(f, g) == (h, s, t)
     assert gcd(f, g) == h
@@ -1602,7 +1602,7 @@ def test_monic():
     assert monic(2*x**2 + 6*x + 4, auto=False) == x**2 + 3*x + 2
     raises(ExactQuotientFailed, "monic(2*x + 6*x + 1, auto=False)")
 
-    assert monic(2.0*x**2 + 6.0*x + 4.0) == x**2 + 3.0*x + 2.0
+    assert monic(2.0*x**2 + 6.0*x + 4.0) == 1.0*x**2 + 3.0*x + 2.0
     assert monic(2*x**2 + 3*x + 4, modulus=5) == x**2 - x + 2
 
 def test_content():
@@ -2108,22 +2108,22 @@ def test_nroots():
     assert Poly(1, x).nroots() == []
 
     assert Poly(x**2 - 1, x).nroots() == [-1.0, 1.0]
-    assert Poly(x**2 + 1, x).nroots() == [-I, I]
+    assert Poly(x**2 + 1, x).nroots() == [-1.0*I, 1.0*I]
 
     roots, error = Poly(x**2 - 1, x).nroots(error=True)
     assert roots == [-1.0, 1.0] and error < 1e25;
 
     roots, error = Poly(x**2 + 1, x).nroots(error=True)
-    assert roots == [-I, I] and error < 1e25;
+    assert roots == [-1.0*I, 1.0*I] and error < 1e25;
 
     roots, error = Poly(x**2/3 - S(1)/3, x).nroots(error=True)
     assert roots == [-1.0, 1.0] and error < 1e25;
 
     roots, error = Poly(x**2/3 + S(1)/3, x).nroots(error=True)
-    assert roots == [-I, I] and error < 1e25;
+    assert roots == [-1.0*I, 1.0*I] and error < 1e25;
 
-    assert Poly(x**2 + 2*I, x).nroots() == [-1.0 + I, 1.0 - I]
-    assert Poly(x**2 + 2*I, x, extension=I).nroots() == [-1.0 + I, 1.0 - I]
+    assert Poly(x**2 + 2*I, x).nroots() == [-1.0 + 1.0*I, 1.0 - 1.0*I]
+    assert Poly(x**2 + 2*I, x, extension=I).nroots() == [-1.0 + 1.0*I, 1.0 - 1.0*I]
 
     assert Poly(0.2*x + 0.1).nroots() == [-0.5]
 
@@ -2135,8 +2135,8 @@ def test_nroots():
     roots, error = nroots(x**2 - 1, error=True)
     assert roots == [-1.0, 1.0] and error < 1e25;
 
-    assert nroots(x + I) == [-I]
-    assert nroots(x + 2*I) == [-2*I]
+    assert nroots(x + I) == [-1.0*I]
+    assert nroots(x + 2*I) == [-2.0*I]
 
     raises(PolynomialError, "nroots(0)")
 
