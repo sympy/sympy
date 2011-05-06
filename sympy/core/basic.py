@@ -3,7 +3,7 @@
 from decorators import _sympifyit
 from assumptions import AssumeMeths, make__get_assumption, _assume_defined
 from cache import cacheit
-from core import BasicMeta, BasicType, C
+from core import BasicType, C
 from sympify import _sympify, sympify, SympifyError
 from compatibility import callable, reduce, cmp, iterable
 from sympy.core.decorators import deprecated
@@ -42,9 +42,6 @@ class Basic(AssumeMeths):
 
 
     """
-
-    __metaclass__ = BasicMeta
-
     __slots__ = ['_mhash',              # hash value
                  '_args',               # arguments
                  '_assume_type_keys',   # assumptions typeinfo keys

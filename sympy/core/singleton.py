@@ -1,6 +1,6 @@
 """Singleton mechanism"""
 
-from core import BasicMeta, Registry
+from core import WithAssumptions, Registry
 from sympify import sympify
 
 class SingletonRegistry(Registry):
@@ -18,7 +18,7 @@ class SingletonRegistry(Registry):
 S = SingletonRegistry()
 
 
-class Singleton(BasicMeta):
+class Singleton(WithAssumptions):
     """
     Metaclass for singleton classes.
 

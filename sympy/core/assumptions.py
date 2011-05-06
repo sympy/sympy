@@ -1,6 +1,6 @@
-from facts import FactRules
-
 from sympy.core.compatibility import cmp
+from sympy.core.facts import FactRules
+from sympy.core.core import WithAssumptions
 
 # This are the rules under which our assumptions function
 #
@@ -85,6 +85,34 @@ class CycleDetected(Exception):
     pass
 
 
+def make__get_assumption(classname, name):
+    """Cooks function which will get named assumption
+
+       e.g.
+
+       class C:
+
+           is_xxx = make__get_assumption('C', 'xxx')
+           is_yyy = property( make__get_assumption('C', 'yyy'))
+
+
+       then
+
+       c = C()
+
+       c.is_xxx()   # note braces -- it's a function call
+       c.is_yyy     # no braces   -- it's a property
+    """
+    def getit(self):
+        try:
+            return self._assumptions[name]
+        except KeyError:
+            return self._what_known_about(name)
+
+    getit.func_name = '%s__is_%s' % (classname, name)
+    return getit
+
+
 class AssumeMeths(object):
     """ Define default assumption methods.
 
@@ -146,6 +174,7 @@ class AssumeMeths(object):
 
         - None (if you don't know if the property is True or false)
     """
+    __metaclass__ = WithAssumptions
     __slots__ = ['_assumptions',    # assumptions
                  '_a_inprogress',   # already-seen requests (when deducing
                                     # through prerequisites -- see CycleDetected)
@@ -305,30 +334,3 @@ class AssumeMeths(object):
         # NOTE it modifies base inplace
         _assume_rules.deduce_all_facts(facts, base)
 
-
-def make__get_assumption(classname, name):
-    """Cooks function which will get named assumption
-
-       e.g.
-
-       class C:
-
-           is_xxx = make__get_assumption('C', 'xxx')
-           is_yyy = property( make__get_assumption('C', 'yyy'))
-
-
-       then
-
-       c = C()
-
-       c.is_xxx()   # note braces -- it's a function call
-       c.is_yyy     # no braces   -- it's a property
-    """
-    def getit(self):
-        try:
-            return self._assumptions[name]
-        except KeyError:
-            return self._what_known_about(name)
-
-    getit.func_name = '%s__is_%s' % (classname, name)
-    return getit

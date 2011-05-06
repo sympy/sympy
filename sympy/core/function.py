@@ -29,7 +29,7 @@ Example:
     (x,)
 
 """
-from core import BasicMeta, C
+from core import WithAssumptions, BasicMeta, C
 from basic import Basic
 from singleton import S
 from expr import Expr, AtomicExpr
@@ -54,7 +54,7 @@ class ArgumentIndexError(ValueError):
         return ("Invalid operation with argument number %s for Function %s" %
                         (self.args[1], self.args[0]))
 
-class FunctionClass(BasicMeta):
+class FunctionClass(WithAssumptions):
     """
     Base class for function classes. FunctionClass is a subclass of type.
 

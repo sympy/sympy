@@ -69,7 +69,7 @@ from sympy import S, Basic, Mul, Add
 
 from sympy.core.exprtools import decompose_power
 from sympy.polys.monomialtools import monomial_key
-from sympy.core.basic import BasicMeta
+from sympy.core.core import BasicMeta
 
 from sympy.core.compatibility import cmp_to_key
 
