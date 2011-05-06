@@ -1,5 +1,6 @@
 from sympy.core.logic import fuzzy_not, name_not, Logic, And, Or, Not, \
-                             fuzzy_and
+                             fuzzy_and, fuzzy_xor
+from sympy.utilities.iterables import cartes
 from sympy.utilities.pytest import raises
 
 T = True
@@ -24,6 +25,20 @@ def test_fuzzy_and():
     assert fuzzy_and([F, F]) == F
     assert fuzzy_and([F, U]) == F
     assert fuzzy_and([U, U]) == U
+
+def test_fuzzy_xor():
+    def check(s, a):
+        if s.count(True) == 1 and s.count(None) == 0:
+            assert a is True
+        elif (s.count(True) > 1 or s.count(False) == len(s)):
+            assert a is False
+        else:
+            assert a is None
+
+    for i, a in enumerate(cartes(*[[T, F, U]]*2)):
+        check(a, fuzzy_xor(*a))
+    for i, a in enumerate(cartes(*[[T, F, U]]*3)):
+        check(a, fuzzy_xor(*a))
 
 def test_name_not():
     assert name_not('zero')  == '!zero'

@@ -20,7 +20,7 @@ def fuzzy_bool(x):
 def fuzzy_and(*args):
     """Return True (all True), False (any False) or None.
 
-    If `a` is an iterable it must have more than one element."""
+    If `args` is an iterable it must have more than one element."""
 
     if (len(args) == 1 and hasattr(args[0], '__iter__') or
         len(args) > 2):
@@ -44,6 +44,39 @@ def fuzzy_and(*args):
         return True
     elif a is False or b is False:
         return False
+
+def fuzzy_xor(*args):
+    """Return True (one True and rest False), False (more than one True) or None.
+
+    If `args` is an iterable it must have more than one element."""
+    if (len(args) == 1 and hasattr(args[0], '__iter__') or
+        len(args) > 2):
+        if len(args) == 1:
+            args = args[0]
+        saw_none = False
+        saw_true = False
+        i = 0
+        for ai in args:
+            ai = fuzzy_bool(ai)
+            if ai:
+                if saw_true:
+                    return False
+                saw_true = True
+            elif ai is None:
+                saw_none = True
+            i += 1
+        if i < 2:
+            raise ValueError('iterables must have 2 or more elements')
+        if saw_none:
+            return None
+        return saw_true
+
+    a, b = [fuzzy_bool(i) for i in args]
+    if a is None or b is None:
+        return None
+    if a is b:
+        return False
+    return True
 
 def fuzzy_not(v):
     """'not' in fuzzy logic"""
