@@ -79,21 +79,21 @@ class Basic(AssumeMeths):
 
     def __new__(cls, *args, **assumptions):
         obj = object.__new__(cls)
+        obj._init_assumptions(assumptions)
 
-        # FIXME we are slowed a *lot* by Add/Mul passing is_commutative as the
-        # only assumption.
-        #
-        # .is_commutative is not an assumption -- it's like typeinfo!!!
-        # we should remove it.
+        obj._mhash = None # will be set by __hash__ method.
+        obj._args = args  # all items in args must be Basic objects
+        return obj
 
+    def  _init_assumptions(self, assumptions):
         # initially assumptions are shared between instances and class
-        obj._assumptions  = cls.default_assumptions
-        obj._a_inprogress = []
+        self._assumptions  = self.default_assumptions
+        self._a_inprogress = []
 
         # NOTE this could be made lazy -- probably not all instances will need
         # fully derived assumptions?
         if assumptions:
-            obj._learn_new_facts(assumptions)
+            self._learn_new_facts(assumptions)
             #                      ^
             # FIXME this is slow   |    another NOTE: speeding this up is *not*
             #        |             |    important. say for %timeit x+y most of
@@ -101,18 +101,13 @@ class Basic(AssumeMeths):
             # |                    |
             # |  XXX _learn_new_facts  could be asked about what *new* facts have
             # v  XXX been learned -- we'll need this to append to _hashable_content
-            basek = set(cls.default_assumptions.keys())
-            k2    = set(obj._assumptions.keys())
+            basek = set(self.default_assumptions.keys())
+            k2    = set(self._assumptions.keys())
             newk  = k2.difference(basek)
 
-            obj._assume_type_keys = frozenset(newk)
+            self._assume_type_keys = frozenset(newk)
         else:
-            obj._assume_type_keys = None
-
-        obj._mhash = None # will be set by __hash__ method.
-        obj._args = args  # all items in args must be Basic objects
-        return obj
-
+            self._assume_type_keys = None
 
     # XXX better name?
     @property
