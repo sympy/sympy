@@ -45,7 +45,6 @@ class Basic(object):
     __metaclass__ = WithAssumptions
     __slots__ = ['_mhash',              # hash value
                  '_args',               # arguments
-                 '_assume_type_keys',   # assumptions typeinfo keys
                 ]
 
     # To be overridden with True in the appropriate subclasses
@@ -85,70 +84,6 @@ class Basic(object):
         obj._mhash = None # will be set by __hash__ method.
         obj._args = args  # all items in args must be Basic objects
         return obj
-
-    def  _init_assumptions(self, assumptions):
-        # initially assumptions are shared between instances and class
-        self._assumptions  = self.default_assumptions
-        self._a_inprogress = []
-
-        # NOTE this could be made lazy -- probably not all instances will need
-        # fully derived assumptions?
-        if assumptions:
-            self._learn_new_facts(assumptions)
-            #                      ^
-            # FIXME this is slow   |    another NOTE: speeding this up is *not*
-            #        |             |    important. say for %timeit x+y most of
-            # .------'             |    the time is spent elsewhere
-            # |                    |
-            # |  XXX _learn_new_facts  could be asked about what *new* facts have
-            # v  XXX been learned -- we'll need this to append to _hashable_content
-            basek = set(self.default_assumptions.keys())
-            k2    = set(self._assumptions.keys())
-            newk  = k2.difference(basek)
-
-            self._assume_type_keys = frozenset(newk)
-        else:
-            self._assume_type_keys = None
-
-    # XXX better name?
-    @property
-    def assumptions0(self):
-        """
-        Return object `type` assumptions.
-
-        For example:
-
-          Symbol('x', real=True)
-          Symbol('x', integer=True)
-
-        are different objects. In other words, besides Python type (Symbol in
-        this case), the initial assumptions are also forming their typeinfo.
-
-        Example:
-
-        >>> from sympy import Symbol
-        >>> from sympy.abc import x
-        >>> x.assumptions0
-        {}
-        >>> x = Symbol("x", positive=True)
-        >>> x.assumptions0
-        {'commutative': True, 'complex': True, 'imaginary': False,
-        'negative': False, 'nonnegative': True, 'nonpositive': False,
-        'nonzero': True, 'positive': True, 'real': True, 'zero': False}
-
-        """
-
-        cls = type(self)
-        A   = self._assumptions
-
-        # assumptions shared:
-        if A is cls.default_assumptions or (self._assume_type_keys is None):
-            assumptions0 = {}
-        else:
-            assumptions0 = dict( (k, A[k]) for k in self._assume_type_keys )
-
-        return assumptions0
-
 
     # NOTE NOTE NOTE
     # --------------
