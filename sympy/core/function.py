@@ -29,7 +29,8 @@ Example:
     (x,)
 
 """
-from core import WithAssumptions, BasicMeta, C
+from core import BasicMeta, C
+from assumptions import WithAssumptions
 from basic import Basic
 from singleton import S
 from expr import Expr, AtomicExpr

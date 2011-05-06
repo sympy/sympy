@@ -1,6 +1,7 @@
 """Singleton mechanism"""
 
-from core import WithAssumptions, Registry
+from core import Registry
+from assumptions import WithAssumptions
 from sympify import sympify
 
 class SingletonRegistry(Registry):
