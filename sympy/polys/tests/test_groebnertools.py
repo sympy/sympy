@@ -436,10 +436,10 @@ def test_benchmark_katsura_3():
     gr = groebner(I, x0, x1, x2, order='grlex')
     gr.sort()
     assert gr == [
-        7*x1 + 3*x2 - 79*x2**2 + 210*x2**3,
+        -1 + x0 + 2*x1 + 2*x2,
         -x1 + x2 - 3*x2**2 + 5*x1**2,
         -x1 - 4*x2 + 10*x1*x2 + 12*x2**2,
-        -1 + x0 + 2*x1 + 2*x2,
+        7*x1 + 3*x2 - 79*x2**2 + 210*x2**3,
     ]
 
 def test_benchmark_katsura_4():

@@ -66,24 +66,12 @@ def taylor(p,var=None,start=0,prec=6,dir="+",pol_pars=[],ov=True):
         prec in [S.Infinity, S.NegativeInfinity]:
         return series(p,var,start,prec)
     # case with ov=True; for ov=False taylor is faster than for ov=True
-    # in sin(x), etc. series() is faster at high precision
-    #              prec
-    # sin(x)       100   series 2x faster
-    #              200   series 2x faster
-    #              1000  series 30x faster
-    # similarly for cos
     # tan(x)       100   taylor 50% faster 
     #              200   taylor 20% faster
     #              1000  series 3x faster (chosen series for this)
-    # log(1+x)           taylor 50% faster  
-    # atan(x)            taylor 20% faster
-    # for longer arguments taylor is faster
-    # sin(x+x**2)  100   taylor 10x faster
-    #              200   taylor 7x faster
-    #              500   taylor 6x faster
     if prec > 70 and ov:
         head = p.__class__
-        if head in [cos,sin,tan,acos,asin]:
+        if head in [tan,acos,asin]:
             q = p.args[0]
             if q == var:
                 return series(p,var,start,prec)
@@ -106,15 +94,16 @@ def taylor(p,var=None,start=0,prec=6,dir="+",pol_pars=[],ov=True):
         try:
             p1 = te(p)
             lp = p1.lp
-            sb = Subs(lp,lp,{te.lvname:te.lvar-start})
-            lvar = sb.subs(p1)
             p1 = p1.tobasic(*gens)
             #args = list(p1._args + (O(var**prec),))
             #p1._args = tuple(args)
+            # in the symbolic ring case one must expand
+            # because the coefficients are often not expanded
+            # TODO expand the coefficients
+            if lp.SR:
+                p1 = p1.expand()
             if ov:
                 p1 = p1 + O(var**prec)
-                if lp.SR:
-                    p1 = p1.expand()
             return p1
         except TaylorEvalError:
             continue

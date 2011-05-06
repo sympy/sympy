@@ -1347,7 +1347,7 @@ class Poly(dict):
                     q = ax[i//2].square_trunc(iv,nv)
                 else:
                     q = q.mul_trunc(p, iv,nv)
-            ax.append(q)
+                ax.append(q)
         # optimize using square_trunc
         pj = ax[-1].mul_trunc(p, iv,nv)
         b = lp(1)
@@ -1804,10 +1804,28 @@ class Poly(dict):
                 raise NotImplementedError
             p1 = p - c
             return sympy.cos(c)*p1.sin(iv,nv) + sympy.sin(c)*p1.cos(iv,nv)
-        t = (p/2).tan(iv,nv)
-        t2 = t.square_trunc(iv,nv)
-        p1 = (1+t2).series_inversion(iv,nv)
-        return p1.mul_trunc(2*t,iv,nv)
+        # get a good value
+        if len(p) > 20: 
+            t = (p/2).tan(iv,nv)
+            t2 = t.square_trunc(iv,nv)
+            p1 = (1+t2).series_inversion(iv,nv)
+            return p1.mul_trunc(2*t,iv,nv)
+        if lp.base_ring:
+            one = lp.base_ring(1)
+        else:
+            one = lp.ring(1)
+        n = 1
+        c = [0]
+        if hasattr(nv,'__hex__'):
+            m = nv
+        else:
+            m = sum(nv)
+        for k in range(2,m+2,2):
+            c.append(one/n)
+            c.append(0)
+            n *= -k*(k+1)
+        return p.series_from_list(c,iv,nv)
+
         
     def cos(p,iv,nv):
         """ cos of a series
@@ -1822,11 +1840,29 @@ class Poly(dict):
                 raise NotImplementedError
             p1 = p - c
             return sympy.cos(c)*p1.cos(iv,nv) - sympy.sin(c)*p1.sin(iv,nv)
-        t = (p/2).tan(iv,nv)
-        t2 = t.square_trunc(iv,nv)
-        p1 = (1+t2).series_inversion(iv,nv)
-        return p1.mul_trunc(1-t2,iv,nv)
-    
+        # get a good value
+        if len(p) > 20: 
+            t = (p/2).tan(iv,nv)
+            t2 = t.square_trunc(iv,nv)
+            p1 = (1+t2).series_inversion(iv,nv)
+            return p1.mul_trunc(1-t2,iv,nv)
+        if lp.base_ring:
+            one = lp.base_ring(1)
+        else:
+            one = lp.ring(1)
+        n = 1
+        c = []
+        if hasattr(nv,'__hex__'):
+            m = nv
+        else:
+            m = sum(nv)
+        for k in range(2,m+2,2):
+            c.append(one/n)
+            c.append(0)
+            n *= -k*(k-1)
+        return p.series_from_list(c,iv,nv)
+
+
     def cos_sin(p,iv,nv):
         t = (p/2).tan(iv,nv)
         t2 = t.square_trunc(iv,nv)
