@@ -24,6 +24,7 @@ import doctest as pdoctest # avoid clashing with our doctest() function
 from sympy.utilities import any
 from doctest import DocTestFinder, DocTestRunner
 import re as pre
+from sympy.core.cache import clear_cache
 
 # Use sys.stdout encoding for ouput.
 # This was only added to Python's doctest in Python 2.6, so we must duplicate
@@ -282,6 +283,7 @@ def doctest(*paths, **kwargs):
                 # make sure we return to the original displayhook in case some
                 # doctest has changed that
                 sys.displayhook = old_displayhook
+                clear_cache()
 
             txtfailed, tested = out
             if tested:
@@ -469,6 +471,7 @@ class SymPyTests(object):
             except KeyboardInterrupt:
                 print " interrupted by user"
                 break
+            clear_cache()
         return self._reporter.finish()
 
     def test_file(self, filename):
@@ -589,6 +592,7 @@ class SymPyDocTests(object):
             except KeyboardInterrupt:
                 print " interrupted by user"
                 break
+            clear_cache()
         return self._reporter.finish()
 
     def test_file(self, filename):
