@@ -17,6 +17,7 @@ from sympy.solvers import solve_poly_system, solve
 from entity import GeometryEntity
 from point import Point
 from line import LinearEntity, Line
+from util import _symbol
 
 class Ellipse(GeometryEntity):
     """An elliptical GeometryEntity.
@@ -542,12 +543,12 @@ class Ellipse(GeometryEntity):
         else:
             raise NotImplementedError("Unknown argument type")
 
-    def arbitrary_point(self, parameter_name='t'):
+    def arbitrary_point(self, parameter='t'):
         """A parametric point on the ellipse.
 
         Parameters
         ----------
-        parameter_name : str, optional
+        parameter : str, optional
             Default value is 't'.
 
         Returns
@@ -566,16 +567,16 @@ class Ellipse(GeometryEntity):
         Point(3*cos(t), 2*sin(t))
 
         """
-        t = C.Symbol(parameter_name, real=True)
+        t = _symbol(parameter)
         return Point(self.center[0] + self.hradius*C.cos(t),
                 self.center[1] + self.vradius*C.sin(t))
 
-    def plot_interval(self, parameter_name='t'):
+    def plot_interval(self, parameter='t'):
         """The plot interval for the default geometric plot of the Ellipse.
 
         Parameters
         ----------
-        parameter_name : str, optional
+        parameter : str, optional
             Default value is 't'.
 
         Returns
@@ -591,7 +592,7 @@ class Ellipse(GeometryEntity):
         [t, -pi, pi]
 
         """
-        t = C.Symbol(parameter_name, real=True)
+        t = _symbol(parameter)
         return [t, -S.Pi, S.Pi]
 
     def random_point(self):
@@ -627,8 +628,8 @@ class Ellipse(GeometryEntity):
 
         """
         from random import random
-        t = C.Symbol('t', real=True)
-        p = self.arbitrary_point('t')
+        t = _symbol('t')
+        p = self.arbitrary_point(t)
         # get a random value in [-pi, pi)
         subs_val = float(S.Pi)*(2*random() - 1)
         return Point(p[0].subs(t, subs_val), p[1].subs(t, subs_val))
@@ -655,8 +656,8 @@ class Ellipse(GeometryEntity):
         -1 + (-1/3 + x/3)**2 + y**2/4
 
         """
-        if isinstance(x, basestring):   x = C.Symbol(x, real=True)
-        if isinstance(y, basestring):   y = C.Symbol(y, real=True)
+        x = _symbol(x)
+        y = _symbol(y)
         t1 = ((x - self.center[0]) / self.hradius)**2
         t2 = ((y - self.center[1]) / self.vradius)**2
         return t1 + t2 - 1
@@ -711,7 +712,7 @@ class Ellipse(GeometryEntity):
     def _do_circle_intersection(self, o):
         """The intersection of an Ellipse and a Circle.
 
-        Private helper methode for `intersection`.
+        Private helper method for `intersection`.
 
         """
         variables = self.equation().atoms(C.Symbol)
@@ -821,7 +822,6 @@ class Ellipse(GeometryEntity):
                 return self._do_ellipse_intersection(o)
 
         return o.intersection(self)
-
 
     def __eq__(self, o):
         """Is the other GeometryEntity the same as this ellipse?"""
@@ -979,10 +979,8 @@ class Circle(Ellipse):
         -25 + x**2 + y**2
 
         """
-        if isinstance(x, basestring):
-            x = C.Symbol(x, real=True)
-        if isinstance(y, basestring):
-            y = C.Symbol(y, real=True)
+        x = _symbol(x)
+        y = _symbol(y)
         t1 = (x - self.center[0])**2
         t2 = (y - self.center[1])**2
         return t1 + t2 - self.major**2

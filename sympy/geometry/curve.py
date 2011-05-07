@@ -10,6 +10,7 @@ from sympy.core import sympify, C
 from sympy.geometry.exceptions import GeometryError
 from sympy.geometry.point import Point
 from entity import GeometryEntity
+from util import _symbol
 
 class Curve(GeometryEntity):
     """A curve in space.
@@ -79,14 +80,16 @@ class Curve(GeometryEntity):
         """
         return self.__getitem__(0)
 
-    def arbitrary_point(self, parameter_name='t'):
+    def arbitrary_point(self, parameter='t'):
         """
         A parameterized point on the curve.
 
         Parameters
         ----------
-        parameter_name : str, optional
-            Default value is 't'.
+        parameter : str or Symbol, optional
+            Default value is 't';
+            the Curve's parameter is selected with ''
+            otherwise the provided symbol is used.
 
         Returns
         -------
@@ -98,33 +101,35 @@ class Curve(GeometryEntity):
 
         Examples
         --------
+        >>> from sympy import Symbol
         >>> from sympy.abc import s
         >>> from sympy.geometry import Curve
         >>> C = Curve([s, s**2], (s, 0, 2))
         >>> C.arbitrary_point()
         Point(2*t, 4*t**2)
-        >>> C.arbitrary_point('s')
+        >>> C.arbitrary_point('')
         Point(2*s, 4*s**2)
+        >>> C.arbitrary_point(Symbol('a'))
+        Point(2*a, 4*a**2)
 
         """
-        if isinstance(parameter_name, C.Symbol):
-            tnew = parameter_name
-        elif parameter_name != self.parameter.name:
-            tnew = C.Symbol(parameter_name, real=True)
-        else:
-            tnew = self.parameter
+        if parameter == '':
+            parameter = self.parameter.name
+        tnew = _symbol(parameter, self.parameter)
         t = self.parameter
         start, finish = self.limits[1:]
         tnew *= finish - start
-        return Point(*[w.subs(t, tnew) for w in  self.functions])
+        return Point(*[w.subs(t, tnew) for w in self.functions])
 
-    def plot_interval(self, parameter_name='t'):
+    def plot_interval(self, parameter='t'):
         """The plot interval for the default geometric plot of the curve.
 
         Parameters
         ----------
-        parameter_name : str, optional
-            Default value is 't'.
+        parameter : str or Symbol, optional
+            Default value is 't';
+            the Curve's parameter is selected with ''
+            otherwise the provided symbol is used.
 
         Returns
         -------
@@ -134,12 +139,18 @@ class Curve(GeometryEntity):
         Examples
         --------
         >>> from sympy import Curve, sin
-        >>> from sympy.abc import x
+        >>> from sympy.abc import x, t, s
         >>> Curve((x, sin(x)), (x, 1, 2)).plot_interval()
         [t, 1, 2]
+        >>> Curve((x, sin(x)), (x, 1, 2)).plot_interval('')
+        [x, 1, 2]
+        >>> Curve((x, sin(x)), (x, 1, 2)).plot_interval(s)
+        [s, 1, 2]
 
         """
-        t = C.Symbol(parameter_name, real=True)
+        if parameter == '':
+            parameter = self.parameter.name
+        t = _symbol(parameter, self.parameter)
         return [t] + list(self.limits[1:])
 
     @property
