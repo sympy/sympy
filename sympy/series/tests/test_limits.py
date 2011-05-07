@@ -262,3 +262,7 @@ def test_issue835():
 
 def test_newissue():
     assert limit(exp(1/sin(x))/exp(cot(x)), x, 0) == 1
+
+def test_issue2337():
+    raises(NotImplementedError, 'limit(exp(x*y), x, oo)')
+    raises(NotImplementedError, 'limit(exp(-x*y), x, oo)')
