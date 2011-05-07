@@ -11,6 +11,9 @@ from miscellaneous import sqrt
 ########################## TRIGONOMETRIC FUNCTIONS ############################
 ###############################################################################
 
+class TrigonometricFunction(Function):
+    """Base class for trigonometric functions. """
+
 def _peeloff_pi(arg):
     """
     Split ARG into two parts, a "rest" and a multiple of pi/2.
@@ -100,7 +103,7 @@ def _pi_coeff(arg, cycles=1):
             else:
                 return Rational(c.p % (2*c.q), c.q)
 
-class sin(Function):
+class sin(TrigonometricFunction):
     """
     Usage
     =====
@@ -317,7 +320,7 @@ class sin(Function):
         import sage.all as sage
         return sage.sin(self.args[0]._sage_())
 
-class cos(Function):
+class cos(TrigonometricFunction):
     """
     Usage
     =====
@@ -539,7 +542,7 @@ class cos(Function):
         import sage.all as sage
         return sage.cos(self.args[0]._sage_())
 
-class tan(Function):
+class tan(TrigonometricFunction):
     """
     Usage
     =====
@@ -740,7 +743,7 @@ class tan(Function):
         import sage.all as sage
         return sage.tan(self.args[0]._sage_())
 
-class cot(Function):
+class cot(TrigonometricFunction):
     """
     Usage
     =====

@@ -377,8 +377,7 @@ def test_separable5():
     assert checkodesol(eq15, f(x), sol15, order=1, solve_for_func=False)[0]
     assert checkodesol(eq16, f(x), sol16, order=1, solve_for_func=False)[0]
     assert checkodesol(eq17, f(x), sol17, order=1, solve_for_func=False)[0]
-    # XXX: use trigsimp()
-    # XXX: assert checkodesol(eq18, f(x), sol18, order=1, solve_for_func=False)[0]
+    assert checkodesol(eq18, f(x), sol18, order=1, solve_for_func=False)[0]
     assert checkodesol(eq19, f(x), sol19a, order=1, solve_for_func=False)[0]
     assert checkodesol(eq20, f(x), sol20, order=1, solve_for_func=False)[0]
     assert checkodesol(eq21, f(x), sol21, order=1, solve_for_func=False)[0]
