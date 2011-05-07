@@ -2002,12 +2002,12 @@ def test_pretty_Boolean():
     assert  pretty(expr) == "Not(x)"
     assert upretty(expr) == u"¬ x"
 
-    expr = And(x, y, evalute=False)
+    expr = And(x, y)
 
     assert  pretty(expr) == "And(x, y)"
     assert upretty(expr) == u"x ∧ y"
 
-    expr = Or(x, y, evalute=False)
+    expr = Or(x, y)
 
     assert  pretty(expr) == "Or(x, y)"
     assert upretty(expr) == u"x ∨ y"

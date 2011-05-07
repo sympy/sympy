@@ -2317,8 +2317,8 @@ def evaluate_deltas(e):
     accepted_functions = (
             Add,
             )
-    if isinstance(e,accepted_functions):
-        return e.new(*[evaluate_deltas(arg) for arg in e.args])
+    if isinstance(e, accepted_functions):
+        return e.func(*[evaluate_deltas(arg) for arg in e.args])
 
     elif isinstance(e,Mul):
         # find all occurences of delta function and count each index present in

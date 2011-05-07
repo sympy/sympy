@@ -151,27 +151,6 @@ class Basic(AssumeMeths):
         return assumptions0
 
 
-    def new(self, *args):
-        """
-        Create new 'similar' object.
-
-        this is conceptually equivalent to:
-
-          type(self) (*args)
-
-        but takes type assumptions into account. See also: assumptions0
-
-        Example:
-
-        >>> from sympy.abc import x
-        >>> x.new("x")
-        x
-
-        """
-        obj = self.func(*args, **self.assumptions0)
-        return obj
-
-
     # NOTE NOTE NOTE
     # --------------
     #
@@ -1215,7 +1194,7 @@ class Basic(AssumeMeths):
         """
         if hints.get('deep', True):
             terms = [ term.doit(**hints) for term in self.args ]
-            return self.new(*terms)
+            return self.func(*terms)
         else:
             return self
 
@@ -1224,7 +1203,7 @@ class Basic(AssumeMeths):
             return self
         sargs = self.args
         terms = [ t._eval_rewrite(pattern, rule, **hints) for t in sargs ]
-        return self.new(*terms)
+        return self.func(*terms)
 
     def rewrite(self, *args, **hints):
         """Rewrites expression containing applications of functions

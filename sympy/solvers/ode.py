@@ -1368,9 +1368,9 @@ def constantsimp(expr, independentsymbol, endnumber, startnumber=1,
             else:
                 newfuncargs = [constantsimp(t, x, endnumber, startnumber,
                 symbolname) for t in expr.args]
-                return expr.new(*newfuncargs)
+                return expr.func(*newfuncargs)
         else:
-            newexpr = expr.new(*newargs)
+            newexpr = expr.func(*newargs)
             if reeval:
                 return constantsimp(newexpr, x, endnumber, startnumber,
                 symbolname)
@@ -1438,7 +1438,7 @@ def constant_renumber(expr, symbolname, startnumber, endnumber):
             return newconst
         else:
             if expr.is_Function or expr.is_Pow:
-                return expr.new(*[_constant_renumber(x, symbolname, startnumber,
+                return expr.func(*[_constant_renumber(x, symbolname, startnumber,
                 endnumber) for x in expr.args])
             else:
                 sortedargs = list(expr.args)
@@ -1447,7 +1447,7 @@ def constant_renumber(expr, symbolname, startnumber, endnumber):
                 # the indexed value of C
                 C_1 = [(ci, S.One) for ci in constantsymbols]
                 sortedargs.sort(Basic._compare_pretty, key=lambda x: x.subs(C_1))
-                return expr.new(*[_constant_renumber(x, symbolname, startnumber,
+                return expr.func(*[_constant_renumber(x, symbolname, startnumber,
                 endnumber) for x in sortedargs])
 
 
