@@ -28,7 +28,7 @@ def test_bug1():
     assert e.subs(log(w),-x) == sqrt(5*x)
 
 def test_general_function():
-    nu = Function('nu', nargs=1)
+    nu = Function('nu')
     x = Symbol("x")
     y = Symbol("y")
 
@@ -44,17 +44,10 @@ def test_general_function():
     assert edxdx == diff(diff(nu(x), x), x)
     assert edxdy == 0
 
-def test_function_nargs():
-    f = Function('f')
-    x = Symbol('x')
-    assert f.nargs == None
-    assert f(x).nargs == 1
-    assert f(x, x, x, x).nargs == 4
-
 def test_derivative_subs_bug():
     x = Symbol("x y")
-    l = Function('l', nargs=1)
-    n = Function('n', nargs=1)
+    l = Function('l')
+    n = Function('n')
 
     e = diff(n(x), x)
     assert e.subs(n(x), l(x)) != e
@@ -73,7 +66,7 @@ def test_derivative_subs_self_bug():
 def test_derivative_linearity():
     x = Symbol("x")
     y = Symbol("y")
-    n = Function('n', nargs=1)
+    n = Function('n')
 
     assert diff(-n(x), x) == -diff(n(x), x)
     assert diff(8*n(x), x) == 8*diff(n(x), x)
