@@ -38,7 +38,7 @@ class ReprPrinter(Printer):
         return "Add(%s)"%", ".join(args)
 
     def _print_Function(self, expr):
-        r = '%s(%r)' % (expr.func.__base__.__name__, expr.func.__name__)
+        r = self._print(expr.func)
         r+= '(%s)' % ', '.join([self._print(a) for a in expr.args])
         return r
 

@@ -70,13 +70,6 @@ class FunctionClass(BasicMeta):
     def __contains__(self, obj):
         return (self == obj)
 
-class UndefinedFunction(FunctionClass):
-    """
-    The (meta)class of undefined functions.
-    """
-    def __new__(mcl, name):
-        return BasicMeta.__new__(mcl, name, (Function,), {})
-
 class Application(Basic):
     """
     Base class for applied functions.
@@ -120,10 +113,6 @@ class Application(Basic):
         if evaluated is not None:
             return evaluated
 
-        if isinstance(cls, UndefinedFunction):
-            r = super(Application, cls).__new__(cls, *args, **options)
-            r.nargs = len(args)
-            return r
         r = super(Application, cls).__new__(cls, *args, **options)
         if any([cls._should_evalf(a) for a in args]):
             return r.evalf()
@@ -545,6 +534,25 @@ functions are not supported.')
         """
         x = sympify(x)
         return cls(x).diff(x, n).subs(x, 0) * x**n / C.Factorial(n)
+
+
+class AppliedUndef(Function):
+    """
+    Base class for expressions resulting from the application of an undefined function.
+    """
+    def __new__(cls, *args, **options):
+        args = map(sympify, args)
+        result = Expr.__new__(cls, *args, **options)
+        result.nargs = len(args)
+        return result
+
+class UndefinedFunction(FunctionClass):
+    """
+    The (meta)class of undefined functions.
+    """
+    def __new__(mcl, name):
+        return BasicMeta.__new__(mcl, name, (AppliedUndef,), {})
+
 
 class WildFunction(Function, AtomicExpr):
     """
