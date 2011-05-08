@@ -471,6 +471,15 @@ def test_polygon():
     assert p2.circumcircle == Circle(Point(0, 0), 5)
     assert p2.incircle == Circle(Point(0, 0), p2.apothem)
     assert p1.is_convex()
+    assert p1.rotation == 0
+    p1.spin(pi/3)
+    assert p1.rotation == pi/3
+    assert p1[0] == Point(5, 5*sqrt(3))
+    # while spin works in place (notice that rotation is 2pi/3 below)
+    # rotate returns a new object
+    p1_old = p1
+    assert p1.rotate(pi/3) == RegularPolygon(Point(0, 0), 10, 5, 2*pi/3)
+    assert p1 == p1_old
 
     #
     # Angles

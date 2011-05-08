@@ -62,7 +62,7 @@ class Polygon(GeometryEntity):
     Examples
     --------
     >>> from sympy import Point, Polygon, pi
-    >>> p1, p2, p3, p4, p5 = map(Point, [(0, 0), (1, 0), (5, 1), (0, 1), (3, 0)])
+    >>> p1, p2, p3, p4, p5 = [(0, 0), (1, 0), (5, 1), (0, 1), (3, 0)]
     >>> Polygon(p1, p2, p3, p4)
     Polygon(Point(0, 0), Point(1, 0), Point(5, 1), Point(0, 1))
     >>> Polygon(p1, p2)
@@ -85,7 +85,8 @@ class Polygon(GeometryEntity):
     Polygon then a RegularPolygon is created and the other arguments are
     interpreted as center, radius and rotation. The unrotated RegularPolygon
     will always have a vertex at Point(r, 0) where `r` is the radius of the
-    circle that circumscribes the RegularPolygon.
+    circle that circumscribes the RegularPolygon. Its method `spin` can be
+    used to increment that angle.
 
     >>> p = Polygon((0,0), 1, n=3)
     >>> p
@@ -96,7 +97,7 @@ class Polygon(GeometryEntity):
     Point(1, 0)
     >>> p.args[0]
     Point(0, 0)
-    >>> p.rotate(pi/2)
+    >>> p.spin(pi/2)
     >>> p[0]
     Point(0, 1)
 
@@ -876,6 +877,7 @@ class RegularPolygon(Polygon):
     vertices
     center
     radius
+    rotation
     apothem
     interior_angle
     exterior_angle
@@ -939,7 +941,7 @@ class RegularPolygon(Polygon):
 
     @property
     def center(self):
-        """The center of the regular polygon
+        """The center of the RegularPolygon
 
         This is also the center of the circumscribing circle.
 
@@ -968,7 +970,7 @@ class RegularPolygon(Polygon):
 
     @property
     def radius(self):
-        """Radius of the regular polygon
+        """Radius of the RegularPolygon
 
         This is also the radius of the circumscribing circle.
 
@@ -995,7 +997,7 @@ class RegularPolygon(Polygon):
 
     @property
     def rotation(self):
-        """CCW angle by which regular polygon is rotated
+        """CCW angle by which the RegularPolygon is rotated
 
         Returns
         -------
@@ -1013,7 +1015,7 @@ class RegularPolygon(Polygon):
 
     @property
     def apothem(self):
-        """The inradius of the regular polygon.
+        """The inradius of the RegularPolygon.
 
         The apothem/inradius is the radius of the inscribed circle.
 
@@ -1076,7 +1078,7 @@ class RegularPolygon(Polygon):
 
     @property
     def circumcircle(self):
-        """The circumcircle of the regular polygon.
+        """The circumcircle of the RegularPolygon.
 
         Returns
         -------
@@ -1098,7 +1100,7 @@ class RegularPolygon(Polygon):
 
     @property
     def incircle(self):
-        """The incircle of the regular polygon.
+        """The incircle of the RegularPolygon.
 
         Returns
         -------
@@ -1172,25 +1174,44 @@ class RegularPolygon(Polygon):
         elif d < self.inradius:
             return True
         else:
-            # now enumerate the regular polygon like a general polygon.
+            # now enumerate the RegularPolygon like a general polygon.
             return Polygon.encloses_point(self, p)
 
-    def rotate(self, angle):
-        """Rotate the virtual Polygon
+    def spin(self, angle):
+        """Increment *in place* the virtual Polygon's rotation by ccw angle.
+
+        See also: rotate method which moves the center.
+
         >>> from sympy import Polygon, Point, pi
         >>> r = Polygon(Point(0,0), 1, n=3)
         >>> r[0]
         Point(1, 0)
-        >>> r.rotate(pi/6)
+        >>> r.spin(pi/6)
         >>> r[0]
         Point(3**(1/2)/2, 1/2)
 
         """
         self._rot += angle
 
+    def rotate(self, angle, pt=None):
+        """Override GeometryEntity.rotate to first rotate the RegularPolygon
+        about its center.
+
+        >>> from sympy import Point, RegularPolygon, Polygon, pi
+        >>> t = RegularPolygon(Point(1, 0), 1, 3)
+        >>> t[0] # vertex on x-axis
+        Point(2, 0)
+        >>> t.rotate(pi/2).vertices[0] # vertex on y axis now
+        Point(0, 2)
+        """
+
+        r = type(self)(*self.args) # need a copy or else changes are in-place
+        r._rot += angle
+        return GeometryEntity.rotate(r, angle, pt)
+
     @property
     def vertices(self):
-        """The vertices of the regular polygon.
+        """The vertices of the RegularPolygon.
 
         Returns
         -------
