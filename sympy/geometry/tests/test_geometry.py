@@ -44,10 +44,11 @@ def test_point():
     assert Point.midpoint(p3, p4) == Point(half, half)
     assert Point.midpoint(p1, p4) == Point(half + half*x1, half + half*x2)
     assert Point.midpoint(p2, p2) == p2
+    assert p2.midpoint(p2) == p2
 
     assert Point.distance(p3, p4) == sqrt(2)
     assert Point.distance(p1, p1) == 0
-    #assert Point.distance(p3, p2) == abs(p2)
+    assert Point.distance(p3, p2) == sqrt(p2.x**2 + p2.y**2)
 
     p1_1 = Point(x1, x1)
     p1_2 = Point(y2, y2)
@@ -260,6 +261,18 @@ def test_ellipse():
     assert c1.area == e1.area
     assert c1.circumference == e1.circumference
     assert e3.circumference == 2*pi*y1
+
+    # with generic symbols, the hradius is assumed to contain the major radius
+    M = Symbol('M')
+    m = Symbol('m')
+    assert Ellipse(p1, M, m).circumference == \
+        4*M*C.Integral(sqrt((1 - x**2*(M**2 - m**2)/M**2)/(1 - x**2)), (x, 0, 1))
+    # but you can help it with assumptions
+    M = Symbol('M', positive=True)
+    m = Symbol('m', negative=True)
+    Ellipse(p1, m, M).circumference == Ellipse((0, 0), M, m) == \
+       4*M*C.Integral(sqrt((1 - x**2*(M**2 - m**2)/M**2)/(1 - x**2)), (x, 0, 1))
+
     assert e2.arbitrary_point() in e2
 
     # Foci
@@ -371,7 +384,21 @@ def test_ellipse_intersection_fail():
     e2 = Ellipse(Point(2, 1), 4, 8)
     assert e1.intersection(e2) # when this no longer fails, supply the answer
 
-@XFAIL
+    # encloses_point
+    e = Ellipse((0, 0), 1, 2)
+    assert e.encloses_point(e.center)
+    assert e.encloses_point(e.center + Point(0, e.vradius - Rational(1, 10)))
+    assert e.encloses_point(e.center + Point(e.hradius - Rational(1, 10), 0))
+    assert e.encloses_point(e.center + Point(e.hradius, 0)) is False
+    assert e.encloses_point(e.center + Point(e.hradius + Rational(1, 10), 0)) is False
+    e = Ellipse((0, 0), 2, 1)
+    assert e.encloses_point(e.center)
+    assert e.encloses_point(e.center + Point(0, e.vradius - Rational(1, 10)))
+    assert e.encloses_point(e.center + Point(e.hradius - Rational(1, 10), 0))
+    assert e.encloses_point(e.center + Point(e.hradius, 0)) is False
+    assert e.encloses_point(e.center + Point(e.hradius + Rational(1, 10), 0)) is False
+
+
 def test_ellipse_random_point():
     e3 = Ellipse(Point(0, 0), y1, y1)
     for ind in xrange(0, 5):

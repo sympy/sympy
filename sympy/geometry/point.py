@@ -215,14 +215,12 @@ class Point(GeometryEntity):
         return True
         """
 
-    @staticmethod
-    def distance(p1, p2):
-        """The Euclidean distance between two points.
+    def distance(self, p):
+        """The Euclidean distance from self to point p.
 
         Parameters
         ----------
-        p1 : Point
-        p2 : Point
+        p : Point
 
         Returns
         -------
@@ -232,25 +230,23 @@ class Point(GeometryEntity):
         --------
         >>> from sympy.geometry import Point
         >>> p1, p2 = Point(1, 1), Point(4, 5)
-        >>> Point.distance(p1, p2)
+        >>> p1.distance(p2)
         5
 
         >>> from sympy.abc import x, y
         >>> p3 = Point(x, y)
-        >>> Point.distance(Point(0, 0), p3)
+        >>> p3.distance(Point(0, 0))
         (x**2 + y**2)**(1/2)
 
         """
-        return sqrt(sum([(a - b)**2 for a, b in zip(p1, p2)]))
+        return sqrt(sum([(a - b)**2 for a, b in zip(self, p)]))
 
-    @staticmethod
-    def midpoint(p1, p2):
-        """The midpoint between points p1 and p2.
+    def midpoint(self, p):
+        """The midpoint between self and point p.
 
         Parameters
         ----------
-        p1 : Point
-        p2 : Point
+        p : Point
 
         Returns
         -------
@@ -260,11 +256,11 @@ class Point(GeometryEntity):
         --------
         >>> from sympy.geometry import Point
         >>> p1, p2 = Point(1, 1), Point(13, 5)
-        >>> Point.midpoint(p1, p2)
+        >>> p1.midpoint(p2)
         Point(7, 3)
 
         """
-        return Point([simplify((a + b)*S.Half) for a, b in zip(p1, p2)])
+        return Point([simplify((a + b)*S.Half) for a, b in zip(self, p)])
 
     def evalf(self):
         """Evaluate the coordinates of the point.

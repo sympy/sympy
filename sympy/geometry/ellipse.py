@@ -62,8 +62,11 @@ class Ellipse(GeometryEntity):
     Constructed from a center and two radii, the first being the horizontal
     radius (along the x-axis) and the second being the vertical radius (along
     the y-axis).
-    Rotation is currently not supported since an ellipse is defined
-    on horizontal/vertical radii
+
+    When symbolic value for hradius and vradius are used, any calculation that
+    refers to the foci or the major or minor axis will assume that the ellipse
+    has its major radius on the x-axis. If this is not true then a manual
+    rotation is necessary.
 
     Examples
     --------
@@ -96,6 +99,7 @@ class Ellipse(GeometryEntity):
                 **kwargs):
         hradius = sympify(hradius)
         vradius = sympify(vradius)
+
         eccentricity = sympify(eccentricity)
 
         if center is None:
@@ -115,6 +119,7 @@ class Ellipse(GeometryEntity):
 
         if hradius == vradius:
             return Circle(center, hradius, **kwargs)
+
         return GeometryEntity.__new__(cls, center, hradius, vradius, **kwargs)
 
     @property
@@ -176,41 +181,72 @@ class Ellipse(GeometryEntity):
 
     @property
     def minor(self):
-        """The shorter axis of the ellipse.
+        """Shorter axis of the ellipse (if it can be determined) else vradius.
 
         Returns
         -------
-        minor : number
+        minor : number or expression
 
         Examples
         --------
-        >>> from sympy import Point, Ellipse
+        >>> from sympy import Point, Ellipse, Symbol
         >>> p1 = Point(0, 0)
         >>> e1 = Ellipse(p1, 3, 1)
         >>> e1.minor
         1
 
+        >>> a = Symbol('a')
+        >>> b = Symbol('b')
+        >>> Ellipse(p1, a, b).minor
+        b
+        >>> Ellipse(p1, b, a).minor
+        a
+
+        >>> m = Symbol('m', negative=True) # assumption to indicate smaller
+        >>> M = Symbol('M', positive=True) # assumption to indicate bigger
+        >>> Ellipse(p1, m, M).minor
+        m
+
         """
-        return Min(*self[1:3])
+        rv = Min(*self[1:3])
+        if rv.func is Min:
+            return self.vradius
+        return rv
 
     @property
     def major(self):
-        """The longer axis of the ellipse.
+        """Longer axis of the ellipse (if it can be determined) else hradius.
 
         Returns
         -------
-        major : number
+        major : number or expression
 
         Examples
         --------
-        >>> from sympy import Point, Ellipse
+        >>> from sympy import Point, Ellipse, Symbol
         >>> p1 = Point(0, 0)
         >>> e1 = Ellipse(p1, 3, 1)
         >>> e1.major
         3
 
+        >>> a = Symbol('a')
+        >>> b = Symbol('b')
+        >>> Ellipse(p1, a, b).major
+        a
+        >>> Ellipse(p1, b, a).major
+        b
+
+        >>> m = Symbol('m', negative=True) # assumption to indicate smaller
+        >>> M = Symbol('M', positive=True) # assumption to indicate bigger
+        >>> Ellipse(p1, m, M).major
+        M
+
         """
-        return Max(*self[1:3])
+        rv = Max(*self[1:3])
+        if rv.func is Max:
+            return self.hradius
+        return rv
+
 
     @property
     def area(self):
@@ -340,12 +376,12 @@ class Ellipse(GeometryEntity):
 
         Notes
         -----
-        The foci can only be calculated if the radii are numerical.
+        The foci can only be calculated if the major/minor axes are known.
 
         Raises
         ------
         ValueError
-            When the radii aren't numerical
+            When the major and minor axis cannot be determined.
 
         See Also
         --------
@@ -361,17 +397,19 @@ class Ellipse(GeometryEntity):
 
         """
         c = self.center
-        if self.hradius == self.vradius:
+        hr, vr = self.hradius, self.vradius
+        if hr == vr:
             return (c, c)
 
-        hr, vr = self.minor, self.major
 
         # calculate focus distance manually, since focus_distance calls this routine
-        h = sqrt(vr**2 - hr**2)
-        if hr > vr:
-            return (c + Point(0, -h), c + Point(0, h))
-        else:
-            return (c + Point(-h, 0), c + Point(h, 0))
+        fd = sqrt(self.major**2 - self.minor**2)
+        if hr == self.minor:
+            # foci on the y-axis
+            return (c + Point(0, -fd), c + Point(0, fd))
+        elif hr == self.major:
+            # foci on the x-axis
+            return (c + Point(-fd, 0), c + Point(fd, 0))
 
     def encloses_point(self, p):
         """
@@ -406,12 +444,15 @@ class Ellipse(GeometryEntity):
             return False
 
         if len(self.foci) == 2:
-            f1, f2 = self.foci
-            test = (2*self.major -
-                    Point.distance(f1, p) -
-                    Point.distance(f2, p))
+            # if the combined distance from the foci to p (h1 + h2) is less
+            # than the combined distance from the foci to the minor axis
+            # (which is the same as the major axis length) then p is inside
+            # the ellipse
+            h1, h2 = [f.distance(p) for f in self.foci]
+            f = self.focus_distance
+            test = 2*self.major - (h1 + h2)
         else:
-            test = self.radius - Point.distance(self.center, p)
+            test = self.radius - self.center.distance(p)
 
         return fuzzy_bool(test.is_positive)
 
