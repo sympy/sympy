@@ -24,10 +24,23 @@ class PythonRationalType(object):
     __slots__ = ['p', 'q']
 
     def __init__(self, p, q=None):
+        if isinstance(p,basestring):
+            a = p.split('/')
+            if len(a) == 2:
+                p = PythonRationalType(int(a[0]),int(a[1]))
+            else:
+                p = int(p)
         if q is None:
-            self.p = p
-            self.q = 1
+            if isinstance(p,PythonRationalType):
+                self.p = p.p
+                self.q = p.q
+            else:
+                self.p = p
+                self.q = 1
         else:
+            if  isinstance(p,PythonRationalType):
+                p = p.p
+                q = p.q*q
             if not q:
                 raise ZeroDivisionError('rational number')
             elif q < 0:
@@ -55,6 +68,8 @@ class PythonRationalType(object):
         return "%s(%d, %d)" % (self.__class__.__name__, self.p, self.q)
 
     def __str__(self):
+        if self.q == 1:
+            return "%d" %(self.p)
         return "%d/%d" % (self.p, self.q)
 
     def __int__(self):
@@ -123,7 +138,6 @@ class PythonRationalType(object):
             q = self.q
         else:
             return NotImplemented
-
         return self.__class__(p, q)
 
     def __rmul__(self, other):
