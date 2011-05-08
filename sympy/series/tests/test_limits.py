@@ -262,3 +262,23 @@ def test_issue835():
 
 def test_newissue():
     assert limit(exp(1/sin(x))/exp(cot(x)), x, 0) == 1
+
+def test_extended_real_line():
+    assert limit(x - oo, x, oo) == -oo
+    assert limit(oo - x, x, -oo) == oo
+    assert limit(x**2/(x-5) - oo, x, oo) == -oo
+    assert limit(1/(x+sin(x)) - oo, x, 0) == -oo
+    assert limit(x - oo + 1/x, x, oo) == -oo
+    assert limit(x - oo + 1/x, x, 0) == -oo
+    assert limit(oo/x, x, oo) == oo
+
+@XFAIL
+def test_order_oo():
+    from sympy import C
+    x = Symbol('x', positive=True, bounded=True)
+    assert C.Order(x)*oo != C.Order(1, x)
+    assert limit(oo/(x**2 - 4), x, oo) == oo
+
+def test_issue2337():
+    raises(NotImplementedError, 'limit(exp(x*y), x, oo)')
+    raises(NotImplementedError, 'limit(exp(-x*y), x, oo)')

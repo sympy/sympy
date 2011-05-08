@@ -135,15 +135,6 @@ class Piecewise(Function):
         if len(non_false_ecpairs) != len(args) or piecewise_again:
             return Piecewise(*non_false_ecpairs)
 
-        # Count number of arguments.
-        nargs = 0
-        for expr, cond in args:
-            if hasattr(expr, 'nargs'):
-                nargs = max(nargs, expr.nargs)
-            elif hasattr(expr, 'args'):
-                nargs = max(nargs, len(expr.args))
-        if nargs:
-            cls.narg = nargs
         return None
 
     def doit(self, **hints):
