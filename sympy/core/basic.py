@@ -1,7 +1,7 @@
 """Base class for all the objects in SymPy"""
 
 from decorators import _sympifyit
-from assumptions import WithAssumptions, make__get_assumption, _assume_defined
+from assumptions import WithAssumptions
 from cache import cacheit
 from core import BasicType, C
 from sympify import _sympify, sympify, SympifyError
@@ -85,20 +85,6 @@ class Basic(object):
         obj._args = args  # all items in args must be Basic objects
         return obj
 
-    # NOTE NOTE NOTE
-    # --------------
-    #
-    # new-style classes + __getattr__ is *very* slow!
-
-    # def __getattr__(self, name):
-    #     raise Warning('no way, *all* attribute access will be 2.5x slower')
-
-    # here is what we do instead:
-    for k in _assume_defined:
-        exec "is_%s  = property(make__get_assumption('Basic', '%s'))" % (k,k)
-    del k
-
-    # NB: there is no need in protective __setattr__
 
     def __getnewargs__(self):
         """ Pickling support.

@@ -127,6 +127,11 @@ class WithAssumptions(BasicMeta):
     def __init__(cls, *args, **kws):
         BasicMeta.__init__(cls, *args, **kws)
 
+        for k in _assume_defined:
+            attrname = 'is_%s' % k
+            if not hasattr(cls, attrname):
+                setattr(cls, attrname, property(make__get_assumption('Basic', k)))
+
         # initialize default_assumptions dictionary
         default_assumptions = {}
 
