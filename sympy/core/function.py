@@ -70,15 +70,6 @@ class FunctionClass(BasicMeta):
     def __contains__(self, obj):
         return (self == obj)
 
-class UndefinedFunction(FunctionClass):
-    """
-    The (meta)class of undefined functions.
-    """
-    def __new__(mcl, name):
-        attrdict = {'undefined_Function': True}
-        bases = (Function,)
-        return BasicMeta.__new__(mcl, name, bases, attrdict)
-
 class Application(Basic):
     """
     Base class for applied functions.
@@ -93,43 +84,20 @@ class Application(Basic):
 
     nargs = None
 
-    @classmethod
-    def _should_evalf(cls, arg):
-        """
-        Decide if the function should automatically evalf().
-        By default (in this implementation), this happens if (and only if) the
-        ARG is a floating point number.
-        This function is used by __new__.
-        """
-        if arg.is_Real:
-            return True
-        if not arg.is_Add:
-            return False
-        re, im = arg.as_real_imag()
-        return re.is_Real or im.is_Real
-
     @cacheit
     def __new__(cls, *args, **options):
         args = map(sympify, args)
+
         # these lines should be refactored
         for opt in ["nargs", "dummy", "comparable", "noncommutative", "commutative"]:
             if opt in options:
                 del options[opt]
-        # up to here.
-        if not options.pop('evaluate', True):
-            return super(Application, cls).__new__(cls, *args, **options)
-        evaluated = cls.eval(*args)
-        if evaluated is not None:
-            return evaluated
-        # Just undefined functions have nargs == None
-        if not cls.nargs and hasattr(cls, 'undefined_Function'):
-            r = super(Application, cls).__new__(cls, *args, **options)
-            r.nargs = len(args)
-            return r
-        r = super(Application, cls).__new__(cls, *args, **options)
-        if any([cls._should_evalf(a) for a in args]):
-            return r.evalf()
-        return r
+
+        if options.pop('evaluate', True):
+            evaluated = cls.eval(*args)
+            if evaluated is not None:
+                return evaluated
+        return super(Application, cls).__new__(cls, *args, **options)
 
     @classmethod
     def eval(cls, *args):
@@ -168,10 +136,9 @@ class Application(Basic):
             return new
         elif old.is_Function and new.is_Function:
             if old == self.func:
-                if self.nargs == new.nargs or not new.nargs:
-                    return new(*self.args)
-                # Written down as an elif to avoid a super-long line
-                elif isinstance(new.nargs, tuple) and self.nargs in new.nargs:
+                nargs = len(self.args)
+                if (nargs == new.nargs or new.nargs is None or
+                        (isinstance(new.nargs, tuple) and nargs in new.nargs)):
                     return new(*self.args)
         return self.func(*[s.subs(old, new) for s in self.args])
 
@@ -190,24 +157,36 @@ class Function(Application, Expr):
 
     @cacheit
     def __new__(cls, *args, **options):
-        # NOTE: this __new__ is twofold:
-        #
-        # 1 -- it can create another *class*, which can then be instantiated by
-        #      itself e.g. Function('f') creates a new class f(Function)
-        #
-        # 2 -- on the other hand, we instantiate -- that is we create an
-        #      *instance* of a class created earlier in 1.
-
-        # (1) create new function class
-        #     UC: Function('f')
+        # Handle calls like Function('f')
         if cls is Function:
             return UndefinedFunction(*args)
 
-        # (2) create new instance of a class created in (1)
-        #     UC: Function('f')(x)
-        #     UC: sin(x)
-        return Application.__new__(cls, *args, **options)
+        args = map(sympify, args)
+        evaluate = options.pop('evaluate', True)
+        if evaluate:
+            evaluated = cls.eval(*args)
+            if evaluated is not None:
+                return evaluated
+        result = super(Application, cls).__new__(cls, *args, **options)
+        if evaluate and any([cls._should_evalf(a) for a in args]):
+            return result.evalf()
+        return result
 
+    @classmethod
+    def _should_evalf(cls, arg):
+        """
+        Decide if the function should automatically evalf().
+
+        By default (in this implementation), this happens if (and only if) the
+        ARG is a floating point number.
+        This function is used by __new__.
+        """
+        if arg.is_Real:
+            return True
+        if not arg.is_Add:
+            return False
+        re, im = arg.as_real_imag()
+        return re.is_Real or im.is_Real
 
     @property
     def is_commutative(self):
@@ -547,6 +526,25 @@ functions are not supported.')
         """
         x = sympify(x)
         return cls(x).diff(x, n).subs(x, 0) * x**n / C.Factorial(n)
+
+
+class AppliedUndef(Function):
+    """
+    Base class for expressions resulting from the application of an undefined function.
+    """
+    def __new__(cls, *args, **options):
+        args = map(sympify, args)
+        result = Expr.__new__(cls, *args, **options)
+        result.nargs = len(args)
+        return result
+
+class UndefinedFunction(FunctionClass):
+    """
+    The (meta)class of undefined functions.
+    """
+    def __new__(mcl, name):
+        return BasicMeta.__new__(mcl, name, (AppliedUndef,), {})
+
 
 class WildFunction(Function, AtomicExpr):
     """
