@@ -112,6 +112,9 @@ def make__get_assumption(classname, name):
     getit.func_name = '%s__is_%s' % (classname, name)
     return getit
 
+def as_property(fact):
+    """Convert a fact name to the name of the corresponding property"""
+    return 'is_%s' % fact
 
 class WithAssumptions(BasicMeta):
     """Metaclass for classes with old-style assumptions"""
@@ -127,80 +130,51 @@ class WithAssumptions(BasicMeta):
     def __init__(cls, *args, **kws):
         BasicMeta.__init__(cls, *args, **kws)
 
+        cls_premises = {}
         for k in _assume_defined:
-            attrname = 'is_%s' % k
-            if not hasattr(cls, attrname):
-                setattr(cls, attrname, property(make__get_assumption('Basic', k)))
-
-        # initialize default_assumptions dictionary
-        default_assumptions = {}
-
-        for k,v in cls.__dict__.iteritems():
-            if not k.startswith('is_'):
-                continue
-
-            # this is not an assumption (e.g. is_Integer)
-            if k[3:] not in _assume_defined:
-                continue
-
-            k = k[3:]
-            if isinstance(v,(bool,int,long,type(None))):
+            attrname = as_property(k)
+            v = cls.__dict__.get(attrname, '')
+            if isinstance(v, (bool, int, long, type(None))):
                 if v is not None:
                     v = bool(v)
-                default_assumptions[k] = v
+                cls_premises[k] = v
 
-        # XXX maybe we should try to keep ._default_premises out of class ?
-        # XXX __slots__ in class ?
-        cls._default_premises = default_assumptions
-
-        for base in cls.__bases__:
+        cls._default_premises = {}
+        for base in reversed(cls.__bases__):
             try:
-                base_premises = base._default_premises
+                cls._default_premises.update(base._default_premises)
             except AttributeError:
-                continue    # no ._default_premises is ok
-
-            for k,v in base_premises.iteritems():
-
-                # if an assumption is already present in child, we should ignore base
-                # e.g. Integer.is_integer=T, but Rational.is_integer=F (for speed)
-                if k in default_assumptions:
-                    continue
-
-                default_assumptions[k] = v
+                pass
+        cls._default_premises.update(cls_premises)
 
         # deduce all consequences from default assumptions -- make it complete
-        xass = _assume_rules.deduce_all_facts(default_assumptions)
+        default_assumptions = _assume_rules.deduce_all_facts(cls._default_premises)
 
         # and store completed set into cls -- this way we'll avoid rededucing
         # extensions of class default assumptions each time on instance
         # creation -- we keep it prededuced already.
-        cls.default_assumptions = xass
-
-        # first we need to collect derived premises
-        derived_premises = {}
-        for k,v in xass.iteritems():
-            if k not in default_assumptions:
-                derived_premises[k] = v
-        cls._derived_premises = derived_premises
-
-        for k,v in xass.iteritems():
-            assert v == cls.__dict__.get('is_'+k, v),  (cls,k,v)
-            # NOTE: this way Integer.is_even = False (inherited from Rational)
-            # NOTE: the next code blocks add 'protection-properties' to overcome this
-            setattr(cls, 'is_'+k, v)
+        for k, v in default_assumptions.iteritems():
+            setattr(cls, as_property(k), v)
+        cls.default_assumptions = default_assumptions
 
         # protection e.g. for Initeger.is_even=F <- (Rational.is_integer=F)
+        base_derived_premises = set()
         for base in cls.__bases__:
             try:
-                base_derived_premises = base._derived_premises
+                base_derived_premises |= (set(base.default_assumptions) -
+                                                set(base._default_premises))
             except AttributeError:
-                continue    # no ._derived_premises is ok
+                continue        #not an assumption-aware class
 
-            for k,v in base_derived_premises.iteritems():
-                if ('is_'+k) not in cls.__dict__:
-                    is_k = make__get_assumption(cls.__name__, k)
-                    setattr(cls, 'is_'+k, property(is_k))
+        for k in base_derived_premises:
+            if as_property(k) not in cls.__dict__:
+                is_k = make__get_assumption(cls.__name__, k)
+                setattr(cls, as_property(k), property(is_k))
 
+        for k in _assume_defined:
+            attrname = as_property(k)
+            if not hasattr(cls, attrname):
+                setattr(cls, attrname, property(make__get_assumption(cls.__name__, k)))
 
 class AssumeMixin(object):
     """ Define default assumption methods.
