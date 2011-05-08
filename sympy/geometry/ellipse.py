@@ -823,29 +823,6 @@ class Ellipse(GeometryEntity):
 
         return o.intersection(self)
 
-    def distance_to_center(self, t):
-        """The distance from an point on the ellipse to the center.
-
-        Parameters
-        ----------
-        t : number
-            Parameter in range [0, 2*pi)
-
-        Examples
-        --------
-        >>> from sympy import Point, Ellipse, S
-        >>> e1 = Ellipse(Point(0, 0), 3, 2)
-        >>> # horizontal distance to center
-        >>> e1.distance_to_center(0)
-        3
-        >>> # vertical distance to center
-        >>> e1.distance_to_center(S.Pi/2)
-        2
-
-        """
-        seg = Point.distance(self.center, self.arbitrary_point())
-
-        return seg.subs('t', t)
 
     def __eq__(self, o):
         """Is the other GeometryEntity the same as this ellipse?"""
