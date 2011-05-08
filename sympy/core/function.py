@@ -75,9 +75,7 @@ class UndefinedFunction(FunctionClass):
     The (meta)class of undefined functions.
     """
     def __new__(mcl, name):
-        attrdict = {'undefined_Function': True}
-        bases = (Function,)
-        return BasicMeta.__new__(mcl, name, bases, attrdict)
+        return BasicMeta.__new__(mcl, name, (Function,), {})
 
 class Application(Basic):
     """
@@ -121,8 +119,8 @@ class Application(Basic):
         evaluated = cls.eval(*args)
         if evaluated is not None:
             return evaluated
-        # Just undefined functions have nargs == None
-        if not cls.nargs and hasattr(cls, 'undefined_Function'):
+
+        if isinstance(cls, UndefinedFunction):
             r = super(Application, cls).__new__(cls, *args, **options)
             r.nargs = len(args)
             return r
