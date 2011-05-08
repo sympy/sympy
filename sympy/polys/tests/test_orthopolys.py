@@ -11,7 +11,7 @@ from sympy.polys.orthopolys import (
     laguerre_poly,
 )
 
-from sympy.abc import x
+from sympy.abc import x, a
 
 def test_chebyshevt_poly():
     raises(ValueError, "chebyshevt_poly(-1, x)")
@@ -78,3 +78,7 @@ def test_laguerre_poly():
     assert laguerre_poly(5, x) == -Q(1,120)*x**5 + Q(25,120)*x**4 - Q(200,120)*x**3 + Q(600,120)*x**2 - Q(600,120)*x + 1
     assert laguerre_poly(6, x) == Q(1,720)*x**6 - Q(36,720)*x**5 + Q(450,720)*x**4 - Q(2400,720)*x**3 + Q(5400,720)*x**2 - Q(4320,720)*x + 1
 
+    assert laguerre_poly(0, x, a) == 1
+    assert laguerre_poly(1, x, a) == -x + a + 1
+    assert laguerre_poly(2, x, a) == x**2/2 + (-a - 2)*x + a**2/2 + 3*a/2 + 1
+    assert laguerre_poly(3, x, a) == -x**3/6 + (a/2 + Q(3)/2)*x**2 + (-a**2/2 - 5*a/2 - 3)*x + a**3/6 + a**2 + 11*a/6 + 1
