@@ -84,34 +84,6 @@ class CycleDetected(Exception):
     """
     pass
 
-
-def make__get_assumption(classname, name):
-    """Cooks function which will get named assumption
-
-       e.g.
-
-       class C:
-
-           is_xxx = make__get_assumption('C', 'xxx')
-           is_yyy = property( make__get_assumption('C', 'yyy'))
-
-
-       then
-
-       c = C()
-
-       c.is_xxx()   # note braces -- it's a function call
-       c.is_yyy     # no braces   -- it's a property
-    """
-    def getit(self):
-        try:
-            return self._assumptions[name]
-        except KeyError:
-            return self._what_known_about(name)
-
-    getit.func_name = '%s__is_%s' % (classname, name)
-    return getit
-
 def as_property(fact):
     """Convert a fact name to the name of the corresponding property"""
     return 'is_%s' % fact
@@ -166,15 +138,26 @@ class WithAssumptions(BasicMeta):
             except AttributeError:
                 continue        #not an assumption-aware class
 
-        for k in base_derived_premises:
-            if as_property(k) not in cls.__dict__:
-                is_k = make__get_assumption(cls.__name__, k)
-                setattr(cls, as_property(k), property(is_k))
+        for fact in base_derived_premises:
+            if as_property(fact) not in cls.__dict__:
+                cls.add_property(fact)
 
-        for k in _assume_defined:
-            attrname = as_property(k)
-            if not hasattr(cls, attrname):
-                setattr(cls, attrname, property(make__get_assumption(cls.__name__, k)))
+        for fact in _assume_defined:
+            if not hasattr(cls, as_property(fact)):
+                cls.add_property(fact)
+
+    def add_property(cls, fact):
+        """Add to the class the automagic property corresponding to a fact."""
+
+        def getit(self):
+            try:
+                return self._assumptions[fact]
+            except KeyError:
+                return self._what_known_about(fact)
+
+        getit.func_name = '%s__is_%s' % (cls.__name__, fact)
+        setattr(cls, as_property(fact), property(getit))
+
 
 class AssumeMixin(object):
     """ Define default assumption methods.
