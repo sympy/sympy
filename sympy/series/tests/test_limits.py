@@ -282,3 +282,11 @@ def test_order_oo():
 def test_issue2337():
     raises(NotImplementedError, 'limit(exp(x*y), x, oo)')
     raises(NotImplementedError, 'limit(exp(-x*y), x, oo)')
+
+def test_issue2293():
+    from sympy.core.numbers import Integer, Rational
+    x = Symbol('x')
+    raises(ValueError, 'limit(x**2, 0, 0)')
+    raises(ValueError, 'limit(x**2 + x + 1, Rational(2, 3), 2)')
+    raises(ValueError, 'limit(x**2 + x + 1, Integer(4), 10)')
+

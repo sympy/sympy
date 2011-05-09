@@ -1,4 +1,4 @@
-from sympy.core import S, Add, sympify, Expr, PoleError, Mul, oo, C
+from sympy.core import S, Add, sympify, Expr, PoleError, Mul, oo, C, Symbol
 from gruntz import gruntz
 from sympy.functions import sign, tan, cot
 
@@ -37,11 +37,14 @@ def limit(e, z, z0, dir="+"):
     z = sympify(z)
     z0 = sympify(z0)
 
-    if e == z:
-        return z0
+    if not isinstance(z, Symbol):
+        raise ValueError("Invalid limit variable %s" %z)
 
     if e.is_Rational:
         return e
+
+    if e == z:
+        return z0
 
     if not e.has(z):
         return e
