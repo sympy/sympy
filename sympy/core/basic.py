@@ -1,14 +1,14 @@
 """Base class for all the objects in SymPy"""
 
 from decorators import _sympifyit
-from assumptions import AssumeMeths, make__get_assumption, _assume_defined
+from assumptions import WithAssumptions, make__get_assumption, _assume_defined
 from cache import cacheit
 from core import BasicType, C
 from sympify import _sympify, sympify, SympifyError
 from compatibility import callable, reduce, cmp, iterable
 from sympy.core.decorators import deprecated
 
-class Basic(AssumeMeths):
+class Basic(object):
     """
     Base class for all objects in sympy.
 
@@ -42,6 +42,7 @@ class Basic(AssumeMeths):
 
 
     """
+    __metaclass__ = WithAssumptions
     __slots__ = ['_mhash',              # hash value
                  '_args',               # arguments
                  '_assume_type_keys',   # assumptions typeinfo keys

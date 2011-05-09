@@ -117,6 +117,13 @@ class WithAssumptions(BasicMeta):
     """Metaclass for classes with old-style assumptions"""
     __metaclass__ = BasicMeta
 
+    def __new__(mcl, name, bases, attrdict):
+        if not any(issubclass(base, AssumeMixin) for base in bases):
+            bases = (AssumeMixin,) + bases
+            if '__slots__' in attrdict:
+                attrdict['__slots__'] += AssumeMixin._assume_slots
+        return super(WithAssumptions, mcl).__new__(mcl, name, bases, attrdict)
+
     def __init__(cls, *args, **kws):
         BasicMeta.__init__(cls, *args, **kws)
 
@@ -190,7 +197,7 @@ class WithAssumptions(BasicMeta):
                     setattr(cls, 'is_'+k, property(is_k))
 
 
-class AssumeMeths(object):
+class AssumeMixin(object):
     """ Define default assumption methods.
 
     AssumeMeths should be used to derive Basic class only.
@@ -251,11 +258,11 @@ class AssumeMeths(object):
 
         - None (if you don't know if the property is True or false)
     """
-    __metaclass__ = WithAssumptions
-    __slots__ = ['_assumptions',    # assumptions
+    _assume_slots = ['_assumptions',    # assumptions
                  '_a_inprogress',   # already-seen requests (when deducing
                                     # through prerequisites -- see CycleDetected)
                 ]
+    __slots__ = []
 
 
     def __getstate__(self, cls=None):
