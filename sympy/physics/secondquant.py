@@ -832,15 +832,16 @@ class FermionicOperator(SqOperator):
 
     def _sortkey(self):
         h = hash(self)
+        label = str(self.args[0])
 
         if self.is_only_q_creator:
-            return 1, h
+            return 1, label, h
         if self.is_only_q_annihilator:
-            return 4, h
+            return 4, label, h
         if isinstance(self, Annihilator):
-            return 3, h
+            return 3, label, h
         if isinstance(self, Creator):
-            return 2, h
+            return 2, label, h
 
 
 class AnnihilateFermion(FermionicOperator, Annihilator):
@@ -2043,12 +2044,11 @@ class NO(Expr):
         """
         Iterates over the annihilation operators.
 
-        >>> from sympy import symbols, Dummy
-        >>> i,j,k,l = symbols('i j k l', below_fermi=True)
-        >>> p,q,r,s = symbols('p q r s', cls=Dummy)
-        >>> a,b,c,d = symbols('a b c d', above_fermi=True)
+        >>> from sympy import symbols
+        >>> i, j = symbols('i j', below_fermi=True)
+        >>> a, b = symbols('a b', above_fermi=True)
         >>> from sympy.physics.secondquant import NO, F, Fd
-        >>> no = NO(Fd(a)*F(i)*Fd(j)*F(b))
+        >>> no = NO(Fd(a)*F(i)*F(b)*Fd(j))
 
         >>> no.iter_q_creators()
         <generator object... at 0x...>
@@ -2070,12 +2070,11 @@ class NO(Expr):
         """
         Iterates over the creation operators.
 
-        >>> from sympy import symbols, Dummy
-        >>> i,j,k,l = symbols('i j k l',below_fermi=True)
-        >>> p,q,r,s = symbols('p q r s', cls=Dummy)
-        >>> a,b,c,d = symbols('a b c d',above_fermi=True)
+        >>> from sympy import symbols
+        >>> i, j = symbols('i j',below_fermi=True)
+        >>> a, b = symbols('a b',above_fermi=True)
         >>> from sympy.physics.secondquant import NO, F, Fd
-        >>> no = NO(Fd(a)*F(i)*Fd(j)*F(b))
+        >>> no = NO(Fd(a)*F(i)*F(b)*Fd(j))
 
         >>> no.iter_q_creators()
         <generator object... at 0x...>
