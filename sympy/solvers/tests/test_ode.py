@@ -287,14 +287,14 @@ def test_separable1():
     sol2 = Eq(f(x), C1*x)
     sol3 = Eq(f(x), C1 + cos(x))
     sol4 = Eq(atan(f(x)), C1 + atan(x))
-    #sol5 = Eq(f(x), -2 + C1*sqrt(1 + tan(x)**2))
+    sol5 = Eq(f(x), -2 + C1*sqrt(1 + tan(x)**2))
     #sol5 = Eq(f(x), C1*(C2 + sqrt(1 + tan(x)**2)))
-    sol5 = Eq(-log(2 + f(x)), C1 - log(1 + tan(x)**2)/2)
+    #sol5 = Eq(-log(2 + f(x)), C1 - log(1 + tan(x)**2)/2)
     assert dsolve(eq1, f(x), hint='separable') == sol1
     assert dsolve(eq2, f(x), hint='separable') == sol2
     assert dsolve(eq3, f(x), hint='separable') == sol3
     assert dsolve(eq4, f(x), hint='separable') == sol4
-    assert dsolve(eq5, f(x), hint='separable', simplify=False) == sol5
+    assert dsolve(eq5, f(x), hint='separable') == sol5
     assert checkodesol(eq1, f(x), sol1, order=1, solve_for_func=False)[0]
     assert checkodesol(eq2, f(x), sol2, order=1, solve_for_func=False)[0]
     assert checkodesol(eq3, f(x), sol3, order=1, solve_for_func=False)[0]
@@ -310,12 +310,12 @@ def test_separable2():
     eq10 = x*cos(f(x)) + x**2*sin(f(x))*f(x).diff(x) - a**2*sin(f(x))*f(x).diff(x)
     # solve() messes this one up a little bit, so lets test _Integral here
     # We have to test strings with _Integral because y is a dummy variable.
-    sol6str = "Integral(-(2 - _y)/_y**3, (_y, f(x))) == C1 + Integral(x**(-2), x)"
-    sol7 = Eq(log(1 - f(x)**2)/2, C1 + log(2 + x))
+    sol6str = "Integral((-2 + _y)/_y**3, (_y, f(x))) == C1 + Integral(x**(-2), x)"
+    sol7 = Eq(-log(-1 + f(x)**2)/2, C1 - log(2 + x))
     sol8 = Eq(asinh(f(x)), C1 - log(log(x)))
     # integrate cannot handle the integral on the lhs (cos/tan)
     sol9str = "Integral(cos(_y)/tan(_y), (_y, f(x))) == C1 + Integral(-E*exp(x), x)"
-    sol10 = Eq(-log(1 - sin(f(x))**2)/2, C1 - log(x**2 - a**2)/2)
+    sol10 = Eq(-log(-1 + sin(f(x))**2)/2, C1 - log(x**2 - a**2)/2)
     assert str(dsolve(eq6, f(x), hint='separable_Integral')) == sol6str
     assert dsolve(eq7, f(x), hint='separable') == sol7
     assert dsolve(eq8, f(x), hint='separable') == sol8
@@ -325,13 +325,12 @@ def test_separable2():
     assert checkodesol(eq8, f(x), sol8, order=1, solve_for_func=False)[0]
     assert checkodesol(eq10, f(x), sol10, order=1, solve_for_func=False)[0]
 
-
 def test_separable3():
     eq11 = f(x).diff(x) - f(x)*tan(x)
     eq12 = (x - 1)*cos(f(x))*f(x).diff(x) - 2*x*sin(f(x))
     eq13 = f(x).diff(x) - f(x)*log(f(x))/tan(x)
     sol11 = Eq(f(x), C1*sqrt(1 + tan(x)**2))
-    sol12 = Eq(-log(1 - cos(f(x))**2)/2, C1 - 2*x - 2*log(1 - x))
+    sol12 = Eq(log(-1 + cos(f(x))**2)/2, C1 + 2*x + 2*log(x - 1))
     sol13 = Eq(log(log(f(x))), C1 - log(1 + tan(x)**2)/2 + log(tan(x)))
     assert dsolve(eq11, f(x), hint='separable') == sol11
     assert dsolve(eq12, f(x), hint='separable') == sol12
@@ -357,15 +356,15 @@ def test_separable5():
     sol15 = Eq(f(x), -1 + exp(C1 - x**2/2))
     sol16 = Eq(-exp(-f(x)**2)/2, C1 - x - x**2/2)
     sol17 = Eq(f(x), exp(C1 - x))
-    sol18 = Eq(-log(1 - sin(2*f(x))**2)/4, C1 + log(1 - sin(x)**2)/2)
+    sol18 = Eq(-log(-1 + sin(2*f(x))**2)/4, C1 + log(-1 + sin(x)**2)/2)
     sol19a = Eq(f(x), -(1 - x - exp(C1 - x))/(1 - x))
-    sol19b = Eq(f(x), -1 + exp(C1 - x)/(1 - x))
+    sol19b = Eq(f(x), -1 + exp(C1 - x)/(-1 + x))
     sol19c = Eq(f(x), -1/(1 - x) + x/(1 - x) + exp(C1 - x)/(1 - x))
     sol19d = Eq(f(x), (C1*(1 - x) + x*(-x*exp(x) + exp(x))- exp(x) + x*exp(x))/
                         ((1 - x)*(-x*exp(x) + exp(x))))
     sol19e = Eq(f(x), (C1*(1 - x) - x*(-x*exp(x) + exp(x)) -
                             x*exp(x) + exp(x))/((1 - x)*(-exp(x) + x*exp(x))))
-    sol20 = Eq(-log(1 - 3*f(x)**2)/6, C1 - x**2/2)
+    sol20 = Eq(log(-1 + 3*f(x)**2)/6, C1 + x**2/2)
     sol21 = Eq(-exp(-f(x)), C1 + exp(x))
     assert dsolve(eq15, f(x), hint='separable') == sol15
     assert dsolve(eq16, f(x), hint='separable') == sol16
@@ -497,7 +496,7 @@ def test_1st_homogeneous_coeff_ode2():
     eq2 = x**2 + f(x)**2 - 2*x*f(x)*f(x).diff(x)
     eq3 = x*exp(f(x)/x) + f(x) - x*f(x).diff(x)
     sol1 = Eq(f(x), x*acos(log(C1*x)))
-    sol2 = [Eq(f(x), sqrt(C1*x + x**2)), Eq(f(x), -sqrt(C1*x + x**2))]
+    sol2 = [Eq(f(x), -sqrt(C1*x + x**2)), Eq(f(x), sqrt(C1*x + x**2))]
     sol3 = Eq(f(x), log(log(C1/x)**(-x)))
     # specific hints are applied for speed reasons
     assert dsolve(eq1, f(x), hint='1st_homogeneous_coeff_subs_dep_div_indep') == sol1
@@ -993,18 +992,18 @@ def test_nth_linear_constant_coeff_variation_of_parameters():
     eq10 = f(x).diff(x, 2) + 2*f(x).diff(x) + f(x) - exp(-x)/x
     eq11 = f(x).diff(x, 2) + f(x) - 1/sin(x)*1/cos(x)
     eq12 = f(x).diff(x, 4)  - 1/x
-    sol1 = Eq(f(x), -1 - x - (C1 + C2*x + 3*x**2/32 + x**3/24)*exp(-x) + C3*exp(x/3))
-    sol2 = Eq(f(x), -1 - x - (C1 + C2*x + x**2/8)*exp(-x) + C3*exp(x/3))
+    sol1 = Eq(f(x), -1 - x + (C1 + C2*x - 3*x**2/32 - x**3/24)*exp(-x) + C3*exp(x/3))
+    sol2 = Eq(f(x), -1 - x + (C1 + C2*x - x**2/8)*exp(-x) + C3*exp(x/3))
     sol3 = Eq(f(x), C1 + x)
     sol4 = Eq(f(x), 2 + C1*exp(-x) + C2*exp(-2*x))
     sol5 = Eq(f(x), 2*exp(x) + C1*exp(-x) + C2*exp(-2*x))
     sol7 = Eq(f(x), (C1 + C2*x + x**4/12)*exp(-x))
     sol8 = Eq(f(x), C1*exp(x) + (S(5)/36 + x/6)*exp(-x) + C2*exp(2*x))
     sol9 = Eq(f(x), (C1 + C2*x + C3*x**2 + x**3/6)*exp(x))
-    sol10 = Eq(f(x), (C1 - x*(C2 - log(x)))*exp(-x))
+    sol10 = Eq(f(x), (C1 + x*(C2 + log(x)))*exp(-x))
     sol11 = Eq(f(x), cos(x)*(C2 - Integral(1/cos(x), x)) + sin(x)*(C1 + \
         Integral(1/sin(x), x)))
-    sol12 = Eq(f(x), C1 + C2*x - x**3*(C3 - log(x)/6) + C4*x**2)
+    sol12 = Eq(f(x), C1 + C2*x + x**3*(C3 + log(x)/6) + C4*x**2)
     sol1s = constant_renumber(sol1, 'C', 1, 3)
     sol2s = constant_renumber(sol2, 'C', 1, 3)
     sol3s = constant_renumber(sol3, 'C', 1, 2)

@@ -39,7 +39,7 @@ def test_symmetrize():
     assert symmetrize(x**2 - y**2) == (-2*x*y + (x + y)**2, -2*y**2)
 
     assert symmetrize(x**3 + y**2 + a*x**2 + b*y**3, x, y) == \
-        (-3*x*y*(x + y) - 2*a*x*y + a*(x + y)**2 + (x + y)**3, y**2*(1 - a) - y**3*(1 - b))
+        (-3*x*y*(x + y) - 2*a*x*y + a*(x + y)**2 + (x + y)**3, y**2*(1 - a) + y**3*(b - 1))
 
     U = [u0, u1, u2] = symbols('u:3')
 
@@ -82,3 +82,4 @@ def test_viete():
     raises(ValueError, "viete(x**2 + 1, [r1])")
 
     raises(MultivariatePolynomialError, "viete(x + y, [r1])")
+

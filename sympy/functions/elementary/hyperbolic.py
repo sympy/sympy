@@ -7,7 +7,10 @@ from sympy.functions.elementary.miscellaneous import sqrt
 ########################### HYPERBOLIC FUNCTIONS ##############################
 ###############################################################################
 
-class sinh(Function):
+class HyperbolicFunction(Function):
+    """Base class for hyperbolic functions. """
+
+class sinh(HyperbolicFunction):
     """
     Usage
     =====
@@ -134,7 +137,7 @@ class sinh(Function):
         import sage.all as sage
         return sage.sinh(self.args[0]._sage_())
 
-class cosh(Function):
+class cosh(HyperbolicFunction):
     """
     Usage
     =====
@@ -260,7 +263,7 @@ class cosh(Function):
         import sage.all as sage
         return sage.cosh(self.args[0]._sage_())
 
-class tanh(Function):
+class tanh(HyperbolicFunction):
     """
     Usage
     =====
@@ -389,7 +392,7 @@ class tanh(Function):
         import sage.all as sage
         return sage.tanh(self.args[0]._sage_())
 
-class coth(Function):
+class coth(HyperbolicFunction):
     """
     Usage
     =====

@@ -134,14 +134,15 @@ def test_issue1263():
     np = Symbol('np',positive=False)
     assert (((1 + x/np)**-2)**(-S.One)).as_numer_denom() == ((np + x)**2, np**2)
 
-def test_issue1496():
+def test_Pow_signs():
+    """Cf. issues 1496 and 2151"""
     x = Symbol('x')
     y = Symbol('y')
     n = Symbol('n', even=True)
-    assert (3-y)**2 == (y-3)**2
-    assert (3-y)**n == (y-3)**n
-    assert (-3+y-x)**2 == (3-y+x)**2
-    assert (y-3)**3 == -(3-y)**3
+    assert (3-y)**2 != (y-3)**2
+    assert (3-y)**n != (y-3)**n
+    assert (-3+y-x)**2 != (3-y+x)**2
+    assert (y-3)**3 != -(3-y)**3
 
 def test_power_with_noncommutative_mul_as_base():
     x = Symbol('x', commutative=False)

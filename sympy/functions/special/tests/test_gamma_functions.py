@@ -37,11 +37,11 @@ def test_gamma():
     assert gamma(x - 1).expand(func=True) == gamma(x)/(x-1)
     assert gamma(x + 2).expand(func=True, mul=False) == x*(x+1)*gamma(x)
 
-    assert expand_func(gamma(x + Rational(3, 2))) ==\
-    (x + Rational(1, 2))*gamma(x + Rational(1, 2))
+    assert expand_func(gamma(x + Rational(3, 2))) == \
+        (x + Rational(1, 2))*gamma(x + Rational(1, 2))
 
-    assert expand_func(gamma(x - Rational(1, 2))) ==\
-    -gamma(Rational(1, 2) + x)/(Rational(1, 2) - x)
+    assert expand_func(gamma(x - Rational(1, 2))) == \
+        gamma(Rational(1, 2) + x)/(x - Rational(1, 2))
 
 def test_lowergamma():
     pass
@@ -85,7 +85,7 @@ def test_polygamma_expand_func():
     assert polygamma(2, x).expand(func=True) == \
            polygamma(2, x)
     assert polygamma(0, -1 + x).expand(func=True) == \
-           polygamma(0, x) + 1/(1 - x)
+           polygamma(0, x) - 1/(x - 1)
     assert polygamma(0, 1 + x).expand(func=True) == \
            1/x + polygamma(0, x )
     assert polygamma(0, 2 + x).expand(func=True) == \
@@ -146,3 +146,4 @@ def test_polygamma_expansion():
            == x + x**2/2 + x**3/6 + O(x**5)
     assert polygamma(3, 1/x).nseries(x, n=8) \
            == 2*x**3 + 3*x**4 + 2*x**5 - x**7 + 4*x**9/3 + O(x**11)
+

@@ -418,9 +418,9 @@ def test_issue405():
     a = Symbol("a")
     e = asin(a*x)/x
     assert e.series(x, 4, n=2).removeO().subs(x, x - 4) == (
-           asin(4*a)/4 +
-           (4 - x)*asin(4*a)/16 -
-           a*(4 - x)/(4*sqrt(1 - 16*a**2)))
+           asin(4*a)/4 -
+           (x - 4)*asin(4*a)/16 +
+           a*(x - 4)/(4*sqrt(1 - 16*a**2)))
 
 def test_issue1342():
     x, a, b = symbols('x,a,b')

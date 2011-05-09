@@ -162,8 +162,8 @@ This function provides factorization of univariate and multivariate polynomials
 with rational coefficients::
 
     >>> factor(x**4/2 + 5*x**3/12 - x**2/3)
-      2
-    -x *(1 - 2*x)*(4 + 3*x)
+     2
+    x *(-1 + 2*x)*(4 + 3*x)
     -----------------------
                12
 

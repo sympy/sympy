@@ -256,38 +256,39 @@ def laguerre_l(n, alpha, x):
     """
     Returns the generalized Laguerre polynomial.
 
-    n     ... 0, 1, 2, 3, ...
-    alpha ... any symbol (alpha=0 gives regular Laguerre polynomials)
+    ``n`` : ``int``
+        Degree of Laguerre polynomial. Must be ``n >= 0``.
 
-    Examples::
+    ``alpha`` : ``Expr``
+        Arbitrary expression. For ``alpha=0`` regular Laguerre
+        polynomials will be generated.
 
-    >>> from sympy import laguerre_l, var
-    >>> var("alpha, x")
-    (alpha, x)
-    >>> laguerre_l(0, alpha, x)
-    1
-    >>> laguerre_l(1, alpha, x)
-    1 + alpha - x
-    >>> laguerre_l(2, alpha, x)
-    -1/2 - alpha/2 + (1 + alpha - x)*(3 + alpha - x)/2
+    **Examples**
 
-    If you set alpha=0, you get regular Laguerre polynomials::
+    To construct generalized Laguerre polynomials issue::
 
-    >>> laguerre_l(1, 0, x)
-    1 - x
-    >>> laguerre_l(2, 0, x)
-    -1/2 + (1 - x)*(3 - x)/2
-    >>> laguerre_l(3, 0, x)
-    -2/3 + 2*x/3 - (1/2 - (1 - x)*(3 - x)/2)*(5 - x)/3
-    >>> laguerre_l(4, 0, x)
-    3/8 - 3*(1 - x)*(3 - x)/8 - (7 - x)*(2/3 - 2*x/3 + (1/2 - (1 - x)*(3 - x)/2)*(5 - x)/3)/4
+        >>> from sympy import laguerre_l, var
+        >>> var("alpha, x")
+        (alpha, x)
+
+        >>> laguerre_l(0, alpha, x)
+        1
+        >>> laguerre_l(1, alpha, x)
+        1 + alpha - x
+        >>> laguerre_l(2, alpha, x)
+        1 + 3*alpha/2 + x*(-2 - alpha) + alpha**2/2 + x**2/2
+
+    If you set ``alpha=0``, you get regular Laguerre polynomials::
+
+        >>> laguerre_l(1, 0, x)
+        1 - x
+        >>> laguerre_l(2, 0, x)
+        1 - 2*x + x**2/2
+        >>> laguerre_l(3, 0, x)
+        1 - 3*x + 3*x**2/2 - x**3/6
+        >>> laguerre_l(4, 0, x)
+        1 - 4*x + 3*x**2 - 2*x**3/3 + x**4/24
 
     """
-    n, alpha, x = S(n), S(alpha), S(x)
+    return laguerre_poly(n, x, alpha)
 
-    c = 0
-    r = S(1)
-    for m in range(1, n+1):
-      l, c = c, r
-      r = ((2*m-1+alpha-x)*c-(m-1+alpha)*l)/m
-    return r

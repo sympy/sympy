@@ -820,7 +820,7 @@ class Expr(Basic, EvalfMixin):
             Note how the below differs from the above in making the
             constant on the dep term positive.
             >>> (y*(-3+x)).as_independent(x)
-            (-y, 3 - x)
+            (y, -3 + x)
 
             Note: when trying to get independent terms, a separation method
             might need to be used first. In this case, it is important to keep

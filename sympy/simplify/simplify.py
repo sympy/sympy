@@ -6,8 +6,9 @@ from sympy.core import Basic, S, C, Add, Mul, Pow, Rational, Integer, \
 
 from sympy.core.numbers import igcd
 
-from sympy.utilities import all, any, flatten
+from sympy.utilities import all, any, flatten, preorder_traversal
 from sympy.functions import gamma, exp, sqrt, log
+from sympy.functions.elementary.trigonometric import TrigonometricFunction
 
 from sympy.simplify.cse_main import cse
 
@@ -574,7 +575,7 @@ def separatevars(expr, symbols=[], dict=False):
     separable, separatevars will do the best it can to separate it.
 
     >>> separatevars(x+x*y-3*(x**2))
-    x*(1 + y - 3*x)
+    -x*(-1 - y + 3*x)
 
     If the expression is not separable then expr is returned unchanged
     or (if dict=True) then None is returned.
@@ -1471,6 +1472,7 @@ def simplify(expr, ratio=1.7):
 
     if isinstance(expr, Atom):
         return expr
+
     # TODO: Apply different strategies, considering expression pattern:
     # is it a purely rational function? Is there any trigonometric function?...
     # See also https://github.com/sympy/sympy/pull/185.
@@ -1484,6 +1486,18 @@ def simplify(expr, ratio=1.7):
 
     if not isinstance(expr, Basic): # XXX: temporary hack
         return expr
+
+    traversal = preorder_traversal(expr)
+
+    for subexpr in traversal:
+        if isinstance(subexpr, TrigonometricFunction):
+            traversal.skip()
+            continue
+
+        if not isinstance(subexpr, (Atom, Add, Mul, Pow)):
+            break
+    else:
+        expr = trigsimp(expr)
 
     expr = powsimp(expr, combine='exp', deep=True)
     numer, denom = expr.as_numer_denom()
@@ -1507,8 +1521,10 @@ def simplify(expr, ratio=1.7):
         n, d = expr.as_numer_denom()
         if d != 0:
             expr = -n/(-d)
+
     if count_ops(expr) > ratio*count_ops(original_expr):
         return original_expr
+
     return expr
 
 def _real_to_rational(expr):

@@ -41,7 +41,7 @@ def test_ratsimp():
 
     f = A*B/D - A*C/D + A*C*erf(x)/D - A*B*erf(x)/D + 2*A/D
 
-    assert ratsimp(f) == A*B/8 - A*C/8 + A/(4 - 4*erf(x))
+    assert ratsimp(f) == A*B/8 - A*C/8 - A/(4*erf(x) - 4)
 
 def test_trigsimp1():
     x, y = symbols('x,y')
@@ -325,7 +325,7 @@ def test_collect_3():
     f = Function('f')
     x, y, z, n = symbols('x,y,z,n')
 
-    assert collect(-x/8 + x*y, -x) == -x*(S.One/8 - y)
+    assert collect(-x/8 + x*y, -x) == x*(y - S(1)/8)
 
     assert collect( 1 + x*(y**2), x*y ) == 1 + x*(y**2)
     assert collect( x*y + a*x*y, x*y) == x*y*(1 + a)
@@ -426,9 +426,8 @@ def test_separatevars():
 def test_separatevars_advanced_factor():
     x,y,z = symbols('x,y,z')
     assert separatevars(1 + log(x)*log(y) + log(x) + log(y)) == (log(x) + 1)*(log(y) + 1)
-    assert separatevars(1 + x - log(z) - x*log(z) - exp(y)*log(z) - \
-        x*exp(y)*log(z) + x*exp(y) + exp(y)) == \
-        (1 + x)*(1 - log(z))*(1 + exp(y))
+    assert separatevars(1 + x - log(z) - x*log(z) - exp(y)*log(z) - x*exp(y)*log(z) + x*exp(y) + exp(y)) == \
+        -((x + 1)*(log(z) - 1)*(exp(y) + 1))
     x, y = symbols('x,y', positive=True)
     assert separatevars(1 + log(x**log(y)) + log(x*y)) == (log(x) + 1)*(log(y) + 1)
 
@@ -449,7 +448,7 @@ def test_hypersimp():
     assert hypersimp(term, k) == (S(1)/2)*((4*k + 5)/(3 + 14*k + 8*k**2))
 
     term = 1/((2*k-1)*factorial(2*k+1))
-    assert hypersimp(term, k) == (2*k-1)/(6 + 22*k + 24*k**2 + 8*k**3)
+    assert hypersimp(term, k) == (2*k - 1)/(3 + 11*k + 12*k**2 + 4*k**3)/2
 
     term = binomial(n, k)*(-1)**k/factorial(k)
     assert hypersimp(term, k) == (k - n)/(k**2+2*k+1)

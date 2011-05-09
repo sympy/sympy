@@ -606,13 +606,16 @@ def test_Rational_factors():
 
     # TODO write more Rational.factor() tests
 
-
 def test_issue1008():
-    assert  pi*(E + 10) + pi*(-E - 10)          == 0
-    assert  pi*(E + 10**10) + pi*(-E - 10**10)  == 0
-    assert  pi*(E + 10**20) + pi*(-E - 10**20)  == 0
-    assert  pi*(E + 10**80) + pi*(-E - 10**80)  == 0
+    assert pi*(E + 10) + pi*(-E - 10)         != 0
+    assert pi*(E + 10**10) + pi*(-E - 10**10) != 0
+    assert pi*(E + 10**20) + pi*(-E - 10**20) != 0
+    assert pi*(E + 10**80) + pi*(-E - 10**80) != 0
 
+    assert (pi*(E + 10) + pi*(-E - 10)).expand()         == 0
+    assert (pi*(E + 10**10) + pi*(-E - 10**10)).expand() == 0
+    assert (pi*(E + 10**20) + pi*(-E - 10**20)).expand() == 0
+    assert (pi*(E + 10**80) + pi*(-E - 10**80)).expand() == 0
 
 def test_IntegerInteger():
     a = Integer(4)
@@ -826,3 +829,4 @@ def test_issue_1023():
     assert -oo + x == -oo
     x = Symbol('x', infinitesimal=True, real=True)
     assert -oo + x == -oo
+
