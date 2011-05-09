@@ -376,7 +376,7 @@ def dsolve(eq, func, hint="default", simplify=True, **kwargs):
         f(x) == C1*cos(3*x) + C2*sin(3*x)
         >>> dsolve(sin(x)*cos(f(x)) + cos(x)*sin(f(x))*f(x).diff(x), f(x),
         ...     hint='separable')
-        -log(1 - sin(f(x))**2)/2 == C1 + log(1 - sin(x)**2)/2
+        -log(-1 + sin(f(x))**2)/2 == C1 + log(-1 + sin(x)**2)/2
         >>> dsolve(sin(x)*cos(f(x)) + cos(x)*sin(f(x))*f(x).diff(x), f(x),
         ...     hint='1st_exact')
         f(x) == acos(C1/cos(x))
@@ -2679,9 +2679,10 @@ def ode_nth_linear_constant_coeff_variation_of_parameters(eq, func, order, match
         >>> pprint(dsolve(f(x).diff(x, 3) - 3*f(x).diff(x, 2) +
         ... 3*f(x).diff(x) - f(x) - exp(x)*log(x), f(x),
         ... hint='nth_linear_constant_coeff_variation_of_parameters'))
-               /             3 /11   log(x)\       2\  x
-        f(x) = |C1 + C2*x - x *|-- - ------| + C3*x |*e
-               \               \36     6   /        /
+               /             3 /  11   log(x)\       2\  x
+        f(x) = |C1 + C2*x + x *|- -- + ------| + C3*x |*e
+               \               \  36     6   /        /
+
 
     **References**
         - http://en.wikipedia.org/wiki/Variation_of_parameters
@@ -2786,10 +2787,11 @@ def ode_separable(eq, func, order, match):
         >>> f = Function('f')
         >>> pprint(dsolve(Eq(f(x)*f(x).diff(x) + x, 3*x*f(x)**2), f(x),
         ... hint='separable'))
-            /       2   \         2
-        -log\1 - 3*f (x)/        x
-        ----------------- = C1 - --
+           /        2   \         2
+        log\-1 + 3*f (x)/        x
+        ----------------- = C1 + --
                 6                2
+
 
     **Reference**
         - M. Tenenbaum & H. Pollard, "Ordinary Differential Equations",

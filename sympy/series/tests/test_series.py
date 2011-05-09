@@ -34,13 +34,13 @@ def test_2124():
     assert (cos(x).series(x, 1).removeO().subs(x, x - 1) -
             cos(x + 1).series(x).removeO().subs(x, x - 1)).expand() == 0
     e = cos(x).series(x, 1, n=None)
-    assert [e.next() for i in range(2)] == [cos(1), (1 - x)*sin(1)]
+    assert [e.next() for i in range(2)] == [cos(1), -((x - 1)*sin(1))]
     e = cos(x).series(x, 1, n=None, dir='-')
     assert [e.next() for i in range(2)] == [cos(1), (1 - x)*sin(1)]
     # the following test is exact so no need for x -> x - 1 replacement
     assert abs(x).series(x, 1, dir='-') == x
     assert exp(x).series(x, 1, dir='-', n=3).removeO().subs(x, x - 1) == \
-           E - E*(1 - x) + E*(1 - x)**2/2
+           E + E*(x - 1) + E*(x - 1)**2/2
 
     D = Derivative
     assert D(x**2 + x**3*y**2, x, 2, y, 1).series(x).doit() == 12*x*y

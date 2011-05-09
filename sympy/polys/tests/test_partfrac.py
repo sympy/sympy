@@ -30,7 +30,7 @@ def test_apart():
     assert apart(f, full=True) == g
 
     assert apart((E*x+2)/(x-pi)*(x-1), x) == \
-        2 - E + E*pi + E*x - (2 + E*pi)*(-pi + 1)/(x - pi)
+        2 - E + E*pi + E*x + (E*pi + 2)*(pi - 1)/(x - pi)
 
     assert apart(Eq((x**2 + 1)/(x + 1), x), x) == Eq(x - 1 + 2/(x + 1), x)
 
@@ -71,4 +71,5 @@ def test_apart_full_decomposition():
     q = Poly(x**5 + 1, x)
 
     assert apart_full_decomposition(p, q) == \
-        (S(1)/5)*((-x**3 + 2*x**2 - 3*x + 4)/(x**4 - x**3 + x**2 - x + 1)) + (S(1)/5)/(x + 1)
+        (-S(1)/5)*((x**3 - 2*x**2 + 3*x - 4)/(x**4 - x**3 + x**2 - x + 1)) + (S(1)/5)/(x + 1)
+

@@ -851,17 +851,6 @@ def test_as_base_exp():
     assert (x+y+z).as_base_exp() == (x+y+z, S.One)
     assert ((x+y)**z).as_base_exp() == (x+y, z)
 
-def test_Basic_keep_sign():
-    Basic.keep_sign = True
-    assert Mul(x - 1, x + 1) == (x - 1)*(x + 1)
-    assert (1/(x - 1)).as_coeff_mul()[0] == +1
-
-    clear_cache()
-
-    Basic.keep_sign = False
-    assert Mul(x - 1, x + 1) == -(1 - x)*(1 + x)
-    assert (1/(x - 1)).as_coeff_mul()[0] == -1
-
 def test_issue1864():
     assert hasattr(Mul(x, y), "is_commutative")
     assert hasattr(Mul(x, y, evaluate=False), "is_commutative")
@@ -993,10 +982,10 @@ def test_as_ordered_factors():
     assert x.as_ordered_factors() == [x]
     assert (2*x*x**n*sin(x)*cos(x)).as_ordered_factors() == [Integer(2), x, x**n, sin(x), cos(x)]
 
-    expr = Mul(*[f(1), f(2), f(3), f(1, 2, 3), g(1), g(2), g(3), g(1, 2, 3)])
+    args = [f(1), f(2), f(3), f(1, 2, 3), g(1), g(2), g(3), g(1, 2, 3)]
+    expr = Mul(*args)
 
-    assert expr.as_ordered_factors() == \
-        [f(1), f(2), f(3), f(1, 2, 3), g(1), g(2), g(3), g(1, 2, 3)]
+    assert expr.as_ordered_factors() == args
 
 def test_as_ordered_terms():
     f, g = symbols('f,g', cls=Function)
@@ -1004,10 +993,10 @@ def test_as_ordered_terms():
     assert x.as_ordered_terms() == [x]
     assert (sin(x)**2*cos(x) + sin(x)*cos(x)**2 + 1).as_ordered_terms() == [sin(x)**2*cos(x), sin(x)*cos(x)**2, 1]
 
-    expr = Add(*[f(1), f(2), f(3), f(1, 2, 3), g(1), g(2), g(3), g(1, 2, 3)])
+    args = [f(1), f(2), f(3), f(1, 2, 3), g(1), g(2), g(3), g(1, 2, 3)]
+    expr = Add(*args)
 
-    assert expr.as_ordered_terms() == \
-        [f(1), f(2), f(3), f(1, 2, 3), g(1), g(2), g(3), g(1, 2, 3)]
+    assert expr.as_ordered_terms() == args
 
     assert (1 + 4*sqrt(3)*pi*x).as_ordered_terms() == [4*pi*x*sqrt(3), 1]
 

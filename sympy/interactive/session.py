@@ -101,7 +101,7 @@ def _init_python_session():
     return SymPyConsole()
 
 def init_session(ipython=None, pretty_print=True, order=None,
-        use_unicode=None, quiet=False, keep_sign=False, argv=[]):
+        use_unicode=None, quiet=False, argv=[]):
     """Initialize an embedded IPython or Python session. """
     import sys
 
@@ -128,9 +128,6 @@ def init_session(ipython=None, pretty_print=True, order=None,
                 ip = _init_ipython_session(argv)
 
     _preexec_source = preexec_source
-
-    if keep_sign:
-        _preexec_source += "Basic.keep_sign = True\n"
 
     ip.runsource(_preexec_source, symbol='exec')
     init_printing(pretty_print=pretty_print, order=order, use_unicode=use_unicode)

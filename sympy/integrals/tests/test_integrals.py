@@ -545,6 +545,9 @@ def test_issue_1304():
     z = Symbol('z', positive=True)
     assert integrate(sqrt(x**2 + z**2),x) == z**2*asinh(x/z)/2 + x*(x**2 + z**2)**(S(1)/2)/2
     assert integrate(sqrt(x**2 - z**2),x) == -z**2*acosh(x/z)/2 + x*(x**2 - z**2)**(S(1)/2)/2
+
+@XFAIL
+def test_issue_1304_2():
     assert integrate(sqrt(-x**2 - 4), x) == -2*atan(x/(-4 - x**2)**(S(1)/2)) + x*(-4 - x**2)**(S(1)/2)/2
 
 def tets_issue_1001():

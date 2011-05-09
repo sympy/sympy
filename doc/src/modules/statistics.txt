@@ -10,7 +10,6 @@ and related tools. Its contents can be imported with the following statement::
     >>> from sympy.statistics import *
     >>> import sys
     >>> sys.displayhook = pprint
-    >>> Basic.keep_sign = True
 
 Normal distributions
 --------------------

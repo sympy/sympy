@@ -70,3 +70,6 @@ def test_construct_domain():
 
     assert construct_domain([2/x, 3*y]) == \
         (dom, [dom.convert(2/x), dom.convert(3*y)])
+
+    assert construct_domain(2) == (ZZ, ZZ(2))
+    assert construct_domain(S(2)/3) == (QQ, QQ(2, 3))

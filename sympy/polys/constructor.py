@@ -192,10 +192,13 @@ def construct_domain(obj, **args):
     """Construct a minimal domain for the list of coefficients. """
     opt = build_options(args)
 
-    if isinstance(obj, dict):
-        monoms, coeffs = zip(*obj.items())
+    if hasattr(obj, '__iter__'):
+        if isinstance(obj, dict):
+            monoms, coeffs = zip(*obj.items())
+        else:
+            coeffs = obj
     else:
-        coeffs = obj
+        coeffs = [obj]
 
     coeffs = map(sympify, coeffs)
     result = _construct_simple(coeffs, opt)
@@ -213,7 +216,10 @@ def construct_domain(obj, **args):
         else:
             domain, coeffs = _construct_expression(coeffs, opt)
 
-    if isinstance(obj, dict):
-        return domain, dict(zip(monoms, coeffs))
+    if hasattr(obj, '__iter__'):
+        if isinstance(obj, dict):
+            return domain, dict(zip(monoms, coeffs))
+        else:
+            return domain, coeffs
     else:
-        return domain, coeffs
+        return domain, coeffs[0]

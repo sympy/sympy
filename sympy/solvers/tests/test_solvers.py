@@ -182,7 +182,7 @@ def test_linear_system():
                 [-1, 0, 1, 0, 0]])
 
     assert solve_linear_system(M, x, y, z, t) == \
-           {y: 0, z: -t*(1 + n)/n, x: -t*(1 + n)/n}
+           {y: 0, z: t*(-n - 1)/n, x: t*(-n - 1)/n}
 
 def test_linear_systemLU():
     x, y, z, n = symbols('x,y,z,n')
@@ -288,7 +288,7 @@ def test_solve_for_functions_derivatives():
     x = Symbol('x')
     f = Function('f')
     F = x**2 + f(x)**2 - 4*x - 1
-    assert solve(F.diff(x), diff(f(x), x)) == [(2 - x)/f(x)]
+    assert solve(F.diff(x), diff(f(x), x)) == [-((x - 2)/f(x))]
 
     # Mixed cased with a Symbol and a Function
     x = Symbol('x')
@@ -304,7 +304,7 @@ def test_issue626():
     f = Function("f")
     F = x**2 + f(x)**2 - 4*x - 1
     e = F.diff(x)
-    assert solve(e, f(x).diff(x)) == [(2-x)/f(x)]
+    assert solve(e, f(x).diff(x)) == [-((x - 2)/f(x))]
 
 def test_solve_linear():
     x, y = symbols('x y')
@@ -343,3 +343,4 @@ def test_solve_inequalities():
                And(Lt(1, re(x)), Lt(re(x), sqrt(2)))), Eq(im(x), 0))
     assert solve(system, assume=Assume(x, Q.real)) == \
         Or(And(Lt(-sqrt(2), x), Lt(x, -1)), And(Lt(1, x), Lt(x, sqrt(2))))
+
