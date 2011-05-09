@@ -506,8 +506,8 @@ class Polygon(GeometryEntity):
 
         Examples
         --------
-        >>> from sympy import Polygon, S
-        >>> from sympy.abc import t
+        >>> from sympy import Polygon, S, Symbol
+        >>> t = Symbol('t', real=True)
         >>> tri = Polygon((0, 0), (1, 0), (1, 1))
         >>> p = tri.arbitrary_point('t')
         >>> perimeter = tri.perimeter
@@ -1140,8 +1140,7 @@ class RegularPolygon(Polygon):
 
         Examples
         --------
-        >>> from sympy import RegularPolygon, S, Point
-        >>> from sympy.abc import t
+        >>> from sympy import RegularPolygon, S, Point, Symbol
         >>> p = RegularPolygon((0, 0), 3, 4)
         >>> p.encloses_point(Point(0, 0))
         True
@@ -1150,6 +1149,7 @@ class RegularPolygon(Polygon):
         True
         >>> p.encloses_point(Point(R/2, R/2 + (R - r)/10))
         False
+        >>> t = Symbol('t', real=True)
         >>> p.encloses_point(p.arbitrary_point().subs(t, S.Half))
         False
         >>> p.encloses_point(Point(5, 5))

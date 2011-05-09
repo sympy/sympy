@@ -32,14 +32,12 @@ class Symbol(AtomicExpr, Boolean):
     is_Symbol = True
 
     def __new__(cls, name, commutative=True, **assumptions):
-        """Symbols are identified by name and commutativity::
+        """Symbols are identified by name and assumptions::
 
         >>> from sympy import Symbol
         >>> Symbol("x") == Symbol("x")
         True
         >>> Symbol("x", real=True) == Symbol("x", real=False)
-        True
-        >>> Symbol("x", commutative=True) == Symbol("x", commutative=False)
         False
 
         """

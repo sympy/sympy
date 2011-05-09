@@ -451,7 +451,7 @@ class Basic(AssumeMeths):
         st = self._hashable_content()
         ot = other._hashable_content()
 
-        return (st == ot)
+        return st == ot and self._assume_type_keys == other._assume_type_keys
 
     def __ne__(self, other):
         """a != b  -> Compare two symbolic trees and see whether they are different
@@ -476,7 +476,7 @@ class Basic(AssumeMeths):
         st = self._hashable_content()
         ot = other._hashable_content()
 
-        return (st != ot)
+        return (st != ot) or self._assume_type_keys != other._assume_type_keys
 
     def __repr__(self):
         from sympy.printing import sstr

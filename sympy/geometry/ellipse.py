@@ -18,8 +18,6 @@ from entity import GeometryEntity
 from point import Point
 from line import LinearEntity, Line
 
-from sympy.abc import x
-
 class Ellipse(GeometryEntity):
     """An elliptical GeometryEntity.
 
@@ -242,12 +240,13 @@ class Ellipse(GeometryEntity):
         >>> p1 = Point(0, 0)
         >>> e1 = Ellipse(p1, 3, 1)
         >>> e1.circumference
-        12*Integral(((1 - 8*x**2/9)/(1 - x**2))**(1/2), (x, 0, 1))
+        12*Integral(((1 - 8*_x**2/9)/(1 - _x**2))**(1/2), (_x, 0, 1))
 
         """
         if self.eccentricity == 1:
             return 2*pi*self.hradius
         else:
+            x = C.Dummy('x', real=True)
             return 4*self.major*\
                    C.Integral(sqrt((1 - (self.eccentricity*x)**2)/(1 - x**2)),
                               (x, 0, 1))
