@@ -13,7 +13,7 @@ class PythonRationalType(object):
     >>> from sympy.polys.domains import PythonRationalType
 
     >>> PythonRationalType(1)
-    1/1
+    1
     >>> PythonRationalType(2, 3)
     2/3
     >>> PythonRationalType(14, 10)
