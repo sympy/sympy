@@ -319,7 +319,7 @@ class PDF(ContinuousProbability):
         if self._variance is not None:
             return self._variance
         else:
-            from sympy import integrate, simplify, together
+            from sympy import integrate, simplify
             w = Dummy('w', real=True)
             self._variance = integrate(self.pdf(w)*w**2,(w,self.domain[0],self.domain[1])) - self.mean**2
             self._variance = simplify(self._variance)

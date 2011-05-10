@@ -1254,7 +1254,6 @@ class Triangle(Polygon):
     circumcenter
     circumradius
     circumcircle
-    bisectors
     inradius
     incircle
     medians
@@ -1554,7 +1553,6 @@ class Triangle(Polygon):
         """
         return Circle(self.circumcenter, self.circumradius)
 
-    @property
     def bisectors(self):
         """The angle bisectors of the triangle.
 
@@ -1578,7 +1576,7 @@ class Triangle(Polygon):
         >>> p1, p2, p3 = Point(0, 0), Point(1, 0), Point(0, 1)
         >>> t = Triangle(p1, p2, p3)
         >>> from sympy import sqrt
-        >>> t.bisectors[p2] == Segment(Point(0, sqrt(2) - 1), Point(1, 0))
+        >>> t.bisectors()[p2] == Segment(Point(0, sqrt(2) - 1), Point(1, 0))
         True
 
         """
