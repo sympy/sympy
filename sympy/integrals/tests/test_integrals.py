@@ -1,7 +1,7 @@
 from sympy import (S, symbols, integrate, Integral, Derivative, exp, erf, oo, Symbol,
         Function, Rational, log, sin, cos, pi, E, I, Poly, LambertW, diff,
         Matrix, sympify, sqrt, atan, asin, acos, asinh, acosh, DiracDelta, Heaviside,
-        Lambda, sstr, Add, Tuple, Eq, Interval, Sum, cancel)
+        Lambda, sstr, Add, Tuple, Eq, Interval, Sum, factor, trigsimp)
 from sympy.utilities.pytest import XFAIL, skip, raises
 from sympy.physics.units import m, s
 
@@ -634,4 +634,4 @@ def test_issue_1793b():
     # 8*cos(y)**2)/(2*(3 - cos(y)))) + x**2*sin(y)/2 + 2*x*cos(y)
 
     expr = (sin(y)*x**3 + 2*cos(y)*x**2 + 12)/(x**2 + 2)
-    assert cancel(integrate(expr, x).diff(x)) == expr
+    assert trigsimp(factor(integrate(expr, x).diff(x) - expr)) == 0
