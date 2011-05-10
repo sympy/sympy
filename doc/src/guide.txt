@@ -518,9 +518,10 @@ get your patch accepted.
 .. _mailinglist:        http://groups.google.com/group/sympy
 .. _SympyDevelopment:   http://code.google.com/p/sympy/wiki/SympyDevelopment
 
-Please read our excellent :ref:`SymPy Patches Tutorial <patches-tutorial>`
-how to write patches to SymPy, how to work with Git and simply
-how to get your life easier and get started with SymPy.
+Please read our excellent `SymPy Patches Tutorial
+<https://github.com/sympy/sympy/wiki/Development-workflow>` over at our
+wiki for a guide on how to write patches to SymPy, how to work with Git,
+and simply how to get your life easier and get started with SymPy.
 
 
 Improving the docs
