@@ -22,7 +22,9 @@ from __builtin__ import (
 
 from pythonrationaltype import PythonRationalType
 
-from sympy.functions.combinatorial.factorials import factorial as python_factorial
+def python_factorial(n):
+    from sympy.functions.combinatorial.factorials import factorial
+    return int(factorial(n))
 
 from sympy.core.numbers import (
     igcdex     as python_gcdex,
