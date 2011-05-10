@@ -345,10 +345,23 @@ class Field(BooleanOption):
 
 class Greedy(BooleanOption):
     """``greedy`` option to polynomial manipulation functions. """
-
     __metaclass__ = OptionType
 
     option = 'greedy'
+
+    requires = []
+    excludes = ['domain', 'split', 'gaussian', 'extension', 'modulus', 'symmetric']
+
+class Composite(BooleanOption):
+    """ """
+
+    __metaclass__ = OptionType
+
+    option = 'composite'
+
+    @classmethod
+    def default(cls):
+        return True
 
     requires = []
     excludes = ['domain', 'split', 'gaussian', 'extension', 'modulus', 'symmetric']
