@@ -82,7 +82,14 @@ def _pi_coeff(arg, cycles=1):
     elif arg.is_Mul:
         cx = arg.coeff(S.Pi)
         if cx:
-            c, x = cx.as_coeff_mul(args=False) # pi is not included as coeff
+            # We want the Number coefficient (but not pi). as_coeff_mul()
+            # doesn't include Real coefficients, so do this instead.
+            args = Mul.make_args(cx)
+            if args[0].is_Number:
+                c, x = args[0], Mul(*args[1:])
+            else:
+                c, x = S.One, cx
+
             if c.is_Real:
                 # recast exact binary fractions to Rationals
                 m = int(c*2)
