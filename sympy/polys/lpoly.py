@@ -27,27 +27,10 @@ from sympy.core import S, Add, Mul, Pow
 from sympy.polys.domains import QQ
 import sympy
 
-
-
 from copy import copy
 import re
 import math
 
-def newton_method_sizes(N):
-    """taken from Sage misc.py
-    """
-    N = int(N)
-    if N < 1:
-        raise ValueError, "N (=%s) must be a positive integer" % N
-
-    output = []
-    while N > 1:
-        output.append(N)
-        N = (N + 1) >> 1
-
-    #output.append(1)
-    output.reverse()
-    return output
 
 def giant_steps(target):
     """
@@ -2274,7 +2257,7 @@ class Poly(dict):
 
     def _tanh1(p,iv,nv):
         lp = p.lp
-        p1 = lp('0')
+        p1 = lp(0)
         for prec in giant_steps(nv):
             tmp = p - p1.atanh(iv, prec)
             tmp = tmp.mul_trunc(1 - p1.square(),iv, prec)
@@ -2338,11 +2321,11 @@ class Poly(dict):
         if 0 in p:
             raise NotImplementedError, 'p must not have constant part'
         lp = p.lp
-        q = lp('1')
+        q = lp(1)
         n = 1
         k = 1
-        p1 = lp('1')
-        z = lp('0')
+        p1 = lp(1)
+        z = lp(0)
         while 1:
            q = q.mul_trunc(p,iv,nv)
            if not q:
