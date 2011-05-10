@@ -1042,7 +1042,7 @@ class acos(Function):
 
     Notes
     =====
-        acos(x) will evaluate automatically in the cases 
+        acos(x) will evaluate automatically in the cases
         oo, -oo, 0, 1, -1
 
     Examples

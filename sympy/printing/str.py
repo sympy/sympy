@@ -428,7 +428,7 @@ class StrPrinter(Printer):
 
 
 def sstr(expr, **settings):
-    """Returns the expression as a string.  
+    """Returns the expression as a string.
     Example:
 
     >>> from sympy import symbols, Eq, sstr
