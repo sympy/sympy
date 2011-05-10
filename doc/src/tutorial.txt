@@ -217,7 +217,7 @@ For the remainder of the tutorial, we assume that we have run::
     >>> oldhook = sys.displayhook
     >>> sys.displayhook = pprint
 
-So that things pretty print.  See the :ref:`_pretty_printing` section below.  If you have a unicode font installed, your output may look a litte different (it will look slightly nicer).
+So that things pretty print.  See the :ref:`printing-tutorial` section below.  If you have a unicode font installed, your output may look a litte different (it will look slightly nicer).
 
 Algebra
 =======
@@ -782,8 +782,6 @@ Tip: To make the pretty printing default in the python interpreter, use::
      | x  dx
      |
     /
-
-.. _pretty_printing:
 
 **Python printing**
 
