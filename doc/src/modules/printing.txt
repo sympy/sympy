@@ -80,7 +80,10 @@ PythonPrinter
 
 This class implements Python printing. Usage::
 
-    In [1]: print_python(5*x**3 + sin(x))
+    >>> from sympy import print_python, sin
+    >>> from sympy.abc import x
+
+    >>> print_python(5*x**3 + sin(x))
     x = Symbol('x')
     e = sin(x) + 5*x**3
 
