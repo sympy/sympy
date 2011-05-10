@@ -14,11 +14,15 @@ from sympy import *
 from sympy import Symbol
 
 def test_str():
+    # str of a Poly object gives different output using QQ in python
+    # or in gmpy mode, in one case giving n/1, in the other giving n
+    # for QQ(n,1); in this test these quantities do not appear
     lp = LPoly(list('xyz'),QQ,O_lex)
+    x,y,z = lp.gens()
     p = lp('  +z^4 +1/2*z^2 -1/4')
     assert str(p) == ' +z^4 +1/2*z^2 -1/4'
-    p = lp('z^4 -1')
-    assert str(p) == ' +z^4 -1'
+    p = lp('z^4 -1/2')
+    assert str(p) == ' +z^4 -1/2'
 
 def test_read_monom():
     lp = LPoly(list('xyz'),QQ,O_lex)

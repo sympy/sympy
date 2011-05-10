@@ -13,7 +13,7 @@ class PythonRationalType(object):
     >>> from sympy.polys.domains import PythonRationalType
 
     >>> PythonRationalType(1)
-    1
+    1/1
     >>> PythonRationalType(2, 3)
     2/3
     >>> PythonRationalType(14, 10)
@@ -24,23 +24,25 @@ class PythonRationalType(object):
     __slots__ = ['p', 'q']
 
     def __init__(self, p, q=None):
-        if isinstance(p,basestring):
-            a = p.split('/')
-            if len(a) == 2:
-                p = PythonRationalType(int(a[0]),int(a[1]))
-            else:
-                p = int(p)
         if q is None:
+            # PythonRationalType(a) for a PythonRationalType,string
+            # or other admissible convertions
             if isinstance(p,PythonRationalType):
                 self.p = p.p
                 self.q = p.q
+            elif isinstance(p,basestring):
+                    a = p.split('/')
+                    if len(a) == 2:
+                        p = PythonRationalType(int(a[0]),int(a[1]))
+                        self.p = p.p
+                        self.q = p.q
+                    else:
+                        self.p = self.p = int(a[0])
+                        self.q = 1
             else:
                 self.p = p
                 self.q = 1
         else:
-            if  isinstance(p,PythonRationalType):
-                p = p.p
-                q = p.q*q
             if not q:
                 raise ZeroDivisionError('rational number')
             elif q < 0:
@@ -68,8 +70,6 @@ class PythonRationalType(object):
         return "%s(%d, %d)" % (self.__class__.__name__, self.p, self.q)
 
     def __str__(self):
-        if self.q == 1:
-            return "%d" %(self.p)
         return "%d/%d" % (self.p, self.q)
 
     def __int__(self):
