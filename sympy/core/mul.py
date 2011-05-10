@@ -495,7 +495,10 @@ class Mul(AssocOp):
             return args[0], self._new_rawargs(*args[1:])
 
     @cacheit
-    def as_coeff_mul(self, *deps):
+    def as_coeff_mul(self, *deps, **kwargs):
+        args = kwargs.pop('args', True)
+        if kwargs:
+            raise TypeError("as_coeff_mul() got unexpected keyword arguments %s" % kwargs)
         if deps:
             l1 = []
             l2 = []
@@ -504,10 +507,16 @@ class Mul(AssocOp):
                     l2.append(f)
                 else:
                     l1.append(f)
+            if not args:
+                return self._new_rawargs(*l1), self._new_rawargs(*l2)
             return self._new_rawargs(*l1), tuple(l2)
         coeff, notrat = self.args[0].as_coeff_mul()
         if not coeff is S.One:
+            if not args:
+                return coeff, self._new_rawargs(*(notrat + self.args[1:]))
             return coeff, notrat + self.args[1:]
+        if not args:
+            return S.One, self
         return S.One, self.args
 
     @staticmethod
@@ -772,18 +781,6 @@ class Mul(AssocOp):
             numers.append(n)
             denoms.append(d)
         return Mul(*numers), Mul(*denoms)
-
-    def as_coeff_Mul(self):
-        """Efficiently extract the coefficient of a product. """
-        coeff, args = self.args[0], self.args[1:]
-
-        if coeff.is_Number:
-            if len(args) == 1:
-                return coeff, args[0]
-            else:
-                return coeff, self._new_rawargs(*args)
-        else:
-            return S.One, self
 
     def _eval_is_polynomial(self, syms):
         for term in self.args:

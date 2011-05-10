@@ -201,12 +201,22 @@ class Number(AtomicExpr):
     def is_number(self):
         return True
 
-    def as_coeff_mul(self, *deps):
+    def as_coeff_mul(self, *deps, **kwargs):
         # a -> c * t
+        args = kwargs.pop('args', True)
+        if kwargs:
+            raise TypeError("as_coeff_mul() got unexpected keyword arguments %s" % kwargs)
+
         if self.is_Rational:
+            if not args:
+                return self, S.One
             return self, tuple()
         elif self.is_negative:
+            if not args:
+                return S.NegativeOne, -self
             return S.NegativeOne, (-self,)
+        if not args:
+            return S.One, self
         return S.One, (self,)
 
     def as_coeff_add(self, *deps):
@@ -229,10 +239,6 @@ class Number(AtomicExpr):
         """Compute GCD and cofactors of input arguments. """
         other = _sympify(other)
         return S.One, self, other
-
-    def as_coeff_Mul(self):
-        """Efficiently extract the coefficient of a product. """
-        return self, S.One
 
 class Real(Number):
     """

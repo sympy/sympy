@@ -205,12 +205,17 @@ class Add(AssocOp):
             return coeff, notrat + self.args[1:]
         return S.Zero, self.args
 
-    @cacheit
-    def as_coeff_mul(self, *deps):
+#    @cacheit
+    def as_coeff_mul(self, *deps, **kwargs):
         # -2 + 2 * a -> -1, 2-2*a
+        args = kwargs.pop('args', True)
+        if kwargs:
+            raise TypeError("as_coeff_mul() got unexpected keyword arguments %s" % kwargs)
         if self.args[0].is_Rational and self.args[0].is_negative:
+            if not args:
+                return S.NegativeOne, -self
             return S.NegativeOne, (-self,)
-        return Expr.as_coeff_mul(self, *deps)
+        return Expr.as_coeff_mul(self, *deps, **{'args':args})
 
     def _eval_derivative(self, s):
         return Add(*[f.diff(s) for f in self.args])

@@ -398,7 +398,7 @@ class Basic(AssumeMeths):
                 return head(self), (1, args), number(S.One), S.One
         else:
             try:
-                coeff, expr = self.as_coeff_Mul()
+                coeff, expr = self.as_coeff_mul(args=False)
             except AttributeError:
                 return head(self), (len(self.args), self.args), number(S.One), S.One
             else:
