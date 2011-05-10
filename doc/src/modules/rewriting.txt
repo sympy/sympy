@@ -65,27 +65,26 @@ Common Subexpression Detection and Collection
 .. module:: sympy.simplify.cse_main
 
 Before evaluating a large expression, it is often useful to identify common
-subexpressions, collect them and evaluate them at once. This is implemented in the ``cse`` method. Examples::
+subexpressions, collect them and evaluate them at once. This is implemented in the ``cse`` function. Examples::
 
-    In [1]: cse(sqrt(sin(x)))
-    Out[1]:
+    >>> from sympy import cse, sqrt, sin, pprint
+    >>> from sympy.abc import x
+
+    >>> pprint(cse(sqrt(sin(x))), use_unicode=True)
     ⎛    ⎡  ⎽⎽⎽⎽⎽⎽⎽⎽⎤⎞
     ⎝[], ⎣╲╱ sin(x) ⎦⎠
 
-    In [2]: cse(sqrt(sin(x)+5)*sqrt(sin(x)+4))
-    Out[2]:
+    >>> pprint(cse(sqrt(sin(x)+5)*sqrt(sin(x)+4)), use_unicode=True)
     ⎛                ⎡  ⎽⎽⎽⎽⎽⎽⎽⎽   ⎽⎽⎽⎽⎽⎽⎽⎽⎤⎞
-    ⎝[(x₀, sin(x))], ⎣╲╱ 4 + x₀ *╲╱ 5 + x₀ ⎦⎠
+    ⎝[(x₀, sin(x))], ⎣╲╱ 4 + x₀ ⋅╲╱ 5 + x₀ ⎦⎠
 
-    In [3]: cse(sqrt(sin(x)+5+cos(y))*sqrt(sin(x)+4+cos(y)))
-    Out[3]:
-    ⎛                              ⎡  ⎽⎽⎽⎽⎽⎽⎽⎽⎽⎽⎽⎽⎽   ⎽⎽⎽⎽⎽⎽⎽⎽⎽⎽⎽⎽⎽⎤⎞
-    ⎝[(x₀, cos(y)), (x₁, sin(x))], ⎣╲╱ 4 + x₀ + x₁ *╲╱ 5 + x₀ + x₁ ⎦⎠
+    >>> pprint(cse(sqrt(sin(x)+5+cos(y))*sqrt(sin(x)+4+cos(y))), use_unicode=True)
+    ⎛                                             ⎡  ⎽⎽⎽⎽⎽⎽⎽⎽   ⎽⎽⎽⎽⎽⎽⎽⎽⎤⎞
+    ⎝[(x₀, cos(y)), (x₁, sin(x)), (x₂, x₀ + x₁)], ⎣╲╱ 4 + x₂ ⋅╲╱ 5 + x₂ ⎦⎠
 
-    In [4]: cse((x-y)*(z-y) + sqrt((x-y)*(z-y)))
-    Out[4]:
-    ⎛                            ⎡          ⎽⎽⎽⎽   ⎽⎽⎽⎽⎤⎞
-    ⎝[(x₀, z - y), (x₁, x - y)], ⎣x₀*x₁ + ╲╱ x₀ *╲╱ x₁ ⎦⎠
+    >>> pprint(cse((x-y)*(z-y) + sqrt((x-y)*(z-y))), use_unicode=True)
+    ⎛                         ⎡       ⎽⎽⎽⎽⎤⎞
+    ⎝[(x₀, (x - y)⋅(z - y))], ⎣x₀ + ╲╱ x₀ ⎦⎠
 
 More information:
 
