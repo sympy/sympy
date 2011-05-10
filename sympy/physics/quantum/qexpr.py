@@ -22,7 +22,7 @@ class QuantumError(Exception):
     pass
 
 
-def _qsympify_sequence(*seq):
+def _qsympify_sequence(seq):
     """Convert elements of a sequence to standard form.
 
     This is like sympify, but it performs special logic for arguments passed
@@ -36,19 +36,36 @@ def _qsympify_sequence(*seq):
 
     Strings are passed to Symbol, not sympify to make sure that variables like
     'pi' are kept as Symbols, not the Sympy built-in number subclasses.
+
+    Examples
+    ========
+
+    >>> from sympy.physics.quantum.qexpr import _qsympify_sequence
+    >>> _qsympify_sequence((1,2,[3,4,[1,]]))
+    (1, 2, Tuple(3, 4, Tuple(1)))
+
     """
-    result = []
-    for item in seq:
-        if isinstance(item, (list, tuple, Tuple)):
-            newitem = Tuple(*[_qsympify_sequence(it) for it in item])
-        elif isinstance(item, Matrix):
-            newitem = item
-        elif isinstance(item, basestring):
-            newitem = Symbol(item)
+
+    return tuple(__qsympify_sequence_helper(seq))
+
+def __qsympify_sequence_helper(seq):
+    """
+       Helper function for _qsympify_sequence
+       This function does the actual work.
+    """
+    #base case. If not a list, do Sympification
+    if not isinstance(seq, (list, tuple, Tuple)):
+        if isinstance(seq, Matrix):
+            return seq
+        elif isinstance(seq, basestring):
+            return Symbol(seq)
         else:
-            newitem = sympify(item)
-        result.append(newitem)
-    return tuple(result)
+            return sympify(seq)
+
+    #if list, recurse on each item in the list
+    result = [__qsympify_sequence_helper(item) for item in seq]
+
+    return Tuple(*result)
 
 
 #-----------------------------------------------------------------------------
@@ -146,7 +163,7 @@ class QExpr(Expr):
 
         This simply runs args through _qsympify_sequence.
         """
-        return _qsympify_sequence(*args)
+        return _qsympify_sequence(args)
 
     @classmethod
     def _eval_hilbert_space(cls, args):
