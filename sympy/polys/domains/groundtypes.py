@@ -22,8 +22,9 @@ from __builtin__ import (
 
 from pythonrationaltype import PythonRationalType
 
+from sympy.functions.combinatorial.factorials import factorial as python_factorial
+
 from sympy.core.numbers import (
-    ifactorial as python_factorial,
     igcdex     as python_gcdex,
     igcd       as python_gcd,
     ilcm       as python_lcm,

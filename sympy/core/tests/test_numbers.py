@@ -3,7 +3,7 @@ from sympy import (Rational, Symbol, Real, I, sqrt, oo, nan, pi, E, Integer,
                    Number, zoo, log, Mul, Pow)
 from sympy.core.power import integer_nthroot
 
-from sympy.core.numbers import igcd, ilcm, igcdex, ifactorial, seterr, _intcache
+from sympy.core.numbers import igcd, ilcm, igcdex, seterr, _intcache
 from sympy.utilities.pytest import raises
 from sympy import mpmath
 
@@ -106,13 +106,6 @@ def test_igcdex():
     assert igcdex(2, 3) == (-1, 1, 1)
     assert igcdex(10, 12) == (-1, 1, 2)
     assert igcdex(100, 2004) == (-20, 1, 4)
-
-def test_ifactorial():
-    assert ifactorial(0) == 1
-    assert ifactorial(1) == 1
-    assert ifactorial(2) == 2
-    assert ifactorial(3) == 6
-    assert ifactorial(10) == 3628800
 
 def _strictly_equal(a, b):
     return (a.p, a.q, type(a.p), type(a.q)) == \
