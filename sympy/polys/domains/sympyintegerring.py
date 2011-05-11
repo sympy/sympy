@@ -5,6 +5,11 @@ from sympy.polys.domains.groundtypes import SymPyIntegerType
 
 from sympy.polys.polyerrors import CoercionFailed
 
+from sympy import (
+    Integer as sympy_int,
+    Rational as sympy_rat,
+)
+
 class SymPyIntegerRing(IntegerRing):
     """Integer ring based on SymPy's `Integer` type. """
 
@@ -15,6 +20,22 @@ class SymPyIntegerRing(IntegerRing):
 
     def __init__(self):
         """Allow instantiation of this domain. """
+
+    def of_type(self, a):
+        """
+        Check if `a` is of type `dtype` (`sympy`).
+
+        Example
+        =======
+        >>> from sympy import Integer
+        >>> from sympy.polys.domains import ZZ_sympy, QQ
+        >>> ZZ_sympy().of_type(Integer(2))
+        True
+        >>> ZZ_sympy().of_type(QQ(3, 2))
+        False
+        """
+        return type(a) in [type(self.one), type(self.zero),
+                           type(sympy_int(-1)), type(sympy_int(2))]
 
     def to_sympy(self, a):
         """Convert `a` to a SymPy object. """
