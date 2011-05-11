@@ -5,6 +5,7 @@ from sympy.utilities.pytest import XFAIL, raises
 from sympy.abc import x, y, n
 from sympy.core.function import PoleError
 from sympy.utilities.iterables import subsets, variations
+from sympy.core.compatibility import all
 
 def test_f_expand_complex():
     f = Function('f')
