@@ -24,6 +24,7 @@ import doctest as pdoctest # avoid clashing with our doctest() function
 from sympy.utilities import any
 from doctest import DocTestFinder, DocTestRunner
 import re as pre
+import random
 
 # Use sys.stdout encoding for ouput.
 # This was only added to Python's doctest in Python 2.6, so we must duplicate
@@ -142,8 +143,11 @@ def test(*paths, **kwargs):
     post_mortem = kwargs.get("pdb", False)
     colors = kwargs.get("colors", True)
     sort = kwargs.get("sort", True)
+    seed = kwargs.get("seed", None)
+    if seed is None:
+        seed = random.randrange(100000000)
     r = PyTestReporter(verbose, tb, colors)
-    t = SymPyTests(r, kw, post_mortem)
+    t = SymPyTests(r, kw, post_mortem, seed)
 
     test_files = t.get_test_files('sympy')
     if len(paths) == 0:
@@ -442,7 +446,8 @@ def sympytestfile(filename, module_relative=True, name=None, package=None,
 
 class SymPyTests(object):
 
-    def __init__(self, reporter, kw="", post_mortem=False):
+    def __init__(self, reporter, kw="", post_mortem=False,
+                 seed=random.random()):
         self._post_mortem = post_mortem
         self._kw = kw
         self._count = 0
@@ -450,6 +455,7 @@ class SymPyTests(object):
         self._reporter = reporter
         self._reporter.root_dir(self._root_dir)
         self._testfiles = []
+        self._seed = seed
 
     def test(self, sort=False):
         """
@@ -469,13 +475,14 @@ class SymPyTests(object):
             except KeyboardInterrupt:
                 print " interrupted by user"
                 break
-        return self._reporter.finish()
+        return self._reporter.finish(self._seed)
 
     def test_file(self, filename):
         name = "test%d" % self._count
         name = os.path.splitext(os.path.basename(filename))[0]
         self._count += 1
         gl = {'__file__':filename}
+        random.seed(self._seed)
         try:
             execfile(filename, gl)
         except (ImportError, SyntaxError):
@@ -1034,7 +1041,7 @@ class PyTestReporter(Reporter):
         self.write("ground types: %s\n\n" % GROUND_TYPES)
         self._t_start = clock()
 
-    def finish(self):
+    def finish(self, seed=None):
         self._t_end = clock()
         self.write("\n")
         global text, linelen
@@ -1062,6 +1069,8 @@ class PyTestReporter(Reporter):
         if len(self._exceptions) > 0:
             add_text("%d exceptions, " % len(self._exceptions))
         add_text("in %.2f seconds" % (self._t_end - self._t_start))
+        if len(self._failed) > 0 and seed is not None:
+            add_text(", seed was: %d" % seed)
 
 
         if len(self._xpassed) > 0:
