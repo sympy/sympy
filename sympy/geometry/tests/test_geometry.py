@@ -530,7 +530,20 @@ def test_polygon():
     assert p3.distance(pt2) == sqrt(2)/2
 
     '''Polygon to Polygon'''
+    import warnings
+    # p1.distance(p2) emits a warning
+    # First, test the warning
+    warnings.filterwarnings("error", "Polygons may intersect producing erroneous output")
+    raises(UserWarning, "p1.distance(p2)")
+    # now test the actual output
+    warnings.filterwarnings("ignore", "Polygons may intersect producing erroneous output")
     assert p1.distance(p2) == half/2
+    # Keep testing reasonably thread safe, so reset the warning
+    warnings.filterwarnings("default", "Polygons may intersect producing erroneous output")
+    # Note, in Python 2.6+, this can be done more nicely using the
+    # warnings.catch_warnings context manager.
+    # See http://docs.python.org/library/warnings#testing-warnings.
+
     assert p1.distance(p3) == sqrt(2)/2
     assert p3.distance(p4) == (sqrt(2)/2 - sqrt(Rational(2)/25)/2)
     assert p5.distance(p6) == Rational(7)/10
