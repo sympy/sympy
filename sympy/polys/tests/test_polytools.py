@@ -1152,6 +1152,7 @@ def test_poly_cancel():
     a = Poly(y, y, domain='ZZ(x)')
     b = Poly(1, y, domain='ZZ[x]')
     assert a.cancel(b) == (1, Poly(y, y, domain='ZZ(x)'), Poly(1, y, domain='ZZ(x)'))
+    assert a.cancel(b, include=True) == (Poly(y, y, domain='ZZ(x)'), Poly(1, y, domain='ZZ(x)'))
 
 def test_parallel_poly_from_expr():
     assert parallel_poly_from_expr([x-1, x**2-1], x)[0] == [Poly(x-1, x), Poly(x**2-1, x)]
