@@ -24,6 +24,7 @@ import doctest as pdoctest # avoid clashing with our doctest() function
 from sympy.utilities import any
 from doctest import DocTestFinder, DocTestRunner
 import re as pre
+import random
 
 # Use sys.stdout encoding for ouput.
 # This was only added to Python's doctest in Python 2.6, so we must duplicate
@@ -161,8 +162,11 @@ def test(*paths, **kwargs):
     post_mortem = kwargs.get("pdb", False)
     colors = kwargs.get("colors", True)
     sort = kwargs.get("sort", True)
+    seed = kwargs.get("seed", None)
+    if seed is None:
+        seed = random.randrange(100000000)
     r = PyTestReporter(verbose, tb, colors)
-    t = SymPyTests(r, kw, post_mortem)
+    t = SymPyTests(r, kw, post_mortem, seed)
 
     # Disable warnings for external modules
     import sympy.external
@@ -471,7 +475,8 @@ def sympytestfile(filename, module_relative=True, name=None, package=None,
 
 class SymPyTests(object):
 
-    def __init__(self, reporter, kw="", post_mortem=False):
+    def __init__(self, reporter, kw="", post_mortem=False,
+                 seed=random.random()):
         self._post_mortem = post_mortem
         self._kw = kw
         self._count = 0
@@ -479,6 +484,7 @@ class SymPyTests(object):
         self._reporter = reporter
         self._reporter.root_dir(self._root_dir)
         self._testfiles = []
+        self._seed = seed
 
     def test(self, sort=False):
         """
@@ -490,8 +496,9 @@ class SymPyTests(object):
             self._testfiles.sort()
         else:
             from random import shuffle
+            random.seed(self._seed)
             shuffle(self._testfiles)
-        self._reporter.start()
+        self._reporter.start(self._seed)
         for f in self._testfiles:
             try:
                 self.test_file(f)
@@ -505,6 +512,7 @@ class SymPyTests(object):
         name = os.path.splitext(os.path.basename(filename))[0]
         self._count += 1
         gl = {'__file__':filename}
+        random.seed(self._seed)
         try:
             execfile(filename, gl)
         except (ImportError, SyntaxError):
@@ -1053,7 +1061,7 @@ class PyTestReporter(Reporter):
         t = traceback.format_exception_only(e, val)
         self.write("".join(t))
 
-    def start(self):
+    def start(self, seed=None):
         self.write_center("test process starts")
         executable = sys.executable
         v = tuple(sys.version_info)
@@ -1062,7 +1070,9 @@ class PyTestReporter(Reporter):
         from .misc import ARCH
         self.write("architecture: %s\n" % ARCH)
         from sympy.polys.domains import GROUND_TYPES
-        self.write("ground types: %s\n\n" % GROUND_TYPES)
+        self.write("ground types: %s\n" % GROUND_TYPES)
+        if seed is not None:
+            self.write("random seed: %d\n\n" % seed)
         self._t_start = clock()
 
     def finish(self):
