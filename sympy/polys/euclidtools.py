@@ -1793,7 +1793,7 @@ def dmp_primitive(f, u, K):
     else:
         return cont, [ dmp_exquo(c, cont, v, K) for c in f ]
 
-def dup_cancel(f, g, K, multout=True):
+def dup_cancel(f, g, K, include=True):
     """
     Cancel common factors in a rational function ``f/g``.
 
@@ -1809,9 +1809,9 @@ def dup_cancel(f, g, K, multout=True):
     ([2, 2], [1, -1])
 
     """
-    return dmp_cancel(f, g, 0, K, multout=multout)
+    return dmp_cancel(f, g, 0, K, include=include)
 
-def dmp_cancel(f, g, u, K, multout=True):
+def dmp_cancel(f, g, u, K, include=True):
     """
     Cancel common factors in a rational function ``f/g``.
 
@@ -1828,7 +1828,7 @@ def dmp_cancel(f, g, u, K, multout=True):
 
     """
     if dmp_zero_p(f, u) or dmp_zero_p(g, u):
-        if multout:
+        if include:
             return f, g
         else:
             return K.one, K.one, f, g
@@ -1861,7 +1861,7 @@ def dmp_cancel(f, g, u, K, multout=True):
     elif q_neg:
         cp, q = -cp, dmp_neg(q, u, K)
 
-    if not multout:
+    if not include:
         return cp, cq, p, q
 
     p = dmp_mul_ground(p, cp, u, K)

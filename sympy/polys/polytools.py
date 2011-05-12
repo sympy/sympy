@@ -2862,7 +2862,7 @@ class Poly(Expr):
 
         return r.replace(t, x)
 
-    def cancel(f, g):
+    def cancel(f, g, include=False):
         """
         Cancel common factors in a rational function ``f/g``.
 
@@ -2874,21 +2874,29 @@ class Poly(Expr):
         >>> Poly(2*x**2 - 2, x).cancel(Poly(x**2 - 2*x + 1, x))
         (1, Poly(2*x + 2, x, domain='ZZ'), Poly(x - 1, x, domain='ZZ'))
 
+        >>> Poly(2*x**2 - 2, x).cancel(Poly(x**2 - 2*x + 1, x), include=True)
+        (Poly(2*x + 2, x, domain='ZZ'), Poly(x - 1, x, domain='ZZ'))
+
         """
         dom, per, F, G = f._unify(g)
 
         if hasattr(F, 'cancel'):
-            cp, cq, p, q = F.cancel(G, multout=False)
+            result = F.cancel(G, include=include)
         else: # pragma: no cover
             raise OperationNotSupported(f, 'cancel')
 
-        if dom.has_assoc_Ring:
-            dom = dom.get_ring()
+        if not include:
+            if dom.has_assoc_Ring:
+                dom = dom.get_ring()
 
-        cp = dom.to_sympy(cp)
-        cq = dom.to_sympy(cq)
+            cp, cq, p, q = result
 
-        return cp/cq, per(p), per(q)
+            cp = dom.to_sympy(cp)
+            cq = dom.to_sympy(cq)
+
+            return cp/cq, per(p), per(q)
+        else:
+            return tuple(map(per, result))
 
     @property
     def is_zero(f):

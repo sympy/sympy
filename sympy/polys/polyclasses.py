@@ -611,18 +611,18 @@ class DMP(object):
         lev, dom, per, F, G = f.unify(g)
         return per(dmp_lcm(F, G, lev, dom))
 
-    def cancel(f, g, multout=True):
+    def cancel(f, g, include=True):
         """Cancel common factors in a rational function ``f/g``. """
         lev, dom, per, F, G = f.unify(g)
 
-        if multout:
-                    F, G = dmp_cancel(F, G, lev, dom, multout=True)
+        if include:
+                    F, G = dmp_cancel(F, G, lev, dom, include=True)
         else:
-            cF, cG, F, G = dmp_cancel(F, G, lev, dom, multout=False)
+            cF, cG, F, G = dmp_cancel(F, G, lev, dom, include=False)
 
         F, G = per(F), per(G)
 
-        if multout:
+        if include:
             return F, G
         else:
             return cF, cG, F, G
