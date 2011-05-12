@@ -50,7 +50,7 @@ from sympy.polys.densebasic import (
     dup_deflate, dmp_deflate,
     dmp_inject, dmp_eject,
     dup_terms_gcd, dmp_terms_gcd,
-    dmp_list_terms,
+    dmp_list_terms, dmp_exclude,
     dmp_slice_in)
 
 from sympy.polys.densearith import (
@@ -335,6 +335,24 @@ class DMP(object):
         """Eject selected generators into the ground domain. """
         F = dmp_eject(f.rep, f.lev, dom, front=front)
         return f.__class__(F, dom, f.lev - len(dom.gens))
+
+    def exclude(f):
+        r"""
+        Remove useless generators from ``f``.
+
+        Returns the removed generators and the new excluded ``f``.
+
+        **Example**
+
+        >>> from sympy.polys.polyclasses import DMP
+        >>> from sympy.polys.domains import ZZ
+
+        >>> DMP([[[ZZ(1)]], [[ZZ(1)], [ZZ(2)]]], ZZ).exclude()
+        ([2], DMP([[1], [1, 2]], ZZ))
+
+        """
+        J, F, u = dmp_exclude(f.rep, f.lev, f.dom)
+        return J, f.__class__(F, f.dom, u)
 
     def terms_gcd(f):
         """Remove GCD of terms from the polynomial `f`. """

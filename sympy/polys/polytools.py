@@ -428,6 +428,28 @@ class Poly(Expr):
 
         return f.as_expr().subs(old, new)
 
+    def exclude(f):
+        """
+        Remove unnecessary generators from ``f``.
+
+        **Example**
+
+        >>> from sympy import Poly
+        >>> from sympy.abc import a, b, c, d, x
+
+        >>> Poly(a + x, a, b, c, d, x).exclude()
+        Poly(a + x, a, x, domain='ZZ')
+
+        """
+        J, new = f.rep.exclude()
+        gens = []
+
+        for j in range(len(f.gens)):
+            if j not in J:
+                gens.append(f.gens[j])
+
+        return f.per(new, gens=gens)
+
     def replace(f, x, y=None):
         """
         Replace ``x`` with ``y`` in generators list.
