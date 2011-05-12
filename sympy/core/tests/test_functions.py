@@ -347,7 +347,7 @@ def test_evalf_default():
     assert type(re(sin(I + 1.0))) == Float
     assert type(im(sin(I + 1.0))) == Float
     assert type(sin(4)) == sin
-    assert type(polygamma(2,4.0)) == Float
+    assert type(polygamma(2.0,4.0)) == Float
     assert type(sin(Rational(1,4))) == sin
 
 def test_issue2300():
@@ -371,3 +371,8 @@ def test_issue2300():
                 noraise = eq.diff(*v)
             else:
                 raises(ValueError, 'eq.diff(*v)')
+
+def test_derivative_numerically():
+    from random import random
+    z0 = random() + I*random()
+    assert abs(Derivative(sin(x), x).doit_numerically(z0) - cos(z0)) < 1e-15
