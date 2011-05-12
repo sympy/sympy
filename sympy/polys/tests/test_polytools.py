@@ -859,6 +859,11 @@ def test_Poly_eject():
     raises(DomainError, "Poly(x*y, x, y, domain=ZZ[z]).eject(y)")
     raises(NotImplementedError, "Poly(x*y, x, y, z).eject(y)")
 
+def test_Poly_exclude():
+    assert Poly(x, x, y).exclude() == Poly(x, x)
+    assert Poly(x*y, x, y).exclude() == Poly(x*y, x, y)
+    assert Poly(1, x, y).exclude() == Poly(1, x, y)
+
 def test_Poly__gen_to_level():
     assert Poly(1, x, y)._gen_to_level(-2) == 0
     assert Poly(1, x, y)._gen_to_level(-1) == 1
