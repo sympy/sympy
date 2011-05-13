@@ -198,3 +198,14 @@ polygamma
 uppergamma
 ----------
 .. autoclass:: sympy.functions.special.gamma_functions.uppergamma
+
+Bessel Type Functions
+---------------------
+.. autoclass:: sympy.functions.special.bessel.besselj
+.. autoclass:: sympy.functions.special.bessel.bessely
+.. autoclass:: sympy.functions.special.bessel.besseli
+.. autoclass:: sympy.functions.special.bessel.besselk
+.. autoclass:: sympy.functions.special.bessel.hankel1
+.. autoclass:: sympy.functions.special.bessel.hankel2
+.. autoclass:: sympy.functions.special.bessel.jn
+.. autoclass:: sympy.functions.special.bessel.yn
