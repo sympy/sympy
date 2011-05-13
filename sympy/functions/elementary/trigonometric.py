@@ -1,6 +1,6 @@
 from sympy.core.add import Add
 from sympy.core.mul import Mul
-from sympy.core.numbers import Rational, Real
+from sympy.core.numbers import Rational, Real, Number
 from sympy.core.basic import C, sympify, cacheit
 from sympy.core.singleton import S
 from sympy.core.function import Function, ArgumentIndexError
@@ -84,11 +84,7 @@ def _pi_coeff(arg, cycles=1):
         if cx:
             # We want the Number coefficient (but not pi). as_coeff_mul()
             # doesn't include Real coefficients, so do this instead.
-            args = Mul.make_args(cx)
-            if args[0].is_Number:
-                c, x = args[0], Mul(*args[1:])
-            else:
-                c, x = S.One, cx
+            x, c = cx.as_independent(Number)
 
             if c.is_Real:
                 # recast exact binary fractions to Rationals
