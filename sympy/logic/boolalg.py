@@ -156,6 +156,32 @@ class Equivalent(BooleanFunction):
             return Nor(*argset)
         return Basic.__new__(cls, *set(args))
 
+class ITE(BooleanFunction):
+    """
+    If then else clause.
+
+    ITE(A, B, C) evaluates and returns the result of B if A is true
+    else it returns the result of C
+
+    Example:
+    >>> from sympy.logic.boolalg import ITE, And, Xor, Or
+    >>> from sympy.abc import x,y,z
+    >>> x = True
+    >>> y = False
+    >>> z = True
+    >>> ITE(x,y,z)
+    False
+    >>> ITE(Or(x, y), And(x, z), Xor(z, x))
+    True
+    """
+    @classmethod
+    def eval(cls, *args):
+        args = list(args)
+        if len(args) != 3:
+            raise ValueError, "%d operand(s) used for an ITE (triples are required): %s" % (len(args), str(args))
+        else:
+            return Or(And(args[0], args[1]), And(Not(args[0]), args[2]))
+
 ### end class definitions. Some useful methods
 
 def fuzzy_not(arg):
