@@ -102,19 +102,6 @@ def igcdex(a, b):
 
     return (x*x_sign, y*y_sign, a)
 
-def ifactorial(m):
-    """Computes factorial of ``m``. """
-    if not m:
-        return 1
-
-    k = m
-
-    while m > 1:
-        m -= 1
-        k *= m
-
-    return k
-
 class Number(AtomicExpr):
     """
     Represents any kind of number in sympy.
@@ -1223,7 +1210,8 @@ class Integer(Rational):
 
     def factorial(a):
         """Compute factorial of `a`. """
-        return Integer(ifactorial(int(a)))
+        from sympy.functions.combinatorial.factorials import factorial
+        return Integer(factorial(int(a)))
 
     def isqrt(a):
         """Compute integer square root of `a`. """

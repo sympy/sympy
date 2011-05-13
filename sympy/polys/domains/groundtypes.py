@@ -22,8 +22,11 @@ from __builtin__ import (
 
 from pythonrationaltype import PythonRationalType
 
+def python_factorial(n):
+    from sympy.functions.combinatorial.factorials import factorial
+    return int(factorial(n))
+
 from sympy.core.numbers import (
-    ifactorial as python_factorial,
     igcdex     as python_gcdex,
     igcd       as python_gcd,
     ilcm       as python_lcm,
