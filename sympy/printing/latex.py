@@ -523,6 +523,48 @@ class LatexPrinter(Printer):
 
         return self._do_exponent(tex, exp)
 
+    def _hprint_BesselBase(self, expr, exp, sym):
+        tex = r"%s" % (sym)
+
+        need_exp = False
+        if exp is not None:
+            if tex.find('^') == -1:
+                tex = r"%s^{%s}" % (tex, self._print(exp))
+            else:
+                need_exp = True
+
+        tex = r"%s_{%s}\left(%s\right)" % (tex, self._print(expr.order),
+                                           self._print(expr.argument))
+
+        if need_exp:
+            tex = self._do_exponent(tex, exp)
+
+        return tex
+
+    def _print_besselj(self, expr, exp=None):
+        return self._hprint_BesselBase(expr, exp, 'J')
+
+    def _print_besseli(self, expr, exp=None):
+        return self._hprint_BesselBase(expr, exp, 'I')
+
+    def _print_besselk(self, expr, exp=None):
+        return self._hprint_BesselBase(expr, exp, 'K')
+
+    def _print_bessely(self, expr, exp=None):
+        return self._hprint_BesselBase(expr, exp, 'Y')
+
+    def _print_yn(self, expr, exp=None):
+        return self._hprint_BesselBase(expr, exp, 'y')
+
+    def _print_jn(self, expr, exp=None):
+        return self._hprint_BesselBase(expr, exp, 'j')
+
+    def _print_hankel1(self, expr, exp=None):
+        return self._hprint_BesselBase(expr, exp, 'H^{(1)}')
+
+    def _print_hankel2(self, expr, exp=None):
+        return self._hprint_BesselBase(expr, exp, 'H^{(2)}')
+
     def _print_Rational(self, expr):
         if expr.q != 1:
             sign = ""
