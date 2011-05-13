@@ -35,6 +35,13 @@ class GeometryEntity(tuple):
     def __getnewargs__(self):
         return tuple(self)
 
+    @property
+    def free_symbols(self):
+        free = set()
+        for a in self.args:
+            free |= a.free_symbols
+        return free
+
     def intersection(self, o):
         """
         Returns a list of all of the intersections of self with o.

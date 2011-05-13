@@ -202,8 +202,8 @@ class Ellipse(GeometryEntity):
         >>> Ellipse(p1, b, a).minor
         a
 
-        >>> m = Symbol('m', negative=True) # assumption to indicate smaller
-        >>> M = Symbol('M', positive=True) # assumption to indicate bigger
+        >>> m = Symbol('m')
+        >>> M = m + 1
         >>> Ellipse(p1, m, M).minor
         m
 
@@ -236,10 +236,10 @@ class Ellipse(GeometryEntity):
         >>> Ellipse(p1, b, a).major
         b
 
-        >>> m = Symbol('m', negative=True) # assumption to indicate smaller
-        >>> M = Symbol('M', positive=True) # assumption to indicate bigger
+        >>> m = Symbol('m')
+        >>> M = m + 1
         >>> Ellipse(p1, m, M).major
-        M
+        1 + m
 
         """
         rv = Max(*self[1:3])
@@ -434,7 +434,7 @@ class Ellipse(GeometryEntity):
         >>> e = Ellipse((0, 0), 3, 2)
         >>> e.encloses_point((0, 0))
         True
-        >>> e.encloses_point(e.arbitrary_point().subs(t, S.Half))
+        >>> e.encloses_point(e.arbitrary_point(t).subs(t, S.Half))
         False
         >>> e.encloses_point((4, 0))
         False
@@ -449,7 +449,6 @@ class Ellipse(GeometryEntity):
             # (which is the same as the major axis length) then p is inside
             # the ellipse
             h1, h2 = [f.distance(p) for f in self.foci]
-            f = self.focus_distance
             test = 2*self.major - (h1 + h2)
         else:
             test = self.radius - self.center.distance(p)
@@ -585,7 +584,7 @@ class Ellipse(GeometryEntity):
             raise NotImplementedError("Unknown argument type")
 
     def arbitrary_point(self, parameter='t'):
-        """A parametric point on the ellipse.
+        """A parameterized point on the ellipse.
 
         Parameters
         ----------
@@ -595,6 +594,11 @@ class Ellipse(GeometryEntity):
         Returns
         -------
         arbitrary_point : Point
+
+        Raises
+        ------
+        ValueError
+            When `parameter` already appears in the functions.
 
         See Also
         --------
@@ -609,6 +613,8 @@ class Ellipse(GeometryEntity):
 
         """
         t = _symbol(parameter)
+        if t.name in (f.name for f in self.free_symbols):
+            raise ValueError('Symbol %s already appears in object and cannot be used as a parameter.' % t.name)
         return Point(self.center[0] + self.hradius*C.cos(t),
                 self.center[1] + self.vradius*C.sin(t))
 

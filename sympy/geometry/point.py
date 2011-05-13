@@ -69,6 +69,10 @@ class Point(GeometryEntity):
     def y(self):
         return self[1]
 
+    @property
+    def free_symbols(self):
+        return self.x.free_symbols.union(self.y.free_symbols)
+
     def _eval_subs(self, old, new):
         return type(self)(self.x.subs(old, new), self.y.subs(old, new))
 

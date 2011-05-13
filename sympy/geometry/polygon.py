@@ -485,7 +485,7 @@ class Polygon(GeometryEntity):
         return hit_odd
 
     def arbitrary_point(self, parameter='t'):
-        """A parametric point on the polygon.
+        """A parameterized point on the polygon.
 
         The parameter, varying from 0 to 1, assigns points to the position on
         the perimeter that is that fraction of the total perimeter. So the
@@ -500,6 +500,11 @@ class Polygon(GeometryEntity):
         Returns
         -------
         arbitrary_point : Point
+
+        Raises
+        ------
+        ValueError
+            When `parameter` already appears in the Polygon's definition.
 
         See Also
         --------
@@ -517,8 +522,10 @@ class Polygon(GeometryEntity):
         Point(1, 1/2)
 
         """
-        sides = []
         t = _symbol(parameter)
+        if t.name in (f.name for f in self.free_symbols):
+            raise ValueError('Symbol %s already appears in object and cannot be used as a parameter.' % t.name)
+        sides = []
         perimeter = self.perimeter
         perim_fraction_start = 0
         for s in self.sides:
@@ -906,7 +913,7 @@ class RegularPolygon(Polygon):
     """
 
     def __new__(self, c, r, n, rot=0, **kwargs):
-        r, n, rot = [sympify(w) for w in [r, n, rot]]
+        r, n, rot = sympify([r, n, rot])
         c = Point(c)
         if not isinstance(r, Basic):
             raise GeometryError("RegularPolygon.__new__ requires r to be a number or Basic instance")

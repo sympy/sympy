@@ -1,5 +1,5 @@
 from sympy import (Abs, C, Max, Min, Rational, Real, S, Symbol, cos, oo, pi,
-                   simplify, sqrt)
+                   simplify, sqrt, symbols)
 from sympy.geometry import (Circle, Curve, Ellipse, GeometryError, Line, Point,
                             Polygon, Ray, RegularPolygon, Segment, Triangle,
                             are_similar, convex_hull, intersection)
@@ -20,13 +20,29 @@ def feq(a, b):
     return -t < a-b < t
 
 def test_curve():
+    s = Symbol('s')
     t = Symbol('t')
     z = Symbol('z')
-    C = Curve([2*t, t**2], (z, 0, 2))
+
+    # this curve is independent of the indicated parameter
+    C = Curve([2*s, s**2], (z, 0, 2))
 
     assert C.parameter == z
-    assert C.functions == [2*t, t**2]
+    assert C.functions == (2*s, s**2)
+    assert C.arbitrary_point() == Point(2*s, s**2)
+    assert C.arbitrary_point(z) == Point(2*s, s**2)
+
+    # this is how it is normally used
+    C = Curve([2*s, s**2], (s, 0, 2))
+
+    assert C.parameter == s
+    assert C.functions == (2*s, s**2)
     assert C.arbitrary_point() == Point(2*t, t**2)
+    assert C.arbitrary_point(z) == Point(2*z, z**2)
+    assert C.arbitrary_point(C.parameter) == Point(2*s, s**2)
+
+    raises(ValueError, 'Curve((s, s + t), (s, 1, 2)).arbitrary_point()')
+    raises(ValueError, 'Curve((s, s + t), (t, 1, 2)).arbitrary_point(s)')
 
 def test_point():
     p1 = Point(x1, x2)
@@ -625,3 +641,20 @@ def test_encloses():
     assert s.encloses(Point(0, S.Half)) is False
     assert s.encloses(Point(S.Half, S.Half)) is False # it's a vertex
     assert s.encloses(Point(Rational(3, 4), S.Half)) is True
+
+def test_free_symbols():
+    a, b, c, d, e, f, s = symbols('a:f,s')
+    assert Point(a,b).free_symbols == set([a, b])
+    assert Line((a,b),(c,d)).free_symbols == set([a, b, c, d])
+    assert Ray((a,b),(c,d)).free_symbols == set([a, b, c, d])
+    assert Ray((a,b),angle=c).free_symbols == set([a, b, c])
+    assert Segment((a,b),(c,d)).free_symbols == set([a, b, c, d])
+    assert Line((a,b),slope=c).free_symbols == set([a, b, c])
+    assert Curve((a*s,b*s),(s,c,d)).free_symbols == set([a, b, c, d])
+    assert Ellipse((a,b),c,d).free_symbols == set([a, b, c, d])
+    assert Ellipse((a,b),c, eccentricity=d).free_symbols == set([a, b, c, d])
+    assert Ellipse((a,b),vradius=c, eccentricity=d).free_symbols == set([a, b, c, d])
+    assert Circle((a,b),c).free_symbols == set([a, b, c])
+    assert Circle((a,b),(c,d),(e,f)).free_symbols == set([e, d, c, b, f, a])
+    assert Polygon((a,b),(c,d),(e,f)).free_symbols == set([e, b, d, f, a, c])
+    assert RegularPolygon((a,b),c,d,e).free_symbols == set([e, a, b, c, d])

@@ -771,6 +771,11 @@ class Line(LinearEntity):
         -------
         point : Point
 
+        Raises
+        ------
+        ValueError
+            When `parameter` already appears in the Line's definition.
+
         See Also
         --------
         Point
@@ -785,6 +790,8 @@ class Line(LinearEntity):
 
         """
         t = _symbol(parameter)
+        if t.name in (f.name for f in self.free_symbols):
+            raise ValueError('Symbol %s already appears in object and cannot be used as a parameter.' % t.name)
         x = simplify(self.p1[0] + t*(self.p2[0] - self.p1[0]))
         y = simplify(self.p1[1] + t*(self.p2[1] - self.p1[1]))
         return Point(x, y)
@@ -1028,7 +1035,28 @@ class Ray(LinearEntity):
     def arbitrary_point(self, parameter='t'):
         """A parameterized point on the Ray.
 
-        >>> from sympy import Ray, Point, Segment, S, simplify, solve
+        Parameters
+        ----------
+        parameter : str, optional
+            The name of the parameter which will be used for the parametric
+            point. The default value is 't'.
+
+        Returns
+        -------
+        point : Point
+
+        Raises
+        ------
+        ValueError
+            When `parameter` already appears in the Ray's definition.
+
+        See Also
+        --------
+        Point
+
+        Examples
+        --------
+         >>> from sympy import Ray, Point, Segment, S, simplify, solve
         >>> from sympy.abc import t
         >>> r = Ray(Point(0, 0), Point(2, 3))
 
@@ -1072,6 +1100,8 @@ class Ray(LinearEntity):
 
         """
         t = _symbol(parameter)
+        if t.name in (f.name for f in self.free_symbols):
+            raise ValueError('Symbol %s already appears in object and cannot be used as a parameter.' % t.name)
         m = self.slope
         x = simplify(self.p1[0] + t/(1 - t)*(self.p2[0] - self.p1[0]))
         y = simplify(self.p1[1] + t/(1 - t)*(self.p2[1] - self.p1[1]))
@@ -1219,6 +1249,22 @@ class Segment(LinearEntity):
         -------
         point : Point
 
+
+        Parameters
+        ----------
+        parameter : str, optional
+            The name of the parameter which will be used for the parametric
+            point. The default value is 't'.
+
+        Returns
+        -------
+        point : Point
+
+        Raises
+        ------
+        ValueError
+            When `parameter` already appears in the Segment's definition.
+
         See Also
         --------
         Point
@@ -1233,6 +1279,8 @@ class Segment(LinearEntity):
 
         """
         t = _symbol(parameter)
+        if t.name in (f.name for f in self.free_symbols):
+            raise ValueError('Symbol %s already appears in object and cannot be used as a parameter.' % t.name)
         x = simplify(self.p1[0] + t*(self.p2[0] - self.p1[0]))
         y = simplify(self.p1[1] + t*(self.p2[1] - self.p1[1]))
         return Point(x, y)
