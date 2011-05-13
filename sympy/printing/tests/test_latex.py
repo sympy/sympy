@@ -1,7 +1,7 @@
 from sympy import (symbols, Rational, Symbol, Integral, log, diff, sin, exp,
         Function, factorial, floor, ceiling, Abs, re, im, conjugate, gamma,
         Order, Piecewise, Matrix, asin, Interval, EmptySet, Union, S, Sum,
-        Limit, oo, Poly, Float, lowergamma, uppergamma)
+        Limit, oo, Poly, Float, lowergamma, uppergamma, hyper, meijerg)
 from sympy.abc import mu, tau
 from sympy.printing.latex import latex
 from sympy.utilities.pytest import XFAIL, raises
@@ -101,6 +101,22 @@ def test_latex_functions():
     assert latex(Order(x)) == r"\operatorname{\mathcal{O}}\left(x\right)"
     assert latex(lowergamma(x, y)) == r'\operatorname{\gamma}\left(x, y\right)'
     assert latex(uppergamma(x, y)) == r'\operatorname{\Gamma}\left(x, y\right)'
+
+def test_hyper_printing():
+    from sympy import pi, Tuple
+    from sympy.abc import x, z
+
+    assert latex(meijerg(Tuple(pi, pi, x), Tuple(1), \
+                         (0,1), Tuple(1, 2, 3/pi),z)) == \
+             r'{G_{4, 5}^{2, 3}\left(\begin{matrix} \pi, \pi, x & 1 \\0, 1 & 1, 2, \frac{3}{\pi} \end{matrix} \middle| {z} \right)}'
+    assert latex(meijerg(Tuple(), Tuple(1), (0,), Tuple(),z)) == \
+             r'{G_{1, 1}^{1, 0}\left(\begin{matrix}  & 1 \\0 &  \end{matrix} \middle| {z} \right)}'
+    assert latex(hyper((x, 2), (3,), z)) == \
+               r'{{}_{2}F_{1}\left(\begin{matrix} x, 2 ' \
+               r'\\ 3 \end{matrix}\middle| {z} \right)}'
+    assert latex(hyper(Tuple(), Tuple(1), z)) == \
+               r'{{}_{0}F_{1}\left(\begin{matrix}  ' \
+               r'\\ 1 \end{matrix}\middle| {z} \right)}'
 
 def test_latex_bessel():
     from sympy.functions.special.bessel import (besselj, bessely, besseli,

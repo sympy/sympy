@@ -4,7 +4,7 @@ from sympy import (Basic, Matrix, Piecewise, Ne, symbols, sqrt, Function,
     pprint, sqrt, factorial, binomial, pi, sin, ceiling, pprint_use_unicode,
     I, S, Limit, oo, cos, Pow, Integral, exp, Eq, Lt, Gt, Ge, Le, gamma, Abs,
     RootOf, RootSum, Lambda, Not, And, Or, Xor, Nand, Nor, Implies, Equivalent,
-    Sum, Subs, FF, ZZ, QQ, RR, O, uppergamma, lowergamma)
+    Sum, Subs, FF, ZZ, QQ, RR, O, uppergamma, lowergamma, hyper, meijerg)
 
 from sympy.printing.pretty import pretty as xpretty
 from sympy.printing.pretty import pprint
@@ -2514,3 +2514,130 @@ u"""\
 def test_gammas():
     assert upretty(lowergamma(x, y)) == u"γ(x, y)"
     assert upretty(uppergamma(x, y)) == u"Γ(x, y)"
+
+def test_hyper():
+    expr = hyper((), (), z)
+    ucode_str = \
+u"""\
+ ┌─  ⎛  │  ⎞\n\
+ ├─  ⎜  │ z⎟\n\
+0╵ 0 ⎝  │  ⎠\
+"""
+    ascii_str = \
+"""\
+  _         \n\
+ |_  /  |  \\\n\
+ |   |  | z|\n\
+0  0 \\  |  /\
+"""
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    expr = hyper((), (1,), x)
+    ucode_str = \
+u"""\
+ ┌─  ⎛  │  ⎞\n\
+ ├─  ⎜  │ x⎟\n\
+0╵ 1 ⎝1 │  ⎠\
+"""
+    ascii_str = \
+"""\
+  _         \n\
+ |_  /  |  \\\n\
+ |   |  | x|\n\
+0  1 \\1 |  /\
+"""
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    expr = hyper([2], [1], x)
+    ucode_str = \
+u"""\
+ ┌─  ⎛2 │  ⎞\n\
+ ├─  ⎜  │ x⎟\n\
+1╵ 1 ⎝1 │  ⎠\
+"""
+    ascii_str = \
+"""\
+  _         \n\
+ |_  /2 |  \\\n\
+ |   |  | x|\n\
+1  1 \\1 |  /\
+"""
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    expr = hyper((pi/3, -2*k), (3, 4, 5, -3), x)
+    ucode_str = \
+u"""\
+     ⎛  π         │  ⎞\n\
+ ┌─  ⎜  ─, -2⋅k   │  ⎟\n\
+ ├─  ⎜  3         │ x⎟\n\
+2╵ 4 ⎜            │  ⎟\n\
+     ⎝3, 4, 5, -3 │  ⎠\
+"""
+    ascii_str = \
+"""\
+                      \n\
+  _  /  pi        |  \\\n\
+ |_  |  --, -2*k  |  |\n\
+ |   |  3         | x|\n\
+2  4 |            |  |\n\
+     \\3, 4, 5, -3 |  /\
+"""
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    expr = hyper((pi,S('2/3'),-2*k), (3,4,5,-3), x**2)
+    ucode_str = \
+u"""\
+ ┌─  ⎛π, 2/3, -2⋅k │  2⎞\n\
+ ├─  ⎜             │ x ⎟\n\
+3╵ 4 ⎝3, 4, 5, -3  │   ⎠\
+"""
+    ascii_str = \
+"""\
+  _                      \n\
+ |_  /pi, 2/3, -2*k |  2\\\n\
+ |   |              | x |\n\
+3  4 \\ 3, 4, 5, -3  |   /\
+"""
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+def test_meijerg():
+    expr = meijerg([pi, pi, x], [1], [0, 1], [1, 2, 3], z)
+    ucode_str = \
+u"""\
+╭─╮2, 3 ⎛π, π, x     1    │  ⎞\n\
+│╶┐     ⎜                 │ z⎟\n\
+╰─╯4, 5 ⎝ 0, 1    1, 2, 3 │  ⎠\
+"""
+    ascii_str = \
+"""\
+ __2, 3 /pi, pi, x     1    |  \\\n\
+/__     |                   | z|\n\
+\_|4, 5 \\  0, 1     1, 2, 3 |  /\
+"""
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    expr = meijerg([1, pi/7], [2, pi, 5], [], [], z**2)
+    ucode_str = \
+u"""\
+        ⎛   π          │   ⎞\n\
+╭─╮0, 2 ⎜1, ─  2, π, 5 │  2⎟\n\
+│╶┐     ⎜   7          │ z ⎟\n\
+╰─╯5, 0 ⎜              │   ⎟\n\
+        ⎝              │   ⎠\
+"""
+    ascii_str = \
+"""\
+        /   pi           |   \\\n\
+ __0, 2 |1, --  2, pi, 5 |  2|\n\
+/__     |   7            | z |\n\
+\_|5, 0 |                |   |\n\
+        \\                |   /\
+"""
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str

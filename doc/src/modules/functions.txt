@@ -213,3 +213,8 @@ Bessel Type Functions
 .. autoclass:: sympy.functions.special.bessel.hankel2
 .. autoclass:: sympy.functions.special.bessel.jn
 .. autoclass:: sympy.functions.special.bessel.yn
+
+Hypergeometric Functions
+------------------------
+.. autoclass:: sympy.functions.special.hyper.hyper
+.. autoclass:: sympy.functions.special.hyper.meijerg

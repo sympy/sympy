@@ -558,8 +558,16 @@ class LatexPrinter(Printer):
 
         if need_exp:
             tex = self._do_exponent(tex, exp)
-
         return tex
+
+    def _hprint_vec(self, vec):
+        if len(vec) == 0:
+            return ""
+        s = ""
+        for i in vec[:-1]:
+            s += "%s, " % self._print(i)
+        s += self._print(vec[-1])
+        return s
 
     def _print_besselj(self, expr, exp=None):
         return self._hprint_BesselBase(expr, exp, 'J')
@@ -584,6 +592,30 @@ class LatexPrinter(Printer):
 
     def _print_hankel2(self, expr, exp=None):
         return self._hprint_BesselBase(expr, exp, 'H^{(2)}')
+
+    def _print_hyper(self, expr, exp=None):
+        tex = r"{{}_{%s}F_{%s}\left(\begin{matrix} %s \\ %s \end{matrix}" \
+              r"\middle| {%s} \right)}" % \
+             (self._print(len(expr.ap)), self._print(len(expr.bq)),
+              self._hprint_vec(expr.ap), self._hprint_vec(expr.bq),
+              self._print(expr.argument))
+
+        if exp is not None:
+            tex = r"{%s}^{%s}" % (tex, self._print(exp))
+        return tex
+
+    def _print_meijerg(self, expr, exp=None):
+        tex = r"{G_{%s, %s}^{%s, %s}\left(\begin{matrix} %s & %s \\" \
+              r"%s & %s \end{matrix} \middle| {%s} \right)}" % \
+             (self._print(len(expr.ap)), self._print(len(expr.bq)),
+              self._print(len(expr.bm)), self._print(len(expr.an)),
+              self._hprint_vec(expr.an), self._hprint_vec(expr.aother),
+              self._hprint_vec(expr.bm), self._hprint_vec(expr.bother),
+              self._print(expr.argument))
+
+        if exp is not None:
+            tex = r"{%s}^{%s}" % (tex, self._print(exp))
+        return tex
 
     def _print_Rational(self, expr):
         if expr.q != 1:

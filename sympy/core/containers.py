@@ -70,6 +70,9 @@ class Tuple(Basic):
     def __hash__(self):
         return hash(self.args)
 
+    def _to_mpmath(self, prec):
+        return tuple([a._to_mpmath(prec) for a in self.args])
+
 
 def tuple_wrapper(method):
     """
