@@ -1,7 +1,7 @@
 from sympy import symbols, Integral, Tuple, Dummy, Basic
 from sympy.utilities.iterables import (postorder_traversal, preorder_traversal,
     flatten, group, take, subsets, variations, cartes, numbered_symbols,
-    dict_merge, prefixes, postfixes, sift, topological_sort)
+    dict_merge, prefixes, postfixes, sift, topological_sort, rotate_left, rotate_right)
 from sympy.core.singleton import S
 from sympy.functions.elementary.piecewise import Piecewise, ExprCondPair
 from sympy.utilities.pytest import raises
@@ -215,3 +215,8 @@ def test_topological_sort():
 
     raises(ValueError, "topological_sort((V, E + [(10, 7)]))")
 
+def test_rotate():
+    A = [0, 1, 2, 3, 4]
+
+    assert rotate_left(A, 2) == [2, 3, 4, 0, 1]
+    assert rotate_right(A, 1) == [4, 0, 1, 2, 3]
