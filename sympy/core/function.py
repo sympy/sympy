@@ -950,9 +950,13 @@ def expand(e, deep=True, modulus=None, power_base=True, power_exp=True, \
     >>> (2**(x+y)).expand(power_exp=True)
     2**x*2**y
 
-    power_base - Split powers of multiplied bases.
+    power_base - Split powers of multiplied bases if assumptions allow.
     >>> ((x*y)**z).expand(power_base=True)
+    (x*y)**z
+    >>> ((x*y)**z).expand(power_base=True, force=True)
     x**z*y**z
+    >>> ((2*y)**z).expand(power_base=True)
+    2**z*y**z
 
     log - Pull out power of an argument as a coefficient and split logs products
     into sums of logs.  Note that these only work if the arguments of the log
