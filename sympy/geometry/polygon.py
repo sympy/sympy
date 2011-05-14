@@ -9,6 +9,8 @@ from point import Point
 from ellipse import Circle
 from line import Line, Segment, Ray
 
+from sympy.core.compatibility import all
+
 import warnings
 
 class Polygon(GeometryEntity):

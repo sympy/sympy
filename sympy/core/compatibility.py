@@ -22,12 +22,18 @@ def minkey(sequence, key):
     'a'
 
     """
-    smallest = sequence[0]
-    smallestkey = key(sequence[0])
-    for i in xrange(1, len(sequence)):
-        keyi = key(sequence[i])
+    # Note, we must not implement this using indexing, because not all
+    # container objects support indexing (like sets)!
+    first = True
+    for item in sequence:
+        if first:
+            smallest = item
+            smallestkey = key(item)
+            first = False
+
+        keyi = key(item)
         if keyi < smallestkey:
-            smallest = sequence[i]
+            smallest = item
             smallestkey = keyi
     return smallest
 
