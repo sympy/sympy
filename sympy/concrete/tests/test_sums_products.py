@@ -1,7 +1,6 @@
 from sympy import (Symbol, Sum, oo, Real, Rational, summation, pi, cos, zeta,
     Catalan, exp, log, factorial, sqrt, E, sympify, binomial, EulerGamma,
     Function, Integral, Product, product, nan, diff, Derivative, S, cos)
-from sympy.concrete.sums_products import Sum2
 from sympy.concrete.summations import telescopic
 from sympy.utilities.pytest import XFAIL, raises
 
@@ -187,11 +186,6 @@ def test_Sum_limit_subs():
 @XFAIL
 def test_issue2166():
     assert Sum(x, (x, 1, x)).subs(x, a) == Sum(x, (x, 1, a))
-
-def test_Sum2():
-    x = Symbol('x')
-    y = Symbol('y')
-    assert Sum2(x**y, (x, 1, 3)) == 1 + 2**y + 3**y
 
 def test_Sum_doit():
     assert Sum(n*Integral(a**2), (n, 0, 2)).doit() == a**3

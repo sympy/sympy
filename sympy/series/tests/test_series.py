@@ -75,11 +75,12 @@ def test_2124():
     assert exp(sin(x)*log(x)).series(n=2) == 1 + x*log(x) + O(x**2*log(x)**2)
 
 from sympy.series.acceleration import richardson, shanks
-from sympy import Sum2, Integer
+from sympy import Sum, Integer
+
 def test_acceleration():
     e = (1 + 1/n)**n
     assert round(richardson(e, n, 10, 20).evalf(), 10) == round(E.evalf(), 10)
 
-    A = Sum2(Integer(-1)**(k+1) / k, (k, 1, n))
+    A = Sum(Integer(-1)**(k+1) / k, (k, 1, n))
     assert round(shanks(A, n, 25).evalf(), 4) == round(log(2).evalf(), 4)
     assert round(shanks(A, n, 25, 5).evalf(), 10) == round(log(2).evalf(), 10)
