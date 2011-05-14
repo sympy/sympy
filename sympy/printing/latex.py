@@ -157,7 +157,7 @@ class LatexPrinter(Printer):
         elif str_real == "+inf":
             return r"\infty"
         elif str_real == "-inf":
-            return r"- \intfy"
+            return r"- \infty"
         else:
             return str_real
 

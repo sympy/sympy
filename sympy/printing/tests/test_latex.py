@@ -1,7 +1,7 @@
-from sympy import symbols, Rational, Symbol, Integral, log, diff, sin, exp, \
-        Function, factorial, floor, ceiling, Abs, re, im, conjugate, gamma, \
-        Order, Piecewise, Matrix, asin, Interval, EmptySet, Union, S, Sum, \
-        Limit, oo, Poly
+from sympy import (symbols, Rational, Symbol, Integral, log, diff, sin, exp,
+        Function, factorial, floor, ceiling, Abs, re, im, conjugate, gamma,
+        Order, Piecewise, Matrix, asin, Interval, EmptySet, Union, S, Sum,
+        Limit, oo, Poly, Real)
 from sympy.abc import mu, tau
 from sympy.printing.latex import latex
 from sympy.utilities.pytest import XFAIL, raises
@@ -41,6 +41,12 @@ def test_latex_basic():
     assert latex(1.5e20*x) == r"1.5 \times 10^{20} x"
     assert latex(1.5e20*x, mul_symbol='dot') == r"1.5 \cdot 10^{20} \cdot x"
 
+def test_latex_Real():
+    assert latex(Real(1.0e100)) == r"1.0 \times 10^{100}"
+    assert latex(Real(1.0e-100)) == r"1.0 \times 10^{-100}"
+    latex(Real(1.0e-100), mul_symbol="dot") == r"1.0 \cdot 10^{-100}"
+    assert latex(1.0*oo) == r"\infty"
+    assert latex(-1.0*oo) == r"- \infty"
 
 def test_latex_symbols():
     Gamma, lmbda, rho = map(Symbol, ('Gamma', 'lambda', 'rho'))
