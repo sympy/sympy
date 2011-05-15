@@ -991,7 +991,6 @@ class Mul(AssocOp):
         # should even be started; we always know where to find the Rational
         # so it's a quick test
 
-        coeff = S.One
         co_self = self.args[0]
         co_old = old.args[0]
         if co_old.is_Rational and co_self.is_Rational:
@@ -1186,9 +1185,7 @@ class Mul(AssocOp):
             s *= x._sage_()
         return s
 
+from numbers import Rational, igcd
 from power import Pow
-from numbers import Real, Integer, Rational, igcd
-from function import FunctionClass
 from sympify import sympify
 from add import Add
-
