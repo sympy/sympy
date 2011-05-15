@@ -8,6 +8,7 @@ from entity import GeometryEntity
 from point import Point
 from ellipse import Circle
 from line import Line, Segment, Ray
+from util import _symbol
 
 from sympy.core.compatibility import all
 
@@ -158,16 +159,16 @@ class Polygon(GeometryEntity):
         # part of the convex hull can possibly intersect with other
         # sides of the polygon...but for now we use the n**2 algorithm
         # and check all sides with intersection with any preceding sides
+        hit = _symbol('hit')
         if not rv.is_convex:
             sides = rv.sides
             for i, si in enumerate(sides):
                 pts = si[0], si[1]
-                ai = si.arbitrary_point('hit') # arbitrary point should take Symbol arg
-                hit = [s for s in ai[0].free_symbols.union(ai[1].free_symbols) if s.name == 'hit']
+                ai = si.arbitrary_point(hit)
                 for j in xrange(i):
                     sj = sides[j]
                     if sj[0] not in pts and sj[1] not in pts:
-                        aj = si.arbitrary_point('hit')
+                        aj = si.arbitrary_point(hit)
                         tx = (solve(ai[0] - aj[0]) or [S.Zero])[0]
                         if tx.is_number and 0 <= tx <= 1:
                             ty = (solve(ai[1] - aj[1]) or [S.Zero])[0]
@@ -483,8 +484,8 @@ class Polygon(GeometryEntity):
             p1x, p1y = p2x, p2y
         return hit_odd
 
-    def arbitrary_point(self, parameter_name='t'):
-        """A parametric point on the polygon.
+    def arbitrary_point(self, parameter='t'):
+        """A parameterized point on the polygon.
 
         The parameter, varying from 0 to 1, assigns points to the position on
         the perimeter that is that fraction of the total perimeter. So the
@@ -493,12 +494,17 @@ class Polygon(GeometryEntity):
 
         Parameters
         ----------
-        parameter_name : str, optional
+        parameter : str, optional
             Default value is 't'.
 
         Returns
         -------
         arbitrary_point : Point
+
+        Raises
+        ------
+        ValueError
+            When `parameter` already appears in the Polygon's definition.
 
         See Also
         --------
@@ -516,25 +522,27 @@ class Polygon(GeometryEntity):
         Point(1, 1/2)
 
         """
+        t = _symbol(parameter)
+        if t.name in (f.name for f in self.free_symbols):
+            raise ValueError('Symbol %s already appears in object and cannot be used as a parameter.' % t.name)
         sides = []
-        t = Symbol(parameter_name, real=True)
         perimeter = self.perimeter
         perim_fraction_start = 0
         for s in self.sides:
             side_perim_fraction = s.length/perimeter
             perim_fraction_end = perim_fraction_start + side_perim_fraction
-            pt  = s.arbitrary_point(parameter_name).subs(
+            pt  = s.arbitrary_point(parameter).subs(
                   t, (t - perim_fraction_start)/side_perim_fraction)
             sides.append((pt, (perim_fraction_start <= t < perim_fraction_end)))
             perim_fraction_start = perim_fraction_end
         return Piecewise(*sides)
 
-    def plot_interval(self, parameter_name='t'):
+    def plot_interval(self, parameter='t'):
         """The plot interval for the default geometric plot of the polygon.
 
         Parameters
         ----------
-        parameter_name : str, optional
+        parameter : str, optional
             Default value is 't'.
 
         Returns
@@ -550,7 +558,7 @@ class Polygon(GeometryEntity):
         [t, 0, 1]
 
         """
-        t = Symbol(parameter_name, real=True)
+        t = Symbol(parameter, real=True)
         return [t, 0, 1]
 
     def intersection(self, o):
@@ -905,7 +913,7 @@ class RegularPolygon(Polygon):
     """
 
     def __new__(self, c, r, n, rot=0, **kwargs):
-        r, n, rot = [sympify(w) for w in [r, n, rot]]
+        r, n, rot = sympify([r, n, rot])
         c = Point(c)
         if not isinstance(r, Basic):
             raise GeometryError("RegularPolygon.__new__ requires r to be a number or Basic instance")

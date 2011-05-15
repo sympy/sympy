@@ -443,7 +443,7 @@ class Expr(Basic, EvalfMixin):
 
         return [set(c), nc]
 
-    def coeff(self, x, exact=True, right=False):
+    def coeff(self, x, right=False):
         """
         Returns the coefficient of the exact term "x" or None if there is no "x".
 

@@ -7,6 +7,67 @@ convex_hull
 are_similar
 
 """
+from sympy import Symbol, Function, solve
+
+def idiff(eq, y, x, dep=None):
+    """Return dy/dx assuming that y and any other variables given in dep
+    depend on x.
+
+    >>> from sympy.abc import x, y, a
+    >>> from sympy.geometry.util import idiff
+
+    >>> idiff(x**2 + y**2 - 4, y, x)
+    -x/y
+    >>> idiff(x + a + y, y, x)
+    -1
+    >>> idiff(x + a + y, y, x, [a])
+    -1 - D(a, x)
+
+    """
+    if not dep:
+        dep = []
+    dep = set(dep)
+    dep.add(y)
+
+    f = dict([(s, Function(s.name)(x)) for s in eq.atoms(Symbol) if s != x and s in dep])
+    dydx = Function(y.name)(x).diff(x)
+    return solve(eq.subs(f).diff(x), dydx)[0].subs(
+        [(b, a) for a, b in f.iteritems()])
+
+def _symbol(s, matching_symbol=None):
+    """Return s if s is a Symbol, else return either a new Symbol (real=True)
+    with the same name s or the matching_symbol if s is a string and it matches
+    the name of the matching_symbol.
+
+    >>> from sympy import Symbol
+    >>> from sympy.geometry.util import _symbol
+    >>> x = Symbol('x')
+    >>> _symbol('y')
+    y
+    >>> _.is_real
+    True
+    >>> _symbol(x)
+    x
+    >>> _.is_real is None
+    True
+    >>> arb = Symbol('foo')
+    >>> _symbol('arb', arb) # arb's name is foo so foo will not be returned
+    arb
+    >>> _symbol('foo', arb) # now it will
+    foo
+
+    NB: the symbol here may not be the same as a symbol with the same
+    name defined elsewhere as a result of different assumptions.
+
+    """
+    if isinstance(s, basestring):
+        if matching_symbol and matching_symbol.name == s:
+            return matching_symbol
+        return Symbol(s, real=True)
+    elif isinstance(s, Symbol):
+        return s
+    else:
+        raise ValueError('symbol must be string for symbol name or Symbol')
 
 def intersection(*entities):
     """The intersection of a collection of GeometryEntity instances.

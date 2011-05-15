@@ -8,13 +8,15 @@ Ray
 Segment
 
 """
-from sympy.core import S, C, sympify
+from sympy.core import S, C, sympify, Dummy
 from sympy.functions.elementary.trigonometric import _pi_coeff as pi_coeff
 from sympy.core.numbers import Real, Rational
 from sympy.simplify import simplify
+from sympy.solvers import solve
 from sympy.geometry.exceptions import GeometryError
 from entity import GeometryEntity
 from point import Point
+from util import _symbol
 
 class LinearEntity(GeometryEntity):
     """An abstract base class for all linear entities (line, ray and segment)
@@ -757,18 +759,23 @@ class Line(LinearEntity):
 
         return LinearEntity.__new__(cls, p1, p2, **kwargs)
 
-    def arbitrary_point(self, parameter_name='t'):
+    def arbitrary_point(self, parameter='t'):
         """A parameterized point on the Line.
 
         Parameters
         ----------
-        parameter_name : str, optional
+        parameter : str, optional
             The name of the parameter which will be used for the parametric
             point. The default value is 't'.
 
         Returns
         -------
         point : Point
+
+        Raises
+        ------
+        ValueError
+            When `parameter` already appears in the Line's definition.
 
         See Also
         --------
@@ -783,17 +790,19 @@ class Line(LinearEntity):
         Point(1 + 4*t, 3*t)
 
         """
-        t = C.Symbol(parameter_name, real=True)
+        t = _symbol(parameter)
+        if t.name in (f.name for f in self.free_symbols):
+            raise ValueError('Symbol %s already appears in object and cannot be used as a parameter.' % t.name)
         x = simplify(self.p1[0] + t*(self.p2[0] - self.p1[0]))
         y = simplify(self.p1[1] + t*(self.p2[1] - self.p1[1]))
         return Point(x, y)
 
-    def plot_interval(self, parameter_name='t'):
+    def plot_interval(self, parameter='t'):
         """The plot interval for the default geometric plot of line.
 
         Parameters
         ----------
-        parameter_name : str, optional
+        parameter : str, optional
             Default value is 't'.
 
         Returns
@@ -810,7 +819,7 @@ class Line(LinearEntity):
         [t, -5, 5]
 
         """
-        t = C.Symbol(parameter_name, real=True)
+        t = _symbol(parameter)
         return [t, -5, 5]
 
     def equation(self, x='x', y='y'):
@@ -836,11 +845,7 @@ class Line(LinearEntity):
         3 - 3*x + 4*y
 
         """
-        if type(x) is str:
-            x = C.Symbol(x, real=True)
-        if type(y) is str:
-            y = C.Symbol(y, real=True)
-
+        x, y = _symbol(x), _symbol(y)
         p1, p2 = self.points
         if p1[0] == p2[0]:
             return x - p1[0]
@@ -1028,10 +1033,31 @@ class Ray(LinearEntity):
         else:
             return S.NegativeInfinity
 
-    def arbitrary_point(self, parameter_name='t'):
+    def arbitrary_point(self, parameter='t'):
         """A parameterized point on the Ray.
 
-        >>> from sympy import Ray, Point, Segment, S, simplify, solve
+        Parameters
+        ----------
+        parameter : str, optional
+            The name of the parameter which will be used for the parametric
+            point. The default value is 't'.
+
+        Returns
+        -------
+        point : Point
+
+        Raises
+        ------
+        ValueError
+            When `parameter` already appears in the Ray's definition.
+
+        See Also
+        --------
+        Point
+
+        Examples
+        --------
+         >>> from sympy import Ray, Point, Segment, S, simplify, solve
         >>> from sympy.abc import t
         >>> r = Ray(Point(0, 0), Point(2, 3))
 
@@ -1074,26 +1100,20 @@ class Ray(LinearEntity):
         1
 
         """
-        if isinstance(parameter_name, C.Symbol):
-            t = parameter_name
-        else:
-            # note: since assumptions identify symbols, the
-            # t below is not the same as Symbol(parameter_name)
-            # so replacements of t by the user will only happen
-            # if the t they define has the real=True assumption, too.
-            # XXX other methods should use this, too.
-            t = C.Symbol(parameter_name, real=True)
+        t = _symbol(parameter)
+        if t.name in (f.name for f in self.free_symbols):
+            raise ValueError('Symbol %s already appears in object and cannot be used as a parameter.' % t.name)
         m = self.slope
         x = simplify(self.p1[0] + t/(1 - t)*(self.p2[0] - self.p1[0]))
         y = simplify(self.p1[1] + t/(1 - t)*(self.p2[1] - self.p1[1]))
         return Point(x, y)
 
-    def plot_interval(self, parameter_name='t'):
+    def plot_interval(self, parameter='t'):
         """The plot interval for the default geometric plot of the Ray.
 
         Parameters
         ----------
-        parameter_name : str, optional
+        parameter : str, optional
             Default value is 't'.
 
         Returns
@@ -1109,7 +1129,7 @@ class Ray(LinearEntity):
         [t, 0, 5*2**(1/2)/(1 + 5*2**(1/2))]
 
         """
-        t = C.Symbol(parameter_name, real=True)
+        t = _symbol(parameter)
         p = self.arbitrary_point(t)
         # get a t corresponding to length of 10
         want = 10
@@ -1217,18 +1237,34 @@ class Segment(LinearEntity):
             p1, p2 = p2, p1
         return LinearEntity.__new__(cls, p1, p2, **kwargs)
 
-    def arbitrary_point(self, parameter_name='t'):
+    def arbitrary_point(self, parameter='t'):
         """A parameterized point on the Segment.
 
         Parameters
         ----------
-        parameter_name : str, optional
+        parameter : str, optional
             The name of the parameter which will be used for the parametric
             point. The default value is 't'.
 
         Returns
         -------
         point : Point
+
+
+        Parameters
+        ----------
+        parameter : str, optional
+            The name of the parameter which will be used for the parametric
+            point. The default value is 't'.
+
+        Returns
+        -------
+        point : Point
+
+        Raises
+        ------
+        ValueError
+            When `parameter` already appears in the Segment's definition.
 
         See Also
         --------
@@ -1243,17 +1279,19 @@ class Segment(LinearEntity):
         Point(1 + 4*t, 3*t)
 
         """
-        t = C.Symbol(parameter_name, real=True)
+        t = _symbol(parameter)
+        if t.name in (f.name for f in self.free_symbols):
+            raise ValueError('Symbol %s already appears in object and cannot be used as a parameter.' % t.name)
         x = simplify(self.p1[0] + t*(self.p2[0] - self.p1[0]))
         y = simplify(self.p1[1] + t*(self.p2[1] - self.p1[1]))
         return Point(x, y)
 
-    def plot_interval(self, parameter_name='t'):
+    def plot_interval(self, parameter='t'):
         """The plot interval for the default geometric plot of the Segment.
 
         Parameters
         ----------
-        parameter_name : str, optional
+        parameter : str, optional
             Default value is 't'.
 
         Returns
@@ -1270,7 +1308,7 @@ class Segment(LinearEntity):
         [t, 0, 1]
 
         """
-        t = C.Symbol(parameter_name, real=True)
+        t = _symbol(parameter)
         return [t, 0, 1]
 
     def perpendicular_bisector(self, p=None):
@@ -1371,9 +1409,15 @@ class Segment(LinearEntity):
             return o.p1 in self and o.p2 in self
         elif isinstance(o, Point):
             if Point.is_collinear(self.p1, self.p2, o):
-                d = self.length
-                if Point.distance(self.p1,o) <= d and Point.distance(self.p2,o) <= d:
-                    return True
+                t = Dummy('t')
+                x, y = self.arbitrary_point(t)
+                if self.p1.x != self.p2.x:
+                    ti = solve(x - o.x, t)[0]
+                else:
+                    ti = solve(y - o.y, t)[0]
+                if ti.is_number:
+                    return 0 <= ti <= 1
+                return None
 
         # No other known entity can be contained in a Ray
         return False
