@@ -377,30 +377,47 @@ class Basic(AssumeMeths):
                 return head(self), (1, args), number(S.One), S.One
         else:
             try:
-                coeff, expr = self.as_coeff_Mul()
+                coeff, args = self.as_coeff_mul()
             except AttributeError:
                 return head(self), (len(self.args), self.args), number(S.One), S.One
             else:
-                if expr.is_Pow:
-                    expr, exp = expr.args
-                else:
-                    expr, exp = expr, S.One
 
-                if expr.is_Atom:
-                    if expr.is_Symbol:
-                        args = (str(expr),)
+                # include any Real
+                if args:
+                    if args[0].is_Number:
+                        coeff *= args[0]
+                        args = args[1:]
+                args = args or (S.One,)
+
+                if len(args) == 1:
+                    expr = args[0]
+
+                    if expr.is_Pow:
+                        expr, exp = expr.args
+                    elif expr.is_Add and coeff is S.NegativeOne:
+                        # put back the sign removed from the Add
+                        coeff = S.One
+                        expr, exp = -expr, S.One
                     else:
-                        args = (expr,)
-                else:
-                    if expr.is_Add:
-                        args = expr.as_ordered_terms(order=order)
+                        expr, exp = expr, S.One
+
+                    if expr.is_Atom:
+                        if expr.is_Symbol:
+                            args = (str(expr),)
+                        else:
+                            args = (expr,)
                     else:
-                        args = expr.args
+                        if expr.is_Add:
+                            args = expr.as_ordered_terms(order=order)
+                        else:
+                            args = expr.args
 
-                    args = rmap(args)
+                        args = rmap(args)
 
-                    if expr.is_Mul:
-                        args = sorted(args)
+                else:
+                    expr = self._new_rawargs(*args)
+                    exp = S.One
+                    args = sorted(rmap(args))
 
                 args = (len(args), args)
                 exp = exp.as_tuple_tree(order=order)

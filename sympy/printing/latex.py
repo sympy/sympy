@@ -162,7 +162,9 @@ class LatexPrinter(Printer):
             return str_real
 
     def _print_Mul(self, expr):
-        coeff, tail = expr.as_coeff_Mul()
+        coeff, tail = expr.as_two_terms()
+        if not coeff.is_Number:
+            coeff, tail = S.One, expr
 
         if not coeff.is_negative:
             tex = ""
