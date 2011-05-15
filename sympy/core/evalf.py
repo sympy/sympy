@@ -627,20 +627,6 @@ def evalf_piecewise(expr, prec, options):
     # We still have undefined symbols
     raise NotImplementedError
 
-def evalf_piecewise(expr, prec, options):
-    if 'subs' in options:
-        expr = expr.subs(options['subs'])
-        del options['subs']
-        if hasattr(expr,'func'):
-            return evalf(expr, prec, options)
-        if type(expr) == float:
-            return evalf(C.Real(expr), prec, options)
-        if type(expr) == int:
-            return evalf(C.Integer(expr), prec, options)
-
-    # We still have undefined symbols
-    raise NotImplementedError
-
 def evalf_bernoulli(expr, prec, options):
     arg = expr.args[0]
     if not arg.is_Integer:
@@ -826,7 +812,6 @@ def hypsum(expr, n, start, prec):
 
     # Direct summation if geometric or faster
     if h > 0 or (h == 0 and abs(g) > 1):
-        one = MPZ(1) << prec
         term = expr.subs(n, 0)
         term = (MPZ(term.p) << prec) // term.q
         s = term
@@ -847,7 +832,6 @@ def hypsum(expr, n, start, prec):
         # Need to use at least quad precision because a lot of cancellation
         # might occur in the extrapolation process
         prec2 = 4*prec
-        one = MPZ(1) << prec2
         term = expr.subs(n, 0)
         term = (MPZ(term.p) << prec2) // term.q
 
