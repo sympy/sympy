@@ -847,38 +847,35 @@ class Expr(Basic, EvalfMixin):
         """
         from sympy.utilities.iterables import sift
 
-        if 'as_Add' in hint:
-            if hint.get('as_Add', False):
-                args = list(Add.make_args(self))
+        func = self.func
+        if hint.get('as_Add', func is Add):
+            want = Add
+        else:
+            want = Mul
+        if (want is not func or
+            func is not Add and func is not Mul):
+            if self.has(*deps):
+                return (want.identity, self)
+            else:
+                return (self, want.identity)
+        else:
+            if func is Add:
+                args = list(self.args)
+                nc = ndeps = []
                 func = Add
             else:
-                args = list(Mul.make_args(self))
+                args, nc = self.args_cnc()
+                d = sift(deps, lambda w: bool(getattr(w, 'is_commutative', True)))
+                ndeps = d.pop(False, [])
+                deps = d.pop(True, [])
                 func = Mul
-        elif not (self.is_Add or self.is_Mul):
-            if self.has(*deps):
-                return (S.One, self)
-            else:
-                return (self, S.One)
-        else:
-            func = self.func
-            args = list(self.args)
 
-        if func is Mul:
-            d = sift(deps, lambda w: w.is_commutative)
-            deps = d.get(True, [])
-            ndeps = d.get(False, [])
-
-        indep, nc, depend = [], [], []
         # do commutative terms
-        for a in args:
-            if a.has(*deps):
-                depend.append(a)
-            elif a.is_commutative:
-                indep.append(a)
-            else:
-                nc.append(a)
+        d = sift(args, lambda x: x.has(*deps))
+        depend = d.pop(True, [])
+        indep = d.pop(False, [])
         if func is Add or not ndeps:
-            return (func(func(*indep), func(*nc)),
+            return (func(*(indep + nc)),
                     func(*depend))
         else:
             for i, n in enumerate(nc):
