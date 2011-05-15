@@ -1013,30 +1013,15 @@ class Mul(AssocOp):
             c[co_xmul] = S.One
             old_c.pop(co_old)
 
-        # do quick tests to see if we can't succeed
-
-        ok = True
-        if (
-            # more non-commutative terms
-            len(old_nc) > len(nc)):
-            ok = False
-        elif (
-            # more commutative terms
-            len(old_c) > len(c)):
-            ok = False
-        elif (
-            # unmatched non-commutative bases
-            set(_[0] for _ in  old_nc).difference(set(_[0] for _ in nc))):
-            ok = False
-        elif (
-            # unmatched commutative terms
-            set(old_c).difference(set(c))):
-            ok = False
-        elif (
-            # differences in sign
-            any(sign(c[b]) != sign(old_c[b]) for b in old_c)):
-            ok = False
-        if not ok:
+        # Do bunch of quick tests to see whether we can succeed:
+        # 1) check for more non-commutative or 2) commutative terms
+        # 3) ... unmatched non-commutative bases
+        # 4) ... unmatched commutative terms
+        # 5) and finally differences in sign
+        if len(old_nc) > len(nc) or len(old_c) > len(c) or \
+                set(_[0] for _ in  old_nc).difference(set(_[0] for _ in nc)) or \
+                set(old_c).difference(set(c)) or \
+                any(sign(c[b]) != sign(old_c[b]) for b in old_c):
             return fallback()
 
         if not old_c:
