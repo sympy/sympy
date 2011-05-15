@@ -432,7 +432,7 @@ def sstr(expr, **settings):
     Example:
 
     >>> from sympy import symbols, Eq, sstr
-    >>> a, b = symbols('ab')
+    >>> a, b = symbols('a b')
     >>> sstr(Eq(a + b, 0))
     'a + b == 0'
     """

@@ -931,8 +931,8 @@ class asin(Function):
     Examples
     ========
         >>> from sympy import asin, oo, pi
-        >>> asin(.5)
-        asin(0.5)
+        >>> asin(1)
+        pi/2
         >>> asin(-1)
         -pi/2
 
@@ -1048,8 +1048,8 @@ class acos(Function):
     Examples
     ========
         >>> from sympy import acos, oo, pi
-        >>> acos(.5)
-        acos(0.5)
+        >>> acos(1)
+        0
         >>> acos(0)
         pi/2
         >>> acos(oo)
@@ -1158,7 +1158,7 @@ class atan(Function):
         >>> atan(0)
         0
         >>> atan(.5)
-        atan(0.5)
+        pi/4
         >>> atan(oo)
         pi/2
 
