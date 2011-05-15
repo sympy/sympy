@@ -403,10 +403,6 @@ class Add(AssocOp):
             if isinstance(terms, Basic):
                 terms = terms.args
             terms = [f for f in terms if not f.is_bounded]
-        if coeff is not S.Zero:
-            o = C.Order(x)
-        else:
-            o = C.Order(terms[0]*x,x)
         n = 1
         s = self.nseries(x, n=n).collect(x) # could be 1/x + 1/(y*x)
         while s.is_Order:
@@ -564,4 +560,3 @@ class Add(AssocOp):
 
 from function import FunctionClass
 from mul import Mul
-from symbol import Symbol
