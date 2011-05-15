@@ -8,10 +8,11 @@ Ray
 Segment
 
 """
-from sympy.core import S, C, sympify
+from sympy.core import S, C, sympify, Dummy
 from sympy.functions.elementary.trigonometric import _pi_coeff as pi_coeff
 from sympy.core.numbers import Real, Rational
 from sympy.simplify import simplify
+from sympy.solvers import solve
 from sympy.geometry.exceptions import GeometryError
 from entity import GeometryEntity
 from point import Point
@@ -1408,9 +1409,15 @@ class Segment(LinearEntity):
             return o.p1 in self and o.p2 in self
         elif isinstance(o, Point):
             if Point.is_collinear(self.p1, self.p2, o):
-                d = self.length
-                if Point.distance(self.p1,o) <= d and Point.distance(self.p2,o) <= d:
-                    return True
+                t = Dummy('t')
+                x, y = self.arbitrary_point(t)
+                if self.p1.x != self.p2.x:
+                    ti = solve(x - o.x, t)[0]
+                else:
+                    ti = solve(y - o.y, t)[0]
+                if ti.is_number:
+                    return 0 <= ti <= 1
+                return None
 
         # No other known entity can be contained in a Ray
         return False

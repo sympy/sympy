@@ -181,8 +181,8 @@ def test_line():
     assert Ray((1, 1), angle=3.0*pi) == Ray((1, 1), (0, 1))
     assert Ray((1, 1), angle=4.0*pi) == Ray((1, 1), (2, 1))
     assert Ray((1, 1), angle=0) == Ray((1, 1), (2, 1))
-    # don't know why this fails
-    # assert Ray((1, 1), angle=4.2*pi) == Ray(Point(1, 1), Point(2, 1 + C.tan(0.2*pi)))
+    # XXX don't know why this fails without str
+    assert str(Ray((1, 1), angle=4.2*pi)) == str(Ray(Point(1, 1), Point(2, 1 + C.tan(0.2*pi))))
     assert Ray((1, 1), angle=5) == Ray((1, 1), (2, 1 + C.tan(5)))
     raises(ValueError, 'Ray((1, 1), 1)')
 
@@ -201,6 +201,14 @@ def test_line():
     assert s2.length == sqrt( 2*(x1**2) )
     assert s1.perpendicular_bisector() == Line(Point(0, 1), Point(1, 0))
     assert Segment((1, 1), (2, 3)).arbitrary_point() == Point(1 + t, 1 + 2*t)
+
+    # Segment contains
+    a, b = symbols('a,b')
+    s = Segment((0, a), (0, b))
+    assert Point(0, (a + b)/2) in s
+    s = Segment((a, 0), (b, 0))
+    assert Point((a + b)/2, 0) in s
+    assert (Point(2*a, 0) in s) is False # XXX should be None?
 
     # Testing distance from a Segment to an object
     s1 = Segment(Point(0, 0), Point(1, 1))
