@@ -4581,7 +4581,7 @@ def _symbolic_factor(expr, opt, method):
         coeff, factors = _symbolic_factor_list(together(expr), opt, method)
         return _keep_coeff(coeff, _factors_product(factors))
     elif hasattr(expr, 'args'):
-        return expr.new(*[ _symbolic_factor(arg, opt, method) for arg in expr.args ])
+        return expr.func(*[ _symbolic_factor(arg, opt, method) for arg in expr.args ])
     elif hasattr(expr, '__iter__'):
         return expr.__class__([ _symbolic_factor(arg, opt, method) for arg in expr ])
     else:

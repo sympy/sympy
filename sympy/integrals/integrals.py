@@ -393,7 +393,7 @@ class Integral(Expr):
                         function = antideriv._eval_interval(x, a, b)
 
         if undone_limits:
-            return self.new(*([function] + undone_limits))
+            return self.func(*([function] + undone_limits))
         return function
 
     def _eval_expand_basic(self, deep=True, **hints):
