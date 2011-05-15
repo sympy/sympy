@@ -757,6 +757,8 @@ class Lambda(Expr):
             variables = Tuple(*variables)
         except TypeError:
             variables = Tuple(variables)
+        if len(variables) == 1 and variables[0] == expr:
+            return S.IdentityFunction
 
         #use dummy variables internally, just to be sure
         new_variables = [C.Dummy(arg.name) for arg in variables]

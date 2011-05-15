@@ -1,5 +1,6 @@
 from sympy.core import S, C, sympify
 from sympy.core.basic import Basic
+from sympy.core.containers import Tuple
 from sympy.core.operations import LatticeOp, ShortCircuit
 from sympy.core.function import Application, Lambda
 from sympy.core.expr import Expr
@@ -19,7 +20,8 @@ class IdentityFunction(Lambda):
     nargs = 1
     def __new__(cls):
         x = C.Dummy('x')
-        return Lambda([x], x)
+        #construct "by hand" to avoid infinite loop
+        return Expr.__new__(cls, Tuple(x), x)
 Id = S.IdentityFunction
 
 ###############################################################################

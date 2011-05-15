@@ -138,6 +138,9 @@ def test_Lambda_is_identity():
     assert Lambda(x, 2*x).is_identity == False
     assert Lambda((x, y), x).is_identity == None
 
+def test_IdentityFunction():
+    assert Lambda(x, x) is Lambda(y, y) is S.IdentityFunction
+
 def test_Lambda_symbols():
     assert Lambda(x, 2*x).free_symbols == set()
     assert Lambda(x, x*y).free_symbols == set([y])
@@ -153,6 +156,7 @@ def test_Lambda_equality():
     assert (Lambda((x, y), 2*x) != Lambda((x, y), 2*x)) is False
     assert Lambda(x, 2*x) != 2*x
     assert (Lambda(x, 2*x) == 2*x) is False
+
 
 def test_expand_function():
     assert expand(x+y) == x + y
