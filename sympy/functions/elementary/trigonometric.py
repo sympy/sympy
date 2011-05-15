@@ -1157,7 +1157,7 @@ class atan(Function):
         >>> from sympy import atan, oo, pi
         >>> atan(0)
         0
-        >>> atan(.5)
+        >>> atan(1)
         pi/4
         >>> atan(oo)
         pi/2
