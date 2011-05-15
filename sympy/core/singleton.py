@@ -2,7 +2,6 @@
 
 from core import BasicMeta, Registry
 from sympify import sympify
-from basic import Basic
 
 class SingletonRegistry(Registry):
     """
