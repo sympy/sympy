@@ -18,8 +18,6 @@ from entity import GeometryEntity
 from point import Point
 from line import LinearEntity, Line
 
-from sympy.abc import x
-
 class Ellipse(GeometryEntity):
     """An elliptical GeometryEntity.
 
@@ -242,12 +240,13 @@ class Ellipse(GeometryEntity):
         >>> p1 = Point(0, 0)
         >>> e1 = Ellipse(p1, 3, 1)
         >>> e1.circumference
-        12*Integral(((1 - 8*x**2/9)/(1 - x**2))**(1/2), (x, 0, 1))
+        12*Integral(((1 - 8*_x**2/9)/(1 - _x**2))**(1/2), (_x, 0, 1))
 
         """
         if self.eccentricity == 1:
             return 2*pi*self.hradius
         else:
+            x = C.Dummy('x', real=True)
             return 4*self.major*\
                    C.Integral(sqrt((1 - (self.eccentricity*x)**2)/(1 - x**2)),
                               (x, 0, 1))
@@ -823,29 +822,6 @@ class Ellipse(GeometryEntity):
 
         return o.intersection(self)
 
-    def distance_to_center(self, t):
-        """The distance from an point on the ellipse to the center.
-
-        Parameters
-        ----------
-        t : number
-            Parameter in range [0, 2*pi)
-
-        Examples
-        --------
-        >>> from sympy import Point, Ellipse, S
-        >>> e1 = Ellipse(Point(0, 0), 3, 2)
-        >>> # horizontal distance to center
-        >>> e1.distance_to_center(0)
-        3
-        >>> # vertical distance to center
-        >>> e1.distance_to_center(S.Pi/2)
-        2
-
-        """
-        seg = Point.distance(self.center, self.arbitrary_point())
-
-        return seg.subs('t', t)
 
     def __eq__(self, o):
         """Is the other GeometryEntity the same as this ellipse?"""

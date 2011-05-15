@@ -448,7 +448,6 @@ def test_hash_vs_typeinfo():
     assert x1 == x2
 
 
-@XFAIL  # our __eq__ just does not look at it (yet)
 def test_hash_vs_typeinfo_2():
     """different typeinfo should mean !eq"""
     # the following two are semantically different

@@ -71,10 +71,10 @@ class Pow(Expr):
     __slots__ = ['is_commutative']
 
     @cacheit
-    def __new__(cls, b, e, **assumptions):
+    def __new__(cls, b, e, evaluate=True):
         b = _sympify(b)
         e = _sympify(e)
-        if assumptions.pop('evaluate', True):
+        if evaluate:
             if e is S.Zero:
                 return S.One
             elif e is S.One:
@@ -83,7 +83,7 @@ class Pow(Expr):
                 obj = b._eval_power(e)
                 if obj is not None:
                     return obj
-        obj = Expr.__new__(cls, b, e, **assumptions)
+        obj = Expr.__new__(cls, b, e)
         obj.is_commutative = (b.is_commutative and e.is_commutative)
         return obj
 
@@ -252,7 +252,7 @@ class Pow(Expr):
             else:
                 newterm = term
             terms.append(newterm)
-        return self.new(*terms)
+        return self.func(*terms)
 
     def _eval_expand_power_exp(self, deep=True, *args, **hints):
         """a**(n+m) -> a**n*a**m"""
@@ -295,7 +295,7 @@ class Pow(Expr):
             else:
                 newterm = term
             terms.append(newterm)
-        return self.new(*terms)
+        return self.func(*terms)
 
     def _eval_expand_multinomial(self, deep=True, **hints):
         """(a+b+..) ** n -> a**n + n*a**(n-1)*b + .., n is nonzero integer"""
@@ -449,7 +449,7 @@ class Pow(Expr):
             else:
                 newterm = term
             terms.append(newterm)
-        return self.new(*terms)
+        return self.func(*terms)
 
     def _eval_expand_complex(self, deep=True, **hints):
         re_part, im_part = self.as_real_imag(deep=deep, **hints)
@@ -531,7 +531,7 @@ class Pow(Expr):
             else:
                 newterm = term
             terms.append(newterm)
-        return self.new(*terms)
+        return self.func(*terms)
 
     def _eval_derivative(self, s):
         dbase = self.base.diff(s)

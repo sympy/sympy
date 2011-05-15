@@ -232,8 +232,7 @@ class Interval(Set, EvalfMixin):
           'mpi' interval instance
     """
 
-    def __new__(cls, start, end,
-                left_open=False, right_open=False, **assumptions):
+    def __new__(cls, start, end, left_open=False, right_open=False):
 
         start = _sympify(start)
         end = _sympify(end)
@@ -256,8 +255,7 @@ class Interval(Set, EvalfMixin):
         if end == S.Infinity:
             right_open = True
 
-        return Basic.__new__(cls, start, end,
-                             left_open, right_open, **assumptions)
+        return Basic.__new__(cls, start, end, left_open, right_open)
 
     @property
     def start(self):
@@ -465,7 +463,7 @@ class Union(Set):
 
     """
 
-    def __new__(cls, *args, **assumptions):
+    def __new__(cls, *args):
         intervals, other_sets = [], []
         for arg in args:
             if isinstance(arg, EmptySet):
@@ -532,7 +530,7 @@ class Union(Set):
         elif len(intervals) == 0 and len(other_sets) == 1:
             return other_sets[0]
 
-        return Basic.__new__(cls, *(intervals + other_sets), **assumptions)
+        return Basic.__new__(cls, *(intervals + other_sets))
 
     @property
     def _inf(self):

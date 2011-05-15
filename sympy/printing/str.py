@@ -393,9 +393,6 @@ class StrPrinter(Printer):
         L = ', '.join([_xab_tostr(l) for l in expr.limits])
         return 'Sum(%s, %s)' % (self._print(expr.function), L)
 
-    def _print_Sum2(self, expr):
-        return "Sum2(%r, (%r, %r, %r))" % (expr.f, expr.i, expr.a, expr.b)
-
     def _print_Symbol(self, expr):
         return expr.name
 

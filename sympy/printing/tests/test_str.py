@@ -1,7 +1,7 @@
 from sympy import (Abs, Catalan, cos, Derivative, E, EulerGamma, exp, factorial,
     Function, GoldenRatio, I, Integer, Integral, Interval, Lambda, Limit, log,
     Matrix, nan, O, oo, pi, Rational, Real, Rel, S, sin, SMatrix, sqrt,
-    summation, Sum, Sum2, Symbol, symbols, Wild, WildFunction, zeta, zoo,
+    summation, Sum, Symbol, symbols, Wild, WildFunction, zeta, zoo,
     Dummy)
 from sympy.core import Expr
 from sympy.physics.units import second
@@ -315,9 +315,6 @@ def test_Sum():
     assert str(summation(cos(3*z), (z, x, y))) == "Sum(cos(3*z), (z, x, y))"
     assert str(Sum(x*y**2, (x, -2, 2), (y, -5, 5))) == \
         "Sum(x*y**2, (x, -2, 2), (y, -5, 5))"
-
-def test_Sum2():
-    assert str(Sum2(cos(3*z), (z, x, y))) == "Sum2(cos(3*z), (z, x, y))"
 
 def test_Symbol():
     assert str(y) == "y"

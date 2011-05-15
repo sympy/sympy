@@ -26,7 +26,7 @@ class AssocOp(Expr):
     __slots__ = ['is_commutative']
 
     @cacheit
-    def __new__(cls, *args, **assumptions):
+    def __new__(cls, *args, **options):
         if len(args) == 0:
             return cls.identity
 
@@ -34,8 +34,8 @@ class AssocOp(Expr):
         if len(args) == 1:
             return args[0]
 
-        if not assumptions.pop('evaluate', True):
-            obj = Expr.__new__(cls, *args, **assumptions)
+        if not options.pop('evaluate', True):
+            obj = Expr.__new__(cls, *args)
             obj.is_commutative = all(a.is_commutative for a in args)
             return obj
 
@@ -48,7 +48,7 @@ class AssocOp(Expr):
             else:
                 obj = cls.identity
         else:
-            obj = Expr.__new__(cls, *(c_part + nc_part), **assumptions)
+            obj = Expr.__new__(cls, *(c_part + nc_part))
             obj.is_commutative = not nc_part
 
         if order_symbols is not None:
@@ -320,7 +320,7 @@ class LatticeOp(AssocOp):
 
     is_commutative = True
 
-    def __new__(cls, *args, **assumptions):
+    def __new__(cls, *args, **options):
         args = (sympify(arg) for arg in args)
         try:
             _args = frozenset(cls._new_args_filter(args))
@@ -331,7 +331,7 @@ class LatticeOp(AssocOp):
         elif len(_args) == 1:
             return set(_args).pop()
         else:
-            obj = Expr.__new__(cls, _args, **assumptions)
+            obj = Expr.__new__(cls, _args)
             obj._argset = _args
             return obj
 

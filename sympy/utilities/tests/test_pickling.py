@@ -395,11 +395,9 @@ def test_statistics():
 #================== concrete ==================
 from sympy.concrete.products import Product
 from sympy.concrete.summations import Sum
-from sympy.concrete.sums_products import Sum2, _BigOperator
 
 def test_concrete():
     x = Symbol("x")
-    for c in (Product, Product(1,2), Sum, Sum(x, (x, 2, 4)), Sum2, Sum2(x,(x,2,4)),
-              _BigOperator):
+    for c in (Product, Product(1,2), Sum, Sum(x, (x, 2, 4))):
         check(c)
 
