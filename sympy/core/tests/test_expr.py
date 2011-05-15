@@ -683,6 +683,8 @@ def test_as_coeff_mul():
     e = 2**(x + y)
     assert e.as_coeff_mul(y) == (1, (e,))
 
+    raises(TypeError, 'x.as_coeff_mul(notarealkwarg=False)')
+
 def test_as_coeff_exponent():
     assert (3*x**4).as_coeff_exponent(x) == (3, 4)
     assert (2*x**3).as_coeff_exponent(x) == (2, 3)
@@ -939,21 +941,21 @@ def test_issue_2061():
     assert sqrt(-1.0*x) == 1.0*I*sqrt(x)
     assert sqrt(1.0*x) == 1.0*sqrt(x)
 
-def test_as_coeff_Mul():
-    Integer(3).as_coeff_Mul() == (Integer(3), Integer(1))
-    Rational(3, 4).as_coeff_Mul() == (Rational(3, 4), Integer(1))
-    Real(5.0).as_coeff_Mul() == (Real(5.0), Integer(1))
+def test_as_coeff_mul_args_False():
+    Integer(3).as_coeff_mul(args=False) == (Integer(3), Integer(1))
+    Rational(3, 4).as_coeff_mul(args=False) == (Rational(3, 4), Integer(1))
+    Real(5.0).as_coeff_mul(args=False) == (Real(5.0), Integer(1))
 
-    (Integer(3)*x).as_coeff_Mul() == (Integer(3), x)
-    (Rational(3, 4)*x).as_coeff_Mul() == (Rational(3, 4), x)
-    (Real(5.0)*x).as_coeff_Mul() == (Real(5.0), x)
+    (Integer(3)*x).as_coeff_mul(args=False) == (Integer(3), x)
+    (Rational(3, 4)*x).as_coeff_mul(args=False) == (Rational(3, 4), x)
+    (Real(5.0)*x).as_coeff_mul(args=False) == (Real(5.0), x)
 
-    (Integer(3)*x*y).as_coeff_Mul() == (Integer(3), x*y)
-    (Rational(3, 4)*x*y).as_coeff_Mul() == (Rational(3, 4), x*y)
-    (Real(5.0)*x*y).as_coeff_Mul() == (Real(5.0), x*y)
+    (Integer(3)*x*y).as_coeff_mul(args=False) == (Integer(3), x*y)
+    (Rational(3, 4)*x*y).as_coeff_mul(args=False) == (Rational(3, 4), x*y)
+    (Real(5.0)*x*y).as_coeff_mul(args=False) == (Real(5.0), x*y)
 
-    (x).as_coeff_Mul() == (S.One, x)
-    (x*y).as_coeff_Mul() == (S.One, x*y)
+    (x).as_coeff_mul(args=False) == (S.One, x)
+    (x*y).as_coeff_mul(args=False) == (S.One, x*y)
 
 def test_expr_sorting():
     f, g = symbols('f,g', cls=Function)

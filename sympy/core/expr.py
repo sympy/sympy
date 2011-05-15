@@ -283,13 +283,13 @@ class Expr(Basic, EvalfMixin):
         gens, terms = set([]), []
 
         for term in Add.make_args(self):
-            coeff, _term = term.as_coeff_Mul()
+            coeff, _term = term.as_coeff_mul()
 
             coeff = complex(coeff)
             cpart, ncpart = {}, []
 
-            if _term is not S.One:
-                for factor in Mul.make_args(_term):
+            if _term:
+                for factor in _term:
                     if factor.is_number:
                         try:
                             coeff *= complex(factor)
@@ -930,7 +930,7 @@ class Expr(Basic, EvalfMixin):
         warnings.warn("\nuse as_coeff_add() instead of as_coeff_factors().",
                       DeprecationWarning)
 
-    def as_coeff_mul(self, *deps):
+    def as_coeff_mul(self, *deps, **kwargs):
         """Return the tuple (c, args) where self is written as a Mul, `m`.
 
         c should be a Rational multiplied by any terms of the Mul that are
@@ -942,6 +942,11 @@ class Expr(Basic, EvalfMixin):
         This should be used when you don't know if self is a Mul or not but
         you want to treat self as a Mul or if you want to process the
         individual arguments of the tail of self as a Mul.
+
+        If you want the deps back as a Mul, not the args, set
+        args=False.  If there are no deps, it will return 1.  Note that if you
+        don't need the Mul, just returning the args, as is the default, is more
+        efficient.
 
         - if you know self is a Mul and want only the head, use self.args[0];
         - if you don't want to process the arguments of the tail but need the
@@ -959,11 +964,25 @@ class Expr(Basic, EvalfMixin):
         (3*y, (x,))
         >>> (3*y).as_coeff_mul(x)
         (3*y, ())
+
+        >>> (3*x*y).as_coeff_mul(args=False)
+        (3, x*y)
+        >>> (3*y).as_coeff_mul(x, args=False)
+        (3*y, 1)
         """
-        if deps:
-            if not self.has(*deps):
-                return self, tuple()
-        return S.One, (self,)
+        args = kwargs.pop('args', True)
+        if kwargs:
+            raise TypeError("as_coeff_mul() got unexpected keyword arguments %s" % kwargs)
+
+        if deps and not self.has(*deps):
+            c, mterms = self, tuple()
+        else:
+            c, mterms = S.One, (self,)
+
+        if not args:
+            mterms = object.__new__(Mul)._new_rawargs(*mterms)
+
+        return c, mterms
 
     def as_coeff_add(self, *deps):
         """Return the tuple (c, args) where self is written as an Add, `a`.
@@ -1639,9 +1658,6 @@ class Expr(Basic, EvalfMixin):
             return c, e
         raise ValueError("cannot compute leadterm(%s, %s), got c=%s" % (self, x, c))
 
-    def as_coeff_Mul(self):
-        """Efficiently extract the coefficient of a product. """
-        return S.One, self
 
     ###################################################################################
     ##################### DERIVATIVE, INTEGRAL, FUNCTIONAL METHODS ####################
