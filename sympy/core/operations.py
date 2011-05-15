@@ -1,5 +1,4 @@
 from core import C
-from singleton import S
 from expr import Expr
 from sympify import _sympify, sympify
 from cache import cacheit
