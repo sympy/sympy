@@ -29,7 +29,6 @@ Example:
     (x,)
 
 """
-
 from core import BasicMeta, C
 from basic import Basic
 from singleton import S
@@ -38,7 +37,7 @@ from expr import Expr, AtomicExpr
 from cache import cacheit
 from numbers import Rational
 from sympy.core.containers import Tuple
-from sympy.utilities.decorator import deprecated
+from sympy.core.decorators import deprecated
 from sympy.utilities import all, any
 
 from sympy import mpmath
