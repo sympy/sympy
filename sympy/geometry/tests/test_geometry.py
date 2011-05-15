@@ -1,5 +1,5 @@
-from sympy import (Abs, C, Max, Min, Rational, Real, S, Symbol, cos, oo, pi,
-                   simplify, sqrt, symbols)
+from sympy import (Abs, C, Dummy, Max, Min, Rational, Real, S, Symbol, cos, oo,
+                   pi, simplify, sqrt, symbols)
 from sympy.geometry import (Circle, Curve, Ellipse, GeometryError, Line, Point,
                             Polygon, Ray, RegularPolygon, Segment, Triangle,
                             are_similar, convex_hull, intersection)
@@ -21,7 +21,6 @@ def feq(a, b):
 
 def test_curve():
     s = Symbol('s')
-    t = Symbol('t')
     z = Symbol('z')
 
     # this curve is independent of the indicated parameter
@@ -37,6 +36,9 @@ def test_curve():
 
     assert C.parameter == s
     assert C.functions == (2*s, s**2)
+    t = Symbol('t')
+    assert C.arbitrary_point() != Point(2*t, t**2) # the t returned as assumptions
+    t = Symbol('t', real=True) # now t has the same assumptions so the test passes
     assert C.arbitrary_point() == Point(2*t, t**2)
     assert C.arbitrary_point(z) == Point(2*z, z**2)
     assert C.arbitrary_point(C.parameter) == Point(2*s, s**2)
@@ -289,13 +291,10 @@ def test_ellipse():
     # with generic symbols, the hradius is assumed to contain the major radius
     M = Symbol('M')
     m = Symbol('m')
-    assert Ellipse(p1, M, m).circumference == \
-        4*M*C.Integral(sqrt((1 - x**2*(M**2 - m**2)/M**2)/(1 - x**2)), (x, 0, 1))
-    # but you can help it with assumptions
-    M = Symbol('M', positive=True)
-    m = Symbol('m', negative=True)
-    Ellipse(p1, m, M).circumference == Ellipse((0, 0), M, m) == \
-       4*M*C.Integral(sqrt((1 - x**2*(M**2 - m**2)/M**2)/(1 - x**2)), (x, 0, 1))
+    c = Ellipse(p1, M, m).circumference
+    _x = c.atoms(Dummy).pop()
+    assert c == \
+        4*M*C.Integral(sqrt((1 - _x**2*(M**2 - m**2)/M**2)/(1 - _x**2)), (_x, 0, 1))
 
     assert e2.arbitrary_point() in e2
 
