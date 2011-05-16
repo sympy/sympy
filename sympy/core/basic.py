@@ -326,6 +326,44 @@ class Basic(AssumeMeths):
         # now both objects are from SymPy, so we can proceed to usual comparison
         return Basic._compare_pretty(a, b)
 
+
+    @classmethod
+    def class_key(cls):
+        """Nice order of classes. """
+        funcs = {
+            'exp': 10, 'log': 11,
+            'sin': 20, 'cos': 21, 'tan': 22, 'cot': 23,
+            'sinh': 30, 'cosh': 31, 'tanh': 32, 'coth': 33,
+        }
+        name = cls.__name__
+
+        if cls.is_Number:
+            return 1, 0, 'Number'
+        elif cls.is_Atom:
+            return 2, 0, name
+        elif cls.is_Mul:
+            return 3, 0, name
+        elif cls.is_Add:
+            return 3, 1, name
+        elif cls.is_Pow:
+            return 3, 2, name
+        elif cls.is_Function:
+            try:
+                i = funcs[name]
+            except KeyError:
+                nargs = cls.nargs
+
+                if nargs is None:
+                    i = 0
+                else:
+                    i = 10000
+
+            return 4, i, name
+        else:
+            return 5, 0, name
+
+
+
     def sort_key(self, order=None):
         """
         A key-function for sorting expressions.
@@ -345,42 +383,6 @@ class Basic(AssumeMeths):
 
         """
         from sympy.core import S
-
-        funcs = {
-            'exp': 10, 'log': 11,
-            'sin': 20, 'cos': 21, 'tan': 22, 'cot': 23,
-            'sinh': 30, 'cosh': 31, 'tanh': 32, 'coth': 33,
-        }
-
-        def head(expr):
-            """Nice order of classes. """
-            name = expr.__class__.__name__
-
-            if expr.is_Number:
-                return 1, 0, 'Number'
-            elif expr.is_Atom:
-                return 2, 0, name
-            elif expr.is_Mul:
-                return 3, 0, name
-            elif expr.is_Add:
-                return 3, 1, name
-            elif expr.is_Pow:
-                return 3, 2, name
-            elif expr.is_Function:
-                try:
-                    i = funcs[name]
-                except KeyError:
-                    nargs = expr.func.nargs
-
-                    if nargs is None:
-                        i = 0
-                    else:
-                        i = 10000
-
-                return 4, i, name
-            else:
-                return 5, 0, name
-
         def rmap(args):
             """Recursively map a tree. """
             result = []
@@ -395,25 +397,21 @@ class Basic(AssumeMeths):
 
             return tuple(result)
 
-        def number(expr):
-            """Tuple of a number. """
-            return head(expr), (0, ()), (), expr
-
         if self.is_Atom:
             if self.is_Number:
-                return number(self)
+                return self.class_key(), (0, ()), (), self
             else:
                 if self.is_Symbol:
                     args = (str(self),)
                 else:
                     args = (self,)
 
-                return head(self), (1, args), number(S.One), S.One
+                return self.class_key(), (1, args), S.One.sort_key(), S.One
         else:
             try:
                 coeff, expr = self.as_coeff_Mul()
             except AttributeError:
-                return head(self), (len(self.args), self.args), number(S.One), S.One
+                return self.class_key(), (len(self.args), self.args), S.One.sort_key(), S.One
             else:
                 if expr.is_Pow:
                     expr, exp = expr.args
@@ -439,9 +437,8 @@ class Basic(AssumeMeths):
                 args = (len(args), args)
                 exp = exp.sort_key(order=order)
 
-                return head(expr), args, exp, coeff
+                return expr.class_key(), args, exp, coeff
 
-        return expr.sort_key(order=order)
 
     def __eq__(self, other):
         """a == b  -> Compare two symbolic trees and see whether they are equal
