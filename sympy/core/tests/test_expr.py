@@ -439,10 +439,13 @@ def test_as_independent():
     assert (n1*n2*n1).as_independent(n2) == (n1, n2*n1)
     assert (n1*n2*n1).as_independent(n1) == (1, n1*n2*n1)
 
-    assert (3*x).as_independent(x, as_Add=1) == (0, 3*x)
-    assert (3*x).as_independent(x, as_Add=0) == (3, x)
-    assert (3+x).as_independent(x, as_Add=1) == (3, x)
-    assert (3+x).as_independent(x, as_Add=0) == (1, 3 + x)
+    assert (3*x).as_independent(x, as_Add=True) == (0, 3*x)
+    assert (3*x).as_independent(x, as_Add=False) == (3, x)
+    assert (3+x).as_independent(x, as_Add=True) == (3, x)
+    assert (3+x).as_independent(x, as_Add=False) == (1, 3 + x)
+
+    # issue 2380
+    assert (3*x).as_independent(Symbol) == (3, x)
 
 def test_subs_dict():
     a,b,c,d,e = symbols('a,b,c,d,e')
