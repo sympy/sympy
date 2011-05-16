@@ -75,6 +75,11 @@ class Add(AssocOp):
 
                 # 3*...
                 if c.is_Number:
+                    # unevaluated 2-arg Mul
+                    if len(o.args) == 2 and o.args[1].is_Add and o.args[1].is_commutative:
+                        seq.extend([c*a for a in o.args[1].args])
+                        continue
+
                     if c is S.One:
                         s = o
                     else:
