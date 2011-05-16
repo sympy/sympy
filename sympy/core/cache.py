@@ -7,6 +7,7 @@ CACHE = []  # [] of
             #    (item, {} or tuple of {})
 
 from sympy.core.logic import fuzzy_bool
+from sympy.core.decorators import wraps
 
 def print_cache():
     """print cache content"""
@@ -72,6 +73,7 @@ def __cacheit(func):
     func._cache_it_cache = func_cache_it_cache = {}
     CACHE.append((func, func_cache_it_cache))
 
+    @wraps(func)
     def wrapper(*args, **kw_args):
         """
         Assemble the args and kw_args to compute the hash.
@@ -100,16 +102,13 @@ def __cacheit(func):
             pass
         func_cache_it_cache[k] = r = func(*args, **kw_args)
         return r
-
-    wrapper.__doc__ = func.__doc__
-    wrapper.__name__ = func.__name__
-
     return wrapper
 
 def __cacheit_debug(func):
     """cacheit + code to check cache consistency"""
     cfunc = __cacheit(func)
 
+    @wraps(func)
     def wrapper(*args, **kw_args):
         # always call function itself and compare it with cached version
         r1 = func (*args, **kw_args)
@@ -130,10 +129,6 @@ def __cacheit_debug(func):
         assert r1 == r2
 
         return r1
-
-    wrapper.__doc__ = func.__doc__
-    wrapper.__name__ = func.__name__
-
     return wrapper
 
 class MemoizerArg:
@@ -244,6 +239,7 @@ class Memoizer:
         value_cache = {}
         CACHE.append((func, (cache, value_cache)))
 
+        @wraps(func)
         def wrapper(*args, **kw_args):
             kw_items = tuple(kw_args.items())
             try:
@@ -280,6 +276,7 @@ class Memoizer_nocache(Memoizer):
     def __call__(self, func):
         # XXX I would be happy just to return func, but we need to provide
         # argument convertion, and it is really needed for e.g. Real("0.5")
+        @wraps(func)
         def wrapper(*args, **kw_args):
             kw_items = tuple(kw_args.items())
             self.fix_allowed_types()
