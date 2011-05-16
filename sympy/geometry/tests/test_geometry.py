@@ -1,5 +1,5 @@
-from sympy import (Abs, C, Max, Min, Rational, Real, S, Symbol, cos, oo, pi,
-                   simplify, sqrt)
+from sympy import (Abs, C, Dummy, Max, Min, Rational, Real, S, Symbol, cos, oo,
+                   pi, simplify, sqrt, symbols)
 from sympy.geometry import (Circle, Curve, Ellipse, GeometryError, Line, Point,
                             Polygon, Ray, RegularPolygon, Segment, Triangle,
                             are_similar, convex_hull, intersection)
@@ -20,13 +20,31 @@ def feq(a, b):
     return -t < a-b < t
 
 def test_curve():
-    t = Symbol('t')
+    s = Symbol('s')
     z = Symbol('z')
-    C = Curve([2*t, t**2], (z, 0, 2))
+
+    # this curve is independent of the indicated parameter
+    C = Curve([2*s, s**2], (z, 0, 2))
 
     assert C.parameter == z
-    assert C.functions == [2*t, t**2]
+    assert C.functions == (2*s, s**2)
+    assert C.arbitrary_point() == Point(2*s, s**2)
+    assert C.arbitrary_point(z) == Point(2*s, s**2)
+
+    # this is how it is normally used
+    C = Curve([2*s, s**2], (s, 0, 2))
+
+    assert C.parameter == s
+    assert C.functions == (2*s, s**2)
+    t = Symbol('t')
+    assert C.arbitrary_point() != Point(2*t, t**2) # the t returned as assumptions
+    t = Symbol('t', real=True) # now t has the same assumptions so the test passes
     assert C.arbitrary_point() == Point(2*t, t**2)
+    assert C.arbitrary_point(z) == Point(2*z, z**2)
+    assert C.arbitrary_point(C.parameter) == Point(2*s, s**2)
+
+    raises(ValueError, 'Curve((s, s + t), (s, 1, 2)).arbitrary_point()')
+    raises(ValueError, 'Curve((s, s + t), (t, 1, 2)).arbitrary_point(s)')
 
 def test_point():
     p1 = Point(x1, x2)
@@ -44,10 +62,11 @@ def test_point():
     assert Point.midpoint(p3, p4) == Point(half, half)
     assert Point.midpoint(p1, p4) == Point(half + half*x1, half + half*x2)
     assert Point.midpoint(p2, p2) == p2
+    assert p2.midpoint(p2) == p2
 
     assert Point.distance(p3, p4) == sqrt(2)
     assert Point.distance(p1, p1) == 0
-    #assert Point.distance(p3, p2) == abs(p2)
+    assert Point.distance(p3, p2) == sqrt(p2.x**2 + p2.y**2)
 
     p1_1 = Point(x1, x1)
     p1_2 = Point(y2, y2)
@@ -164,8 +183,8 @@ def test_line():
     assert Ray((1, 1), angle=3.0*pi) == Ray((1, 1), (0, 1))
     assert Ray((1, 1), angle=4.0*pi) == Ray((1, 1), (2, 1))
     assert Ray((1, 1), angle=0) == Ray((1, 1), (2, 1))
-    # don't know why this fails
-    # assert Ray((1, 1), angle=4.2*pi) == Ray(Point(1, 1), Point(2, 1 + C.tan(0.2*pi)))
+    # XXX don't know why this fails without str
+    assert str(Ray((1, 1), angle=4.2*pi)) == str(Ray(Point(1, 1), Point(2, 1 + C.tan(0.2*pi))))
     assert Ray((1, 1), angle=5) == Ray((1, 1), (2, 1 + C.tan(5)))
     raises(ValueError, 'Ray((1, 1), 1)')
 
@@ -184,6 +203,14 @@ def test_line():
     assert s2.length == sqrt( 2*(x1**2) )
     assert s1.perpendicular_bisector() == Line(Point(0, 1), Point(1, 0))
     assert Segment((1, 1), (2, 3)).arbitrary_point() == Point(1 + t, 1 + 2*t)
+
+    # Segment contains
+    a, b = symbols('a,b')
+    s = Segment((0, a), (0, b))
+    assert Point(0, (a + b)/2) in s
+    s = Segment((a, 0), (b, 0))
+    assert Point((a + b)/2, 0) in s
+    assert (Point(2*a, 0) in s) is False # XXX should be None?
 
     # Testing distance from a Segment to an object
     s1 = Segment(Point(0, 0), Point(1, 1))
@@ -260,6 +287,15 @@ def test_ellipse():
     assert c1.area == e1.area
     assert c1.circumference == e1.circumference
     assert e3.circumference == 2*pi*y1
+
+    # with generic symbols, the hradius is assumed to contain the major radius
+    M = Symbol('M')
+    m = Symbol('m')
+    c = Ellipse(p1, M, m).circumference
+    _x = c.atoms(Dummy).pop()
+    assert c == \
+        4*M*C.Integral(sqrt((1 - _x**2*(M**2 - m**2)/M**2)/(1 - _x**2)), (_x, 0, 1))
+
     assert e2.arbitrary_point() in e2
 
     # Foci
@@ -281,7 +317,33 @@ def test_ellipse():
     assert c1.is_tangent(Line(p1_1, Point(0, sqrt(2))))
     assert e1.is_tangent(Line(Point(0, 0), Point(1, 1))) == False
 
-    # FAILING GOES HERE (from test_ellipse_fail when they work)
+    assert Ellipse(Point(5, 5), 2, 1).tangent_lines(Point(0, 0)) == \
+    [Line(Point(0, 0), Point(S(77)/25, S(132)/25)),
+     Line(Point(0, 0), Point(S(33)/5, S(22)/5))]
+    assert Ellipse(Point(5, 5), 2, 1).tangent_lines(Point(3, 4)) == \
+    [Line(Point(3, 4), Point(3, 5)), Line(Point(3, 4), Point(5, 4))]
+    assert Circle(Point(5, 5), 2).tangent_lines(Point(3, 3)) == \
+    [Line(Point(3, 3), Point(3, 5)), Line(Point(3, 3), Point(5, 3))]
+    assert Circle(Point(5, 5), 2).tangent_lines(Point(5 - 2*sqrt(2), 5)) == \
+    [Line(Point(5 - 2*sqrt(2), 5), Point(5 - sqrt(2), 5 - sqrt(2))),
+     Line(Point(5 - 2*sqrt(2), 5), Point(5 - sqrt(2), 5 + sqrt(2))),]
+
+    # Properties
+    major = 3
+    minor = 1
+    e4 = Ellipse(p2, minor, major)
+    assert e4.focus_distance == sqrt(major**2 - minor**2)
+    ecc = e4.focus_distance / major
+    assert e4.eccentricity == ecc
+    assert e4.periapsis == major*(1 - ecc)
+    assert e4.apoapsis == major*(1 + ecc)
+    # independent of orientation
+    e4 = Ellipse(p2, major, minor)
+    assert e4.focus_distance == sqrt(major**2 - minor**2)
+    ecc = e4.focus_distance / major
+    assert e4.eccentricity == ecc
+    assert e4.periapsis == major*(1 - ecc)
+    assert e4.apoapsis == major*(1 + ecc)
 
     # Intersection
     l1 = Line(Point(1, -5), Point(1, 5))
@@ -325,57 +387,43 @@ def test_ellipse():
     assert elip.tangent_lines(Point(0, 0)) == []
     elip = Ellipse(Point(0, 0), 3, 2)
     assert elip.tangent_lines(Point(3, 0)) == [Line(Point(3, 0), Point(3, -12))]
-    # FAILING ELLIPSE INTERSECTION GOES HERE
+
+    e1 = Ellipse(Point(0, 0), 5, 10)
+    e2 = Ellipse(Point(2, 1), 4, 8)
+    a = S(53)/17
+    c = 2*sqrt(3991)/17
+    assert e1.intersection(e2) == [Point(a - c/8, a/2 + c), Point(a + c/8, a/2 - c)]
 
     # Combinations of above
     assert e3.is_tangent(e3.tangent_lines(p1 + Point(y1, 0))[0])
 
-@XFAIL
-def test_ellipse_circumference():
-    a = Symbol('a', real=True)
-    b = Symbol('b', real=True)
-    e5 = Ellipse(p1, a, b)
-    assert e5.circumference == \
-           4*C.Integral(sqrt((1 - t**2*(Max(a, b)**2 - Min(a, b)**2)/
-                          Max(a, b)**2)/(1 - t**2)), (t, 0, 1)) * Max(a, b)
+    e = Ellipse((1, 2), 3, 2)
+    assert e.tangent_lines(Point(10, 0)) == \
+       [Line(Point(10, 0), Point(1, 0)),
+        Line(Point(10, 0), Point(S(14)/5, S(18)/5))]
 
-@XFAIL
-def test_ellipse_fail():
-    # these need the upgrade to the solver; when this works, move
-    # these lines to the # FAILING GOES HERE line in test_ellipse above.
-    assert Ellipse(Point(5, 5), 2, 1).tangent_lines(Point(0, 0)) == \
-    [Line(Point(0, 0), Point(S(77)/25, S(132)/25)),
-     Line(Point(0, 0), Point(S(33)/5, S(22)/5))]
-    assert Ellipse(Point(5, 5), 2, 1).tangent_lines(Point(3, 4)) == \
-    [Line(Point(3, 4), Point(4, 4)), Line(Point(3, 4), Point(3, 5))]
-    assert Circle(Point(5, 5), 2).tangent_lines(Point(3, 3)) == \
-    [Line(Point(3, 3), Point(4, 3)), Line(Point(3, 3), Point(3, 4))]
-    assert Circle(Point(5, 5), 2).tangent_lines(Point(5 - 2*sqrt(2), 5)) == \
-    [Line(Point(5 - 2*sqrt(2), 5), Point(5 - sqrt(2), 5 + sqrt(2))),
-     Line(Point(5 - 2*sqrt(2), 5), Point(5 - sqrt(2), 5 - sqrt(2)))]
+    # encloses_point
+    e = Ellipse((0, 0), 1, 2)
+    assert e.encloses_point(e.center)
+    assert e.encloses_point(e.center + Point(0, e.vradius - Rational(1, 10)))
+    assert e.encloses_point(e.center + Point(e.hradius - Rational(1, 10), 0))
+    assert e.encloses_point(e.center + Point(e.hradius, 0)) is False
+    assert e.encloses_point(e.center + Point(e.hradius + Rational(1, 10), 0)) is False
+    e = Ellipse((0, 0), 2, 1)
+    assert e.encloses_point(e.center)
+    assert e.encloses_point(e.center + Point(0, e.vradius - Rational(1, 10)))
+    assert e.encloses_point(e.center + Point(e.hradius - Rational(1, 10), 0))
+    assert e.encloses_point(e.center + Point(e.hradius, 0)) is False
+    assert e.encloses_point(e.center + Point(e.hradius + Rational(1, 10), 0)) is False
 
-    major = 3
-    minor = 1
-    e4 = Ellipse(p2, major, minor)
-    assert e4.focus_distance == sqrt(abs(major**2 - minor**2))
-    ecc = e4.focus_distance / major
-    assert e4.eccentricity == ecc
-    assert e4.periapsis == major*(1 - ecc)
-    assert e4.apoapsis == major*(1 + ecc)
-
-@XFAIL
-def test_ellipse_intersection_fail():
-    # these need the upgrade to the solver; when this works, move
-    # these lines to the FAILING ELLIPSE INTERSECTION GOES HERE line in test_ellipse above.
-    e1 = Ellipse(Point(0, 0), 5, 10)
-    e2 = Ellipse(Point(2, 1), 4, 8)
-    assert e1.intersection(e2) # when this no longer fails, supply the answer
-
-@XFAIL
 def test_ellipse_random_point():
     e3 = Ellipse(Point(0, 0), y1, y1)
+    rx, ry = Symbol('rx'), Symbol('ry')
     for ind in xrange(0, 5):
-        assert e3.random_point() in e3
+        r = e3.random_point()
+        # substitution should give zero*y1**2
+        assert e3.equation(rx, ry).subs(zip((rx, ry), r.args)
+                                        ).n(3).as_coeff_Mul()[0] < 1e-10
 
 def test_polygon():
     t = Triangle(Point(0, 0), Point(2, 0), Point(3, 3))
@@ -600,3 +648,20 @@ def test_encloses():
     assert s.encloses(Point(0, S.Half)) is False
     assert s.encloses(Point(S.Half, S.Half)) is False # it's a vertex
     assert s.encloses(Point(Rational(3, 4), S.Half)) is True
+
+def test_free_symbols():
+    a, b, c, d, e, f, s = symbols('a:f,s')
+    assert Point(a,b).free_symbols == set([a, b])
+    assert Line((a,b),(c,d)).free_symbols == set([a, b, c, d])
+    assert Ray((a,b),(c,d)).free_symbols == set([a, b, c, d])
+    assert Ray((a,b),angle=c).free_symbols == set([a, b, c])
+    assert Segment((a,b),(c,d)).free_symbols == set([a, b, c, d])
+    assert Line((a,b),slope=c).free_symbols == set([a, b, c])
+    assert Curve((a*s,b*s),(s,c,d)).free_symbols == set([a, b, c, d])
+    assert Ellipse((a,b),c,d).free_symbols == set([a, b, c, d])
+    assert Ellipse((a,b),c, eccentricity=d).free_symbols == set([a, b, c, d])
+    assert Ellipse((a,b),vradius=c, eccentricity=d).free_symbols == set([a, b, c, d])
+    assert Circle((a,b),c).free_symbols == set([a, b, c])
+    assert Circle((a,b),(c,d),(e,f)).free_symbols == set([e, d, c, b, f, a])
+    assert Polygon((a,b),(c,d),(e,f)).free_symbols == set([e, b, d, f, a, c])
+    assert RegularPolygon((a,b),c,d,e).free_symbols == set([e, a, b, c, d])
