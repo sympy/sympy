@@ -1168,3 +1168,11 @@ def test_Add_primitive():
 
     (2*x/3 + 4*y/9).primitive() == (2/9, 3*x + 2*y)
     (2*x/3 + 4.1*y).primitive() == (1, 2*x/3 + 4.1*y)
+
+def test_issue2361():
+    u = Mul(2, (1 + x), evaluate=False)
+    assert 2 + u == 4 + 2*x
+    n = Symbol('n', commutative=False)
+    u = 2*(1 + n)
+    assert u.is_Mul
+    assert (2 + u).args == (S(2), u)
