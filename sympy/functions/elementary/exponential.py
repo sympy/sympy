@@ -372,23 +372,24 @@ class log(Function):
         return (1-2*(n%2)) * x**(n+1)/(n+1)
 
     def _eval_expand_log(self, deep=True, **hints):
+        force = hints.get('force', False)
         if deep:
             arg = self.args[0].expand(deep=deep, **hints)
         else:
             arg = self.args[0]
         if arg.is_Mul:
-            expr = sympify(0)
-            nonpos = sympify(1)
+            expr = []
+            nonpos = []
             for x in arg.args:
                 if deep:
                     x = x.expand(deep=deep, **hints)
-                if x.is_positive:
-                    expr += self.func(x)._eval_expand_log(deep=deep, **hints)
+                if force or x.is_positive:
+                    expr.append(self.func(x)._eval_expand_log(deep=deep, **hints))
                 else:
-                    nonpos *= x
-            return expr + log(nonpos)
+                    nonpos.append(x)
+            return Add(*expr) + log(Mul(*nonpos))
         elif arg.is_Pow:
-            if arg.exp.is_real and arg.base.is_positive:
+            if force or arg.exp.is_real and arg.base.is_positive:
                 if deep:
                     b = arg.base.expand(deep=deep, **hints)
                     e = arg.exp.expand(deep=deep, **hints)
