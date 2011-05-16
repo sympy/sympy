@@ -28,11 +28,11 @@ def __sympy_debug():
 SYMPY_DEBUG = __sympy_debug()
 
 from sympy.core import *
+from logic import *
 from assumptions import *
 from polys import *
 from series import *
 from functions import *
-from logic import *
 from ntheory import *
 from concrete import *
 from simplify import *
