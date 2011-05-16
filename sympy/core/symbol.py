@@ -1,10 +1,9 @@
-from basic import Basic, Atom
+from basic import Basic
 from core import C
-from sympify import sympify, _sympify, SympifyError
-from singleton import S, Singleton
+from sympify import sympify
+from singleton import S
 from expr import Expr, AtomicExpr
 from cache import cacheit
-from compatibility import any, all
 from function import FunctionClass
 from sympy.logic.boolalg import Boolean
 

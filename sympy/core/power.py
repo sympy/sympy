@@ -797,4 +797,4 @@ class Pow(Expr):
 from add import Add
 from numbers import Integer
 from mul import Mul
-from symbol import Symbol, Dummy, Wild
+from symbol import Symbol, Dummy
