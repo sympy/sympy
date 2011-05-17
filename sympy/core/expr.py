@@ -501,7 +501,6 @@ class Expr(Basic, EvalfMixin):
         1
         """
         from sympy.utilities.iterables import any
-        from sympy.polys import terms_gcd
 
         x = sympify(x)
         if not x: # 0 or None
@@ -1823,8 +1822,6 @@ class AtomicExpr(Atom, Expr):
 from mul import Mul
 from add import Add
 from power import Pow
-from relational import Inequality, StrictInequality
 from function import Derivative
-from sympify import _sympify, sympify, SympifyError
-from symbol import Wild, Dummy
-from sympy.core.exprtools import gcd_terms
+from sympify import sympify
+from symbol import Wild

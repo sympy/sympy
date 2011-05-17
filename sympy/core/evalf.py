@@ -3,19 +3,16 @@ Adaptive numerical evaluation of SymPy expressions, using mpmath
 for mathematical functions.
 """
 
-from sympy.mpmath.libmp import (from_int, from_rational, fzero, normalize,
-        bitcount, round_nearest, to_str, fone, fnone, fhalf, to_int, mpf_lt,
-        mpf_sqrt, mpf_cmp, mpf_abs, mpf_pow_int, mpf_shift, mpf_add, mpf_mul,
-        mpf_neg)
-
 import sympy.mpmath.libmp as libmp
-from sympy.mpmath.libmp.libmpf import dps_to_prec
-from sympy.mpmath import mpf, mpc, quadts, quadosc, mp, make_mpf, make_mpc
-from sympy.mpmath.libmp import (mpf_pi, mpf_log, mpf_pow, mpf_sin, mpf_cos,
-        mpf_atan, mpf_atan2, mpf_e, mpf_exp, from_man_exp, from_int)
-from sympy.mpmath.libmp.backend import MPZ
-from sympy.mpmath import nsum
+from sympy.mpmath import make_mpc, make_mpf, mp, mpc, mpf, nsum, quadts, quadosc
 from sympy.mpmath import inf as mpmath_inf
+from sympy.mpmath.libmp import (bitcount, from_int, from_man_exp, \
+        from_rational, fhalf, fnone, fone, fzero, mpf_abs, mpf_add, mpf_atan, \
+        mpf_atan2, mpf_cmp, mpf_cos, mpf_e, mpf_exp, mpf_log, mpf_lt, mpf_mul, \
+        mpf_neg, mpf_pi, mpf_pow, mpf_pow_int, mpf_shift, mpf_sin, mpf_sqrt, \
+        normalize, round_nearest, to_int, to_str)
+from sympy.mpmath.libmp.backend import MPZ
+from sympy.mpmath.libmp.libmpf import dps_to_prec
 
 from sympy.mpmath.libmp.gammazeta import mpf_bernoulli
 
@@ -627,20 +624,6 @@ def evalf_piecewise(expr, prec, options):
     # We still have undefined symbols
     raise NotImplementedError
 
-def evalf_piecewise(expr, prec, options):
-    if 'subs' in options:
-        expr = expr.subs(options['subs'])
-        del options['subs']
-        if hasattr(expr,'func'):
-            return evalf(expr, prec, options)
-        if type(expr) == float:
-            return evalf(C.Real(expr), prec, options)
-        if type(expr) == int:
-            return evalf(C.Integer(expr), prec, options)
-
-    # We still have undefined symbols
-    raise NotImplementedError
-
 def evalf_bernoulli(expr, prec, options):
     arg = expr.args[0]
     if not arg.is_Integer:
@@ -826,7 +809,6 @@ def hypsum(expr, n, start, prec):
 
     # Direct summation if geometric or faster
     if h > 0 or (h == 0 and abs(g) > 1):
-        one = MPZ(1) << prec
         term = expr.subs(n, 0)
         term = (MPZ(term.p) << prec) // term.q
         s = term
@@ -847,7 +829,6 @@ def hypsum(expr, n, start, prec):
         # Need to use at least quad precision because a lot of cancellation
         # might occur in the extrapolation process
         prec2 = 4*prec
-        one = MPZ(1) << prec2
         term = expr.subs(n, 0)
         term = (MPZ(term.p) << prec2) // term.q
 

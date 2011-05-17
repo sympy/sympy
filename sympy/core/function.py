@@ -36,14 +36,11 @@ from singleton import S
 from expr import Expr, AtomicExpr
 
 from cache import cacheit
-#from numbers import Rational, Integer
-#from symbol import Symbol, Dummy
+from numbers import Rational
 from sympy.utilities.decorator import deprecated
 from sympy.utilities import all, any
 
 from sympy import mpmath
-
-from itertools import repeat
 
 class PoleError(Exception):
     pass
@@ -245,7 +242,6 @@ class Function(Application, Expr):
         # f(x).diff(s) -> x.diff(s) * f.fdiff(1)(s)
         i = 0
         l = []
-        r = S.Zero
         for a in self.args:
             i += 1
             da = a.diff(s)
@@ -319,13 +315,11 @@ functions are not supported.')
             p = [Dummy() for t in z]
             q = []
             v = None
-            w = None
             for ai, zi, pi in zip(a0, z, p):
                 if zi.has(x):
                     if v is not None: raise NotImplementedError
                     q.append(ai + pi)
                     v = pi
-                    w = zi
                 else:
                     q.append(ai)
             e1 = self.func(*q)
@@ -1300,6 +1294,5 @@ def count_ops(expr, visual=False):
 
     return sum(int((a.args or [1])[0]) for a in Add.make_args(ops))
 
-from numbers import Rational, Integer
 from sympify import sympify
 from add    import Add

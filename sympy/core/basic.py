@@ -1,11 +1,10 @@
-"""Base class for all objects in sympy"""
+"""Base class for all the objects in SymPy"""
 
-from decorators import _sympifyit
 from assumptions import AssumeMeths, make__get_assumption
 from cache import cacheit
 from core import BasicMeta, BasicType, C
 from sympify import _sympify, sympify, SympifyError
-from compatibility import any, all
+from compatibility import any
 
 
 class Basic(AssumeMeths):
@@ -1270,6 +1269,7 @@ class Atom(Basic):
             return self
 
     def as_numer_denom(self):
+        from sympy.core import S
         return self, S.One
 
     def doit(self, **hints):
