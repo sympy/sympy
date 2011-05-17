@@ -784,7 +784,7 @@ class PrettyPrinter(Printer):
     def _print_RootSum(self, expr):
         args = [self._print_Add(expr.expr, order='lex')]
 
-        if not expr.fun.is_identity:
+        if expr.fun is not S.IdentityFunction:
             args.append(self._print(expr.fun))
 
         pform = prettyForm(*self._print_seq(args).parens())

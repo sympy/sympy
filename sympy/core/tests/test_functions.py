@@ -115,39 +115,45 @@ def test_Lambda():
     assert Lambda(x, x**2) == Lambda(x, x**2)
     assert Lambda(x, x**2) == Lambda(y, y**2)
     assert Lambda(x, x**2) != Lambda(y, y**2+1)
-    assert Lambda(x,y,x**y) == Lambda(y,x,y**x)
-    assert Lambda(x,y,x**y) != Lambda(x,y,y**x)
+    assert Lambda((x, y), x**y) == Lambda((y, x), y**x)
+    assert Lambda((x, y), x**y) != Lambda((x, y), y**x)
 
-    assert Lambda(x,y,x**y)(x,y) == x**y
-    assert Lambda(x,y,x**y)(x) == Lambda(y,x**y)
-    assert Lambda(x,y,x**y)(x)(y) == x**y
-    assert Lambda(x,y,x**y)(x)(3) == x**3
-    assert Lambda(x,y,x**y)(3)(y) == 3**y
-    assert Lambda(x,y,x**y)(3)(3) == 3**3
-    assert Lambda(x,y,x**y)(3,3) == 3**3
-    assert Lambda(x,y,x**y)(x,3) == x**3
-    assert Lambda(x,y,x**y)(3,y) == 3**y
-    assert Lambda(x,f(x))(x) == f(x)
-    assert Lambda(x,f(x))() == Lambda(x,f(x))
-    assert Lambda(x,x**2)(e(x)) == x**4
+    assert Lambda((x, y), x**y)(x, y) == x**y
+    assert Lambda((x, y), x**y)(3, 3) == 3**3
+    assert Lambda((x, y), x**y)(x, 3) == x**3
+    assert Lambda((x, y), x**y)(3, y) == 3**y
+    assert Lambda(x, f(x))(x) == f(x)
+    assert Lambda(x, x**2)(e(x)) == x**4
     assert e(e(x)) == x**4
-    assert Lambda(x,y,f(x)+f(y))(x) == Lambda(y,f(x)+f(y))
-    #doesn't work yet:
-    #class F(Function):
-    #    pass
-    #assert Lambda(x, F(x)) == F
 
-    assert Lambda(x, y, x+y).nargs == 2
+    assert Lambda((x, y), x+y).nargs == 2
 
     z = Symbol('z')
     t = Symbol('t')
     p = x, y, z, t
     assert Lambda(p, t*(x+y+z))(*p) == t * (x + y + z)
 
-def test_Lambda_is_identity():
-    assert Lambda(x, x).is_identity == True
-    assert Lambda(x, 2*x).is_identity == False
-    assert Lambda((x, y), x).is_identity == None
+def test_IdentityFunction():
+    assert Lambda(x, x) is Lambda(y, y) is S.IdentityFunction
+    assert Lambda(x, 2*x) is not S.IdentityFunction
+    assert Lambda((x, y), x) is not S.IdentityFunction
+
+def test_Lambda_symbols():
+    assert Lambda(x, 2*x).free_symbols == set()
+    assert Lambda(x, x*y).free_symbols == set([y])
+
+def test_Lambda_arguments():
+    raises(TypeError, 'Lambda(x, 2*x)(x, y)')
+    raises(TypeError, 'Lambda((x, y), x+y)(x)')
+
+def test_Lambda_equality():
+    assert Lambda(x, 2*x) != Lambda((x,y), 2*x)
+    assert (Lambda(x, 2*x) == Lambda((x,y), 2*x)) is False
+    assert Lambda((x, y), 2*x) == Lambda((x, y), 2*x)
+    assert (Lambda((x, y), 2*x) != Lambda((x, y), 2*x)) is False
+    assert Lambda(x, 2*x) != 2*x
+    assert (Lambda(x, 2*x) == 2*x) is False
+
 
 def test_expand_function():
     assert expand(x+y) == x + y

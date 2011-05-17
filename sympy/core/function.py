@@ -37,6 +37,7 @@ from expr import Expr, AtomicExpr
 
 from cache import cacheit
 from numbers import Rational
+from sympy.core.containers import Tuple
 from sympy.utilities.decorator import deprecated
 from sympy.utilities import all, any
 
@@ -722,7 +723,7 @@ class Derivative(Expr):
     def _eval_as_leading_term(self, x):
         return self.args[0].as_leading_term(x)
 
-class Lambda(Function):
+class Lambda(Expr):
     """
     Lambda(x, expr) represents a lambda function similar to Python's
     'lambda x: expr'. A function of several variables is written as
@@ -737,17 +738,9 @@ class Lambda(Function):
 
     For multivariate functions, use:
         >>> from sympy.abc import y, z, t
-        >>> f2 = Lambda(x, y, z, t, x + y**z + t**z)
+        >>> f2 = Lambda((x, y, z, t), x + y**z + t**z)
         >>> f2(1, 2, 3, 4)
         73
-
-    Multivariate functions can be curries for partial applications:
-        >>> sum2numbers = Lambda(x, y, x+y)
-        >>> sum2numbers(1,2)
-        3
-        >>> plus1 = sum2numbers(1)
-        >>> plus1(3)
-        4
 
     A handy shortcut for lots of arguments:
         >>> p = x, y, z
@@ -756,85 +749,65 @@ class Lambda(Function):
         x + y*z
 
     """
+    is_Function = True
+    __slots__ = []
 
-    # a minimum of 2 arguments (parameter, expression) are needed
-    nargs = 2
-    def __new__(cls,*args):
-        assert len(args) >= 2,"Must have at least one parameter and an expression"
-        if len(args) == 2 and isinstance(args[0], (list, tuple)):
-            args = tuple(args[0])+(args[1],)
-        obj = Function.__new__(cls,*args)
-        obj.nargs = len(args)-1
-        return obj
+    def __new__(cls, variables, expr):
+        try:
+            variables = Tuple(*variables)
+        except TypeError:
+            variables = Tuple(variables)
+        if len(variables) == 1 and variables[0] == expr:
+            return S.IdentityFunction
 
-    @classmethod
-    def eval(cls,*args):
-        obj = Expr.__new__(cls, *args)
         #use dummy variables internally, just to be sure
-        nargs = len(args)-1
+        new_variables = [C.Dummy(arg.name) for arg in variables]
+        expr = sympify(expr).subs(tuple(zip(variables, new_variables)))
 
-        expression = args[nargs]
-        funargs = [C.Dummy(arg.name) for arg in args[:nargs]]
-        #probably could use something like foldl here
-        for arg,funarg in zip(args[:nargs],funargs):
-            expression = expression.subs(arg,funarg)
-        funargs.append(expression)
-        obj._args = tuple(funargs)
-
+        obj = Expr.__new__(cls, Tuple(*new_variables), expr)
         return obj
 
-    def apply(self, *args):
-        """Applies the Lambda function "self" to the arguments given.
-        This supports partial application.
+    @property
+    def variables(self):
+        """The variables used in the internal representation of the function"""
+        return self._args[0]
 
-        Example:
-            >>> from sympy import Lambda
-            >>> from sympy.abc import x, y
-            >>> f = Lambda(x, x**2)
-            >>> f.apply(4)
-            16
-            >>> sum2numbers = Lambda(x,y,x+y)
-            >>> sum2numbers(1,2)
-            3
-            >>> plus1 = sum2numbers(1)
-            >>> plus1(3)
-            4
+    @property
+    def expr(self):
+        """The return value of the function"""
+        return self._args[1]
 
-        """
+    @property
+    def free_symbols(self):
+        return self.expr.free_symbols - set(self.variables)
 
-        nparams = self.nargs
-        assert nparams >= len(args),"Cannot call function with more parameters than function variables: %s (%d variables) called with %d arguments" % (str(self),nparams,len(args))
+    @property
+    def nargs(self):
+        """The number of arguments that this function takes"""
+        return len(self._args[0])
 
-
-        #replace arguments
-        expression = self.args[self.nargs]
-        for arg,funarg in zip(args,self.args[:nparams]):
-            expression = expression.subs(funarg,arg)
-
-        #curry the rest
-        if nparams != len(args):
-            unused_args = list(self.args[len(args):nparams])
-            unused_args.append(expression)
-            return Lambda(*tuple(unused_args))
-        return expression
+    @deprecated
+    def apply(self, *args): # pragma: no cover
+        return self(*args)
 
     def __call__(self, *args):
-        return self.apply(*args)
+        if len(args) != self.nargs:
+            raise TypeError("%s takes %d arguments (%d given)" % (self, self.nargs, len(args)))
+        return self.expr.subs(tuple(zip(self.variables, args)))
 
     def __eq__(self, other):
-        if isinstance(other, Lambda):
-            if not len(self.args) == len(other.args):
-                return False
+        if not isinstance(other, Lambda):
+            return False
+        if self.nargs != other.nargs:
+            return False
 
-            selfexpr = self.args[self.nargs]
-            otherexpr = other.args[other.nargs]
-            for selfarg,otherarg in zip(self.args[:self.nargs],other.args[:other.nargs]):
-                otherexpr = otherexpr.subs(otherarg,selfarg)
-            if selfexpr == otherexpr:
-                return True
-           # if self.args[1] == other.args[1].subs(other.args[0], self.args[0]):
-           #     return True
-        return False
+        selfexpr = self.args[1]
+        otherexpr = other.args[1]
+        otherexpr = otherexpr.subs(tuple(zip(other.args[0], self.args[0])))
+        return selfexpr == otherexpr
+
+    def __ne__(self, other):
+        return not(self == other)
 
     def __hash__(self):
         return super(Lambda, self).__hash__()
@@ -847,13 +820,6 @@ class Lambda(Function):
         else:
             return None
 
-    @property
-    def vars(self):
-        return self.args[:-1]
-
-    @property
-    def expr(self):
-        return self.args[-1]
 
 def diff(f, *symbols, **kwargs):
     """
