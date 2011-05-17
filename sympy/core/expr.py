@@ -9,6 +9,50 @@ from sympy.core.compatibility import any, all
 class Expr(Basic, EvalfMixin):
     __slots__ = []
 
+    def sort_key(self, order=None):
+        from sympy.core import S
+        def rmap(args):
+            """Recursively map a tree. """
+            result = []
+
+            for arg in args:
+                if isinstance(arg, Basic):
+                    arg = arg.sort_key(order=order)
+                elif hasattr(arg, '__iter__'):
+                    arg = rmap(arg)
+
+                result.append(arg)
+
+            return tuple(result)
+
+        coeff, expr = self.as_coeff_Mul()
+        if expr.is_Pow:
+            expr, exp = expr.args
+        else:
+            expr, exp = expr, S.One
+
+        if expr.is_Atom:
+            if expr.is_Symbol:
+                args = (str(expr),)
+            else:
+                args = (expr,)
+        else:
+            if expr.is_Add:
+                args = expr.as_ordered_terms(order=order)
+            else:
+                args = expr.args
+
+            args = rmap(args)
+
+            if expr.is_Mul:
+                args = sorted(args)
+
+        args = (len(args), args)
+        exp = exp.sort_key(order=order)
+
+        return expr.class_key(), args, exp, coeff
+
+
     # ***************
     # * Arithmetics *
     # ***************
