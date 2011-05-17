@@ -366,19 +366,19 @@ class Basic(AssumeMeths):
 
     def sort_key(self, order=None):
         """
-        A key-function for sorting expressions.
+        Return a sort key.
 
         **Examples**
 
         >>> from sympy.core import Basic, S, I
         >>> from sympy.abc import x
 
-        >>> sorted([S(1)/2, I, -I], key=Basic.sort_key)
+        >>> sorted([S(1)/2, I, -I], key=lambda x: x.sort_key())
         [1/2, -I, I]
 
         >>> S("[x, 1/x, 1/x**2, x**2, x**(1/2), x**(1/4), x**(3/2)]")
         [x, 1/x, x**(-2), x**2, x**(1/2), x**(1/4), x**(3/2)]
-        >>> sorted(_, key=Basic.sort_key)
+        >>> sorted(_, key=lambda x: x.sort_key())
         [x**(-2), 1/x, x**(1/4), x**(1/2), x, x**(3/2), x**2]
 
         """
