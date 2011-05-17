@@ -126,12 +126,8 @@ class Factorial(Function):
 
                     return C.Integer(result)
 
-        if n.is_integer:
-            if n.is_negative:
-                return S.Zero
-        else:
-            return C.gamma(n+1)
-
+        if n.is_negative:
+            return S.Zero
 
     @classmethod    # ?
     def _eval_rewrite_as_gamma(self, arg):
@@ -419,18 +415,13 @@ class Binomial(Function):
 
                         return result
 
-        if k.is_integer:
-            if k.is_negative:
-                return S.Zero
-        else:
-            return C.gamma(r+1)/(C.gamma(r-k+1)*C.gamma(k+1))
-
+        if k.is_negative:
+            return S.Zero
 
     def _eval_rewrite_as_gamma(self, r, k):
         return C.gamma(r+1) / (C.gamma(r-k+1)*C.gamma(k+1))
 
     def _eval_is_integer(self):
         return self.args[0].is_integer and self.args[1].is_integer
-
 
 binomial = Binomial

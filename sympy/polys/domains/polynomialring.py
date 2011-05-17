@@ -5,7 +5,7 @@ from sympy.polys.domains.compositedomain import CompositeDomain
 from sympy.polys.domains.characteristiczero import CharacteristicZero
 
 from sympy.polys.polyclasses import DMP
-from sympy.polys.polyerrors import GeneratorsNeeded, GeneratorsError, PolynomialError, CoercionFailed
+from sympy.polys.polyerrors import GeneratorsNeeded, PolynomialError, CoercionFailed
 from sympy.polys.polyutils import dict_from_basic, basic_from_dict, _dict_reorder
 
 class PolynomialRing(Ring, CharacteristicZero, CompositeDomain):
@@ -146,13 +146,6 @@ class PolynomialRing(Ring, CharacteristicZero, CompositeDomain):
     def frac_field(self, *gens):
         """Returns a fraction field, i.e. `K(X)`. """
         raise NotImplementedError('nested domains not allowed')
-
-    def inject(self, *gens):
-        """Inject generators into this domain. """
-        if not (set(self.gens) & set(gens)):
-            return self.__class__(self.dom, *(self.gens + gens))
-        else:
-            raise GeneratorsError("common generators in %s and %s" % (self.gens, gens))
 
     def is_positive(self, a):
         """Returns True if `LC(a)` is positive. """

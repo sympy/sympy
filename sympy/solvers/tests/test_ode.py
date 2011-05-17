@@ -1,11 +1,10 @@
-from sympy import Function, dsolve, Symbol, sin, cos, sinh, acos, tan, cosh, \
-        I, exp, log, simplify, normal, together, powsimp, \
-        fraction, radsimp, Eq, sqrt, pi, erf,  diff, Rational, asinh, trigsimp, \
-        S, RootOf, Poly, Integral, atan, Equality, solve, O, LambertW, Dummy, \
-        pure
+from sympy import (Function, dsolve, Symbol, sin, cos, sinh, acos, tan, cosh,
+    I, exp, log, simplify, together, powsimp, fraction, radsimp, Eq, sqrt, pi,
+    erf,  diff, Rational, asinh, trigsimp, S, RootOf, Poly, Integral, atan,
+    Equality, solve, O, LambertW, Dummy, pure)
 from sympy.abc import x, y, z
 from sympy.solvers.ode import ode_order, homogeneous_order, \
-        _undetermined_coefficients_match, classify_ode, checkodesol, constant_renumber
+    _undetermined_coefficients_match, classify_ode, checkodesol, constant_renumber
 from sympy.utilities.pytest import XFAIL, skip, raises
 
 C1 = Symbol('C1')
