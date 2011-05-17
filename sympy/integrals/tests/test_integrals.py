@@ -153,9 +153,11 @@ def test_integrate_poly_defined():
 
 def test_integrate_omit_var():
     y = Symbol('y')
+
+    assert integrate(x) == x**2/2
+
     raises(ValueError, "integrate(2)")
-    assert integrate(x)     == x**2/2
-    assert integrate(x*y)   == x**2*y**2/4
+    raises(ValueError, "integrate(x*y)")
 
 def test_integrate_poly_accurately():
     y = Symbol('y')

@@ -104,15 +104,14 @@ class Integral(Expr):
         else:
             # no symbols provided -- let's compute full anti-derivative
             limits, sign = [Tuple(s) for s in function.free_symbols], 1
-            if not limits:
-                raise ValueError('An integration variable is required.')
 
+            if len(limits) != 1:
+                raise ValueError("specify integration variables to integrate %s" % function)
 
         while isinstance(function, Integral):
             # denest the integrand
             limits = list(function.limits) + limits
             function = function.function
-
 
         obj = Expr.__new__(cls, **assumptions)
         arglist = [sign*function]
@@ -812,7 +811,7 @@ def integrate(*args, **kwargs):
        Also, if no var is specified at all, then the full anti-derivative of f is
        returned. This is equivalent to integrating f over all its variables.
 
-       Examples
+       **Examples**
 
        >>> from sympy import integrate, log
        >>> from sympy.abc import a, x, y
@@ -830,7 +829,12 @@ def integrate(*args, **kwargs):
        x**2/2
 
        >>> integrate(x*y)
-       x**2*y**2/4
+       Traceback (most recent call last):
+       ...
+       ValueError: specify integration variables to integrate x*y
+
+       Note that ``integrate(x)`` syntax is meant only for convenience
+       in interactive sessions and should be avoided in library code.
 
        See also the doctest of Integral._eval_integral(), which explains
        thoroughly the strategy that SymPy uses for integration.
