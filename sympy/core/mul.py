@@ -405,6 +405,7 @@ class Mul(AssocOp):
 
                 if e.is_rational:
                     coeff, rest = b.as_coeff_mul()
+                    rest = list(rest)
                     unk=[]
                     nonneg=[]
                     neg=[]
@@ -418,14 +419,15 @@ class Mul(AssocOp):
                             unk.append(bi)
                     if len(unk) == len(rest) or len(neg) == len(rest) == 1:
                         # if all terms were unknown there is nothing to pull
-                        # out except maybe the coeff OR if there was only a
-                        # single negative term then it shouldn't be pulled out
-                        # either.
-                        if coeff < 0:
+                        # out except maybe the coeff; if there is a single
+                        # negative term, this is the base case which cannot
+                        # be processed further
+                        if coeff.is_negative:
                             coeff *= -1
+                            rest[0] = -rest[0]
                         if coeff is S.One:
                             return None
-                        return Mul(Pow(coeff, e), Pow(b/coeff, e))
+                        return Mul(Pow(coeff, e), Pow(Mul(*rest), e))
 
                     # otherwise return the new expression expanding out the
                     # known terms; those that are not known can be expanded
@@ -433,13 +435,14 @@ class Mul(AssocOp):
                     # "garbage" that is needed to keep one on the same branch
                     # as the unexpanded expression. The negatives are brought
                     # out with a negative sign added and a negative left behind
-                    # in the unexpanded terms.
+                    # in the unexpanded terms if there were an odd number of
+                    # negatives.
                     if neg:
                         neg = [-w for w in neg]
-                        if len(neg) % 2 and not coeff.is_negative:
-                            unk.append(S.NegativeOne)
                         if coeff.is_negative:
                             coeff = -coeff
+                            unk.append(S.NegativeOne)
+                        if len(neg) % 2:
                             unk.append(S.NegativeOne)
                     return Mul(*[Pow(s, e) for s in nonneg + neg + [coeff]])* \
                        Pow(Mul(*unk), e)

@@ -205,6 +205,8 @@ def test_expand():
     m=Symbol('m', negative=True)
     assert ((-2*x*y*n)**z).expand() == 2**z*(-n)**z*(x*y)**z
     assert ((-2*x*y*n*m)**z).expand() == 2**z*(-m)**z*(-n)**z*(-x*y)**z
+    # issue 2383
+    assert sqrt(-2*x*n) == sqrt(2)*sqrt(-n)*sqrt(x)
 
     # Check that this isn't too slow
     x = Symbol('x')
