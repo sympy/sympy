@@ -578,7 +578,7 @@ class RootSum(Expr):
             else:
                 raise ValueError("expected a univariate function, got %s" % func)
 
-        var, expr = func.args
+        var, expr = func.variables[0], func.expr
 
         if coeff is not S.One:
             expr = expr.subs(var, coeff*var)
@@ -632,7 +632,7 @@ class RootSum(Expr):
     @classmethod
     def new(cls, poly, func, auto=True):
         """Construct new ``RootSum`` instance. """
-        if not func.expr.has(*func.vars):
+        if not func.expr.has(*func.variables):
             return func.expr
 
         rational = cls._is_func_rational(poly, func)
@@ -651,14 +651,14 @@ class RootSum(Expr):
     @classmethod
     def _is_func_rational(cls, poly, func):
         """Check if a lambda is areational function. """
-        var, expr = func.args
+        var, expr = func.variables[0], func.expr
         return expr.is_rational_function(var)
 
     @classmethod
     def _rational_case(cls, poly, func):
         """Handle the rational function case. """
         roots = symbols('r:%d' % poly.degree())
-        var, expr = func.args
+        var, expr = func.variables[0], func.expr
 
         f = sum(expr.subs(var, r) for r in roots)
         p, q = together(f).as_numer_denom()
