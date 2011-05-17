@@ -47,6 +47,9 @@ def test_composite_sums():
     B = s.subs(a,-3).subs(b,4)
     assert A == B
 
+def test_hypergeometric_sums():
+    assert summation(binomial(2*k, k)/4**k, (k, 0, n)) == (1 + 2*n)*binomial(2*n, n)/4**n
+
 fac = factorial
 
 def NS(e, n=15, **options):

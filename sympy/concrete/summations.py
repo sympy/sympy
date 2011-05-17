@@ -2,7 +2,8 @@ from sympy.core import (Expr, S, C, Symbol, Equality, Interval, sympify, Wild,
                         Tuple, Dummy, Derivative)
 from sympy.core.compatibility import any
 from sympy.functions.elementary.piecewise import piecewise_fold
-from sympy.polys import apart
+from sympy.concrete.gosper import gosper_sum
+from sympy.polys import apart, PolynomialError
 from sympy.solvers import solve
 from sympy.utilities import flatten
 
@@ -336,45 +337,64 @@ def eval_sum(f, (i, a, b)):
 def eval_sum_symbolic(f, (i, a, b)):
     if not f.has(i):
         return f*(b-a+1)
+
     # Linearity
     if f.is_Mul:
         L, R = f.as_two_terms()
+
         if not L.has(i):
             sR = eval_sum_symbolic(R, (i, a, b))
             if sR: return L*sR
+
         if not R.has(i):
             sL = eval_sum_symbolic(L, (i, a, b))
             if sL: return R*sL
-        f = apart(f, i) # see if it becomes an Add
+
+        try:
+            f = apart(f, i) # see if it becomes an Add
+        except PolynomialError:
+            pass
+
     if f.is_Add:
         L, R = f.as_two_terms()
         lrsum = telescopic(L, R, (i, a, b))
-        if lrsum: return lrsum
+
+        if lrsum:
+            return lrsum
+
         lsum = eval_sum_symbolic(L, (i, a, b))
         rsum = eval_sum_symbolic(R, (i, a, b))
+
         if None not in (lsum, rsum):
             return lsum + rsum
+
     # Polynomial terms with Faulhaber's formula
     p = C.Wild('p')
     e = f.match(i**p)
+
     if e is not None:
         c = p.subs(e)
         B = C.bernoulli
         if c.is_integer and c >= 0:
             s = (B(c+1, b+1) - B(c+1, a))/(c+1)
             return s.expand()
+
     # Geometric terms
     c1 = C.Wild('c1', exclude=[i])
     c2 = C.Wild('c2', exclude=[i])
     c3 = C.Wild('c3', exclude=[i])
+
     e = f.match(c1**(c2*i+c3))
+
     if e is not None:
         c1 = c1.subs(e)
         c2 = c2.subs(e)
         c3 = c3.subs(e)
+
         # TODO: more general limit handling
         return c1**c3 * (c1**(a*c2) - c1**(c2+b*c2)) / (1 - c1**c2)
-    return None
+
+    return gosper_sum(f, (i, a, b))
 
 def eval_sum_direct(expr, (i, a, b)):
     s = S.Zero
