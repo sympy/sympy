@@ -167,6 +167,10 @@ class Number(AtomicExpr):
         # Order(5, x, y) -> Order(1,x,y)
         return C.Order(S.One, *symbols)
 
+    def sort_key(self, order=None):
+        return self.class_key(), (0, ()), (), self
+
+
     def __eq__(self, other):
         raise NotImplementedError('%s needs .__eq__() method' % (self.__class__.__name__))
     def __ne__(self, other):

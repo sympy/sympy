@@ -397,47 +397,36 @@ class Basic(AssumeMeths):
 
             return tuple(result)
 
-        if self.is_Atom:
-            if self.is_Number:
-                return self.class_key(), (0, ()), (), self
-            else:
-                if self.is_Symbol:
-                    args = (str(self),)
-                else:
-                    args = (self,)
-
-                return self.class_key(), (1, args), S.One.sort_key(), S.One
+        try:
+            coeff, expr = self.as_coeff_Mul()
+        except AttributeError:
+            return self.class_key(), (len(self.args), self.args), S.One.sort_key(), S.One
         else:
-            try:
-                coeff, expr = self.as_coeff_Mul()
-            except AttributeError:
-                return self.class_key(), (len(self.args), self.args), S.One.sort_key(), S.One
+            if expr.is_Pow:
+                expr, exp = expr.args
             else:
-                if expr.is_Pow:
-                    expr, exp = expr.args
+                expr, exp = expr, S.One
+
+            if expr.is_Atom:
+                if expr.is_Symbol:
+                    args = (str(expr),)
                 else:
-                    expr, exp = expr, S.One
-
-                if expr.is_Atom:
-                    if expr.is_Symbol:
-                        args = (str(expr),)
-                    else:
-                        args = (expr,)
+                    args = (expr,)
+            else:
+                if expr.is_Add:
+                    args = expr.as_ordered_terms(order=order)
                 else:
-                    if expr.is_Add:
-                        args = expr.as_ordered_terms(order=order)
-                    else:
-                        args = expr.args
+                    args = expr.args
 
-                    args = rmap(args)
+                args = rmap(args)
 
-                    if expr.is_Mul:
-                        args = sorted(args)
+                if expr.is_Mul:
+                    args = sorted(args)
 
-                args = (len(args), args)
-                exp = exp.sort_key(order=order)
+            args = (len(args), args)
+            exp = exp.sort_key(order=order)
 
-                return expr.class_key(), args, exp, coeff
+            return expr.class_key(), args, exp, coeff
 
 
     def __eq__(self, other):
@@ -1286,3 +1275,7 @@ class Atom(Basic):
 
     def __contains__(self, obj):
         return (self == obj)
+
+    def sort_key(self, order=None):
+        from sympy.core import S
+        return self.class_key(), (1, (self,)), S.One.sort_key(), S.One
