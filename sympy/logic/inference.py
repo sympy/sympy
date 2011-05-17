@@ -99,7 +99,7 @@ def pl_true(expr, model={}):
             return None
         return pt == qt
     else:
-        raise ValueError, "Illegal operator in logic expression" + str(expr)
+        raise ValueError("Illegal operator in logic expression" + str(expr))
 
 
 class KB(object):
@@ -143,3 +143,4 @@ class PropKB(KB):
         for c in conjuncts(to_cnf(sentence)):
             if c in self.clauses:
                 self.clauses.remove(c)
+

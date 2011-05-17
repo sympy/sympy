@@ -108,8 +108,8 @@ class Ellipse(GeometryEntity):
             center = Point(center)
 
         if len(filter(None, (hradius, vradius, eccentricity))) != 2:
-            raise ValueError, 'Exactly two arguments of "hradius", '\
-                '"vradius", and "eccentricity" must not be None."'
+            raise ValueError('Exactly two arguments of "hradius", '\
+                '"vradius", and "eccentricity" must not be None."')
 
         if eccentricity is not None:
             if hradius is None:

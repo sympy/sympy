@@ -203,7 +203,7 @@ Debugging
 ---------
 
 Starting with 0.6.4, you can turn on/off debugg messages with the environment variable
-SYMPY_DEBUG, which is expected to have the values True or False. For example, o turn on 
+SYMPY_DEBUG, which is expected to have the values True or False. For example, o turn on
 debugging, you would issue::
 
     [user@localhost]: SYMPY_DEBUG=True ./bin/isympy
@@ -334,7 +334,7 @@ This is how to create a function of two variables::
         @classmethod
         def eval(cls, n, k):
             if not 0 <= k < n:
-                raise ValueError, "must have 0 <= k < n"
+                raise ValueError("must have 0 <= k < n")
             return C.cos(S.Pi*(2*k+1)/(2*n))
 
 
@@ -527,3 +527,4 @@ Improving the docs
 
 Please see :ref:`the documentation <module-docs>` how to fix and improve
 SymPy's documentation. All contribution is very welcome.
+

@@ -71,17 +71,16 @@ def gen_poly(points, order, syms):
     """Generates a polynomial using a Vandermonde system"""
     num_pts = len(points)
     if num_pts == 0:
-        raise ValueError, "Must provide points"
+        raise ValueError("Must provide points")
     dim = len(points[0]) - 1
     if dim > len(syms):
-        raise ValueError, \
-            "Must provide at lease %d symbols for the polynomial" % dim
+        raise ValueError("Must provide at lease %d symbols for the polynomial" % dim)
     V, tmp_syms, terms = vandermonde(order, dim)
     if num_pts < V.shape[0]:
-        raise ValueError, \
+        raise ValueError(
             "Must provide %d points for order %d, dimension "\
             "%d polynomial, given %d points" % \
-            (V.shape[0], order, dim, num_pts)
+            (V.shape[0], order, dim, num_pts))
     elif num_pts > V.shape[0]:
         print "gen_poly given %d points but only requires %d, "\
             "continuing using the first %d points" % \
@@ -164,3 +163,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
