@@ -93,6 +93,7 @@ from sympy.polys.densetools import (
     dup_monic, dmp_ground_monic,
     dup_compose, dmp_compose,
     dup_decompose,
+    dup_shift,
     dmp_lift)
 
 from sympy.polys.euclidtools import (
@@ -616,6 +617,13 @@ class DMP(object):
         """Computes functional decomposition of `f`. """
         if not f.lev:
             return map(f.per, dup_decompose(f.rep, f.dom))
+        else:
+            raise ValueError('univariate polynomial expected')
+
+    def shift(f, a):
+        """Efficiently compute Taylor shift ``f(x + a)``. """
+        if not f.lev:
+            return f.per(dup_shift(f.rep, f.dom.convert(a), f.dom))
         else:
             raise ValueError('univariate polynomial expected')
 
