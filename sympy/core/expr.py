@@ -11,19 +11,14 @@ class Expr(Basic, EvalfMixin):
 
     def sort_key(self, order=None):
         from sympy.core import S
-        def rmap(args):
-            """Recursively map a tree. """
-            result = []
 
-            for arg in args:
-                if isinstance(arg, Basic):
-                    arg = arg.sort_key(order=order)
-                elif hasattr(arg, '__iter__'):
-                    arg = rmap(arg)
-
-                result.append(arg)
-
-            return tuple(result)
+        def key_inner(arg):
+            if isinstance(arg, Basic):
+                return arg.sort_key(order=order)
+            elif hasattr(arg, '__iter__'):
+                return tuple(key_inner(arg) for arg in args)
+            else:
+                return arg
 
         coeff, expr = self.as_coeff_Mul()
         if expr.is_Pow:
@@ -42,7 +37,7 @@ class Expr(Basic, EvalfMixin):
             else:
                 args = expr.args
 
-            args = rmap(args)
+            args = tuple(key_inner(arg) for arg in args)
 
             if expr.is_Mul:
                 args = sorted(args)
