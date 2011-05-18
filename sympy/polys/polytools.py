@@ -2343,6 +2343,26 @@ class Poly(Expr):
 
         return map(f.per, result)
 
+    def shift(f, a):
+        """
+        Efficiently compute Taylor shift ``f(x + a)``.
+
+        **Examples**
+
+        >>> from sympy import Poly
+        >>> from sympy.abc import x
+
+        >>> Poly(x**2 - 2*x + 1, x).shift(2)
+        Poly(x**2 + 2*x + 1, x, domain='ZZ')
+
+        """
+        if hasattr(f.rep, 'shift'):
+            result = f.rep.shift(a)
+        else: # pragma: no cover
+            raise OperationNotSupported(f, 'shift')
+
+        return f.per(result)
+
     def sturm(f, auto=True):
         """
         Computes the Sturm sequence of ``f``.
