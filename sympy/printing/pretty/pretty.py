@@ -85,6 +85,22 @@ class PrettyPrinter(Printer):
         pform = prettyForm(*pform.right('!'))
         return pform
 
+    def _print_Binomial(self, e):
+        n, k = e.args
+
+        n_pform = self._print(n)
+        k_pform = self._print(k)
+
+        bar = ' '*max(n_pform.width(), k_pform.width())
+
+        pform = prettyForm(*k_pform.above(bar))
+        pform = prettyForm(*pform.above(n_pform))
+        pform = prettyForm(*pform.parens('(', ')'))
+
+        pform.baseline = (pform.baseline + 1)//2
+
+        return pform
+
     def _print_Relational(self, e):
         op = prettyForm(' ' + xsym(e.rel_op) + ' ')
 

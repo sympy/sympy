@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 from sympy import (Matrix, Piecewise, Ne, symbols, sqrt, Function,
     Rational, conjugate, Derivative, tan, Function, log, floor, Symbol,
-    pprint, sqrt, factorial, pi, sin, ceiling, pprint_use_unicode, I, S,
-    Limit, oo, cos, Pow, Integral, exp, Eq, Lt, Gt, Ge, Le, gamma, Abs, RootOf,
-    RootSum, Lambda, Not, And, Or, Xor, Nand, Nor, Implies, Equivalent,
+    pprint, sqrt, factorial, binomial, pi, sin, ceiling, pprint_use_unicode,
+    I, S, Limit, oo, cos, Pow, Integral, exp, Eq, Lt, Gt, Ge, Le, gamma, Abs,
+    RootOf, RootSum, Lambda, Not, And, Or, Xor, Nand, Nor, Implies, Equivalent,
     FF, ZZ, QQ, RR, O)
 
 from sympy.printing.pretty import pretty as xpretty
@@ -960,6 +960,59 @@ u"""\
 """
     assert  pretty(expr) in [ascii_str_1, ascii_str_2]
     assert upretty(expr) in [ucode_str_1, ucode_str_2]
+
+    expr = 2*binomial(n, k)
+    ascii_str = \
+"""\
+  /n\\\n\
+2*| |\n\
+  \k/\
+"""
+    ucode_str = \
+u"""\
+  ⎛n⎞\n\
+2⋅⎜ ⎟\n\
+  ⎝k⎠\
+"""
+
+    assert  pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    expr = 2*binomial(2*n, k)
+    ascii_str = \
+"""\
+  /2*n\\\n\
+2*|   |\n\
+  \ k /\
+"""
+    ucode_str = \
+u"""\
+  ⎛2⋅n⎞\n\
+2⋅⎜   ⎟\n\
+  ⎝ k ⎠\
+"""
+
+    assert  pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    expr = 2*binomial(n**2, k)
+    ascii_str = \
+"""\
+  / 2\\\n\
+  |n |\n\
+2*|  |\n\
+  \k /\
+"""
+    ucode_str = \
+u"""\
+  ⎛ 2⎞\n\
+  ⎜n ⎟\n\
+2⋅⎜  ⎟\n\
+  ⎝k ⎠\
+"""
+
+    assert  pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
 
     expr = conjugate(x)
     ascii_str = \
