@@ -109,9 +109,16 @@ def denom_expand(expr):
     a, b = fraction(expr)
     return a / b.expand()
 
-def separate(expr, deep=False):
-    """Rewrite or separate a power of product to a product of powers
-       but without any expanding, i.e., rewriting products to summations.
+def separate(expr, deep=False, force=True):
+    """A wrapper to expand(power_base=True, force=True) which separates a power with a
+       base that is a Mul into a product of powers without performing any other
+       expansions and without regard to assumptions on variables.
+
+       deep=True will do separations inside functions.
+
+       force=False will cause assumptions regarding the sign of base or type
+       of exponent to be regarded and will prevent separations of bases having
+       no assumptions regarding sign.
 
        >>> from sympy.abc import x, y, z
        >>> from sympy import separate, sin, cos, exp
@@ -141,27 +148,8 @@ def separate(expr, deep=False):
        x**(z + 1)*y**(z + 1)
 
     """
-    expr = sympify(expr)
-
-    if expr.is_Pow:
-        terms, expo = [], separate(expr.exp, deep)
-
-        if expr.base.is_Mul:
-            t = [separate(Pow(t,expo), deep) for t in expr.base.args]
-            return Mul(*t)
-        elif expr.base.func is C.exp:
-            if deep == True:
-                return C.exp(separate(expr.base[0], deep)*expo)
-            else:
-                return C.exp(expr.base[0]*expo)
-        else:
-            return Pow(separate(expr.base, deep), expo)
-    elif expr.is_Add or expr.is_Mul:
-        return type(expr)(*[separate(t, deep) for t in expr.args])
-    elif expr.is_Function and deep:
-        return expr.func(*[separate(t) for t in expr.args])
-    else:
-        return expr
+    return sympify(expr).expand(deep=deep, mul=False, power_exp=False,\
+    power_base=True, basic=False, multinomial=False, log=False, force=force)
 
 def collect(expr, syms, evaluate=True, exact=False):
     """
@@ -1897,4 +1885,3 @@ def _logcombine(expr, force=False):
         _logcombine(expr.args[1], force)
 
     return expr
-
