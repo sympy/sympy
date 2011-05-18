@@ -1395,6 +1395,54 @@ class Matrix(object):
                     return False
         return True
 
+    def is_upper_hessenberg(self):
+        """
+        Checks if the matrix is the upper hessenberg form.
+
+        The upper hessenberg matrix has zero entries
+        below the first subdiagonal.
+
+        Example:
+        >>> from sympy.matrices import Matrix
+        >>> a = Matrix([[1,4,2,3],[3,4,1,7],[0,2,3,4],[0,0,1,3]])
+        >>> a
+        [1, 4, 2, 3]
+        [3, 4, 1, 7]
+        [0, 2, 3, 4]
+        [0, 0, 1, 3]
+        >>> a.is_upper_hessenberg()
+        True
+        """
+        for i in xrange(2, self.rows):
+            for j in xrange(0, i - 1):
+                if self[i,j] != 0:
+                    return False
+        return True
+
+    def is_lower_hessenberg(self):
+        r"""
+        Checks if the matrix is in the lower hessenberg form.
+
+        The lower hessenberg matrix has zero entries
+        above the first superdiagonal.
+
+        Example:
+        >>> from sympy.matrices import Matrix
+        >>> a = Matrix([[1,2,0,0],[5,2,3,0],[3,4,3,7],[5,6,1,1]])
+        >>> a
+        [1, 2, 0, 0]
+        [5, 2, 3, 0]
+        [3, 4, 3, 7]
+        [5, 6, 1, 1]
+        >>> a.is_lower_hessenberg()
+        True
+        """
+        for i in xrange(0, self.rows):
+            for j in xrange(i + 2, self.cols):
+                if self[i, j] != 0:
+                    return False
+        return True
+
     def is_symbolic(self):
         for element in self.mat:
             if element.has(Symbol):

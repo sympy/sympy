@@ -1553,3 +1553,10 @@ def test_getattr():
     A = Matrix(((1,4,x),(y,2,4),(10,5,x**2+1)))
     raises (AttributeError, 'A.nonexistantattribute')
 
+def test_hessenberg():
+    A = Matrix([[3, 4, 1],[2, 4 ,5],[0, 1, 2]])
+    assert A.is_upper_hessenberg()
+    assert A.transpose().is_lower_hessenberg()
+
+    A = Matrix([[3, 4, 1],[2, 4 ,5],[3, 1, 2]])
+    assert not A.is_upper_hessenberg()
