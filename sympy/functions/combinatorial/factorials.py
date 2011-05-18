@@ -129,9 +129,8 @@ class factorial(Function):
         if n.is_negative:
             return S.Zero
 
-    @classmethod    # ?
-    def _eval_rewrite_as_gamma(self, arg):
-        return C.gamma(1 + arg)
+    def _eval_rewrite_as_gamma(self, n):
+        return C.gamma(n + 1)
 
     def _eval_is_integer(self):
         return self.args[0].is_integer
@@ -360,61 +359,67 @@ class binomial(Function):
     nargs = 2
 
     @classmethod
-    def eval(cls, r, k):
-        r, k = map(sympify, (r, k))
+    def eval(cls, n, k):
+        n, k = map(sympify, (n, k))
 
         if k.is_Number:
-            if k is S.Zero:
-                return S.One
-            elif k.is_Integer:
-                if k.is_negative:
+            if k.is_Integer:
+                if k < 0:
                     return S.Zero
-                else:
-                    if r.is_Integer and r.is_nonnegative:
-                        r, k = int(r), int(k)
+                elif k == 0 or n == k:
+                    return S.One
+                elif n.is_Integer and n >= 0:
+                    n, k = int(n), int(k)
 
-                        if k > r:
-                            return S.Zero
-                        elif k > r // 2:
-                            k = r - k
+                    if k > n:
+                        return S.Zero
+                    elif k > n // 2:
+                        k = n - k
 
-                        M, result = int(sqrt(r)), 1
+                    M, result = int(sqrt(n)), 1
 
-                        for prime in sieve.primerange(2, r+1):
-                            if prime > r - k:
+                    for prime in sieve.primerange(2, n+1):
+                        if prime > n - k:
+                            result *= prime
+                        elif prime > n // 2:
+                            continue
+                        elif prime > M:
+                            if n % prime < k % prime:
                                 result *= prime
-                            elif prime > r // 2:
-                                continue
-                            elif prime > M:
-                                if r % prime < k % prime:
-                                    result *= prime
-                            else:
-                                R, K = r, k
-                                exp = a = 0
+                        else:
+                            N, K = n, k
+                            exp = a = 0
 
-                                while R > 0:
-                                    a = int((R % prime) < (K % prime + a))
-                                    R, K = R // prime, K // prime
-                                    exp = a + exp
+                            while N > 0:
+                                a = int((N % prime) < (K % prime + a))
+                                N, K = N // prime, K // prime
+                                exp = a + exp
 
-                                if exp > 0:
-                                    result *= prime**exp
+                            if exp > 0:
+                                result *= prime**exp
 
-                        return C.Integer(result)
-                    else:
-                        result = r - k + 1
+                    return C.Integer(result)
+                else:
+                    result = n - k + 1
 
-                        for i in xrange(2, k+1):
-                            result *= r-k+i
-                            result /= i
+                    for i in xrange(2, k+1):
+                        result *= n-k+i
+                        result /= i
 
-                        return result
-
-        if k.is_negative:
+                    return result
+        elif k.is_negative:
             return S.Zero
+        else:
+            d = n - k
 
-    def _eval_rewrite_as_gamma(self, r, k):
-        return C.gamma(r+1) / (C.gamma(r-k+1)*C.gamma(k+1))
+            if d.is_Integer:
+                return cls.eval(n, d)
+
+    def _eval_rewrite_as_factorial(self, n, k):
+        return C.factorial(n)/(C.factorial(k)*C.factorial(n - k))
+
+    def _eval_rewrite_as_gamma(self, n, k):
+        return C.gamma(n + 1)/(C.gamma(k + 1)*C.gamma(n - k + 1))
 
     def _eval_is_integer(self):
         return self.args[0].is_integer and self.args[1].is_integer

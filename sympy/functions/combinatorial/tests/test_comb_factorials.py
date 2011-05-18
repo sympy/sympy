@@ -1,4 +1,4 @@
-from sympy import symbols, rf, Symbol, factorial, factorial, ff, nan, oo, factorial2
+from sympy import Symbol, symbols, factorial, factorial2, binomial, rf, ff, gamma, nan, oo
 
 def test_rf_eval_apply():
     x, y = symbols('x,y')
@@ -56,18 +56,58 @@ def test_ff_eval_apply():
 
     assert ff(100, 100) == factorial(100)
 
-def test_factorials():
+def test_factorial():
     n = Symbol('n', integer=True)
+
     assert factorial(-2) == 0
     assert factorial(0) == 1
     assert factorial(7) == 5040
     assert factorial(n).func == factorial
     assert factorial(2*n).func == factorial
 
+def test_factorial_rewrite():
+    n = Symbol('n', integer=True)
+
+    assert factorial(n).rewrite(gamma) == gamma(n + 1)
+
 def test_factorial2():
     n = Symbol('n', integer=True)
+
     assert factorial2(-1) == 1
     assert factorial2(0) == 1
     assert factorial2(7) == 105
     assert factorial2(8) == 384
     assert factorial2(n).func == factorial2
+
+def test_binomial():
+    n = Symbol('n', integer=True)
+    k = Symbol('k', integer=True)
+    u = Symbol('v', negative=True)
+    v = Symbol('m', positive=True)
+
+    assert binomial(0, 0) == 1
+    assert binomial(1, 1) == 1
+    assert binomial(10, 10) == 1
+    assert binomial(1, 2) == 0
+    assert binomial(1, -1) == 0
+    assert binomial(-1, 1) == -1
+    assert binomial(-10, 1) == -10
+    assert binomial(-10, 7) == -11440
+    assert binomial(n, -1) == 0
+    assert binomial(n, 0) == 1
+    assert binomial(n, 1) == n
+    assert binomial(n, 2) == n*(n - 1)/2
+    assert binomial(n, n-2) == n*(n - 1)/2
+    assert binomial(n, n-1) == n
+    assert binomial(n, n) == 1
+    assert binomial(n, n+1) == 0
+    assert binomial(n, u) == 0
+    assert binomial(n, v).func == binomial
+    assert binomial(n, k).func == binomial
+
+def test_binomial_rewrite():
+    n = Symbol('n', integer=True)
+    k = Symbol('k', integer=True)
+
+    assert binomial(n, k).rewrite(factorial) == factorial(n)/(factorial(k)*factorial(n - k))
+    assert binomial(n, k).rewrite(gamma) == gamma(n + 1)/(gamma(k + 1)*gamma(n - k + 1))
