@@ -6,7 +6,7 @@ from math import sqrt
 ######################## FACTORIAL and MULTI-FACTORIAL ########################
 ###############################################################################
 
-class Factorial(Function):
+class factorial(Function):
     """Implementation of factorial function over nonnegative integers.
        For the sake of convenience and simplicity of procedures using
        this function it is defined for negative integers and returns
@@ -139,7 +139,7 @@ class Factorial(Function):
 class MultiFactorial(Function):
     pass
 
-class Factorial2(Function):
+class factorial2(Function):
     """The double factorial n!!, not to be confused with (n!)!
 
     The double facotrial is defined for integers >= -1 as
@@ -166,16 +166,13 @@ class Factorial2(Function):
         if arg.is_Number:
             if arg == S.Zero or arg == S.NegativeOne:
                 return S.One
-            return Factorial2(arg - 2)*arg
+            return factorial2(arg - 2)*arg
 
     def _sympystr(self, p):
         if self.args[0].is_Atom:
             return "%s!!" % p.doprint(self.args[0])
         else:
             return "(%s)!!" % p.doprint(self.args[0])
-
-factorial   = Factorial
-factorial2  = Factorial2
 
 ###############################################################################
 ######################## RISING and FALLING FACTORIALS ########################
@@ -313,7 +310,7 @@ ff = FallingFactorial
 ########################### BINOMIAL COEFFICIENTS #############################
 ###############################################################################
 
-class Binomial(Function):
+class binomial(Function):
     """Implementation of the binomial coefficient. It can be defined
        in two ways depending on its desired interpretation:
 
@@ -421,5 +418,3 @@ class Binomial(Function):
 
     def _eval_is_integer(self):
         return self.args[0].is_integer and self.args[1].is_integer
-
-binomial = Binomial

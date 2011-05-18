@@ -81,7 +81,7 @@ class sinh(HyperbolicFunction):
                 p = previous_terms[-2]
                 return p * x**2 / (n*(n-1))
             else:
-                return x**(n) / C.Factorial(n)
+                return x**(n) / C.factorial(n)
 
     def _eval_conjugate(self):
         return self.func(self.args[0].conjugate())
@@ -206,7 +206,7 @@ class cosh(HyperbolicFunction):
                 p = previous_terms[-2]
                 return p * x**2 / (n*(n-1))
             else:
-                return x**(n)/C.Factorial(n)
+                return x**(n)/C.factorial(n)
 
     def _eval_conjugate(self):
         return self.func(self.args[0].conjugate())
@@ -334,7 +334,7 @@ class tanh(HyperbolicFunction):
             a = 2**(n+1)
 
             B = C.bernoulli(n+1)
-            F = C.Factorial(n+1)
+            F = C.factorial(n+1)
 
             return a*(a-1) * B/F * x**n
 
@@ -463,7 +463,7 @@ class coth(HyperbolicFunction):
             x = sympify(x)
 
             B = C.bernoulli(n+1)
-            F = C.Factorial(n+1)
+            F = C.factorial(n+1)
 
             return 2**(n+1) * B/F * x**n
 
@@ -575,7 +575,7 @@ class asinh(Function):
             else:
                 k = (n - 1) // 2
                 R = C.RisingFactorial(S.Half, k)
-                F = C.Factorial(k)
+                F = C.factorial(k)
                 return (-1)**k * R / F * x**n / n
 
     def _eval_as_leading_term(self, x):
@@ -679,7 +679,7 @@ class acosh(Function):
             else:
                 k = (n - 1) // 2
                 R = C.RisingFactorial(S.Half, k)
-                F = C.Factorial(k)
+                F = C.factorial(k)
                 return -R / F * S.ImaginaryUnit * x**n / n
 
     def _eval_as_leading_term(self, x):

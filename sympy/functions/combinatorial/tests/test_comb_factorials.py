@@ -1,5 +1,4 @@
-from sympy import symbols, rf, Symbol, factorial, Factorial, ff, nan, oo,\
-        Factorial2, factorial2
+from sympy import symbols, rf, Symbol, factorial, factorial, ff, nan, oo, factorial2
 
 def test_rf_eval_apply():
     x, y = symbols('x,y')
@@ -62,8 +61,8 @@ def test_factorials():
     assert factorial(-2) == 0
     assert factorial(0) == 1
     assert factorial(7) == 5040
-    assert factorial(n).func == Factorial
-    assert factorial(2*n).func == Factorial
+    assert factorial(n).func == factorial
+    assert factorial(2*n).func == factorial
 
 def test_factorial2():
     n = Symbol('n', integer=True)
@@ -71,4 +70,4 @@ def test_factorial2():
     assert factorial2(0) == 1
     assert factorial2(7) == 105
     assert factorial2(8) == 384
-    assert factorial2(n).func == Factorial2
+    assert factorial2(n).func == factorial2

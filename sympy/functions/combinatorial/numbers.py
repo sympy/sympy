@@ -205,7 +205,7 @@ class bernoulli(Function):
     @staticmethod
     def _calc_bernoulli(n):
         s = 0
-        a = int(C.Binomial(n+3, n-6))
+        a = int(C.binomial(n+3, n-6))
         for j in xrange(1, n//6+1):
             s += a * bernoulli(n - 6*j)
             # Avoid computing each binomial coefficient from scratch
@@ -215,7 +215,7 @@ class bernoulli(Function):
             s = -Rational(n+3, 6) - s
         else:
             s = Rational(n+3, 3) - s
-        return s / C.Binomial(n+3, n)
+        return s / C.binomial(n+3, n)
 
     # We implement a specialized memoization scheme to handle each
     # case modulo 6 separately
@@ -256,7 +256,7 @@ class bernoulli(Function):
                 else:
                     n, result = int(n), []
                     for k in xrange(n + 1):
-                        result.append(C.Binomial(n, k)*cls(k)*sym**(n-k))
+                        result.append(C.binomial(n, k)*cls(k)*sym**(n-k))
                     return Add(*result)
             else:
                 raise ValueError("Bernoulli numbers are defined only"

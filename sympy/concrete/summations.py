@@ -197,7 +197,7 @@ class Sum(Expr):
         g = f.diff(i)
         for k in xrange(1, n+2):
             ga, gb = fpoint(g)
-            term = C.bernoulli(2*k)/C.Factorial(2*k)*(gb-ga)
+            term = C.bernoulli(2*k)/C.factorial(2*k)*(gb-ga)
             if (eps and term and abs(term.evalf(3)) < eps) or (k > n):
                 break
             s += term

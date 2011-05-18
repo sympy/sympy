@@ -829,7 +829,7 @@ class Pow(Expr):
     def taylor_term(self, n, x, *previous_terms): # of (1+x)**e
         if n<0: return S.Zero
         x = _sympify(x)
-        return C.Binomial(self.exp, n) * Pow(x, n)
+        return C.binomial(self.exp, n) * Pow(x, n)
 
     def _sage_(self):
         return Pow(self.args[0]._sage_(), self.args[1]._sage_())

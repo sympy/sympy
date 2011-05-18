@@ -36,7 +36,7 @@ def Ylm(l, m, theta, phi):
 
     """
     l, m, theta, phi = [sympify(x) for x in (l, m, theta, phi)]
-    factorial = C.Factorial
+    factorial = C.factorial
     return sqrt((2*l+1)/(4*pi) * factorial(l-m)/factorial(l+m)) * \
             Plmcos(l, m, theta) * C.exp(I*m*phi)
 

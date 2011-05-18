@@ -144,11 +144,11 @@ def test_core_cache():
 
 #================== functions ===================
 from sympy.functions import (Piecewise, lowergamma, acosh,
-        chebyshevu, chebyshevt, ln, chebyshevt_root, Binomial, legendre,
+        chebyshevu, chebyshevt, ln, chebyshevt_root, binomial, legendre,
         Heaviside, Dij, factorial, bernoulli, coth, tanh, assoc_legendre, sign,
         arg, asin, DiracDelta, re, rf, Abs, uppergamma, binomial, sinh, Ylm,
         cos, cot, acos, acot, gamma, bell, hermite, harmonic,
-        LambertW, zeta, log, Factorial, asinh, acoth, Zlm,
+        LambertW, zeta, log, factorial, asinh, acoth, Zlm,
         cosh, dirichlet_eta, Eijk, loggamma, erf, ceiling, im, fibonacci,
         conjugate, tan, chebyshevu_root, floor, atanh, sqrt,
         RisingFactorial, sin, atan, ff, FallingFactorial, lucas, atan2,
@@ -159,7 +159,7 @@ def test_functions():
     zero_var = (pi, oo, nan, zoo, E, I)
     one_var = (acosh, ln, Heaviside, Dij, factorial, bernoulli, coth, tanh,
             sign, arg, asin, DiracDelta, re, Abs, sinh, cos, cot, acos, acot,
-            gamma, bell, harmonic, LambertW, zeta, log, Factorial, asinh,
+            gamma, bell, harmonic, LambertW, zeta, log, factorial, asinh,
             acoth, cosh, dirichlet_eta, loggamma, erf, ceiling, im, fibonacci,
             conjugate, tan, floor, atanh, sin, atan, lucas, exp)
     two_var = (rf, ff, lowergamma, chebyshevu, chebyshevt, binomial,
