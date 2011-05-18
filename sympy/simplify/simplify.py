@@ -640,29 +640,19 @@ def _separatevars(expr, force):
 def _separatevars_dict(expr, *symbols):
     if symbols:
         assert all((t.is_Atom for t in symbols)), "symbols must be Atoms."
-    ret = dict(((i,sympify(1)) for i in symbols))
-    ret['coeff'] = sympify(1)
-    if expr.is_Mul:
-        for i in expr.args:
-            expsym = i.atoms(Symbol)
-            intersection = set(symbols).intersection(expsym)
-            if len(intersection) > 1:
-                return None
-            if len(intersection) == 0:
-                # There are no symbols, so it is part of the coefficient
-                ret['coeff'] *= i
-            else:
-                ret[intersection.pop()] *= i
-    else:
-        expsym = expr.atoms(Symbol)
+
+    ret = dict(((i, S.One) for i in symbols + ('coeff',)))
+
+    for i in Mul.make_args(expr):
+        expsym = i.free_symbols
         intersection = set(symbols).intersection(expsym)
         if len(intersection) > 1:
             return None
         if len(intersection) == 0:
             # There are no symbols, so it is part of the coefficient
-            ret['coeff'] *= expr
+            ret['coeff'] *= i
         else:
-            ret[intersection.pop()] *= expr
+            ret[intersection.pop()] *= i
 
     return ret
 
