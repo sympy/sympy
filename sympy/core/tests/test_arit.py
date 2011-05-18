@@ -192,6 +192,21 @@ def test_expand():
     assert e.expand(power_exp=False, power_base=False, deep=False) == x*(x*(y + z))**(x*(y + z)) + y*(x*(y + z))**(x*(y + z))
     e = (x*(y+z))**z
     assert e.expand(power_base=True, mul=True, deep=True) in [x**z*(y + z)**z, (x*y + x*z)**z]
+    assert ((2*y)**z).expand() == 2**z*y**z
+    p=Symbol('p', positive=True)
+    assert sqrt(-x).expand().is_Pow
+    assert sqrt(-x).expand(force=True) == I*sqrt(x)
+    assert ((2*y*p)**z).expand() == 2**z*p**z*y**z
+    assert ((2*y*p*x)**z).expand() == 2**z*p**z*(x*y)**z
+    assert ((2*y*p*x)**z).expand(force=True) == 2**z*p**z*x**z*y**z
+    assert ((2*y*p*-pi)**z).expand() ==  2**z*pi**z*p**z*(-y)**z
+    assert ((2*y*p*-pi*x)**z).expand() == 2**z*pi**z*p**z*(-x*y)**z
+    n=Symbol('n', negative=True)
+    m=Symbol('m', negative=True)
+    assert ((-2*x*y*n)**z).expand() == 2**z*(-n)**z*(x*y)**z
+    assert ((-2*x*y*n*m)**z).expand() == 2**z*(-m)**z*(-n)**z*(-x*y)**z
+    # issue 2383
+    assert sqrt(-2*x*n) == sqrt(2)*sqrt(-n)*sqrt(x)
 
     # Check that this isn't too slow
     x = Symbol('x')

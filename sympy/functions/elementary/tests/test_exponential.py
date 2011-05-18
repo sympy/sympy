@@ -201,6 +201,9 @@ def test_log_expand():
     assert log(x**log(x**2)).expand(deep=False) == log(x)*log(x**2)
     assert log(x**log(x**2)).expand() == 2*log(x)**2
     assert (log(x*(y+z))*(x+y)),expand(mul=True, log=True) == y*log(x) + y*log(y + z) + z*log(x) + z*log(y + z)
+    x, y = symbols('x,y')
+    assert log(x*y).expand(force=True) == log(x) + log(y)
+    assert log(x**y).expand(force=True) == y*log(x)
 
 def test_log_simplify():
     x = Symbol("x", positive=True)
