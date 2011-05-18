@@ -272,6 +272,15 @@ def test_powsimp():
     assert powsimp((1/x)**log(2)/x) == (1/x)**(1 + log(2))
     assert powsimp((1/p)**log(2)/p) == p**(-1 - log(2))
 
+    # coefficient of exponent can only be simplified for positive bases
+    assert powsimp(2**(2*x)) == 4**x
+    assert powsimp((-1)**(2*x)) == (-1)**(2*x)
+    i = symbols('i', integer=True)
+    assert powsimp((-1)**(2*i)) == 1
+    assert powsimp((-1)**(-x)) != (-1)**x  # could be 1/((-1)**x), but is not
+    # force=True overrides assumptions
+    assert powsimp((-1)**(2*x), force=True) == 1
+
 def test_powsimp_nc():
     x, y, z = symbols('x,y,z')
     A, B, C = symbols('A B C', commutative=False)

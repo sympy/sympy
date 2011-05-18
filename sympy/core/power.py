@@ -7,6 +7,7 @@ from singleton import S
 from expr import Expr
 
 from sympy import mpmath
+from sympy.utilities.iterables import sift
 
 def integer_nthroot(y, n):
     """
@@ -273,19 +274,58 @@ class Pow(Expr):
 
     def _eval_expand_power_base(self, deep=True, **hints):
         """(a*b)**n -> a**n * b**n"""
-        b = self.base
+        force = hints.get('force', False)
+        b, ewas = self.args
         if deep:
             e = self.exp.expand(deep=deep, **hints)
         else:
             e = self.exp
         if b.is_Mul:
-            if deep:
-                return Mul(*(Pow(t.expand(deep=deep, **hints), e)\
-                for t in b.args))
+            bargs = b.args
+            if force or e.is_integer:
+                nonneg = bargs
+                other = []
+            elif ewas.is_Rational or len(bargs) == 2 and bargs[0] is S.NegativeOne:
+                # the Rational exponent was already expanded automatically
+                # if there is a negative Number * foo, foo must be unknown
+                #    or else it, too, would have automatically expanded;
+                #    sqrt(-Number*foo) -> sqrt(Number)*sqrt(-foo); then
+                #    sqrt(-foo) -> unchanged if foo is not positive else
+                #               -> I*sqrt(foo)
+                #    So...if we have a 2 arg Mul and the first is a Number
+                #    that number is -1 and there is nothing more than can
+                #    be done without the force=True hint
+                nonneg= []
             else:
-                return Mul(*[Pow(t, e) for t in b.args])
-        else:
-            return Pow(b, e)
+                # this is just like what is happening automatically, except
+                # that now we are doing it for an arbitrary exponent for which
+                # no automatic expansion is done
+                sifted = sift(b.args, lambda x: x.is_nonnegative)
+                nonneg = sifted.get(True, [])
+                other = sifted.get(None, [])
+                neg = sifted.get(False, [])
+
+                # make sure the Number gets pulled out
+                if neg and neg[0].is_Number and neg[0] is not S.NegativeOne:
+                    nonneg.append(-neg[0])
+                    neg[0] = S.NegativeOne
+
+                # leave behind a negative sign
+                oddneg = len(neg) % 2
+                if oddneg:
+                    other.append(S.NegativeOne)
+
+                # negate all negatives and append to nonneg
+                nonneg += [-n for n in neg]
+
+            if nonneg: # then there's a new expression to return
+                other = [Pow(Mul(*other), e)]
+                if deep:
+                    return Mul(*([Pow(b.expand(deep=deep, **hints), e)\
+                    for b in nonneg] + other))
+                else:
+                    return Mul(*([Pow(b, e) for b in nonneg] + other))
+        return Pow(b, e)
 
     def _eval_expand_mul(self, deep=True, **hints):
         sargs, terms = self.args, []

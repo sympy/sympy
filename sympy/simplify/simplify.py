@@ -1285,10 +1285,12 @@ def powsimp(expr, deep=False, combine='all', force=False):
                                 continue
                         nc_part.append(term)
 
-            # Pull out numerical coefficients from exponent
+            # Pull out numerical coefficients from exponent if assumptions allow
             # e.g., 2**(2*x) => 4**x
             for i in xrange(len(c_powers)):
                 b, e = c_powers[i]
+                if not (b.is_nonnegative or e.is_integer or force):
+                    continue
                 exp_c, exp_t = e.as_coeff_mul()
                 if not (exp_c is S.One) and exp_t:
                     c_powers[i] = [Pow(b, exp_c), e._new_rawargs(*exp_t)]

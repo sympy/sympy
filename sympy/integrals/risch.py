@@ -384,7 +384,7 @@ def heurisch(f, x, **kwargs):
 
         h = F - derivation(candidate) / denom
 
-        numer = h.as_numer_denom()[0].expand()
+        numer = h.as_numer_denom()[0].expand(force=True)
 
         equations = {}
 
@@ -421,7 +421,7 @@ def heurisch(f, x, **kwargs):
                 antideriv = antideriv.subs(coeff, S.Zero)
 
         antideriv = antideriv.subs(rev_mapping)
-        antideriv = cancel(antideriv).expand()
+        antideriv = cancel(antideriv).expand(force=True)
 
         if antideriv.is_Add:
             antideriv = antideriv.as_independent(x)[1]
