@@ -235,14 +235,14 @@ For partial fraction decomposition, use ``apart(expr, x)``::
     1 + x   2 + x
 
     >>> (x+1)/(x-1)
-    -(1 + x)
-    --------
-     1 - x
+    1 + x
+    ------
+    -1 + x
 
     >>> apart((x+1)/(x-1), x)
           2
-    1 - -----
-        1 - x
+    1 + ------
+        -1 + x
 
 To combine things back together, use ``together(expr, x)``::
 
@@ -252,9 +252,9 @@ To combine things back together, use ``together(expr, x)``::
          x*y*z
 
     >>> together(apart((x+1)/(x-1), x), x)
-    -(1 + x)
-    --------
-     1 - x
+    1 + x
+    ------
+    -1 + x
 
     >>> together(apart(1/( (x+2)*(x+1) ), x), x)
            1
