@@ -1,6 +1,6 @@
 from sympy.logic.boolalg import to_cnf, eliminate_implications, distribute_and_over_or, \
     compile_rule, conjuncts, disjuncts, to_int_repr, fuzzy_not, Boolean, is_cnf
-from sympy import symbols, And, Or, Xor, Not, Nand, Nor, Implies, Equivalent
+from sympy import symbols, And, Or, Xor, Not, Nand, Nor, Implies, Equivalent, ITE
 from sympy.utilities.pytest import raises, XFAIL
 
 def test_overloading():
@@ -250,3 +250,18 @@ def test_is_cnf():
     assert is_cnf(x & y & z) == True
     assert is_cnf((x | y) & z) == True
     assert is_cnf((x & y) | z) == False
+
+def test_ITE():
+    A, B, C = map(Boolean, symbols('A,B,C'))
+    assert ITE(True, False, True) == False
+    assert ITE(True, True, False) == True
+    assert ITE(False, True, False) == False
+    assert ITE(False, False, True) == True
+
+    A = True
+    assert ITE(A, B, C) == B
+    A = False
+    assert ITE(A, B, C) == C
+    B = True
+    assert ITE(And(A, B), B, C) == C
+    assert ITE(Or(A, False), And(B, True), False) == False
