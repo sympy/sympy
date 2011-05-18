@@ -1664,6 +1664,9 @@ def test_compose():
     assert compose(x**2 - y**2, x - y, x, y) ==  x**2 - 2*x*y
     assert compose(x**2 - y**2, x - y, y, x) == -y**2 + 2*x*y
 
+def test_shift():
+    assert Poly(x**2 - 2*x + 1, x).shift(2) == Poly(x**2 + 2*x + 1, x)
+
 def test_sturm():
     f, F = x, Poly(x, domain='QQ')
     g, G = 1, Poly(1, x, domain='QQ')
