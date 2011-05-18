@@ -72,7 +72,6 @@ def generator_combinations(numGenerators):
 
     return combinationList
         
-
 identity = Matrix( ((1, 0), (0, 1)))
 sigma_x = msigma(1)
 sigma_y = msigma(2)
@@ -89,6 +88,28 @@ generators = [m1, m2, m3, m4]
 print generator_combinations(4)
 # Ok it seems to work
 
+combos = generator_combinations(4)
+
+stabilizer_set = []
+
+identity_5 = TensorProduct(identity, identity, identity, identity, identity)
+for a_combo in combos:
+    a_stabilizer = identity_5
+
+    for which_gen in a_combo:
+        a_stabilizer = a_stabilizer * generators[which_gen - 1]
+
+    list.append(stabilizer_set, a_stabilizer)
+#print 'Stabilizer set: ', stabilizer_set
+
+zero_codeword = map((lambda op: 
+                         matrix_to_qubit(
+                             op * qubit_to_matrix(Qubit('00000')))),
+                    stabilizer_set)
+
+print ''
+print '5 qubit codeword for 0:'
+print zero_codeword
 
 # Possible to generate new codes by "pasting" codes together
 
