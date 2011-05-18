@@ -182,17 +182,23 @@ def test_function_comparable():
     assert sin(zoo).is_comparable   == False
     assert sin(nan).is_comparable   == False
 
+@XFAIL
 def test_deriv1():
+    # This requires derivatives evaluated at a point.  This is written in such
+    # a way that it will XPASS when that is implemented.  When it is, fix this
+    # and test_deriv2() below.
     f=Function('f')
     g=Function('g')
     x = Symbol('x')
-    assert f(g(x)).diff(x) == Derivative(f(g(x)), g(x)) * Derivative(g(x), x)
+    f(g(x)).diff(x)
 
+@XFAIL
 def test_deriv2():
+    # These all requre derivatives evaluated at a point (issue 1620) to work.
+    # See issue 1525
     f = Function('f')
     x = Symbol('x')
 
-    assert f(x).diff(x) == Derivative(f(x), x)
     assert f(2*x).diff(x) == 2*Derivative(f(2*x), 2*x)
     assert (f(x)**3).diff(x) == 3*f(x)**2*f(x).diff(x)
     assert (f(2*x)**3).diff(x) == 6*f(2*x)**2*Derivative(f(2*x), 2*x)
@@ -212,6 +218,12 @@ def test_deriv3():
     assert diff(x**3, x) == 3*x**2
     assert diff(x**3, x, evaluate=False) != 3*x**2
     assert diff(x**3, x, evaluate=False) == Derivative(x**3, x)
+
+def test_func_deriv():
+    f = Function('f')
+    x = Symbol('x')
+
+    assert f(x).diff(x) == Derivative(f(x), x)
 
 def test_suppressed_evaluation():
     a = sin(0, evaluate=False)
