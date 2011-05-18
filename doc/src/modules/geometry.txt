@@ -94,7 +94,7 @@ Intersection of medians
     Point(0, 0): Segment(Point(0, 0), Point(a/2 + c/2, b/2))}
 
     >>> intersection(t.medians[x], t.medians[y], t.medians[z])
-    [Point(1/3*c+1/3*a, 1/3*b)]
+    [Point(a/3 + c/3, b/3)]
 
 An in-depth example: Pappus' Theorem
 ------------------------------------
