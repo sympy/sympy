@@ -435,7 +435,16 @@ def test_separatevars():
     # 1759
     p=Symbol('p',positive=True)
     assert separatevars(sqrt(p**2 + x*p**2)) == p*sqrt(1 + x)
-    assert separatevars(sqrt(y*(p**2 + x*p**2))) == p*sqrt(y)*sqrt(1 + x)
+    assert separatevars(sqrt(y*(p**2 + x*p**2))) == p*sqrt(y*(1 + x))
+    assert separatevars(sqrt(y*(p**2 + x*p**2)), force=True) == p*sqrt(y)*sqrt(1 + x)
+    # 1766
+    assert separatevars(sqrt(x*y)).is_Pow
+    assert separatevars(sqrt(x*y), force=True) == sqrt(x)*sqrt(y)
+
+@XFAIL
+def test_separation_by_factor():
+    x,y = symbols('x,y')
+    assert factor(sqrt(x*y), expand=False).is_Pow
 
 def test_separatevars_advanced_factor():
     x,y,z = symbols('x,y,z')

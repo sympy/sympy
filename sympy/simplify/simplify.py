@@ -526,7 +526,7 @@ def rcollect(expr, *vars):
         else:
             return expr
 
-def separatevars(expr, symbols=[], dict=False):
+def separatevars(expr, symbols=[], dict=False, force=False):
     """
     Separates variables in an expression, if possible.  By
     default, it separates with respect to all symbols in an
@@ -575,20 +575,33 @@ def separatevars(expr, symbols=[], dict=False):
     """
 
     if dict:
-        return _separatevars_dict(_separatevars(expr), *symbols)
+        return _separatevars_dict(_separatevars(expr, force), *symbols)
     else:
-        return _separatevars(expr)
+        return _separatevars(expr, force)
 
-def _separatevars(expr):
+def _separatevars(expr, force):
     # get a Pow ready for expansion
     if expr.is_Pow:
-        expr = separatevars(expr.base)**expr.exp
+        expr = Pow(separatevars(expr.base, force=force), expr.exp)
 
     # First try other expansion methods
-    expr = expr.expand(mul=False, multinomial=False)
+    expr = expr.expand(mul=False, multinomial=False, force=force)
 
-    _expr = expr.expand(power_exp=False, deep=False)
+    _expr = expr.expand(power_exp=False, deep=False, force=force)
+
+    if not force:
+        # factor will expand bases so we mask them off now
+        pows = [p for p in _expr.atoms(Pow) if p.base.is_Mul]
+        dums = [Dummy(str(i)) for i in xrange(len(pows))]
+        _expr = _expr.subs(dict(zip(pows, dums)))
+
     _expr = factor(_expr, expand=False)
+
+    if not force:
+        # and retore them
+        _expr = _expr.subs(dict(zip(dums, pows)))
+
+
 
     if not _expr.is_Add:
         expr = _expr
