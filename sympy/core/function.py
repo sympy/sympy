@@ -592,8 +592,12 @@ class Derivative(Expr):
 
     def __new__(cls, expr, *symbols, **assumptions):
         expr = sympify(expr)
+
         if not symbols:
-            return expr
+            symbols = expr.free_symbols
+
+            if len(symbols) != 1:
+                raise ValueError("specify differentiation variables to differentiate %s" % expr)
 
         # standardize symbols
         symbols = list(sympify(symbols))
@@ -835,7 +839,8 @@ def diff(f, *symbols, **kwargs):
     that if there are 0 symbols (such as diff(f(x), x, 0), then the result will
     be the function (the zeroth derivative), even if evaluate=False.
 
-    Examples:
+    **Examples**
+
     >>> from sympy import sin, cos, Function, diff
     >>> from sympy.abc import x, y
     >>> f = Function('f')
@@ -857,6 +862,16 @@ def diff(f, *symbols, **kwargs):
     sin
     >>> type(diff(sin(x), x, 0, evaluate=False))
     sin
+
+    >>> diff(sin(x))
+    cos(x)
+    >>> diff(sin(x*y))
+    Traceback (most recent call last):
+    ...
+    ValueError: specify differentiation variables to differentiate sin(x*y)
+
+    Note that ``diff(sin(x))`` syntax is meant only for convenience
+    in interactive sessions and should be avoided in library code.
 
     See Also
     http://documents.wolfram.com/v5/Built-inFunctions/AlgebraicComputation/Calculus/D.html

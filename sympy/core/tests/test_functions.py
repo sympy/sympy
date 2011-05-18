@@ -282,8 +282,8 @@ def test_issue2300():
     args = [x, y, S(2), S.Half]
     def ok(a):
         """Return True if the input args for diff are ok"""
-        if not a:return True
-        if a[0].is_Symbol is False:return False
+        if not a: return False
+        if a[0].is_Symbol is False: return False
         s_at = [i for i in range(len(a)) if a[i].is_Symbol]
         n_at = [i for i in range(len(a)) if not a[i].is_Symbol]
         # every symbol is followed by symbol or int
