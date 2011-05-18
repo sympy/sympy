@@ -269,28 +269,27 @@ class Expr(Basic, EvalfMixin):
         gens, terms = set([]), []
 
         for term in Add.make_args(self):
-            coeff, _term = term.as_coeff_Mul()
+            coeff, mul = term.as_coeff_mul()
 
             coeff = complex(coeff)
             cpart, ncpart = {}, []
 
-            if _term is not S.One:
-                for factor in Mul.make_args(_term):
-                    if factor.is_number:
-                        try:
-                            coeff *= complex(factor)
-                        except ValueError:
-                            pass
-                        else:
-                            continue
-
-                    if factor.is_commutative:
-                        base, exp = decompose_power(factor)
-
-                        cpart[base] = exp
-                        gens.add(base)
+            for factor in mul:
+                if factor.is_number:
+                    try:
+                        coeff *= complex(factor)
+                    except ValueError:
+                        pass
                     else:
-                        ncpart.append(factor)
+                        continue
+
+                if factor.is_commutative:
+                    base, exp = decompose_power(factor)
+
+                    cpart[base] = exp
+                    gens.add(base)
+                else:
+                    ncpart.append(factor)
 
             coeff = coeff.real, coeff.imag
             ncpart = tuple(ncpart)
@@ -1620,10 +1619,6 @@ class Expr(Basic, EvalfMixin):
         if not c.has(x):
             return c, e
         raise ValueError("cannot compute leadterm(%s, %s), got c=%s" % (self, x, c))
-
-    def as_coeff_Mul(self):
-        """Efficiently extract the coefficient of a product. """
-        return S.One, self
 
     ###################################################################################
     ##################### DERIVATIVE, INTEGRAL, FUNCTIONAL METHODS ####################

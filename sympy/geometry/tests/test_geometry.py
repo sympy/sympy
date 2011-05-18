@@ -422,8 +422,8 @@ def test_ellipse_random_point():
     for ind in xrange(0, 5):
         r = e3.random_point()
         # substitution should give zero*y1**2
-        assert e3.equation(rx, ry).subs(zip((rx, ry), r.args)
-                                        ).n(3).as_coeff_Mul()[0] < 1e-10
+        ans = e3.equation(rx, ry).subs(zip((rx, ry), r.args)).n(3)
+        assert not ans or ans.as_two_terms()[0] < 1e-10
 
 def test_polygon():
     t = Triangle(Point(0, 0), Point(2, 0), Point(3, 3))
