@@ -493,13 +493,7 @@ functions are not supported.')
                 nargs = self.nargs
             if not (1<=argindex<=nargs):
                 raise ArgumentIndexError(self, argindex)
-        u = self.args[argindex - 1]
-        if u.is_Symbol:
-            uself = self
-        else:
-            u = C.Dummy('u')
-            uself = self.func(u)
-        return Derivative(uself, u, evaluate=False)
+        return Derivative(self,self.args[argindex-1],evaluate=False)
 
     def _eval_as_leading_term(self, x):
         """General method for the leading term"""
