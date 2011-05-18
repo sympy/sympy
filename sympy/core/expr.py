@@ -319,30 +319,11 @@ class Expr(Basic, EvalfMixin):
 
     def removeO(self):
         """Removes the additive O(..) symbol if there is one"""
-        if self.is_Order:
-            return S.Zero
-        if not self.is_Add:
-            return self
-        args = []
-        for a in self.args:
-            if a.is_Order:
-                continue
-            args.append(a)
-        return self._new_rawargs(*args)
+        return self
 
     def getO(self):
         """Returns the additive O(..) symbol if there is one, else None."""
-        if self.is_Order:
-            return self
-        if not self.is_Add:
-            return None
-        args = []
-        for a in self.args:
-            if not a.is_Order:
-                continue
-            args.append(a)
-        if args:
-            return self._new_rawargs(*args)
+        return None
 
     def getn(self):
         """

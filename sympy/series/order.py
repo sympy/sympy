@@ -172,6 +172,13 @@ class Order(Expr):
                     order_symbols = order_symbols + (s,)
         return self.expr, order_symbols
 
+    def removeO(self):
+        return S.Zero
+
+    def getO(self):
+        return self
+
+
     @cacheit
     def contains(self, expr):
         """
