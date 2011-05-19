@@ -358,6 +358,16 @@ class Add(AssocOp):
                     return Add(new, coeff_self, -coeff_old, *[s._eval_subs(old, new) for s in ret_set])
         return self.__class__(*[s._eval_subs(old, new) for s in self.args])
 
+
+    def removeO(self):
+        args = [a for a in self.args if not a.is_Order]
+        return self._new_rawargs(*args)
+
+    def getO(self):
+        args = [a for a in self.args if a.is_Order]
+        if args:
+            return self._new_rawargs(*args)
+
     @cacheit
     def extract_leading_order(self, *symbols):
         """
