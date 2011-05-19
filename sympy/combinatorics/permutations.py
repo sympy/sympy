@@ -308,3 +308,6 @@ class Permutation(Basic):
                     inversions += 1
         return inversions
 
+    @property
+    def signature(self):
+        return (-1)**self.inversions

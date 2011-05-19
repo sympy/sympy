@@ -53,5 +53,8 @@ def test_Permutation():
     assert Permutation(r.descents).is_Identity
 
     assert p.inversions == 7
+    assert p.signature == -1
     assert q.inversions == 11
+    assert q.signature == -1
     assert (p*(~p)).inversions == 0
+    assert (p*(~p)).signature == 1
