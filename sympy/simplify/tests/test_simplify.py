@@ -1,9 +1,9 @@
-from sympy import Symbol, symbols, hypersimp, factorial, binomial, \
-        collect, Function, powsimp, separate, sin, exp, Rational, fraction, \
-        simplify, trigsimp, cos, tan, cot, log, ratsimp, Matrix, pi, integrate, \
-        solve, nsimplify, GoldenRatio, sqrt, E, I, sympify, atan, Derivative, \
-        S, diff, oo, Eq, Integer, gamma, acos, Integral, logcombine, Wild, \
-        separatevars, erf, rcollect, count_ops
+from sympy import (Symbol, symbols, hypersimp, factorial, binomial,
+    collect, Function, powsimp, separate, sin, exp, Rational, fraction,
+    simplify, trigsimp, cos, tan, cot, log, ratsimp, Matrix, pi, integrate,
+    solve, nsimplify, GoldenRatio, sqrt, E, I, sympify, atan, Derivative,
+    S, diff, oo, Eq, Integer, gamma, acos, Integral, logcombine, Wild,
+    separatevars, erf, rcollect, count_ops, combsimp)
 from sympy.utilities import all
 from sympy.utilities.pytest import XFAIL
 
@@ -612,3 +612,25 @@ def test_issue_1095():
     from sympy.abc import x, y
     f = Function('f')
     assert simplify((4*x+6*f(y))/(2*x+3*f(y))) == 2
+
+def test_combsimp():
+    from sympy.abc import n, k
+
+    assert combsimp(factorial(n)) == factorial(n)
+    assert combsimp(binomial(n, k)) == binomial(n, k)
+
+    assert combsimp(factorial(n)/factorial(n - 3)) == n*(-1 + n)*(-2 + n)
+    assert combsimp(binomial(n + 1, k + 1)/binomial(n, k)) == (1 + n)/(1 + k)
+
+    assert combsimp(binomial(3*n + 4, n + 1)/binomial(3*n + 1, n)) == \
+        S(3)/2*((3*n + 2)*(3*n + 4)/((n + 1)*(2*n + 3)))
+
+    assert combsimp(factorial(n)**2/factorial(n - 3)) == factorial(n)*n*(-1 + n)*(-2 + n)
+    assert combsimp(factorial(n)*binomial(n+1, k+1)/binomial(n, k)) == factorial(n)*(1 + n)/(1 + k)
+
+    assert combsimp(binomial(n - 1, k)) == -((-n + k)*binomial(n, k))/n
+
+    assert combsimp(binomial(n + 2, k + S(1)/2)) == \
+        4*((n + 1)*(n + 2)*binomial(n, k + S(1)/2))/((2*k - 2*n - 1)*(2*k - 2*n - 3))
+    assert combsimp(binomial(n + 2, k + 2.0)) == \
+        -((1.0*n + 2.0)*binomial(n + 1.0, k + 2.0))/(k - n)
