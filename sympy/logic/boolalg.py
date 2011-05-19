@@ -178,7 +178,9 @@ class ITE(BooleanFunction):
     def eval(cls, *args):
         args = list(args)
         if len(args) != 3:
-            raise ValueError, "%d operand(s) used for an ITE (triples are required): %s" % (len(args), str(args))
+            raise ValueError("ITE requires 3 operands but %i %s given: %s" % (len(args),
+                                                                              ['were', 'was'][len(args) == 1],
+                                                                              str(args)))
         else:
             return Or(And(args[0], args[1]), And(Not(args[0]), args[2]))
 
