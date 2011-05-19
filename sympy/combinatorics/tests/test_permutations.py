@@ -26,3 +26,6 @@ def test_Permutation():
     r = Permutation([3,2,1,0])
     assert (r**2).is_Identity
 
+    assert (p*(~p)).is_Identity
+    assert (~p)**13 == Permutation([5, 2, 0, 4, 6, 1, 3])
+    assert ~(r**2).is_Identity

@@ -5,6 +5,7 @@ import itertools
 
 class Permutation(Basic):
     is_Permutation = True
+
     def __mul__(self, other):
         """
         Routine for multiplication of permutations
@@ -56,6 +57,13 @@ class Permutation(Basic):
         if self.is_CyclicForm:
             return val.to_cycles()
         return val
+
+    def __invert__(self):
+        inv_form = [0] * len(self.args[0])
+        self_form = self.args[0]
+        for i in range(len(self.args[0])):
+            inv_form[self_form[i]] = i
+        return Permutation(inv_form)
 
     def to_array(self):
         """
