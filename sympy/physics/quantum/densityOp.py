@@ -21,7 +21,6 @@ class Density(QExpr):
     """
 
     _label_separator = u' + '
-    _op_priority = 11.0
     
     @classmethod
     def _eval_args(cls, args):
@@ -61,16 +60,7 @@ class Density(QExpr):
             ret_val = ret_val + (self.lhs*state[0]*Dagger(state[0])*state[1]*self.rhs,)
         return ret_val
 
-    #Should I move the operators into the density at Mul, or on 
-    def __mul__(self, other):
-        arg_list = list(self.args)
-        arg_list[-1] = self.rhs*other
-        return Density(*arg_list)
-
-    def __rmul__(self, other):
-        arg_list = list(self.args)
-        arg_list[-2] = other*self.lhs
-        return Density(*arg_list)    
+    #Should I move the operators into the density at Mul, or on  
     
     def getstate(self, index):
         #returns the state in place index
@@ -80,7 +70,7 @@ class Density(QExpr):
     def getprob(self, index):
         #returns the prob in place index
         prob = self.args[index][1]
-        return prob  
+        return prob
     
     @property
     def state_part(self):
@@ -122,10 +112,10 @@ class Density(QExpr):
     # Apply
     #-------------------------------------------------------------------------
     def _apply_density(self, **options):
-        from sympy.physics.quantum.applyops import apply_operators
+        from sympy.physics.quantum.qapply import qapply
         result = []
         for state in self.state_part:
-            result.append([apply_operators(self.lhs*state[0], **options), state[1]])
+            result.append([qapply(self.lhs*state[0], **options), state[1]])
         result.append(1)
         result.append(1)
         return Density(*result)
