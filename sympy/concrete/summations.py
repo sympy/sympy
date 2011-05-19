@@ -367,15 +367,20 @@ def eval_sum_symbolic(f, (i, a, b)):
             return lsum + rsum
 
     # Polynomial terms with Faulhaber's formula
-    p = C.Wild('p')
-    e = f.match(i**p)
+    n = Wild('n')
+    result = f.match(i**n)
 
-    if e is not None:
-        c = p.subs(e)
-        B = C.bernoulli
-        if c.is_integer and c >= 0:
-            s = (B(c+1, b+1) - B(c+1, a))/(c+1)
-            return s.expand()
+    if result is not None:
+        n = result[n]
+
+        if n.is_Integer:
+            if n >= 0:
+                return ((C.bernoulli(n+1, b+1) - C.bernoulli(n+1, a))/(n+1)).expand()
+            elif a.is_Integer and a >= 1:
+                if n == -1:
+                    return C.harmonic(b) - C.harmonic(a - 1)
+                else:
+                    return C.harmonic(b, abs(n)) - C.harmonic(a - 1, abs(n))
 
     # Geometric terms
     c1 = C.Wild('c1', exclude=[i])

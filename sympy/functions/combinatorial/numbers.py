@@ -405,13 +405,14 @@ class harmonic(Function):
     # order and store it in a dictionary
     _functions = {}
 
+    nargs = (1, 2)
+
     @classmethod
     def eval(cls, n, m=None):
         if m is None:
             m = S.One
         if n == oo:
-            from sympy.functions.special.zeta_functions import zeta
-            return zeta(m)
+            return C.zeta(m)
         if n.is_Integer and n.is_nonnegative and m.is_Integer:
             if n == 0:
                 return S.Zero
