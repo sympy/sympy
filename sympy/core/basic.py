@@ -1036,21 +1036,19 @@ class Basic(AssumeMeths):
                 args.append(result)
 
             if construct:
-                expr = expr.__class__(*args)
-
-            result = _query(expr)
-
-            if result:
-                value = _value(expr, result)
-
-                if map:
-                    mapping[expr] = value
-
-                return value
-            elif construct:
-                return expr
+                return expr.__class__(*args)
             else:
-                return None
+                result = _query(expr)
+
+                if result:
+                    value = _value(expr, result)
+
+                    if map:
+                        mapping[expr] = value
+
+                    return value
+                else:
+                    return None
 
         result = rec_replace(self)
 
