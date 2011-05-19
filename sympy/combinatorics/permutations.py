@@ -128,3 +128,20 @@ class Permutation(Basic):
         if self.is_ArrayForm:
             return set(self.args[0])
         return self.to_array().atoms()
+
+    @property
+    def is_Singleton(self):
+        return len(self.args[0]) == 1
+
+    @property
+    def is_Empty(self):
+        return len(self.args[0]) == 0
+
+    @property
+    def is_Identity(self):
+        if self.is_CyclicForm:
+            return len(self.atoms()) == \
+                   len(self.args[0])
+        return len(self.atoms()) == \
+               len(self.to_cycles().args[0])
+

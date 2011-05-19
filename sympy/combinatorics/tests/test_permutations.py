@@ -19,3 +19,10 @@ def test_Permutation():
     assert len(p.atoms()) == 7
     assert q.atoms() == set([0, 1, 2, 3, 4, 5, 6])
 
+    s = Permutation([0])
+
+    assert s.is_Singleton
+
+    r = Permutation([3,2,1,0])
+    assert (r**2).is_Identity
+
