@@ -66,3 +66,10 @@ def test_Permutation():
     assert p.length == 6
     assert q.length == 7
     assert r.length == 4
+
+    assert not p.is_Positive
+    assert p.is_Negative
+    assert not q.is_Positive
+    assert q.is_Negative
+    assert r.is_Positive
+    assert not r.is_Negative

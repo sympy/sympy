@@ -355,3 +355,12 @@ class Permutation(Basic):
             if temp_form[i] != i:
                 length += 1
         return length
+
+    @property
+    def is_Positive(self):
+        return self.signature > 0
+
+    @property
+    def is_Negative(self):
+        return self.signature < 0
+
