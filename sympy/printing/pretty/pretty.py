@@ -252,9 +252,10 @@ class PrettyPrinter(Printer):
     def _print_Integral(self, integral):
         f   = integral.function
 
-        # Add parentheses if a sum and create pretty form for argument
+        # Add parentheses if arg involves addition of terms and
+        # create a pretty form for the argument
         prettyF = self._print(f)
-        # XXX generalize parents
+        # XXX generalize parens
         if f.is_Add:
             prettyF = prettyForm(*prettyF.parens())
 
@@ -330,6 +331,91 @@ class PrettyPrinter(Printer):
         pform = prettyForm(*arg.left(s))
         return pform
 
+    def _print_Sum(self, expr):
+        def asum(hrequired, lower, upper):
+            def adjust(s, wid=None, how='<^>'):
+                if not wid or len(s)>wid:
+                    return s
+                need = wid - len(s)
+                if how == '<^>' or how == "<" or how not in list('<^>'):
+                    return s + ' '*need
+                half = need//2
+                lead = ' '*half
+                if how == ">":
+                    return " "*need + s
+                return lead + s + ' '*(need - len(lead))
+
+            h = max(hrequired, 2)
+            d = h//2
+            wrequired = max(lower, upper)
+            w = d + 1
+            more = hrequired % 2
+
+            lines = []
+            lines.append("_"*(w) + ' ')
+            lines.append("\%s`" % (' '*(w - 1)))
+            for i in range(1, d):
+              lines.append('%s\\%s' % (' '*i, ' '*(w - i)))
+            if more:
+                lines.append('%s)%s' % (' '*(d), ' '*(w - d)))
+            for i in reversed(range(1, d)):
+              lines.append('%s/%s' % (' '*i, ' '*(w - i)))
+            lines.append("/" + "_"*(w - 1) + ',')
+            return d, h + more, lines
+
+        f = expr.function
+
+        prettyF = self._print(f)
+
+        if f.is_Add: # add parens
+            prettyF = prettyForm(*prettyF.parens())
+
+        H = prettyF.height() + 2
+
+        # \sum \sum \sum ...
+        first = True
+        max_upper = 0
+        sign_height = 0
+
+        for lim in expr.limits:
+            if len(lim) == 3:
+                prettyUpper = self._print(lim[2])
+                prettyLower = self._print(C.Equality(lim[0], lim[1]))
+            elif len(lim) == 2:
+                prettyUpper = self._print("")
+                prettyLower = self._print(C.Equality(lim[0], lim[1]))
+            elif len(lim) == 1:
+                prettyUpper = self._print("")
+                prettyLower = self._print(lim[0])
+
+            max_upper = max(max_upper, prettyUpper.height())
+
+            # Create sum sign based on the height of the argument
+            d, h, slines = asum(H, prettyLower.width(), prettyUpper.width())
+            prettySign = stringPict('')
+            prettySign = prettyForm(*prettySign.stack(*slines))
+
+            if first:
+                sign_height = prettySign.height()
+
+            prettySign = prettyForm(*prettySign.above(prettyUpper))
+            prettySign = prettyForm(*prettySign.below(prettyLower))
+
+            if first:
+                # change F baseline so it centers on the sign
+                prettyF.baseline -= d - (prettyF.height()//2 -
+                                         prettyF.baseline)
+                first = False
+
+            # put padding to the right
+            pad = stringPict('')
+            pad = prettyForm(*pad.stack(*[' ']*h))
+            prettySign = prettyForm(*prettySign.right(pad))
+            # put the present prettyF to the right
+            prettyF = prettyForm(*prettySign.right(prettyF))
+
+        prettyF.baseline = max_upper + sign_height//2
+        return prettyF
 
     def _print_Limit(self, l):
         # XXX we do not print dir ...
