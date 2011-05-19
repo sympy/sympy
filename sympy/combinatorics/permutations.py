@@ -217,6 +217,36 @@ class Permutation(Basic):
                len(self.to_cycles().args[0])
 
     @property
+    def ascents(self):
+        """
+        Returns the positions of ascents in a permutation, ie, the location
+        where p_{i} < p_{i+1}
+        """
+        pos = []
+        temp = self
+        if temp.is_CyclicForm:
+            temp = temp.to_array()
+        for i in xrange(len(temp.args[0])-1):
+            if temp.args[0][i] < temp.args[0][i+1]:
+                pos.append(i)
+        return pos
+
+    @property
+    def descents(self):
+        """
+        Returns the positions of descents in a permutation, ie, the location
+        where p_{i} > p_{i+1}
+        """
+        pos = []
+        temp = self
+        if temp.is_CyclicForm:
+            temp = temp.to_array()
+        for i in xrange(len(temp.args[0])-1):
+            if temp.args[0][i] > temp.args[0][i+1]:
+                pos.append(i)
+        return pos
+
+    @property
     def max(self):
         """
         The maximum element moved by the permutation.

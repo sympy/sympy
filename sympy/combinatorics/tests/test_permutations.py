@@ -40,3 +40,14 @@ def test_Permutation():
     assert p.rank_nonlex() == 1600
     assert q.rank_nonlex() == 41
     assert q.unrank_nonlex(41) == Permutation([4, 2, 3, 5, 1, 0, 6])
+
+    p = Permutation([1,5,2,0,3,6,4])
+    q = Permutation([[2,3,5],[1,0,6],[4]])
+
+    assert p.ascents == [0, 3, 4]
+    assert q.ascents == [1, 2, 4]
+    assert r.ascents == []
+
+    assert p.descents == [1, 2, 5]
+    assert q.descents == [0, 3, 5]
+    assert Permutation(r.descents).is_Identity
