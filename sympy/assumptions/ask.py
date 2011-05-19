@@ -3,9 +3,9 @@ import inspect
 from sympy.core import sympify
 from sympy.utilities.source import get_class
 from sympy.assumptions import global_assumptions, Predicate
-from sympy.assumptions.assume import eliminate_assume
 from sympy.logic.boolalg import to_cnf, And, Not, Or, Implies, Equivalent
 from sympy.logic.inference import satisfiable
+from sympy.assumptions.assume import AppliedPredicate
 
 class Q:
     """Supported ask keys."""
@@ -60,6 +60,36 @@ def eval_predicate(predicate, expr, assumptions=True):
             break
     return res
 
+
+def eliminate_assume(expr, symbol=None):
+    """
+    Convert an expression with assumptions to an equivalent with all assumptions
+    replaced by symbols.
+
+    Q.integer(x) --> Q.integer
+    ~Q.integer(x) --> ~Q.integer
+
+    Examples:
+        >>> from sympy.assumptions.ask import eliminate_assume
+        >>> from sympy import Q
+        >>> from sympy.abc import x
+        >>> eliminate_assume(Q.positive(x))
+        Q.positive
+        >>> eliminate_assume(~Q.positive(x))
+        Not(Q.positive)
+
+    """
+    if symbol is not None:
+        props = expr.atoms(AppliedPredicate)
+        if props and symbol not in [prop.arg for prop in props]:
+            return
+    if expr.__class__ is AppliedPredicate:
+        if symbol is not None:
+            if not expr.arg.has(symbol):
+                return
+        return expr.func
+    return expr.func(*filter(lambda x: x is not None,
+                [eliminate_assume(arg, symbol) for arg in expr.args]))
 
 def ask(expr, key=Q.is_true, assumptions=True, context=global_assumptions):
     """
