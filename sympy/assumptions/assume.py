@@ -1,4 +1,3 @@
-# doctests are disabled because of issue #1521
 from sympy.logic.boolalg import Boolean, Not
 
 class AssumptionsContext(set):
@@ -31,12 +30,14 @@ class AssumptionsContext(set):
 global_assumptions = AssumptionsContext()
 
 class AppliedPredicate(Boolean):
-    """New-style assumptions.
+    """The class of expressions resulting from applying a Predicate.
 
-    >>> from sympy import Q
-    >>> from sympy.abc import x
+    >>> from sympy import Q, Symbol
+    >>> x = Symbol('x')
     >>> Q.integer(x)
     Q.integer(x)
+    >>> type(Q.integer(x))
+    <class 'sympy.assumptions.assume.AppliedPredicate'>
 
     """
     __slots__ = []
@@ -52,8 +53,8 @@ class AppliedPredicate(Boolean):
         Return the expression used by this assumption.
 
         Examples:
-            >>> from sympy import Q
-            >>> from sympy.abc import x
+            >>> from sympy import Q, Symbol
+            >>> x = Symbol('x')
             >>> a = Q.integer(x + 1)
             >>> a.arg
             1 + x
@@ -112,15 +113,21 @@ class Predicate(Boolean):
 
     Predicates merely wrap their argument and remain unevaluated:
 
-        >>> from sympy import Q, ask
+        >>> from sympy import Q, ask, Symbol
+        >>> x = Symbol('x')
         >>> Q.prime(7)
         Q.prime(7)
 
     To obtain the truth value of an expression containing predicates, use
-    the function `ask` and the special predicate Q.is_true:
+    the function `ask`:
 
-        >>> ask(Q.prime(7), Q.is_true)
+        >>> ask(Q.prime(7))
         True
+
+    The tautological predicate `Q.is_true` can be used to wrap other objects:
+
+        >>> Q.is_true(x > 1)
+        Q.is_true(1 < x)
 
     """
 
