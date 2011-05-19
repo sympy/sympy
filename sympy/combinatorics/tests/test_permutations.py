@@ -62,3 +62,7 @@ def test_Permutation():
     assert p.order == 6
     assert q.order == 3
     assert (p**(p.order)).is_Identity
+
+    assert p.length == 6
+    assert q.length == 7
+    assert r.length == 4

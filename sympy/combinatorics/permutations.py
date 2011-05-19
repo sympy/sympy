@@ -341,3 +341,17 @@ class Permutation(Basic):
             order = lcm(order, len(cycle))
         return order
 
+    @property
+    def length(self):
+        """
+        Returns the number of integers moved by a permutation.
+        """
+        length = 0
+        temp = self
+        if temp.is_CyclicForm:
+            temp = temp.to_array()
+        temp_form = temp.args[0]
+        for i in xrange(len(temp_form)):
+            if temp_form[i] != i:
+                length += 1
+        return length
