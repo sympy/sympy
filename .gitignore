@@ -1,5 +1,3 @@
-*.patch
-*.rej
 *.pyc
 *.pyo
 .*.sw[op]
