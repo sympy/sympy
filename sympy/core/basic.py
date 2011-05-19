@@ -1268,10 +1268,6 @@ class Atom(Basic):
         else:
             return self
 
-    def as_numer_denom(self):
-        from sympy.core import S
-        return self, S.One
-
     def doit(self, **hints):
         return self
 
