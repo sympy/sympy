@@ -16,3 +16,6 @@ def test_Permutation():
     assert p**13 == p
     assert q**2 == Permutation([[3, 6, 4], [1], [0, 5, 2]])
 
+    assert len(p.atoms()) == 7
+    assert q.atoms() == set([0, 1, 2, 3, 4, 5, 6])
+

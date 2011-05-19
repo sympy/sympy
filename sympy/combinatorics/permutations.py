@@ -5,7 +5,6 @@ import itertools
 
 class Permutation(Basic):
     is_Permutation = True
-
     def __mul__(self, other):
         """
         Routine for multiplication of permutations
@@ -121,3 +120,11 @@ class Permutation(Basic):
     @property
     def is_CyclicForm(self):
         return isinstance(self.args[0][0], list)
+
+    def atoms(self):
+        """
+        Returns all the elements of a permutation
+        """
+        if self.is_ArrayForm:
+            return set(self.args[0])
+        return self.to_array().atoms()
