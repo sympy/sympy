@@ -1633,7 +1633,7 @@ def simplify(expr, ratio=1.7):
     if expr.is_commutative is False:
         return together(powsimp(expr))
 
-    expr = together(cancel(powsimp(expr)).expand())
+    expr = together(cancel(powsimp(expr)).expand(), deep=True)
 
     if not isinstance(expr, Basic): # XXX: temporary hack
         return expr
