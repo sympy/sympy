@@ -270,6 +270,7 @@ class DifferentialExtension(object):
             # into base E, integrate, and then convert back.
             for i in pows:
                 old = i
+                new = exp(i.exp*log(i.base))
                 # If exp is ever changed to automatically reduce exp(x*log(2))
                 # to 2**x, then this will break.  The solution is to not change
                 # exp to do that :)
@@ -305,7 +306,9 @@ class DifferentialExtension(object):
 
                 elif i not in numpows:
                     continue
-                new = exp(i.exp*log(i.base))
+                else:
+                    # i in numpows
+                    newterm = new
                 # TODO: Just put it in self.Tfuncs
                 self.backsubs.append((new, old))
                 self.newf = self.newf.subs(old, newterm)
