@@ -202,10 +202,12 @@ class DifferentialExtension(object):
         self-consistent.  Therefore, this should only be used for
         testing/debugging purposes.
         """
-        if extension:
-            for attr in self.__slots__:
-                setattr(self, attr, None)
+        for attr in self.__slots__:
+            # To prevent AttributeError when debugging
+            setattr(self, attr, None)
+        # XXX: If you need to debug this function, set the break point here
 
+        if extension:
             if not extension.has_key('D'):
                 raise ValueError("At least the key D must be included with " +
                     "the extension flag to DifferentialExtension.")
