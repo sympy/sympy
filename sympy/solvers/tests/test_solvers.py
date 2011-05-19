@@ -210,11 +210,11 @@ def test_tsolve():
     assert solve(2*cos(x)-y,x)== [acos(y/2)]
     raises(NotImplementedError, "solve(Eq(cos(x), sin(x)), x)")
 
-    # XXX in the following test, log(2*y + 2*...) should -> log(2) + log(y +...)
-    assert solve(exp(x) + exp(-x) - y, x)    == [
-        -log(4) + log(2*y + 2*(-4 + y**2)**Rational(1,2)),
-        -log(4) + log(2*y - 2*(-4 + y**2)**Rational(1,2))
-                                                ]
+    assert solve(exp(x) + exp(-x) - y, x) in [
+     [-log(4) + log(2*y + 2*sqrt(-4 + y**2)),
+      -log(4) + log(2*y - 2*sqrt(-4 + y**2))],
+     [log(y/2 + sqrt(-4 + y**2)/2), log(y/2 - sqrt(-4 + y**2)/2)]
+     ]
     assert solve(exp(x)-3, x) == [log(3)]
     assert solve(Eq(exp(x), 3), x) == [log(3)]
     assert solve(log(x)-3, x) == [exp(3)]
@@ -257,7 +257,7 @@ def test_tsolve():
 
     # issue #1409
     assert solve(y - b*x/(a+x), x) in [[-a*y/(y - b)], [a*y/(b - y)]]
-    assert solve(y - b*exp(a/x), x) == [a/(-log(b) + log(y))]
+    assert solve(y - b*exp(a/x), x) == [a/log(y/b)]
     # issue #1408
     assert solve(y-b/(1+a*x), x) in [[(b - y)/(a*y)], [-((y - b)/(a*y))]]
     # issue #1407
@@ -348,4 +348,3 @@ def test_solve_inequalities():
                And(Lt(1, re(x)), Lt(re(x), sqrt(2)))), Eq(im(x), 0))
     assert solve(system, assume=Q.real(x)) == \
         Or(And(Lt(-sqrt(2), x), Lt(x, -1)), And(Lt(1, x), Lt(x, sqrt(2))))
-

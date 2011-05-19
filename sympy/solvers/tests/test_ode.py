@@ -1060,7 +1060,7 @@ def test_Liouville_ODE():
     sol2 = Eq(C1 + C2/x - exp(-f(x)), 0) # This is equivalent to sol1
     sol3 = [Eq(f(x), -sqrt(2)*sqrt(C1 + C2*log(x))), Eq(f(x), sqrt(2)*sqrt(C1 + C2*log(x)))]
     sol4 = [Eq(f(x), -sqrt(2)*sqrt(C1 + C2*exp(-x))), Eq(f(x), sqrt(2)*sqrt(C1 + C2*exp(-x)))]
-    sol5 = Eq(f(x), -log(x) + log(C1 + C2*x))
+    sol5 = Eq(f(x), log(C1 + C2/x))
     sol1s = constant_renumber(sol1, 'C', 1, 2)
     sol2s = constant_renumber(sol2, 'C', 1, 2)
     sol3s = constant_renumber(sol3, 'C', 1, 2)

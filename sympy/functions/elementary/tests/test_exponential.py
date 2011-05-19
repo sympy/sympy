@@ -106,6 +106,8 @@ def test_log_values():
 
     assert exp(-log(3))**(-1) == 3
 
+    assert log(S.Half) == -log(2)
+
 def test_log_base():
     assert log(1, 2) == 0
     assert log(2, 2) == 1
@@ -122,9 +124,12 @@ def test_log_symbolic():
     assert log(x, exp(1)) == log(x)
     assert log(exp(x)) != x
 
-    assert log(x) == log(x)
     assert log(x, exp(1)) == log(x)
     assert log(x*y) != log(x) + log(y)
+    assert log(x/y).expand() != log(x) - log(y)
+    assert log(x/y).expand(force=True) == log(x) - log(y)
+    assert log(x**y).expand() != y*log(x)
+    assert log(x**y).expand(force=True) == y*log(x)
 
     assert log(x, 2) == log(x)/log(2)
     assert log(E, 2) == 1/log(2)
