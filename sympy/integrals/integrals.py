@@ -287,7 +287,7 @@ class Integral(Expr):
         function = self.function
         y = Dummy('y')
         inverse_mapping = solve(mapping.subs(x, y) - x, y)
-        if len(inverse_mapping) != 1 or not inverse_mapping[0].has(x):
+        if len(inverse_mapping) != 1 or x not in inverse_mapping[0].free_symbols:
             raise ValueError("The mapping must be uniquely invertible")
         inverse_mapping = inverse_mapping[0]
         if inverse:
