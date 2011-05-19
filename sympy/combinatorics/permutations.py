@@ -276,3 +276,35 @@ class Permutation(Basic):
                 min = temp_form[i]
         return min
 
+    @property
+    def inversions(self):
+        """
+        Computes the inversions of a permutation.
+
+        An inversion is where i > j but p_{i} < p_{j}.
+
+        Examples:
+        >>> from sympy.combinatorics.permutations import Permutation
+        >>> p = Permutation([0,1,2,3,4,5])
+        >>> p.inversions
+        0
+
+        In the cyclic form
+        >>> from sympy.combinatorics.permutations import Permutation
+        >>> p = Permutation([[4,0,2],[3,5],[1]])
+        >>> p.inversions
+        8
+        """
+        inversions = 0
+        temp = self
+        if temp.is_CyclicForm:
+            temp = temp.to_array()
+        temp_form = temp.args[0]
+        for i in xrange(len(temp_form)):
+            for j in xrange(len(temp_form)):
+                if i==j:
+                    continue
+                if i < j and temp_form[i] > temp_form[j]:
+                    inversions += 1
+        return inversions
+

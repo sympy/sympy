@@ -51,3 +51,7 @@ def test_Permutation():
     assert p.descents == [1, 2, 5]
     assert q.descents == [0, 3, 5]
     assert Permutation(r.descents).is_Identity
+
+    assert p.inversions == 7
+    assert q.inversions == 11
+    assert (p*(~p)).inversions == 0
