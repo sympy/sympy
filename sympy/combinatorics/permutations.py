@@ -1,5 +1,7 @@
 from sympy.core import Basic
 from sympy.utilities.iterables import rotate_left
+from sympy.polys.polytools import lcm
+from sympy.abc import x
 
 import itertools
 
@@ -52,8 +54,11 @@ class Permutation(Basic):
         Permutation([0, 1, 2, 3])
         """
         val = self
+        if val.is_CyclicForm:
+            val = val.to_array()
+        ref = val
         for i in range(n-1):
-            val = self*val
+            val = val * ref
         if self.is_CyclicForm:
             return val.to_cycles()
         return val
@@ -311,3 +316,28 @@ class Permutation(Basic):
     @property
     def signature(self):
         return (-1)**self.inversions
+
+    @property
+    def order(self):
+        """
+        Computes the order of a permutation.
+
+        When the permutation is raised to the power of its
+        order it equals the identity permutation.
+
+        Example:
+        >>> from sympy.combinatorics.permutations import Permutation
+        >>> p = Permutation([3,1,5,2,4,0])
+        >>> p.order
+        4
+        >>> (p**(p.order)).is_Identity
+        True
+        """
+        temp = self
+        if temp.is_ArrayForm:
+            temp = temp.to_cycles()
+        order = 1
+        for cycle in temp.args[0]:
+            order = lcm(order, len(cycle))
+        return order
+

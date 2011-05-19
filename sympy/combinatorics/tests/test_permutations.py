@@ -58,3 +58,7 @@ def test_Permutation():
     assert q.signature == -1
     assert (p*(~p)).inversions == 0
     assert (p*(~p)).signature == 1
+
+    assert p.order == 6
+    assert q.order == 3
+    assert (p**(p.order)).is_Identity
