@@ -2182,30 +2182,57 @@ def test_settings():
     raises(TypeError, 'pretty(S(4), method="garbage")')
 
 def test_pretty_sum():
-    from sympy.abc import x, a, b
-    ans = [
-'  oo   \n\
+    from sympy.abc import x, a, b, k, m, n
+
+    expr = Sum(x, (x, 0, oo))
+    ascii_str = \
+"""\
+  oo   \n\
  __    \n\
  \\ `   \n\
   )   x\n\
  /_,   \n\
-x = 0  ',
-    '  oo    \n\
+x = 0  \
+"""
+
+    assert  pretty(expr) == ascii_str
+    #assert upretty(expr) == ucode_str
+
+    expr = Sum(x**2, (x, 0, oo))
+    ascii_str = \
+"""\
+  oo    \n\
  ___    \n\
  \\  `   \n\
   \\    2\n\
   /   x \n\
  /__,   \n\
-x = 0   ',
-    '  oo   \n\
+x = 0   \
+"""
+
+    assert  pretty(expr) == ascii_str
+    #assert upretty(expr) == ucode_str
+
+    expr = Sum(x/2, (x, 0, oo))
+    ascii_str = \
+"""\
+  oo   \n\
  ___   \n\
  \\  `  \n\
   \\   x\n\
    )  -\n\
   /   2\n\
  /__,  \n\
-x = 0  ',
-    '  oo    \n\
+x = 0  \
+"""
+
+    assert  pretty(expr) == ascii_str
+    #assert upretty(expr) == ucode_str
+
+    expr = Sum(x**3/2, (x, 0, oo))
+    ascii_str = \
+"""\
+  oo    \n\
 ____    \n\
 \\   `   \n\
  \\     3\n\
@@ -2213,18 +2240,34 @@ ____    \n\
   /   --\n\
  /    2 \n\
 /___,   \n\
-x = 0   ',
-    '  oo          \n\
+x = 0   \
+"""
+
+    assert  pretty(expr) == ascii_str
+    #assert upretty(expr) == ucode_str
+
+    expr = Sum((x**3*y**(x/2))**n, (x, 0, oo))
+    ascii_str = \
+"""\
+  oo          \n\
 ____          \n\
 \\   `         \n\
- \\           2\n\
-  \\      / x\\ \n\
-   )     | -| \n\
-  /    6 | 2| \n\
- /    x *\\y / \n\
+ \\           n\n\
+  \\   /    x\\ \n\
+   )  |    -| \n\
+  /   | 3  2| \n\
+ /    \\x *y / \n\
 /___,         \n\
-x = 0         ',
-    '  oo    \n\
+x = 0         \
+"""
+
+    assert  pretty(expr) == ascii_str
+    #assert upretty(expr) == ucode_str
+
+    expr = Sum(1/x**2, (x, 0, oo))
+    ascii_str = \
+"""\
+  oo    \n\
 ____    \n\
 \\   `   \n\
  \\    1 \n\
@@ -2232,8 +2275,16 @@ ____    \n\
   /    2\n\
  /    x \n\
 /___,   \n\
-x = 0   ',
-    '  oo     \n\
+x = 0   \
+"""
+
+    assert  pretty(expr) == ascii_str
+    #assert upretty(expr) == ucode_str
+
+    expr = Sum(1/y**(a/b), (x, 0, oo))
+    ascii_str = \
+"""\
+  oo     \n\
 ____     \n\
 \\   `    \n\
  \\     -a\n\
@@ -2241,8 +2292,16 @@ ____     \n\
   /    b \n\
  /    y  \n\
 /___,    \n\
-x = 0    ',
-    '  2     oo     \n\
+x = 0    \
+"""
+
+    assert  pretty(expr) == ascii_str
+    #assert upretty(expr) == ucode_str
+
+    expr = Sum(1/y**(a/b), (x, 0, oo), (y,1,2))
+    ascii_str = \
+"""\
+  2     oo     \n\
 ____  ____     \n\
 \\   ` \\   `    \n\
  \\     \\     -a\n\
@@ -2250,27 +2309,32 @@ ____  ____     \n\
   /     /    b \n\
  /     /    y  \n\
 /___, /___,    \n\
-y = 1 x = 0    '
-    ]
-    test = [xpretty(e) for e in
-    Sum(x, (x, 0, oo)),
-    Sum(x**2, (x, 0, oo)),
-    Sum(x/2, (x, 0, oo)),
-    Sum(x**3/2, (x, 0, oo)),
-    Sum((x**3*y**(x/2))**2, (x, 0, oo)),
-    Sum(1/x**2, (x, 0, oo)),
-    Sum(1/y**(a/b), (x, 0, oo)),
-    Sum(1/y**(a/b), (x, 0, oo),(y,1,2))]
-    for i in range(len(test)):
-        try:
-            assert test[i] == ans[i]
-        except AssertionError:
-            print 'Error in test',i
-            for j in range(len(test[i])):
-                if not test[i][j] == ans[i][j]:
-                    print '\tat char',j
-                    print '\tgot',repr(test[i][j-3:j+3])
-                    print '\tans',repr(ans[i][j-3:j+3])
-                    break
-            print repr(test[i])
-            print repr(ans[i])
+y = 1 x = 0    \
+"""
+
+    assert  pretty(expr) == ascii_str
+    #assert upretty(expr) == ucode_str
+
+    expr = Sum(1/(1 + 1/(1 + 1/k)) + 1, (k, 111, 1 + 1/n), (k, 1/(1+m), oo)) + 1/(1 + 1/k)
+    ascii_str = \
+"""\
+               1                         \n\
+           1 + -                         \n\
+    oo         n                         \n\
+  _____    _____                         \n\
+  \\    `   \\    `                        \n\
+   \\        \\     /        1    \\        \n\
+    \\        \\    |1 + ---------|        \n\
+     \\        \\   |          1  |     1  \n\
+      )        )  |    1 + -----| + -----\n\
+     /        /   |            1|       1\n\
+    /        /    |        1 + -|   1 + -\n\
+   /        /     \\            k/       k\n\
+  /____,   /____,                        \n\
+      1   k = 111                        \n\
+k = -----                                \n\
+    1 + m                                \
+"""
+
+    assert  pretty(expr) == ascii_str
+    #assert upretty(expr) == ucode_str
