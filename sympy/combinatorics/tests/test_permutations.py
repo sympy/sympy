@@ -6,7 +6,7 @@ def test_Permutation():
 
     assert p.is_ArrayForm
     assert q.is_CyclicForm
-
+    assert q.cycles == 3
     assert p*q == Permutation([4, 6, 1, 2, 5, 3, 0])
     assert q*p == Permutation([6, 5, 3, 0, 2, 4, 1])
 

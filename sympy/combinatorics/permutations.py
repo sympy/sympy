@@ -364,6 +364,13 @@ class Permutation(Basic):
     def is_Negative(self):
         return self.signature < 0
 
+    @property
+    def cycles(self):
+        temp = self
+        if temp.is_ArrayForm:
+            temp = temp.to_cycles()
+        return len(temp.args[0])
+
     def runs(self):
         """
         Returns the number of runs (ascending cycles) of a permutation
@@ -413,4 +420,3 @@ class Permutation(Basic):
                 cycles.append(temp_cycle)
             cycles.append([next_elem])
         return cycles
-
