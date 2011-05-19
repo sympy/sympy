@@ -153,3 +153,33 @@ class Permutation(Basic):
         return len(self.atoms()) == \
                len(self.to_cycles().args[0])
 
+    @property
+    def max(self):
+        """
+        The maximum element moved by the permutation.
+        """
+        temp = self
+        if temp.is_CyclicForm:
+            temp = temp.to_array()
+        temp_form = temp.args[0]
+        max = 0
+        for i in xrange(len(temp_form)):
+            if temp_form[i] != i and temp_form[i] > max:
+                max = temp_form[i]
+        return max
+
+    @property
+    def min(self):
+        """
+        The minimum element moved by the permutation
+        """
+        temp = self
+        if temp.is_CyclicForm:
+            temp = temp.to_array()
+        temp_form = temp.args[0]
+        min = len(temp_form)
+        for i in xrange(len(temp_form)):
+            if temp_form[i] != i and temp_form[i] < min:
+                min = temp_form[i]
+        return min
+

@@ -29,3 +29,10 @@ def test_Permutation():
     assert (p*(~p)).is_Identity
     assert (~p)**13 == Permutation([5, 2, 0, 4, 6, 1, 3])
     assert ~(r**2).is_Identity
+    assert p.max == 6
+    assert p.min == 0
+
+    q = Permutation([[4,1,2,3],[0,5,6]])
+
+    assert q.max == 4
+    assert q.min == 0
