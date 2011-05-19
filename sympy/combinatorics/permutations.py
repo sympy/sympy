@@ -364,3 +364,53 @@ class Permutation(Basic):
     def is_Negative(self):
         return self.signature < 0
 
+    def runs(self):
+        """
+        Returns the number of runs (ascending cycles) of a permutation
+
+        Examples:
+        >>> from sympy.combinatorics.permutations import Permutation
+        >>> p = Permutation([2,5,7,3,6,0,1,4,8])
+        >>> p.runs()
+        [[2, 5, 7], [3, 6], [0, 1, 4, 8]]
+        >>> q = Permutation([1,3,2,0])
+        >>> q.runs()
+        [[1, 3], [2], [0]]
+        """
+        temp = self
+        if temp.is_CyclicForm:
+            temp = temp.to_array()
+        temp_form = temp.args[0]
+        cycles = []
+        temp_cycle = []
+        for i in range(len(temp_form) - 1):
+            current_elem = temp_form[i]
+            next_elem    = temp_form[i+1]
+
+            if current_elem < next_elem:
+                temp_cycle.append(current_elem)
+                continue
+
+            if current_elem > next_elem:
+                if temp_cycle != [] and \
+                       temp_cycle[len(temp_cycle) - 1] < current_elem:
+                    temp_cycle.append(current_elem)
+                    cycles.append(temp_cycle)
+                    temp_cycle = []
+                    continue
+                else:
+                    if temp_cycle != []:
+                        cycles.append(temp_cycle)
+                    cycles.append([current_elem])
+                    temp_cycle = []
+                    continue
+
+        if current_elem < next_elem:
+            temp_cycle.append(next_elem)
+            cycles.append(temp_cycle)
+        else:
+            if temp_cycle != []:
+                cycles.append(temp_cycle)
+            cycles.append([next_elem])
+        return cycles
+

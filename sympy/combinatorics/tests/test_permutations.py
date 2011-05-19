@@ -73,3 +73,8 @@ def test_Permutation():
     assert q.is_Negative
     assert r.is_Positive
     assert not r.is_Negative
+
+    assert p.runs() == [[1, 5], [2], [0, 3, 6], [4]]
+    assert q.runs() == [[4], [2, 3, 5], [0, 6], [1]]
+    assert r.runs() == [[3], [2], [1], [0]]
+
