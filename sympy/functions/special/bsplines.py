@@ -1,4 +1,4 @@
-from sympy.core import Basic, S, C, sympify, expand
+from sympy.core import S, sympify, expand
 from sympy.functions import Piecewise, piecewise_fold
 from sympy.functions.elementary.piecewise import ExprCondPair
 from sympy.core.sets import Interval
@@ -121,7 +121,6 @@ def bspline_basis_set(d, knots, x):
         >>> splines
         [Piecewise((x**2/2, [0, 1)), (-3/2 + 3*x - x**2, [1, 2)), (9/2 - 3*x + x**2/2, [2, 3]), (0, True)), Piecewise((1/2 - x + x**2/2, [1, 2)), (-11/2 + 5*x - x**2, [2, 3)), (8 - 4*x + x**2/2, [3, 4]), (0, True))]
     """
-    splines = []
     n_splines = len(knots)-d-1
     return [bspline_basis(d, knots, i, x) for i in range(n_splines)]
 

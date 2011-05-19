@@ -1,9 +1,9 @@
-from sympy.core import Basic, S, C
+from sympy.core import S, C
 from sympy.core.function import Function, Derivative, ArgumentIndexError
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.core import Add, Mul
-from sympy.core.relational import Eq, Ne
+from sympy.core.relational import Eq
 from sympy.utilities.iterables import iff
 
 ###############################################################################

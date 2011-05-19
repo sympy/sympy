@@ -284,8 +284,6 @@ class FallingFactorial(Function):
             elif k is S.Zero:
                 return S.One
             else:
-                result = S.One
-
                 if k.is_positive:
                     if x is S.Infinity:
                         return S.Infinity

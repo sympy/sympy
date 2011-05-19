@@ -1,10 +1,8 @@
 from sympy.core.add import Add
-from sympy.core.mul import Mul
 from sympy.core.numbers import Rational, Real
 from sympy.core.basic import C, sympify, cacheit
 from sympy.core.singleton import S
 from sympy.core.function import Function, ArgumentIndexError
-from sympy.core.symbol import Wild
 from miscellaneous import sqrt
 
 ###############################################################################
