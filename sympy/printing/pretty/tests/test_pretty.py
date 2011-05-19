@@ -4,7 +4,7 @@ from sympy import (Matrix, Piecewise, Ne, symbols, sqrt, Function,
     pprint, sqrt, factorial, binomial, pi, sin, ceiling, pprint_use_unicode,
     I, S, Limit, oo, cos, Pow, Integral, exp, Eq, Lt, Gt, Ge, Le, gamma, Abs,
     RootOf, RootSum, Lambda, Not, And, Or, Xor, Nand, Nor, Implies, Equivalent,
-    FF, ZZ, QQ, RR, O)
+    Sum, FF, ZZ, QQ, RR, O)
 
 from sympy.printing.pretty import pretty as xpretty
 from sympy.printing.pretty import pprint
@@ -2181,3 +2181,160 @@ def test_pretty_no_wrap_line():
 def test_settings():
     raises(TypeError, 'pretty(S(4), method="garbage")')
 
+def test_pretty_sum():
+    from sympy.abc import x, a, b, k, m, n
+
+    expr = Sum(x, (x, 0, oo))
+    ascii_str = \
+"""\
+  oo   \n\
+ __    \n\
+ \\ `   \n\
+  )   x\n\
+ /_,   \n\
+x = 0  \
+"""
+
+    assert  pretty(expr) == ascii_str
+    #assert upretty(expr) == ucode_str
+
+    expr = Sum(x**2, (x, 0, oo))
+    ascii_str = \
+"""\
+  oo    \n\
+ ___    \n\
+ \\  `   \n\
+  \\    2\n\
+  /   x \n\
+ /__,   \n\
+x = 0   \
+"""
+
+    assert  pretty(expr) == ascii_str
+    #assert upretty(expr) == ucode_str
+
+    expr = Sum(x/2, (x, 0, oo))
+    ascii_str = \
+"""\
+  oo   \n\
+ ___   \n\
+ \\  `  \n\
+  \\   x\n\
+   )  -\n\
+  /   2\n\
+ /__,  \n\
+x = 0  \
+"""
+
+    assert  pretty(expr) == ascii_str
+    #assert upretty(expr) == ucode_str
+
+    expr = Sum(x**3/2, (x, 0, oo))
+    ascii_str = \
+"""\
+  oo    \n\
+____    \n\
+\\   `   \n\
+ \\     3\n\
+  \\   x \n\
+  /   --\n\
+ /    2 \n\
+/___,   \n\
+x = 0   \
+"""
+
+    assert  pretty(expr) == ascii_str
+    #assert upretty(expr) == ucode_str
+
+    expr = Sum((x**3*y**(x/2))**n, (x, 0, oo))
+    ascii_str = \
+"""\
+  oo          \n\
+____          \n\
+\\   `         \n\
+ \\           n\n\
+  \\   /    x\\ \n\
+   )  |    -| \n\
+  /   | 3  2| \n\
+ /    \\x *y / \n\
+/___,         \n\
+x = 0         \
+"""
+
+    assert  pretty(expr) == ascii_str
+    #assert upretty(expr) == ucode_str
+
+    expr = Sum(1/x**2, (x, 0, oo))
+    ascii_str = \
+"""\
+  oo    \n\
+____    \n\
+\\   `   \n\
+ \\    1 \n\
+  \\   --\n\
+  /    2\n\
+ /    x \n\
+/___,   \n\
+x = 0   \
+"""
+
+    assert  pretty(expr) == ascii_str
+    #assert upretty(expr) == ucode_str
+
+    expr = Sum(1/y**(a/b), (x, 0, oo))
+    ascii_str = \
+"""\
+  oo     \n\
+____     \n\
+\\   `    \n\
+ \\     -a\n\
+  \\    --\n\
+  /    b \n\
+ /    y  \n\
+/___,    \n\
+x = 0    \
+"""
+
+    assert  pretty(expr) == ascii_str
+    #assert upretty(expr) == ucode_str
+
+    expr = Sum(1/y**(a/b), (x, 0, oo), (y,1,2))
+    ascii_str = \
+"""\
+  2     oo     \n\
+____  ____     \n\
+\\   ` \\   `    \n\
+ \\     \\     -a\n\
+  \\     \\    --\n\
+  /     /    b \n\
+ /     /    y  \n\
+/___, /___,    \n\
+y = 1 x = 0    \
+"""
+
+    assert  pretty(expr) == ascii_str
+    #assert upretty(expr) == ucode_str
+
+    expr = Sum(1/(1 + 1/(1 + 1/k)) + 1, (k, 111, 1 + 1/n), (k, 1/(1+m), oo)) + 1/(1 + 1/k)
+    ascii_str = \
+"""\
+               1                         \n\
+           1 + -                         \n\
+    oo         n                         \n\
+  _____    _____                         \n\
+  \\    `   \\    `                        \n\
+   \\        \\     /        1    \\        \n\
+    \\        \\    |1 + ---------|        \n\
+     \\        \\   |          1  |     1  \n\
+      )        )  |    1 + -----| + -----\n\
+     /        /   |            1|       1\n\
+    /        /    |        1 + -|   1 + -\n\
+   /        /     \\            k/       k\n\
+  /____,   /____,                        \n\
+      1   k = 111                        \n\
+k = -----                                \n\
+    1 + m                                \
+"""
+
+    assert  pretty(expr) == ascii_str
+    #assert upretty(expr) == ucode_str
