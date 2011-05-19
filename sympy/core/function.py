@@ -572,7 +572,10 @@ class Derivative(Expr):
     Carries out differentiation of the given expression with respect to symbols.
 
     expr must define ._eval_derivative(symbol) method that returns
-    the differentiation result or None.
+    the differentiation result. This function only needs to consider the
+    non-trivial case where expr contains symbol and it should call the diff()
+    method interally (not _eval_derivative); Derivative should be the only
+    one to call _eval_derivative.
 
     Examples:
 
