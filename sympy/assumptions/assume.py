@@ -78,36 +78,6 @@ class AppliedPredicate(Boolean):
     def __hash__(self):
         return super(AppliedPredicate, self).__hash__()
 
-def eliminate_assume(expr, symbol=None):
-    """
-    Convert an expression with assumptions to an equivalent with all assumptions
-    replaced by symbols.
-
-    Q.integer(x) --> Q.integer
-    ~Q.integer(x) --> ~Q.integer
-
-    Examples:
-        >>> from sympy.assumptions.assume import eliminate_assume
-        >>> from sympy import Q
-        >>> from sympy.abc import x
-        >>> eliminate_assume(Q.positive(x))
-        Q.positive
-        >>> eliminate_assume(~Q.positive(x))
-        Not(Q.positive)
-
-    """
-    if symbol is not None:
-        props = expr.atoms(AppliedPredicate)
-        if props and symbol not in [prop.arg for prop in props]:
-            return
-    if expr.__class__ is AppliedPredicate:
-        if symbol is not None:
-            if not expr.arg.has(symbol):
-                return
-        return expr.func
-    return expr.func(*filter(lambda x: x is not None,
-                [eliminate_assume(arg, symbol) for arg in expr.args]))
-
 class Predicate(Boolean):
     """A predicate is a function that returns a boolean value.
 
