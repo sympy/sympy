@@ -169,6 +169,10 @@ class DifferentialExtension(object):
       Use the methods self.increase_level() and self.decrement_level() to change
       the current level.
     """
+    # __slots__ is defined mainly so we can iterate over all the attributes
+    # of the class easily (the memory use does't matter too much, since we
+    # only create one DifferentialExtension per integration).  Also, it's nice
+    # to have a safeguard when debugging.
     __slots__ = ('f', 'x', 'T', 'D', 'fa', 'fd', 'Tfuncs', 'backsubs', 'E_K',
         'E_args', 'L_K', 'L_args', 'cases', 'case', 't', 'd', 'newf', 'level',
         'ts')
