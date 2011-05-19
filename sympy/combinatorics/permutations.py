@@ -120,7 +120,6 @@ class Permutation(Basic):
         cyclic_form.sort(key=lambda t: -t[0])
         return Permutation(cyclic_form)
 
-
     @property
     def is_ArrayForm(self):
         return not isinstance(self.args[0][0], list)
@@ -136,6 +135,70 @@ class Permutation(Basic):
         if self.is_ArrayForm:
             return set(self.args[0])
         return self.to_array().atoms()
+
+    def unrank_nonlex(self, r):
+        """
+        This is a linear time unranking algorithm that does not
+        respect lexicographic order [1].
+
+        [1] Wendy Myrvold and Frank Ruskey. 2001. Ranking and unranking \
+            permutations in linear time. Inf. Process. Lett. 79, 6 (September 2001),\
+            281-284. DOI=10.1016/S0020-0190(01)00141-7
+
+        Examples:
+        >>> from sympy.combinatorics.permutations import Permutation
+        >>> p = Permutation([0,1,2,3])
+        >>> p.unrank_nonlex(5)
+        Permutation([2, 0, 3, 1])
+
+        Consider in the cyclic form
+        >>> from sympy.combinatorics.permutations import Permutation
+        >>> p = Permutation([[0,1],[2,3]])
+        >>> p.unrank_nonlex(5)
+        Permutation([2, 0, 3, 1])
+        """
+        temp = self
+        if temp.is_CyclicForm:
+            temp = self.to_array()
+        n = len(temp.args[0])
+        id_perm = [i for i in range(n)]
+        while n > 1:
+            id_perm[n-1],id_perm[r % n] = id_perm[r % n], id_perm[n-1]
+            n -= 1
+            r = r/n
+        return Permutation(id_perm)
+
+    def rank_nonlex(self, inv_perm = None, n = 0):
+        """
+        This is a linear time ranking algorithm that does not
+        enforce lexicographic order [1].
+
+        Examples
+        >>> from sympy.combinatorics.permutations import Permutation
+        >>> p = Permutation([2,0,3,1])
+        >>> p.rank_nonlex()
+        5
+        """
+        temp = self
+        if temp.is_CyclicForm:
+            temp = temp.to_array()
+        temp_inv = inv_perm
+        if temp_inv is None:
+            temp_inv = ~temp
+            if temp_inv.is_CyclicForm:
+                temp_inv = temp_inv.to_array()
+        if n == 0:
+            n = len(temp.args[0])
+        if n == 1:
+            return 0
+        perm_form = temp.args[0]
+        temp_inv_form = temp_inv.args[0]
+        s = perm_form[n-1]
+        perm_form[n-1], perm_form[temp_inv_form[n-1]] = \
+                        perm_form[temp_inv_form[n-1]], perm_form[n-1]
+        temp_inv_form[s], temp_inv_form[n-1] = \
+                          temp_inv_form[n-1], temp_inv_form[s]
+        return s + n*temp.rank_nonlex(temp_inv, n - 1)
 
     @property
     def is_Singleton(self):

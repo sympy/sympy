@@ -36,3 +36,7 @@ def test_Permutation():
 
     assert q.max == 4
     assert q.min == 0
+
+    assert p.rank_nonlex() == 1600
+    assert q.rank_nonlex() == 41
+    assert q.unrank_nonlex(41) == Permutation([4, 2, 3, 5, 1, 0, 6])
