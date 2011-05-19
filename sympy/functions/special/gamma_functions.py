@@ -306,5 +306,3 @@ def digamma(x):
 
 def trigamma(x):
     return polygamma(1, x)
-
-from sympy import expand

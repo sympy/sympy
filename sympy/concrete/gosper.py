@@ -1,6 +1,6 @@
 """Gosper's algorithm for hypergeometric summation. """
 
-from sympy.core import S, Dummy, sympify, symbols
+from sympy.core import S, Dummy, symbols
 from sympy.polys import Poly, parallel_poly_from_expr, factor
 from sympy.solvers import solve
 from sympy.simplify import hypersimp

@@ -177,12 +177,9 @@ class ITE(BooleanFunction):
     @classmethod
     def eval(cls, *args):
         args = list(args)
-        if len(args) != 3:
-            raise ValueError("ITE requires 3 operands but %i %s given: %s" % (len(args),
-                                                                              ['were', 'was'][len(args) == 1],
-                                                                              str(args)))
-        else:
+        if len(args) == 3:
             return Or(And(args[0], args[1]), And(Not(args[0]), args[2]))
+        raise ValueError("ITE expects 3 arguments, but got %d: %s" % (len(args), str(args)))
 
 ### end class definitions. Some useful methods
 

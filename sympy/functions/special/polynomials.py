@@ -10,7 +10,6 @@ from sympy.core.basic import C
 from sympy.core.singleton import S
 from sympy.core import Rational
 from sympy.core.function import Function
-from sympy.functions.combinatorial.factorials import factorial
 
 from sympy.polys.orthopolys import (
     chebyshevt_poly,

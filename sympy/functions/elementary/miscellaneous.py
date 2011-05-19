@@ -5,7 +5,6 @@ from sympy.core.operations import LatticeOp, ShortCircuit
 from sympy.core.function import Application, Lambda
 from sympy.core.expr import Expr
 from sympy.core.singleton import Singleton
-from sympy.core.symbol import Dummy
 
 class IdentityFunction(Lambda):
     """The identity function

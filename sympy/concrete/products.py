@@ -88,7 +88,6 @@ class Product(Expr):
             poly = term.as_poly(k)
 
             A = B = Q = S.One
-            C_= poly.LC()
 
             all_roots = roots(poly, multiple=True)
 
