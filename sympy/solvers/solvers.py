@@ -795,16 +795,6 @@ def tsolve(eq, sym):
 
     raise NotImplementedError("Unable to solve the equation.")
 
-def msolve(*args, **kwargs):
-    """
-    Compatibility wrapper pointing to nsolve().
-
-    msolve() has been renamed to nsolve(), please use nsolve() directly."""
-    warn('msolve() is has been renamed, please use nsolve() instead',
-         DeprecationWarning)
-    args[0], args[1] = args[1], args[0]
-    return nsolve(*args, **kwargs)
-
 # TODO: option for calculating J numerically
 def nsolve(*args, **kwargs):
     """
