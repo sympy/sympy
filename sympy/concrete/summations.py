@@ -1,11 +1,9 @@
-from sympy.core import (Expr, S, C, Symbol, Equality, Interval, sympify, Wild,
-                        Tuple, Dummy, Derivative)
+from sympy.core import (Expr, S, C, sympify, Wild, Dummy, Derivative)
 from sympy.core.compatibility import any
 from sympy.functions.elementary.piecewise import piecewise_fold
 from sympy.concrete.gosper import gosper_sum
 from sympy.polys import apart, PolynomialError
 from sympy.solvers import solve
-from sympy.utilities import flatten
 
 class Sum(Expr):
     """Represents unevaluated summation."""

@@ -1,9 +1,9 @@
 from sympy.core import C, sympify
 from sympy.core.add import Add
-from sympy.core.function import Lambda, Function, expand_log, ArgumentIndexError
+from sympy.core.function import Lambda, Function, ArgumentIndexError
 from sympy.core.cache import cacheit
 from sympy.core.singleton import S
-from sympy.core.symbol import Wild, Symbol, Dummy
+from sympy.core.symbol import Wild, Dummy
 from sympy.core.mul import Mul
 
 from sympy.ntheory import multiplicity
@@ -218,7 +218,7 @@ class exp(Function):
     def _eval_nseries(self, x, n, logx):
         # NOTE Please see the comment at the beginning of this file, labelled
         #      IMPORTANT.
-        from sympy import limit, oo, powsimp, expand_mul
+        from sympy import limit, oo, powsimp
         arg = self.args[0]
         arg_series = arg._eval_nseries(x, n=n, logx=logx)
         if arg_series.is_Order:
@@ -453,7 +453,7 @@ class log(Function):
     def _eval_nseries(self, x, n, logx):
         # NOTE Please see the comment at the beginning of this file, labelled
         #      IMPORTANT.
-        from sympy import powsimp, ceiling, cancel
+        from sympy import cancel
         if not logx:
             logx = log(x)
         if self.args[0] == x:
