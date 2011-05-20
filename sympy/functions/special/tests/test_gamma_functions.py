@@ -1,6 +1,9 @@
 from sympy import Symbol, gamma, oo, nan, zoo, factorial, sqrt, Rational, log,\
         polygamma, EulerGamma, pi, uppergamma, S, expand_func, loggamma, sin, cos, \
-        O
+        O, cancel, lowergamma, exp,  erf
+from sympy.utilities.randtest import (test_derivative_numerically as td,
+                                      random_complex_number as randcplx,
+                                      test_numerically as tn)
 
 x = Symbol('x')
 y = Symbol('y')
@@ -47,10 +50,31 @@ def test_gamma_series():
         1 - x*EulerGamma + x**2*EulerGamma**2/2 + pi**2*x**2/12 + O(x**3)
 
 def test_lowergamma():
-    pass
+    assert lowergamma(x, y).diff(y) == y**(x-1)*exp(-y)
+    assert td(lowergamma(randcplx(), y), y)
+
+    assert lowergamma(S.Half, x) == sqrt(pi)*erf(sqrt(x))
+    assert not lowergamma(S.Half - 3, x).has(lowergamma)
+    assert not lowergamma(S.Half + 3, x).has(lowergamma)
+    assert lowergamma(S.Half, x, evaluate=False).has(lowergamma)
+    assert tn(lowergamma(S.Half + 3, x, evaluate=False),
+              lowergamma(S.Half + 3, x), x)
+    assert tn(lowergamma(S.Half - 3, x, evaluate=False),
+              lowergamma(S.Half - 3, x), x)
 
 def test_uppergamma():
     assert uppergamma(4, 0) == 6
+    assert uppergamma(x, y).diff(y) == -y**(x-1)*exp(-y)
+    assert td(uppergamma(randcplx(), y), y)
+
+    assert uppergamma(S.Half, x) == sqrt(pi)*(1 - erf(sqrt(x)))
+    assert not uppergamma(S.Half - 3, x).has(uppergamma)
+    assert not uppergamma(S.Half + 3, x).has(uppergamma)
+    assert uppergamma(S.Half, x, evaluate=False).has(uppergamma)
+    assert tn(uppergamma(S.Half + 3, x, evaluate=False),
+              uppergamma(S.Half + 3, x), x)
+    assert tn(uppergamma(S.Half - 3, x, evaluate=False),
+              uppergamma(S.Half - 3, x), x)
 
 def test_polygamma():
 

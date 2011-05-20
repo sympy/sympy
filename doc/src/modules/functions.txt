@@ -199,6 +199,10 @@ uppergamma
 ----------
 .. autoclass:: sympy.functions.special.gamma_functions.uppergamma
 
+lowergamma
+----------
+.. autoclass:: sympy.functions.special.gamma_functions.lowergamma
+
 Bessel Type Functions
 ---------------------
 .. autoclass:: sympy.functions.special.bessel.besselj

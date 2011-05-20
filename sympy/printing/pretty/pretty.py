@@ -596,6 +596,26 @@ class PrettyPrinter(Printer):
         else:
             return self._print_Function(e)
 
+    def _print_uppergamma(self, e):
+        if self._use_unicode:
+            pform = self._print(e.args[0])
+            pform = prettyForm(*pform.right(', ', self._print(e.args[1])))
+            pform = prettyForm(*pform.parens())
+            pform = prettyForm(*pform.left(greek['gamma'][1]))
+            return pform
+        else:
+            return self._print_Function(e)
+
+    def _print_lowergamma(self, e):
+        if self._use_unicode:
+            pform = self._print(e.args[0])
+            pform = prettyForm(*pform.right(', ', self._print(e.args[1])))
+            pform = prettyForm(*pform.parens())
+            pform = prettyForm(*pform.left(greek['gamma'][0]))
+            return pform
+        else:
+            return self._print_Function(e)
+
     def _print_Add(self, expr, order=None):
         terms = self._as_ordered_terms(expr, order=order)
         pforms, indices = [], []
