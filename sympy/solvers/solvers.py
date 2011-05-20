@@ -14,13 +14,13 @@
 """
 
 from sympy.core.sympify import sympify
-from sympy.core import S, Mul, Add, Pow, Symbol, Wild, Equality, Dummy
+from sympy.core import S, Mul, Add, Pow, Symbol, Wild, Equality, Dummy, Basic
 from sympy.core.numbers import ilcm
 
 from sympy.functions import log, exp, LambertW
-from sympy.simplify import simplify, collect
+from sympy.simplify import simplify, collect, powsimp
 from sympy.matrices import Matrix, zeros
-from sympy.polys import roots, cancel
+from sympy.polys import roots, cancel, Poly, together
 from sympy.functions.elementary.piecewise import piecewise_fold
 
 from sympy.utilities import any, all
@@ -32,6 +32,124 @@ from sympy.solvers.polysys import solve_poly_system
 from sympy.solvers.inequalities import reduce_inequalities
 
 from warnings import warn
+
+def checksol(f, symbol, sol=None, **flags):
+    """Checks whether sol is a solution of equation f == 0.
+
+    Input can be either a single symbol and corresponding value
+    or a dictionary of symbols and values.
+
+    Examples:
+    ---------
+
+       >>> from sympy import symbols
+       >>> from sympy.solvers import checksol
+       >>> x,y = symbols('xy')
+       >>> checksol(x**4-1, x, 1)
+       True
+       >>> checksol(x**4-1, x, 0)
+       False
+       >>> checksol(x**2 + y**2 - 5**2, {x:3, y: 4})
+       True
+
+       None is returned if checksol() could not conclude.
+
+       flags:
+           'numerical=True'
+               do a fast numerical check if f has only one symbol.
+           'minimal=True'
+               a very fast, minimal testing.
+           'warning=True'
+               print a warning if checksol() could not conclude.
+           'simplified=True'
+               to omit the simplification step in case the solution has
+               already been simplified.
+           'force=True'
+               make positive all symbols without assumptions regarding sign.
+    """
+
+    if sol is not None:
+        sol = {symbol: sol}
+    elif isinstance(symbol, dict):
+        sol = symbol
+    else:
+        msg = 'Expecting sym, val or {sym: val}, None but got %s, %s'
+        raise ValueError(msg % (symbol, sol))
+
+    if hasattr(f, '__iter__') and hasattr(f, '__len__'):
+        if not f:
+            raise ValueError('no functions to check')
+        rv = set()
+        for fi in f:
+            check = checksol(fi, sol, **flags)
+            if check is False:
+                return False
+            rv.add(check)
+        if None in rv: # rv might contain True and/or None
+            return None
+        assert len(rv) == 1 # True
+        return True
+
+    if isinstance(f, Poly):
+        f = f.as_expr()
+    elif isinstance(f, Equality):
+        f = f.lhs - f.rhs
+
+    if not f:
+        return True
+
+    if not f.has(*sol.keys()):
+        return False
+
+    attempt = -1
+    numerical = flags.get('numerical', True)
+    while 1:
+        attempt += 1
+        if attempt == 0:
+            val = f.subs(sol)
+        elif attempt == 1:
+            if not val.atoms(Symbol) and numerical:
+                # val is a constant, so a fast numerical test may suffice
+                if val not in [S.Infinity, S.NegativeInfinity]:
+                    # issue 2088 shows that +/-oo chops to 0
+                    val = val.evalf(36).n(30, chop=True)
+        elif attempt == 2:
+            if flags.get('minimal', False):
+                return
+            # simplified =
+            #   True - do simplification
+            #   False - don't do simplification
+            #   default - do
+            if not flags.get('simplified', True):
+                continue
+            if flags.get('simplify_sol', True):
+                for k in sol:
+                    sol[k] = simplify(sympify(sol[k]))
+                flags['simplify_sol'] = False # no need to simplify sol anymore
+            val = simplify(f.subs(sol))
+            if flags.get('force', False):
+                val = posify(val)[0]
+        elif attempt == 3:
+            val = powsimp(val)
+        elif attempt == 4:
+            val = cancel(val)
+        elif attempt == 5:
+            val = val.expand()
+        elif attempt == 6:
+            val = together(val)
+        elif attempt == 7:
+            val = powsimp(val)
+        else:
+            break
+        if val.is_zero:
+            return True
+        elif attempt > 0 and numerical and val.is_nonzero:
+            return False
+
+    if flags.get('warning', False):
+        print("Warning: could not verify solution %s." % sol)
+    # returns None if it can't conclude
+    # TODO: improve solution testing
 
 # Codes for guess solve strategy
 GS_POLY = 0
@@ -111,6 +229,14 @@ def guess_solve_strategy(expr, symbol):
     return eq_type
 
 def solve(f, *symbols, **flags):
+    """
+    A preprocessor to _solve.
+    """
+
+    solution = _solve(f, *symbols, **flags)
+    return solution
+
+def _solve(f, *symbols, **flags):
     """Solves equations and systems of equations.
 
        Currently supported are univariate polynomial, transcendental
@@ -141,20 +267,22 @@ def solve(f, *symbols, **flags):
        {x: -3, y: 1}
 
     """
-    def sympit(w):
+
+    def sympified_list(w):
         return map(sympify, iff(isinstance(w,(list, tuple, set)), w, [w]))
     # make f and symbols into lists of sympified quantities
     # keeping track of how f was passed since if it is a list
     # a dictionary of results will be returned.
     bare_f = not isinstance(f, (list, tuple, set))
-    f, symbols = (sympit(w) for w in [f, symbols])
-
-    if any(isinstance(fi, bool) or (fi.is_Relational and not fi.is_Equality) for fi in f):
-        return reduce_inequalities(f, assume=flags.get('assume'))
+    f, symbols = (sympified_list(w) for w in [f, symbols])
 
     for i, fi in enumerate(f):
-        if fi.is_Equality:
+        if isinstance(fi, Equality):
             f[i] = fi.lhs - fi.rhs
+        elif isinstance(fi, Poly):
+            f[i] = fi.as_expr()
+        elif isinstance(fi, bool) or fi.is_Relational:
+            return reduce_inequalities(f, assume=flags.get('assume'))
 
     if not symbols:
         #get symbols from equations or supply dummy symbols since
@@ -163,9 +291,8 @@ def solve(f, *symbols, **flags):
         for fi in f:
             symbols |= fi.atoms(Symbol) or set([Dummy('x')])
         symbols = list(symbols)
+        symbols.sort(key=Basic.sorted_key)
 
-    if bare_f:
-        f=f[0]
     if len(symbols) == 1:
         if isinstance(symbols[0], (list, tuple, set)):
             symbols = symbols[0]
@@ -201,7 +328,8 @@ def solve(f, *symbols, **flags):
             swap_back_dict = dict(zip(symbols_new, symbols))
     # End code for handling of Function and Derivative instances
 
-    if not isinstance(f, (tuple, list, set)):
+    if bare_f:
+        f = f[0]
 
         # Create a swap dictionary for storing the passed symbols to be solved
         # for, so that they may be swapped back.
@@ -215,38 +343,44 @@ def solve(f, *symbols, **flags):
         f = piecewise_fold(f)
 
         if len(symbols) != 1:
-            result = {}
-            for s in symbols:
-                result[s] = solve(f, s, **flags)
-            if flags.get('simplified', True):
-                for s, r in result.items():
-                    result[s] = map(simplify, r)
-            return result
+            free = f.free_symbols
+            ex = free - set(symbols)
+            if len(ex) == 1:
+                ex = ex.pop()
+                try:
+                    return solve_undetermined_coeffs(f, symbols, ex)
+                except NotImplementedError:
+                    pass
+            n, d = solve_linear(f, x=symbols)
+            if n.is_Symbol:
+                return {n: cancel(d)}
 
         symbol = symbols[0]
         strategy = guess_solve_strategy(f, symbol)
 
         if strategy == GS_POLY:
-            poly = f.as_poly( symbol )
+            poly = f.as_poly(symbol)
             if poly is None:
                 raise NotImplementedError("Cannot solve equation " + str(f) + " for "
                     + str(symbol))
             # for cubics and quartics, if the flag wasn't set, DON'T do it
             # by default since the results are quite long. Perhaps one could
             # base this decision on a certain crtical length of the roots.
-            if poly.degree > 2:
+            if poly.degree() > 2:
                 flags['simplified'] = flags.get('simplified', False)
             result = roots(poly, cubics=True, quartics=True).keys()
 
         elif strategy == GS_RATIONAL:
             P, Q = f.as_numer_denom()
-            #TODO: check for Q != 0
-            result = solve(P, symbol, **flags)
+            # reject any result that makes Q affirmatively 0, if in doubt
+            # keep it
+            soln = _solve(P, symbol, **flags)
+            result = [s for s in soln if not checksol(Q, {symbol: s})]
 
         elif strategy == GS_POLY_CV_1:
             args = list(f.args)
             if isinstance(f, Add):
-                # we must search for a suitable change of variable
+                # we must search for a suitable change of variables
                 # collect exponents
                 exponents_denom = list()
                 for arg in args:
@@ -268,13 +402,16 @@ def solve(f, *symbols, **flags):
                 f_ = f.subs(symbol, t**m)
                 if guess_solve_strategy(f_, t) != GS_POLY:
                     raise NotImplementedError("Could not convert to a polynomial equation: %s" % f_)
-                cv_sols = solve(f_, t)
-                for sol in cv_sols:
-                    result.append(sol**m)
+                soln = [s**m for s in _solve(f_, t)]
+                # we might have introduced solutions from another branch
+                # when changing variables; check and keep solutions
+                # unless they definitely aren't a solution
+                result = [s for s in soln if checksol(f, {symbol: s}) is not False]
 
             elif isinstance(f, Mul):
-                for mul_arg in args:
-                    result.extend(solve(mul_arg, symbol))
+                result = []
+                for m in f.args:
+                    result.extend(_solve(m, symbol, **flags) or [])
 
         elif strategy == GS_POLY_CV_2:
             m = 0
@@ -291,15 +428,18 @@ def solve(f, *symbols, **flags):
                 for mul_arg in args:
                     if isinstance(mul_arg, Pow):
                         m = min(m, mul_arg.exp)
-            f1 = simplify(f*symbol**(-m))
-            result = solve(f1, symbol)
-            # TODO: we might have introduced unwanted solutions
-            # when multiplied by x**-m
+
+            f_ = simplify(f*symbol**(-m))
+            sols = _solve(f_, symbol)
+            # we might have introduced unwanted solutions
+            # when multiplying by x**-m; check and keep solutions
+            # unless they definitely aren't a solution
+            result = [s for s in sols if checksol(f, {symbol: s}) is not False]
 
         elif strategy == GS_PIECEWISE:
             result = set()
             for expr, cond in f.args:
-                candidates = solve(expr, *symbols)
+                candidates = _solve(expr, *symbols)
                 if isinstance(cond, bool) or cond.is_Number:
                     if not cond:
                         continue
@@ -343,12 +483,11 @@ def solve(f, *symbols, **flags):
             result = [ri.subs(swap_back_dict) for ri in result]
 
         if flags.get('simplified', True) and strategy != GS_RATIONAL:
-            return map(simplify, result)
-        else:
-            return result
+            result = map(simplify, result)
+        return result
     else:
         if not f:
-            return {}
+            return []
         else:
             # Create a swap dictionary for storing the passed symbols to be
             # solved for, so that they may be swapped back.
@@ -380,23 +519,22 @@ def solve(f, *symbols, **flags):
                         except ValueError:
                             matrix[i, m] = -coeff
 
+                # a dictionary of symbols: values
                 soln = solve_linear_system(matrix, *symbols, **flags)
             else:
+                # a list of tuples, T, where T[i] [j] corresponds to the ith solution for symbols[j]
                 soln = solve_poly_system(polys)
 
-            # Use swap_dict to ensure we return the same type as what was passed
+            # Use swap_dict to ensure we return the same type as what was
+            # passed
             if symbol_swapped:
                 if isinstance(soln, dict):
-                    res = {}
-
-                    for k, v in soln.iteritems():
-                        k = k.subs(swap_back_dict)
-                        v = v.subs(swap_back_dict)
-                        res[k] = v
-
-                    return res
+                    result = dict([(swap_back_dict[k],
+                                    v.subs(swap_back_dict))
+                                        for k, v in soln.iteritems()])
                 else:
-                    return soln
+                    result = [v.subs(swap_back_dict) for v in soln]
+                return result
             else:
                 return soln
 
@@ -891,4 +1029,3 @@ def nsolve(*args, **kwargs):
     # solve the system numerically
     x = findroot(f, x0, J=J, **kwargs)
     return x
-
