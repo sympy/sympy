@@ -7,7 +7,6 @@ y = Symbol('y')
 n = Symbol('n', integer=True)
 
 def test_gamma():
-
     assert gamma(nan) == nan
     assert gamma(oo) == oo
 
@@ -42,6 +41,10 @@ def test_gamma():
 
     assert expand_func(gamma(x - Rational(1, 2))) == \
         gamma(Rational(1, 2) + x)/(x - Rational(1, 2))
+
+def test_gamma_series():
+    assert gamma(x + 1).series(x, 0, 3) == \
+        1 - x*EulerGamma + x**2*EulerGamma**2/2 + pi**2*x**2/12 + O(x**3)
 
 def test_lowergamma():
     pass

@@ -48,6 +48,12 @@ class factorial(Function):
 
     nargs = 1
 
+    def fdiff(self, argindex=1):
+        if argindex == 1:
+            return C.gamma(self.args[0] + 1)*C.polygamma(0, self.args[0] + 1)
+        else:
+            raise ArgumentIndexError(self, argindex)
+
     _small_swing = [
         1,1,1,3,3,15,5,35,35,315,63,693,231,3003,429,6435,6435,109395,
         12155,230945,46189,969969,88179,2028117,676039,16900975,1300075,
@@ -357,6 +363,18 @@ class binomial(Function):
     """
 
     nargs = 2
+
+    def fdiff(self, argindex=1):
+        if argindex == 1:
+            # http://functions.wolfram.com/GammaBetaErf/Binomial/20/01/01/
+            n, k = self.args
+            return binomial(n, k)*(C.polygamma(0, n + 1) - C.polygamma(0, n - k + 1))
+        elif argindex == 2:
+            # http://functions.wolfram.com/GammaBetaErf/Binomial/20/01/02/
+            n, k = self.args
+            return binomial(n, k)*(C.polygamma(0, n - k + 1) - C.polygamma(0, k + 1))
+        else:
+            raise ArgumentIndexError(self, argindex)
 
     @classmethod
     def eval(cls, n, k):

@@ -1,4 +1,5 @@
-from sympy import Symbol, symbols, factorial, factorial2, binomial, rf, ff, gamma, nan, oo
+from sympy import (Symbol, symbols, factorial, factorial2, binomial,
+    rf, ff, gamma, polygamma, EulerGamma, O, pi, nan, oo)
 
 def test_rf_eval_apply():
     x, y = symbols('x,y')
@@ -65,6 +66,20 @@ def test_factorial():
     assert factorial(n).func == factorial
     assert factorial(2*n).func == factorial
 
+def test_factorial_diff():
+    n = Symbol('n', integer=True)
+
+    assert factorial(n).diff(n) == \
+        gamma(1 + n)*polygamma(0, 1 + n)
+    assert factorial(n**2).diff(n) == \
+        2*n*gamma(1 + n**2)*polygamma(0, 1 + n**2)
+
+def test_factorial_series():
+    n = Symbol('n', integer=True)
+
+    assert factorial(n).series(n, 0, 3) == \
+        1 - n*EulerGamma + n**2*EulerGamma**2/2 + pi**2*n**2/12 + O(n**3)
+
 def test_factorial_rewrite():
     n = Symbol('n', integer=True)
 
@@ -104,6 +119,20 @@ def test_binomial():
     assert binomial(n, u) == 0
     assert binomial(n, v).func == binomial
     assert binomial(n, k).func == binomial
+
+def test_binomial_diff():
+    n = Symbol('n', integer=True)
+    k = Symbol('k', integer=True)
+
+    assert binomial(n, k).diff(n) == \
+        (-polygamma(0, 1 + n - k) + polygamma(0, 1 + n))*binomial(n, k)
+    assert binomial(n**2, k**3).diff(n) == \
+        2*n*(-polygamma(0, 1 + n**2 - k**3) + polygamma(0, 1 + n**2))*binomial(n**2, k**3)
+
+    assert binomial(n, k).diff(k) == \
+        (-polygamma(0, 1 + k) + polygamma(0, 1 + n - k))*binomial(n, k)
+    assert binomial(n**2, k**3).diff(k) == \
+        3*k**2*(-polygamma(0, 1 + k**3) + polygamma(0, 1 + n**2 - k**3))*binomial(n**2, k**3)
 
 def test_binomial_rewrite():
     n = Symbol('n', integer=True)
