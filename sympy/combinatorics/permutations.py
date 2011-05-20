@@ -176,9 +176,7 @@ class Permutation(Basic):
         This is a linear time unranking algorithm that does not
         respect lexicographic order [1].
 
-        [1] Wendy Myrvold and Frank Ruskey. 2001. Ranking and unranking \
-            permutations in linear time. Inf. Process. Lett. 79, 6 (September 2001),\
-            281-284. DOI=10.1016/S0020-0190(01)00141-7
+        [1] See below
 
         Examples:
         >>> from sympy.combinatorics.permutations import Permutation
@@ -207,6 +205,10 @@ class Permutation(Basic):
         """
         This is a linear time ranking algorithm that does not
         enforce lexicographic order [1].
+
+        [1] Wendy Myrvold and Frank Ruskey. 2001. Ranking and unranking
+            permutations in linear time. Inf. Process. Lett. 79, 6 (September 2001),
+            281-284. DOI=10.1016/S0020-0190(01)00141-7
 
         Examples
         >>> from sympy.combinatorics.permutations import Permutation
