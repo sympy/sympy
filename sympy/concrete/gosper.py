@@ -40,7 +40,7 @@ def gosper_normal(f, g, n, polys=True):
     (1/4, 3/2 + n, 1/4 + n)
 
     """
-    (p, q), opt = parallel_poly_from_expr((f, g), n, field=True)
+    (p, q), opt = parallel_poly_from_expr((f, g), n, field=True, extension=True)
 
     a, A = p.LC(), p.monic()
     b, B = q.LC(), q.monic()
@@ -139,16 +139,16 @@ def gosper_term(f, n):
     if solution is None:
         return None    # 'f(n)' is *not* Gosper-summable
 
+    x = x.as_expr().subs(solution)
+
     for coeff in coeffs:
         if coeff not in solution:
-            solution[coeff] = S(0)
-
-    x = x.as_expr().subs(solution)
+            x = x.subs(coeff, 0)
 
     if x is S.Zero:
         return None    # 'f(n)' is *not* Gosper-summable
     else:
-        return B*x/C
+        return B.as_expr()*x/C.as_expr()
 
 def gosper_sum(f, k):
     """
@@ -197,4 +197,3 @@ def gosper_sum(f, k):
         result = (f*(g+1)).subs(k, b) - (f*g).subs(k, a)
 
     return factor(result)
-

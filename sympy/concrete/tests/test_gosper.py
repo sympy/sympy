@@ -1,7 +1,7 @@
 """Tests for Gosper's algorithm for hypergeometric summation. """
 
 from sympy.concrete.gosper import gosper_normal, gosper_term, gosper_sum
-from sympy import S, Poly, symbols, factorial, binomial, gamma
+from sympy import S, Poly, symbols, factorial, binomial, gamma, sqrt
 
 n, m, k, i, j = symbols('n,m,k,i,j', integer=True)
 
@@ -46,6 +46,9 @@ def test_gosper_sum_indefinite():
 def test_gosper_sum_parametric():
     assert gosper_sum(binomial(S(1)/2, m - j + 1)*binomial(S(1)/2, m + j), (j, 1, n)) == \
         n*(1 + m - n)*(-1 + 2*m + 2*n)*binomial(S(1)/2, 1 + m - n)*binomial(S(1)/2, m + n)/(m*(1 + 2*m))
+
+def test_gosper_sum_algebraic():
+    assert gosper_sum(n**2 + sqrt(2), (n, 0, m)) == (m + 1)*(2*m**2 + m + 6*sqrt(2))/6
 
 def test_gosper_sum_iterated():
     f1 = binomial(2*k, k)/4**k
