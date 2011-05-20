@@ -1,6 +1,7 @@
 from sympy.core import Basic
 from sympy.utilities.iterables import rotate_left
 from sympy.polys.polytools import lcm
+from sympy.matrices import Matrix, zeros
 
 import itertools
 
@@ -472,6 +473,29 @@ class Permutation(Basic):
                 cycles.append(temp_cycle)
             cycles.append([next_elem])
         return cycles
+
+    def get_precedence_matrix(self):
+        """
+        Gets the precedence matrix. This is used for computing the
+        distance between two permutations.
+
+        Examples:
+        >>> from sympy.combinatorics.permutations import josephus
+        >>> p = josephus(3,6,1)
+        >>> p.get_precedence_matrix()
+        [0, 0, 0, 0, 0, 0]
+        [1, 0, 0, 0, 1, 0]
+        [1, 1, 0, 1, 1, 1]
+        [1, 1, 0, 0, 1, 0]
+        [1, 0, 0, 0, 0, 0]
+        [1, 1, 0, 1, 1, 0]
+        """
+        m = zeros(self.size)
+        perm = self.array_form.args[0]
+        for i in xrange(m.rows):
+            for j in xrange(i + 1, m.cols):
+                m[perm[i], perm[j]] = 1
+        return m
 
 def josephus(m, n, s = 1):
     """
