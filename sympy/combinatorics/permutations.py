@@ -255,7 +255,13 @@ class Permutation(Basic):
     def ascents(self):
         """
         Returns the positions of ascents in a permutation, ie, the location
-        where p_{i} < p_{i+1}
+        where p[i] < p[i+1]
+
+        Example:
+        >>> from sympy.combinatorics.permutations import Permutation
+        >>> p = Permutation([4,0,1,3,2])
+        >>> p.ascents
+        [1, 2]
         """
         pos = []
         temp = self
@@ -270,7 +276,13 @@ class Permutation(Basic):
     def descents(self):
         """
         Returns the positions of descents in a permutation, ie, the location
-        where p_{i} > p_{i+1}
+        where p[i] > p[i+1]
+
+        Example:
+        >>> from sympy.combinatorics.permutations import Permutation
+        >>> p = Permutation([4,0,1,3,2])
+        >>> p.descents
+        [0, 3]
         """
         pos = []
         temp = self
