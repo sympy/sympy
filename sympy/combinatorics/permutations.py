@@ -259,11 +259,7 @@ class Permutation(Basic):
 
     @property
     def is_Identity(self):
-        if self.is_CyclicForm:
-            return len(self.atoms()) == \
-                   len(self.args[0])
-        return len(self.atoms()) == \
-               len(self.to_cycles().args[0])
+        return self.size == len(self.cyclic_form.args[0])
 
     @property
     def ascents(self):
