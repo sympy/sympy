@@ -529,12 +529,12 @@ Functions
     >>> y = Symbol("y", integer=True)
 
     >>> factorial(x)
-    gamma(1 + x)
+    x!
 
     >>> factorial(y)
     y!
 
-    >>> factorial(x).series(x, 0, 3)
+    >>> gamma(x + 1).series(x, 0, 3) # i.e. factorial(x)
                         2           2     2  2
                        x *EulerGamma    pi *x
     1 - x*EulerGamma + -------------- + ------ + O(x**3)
