@@ -403,7 +403,13 @@ class Permutation(Basic):
 
     def runs(self):
         """
-        Returns the number of runs (ascending cycles) of a permutation
+        Returns the run of a permutation.
+
+        A set of ascending sequences in a permutation is called a run [1]
+
+        [1] Graham, R. L.; Knuth, D. E.; and Patashnik, O.
+            Concrete Mathematics: A Foundation for Computer Science, 2nd ed.
+            Reading, MA: Addison-Wesley, 1994.
 
         Examples:
         >>> from sympy.combinatorics.permutations import Permutation
@@ -430,7 +436,7 @@ class Permutation(Basic):
 
             if current_elem > next_elem:
                 if temp_cycle != [] and \
-                       temp_cycle[len(temp_cycle) - 1] < current_elem:
+                       temp_cycle[-1] < current_elem:
                     temp_cycle.append(current_elem)
                     cycles.append(temp_cycle)
                     temp_cycle = []
