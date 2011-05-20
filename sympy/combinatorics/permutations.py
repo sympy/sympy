@@ -151,18 +151,18 @@ class Permutation(Basic):
         if self.is_CyclicForm:
             return self
         linear_rep = self.args[0]
-        P = [True] * len(linear_rep)
+        unchecked = [True] * len(linear_rep)
         cyclic_form = []
         for i in xrange(len(linear_rep)):
-            if P[i]:
+            if unchecked[i]:
                 cycle = []
                 cycle.append(i)
-                P[i] = False
+                unchecked[i] = False
                 j = i
-                while P[linear_rep[j]]:
+                while unchecked[linear_rep[j]]:
                     j = linear_rep[j]
                     cycle.append(j)
-                    P[j] = False
+                    unchecked[j] = False
                 cyclic_form.append(cycle)
         cyclic_form.sort(key=lambda t: -t[0])
         return Permutation(cyclic_form)
