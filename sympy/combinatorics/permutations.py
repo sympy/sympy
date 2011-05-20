@@ -297,6 +297,12 @@ class Permutation(Basic):
     def max(self):
         """
         The maximum element moved by the permutation.
+
+        Example:
+        >>> from sympy.combinatorics.permutations import Permutation
+        >>> p = Permutation([1,0,4,3,2])
+        >>> p.max
+        4
         """
         temp = self
         if temp.is_CyclicForm:
@@ -312,6 +318,12 @@ class Permutation(Basic):
     def min(self):
         """
         The minimum element moved by the permutation
+
+        Example:
+        >>> from sympy.combinatorics.permutations import Permutation
+        >>> p = Permutation([0,1,4,3,2])
+        >>> p.min
+        2
         """
         temp = self
         if temp.is_CyclicForm:
