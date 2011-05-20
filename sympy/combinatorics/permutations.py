@@ -38,6 +38,14 @@ class Permutation(Basic):
     """
     is_Permutation = True
 
+    @property
+    def array_form(self):
+        return self.to_array()
+
+    @property
+    def cyclic_form(self):
+        return self.to_cycles()
+
     def __mul__(self, other):
         """
         Routine for multiplication of permutations
@@ -114,7 +122,7 @@ class Permutation(Basic):
         Permutation([1, 3, 0, 2])
         """
         if self.is_ArrayForm:
-            return
+            return self
         cycles = self.args[0]
         linear_form = []
         for cycle in cycles:
@@ -137,7 +145,7 @@ class Permutation(Basic):
         Permutation([[1, 3, 2], [0]])
         """
         if self.is_CyclicForm:
-            return
+            return self
         linear_rep = self.args[0]
         P = [True] * len(linear_rep)
         cyclic_form = []
