@@ -79,9 +79,13 @@ def test_Permutation():
     assert r.runs() == [[3], [2], [1], [0]]
 
     assert p.get_precedence_distance(q) == q.get_precedence_distance(p)
+    assert p.get_adjacency_distance(q) == p.get_adjacency_distance(q)
+    assert p.get_positional_distance(q) == p.get_positional_distance(q)
     p = Permutation([0, 1, 2, 3])
     q = Permutation([3, 2, 1, 0])
     assert p.get_precedence_distance(q) == 6
+    assert p.get_adjacency_distance(q) == 3
+    assert p.get_positional_distance(q) == 8
 
 def test_josephus():
     assert josephus(4, 6, 1) == Permutation([3, 1, 0, 2, 5, 4])

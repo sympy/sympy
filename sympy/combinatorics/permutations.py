@@ -528,6 +528,88 @@ class Permutation(Basic):
         d = self.size * (self.size - 1)/2 - n_prec
         return d
 
+    def get_adjacency_matrix(self):
+        """
+        Computes the adjacency matrix of a permutation.
+
+        If job i is adjacent to job j in a permutation p
+        then we set m[i, j] = 1 where m is the adjacency
+        matrix of p.
+
+        Examples:
+        >>> from sympy.combinatorics.permutations import josephus
+        >>> p = josephus(3,6,1)
+        >>> p.get_adjacency_matrix()
+        [0, 0, 0, 0, 0, 0]
+        [0, 0, 0, 0, 1, 0]
+        [0, 0, 0, 0, 0, 1]
+        [0, 1, 0, 0, 0, 0]
+        [1, 0, 0, 0, 0, 0]
+        [0, 0, 0, 1, 0, 0]
+        >>> from sympy.combinatorics.permutations import Permutation
+        >>> q = Permutation([0, 1, 2, 3])
+        >>> q.get_adjacency_matrix()
+        [0, 1, 0, 0]
+        [0, 0, 1, 0]
+        [0, 0, 0, 1]
+        [0, 0, 0, 0]
+        """
+        m = zeros(self.size)
+        perm = self.array_form.args[0]
+        for i in xrange(self.size - 1):
+            m[perm[i], perm[i + 1]] = 1
+        return m
+
+    def get_adjacency_distance(self, other):
+        """
+        Computes the adjacency distance between two permutations
+
+        This metric counts the number of times a pair i,j of jobs is
+        adjacent in both p and p'. If n_adj is this quantity then
+        the adjacency distance is n - n_adj - 1 [1]
+
+        [1] Reeves, Colin R. Landscapes, Operators and Heuristic search, Annals
+        of Operational Research, 86, pp 473-490. (1999)
+
+        Examples:
+        >>> from sympy.combinatorics.permutations import Permutation, josephus
+        >>> p = Permutation([0, 3, 1, 2, 4])
+        >>> q = josephus(4, 5, 2)
+        >>> p.get_adjacency_distance(q)
+        3
+        """
+        if self.size != other.size:
+            raise ValueError("The permutations must be of the same size")
+        self_adj_mat = self.get_adjacency_matrix()
+        other_adj_mat = other.get_adjacency_matrix()
+        n_adj = 0
+        for i in xrange(self.size):
+            for j in xrange(self.size):
+                if i == j:
+                    continue
+                if self_adj_mat[i, j] * other_adj_mat[i, j] == 1:
+                    n_adj += 1
+        d = self.size - n_adj - 1
+        return d
+
+    def get_positional_distance(self, other):
+        """
+        Computes the positional distance between two permutations
+
+        Examples:
+        >>> from sympy.combinatorics.permutations import Permutation, josephus
+        >>> p = Permutation([0, 3, 1, 2, 4])
+        >>> q = josephus(4, 5, 2)
+        >>> p.get_positional_distance(q)
+        12
+        """
+        if self.size != other.size:
+            raise ValueError("The permutations must be of the same size")
+        perm_array = self.array_form.args[0]
+        other_array = other.array_form.args[0]
+        return reduce(lambda x, y: x + y,
+                      [abs(perm_array[i] - other_array[i]) for i in xrange(self.size)])
+
 def josephus(m, n, s = 1):
     """
     Computes the Josephus permutation for a given number of
