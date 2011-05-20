@@ -6,6 +6,37 @@ from sympy.abc import x
 import itertools
 
 class Permutation(Basic):
+    """
+    A permutation, alternatively known as an 'arrangement number'
+    or 'ordering' is an arrangement of the elements of an ordered list
+    into a one-to-one mapping with  itself. The number of permutations
+    on a set of n elements is given by n!.
+
+    A representation of a permutation as a product of permutation cycles
+    is unique (up to the ordering of the cycles). An example of a cyclic
+    decomposition is the permutation [4, 2, 1, 3] of the set [1, 2, 3, 4].
+    This is denoted as [[2], [1, 4, 3]], corresponding to the disjoint
+    permutation cycles [2] and [1, 4, 3]. We can choose the cyclic form as
+    we want since the cycles are disjoint and can therefore be specified
+    in any order and a rotation of a given cycle specifies the same cycle [1]
+    Therefore, (431)(2), (314)(2), (143)(2), (2)(431), (2)(314), and (2)(143)
+    all describe the same permutation.
+
+    Another notation that explicitly identifies the positions occupied by
+    elements before and after application of a permutation on n elements uses a
+    2xn matrix, where the first row is the identity permutation  and the second
+    row is the new arrangement [2].
+
+    Any permutation is also a product of transpositions.
+
+    Permutations are commonly denoted in lexicographic or transposition order.
+
+    [1] Skiena, S. "Permutations." §1.1 in Implementing Discrete Mathematics:
+        Combinatorics and Graph Theory with Mathematica.
+        Reading, MA: Addison-Wesley, pp. 3-16, 1990.
+    [2] Knuth, D. E. The Art of Computer Programming, Vol. 4: Combinatorial Algorithms,
+        1st ed. Reading, MA: Addison-Wesley, 2011.
+    """
     is_Permutation = True
 
     def __mul__(self, other):
