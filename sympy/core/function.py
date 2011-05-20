@@ -516,7 +516,7 @@ functions are not supported.')
         redefine it to make it faster by using the "previous_terms".
         """
         x = sympify(x)
-        return cls(x).diff(x, n).subs(x, 0) * x**n / C.Factorial(n)
+        return cls(x).diff(x, n).subs(x, 0) * x**n / C.factorial(n)
 
 
 class AppliedUndef(Function):

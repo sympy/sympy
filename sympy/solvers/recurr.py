@@ -54,7 +54,7 @@ from sympy.core import sympify
 from sympy.simplify import simplify, hypersimp, hypersimilar
 from sympy.solvers import solve, solve_undetermined_coeffs
 from sympy.polys import Poly, exquo, gcd, lcm, roots, resultant
-from sympy.functions import Binomial, FallingFactorial
+from sympy.functions import binomial, FallingFactorial
 from sympy.matrices import Matrix, casoratian
 from sympy.concrete import product
 
@@ -123,7 +123,7 @@ def rsolve_poly(coeffs, f, n, **hints):
 
     for i in xrange(0, r+1):
         for j in xrange(i, r+1):
-            polys[i] += coeffs[j]*Binomial(j, i)
+            polys[i] += coeffs[j]*binomial(j, i)
 
         if not polys[i].is_zero:
             (exp,), coeff = polys[i].LT()
@@ -230,7 +230,7 @@ def rsolve_poly(coeffs, f, n, **hints):
 
             for j in xrange(0, A+1):
                 for k in xrange(0, d+1):
-                    B = Binomial(k, i+j)
+                    B = binomial(k, i+j)
                     D = delta(polys[j].as_expr(), k)
 
                     alpha[i] += I[k]*B*D

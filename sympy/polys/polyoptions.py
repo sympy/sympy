@@ -341,7 +341,7 @@ class Field(BooleanOption):
     option = 'field'
 
     requires = []
-    excludes = ['domain', 'split', 'gaussian', 'extension']
+    excludes = ['domain', 'split', 'gaussian']
 
 class Greedy(BooleanOption):
     """``greedy`` option to polynomial manipulation functions. """
@@ -480,7 +480,7 @@ class Extension(Option):
     option = 'extension'
 
     requires = []
-    excludes = ['field', 'greedy', 'domain', 'split', 'gaussian', 'modulus', 'symmetric']
+    excludes = ['greedy', 'domain', 'split', 'gaussian', 'modulus', 'symmetric']
 
     @classmethod
     def preprocess(cls, extension):

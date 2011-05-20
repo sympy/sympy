@@ -263,7 +263,7 @@ class Domain(object):
                         else:
                             return K1.__class__(K1.dom, *gens)
             elif K1.is_Algebraic:
-                raise UnificationFailed("can't unify %s with %s" % (K0, K1))
+                return K0.__class__(K1.unify(K0.dom), *K0.gens)
             else:
                 if K0.has_Field:
                     if K0.dom == K1:
@@ -275,7 +275,7 @@ class Domain(object):
                         return K0.__class__(K1, *K0.gens)
         elif K0.is_Algebraic:
             if K1.is_Composite:
-                raise UnificationFailed("can't unify %s with %s" % (K0, K1))
+                return K1.__class__(K0.unify(K1.dom), *K1.gens)
             elif K1.is_Algebraic:
                 raise NotImplementedError("unification of different algebraic extensions")
             elif K1.is_ZZ or K1.is_QQ:

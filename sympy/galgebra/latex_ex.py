@@ -658,7 +658,7 @@ class LatexPrinter(Printer):
         else:
             return r"\operatorname{\Gamma}%s" % tex
 
-    def _print_Factorial(self, expr, exp=None):
+    def _print_factorial(self, expr, exp=None):
         x = expr.args[0]
         if self._needs_brackets(x):
             tex = r"\left(%s\right)!" % self._print(x)
@@ -670,7 +670,7 @@ class LatexPrinter(Printer):
         else:
             return tex
 
-    def _print_Binomial(self, expr, exp=None):
+    def _print_binomial(self, expr, exp=None):
         tex = r"{{%s}\choose{%s}}" % (self._print(expr[0]),
                                       self._print(expr[1]))
 

@@ -204,7 +204,7 @@ class FCodePrinter(CodePrinter):
                 self._not_supported.add(expr)
         return "%s(%s)" % (name, self.stringify(expr.args, ", "))
 
-    _print_Factorial = _print_Function
+    _print_factorial = _print_Function
 
     def _print_ImaginaryUnit(self, expr):
         # purpose: print complex numbers nicely in Fortran.

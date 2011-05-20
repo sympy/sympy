@@ -35,7 +35,7 @@ class zeta(Function):
                     if z.is_negative:
                         zeta = (-1)**z * C.bernoulli(-z+1)/(-z+1)
                     elif z.is_even:
-                        B, F = C.bernoulli(z), C.Factorial(z)
+                        B, F = C.bernoulli(z), C.factorial(z)
                         zeta = 2**(z-1) * abs(B) * pi**z / F
                     else:
                         return

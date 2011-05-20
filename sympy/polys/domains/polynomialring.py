@@ -95,6 +95,11 @@ class PolynomialRing(Ring, CharacteristicZero, CompositeDomain):
         """Convert a mpmath `mpf` object to `dtype`. """
         return K1(K1.dom.convert(a, K0))
 
+    def from_AlgebraicField(K1, a, K0):
+        """Convert a `ANP` object to `dtype`. """
+        if K1.dom == K0:
+            return K1(a)
+
     def from_PolynomialRing(K1, a, K0):
         """Convert a `DMP` object to `dtype`. """
         if K1.gens == K0.gens:

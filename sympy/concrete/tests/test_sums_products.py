@@ -1,6 +1,6 @@
-from sympy import (Symbol, Sum, oo, Real, Rational, summation, pi, cos, zeta,
-    Catalan, exp, log, factorial, sqrt, E, sympify, binomial, EulerGamma,
-    Function, Integral, Product, product, nan, diff, Derivative, S, cos)
+from sympy import (S, Symbol, Sum, oo, Real, Rational, summation, pi, cos,
+    zeta, exp, log, factorial, sqrt, E, sympify, binomial, harmonic, Catalan,
+    EulerGamma, Function, Integral, Product, product, nan, diff, Derivative)
 from sympy.concrete.summations import telescopic
 from sympy.utilities.pytest import XFAIL, raises
 
@@ -36,6 +36,12 @@ def test_geometric_sums():
     assert summation(3**(-n), (n, 4, oo)) == Rational(1,54)
     assert summation(2**(-4*n+3), (n, 1, oo)) == Rational(8,15)
     assert summation(2**(n+1), (n, 1, b)).expand() == 4*(2**b-1)
+
+def test_harmonic_sums():
+    assert summation(1/k, (k, 0, n)) == Sum(1/k, (k, 0, n))
+    assert summation(1/k, (k, 1, n)) == harmonic(n)
+    assert summation(n/k, (k, 1, n)) == n*harmonic(n)
+    assert summation(1/k, (k, 5, n)) == harmonic(n) - harmonic(4)
 
 def test_composite_sums():
     f = Rational(1,2)*(7 - 6*n + Rational(1,7)*n**3)

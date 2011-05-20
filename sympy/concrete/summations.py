@@ -197,7 +197,7 @@ class Sum(Expr):
         g = f.diff(i)
         for k in xrange(1, n+2):
             ga, gb = fpoint(g)
-            term = C.bernoulli(2*k)/C.Factorial(2*k)*(gb-ga)
+            term = C.bernoulli(2*k)/C.factorial(2*k)*(gb-ga)
             if (eps and term and abs(term.evalf(3)) < eps) or (k > n):
                 break
             s += term
@@ -367,15 +367,20 @@ def eval_sum_symbolic(f, (i, a, b)):
             return lsum + rsum
 
     # Polynomial terms with Faulhaber's formula
-    p = C.Wild('p')
-    e = f.match(i**p)
+    n = Wild('n')
+    result = f.match(i**n)
 
-    if e is not None:
-        c = p.subs(e)
-        B = C.bernoulli
-        if c.is_integer and c >= 0:
-            s = (B(c+1, b+1) - B(c+1, a))/(c+1)
-            return s.expand()
+    if result is not None:
+        n = result[n]
+
+        if n.is_Integer:
+            if n >= 0:
+                return ((C.bernoulli(n+1, b+1) - C.bernoulli(n+1, a))/(n+1)).expand()
+            elif a.is_Integer and a >= 1:
+                if n == -1:
+                    return C.harmonic(b) - C.harmonic(a - 1)
+                else:
+                    return C.harmonic(b, abs(n)) - C.harmonic(a - 1, abs(n))
 
     # Geometric terms
     c1 = C.Wild('c1', exclude=[i])

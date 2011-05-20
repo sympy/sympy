@@ -36,7 +36,7 @@ class gamma(Function):
                 return S.Infinity
             elif arg.is_Integer:
                 if arg.is_positive:
-                    return C.Factorial(arg-1)
+                    return C.factorial(arg-1)
                 else:
                     return S.ComplexInfinity
             elif arg.is_Rational:
@@ -234,7 +234,7 @@ class polygamma(Function):
                             if n is S.Zero:
                                 return -S.EulerGamma + C.harmonic(z-1, 1)
                             elif n.is_odd:
-                                return (-1)**(n+1)*C.Factorial(n)*zeta(n+1, z)
+                                return (-1)**(n+1)*C.factorial(n)*zeta(n+1, z)
 
 
     def _eval_expand_func(self, deep=True, **hints):
@@ -254,7 +254,7 @@ class polygamma(Function):
                         tail = Add(*[C.Pow(z - i, e)  for i in xrange(1, int(coeff) + 1)])
                     else:
                         tail = -Add(*[C.Pow(z + i, e)  for i in xrange(0, int(-coeff))])
-                    return polygamma(n, z - coeff) + (-1)**n*C.Factorial(n)*tail
+                    return polygamma(n, z - coeff) + (-1)**n*C.factorial(n)*tail
 
             elif z.is_Mul:
                 coeff, z = z.as_two_terms()
@@ -268,7 +268,7 @@ class polygamma(Function):
         return polygamma(n, z)
 
     def _eval_rewrite_as_zeta(self, n, z):
-        return (-1)**(n+1)*C.Factorial(n)*zeta(n+1, z-1)
+        return (-1)**(n+1)*C.factorial(n)*zeta(n+1, z-1)
 
 class loggamma(Function):
 

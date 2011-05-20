@@ -494,6 +494,8 @@ def test_replace():
     assert cos(x).replace(cos, sin, map=True) == (sin(x), {cos(x): sin(x)})
     assert sin(x).replace(cos, sin) == sin(x)
 
+    assert (y*sin(x)).replace(sin, lambda expr: sin(expr)/y) == sin(x)
+
 def test_find():
     expr = (x + y + 2 + sin(3*x))
 

@@ -244,7 +244,7 @@ class sin(TrigonometricFunction):
                 p = previous_terms[-2]
                 return -p * x**2 / (n*(n-1))
             else:
-                return (-1)**(n//2) * x**(n)/C.Factorial(n)
+                return (-1)**(n//2) * x**(n)/C.factorial(n)
 
     def _eval_rewrite_as_exp(self, arg):
         exp, I = C.exp, S.ImaginaryUnit
@@ -466,7 +466,7 @@ class cos(TrigonometricFunction):
                 p = previous_terms[-2]
                 return -p * x**2 / (n*(n-1))
             else:
-                return (-1)**(n//2)*x**(n)/C.Factorial(n)
+                return (-1)**(n//2)*x**(n)/C.factorial(n)
 
     def _eval_rewrite_as_exp(self, arg):
         exp, I = C.exp, S.ImaginaryUnit
@@ -663,7 +663,7 @@ class tan(TrigonometricFunction):
             a, b = ((n-1)//2), 2**(n+1)
 
             B = C.bernoulli(n+1)
-            F = C.Factorial(n+1)
+            F = C.factorial(n+1)
 
             return (-1)**a * b*(b-1) * B/F * x**n
 
@@ -841,7 +841,7 @@ class cot(TrigonometricFunction):
             x = sympify(x)
 
             B = C.bernoulli(n+1)
-            F = C.Factorial(n+1)
+            F = C.factorial(n+1)
 
             return (-1)**((n+1)//2) * 2**(n+1) * B/F * x**n
 
@@ -991,7 +991,7 @@ class asin(Function):
             else:
                 k = (n - 1) // 2
                 R = C.RisingFactorial(S.Half, k)
-                F = C.Factorial(k)
+                F = C.factorial(k)
                 return R / F * x**n / n
 
     def _eval_as_leading_term(self, x):
@@ -1080,7 +1080,7 @@ class acos(Function):
             else:
                 k = (n - 1) // 2
                 R = C.RisingFactorial(S.Half, k)
-                F = C.Factorial(k)
+                F = C.factorial(k)
                 return -R / F * x**n / n
 
     def _eval_as_leading_term(self, x):

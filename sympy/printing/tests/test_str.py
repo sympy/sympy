@@ -71,7 +71,7 @@ def test_EulerGamma():
 def test_Exp():
     assert str(E) == "E"
 
-def test_Factorial():
+def test_factorial():
     n = Symbol('n', integer=True)
     assert str(factorial(-2)) == "0"
     assert str(factorial(0)) == "1"
