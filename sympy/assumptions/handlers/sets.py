@@ -1,12 +1,12 @@
 """
-Handlers for keys related to set membership: integer, rational, etc.
+Handlers for predicates related to set membership: integer, rational, etc.
 """
 from sympy.assumptions import Q, ask
 from sympy.assumptions.handlers import CommonHandler
 
 class AskIntegerHandler(CommonHandler):
     """
-    Handler for key 'integer'
+    Handler for Q.integer
     Test that an expression belongs to the field of integer numbers
     """
 
@@ -26,7 +26,7 @@ class AskIntegerHandler(CommonHandler):
         """
         if expr.is_number:
             return AskIntegerHandler._number(expr, assumptions)
-        return test_closed_group(expr, assumptions, 'integer')
+        return test_closed_group(expr, assumptions, Q.integer)
 
     @staticmethod
     def Mul(expr, assumptions):
@@ -102,7 +102,7 @@ class AskIntegerHandler(CommonHandler):
 
 class AskRationalHandler(CommonHandler):
     """
-    Handler for key 'rational'
+    Handler for Q.rational
     Test that an expression belongs to the field of rational numbers
     """
 
@@ -116,7 +116,7 @@ class AskRationalHandler(CommonHandler):
         if expr.is_number:
             if expr.as_real_imag()[1]:
                 return False
-        return test_closed_group(expr, assumptions, 'rational')
+        return test_closed_group(expr, assumptions, Q.rational)
 
     Mul = Add
 
@@ -175,7 +175,7 @@ class AskIrrationalHandler(CommonHandler):
 
 class AskRealHandler(CommonHandler):
     """
-    Handler for key 'real'
+    Handler for Q.real
     Test that an expression belongs to the field of real numbers
     """
 
@@ -191,7 +191,7 @@ class AskRealHandler(CommonHandler):
         """
         if expr.is_number:
             return AskRealHandler._number(expr, assumptions)
-        return test_closed_group(expr, assumptions, 'real')
+        return test_closed_group(expr, assumptions, Q.real)
 
     @staticmethod
     def Mul(expr, assumptions):
@@ -282,14 +282,14 @@ class AskRealHandler(CommonHandler):
 
 class AskExtendedRealHandler(AskRealHandler):
     """
-    Handler for key 'extended_real'
+    Handler for Q.extended_real
     Test that an expression belongs to the field of extended real numbers,
     that is real numbers union {Infinity, -Infinity}
     """
 
     @staticmethod
     def Add(expr, assumptions):
-        return test_closed_group(expr, assumptions, 'extended_real')
+        return test_closed_group(expr, assumptions, Q.extended_real)
 
     Mul, Pow = Add, Add
 
@@ -303,13 +303,13 @@ class AskExtendedRealHandler(AskRealHandler):
 
 class AskComplexHandler(CommonHandler):
     """
-    Handler for key 'complex'
+    Handler for Q.complex
     Test that an expression belongs to the field of complex numbers
     """
 
     @staticmethod
     def Add(expr, assumptions):
-        return test_closed_group(expr, assumptions, 'complex')
+        return test_closed_group(expr, assumptions, Q.complex)
 
     Mul, Pow = Add, Add
 
@@ -341,7 +341,7 @@ class AskComplexHandler(CommonHandler):
 
 class AskImaginaryHandler(CommonHandler):
     """
-    Handler for key 'imaginary'
+    Handler for Q.imaginary
     Test that an expression belongs to the field of imaginary numbers,
     that is, numbers in the form x*I, where x is real
     """
@@ -408,19 +408,19 @@ class AskImaginaryHandler(CommonHandler):
         return True
 
 class AskAlgebraicHandler(CommonHandler):
-    """Handler for 'algebraic' key. """
+    """Handler for Q.algebraic key. """
 
     @staticmethod
     def Add(expr, assumptions):
-        return test_closed_group(expr, assumptions, 'algebraic')
+        return test_closed_group(expr, assumptions, Q.algebraic)
 
     @staticmethod
     def Mul(expr, assumptions):
-        return test_closed_group(expr, assumptions, 'algebraic')
+        return test_closed_group(expr, assumptions, Q.algebraic)
 
     @staticmethod
     def Pow(expr, assumptions):
-        return expr.exp.is_Rational and ask(expr.base, 'algebraic', assumptions)
+        return expr.exp.is_Rational and ask(expr.base, Q.algebraic, assumptions)
 
     @staticmethod
     def Number(expr, assumptions):

@@ -106,8 +106,6 @@ def ask(expr, key=Q.is_true, assumptions=True, context=global_assumptions):
 
     """
     expr = sympify(expr)
-    if isinstance(key, basestring):
-        key = getattr(Q, str(key))
     assumptions = And(assumptions, And(*context))
 
     # direct resolution method, no logic
@@ -169,16 +167,16 @@ def register_handler(key, handler):
     """Register a handler in the ask system. key must be a string and handler a
     class inheriting from AskHandler.
 
-        >>> from sympy.assumptions import register_handler, ask
+        >>> from sympy.assumptions import register_handler, ask, Q
         >>> from sympy.assumptions.handlers import AskHandler
         >>> class MersenneHandler(AskHandler):
         ...     # Mersenne numbers are in the form 2**n + 1, n integer
         ...     @staticmethod
         ...     def Integer(expr, assumptions):
         ...         import math
-        ...         return ask(math.log(expr + 1, 2), 'integer')
+        ...         return ask(math.log(expr + 1, 2), Q.integer)
         >>> register_handler('mersenne', MersenneHandler)
-        >>> ask(7, 'mersenne')
+        >>> ask(7, Q.mersenne)
         True
 
     """
