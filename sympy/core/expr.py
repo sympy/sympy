@@ -202,7 +202,7 @@ class Expr(Basic, EvalfMixin):
         def key(term):
             _, ((re, im), monom, ncpart) = term
             ncpart = [ e.as_tuple_tree() for e in ncpart ]
-            return monom_key(monom), tuple(ncpart), (-re, -im)
+            return monom_key(monom), tuple(ncpart), ((not im, -re), (-re, -im))
 
         return key, reverse
 

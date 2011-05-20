@@ -1005,6 +1005,16 @@ def test_as_ordered_terms():
 
     assert (1 + 4*sqrt(3)*pi*x).as_ordered_terms() == [4*pi*x*sqrt(3), 1]
 
+    assert ( 2 + 3*I).as_ordered_terms() == [ 2,  3*I]
+    assert (-2 + 3*I).as_ordered_terms() == [-2,  3*I]
+    assert ( 2 - 3*I).as_ordered_terms() == [ 2, -3*I]
+    assert (-2 - 3*I).as_ordered_terms() == [-2, -3*I]
+
+    assert ( 4 + 3*I).as_ordered_terms() == [ 4,  3*I]
+    assert (-4 + 3*I).as_ordered_terms() == [-4,  3*I]
+    assert ( 4 - 3*I).as_ordered_terms() == [ 4, -3*I]
+    assert (-4 - 3*I).as_ordered_terms() == [-4, -3*I]
+
 def test_issue_1100():
     # first subs and limit gives NaN
     a = x/y

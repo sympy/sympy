@@ -204,7 +204,7 @@ to ``True``::
 
     >>> factor(f, gaussian=True)
       ⎛    3⋅ⅈ⎞ ⎛    3⋅ⅈ⎞
-    4⋅⎜x - ───⎟⋅⎜x + ───⎟⋅(x - 4⋅ⅈ + 1)⋅(x + 4⋅ⅈ + 1)
+    4⋅⎜x - ───⎟⋅⎜x + ───⎟⋅(x + 1 - 4⋅ⅈ)⋅(x + 1 + 4⋅ⅈ)
       ⎝     2 ⎠ ⎝     2 ⎠
 
 As the result we got a splitting factorization of ``f`` with monic factors
@@ -214,7 +214,7 @@ be computed using more general syntax::
 
     >>> factor(f, extension=I)
       ⎛    3⋅ⅈ⎞ ⎛    3⋅ⅈ⎞
-    4⋅⎜x - ───⎟⋅⎜x + ───⎟⋅(x - 4⋅ⅈ + 1)⋅(x + 4⋅ⅈ + 1)
+    4⋅⎜x - ───⎟⋅⎜x + ───⎟⋅(x + 1 - 4⋅ⅈ)⋅(x + 1 + 4⋅ⅈ)
       ⎝     2 ⎠ ⎝     2 ⎠
 
 Computing with automatic field extensions
