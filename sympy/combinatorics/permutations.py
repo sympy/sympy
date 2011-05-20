@@ -1,7 +1,6 @@
 from sympy.core import Basic
 from sympy.utilities.iterables import rotate_left
 from sympy.polys.polytools import lcm
-from sympy.abc import x
 
 import itertools
 
