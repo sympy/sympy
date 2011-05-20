@@ -50,10 +50,6 @@ html: $(SPHINXBUILDpy)
 	@echo
 	@echo "Build finished. The HTML pages are in _build/html."
 
-spt-printable:
-	mkdir -p _build/html/
-	$(RST2HTML) src/sympy-patches-tutorial.txt > _build/html/spt-printable.html
-
 htmlapi: $(SPHINXBUILDpy)
 	mkdir -p api/.static
 	mkdir -p api/modules

@@ -73,32 +73,28 @@ Intersection of medians
 -----------------------
 ::
 
-    In [1]: from sympy.geometry import *
+    >>> from sympy import Symbol
+    >>> from sympy.geometry import Point, Triangle, intersection
 
-    In [2]: a = Symbol("a")
+    >>> a = Symbol("a")
+    >>> b = Symbol("b")
+    >>> c = Symbol("c")
 
-    In [3]: b = Symbol("b")
+    >>> x = Point(0,0)
+    >>> y = Point(c,0)
+    >>> z = Point(a,b)
+    >>> t = Triangle(x,y,z)
 
-    In [4]: c = Symbol("c")
+    >>> t.area
+    b*c/2
 
-    In [5]: x = Point(0,0)
+    >>> t.medians #doctest: +NORMALIZE_WHITESPACE
+    {Point(a, b): Segment(Point(a, b), Point(c/2, 0)),
+    Point(c, 0): Segment(Point(c, 0), Point(a/2, b/2)),
+    Point(0, 0): Segment(Point(0, 0), Point(a/2 + c/2, b/2))}
 
-    In [6]: y = Point(c,0)
-
-    In [7]: z = Point(a,b)
-
-    In [8]: t = Triangle(x,y,z)
-
-    In [9]: t.area
-    Out[9]: 1/2*c*b
-
-    In [10]: t.medians
-    Out[10]: {Point(c, 0): Segment(Point(1/2*a, 1/2*b), Point(c, 0)), Point(0,
-        0): Segment(Point(1/2*c+1/2*a, 1/2*b), Point(0, 0)), Point(a, b):
-        Segment(Point(1/2*c, 0), Point(a, b))}
-
-    In [11]: intersection(t.medians[x], t.medians[y], t.medians[z])
-    Out[11]: [Point(1/3*c+1/3*a, 1/3*b)]
+    >>> intersection(t.medians[x], t.medians[y], t.medians[z])
+    [Point(a/3 + c/3, b/3)]
 
 An in-depth example: Pappus' Theorem
 ------------------------------------

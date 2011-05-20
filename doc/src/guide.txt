@@ -342,74 +342,75 @@ This is how to create a function of two variables::
 
 Here it's how to define a derivative of the function::
 
-    class my_function(Function):
-        nargs = 1
-
-        def fdiff(self, argindex = 1):
-            return cos(self.args[0])
-
-        @classmethod
-        def eval(cls, arg):
-            arg = sympify(arg)
-            if arg == 0:
-                return sympify(0)
+    >>> from sympy import Function, sympify, cos
+    >>> class my_function(Function):
+    ...     nargs = 1
+    ...
+    ...     def fdiff(self, argindex = 1):
+    ...         return cos(self.args[0])
+    ...
+    ...     @classmethod
+    ...     def eval(cls, arg):
+    ...         arg = sympify(arg)
+    ...         if arg == 0:
+    ...             return sympify(0)
 
 So guess what this ``my_function`` is going to be? Well, it's derivative is
 ``cos`` and the function value at 0 is 0, but let's pretend we don't know::
 
-    In [2]: my_function(x).series(x, 0, 10)
-    Out[2]:
+    >>> from sympy import pprint
+    >>> pprint(my_function(x).series(x, 0, 10))
          3     5     7       9
         x     x     x       x
-    x - ── + ─── - ──── + ────── + O(x**10)
+    x - -- + --- - ---- + ------ + O(x**10)
         6    120   5040   362880
 
 Looks familiar indeed::
 
-    In [3]: sin(x).series(x, 0, 10)
-    Out[3]:
+    >>> from sympy import sin
+    >>> pprint(sin(x).series(x, 0, 10))
          3     5     7       9
         x     x     x       x
-    x - ── + ─── - ──── + ────── + O(x**10)
+    x - -- + --- - ---- + ------ + O(x**10)
         6    120   5040   362880
 
 Let's try some more complicated example. Let's define the derivative in terms of the function itself::
 
-    class what_am_i(Function):
-        nargs = 1
-
-        def fdiff(self, argindex = 1):
-            return 1-what_am_i(self.args[0])**2
-
-        @classmethod
-        def eval(cls, arg):
-            arg = sympify(arg)
-            if arg == 0:
-                return sympify(0)
+    >>> class what_am_i(Function):
+    ...     nargs = 1
+    ...
+    ...     def fdiff(self, argindex = 1):
+    ...         return 1-what_am_i(self.args[0])**2
+    ...
+    ...     @classmethod
+    ...     def eval(cls, arg):
+    ...         arg = sympify(arg)
+    ...         if arg == 0:
+    ...             return sympify(0)
 
 So what is ``what_am_i``?  Let's try it::
 
-    In [4]: what_am_i(x).series(x, 0, 10)
-    Out[4]:
+    >>> pprint(what_am_i(x).series(x, 0, 10))
          3      5       7       9
         x    2*x    17*x    62*x
-    x - ── + ──── - ───── + ───── + O(x**10)
+    x - -- + ---- - ----- + ----- + O(x**10)
         3     15     315     2835
 
 Well, it's ``tanh``::
 
-    In [5]: tanh(x).series(x, 0, 10)
-    Out[5]:
+    >>> from sympy import tanh
+    >>> pprint(tanh(x).series(x, 0, 10))
          3      5       7       9
         x    2*x    17*x    62*x
-    x - ── + ──── - ───── + ───── + O(x**10)
+    x - -- + ---- - ----- + ----- + O(x**10)
         3     15     315     2835
 
 The new functions we just defined are regular SymPy objects, you
 can use them all over SymPy, e.g.::
 
-    In [6]: limit(what_am_i(x)/x, x, 0)
-    Out[6]: 1
+    >>> from sympy import limit
+    >>> limit(what_am_i(x)/x, x, 0)
+    1
 
 
 common tasks
@@ -421,13 +422,13 @@ Please use the same way as is shown below all across SymPy.
 
     >>> from sympy import sign, sin
     >>> from sympy.abc import x, y, z
-    
-    In [1]: e = sign(x**2)
-    In [2]: e.args
-    Out[2]: x**2
 
-    In [3]: e.args[0]
-    Out[3]: x**2
+    >>> e = sign(x**2)
+    >>> e.args
+    (x**2,)
+
+    >>> e.args[0]
+    x**2
 
     >>> (x+y*z).args
     (y*z, x)
@@ -517,9 +518,10 @@ get your patch accepted.
 .. _mailinglist:        http://groups.google.com/group/sympy
 .. _SympyDevelopment:   http://code.google.com/p/sympy/wiki/SympyDevelopment
 
-Please read our excellent :ref:`SymPy Patches Tutorial <patches-tutorial>`
-how to write patches to SymPy, how to work with Git and simply
-how to get your life easier and get started with SymPy.
+Please read our excellent `SymPy Patches Tutorial
+<https://github.com/sympy/sympy/wiki/Development-workflow>` over at our
+wiki for a guide on how to write patches to SymPy, how to work with Git,
+and simply how to get your life easier and get started with SymPy.
 
 
 Improving the docs
