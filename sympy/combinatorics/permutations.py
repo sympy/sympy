@@ -91,10 +91,25 @@ class Permutation(Basic):
         return return_val
 
     def __invert__(self):
-        inv_form = [0] * len(self.args[0])
-        self_form = self.args[0]
-        for i in xrange(len(self.args[0])):
-            inv_form[self_form[i]] = i
+        """
+        Finds the invert of a permutation.
+
+        An invert of a permutation when multiplied by it
+        results in the identity permutation.
+
+        Examples:
+        >>> from sympy.combinatorics.permutations import Permutation
+        >>> p = Permutation([[2,0],[3,1]])
+        >>> ~p
+        Permutation([2, 0, 3, 1])
+        >>> p*(~p) == Permutation([0,1,2,3])
+        True
+        """
+        self_form = self.array_form
+        inv_form = [0] * self_form.size
+
+        for i in xrange(self_form.size):
+            inv_form[self_form.args[0][i]] = i
         return Permutation(inv_form)
 
     def to_array(self):
