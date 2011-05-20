@@ -6,9 +6,8 @@ from sympy.core import (Basic, S, C, Add, Mul, Pow, Rational, Integer,
 
 from sympy.core.numbers import igcd
 
-from sympy.utilities import all, any, flatten, preorder_traversal
+from sympy.utilities import all, any, flatten
 from sympy.functions import gamma, exp, sqrt, log
-from sympy.functions.elementary.trigonometric import TrigonometricFunction
 
 from sympy.simplify.cse_main import cse
 
@@ -1593,6 +1592,10 @@ def simplify(expr, ratio=1.7):
     if isinstance(expr, Atom):
         return expr
 
+    if isinstance(expr, C.Relational):
+        return expr.__class__(simplify(expr.lhs, ratio=ratio),
+                              simplify(expr.rhs, ratio=ratio))
+
     # TODO: Apply different strategies, considering expression pattern:
     # is it a purely rational function? Is there any trigonometric function?...
     # See also https://github.com/sympy/sympy/pull/185.
@@ -1607,17 +1610,11 @@ def simplify(expr, ratio=1.7):
     if not isinstance(expr, Basic): # XXX: temporary hack
         return expr
 
-    traversal = preorder_traversal(expr)
-
-    for subexpr in traversal:
-        if isinstance(subexpr, TrigonometricFunction):
-            traversal.skip()
-            continue
-
-        if not isinstance(subexpr, (Atom, Add, Mul, Pow)):
-            break
-    else:
+    if expr.has(C.TrigonometricFunction):
         expr = trigsimp(expr)
+
+    if expr.has(C.CombinatorialFunction, gamma):
+        expr = combsimp(expr)
 
     expr = powsimp(expr, combine='exp', deep=True)
     numer, denom = expr.as_numer_denom()

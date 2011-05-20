@@ -163,6 +163,12 @@ def test_simplify():
 
     assert simplify(A*B - B*A) == A*B - B*A
 
+def test_simplify_other():
+    assert simplify(sin(x)**2 + cos(x)**2) == 1
+    assert simplify(gamma(x + 1)/gamma(x)) == x
+    assert simplify(sin(x)**2 + cos(x)**2 + factorial(x)/gamma(x)) == 1 + x
+    assert simplify(Eq(sin(x)**2 + cos(x)**2, factorial(x)/gamma(x))) == Eq(1, x)
+
 def test_simplify_ratio():
     # roots of x**3-3*x+5
     roots = ['(5/2 + 21**(1/2)/2)**(1/3)*(1/2 - I*3**(1/2)/2)'
@@ -170,18 +176,17 @@ def test_simplify_ratio():
              '(5/2 + 21**(1/2)/2)**(1/3)*(1/2 + I*3**(1/2)/2)'
              ' + 1/((1/2 + I*3**(1/2)/2)*(5/2 + 21**(1/2)/2)**(1/3))',
              '-1/(5/2 + 21**(1/2)/2)**(1/3) - (5/2 + 21**(1/2)/2)**(1/3)']
+
     for r in roots:
         r = S(r)
         assert count_ops(simplify(r, ratio=1)) <= count_ops(r)
         # If ratio=oo, simplify() is always applied:
         assert simplify(r, ratio=oo) is not r
 
-
 def test_simplify_issue_1308():
     assert simplify(exp(-Rational(1, 2)) + exp(-Rational(3, 2))) == \
         (1 + E)*exp(-Rational(3, 2))
     assert simplify(exp(1)+exp(-exp(1))) == (1 + exp(1 + E))*exp(-E)
-
 
 def test_simplify_fail1():
     x = Symbol('x')
