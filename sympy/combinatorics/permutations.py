@@ -314,9 +314,9 @@ class Permutation(Basic):
     @property
     def inversions(self):
         """
-        Computes the inversions of a permutation.
+        Computes the number of inversions of a permutation.
 
-        An inversion is where i > j but p_{i} < p_{j}.
+        An inversion is where i > j but p[i] < p[j].
 
         Examples:
         >>> from sympy.combinatorics.permutations import Permutation
