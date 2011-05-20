@@ -30,24 +30,151 @@ def add_formulae(formulae):
     # Luke, Y. L. (1969), The Special Functions and Their Approximations,
     # Volume 1, section 6.2
 
-    from sympy import exp, sqrt, cosh, log, asin, atan, I
+    from sympy import (exp, sqrt, cosh, log, asin, atan, I, lowergamma, cos,
+                       atanh, besseli, gamma, erf, pi, sin, besselj)
+
+    # 0F0
     add((), (), exp(z))
+
+    # 1F0
     add((-a, ), (), (1-z)**a)
-    add((a, a - S.Half), (2*a,), (S.Half + sqrt(1 - z)/2)**(1-2*a))
-    add((), (S.Half,), cosh(2*sqrt(z)))
-    add((1, 1), (2,), log(1 - z)/-z)
-    add((S.Half, 1), (S('3/2'),), log((1 + sqrt(z))/(1 - sqrt(z)))/(2*sqrt(z)))
-    add((S.Half, S.Half), (S('3/2'),), asin(sqrt(z))/sqrt(z))
-    add((S.Half - a, 1 - a), (S('3/2'),),
-        ((1 + sqrt(z))**(2*a) - (1 - sqrt(z))**(2*a))/(4*a*sqrt(z)))
 
+    # 2F1
+    addb((a, a - S.Half), (2*a,),
+         Matrix([2**(2*a-1)*(1 + sqrt(1-z))**(1-2*a),
+                 2**(2*a-1)*(1 + sqrt(1-z))**(-2*a)]),
+         Matrix([[1, 0]]),
+         Matrix([[(a-S.Half)*z/(1-z), (S.Half-a)*z/(1-z)],
+                 [a/(1-z), a*(z-2)/(1-z)]]))
+    addb((1, 1), (2,),
+         Matrix([log(1 - z), 1]), Matrix([[-1/z, 0]]),
+         Matrix([[0, z/(z - 1)], [0, 0]]))
+    addb((S.Half, 1), (S('3/2'),),
+         Matrix([log((1 + sqrt(z))/(1 - sqrt(z)))/sqrt(z), 1]),
+         Matrix([[S(1)/2, 0]]),
+         Matrix([[-S(1)/2, 1/(1 - z)], [0, 0]]))
+    addb((S.Half, S.Half), (S('3/2'),),
+         Matrix([asin(sqrt(z))/sqrt(z), 1/sqrt(1 - z)]),
+         Matrix([[1, 0]]),
+         Matrix([[-S(1)/2, S(1)/2], [0, z/(1 - z)/2]]))
     addb((-a, S.Half - a), (S.Half,),
-         Matrix([(1 + sqrt(z))**(2*a), (1 - sqrt(z))**(2*a)]),
-         Matrix([[S.Half, S.Half]]),
-         diag(a*sqrt(z)/(1 + sqrt(z)), -a*sqrt(z)/(1 - sqrt(z))))
+         Matrix([(1 + sqrt(z))**(2*a) + (1 - sqrt(z))**(2*a),
+                 sqrt(z)*(1 + sqrt(z))**(2*a-1)
+                 - sqrt(z)*(1 - sqrt(z))**(2*a-1)]),
+         Matrix([[S.Half, 0]]),
+         Matrix([[0, a], [z*(2*a-1)/2/(1-z), S.Half - z*(2*a-1)/(1-z)]]))
 
-    # This reduces to a lower order formula.
-    #add((a + 1, 2*a), (a,), (1 + z)*(1 - z)**(-2*a - 1))
+    # A. P. Prudnikov, Yu. A. Brychkov and O. I. Marichev (1990).
+    # Integrals and Series: More Special Functions, Vol. 3,.
+    # Gordon and Breach Science Publisher
+    add([a, -a], [S.Half], cos(2*a*asin(sqrt(z))))
+    addb([1, 1], [3*S.Half],
+         Matrix([asin(sqrt(z))/sqrt(z*(1-z)), 1]), Matrix([[1, 0]]),
+         Matrix([[(z - S.Half)/(1 - z), 1/(1 - z)/2], [0, 0]]))
+
+    # 3F2
+    addb([-S.Half, 1, 1], [S.Half, 2],
+         Matrix([sqrt(z)*atanh(sqrt(z)), log(1 - z), 1]),
+         Matrix([[-S(2)/3, -S(1)/(3*z), S(2)/3]]),
+         Matrix([[S(1)/2, 0, z/(1 - z)/2],
+                 [0, 0, z/(z - 1)],
+                 [0, 0, 0]]))
+    # actually the formula for 3/2 is much nicer ...
+    addb([-S.Half, 1, 1], [2, 2],
+         Matrix([sqrt(1 - z), log(sqrt(1 - z)/2 + S.Half), 1]),
+         Matrix([[S(4)/9 - 16/(9*z), 4/(3*z), 16/(9*z)]]),
+         Matrix([[z/2/(z - 1), 0, 0], [1/(2*(z - 1)), 0, S.Half], [0, 0, 0]]))
+
+    # 1F1
+    addb([1], [b], Matrix([z**(1 - b) * exp(z) * lowergamma(b - 1, z), 1]),
+         Matrix([[b - 1, 0]]),Matrix([[1 - b + z, 1], [0, 0]]))
+    addb([a], [2*a],
+         Matrix([z**(S.Half - a)*exp(z/2)*besseli(a - S.Half, z/2)
+                 * gamma(a + S.Half)/4**(S.Half - a),
+                 z**(S.Half - a)*exp(z/2)*besseli(a + S.Half, z/2)
+                 * gamma(a + S.Half)/4**(S.Half - a)]),
+         Matrix([[1, 0]]),
+         Matrix([[z/2, z/2], [z/2, (z/2 - 2*a)]]))
+    add([-S.Half], [S.Half], exp(z) - sqrt(pi*z)*(-I)*erf(I*sqrt(z)))
+
+    # 2F2
+    addb([S.Half, a], [S(3)/2, a + 1],
+         Matrix([a/(2*a - 1)*(-I)*sqrt(pi/z)*erf(I*sqrt(z)),
+                 a/(2*a - 1)*(-z)**(-a)*lowergamma(a, -z), a/(2*a - 1)*exp(z)]),
+         Matrix([[1, -1, 0]]),
+         Matrix([[-S.Half, 0, 1], [0, -a, 1], [0, 0, z]]))
+
+    # 0F1
+    add((), (S.Half,), cosh(2*sqrt(z)))
+    addb([], [b],
+         Matrix([gamma(b)*z**((1-b)/2)*besseli(b-1, 2*sqrt(z)),
+                 gamma(b)*z**(1 - b/2)*besseli(b  , 2*sqrt(z))]),
+         Matrix([[1, 0]]), Matrix([[0, 1], [z, (1-b)]]))
+
+    # 0F3
+    x = 4*z**(S(1)/4)
+    def fp(a,z): return besseli(a, x) + besselj(a, x)
+    def fm(a,z): return besseli(a, x) - besselj(a, x)
+    addb([], [S.Half, a, a+S.Half],
+         Matrix([fp(2*a - 1, z), fm(2*a, z)*z**(S(1)/4),
+                 fm(2*a - 1, z)*z**(S(1)/2), fp(2*a, z)*z**(S(3)/4)])
+           * 2**(-2*a)*gamma(2*a)*z**((1-2*a)/4),
+         Matrix([[1, 0, 0, 0]]),
+         Matrix([[0, 1, 0, 0],
+                 [0, S(1)/2 - a, 1, 0],
+                 [0, 0, S(1)/2, 1],
+                 [z, 0, 0, 1 - a]]))
+    x = 2*(-4*z)**(S(1)/4)
+    addb([], [a, a + S.Half, 2*a],
+         (2*sqrt(-z))**(1-2*a)*gamma(2*a)**2 *
+         Matrix([besselj(2*a-1, x)*besseli(2*a-1, x),
+                 x*(besseli(2*a, x)*besselj(2*a-1, x)
+                    - besseli(2*a-1, x)*besselj(2*a, x)),
+                 x**2*besseli(2*a, x)*besselj(2*a, x),
+                 x**3*(besseli(2*a,x)*besselj(2*a-1,x)
+                       + besseli(2*a-1, x)*besselj(2*a, x))]),
+         Matrix([[1, 0, 0, 0]]),
+         Matrix([[0, S(1)/4, 0, 0],
+                 [0, (1-2*a)/2, -S(1)/2, 0],
+                 [0, 0, 1-2*a, S(1)/4],
+                 [-32*z, 0, 0, 1-a]]))
+
+    # 1F2
+    addb([a], [a - S.Half, 2*a],
+         Matrix([z**(S.Half - a)*besseli(a-S.Half, sqrt(z))**2,
+                 z**(1-a)*besseli(a-S.Half, sqrt(z))
+                         *besseli(a-S(3)/2, sqrt(z)),
+                 z**(S(3)/2-a)*besseli(a-S(3)/2, sqrt(z))**2]),
+         Matrix([[-gamma(a + S.Half)**2/4**(S.Half - a),
+                 2*gamma(a - S.Half)*gamma(a + S.Half)/4**(1 - a),
+                 0]]),
+         Matrix([[1 - 2*a, 1, 0], [z/2, S.Half - a, S.Half], [0, z, 0]]))
+    addb([S.Half], [b, 2 - b],
+         pi*(1-b)/sin(pi*b) *
+         Matrix([besseli(1-b, sqrt(z))*besseli(b-1, sqrt(z)),
+                 sqrt(z)*(besseli(-b, sqrt(z))*besseli(b-1, sqrt(z))
+                          + besseli(1-b, sqrt(z))*besseli(b, sqrt(z))),
+                 besseli(-b, sqrt(z))*besseli(b, sqrt(z))]),
+         Matrix([[1, 0, 0]]),
+         Matrix([[b-1, S(1)/2, 0],
+                 [z, 0, z],
+                 [0, S(1)/2, -b]]))
+
+    # 2F3
+    # XXX with this five-parameter formula is pretty slow with the current
+    #     Formula.find_instantiations (creates 2!*3!*3**(2+3) ~ 3000
+    #     instantiations ... But it's not too bad.
+    addb([a, a + S.Half], [2*a, b, 2*a - b + 1],
+         gamma(b)*gamma(2*a - b + 1) * (sqrt(z)/2)**(1-2*a) *
+         Matrix([besseli(b-1, sqrt(z))*besseli(2*a-b, sqrt(z)),
+                 sqrt(z)*besseli(b, sqrt(z))*besseli(2*a-b, sqrt(z)),
+                 sqrt(z)*besseli(b-1, sqrt(z))*besseli(2*a-b+1, sqrt(z)),
+                 besseli(b, sqrt(z))*besseli(2*a-b+1, sqrt(z))]),
+         Matrix([[1, 0, 0, 0]]),
+         Matrix([[0, S(1)/2, S(1)/2, 0],
+                 [z/2, 1-b, 0, z/2],
+                 [z/2, 0, b-2*a, z/2],
+                 [0, S(1)/2, S(1)/2, -2*a]]))
 
 
 class Mod1(object):
@@ -485,7 +612,7 @@ class FormulaCollection(object):
 
         >>> from sympy import S
         >>> f.lookup_origin(IndexPair([S('1/4'), S('3/4 + 4')], [S.Half])).closed_form
-        ((-_z + 1)**(1/2)/2 + 1/2)**(1/2)
+        1/(2*(_z**(1/2) + 1)**(17/2)) + 1/(2*(-_z**(1/2) + 1)**(17/2))
         """
         inv = ip.build_invariants()
         sizes = ip.sizes
