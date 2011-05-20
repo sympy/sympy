@@ -46,6 +46,10 @@ class Permutation(Basic):
     def cyclic_form(self):
         return self.to_cycles()
 
+    @property
+    def size(self):
+        return len(self.array_form.args[0])
+
     def __mul__(self, other):
         """
         Routine for multiplication of permutations
