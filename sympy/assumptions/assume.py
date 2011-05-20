@@ -1,4 +1,3 @@
-# doctests are disabled because of issue #1521
 from sympy.logic.boolalg import Boolean, Not
 
 class AssumptionsContext(set):
@@ -9,14 +8,14 @@ class AssumptionsContext(set):
     wrapper to Python's set, so see its documentation for advanced usage.
 
     Examples:
-        >>> from sympy import global_assumptions, Assume, Q
+        >>> from sympy import global_assumptions, AppliedPredicate, Q
         >>> global_assumptions
         AssumptionsContext()
         >>> from sympy.abc import x
-        >>> global_assumptions.add(Assume(x, Q.real))
+        >>> global_assumptions.add(Q.real(x))
         >>> global_assumptions
-        AssumptionsContext([Assume(x, Q.real)])
-        >>> global_assumptions.remove(Assume(x, Q.real))
+        AssumptionsContext([Q.real(x)])
+        >>> global_assumptions.remove(Q.real(x))
         >>> global_assumptions
         AssumptionsContext()
         >>> global_assumptions.clear()
@@ -26,112 +25,111 @@ class AssumptionsContext(set):
     def add(self, *assumptions):
         """Add an assumption."""
         for a in assumptions:
-            assert isinstance(a, Assume), 'can only store instances of Assume'
             super(AssumptionsContext, self).add(a)
 
 global_assumptions = AssumptionsContext()
 
-class Assume(Boolean):
-    """New-style assumptions.
+class AppliedPredicate(Boolean):
+    """The class of expressions resulting from applying a Predicate.
 
-    >>> from sympy import Assume, Q
-    >>> from sympy.abc import x
-    >>> Assume(x, Q.integer)
-    Assume(x, Q.integer)
-    >>> Assume(x, Q.integer, False)
-    Not(Assume(x, Q.integer))
-    >>> Assume( x > 1 )
-    Assume(1 < x, Q.is_true)
+    >>> from sympy import Q, Symbol
+    >>> x = Symbol('x')
+    >>> Q.integer(x)
+    Q.integer(x)
+    >>> type(Q.integer(x))
+    <class 'sympy.assumptions.assume.AppliedPredicate'>
 
     """
-    def __new__(cls, expr, predicate=None, value=True):
-        from sympy import Q
-        if predicate is None:
-            predicate = Q.is_true
-        elif not isinstance(predicate, Predicate):
-            key = str(predicate)
-            try:
-                predicate = getattr(Q, key)
-            except AttributeError:
-                predicate = Predicate(key)
-        if value:
-            return Boolean.__new__(cls, expr, predicate)
-        else:
-            return Not(Boolean.__new__(cls, expr, predicate))
+    __slots__ = []
+
+    def __new__(cls, predicate, arg):
+        return Boolean.__new__(cls, predicate, arg)
 
     is_Atom = True # do not attempt to decompose this
 
     @property
-    def expr(self):
+    def arg(self):
         """
         Return the expression used by this assumption.
 
         Examples:
-            >>> from sympy import Assume, Q
-            >>> from sympy.abc import x
-            >>> a = Assume(x+1, Q.integer)
-            >>> a.expr
+            >>> from sympy import Q, Symbol
+            >>> x = Symbol('x')
+            >>> a = Q.integer(x + 1)
+            >>> a.arg
             1 + x
-
-        """
-        return self._args[0]
-
-    @property
-    def key(self):
-        """
-        Return the key used by this assumption.
-        It is a string, e.g. 'integer', 'rational', etc.
-
-        Examples:
-            >>> from sympy import Assume, Q
-            >>> from sympy.abc import x
-            >>> a = Assume(x, Q.integer)
-            >>> a.key
-            Q.integer
 
         """
         return self._args[1]
 
+    @property
+    def args(self):
+        return self._args[1:]
+
+    @property
+    def func(self):
+        return self._args[0]
+
     def __eq__(self, other):
-        if type(other) == Assume:
+        if type(other) is AppliedPredicate:
             return self._args == other._args
         return False
 
     def __hash__(self):
-        return super(Assume, self).__hash__()
+        return super(AppliedPredicate, self).__hash__()
 
 def eliminate_assume(expr, symbol=None):
     """
     Convert an expression with assumptions to an equivalent with all assumptions
     replaced by symbols.
 
-    Assume(x, integer=True) --> integer
-    Assume(x, integer=False) --> ~integer
+    Q.integer(x) --> Q.integer
+    ~Q.integer(x) --> ~Q.integer
 
     Examples:
         >>> from sympy.assumptions.assume import eliminate_assume
-        >>> from sympy import Assume, Q
+        >>> from sympy import Q
         >>> from sympy.abc import x
-        >>> eliminate_assume(Assume(x, Q.positive))
+        >>> eliminate_assume(Q.positive(x))
         Q.positive
-        >>> eliminate_assume(Assume(x, Q.positive, False))
+        >>> eliminate_assume(~Q.positive(x))
         Not(Q.positive)
 
     """
-    if expr.func is Assume:
+    if symbol is not None:
+        props = expr.atoms(AppliedPredicate)
+        if props and symbol not in [prop.arg for prop in props]:
+            return
+    if expr.__class__ is AppliedPredicate:
         if symbol is not None:
-            if not expr.expr.has(symbol):
+            if not expr.arg.has(symbol):
                 return
-        return expr.key
-
-    if expr.func is Predicate:
-        return expr
-
-    # To be used when Python 2.4 compatability is no longer required
-    #return expr.func(*[x for x in (eliminate_assume(arg, symbol) for arg in expr.args) if x is not None])
-    return expr.func(*filter(lambda x: x is not None, [eliminate_assume(arg, symbol) for arg in expr.args]))
+        return expr.func
+    return expr.func(*filter(lambda x: x is not None,
+                [eliminate_assume(arg, symbol) for arg in expr.args]))
 
 class Predicate(Boolean):
+    """A predicate is a function that returns a boolean value.
+
+    Predicates merely wrap their argument and remain unevaluated:
+
+        >>> from sympy import Q, ask, Symbol
+        >>> x = Symbol('x')
+        >>> Q.prime(7)
+        Q.prime(7)
+
+    To obtain the truth value of an expression containing predicates, use
+    the function `ask`:
+
+        >>> ask(Q.prime(7))
+        True
+
+    The tautological predicate `Q.is_true` can be used to wrap other objects:
+
+        >>> Q.is_true(x > 1)
+        Q.is_true(1 < x)
+
+    """
 
     is_Atom = True
 
@@ -148,7 +146,7 @@ class Predicate(Boolean):
         return (self.name,)
 
     def __call__(self, expr):
-        return Assume(expr, self.name)
+        return AppliedPredicate(self, expr)
 
     def add_handler(self, handler):
         self.handlers.append(handler)

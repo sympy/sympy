@@ -3,7 +3,7 @@
 from sympy.core import Symbol, Interval, Union
 from sympy.core.relational import Relational, Eq, Ge, Lt
 from sympy.core.singleton import S
-from sympy.assumptions import ask, Assume
+from sympy.assumptions import ask, AppliedPredicate
 from sympy.functions import re, im, Abs
 from sympy.logic import And, Or
 from sympy.polys import Poly
@@ -236,7 +236,7 @@ def reduce_inequalities(inequalities, assume=True):
             else:
                 continue
 
-        if isinstance(inequality, Assume):
+        if isinstance(inequality, AppliedPredicate):
             extra_assume.append(inequality)
             continue
 

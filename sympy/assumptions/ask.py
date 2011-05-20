@@ -2,7 +2,7 @@
 import inspect
 from sympy.core import sympify
 from sympy.utilities.source import get_class
-from sympy.assumptions import global_assumptions, Assume, Predicate
+from sympy.assumptions import global_assumptions, Predicate
 from sympy.assumptions.assume import eliminate_assume
 from sympy.logic.boolalg import to_cnf, And, Not, Or, Implies, Equivalent
 from sympy.logic.inference import satisfiable
@@ -36,6 +36,8 @@ def eval_predicate(predicate, expr, assumptions=True):
 
     This uses only direct resolution methods, not logical inference.
     """
+    if not isinstance(predicate, Predicate):
+        return eval_predicate(Q.is_true, predicate(expr), assumptions)
     res, _res = None, None
     mro = inspect.getmro(type(expr))
     for handler in predicate.handlers:
@@ -59,7 +61,7 @@ def eval_predicate(predicate, expr, assumptions=True):
     return res
 
 
-def ask(expr, key, assumptions=True, context=global_assumptions, disable_preprocessing=False):
+def ask(expr, key=Q.is_true, assumptions=True, context=global_assumptions, disable_preprocessing=False):
     """
     Method for inferring properties about objects.
 
@@ -72,25 +74,25 @@ def ask(expr, key, assumptions=True, context=global_assumptions, disable_preproc
             where expression is any SymPy expression
 
     **Examples**
-        >>> from sympy import ask, Q, Assume, pi
+        >>> from sympy import ask, Q, pi
         >>> from sympy.abc import x, y
         >>> ask(pi, Q.rational)
         False
-        >>> ask(x*y, Q.even, Assume(x, Q.even) & Assume(y, Q.integer))
+        >>> ask(x*y, Q.even, Q.even(x) & Q.integer(y))
         True
-        >>> ask(x*y, Q.prime, Assume(x, Q.integer) &  Assume(y, Q.integer))
+        >>> ask(x*y, Q.prime, Q.integer(x) &  Q.integer(y))
         False
 
     **Remarks**
         Relations in assumptions are not implemented (yet), so the following
         will not give a meaningful result.
-        >> ask(x, positive=True, Assume(x>0))
+        >> ask(x, Q.positive, Q.is_true(x > 0))
         It is however a work in progress and should be available before
         the official release
 
     """
     expr = sympify(expr)
-    if type(key) is not Predicate:
+    if isinstance(key, basestring):
         key = getattr(Q, str(key))
     assumptions = And(assumptions, And(*context))
 
@@ -129,7 +131,8 @@ def ask(expr, key, assumptions=True, context=global_assumptions, disable_preproc
                         return False
                     if Not(key) in known_facts_dict[assum]:
                         return True
-        elif assumptions.func is Not and assumptions.args[0].is_Atom:
+        elif (isinstance(key, Predicate) and
+                assumptions.func is Not and assumptions.args[0].is_Atom):
             if assumptions.args[0] in known_facts_dict[key]:
                 return False
 
@@ -193,7 +196,7 @@ def compute_known_facts():
         mapping[key] = set([key])
         for other_key in known_facts_keys:
             if other_key != key:
-                if ask(x, other_key, Assume(x, key, True), disable_preprocessing=True):
+                if ask(x, other_key, key(x), disable_preprocessing=True):
                     mapping[key].add(other_key)
     fact_string += "\n# -{ Known facts in compressed sets }-\n"
     fact_string += "known_facts_dict = {\n    "

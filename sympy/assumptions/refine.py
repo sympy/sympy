@@ -12,11 +12,11 @@ def refine(expr, assumptions=True):
 
     Examples::
 
-        >>> from sympy import refine, sqrt, Assume, Q
+        >>> from sympy import refine, sqrt, Q
         >>> from sympy.abc import x
-        >>> refine(sqrt(x**2), Assume(x, Q.real))
+        >>> refine(sqrt(x**2), Q.real(x))
         Abs(x)
-        >>> refine(sqrt(x**2), Assume(x, Q.positive))
+        >>> refine(sqrt(x**2), Q.positive(x))
         x
 
     """
@@ -38,13 +38,13 @@ def refine_abs(expr, assumptions):
 
     Examples::
 
-    >>> from sympy import Symbol, Assume, Q, refine, Abs
+    >>> from sympy import Symbol, Q, refine, Abs
     >>> from sympy.assumptions.refine import refine_abs
     >>> from sympy.abc import x
-    >>> refine_abs(Abs(x), Assume(x, Q.real))
-    >>> refine_abs(Abs(x), Assume(x, Q.positive))
+    >>> refine_abs(Abs(x), Q.real(x))
+    >>> refine_abs(Abs(x), Q.positive(x))
     x
-    >>> refine_abs(Abs(x), Assume(x, Q.negative))
+    >>> refine_abs(Abs(x), Q.negative(x))
     -x
 
     """
@@ -60,22 +60,22 @@ def refine_Pow(expr, assumptions):
     """
     Handler for instances of Pow.
 
-    >>> from sympy import Symbol, Assume, Q
+    >>> from sympy import Symbol, Q
     >>> from sympy.assumptions.refine import refine_Pow
     >>> from sympy.abc import x,y,z
-    >>> refine_Pow((-1)**x, Assume(x, Q.real))
-    >>> refine_Pow((-1)**x, Assume(x, Q.even))
+    >>> refine_Pow((-1)**x, Q.real(x))
+    >>> refine_Pow((-1)**x, Q.even(x))
     1
-    >>> refine_Pow((-1)**x, Assume(x, Q.odd))
+    >>> refine_Pow((-1)**x, Q.odd(x))
     -1
 
     For powers of -1, even parts of the exponent can be simplified:
 
-    >>> refine_Pow((-1)**(x+y), Assume(x, Q.even))
+    >>> refine_Pow((-1)**(x+y), Q.even(x))
     (-1)**y
-    >>> refine_Pow((-1)**(x+y+z), Assume(x, Q.odd) & Assume(z, Q.odd))
+    >>> refine_Pow((-1)**(x+y+z), Q.odd(x) & Q.odd(z))
     (-1)**y
-    >>> refine_Pow((-1)**(x+y+2), Assume(x, Q.odd))
+    >>> refine_Pow((-1)**(x+y+2), Q.odd(x))
     (-1)**(1 + y)
     >>> refine_Pow((-1)**(x+3), True)
     (-1)**(1 + x)
@@ -132,11 +132,11 @@ def refine_exp(expr, assumptions):
     """
     Handler for exponential function.
 
-    >>> from sympy import Symbol, Assume, Q, exp, I, pi
+    >>> from sympy import Symbol, Q, exp, I, pi
     >>> from sympy.assumptions.refine import refine_exp
     >>> from sympy.abc import x
-    >>> refine_exp(exp(pi*I*2*x), Assume(x, Q.real))
-    >>> refine_exp(exp(pi*I*2*x), Assume(x, Q.integer))
+    >>> refine_exp(exp(pi*I*2*x), Q.real(x))
+    >>> refine_exp(exp(pi*I*2*x), Q.integer(x))
     1
 
     """
