@@ -681,9 +681,14 @@ def classify_ode(eq, func, dict=False):
             r['y'] = y
             r[d] = r[d].subs(f(x),y)
             r[e] = r[e].subs(f(x),y)
-            if r[d] != 0 and simplify(r[d].diff(y)) == simplify(r[e].diff(x)):
-                matching_hints["1st_exact"] = r
-                matching_hints["1st_exact_Integral"] = r
+            try:
+                if r[d] != 0 and simplify(r[d].diff(y)) == simplify(r[e].diff(x)):
+                    matching_hints["1st_exact"] = r
+                    matching_hints["1st_exact_Integral"] = r
+            except NotImplementedError:
+                # Differentiating the coefficients might fail because of things
+                # like f(2*x).diff(x).  See issue 1525 and issue 1620.
+                pass
 
         # This match is used for several cases below; we now collect on
         # f(x) so the matching works.
@@ -1662,7 +1667,7 @@ def ode_1st_homogeneous_coeff_subs_dep_div_indep(eq, func, order, match):
     If the coefficients P and Q in the  differential equation above are
     homogeneous functions of the same order, then it can be shown that
     the substitution y = u1*x (u1 = y/x) will turn the differential
-    equation into an equation separable in the variables x and u.  if
+    equation into an equation separable in the variables x and u.  If
     h(u1) is the function that results from making the substitution
     u1 = f(x)/x on P(x, f(x)) and g(u2) is the function that results
     from the substitution on Q(x, f(x)) in the differential equation
@@ -1743,7 +1748,7 @@ def ode_1st_homogeneous_coeff_subs_indep_div_dep(eq, func, order, match):
     If the coefficients P and Q in the  differential equation above are
     homogeneous functions of the same order, then it can be shown that
     the substitution x = u2*y (u2 = x/y) will turn the differential
-    equation into an equation separable in the variables y and u2.  if
+    equation into an equation separable in the variables y and u2.  If
     h(u2) is the function that results from making the substitution
     u2 = x/f(x) on P(x, f(x)) and g(u2) is the function that results
     from the substitution on Q(x, f(x)) in the differential equation
