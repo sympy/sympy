@@ -85,15 +85,10 @@ class Permutation(Basic):
         >>> p**4
         Permutation([0, 1, 2, 3])
         """
-        val = self
-        if val.is_CyclicForm:
-            val = val.to_array()
-        ref = val
-        for i in xrange(n-1):
-            val = val * ref
+        return_val = reduce(lambda x, y: x*y, [self]*n)
         if self.is_CyclicForm:
-            return val.to_cycles()
-        return val
+            return return_val.cyclic_form
+        return return_val
 
     def __invert__(self):
         inv_form = [0] * len(self.args[0])
