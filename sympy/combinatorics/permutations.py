@@ -30,7 +30,7 @@ class Permutation(Basic):
 
     Permutations are commonly denoted in lexicographic or transposition order.
 
-    [1] Skiena, S. "Permutations." §1.1 in Implementing Discrete Mathematics:
+    [1] Skiena, S. 'Permutations.' 1.1 in Implementing Discrete Mathematics
         Combinatorics and Graph Theory with Mathematica.
         Reading, MA: Addison-Wesley, pp. 3-16, 1990.
     [2] Knuth, D. E. The Art of Computer Programming, Vol. 4: Combinatorial Algorithms,
