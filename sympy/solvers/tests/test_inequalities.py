@@ -4,21 +4,17 @@ from sympy.solvers.inequalities import (
     reduce_poly_inequalities,
     reduce_inequalities)
 
-from sympy import (
-    S, Symbol, Interval, Eq, Ne, Lt, Le, Gt, Ge, Or, And, pi, oo,
-    sqrt, Q, Assume, global_assumptions, re, im, sin)
+from sympy import (S, Symbol, Interval, Eq, Ne, Lt, Le, Gt, Ge, Or, And, pi, oo,
+    sqrt, Q, global_assumptions, re, im, sin)
 
 from sympy.utilities.pytest import raises
 from sympy.abc import x, y
 
 inf = oo.evalf()
 
-x_assume = Assume(x, Q.real)
-y_assume = Assume(y, Q.real)
-
 def test_reduce_poly_inequalities_real_interval():
-    global_assumptions.add(x_assume)
-    global_assumptions.add(y_assume)
+    global_assumptions.add(Q.real(x))
+    global_assumptions.add(Q.real(y))
 
     assert reduce_poly_inequalities([[Eq(x**2, 0)]], x, relational=False) == [Interval(0, 0)]
     assert reduce_poly_inequalities([[Le(x**2, 0)]], x, relational=False) == [Interval(0, 0)]
@@ -51,12 +47,12 @@ def test_reduce_poly_inequalities_real_interval():
     assert reduce_poly_inequalities([[Lt(x**2 - 2, 0), Gt(x**2 - 1, 0)]], x, relational=False) == [Interval(-s, -1, True, True), Interval(1, s, True, True)]
     assert reduce_poly_inequalities([[Lt(x**2 - 2, 0), Ne(x**2 - 1, 0)]], x, relational=False) == [Interval(-s, -1, True, True), Interval(-1, 1, True, True), Interval(1, s, True, True)]
 
-    global_assumptions.remove(x_assume)
-    global_assumptions.remove(y_assume)
+    global_assumptions.remove(Q.real(x))
+    global_assumptions.remove(Q.real(y))
 
 def test_reduce_poly_inequalities_real_relational():
-    global_assumptions.add(x_assume)
-    global_assumptions.add(y_assume)
+    global_assumptions.add(Q.real(x))
+    global_assumptions.add(Q.real(y))
 
     assert reduce_poly_inequalities([[Eq(x**2, 0)]], x, relational=True) == Eq(x, 0)
     assert reduce_poly_inequalities([[Le(x**2, 0)]], x, relational=True) == Eq(x, 0)
@@ -79,8 +75,8 @@ def test_reduce_poly_inequalities_real_relational():
     assert reduce_poly_inequalities([[Gt(x**2, 1.0)]], x, relational=True) == Or(Lt(x, -1.0), Lt(1.0, x))
     assert reduce_poly_inequalities([[Ne(x**2, 1.0)]], x, relational=True) == Or(Lt(x, -1.0), And(Lt(-1.0, x), Lt(x, 1.0)), Lt(1.0, x))
 
-    global_assumptions.remove(x_assume)
-    global_assumptions.remove(y_assume)
+    global_assumptions.remove(Q.real(x))
+    global_assumptions.remove(Q.real(y))
 
 def test_reduce_poly_inequalities_complex_relational():
     cond = Eq(im(x), 0)
@@ -107,7 +103,7 @@ def test_reduce_poly_inequalities_complex_relational():
     assert reduce_poly_inequalities([[Ne(x**2, 1.0)]], x, relational=True) == And(Or(Lt(re(x), -1.0), And(Lt(-1.0, re(x)), Lt(re(x), 1.0)), Lt(1.0, re(x))), cond)
 
 def test_reduce_abs_inequalities():
-    real = Assume(x, Q.real)
+    real = Q.real(x)
 
     assert reduce_inequalities(abs(x - 5) < 3, assume=real) == And(Gt(x, 2), Lt(x, 8))
     assert reduce_inequalities(abs(2*x + 3) >= 8, assume=real) == Or(Le(x, -S(11)/2), Ge(x, S(5)/2))
@@ -121,8 +117,8 @@ def test_reduce_inequalities_boolean():
     assert reduce_inequalities([Eq(x**2, 0), False]) == False
 
 def test_reduce_inequalities_assume():
-    assert reduce_inequalities([Le(x**2, 1), Assume(x, Q.real)]) == And(Le(-1, x), Le(x, 1))
-    assert reduce_inequalities([Le(x**2, 1)], Assume(x, Q.real)) == And(Le(-1, x), Le(x, 1))
+    assert reduce_inequalities([Le(x**2, 1), Q.real(x)]) == And(Le(-1, x), Le(x, 1))
+    assert reduce_inequalities([Le(x**2, 1)], Q.real(x)) == And(Le(-1, x), Le(x, 1))
 
 def test_reduce_inequalities_multivariate():
     assert reduce_inequalities([Ge(x**2, 1), Ge(y**2, 1)]) == \

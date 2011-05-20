@@ -50,8 +50,8 @@ class TautologicalHandler(AskHandler):
         return expr
 
     @staticmethod
-    def Assume(expr, assumptions):
-        return ask(expr.expr, expr.key, assumptions)
+    def AppliedPredicate(expr, assumptions):
+        return ask(expr.arg, expr.func, assumptions)
 
     @staticmethod
     def Not(expr, assumptions):

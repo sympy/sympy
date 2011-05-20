@@ -14,9 +14,9 @@ Querying
 ask's optional second argument should be a boolean
 expression involving assumptions about objects in expr. Valid values include:
 
-    * Assume(x, Q.integer)
-    * Assume(x, Q.positive)
-    * Assume(x, Q.integer) & Assume(x, Q.positive)
+    * Q.integer(x)
+    * Q.positive(x)
+    * Q.integer(x) & Q.positive(x)
     * etc.
 
 Q is a class in sympy.assumptions holding valid assumptions.
@@ -31,7 +31,7 @@ clean_global_assumptions()
 
      >>> from sympy import *
      >>> x = Symbol('x')
-     >>> global_assumptions.add(Assume(x, Q.positive))
+     >>> global_assumptions.add(Q.positive(x))
      >>> ask(x, Q.positive)
      True
      >>> global_assumptions.clear()
@@ -52,7 +52,7 @@ Examples::
     >>> x = Symbol('x')
     >>> ask(exp(x), Q.bounded)
     False
-    >>> ask(exp(x), Q.bounded , Assume(x, Q.bounded))
+    >>> ask(exp(x), Q.bounded , Q.bounded(x))
     True
     >>> ask(sin(x), Q.bounded)
     True
@@ -70,9 +70,9 @@ Examples::
     >>> x, y = symbols('x,y')
     >>> ask(x, Q.commutative)
     True
-    >>> ask(x, Q.commutative, Assume(x, Q.commutative, False))
+    >>> ask(x, Q.commutative, ~Q.commutative(x))
     False
-    >>> ask(x*y, Q.commutative, Assume(x, Q.commutative, False))
+    >>> ask(x*y, Q.commutative, ~Q.commutative(x))
     False
 
 
@@ -89,7 +89,7 @@ Examples::
     >>> ask(I, Q.complex)
     True
     >>> x, y = symbols('x,y')
-    >>> ask(x+I*y, Q.complex, Assume(x, Q.real) & Assume(y, Q.real))
+    >>> ask(x+I*y, Q.complex, Q.real(x) & Q.real(y))
     True
 
 
@@ -105,7 +105,7 @@ Examples::
     >>> ask(2, Q.even)
     True
     >>> n = Symbol('n')
-    >>> ask(2*n, Q.even, Assume(n, Q.integer))
+    >>> ask(2*n, Q.even, Q.integer(n))
     True
 
 
@@ -122,7 +122,7 @@ Examples::
     True
     >>> ask(2, Q.extended_real)
     True
-    >>> ask(x, Q.extended_real, Assume(x, Q.real))
+    >>> ask(x, Q.extended_real, Q.real(x))
     True
 
 
@@ -138,7 +138,7 @@ Examples::
     >>> ask(2*I, Q.imaginary)
     True
     >>> x = Symbol('x')
-    >>> ask(x*I, Q.imaginary, Assume(x, Q.real))
+    >>> ask(x*I, Q.imaginary, Q.real(x))
     True
 
 
@@ -153,9 +153,9 @@ Examples::
     >>> ask(1/oo, Q.infinitesimal)
     True
     >>> x, y = symbols('x,y')
-    >>> ask(2*x, Q.infinitesimal, Assume(x, Q.infinitesimal))
+    >>> ask(2*x, Q.infinitesimal, Q.infinitesimal(x))
     True
-    >>> ask(x*y, Q.infinitesimal, Assume(x, Q.infinitesimal) & Assume(y, Q.bounded))
+    >>> ask(x*y, Q.infinitesimal, Q.infinitesimal(x) & Q.bounded(y))
     True
 
 
@@ -172,7 +172,7 @@ Examples::
     >>> ask(sqrt(2), Q.integer)
     False
     >>> x = Symbol('x')
-    >>> ask(x/2, Q.integer, Assume(x, Q.even))
+    >>> ask(x/2, Q.integer, Q.even(x))
     True
 
 
@@ -188,7 +188,7 @@ Examples::
      True
      >>> ask(sqrt(2), Q.irrational)
      True
-     >>> ask(x*sqrt(2), Q.irrational, Assume(x, Q.rational))
+     >>> ask(x*sqrt(2), Q.irrational, Q.rational(x))
      True
 
 
@@ -203,9 +203,9 @@ Examples::
      >>> ask(Rational(3, 4), Q.rational)
      True
      >>> x, y = symbols('x,y')
-     >>> ask(x/2, Q.rational, Assume(x, Q.integer))
+     >>> ask(x/2, Q.rational, Q.integer(x))
      True
-     >>> ask(x/y, Q.rational, Assume(x, Q.integer) & Assume(y, Q.integer))
+     >>> ask(x/y, Q.rational, Q.integer(x) & Q.integer(y))
      True
 
 
@@ -220,7 +220,7 @@ Examples::
      >>> ask(0.3, Q.negative)
      False
      >>> x = Symbol('x')
-     >>> ask(-x, Q.negative, Assume(x, Q.positive))
+     >>> ask(-x, Q.negative, Q.positive(x))
      True
 
 Remarks
@@ -241,7 +241,7 @@ Examples::
      >>> ask(0.3, Q.positive)
      True
      >>> x = Symbol('x')
-     >>> ask(-x, Q.positive, Assume(x, Q.negative))
+     >>> ask(-x, Q.positive, Q.negative(x))
      True
 
 Remarks
@@ -274,7 +274,7 @@ Examples::
     >>> ask(sqrt(2), Q.real)
     True
     >>> x, y = symbols('x,y')
-    >>> ask(x*y, Q.real, Assume(x, Q.real) & Assume(y, Q.real))
+    >>> ask(x*y, Q.real, Q.real(x) & Q.real(y))
     True
 
 
@@ -289,7 +289,7 @@ Examples::
     >>> ask(3, Q.odd)
     True
     >>> n = Symbol('n')
-    >>> ask(2*n + 1, Q.odd, Assume(n, Q.integer))
+    >>> ask(2*n + 1, Q.odd, Q.integer(n))
     True
 
 
@@ -302,7 +302,7 @@ Examples::
 
      >>> from sympy import *
      >>> x = Symbol('x')
-     >>> ask(x, Q.nonzero, Assume(x, Q.positive) | Assume(x, Q.negative))
+     >>> ask(x, Q.nonzero, Q.positive(x) | Q.negative(x))
      True
 
 
