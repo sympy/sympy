@@ -78,6 +78,11 @@ def test_Permutation():
     assert q.runs() == [[4], [2, 3, 5], [0, 6], [1]]
     assert r.runs() == [[3], [2], [1], [0]]
 
+    assert p.get_precedence_distance(q) == q.get_precedence_distance(p)
+    p = Permutation([0, 1, 2, 3])
+    q = Permutation([3, 2, 1, 0])
+    assert p.get_precedence_distance(q) == 6
+
 def test_josephus():
     assert josephus(4, 6, 1) == Permutation([3, 1, 0, 2, 5, 4])
     assert josephus(1, 5, 1).is_Identity

@@ -497,6 +497,37 @@ class Permutation(Basic):
                 m[perm[i], perm[j]] = 1
         return m
 
+    def get_precedence_distance(self, other):
+        """
+        Computes the precedence distance between two permutations.
+
+        Suppose p and p' represent n jobs. The precedence metric
+        counts the number of times a job j is prededed by job i
+        in both p and p'. This metric is commutative.
+
+        Examples:
+        >>> from sympy.combinatorics.permutations import Permutation
+        >>> p = Permutation([2, 0, 4, 3, 1])
+        >>> q = Permutation([3, 1, 2, 4, 0])
+        >>> p.get_precedence_distance(q)
+        7
+        >>> q.get_precedence_distance(p)
+        7
+        """
+        if self.size != other.size:
+            raise ValueError("The permutations must be of the same size")
+        self_prec_mat = self.get_precedence_matrix()
+        other_prec_mat = other.get_precedence_matrix()
+        n_prec = 0
+        for i in xrange(self.size):
+            for j in xrange(self.size):
+                if i == j:
+                    continue
+                if self_prec_mat[i, j] * other_prec_mat[i, j] == 1:
+                    n_prec += 1
+        d = self.size * (self.size - 1)/2 - n_prec
+        return d
+
 def josephus(m, n, s = 1):
     """
     Computes the Josephus permutation for a given number of
