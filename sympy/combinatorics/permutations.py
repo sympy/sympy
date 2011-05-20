@@ -345,6 +345,19 @@ class Permutation(Basic):
 
     @property
     def signature(self):
+        """
+        Gives the signature of the permutation needed to place the
+        elements of the permutation in canonical order.
+
+        Example:
+        >>> from sympy.combinatorics.permutations import Permutation
+        >>> p = Permutation([0,1,2])
+        >>> p.signature
+        1
+        >>> q = Permutation([0,2,1])
+        >>> q.signature
+        -1
+        """
         return (-1)**self.inversions
 
     @property
