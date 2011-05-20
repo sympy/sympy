@@ -61,30 +61,19 @@ def eval_predicate(predicate, expr, assumptions=True):
     return res
 
 
-def eliminate_assume(expr, symbol=None):
+def _extract_facts(expr, symbol):
     """
-    Convert an expression with assumptions to an equivalent with all assumptions
-    replaced by symbols.
+    Helper for ask().
 
-    Q.integer(x) --> Q.integer
-    ~Q.integer(x) --> ~Q.integer
-
-    Examples:
-        >>> from sympy.assumptions.ask import eliminate_assume
-        >>> from sympy import Q
-        >>> from sympy.abc import x
-        >>> eliminate_assume(Q.positive(x))
-        Q.positive
-        >>> eliminate_assume(~Q.positive(x))
-        Not(Q.positive)
-
+    Extracts the facts relevant to the symbol from an assumption.
+    Returns None if there is nothing to extract.
     """
-    if symbol is not None and not expr.has(symbol):
+    if not expr.has(symbol):
         return None
     if isinstance(expr, AppliedPredicate):
         return expr.func
     return expr.func(*filter(lambda x: x is not None,
-                [eliminate_assume(arg, symbol) for arg in expr.args]))
+                [_extract_facts(arg, symbol) for arg in expr.args]))
 
 def ask(expr, key=Q.is_true, assumptions=True, context=global_assumptions):
     """
@@ -132,18 +121,18 @@ def ask(expr, key=Q.is_true, assumptions=True, context=global_assumptions):
     if not expr.is_Atom:
         return
 
-    assumptions = eliminate_assume(assumptions, expr)
-    if assumptions is None or assumptions is True:
+    local_facts = _extract_facts(assumptions, expr)
+    if local_facts is None or local_facts is True:
         return
 
     # See if there's a straight-forward conclusion we can make for the inference
-    if assumptions.is_Atom:
-        if key in known_facts_dict[assumptions]:
+    if local_facts.is_Atom:
+        if key in known_facts_dict[local_facts]:
             return True
-        if Not(key) in known_facts_dict[assumptions]:
+        if Not(key) in known_facts_dict[local_facts]:
             return False
-    elif assumptions.func is And:
-        for assum in assumptions.args:
+    elif local_facts.func is And:
+        for assum in local_facts.args:
             if assum.is_Atom:
                 if key in known_facts_dict[assum]:
                     return True
@@ -155,12 +144,12 @@ def ask(expr, key=Q.is_true, assumptions=True, context=global_assumptions):
                 if Not(key) in known_facts_dict[assum]:
                     return True
     elif (isinstance(key, Predicate) and
-            assumptions.func is Not and assumptions.args[0].is_Atom):
-        if assumptions.args[0] in known_facts_dict[key]:
+            local_facts.func is Not and local_facts.args[0].is_Atom):
+        if local_facts.args[0] in known_facts_dict[key]:
             return False
 
     # Failing all else, we do a full logical inference
-    return ask_direct(key, assumptions)
+    return ask_direct(key, local_facts)
 
 
 def ask_direct(proposition, hypothesis):
