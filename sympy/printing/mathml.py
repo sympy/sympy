@@ -87,8 +87,8 @@ class MathMLPrinter(Printer):
             x.appendChild(self._print(denom))
             return x
 
-        if self.order:
-            terms = sorted(terms, key=Basic.sorted_key)
+        if self.order != 'old':
+            terms = expr._new_rawargs(*terms).as_ordered_factors()
 
         if coeff == 1 and len(terms) == 1:
             return self._print(terms[0])

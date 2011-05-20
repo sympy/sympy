@@ -256,8 +256,7 @@ class Printer(object):
         """A compatibility function for ordering terms in Add. """
         order = order or self.order
 
-        if order is None:
+        if order == 'old':
             return sorted(Add.make_args(expr), Basic._compare_pretty)
         else:
             return expr.as_ordered_terms(order=order)
-
