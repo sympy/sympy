@@ -796,13 +796,26 @@ class Rational(Number):
     def __hash__(self):
         return super(Rational, self).__hash__()
 
-    def factors(self, limit=None, verbose=False):
+    def factors(self, limit=None, use_trial=True,
+                                  use_rho=False,
+                                  use_pm1=False,
+                                  verbose=False):
         """A wrapper to factorint which return factors of self that are
-        smaller than limit (or cheap to compute)."""
+        smaller than limit (or cheap to compute). Special methods of
+        factoring are disabled by default so that only trial division is used.
+        """
         from sympy.ntheory import factorint
 
-        f = factorint(self.p, limit=limit, verbose=verbose).copy()
-        for p, e in factorint(self.q, limit=limit, verbose=verbose).items():
+        f = factorint(self.p, limit=limit,
+                              use_trial=use_trial,
+                              use_rho=use_rho,
+                              use_pm1=use_pm1,
+                              verbose=verbose).copy()
+        for p, e in factorint(self.q, limit=limit,
+                              use_trial=use_trial,
+                              use_rho=use_rho,
+                              use_pm1=use_pm1,
+                              verbose=verbose).items():
             try: f[p] += -e
             except KeyError: f[p] = -e
 

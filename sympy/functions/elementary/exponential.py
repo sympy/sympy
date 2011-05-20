@@ -2,11 +2,12 @@ from sympy.core import C, sympify
 from sympy.core.add import Add
 from sympy.core.function import Lambda, Function, ArgumentIndexError
 from sympy.core.cache import cacheit
+from sympy.core.compatibility import any
 from sympy.core.singleton import S
 from sympy.core.symbol import Wild, Dummy
 from sympy.core.mul import Mul
 
-from sympy.ntheory import multiplicity
+from sympy.ntheory import multiplicity, perfect_power
 
 # NOTE IMPORTANT
 # The series expansion code in this file is an important part of the gruntz
@@ -325,8 +326,25 @@ class log(Function):
                 return S.NaN
             elif arg.is_negative:
                 return S.Pi * S.ImaginaryUnit + cls(-arg)
-            elif arg.is_Rational and arg.q != 1:
-                return cls(arg.p) - cls(arg.q)
+            elif arg.is_Rational:
+                if arg.q != 1:
+                    return cls(arg.p) - cls(arg.q)
+                # make arg square free up to integer limit
+                p = perfect_power(int(arg))
+                if p is not False:
+                    dict = {p[0]: p[1]}
+                else:
+                    dict = arg.factors(limit=2**15)
+                if any(e != 1 for e in dict.values()):
+                    lump = 1
+                    terms = []
+                    for b, e in dict.iteritems():
+                        if e == 1:
+                            lump *= b
+                        else:
+                            terms.append(e*cls(b))
+                    if terms:
+                        return cls(lump) + Add(*terms)
         elif arg is S.ComplexInfinity:
             return S.ComplexInfinity
         elif arg is S.Exp1:

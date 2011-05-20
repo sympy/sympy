@@ -107,6 +107,8 @@ def test_log_values():
     assert exp(-log(3))**(-1) == 3
 
     assert log(S.Half) == -log(2)
+    assert log(2*3).func is log
+    assert log(2*3**2) == 2*log(3) + log(2)
 
 def test_log_base():
     assert log(1, 2) == 0

@@ -211,8 +211,8 @@ def test_tsolve():
     raises(NotImplementedError, "solve(Eq(cos(x), sin(x)), x)")
 
     assert solve(exp(x) + exp(-x) - y, x) in [
-     [-log(4) + log(2*y + 2*sqrt(-4 + y**2)),
-      -log(4) + log(2*y - 2*sqrt(-4 + y**2))],
+     [-2*log(2) + log(2*y + 2*sqrt(-4 + y**2)),
+      -2*log(2) + log(2*y - 2*sqrt(-4 + y**2))],
      [log(y/2 + sqrt(-4 + y**2)/2), log(y/2 - sqrt(-4 + y**2)/2)]
      ]
     assert solve(exp(x)-3, x) == [log(3)]
@@ -221,7 +221,7 @@ def test_tsolve():
     assert solve(sqrt(3*x)-4, x) == [Rational(16,3)]
     assert solve(3**(x+2), x) == [zoo]
     assert solve(3**(2-x), x) == [zoo]
-    assert solve(4*3**(5*x+2)-7, x) == [(-log(4) - 2*log(3) + log(7))/(5*log(3))]
+    assert solve(4*3**(5*x+2)-7, x) == [(-2*log(2) - 2*log(3) + log(7))/(5*log(3))]
     assert solve(x+2**x, x) == [-LambertW(log(2))/log(2)]
     assert solve(3*x+5+2**(-5*x+3), x) in \
         [[-Rational(5,3) + LambertW(-10240*2**Rational(1,3)*log(2)/3)/(5*log(2))],\
