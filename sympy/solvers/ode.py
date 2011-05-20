@@ -226,7 +226,7 @@ from sympy.utilities.iterables import minkey
 # the list is better than one before it, fell free to modify the list.  Note
 # however that you can easily override the hint used in dsolve() for a specific ODE
 # (see the docstring).  In general, "_Integral" hints should be grouped
-# at the end of the list, unless there is a method that returns an unevaluatable
+# at the end of the list, unless there is a method that returns an unevaluable
 # integral most of the time (which should surely go near the end of the list
 # anyway).
 # "default", "all", "best", and "all_Integral" meta-hints should not be

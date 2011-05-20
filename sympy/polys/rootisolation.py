@@ -34,7 +34,7 @@ def dup_sturm(f, K):
     """
     Computes the Sturm sequence of ``f`` in ``F[x]``.
 
-    Given an univariate, square-free polynomial ``f(x)`` returns the
+    Given a univariate, square-free polynomial ``f(x)`` returns the
     associated Sturm sequence ``f_0(x), ..., f_n(x)`` defined by::
 
        f_0(x), f_1(x) = f(x), f'(x)

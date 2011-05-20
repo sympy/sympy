@@ -102,7 +102,7 @@ class Piecewise(Function):
     @classmethod
     def eval(cls, *args):
         # Check for situations where we can evaluate the Piecewise object.
-        # 1) Hit an unevaluatable cond (e.g. x<1) -> keep object
+        # 1) Hit an unevaluable cond (e.g. x<1) -> keep object
         # 2) Hit a true condition -> return that expr
         # 3) Remove false conditions, if no conditions left -> raise ValueError
         all_conds_evaled = True    # Do all conds eval to a bool?
