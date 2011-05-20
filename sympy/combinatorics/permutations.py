@@ -349,12 +349,10 @@ class Permutation(Basic):
         8
         """
         inversions = 0
-        temp = self.array_form
-        for i in xrange(len(temp.args[0])):
-            for j in xrange(len(temp.args[0])):
-                if i==j:
-                    continue
-                if i < j and temp.args[0][i] > temp.args[0][j]:
+        temp = self.array_form.args[0]
+        for i in xrange(len(temp) - 1):
+            for j in xrange(i + 1, len(temp)):
+                if temp[i] > temp[j]:
                     inversions += 1
         return inversions
 
