@@ -202,9 +202,7 @@ class Permutation(Basic):
         >>> p.unrank_nonlex(5)
         Permutation([2, 0, 3, 1])
         """
-        temp = self
-        if temp.is_CyclicForm:
-            temp = self.to_array()
+        temp = self.array_form
         n = len(temp.args[0])
         id_perm = [i for i in xrange(n)]
         while n > 1:
@@ -228,14 +226,10 @@ class Permutation(Basic):
         >>> p.rank_nonlex()
         23
         """
-        temp = self
-        if temp.is_CyclicForm:
-            temp = temp.to_array()
+        temp = self.array_form
         temp_inv = inv_perm
         if temp_inv is None:
-            temp_inv = ~temp
-            if temp_inv.is_CyclicForm:
-                temp_inv = temp_inv.to_array()
+            temp_inv = (~temp).array_form
         if n == 0:
             n = len(temp.args[0])
         if n == 1:
@@ -274,9 +268,7 @@ class Permutation(Basic):
         [1, 2]
         """
         pos = []
-        temp = self
-        if temp.is_CyclicForm:
-            temp = temp.to_array()
+        temp = self.array_form
         for i in xrange(len(temp.args[0])-1):
             if temp.args[0][i] < temp.args[0][i+1]:
                 pos.append(i)
@@ -295,9 +287,7 @@ class Permutation(Basic):
         [0, 3]
         """
         pos = []
-        temp = self
-        if temp.is_CyclicForm:
-            temp = temp.to_array()
+        temp = self.array_form
         for i in xrange(len(temp.args[0])-1):
             if temp.args[0][i] > temp.args[0][i+1]:
                 pos.append(i)
@@ -314,14 +304,11 @@ class Permutation(Basic):
         >>> p.max
         4
         """
-        temp = self
-        if temp.is_CyclicForm:
-            temp = temp.to_array()
-        temp_form = temp.args[0]
+        temp = self.array_form
         max = 0
-        for i in xrange(len(temp_form)):
-            if temp_form[i] != i and temp_form[i] > max:
-                max = temp_form[i]
+        for i in xrange(len(temp.args[0])):
+            if temp.args[0][i] != i and temp.args[0][i] > max:
+                max = temp.args[0][i]
         return max
 
     @property
@@ -335,14 +322,11 @@ class Permutation(Basic):
         >>> p.min
         2
         """
-        temp = self
-        if temp.is_CyclicForm:
-            temp = temp.to_array()
-        temp_form = temp.args[0]
-        min = len(temp_form)
-        for i in xrange(len(temp_form)):
-            if temp_form[i] != i and temp_form[i] < min:
-                min = temp_form[i]
+        temp = self.array_form
+        min = len(temp.args[0])
+        for i in xrange(len(temp.args[0])):
+            if temp.args[0][i] != i and temp.args[0][i] < min:
+                min = temp.args[0][i]
         return min
 
     @property
@@ -365,15 +349,12 @@ class Permutation(Basic):
         8
         """
         inversions = 0
-        temp = self
-        if temp.is_CyclicForm:
-            temp = temp.to_array()
-        temp_form = temp.args[0]
-        for i in xrange(len(temp_form)):
-            for j in xrange(len(temp_form)):
+        temp = self.array_form
+        for i in xrange(len(temp.args[0])):
+            for j in xrange(len(temp.args[0])):
                 if i==j:
                     continue
-                if i < j and temp_form[i] > temp_form[j]:
+                if i < j and temp.args[0][i] > temp.args[0][j]:
                     inversions += 1
         return inversions
 
@@ -410,9 +391,7 @@ class Permutation(Basic):
         >>> (p**(p.order)).is_Identity
         True
         """
-        temp = self
-        if temp.is_ArrayForm:
-            temp = temp.to_cycles()
+        temp = self.cyclic_form
         order = 1
         for cycle in temp.args[0]:
             order = lcm(order, len(cycle))
@@ -424,12 +403,9 @@ class Permutation(Basic):
         Returns the number of integers moved by a permutation.
         """
         length = 0
-        temp = self
-        if temp.is_CyclicForm:
-            temp = temp.to_array()
-        temp_form = temp.args[0]
-        for i in xrange(len(temp_form)):
-            if temp_form[i] != i:
+        temp = self.array_form
+        for i in xrange(len(temp.args[0])):
+            if temp.args[0][i] != i:
                 length += 1
         return length
 
@@ -443,10 +419,7 @@ class Permutation(Basic):
 
     @property
     def cycles(self):
-        temp = self
-        if temp.is_ArrayForm:
-            temp = temp.to_cycles()
-        return len(temp.args[0])
+        return len(self.cyclic_form.args[0])
 
     def runs(self):
         """
@@ -467,9 +440,7 @@ class Permutation(Basic):
         >>> q.runs()
         [[1, 3], [2], [0]]
         """
-        temp = self
-        if temp.is_CyclicForm:
-            temp = temp.to_array()
+        temp = self.array_form
         temp_form = temp.args[0]
         cycles = []
         temp_cycle = []
