@@ -69,21 +69,11 @@ class Permutation(Basic):
         >>> p*q
         Permutation([1, 0, 3, 2])
         """
-        mul1, mul2 = self, other
-        if not mul1.is_ArrayForm:
-            mul1 = mul1.to_array()
-        if not mul2.is_ArrayForm:
-            mul2 = mul2.to_array()
-        if len(mul1.args[0]) != len(mul2.args[0]):
-            raise ValueError("The permutations must have equal \
-            number of elements")
-        return_val = [None] * len(mul1.args[0])
-        mul1_form = mul1.args[0]
-        mul2_form = mul2.args[0]
-        for i in xrange(len(mul1.args[0])):
-             return_val[i] = mul2_form[mul1_form[i]]
-        return Permutation(return_val)
-
+        if self.size != other.size:
+            raise ValueError("The number of elements in the permutations \
+            dont match")
+        return Permutation([other.array_form.args[0][self.array_form.args[0][i]]
+                            for i in range(self.size)])
 
     def __pow__(self, n):
         """
