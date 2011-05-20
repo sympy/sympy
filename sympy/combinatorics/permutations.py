@@ -68,7 +68,7 @@ class Permutation(Basic):
         return_val = [None] * len(mul1.args[0])
         mul1_form = mul1.args[0]
         mul2_form = mul2.args[0]
-        for i in range(len(mul1.args[0])):
+        for i in xrange(len(mul1.args[0])):
              return_val[i] = mul2_form[mul1_form[i]]
         return Permutation(return_val)
 
@@ -87,7 +87,7 @@ class Permutation(Basic):
         if val.is_CyclicForm:
             val = val.to_array()
         ref = val
-        for i in range(n-1):
+        for i in xrange(n-1):
             val = val * ref
         if self.is_CyclicForm:
             return val.to_cycles()
@@ -96,7 +96,7 @@ class Permutation(Basic):
     def __invert__(self):
         inv_form = [0] * len(self.args[0])
         self_form = self.args[0]
-        for i in range(len(self.args[0])):
+        for i in xrange(len(self.args[0])):
             inv_form[self_form[i]] = i
         return Permutation(inv_form)
 
@@ -196,7 +196,7 @@ class Permutation(Basic):
         if temp.is_CyclicForm:
             temp = self.to_array()
         n = len(temp.args[0])
-        id_perm = [i for i in range(n)]
+        id_perm = [i for i in xrange(n)]
         while n > 1:
             id_perm[n-1],id_perm[r % n] = id_perm[r % n], id_perm[n-1]
             n -= 1
@@ -420,7 +420,7 @@ class Permutation(Basic):
         temp_form = temp.args[0]
         cycles = []
         temp_cycle = []
-        for i in range(len(temp_form) - 1):
+        for i in xrange(len(temp_form) - 1):
             current_elem = temp_form[i]
             next_elem    = temp_form[i+1]
 
