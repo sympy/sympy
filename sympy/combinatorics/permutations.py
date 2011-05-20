@@ -212,9 +212,9 @@ class Permutation(Basic):
 
         Examples
         >>> from sympy.combinatorics.permutations import Permutation
-        >>> p = Permutation([2,0,3,1])
+        >>> p = Permutation([0,1,2,3])
         >>> p.rank_nonlex()
-        5
+        23
         """
         temp = self
         if temp.is_CyclicForm:
@@ -228,13 +228,13 @@ class Permutation(Basic):
             n = len(temp.args[0])
         if n == 1:
             return 0
-        perm_form = temp.args[0]
-        temp_inv_form = temp_inv.args[0]
+        perm_form = temp.args[0][:]
+        temp_inv_form = temp_inv.args[0][:]
         s = perm_form[n-1]
         perm_form[n-1], perm_form[temp_inv_form[n-1]] = \
-                        perm_form[temp_inv_form[n-1]], perm_form[n-1]
+            perm_form[temp_inv_form[n-1]], perm_form[n-1]
         temp_inv_form[s], temp_inv_form[n-1] = \
-                          temp_inv_form[n-1], temp_inv_form[s]
+            temp_inv_form[n-1], temp_inv_form[s]
         return s + n*temp.rank_nonlex(temp_inv, n - 1)
 
     @property
