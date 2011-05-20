@@ -461,7 +461,7 @@ def collect(expr, syms, evaluate=True, exact=False):
 
     summa = [separate(i) for i in Add.make_args(sympify(expr))]
 
-    if isinstance(syms, (tuple, list)):
+    if hasattr(syms, '__iter__') or hasattr(syms, '__getitem__'):
         syms = [separate(s) for s in syms]
     else:
         syms = [separate(syms)]

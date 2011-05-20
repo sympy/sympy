@@ -322,6 +322,9 @@ def test_collect_1():
     assert collect( ((1 + y + x)**4).expand(), x) == ((1 + y)**4).expand() + \
                 x*(4*(1 + y)**3).expand() + x**2*(6*(1 + y)**2).expand() + \
                 x**3*(4*(1 + y)).expand() + x**4
+    # symbols can be given as any iterable
+    expr = x + y
+    assert collect(expr, expr.free_symbols) == expr
 
 def test_collect_2():
     """Collect with respect to a sum"""
