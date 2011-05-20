@@ -1,1 +1,1 @@
-from sympy.combinatorics.permutations import Permutation
+from sympy.combinatorics.permutations import Permutation, josephus

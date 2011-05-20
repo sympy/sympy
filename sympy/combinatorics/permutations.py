@@ -472,3 +472,29 @@ class Permutation(Basic):
                 cycles.append(temp_cycle)
             cycles.append([next_elem])
         return cycles
+
+def josephus(m, n, s = 1):
+    """
+    Computes the Josephus permutation for a given number of
+    prisoners, frequency of removal and desired number of
+    survivors.
+
+    Examples:
+    >>> from sympy.combinatorics.permutations import josephus
+    >>> josephus(3, 40, 1)
+    Permutation([2, 5, 8, 11, 14, 17, 20, 23, 26, 29, 32, 35, \
+    38, 1, 6, 10, 15, 19, 24, 28, 33, 37, 3, 9, 16, 22, 30, 36, \
+    4, 13, 25, 34, 7, 21, 39, 18, 0, 31, 12, 27])
+    """
+    from collections import deque
+    m -= 1
+    if s <= 0:
+        s = 1
+    Q = deque([i for i in xrange(0, n)])
+    perm = []
+    while len(Q) > s:
+        for dp in xrange(0, m):
+            Q.append(Q.popleft())
+        perm.append(Q.popleft())
+    perm.extend(list(Q))
+    return Permutation(perm)

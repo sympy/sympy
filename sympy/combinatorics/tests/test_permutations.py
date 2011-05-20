@@ -1,4 +1,4 @@
-from sympy.combinatorics.permutations import Permutation
+from sympy.combinatorics.permutations import Permutation, josephus
 
 def test_Permutation():
     p = Permutation([2,5,1,6,3,0,4])
@@ -78,3 +78,6 @@ def test_Permutation():
     assert q.runs() == [[4], [2, 3, 5], [0, 6], [1]]
     assert r.runs() == [[3], [2], [1], [0]]
 
+def test_josephus():
+    assert josephus(4, 6, 1) == Permutation([3, 1, 0, 2, 5, 4])
+    assert josephus(1, 5, 1).is_Identity
