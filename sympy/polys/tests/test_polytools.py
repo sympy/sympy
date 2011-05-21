@@ -1639,8 +1639,10 @@ def test_primitive():
     raises(ComputationFailed, "primitive(4)")
 
     f = Poly(2*x, modulus=3)
+    g = Poly(2.0*x, domain=RR)
 
     assert f.primitive() == (1, f)
+    assert g.primitive() == (1.0, g)
 
 def test_compose():
     f = x**12+20*x**10+150*x**8+500*x**6+625*x**4-2*x**3-10*x+9

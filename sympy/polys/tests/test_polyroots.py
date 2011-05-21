@@ -1,7 +1,7 @@
 """Tests for algorithms for computing symbolic roots of polynomials. """
 
-from sympy import (S, symbols, Symbol, Integer, Rational, sqrt, I, powsimp,
-    Lambda, sin, cos, pi, I)
+from sympy import (S, symbols, Symbol, Wild, Integer, Rational, sqrt,
+    powsimp, Lambda, sin, cos, pi, I)
 from sympy.utilities.pytest import raises
 
 from sympy.polys import Poly, cyclotomic_poly
@@ -303,8 +303,8 @@ def test_roots():
     assert roots((x-1)*(x+1), x) == {S.One: 1, -S.One: 1}
     assert roots((x-1)*(x+1), x, predicate=lambda r: r.is_positive) == {S.One: 1}
 
-    assert roots(x**4-1, x, filter='Z', multiple=True) == [S.One, -S.One]
-    assert roots(x**4-1, x, filter='I', multiple=True) in ([I, -I], [-I, I])
+    assert roots(x**4-1, x, filter='Z', multiple=True) == [-S.One, S.One]
+    assert roots(x**4-1, x, filter='I', multiple=True) == [-I, I]
 
     assert roots(x**3, x, multiple=True) == [S.Zero, S.Zero, S.Zero]
     assert roots(1234, x, multiple=True) == []
@@ -364,7 +364,35 @@ def test_roots_inexact():
     R2 = sorted([-12.7530479110482, -3.85012393732929, 4.89897948556636, 7.46155167569183])
 
     for r1, r2 in zip(R1, R2):
-        assert abs(r1 - r2) < 1e-12
+        assert abs(r1 - r2) < 1e-10
+
+def test_roots_preprocessed():
+    E, F, J, L = symbols("E,F,J,L")
+
+    f = -21601054687500000000*E**8*J**8/L**16 + \
+         508232812500000000*F*x*E**7*J**7/L**14 - \
+         4269543750000000*E**6*F**2*J**6*x**2/L**12 + \
+         16194716250000*E**5*F**3*J**5*x**3/L**10 - \
+         27633173750*E**4*F**4*J**4*x**4/L**8 + \
+         14840215*E**3*F**5*J**3*x**5/L**6 + \
+         54794*E**2*F**6*J**2*x**6/(5*L**4) - \
+         1153*E*J*F**7*x**7/(80*L**2) + \
+         633*F**8*x**8/160000
+
+    assert roots(f, x) == {}
+
+    R1 = roots(f.evalf(), x, multiple=True)
+    R2 = [-1304.88375606366, 97.1168816800648, 186.946430171876, 245.526792947065,
+           503.441004174773, 791.549343830097, 1273.16678129348, 1850.10650616851]
+
+    w = Wild('w')
+    p = w*E*J/(F*L**2)
+
+    assert len(R1) == len(R2)
+
+    for r1, r2 in zip(R1, R2):
+        match = r1.match(p)
+        assert match is not None and abs(match[w] - r2) < 1e-10
 
 def test_root_factors():
     assert root_factors(Poly(1, x)) == [Poly(1, x)]

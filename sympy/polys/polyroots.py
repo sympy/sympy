@@ -3,7 +3,7 @@
 from sympy.core.symbol import Dummy
 from sympy.core.add import Add
 from sympy.core.mul import Mul
-from sympy.core import S, I
+from sympy.core import S, I, Basic
 from sympy.core.sympify import sympify
 from sympy.core.numbers import Rational, igcd
 
@@ -524,9 +524,6 @@ def roots(f, *gens, **flags):
         if f.is_multivariate:
             raise PolynomialError('multivariate polynomials are not supported')
 
-        if auto and f.get_domain().has_Ring:
-            f = f.to_field()
-
     x = f.gen
 
     def _update_dict(result, root, k):
@@ -596,14 +593,19 @@ def roots(f, *gens, **flags):
             else:
                 return {}
         else:
-            result = { S(0) : f.degree() }
+            result = {S(0) : f.degree()}
     else:
         (k,), f = f.terms_gcd()
 
         if not k:
             zeros = {}
         else:
-            zeros = { S(0) : k }
+            zeros = {S(0) : k}
+
+        coeff, f = preprocess_roots(f)
+
+        if auto and f.get_domain().has_Ring:
+            f = f.to_field()
 
         result = {}
 
@@ -628,6 +630,12 @@ def roots(f, *gens, **flags):
                 for factor, k in factors:
                     for r in _try_heuristics(Poly(factor, x, field=True)):
                         _update_dict(result, r, k)
+
+        if coeff is not S.One:
+            _result, result, = result, {}
+
+            for root, k in _result.iteritems():
+                result[coeff*root] = k
 
         result.update(zeros)
 
@@ -661,7 +669,7 @@ def roots(f, *gens, **flags):
         for zero, k in result.iteritems():
             zeros.extend([zero]*k)
 
-        return zeros
+        return sorted(zeros, key=Basic.sorted_key)
 
 def root_factors(f, *gens, **args):
     """
