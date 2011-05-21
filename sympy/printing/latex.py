@@ -179,8 +179,8 @@ class LatexPrinter(Printer):
             else:
                 _tex = last_term_tex = ""
 
-                if self.order:
-                    args = sorted(expr.args, key=Basic.sorted_key)
+                if self.order != 'old':
+                    args = expr.as_ordered_factors()
                 else:
                     args = expr.args
 

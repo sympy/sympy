@@ -264,7 +264,7 @@ class Ket(State, KetBase):
         >>> k0 = Ket(0)
         >>> k1 = Ket(1)
         >>> 2*I*k0 - 4*k1
-        -4*|1> + 2*I*|0>
+        2*I*|0> - 4*|1>
 
     Compound labels are passed as tuples::
 
@@ -331,7 +331,7 @@ class Bra(State, BraBase):
     Symbols in a Bra can be substituted using ``.subs``::
 
         >>> b.subs(n,m)
-        -I*<mm| + <mm|
+        <mm| - I*<mm|
 
     References
     ==========

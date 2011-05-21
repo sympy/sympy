@@ -36,7 +36,7 @@ def trigintegrate(f, x):
        sin(x)**2/2
 
        >>> trigintegrate(sin(x)**2, x)
-       x/2 - cos(x)*sin(x)/2
+       x/2 - sin(x)*cos(x)/2
 
        http://en.wikibooks.org/wiki/Calculus/Further_integration_techniques
     """

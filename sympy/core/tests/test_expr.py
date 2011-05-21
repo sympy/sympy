@@ -2,7 +2,7 @@ from sympy import Add, Basic, S, Symbol, Wild,  Real, Integer, Rational, I, \
     sin, cos, tan, exp, log, oo, sqrt, symbols, Integral, sympify, \
     WildFunction, Poly, Function, Derivative, Number, pi, var, \
     NumberSymbol, zoo, Piecewise, Mul, Pow, nsimplify, ratsimp, trigsimp, \
-    radsimp, powsimp, simplify, together, separate, collect, \
+    radsimp, powsimp, simplify, together, separate, collect, factorial, \
     apart, combsimp, factor, refine, cancel, invert, Tuple
 from sympy.physics.secondquant import FockState
 
@@ -978,6 +978,9 @@ def test_expr_sorting():
     exprs = [f(1), f(2), f(3), f(1, 2, 3), g(1), g(2), g(3), g(1, 2, 3)]
     assert sorted(exprs, key=Basic.sorted_key) == exprs
 
+    exprs = [f(x), g(x), exp(x), sin(x), cos(x), factorial(x)]
+    assert sorted(exprs, key=Basic.sorted_key) == exprs
+
     exprs = [Tuple(x, y), Tuple(x, z), Tuple(x, y, z)]
     assert sorted(exprs, key=Basic.sorted_key) == exprs
 
@@ -992,6 +995,11 @@ def test_as_ordered_factors():
 
     assert expr.as_ordered_factors() == args
 
+    A, B = symbols('A,B', commutative=False)
+
+    assert (A*B).as_ordered_factors() == [A, B]
+    assert (B*A).as_ordered_factors() == [B, A]
+
 def test_as_ordered_terms():
     f, g = symbols('f,g', cls=Function)
 
@@ -1004,6 +1012,16 @@ def test_as_ordered_terms():
     assert expr.as_ordered_terms() == args
 
     assert (1 + 4*sqrt(3)*pi*x).as_ordered_terms() == [4*pi*x*sqrt(3), 1]
+
+    assert ( 2 + 3*I).as_ordered_terms() == [ 2,  3*I]
+    assert (-2 + 3*I).as_ordered_terms() == [-2,  3*I]
+    assert ( 2 - 3*I).as_ordered_terms() == [ 2, -3*I]
+    assert (-2 - 3*I).as_ordered_terms() == [-2, -3*I]
+
+    assert ( 4 + 3*I).as_ordered_terms() == [ 4,  3*I]
+    assert (-4 + 3*I).as_ordered_terms() == [-4,  3*I]
+    assert ( 4 - 3*I).as_ordered_terms() == [ 4, -3*I]
+    assert (-4 - 3*I).as_ordered_terms() == [-4, -3*I]
 
 def test_issue_1100():
     # first subs and limit gives NaN

@@ -36,14 +36,14 @@ uniquely defined this way::
 
     >>> q, r = div(f, g, domain='QQ')
     >>> q
-    5   5*x
-    - + ---
-    2    2
+    5*x   5
+    --- + -
+     2    2
     >>> r
     -2
     >>> (q*g + r).expand()
-                  2
-    3 + 10*x + 5*x
+       2
+    5*x  + 10*x + 3
 
 As you can see, ``q`` has a non-integer coefficient. If you want to do division
 only in the ring of polynomials with integer coefficients, you can specify an
@@ -53,8 +53,8 @@ additional parameter::
     >>> q
     0
     >>> r
-                  2
-    3 + 10*x + 5*x
+       2
+    5*x  + 10*x + 3
 
 But be warned, that this ring is no longer Euclidean and that the degree of the
 remainder doesn't need to be smaller than that of ``f``. Since 2 doesn't divide 5,
@@ -66,10 +66,10 @@ $2 x$ doesn't divide $5 x^2$, even if the degree is smaller. But::
     >>> q
     x
     >>> r
-    3 + 9*x
+    9*x + 3
     >>> (q*g + r).expand()
-                  2
-    3 + 10*x + 5*x
+       2
+    5*x  + 10*x + 3
 
 This also works for polynomials with multiple variables::
 
@@ -93,13 +93,14 @@ constant as coefficient, you can specify the variables explicitly::
     >>> g = 3*x + 2
     >>> q, r = div(f, g, domain='QQ')
     >>> q
-      2*a   b   a*x
-    - --- + - + ---
-       9    3    3
+    a*x   2*a   b
+    --- - --- + -
+     3     9    3
+
     >>> r
-        2*b   4*a
-    c - --- + ---
-         3     9
+    4*a   2*b
+    --- - --- + c
+     9     3
 
 GCD and LCM
 -----------
@@ -149,11 +150,11 @@ factors (not necessarily irreducible) of degree 1, 2 etc.::
     >>> f = 2*x**2 + 5*x**3 + 4*x**4 + x**5
 
     >>> sqf_list(f)
-    (1, [(2 + x, 1), (x, 2), (1 + x, 2)])
+    (1, [(x + 2, 1), (x, 2), (x + 1, 2)])
 
     >>> sqf(f)
      2        2
-    x *(1 + x) *(2 + x)
+    x *(x + 1) *(x + 2)
 
 Factorization
 -------------
@@ -163,9 +164,9 @@ with rational coefficients::
 
     >>> factor(x**4/2 + 5*x**3/12 - x**2/3)
      2
-    x *(-1 + 2*x)*(4 + 3*x)
-    -----------------------
-               12
+    x *(2*x - 1)*(3*x + 4)
+    ----------------------
+              12
 
     >>> factor(x**2 + 4*x*y + 4*y**2)
              2
@@ -177,12 +178,12 @@ Groebner bases
 Buchberger's algorithm is implemented, supporting various monomial orders::
 
     >>> groebner([x**2 + 1, y**4*x + x**3], x, y, order='lex')
-          2        4
-    [1 + x , -1 + y ]
+      2       4
+    [x  + 1, y  - 1]
 
     >>> groebner([x**2 + 1, y**4*x + x**3, x*y*z**3], x, y, z, order='grevlex')
-           4   3       2
-    [-1 + y , z , 1 + x ]
+      4       3   2
+    [y  - 1, z , x  + 1]
 
 Solving Equations
 -----------------
@@ -193,8 +194,8 @@ polynomials and to solve some systems of polynomial equations::
     >>> from sympy import roots, solve_poly_system
 
     >>> solve(x**3 + 2*x + 3, x)
-             ____              ____
-     1   I*\/ 11       1   I*\/ 11
+           ____              ____
+     1   \/ 11 *I      1   \/ 11 *I
     [- - --------, -1, - + --------]
      2      2          2      2
 
@@ -202,17 +203,17 @@ polynomials and to solve some systems of polynomial equations::
     >>> q = Symbol('q')
 
     >>> sorted(solve(x**2 + p*x + q, x))
-              ___________           ___________
-             /         2           /         2
-       p   \/  -4*q + p      p   \/  -4*q + p
-    [- - + --------------, - - - --------------]
-       2         2           2         2
+              __________           __________
+             /  2                 /  2
+       p   \/  p  - 4*q     p   \/  p  - 4*q
+    [- - + -------------, - - - -------------]
+       2         2          2         2
 
     >>> solve_poly_system([y - x, x - 5], x, y)
     [(5, 5)]
 
     >>> solve_poly_system([y**2 - x**3 + 1, y*x], x, y)
-                                         ___                 ___
-                                 1   I*\/ 3          1   I*\/ 3
+                                       ___                 ___
+                                 1   \/ 3 *I         1   \/ 3 *I
     [(0, I), (0, -I), (1, 0), (- - + -------, 0), (- - - -------, 0)]
                                  2      2            2      2

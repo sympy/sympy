@@ -15,7 +15,7 @@ def ratint(f, x, **flags):
        >>> from sympy.abc import x
 
        >>> ratint(36/(x**5 - 2*x**4 - 2*x**3 + 4*x**2 + x - 2), x)
-       -4*log(1 + x) + 4*log(-2 + x) + (6 + 12*x)/(-1 + x**2)
+       (12*x + 6)/(x**2 - 1) + 4*log(x - 2) - 4*log(x + 1)
 
        References
        ==========

@@ -1383,7 +1383,7 @@ class Matrix(object):
         >>> from sympy.abc import x, y
         >>> m = Matrix(2,2,[x**2 + y, y**2 + x, 0, x + y])
         >>> m
-        [y + x**2, x + y**2]
+        [x**2 + y, x + y**2]
         [       0,    x + y]
         >>> m.is_lower()
         False
@@ -1485,8 +1485,8 @@ class Matrix(object):
         >>> from sympy.abc import x, y
         >>> m = Matrix(3,3,[1, x**2 + 2*x + 1, y, (x + 1)**2 , 2, 0, y, 0, 3])
         >>> m
-        [         1, 1 + 2*x + x**2, y]
-        [(1 + x)**2,              2, 0]
+        [         1, x**2 + 2*x + 1, y]
+        [(x + 1)**2,              2, 0]
         [         y,              0, 3]
         >>> m.is_symmetric()
         True
@@ -1765,7 +1765,7 @@ class Matrix(object):
            (1, -x, -y)
 
            >>> print r # 3 x 3 M's sub-matrix
-           (1, -2*x, -y - y*z + x**2, x*y - z**2)
+           (1, -2*x, x**2 - y*z - y, x*y - z**2)
 
            For more information on the implemented algorithm refer to:
 
