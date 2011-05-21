@@ -39,13 +39,73 @@ class Permutation(Basic):
     """
     is_Permutation = True
 
+    _array_form = None
+    _cyclic_form = None
+
     @property
     def array_form(self):
-        return self.to_array()
+        """
+        This is used to convert from cyclic notation to the
+        canonical notation.
+        Currently singleton cycles need to be written
+        explicitly.
+
+        Examples:
+        >>> from sympy.combinatorics.permutations import Permutation
+        >>> p = Permutation([[2,0],[3,1]])
+        >>> p.array_form
+        Permutation([1, 3, 0, 2])
+        """
+        if self._array_form is not None:
+            return self._array_form
+        if not isinstance(self.args[0][0], list):
+            self._array_form = self
+            return self._array_form
+        cycles = self.args[0]
+        linear_form = []
+        for cycle in cycles:
+            min_element = min(cycle)
+            while cycle[0] != min_element:
+                cycle = rotate_left(cycle, 1)
+            linear_form.append(cycle)
+        linear_form.sort(key=lambda t: -t[0])
+        self._array_form = Permutation(list(itertools.chain(*linear_form)))
+        return self._array_form
 
     @property
     def cyclic_form(self):
-        return self.to_cycles()
+        """
+        This is used to convert to the cyclic notation
+        from the canonical notation.
+
+        Examples:
+        >>> from sympy.combinatorics.permutations import Permutation
+        >>> p = Permutation([0,3,1,2])
+        >>> p.cyclic_form
+        Permutation([[1, 3, 2], [0]])
+        """
+        if self._cyclic_form is not None:
+            return self._cyclic_form
+        if isinstance(self.args[0][0], list):
+            self._cyclic_form = self
+            return self._cyclic_form
+        linear_rep = self.args[0]
+        unchecked = [True] * len(linear_rep)
+        cyclic_form = []
+        for i in xrange(len(linear_rep)):
+            if unchecked[i]:
+                cycle = []
+                cycle.append(i)
+                unchecked[i] = False
+                j = i
+                while unchecked[linear_rep[j]]:
+                    j = linear_rep[j]
+                    cycle.append(j)
+                    unchecked[j] = False
+                cyclic_form.append(cycle)
+        cyclic_form.sort(key=lambda t: -t[0])
+        self._cyclic_form = Permutation(cyclic_form)
+        return self.cyclic_form
 
     @property
     def size(self):
@@ -113,61 +173,6 @@ class Permutation(Basic):
             inv_form[self_form.args[0][i]] = i
         return Permutation(inv_form)
 
-    def to_array(self):
-        """
-        This is used to convert from cyclic notation to the
-        canonical notation.
-        Currently singleton cycles need to be written
-        explicitly.
-
-        Examples:
-        >>> from sympy.combinatorics.permutations import Permutation
-        >>> p = Permutation([[2,0],[3,1]])
-        >>> p.to_array()
-        Permutation([1, 3, 0, 2])
-        """
-        if self.is_ArrayForm:
-            return self
-        cycles = self.args[0]
-        linear_form = []
-        for cycle in cycles:
-            min_element = min(cycle)
-            while cycle[0] != min_element:
-                cycle = rotate_left(cycle, 1)
-            linear_form.append(cycle)
-        linear_form.sort(key=lambda t: -t[0])
-        return Permutation(list(itertools.chain(*linear_form)))
-
-    def to_cycles(self):
-        """
-        This is used to convert to the cyclic notation
-        from the canonical notation.
-
-        Examples:
-        >>> from sympy.combinatorics.permutations import Permutation
-        >>> p = Permutation([0,3,1,2])
-        >>> p.to_cycles()
-        Permutation([[1, 3, 2], [0]])
-        """
-        if self.is_CyclicForm:
-            return self
-        linear_rep = self.args[0]
-        unchecked = [True] * len(linear_rep)
-        cyclic_form = []
-        for i in xrange(len(linear_rep)):
-            if unchecked[i]:
-                cycle = []
-                cycle.append(i)
-                unchecked[i] = False
-                j = i
-                while unchecked[linear_rep[j]]:
-                    j = linear_rep[j]
-                    cycle.append(j)
-                    unchecked[j] = False
-                cyclic_form.append(cycle)
-        cyclic_form.sort(key=lambda t: -t[0])
-        return Permutation(cyclic_form)
-
     @property
     def is_ArrayForm(self):
         return not isinstance(self.args[0][0], list)
@@ -182,7 +187,7 @@ class Permutation(Basic):
         """
         if self.is_ArrayForm:
             return set(self.args[0])
-        return self.to_array().atoms()
+        return self.array_form.atoms()
 
     def unrank_nonlex(self, r):
         """

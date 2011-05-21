@@ -10,8 +10,8 @@ def test_Permutation():
     assert p*q == Permutation([4, 6, 1, 2, 5, 3, 0])
     assert q*p == Permutation([6, 5, 3, 0, 2, 4, 1])
 
-    assert q.to_array() == Permutation([3, 1, 4, 5, 0, 6, 2])
-    assert p.to_cycles() == Permutation([[3, 6, 4], [0, 2, 1, 5]])
+    assert q.array_form == Permutation([3, 1, 4, 5, 0, 6, 2])
+    assert p.cyclic_form == Permutation([[3, 6, 4], [0, 2, 1, 5]])
 
     assert p**13 == p
     assert q**2 == Permutation([[3, 6, 4], [1], [0, 5, 2]])
