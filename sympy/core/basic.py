@@ -322,10 +322,11 @@ class Basic(AssumeMeths):
     def as_tuple_tree(self, order=None):
         """Construct a tuple-tree version of ``self``. """
         from sympy.core import S
+
         funcs = {
-            'exp': 0, 'log': 1,
-            'sin': 2, 'cos': 3, 'tan': 4, 'cot': 5,
-            'sinh': 6, 'cosh': 7, 'tanh': 8, 'coth': 9,
+            'exp': 10, 'log': 11,
+            'sin': 20, 'cos': 21, 'tan': 22, 'cot': 23,
+            'sinh': 30, 'cosh': 31, 'tanh': 32, 'coth': 33,
         }
 
         def head(expr):
@@ -336,15 +337,26 @@ class Basic(AssumeMeths):
                 return 1, 0, 'Number'
             elif expr.is_Atom:
                 return 2, 0, name
+            elif expr.is_Mul:
+                return 3, 0, name
+            elif expr.is_Add:
+                return 3, 1, name
+            elif expr.is_Pow:
+                return 3, 2, name
             elif expr.is_Function:
                 try:
                     i = funcs[name]
                 except KeyError:
-                    i = len(funcs)
+                    nargs = expr.func.nargs
 
-                return 3, i, name
+                    if nargs is None:
+                        i = 0
+                    else:
+                        i = 10000
+
+                return 4, i, name
             else:
-                return 4, 0, name
+                return 5, 0, name
 
         def rmap(args):
             """Recursively map a tree. """
