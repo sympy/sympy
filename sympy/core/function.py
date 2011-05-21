@@ -284,14 +284,15 @@ class Function(Application, Expr):
         >>> atan2(x, y).series(x, n=2)
         atan2(0, y) + x/y + O(x**2)
         >>> atan2(x, y).series(y, n=2)
-        atan2(x, 0) - y/x + O(y**2)
+        -y/x + atan2(x, 0) + O(y**2)
 
         This function also computes asymptotic expansions, if necessary
         and possible:
 
         >>> from sympy import loggamma
         >>> loggamma(1/x)._eval_nseries(x,0,None)
-        log(x)/2 - log(x)/x - 1/x + O(1)
+        -1/x - log(x)/x + log(x)/2 + O(1)
+
         """
         if self.func.nargs is None:
             raise NotImplementedError('series for user-defined \
@@ -848,7 +849,7 @@ def diff(f, *symbols, **kwargs):
     >>> diff(f(x), x, 3)
     D(f(x), x, x, x)
     >>> diff(sin(x)*cos(y), x, 2, y, 2)
-    cos(y)*sin(x)
+    sin(x)*cos(y)
 
     >>> type(diff(sin(x), x))
     cos
@@ -913,7 +914,7 @@ def expand(e, deep=True, modulus=None, power_base=True, power_exp=True, \
     >>> (x+y).expand(complex=True)
     I*im(x) + I*im(y) + re(x) + re(y)
     >>> cos(x).expand(complex=True)
-    cos(re(x))*cosh(im(x)) - I*sin(re(x))*sinh(im(x))
+    -I*sin(re(x))*sinh(im(x)) + cos(re(x))*cosh(im(x))
 
     power_exp - Expand addition in exponents into multiplied bases.
     >>> exp(x+y).expand(power_exp=True)
@@ -935,14 +936,14 @@ def expand(e, deep=True, modulus=None, power_base=True, power_exp=True, \
     exponents must be real.
     >>> from sympy import log, symbols
     >>> log(x**2*y).expand(log=True)
-    log(y*x**2)
+    log(x**2*y)
     >>> x, y = symbols('x,y', positive=True)
     >>> log(x**2*y).expand(log=True)
     2*log(x) + log(y)
 
     trig - Do trigonometric expansions.
     >>> cos(x+y).expand(trig=True)
-    cos(x)*cos(y) - sin(x)*sin(y)
+    -sin(x)*sin(y) + cos(x)*cos(y)
 
     func - Expand other functions.
     >>> from sympy import gamma
@@ -951,7 +952,7 @@ def expand(e, deep=True, modulus=None, power_base=True, power_exp=True, \
 
     multinomial - Expand (x + y + ...)**n where n is a positive integer.
     >>> ((x+y+z)**2).expand(multinomial=True)
-    2*x*y + 2*x*z + 2*y*z + x**2 + y**2 + z**2
+    x**2 + 2*x*y + 2*x*z + y**2 + 2*y*z + z**2
 
     You can shut off methods that you don't want.
     >>> (exp(x+y)*(x+y)).expand()
@@ -1002,10 +1003,10 @@ def expand(e, deep=True, modulus=None, power_base=True, power_exp=True, \
     x*(y + z)**2
 
     >>> expand(x*(y+z)**2, mul=False)
-    x*(2*y*z + y**2 + z**2)
+    x*(y**2 + 2*y*z + z**2)
 
     >>> expand_mul(_)
-    2*x*y*z + x*y**2 + x*z**2
+    x*y**2 + 2*x*y*z + x*z**2
 
     """
     hints['power_base'] = power_base
@@ -1042,7 +1043,7 @@ def expand_multinomial(expr, deep=True):
     >>> from sympy import symbols, expand_multinomial, exp
     >>> x, y = symbols('x y', positive=True)
     >>> expand_multinomial((x + exp(x + 1))**2)
-    x**2 + 2*x*exp(1 + x) + exp(2 + 2*x)
+    x**2 + 2*x*exp(x + 1) + exp(2*x + 2)
 
     """
     return sympify(expr).expand(deep=deep, mul=False, power_exp=False,\
@@ -1058,7 +1059,7 @@ def expand_log(expr, deep=True):
     >>> from sympy import symbols, expand_log, exp, log
     >>> x, y = symbols('x,y', positive=True)
     >>> expand_log(exp(x+y)*(x+y)*log(x*y**2))
-    (x + y)*(2*log(y) + log(x))*exp(x + y)
+    (x + y)*(log(x) + 2*log(y))*exp(x + y)
 
     """
     return sympify(expr).expand(deep=deep, log=True, mul=False,\
@@ -1073,7 +1074,7 @@ def expand_func(expr, deep=True):
     >>> from sympy import expand_func, gamma
     >>> from sympy.abc import x
     >>> expand_func(gamma(x + 2))
-    x*(1 + x)*gamma(x)
+    x*(x + 1)*gamma(x)
 
     """
     return sympify(expr).expand(deep=deep, func=True, basic=False,\
@@ -1088,7 +1089,7 @@ def expand_trig(expr, deep=True):
     >>> from sympy import expand_trig, sin, cos
     >>> from sympy.abc import x, y
     >>> expand_trig(sin(x+y)*(x+y))
-    (x + y)*(cos(x)*sin(y) + cos(y)*sin(x))
+    (x + y)*(sin(x)*cos(y) + sin(y)*cos(x))
 
     """
     return sympify(expr).expand(deep=deep, trig=True, basic=False,\
@@ -1136,7 +1137,7 @@ def count_ops(expr, visual=False):
 
     Here, there are two Adds and a Pow:
         >>> (1 + a + b**2).count_ops(visual=True)
-        POW + 2*ADD
+        2*ADD + POW
 
     In the following, an Add, Mul, Pow and two functions:
         >>> (sin(x)*x + sin(x)**2).count_ops(visual=True)
@@ -1165,7 +1166,7 @@ def count_ops(expr, visual=False):
         >>> count_ops([x, sin(x), None, True, x + 2], visual=True)
         ADD + SIN
         >>> count_ops({x: sin(x), x + 2: y + 1}, visual=True)
-        SIN + 2*ADD
+        2*ADD + SIN
 
     """
     from sympy.simplify.simplify import fraction

@@ -402,7 +402,7 @@ class Expr(Basic, EvalfMixin):
         The arg is treated as a Mul:
 
         >>> (-2 + x + A).args_cnc()
-        [set(), [-2 + A + x]]
+        [set(), [x - 2 + A]]
         """
 
         if self.is_Mul:
@@ -684,7 +684,7 @@ class Expr(Basic, EvalfMixin):
 
         >>> f = (x**2 + x*y).as_poly(x, y)
         >>> f.as_expr()
-        x*y + x**2
+        x**2 + x*y
 
         >>> sin(x).as_expr()
         sin(x)
@@ -708,7 +708,7 @@ class Expr(Basic, EvalfMixin):
            >>> (2*sin(E)*E).as_coefficient(E)
 
            >>> (2*E + x*E).as_coefficient(E)
-           2 + x
+           x + 2
            >>> (2*E*x + x).as_coefficient(E)
 
            >>> (E*(x + 1) + x).as_coefficient(E)
@@ -752,13 +752,13 @@ class Expr(Basic, EvalfMixin):
             >>> from sympy.abc import x, y, z
 
             >>> (x + x*y).as_independent(x)
-            (0, x + x*y)
+            (0, x*y + x)
             >>> (x + x*y).as_independent(y)
             (x, x*y)
             >>> (2*x*sin(x) + y + x + z).as_independent(x)
-            (y + z, x + 2*x*sin(x))
+            (y + z, 2*x*sin(x) + x)
             >>> (2*x*sin(x) + y + x + z).as_independent(x, y)
-            (z, x + y + 2*x*sin(x))
+            (z, 2*x*sin(x) + x + y)
 
           -- self is a Mul
             >>> (x*sin(x)*cos(y)).as_independent(x)
@@ -792,14 +792,14 @@ class Expr(Basic, EvalfMixin):
 
           -- force self to be treated as a Mul:
             >>> (3+x).as_independent(x, as_Add=0)
-            (1, 3 + x)
+            (1, x + 3)
             >>> (-3+x).as_independent(x, as_Add=0)
-            (1, -3 + x)
+            (1, x - 3)
 
             Note how the below differs from the above in making the
             constant on the dep term positive.
             >>> (y*(-3+x)).as_independent(x)
-            (y, -3 + x)
+            (y, x - 3)
 
             Note: when trying to get independent terms, a separation method
             might need to be used first. In this case, it is important to keep
@@ -812,9 +812,9 @@ class Expr(Basic, EvalfMixin):
             >>> (x + x*y).as_independent(y)
             (x, x*y)
             >>> separatevars(x + x*y).as_independent(y)
-            (x, 1 + y)
+            (x, y + 1)
             >>> (x*(1 + y)).as_independent(y)
-            (x, 1 + y)
+            (x, y + 1)
             >>> (x*(1 + y)).expand(mul=True).as_independent(y)
             (x, x*y)
             >>> a, b=symbols('a b',positive=True)
@@ -967,9 +967,10 @@ class Expr(Basic, EvalfMixin):
         >>> (3 + x + y).as_coeff_add()
         (3, (y, x))
         >>> (3 + x +y).as_coeff_add(x)
-        (3 + y, (x,))
+        (y + 3, (x,))
         >>> (3 + y).as_coeff_add(x)
-        (3 + y, ())
+        (y + 3, ())
+
         """
         if deps:
             if not self.has(*deps):
@@ -1107,10 +1108,10 @@ class Expr(Basic, EvalfMixin):
            >>> (x+1).extract_additively(2*x)
 
            >>> (x+1).extract_additively(-x)
-           1 + 2*x
+           2*x + 1
 
            >>> (-x+1).extract_additively(2*x)
-           1 - 3*x
+           -3*x + 1
 
         """
         c = sympify(c)
@@ -1276,9 +1277,9 @@ class Expr(Basic, EvalfMixin):
             1 - x**2/2 + O(x**4)
             >>> e = cos(x + exp(y))
             >>> e.series(y, n=2)
-            -y*sin(1 + x) + cos(1 + x) + O(y**2)
+            cos(x + 1) - y*sin(x + 1) + O(y**2)
             >>> e.series(x, n=2)
-            -x*sin(exp(y)) + cos(exp(y)) + O(x**2)
+            cos(exp(y)) - x*sin(exp(y)) + O(x**2)
 
             If `n=None` then an iterator of the series terms will be returned.
 

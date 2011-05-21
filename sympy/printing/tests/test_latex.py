@@ -21,10 +21,10 @@ def test_printmethod():
     assert latex(R(x)) == "foo"
 
 def test_latex_basic():
-    assert latex(1+x) == "1 + x"
+    assert latex(1+x) == "x + 1"
     assert latex(x**2) == "x^{2}"
-    assert latex(x**(1+x)) == "x^{1 + x}"
-    assert latex(x**3+x+1+x**2) == "1 + x + x^{2} + x^{3}"
+    assert latex(x**(1+x)) == "x^{x + 1}"
+    assert latex(x**3+x+1+x**2) == "x^{3} + x^{2} + x + 1"
 
     assert latex(2*x*y) == "2 x y"
     assert latex(2*x*y, mul_symbol='dot') == r"2 \cdot x \cdot y"
@@ -107,17 +107,17 @@ def test_latex_derivatives():
     assert latex(diff(x**3, x, evaluate=False)) == \
     r"\frac{\partial}{\partial x} x^{3}"
     assert latex(diff(sin(x)+x**2, x, evaluate=False)) == \
-    r"\frac{\partial}{\partial x}\left(\operatorname{sin}\left(x\right) + x^{2}\right)"
+    r"\frac{\partial}{\partial x}\left(x^{2} + \operatorname{sin}\left(x\right)\right)"
 
 def test_latex_integrals():
     assert latex(Integral(log(x), x)) == r"\int \operatorname{log}\left(x\right)\,dx"
     assert latex(Integral(x**2, (x,0,1))) == r"\int_{0}^{1} x^{2}\,dx"
     assert latex(Integral(x**2, (x,10,20))) == r"\int_{10}^{20} x^{2}\,dx"
-    assert latex(Integral(y*x**2, (x,0,1), y)) == r"\int\int_{0}^{1} y x^{2}\,dx dy"
+    assert latex(Integral(y*x**2, (x,0,1), y)) == r"\int\int_{0}^{1} x^{2} y\,dx dy"
     assert latex(Integral(y*x**2, (x,0,1), y), mode='equation*') \
-        == r"\begin{equation*}\int\int\limits_{0}^{1} y x^{2}\,dx dy\end{equation*}"
+        == r"\begin{equation*}\int\int\limits_{0}^{1} x^{2} y\,dx dy\end{equation*}"
     assert latex(Integral(y*x**2, (x,0,1), y), mode='equation*', itex=True) \
-        == r"$$\int\int_{0}^{1} y x^{2}\,dx dy$$"
+        == r"$$\int\int_{0}^{1} x^{2} y\,dx dy$$"
 
 def test_latex_intervals():
     a = Symbol('a', real=True)
@@ -142,7 +142,7 @@ def test_latex_sum():
     assert latex(Sum(x**2, (x, -2, 2))) == \
         r"\sum_{x=-2}^{2} x^{2}"
     assert latex(Sum(x**2 + y, (x, -2, 2))) == \
-        r"\sum_{x=-2}^{2} \left(y + x^{2}\right)"
+        r"\sum_{x=-2}^{2} \left(x^{2} + y\right)"
 
 def test_latex_limits():
     assert latex(Limit(x, x, oo)) == r"\lim_{x \to \infty} x"
@@ -208,16 +208,16 @@ def test_latex_Piecewise():
 
 def test_latex_Matrix():
     M = Matrix([[1+x, y],[y, x-1]])
-    assert latex(M) == '\\left(\\begin{smallmatrix}1 + x & y\\\\y & -1 + '\
-                       'x\\end{smallmatrix}\\right)'
+    assert latex(M) == '\\left(\\begin{smallmatrix}x + 1 & y\\\\y & x -'\
+                       '1\\end{smallmatrix}\\right)'
     settings = {'mat_str' : 'bmatrix'}
-    assert latex(M, **settings) == '\\left(\\begin{bmatrix}1 + x & y\\\\y &'\
-           ' -1 + x\\end{bmatrix}\\right)'
+    assert latex(M, **settings) == '\\left(\\begin{bmatrix}x + 1 & y\\\\y &'\
+           ' x -1\\end{bmatrix}\\right)'
     settings['mat_delim'] = None
-    assert latex(M, **settings) == '\\begin{bmatrix}1 + x & y\\\\y & -1 + '\
-                       'x\\end{bmatrix}'
-    assert latex(M) == '\\left(\\begin{smallmatrix}1 + x & y\\\\y & -1 + '\
-                       'x\\end{smallmatrix}\\right)'
+    assert latex(M, **settings) == '\\begin{bmatrix}x + 1 & y\\\\y & x -1'\
+                       '\\end{bmatrix}'
+    assert latex(M) == '\\left(\\begin{smallmatrix}x + 1 & y\\\\y & x -1'\
+                       '\\end{smallmatrix}\\right)'
 
 def test_latex_mul_symbol():
     assert latex(4*4**x, mul_symbol='times') == "4 \\times 4^{x}"
@@ -229,7 +229,7 @@ def test_latex_mul_symbol():
     assert latex(4*x, mul_symbol='ldot') == "4 \,.\, x"
 
 def test_latex_Poly():
-    assert latex(Poly(x**2 + 2 * x, x)) == r"2 x + x^{2}"
+    assert latex(Poly(x**2 + 2 * x, x)) == r"x^{2} + 2 x"
 
 def test_latex_issue1282():
     y = 4*4**log(2)

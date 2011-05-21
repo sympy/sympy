@@ -378,7 +378,7 @@ def gcd_terms(terms):
     >>> from sympy.abc import x, y
 
     >>> gcd_terms((x + 1)**2*y + (x + 1)*y**2)
-    y*(1 + x)*(1 + x + y)
+    y*(x + 1)*(x + y + 1)
 
     """
     cont, numer, denom = _gcd_terms(sympify(terms))

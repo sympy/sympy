@@ -370,12 +370,12 @@ def print_mathml(expr, **settings):
     >>> print_mathml(x+1) #doctest: +NORMALIZE_WHITESPACE
     <apply>
         <plus/>
-        <cn>
-                1
-        </cn>
         <ci>
                 x
         </ci>
+        <cn>
+                1
+        </cn>
     </apply>
 
     """

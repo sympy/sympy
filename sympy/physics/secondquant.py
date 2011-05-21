@@ -299,7 +299,7 @@ class KroneckerDelta(Function):
     >>> KroneckerDelta(i, i+1)
     0
     >>> KroneckerDelta(i, i+1+k)
-    KroneckerDelta(i, 1 + i + k)
+    KroneckerDelta(i, i + k + 1)
 
     """
 
@@ -321,7 +321,7 @@ class KroneckerDelta(Function):
         >>> KroneckerDelta(i, i+1)
         0
         >>> KroneckerDelta(i, i+1+k)
-        KroneckerDelta(i, 1 + i + k)
+        KroneckerDelta(i, i + k + 1)
 
         # indirect doctest
 
@@ -1714,7 +1714,7 @@ class Commutator(Function):
     >>> comm = Commutator(Fd(p)*Fd(q),F(i)); comm
     Commutator(CreateFermion(p)*CreateFermion(q), AnnihilateFermion(i))
     >>> comm.doit(wicks=True)
-    KroneckerDelta(i, q)*CreateFermion(p) - KroneckerDelta(i, p)*CreateFermion(q)
+    -KroneckerDelta(i, p)*CreateFermion(q) + KroneckerDelta(i, q)*CreateFermion(p)
 
     """
 
@@ -2304,9 +2304,9 @@ def evaluate_deltas(e):
     imply a loss of information:
 
     >>> evaluate_deltas(KroneckerDelta(i,p)*f(q))
-    KroneckerDelta(_i, _p)*f(_q)
+    f(_q)*KroneckerDelta(_i, _p)
     >>> evaluate_deltas(KroneckerDelta(i,p)*f(i))
-    KroneckerDelta(_i, _p)*f(_i)
+    f(_i)*KroneckerDelta(_i, _p)
     """
 
 
@@ -2985,12 +2985,12 @@ def simplify_index_permutations(expr, permutation_operators):
     >>> expr = f(p)*g(q) - f(q)*g(p); expr
     f(p)*g(q) - f(q)*g(p)
     >>> simplify_index_permutations(expr,[PermutationOperator(p,q)])
-    PermutationOperator(p, q)*f(p)*g(q)
+    f(p)*g(q)*PermutationOperator(p, q)
 
     >>> PermutList = [PermutationOperator(p,q),PermutationOperator(r,s)]
     >>> expr = f(p,r)*g(q,s) - f(q,r)*g(p,s) + f(q,s)*g(p,r) - f(p,s)*g(q,r)
     >>> simplify_index_permutations(expr,PermutList)
-    PermutationOperator(p, q)*PermutationOperator(r, s)*f(p, r)*g(q, s)
+    f(p, r)*g(q, s)*PermutationOperator(p, q)*PermutationOperator(r, s)
 
     """
 

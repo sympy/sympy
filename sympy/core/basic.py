@@ -557,10 +557,10 @@ class Basic(AssumeMeths):
 
            >>> from sympy import Function, Mul
            >>> (1 + x + 2*sin(y + I*pi)).atoms(Function)
-           set([sin(y + pi*I)])
+           set([sin(y + I*pi)])
 
            >>> (1 + x + 2*sin(y + I*pi)).atoms(Mul)
-           set([2*sin(y + pi*I), pi*I])
+           set([2*sin(y + I*pi), I*pi])
 
 
         """
@@ -792,7 +792,7 @@ class Basic(AssumeMeths):
         >>> from sympy import pi
         >>> from sympy.abc import x, y
         >>> (1 + x*y).subs(x, pi)
-        1 + pi*y
+        pi*y + 1
         >>> (1 + x*y).subs({x:pi, y:2})
         1 + 2*pi
         >>> (1 + x*y).subs([(x,pi), (y,2)])
@@ -801,7 +801,7 @@ class Basic(AssumeMeths):
         >>> (x + y).subs([(y,x**2), (x,2)])
         6
         >>> (x + y).subs([(x,2), (y,x**2)])
-        2 + x**2
+        x**2 + 2
         """
         if len(args) == 1:
             sequence = args[0]
@@ -839,7 +839,7 @@ class Basic(AssumeMeths):
 
         >>> from sympy.abc import x, y
         >>> (x+y)._subs_list( [(x, 3),     (y, x**2)] )
-        3 + x**2
+        x**2 + 3
         >>> (x+y)._subs_list( [(y, x**2),  (x, 3)   ] )
         12
 
@@ -876,7 +876,7 @@ class Basic(AssumeMeths):
            >>> expr = sqrt(sin(2*x))*sin(exp(x)*x)*cos(2*x) + sin(2*x)
 
            >>> expr._subs_dict([A,B,C,D,E])
-           b + a*c*sin(d*e)
+           a*c*sin(d*e) + b
 
         """
         if isinstance(sequence, dict):

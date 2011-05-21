@@ -25,7 +25,7 @@ def _peeloff_pi(arg):
     >>> peel(x + pi/2)
     (x, pi/2)
     >>> peel(x + 2*pi/3 + pi*y)
-    (x + pi/6 + pi*y, pi/2)
+    (x + pi*y + pi/6, pi/2)
     """
     for a in Add.make_args(arg):
         if a is S.Pi:
@@ -556,7 +556,7 @@ class tan(TrigonometricFunction):
         >>> from sympy import tan
         >>> from sympy.abc import x
         >>> tan(x**2).diff(x)
-        2*x*(1 + tan(x**2)**2)
+        2*x*(tan(x**2)**2 + 1)
         >>> tan(1).diff(x)
         0
 

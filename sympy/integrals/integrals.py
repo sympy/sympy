@@ -431,7 +431,7 @@ class Integral(Expr):
         >>> i.free_symbols
         set([x])
         >>> i.doit()
-        -1/6 - x/2 + 2*x**3/3
+        2*x**3/3 - x/2 - 1/6
 
         """
 
@@ -682,7 +682,7 @@ class Integral(Expr):
         >>> i.subs(a + x, b) == i # there is no x + a, only x + <a>
         True
         >>> i.subs(x, y - c)
-        Integral(a + y - c, (a, a, 3), (b, y - c, c))
+        Integral(a - c + y, (a, a, 3), (b, -c + y, c))
         """
         if self == old:
             return new
@@ -735,9 +735,9 @@ class Integral(Expr):
             >>> from sympy.integrals import Integral
             >>> e = Integral(sqrt(x**3+1), (x, 2, 10))
             >>> e
-            Integral((1 + x**3)**(1/2), (x, 2, 10))
+            Integral((x**3 + 1)**(1/2), (x, 2, 10))
             >>> e.as_sum(4, method="midpoint")
-            2*730**(1/2) + 4*7**(1/2) + 4*86**(1/2) + 6*14**(1/2)
+            4*7**(1/2) + 6*14**(1/2) + 4*86**(1/2) + 2*730**(1/2)
             >>> e.as_sum(4, method="midpoint").n()
             124.164447891310
             >>> e.n()
@@ -755,7 +755,7 @@ class Integral(Expr):
             >>> from sympy.abc import x
             >>> e = Integral(sqrt(x**3+1), (x, 2, 10))
             >>> e
-            Integral((1 + x**3)**(1/2), (x, 2, 10))
+            Integral((x**3 + 1)**(1/2), (x, 2, 10))
             >>> e.as_sum(4, method="left")
             6 + 2*65**(1/2) + 2*217**(1/2) + 6*57**(1/2)
             >>> e.as_sum(4, method="left").n()
@@ -817,13 +817,13 @@ def integrate(*args, **kwargs):
        >>> from sympy.abc import a, x, y
 
        >>> integrate(x*y, x)
-       y*x**2/2
+       x**2*y/2
 
        >>> integrate(log(x), x)
-       -x + x*log(x)
+       x*log(x) - x
 
        >>> integrate(log(x), (x, 1, a))
-       1 - a + a*log(a)
+       a*log(a) - a + 1
 
        >>> integrate(x)
        x**2/2

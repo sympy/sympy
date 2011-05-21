@@ -31,10 +31,10 @@
     >>> n = Symbol('n', integer=True)
 
     >>> rsolve_poly([-1, 1], 4*n**3, n)
-    C0 + n**2 - 2*n**3 + n**4
+    C0 + n**4 - 2*n**3 + n**2
 
     >>> bernoulli(4, n)
-    -1/30 + n**2 - 2*n**3 + n**4
+    n**4 - 2*n**3 + n**2 - 1/30
 
    For the sake of completeness, f(n) can be:
 
@@ -92,7 +92,7 @@ def rsolve_poly(coeffs, f, n, **hints):
        >>> n = Symbol('n', integer=True)
 
        >>> rsolve_poly([-1, 1], 4*n**3, n)
-       C0 + n**2 - 2*n**3 + n**4
+       C0 + n**4 - 2*n**3 + n**2
 
        For more information on implemented algorithms refer to:
 
@@ -625,10 +625,10 @@ def rsolve(f, y, init=None):
        >>> f = (n-1)*y(n+2) - (n**2+3*n-2)*y(n+1) + 2*n*(n+1)*y(n)
 
        >>> rsolve(f, y(n))
-       C0*n! + C1*2**n
+       2**n*C1 + C0*n!
 
        >>> rsolve(f, y(n), { y(0):0, y(1):3 })
-       -3*n! + 3*2**n
+       3*2**n - 3*n!
 
     """
     if isinstance(f, Equality):

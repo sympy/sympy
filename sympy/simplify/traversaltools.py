@@ -15,10 +15,9 @@ def use(expr, func, level=0, args=(), kwargs={}):
     >>> f = (x + y)**2*x + 1
 
     >>> use(f, expand, level=2)
-    1 + x*(2*x*y + x**2 + y**2)
-
+    x*(x**2 + 2*x*y + y**2) + 1
     >>> expand(f)
-    1 + x*y**2 + 2*y*x**2 + x**3
+    x**3 + 2*x**2*y + x*y**2 + 1
 
     """
     def _use(expr, level):

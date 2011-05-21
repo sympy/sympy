@@ -376,7 +376,7 @@ def dsolve(eq, func, hint="default", simplify=True, **kwargs):
         f(x) == C1*cos(3*x) + C2*sin(3*x)
         >>> dsolve(sin(x)*cos(f(x)) + cos(x)*sin(f(x))*f(x).diff(x), f(x),
         ...     hint='separable')
-        -log(-1 + sin(f(x))**2)/2 == C1 + log(-1 + sin(x)**2)/2
+        -log(sin(f(x))**2 - 1)/2 == C1 + log(sin(x)**2 - 1)/2
         >>> dsolve(sin(x)*cos(f(x)) + cos(x)*sin(f(x))*f(x).diff(x), f(x),
         ...     hint='1st_exact')
         f(x) == acos(C1/cos(x))
@@ -819,20 +819,20 @@ def odesimp(eq, func, order, hint):
         ... hint='1st_homogeneous_coeff_subs_indep_div_dep_Integral',
         ... simplify=False)
         >>> pprint(eq)
-            x
-           ----
-           f(x)
-             /
-            |
-            |   /          /1 \\
-            |  -|1 + u2*sin|--||
-            |   \          \u2//            /f(x)\
-        -   |  ----------------- d(u2) + log|----| = 0
-            |       2    /1 \               \ C1 /
-            |     u2 *sin|--|
-            |            \u2/
-            |
-           /
+                      x
+                     ----
+                     f(x)
+                       /
+                      |
+                      |   /      /1 \    \
+                      |  -|u2*sin|--| + 1|
+           /f(x)\     |   \      \u2/    /
+        log|----| -   |  ----------------- d(u2) = 0
+           \ C1 /     |       2    /1 \
+                      |     u2 *sin|--|
+                      |            \u2/
+                      |
+                     /
 
         >>  pprint(odesimp(eq, f(x), 1,
         ... hint='1st_homogeneous_coeff_subs_indep_div_dep'
@@ -1295,7 +1295,7 @@ def constantsimp(expr, independentsymbol, endnumber, startnumber=1,
         >>> constantsimp(C1 + 2 + x + y, x, 3)
         C1 + x
         >>> constantsimp(C1*C2 + 2 + x + y + C3*x, x, 3)
-        C2 + x + C3*x
+        C2 + C3*x + x
 
     """
     # This function works recursively.  The idea is that, for Mul,
@@ -1406,7 +1406,7 @@ def constant_renumber(expr, symbolname, startnumber, endnumber):
         >>> x, C1, C2, C3 = symbols('x,C1,C2,C3')
         >>> pprint(C2 + C1*x + C3*x**2)
                         2
-        C2 + C1*x + C3*x
+        C1*x + C2 + C3*x
         >>> pprint(constant_renumber(C2 + C1*x + C3*x**2, 'C', 1, 3))
                         2
         C1 + C2*x + C3*x
@@ -1624,11 +1624,11 @@ def ode_1st_homogeneous_coeff_best(eq, func, order, match):
         >>> pprint(dsolve(2*x*f(x) + (x**2 + f(x)**2)*f(x).diff(x), f(x),
         ... hint='1st_homogeneous_coeff_best'))
               ___________
-             /         2
-            /       3*x
-           /   1 + ----- *f(x) = C1
-        3 /         2
-        \/         f (x)
+             /     2
+            /   3*x
+           /   ----- + 1 *f(x) = C1
+        3 /     2
+        \/     f (x)
 
     **References**
         - http://en.wikipedia.org/wiki/Homogeneous_differential_equation
@@ -1679,22 +1679,21 @@ def ode_1st_homogeneous_coeff_subs_dep_div_indep(eq, func, order, match):
         >>> f, g, h = map(Function, ['f', 'g', 'h'])
         >>> genform = g(f(x)/x) + h(f(x)/x)*f(x).diff(x)
         >>> pprint(genform)
-        d         /f(x)\    /f(x)\
-        --(f(x))*h|----| + g|----|
-        dx        \ x  /    \ x  /
+         /f(x)\    /f(x)\ d
+        g|----| + h|----|*--(f(x))
+         \ x  /    \ x  / dx
         >>> pprint(dsolve(genform, f(x),
         ... hint='1st_homogeneous_coeff_subs_dep_div_indep_Integral'))
-           f(x)
-           ----
-            x
-             /
-            |
-            |       -h(u1)
-        -   |  ---------------- d(u1) + log(C1*x) = 0
-            |  u1*h(u1) + g(u1)
-            |
-           /
-
+                     f(x)
+                     ----
+                      x
+                       /
+                      |
+                      |       -h(u1)
+        log(C1*x) -   |  ---------------- d(u1) = 0
+                      |  u1*h(u1) + g(u1)
+                      |
+                     /
 
     Where u1*h(u1) + g(u1) != 0 and x != 0.
 
@@ -1760,9 +1759,9 @@ def ode_1st_homogeneous_coeff_subs_indep_div_dep(eq, func, order, match):
     >>> f, g, h = map(Function, ['f', 'g', 'h'])
     >>> genform = g(x/f(x)) + h(x/f(x))*f(x).diff(x)
     >>> pprint(genform)
-    d         / x  \    / x  \
-    --(f(x))*h|----| + g|----|
-    dx        \f(x)/    \f(x)/
+     / x  \    / x  \ d
+    g|----| + h|----|*--(f(x))
+     \f(x)/    \f(x)/ dx
     >>> pprint(dsolve(genform, f(x),
     ... hint='1st_homogeneous_coeff_subs_indep_div_dep_Integral'))
                  x
@@ -1772,7 +1771,7 @@ def ode_1st_homogeneous_coeff_subs_indep_div_dep(eq, func, order, match):
                  |
                  |        g(u2)
                  |  ----------------- d(u2)
-                 |  -h(u2) - u2*g(u2)
+                 |  -u2*g(u2) - h(u2)
                  |
                 /
     <BLANKLINE>
@@ -1790,11 +1789,11 @@ def ode_1st_homogeneous_coeff_subs_indep_div_dep(eq, func, order, match):
         >>> pprint(dsolve(2*x*f(x) + (x**2 + f(x)**2)*f(x).diff(x), f(x),
         ... hint='1st_homogeneous_coeff_subs_indep_div_dep'))
               ___________
-             /         2
-            /       3*x
-           /   1 + ----- *f(x) = C1
-        3 /         2
-        \/         f (x)
+             /     2
+            /   3*x
+           /   ----- + 1 *f(x) = C1
+        3 /     2
+        \/     f (x)
 
     **References**
         - http://en.wikipedia.org/wiki/Homogeneous_differential_equation
@@ -2040,8 +2039,8 @@ def ode_Bernoulli(eq, func, order, match):
         >>> f, P, Q = map(Function, ['f', 'P', 'Q'])
         >>> genform = Eq(f(x).diff(x) + P(x)*f(x), Q(x)*f(x)**n)
         >>> pprint(genform)
-                    d           n
-        P(x)*f(x) + --(f(x)) = f (x)*Q(x)
+                    d                n
+        P(x)*f(x) + --(f(x)) = Q(x)*f (x)
                     dx
         >>> pprint(dsolve(genform, f(x), hint='Bernoulli_Integral')) #doctest: +SKIP
                                                                                        1
@@ -2115,10 +2114,10 @@ def ode_Liouville(eq, func, order, match):
         >>> genform = Eq(diff(f(x),x,x) + g(f(x))*diff(f(x),x)**2 +
         ... h(x)*diff(f(x),x), 0)
         >>> pprint(genform)
-                2                              2
-        d                   d                 d
-        --(f(x)) *g(f(x)) + --(f(x))*h(x) + -----(f(x)) = 0
-        dx                  dx              dx dx
+                        2                      2
+                d                d            d
+        g(f(x))*--(f(x))  + h(x)*--(f(x)) + -----(f(x)) = 0
+                dx               dx         dx dx
         >>> pprint(dsolve(genform, f(x), hint='Liouville_Integral'))
                                           f(x)
                   /                     /
@@ -2186,7 +2185,7 @@ def _nth_linear_match(eq, func, order):
         >>> _nth_linear_match(f(x).diff(x, 3) + 2*f(x).diff(x) +
         ... x*f(x).diff(x, 2) + cos(x)*f(x).diff(x) + x - f(x) -
         ... sin(x), f(x), 3)
-        {-1: x - sin(x), 0: -1, 1: 2 + cos(x), 2: x, 3: 1}
+        {-1: x - sin(x), 0: -1, 1: cos(x) + 2, 2: x, 3: 1}
         >>> _nth_linear_match(f(x).diff(x, 3) + 2*f(x).diff(x) +
         ... x*f(x).diff(x, 2) + cos(x)*f(x).diff(x) + x - f(x) -
         ... sin(f(x)), f(x), 3) == None
@@ -2382,10 +2381,10 @@ def ode_nth_linear_constant_coeff_undetermined_coefficients(eq, func, order, mat
         >>> pprint(dsolve(f(x).diff(x, 2) + 2*f(x).diff(x) + f(x) -
         ... 4*exp(-x)*x**2 + cos(2*x), f(x),
         ... hint='nth_linear_constant_coeff_undetermined_coefficients'))
-                                           /             4\
-                 4*sin(2*x)   3*cos(2*x)   |            x |  -x
-        f(x) = - ---------- + ---------- + |C1 + C2*x + --|*e
-                     25           25       \            3 /
+               /             4\
+               |            x |  -x   4*sin(2*x)   3*cos(2*x)
+        f(x) = |C1 + C2*x + --|*e   - ---------- + ----------
+               \            3 /           25           25
 
     **References**
         - http://en.wikipedia.org/wiki/Method_of_undetermined_coefficients
@@ -2684,10 +2683,9 @@ def ode_nth_linear_constant_coeff_variation_of_parameters(eq, func, order, match
         >>> pprint(dsolve(f(x).diff(x, 3) - 3*f(x).diff(x, 2) +
         ... 3*f(x).diff(x) - f(x) - exp(x)*log(x), f(x),
         ... hint='nth_linear_constant_coeff_variation_of_parameters'))
-               /             3 /  11   log(x)\       2\  x
-        f(x) = |C1 + C2*x + x *|- -- + ------| + C3*x |*e
-               \               \  36     6   /        /
-
+               /                2    3 /log(x)   11\\  x
+        f(x) = |C1 + C2*x + C3*x  + x *|------ - --||*e
+               \                       \  6      36//
 
     **References**
         - http://en.wikipedia.org/wiki/Variation_of_parameters
@@ -2772,9 +2770,9 @@ def ode_separable(eq, func, order, match):
         >>> a, b, c, d, f = map(Function, ['a', 'b', 'c', 'd', 'f'])
         >>> genform = Eq(a(x)*b(f(x))*f(x).diff(x), c(x)*d(f(x)))
         >>> pprint(genform)
-        d
-        --(f(x))*a(x)*b(f(x)) = c(x)*d(f(x))
-        dx
+                     d
+        a(x)*b(f(x))*--(f(x)) = c(x)*d(f(x))
+                     dx
         >>> pprint(dsolve(genform, f(x), hint='separable_Integral'))
              f(x)
            /                  /
@@ -2792,10 +2790,10 @@ def ode_separable(eq, func, order, match):
         >>> f = Function('f')
         >>> pprint(dsolve(Eq(f(x)*f(x).diff(x) + x, 3*x*f(x)**2), f(x),
         ... hint='separable'))
-           /        2   \         2
-        log\-1 + 3*f (x)/        x
-        ----------------- = C1 + --
-                6                2
+           /   2       \         2
+        log\3*f (x) - 1/        x
+        ---------------- = C1 + --
+               6                2
 
 
     **Reference**

@@ -726,7 +726,7 @@ class Line(LinearEntity):
     >>> L.points
     (Point(2, 3), Point(3, 5))
     >>> L.equation()
-    1 + y - 2*x
+    -2*x + y + 1
     >>> L.coefficients
     (-2, 1, 1)
 
@@ -787,7 +787,7 @@ class Line(LinearEntity):
         >>> p1, p2 = Point(1, 0), Point(5, 3)
         >>> l1 = Line(p1, p2)
         >>> l1.arbitrary_point()
-        Point(1 + 4*t, 3*t)
+        Point(4*t + 1, 3*t)
 
         """
         t = _symbol(parameter)
@@ -842,7 +842,7 @@ class Line(LinearEntity):
         >>> p1, p2 = Point(1, 0), Point(5, 3)
         >>> l1 = Line(p1, p2)
         >>> l1.equation()
-        3 - 3*x + 4*y
+        -3*x + 4*y + 3
 
         """
         x, y = _symbol(x), _symbol(y)
@@ -1276,7 +1276,7 @@ class Segment(LinearEntity):
         >>> p1, p2 = Point(1, 0), Point(5, 3)
         >>> s1 = Segment(p1, p2)
         >>> s1.arbitrary_point()
-        Point(1 + 4*t, 3*t)
+        Point(4*t + 1, 3*t)
 
         """
         t = _symbol(parameter)

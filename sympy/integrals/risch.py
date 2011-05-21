@@ -116,7 +116,7 @@ def heurisch(f, x, **kwargs):
        >>> from sympy.abc import x, y
 
        >>> heurisch(y*tan(x), x)
-       y*log(1 + tan(x)**2)/2
+       y*log(tan(x)**2 + 1)/2
 
        See Manuel Bronstein's "Poor Man's Integrator":
 

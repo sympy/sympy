@@ -32,17 +32,17 @@ def test_Abs():
 
 def test_Add():
     assert str(x+y) == "x + y"
-    assert str(x+1) == "1 + x"
-    assert str(x+x**2) == "x + x**2"
-    assert str(5+x+y+x*y+x**2+y**2) == "5 + x + y + x*y + x**2 + y**2"
-    assert str(1+x+x**2/2+x**3/3) == "1 + x + x**2/2 + x**3/3"
-    assert str(2*x-7*x**2 + 2 + 3*y) == "2 + 2*x + 3*y - 7*x**2"
+    assert str(x+1) == "x + 1"
+    assert str(x+x**2) == "x**2 + x"
+    assert str(5+x+y+x*y+x**2+y**2) == "x**2 + x*y + x + y**2 + y + 5"
+    assert str(1+x+x**2/2+x**3/3) == "x**3/3 + x**2/2 + x + 1"
+    assert str(2*x-7*x**2 + 2 + 3*y) == "-7*x**2 + 2*x + 3*y + 2"
     assert str(x-y) == "x - y"
-    assert str(2-x) == "2 - x"
-    assert str(x-2) == "-2 + x"
-    assert str(x-y-z-w) == "x - w - y - z"
-    assert str(x-z*y**2*z*w) == "x - w*y**2*z**2"
-    assert str(x-1*y*x*y) == "x - x*y**2"
+    assert str(2-x) == "-x + 2"
+    assert str(x-2) == "x - 2"
+    assert str(x-y-z-w) == "-w + x - y - z"
+    assert str(x-z*y**2*z*w) == "-w*y**2*z**2 + x"
+    assert str(x-1*y*x*y) == "-x*y**2 + x"
     assert str(sin(x).series(x, 0, 15)) == "x - x**3/6 + x**5/120 - x**7/5040 + x**9/362880 - x**11/39916800 + x**13/6227020800 + O(x**15)"
 
 def test_Catalan():
@@ -57,13 +57,13 @@ def test_Derivative():
     assert str(Derivative(x**2/y, x, y, evaluate=False)) == "D(x**2/y, x, y)"
 
 def test_dict():
-    assert str({1: 1+x}) == sstr({1: 1+x}) == "{1: 1 + x}"
+    assert str({1: 1+x}) == sstr({1: 1+x}) == "{1: x + 1}"
     assert str({1: x**2, 2: y*x}) in ("{1: x**2, 2: x*y}", "{2: x*y, 1: x**2}")
     assert sstr({1: x**2, 2: y*x}) == "{1: x**2, 2: x*y}"
 
 def test_Dummy():
     assert str(d) == "_d"
-    assert str(d+x) == "x + _d"
+    assert str(d+x) == "_d + x"
 
 def test_EulerGamma():
     assert str(EulerGamma) == "EulerGamma"
@@ -131,7 +131,7 @@ def test_Limit():
 
 def test_list():
     assert str([x]) == sstr([x]) == "[x]"
-    assert str([x**2, x*y+1]) == sstr([x**2, x*y+1]) == "[x**2, 1 + x*y]"
+    assert str([x**2, x*y+1]) == sstr([x**2, x*y+1]) == "[x**2, x*y + 1]"
     assert str([x**2, [y+x]]) == sstr([x**2, [y+x]]) == "[x**2, [x + y]]"
 
 def test_Matrix():
@@ -146,7 +146,7 @@ def test_Mul():
     assert str(x/y) == "x/y"
     assert str(y/x) == "y/x"
     assert str(x/y/z) == "x/(y*z)"
-    assert str((x+1)/(y+2)) == "(1 + x)/(2 + y)"
+    assert str((x+1)/(y+2)) == "(x + 1)/(y + 2)"
     assert str(2*x/3)  ==  '2*x/3'
     assert str(-2*x/3)  == '-2*x/3'
 
@@ -196,15 +196,15 @@ def test_Poly():
 
     assert str(Poly(x - 1, x)) == "Poly(x - 1, x, domain='ZZ')"
 
-    assert str(Poly(x**2 + 1 + y, x)) == "Poly(x**2 + 1 + y, x, domain='ZZ[y]')"
-    assert str(Poly(x**2 - 1 + y, x)) == "Poly(x**2 - 1 + y, x, domain='ZZ[y]')"
+    assert str(Poly(x**2 + 1 + y, x)) == "Poly(x**2 + y + 1, x, domain='ZZ[y]')"
+    assert str(Poly(x**2 - 1 + y, x)) == "Poly(x**2 + y - 1, x, domain='ZZ[y]')"
 
     assert str(Poly(x**2 + I*x, x)) == "Poly(x**2 + I*x, x, domain='EX')"
     assert str(Poly(x**2 - I*x, x)) == "Poly(x**2 - I*x, x, domain='EX')"
 
     assert str(Poly(-x*y*z + x*y - 1, x, y, z)) == "Poly(-x*y*z + x*y - 1, x, y, z, domain='ZZ')"
     assert str(Poly(-w*x**21*y**7*z + (1 + w)*z**3 - 2*x*z + 1, x, y, z)) == \
-        "Poly(-w*x**21*y**7*z - 2*x*z + (1 + w)*z**3 + 1, x, y, z, domain='ZZ[w]')"
+        "Poly(-w*x**21*y**7*z - 2*x*z + (w + 1)*z**3 + 1, x, y, z, domain='ZZ[w]')"
 
     assert str(Poly(x**2 + 1, x, modulus=2)) == "Poly(x**2 + 1, x, modulus=2)"
     assert str(Poly(2*x**2 + 3*x + 4, x, modulus=17)) == "Poly(2*x**2 + 3*x + 4, x, modulus=17)"
@@ -216,7 +216,7 @@ def test_Pow():
     assert str((x+y)**-1) == "1/(x + y)"
     assert str((x+y)**-2) == "(x + y)**(-2)"
     assert str((x+y)**2) == "(x + y)**2"
-    assert str((x+y)**(1+x)) == "(x + y)**(1 + x)"
+    assert str((x+y)**(1+x)) == "(x + y)**(x + 1)"
 
 def test_Rational():
     n1 = Rational(1,4)
@@ -324,8 +324,8 @@ def test_Symbol():
 
 def test_tuple():
     assert str((x,)) == sstr((x,)) == "(x,)"
-    assert str((x+y, 1+x)) == sstr((x+y, 1+x)) == "(x + y, 1 + x)"
-    assert str((x+y, (1+x, x**2))) == sstr((x+y, (1+x, x**2))) == "(x + y, (1 + x, x**2))"
+    assert str((x+y, 1+x)) == sstr((x+y, 1+x)) == "(x + y, x + 1)"
+    assert str((x+y, (1+x, x**2))) == sstr((x+y, (1+x, x**2))) == "(x + y, (x + 1, x**2))"
 
 def test_Uniform():
     assert str(Uniform(x, y)) == "Uniform(x, y)"
@@ -337,12 +337,12 @@ def test_Unit():
 def test_wild_str():
     # Check expressions containing Wild not causing infinite recursion
     w = Wild('x')
-    assert str(w + 1)           == '1 + x_'
-    assert str(exp(2**w) + 5)   == '5 + exp(2**x_)'
-    assert str(3*w + 1)         == '1 + 3*x_'
+    assert str(w + 1)           == 'x_ + 1'
+    assert str(exp(2**w) + 5)   == 'exp(2**x_) + 5'
+    assert str(3*w + 1)         == '3*x_ + 1'
     assert str(1/w + 1)         == '1 + 1/x_'
-    assert str(w**2 + 1)        == '1 + x_**2'
-    assert str(1/(1-w))         == '1/(1 - x_)'
+    assert str(w**2 + 1)        == 'x_**2 + 1'
+    assert str(1/(1-w))         == '1/(-x_ + 1)'
 
 def test_zeta():
     assert str(zeta(3)) == "zeta(3)"
@@ -367,8 +367,7 @@ def test_bug4():
 
 def test_issue922():
     e = Integral(x,x) + 1
-    assert str(e)   == '1 + Integral(x, x)'
-
+    assert str(e)   == 'Integral(x, x) + 1'
 
 def test_sstrrepr():
     assert sstr('abc')      == 'abc'
