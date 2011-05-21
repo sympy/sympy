@@ -3,7 +3,7 @@ from sympify import converter, sympify, _sympify, SympifyError
 from basic import Basic
 from singleton import S, Singleton
 from expr import Expr, AtomicExpr
-from decorators import _sympifyit
+from decorators import _sympifyit, deprecated
 from cache import cacheit, clear_cache
 import sympy.mpmath as mpmath
 import sympy.mpmath.libmp as mlib
@@ -439,6 +439,11 @@ converter[float] = converter[decimal.Decimal] = Float
 
 # this is here to work nicely in Sage
 RealNumber = Float
+
+@deprecated
+def Real(*args, **kwargs):  # pragma: no cover
+    """Deprecated alias for the Float constructor."""
+    return Float(*args, **kwargs)
 
 class Rational(Number):
     """Represents integers and rational numbers (p/q) of any size.
