@@ -524,8 +524,6 @@ def roots(f, *gens, **flags):
         if f.is_multivariate:
             raise PolynomialError('multivariate polynomials are not supported')
 
-    x = f.gen
-
     def _update_dict(result, root, k):
         if root in result:
             result[root] += k
@@ -543,7 +541,7 @@ def roots(f, *gens, **flags):
             previous, roots = list(roots), []
 
             for root in previous:
-                g = factor - Poly(root, x)
+                g = factor - Poly(root, f.gen)
 
                 for root in _try_heuristics(g):
                     roots.append(root)
@@ -567,7 +565,7 @@ def roots(f, *gens, **flags):
 
         for i in [-1, 1]:
             if not f.eval(i):
-                f = f.exquo(Poly(x - i, x))
+                f = f.exquo(Poly(f.gen - i, f.gen))
                 result.append(i)
                 break
 
@@ -586,29 +584,21 @@ def roots(f, *gens, **flags):
 
         return result
 
-    if f.is_monomial == 1:
-        if f.is_ground:
-            if multiple:
-                return []
-            else:
-                return {}
-        else:
-            result = {S(0) : f.degree()}
+    (k,), f = f.terms_gcd()
+
+    if not k:
+        zeros = {}
     else:
-        (k,), f = f.terms_gcd()
+        zeros = {S(0) : k}
 
-        if not k:
-            zeros = {}
-        else:
-            zeros = {S(0) : k}
+    coeff, f = preprocess_roots(f)
 
-        coeff, f = preprocess_roots(f)
+    if auto and f.get_domain().has_Ring:
+        f = f.to_field()
 
-        if auto and f.get_domain().has_Ring:
-            f = f.to_field()
+    result = {}
 
-        result = {}
-
+    if not f.is_ground:
         if not f.get_domain().is_Exact:
             for r in f.nroots():
                 _update_dict(result, r, 1)
@@ -628,16 +618,16 @@ def roots(f, *gens, **flags):
                     _update_dict(result, root, 1)
             else:
                 for factor, k in factors:
-                    for r in _try_heuristics(Poly(factor, x, field=True)):
+                    for r in _try_heuristics(Poly(factor, f.gen, field=True)):
                         _update_dict(result, r, k)
 
-        if coeff is not S.One:
-            _result, result, = result, {}
+    if coeff is not S.One:
+        _result, result, = result, {}
 
-            for root, k in _result.iteritems():
-                result[coeff*root] = k
+        for root, k in _result.iteritems():
+            result[coeff*root] = k
 
-        result.update(zeros)
+    result.update(zeros)
 
     if filter not in [None, 'C']:
         handlers = {
