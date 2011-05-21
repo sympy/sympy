@@ -1,5 +1,5 @@
 from sympy.core.add import Add
-from sympy.core.numbers import Rational, Real
+from sympy.core.numbers import Rational, Float
 from sympy.core.basic import C, sympify, cacheit
 from sympy.core.singleton import S
 from sympy.core.function import Function, ArgumentIndexError
@@ -81,10 +81,10 @@ def _pi_coeff(arg, cycles=1):
         cx = arg.coeff(S.Pi)
         if cx:
             c, x = cx.as_coeff_Mul() # pi is not included as coeff
-            if c.is_Real:
+            if c.is_Float:
                 # recast exact binary fractions to Rationals
                 m = int(c*2)
-                if Real(float(m)/2) == c:
+                if Float(float(m)/2) == c:
                     c = Rational(m, 2)
             if x is not S.One or not (c.is_Rational and c.q != 1):
                 if x.is_integer:

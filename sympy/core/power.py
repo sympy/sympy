@@ -629,7 +629,7 @@ class Pow(Expr):
             c, t = exp.as_coeff_mul()
             if c.is_negative:
                 return 1, base**-exp
-        # unprocessed Real and NumberSymbol
+        # unprocessed Float and NumberSymbol
         return self, S.One
 
     def matches(self, expr, repl_dict={}, evaluate=False):

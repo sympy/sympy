@@ -10,7 +10,7 @@ from sympy.polys.polyerrors import (
 )
 
 from sympy import (
-    S, symbols, sqrt, I, Rational, Real, Lambda, log, exp, tan,
+    S, symbols, sqrt, I, Rational, Float, Lambda, log, exp, tan,
 )
 
 from sympy.utilities.pytest import raises
@@ -139,17 +139,17 @@ def test_RootOf_subs():
 def test_RootOf_evalf():
     real = RootOf(x**3 + x + 3, 0).evalf(n=20)
 
-    assert real.epsilon_eq(Real("-1.2134116627622296341"))
+    assert real.epsilon_eq(Float("-1.2134116627622296341"))
 
     re, im = RootOf(x**3 + x + 3, 1).evalf(n=20).as_real_imag()
 
-    assert re.epsilon_eq(Real("0.60670583138111481707"))
-    assert im.epsilon_eq(Real("1.45061224918844152650"))
+    assert re.epsilon_eq(Float("0.60670583138111481707"))
+    assert im.epsilon_eq(Float("1.45061224918844152650"))
 
     re, im = RootOf(x**3 + x + 3, 2).evalf(n=20).as_real_imag()
 
-    assert re.epsilon_eq( Real("0.60670583138111481707"))
-    assert im.epsilon_eq(-Real("1.45061224918844152650"))
+    assert re.epsilon_eq( Float("0.60670583138111481707"))
+    assert im.epsilon_eq(-Float("1.45061224918844152650"))
 
 def test_RootSum___new__():
     f = x**3 + x + 3

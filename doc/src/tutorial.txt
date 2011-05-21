@@ -123,7 +123,7 @@ Documentation can be found at http://www.sympy.org
 Using SymPy as a calculator
 ---------------------------
 
-Sympy has three built-in numeric types: Real, Rational and Integer.
+Sympy has three built-in numeric types: Float, Rational and Integer.
 
 The Rational class represents a rational number as a pair of two Integers: the numerator and the denominator, so Rational(1,2) represents 1/2, Rational(5,2) 5/2 and so on.
 

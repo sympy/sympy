@@ -245,8 +245,8 @@ class FCodePrinter(CodePrinter):
         p, q = int(expr.p), int(expr.q)
         return "%d.0d0/%d.0d0" % (p, q)
 
-    def _print_Real(self, expr):
-        printed = CodePrinter._print_Real(self, expr)
+    def _print_Float(self, expr):
+        printed = CodePrinter._print_Float(self, expr)
         e = printed.find('e')
         if e > -1:
             return "%sd%s" % (printed[:e], printed[e+1:])

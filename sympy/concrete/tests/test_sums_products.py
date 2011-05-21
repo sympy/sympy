@@ -1,4 +1,4 @@
-from sympy import (S, Symbol, Sum, oo, Real, Rational, summation, pi, cos,
+from sympy import (S, Symbol, Sum, oo, Float, Rational, summation, pi, cos,
     zeta, exp, log, factorial, sqrt, E, sympify, binomial, harmonic, Catalan,
     EulerGamma, Function, Integral, Product, product, nan, diff, Derivative)
 from sympy.concrete.summations import telescopic

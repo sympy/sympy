@@ -9,7 +9,7 @@ ordering_of_classes = [
     # singleton numbers
     'Zero', 'One','Half','Infinity','NaN','NegativeOne','NegativeInfinity',
     # numbers
-    'Integer','Rational','Real',
+    'Integer','Rational','Float',
     # singleton symbols
     'Exp1','Pi','ImaginaryUnit',
     # symbols

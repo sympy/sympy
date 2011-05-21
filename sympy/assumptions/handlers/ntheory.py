@@ -58,7 +58,7 @@ class AskPrimeHandler(CommonHandler):
         return False
 
     @staticmethod
-    def Real(expr, assumptions):
+    def Float(expr, assumptions):
         return AskPrimeHandler._number(expr, assumptions)
 
     @staticmethod
@@ -167,7 +167,7 @@ class AskEvenHandler(CommonHandler):
         return False
 
     @staticmethod
-    def Real(expr, assumptions):
+    def Float(expr, assumptions):
         return expr % 2 == 0
 
     @staticmethod

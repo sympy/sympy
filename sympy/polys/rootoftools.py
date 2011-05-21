@@ -1,7 +1,7 @@
 """Implementation of RootOf class and related tools. """
 
 from sympy.core import (
-    S, Basic, Expr, Integer, Real, I, Add, Lambda, symbols,
+    S, Basic, Expr, Integer, Float, I, Add, Lambda, symbols,
 )
 
 from sympy.polys.polytools import Poly, factor
@@ -447,7 +447,7 @@ class RootOf(Expr):
         finally:
             mp.prec = _prec
 
-        return Real._new(root.real._mpf_, prec) + I*Real._new(root.imag._mpf_, prec)
+        return Float._new(root.real._mpf_, prec) + I*Float._new(root.imag._mpf_, prec)
 
 class RootSum(Expr):
     """Represents a sum of all roots of a univariate polynomial. """

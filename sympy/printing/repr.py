@@ -84,7 +84,7 @@ class ReprPrinter(Printer):
     def _print_Fraction(self, expr):
         return 'Fraction(%s, %s)' % (self._print(expr.numerator), self._print(expr.denominator))
 
-    def _print_Real(self, expr):
+    def _print_Float(self, expr):
         dps = prec_to_dps(expr._prec)
         r = mlib.to_str(expr._mpf_, repr_dps(expr._prec))
         return "%s('%s', prec=%i)" % (expr.__class__.__name__, r, dps)

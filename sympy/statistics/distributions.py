@@ -1,4 +1,4 @@
-from sympy.core import sympify, Lambda, Dummy, Integer, Rational, oo, Real, pi
+from sympy.core import sympify, Lambda, Dummy, Integer, Rational, oo, Float, pi
 from sympy.functions import sqrt, exp, erf
 from sympy.printing import sstr
 import random
@@ -139,7 +139,7 @@ class Normal(ContinuousProbability):
 
         # calculate y = ierf(p) by solving erf(y) - p = 0
         y = erfinv(mpf(p))
-        t = Real(str(mpf(float(s.sigma)) * mpf(2)**0.5 * y))
+        t = Float(str(mpf(float(s.sigma)) * mpf(2)**0.5 * y))
         mu = s.mu.evalf()
         return (mu-t, mu+t)
 
@@ -191,7 +191,7 @@ class Uniform(ContinuousProbability):
         return (x-s.a)/(s.b-s.a)
 
     def _random(s):
-        return Real(random.uniform(float(s.a), float(s.b)))
+        return Float(random.uniform(float(s.a), float(s.b)))
 
     def confidence(s, p):
         """Generate a symmetric (p*100)% confidence interval.

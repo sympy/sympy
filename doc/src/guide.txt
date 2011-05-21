@@ -114,8 +114,8 @@ Basics
 
 All symbolic things are implemented using subclasses of the ``Basic`` class.
 First, you need to create symbols using ``Symbol("x")`` or numbers using
-``Integer(5)`` or ``Real(34.3)``. Then you construct the expression using any
-class from SymPy.  For example ``Add(Symbol("a"),Symbol("b"))`` gives an
+``Integer(5)`` or ``Float(34.3)``. Then you construct the expression using any
+class from SymPy.  For example ``Add(Symbol("a"), Symbol("b"))`` gives an
 instance of the ``Add`` class.  You can call all methods, which the particular
 class supports.
 

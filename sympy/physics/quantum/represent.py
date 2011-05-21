@@ -28,7 +28,7 @@ def _sympy_to_scalar(e):
     if isinstance(e, Expr):
         if e.is_Integer:
             return int(e)
-        elif e.is_Real:
+        elif e.is_Float:
             return float(e)
         elif e.is_Rational:
             return float(e)

@@ -1890,7 +1890,7 @@ def _homogeneous_order(eq, *symbols):
 
     # These are all constants
     if type(eq) in (int, float) or eq.is_Number or eq.is_Integer or \
-    eq.is_Rational or eq.is_NumberSymbol or eq.is_Real:
+    eq.is_Rational or eq.is_NumberSymbol or eq.is_Float:
         return sympify(0)
 
     # Break the equation into additive parts

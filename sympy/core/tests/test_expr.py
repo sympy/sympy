@@ -1,4 +1,4 @@
-from sympy import Add, Basic, S, Symbol, Wild,  Real, Integer, Rational, I, \
+from sympy import Add, Basic, S, Symbol, Wild,  Float, Integer, Rational, I, \
     sin, cos, tan, exp, log, oo, sqrt, symbols, Integral, sympify, \
     WildFunction, Poly, Function, Derivative, Number, pi, var, \
     NumberSymbol, zoo, Piecewise, Mul, Pow, nsimplify, ratsimp, trigsimp, \
@@ -104,7 +104,7 @@ f1_1 = F1_1()
 # basic sympy objects
 basic_objs = [
     Rational(2),
-    Real("1.3"),
+    Float("1.3"),
     x,
     y,
     pow(x,y)*y,
@@ -622,7 +622,7 @@ def test_nonzero():
     assert bool(x*0)    == False
 
 def test_is_number():
-    assert Real(3.14).is_number == True
+    assert Float(3.14).is_number == True
     assert Integer(737).is_number == True
     assert Rational(3, 2).is_number == True
     assert Rational(8).is_number == True
@@ -947,15 +947,15 @@ def test_issue_2061():
 def test_as_coeff_Mul():
     Integer(3).as_coeff_Mul() == (Integer(3), Integer(1))
     Rational(3, 4).as_coeff_Mul() == (Rational(3, 4), Integer(1))
-    Real(5.0).as_coeff_Mul() == (Real(5.0), Integer(1))
+    Float(5.0).as_coeff_Mul() == (Float(5.0), Integer(1))
 
     (Integer(3)*x).as_coeff_Mul() == (Integer(3), x)
     (Rational(3, 4)*x).as_coeff_Mul() == (Rational(3, 4), x)
-    (Real(5.0)*x).as_coeff_Mul() == (Real(5.0), x)
+    (Float(5.0)*x).as_coeff_Mul() == (Float(5.0), x)
 
     (Integer(3)*x*y).as_coeff_Mul() == (Integer(3), x*y)
     (Rational(3, 4)*x*y).as_coeff_Mul() == (Rational(3, 4), x*y)
-    (Real(5.0)*x*y).as_coeff_Mul() == (Real(5.0), x*y)
+    (Float(5.0)*x*y).as_coeff_Mul() == (Float(5.0), x*y)
 
     (x).as_coeff_Mul() == (S.One, x)
     (x*y).as_coeff_Mul() == (S.One, x*y)

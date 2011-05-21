@@ -73,7 +73,7 @@ class AskIntegerHandler(CommonHandler):
         return False
 
     @staticmethod
-    def Real(expr, assumptions):
+    def Float(expr, assumptions):
         return int(expr) == expr
 
     @staticmethod
@@ -138,7 +138,7 @@ class AskRationalHandler(CommonHandler):
         return True
 
     @staticmethod
-    def Real(expr, assumptions):
+    def Float(expr, assumptions):
         # it's finite-precission
         return True
 
@@ -240,7 +240,7 @@ class AskRealHandler(CommonHandler):
         return True
 
     @staticmethod
-    def Real(expr, assumptions):
+    def Float(expr, assumptions):
         return True
 
     @staticmethod

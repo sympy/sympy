@@ -1,6 +1,6 @@
 from sympy import (Abs, Catalan, cos, Derivative, E, EulerGamma, exp, factorial,
     Function, GoldenRatio, I, Integer, Integral, Interval, Lambda, Limit, log,
-    Matrix, nan, O, oo, pi, Rational, Real, Rel, S, sin, SparseMatrix, sqrt,
+    Matrix, nan, O, oo, pi, Rational, Float, Rel, S, sin, SparseMatrix, sqrt,
     summation, Sum, Symbol, symbols, Wild, WildFunction, zeta, zoo,
     Dummy)
 from sympy.core import Expr
@@ -158,7 +158,7 @@ def test_Mul():
     cc2 = CustomClass2(commutative=True)
     assert str(Rational(2)*cc1) == '2*CustomClass1()'
     assert str(cc1*Rational(2)) == '2*CustomClass1()'
-    assert str(cc1*Real("1.5")) == '1.5*CustomClass1()'
+    assert str(cc1*Float("1.5")) == '1.5*CustomClass1()'
     assert str(cc2*Rational(2)) == '2*CustomClass2()'
     assert str(cc2*Rational(2)*cc1) == '2*CustomClass1()*CustomClass2()'
     assert str(cc1*Rational(2)*cc2) == '2*CustomClass1()*CustomClass2()'
@@ -268,11 +268,11 @@ def test_Rational():
     assert str((-4)**Rational(1,2)) == str(2*I)
     assert str(2**Rational(1,10**10)) == "2**(1/10000000000)"
 
-def test_Real():
+def test_Float():
     # NOTE prec is the whole number of decimal digits
-    assert str(Real('1.23', prec=1+2))    == '1.23'
-    assert str(Real('1.23456789', prec=1+8))  == '1.23456789'
-    assert str(Real('1.234567890123456789', prec=1+18))    == '1.234567890123456789'
+    assert str(Float('1.23', prec=1+2))    == '1.23'
+    assert str(Float('1.23456789', prec=1+8))  == '1.23456789'
+    assert str(Float('1.234567890123456789', prec=1+18))    == '1.234567890123456789'
     assert str(pi.evalf(1+2))   == '3.14'
     assert str(pi.evalf(1+14))  == '3.14159265358979'
     assert str(pi.evalf(1+64))  == '3.1415926535897932384626433832795028841971693993751058209749445923'
