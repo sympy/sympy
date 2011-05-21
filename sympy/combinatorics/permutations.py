@@ -209,7 +209,7 @@ class Permutation(Basic):
         Permutation([2, 0, 3, 1])
         """
         temp = self.array_form
-        n = len(temp.args[0])
+        n = temp.size
         id_perm = [i for i in xrange(n)]
         while n > 1:
             id_perm[n-1],id_perm[r % n] = id_perm[r % n], id_perm[n-1]
@@ -237,7 +237,7 @@ class Permutation(Basic):
         if temp_inv is None:
             temp_inv = (~temp).array_form
         if n == 0:
-            n = len(temp.args[0])
+            n = temp.size
         if n == 1:
             return 0
         perm_form = temp.args[0][:]
@@ -251,11 +251,11 @@ class Permutation(Basic):
 
     @property
     def is_Singleton(self):
-        return len(self.args[0]) == 1
+        return self.size == 1
 
     @property
     def is_Empty(self):
-        return len(self.args[0]) == 0
+        return self.size == 0
 
     @property
     def is_Identity(self):
@@ -275,7 +275,7 @@ class Permutation(Basic):
         """
         pos = []
         temp = self.array_form
-        for i in xrange(len(temp.args[0])-1):
+        for i in xrange(temp.size-1):
             if temp.args[0][i] < temp.args[0][i+1]:
                 pos.append(i)
         return pos
@@ -312,7 +312,7 @@ class Permutation(Basic):
         """
         temp = self.array_form
         max = 0
-        for i in xrange(len(temp.args[0])):
+        for i in xrange(temp.size):
             if temp.args[0][i] != i and temp.args[0][i] > max:
                 max = temp.args[0][i]
         return max
@@ -329,8 +329,8 @@ class Permutation(Basic):
         2
         """
         temp = self.array_form
-        min = len(temp.args[0])
-        for i in xrange(len(temp.args[0])):
+        min = temp.size
+        for i in xrange(temp.size):
             if temp.args[0][i] != i and temp.args[0][i] < min:
                 min = temp.args[0][i]
         return min
@@ -356,8 +356,8 @@ class Permutation(Basic):
         """
         inversions = 0
         temp = self.array_form.args[0]
-        for i in xrange(len(temp) - 1):
-            for j in xrange(i + 1, len(temp)):
+        for i in xrange(self.size - 1):
+            for j in xrange(i + 1, self.size):
                 if temp[i] > temp[j]:
                     inversions += 1
         return inversions
@@ -406,7 +406,7 @@ class Permutation(Basic):
         """
         length = 0
         temp = self.array_form
-        for i in xrange(len(temp.args[0])):
+        for i in xrange(self.size):
             if temp.args[0][i] != i:
                 length += 1
         return length
