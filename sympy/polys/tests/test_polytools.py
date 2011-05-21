@@ -2307,6 +2307,8 @@ def test_groebner():
         [-2*x**2 + x**3, -x**2/2 + y**2, -2*y + x*y]
 
     assert groebner([1], x) == [1]
+
+    raises(DomainError, "groebner([x**2 + 2.0*y], x, y)")
     raises(ComputationFailed, "groebner([1])")
 
 def test_poly():

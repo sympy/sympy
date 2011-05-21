@@ -5084,7 +5084,7 @@ def groebner(F, *gens, **args):
     if domain.has_assoc_Field:
         opt.domain = domain.get_field()
     else:
-        raise DomainError("can't compute a Groebner basis over %s" % K)
+        raise DomainError("can't compute a Groebner basis over %s" % domain)
 
     for i, poly in enumerate(polys):
         poly = poly.set_domain(opt.domain).rep.to_dict()
