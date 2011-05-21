@@ -3,7 +3,7 @@ from sympy import Add, Basic, S, Symbol, Wild,  Real, Integer, Rational, I, \
     WildFunction, Poly, Function, Derivative, Number, pi, var, \
     NumberSymbol, zoo, Piecewise, Mul, Pow, nsimplify, ratsimp, trigsimp, \
     radsimp, powsimp, simplify, together, separate, collect, \
-    apart, combsimp, factor, refine, cancel, invert, Tuple
+    apart, combsimp, factor, refine, cancel, invert, Tuple, gamma
 from sympy.physics.secondquant import FockState
 
 from sympy.core.cache import clear_cache
@@ -837,7 +837,8 @@ def test_contains():
     f = (x*y + 3/y)**(3 + 2)
     g = Function('g')
     h = Function('h')
-    p = Piecewise( (g, x<-1), (1, x<=1), (f, True))
+    p = Piecewise((g, x < -1), (1, x <= 1), (f, True))
+
     assert x in p
     assert y in p
     assert not z in p
@@ -847,6 +848,36 @@ def test_contains():
     assert f in p
     assert g in p
     assert not h in p
+
+    A, B, C = symbols('A,B,C', commutative=False)
+    f = x*gamma(x)*sin(x)*exp(x*y)*A*B*C*cos(x*A*B)
+
+    assert (x in f) == True
+    assert (x*y in f) == True
+    assert (x*sin(x) in f) == True
+    assert (x*sin(y) in f) == False
+    assert (x*A in f) == True
+    assert (x*A*B in f) == True
+    assert (x*A*C in f) == False
+    assert (x*A*B*C in f) == True
+    assert (x*A*C*B in f) == False
+    assert (x*sin(x)*A*B*C in f) == True
+    assert (x*sin(x)*A*C*B in f) == False
+    assert (x*sin(y)*A*B*C in f) == False
+    assert (x*gamma(x) in f) == True
+
+    f = Integral(x**2 + sin(x*y*z), (x, 0, x + y + z))
+
+    assert (x + y in f) == True
+    assert (x + z in f) == True
+    assert (y + z in f) == True
+
+    assert (x*y in f) == True
+    assert (x*z in f) == True
+    assert (y*z in f) == True
+
+    assert (2*x + y in f) == False
+    assert (2*x*y in f) == False
 
 def test_as_base_exp():
     assert x.as_base_exp() == (x, S.One)
