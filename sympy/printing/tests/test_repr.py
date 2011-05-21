@@ -1,6 +1,6 @@
 from sympy.utilities.pytest import XFAIL, raises
 from sympy import Symbol, symbols, Function, Integer, Matrix, nan, oo, Abs, \
-    Rational, Real, S, WildFunction
+    Rational, Float, S, WildFunction
 from sympy.geometry import Point, Circle, Ellipse
 from sympy.printing import srepr
 
@@ -77,11 +77,11 @@ def test_Rational():
     sT(Rational(1,3), "Rational(1, 3)")
     sT(Rational(-1,3), "Rational(-1, 3)")
 
-def test_Real():
-    sT(Real('1.23', prec=3), "Real('1.22998', prec=3)")
-    sT(Real('1.23456789', prec=9), "Real('1.23456788994', prec=9)")
-    sT(Real('1.234567890123456789', prec=19), "Real('1.234567890123456789013', prec=19)")
-    sT(Real('0.60038617995049726', 15), "Real('0.60038617995049726', prec=15)")
+def test_Float():
+    sT(Float('1.23', prec=3), "Float('1.22998', prec=3)")
+    sT(Float('1.23456789', prec=9), "Float('1.23456788994', prec=9)")
+    sT(Float('1.234567890123456789', prec=19), "Float('1.234567890123456789013', prec=19)")
+    sT(Float('0.60038617995049726', 15), "Float('0.60038617995049726', prec=15)")
 
 def test_Symbol():
     sT(x, "Symbol('x')")

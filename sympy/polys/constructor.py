@@ -21,7 +21,7 @@ def _construct_simple(coeffs, opt):
         if coeff.is_Rational:
             if not coeff.is_Integer:
                 rationals = True
-        elif coeff.is_Real:
+        elif coeff.is_Float:
             if not algebraics:
                 reals = True
             else:
@@ -147,7 +147,7 @@ def _construct_composite(coeffs, opt):
             if coeff.is_Rational:
                 if not coeff.is_Integer:
                     rationals = True
-            elif coeff.is_Real:
+            elif coeff.is_Float:
                 reals = True
                 break
 

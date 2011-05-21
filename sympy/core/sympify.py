@@ -23,7 +23,7 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False):
     Converts an arbitrary expression to a type that can be used inside sympy.
 
     For example, it will convert python ints into instance of sympy.Rational,
-    floats into instances of sympy.Real, etc. It is also able to coerce symbolic
+    floats into instances of sympy.Float, etc. It is also able to coerce symbolic
     expressions which inherit from Basic. This can be useful in cooperation
     with SAGE.
 

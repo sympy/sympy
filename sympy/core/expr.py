@@ -106,11 +106,11 @@ class Expr(Basic, EvalfMixin):
     @staticmethod
     def _from_mpmath(x, prec):
         if hasattr(x, "_mpf_"):
-            return C.Real._new(x._mpf_, prec)
+            return C.Float._new(x._mpf_, prec)
         elif hasattr(x, "_mpc_"):
             re, im = x._mpc_
-            re = C.Real._new(re, prec)
-            im = C.Real._new(im, prec)*S.ImaginaryUnit
+            re = C.Float._new(re, prec)
+            im = C.Float._new(im, prec)*S.ImaginaryUnit
             return re+im
         else:
             raise TypeError("expected mpmath number (mpf or mpc)")
@@ -1038,8 +1038,8 @@ class Expr(Basic, EvalfMixin):
                     return None
                 else:
                     return quotient
-            elif self.is_Real:
-                if not quotient.is_Real:
+            elif self.is_Float:
+                if not quotient.is_Float:
                     return None
                 elif self.is_positive and quotient.is_negative:
                     return None
@@ -1127,8 +1127,8 @@ class Expr(Basic, EvalfMixin):
                     return None
                 else:
                     return sub
-            elif self.is_Real:
-                if not sub.is_Real:
+            elif self.is_Float:
+                if not sub.is_Float:
                     return None
                 elif self.is_positive and sub.is_negative:
                     return None

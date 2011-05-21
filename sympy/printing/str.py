@@ -329,7 +329,7 @@ class StrPrinter(Printer):
     def _print_mpq(self, expr):
         return '%s/%s' % (expr.numer(), expr.denom())
 
-    def _print_Real(self, expr):
+    def _print_Float(self, expr):
         prec = expr._prec
         if prec < 5:
             dps = 0

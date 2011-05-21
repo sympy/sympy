@@ -1,4 +1,4 @@
-from sympy import Symbol, exp, Integer, Real, sin, cos, log, Poly, Lambda, \
+from sympy import Symbol, exp, Integer, Float, sin, cos, log, Poly, Lambda, \
         Function, I, S, sqrt, srepr, Rational
 from sympy.abc import x, y
 from sympy.core.sympify import sympify, _sympify, SympifyError
@@ -154,7 +154,7 @@ def test__sympify():
     assert _sympify(x)      is x
     assert _sympify(f)      is f
     assert _sympify(1)      == Integer(1)
-    assert _sympify(0.5)    == Real("0.5")
+    assert _sympify(0.5)    == Float("0.5")
     assert _sympify(1+1j)   == 1.0 + I*1.0
 
     class A:
@@ -177,20 +177,20 @@ def test_sympifyit():
     def add(a, b):
         return a+b
 
-    assert add(x, 1)    == x+1
-    assert add(x, 0.5)  == x+Real('0.5')
-    assert add(x, y)    == x+y
+    assert add(x, 1) == x + 1
+    assert add(x, 0.5) == x + Float('0.5')
+    assert add(x, y) == x + y
 
-    assert add(x, '1')  == NotImplemented
+    assert add(x, '1') == NotImplemented
 
 
     @_sympifyit('b')
     def add_raises(a, b):
         return a+b
 
-    assert add_raises(x, 1)     == x+1
-    assert add_raises(x, 0.5)   == x+Real('0.5')
-    assert add_raises(x, y)     == x+y
+    assert add_raises(x, 1) == x + 1
+    assert add_raises(x, 0.5) == x + Float('0.5')
+    assert add_raises(x, y) == x + y
 
     raises(SympifyError, "add_raises(x, '1')")
 
@@ -220,7 +220,7 @@ def test_int_float():
             return 1
 
         def _sympy_(self):
-            return Real(1.1)
+            return Float(1.1)
 
     class I5(object):
         def __int__(self):
@@ -229,7 +229,7 @@ def test_int_float():
     class I5b(object):
         """
         This class implements both __int__() and __float__(), so it will be
-        treated as Real in SymPy. One could change this behavior, by using
+        treated as Float in SymPy. One could change this behavior, by using
         float(a) == int(a), but deciding that integer-valued floats represent
         exact numbers is arbitrary and often not correct, so we do not do it.
         If, in the future, we decide to do it anyway, the tests for I5b need to
@@ -264,7 +264,7 @@ def test_int_float():
     assert sympify(i5) == 5
     assert isinstance(sympify(i5), Integer)
     assert sympify(i5b) == 5
-    assert isinstance(sympify(i5b), Real)
+    assert isinstance(sympify(i5b), Float)
     assert sympify(i5c) == 5
     assert isinstance(sympify(i5c), Integer)
     assert abs(sympify(f1_1) - 1.1) < 1e-5
@@ -274,7 +274,7 @@ def test_int_float():
     assert _sympify(i5) == 5
     assert isinstance(_sympify(i5), Integer)
     assert _sympify(i5b) == 5
-    assert isinstance(_sympify(i5b), Real)
+    assert isinstance(_sympify(i5b), Float)
     assert _sympify(i5c) == 5
     assert isinstance(_sympify(i5c), Integer)
     assert abs(_sympify(f1_1) - 1.1) < 1e-5
@@ -289,18 +289,18 @@ def test_issue1034():
     assert a.is_Integer
 
 def test_issue883():
-    a = [3,2.0]
-    assert sympify(a) == [Integer(3), Real(2.0)]
-    assert sympify(tuple(a)) == (Integer(3), Real(2.0))
-    assert sympify(set(a)) == set([Integer(3), Real(2.0)])
+    a = [3, 2.0]
+    assert sympify(a) == [Integer(3), Float(2.0)]
+    assert sympify(tuple(a)) == (Integer(3), Float(2.0))
+    assert sympify(set(a)) == set([Integer(3), Float(2.0)])
 
 def test_S_sympify():
     assert S(1)/2 == sympify(1)/2
     assert (-2)**(S(1)/2) == sqrt(2)*I
 
 def test_issue1689():
-    assert srepr(S(1.0+0J)) == srepr(S(1.0)) == srepr(Real(1.0))
-    assert srepr(Real(1)) != srepr(Real(1.0))
+    assert srepr(S(1.0+0J)) == srepr(S(1.0)) == srepr(Float(1.0))
+    assert srepr(Float(1)) != srepr(Float(1.0))
 
 def test_issue1699_None():
     assert S(None) == None

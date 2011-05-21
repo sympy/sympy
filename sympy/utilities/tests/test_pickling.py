@@ -11,7 +11,7 @@ from sympy.core.symbol import Dummy, Symbol, Wild
 from sympy.core.numbers import Catalan, ComplexInfinity, EulerGamma, Exp1,\
         GoldenRatio, Half, ImaginaryUnit, Infinity, Integer, NaN,\
         NegativeInfinity,  NegativeOne, Number, NumberSymbol, One, Pi,\
-        Rational, Real, Zero
+        Rational, Float, Zero
 from sympy.core.relational import Equality, Inequality, Relational,\
         StrictInequality, Unequality
 from sympy.core.add import Add
@@ -82,7 +82,7 @@ def test_core_numbers():
               Integer, Integer(2), NaN, NaN(), NegativeInfinity,
               NegativeInfinity(), NegativeOne, NegativeOne(), Number, Number(15),
               NumberSymbol, NumberSymbol(), One, One(), Pi, Pi(), Rational,
-              Rational(1,2), Real, Real("1.2"), Zero, Zero()):
+              Rational(1,2), Float, Float("1.2"), Zero, Zero()):
         check(c)
 
 def test_core_relational():

@@ -1,5 +1,5 @@
 from sympy import Symbol, floor, nan, oo, E, symbols, ceiling, pi, Rational, \
-        Real, I, sin, exp, log, factorial
+        Float, I, sin, exp, log, factorial
 
 from sympy.utilities.pytest import XFAIL
 
@@ -34,11 +34,11 @@ def test_floor():
     assert floor(Rational(7, 3)) == 2
     assert floor(-Rational(7, 3)) == -3
 
-    assert floor(Real(17.0)) == 17
-    assert floor(-Real(17.0)) == -17
+    assert floor(Float(17.0)) == 17
+    assert floor(-Float(17.0)) == -17
 
-    assert floor(Real(7.69)) == 7
-    assert floor(-Real(7.69)) == -8
+    assert floor(Float(7.69)) == 7
+    assert floor(-Float(7.69)) == -8
 
     assert floor(I) == I
     assert floor(-I) == -I
@@ -132,11 +132,11 @@ def test_ceiling():
     assert ceiling(Rational(7, 3)) == 3
     assert ceiling(-Rational(7, 3)) == -2
 
-    assert ceiling(Real(17.0)) == 17
-    assert ceiling(-Real(17.0)) == -17
+    assert ceiling(Float(17.0)) == 17
+    assert ceiling(-Float(17.0)) == -17
 
-    assert ceiling(Real(7.69)) == 8
-    assert ceiling(-Real(7.69)) == -7
+    assert ceiling(Float(7.69)) == 8
+    assert ceiling(-Float(7.69)) == -7
 
     assert ceiling(I) == I
     assert ceiling(-I) == -I

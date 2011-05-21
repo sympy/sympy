@@ -75,22 +75,22 @@ significantly speed up computations such as the one above.
 Floating-point numbers
 ----------------------
 
-Floating-point numbers in SymPy are instances of the class ``Real``. A ``Real``
+Floating-point numbers in SymPy are instances of the class ``Float``. A ``Float``
 can be created with a custom precision as second argument:
 
-    >>> Real(0.1)
+    >>> Float(0.1)
     0.100000000000000
-    >>> Real(0.1, 10)
+    >>> Float(0.1, 10)
     0.1000000000
-    >>> Real(0.1, 30)
+    >>> Float(0.1, 30)
     0.100000000000000005551115123126
 
 
 As the last example shows, Python floats are only accurate to about 15 digits as
-inputs. To create a ``Real`` from a high-precision decimal number, it is better
+inputs. To create a ``Float`` from a high-precision decimal number, it is better
 to pass a string or ``evalf`` a ``Rational``:
 
-    >>> Real('0.1', 30)
+    >>> Float('0.1', 30)
     0.100000000000000000000000000000
     >>> Rational(1,10).evalf(30)
     0.100000000000000000000000000000
@@ -357,7 +357,7 @@ and a minimum numerical tolerance. Here are some elementary examples:
 
 Here are several more advanced examples:
 
-    >>> nsimplify(Real('0.130198866629986772369127970337',30), [pi, E])
+    >>> nsimplify(Float('0.130198866629986772369127970337',30), [pi, E])
         1
     ----------
           5*pi

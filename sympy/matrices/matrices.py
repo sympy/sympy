@@ -2211,14 +2211,14 @@ class Matrix(object):
         Test whether any subexpression matches any of the patterns.
 
         Examples:
-        >>> from sympy import Matrix, Real
+        >>> from sympy import Matrix, Float
         >>> from sympy.abc import x, y
         >>> A = Matrix(((1, x), (0.2, 3)))
         >>> A.has(x)
         True
         >>> A.has(y)
         False
-        >>> A.has(Real)
+        >>> A.has(Float)
         True
         """
         return any(a.has(*patterns) for a in self.mat)

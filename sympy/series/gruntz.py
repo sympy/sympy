@@ -425,7 +425,7 @@ def sign(e, x):
     elif e.is_negative:
         return -1
 
-    if e.is_Rational or e.is_Real:
+    if e.is_Rational or e.is_Float:
         assert not e is S.NaN
         if e == 0:
             return 0

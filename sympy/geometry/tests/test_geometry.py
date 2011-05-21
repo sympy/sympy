@@ -1,4 +1,4 @@
-from sympy import (Abs, C, Dummy, Max, Min, Rational, Real, S, Symbol, cos, oo,
+from sympy import (Abs, C, Dummy, Max, Min, Rational, Float, S, Symbol, cos, oo,
                    pi, simplify, sqrt, symbols)
 from sympy.geometry import (Circle, Curve, Ellipse, GeometryError, Line, Point,
                             Polygon, Ray, RegularPolygon, Segment, Triangle,
@@ -16,7 +16,7 @@ half = Rational(1,2)
 
 def feq(a, b):
     """Test if two floating point values are 'equal'."""
-    t = Real("1.0E-10")
+    t = Float("1.0E-10")
     return -t < a-b < t
 
 def test_curve():
@@ -476,16 +476,16 @@ def test_polygon():
     # Angles
     #
     angles = p4.angles
-    assert feq(angles[Point(0, 0)].evalf(), Real("0.7853981633974483"))
-    assert feq(angles[Point(4, 4)].evalf(), Real("1.2490457723982544"))
-    assert feq(angles[Point(5, 2)].evalf(), Real("1.8925468811915388"))
-    assert feq(angles[Point(3, 0)].evalf(), Real("2.3561944901923449"))
+    assert feq(angles[Point(0, 0)].evalf(), Float("0.7853981633974483"))
+    assert feq(angles[Point(4, 4)].evalf(), Float("1.2490457723982544"))
+    assert feq(angles[Point(5, 2)].evalf(), Float("1.8925468811915388"))
+    assert feq(angles[Point(3, 0)].evalf(), Float("2.3561944901923449"))
 
     angles = p3.angles
-    assert feq(angles[Point(0, 0)].evalf(), Real("0.7853981633974483"))
-    assert feq(angles[Point(4, 4)].evalf(), Real("1.2490457723982544"))
-    assert feq(angles[Point(5, 2)].evalf(), Real("1.8925468811915388"))
-    assert feq(angles[Point(3, 0)].evalf(), Real("2.3561944901923449"))
+    assert feq(angles[Point(0, 0)].evalf(), Float("0.7853981633974483"))
+    assert feq(angles[Point(4, 4)].evalf(), Float("1.2490457723982544"))
+    assert feq(angles[Point(5, 2)].evalf(), Float("1.8925468811915388"))
+    assert feq(angles[Point(3, 0)].evalf(), Float("2.3561944901923449"))
 
     #
     # Triangle

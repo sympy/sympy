@@ -77,14 +77,14 @@ class floor(RoundFunction):
     More information can be found in "Concrete mathematics" by Graham,
     pp. 87 or visit http://mathworld.wolfram.com/FloorFunction.html.
 
-        >>> from sympy import floor, E, I, Real, Rational
+        >>> from sympy import floor, E, I, Float, Rational
         >>> floor(17)
         17
         >>> floor(Rational(23, 10))
         2
         >>> floor(2*E)
         5
-        >>> floor(-Real(0.567))
+        >>> floor(-Float(0.567))
         -1
         >>> floor(-I/2)
         -I
@@ -99,7 +99,7 @@ class floor(RoundFunction):
                 if not arg.q:
                     return arg
                 return C.Integer(arg.p // arg.q)
-            elif arg.is_Real:
+            elif arg.is_Float:
                 return C.Integer(int(arg.floor()))
         if arg.is_NumberSymbol:
             return arg.approximation_interval(C.Integer)[0]
@@ -126,14 +126,14 @@ class ceiling(RoundFunction):
     More information can be found in "Concrete mathematics" by Graham,
     pp. 87 or visit http://mathworld.wolfram.com/CeilingFunction.html.
 
-        >>> from sympy import ceiling, E, I, Real, Rational
+        >>> from sympy import ceiling, E, I, Float, Rational
         >>> ceiling(17)
         17
         >>> ceiling(Rational(23, 10))
         3
         >>> ceiling(2*E)
         6
-        >>> ceiling(-Real(0.567))
+        >>> ceiling(-Float(0.567))
         0
         >>> ceiling(I/2)
         I
@@ -148,7 +148,7 @@ class ceiling(RoundFunction):
                 if not arg.q:
                     return arg
                 return -C.Integer(-arg.p // arg.q)
-            elif arg.is_Real:
+            elif arg.is_Float:
                 return C.Integer(int(arg.ceiling()))
         if arg.is_NumberSymbol:
             return arg.approximation_interval(C.Integer)[1]

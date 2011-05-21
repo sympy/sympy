@@ -1,4 +1,4 @@
-from sympy import Symbol, sin, cos, exp, O, sqrt, Rational, Real, re, pi, \
+from sympy import Symbol, sin, cos, exp, O, sqrt, Rational, Float, re, pi, \
         sympify, sqrt, Add, Mul, Pow, I, log, S
 from sympy.utilities.pytest import XFAIL
 
@@ -236,9 +236,9 @@ def test_power_expand():
     assert (A**(a+b)).expand() != A**(a+b)
 
 def test_real_mul():
-    Real(0) * pi * x == Real(0)
-    Real(1) * pi * x == pi * x
-    len((Real(2) * pi * x).args) == 3
+    Float(0) * pi * x == Float(0)
+    Float(1) * pi * x == pi * x
+    len((Float(2) * pi * x).args) == 3
 
 def test_ncmul():
     A = Symbol("A", commutative=False)

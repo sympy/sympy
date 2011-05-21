@@ -136,7 +136,7 @@ class LatexPrinter(Printer):
 
         return tex
 
-    def _print_Real(self, expr):
+    def _print_Float(self, expr):
         # Based off of that in StrPrinter
         dps = prec_to_dps(expr._prec)
         str_real = mlib.to_str(expr._mpf_, dps, strip_zeros=True)

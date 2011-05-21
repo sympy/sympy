@@ -741,7 +741,7 @@ class Mul(AssocOp):
         if lhs == rhs:
             return S.One
         def check(l, r):
-            if l.is_Real and r.is_comparable:
+            if l.is_Float and r.is_comparable:
                 return Add(l, 0) == Add(r.evalf(), 0)
             return False
         if check(lhs, rhs) or check(rhs, lhs):

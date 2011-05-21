@@ -617,7 +617,7 @@ def evalf_piecewise(expr, prec, options):
         if hasattr(expr,'func'):
             return evalf(expr, prec, options)
         if type(expr) == float:
-            return evalf(C.Real(expr), prec, options)
+            return evalf(C.Float(expr), prec, options)
         if type(expr) == int:
             return evalf(C.Integer(expr), prec, options)
 
@@ -866,7 +866,7 @@ def evalf_sum(expr, prec, options):
         return v, None, min(prec, delta), None
     except NotImplementedError:
         # Euler-Maclaurin summation for general series
-        eps = C.Real(2.0)**(-prec)
+        eps = C.Float(2.0)**(-prec)
         for i in range(1, 5):
             m = n = 2**i * prec
             s, err = expr.euler_maclaurin(m=m, n=n, eps=eps, \
@@ -911,7 +911,7 @@ def _create_evalf_table():
     evalf_table = {
     C.Symbol : evalf_symbol,
     C.Dummy : evalf_symbol,
-    C.Real : lambda x, prec, options: (x._mpf_, None, prec, None),
+    C.Float : lambda x, prec, options: (x._mpf_, None, prec, None),
     C.Rational : lambda x, prec, options: (from_rational(x.p, x.q, prec), None, prec, None),
     C.Integer : lambda x, prec, options: (from_int(x.p, prec), None, prec, None),
     C.Zero : lambda x, prec, options: (None, None, prec, None),
@@ -1035,13 +1035,13 @@ class EvalfMixin(object):
         if re:
             p = max(min(prec, re_acc), 1)
             #re = mpf_pos(re, p, round_nearest)
-            re = C.Real._new(re, p)
+            re = C.Float._new(re, p)
         else:
             re = S.Zero
         if im:
             p = max(min(prec, im_acc), 1)
             #im = mpf_pos(im, p, round_nearest)
-            im = C.Real._new(im, p)
+            im = C.Float._new(im, p)
             return re + im*S.ImaginaryUnit
         else:
             return re
@@ -1066,19 +1066,19 @@ class EvalfMixin(object):
         v = self._eval_evalf(prec)
         if v is None:
             raise ValueError(errmsg)
-        if v.is_Real:
+        if v.is_Float:
             return make_mpf(v._mpf_)
         # Number + Number*I is also fine
         re, im = v.as_real_imag()
         if allow_ints and re.is_Integer:
             re = from_int(re.p)
-        elif re.is_Real:
+        elif re.is_Float:
             re = re._mpf_
         else:
             raise ValueError(errmsg)
         if allow_ints and im.is_Integer:
             im = from_int(im.p)
-        elif im.is_Real:
+        elif im.is_Float:
             im = im._mpf_
         else:
             raise ValueError(errmsg)

@@ -178,12 +178,12 @@ class Function(Application, Expr):
         ARG is a floating point number.
         This function is used by __new__.
         """
-        if arg.is_Real:
+        if arg.is_Float:
             return True
         if not arg.is_Add:
             return False
         re, im = arg.as_real_imag()
-        return re.is_Real or im.is_Real
+        return re.is_Float or im.is_Float
 
     @property
     def is_commutative(self):
@@ -207,7 +207,7 @@ class Function(Application, Expr):
             func = getattr(mpmath, fname)
         except (AttributeError, KeyError):
             try:
-                return C.Real(self._imp_(*self.args), prec)
+                return C.Float(self._imp_(*self.args), prec)
             except (AttributeError, TypeError):
                 return
 

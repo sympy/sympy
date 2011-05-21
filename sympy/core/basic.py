@@ -59,7 +59,7 @@ class Basic(AssumeMeths):
     is_Mul = False
     is_Pow = False
     is_Number = False
-    is_Real = False
+    is_Float = False
     is_Rational = False
     is_Integer = False
     is_NumberSymbol = False

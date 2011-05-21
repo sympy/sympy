@@ -275,7 +275,7 @@ class Memoizer_nocache(Memoizer):
 
     def __call__(self, func):
         # XXX I would be happy just to return func, but we need to provide
-        # argument convertion, and it is really needed for e.g. Real("0.5")
+        # argument convertion, and it is really needed for e.g. Float("0.5")
         @wraps(func)
         def wrapper(*args, **kw_args):
             kw_items = tuple(kw_args.items())

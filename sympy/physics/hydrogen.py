@@ -1,4 +1,4 @@
-from sympy import factorial, sqrt, exp, S, laguerre_l, Real
+from sympy import factorial, sqrt, exp, S, laguerre_l, Float
 
 def R_nl(n, l, r, Z=1):
     """
@@ -104,7 +104,7 @@ def E_nl(n, Z=1):
         raise ValueError("'n' must be positive integer")
     return -Z**2/(2*n**2)
 
-def E_nl_dirac(n, l, spin_up=True, Z=1, c=Real("137.035999037")):
+def E_nl_dirac(n, l, spin_up=True, Z=1, c=Float("137.035999037")):
     """
     Returns the relativistic energy of the state (n, l, spin) in Hartree atomic
     units.

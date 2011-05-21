@@ -1,4 +1,4 @@
-from sympy import (Rational, Symbol, Real, I, sqrt, oo, nan, pi, E, Integer,
+from sympy import (Rational, Symbol, Float, I, sqrt, oo, nan, pi, E, Integer,
                    S, factorial, Catalan, EulerGamma, GoldenRatio, cos, exp,
                    Number, zoo, log, Mul, Pow)
 from sympy.core.power import integer_nthroot
@@ -52,12 +52,12 @@ def test_mod():
     assert z % y == 5/S(18043)
     assert z % z == 0
 
-    a = Real('2.6')
+    a = Float('2.6')
 
-    assert round(a % Real('0.2'), 15) == 0.2
+    assert round(a % Float('0.2'), 15) == 0.2
     assert round(a % 2, 15) == 0.6
     assert round(a % 0.5, 15) == 0.1
-    assert Rational(3,4) % Real(1.1) == 0.75
+    assert Rational(3,4) % Float(1.1) == 0.75
 
     a = Integer(7)
     b = Integer(4)
@@ -180,12 +180,12 @@ def test_Number_new():
     assert Number(2).__class__ is Integer
     assert Number(-622).__class__ is Integer
     assert Number(5,3).__class__ is Rational
-    assert Number(5.3).__class__ is Real
+    assert Number(5.3).__class__ is Float
     assert Number('1') is S.One
     assert Number('2').__class__ is Integer
     assert Number('-622').__class__ is Integer
     assert Number('5/3').__class__ is Rational
-    assert Number('5.3').__class__ is Real
+    assert Number('5.3').__class__ is Float
     raises(ValueError, "Number('cos')")
     raises(TypeError, "Number(cos)")
     a = Rational(3,5)
@@ -218,27 +218,27 @@ def test_Rational_cmp():
     assert Rational(-1) < 0
 
 
-def test_Real():
+def test_Float():
     def eq(a, b):
-        t = Real("1.0E-15")
+        t = Float("1.0E-15")
         return (-t < a-b < t)
 
-    a = Real(2) ** Real(3)
-    assert eq(a.evalf(), Real(8))
-    assert eq((pi ** -1).evalf(), Real("0.31830988618379067"))
-    a = Real(2) ** Real(4)
-    assert eq(a.evalf(), Real(16))
+    a = Float(2) ** Float(3)
+    assert eq(a.evalf(), Float(8))
+    assert eq((pi ** -1).evalf(), Float("0.31830988618379067"))
+    a = Float(2) ** Float(4)
+    assert eq(a.evalf(), Float(16))
     assert (S(.3) == S(.5)) is False
-    x_str = Real((0, '13333333333333L', -52, 53))
-    x2_str = Real((0, '26666666666666L', -53, 53))
-    x_hex = Real((0, 0x13333333333333L, -52, 53))
-    x_dec = Real((0, 5404319552844595L, -52, 53))
-    x2_hex = Real((0, 0x13333333333333L*2, -53, 53))
-    assert x_str == x_hex == x_dec == x2_hex == Real(1.2)
+    x_str = Float((0, '13333333333333L', -52, 53))
+    x2_str = Float((0, '26666666666666L', -53, 53))
+    x_hex = Float((0, 0x13333333333333L, -52, 53))
+    x_dec = Float((0, 5404319552844595L, -52, 53))
+    x2_hex = Float((0, 0x13333333333333L*2, -53, 53))
+    assert x_str == x_hex == x_dec == x2_hex == Float(1.2)
     # x2_str and 1.2 are superficially the same
-    assert str(x2_str) == str(Real(1.2))
+    assert str(x2_str) == str(Float(1.2))
     # but are different at the mpf level
-    assert Real(1.2)._mpf_ == (0, 5404319552844595L, -52, 53)
+    assert Float(1.2)._mpf_ == (0, 5404319552844595L, -52, 53)
     assert x2_str._mpf_ == (0, 10808639105689190L, -53, 53)
 
     # do not automatically evalf
@@ -252,12 +252,12 @@ def test_Real():
     teq(2*pi)
     teq(cos(0.1, evaluate=False))
 
-    assert Real(1) is S.One
-    assert Real(0) is S.Zero
+    assert Float(1) is S.One
+    assert Float(0) is S.Zero
 
-def test_Real_eval():
-    a = Real(3.2)
-    assert (a**2).is_Real
+def test_Float_eval():
+    a = Float(3.2)
+    assert (a**2).is_Float
 
 def test_Infinity():
     assert oo != 1
@@ -475,11 +475,11 @@ def test_abs1():
     assert abs(Rational(1,6)) == abs(Rational(-1,6))
 
 def test_accept_int():
-    assert Real(4) == 4
+    assert Float(4) == 4
 
 def test_dont_accept_str():
-    assert      Real("0.2") != "0.2"
-    assert not (Real("0.2") == "0.2")
+    assert      Float("0.2") != "0.2"
+    assert not (Float("0.2") == "0.2")
 
 def test_int():
     a = Rational(5)
@@ -667,22 +667,22 @@ def test_Rational_gcd_lcm_cofactors():
     assert Integer(4).cofactors(2) == (Integer(2), Integer(2), Integer(1))
     assert Integer(4).cofactors(Integer(2)) == (Integer(2), Integer(2), Integer(1))
 
-    assert Integer(4).gcd(Real(2.0)) == S.One
-    assert Integer(4).lcm(Real(2.0)) == Real(8.0)
-    assert Integer(4).cofactors(Real(2.0)) == (S.One, Integer(4), Real(2.0))
+    assert Integer(4).gcd(Float(2.0)) == S.One
+    assert Integer(4).lcm(Float(2.0)) == Float(8.0)
+    assert Integer(4).cofactors(Float(2.0)) == (S.One, Integer(4), Float(2.0))
 
-    assert Rational(1,2).gcd(Real(2.0)) == S.One
-    assert Rational(1,2).lcm(Real(2.0)) == Real(1.0)
-    assert Rational(1,2).cofactors(Real(2.0)) == (S.One, Rational(1,2), Real(2.0))
+    assert Rational(1,2).gcd(Float(2.0)) == S.One
+    assert Rational(1,2).lcm(Float(2.0)) == Float(1.0)
+    assert Rational(1,2).cofactors(Float(2.0)) == (S.One, Rational(1,2), Float(2.0))
 
-def test_Real_gcd_lcm_cofactors():
-    assert Real(2.0).gcd(Integer(4)) == S.One
-    assert Real(2.0).lcm(Integer(4)) == Real(8.0)
-    assert Real(2.0).cofactors(Integer(4)) == (S.One, Real(2.0), Integer(4))
+def test_Float_gcd_lcm_cofactors():
+    assert Float(2.0).gcd(Integer(4)) == S.One
+    assert Float(2.0).lcm(Integer(4)) == Float(8.0)
+    assert Float(2.0).cofactors(Integer(4)) == (S.One, Float(2.0), Integer(4))
 
-    assert Real(2.0).gcd(Rational(1,2)) == S.One
-    assert Real(2.0).lcm(Rational(1,2)) == Real(1.0)
-    assert Real(2.0).cofactors(Rational(1,2)) == (S.One, Real(2.0), Rational(1,2))
+    assert Float(2.0).gcd(Rational(1,2)) == S.One
+    assert Float(2.0).lcm(Rational(1,2)) == Float(1.0)
+    assert Float(2.0).cofactors(Rational(1,2)) == (S.One, Float(2.0), Rational(1,2))
 
 def test_issue1512():
     assert abs(pi._evalf(50) - 3.14159265358979) < 1e-10
@@ -700,7 +700,7 @@ def test_issue1512():
 def test_conversion_to_mpmath():
     assert mpmath.mpmathify(Integer(1)) == mpmath.mpf(1)
     assert mpmath.mpmathify(Rational(1, 2)) == mpmath.mpf(0.5)
-    assert mpmath.mpmathify(Real('1.23')) == mpmath.mpf('1.23')
+    assert mpmath.mpmathify(Float('1.23')) == mpmath.mpf('1.23')
 
 def test_relational():
     # real
