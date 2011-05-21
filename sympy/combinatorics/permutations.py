@@ -389,14 +389,10 @@ class Permutation(Basic):
         >>> p = Permutation([3,1,5,2,4,0])
         >>> p.order
         4
-        >>> (p**(p.order)).is_Identity
-        True
+        >>> (p**(p.order))
+        Permutation([0, 1, 2, 3, 4, 5])
         """
-        temp = self.cyclic_form
-        order = 1
-        for cycle in temp.args[0]:
-            order = lcm(order, len(cycle))
-        return order
+        return reduce(lcm,[1]+[len(cycle) for cycle in self.cyclic_form.args[0]])
 
     @property
     def length(self):
