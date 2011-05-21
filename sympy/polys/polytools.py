@@ -3064,7 +3064,7 @@ class Poly(Expr):
         False
 
         """
-        return f.length() <= 1
+        return f.rep.is_monomial
 
     @property
     def is_homogeneous(f):

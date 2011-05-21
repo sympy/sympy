@@ -142,6 +142,13 @@ def test_roots_rational():
     assert roots_rational(Poly(t*x**2-x, x)) == []
 
 def test_roots_preprocessing():
+    f = a*y*x**2 + y - b
+
+    coeff, poly = preprocess_roots(Poly(f, x))
+
+    assert coeff == 1
+    assert poly == Poly(a*y*x**2 + y - b, x)
+
     f = c**3*x**3 + c**2*x**2 + c*x + a
 
     coeff, poly = preprocess_roots(Poly(f, x))

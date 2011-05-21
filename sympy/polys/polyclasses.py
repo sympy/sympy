@@ -768,11 +768,6 @@ class DMP(object):
         return f.dom.is_one(dmp_ground_content(f.rep, f.lev, f.dom))
 
     @property
-    def is_ground(f):
-        """Returns `True` if `f` is an element of the ground domain. """
-        return all(d <= 0 for d in dmp_degree_list(f.rep, f.lev))
-
-    @property
     def is_linear(f):
         """Returns `True` if `f` is linear in all its variables. """
         return all([ sum(monom) <= 1 for monom in dmp_to_dict(f.rep, f.lev).keys() ])
@@ -781,6 +776,11 @@ class DMP(object):
     def is_quadratic(f):
         """Returns `True` if `f` is quadratic in all its variables. """
         return all([ sum(monom) <= 2 for monom in dmp_to_dict(f.rep, f.lev).keys() ])
+
+    @property
+    def is_monomial(f):
+        """Returns `True` if `f` is zero or has only one term. """
+        return len(f.to_dict()) <= 1
 
     @property
     def is_homogeneous(f):
