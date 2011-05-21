@@ -5,6 +5,7 @@ from cache import cacheit
 from core import BasicMeta, BasicType, C
 from sympify import _sympify, sympify, SympifyError
 from compatibility import any
+from sympy.core.decorators import deprecated
 
 
 class Basic(AssumeMeths):
@@ -72,6 +73,12 @@ class Basic(AssumeMeths):
     is_Equality = False
     is_Boolean = False
     is_Not = False
+
+    @property
+    @deprecated
+    def is_Real(self):  # pragma: no cover
+        """Deprecated alias for is_Float"""
+        return self.is_Float
 
     def __new__(cls, *args, **assumptions):
         obj = object.__new__(cls)
