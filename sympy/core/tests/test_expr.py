@@ -992,6 +992,11 @@ def test_as_ordered_factors():
 
     assert expr.as_ordered_factors() == args
 
+    A, B = symbols('A,B', commutative=False)
+
+    assert (A*B).as_ordered_factors() == [A, B]
+    assert (B*A).as_ordered_factors() == [B, A]
+
 def test_as_ordered_terms():
     f, g = symbols('f,g', cls=Function)
 

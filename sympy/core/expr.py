@@ -201,8 +201,12 @@ class Expr(Basic, EvalfMixin):
 
         def key(term):
             _, ((re, im), monom, ncpart) = term
-            ncpart = [ e.as_tuple_tree() for e in ncpart ]
-            return monom_key(monom), tuple(ncpart), ((not im, -re), (-re, -im))
+
+            monom = [ -m for m in monom_key(monom) ]
+            ncpart = tuple([ e.as_tuple_tree() for e in ncpart ])
+            coeff = ((bool(im), im), (re, im))
+
+            return monom, ncpart, coeff
 
         return key, reverse
 
@@ -221,8 +225,17 @@ class Expr(Basic, EvalfMixin):
         """
         if not self.is_Mul:
             return [self]
-        else:
-            return sorted(self.args, key=lambda expr: Basic.sorted_key(expr, order=order))
+
+        cpart = []
+        ncpart = []
+
+        for arg in self.args:
+            if arg.is_commutative:
+                cpart.append(arg)
+            else:
+                ncpart.append(arg)
+
+        return sorted(cpart, key=lambda expr: Basic.sorted_key(expr, order=order)) + ncpart
 
     def as_ordered_terms(self, order=None, data=False):
         """
@@ -243,7 +256,7 @@ class Expr(Basic, EvalfMixin):
         terms, gens = self.as_terms()
 
         if not any(term.is_Order for term, _ in terms):
-            ordered = sorted(terms, key=key, reverse=not reverse)
+            ordered = sorted(terms, key=key, reverse=reverse)
         else:
             _terms, _order = [], []
 
@@ -253,8 +266,8 @@ class Expr(Basic, EvalfMixin):
                 else:
                     _order.append((term, repr))
 
-            ordered = sorted(_terms, key=key) \
-                    + sorted(_order, key=key)
+            ordered = sorted(_terms, key=key, reverse=True) \
+                    + sorted(_order, key=key, reverse=True)
 
         if data:
             return ordered, gens
