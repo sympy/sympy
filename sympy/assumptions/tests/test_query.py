@@ -933,6 +933,12 @@ def test_composite_ask_key():
     x = symbols('x')
     assert ask(x, Q.negative & Q.integer, Q.real(x) >> Q.positive(x)) is False
 
+def test_multiple_symbols():
+    x, y = symbols('x, y')
+    assert ask(Q.real(x), assumptions=Q.real(x) & Q.real(y)) is True
+    assert ask(Q.real(x), assumptions=Q.real(x) | Q.real(y)) is None
+    assert ask(Q.real(x), assumptions= ~(Q.real(x) >> Q.real(y))) is True
+
 def test_is_true():
     from sympy.logic.boolalg import Equivalent, Implies
     x = symbols('x')

@@ -22,11 +22,15 @@ def test_extract_facts():
     a, b = symbols('a b', cls=Predicate)
     x, y = symbols('x y')
     assert _extract_facts(a(x), x)  == a
-    assert _extract_facts(a(x), y)  == None
+    assert _extract_facts(a(x), y)  == True
     assert _extract_facts(~a(x), x) == ~a
-    assert _extract_facts(~a(x), y) == None
+    assert _extract_facts(~a(x), y) == True
     assert _extract_facts(a(x) | b(x), x) == a | b
     assert _extract_facts(a(x) | ~b(x), x) == a | ~b
+    assert _extract_facts(a(x) & b(y), x) == a
+    assert _extract_facts(a(x) & b(y), y) == b
+    assert _extract_facts(a(x) | b(y), x) == True
+    assert _extract_facts(~(a(x)|b(y)), x) == ~a
 
 def test_global():
     """Test for global assumptions"""

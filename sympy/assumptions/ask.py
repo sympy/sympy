@@ -65,15 +65,14 @@ def _extract_facts(expr, symbol):
     """
     Helper for ask().
 
-    Extracts the facts relevant to the symbol from an assumption.
-    Returns None if there is nothing to extract.
+    Extracts the facts relevant to the symbol from an assumption in CNF.
+    Returns True (the tautological fact) if there is nothing to extract.
     """
     if not expr.has(symbol):
-        return None
+        return True
     if isinstance(expr, AppliedPredicate):
         return expr.func
-    return expr.func(*filter(lambda x: x is not None,
-                [_extract_facts(arg, symbol) for arg in expr.args]))
+    return expr.func(*[_extract_facts(arg, symbol) for arg in expr.args])
 
 def ask(expr, key=Q.is_true, assumptions=True, context=global_assumptions):
     """
@@ -119,8 +118,8 @@ def ask(expr, key=Q.is_true, assumptions=True, context=global_assumptions):
     if not expr.is_Atom:
         return
 
-    local_facts = _extract_facts(assumptions, expr)
-    if local_facts is None or local_facts is True:
+    local_facts = _extract_facts(to_cnf(assumptions), expr)
+    if local_facts is True:
         return
 
     # See if there's a straight-forward conclusion we can make for the inference
