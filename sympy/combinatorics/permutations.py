@@ -609,8 +609,7 @@ class Permutation(Basic):
             raise ValueError("The permutations must be of the same size")
         perm_array = self.array_form.args[0]
         other_array = other.array_form.args[0]
-        return reduce(lambda x, y: x + y,
-                      [abs(perm_array[i] - other_array[i]) for i in xrange(self.size)])
+        return sum([abs(perm_array[i] - other_array[i]) for i in xrange(self.size)])
 
 def josephus(m, n, s = 1):
     """
