@@ -1,10 +1,7 @@
 """Tests for the implementation of RootOf class and related tools. """
 
 from sympy.polys.polytools import Poly
-
-from sympy.polys.rootoftools import (
-    RootOf, RootSum, _rootof_preprocess,
-)
+from sympy.polys.rootoftools import RootOf, RootSum
 
 from sympy.polys.polyerrors import (
     MultivariatePolynomialError,
@@ -153,53 +150,6 @@ def test_RootOf_evalf():
 
     assert re.epsilon_eq( Real("0.60670583138111481707"))
     assert im.epsilon_eq(-Real("1.45061224918844152650"))
-
-def test_RootOf_preprocessing():
-    f = c**3*x**3 + c**2*x**2 + c*x + a
-
-    coeff, poly = _rootof_preprocess(Poly(f, x))
-
-    assert coeff == 1/c
-    assert poly == Poly(x**3 + x**2 + x + a, x)
-
-    f = c**3*x**3 + c**2*x**2 + a
-
-    coeff, poly = _rootof_preprocess(Poly(f, x))
-
-    assert coeff == 1/c
-    assert poly == Poly(x**3 + x**2 + a, x)
-
-    f = c**3*x**3 + c*x + a
-
-    coeff, poly = _rootof_preprocess(Poly(f, x))
-
-    assert coeff == 1/c
-    assert poly == Poly(x**3 + x + a, x)
-
-    f = c**3*x**3 + a
-
-    coeff, poly = _rootof_preprocess(Poly(f, x))
-
-    assert coeff == 1/c
-    assert poly == Poly(x**3 + a, x)
-
-    E, F, J, L = symbols("E,F,J,L")
-
-    f = -21601054687500000000*E**8*J**8/L**16 + \
-         508232812500000000*F*x*E**7*J**7/L**14 - \
-         4269543750000000*E**6*F**2*J**6*x**2/L**12 + \
-         16194716250000*E**5*F**3*J**5*x**3/L**10 - \
-         27633173750*E**4*F**4*J**4*x**4/L**8 + \
-         14840215*E**3*F**5*J**3*x**5/L**6 + \
-         54794*E**2*F**6*J**2*x**6/(5*L**4) - \
-         1153*E*J*F**7*x**7/(80*L**2) + \
-         633*F**8*x**8/160000
-
-    coeff, poly = _rootof_preprocess(Poly(f, x))
-
-    assert coeff == 20*E*J/(F*L**2)
-    assert poly == 633*x**8 - 115300*x**7 + 4383520*x**6 + 296804300*x**5 - 27633173750*x**4 + \
-        809735812500*x**3 - 10673859375000*x**2 + 63529101562500*x - 135006591796875
 
 def test_RootSum___new__():
     f = x**3 + x + 3

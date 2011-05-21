@@ -10,9 +10,9 @@ from sympy.core.numbers import Rational, igcd
 from sympy.ntheory import divisors, isprime, nextprime
 from sympy.functions import exp, sqrt, re, im
 
-from sympy.polys.polytools import Poly, cancel, factor
+from sympy.polys.polytools import Poly, cancel, factor, gcd_list
 from sympy.polys.specialpolys import cyclotomic_poly
-from sympy.polys.polyerrors import PolynomialError, GeneratorsNeeded
+from sympy.polys.polyerrors import PolynomialError, GeneratorsNeeded, DomainError
 
 from sympy.simplify import simplify
 from sympy.utilities import all
@@ -342,6 +342,108 @@ def roots_rational(f):
                 zeros.append(-zero)
 
     return zeros
+
+def _integer_basis(poly):
+    """Compute coefficient basis for a polynomial over integers. """
+    monoms, coeffs = zip(*poly.terms())
+
+    monoms, = zip(*monoms)
+    coeffs = map(abs, coeffs)
+
+    if coeffs[0] < coeffs[-1]:
+        coeffs = list(reversed(coeffs))
+    else:
+        return None
+
+    monoms = monoms[:-1]
+    coeffs = coeffs[:-1]
+
+    divs = reversed(divisors(gcd_list(coeffs))[1:])
+
+    try:
+        div = divs.next()
+    except StopIteration:
+        return None
+
+    while True:
+        for monom, coeff in zip(monoms, coeffs):
+            if coeff % div**monom != 0:
+                try:
+                    div = divs.next()
+                except StopIteration:
+                    return None
+                else:
+                    break
+        else:
+            return div
+
+def preprocess_roots(poly):
+    """Try to get rid of symbolic coefficients from ``poly``. """
+    coeff = S.One
+
+    try:
+        _, poly = poly.clear_denoms(convert=True)
+    except DomainError:
+        return coeff, poly
+
+    poly = poly.primitive()[1]
+    poly = poly.retract()
+
+    if poly.get_domain().is_Poly:
+        poly = poly.inject()
+
+        strips = zip(*poly.monoms())
+        gens = list(poly.gens[1:])
+
+        base, strips = strips[0], strips[1:]
+
+        for gen, strip in zip(gens, strips):
+            reverse = False
+
+            if strip[0] < strip[-1]:
+                strip = reversed(strip)
+                reverse = True
+
+            ratio = None
+
+            for a, b in zip(base, strip):
+                if not a and not b:
+                    continue
+                elif not a or not b:
+                    break
+                elif b % a != 0:
+                    break
+                else:
+                    _ratio = b // a
+
+                    if ratio is None:
+                        ratio = _ratio
+                    elif ratio != _ratio:
+                        break
+            else:
+                if reverse:
+                    ratio = -ratio
+
+                poly = poly.eval(gen, 1)
+                coeff *= gen**(-ratio)
+                gens.remove(gen)
+
+        if gens:
+            poly = poly.eject(*gens)
+
+    if poly.is_univariate and poly.get_domain().is_ZZ:
+        basis = _integer_basis(poly)
+
+        if basis is not None:
+            n = poly.degree()
+
+            def func((k,), coeff):
+                return coeff//basis**(n-k)
+
+            poly = poly.termwise(func)
+            coeff *= basis
+
+    return coeff, poly
 
 def roots(f, *gens, **flags):
     """
