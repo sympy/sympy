@@ -53,7 +53,7 @@ class Permutation(Basic):
 
     def __mul__(self, other):
         """
-        Routine for multiplication of permutations
+        Routine for multiplication of permutations.
 
         Examples:
         >>> from sympy.combinatorics.permutations import Permutation
@@ -187,9 +187,9 @@ class Permutation(Basic):
     def unrank_nonlex(self, r):
         """
         This is a linear time unranking algorithm that does not
-        respect lexicographic order [1].
+        respect lexicographic order [3].
 
-        [1] See below
+        [3] See below
 
         Examples:
         >>> from sympy.combinatorics.permutations import Permutation
@@ -215,9 +215,9 @@ class Permutation(Basic):
     def rank_nonlex(self, inv_perm = None, n = 0):
         """
         This is a linear time ranking algorithm that does not
-        enforce lexicographic order [1].
+        enforce lexicographic order [3].
 
-        [1] Wendy Myrvold and Frank Ruskey. 2001. Ranking and unranking
+        [3] Wendy Myrvold and Frank Ruskey. 2001. Ranking and unranking
             permutations in linear time. Inf. Process. Lett. 79, 6 (September 2001),
             281-284. DOI=10.1016/S0020-0190(01)00141-7
 
@@ -301,9 +301,9 @@ class Permutation(Basic):
 
         Example:
         >>> from sympy.combinatorics.permutations import Permutation
-        >>> p = Permutation([1,0,4,3,2])
+        >>> p = Permutation([1,0,2,3,4])
         >>> p.max
-        4
+        1
         """
         temp = self.array_form
         max = 0
@@ -362,6 +362,8 @@ class Permutation(Basic):
         """
         Gives the signature of the permutation needed to place the
         elements of the permutation in canonical order.
+
+        The signature is calculated as (-1)^<# no. of inversions>
 
         Example:
         >>> from sympy.combinatorics.permutations import Permutation
@@ -422,9 +424,9 @@ class Permutation(Basic):
 
     def runs(self):
         """
-        Returns the run of a permutation.
+        Returns the runs of a permutation.
 
-        A set of ascending sequences in a permutation is called a run [1]
+        An ascending sequence in a permutation is called a run [1]
 
         [1] Graham, R. L.; Knuth, D. E.; and Patashnik, O.
             Concrete Mathematics: A Foundation for Computer Science, 2nd ed.
@@ -562,7 +564,7 @@ class Permutation(Basic):
 
     def get_adjacency_distance(self, other):
         """
-        Computes the adjacency distance between two permutations
+        Computes the adjacency distance between two permutations.
 
         This metric counts the number of times a pair i,j of jobs is
         adjacent in both p and p'. If n_adj is this quantity then
@@ -594,7 +596,7 @@ class Permutation(Basic):
 
     def get_positional_distance(self, other):
         """
-        Computes the positional distance between two permutations
+        Computes the positional distance between two permutations.
 
         Examples:
         >>> from sympy.combinatorics.permutations import Permutation, josephus
