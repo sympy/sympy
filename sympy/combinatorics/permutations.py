@@ -194,7 +194,6 @@ class Permutation(Basic):
         >>> p.unrank_nonlex(5)
         Permutation([2, 0, 3, 1])
         """
-        temp = self.array_form
         n = self.size
         id_perm = [i for i in xrange(n)]
         while n > 1:
@@ -218,22 +217,20 @@ class Permutation(Basic):
         >>> p.rank_nonlex()
         23
         """
-        temp = self.array_form
-        temp_inv = inv_perm
-        if temp_inv is None:
-            temp_inv = (~self).array_form
+        if inv_perm is None:
+            inv_perm = (~self).array_form
         if n == 0:
             n = self.size
         if n == 1:
             return 0
-        perm_form = temp[:]
-        temp_inv_form = temp_inv[:]
+        perm_form = self.array_form[:]
+        temp_inv_form = inv_perm[:]
         s = perm_form[n-1]
         perm_form[n-1], perm_form[temp_inv_form[n-1]] = \
             perm_form[temp_inv_form[n-1]], perm_form[n-1]
         temp_inv_form[s], temp_inv_form[n-1] = \
             temp_inv_form[n-1], temp_inv_form[s]
-        return s + n*self.rank_nonlex(temp_inv, n - 1)
+        return s + n*self.rank_nonlex(temp_inv_form, n - 1)
 
     @property
     def is_Singleton(self):
@@ -260,9 +257,8 @@ class Permutation(Basic):
         [1, 2]
         """
         pos = []
-        temp = self.array_form
         for i in xrange(self.size-1):
-            if temp[i] < temp[i+1]:
+            if self.array_form[i] < self.array_form[i+1]:
                 pos.append(i)
         return pos
 
@@ -279,9 +275,8 @@ class Permutation(Basic):
         [0, 3]
         """
         pos = []
-        temp = self.array_form
-        for i in xrange(len(temp)-1):
-            if temp[i] > temp[i+1]:
+        for i in xrange(self.size-1):
+            if self.array_form[i] > self.array_form[i+1]:
                 pos.append(i)
         return pos
 
@@ -296,11 +291,10 @@ class Permutation(Basic):
         >>> p.max
         1
         """
-        temp = self.array_form
         max = 0
         for i in xrange(self.size):
-            if temp[i] != i and temp[i] > max:
-                max = temp[i]
+            if self.array_form[i] != i and self.array_form[i] > max:
+                max = self.array_form[i]
         return max
 
     @property
@@ -314,11 +308,10 @@ class Permutation(Basic):
         >>> p.min
         2
         """
-        temp = self.array_form
         min = self.size
         for i in xrange(self.size):
-            if temp[i] != i and temp[i] < min:
-                min = temp[i]
+            if self.array_form[i] != i and self.array_form[i] < min:
+                min = self.array_form[i]
         return min
 
     @property
@@ -341,10 +334,9 @@ class Permutation(Basic):
         8
         """
         inversions = 0
-        temp = self.array_form
         for i in xrange(self.size - 1):
             for j in xrange(i + 1, self.size):
-                if temp[i] > temp[j]:
+                if self.array_form[i] > self.array_form[j]:
                     inversions += 1
         return inversions
 
@@ -391,9 +383,8 @@ class Permutation(Basic):
         Returns the number of integers moved by a permutation.
         """
         length = 0
-        temp = self.array_form
         for i in xrange(self.size):
-            if temp[i] != i:
+            if self.array_form[i] != i:
                 length += 1
         return length
 
@@ -428,13 +419,11 @@ class Permutation(Basic):
         >>> q.runs()
         [[1, 3], [2], [0]]
         """
-        temp = self.array_form
-        temp_form = temp
         cycles = []
         temp_cycle = []
-        for i in xrange(len(temp_form) - 1):
-            current_elem = temp_form[i]
-            next_elem    = temp_form[i+1]
+        for i in xrange(self.size - 1):
+            current_elem = self.array_form[i]
+            next_elem    = self.array_form[i+1]
 
             if current_elem < next_elem:
                 temp_cycle.append(current_elem)
@@ -615,10 +604,10 @@ def josephus(m, n, s = 1):
     m -= 1
     if s <= 0:
         s = 1
-    Q = deque([i for i in xrange(0, n)])
+    Q = deque([i for i in xrange(n)])
     perm = []
     while len(Q) > s:
-        for dp in xrange(0, m):
+        for dp in xrange(m):
             Q.append(Q.popleft())
         perm.append(Q.popleft())
     perm.extend(list(Q))
