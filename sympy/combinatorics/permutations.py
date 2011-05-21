@@ -54,12 +54,12 @@ class Permutation(Basic):
         >>> from sympy.combinatorics.permutations import Permutation
         >>> p = Permutation([[2,0],[3,1]])
         >>> p.array_form
-        Permutation([1, 3, 0, 2])
+        [1, 3, 0, 2]
         """
         if self._array_form is not None:
             return self._array_form
         if not isinstance(self.args[0][0], list):
-            self._array_form = self
+            self._array_form = self.args[0]
             return self._array_form
         cycles = self.args[0]
         linear_form = []
@@ -69,7 +69,7 @@ class Permutation(Basic):
                 cycle = rotate_left(cycle, 1)
             linear_form.append(cycle)
         linear_form.sort(key=lambda t: -t[0])
-        self._array_form = Permutation(list(itertools.chain(*linear_form)))
+        self._array_form = list(itertools.chain(*linear_form))
         return self._array_form
 
     @property
@@ -82,12 +82,12 @@ class Permutation(Basic):
         >>> from sympy.combinatorics.permutations import Permutation
         >>> p = Permutation([0,3,1,2])
         >>> p.cyclic_form
-        Permutation([[1, 3, 2], [0]])
+        [[1, 3, 2], [0]]
         """
         if self._cyclic_form is not None:
             return self._cyclic_form
         if isinstance(self.args[0][0], list):
-            self._cyclic_form = self
+            self._cyclic_form = self.args[0]
             return self._cyclic_form
         linear_rep = self.args[0]
         unchecked = [True] * len(linear_rep)
@@ -104,12 +104,12 @@ class Permutation(Basic):
                     unchecked[j] = False
                 cyclic_form.append(cycle)
         cyclic_form.sort(key=lambda t: -t[0])
-        self._cyclic_form = Permutation(cyclic_form)
+        self._cyclic_form = cyclic_form
         return self.cyclic_form
 
     @property
     def size(self):
-        return len(self.array_form.args[0])
+        return len(self.array_form)
 
     def __mul__(self, other):
         """
@@ -133,7 +133,7 @@ class Permutation(Basic):
         if self.size != other.size:
             raise ValueError("The number of elements in the permutations \
             dont match")
-        return Permutation([other.array_form.args[0][self.array_form.args[0][i]]
+        return Permutation([other.array_form[self.array_form[i]]
                             for i in range(self.size)])
 
     def __pow__(self, n):
@@ -146,10 +146,7 @@ class Permutation(Basic):
         >>> p**4
         Permutation([0, 1, 2, 3])
         """
-        return_val = reduce(lambda x, y: x*y, [self]*n)
-        if self.is_CyclicForm:
-            return return_val.cyclic_form
-        return return_val
+        return reduce(lambda x, y: x*y, [self]*n)
 
     def __invert__(self):
         """
@@ -167,27 +164,16 @@ class Permutation(Basic):
         True
         """
         self_form = self.array_form
-        inv_form = [0] * self_form.size
-
-        for i in xrange(self_form.size):
-            inv_form[self_form.args[0][i]] = i
+        inv_form = [0] * self.size
+        for i in xrange(self.size):
+            inv_form[self_form[i]] = i
         return Permutation(inv_form)
-
-    @property
-    def is_ArrayForm(self):
-        return not isinstance(self.args[0][0], list)
-
-    @property
-    def is_CyclicForm(self):
-        return isinstance(self.args[0][0], list)
 
     def atoms(self):
         """
         Returns all the elements of a permutation
         """
-        if self.is_ArrayForm:
-            return set(self.args[0])
-        return self.array_form.atoms()
+        return set(self.array_form)
 
     def unrank_nonlex(self, r):
         """
@@ -209,7 +195,7 @@ class Permutation(Basic):
         Permutation([2, 0, 3, 1])
         """
         temp = self.array_form
-        n = temp.size
+        n = self.size
         id_perm = [i for i in xrange(n)]
         while n > 1:
             id_perm[n-1],id_perm[r % n] = id_perm[r % n], id_perm[n-1]
@@ -235,19 +221,19 @@ class Permutation(Basic):
         temp = self.array_form
         temp_inv = inv_perm
         if temp_inv is None:
-            temp_inv = (~temp).array_form
+            temp_inv = (~self).array_form
         if n == 0:
-            n = temp.size
+            n = self.size
         if n == 1:
             return 0
-        perm_form = temp.args[0][:]
-        temp_inv_form = temp_inv.args[0][:]
+        perm_form = temp[:]
+        temp_inv_form = temp_inv[:]
         s = perm_form[n-1]
         perm_form[n-1], perm_form[temp_inv_form[n-1]] = \
             perm_form[temp_inv_form[n-1]], perm_form[n-1]
         temp_inv_form[s], temp_inv_form[n-1] = \
             temp_inv_form[n-1], temp_inv_form[s]
-        return s + n*temp.rank_nonlex(temp_inv, n - 1)
+        return s + n*self.rank_nonlex(temp_inv, n - 1)
 
     @property
     def is_Singleton(self):
@@ -259,7 +245,7 @@ class Permutation(Basic):
 
     @property
     def is_Identity(self):
-        return self.size == len(self.cyclic_form.args[0])
+        return self.size == len(self.cyclic_form)
 
     @property
     def ascents(self):
@@ -275,8 +261,8 @@ class Permutation(Basic):
         """
         pos = []
         temp = self.array_form
-        for i in xrange(temp.size-1):
-            if temp.args[0][i] < temp.args[0][i+1]:
+        for i in xrange(self.size-1):
+            if temp[i] < temp[i+1]:
                 pos.append(i)
         return pos
 
@@ -294,8 +280,8 @@ class Permutation(Basic):
         """
         pos = []
         temp = self.array_form
-        for i in xrange(len(temp.args[0])-1):
-            if temp.args[0][i] > temp.args[0][i+1]:
+        for i in xrange(len(temp)-1):
+            if temp[i] > temp[i+1]:
                 pos.append(i)
         return pos
 
@@ -312,9 +298,9 @@ class Permutation(Basic):
         """
         temp = self.array_form
         max = 0
-        for i in xrange(temp.size):
-            if temp.args[0][i] != i and temp.args[0][i] > max:
-                max = temp.args[0][i]
+        for i in xrange(self.size):
+            if temp[i] != i and temp[i] > max:
+                max = temp[i]
         return max
 
     @property
@@ -329,10 +315,10 @@ class Permutation(Basic):
         2
         """
         temp = self.array_form
-        min = temp.size
-        for i in xrange(temp.size):
-            if temp.args[0][i] != i and temp.args[0][i] < min:
-                min = temp.args[0][i]
+        min = self.size
+        for i in xrange(self.size):
+            if temp[i] != i and temp[i] < min:
+                min = temp[i]
         return min
 
     @property
@@ -355,7 +341,7 @@ class Permutation(Basic):
         8
         """
         inversions = 0
-        temp = self.array_form.args[0]
+        temp = self.array_form
         for i in xrange(self.size - 1):
             for j in xrange(i + 1, self.size):
                 if temp[i] > temp[j]:
@@ -397,7 +383,7 @@ class Permutation(Basic):
         >>> (p**(p.order))
         Permutation([0, 1, 2, 3, 4, 5])
         """
-        return reduce(lcm,[1]+[len(cycle) for cycle in self.cyclic_form.args[0]])
+        return reduce(lcm,[1]+[len(cycle) for cycle in self.cyclic_form])
 
     @property
     def length(self):
@@ -407,7 +393,7 @@ class Permutation(Basic):
         length = 0
         temp = self.array_form
         for i in xrange(self.size):
-            if temp.args[0][i] != i:
+            if temp[i] != i:
                 length += 1
         return length
 
@@ -421,7 +407,7 @@ class Permutation(Basic):
 
     @property
     def cycles(self):
-        return len(self.cyclic_form.args[0])
+        return len(self.cyclic_form)
 
     def runs(self):
         """
@@ -443,7 +429,7 @@ class Permutation(Basic):
         [[1, 3], [2], [0]]
         """
         temp = self.array_form
-        temp_form = temp.args[0]
+        temp_form = temp
         cycles = []
         temp_cycle = []
         for i in xrange(len(temp_form) - 1):
@@ -494,7 +480,7 @@ class Permutation(Basic):
         [1, 1, 0, 1, 1, 0]
         """
         m = zeros(self.size)
-        perm = self.array_form.args[0]
+        perm = self.array_form
         for i in xrange(m.rows):
             for j in xrange(i + 1, m.cols):
                 m[perm[i], perm[j]] = 1
@@ -558,7 +544,7 @@ class Permutation(Basic):
         [0, 0, 0, 0]
         """
         m = zeros(self.size)
-        perm = self.array_form.args[0]
+        perm = self.array_form
         for i in xrange(self.size - 1):
             m[perm[i], perm[i + 1]] = 1
         return m
@@ -608,8 +594,8 @@ class Permutation(Basic):
         """
         if self.size != other.size:
             raise ValueError("The permutations must be of the same size")
-        perm_array = self.array_form.args[0]
-        other_array = other.array_form.args[0]
+        perm_array = self.array_form
+        other_array = other.array_form
         return sum([abs(perm_array[i] - other_array[i]) for i in xrange(self.size)])
 
 def josephus(m, n, s = 1):
