@@ -22,6 +22,10 @@ def add_formulae(formulae):
     a, b, c = symbols('a b c', cls=Dummy)
     def add(ap, bq, res):
         formulae.append(Formula(ap, bq, z, res, (a, b, c)))
+    def addb(ap, bq, B, C, M):
+        formulae.append(Formula(ap, bq, z, None, (a, b, c), B, C, M))
+
+    from sympy.matrices import diag, Matrix
 
     # Luke, Y. L. (1969), The Special Functions and Their Approximations,
     # Volume 1, section 6.2
@@ -29,8 +33,6 @@ def add_formulae(formulae):
     from sympy import exp, sqrt, cosh, log, asin, atan, I
     add((), (), exp(z))
     add((-a, ), (), (1-z)**a)
-    add((-a, S.Half - a), (S.Half,),
-        ((1 + sqrt(z))**(2*a) + (1 - sqrt(z))**(2*a))/2)
     add((a, a - S.Half), (2*a,), (S.Half + sqrt(1 - z)/2)**(1-2*a))
     add((), (S.Half,), cosh(2*sqrt(z)))
     add((1, 1), (2,), log(1 - z)/-z)
@@ -39,9 +41,42 @@ def add_formulae(formulae):
     add((S.Half - a, 1 - a), (S('3/2'),),
         ((1 + sqrt(z))**(2*a) - (1 - sqrt(z))**(2*a))/(4*a*sqrt(z)))
 
+    addb((-a, S.Half - a), (S.Half,),
+         Matrix([(1 + sqrt(z))**(2*a), (1 - sqrt(z))**(2*a)]),
+         Matrix([[S.Half, S.Half]]),
+         diag(a*sqrt(z)/(1 + sqrt(z)), -a*sqrt(z)/(1 - sqrt(z))))
+
     # This reduces to a lower order formula.
     #add((a + 1, 2*a), (a,), (1 + z)*(1 - z)**(-2*a - 1))
 
+
+class Mod1(object):
+    """
+    Represent an expression 'mod 1'.
+
+    Beware: __eq__ and the hash are NOT compatible. (by design)
+    This means that m1 == m2 does not imply hash(m1) == hash(m2).
+    Code that creates Mod1 objects (like compute_buckets below) should be
+    careful only to produce one instance of Mod1 for each class.
+    """
+    # TODO this should be backported to any implementation of a Mod object
+    #      (c/f issue 2490)
+
+    def __new__(cls, r):
+        if r.is_Rational and not r.free_symbols:
+            return r - r.p//r.q
+        res = object.__new__(cls)
+        res.expr = r
+        return res
+
+    def __repr__(self):
+        return str(self.expr) + ' % 1'
+
+    def __eq__(self, other):
+        from sympy import simplify
+        if simplify(self.expr - other.expr).is_integer is True:
+            return True
+        return False
 
 class IndexPair(object):
     """ Holds a pair of indices, and methods to compute their invariants. """
@@ -58,12 +93,15 @@ class IndexPair(object):
     def __str__(self):
         return 'IndexPair(%s, %s)' % (self.ap, self.bq)
 
-    def compute_buckets(self):
+    def compute_buckets(self, oabuckets=None, obbuckets=None):
         """
         Partition parameters `ap`, `bq` into buckets, that is return two dicts
         abuckets, bbuckets such that every key in [ab]buckets is a rational in
         range [0, 1) and the corresponding items are items of ap/bq congruent to
         the key mod 1.
+
+        If oabuckets, obbuckets is specified, try to use the same Mod1 objects
+        for parameters where possible.
 
         >>> from sympy.simplify.hyperexpand import IndexPair
         >>> from sympy import S
@@ -72,30 +110,46 @@ class IndexPair(object):
         >>> IndexPair(ap, bq).compute_buckets()
         ({0: (-2,), 1/3: (1/3,), 1/2: (1/2, -1/2)}, {0: (1, 2)})
         """
+        # TODO this should probably be cached somewhere
         abuckets = {}
         bbuckets = {}
 
-        def mod1(r):
-            """ Compute `r` % 1, in [0, 1) """
-            if r.is_Rational:
-                return r - r.p//r.q
-            elif r.is_Add:
-                a, b = r.as_real_imag()
-                return mod1(a) + I*mod1(b)
-            else:
-                raise TypeError("Don't know how to compute mod1(%s)" % r)
+        oaparametric = []
+        obparametric = []
+        if oabuckets is not None:
+            for parametric, buckets in [(oaparametric, oabuckets),
+                                        (obparametric, obbuckets)]:
+                parametric += filter(lambda x: isinstance(x, Mod1),
+                                     buckets.keys())
 
-        for params, bucket in [(self.ap, abuckets), (self.bq, bbuckets)]:
+        for params, bucket, oparametric in [(self.ap, abuckets, oaparametric),
+                                            (self.bq, bbuckets, obparametric)]:
+            parametric = []
             for p in params:
-                if len(p.free_symbols):
-                    raise NotImplementedError('symbolic parameters')
                 if p == 0:
                     raise ValueError('parameters must not be zero')
-                res = mod1(p)
+                res = Mod1(p)
+                if isinstance(res, Mod1):
+                    parametric.append(p)
+                    continue
                 if res in bucket:
                     bucket[res] += (p,)
                 else:
                     bucket[res] = (p,)
+            while parametric:
+                p0 = parametric[0]
+                p0mod1 = Mod1(p0)
+                if oparametric.count(p0mod1):
+                    i = oparametric.index(p0mod1)
+                    p0mod1 = oparametric.pop(i)
+                bucket[p0mod1] = (p0,)
+                pos = []
+                for po in parametric[1:]:
+                    if Mod1(po) == p0mod1:
+                        bucket[p0mod1] += (po,)
+                    else:
+                        pos.append(po)
+                parametric = pos
 
         return abuckets, bbuckets
 
@@ -108,6 +162,9 @@ class IndexPair(object):
               nl is the number of parameters a_i congruent to sl mod 1
               t1 < ... < tr
               ml is the number of parameters b_i congruent to tl mod 1
+
+        If the index pair contains parameters, then this is not truly an
+        invariant, since the parameters cannot be sorted uniquely mod1.
 
         >>> from sympy.simplify.hyperexpand import IndexPair
         >>> from sympy import S
@@ -130,11 +187,30 @@ class IndexPair(object):
 
         def tr(bucket):
             bucket = bucket.items()
-            bucket.sort(key=lambda x: x[0])
+            if not any(isinstance(x[0], Mod1) for x in bucket):
+                bucket.sort(key=lambda x: x[0])
             bucket = tuple(map(lambda x: (x[0], len(x[1])), bucket))
             return bucket
 
         return (gamma, tr(abuckets), tr(bbuckets))
+
+    def reachable(self, ip):
+        """ Determine if `ip` is reachable from self """
+        oabuckets, obbuckets = self.compute_buckets()
+        abuckets, bbuckets = ip.compute_buckets(oabuckets, obbuckets)
+
+        gt0 = lambda x: (x > 0) is True
+        if S(0) in abuckets and (not S(0) in oabuckets or
+             len(filter(gt0, abuckets[S(0)])) != len(filter(gt0, oabuckets[S(0)]))):
+            return False
+
+        for bucket, obucket in [(abuckets, oabuckets), (bbuckets, obbuckets)]:
+            for mod in bucket.keys() + obucket.keys():
+                if (not mod in bucket) or (not mod in obucket) \
+                   or len(bucket[mod]) != len(obucket[mod]):
+                    return False
+
+        return True
 
 # Dummy generator
 x = Dummy('x')
@@ -173,7 +249,7 @@ class Formula(object):
     (4, 1)
     """
 
-    def _compute_basis(self):
+    def _compute_basis(self, closed_form):
         """
         Compute a set of functions B=(f1, ..., fn), a nxn matrix M
         and a 1xn matrix C such that:
@@ -188,7 +264,7 @@ class Formula(object):
         poly = Poly(expr, x)
 
         n = poly.degree() - 1
-        b = [self.closed_form]
+        b = [closed_form]
         for _ in xrange(n):
             b.append(self.z*b[-1].diff(self.z))
 
@@ -201,10 +277,7 @@ class Formula(object):
         l.reverse()
         self.M = m.row_insert(n, -Matrix([l])/poly.all_coeffs()[0])
 
-        self.B.simplify()
-        self.M.simplify()
-
-    def __init__(self, ap, bq, z, res, symbols):
+    def __init__(self, ap, bq, z, res, symbols, B=None, C=None, M=None):
         ap = Tuple(*map(expand, sympify(ap)))
         bq = Tuple(*map(expand, sympify(bq)))
         z  = sympify(z)
@@ -212,8 +285,10 @@ class Formula(object):
         symbols = filter(lambda x: ap.has(x) or bq.has(x), sympify(symbols))
 
         self.z  = z
-        self.closed_form = res
         self.symbols = symbols
+        self.B = B
+        self.C = C
+        self.M = M
 
         params = list(ap) + list(bq)
         lcms = {}
@@ -253,9 +328,12 @@ class Formula(object):
         # TODO with symbolic parameters, it could be advantageous
         #      (for prettier answers) to compute a basis only *after*
         #      instantiation
-        # TODO for even prettier answers, the basis could be specified by hand
-        if self.closed_form is not None:
-            self._compute_basis()
+        if res is not None:
+            self._compute_basis(res)
+
+    @property
+    def closed_form(self):
+        return (self.C*self.B)[0]
 
     def find_instantiations(self, ip):
         """
@@ -275,9 +353,10 @@ class Formula(object):
         repl = {}
         for a in self.symbols:
             i, _ = self.isolation[a]
-            repl[a] = solve(our_params[i] - all_params[i])[0]
+            repl[a] = solve(our_params[i] - all_params[i], a)[0]
         return [Formula(self.indices.ap.subs(repl), self.indices.bq.subs(repl),
-                        self.z, self.closed_form.subs(repl), [])]
+                        self.z, None, [], self.B.subs(repl), self.C.subs(repl),
+                        self.M.subs(repl))]
 
     def is_suitable(self):
         """
@@ -366,7 +445,7 @@ class FormulaCollection(object):
 
         >>> from sympy import S
         >>> f.lookup_origin(IndexPair([S('1/4'), S('3/4 + 4')], [S.Half])).closed_form
-        -((_z**(1/2) + 1)**(-15/2) - 1/(-_z**(1/2) + 1)**(15/2))/(15*_z**(1/2))
+        ((-_z + 1)**(1/2)/2 + 1/2)**(1/2)
         """
         inv = ip.build_invariants()
         sizes = ip.sizes
@@ -378,19 +457,11 @@ class FormulaCollection(object):
         if not sizes in self.symbolic_formulae:
             return None # Too bad...
 
-        # We instantiate all formulae we can, build the invariants, and look up
-        # in the new table.
-        # TODO This is a bit of a waste since the instantiatons will return all
-        #      permutations anyway, but let's do this for now for simplicity.
-        new_formulae = {}
         for f in self.symbolic_formulae[sizes]:
             l = f.find_instantiations(ip)
             for f2 in l:
-                if f2.is_suitable():
-                    new_formulae[f2.indices.build_invariants()] = f2
-
-        if inv in new_formulae:
-            return new_formulae[inv]
+                if f2.is_suitable() and f2.indices.reachable(ip):
+                    return f2
 
         # Give up.
         return None
@@ -441,6 +512,12 @@ class Operator(object):
         for c, d in zip(coeffs[1:], diffs[1:]):
             r += c*d
         return r
+
+class MultOperator(Operator):
+    """ Simply multiply by a "constant" """
+
+    def __init__(self, p):
+        self._poly = Poly(p, x)
 
 class ShiftA(Operator):
     """ Increment an upper index. """
@@ -682,7 +759,7 @@ def devise_plan(ip, nip, z):
     [<Decrement lower 3.>, <Decrement lower 4.>, <Decrement upper index #1 of [-1, 2], [4].>, <Decrement upper index #1 of [-1, 3], [4].>, <Increment upper -2.>]
     """
     abuckets, bbuckets = ip.compute_buckets()
-    nabuckets, nbbuckets = nip.compute_buckets()
+    nabuckets, nbbuckets = nip.compute_buckets(abuckets, bbuckets)
 
     if len(abuckets.keys()) != len(nabuckets.keys()) or \
        len(bbuckets.keys()) != len(nbbuckets.keys()):
@@ -693,7 +770,7 @@ def devise_plan(ip, nip, z):
     def do_shifts(fro, to, inc, dec):
         ops = []
         for i in xrange(len(fro)):
-            if to[i] > fro[i]:
+            if to[i] - fro[i] > 0:
                 sh = inc
                 ch = 1
             else:
@@ -773,11 +850,60 @@ def devise_plan(ip, nip, z):
     ops.reverse()
     return ops
 
+def try_shifted_sum(ip, z):
+    """ Try to recognise a hypergeometric sum that starts from k > 0. """
+    from sympy.functions import rf, factorial
+    abuckets, bbuckets = ip.compute_buckets()
+    if not S(0) in abuckets or len(abuckets[S(0)]) != 1:
+        return None
+    r = abuckets[S(0)][0]
+    if r <= 0:
+        return None
+    if not S(0) in bbuckets:
+        return None
+    l = list(bbuckets[S(0)])
+    l.sort()
+    k = l[0]
+    if k <= 0:
+        return None
+
+    nap = list(ip.ap)
+    nap.remove(r)
+    nbq = list(ip.bq)
+    nbq.remove(k)
+    k -= 1
+    nap = map(lambda x: x - k, nap)
+    nbq = map(lambda x: x - k, nbq)
+
+    ops = []
+    for n in xrange(r - 1):
+        ops.append(ShiftA(n + 1))
+    ops.reverse()
+
+    fac = factorial(k)/z**k
+    for a in nap:
+        fac /= rf(a, k)
+    for b in nbq:
+        fac *= rf(b, k)
+
+    ops += [MultOperator(fac)]
+
+    p = 0
+    for n in xrange(k):
+        m = z**n/factorial(n)
+        for a in nap:
+            m *= rf(a, n)
+        for b in nbq:
+            m /= rf(b, n)
+        p += m
+
+    return IndexPair(nap, nbq), ops, -p
+
 collection = None
 def _hyperexpand(ip, z):
     """ Try to find an expression for the hypergeometric function
         `ip.ap`, `ip.bq`. """
-    from sympy.simplify import powdenest
+    from sympy.simplify import powdenest, simplify
 
     # TODO
     # The following would be possible:
@@ -797,6 +923,20 @@ def _hyperexpand(ip, z):
     # First reduce order as much as possible.
     nip, ops = reduce_order(ip)
 
+    # Our dummy variable
+    z0 = Dummy('z0')
+
+    # Try to recognise a shifted sum.
+    p = S(0)
+    res = try_shifted_sum(nip, z0)
+    if res != None:
+        nip, nops, p = res
+        ops += nops
+
+    # apply the plan for poly
+    p = apply_operators(p, ops, lambda f: z0*f.diff(z0))
+    p = simplify(p).subs(z0, z)
+
     # Now try to find a formula
     f = collection.lookup_origin(nip)
 
@@ -805,14 +945,15 @@ def _hyperexpand(ip, z):
         return None
 
     # We need to find the operators that convert f into (nap, nbq).
-    ops += devise_plan(nip, f.indices, f.z)
+    ops += devise_plan(nip, f.indices, z0)
 
     # Now carry out the plan.
-    C = apply_operators(f.C, ops, make_derivative_operator(f.M, f.z))
+    C = apply_operators(f.C.subs(f.z, z0), ops,
+                        make_derivative_operator(f.M.subs(f.z, z0), z0))
 
     C.simplify() # is this a good idea?
-    r = C*f.B
-    r = r[0].subs(f.z, z)
+    r = C*f.B.subs(f.z, z0)
+    r = r[0].subs(z0, z) + p
 
     # This will simpliy things like sqrt(-z**2) to i*z.
     # It would be wrong under certain choices of branch, but all results we

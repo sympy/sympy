@@ -4,7 +4,7 @@ from sympy.simplify.hyperexpand import (ShiftA, ShiftB, UnShiftA, UnShiftB,
                        hyperexpand, IndexPair)
 from sympy import hyper, I, S
 from sympy.utilities.pytest import raises
-from sympy.abc import z
+from sympy.abc import z, a
 from sympy.utilities.randtest import test_numerically as tn
 from sympy.utilities.pytest import XFAIL
 from random import randrange
@@ -26,6 +26,24 @@ def test_hyperexpand():
     # More from above
     # Kelly' Roach's Papers
     # "Integrals and Series"
+
+def test_hyperexpand_parametric():
+    assert hyperexpand(hyper([a, S(1)/2 + a], [S(1)/2], z)) \
+        == (1 + z**(S(1)/2))**(-2*a)/2 + (1 - z**(S(1)/2))**(-2*a)/2
+    assert hyperexpand(hyper([a, -S(1)/2 + a], [2*a], z)) \
+        == (S(1)/2 + (1 - z)**(S(1)/2)/2)**(1 - 2*a)
+
+def test_hyperexpand_bases():
+    assert hyperexpand(hyper([a + 1, S(1)/2 + a], [S.Half], z)) \
+        == (1 + z**(S(1)/2))**(-2*a)*(-1 + z**(S(1)/2))/(-1 + z)/2 \
+         + (1 - z**(S(1)/2))**(-2*a)*(-1 - z**(S(1)/2))/(-1 + z)/2
+
+
+
+def test_shifted_sum():
+    from sympy import simplify
+    assert simplify(hyperexpand(z**4*hyper([2], [3, S('3/2')], -z**2))) \
+           == -S(1)/2 + cos(2*z)/2 + z*sin(2*z) - z**2*cos(2*z)
 
 def randrat():
     """ Steer clear of integers. """
