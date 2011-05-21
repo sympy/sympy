@@ -212,7 +212,7 @@ class assoc_legendre(Function):
             assoc = cls.calc(int(n), abs(int(m)))
 
             if m < 0:
-                assoc *= (-1)**(-m) * (C.Factorial(n + m)/C.Factorial(n - m))
+                assoc *= (-1)**(-m) * (C.factorial(n + m)/C.factorial(n - m))
 
             return assoc.subs(_x, x)
 

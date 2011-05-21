@@ -1,4 +1,4 @@
-from sympy import sin, cos, atan2, gamma, conjugate, sqrt, Factorial, \
+from sympy import sin, cos, atan2, gamma, conjugate, sqrt, factorial, \
     Integral, Piecewise, Add, diff, symbols, S, Real, Dummy
 from sympy import Catalan, EulerGamma, E, GoldenRatio, I, pi
 from sympy import Function, Rational, Integer, Lambda
@@ -97,7 +97,7 @@ def test_user_functions():
     g = Function('g')
     assert fcode(g(x), user_functions={g: "great"}) == "      great(x)"
     n = symbols('n', integer=True)
-    assert fcode(Factorial(n), user_functions={Factorial: "fct"}) == "      fct(n)"
+    assert fcode(factorial(n), user_functions={factorial: "fct"}) == "      fct(n)"
 
 def test_inline_function():
     x = symbols('x')

@@ -293,7 +293,7 @@ def test_separable1():
     assert dsolve(eq2, f(x), hint='separable') == sol2
     assert dsolve(eq3, f(x), hint='separable') == sol3
     assert dsolve(eq4, f(x), hint='separable') == sol4
-    assert dsolve(eq5, f(x), hint='separable') == sol5
+    assert dsolve(eq5, f(x), hint='separable') == simplify(sol5)
     assert checkodesol(eq1, f(x), sol1, order=1, solve_for_func=False)[0]
     assert checkodesol(eq2, f(x), sol2, order=1, solve_for_func=False)[0]
     assert checkodesol(eq3, f(x), sol3, order=1, solve_for_func=False)[0]
@@ -331,7 +331,7 @@ def test_separable3():
     sol11 = Eq(f(x), C1*sqrt(1 + tan(x)**2))
     sol12 = Eq(log(-1 + cos(f(x))**2)/2, C1 + 2*x + 2*log(x - 1))
     sol13 = Eq(log(log(f(x))), C1 - log(1 + tan(x)**2)/2 + log(tan(x)))
-    assert dsolve(eq11, f(x), hint='separable') == sol11
+    assert dsolve(eq11, f(x), hint='separable') == simplify(sol11)
     assert dsolve(eq12, f(x), hint='separable') == sol12
     assert dsolve(eq13, f(x), hint='separable') == sol13
     assert checkodesol(eq11, f(x), sol11, order=1, solve_for_func=False)[0]

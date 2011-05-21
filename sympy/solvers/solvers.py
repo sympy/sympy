@@ -384,13 +384,16 @@ def solve(f, *symbols, **flags):
             else:
                 soln = solve_poly_system(polys)
 
-            # Use swap_dict to ensure we return the same type as what was
-            # passed
+            # Use swap_dict to ensure we return the same type as what was passed
             if symbol_swapped:
                 if isinstance(soln, dict):
                     res = {}
-                    for k in soln.keys():
-                        res.update({swap_back_dict[k]: soln[k]})
+
+                    for k, v in soln.iteritems():
+                        k = k.subs(swap_back_dict)
+                        v = v.subs(swap_back_dict)
+                        res[k] = v
+
                     return res
                 else:
                     return soln

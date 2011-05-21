@@ -124,7 +124,7 @@ class exp(Function):
             p = previous_terms[-1]
             if p is not None:
                 return p * x / n
-        return x**n/C.Factorial()(n)
+        return x**n/C.factorial()(n)
 
     def _eval_expand_complex(self, deep=True, **hints):
         re_part, im_part = self.as_real_imag(deep=deep, **hints)

@@ -80,7 +80,7 @@ def monomial_count(V, N):
     6
 
     """
-    return C.Factorial(V + N) / C.Factorial(V) / C.Factorial(N)
+    return C.factorial(V + N) / C.factorial(V) / C.factorial(N)
 
 def monomial_lex_key(monom):
     """Key function for sorting monomials in lexicographic order. """

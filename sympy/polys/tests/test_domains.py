@@ -172,6 +172,18 @@ def test_Domain__unify():
     assert QQ.frac_field('x','y').unify(ZZ.poly_ring('x','z')) == EX # QQ.frac_field('x','y','z')
     assert QQ.frac_field('x','y').unify(QQ.poly_ring('x','z')) == QQ.frac_field('x','y','z')
 
+    alg = QQ.algebraic_field(sqrt(5))
+
+    assert alg.unify(alg['x','y']) == alg['x','y']
+    assert alg['x','y'].unify(alg) == alg['x','y']
+
+    assert alg.unify(alg.frac_field('x','y')) == alg.frac_field('x','y')
+    assert alg.frac_field('x','y').unify(alg) == alg.frac_field('x','y')
+
+    ext = QQ.algebraic_field(sqrt(7))
+
+    raises(NotImplementedError, "alg.unify(ext)")
+
     raises(UnificationFailed, "ZZ.poly_ring('x','y').unify(ZZ, gens=('y', 'z'))")
     raises(UnificationFailed, "ZZ.unify(ZZ.poly_ring('x','y'), gens=('y', 'z'))")
 

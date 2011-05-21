@@ -76,7 +76,7 @@ class PrettyPrinter(Printer):
     _print_NegativeInfinity = _print_Atom
     _print_EmptySet         = _print_Atom
 
-    def _print_Factorial(self, e):
+    def _print_factorial(self, e):
         x = e.args[0]
         pform = self._print(x)
         # Add parentheses if needed
@@ -85,7 +85,7 @@ class PrettyPrinter(Printer):
         pform = prettyForm(*pform.right('!'))
         return pform
 
-    def _print_Binomial(self, e):
+    def _print_binomial(self, e):
         n, k = e.args
 
         n_pform = self._print(n)
