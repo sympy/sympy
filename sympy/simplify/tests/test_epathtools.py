@@ -3,6 +3,7 @@
 from sympy.simplify.epathtools import epath, EPath
 from sympy.utilities.pytest import raises
 
+from sympy import sin, cos, E
 from sympy.abc import x, y, z, t
 
 def test_epath_select():
@@ -43,7 +44,8 @@ def test_epath_select():
     assert epath("/*/[0]/int[1:]", expr) == [1, 4]
     assert epath("/*/[0]/Symbol[1:]", expr) == [t, y]
 
-    assert set(epath("/Symbol", x + y + z + 1)) == set([x, y, z])
+    assert epath("/Symbol", x + y + z + 1) == [x, y, z]
+    assert epath("/*/*/Symbol", t + sin(x + 1) + cos(x + y + E)) == [x, x, y]
 
 def test_epath_apply():
     expr = [((x, 1, t), 2), ((3, y, 4), z)]
@@ -61,6 +63,8 @@ def test_epath_apply():
     assert epath("/*/[0]/Symbol[1:]", expr, func) == [((x, 1, t**2), 2), ((3, y**2, 4), z)]
 
     assert epath("/Symbol", x + y + z + 1, func) == x**2 + y**2 + z**2 + 1
+    assert epath("/*/*/Symbol", t + sin(x + 1) + cos(x + y + E), func) == \
+        t + sin(x**2 + 1) + cos(x**2 + y**2 + E)
 
 def test_EPath():
     assert EPath("/*/[0]")._path == "/*/[0]"

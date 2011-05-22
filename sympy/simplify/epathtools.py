@@ -113,6 +113,15 @@ class EPath(object):
     def __repr__(self):
         return "%s(%r)" % (self.__class__.__name__, self._path)
 
+    def _get_ordered_args(self, expr):
+        """Sort ``expr.args`` using printing order. """
+        if expr.is_Add:
+            return expr.as_ordered_terms()
+        elif expr.is_Mul:
+            return expr.as_ordered_factors()
+        else:
+            return expr.args
+
     def _hasattrs(self, expr, attrs):
         """Check if ``expr`` has any of ``attrs``. """
         for attr in attrs:
@@ -146,13 +155,20 @@ class EPath(object):
         **Examples**
 
         >>> from sympy.simplify.epathtools import EPath
-        >>> from sympy.abc import x, y, z
+        >>> from sympy import sin, cos, E
+        >>> from sympy.abc import x, y, z, t
 
         >>> path = EPath("/*/[0]/Symbol")
         >>> expr = [((x, 1), 2), ((3, y), z)]
 
         >>> path.apply(expr, lambda expr: expr**2)
         [((x**2, 1), 2), ((3, y**2), z)]
+
+        >>> path = EPath("/*/*/Symbol")
+        >>> expr = t + sin(x + 1) + cos(x + y + E)
+
+        >>> path.apply(expr, lambda expr: 2*expr)
+        t + sin(2*x + 1) + cos(2*x + 2*y + E)
 
         """
         def _apply(path, expr, func):
@@ -163,7 +179,10 @@ class EPath(object):
                 attrs, types, span = selector
 
                 if isinstance(expr, Basic):
-                    args, basic = expr.args, True
+                    if not expr.is_Atom:
+                        args, basic = self._get_ordered_args(expr), True
+                    else:
+                        return expr
                 elif hasattr(expr, '__iter__'):
                     args, basic = expr, False
                 else:
@@ -205,13 +224,20 @@ class EPath(object):
         **Examples**
 
         >>> from sympy.simplify.epathtools import EPath
-        >>> from sympy.abc import x, y, z
+        >>> from sympy import sin, cos, E
+        >>> from sympy.abc import x, y, z, t
 
         >>> path = EPath("/*/[0]/Symbol")
         >>> expr = [((x, 1), 2), ((3, y), z)]
 
         >>> path.select(expr)
         [x, y]
+
+        >>> path = EPath("/*/*/Symbol")
+        >>> expr = t + sin(x + 1) + cos(x + y + E)
+
+        >>> path.select(expr)
+        [x, x, y]
 
         """
         result = []
@@ -224,7 +250,7 @@ class EPath(object):
                 attrs, types, span = selector
 
                 if isinstance(expr, Basic):
-                    args = expr.args
+                    args = self._get_ordered_args(expr)
                 elif hasattr(expr, '__iter__'):
                     args = expr
                 else:
@@ -284,7 +310,8 @@ def epath(path, expr=None, func=None, args=None, kwargs=None):
     **Examples**
 
     >>> from sympy.simplify.epathtools import epath
-    >>> from sympy.abc import x, y, z
+    >>> from sympy import sin, cos, E
+    >>> from sympy.abc import x, y, z, t
 
     >>> path = "/*/[0]/Symbol"
     >>> expr = [((x, 1), 2), ((3, y), z)]
@@ -293,6 +320,14 @@ def epath(path, expr=None, func=None, args=None, kwargs=None):
     [x, y]
     >>> epath(path, expr, lambda expr: expr**2)
     [((x**2, 1), 2), ((3, y**2), z)]
+
+    >>> path = "/*/*/Symbol"
+    >>> expr = t + sin(x + 1) + cos(x + y + E)
+
+    >>> epath(path, expr)
+    [x, x, y]
+    >>> epath(path, expr, lambda expr: 2*expr)
+    t + sin(2*x + 1) + cos(2*x + 2*y + E)
 
     """
     _epath = EPath(path)
