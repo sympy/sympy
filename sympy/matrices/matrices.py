@@ -2522,7 +2522,7 @@ converter[Matrix] = _matrix_sympify
 del _matrix_sympify
 
 
-class SMatrix(Matrix):
+class SparseMatrix(Matrix):
     """Sparse matrix"""
 
     def __init__(self, *args):
@@ -2673,8 +2673,8 @@ class SMatrix(Matrix):
         """
         Returns a Row-sorted list of non-zero elements of the matrix.
 
-        >>> from sympy.matrices import SMatrix
-        >>> a=SMatrix((1,2),(3,4))
+        >>> from sympy.matrices import SparseMatrix
+        >>> a=SparseMatrix((1,2),(3,4))
         >>> a
         [1, 2]
         [3, 4]
@@ -2695,8 +2695,8 @@ class SMatrix(Matrix):
     def col_list(self):
         """
         Returns a Column-sorted list of non-zero elements of the matrix.
-        >>> from sympy.matrices import SMatrix
-        >>> a=SMatrix((1,2),(3,4))
+        >>> from sympy.matrices import SparseMatrix
+        >>> a=SparseMatrix((1,2),(3,4))
         >>> a
         [1, 2]
         [3, 4]
@@ -2715,9 +2715,9 @@ class SMatrix(Matrix):
 
     def transpose(self):
         """
-        Returns the transposed SMatrix of this SMatrix
-        >>> from sympy.matrices import SMatrix
-        >>> a = SMatrix((1,2),(3,4))
+        Returns the transposed SparseMatrix of this SparseMatrix
+        >>> from sympy.matrices import SparseMatrix
+        >>> a = SparseMatrix((1,2),(3,4))
         >>> a
         [1, 2]
         [3, 4]
@@ -2725,7 +2725,7 @@ class SMatrix(Matrix):
         [1, 3]
         [2, 4]
         """
-        tran = SMatrix(self.cols,self.rows,{})
+        tran = SparseMatrix(self.cols,self.rows,{})
         for key,value in self.mat.iteritems():
             tran.mat[key[1],key[0]]=value
         return tran
@@ -2734,30 +2734,30 @@ class SMatrix(Matrix):
 
 
     def __add__(self, other):
-        if isinstance(other, SMatrix):
+        if isinstance(other, SparseMatrix):
             return self.add(other)
         else:
-            raise NotImplementedError("Only SMatrix + SMatrix supported")
+            raise NotImplementedError("Only SparseMatrix + SparseMatrix supported")
 
     def __radd__(self, other):
-        if isinstance(other, SMatrix):
+        if isinstance(other, SparseMatrix):
             return self.add(other)
         else:
-            raise NotImplementedError("Only SMatrix + SMatrix supported")
+            raise NotImplementedError("Only SparseMatrix + SparseMatrix supported")
 
     def add(self, other):
         """
         Add two sparse matrices with dictionary representation.
 
-        >>> from sympy.matrices.matrices import SMatrix
-        >>> A = SMatrix(5, 5, lambda i, j : i * j + i)
+        >>> from sympy.matrices.matrices import SparseMatrix
+        >>> A = SparseMatrix(5, 5, lambda i, j : i * j + i)
         >>> A
         [0, 0,  0,  0,  0]
         [1, 2,  3,  4,  5]
         [2, 4,  6,  8, 10]
         [3, 6,  9, 12, 15]
         [4, 8, 12, 16, 20]
-        >>> B = SMatrix(5, 5, lambda i, j : i + 2 * j)
+        >>> B = SparseMatrix(5, 5, lambda i, j : i + 2 * j)
         >>> B
         [0, 2, 4,  6,  8]
         [1, 3, 5,  7,  9]
@@ -2791,16 +2791,16 @@ class SMatrix(Matrix):
                 c[a[i]] = self.mat[a[i]] + other.mat[b[j]]
                 i = i + 1
                 j = j + 1
-        return SMatrix(self.rows, self.cols, c)
+        return SparseMatrix(self.rows, self.cols, c)
 
 
 
     # from here to end all functions are same as in matrices.py
-    # with Matrix replaced with SMatrix
+    # with Matrix replaced with SparseMatrix
     def copyin_list(self, key, value):
         if not isinstance(value, (list, tuple)):
             raise TypeError("`value` must be of type list or tuple.")
-        self.copyin_matrix(key, SMatrix(value))
+        self.copyin_matrix(key, SparseMatrix(value))
 
     def multiply(self,b):
         """Returns self*b """
@@ -2813,7 +2813,7 @@ class SMatrix(Matrix):
                 r+=a[i,x]*b[x,j]
             return r
 
-        r = SMatrix(self.rows, b.cols, lambda i,j: dotprod(self,b,i,j))
+        r = SparseMatrix(self.rows, b.cols, lambda i,j: dotprod(self,b,i,j))
         if r.rows == 1 and r.cols ==1:
             return r[0,0]
         return r
@@ -2825,7 +2825,7 @@ class SMatrix(Matrix):
         clo, chi = self.slice2bounds(keys[1], self.cols)
         if not ( 0<=rlo<=rhi and 0<=clo<=chi ):
             raise IndexError("Slice indices out of range: a[%s]"%repr(keys))
-        return SMatrix(rhi-rlo, chi-clo, lambda i,j: self[i+rlo, j+clo])
+        return SparseMatrix(rhi-rlo, chi-clo, lambda i,j: self[i+rlo, j+clo])
 
     def reshape(self, _rows, _cols):
         if len(self) != _rows*_cols:
@@ -2836,7 +2836,7 @@ class SMatrix(Matrix):
                 m,n = self.rowdecomp(i*_cols + j)
                 if (m,n) in self.mat:
                     newD[(i,j)] = self.mat[(m,n)]
-        return SMatrix(_rows, _cols, newD)
+        return SparseMatrix(_rows, _cols, newD)
 
     def cross(self, b):
         if not isinstance(b, (list, tuple, Matrix)):
@@ -2848,7 +2848,7 @@ class SMatrix(Matrix):
                 b.rows == 3 and b.cols == 1):
             raise ShapeError("Dimensions incorrect for cross product")
         else:
-            return SMatrix(1,3,((self[1]*b[2] - self[2]*b[1]),
+            return SparseMatrix(1,3,((self[1]*b[2] - self[2]*b[1]),
                                (self[2]*b[0] - self[0]*b[2]),
                                (self[0]*b[1] - self[1]*b[0])))
 
@@ -2856,10 +2856,10 @@ class SMatrix(Matrix):
     def zeros(self, dims):
         """Returns a dims = (d1,d2) matrix of zeros."""
         n, m = _dims_to_nm( dims )
-        return SMatrix(n,m,{})
+        return SparseMatrix(n,m,{})
 
     def eye(self, n):
-        tmp = SMatrix(n,n,lambda i,j:0)
+        tmp = SparseMatrix(n,n,lambda i,j:0)
         for i in range(tmp.rows):
             tmp[i,i] = 1
         return tmp
