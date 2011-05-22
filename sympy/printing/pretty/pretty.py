@@ -658,8 +658,8 @@ class PrettyPrinter(Printer):
         a = [] # items in the numerator
         b = [] # items that are in the denominator (if any)
 
-        if self.order:
-            args = sorted(product.args, key=Basic.sorted_key)
+        if self.order != 'old':
+            args = product.as_ordered_factors()
         else:
             args = product.args
 

@@ -438,7 +438,7 @@ def solve_linear(lhs, rhs=0, x=[], exclude=[]):
     expression without causing a division by zero error.
 
         >>> solve_linear(x**2*(1/x - z**2/x))
-        (x**2*(x - x*z**2), x**2)
+        (x**2*(-x*z**2 + x), x**2)
 
     You can give a list of what you prefer for x candidates:
 

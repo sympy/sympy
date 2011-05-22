@@ -227,7 +227,7 @@ class Poly(Expr):
         >>> from sympy.abc import x
 
         >>> Poly(x**2 + 1, x).args
-        [1 + x**2]
+        [x**2 + 1]
 
         """
         return [self.as_expr()]
@@ -820,9 +820,9 @@ class Poly(Expr):
         >>> f = Poly(x**2 + 2*x*y**2 - y, x, y)
 
         >>> f.as_expr()
-        -y + x**2 + 2*x*y**2
+        x**2 + 2*x*y**2 - y
         >>> f.as_expr({x: 5})
-        25 - y + 10*y**2
+        10*y**2 - y + 25
         >>> f.as_expr(5, 6)
         379
 
@@ -931,9 +931,9 @@ class Poly(Expr):
         >>> f = Poly(x**2*y + x*y**3 + x*y + 1, x, y)
 
         >>> f.eject(x)
-        Poly(x*y**3 + (x + x**2)*y + 1, y, domain='ZZ[x]')
+        Poly(x*y**3 + (x**2 + x)*y + 1, y, domain='ZZ[x]')
         >>> f.eject(y)
-        Poly(y*x**2 + (y + y**3)*x + 1, x, domain='ZZ[y]')
+        Poly(y*x**2 + (y**3 + y)*x + 1, x, domain='ZZ[y]')
 
         """
         dom = f.rep.dom
@@ -1327,7 +1327,7 @@ class Poly(Expr):
         >>> Poly(x**2 + 1, x).pquo(Poly(2*x - 4, x))
         Traceback (most recent call last):
         ...
-        ExactQuotientFailed: -4 + 2*x does not divide 1 + x**2
+        ExactQuotientFailed: 2*x - 4 does not divide x**2 + 1
 
         """
         _, per, F, G = f._unify(g)
@@ -1456,7 +1456,7 @@ class Poly(Expr):
         >>> Poly(x**2 + 1, x).quo(Poly(2*x - 4, x))
         Traceback (most recent call last):
         ...
-        ExactQuotientFailed: -4 + 2*x does not divide 1 + x**2
+        ExactQuotientFailed: 2*x - 4 does not divide x**2 + 1
 
         """
         dom, per, F, G = f._unify(g)
@@ -3584,7 +3584,7 @@ def pdiv(f, g, *gens, **args):
     >>> from sympy.abc import x
 
     >>> pdiv(x**2 + 1, 2*x - 4)
-    (4 + 2*x, 20)
+    (2*x + 4, 20)
 
     """
     options.allowed_flags(args, ['polys'])
@@ -3638,12 +3638,12 @@ def pquo(f, g, *gens, **args):
     >>> from sympy.abc import x
 
     >>> pquo(x**2 - 1, 2*x - 2)
-    2 + 2*x
+    2*x + 2
 
     >>> pquo(x**2 + 1, 2*x - 4)
     Traceback (most recent call last):
     ...
-    ExactQuotientFailed: -4 + 2*x does not divide 1 + x**2
+    ExactQuotientFailed: 2*x - 4 does not divide x**2 + 1
 
     """
     options.allowed_flags(args, ['polys'])
@@ -3670,9 +3670,9 @@ def pexquo(f, g, *gens, **args):
     >>> from sympy.abc import x
 
     >>> pexquo(x**2 + 1, 2*x - 4)
-    4 + 2*x
+    2*x + 4
     >>> pexquo(x**2 - 1, 2*x - 1)
-    1 + 2*x
+    2*x + 1
 
     """
     options.allowed_flags(args, ['polys'])
@@ -3699,9 +3699,9 @@ def div(f, g, *gens, **args):
     >>> from sympy.abc import x
 
     >>> div(x**2 + 1, 2*x - 4, domain=ZZ)
-    (0, 1 + x**2)
+    (0, x**2 + 1)
     >>> div(x**2 + 1, 2*x - 4, domain=QQ)
-    (1 + x/2, 5)
+    (x/2 + 1, 5)
 
     """
     options.allowed_flags(args, ['auto', 'polys'])
@@ -3728,7 +3728,7 @@ def rem(f, g, *gens, **args):
     >>> from sympy.abc import x
 
     >>> rem(x**2 + 1, 2*x - 4, domain=ZZ)
-    1 + x**2
+    x**2 + 1
     >>> rem(x**2 + 1, 2*x - 4, domain=QQ)
     5
 
@@ -3757,12 +3757,12 @@ def quo(f, g, *gens, **args):
     >>> from sympy.abc import x
 
     >>> quo(x**2 - 1, x - 1)
-    1 + x
+    x + 1
 
     >>> quo(x**2 + 1, 2*x - 4)
     Traceback (most recent call last):
     ...
-    ExactQuotientFailed: -4 + 2*x does not divide 1 + x**2
+    ExactQuotientFailed: 2*x - 4 does not divide x**2 + 1
 
     """
     options.allowed_flags(args, ['auto', 'polys'])
@@ -3789,9 +3789,9 @@ def exquo(f, g, *gens, **args):
     >>> from sympy.abc import x
 
     >>> exquo(x**2 + 1, 2*x - 4)
-    1 + x/2
+    x/2 + 1
     >>> exquo(x**2 - 1, x - 1)
-    1 + x
+    x + 1
 
     """
     options.allowed_flags(args, ['auto', 'polys'])
@@ -3820,7 +3820,7 @@ def half_gcdex(f, g, *gens, **args):
     >>> from sympy.abc import x
 
     >>> half_gcdex(x**4 - 2*x**3 - 6*x**2 + 12*x + 15, x**3 + x**2 - 4*x - 4)
-    (3/5 - x/5, 1 + x)
+    (-x/5 + 3/5, x + 1)
 
     """
     options.allowed_flags(args, ['auto', 'polys'])
@@ -3857,7 +3857,7 @@ def gcdex(f, g, *gens, **args):
     >>> from sympy.abc import x
 
     >>> gcdex(x**4 - 2*x**3 - 6*x**2 + 12*x + 15, x**3 + x**2 - 4*x - 4)
-    (3/5 - x/5, 2 - 6*x/5 + x**2/5, 1 + x)
+    (-x/5 + 3/5, x**2/5 - 6*x/5 + 2, x + 1)
 
     """
     options.allowed_flags(args, ['auto', 'polys'])
@@ -3932,7 +3932,7 @@ def subresultants(f, g, *gens, **args):
     >>> from sympy.abc import x
 
     >>> subresultants(x**2 + 1, x**2 - 1)
-    [1 + x**2, -1 + x**2, -2]
+    [x**2 + 1, x**2 - 1, -2]
 
     """
     options.allowed_flags(args, ['polys'])
@@ -4017,7 +4017,7 @@ def cofactors(f, g, *gens, **args):
     >>> from sympy.abc import x
 
     >>> cofactors(x**2 - 1, x**2 - 3*x + 2)
-    (-1 + x, 1 + x, -2 + x)
+    (x - 1, x + 1, x - 2)
 
     """
     options.allowed_flags(args, ['polys'])
@@ -4052,7 +4052,7 @@ def gcd_list(seq, *gens, **args):
     >>> from sympy.abc import x
 
     >>> gcd_list([x**3 - 1, x**2 - 1, x**2 - 3*x + 2])
-    -1 + x
+    x - 1
 
     """
     if not gens and not args:
@@ -4108,7 +4108,7 @@ def gcd(f, g=None, *gens, **args):
     >>> from sympy.abc import x
 
     >>> gcd(x**2 - 1, x**2 - 3*x + 2)
-    -1 + x
+    x - 1
 
     """
     if hasattr(f, '__iter__'):
@@ -4149,7 +4149,7 @@ def lcm_list(seq, *gens, **args):
     >>> from sympy.abc import x
 
     >>> lcm_list([x**3 - 1, x**2 - 1, x**2 - 3*x + 2])
-    2 + x - x**2 - 2*x**3 - x**4 + x**5
+    x**5 - x**4 - 2*x**3 - x**2 + x + 2
 
     """
     if not gens and not args:
@@ -4199,7 +4199,7 @@ def lcm(f, g=None, *gens, **args):
     >>> from sympy.abc import x
 
     >>> lcm(x**2 - 1, x**2 - 3*x + 2)
-    2 - x - 2*x**2 + x**3
+    x**3 - 2*x**2 - x + 2
 
     """
     if hasattr(f, '__iter__'):
@@ -4240,7 +4240,7 @@ def terms_gcd(f, *gens, **args):
     >>> from sympy.abc import x, y
 
     >>> terms_gcd(x**6*y**2 + x**3*y, x, y)
-    y*x**3*(1 + y*x**3)
+    x**3*y*(x**3*y + 1)
 
     """
     options.allowed_flags(args, ['polys'])
@@ -4277,7 +4277,7 @@ def trunc(f, p, *gens, **args):
     >>> from sympy.abc import x
 
     >>> trunc(2*x**3 + 3*x**2 + 5*x + 7, 3)
-    1 - x - x**3
+    -x**3 - x + 1
 
     """
     options.allowed_flags(args, ['auto', 'polys'])
@@ -4304,7 +4304,7 @@ def monic(f, *gens, **args):
     >>> from sympy.abc import x
 
     >>> monic(3*x**2 + 4*x + 2)
-    2/3 + 4*x/3 + x**2
+    x**2 + 4*x/3 + 2/3
 
     """
     options.allowed_flags(args, ['auto', 'polys'])
@@ -4353,7 +4353,7 @@ def primitive(f, *gens, **args):
     >>> from sympy.abc import x
 
     >>> primitive(6*x**2 + 8*x + 12)
-    (2, 6 + 4*x + 3*x**2)
+    (2, 3*x**2 + 4*x + 6)
 
     """
     options.allowed_flags(args, ['polys'])
@@ -4380,7 +4380,7 @@ def compose(f, g, *gens, **args):
     >>> from sympy.abc import x
 
     >>> compose(x**2 + x, x - 1)
-    -x + x**2
+    x**2 - x
 
     """
     options.allowed_flags(args, ['polys'])
@@ -4407,7 +4407,7 @@ def decompose(f, *gens, **args):
     >>> from sympy.abc import x
 
     >>> decompose(x**4 + 2*x**3 - x - 1)
-    [-1 - x + x**2, x + x**2]
+    [x**2 - x - 1, x**2 + x]
 
     """
     options.allowed_flags(args, ['polys'])
@@ -4434,7 +4434,7 @@ def sturm(f, *gens, **args):
     >>> from sympy.abc import x
 
     >>> sturm(x**3 - 2*x**2 + x - 3)
-    [-3 + x - 2*x**2 + x**3, 1 - 4*x + 3*x**2, 25/9 + 2*x/9, -2079/4]
+    [x**3 - 2*x**2 + x - 3, 3*x**2 - 4*x + 1, 2*x/9 + 25/9, -2079/4]
 
     """
     options.allowed_flags(args, ['auto', 'polys'])
@@ -4463,7 +4463,7 @@ def gff_list(f, *gens, **args):
     >>> f = x**5 + 2*x**4 - x**3 - 2*x**2
 
     >>> gff_list(f)
-    [(x, 1), (2 + x, 4)]
+    [(x, 1), (x + 2, 4)]
 
     >>> (ff(x, 1)*ff(x + 2, 4)).expand() == f
     True
@@ -4501,7 +4501,7 @@ def sqf_norm(f, *gens, **args):
     >>> from sympy.abc import x
 
     >>> sqf_norm(x**2 + 1, extension=[sqrt(3)])
-    (1, 4 - 2*x*3**(1/2) + x**2, 16 - 4*x**2 + x**4)
+    (1, x**2 - 2*3**(1/2)*x + 4, x**4 - 4*x**2 + 16)
 
     """
     options.allowed_flags(args, ['polys'])
@@ -4528,7 +4528,7 @@ def sqf_part(f, *gens, **args):
     >>> from sympy.abc import x
 
     >>> sqf_part(x**3 - 3*x - 2)
-    -2 - x + x**2
+    x**2 - x - 2
 
     """
     options.allowed_flags(args, ['polys'])
@@ -4655,7 +4655,7 @@ def sqf_list(f, *gens, **args):
     >>> from sympy.abc import x
 
     >>> sqf_list(2*x**5 + 16*x**4 + 50*x**3 + 76*x**2 + 56*x + 16)
-    (2, [(1 + x, 2), (2 + x, 3)])
+    (2, [(x + 1, 2), (x + 2, 3)])
 
     """
     return _generic_factor_list(f, gens, args, method='sqf')
@@ -4670,7 +4670,7 @@ def sqf(f, *gens, **args):
     >>> from sympy.abc import x
 
     >>> sqf(2*x**5 + 16*x**4 + 50*x**3 + 76*x**2 + 56*x + 16)
-    2*(1 + x)**2*(2 + x)**3
+    2*(x + 1)**2*(x + 2)**3
 
     """
     return _generic_factor(f, gens, args, method='sqf')
@@ -4685,7 +4685,7 @@ def factor_list(f, *gens, **args):
     >>> from sympy.abc import x, y
 
     >>> factor_list(2*x**5 + 2*x**4*y + 4*x**3 + 4*x**2*y + 2*x + 2*y)
-    (2, [(x + y, 1), (1 + x**2, 2)])
+    (2, [(x + y, 1), (x**2 + 1, 2)])
 
     """
     return _generic_factor_list(f, gens, args, method='factor')
@@ -4713,22 +4713,22 @@ def factor(f, *gens, **args):
     >>> from sympy.abc import x, y
 
     >>> factor(2*x**5 + 2*x**4*y + 4*x**3 + 4*x**2*y + 2*x + 2*y)
-    2*(1 + x**2)**2*(x + y)
+    2*(x + y)*(x**2 + 1)**2
 
     >>> factor(x**2 + 1)
-    1 + x**2
+    x**2 + 1
     >>> factor(x**2 + 1, modulus=2)
-    (1 + x)**2
+    (x + 1)**2
     >>> factor(x**2 + 1, gaussian=True)
-    (x + I)*(x - I)
+    (x - I)*(x + I)
 
     >>> factor(x**2 - 2, extension=sqrt(2))
-    (x + 2**(1/2))*(x - 2**(1/2))
+    (x - 2**(1/2))*(x + 2**(1/2))
 
     >>> factor((x**2 - 1)/(x**2 + 4*x + 4))
-    (1 + x)*(-1 + x)/(2 + x)**2
+    (x - 1)*(x + 1)/(x + 2)**2
     >>> factor((x**2 + 4*x + 4)**10000000*(x**2 + 1))
-    (2 + x)**20000000*(1 + x**2)
+    (x + 2)**20000000*(x**2 + 1)
 
     """
     return _generic_factor(f, gens, args, method='factor')
@@ -4906,7 +4906,7 @@ def nth_power_roots_poly(f, n, *gens, **args):
     >>> g = factor(nth_power_roots_poly(f, 2))
 
     >>> g
-    (1 - x + x**2)**2
+    (x**2 - x + 1)**2
 
     >>> R_f = [ (r**2).expand() for r in roots(f) ]
     >>> R_g = roots(g).keys()
@@ -4939,7 +4939,7 @@ def cancel(f, *gens, **args):
     >>> from sympy.abc import x
 
     >>> cancel((2*x**2 - 2)/(x**2 - 2*x + 1))
-    (2 + 2*x)/(-1 + x)
+    (2*x + 2)/(x - 1)
 
     """
     options.allowed_flags(args, ['polys'])
@@ -4987,7 +4987,7 @@ def reduced(f, G, *gens, **args):
     >>> from sympy.abc import x, y
 
     >>> reduced(2*x**4 + y**2 - x**2 + y**3, [x**3 - x, y**3 - y])
-    ([2*x, 1], y + x**2 + y**2)
+    ([2*x, 1], x**2 + y**2 + y)
 
     """
     options.allowed_flags(args, ['polys'])
@@ -5026,11 +5026,11 @@ def groebner(F, *gens, **args):
     >>> from sympy.abc import x, y
 
     >>> groebner([x*y - 2*y, 2*y**2 - x**2], order='lex')
-    [x**2 - 2*y**2, -2*y + x*y, -2*y + y**3]
+    [x**2 - 2*y**2, x*y - 2*y, y**3 - 2*y]
     >>> groebner([x*y - 2*y, 2*y**2 - x**2], order='grlex')
-    [-2*y + y**3, x**2 - 2*y**2, -2*y + x*y]
+    [y**3 - 2*y, x**2 - 2*y**2, x*y - 2*y]
     >>> groebner([x*y - 2*y, 2*y**2 - x**2], order='grevlex')
-    [-2*x**2 + x**3, -x**2 + 2*y**2, -2*y + x*y]
+    [x**3 - 2*x**2, -x**2 + 2*y**2, x*y - 2*y]
 
     **References**
 

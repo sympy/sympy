@@ -227,7 +227,7 @@ def _sympify(a):
        >>> from sympy import Symbol
        >>> from sympy.abc import x
        >>> x + 1
-       1 + x
+       x + 1
 
        >>> x + '1'
        Traceback (most recent call last):

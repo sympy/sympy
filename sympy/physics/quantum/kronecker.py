@@ -42,7 +42,7 @@ class KroneckerDelta(Function):
         >>> KroneckerDelta(i, i+1)
         0
         >>> KroneckerDelta(i, i+1+k)
-        d(i,1 + i + k)
+        d(i,i + k + 1)
 
     References
     ==========

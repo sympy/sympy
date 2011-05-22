@@ -146,7 +146,7 @@ class Sum(Expr):
             1.28333333333333
             >>> s, e = Sum(1/k, (k, 2, 5)).euler_maclaurin()
             >>> s
-            7/20 - log(2) + log(5)
+            -log(2) + 7/20 + log(5)
             >>> from sympy import sstr
             >>> print sstr((s.evalf(), e.evalf()), full_prec=True)
             (1.26629073187416, 0.0175000000000000)
@@ -155,7 +155,7 @@ class Sum(Expr):
 
             >>> s, e = Sum(1/k, (k, a, b)).euler_maclaurin()
             >>> s
-            -log(a) + log(b) + 1/(2*a) + 1/(2*b)
+            -log(a) + log(b) + 1/(2*b) + 1/(2*a)
             >>> e
             Abs(-1/(12*b**2) + 1/(12*a**2))
 
@@ -163,9 +163,9 @@ class Sum(Expr):
         Euler-Maclaurin formula becomes exact (and e = 0 is returned):
 
             >>> Sum(k, (k, 2, b)).euler_maclaurin()
-            (-1 + b/2 + b**2/2, 0)
+            (b**2/2 + b/2 - 1, 0)
             >>> Sum(k, (k, 2, b)).doit()
-            -1 + b/2 + b**2/2
+            b**2/2 + b/2 - 1
 
         With a nonzero eps specified, the summation is ended
         as soon as the remainder term is less than the epsilon.
@@ -245,7 +245,7 @@ def summation(f, *symbols, **kwargs):
     >>> summation(1/log(n)**n, (n, 2, oo))
     Sum(log(n)**(-n), (n, 2, oo))
     >>> summation(i, (i, 0, n), (n, 0, m))
-    m/3 + m**2/2 + m**3/6
+    m**3/6 + m**2/2 + m/3
 
     """
     return Sum(f, *symbols, **kwargs).doit(deep=False)
@@ -262,7 +262,7 @@ def telescopic_direct(L, R, n, (i, a, b)):
     >>> from sympy.concrete.summations import telescopic_direct
     >>> from sympy.abc import k, a, b
     >>> telescopic_direct(1/k, -1/(k+2), 2, (k, a, b))
-    1/a + 1/(1 + a) - 1/(1 + b) - 1/(2 + b)
+    -1/(b + 2) - 1/(b + 1) + 1/(a + 1) + 1/a
 
     """
     s = 0

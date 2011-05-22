@@ -311,8 +311,8 @@ def cartes(*seqs):
     ...
     2*x
     2*y
-    2 + x
-    2 + y
+    x + 2
+    y + 2
     >>>
 
     >>> list(cartes([1, 2], [3, 4, 5]))

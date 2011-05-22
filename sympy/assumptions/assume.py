@@ -57,7 +57,7 @@ class AppliedPredicate(Boolean):
             >>> x = Symbol('x')
             >>> a = Q.integer(x + 1)
             >>> a.arg
-            1 + x
+            x + 1
 
         """
         return self._args[1]

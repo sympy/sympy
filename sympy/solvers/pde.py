@@ -94,7 +94,7 @@ def pde_separate_add(eq, fun, sep):
 
     >>> eq = Eq(D(u(x, t), x), E**(u(x, t))*D(u(x, t), t))
     >>> pde_separate_add(eq, u(x, t), [X(x), T(t)])
-    [D(X(x), x)*exp(-X(x)), D(T(t), t)*exp(T(t))]
+    [exp(-X(x))*D(X(x), x), exp(T(t))*D(T(t), t)]
 
     """
     return pde_separate(eq, fun, sep, strategy='add')

@@ -368,13 +368,13 @@ u"""\
 """
     ascii_str_2 = \
 """\
- 2       \n\
-x + x + 1\
+ 2        \n\
+x  + x + 1\
 """
     ascii_str_3 = \
 """\
- 2       \n\
-x + 1 + x\
+ 2        \n\
+x  + 1 + x\
 """
     ucode_str_1 = \
 u"""\
@@ -383,13 +383,13 @@ u"""\
 """
     ucode_str_2 = \
 u"""\
- 2       \n\
-x + x + 1\
+ 2        \n\
+x  + x + 1\
 """
     ucode_str_3 = \
 u"""\
- 2       \n\
-x + 1 + x\
+ 2        \n\
+x  + 1 + x\
 """
     assert  pretty(expr) in [ascii_str_1, ascii_str_2, ascii_str_3]
     assert upretty(expr) in [ucode_str_1, ucode_str_2, ucode_str_3]
@@ -554,11 +554,11 @@ x + 10\
     expr = -S(1)/2 - 3*x
     ascii_str = \
 """\
--1/2 - 3*x\
+-3*x - 1/2\
 """
     ucode_str = \
 u"""\
--1/2 - 3⋅x\
+-3⋅x - 1/2\
 """
     assert  pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
@@ -566,11 +566,11 @@ u"""\
     expr = S(1)/2 - 3*x
     ascii_str = \
 """\
-1/2 - 3*x\
+-3*x + 1/2\
 """
     ucode_str = \
 u"""\
-1/2 - 3⋅x\
+-3⋅x + 1/2\
 """
     assert  pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
@@ -578,15 +578,15 @@ u"""\
     expr = -S(1)/2 - 3*x/2
     ascii_str = \
 """\
-  1   3*x\n\
-- - - ---\n\
-  2    2 \
+  3*x   1\n\
+- --- - -\n\
+   2    2\
 """
     ucode_str = \
 u"""\
-  1   3⋅x\n\
-- ─ - ───\n\
-  2    2 \
+  3⋅x   1\n\
+- ─── - ─\n\
+   2    2\
 """
     assert  pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
@@ -594,15 +594,15 @@ u"""\
     expr = S(1)/2 - 3*x/2
     ascii_str = \
 """\
-1   3*x\n\
-- - ---\n\
-2    2 \
+  3*x   1\n\
+- --- + -\n\
+   2    2\
 """
     ucode_str = \
 u"""\
-1   3⋅x\n\
-─ - ───\n\
-2    2 \
+  3⋅x   1\n\
+- ─── + ─\n\
+   2    2\
 """
     assert  pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
@@ -627,8 +627,8 @@ x  + x + 1\
     f = 2*x**4 + y**2 - x**2 + y**3
     assert pretty(f, order=None) == \
 """\
- 2    2    3      4\n\
-y  - x  + y  + 2*x \
+   4    2    3    2\n\
+2*x  - x  + y  + y \
 """
     assert pretty(f, order='lex') == \
 """\
@@ -868,7 +868,7 @@ u"""\
 |  x   |\n\
 |------|\n\
 | 2    |\n\
-|x + 1 |\
+|x  + 1|\
 """
     ucode_str_1 = \
 u"""\
@@ -882,7 +882,7 @@ u"""\
 │  x   │\n\
 │──────│\n\
 │ 2    │\n\
-│x + 1 │\
+│x  + 1│\
 """
     assert  pretty(expr) in [ascii_str_1, ascii_str_2]
     assert upretty(expr) in [ucode_str_1, ucode_str_2]
@@ -1048,7 +1048,7 @@ f(1 + x)\
     ucode_str_2 = \
 u"""\
 ⎽⎽⎽⎽⎽⎽⎽⎽\n\
-f(1 + x)\
+f(x + 1)\
 """
     assert  pretty(expr) in [ascii_str_1, ascii_str_2]
     assert upretty(expr) in [ucode_str_1, ucode_str_2]
@@ -1122,13 +1122,13 @@ sin (x)\
     expr = conjugate(a+b*I)
     ascii_str = \
 """\
-    _   _\n\
-- I*b + a\
+_     _\n\
+a - I*b\
 """
     ucode_str = \
 u"""\
-    ⎽   ⎽\n\
-- ⅈ⋅b + a\
+⎽     ⎽\n\
+a - ⅈ⋅b\
 """
     assert  pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
@@ -1136,15 +1136,15 @@ u"""\
     expr = conjugate(exp(a+b*I))
     ascii_str = \
 """\
-     _   _\n\
- - I*b + a\n\
-e         \
+ _     _\n\
+ a - I*b\n\
+e       \
 """
     ucode_str = \
 u"""\
-     ⎽   ⎽\n\
- - ⅈ⋅b + a\n\
-ℯ         \
+ ⎽     ⎽\n\
+ a - ⅈ⋅b\n\
+ℯ       \
 """
     assert  pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
@@ -1285,14 +1285,14 @@ u"""\
     ascii_str = \
 """\
    ________\n\
-  /      2 \n\
-\/  1 + x  \
+  /  2     \n\
+\/  x  + 1 \
 """
     ucode_str = \
 u"""\
    ⎽⎽⎽⎽⎽⎽⎽⎽\n\
-  ╱      2 \n\
-╲╱  1 + x  \
+  ╱  2     \n\
+╲╱  x  + 1 \
 """
     assert  pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
@@ -1344,23 +1344,23 @@ u"""\
     expr = (2+(1+x**2)/(2+x))**Rational(1,4)+(1+x**Rational(1,1000))/sqrt(3+x**2)
     ascii_str = \
 """\
-                   ____________\n\
-    1000___       /          2 \n\
-1 +   \/ x       /      1 + x  \n\
------------ + 4 /   2 + ------ \n\
-   ________   \/        2 + x  \n\
-  /      2                     \n\
-\/  3 + x                      \
+     ____________              \n\
+    /      2        1000___    \n\
+   /      x  + 1      \/ x  + 1\n\
+4 /   2 + ------  + -----------\n\
+\/        x + 2        ________\n\
+                      /  2     \n\
+                    \/  x  + 3 \
 """
     ucode_str = \
 u"""\
-                   ⎽⎽⎽⎽⎽⎽⎽⎽⎽⎽⎽⎽\n\
-    1000⎽⎽⎽       ╱          2 \n\
-1 +   ╲╱ x       ╱      1 + x  \n\
-─────────── + 4 ╱   2 + ────── \n\
-   ⎽⎽⎽⎽⎽⎽⎽⎽   ╲╱        2 + x  \n\
-  ╱      2                     \n\
-╲╱  3 + x                      \
+     ⎽⎽⎽⎽⎽⎽⎽⎽⎽⎽⎽⎽              \n\
+    ╱      2        1000⎽⎽⎽    \n\
+   ╱      x  + 1      ╲╱ x  + 1\n\
+4 ╱   2 + ──────  + ───────────\n\
+╲╱        x + 2        ⎽⎽⎽⎽⎽⎽⎽⎽\n\
+                      ╱  2     \n\
+                    ╲╱  x  + 3 \
 """
     assert  pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
@@ -1423,8 +1423,8 @@ dy dx             \
     ascii_str_2 = \
 """\
    2              \n\
-  d  / 2        \\\n\
------\\x + log(x)/\n\
+  d  / 2         \\\n\
+-----\\x  + log(x)/\n\
 dy dx             \
 """
     ucode_str_1 = \
@@ -1436,9 +1436,9 @@ dy dx             \
 """
     ucode_str_2 = \
 u"""\
-   2             \n\
-  d  ⎛ 2        ⎞\n\
-─────⎝x + log(x)⎠\n\
+   2              \n\
+  d  ⎛ 2         ⎞\n\
+─────⎝x  + log(x)⎠\n\
 dy dx             \
 """
     assert  pretty(expr) in [ascii_str_1, ascii_str_2]
@@ -1455,10 +1455,10 @@ dx dy            \
 """
     ascii_str_2 = \
 """\
-   2             \n\
-  d   2          \n\
------x + (2*x*y) \n\
-dx dy            \
+        2        \n\
+ 2     d         \n\
+x  + -----(2*x*y)\n\
+     dx dy       \
 """
     ucode_str_1 = \
 u"""\
@@ -1469,10 +1469,10 @@ dx dy            \
 """
     ucode_str_2 = \
 u"""\
-   2             \n\
-  d   2          \n\
-─────x + (2*x*y) \n\
-dx dy            \
+        2        \n\
+ 2     d         \n\
+x  + ─────(2⋅x⋅y)\n\
+     dx dy       \
 """
     assert  pretty(expr) in [ascii_str_1, ascii_str_2]
     assert upretty(expr) in [ucode_str_1, ucode_str_2]
@@ -1697,9 +1697,9 @@ def test_pretty_matrix():
     ascii_str_2 = \
 """\
 [ 2           ]
-[x + 1     1  ]
+[x  + 1    1  ]
 [             ]
-[  y     y + x]\
+[  y     x + y]\
 """
     ucode_str_1 = \
 u"""\
@@ -1711,9 +1711,9 @@ u"""\
     ucode_str_2 = \
 u"""\
 ⎡ 2           ⎤
-⎢x + 1     1  ⎥
+⎢x  + 1    1  ⎥
 ⎢             ⎥
-⎣  y     y + x⎦\
+⎣  y     x + y⎦\
 """
     assert  pretty(expr) in [ascii_str_1, ascii_str_2]
     assert upretty(expr) in [ucode_str_1, ucode_str_2]
@@ -2333,7 +2333,7 @@ y = 1 x = 0    \
   /____,   /____,                        \n\
       1   k = 111                        \n\
 k = -----                                \n\
-    1 + m                                \
+    m + 1                                \
 """
 
     assert  pretty(expr) == ascii_str

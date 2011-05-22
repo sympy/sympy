@@ -37,7 +37,7 @@ def gosper_normal(f, g, n, polys=True):
     >>> from sympy.abc import n
 
     >>> gosper_normal(4*n+5, 2*(4*n+1)*(2*n+3), n, polys=False)
-    (1/4, 3/2 + n, 1/4 + n)
+    (1/4, n + 3/2, n + 1/4)
 
     """
     (p, q), opt = parallel_poly_from_expr((f, g), n, field=True, extension=True)
@@ -95,7 +95,7 @@ def gosper_term(f, n):
     >>> from sympy.abc import n
 
     >>> gosper_term((4*n + 1)*factorial(n)/factorial(2*n + 1), n)
-    (-1/2 - n)/(1/4 + n)
+    (-n - 1/2)/(n + 1/4)
 
     """
     r = hypersimp(f, n)
@@ -171,7 +171,7 @@ def gosper_sum(f, k):
     >>> from sympy.abc import n, k
 
     >>> gosper_sum((4*k + 1)*factorial(k)/factorial(2*k + 1), (k, 0, n))
-    (-n! + 2*(1 + 2*n)!)/(1 + 2*n)!
+    (-n! + 2*(2*n + 1)!)/(2*n + 1)!
 
     **References**
 

@@ -546,7 +546,7 @@ class Add(AssocOp):
         (2, x + 2*y)
 
         >>> (2*x/3 + 4*y/9).primitive()
-        (2/9, 2*y + 3*x)
+        (2/9, 3*x + 2*y)
 
         >>> (2*x/3 + 4.1*y).primitive()
         (1, 2*x/3 + 4.1*y)

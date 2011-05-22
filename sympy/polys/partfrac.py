@@ -21,8 +21,8 @@ def apart(f, x=None, full=False):
     >>> from sympy.polys.partfrac import apart
     >>> from sympy.abc import x, y
 
-    >>> apart(y/(x+2)/(x+1), x)
-    y/(1 + x) - y/(2 + x)
+    >>> apart(y/(x + 2)/(x + 1), x)
+    -y/(x + 2) + y/(x + 1)
 
     """
     f = sympify(f)

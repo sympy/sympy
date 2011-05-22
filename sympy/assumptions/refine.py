@@ -76,10 +76,9 @@ def refine_Pow(expr, assumptions):
     >>> refine_Pow((-1)**(x+y+z), Q.odd(x) & Q.odd(z))
     (-1)**y
     >>> refine_Pow((-1)**(x+y+2), Q.odd(x))
-    (-1)**(1 + y)
+    (-1)**(y + 1)
     >>> refine_Pow((-1)**(x+3), True)
-    (-1)**(1 + x)
-
+    (-1)**(x + 1)
 
     """
     from sympy.core import Pow, Rational

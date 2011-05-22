@@ -263,7 +263,7 @@ class Polygon(GeometryEntity):
         >>> p1, p2, p3, p4 = map(Point, [(0, 0), (1, 0), (5, 1), (0, 1)])
         >>> poly = Polygon(p1, p2, p3, p4)
         >>> poly.perimeter
-        7 + 17**(1/2)
+        17**(1/2) + 7
         """
         p = 0
         for i in xrange(len(self)):
@@ -1028,7 +1028,7 @@ class RegularPolygon(Polygon):
         >>> radius = Symbol('r')
         >>> rp = RegularPolygon(Point(0, 0), radius, 4)
         >>> rp.apothem
-        r*2**(1/2)/2
+        2**(1/2)*r/2
 
         """
         return self.radius * cos(S.Pi/self._n)
@@ -1535,7 +1535,7 @@ class Triangle(Polygon):
         >>> p1, p2, p3 = Point(0, 0), Point(1, 0), Point(0, a)
         >>> t = Triangle(p1, p2, p3)
         >>> t.circumradius
-        (1/4 + a**2/4)**(1/2)
+        (a**2/4 + 1/4)**(1/2)
 
         """
         return Point.distance(self.circumcenter, self.vertices[0])
@@ -1620,7 +1620,7 @@ class Triangle(Polygon):
         >>> p1, p2, p3 = Point(0, 0), Point(1, 0), Point(0, 1)
         >>> t = Triangle(p1, p2, p3)
         >>> t.incenter
-        Point(1 - 2**(1/2)/2, 1 - 2**(1/2)/2)
+        Point(-2**(1/2)/2 + 1, -2**(1/2)/2 + 1)
 
         """
         s = self.sides
@@ -1675,7 +1675,7 @@ class Triangle(Polygon):
         >>> p1, p2, p3 = Point(0, 0), Point(2, 0), Point(0, 2)
         >>> t = Triangle(p1, p2, p3)
         >>> t.incircle
-        Circle(Point(2 - 2**(1/2), 2 - 2**(1/2)), 2 - 2**(1/2))
+        Circle(Point(-2**(1/2) + 2, -2**(1/2) + 2), -2**(1/2) + 2)
 
         """
         return Circle(self.incenter, self.inradius)

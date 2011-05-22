@@ -97,8 +97,8 @@ def main():
         '-o', '--order',
         dest='order',
         action='store',
-        default='old',
-        help='setup ordering of terms: old | [rev-]lex, [rev-]grlex, [rev-]grevlex')
+        default=None,
+        help='setup ordering of terms: [rev-]lex | [rev-]grlex | [rev-]grevlex | old')
 
     parser.add_option(
         '-q', '--quiet',
@@ -167,8 +167,8 @@ def main():
                     raise ValueError("Unknown pretty" \
                         " printing setup: " + options.pretty)
 
-    order = options.order.lower()
-    if order != 'old':
+    if options.order is not None:
+        order = options.order.lower()
         args['order'] = order
 
     args['quiet'] = options.quiet

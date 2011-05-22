@@ -123,13 +123,13 @@ def separate(expr, deep=False):
        x**2*y**6*z**6
 
        >>> separate((x*sin(x))**y + (x*cos(x))**y)
-       x**y*cos(x)**y + x**y*sin(x)**y
+       x**y*sin(x)**y + x**y*cos(x)**y
 
        >>> separate((exp(x)*exp(y))**x)
        exp(x**2)*exp(x*y)
 
        >>> separate((sin(x)*cos(x))**y)
-       cos(x)**y*sin(x)**y
+       sin(x)**y*cos(x)**y
 
        Notice that summations are left untouched. If this is not the
        requested behavior, apply 'expand' to input expression before:
@@ -138,7 +138,7 @@ def separate(expr, deep=False):
        z**2*(x + y)**2
 
        >>> separate((x*y)**(1+z))
-       x**(1 + z)*y**(1 + z)
+       x**(z + 1)*y**(z + 1)
 
     """
     expr = sympify(expr)
@@ -192,7 +192,7 @@ def collect(expr, syms, evaluate=True, exact=False):
         rational powers of collection variable:
 
         >>> collect(a*x**2 + b*x**2 + a*x - b*x + c, x)
-        c + x*(a - b) + x**2*(a + b)
+        c + x**2*(a + b) + x*(a - b)
 
         The same result can be achieved in dictionary form:
 
@@ -209,7 +209,7 @@ def collect(expr, syms, evaluate=True, exact=False):
         about a single symbol at time, in specification order:
 
         >>> collect(x**2 + y*x**2 + x*y + y + a*y, [x, y])
-        x*y + y*(1 + a) + x**2*(1 + y)
+        x**2*(y + 1) + x*y + y*(a + 1)
 
         Also more complicated expressions can be used as patterns:
 
@@ -241,7 +241,7 @@ def collect(expr, syms, evaluate=True, exact=False):
         you will get well known behavior:
 
         >>> collect(a*x**(2*c) + b*x**(2*c), x**c)
-        (x**2)**c*(a + b)
+        (a + b)*(x**2)**c
 
         Note also that all previously stated facts about 'collect'
         function apply to the exponential function, so you can get:
@@ -277,14 +277,13 @@ def collect(expr, syms, evaluate=True, exact=False):
         >>> collect(a*D(D(f,x),x) + b*D(D(f,x),x), D(f,x), exact=True)
         a*D(f(x), x, x) + b*D(f(x), x, x)
 
-
         >>> collect(a*D(f,x) + b*D(f,x) + a*f + b*f, f,x)
-        (a + b)*D(f(x), x) + (a + b)*f(x)
+        (a + b)*f(x) + (a + b)*D(f(x), x)
 
         Or you can even match both derivative order and exponent at time::
 
         >>> collect(a*D(D(f,x),x)**2 + b*D(D(f,x),x)**2, D(f,x))
-        D(f(x), x, x)**2*(a + b)
+        (a + b)*D(f(x), x, x)**2
 
 
     == Notes ==
@@ -526,7 +525,7 @@ def rcollect(expr, *vars):
     >>> expr = (x**2*y + x*y + x + y)/(x + y)
 
     >>> rcollect(expr, y)
-    (x + y*(1 + x + x**2))/(x + y)
+    (x + y*(x**2 + x + 1))/(x + y)
 
     """
     if expr.is_Atom or not expr.has(*vars):
@@ -561,20 +560,20 @@ def separatevars(expr, symbols=[], dict=False):
     >>> from sympy.abc import x, y, z, alpha
     >>> from sympy import separatevars, sin
     >>> separatevars(2*x**2*z*sin(y)+2*z*x**2)
-    2*z*x**2*(1 + sin(y))
+    2*x**2*z*(sin(y) + 1)
 
     >>> separatevars(2*x+y*sin(x))
     2*x + y*sin(x)
     >>> separatevars(2*x**2*z*sin(y)+2*z*x**2, symbols=(x, y), dict=True)
-    {'coeff': 2*z, x: x**2, y: 1 + sin(y)}
+    {'coeff': 2*z, x: x**2, y: sin(y) + 1}
     >>> separatevars(2*x**2*z*sin(y)+2*z*x**2, [x, y, alpha], dict=True)
-    {'coeff': 2*z, alpha: 1, x: x**2, y: 1 + sin(y)}
+    {'coeff': 2*z, alpha: 1, x: x**2, y: sin(y) + 1}
 
     If the expression is not really separable, or is only partially
     separable, separatevars will do the best it can to separate it.
 
     >>> separatevars(x+x*y-3*(x**2))
-    -x*(-1 - y + 3*x)
+    -x*(3*x - y - 1)
 
     If the expression is not separable then expr is returned unchanged
     or (if dict=True) then None is returned.
@@ -707,7 +706,7 @@ def trigsimp(expr, deep=False, recursive=False):
         >>> trigsimp(e)
         2
         >>> trigsimp(log(e))
-        log(2*cos(x)**2 + 2*sin(x)**2)
+        log(2*sin(x)**2 + 2*cos(x)**2)
         >>> trigsimp(log(e), deep=True)
         log(2)
 
@@ -773,7 +772,7 @@ def trigsimp_nonrecursive(expr, deep=False):
         >>> trigsimp(e)
         2
         >>> trigsimp_nonrecursive(log(e))
-        log(2*cos(x)**2 + 2*sin(x)**2)
+        log(2*sin(x)**2 + 2*cos(x)**2)
         >>> trigsimp_nonrecursive(log(e), deep=True)
         log(2)
 
@@ -852,11 +851,11 @@ def radsimp(expr):
     Examples:
         >>> from sympy import radsimp, sqrt, Symbol
         >>> radsimp(1/(2+sqrt(2)))
-        1 - 2**(1/2)/2
+        -2**(1/2)/2 + 1
         >>> x,y = map(Symbol, 'xy')
         >>> e = ((2+2*sqrt(2))*x+(2+sqrt(8))*y)/(2+sqrt(2))
         >>> radsimp(e)
-        x*2**(1/2) + y*2**(1/2)
+        2**(1/2)*x + 2**(1/2)*y
 
     """
     n,d = fraction(expr)
@@ -888,7 +887,7 @@ def posify(eq):
     >>> from sympy import posify, Symbol, log
     >>> from sympy.abc import x
     >>> posify(x + Symbol('p', positive=True) + Symbol('n', negative=True))
-    (n + p + _x, {_x: x})
+    (_x + n + p, {_x: x})
 
     >> log(1/x).expand() # should be log(1/x) but it comes back as -log(x)
     log(1/x)
@@ -899,7 +898,7 @@ def posify(eq):
     >>> log(eq).expand().subs(rep)
     -log(x)
     >>> posify([x, 1 + x])
-    ([_x, 1 + _x], {_x: x})
+    ([_x, _x + 1], {_x: x})
     """
     eq = sympify(eq)
     if type(eq) in (list, set, tuple):
@@ -1453,9 +1452,9 @@ def combsimp(expr):
     >>> from sympy.abc import n, k
 
     >>> combsimp(factorial(n)/factorial(n - 3))
-    n*(-1 + n)*(-2 + n)
+    n*(n - 2)*(n - 1)
     >>> combsimp(binomial(n+1, k+1)/binomial(n, k))
-    (1 + n)/(1 + k)
+    (n + 1)/(k + 1)
 
     """
     factorial = C.factorial
@@ -1647,10 +1646,13 @@ def simplify(expr, ratio=1.7):
 def _real_to_rational(expr):
     """
     Replace all reals in expr with rationals.
+
     >>> from sympy import nsimplify
     >>> from sympy.abc import x
+
     >>> nsimplify(.76 + .1*x**.5, rational=1)
-    19/25 + x**(1/2)/10
+    x**(1/2)/10 + 19/25
+
     """
     p = sympify(expr)
     for r in p.atoms(C.Real):
@@ -1694,7 +1696,7 @@ def nsimplify(expr, constants=[], tolerance=None, full=False, rational=False):
         >>> nsimplify(4/(1+sqrt(5)), [GoldenRatio])
         -2 + 2*GoldenRatio
         >>> nsimplify((1/(exp(3*pi*I/5)+1)))
-        1/2 - I*(1/4 + 5**(1/2)/10)**(1/2)
+        1/2 - I*(5**(1/2)/10 + 1/4)**(1/2)
         >>> nsimplify(I**I, [pi])
         exp(-pi/2)
         >>> nsimplify(pi, tolerance=0.01)
@@ -1773,13 +1775,13 @@ def logcombine(expr, force=False):
     >>> from sympy import Symbol, symbols, log, logcombine
     >>> from sympy.abc import a, x, y, z
     >>> logcombine(a*log(x)+log(y)-log(z))
-    -log(z) + a*log(x) + log(y)
+    a*log(x) + log(y) - log(z)
     >>> logcombine(a*log(x)+log(y)-log(z), force=True)
-    log(y*x**a/z)
+    log(x**a*y/z)
     >>> x,y,z = symbols('x,y,z', positive=True)
     >>> a = Symbol('a', real=True)
     >>> logcombine(a*log(x)+log(y)-log(z))
-    log(y*x**a/z)
+    log(x**a*y/z)
 
     """
     # Try to make (a+bi)*log(x) == a*log(x)+bi*log(x).  This needs to be a

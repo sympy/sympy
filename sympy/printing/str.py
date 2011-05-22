@@ -182,8 +182,8 @@ class StrPrinter(Printer):
         a = [] # items in the numerator
         b = [] # items that are in the denominator (if any)
 
-        if self.order:
-            args = sorted(terms, key=Basic.sorted_key)
+        if self.order != 'old':
+            args = expr._new_rawargs(*terms).as_ordered_factors()
         else:
             args = terms
 
