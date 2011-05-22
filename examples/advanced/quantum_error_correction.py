@@ -15,10 +15,9 @@ measurement yields an eigenvalue of 1.  The generators themselves are
 a set of errors since they use the error basis.  
 """
 
-from sympy import Matrix, I
-from sympy.physics.matrices import msigma
-from sympy.physics.quantum.qubit import Qubit, qubit_to_matrix, matrix_to_qubit
-from sympy.physics.quantum.tensorproduct import TensorProduct
+from sympy.physics.quantum.qubit import Qubit, IntQubit
+from sympy.physics.quantum.applyops import apply_operators
+from sympy.physics.quantum.gate import X, Y, Z
 
 # Matrix operations evaluate themselves, no need for apply_operators
 # Playing around with 5 qubit stabilizer code
@@ -71,7 +70,8 @@ def generator_combinations(numGenerators):
         list.append(combinationList, currentCombo)
 
     return combinationList
-        
+
+"""Use the gates instead        
 identity = Matrix( ((1, 0), (0, 1)))
 sigma_x = msigma(1)
 sigma_y = msigma(2)
@@ -81,6 +81,12 @@ m1 = TensorProduct(sigma_x, sigma_z, sigma_z, sigma_x, identity)
 m2 = TensorProduct(identity, sigma_x, sigma_z, sigma_z, sigma_x)
 m3 = TensorProduct(sigma_x, identity, sigma_x, sigma_z, sigma_z)
 m4 = TensorProduct(sigma_z, sigma_x, identity, sigma_x, sigma_z)
+"""
+
+m1 = X(4)*Z(3)*Z(2)*X(1); m1
+m2 = X(3)*Z(2)*Z(1)*X(0); m2
+m3 = X(4)*X(2)*Z(1)*Z(0); m3
+m4 = Z(4)*X(3)*X(1)*Z(0); m4
 
 generators = [m1, m2, m3, m4]
 
@@ -92,9 +98,8 @@ combos = generator_combinations(4)
 
 stabilizer_set = []
 
-identity_5 = TensorProduct(identity, identity, identity, identity, identity)
 for a_combo in combos:
-    a_stabilizer = identity_5
+    a_stabilizer = 1
 
     for which_gen in a_combo:
         a_stabilizer = a_stabilizer * generators[which_gen - 1]
@@ -102,14 +107,18 @@ for a_combo in combos:
     list.append(stabilizer_set, a_stabilizer)
 #print 'Stabilizer set: ', stabilizer_set
 
-zero_codeword = map((lambda op: 
-                         matrix_to_qubit(
-                             op * qubit_to_matrix(Qubit('00000')))),
+zero_codeword = map((lambda op: apply_operators(op*Qubit('00000'))),
                     stabilizer_set)
+
+# IntQubit parameters: # to be represented, # of qubits to represent number
+zero_codeword_intqubit = map((lambda op: apply_operators(op*IntQubit(0, 5))),
+                             stabilizer_set)
 
 print ''
 print '5 qubit codeword for 0:'
 print zero_codeword
+print ''
+print zero_codeword_intqubit
 
 # Possible to generate new codes by "pasting" codes together
 
