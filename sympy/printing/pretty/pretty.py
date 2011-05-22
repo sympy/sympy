@@ -56,8 +56,8 @@ class PrettyPrinter(Printer):
 
         return prettyForm(symb)
 
-    def _print_Real(self, e):
-        # we will use StrPrinter's Real printer, but we need to handle the
+    def _print_Float(self, e):
+        # we will use StrPrinter's Float printer, but we need to handle the
         # full_prec ourselves, according to the self._print_level
         full_prec = self._settings["full_prec"]
         if  full_prec == "auto":

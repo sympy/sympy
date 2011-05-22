@@ -47,7 +47,7 @@ if ast_enabled:
                 return fix_missing_locations(Call(Name('Integer', Load()),
                         [node], [], None, None))
             elif isinstance(node.n, float):
-                return fix_missing_locations(Call(Name('Real', Load()),
+                return fix_missing_locations(Call(Name('Float', Load()),
                     [node], [], None, None))
             return node
 

@@ -1655,7 +1655,7 @@ def _real_to_rational(expr):
 
     """
     p = sympify(expr)
-    for r in p.atoms(C.Real):
+    for r in p.atoms(C.Float):
         newr = nsimplify(r)
         if not newr.is_Rational or \
            r.is_finite and not newr.is_finite:
@@ -1715,7 +1715,7 @@ def nsimplify(expr, constants=[], tolerance=None, full=False, rational=False):
     for constant in constants:
         constant = sympify(constant)
         v = constant.evalf(prec)
-        if not v.is_Real:
+        if not v.is_Float:
             raise ValueError("constants must be real-valued")
         constants_dict[str(constant)] = v._to_mpmath(bprec)
 
@@ -1723,7 +1723,7 @@ def nsimplify(expr, constants=[], tolerance=None, full=False, rational=False):
     re, im = exprval.as_real_imag()
 
     # Must be numerical
-    if not ((re.is_Real or re.is_Integer) and (im.is_Real or im.is_Integer)):
+    if not ((re.is_Float or re.is_Integer) and (im.is_Float or im.is_Integer)):
         return expr
 
     def nsimplify_real(x):

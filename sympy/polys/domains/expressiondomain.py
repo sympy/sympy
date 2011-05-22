@@ -144,7 +144,7 @@ class ExpressionDomain(Field, CharacteristicZero, SimpleDomain):
         return K1(K0.to_sympy(a))
 
     def from_RR_sympy(K1, a, K0):
-        """Convert a SymPy `Real` object to `dtype`. """
+        """Convert a SymPy `Float` object to `dtype`. """
         return K1(K0.to_sympy(a))
 
     def from_RR_mpmath(K1, a, K0):

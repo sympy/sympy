@@ -1,5 +1,5 @@
 from sympy.utilities.pytest import XFAIL, raises
-from sympy import (symbols, lambdify, sqrt, sin, cos, pi, atan, Rational, Real,
+from sympy import (symbols, lambdify, sqrt, sin, cos, pi, atan, Rational, Float,
         Matrix, Lambda, exp, Integral, oo)
 from sympy.printing.lambdarepr import LambdaPrinter
 from sympy import mpmath
@@ -76,7 +76,7 @@ def test_sympy_lambda():
     f = lambdify(x, sin(x), "sympy")
     assert f(x) is sin(x)
     prec = 1e-15
-    assert -prec < f(Rational(1,5)).evalf() - Real(str(sin02)) < prec
+    assert -prec < f(Rational(1,5)).evalf() - Float(str(sin02)) < prec
     try:
         # arctan is in numpy module and should not be available
         f = lambdify(x, arctan(x), "sympy")

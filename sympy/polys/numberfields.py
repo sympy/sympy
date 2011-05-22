@@ -1,7 +1,7 @@
 """Computational algebraic number field theory. """
 
 from sympy import (
-    S, Expr, I, Integer, Rational, Real,
+    S, Expr, I, Integer, Rational, Float,
     Symbol, Add, Mul, sympify, Q, ask, Dummy,
 )
 

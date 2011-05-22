@@ -1,5 +1,5 @@
 from sympy import (Symbol, Wild, sin, cos, exp, sqrt, pi, Function, Derivative,
-        abc, Integer, Eq, symbols, Add, I, Real, log, Rational, Lambda, atan2,
+        abc, Integer, Eq, symbols, Add, I, Float, log, Rational, Lambda, atan2,
         cse, cot, tan, S, Tuple)
 
 def test_subs():
@@ -61,20 +61,20 @@ def test_logexppow():   # no eval()
     assert e.subs(exp(x*log(Rational(2))), w) != e
 
 def test_bug():
-    x1=Symbol("x1")
-    x2=Symbol("x2")
-    y=x1*x2
-    y.subs(x1,Real(3.0))
+    x1 = Symbol("x1")
+    x2 = Symbol("x2")
+    y = x1*x2
+    y.subs(x1, Float(3.0))
 
 def test_subbug1():
-    x=Symbol("x")
-    e=(x**x).subs(x,1)
-    e=(x**x).subs(x,1.0)
+    x = Symbol("x")
+    e = (x**x).subs(x,1)
+    e = (x**x).subs(x,1.0)
 
 def test_subbug2():
     # Ensure this does not cause infinite recursion
     x = Symbol('x')
-    assert Real(7.7).epsilon_eq(abs(x).subs(x, -7.7))
+    assert Float(7.7).epsilon_eq(abs(x).subs(x, -7.7))
 
 def test_dict():
     x = Symbol('x')

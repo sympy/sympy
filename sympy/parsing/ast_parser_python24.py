@@ -32,7 +32,7 @@ class SymPyTransformer(Transformer):
             n = Const(complex(number), lineno)
             return CallFunc(Name('sympify'), [n])
         n = Const(number, lineno)
-        return CallFunc(Name('Real'), [n])
+        return CallFunc(Name('Float'), [n])
 
     def atom_name(self, nodelist):
         name, lineno = nodelist[0][1:]

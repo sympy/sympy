@@ -13,7 +13,7 @@ except ImportError:
     disabled = True
 
 
-from sympy import (Rational, Symbol, list2numpy, sin, Real, Matrix, lambdify,
+from sympy import (Rational, Symbol, list2numpy, sin, Float, Matrix, lambdify,
         symarray, symbols)
 import sympy
 
@@ -40,7 +40,7 @@ def test_systematic_basic():
     y = Symbol("y")
     sympy_objs = [
             Rational(2),
-            Real("1.3"),
+            Float("1.3"),
             x,
             y,
             pow(x,y)*y,
@@ -189,9 +189,9 @@ def test_Matrix_array():
 def test_issue629():
     x = Symbol("x")
     assert (Rational(1,2)*array([2*x, 0]) == array([x, 0])).all()
-    assert (Rational(1,2)+array([2*x, 0]) == array([2*x+Rational(1,2), Rational(1,2)])).all()
-    assert (Real("0.5")*array([2*x, 0]) == array([Real("1.0")*x, 0])).all()
-    assert (Real("0.5")+array([2*x, 0]) == array([2*x+Real("0.5"), Real("0.5")])).all()
+    assert (Rational(1,2) + array([2*x, 0]) == array([2*x + Rational(1,2), Rational(1,2)])).all()
+    assert (Float("0.5")*array([2*x, 0]) == array([Float("1.0")*x, 0])).all()
+    assert (Float("0.5") + array([2*x, 0]) == array([2*x + Float("0.5"), Float("0.5")])).all()
 
 def test_lambdify():
     x = Symbol("x")
