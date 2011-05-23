@@ -647,7 +647,7 @@ class Poly(Expr):
         Poly(x**2 + 1, x, domain='QQ')
 
         """
-        dom, rep = construct_domain(f.as_dict(), field=field)
+        dom, rep = construct_domain(f.as_dict(zero=True), field=field)
         return f.from_dict(rep, f.gens, domain=dom)
 
     def slice(f, x, m, n=None):
@@ -805,7 +805,7 @@ class Poly(Expr):
         """
         return len(f.as_dict())
 
-    def as_dict(f, native=False):
+    def as_dict(f, native=False, zero=False):
         """
         Switch to a ``dict`` representation.
 
@@ -819,9 +819,9 @@ class Poly(Expr):
 
         """
         if native:
-            return f.rep.to_dict()
+            return f.rep.to_dict(zero=zero)
         else:
-            return f.rep.to_sympy_dict()
+            return f.rep.to_sympy_dict(zero=zero)
 
     def as_list(f, native=False):
         """Switch to a ``list`` representation. """
@@ -3064,7 +3064,7 @@ class Poly(Expr):
         False
 
         """
-        return f.length() <= 1
+        return f.rep.is_monomial
 
     @property
     def is_homogeneous(f):
@@ -5084,7 +5084,7 @@ def groebner(F, *gens, **args):
     if domain.has_assoc_Field:
         opt.domain = domain.get_field()
     else:
-        raise DomainError("can't compute a Groebner basis over %s" % K)
+        raise DomainError("can't compute a Groebner basis over %s" % domain)
 
     for i, poly in enumerate(polys):
         poly = poly.set_domain(opt.domain).rep.to_dict()

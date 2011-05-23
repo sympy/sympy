@@ -691,6 +691,8 @@ def test_Poly_retract():
     assert f.retract() == Poly(x**2 + 1, x, domain='ZZ')
     assert f.retract(field=True) == Poly(x**2 + 1, x, domain='QQ')
 
+    assert Poly(0, x, y).retract() == Poly(0, x, y)
+
 def test_Poly_slice():
     f = Poly(x**3 + 2*x**2 + 3*x + 4)
 
@@ -1637,8 +1639,10 @@ def test_primitive():
     raises(ComputationFailed, "primitive(4)")
 
     f = Poly(2*x, modulus=3)
+    g = Poly(2.0*x, domain=RR)
 
     assert f.primitive() == (1, f)
+    assert g.primitive() == (1.0, g)
 
 def test_compose():
     f = x**12+20*x**10+150*x**8+500*x**6+625*x**4-2*x**3-10*x+9
@@ -2303,6 +2307,8 @@ def test_groebner():
         [-2*x**2 + x**3, -x**2/2 + y**2, -2*y + x*y]
 
     assert groebner([1], x) == [1]
+
+    raises(DomainError, "groebner([x**2 + 2.0*y], x, y)")
     raises(ComputationFailed, "groebner([1])")
 
 def test_poly():

@@ -226,13 +226,13 @@ class DMP(object):
         """Create an instance of `cls` given a list of SymPy coefficients. """
         return cls(dmp_from_sympy(rep, lev, dom), dom, lev)
 
-    def to_dict(f):
+    def to_dict(f, zero=False):
         """Convert `f` to a dict representation with native coefficients. """
-        return dmp_to_dict(f.rep, f.lev)
+        return dmp_to_dict(f.rep, f.lev, f.dom, zero=zero)
 
-    def to_sympy_dict(f):
+    def to_sympy_dict(f, zero=False):
         """Convert `f` to a dict representation with SymPy coefficients. """
-        rep = dmp_to_dict(f.rep, f.lev)
+        rep = dmp_to_dict(f.rep, f.lev, f.dom, zero=zero)
 
         for k, v in rep.iteritems():
             rep[k] = f.dom.to_sympy(v)
@@ -768,19 +768,19 @@ class DMP(object):
         return f.dom.is_one(dmp_ground_content(f.rep, f.lev, f.dom))
 
     @property
-    def is_ground(f):
-        """Returns `True` if `f` is an element of the ground domain. """
-        return all(d <= 0 for d in dmp_degree_list(f.rep, f.lev))
-
-    @property
     def is_linear(f):
         """Returns `True` if `f` is linear in all its variables. """
-        return all([ sum(monom) <= 1 for monom in dmp_to_dict(f.rep, f.lev).keys() ])
+        return all([ sum(monom) <= 1 for monom in dmp_to_dict(f.rep, f.lev, f.dom).keys() ])
 
     @property
     def is_quadratic(f):
         """Returns `True` if `f` is quadratic in all its variables. """
-        return all([ sum(monom) <= 2 for monom in dmp_to_dict(f.rep, f.lev).keys() ])
+        return all([ sum(monom) <= 2 for monom in dmp_to_dict(f.rep, f.lev, f.dom).keys() ])
+
+    @property
+    def is_monomial(f):
+        """Returns `True` if `f` is zero or has only one term. """
+        return len(f.to_dict()) <= 1
 
     @property
     def is_homogeneous(f):
@@ -1354,11 +1354,11 @@ class ANP(object):
 
     def to_dict(f):
         """Convert `f` to a dict representation with native coefficients. """
-        return dmp_to_dict(f.rep, 0)
+        return dmp_to_dict(f.rep, 0, f.dom)
 
     def to_sympy_dict(f):
         """Convert `f` to a dict representation with SymPy coefficients. """
-        rep = dmp_to_dict(f.rep, 0)
+        rep = dmp_to_dict(f.rep, 0, f.dom)
 
         for k, v in rep.iteritems():
             rep[k] = f.dom.to_sympy(v)

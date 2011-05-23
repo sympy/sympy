@@ -128,11 +128,9 @@ def _construct_composite(coeffs, opt):
                 fractions = True
                 break
 
-    result = []
+    coeffs = set([])
 
     if not fractions:
-        coeffs = set([])
-
         for numer, denom in zip(numers, denoms):
             denom = denom[zeros]
 
@@ -140,24 +138,31 @@ def _construct_composite(coeffs, opt):
                 coeff /= denom
                 coeffs.add(coeff)
                 numer[monom] = coeff
+    else:
+        for numer, denom in zip(numers, denoms):
+            coeffs.update(numer.values())
+            coeffs.update(denom.values())
 
-        rationals, reals = False, False
+    rationals, reals = False, False
 
-        for coeff in coeffs:
-            if coeff.is_Rational:
-                if not coeff.is_Integer:
-                    rationals = True
-            elif coeff.is_Real:
-                reals = True
-                break
+    for coeff in coeffs:
+        if coeff.is_Rational:
+            if not coeff.is_Integer:
+                rationals = True
+        elif coeff.is_Real:
+            reals = True
+            break
 
-        if reals:
-            ground = RR
-        elif rationals:
-            ground = QQ
-        else:
-            ground = ZZ
+    if reals:
+        ground = RR
+    elif rationals:
+        ground = QQ
+    else:
+        ground = ZZ
 
+    result = []
+
+    if not fractions:
         domain = ground.poly_ring(*gens)
 
         for numer in numers:
@@ -166,14 +171,14 @@ def _construct_composite(coeffs, opt):
 
             result.append(domain(numer))
     else:
-        domain = ZZ.frac_field(*gens)
+        domain = ground.frac_field(*gens)
 
         for numer, denom in zip(numers, denoms):
             for monom, coeff in numer.iteritems():
-                numer[monom] = ZZ.from_sympy(coeff)
+                numer[monom] = ground.from_sympy(coeff)
 
             for monom, coeff in denom.iteritems():
-                denom[monom] = ZZ.from_sympy(coeff)
+                denom[monom] = ground.from_sympy(coeff)
 
             result.append(domain((numer, denom)))
 
