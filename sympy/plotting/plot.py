@@ -404,10 +404,12 @@ class ScreenShot:
         glReadPixels(0,0,size_x,size_y, GL_RGBA, GL_UNSIGNED_BYTE, image)
         from PIL import Image
         im = Image.frombuffer('RGBA',(size_x,size_y),image.raw, 'raw', 'RGBA', 0, 1)
-        if type(self.outfile) in (str, unicode):
-            im.transpose(Image.FLIP_TOP_BOTTOM).save(self.outfile)
-        elif type(self.outfile)==file:
+        try:
             im.transpose(Image.FLIP_TOP_BOTTOM).save(self.outfile, self.format)
+        except Exception as e:
+            print 'Exception while trying to save screenshot: %s' % e 
+                
+
         self.flag = 0
         self.screenshot_requested = False
         if self.invisibleMode:
@@ -418,6 +420,8 @@ class ScreenShot:
         self.outfile = outfile
         self.format = format
         self.size = size
+        self.screenshot_requested = True
+
         if not self._plot._window or self._plot._window.has_exit:
             self._plot._win_args['visible'] = False
 
@@ -428,13 +432,8 @@ class ScreenShot:
             self._plot._window = PlotWindow(self._plot, **self._plot._win_args)
             self.invisibleMode = True
 
-        if type(self.outfile) in (str, unicode):
-            self.screenshot_requested = True
-        elif type(self.outfile)==file and self.format:
-            self.screenshot_requested = True
-        elif self.outfile==None:
+        if self.outfile is None:
             self.outfile=self._create_unique_path()
-            self.screenshot_requested = True
             print self.outfile
 
     def _create_unique_path(self):
