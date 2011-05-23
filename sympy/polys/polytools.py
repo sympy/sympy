@@ -428,6 +428,25 @@ class Poly(Expr):
 
         return f.as_expr().subs(old, new)
 
+    def exclude(f):
+        """
+        Remove unnecessary generators from `f`.
+
+        **Example**
+
+        >>> from sympy import Poly
+        >>> from sympy.abc import a, b, c, d, x
+        >>> Poly(a + x, a, b, c, d, x).exclude()
+        Poly(a + x, a, x, domain='ZZ')
+        """
+        J, new = f.rep.exclude()
+        newgens = []
+        for i in range(len(f.gens)):
+            if i not in J:
+                newgens.append(f.gens[i])
+
+        return f.per(new, gens=newgens)
+
     def replace(f, x, y=None):
         """
         Replace ``x`` with ``y`` in generators list.
@@ -2495,19 +2514,23 @@ class Poly(Expr):
 
         **Examples**
 
-        >>> from sympy import Poly
+        >>> from sympy import Poly, expand
         >>> from sympy.abc import x
 
-        >>> f = 2*x**5 + 16*x**4 + 50*x**3 + 76*x**2 + 56*x + 16
+        >>> f = expand(2*(x + 1)**3*x**4)
+        >>> f
+        2*x**4 + 6*x**5 + 6*x**6 + 2*x**7
 
         >>> Poly(f).sqf_list_include()
-        [(Poly(2*x + 2, x, domain='ZZ'), 2),
-         (Poly(x + 2, x, domain='ZZ'), 3)]
+        [(Poly(2, x, domain='ZZ'), 1),
+         (Poly(x + 1, x, domain='ZZ'), 3),
+         (Poly(x, x, domain='ZZ'), 4)]
 
         >>> Poly(f).sqf_list_include(all=True)
         [(Poly(2, x, domain='ZZ'), 1),
-         (Poly(x + 1, x, domain='ZZ'), 2),
-         (Poly(x + 2, x, domain='ZZ'), 3)]
+         (Poly(1, x, domain='ZZ'), 2),
+         (Poly(x + 1, x, domain='ZZ'), 3),
+         (Poly(x, x, domain='ZZ'), 4)]
 
         """
         if hasattr(f.rep, 'sqf_list_include'):
@@ -2840,7 +2863,7 @@ class Poly(Expr):
 
         return r.replace(t, x)
 
-    def cancel(f, g):
+    def cancel(f, g, include=False):
         """
         Cancel common factors in a rational function ``f/g``.
 
@@ -2851,9 +2874,14 @@ class Poly(Expr):
 
         >>> Poly(2*x**2 - 2, x).cancel(Poly(x**2 - 2*x + 1, x))
         (1, Poly(2*x + 2, x, domain='ZZ'), Poly(x - 1, x, domain='ZZ'))
+        >>> Poly(2*x**2 - 2, x).cancel(Poly(x**2 - 2*x + 1, x), include=True)
+        (Poly(2*x + 2, x, domain='ZZ'), Poly(x - 1, x, domain='ZZ'))
 
         """
         dom, per, F, G = f._unify(g)
+
+        if (F.is_zero or G.is_zero) and not include:
+            return S.One, per(F), per(G)
 
         if hasattr(F, 'cancel'):
             cp, cq, p, q = F.cancel(G, multout=False)
@@ -2865,6 +2893,10 @@ class Poly(Expr):
 
         cp = dom.to_sympy(cp)
         cq = dom.to_sympy(cq)
+
+        if include:
+            return (per(p)*Poly(cp, *g.gens, **{'domain':dom}),
+                per(q)*Poly(cq, *f.gens, **{'domain':dom}))
 
         return cp/cq, per(p), per(q)
 

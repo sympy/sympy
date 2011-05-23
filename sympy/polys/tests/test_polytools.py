@@ -859,6 +859,11 @@ def test_Poly_eject():
     raises(DomainError, "Poly(x*y, x, y, domain=ZZ[z]).eject(y)")
     raises(NotImplementedError, "Poly(x*y, x, y, z).eject(y)")
 
+def test_Poly_exclude():
+    assert Poly(x, x, y).exclude() == Poly(x, x)
+    assert Poly(x*y, x, y).exclude() == Poly(x*y, x, y)
+    assert Poly(1, x, y).exclude() == Poly(1, x, y)
+
 def test_Poly__gen_to_level():
     assert Poly(1, x, y)._gen_to_level(-2) == 0
     assert Poly(1, x, y)._gen_to_level(-1) == 1
@@ -1142,6 +1147,17 @@ def test_Poly_eval():
     Poly(x+1, domain='ZZ').eval(sqrt(2)) == sqrt(2) + 1
 
     raises(DomainError, "Poly(x+1, domain='ZZ').eval(S(1)/2, auto=False)")
+
+def test_poly_cancel():
+    a = Poly(y, y, domain='ZZ(x)')
+    b = Poly(1, y, domain='ZZ[x]')
+    assert a.cancel(b) == (1, Poly(y, y, domain='ZZ(x)'), Poly(1, y, domain='ZZ(x)'))
+    assert a.cancel(b, include=True) == (Poly(y, y, domain='ZZ(x)'), Poly(1, y, domain='ZZ(x)'))
+    a = Poly(5*x*y + x, y, domain='ZZ(x)')
+    b = Poly(2*x**2*y, y, domain='ZZ(x)')
+    assert a.cancel(b, include=True) == (Poly(5*y + 1, y, domain='ZZ(x)'),
+        Poly(2*x*y, y, domain='ZZ(x)'))
+
 
 def test_parallel_poly_from_expr():
     assert parallel_poly_from_expr([x-1, x**2-1], x)[0] == [Poly(x-1, x), Poly(x**2-1, x)]
