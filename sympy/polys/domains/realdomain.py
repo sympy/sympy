@@ -102,4 +102,11 @@ class RealDomain(CharacteristicZero, SimpleDomain): # XXX: should be a field
 
     def div(self, a, b):
         """Division of `a` and `b`, implies `__div__`. """
-        return a / b, self.zero
+
+    def gcd(self, a, b):
+        """Returns GCD of `a` and `b`. """
+        return self.one
+
+    def lcm(self, a, b):
+        """Returns LCM of `a` and `b`. """
+        return a*b

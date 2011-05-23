@@ -921,7 +921,7 @@ def dmp_from_dict(f, u, K):
     return dmp_strip(h, u)
 
 @cythonized("n,k")
-def dup_to_dict(f):
+def dup_to_dict(f, K=None, zero=False):
     """
     Convert ``K[x]`` polynomial to a ``dict``.
 
@@ -935,6 +935,9 @@ def dup_to_dict(f):
     {}
 
     """
+    if not f and zero:
+        return {(0,): K.zero}
+
     n, result = dup_degree(f), {}
 
     for k in xrange(0, n+1):
@@ -944,7 +947,7 @@ def dup_to_dict(f):
     return result
 
 @cythonized("n,k")
-def dup_to_raw_dict(f):
+def dup_to_raw_dict(f, K=None, zero=False):
     """
     Convert ``K[x]`` polynomial to a raw ``dict``.
 
@@ -956,6 +959,9 @@ def dup_to_raw_dict(f):
     {0: 7, 2: 5, 4: 1}
 
     """
+    if not f and zero:
+        return {0: K.zero}
+
     n, result = dup_degree(f), {}
 
     for k in xrange(0, n+1):
@@ -965,7 +971,7 @@ def dup_to_raw_dict(f):
     return result
 
 @cythonized("u,v,n,k")
-def dmp_to_dict(f, u):
+def dmp_to_dict(f, u, K=None, zero=False):
     """
     Convert ``K[X]`` polynomial to a ``dict````.
 
@@ -980,7 +986,10 @@ def dmp_to_dict(f, u):
 
     """
     if not u:
-        return dup_to_dict(f)
+        return dup_to_dict(f, K, zero=zero)
+
+    if dmp_zero_p(f, u) and zero:
+        return {(0,)*(u + 1): K.zero}
 
     n, v, result = dmp_degree(f, u), u-1, {}
 
