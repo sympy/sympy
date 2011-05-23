@@ -1384,21 +1384,13 @@ class Integer(Rational):
         # let the int routines determine whether the expression can
         # be made into an int or whether an error should be raised.
         ival = int(i)
-
         try:
             return _intcache[ival]
         except KeyError:
             # We only work with well-behaved integer types. This converts, for
             # example, numpy.int32 instances.
-            if ival == 0:
-                obj = S.Zero
-            elif ival == 1:
-                obj = S.One
-            elif ival == -1:
-                obj = S.NegativeOne
-            else:
-                obj = Expr.__new__(cls)
-                obj.p = ival
+            obj = Expr.__new__(cls)
+            obj.p = ival
 
             _intcache[ival] = obj
             return obj
