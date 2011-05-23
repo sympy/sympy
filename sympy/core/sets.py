@@ -623,3 +623,59 @@ class EmptySet(Set):
     def _contains(self, other):
         return False
 
+class DiscreteSet(Set):
+    @property
+    def _measure(self):
+        return 0
+
+class ExpressionDiscreteSet(DiscreteSet):
+    pass;
+
+class FiniteSet(DiscreteSet):
+    """
+    Represents a finite set of discrete numbers
+    Is largely a wrapper around the Python set
+
+    Examples:
+        >>> from sympy import Symbol, FiniteSet, sets
+
+        >>> S = FiniteSet((1,2,3,4))
+        {1,2,3,4}
+
+        >>> 3 in S
+        True
+
+    Notes:
+    """
+    def __init__(self, elements):
+        self.elements = set(elements)
+    def __iter__(self):
+        return self.elements.__iter__()
+    def _intersect(self, other):
+        if isinstance(other, FiniteSet):
+            return FiniteSet(self.elements & other.elements)
+        return FiniteSet(set(el for el in self if el in other))
+
+    def union(self, other): #overwriting Union default
+        if isinstance(other, FiniteSet):
+            return FiniteSet(self.elements | other.elements)
+        return Union(self, other)
+
+    def _contains(self, other):
+        return other in self.elements
+
+    def subset(self, other):
+        return all([el in other for el in self])
+
+    def _inf(self):
+        if all(el.is_Number for el in self):
+            return min(self)
+        else:
+            raise NotImplementedError("Minimum not well defined for symbolic sets")
+    def _sup(self):
+        if all(el.is_Number for el in self):
+            return max(self)
+        else:
+            raise NotImplementedError("Maximum not well defined for symbolic sets")
+    def __len__(self):
+        return len(self.elements)

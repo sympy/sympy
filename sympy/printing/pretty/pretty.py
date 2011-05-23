@@ -774,6 +774,18 @@ class PrettyPrinter(Printer):
         else:
             return self.emptyPrinter(expr)
 
+    def _print_FiniteSet(self, s):
+        if len(s) > 10:
+            #take ten elements from the set at random
+            q = iter(s)
+            printset = [q.next() for i in xrange(10)]
+            printset.append('...')
+        else:
+            printset = s
+
+        return self._print_seq(printset, '{', '}', ',' )
+
+
     def _print_Interval(self, i):
         if i.start == i.end:
             return self._print_seq(i.args[:1], '{', '}')
