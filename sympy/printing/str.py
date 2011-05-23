@@ -389,7 +389,7 @@ class StrPrinter(Printer):
     _print_set       = __print_set
     _print_frozenset = __print_set
 
-    def _print_SMatrix(self, expr):
+    def _print_SparseMatrix(self, expr):
         return self._print(expr.toMatrix())
 
     def _print_Sum(self, expr):

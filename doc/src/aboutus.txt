@@ -108,7 +108,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Andre de Fortier Smit: doctests in matrices improved
 #. Alexey U. Goodchenko: various work in matrices
 #. Gary Kerr: fix examples, docs
-#. Sherjil Ozair: fixes to SMatrix
+#. Sherjil Ozair: fixes to SparseMatrix
 #. Oleksandr Gituliar: fixes to Matrix
 #. Sean Vig: Quantum improvement
 #. Prafullkumar P. Tale: fixed plotting documentation

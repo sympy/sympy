@@ -1,6 +1,6 @@
 from sympy import (Abs, Catalan, cos, Derivative, E, EulerGamma, exp, factorial,
     Function, GoldenRatio, I, Integer, Integral, Interval, Lambda, Limit, log,
-    Matrix, nan, O, oo, pi, Rational, Real, Rel, S, sin, SMatrix, sqrt,
+    Matrix, nan, O, oo, pi, Rational, Real, Rel, S, sin, SparseMatrix, sqrt,
     summation, Sum, Symbol, symbols, Wild, WildFunction, zeta, zoo,
     Dummy)
 from sympy.core import Expr
@@ -307,8 +307,8 @@ def test_set():
     assert sstr(set([1,2,3]))== 'set([1, 2, 3])'
     assert sstr(set([1,x,x**2,x**3,x**4]))   == 'set([1, x, x**2, x**3, x**4])'
 
-def test_SMatrix():
-    M = SMatrix([[x**+1, 1], [y, x+y]])
+def test_SparseMatrix():
+    M = SparseMatrix([[x**+1, 1], [y, x+y]])
     assert str(M) == sstr(M) == "[x,     1]\n[y, x + y]"
 
 def test_Sum():
