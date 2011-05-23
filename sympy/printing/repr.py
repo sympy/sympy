@@ -13,6 +13,10 @@ from sympy.mpmath.libmp import prec_to_dps, repr_dps
 class ReprPrinter(Printer):
     printmethod = "_sympyrepr"
 
+    _default_settings = {
+        "order": None
+    }
+
     def reprify(self, args, sep):
         return sep.join([self.doprint(item) for item in args])
 
@@ -31,11 +35,10 @@ class ReprPrinter(Printer):
         else:
             return str(expr)
 
-    def _print_Add(self, expr):
-        args = list(expr.args)
-        args.sort(Basic._compare_pretty)
+    def _print_Add(self, expr, order=None):
+        args = self._as_ordered_terms(expr, order=order)
         args = map(self._print, args)
-        return "Add(%s)"%", ".join(args)
+        return "Add(%s)" % ", ".join(args)
 
     def _print_Function(self, expr):
         r = self._print(expr.func)
