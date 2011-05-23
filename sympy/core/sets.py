@@ -168,6 +168,13 @@ class Set(Basic):
 
     def __add__(self, other):
         return self.union(other)
+    def __or__(self, other):
+        return self.union(other)
+
+    def __mul__(self, other):
+        return self.intersect(other)
+    def __and__(self, other):
+        return self.intersect(other)
 
     def __sub__(self, other):
         return self.intersect(other.complement)
@@ -177,7 +184,6 @@ class Set(Basic):
 
     def __invert__(self):
         return self.complement
-
     def __contains__(self, other):
         result = self.contains(other)
         if not isinstance(result, bool):
@@ -464,10 +470,13 @@ class Union(Set):
     """
 
     def __new__(cls, *args):
-        intervals, other_sets = [], []
+        intervals, finite_sets, other_sets = [], [], []
         for arg in args:
             if isinstance(arg, EmptySet):
                 continue
+
+            elif isinstance(arg, FiniteSet):
+                finite_sets.append(arg)
 
             elif isinstance(arg, Interval):
                 intervals.append(arg)
@@ -482,8 +491,11 @@ class Union(Set):
                 raise ValueError("Unknown argument '%s'" % arg)
 
         # Any non-empty sets at all?
-        if len(intervals) == 0 and len(other_sets) == 0:
+        if all( len(s) == 0 for s in [intervals, other_sets, finite_sets]):
             return S.EmptySet
+
+        # Merge Finite Sets
+        finite_set = sum(finite_sets, FiniteSet([]))
 
         # Sort intervals according to their infimum
         intervals.sort(key=lambda i: i.start)
@@ -522,7 +534,11 @@ class Union(Set):
                 del intervals[i + 1]
             else:
                 i += 1
-
+        # Collect all elements in the finite sets not in any interval
+        finite_complement = FiniteSet(el for el in finite_set
+                if not any(el in i for i in intervals))
+        if len(finite_complement)>0:
+            other_sets.append(finite_complement)
         # If a single set is left over, don't create a new Union object but
         # rather return the single set.
         if len(intervals) == 1 and len(other_sets) == 0:
@@ -641,11 +657,9 @@ class FiniteSet(DiscreteSet):
 
         >>> S = FiniteSet((1,2,3,4))
         {1,2,3,4}
-
         >>> 3 in S
         True
 
-    Notes:
     """
     def __init__(self, elements):
         self.elements = set(elements)
@@ -654,9 +668,28 @@ class FiniteSet(DiscreteSet):
     def _intersect(self, other):
         if isinstance(other, FiniteSet):
             return FiniteSet(self.elements & other.elements)
-        return FiniteSet(set(el for el in self if el in other))
+        return FiniteSet(el for el in self if el in other)
 
     def union(self, other): #overwriting Union default
+        """
+        Returns the union of 'self' and 'other'. As a shortcut it is possible
+        to use the '+' operator:
+
+        >>> from sympy import FiniteSet
+
+        >>> FiniteSet((0, 1)).union(FiniteSet((2, 3)))
+        {0,1,2,3}
+        >>> FiniteSet((Symbol('x'), 1,2)) + FiniteSet((2, 3))
+        {x,1,2,3}
+
+        Similarly it is possible to use the '-' operator for set
+        differences:
+
+        >>> FiniteSet((Symbol('x'), 1,2)) + FiniteSet((2, 3))
+        {1,x}
+
+        """
+
         if isinstance(other, FiniteSet):
             return FiniteSet(self.elements | other.elements)
         return Union(self, other)
@@ -665,6 +698,17 @@ class FiniteSet(DiscreteSet):
         return other in self.elements
 
     def subset(self, other):
+        """
+        Returns True if 'other' is a subset of 'self'.
+
+        >>> from sympy import FiniteSet
+
+        >>> s = FiniteSet((1,2,3))
+        >>> t = FiniteSet((1,2))
+        >>> t.subset(s)
+        True
+
+        """
         return all([el in other for el in self])
 
     def _inf(self):
@@ -679,3 +723,8 @@ class FiniteSet(DiscreteSet):
             raise NotImplementedError("Maximum not well defined for symbolic sets")
     def __len__(self):
         return len(self.elements)
+    def __sub__(self, other):
+        if self.subset(other):
+            return EmptySet()
+        else:
+            return FiniteSet(el for el in self if el not in other)

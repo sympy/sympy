@@ -672,7 +672,7 @@ class LatexPrinter(Printer):
             printset = [q.next() for i in xrange(10)]
         else:
             printset = s
-        return '{' + ','.join(self._print(el) for el in s) + '}'
+        return '\{' + ','.join(self._print(el) for el in s) + '\}'
     def _print_Interval(self, i):
         if i.start == i.end:
             return r"\left{%s\right}" % self._print(i.start)
