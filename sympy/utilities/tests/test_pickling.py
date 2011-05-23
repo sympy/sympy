@@ -209,10 +209,10 @@ def test_integrals():
         check(c)
 
 #================== matrices ====================
-from sympy.matrices.matrices import Matrix, SMatrix
+from sympy.matrices.matrices import Matrix, SparseMatrix
 
 def test_matrices():
-    for c in (Matrix, Matrix([1,2,3]), SMatrix, SMatrix([[1,2],[3,4]])):
+    for c in (Matrix, Matrix([1,2,3]), SparseMatrix, SparseMatrix([[1,2],[3,4]])):
         check(c)
 
 #================== ntheorie ====================

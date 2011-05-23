@@ -1,10 +1,10 @@
-from sympy import (symbols, Matrix, SMatrix, eye, I, Symbol, Rational, wronskian, cos,
+from sympy import (symbols, Matrix, SparseMatrix, eye, I, Symbol, Rational, wronskian, cos,
     sin, exp, hessian, sqrt, zeros, ones, randMatrix, Poly, S, pi, E,
     oo, trigsimp, Integer, block_diag, N, zeros)
 from sympy.matrices.matrices import (ShapeError, MatrixError,
     matrix_multiply_elementwise, diag,
 
-    SMatrix, SMatrix, NonSquareMatrixError, _dims_to_nm,
+    SparseMatrix, SparseMatrix, NonSquareMatrixError, _dims_to_nm,
     matrix_multiply_elementwise)
 from sympy.utilities.pytest import raises
 
@@ -584,21 +584,21 @@ def test_eigen():
 def test_sparse_matrix():
     return
     def eye(n):
-        tmp = SMatrix(n,n,lambda i,j:0)
+        tmp = SparseMatrix(n,n,lambda i,j:0)
         for i in range(tmp.rows):
             tmp[i,i] = 1
         return tmp
     def zeros(n):
-        return SMatrix(n,n,lambda i,j:0)
+        return SparseMatrix(n,n,lambda i,j:0)
 
     # test_multiplication
-    a=SMatrix((
+    a=SparseMatrix((
         (1, 2),
         (3, 1),
         (0, 6),
         ))
 
-    b = SMatrix ((
+    b = SparseMatrix ((
         (1, 2),
         (3, 0),
         ))
@@ -614,34 +614,34 @@ def test_sparse_matrix():
     x = Symbol("x")
 
     c = b * Symbol("x")
-    assert isinstance(c,SMatrix)
+    assert isinstance(c,SparseMatrix)
     assert c[0,0] == x
     assert c[0,1] == 2*x
     assert c[1,0] == 3*x
     assert c[1,1] == 0
 
     c = 5 * b
-    assert isinstance(c,SMatrix)
+    assert isinstance(c,SparseMatrix)
     assert c[0,0] == 5
     assert c[0,1] == 2*5
     assert c[1,0] == 3*5
     assert c[1,1] == 0
 
     #test_power
-    A = SMatrix([[2,3],[4,5]])
+    A = SparseMatrix([[2,3],[4,5]])
     assert (A**5)[:] == [6140, 8097, 10796, 14237]
-    A = SMatrix([[2, 1, 3],[4,2, 4], [6,12, 1]])
+    A = SparseMatrix([[2, 1, 3],[4,2, 4], [6,12, 1]])
     assert (A**3)[:] == [290, 262, 251, 448, 440, 368, 702, 954, 433]
 
 
     # test_creation
     x = Symbol("x")
-    a = SMatrix([x, 0], [0, 0])
+    a = SparseMatrix([x, 0], [0, 0])
     m = a
     assert m.cols == m.rows
     assert m.cols == 2
     assert m[:] == [x,0,0,0]
-    b = SMatrix(2,2, [x, 0, 0, 0])
+    b = SparseMatrix(2,2, [x, 0, 0, 0])
     m = b
     assert m.cols == m.rows
     assert m.cols == 2
@@ -652,47 +652,47 @@ def test_sparse_matrix():
     # test_determinant
     x, y = Symbol('x'), Symbol('y')
 
-    assert SMatrix([ [1] ]).det() == 1
+    assert SparseMatrix([ [1] ]).det() == 1
 
-    assert SMatrix(( (-3,  2),
+    assert SparseMatrix(( (-3,  2),
                     ( 8, -5) )).det() == -1
 
-    assert SMatrix(( (x,   1),
+    assert SparseMatrix(( (x,   1),
                     (y, 2*y) )).det() == 2*x*y-y
 
-    assert SMatrix(( (1, 1, 1),
+    assert SparseMatrix(( (1, 1, 1),
                     (1, 2, 3),
                     (1, 3, 6) )).det() == 1
 
-    assert SMatrix(( ( 3, -2,  0, 5),
+    assert SparseMatrix(( ( 3, -2,  0, 5),
                     (-2,  1, -2, 2),
                     ( 0, -2,  5, 0),
                     ( 5,  0,  3, 4) )).det() == -289
 
-    assert SMatrix(( ( 1,  2,  3,  4),
+    assert SparseMatrix(( ( 1,  2,  3,  4),
                     ( 5,  6,  7,  8),
                     ( 9, 10, 11, 12),
                     (13, 14, 15, 16) )).det() == 0
 
-    assert SMatrix(( (3, 2, 0, 0, 0),
+    assert SparseMatrix(( (3, 2, 0, 0, 0),
                     (0, 3, 2, 0, 0),
                     (0, 0, 3, 2, 0),
                     (0, 0, 0, 3, 2),
                     (2, 0, 0, 0, 3) )).det() == 275
 
-    assert SMatrix(( (1, 0,  1,  2, 12),
+    assert SparseMatrix(( (1, 0,  1,  2, 12),
                     (2, 0,  1,  1,  4),
                     (2, 1,  1, -1,  3),
                     (3, 2, -1,  1,  8),
                     (1, 1,  1,  0,  6) )).det() == -55
 
-    assert SMatrix(( (-5,  2,  3,  4,  5),
+    assert SparseMatrix(( (-5,  2,  3,  4,  5),
                     ( 1, -4,  3,  4,  5),
                     ( 1,  2, -3,  4,  5),
                     ( 1,  2,  3, -2,  5),
                     ( 1,  2,  3,  4, -1) )).det() == 11664
 
-    assert SMatrix(( ( 2,  7, -1, 3, 2),
+    assert SparseMatrix(( ( 2,  7, -1, 3, 2),
                     ( 0,  0,  1, 0, 1),
                     (-2,  0,  7, 0, 2),
                     (-3, -2,  4, 5, 3),
@@ -703,47 +703,47 @@ def test_sparse_matrix():
     assert m0[0:3, 0:3] == eye(3)
     assert m0[2:4, 0:2] == zeros(2)
 
-    m1 = SMatrix(3,3, lambda i,j: i+j)
-    assert m1[0,:] == SMatrix(1,3,(0,1,2))
-    assert m1[1:3, 1] == SMatrix(2,1,(2,3))
+    m1 = SparseMatrix(3,3, lambda i,j: i+j)
+    assert m1[0,:] == SparseMatrix(1,3,(0,1,2))
+    assert m1[1:3, 1] == SparseMatrix(2,1,(2,3))
 
-    m2 = SMatrix([0,1,2,3],[4,5,6,7],[8,9,10,11],[12,13,14,15])
-    assert m2[:,-1] == SMatrix(4,1,[3,7,11,15])
-    assert m2[-2:,:] == SMatrix([[8,9,10,11],[12,13,14,15]])
+    m2 = SparseMatrix([0,1,2,3],[4,5,6,7],[8,9,10,11],[12,13,14,15])
+    assert m2[:,-1] == SparseMatrix(4,1,[3,7,11,15])
+    assert m2[-2:,:] == SparseMatrix([[8,9,10,11],[12,13,14,15]])
 
     # test_submatrix_assignment
     m = zeros(4)
     m[2:4, 2:4] = eye(2)
-    assert m == SMatrix((0,0,0,0),
+    assert m == SparseMatrix((0,0,0,0),
                         (0,0,0,0),
                         (0,0,1,0),
                         (0,0,0,1))
     m[0:2, 0:2] = eye(2)
     assert m == eye(4)
-    m[:,0] = SMatrix(4,1,(1,2,3,4))
-    assert m == SMatrix((1,0,0,0),
+    m[:,0] = SparseMatrix(4,1,(1,2,3,4))
+    assert m == SparseMatrix((1,0,0,0),
                         (2,1,0,0),
                         (3,0,1,0),
                         (4,0,0,1))
     m[:,:] = zeros(4)
     assert m == zeros(4)
     m[:,:] = ((1,2,3,4),(5,6,7,8),(9, 10, 11, 12),(13,14,15,16))
-    assert m == SMatrix(((1,2,3,4),
+    assert m == SparseMatrix(((1,2,3,4),
                         (5,6,7,8),
                         (9, 10, 11, 12),
                         (13,14,15,16)))
     m[0:2, 0] = [0,0]
-    assert m == SMatrix(((0,2,3,4),
+    assert m == SparseMatrix(((0,2,3,4),
                         (0,6,7,8),
                         (9, 10, 11, 12),
                         (13,14,15,16)))
 
     # test_reshape
     m0 = eye(3)
-    assert m0.reshape(1,9) == SMatrix(1,9,(1,0,0,0,1,0,0,0,1))
-    m1 = SMatrix(3,4, lambda i,j: i+j)
-    assert m1.reshape(4,3) == SMatrix((0,1,2), (3,1,2), (3,4,2), (3,4,5))
-    assert m1.reshape(2,6) == SMatrix((0,1,2,3,1,2), (3,4,2,3,4,5))
+    assert m0.reshape(1,9) == SparseMatrix(1,9,(1,0,0,0,1,0,0,0,1))
+    m1 = SparseMatrix(3,4, lambda i,j: i+j)
+    assert m1.reshape(4,3) == SparseMatrix((0,1,2), (3,1,2), (3,4,2), (3,4,5))
+    assert m1.reshape(2,6) == SparseMatrix((0,1,2,3,1,2), (3,4,2,3,4,5))
 
     # test_applyfunc
     m0 = eye(3)
@@ -751,7 +751,7 @@ def test_sparse_matrix():
     assert m0.applyfunc(lambda x: 0 ) == zeros(3)
 
     # test_LUdecomp
-    testmat = SMatrix([[0,2,5,3],
+    testmat = SparseMatrix([[0,2,5,3],
                       [3,3,7,4],
                       [8,4,0,2],
                       [-2,6,3,4]])
@@ -760,7 +760,7 @@ def test_sparse_matrix():
     assert U.is_upper()
     assert (L*U).permuteBkwd(p)-testmat == zeros(4)
 
-    testmat = SMatrix([[6,-2,7,4],
+    testmat = SparseMatrix([[6,-2,7,4],
                       [0,3,6,7],
                       [1,-2,7,4],
                       [-9,2,6,3]])
@@ -777,17 +777,17 @@ def test_sparse_matrix():
     assert (L*U).permuteBkwd(p)-M == zeros(3)
 
     # test_LUsolve
-    A = SMatrix([[2,3,5],
+    A = SparseMatrix([[2,3,5],
                 [3,6,2],
                 [8,3,6]])
-    x = SMatrix(3,1,[3,7,5])
+    x = SparseMatrix(3,1,[3,7,5])
     b = A*x
     soln = A.LUsolve(b)
     assert soln == x
-    A = SMatrix([[0,-1,2],
+    A = SparseMatrix([[0,-1,2],
                 [5,10,7],
                 [8,3,4]])
-    x = SMatrix(3,1,[-1,2,5])
+    x = SparseMatrix(3,1,[-1,2,5])
     b = A*x
     soln = A.LUsolve(b)
     assert soln == x
@@ -797,7 +797,7 @@ def test_sparse_matrix():
     assert A.inv() == eye(4)
     assert A.inv("LU") == eye(4)
     assert A.inv("ADJ") == eye(4)
-    A = SMatrix([[2,3,5],
+    A = SparseMatrix([[2,3,5],
                 [3,6,2],
                 [8,3,6]])
     Ainv = A.inv()
@@ -813,20 +813,20 @@ def test_sparse_matrix():
 
     # test_cofactor
     assert eye(3) == eye(3).cofactorMatrix()
-    test = SMatrix([[1,3,2],[2,6,3],[2,3,6]])
-    assert test.cofactorMatrix() == SMatrix([[27,-6,-6],[-12,2,3],[-3,1,0]])
-    test = SMatrix([[1,2,3],[4,5,6],[7,8,9]])
-    assert test.cofactorMatrix() == SMatrix([[-3,6,-3],[6,-12,6],[-3,6,-3]])
+    test = SparseMatrix([[1,3,2],[2,6,3],[2,3,6]])
+    assert test.cofactorMatrix() == SparseMatrix([[27,-6,-6],[-12,2,3],[-3,1,0]])
+    test = SparseMatrix([[1,2,3],[4,5,6],[7,8,9]])
+    assert test.cofactorMatrix() == SparseMatrix([[-3,6,-3],[6,-12,6],[-3,6,-3]])
 
     # test_jacobian
     x = Symbol('x')
     y = Symbol('y')
-    L = SMatrix(1,2,[x**2*y, 2*y**2 + x*y])
+    L = SparseMatrix(1,2,[x**2*y, 2*y**2 + x*y])
     syms = [x,y]
     assert L.jacobian(syms) == Matrix([[2*x*y, x**2],[y, 4*y+x]])
 
-    L = SMatrix(1,2,[x, x**2*y**3])
-    assert L.jacobian(syms) == SMatrix([[1, 0], [2*x*y**3, x**2*3*y**2]])
+    L = SparseMatrix(1,2,[x, x**2*y**3])
+    assert L.jacobian(syms) == SparseMatrix([[1, 0], [2*x*y**3, x**2*3*y**2]])
 
     # test_QR
     A = Matrix([[1,2],[2,3]])
@@ -890,7 +890,7 @@ def test_sparse_matrix():
                               [2, 1, [Matrix(1,3,[0,1,0])]],
                               [5, 1, [Matrix(1,3,[1,1,0])]]]
 
-    assert M.zeros((3, 5)) == SMatrix(3, 5, {})
+    assert M.zeros((3, 5)) == SparseMatrix(3, 5, {})
 
 def test_subs():
     x = Symbol('x')
@@ -1456,16 +1456,16 @@ def test_exp():
     assert m.exp() == Matrix([[E,0],[0,E]])
 
 def test_SMatrix_transpose():
-    assert SMatrix((1,2),(3,4)).transpose() == SMatrix((1,3),(2,4))
+    assert SparseMatrix((1,2),(3,4)).transpose() == SparseMatrix((1,3),(2,4))
 
 def test_SMatrix_CL_RL():
-    assert SMatrix((1,2),(3,4)).row_list() == [(0, 0, 1), (0, 1, 2), (1, 0, 3), (1, 1, 4)]
-    assert SMatrix((1,2),(3,4)).col_list() == [(0, 0, 1), (1, 0, 3), (0, 1, 2), (1, 1, 4)]
+    assert SparseMatrix((1,2),(3,4)).row_list() == [(0, 0, 1), (0, 1, 2), (1, 0, 3), (1, 1, 4)]
+    assert SparseMatrix((1,2),(3,4)).col_list() == [(0, 0, 1), (1, 0, 3), (0, 1, 2), (1, 1, 4)]
 
 def test_SMatrix_add():
-    assert SMatrix(((1,0), (0,1))) + SMatrix(((0,1), (1,0))) == SMatrix(((1,1), (1,1)))
-    a = SMatrix(100, 100, lambda i, j : int(j != 0 and i % j == 0))
-    b = SMatrix(100, 100, lambda i, j : int(i != 0 and j % i == 0))
+    assert SparseMatrix(((1,0), (0,1))) + SparseMatrix(((0,1), (1,0))) == SparseMatrix(((1,1), (1,1)))
+    a = SparseMatrix(100, 100, lambda i, j : int(j != 0 and i % j == 0))
+    b = SparseMatrix(100, 100, lambda i, j : int(i != 0 and j % i == 0))
     assert (len(a.mat) + len(b.mat) - len((a+b).mat) > 0)
 
 def test_has():
@@ -1490,7 +1490,7 @@ def test_errors():
     raises(ShapeError, "Matrix([1]).row_insert(1, Matrix([[1, 2], [3, 4]]))")
     raises(ShapeError, "Matrix([1]).col_insert(1, Matrix([[1, 2], [3, 4]]))")
     raises(NonSquareMatrixError, "Matrix([1, 2]).trace()")
-    raises(TypeError, "SMatrix([[1, 2], [3, 4]]).submatrix([1, 1])")
+    raises(TypeError, "SparseMatrix([[1, 2], [3, 4]]).submatrix([1, 1])")
     raises(TypeError, "Matrix([1]).applyfunc(1)")
     raises(ShapeError, "Matrix([1]).LUsolve(Matrix([[1, 2], [3, 4]]))")
     raises(MatrixError, "Matrix([[1,2,3],[4,5,6],[7,8,9]]).QRdecomposition()")
@@ -1511,14 +1511,14 @@ def test_errors():
     raises(NonSquareMatrixError, "Matrix([1,2]).is_nilpotent()")
     raises(ValueError, "hessian(Matrix([[1, 2], [3, 4]]), Matrix([[1, 2], [2, 1]]))")
     raises(ValueError, "hessian(Matrix([[1, 2], [3, 4]]), [])")
-    raises(TypeError, "SMatrix(1.4, 2, lambda i, j: 0)")
-    raises(ValueError, "SMatrix([1, 2, 3], [1, 2])")
-    raises(ValueError, "SMatrix([[1, 2], [3, 4]])[(1, 2, 3)]")
-    raises(ValueError, "SMatrix([[1, 2], [3, 4]]).rowdecomp(5)")
-    raises(ValueError, "SMatrix([[1, 2], [3, 4]])[1, 2, 3] = 4")
-    raises(TypeError, "SMatrix([[1, 2], [3, 4]]).copyin_list([0, 1], set([]))")
-    raises(TypeError, "SMatrix([[1, 2], [3, 4]]).submatrix((1, 2))")
-    raises(TypeError, "SMatrix([1, 2, 3]).cross(1)")
+    raises(TypeError, "SparseMatrix(1.4, 2, lambda i, j: 0)")
+    raises(ValueError, "SparseMatrix([1, 2, 3], [1, 2])")
+    raises(ValueError, "SparseMatrix([[1, 2], [3, 4]])[(1, 2, 3)]")
+    raises(ValueError, "SparseMatrix([[1, 2], [3, 4]]).rowdecomp(5)")
+    raises(ValueError, "SparseMatrix([[1, 2], [3, 4]])[1, 2, 3] = 4")
+    raises(TypeError, "SparseMatrix([[1, 2], [3, 4]]).copyin_list([0, 1], set([]))")
+    raises(TypeError, "SparseMatrix([[1, 2], [3, 4]]).submatrix((1, 2))")
+    raises(TypeError, "SparseMatrix([1, 2, 3]).cross(1)")
     raises(ValueError, "Matrix([[5, 10, 7],[0, -1, 2],[8,  3, 4]]).LUdecomposition_Simple(iszerofunc=lambda x:abs(x)<=4)")
     raises(NotImplementedError, "Matrix([[1, 0],[1, 1]])**(S(1)/2)")
     raises(NotImplementedError, "Matrix([[1, 2, 3],[4, 5, 6],[7,  8, 9]])**(0.5)")
