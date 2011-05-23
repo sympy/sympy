@@ -670,7 +670,11 @@ class LatexPrinter(Printer):
             printset = [q.next() for i in xrange(10)]
         else:
             printset = s
-        return '\{' + ','.join(self._print(el) for el in s) + '\}'
+        try:
+            printset.sort()
+        except:
+            pass
+        return r"\left\{" + r", ".join(self._print(el) for el in printset) + r"\right\}"
     def _print_Interval(self, i):
         if i.start == i.end:
             return r"\left{%s\right}" % self._print(i.start)
@@ -690,25 +694,7 @@ class LatexPrinter(Printer):
                    (left, self._print(i.start), self._print(i.end), right)
 
     def _print_Union(self, u):
-        other_sets, singletons = [], []
-        for set in u.args:
-            if isinstance(set, Interval) and set.measure == 0:
-                singletons.append(set.start)
-            else:
-                other_sets.append(set)
-
-        S2 = r"%s" % \
-             r" \cup ".join([ self._print_Interval(i) for i in other_sets ])
-
-        if len(singletons) > 0:
-            S1 = r"\left\{%s\right\}" % \
-                 r", ".join([ self._print(i) for i in singletons ])
-
-            S = r"%s \cup %s" % (S1, S2)
-        else:
-            S = S2
-
-        return S
+        return r" \cup ".join([self._print(i) for i in u.args])
 
     def _print_EmptySet(self, e):
         return r"\emptyset"

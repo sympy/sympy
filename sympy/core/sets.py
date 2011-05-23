@@ -2,8 +2,9 @@ from basic import Basic
 from singleton import Singleton, S
 from evalf import EvalfMixin
 from numbers import Float
-from sympify import _sympify
+from sympify import _sympify, sympify
 from sympy.mpmath import mpi, mpf
+from collections import Iterable
 
 
 class Set(Basic):
@@ -20,18 +21,22 @@ class Set(Basic):
         Returns the union of 'self' and 'other'. As a shortcut it is possible
         to use the '+' operator:
 
-        >>> from sympy import Interval
+        >>> from sympy import Interval, FiniteSet
 
         >>> Interval(0, 1).union(Interval(2, 3))
         Union([0, 1], [2, 3])
         >>> Interval(0, 1) + Interval(2, 3)
         Union([0, 1], [2, 3])
+        >>> Interval(1,2, True, True) + FiniteSet(2,3)
+        Union((1, 2], {3})
 
         Similarly it is possible to use the '-' operator for set
         differences:
 
         >>> Interval(0, 2) - Interval(0, 1)
         (1, 2]
+        >>> Interval(1,3)-FiniteSet(2)
+        Union([1, 2), (2, 3])
 
         """
         return Union(self, other)
@@ -171,8 +176,6 @@ class Set(Basic):
     def __or__(self, other):
         return self.union(other)
 
-    def __mul__(self, other):
-        return self.intersect(other)
     def __and__(self, other):
         return self.intersect(other)
 
@@ -254,6 +257,8 @@ class Interval(Set, EvalfMixin):
 
         if end == start and (left_open or right_open):
             return S.EmptySet
+        if end == start and not (left_open or right_open):
+            return FiniteSet(end)
 
         # Make sure infinite interval end points are open.
         if start == S.NegativeInfinity:
@@ -469,25 +474,21 @@ class Union(Set):
 
     """
 
-<<<<<<< HEAD
     def __new__(cls, *args):
-        intervals, other_sets = [], []
-=======
-    def __new__(cls, *args, **assumptions):
         intervals, finite_sets, other_sets = [], [], []
->>>>>>> unions working smoothly
+        args = list(args)
         for arg in args:
             if isinstance(arg, EmptySet):
                 continue
+
+            if isinstance(arg, Union):
+                args += list(arg.args)
 
             elif isinstance(arg, FiniteSet):
                 finite_sets.append(arg)
 
             elif isinstance(arg, Interval):
                 intervals.append(arg)
-
-            elif isinstance(arg, Union):
-                intervals += arg.args
 
             elif isinstance(arg, Set):
                 other_sets.append(arg)
@@ -499,8 +500,6 @@ class Union(Set):
         if all( len(s) == 0 for s in [intervals, other_sets, finite_sets]):
             return S.EmptySet
 
-        # Merge Finite Sets
-        finite_set = sum(finite_sets, FiniteSet([]))
 
         # Sort intervals according to their infimum
         intervals.sort(lambda i, j: cmp(i.start, j.start))
@@ -540,10 +539,22 @@ class Union(Set):
             else:
                 i += 1
         # Collect all elements in the finite sets not in any interval
-        finite_complement = FiniteSet(el for el in finite_set
-                if not any(el in i for i in intervals))
-        if len(finite_complement)>0:
-            other_sets.append(finite_complement)
+        if finite_sets:
+            # Merge Finite Sets
+            finite_set = sum(finite_sets[1:], finite_sets[0])
+            # Close open intervals if boundary is in finite_set
+            for num, i in enumerate(intervals):
+                closeLeft = i.start in finite_set if i.left_open else False
+                closeRight = i.end in finite_set if i.right_open else False
+                if ((closeLeft and i.left_open)
+                        or (closeRight and i.right_open)):
+                    intervals[num] = Interval(i.start, i.end,
+                            not closeLeft, not closeRight)
+            # All elements in finite_set not in any interval
+            finite_complement = FiniteSet(el for el in finite_set
+                    if not any(el in i for i in intervals))
+            if len(finite_complement)>0: # Anything left?
+                other_sets.append(finite_complement)
         # If a single set is left over, don't create a new Union object but
         # rather return the single set.
         if len(intervals) == 1 and len(other_sets) == 0:
@@ -583,10 +594,13 @@ class Union(Set):
                 intersections.append(interval.intersect(other))
             return self.__class__(*intersections)
 
+        if isinstance(other, FiniteSet):
+            return other._intersect(self)
+
         elif isinstance(other, Union):
             intersections = []
-            for interval in other.args:
-                intersections.append(self.intersect(interval))
+            for s in other.args:
+                intersections.append(self.intersect(s))
             return self.__class__(*intersections)
 
         else:
@@ -645,62 +659,86 @@ class EmptySet(Set):
         return False
 
 class DiscreteSet(Set):
+    # TODO
     @property
     def _measure(self):
         return 0
 
 class ExpressionDiscreteSet(DiscreteSet):
+    # TODO
     pass;
 
 class FiniteSet(DiscreteSet):
     """
     Represents a finite set of discrete numbers
-    Is largely a wrapper around the Python set
 
     Examples:
         >>> from sympy import Symbol, FiniteSet, sets
 
-        >>> S = FiniteSet((1,2,3,4))
-        {1,2,3,4}
-        >>> 3 in S
+        >>> FiniteSet((1,2,3,4))
+        {1, 2, 3, 4}
+        >>> 3 in FiniteSet(1,2,3,4)
         True
 
     """
-    def __init__(self, elements):
-        self.elements = set(elements)
+    def __init__(self, *args):
+        # Allow bot FiniteSet(iterable) and FiniteSet(num, num, num)
+        if len(args)==1 and isinstance(args[0], Iterable):
+            args = args[0]
+        self.elements = set(map(sympify,args))
+
     def __iter__(self):
         return self.elements.__iter__()
+
     def _intersect(self, other):
         if isinstance(other, FiniteSet):
             return FiniteSet(self.elements & other.elements)
         return FiniteSet(el for el in self if el in other)
 
-    def union(self, other): #overwriting Union default
+    def union(self, other):
         """
         Returns the union of 'self' and 'other'. As a shortcut it is possible
         to use the '+' operator:
 
-        >>> from sympy import FiniteSet
+        >>> from sympy import FiniteSet, Interval, Symbol
 
         >>> FiniteSet((0, 1)).union(FiniteSet((2, 3)))
-        {0,1,2,3}
+        {0, 1, 2, 3}
         >>> FiniteSet((Symbol('x'), 1,2)) + FiniteSet((2, 3))
-        {x,1,2,3}
+        {1, 2, 3, x}
+        >>> Interval(1,2, True, True) + FiniteSet(2,3)
+        Union((1, 2], {3})
 
         Similarly it is possible to use the '-' operator for set
         differences:
 
-        >>> FiniteSet((Symbol('x'), 1,2)) + FiniteSet((2, 3))
-        {1,x}
+        >>> FiniteSet((Symbol('x'), 1,2)) - FiniteSet((2, 3))
+        {1, x}
+        >>> Interval(1,2)-FiniteSet(2,3)
+        [1, 2)
+
 
         """
 
         if isinstance(other, FiniteSet):
             return FiniteSet(self.elements | other.elements)
-        return Union(self, other)
+        return Union(self, other) # Resort to default
 
     def _contains(self, other):
-        return other in self.elements
+        """
+        Tests whether an element, other, is in the set.
+        Relies on Python's set class. This tests for object equality
+        All inputs are sympified
+
+        >>> from sympy import FiniteSet
+
+        >>> 1 in FiniteSet(1,2)
+        True
+        >>> 5 in FiniteSet(1,2)
+        False
+
+        """
+        return sympify(other) in self.elements
 
     def subset(self, other):
         """
@@ -710,27 +748,75 @@ class FiniteSet(DiscreteSet):
 
         >>> s = FiniteSet((1,2,3))
         >>> t = FiniteSet((1,2))
-        >>> t.subset(s)
+        >>> s.subset(t)
         True
 
         """
-        return all([el in other for el in self])
+        if other is S.EmptySet:
+            return True
+        if isinstance(other, FiniteSet):
+            return all(el in self for el in other)
+        return False
 
     def _inf(self):
-        if all(el.is_Number for el in self):
-            return min(self)
-        else:
-            raise NotImplementedError("Minimum not well defined for symbolic sets")
+        from sympy.functions.elementary.miscellaneous import Min
+        # Separate elements into numbers and nonnumbers
+        numbers = [el for el in self if el.is_number]
+        non_numbers = [el for el in self if not el.is_number]
+        # Get the smallest number
+        inf = min(numbers) if numbers else non_numbers[0]
+        # Compare to all the non_numbers
+        for element in non_numbers:
+            inf = Min(inf, element)
+        return inf
+
     def _sup(self):
-        if all(el.is_Number for el in self):
-            return max(self)
-        else:
-            raise NotImplementedError("Maximum not well defined for symbolic sets")
+        from sympy.functions.elementary.miscellaneous import Max
+        # Separate elements into numbers and nonnumbers
+        numbers = [el for el in self if el.is_number]
+        non_numbers = [el for el in self if not el.is_number]
+        # Get the smallest number
+        inf = max(numbers) if numbers else non_numbers[0]
+        # Compare to all the non_numbers
+        for element in non_numbers:
+            inf = Max(inf, element)
+        return inf
+
     def __len__(self):
         return len(self.elements)
+
+    def __eq__(self, other):
+        if isinstance(other, FiniteSet):
+            return self.elements == other.elements
+        if isinstance(other, EmptySet):
+            return len(self.elements) == 0
+        return False
+
     def __sub__(self, other):
-        if self.subset(other):
-            return EmptySet()
-        else:
-            return FiniteSet(el for el in self if el not in other)
+        return FiniteSet(el for el in self if el not in other)
+
+    @property
+    def _complement(self):
+        """
+        The complement of a finite set is the Union of open Intervals between
+        the elements of the set.
+
+        >>> from sympy import FiniteSet
+        >>> FiniteSet(1,2,3).complement
+        Union((-oo, 1), (1, 2), (2, 3), (3, oo))
+
+
+        """
+        if not all(el.is_Number for el in self):
+            raise NotImpementedError("Only real intervals supported")
+
+        sorted_elements = sorted(list(self.elements))
+
+        intervals = [] # Build up a list of intervals between the elements
+        intervals += [Interval(S.NegativeInfinity,sorted_elements[0],True,True)]
+        for a,b in zip(sorted_elements[0:-1], sorted_elements[1:]):
+            intervals.append(Interval(a,b, True, True)) # open intervals
+        intervals.append(Interval(sorted_elements[-1], S.Infinity, True, True))
+
+        return Union(*intervals)
 

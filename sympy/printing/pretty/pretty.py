@@ -782,8 +782,11 @@ class PrettyPrinter(Printer):
             printset.append('...')
         else:
             printset = s
+        try:
+            printset = sorted(printset)
+        except:  pass
 
-        return self._print_seq(printset, '{', '}', ',' )
+        return self._print_seq(printset, '{', '}', ', ' )
 
 
     def _print_Interval(self, i):

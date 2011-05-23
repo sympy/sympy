@@ -1,6 +1,6 @@
 from sympy import (
     Symbol, Set, Union, Interval, oo, S,
-    Inequality, Max, Min, And, Or, Eq, Le, Lt, Float,
+    Inequality, Max, Min, And, Or, Eq, Le, Lt, Float, FiniteSet
 )
 from sympy.mpmath import mpi
 
@@ -12,7 +12,7 @@ def test_interval_arguments():
     assert Interval(-oo, 0) == Interval(-oo, 0, True, False)
     assert Interval(-oo, 0).left_open == True
 
-    assert isinstance(Interval(1, 1), Interval)
+    assert isinstance(Interval(1, 1), FiniteSet)
 
     assert Interval(1, 0) == S.EmptySet
     assert Interval(1, 1).measure == 0
@@ -64,6 +64,16 @@ def test_union():
 
     assert Union(Set()) == Set()
 
+    # Test that Intervals and FiniteSets play nicely
+    assert Interval(1,3) + FiniteSet(2) == Interval(1,3)
+    assert Interval(1,3, True,True) + FiniteSet(3) == Interval(1,3, True,False)
+    X = Interval(1,3)+FiniteSet(5)
+    Y = Interval(1,2)+FiniteSet(3)
+    XandY = X.intersect(Y)
+    assert 2 in X and 3 in X and 3 in XandY
+    assert X.subset(XandY) and Y.subset(XandY)
+
+
     raises(ValueError, "Union(1, 2, 3)")
 
 def test_difference():
@@ -92,7 +102,14 @@ def test_complement():
            Union(Interval(-oo, 0, True, True), Interval(1, 2, True, True),
                  Interval(3, oo, True, True))
 
+    assert FiniteSet(0).complement == Union(Interval(-oo,0, True,True) ,
+            Interval(0,oo, True, True))
+    X = Interval(1,3)+FiniteSet(5)
+    assert X.intersect(X.complement) == S.EmptySet
+
+
 def test_intersect():
+    x = Symbol('x')
     assert Interval(0, 2).intersect(Interval(1, 2)) == Interval(1, 2)
     assert Interval(0, 2).intersect(Interval(1, 2, True)) == \
            Interval(1, 2, True)
@@ -102,6 +119,10 @@ def test_intersect():
            Interval(1, 2, False, True)
     assert Interval(0, 2).intersect(Union(Interval(0, 1), Interval(2, 3))) == \
            Union(Interval(0, 1), Interval(2, 2))
+
+    assert FiniteSet(1,2,x).intersect(FiniteSet(x)) == FiniteSet(x)
+    assert Interval(0,5).intersect(FiniteSet(1,3)) == FiniteSet(1,3)
+    assert Interval(0,1, True, True).intersect(FiniteSet(1)) == S.EmptySet
 
     assert Union(Interval(0, 1), Interval(2, 3)).intersect(Interval(1, 2)) == \
            Union(Interval(1, 1), Interval(2, 2))
@@ -131,11 +152,18 @@ def test_measure():
 
     assert Union(Interval(1, 2), Interval(3, 4)).measure == 2
 
+    assert FiniteSet(1,2,oo,a,-oo,-5).measure == 0
+
     assert S.EmptySet.measure == 0
 
 def test_subset():
     assert Interval(0, 2).subset(Interval(0, 1)) == True
     assert Interval(0, 2).subset(Interval(0, 3)) == False
+
+    assert FiniteSet(1,2,3,4).subset(FiniteSet(1,2))
+    assert Interval(0,2).subset(FiniteSet(1))
+    assert (Interval(0,2,False,True)+FiniteSet(2,3)).subset(
+            Interval(1,2)+FiniteSet(3))
 
     assert Union(Interval(0, 1), Interval(2, 5)).subset(Interval(3, 4)) == True
     assert Union(Interval(0, 1), Interval(2, 5)).subset(Interval(3, 6)) == False
@@ -154,6 +182,9 @@ def test_contains():
     assert Interval(0, 2, False, True).contains(2) == False
     assert Interval(0, 2, True, True).contains(0) == False
     assert Interval(0, 2, True, True).contains(2) == False
+
+    assert FiniteSet(1,2,3).contains(2)
+    assert FiniteSet(1,2,Symbol('x')).contains(Symbol('x'))
 
     assert Union(Interval(0, 1), Interval(2, 5)).contains(3) == True
     assert Union(Interval(0, 1), Interval(2, 5)).contains(6) == False
@@ -181,6 +212,10 @@ def test_union_contains():
     assert e.subs(x, 1.5) is False
     assert e.subs(x, 2.5) is True
     assert e.subs(x, 3.5) is False
+
+    U = Interval(0,2, True,True) + Interval(10,oo) + FiniteSet(-1,2,5,6)
+    assert not any(el in U for el in [0,4,-oo])
+    assert all(el in U for el in [2,5,10])
 
 def test_is_number():
     assert Interval(0, 1).is_number is False
@@ -219,11 +254,13 @@ def test_Interval_as_relational():
     assert Interval(-oo, oo).as_relational(x) == True
 
 def test_finite_basic():
-    A = FiniteSet((1,2,3))
-    B = FiniteSet((3,4,5))
+    x = Symbol('x')
+    A = FiniteSet(1,2,3)
+    B = FiniteSet(3,4,5)
     AorB = Union(A,B)
-    AandB = A*B
-    assert A in AorB
-    assert B in AorB
-    assert AandB in A
+    AandB = A.intersect(B)
+    assert AorB.subset(A) and AorB.subset(B)
+    assert A.subset(AandB)
+    assert AandB == FiniteSet(3)
+
 
