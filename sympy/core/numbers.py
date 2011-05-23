@@ -958,18 +958,13 @@ class Integer(Rational):
     @int_trace
     def __new__(cls, i):
         ival = int(i)
-
         try:
             return _intcache[ival]
         except KeyError:
             # We only work with well-behaved integer types. This converts, for
             # example, numpy.int32 instances.
-            if ival == 0: obj = S.Zero
-            elif ival == 1: obj = S.One
-            elif ival == -1: obj = S.NegativeOne
-            else:
-                obj = Expr.__new__(cls)
-                obj.p = ival
+            obj = Expr.__new__(cls)
+            obj.p = ival
 
             _intcache[ival] = obj
             return obj
