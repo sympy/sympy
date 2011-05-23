@@ -16,6 +16,26 @@ class SymPyIntegerRing(IntegerRing):
     def __init__(self):
         """Allow instantiation of this domain. """
 
+    def of_type(self, a):
+        """
+        Check if `a` is of type `dtype` (`sympy`).
+
+        **Example**
+
+        >>> from sympy import S, Integer, Rational
+        >>> from sympy.polys.domains import ZZ_sympy
+
+        >>> ZZ_sympy().of_type(S.One)
+        True
+        >>> ZZ_sympy().of_type(Integer(3))
+        True
+        >>> ZZ_sympy().of_type(Rational(3, 2))
+        False
+
+        """
+        return type(a) in [type(self.one), type(self.zero),
+            type(self.dtype(-1)), type(self.dtype(2))]
+
     def to_sympy(self, a):
         """Convert `a` to a SymPy object. """
         return a
