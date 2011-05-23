@@ -17,6 +17,7 @@ import plot_modes
 from time import sleep
 from os import getcwd, listdir
 from util import parse_option_string
+from types import MethodType
 
 from sympy.geometry.entity import GeometryEntity
 
@@ -406,7 +407,7 @@ class ScreenShot:
         im = Image.frombuffer('RGBA',(size_x,size_y),image.raw, 'raw', 'RGBA', 0, 1)
         if type(self.outfile) in (str, unicode):
             im.transpose(Image.FLIP_TOP_BOTTOM).save(self.outfile)
-        elif type(self.outfile)==file:
+        elif hasattr(self.outfile.write, '__call__'):
             im.transpose(Image.FLIP_TOP_BOTTOM).save(self.outfile, self.format)
         self.flag = 0
         self.screenshot_requested = False
@@ -430,7 +431,7 @@ class ScreenShot:
 
         if type(self.outfile) in (str, unicode):
             self.screenshot_requested = True
-        elif type(self.outfile)==file and self.format:
+        elif hasattr(self.outfile.write, '__call__') and self.format:
             self.screenshot_requested = True
         elif self.outfile==None:
             self.outfile=self._create_unique_path()
