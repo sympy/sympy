@@ -128,6 +128,18 @@ class StrPrinter(Printer):
         L = ', '.join([_xab_tostr(l) for l in expr.limits])
         return 'Integral(%s, %s)' % (self._print(expr.function), L)
 
+    def _print_FiniteSet(self, s):
+        if len(s) > 10:
+            #take ten elements from the set at random
+            q = iter(s)
+            printset = [q.next() for i in xrange(10)]
+        else:
+            printset = s
+        try:
+            printset = sorted(printset)
+        except:  pass
+        return '{' + ', '.join(self._print(el) for el in printset) + '}'
+
     def _print_Interval(self, i):
         if i.left_open:
             left = '('
