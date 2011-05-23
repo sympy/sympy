@@ -218,3 +218,12 @@ def test_Interval_as_relational():
 
     assert Interval(-oo, oo).as_relational(x) == True
 
+def test_finite_basic():
+    A = FiniteSet((1,2,3))
+    B = FiniteSet((3,4,5))
+    AorB = Union(A,B)
+    AandB = A*B
+    assert A in AorB
+    assert B in AorB
+    assert AandB in A
+
