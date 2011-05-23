@@ -489,13 +489,15 @@ class Basic(AssumeMeths):
 
         return (st != ot) or self._assume_type_keys != other._assume_type_keys
 
+    # Note, we always use the default ordering (lex) in __str__ and __repr__,
+    # regardless of the global setting.  See issue 2388.
     def __repr__(self):
         from sympy.printing import sstr
-        return sstr(self)
+        return sstr(self, order=None)
 
     def __str__(self):
         from sympy.printing import sstr
-        return sstr(self)
+        return sstr(self, order=None)
 
     def atoms(self, *types):
         """Returns the atoms that form the current object.
