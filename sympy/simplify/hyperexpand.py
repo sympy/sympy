@@ -194,23 +194,31 @@ class IndexPair(object):
 
         return (gamma, tr(abuckets), tr(bbuckets))
 
-    def reachable(self, ip):
-        """ Determine if `ip` is reachable from self """
+    def difficulty(self, ip):
+        """ Estimate how many steps it takes to reach `ip` from self.
+            Return -1 if impossible. """
         oabuckets, obbuckets = self.compute_buckets()
         abuckets, bbuckets = ip.compute_buckets(oabuckets, obbuckets)
 
         gt0 = lambda x: (x > 0) is True
         if S(0) in abuckets and (not S(0) in oabuckets or
              len(filter(gt0, abuckets[S(0)])) != len(filter(gt0, oabuckets[S(0)]))):
-            return False
+            return -1
 
+        diff = 0
         for bucket, obucket in [(abuckets, oabuckets), (bbuckets, obbuckets)]:
-            for mod in bucket.keys() + obucket.keys():
+            for mod in set(bucket.keys() + obucket.keys()):
                 if (not mod in bucket) or (not mod in obucket) \
                    or len(bucket[mod]) != len(obucket[mod]):
-                    return False
+                    return -1
+                l1 = list(bucket[mod])
+                l2 = list(obucket[mod])
+                l1.sort()
+                l2.sort()
+                for i, j in zip(l1, l2):
+                    diff += abs(i - j)
 
-        return True
+        return diff
 
 # Dummy generator
 x = Dummy('x')
@@ -242,11 +250,11 @@ class Formula(object):
 
     We can isolate a in the (1+a)/2 term, with denominator 2:
     >>> f.isolation[a]
-    (2, 2)
+    (2, 2, 1)
 
     b is isolated in the b term, with coefficient one:
     >>> f.isolation[b]
-    (4, 1)
+    (4, 1, 1)
     """
 
     def _compute_basis(self, closed_form):
@@ -312,12 +320,13 @@ class Formula(object):
                     l = ilcm(l, c.q)
 
                     if not p.has(*others):
-                        isolating.append((i, c.q))
+                        isolating.append((i, c.q, c.p))
                 lcms[a] = l
                 i += 1
             if len(isolating) == 0:
                 raise NotImplementedError('parameter is not isolated')
             isolating.sort(key=lambda x:x[1])
+            isolating.sort(key=lambda x:-x[2])
             isolation[a] = isolating[-1]
 
         self.lcms = lcms
@@ -346,17 +355,42 @@ class Formula(object):
         bq = ip.bq
         if len(ap) != len(self.indices.ap) or len(bq) != len(self.indices.bq):
             raise TypeError('Cannot instantiate other number of parameters')
-        # TODO this needs to be *much* more clever
+
         from sympy import solve
-        all_params = list(ap) + list(bq)
+        from itertools import permutations, product
+        res = []
         our_params = list(self.indices.ap) + list(self.indices.bq)
-        repl = {}
-        for a in self.symbols:
-            i, _ = self.isolation[a]
-            repl[a] = solve(our_params[i] - all_params[i], a)[0]
-        return [Formula(self.indices.ap.subs(repl), self.indices.bq.subs(repl),
-                        self.z, None, [], self.B.subs(repl), self.C.subs(repl),
-                        self.M.subs(repl))]
+        for na in permutations(ap):
+            for nb in permutations(bq):
+                all_params = list(na) + list(nb)
+                repl = {}
+                for a in self.symbols:
+                    i, d, _ = self.isolation[a]
+                    repl[a] = (solve(our_params[i] - all_params[i], a)[0], d)
+                for change in product(*[(-1, 0, 1)]*len(self.symbols)):
+                    rep = {}
+                    for i, a in zip(change, repl.keys()):
+                        rep[a] = repl[a][0] + i*repl[a][1]
+                    res.append(Formula(self.indices.ap.subs(rep),
+                                       self.indices.bq.subs(rep),
+                                       self.z, None, [], self.B.subs(rep),
+                                       self.C.subs(rep), self.M.subs(rep)))
+                # if say a = -1/2, and there is 2*a in the formula, then
+                # there will be a negative integer. But this origin is also
+                # reachable from a = 1/2 ...
+                # So throw this in as well.
+                # The code is not as general as it could be, but good enough.
+                if len(self.symbols) == 1:
+                    a = self.symbols[0]
+                    aval, d = repl[a]
+                    if aval < 0 and d == 1:
+                        from sympy import ceiling
+                        aval -= ceiling(aval) - 1
+                        res.append(Formula(self.indices.ap.subs(a, aval),
+                                           self.indices.bq.subs(a, aval),
+                                       self.z, None, [], self.B.subs(a, aval),
+                                       self.C.subs(rep), self.M.subs(a, aval)))
+        return res
 
     def is_suitable(self):
         """
@@ -394,6 +428,7 @@ class Formula(object):
         >>> Formula((S(1)/2, 1), (2, -S(2)/3, S(3)/2), None, None, []).is_suitable()
         True
         """
+        from sympy import oo, zoo
         if len(self.symbols) > 0:
             return None
         for a in self.indices.ap:
@@ -405,6 +440,11 @@ class Formula(object):
                 return False
         for b in self.indices.bq:
             if b <= 0 and b.q == 1:
+                return False
+        for e in [self.B, self.M, self.C]:
+            if e is None:
+                continue
+            if e.has(S.NaN) or e.has(oo) or e.has(-oo) or e.has(zoo):
                 return False
         return True
 
@@ -457,14 +497,23 @@ class FormulaCollection(object):
         if not sizes in self.symbolic_formulae:
             return None # Too bad...
 
+        possible = []
         for f in self.symbolic_formulae[sizes]:
             l = f.find_instantiations(ip)
             for f2 in l:
-                if f2.is_suitable() and f2.indices.reachable(ip):
-                    return f2
+                if not f2.is_suitable():
+                    continue
+                diff = f2.indices.difficulty(ip)
+                if diff != -1:
+                    possible.append((diff, f2))
 
-        # Give up.
-        return None
+        if not possible:
+            # Give up.
+            return None
+
+        # find the nearest origin
+        possible.sort(key=lambda x:x[0])
+        return possible[0][1]
 
 
 class Operator(object):
