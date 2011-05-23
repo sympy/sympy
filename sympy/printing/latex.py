@@ -665,7 +665,14 @@ class LatexPrinter(Printer):
             tex = r"\delta^{\left( %s \right)}\left( %s \right)" % (\
             self._print(expr.args[1]), self._print(expr.args[0]))
         return tex
-
+    def _print_FiniteSet(self, s):
+        if len(s) > 10:
+            #take ten elements from the set at random
+            q = iter(s)
+            printset = [q.next() for i in xrange(10)]
+        else:
+            printset = s
+        return '{' + ','.join(self._print(el) for el in s) + '}'
     def _print_Interval(self, i):
         if i.start == i.end:
             return r"\left{%s\right}" % self._print(i.start)
