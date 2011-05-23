@@ -17,6 +17,10 @@ from sympy.polys.densearith import (
 from sympy.polys.densetools import (
     dmp_diff)
 
+from sympy.polys.polyclasses import (
+    DMP
+)
+
 from sympy.polys.polyerrors import (
     DomainError)
 
@@ -24,6 +28,8 @@ from sympy.polys.specialpolys import (
     f_0, f_1, f_2, f_3, f_4, f_5, f_6)
 
 from sympy.polys.domains import FF, ZZ, QQ
+
+from sympy.abc import x
 
 from sympy.utilities.pytest import raises
 
@@ -98,6 +104,9 @@ def test_dup_sqf():
 
     assert dup_sqf_list(res, ZZ) == (45796, [([4,0,1], 3)])
 
+    assert dup_sqf_list_include([DMP([1, 0, 0, 0], ZZ), DMP([], ZZ), DMP([], ZZ)], ZZ[x]) == \
+        [([DMP([1, 0, 0, 0], ZZ)], 1), ([DMP([1], ZZ), DMP([], ZZ)], 2)]
+
 def test_dmp_sqf():
     assert dmp_sqf_part([[]], 1, ZZ) == [[]]
     assert dmp_sqf_p([[]], 1, ZZ) == True
@@ -144,6 +153,11 @@ def test_dmp_sqf():
         [([[-1],[-1],[-1],[-1]], 1), ([[1],[-1]], 2)]
 
     K = FF(2)
+
+    f = [[-1], [2], [-1]]
+
+    assert dmp_sqf_list_include(f, 1, ZZ) == \
+        [([[-1]], 1), ([[1], [-1]], 2)]
 
     raises(DomainError, "dmp_sqf_list([[K(1), K(0), K(1)]], 1, K)")
 

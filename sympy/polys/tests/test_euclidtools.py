@@ -593,7 +593,7 @@ def test_dup_cancel():
     q = [ZZ(1), -ZZ(1)]
 
     assert dup_cancel(f, g, ZZ) == (p, q)
-    assert dup_cancel(f, g, ZZ, multout=False) == (ZZ(1), ZZ(1), p, q)
+    assert dup_cancel(f, g, ZZ, include=False) == (ZZ(1), ZZ(1), p, q)
 
     f = [-ZZ(1),-ZZ(2)]
     g = [ ZZ(3),-ZZ(4)]
@@ -612,4 +612,4 @@ def test_dmp_cancel():
     q = [[ZZ(1)], [-ZZ(1)]]
 
     assert dmp_cancel(f, g, 1, ZZ) == (p, q)
-    assert dmp_cancel(f, g, 1, ZZ, multout=False) == (ZZ(1), ZZ(1), p, q)
+    assert dmp_cancel(f, g, 1, ZZ, include=False) == (ZZ(1), ZZ(1), p, q)

@@ -252,6 +252,13 @@ def test_DMP_functionality():
     raises(ValueError, "f.decompose()")
     raises(ValueError, "f.sturm()")
 
+def test_DMP_exclude():
+    f = [[[[[[[[[[[[[[[[[[[[[[[[[[1]], [[]]]]]]]]]]]]]]]]]]]]]]]]]]
+    J = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 24, 25]
+
+    assert DMP(f, ZZ).exclude() == (J, DMP([1, 0], ZZ))
+    assert DMP([[1], [1, 0]], ZZ).exclude() == ([], DMP([[1], [1, 0]], ZZ))
+
 def test_DMF__init__():
     f = DMF(([[0],[],[0,1,2],[3]], [[1,2,3]]), ZZ)
 

@@ -50,8 +50,8 @@ from sympy.polys.densebasic import (
     dup_deflate, dmp_deflate,
     dmp_inject, dmp_eject,
     dup_terms_gcd, dmp_terms_gcd,
-    dmp_list_terms,
-    dmp_slice_in)
+    dmp_list_terms, dmp_exclude,
+    dmp_slice_in, dmp_permute)
 
 from sympy.polys.densearith import (
     dup_add_term, dmp_add_term,
@@ -336,6 +336,42 @@ class DMP(object):
         F = dmp_eject(f.rep, f.lev, dom, front=front)
         return f.__class__(F, dom, f.lev - len(dom.gens))
 
+    def exclude(f):
+        r"""
+        Remove useless generators from ``f``.
+
+        Returns the removed generators and the new excluded ``f``.
+
+        **Example**
+
+        >>> from sympy.polys.polyclasses import DMP
+        >>> from sympy.polys.domains import ZZ
+
+        >>> DMP([[[ZZ(1)]], [[ZZ(1)], [ZZ(2)]]], ZZ).exclude()
+        ([2], DMP([[1], [1, 2]], ZZ))
+
+        """
+        J, F, u = dmp_exclude(f.rep, f.lev, f.dom)
+        return J, f.__class__(F, f.dom, u)
+
+    def permute(f, P):
+        r"""
+        Returns a polynomial in ``K[x_{P(1)}, ..., x_{P(n)}]``.
+
+        **Example**
+
+        >>> from sympy.polys.polyclasses import DMP
+        >>> from sympy.polys.domains import ZZ
+
+        >>> DMP([[[ZZ(2)], [ZZ(1), ZZ(0)]], [[]]], ZZ).permute([1, 0, 2])
+        DMP([[[2], []], [[1, 0], []]], ZZ)
+
+        >>> DMP([[[ZZ(2)], [ZZ(1), ZZ(0)]], [[]]], ZZ).permute([1, 2, 0])
+        DMP([[[1], []], [[2, 0], []]], ZZ)
+
+        """
+        return f.per(dmp_permute(f.rep, P, f.lev, f.dom))
+
     def terms_gcd(f):
         """Remove GCD of terms from the polynomial `f`. """
         J, F = dmp_terms_gcd(f.rep, f.lev, f.dom)
@@ -575,18 +611,18 @@ class DMP(object):
         lev, dom, per, F, G = f.unify(g)
         return per(dmp_lcm(F, G, lev, dom))
 
-    def cancel(f, g, multout=True):
+    def cancel(f, g, include=True):
         """Cancel common factors in a rational function ``f/g``. """
         lev, dom, per, F, G = f.unify(g)
 
-        if multout:
-                    F, G = dmp_cancel(F, G, lev, dom, multout=True)
+        if include:
+                    F, G = dmp_cancel(F, G, lev, dom, include=True)
         else:
-            cF, cG, F, G = dmp_cancel(F, G, lev, dom, multout=False)
+            cF, cG, F, G = dmp_cancel(F, G, lev, dom, include=False)
 
         F, G = per(F), per(G)
 
-        if multout:
+        if include:
             return F, G
         else:
             return cF, cG, F, G
@@ -861,7 +897,7 @@ class DMP(object):
         return not dmp_zero_p(f.rep, f.lev)
 
 def init_normal_DMF(num, den, lev, dom):
-    return DFP(dmp_normal(num, lev, dom),
+    return DMF(dmp_normal(num, lev, dom),
                dmp_normal(den, lev, dom), dom, lev)
 
 class DMF(object):

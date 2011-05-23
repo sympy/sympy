@@ -859,6 +859,11 @@ def test_Poly_eject():
     raises(DomainError, "Poly(x*y, x, y, domain=ZZ[z]).eject(y)")
     raises(NotImplementedError, "Poly(x*y, x, y, z).eject(y)")
 
+def test_Poly_exclude():
+    assert Poly(x, x, y).exclude() == Poly(x, x)
+    assert Poly(x*y, x, y).exclude() == Poly(x*y, x, y)
+    assert Poly(1, x, y).exclude() == Poly(1, x, y)
+
 def test_Poly__gen_to_level():
     assert Poly(1, x, y)._gen_to_level(-2) == 0
     assert Poly(1, x, y)._gen_to_level(-1) == 1
@@ -2232,6 +2237,17 @@ def test_cancel():
     g = Poly(-x**9 + x**8 + x**6 - x**5 + 2*x**2 - 3*x + 1, x)
 
     assert cancel((f, g)) == (1, -f, -g)
+
+    f = Poly(y, y, domain='ZZ(x)')
+    g = Poly(1, y, domain='ZZ[x]')
+
+    assert f.cancel(g) == (1, Poly(y, y, domain='ZZ(x)'), Poly(1, y, domain='ZZ(x)'))
+    assert f.cancel(g, include=True) == (Poly(y, y, domain='ZZ(x)'), Poly(1, y, domain='ZZ(x)'))
+
+    f = Poly(5*x*y + x, y, domain='ZZ(x)')
+    g = Poly(2*x**2*y, y, domain='ZZ(x)')
+
+    assert f.cancel(g, include=True) == (Poly(5*y + 1, y, domain='ZZ(x)'), Poly(2*x*y, y, domain='ZZ(x)'))
 
 def test_reduced():
     f = 2*x**4 + y**2 - x**2 + y**3
