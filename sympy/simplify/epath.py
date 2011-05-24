@@ -18,7 +18,7 @@ select by attribute : "/__iter__?"
 
 **Examples**
 
->>> from sympy.simplify.epath import eselect, eapply
+>>> from sympy.simplify.epath import eselect, emap
 >>> from sympy import sin, cos, E, symbols
 >>> x, y, z, t = symbols('x, y, z, t')
 
@@ -26,14 +26,14 @@ select by attribute : "/__iter__?"
 >>> expr = [((x, 1), 2), ((3, y), z)]
 >>> eselect(expr, path)
 [x, y]
->>> eapply(lambda expr: expr**2, expr, path)
+>>> emap(lambda expr: expr**2, expr, path)
 [((x**2, 1), 2), ((3, y**2), z)]
 
 >>> path = "/*/*/Symbol"
 >>> expr = t + sin(x + 1) + cos(x + y + E)
 >>> eselect(expr, path)
 [x, x, y]
->>> eapply(lambda expr: 2*expr, expr, path)
+>>> emap(lambda expr: 2*expr, expr, path)
 t + sin(2*x + 1) + cos(2*x + 2*y + E)
 
 """
@@ -186,7 +186,7 @@ class EPath(object):
 
         return False
 
-    def apply(self, func, expr):
+    def map(self, func, expr):
         """
         Modify parts of an expression selected by a path.
 
@@ -198,16 +198,16 @@ class EPath(object):
 
         >>> path = EPath("/*/[0]/Symbol")
         >>> expr = [((x, 1), 2), ((3, y), z)]
-        >>> path.apply(lambda expr: expr**2, expr)
+        >>> path.map(lambda expr: expr**2, expr)
         [((x**2, 1), 2), ((3, y**2), z)]
 
         >>> path = EPath("/*/*/Symbol")
         >>> expr = t + sin(x + 1) + cos(x + y + E)
-        >>> path.apply(lambda expr: 2*expr, expr)
+        >>> path.map(lambda expr: 2*expr, expr)
         t + sin(2*x + 1) + cos(2*x + 2*y + E)
 
         """
-        def _apply(path, func, expr):
+        def _map(path, func, expr):
             if not path:
                 return func(expr)
             else:
@@ -241,14 +241,14 @@ class EPath(object):
                         continue
 
                     if self._has(arg, attrs, types):
-                        args[i] = _apply(path, func, arg)
+                        args[i] = _map(path, func, arg)
 
                 if basic:
                     return expr.func(*args)
                 else:
                     return expr.__class__(args)
 
-        return _apply(self._epath, func, expr)
+        return _map(self._epath, func, expr)
 
     def select(self, expr):
         """
@@ -327,23 +327,23 @@ def eselect(expr, epath):
     """
     return EPath(epath).select(expr)
 
-def eapply(func, expr, epath):
+def emap(func, expr, epath):
     """
     Modify an expression by applying a function to some of its parts.
 
     **Examples**
 
-    >>> from sympy.simplify.epath import eapply
+    >>> from sympy.simplify.epath import emap
     >>> from sympy import sin, cos, E, symbols
     >>> x, y, z, t = symbols('x, y, z, t')
 
     >>> expr = [((x, 1), 2), ((3, y), z)]
-    >>> eapply(lambda expr: expr**2, expr, "/*/[0]/Symbol")
+    >>> emap(lambda expr: expr**2, expr, "/*/[0]/Symbol")
     [((x**2, 1), 2), ((3, y**2), z)]
 
     >>> expr = t + sin(x + 1) + cos(x + y + E)
-    >>> eapply(lambda expr: 2*expr, expr, "/*/*/Symbol")
+    >>> emap(lambda expr: 2*expr, expr, "/*/*/Symbol")
     t + sin(2*x + 1) + cos(2*x + 2*y + E)
 
     """
-    return EPath(epath).apply(func, expr)
+    return EPath(epath).map(func, expr)
