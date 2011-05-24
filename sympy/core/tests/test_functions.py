@@ -1,6 +1,7 @@
-from sympy import Lambda, Symbol, Function, Derivative, sqrt, \
-        log, exp, Rational, Float, sin, cos, acos, diff, I, re, im, \
-        oo, zoo, nan, E, expand, pi, O, Sum, S, polygamma, loggamma
+from sympy import (Lambda, Symbol, Function, Derivative, Subs, sqrt,
+        log, exp, Rational, Float, sin, cos, acos, diff, I, re, im,
+        oo, zoo, nan, E, expand, pi, O, Sum, S, polygamma, loggamma,
+        Tuple, Dummy)
 from sympy.utilities.pytest import XFAIL, raises
 from sympy.abc import x, y, n
 from sympy.core.function import PoleError
@@ -157,6 +158,61 @@ def test_Lambda_equality():
     assert Lambda(x, 2*x) != 2*x
     assert (Lambda(x, 2*x) == 2*x) is False
 
+def test_Subs():
+    x = Symbol('x')
+    y = Symbol('y')
+    z = Symbol('z')
+    f = Function('f')
+
+    assert Subs(f(x), x, 0).doit() == f(0)
+    assert Subs(f(x**2), x**2, 0).doit() == f(0)
+    assert Subs(f(x, y), (x, y), (0, 1)).doit() == f(0, 1)
+    assert Subs(Subs(f(x, y), x, 0), y, 1).doit() == f(0, 1)
+    raises(ValueError, 'Subs(f(x, y), (x, y), (0, 0, 1))')
+    raises(ValueError, 'Subs(f(x, y), (x, x, y), (0, 0, 1))')
+
+    assert len(Subs(f(x, y), (x, y), (0, 1)).variables) == 2
+    assert all([ isinstance(v, Dummy) for v in Subs(f(x, y),
+        (x, y), (0, 1)).variables ])
+    assert Subs(f(x, y), (x, y), (0, 1)).point == Tuple(0, 1)
+
+    assert Subs(f(x), x, 0) == Subs(f(y), y, 0)
+    assert Subs(f(x, y), (x, y), (0, 1)) == Subs(f(x, y), (y, x), (1, 0))
+    assert Subs(f(x)*y, (x, y), (0, 1)) == Subs(f(y)*x, (y, x), (0, 1))
+    assert Subs(f(x)*y, (x, y), (1, 1)) == Subs(f(y)*x, (x, y), (1, 1))
+
+    assert Subs(f(x), x, 0).subs(x, 1) == Subs(f(x), x, 0)
+    assert Subs(f(x), x, 0).subs(x, 1).doit() == f(0)
+    assert Subs(f(x), x, y).subs(y, 0) == Subs(f(x), x, 0)
+    assert Subs(y*f(x), x, y).subs(y, 2) == Subs(2*f(x), x, 2)
+    assert (2 * Subs(f(x), x, 0)).subs(Subs(f(x), x, 0), y) == 2*y
+
+    assert Subs(f(x), x, 0).free_symbols == set([])
+    assert Subs(f(x, y), x, z).free_symbols == set([y, z])
+
+    assert Subs(f(x).diff(x), x, 0).doit() == Subs(f(x).diff(x), x, 0)
+    assert Subs(1+f(x).diff(x), x, 0).doit() == 1 + Subs(f(x).diff(x), x, 0)
+    assert Subs(y*f(x, y).diff(x), (x, y), (0, 2)).doit() == \
+            2*Subs(Derivative(f(x, 2), x), x, 0)
+    assert Subs(y**2*f(x), x, 0).diff(y) == 2*y*f(0)
+
+    e = Subs(y**2*f(x), x, y)
+    assert e.diff(y) == e.doit().diff(y) == y**2*Derivative(f(y), y) + 2*y*f(y)
+
+    assert Subs(f(x), x, 0) + Subs(f(x), x, 0) == 2*Subs(f(x), x, 0)
+    e1 = Subs(z*f(x), x, 1)
+    e2 = Subs(z*f(y), y, 1)
+    assert e1 + e2 == 2*e1
+    assert e1.__hash__() == e2.__hash__()
+    assert Subs(z*f(x+1), x, 1) not in [ e1, e2 ]
+
+@XFAIL
+def test_Subs2():
+    x = Symbol('x')
+    f = Function('f')
+    # this reflects a limitation of subs(), probably won't fix
+    assert Subs(f(x), x**2, 0).doit() == f(sqrt(x))
+
 
 def test_expand_function():
     assert expand(x+y) == x + y
@@ -185,33 +241,29 @@ def test_function_comparable():
     assert sin(zoo).is_comparable   == False
     assert sin(nan).is_comparable   == False
 
-@XFAIL
 def test_deriv1():
-    # This requires derivatives evaluated at a point.  This is written in such
-    # a way that it will XPASS when that is implemented.  When it is, fix this
-    # and test_deriv2() below.
-    f=Function('f')
-    g=Function('g')
-    x = Symbol('x')
-    f(g(x)).diff(x)
-
-@XFAIL
-def test_deriv2():
     # These all requre derivatives evaluated at a point (issue 1620) to work.
     # See issue 1525
     f = Function('f')
+    g = Function('g')
     x = Symbol('x')
 
-    assert f(2*x).diff(x) == 2*Derivative(f(2*x), 2*x)
+    assert f(g(x)).diff(x) == Derivative(g(x), x)*Subs(Derivative(f(x), x),
+            Tuple(x), Tuple(g(x)))
+    assert f(2*x).diff(x) == 2*Subs(Derivative(f(x), x), Tuple(x), Tuple(2*x))
     assert (f(x)**3).diff(x) == 3*f(x)**2*f(x).diff(x)
-    assert (f(2*x)**3).diff(x) == 6*f(2*x)**2*Derivative(f(2*x), 2*x)
+    assert (f(2*x)**3).diff(x) == 6*f(2*x)**2*Subs(Derivative(f(x), x), Tuple(x),
+            Tuple(2*x))
 
-    assert f(2+x).diff(x) == Derivative(f(2+x), 2+x)
-    assert f(2+3*x).diff(x) == 3*Derivative(f(2+3*x), 2+3*x)
-    assert f(sin(x)).diff(x) == Derivative(f(sin(x)), sin(x)) * cos(x)
-    assert f(3*sin(x)).diff(x) == 3*Derivative(f(3*sin(x)), 3*sin(x)) * cos(x)
+    assert f(2+x).diff(x) == Subs(Derivative(f(x), x), Tuple(x), Tuple(x + 2))
+    assert f(2+3*x).diff(x) == 3*Subs(Derivative(f(x), x), Tuple(x),
+            Tuple(3*x + 2))
+    assert f(sin(x)).diff(x) == cos(x)*Subs(Derivative(f(x), x), Tuple(x),
+            Tuple(sin(x)))
+    assert f(3*sin(x)).diff(x) == 3*cos(x)*Subs(Derivative(f(x), x),
+            Tuple(x), Tuple(3*sin(x)))
 
-def test_deriv3():
+def test_deriv2():
     x = Symbol('x')
 
     assert (x**3).diff(x) == 3*x**2

@@ -930,6 +930,23 @@ class PrettyPrinter(Printer):
 
         return pform
 
+    def _print_Subs(self, e):
+        pform = self._print(e.expr)
+        pform = prettyForm(*pform.parens())
+
+        h = pform.height() if pform.height() > 1 else 2
+        rvert = stringPict(vobj('|', h), baseline=pform.baseline)
+        pform = prettyForm(*pform.right(rvert))
+
+        b = pform.baseline
+        pform.baseline = pform.height() - 1
+        pform = prettyForm(*pform.right(self._print_seq([
+            self._print_seq((self._print(v[0]), xsym('=='), self._print(v[1])),
+                delimiter='') for v in zip(e.variables, e.point) ])))
+
+        pform.baseline = b
+        return pform
+
 def pretty(expr, **settings):
     """
     Returns a string containing the prettified form of expr.
