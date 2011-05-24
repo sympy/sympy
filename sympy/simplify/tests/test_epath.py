@@ -1,6 +1,6 @@
 """Tests for tools for manipulation of expressions using paths. """
 
-from sympy.simplify.epathtools import EPath, eselect, eapply
+from sympy.simplify.epath import EPath, eselect, eapply
 from sympy.utilities.pytest import raises
 
 from sympy import sin, cos, E

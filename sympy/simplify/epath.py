@@ -18,7 +18,7 @@ select by attribute : "/__iter__?"
 
 **Examples**
 
->>> from sympy.simplify.epathtools import eselect, eapply
+>>> from sympy.simplify.epath import eselect, eapply
 >>> from sympy import sin, cos, E, symbols
 >>> x, y, z, t = symbols('x, y, z, t')
 
@@ -192,7 +192,7 @@ class EPath(object):
 
         **Examples**
 
-        >>> from sympy.simplify.epathtools import EPath
+        >>> from sympy.simplify.epath import EPath
         >>> from sympy import sin, cos, E, symbols
         >>> x, y, z, t = symbols('x, y, z, t')
 
@@ -256,7 +256,7 @@ class EPath(object):
 
         **Examples**
 
-        >>> from sympy.simplify.epathtools import EPath
+        >>> from sympy.simplify.epath import EPath
         >>> from sympy import sin, cos, E
         >>> from sympy.abc import x, y, z, t
 
@@ -312,7 +312,7 @@ def eselect(expr, epath):
 
     **Examples**
 
-    >>> from sympy.simplify.epathtools import eselect
+    >>> from sympy.simplify.epath import eselect
     >>> from sympy import sin, cos, E, symbols
     >>> x, y, z, t = symbols("x, y, z, t")
 
@@ -333,7 +333,7 @@ def eapply(func, expr, epath):
 
     **Examples**
 
-    >>> from sympy.simplify.epathtools import eapply
+    >>> from sympy.simplify.epath import eapply
     >>> from sympy import sin, cos, E, symbols
     >>> x, y, z, t = symbols('x, y, z, t')
 
