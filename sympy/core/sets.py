@@ -264,22 +264,19 @@ class ProductSet(Set):
     """
 
     def __new__(cls, *sets, **assumptions):
-        sets = list(sets)
-        result_sets = []
-        for set in sets:
-            if not isinstance(set, Set) and isinstance(set, Iterable):
-                sets += set # Flatten any iterable of sets
-            elif isinstance(set, ProductSet): # Flatten any product of products
-                sets += set.args
-            elif isinstance(set, Set):
-                result_sets.append(set)
-            else:
-                raise TypeError("%s: Expected type Set, not %s"%
-                        (set, set.__class__))
+        def flatten(arg):
+            if isinstance(arg, Set) and not isinstance(arg, ProductSet):
+                return [arg]
+            if isinstance(arg,ProductSet):
+                return sum(map(flatten, arg.args), [])
+            if isinstance(arg, Iterable) and not isinstance(arg,Set):
+                return sum(map(flatten, arg), [])
+            raise TypeError("Input must be Sets or Iterables of Sets")
+        sets = flatten(sets)
 
-        if EmptySet() in result_sets:
+        if EmptySet() in sets:
             return EmptySet()
-        return Basic.__new__(cls, *result_sets, **assumptions)
+        return Basic.__new__(cls, *sets, **assumptions)
 
     def __iter__(self):
         return self.args.__iter__()
