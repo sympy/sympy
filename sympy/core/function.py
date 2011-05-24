@@ -697,6 +697,9 @@ class Derivative(Expr):
     def _eval_subs(self, old, new):
         if self==old:
             return new
+        if old in self.variables and not new.is_Symbol:
+            # Issue 1620
+            raise NotImplementedError("Derivatives evaluated at a point are not yet implemented.")
         return Derivative(*map(lambda x: x._eval_subs(old, new), self.args))
 
     def matches(self, expr, repl_dict={}, evaluate=False):
