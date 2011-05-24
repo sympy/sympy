@@ -567,7 +567,7 @@ def test_posify():
     # when it is corrected, posify will allow the change to be made:
     eq, rep = posify(1/x)
     assert log(eq).expand().subs(rep) == -log(x)
-    assert str(posify([x, 1 + x])) == '([_x, _x + 1], {_x: x})'
+    assert str(posify([x, 1 + x])) == '(Tuple(_x, _x + 1), {_x: x})'
 
 def test_powdenest():
     from sympy import powdenest
