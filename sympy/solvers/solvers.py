@@ -356,6 +356,15 @@ def _solve(f, *symbols, **flags):
                 return {n: cancel(d)}
 
         symbol = symbols[0]
+
+        # first see if it really depends on symbol and whether there
+        # is a linear solution
+        n, d = solve_linear(f, x=symbols)
+        if n is S.Zero:
+            return None
+        elif n.is_Symbol:
+            return [cancel(d)]
+
         strategy = guess_solve_strategy(f, symbol)
 
         if strategy == GS_POLY:
@@ -542,9 +551,11 @@ def solve_linear(lhs, rhs=0, x=[], exclude=[]):
     """ Return a tuple containing derived from f = lhs - rhs that is either:
 
         (numerator, denominator) of f; if this comes back as (0, 1) it means
-            that f was actually zero even though it may have had symbols:
-            e.g. y*cos(x)**2 + y*sin(x)**2 - y = y*(0) = 0 If the numerator
-            is not zero then the function is guaranteed not to be zero.
+            that f is independent of the symbols of x, e.g.
+                y*cos(x)**2 + y*sin(x)**2 - y = y*(0) = 0
+                cos(x)**2 + sin(x)**2 = 1
+            If the numerator is not zero then the function is guaranteed
+            to be dependent on a symbol in x.
 
         or
 
@@ -572,7 +583,7 @@ def solve_linear(lhs, rhs=0, x=[], exclude=[]):
         (x**2 - 3*y**2, y**2)
 
     If x is allowed to cancel, then this appears linear, but this sort of
-    cancellation is not done so the solultion will always satisfy the original
+    cancellation is not done so the solution will always satisfy the original
     expression without causing a division by zero error.
 
         >>> solve_linear(x**2*(1/x - z**2/x))
@@ -598,7 +609,7 @@ def solve_linear(lhs, rhs=0, x=[], exclude=[]):
     n, d = (lhs - rhs).as_numer_denom()
     ex = expand_mul(n)
     if not ex:
-        return ex, d
+        return ex, S.One
 
     exclude = set(exclude)
     syms = ex.free_symbols
@@ -608,12 +619,16 @@ def solve_linear(lhs, rhs=0, x=[], exclude=[]):
         x = syms.intersection(x)
     x = x.difference(exclude)
 
+    all_zero = True
     for xi in x:
         dn = n.diff(xi)
-        # if not dn then this is a pseudo-function of xi
-        if dn and not dn.has(xi):
-            return xi, -(n.subs(xi, 0))/dn
+        if dn:
+            all_zero = False
+            if not xi in dn.free_symbols:
+                return xi, -(n.subs(xi, 0))/dn
 
+    if all_zero:
+        return S.Zero, S.One
     return n, d
 
 def solve_linear_system(system, *symbols, **flags):

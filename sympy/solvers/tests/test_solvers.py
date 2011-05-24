@@ -333,8 +333,7 @@ def test_solve_linear():
     assert solve_linear(w, x) in [(w, x), (x, w)]
     assert solve_linear(cos(x)**2 + sin(x)**2 + 2 + y) == \
            (y, -2 - cos(x)**2 - sin(x)**2)
-    assert solve_linear(cos(x)**2 + sin(x)**2 + 2 + y, x=[x]) == \
-           (2 + y + cos(x)**2 + sin(x)**2, 1)
+    assert solve_linear(cos(x)**2 + sin(x)**2 + 2 + y, x=[x]) == (0, 1)
 
 def test_solve_undetermined_coeffs():
     a, b, c, x = symbols('a, b, c, x')
@@ -357,3 +356,13 @@ def test_solve_inequalities():
                And(Lt(1, re(x)), Lt(re(x), sqrt(2)))), Eq(im(x), 0))
     assert solve(system, assume=Q.real(x)) == \
         Or(And(Lt(-sqrt(2), x), Lt(x, -1)), And(Lt(1, x), Lt(x, sqrt(2))))
+
+def test_issue_1694():
+    assert solve(x*(1-5/x)) == [5]
+    assert solve(x+sqrt(x)-2) == [1]
+    assert solve(-(1 + x)/(2 + x)**2 + 1/(2 + x)) == [-2]
+    assert solve(-x**2 - 2*x + (x + 1)**2 - 1) is None
+    assert solve(x/sqrt(x**2+1),x) == [0]
+    assert solve(exp(x) - y,x) == [log(y)]
+    assert solve(exp(x)) == [zoo]
+    assert solve(x**2 + x + sin(y)**2 + cos(y)**2 - 1, x) == [0, -1]
