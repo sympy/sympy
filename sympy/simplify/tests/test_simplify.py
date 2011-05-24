@@ -554,16 +554,6 @@ def test_logcombine_1():
         force=True) == log(x**2)+3*I*log(x) + \
         Integral((sin(x**2)+cos(x**3))/x, x)
 
-@XFAIL
-def test_logcombine_2():
-    # The same as one of the tests above, but with Rational(a, b) replaced with a/b.
-    # This fails because of a bug in matches.  See issue 1274.
-    x, y = symbols("x,y")
-    assert logcombine((x*y+sqrt(x**4+y**4)+log(x)-log(y))/(pi*x**(2/3)*y**(3/2)), \
-        force=True) == log(x**(1/(pi*x**(2/3)*y**(3/2)))*y**(-1/\
-        (pi*x**(2/3)*y**(3/2)))) + (x**4 + y**4)**(1/2)/(pi*x**(2/3)*y**(3/2)) + \
-        x**(1/3)/(pi*y**(1/2))
-
 def test_posify():
     from sympy import posify, Symbol, log
     from sympy.abc import x
