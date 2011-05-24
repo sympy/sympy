@@ -1,51 +1,51 @@
 """Tests for tools for manipulation of expressions using paths. """
 
-from sympy.simplify.epathtools import epath, EPath
+from sympy.simplify.epathtools import epath, EPath, eselect
 from sympy.utilities.pytest import raises
 
 from sympy import sin, cos, E
 from sympy.abc import x, y, z, t
 
-def test_epath_select():
+def test_eselect():
     expr = [((x, 1, t), 2), ((3, y, 4), z)]
 
-    assert epath("/*", expr) == [((x, 1, t), 2), ((3, y, 4), z)]
-    assert epath("/*/*", expr) == [(x, 1, t), 2, (3, y, 4), z]
-    assert epath("/*/*/*", expr) == [x, 1, t, 3, y, 4]
-    assert epath("/*/*/*/*", expr) == []
+    assert eselect(expr, "/*") == [((x, 1, t), 2), ((3, y, 4), z)]
+    assert eselect(expr, "/*/*") == [(x, 1, t), 2, (3, y, 4), z]
+    assert eselect(expr, "/*/*/*") == [x, 1, t, 3, y, 4]
+    assert eselect(expr, "/*/*/*/*") == []
 
-    assert epath("/[:]", expr) == [((x, 1, t), 2), ((3, y, 4), z)]
-    assert epath("/[:]/[:]", expr) == [(x, 1, t), 2, (3, y, 4), z]
-    assert epath("/[:]/[:]/[:]", expr) == [x, 1, t, 3, y, 4]
-    assert epath("/[:]/[:]/[:]/[:]", expr) == []
+    assert eselect(expr, "/[:]") == [((x, 1, t), 2), ((3, y, 4), z)]
+    assert eselect(expr, "/[:]/[:]") == [(x, 1, t), 2, (3, y, 4), z]
+    assert eselect(expr, "/[:]/[:]/[:]") == [x, 1, t, 3, y, 4]
+    assert eselect(expr, "/[:]/[:]/[:]/[:]") == []
 
-    assert epath("/*/[:]", expr) == [(x, 1, t), 2, (3, y, 4), z]
+    assert eselect(expr, "/*/[:]") == [(x, 1, t), 2, (3, y, 4), z]
 
-    assert epath("/*/[0]", expr) == [(x, 1, t), (3, y, 4)]
-    assert epath("/*/[1]", expr) == [2, z]
-    assert epath("/*/[2]", expr) == []
+    assert eselect(expr, "/*/[0]") == [(x, 1, t), (3, y, 4)]
+    assert eselect(expr, "/*/[1]") == [2, z]
+    assert eselect(expr, "/*/[2]") == []
 
-    assert epath("/*/int", expr) == [2]
-    assert epath("/*/Symbol", expr) == [z]
-    assert epath("/*/tuple", expr) == [(x, 1, t), (3, y, 4)]
-    assert epath("/*/__iter__?", expr) == [(x, 1, t), (3, y, 4)]
+    assert eselect(expr, "/*/int") == [2]
+    assert eselect(expr, "/*/Symbol") == [z]
+    assert eselect(expr, "/*/tuple") == [(x, 1, t), (3, y, 4)]
+    assert eselect(expr, "/*/__iter__?") == [(x, 1, t), (3, y, 4)]
 
-    assert epath("/*/int|tuple", expr) == [(x, 1, t), 2, (3, y, 4)]
-    assert epath("/*/Symbol|tuple", expr) == [(x, 1, t), (3, y, 4), z]
-    assert epath("/*/int|Symbol|tuple", expr) == [(x, 1, t), 2, (3, y, 4), z]
+    assert eselect(expr, "/*/int|tuple") == [(x, 1, t), 2, (3, y, 4)]
+    assert eselect(expr, "/*/Symbol|tuple") == [(x, 1, t), (3, y, 4), z]
+    assert eselect(expr, "/*/int|Symbol|tuple") == [(x, 1, t), 2, (3, y, 4), z]
 
-    assert epath("/*/int|__iter__?", expr) == [(x, 1, t), 2, (3, y, 4)]
-    assert epath("/*/Symbol|__iter__?", expr) == [(x, 1, t), (3, y, 4), z]
-    assert epath("/*/int|Symbol|__iter__?", expr) == [(x, 1, t), 2, (3, y, 4), z]
+    assert eselect(expr, "/*/int|__iter__?") == [(x, 1, t), 2, (3, y, 4)]
+    assert eselect(expr, "/*/Symbol|__iter__?") == [(x, 1, t), (3, y, 4), z]
+    assert eselect(expr, "/*/int|Symbol|__iter__?") == [(x, 1, t), 2, (3, y, 4), z]
 
-    assert epath("/*/[0]/int", expr) == [1, 3, 4]
-    assert epath("/*/[0]/Symbol", expr) == [x, t, y]
+    assert eselect(expr, "/*/[0]/int") == [1, 3, 4]
+    assert eselect(expr, "/*/[0]/Symbol") == [x, t, y]
 
-    assert epath("/*/[0]/int[1:]", expr) == [1, 4]
-    assert epath("/*/[0]/Symbol[1:]", expr) == [t, y]
+    assert eselect(expr, "/*/[0]/int[1:]") == [1, 4]
+    assert eselect(expr, "/*/[0]/Symbol[1:]") == [t, y]
 
-    assert epath("/Symbol", x + y + z + 1) == [x, y, z]
-    assert epath("/*/*/Symbol", t + sin(x + 1) + cos(x + y + E)) == [x, x, y]
+    assert eselect(x + y + z + 1, "/Symbol") == [x, y, z]
+    assert eselect(t + sin(x + 1) + cos(x + y + E), "/*/*/Symbol")   == [x, x, y]
 
 def test_epath_apply():
     expr = [((x, 1, t), 2), ((3, y, 4), z)]

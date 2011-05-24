@@ -335,3 +335,24 @@ def epath(path, expr=None, func=None):
         return _epath.select(expr)
     else:
         return _epath.apply(expr, func)
+
+def eselect(expr, epath):
+    """
+    Select parts of an expression according to an EPath specification.
+
+    **Examples**
+
+    >>> from sympy.simplify.epathtools import eselect
+    >>> from sympy import sin, cos, E, symbols
+    >>> x, y, z, t = symbols("x, y, z, t")
+
+    >>> expr = [((x, 1), 2), ((3, y), z)]
+    >>> eselect(expr, "/*/[0]/Symbol")
+    [x, y]
+
+    >>> expr = t + sin(x + 1) + cos(x + y + E)
+    >>> eselect(expr, "/*/*/Symbol")
+    [x, x, y]
+
+    """
+    return EPath(epath).select(expr)
