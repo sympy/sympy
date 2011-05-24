@@ -565,7 +565,7 @@ def roots(f, *gens, **flags):
 
         for i in [-1, 1]:
             if not f.eval(i):
-                f = f.exquo(Poly(f.gen - i, f.gen))
+                f = f.quo(Poly(f.gen - i, f.gen))
                 result.append(i)
                 break
 
@@ -699,7 +699,7 @@ def root_factors(f, *gens, **args):
 
         if N < F.degree():
             G = reduce(lambda p,q: p*q, factors)
-            factors.append(F.exquo(G))
+            factors.append(F.quo(G))
 
     if not isinstance(f, Poly):
         return [ f.as_expr() for f in factors ]

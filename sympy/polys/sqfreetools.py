@@ -13,7 +13,7 @@ from sympy.polys.densearith import (
     dup_neg, dmp_neg,
     dup_sub, dmp_sub,
     dup_mul, dmp_mul,
-    dup_exquo, dmp_exquo,
+    dup_quo, dmp_quo,
     dup_mul_ground, dmp_mul_ground)
 
 from sympy.polys.densetools import (
@@ -204,7 +204,7 @@ def dup_sqf_part(f, K):
         f = dup_neg(f, K)
 
     gcd = dup_gcd(f, dup_diff(f, 1, K), K)
-    sqf = dup_exquo(f, gcd, K)
+    sqf = dup_quo(f, gcd, K)
 
     if K.has_Field or not K.is_Exact:
         return dup_monic(sqf, K)
@@ -240,7 +240,7 @@ def dmp_sqf_part(f, u, K):
         f = dmp_neg(f, u, K)
 
     gcd = dmp_gcd(f, dmp_diff(f, 1, u, K), u, K)
-    sqf = dmp_exquo(f, gcd, u, K)
+    sqf = dmp_quo(f, gcd, u, K)
 
     if K.has_Field or not K.is_Exact:
         return dmp_ground_monic(sqf, u, K)
@@ -468,7 +468,7 @@ def dup_gff_list(f, K):
             g = dup_mul(g, dup_shift(h, -K(k), K), K)
             H[i] = (h, k + 1)
 
-        f = dup_exquo(f, g, K)
+        f = dup_quo(f, g, K)
 
         if not dup_degree(f):
             return H
