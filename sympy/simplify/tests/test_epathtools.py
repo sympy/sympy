@@ -1,6 +1,6 @@
 """Tests for tools for manipulation of expressions using paths. """
 
-from sympy.simplify.epathtools import epath, EPath, eselect, eapply
+from sympy.simplify.epathtools import EPath, eselect, eapply
 from sympy.utilities.pytest import raises
 
 from sympy import sin, cos, E
@@ -69,7 +69,6 @@ def test_eapply():
 def test_EPath():
     assert EPath("/*/[0]")._path == "/*/[0]"
     assert EPath(EPath("/*/[0]"))._path == "/*/[0]"
-    assert isinstance(epath("/*/[0]"), EPath) is True
 
     assert repr(EPath("/*/[0]")) == "EPath('/*/[0]')"
 

@@ -1,4 +1,42 @@
-"""Tools for manipulation of expressions using paths. """
+"""
+Manipulate parts of an expression selected by a path.
+
+This module allows to manipulate large nested expressions in a single
+line of code, utilizing techniques similar to those applied in XML processing
+standards (e.g. XPath).
+
+**Syntax**
+
+select all : "/*"
+    Equivalent of ``for arg in args:``.
+select slice : "/[0]" | "/[1:5]" | "/[1:5:2]"
+    Supports standard Python's slice syntax.
+select by type : "/list" | "/list|tuple"
+    Emulates :func:`isinstance`.
+select by attribute : "/__iter__?"
+    Emulates :func:`hasattr`.
+
+**Examples**
+
+>>> from sympy.simplify.epathtools import eselect, eapply
+>>> from sympy import sin, cos, E, symbols
+>>> x, y, z, t = symbols('x, y, z, t')
+
+>>> path = "/*/[0]/Symbol"
+>>> expr = [((x, 1), 2), ((3, y), z)]
+>>> eselect(expr, path)
+[x, y]
+>>> eapply(lambda expr: expr**2, expr, path)
+[((x**2, 1), 2), ((3, y**2), z)]
+
+>>> path = "/*/*/Symbol"
+>>> expr = t + sin(x + 1) + cos(x + y + E)
+>>> eselect(expr, path)
+[x, x, y]
+>>> eapply(lambda expr: 2*expr, expr, path)
+t + sin(2*x + 1) + cos(2*x + 2*y + E)
+
+"""
 
 from sympy.core import Basic
 
@@ -267,72 +305,6 @@ class EPath(object):
         _select(self._epath, expr)
         return result
 
-def epath(path, expr=None, func=None):
-    """
-    Manipulate parts of an expression selected by a path.
-
-    This function allows to manipulate large nested expressions in single
-    line of code, utilizing techniques to those applied in XML processing
-    standards (e.g. XPath).
-
-    If ``func`` is ``None``, :func:`epath` retrieves elements selected by
-    the ``path``. Otherwise it applies ``func`` to each matching element.
-
-    **Syntax**
-
-    select all : "/*"
-        Equivalent of ``for arg in args:``.
-    select slice : "/[0]" | "/[1:5]" | "/[1:5:2]"
-        Supports standard Python's slice syntax.
-    select by type : "/list" | "/list|tuple"
-        Emulates :func:`isinstance`.
-    select by attribute : "/__iter__?"
-        Emulates :func:`hasattr`.
-
-    **Parameters**
-
-    path : str | EPath
-        A path as a string or a compiled EPath.
-    expr : Basic | iterable
-        An expression or a container of expressions.
-    func : callable (optional)
-        A callable that will be applied to matching parts.
-    args : tuple (optional)
-        Additional positional arguments to ``func``.
-    kwargs : dict (optional)
-        Additional keyword arguments to ``func``.
-
-    **Examples**
-
-    >>> from sympy.simplify.epathtools import epath
-    >>> from sympy import sin, cos, E
-    >>> from sympy.abc import x, y, z, t
-
-    >>> path = "/*/[0]/Symbol"
-    >>> expr = [((x, 1), 2), ((3, y), z)]
-
-    >>> epath(path, expr)
-    [x, y]
-    >>> epath(path, expr, lambda expr: expr**2)
-    [((x**2, 1), 2), ((3, y**2), z)]
-
-    >>> path = "/*/*/Symbol"
-    >>> expr = t + sin(x + 1) + cos(x + y + E)
-
-    >>> epath(path, expr)
-    [x, x, y]
-    >>> epath(path, expr, lambda expr: 2*expr)
-    t + sin(2*x + 1) + cos(2*x + 2*y + E)
-
-    """
-    _epath = EPath(path)
-
-    if expr is None:
-        return _epath
-    if func is None:
-        return _epath.select(expr)
-    else:
-        return _epath.apply(func, expr)
 
 def eselect(expr, epath):
     """
