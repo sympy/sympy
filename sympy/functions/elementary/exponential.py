@@ -398,7 +398,7 @@ class log(Function):
                 return e * self.func(b)._eval_expand_log(deep=deep,\
                 **hints)
         elif arg.is_Integer:
-            limit_ = hints.get('limit', 2**15)
+            limit_ = hints.get('factor_limit', 2**15)
             if limit_:
                 if limit_ != S.Infinity:
                     dict = arg.factors(limit=limit_)

@@ -971,11 +971,11 @@ def expand(e, deep=True, modulus=None, power_base=True, power_exp=True, \
     log(12)
     >>> _.expand()
     log(3) + 2*log(2)
-    >>> log(12).expand(limit=0) # don't do numerical expansion
+    >>> log(12).expand(factor_limit=0) # don't do numerical expansion
     log(12)
     >>> log(2147909653)
     log(2147909653)
-    >>> _.expand(limit=oo) # default limit is 2**15; oo forces full factorization
+    >>> _.expand(factor_limit=oo) # default limit is 2**15; oo forces full factorization
     log(32771) + log(65543)
 
     trig - Do trigonometric expansions.

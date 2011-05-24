@@ -216,8 +216,8 @@ def test_log_expand():
     p = nextprime(2**15)
     q = nextprime(2*p)
     assert log(p*q).expand() == log(2147909653)
-    assert log(p*q).expand(limit=oo) == log(32771) + log(65543)
-    assert log(2*3).expand(limit=0) == log(6)
+    assert log(p*q).expand(factor_limit=oo) == log(32771) + log(65543)
+    assert log(2*3).expand(factor_limit=0) == log(6)
 
 def test_log_simplify():
     x = Symbol("x", positive=True)
