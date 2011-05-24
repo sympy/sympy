@@ -329,22 +329,10 @@ class log(Function):
             elif arg.is_Rational:
                 if arg.q != 1:
                     return cls(arg.p) - cls(arg.q)
-                # make arg square free up to integer limit
+                # remove perfect powers automatically
                 p = perfect_power(int(arg))
                 if p is not False:
-                    dict = {p[0]: p[1]}
-                else:
-                    dict = arg.factors(limit=2**15)
-                if any(e != 1 for e in dict.values()):
-                    lump = 1
-                    terms = []
-                    for b, e in dict.iteritems():
-                        if e == 1:
-                            lump *= b
-                        else:
-                            terms.append(e*cls(b))
-                    if terms:
-                        return cls(lump) + Add(*terms)
+                    return p[1]*cls(p[0])
         elif arg is S.ComplexInfinity:
             return S.ComplexInfinity
         elif arg is S.Exp1:
@@ -409,6 +397,23 @@ class log(Function):
                     e = arg.exp
                 return e * self.func(b)._eval_expand_log(deep=deep,\
                 **hints)
+        elif arg.is_Integer:
+            limit_ = hints.get('limit', 2**15)
+            if limit_ != S.Infinity:
+                dict = arg.factors(limit=limit_)
+            else:
+                dict = arg.factors()
+            if any(e != 1 for e in dict.values()):
+                lump = 1
+                terms = []
+                for b, e in dict.iteritems():
+                    if e == 1:
+                        lump *= b
+                    else:
+                        terms.append(e*self.func(b))
+                if terms:
+                    return self.func(lump) + Add(*terms)
+
         return self.func(arg)
 
     def as_real_imag(self, deep=True, **hints):
