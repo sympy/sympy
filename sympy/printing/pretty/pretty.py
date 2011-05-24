@@ -776,6 +776,9 @@ class PrettyPrinter(Printer):
         else:
             return self.emptyPrinter(expr)
 
+    def _print_ProductSet(self, p):
+        return self._print_seq(p, '', '', ' x ' )
+
     def _print_FiniteSet(self, s):
         if len(s) > 10:
             #take ten elements from the set at random

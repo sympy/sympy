@@ -180,6 +180,9 @@ class Set(Basic):
     def __and__(self, other):
         return self.intersect(other)
 
+    def __mul__(self, other):
+        return ProductSet(self, other)
+
     def __sub__(self, other):
         return self.intersect(other.complement)
 
@@ -231,6 +234,73 @@ class RealSet(Set, EvalfMixin):
     @property
     def is_real(self):
         return True
+
+class ProductSet(Set):
+    """
+    Represents a Cartesian Product of Sets.
+
+    Usage:
+        Returns a cartesian product given several sets as either an iterable
+        or individual arguments.
+
+        Can use '*' operator on any sets for convenient shorthand.
+
+    Examples:
+        >>> from sympy import Interval, FiniteSet, ProductSet
+
+        >>> I = Interval(0, 5); S = FiniteSet(1,2,3)
+        >>> ProductSet(I, S)
+        [0, 5] x {1, 2, 3}
+
+        >>> (2,2) in ProductSet(I, S)
+        True
+
+        >>> Interval(0,1) * Interval(0,1) # The unit square
+        [0, 1] x [0, 1]
+
+    Notes:
+        - Passes most operations down to the argument sets
+        - Flattens Products of ProductSets
+    """
+
+    def __new__(cls, *sets, **assumptions):
+        sets = list(sets)
+        result_sets = []
+        for set in sets:
+            if not isinstance(set, Set) and isinstance(set, Iterable):
+                sets += set # Flatten any iterable of sets
+            elif isinstance(set, ProductSet): # Flatten any product of products
+                sets += set.args
+            elif isinstance(set, Set):
+                result_sets.append(set)
+            else:
+                raise TypeError("%s: Expected type Set, not %s"%
+                        (set, set.__class__))
+
+        if EmptySet() in result_sets:
+            return EmptySet()
+        return Basic.__new__(cls, *result_sets, **assumptions)
+
+    def __iter__(self):
+        return self.args.__iter__()
+
+    def _contains(self, element):
+        if len(element) != len(self.args):
+            raise ValueError("%s\nExpected tuple of size %d, not %d"
+                    %(str(element), len(self.args), len(element)))
+        return all(elem in set for elem, set in zip(element, self))
+
+    def _intersect(self, other):
+        if not isinstance(other, ProductSet):
+            raise TypeError("%s is not a Product Set."%str(other))
+        if len(other.args) != len(self.args):
+            raise ValueError("Sets not the same size Left: %d, Right %d"
+                    %(len(self.args), len(other.args)))
+        return ProductSet(a.intersect(b) for a,b in zip(self, other))
+
+    @property
+    def _complement(self):
+        return ProductSet([set.complement for set in self])
 
 class CountableSet(Set):
     """
