@@ -148,7 +148,7 @@ class EPath(object):
 
         return False
 
-    def apply(self, expr, func, args=None, kwargs=None):
+    def apply(self, expr, func):
         """
         Modify parts of an expression selected by a path.
 
@@ -212,10 +212,7 @@ class EPath(object):
                 else:
                     return expr.__class__(args)
 
-        _args, _kwargs = args or (), kwargs or {}
-        _func = lambda expr: func(expr, *_args, **_kwargs)
-
-        return _apply(self._epath, expr, _func)
+        return _apply(self._epath, expr, func)
 
     def select(self, expr):
         """
@@ -272,7 +269,7 @@ class EPath(object):
         _select(self._epath, expr)
         return result
 
-def epath(path, expr=None, func=None, args=None, kwargs=None):
+def epath(path, expr=None, func=None):
     """
     Manipulate parts of an expression selected by a path.
 
@@ -337,4 +334,4 @@ def epath(path, expr=None, func=None, args=None, kwargs=None):
     if func is None:
         return _epath.select(expr)
     else:
-        return _epath.apply(expr, func, args, kwargs)
+        return _epath.apply(expr, func)
