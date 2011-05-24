@@ -35,7 +35,7 @@ class Set(Basic):
 
         >>> Interval(0, 2) - Interval(0, 1)
         (1, 2]
-        >>> Interval(1,3)-FiniteSet(2)
+        >>> Interval(1,3) - FiniteSet(2)
         Union([1, 2), (2, 3])
 
         """
@@ -413,11 +413,6 @@ class Interval(Set, EvalfMixin):
         return is_comparable
 
     @property
-    def is_point(self):
-        """Return ``True`` if the left endpoint equals the right endpoint. """
-        return self.start == self.end
-
-    @property
     def is_left_unbounded(self):
         """Return ``True`` if the left endpoint is negative infinity. """
         return self.left is S.NegativeInfinity or self.left == Float("-inf")
@@ -432,29 +427,25 @@ class Interval(Set, EvalfMixin):
         from sympy.core.relational import Eq, Lt, Le
         from sympy.logic.boolalg import And
 
-        if self.is_point:
-            return Eq(symbol, self.start)
-        else:
-            if not self.is_left_unbounded:
-                if self.left_open:
-                    left = Lt(self.start, symbol)
-                else:
-                    left = Le(self.start, symbol)
-
-            if not self.is_right_unbounded:
-                if self.right_open:
-                    right = Lt(symbol, self.right)
-                else:
-                    right = Le(symbol, self.right)
-
-            if self.is_left_unbounded and self.is_right_unbounded:
-                return True # XXX: Contained(symbol, Floats)
-            elif self.is_left_unbounded:
-                return right
-            elif self.is_right_unbounded:
-                return left
+        if not self.is_left_unbounded:
+            if self.left_open:
+                left = Lt(self.start, symbol)
             else:
-                return And(left, right)
+                left = Le(self.start, symbol)
+
+        if not self.is_right_unbounded:
+            if self.right_open:
+                right = Lt(symbol, self.right)
+            else:
+                right = Le(symbol, self.right)
+        if self.is_left_unbounded and self.is_right_unbounded:
+            return True # XXX: Contained(symbol, Floats)
+        elif self.is_left_unbounded:
+            return right
+        elif self.is_right_unbounded:
+            return left
+        else:
+            return And(left, right)
 
 class Union(Set):
     """
@@ -819,4 +810,3 @@ class FiniteSet(DiscreteSet):
         intervals.append(Interval(sorted_elements[-1], S.Infinity, True, True))
 
         return Union(*intervals)
-

@@ -221,10 +221,6 @@ def test_is_number():
     assert Interval(0, 1).is_number is False
     assert Set().is_number is False
 
-def test_Interval_is_point():
-    assert Interval(3, 3).is_point == True
-    assert Interval(3, 4).is_point == False
-
 def test_Interval_is_left_unbounded():
     assert Interval(3, 4).is_left_unbounded == False
     assert Interval(-oo, 3).is_left_unbounded == True
@@ -237,8 +233,6 @@ def test_Interval_is_right_unbounded():
 
 def test_Interval_as_relational():
     x = Symbol('x')
-
-    assert Interval(3, 3).as_relational(x) == Eq(x, 3)
 
     assert Interval(-1, 2, False, False).as_relational(x) == And(Le(-1, x), Le(x, 2))
     assert Interval(-1, 2, True, False).as_relational(x) == And(Lt(-1, x), Le(x, 2))
