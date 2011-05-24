@@ -498,13 +498,15 @@ def test_1st_homogeneous_coeff_ode2():
     eq3 = x*exp(f(x)/x) + f(x) - x*f(x).diff(x)
     sol1 = Eq(f(x), x*acos(log(C1*x)))
     sol2 = set([Eq(f(x), -sqrt(C1*x + x**2)), Eq(f(x), sqrt(C1*x + x**2))])
-    sol3 = Eq(f(x), log(log(C1/x)**(-x)))
+    sol3 = Eq(f(x), log((-1/log(C1*x))**x))
     # specific hints are applied for speed reasons
     assert dsolve(eq1, f(x), hint='1st_homogeneous_coeff_subs_dep_div_indep') == sol1
     assert set(dsolve(eq2, f(x), hint='1st_homogeneous_coeff_best')) == sol2
     assert dsolve(eq3, f(x), hint='1st_homogeneous_coeff_subs_dep_div_indep') == sol3
     assert checkodesol(eq1, f(x), sol1, order=1, solve_for_func=False)[0]
     assert all(i[0] for i in checkodesol(eq2, f(x), sol2, order=1, solve_for_func=False))
+    # the solution doesn't check...perhaps there is something wrong with the routine or the solver?
+    # assert checkodesol(eq3, f(x), sol3, order=1, solve_for_func=False)[0]
 
 @XFAIL
 def test_1st_homogeneous_coeff_ode2_eq3sol():
