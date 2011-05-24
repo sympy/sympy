@@ -399,20 +399,16 @@ class log(Function):
                 **hints)
         elif arg.is_Integer:
             limit_ = hints.get('limit', 2**15)
-            if limit_ != S.Infinity:
-                dict = arg.factors(limit=limit_)
-            else:
-                dict = arg.factors()
-            if any(e != 1 for e in dict.values()):
-                lump = 1
-                terms = []
-                for b, e in dict.iteritems():
-                    if e == 1:
-                        lump *= b
-                    else:
+            if limit_:
+                if limit_ != S.Infinity:
+                    dict = arg.factors(limit=limit_)
+                else:
+                    dict = arg.factors()
+                if len(dict) > 1:
+                    terms = []
+                    for b, e in dict.iteritems():
                         terms.append(e*self.func(b))
-                if terms:
-                    return self.func(lump) + Add(*terms)
+                    return Add(*terms)
 
         return self.func(arg)
 

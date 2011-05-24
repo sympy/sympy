@@ -1,5 +1,5 @@
 from sympy import (symbols, log, Float, nan, oo, zoo, I, pi, E, exp, Symbol,
-        LambertW, sqrt, Rational, sin, expand_log, S, sign)
+        LambertW, sqrt, Rational, sin, expand_log, S, sign, nextprime)
 from sympy.utilities.pytest import XFAIL
 
 def test_exp_values():
@@ -108,7 +108,7 @@ def test_log_values():
 
     assert log(S.Half) == -log(2)
     assert log(2*3).func is log
-    assert log(2*3**2) == 2*log(3) + log(2)
+    assert log(2*3**2).func is log
 
 def test_log_base():
     assert log(1, 2) == 0
@@ -211,6 +211,13 @@ def test_log_expand():
     x, y = symbols('x,y')
     assert log(x*y).expand(force=True) == log(x) + log(y)
     assert log(x**y).expand(force=True) == y*log(x)
+
+    assert log(2*3**2).expand() == 2*log(3) + log(2)
+    p = nextprime(2**15)
+    q = nextprime(2*p)
+    assert log(p*q).expand() == log(2147909653)
+    assert log(p*q).expand(limit=oo) == log(32771) + log(65543)
+    assert log(2*3).expand(limit=0) == log(6)
 
 def test_log_simplify():
     x = Symbol("x", positive=True)

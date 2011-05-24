@@ -265,7 +265,7 @@ def test_tsolve():
     # issue #1406
     assert solve(z**x - y, x) == [log(y)/log(z)]
     # issue #1405
-    assert solve(2**x - 10, x) == [log(10)/log(2)]
+    assert solve(2**x - 10, x) == [(log(2) + log(5))/log(2)]
 
 def test_solve_for_functions_derivatives():
     t = Symbol('t')
