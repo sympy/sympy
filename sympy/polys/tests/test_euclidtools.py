@@ -38,7 +38,7 @@ from sympy.polys.specialpolys import (
     dmp_fateman_poly_F_2,
     dmp_fateman_poly_F_3)
 
-from sympy.polys.domains import ZZ, QQ
+from sympy.polys.domains import ZZ, QQ, RR
 
 def test_dup_gcdex():
     f = dup_normal([1,-2,-6,12,15], QQ)
@@ -516,6 +516,12 @@ def test_dmp_gcd():
 
     assert dmp_qq_heu_gcd(f, g, 1, QQ) == (h, g, [[QQ(1,2)]])
     assert dmp_ff_prs_gcd(f, g, 1, QQ) == (h, g, [[QQ(1,2)]])
+
+    f = [[RR(2.1), RR(-2.2), RR(2.1)], []]
+    g = [[RR(1.0)], [], [], []]
+
+    assert dmp_ff_prs_gcd(f, g, 1, RR) == \
+        ([[RR(1.0)], []], [[RR(2.1), RR(-2.2), RR(2.1)]], [[RR(1.0)], [], []])
 
 def test_dup_lcm():
     assert dup_lcm([2], [6], ZZ) == [6]
