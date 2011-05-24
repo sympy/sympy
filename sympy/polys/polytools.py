@@ -3105,7 +3105,7 @@ class Poly(Expr):
     @property
     def is_univariate(f):
         """
-        Returns ``True`` if ``f`` is an univariate polynomial.
+        Returns ``True`` if ``f`` is a univariate polynomial.
 
         **Examples**
 

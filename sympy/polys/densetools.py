@@ -1021,7 +1021,7 @@ def dup_decompose(f, K):
     """
     Computes functional decomposition of ``f`` in ``K[x]``.
 
-    Given an univariate polynomial ``f`` with coefficients in a field of
+    Given a univariate polynomial ``f`` with coefficients in a field of
     characteristic zero, returns list ``[f_1, f_2, ..., f_n]``, where::
 
               f = f_1 o f_2 o ... f_n = f_1(f_2(... f_n))
