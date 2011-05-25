@@ -739,7 +739,7 @@ class FiniteSet(DiscreteSet, EvalfMixin):
 
         >>> FiniteSet((Symbol('x'), 1,2)) - FiniteSet((2, 3))
         {1, x}
-        >>> Interval(1,2)-FiniteSet(2,3)
+        >>> Interval(1,2) - FiniteSet(2,3)
         [1, 2)
 
 
