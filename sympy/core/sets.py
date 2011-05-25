@@ -279,13 +279,16 @@ class ProductSet(Set):
         return Basic.__new__(cls, *sets, **assumptions)
 
     def __iter__(self):
-        return self.args.__iter__()
+        if not all(isinstance(set, Iterable) for set in self.sets):
+            raise NotImplementedError("Some constituent sets not iterable")
+        import itertools
+        return itertools.product(*self.sets)
 
     def _contains(self, element):
         if len(element) != len(self.args):
             raise ValueError("%s\nExpected tuple of size %d, not %d"
                     %(str(element), len(self.args), len(element)))
-        return all(elem in set for elem, set in zip(element, self))
+        return all(elem in set for elem, set in zip(element, self.sets))
 
     def _intersect(self, other):
         if not isinstance(other, ProductSet):
@@ -293,7 +296,12 @@ class ProductSet(Set):
         if len(other.args) != len(self.args):
             raise ValueError("Sets not the same size Left: %d, Right %d"
                     %(len(self.args), len(other.args)))
-        return ProductSet(a.intersect(b) for a,b in zip(self, other))
+        return ProductSet(a.intersect(b) for a,b in
+                zip(self.sets, other.sets))
+
+    @property
+    def sets(self):
+        return self.args
 
     @property
     def _complement(self):
