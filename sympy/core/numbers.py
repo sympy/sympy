@@ -3,7 +3,7 @@ from sympify import converter, sympify, _sympify, SympifyError
 from basic import Basic
 from singleton import S, Singleton
 from expr import Expr, AtomicExpr
-from decorators import _sympifyit, deprecated
+from decorators import _sympifyit, deprecated, sympify_other
 from cache import cacheit, clear_cache
 import sympy.mpmath as mpmath
 import sympy.mpmath.libmp as mlib
@@ -327,21 +327,21 @@ class Float(Number):
     def __neg__(self):
         return Float._new(mlib.mpf_neg(self._mpf_), self._prec)
 
-    @_sympifyit('other', NotImplemented)
+    @sympify_other
     def __mul__(self, other):
         if isinstance(other, Number):
             rhs, prec = other._as_mpf_op(self._prec)
             return Float._new(mlib.mpf_mul(self._mpf_, rhs, prec, rnd), prec)
         return Number.__mul__(self, other)
 
-    @_sympifyit('other', NotImplemented)
+    @sympify_other
     def __mod__(self, other):
         if isinstance(other, Number):
             rhs, prec = other._as_mpf_op(self._prec)
             return Float._new(mlib.mpf_mod(self._mpf_, rhs, prec, rnd), prec)
-        return Number.__mod__(self, other)
+        return NotImplemented
 
-    @_sympifyit('other', NotImplemented)
+    @sympify_other
     def __add__(self, other):
         if (other is S.NaN) or (self is NaN):
             return S.NaN
@@ -632,7 +632,7 @@ class Rational(Number):
     def __neg__(self):
         return Rational(-self.p, self.q)
 
-    @_sympifyit('other', NotImplemented)
+    @sympify_other
     def __mul__(self, other):
         if (other is S.NaN) or (self is S.NaN):
             return S.NaN
@@ -642,16 +642,25 @@ class Rational(Number):
             return Rational(self.p * other.p, self.q * other.q)
         return Number.__mul__(self, other)
 
-    @_sympifyit('other', NotImplemented)
+    @sympify_other
     def __mod__(self, other):
         if isinstance(other, Rational):
             n = (self.p*other.q) // (other.p*self.q)
             return Rational(self.p*other.q - n*other.p*self.q, self.q*other.q)
         if isinstance(other, Float):
             return self.evalf() % other
-        return Number.__mod__(self, other)
+        return NotImplemented
 
-    @_sympifyit('other', NotImplemented)
+    @sympify_other
+    def __rmod__(self, other):
+        if isinstance(other, Rational):
+            n = (other.p * self.q) // (self.p * other.q)
+            return Rational(other.p*self.q - n*self.p*other.q, self.q*other.q)
+        if isinstance(other, Float):
+            return other % self.evalf()
+        return NotImplemented
+
+    @sympify_other
     def __add__(self, other):
         if (other is S.NaN) or (self is S.NaN):
             return S.NaN
@@ -986,12 +995,14 @@ class Integer(Rational):
             return Integer(-self.p)
 
     def __mod__(self, other):
-        if isinstance(other, Integer) or not isinstance(other, Rational):
-            return Integer(self.p % other)
-        return Rational.__mod__(self, other)
+        if isinstance(other, Integer):
+            return Integer(self.p % other.p)
+        return super(Integer, self).__mod__(other)
 
     def __rmod__(self, other):
-        return Integer(other % self.p)
+        if isinstance(other, Integer):
+            return Integer(other.p % self.p)
+        return super(Integer, self).__rmod__(other)
 
     def __divmod__(self, other):
         return divmod(self.p, other.p)
