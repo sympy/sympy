@@ -666,7 +666,7 @@ class LatexPrinter(Printer):
             self._print(expr.args[1]), self._print(expr.args[0]))
         return tex
     def _print_ProductSet(self, p):
-        return r" \cross ".join(self._print(set) for set in p)
+        return r" \cross ".join(self._print(set) for set in p.sets)
     def _print_FiniteSet(self, s):
         if len(s) > 10:
             #take ten elements from the set at random

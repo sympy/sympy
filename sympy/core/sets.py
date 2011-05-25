@@ -1,7 +1,7 @@
 from basic import Basic
 from singleton import Singleton, S
 from evalf import EvalfMixin
-from numbers import Float
+from numbers import Float, Integer
 from sympify import _sympify, sympify
 from sympy.mpmath import mpi, mpf
 from containers import Tuple
@@ -182,6 +182,10 @@ class Set(Basic):
 
     def __mul__(self, other):
         return ProductSet(self, other)
+    def __pow__(self, exp):
+        if not isinstance(sympify(exp), Integer) and exp>=0:
+            raise ValueError("%s: Exponent must be a positive Integer"%exp)
+        return ProductSet([self]*exp)
 
     def __sub__(self, other):
         return self.intersect(other.complement)
@@ -258,9 +262,18 @@ class ProductSet(Set):
         >>> Interval(0,1) * Interval(0,1) # The unit square
         [0, 1] x [0, 1]
 
+        >>> coin = FiniteSet('H','T')
+        >>> for pair in coin**2: print pair
+        (H, H)
+        (H, T)
+        (T, H)
+        (T, T)
+
+
     Notes:
         - Passes most operations down to the argument sets
         - Flattens Products of ProductSets
+        - Produces IterableProductSet if all sets iterable
     """
 
     def __new__(cls, *sets, **assumptions):
@@ -269,28 +282,41 @@ class ProductSet(Set):
                 return [arg]
             if isinstance(arg,ProductSet):
                 return sum(map(flatten, arg.args), [])
-            if isinstance(arg, Iterable) and not isinstance(arg,Set):
+            if is_iterable(arg) and not isinstance(arg,Set):
                 return sum(map(flatten, arg), [])
-            raise TypeError("Input must be Sets or Iterables of Sets")
+            raise TypeError("Input must be Sets or iterables of Sets")
         sets = flatten(sets)
 
-        if EmptySet() in sets:
+        if EmptySet() in sets or len(sets)==0:
             return EmptySet()
+
+        if all(is_iterable(set) for set in sets):
+            return Basic.__new__(IterableProductSet, *sets, **assumptions)
+
         return Basic.__new__(cls, *sets, **assumptions)
 
-    def __iter__(self):
-        if not all(isinstance(set, Iterable) for set in self.sets):
-            raise NotImplementedError("Some constituent sets not iterable")
-        import itertools
-        return itertools.product(*self.sets)
-
     def _contains(self, element):
+        """
+        in operator for ProductSets
+
+        >>> from sympy import Interval
+
+        >>> (2,3) in Interval(0,5) * Interval(0,5)
+        True
+
+        >>> (10,10) in Interval(0,5) * Interval(0,5)
+        False
+
+        Passes operation on to constitent sets
+        """
+
         if len(element) != len(self.args):
-            raise ValueError("%s\nExpected tuple of size %d, not %d"
-                    %(str(element), len(self.args), len(element)))
+            return False
         return all(elem in set for elem, set in zip(element, self.sets))
 
     def _intersect(self, other):
+        if isinstance(other, Union):
+            return Union(self.intersect(set) for set in other.args)
         if not isinstance(other, ProductSet):
             raise TypeError("%s is not a Product Set."%str(other))
         if len(other.args) != len(self.args):
@@ -305,7 +331,34 @@ class ProductSet(Set):
 
     @property
     def _complement(self):
-        return ProductSet([set.complement for set in self])
+        return ProductSet(set.complement for set in self.sets)
+    @property
+    def is_finite(self):
+        return all(set.is_finite for set in self.sets)
+    @property
+    def is_real(self):
+        return all(set.is_real for set in self.sets)
+
+class IterableProductSet(ProductSet):
+    """
+    Represents the Cartesian Product of iterable sets
+
+    Example:
+    >>> from sympy import FiniteSet
+
+    >>> coin = FiniteSet('H', 'T')
+    >>> for pair in coin * coin: print pair
+    (H, H)
+    (H, T)
+    (T, H)
+    (T, T)
+
+    See ProductSet for more details
+    """
+
+    def __iter__(self):
+        import itertools
+        return itertools.product(*self.sets)
 
 class CountableSet(Set):
     """
@@ -808,6 +861,13 @@ class RealUnion(Union, RealSet):
         return RealUnion(set.evalf() for set in self.args)
 
 
+    def __iter__(self):
+        import itertools
+        if all(isinstance(set, Iterable) for set in self.args):
+            return itertools.chain(*(iter(arg) for arg in self.args))
+        else:
+            raise TypeError("Not all constituent sets are iterable")
+
 class EmptySet(Set):
     """
     Represents the empty set. The empty set is available as a singleton
@@ -1010,6 +1070,16 @@ class RealFiniteSet(FiniteSet, RealSet):
             intervals.append(Interval(a,b, True, True)) # open intervals
         intervals.append(Interval(sorted_elements[-1], S.Infinity, True, True))
         return Union(*intervals)
+
+    def as_relational(self, symbol):
+        """Rewrite a FiniteSet in terms of equalities and logic operators.
+        """
+        from sympy.core.relational import Eq
+        from sympy.logic.boolalg import Or
+        return Or(*[Eq(symbol, elem) for elem in self])
+
+    def _eval_evalf(self, prec):
+        return FiniteSet(elem.evalf(prec) for elem in self)
 
 genclass = (1 for i in xrange(2)).__class__
 def is_flattenable(obj):

@@ -777,7 +777,7 @@ class PrettyPrinter(Printer):
             return self.emptyPrinter(expr)
 
     def _print_ProductSet(self, p):
-        return self._print_seq(p, '', '', ' x ' )
+        return self._print_seq(p.sets, '', '', ' x ' )
 
     def _print_FiniteSet(self, s):
         if len(s) > 10:
