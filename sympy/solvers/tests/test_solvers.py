@@ -369,7 +369,7 @@ def test_issue_1694():
     assert solve(x/sqrt(x**2 + 1),x) == [0]
     assert solve(exp(x) - y,x) == [log(y)]
     assert solve(exp(x)) == [zoo]
-    assert solve(x**2 + x + sin(y)**2 + cos(y)**2 - 1, x) == [0, -1]
+    assert solve(x**2 + x + sin(y)**2 + cos(y)**2 - 1, x) in [[0, -1], [-1, 0]]
     assert solve((x/(x + 1) + 3)**(-2)) == [-1]
     assert solve(4*3**(5*x+2) - 7, x) == [(-2*log(3) - log(4) + log(7))/(5*log(3))]
     # 2072
