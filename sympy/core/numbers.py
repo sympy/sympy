@@ -350,12 +350,17 @@ class Float(Number):
 
     @sympify_other
     def __add__(self, other):
-        if (other is S.NaN) or (self is NaN):
-            return S.NaN
-        if isinstance(other, Number):
+        if isinstance(other, Float):
             rhs, prec = other._as_mpf_op(self._prec)
             return Float._new(mlib.mpf_add(self._mpf_, rhs, prec, rnd), prec)
         return Number.__add__(self, other)
+
+    @sympify_other
+    def __radd__(self, other):
+        if isinstance(other, Number):
+            rhs, prec = other._as_mpf_op(self._prec)
+            return Float._new(mlib.mpf_add(self._mpf_, rhs, prec, rnd), prec)
+        return Number.__radd__(self, other)
 
     def _eval_power(self, expt):
         """
@@ -671,12 +676,10 @@ class Rational(Number):
             return other % self.evalf()
         return NotImplemented
 
-    @sympify_other
+
     def __add__(self, other):
-        if (other is S.NaN) or (self is S.NaN):
-            return S.NaN
         if isinstance(other, Float):
-            return other + self
+            return other.__radd__(self)
         if isinstance(other, Rational):
             if self.is_unbounded:
                 if other.is_bounded:
@@ -688,6 +691,23 @@ class Rational(Number):
                     return other
             return Rational(self.p * other.q + self.q * other.p, self.q * other.q)
         return Number.__add__(self, other)
+
+
+    @sympify_other
+    def __radd__(self, other):
+        if isinstance(other, Float):
+            return other.__radd__(self)
+        if isinstance(other, Rational):
+            if self.is_unbounded:
+                if other.is_bounded:
+                    return self
+                elif self==other:
+                    return self
+            else:
+                if other.is_unbounded:
+                    return other
+            return Rational(self.p * other.q + self.q * other.p, self.q * other.q)
+        return Number.__radd__(self, other)
 
     def _eval_power(self, expt):
         if (expt is S.NaN):
@@ -1031,7 +1051,7 @@ class Integer(Rational):
             return Integer(other + self.p)
         elif isinstance(other, Integer):
             return Integer(other.p + self.p)
-        return Rational.__add__(self, other)
+        return Rational.__radd__(self, other)
 
     def __sub__(self, other):
         if type(other) is int:
@@ -1602,6 +1622,16 @@ class NaN(RationalConstant):
         if isinstance(other, Expr):
             return self
         return super(NaN, self).__rmul__(other)
+
+    def __add__(self, other):
+        if isinstance(other, Number):
+            return self
+        return super(NaN, self).__add__(other)
+
+    def __radd__(self, other):
+        if isinstance(other, Expr):
+            return self
+        return super(NaN, self).__radd__(other)
 
     def _as_mpf_val(self, prec):
         return mlib.fnan

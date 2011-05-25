@@ -22,7 +22,9 @@ class Expr(Basic, EvalfMixin):
 
     @sympify_other
     def __add__(self, other):
-        return Add(self, other)
+        if type(other) is type(self):
+            return Add(self, other)
+        return NotImplemented
 
     @sympify_other
     def __radd__(self, other):
