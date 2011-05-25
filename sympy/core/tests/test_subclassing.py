@@ -67,7 +67,6 @@ def test_mul():
         assert x*l != 'low'
         assert l*x != 'low'
 
-@XFAIL
 def test_add():
     h = Higher()
     l = Lower()
