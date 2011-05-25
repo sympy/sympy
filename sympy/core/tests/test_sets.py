@@ -139,9 +139,9 @@ def test_interval_subs():
     assert Interval(0, a).subs(a, 2) == Interval(0, 2)
     assert Interval(a, 0).subs(a, 2) == S.EmptySet
 
-def test_interval_evalf():
-    assert Interval(0, 1).evalf() == mpi(0, 1)
-    assert Interval(0, 1, True, False).evalf() == mpi(0, 1)
+def test_interval_to_mpi():
+    assert Interval(0, 1).to_mpi() == mpi(0, 1)
+    assert Interval(0, 1, True, False).to_mpi() == mpi(0, 1)
 
 def test_measure():
     a = Symbol('a', real=True)

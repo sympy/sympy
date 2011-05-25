@@ -134,7 +134,7 @@ def reduce_poly_inequalities(exprs, gen, assume=True, relational=True):
     solution = solve_poly_inequalities(polys)
 
     if not exact:
-        raise NotImplementedError("Inexact not implemented")
+        solution = solution.evalf()
 
     if not relational:
         return solution
