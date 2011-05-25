@@ -1,15 +1,17 @@
 from sympy.simplify.hyperexpand import (ShiftA, ShiftB, UnShiftA, UnShiftB,
                        ReduceOrder, reduce_order, apply_operators,
                        devise_plan, make_derivative_operator, Formula,
-                       hyperexpand, IndexPair)
-from sympy import hyper, I, S
+                       hyperexpand, IndexPair, IndexQuadruple,
+                       reduce_order_meijer)
+from sympy import hyper, I, S, meijerg, Piecewise
 from sympy.utilities.pytest import raises
 from sympy.abc import z, a, b, c
 from sympy.utilities.randtest import test_numerically as tn
 from sympy.utilities.pytest import XFAIL, skip
 from random import randrange
 
-from sympy import cos, sin, log, exp, asin, lowergamma, atanh, besseli, gamma
+from sympy import (cos, sin, log, exp, asin, lowergamma, atanh, besseli,
+                   gamma, sqrt, pi)
 
 # whether to veryify that we can indeed do everything in the tables
 # beware: this takes a *long* time
@@ -188,7 +190,6 @@ def test_reduction_operators():
 
     assert ReduceOrder(2, 0) is None
     assert ReduceOrder(2, -1) is None
-    assert ReduceOrder(0, -1) is None
     assert ReduceOrder(1, S('1/2')) is None
 
     h2 = hyper((a1, a2), (b1, a2), z)
@@ -241,6 +242,120 @@ def test_ushift_operators():
     assert tn(s.apply(h, op), hyper((a1, a2), (b1, b2 + 1, b3), z), z)
     s = UnShiftB((a1, a2), (b1, b2, b3), 2, z)
     assert tn(s.apply(h, op), hyper((a1, a2), (b1, b2, b3 + 1), z), z)
+
+
+def can_do_meijer(a1, a2, b1, b2, numeric=True):
+    """
+    This helper function tries to hyperexpand() the meijer g-function
+    corresponding to the parameters a1, a2, b1, b2.
+    It returns False if this expansion still contains g-functions.
+    If numeric is True, it also tests the so-obtained formula numerically
+    (at random values) and returns False if the test fails.
+    Else it returns True.
+    """
+    r = hyperexpand(meijerg(a1, a2, b1, b2, z))
+    if r.has(meijerg):
+        return False
+
+    if not numeric:
+        return True
+
+    repl = {}
+    for a in meijerg(a1, a2, b1, b2, z).free_symbols - set([z]):
+        repl[a] = randcplx()
+    return tn(meijerg(a1, a2, b1, b2, z).subs(repl), r.subs(repl), z)
+
+def test_meijerg_expand():
+    # from mpmath docs
+    assert hyperexpand(meijerg([[],[]], [[0],[]], -z)) == exp(z)
+
+    assert hyperexpand(meijerg([[1,1],[]], [[1],[0]], z)) == \
+        log(z + 1)
+    assert hyperexpand(meijerg([[1,1],[]], [[1],[1]], z)) == \
+        z/(z + 1)
+    assert hyperexpand(meijerg([[],[]], [[S(1)/2],[0]], (z/2)**2)) \
+           == sin(z)/sqrt(pi)
+    assert hyperexpand(meijerg([[],[]], [[0], [S(1)/2]], (z/2)**2)) \
+           == cos(z)/sqrt(pi)
+    assert can_do_meijer([], [a], [a-1, a-S.Half], [])
+    assert can_do_meijer([], [], [a/2], [-a/2], False) # branches...
+    assert can_do_meijer([a], [b], [a], [b, a - 1])
+
+    # wikipedia
+    assert hyperexpand(meijerg([1], [], [], [0], z)) == \
+       Piecewise((0, abs(z) < 1), (1, abs(1/z) < 1),
+                 (meijerg([1], [], [], [0], z), True))
+    assert hyperexpand(meijerg([], [1], [0], [], z)) == \
+       Piecewise((1, abs(z) < 1), (0, abs(1/z) < 1),
+                 (meijerg([], [1], [0], [], z), True))
+
+    # The Special Functions and their Approximations
+    assert can_do_meijer([], [], [a + b/2], [a, a - b/2, a + S.Half])
+    assert can_do_meijer([], [], [a], [b], False) # branches only agree for small z
+    assert can_do_meijer([], [S.Half], [a], [-a])
+    assert can_do_meijer([], [], [a, b], [])
+    assert can_do_meijer([], [], [a, b], [])
+    assert can_do_meijer([], [], [a, a+S.Half], [b, b+S.Half])
+    assert can_do_meijer([], [], [a, -a], [0, S.Half], False) # dito
+    assert can_do_meijer([], [], [a, a+S.Half, b, b+S.Half], [])
+    assert can_do_meijer([S.Half], [], [0], [a, -a])
+    assert can_do_meijer([S.Half], [], [a], [0, -a], False) # dito
+    assert can_do_meijer([], [a - S.Half], [a, b], [a - S.Half], False)
+    assert can_do_meijer([], [a+S.Half], [a+b, a-b, a], [], False)
+    assert can_do_meijer([a+S.Half], [], [b, 2*a-b, a], [], False)
+
+    # This for example is actually zero.
+    assert can_do_meijer([], [], [], [a, b])
+
+@XFAIL
+def test_meijerg_expand_fail():
+    # These basically test hyper([], [1/2 - a, 1/2 + 1, 1/2], z),
+    # which is *very* messy. But since the meijer g actually yields a
+    # sum of bessel functions, things can sometimes be simplified a lot and
+    # are then put into tables...
+    assert can_do_meijer([], [], [a + S.Half], [a, a - b/2, a + b/2])
+    assert can_do_meijer([], [], [0, S.Half], [a, -a])
+    assert can_do_meijer([], [], [3*a - S.Half, a, -a - S.Half], [a - S.Half])
+    assert can_do_meijer([], [], [0, a - S.Half, -a - S.Half], [S.Half])
+    assert can_do_meijer([], [], [a, b + S(1)/2, b], [2*b - a])
+    assert can_do_meijer([], [], [a, b + S(1)/2, b, 2*b - a])
+    assert can_do_meijer([S.Half], [], [-a, a], [0])
+
+def test_meijerg():
+    # carefully set up the parameters.
+    # NOTE: this used to fail sometimes. I believe it is fixed, but if you
+    #       hit an inexplicable test failure here, please let me know the seed.
+    a1, a2 = map(lambda _: randcplx() - 5*I, range(2))
+    b1, b2 = map(lambda _: randcplx() + 5*I, range(2))
+    b3, b4, b5, a3, a4, a5 = map(lambda _: randcplx(), range(6))
+    g = meijerg([a1], [a3, a4], [b1], [b3, b4], z)
+
+    assert ReduceOrder.meijer_minus(3, 4) is None
+    assert ReduceOrder.meijer_plus(4, 3) is None
+
+    g2 = meijerg([a1, a2], [a3, a4], [b1], [b3, b4, a2], z)
+    assert tn(ReduceOrder.meijer_plus(a2, a2).apply(g, op), g2, z)
+
+    g2 = meijerg([a1, a2], [a3, a4], [b1], [b3, b4, a2 + 1], z)
+    assert tn(ReduceOrder.meijer_plus(a2, a2 + 1).apply(g, op), g2, z)
+
+    g2 = meijerg([a1, a2 - 1], [a3, a4], [b1], [b3, b4, a2 + 2], z)
+    assert tn(ReduceOrder.meijer_plus(a2 - 1, a2 + 2).apply(g, op), g2, z)
+
+    g2 = meijerg([a1], [a3, a4, b2 - 1], [b1, b2 + 2], [b3, b4], z)
+    assert tn(ReduceOrder.meijer_minus(b2 + 2, b2 - 1).apply(g, op), g2, z, tol=1e-6)
+
+    # test several-step reduction
+    an = [a1, a2]
+    bq = [b3, b4, a2 + 1]
+    ap = [a3, a4, b2 - 1]
+    bm = [b1, b2 + 1]
+    niq, ops = reduce_order_meijer(IndexQuadruple(an, ap, bm, bq))
+    assert niq.an == (a1,)
+    assert set(niq.ap) == set([a3, a4])
+    assert niq.bm == (b1,)
+    assert set(niq.bq) == set([b3, b4])
+    assert tn(apply_operators(g, ops, op), meijerg(an, ap, bm, bq, z), z)
 
 @tables
 def test_prudnikov_misc():

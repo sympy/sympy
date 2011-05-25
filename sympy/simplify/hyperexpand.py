@@ -345,6 +345,20 @@ class IndexPair(object):
 
         return diff
 
+class IndexQuadruple(object):
+    """ Holds a quadruple of indices. """
+    def __init__(self, an, ap, bm, bq):
+        from sympy import expand, Tuple
+        def tr(l): return Tuple(*[expand(x) for x in sympify(l)])
+        self.an = tr(an)
+        self.ap = tr(ap)
+        self.bm = tr(bm)
+        self.bq = tr(bq)
+
+    def __str__(self):
+        return 'IndexQuadruple(%s, %s, %s, %s)' % (self.an, self.ap,
+                                                   self.bm, self.bq)
+
 # Dummy generator
 x = Dummy('x')
 
@@ -832,9 +846,68 @@ class ReduceOrder(Operator):
 
         return self
 
+    @classmethod
+    def _meijer(cls, b, a, sign):
+        """ Cancel b + sign*s and a + sign*s
+            This is for meijer G functions. """
+        from sympy import Add
+        b = sympify(b)
+        a = sympify(a)
+        n = b - a
+        if n < 0 or not n.is_Integer:
+            return None
+
+        self = Operator.__new__(cls)
+
+        p = S(1)
+        for k in xrange(n):
+            p *= (sign*x + a + k)
+
+        self._poly = Poly(p, x)
+        if sign == -1:
+            self._a = b
+            self._b = a
+        else:
+            self._b = Add(1, a - 1, evaluate=False)
+            self._a = Add(1, b - 1, evaluate=False)
+
+        return self
+
+    @classmethod
+    def meijer_minus(cls, b, a):
+        return cls._meijer(b, a, -1)
+    @classmethod
+    def meijer_plus(cls, a, b):
+        return cls._meijer(1 - a, 1 - b, 1)
+
     def __str__(self):
         return '<Reduce order by cancelling upper %s with lower %s.>' % \
                   (self._a, self._b)
+
+def _reduce_order(ap, bq, gen, key):
+    """ Order reduction algorithm common to both Hypergeometric and Meijer G """
+    ap = list(ap)
+    bq = list(bq)
+
+    ap.sort(key=key)
+    bq.sort(key=key)
+
+    nap = []
+    # we will edit bq in place
+    operators = []
+    for a in ap:
+        op = None
+        for i in xrange(len(bq)):
+            op = gen(a, bq[i])
+            if op is not None:
+                bq.pop(i)
+                break
+        if op is None:
+            nap.append(a)
+        else:
+            operators.append(op)
+
+    return nap, bq, operators
 
 def reduce_order(ip):
     """
@@ -854,25 +927,35 @@ def reduce_order(ip):
     >>> reduce_order(IndexPair((2, 4), (3, 3)))
     (IndexPair((2,), (3,)), [<Reduce order by cancelling upper 4 with lower 3.>])
     """
-    ap = list(ip.ap)
-    bq = list(ip.bq)
+    nap, nbq, operators = _reduce_order(ip.ap, ip.bq, ReduceOrder, lambda x: x)
 
-    nap = []
-    # we will edit bq in place
-    operators = []
-    for a in ap:
-        op = None
-        for i in xrange(len(bq)):
-            op = ReduceOrder(a, bq[i])
-            if op is not None:
-                bq.pop(i)
-                break
-        if op is None:
-            nap.append(a)
-        else:
-            operators.append(op)
+    return IndexPair(Tuple(*nap), Tuple(*nbq)), operators
 
-    return IndexPair(Tuple(*nap), Tuple(*bq)), operators
+def reduce_order_meijer(iq):
+    """
+    Given the Meijer G function parameters, `iq.am`, `iq.ap`, `iq.bm`,
+    `iq.bq`, find a sequence of operators that reduces order as much as possible.
+
+    Return niq, [operators].
+
+    Examples:
+
+    >>> from sympy.simplify.hyperexpand import reduce_order_meijer, IndexQuadruple
+    >>> reduce_order_meijer(IndexQuadruple([3, 4], [5, 6], [3, 4], [1, 2]))[0]
+    IndexQuadruple((4, 3), (5, 6), (3, 4), (2, 1))
+    >>> reduce_order_meijer(IndexQuadruple([3, 4], [5, 6], [3, 4], [1, 8]))[0]
+    IndexQuadruple((3,), (5, 6), (3, 4), (1,))
+    >>> reduce_order_meijer(IndexQuadruple([3, 4], [5, 6], [7, 5], [1, 5]))[0]
+    IndexQuadruple((3,), (), (), (1,))
+    >>> reduce_order_meijer(IndexQuadruple([3, 4], [5, 6], [7, 5], [5, 3]))[0]
+    IndexQuadruple((), (), (), ())
+    """
+
+    nan, nbq, ops1 = _reduce_order(iq.an, iq.bq, ReduceOrder.meijer_plus, lambda x: -x)
+    nbm, nap, ops2 = _reduce_order(iq.bm, iq.ap, ReduceOrder.meijer_minus, lambda x: x)
+
+    return IndexQuadruple(Tuple(*nan), Tuple(*nap), Tuple(*nbm), Tuple(*nbq)), \
+           ops1 + ops2
 
 def make_derivative_operator(M, z):
     """ Create a derivative operator, to be passed to Operator.apply. """
@@ -1102,7 +1185,7 @@ def try_polynomial(ip, z):
     return res
 
 collection = None
-def _hyperexpand(ip, z):
+def _hyperexpand(ip, z, ops0=[]):
     """ Try to find an expression for the hypergeometric function
         `ip.ap`, `ip.bq`. """
     from sympy.simplify import powdenest, simplify
@@ -1122,8 +1205,11 @@ def _hyperexpand(ip, z):
     if collection is None:
         collection = FormulaCollection()
 
+    ops = ops0[:]
+
     # First reduce order as much as possible.
-    nip, ops = reduce_order(ip)
+    nip, nops = reduce_order(ip)
+    ops += nops
 
     # Our dummy variable
     z0 = Dummy('z0')
@@ -1168,9 +1254,103 @@ def _hyperexpand(ip, z):
     # return are under an "implicit suitable choice of branch" anyway.
     return powdenest(r, force=True)
 
-def hyperexpand(f):
+def _meijergexpand(iq, z, allow_hyper=False):
     """
-    Expand hypergeometric functions.
+    Try to find an expression for the Meijer G function specified
+    by the IndexQuadruple `iq`. If `allow_hyper` is True, then returning
+    an expression in terms of hypergeometric functions is allowed.
+
+    Currently this just does slater's theorem.
+    """
+    from sympy import hyper, Piecewise, meijerg, powdenest
+    iq_ = iq
+    iq, ops = reduce_order_meijer(iq)
+
+    # TODO the following would be possible:
+    # 1) Set up a collection of meijer g formulae.
+    #    This handles some cases that cannot be done using Slater's theorem,
+    #    and also yields nicer looking results.
+    # 2) Paired Index Theorems
+    # 3) PFD Duplication
+    #    (See Kelly Roach's paper for (2) and (3).)
+    #
+    # TODO Also, we tend to create combinations of gamma functions that can be
+    #      simplified.
+
+    def can_do(params):
+        """ Test if slater applies. """
+        # TODO this can use IndexQuadruple.compute_buckets when the latter
+        #      is implemented
+        for i, a in enumerate(params):
+            for j in range(i + 1, len(params)):
+                if Mod1(a) == Mod1(params[j]):
+                    return False
+        return True
+
+    def do_slater(an, bm, ap, bq, z, sub):
+        from sympy import gamma
+        if not can_do(bm):
+            return S(0), False
+
+        res = S(0)
+        for bh in bm:
+            fac = 1
+            bo = list(bm)
+            bo.remove(bh)
+            for bj in bo: fac *= gamma(bj - bh)
+            for aj in an: fac *= gamma(1 + bh - aj)
+            for bj in bq: fac /= gamma(1 + bh - bj)
+            for aj in ap: fac /= gamma(aj - bh)
+            nap = [1 + bh - a for a in list(an) + list(ap)]
+            nbq = [1 + bh - b for b in list(bo) + list(bq)]
+            harg = S(-1)**(len(ap) - len(bm))*z
+            hyp = _hyperexpand(IndexPair(nap, nbq), harg, ops)
+            if hyp is None:
+                hyp = hyper(nap, nbq, harg)
+            res += fac * z**(bh-sub) * hyp
+
+        cond = len(an) + len(ap) < len(bm) + len(bq)
+        if len(an) + len(ap) == len(bm) + len(bq):
+            cond = abs(z) < 1
+        return res, cond
+
+    slater1, cond1 = do_slater(iq.an, iq.bm, iq.ap, iq.bq, z, 0)
+
+    def tr(l): return [-x for x in l]
+    slater2, cond2 = do_slater(tr(iq.bm), tr(iq.an), tr(iq.bq), tr(iq.ap), 1/z, -1)
+
+    slater1 = powdenest(slater1, force = True)
+    slater2 = powdenest(slater2, force = True)
+
+    if meijerg(iq.an, iq.ap, iq.bm, iq.bq, z).delta > 0:
+        # The above condition means that the convergence region is connected.
+        # Any expression we find can be continued analytically to the entire
+        # convergence region.
+        if cond1 is not False:
+            cond1 = True
+        if cond2 is not False:
+            cond2 = True
+
+    if cond1 is True and not slater1.has(hyper):
+        return slater1
+    if cond2 is True and not slater2.has(hyper):
+        return slater2
+
+    # We couldn't find an expression without hypergeometric functions.
+    # TODO it would be helpful to give conditions under which the integral
+    #      is known to diverge.
+    r =  Piecewise((slater1, cond1), (slater2, cond2),
+                   (meijerg(iq_.an, iq_.ap, iq_.bm, iq_.bq, z), True))
+    if not r.has(hyper) or allow_hyper:
+        return r
+
+    return meijerg(iq_.an, iq_.ap, iq_.bm, iq_.bq, z0)
+
+def hyperexpand(f, allow_hyper=False):
+    """
+    Expand hypergeometric functions. If allow_hyper is True, allow partial
+    simplification (that is a result different from input,
+    but still containing hypergeometric functions).
 
     Examples:
 
@@ -1186,7 +1366,8 @@ def hyperexpand(f):
     >>> hyperexpand(1 + hyper([1, 1, 1], [], z))
     1 + hyper((1, 1, 1), (), z)
     """
-    from sympy.functions import hyper
+    from sympy.functions import hyper, meijerg
+    from sympy import nan, zoo, oo
     f = sympify(f)
     def do_replace(ap, bq, z):
         r = _hyperexpand(IndexPair(ap, bq), z)
@@ -1194,6 +1375,15 @@ def hyperexpand(f):
             return hyper(ap, bq, z)
         else:
             return r
-    return f.replace(hyper, do_replace)
+    def do_meijer(ap, bq, z):
+        # _meijergexpand plays tricks with analytic continuation, this does
+        # not work well if the argument is not symbolic
+        z0 = Dummy('z')
+        r = _meijergexpand(IndexQuadruple(ap[0], ap[1], bq[0], bq[1]), z0,
+                           allow_hyper)
+        r = r.subs(z0, z)
+        if not r.has(nan, zoo, oo, -oo):
+            return r
+    return f.replace(hyper, do_replace).replace(meijerg, do_meijer)
 
 from sympy.polys.polytools import Poly
