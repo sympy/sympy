@@ -1114,10 +1114,10 @@ def dmp_ff_prs_gcd(f, g, u, K):
     if result is not None:
         return result
 
-    fc, f = dmp_primitive(f, u, K)
-    gc, g = dmp_primitive(g, u, K)
+    fc, F = dmp_primitive(f, u, K)
+    gc, G = dmp_primitive(g, u, K)
 
-    h = dmp_subresultants(f, g, u, K)[-1]
+    h = dmp_subresultants(F, G, u, K)[-1]
     c, _, _ = dmp_ff_prs_gcd(fc, gc, u-1, K)
 
     _, h = dmp_primitive(h, u, K)
