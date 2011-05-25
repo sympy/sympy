@@ -329,10 +329,17 @@ class Float(Number):
 
     @sympify_other
     def __mul__(self, other):
+        if type(other) is type(self):
+            prec = max(self._prec, other._prec)
+            return Float._new(mlib.mpf_mul(self._mpf_, other._mpf_, prec, rnd), prec)
+        return NotImplemented
+
+    @sympify_other
+    def __rmul__(self, other):
         if isinstance(other, Number):
             rhs, prec = other._as_mpf_op(self._prec)
             return Float._new(mlib.mpf_mul(self._mpf_, rhs, prec, rnd), prec)
-        return Number.__mul__(self, other)
+        return Number.__rmul__(self, other)
 
     @sympify_other
     def __mod__(self, other):
@@ -632,15 +639,19 @@ class Rational(Number):
     def __neg__(self):
         return Rational(-self.p, self.q)
 
-    @sympify_other
     def __mul__(self, other):
-        if (other is S.NaN) or (self is S.NaN):
-            return S.NaN
         if isinstance(other, Float):
-            return other * self
+            return other.__rmul__(self)
         if isinstance(other, Rational):
             return Rational(self.p * other.p, self.q * other.q)
-        return Number.__mul__(self, other)
+        return super(Rational, self).__mul__(other)
+
+    def __rmul__(self, other):
+        if isinstance(other, Float):
+            return other.__rmul__(self)
+        if isinstance(other, Rational):
+            return Rational(self.p * other.p, self.q * other.q)
+        return super(Rational, self).__rmul__(other)
 
     @sympify_other
     def __mod__(self, other):
@@ -1048,7 +1059,7 @@ class Integer(Rational):
             return Integer(other * self.p)
         elif isinstance(other, Integer):
             return Integer(other.p * self.p)
-        return Rational.__mul__(self, other)
+        return super(Integer, self).__rmul__(other)
 
     def __eq__(self, other):
         if type(other) is int:
@@ -1581,6 +1592,16 @@ class NaN(RationalConstant):
     is_positive = None
 
     __slots__ = []
+
+    def __mul__(self, other):
+        if isinstance(other, Number):
+            return self
+        return super(NaN, self).__mul__(other)
+
+    def __rmul__(self, other):
+        if isinstance(other, Expr):
+            return self
+        return super(NaN, self).__rmul__(other)
 
     def _as_mpf_val(self, prec):
         return mlib.fnan
