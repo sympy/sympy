@@ -1,6 +1,6 @@
 from sympy import (
     Symbol, Set, Union, Interval, oo, S,
-    Inequality, Max, Min, And, Or, Eq, Le, Lt, Float, FiniteSet
+    Inequality, Max, Min, And, Or, Eq, Ge, Le, Lt, Float, FiniteSet
 )
 from sympy.mpmath import mpi
 
@@ -82,6 +82,14 @@ def test_difference():
     assert Interval(1, 3, True) - Interval(2, 3) == Interval(1, 2, True, True)
     assert Interval(1, 3, True) - Interval(2, 3, True) == \
            Interval(1, 2, True, False)
+    assert Interval(0,2) - FiniteSet(1) == \
+            Union(Interval(0,1,False, True), Interval(1,2, True, False))
+
+    assert FiniteSet(1,2,3) - FiniteSet(2) == FiniteSet(1,3)
+    assert FiniteSet(1,2,3,4) - Interval(2,10, True, False) == FiniteSet(1,2)
+    assert FiniteSet(1,2,3,4) - S.EmptySet == FiniteSet(1,2,3,4)
+    assert Union(Interval(0,2), FiniteSet(2,3,4)) - Interval(1,3) == \
+            Union(Interval(0,1,False, True), FiniteSet(4))
 
 def test_complement():
     assert Interval(0, 1).complement == \
@@ -104,6 +112,7 @@ def test_complement():
 
     assert FiniteSet(0).complement == Union(Interval(-oo,0, True,True) ,
             Interval(0,oo, True, True))
+
     X = Interval(1,3)+FiniteSet(5)
     assert X.intersect(X.complement) == S.EmptySet
 
@@ -151,6 +160,8 @@ def test_measure():
     assert Interval(1, a).measure == a - 1
 
     assert Union(Interval(1, 2), Interval(3, 4)).measure == 2
+    assert Union(Interval(1, 2), Interval(3, 4), FiniteSet(5,6,7)).measure\
+            == 2
 
     assert FiniteSet(1,2,oo,a,-oo,-5).measure == 0
 
@@ -167,6 +178,9 @@ def test_subset():
 
     assert Union(Interval(0, 1), Interval(2, 5)).subset(Interval(3, 4)) == True
     assert Union(Interval(0, 1), Interval(2, 5)).subset(Interval(3, 6)) == False
+
+    assert Interval(0,5).subset(FiniteSet(1,2,3,4)) == True
+    assert FiniteSet(1,2,3).subset(S.EmptySet) == True
 
     assert S.EmptySet.subset(Interval(0, 1)) == False
     assert S.EmptySet.subset(S.EmptySet) == True
@@ -188,6 +202,7 @@ def test_contains():
 
     assert Union(Interval(0, 1), Interval(2, 5)).contains(3) == True
     assert Union(Interval(0, 1), Interval(2, 5)).contains(6) == False
+    assert Union(Interval(0, 1), FiniteSet(2, 5)).contains(3) == False
 
     assert S.EmptySet.contains(1) == False
 
@@ -214,7 +229,7 @@ def test_union_contains():
     assert e.subs(x, 3.5) is False
 
     U = Interval(0,2, True,True) + Interval(10,oo) + FiniteSet(-1,2,5,6)
-    assert not any(el in U for el in [0,4,-oo])
+    assert all(el not in U for el in [0,4,-oo])
     assert all(el in U for el in [2,5,10])
 
 def test_is_number():
@@ -246,6 +261,18 @@ def test_Interval_as_relational():
     assert Interval(-2, oo, left_open=True).as_relational(x) == Lt(-2, x)
 
     assert Interval(-oo, oo).as_relational(x) == True
+
+def test_Finite_as_relational():
+    x = Symbol('x')
+    y = Symbol('y')
+
+    assert FiniteSet(1,2).as_relational(x) == Or(Eq(x,1), Eq(x,2))
+    assert FiniteSet(y,-5).as_relational(x) == Or(Eq(x,y), Eq(x,-5))
+
+def test_Union_as_relational():
+    x = Symbol('x')
+    assert (Interval(0,1) + FiniteSet(2)).as_relational(x) ==\
+            Or(And(Ge(x,0), Le(x,1)) , Eq(x,2))
 
 def test_finite_basic():
     x = Symbol('x')
