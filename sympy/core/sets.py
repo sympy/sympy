@@ -173,11 +173,6 @@ class Set(Basic):
 
     def __add__(self, other):
         return self.union(other)
-    def __or__(self, other):
-        return self.union(other)
-
-    def __and__(self, other):
-        return self.intersect(other)
 
     def __sub__(self, other):
         return self.intersect(other.complement)
@@ -551,7 +546,7 @@ class Union(Set, EvalfMixin):
                             not closeLeft, not closeRight)
             # All elements in finite_set not in any interval
             finite_complement = FiniteSet(el for el in finite_set
-                    if not any(el in i for i in intervals))
+                    if not el.is_number or not any(el in i for i in intervals))
             if len(finite_complement)>0: # Anything left?
                 other_sets.append(finite_complement)
         # If a single set is left over, don't create a new Union object but
@@ -767,27 +762,12 @@ class FiniteSet(DiscreteSet, EvalfMixin):
 
     def _inf(self):
         from sympy.functions.elementary.miscellaneous import Min
-        # Separate elements into numbers and nonnumbers
-        numbers = [el for el in self if el.is_number]
-        non_numbers = [el for el in self if not el.is_number]
-        # Get the smallest number
-        inf = min(numbers) if numbers else non_numbers[0]
-        # Compare to all the non_numbers
-        for element in non_numbers:
-            inf = Min(inf, element)
-        return inf
+        return Min(*self)
 
     def _sup(self):
         from sympy.functions.elementary.miscellaneous import Max
-        # Separate elements into numbers and nonnumbers
-        numbers = [el for el in self if el.is_number]
-        non_numbers = [el for el in self if not el.is_number]
-        # Get the smallest number
-        inf = max(numbers) if numbers else non_numbers[0]
-        # Compare to all the non_numbers
-        for element in non_numbers:
-            inf = Max(inf, element)
-        return inf
+        return Max(*self)
+
 
     def __len__(self):
         return len(self.elements)
@@ -795,8 +775,6 @@ class FiniteSet(DiscreteSet, EvalfMixin):
     def __eq__(self, other):
         if isinstance(other, FiniteSet):
             return self.elements == other.elements
-        if isinstance(other, EmptySet):
-            return len(self.elements) == 0
         return False
 
     def __sub__(self, other):

@@ -1,6 +1,6 @@
 from sympy import (
     Symbol, Set, Union, Interval, oo, S,
-    Inequality, Max, Min, And, Or, Eq, Ge, Le, Lt, Float, FiniteSet
+    Inequality, Max, Min, And, Or, Eq, Ge, Le, Gt, Lt, Float, FiniteSet
 )
 from sympy.mpmath import mpi
 
@@ -57,12 +57,19 @@ def test_union():
     assert Union(Interval(1, 2), S.EmptySet) == Interval(1, 2)
     assert Union(S.EmptySet) == S.EmptySet
 
+    assert Union(Interval(0,1), [FiniteSet(1.0/n) for n in range(1,10)]) == \
+            Interval(0,1)
+
     assert Interval(1, 2).union(Interval(2, 3)) == \
            Interval(1, 2) + Interval(2, 3)
 
     assert Interval(1, 2).union(Interval(2, 3)) == Interval(1, 3)
 
     assert Union(Set()) == Set()
+
+    assert FiniteSet(1) + FiniteSet(2) + FiniteSet(3) == FiniteSet(1,2,3)
+    assert FiniteSet(['ham']) + FiniteSet(['eggs']) == FiniteSet('ham', 'eggs')
+    assert FiniteSet(1,2,3) + S.EmptySet == FiniteSet(1,2,3)
 
     # Test that Intervals and FiniteSets play nicely
     assert Interval(1,3) + FiniteSet(2) == Interval(1,3)
@@ -86,6 +93,7 @@ def test_difference():
             Union(Interval(0,1,False, True), Interval(1,2, True, False))
 
     assert FiniteSet(1,2,3) - FiniteSet(2) == FiniteSet(1,3)
+    assert FiniteSet('ham', 'eggs') - FiniteSet(['eggs']) == FiniteSet(['ham'])
     assert FiniteSet(1,2,3,4) - Interval(2,10, True, False) == FiniteSet(1,2)
     assert FiniteSet(1,2,3,4) - S.EmptySet == FiniteSet(1,2,3,4)
     assert Union(Interval(0,2), FiniteSet(2,3,4)) - Interval(1,3) == \
@@ -113,6 +121,11 @@ def test_complement():
     assert FiniteSet(0).complement == Union(Interval(-oo,0, True,True) ,
             Interval(0,oo, True, True))
 
+    assert (FiniteSet(5) + Interval(S.NegativeInfinity, 0)).complement == \
+            Interval(0, 5, True, True) + Interval(5, S.Infinity, True,True)
+
+    assert FiniteSet(1,2,3).complement == Interval(S.NegativeInfinity,1, True,True) + Interval(1,2, True,True) + Interval(2,3, True,True) + Interval(3,S.Infinity, True,True)
+
     X = Interval(1,3)+FiniteSet(5)
     assert X.intersect(X.complement) == S.EmptySet
 
@@ -130,6 +143,10 @@ def test_intersect():
            Union(Interval(0, 1), Interval(2, 2))
 
     assert FiniteSet(1,2,x).intersect(FiniteSet(x)) == FiniteSet(x)
+    assert FiniteSet('ham', 'eggs').intersect(FiniteSet(['ham'])) == \
+            FiniteSet(['ham'])
+    assert FiniteSet(1,2,3,4,5).intersect(S.EmptySet) == S.EmptySet
+
     assert Interval(0,5).intersect(FiniteSet(1,3)) == FiniteSet(1,3)
     assert Interval(0,1, True, True).intersect(FiniteSet(1)) == S.EmptySet
 
@@ -141,6 +158,8 @@ def test_intersect():
            S.EmptySet
     assert Union(Interval(0, 1), Interval(2, 3)).intersect(S.EmptySet) == \
            S.EmptySet
+    assert Union(Interval(0,5), FiniteSet(['Ham'])).intersect(
+            FiniteSet(2,3,4,5,6)) == FiniteSet(2,3,4,5)
 
 def test_interval_subs():
     a = Symbol('a', real=True)
@@ -172,7 +191,9 @@ def test_subset():
     assert Interval(0, 2).subset(Interval(0, 3)) == False
 
     assert FiniteSet(1,2,3,4).subset(FiniteSet(1,2))
+    assert FiniteSet(1,2,3,4).subset(FiniteSet(4,5)) == False
     assert Interval(0,2).subset(FiniteSet(1))
+    assert Interval(0,2,True,True).subset(FiniteSet(1,2)) == False
     assert (Interval(0,2,False,True)+FiniteSet(2,3)).subset(
             Interval(1,2)+FiniteSet(3))
 
@@ -199,6 +220,9 @@ def test_contains():
 
     assert FiniteSet(1,2,3).contains(2)
     assert FiniteSet(1,2,Symbol('x')).contains(Symbol('x'))
+    items = [1,2,S.Infinity, 'ham', -1.1, Interval]
+
+    assert all(item in FiniteSet(items) for item in items)
 
     assert Union(Interval(0, 1), Interval(2, 5)).contains(3) == True
     assert Union(Interval(0, 1), Interval(2, 5)).contains(6) == False
@@ -273,6 +297,11 @@ def test_Union_as_relational():
     x = Symbol('x')
     assert (Interval(0,1) + FiniteSet(2)).as_relational(x) ==\
             Or(And(Ge(x,0), Le(x,1)) , Eq(x,2))
+    assert (Interval(0,1, True, True) + FiniteSet(1)).as_relational(x) ==\
+            And(Gt(x,0), Le(x,1))
+
+def test_EmptySet_as_relational():
+    assert S.EmptySet.as_relational(Symbol('x')) == False
 
 def test_finite_basic():
     x = Symbol('x')
@@ -284,4 +313,8 @@ def test_finite_basic():
     assert A.subset(AandB)
     assert AandB == FiniteSet(3)
 
+    assert A.inf() == 1 and A.sup() == 3
+    assert AorB.inf() == 1 and AorB.sup()==5
+    assert FiniteSet(x, 1, 5).sup() == Max(x,5)
+    assert FiniteSet(x, 1, 5).inf() == Min(x,1)
 
