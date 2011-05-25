@@ -258,7 +258,7 @@ class Interval(Set, EvalfMixin):
         if end == start and (left_open or right_open):
             return S.EmptySet
         if end == start and not (left_open or right_open):
-            return FiniteSet(end)
+            return SingletonSet(end)
 
         # Make sure infinite interval end points are open.
         if start == S.NegativeInfinity:
@@ -617,6 +617,12 @@ class Union(Set):
             measure += set.measure
         return measure
 
+    def as_relational(self, symbol):
+        """Rewrite a Union in terms of equalities and logic operators.
+        """
+        from sympy.logic.boolalg import Or
+        return Or(*[set.as_relational(symbol) for set in self.args])
+
 class EmptySet(Set):
     """
     Represents the empty set. The empty set is available as a singleton
@@ -672,11 +678,20 @@ class FiniteSet(DiscreteSet):
         True
 
     """
-    def __init__(self, *args):
-        # Allow bot FiniteSet(iterable) and FiniteSet(num, num, num)
+    def __new__(cls, *args):
+        # Allow both FiniteSet(iterable) and FiniteSet(num, num, num)
         if len(args)==1 and isinstance(args[0], Iterable):
             args = args[0]
-        self.elements = set(map(sympify,args))
+        # Sympify Arguments
+        args = map(sympify, args)
+
+        # Just a single numeric input?
+        if len(args)==1 and args[0].is_number:
+            return SingletonSet(args[0])
+
+        obj = Basic.__new__(cls, args)
+        obj.elements = frozenset(map(sympify,args))
+        return obj
 
     def __iter__(self):
         return self.elements.__iter__()
@@ -810,3 +825,24 @@ class FiniteSet(DiscreteSet):
         intervals.append(Interval(sorted_elements[-1], S.Infinity, True, True))
 
         return Union(*intervals)
+
+    def as_relational(self, symbol):
+        """Rewrite a FiniteSet in terms of equalities and logic operators.
+        """
+        from sympy.core.relational import Eq
+        from sympy.logic.boolalg import Or
+        return Or(*[Eq(symbol, elem) for elem in self])
+
+class SingletonSet(FiniteSet, Interval):
+    """
+    Represents a single numeric element in a set, i.e. {x} or [x,x]
+
+    See FiniteSet and Interval for more details.
+    """
+    def __new__(cls, val):
+        val = sympify(val)
+        # Satisfy Interval's requirements for args
+        obj = Basic.__new__(cls, val, val, False, False)
+        # Satisfy FiniteSet's requirements for elements field
+        obj.elements = frozenset((val,))
+        return obj
