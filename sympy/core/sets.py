@@ -401,8 +401,12 @@ class Interval(Set, EvalfMixin):
     def _measure(self):
         return self.end - self.start
 
-    def _eval_evalf(self, prec):
+    def to_mpi(self, prec=53):
         return mpi(mpf(self.start.evalf(prec)), mpf(self.end.evalf(prec)))
+
+    def _eval_evalf(self, prec):
+        return Interval(self.left.evalf(), self.right.evalf(),
+            left_open=self.left_open, right_open=self.right_open)
 
     def _is_comparable(self, other):
         is_comparable = self.start.is_comparable
@@ -447,7 +451,7 @@ class Interval(Set, EvalfMixin):
         else:
             return And(left, right)
 
-class Union(Set):
+class Union(Set, EvalfMixin):
     """
     Represents a union of sets as a Set.
 
@@ -469,10 +473,11 @@ class Union(Set):
         intervals, finite_sets, other_sets = [], [], []
         args = list(args)
         for arg in args:
+
             if isinstance(arg, EmptySet):
                 continue
 
-            if isinstance(arg, Union):
+            elif isinstance(arg, Union):
                 args += list(arg.args)
 
             elif isinstance(arg, FiniteSet):
@@ -483,6 +488,9 @@ class Union(Set):
 
             elif isinstance(arg, Set):
                 other_sets.append(arg)
+
+            elif isinstance(arg, Iterable) and not isinstance(arg, Set):
+                args += list(arg)
 
             else:
                 raise ValueError("Unknown argument '%s'" % arg)
@@ -576,6 +584,10 @@ class Union(Set):
         for set in self.args[1:]:
             sup = Max(sup, set.sup)
         return sup
+
+    def _eval_evalf(self, prec):
+        return Union(set.evalf() if isinstance(set, EvalfMixin) else set
+                for set in self.args)
 
     def _intersect(self, other):
         # Distributivity.
