@@ -133,28 +133,18 @@ def reduce_poly_inequalities(exprs, gen, assume=True, relational=True):
 
     solution = solve_poly_inequalities(polys)
 
-    if isinstance(solution, Union):
-        intervals = list(solution.args)
-    elif isinstance(solution, Interval):
-        intervals = [solution]
-    else:
-        intervals = []
-
     if not exact:
-        intervals = map(interval_evalf, intervals)
+        raise NotImplementedError("Inexact not implemented")
 
     if not relational:
-        return intervals
+        return solution
 
     real = ask(Q.real(gen), assumptions=assume)
 
-    def relationalize(gen):
-        return Or(*[ i.as_relational(gen) for i in intervals ])
-
     if not real:
-        result = And(relationalize(re(gen)), Eq(im(gen), 0))
+        result = And(solution.as_relational(re(gen)), Eq(im(gen), 0))
     else:
-        result = relationalize(gen)
+        result = solution.as_relational(gen)
 
     return result
 

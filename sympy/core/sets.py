@@ -655,6 +655,9 @@ class EmptySet(Set):
     def _contains(self, other):
         return False
 
+    def as_relational(self, symbol):
+        return False
+
 class DiscreteSet(Set):
     # TODO
     @property
@@ -665,7 +668,7 @@ class ExpressionDiscreteSet(DiscreteSet):
     # TODO
     pass;
 
-class FiniteSet(DiscreteSet):
+class FiniteSet(DiscreteSet, EvalfMixin):
     """
     Represents a finite set of discrete numbers
 
@@ -832,6 +835,9 @@ class FiniteSet(DiscreteSet):
         from sympy.core.relational import Eq
         from sympy.logic.boolalg import Or
         return Or(*[Eq(symbol, elem) for elem in self])
+
+    def _eval_evalf(self, prec):
+        return FiniteSet(elem.evalf(prec) for elem in self)
 
 class SingletonSet(FiniteSet, Interval):
     """
