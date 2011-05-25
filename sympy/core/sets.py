@@ -668,15 +668,15 @@ class EmptySet(Set):
     def __len__(self):
         return 0
 
-class DiscreteSet(Set):
+class CountableSet(Set):
     """
-    Represents a set of discrete numbers such as {1,2,3,4} or {1,2,3, ...}
+    Represents a set of countable numbers such as {1,2,3,4} or {1,2,3, ...}
     """
     @property
     def _measure(self):
         return 0
 
-class FiniteSet(DiscreteSet, EvalfMixin):
+class FiniteSet(CountableSet, EvalfMixin):
     """
     Represents a finite set of discrete numbers
 
