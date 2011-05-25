@@ -237,7 +237,7 @@ class Pow(Expr):
         return Pow(self.base._eval_subs(old, new), self.exp._eval_subs(old, new))
 
     def as_base_exp(self):
-        if self.base.is_Rational and self.base.p==1:
+        if self.base.is_Rational and self.base.p==1 and self.base != S.Infinity:
             return 1/self.base, -self.exp
         return self.base, self.exp
 
