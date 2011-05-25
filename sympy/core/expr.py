@@ -1,4 +1,5 @@
 from core import C
+from sympy.core.sympify import SympifyError
 from basic import Basic, Atom
 from singleton import S
 from evalf import EvalfMixin
@@ -37,7 +38,9 @@ class Expr(Basic, EvalfMixin):
 
     @sympify_other
     def __mul__(self, other):
-        return Mul(self, other)
+        if type(other) is type(self):
+            return Mul(self, other)
+        return NotImplemented
 
     @sympify_other
     def __rmul__(self, other):

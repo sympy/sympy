@@ -111,6 +111,9 @@ def test_mul():
     e = exp(x)
     assert e.match(x**p*exp(x*q)) == {p: 0, q: 1}
 
+@XFAIL
+def test_Poly():
+    p = Wild('p')
     e = I*Poly(x, x)
     assert e.match(I*p) == {p: Poly(x, x)}
 

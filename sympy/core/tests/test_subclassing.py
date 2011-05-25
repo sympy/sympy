@@ -57,7 +57,6 @@ class Lower(Expr):
         rname = "__r%s__" % name
         locals()[rname] = _reverse(rname)
 
-@XFAIL
 def test_mul():
     h = Higher()
     l = Lower()
