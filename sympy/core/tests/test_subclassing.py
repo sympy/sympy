@@ -76,7 +76,6 @@ def test_add():
         assert x+h == h+x == 'high'
         assert l+x == x+l != 'low'
 
-@XFAIL
 def test_sub():
     h = Higher()
     l = Lower()
@@ -87,7 +86,6 @@ def test_sub():
         assert l-x != 'low'
         assert x-l != 'low'
 
-@XFAIL
 def test_pow():
     h = Higher()
     l = Lower()
@@ -98,7 +96,6 @@ def test_pow():
         assert l**x != 'low'
         assert x**l != 'low'
 
-@XFAIL
 def test_div():
     h = Higher()
     l = Lower()
