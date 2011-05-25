@@ -364,14 +364,14 @@ def test_issue_1694():
     assert solve(1/x) == []
     assert solve(x*(1 - 5/x)) == [5]
     assert solve(x + sqrt(x) - 2) == [1]
-    assert solve(-(1 + x)/(2 + x)**2 + 1/(2 + x)) == [-2]
+    assert solve(-(1 + x)/(2 + x)**2 + 1/(2 + x)) == []
     assert solve(-x**2 - 2*x + (x + 1)**2 - 1) == []
+    assert solve((x/(x + 1) + 3)**(-2)) == []
     assert solve(x/sqrt(x**2 + 1),x) == [0]
     assert solve(exp(x) - y,x) == [log(y)]
     assert solve(exp(x)) == [zoo]
     assert solve(x**2 + x + sin(y)**2 + cos(y)**2 - 1, x) in [[0, -1], [-1, 0]]
-    assert solve((x/(x + 1) + 3)**(-2)) == [-1]
-    assert solve(4*3**(5*x+2) - 7, x) == [(-2*log(3) - log(4) + log(7))/(5*log(3))]
+    assert solve(4*3**(5*x + 2) - 7, x) == [(-2*log(3) - log(4) + log(7))/(5*log(3))]
     # 2072
     assert solve(sqrt(x)) == solve(sqrt(x**3)) == [0]
     assert solve(sqrt(x - 1)) == [1]
@@ -382,8 +382,8 @@ def test_issue_1694():
     assert solve(2*x/(x + 2) - 1,x) == [2]
     # 1397
     assert solve((x**2/(7 - x)).diff(x)) == [14, 0]
-    # 1398
-    assert solve(1/(5 + x)**(S(1)/5) - 9, x) == [-295244/S(59049)]
     # 1596
     f = Function('f')
     assert solve((3 - 5*x/f(x))*f(x), f(x)) == [5*x/3]
+    # 1398
+    #assert solve(1/(5 + x)**(S(1)/5) - 9, x) == [-295244/S(59049)]

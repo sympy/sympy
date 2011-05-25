@@ -33,6 +33,25 @@ from sympy.solvers.inequalities import reduce_inequalities
 
 from warnings import warn
 
+def denoms(eq, x=None):
+    """Return (recursively) set of all denominators that appear in eq
+    that contain any symbol in x; if x is None (default) then all
+    denominators with symbols will be returned."""
+    from sympy.utilities.iterables import preorder_traversal
+
+    if x is None:
+        x = eq.free_symbols
+    dens = set()
+    pt = preorder_traversal(eq)
+    for e in pt:
+        if e.is_Pow or e.func is exp:
+            n, d = e.as_numer_denom()
+            if d in dens:
+                pt.skip()
+            elif d.has(*x):
+                dens.add(d.as_base_exp()[0])
+    return dens
+
 def checksol(f, symbol, sol=None, **flags):
     """Checks whether sol is a solution of equation f == 0.
 
@@ -189,7 +208,7 @@ def guess_solve_strategy(expr, symbol):
     elif expr.is_Mul:
         # check for rational functions
         num, denom = expr.as_numer_denom()
-        if denom != 1 and denom.has(symbol):
+        if denom.has(symbol):
             #we have a quotient
             m = max(guess_solve_strategy(num, symbol), guess_solve_strategy(denom, symbol))
             if m == GS_POLY:
@@ -359,13 +378,14 @@ def _solve(f, *symbols, **flags):
 
         # first see if it really depends on symbol and whether there
         # is a linear solution
-        f_num, f_den = solve_linear(f, x=symbols)
-        if f_num is S.Zero:
+        f_num, sol = solve_linear(f, x=symbols)
+        if not symbol in f_num.free_symbols:
             return []
         elif f_num.is_Symbol:
-            return [cancel(f_den)]
+            return [cancel(sol)]
 
         strategy = guess_solve_strategy(f, symbol)
+        result = False # no solution was obtained
 
         if strategy == GS_POLY:
             poly = f.as_poly(symbol)
@@ -380,7 +400,8 @@ def _solve(f, *symbols, **flags):
                 result = roots(poly, cubics=True, quartics=True).keys()
 
         elif strategy == GS_RATIONAL:
-            P, Q = f.as_numer_denom()
+            P, _ = f.as_numer_denom()
+            dens = denoms(f, x=symbols)
             # reject any result that makes Q affirmatively 0;
             # if in doubt, keep it
             try:
@@ -389,7 +410,10 @@ def _solve(f, *symbols, **flags):
                 msg = "Cannot solve equation %s for %s" % (P, symbol)
                 result = []
             else:
-                result = [s for s in soln if not checksol(Q, {symbol: s})]
+                if dens:
+                    result = [s for s in soln if all(not checksol(den, {symbol: s}) for den in dens)]
+                else:
+                    result = soln
 
         elif strategy == GS_POLY_CV_1:
             args = list(f.args)
@@ -459,6 +483,8 @@ def _solve(f, *symbols, **flags):
                     # unless they definitely aren't a solution
                     if sols:
                         result = [s for s in sols if checksol(f, {symbol: s}) is not False]
+            else:
+                msg = 'CV_2 calculated %d but it should have been other than 0 or 1' % m
 
         elif strategy == GS_PIECEWISE:
             result = set()
@@ -492,14 +518,18 @@ def _solve(f, *symbols, **flags):
             raise ValueError('Could not parse expression %s' % f)
 
         # this is the fallback for not getting any other solution
-        if not result or strategy == GS_TRANSCENDENTAL:
-            # reject any result that makes f_den affirmatively 0,
+        if result is False or strategy == GS_TRANSCENDENTAL:
+            # reject any result that makes any dens affirmatively 0,
             # if in doubt, keep it
             soln = tsolve(f_num, symbol)
-            result = [s for s in soln if not checksol(f_den, {symbol: s})]
+            dens = denoms(f, x=symbols)
+            if not dens:
+                result = soln
+            else:
+                result = [s for s in soln if all(not checksol(den, {symbol: s}) for den in dens)]
 
-        if not result:
-            raise NotImplementedError("No algorithms are implemented to solve equation %s" % f)
+        if result is False:
+            raise NotImplementedError(msg + "\nNo algorithms are implemented to solve equation %s" % f)
 
         # This symbol swap should not be necessary for the single symbol case: if you've
         # solved for the symbol the it will not appear in the solution. Right now, however
@@ -526,7 +556,7 @@ def _solve(f, *symbols, **flags):
 
             for g in f:
 
-                poly = g.as_poly(*symbols)
+                poly = g.as_poly(*symbols, extension=True)
 
                 if poly is not None:
                     polys.append(poly)
@@ -635,36 +665,39 @@ def solve_linear(lhs, rhs=0, x=[], exclude=[]):
     else:
         x = syms.intersection(x)
     x = x.difference(exclude)
+    d_free = d.free_symbols
+    if x:
+        all_zero = True
+        for xi in x:
+            dn = n.diff(xi)
+            if dn:
+                all_zero = False
+                if not xi in dn.free_symbols:
+                    vi = -(n.subs(xi, 0))/dn
+                    if not checksol(d, {xi: vi}, minimal=True) is True:
+                        return xi, vi
 
-    all_zero = True
-    for xi in x:
-        dn = n.diff(xi)
-        if dn:
-            all_zero = False
-            if not xi in dn.free_symbols:
-                return xi, -(n.subs(xi, 0))/dn
-
-    if all_zero:
-        return S.Zero, S.One
-    return n, d
+        if all_zero:
+            return S.Zero, S.One
+    return n, d # should we cancel now?
 
 def solve_linear_system(system, *symbols, **flags):
     """Solve system of N linear equations with M variables, which means
        both Cramer and over defined systems are supported. The possible
        number of solutions is zero, one or infinite. Respectively this
        procedure will return None or dictionary with solutions. In the
-       case of over defined system all arbitrary parameters are skipped.
-       This may cause situation in with empty dictionary is returned.
+       case of over-defined systems all arbitrary parameters are skipped.
+       This may cause situation in which an empty dictionary is returned.
        In this case it means all symbols can be assigned arbitrary values.
 
        Input to this functions is a Nx(M+1) matrix, which means it has
-       to be in augmented form. If you are unhappy with such setting
-       use 'solve' method instead, where you can input equations
-       explicitly. And don't worry about the matrix, this function
-       is persistent and will make a local copy of it.
+       to be in augmented form. If you prefer to enter N equations and M
+       unknowns then use 'solve(Neqs, *Msymbols)' instead. Note: a local
+       copy of the matrix is made by this routine so the matrix that is
+       passed will not be modified.
 
-       The algorithm used here is fraction free Gaussian elimination,
-       which results, after elimination, in upper-triangular matrix.
+       The algorithm used here is fraction-free Gaussian elimination,
+       which results, after elimination, in an upper-triangular matrix.
        Then solutions are found using back-substitution. This approach
        is more efficient and compact than the Gauss-Jordan method.
 
