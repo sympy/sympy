@@ -670,15 +670,16 @@ class EmptySet(Set):
     def as_relational(self, symbol):
         return False
 
+    def __len__(self):
+        return 0
+
 class DiscreteSet(Set):
-    # TODO
+    """
+    Represents a set of discrete numbers such as {1,2,3,4} or {1,2,3, ...}
+    """
     @property
     def _measure(self):
         return 0
-
-class ExpressionDiscreteSet(DiscreteSet):
-    # TODO
-    pass;
 
 class FiniteSet(DiscreteSet, EvalfMixin):
     """
@@ -703,6 +704,9 @@ class FiniteSet(DiscreteSet, EvalfMixin):
         # Just a single numeric input?
         if len(args)==1 and args[0].is_number:
             return SingletonSet(args[0])
+
+        if len(args)==0:
+            return EmptySet()
 
         obj = Basic.__new__(cls, args)
         obj.elements = frozenset(map(sympify,args))
@@ -760,24 +764,6 @@ class FiniteSet(DiscreteSet, EvalfMixin):
 
         """
         return sympify(other) in self.elements
-
-    def subset(self, other):
-        """
-        Returns True if 'other' is a subset of 'self'.
-
-        >>> from sympy import FiniteSet
-
-        >>> s = FiniteSet((1,2,3))
-        >>> t = FiniteSet((1,2))
-        >>> s.subset(t)
-        True
-
-        """
-        if other is S.EmptySet:
-            return True
-        if isinstance(other, FiniteSet):
-            return all(el in self for el in other)
-        return False
 
     def _inf(self):
         from sympy.functions.elementary.miscellaneous import Min
