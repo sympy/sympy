@@ -58,6 +58,8 @@ def test_mod():
     assert round(a % 2, 15) == 0.6
     assert round(a % 0.5, 15) == 0.1
     assert Rational(3,4) % Float(1.1) == 0.75
+    assert 2.5 % Integer(2) == 0.5
+    assert 2.5 % Rational(3, 2) == 1.
 
     a = Integer(7)
     b = Integer(4)
