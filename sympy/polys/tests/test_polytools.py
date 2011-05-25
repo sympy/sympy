@@ -461,7 +461,6 @@ def test_Poly_add():
     assert Poly(x, x) + 1 == Poly(x+1, x)
     assert 1 + Poly(x, x) == Poly(x+1, x)
 
-@XFAIL
 def test_Poly_sub():
     assert Poly(0, x).sub(Poly(0, x)) == Poly(0, x)
     assert Poly(0, x) - Poly(0, x) == Poly(0, x)
