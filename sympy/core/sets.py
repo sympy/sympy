@@ -702,11 +702,13 @@ class FiniteSet(CountableSet, EvalfMixin):
 
         if len(args)==0:
             return EmptySet()
-
-        obj = Basic.__new__(cls, args)
-        obj.elements = frozenset(map(sympify,args))
+        elements = frozenset(map(sympify, args))
+        obj = Basic.__new__(cls, elements)
         return obj
 
+    @property
+    def elements(self):
+        return self.args[0]
     def __iter__(self):
         return self.elements.__iter__()
 
@@ -772,11 +774,6 @@ class FiniteSet(CountableSet, EvalfMixin):
     def __len__(self):
         return len(self.elements)
 
-    def __eq__(self, other):
-        if isinstance(other, FiniteSet):
-            return self.elements == other.elements
-        return False
-
     def __sub__(self, other):
         return FiniteSet(el for el in self if el not in other)
 
@@ -824,7 +821,10 @@ class SingletonSet(FiniteSet, Interval):
     def __new__(cls, val):
         val = sympify(val)
         # Satisfy Interval's requirements for args
-        obj = Basic.__new__(cls, val, val, False, False)
+        obj = Basic.__new__(cls, val, val, False, False, frozenset((val,)))
         # Satisfy FiniteSet's requirements for elements field
-        obj.elements = frozenset((val,))
         return obj
+    @property
+    def elements(self):
+        return self.args[4]
+
