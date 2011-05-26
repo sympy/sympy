@@ -39,6 +39,7 @@ x/y
 (1+x)*y  #3
 -5*x/(x+10)  # correct placement of negative sign
 1 - Rational(3,2)*(x+1)
+-(-x + 5)*(-x - 2*2**(1/S(2)) + 5) - (-y + 5)*(-y + 5) # Issue 2425
 
 
 ORDERING:
@@ -606,6 +607,19 @@ u"""\
 """
     assert  pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
+
+def test_issue_2425():
+    assert pretty(-(-x + 5)*(-x - 2*2**(1/S(2)) + 5) - (-y + 5)*(-y + 5)) == \
+"""\
+        /         ___    \\           2\n\
+(x - 5)*\\-x - 2*\\/ 2  + 5/ - (-y + 5) \
+"""
+
+    assert upretty(-(-x + 5)*(-x - 2*2**(1/S(2)) + 5) - (-y + 5)*(-y + 5)) == \
+u"""\
+        ⎛         ⎽⎽⎽    ⎞           2\n\
+(x - 5)⋅⎝-x - 2⋅╲╱ 2  + 5⎠ - (-y + 5) \
+"""
 
 def test_pretty_ordering():
     assert pretty(x**2 + x + 1, order='lex') == \
