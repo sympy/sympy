@@ -121,7 +121,7 @@ def ratint_ratpart(f, g, x):
     A = Poly(A_coeffs, x, domain=ZZ[C_coeffs])
     B = Poly(B_coeffs, x, domain=ZZ[C_coeffs])
 
-    H = f - A.diff()*v + A*(u.diff()*v).exquo(u) - B*u
+    H = f - A.diff()*v + A*(u.diff()*v).quo(u) - B*u
 
     result = solve(H.coeffs(), C_coeffs)
 
@@ -182,7 +182,7 @@ def ratint_logpart(f, g, x, t=None):
             _include_sign(c, h_lc_sqf)
 
             for a, j in h_lc_sqf:
-                h = h.exquo(Poly(a.gcd(q)**j, x))
+                h = h.quo(Poly(a.gcd(q)**j, x))
 
             inv, coeffs = h_lc.invert(q), [S(1)]
 
@@ -219,7 +219,7 @@ def log_to_atan(f, g):
         return 2*atan(p.as_expr())
     else:
         s, t, h = g.gcdex(-f)
-        u = (f*s+g*t).exquo(h)
+        u = (f*s+g*t).quo(h)
         A = 2*atan(u.as_expr())
 
         return A + log_to_atan(s, t)

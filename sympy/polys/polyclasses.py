@@ -848,10 +848,10 @@ class DMP(object):
 
     def __floordiv__(f, g):
         if isinstance(g, DMP):
-            return f.exquo(g)
+            return f.quo(g)
         else:
             try:
-                return f.exquo_ground(g)
+                return f.quo_ground(g)
             except TypeError:
                 return NotImplemented
 
@@ -1221,10 +1221,10 @@ class DMF(object):
 
     def __div__(f, g):
         if isinstance(g, (DMP, DMF)):
-            return f.exquo(g)
+            return f.quo(g)
 
         try:
-            return f.exquo(f.half_per(g))
+            return f.quo(f.half_per(g))
         except TypeError:
             return NotImplemented
 
@@ -1491,10 +1491,10 @@ class ANP(object):
 
     def __div__(f, g):
         if isinstance(g, ANP):
-            return f.exquo(g)
+            return f.quo(g)
         else:
             try:
-                return f.exquo(f.per(g))
+                return f.quo(f.per(g))
             except TypeError:
                 return NotImplemented
 

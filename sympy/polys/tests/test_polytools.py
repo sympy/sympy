@@ -434,11 +434,11 @@ def test_Poly_mul_ground():
 
 def test_Poly_quo_ground():
     assert Poly(2*x + 4).quo_ground(2) == Poly(x + 2)
-    raises(ExactQuotientFailed, "Poly(2*x + 3).quo_ground(2)")
+    assert Poly(2*x + 3).quo_ground(2) == Poly(x + 1)
 
 def test_Poly_exquo_ground():
     assert Poly(2*x + 4).exquo_ground(2) == Poly(x + 2)
-    assert Poly(2*x + 3).exquo_ground(2) == Poly(x + 1)
+    raises(ExactQuotientFailed, "Poly(2*x + 3).exquo_ground(2)")
 
 def test_Poly_abs():
     assert Poly(-x+1, x).abs() == abs(Poly(-x+1, x)) == Poly(x+1, x)
@@ -1185,44 +1185,44 @@ def test_pdiv():
     F, G, Q, R = [ Poly(h, x, y) for h in (f, g, q, r) ]
 
     assert F.pdiv(G) == (Q, R)
-    assert F.pexquo(G) == Q
-    assert F.pquo(G) == Q
     assert F.prem(G) == R
+    assert F.pquo(G) == Q
+    assert F.pexquo(G) == Q
 
     assert pdiv(f, g) == (q, r)
-    assert pexquo(f, g) == q
-    assert pquo(f, g) == q
     assert prem(f, g) == r
+    assert pquo(f, g) == q
+    assert pexquo(f, g) == q
 
     assert pdiv(f, g, x, y) == (q, r)
-    assert pexquo(f, g, x, y) == q
-    assert pquo(f, g, x, y) == q
     assert prem(f, g, x, y) == r
+    assert pquo(f, g, x, y) == q
+    assert pexquo(f, g, x, y) == q
 
     assert pdiv(f, g, (x,y)) == (q, r)
-    assert pexquo(f, g, (x,y)) == q
-    assert pquo(f, g, (x,y)) == q
     assert prem(f, g, (x,y)) == r
+    assert pquo(f, g, (x,y)) == q
+    assert pexquo(f, g, (x,y)) == q
 
     assert pdiv(F, G) == (Q, R)
-    assert pexquo(F, G) == Q
-    assert pquo(F, G) == Q
     assert prem(F, G) == R
+    assert pquo(F, G) == Q
+    assert pexquo(F, G) == Q
 
     assert pdiv(f, g, polys=True) == (Q, R)
-    assert pexquo(f, g, polys=True) == Q
-    assert pquo(f, g, polys=True) == Q
     assert prem(f, g, polys=True) == R
+    assert pquo(f, g, polys=True) == Q
+    assert pexquo(f, g, polys=True) == Q
 
     assert pdiv(F, G, polys=False) == (q, r)
-    assert pexquo(F, G, polys=False) == q
-    assert pquo(F, G, polys=False) == q
     assert prem(F, G, polys=False) == r
+    assert pquo(F, G, polys=False) == q
+    assert pexquo(F, G, polys=False) == q
 
     raises(ComputationFailed, "pdiv(4, 2)")
-    raises(ComputationFailed, "pexquo(4, 2)")
-    raises(ComputationFailed, "pquo(4, 2)")
     raises(ComputationFailed, "prem(4, 2)")
+    raises(ComputationFailed, "pquo(4, 2)")
+    raises(ComputationFailed, "pexquo(4, 2)")
 
 def test_div():
     f, g = x**2 - y**2, x - y
@@ -1231,44 +1231,44 @@ def test_div():
     F, G, Q, R = [ Poly(h, x, y) for h in (f, g, q, r) ]
 
     assert F.div(G) == (Q, R)
-    assert F.exquo(G) == Q
-    assert F.quo(G) == Q
     assert F.rem(G) == R
+    assert F.quo(G) == Q
+    assert F.exquo(G) == Q
 
     assert div(f, g) == (q, r)
-    assert exquo(f, g) == q
-    assert quo(f, g) == q
     assert rem(f, g) == r
+    assert quo(f, g) == q
+    assert exquo(f, g) == q
 
     assert div(f, g, x, y) == (q, r)
-    assert exquo(f, g, x, y) == q
-    assert quo(f, g, x, y) == q
     assert rem(f, g, x, y) == r
+    assert quo(f, g, x, y) == q
+    assert exquo(f, g, x, y) == q
 
     assert div(f, g, (x,y)) == (q, r)
-    assert exquo(f, g, (x,y)) == q
-    assert quo(f, g, (x,y)) == q
     assert rem(f, g, (x,y)) == r
+    assert quo(f, g, (x,y)) == q
+    assert exquo(f, g, (x,y)) == q
 
     assert div(F, G) == (Q, R)
-    assert exquo(F, G) == Q
-    assert quo(F, G) == Q
     assert rem(F, G) == R
+    assert quo(F, G) == Q
+    assert exquo(F, G) == Q
 
     assert div(f, g, polys=True) == (Q, R)
-    assert exquo(f, g, polys=True) == Q
-    assert quo(f, g, polys=True) == Q
     assert rem(f, g, polys=True) == R
+    assert quo(f, g, polys=True) == Q
+    assert exquo(f, g, polys=True) == Q
 
     assert div(F, G, polys=False) == (q, r)
-    assert exquo(F, G, polys=False) == q
-    assert quo(F, G, polys=False) == q
     assert rem(F, G, polys=False) == r
+    assert quo(F, G, polys=False) == q
+    assert exquo(F, G, polys=False) == q
 
     raises(ComputationFailed, "div(4, 2)")
-    raises(ComputationFailed, "exquo(4, 2)")
-    raises(ComputationFailed, "quo(4, 2)")
     raises(ComputationFailed, "rem(4, 2)")
+    raises(ComputationFailed, "quo(4, 2)")
+    raises(ComputationFailed, "exquo(4, 2)")
 
     f, g = x**2 + 1, 2*x - 4
 
@@ -1295,27 +1295,27 @@ def test_div():
     assert rem(f, g, domain=QQ, auto=True) == rq
     assert rem(f, g, domain=QQ, auto=False) == rq
 
-    assert exquo(f, g) == qq
-    assert exquo(f, g, auto=True) == qq
-    assert exquo(f, g, auto=False) == qz
-    assert exquo(f, g, domain=ZZ) == qz
-    assert exquo(f, g, domain=QQ) == qq
-    assert exquo(f, g, domain=ZZ, auto=True) == qq
-    assert exquo(f, g, domain=ZZ, auto=False) == qz
-    assert exquo(f, g, domain=QQ, auto=True) == qq
-    assert exquo(f, g, domain=QQ, auto=False) == qq
+    assert quo(f, g) == qq
+    assert quo(f, g, auto=True) == qq
+    assert quo(f, g, auto=False) == qz
+    assert quo(f, g, domain=ZZ) == qz
+    assert quo(f, g, domain=QQ) == qq
+    assert quo(f, g, domain=ZZ, auto=True) == qq
+    assert quo(f, g, domain=ZZ, auto=False) == qz
+    assert quo(f, g, domain=QQ, auto=True) == qq
+    assert quo(f, g, domain=QQ, auto=False) == qq
 
     f, g, q = x**2, 2*x, x/2
 
-    assert quo(f, g) == q
-    assert quo(f, g, auto=True) == q
-    raises(ExactQuotientFailed, "quo(f, g, auto=False)")
-    raises(ExactQuotientFailed, "quo(f, g, domain=ZZ)")
-    assert quo(f, g, domain=QQ) == q
-    assert quo(f, g, domain=ZZ, auto=True) == q
-    raises(ExactQuotientFailed, "quo(f, g, domain=ZZ, auto=False)")
-    assert quo(f, g, domain=QQ, auto=True) == q
-    assert quo(f, g, domain=QQ, auto=False) == q
+    assert exquo(f, g) == q
+    assert exquo(f, g, auto=True) == q
+    raises(ExactQuotientFailed, "exquo(f, g, auto=False)")
+    raises(ExactQuotientFailed, "exquo(f, g, domain=ZZ)")
+    assert exquo(f, g, domain=QQ) == q
+    assert exquo(f, g, domain=ZZ, auto=True) == q
+    raises(ExactQuotientFailed, "exquo(f, g, domain=ZZ, auto=False)")
+    assert exquo(f, g, domain=QQ, auto=True) == q
+    assert exquo(f, g, domain=QQ, auto=False) == q
 
     f, g = Poly(x**2), Poly(x)
 

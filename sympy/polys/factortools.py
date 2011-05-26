@@ -35,7 +35,7 @@ from sympy.polys.densearith import (
     dup_pow, dmp_pow,
     dup_div, dmp_div,
     dup_rem, dmp_rem,
-    dup_exquo, dmp_exquo,
+    dup_quo, dmp_quo,
     dup_expand, dmp_expand,
     dup_add_mul, dmp_add_mul,
     dup_sub_mul, dmp_sub_mul,
@@ -43,7 +43,7 @@ from sympy.polys.densearith import (
     dup_max_norm, dmp_max_norm,
     dup_l1_norm, dmp_l1_norm,
     dup_mul_ground, dmp_mul_ground,
-    dup_exquo_ground, dmp_exquo_ground)
+    dup_quo_ground, dmp_quo_ground)
 
 from sympy.polys.densetools import (
     dup_clear_denoms, dmp_clear_denoms,
@@ -411,7 +411,7 @@ def dup_zz_cyclotomic_poly(n, K):
     h = [K.one,-K.one]
 
     for p, k in factorint(n).iteritems():
-        h = dup_exquo(dup_inflate(h, p, K), h, K)
+        h = dup_quo(dup_inflate(h, p, K), h, K)
         h = dup_inflate(h, p**(k-1), K)
 
     return h
@@ -421,7 +421,7 @@ def _dup_cyclotomic_decompose(n, K):
     H = [[K.one,-K.one]]
 
     for p, k in factorint(n).iteritems():
-        Q = [ dup_exquo(dup_inflate(h, p, K), h, K) for h in H ]
+        Q = [ dup_quo(dup_inflate(h, p, K), h, K) for h in H ]
         H.extend(Q)
 
         for i in xrange(1, k):
@@ -756,7 +756,7 @@ def dmp_zz_diophantine(F, c, A, d, p, u, K):
         B, G = [], []
 
         for f in F:
-            B.append(dmp_exquo(e, f, u, K))
+            B.append(dmp_quo(e, f, u, K))
             G.append(dmp_eval_in(f, a, n, u, K))
 
         C = dmp_eval_in(c, a, n, u, K)
@@ -782,7 +782,7 @@ def dmp_zz_diophantine(F, c, A, d, p, u, K):
             C = dmp_diff_eval_in(c, k+1, a, n, u, K)
 
             if not dmp_zero_p(C, v):
-                C = dmp_exquo_ground(C, K.factorial(k+1), v, K)
+                C = dmp_quo_ground(C, K.factorial(k+1), v, K)
                 T = dmp_zz_diophantine(G, C, A, d, p, v, K)
 
                 for i, t in enumerate(T):
@@ -837,7 +837,7 @@ def dmp_zz_wang_hensel_lifting(f, H, LC, A, p, u, K):
             C = dmp_diff_eval_in(c, k+1, a, w, w, K)
 
             if not dmp_zero_p(C, w-1):
-                C = dmp_exquo_ground(C, K.factorial(k+1), w-1, K)
+                C = dmp_quo_ground(C, K.factorial(k+1), w-1, K)
                 T = dmp_zz_diophantine(G, C, I, d, p, w-1, K)
 
                 for i, (h, t) in enumerate(zip(H, T)):
