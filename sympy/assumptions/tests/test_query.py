@@ -879,30 +879,30 @@ def test_real():
 def test_algebraic():
     x, y = symbols('x,y')
 
-    assert ask(x, 'algebraic') == None
+    assert ask(x, Q.algebraic) == None
 
-    assert ask(I, 'algebraic') == True
-    assert ask(2*I, 'algebraic') == True
-    assert ask(I/3, 'algebraic') == True
+    assert ask(I, Q.algebraic) == True
+    assert ask(2*I, Q.algebraic) == True
+    assert ask(I/3, Q.algebraic) == True
 
-    assert ask(sqrt(7), 'algebraic') == True
-    assert ask(2*sqrt(7), 'algebraic') == True
-    assert ask(sqrt(7)/3, 'algebraic') == True
+    assert ask(sqrt(7), Q.algebraic) == True
+    assert ask(2*sqrt(7), Q.algebraic) == True
+    assert ask(sqrt(7)/3, Q.algebraic) == True
 
-    assert ask(I*sqrt(3), 'algebraic') == True
-    assert ask(sqrt(1+I*sqrt(3)), 'algebraic') == True
+    assert ask(I*sqrt(3), Q.algebraic) == True
+    assert ask(sqrt(1+I*sqrt(3)), Q.algebraic) == True
 
-    assert ask((1+I*sqrt(3)**(S(17)/31)), 'algebraic') == True
-    assert ask((1+I*sqrt(3)**(S(17)/pi)), 'algebraic') == False
+    assert ask((1+I*sqrt(3)**(S(17)/31)), Q.algebraic) == True
+    assert ask((1+I*sqrt(3)**(S(17)/pi)), Q.algebraic) == False
 
-    assert ask(sin(7), 'algebraic') == None
-    assert ask(sqrt(sin(7)), 'algebraic') == None
-    assert ask(sqrt(y+I*sqrt(7)), 'algebraic') == None
+    assert ask(sin(7), Q.algebraic) == None
+    assert ask(sqrt(sin(7)), Q.algebraic) == None
+    assert ask(sqrt(y+I*sqrt(7)), Q.algebraic) == None
 
-    assert ask(oo, 'algebraic') == False
-    assert ask(-oo, 'algebraic') == False
+    assert ask(oo, Q.algebraic) == False
+    assert ask(-oo, Q.algebraic) == False
 
-    assert ask(2.47, 'algebraic') == False
+    assert ask(2.47, Q.algebraic) == False
 
 def test_global():
     """Test ask with global assumptions"""
@@ -932,6 +932,12 @@ def test_functions_in_assumptions():
 def test_composite_ask_key():
     x = symbols('x')
     assert ask(x, Q.negative & Q.integer, Q.real(x) >> Q.positive(x)) is False
+
+def test_multiple_symbols():
+    x, y = symbols('x, y')
+    assert ask(Q.real(x), assumptions=Q.real(x) & Q.real(y)) is True
+    assert ask(Q.real(x), assumptions=Q.real(x) | Q.real(y)) is None
+    assert ask(Q.real(x), assumptions= ~(Q.real(x) >> Q.real(y))) is True
 
 def test_is_true():
     from sympy.logic.boolalg import Equivalent, Implies
@@ -972,15 +978,15 @@ def test_incompatible_resolutors():
 def test_key_extensibility():
     """test that you can add keys to the ask system at runtime"""
     x = Symbol('x')
-    # make sure thie key is not defined
-    raises(AttributeError, "ask(x, 'my_key')")
+    # make sure the key is not defined
+    raises(AttributeError, "ask(x, Q.my_key)")
     class MyAskHandler(AskHandler):
         @staticmethod
         def Symbol(expr, assumptions):
             return True
     register_handler('my_key', MyAskHandler)
-    assert ask(x, 'my_key') == True
-    assert ask(x+1, 'my_key') == None
+    assert ask(x, Q.my_key) == True
+    assert ask(x+1, Q.my_key) == None
     remove_handler('my_key', MyAskHandler)
 
 def test_type_extensibility():

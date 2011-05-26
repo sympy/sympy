@@ -1,7 +1,7 @@
 """rename this to test_assumptions.py when the old assumptions system is deleted"""
 from sympy.core import symbols
 from sympy.assumptions import AppliedPredicate, global_assumptions, Predicate
-from sympy.assumptions.assume import eliminate_assume
+from sympy.assumptions.ask import _extract_facts
 from sympy.printing import pretty
 from sympy.assumptions.ask import Q
 from sympy.logic.boolalg import Or
@@ -18,21 +18,19 @@ def test_pretty():
     x = symbols('x')
     assert pretty(Q.positive(x)) == "Q.positive(x)"
 
-def test_eliminate_assumptions():
+def test_extract_facts():
     a, b = symbols('a b', cls=Predicate)
     x, y = symbols('x y')
-    assert eliminate_assume(a(x))  == a
-    assert eliminate_assume(a(x), symbol=x)  == a
-    assert eliminate_assume(a(x), symbol=y)  == None
-    assert eliminate_assume(~a(x)) == ~a
-    assert eliminate_assume(a(x), symbol=y) == None
-    assert eliminate_assume(a(x) | b(x)) == a | b
-    assert eliminate_assume(a(x) | ~b(x)) == a | ~b
-
-def test_eliminate_composite_assumptions():
-    a, b = map(Predicate, symbols('a b'))
-    x, y = symbols('x y')
-    assert eliminate_assume(~a(y), x) == None
+    assert _extract_facts(a(x), x)  == a
+    assert _extract_facts(a(x), y)  == True
+    assert _extract_facts(~a(x), x) == ~a
+    assert _extract_facts(~a(x), y) == True
+    assert _extract_facts(a(x) | b(x), x) == a | b
+    assert _extract_facts(a(x) | ~b(x), x) == a | ~b
+    assert _extract_facts(a(x) & b(y), x) == a
+    assert _extract_facts(a(x) & b(y), y) == b
+    assert _extract_facts(a(x) | b(y), x) == True
+    assert _extract_facts(~(a(x)|b(y)), x) == ~a
 
 def test_global():
     """Test for global assumptions"""
