@@ -816,6 +816,9 @@ class Lambda(Expr):
     def __hash__(self):
         return super(Lambda, self).__hash__()
 
+    def _hashable_content(self):
+        return (self.nargs, ) + tuple(sorted(self.free_symbols))
+
     @property
     def is_identity(self):
         """Return ``True`` if this ``Lambda`` is an identity function. """
