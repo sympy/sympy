@@ -81,7 +81,7 @@ def test_union():
     assert X.subset(XandY) and Y.subset(XandY)
 
 
-    raises(ValueError, "Union(1, 2, 3)")
+    raises(TypeError, "Union(1, 2, 3)")
 
 def test_difference():
     assert Interval(1, 3) - Interval(1, 2) == Interval(2, 3, True)
@@ -317,4 +317,24 @@ def test_finite_basic():
     assert AorB.inf() == 1 and AorB.sup()==5
     assert FiniteSet(x, 1, 5).sup() == Max(x,5)
     assert FiniteSet(x, 1, 5).inf() == Min(x,1)
+
+def test_real():
+    x = Symbol('x', real=True)
+    y = Symbol('y')
+
+    I = Interval(0, 5)
+    J = Interval(10, 20)
+    A = FiniteSet(1, 2, 30, x, S.Pi, S.Infinity)
+    B = FiniteSet(-4, 0)
+    C = FiniteSet(100, S.NegativeInfinity)
+    D = FiniteSet('Ham', 'Eggs')
+
+
+    assert all(s.is_real for s in [I,J,A,B,C])
+    assert not D.is_real
+    assert all((a+b).is_real for a in [I,J,A,B,C] for b in [I,J,A,B,C])
+    assert not any((a+D).is_real for a in [I,J,A,B,C,D])
+
+    assert not (I+A+D).is_real
+
 
