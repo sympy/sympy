@@ -169,6 +169,20 @@ class Permutation(Basic):
             inv_form[self_form[i]] = i
         return Permutation(inv_form)
 
+    def __call__(self, arg):
+        """
+        Allows applying a permutation instance as a bijective function.
+
+        Examples:
+        >>> from sympy.combinatorics.permutations import Permutation
+        >>> p = Permutation([[2,0],[3,1]])
+        >>> p(3)
+        2
+        """
+        if not isinstance(arg, int):
+            raise ValueError("Arguments must be integers")
+        return self.array_form[arg]
+
     def atoms(self):
         """
         Returns all the elements of a permutation
