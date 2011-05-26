@@ -10,7 +10,8 @@ from sympy.utilities.pytest import XFAIL
 x = Symbol('x')
 y = Symbol('y', commutative=False)
 _Expr_objects = [Integer(3), Rational(4, 3), Float(2.4), x, x+1, 3*x, S.Pi,
-        S.ImaginaryUnit, y, x*y, y**3, sin(x+1)]
+        S.ImaginaryUnit, y, x*y, y**3, sin(x+1),
+        S.One, S.Zero, S.ComplexInfinity, S.NaN]
 
 class Higher(Expr):
 
