@@ -418,16 +418,16 @@ def gf_mul_ground(f, a, p, K):
     else:
         return [ (a*b) % p for b in f ]
 
-def gf_exquo_ground(f, a, p, K):
+def gf_quo_ground(f, a, p, K):
     """
     Compute ``f/a`` where ``f`` in ``GF(p)[x]`` and ``a`` in ``GF(p)``.
 
     **Examples**
 
     >>> from sympy.polys.domains import ZZ
-    >>> from sympy.polys.galoistools import gf_exquo_ground
+    >>> from sympy.polys.galoistools import gf_quo_ground
 
-    >>> gf_exquo_ground([3, 2, 4], 2, 5, ZZ)
+    >>> gf_quo_ground([3, 2, 4], 2, 5, ZZ)
     [4, 1, 2]
 
     """
@@ -695,44 +695,19 @@ def gf_rem(f, g, p, K):
     """
     return gf_div(f, g, p, K)[1]
 
-def gf_quo(f, g, p, K):
-    """
-    Compute polynomial quotient in ``GF(p)[x]``.
-
-    **Examples**
-
-    >>> from sympy.polys.domains import ZZ
-    >>> from sympy.polys.galoistools import gf_quo
-
-    >>> gf_quo([1, 0, 3, 2, 3], [2, 2, 2], 5, ZZ)
-    [3, 2, 4]
-
-    >>> gf_quo([1, 0, 1, 1], [1, 1, 0], 2, ZZ)
-    Traceback (most recent call last):
-    ...
-    ExactQuotientFailed: [1, 1, 0] does not divide [1, 0, 1, 1]
-
-    """
-    q, r = gf_div(f, g, p, K)
-
-    if not r:
-        return q
-    else:
-        raise ExactQuotientFailed(f, g)
-
 @cythonized("df,dg,dq,dr,i,j")
-def gf_exquo(f, g, p, K):
+def gf_quo(f, g, p, K):
     """
     Compute exact quotient in ``GF(p)[x]``.
 
     **Examples**
 
     >>> from sympy.polys.domains import ZZ
-    >>> from sympy.polys.galoistools import gf_exquo
+    >>> from sympy.polys.galoistools import gf_quo
 
-    >>> gf_exquo([1, 0, 1, 1], [1, 1, 0], 2, ZZ)
+    >>> gf_quo([1, 0, 1, 1], [1, 1, 0], 2, ZZ)
     [1, 1]
-    >>> gf_exquo([1, 0, 3, 2, 3], [2, 2, 2], 5, ZZ)
+    >>> gf_quo([1, 0, 3, 2, 3], [2, 2, 2], 5, ZZ)
     [3, 2, 4]
 
     """
@@ -757,6 +732,31 @@ def gf_exquo(f, g, p, K):
         h[i] = (coeff * inv) % p
 
     return h[:dq+1]
+
+def gf_exquo(f, g, p, K):
+    """
+    Compute polynomial quotient in ``GF(p)[x]``.
+
+    **Examples**
+
+    >>> from sympy.polys.domains import ZZ
+    >>> from sympy.polys.galoistools import gf_exquo
+
+    >>> gf_exquo([1, 0, 3, 2, 3], [2, 2, 2], 5, ZZ)
+    [3, 2, 4]
+
+    >>> gf_exquo([1, 0, 1, 1], [1, 1, 0], 2, ZZ)
+    Traceback (most recent call last):
+    ...
+    ExactQuotientFailed: [1, 1, 0] does not divide [1, 0, 1, 1]
+
+    """
+    q, r = gf_div(f, g, p, K)
+
+    if not r:
+        return q
+    else:
+        raise ExactQuotientFailed(f, g)
 
 @cythonized("n")
 def gf_lshift(f, n, K):
@@ -912,8 +912,8 @@ def gf_lcm(f, g, p, K):
     if not f or not g:
         return []
 
-    h = gf_exquo(gf_mul(f, g, p, K),
-                 gf_gcd(f, g, p, K), p, K)
+    h = gf_quo(gf_mul(f, g, p, K),
+               gf_gcd(f, g, p, K), p, K)
 
     return gf_monic(h, p, K)[1]
 
@@ -935,8 +935,8 @@ def gf_cofactors(f, g, p, K):
 
     h = gf_gcd(f, g, p, K)
 
-    return (h, gf_exquo(f, h, p, K),
-               gf_exquo(g, h, p, K))
+    return (h, gf_quo(f, h, p, K),
+               gf_quo(g, h, p, K))
 
 def gf_gcdex(f, g, p, K):
     """
@@ -1023,7 +1023,7 @@ def gf_monic(f, p, K):
         if K.is_one(lc):
             return lc, list(f)
         else:
-            return lc, gf_exquo_ground(f, lc, p, K)
+            return lc, gf_quo_ground(f, lc, p, K)
 
 @cythonized("df,n")
 def gf_diff(f, p, K):
@@ -1434,18 +1434,18 @@ def gf_sqf_list(f, p, K, all=False):
 
         if F != []:
             g = gf_gcd(f, F, p, K)
-            h = gf_exquo(f, g, p, K)
+            h = gf_quo(f, g, p, K)
 
             i = 1
 
             while h != [K.one]:
                 G = gf_gcd(g, h, p, K)
-                H = gf_exquo(h, G, p, K)
+                H = gf_quo(h, G, p, K)
 
                 if gf_degree(H) > 0:
                     factors.append((H, i*n))
 
-                g, h, i = gf_exquo(g, G, p, K), G, i+1
+                g, h, i = gf_quo(g, G, p, K), G, i+1
 
             if g == [K.one]:
                 sqf = True
@@ -1600,7 +1600,7 @@ def gf_berlekamp(f, p, K):
                 if h != [K.one] and h != f:
                     factors.remove(f)
 
-                    f = gf_exquo(f, h, p, K)
+                    f = gf_quo(f, h, p, K)
                     factors.extend([f, h])
 
                 if len(factors) == len(V):
@@ -1654,7 +1654,7 @@ def gf_ddf_zassenhaus(f, p, K):
         if h != [K.one]:
             factors.append((h, i))
 
-            f = gf_exquo(f, h, p, K)
+            f = gf_quo(f, h, p, K)
             g = gf_rem(g, f, p, K)
 
         i += 1
@@ -1713,7 +1713,7 @@ def gf_edf_zassenhaus(f, n, p, K):
 
         if g != [K.one] and g != f:
             factors = gf_edf_zassenhaus(g, n, p, K) \
-                    + gf_edf_zassenhaus(gf_exquo(f, g, p, K), n, p, K)
+                    + gf_edf_zassenhaus(gf_quo(f, g, p, K), n, p, K)
 
     return _sort_factors(factors, multiple=False)
 
@@ -1775,7 +1775,7 @@ def gf_ddf_shoup(f, p, K):
             h = gf_rem(h, f, p, K)
 
         g = gf_gcd(f, h, p, K)
-        f = gf_exquo(f, g, p, K)
+        f = gf_quo(f, g, p, K)
 
         for u in reversed(U):
             h = gf_sub(v, u, p, K)
@@ -1784,7 +1784,7 @@ def gf_ddf_shoup(f, p, K):
             if F != [K.one]:
                 factors.append((F, k*(i+1)-j))
 
-            g, j = gf_exquo(g, F, p, K), j-1
+            g, j = gf_quo(g, F, p, K), j-1
 
     if f != [K.one]:
         factors.append((f, gf_degree(f)))
@@ -1834,7 +1834,7 @@ def gf_edf_shoup(f, n, p, K):
 
     if p == 2:
         h1 = gf_gcd(f, H, p, K)
-        h2 = gf_exquo(f, h1, p, K)
+        h2 = gf_quo(f, h1, p, K)
 
         factors = gf_edf_shoup(h1, n, p, K) \
                 + gf_edf_shoup(h2, n, p, K)
@@ -1843,7 +1843,7 @@ def gf_edf_shoup(f, n, p, K):
 
         h1 = gf_gcd(f, h, p, K)
         h2 = gf_gcd(f, gf_sub_ground(h, K.one, p, K), p, K)
-        h3 = gf_exquo(f, gf_mul(h1, h2, p, K), p, K)
+        h3 = gf_quo(f, gf_mul(h1, h2, p, K), p, K)
 
         factors = gf_edf_shoup(h1, n, p, K) \
                 + gf_edf_shoup(h2, n, p, K) \

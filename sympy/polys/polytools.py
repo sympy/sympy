@@ -1074,9 +1074,7 @@ class Poly(Expr):
         Poly(x + 2, x, domain='ZZ')
 
         >>> Poly(2*x + 3).quo_ground(2)
-        Traceback (most recent call last):
-        ...
-        ExactQuotientFailed: 2 does not divide 3 in ZZ
+        Poly(x + 1, x, domain='ZZ')
 
         """
         if hasattr(f.rep, 'quo_ground'):
@@ -1099,7 +1097,9 @@ class Poly(Expr):
         Poly(x + 2, x, domain='ZZ')
 
         >>> Poly(2*x + 3).exquo_ground(2)
-        Poly(x + 1, x, domain='ZZ')
+        Traceback (most recent call last):
+        ...
+        ExactQuotientFailed: 2 does not divide 3 in ZZ
 
         """
         if hasattr(f.rep, 'exquo_ground'):
@@ -1343,22 +1343,17 @@ class Poly(Expr):
         >>> from sympy import Poly
         >>> from sympy.abc import x
 
+        >>> Poly(x**2 + 1, x).pquo(Poly(2*x - 4, x))
+        Poly(2*x + 4, x, domain='ZZ')
+
         >>> Poly(x**2 - 1, x).pquo(Poly(2*x - 2, x))
         Poly(2*x + 2, x, domain='ZZ')
-
-        >>> Poly(x**2 + 1, x).pquo(Poly(2*x - 4, x))
-        Traceback (most recent call last):
-        ...
-        ExactQuotientFailed: 2*x - 4 does not divide x**2 + 1
 
         """
         _, per, F, G = f._unify(g)
 
         if hasattr(f.rep, 'pquo'):
-            try:
-                result = F.pquo(G)
-            except ExactQuotientFailed, exc:
-                raise exc.new(f.as_expr(), g.as_expr())
+            result = F.pquo(G)
         else: # pragma: no cover
             raise OperationNotSupported(f, 'pquo')
 
@@ -1373,17 +1368,22 @@ class Poly(Expr):
         >>> from sympy import Poly
         >>> from sympy.abc import x
 
-        >>> Poly(x**2 + 1, x).pexquo(Poly(2*x - 4, x))
-        Poly(2*x + 4, x, domain='ZZ')
-
         >>> Poly(x**2 - 1, x).pexquo(Poly(2*x - 2, x))
         Poly(2*x + 2, x, domain='ZZ')
+
+        >>> Poly(x**2 + 1, x).pexquo(Poly(2*x - 4, x))
+        Traceback (most recent call last):
+        ...
+        ExactQuotientFailed: 2*x - 4 does not divide x**2 + 1
 
         """
         _, per, F, G = f._unify(g)
 
         if hasattr(f.rep, 'pexquo'):
-            result = F.pexquo(G)
+            try:
+                result = F.pexquo(G)
+            except ExactQuotientFailed, exc:
+                raise exc.new(f.as_expr(), g.as_expr())
         else: # pragma: no cover
             raise OperationNotSupported(f, 'pexquo')
 
@@ -1472,13 +1472,11 @@ class Poly(Expr):
         >>> from sympy import Poly
         >>> from sympy.abc import x
 
+        >>> Poly(x**2 + 1, x).quo(Poly(2*x - 4, x))
+        Poly(1/2*x + 1, x, domain='QQ')
+
         >>> Poly(x**2 - 1, x).quo(Poly(x - 1, x))
         Poly(x + 1, x, domain='ZZ')
-
-        >>> Poly(x**2 + 1, x).quo(Poly(2*x - 4, x))
-        Traceback (most recent call last):
-        ...
-        ExactQuotientFailed: 2*x - 4 does not divide x**2 + 1
 
         """
         dom, per, F, G = f._unify(g)
@@ -1489,10 +1487,7 @@ class Poly(Expr):
             retract = True
 
         if hasattr(f.rep, 'quo'):
-            try:
-                q = F.quo(G)
-            except ExactQuotientFailed, exc:
-                raise exc.new(f.as_expr(), g.as_expr())
+            q = F.quo(G)
         else: # pragma: no cover
             raise OperationNotSupported(f, 'quo')
 
@@ -1513,11 +1508,13 @@ class Poly(Expr):
         >>> from sympy import Poly
         >>> from sympy.abc import x
 
-        >>> Poly(x**2 + 1, x).exquo(Poly(2*x - 4, x))
-        Poly(1/2*x + 1, x, domain='QQ')
-
         >>> Poly(x**2 - 1, x).exquo(Poly(x - 1, x))
         Poly(x + 1, x, domain='ZZ')
+
+        >>> Poly(x**2 + 1, x).exquo(Poly(2*x - 4, x))
+        Traceback (most recent call last):
+        ...
+        ExactQuotientFailed: 2*x - 4 does not divide x**2 + 1
 
         """
         dom, per, F, G = f._unify(g)
@@ -1528,7 +1525,10 @@ class Poly(Expr):
             retract = True
 
         if hasattr(f.rep, 'exquo'):
-            q = F.exquo(G)
+            try:
+                q = F.exquo(G)
+            except ExactQuotientFailed, exc:
+                raise exc.new(f.as_expr(), g.as_expr())
         else: # pragma: no cover
             raise OperationNotSupported(f, 'exquo')
 
@@ -3275,14 +3275,14 @@ class Poly(Expr):
         if not g.is_Poly:
             g = Poly(g, *f.gens)
 
-        return f.exquo(g)
+        return f.quo(g)
 
     @_sympifyit('g', NotImplemented)
     def __rfloordiv__(f, g):
         if not g.is_Poly:
             g = Poly(g, *f.gens)
 
-        return g.exquo(f)
+        return g.quo(f)
 
     @_sympifyit('g', NotImplemented)
     def __div__(f, g):
@@ -3671,13 +3671,10 @@ def pquo(f, g, *gens, **args):
     >>> from sympy import pquo
     >>> from sympy.abc import x
 
-    >>> pquo(x**2 - 1, 2*x - 2)
-    2*x + 2
-
     >>> pquo(x**2 + 1, 2*x - 4)
-    Traceback (most recent call last):
-    ...
-    ExactQuotientFailed: 2*x - 4 does not divide x**2 + 1
+    2*x + 4
+    >>> pquo(x**2 - 1, 2*x - 1)
+    2*x + 1
 
     """
     options.allowed_flags(args, ['polys'])
@@ -3703,10 +3700,13 @@ def pexquo(f, g, *gens, **args):
     >>> from sympy import pexquo
     >>> from sympy.abc import x
 
+    >>> pexquo(x**2 - 1, 2*x - 2)
+    2*x + 2
+
     >>> pexquo(x**2 + 1, 2*x - 4)
-    2*x + 4
-    >>> pexquo(x**2 - 1, 2*x - 1)
-    2*x + 1
+    Traceback (most recent call last):
+    ...
+    ExactQuotientFailed: 2*x - 4 does not divide x**2 + 1
 
     """
     options.allowed_flags(args, ['polys'])
@@ -3790,13 +3790,10 @@ def quo(f, g, *gens, **args):
     >>> from sympy import quo
     >>> from sympy.abc import x
 
+    >>> quo(x**2 + 1, 2*x - 4)
+    x/2 + 1
     >>> quo(x**2 - 1, x - 1)
     x + 1
-
-    >>> quo(x**2 + 1, 2*x - 4)
-    Traceback (most recent call last):
-    ...
-    ExactQuotientFailed: 2*x - 4 does not divide x**2 + 1
 
     """
     options.allowed_flags(args, ['auto', 'polys'])
@@ -3822,10 +3819,13 @@ def exquo(f, g, *gens, **args):
     >>> from sympy import exquo
     >>> from sympy.abc import x
 
-    >>> exquo(x**2 + 1, 2*x - 4)
-    x/2 + 1
     >>> exquo(x**2 - 1, x - 1)
     x + 1
+
+    >>> exquo(x**2 + 1, 2*x - 4)
+    Traceback (most recent call last):
+    ...
+    ExactQuotientFailed: 2*x - 4 does not divide x**2 + 1
 
     """
     options.allowed_flags(args, ['auto', 'polys'])

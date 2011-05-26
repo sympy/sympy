@@ -81,9 +81,9 @@ def test_DMP_arithmetics():
     f = DMP([[2],[2,0]], ZZ)
 
     assert f.mul_ground(2) == DMP([[4],[4,0]], ZZ)
-    assert f.exquo_ground(2) == DMP([[1],[1,0]], ZZ)
+    assert f.quo_ground(2) == DMP([[1],[1,0]], ZZ)
 
-    raises(ExactQuotientFailed, 'f.quo_ground(3)')
+    raises(ExactQuotientFailed, 'f.exquo_ground(3)')
 
     f = DMP([[-5]], ZZ)
     g = DMP([[5]], ZZ)
@@ -133,10 +133,10 @@ def test_DMP_arithmetics():
     r = DMP([[8,0,0]], ZZ)
 
     assert f.pdiv(g) == (q, r)
-    assert f.pexquo(g) == q
+    assert f.pquo(g) == q
     assert f.prem(g) == r
 
-    raises(ExactQuotientFailed, 'f.pquo(g)')
+    raises(ExactQuotientFailed, 'f.pexquo(g)')
 
     f = DMP([[1],[],[1,0,0]], ZZ)
     g = DMP([[1],[-1,0]], ZZ)
@@ -145,14 +145,14 @@ def test_DMP_arithmetics():
     r = DMP([[2,0,0]], ZZ)
 
     assert f.div(g) == (q, r)
-    assert f.exquo(g) == q
+    assert f.quo(g) == q
     assert f.rem(g) == r
 
     assert divmod(f, g) == (q, r)
     assert f // g == q
     assert f % g == r
 
-    raises(ExactQuotientFailed, 'f.quo(g)')
+    raises(ExactQuotientFailed, 'f.exquo(g)')
 
 def test_DMP_functionality():
     f = DMP([[1],[2,0],[1,0,0]], ZZ)
