@@ -133,6 +133,9 @@ def test_Lambda():
     p = x, y, z, t
     assert Lambda(p, t*(x+y+z))(*p) == t * (x + y + z)
 
+    assert Lambda(x, 2*x) + Lambda(y, 2*y) == 2*Lambda(x, 2*x)
+    assert Lambda(x, 2*x) not in [ Lambda(x, x) ]
+
 def test_IdentityFunction():
     assert Lambda(x, x) is Lambda(y, y) is S.IdentityFunction
     assert Lambda(x, 2*x) is not S.IdentityFunction
