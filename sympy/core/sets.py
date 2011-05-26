@@ -182,6 +182,7 @@ class Set(Basic):
 
     def __invert__(self):
         return self.complement
+
     def __contains__(self, other):
         result = self.contains(other)
         if not isinstance(result, bool):
@@ -440,6 +441,7 @@ class Interval(RealSet):
     @property
     def is_interval(self):
         return True
+
     @property
     def is_left_unbounded(self):
         """Return ``True`` if the left endpoint is negative infinity. """
@@ -557,6 +559,7 @@ class Union(Set):
         # interval end points.
         from sympy.functions.elementary.miscellaneous import Min
         return Min(*[set.inf for set in self.args])
+
     @property
     def _sup(self):
         # We use Max so that sup is meaningful in combination with symbolic
@@ -752,8 +755,10 @@ class EmptySet(Set):
 
     def __len__(self):
         return 0
+
     def union(self, other):
         return other
+
     def __iter__(self):
         return iter([])
 
@@ -791,6 +796,7 @@ class FiniteSet(CountableSet):
     @property
     def elements(self):
         return self.args[0]
+
     def __iter__(self):
         return self.elements.__iter__()
 
@@ -883,6 +889,7 @@ class RealFiniteSet(FiniteSet, RealSet):
 
     def _eval_evalf(self, prec):
         return RealFiniteSet(elem.evalf(prec) for elem in self)
+
     @property
     def _complement(self):
         """
