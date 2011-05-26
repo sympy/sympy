@@ -79,6 +79,13 @@ def test_divmod():
     raises(ZeroDivisionError, "divmod(S(0), S(0))")
     raises(ZeroDivisionError, "divmod(S(1), S(0))")
 
+def test_floordiv():
+    assert Integer(5) // Integer(3) is S.One
+    assert 5 // Integer(3) is S.One
+    assert Integer(5) // 3 is S.One
+    raises(TypeError, '"5" // Integer(3)')
+    raises(TypeError, 'Integer(5) // "3"')
+
 def test_igcd():
     assert igcd(0, 0) == 0
     assert igcd(0, 1) == 1

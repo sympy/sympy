@@ -506,7 +506,6 @@ def test_Poly_pow():
     assert Poly(x*y+1, x, y)**(-1) == (x*y+1)**(-1)
     assert Poly(x*y+1, x, y)**x == (x*y+1)**x
 
-@XFAIL
 def test_Poly_divmod():
     f, g = Poly(x**2), Poly(x)
     q, r = g, Poly(0, x)
