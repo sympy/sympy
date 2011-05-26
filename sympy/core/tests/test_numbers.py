@@ -37,6 +37,11 @@ def test_seterr():
     seterr(divide = False)
     S.Zero / S.Zero == S.NaN
 
+def test_mul():
+    assert Rational(3, 2) * Rational(5, 2) == Rational(15, 4)
+    assert Float(1.5) * Rational(5, 2) == Float(3.75)
+    assert Float(1.5) * Float(2.5) == Float(3.75)
+
 def test_mod():
     x = Rational(1, 2)
     y = Rational(3, 4)
@@ -58,6 +63,8 @@ def test_mod():
     assert round(a % 2, 15) == 0.6
     assert round(a % 0.5, 15) == 0.1
     assert Rational(3,4) % Float(1.1) == 0.75
+    assert 2.5 % Integer(2) == 0.5
+    assert 2.5 % Rational(3, 2) == 1.
 
     a = Integer(7)
     b = Integer(4)
@@ -71,6 +78,13 @@ def test_divmod():
     assert divmod(S(0), S(1)) == (0, 0)
     raises(ZeroDivisionError, "divmod(S(0), S(0))")
     raises(ZeroDivisionError, "divmod(S(1), S(0))")
+
+def test_floordiv():
+    assert Integer(5) // Integer(3) is S.One
+    assert 5 // Integer(3) is S.One
+    assert Integer(5) // 3 is S.One
+    raises(TypeError, '"5" // Integer(3)')
+    raises(TypeError, 'Integer(5) // "3"')
 
 def test_igcd():
     assert igcd(0, 0) == 0
@@ -308,6 +322,10 @@ def test_NaN():
     assert 1/nan  == nan
     assert 1/(-nan)  == nan
     assert 8/nan  == nan
+    assert 2. * nan == nan
+    assert nan * 2. == nan
+    assert Float(2.) * nan == nan
+    assert nan * Float(2.) == nan
 
 def test_powers():
     assert integer_nthroot(1, 2) == (1, True)

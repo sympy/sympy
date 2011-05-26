@@ -488,8 +488,8 @@ def test_Poly_mul():
     assert Poly(1, x) * x == Poly(x, x)
     assert Poly(1, x) * sin(x) == sin(x)
 
-    assert Poly(x, x) * 2 == Poly(2*x, x)
-    assert 2 * Poly(x, x) == Poly(2*x, x)
+    assert Poly(x, x) * 2 == Poly(x, x) * Integer(2) == Poly(2*x, x)
+    assert 2 * Poly(x, x) == Integer(2) * Poly(x, x) == Poly(2*x, x)
 
 def test_Poly_sqr():
     assert Poly(x*y, x, y).sqr() == Poly(x**2*y**2, x, y)

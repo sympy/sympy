@@ -3,7 +3,7 @@ from sympify import converter, sympify, _sympify, SympifyError
 from basic import Basic
 from singleton import S, Singleton
 from expr import Expr, AtomicExpr
-from decorators import _sympifyit, deprecated
+from decorators import _sympifyit, deprecated, sympify_other
 from cache import cacheit, clear_cache
 import sympy.mpmath as mpmath
 import sympy.mpmath.libmp as mlib
@@ -169,15 +169,19 @@ class Number(AtomicExpr):
 
     def __eq__(self, other):
         raise NotImplementedError('%s needs .__eq__() method' % (self.__class__.__name__))
+
     def __ne__(self, other):
         raise NotImplementedError('%s needs .__ne__() method' % (self.__class__.__name__))
+
     def __lt__(self, other):
         raise NotImplementedError('%s needs .__lt__() method' % (self.__class__.__name__))
+
     def __le__(self, other):
         raise NotImplementedError('%s needs .__le__() method' % (self.__class__.__name__))
 
     def __gt__(self, other):
         return _sympify(other).__lt__(self)
+
     def __ge__(self, other):
         return _sympify(other).__le__(self)
 
@@ -323,47 +327,59 @@ class Float(Number):
     def __neg__(self):
         return Float._new(mlib.mpf_neg(self._mpf_), self._prec)
 
-    @_sympifyit('other', NotImplemented)
+    @sympify_other
     def __mul__(self, other):
+        if type(other) is type(self):
+            prec = max(self._prec, other._prec)
+            return Float._new(mlib.mpf_mul(self._mpf_, other._mpf_, prec, rnd), prec)
+        return NotImplemented
+
+    @sympify_other
+    def __rmul__(self, other):
         if isinstance(other, Number):
             rhs, prec = other._as_mpf_op(self._prec)
             return Float._new(mlib.mpf_mul(self._mpf_, rhs, prec, rnd), prec)
-        return Number.__mul__(self, other)
+        return Number.__rmul__(self, other)
 
-    @_sympifyit('other', NotImplemented)
+    @sympify_other
     def __mod__(self, other):
         if isinstance(other, Number):
             rhs, prec = other._as_mpf_op(self._prec)
             return Float._new(mlib.mpf_mod(self._mpf_, rhs, prec, rnd), prec)
-        return Number.__mod__(self, other)
+        return NotImplemented
 
-    @_sympifyit('other', NotImplemented)
+    @sympify_other
     def __add__(self, other):
-        if (other is S.NaN) or (self is NaN):
-            return S.NaN
-        if isinstance(other, Number):
+        if isinstance(other, Float):
             rhs, prec = other._as_mpf_op(self._prec)
             return Float._new(mlib.mpf_add(self._mpf_, rhs, prec, rnd), prec)
         return Number.__add__(self, other)
 
-    def _eval_power(self, e):
+    @sympify_other
+    def __radd__(self, other):
+        if isinstance(other, Number):
+            rhs, prec = other._as_mpf_op(self._prec)
+            return Float._new(mlib.mpf_add(self._mpf_, rhs, prec, rnd), prec)
+        return Number.__radd__(self, other)
+
+    def _eval_power(self, expt):
         """
-        e is symbolic object but not equal to 0, 1
+        expt is symbolic object but not equal to 0, 1
 
         (-p) ** r -> exp(r * log(-p)) -> exp(r * (log(p) + I*Pi)) ->
                   -> p ** r * (sin(Pi*r) + cos(Pi*r) * I)
         """
-        if isinstance(e, Number):
-            if isinstance(e, Integer):
+        if isinstance(expt, Number):
+            if isinstance(expt, Integer):
                 prec = self._prec
-                return Float._new(mlib.mpf_pow_int(self._mpf_, e.p, prec, rnd), prec)
-            e, prec = e._as_mpf_op(self._prec)
-            b = self._mpf_
+                return Float._new(mlib.mpf_pow_int(self._mpf_, expt.p, prec, rnd), prec)
+            expt, prec = expt._as_mpf_op(self._prec)
+            self = self._mpf_
             try:
-                y = mpf_pow(b, e, prec, rnd)
+                y = mpf_pow(self, expt, prec, rnd)
                 return Float._new(y, prec)
             except mlib.ComplexResult:
-                re, im = mlib.mpc_pow((b, mlib.fzero), (e, mlib.fzero), prec, rnd)
+                re, im = mlib.mpc_pow((self, mlib.fzero), (expt, mlib.fzero), prec, rnd)
                 return Float._new(re, prec) + Float._new(im, prec) * S.ImaginaryUnit
 
     def __abs__(self):
@@ -378,7 +394,8 @@ class Float(Number):
         except SympifyError:
             return False    # sympy != other  -->  not ==
         if isinstance(other, NumberSymbol):
-            if other.is_irrational: return False
+            if other.is_irrational:
+                return False
             return other.__eq__(self)
         if isinstance(other, FunctionClass): #cos as opposed to cos(x)
             return False
@@ -392,7 +409,8 @@ class Float(Number):
         except SympifyError:
             return True     # sympy != other
         if isinstance(other, NumberSymbol):
-            if other.is_irrational: return True
+            if other.is_irrational:
+                return True
             return other.__ne__(self)
         if isinstance(other, FunctionClass): #cos as opposed to cos(x)
             return True
@@ -407,7 +425,8 @@ class Float(Number):
             return False    # sympy > other
         if isinstance(other, NumberSymbol):
             return other.__ge__(self)
-        if other.is_comparable: other = other.evalf()
+        if other.is_comparable:
+            other = other.evalf()
         if isinstance(other, Number):
             return bool(mlib.mpf_lt(self._mpf_, other._as_mpf_val(self._prec)))
         return Expr.__lt__(self, other)
@@ -419,7 +438,8 @@ class Float(Number):
             return False    # sympy > other  -->  ! <=
         if isinstance(other, NumberSymbol):
             return other.__gt__(self)
-        if other.is_comparable: other = other.evalf()
+        if other.is_comparable:
+            other = other.evalf()
         if isinstance(other, Number):
             return bool(mlib.mpf_le(self._mpf_, other._as_mpf_val(self._prec)))
         return Expr.__le__(self, other)
@@ -624,32 +644,42 @@ class Rational(Number):
     def __neg__(self):
         return Rational(-self.p, self.q)
 
-    @_sympifyit('other', NotImplemented)
     def __mul__(self, other):
-        if (other is S.NaN) or (self is S.NaN):
-            return S.NaN
         if isinstance(other, Float):
-            return other * self
+            return other.__rmul__(self)
         if isinstance(other, Rational):
             return Rational(self.p * other.p, self.q * other.q)
-        return Number.__mul__(self, other)
+        return super(Rational, self).__mul__(other)
 
-    @_sympifyit('other', NotImplemented)
+    def __rmul__(self, other):
+        if isinstance(other, Float):
+            return other.__rmul__(self)
+        if isinstance(other, Rational):
+            return Rational(self.p * other.p, self.q * other.q)
+        return super(Rational, self).__rmul__(other)
+
+    @sympify_other
     def __mod__(self, other):
         if isinstance(other, Rational):
             n = (self.p*other.q) // (other.p*self.q)
             return Rational(self.p*other.q - n*other.p*self.q, self.q*other.q)
         if isinstance(other, Float):
             return self.evalf() % other
-        return Number.__mod__(self, other)
+        return NotImplemented
 
-    # TODO reorder
-    @_sympifyit('other', NotImplemented)
-    def __add__(self, other):
-        if (other is S.NaN) or (self is S.NaN):
-            return S.NaN
+    @sympify_other
+    def __rmod__(self, other):
+        if isinstance(other, Rational):
+            n = (other.p * self.q) // (self.p * other.q)
+            return Rational(other.p*self.q - n*self.p*other.q, self.q*other.q)
         if isinstance(other, Float):
-            return other + self
+            return other % self.evalf()
+        return NotImplemented
+
+
+    def __add__(self, other):
+        if isinstance(other, Float):
+            return other.__radd__(self)
         if isinstance(other, Rational):
             if self.is_unbounded:
                 if other.is_bounded:
@@ -662,46 +692,65 @@ class Rational(Number):
             return Rational(self.p * other.q + self.q * other.p, self.q * other.q)
         return Number.__add__(self, other)
 
-    def _eval_power(b, e):
-        if (e is S.NaN): return S.NaN
-        if isinstance(e, Number):
-            if isinstance(e, Float):
-                return b._eval_evalf(e._prec) ** e
-            if e.is_negative:
+
+    @sympify_other
+    def __radd__(self, other):
+        if isinstance(other, Float):
+            return other.__radd__(self)
+        if isinstance(other, Rational):
+            if self.is_unbounded:
+                if other.is_bounded:
+                    return self
+                elif self==other:
+                    return self
+            else:
+                if other.is_unbounded:
+                    return other
+            return Rational(self.p * other.q + self.q * other.p, self.q * other.q)
+        return Number.__radd__(self, other)
+
+    def _eval_power(self, expt):
+        if (expt is S.NaN):
+            return S.NaN
+        if isinstance(expt, Number):
+            if isinstance(expt, Float):
+                return self._eval_evalf(expt._prec) ** expt
+            if expt.is_negative:
                 # (3/4)**-2 -> (4/3)**2
-                ne = -e
+                ne = -expt
                 if (ne is S.One):
-                    return Rational(b.q, b.p)
-                if b < 0:
-                    if e.q != 1:
-                        return -(S.NegativeOne) ** ((e.p % e.q) / S(e.q)) * Rational(b.q, -b.p) ** ne
+                    return Rational(self.q, self.p)
+                if self < 0:
+                    if expt.q != 1:
+                        return -(S.NegativeOne) ** ((expt.p % expt.q) / S(expt.q)) * Rational(self.q, -self.p) ** ne
                     else:
-                        return S.NegativeOne ** ne * Rational(b.q, -b.p) ** ne
+                        return S.NegativeOne ** ne * Rational(self.q, -self.p) ** ne
                 else:
-                    return Rational(b.q, b.p) ** ne
-            if (e is S.Infinity):
-                if b.p > b.q:
+                    return Rational(self.q, self.p) ** ne
+            if (expt is S.Infinity):
+                if self.p > self.q:
                     # (3/2)**oo -> oo
                     return S.Infinity
-                if b.p < -b.q:
+                if self.p < -self.q:
                     # (-3/2)**oo -> oo + I*oo
                     return S.Infinity + S.Infinity * S.ImaginaryUnit
                 return S.Zero
-            if isinstance(e, Integer):
+            if isinstance(expt, Integer):
                 # (4/3)**2 -> 4**2 / 3**2
-                return Rational(b.p ** e.p, b.q ** e.p)
-            if isinstance(e, Rational):
-                if b.p != 1:
+                return Rational(self.p ** expt.p, self.q ** expt.p)
+            if isinstance(expt, Rational):
+                if self.p != 1:
                     # (4/3)**(5/6) -> 4**(5/6) * 3**(-5/6)
-                    return Integer(b.p) ** e * Integer(b.q) ** (-e)
-                if b >= 0:
-                    return Integer(b.q)**Rational(e.p * (e.q-1), e.q) / ( Integer(b.q) ** Integer(e.p))
+                    return Integer(self.p) ** expt * Integer(self.q) ** (-expt)
+                if self >= 0:
+                    return (Integer(self.q)**Rational(expt.p * (expt.q-1), expt.q)
+                                / ( Integer(self.q) ** Integer(expt.p)))
                 else:
-                    return (-1)**e * (-b)**e
+                    return (-1)**expt * (-self)**expt
 
-        c, t = b.as_coeff_mul()
-        if e.is_even and isinstance(c, Number) and c < 0:
-            return (-c * Mul(*t)) ** e
+        c, t = self.as_coeff_mul()
+        if expt.is_even and isinstance(c, Number) and c < 0:
+            return (-c * Mul(*t)) ** expt
 
         return
 
@@ -723,7 +772,8 @@ class Rational(Number):
         except SympifyError:
             return False    # sympy != other  -->  not ==
         if isinstance(other, NumberSymbol):
-            if other.is_irrational: return False
+            if other.is_irrational:
+                return False
             return other.__eq__(self)
         if isinstance(other, FunctionClass): #cos as opposed to cos(x)
             return False
@@ -742,7 +792,8 @@ class Rational(Number):
         except SympifyError:
             return True     # sympy != other
         if isinstance(other, NumberSymbol):
-            if other.is_irrational: return True
+            if other.is_irrational:
+                return True
             return other.__ne__(self)
         if isinstance(other, FunctionClass): #cos as opposed to cos(x)
             return True
@@ -947,18 +998,13 @@ class Integer(Rational):
     @int_trace
     def __new__(cls, i):
         ival = int(i)
-
         try:
             return _intcache[ival]
         except KeyError:
             # We only work with well-behaved integer types. This converts, for
             # example, numpy.int32 instances.
-            if ival == 0: obj = S.Zero
-            elif ival == 1: obj = S.One
-            elif ival == -1: obj = S.NegativeOne
-            else:
-                obj = Expr.__new__(cls)
-                obj.p = ival
+            obj = Expr.__new__(cls)
+            obj.p = ival
 
             _intcache[ival] = obj
             return obj
@@ -980,100 +1026,114 @@ class Integer(Rational):
             return Integer(-self.p)
 
     def __mod__(self, other):
-        if isinstance(other, Integer) or not isinstance(other, Rational):
-            return Integer(self.p % other)
-        return Rational.__mod__(self, other)
+        if isinstance(other, Integer):
+            return Integer(self.p % other.p)
+        return super(Integer, self).__mod__(other)
 
     def __rmod__(self, other):
-        return Integer(other % self.p)
+        if isinstance(other, Integer):
+            return Integer(other.p % self.p)
+        return super(Integer, self).__rmod__(other)
 
     def __divmod__(self, other):
         return divmod(self.p, other.p)
 
     # TODO make it decorator + bytecodehacks?
-    def __add__(a, b):
-        if isinstance(b, (int, long)):
-            return Integer(a.p + b)
-        elif isinstance(b, Integer):
-            return Integer(a.p + b.p)
-        return Rational.__add__(a, b)   # a,b -not- b,a
+    def __add__(self, other):
+        if type(other) is int:
+            return Integer(self.p + other)
+        elif isinstance(other, Integer):
+            return Integer(self.p + other.p)
+        return Rational.__add__(self, other)
 
-    def __radd__(a, b):
-        if isinstance(b, (int, long)):
-            return Integer(b + a.p)
-        elif isinstance(b, Integer):
-            return Integer(b.p + a.p)
-        return Rational.__add__(a, b)
+    def __radd__(self, other):
+        if type(other) is int:
+            return Integer(other + self.p)
+        elif isinstance(other, Integer):
+            return Integer(other.p + self.p)
+        return Rational.__radd__(self, other)
 
-    def __sub__(a, b):
-        if isinstance(b, (int, long)):
-            return Integer(a.p - b)
-        elif isinstance(b, Integer):
-            return Integer(a.p - b.p)
-        return Rational.__sub__(a, b)
+    def __sub__(self, other):
+        if type(other) is int:
+            return Integer(self.p - other)
+        elif isinstance(other, Integer):
+            return Integer(self.p - other.p)
+        return Rational.__sub__(self, other)
 
-    def __rsub__(a, b):
-        if isinstance(b, (int, long)):
-            return Integer(b - a.p)
-        elif isinstance(b, Integer):
-            return Integer(b.p - a.p)
-        return Rational.__rsub__(a, b)
+    def __rsub__(self, other):
+        if type(other) is int:
+            return Integer(other - self.p)
+        elif isinstance(other, Integer):
+            return Integer(other.p - self.p)
+        return Rational.__rsub__(self, other)
 
-    def __mul__(a, b):
-        if isinstance(b, (int, long)):
-            return Integer(a.p * b)
-        elif isinstance(b, Integer):
-            return Integer(a.p * b.p)
-        return Rational.__mul__(a, b)
+    def __mul__(self, other):
+        if type(other) is int:
+            return Integer(self.p * other)
+        elif isinstance(other, Integer):
+            return Integer(self.p * other.p)
+        return Rational.__mul__(self, other)
 
-    def __rmul__(a, b):
-        if isinstance(b, (int, long)):
-            return Integer(b * a.p)
-        elif isinstance(b, Integer):
-            return Integer(b.p * a.p)
-        return Rational.__mul__(a, b)
+    def __rmul__(self, other):
+        if type(other) is int:
+            return Integer(other * self.p)
+        elif isinstance(other, Integer):
+            return Integer(other.p * self.p)
+        return super(Integer, self).__rmul__(other)
 
-    def __eq__(a, b):
-        if isinstance(b, (int, long)):
-            return (a.p == b)
-        elif isinstance(b, Integer):
-            return (a.p == b.p)
-        return Rational.__eq__(a, b)
+    @sympify_other
+    def __floordiv__(self, other):
+        if type(other) is type(self):
+            return Integer(self.p // Integer(other).p)
+        return NotImplemented
 
-    def __ne__(a, b):
-        if isinstance(b, (int, long)):
-            return (a.p != b)
-        elif isinstance(b, Integer):
-            return (a.p != b.p)
-        return Rational.__ne__(a, b)
+    @sympify_other
+    def __rfloordiv__(self, other):
+        if isinstance(other, Integer):
+            return Integer(Integer(other).p // self.p)
+        return NotImplemented
 
-    def __gt__(a, b):
-        if isinstance(b, (int, long)):
-            return (a.p >  b)
-        elif isinstance(b, Integer):
-            return (a.p >  b.p)
-        return Rational.__gt__(a, b)
+    def __eq__(self, other):
+        if type(other) is int:
+            return (self.p == other)
+        elif isinstance(other, Integer):
+            return (self.p == other.p)
+        return Rational.__eq__(self, other)
 
-    def __lt__(a, b):
-        if isinstance(b, (int, long)):
-            return (a.p <  b)
-        elif isinstance(b, Integer):
-            return (a.p <  b.p)
-        return Rational.__lt__(a, b)
+    def __ne__(self, other):
+        if type(other) is int:
+            return (self.p != other)
+        elif isinstance(other, Integer):
+            return (self.p != other.p)
+        return Rational.__ne__(self, other)
 
-    def __ge__(a, b):
-        if isinstance(b, (int, long)):
-            return (a.p >= b)
-        elif isinstance(b, Integer):
-            return (a.p >= b.p)
-        return Rational.__ge__(a, b)
+    def __gt__(self, other):
+        if type(other) is int:
+            return (self.p >  other)
+        elif isinstance(other, Integer):
+            return (self.p >  other.p)
+        return Rational.__gt__(self, other)
 
-    def __le__(a, b):
-        if isinstance(b, (int, long)):
-            return (a.p <= b)
-        elif isinstance(b, Integer):
-            return (a.p <= b.p)
-        return Rational.__le__(a, b)
+    def __lt__(self, other):
+        if type(other) is int:
+            return (self.p <  other)
+        elif isinstance(other, Integer):
+            return (self.p <  other.p)
+        return Rational.__lt__(self, other)
+
+    def __ge__(self, other):
+        if type(other) is int:
+            return (self.p >= other)
+        elif isinstance(other, Integer):
+            return (self.p >= other.p)
+        return Rational.__ge__(self, other)
+
+    def __le__(self, other):
+        if type(other) is int:
+            return (self.p <= other)
+        elif isinstance(other, Integer):
+            return (self.p <= other.p)
+        return Rational.__le__(self, other)
 
     def __hash__(self):
         return super(Integer, self).__hash__()
@@ -1086,9 +1146,9 @@ class Integer(Rational):
     def _eval_is_odd(self):
         return bool(self.p % 2)
 
-    def _eval_power(b, e):
+    def _eval_power(self, expt):
         """
-        Tries to do some simplifications on b ** e, where b is
+        Tries to do some simplifications on self ** expt, where self is
         an instance of Integer
 
         Returns None if no further simplifications can be done
@@ -1107,63 +1167,62 @@ class Integer(Rational):
         """
         from sympy import perfect_power
 
-        if e is S.NaN:
+        if expt is S.NaN:
             return S.NaN
-        if b is S.One:
+        if self is S.One:
             return S.One
-        if b is S.NegativeOne:
+        if self is S.NegativeOne:
             return
-        if e is S.Infinity:
-            if b > S.One:
+        if expt is S.Infinity:
+            if self.p > S.One:
                 return S.Infinity
-            if b is S.NegativeOne:
+            if self is S.NegativeOne:
                 return S.NaN
-            # cases for 0 and 1 are done in their respective classes
+            # cases 0, 1 are done in their respective classes
             return S.Infinity + S.ImaginaryUnit * S.Infinity
-        if not isinstance(e, Number):
+        if not isinstance(expt, Number):
             # simplify when exp is even
             # (-2) ** k --> 2 ** k
-            c, t = b.as_coeff_mul()
-            if e.is_even and isinstance(c, Number) and c < 0:
-                return (-c*Mul(*t))**e
-        if not isinstance(e, Rational):
+            c, t = self.as_coeff_mul()
+            if expt.is_even and isinstance(c, Number) and c < 0:
+                return (-c*Mul(*t))**expt
+        if not isinstance(expt, Rational):
             return
-        if e is S.Half and b < 0:
+        if expt is S.Half and self < 0:
             # we extract I for this special case since everyone is doing so
-            return S.ImaginaryUnit*Pow(-b, e)
-        if e < 0:
+            return S.ImaginaryUnit * Pow(-self, expt)
+        if expt < 0:
             # invert base and change sign on exponent
-            ne = -e
-            if b < 0:
-                if e.q != 1:
-                    return -(S.NegativeOne)**((e.p % e.q) /
-                                             S(e.q)) * Rational(1, -b)**ne
+            ne = -expt
+            if self < 0:
+                if expt.q != 1:
+                    return -(S.NegativeOne) ** ((expt.p % expt.q) / S(expt.q)) * Rational(1, -self) ** ne
                 else:
-                    return (S.NegativeOne)**ne*Rational(1, -b)**ne
+                    return (S.NegativeOne) ** ne * Rational(1, -self) ** ne
             else:
-                return Rational(1, b)**ne
+                return Rational(1, self.p) ** ne
         # see if base is a perfect root, sqrt(4) --> 2
-        b_pos = int(abs(b))
-        x, xexact = integer_nthroot(b_pos, e.q)
+        x, xexact = integer_nthroot(abs(self.p), expt.q)
         if xexact:
             # if it's a perfect root we've finished
-            result = Integer(x ** abs(e.p))
-            if b < 0:
-                result *= (-1)**e
+            result = Integer(x ** abs(expt.p))
+            if self < 0:
+                result *= (-1)**expt
             return result
 
         # The following is an algorithm where we collect perfect roots
         # from the factors of base.
 
         # if it's not an nth root, it still might be a perfect power
+        b_pos = int(abs(self.p))
         p = perfect_power(b_pos)
         if p is not False:
             dict = {p[0]: p[1]}
         else:
-            dict = Integer(b_pos).factors(limit=2**15)
+            dict = Integer(self).factors(limit=2**15)
 
         # now process the dict of factors
-        if b.is_negative:
+        if self.is_negative:
             dict[-1] = 1
         out_int = 1 # integer part
         out_rad = 1 # extracted radicals
@@ -1171,17 +1230,17 @@ class Integer(Rational):
         sqr_gcd = 0
         sqr_dict = {}
         for prime, exponent in dict.items():
-            exponent *= e.p
-            # remove multiples of e.q, e.g. (2**12)**(1/10) -> 2*(2**2)**(1/10)
-            div_e, div_m = divmod(exponent, e.q)
+            exponent *= expt.p
+            # remove multiples of expt.q, e.g. (2**12)**(1/10) -> 2*(2**2)**(1/10)
+            div_e, div_m = divmod(exponent, expt.q)
             if div_e > 0:
                 out_int *= prime**div_e
             if div_m > 0:
                 # see if the reduced exponent shares a gcd with e.q
                 # (2**2)**(1/10) -> 2**(1/5)
-                g = igcd(div_m, e.q)
+                g = igcd(div_m, expt.q)
                 if g != 1:
-                    out_rad *= Pow(prime, Rational(div_m//g, e.q//g))
+                    out_rad *= Pow(prime, Rational(div_m//g, expt.q//g))
                 else:
                     sqr_dict[prime] = div_m
         # identify gcd of remaining powers
@@ -1194,10 +1253,10 @@ class Integer(Rational):
                     break
         for k, v in sqr_dict.iteritems():
             sqr_int *= k**(v//sqr_gcd)
-        if sqr_int == b and out_int == 1 and out_rad == 1:
+        if sqr_int == self and out_int == 1 and out_rad == 1:
             result = None
         else:
-            result = out_int*out_rad*Pow(sqr_int, Rational(sqr_gcd, e.q))
+            result = out_int*out_rad*Pow(sqr_int, Rational(sqr_gcd, expt.q))
         return result
 
     def _eval_is_prime(self):
@@ -1207,47 +1266,39 @@ class Integer(Rational):
     def as_numer_denom(self):
         return self, S.One
 
-    def __floordiv__(self, other):
-        return Integer(self.p // Integer(other).p)
-
-    def __rfloordiv__(self, other):
-        return Integer(Integer(other).p // self.p)
-
-    def factorial(a):
-        """Compute factorial of `a`. """
+    def factorial(self):
+        """Compute factorial of `self`. """
         from sympy.functions.combinatorial.factorials import factorial
-        return Integer(factorial(int(a)))
+        return Integer(factorial(int(self)))
 
-    def isqrt(a):
-        """Compute integer square root of `a`. """
-        return Integer(mlib.isqrt(int(a)))
+    def isqrt(self):
+        """Compute integer square root of `self`. """
+        return Integer(mlib.isqrt(int(self)))
 
-    def half_gcdex(a, b):
+    def half_gcdex(self, other):
         """Half Extended Euclidean Algorithm. """
-        s, _, h = a.gcdex(b)
+        s, _, h = self.gcdex(other)
         return s, h
 
-    def gcdex(a, b):
+    def gcdex(self, other):
         """Extended Euclidean Algorithm. """
-        if isinstance(b, (int, long)):
-            return tuple(map(Integer, igcdex(int(a), b)))
+        if isinstance(self, (int, long)):
+            return tuple(map(Integer, igcdex(int(self), other)))
+        b = _sympify(other)
+        if b.is_Integer:
+            return tuple(map(Integer, igcdex(int(self), int(b))))
         else:
-            b = _sympify(b)
+            raise ValueError("expected an integer, got %s" % b)
+
+    def invert(self, other):
+        """Invert `self` modulo `other`, if possible. """
+        if isinstance(other, (int, long)):
+            a, b = int(self), other
+        else:
+            b = _sympify(other)
 
             if b.is_Integer:
-                return tuple(map(Integer, igcdex(int(a), int(b))))
-            else:
-                raise ValueError("expected an integer, got %s" % b)
-
-    def invert(a, b):
-        """Invert `a` modulo `b`, if possible. """
-        if isinstance(b, (int, long)):
-            a = int(a)
-        else:
-            b = _sympify(b)
-
-            if b.is_Integer:
-                a, b = int(a), int(b)
+                a, b = int(self), int(b)
             else:
                 raise ValueError("expected an integer, got %s" % b)
 
@@ -1302,21 +1353,21 @@ class Zero(IntegerConstant):
     def __neg__():
         return S.Zero
 
-    def _eval_power(b, e):
-        if e.is_negative:
+    def _eval_power(self, expt):
+        if expt.is_negative:
             return S.Infinity
-        if e.is_positive:
-            return b
-        d = e.evalf()
+        if expt.is_positive:
+            return self
+        d = expt.evalf()
         if isinstance(d, Number):
             if d.is_negative:
                 return S.Infinity
-            return b
-        coeff, terms = e.as_coeff_mul()
+            return self
+        coeff, terms = expt.as_coeff_mul()
         if coeff.is_negative:
             return S.Infinity ** Mul(*terms)
         if coeff is not S.One:
-            return b ** Mul(*terms)
+            return self ** Mul(*terms)
 
     def _eval_order(self, *symbols):
         # Order(0,x) -> 0
@@ -1372,25 +1423,27 @@ class NegativeOne(IntegerConstant):
     def __neg__():
         return S.One
 
-    def _eval_power(b, e):
-        if e.is_odd: return S.NegativeOne
-        if e.is_even: return S.One
-        if isinstance(e, Number):
-            if isinstance(e, Float):
-                return Float(-1.0) ** e
-            if e is S.NaN:
+    def _eval_power(self, expt):
+        if expt.is_odd:
+            return S.NegativeOne
+        if expt.is_even:
+            return S.One
+        if isinstance(expt, Number):
+            if isinstance(expt, Float):
+                return Float(-1.0) ** expt
+            if expt is S.NaN:
                 return S.NaN
-            if e is S.Infinity  or  e is S.NegativeInfinity:
+            if expt is S.Infinity  or  expt is S.NegativeInfinity:
                 return S.NaN
-            if e is S.Half:
+            if expt is S.Half:
                 return S.ImaginaryUnit
-            if isinstance(e, Rational):
-                if e.q == 2:
-                    return S.ImaginaryUnit ** Integer(e.p)
-                q = Float(e).floor()
+            if isinstance(expt, Rational):
+                if expt.q == 2:
+                    return S.ImaginaryUnit ** Integer(expt.p)
+                q = Float(expt).floor()
                 if q:
                     q = Integer(q)
-                    return b ** q * b ** (e - q)
+                    return self ** q * self ** (expt - q)
         return
 
 class Half(RationalConstant):
@@ -1431,23 +1484,23 @@ class Infinity(RationalConstant):
     def __neg__():
         return S.NegativeInfinity
 
-    def _eval_power(b, e):
+    def _eval_power(self, expt):
         """
-        e is symbolic object but not equal to 0, 1
+        expt is symbolic object but not equal to 0, 1
 
         oo ** nan -> nan
         oo ** (-p) -> 0, p is number, oo
         """
-        if e.is_positive:
+        if expt.is_positive:
             return S.Infinity
-        if e.is_negative:
+        if expt.is_negative:
             return S.Zero
-        if isinstance(e, Number):
-            if e is S.NaN:
+        if isinstance(expt, Number):
+            if expt is S.NaN:
                 return S.NaN
-        d = e.evalf()
+        d = expt.evalf()
         if isinstance(d, Number):
-            return b ** d
+            return self ** d
         return
 
     def _as_mpf_val(self, prec):
@@ -1457,19 +1510,19 @@ class Infinity(RationalConstant):
         import sage.all as sage
         return sage.oo
 
-    def __gt__(a, b):
-        if b is S.Infinity:
+    def __gt__(self, other):
+        if other is S.Infinity:
             return False
         return True
 
-    def __lt__(a, b):
+    def __lt__(self, other):
         return False
 
-    def __ge__(a, b):
+    def __ge__(self, other):
         return True
 
-    def __le__(a, b):
-        if b is S.Infinity:
+    def __le__(self, other):
+        if other is S.Infinity:
             return True
         return False
 
@@ -1504,45 +1557,45 @@ class NegativeInfinity(RationalConstant):
     def __neg__():
         return S.Infinity
 
-    def _eval_power(b, e):
+    def _eval_power(self, expt):
         """
-        e is symbolic object but not equal to 0, 1
+        expt is symbolic object but not equal to 0, 1
 
         (-oo) ** nan -> nan
         (-oo) ** oo  -> nan
         (-oo) ** (-oo) -> nan
-        (-oo) ** e -> oo, e is positive even integer
+        (-oo) ** expt -> oo, expt is positive even integer
         (-oo) ** o -> -oo, o is positive odd integer
 
         """
-        if isinstance(e, Number):
-            if (e is S.NaN)  or  (e is S.Infinity)  or  (e is S.NegativeInfinity):
+        if isinstance(expt, Number):
+            if (expt is S.NaN)  or  (expt is S.Infinity)  or  (expt is S.NegativeInfinity):
                 return S.NaN
-            if isinstance(e, Integer):
-                if e.is_positive:
-                    if e.is_odd:
+            if isinstance(expt, Integer):
+                if expt.is_positive:
+                    if expt.is_odd:
                         return S.NegativeInfinity
                     return S.Infinity
-            return S.NegativeOne**e * S.Infinity ** e
+            return S.NegativeOne**expt * S.Infinity ** expt
         return
 
     def _as_mpf_val(self, prec):
         return mlib.fninf
 
-    def __gt__(a, b):
+    def __gt__(self, other):
         return False
 
-    def __lt__(a, b):
-        if b is S.NegativeInfinity:
+    def __lt__(self, other):
+        if other is S.NegativeInfinity:
             return False
         return True
 
-    def __ge__(a, b):
-        if b is S.NegativeInfinity:
+    def __ge__(self, other):
+        if other is S.NegativeInfinity:
             return True
         return False
 
-    def __le__(a, b):
+    def __le__(self, other):
         return True
 
 
@@ -1566,13 +1619,33 @@ class NaN(RationalConstant):
 
     __slots__ = []
 
+    def __mul__(self, other):
+        if isinstance(other, Number):
+            return self
+        return super(NaN, self).__mul__(other)
+
+    def __rmul__(self, other):
+        if isinstance(other, Expr):
+            return self
+        return super(NaN, self).__rmul__(other)
+
+    def __add__(self, other):
+        if isinstance(other, Number):
+            return self
+        return super(NaN, self).__add__(other)
+
+    def __radd__(self, other):
+        if isinstance(other, Expr):
+            return self
+        return super(NaN, self).__radd__(other)
+
     def _as_mpf_val(self, prec):
         return mlib.fnan
 
-    def _eval_power(b, e):
-        if e is S.Zero:
+    def _eval_power(self, expt):
+        if expt is S.Zero:
             return S.One
-        return b
+        return self
 
     def _sage_(self):
         import sage.all as sage
@@ -1599,15 +1672,15 @@ class ComplexInfinity(AtomicExpr):
     def __neg__():
         return S.ComplexInfinity
 
-    def _eval_power(b, e):
-        if e is S.ComplexInfinity:
+    def _eval_power(self, expt):
+        if expt is S.ComplexInfinity:
             return S.NaN
 
-        if isinstance(e, Number):
-            if e is S.Zero:
+        if isinstance(expt, Number):
+            if expt is S.Zero:
                 return S.NaN
             else:
-                if e.is_positive:
+                if expt.is_positive:
                     return S.ComplexInfinity
                 else:
                     return S.Zero
@@ -1861,7 +1934,7 @@ class ImaginaryUnit(AtomicExpr):
     def _eval_conjugate(self):
         return -S.ImaginaryUnit
 
-    def _eval_power(b, e):
+    def _eval_power(self, expt):
         """
         b is I = sqrt(-1)
         e is symbolic object but not equal to 0, 1
@@ -1874,17 +1947,17 @@ class ImaginaryUnit(AtomicExpr):
         """
 
 
-        if isinstance(e, Number):
-            if isinstance(e, Integer):
-                ei = e.p % 4
-                if ei == 0:
+        if isinstance(expt, Number):
+            if isinstance(expt, Integer):
+                expt = expt.p % 4
+                if expt==0:
                     return S.One
-                if ei == 1:
+                if expt==1:
                     return S.ImaginaryUnit
-                if ei == 2:
+                if expt==2:
                     return -S.One
                 return -S.ImaginaryUnit
-            return (S.NegativeOne) ** (e * S.Half)
+            return (S.NegativeOne) ** (expt * S.Half)
         return
 
     def as_base_exp(self):
