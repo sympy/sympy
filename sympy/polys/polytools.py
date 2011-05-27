@@ -4726,7 +4726,8 @@ def factor_list(f, *gens, **args):
 
 def factor(f, *gens, **args):
     """
-    Compute the factorization of ``f`` into irreducibles.
+    Compute the factorization of ``f`` into irreducibles. (Use factorint to
+    factor an integer.)
 
     There two modes implemented: symbolic and formal. If ``f`` is not an
     instance of :class:`Poly` and generators are not specified, then the
