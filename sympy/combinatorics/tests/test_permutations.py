@@ -1,4 +1,5 @@
-from sympy.combinatorics.permutations import Permutation, josephus
+from sympy.combinatorics.permutations import (Permutation, josephus,
+                                              from_inversion_vector)
 
 def test_Permutation():
     p = Permutation([2,5,1,6,3,0,4])
@@ -19,6 +20,10 @@ def test_Permutation():
 
     assert p.inversion_vector == [2, 4, 1, 3, 1, 0]
     assert q.inversion_vector == [3, 1, 2, 2, 0, 1]
+
+    assert from_inversion_vector(p.inversion_vector) == p
+    assert from_inversion_vector(q.inversion_vector).array_form == \
+          q.array_form
 
     s = Permutation([0])
 

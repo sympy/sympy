@@ -660,5 +660,25 @@ def from_inversion_vector(inversion):
     vector.
 
     Examples:
+    >>> from sympy.combinatorics.permutations import from_inversion_vector
+    >>> from_inversion_vector([3,2,1,0,0])
+    Permutation([3, 2, 1, 0, 4, 5])
+
+    >>> from sympy.combinatorics.permutations import Permutation
+    >>> a = Permutation([3,5,1,4,2,0,7,6])
+    >>> from sympy.combinatorics.permutations import from_inversion_vector
+    >>> from_inversion_vector(a.inversion_vector) == a
+    True
     """
-    raise NotImplementedError()
+    size = len(inversion) + 1
+    N = [i for i in xrange(size)]
+    perm = []
+    try:
+        for k in xrange(size - 1):
+            val = N[inversion[k]]
+            perm.append(val)
+            N.remove(val)
+    except IndexError:
+        raise ValueError("The inversion vector is not valid")
+    perm.extend(N)
+    return Permutation(perm)
