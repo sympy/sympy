@@ -61,7 +61,7 @@ def eval_predicate(predicate, expr, assumptions=True):
     return res
 
 
-def ask(expr, key=Q.is_true, assumptions=True, context=global_assumptions, disable_preprocessing=False):
+def ask(expr, key=Q.is_true, assumptions=True, context=global_assumptions):
     """
     Method for inferring properties about objects.
 
@@ -97,10 +97,9 @@ def ask(expr, key=Q.is_true, assumptions=True, context=global_assumptions, disab
     assumptions = And(assumptions, And(*context))
 
     # direct resolution method, no logic
-    if not disable_preprocessing:
-        res = eval_predicate(key, expr, assumptions)
-        if res is not None:
-            return res
+    res = eval_predicate(key, expr, assumptions)
+    if res is not None:
+        return res
 
     if assumptions is True:
         return
@@ -113,28 +112,27 @@ def ask(expr, key=Q.is_true, assumptions=True, context=global_assumptions, disab
         return
 
     # See if there's a straight-forward conclusion we can make for the inference
-    if not disable_preprocessing:
-        if assumptions.is_Atom:
-            if key in known_facts_dict[assumptions]:
-                return True
-            if Not(key) in known_facts_dict[assumptions]:
-                return False
-        elif assumptions.func is And:
-            for assum in assumptions.args:
-                if assum.is_Atom:
-                    if key in known_facts_dict[assum]:
-                        return True
-                    if Not(key) in known_facts_dict[assum]:
-                        return False
-                elif assum.func is Not and assum.args[0].is_Atom:
-                    if key in known_facts_dict[assum]:
-                        return False
-                    if Not(key) in known_facts_dict[assum]:
-                        return True
-        elif (isinstance(key, Predicate) and
-                assumptions.func is Not and assumptions.args[0].is_Atom):
-            if assumptions.args[0] in known_facts_dict[key]:
-                return False
+    if assumptions.is_Atom:
+        if key in known_facts_dict[assumptions]:
+            return True
+        if Not(key) in known_facts_dict[assumptions]:
+            return False
+    elif assumptions.func is And:
+        for assum in assumptions.args:
+            if assum.is_Atom:
+                if key in known_facts_dict[assum]:
+                    return True
+                if Not(key) in known_facts_dict[assum]:
+                    return False
+            elif assum.func is Not and assum.args[0].is_Atom:
+                if key in known_facts_dict[assum]:
+                    return False
+                if Not(key) in known_facts_dict[assum]:
+                    return True
+    elif (isinstance(key, Predicate) and
+            assumptions.func is Not and assumptions.args[0].is_Atom):
+        if assumptions.args[0] in known_facts_dict[key]:
+            return False
 
     # Failing all else, we do a full logical inference
     # If it's not consistent with the assumptions, then it can't be true
@@ -147,6 +145,41 @@ def ask(expr, key=Q.is_true, assumptions=True, context=global_assumptions, disab
 
     # Otherwise, we don't have enough information to conclude one way or the other
     return None
+
+
+def ask_full_inference(expr, key=Q.is_true, assumptions=True, context=global_assumptions):
+    """
+    Method for inferring properties about objects.
+
+    """
+    expr = sympify(expr)
+    if isinstance(key, basestring):
+        key = getattr(Q, str(key))
+    assumptions = And(assumptions, And(*context))
+
+    if assumptions is True:
+        return
+
+    if not expr.is_Atom:
+        return
+
+    assumptions = eliminate_assume(assumptions, expr)
+    if assumptions is None or assumptions is True:
+        return
+
+    # Failing all else, we do a full logical inference
+    # If it's not consistent with the assumptions, then it can't be true
+    if not satisfiable(And(known_facts_cnf, assumptions, key)):
+        return False
+
+    # If the negation is unsatisfiable, it is entailed
+    if not satisfiable(And(known_facts_cnf, assumptions, Not(key))):
+        return True
+
+    # Otherwise, we don't have enough information to conclude one way or the other
+    return None
+
+
 
 def register_handler(key, handler):
     """Register a handler in the ask system. key must be a string and handler a
@@ -196,7 +229,7 @@ def compute_known_facts():
         mapping[key] = set([key])
         for other_key in known_facts_keys:
             if other_key != key:
-                if ask(x, other_key, key(x), disable_preprocessing=True):
+                if ask_full_inference(x, other_key, key(x)):
                     mapping[key].add(other_key)
     fact_string += "\n# -{ Known facts in compressed sets }-\n"
     fact_string += "known_facts_dict = {\n    "
