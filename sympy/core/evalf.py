@@ -1063,26 +1063,33 @@ class EvalfMixin(object):
         errmsg = "cannot convert to mpmath number"
         if allow_ints and self.is_Integer:
             return self.p
-        v = self._eval_evalf(prec)
-        if v is None:
-            raise ValueError(errmsg)
-        if v.is_Float:
-            return make_mpf(v._mpf_)
-        # Number + Number*I is also fine
-        re, im = v.as_real_imag()
-        if allow_ints and re.is_Integer:
-            re = from_int(re.p)
-        elif re.is_Float:
-            re = re._mpf_
-        else:
-            raise ValueError(errmsg)
-        if allow_ints and im.is_Integer:
-            im = from_int(im.p)
-        elif im.is_Float:
-            im = im._mpf_
-        else:
-            raise ValueError(errmsg)
-        return make_mpc((re, im))
+        try:
+            re, im, _, _ = evalf(self, prec, {})
+            if im:
+                return make_mpc((re, im))
+            else:
+                return make_mpf(re)
+        except NotImplementedError:
+            v = self._eval_evalf(prec)
+            if v is None:
+                raise ValueError(errmsg)
+            if v.is_Float:
+                return make_mpf(v._mpf_)
+            # Number + Number*I is also fine
+            re, im = v.as_real_imag()
+            if allow_ints and re.is_Integer:
+                re = from_int(re.p)
+            elif re.is_Float:
+                re = re._mpf_
+            else:
+                raise ValueError(errmsg)
+            if allow_ints and im.is_Integer:
+                im = from_int(im.p)
+            elif im.is_Float:
+                im = im._mpf_
+            else:
+                raise ValueError(errmsg)
+            return make_mpc((re, im))
 
 
 def N(x, n=15, **options):

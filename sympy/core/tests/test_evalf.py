@@ -230,3 +230,6 @@ def test_evaluate_false():
 
 def test_evalf_relational():
     assert Eq(x/5, y/10).evalf() == Eq(0.2*x, 0.1*y)
+
+def test_issue_2387():
+    assert not cos(sqrt(0.5 + I)).n().is_Function
