@@ -253,8 +253,6 @@ class IndexPair(object):
                                             (self.bq, bbuckets, obparametric)]:
             parametric = []
             for p in params:
-                if p == 0:
-                    raise ValueError('parameters must not be zero')
                 res = Mod1(p)
                 if isinstance(res, Mod1):
                     parametric.append(p)
@@ -819,7 +817,7 @@ class ReduceOrder(Operator):
         n = ai - bj
         if n < 0 or not n.is_Integer:
             return None
-        if bj.is_integer and bj <= 0 and bj + n >= 0:
+        if bj.is_integer and bj <= 0 and bj + n - 1 >= 0:
             return None
 
         self = Operator.__new__(cls)
@@ -1075,6 +1073,34 @@ def try_shifted_sum(ip, z):
 
     return IndexPair(nap, nbq), ops, -p
 
+def try_polynomial(ip, z):
+    """ Recognise polynomial cases. Returns None if not such a case.
+        Requires order to be fully reduced. """
+    from sympy import oo, factorial, rf
+    abuckets, bbuckets = ip.compute_buckets()
+    a0 = list(abuckets.get(S(0), []))
+    b0 = list(bbuckets.get(S(0), []))
+    a0.sort()
+    b0.sort()
+    al0 = filter(lambda x: x <= 0, a0)
+    bl0 = filter(lambda x: x <= 0, b0)
+
+    if bl0:
+        return oo
+    if not al0:
+        return None
+
+    a = al0[-1]
+    fac = 1
+    res = S(1)
+    for n in xrange(-a):
+       fac *= z
+       fac /= n + 1
+       for a in ip.ap: fac *= a + n
+       for b in ip.bq: fac /= b + n
+       res += fac
+    return res
+
 collection = None
 def _hyperexpand(ip, z):
     """ Try to find an expression for the hypergeometric function
@@ -1101,6 +1127,12 @@ def _hyperexpand(ip, z):
 
     # Our dummy variable
     z0 = Dummy('z0')
+
+    # Now try polynomial cases
+    res = try_polynomial(nip, z0)
+    if res is not None:
+        p = apply_operators(res, ops, lambda f: z0*f.diff(z0))
+        return simplify(p).subs(z0, z)
 
     # Try to recognise a shifted sum.
     p = S(0)

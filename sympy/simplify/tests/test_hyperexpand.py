@@ -69,6 +69,12 @@ def test_roach_fail():
 
 # For the long table tests, see end of file
 
+def test_polynomial():
+    from sympy import oo
+    assert hyperexpand(hyper([], [-1], z)) == oo
+    assert hyperexpand(hyper([-2], [-1], z)) == oo
+    assert hyperexpand(hyper([0, 0], [-1], z)) == 1
+    assert can_do([-5, -2, randcplx(), randcplx()], [-10, randcplx()])
 
 def test_hyperexpand_bases():
     assert hyperexpand(hyper([2], [a], z)) == \
@@ -140,7 +146,7 @@ def test_formulae():
 def op(f): return z*f.diff(z)
 
 def test_plan():
-    raises(ValueError, 'devise_plan(IndexPair([0], ()), IndexPair([0], ()), z)')
+    assert devise_plan(IndexPair([0], ()), IndexPair([0], ()), z) == []
     raises(ValueError, 'devise_plan(IndexPair([1], ()), IndexPair((), ()), z)')
     raises(ValueError, 'devise_plan(IndexPair([2], [1]), IndexPair([2], [2]), z)')
     raises(KeyError,
