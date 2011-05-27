@@ -1,11 +1,9 @@
 """Module for querying SymPy objects about assumptions."""
-import inspect
 from sympy.core import sympify
-from sympy.utilities.source import get_class
-from sympy.assumptions import global_assumptions, Predicate
 from sympy.logic.boolalg import to_cnf, And, Not, Or, Implies, Equivalent
 from sympy.logic.inference import satisfiable
-from sympy.assumptions.assume import AppliedPredicate
+from sympy.assumptions.assume import (global_assumptions, Predicate,
+        AppliedPredicate)
 
 class Q:
     """Supported ask keys."""
@@ -29,34 +27,6 @@ class Q:
     odd = Predicate('odd')
     is_true = Predicate('is_true')
 
-
-def eval_predicate(predicate, expr, assumptions=True):
-    """
-    Evaluate predicate(expr) under the given assumptions.
-
-    This uses only direct resolution methods, not logical inference.
-    """
-    res, _res = None, None
-    mro = inspect.getmro(type(expr))
-    for handler in predicate.handlers:
-        cls = get_class(handler)
-        for subclass in mro:
-            try:
-                eval = getattr(cls, subclass.__name__)
-            except AttributeError:
-                continue
-            res = eval(expr, assumptions)
-            if _res is None:
-                _res = res
-            elif res is None:
-                # since first resolutor was conclusive, we keep that value
-                res = _res
-            else:
-                # only check consistency if both resolutors have concluded
-                if _res != res:
-                    raise ValueError('incompatible resolutors')
-            break
-    return res
 
 
 def _extract_facts(expr, symbol):
@@ -107,7 +77,7 @@ def ask(expr, key=Q.is_true, assumptions=True, context=global_assumptions):
     assumptions = And(assumptions, And(*context))
 
     # direct resolution method, no logic
-    res = eval_predicate(key, expr, assumptions)
+    res = key.eval(expr, assumptions)
     if res is not None:
         return res
 
