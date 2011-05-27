@@ -30,17 +30,27 @@ from sympy.utilities import (
 from sympy.ntheory import sieve
 from sympy.mpmath import pslq, mp
 
-def minimal_polynomial(ex, x=None, **args):
-    """Computes the minimal polynomial of an algebraic number. """
+def minimal_polynomial(ex, gen, **args):
+    """
+    Computes the minimal polynomial of an algebraic number.
+
+    **Example**
+
+    >>> from sympy import minimal_polynomial, sqrt
+    >>> from sympy.abc import x
+
+    >>> minimal_polynomial(sqrt(2), x)
+    x**2 - 2
+    >>> minimal_polynomial(sqrt(2) + sqrt(3), x)
+    x**4 - 10*x**2 + 1
+
+    """
     generator = numbered_symbols('a', cls=Dummy)
     mapping, symbols, replace = {}, {}, []
 
     ex = sympify(ex)
 
-    if x is not None:
-        x = sympify(x)
-    else:
-        x = S.Pure
+    gen = sympify(gen)
 
     def update_mapping(ex, exp, base=None):
         a = generator.next()
@@ -70,7 +80,7 @@ def minimal_polynomial(ex, x=None, **args):
             if ex.exp.is_Rational:
                 if ex.exp < 0 and ex.base.is_Add:
                     coeff, terms = ex.base.as_coeff_add()
-                    elt, _ = primitive_element(terms, polys=True)
+                    elt, _ = primitive_element(terms, gen, polys=True)
 
                     alg = ex.base - coeff
 
@@ -97,7 +107,7 @@ def minimal_polynomial(ex, x=None, **args):
                     return symbols[expr]
         elif ex.is_AlgebraicNumber:
             if ex.root not in mapping:
-                return update_mapping(ex.root, ex.minpoly)
+                return update_mapping(ex.root, ex.minpoly(gen))
             else:
                 return symbols[ex.root]
 
@@ -107,14 +117,14 @@ def minimal_polynomial(ex, x=None, **args):
 
     if ex.is_AlgebraicNumber:
         if not polys:
-            return ex.minpoly.as_expr(x)
+            return ex.minpoly(gen).as_expr(gen)
         else:
-            return ex.minpoly.replace(x)
+            return ex.minpoly(gen).replace(gen)
     elif ex.is_Rational and ex.q != 0:
-        result = ex.q*x - ex.p
+        result = ex.q*gen - ex.p
     else:
-        F = [x - bottom_up_scan(ex)] + mapping.values()
-        G = groebner(F, symbols.values() + [x], order='lex')
+        F = [gen - bottom_up_scan(ex)] + mapping.values()
+        G = groebner(F, symbols.values() + [gen], order='lex')
 
         _, factors = factor_list(G[-1])
 
@@ -122,13 +132,13 @@ def minimal_polynomial(ex, x=None, **args):
             ((result, _),) = factors
         else:
             for result, _ in factors:
-                if result.subs(x, ex).evalf(chop=True) == 0:
+                if result.subs(gen, ex).evalf(chop=True) == 0:
                     break
             else: # pragma: no cover
                 raise NotImplementedError("multiple candidates for the minimal polynomial of %s" % ex)
 
     if polys:
-        return Poly(result, x, field=True)
+        return Poly(result, gen, field=True)
     else:
         return result
 
@@ -139,23 +149,20 @@ def _coeffs_generator(n):
     for coeffs in variations([1,-1], n, repetition=True):
         yield coeffs
 
-def primitive_element(extension, x=None, **args):
+def primitive_element(extension, gen, **args):
     """Construct a common number field for all extensions. """
     if not extension:
         raise ValueError("can't compute primitive element for empty extension")
 
-    if x is not None:
-        x = sympify(x)
-    else:
-        x = S.Pure
+    gen = sympify(gen)
 
     if not args.get('ex', False):
-        extension = [ AlgebraicNumber(ext, gen=x) for ext in extension ]
+        extension = [ AlgebraicNumber(ext, gen=gen) for ext in extension ]
 
-        g, coeffs = extension[0].minpoly, [1]
+        g, coeffs = extension[0].minpoly(gen), [1]
 
         for ext in extension[1:]:
-            s, _, g = sqf_norm(g, x, extension=ext)
+            s, _, g = sqf_norm(g, gen, extension=ext)
             coeffs = [ s*c for c in coeffs ] + [1]
 
         if not args.get('polys', False):
@@ -184,14 +191,14 @@ def primitive_element(extension, x=None, **args):
     coeffs_generator = args.get('coeffs', _coeffs_generator)
 
     for coeffs in coeffs_generator(len(Y)):
-        f = x - sum([ c*y for c, y in zip(coeffs, Y)])
-        G = groebner(F + [f], Y + [x], order='lex', field=True)
+        f = gen - sum([ c*y for c, y in zip(coeffs, Y)])
+        G = groebner(F + [f], Y + [gen], order='lex', field=True)
 
-        H, g = G[:-1], Poly(G[-1], x, domain='QQ')
+        H, g = G[:-1], Poly(G[-1], gen, domain='QQ')
 
         for i, (h, y) in enumerate(zip(H, Y)):
             try:
-                H[i] = Poly(y - h, x, domain='QQ').all_coeffs() # XXX: composite=False
+                H[i] = Poly(y - h, gen, domain='QQ').all_coeffs() # XXX: composite=False
             except CoercionFailed: # pragma: no cover
                 break # G is not a triangular set
         else:
@@ -210,8 +217,8 @@ primelt = primitive_element
 
 def is_isomorphism_possible(a, b):
     """Returns `True` if there is a chance for isomorphism. """
-    n = a.minpoly.degree()
-    m = b.minpoly.degree()
+    n = a._minpoly.degree()
+    m = b._minpoly.degree()
 
     if m % n != 0:
         return False
@@ -219,8 +226,8 @@ def is_isomorphism_possible(a, b):
     if n == m:
         return True
 
-    da = a.minpoly.discriminant()
-    db = b.minpoly.discriminant()
+    da = a._minpoly.discriminant()
+    db = b._minpoly.discriminant()
 
     i, k, half = 1, m//n, db//2
 
@@ -243,10 +250,10 @@ def field_isomorphism_pslq(a, b):
     if not a.root.is_real or not b.root.is_real:
         raise NotImplementedError("PSLQ doesn't support complex coefficients")
 
-    f = a.minpoly
-    g = b.minpoly.replace(f.gen)
+    f = a._minpoly
+    g = b._minpoly.replace(f.gen)
 
-    n, m, prev = 100, b.minpoly.degree(), None
+    n, m, prev = 100, b._minpoly.degree(), None
 
     for i in xrange(1, 5):
         A = a.root.evalf(n)
@@ -293,7 +300,7 @@ def field_isomorphism_pslq(a, b):
 
 def field_isomorphism_factor(a, b):
     """Construct field isomorphism via factorization. """
-    _, factors = factor_list(a.minpoly, extension=b)
+    _, factors = factor_list(a._minpoly, extension=b)
 
     for f, _ in factors:
         if f.degree() == 1:
@@ -326,8 +333,8 @@ def field_isomorphism(a, b, **args):
     if a == b:
         return a.coeffs()
 
-    n = a.minpoly.degree()
-    m = b.minpoly.degree()
+    n = a._minpoly.degree()
+    m = b._minpoly.degree()
 
     if n == 1:
         return [a.root]
@@ -348,7 +355,7 @@ def field_isomorphism(a, b, **args):
 
 def to_number_field(extension, theta=None, **args):
     """Express `extension` in the field generated by `theta`. """
-    gen = args.get('gen')
+    gen = args.get('gen', Dummy('p'))
 
     if hasattr(extension, '__iter__'):
         extension = list(extension)
@@ -379,7 +386,7 @@ def to_number_field(extension, theta=None, **args):
 class AlgebraicNumber(Expr):
     """Class for representing algebraic numbers in SymPy. """
 
-    __slots__ = ['rep', 'root', 'alias', 'minpoly']
+    __slots__ = ['rep', 'root', 'alias', '_minpoly']
 
     is_AlgebraicNumber = True
 
@@ -388,16 +395,15 @@ class AlgebraicNumber(Expr):
         expr = sympify(expr)
 
         if type(expr) is tuple:
-            minpoly, root = expr
+            _minpoly, root = expr
 
-            if not minpoly.is_Poly:
-                minpoly = Poly(minpoly)
+            _minpoly = Poly(_minpoly)
         elif expr.is_AlgebraicNumber:
-            minpoly, root = expr.minpoly, expr.root
+            _minpoly, root = expr._minpoly, expr.root
         else:
-            minpoly, root = minimal_polynomial(expr, args.get('gen'), polys=True), expr
+            _minpoly, root = minimal_polynomial(expr, args.get('gen', Dummy('p')), polys=True), expr
 
-        dom = minpoly.get_domain()
+        dom = _minpoly.get_domain()
 
         if coeffs is not None:
             if not isinstance(coeffs, ANP):
@@ -405,8 +411,8 @@ class AlgebraicNumber(Expr):
             else:
                 rep = DMP.from_list(coeffs.to_list(), 0, dom)
 
-            if rep.degree() >= minpoly.degree():
-                rep = rep.rem(minpoly.rep)
+            if rep.degree() >= _minpoly.degree():
+                rep = rep.rem(_minpoly.rep)
         else:
             rep = DMP.from_list([1, 0], 0, dom)
 
@@ -424,29 +430,28 @@ class AlgebraicNumber(Expr):
         obj.rep = rep
         obj.root = root
         obj.alias = alias
-        obj.minpoly = minpoly
+        obj._minpoly = _minpoly
 
         return obj
 
-    def __eq__(a, b):
-        if not b.is_AlgebraicNumber:
+    def minpoly(self, gen):
+        """
+        Return the minimal polynomial of `self`.
+        """
+        return self._minpoly.replace(self._minpoly.gen, gen)
+
+    def __eq__(self, other):
+        if not other.is_AlgebraicNumber:
             try:
-                b = to_number_field(b, a)
+                other = to_number_field(other, self)
             except (NotAlgebraic, IsomorphismFailed):
                 return False
 
-        return a.rep == b.rep and \
-            a.minpoly.all_coeffs() == b.minpoly.all_coeffs()
+        return self.rep == other.rep and \
+            self._minpoly.all_coeffs() == other._minpoly.all_coeffs()
 
-    def __ne__(a, b):
-        if not b.is_AlgebraicNumber:
-            try:
-                b = to_number_field(b, a)
-            except (NotAlgebraic, IsomorphismFailed):
-                return True
-
-        return a.rep != b.rep or \
-            a.minpoly.all_coeffs() != b.minpoly.all_coeffs()
+    def __ne__(self, other):
+        return not self.__eq__(other)
 
     def __hash__(self):
         return super(AlgebraicNumber, self).__hash__()
@@ -483,7 +488,7 @@ class AlgebraicNumber(Expr):
 
     def to_algebraic_integer(self):
         """Convert `self` to an algebraic integer. """
-        f = self.minpoly
+        f = self._minpoly
 
         if f.LC() == 1:
             return self
@@ -518,7 +523,7 @@ def isolate(alg, eps=None, fast=False):
 
     func = lambdify((), alg, modules="mpmath", printer=IntervalPrinter())
 
-    poly = minpoly(alg, polys=True)
+    poly = minpoly(alg, Dummy('p'), polys=True)
     intervals = poly.intervals(sqf=True)
 
     dps, done = mp.dps, False

@@ -4,7 +4,7 @@ from sympy.polys.polyutils import parallel_dict_from_basic
 from sympy.polys.polyoptions import build_options
 from sympy.polys.domains import ZZ, QQ, RR, EX
 from sympy.assumptions import ask, Q
-from sympy.core import S, sympify
+from sympy.core import S, sympify, Dummy
 from sympy.utilities import any
 
 def _construct_simple(coeffs, opt):
@@ -82,7 +82,7 @@ def _construct_algebraic(coeffs, opt):
 
     exts = list(exts)
 
-    g, span, H = primitive_element(exts, ex=True, polys=True)
+    g, span, H = primitive_element(exts, Dummy('p'), ex=True, polys=True)
     root = sum([ s*ext for s, ext in zip(span, exts) ])
 
     domain, g = QQ.algebraic_field((g, root)), g.rep.rep

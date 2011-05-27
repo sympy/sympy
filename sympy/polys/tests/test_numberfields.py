@@ -1,6 +1,6 @@
 """Tests for computational algebraic number field theory. """
 
-from sympy import S, Rational, Symbol, Poly, sin, sqrt, I, oo, pure
+from sympy import S, Rational, Symbol, Poly, sin, sqrt, I, oo
 from sympy.utilities.pytest import raises
 
 from sympy.polys.numberfields import (
@@ -67,10 +67,9 @@ def test_minimal_polynomial():
     raises(NotAlgebraic, "minimal_polynomial(2**y, x)")
     raises(NotAlgebraic, "minimal_polynomial(sin(1), x)")
 
-    assert minimal_polynomial(sqrt(2)) == pure**2 - 2
+    assert minimal_polynomial(sqrt(2), x) == x**2 - 2
     assert minimal_polynomial(sqrt(2), x) == x**2 - 2
 
-    assert minimal_polynomial(sqrt(2), polys=True) == Poly(pure**2 - 2)
     assert minimal_polynomial(sqrt(2), x, polys=True) == Poly(x**2 - 2)
 
     a = AlgebraicNumber(sqrt(2))
@@ -109,7 +108,7 @@ def test_primitive_element():
     assert primitive_element([sqrt(2), sqrt(3)], x, ex=True, polys=True) == \
         (Poly(x**4 - 10*x**2 + 1), [1, 1], [[Q(1,2), 0, -Q(9,2), 0], [-Q(1,2), 0, Q(11,2), 0]])
 
-    assert primitive_element([sqrt(2)]) == (pure**2 - 2, [1])
+    assert primitive_element([sqrt(2)], x) == (x**2 - 2, [1])
 
     raises(ValueError, "primitive_element([], x, ex=False)")
     raises(ValueError, "primitive_element([], x, ex=True)")
@@ -336,7 +335,7 @@ def test_AlgebraicNumber():
     assert a.rep == DMP([QQ(1),QQ(0)], QQ)
     assert a.root == root
     assert a.alias is None
-    assert a.minpoly == minpoly
+    assert a.minpoly(x) == minpoly
 
     assert a.is_aliased == False
 
@@ -348,7 +347,7 @@ def test_AlgebraicNumber():
     assert a.rep == DMP([QQ(1),QQ(0)], QQ)
     assert a.root == root
     assert a.alias == Symbol('y')
-    assert a.minpoly == minpoly
+    assert a.minpoly(x) == minpoly
 
     assert a.is_aliased == True
 
@@ -357,7 +356,7 @@ def test_AlgebraicNumber():
     assert a.rep == DMP([QQ(1),QQ(0)], QQ)
     assert a.root == root
     assert a.alias == Symbol('y')
-    assert a.minpoly == minpoly
+    assert a.minpoly(x) == minpoly
 
     assert a.is_aliased == True
 
@@ -376,7 +375,7 @@ def test_AlgebraicNumber():
     assert a.rep == DMP([QQ(1),QQ(2)], QQ)
     assert a.root == root
     assert a.alias is None
-    assert a.minpoly == minpoly
+    assert a.minpoly(x) == minpoly
 
     assert a.is_aliased == False
 
@@ -388,7 +387,7 @@ def test_AlgebraicNumber():
     assert a.rep == DMP([QQ(1),QQ(2)], QQ)
     assert a.root == root
     assert a.alias is None
-    assert a.minpoly == minpoly
+    assert a.minpoly(x) == minpoly
 
     assert a.is_aliased == False
 
@@ -397,7 +396,7 @@ def test_AlgebraicNumber():
     assert a.rep == DMP([QQ(1),QQ(2)], QQ)
     assert a.root == root
     assert a.alias is None
-    assert a.minpoly == minpoly
+    assert a.minpoly(x) == minpoly
 
     assert a.is_aliased == False
 
@@ -450,25 +449,25 @@ def test_AlgebraicNumber():
 def test_to_algebraic_integer():
     a = AlgebraicNumber(sqrt(3), gen=x).to_algebraic_integer()
 
-    assert a.minpoly == x**2 - 3
+    assert a.minpoly(x) == x**2 - 3
     assert a.root    == sqrt(3)
     assert a.rep     == DMP([QQ(1),QQ(0)], QQ)
 
     a = AlgebraicNumber(2*sqrt(3), gen=x).to_algebraic_integer()
 
-    assert a.minpoly == x**2 - 12
+    assert a.minpoly(x) == x**2 - 12
     assert a.root    == 2*sqrt(3)
     assert a.rep     == DMP([QQ(1),QQ(0)], QQ)
 
     a = AlgebraicNumber(sqrt(3)/2, gen=x).to_algebraic_integer()
 
-    assert a.minpoly == x**2 - 12
+    assert a.minpoly(x) == x**2 - 12
     assert a.root    == 2*sqrt(3)
     assert a.rep     == DMP([QQ(1),QQ(0)], QQ)
 
     a = AlgebraicNumber(sqrt(3)/2, [S(7)/19, 3], gen=x).to_algebraic_integer()
 
-    assert a.minpoly == x**2 - 12
+    assert a.minpoly(x) == x**2 - 12
     assert a.root    == 2*sqrt(3)
     assert a.rep     == DMP([QQ(7,19),QQ(3)], QQ)
 

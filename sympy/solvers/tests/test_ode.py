@@ -1,7 +1,7 @@
 from sympy import (Function, dsolve, Symbol, sin, cos, sinh, acos, tan, cosh,
     I, exp, log, simplify, together, powsimp, fraction, radsimp, Eq, sqrt, pi,
     erf,  diff, Rational, asinh, trigsimp, S, RootOf, Poly, Integral, atan,
-    Equality, solve, O, LambertW, Dummy, pure)
+    Equality, solve, O, LambertW, Dummy)
 from sympy.abc import x, y, z
 from sympy.solvers.ode import ode_order, homogeneous_order, \
     _undetermined_coefficients_match, classify_ode, checkodesol, constant_renumber
@@ -702,24 +702,32 @@ def test_nth_linear_constant_coeff_homogeneous():
     assert checkodesol(eq30, f(x), sol30, order=5, solve_for_func=False)[0]
 
 def test_nth_linear_constant_coeff_homogeneous_RootOf():
+    # We have to test strings because _m is a dummy variable
+    _m = Symbol('_m')
     eq = f(x).diff(x, 5) + 11*f(x).diff(x) - 2*f(x)
-    sol = Eq(f(x),
-        C1*exp(x*RootOf(pure**5 + 11*pure - 2, 0)) + \
-        C2*exp(x*RootOf(pure**5 + 11*pure - 2, 1)) + \
-        C3*exp(x*RootOf(pure**5 + 11*pure - 2, 2)) + \
-        C4*exp(x*RootOf(pure**5 + 11*pure - 2, 3)) + \
-        C5*exp(x*RootOf(pure**5 + 11*pure - 2, 4)))
-    assert dsolve(eq, f(x)) == sol
+    solstr = "f(x) == " + \
+        "C1*exp(x*RootOf(_m**5 + 11*_m - 2, 0)) + " + \
+        "C2*exp(x*RootOf(_m**5 + 11*_m - 2, 1)) + " + \
+        "C3*exp(x*RootOf(_m**5 + 11*_m - 2, 2)) + " + \
+        "C4*exp(x*RootOf(_m**5 + 11*_m - 2, 3)) + " + \
+        "C5*exp(x*RootOf(_m**5 + 11*_m - 2, 4))"
+    assert str(dsolve(eq, f(x))) == solstr
 
 @XFAIL
 def test_nth_linear_constant_coeff_homogeneous_RootOf_sol():
+    # We have to test strings because _m is a dummy variable
+    _m = Symbol('_m')
     eq = f(x).diff(x, 5) + 11*f(x).diff(x) - 2*f(x)
-    sol = Eq(f(x),
-        C1*exp(x*RootOf(pure**5 + 11*pure - 2, 0)) + \
-        C2*exp(x*RootOf(pure**5 + 11*pure - 2, 1)) + \
-        C3*exp(x*RootOf(pure**5 + 11*pure - 2, 2)) + \
-        C4*exp(x*RootOf(pure**5 + 11*pure - 2, 3)) + \
-        C5*exp(x*RootOf(pure**5 + 11*pure - 2, 4)))
+    sol = Eq(f(x), C1*exp(x*RootOf(Poly(_m**5 + 11*_m - 2, _m), index=0)) + \
+        C2*exp(x*RootOf(Poly(_m**5 + 11*_m - 2, _m), index=1)) + \
+        C3*exp(x*RootOf(Poly(_m**5 + 11*_m - 2, _m), index=2)) + \
+        C4*exp(x*RootOf(Poly(_m**5 + 11*_m - 2, _m), index=3)) + \
+        C5*exp(x*RootOf(Poly(_m**5 + 11*_m - 2, _m), index=4)))
+    solstr = "f(x) == C1*exp(x*RootOf(_m**5 + 11*_m - 2, _m, index=0)) + C2" + \
+        "*exp(x*RootOf(_m**5 + 11*_m - 2, _m, index=1)) + C3*exp(x*RootOf(_" + \
+        "m**5 + 11*_m - 2, _m, index=2)) + C4*exp(x*RootOf(_m**5 + 11*_m - " + \
+        "2, _m, index=3)) + C5*exp(x*RootOf(_m**5 + 11*_m - 2, _m, index=4))"
+    assert str(sol) == solstr # str(sol) fails
     assert checkodesol(eq, f(x), sol, order=5, solve_for_func=False)[0]
 
 def test_undetermined_coefficients_match():
