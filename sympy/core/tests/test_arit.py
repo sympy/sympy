@@ -241,9 +241,9 @@ def test_power_expand():
     assert (A**(a+b)).expand() != A**(a+b)
 
 def test_real_mul():
-    Float(0) * pi * x == Float(0)
-    Float(1) * pi * x == pi * x
-    len((Float(2) * pi * x).args) == 3
+    assert Float(0) * pi * x == Float(0)
+    assert Float(1) * pi * x == pi * x
+    assert len((Float(2) * pi * x).args) == 3
 
 def test_ncmul():
     A = Symbol("A", commutative=False)

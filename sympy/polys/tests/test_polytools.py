@@ -457,14 +457,14 @@ def test_Poly_set_domain():
     raises(GeneratorsError, "Poly(x*y, x, y).set_domain(ZZ[y])")
 
 def test_Poly_get_modulus():
-    Poly(x**2 + 1, modulus=2).get_modulus() == 2
+    assert Poly(x**2 + 1, modulus=2).get_modulus() == 2
     raises(PolynomialError, "Poly(x**2 + 1).get_modulus()")
 
 def test_Poly_set_modulus():
-    Poly(x**2 + 1, modulus=2).set_modulus(7) == Poly(x**2 + 1, modulus=7)
-    Poly(x**2 + 5, modulus=7).set_modulus(2) == Poly(x**2 + 1, modulus=2)
+    assert Poly(x**2 + 1, modulus=2).set_modulus(7) == Poly(x**2 + 1, modulus=7)
+    assert Poly(x**2 + 5, modulus=7).set_modulus(2) == Poly(x**2 + 1, modulus=2)
 
-    Poly(x**2 + 1).set_modulus(2) == Poly(x**2 + 1, modulus=2)
+    assert Poly(x**2 + 1).set_modulus(2) == Poly(x**2 + 1, modulus=2)
 
     raises(CoercionFailed, "Poly(x/2 + 1).set_modulus(2)")
 
@@ -1209,8 +1209,8 @@ def test_Poly_eval():
     assert Poly(x*y + y, x, y).eval((6, 7)) == 49
     assert Poly(x*y + y, x, y).eval([6, 7]) == 49
 
-    Poly(x+1, domain='ZZ').eval(S(1)/2) == S(3)/2
-    Poly(x+1, domain='ZZ').eval(sqrt(2)) == sqrt(2) + 1
+    Poly(x + 1, domain='ZZ').eval(S(1)/2) == S(3)/2
+    Poly(x + 1, domain='ZZ').eval(sqrt(2)) == sqrt(2) + 1
 
     raises(ValueError, "Poly(x*y + y, x, y).eval((6, 7, 8))")
     raises(DomainError, "Poly(x+1, domain='ZZ').eval(S(1)/2, auto=False)")
@@ -1690,8 +1690,8 @@ def test_monic():
 def test_content():
     f, F = 4*x + 2, Poly(4*x + 2)
 
-    F.content() == 2
-    content(f) == 2
+    assert F.content() == 2
+    assert content(f) == 2
 
     raises(ComputationFailed, "content(4)")
 
@@ -2319,15 +2319,15 @@ def test_nth_power_roots_poly():
     f_4 = (x**2 + x + 1)**2
     f_12 = (x - 1)**4
 
-    nth_power_roots_poly(f, 1) == f
+    assert nth_power_roots_poly(f, 1) == f
 
     raises(ValueError, "nth_power_roots_poly(f, 0)")
     raises(ValueError, "nth_power_roots_poly(f, x)")
 
-    factor(nth_power_roots_poly(f, 2)) == f_2
-    factor(nth_power_roots_poly(f, 3)) == f_3
-    factor(nth_power_roots_poly(f, 4)) == f_4
-    factor(nth_power_roots_poly(f, 12)) == f_12
+    assert factor(nth_power_roots_poly(f, 2)) == f_2
+    assert factor(nth_power_roots_poly(f, 3)) == f_3
+    assert factor(nth_power_roots_poly(f, 4)) == f_4
+    assert factor(nth_power_roots_poly(f, 12)) == f_12
 
     raises(MultivariatePolynomialError, "nth_power_roots_poly(x + y, 2, x, y)")
 
