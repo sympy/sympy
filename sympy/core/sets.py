@@ -852,10 +852,12 @@ class FiniteSet(CountableSet):
         """
         return sympify(other) in self.elements
 
+    @property
     def _inf(self):
         from sympy.functions.elementary.miscellaneous import Min
         return Min(*self)
 
+    @property
     def _sup(self):
         from sympy.functions.elementary.miscellaneous import Max
         return Max(*self)
