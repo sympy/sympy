@@ -15,6 +15,16 @@ def test_Permutation():
     assert p**13 == p
     assert q**2 == Permutation([5, 1, 0, 6, 3, 2, 4])
 
+    assert p+q == Permutation([5, 6, 3, 1, 2, 4, 0])
+    assert q+p == p+q
+
+    assert p-q == Permutation([6, 3, 5, 1, 2, 4, 0])
+    assert q-p == Permutation([1, 4, 2, 6, 5, 3, 0])
+
+    a = p-q
+    b = q-p
+    assert (a+b).is_Identity
+
     assert len(p.atoms()) == 7
     assert q.atoms() == set([0, 1, 2, 3, 4, 5, 6])
 

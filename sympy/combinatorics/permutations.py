@@ -111,6 +111,65 @@ class Permutation(Basic):
     def size(self):
         return len(self.array_form)
 
+    def __add__(self, other):
+        """
+        Routine for addition of permutations.
+
+        This is defined in terms of the Lehmer code of a
+        permutation. The Lehmer code is nothing but the
+        inversion vector of a permutation. In this scheme
+        the identity permutation is like a zero element.
+
+        Examples:
+        >>> from sympy.combinatorics.permutations import Permutation
+        >>> p = Permutation([0,1,2,3])
+        >>> q = Permutation([2,1,3,0])
+        >>> p+q == q
+        True
+        >>> from sympy.combinatorics.permutations import Permutation
+        >>> a = Permutation([0, 3, 1, 2])
+        >>> b = Permutation([2, 1, 0, 3])
+        >>> a+b
+        Permutation([2, 0, 1, 3])
+        """
+        if self.size != other.size:
+            raise ValueError("The permutations must be of equal size")
+        result_inv = []
+        for i in xrange(self.size - 1):
+            val = self.inversion_vector[i] + other.inversion_vector[i]
+            val = val % (self.size - i)
+            result_inv.append(val)
+        return from_inversion_vector(result_inv)
+
+    def __sub__(self, other):
+        """
+        Routine for subtraction of permutations.
+
+        The idea behind this is the same as the above.
+        With subtraction however,
+
+        Examples:
+        >>> from sympy.combinatorics.permutations import Permutation
+        >>> p = Permutation([0,1,2,3])
+        >>> q = Permutation([2,1,3,0])
+        >>> q-p==q
+        True
+
+        >>> from sympy.combinatorics.permutations import Permutation
+        >>> a = Permutation([0, 3, 1, 2])
+        >>> b = Permutation([2, 3, 1, 0])
+        >>> a-b
+        Permutation([2, 0, 3, 1])
+        """
+        if self.size != other.size:
+            raise ValueError("The permutations must be of equal size")
+        result_inv = []
+        for i in xrange(self.size - 1):
+            val = self.inversion_vector[i] - other.inversion_vector[i]
+            val = val % (self.size - i)
+            result_inv.append(val)
+        return from_inversion_vector(result_inv)
+
     def __mul__(self, other):
         """
         Routine for multiplication of permutations.
