@@ -313,10 +313,10 @@ def test_finite_basic():
     assert A.subset(AandB)
     assert AandB == FiniteSet(3)
 
-    assert A.inf() == 1 and A.sup() == 3
-    assert AorB.inf() == 1 and AorB.sup()==5
-    assert FiniteSet(x, 1, 5).sup() == Max(x,5)
-    assert FiniteSet(x, 1, 5).inf() == Min(x,1)
+    assert A.inf == 1 and A.sup == 3
+    assert AorB.inf == 1 and AorB.sup ==5
+    assert FiniteSet(x, 1, 5).sup == Max(x,5)
+    assert FiniteSet(x, 1, 5).inf == Min(x,1)
 
 def test_real():
     x = Symbol('x', real=True)
@@ -336,5 +336,21 @@ def test_real():
     assert not any((a+D).is_real for a in [I,J,A,B,C,D])
 
     assert not (I+A+D).is_real
+
+def test_supinf():
+    x = Symbol('x', real=True)
+    y = Symbol('y', real=True)
+
+    assert (Interval(0,1) + FiniteSet(2)).sup == 2
+    assert (Interval(0,1) + FiniteSet(2)).inf == 0
+    assert (Interval(0,1) + FiniteSet(x)).sup == Max(1,x)
+    assert (Interval(0,1) + FiniteSet(x)).inf == Min(0,x)
+    assert FiniteSet(5,1,x).sup == Max(5,x)
+    assert FiniteSet(5,1,x).inf == Min(1,x)
+    assert FiniteSet(5,1,x,y).sup == Max(5,x,y)
+    assert FiniteSet(5,1,x,y).inf == Min(1,x,y)
+    assert FiniteSet(5,1,x,y,S.Infinity, S.NegativeInfinity).sup == S.Infinity
+    assert FiniteSet(5,1,x,y,S.Infinity, S.NegativeInfinity).inf == S.NegativeInfinity
+    assert FiniteSet('Ham', 'Eggs').sup == Max('Ham', 'Eggs')
 
 
