@@ -36,8 +36,6 @@ def eval_predicate(predicate, expr, assumptions=True):
 
     This uses only direct resolution methods, not logical inference.
     """
-    if not isinstance(predicate, Predicate):
-        return eval_predicate(Q.is_true, predicate(expr), assumptions)
     res, _res = None, None
     mro = inspect.getmro(type(expr))
     for handler in predicate.handlers:
