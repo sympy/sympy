@@ -1184,8 +1184,6 @@ def test_Add_primitive():
 
     assert (2*x/3 + 4*y/9).primitive() == (1, 2*x/3 + 4*y/9)
 
-@XFAIL
-def test_float_Add_primitive():
     assert (2*x/3 + 4.1*y).primitive() == (1, 2*x/3 + 4.1*y)
 
 def test_issue2361():
