@@ -55,7 +55,7 @@ def _process_limits(*symbols):
             limits.append(Tuple(V))
             continue
         elif isinstance(V, (tuple, list, Tuple)):
-            V = list(sympify(flatten(V)))
+            V = map(sympify, flatten(V))
             if V[0].is_Symbol:
                 newsymbol = V[0]
                 if len(V) == 2 and isinstance(V[1], Interval):

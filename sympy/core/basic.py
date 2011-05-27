@@ -427,8 +427,7 @@ class Basic(AssumeMeths):
 
     @classmethod
     def fromiter(cls, args, **assumptions):
-        args = sympify(tuple(args))
-        return Basic.__new__(cls, *args, **assumptions)
+        return cls(*tuple(args), **assumptions)
 
     @classmethod
     def sorted_key(cls, expr, order=None):
