@@ -163,6 +163,9 @@ def test_simplify():
 
     assert simplify(A*B - B*A) == A*B - B*A
 
+    assert simplify(log(2) + log(3)) == log(6)
+    assert simplify(log(2*x) - log(2)) == log(x)
+
 def test_simplify_other():
     assert simplify(sin(x)**2 + cos(x)**2) == 1
     assert simplify(gamma(x + 1)/gamma(x)) == x

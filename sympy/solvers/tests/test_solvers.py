@@ -221,7 +221,7 @@ def test_tsolve():
     assert solve(sqrt(3*x)-4, x) == [Rational(16,3)]
     assert solve(3**(x+2), x) == [zoo]
     assert solve(3**(2-x), x) == [zoo]
-    assert solve(4*3**(5*x+2)-7, x) == [(-2*log(2) - 2*log(3) + log(7))/(5*log(3))]
+    assert solve(4*3**(5*x+2)-7, x) == [(-2*log(3) - 2*log(2) + log(7))/(5*log(3))]
     assert solve(x+2**x, x) == [-LambertW(log(2))/log(2)]
     assert solve(3*x+5+2**(-5*x+3), x) in [
         [Rational(-5, 3) + LambertW(log(2**(-10240*2**(Rational(1, 3))/3)))/(5*log(2))],
@@ -242,7 +242,7 @@ def test_tsolve():
     assert solve(2*log(3*x+4)-3, x) == [(exp(Rational(3,2))-4)/3]
     assert solve(exp(x)+1, x) == [pi*I]
     assert solve(x**2 - 2**x, x) == [2]
-    assert solve(x**3 - 3**x, x) == [-3/log(3)*LambertW(-log(3)/3)]
+    assert solve(x**3 - 3**x, x) == [-3*LambertW(-log(3)/3)/log(3)]
 
     A = -7*2**Rational(4, 5)*6**Rational(1, 5)*log(7)/10
     B = -7*3**Rational(1, 5)*log(7)/5
@@ -270,7 +270,7 @@ def test_tsolve():
     # issue #1406
     assert solve(z**x - y, x) == [log(y)/log(z)]
     # issue #1405
-    assert solve(2**x - 10, x) == [(log(2) + log(5))/log(2)]
+    assert solve(2**x - 10, x) == [log(10)/log(2)]
 
 def test_solve_for_functions_derivatives():
     t = Symbol('t')
