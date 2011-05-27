@@ -1764,7 +1764,7 @@ class Expr(Basic, EvalfMixin):
         return combsimp(self)
 
     def factor(self, *gens, **args):
-        """See the factor function in sympy.simplify"""
+        """See the factor function in sympy.polys.polytools"""
         from sympy.polys import factor
         return factor(self, *gens, **args)
 
