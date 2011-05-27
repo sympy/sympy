@@ -77,7 +77,7 @@ def ask(expr, key=Q.is_true, assumptions=True, context=global_assumptions):
     assumptions = And(assumptions, And(*context))
 
     # direct resolution method, no logic
-    res = key.eval(expr, assumptions)
+    res = key(expr)._eval_ask(assumptions)
     if res is not None:
         return res
 

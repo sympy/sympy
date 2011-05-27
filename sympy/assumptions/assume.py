@@ -80,6 +80,9 @@ class AppliedPredicate(Boolean):
     def __hash__(self):
         return super(AppliedPredicate, self).__hash__()
 
+    def _eval_ask(self, assumptions):
+        return self.func.eval(self.arg, assumptions)
+
 class Predicate(Boolean):
     """A predicate is a function that returns a boolean value.
 
