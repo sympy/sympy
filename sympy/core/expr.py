@@ -1216,7 +1216,6 @@ class Expr(Basic, EvalfMixin):
             # As a last resort, we choose the one with greater hash
             return hash(self) < hash(negative_self)
 
-
     ###################################################################################
     ##################### SERIES, LEADING TERM, LIMIT, ORDER METHODS ##################
     ###################################################################################
@@ -1704,85 +1703,89 @@ class Expr(Basic, EvalfMixin):
     ###########################################################################
 
     def integrate(self, *args, **kwargs):
-        """See the integrate function in sympy.integrals"""
+        """See the integrate() function in sympy.integrals."""
         from sympy.integrals import integrate
         return integrate(self, *args, **kwargs)
 
     def simplify(self):
-        """See the simplify function in sympy.simplify"""
+        """See the simplify() function in sympy.simplify."""
         from sympy.simplify import simplify
         return simplify(self)
 
     def nsimplify(self, constants=[], tolerance=None, full=False):
-        """See the nsimplify function in sympy.simplify"""
+        """See the nsimplify() function in sympy.simplify."""
         from sympy.simplify import nsimplify
         return nsimplify(self, constants, tolerance, full)
 
     def separate(self, deep=False):
-        """See the separate function in sympy.simplify"""
+        """See the separate() function in sympy.simplify."""
         from sympy.simplify import separate
         return separate(self, deep)
 
     def collect(self, syms, evaluate=True, exact=False):
-        """See the collect function in sympy.simplify"""
+        """See the collect() function in sympy.simplify."""
         from sympy.simplify import collect
         return collect(self, syms, evaluate, exact)
 
     def together(self, *args, **kwargs):
-        """See the together function in sympy.polys"""
+        """See the together() function in sympy.polys."""
         from sympy.polys import together
         return together(self, *args, **kwargs)
 
     def apart(self, x=None, **args):
-        """See the apart function in sympy.polys"""
+        """See the apart() function in sympy.polys."""
         from sympy.polys import apart
         return apart(self, x, **args)
 
     def ratsimp(self):
-        """See the ratsimp function in sympy.simplify"""
+        """See the ratsimp() function in sympy.simplify."""
         from sympy.simplify import ratsimp
         return ratsimp(self)
 
     def trigsimp(self, deep=False, recursive=False):
-        """See the trigsimp function in sympy.simplify"""
+        """See the trigsimp() function in sympy.simplify."""
         from sympy.simplify import trigsimp
         return trigsimp(self, deep, recursive)
 
     def radsimp(self):
-        """See the radsimp function in sympy.simplify"""
+        """See the radsimp() function in sympy.simplify."""
         from sympy.simplify import radsimp
         return radsimp(self)
 
     def powsimp(self, deep=False, combine='all'):
-        """See the powsimp function in sympy.simplify"""
+        """See the powsimp() function in sympy.simplify."""
         from sympy.simplify import powsimp
         return powsimp(self, deep, combine)
 
     def combsimp(self):
-        """See the combsimp function in sympy.simplify"""
+        """See the combsimp() function in sympy.simplify."""
         from sympy.simplify import combsimp
         return combsimp(self)
 
     def factor(self, *gens, **args):
-        """See the factor function in sympy.simplify"""
+        """See the factor() function in sympy.simplify."""
         from sympy.polys import factor
         return factor(self, *gens, **args)
 
     def refine(self, assumption=True):
-        """See the refine function in sympy.assumptions"""
+        """See the refine() function in sympy.assumptions."""
         from sympy.assumptions import refine
         return refine(self, assumption)
 
     def cancel(self, *gens, **args):
-        """See the cancel function in sympy.polys"""
+        """See the cancel() function in sympy.polys."""
         from sympy.polys import cancel
         return cancel(self, *gens, **args)
 
     def invert(self, g):
-        """See the invert function in sympy.polys"""
+        """See the invert() function in sympy.polys."""
         from sympy.polys import invert
         return invert(self, g)
 
+    def primitive(self, *gens, **args):
+        """See the primitive() function in sympy.polys."""
+        from sympy.polys import primitive
+        return primitive(self, *gens, **args)
 
 class AtomicExpr(Atom, Expr):
     """
