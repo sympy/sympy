@@ -1165,25 +1165,28 @@ def test_issue2027():
     assert (-2)**i*(-3)**i == 6**i
 
 def test_Add_primitive():
-    (x + 2).primitive() == (1, x + 2)
+    assert (x + 2).primitive() == (1, x + 2)
 
-    (3*x + 2).primitive() == (1, x + 2)
-    (2*x + 2).primitive() == (2, x + 1)
-    (3*x + 3).primitive() == (3, x + 1)
-    (4*x + 8).primitive() == (4, x + 2)
+    assert (3*x + 2).primitive() == (1, 3*x + 2)
+    assert (2*x + 2).primitive() == (2, x + 1)
+    assert (3*x + 3).primitive() == (3, x + 1)
+    assert (4*x + 8).primitive() == (4, x + 2)
 
-    (3*x + 2*y).primitive() == (1, x + 2*y)
-    (2*x + 2*y).primitive() == (2, x + y)
-    (3*x + 3*y).primitive() == (3, x + y)
-    (4*x + 8*y).primitive() == (4, x + 2*y)
+    assert (3*x + 2*y).primitive() == (1, 3*x + 2*y)
+    assert (2*x + 2*y).primitive() == (2, x + y)
+    assert (3*x + 3*y).primitive() == (3, x + y)
+    assert (4*x + 8*y).primitive() == (4, x + 2*y)
 
-    (3/x + 2*x*y*z**2).primitive() == (1, 1/x + 2*x*y*z**2)
-    (2/x + 2*x*y*z**2).primitive() == (2, 1/x + x*y*z**2)
-    (3/x + 3*x*y*z**2).primitive() == (3, 1/x + x*y*z**2)
-    (4/x + 8*x*y*z**2).primitive() == (4, 1/x + 2*x*y*z**2)
+    assert (3/x + 2*x*y*z**2).primitive() == (1, 3/x + 2*x*y*z**2)
+    assert (2/x + 2*x*y*z**2).primitive() == (2, 1/x + x*y*z**2)
+    assert (3/x + 3*x*y*z**2).primitive() == (3, 1/x + x*y*z**2)
+    assert (4/x + 8*x*y*z**2).primitive() == (4, 1/x + 2*x*y*z**2)
 
-    (2*x/3 + 4*y/9).primitive() == (2/9, 3*x + 2*y)
-    (2*x/3 + 4.1*y).primitive() == (1, 2*x/3 + 4.1*y)
+    assert (2*x/3 + 4*y/9).primitive() == (1, 2*x/3 + 4*y/9)
+
+@XFAIL
+def test_float_Add_primitive():
+    assert (2*x/3 + 4.1*y).primitive() == (1, 2*x/3 + 4.1*y)
 
 def test_issue2361():
     u = Mul(2, (1 + x), evaluate=False)
