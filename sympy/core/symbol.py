@@ -198,7 +198,7 @@ class Wild(Symbol):
 
 _re_var_range = re.compile(r"^(.*?)(\d*):(\d+)$")
 _re_var_scope = re.compile(r"^(.):(.)$")
-_re_var_split = re.compile(r"\s|,")
+_re_var_split = re.compile(r"\s*,\s*|\s+")
 
 def symbols(names, **args):
     """
@@ -215,9 +215,12 @@ def symbols(names, **args):
 
     The type of output is dependent on the properties of input arguments::
 
-        >>> x = symbols('x')
-        >>> (x,) = symbols('x,')
-
+        >>> symbols('x')
+        x
+        >>> symbols('x,')
+        (x,)
+        >>> symbols('x,y')
+        (x, y)
         >>> symbols(('a', 'b', 'c'))
         (a, b, c)
         >>> symbols(['a', 'b', 'c'])
@@ -225,12 +228,13 @@ def symbols(names, **args):
         >>> symbols(set(['a', 'b', 'c']))
         set([a, b, c])
 
-    If an iterable container is needed set ``seq`` argument to ``True``::
+    If an iterable container is needed for a single symbol, set the ``seq``
+    argument to ``True`` or terminate the symbol name with a comma::
 
         >>> symbols('x', seq=True)
         (x,)
 
-    To cut on typing, range syntax is supported co create indexed symbols::
+    To reduce typing, range syntax is supported to create indexed symbols::
 
         >>> symbols('x:10')
         (x0, x1, x2, x3, x4, x5, x6, x7, x8, x9)
@@ -244,7 +248,7 @@ def symbols(names, **args):
         >>> symbols(('x5:10', 'y:5'))
         ((x5, x6, x7, x8, x9), (y0, y1, y2, y3, y4))
 
-    To cut on typing even more, lexicographic range syntax is supported::
+    To reduce typing even more, lexicographic range syntax is supported::
 
         >>> symbols('x:z')
         (x, y, z)
@@ -279,14 +283,20 @@ def symbols(names, **args):
     result = []
 
     if isinstance(names, basestring):
-        names = _re_var_split.split(names)
+        names = names.strip()
+        as_seq= names.endswith(',')
+        if as_seq:
+            names = names[:-1].rstrip()
+        if not names:
+            raise ValueError('no symbols given')
 
         cls = args.pop('cls', Symbol)
-        seq = args.pop('seq', False)
+        seq = args.pop('seq', as_seq)
 
+        names = _re_var_split.split(names)
         for name in names:
             if not name:
-                continue
+                raise ValueError('missing symbol')
 
             if ':' not in name:
                 symbol = cls(name, **args)
@@ -326,17 +336,13 @@ def symbols(names, **args):
 
         if not seq and len(result) <= 1:
             if not result:
-                return None
-            elif names[-1]:
-                return result[0]
+                raise ValueError('missing symbol') # should never happen
+            return result[0]
 
         return tuple(result)
     else:
         for name in names:
-            syms = symbols(name, **args)
-
-            if syms is not None:
-                result.append(syms)
+            result.append(symbols(name, **args))
 
         return type(names)(result)
 

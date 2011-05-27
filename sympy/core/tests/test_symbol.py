@@ -117,11 +117,14 @@ def test_symbols():
     y = Symbol('y')
     z = Symbol('z')
 
-    assert symbols('') is None
-
     assert symbols('x') == x
+    assert symbols('x ') == x
+    assert symbols(' x ') == x
     assert symbols('x,') == (x,)
-    assert symbols('x ') == (x,)
+    assert symbols('x, ') == (x,)
+    assert symbols('x ,') == (x,)
+
+    assert symbols('x , y') == (x, y)
 
     assert symbols('x,y,z') == (x, y, z)
     assert symbols('x y z') == (x, y, z)
@@ -147,8 +150,10 @@ def test_symbols():
     assert symbols(['x', 'y', 'z']) == [x, y, z]
     assert symbols(set(['x', 'y', 'z'])) == set([x, y, z])
 
-    assert symbols('x,,y,,z') == (x, y, z)
-    assert symbols(('x', '', 'y', '', 'z')) == (x, y, z)
+    raises(ValueError, "symbols('')")
+    raises(ValueError, "symbols(',')")
+    raises(ValueError, "symbols('x,,y,,z')")
+    raises(ValueError, "symbols(('x', '', 'y', '', 'z'))")
 
     a, b = symbols('x,y', real=True)
 

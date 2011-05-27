@@ -64,12 +64,18 @@ def test_Gens_postprocess():
     assert opt == {'gens': (x, y)}
 
 def test_Wrt_preprocess():
-    Wrt.preprocess(x) == ['x']
-    Wrt.preprocess('x,y') == ['x', 'y']
-    Wrt.preprocess('x y') == ['x', 'y']
-    Wrt.preprocess('x, y') == ['x', 'y']
-    Wrt.preprocess([x, y]) == ['x', 'y']
+    assert Wrt.preprocess(x) == ['x']
+    assert Wrt.preprocess('') == []
+    assert Wrt.preprocess(' ') == []
+    assert Wrt.preprocess('x,y') == ['x', 'y']
+    assert Wrt.preprocess('x y') == ['x', 'y']
+    assert Wrt.preprocess('x, y') == ['x', 'y']
+    assert Wrt.preprocess('x , y') == ['x', 'y']
+    assert Wrt.preprocess(' x, y') == ['x', 'y']
+    assert Wrt.preprocess(' x,  y') == ['x', 'y']
+    assert Wrt.preprocess([x, y]) == ['x', 'y']
 
+    raises(OptionError, "Wrt.preprocess(',')")
     raises(OptionError, "Wrt.preprocess(0)")
 
 def test_Wrt_postprocess():
