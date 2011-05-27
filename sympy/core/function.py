@@ -965,18 +965,6 @@ def expand(e, deep=True, modulus=None, power_base=True, power_exp=True, \
     >>> x, y = symbols('x,y', positive=True)
     >>> log(x**2*y).expand(log=True)
     2*log(x) + log(y)
-    >>> log(4)
-    2*log(2)
-    >>> log(4*3)
-    log(12)
-    >>> _.expand()
-    log(3) + 2*log(2)
-    >>> log(12).expand(factor_limit=0) # don't do numerical expansion
-    log(12)
-    >>> log(2147909653)
-    log(2147909653)
-    >>> _.expand(factor_limit=oo) # default limit is 2**15; oo forces full factorization
-    log(32771) + log(65543)
 
     trig - Do trigonometric expansions.
     >>> cos(x + y).expand(trig=True)

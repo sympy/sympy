@@ -7,7 +7,7 @@ from sympy.core.singleton import S
 from sympy.core.symbol import Wild, Dummy
 from sympy.core.mul import Mul
 
-from sympy.ntheory import multiplicity, perfect_power, factorint
+from sympy.ntheory import multiplicity, perfect_power
 
 # NOTE IMPORTANT
 # The series expansion code in this file is an important part of the gruntz
@@ -397,18 +397,6 @@ class log(Function):
                     e = arg.exp
                 return e * self.func(b)._eval_expand_log(deep=deep,\
                 **hints)
-        elif arg.is_Integer:
-            limit_ = hints.get('factor_limit', 2**15)
-            if limit_:
-                if limit_ != S.Infinity:
-                    dict = arg.factors(limit=limit_)
-                else:
-                    dict = factorint(arg)
-                if len(dict) > 1:
-                    terms = []
-                    for b, e in dict.iteritems():
-                        terms.append(e*self.func(b))
-                    return Add(*terms)
 
         return self.func(arg)
 

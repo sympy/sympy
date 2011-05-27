@@ -223,17 +223,22 @@ def test_tsolve():
     assert solve(3**(2-x), x) == [zoo]
     assert solve(4*3**(5*x+2)-7, x) == [(-2*log(2) - 2*log(3) + log(7))/(5*log(3))]
     assert solve(x+2**x, x) == [-LambertW(log(2))/log(2)]
-    assert solve(3*x+5+2**(-5*x+3), x) in \
-        [[-Rational(5,3) + LambertW(-10240*2**Rational(1,3)*log(2)/3)/(5*log(2))],\
-        [(-25*log(2) + 3*LambertW(-10240*2**(Rational(1, 3))*log(2)/3))/(15*log(2))]]
+    assert solve(3*x+5+2**(-5*x+3), x) in [
+        [Rational(-5, 3) + LambertW(log(2**(-10240*2**(Rational(1, 3))/3)))/(5*log(2))],
+        [-Rational(5,3) + LambertW(-10240*2**Rational(1,3)*log(2)/3)/(5*log(2))],
+        [(-25*log(2) + 3*LambertW(-10240*2**(Rational(1, 3))*log(2)/3))/(15*log(2))],
+        ]
     assert solve(5*x-1+3*exp(2-7*x), x) == \
         [Rational(1,5) + LambertW(-21*exp(Rational(3,5))/5)/7]
     assert solve(2*x+5+log(3*x-2), x) == \
         [Rational(2,3) + LambertW(2*exp(-Rational(19,3))/3)/2]
     assert solve(3*x+log(4*x), x) == [LambertW(Rational(3,4))/3]
     assert solve((2*x+8)*(8+exp(x)), x) == [-4, log(8) + pi*I]
-    assert solve(2*exp(3*x+4)-3, x) in [ [-Rational(4,3)+log(Rational(3,2))/3],\
-                                         [Rational(-4, 3) - log(2)/3 + log(3)/3]]
+    assert solve(2*exp(3*x+4)-3, x) in [
+        [Rational(-4, 3) + log(2**(Rational(2, 3))*3**(Rational(1, 3))/2)],
+        [-Rational(4,3)+log(Rational(3,2))/3],
+        [Rational(-4, 3) - log(2)/3 + log(3)/3],
+        ]
     assert solve(2*log(3*x+4)-3, x) == [(exp(Rational(3,2))-4)/3]
     assert solve(exp(x)+1, x) == [pi*I]
     assert solve(x**2 - 2**x, x) == [2]

@@ -212,12 +212,10 @@ def test_log_expand():
     assert log(x*y).expand(force=True) == log(x) + log(y)
     assert log(x**y).expand(force=True) == y*log(x)
 
-    assert log(2*3**2).expand() == 2*log(3) + log(2)
-    p = nextprime(2**15)
-    q = nextprime(2*p)
-    assert log(p*q).expand() == log(2147909653)
-    assert log(p*q).expand(factor_limit=oo) == log(32771) + log(65543)
-    assert log(2*3).expand(factor_limit=0) == log(6)
+    # there's generally no need to expand out logs since this requires
+    # factoring and if simplification is sought, it's cheaper to put
+    # logs together than it is to take them apart.
+    assert log(2*3**2).expand() != 2*log(3) + log(2)
 
 def test_log_simplify():
     x = Symbol("x", positive=True)
