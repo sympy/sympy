@@ -466,6 +466,33 @@ class Permutation(Basic):
             cycles.append([next_elem])
         return cycles
 
+    @property
+    def inversion_vector(self):
+        """
+        Gets the inversion vector of the permutation.
+
+        The inversion vector consists of elements whose value
+        indicates the number of elements in the permutation
+        that are greater than it and lie on its left hand side.
+
+        Examples:
+        >>> from sympy.combinatorics.permutations import Permutation
+        >>> p = Permutation([4,8,0,7,1,5,3,6,2])
+        >>> p.inversion_vector
+        [4, 7, 0, 5, 0, 2, 1, 1]
+        >>> p = Permutation([3,2,1,0])
+        >>> p.inversion_vector
+        [3, 2, 1]
+        """
+        inversion_vector = [0] * (self.size - 1)
+        for i in xrange(self.size - 1):
+            val = 0
+            for j in xrange(i, self.size):
+                if self.array_form[j] < self.array_form[i]:
+                    val += 1
+            inversion_vector[i] = val
+        return inversion_vector
+
     def get_precedence_matrix(self):
         """
         Gets the precedence matrix. This is used for computing the
@@ -626,3 +653,12 @@ def josephus(m, n, s = 1):
         perm.append(Q.popleft())
     perm.extend(list(Q))
     return Permutation(perm)
+
+def from_inversion_vector(inversion):
+    """
+    Calculates the permutation from the inversion
+    vector.
+
+    Examples:
+    """
+    raise NotImplementedError()

@@ -17,6 +17,9 @@ def test_Permutation():
     assert len(p.atoms()) == 7
     assert q.atoms() == set([0, 1, 2, 3, 4, 5, 6])
 
+    assert p.inversion_vector == [2, 4, 1, 3, 1, 0]
+    assert q.inversion_vector == [3, 1, 2, 2, 0, 1]
+
     s = Permutation([0])
 
     assert s.is_Singleton
