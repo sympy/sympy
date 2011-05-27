@@ -2336,8 +2336,11 @@ def test_poly():
     assert poly(x*y*(x + y)*(x + z)**2) == \
         Poly(x**3*y**2 + x*y**2*z**2 + y*x**2*z**2 + 2*z*x**2*y**2 + 2*y*z*x**3 + y*x**4, x, y, z)
 
-    assert poly(Poly(x + y + z, y, x, z)) == Poly(x + y + z, x, y, z)
-    assert poly(Poly(x + y + z, y, x, z), wrt=z) == Poly(x + y + z, z, x, y)
+    assert poly(Poly(x + y + z, y, x, z)) == Poly(x + y + z, y, x, z)
 
+    assert poly((x + y)**2, x) == Poly(x**2 + 2*x*y + y**2, x, domain=ZZ[y])
+    assert poly((x + y)**2, y) == Poly(x**2 + 2*x*y + y**2, y, domain=ZZ[x])
+
+    assert poly(1, x) == Poly(1, x)
     raises(GeneratorsNeeded, "poly(1)")
 
