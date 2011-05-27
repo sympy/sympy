@@ -94,6 +94,10 @@ def test_Permutation():
     assert q.runs() == [[4], [2, 3, 5], [0, 6], [1]]
     assert r.runs() == [[3], [2], [1], [0]]
 
+    assert p.index == 8
+    assert q.index == 8
+    assert r.index == 3
+
     assert p.get_precedence_distance(q) == q.get_precedence_distance(p)
     assert p.get_adjacency_distance(q) == p.get_adjacency_distance(q)
     assert p.get_positional_distance(q) == p.get_positional_distance(q)

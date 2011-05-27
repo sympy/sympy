@@ -473,6 +473,24 @@ class Permutation(Basic):
     def cycles(self):
         return len(self.cyclic_form)
 
+    @property
+    def index(self):
+        """
+        Returns the index of a permutation.
+
+        The index of a permutation is the sum of all
+        subscripts j such that p[j] is greater than
+        p[j+1].
+
+        Examples:
+        >>> from sympy.combinatorics.permutations import Permutation
+        >>> p = Permutation([3, 0, 2, 1, 4])
+        >>> p.index
+        2
+        """
+        return sum([j for j in xrange(self.size - 1) if
+                    self.array_form[j] > self.array_form[j+1]])
+
     def runs(self):
         """
         Returns the runs of a permutation.
