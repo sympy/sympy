@@ -42,7 +42,7 @@ def test_monomial_grlex_key():
     assert monomial_grlex_key((1,2,3)) == (6, (1,2,3))
 
 def test_monomial_grevlex_key():
-    assert monomial_grevlex_key((1,2,3)) == (6, (3,2,1))
+    assert monomial_grevlex_key((1,2,3)) == (6, (-3,-2,-1))
 
 def test_monomial_key():
     assert monomial_key() == monomial_lex_key
