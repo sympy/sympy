@@ -213,6 +213,10 @@ class IntegerPartition(Partition):
         Gets the size of the partition.
 
         Examples:
+        >>> from sympy.combinatorics.partitions import IntegerPartition
+        >>> a = IntegerPartition([1,3,4], 8)
+        >>> a.size
+        3
         """
         return len(self.args[0])
 
@@ -222,6 +226,10 @@ class IntegerPartition(Partition):
         Gets the set of the partition.
 
         Examples:
+        >>> from sympy.combinatorics.partitions import IntegerPartition
+        >>> a = IntegerPartition([1,3,4], 8)
+        >>> a.partition_set
+        8
         """
         return self.args[1]
 
@@ -232,6 +240,10 @@ class IntegerPartition(Partition):
         partition object
 
         Examples:
+        >>> from sympy.combinatorics.partitions import IntegerPartition
+        >>> a = IntegerPartition([1,3,4], 8)
+        >>> a.partition_array
+        [1, 3, 4]
         """
         return self.args[0]
 
