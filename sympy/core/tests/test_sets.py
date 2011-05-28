@@ -133,6 +133,14 @@ def test_complement():
     X = Interval(1,3)+FiniteSet(5)
     assert X.intersect(X.complement) == S.EmptySet
 
+    square = Interval(0,1) * Interval(0,1)
+    notsquare = square.complement
+
+    assert all(pt in square for pt in [(0,0), (.5,.5), (1,0), (1,1)])
+    assert not any(pt in notsquare for pt in [(0,0), (.5,.5), (1,0), (1,1)])
+    assert not any(pt in square for pt in [(-1,0), (1.5,.5), (10,10)])
+    assert all(pt in notsquare for pt in [(-1,0), (1.5,.5), (10,10)])
+
 
 def test_intersect():
     x = Symbol('x')
@@ -325,6 +333,39 @@ def test_finite_basic():
     # Ensure a variety of types can exist in a FiniteSet
     S = FiniteSet((1,2), Float, A, -5, x, 'eggs', x**2, FiniteSet)
 
+def test_product_basic():
+    H,T = 'H', 'T'
+    unit_line = Interval(0,1)
+    d6 = FiniteSet(1,2,3,4,5,6)
+    d4 = FiniteSet(1,2,3,4)
+    coin = FiniteSet(H, T)
+
+    square = unit_line * unit_line
+
+    assert (0,0) in square
+    assert (H, T) in coin ** 2
+    assert (.5,.5,.5) in square * unit_line
+    assert (H, 3, 3) in coin * d6* d6
+    HH, TT = sympify(H), sympify(T)
+    assert set(coin**2) == set(((HH, HH), (HH, TT), (TT, HH), (TT, TT)))
+
+    assert (d6*d6).subset(d4*d4)
+
+    inf, neginf = S.Infinity, S.NegativeInfinity
+    assert square.complement == Union(
+       Interval(0,1) * (Interval(neginf,0,True,True)+Interval(1,inf,True,True)),
+       (Interval(neginf,0,True,True)+Interval(1,inf,True,True))*Interval(0,1),
+       ((Interval(neginf,0,True,True) + Interval(1,inf, True, True))
+                * (Interval(neginf,0,True,True) + Interval(1,inf, True,True))))
+
+
+
+    assert (Interval(-10,10)**3).subset(Interval(-5,5)**3)
+    assert not (Interval(-5,5)**3).subset(Interval(-10,10)**3)
+    raises(ValueError, "(Interval(-10,10)**2).subset(Interval(-5,5)**3)")
+
+    assert square.subset(Interval(.2,.5)*FiniteSet(.5)) # segment in square
+
 def test_real():
     x = Symbol('x', real=True)
     y = Symbol('y')
@@ -377,9 +418,6 @@ def test_product_basic():
     assert set(coin**2) == set(((HH, HH), (HH, TT), (TT, HH), (TT, TT)))
 
     assert (d6*d6).subset(d4*d4)
-    assert square.complement == (
-            (Interval(S.NegativeInfinity, 0, True, True)+Interval(1, S.Infinity, True, True)) *
-            (Interval(S.NegativeInfinity, 0, True, True)+Interval(1, S.Infinity, True, True)))
 
     assert (Interval(-10,10)**3).subset(Interval(-5,5)**3)
     assert not (Interval(-5,5)**3).subset(Interval(-10,10)**3)
