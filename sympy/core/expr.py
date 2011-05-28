@@ -19,6 +19,10 @@ class Expr(Basic, EvalfMixin):
     # the object with the highest _op_priority to handle the call.
     # Custom subclasses that want to define their own binary special methods
     # should set an _op_priority value that is higher than the default.
+    #
+    # **NOTE**:
+    # This is a temporary fix, and will eventually be replaced with
+    # something better and more powerful.  See issue 2411.
     _op_priority = 10.0
 
     def __pos__(self):
