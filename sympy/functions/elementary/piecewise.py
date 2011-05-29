@@ -1,5 +1,6 @@
 from sympy.core import Basic, S, Function, diff, Number, sympify
 from sympy.core.relational import Equality, Relational
+from sympy.logic.boolalg import Boolean
 from sympy.core.sets import Set
 
 class ExprCondPair(Function):
@@ -79,7 +80,8 @@ class Piecewise(Function):
             pair = ExprCondPair(*ec)
             cond_type = type(pair.cond)
             if not (cond_type is bool or issubclass(cond_type, Relational) or \
-                    issubclass(cond_type, Number) or issubclass(cond_type, Set)):
+                    issubclass(cond_type, Number) or \
+                    issubclass(cond_type, Set) or issubclass(cond_type, Boolean)):
                 raise TypeError(
                     "Cond %s is of type %s, but must be a bool," \
                     " Relational, Number or Set" % (pair.cond, cond_type))
