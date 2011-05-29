@@ -3,7 +3,7 @@ from sympy.utilities.iterables import rotate_left
 from sympy.polys.polytools import lcm
 from sympy.matrices import Matrix, zeros
 
-import itertools
+import itertools, random
 
 class Permutation(Basic):
     """
@@ -759,3 +759,20 @@ def from_inversion_vector(inversion):
         raise ValueError("The inversion vector is not valid")
     perm.extend(N)
     return Permutation(perm)
+
+def random_permutation(n):
+    """
+    Generates a random permutation.
+
+    Uses the underlying Python psuedo-random
+    number generator.
+
+    Examples:
+    >>> from sympy.combinatorics.permutations import random_permutation
+    >>> a = random_permutation(5)
+    >>> (a*(~a)).is_Identity
+    True
+    """
+    perm_array = [i for i in xrange(n)]
+    random.shuffle(perm_array)
+    return Permutation(perm_array)
