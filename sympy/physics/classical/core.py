@@ -1,5 +1,4 @@
 from sympy import *
-from copy import deepcopy
 
 class Vector:
     """
@@ -10,24 +9,42 @@ class Vector:
 
     subscript_indices = "xyz"
 
-    def __init__(self,mat,frame):
+    def __init__(self, inlist):
         """
         This is the constructor for the Vector class.  
         It should only be used in construction of the basis vectors,
         which is part of the ReferenceFrame construction.  
         It takes in a SymPy matrix and a ReferenceFrame.  
         """
-        self.args=[[mat,frame]]
+        self.args=[]
+        while len(inlist) != 0:
+            added = 0
+            for i, v in enumerate(self.args):
+                if inlist[0][1] == self.args[i][1]:
+                    self.args[i] = (self.args[i][0] + inlist[0][0], inlist[0][1])
+                    inlist.remove(inlist[0])
+                    added = 1
+                    break
+            if added != 1:
+                self.args.append(inlist[0])
+                inlist.remove(inlist[0])
+        i = 0
+        while i<len(self.args):
+            if ((self.args[i][0][0] == 0) & (self.args[i][0][1] == 0) & 
+                (self.args[i][0][2] == 0)):
+                self.args.remove(self.args[i])
+                i -= 1
+            i += 1
 
-def __str__(self):
+    def __str__(self):
         """
         Printing method.  Uses Vector Attribute subscript_indices to choose how
         to show basis vector indices.
         """
         ar = self.args # just to shorten things
         ol = [] # output list, to be concatenated to a string
-        for i in range(len(ar)):
-            for j in 0,1,2:
+        for i, v in enumerate(ar):
+            for j in 0, 1, 2:
                 if ar[i][0][j] == 1: # if the coef of the basis vector is 1, we skip the 1
                     if len(ol) != 0: 
                         ol.append(' + ')
@@ -41,7 +58,7 @@ def __str__(self):
                     # we wrap it in parentheses, for readability.
                     if len(ol) != 0:
                         ol.append(' + ')
-                    ol.append('(' +  `ar[i][0][j]` + ')*' + ar[i][1].name.lower() + self.subscript_indices[j] + '>' )
+                    ol.append('(' + `ar[i][0][j]` + ')*' + ar[i][1].name.lower() + self.subscript_indices[j] + '>' )
         return ''.join(ol)
 
     def __repr__(self):
@@ -55,48 +72,47 @@ def __str__(self):
         The add operator for Vector. 
         It checks that other is a Vector, otherwise it throws an error.
         """
-        if not(isinstance(other,Vector)): # Rejects adding a scalar to a vector
-            raise TypeError('You can only add two Vectors')
-        self2 = self.copy()
-        other2 = other.copy()
-        for i in range(len(self2.args)):
-            for j in range(len(other2.args)):
-                if self2.args[i][1] == other2.args[j][1]:
-                    self2.args[i][0] += other2.args[j][0]
-                    other2.args.remove(j)
-        self2.args += other.args[j]
-        
-        return self2
+        assert isinstance(other, Vector), 'You can only add two Vectors'
+        return Vector(self.args + other.args)
 
     def __and__(self, other):
         """
         Dot product of two vectors.  
         """
         out = 0
-        for i in range(len(self.args)):
-            for j in range(len(other.args)):
-                out += ((other.args[j][0].T)\
-                        *(self.args[i][1].dcm(other.args[j][1]))\
-                        *(self.args[i][0]))[0]
+        for i, v in enumerate(self.args):
+            for j, v in enumerate(other.args):
+                out += ((other.args[j][0].T)
+                        * (self.args[i][1].dcm(other.args[j][1]))
+                        * (self.args[i][0]))[0]
         return out
 
     def __div__(self, other):
         """
         This uses mul and inputs self and 1 divided by other.  
         """
-        return self.__mul__(1/other)
+        return self.__mul__(1 / other)
+
+    def __eq__(self, other):
+        assert isinstance(other,Vector), 'Vectors can only compare to Vectors'
+        dotcheck = (self & self == self & other)
+        crosscheck = ((self ^ other) & (self ^ other) == 0)
+        return dotcheck & crosscheck
 
     def __mul__(self, other):
         """
         Multiplies the Vector by a scalar. 
         Throws an error if another Vector is entered.  
         """
-        if isinstance(other, Vector): # Rejects scalar multiplication of two vectors
-            raise TypeError('Why u try to mul vecs?')
-        self2 = self.copy()
-        for i in range(len(self2.args)):
-            self2.args[i][0] *= other
-        return self2
+        assert not(isinstance(other, Vector)), \
+                'Two Vectors can\'t be multiplied'
+        newlist = [v for v in self.args]
+        for i, v in enumerate(newlist):
+            newlist[i] = (other * newlist[i][0], newlist[i][1])
+        return Vector(newlist)
+
+    def __neg__(self):
+        return self * -1
 
     def __rmul__(self, other):
         """
@@ -109,22 +125,71 @@ def __str__(self):
         The subraction operator. 
         Reuses add and multiplication operations.  
         """
-        return self.__add__(other*-1)
+        return self.__add__(other * -1)
 
-    def copy(self):
-        newvec = Vector(Matrix([0,0,0]),None)
-        for i in range(len(self.args)-1):
-            newvec.args.append([Matrix([0,0,0]),None])
-        for i in range(len(self.args)):
-            newvec.args[i][0][0:] = self.args[i][0][0:]
-            newvec.args[i][1] = self.args[i][1]
-        return newvec
+    def __xor__(self, other):
+        """
+        The cross product operator for two Vectors. 
+        Takes in two Vectors; order matters. 
+        Returns a Vector which is perpendicular to the two input vectors.
+        This Vector is expressed in the frames of self (first vector). 
+        """
+        def _det(mat):
+            """
+            This is needed as a little method for to find the determinant of a
+            list in python; needs to work for a 3x3 list.
+            SymPy's Matrix won't take in Vector, so need a custom function.
+            """
+            return (mat[0][0] * (mat[1][1] * mat[2][2] - mat[1][2] * mat[2][1])
+                    + mat[0][1] * (mat[1][2] * mat[2][0] - mat[1][0] *
+                    mat[2][2]) + mat[0][2] * (mat[1][0] * mat[2][1] -
+                    mat[1][1] * mat[2][0]))
+
+        outvec = Vector([(Matrix([0, 0, 0]), self.args[0][1])])
+        ar = self.args # For brevity
+        for i, v in enumerate(ar):
+            tempx = ar[i][1].x
+            tempy = ar[i][1].y
+            tempz = ar[i][1].z
+            tempm = ([[tempx, tempy, tempz], [Vector([ar[i]]) & tempx, 
+                Vector([ar[i]]) & tempy, Vector([ar[i]]) & tempz],
+                [other & tempx, other & tempy, other & tempz]])
+            outvec += _det(tempm)
+        return outvec
 
     def dot(self, other):
         """
-        Wraps around & operator, which is the designated operator for dot.
+        Wraps around the & operator, which is the dot product operator.
         """
-        return self&other
+        return self & other
+
+    def cross(self, other):
+        """
+        Wraps around the ^ operator, which is the cross product operator.  
+        """
+        return self ^ other
+
+    def d(self, wrt):
+        """
+        Takes in a sympifyable value, which cannot be a Vector.
+        Returns the partial derivative of the self Vector with respect 
+        to the input value.
+        """
+        try:
+            sympify(wrt)
+        except:
+            raise SympifyError('Not a Valid Expression')
+        # TODO Finish this up
+
+    def dt(self, otherframe):
+        """
+        Returns the time derivative of the self Vector in the given Reference
+        Frame.  
+        Takes in a ReferenceFrame, and returns a Vector.
+        """
+        assert isinstance(otherframe, ReferenceFrame), 'Need to supply a \
+                ReferenceFrame to find the derivative in'
+        # TODO Finish this up
 
     def express(self, otherframe):
         """
@@ -133,15 +198,14 @@ def __str__(self):
         frame.
         Takes in a frame.
         """
-        assert isinstance(otherframe, ReferenceFrame), 'Needs a frame to express in'
-        out = Vector(Matrix([0,0,0], ReferenceFrame))
-        for i in range(len(self.args)):
-            if self.args[i][1] == otherframe:
-                out.args[i][0] += self.args[i][0]
-            else:
-                out.args[i][0] += self.args[i][1].dcm(otherframe) *\
-                self.args[i][0]
-        return out
+        assert isinstance(otherframe, ReferenceFrame), 'Needs a frame to \
+                express in'
+        outvec = Vector(self.args + [])
+        for i, v in enumerate(self.args):
+            if v[1] != otherframe:
+                outvec += Vector([(v[1].dcm(otherframe) * v[0], otherframe)])
+                outvec -= Vector([v])
+        return outvec
 
 
 class ReferenceFrame:
@@ -158,31 +222,31 @@ class ReferenceFrame:
         """
         self.name = name
         self.parent = None
-        self.x = Vector(Matrix([1,0,0]), self)
-        self.y = Vector(Matrix([0,1,0]), self)
-        self.z = Vector(Matrix([0,0,1]), self)
+        self.x = Vector([(Matrix([1, 0, 0]), self)])
+        self.y = Vector([(Matrix([0, 1, 0]), self)])
+        self.z = Vector([(Matrix([0, 0, 1]), self)])
 
     def __str__(self):
         """
         Returns the name of the frame.
         """
         return self.name
-    
+
     def __repr__(self):
         """
         Wraps __str__
         """
         return self.name
 
-    def dcm(self,other):
+    def dcm(self, other):
         """
         This will return the direction cosine matrix from self to other;
         other's basis = DCM * self's basis is the definition.
         All it takes in is the other frame.  
-        nxyz = N.dcm(B)*bxyz
+        nxyz = N.dcm(B) * bxyz
         """
         assert isinstance(other, ReferenceFrame), 'You have to use 2\
-        reference frames'
+                reference frames'
         leg1 = [self]
         ptr = self
         while ptr.parent != None:
@@ -228,7 +292,7 @@ class ReferenceFrame:
 
         def _rot(axis, angle): 
             """
-            Returns direction cosine matrix for simple 1,2,3 rotations
+            Returns direction cosine matrix for simple axis 1,2,or 3 rotations
             """
             if axis == 1:
                 return Matrix([[1, 0, 0],
@@ -244,9 +308,9 @@ class ReferenceFrame:
                     [0, 0, 1]])
 
         self.parent = parent
-        approved_orders = ('123','231','312','132',\
-                '213','321','121','131','212','232',\
-                '313','323','1','2','3')
+        approved_orders = ('123', '231', '312', '132',
+                '213', '321', '121', '131', '212', '232',
+                '313', '323', '1', '2', '3', '')
         rot_order = str(rot_order).upper() # Now we need to make sure XYZ = 123
         rot_type  = rot_type.upper()
         rot_order = [i.replace('X', '1') for i in rot_order]
@@ -258,30 +322,32 @@ class ReferenceFrame:
         if rot_type == 'AXIS':
             raise NotImplementedError('Axis rotation not yet implemented')
         elif rot_type == 'EULER':
-            assert len(amounts)==4, 'Euler orietation requires 4 values'
+            assert ininstance(amounts, (list, tuple)) & len(amounts) == 4, \
+                    'Amounts need to be in a list or tuple of length 4'
             assert rot_order=='', 'Euler orientation take no rotation order'
+            self.parent_orient = ()
             # TODO need to finish this up...
         elif rot_type == 'BODY':
-            assert len(amounts)==3, 'Body orientation requires 3 values'
-            assert len(rot_order)==3, 'Body orientation requires 3 orders'
+            assert len(amounts) == 3, 'Body orientation requires 3 values'
+            assert len(rot_order) == 3, 'Body orientation requires 3 orders'
             a1 = int(rot_order[0])
             a2 = int(rot_order[1])
             a3 = int(rot_order[2])
-            self.parent_orient = _rot(a1, amounts[0]) * _rot(a2, amounts[1])\
-                    * _rot(a3, amounts[2])
+            self.parent_orient = (_rot(a1, amounts[0]) * _rot(a2, amounts[1])
+                    * _rot(a3, amounts[2]))
         elif rot_type == 'SPACE':
-            assert len(amounts)==3, 'Space orientation requires 3 values'
-            assert len(rot_order)==3, 'Space orientation requires 3 orders'
+            assert len(amounts) == 3, 'Space orientation requires 3 values'
+            assert len(rot_order) == 3, 'Space orientation requires 3 orders'
             a1 = int(rot_order[0])
             a2 = int(rot_order[1])
             a3 = int(rot_order[2])
-            self.parent_orient = _rot(a3, amounts[2]) * _rot(a2, amounts[1])\
-                    * _rot(a1, amounts[0])
+            self.parent_orient = (_rot(a3, amounts[2]) * _rot(a2, amounts[1])
+                    * _rot(a1, amounts[0]))
         elif rot_type == 'SIMPLE':
-            assert not(isinstance(amounts,(list,tuple))), 'Simple takes in a\
-            single value for amount'
-            assert not(isinstance(rot_order,(list,tuple))), 'Simple takes in a\
-            single value for rotation order'
+            assert not(isinstance(amounts, (list, tuple))), 'Simple takes in a\
+                    single value for amount'
+            assert not(isinstance(rot_order, (list, tuple))), 'Simple takes in a\
+                    single value for rotation order'
             a = int(rot_order)
             self.parent_orient = _rot(a, amounts)
         else:
