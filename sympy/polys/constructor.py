@@ -12,7 +12,7 @@ def _construct_simple(coeffs, opt):
     result, rationals, reals, algebraics = {}, False, False, False
 
     if opt.extension is True:
-        is_algebraic = lambda coeff: ask(coeff, Q.algebraic)
+        is_algebraic = lambda coeff: ask(Q.algebraic(coeff))
     else:
         is_algebraic = lambda coeff: False
 

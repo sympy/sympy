@@ -43,38 +43,41 @@ def _extract_facts(expr, symbol):
     return expr.func(*filter(lambda x: x is not None,
                 [_extract_facts(arg, symbol) for arg in expr.args]))
 
-def ask(expr, key=Q.is_true, assumptions=True, context=global_assumptions):
+def ask(proposition, assumptions=True, context=global_assumptions):
     """
     Method for inferring properties about objects.
 
     **Syntax**
 
-        * ask(expression, key)
+        * ask(proposition)
 
-        * ask(expression, key, assumptions)
+        * ask(proposition, assumptions)
 
-            where expression is any SymPy expression
+            where `proposition` is any boolean expression
 
     **Examples**
         >>> from sympy import ask, Q, pi
         >>> from sympy.abc import x, y
-        >>> ask(pi, Q.rational)
+        >>> ask(Q.rational(pi))
         False
-        >>> ask(x*y, Q.even, Q.even(x) & Q.integer(y))
+        >>> ask(Q.even(x*y), Q.even(x) & Q.integer(y))
         True
-        >>> ask(x*y, Q.prime, Q.integer(x) &  Q.integer(y))
+        >>> ask(Q.prime(x*y), Q.integer(x) &  Q.integer(y))
         False
 
     **Remarks**
         Relations in assumptions are not implemented (yet), so the following
         will not give a meaningful result.
-        >> ask(x, Q.positive, Q.is_true(x > 0))
+        >> ask(Q.positive(x), Q.is_true(x > 0))
         It is however a work in progress and should be available before
         the official release
 
     """
-    expr = sympify(expr)
     assumptions = And(assumptions, And(*context))
+    if isinstance(proposition, AppliedPredicate):
+        key, expr = proposition.func, sympify(proposition.arg)
+    else:
+        key, expr = Q.is_true, sympify(proposition)
 
     # direct resolution method, no logic
     res = key(expr)._eval_ask(assumptions)
@@ -142,9 +145,9 @@ def register_handler(key, handler):
         ...     @staticmethod
         ...     def Integer(expr, assumptions):
         ...         import math
-        ...         return ask(math.log(expr + 1, 2), Q.integer)
+        ...         return ask(Q.integer(math.log(expr + 1, 2)))
         >>> register_handler('mersenne', MersenneHandler)
-        >>> ask(7, Q.mersenne)
+        >>> ask(Q.mersenne(7))
         True
 
     """

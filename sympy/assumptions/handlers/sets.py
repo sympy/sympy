@@ -40,13 +40,13 @@ class AskIntegerHandler(CommonHandler):
             return AskIntegerHandler._number(expr, assumptions)
         _output = True
         for arg in expr.args:
-            if not ask(arg, Q.integer, assumptions):
+            if not ask(Q.integer(arg), assumptions):
                 if arg.is_Rational:
                     if arg.q == 2:
-                        return ask(2*expr, Q.even, assumptions)
+                        return ask(Q.even(2*expr), assumptions)
                     if ~(arg.q & 1):
                         return None
-                elif ask(arg, Q.irrational, assumptions):
+                elif ask(Q.irrational(arg), assumptions):
                     if _output:
                         _output = False
                     else:
@@ -98,7 +98,7 @@ class AskIntegerHandler(CommonHandler):
 
     @staticmethod
     def Abs(expr, assumptions):
-        return ask(expr.args[0], Q.integer, assumptions)
+        return ask(Q.integer(expr.args[0]), assumptions)
 
 class AskRationalHandler(CommonHandler):
     """
@@ -127,10 +127,10 @@ class AskRationalHandler(CommonHandler):
         Irrational ** Rational   -> Irrational
         Rational ** Irrational   -> ?
         """
-        if ask(expr.exp, Q.integer, assumptions):
-            return ask(expr.base, Q.rational, assumptions)
-        elif ask(expr.exp, Q.rational, assumptions):
-            if ask(expr.base, Q.prime, assumptions):
+        if ask(Q.integer(expr.exp), assumptions):
+            return ask(Q.rational(expr.base), assumptions)
+        elif ask(Q.rational(expr.exp), assumptions):
+            if ask(Q.prime(expr.base), assumptions):
                 return False
 
     @staticmethod
@@ -166,9 +166,9 @@ class AskIrrationalHandler(CommonHandler):
 
     @staticmethod
     def Basic(expr, assumptions):
-        _real = ask(expr, Q.real, assumptions)
+        _real = ask(Q.real(expr), assumptions)
         if _real:
-            _rational = ask(expr, Q.rational, assumptions)
+            _rational = ask(Q.rational(expr), assumptions)
             if _rational is None: return None
             return not _rational
         else: return _real
@@ -204,9 +204,9 @@ class AskRealHandler(CommonHandler):
             return AskRealHandler._number(expr, assumptions)
         result = True
         for arg in expr.args:
-            if ask(arg, Q.real, assumptions):
+            if ask(Q.real(arg), assumptions):
                 pass
-            elif ask(arg, Q.imaginary, assumptions):
+            elif ask(Q.imaginary(arg), assumptions):
                 result = result ^ True
             else:
                 break
@@ -223,16 +223,16 @@ class AskRealHandler(CommonHandler):
         """
         if expr.is_number:
             return AskRealHandler._number(expr, assumptions)
-        if ask(expr.base, Q.real, assumptions):
-            if ask(expr.exp, Q.integer, assumptions):
+        if ask(Q.real(expr.base), assumptions):
+            if ask(Q.integer(expr.exp), assumptions):
                 return True
             elif expr.exp.is_Rational:
                 if (expr.exp.q % 2 == 0):
-                    return ask(expr.base, Q.real, assumptions) and \
-                       not ask(expr.base, Q.negative, assumptions)
+                    return ask(Q.real(expr.base), assumptions) and \
+                       not ask(Q.negative(expr.base), assumptions)
                 else: return True
-            elif ask(expr.exp, Q.real, assumptions):
-                if ask(expr.base, Q.positive, assumptions):
+            elif ask(Q.real(expr.exp), assumptions):
+                if ask(Q.positive(expr.base), assumptions):
                     return True
 
     @staticmethod
@@ -275,7 +275,7 @@ class AskRealHandler(CommonHandler):
 
     @staticmethod
     def sin(expr, assumptions):
-        if ask(expr.args[0], Q.real, assumptions):
+        if ask(Q.real(expr.args[0]), assumptions):
             return True
 
     cos, exp = sin, sin
@@ -362,9 +362,9 @@ class AskImaginaryHandler(CommonHandler):
             return AskImaginaryHandler._number(expr, assumptions)
         reals = 0
         for arg in expr.args:
-            if ask(arg, Q.imaginary, assumptions):
+            if ask(Q.imaginary(arg), assumptions):
                 pass
-            elif ask(arg, Q.real, assumptions):
+            elif ask(Q.real(arg), assumptions):
                 reals += 1
             else:
                 break
@@ -386,9 +386,9 @@ class AskImaginaryHandler(CommonHandler):
         result = False
         reals = 0
         for arg in expr.args:
-            if ask(arg, Q.imaginary, assumptions):
+            if ask(Q.imaginary(arg), assumptions):
                 result = result ^ True
-            elif not ask(arg, Q.real, assumptions):
+            elif not ask(Q.real(arg), assumptions):
                 break
         else:
             if reals == len(expr.args):
@@ -420,7 +420,7 @@ class AskAlgebraicHandler(CommonHandler):
 
     @staticmethod
     def Pow(expr, assumptions):
-        return expr.exp.is_Rational and ask(expr.base, Q.algebraic, assumptions)
+        return expr.exp.is_Rational and ask(Q.algebraic(expr.base), assumptions)
 
     @staticmethod
     def Number(expr, assumptions):
@@ -447,7 +447,7 @@ def test_closed_group(expr, assumptions, key):
     """
     result = True
     for arg in expr.args:
-        _out = ask(arg, key, assumptions)
+        _out = ask(key(arg), assumptions)
         if _out is None: break
         elif _out is False:
             if result: result = False
