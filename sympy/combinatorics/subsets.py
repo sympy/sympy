@@ -164,3 +164,17 @@ def get_bitlist_from_subset(subset, superset):
     for i in subset:
         bitlist[superset.index(i)] = '1'
     return bitlist
+
+def unrank_binary(rank, superset):
+    """
+    Gets the binary ordered subset of the
+    specified rank.
+
+    Examples:
+    >>> from sympy.combinatorics.subsets import unrank_binary
+    >>> unrank_binary(4,['a','b','c','d'])
+    ['b']
+    """
+    bin_list = list(bin(rank))[2:]
+    bin_list = [0] * (len(superset) - len(bin_list)) + bin_list
+    return get_subset_from_bitlist(superset, bin_list)
