@@ -1,4 +1,5 @@
 from sympy.core import Basic
+from sympy.functions import factorial
 from sympy.utilities.iterables import rotate_left
 from sympy.polys.polytools import lcm
 from sympy.matrices import Matrix, zeros
@@ -304,6 +305,29 @@ class Permutation(Basic):
         temp_inv_form[s], temp_inv_form[n-1] = \
             temp_inv_form[n-1], temp_inv_form[s]
         return s + n*self.rank_nonlex(temp_inv_form, n - 1)
+
+    @property
+    def rank(self):
+        """
+        Returns the lexicographic rank of the permutation.
+
+        Examples:
+        >>> from sympy.combinatorics.permutations import Permutation
+        >>> p = Permutation([0,1,2,3])
+        >>> p.rank
+        0
+        >>> p = Permutation([3,2,1,0])
+        >>> p.rank
+        23
+        """
+        rank = 0
+        rho = self.array_form[:]
+        for j in xrange(self.size - 1):
+            rank += (rho[j])*int(factorial(self.size - j - 1))
+            for i in xrange(j + 1, self.size):
+                if rho[i] > rho[j]:
+                    rho[i] = rho[i] - 1
+        return rank
 
     @property
     def is_Singleton(self):
