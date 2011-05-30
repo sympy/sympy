@@ -1,10 +1,13 @@
 from sympy import *
+# from sympy import Matrix, sympify, SympifyError, sin, cos, tan, Mul, Pow, eye, 
+#         symbols, Derivative
 
-class Vector:
+class Vector(object):
     """
-    This is the class used to define vectors.  It along with reference frame are the building blocks of pydy.  
+    This is the class used to define vectors.  It along with reference 
+    frame are the building blocks of pydy.  
     Class attributes include: 
-        subscript_indices - a 3 character string used for printing
+    subscript_indices - a 3 character string used for printing
     """
 
     subscript_indices = "xyz"
@@ -16,7 +19,7 @@ class Vector:
         which is part of the ReferenceFrame construction.  
         It takes in a SymPy matrix and a ReferenceFrame.  
         """
-        self.args=[]
+        self.args = []
         while len(inlist) != 0:
             added = 0
             for i, v in enumerate(self.args):
@@ -48,17 +51,21 @@ class Vector:
                 if ar[i][0][j] == 1: # if the coef of the basis vector is 1, we skip the 1
                     if len(ol) != 0: 
                         ol.append(' + ')
-                    ol.append( ar[i][1].name.lower() + self.subscript_indices[j] + '>' )
+                    ol.append( ar[i][1].name.lower() +
+                              self.subscript_indices[j] + '>' )
                 elif ar[i][0][j] == -1: # if the coef of the basis vector is -1, we skip the 1
                     if len(ol) != 0:
                         ol.append(' ')
-                    ol.append( '- ' + ar[i][1].name.lower() + self.subscript_indices[j] + '>' )
+                    ol.append( '- ' + ar[i][1].name.lower() +
+                              self.subscript_indices[j] + '>' )
                 elif ar[i][0][j] != 0: 
                     # If the coefficient of the basis vector is not 1 or -1, 
                     # we wrap it in parentheses, for readability.
                     if len(ol) != 0:
                         ol.append(' + ')
-                    ol.append('(' + `ar[i][0][j]` + ')*' + ar[i][1].name.lower() + self.subscript_indices[j] + '>' )
+                    ol.append('(' + `ar[i][0][j]` + ')*' +
+                              ar[i][1].name.lower() + 
+                              self.subscript_indices[j] + '>' )
         return ''.join(ol)
 
     def __repr__(self):
@@ -207,8 +214,15 @@ class Vector:
                 outvec -= Vector([v])
         return outvec
 
+    @property
+    def mag(self):
+        """
+        Returns the magnitude of the Vector. 
+        """
+        return sqrt(self & self)
 
-class ReferenceFrame:
+
+class ReferenceFrame(object):
     """
     ReferenceFrame is a reference frame.
     It will store its basis vectors as attributes, 
@@ -222,9 +236,9 @@ class ReferenceFrame:
         """
         self.name = name
         self.parent = None
-        self.x = Vector([(Matrix([1, 0, 0]), self)])
-        self.y = Vector([(Matrix([0, 1, 0]), self)])
-        self.z = Vector([(Matrix([0, 0, 1]), self)])
+        self._x = Vector([(Matrix([1, 0, 0]), self)])
+        self._y = Vector([(Matrix([0, 1, 0]), self)])
+        self._z = Vector([(Matrix([0, 0, 1]), self)])
 
     def __str__(self):
         """
@@ -327,7 +341,7 @@ class ReferenceFrame:
         elif rot_type == 'EULER':
             assert ininstance(amounts, (list, tuple)) & len(amounts) == 4, \
                     'Amounts need to be in a list or tuple of length 4'
-            assert rot_order=='', 'Euler orientation take no rotation order'
+            assert rot_order == '', 'Euler orientation take no rotation order'
             q0 = amounts[0]
             q0 = amounts[1]
             q0 = amounts[2]
@@ -354,13 +368,54 @@ class ReferenceFrame:
             self.parent_orient = (_rot(a3, amounts[2]) * _rot(a2, amounts[1])
                     * _rot(a1, amounts[0]))
         elif rot_type == 'SIMPLE':
-            assert not(isinstance(amounts, (list, tuple))), 'Simple takes in a\
-                    single value for amount'
-            assert not(isinstance(rot_order, (list, tuple))), 'Simple takes in a\
-                    single value for rotation order'
+            assert not(isinstance(amounts, (list, tuple))), 'Simple takes in \
+                    a single value for amount'
+            assert not(isinstance(rot_order, (list, tuple))), 'Simple takes \
+                    in a single value for rotation order'
             a = int(rot_order)
             self.parent_orient = _rot(a, amounts)
         else:
             raise NotImplementedError('That is not an implemented rotation')
         self.parent = parent
 
+    """
+    This whole block of code below is used to restrict the user from setting
+    different values for the ReferenceFrame's basis vectors, while still
+    remaining transparent to the user, by using properties
+    """
+    @property
+    def x(self):
+        return self._x
+
+    @x.setter
+    def x(self, value):
+        raise AssertionError('Cannot assign value to a basis vector')
+    
+    @x.deleter
+    def x(self):
+        raise AssertionError('Cannot delete a basis vector')
+    
+    @property
+    def y(self):
+        return self._y
+
+    @y.setter
+    def y(self, value):
+        raise AssertionError('Cannot assign value to a basis vector')
+
+    @y.deleter
+    def y(self):
+        raise AssertionError('Cannot delete a basis vector')
+ 
+    @property
+    def z(self):
+        return self._z
+
+    @z.setter
+    def z(self, value):
+        raise AssertionError('Cannot assign value to a basis vector')
+
+    @z.deleter
+    def z(self):
+        raise AssertionError('Cannot delete a basis vector')
+ 
