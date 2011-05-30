@@ -1,11 +1,5 @@
 """
 Notes to self:
-Pauli class in sympy/physics/paulialgebra.py does not use matrices for
-their representation.  An operation such as Pauli(1)*Qubit(1) will
-not be evaluated with apply_operators.  
-
-For the matrix reps, look at file sympy/physics/matrices.py
-
 Based on PHD thesis by Daniel Gottesman
 It seems the generators are a set of operators used to diagonose an error,
 i.e. they are used for a syndrome measurement.  Generators anticommunte with
@@ -71,22 +65,19 @@ def generator_combinations(numGenerators):
 
     return combinationList
 
-"""Use the gates instead        
-identity = Matrix( ((1, 0), (0, 1)))
-sigma_x = msigma(1)
-sigma_y = msigma(2)
-sigma_z = msigma(3)
-
-m1 = TensorProduct(sigma_x, sigma_z, sigma_z, sigma_x, identity)
-m2 = TensorProduct(identity, sigma_x, sigma_z, sigma_z, sigma_x)
-m3 = TensorProduct(sigma_x, identity, sigma_x, sigma_z, sigma_z)
-m4 = TensorProduct(sigma_z, sigma_x, identity, sigma_x, sigma_z)
-"""
-
 m1 = X(4)*Z(3)*Z(2)*X(1); m1
 m2 = X(3)*Z(2)*Z(1)*X(0); m2
 m3 = X(4)*X(2)*Z(1)*Z(0); m3
 m4 = Z(4)*X(3)*X(1)*Z(0); m4
+
+# Difference between Mermin book and PHD thesis
+# Mermin book has Z in place of X and X in place of Z operators
+"
+m1 = Z(4)*X(3)*X(2)*Z(1); m1
+m2 = Z(3)*X(2)*X(1)*Z(0); m2
+m3 = Z(4)*Z(2)*X(1)*X(0); m3
+m4 = X(4)*Z(3)*Z(1)*X(0); m4
+"
 
 generators = [m1, m2, m3, m4]
 
@@ -119,6 +110,7 @@ print '5 qubit codeword for 0:'
 print zero_codeword
 print ''
 print zero_codeword_intqubit
+print ''
 
 # Possible to generate new codes by "pasting" codes together
 
