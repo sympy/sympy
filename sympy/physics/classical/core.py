@@ -287,7 +287,12 @@ class ReferenceFrame:
         type of rotation, amount(s) of rotation, and if applicable, order of
         rotations.  
         The format for this needs to be spelled out and made explicit, with
-        example.  
+        example.
+        Simple
+        Body
+        Space
+        Euler
+        Axis
         """
 
         def _rot(axis, angle): 
@@ -307,10 +312,8 @@ class ReferenceFrame:
                     [sin(angle), cos(angle), 0],
                     [0, 0, 1]])
 
-        self.parent = parent
-        approved_orders = ('123', '231', '312', '132',
-                '213', '321', '121', '131', '212', '232',
-                '313', '323', '1', '2', '3', '')
+        approved_orders = ('123', '231', '312', '132', '213', '321', '121',
+                '131', '212', '232', '313', '323', '1', '2', '3', '')
         rot_order = str(rot_order).upper() # Now we need to make sure XYZ = 123
         rot_type  = rot_type.upper()
         rot_order = [i.replace('X', '1') for i in rot_order]
@@ -325,8 +328,15 @@ class ReferenceFrame:
             assert ininstance(amounts, (list, tuple)) & len(amounts) == 4, \
                     'Amounts need to be in a list or tuple of length 4'
             assert rot_order=='', 'Euler orientation take no rotation order'
-            self.parent_orient = ()
-            # TODO need to finish this up...
+            q0 = amounts[0]
+            q0 = amounts[1]
+            q0 = amounts[2]
+            q0 = amounts[3]
+            self.parent_orient = (Matrix([[q0 ** 2 + q1 ** 2 - q2 ** 2 - q3 **
+                2, 2 * (q1 * q2 - q0 * q3), 2 * (q0 * q2 + q1 * q3)], 
+                [2 * (q1 * q2 + q0 * q3), q0 ** 2 - q1 ** 2 + q2 **2 - q3 ** 2,
+                2 * (q2 * q3 - q0 * q1)], [2 * (q1 * q3 - q0 * q2), 2 * (q0 *
+                q1 + q2 * q3), q0 ** 2 - q1 ** 2 - q2 ** 2 + q3 ** 2]]))
         elif rot_type == 'BODY':
             assert len(amounts) == 3, 'Body orientation requires 3 values'
             assert len(rot_order) == 3, 'Body orientation requires 3 orders'
@@ -352,5 +362,5 @@ class ReferenceFrame:
             self.parent_orient = _rot(a, amounts)
         else:
             raise NotImplementedError('That is not an implemented rotation')
-
+        self.parent = parent
 
