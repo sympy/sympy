@@ -57,6 +57,9 @@ def test_Permutation():
     assert q.rank_nonlex() == 8441
     assert q.unrank_nonlex(41) == Permutation([4, 2, 3, 5, 1, 0, 6])
 
+    assert q.rank == 870
+    assert p.rank == 1964
+
     p = Permutation([1,5,2,0,3,6,4])
     q = Permutation([[2,3,5],[1,0,6],[4]])
 
@@ -97,6 +100,9 @@ def test_Permutation():
     assert p.index == 8
     assert q.index == 8
     assert r.index == 3
+
+    assert q.rank_trotterjohnson == 259
+    assert p.rank_trotterjohnson == 1087
 
     assert p.get_precedence_distance(q) == q.get_precedence_distance(p)
     assert p.get_adjacency_distance(q) == p.get_adjacency_distance(q)

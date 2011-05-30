@@ -653,6 +653,44 @@ class Permutation(Basic):
             inversion_vector[i] = val
         return inversion_vector
 
+    @property
+    def rank_trotterjohnson(self):
+        """
+        Returns the Trotter Johnson rank, which we get from the minimal
+        change algorithm.
+
+        Examples:
+        >>> from sympy.combinatorics.permutations import Permutation
+        >>> p = Permutation([0,1,2,3])
+        >>> p.rank_trotterjohnson
+        0
+        >>> p = Permutation([0,2,1,3])
+        >>> p.rank_trotterjohnson
+        3
+
+        >>> from sympy.combinatorics.permutations import *
+        >>> a = Permutation([2, 3, 1, 0])
+        >>> a.rank_trotterjohnson
+        13
+        """
+        if self.array_form == [] or self.is_Identity:
+            return 0
+        if self.array_form == [1, 0]:
+            return 1
+        temp_perm = self.array_form[:]
+        index_n = self.array_form.index(self.size - 1)
+        temp_perm.remove(self.size - 1)
+        rank = Permutation(temp_perm).rank_trotterjohnson
+        if rank % 2 == 0:
+            rank = (self.size - 1) * rank + \
+                   len([i for i in self.array_form
+                        if self.array_form.index(i) < index_n])
+        else:
+            rank = (self.size - 1) * rank + \
+                   len([i for i in self.array_form
+                        if self.array_form.index(i) > index_n])
+        return rank
+
     def get_precedence_matrix(self):
         """
         Gets the precedence matrix. This is used for computing the
