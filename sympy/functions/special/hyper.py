@@ -103,9 +103,39 @@ class hyper(TupleParametersBase):
     >>> hyper((n, a), (n**2,), x)
     hyper((n, a), (n**2,), x)
 
-    The hypergeometric function generalises many named special functions.
-    TODO when hyperexpand is implemented, illustrate these.
 
+    The hypergeometric function generalises many named special functions.
+    The function hyperexpand() tries to express a hypergeometric function
+    using named special functions.
+    For example:
+
+    >>> from sympy import hyperexpand
+    >>> hyperexpand(hyper([], [], x))
+    exp(x)
+
+    You can also use expand_func:
+
+    >>> from sympy import expand_func
+    >>> expand_func(x*hyper([1, 1], [2], -x))
+    log(x + 1)
+
+    More examples:
+
+    >>> from sympy import S
+    >>> hyperexpand(hyper([], [S(1)/2], -x**2/4))
+    cos(x)
+    >>> hyperexpand(x*hyper([S(1)/2, S(1)/2], [S(3)/2], x**2))
+    asin(x)
+
+    We can also sometimes hyperexpand parametric functions:
+
+    >>> from sympy.abc import a
+    >>> hyperexpand(hyper([-a], [], x))
+    (-x + 1)**a
+
+    See Also:
+
+    - :func:`sympy.simplify.hyperexpand`
 
     **References**
 
@@ -127,6 +157,14 @@ class hyper(TupleParametersBase):
         nbq = Tuple(*[b + 1 for b in self.bq])
         fac = Mul(*self.ap)/Mul(*self.bq)
         return fac*hyper(nap, nbq, self.argument)
+
+    def _eval_expand_func(self, deep=True, **hints):
+        from sympy import gamma, hyperexpand
+        if len(self.ap) == 2 and len(self.bq) == 1 and self.argument == 1:
+            a, b = self.ap
+            c    = self.bq[0]
+            return gamma(c)*gamma(c - a - b)/gamma(c - a)/gamma(c - b)
+        return hyperexpand(self)
 
     @property
     def argument(self):
@@ -305,12 +343,28 @@ class meijerg(TupleParametersBase):
     (4,)
 
 
-    The Meijer G-function generalises the hypergeometric functions:
-    TODO when implemented, show slater's theorem.
+    The Meijer G-function generalises the hypergeometric functions.
+    In some cases it can be expressed in terms of hypergeometric functions,
+    using Slater's theorem. For example:
 
-    As such it also subsumes many named functions as special cases:
-    TODO when hyperexpand is implemented, illustrate this.
+    >>> from sympy import hyperexpand
+    >>> from sympy.abc import a, b, c
+    >>> hyperexpand(meijerg([a], [], [c], [b], x), allow_hyper=True)
+    x**c*gamma(-a + c + 1)*hyper((-a + c + 1,), (-b + c + 1,), -x)/gamma(-b + c + 1)
 
+    Thus the Meijer G-function also subsumes many named functions as special
+    cases. You can use expand_func or hyperexpand to (try to) rewrite a
+    Meijer G-function in terms of named special functions. For example:
+
+    >>> from sympy import expand_func, S
+    >>> expand_func(meijerg([[],[]], [[0],[]], -x))
+    exp(x)
+    >>> hyperexpand(meijerg([[],[]], [[S(1)/2],[0]], (x/2)**2))
+    sin(x)/pi**(1/2)
+
+    See Also:
+
+    - :func:`sympy.simplify.hyperexpand`
 
     **References**
 
@@ -350,6 +404,10 @@ class meijerg(TupleParametersBase):
             return 1/self.argument * (self.bm[0]*self - G)
         else:
             return S.Zero
+
+    def _eval_expand_func(self, deep=True, **hints):
+        from sympy import hyperexpand
+        return hyperexpand(self)
 
     @property
     def argument(self):
