@@ -1893,7 +1893,7 @@ def test_factor():
     raises(FlagError, "factor(x**2 - 1, polys=True)")
 
     assert factor([x, Eq(x**2 - y**2, Tuple(x**2 - z**2, 1/x + 1/y))]) == \
-        Tuple(x, Eq((x - y)*(x + y), Tuple((x - z)*(x + z), (x + y)/x/y)))
+        [x, Eq((x - y)*(x + y), Tuple((x - z)*(x + z), (x + y)/x/y))]
 
 def test_factor_large():
     f = (x**2 + 4*x + 4)**10000000*(x**2 + 1)*(x**2 + 2*x + 1)**1234567
@@ -2119,36 +2119,36 @@ def test_nroots():
     assert Poly(0, x).nroots() == []
     assert Poly(1, x).nroots() == []
 
-    assert Poly(x**2 - 1, x).nroots() == Tuple(-1.0, 1.0)
-    assert Poly(x**2 + 1, x).nroots() == Tuple(-1.0*I, 1.0*I)
+    assert Poly(x**2 - 1, x).nroots() == [-1.0, 1.0]
+    assert Poly(x**2 + 1, x).nroots() == [-1.0*I, 1.0*I]
 
     roots, error = Poly(x**2 - 1, x).nroots(error=True)
-    assert roots == Tuple(-1.0, 1.0) and error < 1e25;
+    assert roots == [-1.0, 1.0] and error < 1e25;
 
     roots, error = Poly(x**2 + 1, x).nroots(error=True)
-    assert roots == Tuple(-1.0*I, 1.0*I) and error < 1e25;
+    assert roots == [-1.0*I, 1.0*I] and error < 1e25;
 
     roots, error = Poly(x**2/3 - S(1)/3, x).nroots(error=True)
-    assert roots == Tuple(-1.0, 1.0) and error < 1e25;
+    assert roots == [-1.0, 1.0] and error < 1e25;
 
     roots, error = Poly(x**2/3 + S(1)/3, x).nroots(error=True)
-    assert roots == Tuple(-1.0*I, 1.0*I) and error < 1e25;
+    assert roots == [-1.0*I, 1.0*I] and error < 1e25;
 
-    assert Poly(x**2 + 2*I, x).nroots() == Tuple(-1.0 + 1.0*I, 1.0 - 1.0*I)
-    assert Poly(x**2 + 2*I, x, extension=I).nroots() == Tuple(-1.0 + 1.0*I, 1.0 - 1.0*I)
+    assert Poly(x**2 + 2*I, x).nroots() == [-1.0 + 1.0*I, 1.0 - 1.0*I]
+    assert Poly(x**2 + 2*I, x, extension=I).nroots() == [-1.0 + 1.0*I, 1.0 - 1.0*I]
 
-    assert Poly(0.2*x + 0.1).nroots() == Tuple(-0.5)
+    assert Poly(0.2*x + 0.1).nroots() == [-0.5]
 
     raises(DomainError, "Poly(x+y, x).nroots()")
     raises(MultivariatePolynomialError, "Poly(x+y).nroots()")
 
-    assert nroots(x**2 - 1) == Tuple(-1.0, 1.0)
+    assert nroots(x**2 - 1) == [-1.0, 1.0]
 
     roots, error = nroots(x**2 - 1, error=True)
-    assert roots == Tuple(-1.0, 1.0) and error < 1e25;
+    assert roots == [-1.0, 1.0] and error < 1e25;
 
-    assert nroots(x + I) == Tuple(-1.0*I)
-    assert nroots(x + 2*I) == Tuple(-2.0*I)
+    assert nroots(x + I) == [-1.0*I]
+    assert nroots(x + 2*I) == [-2.0*I]
 
     raises(PolynomialError, "nroots(0)")
 

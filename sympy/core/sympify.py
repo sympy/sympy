@@ -18,7 +18,8 @@ class SympifyError(ValueError):
 
 converter = {}
 
-def sympify(a, locals=None, convert_xor=True, strict=False, rational=False):
+def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
+        convert_outer=False, convert_inner=True):
     """
     Converts an arbitrary expression to a type that can be used inside sympy.
 
@@ -32,6 +33,7 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False):
        - standard numeric python types: int, long, float, Decimal
        - strings (like "0.09" or "2e-19")
        - booleans, including `None` (will leave them unchanged)
+       - lists, sets or tuples containing any of the above
 
     If the argument is already a type that sympy understands, it will do
     nothing but return that value. This can be used at the beginning of a
@@ -69,6 +71,20 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False):
     Traceback (most recent call last):
     ...
     SympifyError: SympifyError: True
+
+
+    If the argument is a list (or set or tuple) of expressions, the option
+    `convert_outer` (default `False`) controls if the outermost container is to
+    be converted to a Tuple. In the same way, the option `convert_inner`
+    (default `True`) determines if containers found down in the expressions are
+    to be converted.
+
+    >>> sympify([1, 2, [3, 4]])
+    [1, 2, Tuple(3, 4)]
+    >>> sympify([1, 2, [3, 4]], convert_outer=True)
+    Tuple(1, 2, Tuple(3, 4))
+    >>> sympify([1, 2, [3, 4]], convert_inner=False)
+    [1, 2, [3, 4]]
 
     """
     from containers import Tuple
@@ -110,7 +126,12 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False):
         raise SympifyError(a)
 
     if isinstance(a, (list, tuple, set)):
-        return Tuple(*[sympify(x, locals=locals, convert_xor=convert_xor, rational=rational) for x in a])
+        objs = [sympify(x, locals=locals, convert_xor=convert_xor,
+            rational=rational, convert_outer=convert_inner,
+            convert_inner=convert_inner) for x in a]
+        if convert_outer:
+            return Tuple(*objs)
+        return type(a)(objs)
 
     # At this point we were given an arbitrary expression
     # which does not inherit from Basic and doesn't implement

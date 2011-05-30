@@ -2791,7 +2791,8 @@ class Poly(Expr):
 
         """
         if f.is_multivariate:
-            raise MultivariatePolynomialError("can't compute numerical roots of %s" % f)
+            raise MultivariatePolynomialError("can't compute numerical roots "
+                                              "of %s" % f)
 
         if f.degree() <= 0:
             return []
@@ -2801,7 +2802,8 @@ class Poly(Expr):
         except ValueError:
             raise DomainError("numerical domain expected, got %s" % f.rep.dom)
 
-        return sympify(npolyroots(coeffs, maxsteps=maxsteps, cleanup=cleanup, error=error))
+        return sympify(npolyroots(coeffs, maxsteps=maxsteps, cleanup=cleanup,
+            error=error), convert_inner=False)
 
     def ground_roots(f):
         """
