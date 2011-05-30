@@ -1,4 +1,4 @@
-from sympy.core import Basic
+from sympy.core import Basic, S
 from sympy.functions import factorial
 from sympy.utilities.iterables import rotate_left
 from sympy.polys.polytools import lcm
@@ -355,6 +355,38 @@ class Permutation(Basic):
                     i = temp_perm[i]
                     a[i] = 1
         return (self.size - c) % 2
+
+    @property
+    def is_even(self):
+        """
+        Checks if a permutation is even.
+
+        Examples:
+        >>> from sympy.combinatorics.permutations import Permutation
+        >>> p = Permutation([0,1,2,3])
+        >>> p.is_even
+        True
+        >>> p = Permutation([3,2,1,0])
+        >>> p.is_odd
+        False
+        """
+        return S(self.parity).is_even
+
+    @property
+    def is_odd(self):
+        """
+        Checks if a permutation is odd.
+
+        Examples:
+        >>> from sympy.combinatorics.permutations import Permutation
+        >>> p = Permutation([0,1,2,3])
+        >>> p.is_odd
+        False
+        >>> p = Permutation([3,2,0,1])
+        >>> p.is_odd
+        True
+        """
+        return S(self.parity).is_odd
 
     @property
     def is_Singleton(self):
