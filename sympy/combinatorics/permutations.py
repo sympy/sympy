@@ -330,6 +330,33 @@ class Permutation(Basic):
         return rank
 
     @property
+    def parity(self):
+        """
+        Computes the parity of a permutation.
+
+        Examples:
+        >>> from sympy.combinatorics.permutations import Permutation
+        >>> p = Permutation([0,1,2,3])
+        >>> p.parity
+        0
+        >>> p = Permutation([3,2,0,1])
+        >>> p.parity
+        1
+        """
+        temp_perm = self.array_form[:]
+        a = [0] * self.size
+        c = 0
+        for j in xrange(self.size):
+            if a[j] == 0:
+                c += 1
+                a[j] = 1
+                i = j
+                while temp_perm[i] != j:
+                    i = temp_perm[i]
+                    a[i] = 1
+        return (self.size - c) % 2
+
+    @property
     def is_Singleton(self):
         return self.size == 1
 
