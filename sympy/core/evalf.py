@@ -1066,6 +1066,8 @@ class EvalfMixin(object):
         try:
             re, im, _, _ = evalf(self, prec, {})
             if im:
+                if not re:
+                    re = fzero
                 return make_mpc((re, im))
             else:
                 return make_mpf(re)
