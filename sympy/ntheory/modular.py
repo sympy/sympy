@@ -61,3 +61,22 @@ def crt2(m, v, mm, e, s, symmetric=False):
             return result - mm
     else:
         return result
+
+def mod(x, m):
+    """
+    Modular reduction function.
+
+    mod(x, m) = r if (x - r) is divisible by m.
+
+    Examples:
+    >>> from sympy.ntheory.modular import mod
+    >>> mod(8, 4)
+    0
+    >>> mod(13, 5)
+    3
+    """
+    if x < m:
+        return x
+    for j in xrange(x):
+        if (x - j) % m == 0:
+            return j
