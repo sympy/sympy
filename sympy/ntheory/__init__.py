@@ -12,3 +12,4 @@ from residue_ntheory import is_primitive_root, is_quad_residue, \
     legendre_symbol, n_order, totient_
 from multinomial import binomial_coefficients, binomial_coefficients_list,\
 multinomial_coefficients
+from modular import mod

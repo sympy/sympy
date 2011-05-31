@@ -11,7 +11,7 @@ from sympy.ntheory.factor_ import smoothness, smoothness_p
 from sympy.ntheory.generate import cycle_length
 from sympy.ntheory.primetest import _mr_safe_helper, mr
 from sympy.ntheory.bbp_pi import pi_hex_digits
-from sympy.ntheory.modular import crt, crt1, crt2
+from sympy.ntheory.modular import crt, crt1, crt2, mod
 
 from sympy.utilities.pytest import raises
 from sympy.utilities.iterables import capture
@@ -491,3 +491,9 @@ def test_visual_io():
     assert fi({4: 2}, visual=False) == fi(16)
     assert fi(Mul(*[Pow(k, v, **no) for k, v in {4: 2, 2: 6}.items()], **no),
               visual=False) == fi(2**10)
+
+def test_mod():
+    assert mod(10, 6) == 4
+    assert mod(10, 9) == 1
+    assert mod(10, 10000) == 10
+    assert mod (10000, 3243) == 271
