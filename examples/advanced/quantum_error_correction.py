@@ -65,24 +65,24 @@ def generator_combinations(numGenerators):
 
     return combinationList
 
-m1 = X(4)*Z(3)*Z(2)*X(1); m1
-m2 = X(3)*Z(2)*Z(1)*X(0); m2
-m3 = X(4)*X(2)*Z(1)*Z(0); m3
-m4 = Z(4)*X(3)*X(1)*Z(0); m4
+m1_5 = X(3)*Z(2)*Z(1)*X(0)
+m2_5 = X(4)*Z(3)*Z(2)*X(1)
+m3_5 = Z(4)*Z(3)*X(2)*X(0)
+m4_5 = Z(4)*X(3)*X(1)*Z(0)
 
 # Difference between Mermin book and PHD thesis
 # Mermin book has Z in place of X and X in place of Z operators
-"
+'''
 m1 = Z(4)*X(3)*X(2)*Z(1); m1
 m2 = Z(3)*X(2)*X(1)*Z(0); m2
 m3 = Z(4)*Z(2)*X(1)*X(0); m3
 m4 = X(4)*Z(3)*Z(1)*X(0); m4
-"
+'''
 
-generators = [m1, m2, m3, m4]
+generators = [m1_5, m2_5, m3_5, m4_5]
 
 # Test the function generator_combinations
-print generator_combinations(4)
+#print generator_combinations(4)
 # Ok it seems to work
 
 combos = generator_combinations(4)
@@ -105,11 +105,62 @@ zero_codeword = map((lambda op: apply_operators(op*Qubit('00000'))),
 zero_codeword_intqubit = map((lambda op: apply_operators(op*IntQubit(0, 5))),
                              stabilizer_set)
 
+qubit_5_not = X(4)*X(3)*X(2)*X(1)*X(0)
+
+one_codeword = map((lambda basis: apply_operators(qubit_5_not*basis)),
+                   zero_codeword)
+
+one_codeword_intqubit = map((lambda basis: apply_operators(qubit_5_not*basis)), 
+                            zero_codeword_intqubit)
+
+#one_codeword_intqubit = [IntQubit(one_codeword[0]),
+# IntQubit(one_codeword[1])]
+
 print ''
 print '5 qubit codeword for 0:'
 print zero_codeword
 print ''
 print zero_codeword_intqubit
+print ''
+print '5 qubit codeword for 1:'
+print one_codeword
+print ''
+print one_codeword_intqubit
+print ''
+
+# 7 qubit codeword generators
+m1_7 = X(3)*X(2)*X(1)*X(0)
+m2_7 = X(5)*X(4)*X(1)*X(0)
+m3_7 = X(6)*X(4)*X(2)*X(0)
+m4_7 = Z(3)*Z(2)*Z(1)*Z(0)
+m5_7 = Z(5)*Z(4)*Z(1)*Z(0)
+m6_7 = Z(6)*Z(4)*Z(2)*Z(0)
+
+# Not sure what to do with m4_7 -> m6_7, the phases don't really change
+generators_7 = [m1_7, m2_7, m3_7]
+
+combos_7 = generator_combinations(3)
+
+stabilizer_set_7 = []
+
+for a_combo in combos_7:
+    a_stabilizer = 1
+
+    for which_gen in a_combo:
+        a_stabilizer = a_stabilizer * generators_7[which_gen - 1]
+
+    list.append(stabilizer_set_7, a_stabilizer)
+
+zero_codeword_7 = map((lambda op: apply_operators(op*Qubit('0000000'))),
+                      stabilizer_set_7)
+qubit_7_not = X(6)*X(5)*X(4)*X(3)*X(2)*X(1)*X(0)
+one_codeword_7 = map((lambda basis: apply_operators(qubit_7_not*basis)),
+                     zero_codeword_7)
+
+print '7 qubit codeword example:'
+print '|0> = ', zero_codeword_7
+print '|1> = ', one_codeword_7
+
 print ''
 
 # Possible to generate new codes by "pasting" codes together
