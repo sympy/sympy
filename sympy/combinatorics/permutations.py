@@ -897,3 +897,26 @@ def random_permutation(n):
     perm_array = [i for i in xrange(n)]
     random.shuffle(perm_array)
     return Permutation(perm_array)
+
+def unrank_lex(size, rank):
+    """
+    Lexicographic permutation unranking.
+
+    Examples:
+    >>> from sympy.combinatorics.permutations import *
+    >>> a = unrank_lex(5,10)
+    >>> a.rank
+    10
+    >>> a
+    Permutation([0, 2, 4, 1, 3])
+    """
+    perm_array = [0] * size
+    perm_array[size - 1] = 1
+    for i in xrange(size - 1):
+        d = (rank % int(factorial(i + 1))) / int(factorial(i))
+        rank = rank - d*int(factorial(i))
+        perm_array[size - i - 1] = d + 1
+        for j in xrange(size - i, size):
+            if perm_array[j] > d:
+                perm_array[j] += 1
+    return Permutation(perm_array)

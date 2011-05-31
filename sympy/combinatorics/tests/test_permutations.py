@@ -1,5 +1,6 @@
 from sympy.combinatorics.permutations import (Permutation, josephus,
-                                              from_inversion_vector)
+                                              from_inversion_vector,
+                                              unrank_lex)
 
 def test_Permutation():
     p = Permutation([2,5,1,6,3,0,4])
@@ -116,3 +117,9 @@ def test_Permutation():
 def test_josephus():
     assert josephus(4, 6, 1) == Permutation([3, 1, 0, 2, 5, 4])
     assert josephus(1, 5, 1).is_Identity
+
+def test_unrank_lex():
+    assert unrank_lex(5, 10).rank == 10
+    assert unrank_lex(15, 225).rank == 225
+    assert unrank_lex(10, 0).is_Identity
+    assert unrank_lex(4, 23).array_form == [0, 3, 2, 1]
