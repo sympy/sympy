@@ -221,6 +221,13 @@ class Vector(object):
         """
         return sqrt(self & self)
 
+    @property
+    def normalized(self):
+        """
+        Returns a vector of length one in the direction of the Vector.
+        """
+        return Vector(self.args + []) / self.mag
+
 
 class ReferenceFrame(object):
     """
