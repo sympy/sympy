@@ -193,6 +193,9 @@ class Add(AssocOp):
         else:
             return newseq, [], None
 
+    @classmethod
+    def class_key(cls):
+        return 3, 1, cls.__name__
 
     @cacheit
     def as_coeff_add(self, *deps):

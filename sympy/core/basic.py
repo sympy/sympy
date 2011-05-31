@@ -330,39 +330,7 @@ class Basic(AssumeMeths):
     @classmethod
     def class_key(cls):
         """Nice order of classes. """
-        funcs = {
-            'exp': 10, 'log': 11,
-            'sin': 20, 'cos': 21, 'tan': 22, 'cot': 23,
-            'sinh': 30, 'cosh': 31, 'tanh': 32, 'coth': 33,
-        }
-        name = cls.__name__
-
-        if cls.is_Number:
-            return 1, 0, 'Number'
-        elif cls.is_Atom:
-            return 2, 0, name
-        elif cls.is_Mul:
-            return 3, 0, name
-        elif cls.is_Add:
-            return 3, 1, name
-        elif cls.is_Pow:
-            return 3, 2, name
-        elif cls.is_Function:
-            try:
-                i = funcs[name]
-            except KeyError:
-                nargs = cls.nargs
-
-                if nargs is None:
-                    i = 0
-                else:
-                    i = 10000
-
-            return 4, i, name
-        else:
-            return 5, 0, name
-
-
+        return 5, 0, cls.__name__
 
     def sort_key(self, order=None):
         """
@@ -1232,6 +1200,10 @@ class Atom(Basic):
 
     def __contains__(self, obj):
         return (self == obj)
+
+    @classmethod
+    def class_key(cls):
+        return 2, 0, cls.__name__
 
     def sort_key(self, order=None):
         from sympy.core import S

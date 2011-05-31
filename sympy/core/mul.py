@@ -466,6 +466,11 @@ class Mul(AssocOp):
         #if e.has(Wild):
         #    return Mul(*[t**e for t in b])
 
+    @classmethod
+    def class_key(cls):
+        return 3, 0, cls.__name__
+
+
     def _eval_evalf(self, prec):
         return AssocOp._eval_evalf(self, prec).expand()
 

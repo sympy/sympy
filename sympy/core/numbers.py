@@ -167,6 +167,10 @@ class Number(AtomicExpr):
         # Order(5, x, y) -> Order(1,x,y)
         return C.Order(S.One, *symbols)
 
+    @classmethod
+    def class_key(cls):
+        return 1, 0, 'Number'
+
     def sort_key(self, order=None):
         return self.class_key(), (0, ()), (), self
 
