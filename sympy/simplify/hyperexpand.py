@@ -176,6 +176,16 @@ def add_formulae(formulae):
                  [z/2, 0, b-2*a, z/2],
                  [0, S(1)/2, S(1)/2, -2*a]]))
 
+def make_simp(z):
+    """ Create a function that simplifies rational functions in `z`. """
+    def simp(expr):
+        """ Efficiently simplify the rational function `expr`. """
+        from sympy import poly
+        numer, denom = expr.as_numer_denom()
+        c, numer, denom = poly(numer, z).cancel(poly(denom, z))
+        return c * numer.as_expr() / denom.as_expr()
+    return simp
+
 
 class Mod1(object):
     """
@@ -959,9 +969,10 @@ def reduce_order_meijer(iq):
 
 def make_derivative_operator(M, z):
     """ Create a derivative operator, to be passed to Operator.apply. """
+    from sympy import poly
     def doit(C):
         r = z*C.diff(z) + C*M
-        r.simplify() # this is probably a good idea
+        r = r.applyfunc(make_simp(z))
         return r
     return doit
 
@@ -1245,7 +1256,7 @@ def _hyperexpand(ip, z, ops0=[]):
     C = apply_operators(f.C.subs(f.z, z0), ops,
                         make_derivative_operator(f.M.subs(f.z, z0), z0))
 
-    C.simplify() # is this a good idea?
+    C = C.applyfunc(make_simp(f.z))
     r = C*f.B.subs(f.z, z0)
     r = r[0].subs(z0, z) + p
 
