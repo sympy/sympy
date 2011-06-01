@@ -9,6 +9,7 @@ class Subset(Basic):
     """
 
     _rank_binary = None
+    _rank_lex = None
 
     def next_binary(self):
         """
@@ -78,6 +79,14 @@ class Subset(Basic):
         """
         raise NotImplementedError()
 
+    def prev_graycode(self):
+        """
+        Generates the previous gray code ordered subset.
+
+        Examples:
+        """
+        raise NotImplementedError()
+
     @property
     def rank_binary(self):
         """
@@ -98,13 +107,32 @@ class Subset(Basic):
                                         self.superset)), 2)
         return self._rank_binary
 
-    def prev_graycode(self):
+    @property
+    def rank_lexicographic(self):
         """
-        Generates the previous gray code ordered subset.
+        Computes the lexicographic ranking of the subset.
 
         Examples:
+        >>> from sympy.combinatorics.subsets import Subset
+        >>> a = Subset(['c','d'],['a','b','c','d'])
+        >>> a.rank_lexicographic
+        14
+        >>> a = Subset([2,4,5],[1,2,3,4,5,6])
+        >>> a.rank_lexicographic
+        43
         """
-        raise NotImplementedError()
+        if self._rank_lex == None:
+            superset_index = list(xrange(self.superset_size))
+            subset_index = [self.superset.index(j) for j in self.subset]
+            def ranklex(self, subset_index, i, n):
+                if subset_index == [] or i > n:
+                    return 0
+                if i in subset_index:
+                    subset_index.remove(i)
+                    return 1 + ranklex(self, subset_index, i + 1, n)
+                return 2**(n - i - 1) + ranklex(self, subset_index, i + 1, n)
+            self._rank_lex = ranklex(self, subset_index, 0, self.superset_size)
+        return self._rank_lex
 
     @property
     def subset(self):
