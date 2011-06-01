@@ -8,6 +8,8 @@ class Subset(Basic):
     binary enumeration and lexicographic enumeration.
     """
 
+    _rank_binary = None
+
     def next_binary(self):
         """
         Generates the next binary ordered subset.
@@ -75,6 +77,26 @@ class Subset(Basic):
         Examples:
         """
         raise NotImplementedError()
+
+    @property
+    def rank_binary(self):
+        """
+        Computes the binary ordered rank.
+
+        Examples:
+        >>> from sympy.combinatorics.subsets import Subset
+        >>> a = Subset([],['a','b','c','d'])
+        >>> a.rank_binary
+        0
+        >>> a = Subset(['c','d'],['a','b','c','d'])
+        >>> a.rank_binary
+        3
+        """
+        if self._rank_binary == None:
+            self._rank_binary = int("".join(
+                get_bitlist_from_subset(self.subset,
+                                        self.superset)), 2)
+        return self._rank_binary
 
     def prev_graycode(self):
         """
