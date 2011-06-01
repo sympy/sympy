@@ -1,4 +1,5 @@
 from sympy.core import Basic
+from sympy.combinatorics.graycode import GrayCode
 
 class Subset(Basic):
     """
@@ -10,6 +11,7 @@ class Subset(Basic):
 
     _rank_binary = None
     _rank_lex = None
+    _rank_graycode = None
 
     def next_binary(self):
         """
@@ -133,6 +135,25 @@ class Subset(Basic):
                 return 2**(n - i - 1) + ranklex(self, subset_index, i + 1, n)
             self._rank_lex = ranklex(self, subset_index, 0, self.superset_size)
         return self._rank_lex
+
+    @property
+    def rank_graycode(self):
+        """
+        Computes the gray code ranking of the subset.
+
+        Examples:
+        >>> from sympy.combinatorics.subsets import Subset
+        >>> a = Subset(['c','d'],['a','b','c','d'])
+        >>> a.rank_graycode
+        8
+        >>> a = Subset([2,4,5],[1,2,3,4,5,6])
+        >>> a.rank_graycode
+        19
+        """
+        if self._rank_graycode == None:
+            bits = get_bitlist_from_subset(self.subset, self.superset)
+            self._rank_graycode = GrayCode(start = bits).rank
+        return self._rank_graycode
 
     @property
     def subset(self):
