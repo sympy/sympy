@@ -222,7 +222,7 @@ class Vector(object):
         return sqrt(self & self)
 
     @property
-    def normalized(self):
+    def unit(self):
         """
         Returns a vector of length one in the direction of the Vector.
         """
@@ -431,19 +431,29 @@ class ReferenceFrame(object):
         self._ang_vel = value
         self._ang_vel_parent = other
 
-    """
-    This whole block of code below is used to restrict the user from setting
-    different values for the ReferenceFrame's basis vectors, while still
-    remaining transparent to the user, by using properties
-    """
     @property
     def x(self):
+        """
+        The basis vector for the ReferenceFrame, in the x (or 1, or i)
+        direction.  Immutable.  
+        Returns a Vector.
+        """
         return self._x
    
     @property
     def y(self):
+        """
+        The basis vector for the ReferenceFrame, in the y (or 2, or j)
+        direction.  Immutable.  
+        Returns a Vector.
+        """
         return self._y
 
     @property
     def z(self):
+        """
+        The basis vector for the ReferenceFrame, in the z (or 3, or k)
+        direction.  Immutable.  
+        Returns a Vector.
+        """
         return self._z
