@@ -123,6 +123,31 @@ class GrayCode(Basic):
         """
         self._reset = True
 
+    @property
+    def rank(self):
+        """
+        Ranks the gray code.
+
+        Examples:
+        >>> from sympy.combinatorics.graycode import GrayCode
+        >>> a = GrayCode(3, start = ['1','0','0'])
+        >>> a.rank
+        1
+        >>> a = GrayCode(5, start = ['1','0','1','0','0'])
+        >>> a.rank
+        6
+        """
+        if isinstance(self._current, int):
+            self._current = list(bin(self._current), 2)[2:]
+        if len(self._current)==0:
+            return 0
+        elif self._current[-1]=='0':
+            return GrayCode(start = self._current[:-1]).rank
+        else:
+            return 2**len(self._current) - \
+                   GrayCode(start = self._current[:-1]).rank - 1
+
+
 def random_bitlist(n):
     """
     Generates a random bitlist of length n.
