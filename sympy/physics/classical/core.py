@@ -152,7 +152,7 @@ class Vector(object):
                     mat[2][2]) + mat[0][2] * (mat[1][0] * mat[2][1] -
                     mat[1][1] * mat[2][0]))
 
-        outvec = Vector([(Matrix([0, 0, 0]), self.args[0][1])])
+        outvec = Vector([])
         ar = self.args # For brevity
         for i, v in enumerate(ar):
             tempx = ar[i][1].x
@@ -196,7 +196,14 @@ class Vector(object):
         """
         assert isinstance(otherframe, ReferenceFrame), 'Need to supply a \
                 ReferenceFrame to find the derivative in'
-        # TODO Finish this up
+        outvec = Vector([])
+        for i,v in enumerate(self.args):
+            if v[1] == ReferenceFrame:
+                outvec += v[0].diff(symbols('t'))
+            else:
+                outvec += (v[0].diff(symbols('t')) + 
+                    v[1].ang_vel(otherframe) ^ Vector([v]))
+        return outvec
 
     def express(self, otherframe):
         """
@@ -293,13 +300,13 @@ class ReferenceFrame(object):
         """
         commonframe = self._common_frame(other)
         # form DCM from self to first common frame
-        leg1 = Vector([(Matrix([0,0,0]), self)])
+        leg1 = Vector([])
         ptr = self
         while ptr != commonframe:
             leg1 += ptr._ang_vel
             ptr = ptr.parent
         # form DCM from other to first common frame
-        leg2 = Vector([(Matrix([0,0,0]), self)])
+        leg2 = Vector([])
         ptr = other
         while ptr != commonframe:
             leg2 -= ptr._ang_vel
