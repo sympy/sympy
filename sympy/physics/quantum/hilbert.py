@@ -52,7 +52,7 @@ class HilbertSpace(Basic):
     """
 
     def __new__(cls):
-        obj = Basic.__new__(cls, **{'commutative': False})
+        obj = Basic.__new__(cls)
         return obj
 
     @property
@@ -139,7 +139,7 @@ class ComplexSpace(HilbertSpace):
         r = cls.eval(dimension)
         if isinstance(r, Basic):
             return r
-        obj = Basic.__new__(cls, dimension, **{'commutative': False})
+        obj = Basic.__new__(cls, dimension)
         return obj
 
     @classmethod
@@ -204,7 +204,7 @@ class L2(HilbertSpace):
         if not isinstance(interval, Interval):
             raise TypeError('L2 interval must be an Interval instance: %r'\
             % interval)
-        obj = Basic.__new__(cls, interval, **{'commutative': False})
+        obj = Basic.__new__(cls, interval)
         return obj
 
     @property
@@ -255,7 +255,7 @@ class FockSpace(HilbertSpace):
     """
 
     def __new__(cls):
-        obj = Basic.__new__(cls, **{'commutative': False})
+        obj = Basic.__new__(cls)
         return obj
 
     @property
@@ -323,7 +323,7 @@ class TensorProductHilbertSpace(HilbertSpace):
         r = cls.eval(args)
         if isinstance(r, Basic):
             return r
-        obj = Basic.__new__(cls, *args, **{'commutative': False})
+        obj = Basic.__new__(cls, *args)
         return obj
 
     @classmethod
@@ -465,7 +465,7 @@ class DirectSumHilbertSpace(HilbertSpace):
         r = cls.eval(args)
         if isinstance(r, Basic):
             return r
-        obj = Basic.__new__(cls, *args, **{'commutative': True})
+        obj = Basic.__new__(cls, *args)
         return obj
 
     @classmethod
@@ -580,7 +580,7 @@ class TensorPowerHilbertSpace(HilbertSpace):
         r = cls.eval(args)
         if isinstance(r, Basic):
             return r
-        return Basic.__new__(cls, *r, **{'commutative': False})
+        return Basic.__new__(cls, *r)
 
     @classmethod
     def eval(cls, args):
