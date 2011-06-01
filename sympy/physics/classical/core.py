@@ -243,6 +243,8 @@ class ReferenceFrame(object):
         """
         self.name = name
         self.parent = None
+        self._ang_vel = None
+        self._ang_vel_parent = None
         self._x = Vector([(Matrix([1, 0, 0]), self)])
         self._y = Vector([(Matrix([0, 1, 0]), self)])
         self._z = Vector([(Matrix([0, 0, 1]), self)])
@@ -259,15 +261,13 @@ class ReferenceFrame(object):
         """
         return self.name
 
-    def dcm(self, other):
+    def _common_frame(self,other):
         """
-        This will return the direction cosine matrix from self to other;
-        other's basis = DCM * self's basis is the definition.
-        All it takes in is the other frame.  
-        nxyz = N.dcm(B) * bxyz
+        This returns the first common parent between two ReferenceFrames.
+        Takes in another ReferenceFrame, and returns a ReferenceFrame.
         """
-        assert isinstance(other, ReferenceFrame), 'You have to use 2\
-                reference frames'
+        assert isinstance(other, ReferenceFrame), 'You have to use a \
+                ReferenceFrame'
         leg1 = [self]
         ptr = self
         while ptr.parent != None:
@@ -279,9 +279,41 @@ class ReferenceFrame(object):
             ptr = ptr.parent
             leg2.append(ptr)
         try:
+            # TODO double check that pop gives the correct frame
             commonframe = (set(leg1) & set(leg2)).pop()
         except:
-            raise ValueError('No Common Parent')
+            raise ValueError('No Common Frame')
+        return commonframe
+
+    def ang_vel(self, other):
+        """
+        Returns the angular velocity of the current frame relative to
+        the input frame: angular velocity of self in other
+        Takes in ReferenceFrame, returns Vector.
+        """
+        commonframe = self._common_frame(other)
+        # form DCM from self to first common frame
+        leg1 = Vector([(Matrix([0,0,0]), self)])
+        ptr = self
+        while ptr != commonframe:
+            leg1 += ptr._ang_vel
+            ptr = ptr.parent
+        # form DCM from other to first common frame
+        leg2 = Vector([(Matrix([0,0,0]), self)])
+        ptr = other
+        while ptr != commonframe:
+            leg2 -= ptr._ang_vel
+            ptr = ptr.parent
+        return leg1 + leg2
+
+    def dcm(self, other):
+        """
+        This will return the direction cosine matrix from self to other;
+        other's basis = DCM * self's basis is the definition.
+        All it takes in is the other frame.  
+        nxyz = N.dcm(B) * bxyz
+        """
+        commonframe = self._common_frame(other)
         # form DCM from self to first common frame
         leg1 = eye(3)
         ptr = self
@@ -350,9 +382,9 @@ class ReferenceFrame(object):
                     'Amounts need to be in a list or tuple of length 4'
             assert rot_order == '', 'Euler orientation take no rotation order'
             q0 = amounts[0]
-            q0 = amounts[1]
-            q0 = amounts[2]
-            q0 = amounts[3]
+            q1 = amounts[1]
+            q2 = amounts[2]
+            q3 = amounts[3]
             self.parent_orient = (Matrix([[q0 ** 2 + q1 ** 2 - q2 ** 2 - q3 **
                 2, 2 * (q1 * q2 - q0 * q3), 2 * (q0 * q2 + q1 * q3)], 
                 [2 * (q1 * q2 + q0 * q3), q0 ** 2 - q1 ** 2 + q2 **2 - q3 ** 2,
@@ -385,6 +417,20 @@ class ReferenceFrame(object):
             raise NotImplementedError('That is not an implemented rotation')
         self.parent = parent
 
+    def set_ang_vel(self, value, other):
+        """
+        Define the angular velocity vector of the current ReferenceFrame,
+        with respect to the second ReferenceFrame.  
+        Takes in a Vector for angular velocity vector, and ReferenceFrame, 
+        for the frame to this to be defined in.
+        """
+        assert isinstance(value, Vector), 'Angular velocity needs to be a \
+        Vector.'
+        assert isinstance(other, ReferenceFrame), 'Need to define the \
+        angular velocity with respect to another ReferenceFrame.'
+        self._ang_vel = value
+        self._ang_vel_parent = other
+
     """
     This whole block of code below is used to restrict the user from setting
     different values for the ReferenceFrame's basis vectors, while still
@@ -393,36 +439,11 @@ class ReferenceFrame(object):
     @property
     def x(self):
         return self._x
-
-    @x.setter
-    def x(self, value):
-        raise AssertionError('Cannot assign value to a basis vector')
-    
-    @x.deleter
-    def x(self):
-        raise AssertionError('Cannot delete a basis vector')
-    
+   
     @property
     def y(self):
         return self._y
 
-    @y.setter
-    def y(self, value):
-        raise AssertionError('Cannot assign value to a basis vector')
-
-    @y.deleter
-    def y(self):
-        raise AssertionError('Cannot delete a basis vector')
- 
     @property
     def z(self):
         return self._z
-
-    @z.setter
-    def z(self, value):
-        raise AssertionError('Cannot assign value to a basis vector')
-
-    @z.deleter
-    def z(self):
-        raise AssertionError('Cannot delete a basis vector')
- 
