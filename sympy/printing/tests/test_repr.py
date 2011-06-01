@@ -33,6 +33,8 @@ def test_printmethod():
 
 def test_Add():
     sT(x+y, "Add(Symbol('x'), Symbol('y'))")
+    assert srepr(x**2 + 1, order='lex') == "Add(Pow(Symbol('x'), Integer(2)), Integer(1))"
+    assert srepr(x**2 + 1, order='old') == "Add(Integer(1), Pow(Symbol('x'), Integer(2)))"
 
 def test_Function():
     sT(Function("f")(x), "Function('f')(Symbol('x'))")
@@ -96,3 +98,7 @@ def test_WildFunction():
 
 def test_settins():
     raises(TypeError, 'srepr(x, method="garbage")')
+
+def test_Mul():
+    sT(3*x**3*y, "Mul(Integer(3), Pow(Symbol('x'), Integer(3)), Symbol('y'))")
+    assert srepr(3*x**3*y, order='old') == "Mul(Integer(3), Symbol('y'), Pow(Symbol('x'), Integer(3)))"

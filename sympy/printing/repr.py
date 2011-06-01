@@ -13,6 +13,10 @@ from sympy.mpmath.libmp import prec_to_dps, repr_dps
 class ReprPrinter(Printer):
     printmethod = "_sympyrepr"
 
+    _default_settings = {
+        "order": None
+    }
+
     def reprify(self, args, sep):
         return sep.join([self.doprint(item) for item in args])
 
@@ -25,17 +29,16 @@ class ReprPrinter(Printer):
             l = []
             for o in expr.args:
                 l.append(self._print(o))
-            return expr.__class__.__name__ + '(%s)'%', '.join(l)
+            return expr.__class__.__name__ + '(%s)' % ', '.join(l)
         elif hasattr(expr, "__module__") and hasattr(expr, "__name__"):
-            return "<'%s.%s'>"%(expr.__module__, expr.__name__)
+            return "<'%s.%s'>" % (expr.__module__, expr.__name__)
         else:
             return str(expr)
 
-    def _print_Add(self, expr):
-        args = list(expr.args)
-        args.sort(Basic._compare_pretty)
+    def _print_Add(self, expr, order=None):
+        args = self._as_ordered_terms(expr, order=order)
         args = map(self._print, args)
-        return "Add(%s)"%", ".join(args)
+        return "Add(%s)" % ", ".join(args)
 
     def _print_Function(self, expr):
         r = self._print(expr.func)
@@ -65,7 +68,7 @@ class ReprPrinter(Printer):
         return 'Integer(%i)' % expr.p
 
     def _print_list(self, expr):
-        return "[%s]"%self.reprify(expr, ", ")
+        return "[%s]" % self.reprify(expr, ", ")
 
     def _print_Matrix(self, expr):
         l = []
@@ -80,6 +83,16 @@ class ReprPrinter(Printer):
 
     def _print_Rational(self, expr):
         return 'Rational(%s, %s)' % (self._print(expr.p), self._print(expr.q))
+
+    def _print_Mul(self, expr, order=None):
+        terms = expr.args
+        if self.order != 'old':
+            args = expr._new_rawargs(*terms).as_ordered_factors()
+        else:
+            args = terms
+
+        args = map(self._print, args)
+        return "Mul(%s)" % ", ".join(args)
 
     def _print_Fraction(self, expr):
         return 'Fraction(%s, %s)' % (self._print(expr.numerator), self._print(expr.denominator))
@@ -107,9 +120,9 @@ class ReprPrinter(Printer):
 
     def _print_tuple(self, expr):
         if len(expr)==1:
-            return "(%s,)"%self._print(expr[0])
+            return "(%s,)" % self._print(expr[0])
         else:
-            return "(%s)"%self.reprify(expr, ", ")
+            return "(%s)" % self.reprify(expr, ", ")
 
     def _print_WildFunction(self, expr):
         return "%s('%s')" % (expr.__class__.__name__, expr.name)

@@ -180,9 +180,7 @@ class Printer(object):
 
     _global_settings = {}
 
-    _default_settings = {
-        "order": None,
-    }
+    _default_settings = {}
 
     emptyPrinter = str
     printmethod = None
