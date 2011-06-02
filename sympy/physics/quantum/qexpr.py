@@ -346,21 +346,23 @@ class QExpr(Expr):
         if basis is None:
             result = self._represent_default_basis(**options)
         else:
-            #try:
             result = dispatch_method(self, '_represent', basis, **options)
-            #except NotImplementedError:
-            #    if isinstance(self, State):
 
         # If we get a matrix representation, convert it to the right format.
         format = options.get('format', 'sympy')
-        if format == 'sympy' and not isinstance(result, Matrix):
-            result = to_sympy(result)
-        elif format == 'numpy' and not isinstance(result, numpy_ndarray):
-            result = to_numpy(result)
-        elif format == 'scipy.sparse' and\
-            not isinstance(result, scipy_sparse_matrix):
-            result = to_scipy_sparse(result)
+        result = self.format_represent(result, format)
+        
         return result
+
+    def _format_represent(self, result, format):
+        if format == 'sympy' and not isinstance(result, Matrix):
+            return to_sympy(result)
+        elif format == 'numpy' and not isinstance(result, numpy_ndarray):
+            return to_numpy(result)
+        elif format == 'scipy.sparse' and\
+        not isinstance(result, scipy_sparse_matrix):
+            return to_scipy_sparse(result)
+            
 
 
 def split_commutative_parts(e):
