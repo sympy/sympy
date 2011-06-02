@@ -1687,6 +1687,10 @@ def test_condition_number():
     A[1,1] = x
     assert A.condition_number() == Max(10, Abs(x)) / Min(S(1)/10 , Abs(x))
 
+    M = Matrix([[cos(x), sin(x)], [-sin(x), cos(x)]])
+    Mc = M.condition_number()
+    assert all(Mc.subs(x,val)==1 for val in [.2, .5, .1, pi/2, pi, 7*pi/4 ])
+
 def test_len():
     assert len(Matrix()) == 0
     assert len(Matrix([[1, 2]])) == len(Matrix([[1], [2]])) == 2
