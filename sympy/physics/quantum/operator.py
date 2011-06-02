@@ -193,20 +193,20 @@ class HermitianOperator(Operator):
     H
     """
 
-    @property
+    @classmethod
     def basis_ket(self):
         """Return the class corresponding to the basis ket of this operator. """
         return None
 
-    @property
+    @classmethod
     def basis_set(self):
         """ Return a generator for the basis kets of this operator """
-        return (self.basis_ket(self.default_label.lower() + "_" + str(i)) for i in count(1))
+        return (self.basis_ket()(self.default_label().lower() + "_" + str(i)) for i in count(1))
 
     def _get_basis_kets(self, num):
         ct = 0
         basis_kets = [0 for i in range(num)]
-        for state in self.basis_set:
+        for state in self.basis_set():
             if ct == num:
                 break
             basis_kets[ct] = state

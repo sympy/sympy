@@ -115,6 +115,8 @@ class QExpr(Expr):
 
         # First compute args and call Expr.__new__ to create the instance
         args = cls._eval_args(args)
+        if len(args) == 0:
+            args = cls._eval_args([cls.default_label()])
         inst = Expr.__new__(cls, *args, **{'commutative':False})
         # Now set the slots on the instance
         inst.hilbert_space = cls._eval_hilbert_space(args)
@@ -149,7 +151,7 @@ class QExpr(Expr):
         This must be a tuple, rather than a Tuple.
         """
         if len(self.args) == 0: # If there is no label specified, return the default
-            return self._eval_args([self.default_label])
+            return self._eval_args([self.default_label()])
         else:
             return self.args
 
@@ -157,7 +159,7 @@ class QExpr(Expr):
     def is_symbolic(self):
         return True
 
-    @property
+    @classmethod
     def default_label(self):
         """If no label is specified, then this will be set to be the default value.
 
@@ -344,7 +346,10 @@ class QExpr(Expr):
         if basis is None:
             result = self._represent_default_basis(**options)
         else:
+            #try:
             result = dispatch_method(self, '_represent', basis, **options)
+            #except NotImplementedError:
+            #    if isinstance(self, State):
 
         # If we get a matrix representation, convert it to the right format.
         format = options.get('format', 'sympy')

@@ -26,11 +26,11 @@ __all__ = [
 class XOp(HermitianOperator):
     """1D cartesian position operator."""
 
-    @property
+    @classmethod
     def default_label(self):
         return "X"
 
-    @property
+    @classmethod
     def basis_ket(self):
         return XKet
 
@@ -63,7 +63,7 @@ Px = PxOp('Px')
 class XKet(Ket):
     """1D cartesian position eigenket."""
 
-    @property
+    @classmethod
     def basis_op(self):
         return XOp
 
