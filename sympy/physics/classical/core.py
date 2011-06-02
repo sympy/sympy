@@ -176,18 +176,12 @@ class Vector(object):
         """
         return self ^ other
 
-    def d(self, wrt):
+    def d(self, wrt, otherframe):
         """
         Takes in a sympifyable value, which cannot be a Vector.
         Returns the partial derivative of the self Vector with respect 
         to the input value.
         """
-        try:
-            sympify(wrt)
-        except:
-            raise SympifyError('Not a Valid Expression')
-        # TODO Finish this up
-
     def dt(self, otherframe):
         """
         Returns the time derivative of the self Vector in the given Reference
@@ -239,9 +233,8 @@ class Vector(object):
 class ReferenceFrame(object):
     """
     ReferenceFrame is a reference frame.
-    It will store its basis vectors as attributes, 
-    and orientation information to a parent frame,
-    or it will be at the top of a tree.
+    It will store its basis vectors as attributes, and orientation 
+    information to a parent frame, or it will be at the top of a tree.
     """
 
     def __init__(self, name=''):
@@ -252,9 +245,16 @@ class ReferenceFrame(object):
         self.parent = None
         self._ang_vel = None
         self._ang_vel_parent = None
+        self._cur = 0
         self._x = Vector([(Matrix([1, 0, 0]), self)])
         self._y = Vector([(Matrix([0, 1, 0]), self)])
         self._z = Vector([(Matrix([0, 0, 1]), self)])
+
+    def __iter__(self):
+        """
+        Allows iteration through the basis vectors.
+        """
+        return self
 
     def __str__(self):
         """
@@ -267,6 +267,23 @@ class ReferenceFrame(object):
         Wraps __str__
         """
         return self.name
+
+    def next(self):
+        """
+        Allows iteration through the basis vectors.
+        """
+        if self._cur == 0:
+            self._cur += 1
+            return self._x
+        elif self._cur == 1:
+            self._cur += 1
+            return self._y
+        elif self._cur == 2:
+            self._cur += 1
+            return self._z
+        else: 
+            self._cur = 0
+            raise StopIteration
 
     def _common_frame(self,other):
         """
