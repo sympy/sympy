@@ -2801,7 +2801,19 @@ class Poly(Expr):
         except ValueError:
             raise DomainError("numerical domain expected, got %s" % f.rep.dom)
 
-        return sympify(npolyroots(coeffs, maxsteps=maxsteps, cleanup=cleanup, error=error))
+        result = npolyroots(coeffs, maxsteps=maxsteps, cleanup=cleanup, error=error)
+
+        if error:
+            roots, error = result
+        else:
+            roots, error = result, None
+
+        roots = map(sympify, sorted(roots, key=lambda r: (r.real, r.imag)))
+
+        if error is not None:
+            return roots, sympify(error)
+        else:
+            return roots
 
     def ground_roots(f):
         """
