@@ -2513,7 +2513,7 @@ def _undetermined_coefficients_match(expr, x):
         >>> from sympy.solvers.ode import _undetermined_coefficients_match
         >>> from sympy.abc import x
         >>> _undetermined_coefficients_match(9*x*exp(x) + exp(-x), x)
-        {'test': True, 'trialset': set([x*exp(x), exp(x), exp(-x)])}
+        {'test': True, 'trialset': set([x*exp(x), exp(-x), exp(x)])}
         >>> _undetermined_coefficients_match(log(x), x)
         {'test': False}
 

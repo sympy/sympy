@@ -324,7 +324,7 @@ class Basic(AssumeMeths):
             return +1   # sympy > other
 
         # now both objects are from SymPy, so we can proceed to usual comparison
-        return Basic._compare_pretty(a, b)
+        return cmp(a.sort_key(), b.sort_key())
 
 
     @classmethod
@@ -427,7 +427,7 @@ class Basic(AssumeMeths):
            >>> from sympy import I, pi, sin
            >>> from sympy.abc import x, y
            >>> (1 + x + 2*sin(y + I*pi)).atoms()
-           set([1, 2, pi, x, y, I])
+           set([1, 2, I, pi, x, y])
 
            If one or more types are given, the results will contain only
            those types of atoms::
@@ -445,7 +445,7 @@ class Basic(AssumeMeths):
            set([1, 2, pi])
 
            >>> (1 + x + 2*sin(y + I*pi)).atoms(Number, NumberSymbol, I)
-           set([1, 2, pi, I])
+           set([1, 2, I, pi])
 
            Note that I (imaginary unit) and zoo (complex infinity) are special
            types of number symbols and are not part of the NumberSymbol class.
@@ -477,8 +477,7 @@ class Basic(AssumeMeths):
            set([sin(y + I*pi)])
 
            >>> (1 + x + 2*sin(y + I*pi)).atoms(Mul)
-           set([2*sin(y + I*pi), I*pi])
-
+           set([I*pi, 2*sin(y + I*pi)])
 
         """
 
