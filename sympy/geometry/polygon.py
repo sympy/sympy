@@ -832,8 +832,6 @@ class Polygon(GeometryEntity):
         >>> q = Point(1, 1)
         >>> s = Segment(p, q*2)
         >>> l = Line(p, q)
-        >>> p in q
-        False
         >>> p in s
         True
         >>> q*3 in s

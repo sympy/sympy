@@ -270,3 +270,6 @@ class GeometryEntity(tuple):
             return c
 
         return cmp(i1, i2)
+
+from sympy.core.sympify import converter
+converter[GeometryEntity] = lambda x: x
