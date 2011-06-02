@@ -9,6 +9,7 @@ from sympy.utilities.iterables import flatten
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.printing import sstr
 from sympy.functions.elementary.complexes import re, Abs
+from sympy.functions.elementary.miscellaneous import Max, Min
 
 import random
 
@@ -1278,9 +1279,9 @@ class Matrix(object):
             elif ord == 1: # sum(abs(x))
                 return Add(*(abs(i) for i in self.mat))
             elif ord == S.Infinity: # max(abs(x))
-                return numerical_max(self.applyfunc(abs))
+                return Max(*self.applyfunc(abs))
             elif ord == S.NegativeInfinity: # min(abs(x))
-                return numerical_min(self.applyfunc(abs))
+                return Min(*self.applyfunc(abs))
             # Otherwise generalize the 2-norm, Sum(x_i**ord)**(1/ord)
             # Note that while useful this is not mathematically a norm
             try:
@@ -1291,10 +1292,10 @@ class Matrix(object):
         else:
             if ord == 2: # Spectral Norm
                 # Maximum singular value
-                return numerical_max(self.singular_values())
+                return Max(*self.singular_values())
             elif ord == -2:
                 # Minimum singular value
-                return numerical_min(self.singular_values())
+                return Min(*self.singular_values())
             elif (ord == None or isinstance(ord,str) and ord.lower() in
                     ['f', 'fro', 'frobenius', 'vector']):
                 # Reshape as vector and send back to norm function
@@ -1953,11 +1954,10 @@ class Matrix(object):
         >>> A = Matrix([[1, 0, 0], [0, 10, 0], [0,0,S.One/10]])
         >>> print A.condition_number()
         100
-
-        Only works on Numerical Matrices (no symbols)
         """
+
         singularvalues = self.singular_values()
-        return numerical_max(singularvalues) / numerical_min(singularvalues)
+        return Max(*singularvalues) / Min(*singularvalues)
 
     def fill(self, value):
         """Fill the matrix with the scalar value."""
@@ -3054,21 +3054,6 @@ def symarray(prefix, shape):
     for index in np.ndindex(shape):
         arr[index] = Symbol('%s_%s' % (prefix, '_'.join(map(str, index))))
     return arr
-
-# Wrap standard Max and Min functions but fail on Non-Number Arguments
-# traditional min/max have odd behavior on Symbols. These raise explicit errors
-# instead
-def numerical_max(L):
-    """A max function for numeric arguments only."""
-    if not all(elem.is_number for elem in L):
-        raise NotImplementedError("Not implemented on Non-Numbers")
-    return max(L)
-
-def numerical_min(L):
-    """A max function for numeric arguments only."""
-    if not all(elem.is_number for elem in L):
-        raise NotImplementedError("Not implemented on Non-Numbers")
-    return min(L)
 
 def _separate_eig_results(res):
     eigvals = [item[0] for item in res]
