@@ -2009,20 +2009,18 @@ def test_intervals():
 
     assert intervals(f) == []
 
-    roots = sorted(nroots(f), key=lambda r: (re(r), -im(r)))
-
     real_part, complex_part = intervals(f, all=True, sqf=True)
 
     assert real_part == []
-    assert all([ re(a) < re(r) < re(b) and im(a) < im(r) < im(b) for (a, b), r in zip(complex_part, roots) ])
+    assert all([ re(a) < re(r) < re(b) and im(a) < im(r) < im(b) for (a, b), r in zip(complex_part, nroots(f)) ])
 
-    assert complex_part == [(-S(40)/7, 40*I/7), (-S(40)/7 - 40*I/7, 0),
-                            (0, S(40)/7 + 40*I/7), (-40*I/7, S(40)/7)]
+    assert complex_part == [(-S(40)/7 - 40*I/7, 0), (-S(40)/7, 40*I/7),
+                            (-40*I/7, S(40)/7), (0, S(40)/7 + 40*I/7)]
 
     real_part, complex_part = intervals(f, all=True, sqf=True, eps=S(1)/10)
 
     assert real_part == []
-    assert all([ re(a) < re(r) < re(b) and im(a) < im(r) < im(b) for (a, b), r in zip(complex_part, roots) ])
+    assert all([ re(a) < re(r) < re(b) and im(a) < im(r) < im(b) for (a, b), r in zip(complex_part, nroots(f)) ])
 
     raises(ValueError, "intervals(x**2 - 2, eps=10**-100000)")
     raises(ValueError, "Poly(x**2 - 2).intervals(eps=10**-100000)")
