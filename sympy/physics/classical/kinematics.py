@@ -1,6 +1,24 @@
 from sympy import *
 # from sympy import Matrix, sympify, SympifyError, sin, cos, tan, Mul, Pow, eye, 
-#         symbols, Derivative
+#         symbols, Derivative, Symbol
+
+class TVS(Symbol):
+    
+    def diff(self, *symbols, **assumptions):
+        new_symbols = map(sympify, symbols) # e.g. x, 2, y, z
+        if new_symbols[0] == Symbol('t'):
+            self.d = TVS(self.name + '.d')
+            return self.d
+        assumptions.setdefault("evaluate", True)
+        return Derivative(self, *new_symbols, **assumptions)
+    
+    def _eval_derivative(self, s):
+        print s
+        print 'in_eval'
+        if self == s:
+            return S.One
+        return S.Zero
+
 
 class Vector(object):
     """
@@ -176,7 +194,7 @@ class Vector(object):
         """
         return self ^ other
 
-    def d(self, wrt, otherframe):
+    def diff(self, wrt, otherframe):
         """
         Takes in a sympifyable value, which cannot be a Vector.
         Returns the partial derivative of the self Vector with respect 
