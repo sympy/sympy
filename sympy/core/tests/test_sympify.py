@@ -1,5 +1,5 @@
 from sympy import Symbol, exp, Integer, Float, sin, cos, log, Poly, Lambda, \
-        Function, I, S, sqrt, srepr, Rational
+        Function, I, S, sqrt, srepr, Rational, Tuple
 from sympy.abc import x, y
 from sympy.core.sympify import sympify, _sympify, SympifyError
 from sympy.core.decorators import _sympifyit
@@ -82,10 +82,11 @@ def test_sympify_bool():
     assert sympify(False)== False
 
 def test_sympyify_iterables():
-    ans = [Rational(3, 10), Rational(1, 5)]
+    ans = Tuple(Rational(3, 10), Rational(1, 5))
     assert sympify(['.3', '.2'], rational=1) == ans
-    assert sympify(set(['.3', '.2']), rational=1) == set(ans)
-    assert sympify(tuple(['.3', '.2']), rational=1) == tuple(ans)
+    assert sympify(tuple(['.3', '.2']), rational=1) == ans
+    assert sympify(['1', '2', ['3', '4']]) == \
+            Tuple(S(1), S(2), Tuple(S(3), S(4)))
 
 def test_sympify4():
     class A:
@@ -290,9 +291,8 @@ def test_issue1034():
 
 def test_issue883():
     a = [3, 2.0]
-    assert sympify(a) == [Integer(3), Float(2.0)]
-    assert sympify(tuple(a)) == (Integer(3), Float(2.0))
-    assert sympify(set(a)) == set([Integer(3), Float(2.0)])
+    assert sympify(a) == Tuple(Integer(3), Float(2.0))
+    assert sympify(tuple(a)) == Tuple(Integer(3), Float(2.0))
 
 def test_S_sympify():
     assert S(1)/2 == sympify(1)/2

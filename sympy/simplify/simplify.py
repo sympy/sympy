@@ -900,24 +900,13 @@ def posify(eq):
     >>> posify([x, 1 + x])
     ([_x, _x + 1], {_x: x})
     """
-    eq = sympify(eq)
-    if type(eq) in (list, set, tuple):
-        f = type(eq)
-        eq = list(eq)
-        syms = set()
-        for e in eq:
-            syms = syms.union(e.atoms(C.Symbol))
-        reps = {}
-        for s in syms:
-            reps.update(dict((v, k) for k, v in posify(s)[1].items()))
-        for i, e in enumerate(eq):
-            eq[i] = e.subs(reps)
-        return f(eq), dict([(r,s) for s, r in reps.iteritems()])
-
+    equ = sympify(eq)
     reps = dict([(s, Dummy(s.name, positive=True))
-                 for s in eq.atoms(Symbol) if s.is_positive is None])
-    eq = eq.subs(reps)
-    return eq, dict([(r,s) for s, r in reps.iteritems()])
+                 for s in equ.atoms(Symbol) if s.is_positive is None])
+    equ = equ.subs(reps)
+    if type(eq) in (list, set, tuple):
+        equ = type(eq)(equ)
+    return equ, dict([(r,s) for s, r in reps.iteritems()])
 
 def powdenest(eq, force=False):
     """

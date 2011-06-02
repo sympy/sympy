@@ -16,6 +16,7 @@
 from sympy.core.sympify import sympify
 from sympy.core import S, Mul, Add, Pow, Symbol, Wild, Equality, Dummy
 from sympy.core.numbers import ilcm
+from sympy.core.containers import Tuple
 
 from sympy.functions import log, exp, LambertW
 from sympy.simplify import simplify, collect
@@ -142,7 +143,7 @@ def solve(f, *symbols, **flags):
 
     """
     def sympit(w):
-        return map(sympify, iff(isinstance(w,(list, tuple, set)), w, [w]))
+        return map(sympify, iff(isinstance(w,(list, tuple, set, Tuple)), w, [w]))
     # make f and symbols into lists of sympified quantities
     # keeping track of how f was passed since if it is a list
     # a dictionary of results will be returned.
@@ -167,7 +168,7 @@ def solve(f, *symbols, **flags):
     if bare_f:
         f=f[0]
     if len(symbols) == 1:
-        if isinstance(symbols[0], (list, tuple, set)):
+        if isinstance(symbols[0], (list, tuple, set, Tuple)):
             symbols = symbols[0]
 
     result = list()
@@ -201,7 +202,7 @@ def solve(f, *symbols, **flags):
             swap_back_dict = dict(zip(symbols_new, symbols))
     # End code for handling of Function and Derivative instances
 
-    if not isinstance(f, (tuple, list, set)):
+    if not isinstance(f, (tuple, list, set, Tuple)):
 
         # Create a swap dictionary for storing the passed symbols to be solved
         # for, so that they may be swapped back.

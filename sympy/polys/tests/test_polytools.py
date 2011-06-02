@@ -1892,7 +1892,7 @@ def test_factor():
 
     raises(FlagError, "factor(x**2 - 1, polys=True)")
 
-    assert factor([x, Eq(x**2 - y**2, Tuple(x**2 - z**2, 1/x + 1/y))]) == \
+    assert map(factor, [x, Eq(x**2 - y**2, Tuple(x**2 - z**2, 1/x + 1/y))]) == \
         [x, Eq((x - y)*(x + y), Tuple((x - z)*(x + z), (x + y)/x/y))]
 
 def test_factor_large():

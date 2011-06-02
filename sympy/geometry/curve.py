@@ -6,7 +6,7 @@ Curve
 
 """
 
-from sympy.core import sympify, C, Symbol
+from sympy.core import sympify, C, Symbol, Tuple
 from sympy.geometry.exceptions import GeometryError
 from sympy.geometry.point import Point
 from entity import GeometryEntity
@@ -54,7 +54,7 @@ class Curve(GeometryEntity):
 
     def __new__(cls, function, limits):
         fun = sympify(function)
-        if not isinstance(fun, (list, tuple)) or len(fun) != 2:
+        if not isinstance(fun, (list, tuple, Tuple)) or len(fun) != 2:
             raise ValueError("Function argument should be (x(t), y(t)) but got %s" % str(function))
         if not isinstance(limits, (list, tuple)) or len(limits) != 3:
             raise ValueError("Limit argument should be (t, tmin, tmax) but got %s" % str(limits))

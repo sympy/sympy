@@ -426,6 +426,10 @@ class Basic(AssumeMeths):
                 return head(expr), args, exp, coeff
 
     @classmethod
+    def fromiter(cls, args, **assumptions):
+        return cls(*tuple(args), **assumptions)
+
+    @classmethod
     def sorted_key(cls, expr, order=None):
         """
         A key-function for sorting expressions.
