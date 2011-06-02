@@ -9,7 +9,9 @@ TODO:
   AntiCommutator, represent, apply_operators.
 """
 
-from sympy import Expr
+from itertools import count
+
+from sympy import Expr, Symbol
 from sympy.printing.pretty.stringpict import prettyForm
 from sympy.physics.quantum.dagger import Dagger
 
@@ -190,6 +192,27 @@ class HermitianOperator(Operator):
     >>> Dagger(H)
     H
     """
+
+    @property
+    def basis_ket(self):
+        """Return the class corresponding to the basis ket of this operator. """
+        return None
+
+    @property
+    def basis_set(self):
+        """ Return a generator for the basis kets of this operator """
+        return (self.basis_ket(self.default_label.lower() + "_" + str(i)) for i in count(1))
+
+    def _get_basis_kets(self, num):
+        ct = 0
+        basis_kets = [0 for i in range(num)]
+        for state in self.basis_set:
+            if ct == num:
+                break
+            basis_kets[ct] = state
+            ct+=1
+
+        return basis_kets
 
     def _eval_dagger(self):
         return self

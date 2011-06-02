@@ -149,7 +149,7 @@ class QExpr(Expr):
         This must be a tuple, rather than a Tuple.
         """
         if len(self.args) == 0: # If there is no label specified, return the default
-            return self.default_label
+            return self._eval_args([self.default_label])
         else:
             return self.args
 
@@ -161,10 +161,11 @@ class QExpr(Expr):
     def default_label(self):
         """If no label is specified, then this will be set to be the default value.
 
+        Should be a string. Will be qsympified upon evaluation of label.
+        Convention should be capital letter for operators.
         Should be overidden by subclasses to specify the default labels for kets and operators
         """
-
-        return None
+        return ""
 
     #-------------------------------------------------------------------------
     # _eval_* methods

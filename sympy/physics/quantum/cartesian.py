@@ -3,11 +3,13 @@
 from sympy import I, S, sqrt, pi
 from sympy import exp
 from sympy import Interval, DiracDelta
+from sympy import Symbol
 
 from sympy.physics.quantum.operator import HermitianOperator
 from sympy.physics.quantum.state import Ket, Bra
 from sympy.physics.quantum.constants import hbar
 from sympy.physics.quantum.hilbert import L2
+
 
 
 __all__ = [
@@ -23,6 +25,14 @@ __all__ = [
 
 class XOp(HermitianOperator):
     """1D cartesian position operator."""
+
+    @property
+    def default_label(self):
+        return "X"
+
+    @property
+    def basis_ket(self):
+        return XKet
 
     @classmethod
     def _eval_hilbert_space(self, args):
@@ -52,6 +62,10 @@ Px = PxOp('Px')
 
 class XKet(Ket):
     """1D cartesian position eigenket."""
+
+    @property
+    def basis_op(self):
+        return XOp
 
     @property
     def dual_class(self):

@@ -1,7 +1,7 @@
 """Dirac notation for states."""
 
 
-from sympy import Expr
+from sympy import Expr, Symbol
 from sympy.printing.pretty.stringpict import prettyForm
 
 from sympy.physics.quantum.qexpr import (
@@ -67,7 +67,8 @@ class StateBase(QExpr):
         if self.basis_op is None:
             return None
         else:
-            return Symbol(str(self.basis_op.default_label) + "_1")
+            #
+            return ((self.basis_op()).default_label.lower() + "_1")
 
     #-------------------------------------------------------------------------
     # Dagger/dual
