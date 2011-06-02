@@ -148,11 +148,23 @@ class QExpr(Expr):
 
         This must be a tuple, rather than a Tuple.
         """
-        return self.args
+        if len(self.args) == 0: # If there is no label specified, return the default
+            return self.default_label
+        else:
+            return self.args
 
     @property
     def is_symbolic(self):
         return True
+
+    @property
+    def default_label(self):
+        """If no label is specified, then this will be set to be the default value.
+
+        Should be overidden by subclasses to specify the default labels for kets and operators
+        """
+
+        return None
 
     #-------------------------------------------------------------------------
     # _eval_* methods

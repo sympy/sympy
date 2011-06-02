@@ -57,6 +57,18 @@ class StateBase(QExpr):
     instead use State.
     """
 
+    @property
+    def basis_op(self):
+        """Return the operator that this state is an eigenstate of; to be overidden in subclasses"""
+        return None
+
+    @property
+    def default_label(self):
+        if self.basis_op is None:
+            return None
+        else:
+            return Symbol(str(self.basis_op.default_label) + "_1")
+
     #-------------------------------------------------------------------------
     # Dagger/dual
     #-------------------------------------------------------------------------
