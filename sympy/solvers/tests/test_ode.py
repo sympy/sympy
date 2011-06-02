@@ -381,9 +381,7 @@ def test_separable5():
     assert checkodesol(eq20, f(x), sol20, order=1, solve_for_func=False)[0]
     assert checkodesol(eq21, f(x), sol21, order=1, solve_for_func=False)[0]
 
-@XFAIL
 def test_separable_1_5_checkodesol():
-    # This fails because trigsimp() cannot reduce the expression to 0 in checkodesol()
     eq12 = (x - 1)*cos(f(x))*f(x).diff(x) - 2*x*sin(f(x))
     sol12 = Eq(-log(1 - cos(f(x))**2)/2, C1 - 2*x - 2*log(1 - x))
     assert checkodesol(eq12, f(x), sol12, order=1, solve_for_func=False)[0]
@@ -522,15 +520,11 @@ def test_1st_homogeneous_coeff_ode3():
     solstr = "f(x) == C1*exp(Integral(-1/(_u2*(-_u2**2 + 1)**(1/2)), (_u2, x/f(x))))"
     assert str(dsolve(eq, f(x), hint='1st_homogeneous_coeff_subs_indep_div_dep')) == solstr
 
-@XFAIL
 def test_1st_homogeneous_coeff_ode4_explicit():
+    x = Symbol('x', positive=True)
     eq = f(x)**2+(x*sqrt(f(x)**2-x**2)-x*f(x))*f(x).diff(x)
-    sol = Eq(f(x)**2+C1*x, f(x)*sqrt(f(x)**2-x**2))
-    # If this XPASSES, it means the integral engine has improved!  Please
-    # uncomment the real tests below.
-    assert not dsolve(eq, f(x)).has(Integral)
-#    assert dsolve(eq, f(x)) == sol
-#    assert checkodesol(eq, f(x), order=1, solve_for_func=False)[0]
+    sol = dsolve(eq, f(x))
+    assert checkodesol(eq, f(x), sol)[0]
 
 def test_1st_homogeneous_coeff_corner_case():
     eq1 = f(x).diff(x) - f(x)/x
@@ -985,6 +979,7 @@ def test_nth_linear_constant_coeff_variation_of_parameters():
     eq3 = f(x).diff(x) - 1
     eq4 = f(x).diff(x, 2) + 3*f(x).diff(x) + 2*f(x) - 4
     eq5 = f(x).diff(x, 2) + 3*f(x).diff(x) + 2*f(x) - 12*exp(x)
+    eq6 = f(x).diff(x, 2) - 2*f(x).diff(x) - 8*f(x) - 9*x*exp(x) - 10*exp(-x)
     eq7 = f(x).diff(x, 2) + 2*f(x).diff(x) + f(x) - x**2*exp(-x)
     eq8 = f(x).diff(x, 2) - 3*f(x).diff(x) + 2*f(x) - x*exp(-x)
     eq9 = f(x).diff(x, 3) - 3*f(x).diff(x, 2) + 3*f(x).diff(x) - f(x) - exp(x)
@@ -996,6 +991,7 @@ def test_nth_linear_constant_coeff_variation_of_parameters():
     sol3 = Eq(f(x), C1 + x)
     sol4 = Eq(f(x), 2 + C1*exp(-x) + C2*exp(-2*x))
     sol5 = Eq(f(x), 2*exp(x) + C1*exp(-x) + C2*exp(-2*x))
+    sol6 = Eq(f(x), -x*exp(x) - 2*exp(-x) + C1*exp(-2*x) + C2*exp(4*x))
     sol7 = Eq(f(x), (C1 + C2*x + x**4/12)*exp(-x))
     sol8 = Eq(f(x), C1*exp(x) + (S(5)/36 + x/6)*exp(-x) + C2*exp(2*x))
     sol9 = Eq(f(x), (C1 + C2*x + C3*x**2 + x**3/6)*exp(x))
@@ -1008,6 +1004,7 @@ def test_nth_linear_constant_coeff_variation_of_parameters():
     sol3s = constant_renumber(sol3, 'C', 1, 2)
     sol4s = constant_renumber(sol4, 'C', 1, 2)
     sol5s = constant_renumber(sol5, 'C', 1, 2)
+    sol6s = constant_renumber(sol6, 'C', 1, 2)
     sol7s = constant_renumber(sol7, 'C', 1, 2)
     sol8s = constant_renumber(sol8, 'C', 1, 2)
     sol9s = constant_renumber(sol9, 'C', 1, 3)
@@ -1019,6 +1016,7 @@ def test_nth_linear_constant_coeff_variation_of_parameters():
     assert dsolve(eq3, f(x), hint=hint) in (sol3, sol3s)
     assert dsolve(eq4, f(x), hint=hint) in (sol4, sol4s)
     assert dsolve(eq5, f(x), hint=hint) in (sol5, sol5s)
+    assert dsolve(eq6, f(x), hint=hint) in (sol6, sol6s)
     assert dsolve(eq7, f(x), hint=hint) in (sol7, sol7s)
     assert dsolve(eq8, f(x), hint=hint) in (sol8, sol8s)
     assert dsolve(eq9, f(x), hint=hint) in (sol9, sol9s)
@@ -1030,30 +1028,12 @@ def test_nth_linear_constant_coeff_variation_of_parameters():
     assert checkodesol(eq3, f(x), sol3, order=1, solve_for_func=False)[0]
     assert checkodesol(eq4, f(x), sol4, order=2, solve_for_func=False)[0]
     assert checkodesol(eq5, f(x), sol5, order=2, solve_for_func=False)[0]
+    assert checkodesol(eq6, f(x), sol6, order=2, solve_for_func=False)[0]
     assert checkodesol(eq7, f(x), sol7, order=2, solve_for_func=False)[0]
     assert checkodesol(eq8, f(x), sol8, order=2, solve_for_func=False)[0]
     assert checkodesol(eq9, f(x), sol9, order=3, solve_for_func=False)[0]
     assert checkodesol(eq10, f(x), sol10, order=2, solve_for_func=False)[0]
     assert checkodesol(eq12, f(x), sol12, order=4, solve_for_func=False)[0]
-
-@XFAIL
-def test_nth_linear_constant_coeff_variation_of_parameters_xfail():
-    """When this passes, put it back into
-    test_nth_linear_constant_coeff_variation_of_parameters()
-
-    It is failing because something like (sqrt(x)*(1+x)).as_poly(x)
-    returns None and risch.py line 279 doesn't expect this so .total_degree()
-    raises an error:
-
-        a, b, c = [ p.as_poly(*V).total_degree() for p in [s, P, Q] ]
-    """
-
-    hint = 'nth_linear_constant_coeff_variation_of_parameters'
-    eq6 = f(x).diff(x, 2) - 2*f(x).diff(x) - 8*f(x) - 9*x*exp(x) - 10*exp(-x)
-    sol6 = Eq(f(x), -x*exp(x) - 2*exp(-x) + C1*exp(-2*x) + C2*exp(4*x))
-    sol6s = constant_renumber(sol6, 'C', 1, 2)
-    assert dsolve(eq6, f(x), hint=hint) in (sol6, sol6s)
-    assert checkodesol(eq6, f(x), sol6, order=2, solve_for_func=False)[0]
 
 def test_nth_linear_constant_coeff_variation_of_parameters_simplify_False():
     # solve_variation_of_parameters shouldn't attempt to simplify the
