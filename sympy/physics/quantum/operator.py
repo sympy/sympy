@@ -209,7 +209,6 @@ class HermitianOperator(Operator):
     def _get_basis_kets(self, num):
         if self.basis_ket() is None:
             return None
-        
         ct = 0
         basis_kets = [0 for i in range(num)]
         for state in self.basis_set:

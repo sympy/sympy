@@ -107,19 +107,17 @@ def represent(expr, **options):
     """
     format = options.get('format', 'sympy')
     if isinstance(expr, QExpr):
-        result = None
         try:
-            result = expr._represent(**options)
+            return expr._represent(**options)
         except NotImplementedError as strerr:
             if isinstance(expr, (KetBase, BraBase)):
                 try:
-                    result = rep_innerproduct(expr, **options)
+                    return rep_innerproduct(expr, **options)
                 except NotImplementedError:
                     raise NotImplementedError(strerr)
             else:
                 raise NotImplementedError(strerr)
 
-        return result
     elif isinstance(expr, Add):
         result = represent(expr.args[0], **options)
         for args in expr.args[1:]:
@@ -166,10 +164,10 @@ def represent(expr, **options):
 def rep_innerproduct(expr, **options):
     """ Attempts to calculate inner product with a bra from the specified basis and if this fails
         resorts to the standard represent specified in QExpr"""
-        
+
     basis = options.pop('basis', None)
     superobj = super(type(expr), expr)
-    
+
     if basis is None:
         superobj._represent(**options)
     else:
@@ -181,15 +179,14 @@ def rep_innerproduct(expr, **options):
                 bra = basis_kets[1].dual
             else:
                 bra = basis_kets[0].dual
-            
+
             prod = InnerProduct(bra, expr)
             try:
                 result = prod.doit()
             except NotImplementedError:
                 return superobj._represent(**options)
-        
+
             format = options.get('format', 'sympy')
             return expr._format_represent(result, format)
         else:
             return superobj._represent(**options)
-

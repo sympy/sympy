@@ -290,11 +290,11 @@ class Ket(State, KetBase):
 
     [1] http://en.wikipedia.org/wiki/Bra-ket_notation
     """
-    
+
     @property
     def dual_class(self):
         return Bra
-    
+
 class Bra(State, BraBase):
     """A general time-independent Bra in quantum mechanics.
 

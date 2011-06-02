@@ -350,8 +350,7 @@ class QExpr(Expr):
 
         # If we get a matrix representation, convert it to the right format.
         format = options.get('format', 'sympy')
-        result = self.format_represent(result, format)
-        
+        result = self._format_represent(result, format)
         return result
 
     def _format_represent(self, result, format):
@@ -362,8 +361,8 @@ class QExpr(Expr):
         elif format == 'scipy.sparse' and\
         not isinstance(result, scipy_sparse_matrix):
             return to_scipy_sparse(result)
-            
 
+        return result
 
 def split_commutative_parts(e):
     """Split into commutative and non-commutative parts."""
