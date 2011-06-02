@@ -82,14 +82,11 @@ def test_sympify_bool():
     assert sympify(False)== False
 
 def test_sympyify_iterables():
-    ans = [Rational(3, 10), Rational(1, 5)]
+    ans = Tuple(Rational(3, 10), Rational(1, 5))
     assert sympify(['.3', '.2'], rational=1) == ans
-    assert sympify(tuple(['.3', '.2']), rational=1) == tuple(ans)
-    assert sympify(['1', '2', ['3', '4']]) == [S(1), S(2), Tuple(S(3), S(4))]
-    assert sympify(['1', '2', ['3', '4']], convert_outer=True) == \
+    assert sympify(tuple(['.3', '.2']), rational=1) == ans
+    assert sympify(['1', '2', ['3', '4']]) == \
             Tuple(S(1), S(2), Tuple(S(3), S(4)))
-    assert sympify(['1', '2', ['3', '4']], convert_inner=False) == \
-            [S(1), S(2), [S(3), S(4)]]
 
 def test_sympify4():
     class A:
@@ -294,8 +291,8 @@ def test_issue1034():
 
 def test_issue883():
     a = [3, 2.0]
-    assert sympify(a) == [Integer(3), Float(2.0)]
-    assert sympify(tuple(a)) == tuple([Integer(3), Float(2.0)])
+    assert sympify(a) == Tuple(Integer(3), Float(2.0))
+    assert sympify(tuple(a)) == Tuple(Integer(3), Float(2.0))
 
 def test_S_sympify():
     assert S(1)/2 == sympify(1)/2
