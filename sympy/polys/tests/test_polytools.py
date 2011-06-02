@@ -51,9 +51,9 @@ from sympy.polys.polyclasses import DMP, DMF
 from sympy.polys.domains import FF, ZZ, QQ, RR, EX
 
 from sympy import (
-    S, Integer, Rational, Mul, symbols, sqrt, exp, sin,
-    expand, oo, I, pi, re, im, RootOf, all, Eq, Tuple
-)
+    S, Integer, Rational, Float, Mul, symbols, sqrt, exp,
+    sin, expand, oo, I, pi, re, im, RootOf, all, Eq, Tuple)
+
 from sympy.utilities.pytest import raises, XFAIL
 
 x,y,z,p,q,r,s,t,u,v,w,a,b,c,d,e = symbols('x,y,z,p,q,r,s,t,u,v,w,a,b,c,d,e')
@@ -2138,6 +2138,20 @@ def test_nroots():
     assert Poly(x**2 + 2*I, x, extension=I).nroots() == [-1.0 + 1.0*I, 1.0 - 1.0*I]
 
     assert Poly(0.2*x + 0.1).nroots() == [-0.5]
+
+    roots = Poly(x**5 + x + 1).nroots()
+    eps = Float("10e-12")
+
+    assert re(roots[0]).epsilon_eq(-0.754877666246693, eps) and roots[0].is_real
+    # XXX: assert im(roots[0]).epsilon_eq(-0.000000000000000, eps) -> 'Zero' object has no attribute 'epsilon_eq'
+    assert re(roots[1]).epsilon_eq(-0.500000000000000, eps)
+    assert im(roots[1]).epsilon_eq(-0.866025403784439, eps)
+    assert re(roots[2]).epsilon_eq(-0.500000000000000, eps)
+    assert im(roots[2]).epsilon_eq(+0.866025403784439, eps)
+    assert re(roots[3]).epsilon_eq(+0.877438833123346, eps)
+    assert im(roots[3]).epsilon_eq(-0.744861766619744, eps)
+    assert re(roots[4]).epsilon_eq(+0.877438833123346, eps)
+    assert im(roots[4]).epsilon_eq(+0.744861766619744, eps)
 
     raises(DomainError, "Poly(x+y, x).nroots()")
     raises(MultivariatePolynomialError, "Poly(x+y).nroots()")
