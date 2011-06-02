@@ -7,7 +7,7 @@ from sympy.polys import Poly, roots, cancel
 from sympy.simplify import simplify as sympy_simplify
 from sympy.utilities import any, all
 from sympy.utilities.iterables import flatten
-from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.miscellaneous import sqrt, Max, Min
 from sympy.functions.elementary.complexes import re, Abs
 from sympy.printing import sstr
 
@@ -1460,7 +1460,7 @@ class Matrix(object):
         >>> print trigsimp( v.norm() )
         1
         >>> print v.norm(10)
-        (cos(x)**10 + sin(x)**10)**(1/10)
+        (sin(x)**10 + cos(x)**10)**(1/10)
         >>> A = Matrix([[1,1], [1,1]])
         >>> print A.norm(2)# Spectral norm (max of |Ax|/|x| under 2-vector-norm)
         2
@@ -1469,34 +1469,43 @@ class Matrix(object):
         >>> print A.norm() # Frobenius Norm
         2
         """
+
         # Row or Column Vector Norms
         if self.rows == 1 or self.cols == 1:
             if ord == 2 or ord == None: # Common case sqrt(<x,x>)
                 return Add(*(abs(i)**2 for i in self.mat))**S.Half
+
             elif ord == 1: # sum(abs(x))
                 return Add(*(abs(i) for i in self.mat))
+
             elif ord == S.Infinity: # max(abs(x))
-                return numerical_max(self.applyfunc(abs))
+                return Max(*self.applyfunc(abs))
+
             elif ord == S.NegativeInfinity: # min(abs(x))
-                return numerical_min(self.applyfunc(abs))
+                return Min(*self.applyfunc(abs))
+
             # Otherwise generalize the 2-norm, Sum(x_i**ord)**(1/ord)
             # Note that while useful this is not mathematically a norm
             try:
                 return Pow( Add(*(abs(i)**ord for i in self.mat)), S(1)/ord )
             except:
                 raise ValueError("Expected order to be Number, Symbol, oo")
+
         # Matrix Norms
         else:
             if ord == 2: # Spectral Norm
                 # Maximum singular value
-                return numerical_max(self.singular_values())
+                return Max(*self.singular_values())
+
             elif ord == -2:
                 # Minimum singular value
-                return numerical_min(self.singular_values())
+                return Min(*self.singular_values())
+
             elif (ord == None or isinstance(ord,str) and ord.lower() in
                     ['f', 'fro', 'frobenius', 'vector']):
                 # Reshape as vector and send back to norm function
                 return self.vec().norm(ord=2)
+
             else:
                 raise NotImplementedError("Matrix Norms under development")
 
@@ -2126,36 +2135,34 @@ class Matrix(object):
         >>> x = Symbol('x', real=True)
         >>> A = Matrix([[0, 1, 0], [0, x, 0], [-1, 0, 0]])
         >>> print A.singular_values()
-        [1, (1 + x**2)**(1/2), 0]
+        [1, (x**2 + 1)**(1/2), 0]
         """
         # Compute eigenvalues of A.H A
         valmultpairs = (self.H*self).eigenvals()
 
-        #.eigenvals returns an odd result. Expand into a simple list
+        # Expands result from eigenvals into a simple list
         vals = []
         for k,v in valmultpairs.items():
             vals += [sqrt(k)]*v # dangerous! same k in several spots!
 
-        # if sorting makes sense then sort
+        # If sorting makes sense then sort
         if all(val.is_number for val in vals):
             vals.sort(reverse=True) # sort them in descending order
-
-        # some small imaginary parts are sometime left over
-        # vals = map(re, vals)
 
         return vals
 
     def condition_number(self):
-        """Returns the condition number of a matrix
+        """Returns the condition number of a matrix.
+        This is the maximum singular value divided by the minimum singular value
+
         >>> from sympy import Matrix, S
         >>> A = Matrix([[1, 0, 0], [0, 10, 0], [0,0,S.One/10]])
         >>> print A.condition_number()
         100
-
-        Only works on Numerical Matrices (no symbols)
         """
+
         singularvalues = self.singular_values()
-        return numerical_max(singularvalues) / numerical_min(singularvalues)
+        return Max(*singularvalues) / Min(*singularvalues)
 
     def fill(self, value):
         """Fill the matrix with the scalar value."""
@@ -3252,21 +3259,6 @@ def symarray(prefix, shape):
     for index in np.ndindex(shape):
         arr[index] = Symbol('%s_%s' % (prefix, '_'.join(map(str, index))))
     return arr
-
-# Wrap standard Max and Min functions but fail on Non-Number Arguments
-# traditional min/max have odd behavior on Symbols. These raise explicit errors
-# instead
-def numerical_max(L):
-    """A max function for numeric arguments only."""
-    if not all(elem.is_number for elem in L):
-        raise NotImplementedError("Not implemented on Non-Numbers")
-    return max(L)
-
-def numerical_min(L):
-    """A max function for numeric arguments only."""
-    if not all(elem.is_number for elem in L):
-        raise NotImplementedError("Not implemented on Non-Numbers")
-    return min(L)
 
 def _separate_eig_results(res):
     eigvals = [item[0] for item in res]
