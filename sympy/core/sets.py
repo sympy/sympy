@@ -339,13 +339,13 @@ class ProductSet(Set):
         # We can conveniently represent these options easily using a ProductSet
         switch_sets = ProductSet([FiniteSet(set, set.complement)
             for set in self.sets])
-        product_sets = (ProductSet(set) for set in switch_sets)
+        product_sets = (ProductSet(*set) for set in switch_sets)
         # Union of all combinations but this one
         return Union(p for p in product_sets if p != self)
 
     @property
-    def is_finite(self):
-        return all(set.is_finite for set in self.sets)
+    def is_countable(self):
+        return all(set.is_countable for set in self.sets)
 
     @property
     def is_real(self):
@@ -380,6 +380,7 @@ class CountableSet(Set):
     @property
     def is_iterable(self):
         return True
+
     def __iter__(self):
         raise NotImplementedError("Iteration not yet implemented")
 
@@ -672,6 +673,7 @@ class Union(Set):
 
         # Lets find and merge real elements if we have them
         # Separate into finite, real and other sets
+
         finite_set = sum([s for s in args if s.is_FiniteSet], S.EmptySet)
         real_sets = [s for s in args if s.is_real]
         other_sets = [s for s in args if not s.is_FiniteSet and not s.is_real]
@@ -766,8 +768,8 @@ class Union(Set):
         return Or(*[set.as_relational(symbol) for set in self.args])
 
     @property
-    def is_finite(self):
-        return all(arg.is_finite for arg in self.args)
+    def is_countable(self):
+        return all(arg.is_countable for arg in self.args)
     @property
     def is_iterable(self):
         return all(arg.is_iterable for arg in self.args)
