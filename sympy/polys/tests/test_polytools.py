@@ -1,7 +1,7 @@
 """Tests for user-friendly public interface to polynomial functions. """
 
 from sympy.polys.polytools import (
-    Poly, poly,
+    Poly, PurePoly, poly,
     parallel_poly_from_expr,
     degree, degree_list,
     LC, LM, LT,
@@ -382,6 +382,32 @@ def test_Poly__eq__():
     assert (Poly(x, x) == Poly(x, x, domain=ZZ[a])) == True
 
     assert (Poly(x*y, x, y) == Poly(x, x)) == False
+
+    assert (Poly(x, x, y) == Poly(x, x)) == False
+    assert (Poly(x, x) == Poly(x, x, y)) == False
+
+    assert (Poly(x**2 + 1, x) == Poly(y**2 + 1, y)) == False
+    assert (Poly(y**2 + 1, y) == Poly(x**2 + 1, x)) == False
+
+def test_PurePoly__eq__():
+    assert (PurePoly(x, x) == PurePoly(x, x)) == True
+    assert (PurePoly(x, x, domain=QQ) == PurePoly(x, x)) == True
+    assert (PurePoly(x, x) == PurePoly(x, x, domain=QQ)) == True
+
+    assert (PurePoly(x, x, domain=ZZ[a]) == PurePoly(x, x)) == True
+    assert (PurePoly(x, x) == PurePoly(x, x, domain=ZZ[a])) == True
+
+    assert (PurePoly(x*y, x, y) == PurePoly(x, x)) == False
+
+    assert (PurePoly(x, x, y) == PurePoly(x, x)) == False
+    assert (PurePoly(x, x) == PurePoly(x, x, y)) == False
+
+    assert (PurePoly(x**2 + 1, x) == PurePoly(y**2 + 1, y)) == True
+    assert (PurePoly(y**2 + 1, y) == PurePoly(x**2 + 1, x)) == True
+
+def test_PurePoly_Poly():
+    assert isinstance(PurePoly(Poly(x**2 + 1)), PurePoly) == True
+    assert isinstance(Poly(PurePoly(x**2 + 1)), Poly) == True
 
 def test_Poly_get_domain():
     assert Poly(2*x).get_domain() == ZZ
@@ -1894,6 +1920,9 @@ def test_factor():
 
     assert factor([x, Eq(x**2 - y**2, Tuple(x**2 - z**2, 1/x + 1/y))]) == \
         [x, Eq((x - y)*(x + y), Tuple((x - z)*(x + z), (x + y)/x/y))]
+
+    assert not isinstance(Poly(x**3 + x + 1).factor_list()[1][0][0], PurePoly) == True
+    assert isinstance(PurePoly(x**3 + x + 1).factor_list()[1][0][0], PurePoly) == True
 
 def test_factor_large():
     f = (x**2 + 4*x + 4)**10000000*(x**2 + 1)*(x**2 + 2*x + 1)**1234567
