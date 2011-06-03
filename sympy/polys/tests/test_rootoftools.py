@@ -29,10 +29,10 @@ def test_RootOf___new__():
     assert RootOf(x + 1, 0) ==-1
     assert RootOf(x + 1,-1) ==-1
 
-    assert RootOf(x**2 + 2*x + 3, 0) == -1 + I*sqrt(2)
-    assert RootOf(x**2 + 2*x + 3, 1) == -1 - I*sqrt(2)
-    assert RootOf(x**2 + 2*x + 3,-1) == -1 - I*sqrt(2)
-    assert RootOf(x**2 + 2*x + 3,-2) == -1 + I*sqrt(2)
+    assert RootOf(x**2 + 2*x + 3, 0) == -1 - I*sqrt(2)
+    assert RootOf(x**2 + 2*x + 3, 1) == -1 + I*sqrt(2)
+    assert RootOf(x**2 + 2*x + 3,-1) == -1 + I*sqrt(2)
+    assert RootOf(x**2 + 2*x + 3,-2) == -1 - I*sqrt(2)
 
     r = RootOf(x**2 + 2*x + 3, 0, radicals=False)
     assert isinstance(r, RootOf) == True
@@ -88,8 +88,8 @@ def test_RootOf___new__():
 
     assert RootOf(Poly(x - y, x), 0) == y
 
-    assert RootOf(Poly(x**2 - y, x), 0) == +sqrt(y)
-    assert RootOf(Poly(x**2 - y, x), 1) == -sqrt(y)
+    assert RootOf(Poly(x**2 - y, x), 0) == -sqrt(y)
+    assert RootOf(Poly(x**2 - y, x), 1) ==  sqrt(y)
 
     assert RootOf(Poly(x**3 - y, x), 0) == y**Rational(1,3)
 
@@ -97,24 +97,6 @@ def test_RootOf___new__():
     raises(NotImplementedError, "RootOf(x**3 + x + 2*y, x, 0)")
 
     assert RootOf(x**3 + x + 1, 0).is_commutative == True
-
-def test_RootOf___new___indices():
-    f = x**3 + x + 3
-    r0 = RootOf(f, 0)
-    r1 = RootOf(f, 1)
-    r2 = RootOf(f, 2)
-
-    assert RootOf(f) == [r0]
-
-    assert RootOf(f, (0,)) == [r0]
-    assert RootOf(f, (0,1)) == [r0, r1]
-    assert RootOf(f, (0,1,2)) == [r0, r1, r2]
-
-    assert RootOf(f, (-3,)) == [r0]
-    assert RootOf(f, (-3,-2)) == [r0, r1]
-    assert RootOf(f, (-3,-2,-1)) == [r0, r1, r2]
-
-    assert RootOf(f, True) == [r0, r1, r2]
 
 def test_RootOf___eq__():
     assert (RootOf(x**3 + x + 3, 0) == RootOf(x**3 + x + 3, 0)) == True
@@ -136,6 +118,10 @@ def test_RootOf_is_complex():
 def test_RootOf_subs():
     assert RootOf(x**3 + x + 1, 0).subs(x, y) == RootOf(y**3 + y + 1, 0)
 
+def test_RootOf_diff():
+    assert RootOf(x**3 + x + 1, 0).diff(x) == 0
+    assert RootOf(x**3 + x + 1, 0).diff(y) == 0
+
 def test_RootOf_evalf():
     real = RootOf(x**3 + x + 3, 0).evalf(n=20)
 
@@ -143,13 +129,13 @@ def test_RootOf_evalf():
 
     re, im = RootOf(x**3 + x + 3, 1).evalf(n=20).as_real_imag()
 
-    assert re.epsilon_eq(Float("0.60670583138111481707"))
-    assert im.epsilon_eq(Float("1.45061224918844152650"))
+    assert re.epsilon_eq( Float("0.60670583138111481707"))
+    assert im.epsilon_eq(-Float("1.45061224918844152650"))
 
     re, im = RootOf(x**3 + x + 3, 2).evalf(n=20).as_real_imag()
 
-    assert re.epsilon_eq( Float("0.60670583138111481707"))
-    assert im.epsilon_eq(-Float("1.45061224918844152650"))
+    assert re.epsilon_eq(Float("0.60670583138111481707"))
+    assert im.epsilon_eq(Float("1.45061224918844152650"))
 
 def test_RootSum___new__():
     f = x**3 + x + 3
