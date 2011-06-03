@@ -83,7 +83,7 @@ _complexes_cache = {}
 class RootOf(Expr):
     """Represents ``k``-th root of a univariate polynomial. """
 
-    __slots__ = ['poly', 'index', 'pointer', 'conjugate']
+    __slots__ = ['poly', 'index']
 
     def __new__(cls, f, x, index=None, radicals=True, expand=True):
         """Construct a new ``RootOf`` object for ``k``-th root of ``f``. """
@@ -134,14 +134,12 @@ class RootOf(Expr):
         return coeff*cls._postprocess_root(root, radicals)
 
     @classmethod
-    def _new(cls, poly, index, pointer, conjugate=None):
+    def _new(cls, poly, index):
         """Construct new ``RootOf`` object from raw data. """
         obj = Expr.__new__(cls)
 
         obj.poly = poly
         obj.index = index
-        obj.pointer = pointer
-        obj.conjugate = conjugate
 
         return obj
 
@@ -162,18 +160,13 @@ class RootOf(Expr):
 
     @property
     def is_real(self):
-        """Return ``True`` if the root in consideration is real. """
-        return self.conjugate is None
+        """Return ``True`` if the root is real. """
+        return self.index < len(_reals_cache[self.poly])
 
     @property
     def is_complex(self):
-        """Return ``True`` if the root in consideration is complex. """
-        return self.conjugate is not None
-
-    @property
-    def is_conjugate(self):
-        """Return ``True`` if the root is located in the lower half-plane. """
-        return self.is_complex and self.conjugate
+        """Return ``True`` if the root is complex. """
+        return not self.is_real
 
     @classmethod
     def real_roots(cls, poly, radicals=True):
@@ -292,36 +285,28 @@ class RootOf(Expr):
                     if factor == poly:
                         index += 1
 
-                return poly, index, index, None
+                return poly, index
             else:
                 i += k
 
     @classmethod
     def _complexes_index(cls, complexes, index):
         """Map initial complex root index to an index in a factor where the root belongs. """
-        index, conjugate, i = index, False, 0
+        index, i = index, 0
 
         for j, (_, factor, k) in enumerate(complexes):
-            if index < i + 2*k:
-                if index >= i + k:
-                    conjugate = True
-
-                poly, pointer = factor, 0
+            if index < i + k:
+                poly, index = factor, 0
 
                 for _, factor, _ in complexes[:j]:
                     if factor == poly:
-                        pointer += 1
+                        index += 1
 
-                index = len(_reals_cache[poly])
+                index += len(_reals_cache[poly])
 
-                if not conjugate:
-                    index += 2*pointer
-                else:
-                    index += 2*pointer + 1
-
-                return poly, index, pointer, conjugate
+                return poly, index
             else:
-                i += 2*k
+                i += k
 
     @classmethod
     def _count_roots(cls, roots):
@@ -418,13 +403,13 @@ class RootOf(Expr):
     @classmethod
     def _postprocess_root(cls, root, radicals):
         """Return the root if it is trivial or a ``RootOf`` object. """
-        poly, index, pointer, conjugate = root
+        poly, index = root
         roots = cls._roots_trivial(poly, radicals)
 
         if roots is not None:
             return roots[index]
         else:
-            return cls._new(poly, index, pointer, conjugate)
+            return cls._new(poly, index)
 
     @classmethod
     def _get_roots(cls, method, poly, radicals):
@@ -446,16 +431,18 @@ class RootOf(Expr):
     def _get_interval(self):
         """Internal function for retrieving isolation interval from cache. """
         if self.is_real:
-            return _reals_cache[self.poly][self.pointer]
+            return _reals_cache[self.poly][self.index]
         else:
-            return _complexes_cache[self.poly][self.pointer]
+            reals_count = len(_reals_cache[self.poly])
+            return _complexes_cache[self.poly][self.index - reals_count]
 
     def _set_interval(self, interval):
         """Internal function for updating isolation interval in cache. """
         if self.is_real:
-            _reals_cache[self.poly][self.pointer] = interval
+            _reals_cache[self.poly][self.index] = interval
         else:
-            _complexes_cache[self.poly][self.pointer] = interval
+            reals_count = len(_reals_cache[self.poly])
+            _complexes_cache[self.poly][self.index - reals_count] = interval
 
     def _eval_evalf(self, prec):
         """Evaluate this complex root to the given precision. """
@@ -463,18 +450,15 @@ class RootOf(Expr):
 
         try:
             func = lambdify(self.poly.gen, self.expr)
-            interval, refined = self._get_interval(), False
+
+            interval = self._get_interval()
+            refined =  False
 
             while True:
                 if self.is_real:
                     x0 = mpf(str(interval.center))
                 else:
-                    re, im = interval.center
-
-                    re = mpf(str(re))
-                    im = mpf(str(im))
-
-                    x0 = mpc(re, im)
+                    x0 = mpc(*map(str, interval.center))
 
                 try:
                     root = findroot(func, x0)
@@ -485,9 +469,6 @@ class RootOf(Expr):
                 else:
                     if refined:
                         self._set_interval(interval)
-
-                    if self.is_conjugate:
-                        root = root.conjugate()
 
                     break
         finally:

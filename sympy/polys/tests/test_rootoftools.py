@@ -143,6 +143,27 @@ def test_RootOf_evalf():
     assert re.epsilon_eq(Float("0.60670583138111481707"))
     assert im.epsilon_eq(Float("1.45061224918844152650"))
 
+def test_RootOf_real_roots():
+    assert Poly(x**5 + x + 1).real_roots() == [RootOf(x**3 - x**2 + 1, 0)]
+    assert Poly(x**5 + x + 1).real_roots(radicals=False) == [RootOf(x**3 - x**2 + 1, 0)]
+
+def test_RootOf_all_roots():
+    assert Poly(x**5 + x + 1).all_roots() == [
+        RootOf(x**3 - x**2 + 1, 0),
+        -S(1)/2 - 3**(S(1)/2)*I/2,
+        -S(1)/2 + 3**(S(1)/2)*I/2,
+        RootOf(x**3 - x**2 + 1, 1),
+        RootOf(x**3 - x**2 + 1, 2),
+    ]
+
+    assert Poly(x**5 + x + 1).all_roots(radicals=False) == [
+        RootOf(x**3 - x**2 + 1, 0),
+        RootOf(x**2 + x + 1, 0, radicals=False),
+        RootOf(x**2 + x + 1, 1, radicals=False),
+        RootOf(x**3 - x**2 + 1, 1),
+        RootOf(x**3 - x**2 + 1, 2),
+    ]
+
 def test_RootSum___new__():
     f = x**3 + x + 3
 
