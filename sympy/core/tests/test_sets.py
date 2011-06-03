@@ -1,5 +1,5 @@
 from sympy import (
-    Symbol, Set, Union, Interval, oo, S, sympify,
+    Symbol, Set, Union, Interval, oo, S, sympify, nan,
     Inequality, Max, Min, And, Or, Eq, Ge, Le, Gt, Lt, Float, FiniteSet
 )
 from sympy.mpmath import mpi
@@ -197,6 +197,18 @@ def test_measure():
     assert FiniteSet(1,2,oo,a,-oo,-5).measure == 0
 
     assert S.EmptySet.measure == 0
+
+    square = Interval(0,10) * Interval(0,10)
+    offsetsquare = Interval(5,15) * Interval(5,15)
+    band = Interval(-oo,oo) * Interval(2,4)
+
+    assert square.measure == offsetsquare.measure == 100
+    assert (square + offsetsquare).measure == 175 # there is some overlap
+    assert (square - offsetsquare).measure == 75
+    assert (square * FiniteSet(1,2,3)).measure == 0
+    assert (square.intersect(band)).measure == 20
+    assert (square + band).measure == oo
+    assert (band * FiniteSet(1,2,3)).measure == nan
 
 def test_subset():
     assert Interval(0, 2).subset(Interval(0, 1)) == True

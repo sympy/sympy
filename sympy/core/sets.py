@@ -362,6 +362,12 @@ class ProductSet(Set):
         else:
             raise TypeError("Not all constituent sets are iterable")
 
+    @property
+    def _measure(self):
+        measure = 1
+        for set in self.sets:
+            measure *= set.measure
+        return measure
 class RealSet(Set, EvalfMixin):
     """
     A set of real values
@@ -756,9 +762,46 @@ class Union(Set):
 
     @property
     def _measure(self):
+        # Measure of a union is the sum of the measures of the sets minus
+        # the sum of their pairwise intersections plus the sum of their
+        # triple-wise intersections minus ... etc...
+
+        # Sets is a collection of intersections and a set of elementary
+        # sets which made up those interections (called "sos" for set of sets)
+        # An example element might of this list might be:
+        #    ( {A,B,C}, A.intersect(B).intersect(C) )
+
+        # Start with just elementary sets (  ({A}, A), ({B}, B), ... )
+        # Then get and subtract (  ({A,B}, (A int B), ... ) while non-zero
+        sets = [(FiniteSet((s,)), s) for s in self.args]
         measure = 0
-        for set in self.args:
-            measure += set.measure
+        parity = 1
+        while sets:
+            # Add up the measure of these sets and add or subtract it to total
+            measure += parity * sum(inter.measure for sos, inter in sets)
+
+            # For each intersection in sets, compute the intersection with every
+            # other set not already part of the intersection.
+            sets = ((sos + FiniteSet((newset,)), newset.intersect(intersection))
+                    for sos, intersection in sets for newset in self.args
+                    if newset not in sos)
+
+            # Clear out sets with no measure
+            sets = [(sos,inter) for sos,inter in sets if inter.measure != 0]
+
+            # Clear out duplicates
+            sos_list = []
+            sets_list = []
+            for set in sets:
+                if set[0] in sos_list:
+                    continue
+                else:
+                    sos_list.append(set[0])
+                    sets_list.append(set)
+            sets = sets_list
+
+            # Flip Parity - next time subtract/add if we added/subtracted here
+            parity *= -1
         return measure
 
     def as_relational(self, symbol):
