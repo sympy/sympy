@@ -510,8 +510,11 @@ class DifferentialExtension(object):
         The attributes are (fa, fd, D, T, Tfuncs, backsubs, E_K, E_args,
         L_K, L_args).
         """
+        # XXX: This might be easier to read as a dict or something
         return (self.fa, self.fd, self.D, self.T, self.Tfuncs,
             self.backsubs, self.E_K, self.E_args, self.L_K, self.L_args)
+
+    # TODO: Implement __repr__
 
     def __str__(self):
         return str(self._important_attrs)

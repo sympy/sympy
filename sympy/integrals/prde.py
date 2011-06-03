@@ -620,8 +620,14 @@ def is_deriv_k(fa, fd, DE):
             ans = zip(terms, u)
             result = Add(*[Mul(i, j) for i, j in ans])
             argterms = [DE.T[i] for i in DE.E_K] + DE.L_args
-            const = cancel(fa.as_basic()/fd.as_basic()/
-                    Mul(*[Pow(i, j) for i, j in zip(argterms,u)]))
+            # We need to get around things like sqrt(x**2) != x
+            l = []
+            for i, j in zip(argterms, u):
+                if i.is_Pow:
+                    l.append(i.base**(i.exp*j))
+                else:
+                    l.append(Pow(i, j))
+            const = cancel(fa.as_basic()/fd.as_basic()/Mul(*l))
 
             return (ans, result, const)
 
@@ -723,7 +729,7 @@ def is_log_deriv_k_t_radical(fa, fd, DE, Df=True):
             # constant.  We now find the log of that constant.
             argterms = DE.E_args + [DE.T[i] for i in DE.L_K]
             const = cancel(fa.as_basic()/fd.as_basic() -
-                Add(*[Mul(i, j/n) for i, j in zip(argterms,u)]))
+                Add(*[Mul(i, j/n) for i, j in zip(argterms, u)]))
 
             return (ans, result, n, const)
 

@@ -401,6 +401,11 @@ def test_DifferentialExtension():
         (Poly(t0, t0), Poly(1, t0), [Poly(1, x), Poly(log(10)*t0, t0)], [x, t0],
         [Lambda(i, exp(i*log(10)))], [(exp(x*log(10)), 10**x)], [1], [x*log(10)],
         [], [])
+    assert DifferentialExtension(log(x) + log(x**2), x, dummy=False)._important_attrs in [
+        (Poly(3*t0, t0), Poly(2, t0), [Poly(1, x), Poly(2/x, t0)], [x, t0],
+        [Lambda(i, log(i**2))], [], [], [], [1], [x**2]),
+        (Poly(3*t0, t0), Poly(1, t0), [Poly(1, x), Poly(1/x, t0)], [x, t0],
+        [Lambda(i, log(i))], [], [], [], [1], [x])]
 
     # Rothstein's integral
     f = (2581284541*exp(x) + 1757211400)/(39916800*exp(3*x) +
