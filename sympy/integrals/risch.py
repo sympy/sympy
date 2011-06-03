@@ -260,6 +260,13 @@ class DifferentialExtension(object):
             # Get all exp arguments, so we can avoid ahead of time doing
             # something like t1 = exp(x), t2 = exp(x/2) == sqrt(t1).
 
+            # XXX: This is *very* non-deterministic (hash dependent), because
+            # the order of the args is based on the order of iteration through a
+            # set. So something like log(x) + log(x**2) could be written in
+            # terms of of log(x) or in terms of log(x**2) (currently, on my
+            # machine, it does one if you use x, and the other if you replace x
+            # with y).  To avoid all manner of future problems, the sets should
+            # be ordered in some canonical, platform independent way.
             exps = filter(lambda i: i.exp.is_rational_function(*self.T) and
                 i.exp.has_any_symbols(*self.T), self.newf.atoms(exp))
             # 2**x
