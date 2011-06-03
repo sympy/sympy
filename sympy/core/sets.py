@@ -4,7 +4,6 @@ from evalf import EvalfMixin
 from numbers import Float
 from sympify import _sympify, sympify
 from sympy.mpmath import mpi, mpf
-from collections import Iterable
 
 
 class Set(Basic):
@@ -504,11 +503,11 @@ class Union(Set):
                return []
             if isinstance(arg,Union):
                 return sum(map(flatten, arg.args), [])
-            if isinstance(arg, Iterable) and not isinstance(arg,Set):
+            if is_iterable(arg) and not isinstance(arg,Set):
                 return sum(map(flatten, arg), [])
             if isinstance(arg, Set):
                 return [arg]
-            raise TypeError("Input must be Sets or Iterables of Sets")
+            raise TypeError("Input must be Sets or iterables of Sets")
         args = flatten(args)
 
         if len(args)==0:
@@ -638,10 +637,10 @@ class RealUnion(Union, RealSet):
                 intervals.append(arg)
             elif isinstance(arg, Set):
                 other_sets.append(arg)
-            elif isinstance(arg, Iterable):
+            elif is_iterable(arg):
                 args += arg
             else:
-                raise TypeError("%s: Not a set or iterable"%arg)
+                raise TypeError("%s: Not a set or iterable of sets"%arg)
 
         # Sort intervals according to their infimum
         intervals.sort(lambda i, j: cmp(i.start, j.start))
@@ -777,8 +776,7 @@ class FiniteSet(CountableSet):
     """
     def __new__(cls, *args):
         # Allow both FiniteSet(iterable) and FiniteSet(num, num, num)
-        if (len(args)==1 and isinstance(args[0], Iterable)
-            and not isinstance(args[0], str)):
+        if (len(args)==1 and is_iterable(args[0])):
             args = args[0]
         # Sympify Arguments
         args = map(sympify, args)
@@ -912,3 +910,6 @@ class RealFiniteSet(FiniteSet, RealSet):
             intervals.append(Interval(a,b, True, True)) # open intervals
         intervals.append(Interval(sorted_elements[-1], S.Infinity, True, True))
         return Union(*intervals)
+
+def is_iterable(obj):
+    return hasattr(obj, '__iter__')
