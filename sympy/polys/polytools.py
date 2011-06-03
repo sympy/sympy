@@ -74,7 +74,7 @@ from sympy.polys.constructor import construct_domain
 from sympy.polys import polyoptions as options
 
 class Poly(Expr):
-    """Generic class for representing polynomials in SymPy. """
+    """Generic class for representing polynomial expressions. """
 
     __slots__ = ['rep', 'gens']
 
@@ -181,6 +181,9 @@ class Poly(Expr):
     @classmethod
     def _from_poly(cls, rep, opt):
         """Construct a polynomial from a polynomial. """
+        if cls != rep.__class__:
+            rep = cls.new(rep.rep, *rep.gens)
+
         gens = opt.gens
         order = opt.order
         field = opt.field
@@ -331,6 +334,8 @@ class Poly(Expr):
         else:
             raise UnificationFailed("can't unify %s with %s" % (f, g))
 
+        cls = f.__class__
+
         def per(rep, dom=dom, gens=gens, remove=None):
             if remove is not None:
                 gens = gens[:remove]+gens[remove+1:]
@@ -338,7 +343,7 @@ class Poly(Expr):
                 if not gens:
                     return dom.to_sympy(rep)
 
-            return Poly.new(rep, *gens)
+            return cls.new(rep, *gens)
 
         return dom, per, F, G
 
@@ -368,7 +373,7 @@ class Poly(Expr):
             if not gens:
                 return f.rep.dom.to_sympy(rep)
 
-        return Poly.new(rep, *gens)
+        return f.__class__.new(rep, *gens)
 
     def set_domain(f, domain):
         """Set the ground domain of ``f``. """
@@ -3243,7 +3248,7 @@ class Poly(Expr):
     def __add__(f, g):
         if not g.is_Poly:
             try:
-                g = Poly(g, *f.gens)
+                g = f.__class__(g, *f.gens)
             except PolynomialError:
                 return f.as_expr() + g
 
@@ -3253,7 +3258,7 @@ class Poly(Expr):
     def __radd__(f, g):
         if not g.is_Poly:
             try:
-                g = Poly(g, *f.gens)
+                g = f.__class__(g, *f.gens)
             except PolynomialError:
                 return g + f.as_expr()
 
@@ -3263,7 +3268,7 @@ class Poly(Expr):
     def __sub__(f, g):
         if not g.is_Poly:
             try:
-                g = Poly(g, *f.gens)
+                g = f.__class__(g, *f.gens)
             except PolynomialError:
                 return f.as_expr() - g
 
@@ -3273,7 +3278,7 @@ class Poly(Expr):
     def __rsub__(f, g):
         if not g.is_Poly:
             try:
-                g = Poly(g, *f.gens)
+                g = f.__class__(g, *f.gens)
             except PolynomialError:
                 return g - f.as_expr()
 
@@ -3283,7 +3288,7 @@ class Poly(Expr):
     def __mul__(f, g):
         if not g.is_Poly:
             try:
-                g = Poly(g, *f.gens)
+                g = f.__class__(g, *f.gens)
             except PolynomialError:
                 return f.as_expr()*g
 
@@ -3293,7 +3298,7 @@ class Poly(Expr):
     def __rmul__(f, g):
         if not g.is_Poly:
             try:
-                g = Poly(g, *f.gens)
+                g = f.__class__(g, *f.gens)
             except PolynomialError:
                 return g*f.as_expr()
 
@@ -3309,42 +3314,42 @@ class Poly(Expr):
     @_sympifyit('g', NotImplemented)
     def __divmod__(f, g):
         if not g.is_Poly:
-            g = Poly(g, *f.gens)
+            g = f.__class__(g, *f.gens)
 
         return f.div(g)
 
     @_sympifyit('g', NotImplemented)
     def __rdivmod__(f, g):
         if not g.is_Poly:
-            g = Poly(g, *f.gens)
+            g = f.__class__(g, *f.gens)
 
         return g.div(f)
 
     @_sympifyit('g', NotImplemented)
     def __mod__(f, g):
         if not g.is_Poly:
-            g = Poly(g, *f.gens)
+            g = f.__class__(g, *f.gens)
 
         return f.rem(g)
 
     @_sympifyit('g', NotImplemented)
     def __rmod__(f, g):
         if not g.is_Poly:
-            g = Poly(g, *f.gens)
+            g = f.__class__(g, *f.gens)
 
         return g.rem(f)
 
     @_sympifyit('g', NotImplemented)
     def __floordiv__(f, g):
         if not g.is_Poly:
-            g = Poly(g, *f.gens)
+            g = f.__class__(g, *f.gens)
 
         return f.quo(g)
 
     @_sympifyit('g', NotImplemented)
     def __rfloordiv__(f, g):
         if not g.is_Poly:
-            g = Poly(g, *f.gens)
+            g = f.__class__(g, *f.gens)
 
         return g.quo(f)
 
@@ -3363,7 +3368,7 @@ class Poly(Expr):
     def __eq__(f, g):
         if not g.is_Poly:
             try:
-                g = Poly(g, *f.gens, **{'domain': f.get_domain()})
+                g = f.__class__(g, f.gens, domain=f.get_domain())
             except (PolynomialError, DomainError, CoercionFailed):
                 return False
 
@@ -3391,6 +3396,73 @@ class Poly(Expr):
     def __nonzero__(f):
         return not f.is_zero
 
+class PurePoly(Poly):
+    """Class for representing pure polynomials. """
+
+    def _hashable_content(self):
+        """Allow SymPy to hash Poly instances. """
+        return (self.rep,)
+
+    def __hash__(self):
+        return super(PurePoly, self).__hash__()
+
+    @_sympifyit('g', NotImplemented)
+    def __eq__(f, g):
+        if not g.is_Poly:
+            try:
+                g = f.__class__(g, f.gens, domain=f.get_domain())
+            except (PolynomialError, DomainError, CoercionFailed):
+                return False
+
+        if len(f.gens) != len(g.gens):
+            return False
+
+        if f.rep.dom != g.rep.dom:
+            try:
+                dom = f.rep.dom.unify(g.rep.dom, f.gens)
+            except UnificationFailed:
+                return False
+
+            f = f.set_domain(dom)
+            g = g.set_domain(dom)
+
+        return f.rep == g.rep
+
+    def _unify(f, g):
+        g = sympify(g)
+
+        if not g.is_Poly:
+            try:
+                return f.rep.dom, f.per, f.rep, f.rep.per(f.rep.dom.from_sympy(g))
+            except CoercionFailed:
+                raise UnificationFailed("can't unify %s with %s" % (f, g))
+
+        if len(f.gens) != len(g.gens):
+            raise UnificationFailed("can't unify %s with %s" % (f, g))
+
+        if not (isinstance(f.rep, DMP) and isinstance(g.rep, DMP)):
+            raise UnificationFailed("can't unify %s with %s" % (f, g))
+
+        cls = f.__class__
+        gens = f.gens
+        lev = len(gens)-1
+
+        dom = f.rep.dom.unify(g.rep.dom, gens)
+
+        F = f.rep.convert(dom)
+        G = g.rep.convert(dom)
+
+        def per(rep, dom=dom, gens=gens, remove=None):
+            if remove is not None:
+                gens = gens[:remove]+gens[remove+1:]
+
+                if not gens:
+                    return dom.to_sympy(rep)
+
+            return cls.new(rep, *gens)
+
+        return dom, per, F, G
+
 def poly_from_expr(expr, *gens, **args):
     """Construct a polynomial from an expression. """
     opt = options.build_options(gens, args)
@@ -3403,7 +3475,7 @@ def _poly_from_expr(expr, opt):
     if not isinstance(expr, Basic):
         raise PolificationFailed(opt, orig, expr)
     elif expr.is_Poly:
-        poly = Poly(expr, opt=opt)
+        poly = expr.__class__._from_poly(expr, opt)
 
         opt['gens'] = poly.gens
         opt['domain'] = poly.domain
@@ -3450,8 +3522,8 @@ def _parallel_poly_from_expr(exprs, opt):
         f, g = exprs
 
         if isinstance(f, Poly) and isinstance(g, Poly):
-            f = Poly._from_poly(f, opt)
-            g = Poly._from_poly(g, opt)
+            f = f.__class__._from_poly(f, opt)
+            g = g.__class__._from_poly(g, opt)
 
             f, g = f.unify(g)
 
