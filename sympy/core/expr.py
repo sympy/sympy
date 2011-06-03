@@ -1216,6 +1216,57 @@ class Expr(Basic, EvalfMixin):
             # As a last resort, we choose the one with greater hash
             return hash(self) < hash(negative_self)
 
+    def _eval_is_polynomial(self, syms):
+        return False
+
+    def is_polynomial(self, *syms):
+        """
+        Return True if self is a polynomial in syms and False otherwise.
+
+        This checks if self is an exact polynomial in syms.  This function
+        returns False for expressions that are "polynomials" with symbolic
+        exponents.  Thus, you should be able to apply polynomial algorithms to
+        expressions for which this returns True, and Poly(expr, *syms) should
+        work only if and only if expr.is_polynomial(*syms) returns True. The
+        polynomial does not have to be in expanded form.
+
+        This is not part of the assumptions system.  You cannot do
+        Symbol('z', polynomial=True).
+
+        **Examples**
+        >>> from sympy import Symbol
+        >>> x = Symbol('x')
+        >>> ((x**2 + 1)**4).is_polynomial(x)
+        True
+        >>> (2**x + 1).is_polynomial(x)
+        False
+
+        >>> n = Symbol('n', nonnegative=True, integer=True)
+        >>> (x**n + 1).is_polynomial(x)
+        False
+
+        This function does not attempt any nontrivial simplifications that may
+        result in an expression that does not appear to be a polynomial to
+        become one.
+
+        >>> from sympy import sqrt, factor
+        >>> y = Symbol('y', positive=True)
+        >>> a = sqrt(y**2 + 2*y + 1)
+        >>> a.is_polynomial(y)
+        False
+        >>> factor(a)
+        y + 1
+        """
+        if syms:
+            syms = map(sympify, syms)
+        else:
+            syms = list(self.atoms(C.Symbol))
+
+        if not syms: # constant polynomial
+            return True
+        else:
+            return self._eval_is_polynomial(syms)
+
 
     ###################################################################################
     ##################### SERIES, LEADING TERM, LIMIT, ORDER METHODS ##################

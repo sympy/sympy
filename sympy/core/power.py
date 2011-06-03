@@ -595,8 +595,8 @@ class Pow(Expr):
         if self.base.has(*syms):
             # it would be nice to have is_nni working
             return self.base._eval_is_polynomial(syms) and \
-                   self.exp.is_nonnegative and \
-                   self.exp.is_integer
+                   self.exp.is_Integer and \
+                   self.exp >= 0
         else:
             return True
 

@@ -747,20 +747,6 @@ class Basic(AssumeMeths):
 
         return False
 
-    def _eval_is_polynomial(self, syms):
-        return
-
-    def is_polynomial(self, *syms):
-        if syms:
-            syms = map(sympify, syms)
-        else:
-            syms = list(self.atoms(C.Symbol))
-
-        if not syms: # constant polynomial
-            return True
-        else:
-            return self._eval_is_polynomial(syms)
-
     def as_poly(self, *gens, **args):
         """Converts `self` to a polynomial or returns `None`.
 
