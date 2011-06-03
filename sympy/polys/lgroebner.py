@@ -209,7 +209,9 @@ def groebner_basis(f, verbose=0):
         CP.remove((g1,g2))
         h = S_poly(f[g1],f[g2])
         # normal(h,G) appends h to f if h
-        h = normal(h,G)
+        G1 = list(G)
+        G1.sort(key=lambda g: f[g][0])
+        h = normal(h,G1)
         if h:
             G, CP = update(G,CP,h[1])
         else:
