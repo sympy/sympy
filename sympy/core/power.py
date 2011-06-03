@@ -593,10 +593,19 @@ class Pow(Expr):
             return False
 
         if self.base.has(*syms):
-            # it would be nice to have is_nni working
             return self.base._eval_is_polynomial(syms) and \
-                   self.exp.is_nonnegative and \
-                   self.exp.is_integer
+                   self.exp.is_Integer and \
+                   self.exp >= 0
+        else:
+            return True
+
+    def _eval_is_rational_function(self, syms):
+        if self.exp.has(*syms):
+            return False
+
+        if self.base.has(*syms):
+            return self.base._eval_is_rational_function(syms) and \
+                   self.exp.is_Integer
         else:
             return True
 
