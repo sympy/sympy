@@ -82,15 +82,19 @@ class XKet(Ket):
     def _eval_innerproduct_PxBra(self, bra, **hints):
         return exp(-I*self.position*bra.momentum/hbar)/sqrt(2*pi*hbar)
 
-    def _represent_default_basis(self, **options):
-        return self._represent_XOp(None, **options)
+    #def _represent_default_basis(self, **options):
+        #return self._represent_XOp(None, **options)
 
-    def _represent_XOp(self, basis, **options):
-        return self.position
+    #def _represent_XOp(self, basis, **options):
+        #return self.position
 
 
 class XBra(Bra):
     """1D cartesian position eigenbra."""
+
+    @classmethod
+    def basis_op(self):
+        return XOp
 
     @property
     def dual_class(self):
@@ -100,6 +104,9 @@ class XBra(Bra):
     def position(self):
         """The position of the state."""
         return self.label[0]
+
+    #def _eval_innerproduct_XKet(self, bra, **hints):
+        #return DiracDelta(self.position-bra.position)
 
 
 class PxKet(Ket):

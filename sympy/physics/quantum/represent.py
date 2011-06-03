@@ -6,6 +6,7 @@ TODO:
 """
 
 from sympy import Add, Mul, Pow, I, Expr
+from sympy.functions import conjugate
 
 from sympy.physics.quantum.dagger import Dagger
 from sympy.physics.quantum.commutator import Commutator
@@ -163,30 +164,35 @@ def represent(expr, **options):
 
 def rep_innerproduct(expr, **options):
     """ Attempts to calculate inner product with a bra from the specified basis and if this fails
-        resorts to the standard represent specified in QExpr"""
+        resorts to the standard represent specified in QExpr; Should only be passed an instance
+        of KetBase or BraBase"""
+
+    if not isinstance(expr, (KetBase, BraBase)):
+        raise NotImplementedError("expr passed is not a Bra or Ket")
 
     basis = options.pop('basis', None)
-    superobj = super(type(expr), expr)
 
-    if basis is None:
-        superobj._represent(**options)
-    else:
-        if basis.basis_set is not None:
-            basis_kets = basis._get_basis_kets(2)
+    #If the basis is not specified, try to find the default basis to form an inner product with
+    if basis is None and expr.basis_op() is None:
+        raise NotImplementedError("Could not get basis set for operator")
+    elif basis is None:
+        basis = (expr.basis_op())()
 
-            #WILL ONLY WORK WITH KETS CURRENTLY
-            if isinstance(basis, expr.basis_op()):
-                bra = basis_kets[1].dual
-            else:
-                bra = basis_kets[0].dual
+    #Once we know the basis, try to get the basis kets and form an inner product
+    if basis.basis_set is not None:
+        basis_kets = basis._get_basis_kets(2)
 
-            prod = InnerProduct(bra, expr)
-            try:
-                result = prod.doit()
-            except NotImplementedError:
-                return superobj._represent(**options)
-
-            format = options.get('format', 'sympy')
-            return expr._format_represent(result, format)
+        if isinstance(expr, BraBase):
+            bra = expr
+            ket =  (basis_kets[1] if basis_kets[0].dual == expr else basis_kets[0])
         else:
-            return superobj._represent(**options)
+            bra = (basis_kets[1].dual if basis_kets[0] == expr else basis_kets[0].dual)
+            ket = expr
+        
+        prod = InnerProduct(bra, ket)
+        result = prod.doit()
+
+        format = options.get('format', 'sympy')
+        return expr._format_represent(result, format)
+    else:
+        raise NotImplementedError("Could not get basis set for operator")

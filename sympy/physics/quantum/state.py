@@ -67,8 +67,11 @@ class StateBase(QExpr):
         if self.basis_op() is None:
             return None
         else:
-            #
+            #Returns a default label corresponding to the labeling of its basis operator
             return (self.basis_op().default_label().lower() + "_1")
+
+    def _represent_default_basis(self, **options):
+        return self._represent(basis=(self.basis_op())())
 
     #-------------------------------------------------------------------------
     # Dagger/dual
