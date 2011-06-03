@@ -105,6 +105,12 @@ def test_RootOf___eq__():
     assert (RootOf(x**3 + x + 3, 1) == RootOf(x**3 + x + 3, 2)) == False
     assert (RootOf(x**3 + x + 3, 2) == RootOf(x**3 + x + 3, 2)) == True
 
+    assert (RootOf(x**3 + x + 3, 0) == RootOf(y**3 + y + 3, 0)) == True
+    assert (RootOf(x**3 + x + 3, 0) == RootOf(y**3 + y + 3, 1)) == False
+    assert (RootOf(x**3 + x + 3, 1) == RootOf(y**3 + y + 3, 1)) == True
+    assert (RootOf(x**3 + x + 3, 1) == RootOf(y**3 + y + 3, 2)) == False
+    assert (RootOf(x**3 + x + 3, 2) == RootOf(y**3 + y + 3, 2)) == True
+
 def test_RootOf_is_real():
     assert RootOf(x**3 + x + 3, 0).is_real == True
     assert RootOf(x**3 + x + 3, 1).is_real == False
@@ -184,6 +190,15 @@ def test_RootSum___new__():
 
     assert RootSum(x**3 + a*x + a**3, tan, x) == RootSum(x**3 + x + 1, Lambda(x, tan(a*x)))
     assert RootSum(a**3*x**3 + a*x + 1, tan, x) == RootSum(x**3 + x + 1, Lambda(x, tan(x/a)))
+
+def test_RootSum___eq__():
+    f = Lambda(x, exp(x))
+
+    assert (RootSum(x**3 + x + 1, f) == RootSum(x**3 + x + 1, f)) == True
+    assert (RootSum(x**3 + x + 1, f) == RootSum(y**3 + y + 1, f)) == True
+
+    assert (RootSum(x**3 + x + 1, f) == RootSum(x**3 + x + 2, f)) == False
+    assert (RootSum(x**3 + x + 1, f) == RootSum(y**3 + y + 2, f)) == False
 
 def test_RootSum_diff():
     f = x**3 + x + 3

@@ -2,7 +2,7 @@
 
 from sympy.core import S, Basic, Expr, Integer, Float, I, Add, Lambda, symbols, sympify
 
-from sympy.polys.polytools import Poly, factor
+from sympy.polys.polytools import Poly, PurePoly, factor
 from sympy.polys.rationaltools import together
 from sympy.polys.polyfuncs import symmetrize, viete
 
@@ -99,7 +99,7 @@ class RootOf(Expr):
         else:
             raise ValueError("expected an integer root index, got %d" % index)
 
-        poly = Poly(f, x, greedy=False, expand=expand)
+        poly = PurePoly(f, x, greedy=False, expand=expand)
 
         if not poly.is_univariate:
             raise PolynomialError("only univariate polynomials are allowed")
@@ -146,7 +146,7 @@ class RootOf(Expr):
         return obj
 
     def _hashable_content(self):
-        return (self.expr, self.index)
+        return (self.poly, self.index)
 
     @property
     def expr(self):
@@ -588,7 +588,7 @@ class RootSum(Expr):
     @classmethod
     def _transform(cls, expr, x):
         """Transform an expression to a polynomial. """
-        poly = Poly(expr, x, greedy=False)
+        poly = PurePoly(expr, x, greedy=False)
         return preprocess_roots(poly)
 
     @classmethod
@@ -652,7 +652,7 @@ class RootSum(Expr):
         return factor(p/q)
 
     def _hashable_content(self):
-        return (self.expr, self.fun)
+        return (self.poly, self.fun)
 
     @property
     def expr(self):
