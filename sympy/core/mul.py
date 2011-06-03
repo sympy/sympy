@@ -788,10 +788,8 @@ class Mul(AssocOp):
             return S.One, self
 
     def _eval_is_polynomial(self, syms):
-        for term in self.args:
-            if not term._eval_is_polynomial(syms):
-                return False
-        return True
+        return all(term._eval_is_polynomial(syms) for term in self.args)
+
 
     _eval_is_bounded = lambda self: self._eval_template_is_attr('is_bounded')
     _eval_is_commutative = lambda self: self._eval_template_is_attr('is_commutative')

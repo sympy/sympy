@@ -1217,6 +1217,8 @@ class Expr(Basic, EvalfMixin):
             return hash(self) < hash(negative_self)
 
     def _eval_is_polynomial(self, syms):
+        if self.free_symbols.intersection(syms) == set([]):
+            return True
         return False
 
     def is_polynomial(self, *syms):
@@ -1228,7 +1230,8 @@ class Expr(Basic, EvalfMixin):
         exponents.  Thus, you should be able to apply polynomial algorithms to
         expressions for which this returns True, and Poly(expr, *syms) should
         work only if and only if expr.is_polynomial(*syms) returns True. The
-        polynomial does not have to be in expanded form.
+        polynomial does not have to be in expanded form.  If no symbols are
+        given, all free symbols in the expression will be used.
 
         This is not part of the assumptions system.  You cannot do
         Symbol('z', polynomial=True).
@@ -1238,8 +1241,11 @@ class Expr(Basic, EvalfMixin):
         >>> x = Symbol('x')
         >>> ((x**2 + 1)**4).is_polynomial(x)
         True
+        >>> ((x**2 + 1)**4).is_polynomial()
+        True
         >>> (2**x + 1).is_polynomial(x)
         False
+
 
         >>> n = Symbol('n', nonnegative=True, integer=True)
         >>> (x**n + 1).is_polynomial(x)
@@ -1266,13 +1272,15 @@ class Expr(Basic, EvalfMixin):
         y + 1
         >>> cancel(b).is_polynomial(y)
         True
+
         """
         if syms:
-            syms = map(sympify, syms)
+            syms = set(map(sympify, syms))
         else:
-            syms = list(self.atoms(C.Symbol))
+            syms = self.free_symbols
 
-        if not syms: # constant polynomial
+        if syms.intersection(self.free_symbols) == set([]):
+            # constant polynomial
             return True
         else:
             return self._eval_is_polynomial(syms)
