@@ -2757,7 +2757,35 @@ class Poly(Expr):
 
         return Integer(count)
 
-    def real_roots(f, multiple=True):
+    def root(f, index, radicals=True):
+        """
+        Get an indexed root of a polynomial.
+
+        **Examples**
+
+        >>> from sympy import Poly
+        >>> from sympy.abc import x
+
+        >>> f = Poly(2*x**3 - 7*x**2 + 4*x + 4)
+
+        >>> f.root(0)
+        -1/2
+        >>> f.root(1)
+        2
+        >>> f.root(2)
+        2
+        >>> f.root(3)
+        Traceback (most recent call last):
+        ...
+        IndexError: root index out of [-3, 2] range, got 3
+
+        >>> Poly(x**5 + x + 1).root(0)
+        RootOf(x**3 - x**2 + 1, 0)
+
+        """
+        return sympy.polys.rootoftools.RootOf(f, index, radicals=radicals)
+
+    def real_roots(f, multiple=True, radicals=True):
         """
         Return a list of real roots with multiplicities.
 
@@ -2766,16 +2794,40 @@ class Poly(Expr):
         >>> from sympy import Poly
         >>> from sympy.abc import x
 
-        >>> Poly(2*x**3 - 7*x**2 + 4*x + 4, x).real_roots()
+        >>> Poly(2*x**3 - 7*x**2 + 4*x + 4).real_roots()
         [-1/2, 2, 2]
+        >>> Poly(x**3 + x + 1).real_roots()
+        [RootOf(x**3 + x + 1, 0)]
 
         """
-        reals = sympy.polys.rootoftools.RootOf(f)
+        reals = sympy.polys.rootoftools.RootOf.real_roots(f, radicals=radicals)
 
         if multiple:
             return reals
         else:
             return group(reals, multiple=False)
+
+    def all_roots(f, multiple=True, radicals=True):
+        """
+        Return a list of real and complex roots with multiplicities.
+
+        **Examples**
+
+        >>> from sympy import Poly
+        >>> from sympy.abc import x
+
+        >>> Poly(2*x**3 - 7*x**2 + 4*x + 4).all_roots()
+        [-1/2, 2, 2]
+        >>> Poly(x**3 + x + 1).all_roots()
+        [RootOf(x**3 + x + 1, 0), RootOf(x**3 + x + 1, 1), RootOf(x**3 + x + 1, 2)]
+
+        """
+        roots = sympy.polys.rootoftools.RootOf.all_roots(f, radicals=radicals)
+
+        if multiple:
+            return roots
+        else:
+            return group(roots, multiple=False)
 
     def nroots(f, maxsteps=50, cleanup=True, error=False):
         """

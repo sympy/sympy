@@ -2100,6 +2100,16 @@ def test_count_roots():
 
     raises(PolynomialError, "count_roots(1)")
 
+def test_Poly_root():
+    f = Poly(2*x**3 - 7*x**2 + 4*x + 4)
+
+    assert f.root(0) == -S(1)/2
+    assert f.root(1) == 2
+    assert f.root(2) == 2
+    raises(IndexError, "f.root(3)")
+
+    assert Poly(x**5 + x + 1).root(0) == RootOf(x**3 - x**2 + 1, 0)
+
 def test_real_roots():
     assert real_roots(x) == [0]
     assert real_roots(x, multiple=False) == [(0, 1)]
@@ -2112,6 +2122,19 @@ def test_real_roots():
 
     assert real_roots(x**3*(x**3 + x + 3)) == [RootOf(x**3 + x + 3, 0), 0, 0, 0]
     assert real_roots(x**3*(x**3 + x + 3), multiple=False) == [(RootOf(x**3 + x + 3, 0), 1), (0, 3)]
+
+    f = 2*x**3 - 7*x**2 + 4*x + 4
+    g = x**3 + x + 1
+
+    assert Poly(f).real_roots() == [-S(1)/2, 2, 2]
+    assert Poly(g).real_roots() == [RootOf(g, 0)]
+
+def test_all_roots():
+    f = 2*x**3 - 7*x**2 + 4*x + 4
+    g = x**3 + x + 1
+
+    assert Poly(f).all_roots() == [-S(1)/2, 2, 2]
+    assert Poly(g).all_roots() == [RootOf(g, 0), RootOf(g, 1), RootOf(g, 2)]
 
 def test_nroots():
     assert Poly(0, x).nroots() == []
