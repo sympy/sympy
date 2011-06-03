@@ -599,6 +599,16 @@ class Pow(Expr):
         else:
             return True
 
+    def _eval_is_rational_function(self, syms):
+        if self.exp.has(*syms):
+            return False
+
+        if self.base.has(*syms):
+            return self.base._eval_is_rational_function(syms) and \
+                   self.exp.is_Integer
+        else:
+            return True
+
     def as_numer_denom(self):
         base, exp = self.as_base_exp()
         n, d = base.as_numer_denom()

@@ -275,6 +275,8 @@ class Add(AssocOp):
     def _eval_is_polynomial(self, syms):
         return all(term._eval_is_polynomial(syms) for term in self.args)
 
+    def _eval_is_rational_function(self, syms):
+        return all(term._eval_is_rational_function(syms) for term in self.args)
 
     # assumption methods
     _eval_is_real = lambda self: self._eval_template_is_attr('is_real')

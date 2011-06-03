@@ -719,34 +719,6 @@ class Basic(AssumeMeths):
         """
         return iter(self.args)
 
-    def is_rational_function(self, *syms):
-        """
-        Test whether function is a ratio of two polynomials in the given
-        symbols, syms. When syms is not given, all symbols will be used.
-
-        Example:
-
-        >>> from sympy import symbols, sin
-        >>> from sympy.abc import x, y
-
-        >>> (x/y).is_rational_function()
-        True
-
-        >>> (x**2).is_rational_function()
-        True
-
-        >>> (x/sin(y)).is_rational_function(y)
-        False
-
-        """
-        p, q = self.as_numer_denom()
-        # sending no syms to is_polynomial will cause it to use all symbols
-        if p.is_polynomial(*syms):
-            if q.is_polynomial(*syms):
-                return True
-
-        return False
-
     def as_poly(self, *gens, **args):
         """Converts `self` to a polynomial or returns `None`.
 

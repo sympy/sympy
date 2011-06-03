@@ -1273,6 +1273,8 @@ class Expr(Basic, EvalfMixin):
         >>> cancel(b).is_polynomial(y)
         True
 
+        See also .is_rational_function()
+
         """
         if syms:
             syms = set(map(sympify, syms))
@@ -1285,6 +1287,71 @@ class Expr(Basic, EvalfMixin):
         else:
             return self._eval_is_polynomial(syms)
 
+    def _eval_is_rational_function(self, syms):
+        if self.free_symbols.intersection(syms) == set([]):
+            return True
+        return False
+
+    def is_rational_function(self, *syms):
+        """
+        Test whether function is a ratio of two polynomials in the given
+        symbols, syms. When syms is not given, all free symbols will be used.
+        The rational function does not have to be in expanded or in any kind of
+        canonical form.
+
+        This function returns False for expressions that are "rational
+        functions" with symbolic exponents.  Thus, you should be able to call
+        .as_numer_denom() and apply polynomial algorithms to the result for
+        expressions for which this returns True.
+
+        This is not part of the assumptions system.  You cannot do
+        Symbol('z', rational_function=True).
+
+        Example:
+
+        >>> from sympy import Symbol, sin
+        >>> from sympy.abc import x, y
+
+        >>> (x/y).is_rational_function()
+        True
+
+        >>> (x**2).is_rational_function()
+        True
+
+        >>> (x/sin(y)).is_rational_function(y)
+        False
+
+        >>> n = Symbol('n', integer=True)
+        >>> (x**n + 1).is_rational_function(x)
+        False
+
+        This function does not attempt any nontrivial simplifications that may
+        result in an expression that does not appear to be a rational function
+        to become one.
+
+        >>> from sympy import sqrt, factor, cancel
+        >>> y = Symbol('y', positive=True)
+        >>> a = sqrt(y**2 + 2*y + 1)/y
+        >>> a.is_rational_function(y)
+        False
+        >>> factor(a)
+        (y + 1)/y
+        >>> factor(a).is_rational_function(y)
+        True
+
+        See also is_rational_function().
+
+        """
+        if syms:
+            syms = set(map(sympify, syms))
+        else:
+            syms = self.free_symbols
+
+        if syms.intersection(self.free_symbols) == set([]):
+            # constant rational function
+            return True
+        else:
+            return self._eval_is_rational_function(syms)
 
     ###################################################################################
     ##################### SERIES, LEADING TERM, LIMIT, ORDER METHODS ##################
@@ -1874,6 +1941,9 @@ class AtomicExpr(Atom, Expr):
         return self, S.One
 
     def _eval_is_polynomial(self, syms):
+        return True
+
+    def _eval_is_rational_function(self, syms):
         return True
 
     @property
