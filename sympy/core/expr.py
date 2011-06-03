@@ -1249,13 +1249,23 @@ class Expr(Basic, EvalfMixin):
         result in an expression that does not appear to be a polynomial to
         become one.
 
-        >>> from sympy import sqrt, factor
+        >>> from sympy import sqrt, factor, cancel
         >>> y = Symbol('y', positive=True)
         >>> a = sqrt(y**2 + 2*y + 1)
         >>> a.is_polynomial(y)
         False
         >>> factor(a)
         y + 1
+        >>> factor(a).is_polynomial(y)
+        True
+
+        >>> b = (y**2 + 2*y + 1)/(y + 1)
+        >>> b.is_polynomial(y)
+        False
+        >>> cancel(b)
+        y + 1
+        >>> cancel(b).is_polynomial(y)
+        True
         """
         if syms:
             syms = map(sympify, syms)
