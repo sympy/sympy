@@ -1,23 +1,48 @@
 from sympy import *
-# from sympy import Matrix, sympify, SympifyError, sin, cos, tan, Mul, Pow, eye, 
-#         symbols, Derivative, Symbol
+# from sympy import Matrix, sympify, SympifyError, sin, cos, tan, Mul, Pow,
+# eye, symbols, Derivative, Symbol, simplify
 
-class TVS(Symbol):
-    
-    def diff(self, *symbols, **assumptions):
-        new_symbols = map(sympify, symbols) # e.g. x, 2, y, z
-        if new_symbols[0] == Symbol('t'):
-            self.d = TVS(self.name + '.d')
-            return self.d
-        assumptions.setdefault("evaluate", True)
-        return Derivative(self, *new_symbols, **assumptions)
-    
+class DynamicSymbol(Symbol):
+    """
+    Class for time-varying quantities.  When DynamicSymbol's derivative
+    is taken with respect to Symbol 't', a time differentiated version is
+    returned.  
+    """
+
+    @property
+    def free_symbols(self):
+        return set([Symbol('t'), self])
+
     def _eval_derivative(self, s):
-        print s
-        print 'in_eval'
-        if self == s:
+        if s == Symbol('t'):
+            return DynamicSymbol(self.name+'d')
+        elif self == s:
             return S.One
-        return S.Zero
+        else:
+            return S.Zero
+
+
+def dynamicsymbols(basename, count, diffno = 0):
+    """
+    Returns a list of DynamicSymbols, and a number of their time derivatives.
+    Needs a base name supplied, number of DynamicSymbols, and number of 
+    time derivatives of the Dynamic Symbols.
+    """
+    sympify(basename)
+    outlist = []
+    for i in range(diffno + 1):
+        innerlist = []
+        tag = ''
+        for j in range(i):
+            tag += 'd'
+        for j in range(count):
+            innerlist.append(DynamicSymbol(basename + str(j) + tag))
+        outlist.append(innerlist)
+    try:
+        outlist[1]
+        return outlist
+    except:
+        return outlist[0]
 
 
 class Vector(object):
@@ -42,7 +67,8 @@ class Vector(object):
             added = 0
             for i, v in enumerate(self.args):
                 if inlist[0][1] == self.args[i][1]:
-                    self.args[i] = (self.args[i][0] + inlist[0][0], inlist[0][1])
+                    self.args[i] = (self.args[i][0] +
+                            inlist[0][0], inlist[0][1])
                     inlist.remove(inlist[0])
                     added = 1
                     break
@@ -50,6 +76,7 @@ class Vector(object):
                 self.args.append(inlist[0])
                 inlist.remove(inlist[0])
         i = 0
+        # This code is to remove empty frames from the list
         while i<len(self.args):
             if ((self.args[i][0][0] == 0) & (self.args[i][0][1] == 0) & 
                 (self.args[i][0][2] == 0)):
@@ -59,19 +86,21 @@ class Vector(object):
 
     def __str__(self):
         """
-        Printing method.  Uses Vector Attribute subscript_indices to choose how
-        to show basis vector indices.
+        Printing method.  Uses Vector Attribute subscript_indices to choose
+        how to show basis vector indices.
         """
         ar = self.args # just to shorten things
         ol = [] # output list, to be concatenated to a string
         for i, v in enumerate(ar):
             for j in 0, 1, 2:
-                if ar[i][0][j] == 1: # if the coef of the basis vector is 1, we skip the 1
+                # if the coef of the basis vector is 1, we skip the 1
+                if ar[i][0][j] == 1: 
                     if len(ol) != 0: 
                         ol.append(' + ')
                     ol.append( ar[i][1].name.lower() +
                               self.subscript_indices[j] + '>' )
-                elif ar[i][0][j] == -1: # if the coef of the basis vector is -1, we skip the 1
+                # if the coef of the basis vector is -1, we skip the 1
+                elif ar[i][0][j] == -1: 
                     if len(ol) != 0:
                         ol.append(' ')
                     ol.append( '- ' + ar[i][1].name.lower() +
@@ -96,7 +125,11 @@ class Vector(object):
         """
         The add operator for Vector. 
         It checks that other is a Vector, otherwise it throws an error.
+        Also works with adding a zero scalar.  
         """
+        if isinstance(other, int):
+            if other == 0:
+                return self
         assert isinstance(other, Vector), 'You can only add two Vectors'
         return Vector(self.args + other.args)
 
@@ -104,12 +137,17 @@ class Vector(object):
         """
         Dot product of two vectors.  
         """
+        assert isinstance(other, Vector), 'Dot product is between two vectors'
         out = 0
-        for i, v in enumerate(self.args):
-            for j, v in enumerate(other.args):
-                out += ((other.args[j][0].T)
-                        * (self.args[i][1].dcm(other.args[j][1]))
-                        * (self.args[i][0]))[0]
+        for i, v1 in enumerate(self.args):
+            for j, v2 in enumerate(other.args):
+                out += ((v2[0].T)
+                        * (v2[1].dcm(v1[1]))
+                        * (v1[0]))[0]
+        out2 = simplify(out) # These lines are to simplify as much as we can
+        while out != out2:
+            out = out2
+            out2 = simplify(out2)
         return out
 
     def __div__(self, other):
@@ -119,8 +157,19 @@ class Vector(object):
         return self.__mul__(1 / other)
 
     def __eq__(self, other):
+        """
+        Tests for equality.  If other is 0, and self is empty, returns True.
+        If other is 0 and self is not empty, returns False. 
+        If none of the above, only accepts other as a Vector.
+        """
+        if isinstance(other, int):
+            if other == 0:
+                if self.args == []:
+                    return True
+                else:
+                    return False
         assert isinstance(other,Vector), 'Vectors can only compare to Vectors'
-        dotcheck = (self & self == self & other)
+        dotcheck = (self & self) == (self & other)
         crosscheck = ((self ^ other) & (self ^ other) == 0)
         return dotcheck & crosscheck
 
@@ -159,6 +208,10 @@ class Vector(object):
         Returns a Vector which is perpendicular to the two input vectors.
         This Vector is expressed in the frames of self (first vector). 
         """
+        if isinstance(other, int):
+            if other == 0:
+                return self * 0
+        assert isinstance(other, Vector), 'Cross products are between Vectors'
         def _det(mat):
             """
             This is needed as a little method for to find the determinant of a
@@ -173,9 +226,9 @@ class Vector(object):
         outvec = Vector([])
         ar = self.args # For brevity
         for i, v in enumerate(ar):
-            tempx = ar[i][1].x
-            tempy = ar[i][1].y
-            tempz = ar[i][1].z
+            tempx = v[1].x
+            tempy = v[1].y
+            tempz = v[1].z
             tempm = ([[tempx, tempy, tempz], [Vector([ar[i]]) & tempx, 
                 Vector([ar[i]]) & tempy, Vector([ar[i]]) & tempz],
                 [other & tempx, other & tempy, other & tempz]])
@@ -200,6 +253,17 @@ class Vector(object):
         Returns the partial derivative of the self Vector with respect 
         to the input value.
         """
+        wrt = sympify(wrt)
+        assert isinstance(otherframe, ReferenceFrame), 'Need to supply a \
+                ReferenceFrame to find the derivative in'
+        outvec = 0
+        for i,v in enumerate(self.args):
+            if v[1] == otherframe:
+                outvec += Vector(v[0].diff(wrt), otherframe)
+            else:
+                diffed = (Vector(v).express(otherframe))[0].diff(wrt)
+                outvec += Vector(diff, otherframe).express(v[1])
+
     def dt(self, otherframe):
         """
         Returns the time derivative of the self Vector in the given Reference
@@ -208,13 +272,14 @@ class Vector(object):
         """
         assert isinstance(otherframe, ReferenceFrame), 'Need to supply a \
                 ReferenceFrame to find the derivative in'
-        outvec = Vector([])
+        outvec = 0
         for i,v in enumerate(self.args):
-            if v[1] == ReferenceFrame:
-                outvec += v[0].diff(symbols('t'))
+            if v[1] == otherframe:
+                outvec += Vector(v[0].diff(Symbol('t')), otherframe)
             else:
-                outvec += (v[0].diff(symbols('t')) + 
-                    v[1].ang_vel(otherframe) ^ Vector([v]))
+                outvec += (Vector(v[0].diff(Symbol('t')), otherframe) +
+                    Vector(v[1].ang_vel_in(otherframe), otherframe) ^ 
+                    Vector([v]))
         return outvec
 
     def express(self, otherframe):
@@ -229,7 +294,7 @@ class Vector(object):
         outvec = Vector(self.args + [])
         for i, v in enumerate(self.args):
             if v[1] != otherframe:
-                outvec += Vector([(v[1].dcm(otherframe) * v[0], otherframe)])
+                outvec += Vector([(otherframe.dcm(v[1]) * v[0], otherframe)])
                 outvec -= Vector([v])
         return outvec
 
@@ -320,28 +385,28 @@ class ReferenceFrame(object):
         while ptr.parent != None:
             ptr = ptr.parent
             leg2.append(ptr)
-        try:
-            # TODO double check that pop gives the correct frame
-            commonframe = (set(leg1) & set(leg2)).pop()
-        except:
-            raise ValueError('No Common Frame')
-        return commonframe
+        for i,v1 in enumerate(leg1):
+            for j, v2 in enumerate(leg2):
+                if v1 == v2:
+                    return v1
+        raise ValueError('No Common Frame')
 
-    def ang_vel(self, other):
+    def ang_vel_in(self, other):
         """
         Returns the angular velocity of the current frame relative to
         the input frame: angular velocity of self in other
         Takes in ReferenceFrame, returns Vector.
+        Form is A.ang_vel_in(N) is A's angular velocity in N, or N_w_A
         """
         commonframe = self._common_frame(other)
         # form DCM from self to first common frame
-        leg1 = Vector([])
+        leg1 = 0
         ptr = self
         while ptr != commonframe:
             leg1 += ptr._ang_vel
             ptr = ptr.parent
         # form DCM from other to first common frame
-        leg2 = Vector([])
+        leg2 = 0
         ptr = other
         while ptr != commonframe:
             leg2 -= ptr._ang_vel
@@ -360,15 +425,15 @@ class ReferenceFrame(object):
         leg1 = eye(3)
         ptr = self
         while ptr != commonframe:
-            leg1 *= ptr.parent_orient
+            leg1 = ptr.parent_orient * leg1
             ptr = ptr.parent
         # form DCM from other to first common frame
         leg2 = eye(3)
         ptr = other
         while ptr != commonframe:
-            leg2 *= ptr.parent_orient
+            leg2 = ptr.parent_orient * leg2
             ptr = ptr.parent
-        return leg1.T * leg2
+        return leg2 * leg1.T
 
     def orientnew(self, newname, rot_type, amounts, rot_order):
         newframe = ReferenceFrame(newname)
@@ -466,7 +531,8 @@ class ReferenceFrame(object):
         Takes in a Vector for angular velocity vector, and ReferenceFrame, 
         for the frame to this to be defined in.
         """
-        assert isinstance(value, Vector), 'Angular velocity needs to be a \
+        if value != 0:
+            assert isinstance(value, Vector), 'Angular velocity needs to be a \
         Vector.'
         assert isinstance(other, ReferenceFrame), 'Need to define the \
         angular velocity with respect to another ReferenceFrame.'
@@ -499,3 +565,147 @@ class ReferenceFrame(object):
         Returns a Vector.
         """
         return self._z
+
+
+def cross(vec1, vec2):
+    """
+    Returns the dot product of the two vectors.
+    """
+    assert isinstance(vec1, Vector), 'Cross product is between two vectors'
+    return vec1.cross(vec2)
+
+
+def dot(vec1, vec2):
+    """
+    Returns the dot product of the two vectors
+    """
+    assert isinstance(vec1, Vector), 'Dot product is between two vectors'
+    return vec1.dot(vec2)
+
+
+def express(vec, frame):
+    """
+    Returns the input Vector in the input ReferenceFrame.
+    """
+    assert isinstance(vec, Vector), 'Can only express Vectors in a frame'
+    return vec.express(frame)
+
+
+class Point(object):
+    """
+    This object represents a point in a dynamic system.
+    It stores the: position, velocity, and acceleration of a point.
+    The position is a vector defined as the vector distance from a parent
+    point to this point. 
+    """
+
+    def __init__(self, name):
+        """
+        Initialization of a Point object.  Takes in a name, sets 
+        attributes to zero.
+        """
+        self.name = name
+        self._pos = None
+        self._pos_par = None
+        self._vel = None
+        self._vel_frame = None
+        self._acc = None
+        self._acc_frame = None
+
+    def set_pos(self, value, point = None):
+        """
+        Used to set the position of this point with respect to another point.
+        """
+        if value != 0:
+            assert isinstance(value, Vector), 'Need to supply a Vector for \
+                    the position of this Point'
+        if point != None:
+            assert isinstance(point, Point), 'Need to supply a parent point'
+        self._pos = value
+        self._pos_par = point
+
+    def pos(self, otherpoint = None):
+        """
+        Returns a Vector distance between this Point and the other Point.
+        If no other Point is given, the value of this Point's position is
+        returned. 
+        """
+        if type(otherpoint) == type(None):
+            return self._pos
+        common_pos_par = self._common_pos_par(otherpoint)
+        leg1 = 0
+        ptr = self
+        while ptr != common_pos_par:
+            leg1 += ptr._pos
+            ptr = ptr._pos_par
+        leg2 = 0
+        ptr = 0
+        while ptr != common_pos_par:
+            leg2 -= ptr._pos
+            ptr = ptr._pos_par
+        return leg1 + leg2
+
+    def _common_pos_par(self,other):
+        """
+        This returns the first common parent between two ReferenceFrames.
+        Takes in another ReferenceFrame, and returns a ReferenceFrame.
+        """
+        leg1 = [self]
+        ptr = self
+        while ptr._pos_par != None:
+            ptr = ptr._pos_par
+            leg1.append(ptr)
+        leg2 = [other]
+        ptr = other
+        while ptr._pos_par != None:
+            ptr = ptr._pos_par
+            leg2.append(ptr)
+        for i,v1 in enumerate(leg1):
+            for j, v2 in enumerate(leg2):
+                if v1 == v2:
+                    return v1
+        raise ValueError('No Common Position Parent')
+
+    def set_vel(self, value, frame):
+        """
+        Used to set the velocity Vector of this Point in a ReferenceFrame.
+        """
+        assert isinstance(frame, ReferenceFrame), 'Velocity is defined \
+                in a specific ReferenceFrame'
+        if value != 0:
+            assert isinstance(value, Vector), 'Velocity is a Vector'
+        self._vel_frame = frame
+        self._vel = value
+
+    def vel(self, frame):
+        """
+        Returns the velocity of this Point in the ReferenceFrame, as a Vector.
+        """
+        assert isinstance(frame, ReferenceFrame), 'Velocity is described \
+                in a frame'
+        assert frame == self._vel_frame, 'Velocity has not been defined in \
+                that ReferenceFrame; redefine it first'
+        return self._vel
+
+    def set_acc(self, value, frame):
+        """
+        Used to set the acceleration of this Point in a ReferenceFrame.
+        """
+        assert isinstance(frame, ReferenceFrame), 'Acceleration is defined \
+                in a specific ReferenceFrame'
+        if value != 0:
+            assert isinstance(value, Vector), 'Acceleration is a Vector'
+        self._acc_frame = frame
+        self._acc = value
+
+    def acc(self, frame):
+        """
+        Returns the acceleration of this Point in a ReferenceFrame, as a 
+        Vector.  
+        """
+        assert isinstance(frame, ReferenceFrame), 'Velocity is described \
+                in a frame'
+        assert frame == self._acc_frame, 'Acceleration has not been defined \
+                in that ReferenceFrame; redefine it first'
+        return self._acc
+
