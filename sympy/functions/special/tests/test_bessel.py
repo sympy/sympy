@@ -1,6 +1,46 @@
-from sympy import jn, yn, symbols, sin, cos, pi, S, jn_zeros
+from sympy import jn, yn, symbols, sin, cos, pi, S, jn_zeros, besselj, \
+                  bessely, besseli, besselk, hankel1, hankel2, expand_func, \
+                  latex, sqrt
 from sympy.functions.special.bessel import fn
 from sympy.utilities.pytest import raises
+from sympy.utilities.randtest import \
+        random_complex_number as randcplx, \
+        test_numerically as tn, \
+        test_derivative_numerically as td
+from sympy.abc import z, n, k
+
+def test_bessel_rand():
+    assert td(besselj(randcplx(), z), z)
+    assert td(bessely(randcplx(), z), z)
+    assert td(besseli(randcplx(), z), z)
+    assert td(besselk(randcplx(), z), z)
+    assert td(hankel1(randcplx(), z), z)
+    assert td(hankel2(randcplx(), z), z)
+    assert td(jn(randcplx(), z), z)
+    assert td(yn(randcplx(), z), z)
+
+def test_diff():
+    assert besselj(n, z).diff(z) == besselj(n-1, z)/2 - besselj(n+1, z)/2
+    assert bessely(n, z).diff(z) == bessely(n-1, z)/2 - bessely(n+1, z)/2
+    assert besseli(n, z).diff(z) == besseli(n-1, z)/2 + besseli(n+1, z)/2
+    assert besselk(n, z).diff(z) == -besselk(n-1, z)/2 - besselk(n+1, z)/2
+    assert hankel1(n, z).diff(z) == hankel1(n-1, z)/2 - hankel1(n+1, z)/2
+    assert hankel2(n, z).diff(z) == hankel2(n-1, z)/2 - hankel2(n+1, z)/2
+
+def test_rewrite():
+    assert besselj(n, z).rewrite(jn) == sqrt(2*z/pi)*jn(n - S(1)/2, z)
+    assert bessely(n, z).rewrite(yn) == sqrt(2*z/pi)*yn(n - S(1)/2, z)
+
+def test_latex():
+    assert latex(besselj(n, z**2)**k) == r'J^{k}_{n}\left(z^{2}\right)'
+    assert latex(bessely(n, z)) == r'Y_{n}\left(z\right)'
+    assert latex(besseli(n, z)) == r'I_{n}\left(z\right)'
+    assert latex(besselk(n, z)) == r'K_{n}\left(z\right)'
+    assert latex(hankel1(n, z**2)**2) == \
+              r'\left(H^{(1)}_{n}\left(z^{2}\right)\right)^{2}'
+    assert latex(hankel2(n, z)) == r'H^{(2)}_{n}\left(z\right)'
+    assert latex(jn(n, z)) == r'j_{n}\left(z\right)'
+    assert latex(yn(n, z)) == r'y_{n}\left(z\right)'
 
 def test_fn():
     x, z = symbols("x z")
@@ -13,28 +53,31 @@ def test_fn():
     raises(TypeError, "fn(1.5, z)")
     raises(TypeError, "fn(S(1)/2, z)")
 
+def mjn(n, z): return expand_func(jn(n,z))
+def myn(n, z): return expand_func(yn(n,z))
+
 def test_jn():
     z = symbols("z")
-    assert jn(0, z) == sin(z)/z
-    assert jn(1, z) == sin(z)/z**2 - cos(z)/z
-    assert jn(2, z) == (3/z**3-1/z)*sin(z) - (3/z**2) * cos(z)
-    assert jn(3, z) == (15/z**4 - 6/z**2)*sin(z) + (1/z - 15/z**3)*cos(z)
-    assert jn(4, z) == (1/z + 105/z**5 - 45/z**3)*sin(z) + \
+    assert mjn(0, z) == sin(z)/z
+    assert mjn(1, z) == sin(z)/z**2 - cos(z)/z
+    assert mjn(2, z) == (3/z**3-1/z)*sin(z) - (3/z**2) * cos(z)
+    assert mjn(3, z) == (15/z**4 - 6/z**2)*sin(z) + (1/z - 15/z**3)*cos(z)
+    assert mjn(4, z) == (1/z + 105/z**5 - 45/z**3)*sin(z) + \
                 (-105/z**4 + 10/z**2)*cos(z)
-    assert jn(5, z) == (945/z**6 - 420/z**4 + 15/z**2)*sin(z) + \
+    assert mjn(5, z) == (945/z**6 - 420/z**4 + 15/z**2)*sin(z) + \
                 (-1/z - 945/z**5 + 105/z**3)*cos(z)
-    assert jn(6, z) == (-1/z + 10395/z**7 - 4725/z**5 + 210/z**3)*sin(z) + \
+    assert mjn(6, z) == (-1/z + 10395/z**7 - 4725/z**5 + 210/z**3)*sin(z) + \
                 (-10395/z**6 + 1260/z**4 - 21/z**2)*cos(z)
 
 def test_yn():
     z = symbols("z")
-    assert yn(0, z) == -cos(z)/z
-    assert yn(1, z) == -cos(z)/z**2-sin(z)/z
-    assert yn(2, z) == -((3/z**3-1/z)*cos(z)+(3/z**2)*sin(z))
+    assert myn(0, z) == -cos(z)/z
+    assert myn(1, z) == -cos(z)/z**2-sin(z)/z
+    assert myn(2, z) == -((3/z**3-1/z)*cos(z)+(3/z**2)*sin(z))
 
 def test_sympify_yn():
-    assert S(15) in yn(3, pi).atoms()
-    assert yn(3, pi) == 15/pi**4 - 6/pi**2
+    assert S(15) in myn(3, pi).atoms()
+    assert myn(3, pi) == 15/pi**4 - 6/pi**2
 
 def eq(a, b, tol=1e-6):
     for x, y in zip(a, b):

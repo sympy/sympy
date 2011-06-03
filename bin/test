@@ -31,13 +31,16 @@ parser.add_option("--tb", dest="tb",
         metavar="TBSTYLE", default="short")
 parser.add_option("--random", action="store_false", dest="sort", default=True,
         help="Run tests in random order instead of sorting them")
+parser.add_option("--seed", dest="seed", type="int",
+        help="use this seed for randomised tests",
+        metavar="SEED")
 parser.set_usage("test [options ...] [tests ...]")
 parser.epilog = '"options" are any of the options above.  "tests" are 0 or more glob strings of tests to run.  If no test arguments are given, all tests will be run.'
 options, args = parser.parse_args()
 
 ok = test(*args, **{"verbose": options.verbose, "kw": options.kw,
     "tb": options.tb, "pdb": options.pdb, "colors": options.colors,
-    "sort": options.sort})
+    "sort": options.sort, "seed": options.seed})
 if ok:
     sys.exit(0)
 else:
