@@ -366,12 +366,6 @@ functions are not supported.')
             l.append(g)
         return Add(*l) + C.Order(x**n, x)
 
-    def _eval_is_polynomial(self, syms):
-        for arg in self.args:
-            if arg.has(*syms):
-                return False
-        return True
-
     def _eval_expand_basic(self, deep=True, **hints):
         if not deep:
             return self
