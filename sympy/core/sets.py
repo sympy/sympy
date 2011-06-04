@@ -4,6 +4,7 @@ from evalf import EvalfMixin
 from numbers import Float
 from sympify import _sympify, sympify
 from sympy.mpmath import mpi, mpf
+from containers import Tuple
 
 
 class Set(Basic):
@@ -503,13 +504,12 @@ class Union(Set):
                return []
             if isinstance(arg,Union):
                 return sum(map(flatten, arg.args), [])
-            if is_iterable(arg) and not isinstance(arg,Set):
-                return sum(map(flatten, arg), [])
             if isinstance(arg, Set):
                 return [arg]
+            if is_flattenable(arg): # and not isinstance(arg,Set) (implicit)
+                return sum(map(flatten, arg), [])
             raise TypeError("Input must be Sets or iterables of Sets")
         args = flatten(args)
-
         if len(args)==0:
             return S.EmptySet
 
@@ -637,7 +637,7 @@ class RealUnion(Union, RealSet):
                 intervals.append(arg)
             elif isinstance(arg, Set):
                 other_sets.append(arg)
-            elif is_iterable(arg):
+            elif is_flattenable(arg):
                 args += arg
             else:
                 raise TypeError("%s: Not a set or iterable of sets"%arg)
@@ -679,10 +679,12 @@ class RealUnion(Union, RealSet):
                 del intervals[i + 1]
             else:
                 i += 1
+
         # Collect all elements in the finite sets not in any interval
         if finite_sets:
             # Merge Finite Sets
             finite_set = sum(finite_sets, S.EmptySet)
+
             # Close open intervals if boundary is in finite_set
             for num, i in enumerate(intervals):
                 closeLeft = i.start in finite_set if i.left_open else False
@@ -691,6 +693,7 @@ class RealUnion(Union, RealSet):
                         or (closeRight and i.right_open)):
                     intervals[num] = Interval(i.start, i.end,
                             not closeLeft, not closeRight)
+
             # All elements in finite_set not in any interval
             finite_complement = FiniteSet(
                     el for el in finite_set
@@ -776,16 +779,18 @@ class FiniteSet(CountableSet):
     """
     def __new__(cls, *args):
         # Allow both FiniteSet(iterable) and FiniteSet(num, num, num)
-        if (len(args)==1 and is_iterable(args[0])):
+        if (len(args)==1 and is_flattenable(args[0])):
             args = args[0]
         # Sympify Arguments
         args = map(sympify, args)
+        args = [Tuple(*arg) if arg.__class__ is tuple else arg for arg in args]
 
         if len(args)==0:
             return EmptySet()
 
-        if all(arg.is_real for arg in args):
+        if all(arg.is_real and arg.is_number for arg in args):
             cls = RealFiniteSet
+
 
         elements = frozenset(map(sympify, args))
         obj = Basic.__new__(cls, elements)
@@ -877,6 +882,10 @@ class FiniteSet(CountableSet):
     def is_finite(self):
         return True
 
+    @property
+    def is_real(self):
+        return all(el.is_real for el in self)
+
 class RealFiniteSet(FiniteSet, RealSet):
     """
     A FiniteSet with all elements Real Numbers.
@@ -902,6 +911,9 @@ class RealFiniteSet(FiniteSet, RealSet):
 
 
         """
+        if not all(elem.is_number for elem in self.elements):
+            raise ValueError("%s: Complement not defined for symbolic inputs"
+                    %self)
         sorted_elements = sorted(list(self.elements))
 
         intervals = [] # Build up a list of intervals between the elements
@@ -911,5 +923,10 @@ class RealFiniteSet(FiniteSet, RealSet):
         intervals.append(Interval(sorted_elements[-1], S.Infinity, True, True))
         return Union(*intervals)
 
-def is_iterable(obj):
-    return hasattr(obj, '__iter__')
+def is_flattenable(obj):
+    """
+    Checks that an object is iterable but not a tuple.
+    In this module consider tuples as atomic elements
+    """
+    return (hasattr(obj, '__iter__')
+            and 'tuple' not in str(obj.__class__).lower())
