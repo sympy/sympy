@@ -1,11 +1,11 @@
 """Efficient functions for generating orthogonal polynomials. """
 
-from sympy import sympify, Dummy
+from sympy import Dummy
 
 from sympy.utilities import cythonized
 
 from sympy.polys.constructor import construct_domain
-from sympy.polys.polytools import Poly
+from sympy.polys.polytools import Poly, PurePoly
 from sympy.polys.polyclasses import DMP
 
 from sympy.polys.densearith import (
@@ -30,12 +30,12 @@ def chebyshevt_poly(n, x=None, **args):
     if n < 0:
         raise ValueError("can't generate 1st kind Chebyshev polynomial of degree %s" % n)
 
-    if x is not None:
-        x = sympify(x)
-    else:
-        x = Dummy('x')
+    poly = DMP(dup_chebyshevt(int(n), ZZ), ZZ)
 
-    poly = Poly.new(DMP(dup_chebyshevt(int(n), ZZ), ZZ), x)
+    if x is not None:
+        poly = Poly.new(poly, x)
+    else:
+        poly = PurePoly.new(poly, Dummy('x'))
 
     if not args.get('polys', False):
         return poly.as_expr()
@@ -58,12 +58,12 @@ def chebyshevu_poly(n, x=None, **args):
     if n < 0:
         raise ValueError("can't generate 2nd kind Chebyshev polynomial of degree %s" % n)
 
-    if x is not None:
-        x = sympify(x)
-    else:
-        x = Dummy('x')
+    poly = DMP(dup_chebyshevu(int(n), ZZ), ZZ)
 
-    poly = Poly.new(DMP(dup_chebyshevu(int(n), ZZ), ZZ), x)
+    if x is not None:
+        poly = Poly.new(poly, x)
+    else:
+        poly = PurePoly.new(poly, Dummy('x'))
 
     if not args.get('polys', False):
         return poly.as_expr()
@@ -90,12 +90,12 @@ def hermite_poly(n, x=None, **args):
     if n < 0:
         raise ValueError("can't generate Hermite polynomial of degree %s" % n)
 
-    if x is not None:
-        x = sympify(x)
-    else:
-        x = Dummy('x')
+    poly = DMP(dup_hermite(int(n), ZZ), ZZ)
 
-    poly = Poly.new(DMP(dup_hermite(int(n), ZZ), ZZ), x)
+    if x is not None:
+        poly = Poly.new(poly, x)
+    else:
+        poly = PurePoly.new(poly, Dummy('x'))
 
     if not args.get('polys', False):
         return poly.as_expr()
@@ -120,12 +120,12 @@ def legendre_poly(n, x=None, **args):
     if n < 0:
         raise ValueError("can't generate Legendre polynomial of degree %s" % n)
 
-    if x is not None:
-        x = sympify(x)
-    else:
-        x = Dummy('x')
+    poly = DMP(dup_legendre(int(n), QQ), QQ)
 
-    poly = Poly.new(DMP(dup_legendre(int(n), QQ), QQ), x)
+    if x is not None:
+        poly = Poly.new(poly, x)
+    else:
+        poly = PurePoly.new(poly, Dummy('x'))
 
     if not args.get('polys', False):
         return poly.as_expr()
@@ -150,17 +150,17 @@ def laguerre_poly(n, x=None, alpha=None, **args):
     if n < 0:
         raise ValueError("can't generate Laguerre polynomial of degree %s" % n)
 
-    if x is not None:
-        x = sympify(x)
-    else:
-        x = Dummy('x')
-
     if alpha is not None:
         K, alpha = construct_domain(alpha, field=True) # XXX: ground_field=True
     else:
         K, alpha = QQ, QQ(0)
 
-    poly = Poly.new(DMP(dup_laguerre(int(n), alpha, K), K), x)
+    poly = DMP(dup_laguerre(int(n), alpha, K), K)
+
+    if x is not None:
+        poly = Poly.new(poly, x)
+    else:
+        poly = PurePoly.new(poly, Dummy('x'))
 
     if not args.get('polys', False):
         return poly.as_expr()
