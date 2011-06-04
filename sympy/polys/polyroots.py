@@ -482,10 +482,10 @@ def roots(f, *gens, **flags):
     >>> p = Poly(x**2-y, x, y)
 
     >>> roots(Poly(p, x))
-    {y**(1/2): 1, -y**(1/2): 1}
+    {-y**(1/2): 1, y**(1/2): 1}
 
     >>> roots(x**2 - y, x)
-    {y**(1/2): 1, -y**(1/2): 1}
+    {-y**(1/2): 1, y**(1/2): 1}
 
     >>> roots([1, 0, -1])
     {-1: 1, 1: 1}
@@ -659,7 +659,7 @@ def roots(f, *gens, **flags):
         for zero, k in result.iteritems():
             zeros.extend([zero]*k)
 
-        return sorted(zeros, key=Basic.sorted_key)
+        return sorted(zeros, key=lambda expr: expr.sort_key())
 
 def root_factors(f, *gens, **args):
     """

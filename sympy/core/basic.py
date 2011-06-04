@@ -324,127 +324,35 @@ class Basic(AssumeMeths):
             return +1   # sympy > other
 
         # now both objects are from SymPy, so we can proceed to usual comparison
-        return Basic._compare_pretty(a, b)
+        return cmp(a.sort_key(), b.sort_key())
 
-    def as_tuple_tree(self, order=None):
-        """Construct a tuple-tree version of ``self``. """
-        from sympy.core import S
-
-        funcs = {
-            'exp': 10, 'log': 11,
-            'sin': 20, 'cos': 21, 'tan': 22, 'cot': 23,
-            'sinh': 30, 'cosh': 31, 'tanh': 32, 'coth': 33,
-        }
-
-        def head(expr):
-            """Nice order of classes. """
-            name = expr.__class__.__name__
-
-            if expr.is_Number:
-                return 1, 0, 'Number'
-            elif expr.is_Atom:
-                return 2, 0, name
-            elif expr.is_Mul:
-                return 3, 0, name
-            elif expr.is_Add:
-                return 3, 1, name
-            elif expr.is_Pow:
-                return 3, 2, name
-            elif expr.is_Function:
-                try:
-                    i = funcs[name]
-                except KeyError:
-                    nargs = expr.func.nargs
-
-                    if nargs is None:
-                        i = 0
-                    else:
-                        i = 10000
-
-                return 4, i, name
-            else:
-                return 5, 0, name
-
-        def rmap(args):
-            """Recursively map a tree. """
-            result = []
-
-            for arg in args:
-                if isinstance(arg, Basic):
-                    arg = arg.as_tuple_tree(order=order)
-                elif hasattr(arg, '__iter__'):
-                    arg = rmap(arg)
-
-                result.append(arg)
-
-            return tuple(result)
-
-        def number(expr):
-            """Tuple of a number. """
-            return head(expr), (0, ()), (), expr
-
-        if self.is_Atom:
-            if self.is_Number:
-                return number(self)
-            else:
-                if self.is_Symbol:
-                    args = (str(self),)
-                else:
-                    args = (self,)
-
-                return head(self), (1, args), number(S.One), S.One
-        else:
-            try:
-                coeff, expr = self.as_coeff_Mul()
-            except AttributeError:
-                return head(self), (len(self.args), self.args), number(S.One), S.One
-            else:
-                if expr.is_Pow:
-                    expr, exp = expr.args
-                else:
-                    expr, exp = expr, S.One
-
-                if expr.is_Atom:
-                    if expr.is_Symbol:
-                        args = (str(expr),)
-                    else:
-                        args = (expr,)
-                else:
-                    if expr.is_Add:
-                        args = expr.as_ordered_terms(order=order)
-                    else:
-                        args = expr.args
-
-                    args = rmap(args)
-
-                    if expr.is_Mul:
-                        args = sorted(args)
-
-                args = (len(args), args)
-                exp = exp.as_tuple_tree(order=order)
-
-                return head(expr), args, exp, coeff
 
     @classmethod
-    def sorted_key(cls, expr, order=None):
+    def class_key(cls):
+        """Nice order of classes. """
+        return 5, 0, cls.__name__
+
+    def sort_key(self, order=None):
         """
-        A key-function for sorting expressions.
+        Return a sort key.
 
         **Examples**
 
         >>> from sympy.core import Basic, S, I
         >>> from sympy.abc import x
 
-        >>> sorted([S(1)/2, I, -I], key=Basic.sorted_key)
+        >>> sorted([S(1)/2, I, -I], key=lambda x: x.sort_key())
         [1/2, -I, I]
 
         >>> S("[x, 1/x, 1/x**2, x**2, x**(1/2), x**(1/4), x**(3/2)]")
         [x, 1/x, x**(-2), x**2, x**(1/2), x**(1/4), x**(3/2)]
-        >>> sorted(_, key=Basic.sorted_key)
+        >>> sorted(_, key=lambda x: x.sort_key())
         [x**(-2), 1/x, x**(1/4), x**(1/2), x, x**(3/2), x**2]
 
         """
-        return expr.as_tuple_tree(order=order)
+        from sympy.core.singleton import S
+        return self.class_key(), (len(self.args), self.args), S.One.sort_key(), S.One
+
 
     def __eq__(self, other):
         """a == b  -> Compare two symbolic trees and see whether they are equal
@@ -519,7 +427,7 @@ class Basic(AssumeMeths):
            >>> from sympy import I, pi, sin
            >>> from sympy.abc import x, y
            >>> (1 + x + 2*sin(y + I*pi)).atoms()
-           set([1, 2, pi, x, y, I])
+           set([1, 2, I, pi, x, y])
 
            If one or more types are given, the results will contain only
            those types of atoms::
@@ -537,7 +445,7 @@ class Basic(AssumeMeths):
            set([1, 2, pi])
 
            >>> (1 + x + 2*sin(y + I*pi)).atoms(Number, NumberSymbol, I)
-           set([1, 2, pi, I])
+           set([1, 2, I, pi])
 
            Note that I (imaginary unit) and zoo (complex infinity) are special
            types of number symbols and are not part of the NumberSymbol class.
@@ -569,8 +477,7 @@ class Basic(AssumeMeths):
            set([sin(y + I*pi)])
 
            >>> (1 + x + 2*sin(y + I*pi)).atoms(Mul)
-           set([2*sin(y + I*pi), I*pi])
-
+           set([I*pi, 2*sin(y + I*pi)])
 
         """
 
@@ -1250,3 +1157,11 @@ class Atom(Basic):
 
     def __contains__(self, obj):
         return (self == obj)
+
+    @classmethod
+    def class_key(cls):
+        return 2, 0, cls.__name__
+
+    def sort_key(self, order=None):
+        from sympy.core import S
+        return self.class_key(), (1, (self,)), S.One.sort_key(), S.One
