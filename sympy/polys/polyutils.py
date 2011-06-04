@@ -177,7 +177,7 @@ def _parallel_dict_from_expr_no_gens(exprs, opt):
             return factor in opt.domain
     elif opt.extension is True:
         def _is_coeff(factor):
-            return ask(factor, Q.algebraic)
+            return ask(Q.algebraic(factor))
     elif opt.greedy is not False:
         def _is_coeff(factor):
             return False

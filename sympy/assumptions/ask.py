@@ -1,11 +1,9 @@
 """Module for querying SymPy objects about assumptions."""
-import inspect
 from sympy.core import sympify
-from sympy.utilities.source import get_class
-from sympy.assumptions import global_assumptions, Predicate
 from sympy.logic.boolalg import to_cnf, And, Not, Or, Implies, Equivalent
 from sympy.logic.inference import satisfiable
-from sympy.assumptions.assume import AppliedPredicate
+from sympy.assumptions.assume import (global_assumptions, Predicate,
+        AppliedPredicate)
 
 class Q:
     """Supported ask keys."""
@@ -30,36 +28,6 @@ class Q:
     is_true = Predicate('is_true')
 
 
-def eval_predicate(predicate, expr, assumptions=True):
-    """
-    Evaluate predicate(expr) under the given assumptions.
-
-    This uses only direct resolution methods, not logical inference.
-    """
-    if not isinstance(predicate, Predicate):
-        return eval_predicate(Q.is_true, predicate(expr), assumptions)
-    res, _res = None, None
-    mro = inspect.getmro(type(expr))
-    for handler in predicate.handlers:
-        cls = get_class(handler)
-        for subclass in mro:
-            try:
-                eval = getattr(cls, subclass.__name__)
-            except AttributeError:
-                continue
-            res = eval(expr, assumptions)
-            if _res is None:
-                _res = res
-            elif res is None:
-                # since first resolutor was conclusive, we keep that value
-                res = _res
-            else:
-                # only check consistency if both resolutors have concluded
-                if _res != res:
-                    raise ValueError('incompatible resolutors')
-            break
-    return res
-
 
 def _extract_facts(expr, symbol):
     """
@@ -75,41 +43,44 @@ def _extract_facts(expr, symbol):
     return expr.func(*filter(lambda x: x is not None,
                 [_extract_facts(arg, symbol) for arg in expr.args]))
 
-def ask(expr, key=Q.is_true, assumptions=True, context=global_assumptions):
+def ask(proposition, assumptions=True, context=global_assumptions):
     """
     Method for inferring properties about objects.
 
     **Syntax**
 
-        * ask(expression, key)
+        * ask(proposition)
 
-        * ask(expression, key, assumptions)
+        * ask(proposition, assumptions)
 
-            where expression is any SymPy expression
+            where `proposition` is any boolean expression
 
     **Examples**
         >>> from sympy import ask, Q, pi
         >>> from sympy.abc import x, y
-        >>> ask(pi, Q.rational)
+        >>> ask(Q.rational(pi))
         False
-        >>> ask(x*y, Q.even, Q.even(x) & Q.integer(y))
+        >>> ask(Q.even(x*y), Q.even(x) & Q.integer(y))
         True
-        >>> ask(x*y, Q.prime, Q.integer(x) &  Q.integer(y))
+        >>> ask(Q.prime(x*y), Q.integer(x) &  Q.integer(y))
         False
 
     **Remarks**
         Relations in assumptions are not implemented (yet), so the following
         will not give a meaningful result.
-        >> ask(x, Q.positive, Q.is_true(x > 0))
+        >> ask(Q.positive(x), Q.is_true(x > 0))
         It is however a work in progress and should be available before
         the official release
 
     """
-    expr = sympify(expr)
     assumptions = And(assumptions, And(*context))
+    if isinstance(proposition, AppliedPredicate):
+        key, expr = proposition.func, sympify(proposition.arg)
+    else:
+        key, expr = Q.is_true, sympify(proposition)
 
     # direct resolution method, no logic
-    res = eval_predicate(key, expr, assumptions)
+    res = key(expr)._eval_ask(assumptions)
     if res is not None:
         return res
 
@@ -174,9 +145,9 @@ def register_handler(key, handler):
         ...     @staticmethod
         ...     def Integer(expr, assumptions):
         ...         import math
-        ...         return ask(math.log(expr + 1, 2), Q.integer)
+        ...         return ask(Q.integer(math.log(expr + 1, 2)))
         >>> register_handler('mersenne', MersenneHandler)
-        >>> ask(7, Q.mersenne)
+        >>> ask(Q.mersenne(7))
         True
 
     """

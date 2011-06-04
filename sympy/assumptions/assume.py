@@ -1,3 +1,5 @@
+import inspect
+from sympy.utilities.source import get_class
 from sympy.logic.boolalg import Boolean, Not
 
 class AssumptionsContext(set):
@@ -78,6 +80,9 @@ class AppliedPredicate(Boolean):
     def __hash__(self):
         return super(AppliedPredicate, self).__hash__()
 
+    def _eval_ask(self, assumptions):
+        return self.func.eval(self.arg, assumptions)
+
 class Predicate(Boolean):
     """A predicate is a function that returns a boolean value.
 
@@ -123,3 +128,31 @@ class Predicate(Boolean):
 
     def remove_handler(self, handler):
         self.handlers.remove(handler)
+
+    def eval(self, expr, assumptions=True):
+        """
+        Evaluate self(expr) under the given assumptions.
+
+        This uses only direct resolution methods, not logical inference.
+        """
+        res, _res = None, None
+        mro = inspect.getmro(type(expr))
+        for handler in self.handlers:
+            cls = get_class(handler)
+            for subclass in mro:
+                try:
+                    eval = getattr(cls, subclass.__name__)
+                except AttributeError:
+                    continue
+                res = eval(expr, assumptions)
+                if _res is None:
+                    _res = res
+                elif res is None:
+                    # since first resolutor was conclusive, we keep that value
+                    res = _res
+                else:
+                    # only check consistency if both resolutors have concluded
+                    if _res != res:
+                        raise ValueError('incompatible resolutors')
+                break
+        return res
