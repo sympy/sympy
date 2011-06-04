@@ -136,7 +136,10 @@ m4_7 = Z(3)*Z(2)*Z(1)*Z(0)
 m5_7 = Z(5)*Z(4)*Z(1)*Z(0)
 m6_7 = Z(6)*Z(4)*Z(2)*Z(0)
 
-# Not sure what to do with m4_7 -> m6_7, the phases don't really change
+# m4_7, m5_7, m6_7 are used to detect phase changes.  They have no effect
+# on codewords with no errors in them, so applying m4_7, m5_7, and m6_7 will
+# not produce a change in the codeword; differences are observed only when an
+# error occurs.
 generators_7 = [m1_7, m2_7, m3_7]
 
 combos_7 = generator_combinations(3)
@@ -162,6 +165,15 @@ print '|0> = ', zero_codeword_7
 print '|1> = ', one_codeword_7
 
 print ''
+
+# 3 qubit to 8 qubit codeword
+m1_3_8 = X(7)X(6)X(5)X(4)X(3)X(2)X(1)X(0)
+m2_3_8 = Z(7)Z(6)Z(5)Z(4)Z(3)Z(2)Z(1)Z(0)
+m3_3_8 = Z(7)Y(6)Z(5)Y(4)X(3)X(1)
+m4_3_8 = Y(7)Z(6)X(5)Y(3)Z(2)X(1)
+m5_3_8 = Y(7)Z(5)X(4)Z(3)X(2)Y(1)
+
+# For a 3 qubit codeword, there are 8 codewardes (2^8) to encode
 
 # Possible to generate new codes by "pasting" codes together
 
