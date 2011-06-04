@@ -410,7 +410,7 @@ class AlgebraicNumber(Expr):
         else:
             rep = DMP.from_list([1, 0], 0, dom)
 
-            if ask(root, Q.negative):
+            if ask(Q.negative(root)):
                 rep = -rep
 
         alias = args.get('alias')
@@ -502,7 +502,7 @@ def isolate(alg, eps=None, fast=False):
 
     if alg.is_Rational:
         return (alg, alg)
-    elif not ask(alg, Q.real):
+    elif not ask(Q.real(alg)):
         raise NotImplementedError("complex algebraic numbers are not supported")
 
     from sympy.printing.lambdarepr import LambdaPrinter
