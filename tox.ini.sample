@@ -1,0 +1,8 @@
+#Sample tox.ini configuration file. Copy to tox.ini and edit to needs.
+#More information on the wiki, "Using Tox".
+[tox]
+envlist = py25, py26, py27, docs
+[testenv]
+commands=python bin/test []
+[testenv:docs]
+commands=python bin/doctest [] 
