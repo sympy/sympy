@@ -185,6 +185,28 @@ class Function(Application, Expr):
         re, im = arg.as_real_imag()
         return re.is_Float or im.is_Float
 
+    @classmethod
+    def class_key(cls):
+        funcs = {
+            'exp': 10, 'log': 11,
+            'sin': 20, 'cos': 21, 'tan': 22, 'cot': 23,
+            'sinh': 30, 'cosh': 31, 'tanh': 32, 'coth': 33,
+        }
+        name = cls.__name__
+
+        try:
+            i = funcs[name]
+        except KeyError:
+            nargs = cls.nargs
+
+            if nargs is None:
+                i = 0
+            else:
+                i = 10000
+
+        return 4, i, name
+
+
     @property
     def is_commutative(self):
         if all(getattr(t, 'is_commutative') for t in self.args):

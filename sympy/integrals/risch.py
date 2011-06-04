@@ -26,7 +26,7 @@ def components(f, x):
        >>> from sympy.integrals.risch import components
 
        >>> components(sin(x)*cos(x)**2, x)
-       set([x, cos(x), sin(x)])
+       set([x, sin(x), cos(x)])
 
     """
     result = set()

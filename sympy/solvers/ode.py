@@ -202,6 +202,7 @@ anything is broken, one of those tests will surely fail.
 
 """
 from sympy.core import Add, Basic, C, S, Mul, Pow, oo
+from sympy.core.compatibility import any, all, minkey
 from sympy.core.function import Derivative, diff, expand_mul
 from sympy.core.multidimensional import vectorize
 from sympy.core.relational import Equality, Eq
@@ -216,8 +217,7 @@ from sympy.simplify import collect, logcombine, powsimp, separatevars, \
     simplify, trigsimp
 from sympy.solvers import solve
 
-from sympy.utilities import numbered_symbols, all, any
-from sympy.utilities.iterables import minkey
+from sympy.utilities import numbered_symbols
 
 # This is a list of hints in the order that they should be applied.  That means
 # that, in general, hints earlier in the list should produce simpler results
@@ -479,12 +479,6 @@ def dsolve(eq, func, hint="default", simplify=True, **kwargs):
         rv = _handle_Integral(solvefunc(eq, func, order=hints['order'],
             match=hints[hint]), func, hints['order'], hint)
     return rv
-
-
-    if not isinstance(result, Basic):
-        result = sorted(result, key=Basic.sorted_key)
-
-    return result
 
 def classify_ode(eq, func, dict=False):
     """
@@ -1304,7 +1298,6 @@ def constantsimp(expr, independentsymbol, endnumber, startnumber=1,
     # simplifying up.  Otherwise, we can skip that part of the
     # expression.
 
-    from sympy.utilities import any
     constantsymbols = [Symbol(symbolname+"%d" % t) for t in range(startnumber,
     endnumber + 1)]
     constantsymbols_set = set(constantsymbols)
@@ -1422,7 +1415,6 @@ def constant_renumber(expr, symbolname, startnumber, endnumber):
         newstartnumber maintains its values throughout recursive calls.
 
         """
-        from sympy.utilities import any
         constantsymbols = [Symbol(symbolname+"%d" % t) for t in range(startnumber,
         endnumber + 1)]
         global newstartnumber
@@ -2521,7 +2513,7 @@ def _undetermined_coefficients_match(expr, x):
         >>> from sympy.solvers.ode import _undetermined_coefficients_match
         >>> from sympy.abc import x
         >>> _undetermined_coefficients_match(9*x*exp(x) + exp(-x), x)
-        {'test': True, 'trialset': set([x*exp(x), exp(x), exp(-x)])}
+        {'test': True, 'trialset': set([x*exp(x), exp(-x), exp(x)])}
         >>> _undetermined_coefficients_match(log(x), x)
         {'test': False}
 
@@ -2810,4 +2802,3 @@ def ode_separable(eq, func, order, match):
     return Eq(C.Integral(r['m2']['coeff']*r['m2'][r['y']]/r['m1'][r['y']],
         (r['y'], None, f(x))), C.Integral(-r['m1']['coeff']*r['m1'][x]/
         r['m2'][x], x)+C1)
-

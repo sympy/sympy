@@ -68,6 +68,10 @@ class Symbol(AtomicExpr, Boolean):
     def _hashable_content(self):
         return (self.is_commutative, self.name)
 
+    def sort_key(self, order=None):
+        from sympy.core import S
+        return self.class_key(), (1, (str(self),)), S.One.sort_key(), S.One
+
     def as_dummy(self):
         return Dummy(self.name, self.is_commutative, **self.assumptions0)
 

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from sympy import (Matrix, Piecewise, Ne, symbols, sqrt, Function,
+from sympy import (Basic, Matrix, Piecewise, Ne, symbols, sqrt, Function,
     Rational, conjugate, Derivative, tan, Function, log, floor, Symbol,
     pprint, sqrt, factorial, binomial, pi, sin, ceiling, pprint_use_unicode,
     I, S, Limit, oo, cos, Pow, Integral, exp, Eq, Lt, Gt, Ge, Le, gamma, Abs,
@@ -1883,32 +1883,20 @@ u"""\
     assert upretty(expr) == ucode_str
 
     expr = {1/x: 1/y, x: sin(x)**2}
-    ascii_str_1 = \
-"""\
-       2     1  1 \n\
-{x: sin (x), -: -}\n\
-             x  y \
-"""
-    ascii_str_2 = \
+    ascii_str = \
 """\
  1  1        2    \n\
 {-: -, x: sin (x)}\n\
  x  y             \
 """
-    ucode_str_1 = \
-u"""\
-⎧      2     1  1⎫\n\
-⎨x: sin (x), ─: ─⎬\n\
-⎩            x  y⎭\
-"""
-    ucode_str_2 = \
+    ucode_str = \
 u"""\
 ⎧1  1        2   ⎫\n\
-⎨-: -, x: sin (x)⎬\n\
+⎨─: ─, x: sin (x)⎬\n\
 ⎩x  y            ⎭\
 """
-    assert  pretty(expr) in [ascii_str_1, ascii_str_1]
-    assert upretty(expr) in [ucode_str_1, ucode_str_2]
+    assert  pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
 
     # There used to be a bug with pretty-printing sequences of even height.
     expr = [x**2]
@@ -1954,6 +1942,22 @@ u"""\
     assert  pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
+def test_any_object_in_sequence():
+    # Cf. issue 2207
+    b1 = Basic()
+    b2 = Basic(Basic())
+
+    expr = [b2, b1]
+    assert pretty(expr) == "[Basic(Basic()), Basic()]"
+    assert upretty(expr) == u"[Basic(Basic()), Basic()]"
+
+    expr = set([b2, b1])
+    assert pretty(expr) == "set(Basic(), Basic(Basic()))"
+    assert upretty(expr) == u"set(Basic(), Basic(Basic()))"
+
+    expr = {b2:b1, b1:b2}
+    assert pretty(expr) == "{Basic(): Basic(Basic()), Basic(Basic()): Basic()}"
+    assert upretty(expr) == u"{Basic(): Basic(Basic()), Basic(Basic()): Basic()}"
 
 def test_pretty_limits():
     expr = Limit(x, x, oo)

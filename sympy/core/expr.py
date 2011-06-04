@@ -4,10 +4,49 @@ from singleton import S
 from evalf import EvalfMixin
 from decorators import _sympifyit
 from cache import cacheit
-from sympy.core.compatibility import all
+from sympy.core.compatibility import any, all
 
 class Expr(Basic, EvalfMixin):
     __slots__ = []
+
+    def sort_key(self, order=None):
+        from sympy.core import S
+
+        def key_inner(arg):
+            if isinstance(arg, Basic):
+                return arg.sort_key(order=order)
+            elif hasattr(arg, '__iter__'):
+                return tuple(key_inner(arg) for arg in args)
+            else:
+                return arg
+
+        coeff, expr = self.as_coeff_Mul()
+        if expr.is_Pow:
+            expr, exp = expr.args
+        else:
+            expr, exp = expr, S.One
+
+        if expr.is_Atom:
+            if expr.is_Symbol:
+                args = (str(expr),)
+            else:
+                args = (expr,)
+        else:
+            if expr.is_Add:
+                args = expr.as_ordered_terms(order=order)
+            else:
+                args = expr.args
+
+            args = tuple(key_inner(arg) for arg in args)
+
+            if expr.is_Mul:
+                args = sorted(args)
+
+        args = (len(args), args)
+        exp = exp.sort_key(order=order)
+
+        return expr.class_key(), args, exp, coeff
+
 
     # ***************
     # * Arithmetics *
@@ -203,7 +242,7 @@ class Expr(Basic, EvalfMixin):
             _, ((re, im), monom, ncpart) = term
 
             monom = [ -m for m in monom_key(monom) ]
-            ncpart = tuple([ e.as_tuple_tree() for e in ncpart ])
+            ncpart = tuple([ e.sort_key() for e in ncpart ])
             coeff = ((bool(im), im), (re, im))
 
             return monom, ncpart, coeff
@@ -235,7 +274,7 @@ class Expr(Basic, EvalfMixin):
             else:
                 ncpart.append(arg)
 
-        return sorted(cpart, key=lambda expr: Basic.sorted_key(expr, order=order)) + ncpart
+        return sorted(cpart, key=lambda expr: expr.sort_key(order=order)) + ncpart
 
     def as_ordered_terms(self, order=None, data=False):
         """
@@ -250,8 +289,6 @@ class Expr(Basic, EvalfMixin):
         [sin(x)**2*cos(x), sin(x)**2, 1]
 
         """
-        from sympy.utilities import any
-
         key, reverse = self._parse_order(order)
         terms, gens = self.as_terms()
 
@@ -310,7 +347,7 @@ class Expr(Basic, EvalfMixin):
 
             terms.append((term, (coeff, cpart, ncpart)))
 
-        gens = sorted(gens, key=Basic.sorted_key)
+        gens = sorted(gens, key=lambda expr: expr.sort_key())
 
         k, indices = len(gens), {}
 
@@ -494,8 +531,6 @@ class Expr(Basic, EvalfMixin):
         >>> (n*m + o*m*n).coeff(m*n, right=1)
         1
         """
-        from sympy.utilities.iterables import any
-
         x = sympify(x)
         if not x: # 0 or None
             return None

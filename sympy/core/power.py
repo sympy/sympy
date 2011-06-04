@@ -96,6 +96,10 @@ class Pow(Expr):
     def exp(self):
         return self._args[1]
 
+    @classmethod
+    def class_key(cls):
+        return 3, 2, cls.__name__
+
     def _eval_power(self, other):
         b, e = self.as_base_exp()
         if other.is_integer:
