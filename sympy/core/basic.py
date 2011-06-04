@@ -326,7 +326,6 @@ class Basic(AssumeMeths):
         # now both objects are from SymPy, so we can proceed to usual comparison
         return cmp(a.sort_key(), b.sort_key())
 
-
     @classmethod
     def class_key(cls):
         """Nice order of classes. """
@@ -338,7 +337,7 @@ class Basic(AssumeMeths):
 
         **Examples**
 
-        >>> from sympy.core import Basic, S, I
+        >>> from sympy.core import S, I
         >>> from sympy.abc import x
 
         >>> sorted([S(1)/2, I, -I], key=lambda x: x.sort_key())
@@ -353,6 +352,29 @@ class Basic(AssumeMeths):
         from sympy.core.singleton import S
         return self.class_key(), (len(self.args), self.args), S.One.sort_key(), S.One
 
+    @classmethod
+    def sorted(cls, iterable, reverse=False, order=None):
+        """
+        Sort an iterable container using ``sort_key``.
+
+        **Examples**
+
+        >>> from sympy.core import Basic, S, I
+        >>> from sympy.abc import x
+
+        >>> Basic.sorted([S(1)/2, I, -I])
+        [1/2, -I, I]
+        >>> Basic.sorted([S(1)/2, I, -I], reverse=True)
+        [I, -I, 1/2]
+
+        >>> S("[x, 1/x, 1/x**2, x**2, x**(1/2), x**(1/4), x**(3/2)]")
+        [x, 1/x, x**(-2), x**2, x**(1/2), x**(1/4), x**(3/2)]
+        >>> Basic.sorted(_)
+        [x**(-2), 1/x, x**(1/4), x**(1/2), x, x**(3/2), x**2]
+
+        """
+        key = lambda expr: sympify(expr).sort_key(order=order)
+        return sorted(iterable, reverse=reverse, key=key)
 
     def __eq__(self, other):
         """a == b  -> Compare two symbolic trees and see whether they are equal

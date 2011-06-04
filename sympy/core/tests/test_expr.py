@@ -962,28 +962,41 @@ def test_as_coeff_Mul():
 
 def test_expr_sorting():
     f, g = symbols('f,g', cls=Function)
-    sort_key = lambda expr: expr.sort_key()
 
     exprs = [1/x**2, 1/x, sqrt(sqrt(x)), sqrt(x), x, x**Rational(3,2), x**2]
-    assert sorted(exprs, key=sort_key) == exprs
+    assert Basic.sorted(exprs) == exprs
+    assert Basic.sorted(exprs, reverse=True) == list(reversed(exprs))
 
     exprs = [x, 2*x, 2*x**2, 2*x**3, x**n, 2*x**n, sin(x), sin(x)**n, sin(x**2), cos(x), cos(x**2), tan(x)]
-    assert sorted(exprs, key=sort_key) == exprs
+    assert Basic.sorted(exprs) == exprs
+    assert Basic.sorted(exprs, reverse=True) == list(reversed(exprs))
 
     exprs = [x + 1, x**2 + x + 1, x**3 + x**2 + x + 1]
-    assert sorted(exprs, key=sort_key) == exprs
+    assert Basic.sorted(exprs) == exprs
+    assert Basic.sorted(exprs, reverse=True) == list(reversed(exprs))
 
     exprs = [S(4), x - 3*I/2, x + 3*I/2, x - 4*I + 1, x + 4*I + 1]
-    assert sorted(exprs, key=sort_key) == exprs
+    assert Basic.sorted(exprs) == exprs
+    assert Basic.sorted(exprs, reverse=True) == list(reversed(exprs))
 
     exprs = [f(1), f(2), f(3), f(1, 2, 3), g(1), g(2), g(3), g(1, 2, 3)]
-    assert sorted(exprs, key=sort_key) == exprs
+    assert Basic.sorted(exprs) == exprs
+    assert Basic.sorted(exprs, reverse=True) == list(reversed(exprs))
 
     exprs = [f(x), g(x), exp(x), sin(x), cos(x), factorial(x)]
-    assert sorted(exprs, key=sort_key) == exprs
+    assert Basic.sorted(exprs) == exprs
+    assert Basic.sorted(exprs, reverse=True) == list(reversed(exprs))
 
     exprs = [Tuple(x, y), Tuple(x, z), Tuple(x, y, z)]
-    assert sorted(exprs, key=sort_key) == exprs
+    assert Basic.sorted(exprs) == exprs
+    assert Basic.sorted(exprs, reverse=True) == list(reversed(exprs))
+
+    exprs = [3, 4.0, 1j, 2*I]
+    assert Basic.sorted(exprs) == exprs
+    assert Basic.sorted(exprs, reverse=True) == list(reversed(exprs))
+
+    assert map(type, Basic.sorted(exprs)) == [int, float, complex, Mul]
+    assert map(type, Basic.sorted(exprs, reverse=True)) == [Mul, complex, float, int]
 
 def test_as_ordered_factors():
     f, g = symbols('f,g', cls=Function)

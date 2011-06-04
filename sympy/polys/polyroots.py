@@ -76,7 +76,7 @@ def roots_quadratic(f):
             r0 = E + F
             r1 = E - F
 
-    return sorted([r0, r1], key=lambda expr: expr.sort_key())
+    return Basic.sorted([r0, r1])
 
 def roots_cubic(f):
     """Returns a list of roots of a cubic polynomial."""
@@ -231,7 +231,7 @@ def roots_binomial(f):
         zeta = exp(2*k*S.Pi*I/n).expand(complex=True)
         roots.append((alpha*zeta).expand(power_base=False))
 
-    return sorted(roots, key=lambda expr: expr.sort_key())
+    return Basic.sorted(roots)
 
 def _inv_totient_estimate(m):
     """
@@ -300,7 +300,7 @@ def roots_cyclotomic(f, factor=False):
         for h, _ in g.factor_list()[1]:
             roots.append(-h.TC())
 
-    return sorted(roots, key=lambda expr: expr.sort_key())
+    return Basic.sorted(roots)
 
 def roots_rational(f):
     """Returns a list of rational roots of a polynomial."""
@@ -331,7 +331,7 @@ def roots_rational(f):
             if not f.eval(-zero):
                 zeros.append(-zero)
 
-    return sorted(zeros, key=lambda expr: expr.sort_key())
+    return Basic.sorted(zeros)
 
 def _integer_basis(poly):
     """Compute coefficient basis for a polynomial over integers. """
@@ -649,7 +649,7 @@ def roots(f, *gens, **flags):
         for zero, k in result.iteritems():
             zeros.extend([zero]*k)
 
-        return sorted(zeros, key=lambda expr: expr.sort_key())
+        return Basic.sorted(zeros)
 
 def root_factors(f, *gens, **args):
     """
