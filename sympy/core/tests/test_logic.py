@@ -45,8 +45,8 @@ def test_logic_cmp():
     assert And('a','b','c') == And('c','a','b')
 
 def test_logic_onearg():
-    raises(TypeError, 'And()')
-    raises(TypeError, 'Or ()')
+    assert And() == True
+    assert Or() == False
 
     assert And(T)   == T
     assert And(F)   == F

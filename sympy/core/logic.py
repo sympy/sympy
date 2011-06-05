@@ -133,30 +133,17 @@ class Logic(object):
 
            !a & !b | c
         """
-        # XXX this is not general, but good enough
-        terms = text.split()
-
         lexpr   = None  # current logical expression
         schedop = None  # scheduled operation
-
-        while True:
-            # pop next term and exit loop if there is no terms left
-            try:
-                term = terms.pop(0)
-            except IndexError:
-                break
-
+        for term in text.split():
             # operation symbol
             if term in '&|':
                 if schedop is not None:
                     raise ValueError('double op forbidden: "%s %s"' % (term, schedop))
-
                 if lexpr is None:
                     raise ValueError('%s cannot be in the beginning of expression' % term)
-
                 schedop = term
                 continue
-
 
             # already scheduled operation, e.g. '&'
             if schedop:
@@ -170,7 +157,6 @@ class Logic(object):
 
             lexpr = term
 
-
         # let's check that we ended up in correct state
         if schedop is not None:
             raise ValueError('premature end-of-expression in "%s"' % text)
@@ -181,73 +167,32 @@ class Logic(object):
         return lexpr
 
 
-# XXX better name?
 class AndOr_Base(Logic):
 
     __slots__ = []
 
     def __new__(cls, *args):
-        if len(args) == 0:
-            raise TypeError('%s requires at least one argument' % cls.__name__)
-
-        # process bool args early
         bargs = []
-
         for a in args:
-            # &(F, ...) -> F
-            # |(T, ...) -> T
             if a == cls.op_x_notx:
                 return a
-
-            # &(T, ...) -> &(...)
-            # |(F, ...) -> |(...)
             elif a == (not cls.op_x_notx):
                 continue    # skip this argument
-
-
             bargs.append(a)
 
+        args = cls.flatten(bargs)
+        args = set(args)
 
-        args = bargs
-
-        # &(a, !a) -> F
-        # |(a, !a) -> T
-        # XXX suboptinal
         for a in args:
             if Not(a) in args:
                 return cls.op_x_notx
 
-        args = cls.flatten(args)
-
-        # canonicalize arguments
-        # XXX do we always need this?
-        # NB: this is needed to reduce number of &-nodes in beta-network
-        args = sorted(args, key=hash)
-
-        # now let's kill duplicate arguments, e.g. &(a,a,b) -> &(a,b)
-        prev = None
-        uargs= []
-        for a in args:
-            if a != prev:
-                uargs.append(a)
-                prev = a
-
-        args = uargs
-
-        # &(a) -> a
-        # |(a) -> a
         if len(args) == 1:
-            return args[0]
-
-        # when we are at this stage, it means that _all_ arguments were T/F and
-        # all arguments were accepted as "let's see what follows next", so at
-        # _this_ point the rule is:
-        # |()  -> F  (*not* T)
-        # &()  -> T  (*not* F)
+            return args.pop()
         elif len(args) == 0:
             return not cls.op_x_notx
 
-        return Logic.__new__(cls, args)
+        return Logic.__new__(cls, sorted(args, key=hash))
 
 
     @classmethod
@@ -257,29 +202,21 @@ class AndOr_Base(Logic):
         res = []
 
         while True:
-
             try:
                 arg = args_queue.pop(0)
             except IndexError:
                 break
-
             if isinstance(arg, Logic):
-                if arg.op == cls.op:
-                    #print 'flattening...', fargs, i, arg.args
-                    args_queue.extend( arg.args )
+                if isinstance(arg, cls):
+                    args_queue.extend(arg.args)
                     continue
-
-
-            # another op -- leave it as is
-            res.append( arg )
+            res.append(arg)
 
         args = tuple(res)
         return args
 
-expand_lvl=0
 
 class And(AndOr_Base):
-    op = '&'
     op_x_notx = False
 
     __slots__ = []
@@ -309,22 +246,8 @@ class And(AndOr_Base):
         else:
             return self
 
-    def dbg_expand(self):
-        global expand_lvl
-        print '%sexpand %s' % (' '*expand_lvl, self)
-
-        expand_lvl += 1
-        try:
-            return self.old_expand()
-        finally:
-            expand_lvl -= 1
-
-
-    #old_expand = expand
-    #expand = dbg_expand
 
 class Or(AndOr_Base):
-    op = '|'
     op_x_notx = True
 
     __slots__ = []
@@ -334,8 +257,6 @@ class Or(AndOr_Base):
         return And( *[Not(a) for a in self.args] )
 
 class Not(Logic):
-    op = '!'
-
     __slots__ = []
 
     def __new__(cls, arg):
@@ -355,9 +276,6 @@ class Not(Logic):
 
         else:
             raise ValueError('Not: unknown argument %r' % (arg,))
-
-
-
 
 
 Logic.op_2class['&'] = And

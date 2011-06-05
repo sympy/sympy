@@ -49,7 +49,7 @@ http://en.wikipedia.org/wiki/List_of_rules_of_inference
 """
 from collections import defaultdict
 
-from logic import fuzzy_not, name_not, Logic, And, Not
+from logic import fuzzy_not, name_not, Logic, And, Or, Not
 
 # XXX this prepares forward-chaining rules for alpha-network
 def deduce_alpha_implications(implications):
@@ -359,7 +359,7 @@ class Prover(object):
         if isinstance(b, Logic):
             # a -> b & c    -->  a -> b  ;  a -> c
             # (?) FIXME this is only correct when b & c != null !
-            if b.op == '&':
+            if isinstance(b, And):
                 for barg in b.args:
                     self.process_rule(a, barg)
 
@@ -369,7 +369,7 @@ class Prover(object):
             #
             # NB: the last two rewrites add 1 term, so the rule *grows* in size.
             # NB: without catching terminating conditions this could continue infinitely
-            elif b.op == '|':
+            elif isinstance(b, Or):
                 # detect tautology first
                 if not isinstance(a, Logic):    # Atom
                     # tautology:  a -> a|c|...
@@ -389,14 +389,14 @@ class Prover(object):
         elif isinstance(a, Logic):
             # a & b -> c    -->  IRREDUCIBLE CASE -- WE STORE IT AS IS
             #                    (this will be the basis of beta-network)
-            if a.op == '&':
+            if isinstance(a, And):
                 assert not isinstance(b, Logic)
                 if b in a.args:
                     raise TautologyDetected(a,b, 'a & b -> a')
                 self.proved_rules.append((a,b))
                 # XXX NOTE at present we ignore  !c -> !a | !b
 
-            elif a.op == '|':
+            elif isinstance(a, Or):
                 if b in a.args:
                     raise TautologyDetected(a,b, 'a | b -> a')
                 for aarg in a.args:
