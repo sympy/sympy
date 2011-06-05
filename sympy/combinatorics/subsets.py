@@ -193,6 +193,13 @@ class Subset(Basic):
         """
         return len(self.superset)
 
+    @property
+    def cardinality(self):
+        """
+        Returns the number of all possible subsets.
+        """
+        return 2**(self.superset_size)
+
 def get_subset_from_bitlist(super_set, bitlist):
     """
     Gets the subset defined by the bitlist.
