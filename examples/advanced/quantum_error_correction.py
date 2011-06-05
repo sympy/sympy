@@ -85,9 +85,9 @@ generators = [m1_5, m2_5, m3_5, m4_5]
 #print generator_combinations(4)
 # Ok it seems to work
 
-combos = generator_combinations(4)
+combos = generator_combinations(generators.__len__())
 
-stabilizer_set = []
+stabilizer_op_set = []
 
 for a_combo in combos:
     a_stabilizer = 1
@@ -95,15 +95,15 @@ for a_combo in combos:
     for which_gen in a_combo:
         a_stabilizer = a_stabilizer * generators[which_gen - 1]
 
-    list.append(stabilizer_set, a_stabilizer)
+    list.append(stabilizer_op_set, a_stabilizer)
 #print 'Stabilizer set: ', stabilizer_set
 
 zero_codeword = map((lambda op: apply_operators(op*Qubit('00000'))),
-                    stabilizer_set)
+                    stabilizer_op_set)
 
 # IntQubit parameters: # to be represented, # of qubits to represent number
 zero_codeword_intqubit = map((lambda op: apply_operators(op*IntQubit(0, 5))),
-                             stabilizer_set)
+                             stabilizer_op_set)
 
 qubit_5_not = X(4)*X(3)*X(2)*X(1)*X(0)
 
@@ -142,9 +142,9 @@ m6_7 = Z(6)*Z(4)*Z(2)*Z(0)
 # error occurs.
 generators_7 = [m1_7, m2_7, m3_7]
 
-combos_7 = generator_combinations(3)
+combos_7 = generator_combinations(generators_7.__len__())
 
-stabilizer_set_7 = []
+stabilizer_op_set_7 = []
 
 for a_combo in combos_7:
     a_stabilizer = 1
@@ -152,28 +152,78 @@ for a_combo in combos_7:
     for which_gen in a_combo:
         a_stabilizer = a_stabilizer * generators_7[which_gen - 1]
 
-    list.append(stabilizer_set_7, a_stabilizer)
+    list.append(stabilizer_op_set_7, a_stabilizer)
 
 zero_codeword_7 = map((lambda op: apply_operators(op*Qubit('0000000'))),
-                      stabilizer_set_7)
+                      stabilizer_op_set_7)
 qubit_7_not = X(6)*X(5)*X(4)*X(3)*X(2)*X(1)*X(0)
 one_codeword_7 = map((lambda basis: apply_operators(qubit_7_not*basis)),
                      zero_codeword_7)
 
 print '7 qubit codeword example:'
-print '|0> = ', zero_codeword_7
-print '|1> = ', one_codeword_7
-
+print IntQubit(0),' = ', zero_codeword_7
+print ''
+print IntQubit(1),' = ', one_codeword_7
 print ''
 
 # 3 qubit to 8 qubit codeword
-m1_3_8 = X(7)X(6)X(5)X(4)X(3)X(2)X(1)X(0)
-m2_3_8 = Z(7)Z(6)Z(5)Z(4)Z(3)Z(2)Z(1)Z(0)
-m3_3_8 = Z(7)Y(6)Z(5)Y(4)X(3)X(1)
-m4_3_8 = Y(7)Z(6)X(5)Y(3)Z(2)X(1)
-m5_3_8 = Y(7)Z(5)X(4)Z(3)X(2)Y(1)
+m1_3_8 = X(7)*X(6)*X(5)*X(4)*X(3)*X(2)*X(1)*X(0)
+m2_3_8 = Z(7)*Z(6)*Z(5)*Z(4)*Z(3)*Z(2)*Z(1)*Z(0)
+m3_3_8 = Z(7)*Y(6)*Z(5)*Y(4)*X(3)*X(1)
+m4_3_8 = Y(7)*Z(6)*X(5)*Y(3)*Z(2)*X(1)
+m5_3_8 = Y(7)*Z(5)*X(4)*Z(3)*X(2)*Y(1)
 
-# For a 3 qubit codeword, there are 8 codewardes (2^8) to encode
+# These operators, together with the generators, generate the
+# normalizer.  The stabilizers are a subset of the normalizer.
+x1_3_8 = Z(7)*Z(5)*X(1)*X(0)
+x2_3_8 = Z(6)*Z(3)*X(2)*X(0)
+x3_3_8 = Z(5)*X(4)*Z(3)*X(0)
+z1_3_8 = Z(7)*Z(5)*Z(3)*Z(1)
+z2_3_8 = Z(7)*Z(6)*Z(3)*Z(2)
+z3_3_8 = Z(7)*Z(6)*Z(5)*Z(4)
+
+# For a 3 qubit codeword, there are 8 codewardes (2^3) to encode
+
+generators_3_8 = [m1_3_8, m2_3_8, m3_3_8, m4_3_8, m5_3_8]
+
+combos_3_8 = generator_combinations(generators_3_8.__len__())
+
+stabilizer_op_set_3_8 = []
+
+for a_combo in combos_3_8:
+    a_stabilizer = 1
+
+    for which_gen in a_combo:
+        a_stabilizer = a_stabilizer * generators_3_8[which_gen - 1]
+
+    list.append(stabilizer_op_set_3_8, a_stabilizer)
+
+zero_codeword_3_8 = map((lambda op: apply_operators(op*Qubit('00000000'))),
+                        stabilizer_op_set_3_8)
+
+#print combos_3_8
+all_codewords_3_8 = []
+for number in range(pow(2, 3)):
+    a_codeword = zero_codeword_3_8
+
+    if number & 0x01:
+        a_codeword = map((lambda st: apply_operators(x1_3_8 * st)),
+                         a_codeword)
+    if number & 0x02:
+        a_codeword = map((lambda st: apply_operators(x2_3_8 * st)),
+                         a_codeword)
+    if number & 0x04:
+        a_codeword = map((lambda st: apply_operators(x3_3_8 * st)),
+                         a_codeword)
+
+    list.append(all_codewords_3_8, (number, a_codeword))
+
+print '3 to 8 qubit codeword example:'
+for (a_number, a_codeword) in all_codewords_3_8:
+    print IntQubit(a_number, 3),' = ', a_codeword
+    print ''
+
+print ''
 
 # Possible to generate new codes by "pasting" codes together
 
