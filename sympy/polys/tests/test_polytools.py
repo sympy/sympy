@@ -373,6 +373,22 @@ def test_Poly__unify():
 
     raises(CoercionFailed, "Poly(Poly(x**2 + x**2*z, y, field=True), domain='ZZ(x)')")
 
+def test_Poly_free_symbols():
+    assert Poly(x**2 + 1).free_symbols == set([x])
+    assert Poly(x**2 + y*z).free_symbols == set([x, y, z])
+    assert Poly(x**2 + y*z, x).free_symbols == set([x, y, z])
+    assert Poly(x**2 + sin(y*z)).free_symbols == set([x, y, z])
+    assert Poly(x**2 + sin(y*z), x).free_symbols == set([x, y, z])
+    assert Poly(x**2 + sin(y*z), x, domain=EX).free_symbols == set([x, y, z])
+
+def test_PurePoly_free_symbols():
+    assert PurePoly(x**2 + 1).free_symbols == set([])
+    assert PurePoly(x**2 + y*z).free_symbols == set([])
+    assert PurePoly(x**2 + y*z, x).free_symbols == set([y, z])
+    assert PurePoly(x**2 + sin(y*z)).free_symbols == set([])
+    assert PurePoly(x**2 + sin(y*z), x).free_symbols == set([y, z])
+    assert PurePoly(x**2 + sin(y*z), x, domain=EX).free_symbols == set([y, z])
+
 def test_Poly__eq__():
     assert (Poly(x, x) == Poly(x, x)) == True
     assert (Poly(x, x, domain=QQ) == Poly(x, x)) == True

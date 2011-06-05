@@ -155,6 +155,10 @@ class RootOf(Expr):
         return (self.expr, Integer(self.index))
 
     @property
+    def free_symbols(self):
+        return self.poly.free_symbols
+
+    @property
     def is_commutative(self):
         return True
 
@@ -425,9 +429,6 @@ class RootOf(Expr):
 
         return roots
 
-    def _eval_derivative(self, x):
-        return S.Zero
-
     def _get_interval(self):
         """Internal function for retrieving isolation interval from cache. """
         if self.is_real:
@@ -642,6 +643,10 @@ class RootSum(Expr):
     @property
     def args(self):
         return (self.expr, self.fun, self.poly.gen)
+
+    @property
+    def free_symbols(self):
+        return self.poly.free_symbols | self.fun.free_symbols
 
     @property
     def is_commutative(self):
