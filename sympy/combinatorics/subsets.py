@@ -1,5 +1,6 @@
 from sympy.core import Basic
-from sympy.combinatorics.graycode import GrayCode
+from sympy.combinatorics.graycode import (GrayCode,
+                                          unrank_gray_code)
 
 import itertools
 
@@ -96,8 +97,16 @@ class Subset(Basic):
         Generates the previous gray code ordered subset.
 
         Examples:
+        >>> from sympy.combinatorics.subsets import Subset
+        >>> a = Subset([2,3,4],[1,2,3,4,5])
+        >>> a.prev_graycode()
+        [1, 2, 3, 4]
         """
-        raise NotImplementedError()
+        rank_ = self.rank_graycode
+        unranked_code = unrank_gray_code((rank_-1) % self.cardinality,
+                                         self.superset_size)
+        return get_subset_from_bitlist(self.superset,
+                                       unranked_code._current)
 
     @property
     def rank_binary(self):
