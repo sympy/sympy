@@ -1,11 +1,15 @@
-from sympy import Basic, Symbol, Integer, C, S, Dummy, Rational
+from sympy import Basic, Symbol, Integer, C, S, Dummy, Rational, Add, Pow
+from sympy.core.numbers import Zero
 from sympy.core.sympify import sympify, converter, SympifyError
 
 from sympy.polys import Poly, roots, cancel
 from sympy.simplify import simplify as sympy_simplify
 from sympy.utilities import any, all
+from sympy.utilities.iterables import flatten
+from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.printing import sstr
-
+from sympy.functions.elementary.complexes import re, Abs
+from sympy.functions.elementary.miscellaneous import Max, Min
 
 import random
 
@@ -332,7 +336,7 @@ class Matrix(object):
 
         Implemented mainly so bool(Matrix()) == False.
         """
-        return self.rows*self.cols
+        return self.rows * self.cols
 
     def tolist(self):
         """
@@ -1233,14 +1237,80 @@ class Matrix(object):
         """
         return matrix_multiply_elementwise(self, b)
 
-    def norm(self):
-        if self.rows != 1 and self.cols != 1:
-            raise ShapeError("A Matrix must be a vector to compute the norm.")
+    def norm(self, ord=None):
+        """Return the Norm of a Matrix or Vector.
+        In the simplest case this is the geometric size of the vector
+        Other norms can be specified by the ord parameter
 
-        out = sympify(0)
-        for i in range(len(self)):
-            out += self[i]*self[i]
-        return out**S.Half
+
+        =====  ============================  ==========================
+        ord    norm for matrices             norm for vectors
+        =====  ============================  ==========================
+        None   Frobenius norm                2-norm
+        'fro'  Frobenius norm                - does not exist
+        inf    --                            max(abs(x))
+        -inf   --                            min(abs(x))
+        1      --                            as below
+        -1     --                            as below
+        2      2-norm (largest sing. value)  as below
+        -2     smallest singular value       as below
+        other  - does not exist              sum(abs(x)**ord)**(1./ord)
+        =====  ============================  ==========================
+
+        >>> from sympy import Matrix, var, trigsimp, cos, sin
+        >>> x = var('x', real=True)
+        >>> v = Matrix([cos(x), sin(x)])
+        >>> print trigsimp( v.norm() )
+        1
+        >>> print v.norm(10)
+        (sin(x)**10 + cos(x)**10)**(1/10)
+        >>> A = Matrix([[1,1], [1,1]])
+        >>> print A.norm(2)# Spectral norm (max of |Ax|/|x| under 2-vector-norm)
+        2
+        >>> print A.norm(-2) # Inverse spectral norm (smallest singular value)
+        0
+        >>> print A.norm() # Frobenius Norm
+        2
+        """
+
+        # Row or Column Vector Norms
+        if self.rows == 1 or self.cols == 1:
+            if ord == 2 or ord == None: # Common case sqrt(<x,x>)
+                return Add(*(abs(i)**2 for i in self.mat))**S.Half
+
+            elif ord == 1: # sum(abs(x))
+                return Add(*(abs(i) for i in self.mat))
+
+            elif ord == S.Infinity: # max(abs(x))
+                return Max(*self.applyfunc(abs))
+
+            elif ord == S.NegativeInfinity: # min(abs(x))
+                return Min(*self.applyfunc(abs))
+
+            # Otherwise generalize the 2-norm, Sum(x_i**ord)**(1/ord)
+            # Note that while useful this is not mathematically a norm
+            try:
+                return Pow( Add(*(abs(i)**ord for i in self.mat)), S(1)/ord )
+            except:
+                raise ValueError("Expected order to be Number, Symbol, oo")
+
+        # Matrix Norms
+        else:
+            if ord == 2: # Spectral Norm
+                # Maximum singular value
+                return Max(*self.singular_values())
+
+            elif ord == -2:
+                # Minimum singular value
+                return Min(*self.singular_values())
+
+            elif (ord == None or isinstance(ord,str) and ord.lower() in
+                    ['f', 'fro', 'frobenius', 'vector']):
+                # Reshape as vector and send back to norm function
+                return self.vec().norm(ord=2)
+
+            else:
+                raise NotImplementedError("Matrix Norms under development")
 
     def normalized(self):
         if self.rows != 1 and self.cols != 1:
@@ -1861,6 +1931,41 @@ class Matrix(object):
                     raise NotImplementedError("Can't evaluate eigenvector for eigenvalue %s" % r)
             out.append((r, k, basis))
         return out
+
+    def singular_values(self):
+        """Compute the singular values of a Matrix
+        >>> from sympy import Matrix, Symbol, eye
+        >>> x = Symbol('x', real=True)
+        >>> A = Matrix([[0, 1, 0], [0, x, 0], [-1, 0, 0]])
+        >>> print A.singular_values()
+        [1, (x**2 + 1)**(1/2), 0]
+        """
+        # Compute eigenvalues of A.H A
+        valmultpairs = (self.H*self).eigenvals()
+
+        # Expands result from eigenvals into a simple list
+        vals = []
+        for k,v in valmultpairs.items():
+            vals += [sqrt(k)]*v # dangerous! same k in several spots!
+
+        # If sorting makes sense then sort
+        if all(val.is_number for val in vals):
+            vals.sort(reverse=True) # sort them in descending order
+
+        return vals
+
+    def condition_number(self):
+        """Returns the condition number of a matrix.
+        This is the maximum singular value divided by the minimum singular value
+
+        >>> from sympy import Matrix, S
+        >>> A = Matrix([[1, 0, 0], [0, 10, 0], [0,0,S.One/10]])
+        >>> print A.condition_number()
+        100
+        """
+
+        singularvalues = self.singular_values()
+        return Max(*singularvalues) / Min(*singularvalues)
 
     def fill(self, value):
         """Fill the matrix with the scalar value."""
@@ -2957,3 +3062,10 @@ def symarray(prefix, shape):
     for index in np.ndindex(shape):
         arr[index] = Symbol('%s_%s' % (prefix, '_'.join(map(str, index))))
     return arr
+
+def _separate_eig_results(res):
+    eigvals = [item[0] for item in res]
+    multiplicities = [item[1] for item in res]
+    eigvals = flatten([[val]*mult for val, mult in zip(eigVals, multiplicities)])
+    eigvects = flatten([item[2] for item in res])
+    return eigvals, eigvects

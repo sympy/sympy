@@ -1,12 +1,15 @@
 from sympy import (symbols, Matrix, SparseMatrix, eye, I, Symbol, Rational, wronskian, cos,
-    sin, exp, hessian, sqrt, zeros, ones, randMatrix, Poly, S, pi, E,
-    oo, trigsimp, Integer, block_diag, N, zeros)
+    sin, exp, hessian, sqrt, zeros, ones, randMatrix, Poly, S, pi, E, I,
+    oo, trigsimp, Integer, block_diag, N, zeros, sympify, Pow, simplify,
+    Min, Max, Abs)
 from sympy.matrices.matrices import (ShapeError, MatrixError,
     matrix_multiply_elementwise, diag,
 
     SparseMatrix, SparseMatrix, NonSquareMatrixError, _dims_to_nm,
     matrix_multiply_elementwise)
 from sympy.utilities.pytest import raises
+#from sympy.functions.elementary.miscellaneous import Max, Min
+#from sympy.functions.elementary.miscellaneous import Max, Min
 
 def test_division():
     x, y, z = symbols('x y z')
@@ -1502,7 +1505,6 @@ def test_errors():
     raises(ShapeError, "Matrix([1, 2, 3]).dot(Matrix([1, 2]))")
     raises(NotImplementedError, "Matrix([[0,1,2],[0,0,-1], [0,0,0]]).exp()")
     raises(NonSquareMatrixError, "Matrix([1, 2, 3]).exp()")
-    raises(ShapeError, "Matrix([[1, 2], [3, 4]]).norm()")
     raises(ShapeError, "Matrix([[1, 2], [3, 4]]).normalized()")
     raises(NonSquareMatrixError, "Matrix([1, 2]).inverse_GE()")
     raises(ValueError, "Matrix([[1, 2], [1, 2]]).inverse_GE()")
@@ -1560,3 +1562,139 @@ def test_hessenberg():
 
     A = Matrix([[3, 4, 1],[2, 4 ,5],[3, 1, 2]])
     assert not A.is_upper_hessenberg()
+
+def test_SMatrix_transpose():
+    assert SparseMatrix((1,2),(3,4)).transpose() == SparseMatrix((1,3),(2,4))
+
+def test_SparseMatrix_CL_RL():
+    assert SparseMatrix((1,2),(3,4)).row_list() == [(0, 0, 1), (0, 1, 2), (1, 0, 3), (1, 1, 4)]
+    assert SparseMatrix((1,2),(3,4)).col_list() ==[(0, 0, 1), (1, 0, 3), (0, 1, 2), (1, 1, 4)]
+
+def test_matrix_norm():
+    # Vector Tests
+    # Test columns and symbols
+    x = Symbol('x', real=True)
+    v = Matrix([cos(x), sin(x)])
+    assert trigsimp(v.norm(2)) == 1
+    assert v.norm(10) == Pow(cos(x)**10 + sin(x)**10, S(1)/10)
+
+    # Test Rows
+    y = Matrix([[5, Rational(3,2)]])
+    assert y.norm() == Pow(25 + Rational(9,4),S(1)/2)
+    assert y.norm(oo) == max(y.mat)
+    assert y.norm(-oo) == min(y.mat)
+
+    # Matrix Tests
+    # Intuitive test
+    A = Matrix([[1,1], [1,1]])
+    assert A.norm(2)==2
+    assert A.norm(-2)==0
+    assert A.norm('frobenius')==2
+    assert eye(10).norm(2)==eye(10).norm(-2)==1
+
+    # Test with Symbols and more complex entries
+    y = Symbol('y')
+    A = Matrix([[3,y,y],[x,S(1)/2, -pi]])
+    assert (A.norm('fro')
+           == (S(37)/4 + 2*abs(y)**2 + pi**2 + x**2)**(S(1)/2))
+
+    # Check non-square
+    A = Matrix([[1,2,-3],[4,5,Rational(13,2)]])
+    assert A.norm(2) == sympify('(389/8 + 78665**(1/2)/8)**(1/2)')
+    assert A.norm(-2) == S(0)
+    assert A.norm('frobenius') == 389**Rational(1,2)/2
+
+    # Test properties of matrix norms
+    # http://en.wikipedia.org/wiki/Matrix_norm#Definition
+    # Two matrices
+    A = Matrix([[1,2],[3,4]])
+    B = Matrix([[5,5],[-2,2]])
+    C = Matrix([[0,-I],[I,0]])
+    D = Matrix([[1,0],[0,-1]])
+    L = [A,B,C,D]
+    alpha = Symbol('alpha', real=True)
+
+    for order in ['fro', 2, -2]:
+        # Zero Check
+        assert zeros(3).norm(order) == S(0)
+        # Check Triangle Inequality for all Pairs of Matrices
+        for X in L:
+            for Y in L:
+                assert X.norm(order)+Y.norm(order) >= (X+Y).norm(order)
+        # Scalar multiplication linearity
+        for M in [A,B,C,D]:
+            if order in [2,-2]:
+                # Abs is causing tests to fail when Abs(alpha) is inside a Max
+                # or Min. The tests produce mathematically true statements that
+                # are too complex to be simplified well.
+                continue;
+            try:
+                assert ((alpha*M).norm(order) ==
+                        abs(alpha) * M.norm(order))
+            except NotImplementedError:
+                pass; # Some Norms fail on symbolic matrices due to Max issue
+
+    # Test Properties of Vector Norms
+    # http://en.wikipedia.org/wiki/Vector_norm
+    # Two column vectors
+    a = Matrix([1,1-1*I,-3])
+    b = Matrix([S(1)/2, 1*I, 1])
+    c = Matrix([-1,-1,-1])
+    d = Matrix([3, 2, I])
+    e = Matrix([Integer(1e2),Rational(1,1e2),1])
+    L = [a,b,c,d,e]
+    alpha = Symbol('alpha', real=True)
+
+    for order in [1,2,-1, -2, S.Infinity, S.NegativeInfinity, pi]:
+        # Zero Check
+        assert Matrix([0,0,0]).norm(order) == S(0)
+        # Triangle inequality on all pairs
+        if order >= 1: # Triangle InEq holds only for these norms
+            for v in L:
+                for w in L:
+                    assert v.norm(order)+w.norm(order) >= (v+w).norm(order)
+        # Linear to scalar multiplication
+        if order in [1,2, -1, -2, S.Infinity, S.NegativeInfinity]:
+            for vec in L:
+                try:
+                    assert simplify(  (alpha*v).norm(order) -
+                            (abs(alpha) * v.norm(order))  ) == 0
+                except NotImplementedError:
+                    pass; # Some Norms fail on symbolics due to Max issue
+
+
+def test_singular_values():
+    x = Symbol('x', real=True)
+
+    A = Matrix([[0,1*I],[2,0]])
+    assert A.singular_values() == [2,1]
+
+    A = eye(3); A[1,1] = x; A[2,2] = 5
+    vals = A.singular_values();
+    assert 1 in vals and 5 in vals and abs(x) in vals
+
+    A = Matrix([[sin(x), cos(x)],[-cos(x), sin(x)]])
+    vals = [sv.trigsimp() for sv in A.singular_values()]
+    assert vals == [S(1), S(1)]
+
+def test_condition_number():
+    x = Symbol('x', real=True)
+    A = eye(3);
+    A[0,0] = 10;
+    A[2,2] = S(1)/10;
+    assert A.condition_number() == 100
+
+    A[1,1] = x
+    assert A.condition_number() == Max(10, Abs(x)) / Min(S(1)/10 , Abs(x))
+
+    M = Matrix([[cos(x), sin(x)], [-sin(x), cos(x)]])
+    Mc = M.condition_number()
+    assert all(Mc.subs(x,val)==1 for val in [.2, .5, .1, pi/2, pi, 7*pi/4 ])
+
+def test_len():
+    assert len(Matrix()) == 0
+    assert len(Matrix([[1, 2]])) == len(Matrix([[1], [2]])) == 2
+    assert len(Matrix(0, 2, lambda i, j: 0)) == len(Matrix(2, 0, lambda i, j: 0)) == 0
+    assert len(Matrix([[0, 1, 2], [3, 4, 5]])) == 6
+    assert Matrix([1])
+    assert not Matrix()
