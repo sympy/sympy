@@ -2,7 +2,7 @@ from core import C
 from basic import Basic, Atom
 from singleton import S
 from evalf import EvalfMixin
-from decorators import _sympifyit
+from decorators import _sympifyit, call_highest_priority
 from cache import cacheit
 from sympy.core.compatibility import any, all
 
@@ -51,6 +51,19 @@ class Expr(Basic, EvalfMixin):
     # ***************
     # * Arithmetics *
     # ***************
+
+    # Expr and its sublcasses use _op_priority to determine which object
+    # passed to a binary special method (__mul__, etc.) will handle the
+    # operation. In general, the 'call_highest_priority' decorator will choose
+    # the object with the highest _op_priority to handle the call.
+    # Custom subclasses that want to define their own binary special methods
+    # should set an _op_priority value that is higher than the default.
+    #
+    # **NOTE**:
+    # This is a temporary fix, and will eventually be replaced with
+    # something better and more powerful.  See issue 2411.
+    _op_priority = 10.0
+
     def __pos__(self):
         return self
     def __neg__(self):
@@ -59,42 +72,47 @@ class Expr(Basic, EvalfMixin):
         return C.Abs(self)
 
     @_sympifyit('other', NotImplemented)
+    @call_highest_priority('__radd__')
     def __add__(self, other):
         return Add(self, other)
-
     @_sympifyit('other', NotImplemented)
+    @call_highest_priority('__add__')
     def __radd__(self, other):
         return Add(other, self)
 
     @_sympifyit('other', NotImplemented)
+    @call_highest_priority('__rsub__')
     def __sub__(self, other):
         return Add(self, -other)
-
     @_sympifyit('other', NotImplemented)
+    @call_highest_priority('__sub__')
     def __rsub__(self, other):
         return Add(other, -self)
 
     @_sympifyit('other', NotImplemented)
+    @call_highest_priority('__rmul__')
     def __mul__(self, other):
         return Mul(self, other)
-
     @_sympifyit('other', NotImplemented)
+    @call_highest_priority('__mul__')
     def __rmul__(self, other):
         return Mul(other, self)
 
     @_sympifyit('other', NotImplemented)
+    @call_highest_priority('__rpow__')
     def __pow__(self, other):
         return Pow(self, other)
-
     @_sympifyit('other', NotImplemented)
+    @call_highest_priority('__pow__')
     def __rpow__(self, other):
         return Pow(other, self)
 
     @_sympifyit('other', NotImplemented)
+    @call_highest_priority('__rdiv__')
     def __div__(self, other):
         return Mul(self, Pow(other, S.NegativeOne))
-
     @_sympifyit('other', NotImplemented)
+    @call_highest_priority('__div__')
     def __rdiv__(self, other):
         return Mul(other, Pow(self, S.NegativeOne))
 
