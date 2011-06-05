@@ -199,6 +199,62 @@ for (a_number, a_codeword) in all_codewords_3_8:
 
 print ''
 
+# For a [4, 2, 2] code, 2 qubit words are converted to 4 qubit words
+# It is derived from a [5, 1, 3] code where the last qubit is removed,
+# and the n-k generators from the [5, 1, 3] code will be modified such
+# that M1 ends with an X operator, M2 ends with a Z operator, and
+# the rest of the operators end with the identity operator.
+
+# The 2 generators for the [4, 2, 2] code after modifying the generators
+# from the [5, 1, 3] code (Y = iXZ)
+m1_2_4 = X(3)*Z(2)*Z(1)*X(0)
+m2_2_4 = Y(3)*X(2)*X(1)*Y(0)
+
+# The operators below help generator the normalizer 
+x1_2_4 = X(3)*X(2)*X(1)*X(0)
+x2_2_4 = X(3)*X(1)*Z(0)
+z1_2_4 = Y(3)*Z(2)*Y(1)
+z2_2_4 = X(2)*Z(1)*Z(0)
+
+generators_2_4 = [m1_2_4, m2_2_4]
+
+combos_2_4 = generator_combinations(generators_2_4.__len__())
+
+stabilizer_op_set_2_4 = []
+
+for a_combo in combos_2_4:
+    a_stabilizer = 1
+
+    for which_gen in a_combo:
+        a_stabilizer = a_stabilizer * generators_2_4[which_gen - 1]
+
+    list.append(stabilizer_op_set_2_4, a_stabilizer)
+
+zero_codeword_2_4 = map((lambda op: apply_operators(op*Qubit('0000'))),
+                        stabilizer_op_set_2_4)
+
+#print combos_2_4
+all_codewords_2_4 = []
+for number in range(pow(2, 2)):
+    a_codeword = zero_codeword_2_4
+
+    if number & 0x01:
+        a_codeword = map((lambda st: apply_operators(x2_2_4 * st)),
+                         a_codeword)
+    if number & 0x02:
+        a_codeword = map((lambda st: apply_operators(x1_2_4 * st)),
+                         a_codeword)
+    
+    list.append(all_codewords_2_4, (number, a_codeword))
+
+print '2 to 4 qubit codeword example:'
+for (a_number, a_codeword) in all_codewords_2_4:
+    print IntQubit(a_number, 2),' = ', a_codeword
+    print ''
+
+print ''
+
+
 # Possible to generate new codes by "pasting" codes together
 
 # Concept still confusing to me: how do you find the generators
