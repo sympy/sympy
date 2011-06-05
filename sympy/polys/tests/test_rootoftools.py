@@ -98,6 +98,9 @@ def test_RootOf___new__():
 
     assert RootOf(x**3 + x + 1, 0).is_commutative == True
 
+def test_RootOf_free_symbols():
+    assert RootOf(x**3 + x + 3, 0).free_symbols == set()
+
 def test_RootOf___eq__():
     assert (RootOf(x**3 + x + 3, 0) == RootOf(x**3 + x + 3, 0)) == True
     assert (RootOf(x**3 + x + 3, 0) == RootOf(x**3 + x + 3, 1)) == False
@@ -211,6 +214,11 @@ def test_RootSum___new__():
 
     assert RootSum(x**3 + a*x + a**3, tan, x) == RootSum(x**3 + x + 1, Lambda(x, tan(a*x)))
     assert RootSum(a**3*x**3 + a*x + 1, tan, x) == RootSum(x**3 + x + 1, Lambda(x, tan(x/a)))
+
+def test_RootSum_free_symbols():
+    assert RootSum(x**3 + x + 3, Lambda(r, exp(r))).free_symbols == set()
+    assert RootSum(x**3 + x + 3, Lambda(r, exp(a*r))).free_symbols == set([a])
+    assert RootSum(x**3 + x + y, Lambda(r, exp(a*r)), x).free_symbols == set([a, y])
 
 def test_RootSum___eq__():
     f = Lambda(x, exp(x))

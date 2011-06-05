@@ -219,6 +219,63 @@ class Poly(Expr):
         """Allow SymPy to hash Poly instances. """
         return (self.rep, self.gens)
 
+    def __hash__(self):
+        return super(Poly, self).__hash__()
+
+    @property
+    def free_symbols(self):
+        """
+        Free symbols of a polynomial expression.
+
+        **Examples**
+
+        >>> from sympy import Poly
+        >>> from sympy.abc import x, y
+
+        >>> Poly(x**2 + 1).free_symbols
+        set([x])
+        >>> Poly(x**2 + y).free_symbols
+        set([x, y])
+        >>> Poly(x**2 + y, x).free_symbols
+        set([x, y])
+
+        """
+        symbols = set([])
+
+        for gen in self.gens:
+            symbols |= gen.free_symbols
+
+        return symbols | self.free_symbols_in_domain
+
+    @property
+    def free_symbols_in_domain(self):
+        """
+        Free symbols of the domain of ``self``.
+
+        **Examples**
+
+        >>> from sympy import Poly
+        >>> from sympy.abc import x, y
+
+        >>> Poly(x**2 + 1).free_symbols_in_domain
+        set()
+        >>> Poly(x**2 + y).free_symbols_in_domain
+        set()
+        >>> Poly(x**2 + y, x).free_symbols_in_domain
+        set([y])
+
+        """
+        domain, symbols = self.rep.dom, set()
+
+        if domain.is_Composite:
+            for gen in domain.gens:
+                symbols |= gen.free_symbols
+        elif domain.is_EX:
+            for coeff in self.coeffs():
+                symbols |= coeff.free_symbols
+
+        return symbols
+
     @property
     def args(self):
         """
@@ -3390,9 +3447,6 @@ class Poly(Expr):
     def __ne__(f, g):
         return not f.__eq__(g)
 
-    def __hash__(self):
-        return super(Poly, self).__hash__()
-
     def __nonzero__(f):
         return not f.is_zero
 
@@ -3405,6 +3459,26 @@ class PurePoly(Poly):
 
     def __hash__(self):
         return super(PurePoly, self).__hash__()
+
+    @property
+    def free_symbols(self):
+        """
+        Free symbols of a polynomial.
+
+        **Examples**
+
+        >>> from sympy import PurePoly
+        >>> from sympy.abc import x, y
+
+        >>> PurePoly(x**2 + 1).free_symbols
+        set()
+        >>> PurePoly(x**2 + y).free_symbols
+        set()
+        >>> PurePoly(x**2 + y, x).free_symbols
+        set([y])
+
+        """
+        return self.free_symbols_in_domain
 
     @_sympifyit('g', NotImplemented)
     def __eq__(f, g):
