@@ -13,6 +13,7 @@ from sympy.functions.elementary.exponential import log
 from sympy.physics.quantum.qexpr import _qsympify_sequence
 from sympy.core import sympify
 from sympy.core.numbers import Number
+from sympy.matrices.matrices import Matrix
 
 class Density(QExpr):
     """
@@ -136,4 +137,26 @@ def matrix_to_density(mat):
        We know we can decompose rho by doing:
            sum(EigenVal*|Eigenvect><Eigenvect|)
     """
-    pass      
+    from sympy.physics.quantum.qubit import matrix_to_qubit
+    eigen = mat.eigenvects()
+    #pull out all the eigenvectors and values from the 
+    #poorly designed eigenvects method
+    return Density(*[[matrix_to_qubit(Matrix([vector,])),x[0]] for x in eigen for vector in x[2] if x[0] != 0])
+    
+def reduced_density(state, unobserved_qubit, **options):
+    def find_index_that_is_projected(j, k, unobserved_qubit):
+         bit_mask = 2**unobserved_qubit - 1
+         return ((j >> unobserved_qubit) << (1 + unobserved_qubit)) + (j & bit_mask) + (k << unobserved_qubit)
+
+    old_density = represent(state, **options)
+    old_size = old_density.cols
+    new_size = old_size/2
+    new_density = Matrix().zeros(new_size)
+    for i in xrange(new_size):
+        for j in xrange(new_size):
+            for k in xrange(2):
+                col = find_index_that_is_projected(j,k,unobserved_qubit)
+                row = find_index_that_is_projected(i,k,unobserved_qubit)
+                new_density[i,j] += old_density[row, col]          
+    return Matrix(new_density)
+    
