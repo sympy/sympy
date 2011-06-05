@@ -194,15 +194,6 @@ class Wild(Symbol):
         from sympy.core.function import WildFunction
         return WildFunction(self.name, nargs=len(args))(*args, **assumptions)
 
-class Pure(Dummy):
-
-    def __new__(cls):
-        obj = Symbol.__xnew__(cls, 'pure')
-        obj.dummy_index = 0
-        return obj
-
-    def _hashable_content(self):
-        return Symbol._hashable_content(self) + (self.dummy_index,)
 
 _re_var_range = re.compile(r"^(.*?)(\d*):(\d+)$")
 _re_var_scope = re.compile(r"^(.):(.)$")

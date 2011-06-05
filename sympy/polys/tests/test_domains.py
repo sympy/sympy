@@ -1,6 +1,6 @@
 """Tests for classes defining properties of ground domains, e.g. ZZ, QQ, ZZ[x] ... """
 
-from sympy import S, sqrt, sin, oo, all, pure, Poly, Integer, Rational
+from sympy import S, sqrt, sin, oo, all, Poly, Integer, Rational
 from sympy.abc import x, y, z
 
 from sympy.polys.domains import (
@@ -436,15 +436,15 @@ def test_Domain___eq__():
 
 def test_Domain__algebraic_field():
     alg = ZZ.algebraic_field(sqrt(2))
-    assert alg.ext.minpoly == pure**2 - 2
+    assert alg.ext.minpoly(x) == x**2 - 2
     assert alg.dom == QQ
 
     alg = QQ.algebraic_field(sqrt(2))
-    assert alg.ext.minpoly == pure**2 - 2
+    assert alg.ext.minpoly(x) == x**2 - 2
     assert alg.dom == QQ
 
     alg = alg.algebraic_field(sqrt(3))
-    assert alg.ext.minpoly == pure**4 - 10*pure**2 + 1
+    assert alg.ext.minpoly(x) == x**4 - 10*x**2 + 1
 
 def test_PolynomialRing__from_FractionField():
     f = DMF(([1, 0, 1], [1, 1]), ZZ)

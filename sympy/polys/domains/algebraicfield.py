@@ -25,7 +25,7 @@ class AlgebraicField(Field, CharacteristicZero, SimpleDomain):
         from sympy.polys.numberfields import to_number_field
 
         self.ext = to_number_field(ext)
-        self.mod = self.ext.minpoly.rep
+        self.mod = self.ext._minpoly.rep
 
         self.dom  = dom
 
