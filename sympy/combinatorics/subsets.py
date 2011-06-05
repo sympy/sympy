@@ -1,6 +1,8 @@
 from sympy.core import Basic
 from sympy.combinatorics.graycode import GrayCode
 
+import itertools
+
 class Subset(Basic):
     """
     Represents a basic subset object.
@@ -235,3 +237,19 @@ def unrank_binary(rank, superset):
     bin_list = list(bin(rank))[2:]
     bin_list = [0] * (len(superset) - len(bin_list)) + bin_list
     return get_subset_from_bitlist(superset, bin_list)
+
+def ksubsets(superset, k):
+    """
+    Finds the subsets of size k in lexicographic order.
+
+    This uses the itertools generator.
+
+    Examples:
+    >>> from sympy.combinatorics.subsets import ksubsets
+    >>> list(ksubsets([1,2,3], 2))
+    [(1, 2), (1, 3), (2, 3)]
+    >>> list(ksubsets([1,2,3,4,5], 2))
+    [(1, 2), (1, 3), (4, 5), (1, 4), (1, 5), (2, 3), \
+    (2, 5), (3, 4), (2, 4), (3, 5)]
+    """
+    return set(itertools.combinations(superset, k))
