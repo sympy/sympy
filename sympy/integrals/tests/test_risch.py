@@ -406,6 +406,8 @@ def test_DifferentialExtension():
         [Lambda(i, log(i**2))], [], [], [], [1], [x**2]),
         (Poly(3*t0, t0), Poly(1, t0), [Poly(1, x), Poly(1/x, t0)], [x, t0],
         [Lambda(i, log(i))], [], [], [], [1], [x])]
+    assert DifferentialExtension(S.Zero, x, dummy=False)._important_attrs == \
+        (Poly(0, x), Poly(1, x), [Poly(1, x)], [x], [], [], [], [], [], [])
 
     # Rothstein's integral
     f = (2581284541*exp(x) + 1757211400)/(39916800*exp(3*x) +
@@ -425,3 +427,5 @@ def test_risch_integrate():
     assert risch_integrate((1 + 2*x**2 + x**4 + 2*x**3*exp(2*x**2))/
     (x**4*exp(x**2) + 2*x**2*exp(x**2) + exp(x**2)), x) == \
         Integral(exp(-x**2), x) + exp(x**2)/(1 + x**2)
+
+    assert risch_integrate(0, x) == 0

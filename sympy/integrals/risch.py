@@ -221,7 +221,7 @@ class DifferentialExtension(object):
             self._auto_attrs()
 
             return
-        elif not f or not x:
+        elif f is None or x is None:
             raise ValueError("Either both f and x or a manual extension must " +
             "be given.")
 
@@ -1345,6 +1345,7 @@ def risch_integrate(f, x, extension=None, handle_first='log'):
     -----------
     log(log(x))
     """
+    f = S(f)
     if extension:
         raise NotImplementedError("Manual extensions are not supported yet.")
 
