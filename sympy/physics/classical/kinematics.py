@@ -440,7 +440,7 @@ class ReferenceFrame(object):
         newframe.orient(self, rot_type, amounts, rot_order)
         return newframe
 
-    def orient(self, parent, rot_type, amounts, rot_order):
+    def orient(self, parent, rot_type, amounts, rot_order = ''):
         """
         This function will be used to define the orientation of a
         ReferenceFrame relative to a parent.  It takes in the parent frame,
@@ -451,8 +451,8 @@ class ReferenceFrame(object):
         Simple
         Body
         Space
-        Euler
-        Axis
+        Euler - 4 euler params, no order
+        Axis - angle + 3 amounts for unit vector direction, no order
         """
 
         def _rot(axis, angle): 
@@ -472,6 +472,8 @@ class ReferenceFrame(object):
                     [sin(angle), cos(angle), 0],
                     [0, 0, 1]])
 
+        assert isinstance(parent, ReferenceFrame), 'Parent must be a \
+                ReferenceFrame'
         approved_orders = ('123', '231', '312', '132', '213', '321', '121',
                 '131', '212', '232', '313', '323', '1', '2', '3', '')
         rot_order = str(rot_order).upper() # Now we need to make sure XYZ = 123
@@ -483,7 +485,22 @@ class ReferenceFrame(object):
         assert rot_order in approved_orders, 'Not approved order'
 
         if rot_type == 'AXIS':
-            raise NotImplementedError('Axis rotation not yet implemented')
+            assert rot_order == '', 'Axis orientation take no rotation order'
+            assert ininstance(amounts, (list, tuple)) & len(amounts) == 4, \
+                    'Amounts need to be in a list or tuple of length 4'
+            theta = amounts[0]
+            axis = amounts[1:]
+            assert (diff(axis[0], Symbol('t')) == 0 & \
+                    diff(axis[1], Symbol('t')) == 0 & \
+                    diff(axis[2], Symbol('t')) == 0), 'Axis directions \
+                    cannot be time-varying'
+            axis = Matrix(axis)
+            mag = simplify(simplify(axis.T * axis))
+            if mag != 1:
+                axis /= mag
+            self.parent_orient = ((eye(3) - axis * axis.T) * cos(theta) +
+                    Matrix([[0, -axis[2], axis[1]],[axis[2], 0, -axis[0]],
+                        [-axis[1], axis[0], 0]]) * sin(theta) + axis * axis.T)
         elif rot_type == 'EULER':
             assert ininstance(amounts, (list, tuple)) & len(amounts) == 4, \
                     'Amounts need to be in a list or tuple of length 4'
