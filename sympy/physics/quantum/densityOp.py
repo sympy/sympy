@@ -160,3 +160,7 @@ def reduced_density(state, unobserved_qubit, **options):
                 new_density[i,j] += old_density[row, col]          
     return Matrix(new_density)
     
+def entropy_of_entanglement(state, unobserved_qubit, **options):
+    rho = reduced_density(state, unobserved_qubit, **options)
+    from scipy.linalg import eigvals
+    return -sum([(eigen*log(eigen)).evalf() for eigen in eigvals(rho).tolist() if eigen != 0])
