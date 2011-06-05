@@ -16,25 +16,9 @@ ordering_of_classes = [
     'Exp1','Pi','ImaginaryUnit',
     # symbols
     'Symbol','Wild','Temporary',
-    # Functions that should come before Pow/Add/Mul
-    'ApplyConjugate', 'ApplyAbs',
     # arithmetic operations
     'Pow', 'Mul', 'Add',
     # function values
-    'Apply',
-    'ApplyExp','ApplyLog',
-    'ApplySin','ApplyCos','ApplyTan','ApplyCot',
-    'ApplyASin','ApplyACos','ApplyATan','ApplyACot',
-    'ApplySinh','ApplyCosh','ApplyTanh','ApplyCoth',
-    'ApplyASinh','ApplyACosh','ApplyATanh','ApplyACoth',
-    'ApplyRisingFactorial','ApplyFallingFactorial',
-    'ApplyFactorial','ApplyBinomial',
-    'ApplyFloor', 'ApplyCeiling',
-    'ApplyRe','ApplyIm', 'ApplyArg',
-    'ApplySqrt','ApplySign',
-    'ApplyGamma','ApplyLowerGamma','ApplyUpperGamma','ApplyPolyGamma',
-    'ApplyErf',
-    'ApplyChebyshev','ApplyChebyshev2',
     'Derivative','Integral',
     # defined singleton functions
     'Abs','Sign','Sqrt',
@@ -112,7 +96,6 @@ class ClassRegistry(Registry):
 
 C = ClassRegistry()
 
-
 class BasicMeta(BasicType):
 
     def __init__(cls, *args, **kws):
@@ -166,36 +149,12 @@ class BasicMeta(BasicType):
         # creation -- we keep it prededuced already.
         cls.default_assumptions = xass
 
-        # let's store new derived assumptions back into class.
-        # this will result in faster access to this attributes.
-        #
-        # Timings
-        # -------
-        #
-        # a = Integer(5)
-        # %timeit a.is_zero     -> 20 us (without this optimization)
-        # %timeit a.is_zero     ->  2 us (with    this optimization)
-        #
-        #
-        # BTW: it is very important to study the lessons learned here --
-        #      we could drop Basic.__getattr__ completely (!)
-        #
-        # %timeit x.is_Add      -> 2090 ns  (Basic.__getattr__  present)
-        # %timeit x.is_Add      ->  825 ns  (Basic.__getattr__  absent)
-        #
-        # so we may want to override all assumptions is_<xxx> methods and
-        # remove Basic.__getattr__
-
-
         # first we need to collect derived premises
         derived_premises = {}
-
         for k,v in xass.iteritems():
             if k not in default_assumptions:
                 derived_premises[k] = v
-
         cls._derived_premises = derived_premises
-
 
         for k,v in xass.iteritems():
             assert v == cls.__dict__.get('is_'+k, v),  (cls,k,v)
@@ -214,7 +173,6 @@ class BasicMeta(BasicType):
                 if ('is_'+k) not in cls.__dict__:
                     is_k = make__get_assumption(cls.__name__, k)
                     setattr(cls, 'is_'+k, property(is_k))
-
 
 
     def __cmp__(cls, other):
@@ -255,5 +213,3 @@ class BasicMeta(BasicType):
         return False
 
 C.BasicMeta = BasicMeta
-
-

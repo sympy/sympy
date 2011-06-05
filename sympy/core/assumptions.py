@@ -235,50 +235,34 @@ class AssumeMeths(object):
            _learn_new_facts to deduce all its implications, and also the result
            is cached in ._assumptions for later quick access.
         """
-
-        # 'defined' assumption
         if k not in self._assume_defined:
             raise AttributeError('undefined assumption %r' % (k))
 
         assumptions = self._assumptions
-
         seen = self._a_inprogress
-        #print '%s=?\t%s %s' % (name, self,seen)
         if k in seen:
             raise CycleDetected
-
         seen.append(k)
 
         try:
             # First try the assumption evaluation function if it exists
-            if hasattr(self, '_eval_is_'+k):
-                #print 'FWDREQ: %s\t%s' % (self, k)
+            if hasattr(self, '_eval_is_' + k):
                 try:
-                    a = getattr(self,'_eval_is_'+k)()
-
-                # no luck - e.g. is_integer -> ... -> is_integer
+                    a = getattr(self, '_eval_is_' + k)()
                 except CycleDetected:
-                    #print 'CYC'
                     pass
-
                 else:
                     if a is not None:
-                        self._learn_new_facts( ((k,a),) )
+                        self._learn_new_facts( ((k, a),) )
                         return a
-
-
 
             # Try assumption's prerequisites
             for pk in self._assume_rules.prereq.get(k,()):
-                #print 'pk: %s' % pk
-                if hasattr(self, '_eval_is_'+pk):
+                if hasattr(self, '_eval_is_' + pk):
                     # cycle
                     if pk in seen:
                         continue
-
-                    #print 'PREREQ: %s\t%s <- %s' % (self, k, pk)
-                    a = getattr(self,'is_'+pk)
-
+                    a = getattr(self, 'is_' + pk)
                     if a is not None:
                         self._learn_new_facts( ((pk,a),) )
                         # it is possible that we either know or don't know k at
@@ -361,7 +345,6 @@ def make__get_assumption(classname, name):
        c.is_xxx()   # note braces -- it's a function call
        c.is_yyy     # no braces   -- it's a property
     """
-
     def getit(self):
         try:
             return self._assumptions[name]
@@ -369,9 +352,4 @@ def make__get_assumption(classname, name):
             return self._what_known_about(name)
 
     getit.func_name = '%s__is_%s' % (classname, name)
-
-    #print '\n\n\n%s\n' % getit
-    #from dis import dis
-    #dis(getit)
-
     return getit
