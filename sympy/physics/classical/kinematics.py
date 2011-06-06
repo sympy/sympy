@@ -1,12 +1,22 @@
-from sympy import *
-# from sympy import Matrix, sympify, SympifyError, sin, cos, tan, Mul, Pow,
-# eye, symbols, Derivative, Symbol, simplify
+from sympy import (Matrix, sympify, sin, cos, tan, Mul, Pow, eye,
+        symbols, Derivative, Symbol, simplify)
+
+__all__ = [
+        'DynamicSymbol',
+        'Vector',
+        'ReferenceFrame',
+        'Point',
+        'dynamicsymbols',
+        'cross',
+        'dot',
+        'express'
+        ]
 
 class DynamicSymbol(Symbol):
     """
     Class for time-varying quantities.  When DynamicSymbol's derivative
     is taken with respect to Symbol 't', a time differentiated version is
-    returned.  
+    returned.
     """
 
     @property
@@ -15,17 +25,17 @@ class DynamicSymbol(Symbol):
 
     def _eval_derivative(self, s):
         if s == Symbol('t'):
-            return DynamicSymbol(self.name+'d')
+            return DynamicSymbol(self.name + 'd')
         elif self == s:
             return S.One
         else:
             return S.Zero
 
 
-def dynamicsymbols(basename, count, diffno = 0):
+def dynamicsymbols(basename, count, diffno=0):
     """
     Returns a list of DynamicSymbols, and a number of their time derivatives.
-    Needs a base name supplied, number of DynamicSymbols, and number of 
+    Needs a base name supplied, number of DynamicSymbols, and number of
     time derivatives of the Dynamic Symbols.
     """
     sympify(basename)
@@ -47,9 +57,9 @@ def dynamicsymbols(basename, count, diffno = 0):
 
 class Vector(object):
     """
-    This is the class used to define vectors.  It along with reference 
-    frame are the building blocks of pydy.  
-    Class attributes include: 
+    This is the class used to define vectors.  It along with reference
+    frame are the building blocks of pydy.
+    Class attributes include:
     subscript_indices - a 3 character string used for printing
     """
 
@@ -57,10 +67,10 @@ class Vector(object):
 
     def __init__(self, inlist):
         """
-        This is the constructor for the Vector class.  
+        This is the constructor for the Vector class.
         It should only be used in construction of the basis vectors,
-        which is part of the ReferenceFrame construction.  
-        It takes in a SymPy matrix and a ReferenceFrame.  
+        which is part of the ReferenceFrame construction.
+        It takes in a SymPy matrix and a ReferenceFrame.
         """
         self.args = []
         while len(inlist) != 0:
@@ -78,7 +88,7 @@ class Vector(object):
         i = 0
         # This code is to remove empty frames from the list
         while i<len(self.args):
-            if ((self.args[i][0][0] == 0) & (self.args[i][0][1] == 0) & 
+            if ((self.args[i][0][0] == 0) & (self.args[i][0][1] == 0) &
                 (self.args[i][0][2] == 0)):
                 self.args.remove(self.args[i])
                 i -= 1
@@ -94,24 +104,24 @@ class Vector(object):
         for i, v in enumerate(ar):
             for j in 0, 1, 2:
                 # if the coef of the basis vector is 1, we skip the 1
-                if ar[i][0][j] == 1: 
-                    if len(ol) != 0: 
+                if ar[i][0][j] == 1:
+                    if len(ol) != 0:
                         ol.append(' + ')
                     ol.append( ar[i][1].name.lower() +
                               self.subscript_indices[j] + '>' )
                 # if the coef of the basis vector is -1, we skip the 1
-                elif ar[i][0][j] == -1: 
+                elif ar[i][0][j] == -1:
                     if len(ol) != 0:
                         ol.append(' ')
                     ol.append( '- ' + ar[i][1].name.lower() +
                               self.subscript_indices[j] + '>' )
-                elif ar[i][0][j] != 0: 
-                    # If the coefficient of the basis vector is not 1 or -1, 
+                elif ar[i][0][j] != 0:
+                    # If the coefficient of the basis vector is not 1 or -1,
                     # we wrap it in parentheses, for readability.
                     if len(ol) != 0:
                         ol.append(' + ')
                     ol.append('(' + `ar[i][0][j]` + ')*' +
-                              ar[i][1].name.lower() + 
+                              ar[i][1].name.lower() +
                               self.subscript_indices[j] + '>' )
         return ''.join(ol)
 
@@ -123,9 +133,9 @@ class Vector(object):
 
     def __add__(self, other):
         """
-        The add operator for Vector. 
+        The add operator for Vector.
         It checks that other is a Vector, otherwise it throws an error.
-        Also works with adding a zero scalar.  
+        Also works with adding a zero scalar.
         """
         if isinstance(other, int):
             if other == 0:
@@ -135,7 +145,7 @@ class Vector(object):
 
     def __and__(self, other):
         """
-        Dot product of two vectors.  
+        Dot product of two vectors.
         """
         assert isinstance(other, Vector), 'Dot product is between two vectors'
         out = 0
@@ -152,14 +162,14 @@ class Vector(object):
 
     def __div__(self, other):
         """
-        This uses mul and inputs self and 1 divided by other.  
+        This uses mul and inputs self and 1 divided by other.
         """
         return self.__mul__(1 / other)
 
     def __eq__(self, other):
         """
         Tests for equality.  If other is 0, and self is empty, returns True.
-        If other is 0 and self is not empty, returns False. 
+        If other is 0 and self is not empty, returns False.
         If none of the above, only accepts other as a Vector.
         """
         if isinstance(other, int):
@@ -175,8 +185,8 @@ class Vector(object):
 
     def __mul__(self, other):
         """
-        Multiplies the Vector by a scalar. 
-        Throws an error if another Vector is entered.  
+        Multiplies the Vector by a scalar.
+        Throws an error if another Vector is entered.
         """
         assert not(isinstance(other, Vector)), \
                 'Two Vectors can\'t be multiplied'
@@ -190,23 +200,23 @@ class Vector(object):
 
     def __rmul__(self, other):
         """
-        This wraps mul. 
+        This wraps mul.
         """
         return self.__mul__(other)
 
     def __sub__(self, other):
         """
-        The subraction operator. 
-        Reuses add and multiplication operations.  
+        The subraction operator.
+        Reuses add and multiplication operations.
         """
         return self.__add__(other * -1)
 
     def __xor__(self, other):
         """
-        The cross product operator for two Vectors. 
-        Takes in two Vectors; order matters. 
+        The cross product operator for two Vectors.
+        Takes in two Vectors; order matters.
         Returns a Vector which is perpendicular to the two input vectors.
-        This Vector is expressed in the frames of self (first vector). 
+        This Vector is expressed in the frames of self (first vector).
         """
         if isinstance(other, int):
             if other == 0:
@@ -229,7 +239,7 @@ class Vector(object):
             tempx = v[1].x
             tempy = v[1].y
             tempz = v[1].z
-            tempm = ([[tempx, tempy, tempz], [Vector([ar[i]]) & tempx, 
+            tempm = ([[tempx, tempy, tempz], [Vector([ar[i]]) & tempx,
                 Vector([ar[i]]) & tempy, Vector([ar[i]]) & tempz],
                 [other & tempx, other & tempy, other & tempz]])
             outvec += _det(tempm)
@@ -243,14 +253,14 @@ class Vector(object):
 
     def cross(self, other):
         """
-        Wraps around the ^ operator, which is the cross product operator.  
+        Wraps around the ^ operator, which is the cross product operator.
         """
         return self ^ other
 
     def diff(self, wrt, otherframe):
         """
         Takes in a sympifyable value, which cannot be a Vector.
-        Returns the partial derivative of the self Vector with respect 
+        Returns the partial derivative of the self Vector with respect
         to the input value.
         """
         wrt = sympify(wrt)
@@ -267,7 +277,7 @@ class Vector(object):
     def dt(self, otherframe):
         """
         Returns the time derivative of the self Vector in the given Reference
-        Frame.  
+        Frame.
         Takes in a ReferenceFrame, and returns a Vector.
         """
         assert isinstance(otherframe, ReferenceFrame), 'Need to supply a \
@@ -278,7 +288,7 @@ class Vector(object):
                 outvec += Vector(v[0].diff(Symbol('t')), otherframe)
             else:
                 outvec += (Vector(v[0].diff(Symbol('t')), otherframe) +
-                    Vector(v[1].ang_vel_in(otherframe), otherframe) ^ 
+                    Vector(v[1].ang_vel_in(otherframe), otherframe) ^
                     Vector([v]))
         return outvec
 
@@ -301,7 +311,7 @@ class Vector(object):
     @property
     def mag(self):
         """
-        Returns the magnitude of the Vector. 
+        Returns the magnitude of the Vector.
         """
         return sqrt(self & self)
 
@@ -316,7 +326,7 @@ class Vector(object):
 class ReferenceFrame(object):
     """
     ReferenceFrame is a reference frame.
-    It will store its basis vectors as attributes, and orientation 
+    It will store its basis vectors as attributes, and orientation
     information to a parent frame, or it will be at the top of a tree.
     """
 
@@ -364,7 +374,7 @@ class ReferenceFrame(object):
         elif self._cur == 2:
             self._cur += 1
             return self._z
-        else: 
+        else:
             self._cur = 0
             raise StopIteration
 
@@ -417,7 +427,7 @@ class ReferenceFrame(object):
         """
         This will return the direction cosine matrix from self to other;
         other's basis = DCM * self's basis is the definition.
-        All it takes in is the other frame.  
+        All it takes in is the other frame.
         nxyz = N.dcm(B) * bxyz
         """
         commonframe = self._common_frame(other)
@@ -445,7 +455,7 @@ class ReferenceFrame(object):
         This function will be used to define the orientation of a
         ReferenceFrame relative to a parent.  It takes in the parent frame,
         type of rotation, amount(s) of rotation, and if applicable, order of
-        rotations.  
+        rotations.
         The format for this needs to be spelled out and made explicit, with
         example.
         Simple
@@ -455,7 +465,7 @@ class ReferenceFrame(object):
         Axis - angle + 3 amounts for unit vector direction, no order
         """
 
-        def _rot(axis, angle): 
+        def _rot(axis, angle):
             """
             Returns direction cosine matrix for simple axis 1,2,or 3 rotations
             """
@@ -510,7 +520,7 @@ class ReferenceFrame(object):
             q2 = amounts[2]
             q3 = amounts[3]
             self.parent_orient = (Matrix([[q0 ** 2 + q1 ** 2 - q2 ** 2 - q3 **
-                2, 2 * (q1 * q2 - q0 * q3), 2 * (q0 * q2 + q1 * q3)], 
+                2, 2 * (q1 * q2 - q0 * q3), 2 * (q0 * q2 + q1 * q3)],
                 [2 * (q1 * q2 + q0 * q3), q0 ** 2 - q1 ** 2 + q2 **2 - q3 ** 2,
                 2 * (q2 * q3 - q0 * q1)], [2 * (q1 * q3 - q0 * q2), 2 * (q0 *
                 q1 + q2 * q3), q0 ** 2 - q1 ** 2 - q2 ** 2 + q3 ** 2]]))
@@ -544,8 +554,8 @@ class ReferenceFrame(object):
     def set_ang_vel(self, value, other):
         """
         Define the angular velocity vector of the current ReferenceFrame,
-        with respect to the second ReferenceFrame.  
-        Takes in a Vector for angular velocity vector, and ReferenceFrame, 
+        with respect to the second ReferenceFrame.
+        Takes in a Vector for angular velocity vector, and ReferenceFrame,
         for the frame to this to be defined in.
         """
         if value != 0:
@@ -560,16 +570,16 @@ class ReferenceFrame(object):
     def x(self):
         """
         The basis vector for the ReferenceFrame, in the x (or 1, or i)
-        direction.  Immutable.  
+        direction.  Immutable.
         Returns a Vector.
         """
         return self._x
-   
+
     @property
     def y(self):
         """
         The basis vector for the ReferenceFrame, in the y (or 2, or j)
-        direction.  Immutable.  
+        direction.  Immutable.
         Returns a Vector.
         """
         return self._y
@@ -578,7 +588,7 @@ class ReferenceFrame(object):
     def z(self):
         """
         The basis vector for the ReferenceFrame, in the z (or 3, or k)
-        direction.  Immutable.  
+        direction.  Immutable.
         Returns a Vector.
         """
         return self._z
@@ -591,14 +601,12 @@ def cross(vec1, vec2):
     assert isinstance(vec1, Vector), 'Cross product is between two vectors'
     return vec1.cross(vec2)
 
-
 def dot(vec1, vec2):
     """
     Returns the dot product of the two vectors
     """
     assert isinstance(vec1, Vector), 'Dot product is between two vectors'
     return vec1.dot(vec2)
-
 
 def express(vec, frame):
     """
@@ -607,18 +615,17 @@ def express(vec, frame):
     assert isinstance(vec, Vector), 'Can only express Vectors in a frame'
     return vec.express(frame)
 
-
 class Point(object):
     """
     This object represents a point in a dynamic system.
     It stores the: position, velocity, and acceleration of a point.
     The position is a vector defined as the vector distance from a parent
-    point to this point. 
+    point to this point.
     """
 
     def __init__(self, name):
         """
-        Initialization of a Point object.  Takes in a name, sets 
+        Initialization of a Point object.  Takes in a name, sets
         attributes to zero.
         """
         self.name = name
@@ -645,7 +652,7 @@ class Point(object):
         """
         Returns a Vector distance between this Point and the other Point.
         If no other Point is given, the value of this Point's position is
-        returned. 
+        returned.
         """
         if type(otherpoint) == type(None):
             return self._pos
@@ -717,8 +724,8 @@ class Point(object):
 
     def acc(self, frame):
         """
-        Returns the acceleration of this Point in a ReferenceFrame, as a 
-        Vector.  
+        Returns the acceleration of this Point in a ReferenceFrame, as a
+        Vector.
         """
         assert isinstance(frame, ReferenceFrame), 'Velocity is described \
                 in a frame'
