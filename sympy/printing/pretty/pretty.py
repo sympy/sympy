@@ -985,26 +985,17 @@ class PrettyPrinter(Printer):
         return self.emptyPrinter(expr)
 
     def _print_Lambda(self, e):
-        symbols, expr = e.args
-
-        if len(symbols) == 1:
-            symbols = self._print(symbols[0])
+        vars, expr = e.args
+        if self._use_unicode:
+            arrow = u(" \u21a6 ")
         else:
-            symbols = self._print(tuple(symbols))
+            arrow = " -> "
+        if len(vars) == 1:
+            var_form = self._print(vars[0])
+        else:
+            var_form = self._print(tuple(vars))
 
-        args = (symbols, self._print(expr))
-
-        prettyFunc = self._print(C.Symbol("Lambda"))
-        prettyArgs = prettyForm(*self._print_seq(args).parens())
-
-        pform = prettyForm(
-            binding=prettyForm.FUNC, *stringPict.next(prettyFunc, prettyArgs))
-
-        # store pform parts so it can be reassembled e.g. when powered
-        pform.prettyFunc = prettyFunc
-        pform.prettyArgs = prettyArgs
-
-        return pform
+        return prettyForm(*stringPict.next(var_form, arrow, self._print(expr)), binding=8)
 
     def _print_Order(self, expr):
         pform = self._print(expr.expr)
