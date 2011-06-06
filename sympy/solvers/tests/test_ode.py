@@ -522,7 +522,7 @@ def test_1st_homogeneous_coeff_ode3():
     # test_homogeneous_order_ode1_sol above. It has to compare string
     # expressions because u2 is a dummy variable.
     eq = f(x)**2+(x*sqrt(f(x)**2-x**2)-x*f(x))*f(x).diff(x)
-    solstr = "f(x) == C1*exp(Integral(-1/(_u2*(-_u2**2 + 1)**(1/2)), (_u2, x/f(x))))"
+    solstr = "log(C1*f(x)) - Integral(-1/(_u2*(-_u2**2 + 1)**(1/2)), (_u2, x/f(x))) == 0"
     assert str(dsolve(eq, f(x), hint='1st_homogeneous_coeff_subs_indep_div_dep')) == solstr
 
 def test_1st_homogeneous_coeff_ode4_explicit():

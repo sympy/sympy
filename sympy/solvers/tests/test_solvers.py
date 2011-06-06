@@ -16,16 +16,19 @@ from sympy.abc import x
 def NS(e, n=15, **options):
     return sstr(sympify(e).evalf(n, **options), full_prec=True)
 
-def test_swap_back():
-    # A solution comes back from solve even though it shouldn't be: f(x) is
-    # in the solution's Integral as the upper limit. When solve is fixed this
-    # test should be removed. For now, since there are ode's that come back
-    # with these sorts of solutions, the swap_back feature is performed in
-    # solve and tested here.
-    # This appears to be fixed - the equation is not solved.
+def test_free_symbols():
     x = Symbol('x')
     f = Function('f')
     raises(NotImplementedError, "solve(Eq(log(f(x)), Integral(x, (x, 1, f(x)))), f(x))")
+
+def test_swap_back():
+    f, g = map(Function, 'fg')
+    x, y = symbols('x,y')
+    a, b = f(x), g(x)
+    assert solve([a + y - 2, a - b - 5], a, y, b) == \
+                 {a: b + 5, y: -b - 3}
+    assert solve(a + b*x - 2, [a, b]) == {a: 2, b: 0}
+    assert solve(a + b**2*x - y, [a, b]) == {a: y - b**2*x}
 
 def test_guess_poly():
     """

@@ -74,16 +74,16 @@ def checksol(f, symbol, sol=None, **flags):
        None is returned if checksol() could not conclude.
 
        flags:
-           'numerical=True'
+           'numerical=True (default)'
                do a fast numerical check if f has only one symbol.
-           'minimal=True'
+           'minimal=True (default is False)'
                a very fast, minimal testing.
-           'warning=True'
+           'warning=True (default is False)'
                print a warning if checksol() could not conclude.
-           'simplified=True'
-               to omit the simplification step in case the solution has
-               already been simplified.
-           'force=True'
+           'simplified=True (default)'
+               solution should be simplified before substituting into function
+               and function should be simplified after making substitution.
+           'force=True (default is False)'
                make positive all symbols without assumptions regarding sign.
     """
 
@@ -135,17 +135,16 @@ def checksol(f, symbol, sol=None, **flags):
         elif attempt == 2:
             if flags.get('minimal', False):
                 return
-            # simplified =
-            #   True - do simplification
-            #   False - don't do simplification
-            #   default - do
-            if not flags.get('simplified', True):
-                continue
-            if flags.get('simplify_sol', True):
+            # the flag 'simplified=False' is used in solve to avoid
+            # simplifying the solution. So if it is set to False there
+            # the simplification will not be attempted here, either. But
+            # if the simplification is done here then the flag should be
+            # set to False so it isn't done again there.
+            if flags.get('simplified', True):
                 for k in sol:
                     sol[k] = simplify(sympify(sol[k]))
-                flags['simplify_sol'] = False # no need to simplify sol anymore
-            val = simplify(f.subs(sol))
+                flags['simplified'] = False
+                val = simplify(f.subs(sol))
             if flags.get('force', False):
                 val = posify(val)[0]
         elif attempt == 3:
@@ -362,17 +361,26 @@ def _solve(f, *symbols, **flags):
         f = piecewise_fold(f)
 
         if len(symbols) != 1:
+            soln = None
             free = f.free_symbols
             ex = free - set(symbols)
             if len(ex) == 1:
                 ex = ex.pop()
                 try:
-                    return solve_undetermined_coeffs(f, symbols, ex)
+                    # may come back as dict or list (if non-linear)
+                    soln = solve_undetermined_coeffs(f, symbols, ex)
                 except NotImplementedError:
                     pass
-            n, d = solve_linear(f, x=symbols)
-            if n.is_Symbol:
-                return {n: cancel(d)}
+            if soln is None:
+                n, d = solve_linear(f, x=symbols)
+                if n.is_Symbol:
+                    soln = {n: cancel(d)}
+            if soln:
+                if symbol_swapped and isinstance(soln, dict):
+                    return dict([(swap_back_dict[k],
+                                  v.subs(swap_back_dict))
+                                  for k, v in soln.iteritems()])
+                return soln
 
         symbol = symbols[0]
 
@@ -531,15 +539,9 @@ def _solve(f, *symbols, **flags):
         if result is False:
             raise NotImplementedError(msg + "\nNo algorithms are implemented to solve equation %s" % f)
 
-        # This symbol swap should not be necessary for the single symbol case: if you've
-        # solved for the symbol the it will not appear in the solution. Right now, however
-        # ode's are getting solutions for solve (even though they shouldn't be -- see the
-        # swap_back test in test_solvers).
-        if symbol_swapped:
-            result = [ri.subs(swap_back_dict) for ri in result]
-
         if flags.get('simplified', True) and strategy != GS_RATIONAL:
             result = map(simplify, result)
+
         return result
     else:
         if not f:
@@ -575,24 +577,19 @@ def _solve(f, *symbols, **flags):
                         except ValueError:
                             matrix[i, m] = -coeff
 
-                # a dictionary of symbols: values
+                # a dictionary of symbols: values or None
                 soln = solve_linear_system(matrix, *symbols, **flags)
+                # Use swap_dict to ensure we return the same type as what was
+                # passed; this is not necessary in the poly-system case which
+                # only supports zero-dimensional systems
+                if symbol_swapped and soln:
+                        soln = dict([(swap_back_dict[k],
+                                      v.subs(swap_back_dict))
+                                      for k, v in soln.iteritems()])
+                return soln
             else:
                 # a list of tuples, T, where T[i] [j] corresponds to the ith solution for symbols[j]
-                soln = solve_poly_system(polys)
-
-            # Use swap_dict to ensure we return the same type as what was
-            # passed
-            if symbol_swapped:
-                if isinstance(soln, dict):
-                    result = dict([(swap_back_dict[k],
-                                    v.subs(swap_back_dict))
-                                        for k, v in soln.iteritems()])
-                else:
-                    result = [v.subs(swap_back_dict) for v in soln]
-                return result
-            else:
-                return soln
+                return solve_poly_system(polys)
 
 def solve_linear(lhs, rhs=0, x=[], exclude=[]):
     """ Return a tuple containing derived from f = lhs - rhs that is either:
@@ -933,7 +930,8 @@ def tsolve(eq, sym):
             soln = sol.subs(m).subs(x, sym)
             if not(soln is S.NaN or
                    soln.has(S.Infinity) or
-                   soln.has(S.NegativeInfinity)):
+                   soln.has(S.NegativeInfinity) or
+                   sym in soln.free_symbols):
                 return [soln]
 
     # let's also try to inverse the equation
