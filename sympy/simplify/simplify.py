@@ -109,14 +109,15 @@ def denom_expand(expr):
     a, b = fraction(expr)
     return a / b.expand()
 
-def separate(expr, deep=False, force=True):
-    """A wrapper to expand(power_base=True, force=True) which separates a power
-       with a base that is a Mul into a product of powers without performing
-       any other expansions and without regard to assumptions on variables.
+def separate(expr, deep=False, force=False):
+    """A wrapper to expand(power_base=True) which separates a power
+       with a base that is a Mul into a product of powers, without performing
+       any other expansions, provided that assumptions about the power's base
+       and exponent allow.
 
        deep=True (default is False) will do separations inside functions.
 
-       force=True (default) will cause the expansion to ignore assumptions
+       force=True (default is False) will cause the expansion to ignore assumptions
        about the base and exponent. When False, the expansion will only happen
        if the base is non-negative or the exponent is an integer.
 
@@ -129,14 +130,14 @@ def separate(expr, deep=False, force=True):
        >>> separate((x*(y*z)**3)**2)
        x**2*y**6*z**6
 
-       >>> separate((x*sin(x))**y + (x*cos(x))**y)
-       x**y*sin(x)**y + x**y*cos(x)**y
+       >>> separate((2*sin(x))**y + (2*cos(x))**y)
+       2**y*sin(x)**y + 2**y*cos(x)**y
 
-       >>> separate((exp(x)*exp(y))**x)
-       exp(x**2)*exp(x*y)
+       >>> separate((2*exp(y))**x)
+       2**x*exp(x*y)
 
-       >>> separate((sin(x)*cos(x))**y)
-       sin(x)**y*cos(x)**y
+       >>> separate((2*cos(x))**y)
+       2**y*cos(x)**y
 
        Notice that summations are left untouched. If this is not the
        requested behavior, apply 'expand' to input expression before:
@@ -144,8 +145,8 @@ def separate(expr, deep=False, force=True):
        >>> separate(((x+y)*z)**2)
        z**2*(x + y)**2
 
-       >>> separate((x*y)**(1+z))
-       x**(z + 1)*y**(z + 1)
+       >>> separate((2*y)**(1+z))
+       2**(z + 1)*y**(z + 1)
 
     """
     return sympify(expr).expand(deep=deep, mul=False, power_exp=False,\
