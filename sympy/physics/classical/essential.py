@@ -1,12 +1,18 @@
 __all__ = ['ReferenceFrame', 'Vector']
 
-from sympy import Matrix, Symbol, sin, cos, eye, simplify, diff, sqrt
+from sympy import Matrix, Symbol, sin, cos, eye, simplify, diff, sqrt, sympify
 
 class ReferenceFrame(object):
-    """
-    ReferenceFrame is a reference frame.
-    It will store its basis vectors as attributes, and orientation
-    information to a parent frame, or it will be at the top of a tree.
+    """A reference frame in classical mechanics.
+
+    ReferenceFrame is a class used to represent a reference frame in classical
+    mechanics. It has a standard basis of three unit vectors in the frame's
+    x, y, and z directions.
+    It also can have a rotation relative to a parent
+    frame; this rotation is defined by a direction cosine matrix relating this
+    frame's basis vectors to the parent frame's basis vectors.
+    It can also have an angular velocity vector, defined in another frame.
+
     """
 
     def __init__(self, name=''):
@@ -28,9 +34,7 @@ class ReferenceFrame(object):
         """Returns the name of the frame. """
         return self.name
 
-    def __repr__(self):
-        """Returns the name of the frame. """
-        return self.name
+    __repr__ = __str__
 
     def next(self):
         """Iterator for the basis vectors. """
@@ -48,9 +52,7 @@ class ReferenceFrame(object):
             raise StopIteration
 
     def _common_frame(self,other):
-        """This returns the first common parent between two ReferenceFrames.
-        Takes in another ReferenceFrame, and returns a ReferenceFrame.
-        """
+        """Returns the first common parent between two ReferenceFrames. """
         if not isinstance(other, ReferenceFrame):
             raise TypeError('You have to use a ReferenceFrame')
         leg1 = [self]
@@ -72,6 +74,10 @@ class ReferenceFrame(object):
     def ang_vel_in(self, otherframe):
         """Returns the angular velocity vector of the ReferenceFrame.
 
+        Effectively returns the Vector:
+        :math:`^{N} \vec{\omega} ^{B}`
+        which represent the angular velocity of B in N, where B is self, and
+        N is otherframe.
 
         Parameters
         ==========
@@ -90,6 +96,7 @@ class ReferenceFrame(object):
         (10)*nx>
 
         """
+
         if otherframe == self._ang_vel_parent:
             return self._ang_vel
         commonframe = self._common_frame(otherframe)
@@ -285,8 +292,10 @@ class ReferenceFrame(object):
                 raise TypeError('Amounts are a list or tuple of length 2')
             theta = amounts[0]
             axis = amounts[1]
-            assert isinstance(axis, Vector), 'A Vector needs to be supplied'
-            assert axis.dt(parent) == 0, 'Axis cannot be time-varying'
+            if not isinstance(axis, Vector):
+                raise TypeError('A Vector needs to be supplied')
+            if not axis.dt(parent) == 0:
+                raise ValueError('Axis cannot be time-varying')
             axis = axis.express(parent).unit
             axis = axis.args[0][0]
             self.parent_orient = ((eye(3) - axis * axis.T) * cos(theta) +
@@ -335,6 +344,10 @@ class ReferenceFrame(object):
     def set_ang_vel(self, value, otherframe):
         """Define the angular velocity vector of the ReferenceFrame.
 
+        If this is frame B, with an angular velocity of :math:`\omega` in N,
+        this method is essentially: 
+        :math:`^{N} \vec{\omega} ^{B} = \vec{value}`
+
         Parameters
         ==========
         value : Vector
@@ -379,11 +392,18 @@ class ReferenceFrame(object):
 
 
 class Vector(object):
-    """
-    This is the class used to define vectors.  It along with reference
-    frame are the building blocks of pydy.
-    Class attributes include:
-    subscript_indices - a 3 character string used for printing
+    """The class used to define vectors.
+
+    It along with ReferenceFrame are the building blocks of describing a
+    classical mechanics system in PyDy.
+
+    Attributes
+    ==========
+    subscript_indices : str
+        A 3 character string used for printing the basis vectors
+        This needs to be changed as Vector.subscript_indices = "123", and not
+        as SomeVectorInstance.subscript_indices = "xyz"
+
     """
 
     subscript_indices = "xyz"
@@ -391,9 +411,11 @@ class Vector(object):
     def __init__(self, inlist):
         """
         This is the constructor for the Vector class.
-        It should only be used in construction of the basis vectors,
-        which is part of the ReferenceFrame construction.
-        It takes in a SymPy matrix and a ReferenceFrame.
+        You shouldn't be calling this, it should only be used by other
+        functions. You should be treating Vectors like you would with if you
+        were doing the math by hand, and getting the first 3 from the
+        standard basis vectors from a ReferenceFrame.
+
         """
 
         self.args = []
@@ -419,10 +441,7 @@ class Vector(object):
             i += 1
 
     def __str__(self):
-        """
-        Printing method.  Uses Vector Attribute subscript_indices to choose
-        how to show basis vector indices.
-        """
+        """Printing method. """
         ar = self.args # just to shorten things
         ol = [] # output list, to be concatenated to a string
         for i, v in enumerate(ar):
@@ -449,31 +468,19 @@ class Vector(object):
                               self.subscript_indices[j] + '>' )
         return ''.join(ol)
 
-    def __repr__(self):
-        """
-        Wraps __str__
-        """
-        return self.__str__()
-
     def __add__(self, other):
-        """
-        The add operator for Vector.
-        It checks that other is a Vector, otherwise it throws an error.
-        Also works with adding a zero scalar.
-        """
+        """The add operator for Vector. """
         if isinstance(other, int):
             if other == 0:
                 return self
-        assert isinstance(other, Vector), 'You can only add two Vectors'
+        if not isinstance(other, Vector):
+            raise TypeError('You can only add two Vectors')
         return Vector(self.args + other.args)
 
-    __radd__ = __add__
-
     def __and__(self, other):
-        """
-        Dot product of two vectors.
-        """
-        assert isinstance(other, Vector), 'Dot product is between two vectors'
+        """Dot product of two vectors. """
+        if not isinstance(other, Vector):
+            raise TypeError('Dot product is between two vectors')
         out = 0
         for i, v1 in enumerate(self.args):
             for j, v2 in enumerate(other.args):
@@ -487,35 +494,36 @@ class Vector(object):
         return out
 
     def __div__(self, other):
-        """
-        This uses mul and inputs self and 1 divided by other.
-        """
+        """This uses mul and inputs self and 1 divided by other. """
+
         return self.__mul__(1 / other)
 
     def __eq__(self, other):
-        """
-        Tests for equality.  If other is 0, and self is empty, returns True.
+        """Tests for equality.
+        If other is 0, and self is empty, returns True.
         If other is 0 and self is not empty, returns False.
         If none of the above, only accepts other as a Vector.
+
         """
+
         if isinstance(other, int):
             if other == 0:
                 if self.args == []:
                     return True
                 else:
                     return False
-        assert isinstance(other,Vector), 'Vectors can only compare to Vectors'
+        if not isinstance(other,Vector):
+            raise TypeError('Vectors can only compare to Vectors')
         dotcheck = (self & self) == (self & other)
         crosscheck = ((self ^ other) & (self ^ other) == 0)
         return dotcheck & crosscheck
 
     def __mul__(self, other):
-        """
-        Multiplies the Vector by a scalar.
-        Throws an error if another Vector is entered.
-        """
-        assert not(isinstance(other, Vector)), \
-                'Two Vectors can\'t be multiplied'
+        """Multiplies the Vector by a sympifyable expression. """
+        try:
+            sympify(other)
+        except SympifyError:
+            raise TypeError('Two Vectors can\'t be multiplied')
         newlist = [v for v in self.args]
         for i, v in enumerate(newlist):
             newlist[i] = (other * newlist[i][0], newlist[i][1])
@@ -524,36 +532,52 @@ class Vector(object):
     def __neg__(self):
         return self * -1
 
-    def __rmul__(self, other):
-        """
-        This wraps mul.
-        """
-        return self.__mul__(other)
-
     def __sub__(self, other):
-        """
-        The subraction operator.
-        Reuses add and multiplication operations.
-        """
+        """The subraction operator. """
         return self.__add__(other * -1)
 
     def __xor__(self, other):
+        """The cross product operator for two Vectors.
+
+        Returns a Vector, expressed in the same ReferenceFrames as self.
+
+        Parameters
+        ==========
+        other : Vector
+            The Vector which we are crossing with
+
+        Examples
+        ========
+
+        >>> from sympy.physics.classical.essential import ReferenceFrame, Vector
+        >>> from sympy import symbols
+        >>> q1 = symbols('q1')
+        >>> N = ReferenceFrame('N')
+        >>> N.x ^ N.y
+        nz>
+        >>> A = N.orientnew('A', 'Simple', q1, 1)
+        >>> A.x ^ N.y
+        (sin(q1))*ay> + (cos(q1))*az>
+        >>> N.y ^ A.x
+        - nz>
+
         """
-        The cross product operator for two Vectors.
-        Takes in two Vectors; order matters.
-        Returns a Vector which is perpendicular to the two input vectors.
-        This Vector is expressed in the frames of self (first vector).
-        """
+
         if isinstance(other, int):
             if other == 0:
                 return self * 0
-        assert isinstance(other, Vector), 'Cross products are between Vectors'
+        if not isinstance(other, Vector):
+            raise TypeError('Cross products are between Vectors')
+
         def _det(mat):
             """
             This is needed as a little method for to find the determinant of a
             list in python; needs to work for a 3x3 list.
             SymPy's Matrix won't take in Vector, so need a custom function.
+            You shouldn't be calling this.
+
             """
+
             return (mat[0][0] * (mat[1][1] * mat[2][2] - mat[1][2] * mat[2][1])
                     + mat[0][1] * (mat[1][2] * mat[2][0] - mat[1][0] *
                     mat[2][2]) + mat[0][2] * (mat[1][0] * mat[2][1] -
@@ -571,58 +595,119 @@ class Vector(object):
             outvec += _det(tempm)
         return outvec
 
-    def dot(self, other):
-        """The dot product method.  See dot() function. """
-        return self & other
-
-    def cross(self, other):
-        """The cross product method.  See cross() function. """
-        return self ^ other
+    __repr__ = __str__
+    __radd__ = __add__
+    __rmul__ = __mul__
+    dot = __and__
+    cross = __xor__
 
     def diff(self, wrt, otherframe):
+        """Takes the partial derivative, with respect to a value, in a frame.
+
+        Returns a Vector.
+
+        Parameters
+        ==========
+        wrt : Symbol
+            What the partial derivative is taken with respect to.
+        otherframe : ReferenceFrame
+            The ReferenceFrame that the partial derivative is taken in.
+
+        Examples
+        ========
+
+        >>> from sympy.physics.classical.essential import ReferenceFrame, Vector
+        >>> from sympy.physics.classical.dynamicsymbol import DynamicSymbol
+        >>> from sympy import Symbol
+        >>> t = Symbol('t')
+        >>> q1 = DynamicSymbol('q1')
+        >>> N = ReferenceFrame('N')
+        >>> A = N.orientnew('A', 'Simple', q1, 2)
+        >>> A.x.diff(t, N)
+        (-cos(q1)**2*q1d - sin(q1)**2*q1d)*az>
+
         """
-        Takes in a sympifyable value, which cannot be a Vector.
-        Returns the partial derivative of the self Vector with respect
-        to the input value.
-        """
+
         wrt = sympify(wrt)
-        assert isinstance(otherframe, ReferenceFrame), ('Need to supply a '
-            'ReferenceFrame to find the derivative in')
+        if not isinstance(otherframe, ReferenceFrame):
+            raise TypeError('Need a ReferenceFrame to take derivative in')
         outvec = 0
         for i,v in enumerate(self.args):
             if v[1] == otherframe:
                 outvec += Vector([(v[0].diff(wrt), otherframe)])
             else:
-                diffed = (Vector(v).express(otherframe))[0].diff(wrt)
-                outvec += Vector([(diff, otherframe)]).express(v[1])
+                diffed = (Vector([v]).express(otherframe)).args[0][0].diff(wrt)
+                outvec += Vector([(diffed, otherframe)]).express(v[1])
+        return outvec
 
     def dt(self, otherframe):
+        """Returns the time derivative of the Vector in a ReferenceFrame.
+
+        Returns a Vector which is the time derivative of the self Vector, taken
+        in frame otherframe.
+
+        Parameters
+        ==========
+        otherframe : ReferenceFrame
+            The ReferenceFrame that the partial derivative is taken in.
+
+        Examples
+        ========
+
+        >>> from sympy.physics.classical.essential import ReferenceFrame, Vector
+        >>> from sympy.physics.classical.dynamicsymbol import DynamicSymbol
+        >>> from sympy import Symbol
+        >>> q1 = Symbol('q1')
+        >>> u1 = DynamicSymbol('u1')
+        >>> N = ReferenceFrame('N')
+        >>> A = N.orientnew('A', 'Simple', q1, 1)
+        >>> v = u1 * N.x
+        >>> A.set_ang_vel(10*A.x, N)
+        >>> A.x.dt(N) == 0
+        True
+        >>> v.dt(N)
+        (u1d)*nx>
+
         """
-        Returns the time derivative of the self Vector in the given Reference
-        Frame.
-        Takes in a ReferenceFrame, and returns a Vector.
-        """
-        assert isinstance(otherframe, ReferenceFrame), ('Need to supply a '
-            'ReferenceFrame to find the derivative in')
+
         outvec = 0
+        if not isinstance(otherframe, ReferenceFrame):
+            raise TypeError('Need a ReferenceFrame to take derivative in')
+        # TODO add ability to take dt when only dcm has been defined (no angvel)
         for i,v in enumerate(self.args):
             if v[1] == otherframe:
                 outvec += Vector([(v[0].diff(Symbol('t')), otherframe)])
             else:
                 outvec += (Vector([(v[0].diff(Symbol('t')), otherframe)]) +
-                    Vector([(v[1].ang_vel_in(otherframe), otherframe)]) ^
-                    Vector([v]))
+                    v[1].ang_vel_in(otherframe) ^ Vector([v]))
         return outvec
 
     def express(self, otherframe):
+        """Returns a vector, expressed in the other frame.
+
+        A new Vector is returned, equalivalent to this Vector, but its
+        components are all defined in only the otherframe.
+
+        Parameters
+        ==========
+        otherframe : ReferenceFrame
+            The frame for this Vector to be described in
+
+        Examples
+        ========
+
+        >>> from sympy.physics.classical.essential import ReferenceFrame, Vector
+        >>> from sympy.physics.classical.dynamicsymbol import DynamicSymbol
+        >>> q1 = DynamicSymbol('q1')
+        >>> N = ReferenceFrame('N')
+        >>> A = N.orientnew('A', 'Simple', q1, 2)
+        >>> A.x.express(N)
+        (cos(q1))*nx> + (-sin(q1))*nz>
+
         """
-        Returns the vector, expressed in the other frame.
-        Uses a DCM from each basis vector triplet's current frame to the other
-        frame.
-        Takes in a frame.
-        """
-        assert isinstance(otherframe, ReferenceFrame), ('Needs a frame to '
-                                                        'express in')
+
+        if not isinstance(otherframe, ReferenceFrame):
+            raise TypeError('Need a ReferenceFrame to express in in')
         outvec = Vector(self.args + [])
         for i, v in enumerate(self.args):
             if v[1] != otherframe:
