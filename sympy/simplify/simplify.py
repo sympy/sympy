@@ -110,15 +110,15 @@ def denom_expand(expr):
     return a / b.expand()
 
 def separate(expr, deep=False, force=True):
-    """A wrapper to expand(power_base=True, force=True) which separates a power with a
-       base that is a Mul into a product of powers without performing any other
-       expansions and without regard to assumptions on variables.
+    """A wrapper to expand(power_base=True, force=True) which separates a power
+       with a base that is a Mul into a product of powers without performing
+       any other expansions and without regard to assumptions on variables.
 
-       deep=True will do separations inside functions.
+       deep=True (default is False) will do separations inside functions.
 
-       force=False will cause assumptions regarding the sign of base or type
-       of exponent to be regarded and will prevent separations of bases having
-       no assumptions regarding sign.
+       force=True (default) will cause the expansion to ignore assumptions
+       about the base and exponent. When False, the expansion will only happen
+       if the base is non-negative or the exponent is an integer.
 
        >>> from sympy.abc import x, y, z
        >>> from sympy import separate, sin, cos, exp
