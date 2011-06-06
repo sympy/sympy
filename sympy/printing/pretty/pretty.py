@@ -577,7 +577,28 @@ class PrettyPrinter(Printer):
 
         func_name = func.__name__
 
-        prettyFunc = self._print(C.Symbol(func_name));
+        prettyFunc = self._print(C.Symbol(func_name))
+        prettyArgs = prettyForm(*self._print_seq(args).parens())
+
+        pform = prettyForm(binding=prettyForm.FUNC, *stringPict.next(prettyFunc, prettyArgs))
+
+        # store pform parts so it can be reassembled e.g. when powered
+        pform.prettyFunc = prettyFunc
+        pform.prettyArgs = prettyArgs
+
+        return pform
+
+    def _print_Lambda(self, e):
+        symbols, expr = e.args
+
+        if len(symbols) == 1:
+            symbols = self._print(symbols[0])
+        else:
+            symbols = self._print(tuple(symbols))
+
+        args = (symbols, self._print(expr))
+
+        prettyFunc = self._print(C.Symbol("Lambda"))
         prettyArgs = prettyForm(*self._print_seq(args).parens())
 
         pform = prettyForm(binding=prettyForm.FUNC, *stringPict.next(prettyFunc, prettyArgs))
