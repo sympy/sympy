@@ -11,6 +11,18 @@ __all__ = []
 #    determine which names are imported when
 #    "from sympy.physics.classical import *" is done.
 
-import kinematics
-from kinematics import *
-__all__.extend(kinematics.__all__)
+import dynamicsymbol
+from dynamicsymbol import *
+__all__.extend(dynamicsymbol.__all__)
+
+import functions
+from functions import *
+__all__.extend(functions.__all__)
+
+import point
+from point import *
+__all__.extend(point .__all__)
+
+import essential
+from essential import *
+__all__.extend(essential.__all__)
