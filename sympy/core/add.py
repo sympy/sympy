@@ -46,21 +46,10 @@ class Add(AssocOp):
 
             # 3 or NaN
             elif o.is_Number:
-                if o is S.NaN or coeff is S.ComplexInfinity and o.is_bounded is False:
+                coeff += o
+                if coeff is S.NaN:
                     # we know for sure the result will be nan
                     return [S.NaN], [], None
-                if coeff.is_Number:
-                    coeff += o
-                    if coeff is S.NaN:
-                        # we know for sure the result will be nan
-                        return [S.NaN], [], None
-                continue
-
-            elif o is S.ComplexInfinity:
-                if coeff.is_bounded is False:
-                    # we know for sure the result will be nan
-                    return [S.NaN], [], None
-                coeff = S.ComplexInfinity
                 continue
 
             # Add([...])
@@ -154,8 +143,7 @@ class Add(AssocOp):
             # change the zoo nature; if unbounded a NaN condition could result if
             # the unbounded symbol had sign opposite of the unbounded portion of zoo,
             # e.g. unbounded_real - unbounded_real
-            newseq = [c for c in newseq if not (c.is_bounded and
-                                                c.is_real is not None)]
+            newseq = [c for c in newseq if not c.is_bounded]
 
         # process O(x)
         if order_factors:

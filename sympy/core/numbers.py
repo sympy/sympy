@@ -512,6 +512,7 @@ class Rational(Number):
     is_real = True
     is_integer = False
     is_rational = True
+    is_infinitesimal = False
 
     __slots__ = ['p', 'q']
 
@@ -1339,6 +1340,7 @@ class Zero(IntegerConstant):
     is_positive = False
     is_negative = False
     is_finite = False
+    is_infinitesimal = True
     is_zero = True
     is_prime = False
     is_composite = False
@@ -1611,6 +1613,7 @@ class NaN(RationalConstant):
     is_integer  = None
     is_comparable = False
     is_finite   = None
+    is_infinitesimal = None
     is_bounded = None
     #is_unbounded = False
     is_zero     = None
@@ -1652,11 +1655,13 @@ class NaN(RationalConstant):
         return sage.NaN
 nan = S.NaN
 
-class ComplexInfinity(AtomicExpr):
+class ComplexInfinity(Number):
     __metaclass__ = Singleton
     is_commutative = True
     is_comparable = None
+    is_finite = False
     is_bounded = False
+    is_zero = False
     is_real = None
 
     __slots__ = []
@@ -1671,6 +1676,65 @@ class ComplexInfinity(AtomicExpr):
     @staticmethod
     def __neg__():
         return S.ComplexInfinity
+
+    def __add__(self, other):
+        if isinstance(other, Add):
+            return sum(other.args, self)
+        if isinstance(other, Number):
+            bounded = other.is_bounded
+            if bounded is True:
+                return self
+            elif bounded is False:
+                return S.NaN
+        return super(ComplexInfinity, self).__add__(other)
+
+    def __radd__(self, other):
+        if isinstance(other, Add):
+            return sum(other.args, self)
+        if isinstance(other, Expr):
+            bounded = other.is_bounded
+            if bounded is True:
+                return self
+            elif bounded is False:
+                return S.NaN
+            else:
+                return Add(self, other, evaluate=False)
+        return super(ComplexInfinity, self).__radd__(other)
+
+    def __sub__(self, other):
+        if isinstance(other, Number):
+            return self + (-other)
+        return super(ComplexInfinity, self).__sub__(other)
+
+    def __rsub__(self, other):
+        if isinstance(other, Expr):
+            return other + self # -self == self
+        return super(ComplexInfinity, self).__rsub__(other)
+
+    def __mul__(self, other):
+        if isinstance(other, Number):
+            zero = other.is_zero
+            if zero is True:
+                return S.NaN
+            elif zero is False:
+                return self
+        return super(ComplexInfinity, self).__mul__(other)
+
+    def __rmul__(self, other):
+        if isinstance(other, Expr):
+            zero = other.is_zero
+            if zero is True:
+                return S.NaN
+            elif zero is False:
+                return self
+        return super(ComplexInfinity, self).__rmul__(other)
+
+
+    def __eq__(self, other):
+        return isinstance(other, ComplexInfinity)
+
+    def __ne__(self, other):
+        return not isinstance(other, ComplexInfinity)
 
     def _eval_power(self, expt):
         if expt is S.ComplexInfinity:
@@ -1921,6 +1985,7 @@ class ImaginaryUnit(AtomicExpr):
     is_imaginary = True
     is_bounded = True
     is_finite = True
+    is_infinitesimal = False
 
     __slots__ = []
 
