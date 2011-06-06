@@ -1987,3 +1987,162 @@ def gf_factor(f, p, K):
 
     return lc, _sort_factors(factors)
 
+
+def gf_value(f, a):
+    """
+    Value of polynomial 'f' at 'a' irrespective of field.
+
+    **Example**
+
+    >>> from sympy.polys.galoistools import gf_value
+
+    >>> gf_value([1, 7, 2, 4], 11)
+    2204
+
+    """
+    result = 0
+    for c in f:
+        result *= a
+        result += c
+    return result
+
+def linear_congruence(a, b, m):
+    """
+    Solutions of  a*x congruent b mod(m) distinct mod m.
+
+    **Examples**
+
+    >>> from sympy.polys.galoistools import linear_congruence
+
+    >>> linear_congruence(4, 3, 5)
+    2
+    >>> linear_congruence(0, 3, 5)
+    []
+    >>> linear_congruence(0, 5, 5)
+    [0, 1, 2, 3, 4]
+    >>> linear_congruence(3, 12, 15)
+    [4, 9, 14]
+
+    **Reference**
+    1) Wikipedia http://en.wikipedia.org/wiki/Linear_congruence_theorem
+
+    """
+    if a%m == 0:
+        if b%m == 0:
+            return [i for i in range (0,m)]
+        else:
+            return []
+    from sympy.polys.polytools import gcdex
+    r, _, g = gcdex(a, m)
+    if b%g != 0:
+        return []
+    return [ (r*b/g + t*m/g)%m for t in range (0, g)]
+
+def csolve_prime(f, p):
+    """
+    Solutions of f(x) congruent 0 mod(p).
+
+    'p' is a prime number and this function will be used in more general function csolve.
+
+    **Examples**
+
+    >>> from sympy.polys.galoistools import csolve_prime
+
+    >>> csolve_prime([1,3,2,17], 7)
+    [3]
+    >>> csolve_prime([1,3,1,5], 5)
+    [0, 1]
+
+    """
+    from sympy.polys.domains import ZZ
+    X = []
+    for i in range (0,p):
+        if gf_eval(f,i,p,ZZ) == 0 :
+            X.append(i)
+    return X
+
+def get_above(x,s,p,f):
+    """
+    To generate solutions of f(x) congruent 0 mod(p**(s+1)) from the solutions of f(x) congruent 0 mod(p**s)
+
+    """
+    from sympy.polys.domains import ZZ
+    f_f = gf_diff(f, p, ZZ)
+    alpha = gf_value(f_f, x)
+    beta = -gf_value(f, x)/p**(s-1)
+    return linear_congruence(alpha, beta, p)
+
+def csolve_primepower(f,p,e):
+    """
+    Solving f(x) congruent 0 mod(p**e).
+
+    We need to solve the f(x) congruent 0 mod(p) and then by generating the solutions for f(x) congruent 0 mod(p**2) and so on. Following is an example of how to it generates the solutions for x**2 + x + 223 congruent 0 mod(3**i) for i = 1, 2, 3, 4
+
+    >>>from sympy.polys.galoistools import csolve_primepower
+
+    >>> g.csolve_primepower([1,1,223], 3, 1)
+    [1]
+
+    >>> g.csolve_primepower([1,1,223], 3, 2)
+    [7, 4, 1]
+
+    >>> g.csolve_primepower([1,1,223], 3, 3)
+    [22, 13, 4]
+
+    >>> g.csolve_primepower([1,1,223], 3, 4)
+    [76, 49, 22, 67, 40, 13, 58, 31, 4]
+
+    >>> g.csolve_primepower([1,1,223],3,5)
+    [238, 157, 76, 211, 130, 49, 184, 103, 22, 220, 139, 58, 193, 112, 31, 166, 85, 4]
+
+
+    **Reference**
+    1) 'An Introdunction to the Theory of Numbers' 5th Edition by Ivan Niven, Herbert S. Zuckerman and Hugh L. Montgomery. Chaper 2. Prime Power Moduli
+
+    """
+    X = []
+    X1 = csolve_prime(f,p)
+    S = zip( X1, [1 for i in X1] )
+    while len(S) != 0:
+        x, s = S.pop()
+        s += 1
+        if s == e+1:
+            X.append(x)
+        else:
+             V = get_above(x,s,p,f)
+             for v in V:
+                 x_abv = x + v*p**(s-1)
+                 S.append((x_abv,s))
+    return X
+
+
+def gf_csolve(f,n):
+    """
+    To solve f(x) congruent 0 mod(n).
+
+    'f' is taken in the form of raw matrix and 'n' is any natural number.
+    n is devided into canonical factors and f(x) congrunent 0 mod(p**e) will be solved for each factors.
+    Applying chinese remainder theorem on the result optained from individual factors give the final result.
+
+    **Example**
+
+    >>> from sympy.polys.galoistools import gf_csolve
+
+    >>> gf_csolve([1,1,7],189)
+    >>> [76, 49, 13, 175, 139, 112]
+
+    >>> gf_csolve([1,3,4,1,30],60)
+    >>> [10, 30]
+
+    For other examples and referenc, see function linear_congruence and csolve_primepower.
+
+    """
+    P = factorint(n)
+    X = [csolve_primepower(f, i, P[i]) for i in P]
+    pools = map(tuple, X)
+    perms = [[]]
+    for pool in pools:
+        perms = [x+[y] for x in perms for y in pool]
+    dist_factors = [p**P[p] for p in P.keys()]
+    from sympy.polys.domains import ZZ
+    return [gf_crt(per, dist_factors, ZZ) for per in perms]
