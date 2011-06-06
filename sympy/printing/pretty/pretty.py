@@ -777,11 +777,12 @@ class PrettyPrinter(Printer):
             return self.emptyPrinter(expr)
 
     def _print_ProductSet(self, p):
-        return self._print_seq(p.sets, '', '', ' x ' )
+        return self._print_seq(p.sets, None, None, ' x ',
+                parenthesize = lambda set:set.is_union )
 
     def _print_FiniteSet(self, s):
         if len(s) > 10:
-            #take ten elements from the set at random
+            # Take ten elements from the set at random
             q = iter(s)
             printset = [q.next() for i in xrange(10)]
             printset.append('...')
@@ -812,33 +813,20 @@ class PrettyPrinter(Printer):
             return self._print_seq(i.args[:2], left, right)
 
     def _print_Union(self, u):
-        other_sets, singletons = [], []
-        for set in u.args:
-            if isinstance(set, Interval) and set.measure == 0:
-                singletons.append(set.start)
-            else:
-                other_sets.append(set)
 
         union_delimiter = ' %s ' % pretty_atom('Union')
 
-        s2 = self._print_seq(other_sets, None, None, union_delimiter)
+        return self._print_seq(u.args, None, None, union_delimiter,
+                parenthesize = lambda set:set.is_product)
 
-        if len(singletons) > 0:
-            s1 = self._print_seq(singletons, '{', '}')
-
-            s = prettyForm(*stringPict.next(s1, union_delimiter))
-            s = prettyForm(*stringPict.next(s, s2))
-        else:
-            s = s2
-
-        return s
-
-    def _print_seq(self, seq, left=None, right=None, delimiter=', '):
+    def _print_seq(self, seq, left=None, right=None, delimiter=', ',
+            parenthesize = lambda x:False):
         s = None
 
         for item in seq:
             pform = self._print(item)
-
+            if parenthesize(item):
+                pform = prettyForm(*pform.parens())
             if s is None:
                 # first element
                 s = pform
