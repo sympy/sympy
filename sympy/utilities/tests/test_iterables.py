@@ -1,7 +1,7 @@
 from sympy import symbols, Integral, Tuple, Dummy, Basic
 from sympy.utilities.iterables import (postorder_traversal, preorder_traversal,
     flatten, group, take, subsets, variations, cartes, numbered_symbols,
-    dict_merge, prefixes, postfixes, sift, topological_sort, rotate_left, rotate_right)
+    dict_merge, prefixes, postfixes, sift, topological_sort, rotate_left, rotate_right, k_partitions)
 from sympy.core.singleton import S
 from sympy.functions.elementary.piecewise import Piecewise, ExprCondPair
 from sympy.utilities.pytest import raises
@@ -220,3 +220,18 @@ def test_rotate():
 
     assert rotate_left(A, 2) == [2, 3, 4, 0, 1]
     assert rotate_right(A, 1) == [4, 0, 1, 2, 3]
+
+def test_partitions():
+    parts = k_partitions(3)
+    assert [p.copy() for p in parts] == \
+           [{3: 1}, {1: 1, 2: 1}, {1: 3}]
+
+    parts = k_partitions(10)
+    assert len(list(parts)) == 42
+
+    parts = k_partitions(7, 3)
+    assert [i.copy() for i in parts] == \
+           [{1: 1, 3: 2}, {2: 2, 3: 1}, {1: 2, 2: 1, 3: 1}, \
+            {1: 4, 3: 1}, {1: 1, 2: 3}, {1: 3, 2: 2}, {1: 5, 2: 1}, {1: 7}]
+
+    assert len(list(k_partitions(70, 2))) == 36
