@@ -1,7 +1,7 @@
-from sympy import Matrix, I, Float, Integer
+from sympy import Matrix, I, Float, Integer, symbols
 
 from sympy.physics.quantum.dagger import Dagger
-from sympy.physics.quantum.represent import represent
+from sympy.physics.quantum.represent import represent, rep_innerproduct
 from sympy.physics.quantum.state import Bra, Ket
 from sympy.physics.quantum.operator import Operator, OuterProduct
 from sympy.physics.quantum.tensorproduct import TensorProduct
@@ -12,6 +12,7 @@ from sympy.physics.quantum.innerproduct import InnerProduct
 from sympy.physics.quantum.matrixutils import (
     to_sympy, to_numpy, to_scipy_sparse, numpy_ndarray, scipy_sparse_matrix
 )
+from sympy.physics.quantum.cartesian import XKet, XOp, XBra
 
 from sympy.external import import_module
 from sympy.utilities.pytest import skip
@@ -150,3 +151,16 @@ def test_scalar_scipy_sparse():
     assert represent(Integer(1), format='scipy.sparse') == 1
     assert represent(Float(1.0), format='scipy.sparse') == 1.0
     assert represent(1.0+I, format='scipy.sparse') == 1.0+1.0j
+
+x_ket = XKet('x')
+x_bra = XBra('x')
+x_op = XOp('X')
+
+def test_innerprod_represent():
+    assert rep_innerproduct(x_ket) == InnerProduct(XBra(), x_ket).doit()
+    assert rep_innerproduct(x_bra) == InnerProduct(x_bra, XKet()).doit()
+
+    try:
+        test = rep_innerproduct(x_op)
+    except NotImplementedError:
+        return True

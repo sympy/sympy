@@ -105,10 +105,6 @@ class XBra(Bra):
         """The position of the state."""
         return self.label[0]
 
-    #def _eval_innerproduct_XKet(self, bra, **hints):
-        #return DiracDelta(self.position-bra.position)
-
-
 class PxKet(Ket):
     """1D cartesian momentum eigenket."""
 

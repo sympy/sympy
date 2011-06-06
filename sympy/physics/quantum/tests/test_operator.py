@@ -8,6 +8,22 @@ from sympy.physics.quantum.operator import (
 )
 from sympy.physics.quantum.state import Ket, Bra
 
+class TestKet(Ket):
+    @classmethod
+    def basis_op(self):
+        return TestOp
+
+class TestOp(HermitianOperator):
+    @classmethod
+    def basis_ket(self):
+        return TestKet
+
+    @classmethod
+    def default_label(self):
+        return "T"
+
+t_ket = TestKet()
+t_op = TestOp()
 
 def test_operator():
     A = Operator('A')
@@ -25,6 +41,8 @@ def test_operator():
 
     assert (A*(B+C)).expand() == A*B + A*C
     assert ((A+B)**2).expand() == A**2 + A*B + B*A + B**2
+
+    assert t_op.label[0] == Symbol(t_op.default_label())
 
 
 def test_operator_inv():
@@ -44,6 +62,7 @@ def test_hermitian():
     assert H.is_commutative == False
     assert Dagger(H).is_commutative == False
 
+    assert t_op._get_basis_kets(1)[0] == t_ket
 
 def test_unitary():
     U = UnitaryOperator('U')

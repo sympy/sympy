@@ -188,7 +188,7 @@ def rep_innerproduct(expr, **options):
         else:
             bra = (basis_kets[1].dual if basis_kets[0] == expr else basis_kets[0].dual)
             ket = expr
-        
+
         prod = InnerProduct(bra, ket)
         result = prod.doit()
 
