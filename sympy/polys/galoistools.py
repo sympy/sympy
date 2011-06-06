@@ -2008,7 +2008,7 @@ def gf_value(f, a):
 
 def linear_congruence(a, b, m):
     """
-    Solutions of  a*x congruent b mod(m) distinct mod m.
+    Solutions of  a*x congruent b mod(m) distinct mod m. 
 
     **Examples**
 
@@ -2055,11 +2055,7 @@ def csolve_prime(f, p):
 
     """
     from sympy.polys.domains import ZZ
-    X = []
-    for i in range (0,p):
-        if gf_eval(f,i,p,ZZ) == 0 :
-            X.append(i)
-    return X
+    return [i for i in range(p) if gf_eval(f, i, p, ZZ) == 0]
 
 def get_above(x,s,p,f):
     """
