@@ -2048,9 +2048,9 @@ def csolve_prime(f, p):
 
     >>> from sympy.polys.galoistools import csolve_prime
 
-    >>> csolve_prime([1,3,2,17], 7)
+    >>> csolve_prime([1, 3, 2, 17], 7)
     [3]
-    >>> csolve_prime([1,3,1,5], 5)
+    >>> csolve_prime([1, 3, 1, 5], 5)
     [0, 1]
 
     """
@@ -2065,6 +2065,7 @@ def get_above(x,s,p,f):
     """
     To generate solutions of f(x) congruent 0 mod(p**(s+1)) from the solutions of f(x) congruent 0 mod(p**s)
 
+    This function is used in gf_csolve.
     """
     from sympy.polys.domains import ZZ
     f_f = gf_diff(f, p, ZZ)
@@ -2128,13 +2129,13 @@ def gf_csolve(f,n):
 
     >>> from sympy.polys.galoistools import gf_csolve
 
-    >>> gf_csolve([1,1,7],189)
+    >>> gf_csolve([1, 1, 7], 189)
     >>> [76, 49, 13, 175, 139, 112]
 
-    >>> gf_csolve([1,3,4,1,30],60)
+    >>> gf_csolve([1, 3, 4, 1, 30], 60)
     >>> [10, 30]
 
-    For other examples and referenc, see function linear_congruence and csolve_primepower.
+    For other examples and references, see function linear_congruence and csolve_primepower.
 
     """
     P = factorint(n)
