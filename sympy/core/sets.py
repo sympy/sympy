@@ -783,7 +783,7 @@ class Union(Set):
 
         # Start with just elementary sets (  ({A}, A), ({B}, B), ... )
         # Then get and subtract (  ({A,B}, (A int B), ... ) while non-zero
-        sets = [(FiniteSet((s,)), s) for s in self.args]
+        sets = [(FiniteSet(s), s) for s in self.args]
         measure = 0
         parity = 1
         while sets:
@@ -792,7 +792,7 @@ class Union(Set):
 
             # For each intersection in sets, compute the intersection with every
             # other set not already part of the intersection.
-            sets = ((sos + FiniteSet((newset,)), newset.intersect(intersection))
+            sets = ((sos + FiniteSet(newset), newset.intersect(intersection))
                     for sos, intersection in sets for newset in self.args
                     if newset not in sos)
 
