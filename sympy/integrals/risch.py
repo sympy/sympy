@@ -15,6 +15,8 @@ from sympy.polys import quo, gcd, lcm, \
     monomials, factor, cancel, PolynomialError
 from sympy.polys.polyroots import root_factors
 
+from sympy.core.compatibility import reduce
+
 def components(f, x):
     """Returns a set of all functional components of the given expression
        which includes symbols, function applications and compositions and

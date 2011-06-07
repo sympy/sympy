@@ -17,6 +17,8 @@ from sympy.simplify.cse_main import cse
 from sympy.polys import (Poly, together, reduced, cancel, factor,
     ComputationFailed, terms_gcd)
 
+from sympy.core.compatibility import reduce
+
 import sympy.mpmath as mpmath
 
 def fraction(expr, exact=False):

@@ -201,3 +201,8 @@ except NameError:
     import collections
     def callable(obj):
         return isinstance(obj, collections.Callable)
+
+try:
+    from functools import reduce
+except ImportError:
+    reduce = reduce

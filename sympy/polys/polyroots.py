@@ -17,6 +17,8 @@ from sympy.polys.polyerrors import PolynomialError, GeneratorsNeeded, DomainErro
 from sympy.simplify import simplify
 from sympy.utilities import all, default_sort_key
 
+from sympy.core.compatibility import reduce
+
 import math
 
 def roots_linear(f):
