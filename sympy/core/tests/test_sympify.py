@@ -461,3 +461,11 @@ def test_issue_2497():
     locals = {}
     exec "from sympy.abc import Q, C" in locals
     assert str(S('C&Q', locals)) == 'And(C, Q)'
+
+def test_issue_1612():
+    # This actually ended up being a bug in Basic.__eq__, but manifests itself
+    # with sympify, so I've added the test here.
+    f = Function('f')
+    x = Symbol('x')
+    assert f(x) == sympify('f(x)')
+    assert x(x) == Function('x')(x)

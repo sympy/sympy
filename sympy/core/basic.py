@@ -361,7 +361,7 @@ class Basic(object):
         from http://docs.python.org/dev/reference/datamodel.html#object.__hash__
         """
 
-        if type(self) is not type(other):
+        if type(self) != type(other):
             # issue 3001 a**1.0 == a like a**2.0 == a**2
             while isinstance(self, C.Pow) and self.exp == 1:
                 self = self.base
