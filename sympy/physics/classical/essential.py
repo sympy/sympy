@@ -1,6 +1,6 @@
 __all__ = ['ReferenceFrame', 'Vector']
 
-from sympy import Matrix, Symbol, sin, cos, eye, simplify, diff, sqrt, sympify
+from sympy import Matrix, Symbol, sin, cos, eye, trigsimp, diff, sqrt, sympify
 
 class ReferenceFrame(object):
     """A reference frame in classical mechanics.
@@ -51,6 +51,26 @@ class ReferenceFrame(object):
             self._cur = 0
             raise StopIteration
 
+    def _common_ang_frame(self,other):
+        """First common ang_vel parent between two ReferenceFrames. """
+        if not isinstance(other, ReferenceFrame):
+            raise TypeError('You have to use a ReferenceFrame')
+        leg1 = [self]
+        ptr = self
+        while ptr.parent != None:
+            ptr = ptr._ang_vel_parent
+            leg1.append(ptr)
+        leg2 = [other]
+        ptr = other
+        while ptr.parent != None:
+            ptr = ptr._ang_vel_parent
+            leg2.append(ptr)
+        for i,v1 in enumerate(leg1):
+            for j, v2 in enumerate(leg2):
+                if v1 == v2:
+                    return v1
+        raise ValueError('No Common Angular Velocity Parent')
+
     def _common_frame(self,other):
         """Returns the first common parent between two ReferenceFrames. """
         if not isinstance(other, ReferenceFrame):
@@ -69,7 +89,7 @@ class ReferenceFrame(object):
             for j, v2 in enumerate(leg2):
                 if v1 == v2:
                     return v1
-        raise ValueError('No Common Frame')
+        raise ValueError('No Common Parent Frame')
 
     def ang_vel_in(self, otherframe):
         """Returns the angular velocity vector of the ReferenceFrame.
@@ -99,20 +119,28 @@ class ReferenceFrame(object):
 
         if otherframe == self._ang_vel_parent:
             return self._ang_vel
-        commonframe = self._common_frame(otherframe)
-        # form DCM from self to first common frame
-        leg1 = 0
-        ptr = self
-        while ptr != commonframe:
-            leg1 += ptr._ang_vel
-            ptr = ptr.parent
-        # form DCM from other to first common frame
-        leg2 = 0
-        ptr = otherframe
-        while ptr != commonframe:
-            leg2 -= ptr._ang_vel
-            ptr = ptr.parent
-        return leg1 + leg2
+        try:
+            commonframe = self._common_ang_frame(otherframe)
+            leg1 = 0
+            ptr = self
+            while ptr != commonframe:
+                leg1 += ptr._ang_vel
+                ptr = ptr.parent
+            leg2 = 0
+            ptr = otherframe
+            while ptr != commonframe:
+                leg2 -= ptr._ang_vel
+                ptr = ptr.parent
+            return leg1 + leg2
+        except ValueError:
+            dcm2diff = otherframe.dcm(self)
+            diffed = dcm2diff.diff(Symbol('t'))
+            angvelmat = diffed * dcm2diff.T
+            w1 = angvelmat[7]
+            w2 = angvelmat[2]
+            w3 = angvelmat[3]
+            return Vector([(Matrix([w1, w2, w3]), self)])
+
 
     def dcm(self, otherframe):
         """The direction cosine matrix between frames.
@@ -487,11 +515,7 @@ class Vector(object):
                 out += ((v2[0].T)
                         * (v2[1].dcm(v1[1]))
                         * (v1[0]))[0]
-        out2 = simplify(out) # These lines are to simplify as much as we can
-        while out != out2:
-            out = out2
-            out2 = simplify(out2)
-        return out
+        return trigsimp(sympify(out), recursive=True)
 
     def __div__(self, other):
         """This uses mul and inputs self and 1 divided by other. """
@@ -570,9 +594,8 @@ class Vector(object):
             raise TypeError('Cross products are between Vectors')
 
         def _det(mat):
-            """
-            This is needed as a little method for to find the determinant of a
-            list in python; needs to work for a 3x3 list.
+            """This is needed as a little method for to find the determinant
+            of a list in python; needs to work for a 3x3 list.
             SymPy's Matrix won't take in Vector, so need a custom function.
             You shouldn't be calling this.
 
