@@ -240,7 +240,6 @@ class Expr(Basic, EvalfMixin):
         from sympy.functions.elementary.complexes import conjugate as c
         return c(self)
 
-
     @classmethod
     def _parse_order(cls, order):
         """Parse and configure the ordering of terms. """
@@ -292,7 +291,7 @@ class Expr(Basic, EvalfMixin):
             else:
                 ncpart.append(arg)
 
-        return sorted(cpart, key=lambda expr: expr.sort_key(order=order)) + ncpart
+        return Basic.sorted(cpart, order=order) + ncpart
 
     def as_ordered_terms(self, order=None, data=False):
         """
@@ -365,8 +364,7 @@ class Expr(Basic, EvalfMixin):
 
             terms.append((term, (coeff, cpart, ncpart)))
 
-        gens = sorted(gens, key=lambda expr: expr.sort_key())
-
+        gens = Basic.sorted(gens)
         k, indices = len(gens), {}
 
         for i, g in enumerate(gens):
@@ -383,7 +381,6 @@ class Expr(Basic, EvalfMixin):
             result.append((term, (coeff, tuple(monom), ncpart)))
 
         return result, gens
-
 
     def removeO(self):
         """Removes the additive O(..) symbol if there is one"""

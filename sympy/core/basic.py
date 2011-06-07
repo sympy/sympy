@@ -326,7 +326,6 @@ class Basic(AssumeMeths):
         # now both objects are from SymPy, so we can proceed to usual comparison
         return cmp(a.sort_key(), b.sort_key())
 
-
     @classmethod
     def class_key(cls):
         """Nice order of classes. """
@@ -338,7 +337,7 @@ class Basic(AssumeMeths):
 
         **Examples**
 
-        >>> from sympy.core import Basic, S, I
+        >>> from sympy.core import S, I
         >>> from sympy.abc import x
 
         >>> sorted([S(1)/2, I, -I], key=lambda x: x.sort_key())
@@ -353,6 +352,29 @@ class Basic(AssumeMeths):
         from sympy.core.singleton import S
         return self.class_key(), (len(self.args), self.args), S.One.sort_key(), S.One
 
+    @classmethod
+    def sorted(cls, iterable, reverse=False, order=None):
+        """
+        Sort an iterable container using ``sort_key``.
+
+        **Examples**
+
+        >>> from sympy.core import Basic, S, I
+        >>> from sympy.abc import x
+
+        >>> Basic.sorted([S(1)/2, I, -I])
+        [1/2, -I, I]
+        >>> Basic.sorted([S(1)/2, I, -I], reverse=True)
+        [I, -I, 1/2]
+
+        >>> S("[x, 1/x, 1/x**2, x**2, x**(1/2), x**(1/4), x**(3/2)]")
+        [x, 1/x, x**(-2), x**2, x**(1/2), x**(1/4), x**(3/2)]
+        >>> Basic.sorted(_)
+        [x**(-2), 1/x, x**(1/4), x**(1/2), x, x**(3/2), x**2]
+
+        """
+        key = lambda expr: sympify(expr).sort_key(order=order)
+        return sorted(iterable, reverse=reverse, key=key)
 
     def __eq__(self, other):
         """a == b  -> Compare two symbolic trees and see whether they are equal
@@ -403,6 +425,51 @@ class Basic(AssumeMeths):
         ot = other._hashable_content()
 
         return (st != ot) or self._assume_type_keys != other._assume_type_keys
+
+    def dummy_eq(self, other, symbol=None):
+        """
+        Compare two expressions and handle dummy symbols.
+
+        **Examples**
+
+        >>> from sympy import Dummy
+        >>> from sympy.abc import x, y
+
+        >>> u = Dummy('u')
+
+        >>> (u**2 + 1).dummy_eq(x**2 + 1)
+        True
+        >>> (u**2 + 1) == (x**2 + 1)
+        False
+
+        >>> (u**2 + y).dummy_eq(x**2 + y, x)
+        True
+        >>> (u**2 + y).dummy_eq(x**2 + y, y)
+        False
+
+        """
+        dummy_symbols = [ s for s in self.free_symbols if s.is_Dummy ]
+
+        if not dummy_symbols:
+            return self == other
+        elif len(dummy_symbols) == 1:
+            dummy = dummy_symbols.pop()
+        else:
+            raise ValueError("only one dummy symbol allowed on the left-hand side")
+
+        if symbol is None:
+            symbols = other.free_symbols
+
+            if not symbols:
+                return self == other
+            elif len(symbols) == 1:
+                symbol = symbols.pop()
+            else:
+                raise ValueError("specify a symbol in which expressions should be compared")
+
+        tmp = dummy.__class__()
+
+        return self.subs(dummy, tmp) == other.subs(symbol, tmp)
 
     # Note, we always use the default ordering (lex) in __str__ and __repr__,
     # regardless of the global setting.  See issue 2388.
