@@ -35,15 +35,15 @@ def test_Vector():
 
     assert isinstance(v3, Vector)
     # We probably shouldn't be using simplify in dot...
-    assert dot(v3, A.x) == x*(1 + x)
-    assert dot(v3, A.y) == y*(1 + y)
-    assert dot(v3, A.z) == z*(1 + z)
+    assert dot(v3, A.x) == x + x**2
+    assert dot(v3, A.y) == y + y**2
+    assert dot(v3, A.z) == z + z**2
 
     assert isinstance(v4, Vector)
     # We probably shouldn't be using simplify in dot...
-    assert dot(v4, A.x) == x*(1 - x)
-    assert dot(v4, A.y) == y*(1 - y)
-    assert dot(v4, A.z) == z*(1 - z)
+    assert dot(v4, A.x) == x - x**2
+    assert dot(v4, A.y) == y - y**2
+    assert dot(v4, A.z) == z - z**2
 
 
 

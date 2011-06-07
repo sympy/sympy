@@ -19,8 +19,7 @@ class ReferenceFrame(object):
         """init for ReferenceFrame. """
         self.name = name
         self.parent = None
-        self._ang_vel = None
-        self._ang_vel_parent = None
+        self._ang_vel = {}
         self._cur = 0
         self._x = Vector([(Matrix([1, 0, 0]), self)])
         self._y = Vector([(Matrix([0, 1, 0]), self)])
@@ -50,26 +49,6 @@ class ReferenceFrame(object):
         else:
             self._cur = 0
             raise StopIteration
-
-    def _common_ang_frame(self,other):
-        """First common ang_vel parent between two ReferenceFrames. """
-        if not isinstance(other, ReferenceFrame):
-            raise TypeError('You have to use a ReferenceFrame')
-        leg1 = [self]
-        ptr = self
-        while ptr.parent != None:
-            ptr = ptr._ang_vel_parent
-            leg1.append(ptr)
-        leg2 = [other]
-        ptr = other
-        while ptr.parent != None:
-            ptr = ptr._ang_vel_parent
-            leg2.append(ptr)
-        for i,v1 in enumerate(leg1):
-            for j, v2 in enumerate(leg2):
-                if v1 == v2:
-                    return v1
-        raise ValueError('No Common Angular Velocity Parent')
 
     def _frame_list(self, other):
         """The list of frames from self to other. """
@@ -114,30 +93,13 @@ class ReferenceFrame(object):
         (10)*nx>
 
         """
+        
+        (l1, l2) = _frame_list(self, other)
+        l2.reverse()
+        wholelist = l1 + l2[1:]
 
-        if otherframe == self._ang_vel_parent:
-            return self._ang_vel
-        try:
-            commonframe = self._common_ang_frame(otherframe)
-            leg1 = 0
-            ptr = self
-            while ptr != commonframe:
-                leg1 += ptr._ang_vel
-                ptr = ptr.parent
-            leg2 = 0
-            ptr = otherframe
-            while ptr != commonframe:
-                leg2 -= ptr._ang_vel
-                ptr = ptr.parent
-            return leg1 + leg2
-        except ValueError:
-            dcm2diff = otherframe.dcm(self)
-            diffed = dcm2diff.diff(Symbol('t'))
-            angvelmat = diffed * dcm2diff.T
-            w1 = angvelmat[7]
-            w2 = angvelmat[2]
-            w3 = angvelmat[3]
-            return Vector([(Matrix([w1, w2, w3]), self)])
+        
+
 
     def dcm(self, otherframe):
         """The direction cosine matrix between frames.
@@ -172,9 +134,7 @@ class ReferenceFrame(object):
             return l2[-1].dcm(l2[1]) * l2[0].parent_orient
         elif len(l2) == 1:
             return l1[0].parent_orient.T * l1[1].dcm(l1[-1])
-        # TODO double check the mul order of the line below
         return l1[0].dcm(l1[-1]) * l2[-1].dcm(l2[0])
-        #return l2[-1].dcm(l2[0]) * l1[0].dcm(l1[-1])
 
     def orientnew(self, newname, rot_type, amounts, rot_order=''):
         """Creates a new ReferenceFrame oriented with respect to this Frame.
@@ -361,39 +321,25 @@ class ReferenceFrame(object):
             raise NotImplementedError('That is not an implemented rotation')
         self.parent = parent
 
-    def set_ang_vel(self, value, otherframe):
-        """Define the angular velocity vector of the ReferenceFrame.
+        def set_ang_vel(self, dicti):
+            """Define the angular velocity vector of the ReferenceFrame.
 
-        If this is frame B, with an angular velocity of :math:`\omega` in N,
-        this method is essentially: 
-        :math:`^{N} \vec{\omega} ^{B} = \vec{value}`
+            """
 
-        Parameters
-        ==========
-        value : Vector
-            The angular velocity vector for this frame.
-        otherframe : ReferenceFrame
-            The frame which the angular velocity is defined in.
-
-        Examples
-        ========
-
-        >>> from sympy.physics.classical.essential import ReferenceFrame, Vector
-        >>> N = ReferenceFrame('N')
-        >>> A = ReferenceFrame('A')
-        >>> V = 10 * N.x
-        >>> A.set_ang_vel(V, N)
-
-        """
-
-        if value != 0:
-            if not isinstance(value, Vector):
-                raise TypeError('Angular velocity needs to be Vector.')
-        if not isinstance(otherframe, ReferenceFrame):
-            raise TypeError('Need to define the angular velocity with'
-                            'respect to another ReferenceFrame.')
-        self._ang_vel = value
-        self._ang_vel_parent = otherframe
+            if not isinstance(dicti, dict):
+                raise TypeError('Need to supply a Dictionary')
+            k = dicti.keys()
+            v = dicti.values()
+            if not (len(k) == 1) & (len(v) == 1):
+                raise TypeError('Need to supply a Dictionary of length 1')
+            if not isinstance(k[0], ReferenceFrame):
+                raise TypeError('Need to supply a ReferenceFrame first')
+            if not isinstance(v[0], Vector ) | (v[0] == 0):
+                raise TypeError('Need to supply a Vector second')
+            v = v[0]
+            k = k[0]
+            self._ang_vel.update(dicti)
+            k._angvel.update({self: -v})
 
     @property
     def x(self):
