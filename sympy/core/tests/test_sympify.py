@@ -3,7 +3,7 @@ from sympy import Symbol, exp, Integer, Float, sin, cos, log, Poly, Lambda, \
 from sympy.abc import x, y
 from sympy.core.sympify import sympify, _sympify, SympifyError
 from sympy.core.decorators import _sympifyit
-from sympy.utilities.pytest import raises
+from sympy.utilities.pytest import XFAIL, raises
 
 def test_439():
     v = sympify("exp(x)")
@@ -75,6 +75,16 @@ def test_sympify3():
     raises(SympifyError, "_sympify('x**3')")
     raises(SympifyError, "_sympify('1/2')")
 
+def test_sympify_keywords():
+    raises(SympifyError, "sympify('if')")
+    raises(SympifyError, "sympify('for')")
+    raises(SympifyError, "sympify('while')")
+    raises(SympifyError, "sympify('lambda')")
+
+def test_sympify_float():
+    assert sympify("1e-64") != 0
+    assert sympify("1e-20000") != 0
+
 def test_sympify_bool():
     """Test that sympify accepts boolean values
     and that output leaves them unchanged"""
@@ -134,17 +144,18 @@ def test_bug496():
     a_ = sympify("a_")
     _a = sympify("_a")
 
+@XFAIL
 def test_lambda():
     x = Symbol('x')
     assert sympify('lambda : 1') == Lambda((), 1)
     assert sympify('lambda x: 2*x') == Lambda(x, 2*x)
     assert sympify('lambda x, y: 2*x+y') == Lambda([x, y], 2*x+y)
 
+def test_lambda_raises():
     raises(SympifyError, "_sympify('lambda : 1')")
 
 def test_sympify_raises():
     raises(SympifyError, 'sympify("fx)")')
-
 
 def test__sympify():
     x = Symbol('x')
@@ -281,7 +292,6 @@ def test_int_float():
     assert abs(_sympify(f1_1b) - 1.1) < 1e-5
     assert abs(_sympify(f1_1c) - 1.1) < 1e-5
 
-
 def test_issue1034():
     a = sympify('Integer(4)')
 
@@ -303,14 +313,14 @@ def test_issue1689():
     assert srepr(Float(1)) != srepr(Float(1.0))
 
 def test_issue1699_None():
-    assert S(None) == None
+    assert S(None) is None
 
-def test_issue1889_Builtins():
+def test_issue1889_builtins():
     C = Symbol('C')
     vars = {}
     vars['C'] = C
     exp1 = sympify('C')
-    assert( exp1 == C )	# Make sure it did not get mixed up with sympy.C
+    assert exp1 == C # Make sure it did not get mixed up with sympy.C
 
     exp2 = sympify('C', vars)
-    assert( exp2 == C ) # Make sure it did not get mixed up with sympy.C
+    assert exp2 == C # Make sure it did not get mixed up with sympy.C
