@@ -6,6 +6,8 @@ from sympy.core import S
 from sympy.core.compatibility import ordered_iter
 from time import sleep
 
+from sympy.core.compatibility import callable
+
 class PlotModeBase(PlotMode):
     """
     Intended parent class for plotting

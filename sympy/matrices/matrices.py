@@ -7,6 +7,8 @@ from sympy.simplify import simplify as sympy_simplify
 from sympy.utilities import any, all
 from sympy.printing import sstr
 
+from sympy.core.compatibility import callable
+
 
 import random
 

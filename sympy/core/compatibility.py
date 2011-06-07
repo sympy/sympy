@@ -189,3 +189,15 @@ def ordered_iter(i, include=None):
             iterable(i) or
             bool(include) and
             isinstance(i, include))
+
+"""
+Wrapping some imports in try/except statements to allow the same code to
+be used in Python 3+ as well.
+"""
+
+try:
+    callable = callable
+except NameError:
+    import collections
+    def callable(obj):
+        return isinstance(obj, collections.Callable)
