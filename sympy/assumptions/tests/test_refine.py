@@ -44,3 +44,24 @@ def test_exp():
     assert refine(exp(pi*I*2*(x+Rational(1,2))), Q.integer(x)) == -1
     assert refine(exp(pi*I*2*(x+Rational(1,4))), Q.integer(x)) == I
     assert refine(exp(pi*I*2*(x+Rational(3,4))), Q.integer(x)) == -I
+
+
+def test_func_args():
+    from sympy.core import Expr
+    class MyClass(Expr):
+        # A class with nontrivial .func
+
+        def __init__(self, *args):
+            self.my_member = ""
+
+        @property
+        def func(self):
+            def my_func(*args):
+                obj = MyClass(*args)
+                obj.my_member = self.my_member
+                return obj
+            return my_func
+
+    x = MyClass()
+    x.my_member = "A very important value"
+    assert x.my_member == refine(x).my_member
