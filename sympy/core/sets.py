@@ -778,11 +778,15 @@ class FiniteSet(CountableSet):
 
     """
     def __new__(cls, *args):
-        # Allow both FiniteSet(iterable) and FiniteSet(num, num, num)
-        if (len(args)==1 and is_flattenable(args[0])):
-            args = args[0]
+        def flatten(arg):
+            if is_flattenable(arg) and not isinstance(arg,Set):
+                return sum(map(flatten, arg), [])
+            return [arg]
+        args = flatten(list(args))
+
         # Sympify Arguments
         args = map(sympify, args)
+        # Turn tuples into Tuples
         args = [Tuple(*arg) if arg.__class__ is tuple else arg for arg in args]
 
         if len(args)==0:
@@ -923,10 +927,9 @@ class RealFiniteSet(FiniteSet, RealSet):
         intervals.append(Interval(sorted_elements[-1], S.Infinity, True, True))
         return Union(*intervals)
 
+genclass = (1 for i in xrange(2)).__class__
 def is_flattenable(obj):
     """
-    Checks that an object is iterable but not a tuple.
-    In this module consider tuples as atomic elements
+    Checks that an argument to a Set constructor  should be flattened
     """
-    return (hasattr(obj, '__iter__')
-            and 'tuple' not in str(obj.__class__).lower())
+    return obj.__class__ in [list, set, frozenset, genclass]
