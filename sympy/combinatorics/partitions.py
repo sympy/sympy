@@ -269,6 +269,30 @@ class IntegerPartition(Partition):
         """
         return self.args[0]
 
+    @property
+    def conjugate(self):
+        """
+        Find the conjugate of a partition.
+        This is the vector that satisfies
+        len(p) = max(conjugate(p)) and vice versa.
+
+        Examples:
+        >>> from sympy.combinatorics.partitions import IntegerPartition
+        >>> a = IntegerPartition([1,3,4], 8)
+        >>> a.conjugate
+        [3, 3, 3, 3]
+        """
+        result = []
+        j = len(self.partition_array)
+        if j <= 0:
+            return result
+        while True:
+            result.append(j)
+            while len(result) >= self.partition_array[j-1]:
+                j -= 1
+                if j == 0:
+                    return result
+
     def __new__(cls, *args, **kw_args):
         """
         Generates a new partition object.
