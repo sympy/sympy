@@ -71,10 +71,8 @@ class ReferenceFrame(object):
                     return v1
         raise ValueError('No Common Angular Velocity Parent')
 
-    def _common_frame(self,other):
-        """Returns the first common parent between two ReferenceFrames. """
-        if not isinstance(other, ReferenceFrame):
-            raise TypeError('You have to use a ReferenceFrame')
+    def _frame_list(self, other):
+        """The list of frames from self to other. """
         leg1 = [self]
         ptr = self
         while ptr.parent != None:
@@ -85,10 +83,10 @@ class ReferenceFrame(object):
         while ptr.parent != None:
             ptr = ptr.parent
             leg2.append(ptr)
-        for i,v1 in enumerate(leg1):
-            for j, v2 in enumerate(leg2):
+        for i1, v1 in enumerate(leg2):
+            for i2, v2 in enumerate(leg1):
                 if v1 == v2:
-                    return v1
+                    return leg1[:i2 + 1], leg2[:i1 + 1]
         raise ValueError('No Common Parent Frame')
 
     def ang_vel_in(self, otherframe):
@@ -141,7 +139,6 @@ class ReferenceFrame(object):
             w3 = angvelmat[3]
             return Vector([(Matrix([w1, w2, w3]), self)])
 
-
     def dcm(self, otherframe):
         """The direction cosine matrix between frames.
 
@@ -168,21 +165,16 @@ class ReferenceFrame(object):
         [0, sin(q1),  cos(q1)]
 
         """
-
-        commonframe = self._common_frame(otherframe)
-        # form DCM from self to first common frame
-        leg1 = eye(3)
-        ptr = self
-        while ptr != commonframe:
-            leg1 = ptr.parent_orient * leg1
-            ptr = ptr.parent
-        # form DCM from other to first common frame
-        leg2 = eye(3)
-        ptr = otherframe
-        while ptr != commonframe:
-            leg2 = ptr.parent_orient * leg2
-            ptr = ptr.parent
-        return leg2 * leg1.T
+        (l1, l2) = self._frame_list(otherframe)
+        if (len(l1) == 1) & (len(l2) == 1):
+            return eye(3)
+        elif len(l1) == 1:
+            return l2[-1].dcm(l2[1]) * l2[0].parent_orient
+        elif len(l2) == 1:
+            return l1[0].parent_orient.T * l1[1].dcm(l1[-1])
+        # TODO double check the mul order of the line below
+        return l1[0].dcm(l1[-1]) * l2[-1].dcm(l2[0])
+        #return l2[-1].dcm(l2[0]) * l1[0].dcm(l1[-1])
 
     def orientnew(self, newname, rot_type, amounts, rot_order=''):
         """Creates a new ReferenceFrame oriented with respect to this Frame.
