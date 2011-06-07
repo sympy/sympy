@@ -50,6 +50,16 @@ class ReferenceFrame(object):
             self._cur = 0
             raise StopIteration
 
+    def _w_diff_dcm(self, otherframe):
+        """Angular velocity from time differentiating the DCM. """
+        dcm2diff = otherframe.dcm(self)
+        diffed = dcm2diff.diff(Symbol('t'))
+        angvelmat = diffed * dcm2diff.T
+        w1 = angvelmat[7]
+        w2 = angvelmat[2]
+        w3 = angvelmat[3]
+        return Vector([(Matrix([w1, w2, w3]), self)])
+
     def _frame_list(self, other):
         """The list of frames from self to other. """
         leg1 = [self]
@@ -88,18 +98,32 @@ class ReferenceFrame(object):
         >>> N = ReferenceFrame('N')
         >>> A = ReferenceFrame('A')
         >>> V = 10 * N.x
-        >>> A.set_ang_vel(V, N)
+        >>> A.set_ang_vel({N: V})
         >>> A.ang_vel_in(N)
         (10)*nx>
 
         """
+
+        if self._ang_vel.has_key(otherframe):
+            return self._ang_vel[otherframe]
         
-        (l1, l2) = _frame_list(self, other)
+        (l1, l2) = self._frame_list(otherframe)
         l2.reverse()
         wholelist = l1 + l2[1:]
-
-        
-
+        outvec = 0
+        i = 0
+        while i < len(wholelist):
+            j = len(wholelist)
+            while j > i:
+                if wholelist[i]._ang_vel.has_key(wholelist[j]):
+                    outvec += wholelist[i]._ang_vel[wholelist[j]]
+                    i = j
+                    break
+                j -= 1
+            else:
+                outvec += _w_diff_dcm(wholelist[i], wholelist[i+1])
+            i += 1
+        return outvec
 
     def dcm(self, otherframe):
         """The direction cosine matrix between frames.
@@ -321,25 +345,25 @@ class ReferenceFrame(object):
             raise NotImplementedError('That is not an implemented rotation')
         self.parent = parent
 
-        def set_ang_vel(self, dicti):
-            """Define the angular velocity vector of the ReferenceFrame.
+    def set_ang_vel(self, dicti):
+        """Define the angular velocity vector of the ReferenceFrame.
 
-            """
+        """
 
-            if not isinstance(dicti, dict):
-                raise TypeError('Need to supply a Dictionary')
-            k = dicti.keys()
-            v = dicti.values()
-            if not (len(k) == 1) & (len(v) == 1):
-                raise TypeError('Need to supply a Dictionary of length 1')
-            if not isinstance(k[0], ReferenceFrame):
-                raise TypeError('Need to supply a ReferenceFrame first')
-            if not isinstance(v[0], Vector ) | (v[0] == 0):
-                raise TypeError('Need to supply a Vector second')
-            v = v[0]
-            k = k[0]
-            self._ang_vel.update(dicti)
-            k._angvel.update({self: -v})
+        if not isinstance(dicti, dict):
+            raise TypeError('Need to supply a Dictionary')
+        k = dicti.keys()
+        v = dicti.values()
+        if not (len(k) == 1) & (len(v) == 1):
+            raise TypeError('Need to supply a Dictionary of length 1')
+        if not isinstance(k[0], ReferenceFrame):
+            raise TypeError('Need to supply a ReferenceFrame first')
+        if not isinstance(v[0], Vector ) | (v[0] == 0):
+            raise TypeError('Need to supply a Vector second')
+        v = v[0]
+        k = k[0]
+        self._ang_vel.update(dicti)
+        k._ang_vel.update({self: -v})
 
     @property
     def x(self):
@@ -623,7 +647,7 @@ class Vector(object):
         >>> N = ReferenceFrame('N')
         >>> A = N.orientnew('A', 'Simple', q1, 1)
         >>> v = u1 * N.x
-        >>> A.set_ang_vel(10*A.x, N)
+        >>> A.set_ang_vel({N: 10*A.x})
         >>> A.x.dt(N) == 0
         True
         >>> v.dt(N)
