@@ -2014,12 +2014,6 @@ def linear_congruence(a, b, m):
 
     >>> from sympy.polys.galoistools import linear_congruence
 
-    >>> linear_congruence(4, 3, 5)
-    2
-    >>> linear_congruence(0, 3, 5)
-    []
-    >>> linear_congruence(0, 5, 5)
-    [0, 1, 2, 3, 4]
     >>> linear_congruence(3, 12, 15)
     [4, 9, 14]
 
@@ -2048,8 +2042,6 @@ def csolve_prime(f, p):
 
     >>> from sympy.polys.galoistools import csolve_prime
 
-    >>> csolve_prime([1, 3, 2, 17], 7)
-    [3]
     >>> csolve_prime([1, 3, 1, 5], 5)
     [0, 1]
 
@@ -2060,7 +2052,6 @@ def csolve_prime(f, p):
 def get_above(x,s,p,f):
     """
     To generate solutions of f(x) congruent 0 mod(p**(s+1)) from the solutions of f(x) congruent 0 mod(p**s)
-
     This function is used in gf_csolve.
     """
     from sympy.polys.domains import ZZ
@@ -2077,21 +2068,8 @@ def csolve_primepower(f,p,e):
 
     >>>from sympy.polys.galoistools import csolve_primepower
 
-    >>> g.csolve_primepower([1,1,223], 3, 1)
-    [1]
-
-    >>> g.csolve_primepower([1,1,223], 3, 2)
-    [7, 4, 1]
-
-    >>> g.csolve_primepower([1,1,223], 3, 3)
-    [22, 13, 4]
-
     >>> g.csolve_primepower([1,1,223], 3, 4)
     [76, 49, 22, 67, 40, 13, 58, 31, 4]
-
-    >>> g.csolve_primepower([1,1,223],3,5)
-    [238, 157, 76, 211, 130, 49, 184, 103, 22, 220, 139, 58, 193, 112, 31, 166, 85, 4]
-
 
     **Reference**
     1) 'An Introdunction to the Theory of Numbers' 5th Edition by Ivan Niven, Herbert S. Zuckerman and Hugh L. Montgomery. Chaper 2. Prime Power Moduli
@@ -2127,11 +2105,6 @@ def gf_csolve(f,n):
 
     >>> gf_csolve([1, 1, 7], 189)
     >>> [76, 49, 13, 175, 139, 112]
-
-    >>> gf_csolve([1, 3, 4, 1, 30], 60)
-    >>> [10, 30]
-
-    For other examples and references, see function linear_congruence and csolve_primepower.
 
     """
     P = factorint(n)
