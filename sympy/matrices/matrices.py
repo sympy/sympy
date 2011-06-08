@@ -2287,7 +2287,7 @@ class Matrix(object):
         self._eigenvects = self.eigenvects()
         all_iscorrect = True
         for eigenval, multiplicity, vects in self._eigenvects:
-            if len(vects) <> multiplicity:
+            if len(vects) != multiplicity:
                 all_iscorrect = False
                 break
             elif reals_only and not eigenval.is_real:
