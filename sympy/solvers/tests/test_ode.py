@@ -1,7 +1,7 @@
 from sympy import (Function, dsolve, Symbol, sin, cos, sinh, acos, tan, cosh,
     I, exp, log, simplify, together, powsimp, fraction, radsimp, Eq, sqrt, pi,
     erf,  diff, Rational, asinh, trigsimp, S, RootOf, Poly, Integral, atan,
-    Equality, solve, O, LambertW, Dummy, pure)
+    Equality, solve, O, LambertW, Dummy)
 from sympy.abc import x, y, z
 from sympy.solvers.ode import ode_order, homogeneous_order, \
     _undetermined_coefficients_match, classify_ode, checkodesol, constant_renumber
@@ -698,22 +698,22 @@ def test_nth_linear_constant_coeff_homogeneous():
 def test_nth_linear_constant_coeff_homogeneous_RootOf():
     eq = f(x).diff(x, 5) + 11*f(x).diff(x) - 2*f(x)
     sol = Eq(f(x),
-        C1*exp(x*RootOf(pure**5 + 11*pure - 2, 0)) + \
-        C2*exp(x*RootOf(pure**5 + 11*pure - 2, 1)) + \
-        C3*exp(x*RootOf(pure**5 + 11*pure - 2, 2)) + \
-        C4*exp(x*RootOf(pure**5 + 11*pure - 2, 3)) + \
-        C5*exp(x*RootOf(pure**5 + 11*pure - 2, 4)))
+        C1*exp(x*RootOf(x**5 + 11*x - 2, 0)) + \
+        C2*exp(x*RootOf(x**5 + 11*x - 2, 1)) + \
+        C3*exp(x*RootOf(x**5 + 11*x - 2, 2)) + \
+        C4*exp(x*RootOf(x**5 + 11*x - 2, 3)) + \
+        C5*exp(x*RootOf(x**5 + 11*x - 2, 4)))
     assert dsolve(eq, f(x)) == sol
 
 @XFAIL
 def test_nth_linear_constant_coeff_homogeneous_RootOf_sol():
     eq = f(x).diff(x, 5) + 11*f(x).diff(x) - 2*f(x)
     sol = Eq(f(x),
-        C1*exp(x*RootOf(pure**5 + 11*pure - 2, 0)) + \
-        C2*exp(x*RootOf(pure**5 + 11*pure - 2, 1)) + \
-        C3*exp(x*RootOf(pure**5 + 11*pure - 2, 2)) + \
-        C4*exp(x*RootOf(pure**5 + 11*pure - 2, 3)) + \
-        C5*exp(x*RootOf(pure**5 + 11*pure - 2, 4)))
+        C1*exp(x*RootOf(x**5 + 11*x - 2, 0)) + \
+        C2*exp(x*RootOf(x**5 + 11*x - 2, 1)) + \
+        C3*exp(x*RootOf(x**5 + 11*x - 2, 2)) + \
+        C4*exp(x*RootOf(x**5 + 11*x - 2, 3)) + \
+        C5*exp(x*RootOf(x**5 + 11*x - 2, 4)))
     assert checkodesol(eq, f(x), sol, order=5, solve_for_func=False)[0]
 
 def test_undetermined_coefficients_match():
