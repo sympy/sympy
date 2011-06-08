@@ -1,5 +1,5 @@
 from sympy import (symbols, log, Float, nan, oo, zoo, I, pi, E, exp, Symbol,
-        LambertW, sqrt, Rational, sin, expand_log, S, sign)
+        LambertW, sqrt, Rational, sin, expand_log, S, sign, nextprime)
 from sympy.utilities.pytest import XFAIL
 
 def test_exp_values():
@@ -106,6 +106,10 @@ def test_log_values():
 
     assert exp(-log(3))**(-1) == 3
 
+    assert log(S.Half) == -log(2)
+    assert log(2*3).func is log
+    assert log(2*3**2).func is log
+
 def test_log_base():
     assert log(1, 2) == 0
     assert log(2, 2) == 1
@@ -122,9 +126,12 @@ def test_log_symbolic():
     assert log(x, exp(1)) == log(x)
     assert log(exp(x)) != x
 
-    assert log(x) == log(x)
     assert log(x, exp(1)) == log(x)
     assert log(x*y) != log(x) + log(y)
+    assert log(x/y).expand() != log(x) - log(y)
+    assert log(x/y).expand(force=True) == log(x) - log(y)
+    assert log(x**y).expand() != y*log(x)
+    assert log(x**y).expand(force=True) == y*log(x)
 
     assert log(x, 2) == log(x)/log(2)
     assert log(E, 2) == 1/log(2)
@@ -204,6 +211,11 @@ def test_log_expand():
     x, y = symbols('x,y')
     assert log(x*y).expand(force=True) == log(x) + log(y)
     assert log(x**y).expand(force=True) == y*log(x)
+
+    # there's generally no need to expand out logs since this requires
+    # factoring and if simplification is sought, it's cheaper to put
+    # logs together than it is to take them apart.
+    assert log(2*3**2).expand() != 2*log(3) + log(2)
 
 def test_log_simplify():
     x = Symbol("x", positive=True)

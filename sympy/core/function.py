@@ -919,7 +919,10 @@ def expand(e, deep=True, modulus=None, power_base=True, power_exp=True, \
     recursively expanded.  Use deep=False to only expand on the top
     level.
 
-    Also see expand_log, expand_mul, expand_complex, expand_trig,
+    If the 'force' hint is used, assumptions about variables will be ignored
+    in making the expansion.
+
+    Also see expand_log, expand_mul, separate, expand_complex, expand_trig,
     and expand_func, which are wrappers around those expansion methods.
 
     >>> from sympy import cos, exp
@@ -930,18 +933,19 @@ def expand(e, deep=True, modulus=None, power_base=True, power_exp=True, \
     x*y + y*z
 
     complex - Split an expression into real and imaginary parts.
-    >>> (x+y).expand(complex=True)
+    >>> (x + y).expand(complex=True)
     I*im(x) + I*im(y) + re(x) + re(y)
     >>> cos(x).expand(complex=True)
     -I*sin(re(x))*sinh(im(x)) + cos(re(x))*cosh(im(x))
 
     power_exp - Expand addition in exponents into multiplied bases.
-    >>> exp(x+y).expand(power_exp=True)
+    >>> exp(x + y).expand(power_exp=True)
     exp(x)*exp(y)
-    >>> (2**(x+y)).expand(power_exp=True)
+    >>> (2**(x + y)).expand(power_exp=True)
     2**x*2**y
 
-    power_base - Split powers of multiplied bases if assumptions allow.
+    power_base - Split powers of multiplied bases if assumptions allow
+    or if the 'force' hint is used.
     >>> ((x*y)**z).expand(power_base=True)
     (x*y)**z
     >>> ((x*y)**z).expand(power_base=True, force=True)
@@ -952,39 +956,41 @@ def expand(e, deep=True, modulus=None, power_base=True, power_exp=True, \
     log - Pull out power of an argument as a coefficient and split logs products
     into sums of logs.  Note that these only work if the arguments of the log
     function have the proper assumptions: the arguments must be positive and the
-    exponents must be real.
-    >>> from sympy import log, symbols
+    exponents must be real or else the force hint must be True.
+    >>> from sympy import log, symbols, oo
     >>> log(x**2*y).expand(log=True)
     log(x**2*y)
+    >>> log(x**2*y).expand(log=True, force=True)
+    2*log(x) + log(y)
     >>> x, y = symbols('x,y', positive=True)
     >>> log(x**2*y).expand(log=True)
     2*log(x) + log(y)
 
     trig - Do trigonometric expansions.
-    >>> cos(x+y).expand(trig=True)
+    >>> cos(x + y).expand(trig=True)
     -sin(x)*sin(y) + cos(x)*cos(y)
 
     func - Expand other functions.
     >>> from sympy import gamma
-    >>> gamma(x+1).expand(func=True)
+    >>> gamma(x + 1).expand(func=True)
     x*gamma(x)
 
     multinomial - Expand (x + y + ...)**n where n is a positive integer.
-    >>> ((x+y+z)**2).expand(multinomial=True)
+    >>> ((x + y + z)**2).expand(multinomial=True)
     x**2 + 2*x*y + 2*x*z + y**2 + 2*y*z + z**2
 
     You can shut off methods that you don't want.
-    >>> (exp(x+y)*(x+y)).expand()
+    >>> (exp(x + y)*(x + y)).expand()
     x*exp(x)*exp(y) + y*exp(x)*exp(y)
-    >>> (exp(x+y)*(x+y)).expand(power_exp=False)
+    >>> (exp(x + y)*(x + y)).expand(power_exp=False)
     x*exp(x + y) + y*exp(x + y)
-    >>> (exp(x+y)*(x+y)).expand(mul=False)
+    >>> (exp(x + y)*(x + y)).expand(mul=False)
     (x + y)*exp(x)*exp(y)
 
     Use deep=False to only expand on the top level.
-    >>> exp(x+exp(x+y)).expand()
+    >>> exp(x + exp(x + y)).expand()
     exp(x)*exp(exp(x)*exp(y))
-    >>> exp(x+exp(x+y)).expand(deep=False)
+    >>> exp(x + exp(x + y)).expand(deep=False)
     exp(x)*exp(exp(x + y))
 
     Note: because hints are applied in arbitrary order, some hints may
@@ -998,30 +1004,30 @@ def expand(e, deep=True, modulus=None, power_base=True, power_exp=True, \
     >>> from sympy import expand_log, expand, expand_mul
     >>> x, y, z = symbols('x,y,z', positive=True)
 
-    >> expand(log(x*(y+z))) # could be either one below
+    >> expand(log(x*(y + z))) # could be either one below
     log(x*y + x*z)
     log(x) + log(y + z)
 
-    >>> expand_log(log(x*y+x*z))
+    >>> expand_log(log(x*y + x*z))
     log(x*y + x*z)
 
-    >> expand(log(x*(y+z)), mul=False)
+    >> expand(log(x*(y + z)), mul=False)
     log(x) + log(y + z)
 
 
-    >> expand((x*(y+z))**x) # could be either one below
+    >> expand((x*(y + z))**x) # could be either one below
     (x*y + x*z)**x
     x**x*(y + z)**x
 
-    >>> expand((x*(y+z))**x, mul=False)
+    >>> expand((x*(y + z))**x, mul=False)
     x**x*(y + z)**x
 
 
-    >> expand(x*(y+z)**2) # could be either one below
+    >> expand(x*(y + z)**2) # could be either one below
     2*x*y*z + x*y**2 + x*z**2
     x*(y + z)**2
 
-    >>> expand(x*(y+z)**2, mul=False)
+    >>> expand(x*(y + z)**2, mul=False)
     x*(y**2 + 2*y*z + z**2)
 
     >>> expand_mul(_)
