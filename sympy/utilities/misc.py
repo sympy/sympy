@@ -28,7 +28,7 @@ def default_sort_key(item):
     2.5 or higher), that this can be used for.
     """
 
-    #XXX: The following should also be in the docstring, but orders to not
+    #XXX: The following should also be in the docstring, but orders do not
     # actually work at the moment.
 
     # To use a nonstandard order, you must create your own sort key.  The default
