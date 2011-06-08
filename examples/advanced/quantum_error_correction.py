@@ -13,10 +13,10 @@ from sympy.physics.quantum.qubit import Qubit, IntQubit
 from sympy.physics.quantum.applyops import apply_operators
 from sympy.physics.quantum.gate import X, Y, Z
 
-# Generators commute with each other
+# Generators commute with each other.
 # The size of the stabilizers set is 2^(n-k), and each operator that fixes 
 # an error is some unordered product of the generators, where each 
-# operator may consist of a product of 1 to (n-k) generators
+# operator may consist of a product of 1 to (n-k) generators.
 # In other words, given (n-k) generators, the operators are such that
 # (n-k) C j where j = 1, ... , (n-k), (nCr is the choose operation)
 # 2^(n-k) = sum from i = 0 to i = (n-k): (n-k) C i
@@ -87,19 +87,16 @@ one_codeword = map((lambda basis: apply_operators(qubit_5_not*basis)),
 one_codeword_intqubit = map((lambda basis: apply_operators(qubit_5_not*basis)), 
                             zero_codeword_intqubit)
 
-#one_codeword_intqubit = [IntQubit(one_codeword[0]),
-# IntQubit(one_codeword[1])]
-
 print ''
 print '5 qubit codeword for 0:'
-print zero_codeword
+print reduce((lambda x, y: x + y), zero_codeword)
 print ''
-print zero_codeword_intqubit
+print reduce((lambda x, y: x + y), zero_codeword_intqubit)
 print ''
 print '5 qubit codeword for 1:'
-print one_codeword
+print reduce((lambda x, y: x + y), one_codeword)
 print ''
-print one_codeword_intqubit
+print reduce((lambda x, y: x + y), one_codeword_intqubit)
 print ''
 
 # 1 qubit to 7 qubit codeword generators
@@ -136,9 +133,9 @@ one_codeword_7 = map((lambda basis: apply_operators(qubit_7_not*basis)),
                      zero_codeword_7)
 
 print '7 qubit codeword example:'
-print IntQubit(0),' = ', zero_codeword_7
+print IntQubit(0),' = ', reduce((lambda x, y: x + y), zero_codeword_7)
 print ''
-print IntQubit(1),' = ', one_codeword_7
+print IntQubit(1),' = ', reduce((lambda x, y: x + y), one_codeword_7)
 print ''
 
 # 3 to 8 qubit codeword
@@ -175,7 +172,6 @@ for a_combo in combos_3_8:
 zero_codeword_3_8 = map((lambda op: apply_operators(op*Qubit('00000000'))),
                         stabilizer_op_set_3_8)
 
-#print combos_3_8
 all_codewords_3_8 = []
 for number in range(pow(2, 3)):
     a_codeword = zero_codeword_3_8
@@ -194,13 +190,13 @@ for number in range(pow(2, 3)):
 
 print '3 to 8 qubit codeword example:'
 for (a_number, a_codeword) in all_codewords_3_8:
-    print IntQubit(a_number, 3),' = ', a_codeword
+    print IntQubit(a_number, 3),' = ', reduce((lambda x, y: x + y), a_codeword)
     print ''
 
 print ''
 
-# For a [4, 2, 2] code, 2 qubit words are converted to 4 qubit words
-# It is derived from a [5, 1, 3] code where the last qubit is removed,
+# For a [4, 2, 2] code, 2 qubit words are converted to 4 qubit words.
+# It is derived from a [5, 1, 3] code where the last qubit is removed
 # and the n-k generators from the [5, 1, 3] code will be modified such
 # that M1 ends with an X operator, M2 ends with a Z operator, and
 # the rest of the operators end with the identity operator.
@@ -233,30 +229,31 @@ for a_combo in combos_2_4:
 zero_codeword_2_4 = map((lambda op: apply_operators(op*Qubit('0000'))),
                         stabilizer_op_set_2_4)
 
-#print combos_2_4
 all_codewords_2_4 = []
 for number in range(pow(2, 2)):
     a_codeword = zero_codeword_2_4
 
-    if number & 0x01:
-        a_codeword = map((lambda st: apply_operators(x2_2_4 * st)),
-                         a_codeword)
+    # Need to check if order of operations is correct.
+    # Different from 3 to 8 qubit example, where X3 applied before X1 and X2.
+    # In this example, X1 applied before X2 in order to produce different
+    # codewords.  Otherwise, |1> = X2 * zero_codeword_2_4 and 
+    # |3> = X1 * X2 * zero_codeword_2_4 are the same
     if number & 0x02:
         a_codeword = map((lambda st: apply_operators(x1_2_4 * st)),
                          a_codeword)
-    
+    if number & 0x01:
+        a_codeword = map((lambda st: apply_operators(x2_2_4 * st)),
+                         a_codeword)
+   
     list.append(all_codewords_2_4, (number, a_codeword))
 
 print '2 to 4 qubit codeword example:'
+print map((lambda st: apply_operators(x2_2_4 * x1_2_4 * st)),
+          zero_codeword_2_4)
 for (a_number, a_codeword) in all_codewords_2_4:
-    print IntQubit(a_number, 2),' = ', a_codeword
+    print IntQubit(a_number, 2),' = ', reduce((lambda x, y: x + y), a_codeword)
     print ''
 
 print ''
-
-
-# Possible to generate new codes by "pasting" codes together
-
-# Concept still confusing to me: how do you find the generators
 
 print 'End of quantum error correction example.'
