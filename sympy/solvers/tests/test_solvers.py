@@ -227,6 +227,7 @@ def test_tsolve():
         [Rational(-5, 3) + LambertW(log(2**(-10240*2**(Rational(1, 3))/3)))/(5*log(2))],
         [-Rational(5,3) + LambertW(-10240*2**Rational(1,3)*log(2)/3)/(5*log(2))],
         [(-25*log(2) + 3*LambertW(-10240*2**(Rational(1, 3))*log(2)/3))/(15*log(2))],
+        [-((25*log(2) - 3*LambertW(-10240*2**(Rational(1, 3))*log(2)/3)))/(15*log(2))],
         ]
     assert solve(5*x-1+3*exp(2-7*x), x) == \
         [Rational(1,5) + LambertW(-21*exp(Rational(3,5))/5)/7]
