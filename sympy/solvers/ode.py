@@ -2229,11 +2229,11 @@ def ode_nth_linear_constant_coeff_homogeneous(eq, func, order, match, returns='s
     >>> dsolve(f(x).diff(x, 5) + 10*f(x).diff(x) - 2*f(x), f(x),
     ... hint='nth_linear_constant_coeff_homogeneous')
     ... # doctest: +NORMALIZE_WHITESPACE
-    f(x) == C1*exp(x*RootOf(_pure**5 + 10*_pure - 2, 0)) + \
-    C2*exp(x*RootOf(_pure**5 + 10*_pure - 2, 1)) + \
-    C3*exp(x*RootOf(_pure**5 + 10*_pure - 2, 2)) + \
-    C4*exp(x*RootOf(_pure**5 + 10*_pure - 2, 3)) + \
-    C5*exp(x*RootOf(_pure**5 + 10*_pure - 2, 4))
+    f(x) == C1*exp(x*RootOf(_x**5 + 10*_x - 2, 0)) + \
+    C2*exp(x*RootOf(_x**5 + 10*_x - 2, 1)) + \
+    C3*exp(x*RootOf(_x**5 + 10*_x - 2, 2)) + \
+    C4*exp(x*RootOf(_x**5 + 10*_x - 2, 3)) + \
+    C5*exp(x*RootOf(_x**5 + 10*_x - 2, 4))
 
     Note that because this method does not involve integration, there is
     no 'nth_linear_constant_coeff_homogeneous_Integral' hint.
@@ -2279,15 +2279,15 @@ def ode_nth_linear_constant_coeff_homogeneous(eq, func, order, match, returns='s
     constants = numbered_symbols(prefix='C', cls=Symbol, start=1)
 
     # First, set up characteristic equation.
-    chareq = S.Zero
+    chareq, symbol = S.Zero, Dummy('x')
 
     for i in r.keys():
         if type(i) == str or i < 0:
             pass
         else:
-            chareq += r[i]*S.Pure**i
+            chareq += r[i]*symbol**i
 
-    chareq = Poly(chareq, S.Pure)
+    chareq = Poly(chareq, symbol)
     chareqroots = [ RootOf(chareq, k) for k in xrange(chareq.degree()) ]
 
     # Create a dict root: multiplicity or charroots

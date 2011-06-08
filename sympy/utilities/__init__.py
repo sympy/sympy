@@ -13,3 +13,4 @@ from decorator import threaded, xthreaded
 from cythonutils import cythonized
 from timeutils import timed
 
+from misc import default_sort_key

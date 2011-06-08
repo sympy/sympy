@@ -10,6 +10,7 @@ class Expr(Basic, EvalfMixin):
     __slots__ = []
 
     def sort_key(self, order=None):
+        # XXX: The order argument does not actually work
         from sympy.core import S
 
         def key_inner(arg):
@@ -260,7 +261,7 @@ class Expr(Basic, EvalfMixin):
             _, ((re, im), monom, ncpart) = term
 
             monom = [ -m for m in monom_key(monom) ]
-            ncpart = tuple([ e.sort_key() for e in ncpart ])
+            ncpart = tuple([ e.sort_key(order=order) for e in ncpart ])
             coeff = ((bool(im), im), (re, im))
 
             return monom, ncpart, coeff
@@ -333,6 +334,7 @@ class Expr(Basic, EvalfMixin):
         """Transform an expression to a list of terms. """
         from sympy.core import Add, Mul, S
         from sympy.core.exprtools import decompose_power
+        from sympy.utilities import default_sort_key
 
         gens, terms = set([]), []
 
@@ -365,7 +367,7 @@ class Expr(Basic, EvalfMixin):
 
             terms.append((term, (coeff, cpart, ncpart)))
 
-        gens = sorted(gens, key=lambda expr: expr.sort_key())
+        gens = sorted(gens, key=default_sort_key)
 
         k, indices = len(gens), {}
 
