@@ -15,7 +15,7 @@ from sympy.polys.specialpolys import cyclotomic_poly
 from sympy.polys.polyerrors import PolynomialError, GeneratorsNeeded, DomainError
 
 from sympy.simplify import simplify
-from sympy.utilities import all
+from sympy.utilities import all, default_sort_key
 
 import math
 
@@ -76,7 +76,7 @@ def roots_quadratic(f):
             r0 = E + F
             r1 = E - F
 
-    return sorted([r0, r1], key=lambda expr: expr.sort_key())
+    return sorted([r0, r1], key=default_sort_key)
 
 def roots_cubic(f):
     """Returns a list of roots of a cubic polynomial."""
@@ -231,7 +231,7 @@ def roots_binomial(f):
         zeta = exp(2*k*S.Pi*I/n).expand(complex=True)
         roots.append((alpha*zeta).expand(power_base=False))
 
-    return sorted(roots, key=lambda expr: expr.sort_key())
+    return sorted(roots, key=default_sort_key)
 
 def _inv_totient_estimate(m):
     """
@@ -300,7 +300,7 @@ def roots_cyclotomic(f, factor=False):
         for h, _ in g.factor_list()[1]:
             roots.append(-h.TC())
 
-    return sorted(roots, key=lambda expr: expr.sort_key())
+    return sorted(roots, key=default_sort_key)
 
 def roots_rational(f):
     """Returns a list of rational roots of a polynomial."""
@@ -331,7 +331,7 @@ def roots_rational(f):
             if not f.eval(-zero):
                 zeros.append(-zero)
 
-    return sorted(zeros, key=lambda expr: expr.sort_key())
+    return sorted(zeros, key=default_sort_key)
 
 def _integer_basis(poly):
     """Compute coefficient basis for a polynomial over integers. """
@@ -649,7 +649,7 @@ def roots(f, *gens, **flags):
         for zero, k in result.iteritems():
             zeros.extend([zero]*k)
 
-        return sorted(zeros, key=lambda expr: expr.sort_key())
+        return sorted(zeros, key=default_sort_key)
 
 def root_factors(f, *gens, **args):
     """
