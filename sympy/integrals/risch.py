@@ -328,7 +328,7 @@ class DifferentialExtension(object):
 
             logs = filter(lambda i: i.args[0].is_rational_function(*self.T) and
                 i.args[0].has_any_symbols(*self.T), self.newf.atoms(log))
-            symlogs = filter(lambda i: i.args[0].is_Pow and
+            symlogs = filter(lambda i: i.has(*self.T) and i.args[0].is_Pow and
                 i.args[0].base.is_rational_function(*self.T) and
                 not i.args[0].exp.is_Integer, self.newf.atoms(log))
 
