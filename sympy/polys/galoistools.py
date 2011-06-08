@@ -2008,7 +2008,7 @@ def gf_value(f, a):
 
 def linear_congruence(a, b, m):
     """
-    Solutions of  a*x congruent b mod(m) distinct mod m. 
+    Solutions of  a*x congruent b mod(m) distinct mod m.
 
     **Examples**
 
