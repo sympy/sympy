@@ -20,7 +20,7 @@ from sympy.matrices import Matrix, zeros, eye
 
 from sympy.solvers import solve
 
-from sympy.polys import Poly, lcm, cancel
+from sympy.polys import Poly, lcm, cancel, sqf_list
 
 from sympy.integrals.risch import (gcdex_diophantine, frac_in, derivation,
     NonElementaryIntegralException, residue_reduce, splitfactor,
@@ -620,13 +620,12 @@ def is_deriv_k(fa, fd, DE):
             ans = zip(terms, u)
             result = Add(*[Mul(i, j) for i, j in ans])
             argterms = [DE.T[i] for i in DE.E_K] + DE.L_args
-            # We need to get around things like sqrt(x**2) != x
             l = []
             for i, j in zip(argterms, u):
-                if i.is_Pow:
-                    l.append(i.base**(i.exp*j))
-                else:
-                    l.append(Pow(i, j))
+                # We need to get around things like sqrt(x**2) != x
+                # and also sqrt(x**2 + 2*x + 1) != x + 1
+                icoeff, iterms = sqf_list(i)
+                l.append(Mul(*([Pow(icoeff,j)] + [Pow(b, e*j) for b, e in iterms])))
             const = cancel(fa.as_basic()/fd.as_basic()/Mul(*l))
 
             return (ans, result, const)

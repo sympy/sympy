@@ -158,6 +158,11 @@ def test_is_deriv_k():
     assert is_deriv_k(Poly(x, t1), Poly(1, t1), DE) == \
         ([(t1, S(1)/2)], t1/2, 1)
 
+    DE = DifferentialExtension(extension={'D':[Poly(1, x), Poly(2/(1 + x), t0)],
+        'L_K':[1], 'E_K':[], 'L_args':[x**2 + 2*x + 1], 'E_args':[]})
+    assert is_deriv_k(Poly(1 + x, t0), Poly(1, t0), DE) == \
+        ([(t0, S(1)/2)], t0/2, 1)
+
 def test_is_log_deriv_k_t_radical_in_field():
     # Note, any constant term in the second element of the result doesnt matter,
     # because it cancels in Da/a.
