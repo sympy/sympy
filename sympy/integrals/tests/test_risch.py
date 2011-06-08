@@ -320,6 +320,17 @@ def test_DifferentialExtension():
         Poly((1 + t0)*t1, t1)], [x, t0, t1], [Lambda(i, log(i)),
         Lambda(i, exp(t0*i))], [(exp(x*log(x)), x**x)], [2], [t0*x], [1], [x])
 
+    # symlogs
+    assert DifferentialExtension(log(x**x), x, dummy=False)._important_attrs == \
+        (Poly(x*t0, t0), Poly(1, t0), [Poly(1, x), Poly(1/x, t0)], [x, t0],
+        [Lambda(i, log(i))], [(x*log(x), log(x**x))], [], [], [1], [x])
+    assert DifferentialExtension(log(x**y), x, dummy=False)._important_attrs == \
+        (Poly(y*t0, t0), Poly(1, t0), [Poly(1, x), Poly(1/x, t0)], [x, t0],
+        [Lambda(i, log(i))], [(y*log(x), log(x**y))], [], [], [1], [x])
+    assert DifferentialExtension(log(sqrt(x)), x, dummy=False)._important_attrs == \
+        (Poly(t0, t0), Poly(2, t0), [Poly(1, x), Poly(1/x, t0)], [x, t0],
+        [Lambda(i, log(i))], [(log(x)/2, log(sqrt(x)))], [], [], [1], [x])
+
     # Test handle_first
     assert DifferentialExtension(exp(x)*log(x), x, handle_first='log',
     dummy=False)._important_attrs == \
@@ -429,3 +440,10 @@ def test_risch_integrate():
         Integral(exp(-x**2), x) + exp(x**2)/(1 + x**2)
 
     assert risch_integrate(0, x) == 0
+
+    # These are tested here in addition to in test_DifferentialExtension above
+    # (symlogs) to test that backsubs works correctly.  The integrals should be
+    # written in terms of the original logarithms in the integrands.
+    assert risch_integrate(log(x**x), x) == x*log(x**x)/2 - x**2/4
+    assert risch_integrate(log(x**y), x) == x*log(x**y) - x*y
+    assert risch_integrate(log(sqrt(x)), x) == x*log(sqrt(x)) - x/2

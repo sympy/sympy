@@ -207,7 +207,8 @@ class DifferentialExtension(object):
         testing/debugging purposes.
         """
         for attr in self.__slots__:
-            # To prevent AttributeError when debugging
+            # Always do this, regardless if extension=True or False, because
+            # otherwise we get AttributeError when debugging.
             setattr(self, attr, None)
         # XXX: If you need to debug this function, set the break point here
 
@@ -327,6 +328,26 @@ class DifferentialExtension(object):
 
             logs = filter(lambda i: i.args[0].is_rational_function(*self.T) and
                 i.args[0].has_any_symbols(*self.T), self.newf.atoms(log))
+            symlogs = filter(lambda i: i.args[0].is_Pow and
+                i.args[0].base.is_rational_function(*self.T) and
+                not i.args[0].exp.is_Integer, self.newf.atoms(log))
+
+            # We can handle things like log(x**y) by converting it to y*log(x)
+            # This will fix not only symbolic exponents of the argument, but any
+            # non-Integer exponent, like log(sqrt(x)).  The exponent can also
+            # depend on x, like log(x**x).
+            for i in symlogs:
+                # Unlike in the exponential case above, we do not ever
+                # potentially add new monomials (above we had to add log(a)).
+                # Therefore, there is no need to run any is_deriv functions
+                # here.  Just convert log(a**b) to b*log(a) and let
+                # log_new_extension() handle it from there.
+
+                new = i.args[0].exp*log(i.args[0].base)
+                logs.append(log(i.args[0].base))
+                logs = list(set(logs)) # Don't waste time if it's already in there
+                self.newf = self.newf.subs(i, new)
+                self.backsubs.append((new, i))
 
             if handle_first == 'exp' or not log_new_extension:
                 exp_new_extension = self._exp_part(exps)
@@ -518,6 +539,7 @@ class DifferentialExtension(object):
         L_K, L_args).
         """
         # XXX: This might be easier to read as a dict or something
+        # Maybe a named tuple.
         return (self.fa, self.fd, self.D, self.T, self.Tfuncs,
             self.backsubs, self.E_K, self.E_args, self.L_K, self.L_args)
 
