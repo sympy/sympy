@@ -230,11 +230,7 @@ class Term(object):
 
                 if base.is_Add:
                     cont, base = base.primitive()
-
-                    if exp > 0:
-                        coeff *= cont
-                    else:
-                        coeff /= cont
+                    coeff *= cont**exp
 
                 if exp > 0:
                     numer[base] = exp
