@@ -71,6 +71,19 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False):
     ...
     SympifyError: SympifyError: True
 
+    To extend `sympify` to convert custom objects (not derived from `Basic`),
+    the static dictionary `convert` is provided. The custom converters are
+    usually added at import time, and will apply to all objects of the given
+    class or its derived classes.
+
+    For example, all geometry objects derive from `GeometryEntity` class, and
+    should not be altered by the converter, so we add the following after
+    defining that class:
+
+    >>> from sympy.core.sympify import converter
+    >>> from sympy.geometry.entity import GeometryEntity
+    >>> converter[GeometryEntity] = lambda x: x
+
     """
     from containers import Tuple
 
