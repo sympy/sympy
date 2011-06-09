@@ -1,6 +1,7 @@
 __all__ = ['ReferenceFrame', 'Vector']
 
-from sympy import Matrix, Symbol, sin, cos, eye, trigsimp, diff, sqrt, sympify
+from sympy import (Matrix, Symbol, sin, cos, eye, trigsimp, diff, sqrt, sympify,
+expand)
 
 class ReferenceFrame(object):
     """A reference frame in classical mechanics.
@@ -28,7 +29,6 @@ class ReferenceFrame(object):
         self._z = Vector([(Matrix([0, 0, 1]), self)])
 
     def __iter__(self):
-        """Allows iteration through the basis vectors. """
         return self
 
     def __str__(self):
@@ -65,9 +65,9 @@ class ReferenceFrame(object):
         dcm2diff = otherframe.dcm(self)
         diffed = dcm2diff.diff(Symbol('t'))
         angvelmat = diffed * dcm2diff.T
-        w1 = angvelmat[7]
-        w2 = angvelmat[2]
-        w3 = angvelmat[3]
+        w1 = trigsimp(expand(angvelmat[7]), recursive=True)
+        w2 = trigsimp(expand(angvelmat[2]), recursive=True)
+        w3 = trigsimp(expand(angvelmat[3]), recursive=True)
         return Vector([(Matrix([w1, w2, w3]), self)])
 
     def _dict_list(self, other, num):
@@ -118,9 +118,7 @@ class ReferenceFrame(object):
         """
 
         self._check_frame(otherframe)
-        if self._ang_vel_dict.has_key(otherframe):
-            return self._ang_vel_dict[otherframe]
-        flist = self._dict_list(otherframe, 0)
+        flist = self._dict_list(otherframe, 1)
         outvec = 0
         # TODO double check the sign on this
         for i in range(len(flist) - 1):
@@ -155,8 +153,6 @@ class ReferenceFrame(object):
         """
 
         self._check_frame(otherframe)
-        if self._dcm_dict.has_key(otherframe):
-            return otherframe._dcm_dict[self]
         flist = self._dict_list(otherframe, 0)
         outdcm = eye(3)
         for i in range(len(flist) - 1):
@@ -353,13 +349,35 @@ class ReferenceFrame(object):
         parent._ang_vel_dict.update({self: -wvec})
 
     def set_ang_vel(self, otherframe, value):
-        """Define the angular velocity vector of the ReferenceFrame.
+        """Define the angular velocity vector in a ReferenceFrame.
+
+        Defines the angular velocity of this ReferenceFrame, in another.
+        Angular velocity can be defined with respect to multiple different
+        ReferenceFrames. Care must be taken to not create loops which are
+        inconsistent.
+
+        Parameters
+        ==========
+        otherframe : ReferenceFrame
+            A ReferenceFrame to define the angular velocity in
+        value : Vector
+            The Vector representing angular velocity
+
+        Examples
+        ========
+
+        >>> from sympy.physics.classical.essential import ReferenceFrame, Vector
+        >>> N = ReferenceFrame('N')
+        >>> A = ReferenceFrame('A')
+        >>> V = 10 * N.x
+        >>> A.set_ang_vel(N, V)
+        >>> A.ang_vel_in(N)
+        (10)*nx>
 
         """
 
         self._check_vector(value)
         self._check_frame(otherframe)
-
         self._ang_vel_dict.update({otherframe: value})
         otherframe._ang_vel_dict.update({self: -value})
 
@@ -465,7 +483,32 @@ class Vector(object):
         return Vector(self.args + other.args)
 
     def __and__(self, other):
-        """Dot product of two vectors. """
+        """Dot product of two vectors.
+
+        Returns a scalar, the dot product of the two Vectors
+
+        Parameters
+        ==========
+        other : Vector
+            The Vector which we are dotting with
+
+        Examples
+        ========
+
+        >>> from sympy.physics.classical.essential import ReferenceFrame, Vector
+        >>> from sympy import symbols
+        >>> q1 = symbols('q1')
+        >>> N = ReferenceFrame('N')
+        >>> N.x & N.x
+        1
+        >>> N.x & N.y
+        0
+        >>> A = N.orientnew('A', 'Simple', q1, 1)
+        >>> N.y & A.y
+        cos(q1)
+
+        """
+
         self._check_vector(other)
         out = 0
         for i, v1 in enumerate(self.args):
@@ -477,11 +520,11 @@ class Vector(object):
 
     def __div__(self, other):
         """This uses mul and inputs self and 1 divided by other. """
-
         return self.__mul__(1 / other)
 
     def __eq__(self, other):
         """Tests for equality.
+
         If other is 0, and self is empty, returns True.
         If other is 0 and self is not empty, returns False.
         If none of the above, only accepts other as a Vector.
@@ -494,20 +537,36 @@ class Vector(object):
                     return True
                 else:
                     return False
-        self._check_vector(other)
-        dotcheck = (self & self) == (self & other)
-        crosscheck = ((self ^ other) & (self ^ other) == 0)
-        return dotcheck & crosscheck
+        check = True
+        frame = self.args[0][1]
+        for i, v in enumerate(frame):
+            check = check & (expand(self & v) == expand(other & v))
+        return check
 
     def __mul__(self, other):
-        """Multiplies the Vector by a sympifyable expression. """
-        try:
-            sympify(other)
-        except SympifyError:
-            raise TypeError('Two Vectors can\'t be multiplied')
+        """Multiplies the Vector by a sympifyable expression.
+
+        Parameters
+        ==========
+        other : Sympifyable
+            The scalar to multiply this Vector with
+
+        Examples
+        ========
+
+        >>> from sympy.physics.classical.essential import ReferenceFrame, Vector
+        >>> from sympy import Symbol
+        >>> N = ReferenceFrame('N')
+        >>> t = Symbol('t')
+        >>> V = 10 * t * N.x
+        >>> print V
+        (10*t)*nx>
+
+        """
+
         newlist = [v for v in self.args]
         for i, v in enumerate(newlist):
-            newlist[i] = (other * newlist[i][0], newlist[i][1])
+            newlist[i] = (sympify(other) * newlist[i][0], newlist[i][1])
         return Vector(newlist)
 
     def __neg__(self):

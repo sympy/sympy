@@ -4,6 +4,8 @@ __all__ = ['cross',
            'express']
 
 from sympy.physics.classical.essential import Vector
+from sympy.physics.classical.dynamicsymbol import DynamicSymbol
+from sympy import sympify
 
 def cross(vec1, vec2):
     """Cross product convenience wrapper for Vector.cross(): \n"""
