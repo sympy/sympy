@@ -771,7 +771,7 @@ class FiniteSet(CountableSet):
     Examples:
         >>> from sympy import Symbol, FiniteSet, sets
 
-        >>> FiniteSet((1,2,3,4))
+        >>> FiniteSet(1,2,3,4)
         {1, 2, 3, 4}
         >>> 3 in FiniteSet(1,2,3,4)
         True
@@ -795,14 +795,10 @@ class FiniteSet(CountableSet):
         if all(arg.is_real and arg.is_number for arg in args):
             cls = RealFiniteSet
 
-
         elements = frozenset(map(sympify, args))
-        obj = Basic.__new__(cls, elements)
+        obj = Basic.__new__(cls, *elements)
+        obj.elements = elements
         return obj
-
-    @property
-    def elements(self):
-        return self.args[0]
 
     def __iter__(self):
         return self.elements.__iter__()
@@ -819,9 +815,9 @@ class FiniteSet(CountableSet):
 
         >>> from sympy import FiniteSet, Interval, Symbol
 
-        >>> FiniteSet((0, 1)).union(FiniteSet((2, 3)))
+        >>> FiniteSet(0, 1).union(FiniteSet(2, 3))
         {0, 1, 2, 3}
-        >>> FiniteSet((Symbol('x'), 1,2)) + FiniteSet((2, 3))
+        >>> FiniteSet(Symbol('x'), 1,2) + FiniteSet(2, 3)
         {1, 2, 3, x}
         >>> Interval(1,2, True, True) + FiniteSet(2,3)
         (1, 2] U {3}
@@ -829,7 +825,7 @@ class FiniteSet(CountableSet):
         Similarly it is possible to use the '-' operator for set
         differences:
 
-        >>> FiniteSet((Symbol('x'), 1,2)) - FiniteSet((2, 3))
+        >>> FiniteSet(Symbol('x'), 1,2) - FiniteSet(2, 3)
         {1, x}
         >>> Interval(1,2) - FiniteSet(2,3)
         [1, 2)
