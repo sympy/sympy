@@ -6,16 +6,18 @@ __all__ = ['cross',
 from sympy.physics.classical.essential import Vector
 
 def cross(vec1, vec2):
+    """Cross product convenience wrapper for Vector.cross(): \n"""
     if not isinstance(vec1, Vector):
         raise TypeError('Cross product is between two vectors')
     return vec1.cross(vec2)
-cross.__doc__ = Vector.cross.__doc__
+cross.__doc__ += Vector.cross.__doc__
 
 def dot(vec1, vec2):
+    """Dot product convenience wrapper for Vector.dot(): \n"""
     if not isinstance(vec1, Vector):
         raise TypeError('Doc product is between two vectors')
     return vec1.dot(vec2)
-dot.__doc__ = Vector.dot.__doc__
+dot.__doc__ += Vector.dot.__doc__
 
 def dynamicsymbols(basename, count, diffno=0):
     """Returns a list of DynamicSymbols, and a number of their time derivatives.
@@ -41,7 +43,8 @@ def dynamicsymbols(basename, count, diffno=0):
         return outlist[0]
 
 def express(vec, frame):
+    """Express convenience wrapper for Vector.express(): \n"""
     if not isinstance(vec, Vector):
         raise TypeError('Can only express Vectors')
     return vec.express(frame)
-express.__doc__ = Vector.express.__doc__
+express.__doc__ += Vector.express.__doc__
