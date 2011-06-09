@@ -16,6 +16,7 @@ class Unit(AtomicExpr):
     """
     is_positive = True    # make sqrt(m**2) --> m
     is_commutative = True
+    is_number = False
 
     __slots__ = ["name", "abbrev"]
 
