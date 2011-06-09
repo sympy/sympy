@@ -591,6 +591,28 @@ def test_sparse_matrix():
     def zeros(n):
         return SparseMatrix(n,n,lambda i,j:0)
 
+    # test element assignment
+    a = SparseMatrix((
+        (1, 0),
+        (0, 1)
+    ))
+    a[0, 0] = 2
+    assert a == SparseMatrix((
+        (2, 0),
+        (0, 1)
+    ))
+    a[1, 0] = 5
+    assert a == SparseMatrix((
+        (2, 0),
+        (5, 1)
+    ))
+    a[1, 1] = 0
+    assert a == SparseMatrix((
+        (2, 0),
+        (5, 0)
+    ))
+    assert a.mat == {(0, 0): 2, (1, 0): 5}
+
     # test_multiplication
     a=SparseMatrix((
         (1, 2),
