@@ -1,6 +1,5 @@
 """sympify -- convert objects SymPy internal format"""
 
-from types import NoneType
 from inspect import getmro
 
 from core import all_classes as sympy_classes
@@ -78,7 +77,7 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False):
         cls = type(a)
     if cls in sympy_classes:
         return a
-    if cls in (bool, NoneType):
+    if cls in (bool, type(None)):
         if strict:
             raise SympifyError(a)
         else:
