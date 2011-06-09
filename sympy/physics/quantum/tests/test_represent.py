@@ -1,7 +1,7 @@
 from sympy import Matrix, I, Float, Integer, symbols
 
 from sympy.physics.quantum.dagger import Dagger
-from sympy.physics.quantum.represent import represent, rep_innerproduct
+from sympy.physics.quantum.represent import represent, rep_innerproduct, rep_expectation
 from sympy.physics.quantum.state import Bra, Ket
 from sympy.physics.quantum.operator import Operator, OuterProduct
 from sympy.physics.quantum.tensorproduct import TensorProduct
@@ -13,6 +13,7 @@ from sympy.physics.quantum.matrixutils import (
     to_sympy, to_numpy, to_scipy_sparse, numpy_ndarray, scipy_sparse_matrix
 )
 from sympy.physics.quantum.cartesian import XKet, XOp, XBra
+from sympy.physics.quantum.qapply import qapply
 
 from sympy.external import import_module
 from sympy.utilities.pytest import skip
@@ -162,5 +163,9 @@ def test_innerprod_represent():
 
     try:
         test = rep_innerproduct(x_op)
-    except NotImplementedError:
+    except TypeError:
         return True
+
+def test_operator_represent():
+    basis_kets = x_op._get_basis_kets(2)
+    assert rep_expectation(x_op) == qapply(basis_kets[1].dual*x_op*basis_kets[0])

@@ -16,6 +16,8 @@ from sympy.physics.quantum.qexpr import QExpr
 from sympy.physics.quantum.tensorproduct import TensorProduct
 from sympy.physics.quantum.matrixutils import flatten_scalar
 from sympy.physics.quantum.state import KetBase, BraBase
+from sympy.physics.quantum.operator import Operator
+from sympy.physics.quantum.qapply import qapply
 
 __all__ = [
     'represent'
@@ -116,9 +118,13 @@ def represent(expr, **options):
                     return rep_innerproduct(expr, **options)
                 except NotImplementedError:
                     raise NotImplementedError(strerr)
+            elif isinstance(expr, Operator):
+                try:
+                    return rep_expectation(expr, **options)
+                except NotImplementedError:
+                    raise NotImplementedError(strerr)
             else:
                 raise NotImplementedError(strerr)
-
     elif isinstance(expr, Add):
         result = represent(expr.args[0], **options)
         for args in expr.args[1:]:
@@ -168,7 +174,7 @@ def rep_innerproduct(expr, **options):
         of KetBase or BraBase"""
 
     if not isinstance(expr, (KetBase, BraBase)):
-        raise NotImplementedError("expr passed is not a Bra or Ket")
+        raise TypeError("expr passed is not a Bra or Ket")
 
     basis = options.pop('basis', None)
 
@@ -196,3 +202,23 @@ def rep_innerproduct(expr, **options):
         return expr._format_represent(result, format)
     else:
         raise NotImplementedError("Could not get basis set for operator")
+
+def rep_expectation(expr, **options):
+    """Attempts to form an expectation value like expression for representing an operator.
+
+    Returns the result of evaluating something of the form <x'|A|x>"""
+
+    basis = options.pop('basis', None)
+
+    if not isinstance(expr, Operator):
+        raise TypeError("The passed expression is not an operator")
+
+    if basis is None and expr.basis_ket() is None:
+        raise NotImplementedError("Could not get basis kets for this operator")
+    elif basis is None:
+        basis_kets = expr._get_basis_kets(2)
+
+    bra = basis_kets[1].dual
+    ket = basis_kets[0]
+
+    return qapply(bra*expr*ket)
