@@ -18,8 +18,10 @@ class ReferenceFrame(object):
     def __init__(self, name=''):
         """init for ReferenceFrame. """
         self.name = name
-        self.parent = None
-        self._ang_vel = {}
+        self._dcm_dict = {}
+        self._ang_vel_dict = {}
+        self._ang_acc_dict = {}
+        self._dlist = [self._dcm_dict, self._ang_vel_dict, self._ang_acc_dict]
         self._cur = 0
         self._x = Vector([(Matrix([1, 0, 0]), self)])
         self._y = Vector([(Matrix([0, 1, 0]), self)])
@@ -50,6 +52,14 @@ class ReferenceFrame(object):
             self._cur = 0
             raise StopIteration
 
+    def _check_frame(self, other):
+        if not isinstance(other, ReferenceFrame):
+            raise TypeError('A ReferenceFrame must be supplied')
+
+    def _check_vector(self, other):
+        if not isinstance(other, Vector):
+            raise TypeError('A Vector must be supplied')
+
     def _w_diff_dcm(self, otherframe):
         """Angular velocity from time differentiating the DCM. """
         dcm2diff = otherframe.dcm(self)
@@ -60,23 +70,26 @@ class ReferenceFrame(object):
         w3 = angvelmat[3]
         return Vector([(Matrix([w1, w2, w3]), self)])
 
-    def _frame_list(self, other):
-        """The list of frames from self to other. """
-        leg1 = [self]
-        ptr = self
-        while ptr.parent != None:
-            ptr = ptr.parent
-            leg1.append(ptr)
-        leg2 = [other]
-        ptr = other
-        while ptr.parent != None:
-            ptr = ptr.parent
-            leg2.append(ptr)
-        for i1, v1 in enumerate(leg2):
-            for i2, v2 in enumerate(leg1):
-                if v1 == v2:
-                    return leg1[:i2 + 1], leg2[:i1 + 1]
-        raise ValueError('No Common Parent Frame')
+    def _dict_list(self, other, num):
+        """Creates a list from self to other using _dcm_dict. """
+        outlist = [[self]]
+        oldlist = [[]]
+        while outlist != oldlist:
+            oldlist = outlist[:]
+            for i, v in enumerate(outlist):
+                templist = v[-1]._dlist[num].keys()
+                for i2, v2 in enumerate(templist):
+                    if not v.__contains__(v2):
+                        littletemplist = v + [v2]
+                        if not outlist.__contains__(littletemplist):
+                            outlist.append(littletemplist)
+        for i, v in enumerate(oldlist):
+            if v[-1] != other:
+                outlist.remove(v)
+        outlist.sort(key = len)
+        if len(outlist) != 0:
+            return outlist[0]
+        raise ValueError('No Common Frame')
 
     def ang_vel_in(self, otherframe):
         """Returns the angular velocity vector of the ReferenceFrame.
@@ -98,31 +111,20 @@ class ReferenceFrame(object):
         >>> N = ReferenceFrame('N')
         >>> A = ReferenceFrame('A')
         >>> V = 10 * N.x
-        >>> A.set_ang_vel({N: V})
+        >>> A.set_ang_vel(N, V)
         >>> A.ang_vel_in(N)
         (10)*nx>
 
         """
 
-        if self._ang_vel.has_key(otherframe):
-            return self._ang_vel[otherframe]
-        
-        (l1, l2) = self._frame_list(otherframe)
-        l2.reverse()
-        wholelist = l1 + l2[1:]
+        self._check_frame(otherframe)
+        if self._ang_vel_dict.has_key(otherframe):
+            return self._ang_vel_dict[otherframe]
+        flist = self._dict_list(otherframe, 0)
         outvec = 0
-        i = 0
-        while i < len(wholelist):
-            j = len(wholelist)
-            while j > i:
-                if wholelist[i]._ang_vel.has_key(wholelist[j]):
-                    outvec += wholelist[i]._ang_vel[wholelist[j]]
-                    i = j
-                    break
-                j -= 1
-            else:
-                outvec += _w_diff_dcm(wholelist[i], wholelist[i+1])
-            i += 1
+        # TODO double check the sign on this
+        for i in range(len(flist) - 1):
+            outvec += flist[i]._ang_vel_dict[flist[i + 1]]
         return outvec
 
     def dcm(self, otherframe):
@@ -151,14 +153,15 @@ class ReferenceFrame(object):
         [0, sin(q1),  cos(q1)]
 
         """
-        (l1, l2) = self._frame_list(otherframe)
-        if (len(l1) == 1) & (len(l2) == 1):
-            return eye(3)
-        elif len(l1) == 1:
-            return l2[-1].dcm(l2[1]) * l2[0].parent_orient
-        elif len(l2) == 1:
-            return l1[0].parent_orient.T * l1[1].dcm(l1[-1])
-        return l1[0].dcm(l1[-1]) * l2[-1].dcm(l2[0])
+
+        self._check_frame(otherframe)
+        if self._dcm_dict.has_key(otherframe):
+            return otherframe._dcm_dict[self]
+        flist = self._dict_list(otherframe, 0)
+        outdcm = eye(3)
+        for i in range(len(flist) - 1):
+            outdcm = outdcm * flist[i + 1]._dcm_dict[flist[i]]
+        return outdcm
 
     def orientnew(self, newname, rot_type, amounts, rot_order=''):
         """Creates a new ReferenceFrame oriented with respect to this Frame.
@@ -260,6 +263,7 @@ class ReferenceFrame(object):
 
         """
 
+        self._check_frame(parent)
         def _rot(axis, angle):
             """Returns direction cosine matrix for simple axis 1,2,or 3 rotations """
             if axis == 1:
@@ -284,10 +288,9 @@ class ReferenceFrame(object):
         rot_order = [i.replace('Y', '2') for i in rot_order]
         rot_order = [i.replace('Z', '3') for i in rot_order]
         rot_order = ''.join(rot_order)
-        if not isinstance(parent, ReferenceFrame):
-            raise TypeError('A ReferenceFrame must be supplied as a parent')
         if not rot_order in approved_orders:
             raise TypeError('The supplied order is not an approved type')
+        parent_orient = []
 
         if rot_type == 'AXIS':
             if not rot_order == '':
@@ -296,13 +299,12 @@ class ReferenceFrame(object):
                 raise TypeError('Amounts are a list or tuple of length 2')
             theta = amounts[0]
             axis = amounts[1]
-            if not isinstance(axis, Vector):
-                raise TypeError('A Vector needs to be supplied')
+            self._check_vector(axis)
             if not axis.dt(parent) == 0:
                 raise ValueError('Axis cannot be time-varying')
             axis = axis.express(parent).unit
             axis = axis.args[0][0]
-            self.parent_orient = ((eye(3) - axis * axis.T) * cos(theta) +
+            parent_orient = ((eye(3) - axis * axis.T) * cos(theta) +
                     Matrix([[0, -axis[2], axis[1]],[axis[2], 0, -axis[0]],
                         [-axis[1], axis[0], 0]]) * sin(theta) + axis * axis.T)
         elif rot_type == 'EULER':
@@ -314,7 +316,7 @@ class ReferenceFrame(object):
             q1 = amounts[1]
             q2 = amounts[2]
             q3 = amounts[3]
-            self.parent_orient = (Matrix([[q0 ** 2 + q1 ** 2 - q2 ** 2 - q3 **
+            parent_orient = (Matrix([[q0 ** 2 + q1 ** 2 - q2 ** 2 - q3 **
                 2, 2 * (q1 * q2 - q0 * q3), 2 * (q0 * q2 + q1 * q3)],
                 [2 * (q1 * q2 + q0 * q3), q0 ** 2 - q1 ** 2 + q2 **2 - q3 ** 2,
                 2 * (q2 * q3 - q0 * q1)], [2 * (q1 * q3 - q0 * q2), 2 * (q0 *
@@ -325,7 +327,7 @@ class ReferenceFrame(object):
             a1 = int(rot_order[0])
             a2 = int(rot_order[1])
             a3 = int(rot_order[2])
-            self.parent_orient = (_rot(a1, amounts[0]) * _rot(a2, amounts[1])
+            parent_orient = (_rot(a1, amounts[0]) * _rot(a2, amounts[1])
                     * _rot(a3, amounts[2]))
         elif rot_type == 'SPACE':
             if not (len(amounts) == 3 & len(rot_order) == 3):
@@ -333,37 +335,33 @@ class ReferenceFrame(object):
             a1 = int(rot_order[0])
             a2 = int(rot_order[1])
             a3 = int(rot_order[2])
-            self.parent_orient = (_rot(a3, amounts[2]) * _rot(a2, amounts[1])
+            parent_orient = (_rot(a3, amounts[2]) * _rot(a2, amounts[1])
                     * _rot(a1, amounts[0]))
         elif rot_type == 'SIMPLE':
             if ((isinstance(amounts, (list, tuple))) |
                     (isinstance(rot_order, (list, tuple)))):
                 raise TypeError('Simple takes 1 value for amount and order')
             a = int(rot_order)
-            self.parent_orient = _rot(a, amounts)
+            parent_orient = _rot(a, amounts)
         else:
             raise NotImplementedError('That is not an implemented rotation')
-        self.parent = parent
+        self._dcm_dict.update({parent: parent_orient})
+        parent._dcm_dict.update({self: parent_orient.T})
+        # TODO double check the sign here
+        wvec = self._w_diff_dcm(parent)
+        self._ang_vel_dict.update({parent: wvec})
+        parent._ang_vel_dict.update({self: -wvec})
 
-    def set_ang_vel(self, dicti):
+    def set_ang_vel(self, otherframe, value):
         """Define the angular velocity vector of the ReferenceFrame.
 
         """
 
-        if not isinstance(dicti, dict):
-            raise TypeError('Need to supply a Dictionary')
-        k = dicti.keys()
-        v = dicti.values()
-        if not (len(k) == 1) & (len(v) == 1):
-            raise TypeError('Need to supply a Dictionary of length 1')
-        if not isinstance(k[0], ReferenceFrame):
-            raise TypeError('Need to supply a ReferenceFrame first')
-        if not isinstance(v[0], Vector ) | (v[0] == 0):
-            raise TypeError('Need to supply a Vector second')
-        v = v[0]
-        k = k[0]
-        self._ang_vel.update(dicti)
-        k._ang_vel.update({self: -v})
+        self._check_vector(value)
+        self._check_frame(otherframe)
+
+        self._ang_vel_dict.update({otherframe: value})
+        otherframe._ang_vel_dict.update({self: -value})
 
     @property
     def x(self):
@@ -441,13 +439,13 @@ class Vector(object):
                     if len(ol) != 0:
                         ol.append(' + ')
                     ol.append( ar[i][1].name.lower() +
-                              self.subscript_indices[j] + '>' )
+                              Vector.subscript_indices[j] + '>' )
                 # if the coef of the basis vector is -1, we skip the 1
                 elif ar[i][0][j] == -1:
                     if len(ol) != 0:
                         ol.append(' ')
                     ol.append( '- ' + ar[i][1].name.lower() +
-                              self.subscript_indices[j] + '>' )
+                              Vector.subscript_indices[j] + '>' )
                 elif ar[i][0][j] != 0:
                     # If the coefficient of the basis vector is not 1 or -1,
                     # we wrap it in parentheses, for readability.
@@ -455,7 +453,7 @@ class Vector(object):
                         ol.append(' + ')
                     ol.append('(' + `ar[i][0][j]` + ')*' +
                               ar[i][1].name.lower() +
-                              self.subscript_indices[j] + '>' )
+                              Vector.subscript_indices[j] + '>' )
         return ''.join(ol)
 
     def __add__(self, other):
@@ -463,14 +461,12 @@ class Vector(object):
         if isinstance(other, int):
             if other == 0:
                 return self
-        if not isinstance(other, Vector):
-            raise TypeError('You can only add two Vectors')
+        self._check_vector(other)
         return Vector(self.args + other.args)
 
     def __and__(self, other):
         """Dot product of two vectors. """
-        if not isinstance(other, Vector):
-            raise TypeError('Dot product is between two vectors')
+        self._check_vector(other)
         out = 0
         for i, v1 in enumerate(self.args):
             for j, v2 in enumerate(other.args):
@@ -498,8 +494,7 @@ class Vector(object):
                     return True
                 else:
                     return False
-        if not isinstance(other,Vector):
-            raise TypeError('Vectors can only compare to Vectors')
+        self._check_vector(other)
         dotcheck = (self & self) == (self & other)
         crosscheck = ((self ^ other) & (self ^ other) == 0)
         return dotcheck & crosscheck
@@ -552,8 +547,7 @@ class Vector(object):
         if isinstance(other, int):
             if other == 0:
                 return self * 0
-        if not isinstance(other, Vector):
-            raise TypeError('Cross products are between Vectors')
+        self._check_vector(other)
 
         def _det(mat):
             """This is needed as a little method for to find the determinant
@@ -579,6 +573,14 @@ class Vector(object):
                 [other & tempx, other & tempy, other & tempz]])
             outvec += _det(tempm)
         return outvec
+
+    def _check_frame(self, other):
+        if not isinstance(other, ReferenceFrame):
+            raise TypeError('A ReferenceFrame must be supplied')
+
+    def _check_vector(self, other):
+        if not isinstance(other, Vector):
+            raise TypeError('A Vector must be supplied')
 
     __repr__ = __str__
     __radd__ = __add__
@@ -609,13 +611,12 @@ class Vector(object):
         >>> N = ReferenceFrame('N')
         >>> A = N.orientnew('A', 'Simple', q1, 2)
         >>> A.x.diff(t, N)
-        (-cos(q1)**2*q1d - sin(q1)**2*q1d)*az>
+        (-q1d*sin(q1)**2 - q1d*cos(q1)**2)*az>
 
         """
 
         wrt = sympify(wrt)
-        if not isinstance(otherframe, ReferenceFrame):
-            raise TypeError('Need a ReferenceFrame to take derivative in')
+        self._check_frame(otherframe)
         outvec = 0
         for i,v in enumerate(self.args):
             if v[1] == otherframe:
@@ -647,7 +648,7 @@ class Vector(object):
         >>> N = ReferenceFrame('N')
         >>> A = N.orientnew('A', 'Simple', q1, 1)
         >>> v = u1 * N.x
-        >>> A.set_ang_vel({N: 10*A.x})
+        >>> A.set_ang_vel(N, 10*A.x)
         >>> A.x.dt(N) == 0
         True
         >>> v.dt(N)
@@ -656,9 +657,7 @@ class Vector(object):
         """
 
         outvec = 0
-        if not isinstance(otherframe, ReferenceFrame):
-            raise TypeError('Need a ReferenceFrame to take derivative in')
-        # TODO add ability to take dt when only dcm has been defined (no angvel)
+        self._check_frame(otherframe)
         for i,v in enumerate(self.args):
             if v[1] == otherframe:
                 outvec += Vector([(v[0].diff(Symbol('t')), otherframe)])
@@ -691,8 +690,7 @@ class Vector(object):
 
         """
 
-        if not isinstance(otherframe, ReferenceFrame):
-            raise TypeError('Need a ReferenceFrame to express in in')
+        self._check_frame(otherframe)
         outvec = Vector(self.args + [])
         for i, v in enumerate(self.args):
             if v[1] != otherframe:
