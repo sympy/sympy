@@ -4,10 +4,11 @@ from sympy import (Abs, Catalan, cos, Derivative, E, EulerGamma, exp, factorial,
     summation, Sum, Symbol, symbols, Wild, WildFunction, zeta, zoo,
     Dummy)
 from sympy.core import Expr
-from sympy.physics.units import second
+from sympy.physics.units import second, joule
 from sympy.polys import Poly, RootOf, RootSum
 from sympy.statistics.distributions import Normal, Sample, Uniform
 from sympy.geometry import Point, Circle
+
 from sympy.utilities.pytest import XFAIL, raises
 
 from sympy.printing import sstr, sstrrepr, StrPrinter
@@ -333,6 +334,7 @@ def test_Uniform():
 
 def test_Unit():
     assert str(second) == "s"
+    assert str(joule) == "kg*m**2/s**2" # issue 2461
 
 def test_wild_str():
     # Check expressions containing Wild not causing infinite recursion

@@ -1999,10 +1999,6 @@ class AtomicExpr(Atom, Expr):
     def _eval_is_rational_function(self, syms):
         return True
 
-    @property
-    def is_number(self):
-        return True
-
     def _eval_nseries(self, x, n, logx):
         return self
 
