@@ -23,6 +23,7 @@ which case it will just return a Poly in t, or in k(t), in which case it
 will return the fraction (fa, fd). Other variable names probably come
 from the names used in Bronstein's book.
 """
+from __future__ import with_statement
 from sympy.core.basic import S
 from sympy.core.function import Lambda
 from sympy.core.numbers import ilcm
@@ -166,7 +167,7 @@ class DifferentialExtension(object):
     - newf: Expr form of fa/fd.
     - level: The number (between -1 and -len(self.T)) such that
       self.T[self.level] == self.t and self.D[self.level] == self.d.
-      Use the methods self.increase_level() and self.decrement_level() to change
+      Use the methods self.increment_level() and self.decrement_level() to change
       the current level.
     """
     # __slots__ is defined mainly so we can iterate over all the attributes
@@ -573,7 +574,7 @@ class DifferentialExtension(object):
     # We would have to remove Python 2.4 support first.
     def increment_level(self):
         """
-        Increase the level of self.
+        Increment the level of self.
 
         This makes the working differential extension larger.  self.level is
         given relative to the end of the list (-1, -2, etc.), so we don't need
@@ -581,7 +582,7 @@ class DifferentialExtension(object):
         """
         if self.level >= -1:
             raise ValueError("The level of the differential extension cannot " +
-                "be increased any further.")
+                "be incremented any further.")
 
         self.level += 1
         self.t = self.T[self.level]
@@ -599,13 +600,26 @@ class DifferentialExtension(object):
         """
         if self.level <= -len(self.T):
             raise ValueError("The level of the differential extension cannot " +
-                "be increased any further.")
+                "be decremented any further.")
 
         self.level -= 1
         self.t = self.T[self.level]
         self.d = self.D[self.level]
         self.case = self.cases[self.level]
         return None
+
+class DecrementLevel(object):
+    """
+    A context manager for decrementing the level of a DifferentialExtension.
+    """
+    __slots__ = ('DE',)
+    def __init__(self, DE):
+        self.DE = DE
+        return
+    def __enter__(self):
+        self.DE.decrement_level()
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.DE.increment_level()
 
 class NonElementaryIntegralException(Exception):
     """
@@ -1062,19 +1076,17 @@ def integrate_primitive_polynomial(p, DE):
 
     Dta, Dtb = frac_in(DE.d, DE.T[DE.level - 1])
 
-    DE.decrement_level() # We had better be integrating the lowest extension (x)
-                         # with ratint().
-    a = p.LC()
-    aa, ad = frac_in(a, DE.t)
+    with DecrementLevel(DE): # We had better be integrating the lowest extension (x)
+                             # with ratint().
+        a = p.LC()
+        aa, ad = frac_in(a, DE.t)
 
 
-    try:
-        (ba, bd), c = limited_integrate(aa, ad, [(Dta, Dtb)], DE)
-        assert len(c) == 1
-    except NonElementaryIntegralException:
-        return (Zero, p, False)
-
-    DE.increment_level()
+        try:
+            (ba, bd), c = limited_integrate(aa, ad, [(Dta, Dtb)], DE)
+            assert len(c) == 1
+        except NonElementaryIntegralException:
+            return (Zero, p, False)
 
     m = p.degree(DE.t)
     q0 = c[0].as_poly(DE.t)*Poly(DE.t**(m + 1)/(m + 1), DE.t) + \
@@ -1146,34 +1158,32 @@ def integrate_hyperexponential_polynomial(p, DE, z):
     qd = Poly(1, DE.t)
     b = True
 
-    DE.decrement_level()
-    for i in xrange(-p.degree(z), p.degree(t1) + 1):
-        if not i:
-            continue
-        elif i < 0:
-            # If you get AttributeError: 'NoneType' object has no attribute 'nth'
-            # then this should really not have expand=False
-            # But it shouldn't happen because p is already a Poly in t and z
-            a = p.as_poly(z, expand=False).nth(-i)
-        else:
-            # If you get AttributeError: 'NoneType' object has no attribute 'nth'
-            # then this should really not have expand=False
-            a = p.as_poly(t1, expand=False).nth(i)
+    with DecrementLevel(DE):
+        for i in xrange(-p.degree(z), p.degree(t1) + 1):
+            if not i:
+                continue
+            elif i < 0:
+                # If you get AttributeError: 'NoneType' object has no attribute 'nth'
+                # then this should really not have expand=False
+                # But it shouldn't happen because p is already a Poly in t and z
+                a = p.as_poly(z, expand=False).nth(-i)
+            else:
+                # If you get AttributeError: 'NoneType' object has no attribute 'nth'
+                # then this should really not have expand=False
+                a = p.as_poly(t1, expand=False).nth(i)
 
-        aa, ad = frac_in(a, DE.t, field=True)
-        aa, ad = aa.cancel(ad, include=True)
-        iDt = Poly(i, t1)*dtt
-        iDta, iDtd = frac_in(iDt, DE.t, field=True)
-        try:
-            va, vd = rischDE(iDta, iDtd, Poly(aa, DE.t), Poly(ad, DE.t), DE)
-            va, vd = frac_in((va, vd), t1)
-        except NonElementaryIntegralException:
-            b = False
-        else:
-            qa = qa*vd + va*Poly(t1**i)*qd
-            qd *= vd
-
-    DE.increment_level()
+            aa, ad = frac_in(a, DE.t, field=True)
+            aa, ad = aa.cancel(ad, include=True)
+            iDt = Poly(i, t1)*dtt
+            iDta, iDtd = frac_in(iDt, DE.t, field=True)
+            try:
+                va, vd = rischDE(iDta, iDtd, Poly(aa, DE.t), Poly(ad, DE.t), DE)
+                va, vd = frac_in((va, vd), t1)
+            except NonElementaryIntegralException:
+                b = False
+            else:
+                qa = qa*vd + va*Poly(t1**i)*qd
+                qd *= vd
 
     return (qa, qd, b)
 

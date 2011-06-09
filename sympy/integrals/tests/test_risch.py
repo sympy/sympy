@@ -1,4 +1,5 @@
 """Most of these tests come from the examples in Bronstein's book."""
+from __future__ import with_statement
 from sympy import (Poly, S, Function, log, symbols, exp, tan, Integral, sqrt,
     Symbol, Lambda, sin)
 from sympy.integrals.risch import (gcdex_diophantine, frac_in, as_poly_1t,
@@ -7,7 +8,7 @@ from sympy.integrals.risch import (gcdex_diophantine, frac_in, as_poly_1t,
     integrate_primitive, integrate_hyperexponential_polynomial,
     integrate_hyperexponential, integrate_hypertangent_polynomial,
     integrate_nonlinear_no_specials, integer_powers, DifferentialExtension,
-    risch_integrate)
+    risch_integrate, DecrementLevel)
 from sympy.utilities.pytest import raises
 
 from sympy.abc import x, t, nu, z, a, y
@@ -430,6 +431,53 @@ def test_DifferentialExtension():
         t0**2)*t1, t1, domain='ZZ(t0)')], [x, t0, t1],
         [Lambda(i, exp(i)), Lambda(i, exp(1/(t0 + 1) - 10*i))], [], [1, 2],
         [x, 1/(t0 + 1) - 10*x], [], [])
+
+class TestingException(Exception):
+    """Dummy Exception class for testing."""
+    pass
+
+def test_DecrementLevel():
+    DE = DifferentialExtension(x*log(exp(x) + 1), x, dummy=False)
+    assert DE.level == -1
+    assert DE.t == t1
+    assert DE.d == Poly(t0/(t0 + 1), t1)
+    assert DE.case == 'primitive'
+
+    with DecrementLevel(DE):
+        assert DE.level == -2
+        assert DE.t == t0
+        assert DE.d == Poly(t0, t0)
+        assert DE.case == 'exp'
+
+        with DecrementLevel(DE):
+            assert DE.level == -3
+            assert DE.t == x
+            assert DE.d == Poly(1, x)
+            assert DE.case == 'base'
+
+        assert DE.level == -2
+        assert DE.t == t0
+        assert DE.d == Poly(t0, t0)
+        assert DE.case == 'exp'
+
+    assert DE.level == -1
+    assert DE.t == t1
+    assert DE.d == Poly(t0/(t0 + 1), t1)
+    assert DE.case == 'primitive'
+
+    # Test that __exit__ is called after an exception correctly
+    try:
+        with DecrementLevel(DE):
+            raise TestingException
+    except TestingException:
+        pass
+    else:
+        raise AssertionError("Did not raise.")
+
+    assert DE.level == -1
+    assert DE.t == t1
+    assert DE.d == Poly(t0/(t0 + 1), t1)
+    assert DE.case == 'primitive'
 
 def test_risch_integrate():
     assert risch_integrate(t0*exp(x), x) == t0*exp(x)

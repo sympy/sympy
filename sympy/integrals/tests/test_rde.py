@@ -1,4 +1,5 @@
 """Most of these tests come from the examples in Bronstein's book."""
+from __future__ import with_statement
 from sympy import Poly, S, symbols, oo, I
 from sympy.integrals.risch import (DifferentialExtension,
     NonElementaryIntegralException)
@@ -146,16 +147,19 @@ def test_solve_poly_rde_cancel():
 
     # primitive
     DE = DifferentialExtension(extension={'D':[Poly(1, x), Poly(1/x, t)]})
+
+    # If the DecrementLevel context manager is working correctly, this shouldn't
+    # cause any problems with the further tests.
+    raises(NonElementaryIntegralException,
+    "cancel_primitive(Poly(1, t), Poly(t, t), oo, DE)")
+
     assert cancel_primitive(Poly(1, t), Poly(t + 1/x, t), 2, DE) == \
         Poly(t, t)
     assert cancel_primitive(Poly(4*x, t), Poly(4*x*t**2 + 2*t/x, t), 3, DE) == \
         Poly(t**2, t)
-    # XXX: This test decrements the level without incrementing it again, so
-    # it needs to be the last one that uses this DE.
-    # Ditto for any other raises() test.
-    raises(NonElementaryIntegralException,
-    "cancel_primitive(Poly(1, t), Poly(t, t), oo, DE)")
+
     # TODO: Add more primitive tests, including tests that require is_deriv_in_field()
+
 
 def test_rischDE():
     # TODO: Add more tests for rischDE, including ones from the text

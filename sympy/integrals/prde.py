@@ -14,6 +14,7 @@ right hand side of the equation (i.e., gi in k(t)), and Q is a list of terms on
 the right hand side of the equation (i.e., qi in k[t]).  See the docstring of
 each function for more information.
 """
+from __future__ import with_statement
 from sympy.core import Symbol, ilcm, Add, Mul, Pow, S
 
 from sympy.matrices import Matrix, zeros, eye
@@ -24,7 +25,7 @@ from sympy.polys import Poly, lcm, cancel, sqf_list
 
 from sympy.integrals.risch import (gcdex_diophantine, frac_in, derivation,
     NonElementaryIntegralException, residue_reduce, splitfactor,
-    residue_reduce_derivation)
+    residue_reduce_derivation, DecrementLevel)
 from sympy.integrals.rde import (order_at, order_at_oo, weak_normalizer,
     bound_degree, spde, solve_poly_rde)
 
@@ -791,11 +792,10 @@ def is_log_deriv_k_t_radical_in_field(fa, fd, DE, case='auto'):
 
     if case == 'exp':
         wa, wd = derivation(DE.t, DE).cancel(Poly(DE.t, DE.t), include=True)
-        DE.decrement_level()
-        pa, pd = frac_in(p, DE.t, cancel=True)
-        wa, wd = frac_in((wa, wd), DE.t)
-        A = parametric_log_deriv(pa, pd, wa, wd, DE)
-        DE.increment_level()
+        with DecrementLevel(DE):
+            pa, pd = frac_in(p, DE.t, cancel=True)
+            wa, wd = frac_in((wa, wd), DE.t)
+            A = parametric_log_deriv(pa, pd, wa, wd, DE)
         if A is None:
             return None
         n, e, u = A
@@ -804,10 +804,9 @@ def is_log_deriv_k_t_radical_in_field(fa, fd, DE, case='auto'):
  #       "not yet completely implemented for is_log_deriv_k_t_radical_in_field().")
 
     elif case == 'primitive':
-        DE.decrement_level()
-        pa, pd = frac_in(p, DE.t)
-        A = is_log_deriv_k_t_radical_in_field(pa, pd, DE, case='auto')
-        DE.increment_level()
+        with DecrementLevel(DE):
+            pa, pd = frac_in(p, DE.t)
+            A = is_log_deriv_k_t_radical_in_field(pa, pd, DE, case='auto')
         if A is None:
             return None
         n, u = A

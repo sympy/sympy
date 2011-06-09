@@ -20,13 +20,14 @@ k[t].
 See Chapter 6 of "Symbolic Integration I: Transcendental Functions" by
 Manuel Bronstein.  See also the docstring of risch.py.
 """
+from __future__ import with_statement
 from sympy.core import oo
 from sympy.core.symbol import Symbol
 
 from sympy.polys import Poly, gcd, ZZ, cancel
 
 from sympy.integrals.risch import (gcdex_diophantine, frac_in, derivation,
-    splitfactor, NonElementaryIntegralException)
+    splitfactor, NonElementaryIntegralException, DecrementLevel)
 
 from operator import mul
 
@@ -198,17 +199,15 @@ def special_denom(a, ba, bd, ca, cd, DE, case='auto'):
 
         if case == 'exp':
             dcoeff = DE.d.quo(Poly(DE.t, DE.t))
-            DE.decrement_level() # We are guaranteed to not have problems,
-                                 # because case != 'base'.
-            alphaa, alphad = frac_in(-ba.eval(0)/bd.eval(0)/a.eval(0), DE.t)
-            etaa, etad = frac_in(dcoeff, DE.t)
-            A = parametric_log_deriv(alphaa, alphad, etaa, etad, DE)
-            if A is not None:
-                a, m, z = A
-                if a == 1:
-                    n = min(n, m)
-
-            DE.increment_level()
+            with DecrementLevel(DE): # We are guaranteed to not have problems,
+                                     # because case != 'base'.
+                alphaa, alphad = frac_in(-ba.eval(0)/bd.eval(0)/a.eval(0), DE.t)
+                etaa, etad = frac_in(dcoeff, DE.t)
+                A = parametric_log_deriv(alphaa, alphad, etaa, etad, DE)
+                if A is not None:
+                    a, m, z = A
+                    if a == 1:
+                        n = min(n, m)
         else:
             raise NotImplementedError("Tangent case not implemented yet for " +
                 "RDE special_denom().")
@@ -282,59 +281,53 @@ def bound_degree(a, b, cQ, DE, case='auto', parametric=False):
         etaa, etad = frac_in(DE.d, DE.T[DE.level - 1])
 
         t1 = DE.t
-        DE.decrement_level()
+        with DecrementLevel(DE):
+            alphaa, alphad = frac_in(alpha, DE.t)
+            if db == da - 1:
+                # if alpha == m*Dt + Dz for z in k and m in ZZ:
+                try:
+                    (za, zd), m = limited_integrate(alphaa, alphad, [(etaa, etad)],
+                        DE)
+                except NonElementaryIntegralException:
+                    pass
+                else:
+                    assert len(m) == 1
+                    n = max(n, m[0])
 
-        alphaa, alphad = frac_in(alpha, DE.t)
-        if db == da - 1:
-            # if alpha == m*Dt + Dz for z in k and m in ZZ:
-            try:
-                (za, zd), m = limited_integrate(alphaa, alphad, [(etaa, etad)],
-                    DE)
-            except NonElementaryIntegralException:
-                pass
-            else:
-                assert len(m) == 1
-                n = max(n, m[0])
-
-        if db == da:
-            # if alpha == Dz/z for z in k*:
-                # beta = -lc(a*Dz + b*z)/(z*lc(a))
-                # if beta == m*Dt + Dw for w in k and m in ZZ:
-                    # n = max(n, m)
-            A = is_log_deriv_k_t_radical_in_field(alphaa, alphad, DE)
-            if A is not None:
-                aa, z = A
-                if aa == 1:
-                    beta = -(a*derivation(z, DE).as_poly(t1) +
-                        b*z.as_poly(t1)).LC()/(z.as_basic()*a.LC())
-                    betaa, betad = frac_in(beta, DE.t)
-                    try:
-                        (za, zd), m = limited_integrate(betaa, betad,
-                            [(etaa, etad)], DE)
-                    except NonElementaryIntegralException:
-                        pass
-                    else:
-                        assert len(m) == 1
-                        n = max(n, m[0])
-
-        DE.increment_level()
+            if db == da:
+                # if alpha == Dz/z for z in k*:
+                    # beta = -lc(a*Dz + b*z)/(z*lc(a))
+                    # if beta == m*Dt + Dw for w in k and m in ZZ:
+                        # n = max(n, m)
+                A = is_log_deriv_k_t_radical_in_field(alphaa, alphad, DE)
+                if A is not None:
+                    aa, z = A
+                    if aa == 1:
+                        beta = -(a*derivation(z, DE).as_poly(t1) +
+                            b*z.as_poly(t1)).LC()/(z.as_basic()*a.LC())
+                        betaa, betad = frac_in(beta, DE.t)
+                        try:
+                            (za, zd), m = limited_integrate(betaa, betad,
+                                [(etaa, etad)], DE)
+                        except NonElementaryIntegralException:
+                            pass
+                        else:
+                            assert len(m) == 1
+                            n = max(n, m[0])
 
     elif case == 'exp':
         n = max(0, dc - max(db, da))
         if da == db:
             etaa, etad = frac_in(DE.d.quo(Poly(DE.t, DE.t)), DE.T[DE.level - 1])
-            DE.decrement_level()
-
-            alphaa, alphad = frac_in(alpha, DE.t)
-            A = parametric_log_deriv(alphaa, alphad, etaa, etad, DE)
-            if A is not None:
-                # if alpha == m*Dt/t + Dz/z for z in k* and m in ZZ:
-                    # n = max(n, m)
-                a, m, z = A
-                if a == 1:
-                    n = max(n, m)
-
-            DE.increment_level()
+            with DecrementLevel(DE):
+                alphaa, alphad = frac_in(alpha, DE.t)
+                A = parametric_log_deriv(alphaa, alphad, etaa, etad, DE)
+                if A is not None:
+                    # if alpha == m*Dt/t + Dz/z for z in k* and m in ZZ:
+                        # n = max(n, m)
+                    a, m, z = A
+                    if a == 1:
+                        n = max(n, m)
 
     elif case in ['tan', 'other_nonlinear']:
         delta = DE.d.degree(DE.t)
@@ -512,21 +505,20 @@ def cancel_primitive(b, c, n, DE):
     """
     from sympy.integrals.prde import is_log_deriv_k_t_radical_in_field
 
-    DE.decrement_level()
-    ba, bd = frac_in(b, DE.t)
-    A = is_log_deriv_k_t_radical_in_field(ba, bd, DE)
-    if A is not None:
-        print "Add a cancel_primitive() test."
-        print b, c, n, DE
-        n, z = A
-        if n == 1: # b == Dz/z
-            raise NotImplementedError("is_deriv_in_field() is required to " +
-                " solve this problem.")
-            # if z*c == Dp for p in k[t] and deg(p) <= n:
-            #     return p/z
-            # else:
-            #     raise NonElementaryIntegralException
-    DE.increment_level()
+    with DecrementLevel(DE):
+        ba, bd = frac_in(b, DE.t)
+        A = is_log_deriv_k_t_radical_in_field(ba, bd, DE)
+        if A is not None:
+            print "Add a cancel_primitive() test."
+            print b, c, n, DE
+            n, z = A
+            if n == 1: # b == Dz/z
+                raise NotImplementedError("is_deriv_in_field() is required to " +
+                    " solve this problem.")
+                # if z*c == Dp for p in k[t] and deg(p) <= n:
+                #     return p/z
+                # else:
+                #     raise NonElementaryIntegralException
 
     if c.is_zero:
         return c # return 0
@@ -539,10 +531,9 @@ def cancel_primitive(b, c, n, DE):
         m = c.degree(DE.t)
         if n < m:
             raise NonElementaryIntegralException
-        DE.decrement_level()
-        a2a, a2d = frac_in(c.LC(), DE.t)
-        sa, sd = rischDE(ba, bd, a2a, a2d, DE)
-        DE.increment_level()
+        with DecrementLevel(DE):
+            a2a, a2d = frac_in(c.LC(), DE.t)
+            sa, sd = rischDE(ba, bd, a2a, a2d, DE)
         stm = Poly(sa.as_basic()/sd.as_basic()*DE.t**m, DE.t, expand=False)
         q += stm
         n = m - 1
@@ -564,22 +555,20 @@ def cancel_exp(b, c, n, DE):
 
     eta = DE.d.quo(Poly(DE.t, DE.t)).as_basic()
 
-    DE.decrement_level()
-    etaa, etad = frac_in(eta, DE.t)
-    ba, bd = frac_in(b, DE.t)
-    A = parametric_log_deriv(ba, bd, etaa, etad, DE)
-    if A is not None:
-        a, m, z = A
-        if a == 1:
-            raise NotImplementedError("is_deriv_in_field() is required to " +
-                "solve this problem.")
-            # if c*z*t**m == Dp for p in k<t> and q = p/(z*t**m) in k[t] and
-            # deg(q) <= n:
-            #     return q
-            # else:
-            #     raise NonElementaryIntegralException
-
-    DE.increment_level()
+    with DecrementLevel(DE):
+        etaa, etad = frac_in(eta, DE.t)
+        ba, bd = frac_in(b, DE.t)
+        A = parametric_log_deriv(ba, bd, etaa, etad, DE)
+        if A is not None:
+            a, m, z = A
+            if a == 1:
+                raise NotImplementedError("is_deriv_in_field() is required to " +
+                    "solve this problem.")
+                # if c*z*t**m == Dp for p in k<t> and q = p/(z*t**m) in k[t] and
+                # deg(q) <= n:
+                #     return q
+                # else:
+                #     raise NonElementaryIntegralException
 
     if c.is_zero:
         return c # return 0
@@ -594,16 +583,15 @@ def cancel_exp(b, c, n, DE):
             raise NonElementaryIntegralException
         # a1 = b + m*Dt/t
         a1 = b.as_basic()
-        DE.decrement_level()
-        # TODO: Write a dummy function that does this idiom
-        a1a, a1d = frac_in(a1, DE.t)
-        a1a = a1a*etad + etaa*a1d*Poly(m, DE.t)
-        a1d = a1d*etad
+        with DecrementLevel(DE):
+            # TODO: Write a dummy function that does this idiom
+            a1a, a1d = frac_in(a1, DE.t)
+            a1a = a1a*etad + etaa*a1d*Poly(m, DE.t)
+            a1d = a1d*etad
 
-        a2a, a2d = frac_in(c.LC(), DE.t)
+            a2a, a2d = frac_in(c.LC(), DE.t)
 
-        sa, sd = rischDE(a1a, a1d, a2a, a2d, DE)
-        DE.increment_level()
+            sa, sd = rischDE(a1a, a1d, a2a, a2d, DE)
         stm = Poly(sa.as_basic()/sd.as_basic()*DE.t**m, DE.t, expand=False)
         q += stm
         n = m - 1
@@ -643,12 +631,11 @@ def solve_poly_rde(b, cQ, n, DE, parametric=False):
         else:
             # XXX: Might k be a field? (pg. 209)
             h, b0, c0 = R
-            DE.decrement_level()
-            b0, c0 = b0.as_poly(DE.t), c0.as_poly(DE.t)
-            assert b0 is not None # See above comment
-            assert c0 is not None
-            y = solve_poly_rde(b0, c0, n, DE).as_poly(DE.t)
-            DE.increment_level()
+            with DecrementLevel(DE):
+                b0, c0 = b0.as_poly(DE.t), c0.as_poly(DE.t)
+                assert b0 is not None # See above comment
+                assert c0 is not None
+                y = solve_poly_rde(b0, c0, n, DE).as_poly(DE.t)
             return h + y
 
     elif DE.d.degree(DE.t) >= 2 and b.degree(DE.t) == DE.d.degree(DE.t) - 1 and \
