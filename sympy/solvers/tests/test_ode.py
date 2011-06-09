@@ -3,6 +3,7 @@ from sympy import (Function, dsolve, Symbol, sin, cos, sinh, acos, tan, cosh,
     erf,  diff, Rational, asinh, trigsimp, S, RootOf, Poly, Integral, atan,
     Equality, solve, O, LambertW, Dummy)
 from sympy.abc import x, y, z
+from sympy.core.compatibility import all
 from sympy.solvers.ode import ode_order, homogeneous_order, \
     _undetermined_coefficients_match, classify_ode, checkodesol, constant_renumber
 from sympy.utilities.pytest import XFAIL, skip, raises
@@ -51,6 +52,9 @@ def test_checkodesol():
     assert checkodesol(f(x).diff(x, 2), f(x), [Eq(f(x), C1 + C2*x), \
         Eq(f(x), C2 + C1*x), Eq(f(x), C1*x + C2*x**2)]) == \
             [(True, 0), (True, 0), (False, 2*C2)]
+    assert checkodesol(f(x).diff(x, 2), f(x), set([Eq(f(x), C1 + C2*x), \
+        Eq(f(x), C2 + C1*x), Eq(f(x), C1*x + C2*x**2)])) == \
+            set([(True, 0), (True, 0), (False, 2*C2)])
     assert checkodesol(f(x).diff(x) - 1/f(x)/2, f(x), Eq(f(x)**2, x)) == \
         [(True, 0), (True, 0)]
     assert checkodesol(f(x).diff(x) - f(x), f(x), Eq(C1*exp(x), f(x))) == (True, 0)
@@ -493,15 +497,14 @@ def test_1st_homogeneous_coeff_ode2():
     eq2 = x**2 + f(x)**2 - 2*x*f(x)*f(x).diff(x)
     eq3 = x*exp(f(x)/x) + f(x) - x*f(x).diff(x)
     sol1 = Eq(f(x), x*acos(log(C1*x)))
-    sol2 = [Eq(f(x), -sqrt(C1*x + x**2)), Eq(f(x), sqrt(C1*x + x**2))]
+    sol2 = set([Eq(f(x), -sqrt(C1*x + x**2)), Eq(f(x), sqrt(C1*x + x**2))])
     sol3 = Eq(f(x), log(log(C1/x)**(-x)))
     # specific hints are applied for speed reasons
     assert dsolve(eq1, f(x), hint='1st_homogeneous_coeff_subs_dep_div_indep') == sol1
-    assert dsolve(eq2, f(x), hint='1st_homogeneous_coeff_best') == sol2
+    assert set(dsolve(eq2, f(x), hint='1st_homogeneous_coeff_best')) == sol2
     assert dsolve(eq3, f(x), hint='1st_homogeneous_coeff_subs_dep_div_indep') == sol3
     assert checkodesol(eq1, f(x), sol1, order=1, solve_for_func=False)[0]
-    assert checkodesol(eq2, f(x), sol2[0], order=1, solve_for_func=False)[0]
-    assert checkodesol(eq2, f(x), sol2[1], order=1, solve_for_func=False)[0]
+    assert all(i[0] for i in checkodesol(eq2, f(x), sol2, order=1, solve_for_func=False))
 
 @XFAIL
 def test_1st_homogeneous_coeff_ode2_eq3sol():
@@ -1058,8 +1061,8 @@ def test_Liouville_ODE():
     # If solve() is ever improved, this is a better solution
     sol1a = Eq(f(x), -log((C1*x+C2)/x))
     sol2 = Eq(C1 + C2/x - exp(-f(x)), 0) # This is equivalent to sol1
-    sol3 = [Eq(f(x), -sqrt(2)*sqrt(C1 + C2*log(x))), Eq(f(x), sqrt(2)*sqrt(C1 + C2*log(x)))]
-    sol4 = [Eq(f(x), -sqrt(2)*sqrt(C1 + C2*exp(-x))), Eq(f(x), sqrt(2)*sqrt(C1 + C2*exp(-x)))]
+    sol3 = set([Eq(f(x), -sqrt(2)*sqrt(C1 + C2*log(x))), Eq(f(x), sqrt(2)*sqrt(C1 + C2*log(x)))])
+    sol4 = set([Eq(f(x), -sqrt(2)*sqrt(C1 + C2*exp(-x))), Eq(f(x), sqrt(2)*sqrt(C1 + C2*exp(-x)))])
     sol5 = Eq(f(x), log(C1 + C2/x))
     sol1s = constant_renumber(sol1, 'C', 1, 2)
     sol2s = constant_renumber(sol2, 'C', 1, 2)
@@ -1069,19 +1072,16 @@ def test_Liouville_ODE():
     assert dsolve(eq1, f(x), hint) in (sol1, sol1s)
     assert dsolve(eq1a, f(x), hint) in (sol1, sol1s)
     assert dsolve(eq2, f(x), hint) in (sol2, sol2s)
-    assert dsolve(eq3, f(x), hint) in (sol3, sol3s) # XXX: remove sqrt(2) factor
-    assert dsolve(eq4, f(x), hint) in (sol4, sol4s) # XXX: remove sqrt(2) factor
+    assert set(dsolve(eq3, f(x), hint)) in (sol3, sol3s) # XXX: remove sqrt(2) factor
+    assert set(dsolve(eq4, f(x), hint)) in (sol4, sol4s) # XXX: remove sqrt(2) factor
     assert dsolve(eq5, f(x), hint) in (sol5, sol5s)
     assert checkodesol(sol1, f(x), sol1a, order=2, solve_for_func=False)[0]
     assert checkodesol(eq1, f(x), sol1a, order=2, solve_for_func=False)[0]
     assert checkodesol(eq1a, f(x), sol1a, order=2, solve_for_func=False)[0]
     assert checkodesol(sol2, f(x), sol1a, order=2, solve_for_func=False)[0]
     assert checkodesol(eq2, f(x), sol1a, order=2, solve_for_func=False)[0]
-    assert checkodesol(eq3, f(x), sol3[0], order=2, solve_for_func=False)[0]
-    assert checkodesol(eq3, f(x), sol3[1], order=2, solve_for_func=False)[0]
-    sol4c = checkodesol(eq4, f(x), sol4, order=2, solve_for_func=False)
-    assert sol4c[0][0]
-    assert sol4c[1][0]
+    assert all(i[0] for i in checkodesol(eq3, f(x), sol3, order=2, solve_for_func=False))
+    assert all(i[0] for i in checkodesol(eq4, f(x), sol4, order=2, solve_for_func=False))
     assert checkodesol(eq5, f(x), sol5, order=2, solve_for_func=False)[0]
     not_Liouville1 = classify_ode(diff(f(x),x)/x + f(x)*diff(f(x),x,x)/2 -
         diff(f(x),x)**2/2, f(x))
