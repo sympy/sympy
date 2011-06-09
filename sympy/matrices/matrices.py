@@ -2630,7 +2630,7 @@ class SparseMatrix(Matrix):
             testval = sympify(value)
             if testval != 0:
                 self.mat[(i,j)] = testval
-            if (i,j) in self.mat:
+            elif (i,j) in self.mat:
                 del self.mat[(i,j)]
 
     def row_del(self, k):
