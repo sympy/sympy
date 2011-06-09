@@ -1,4 +1,42 @@
-"""Tools for manipulation of expressions using paths. """
+"""
+Manipulate parts of an expression selected by a path.
+
+This module allows to manipulate large nested expressions in a single
+line of code, utilizing techniques similar to those applied in XML processing
+standards (e.g. XPath).
+
+**Syntax**
+
+select all : "/*"
+    Equivalent of ``for arg in args:``.
+select slice : "/[0]" | "/[1:5]" | "/[1:5:2]"
+    Supports standard Python's slice syntax.
+select by type : "/list" | "/list|tuple"
+    Emulates :func:`isinstance`.
+select by attribute : "/__iter__?"
+    Emulates :func:`hasattr`.
+
+**Examples**
+
+>>> from sympy.simplify.epath import eselect, emap
+>>> from sympy import sin, cos, E, symbols
+>>> x, y, z, t = symbols('x, y, z, t')
+
+>>> path = "/*/[0]/Symbol"
+>>> expr = [((x, 1), 2), ((3, y), z)]
+>>> eselect(expr, path)
+[x, y]
+>>> emap(lambda expr: expr**2, expr, path)
+[((x**2, 1), 2), ((3, y**2), z)]
+
+>>> path = "/*/*/Symbol"
+>>> expr = t + sin(x + 1) + cos(x + y + E)
+>>> eselect(expr, path)
+[x, x, y]
+>>> emap(lambda expr: 2*expr, expr, path)
+t + sin(2*x + 1) + cos(2*x + 2*y + E)
+
+"""
 
 from sympy.core import Basic
 
@@ -148,30 +186,28 @@ class EPath(object):
 
         return False
 
-    def apply(self, expr, func, args=None, kwargs=None):
+    def map(self, func, expr):
         """
         Modify parts of an expression selected by a path.
 
         **Examples**
 
-        >>> from sympy.simplify.epathtools import EPath
-        >>> from sympy import sin, cos, E
-        >>> from sympy.abc import x, y, z, t
+        >>> from sympy.simplify.epath import EPath
+        >>> from sympy import sin, cos, E, symbols
+        >>> x, y, z, t = symbols('x, y, z, t')
 
         >>> path = EPath("/*/[0]/Symbol")
         >>> expr = [((x, 1), 2), ((3, y), z)]
-
-        >>> path.apply(expr, lambda expr: expr**2)
+        >>> path.map(lambda expr: expr**2, expr)
         [((x**2, 1), 2), ((3, y**2), z)]
 
         >>> path = EPath("/*/*/Symbol")
         >>> expr = t + sin(x + 1) + cos(x + y + E)
-
-        >>> path.apply(expr, lambda expr: 2*expr)
+        >>> path.map(lambda expr: 2*expr, expr)
         t + sin(2*x + 1) + cos(2*x + 2*y + E)
 
         """
-        def _apply(path, expr, func):
+        def _map(path, func, expr):
             if not path:
                 return func(expr)
             else:
@@ -205,17 +241,14 @@ class EPath(object):
                         continue
 
                     if self._has(arg, attrs, types):
-                        args[i] = _apply(path, arg, func)
+                        args[i] = _map(path, func, arg)
 
                 if basic:
                     return expr.func(*args)
                 else:
                     return expr.__class__(args)
 
-        _args, _kwargs = args or (), kwargs or {}
-        _func = lambda expr: func(expr, *_args, **_kwargs)
-
-        return _apply(self._epath, expr, _func)
+        return _map(self._epath, func, expr)
 
     def select(self, expr):
         """
@@ -223,7 +256,7 @@ class EPath(object):
 
         **Examples**
 
-        >>> from sympy.simplify.epathtools import EPath
+        >>> from sympy.simplify.epath import EPath
         >>> from sympy import sin, cos, E
         >>> from sympy.abc import x, y, z, t
 
@@ -272,69 +305,45 @@ class EPath(object):
         _select(self._epath, expr)
         return result
 
-def epath(path, expr=None, func=None, args=None, kwargs=None):
+
+def eselect(expr, epath):
     """
-    Manipulate parts of an expression selected by a path.
-
-    This function allows to manipulate large nested expressions in single
-    line of code, utilizing techniques to those applied in XML processing
-    standards (e.g. XPath).
-
-    If ``func`` is ``None``, :func:`epath` retrieves elements selected by
-    the ``path``. Otherwise it applies ``func`` to each matching element.
-
-    **Syntax**
-
-    select all : "/*"
-        Equivalent of ``for arg in args:``.
-    select slice : "/[0]" | "/[1:5]" | "/[1:5:2]"
-        Supports standard Python's slice syntax.
-    select by type : "/list" | "/list|tuple"
-        Emulates :func:`isinstance`.
-    select by attribute : "/__iter__?"
-        Emulates :func:`hasattr`.
-
-    **Parameters**
-
-    path : str | EPath
-        A path as a string or a compiled EPath.
-    expr : Basic | iterable
-        An expression or a container of expressions.
-    func : callable (optional)
-        A callable that will be applied to matching parts.
-    args : tuple (optional)
-        Additional positional arguments to ``func``.
-    kwargs : dict (optional)
-        Additional keyword arguments to ``func``.
+    Select parts of an expression according to an EPath specification.
 
     **Examples**
 
-    >>> from sympy.simplify.epathtools import epath
-    >>> from sympy import sin, cos, E
-    >>> from sympy.abc import x, y, z, t
+    >>> from sympy.simplify.epath import eselect
+    >>> from sympy import sin, cos, E, symbols
+    >>> x, y, z, t = symbols("x, y, z, t")
 
-    >>> path = "/*/[0]/Symbol"
     >>> expr = [((x, 1), 2), ((3, y), z)]
-
-    >>> epath(path, expr)
+    >>> eselect(expr, "/*/[0]/Symbol")
     [x, y]
-    >>> epath(path, expr, lambda expr: expr**2)
+
+    >>> expr = t + sin(x + 1) + cos(x + y + E)
+    >>> eselect(expr, "/*/*/Symbol")
+    [x, x, y]
+
+    """
+    return EPath(epath).select(expr)
+
+def emap(func, expr, epath):
+    """
+    Modify an expression by applying a function to some of its parts.
+
+    **Examples**
+
+    >>> from sympy.simplify.epath import emap
+    >>> from sympy import sin, cos, E, symbols
+    >>> x, y, z, t = symbols('x, y, z, t')
+
+    >>> expr = [((x, 1), 2), ((3, y), z)]
+    >>> emap(lambda expr: expr**2, expr, "/*/[0]/Symbol")
     [((x**2, 1), 2), ((3, y**2), z)]
 
-    >>> path = "/*/*/Symbol"
     >>> expr = t + sin(x + 1) + cos(x + y + E)
-
-    >>> epath(path, expr)
-    [x, x, y]
-    >>> epath(path, expr, lambda expr: 2*expr)
+    >>> emap(lambda expr: 2*expr, expr, "/*/*/Symbol")
     t + sin(2*x + 1) + cos(2*x + 2*y + E)
 
     """
-    _epath = EPath(path)
-
-    if expr is None:
-        return _epath
-    if func is None:
-        return _epath.select(expr)
-    else:
-        return _epath.apply(expr, func, args, kwargs)
+    return EPath(epath).map(func, expr)

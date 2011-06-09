@@ -14,4 +14,4 @@ from cse_main import cse
 
 from traversaltools import use
 
-from epathtools import epath, EPath
+from epath import EPath, eselect, emap
