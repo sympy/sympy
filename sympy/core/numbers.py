@@ -118,6 +118,7 @@ class Number(AtomicExpr):
     is_comparable = True
     is_bounded = True
     is_finite = True
+    is_number = True
 
     __slots__ = []
 
@@ -1606,6 +1607,7 @@ class ComplexInfinity(AtomicExpr):
     is_comparable = None
     is_bounded = False
     is_real = None
+    is_number = True
 
     __slots__ = []
 
@@ -1641,6 +1643,7 @@ class NumberSymbol(AtomicExpr):
     is_comparable = True
     is_bounded = True
     is_finite = True
+    is_number = True
 
     __slots__ = []
 
@@ -1869,6 +1872,7 @@ class ImaginaryUnit(AtomicExpr):
     is_imaginary = True
     is_bounded = True
     is_finite = True
+    is_number = True
 
     __slots__ = []
 
