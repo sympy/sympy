@@ -927,7 +927,6 @@ def odesimp(eq, func, order, hint):
 
     return eq
 
-@vectorize(2)
 def checkodesol(ode, func, sol, order='auto', solve_for_func=True):
     """
     Substitutes sol for func in ode and checks that the result is 0.
@@ -979,6 +978,9 @@ def checkodesol(ode, func, sol, order='auto', solve_for_func=True):
         (False, 2)
 
     """
+    if type(sol) in (tuple, list, set):
+        return type(sol)(map(lambda i: checkodesol(ode, func, i, order=order,
+            solve_for_func=solve_for_func), sol))
     if not func.is_Function or len(func.args) != 1:
         raise ValueError("func must be a function of one variable, not " + str(func))
     x = func.args[0]
@@ -1375,7 +1377,6 @@ def constantsimp(expr, independentsymbol, endnumber, startnumber=1,
             else:
                 return newexpr
 
-@vectorize(0)
 def constant_renumber(expr, symbolname, startnumber, endnumber):
     """
     Renumber arbitrary constants in expr.
@@ -1405,7 +1406,9 @@ def constant_renumber(expr, symbolname, startnumber, endnumber):
         C1 + C2*x + C3*x
 
     """
-
+    if type(expr) in (set, list, tuple):
+        return type(expr)(map(lambda i: constant_renumber(i, symbolname=symbolname,
+            startnumber=startnumber, endnumber=endnumber), expr))
     global newstartnumber
     newstartnumber = 1
 
