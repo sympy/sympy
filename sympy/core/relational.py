@@ -125,10 +125,16 @@ class Relational(Expr, EvalfMixin):
             rop_cls, swap = Relational.get_relational_class(rop)
             if swap: lhs, rhs = rhs, lhs
         if lhs.is_real and lhs.is_number and rhs.is_real and rhs.is_number:
-            return rop_cls._eval_relation(lhs.evalf(), rhs.evalf())
-        else:
-            obj = Expr.__new__(rop_cls, lhs, rhs, **assumptions)
-            return obj
+            # Just becase something is a number, doesn't mean you can evalf it.
+            Nlhs = lhs.evalf()
+            if Nlhs.is_Number:
+                # S.Zero.evalf() returns S.Zero, so test Number instead of Float
+                Nrhs = rhs.evalf()
+                if Nrhs.is_Number:
+                    return rop_cls._eval_relation(Nlhs, Nrhs)
+
+        obj = Expr.__new__(rop_cls, lhs, rhs, **assumptions)
+        return obj
 
     @property
     def lhs(self):
