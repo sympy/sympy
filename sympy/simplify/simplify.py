@@ -1911,8 +1911,7 @@ def _logcombine(expr, force=False):
              expr.args[1:], 1)
 
     if expr.is_Function:
-        return apply(expr.func,map(lambda t: _logcombine(t, force)\
-        , expr.args))
+        return expr.func(*map(lambda t: _logcombine(t, force), expr.args))
 
     if expr.is_Pow:
         return _logcombine(expr.args[0], force)**\
