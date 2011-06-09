@@ -9,6 +9,8 @@ from sympy import (Basic, Matrix, Piecewise, Ne, symbols, sqrt, Function,
 from sympy.printing.pretty import pretty as xpretty
 from sympy.printing.pretty import pprint
 
+from sympy.physics.units import joule
+
 from sympy.utilities.pytest import raises
 
 a, b, x, y, z, k = symbols('a,b,x,y,z,k')
@@ -158,6 +160,10 @@ Limit(x, x, oo)
 Limit(x**2, x, 0)
 Limit(1/x, x, 0)
 Limit(sin(x)/x, x, 0)
+
+UNITS:
+
+joule => kg*m**2/s
 
 """
 
@@ -2356,3 +2362,26 @@ k = -----                                \n\
 
     assert  pretty(expr) == ascii_str
     #assert upretty(expr) == ucode_str
+
+def test_units():
+    # issue 2461
+    expr = joule
+    ascii_str = \
+"""\
+    2\n\
+kg*m \n\
+-----\n\
+   2 \n\
+  s  \
+"""
+
+    unicode_str = \
+u"""\
+    2\n\
+kg⋅m \n\
+─────\n\
+   2 \n\
+  s  \
+"""
+    assert upretty(expr) == unicode_str
+    assert pretty(expr) == ascii_str
