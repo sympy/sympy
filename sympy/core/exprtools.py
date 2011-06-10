@@ -377,5 +377,8 @@ def gcd_terms(terms):
     y*(x + 1)*(x + y + 1)
 
     """
+    from sympy.polys.polytools import _keep_coeff
+
     cont, numer, denom = _gcd_terms(sympify(terms))
-    return cont*(numer/denom)
+    coeff, factors = cont.as_coeff_Mul()
+    return _keep_coeff(coeff, factors*numer/denom)
