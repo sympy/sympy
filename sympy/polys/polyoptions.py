@@ -100,7 +100,6 @@ class Options(dict):
     * Modulus --- option
     * Symmetric --- boolean option
     * Strict --- boolean option
-    * Repr --- option
 
     **Flags**
 
@@ -550,31 +549,6 @@ class Strict(BooleanOption):
     @classmethod
     def default(cls):
         return True
-
-class Repr(Option):
-    """``repr`` option to polynomial manipulation functions. """
-
-    __metaclass__ = OptionType
-
-    option = 'repr'
-
-    @classmethod
-    def default(cls):
-        return sympy.polys.densepolys.DensePoly
-
-    @classmethod
-    def preprocess(cls, repr):
-        if isinstance(repr, str):
-            if repr == 'sparse':
-                return sympy.polys.sparsepolys.SparsePoly
-            elif repr == 'dense':
-                return sympy.polys.densepolys.DensePoly
-            else:
-                raise OptionError("'%s' is not a valid value 'repr' option" % repr)
-        elif isinstance(repr, sympy.polys.polyclasses.GenericPoly):
-            return repr
-        else:
-            raise OptionError("'repr' must a string or a class, got %s" % repr)
 
 class Auto(BooleanOption, Flag):
     """``auto`` flag to polynomial manipulation functions. """
