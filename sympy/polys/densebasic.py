@@ -406,6 +406,48 @@ def dmp_copy(f, u):
 
     return [ dmp_copy(c, v) for c in f ]
 
+def dup_to_tuple(f):
+    """
+    Convert `f` into a tuple.
+
+    This is needed for hashing. This is similar to dup_copy().
+        **Examples**
+
+    >>> from sympy.polys.domains import ZZ
+    >>> from sympy.polys.densebasic import dup_copy
+
+    >>> f = ZZ.map([1, 2, 3, 0])
+
+    >>> dup_copy([1, 2, 3, 0])
+    [1, 2, 3, 0]
+
+    """
+    return tuple(f)
+
+@cythonized("u,v")
+def dmp_to_tuple(f, u):
+    """
+    Convert `f` into a nested tuple of tuples.
+
+    This is needed for hashing.  This is similar to dmp_copy().
+
+    **Examples**
+
+    >>> from sympy.polys.domains import ZZ
+    >>> from sympy.polys.densebasic import dmp_to_tuple
+
+    >>> f = ZZ.map([[1], [1, 2]])
+
+    >>> dmp_to_tuple(f, 1)
+    ((1,), (1, 2))
+
+    """
+    if not u:
+        return tuple(f)
+    v = u - 1
+
+    return tuple(dmp_to_tuple(c, v) for c in f)
+
 def dup_normal(f, K):
     """
     Normalize univariate polynomial in the given domain.
